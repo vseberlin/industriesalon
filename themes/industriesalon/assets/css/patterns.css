@@ -6299,6 +6299,48 @@ Raum / Vermietung → brown
   margin-bottom: clamp(2rem, 4vw, 4rem);
 }
 
+.iss-post-layout-standard .iss-post-hero__media {
+  width: auto;
+  max-width: 100%;
+  margin-left: 0;
+  transform: none;
+  height: auto;
+  max-height: none;
+}
+
+.iss-post-layout-image .iss-post-hero__media {
+  width: 100vw;
+  max-width: none;
+  margin-left: 50%;
+  transform: translateX(-50%);
+  margin-bottom: clamp(1.5rem, 3vw, 3rem);
+  min-height: clamp(18rem, 58vh, 44rem);
+  height: min(70vh, calc(100vh - var(--iss-header-height) - 2rem));
+  max-height: calc(100vh - var(--iss-header-height) - 2rem);
+}
+
+.iss-post-layout-short .iss-post-hero {
+  padding-top: calc(var(--iss-header-height) + 2rem);
+  padding-bottom: 1.5rem;
+}
+
+.iss-post-layout-short .iss-post-hero__media {
+  display: none;
+}
+
+.iss-post-layout-short .iss-post-hero__intro {
+  max-width: 48rem;
+}
+
+.iss-post-layout-short .iss-post-hero__title {
+  max-width: 16ch;
+  font-size: clamp(2rem, 4.2vw, 3.6rem);
+}
+
+.iss-post-layout-short .iss-post-main {
+  padding-top: 1.25rem;
+}
+
 .iss-post-hero__media > .wp-block-post-featured-image,
 .iss-post-hero__media > .wp-block-post-featured-image img {
   width: 100%;
@@ -6338,9 +6380,11 @@ Raum / Vermietung → brown
   color: rgba(30, 30, 30, 0.58);
   font-size: 0.9rem;
   font-weight: 600;
+  line-height: 1.45;
 }
 
 .iss-post-content {
+  --iss-post-wide: min(1280px, calc(100vw - (2 * var(--iss-container-pad))));
   width: min(100% - (2 * var(--iss-container-pad)), 860px);
   margin-left: auto;
   margin-right: auto;
@@ -6350,8 +6394,16 @@ Raum / Vermietung → brown
   max-width: 100%;
 }
 
+.iss-post-content > *:first-child {
+  margin-top: 0;
+}
+
+.iss-post-content > *:last-child {
+  margin-bottom: 0;
+}
+
 .iss-post-content .alignwide {
-  width: min(100vw - (2 * var(--iss-container-pad)), 1280px);
+  width: var(--iss-post-wide);
   max-width: none;
   margin-left: 50%;
   transform: translateX(-50%);
@@ -6370,15 +6422,124 @@ Raum / Vermietung → brown
   line-height: 1.75;
 }
 
+.iss-post-content p {
+  margin-top: 0;
+  margin-bottom: 1.35em;
+}
+
+.iss-post-content ul,
+.iss-post-content ol {
+  padding-left: 1.25em;
+  margin-top: 1.25rem;
+  margin-bottom: 1.65rem;
+}
+
+.iss-post-content li + li {
+  margin-top: 0.45rem;
+}
+
 .iss-post-content h2,
 .iss-post-content h3,
 .iss-post-content h4 {
   margin-top: 2.4em;
+  margin-bottom: 0.7em;
+  letter-spacing: -0.02em;
+}
+
+.iss-post-content h2 {
+  font-size: clamp(1.9rem, 2.4vw, 3rem);
+}
+
+.iss-post-content h3 {
+  font-size: clamp(1.45rem, 1.5vw, 2rem);
+}
+
+.iss-post-content h4 {
+  font-size: clamp(1.18rem, 1vw, 1.45rem);
 }
 
 .iss-post-content figure {
-  margin-top: 2rem;
-  margin-bottom: 2rem;
+  margin-top: clamp(2rem, 4vw, 3.5rem);
+  margin-bottom: clamp(2rem, 4vw, 3.5rem);
+}
+
+.iss-post-content img {
+  max-width: 100%;
+  height: auto;
+}
+
+.iss-post-content figure img {
+  display: block;
+  width: 100%;
+  border-radius: var(--iss-radius-md, 0);
+}
+
+.iss-post-content figcaption {
+  max-width: 68ch;
+  margin: 0.65rem 0 0;
+  color: rgba(30, 30, 30, 0.62);
+  font-size: 0.9rem;
+  line-height: 1.45;
+}
+
+.iss-post-content .alignleft,
+.iss-post-content img.alignleft {
+  float: left;
+  width: min(42%, 320px);
+  margin: 0.35rem 1.4rem 1rem 0;
+}
+
+.iss-post-content .alignright,
+.iss-post-content img.alignright {
+  float: right;
+  width: min(42%, 320px);
+  margin: 0.35rem 0 1rem 1.4rem;
+}
+
+.iss-post-content blockquote,
+.iss-post-content .wp-block-quote,
+.iss-post-content .wp-block-pullquote {
+  margin: clamp(2rem, 4vw, 3.5rem) 0;
+  padding: 1.25rem 0 1.25rem 1.25rem;
+  border-left: 4px solid var(--iss-red);
+  color: var(--iss-black);
+}
+
+.iss-post-content blockquote p,
+.iss-post-content .wp-block-quote p,
+.iss-post-content .wp-block-pullquote p {
+  margin: 0;
+  font-size: clamp(1.25rem, 1.2vw + 1rem, 1.8rem);
+  line-height: 1.42;
+  font-weight: 600;
+}
+
+.iss-post-content hr,
+.iss-post-content .wp-block-separator {
+  width: 100%;
+  margin: clamp(2.5rem, 5vw, 4rem) 0;
+  border: 0;
+  border-top: 1px solid var(--iss-border, rgba(30, 30, 30, 0.16));
+  background: none;
+}
+
+.iss-post-content table {
+  width: 100%;
+  border-collapse: collapse;
+  margin: 2rem 0;
+  font-size: 0.96rem;
+}
+
+.iss-post-content th,
+.iss-post-content td {
+  padding: 0.85rem 0;
+  border-bottom: 1px solid var(--iss-border, rgba(30, 30, 30, 0.16));
+  text-align: left;
+  vertical-align: top;
+}
+
+.iss-post-content th {
+  font-weight: 700;
 }
 
 .iss-post-related .iss-heading {
@@ -6394,7 +6555,38 @@ Raum / Vermietung → brown
     min-height: 18rem;
   }
 
+  .iss-post-layout-image .iss-post-hero__media {
+    min-height: 16rem;
+    height: min(52vh, calc(100vh - var(--iss-header-height) - 1rem));
+    max-height: calc(100vh - var(--iss-header-height) - 1rem);
+  }
+
   .iss-post-hero__title {
     max-width: 11ch;
+  }
+
+  .iss-post-content {
+    width: min(calc(100% - (2 * var(--iss-container-pad))), 100%);
+  }
+
+  .iss-post-content p,
+  .iss-post-content li {
+    font-size: 1rem;
+    line-height: 1.7;
+  }
+
+  .iss-post-content .alignwide,
+  .iss-post-content .alignfull {
+    width: calc(100vw - (2 * var(--iss-container-pad)));
+  }
+
+  .iss-post-content .alignleft,
+  .iss-post-content .alignright,
+  .iss-post-content img.alignleft,
+  .iss-post-content img.alignright {
+    float: none;
+    display: block;
+    width: 100%;
+    margin: 1.5rem 0;
   }
 }

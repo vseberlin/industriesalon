@@ -181,6 +181,141 @@ add_action('admin_head', function() {
 });
 
 /**
+ * Single post layout variants (standard / image / short).
+ */
+function industriesalon_post_layout_choices(): array
+{
+    return array('standard', 'image', 'short');
+}
+
+function industriesalon_sanitize_post_layout($value): string
+{
+    $value = sanitize_key((string) $value);
+    return in_array($value, industriesalon_post_layout_choices(), true) ? $value : 'standard';
+}
+
+function industriesalon_register_post_layout_meta(): void
+{
+    register_post_meta('post', '_iss_post_layout', array(
+        'single' => true,
+        'type' => 'string',
+        'default' => 'standard',
+        'show_in_rest' => true,
+        'sanitize_callback' => 'industriesalon_sanitize_post_layout',
+        'auth_callback' => static function ($allowed = null, $meta_key = '', $post_id = 0) {
+            $post_id = (int) $post_id;
+            if ($post_id > 0) {
+                return current_user_can('edit_post', $post_id);
+            }
+            return current_user_can('edit_posts');
+        },
+    ));
+}
+add_action('init', 'industriesalon_register_post_layout_meta');
+
+function industriesalon_add_post_layout_body_class(array $classes): array
+{
+    if (!is_singular('post')) {
+        return $classes;
+    }
+
+    $post_id = get_queried_object_id();
+    $layout = industriesalon_sanitize_post_layout(get_post_meta($post_id, '_iss_post_layout', true));
+    $classes[] = 'iss-post-layout-' . $layout;
+
+    return $classes;
+}
+add_filter('body_class', 'industriesalon_add_post_layout_body_class');
+
+function industriesalon_enqueue_post_layout_editor_assets(): void
+{
+    if (!function_exists('get_current_screen')) {
+        return;
+    }
+
+    $screen = get_current_screen();
+    if (!$screen || $screen->base !== 'post' || $screen->post_type !== 'post') {
+        return;
+    }
+
+    wp_register_script(
+        'industriesalon-post-layout-editor',
+        false,
+        array('wp-plugins', 'wp-edit-post', 'wp-element', 'wp-components', 'wp-data'),
+        wp_get_theme()->get('Version'),
+        true
+    );
+    wp_enqueue_script('industriesalon-post-layout-editor');
+
+    $script = <<<'JS'
+(function (wp) {
+  if (!wp || !wp.plugins || !wp.editPost || !wp.element || !wp.components || !wp.data) {
+    return;
+  }
+
+  var registerPlugin = wp.plugins.registerPlugin;
+  var PluginDocumentSettingPanel = wp.editPost.PluginDocumentSettingPanel;
+  var SelectControl = wp.components.SelectControl;
+  var createElement = wp.element.createElement;
+  var useSelect = wp.data.useSelect;
+  var useDispatch = wp.data.useDispatch;
+
+  var options = [
+    { label: 'Standard (Bild im Container)', value: 'standard' },
+    { label: 'Bildfokus (Hero Full Width)', value: 'image' },
+    { label: 'Kurze Meldung (kompakt)', value: 'short' }
+  ];
+
+  function isValidLayout(value) {
+    return value === 'standard' || value === 'image' || value === 'short';
+  }
+
+  function PostLayoutPanel() {
+    var postType = useSelect(function (select) {
+      return select('core/editor').getCurrentPostType();
+    }, []);
+
+    var meta = useSelect(function (select) {
+      return select('core/editor').getEditedPostAttribute('meta') || {};
+    }, []);
+
+    var editPost = useDispatch('core/editor').editPost;
+
+    if (postType !== 'post') {
+      return null;
+    }
+
+    var value = isValidLayout(meta._iss_post_layout) ? meta._iss_post_layout : 'standard';
+
+    return createElement(
+      PluginDocumentSettingPanel,
+      { name: 'iss-post-layout', title: 'Beitragslayout', className: 'iss-post-layout-panel' },
+      createElement(SelectControl, {
+        label: 'Layout',
+        value: value,
+        options: options,
+        help: 'Wählt die Darstellung für diesen Beitrag im Frontend.',
+        onChange: function (nextValue) {
+          if (!isValidLayout(nextValue)) {
+            nextValue = 'standard';
+          }
+          editPost({ meta: Object.assign({}, meta, { _iss_post_layout: nextValue }) });
+        }
+      })
+    );
+  }
+
+  registerPlugin('iss-post-layout-panel', {
+    render: PostLayoutPanel
+  });
+})(window.wp);
+JS;
+
+    wp_add_inline_script('industriesalon-post-layout-editor', $script);
+}
+add_action('enqueue_block_editor_assets', 'industriesalon_enqueue_post_layout_editor_assets');
+
+/**
  * Enqueue theme assets.
  */
 function industriesalon_enqueue_assets(): void

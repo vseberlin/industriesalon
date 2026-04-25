@@ -11,27 +11,3 @@
    Why: <what Gutenberg/runtime behavior breaks and why this override exists>
    ===================================================================== */
 
-/* Page: single-tour
-   Block: .section.iss-tour-main
-   Why: Specific template adjustment to reduce gap between hero and main content. */
-.section.iss-tour-main {
-    padding-top: 0rem;
-}
-
-/* Page: single
-   Block: .iss-post-content img
-   Why: Ensure images inside the single post content stay within the constrained post width. */
-.iss-post-content img {
-    max-width: 100%;
-    height: auto;
-}
-
-/* Page: single
-   Block: .iss-post-content .alignwide, .alignfull
-   Why: Force images to stay within the constrained post width. */
-.iss-post-content .alignwide,
-.iss-post-content .alignfull {
-    width: 100%;
-    margin-left: 0;
-    transform: none;
-}

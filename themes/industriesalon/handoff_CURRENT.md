@@ -1,31 +1,42 @@
-# Handoff - April 24, 2026
+# Handoff Current (Theme)
 
-## Overview
-Successfully transitioned the theme toward a "Passive Stability" model by moving away from Gutenberg's `constrained` layout in favor of explicit `layout: default` containers. This allowed for significant CSS simplification and improved the visual consistency of the programme calendar.
+## Status
+- `ready_for_next_session`
 
-## Key Changes
+## Date / Window
+- Date: 2026-04-25
+- Timezone: Europe/Berlin
 
-### 1. Theme Architecture & Stability
-*   **Front-Page Test:** Created `templates/front-page-test.html` using `layout: default`. Registered as "Front Page Test (Default Layout)" in `theme.json`.
-*   **CSS Simplification:** Removed over 20 redundant `!important` flags in `style.css` and `patterns.css` that were previously "fighting" Gutenberg's auto-margins.
-*   **Global Standards:** Consolidated section vertical rhythm and heading measure tokens into the end of `style.css`.
-*   **Gutenberg Core Fixes:** Centralized the Query Loop baseline reset in `style.css` to ensure perfectly flat card rows across all templates.
+## Branch / Commit
+- Branch: `master`
+- HEAD at handoff write: `8ba4ced`
 
-### 2. Single Tour Templates
-*   **Vertical Balance:** Moved "Further Tours" (Query Loop) from the bottom into the main left column (70% width) to eliminate white space voids next to the calendar.
-*   **Editorial Polish:** Added `.iss-hero-anchor` (red rail) to hero text and `.is-sticky-aside` to the booking column.
-*   **Grid Optimization:** Switched discovery cards to a 2-column `.iss-card--flat` grid for better density within the narrowed content column.
+## What Was Done This Session
+- Added post layout variants for normal posts without disabling Gutenberg:
+  - post meta `_iss_post_layout` (`standard`, `image`, `short`)
+  - editor sidebar selector in post document settings
+  - frontend body class `iss-post-layout-*`
+- Updated single-post CSS in `assets/css/patterns.css`:
+  - `standard`: hero image remains in container
+  - `image`: full-width hero with viewport height cap (prevents >100vh)
+  - `short`: compact mode, no large hero image
+- Extended single-post content polish (typography, media, captions, quotes, tables, responsive alignment behavior).
+- Removed now-redundant single-post image/align overrides from `assets/css/overrides.css`.
+- Purged DB template overrides for active theme (`front-page`, `hero-page`, `single`) so disk template files are authoritative.
 
-### 3. ISS Programm Plugin (Calendar & Modal)
-*   **High Visibility:** Switched to a "Green Theme" (`#579e7d`) with high-contrast borders (`#d0d0d0`) and solid inactive date backgrounds (`#e8e8e8`).
-*   **Flatpickr Alignment:** Forced perfect vertical column sync between weekdays and dates using CSS Grid and direct targeting of internal classes.
-*   **Compact Style:** Reduced day-cell height to `3rem` for a more technical, elegant editorial look.
-*   **Cache Busting:** Updated `includes/assets.php` to use `filemtime()` for CSS/JS versioning, ensuring changes reflect immediately on hard refresh.
-*   **Accented Modal:** Updated the booking popup with a matching green rail, bold typography, and improved focus states.
+## Runtime Verification Snapshot
+- Active theme confirmed: `industriesalon` `1.1.0`.
+- Active theme path confirmed: `/var/www/html/wp-content/themes/industriesalon`.
+- Syntax check passed for `themes/industriesalon/functions.php`.
+- WP bootstrap check passed via `wp eval`.
 
-## Known Exceptions
-*   `overrides.css` is now minimal, containing only a single template-specific visual adjustment for tour main padding.
+## Open Item
+- Validate visual output for all three post layout variants on real posts (desktop + mobile).
 
-## Next Steps
-*   If the test front-page template is approved, it can be renamed to `front-page.html` to replace the old version.
-*   The `.home` scopes remaining in `patterns.css` can be further pruned now that alignment is handled by `layout: default`.
+## Suggested Next Step
+1. In post editor, set each layout (`standard`, `image`, `short`) on sample posts.
+2. Verify hero height cap behavior for `image` variant.
+3. Commit/push if visual QA passes.
+
+## Continuity Prompt
+- Start next session with: `read /home/vladimir/wp/themes/industriesalon/handoff_CURRENT.md`.
