@@ -1,0 +1,76 @@
+.iss-register-image-group {
+  margin-bottom: 8px;
+}
+
+.iss-register-image-group__rows {
+  display: grid;
+  gap: 10px;
+}
+
+.iss-register-image-row {
+  border: 1px solid #dcdcde;
+  border-radius: 6px;
+  padding: 10px;
+  background: #fff;
+}
+
+.iss-register-image-row__top {
+  display: flex;
+  gap: 12px;
+  margin-bottom: 10px;
+}
+
+.iss-register-image-row__preview {
+  width: 120px;
+  height: 120px;
+  border: 1px solid #dcdcde;
+  border-radius: 4px;
+  background: #f6f7f7;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  flex-shrink: 0;
+}
+
+.iss-register-image-row__preview img {
+  max-width: 100%;
+  max-height: 100%;
+  display: block;
+}
+
+.iss-register-image-row__controls {
+  flex: 1;
+  display: grid;
+  gap: 8px;
+}
+
+.iss-register-image-row__controls label {
+  display: grid;
+  gap: 4px;
+  font-size: 12px;
+}
+
+.iss-register-image-row__fields {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(220px, 1fr));
+  gap: 10px;
+}
+
+.iss-register-image-row__fields label {
+  display: grid;
+  gap: 4px;
+  font-size: 12px;
+}
+
+.iss-image-featured-wrap {
+  align-items: center;
+  align-self: end;
+  display: flex !important;
+  gap: 8px;
+}
+
+.iss-register-image-group__empty {
+  color: #646970;
+  margin: 0 0 10px;
+}

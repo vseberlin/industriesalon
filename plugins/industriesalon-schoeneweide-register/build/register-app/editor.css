@@ -1,0 +1,10 @@
+.iss-register-editor-preview {
+  border: 1px solid #d6d6d6;
+  border-radius: 8px;
+  padding: 16px;
+  background: #ffffff;
+}
+
+.iss-register-editor-preview p {
+  margin: 8px 0 0;
+}

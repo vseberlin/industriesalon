@@ -16,6 +16,8 @@
 !/plugins/industriesalon-notices/**
 !/plugins/industriesalon-steuerung/
 !/plugins/industriesalon-steuerung/**
+!/plugins/industriesalon-schoeneweide-register/
+!/plugins/industriesalon-schoeneweide-register/**
 !/plugins/iss-calendar/
 !/plugins/iss-calendar/**
 !/plugins/iss-fuehrungen/

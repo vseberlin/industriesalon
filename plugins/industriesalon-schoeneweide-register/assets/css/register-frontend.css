@@ -1,0 +1,1297 @@
+/* =====================================================================
+   Schöneweide Register frontend
+   Scoped visual layer for the server-rendered dynamic block.
+   ===================================================================== */
+
+.iss-register {
+  --iss-register-bg: transparent;
+  --iss-register-surface: var(--iss-white, #f9f9fa);
+  --iss-register-paper: #fff;
+  --iss-register-soft: color-mix(in srgb, var(--iss-grey, #c0b8b5) 13%, #fff);
+  --iss-register-soft-2: color-mix(in srgb, var(--iss-grey, #c0b8b5) 22%, #fff);
+  --iss-register-text: var(--iss-black, #1e1e1e);
+  --iss-register-muted: rgba(30, 30, 30, 0.68);
+  --iss-register-faint: rgba(30, 30, 30, 0.08);
+  --iss-register-border: var(--iss-border, rgba(30, 30, 30, 0.14));
+  --iss-register-accent: var(--iss-red, #e81d25);
+  --iss-register-green: var(--iss-green, #579e7d);
+  --iss-register-blue: var(--iss-blue, #869fba);
+  --iss-register-yellow: var(--iss-yellow, #ebbc1e);
+  --iss-register-brown: var(--iss-brown, #753a18);
+  --iss-register-radius-sm: var(--iss-radius-sm, 8px);
+  --iss-register-radius: var(--iss-radius-md, 16px);
+  --iss-register-radius-lg: var(--iss-radius-lg, 24px);
+  --iss-register-shadow: 0 12px 34px rgba(30, 30, 30, 0.07);
+  --iss-register-shadow-soft: 0 7px 22px rgba(30, 30, 30, 0.045);
+  --iss-register-gap: clamp(1rem, 1.6vw, 1.5rem);
+
+  width: 100%;
+  color: var(--iss-register-text);
+  font-family: "IBM Plex Sans", system-ui, sans-serif;
+  line-height: 1.55;
+}
+
+.iss-register *,
+.iss-register *::before,
+.iss-register *::after {
+  box-sizing: border-box;
+}
+
+.iss-register a,
+.iss-register .iss-register-link {
+  color: var(--iss-register-text);
+  text-decoration-color: rgba(232, 29, 37, 0.45);
+  text-decoration-thickness: 1px;
+  text-underline-offset: 0.16em;
+}
+
+.iss-register a:hover,
+.iss-register .iss-register-link:hover {
+  color: var(--iss-register-accent);
+}
+
+.iss-register__app {
+  display: block;
+  width: 100%;
+  background: var(--iss-register-bg);
+}
+
+/* ---------------------------------------------------------------------
+   Hero
+   --------------------------------------------------------------------- */
+
+.iss-register-hero {
+  position: relative;
+  display: grid;
+  grid-template-columns: minmax(0, 1.45fr) minmax(18rem, 0.75fr);
+  gap: clamp(1rem, 2vw, 2rem);
+  align-items: end;
+  margin-bottom: clamp(1rem, 1.8vw, 1.4rem);
+  padding: clamp(1.35rem, 2.5vw, 2.35rem);
+  overflow: hidden;
+  border: 1px solid rgba(30, 30, 30, 0.08);
+  border-radius: var(--iss-register-radius-lg);
+  background:
+    linear-gradient(115deg, rgba(255, 255, 255, 0.96) 0%, rgba(255, 255, 255, 0.86) 48%, rgba(192, 184, 181, 0.16) 100%),
+    radial-gradient(circle at 88% 8%, rgba(134, 159, 186, 0.18) 0, transparent 36%);
+  box-shadow: var(--iss-register-shadow-soft);
+}
+
+.iss-register-hero::before {
+  content: "";
+  position: absolute;
+  inset: auto auto 0 0;
+  width: min(34rem, 54%);
+  height: 3px;
+  background: linear-gradient(90deg, var(--iss-register-accent), rgba(232, 29, 37, 0));
+  opacity: 0.85;
+}
+
+.iss-register-hero__copy {
+  position: relative;
+  max-width: 60rem;
+}
+
+.iss-register-hero__kicker {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.55rem;
+  margin: 0 0 0.85rem;
+  padding-left: 0.85rem;
+  border-left: 3px solid var(--iss-register-accent);
+  color: var(--iss-register-muted);
+  font-size: 0.74rem;
+  font-weight: 700;
+  line-height: 1;
+  letter-spacing: 0.13em;
+  text-transform: uppercase;
+}
+
+.iss-register-hero__kicker::before {
+  content: "";
+  width: 0.38rem;
+  height: 0.38rem;
+  border-radius: 50%;
+  background: var(--iss-register-accent);
+}
+
+.iss-register-hero__title {
+  max-width: 15ch;
+  margin: 0;
+  font-size: clamp(2rem, 4vw, 4rem);
+  font-weight: 700;
+  line-height: 0.98;
+  letter-spacing: -0.035em;
+  text-wrap: balance;
+}
+
+.iss-register-hero__text {
+  max-width: 42rem;
+  margin: 1rem 0 0;
+  color: var(--iss-register-muted);
+  font-size: clamp(1rem, 0.9rem + 0.35vw, 1.18rem);
+  line-height: 1.58;
+}
+
+.iss-register-hero__stats {
+  position: relative;
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.7rem;
+}
+
+.iss-register-kpi {
+  min-height: 6.25rem;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  border: 1px solid rgba(30, 30, 30, 0.09);
+  border-radius: var(--iss-register-radius);
+  background: rgba(255, 255, 255, 0.72);
+  padding: 0.95rem;
+  box-shadow: 0 6px 20px rgba(30, 30, 30, 0.04);
+}
+
+.iss-register-kpi__value {
+  display: block;
+  color: var(--iss-register-text);
+  font-size: clamp(1.45rem, 2.4vw, 2.15rem);
+  font-weight: 700;
+  line-height: 1;
+  letter-spacing: -0.02em;
+}
+
+.iss-register-kpi__label {
+  display: block;
+  margin-top: 0.45rem;
+  color: var(--iss-register-muted);
+  font-size: 0.78rem;
+  font-weight: 600;
+  line-height: 1.25;
+}
+
+/* ---------------------------------------------------------------------
+   Tabs and controls
+   --------------------------------------------------------------------- */
+
+.iss-register-tabs {
+  position: sticky;
+  top: clamp(0.5rem, 1vw, 1rem);
+  z-index: 20;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.45rem;
+  align-items: center;
+  margin: 0 0 clamp(1rem, 1.8vw, 1.4rem);
+  padding: 0.45rem;
+  border: 1px solid rgba(30, 30, 30, 0.08);
+  border-radius: var(--iss-register-radius-lg);
+  background: rgba(249, 249, 250, 0.9);
+  box-shadow: 0 10px 28px rgba(30, 30, 30, 0.055);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+}
+
+.iss-register-tab,
+.iss-register-feedback-trigger,
+.iss-register-button,
+.iss-register-inline-link-button {
+  appearance: none;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.42rem;
+  min-height: 2.5rem;
+  border: 1px solid rgba(30, 30, 30, 0.12);
+  border-radius: 999px;
+  background: #fff;
+  color: var(--iss-register-text);
+  padding: 0.55rem 0.95rem;
+  font: inherit;
+  font-size: 0.9rem;
+  font-weight: 600;
+  line-height: 1;
+  cursor: pointer;
+  text-decoration: none;
+  transition:
+    transform 0.18s ease,
+    border-color 0.18s ease,
+    background-color 0.18s ease,
+    color 0.18s ease,
+    box-shadow 0.18s ease;
+}
+
+.iss-register-tab:hover,
+.iss-register-feedback-trigger:hover,
+.iss-register-button:hover,
+.iss-register-inline-link-button:hover,
+.iss-register-tab:focus-visible,
+.iss-register-feedback-trigger:focus-visible,
+.iss-register-button:focus-visible,
+.iss-register-inline-link-button:focus-visible {
+  border-color: rgba(30, 30, 30, 0.24);
+  transform: translateY(-1px);
+  box-shadow: 0 6px 16px rgba(30, 30, 30, 0.08);
+  outline: none;
+}
+
+.iss-register-tab.is-active {
+  border-color: rgba(30, 30, 30, 0.2);
+  background: var(--iss-register-text);
+  color: #fff;
+}
+
+.iss-register-feedback-trigger {
+  margin-left: auto;
+  border-color: rgba(232, 29, 37, 0.22);
+  color: var(--iss-register-text);
+}
+
+.iss-register-button {
+  border-color: var(--iss-register-text);
+  background: var(--iss-register-text);
+  color: #fff;
+}
+
+.iss-register-button--ghost {
+  border-color: rgba(30, 30, 30, 0.13);
+  background: #fff;
+  color: var(--iss-register-text);
+}
+
+.iss-register-inline-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  margin-top: 0.8rem;
+  color: var(--iss-register-text);
+  font-size: 0.9rem;
+  font-weight: 650;
+  text-decoration: none;
+}
+
+.iss-register-inline-link::after {
+  content: "→";
+  color: var(--iss-register-accent);
+  transition: transform 0.18s ease;
+}
+
+.iss-register-featured-card:hover .iss-register-inline-link::after,
+.iss-register-place-card:hover .iss-register-inline-link::after,
+.iss-register-then-now-card:hover .iss-register-inline-link::after {
+  transform: translateX(2px);
+}
+
+.iss-register-inline-link-button {
+  min-height: 2rem;
+  padding: 0.4rem 0.7rem;
+  font-size: 0.8rem;
+}
+
+/* ---------------------------------------------------------------------
+   Panels
+   --------------------------------------------------------------------- */
+
+.iss-register-panels {
+  margin-top: 0;
+}
+
+.iss-register-panel {
+  display: none;
+  padding: clamp(1.15rem, 2vw, 1.8rem);
+  border: 1px solid rgba(30, 30, 30, 0.08);
+  border-radius: var(--iss-register-radius-lg);
+  background: rgba(255, 255, 255, 0.72);
+  box-shadow: var(--iss-register-shadow-soft);
+}
+
+.iss-register-panel.is-active {
+  display: block;
+}
+
+.iss-register-panel__header {
+  position: relative;
+  max-width: 48rem;
+  margin: 0 0 clamp(1rem, 1.8vw, 1.5rem);
+  padding-left: 1rem;
+  border-left: 3px solid rgba(232, 29, 37, 0.82);
+}
+
+.iss-register-panel__header h3 {
+  margin: 0;
+  font-size: clamp(1.5rem, 2.2vw, 2.4rem);
+  font-weight: 700;
+  line-height: 1.08;
+  letter-spacing: -0.025em;
+}
+
+.iss-register-panel__header p {
+  margin: 0.55rem 0 0;
+  color: var(--iss-register-muted);
+  font-size: 1rem;
+  line-height: 1.58;
+}
+
+/* ---------------------------------------------------------------------
+   Badges and status
+   --------------------------------------------------------------------- */
+
+.iss-register-badge {
+  --badge-bg: var(--iss-register-soft);
+  --badge-line: rgba(30, 30, 30, 0.12);
+  display: inline-flex;
+  align-items: center;
+  gap: 0.38rem;
+  width: max-content;
+  border: 1px solid var(--badge-line);
+  border-radius: 999px;
+  padding: 0.26rem 0.62rem;
+  background: var(--badge-bg);
+  color: rgba(30, 30, 30, 0.78);
+  font-size: 0.72rem;
+  font-weight: 700;
+  line-height: 1;
+  letter-spacing: 0.02em;
+}
+
+.iss-register-badge::before {
+  content: "";
+  width: 0.45rem;
+  height: 0.45rem;
+  border-radius: 50%;
+  background: rgba(30, 30, 30, 0.34);
+}
+
+.iss-register-badge--aktiv {
+  --badge-bg: color-mix(in srgb, var(--iss-register-green) 16%, #fff);
+  --badge-line: color-mix(in srgb, var(--iss-register-green) 36%, #fff);
+}
+.iss-register-badge--aktiv::before { background: var(--iss-register-green); }
+
+.iss-register-badge--entwicklung {
+  --badge-bg: color-mix(in srgb, var(--iss-register-blue) 18%, #fff);
+  --badge-line: color-mix(in srgb, var(--iss-register-blue) 38%, #fff);
+}
+.iss-register-badge--entwicklung::before { background: var(--iss-register-blue); }
+
+.iss-register-badge--geplant {
+  --badge-bg: color-mix(in srgb, var(--iss-register-yellow) 18%, #fff);
+  --badge-line: color-mix(in srgb, var(--iss-register-yellow) 42%, #fff);
+}
+.iss-register-badge--geplant::before { background: var(--iss-register-yellow); }
+
+.iss-register-badge--unklar {
+  --badge-bg: color-mix(in srgb, var(--iss-register-grey, #c0b8b5) 26%, #fff);
+  --badge-line: rgba(30, 30, 30, 0.16);
+}
+.iss-register-badge--unklar::before { background: var(--iss-register-accent); opacity: 0.75; }
+
+.iss-register-badge--abzug,
+.iss-register-badge--sucht,
+.iss-register-badge--mieter,
+.iss-register-badge--neutral {
+  --badge-bg: var(--iss-register-soft);
+  --badge-line: rgba(30, 30, 30, 0.12);
+}
+
+.iss-register-empty {
+  margin: 0;
+  border: 1px dashed rgba(30, 30, 30, 0.17);
+  border-radius: var(--iss-register-radius);
+  padding: 1rem;
+  background: rgba(255, 255, 255, 0.55);
+  color: var(--iss-register-muted);
+  font-size: 0.92rem;
+}
+
+/* ---------------------------------------------------------------------
+   Discover
+   --------------------------------------------------------------------- */
+
+.iss-register-discover-featured,
+.iss-register-discover-map-wrap,
+.iss-register-discover-list-wrap,
+.iss-register-discover-stats {
+  margin-top: clamp(1.1rem, 2vw, 1.75rem);
+}
+
+.iss-register-discover-map-wrap > h4,
+.iss-register-discover-list-wrap > h4 {
+  margin: 0 0 0.75rem;
+  color: var(--iss-register-text);
+  font-size: 1rem;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+}
+
+.iss-register-featured-grid,
+.iss-register-places-grid,
+.iss-register-then-now-grid {
+  display: grid;
+  gap: var(--iss-register-gap);
+}
+
+.iss-register-featured-grid {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+.iss-register-places-grid {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+.iss-register-then-now-grid {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.iss-register-featured-card,
+.iss-register-place-card,
+.iss-register-then-now-card {
+  position: relative;
+  height: 100%;
+  overflow: hidden;
+  border: 1px solid rgba(30, 30, 30, 0.09);
+  border-radius: var(--iss-register-radius);
+  background: #fff;
+  box-shadow: 0 8px 24px rgba(30, 30, 30, 0.045);
+  transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease;
+}
+
+.iss-register-featured-card::before,
+.iss-register-place-card::before,
+.iss-register-then-now-card::before {
+  content: "";
+  position: absolute;
+  inset: 0 auto 0 0;
+  width: 4px;
+  background: rgba(232, 29, 37, 0.82);
+  z-index: 2;
+}
+
+.iss-register-featured-card:hover,
+.iss-register-place-card:hover,
+.iss-register-then-now-card:hover,
+.iss-register-featured-card:focus-within,
+.iss-register-place-card:focus-within,
+.iss-register-then-now-card:focus-within {
+  transform: translateY(-2px);
+  border-color: rgba(30, 30, 30, 0.18);
+  box-shadow: 0 16px 42px rgba(30, 30, 30, 0.09);
+}
+
+.iss-register-featured-card__button,
+.iss-register-place-card__button,
+.iss-register-then-now-card__button {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  border: 0;
+  padding: 0;
+  margin: 0;
+  background: transparent;
+  color: inherit;
+  text-align: left;
+  cursor: pointer;
+  font: inherit;
+}
+
+.iss-register-place-card__button.is-active {
+  box-shadow: 0 0 0 2px rgba(30, 30, 30, 0.14) inset;
+}
+
+.iss-register-featured-card__body,
+.iss-register-place-card__body,
+.iss-register-then-now-card__body {
+  display: flex;
+  flex: 1 1 auto;
+  flex-direction: column;
+  padding: 1rem 1rem 1.1rem;
+}
+
+.iss-register-featured-card__title,
+.iss-register-place-card__title,
+.iss-register-then-now-card__title {
+  margin: 0;
+  color: var(--iss-register-text);
+  font-size: clamp(1.05rem, 0.95rem + 0.35vw, 1.28rem);
+  font-weight: 700;
+  line-height: 1.16;
+  letter-spacing: -0.012em;
+}
+
+.iss-register-featured-card__meta,
+.iss-register-place-card__meta {
+  order: -1;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+  margin: 0 0 0.75rem;
+  color: var(--iss-register-muted);
+  font-size: 0.82rem;
+}
+
+.iss-register-featured-card__text,
+.iss-register-place-card__text,
+.iss-register-then-now-card__text {
+  margin: 0.65rem 0 0;
+  color: var(--iss-register-muted);
+  font-size: 0.93rem;
+  line-height: 1.52;
+}
+
+.iss-register-featured-card__media,
+.iss-register-place-card__media,
+.iss-register-then-now-card__media,
+.iss-register-detail-hero,
+.iss-register-detail-media {
+  position: relative;
+  background:
+    linear-gradient(135deg, rgba(192, 184, 181, 0.18), rgba(255, 255, 255, 0.8));
+}
+
+.iss-register-featured-card__media img,
+.iss-register-place-card__media img,
+.iss-register-then-now-card__media img,
+.iss-register-detail-hero img,
+.iss-register-detail-media img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.iss-register-featured-card__media,
+.iss-register-place-card__media {
+  min-height: 13rem;
+  aspect-ratio: 16 / 10;
+}
+
+.iss-register-featured-card__media--empty,
+.iss-register-place-card__media--empty,
+.iss-register-then-now-card__media--empty,
+.iss-register-detail-hero__empty,
+.iss-register-detail-media__empty {
+  min-height: 8.5rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1rem;
+  color: rgba(30, 30, 30, 0.55);
+  font-size: 0.88rem;
+  text-align: center;
+}
+
+.iss-register-discover-list {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.6rem;
+}
+
+.iss-register-quick-link {
+  width: 100%;
+  min-height: 4.25rem;
+  border: 1px solid rgba(30, 30, 30, 0.09);
+  border-radius: var(--iss-register-radius);
+  background: #fff;
+  text-align: left;
+  padding: 0.75rem 0.85rem;
+  cursor: pointer;
+  transition: border-color 0.18s ease, background-color 0.18s ease, transform 0.18s ease;
+}
+
+.iss-register-quick-link:hover,
+.iss-register-quick-link:focus-visible {
+  border-color: rgba(30, 30, 30, 0.2);
+  background: var(--iss-register-soft);
+  transform: translateY(-1px);
+  outline: none;
+}
+
+.iss-register-quick-link strong {
+  display: block;
+  font-size: 0.95rem;
+  line-height: 1.25;
+}
+
+.iss-register-quick-link span {
+  display: block;
+  margin-top: 0.28rem;
+  color: var(--iss-register-muted);
+  font-size: 0.82rem;
+}
+
+/* ---------------------------------------------------------------------
+   Map placeholder / schematic map
+   --------------------------------------------------------------------- */
+
+.iss-register-map {
+  display: grid;
+  grid-template-columns: minmax(0, 1.3fr) minmax(16rem, 0.7fr);
+  gap: var(--iss-register-gap);
+  border: 1px solid rgba(30, 30, 30, 0.08);
+  border-radius: var(--iss-register-radius-lg);
+  background: var(--iss-register-soft);
+  padding: clamp(0.9rem, 1.5vw, 1.2rem);
+}
+
+.iss-register-map-canvas {
+  position: relative;
+  min-height: 21rem;
+  overflow: hidden;
+  border: 1px solid rgba(30, 30, 30, 0.08);
+  border-radius: var(--iss-register-radius);
+  background:
+    linear-gradient(90deg, rgba(30, 30, 30, 0.045) 1px, transparent 1px),
+    linear-gradient(180deg, rgba(30, 30, 30, 0.045) 1px, transparent 1px),
+    radial-gradient(circle at 18% 24%, rgba(87, 158, 125, 0.14) 0, transparent 30%),
+    radial-gradient(circle at 72% 72%, rgba(134, 159, 186, 0.18) 0, transparent 34%),
+    linear-gradient(180deg, #fff 0%, rgba(249, 249, 250, 0.8) 100%);
+  background-size: 42px 42px, 42px 42px, auto, auto, auto;
+}
+
+.iss-register-map-canvas::before,
+.iss-register-map-canvas::after {
+  content: "";
+  position: absolute;
+  pointer-events: none;
+}
+
+.iss-register-map-canvas::before {
+  inset: 14% 7%;
+  border-top: 2px solid rgba(117, 58, 24, 0.16);
+  border-bottom: 1px solid rgba(117, 58, 24, 0.12);
+  transform: rotate(-9deg);
+}
+
+.iss-register-map-canvas::after {
+  inset: 0;
+  background: linear-gradient(90deg, rgba(255,255,255,0.92) 0%, transparent 14%, transparent 84%, rgba(255,255,255,0.72) 100%);
+}
+
+.iss-register-map-marker {
+  position: absolute;
+  left: var(--x);
+  top: var(--y);
+  z-index: 2;
+  transform: translate(-50%, -50%);
+  width: 1.55rem;
+  height: 1.55rem;
+  border: 0;
+  border-radius: 999px;
+  background: transparent;
+  cursor: pointer;
+}
+
+.iss-register-map-marker__dot {
+  display: block;
+  width: 100%;
+  height: 100%;
+  border: 2px solid #fff;
+  border-radius: 999px;
+  background: var(--iss-register-text);
+  box-shadow: 0 2px 8px rgba(30, 30, 30, 0.23), 0 0 0 5px rgba(30, 30, 30, 0.06);
+  transition: transform 0.18s ease, background-color 0.18s ease;
+}
+
+.iss-register-map-marker:hover .iss-register-map-marker__dot,
+.iss-register-map-marker:focus-visible .iss-register-map-marker__dot {
+  transform: scale(1.16);
+  background: var(--iss-register-accent);
+}
+
+.iss-register-map-list {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  display: grid;
+  align-content: start;
+  gap: 0.45rem;
+  max-height: 21rem;
+  overflow: auto;
+}
+
+.iss-register-map-list__button {
+  width: 100%;
+  border: 1px solid rgba(30, 30, 30, 0.09);
+  border-radius: 0.75rem;
+  background: rgba(255, 255, 255, 0.78);
+  text-align: left;
+  padding: 0.55rem 0.7rem;
+  color: var(--iss-register-text);
+  font: inherit;
+  font-size: 0.85rem;
+  cursor: pointer;
+}
+
+.iss-register-map-list__button:hover,
+.iss-register-map-list__button:focus-visible {
+  border-color: rgba(30, 30, 30, 0.2);
+  background: #fff;
+  outline: none;
+}
+
+.iss-register-discover-stats,
+.iss-register-research-stats {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 0.7rem;
+}
+
+.iss-register-discover-stat,
+.iss-register-research-stats span {
+  border: 1px solid rgba(30, 30, 30, 0.08);
+  border-radius: var(--iss-register-radius);
+  background: var(--iss-register-soft);
+  padding: 0.9rem;
+  font-size: 0.88rem;
+}
+
+.iss-register-discover-stat h4 {
+  margin: 0;
+  color: var(--iss-register-muted);
+  font-size: 0.78rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+}
+
+.iss-register-discover-stat p {
+  margin: 0.35rem 0 0;
+  font-size: 1.35rem;
+  font-weight: 700;
+  line-height: 1;
+}
+
+/* ---------------------------------------------------------------------
+   Forms / filters
+   --------------------------------------------------------------------- */
+
+.iss-register-filterbar {
+  display: grid;
+  grid-template-columns: minmax(14rem, 1.6fr) minmax(10rem, 1fr) minmax(10rem, 1fr);
+  gap: 0.75rem;
+  padding: 0.85rem;
+  border: 1px solid rgba(30, 30, 30, 0.08);
+  border-radius: var(--iss-register-radius);
+  background: var(--iss-register-soft);
+}
+
+.iss-register-filterbar--advanced,
+.iss-register-filterbar--research {
+  margin-top: 0.75rem;
+}
+
+.iss-register-filterbar--research {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+.iss-register-field {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+}
+
+.iss-register-field span {
+  color: var(--iss-register-muted);
+  font-size: 0.76rem;
+  font-weight: 700;
+  line-height: 1;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.iss-register-field input,
+.iss-register-field select,
+.iss-register-field textarea {
+  width: 100%;
+  border: 1px solid rgba(30, 30, 30, 0.12);
+  border-radius: 0.8rem;
+  background: #fff;
+  color: var(--iss-register-text);
+  padding: 0.68rem 0.75rem;
+  font: inherit;
+  font-size: 0.95rem;
+  line-height: 1.3;
+  box-shadow: 0 1px 0 rgba(30, 30, 30, 0.03);
+}
+
+.iss-register-field input:focus,
+.iss-register-field select:focus,
+.iss-register-field textarea:focus {
+  border-color: rgba(30, 30, 30, 0.34);
+  outline: 2px solid rgba(232, 29, 37, 0.1);
+  outline-offset: 2px;
+}
+
+.iss-register-advanced-filters {
+  margin-top: 0.9rem;
+}
+
+.iss-register-advanced-filters summary {
+  width: max-content;
+  cursor: pointer;
+  color: var(--iss-register-text);
+  font-size: 0.9rem;
+  font-weight: 650;
+}
+
+.iss-register-advanced-filters summary:hover {
+  color: var(--iss-register-accent);
+}
+
+.iss-register-places-meta {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  margin: 0.85rem 0;
+  color: var(--iss-register-muted);
+  font-size: 0.88rem;
+}
+
+/* ---------------------------------------------------------------------
+   Then / Now
+   --------------------------------------------------------------------- */
+
+.iss-register-then-now-card__media-grid,
+.iss-register-detail-then-now {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0;
+  background: var(--iss-register-soft);
+}
+
+.iss-register-then-now-card__media {
+  min-height: 12rem;
+  aspect-ratio: 4 / 3;
+  border-right: 1px solid rgba(30, 30, 30, 0.08);
+}
+
+.iss-register-then-now-card__media:last-child {
+  border-right: 0;
+}
+
+.iss-register-then-now-card__media::after,
+.iss-register-detail-media::after {
+  position: absolute;
+  top: 0.65rem;
+  left: 0.65rem;
+  padding: 0.22rem 0.45rem;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.82);
+  color: rgba(30, 30, 30, 0.74);
+  font-size: 0.68rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.iss-register-then-now-card__media-grid .iss-register-then-now-card__media:first-child::after {
+  content: "Damals";
+}
+
+.iss-register-then-now-card__media-grid .iss-register-then-now-card__media:last-child::after {
+  content: "Heute";
+}
+
+/* ---------------------------------------------------------------------
+   Research
+   --------------------------------------------------------------------- */
+
+.iss-register-research-actions {
+  margin-top: 1rem;
+  display: flex;
+  align-items: center;
+  gap: 0.65rem;
+  flex-wrap: wrap;
+}
+
+.iss-register-research-summary {
+  margin-top: 0.9rem;
+  color: var(--iss-register-muted);
+}
+
+.iss-register-research-sources {
+  margin-top: 1rem;
+  border: 1px solid rgba(30, 30, 30, 0.08);
+  border-radius: var(--iss-register-radius);
+  background: var(--iss-register-soft);
+  padding: 1rem;
+}
+
+.iss-register-research-sources h4 {
+  margin: 0 0 0.65rem;
+  font-size: 1rem;
+}
+
+.iss-register-research-sources ul {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  display: grid;
+  gap: 0.45rem;
+}
+
+.iss-register-research-sources li {
+  display: flex;
+  justify-content: space-between;
+  gap: 0.7rem;
+  border: 1px solid rgba(30, 30, 30, 0.08);
+  border-radius: 0.75rem;
+  background: #fff;
+  padding: 0.55rem 0.65rem;
+  font-size: 0.86rem;
+}
+
+.iss-register-research-results {
+  margin-top: 1rem;
+  overflow-x: auto;
+  border: 1px solid rgba(30, 30, 30, 0.08);
+  border-radius: var(--iss-register-radius);
+  background: #fff;
+}
+
+.iss-register-research-table {
+  width: 100%;
+  border-collapse: collapse;
+  min-width: 760px;
+}
+
+.iss-register-research-table th,
+.iss-register-research-table td {
+  border-bottom: 1px solid rgba(30, 30, 30, 0.08);
+  padding: 0.72rem 0.8rem;
+  text-align: left;
+  vertical-align: top;
+  font-size: 0.86rem;
+}
+
+.iss-register-research-table th {
+  background: var(--iss-register-soft);
+  color: rgba(30, 30, 30, 0.74);
+  font-size: 0.75rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+/* ---------------------------------------------------------------------
+   Detail panel
+   --------------------------------------------------------------------- */
+
+.iss-register-detail-header {
+  max-width: none;
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
+.iss-register-detail-header__meta {
+  margin: 0.55rem 0 0;
+  color: var(--iss-register-muted);
+}
+
+.iss-register-detail-hero {
+  margin: 0;
+  overflow: hidden;
+  min-height: 22rem;
+  border: 1px solid rgba(30, 30, 30, 0.08);
+  border-radius: var(--iss-register-radius-lg);
+  box-shadow: var(--iss-register-shadow-soft);
+}
+
+.iss-register-detail-hero figcaption {
+  margin: 0;
+  padding: 0.9rem 1rem;
+  border-top: 1px solid rgba(30, 30, 30, 0.08);
+  background: #fff;
+  color: var(--iss-register-muted);
+}
+
+.iss-register-detail-facts {
+  margin-top: 1rem;
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  flex-wrap: wrap;
+}
+
+.iss-register-detail-meta__item {
+  border: 1px solid rgba(30, 30, 30, 0.1);
+  border-radius: 999px;
+  padding: 0.32rem 0.68rem;
+  background: var(--iss-register-soft);
+  color: var(--iss-register-muted);
+  font-size: 0.8rem;
+  font-weight: 650;
+}
+
+.iss-register-detail-grid {
+  margin-top: 1rem;
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 0.8rem;
+}
+
+.iss-register-detail-card,
+.iss-register-detail-media,
+.iss-register-detail-section,
+.iss-register-detail-sources {
+  border: 1px solid rgba(30, 30, 30, 0.08);
+  border-radius: var(--iss-register-radius);
+  background: #fff;
+  padding: 1rem;
+  box-shadow: 0 5px 18px rgba(30, 30, 30, 0.035);
+}
+
+.iss-register-detail-card h4,
+.iss-register-detail-media h4,
+.iss-register-detail-section h4 {
+  margin: 0;
+  color: var(--iss-register-muted);
+  font-size: 0.78rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.iss-register-detail-card p,
+.iss-register-detail-media p,
+.iss-register-detail-section p {
+  margin: 0.5rem 0 0;
+}
+
+.iss-register-detail-then-now {
+  margin-top: 1rem;
+  gap: 0.8rem;
+  background: transparent;
+}
+
+.iss-register-detail-media {
+  overflow: hidden;
+}
+
+.iss-register-detail-media img {
+  margin-top: 0.7rem;
+  border-radius: 0.75rem;
+  min-height: 13rem;
+  max-height: 22rem;
+}
+
+.iss-register-detail-section {
+  margin-top: 1rem;
+}
+
+.iss-register-detail-questions {
+  margin: 0.55rem 0 0;
+  padding-left: 1.1rem;
+}
+
+.iss-register-detail-sources {
+  margin-top: 1rem;
+}
+
+.iss-register-detail-sources summary {
+  cursor: pointer;
+  font-weight: 700;
+}
+
+.iss-register-detail-sources ul {
+  margin: 0.65rem 0 0;
+  padding-left: 1.1rem;
+}
+
+.iss-register-detail-feedback {
+  margin-top: 1rem;
+  display: flex;
+  gap: 0.55rem;
+  flex-wrap: wrap;
+}
+
+/* ---------------------------------------------------------------------
+   Feedback modal
+   --------------------------------------------------------------------- */
+
+.iss-register-feedback[hidden] {
+  display: none;
+}
+
+.iss-register-feedback {
+  position: fixed;
+  inset: 0;
+  z-index: 9999;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1rem;
+}
+
+.iss-register-feedback__backdrop {
+  position: absolute;
+  inset: 0;
+  background: rgba(30, 30, 30, 0.55);
+  backdrop-filter: blur(3px);
+  -webkit-backdrop-filter: blur(3px);
+}
+
+.iss-register-feedback__dialog {
+  position: relative;
+  z-index: 1;
+  width: min(760px, 100%);
+  max-height: calc(100vh - 2rem);
+  overflow-y: auto;
+  border: 1px solid rgba(30, 30, 30, 0.12);
+  border-radius: var(--iss-register-radius-lg);
+  background: #fff;
+  box-shadow: 0 24px 70px rgba(0, 0, 0, 0.24);
+  padding: clamp(1.1rem, 2vw, 1.6rem);
+}
+
+.iss-register-feedback__close {
+  position: absolute;
+  top: 0.75rem;
+  right: 0.75rem;
+  width: 2.2rem;
+  height: 2.2rem;
+  border: 1px solid rgba(30, 30, 30, 0.13);
+  border-radius: 999px;
+  background: #fff;
+  cursor: pointer;
+}
+
+.iss-register-feedback-form {
+  margin-top: 1rem;
+  display: grid;
+  gap: 0.8rem;
+}
+
+.iss-register-feedback-form__grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.8rem;
+}
+
+.iss-register-feedback-form__check {
+  display: flex;
+  gap: 0.55rem;
+  color: var(--iss-register-muted);
+  font-size: 0.86rem;
+}
+
+.iss-register-feedback-form__actions {
+  display: flex;
+  justify-content: flex-end;
+}
+
+.iss-register-feedback-form__status {
+  margin: 0;
+  min-height: 1.2rem;
+  font-size: 0.88rem;
+}
+
+/* ---------------------------------------------------------------------
+   Responsive
+   --------------------------------------------------------------------- */
+
+@media (max-width: 1200px) {
+  .iss-register-featured-grid,
+  .iss-register-places-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .iss-register-map {
+    grid-template-columns: 1fr;
+  }
+
+  .iss-register-map-list {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    max-height: none;
+  }
+}
+
+@media (max-width: 1080px) {
+  .iss-register-detail-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .iss-register-then-now-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 840px) {
+  .iss-register-hero {
+    grid-template-columns: 1fr;
+  }
+
+  .iss-register-hero__title {
+    max-width: none;
+  }
+
+  .iss-register-filterbar,
+  .iss-register-filterbar--research {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .iss-register-discover-stats,
+  .iss-register-research-stats {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 680px) {
+  .iss-register-hero,
+  .iss-register-panel {
+    border-radius: var(--iss-register-radius);
+  }
+
+  .iss-register-hero,
+  .iss-register-panel {
+    padding: 1rem;
+  }
+
+  .iss-register-tabs {
+    position: relative;
+    top: auto;
+    border-radius: var(--iss-register-radius);
+  }
+
+  .iss-register-tab,
+  .iss-register-feedback-trigger {
+    flex: 1 1 auto;
+  }
+
+  .iss-register-feedback-trigger {
+    margin-left: 0;
+  }
+
+  .iss-register-hero__stats,
+  .iss-register-featured-grid,
+  .iss-register-filterbar,
+  .iss-register-filterbar--research,
+  .iss-register-places-grid,
+  .iss-register-then-now-grid,
+  .iss-register-map-list,
+  .iss-register-feedback-form__grid,
+  .iss-register-detail-grid,
+  .iss-register-then-now-card__media-grid,
+  .iss-register-detail-then-now,
+  .iss-register-discover-list,
+  .iss-register-discover-stats,
+  .iss-register-research-stats {
+    grid-template-columns: 1fr;
+  }
+
+  .iss-register-then-now-card__media {
+    border-right: 0;
+    border-bottom: 1px solid rgba(30, 30, 30, 0.08);
+  }
+
+  .iss-register-then-now-card__media:last-child {
+    border-bottom: 0;
+  }
+}
