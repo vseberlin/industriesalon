@@ -38,7 +38,48 @@
                         </div>
                         <!-- /wp:group -->
 
-                        <!-- wp:navigation {"className":"iss-header-nav","overlayMenu":"never","layout":{"type":"flex","orientation":"vertical","justifyContent":"left","flexWrap":"nowrap"}} /-->
+                        <!-- wp:group {"className":"iss-supernav-wrap","layout":{"type":"default"}} -->
+                        <div class="wp-block-group iss-supernav-wrap">
+                                <div class="iss-supernav" role="tablist" aria-label="Menübereiche">
+                                        <button type="button" class="iss-supernav__button is-active" data-panel="nav" aria-selected="true">Navigation</button>
+                                        <button type="button" class="iss-supernav__button" data-panel="calendar" aria-selected="false">Kalender</button>
+                                        <button type="button" class="iss-supernav__button" data-panel="info" aria-selected="false">Info</button>
+                                        <button type="button" class="iss-supernav__button" data-panel="search" aria-selected="false">Suche</button>
+                                </div>
+                        </div>
+                        <!-- /wp:group -->
+
+                        <div class="iss-menu-panels">
+                                <div class="iss-menu-panel iss-menu-panel--nav is-visible" data-panel="nav">
+                                        <!-- wp:navigation {"className":"iss-header-nav","overlayMenu":"never","layout":{"type":"flex","orientation":"vertical","justifyContent":"left","flexWrap":"nowrap"}} /-->
+                                </div>
+
+                                <div class="iss-menu-panel iss-menu-panel--calendar" data-panel="calendar" hidden>
+                                        <p class="iss-menu-panel__title">Nächste Termine</p>
+                                        <ul class="iss-menu-panel__list">
+                                                <li><a href="/programm/">Gesamtes Programm ansehen</a></li>
+                                                <li><a href="/fuehrungen/">Führungen</a></li>
+                                                <li><a href="/aktuelles/">Aktuelles</a></li>
+                                        </ul>
+                                </div>
+
+                                <div class="iss-menu-panel iss-menu-panel--info" data-panel="info" hidden>
+                                        <p class="iss-menu-panel__title">Wichtige Infos</p>
+                                        <ul class="iss-menu-panel__list">
+                                                <li><a href="/kontakt/">Kontakt</a></li>
+                                                <li><a href="/ueber-uns/">Über uns</a></li>
+                                                <li><a href="/impressum/">Impressum</a></li>
+                                        </ul>
+                                </div>
+
+                                <div class="iss-menu-panel iss-menu-panel--search" data-panel="search" hidden>
+                                        <p class="iss-menu-panel__title">Suche</p>
+                                        <form role="search" method="get" class="iss-menu-search" action="/">
+                                                <label class="iss-menu-search__label" for="iss-menu-search-input">Suchbegriff</label>
+                                                <input id="iss-menu-search-input" class="iss-menu-search__input" type="search" name="s" placeholder="Suche" required />
+                                        </form>
+                                </div>
+                        </div>
                 </div>
                 <!-- /wp:group -->
         </div>

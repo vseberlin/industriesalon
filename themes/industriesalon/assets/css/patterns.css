@@ -281,7 +281,107 @@
 .iss-menu-shell__topbar {
   display: flex;
   justify-content: flex-end;
-  margin-bottom: 3rem;
+  margin-bottom: 1.25rem;
+}
+
+.iss-supernav-wrap {
+  margin-bottom: 1.5rem;
+}
+
+.iss-supernav {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+}
+
+.iss-supernav__button {
+  border: 1px solid rgba(255, 255, 255, 0.22);
+  background: transparent;
+  color: rgba(255, 255, 255, 0.8);
+  min-height: 40px;
+  padding: 0.45rem 0.85rem;
+  border-radius: var(--iss-radius-pill);
+  font-size: 0.82rem;
+  font-weight: 700;
+  letter-spacing: 0.03em;
+  text-transform: uppercase;
+  cursor: pointer;
+  transition: all var(--iss-transition);
+}
+
+.iss-supernav__button:hover,
+.iss-supernav__button.is-active {
+  background: var(--iss-red);
+  border-color: var(--iss-red);
+  color: var(--iss-white);
+}
+
+.iss-menu-panels {
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow-y: auto;
+  padding-right: 0.35rem;
+}
+
+.iss-menu-panel {
+  display: none;
+}
+
+.iss-menu-panel.is-visible {
+  display: block;
+}
+
+.iss-menu-panel__title {
+  margin: 0 0 1rem;
+  font-size: 1.1rem;
+  font-weight: 700;
+  color: var(--iss-white);
+}
+
+.iss-menu-panel__list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.iss-menu-panel__list li {
+  margin: 0 0 0.85rem;
+}
+
+.iss-menu-panel__list a {
+  color: var(--iss-white);
+  text-decoration: none;
+  font-size: 1.15rem;
+  font-weight: 600;
+}
+
+.iss-menu-panel__list a:hover {
+  color: var(--iss-red);
+}
+
+.iss-menu-search {
+  display: grid;
+  gap: 0.6rem;
+}
+
+.iss-menu-search__label {
+  font-size: 0.95rem;
+  font-weight: 600;
+}
+
+.iss-menu-search__input {
+  width: 100%;
+  min-height: 44px;
+  border: 1px solid rgba(255, 255, 255, 0.24);
+  background: rgba(255, 255, 255, 0.1);
+  color: var(--iss-white);
+  border-radius: 999px;
+  padding: 0.6rem 1rem;
+}
+
+.iss-menu-search__input::placeholder {
+  color: rgba(255, 255, 255, 0.7);
 }
 
 /* .iss-menu-shell__close: Element class for `iss-menu-shell`; apply on `close` element. */
