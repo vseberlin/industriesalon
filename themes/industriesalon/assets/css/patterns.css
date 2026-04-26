@@ -6023,315 +6023,7 @@ Raum / Vermietung → brown
     min-height: 260px;
   }
 }
-/* =========================================================
-   GROUP: SINGLE BLOG POST TEMPLATE
-   ========================================================= */
 
-.iss-post-page {
-  margin: 0;
-}
-
-.iss-post-hero {
-  padding-top: calc(var(--iss-header-height) + 3rem);
-  padding-bottom: 3rem;
-}
-
-.iss-post-hero__media {
-  min-height: clamp(22rem, 52vh, 42rem);
-  margin-bottom: clamp(2rem, 4vw, 4rem);
-}
-
-.iss-post-layout-standard .iss-post-hero__media {
-  width: auto;
-  max-width: 100%;
-  margin-left: 0;
-  transform: none;
-  height: auto;
-  max-height: none;
-}
-
-.iss-post-layout-image .iss-post-hero__media {
-  width: 100vw;
-  max-width: none;
-  margin-left: 50%;
-  transform: translateX(-50%);
-  margin-bottom: clamp(1.5rem, 3vw, 3rem);
-  min-height: clamp(18rem, 58vh, 44rem);
-  height: min(70vh, calc(100vh - var(--iss-header-height) - 2rem));
-  max-height: calc(100vh - var(--iss-header-height) - 2rem);
-}
-
-.iss-post-layout-short .iss-post-hero {
-  padding-top: calc(var(--iss-header-height) + 2rem);
-  padding-bottom: 1.5rem;
-}
-
-.iss-post-layout-short .iss-post-hero__media {
-  display: none;
-}
-
-.iss-post-layout-short .iss-post-hero__intro {
-  max-width: 48rem;
-}
-
-.iss-post-layout-short .iss-post-hero__title {
-  max-width: 16ch;
-  font-size: clamp(2rem, 4.2vw, 3.6rem);
-}
-
-.iss-post-layout-short .iss-post-main {
-  padding-top: 1.25rem;
-}
-
-.iss-post-hero__media > .wp-block-post-featured-image,
-.iss-post-hero__media > .wp-block-post-featured-image img {
-  width: 100%;
-  height: 100%;
-}
-
-.iss-post-hero__media > .wp-block-post-featured-image {
-  margin: 0;
-  overflow: hidden;
-}
-
-.iss-post-hero__media > .wp-block-post-featured-image img {
-  display: block;
-  max-width: none;
-  object-fit: cover;
-}
-
-.iss-post-hero__intro {
-  max-width: 54rem;
-}
-
-.iss-post-hero__title {
-  max-width: 13ch;
-  font-size: clamp(2.6rem, 5.5vw, 5rem);
-  line-height: 0.98;
-  text-wrap: balance;
-}
-
-.iss-post-hero__lede {
-  max-width: 44rem;
-  color: rgba(30, 30, 30, 0.72);
-  font-size: clamp(1rem, 1vw + 0.8rem, 1.2rem);
-}
-
-.iss-post-meta {
-  margin-top: 0.5rem;
-  color: rgba(30, 30, 30, 0.58);
-  font-size: 0.9rem;
-  font-weight: 600;
-  line-height: 1.45;
-}
-
-.iss-post-content {
-  --iss-post-wide: min(1280px, calc(100vw - (2 * var(--iss-container-pad))));
-  width: min(100% - (2 * var(--iss-container-pad)), 860px);
-  margin-left: auto;
-  margin-right: auto;
-}
-
-.iss-post-content > * {
-  max-width: 100%;
-}
-
-.iss-post-content > *:first-child {
-  margin-top: 0;
-}
-
-.iss-post-content > *:last-child {
-  margin-bottom: 0;
-}
-
-.iss-post-content .alignwide {
-  width: var(--iss-post-wide);
-  max-width: none;
-  margin-left: 50%;
-  transform: translateX(-50%);
-}
-
-.iss-post-content .alignfull {
-  width: 100vw;
-  max-width: none;
-  margin-left: 50%;
-  transform: translateX(-50%);
-}
-
-.iss-post-content p,
-.iss-post-content li {
-  font-size: clamp(1.02rem, 0.25vw + 1rem, 1.15rem);
-  line-height: 1.75;
-}
-
-.iss-post-content p {
-  margin-top: 0;
-  margin-bottom: 1.35em;
-}
-
-.iss-post-content ul,
-.iss-post-content ol {
-  padding-left: 1.25em;
-  margin-top: 1.25rem;
-  margin-bottom: 1.65rem;
-}
-
-.iss-post-content li + li {
-  margin-top: 0.45rem;
-}
-
-.iss-post-content h2,
-.iss-post-content h3,
-.iss-post-content h4 {
-  margin-top: 2.4em;
-  margin-bottom: 0.7em;
-  letter-spacing: -0.02em;
-}
-
-.iss-post-content h2 {
-  font-size: clamp(1.9rem, 2.4vw, 3rem);
-}
-
-.iss-post-content h3 {
-  font-size: clamp(1.45rem, 1.5vw, 2rem);
-}
-
-.iss-post-content h4 {
-  font-size: clamp(1.18rem, 1vw, 1.45rem);
-}
-
-.iss-post-content figure {
-  margin-top: clamp(2rem, 4vw, 3.5rem);
-  margin-bottom: clamp(2rem, 4vw, 3.5rem);
-}
-
-.iss-post-content img {
-  max-width: 100%;
-  height: auto;
-}
-
-.iss-post-content figure img {
-  display: block;
-  width: 100%;
-  border-radius: var(--iss-radius-md, 0);
-}
-
-.iss-post-content figcaption {
-  max-width: 68ch;
-  margin: 0.65rem 0 0;
-  color: rgba(30, 30, 30, 0.62);
-  font-size: 0.9rem;
-  line-height: 1.45;
-}
-
-.iss-post-content .alignleft,
-.iss-post-content img.alignleft {
-  float: left;
-  width: min(42%, 320px);
-  margin: 0.35rem 1.4rem 1rem 0;
-}
-
-.iss-post-content .alignright,
-.iss-post-content img.alignright {
-  float: right;
-  width: min(42%, 320px);
-  margin: 0.35rem 0 1rem 1.4rem;
-}
-
-.iss-post-content blockquote,
-.iss-post-content .wp-block-quote,
-.iss-post-content .wp-block-pullquote {
-  margin: clamp(2rem, 4vw, 3.5rem) 0;
-  padding: 1.25rem 0 1.25rem 1.25rem;
-  border-left: 4px solid var(--iss-red);
-  color: var(--iss-black);
-}
-
-.iss-post-content blockquote p,
-.iss-post-content .wp-block-quote p,
-.iss-post-content .wp-block-pullquote p {
-  margin: 0;
-  font-size: clamp(1.25rem, 1.2vw + 1rem, 1.8rem);
-  line-height: 1.42;
-  font-weight: 600;
-}
-
-.iss-post-content hr,
-.iss-post-content .wp-block-separator {
-  width: 100%;
-  margin: clamp(2.5rem, 5vw, 4rem) 0;
-  border: 0;
-  border-top: 1px solid var(--iss-border, rgba(30, 30, 30, 0.16));
-  background: none;
-}
-
-.iss-post-content table {
-  width: 100%;
-  border-collapse: collapse;
-  margin: 2rem 0;
-  font-size: 0.96rem;
-}
-
-.iss-post-content th,
-.iss-post-content td {
-  padding: 0.85rem 0;
-  border-bottom: 1px solid var(--iss-border, rgba(30, 30, 30, 0.16));
-  text-align: left;
-  vertical-align: top;
-}
-
-.iss-post-content th {
-  font-weight: 700;
-}
-
-.iss-post-related .iss-heading {
-  margin-bottom: clamp(1.5rem, 3vw, 2.5rem);
-}
-
-@media (max-width: 782px) {
-  .iss-post-hero {
-    padding-top: calc(var(--iss-header-height) + 1.5rem);
-  }
-
-  .iss-post-hero__media {
-    min-height: 18rem;
-  }
-
-  .iss-post-layout-image .iss-post-hero__media {
-    min-height: 16rem;
-    height: min(52vh, calc(100vh - var(--iss-header-height) - 1rem));
-    max-height: calc(100vh - var(--iss-header-height) - 1rem);
-  }
-
-  .iss-post-hero__title {
-    max-width: 11ch;
-  }
-
-  .iss-post-content {
-    width: min(calc(100% - (2 * var(--iss-container-pad))), 100%);
-  }
-
-  .iss-post-content p,
-  .iss-post-content li {
-    font-size: 1rem;
-    line-height: 1.7;
-  }
-
-  .iss-post-content .alignwide,
-  .iss-post-content .alignfull {
-    width: calc(100vw - (2 * var(--iss-container-pad)));
-  }
-
-  .iss-post-content .alignleft,
-  .iss-post-content .alignright,
-  .iss-post-content img.alignleft,
-  .iss-post-content img.alignright {
-    float: none;
-    display: block;
-    width: 100%;
-    margin: 1.5rem 0;
-  }
-}
 /* =========================================================
    TIMELINE – REFINED (mapped to plugin timeline markup)
    ========================================================= */
@@ -6452,25 +6144,128 @@ Raum / Vermietung → brown
   margin-top: clamp(1.5rem, 3vw, 2rem);
 }
 
+.iss-publications-query .wp-block-post-template {
+  margin-top: clamp(1.5rem, 3vw, 2rem);
+  margin-bottom: 0;
+  padding-left: 0;
+  list-style: none;
+}
+
+.iss-publications-query .wp-block-post {
+  margin: 0;
+}
+
+.iss-publications-page--narrative .section--soft {
+  background: linear-gradient(180deg, rgba(30, 30, 30, 0.03), rgba(30, 30, 30, 0.05));
+}
+
+.iss-publications-intro {
+  max-width: 62rem;
+}
+
+.iss-publications-prose {
+  max-width: 58rem;
+  display: grid;
+  gap: 1.1rem;
+}
+
+.iss-publications-prose p,
+.iss-publication-single__standfirst p {
+  margin: 0;
+  font-size: clamp(1.05rem, 0.98rem + 0.28vw, 1.22rem);
+  line-height: 1.72;
+  color: rgba(30, 30, 30, 0.86);
+}
+
+.iss-publications-prose__aside {
+  padding-top: 0.35rem;
+  color: rgba(30, 30, 30, 0.62);
+  font-size: 0.98rem;
+}
+
 .iss-publication-card__cover {
   background: #fff;
+  aspect-ratio: 5 / 4;
+  margin: 0;
 }
 
 .iss-publication-card__cover img {
   object-fit: contain;
-  padding: 1rem;
+  padding: 1.25rem;
   background: #fff;
+}
+
+.iss-publication-card .iss-card__body {
+  gap: 0.75rem;
+}
+
+.iss-publication-card .iss-card__text {
+  font-size: 0.95rem;
+  line-height: 1.6;
+}
+
+.iss-publication-card .iss-card__meta {
+  font-size: 0.76rem;
+  color: rgba(30, 30, 30, 0.54);
+}
+
+.iss-publication-card .iss-card__footer {
+  padding-top: 0.1rem;
 }
 
 .iss-publication-single__layout {
   display: grid;
-  grid-template-columns: minmax(16rem, 0.78fr) minmax(0, 1.22fr);
+  grid-template-columns: minmax(0, 1.2fr) minmax(18rem, 0.8fr);
   gap: clamp(1.5rem, 4vw, 4rem);
   align-items: start;
 }
 
+.iss-publication-single__intro {
+  max-width: 60rem;
+}
+
+.iss-publication-single__standfirst {
+  max-width: 46rem;
+}
+
+.iss-publication-single__standfirst,
+.iss-publication-single__standfirst p {
+  margin: 0;
+}
+
+.iss-publication-single__content {
+  min-width: 0;
+}
+
+.iss-publication-single__body {
+  margin-top: 1.5rem;
+}
+
+.iss-publication-single__body > :first-child {
+  margin-top: 0;
+}
+
+.iss-publication-single__body > :last-child {
+  margin-bottom: 0;
+}
+
+.iss-publication-single__body p,
+.iss-publication-single__body li {
+  font-size: 1.02rem;
+  line-height: 1.75;
+}
+
+.iss-publication-single__sidebar {
+  display: grid;
+  gap: 1.25rem;
+}
+
 .iss-publication-single__cover .iss-media-card {
   width: 100%;
+}
+
+.iss-publication-single__cover .wp-block-post-featured-image {
+  margin: 0;
 }
 
 .iss-publication-single__cover img {
@@ -6480,11 +6275,29 @@ Raum / Vermietung → brown
   object-fit: contain;
 }
 
+.iss-publication-single__panel {
+  padding: 1.25rem 1.35rem;
+  border: 1px solid var(--iss-border);
+  border-radius: var(--iss-radius-lg);
+  background: rgba(255, 255, 255, 0.78);
+}
+
+.wp-block-iss-publication-meta,
+.wp-block-iss-publication-order-panel {
+  margin: 0;
+}
+
+.iss-publication-single__panel--order {
+  padding: 0;
+  border: 0;
+  background: transparent;
+}
+
 .iss-publication-meta {
   display: flex;
   flex-direction: column;
   gap: 0.65rem;
-  margin: 1.25rem 0 0;
+  margin: 0.9rem 0 0;
   padding: 0;
   list-style: none;
   color: rgba(30, 30, 30, 0.78);
@@ -6497,7 +6310,6 @@ Raum / Vermietung → brown
 }
 
 .iss-publication-order-panel {
-  margin-top: clamp(2rem, 4vw, 4rem);
   padding: clamp(1.25rem, 2.5vw, 2rem);
   border: 1px solid var(--iss-border);
   border-radius: var(--iss-radius-lg);
@@ -6526,5 +6338,9 @@ Raum / Vermietung → brown
   .iss-publications-feature,
   .iss-publication-single__layout {
     grid-template-columns: 1fr;
+  }
+
+  .iss-publication-single__sidebar {
+    order: -1;
   }
 }

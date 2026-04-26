@@ -1,0 +1,123 @@
+<!-- wp:template-part {"slug":"header","tagName":"header"} /-->
+
+<!-- wp:group {"tagName":"main","className":"iss-publication-single","layout":{"type":"default"}} -->
+<main class="wp-block-group iss-publication-single">
+	<!-- wp:group {"tagName":"section","className":"section section--plain","layout":{"type":"default"}} -->
+	<section class="wp-block-group section section--plain">
+		<!-- wp:group {"className":"iss-container","layout":{"type":"default"}} -->
+		<div class="wp-block-group iss-container">
+			<!-- wp:group {"className":"iss-heading iss-heading--uncaged iss-publication-single__intro","layout":{"type":"default"}} -->
+			<div class="wp-block-group iss-heading iss-heading--uncaged iss-publication-single__intro">
+				<!-- wp:paragraph {"className":"iss-kicker iss-kicker--compact"} -->
+				<p class="iss-kicker iss-kicker--compact">Publikation</p>
+				<!-- /wp:paragraph -->
+
+				<!-- wp:post-title {"level":1,"className":"iss-heading__title"} /-->
+
+				<!-- wp:post-excerpt {"moreText":"","showMoreOnNewLine":false,"excerptLength":32,"className":"iss-publication-single__standfirst"} /-->
+			</div>
+			<!-- /wp:group -->
+		</div>
+		<!-- /wp:group -->
+	</section>
+	<!-- /wp:group -->
+
+	<!-- wp:group {"tagName":"section","className":"section section--plain","layout":{"type":"default"}} -->
+	<section class="wp-block-group section section--plain">
+		<!-- wp:group {"className":"iss-container","layout":{"type":"default"}} -->
+		<div class="wp-block-group iss-container">
+			<!-- wp:columns {"className":"iss-publication-single__layout"} -->
+			<div class="wp-block-columns iss-publication-single__layout">
+				<!-- wp:column {"width":"66.66%","className":"iss-publication-single__content"} -->
+				<div class="wp-block-column iss-publication-single__content" style="flex-basis:66.66%">
+					<!-- wp:group {"className":"iss-heading","layout":{"type":"default"}} -->
+					<div class="wp-block-group iss-heading">
+						<!-- wp:paragraph {"className":"iss-kicker iss-kicker--compact"} -->
+						<p class="iss-kicker iss-kicker--compact">Beschreibung</p>
+						<!-- /wp:paragraph -->
+
+						<!-- wp:heading {"level":2,"className":"iss-heading__title"} -->
+						<h2 class="wp-block-heading iss-heading__title">Leselinie</h2>
+						<!-- /wp:heading -->
+					</div>
+					<!-- /wp:group -->
+
+					<!-- wp:group {"className":"iss-indent iss-indent--uncaged iss-publication-single__body","layout":{"type":"default"}} -->
+					<div class="wp-block-group iss-indent iss-indent--uncaged iss-publication-single__body">
+						<!-- wp:post-content {"layout":{"type":"default"}} /-->
+					</div>
+					<!-- /wp:group -->
+				</div>
+				<!-- /wp:column -->
+
+				<!-- wp:column {"width":"33.33%","className":"iss-publication-single__sidebar"} -->
+				<div class="wp-block-column iss-publication-single__sidebar" style="flex-basis:33.33%">
+					<!-- wp:group {"className":"iss-publication-single__cover","layout":{"type":"default"}} -->
+					<div class="wp-block-group iss-publication-single__cover">
+						<!-- wp:group {"className":"iss-media-card iss-media-card--contain iss-media-card--soft iss-media-card--framed","layout":{"type":"default"}} -->
+						<div class="wp-block-group iss-media-card iss-media-card--contain iss-media-card--soft iss-media-card--framed">
+							<!-- wp:post-featured-image {"isLink":false} /-->
+						</div>
+						<!-- /wp:group -->
+					</div>
+					<!-- /wp:group -->
+
+					<!-- wp:iss/publication-meta /-->
+
+					<!-- wp:iss/publication-order-panel /-->
+				</div>
+				<!-- /wp:column -->
+			</div>
+			<!-- /wp:columns -->
+		</div>
+		<!-- /wp:group -->
+	</section>
+	<!-- /wp:group -->
+
+	<!-- wp:group {"tagName":"section","className":"section section--soft","layout":{"type":"default"}} -->
+	<section class="wp-block-group section section--soft">
+		<!-- wp:group {"className":"iss-container","layout":{"type":"default"}} -->
+		<div class="wp-block-group iss-container">
+			<!-- wp:group {"className":"iss-heading","layout":{"type":"default"}} -->
+			<div class="wp-block-group iss-heading">
+				<!-- wp:paragraph {"className":"iss-kicker iss-kicker--compact"} -->
+				<p class="iss-kicker iss-kicker--compact">Weiterlesen</p>
+				<!-- /wp:paragraph -->
+
+				<!-- wp:heading {"level":2,"className":"iss-heading__title"} -->
+				<h2 class="wp-block-heading iss-heading__title">Weitere Publikationen</h2>
+				<!-- /wp:heading -->
+			</div>
+			<!-- /wp:group -->
+
+			<!-- wp:query {"queryId":13,"query":{"perPage":3,"pages":0,"offset":0,"postType":"publication","order":"desc","orderBy":"date","inherit":false},"className":"iss-publications-query","layout":{"type":"default"}} -->
+			<div class="wp-block-query iss-publications-query">
+				<!-- wp:post-template {"className":"iss-card-grid iss-publications-grid","layout":{"type":"grid","columnCount":3}} -->
+				<!-- wp:group {"className":"iss-card iss-card--flat iss-publication-card","layout":{"type":"default"}} -->
+				<div class="wp-block-group iss-card iss-card--flat iss-publication-card">
+					<!-- wp:post-featured-image {"isLink":true,"className":"iss-publication-card__cover"} /-->
+
+					<!-- wp:group {"className":"iss-card__body","layout":{"type":"default"}} -->
+					<div class="wp-block-group iss-card__body">
+						<!-- wp:post-title {"level":2,"isLink":true,"className":"iss-card__title"} /-->
+						<!-- wp:post-excerpt {"moreText":"","showMoreOnNewLine":false,"excerptLength":18,"className":"iss-card__text"} /-->
+						<!-- wp:group {"className":"iss-card__footer","layout":{"type":"flex","flexWrap":"nowrap","justifyContent":"left"}} -->
+						<div class="wp-block-group iss-card__footer">
+							<!-- wp:read-more {"content":"Details / bestellen","className":"iss-card__link"} /-->
+						</div>
+						<!-- /wp:group -->
+					</div>
+					<!-- /wp:group -->
+				</div>
+				<!-- /wp:group -->
+				<!-- /wp:post-template -->
+			</div>
+			<!-- /wp:query -->
+		</div>
+		<!-- /wp:group -->
+	</section>
+	<!-- /wp:group -->
+</main>
+<!-- /wp:group -->
+
+<!-- wp:template-part {"slug":"footer","tagName":"footer"} /-->

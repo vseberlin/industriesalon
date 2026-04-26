@@ -50,13 +50,6 @@ function iss_publications_get_card_meta_items($post_id) {
         $items[] = sprintf(__('%d Seiten', 'iss-publications'), $pages);
     }
 
-    if (iss_publications_sale_enabled($post_id)) {
-        $price = iss_publications_format_price(iss_publications_get_price_cents($post_id));
-        if ($price !== '') {
-            $items[] = $price;
-        }
-    }
-
     return $items;
 }
 
@@ -154,7 +147,7 @@ function iss_publications_render_archive_card($post_id) {
     $meta_items = iss_publications_get_card_meta_items($post_id);
 
     ob_start();
-    echo '<article class="iss-card iss-publication-card">';
+    echo '<article class="iss-card iss-card--flat iss-card--info iss-publication-card">';
     if (has_post_thumbnail($post_id)) {
         echo '<a class="iss-card__media iss-publication-card__cover" href="' . esc_url($permalink) . '">';
         echo get_the_post_thumbnail($post_id, 'large');
@@ -180,7 +173,7 @@ function iss_publications_render_archive_card($post_id) {
         echo '</div>';
     }
 
-    echo '<div class="iss-card__footer"><a class="iss-card__link" href="' . esc_url($permalink) . '">' . esc_html__('Details', 'iss-publications') . '</a></div>';
+    echo '<div class="iss-card__footer"><a class="iss-card__link" href="' . esc_url($permalink) . '">' . esc_html__('Details / bestellen', 'iss-publications') . '</a></div>';
     echo '</div>';
     echo '</article>';
     return (string) ob_get_clean();
@@ -296,6 +289,82 @@ function iss_publications_get_related_posts($post_id, $limit = 3) {
     return get_posts($args);
 }
 
+function iss_publications_get_collection_kind($post_id) {
+    $post_id = (int) $post_id;
+    if ($post_id <= 0) {
+        return 'other';
+    }
+
+    $type_terms = get_the_terms($post_id, 'publication_type');
+    if (!empty($type_terms) && !is_wp_error($type_terms)) {
+        foreach ($type_terms as $term) {
+            if (!$term instanceof WP_Term) {
+                continue;
+            }
+
+            $slug = sanitize_title($term->slug);
+            if (in_array($slug, ['buch', 'buecher', 'book', 'books'], true)) {
+                return 'book';
+            }
+
+            if (in_array($slug, ['broschuere', 'broschueren', 'heft', 'hefte', 'booklet', 'booklets'], true)) {
+                return 'brochure';
+            }
+        }
+    }
+
+    $format = sanitize_title((string) iss_publications_get_meta($post_id, '_iss_publication_format', ''));
+    if ($format !== '') {
+        if (str_contains($format, 'buch')) {
+            return 'book';
+        }
+
+        if (str_contains($format, 'broschure') || str_contains($format, 'broschuere') || str_contains($format, 'magazin') || str_contains($format, 'heft')) {
+            return 'brochure';
+        }
+    }
+
+    return 'other';
+}
+
+function iss_publications_get_archive_posts($args = []) {
+    $defaults = [
+        'post_type'      => ISS_PUBLICATIONS_POST_TYPE,
+        'post_status'    => 'publish',
+        'posts_per_page' => -1,
+        'orderby'        => [
+            'menu_order' => 'ASC',
+            'date'       => 'DESC',
+        ],
+        'tax_query'      => iss_publications_get_archive_tax_query(),
+    ];
+
+    return get_posts(wp_parse_args($args, $defaults));
+}
+
+function iss_publications_partition_archive_posts($posts) {
+    $groups = [
+        'brochure' => [],
+        'book'     => [],
+        'other'    => [],
+    ];
+
+    foreach ((array) $posts as $post) {
+        if (!$post instanceof WP_Post) {
+            continue;
+        }
+
+        $kind = iss_publications_get_collection_kind($post->ID);
+        if (!isset($groups[$kind])) {
+            $kind = 'other';
+        }
+
+        $groups[$kind][] = $post;
+    }
+
+    return $groups;
+}
+
 function iss_publications_block_resolve_post_id($attributes = []) {
     $attributes = is_array($attributes) ? $attributes : [];
 
@@ -328,19 +397,30 @@ function iss_publications_render_featured_block($attributes = [], $content = '')
     return '<div ' . $wrapper . '>' . $html . '</div>';
 }
 
+function iss_publications_render_grid_posts($posts) {
+    $posts = array_values(array_filter((array) $posts, static function ($post) {
+        return $post instanceof WP_Post;
+    }));
+
+    if (empty($posts)) {
+        return '';
+    }
+
+    ob_start();
+    echo '<div class="iss-card-grid iss-publications-grid">';
+    foreach ($posts as $post) {
+        echo iss_publications_render_archive_card($post->ID);
+    }
+    echo '</div>';
+
+    return (string) ob_get_clean();
+}
+
 function iss_publications_render_grid_block($attributes = [], $content = '') {
     $limit = isset($attributes['limit']) ? max(1, (int) $attributes['limit']) : 6;
     $exclude_featured = !empty($attributes['excludeFeatured']);
-
     $args = [
-        'post_type'      => ISS_PUBLICATIONS_POST_TYPE,
-        'post_status'    => 'publish',
         'posts_per_page' => $limit,
-        'orderby'        => [
-            'menu_order' => 'ASC',
-            'date'       => 'DESC',
-        ],
-        'tax_query'      => iss_publications_get_archive_tax_query(),
     ];
 
     if ($exclude_featured) {
@@ -350,26 +430,16 @@ function iss_publications_render_grid_block($attributes = [], $content = '') {
         }
     }
 
-    $query = new WP_Query($args);
-    if (!$query->have_posts()) {
-        wp_reset_postdata();
+    $html = iss_publications_render_grid_posts(iss_publications_get_archive_posts($args));
+    if ($html === '') {
         return '';
     }
-
-    ob_start();
-    echo '<div class="iss-card-grid iss-publications-grid">';
-    while ($query->have_posts()) {
-        $query->the_post();
-        echo iss_publications_render_archive_card(get_the_ID());
-    }
-    echo '</div>';
-    wp_reset_postdata();
 
     $wrapper = function_exists('get_block_wrapper_attributes')
         ? get_block_wrapper_attributes(['class' => 'wp-block-iss-publications-grid'])
         : 'class="wp-block-iss-publications-grid"';
 
-    return '<div ' . $wrapper . '>' . (string) ob_get_clean() . '</div>';
+    return '<div ' . $wrapper . '>' . $html . '</div>';
 }
 
 function iss_publications_render_order_panel_block($attributes = [], $content = '') {
@@ -388,6 +458,34 @@ function iss_publications_render_order_panel_block($attributes = [], $content = 
         : 'class="wp-block-iss-publication-order-panel"';
 
     return '<div ' . $wrapper . '>' . $panel . '</div>';
+}
+
+function iss_publications_render_meta_block($attributes = [], $content = '') {
+    $post_id = iss_publications_block_resolve_post_id($attributes);
+    if ($post_id <= 0) {
+        return '';
+    }
+
+    $summary_meta = iss_publications_get_summary_meta($post_id);
+    if (empty($summary_meta)) {
+        return '';
+    }
+
+    ob_start();
+    echo '<div class="iss-publication-single__panel">';
+    echo '<p class="iss-kicker iss-kicker--compact">' . esc_html__('Bibliografie', 'iss-publications') . '</p>';
+    echo '<ul class="iss-publication-meta">';
+    foreach ($summary_meta as $label => $value) {
+        echo '<li><strong>' . esc_html($label) . ':</strong> ' . esc_html($value) . '</li>';
+    }
+    echo '</ul>';
+    echo '</div>';
+
+    $wrapper = function_exists('get_block_wrapper_attributes')
+        ? get_block_wrapper_attributes(['class' => 'wp-block-iss-publication-meta'])
+        : 'class="wp-block-iss-publication-meta"';
+
+    return '<div ' . $wrapper . '>' . (string) ob_get_clean() . '</div>';
 }
 
 add_shortcode('iss_featured_publication', function ($atts = []) {

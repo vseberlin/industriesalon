@@ -1,6 +1,12 @@
 # Industriesalon Theme Changelog
 
 ## 2026-04-26
+- Moved publication page rendering into native Gutenberg theme templates:
+  - `templates/archive-publication.html`
+  - `templates/single-publication.html`
+- Added reusable editorial pattern for publication intros:
+  - `patterns/iss-publications-intro.html`
+- Registered the new publications intro pattern in `functions.php`.
 - Added publications layout support for the new `iss-publications` plugin:
   - publication feature layout in `assets/css/patterns.css`
   - publication archive/single layout styles in `assets/css/patterns.css`

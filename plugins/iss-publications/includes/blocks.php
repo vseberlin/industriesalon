@@ -29,4 +29,11 @@ add_action('init', function () {
             'render_callback' => 'iss_publications_render_order_panel_block',
         ]);
     }
+
+    $meta_dir = ISS_PUBLICATIONS_PATH . 'blocks/publication-meta';
+    if (file_exists($meta_dir . '/block.json')) {
+        register_block_type($meta_dir, [
+            'render_callback' => 'iss_publications_render_meta_block',
+        ]);
+    }
 });

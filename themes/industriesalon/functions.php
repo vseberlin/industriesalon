@@ -145,6 +145,13 @@ function industriesalon_register_block_patterns(): void
             'categories' => array('industriesalon', 'text', 'media'),
             'file' => '/patterns/iss-flex-split.html',
         ),
+        array(
+            'name' => 'industriesalon/publications-intro',
+            'title' => 'ISS Publications Intro',
+            'description' => 'Editorial opener for publications pages and research-related landings.',
+            'categories' => array('industriesalon', 'text'),
+            'file' => '/patterns/iss-publications-intro.html',
+        ),
     );
 
     foreach ($patterns as $pattern) {
