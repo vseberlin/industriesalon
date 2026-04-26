@@ -1,0 +1,21 @@
+{
+  "apiVersion": 3,
+  "name": "iss/publications-grid",
+  "title": "ISS Publications Grid",
+  "category": "widgets",
+  "icon": "screenoptions",
+  "description": "Server-rendered publication card grid.",
+  "attributes": {
+    "limit": {
+      "type": "number",
+      "default": 6
+    },
+    "excludeFeatured": {
+      "type": "boolean",
+      "default": false
+    }
+  },
+  "supports": {
+    "html": false
+  }
+}

@@ -6418,3 +6418,113 @@ Raum / Vermietung → brown
   transform: translateY(-2px);
 /*  box-shadow: 0 14px 32px rgba(0,0,0,0.08);*/
 }
+
+/* =========================================================
+   GROUP: Publications
+   PURPOSE:
+   Editorial publication archive and single publication layout for the
+   ISS publications plugin.
+   ========================================================= */
+
+.iss-publications-feature {
+  display: grid;
+  grid-template-columns: minmax(0, 0.9fr) minmax(0, 1.1fr);
+  gap: clamp(1.5rem, 4vw, 4rem);
+  align-items: center;
+}
+
+.iss-publications-feature__cover .iss-media-card {
+  height: 100%;
+}
+
+.iss-publications-feature__cover img {
+  display: block;
+  width: 100%;
+  height: auto;
+  object-fit: contain;
+}
+
+.iss-publications-feature__action {
+  margin: 1.25rem 0 0;
+}
+
+.iss-publications-grid {
+  margin-top: clamp(1.5rem, 3vw, 2rem);
+}
+
+.iss-publication-card__cover {
+  background: #fff;
+}
+
+.iss-publication-card__cover img {
+  object-fit: contain;
+  padding: 1rem;
+  background: #fff;
+}
+
+.iss-publication-single__layout {
+  display: grid;
+  grid-template-columns: minmax(16rem, 0.78fr) minmax(0, 1.22fr);
+  gap: clamp(1.5rem, 4vw, 4rem);
+  align-items: start;
+}
+
+.iss-publication-single__cover .iss-media-card {
+  width: 100%;
+}
+
+.iss-publication-single__cover img {
+  display: block;
+  width: 100%;
+  height: auto;
+  object-fit: contain;
+}
+
+.iss-publication-meta {
+  display: flex;
+  flex-direction: column;
+  gap: 0.65rem;
+  margin: 1.25rem 0 0;
+  padding: 0;
+  list-style: none;
+  color: rgba(30, 30, 30, 0.78);
+  font-size: 0.98rem;
+  line-height: 1.5;
+}
+
+.iss-publication-meta li {
+  margin: 0;
+}
+
+.iss-publication-order-panel {
+  margin-top: clamp(2rem, 4vw, 4rem);
+  padding: clamp(1.25rem, 2.5vw, 2rem);
+  border: 1px solid var(--iss-border);
+  border-radius: var(--iss-radius-lg);
+  background: var(--iss-white);
+  box-shadow: var(--iss-shadow);
+}
+
+.iss-publication-order-panel__price {
+  margin: 0 0 0.8rem;
+  font-size: clamp(1.35rem, 2vw, 1.8rem);
+  font-weight: 700;
+  line-height: 1.1;
+}
+
+.iss-publication-order-panel__text,
+.iss-publication-order-panel__note {
+  margin: 0;
+  color: rgba(30, 30, 30, 0.76);
+}
+
+.iss-publication-order-panel__text + .iss-publication-order-panel__note {
+  margin-top: 0.85rem;
+}
+
+@media (max-width: 900px) {
+  .iss-publications-feature,
+  .iss-publication-single__layout {
+    grid-template-columns: 1fr;
+  }
+}

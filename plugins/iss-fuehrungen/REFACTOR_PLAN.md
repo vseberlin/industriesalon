@@ -3,11 +3,15 @@
 ## Root problem
 
 Current ownership is mixed:
-- `saas-api` owns infrastructure **and** tour-facing booking/calendar UI,
+- `saas-api` owns infrastructure/calendar storage,
+- `iss-programm` owns shared calendar UI,
+- `iss-payments-lite` now owns the thin booking entry endpoint,
 - `iss-fuehrungen` owns tour content/CPT/templates.
 
 Target ownership:
 - calendar sync/mapping/cache in infrastructure layer,
+- shared calendar UI in programme layer,
+- thin booking entry/payment flow outside infrastructure,
 - tour UX and booking presentation in tour domain layer.
 
 ---
@@ -82,4 +86,3 @@ Rename strategy:
 - Tours can intentionally expose both booking paths (hybrid).
 - Timeline functionality remains unchanged and site-wide.
 - No shortcodes required for tour booking/calendar rendering.
-

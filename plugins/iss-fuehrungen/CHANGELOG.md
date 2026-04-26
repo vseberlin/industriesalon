@@ -34,8 +34,13 @@ All notable changes for `iss-fuehrungen` are documented here.
   - `single-tour-on-demand.html` for on-demand tours.
 - Removed shortcode/ACF placeholders from those two HTML templates and replaced them with dynamic blocks.
 
+### Changed
+- Updated ownership docs to reflect the thin booking boundary split:
+  - `saas-api` is documented as calendar infrastructure only,
+  - `iss-payments-lite` is documented as the booking submit owner for `/is-tours/v1/book`.
+
 ### Planned
-- Security hardening for booking entry flow (implemented in `saas-api`, tracked from this plugin doc set).
+- Security hardening for booking entry flow (implemented in `iss-payments-lite`, tracked from this plugin doc set).
 - Editor UI cleanup for currently exposed but inactive fields.
 - Mapping/fallback model cleanup and explicit ownership documentation.
 

@@ -1,5 +1,13 @@
 # Industriesalon Theme Changelog
 
+## 2026-04-26
+- Added publications layout support for the new `iss-publications` plugin:
+  - publication feature layout in `assets/css/patterns.css`
+  - publication archive/single layout styles in `assets/css/patterns.css`
+- Included section tint/alt styling refinements in `style.css`.
+- Added revised publications/payment architecture proposal:
+  - `publications-commerce-refactor-revised.md`
+
 ## 2026-04-25
 - Added reference-inspired multi-panel off-canvas header menu:
   - panel tabs: `Navigation`, `Kalender`, `Info`, `Suche`

@@ -8,7 +8,7 @@ It provides:
 - a dedicated post type and taxonomy for tours,
 - structured tour meta fields in the editor,
 - custom archive/single templates,
-- integration points to `saas-api` calendar blocks for dates and booking.
+- integration points to the local calendar stack for dates plus a separate booking entry layer.
 
 This plugin does **not** sync SuperSaaS by itself. Sync/import/fallback logic lives in `saas-api`.
 
@@ -18,9 +18,11 @@ This plugin does **not** sync SuperSaaS by itself. Sync/import/fallback logic li
 
 Required for full behavior:
 - Theme: `industriesalon`
-- Plugin: `saas-api` (calendar blocks + sync + booking endpoint)
+- Plugin: `saas-api` (calendar data sync/store/read)
+- Plugin: `iss-payments-lite` (tour booking submit endpoint)
 
-Without `saas-api`, tours still render, but dynamic calendar/booking behaviors degrade.
+Without `saas-api`, tours still render, but dynamic calendar/date behaviors degrade.
+Without `iss-payments-lite`, the booking form submit flow degrades.
 
 ---
 
@@ -193,7 +195,7 @@ Current weak points:
 2. **Legacy fallback coupling** (`fallback_url`) still referenced in code but no direct UI field in this plugin.
 3. **Mixed status semantics** (`available/sold_out/inquiry`) can surface raw labels without human-friendly mapping in booking box.
 4. **Mapping visibility gap**: frontend says “Keine Zuordnung vorhanden” but editors lack direct guided fix flow from that screen.
-5. **Security hardening gap** for `/is-tours/v1/book` in adversarial conditions.
+5. **Security hardening gap** in the thin booking entry layer for `/is-tours/v1/book`.
 
 ---
 

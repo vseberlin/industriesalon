@@ -2,7 +2,7 @@
 
 ## P0 (stability / security)
 
-- [ ] Harden booking flow in `saas-api` integration: add rate limiting + anti-automation checks for `/is-tours/v1/book`.
+- [ ] Harden booking flow in `iss-payments-lite`: add rate limiting + anti-automation checks for `/is-tours/v1/book`.
 - [ ] Define and enforce retention policy for booking request data (`is_tours_booking_requests`) including IP/UA minimization.
 - [ ] Add admin-visible health check: mapping present, last sync timestamp, and unlinked future items count.
 
@@ -28,4 +28,3 @@
   - [ ] mismatched `source_post_id` booking rejection.
 - [ ] Add manual smoke-test procedure for release checklist.
 - [ ] Keep `MANUAL.md` and `CHANGELOG.md` updated for each release.
-
