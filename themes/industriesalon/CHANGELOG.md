@@ -1,6 +1,12 @@
 # Industriesalon Theme Changelog
 
 ## 2026-04-25
+- Added reference-inspired multi-panel off-canvas header menu:
+  - panel tabs: `Navigation`, `Kalender`, `Info`, `Suche`
+  - panel markup and search form in `parts/header.html`
+  - panel switching logic in `assets/js/header.js`
+  - tab/panel styles in `assets/css/patterns.css`
+- Committed as `3e20381` (`feat(theme): add multi-panel off-canvas header menu`).
 - Added post layout selector for posts in Gutenberg (`standard`, `image`, `short`) via `_iss_post_layout`.
 - Added frontend body class mapping for post layout variants (`iss-post-layout-*`).
 - Implemented layout-specific single post hero behavior:

@@ -1,0 +1,321 @@
+/* =====================================================================
+   FILE: ueber-uns.css
+   ROLE: Über-uns page pattern module.
+   LOAD: after style.css, cards.css, patterns.css.
+   NOTE: Markup intentionally avoids Gutenberg constrained layout tags.
+   ===================================================================== */
+
+.iss-about-page {
+  background: var(--iss-white);
+  color: var(--iss-black);
+  overflow: clip;
+}
+
+.iss-about-page .wp-block-group,
+.iss-about-page .wp-block-columns,
+.iss-about-page .wp-block-column,
+.iss-about-page .wp-block-cover {
+  box-sizing: border-box;
+}
+
+.iss-about-page p {
+  max-width: 70ch;
+}
+
+.iss-about-hero {
+  min-height: 72svh;
+  background: var(--iss-black);
+}
+
+.iss-about-hero::before {
+  background:
+    linear-gradient(
+      90deg,
+      rgba(30, 30, 30, 0.84) 0%,
+      rgba(30, 30, 30, 0.62) 42%,
+      rgba(30, 30, 30, 0.2) 100%
+    );
+}
+
+.iss-about-hero .iss-page-hero__inner {
+  padding-bottom: clamp(3rem, 7vw, 6rem);
+}
+
+.iss-about-hero .iss-page-hero__title {
+  max-width: 12ch;
+}
+
+.iss-about-hero .iss-page-hero__text {
+  max-width: 48rem;
+}
+
+.iss-about-opener__grid,
+.iss-about-split,
+.iss-about-awards__grid,
+.iss-about-founder__grid {
+  gap: clamp(2rem, 5vw, 6rem);
+  align-items: flex-start;
+}
+
+.iss-about-opener__lead {
+  flex-basis: 40% !important;
+}
+
+.iss-about-opener__text {
+  flex-basis: 60% !important;
+}
+
+.iss-about-opener__title {
+  max-width: 12ch;
+  margin-top: 0;
+}
+
+.iss-about-opener__text p {
+  margin-top: 0;
+  font-size: clamp(1.05rem, 0.95rem + 0.25vw, 1.25rem);
+  line-height: 1.65;
+  color: rgba(30, 30, 30, 0.82);
+}
+
+.iss-about-opener__text p + p {
+  margin-top: 1.2rem;
+}
+
+.iss-about-pillars .iss-heading,
+.iss-about-team .iss-heading {
+  margin-bottom: clamp(1.75rem, 3vw, 2.75rem);
+}
+
+.iss-about-card-grid {
+  margin-top: clamp(1.75rem, 3vw, 2.5rem);
+}
+
+.iss-about-card-grid .iss-card {
+  box-shadow: none;
+  min-height: 18rem;
+}
+
+.iss-about-card-grid .iss-card:hover,
+.iss-about-card-grid .iss-card:focus-within {
+  box-shadow: var(--iss-shadow);
+}
+
+.iss-about-card-grid .iss-card__title {
+  min-height: 0;
+}
+
+.iss-about-split {
+  align-items: center;
+}
+
+.iss-about-split__media {
+  flex-basis: 48% !important;
+}
+
+.iss-about-split__content {
+  flex-basis: 52% !important;
+}
+
+.iss-about-split__media figure {
+  min-height: clamp(24rem, 52vh, 38rem);
+}
+
+.iss-about-split__content > p {
+  margin-top: 1.1rem;
+  color: rgba(30, 30, 30, 0.78);
+}
+
+.iss-about-split__content > p:first-of-type {
+  font-size: clamp(1.05rem, 0.95rem + 0.2vw, 1.18rem);
+  color: rgba(30, 30, 30, 0.9);
+}
+
+.iss-about-awards__intro {
+  flex-basis: 42% !important;
+}
+
+.iss-about-awards__list {
+  flex-basis: 58% !important;
+}
+
+.iss-award-list {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 1rem;
+  margin: 0;
+}
+
+.iss-award-item {
+  position: relative;
+  min-height: 100%;
+  margin: 0;
+  padding: 1.15rem 1.25rem 1.2rem 1.6rem;
+  background: var(--iss-white);
+  border: 1px solid var(--iss-border);
+  border-radius: var(--iss-radius-md);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.045);
+  color: rgba(30, 30, 30, 0.76);
+}
+
+.iss-award-item::before {
+  content: "";
+  position: absolute;
+  top: 1.25rem;
+  left: 0.85rem;
+  width: 0.38rem;
+  height: 0.38rem;
+  border-radius: 50%;
+  background: var(--iss-red);
+}
+
+.iss-award-item strong {
+  color: var(--iss-black);
+  font-weight: 700;
+}
+
+.iss-about-founder__content {
+  flex-basis: 62% !important;
+}
+
+.iss-about-founder__note {
+  flex-basis: 38% !important;
+}
+
+.iss-about-founder__content h2 {
+  max-width: 13ch;
+  margin-top: 0;
+}
+
+.iss-founder-note {
+  padding: clamp(1.25rem, 2vw, 1.75rem);
+  background: #f6f6f7;
+  border: 1px solid var(--iss-border);
+  border-left: 5px solid var(--iss-red);
+  border-radius: var(--iss-radius-md);
+}
+
+.iss-founder-note p:last-child {
+  margin-bottom: 0;
+  color: rgba(30, 30, 30, 0.76);
+}
+
+.iss-about-team__strip {
+  max-width: 58rem;
+  padding: clamp(1.25rem, 2vw, 1.75rem);
+  background: var(--iss-white);
+  border: 1px solid var(--iss-border);
+  border-radius: var(--iss-radius-md);
+}
+
+.iss-about-team__strip p {
+  margin: 0;
+  color: rgba(30, 30, 30, 0.78);
+}
+
+.iss-about-cta {
+  position: relative;
+  max-width: 76rem;
+  padding: clamp(1.5rem, 4vw, 3rem);
+  background: var(--iss-black);
+  color: var(--iss-white);
+  border-radius: var(--iss-radius-lg);
+  overflow: hidden;
+}
+
+.iss-about-cta::after {
+  content: "";
+  position: absolute;
+  inset: auto -8rem -9rem auto;
+  width: 22rem;
+  height: 22rem;
+  border: 1px solid rgba(249, 249, 250, 0.14);
+  border-radius: 50%;
+  pointer-events: none;
+}
+
+.iss-about-cta .iss-kicker,
+.iss-about-cta h2,
+.iss-about-cta p {
+  color: var(--iss-white);
+}
+
+.iss-about-cta h2 {
+  max-width: 14ch;
+  margin-top: 0;
+}
+
+.iss-about-cta p {
+  max-width: 56rem;
+  color: rgba(249, 249, 250, 0.82);
+}
+
+.iss-about-cta__buttons {
+  margin-top: 1.4rem;
+}
+
+.iss-about-cta .wp-block-button.is-style-outline .wp-block-button__link {
+  color: var(--iss-white);
+  border-color: rgba(249, 249, 250, 0.45);
+  background: transparent;
+}
+
+.iss-about-cta .wp-block-button.is-style-outline .wp-block-button__link:hover,
+.iss-about-cta .wp-block-button.is-style-outline .wp-block-button__link:focus-visible {
+  border-color: var(--iss-white);
+  background: rgba(249, 249, 250, 0.1);
+}
+
+@media (max-width: 1024px) {
+  .iss-about-opener__lead,
+  .iss-about-opener__text,
+  .iss-about-split__media,
+  .iss-about-split__content,
+  .iss-about-awards__intro,
+  .iss-about-awards__list,
+  .iss-about-founder__content,
+  .iss-about-founder__note {
+    flex-basis: 100% !important;
+  }
+
+  .iss-about-opener__grid,
+  .iss-about-split,
+  .iss-about-awards__grid,
+  .iss-about-founder__grid {
+    gap: 2rem;
+  }
+
+  .iss-about-split__media figure {
+    min-height: 22rem;
+  }
+}
+
+@media (max-width: 782px) {
+  .iss-about-hero {
+    min-height: 58svh;
+  }
+
+  .iss-about-hero::before {
+    background:
+      linear-gradient(
+        180deg,
+        rgba(30, 30, 30, 0.5) 0%,
+        rgba(30, 30, 30, 0.78) 100%
+      );
+  }
+
+  .iss-award-list {
+    grid-template-columns: 1fr;
+  }
+
+  .iss-about-card-grid .iss-card {
+    min-height: 0;
+  }
+
+  .iss-about-split__media figure {
+    min-height: 18rem;
+  }
+
+  .iss-about-cta {
+    border-radius: var(--iss-radius-md);
+  }
+}

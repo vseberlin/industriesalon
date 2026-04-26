@@ -12,6 +12,7 @@ add_action('after_setup_theme', function () {
     add_theme_support('title-tag');
     add_theme_support('post-thumbnails');
     add_theme_support('editor-styles');
+    add_post_type_support('page', 'excerpt');
     add_editor_style(
         array(
             'style.css',
@@ -136,6 +137,13 @@ function industriesalon_register_block_patterns(): void
             'description' => 'Full-width landing hero with right-side note banner (iss-hero-note).',
             'categories' => array('industriesalon', 'text', 'media'),
             'file' => '/patterns/iss-landing-hero-with-note.html',
+        ),
+        array(
+            'name' => 'industriesalon/flexible-split',
+            'title' => 'ISS Flexible Split',
+            'description' => 'Flexible two-column section with ratio modifiers and optional callout/media panels.',
+            'categories' => array('industriesalon', 'text', 'media'),
+            'file' => '/patterns/iss-flex-split.html',
         ),
     );
 
@@ -372,6 +380,44 @@ function industriesalon_enqueue_assets(): void
             $theme_uri . $overrides_rel,
             $overrides_dependencies,
             (string) filemtime($overrides_abs)
+        );
+    }
+
+    $ueber_uns_rel = '/assets/css/ueber-uns.css';
+    $ueber_uns_abs = $theme_dir . $ueber_uns_rel;
+    if (file_exists($ueber_uns_abs)) {
+        $ueber_uns_dependencies = file_exists($overrides_abs)
+            ? array('industriesalon-overrides')
+            : (file_exists($patterns_abs)
+                ? array('industriesalon-patterns')
+                : (file_exists($cards_abs)
+                    ? array('industriesalon-cards')
+                    : array('industriesalon-base')));
+
+        wp_enqueue_style(
+            'industriesalon-ueber-uns',
+            $theme_uri . $ueber_uns_rel,
+            $ueber_uns_dependencies,
+            (string) filemtime($ueber_uns_abs)
+        );
+    }
+
+    $flex_split_rel = '/assets/css/iss-flex-split.css';
+    $flex_split_abs = $theme_dir . $flex_split_rel;
+    if (file_exists($flex_split_abs)) {
+        $flex_split_dependencies = file_exists($overrides_abs)
+            ? array('industriesalon-overrides')
+            : (file_exists($patterns_abs)
+                ? array('industriesalon-patterns')
+                : (file_exists($cards_abs)
+                    ? array('industriesalon-cards')
+                    : array('industriesalon-base')));
+
+        wp_enqueue_style(
+            'industriesalon-flex-split',
+            $theme_uri . $flex_split_rel,
+            $flex_split_dependencies,
+            (string) filemtime($flex_split_abs)
         );
     }
 

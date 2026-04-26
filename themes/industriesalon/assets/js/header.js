@@ -13,10 +13,7 @@
         var toggle = header.querySelector('.iss-nav-toggle a, .iss-nav-toggle button, .iss-nav-toggle');
         var panel = header.querySelector('.iss-menu-shell');
         var overlay = header.querySelector('.iss-nav-overlay');
-        var close = header.querySelector('.iss-menu-shell__close a, .iss-menu-shell__close button, .iss-menu-shell__close');
-        var panelButtons = panel ? panel.querySelectorAll('.iss-supernav__button[data-panel]') : [];
-        var panelViews = panel ? panel.querySelectorAll('.iss-menu-panel[data-panel]') : [];
-        var activePanel = 'nav';
+        var close = header.querySelector('.iss-menu-close');
 
         if (!toggle || !panel || !overlay || !close) {
             return;
@@ -35,34 +32,10 @@
         if (!close.getAttribute('aria-label')) {
             close.setAttribute('aria-label', 'Navigation schließen');
         }
+        panel.setAttribute('aria-hidden', 'true');
 
         var focusableSelector = 'a[href], button:not([disabled]), [tabindex]:not([tabindex="-1"])';
         var lastFocusedElement = null;
-
-        function setActivePanel(nextPanel) {
-            if (!nextPanel) {
-                return;
-            }
-
-            activePanel = nextPanel;
-
-            Array.prototype.forEach.call(panelButtons, function (button) {
-                var isActive = button.getAttribute('data-panel') === nextPanel;
-                button.classList.toggle('is-active', isActive);
-                button.setAttribute('aria-selected', isActive ? 'true' : 'false');
-                button.setAttribute('tabindex', isActive ? '0' : '-1');
-            });
-
-            Array.prototype.forEach.call(panelViews, function (view) {
-                var isActive = view.getAttribute('data-panel') === nextPanel;
-                view.classList.toggle('is-visible', isActive);
-                if (isActive) {
-                    view.removeAttribute('hidden');
-                } else {
-                    view.setAttribute('hidden', 'hidden');
-                }
-            });
-        }
 
         function getFocusable() {
             return Array.prototype.slice.call(panel.querySelectorAll(focusableSelector)).filter(function (el) {
@@ -77,6 +50,7 @@
             panel.classList.add('is-open');
             overlay.classList.add('is-open');
             toggle.setAttribute('aria-expanded', 'true');
+            panel.setAttribute('aria-hidden', 'false');
 
             var items = getFocusable();
             if (items.length) {
@@ -92,6 +66,7 @@
             panel.classList.remove('is-open');
             overlay.classList.remove('is-open');
             toggle.setAttribute('aria-expanded', 'false');
+            panel.setAttribute('aria-hidden', 'true');
 
             if (returnFocus === false) {
                 return;
@@ -151,17 +126,6 @@
         });
         overlay.addEventListener('click', closeNav);
         document.addEventListener('keydown', onKeydown);
-
-        if (panelButtons.length && panelViews.length) {
-            Array.prototype.forEach.call(panelButtons, function (button) {
-                button.addEventListener('click', function () {
-                    setActivePanel(button.getAttribute('data-panel'));
-                });
-            });
-            var defaultPanelButton = panel.querySelector('.iss-supernav__button.is-active');
-            var defaultPanel = defaultPanelButton ? defaultPanelButton.getAttribute('data-panel') : activePanel;
-            setActivePanel(defaultPanel);
-        }
 
         panel.addEventListener('click', function (event) {
             var link = event.target.closest('a');

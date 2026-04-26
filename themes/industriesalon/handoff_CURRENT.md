@@ -9,34 +9,28 @@
 
 ## Branch / Commit
 - Branch: `master`
-- HEAD at handoff write: `8ba4ced`
+- HEAD at handoff write: `3e20381`
 
 ## What Was Done This Session
-- Added post layout variants for normal posts without disabling Gutenberg:
-  - post meta `_iss_post_layout` (`standard`, `image`, `short`)
-  - editor sidebar selector in post document settings
-  - frontend body class `iss-post-layout-*`
-- Updated single-post CSS in `assets/css/patterns.css`:
-  - `standard`: hero image remains in container
-  - `image`: full-width hero with viewport height cap (prevents >100vh)
-  - `short`: compact mode, no large hero image
-- Extended single-post content polish (typography, media, captions, quotes, tables, responsive alignment behavior).
-- Removed now-redundant single-post image/align overrides from `assets/css/overrides.css`.
-- Purged DB template overrides for active theme (`front-page`, `hero-page`, `single`) so disk template files are authoritative.
+- Implemented reference-inspired header menu update:
+  - multi-panel off-canvas tabs: `Navigation`, `Kalender`, `Info`, `Suche`
+  - added tab/panel markup in `parts/header.html`
+  - added JS panel switch logic in `assets/js/header.js`
+  - added scoped styles in `assets/css/patterns.css`
+- Commit for menu update: `3e20381` (`feat(theme): add multi-panel off-canvas header menu`).
 
 ## Runtime Verification Snapshot
 - Active theme confirmed: `industriesalon` `1.1.0`.
 - Active theme path confirmed: `/var/www/html/wp-content/themes/industriesalon`.
-- Syntax check passed for `themes/industriesalon/functions.php`.
-- WP bootstrap check passed via `wp eval`.
+- JS syntax check passed for `themes/industriesalon/assets/js/header.js` (`node --check`).
 
 ## Open Item
-- Validate visual output for all three post layout variants on real posts (desktop + mobile).
+- Visual QA for new menu tabs/panels and off-canvas interactions (desktop + mobile).
 
 ## Suggested Next Step
-1. In post editor, set each layout (`standard`, `image`, `short`) on sample posts.
-2. Verify hero height cap behavior for `image` variant.
-3. Commit/push if visual QA passes.
+1. Open frontend and verify menu open/close and panel switching.
+2. Check focus behavior (open focus, ESC, overlay close).
+3. Tune panel content/labels if stakeholder feedback requests changes.
 
 ## Continuity Prompt
 - Start next session with: `read /home/vladimir/wp/themes/industriesalon/handoff_CURRENT.md`.

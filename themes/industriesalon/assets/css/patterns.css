@@ -3,7 +3,7 @@
    ROLE: Page templates, layout shells, and pattern-specific styling.
    PURPOSE:
    - Own all template composition that is too specific for style.css.
-   - Hold hero layouts, footer/header shells, landing-page assemblies,
+   - Hold hero layouts, footer shells, landing-page assemblies,
      plugin bridge layers, and pattern-only layout decisions.
    - Keep reusable card internals out of this file unless a pattern must
      override them locally.
@@ -29,9 +29,6 @@
    --iss-red / white / black / grey / green / blue / yellow / brown
 
    HIGH-IMPACT TEMPLATE CLASSES
-   .iss-site-header*
-       Sticky header shell and off-canvas navigation.
-
    .iss-site-footer*
        Footer layout and legal/contact navigation.
 
@@ -52,39 +49,26 @@
 
    TABLE OF CONTENTS
    -----------------
-    1. Header Navigation Shell .............. L 78
-    2. Footer Template ...................... L 320
-    3. Front Page Composition ............... L 598
-       3a. Front Page Rhythm ............... L 617
-       3b. Hero ............................. L 647
-       3c. Hero Banner / Note .............. L 813
-       3d. General Rhythm .................. L 1067
-       3e. Visit Panel ..................... L 1072
-       3f. Card Rows ....................... L 1088
-       3g. Media Text ...................... L 1189
-       3h. Newsletter Band ................. L 1227
-       3i. Responsive ...................... L 1270
-    4. Hero Page Template .................. L 1389
-    5. Microblocks ......................... L 1797
-    6. Default Page Template ............... L 1885
-    7. Inner Page Template ................. L 1895
-    8. Secondary Landing Cover ............. L 2033
-    9. Timeline Theme Bridge ............... L 2266
-       9a. Timeline Theme Layer ............ L 2278
-       9b. Timeline Color Schemes .......... L 2323
-       9c. Timeline Section Intro .......... L 2505
-   10. Visit Info Module ................... L 2633
-   11. Single Tour Page ................... L 3200
-   12. Tours Landing Page ................. L 3497
-   13. Info Panel (Anmeldung/Besuch/Vermietung) .. L (see search: .iss-info-panel)
-   14. Feature Split Stack ................ L (see search: .iss-feature-split-stack)
-   15. 50-50 Media Text ................... L 4239
-   16. Asymmetric Feature ................. L 4631
-   17. Newsletter + Funders Band .......... L 4885
-   18. Archive Landing .................... L 5126
-   19. Mission Support Strip .............. L 5818
-   20. Salon-Vermietung Page .............. L 5993
-   21. Single Blog Post Template .......... L 6267
+    1. Footer Template
+    2. Front Page Composition
+    3. Hero Page Template
+    4. Microblocks
+    5. Default Page Template
+    6. Inner Page Template
+    7. Secondary Landing Cover
+    8. Timeline Theme Bridge
+    9. Visit Info Module
+   10. Single Tour Page
+   11. Tours Landing Page
+   12. Info Panel (Anmeldung/Besuch/Vermietung)
+   13. Feature Split Stack
+   14. 50-50 Media Text
+   15. Asymmetric Feature
+   16. Newsletter + Funders Band
+   17. Archive Landing
+   18. Mission Support Strip
+   19. Salon-Vermietung Page
+   20. Single Blog Post Template
 
    MAINTENANCE RULE:
    When debugging, always check whether the issue is:
@@ -92,348 +76,6 @@
    2. card problem (cards.css),
    3. page composition problem (patterns.css).
    ===================================================================== */
-
-/* =========================================================
-   GROUP: HEADER NAVIGATION SHELL
-   PURPOSE:
-   Sticky header, logo scale, mobile/desktop menu toggle, overlay, and
-   off-canvas navigation shell.
-
-   USE THIS WHEN:
-   - Adjusting the visible header height or brand scale.
-   - Tuning menu overlay behavior or side panel spacing.
-
-   MAIN CONTROL VARIABLES:
-   --iss-site-header-pad-top
-   --iss-site-header-pad-bottom
-   --iss-site-logo-size
-   --iss-site-logo-bottom
-   ========================================================= */
-/* Header and navigation */
-
-:root {
-  --iss-site-header-pad-top: 3rem;
-  --iss-site-header-pad-bottom: 1rem;
-  --iss-site-logo-size: 80px;
-  --iss-site-logo-bottom: calc(var(--iss-site-header-pad-top) + var(--iss-site-logo-size));
-}
-
-@media (min-width: 782px) {
-  :root {
-    --iss-site-header-pad-top: 4.5rem;
-    --iss-site-logo-size: 120px;
-  }
-}
-
-/* .iss-site-header: Base class for iss site header; apply on primary wrapper/scope. */
-.iss-site-header {
-  position: fixed;
-  top: 0;
-  left: 0;
-  right: 0;
-  z-index: 1200;
-  pointer-events: none;
-}
-
-/* .iss-site-header__inner: Element class for `iss-site-header`; apply on `inner` element. */
-.iss-site-header__inner {
-  width: 100%;
-  max-width: var(--iss-content-width);
-  margin: 0 auto;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 1.5rem;
-  padding: var(--iss-site-header-pad-top) var(--iss-container-pad) var(--iss-site-header-pad-bottom);
-  pointer-events: none;
-}
-
-/* .iss-site-brand: Base class for iss site brand; apply on primary wrapper/scope. */
-.iss-site-brand {
-  display: inline-flex;
-  align-items: center;
-  min-width: 0;
-  pointer-events: auto;
-}
-
-/* .iss-header-actions: Base class for iss header actions; apply on primary wrapper/scope. */
-.iss-header-actions {
-  display: flex;
-  align-items: center;
-  gap: 0.75rem;
-  pointer-events: auto;
-}
-
-/* .iss-site-header: Base class for iss site header; apply on primary wrapper/scope. */
-/* .wp-block-site-logo: Base class for wp block site logo; apply on primary wrapper/scope. */
-.iss-site-header .wp-block-site-logo {
-  margin: 0;
-}
-
-/* Bigger Logo */
-/* .iss-site-header: Base class for iss site header; apply on primary wrapper/scope. */
-/* .custom-logo: Base class for custom logo; apply on primary wrapper/scope. */
-.iss-site-header .custom-logo,
-/* .iss-site-header: Base class for iss site header; apply on primary wrapper/scope. */
-/* .wp-block-site-logo: Base class for wp block site logo; apply on primary wrapper/scope. */
-.iss-site-header .wp-block-site-logo img {
-  width: var(--iss-site-logo-size);
-  height: auto;
-  object-fit: contain;
-  filter: drop-shadow(0 4px 12px rgba(0,0,0,0.15));
-}
-
-/* Menu Toggle (Mobile on Desktop) */
-/* .iss-nav-toggle: Base class for iss nav toggle; apply on primary wrapper/scope. */
-.iss-nav-toggle {
-  margin: 0;
-}
-
-/* .iss-nav-toggle: Base class for iss nav toggle; apply on primary wrapper/scope. */
-/* .wp-block-button__link: Element class for `wp-block-button`; apply on `link` element. */
-.iss-nav-toggle .wp-block-button__link {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  min-height: 48px;
-  min-width: 100px;
-  padding: 0.5rem 1.5rem;
-  border: 1px solid rgba(255, 255, 255, 0.25);
-  border-radius: var(--iss-radius-pill);
-  background: rgba(30, 30, 30, 0.4);
-  color: var(--iss-white);
-  backdrop-filter: blur(8px);
-  -webkit-backdrop-filter: blur(8px);
-  font-size: 0.95rem;
-  font-weight: 700;
-  text-transform: uppercase;
-  letter-spacing: 0.05em;
-  cursor: pointer;
-  text-decoration: none;
-  transition: all var(--iss-transition);
-}
-
-/* .iss-nav-toggle: Base class for iss nav toggle; apply on primary wrapper/scope. */
-/* .wp-block-button__link: Element class for `wp-block-button`; apply on `link` element. */
-.iss-nav-toggle .wp-block-button__link:hover {
-  background: var(--iss-red);
-  border-color: var(--iss-red);
-  transform: translateY(-2px);
-  box-shadow: 0 8px 20px rgba(0,0,0,0.2);
-}
-
-/* Off-Canvas Shell */
-/* .iss-nav-overlay: Base class for iss nav overlay; apply on primary wrapper/scope. */
-.iss-nav-overlay {
-  position: fixed;
-  inset: 0;
-  z-index: 1201;
-  background: rgba(0, 0, 0, 0.6);
-  opacity: 0;
-  visibility: hidden;
-  transition: opacity 0.3s ease;
-  pointer-events: none;
-}
-
-/* .iss-nav-overlay: Base class for iss nav overlay; apply on primary wrapper/scope. */
-/* .is-open: Base class for is open; apply on primary wrapper/scope. */
-.iss-nav-overlay.is-open {
-  opacity: 1;
-  visibility: visible;
-  pointer-events: auto;
-}
-
-/* .iss-menu-shell: Base class for iss menu shell; apply on primary wrapper/scope. */
-.iss-menu-shell {
-  position: fixed;
-  top: 0;
-  right: 0;
-  z-index: 1202;
-  width: 100%;
-  max-width: 420px;
-  height: 100vh;
-  background: var(--iss-black);
-  color: var(--iss-white);
-  transform: translateX(100%);
-  visibility: hidden;
-  transition: transform 0.4s cubic-bezier(0.16, 1, 0.3, 1);
-  box-shadow: -10px 0 40px rgba(0, 0, 0, 0.3);
-  pointer-events: none;
-}
-
-/* .iss-menu-shell: Base class for iss menu shell; apply on primary wrapper/scope. */
-/* .is-open: Base class for is open; apply on primary wrapper/scope. */
-.iss-menu-shell.is-open {
-  transform: translateX(0);
-  visibility: visible;
-  pointer-events: auto;
-}
-
-/* .iss-menu-shell__inner: Element class for `iss-menu-shell`; apply on `inner` element. */
-.iss-menu-shell__inner {
-  display: flex;
-  flex-direction: column;
-  height: 100%;
-  padding: 3rem 2.5rem;
-}
-
-/* .iss-menu-shell__topbar: Element class for `iss-menu-shell`; apply on `topbar` element. */
-.iss-menu-shell__topbar {
-  display: flex;
-  justify-content: flex-end;
-  margin-bottom: 1.25rem;
-}
-
-.iss-supernav-wrap {
-  margin-bottom: 1.5rem;
-}
-
-.iss-supernav {
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-  flex-wrap: wrap;
-}
-
-.iss-supernav__button {
-  border: 1px solid rgba(255, 255, 255, 0.22);
-  background: transparent;
-  color: rgba(255, 255, 255, 0.8);
-  min-height: 40px;
-  padding: 0.45rem 0.85rem;
-  border-radius: var(--iss-radius-pill);
-  font-size: 0.82rem;
-  font-weight: 700;
-  letter-spacing: 0.03em;
-  text-transform: uppercase;
-  cursor: pointer;
-  transition: all var(--iss-transition);
-}
-
-.iss-supernav__button:hover,
-.iss-supernav__button.is-active {
-  background: var(--iss-red);
-  border-color: var(--iss-red);
-  color: var(--iss-white);
-}
-
-.iss-menu-panels {
-  flex: 1 1 auto;
-  min-height: 0;
-  overflow-y: auto;
-  padding-right: 0.35rem;
-}
-
-.iss-menu-panel {
-  display: none;
-}
-
-.iss-menu-panel.is-visible {
-  display: block;
-}
-
-.iss-menu-panel__title {
-  margin: 0 0 1rem;
-  font-size: 1.1rem;
-  font-weight: 700;
-  color: var(--iss-white);
-}
-
-.iss-menu-panel__list {
-  list-style: none;
-  margin: 0;
-  padding: 0;
-}
-
-.iss-menu-panel__list li {
-  margin: 0 0 0.85rem;
-}
-
-.iss-menu-panel__list a {
-  color: var(--iss-white);
-  text-decoration: none;
-  font-size: 1.15rem;
-  font-weight: 600;
-}
-
-.iss-menu-panel__list a:hover {
-  color: var(--iss-red);
-}
-
-.iss-menu-search {
-  display: grid;
-  gap: 0.6rem;
-}
-
-.iss-menu-search__label {
-  font-size: 0.95rem;
-  font-weight: 600;
-}
-
-.iss-menu-search__input {
-  width: 100%;
-  min-height: 44px;
-  border: 1px solid rgba(255, 255, 255, 0.24);
-  background: rgba(255, 255, 255, 0.1);
-  color: var(--iss-white);
-  border-radius: 999px;
-  padding: 0.6rem 1rem;
-}
-
-.iss-menu-search__input::placeholder {
-  color: rgba(255, 255, 255, 0.7);
-}
-
-/* .iss-menu-shell__close: Element class for `iss-menu-shell`; apply on `close` element. */
-/* .wp-block-button__link: Element class for `wp-block-button`; apply on `link` element. */
-.iss-menu-shell__close .wp-block-button__link {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  min-width: 120px;
-  padding: 0.75rem 1.5rem;
-  border: 1px solid rgba(255, 255, 255, 0.2);
-  border-radius: var(--iss-radius-pill);
-  background: transparent;
-  color: var(--iss-white);
-  font-weight: 600;
-  text-decoration: none;
-  transition: all var(--iss-transition);
-}
-
-/* .iss-menu-shell__close: Element class for `iss-menu-shell`; apply on `close` element. */
-/* .wp-block-button__link: Element class for `wp-block-button`; apply on `link` element. */
-.iss-menu-shell__close .wp-block-button__link:hover {
-  background: var(--iss-red);
-  border-color: var(--iss-red);
-}
-
-/* .iss-header-nav: Base class for iss header nav; apply on primary wrapper/scope. */
-.iss-header-nav {
-  width: 100%;
-}
-
-/* .iss-header-nav: Base class for iss header nav; apply on primary wrapper/scope. */
-/* .wp-block-navigation-item: Base class for wp block navigation item; apply on primary wrapper/scope. */
-.iss-header-nav .wp-block-navigation-item {
-  margin-bottom: 1.5rem;
-}
-
-/* .iss-header-nav: Base class for iss header nav; apply on primary wrapper/scope. */
-/* .wp-block-navigation-item__label: Element class for `wp-block-navigation-item`; apply on `label` element. */
-.iss-header-nav .wp-block-navigation-item__label {
-  font-size: 1.5rem;
-  font-weight: 700;
-  color: var(--iss-white);
-  text-decoration: none;
-}
-
-/* .iss-header-nav: Base class for iss header nav; apply on primary wrapper/scope. */
-/* .wp-block-navigation-item__label: Element class for `wp-block-navigation-item`; apply on `label` element. */
-.iss-header-nav .wp-block-navigation-item__label:hover {
-  color: var(--iss-red);
-}
-
 
 /* =========================================================
    GROUP: FOOTER TEMPLATE
@@ -774,8 +416,8 @@
   --iss-hero-pad-bottom: clamp(2rem, 5vh, 4rem);
   --iss-hero-left-pad: max(var(--iss-container-pad), calc((100vw - var(--iss-content-width)) / 2 + var(--iss-container-pad)));
   --iss-hero-right-pad: clamp(0.75rem, 2.2vw, 2.25rem);
-  --iss-banner-shift-x: -400px;
-  --iss-banner-shift-y: 140px;
+  --iss-banner-shift-x: 250px;
+  --iss-banner-shift-y: 90px;
   --iss-hero-overlay: linear-gradient(
     90deg,
     rgba(30, 30, 30, 0.78) 0%,
@@ -6689,4 +6331,90 @@ Raum / Vermietung → brown
     width: 100%;
     margin: 1.5rem 0;
   }
+}
+/* =========================================================
+   TIMELINE – REFINED (mapped to plugin timeline markup)
+   ========================================================= */
+
+.iss-timeline {
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+}
+
+/* row */
+.iss-timeline .iss-timeline__item {
+  display: grid;
+  grid-template-columns: 160px 1fr;
+  gap: 1.5rem;
+
+  padding: 1.25rem 1.25rem 1.25rem 0.75rem;
+
+  border: 1px solid var(--iss-border);
+  /*border-radius: var(--iss-radius-md);*/
+  background: #fff;
+}
+
+/* left column */
+.iss-timeline .iss-timeline__date {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: rgba(30,30,30,0.65);
+
+  position: relative;
+  padding-left: 0.75rem;
+}
+
+/* subtle rail */
+.iss-timeline .iss-timeline__date::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  top: 0.2rem;
+  bottom: 0.2rem;
+  width: 2px;
+  background: var(--iss-border);
+}
+
+/* content */
+.iss-timeline .iss-timeline__content {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+}
+
+/* title */
+.iss-timeline .iss-timeline__title {
+  font-size: 1.4rem;
+  font-weight: 700;
+  line-height: 1.2;
+}
+
+/* description */
+.iss-timeline .iss-timeline__summary {
+  font-size: 0.95rem;
+  color: rgba(30,30,30,0.75);
+}
+
+/* actions */
+.iss-timeline .iss-timeline__actions {
+  margin-top: 0.5rem;
+  display: flex;
+  gap: 0.5rem;
+}
+
+/* make secondary buttons quieter */
+.iss-timeline .iss-timeline__actions .iss-timeline__btn--secondary {
+  padding: 0.55rem 0.9rem;
+  font-size: 0.85rem;
+}
+
+/* hover = slight lift */
+.iss-timeline .iss-timeline__item:hover {
+  transform: translateY(-2px);
+/*  box-shadow: 0 14px 32px rgba(0,0,0,0.08);*/
 }
