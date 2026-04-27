@@ -1,5 +1,20 @@
 # Industriesalon Theme Changelog
 
+## 2026-04-27
+- Restored front-page disk authority after syncing current live content back into `templates/front-page.html` and removing the DB `front-page` template override.
+- Replaced remaining front-page discovery pills with arrow/text links:
+  - `In kürzen` cards now use `Weiter`
+  - `Projekte` / `Über uns` media-text rows now use `Weiter`
+- Added a semantic accent scheme layer in `style.css`:
+  - wrapper classes `.iss-scheme-red|blue|green|yellow|brown`
+  - default shared accent surfaces now follow `--iss-accent`
+- Added top-level CSS documentation for scheme wrappers and default CTA usage.
+- Refactored reusable pattern files to prefer common color switching and low-chrome discovery CTAs:
+  - generic discovery CTAs now default to `Mehr` arrow links
+  - transactional request/inquiry actions remain buttons
+  - removed fixed decorative red/yellow modifiers from generic reusable patterns where they blocked wrapper-based color switching
+- Added reusable `.iss-action-link` helper for default discovery CTAs.
+
 ## 2026-04-26
 - Moved publication page rendering into native Gutenberg theme templates:
   - `templates/archive-publication.html`

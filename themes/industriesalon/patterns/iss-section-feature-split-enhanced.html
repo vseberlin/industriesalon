@@ -12,8 +12,8 @@ Description: Editorial split with left-aligned text, compact fact list with icon
 	<div class="wp-block-group iss-container">
 		<!-- wp:group {"className":"iss-heading iss-feature-stack__heading","layout":{"type":"default"}} -->
 		<div class="wp-block-group iss-heading iss-feature-stack__heading">
-			<!-- wp:paragraph {"className":"iss-kicker iss-kicker--yellow"} -->
-			<p class="iss-kicker iss-kicker--yellow">Für Schulklassen &amp; Gruppen</p>
+			<!-- wp:paragraph {"className":"iss-kicker"} -->
+			<p class="iss-kicker">Für Schulklassen &amp; Gruppen</p>
 			<!-- /wp:paragraph -->
 
 			<!-- wp:heading {"level":2,"className":"iss-heading__title iss-feature-stack__title"} -->
@@ -49,15 +49,17 @@ Description: Editorial split with left-aligned text, compact fact list with icon
 				<!-- /wp:list-item --></ul>
 				<!-- /wp:list -->
 
-				<!-- wp:buttons {"className":"iss-feature-stack__actions"} -->
-				<div class="wp-block-buttons iss-feature-stack__actions"><!-- wp:button -->
-				<div class="wp-block-button"><a class="wp-block-button__link wp-element-button" href="/fuehrungen/">Angebote ansehen</a></div>
-				<!-- /wp:button -->
+				<!-- wp:group {"className":"iss-feature-stack__actions","layout":{"type":"flex","flexWrap":"wrap"}} -->
+				<div class="wp-block-group iss-feature-stack__actions"><!-- wp:paragraph -->
+				<p><a class="iss-action-link" href="/fuehrungen/">Mehr</a></p>
+				<!-- /wp:paragraph -->
 
-				<!-- wp:button {"className":"is-style-outline"} -->
+				<!-- wp:buttons -->
+				<div class="wp-block-buttons"><!-- wp:button {"className":"is-style-outline"} -->
 				<div class="wp-block-button is-style-outline"><a class="wp-block-button__link wp-element-button" href="/kontakt/">Anfrage stellen</a></div>
 				<!-- /wp:button --></div>
-				<!-- /wp:buttons -->
+				<!-- /wp:buttons --></div>
+				<!-- /wp:group -->
 			</div>
 			<!-- /wp:column -->
 
@@ -67,8 +69,8 @@ Description: Editorial split with left-aligned text, compact fact list with icon
 				<!-- wp:group {"className":"iss-feature-stack__media-grid","layout":{"type":"default"}} -->
 				<div class="wp-block-group iss-feature-stack__media-grid">
 
-					<!-- wp:group {"className":"iss-feature-stack__media iss-feature-stack__media--primary iss-media-card iss-media-card--yellow iss-media-card--contain iss-media-card--framed","layout":{"type":"default"}} -->
-					<div class="wp-block-group iss-feature-stack__media iss-feature-stack__media--primary iss-media-card iss-media-card--yellow iss-media-card--contain iss-media-card--framed">
+					<!-- wp:group {"className":"iss-feature-stack__media iss-feature-stack__media--primary iss-media-card iss-media-card--contain iss-media-card--framed","layout":{"type":"default"}} -->
+					<div class="wp-block-group iss-feature-stack__media iss-feature-stack__media--primary iss-media-card iss-media-card--contain iss-media-card--framed">
 						<!-- wp:image {"id":12426,"sizeSlug":"large","linkDestination":"none","className":"iss-feature-stack__image"} -->
 						<figure class="wp-block-image size-large iss-feature-stack__image"><img src="http://192.168.2.31:8082/wp-content/uploads/2026/04/715yWXXfaFL._SL1500_-1024x977.jpg" alt="Publikation des Industriesalons" class="wp-image-12426"/></figure>
 						<!-- /wp:image -->
@@ -83,8 +85,8 @@ Description: Editorial split with left-aligned text, compact fact list with icon
 					</div>
 					<!-- /wp:group -->
 
-					<!-- wp:group {"className":"iss-feature-stack__media iss-feature-stack__media--detail iss-media-card iss-media-card--red iss-media-card--cover iss-media-card--soft iss-media-card--rail-thin","layout":{"type":"default"}} -->
-					<div class="wp-block-group iss-feature-stack__media iss-feature-stack__media--detail iss-media-card iss-media-card--red iss-media-card--cover iss-media-card--soft iss-media-card--rail-thin">
+					<!-- wp:group {"className":"iss-feature-stack__media iss-feature-stack__media--detail iss-media-card iss-media-card--cover iss-media-card--soft iss-media-card--rail-thin","layout":{"type":"default"}} -->
+					<div class="wp-block-group iss-feature-stack__media iss-feature-stack__media--detail iss-media-card iss-media-card--cover iss-media-card--soft iss-media-card--rail-thin">
 						<!-- wp:image {"id":7485,"sizeSlug":"large","linkDestination":"none","className":"iss-feature-stack__image"} -->
 						<figure class="wp-block-image size-large iss-feature-stack__image"><img src="http://192.168.2.31:8082/wp-content/uploads/2023/05/Peter-Behrens-Bau-FH-1-jpg-1024x697.webp" alt="Industriearchitektur in Schöneweide" class="wp-image-7485"/></figure>
 						<!-- /wp:image -->

@@ -214,7 +214,7 @@ function iss_fuehrung_render_archive_card($post_id) {
     }
 
     echo '<div class="iss-card__footer">';
-    echo '<a class="iss-card__link" href="' . esc_url($permalink) . '">Mehr erfahren</a>';
+    echo '<a class="iss-card__link" href="' . esc_url($permalink) . '">Mehr</a>';
     echo '</div>';
     echo '</div>';
     echo '</article>';

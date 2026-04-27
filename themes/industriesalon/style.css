@@ -72,6 +72,13 @@ Tags: block-theme, full-site-editing, custom-colors, custom-spacing, editor-styl
 
    MAIN CONTROL CLASSES
    --------------------
+   .iss-scheme-red / --blue / --green / --yellow / --brown
+       Optional wrapper classes for page or section-level accent switching.
+       Apply one of these on the outer Group/Section block in Gutenberg
+       when a whole section should inherit a different accent color.
+       They only affect shared accent-driven UI, not explicit red/blue/
+       green component modifiers.
+
    .iss-container
        Standard content cage. Use this for almost every normal section.
 
@@ -105,6 +112,13 @@ Tags: block-theme, full-site-editing, custom-colors, custom-spacing, editor-styl
        - default: full-width hairline
        - --indent: shorter left-aligned line
        - --accent: short red thematic break
+
+   .iss-action-link + modifiers
+       Default low-chrome CTA. Use this for generic "read more" or
+       discovery links instead of pill buttons. Preferred label: "Mehr".
+       Variants:
+       - default: dark text on light backgrounds, accent on hover
+       - --light: white text for dark hero/cover contexts
 
    .section--with-rail
        Decorative right-side fade rail for selected sections only. Use
@@ -216,6 +230,39 @@ body {
   font-family: "IBM Plex Sans", system-ui, sans-serif;
   font-size: 16px;
   line-height: 1.6;
+}
+
+/* Default arrow CTA for discovery links. Use pill buttons only for explicit actions. */
+.iss-action-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  color: var(--iss-black);
+  font-size: 0.95rem;
+  font-weight: 600;
+  text-decoration: none;
+  transition: color var(--iss-transition);
+}
+
+.iss-action-link::after {
+  content: "→";
+  font-size: 1rem;
+  line-height: 1;
+  transition: transform var(--iss-transition);
+}
+
+.iss-action-link:hover,
+.iss-action-link:focus-visible {
+  color: var(--iss-accent);
+}
+
+.iss-action-link:hover::after,
+.iss-action-link:focus-visible::after {
+  transform: translateX(2px);
+}
+
+.iss-action-link--light {
+  color: var(--iss-white);
 }
 
 /* Base Container */

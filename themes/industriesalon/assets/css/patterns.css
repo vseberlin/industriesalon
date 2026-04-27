@@ -1942,6 +1942,19 @@
   margin-top: 0.75rem;
 }
 
+.iss-landing-hero__actions > p,
+.iss-landing-hero__actions > .wp-block-buttons,
+.iss-hero__actions > p,
+.iss-hero__actions > .wp-block-buttons,
+.iss-feature-stack__actions > p,
+.iss-feature-stack__actions > .wp-block-buttons {
+  margin: 0;
+}
+
+.iss-hero__actions {
+  margin-top: 0.75rem;
+}
+
 /* .iss-landing-hero__actions: Element class for `iss-landing-hero`; apply on `actions` element. */
 /* .is-style-outline: Base class for is style outline; apply on primary wrapper/scope. */
 /* .wp-block-button__link: Element class for `wp-block-button`; apply on `link` element. */
