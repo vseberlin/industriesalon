@@ -19,6 +19,8 @@ add_action('after_setup_theme', function () {
             'assets/css/cards.css',
             'assets/css/patterns.css',
             'assets/css/overrides.css',
+            'assets/css/iss-flex-split.css',
+            'assets/css/ueber-uns.css',
         )
     );
 });
@@ -151,6 +153,13 @@ function industriesalon_register_block_patterns(): void
             'description' => 'Editorial opener for publications pages and research-related landings.',
             'categories' => array('industriesalon', 'text'),
             'file' => '/patterns/iss-publications-intro.html',
+        ),
+        array(
+            'name' => 'industriesalon/recognition-split',
+            'title' => 'ISS Recognition Split',
+            'description' => 'Editorial recognition section with a tall media column, trio intro, and two supporting award cards. Remove iss-flex-split--reverse to move the media left.',
+            'categories' => array('industriesalon', 'text', 'media'),
+            'file' => '/patterns/iss-section-recognition-split.html',
         ),
     );
 

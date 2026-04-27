@@ -2145,8 +2145,8 @@
 .iss-timeline,
 /* .iss-timeline-sections: Base class for iss timeline sections; apply on primary wrapper/scope. */
 .iss-timeline-sections,
-/* .iss-timeline-latest: Base class for iss timeline latest; apply on primary wrapper/scope. */
-.iss-timeline-latest {
+/* .iss-timeline-query: Base class for iss timeline query; apply on primary wrapper/scope. */
+.iss-timeline-query {
   --iss-tl-text: var(--iss-black, #1e1e1e);
   --iss-tl-muted: rgba(30, 30, 30, 0.72);
   --iss-tl-line: var(--iss-accent-border, rgba(232, 29, 37, 0.28));
@@ -2174,11 +2174,6 @@
   justify-content: right;
 }
 
-/* .iss-timeline--latest: Modifier class for `iss-timeline`; combine for `latest` variant. */
-.iss-timeline--latest {
-  width: 100%;
-}
-
 /* =====================================================================
    TIMELINE COLOR SCHEMES
    ---------------------------------------------------------------------
@@ -2199,17 +2194,17 @@
 /* .iss-timeline-sections: Base class for iss timeline sections; apply on primary wrapper/scope. */
 /* .iss-timeline--scheme-scarlet-red: Modifier class for `iss-timeline`; combine for `scheme-scarlet-red` variant. */
 .iss-timeline-sections.iss-timeline--scheme-scarlet-red,
-/* .iss-timeline-latest: Base class for iss timeline latest; apply on primary wrapper/scope. */
+/* .iss-timeline-query: Base class for iss timeline query; apply on primary wrapper/scope. */
 /* .iss-timeline--scheme-scarlet-red: Modifier class for `iss-timeline`; combine for `scheme-scarlet-red` variant. */
-.iss-timeline-latest.iss-timeline--scheme-scarlet-red,
+.iss-timeline-query.iss-timeline--scheme-scarlet-red,
 /* .iss-timeline-sections: Base class for iss timeline sections; apply on primary wrapper/scope. */
 /* .iss-timeline--scheme-scarlet-red: Modifier class for `iss-timeline`; combine for `scheme-scarlet-red` variant. */
 /* .iss-timeline: Base class for iss timeline; apply on primary wrapper/scope. */
 .iss-timeline-sections.iss-timeline--scheme-scarlet-red .iss-timeline,
-/* .iss-timeline-latest: Base class for iss timeline latest; apply on primary wrapper/scope. */
+/* .iss-timeline-query: Base class for iss timeline query; apply on primary wrapper/scope. */
 /* .iss-timeline--scheme-scarlet-red: Modifier class for `iss-timeline`; combine for `scheme-scarlet-red` variant. */
 /* .iss-timeline: Base class for iss timeline; apply on primary wrapper/scope. */
-.iss-timeline-latest.iss-timeline--scheme-scarlet-red .iss-timeline {
+.iss-timeline-query.iss-timeline--scheme-scarlet-red .iss-timeline {
   --iss-tl-primary: var(--wp--preset--color--scarlet-red, #e81d25);
   --iss-tl-line: rgba(232, 29, 37, 0.28);
 }
@@ -2220,17 +2215,17 @@
 /* .iss-timeline-sections: Base class for iss timeline sections; apply on primary wrapper/scope. */
 /* .iss-timeline--scheme-vaporous-white: Modifier class for `iss-timeline`; combine for `scheme-vaporous-white` variant. */
 .iss-timeline-sections.iss-timeline--scheme-vaporous-white,
-/* .iss-timeline-latest: Base class for iss timeline latest; apply on primary wrapper/scope. */
+/* .iss-timeline-query: Base class for iss timeline query; apply on primary wrapper/scope. */
 /* .iss-timeline--scheme-vaporous-white: Modifier class for `iss-timeline`; combine for `scheme-vaporous-white` variant. */
-.iss-timeline-latest.iss-timeline--scheme-vaporous-white,
+.iss-timeline-query.iss-timeline--scheme-vaporous-white,
 /* .iss-timeline-sections: Base class for iss timeline sections; apply on primary wrapper/scope. */
 /* .iss-timeline--scheme-vaporous-white: Modifier class for `iss-timeline`; combine for `scheme-vaporous-white` variant. */
 /* .iss-timeline: Base class for iss timeline; apply on primary wrapper/scope. */
 .iss-timeline-sections.iss-timeline--scheme-vaporous-white .iss-timeline,
-/* .iss-timeline-latest: Base class for iss timeline latest; apply on primary wrapper/scope. */
+/* .iss-timeline-query: Base class for iss timeline query; apply on primary wrapper/scope. */
 /* .iss-timeline--scheme-vaporous-white: Modifier class for `iss-timeline`; combine for `scheme-vaporous-white` variant. */
 /* .iss-timeline: Base class for iss timeline; apply on primary wrapper/scope. */
-.iss-timeline-latest.iss-timeline--scheme-vaporous-white .iss-timeline {
+.iss-timeline-query.iss-timeline--scheme-vaporous-white .iss-timeline {
   --iss-tl-primary: var(--wp--preset--color--vaporous-white, #f9f9fa);
   --iss-tl-line: rgba(249, 249, 250, 0.55);
 }
@@ -2241,17 +2236,17 @@
 /* .iss-timeline-sections: Base class for iss timeline sections; apply on primary wrapper/scope. */
 /* .iss-timeline--scheme-eerie-black: Modifier class for `iss-timeline`; combine for `scheme-eerie-black` variant. */
 .iss-timeline-sections.iss-timeline--scheme-eerie-black,
-/* .iss-timeline-latest: Base class for iss timeline latest; apply on primary wrapper/scope. */
+/* .iss-timeline-query: Base class for iss timeline query; apply on primary wrapper/scope. */
 /* .iss-timeline--scheme-eerie-black: Modifier class for `iss-timeline`; combine for `scheme-eerie-black` variant. */
-.iss-timeline-latest.iss-timeline--scheme-eerie-black,
+.iss-timeline-query.iss-timeline--scheme-eerie-black,
 /* .iss-timeline-sections: Base class for iss timeline sections; apply on primary wrapper/scope. */
 /* .iss-timeline--scheme-eerie-black: Modifier class for `iss-timeline`; combine for `scheme-eerie-black` variant. */
 /* .iss-timeline: Base class for iss timeline; apply on primary wrapper/scope. */
 .iss-timeline-sections.iss-timeline--scheme-eerie-black .iss-timeline,
-/* .iss-timeline-latest: Base class for iss timeline latest; apply on primary wrapper/scope. */
+/* .iss-timeline-query: Base class for iss timeline query; apply on primary wrapper/scope. */
 /* .iss-timeline--scheme-eerie-black: Modifier class for `iss-timeline`; combine for `scheme-eerie-black` variant. */
 /* .iss-timeline: Base class for iss timeline; apply on primary wrapper/scope. */
-.iss-timeline-latest.iss-timeline--scheme-eerie-black .iss-timeline {
+.iss-timeline-query.iss-timeline--scheme-eerie-black .iss-timeline {
   --iss-tl-primary: var(--wp--preset--color--eerie-black, #1e1e1e);
   --iss-tl-line: rgba(30, 30, 30, 0.35);
 }
@@ -2262,17 +2257,17 @@
 /* .iss-timeline-sections: Base class for iss timeline sections; apply on primary wrapper/scope. */
 /* .iss-timeline--scheme-cerebral-grey: Modifier class for `iss-timeline`; combine for `scheme-cerebral-grey` variant. */
 .iss-timeline-sections.iss-timeline--scheme-cerebral-grey,
-/* .iss-timeline-latest: Base class for iss timeline latest; apply on primary wrapper/scope. */
+/* .iss-timeline-query: Base class for iss timeline query; apply on primary wrapper/scope. */
 /* .iss-timeline--scheme-cerebral-grey: Modifier class for `iss-timeline`; combine for `scheme-cerebral-grey` variant. */
-.iss-timeline-latest.iss-timeline--scheme-cerebral-grey,
+.iss-timeline-query.iss-timeline--scheme-cerebral-grey,
 /* .iss-timeline-sections: Base class for iss timeline sections; apply on primary wrapper/scope. */
 /* .iss-timeline--scheme-cerebral-grey: Modifier class for `iss-timeline`; combine for `scheme-cerebral-grey` variant. */
 /* .iss-timeline: Base class for iss timeline; apply on primary wrapper/scope. */
 .iss-timeline-sections.iss-timeline--scheme-cerebral-grey .iss-timeline,
-/* .iss-timeline-latest: Base class for iss timeline latest; apply on primary wrapper/scope. */
+/* .iss-timeline-query: Base class for iss timeline query; apply on primary wrapper/scope. */
 /* .iss-timeline--scheme-cerebral-grey: Modifier class for `iss-timeline`; combine for `scheme-cerebral-grey` variant. */
 /* .iss-timeline: Base class for iss timeline; apply on primary wrapper/scope. */
-.iss-timeline-latest.iss-timeline--scheme-cerebral-grey .iss-timeline {
+.iss-timeline-query.iss-timeline--scheme-cerebral-grey .iss-timeline {
   --iss-tl-primary: var(--wp--preset--color--cerebral-grey, #c0b8b5);
   --iss-tl-line: rgba(192, 184, 181, 0.38);
 }
@@ -2283,17 +2278,17 @@
 /* .iss-timeline-sections: Base class for iss timeline sections; apply on primary wrapper/scope. */
 /* .iss-timeline--scheme-turtle-green: Modifier class for `iss-timeline`; combine for `scheme-turtle-green` variant. */
 .iss-timeline-sections.iss-timeline--scheme-turtle-green,
-/* .iss-timeline-latest: Base class for iss timeline latest; apply on primary wrapper/scope. */
+/* .iss-timeline-query: Base class for iss timeline query; apply on primary wrapper/scope. */
 /* .iss-timeline--scheme-turtle-green: Modifier class for `iss-timeline`; combine for `scheme-turtle-green` variant. */
-.iss-timeline-latest.iss-timeline--scheme-turtle-green,
+.iss-timeline-query.iss-timeline--scheme-turtle-green,
 /* .iss-timeline-sections: Base class for iss timeline sections; apply on primary wrapper/scope. */
 /* .iss-timeline--scheme-turtle-green: Modifier class for `iss-timeline`; combine for `scheme-turtle-green` variant. */
 /* .iss-timeline: Base class for iss timeline; apply on primary wrapper/scope. */
 .iss-timeline-sections.iss-timeline--scheme-turtle-green .iss-timeline,
-/* .iss-timeline-latest: Base class for iss timeline latest; apply on primary wrapper/scope. */
+/* .iss-timeline-query: Base class for iss timeline query; apply on primary wrapper/scope. */
 /* .iss-timeline--scheme-turtle-green: Modifier class for `iss-timeline`; combine for `scheme-turtle-green` variant. */
 /* .iss-timeline: Base class for iss timeline; apply on primary wrapper/scope. */
-.iss-timeline-latest.iss-timeline--scheme-turtle-green .iss-timeline {
+.iss-timeline-query.iss-timeline--scheme-turtle-green .iss-timeline {
   --iss-tl-primary: var(--wp--preset--color--turtle-green, #579e7d);
   --iss-tl-line: rgba(87, 158, 125, 0.32);
 }
@@ -2304,17 +2299,17 @@
 /* .iss-timeline-sections: Base class for iss timeline sections; apply on primary wrapper/scope. */
 /* .iss-timeline--scheme-pale-rock-blue: Modifier class for `iss-timeline`; combine for `scheme-pale-rock-blue` variant. */
 .iss-timeline-sections.iss-timeline--scheme-pale-rock-blue,
-/* .iss-timeline-latest: Base class for iss timeline latest; apply on primary wrapper/scope. */
+/* .iss-timeline-query: Base class for iss timeline query; apply on primary wrapper/scope. */
 /* .iss-timeline--scheme-pale-rock-blue: Modifier class for `iss-timeline`; combine for `scheme-pale-rock-blue` variant. */
-.iss-timeline-latest.iss-timeline--scheme-pale-rock-blue,
+.iss-timeline-query.iss-timeline--scheme-pale-rock-blue,
 /* .iss-timeline-sections: Base class for iss timeline sections; apply on primary wrapper/scope. */
 /* .iss-timeline--scheme-pale-rock-blue: Modifier class for `iss-timeline`; combine for `scheme-pale-rock-blue` variant. */
 /* .iss-timeline: Base class for iss timeline; apply on primary wrapper/scope. */
 .iss-timeline-sections.iss-timeline--scheme-pale-rock-blue .iss-timeline,
-/* .iss-timeline-latest: Base class for iss timeline latest; apply on primary wrapper/scope. */
+/* .iss-timeline-query: Base class for iss timeline query; apply on primary wrapper/scope. */
 /* .iss-timeline--scheme-pale-rock-blue: Modifier class for `iss-timeline`; combine for `scheme-pale-rock-blue` variant. */
 /* .iss-timeline: Base class for iss timeline; apply on primary wrapper/scope. */
-.iss-timeline-latest.iss-timeline--scheme-pale-rock-blue .iss-timeline {
+.iss-timeline-query.iss-timeline--scheme-pale-rock-blue .iss-timeline {
   --iss-tl-primary: var(--wp--preset--color--pale-rock-blue, #869fba);
   --iss-tl-line: rgba(134, 159, 186, 0.34);
 }
@@ -2325,17 +2320,17 @@
 /* .iss-timeline-sections: Base class for iss timeline sections; apply on primary wrapper/scope. */
 /* .iss-timeline--scheme-sunrise-yellow: Modifier class for `iss-timeline`; combine for `scheme-sunrise-yellow` variant. */
 .iss-timeline-sections.iss-timeline--scheme-sunrise-yellow,
-/* .iss-timeline-latest: Base class for iss timeline latest; apply on primary wrapper/scope. */
+/* .iss-timeline-query: Base class for iss timeline query; apply on primary wrapper/scope. */
 /* .iss-timeline--scheme-sunrise-yellow: Modifier class for `iss-timeline`; combine for `scheme-sunrise-yellow` variant. */
-.iss-timeline-latest.iss-timeline--scheme-sunrise-yellow,
+.iss-timeline-query.iss-timeline--scheme-sunrise-yellow,
 /* .iss-timeline-sections: Base class for iss timeline sections; apply on primary wrapper/scope. */
 /* .iss-timeline--scheme-sunrise-yellow: Modifier class for `iss-timeline`; combine for `scheme-sunrise-yellow` variant. */
 /* .iss-timeline: Base class for iss timeline; apply on primary wrapper/scope. */
 .iss-timeline-sections.iss-timeline--scheme-sunrise-yellow .iss-timeline,
-/* .iss-timeline-latest: Base class for iss timeline latest; apply on primary wrapper/scope. */
+/* .iss-timeline-query: Base class for iss timeline query; apply on primary wrapper/scope. */
 /* .iss-timeline--scheme-sunrise-yellow: Modifier class for `iss-timeline`; combine for `scheme-sunrise-yellow` variant. */
 /* .iss-timeline: Base class for iss timeline; apply on primary wrapper/scope. */
-.iss-timeline-latest.iss-timeline--scheme-sunrise-yellow .iss-timeline {
+.iss-timeline-query.iss-timeline--scheme-sunrise-yellow .iss-timeline {
   --iss-tl-primary: var(--wp--preset--color--sunrise-yellow, #ebbc1e);
   --iss-tl-line: rgba(235, 188, 30, 0.38);
 }
@@ -2346,17 +2341,17 @@
 /* .iss-timeline-sections: Base class for iss timeline sections; apply on primary wrapper/scope. */
 /* .iss-timeline--scheme-russet-brown: Modifier class for `iss-timeline`; combine for `scheme-russet-brown` variant. */
 .iss-timeline-sections.iss-timeline--scheme-russet-brown,
-/* .iss-timeline-latest: Base class for iss timeline latest; apply on primary wrapper/scope. */
+/* .iss-timeline-query: Base class for iss timeline query; apply on primary wrapper/scope. */
 /* .iss-timeline--scheme-russet-brown: Modifier class for `iss-timeline`; combine for `scheme-russet-brown` variant. */
-.iss-timeline-latest.iss-timeline--scheme-russet-brown,
+.iss-timeline-query.iss-timeline--scheme-russet-brown,
 /* .iss-timeline-sections: Base class for iss timeline sections; apply on primary wrapper/scope. */
 /* .iss-timeline--scheme-russet-brown: Modifier class for `iss-timeline`; combine for `scheme-russet-brown` variant. */
 /* .iss-timeline: Base class for iss timeline; apply on primary wrapper/scope. */
 .iss-timeline-sections.iss-timeline--scheme-russet-brown .iss-timeline,
-/* .iss-timeline-latest: Base class for iss timeline latest; apply on primary wrapper/scope. */
+/* .iss-timeline-query: Base class for iss timeline query; apply on primary wrapper/scope. */
 /* .iss-timeline--scheme-russet-brown: Modifier class for `iss-timeline`; combine for `scheme-russet-brown` variant. */
 /* .iss-timeline: Base class for iss timeline; apply on primary wrapper/scope. */
-.iss-timeline-latest.iss-timeline--scheme-russet-brown .iss-timeline {
+.iss-timeline-query.iss-timeline--scheme-russet-brown .iss-timeline {
   --iss-tl-primary: var(--wp--preset--color--russet-brown, #753a18);
   --iss-tl-line: rgba(117, 58, 24, 0.36);
 }
@@ -2375,9 +2370,9 @@
 /* .iss-timeline-sections: Base class for iss timeline sections; apply on primary wrapper/scope. */
 /* .iss-heading: Base class for iss heading; apply on primary wrapper/scope. */
 .iss-timeline-sections .iss-heading,
-/* .iss-timeline-latest: Base class for iss timeline latest; apply on primary wrapper/scope. */
+/* .iss-timeline-query: Base class for iss timeline query; apply on primary wrapper/scope. */
 /* .iss-heading: Base class for iss heading; apply on primary wrapper/scope. */
-.iss-timeline-latest .iss-heading {
+.iss-timeline-query .iss-heading {
   width: 100%;
   margin-left: 0;
   margin-right: auto;
@@ -2395,10 +2390,10 @@
 /* .iss-heading: Base class for iss heading; apply on primary wrapper/scope. */
 /* .iss-heading--uncaged: Modifier class for `iss-heading`; combine for `uncaged` variant. */
 .iss-timeline-sections .iss-heading:not(.iss-heading--uncaged),
-/* .iss-timeline-latest: Base class for iss timeline latest; apply on primary wrapper/scope. */
+/* .iss-timeline-query: Base class for iss timeline query; apply on primary wrapper/scope. */
 /* .iss-heading: Base class for iss heading; apply on primary wrapper/scope. */
 /* .iss-heading--uncaged: Modifier class for `iss-heading`; combine for `uncaged` variant. */
-.iss-timeline-latest .iss-heading:not(.iss-heading--uncaged) {
+.iss-timeline-query .iss-heading:not(.iss-heading--uncaged) {
   max-width: var(--iss-heading-max-width, 42rem);
 }
 
@@ -2427,18 +2422,18 @@
 /* .iss-heading: Base class for iss heading; apply on primary wrapper/scope. */
 /* .iss-heading__text: Element class for `iss-heading`; apply on `text` element. */
 .iss-timeline-sections .iss-heading > .iss-heading__text,
-/* .iss-timeline-latest: Base class for iss timeline latest; apply on primary wrapper/scope. */
+/* .iss-timeline-query: Base class for iss timeline query; apply on primary wrapper/scope. */
 /* .iss-heading: Base class for iss heading; apply on primary wrapper/scope. */
 /* .iss-kicker: Base class for iss kicker; apply on primary wrapper/scope. */
-.iss-timeline-latest .iss-heading > .iss-kicker,
-/* .iss-timeline-latest: Base class for iss timeline latest; apply on primary wrapper/scope. */
+.iss-timeline-query .iss-heading > .iss-kicker,
+/* .iss-timeline-query: Base class for iss timeline query; apply on primary wrapper/scope. */
 /* .iss-heading: Base class for iss heading; apply on primary wrapper/scope. */
 /* .iss-heading__title: Element class for `iss-heading`; apply on `title` element. */
-.iss-timeline-latest .iss-heading > .iss-heading__title,
-/* .iss-timeline-latest: Base class for iss timeline latest; apply on primary wrapper/scope. */
+.iss-timeline-query .iss-heading > .iss-heading__title,
+/* .iss-timeline-query: Base class for iss timeline query; apply on primary wrapper/scope. */
 /* .iss-heading: Base class for iss heading; apply on primary wrapper/scope. */
 /* .iss-heading__text: Element class for `iss-heading`; apply on `text` element. */
-.iss-timeline-latest .iss-heading > .iss-heading__text {
+.iss-timeline-query .iss-heading > .iss-heading__text {
   margin-left: 0;
   margin-right: 0;
   text-align: inherit;
@@ -2455,10 +2450,10 @@
 .iss-timeline-sections__header,
 /* .iss-timeline-sections__intro: Element class for `iss-timeline-sections`; apply on `intro` element. */
 .iss-timeline-sections__intro,
-/* .iss-timeline-latest__header: Element class for `iss-timeline-latest`; apply on `header` element. */
-.iss-timeline-latest__header,
-/* .iss-timeline-latest__intro: Element class for `iss-timeline-latest`; apply on `intro` element. */
-.iss-timeline-latest__intro {
+/* .iss-timeline-query__header: Element class for `iss-timeline-query`; apply on `header` element. */
+.iss-timeline-query__header,
+/* .iss-timeline-query__intro: Element class for `iss-timeline-query`; apply on `intro` element. */
+.iss-timeline-query__intro {
   justify-items: start;
   align-items: flex-start;
 }
@@ -2470,9 +2465,9 @@
 /* .iss-timeline-sections: Base class for iss timeline sections; apply on primary wrapper/scope. */
 /* .wp-block-buttons: Base class for wp block buttons; apply on primary wrapper/scope. */
 .iss-timeline-sections .wp-block-buttons,
-/* .iss-timeline-latest: Base class for iss timeline latest; apply on primary wrapper/scope. */
+/* .iss-timeline-query: Base class for iss timeline query; apply on primary wrapper/scope. */
 /* .wp-block-buttons: Base class for wp block buttons; apply on primary wrapper/scope. */
-.iss-timeline-latest .wp-block-buttons {
+.iss-timeline-query .wp-block-buttons {
   justify-content: flex-start;
 }
 
@@ -2482,9 +2477,9 @@
 /* .iss-timeline-sections: Base class for iss timeline sections; apply on primary wrapper/scope. */
 /* .has-text-align-center: Base class for has text align center; apply on primary wrapper/scope. */
 .iss-timeline-sections .has-text-align-center,
-/* .iss-timeline-latest: Base class for iss timeline latest; apply on primary wrapper/scope. */
+/* .iss-timeline-query: Base class for iss timeline query; apply on primary wrapper/scope. */
 /* .has-text-align-center: Base class for has text align center; apply on primary wrapper/scope. */
-.iss-timeline-latest .has-text-align-center {
+.iss-timeline-query .has-text-align-center {
   text-align: left;
 }
 
@@ -3949,6 +3944,9 @@ Raum / Vermietung → brown
 /* .iss-feature-stack__title: Element class for `iss-feature-stack`; apply on `title` element. */
 .iss-feature-stack__title {
   margin: 0;
+  font-size: clamp(1.55rem, 1.2rem + 1vw, 2.15rem);
+  line-height: 1.12;
+  max-width: 12ch;
 }
 
 /* .iss-feature-stack__text: Element class for `iss-feature-stack`; apply on `text` element. */
@@ -3964,8 +3962,9 @@ Raum / Vermietung → brown
 
 /* .iss-feature-stack__actions: Element class for `iss-feature-stack`; apply on `actions` element. */
 .iss-feature-stack__actions {
-  margin-top: 0;
-  justify-content: flex-start;
+  margin-top: auto;
+  width: 100%;
+  justify-content: flex-end;
 }
 
 /* .iss-feature-stack__media-col: Element class for `iss-feature-stack`; apply on `media-col` element. */
@@ -3976,6 +3975,7 @@ Raum / Vermietung → brown
   align-items: stretch;
   align-self: stretch;
   min-height: 0;
+  gap: 1rem;
 }
 
 /* .iss-feature-stack__media-grid: Element class for `iss-feature-stack`; apply on `media-grid` element. */
@@ -3985,7 +3985,7 @@ Raum / Vermietung → brown
   gap: var(--iss-feature-stack-media-gap);
   width: 100%;
   max-width: none;
-  height: 100%;
+  min-height: clamp(18rem, 28vw, 24rem);
   margin-left: 0;
   margin-right: 0;
   align-items: stretch;
@@ -4000,12 +4000,13 @@ Raum / Vermietung → brown
   min-width: 0;
   height: 100%;
   min-height: 0;
+  aspect-ratio: 3 / 4;
   background: rgba(30, 30, 30, 0.04);
 }
 
 /* .iss-feature-stack__media--primary: Element class for `iss-feature-stack`; apply on `media--primary` element. */
 .iss-feature-stack__media--primary {
-  flex: 1.2 1 0;
+  flex: 1 1 0;
 }
 
 /* .iss-feature-stack__media--secondary: Element class for `iss-feature-stack`; apply on `media--secondary` element. */
@@ -4015,7 +4016,16 @@ Raum / Vermietung → brown
 
 /* .iss-feature-stack__media--detail: Element class for `iss-feature-stack`; apply on `media--detail` element. */
 .iss-feature-stack__media--detail {
-  flex: 0.8 1 0;
+  flex: 1 1 0;
+}
+
+/* .iss-feature-stack__media: Element class for `iss-feature-stack`; apply on `media` element. */
+.iss-feature-stack__media > .wp-block-image,
+.iss-feature-stack__media > figure,
+.iss-feature-stack__image {
+  width: 100%;
+  height: 100%;
+  margin: 0;
 }
 
 /* .iss-feature-stack__media: Element class for `iss-feature-stack`; apply on `media` element. */
@@ -4024,6 +4034,16 @@ Raum / Vermietung → brown
   width: 100%;
   height: 100%;
   object-fit: cover;
+}
+
+/* .iss-feature-stack__media-copy: Element class for `iss-feature-stack`; apply on `media-copy` element. */
+.iss-feature-stack__media-copy {
+  max-width: 34rem;
+}
+
+/* .iss-feature-stack__media-copy: Element class for `iss-feature-stack`; apply on `media-copy` element. */
+.iss-feature-stack__media-copy > * {
+  margin-top: 0;
 }
 
 @media (max-width: 781px) {
@@ -5882,20 +5902,12 @@ Raum / Vermietung → brown
 
 /* .iss-mission-fact__icon: Element class for `iss-mission-fact`; apply on `icon` element. */
 .iss-mission-fact__icon {
-  display: block;
+  display: inline-block;
   width: 1.15rem;
   height: 1.15rem;
   flex: 0 0 auto;
   transform: translateY(-0.02em);
-}
-
-/* .iss-mission-fact__icon: Element class for `iss-mission-fact`; apply on `icon` element. */
-.iss-mission-fact__icon svg,
-/* .iss-mission-fact__icon: Element class for `iss-mission-fact`; apply on `icon` element. */
-.iss-mission-fact__icon img {
-  display: block;
-  width: 100%;
-  height: 100%;
+  margin: 0;
 }
 
 /* .iss-mission-fact__title: Element class for `iss-mission-fact`; apply on `title` element. */

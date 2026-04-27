@@ -10,6 +10,8 @@
      .iss-flex-split--50-50
      .iss-flex-split--40-60
      .iss-flex-split--60-40
+   - Optional layout modifier:
+     .iss-flex-split--reverse
    - Choose panel type:
      .iss-flex-split__panel--callout
      .iss-flex-split__panel--text
@@ -37,6 +39,14 @@
 
 .iss-flex-split--60-40 .iss-flex-split__layout {
   grid-template-columns: minmax(0, 1.2fr) minmax(0, 0.8fr);
+}
+
+.iss-flex-split--reverse .iss-flex-split__panel:first-child {
+  order: 2;
+}
+
+.iss-flex-split--reverse .iss-flex-split__panel:nth-child(2) {
+  order: 1;
 }
 
 .iss-flex-split__panel {
@@ -165,6 +175,11 @@
   .iss-flex-split--40-60 .iss-flex-split__layout,
   .iss-flex-split--60-40 .iss-flex-split__layout {
     grid-template-columns: 1fr;
+  }
+
+  .iss-flex-split--reverse .iss-flex-split__panel:first-child,
+  .iss-flex-split--reverse .iss-flex-split__panel:nth-child(2) {
+    order: initial;
   }
 
   .iss-flex-split__panel--text {

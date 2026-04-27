@@ -1,6 +1,41 @@
 # Changelog
 
 ## 2026-04-27
+- Rebuilt the live `Über uns` page onto the theme-owned `page-ueber-uns` template:
+  - merged the previous theme draft, live page content, and local `register.md` notes
+  - removed the stale DB `wp_template` override after syncing the useful content into the file-backed template
+  - assigned the live page to `page-ueber-uns`
+  - changed the public slug from `/test/` to `/ueber-uns/`
+  - flushed rewrite rules so the new pretty URL resolves
+- Added a new reusable recognition pattern for Industriesalon:
+  - `themes/industriesalon/patterns/iss-section-recognition-split.html`
+  - registered as `industriesalon/recognition-split`
+  - added shared `iss-flex-split--reverse` support for swapping tall media left/right on desktop
+- Refined the About-page rhythm and visuals in `themes/industriesalon/templates/page-ueber-uns.html` and `assets/css/ueber-uns.css`:
+  - taller hero treatment
+  - wide opener image band
+  - asymmetric `Was wir tun` lead card layout
+  - compact archive/stat fact row
+  - stronger founding/person callout
+  - featured lead team profile before the remaining query grid
+  - darker closing CTA with one primary action and quieter text links
+- Tightened About-page copy using locally supplied notes plus facts cross-checked against the Industriesalon Wikipedia article.
+
+- Continued the local WP content/timeline refactor:
+  - added `plugins/iss-content-model` with CPTs `veranstaltung`, `ausstellung`, `projekt`, `team_member`
+  - wired `veranstaltung` and opted-in `ausstellung` into the existing `iss_calendar_item` timeline contract
+  - added theme templates for the new CPTs and the `iss/content-meta` block
+- Reworked `iss-programm` onto a single active timeline block path:
+  - added normalized query payload + shared REST endpoint
+  - added/expanded `industriesalon/timeline-query` with structured filters, count/empty state, and load more
+  - removed active `timeline`, `timeline-sections`, and `timeline-latest` block paths
+  - added `industriesalon/program-cards` as a lean card renderer on the shared query layer
+- Fixed severe local timeline/program query delays:
+  - `program-cards` now defaults to point-only upcoming queries
+  - `timeline-query` now defaults to point-only upcoming queries
+  - shared query logic now only enables overlap-aware running-range filtering when `ausstellung` is actually in scope
+  - normal event/tour pages no longer pay the heavy exhibition-overlap query cost by default
+
 - Restored front-page file authority by deleting the live `wp_template` override after syncing current content back to `themes/industriesalon/templates/front-page.html`.
 - Reworked front-page discovery CTAs:
   - `In kürzen` cards now use `Weiter` arrow links

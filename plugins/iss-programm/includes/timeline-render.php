@@ -122,11 +122,22 @@ function iss_timeline_prepare_item($item_id) {
 
     $time_label = '';
     if ($ts) {
-        $time_label = wp_date('H:i', $ts);
-        if ($end_ts) {
-            $time_label .= ' – ' . wp_date('H:i', $end_ts);
+        $start_date_key = wp_date('Y-m-d', $ts, wp_timezone());
+        $start_time_key = wp_date('H:i', $ts, wp_timezone());
+        $end_date_key = $end_ts ? wp_date('Y-m-d', $end_ts, wp_timezone()) : '';
+        $end_time_key = $end_ts ? wp_date('H:i', $end_ts, wp_timezone()) : '';
+
+        if ($end_ts && $start_date_key !== $end_date_key) {
+            $time_label = sprintf(__('bis %s', 'iss-timeline'), wp_date('j. F Y', $end_ts, wp_timezone()));
+        } elseif ($start_time_key === '00:00' && ($end_time_key === '' || $end_time_key === '23:59' || $end_time_key === '00:00')) {
+            $time_label = '';
+        } else {
+            $time_label = $start_time_key;
+            if ($end_ts) {
+                $time_label .= ' – ' . $end_time_key;
+            }
+            $time_label .= ' Uhr';
         }
-        $time_label .= ' Uhr';
     }
 
     $title = trim($public_title);
@@ -361,87 +372,449 @@ function iss_timeline_render_items_list($items, $opts = []) {
     return $out;
 }
 
-function iss_timeline_render($attributes = [], $content = '', $block = null) {
-    if (function_exists('iss_programm_enqueue_timeline_assets')) {
-        iss_programm_enqueue_timeline_assets();
+function iss_timeline_get_listing_response($query_args = [], $render_opts = []) {
+    $query_args = is_array($query_args) ? $query_args : [];
+    $render_opts = is_array($render_opts) ? $render_opts : [];
+    $offset = isset($query_args['offset']) ? max(0, (int) $query_args['offset']) : 0;
+    $limit = isset($query_args['limit']) ? (int) $query_args['limit'] : 0;
+    $fetch_args = $query_args;
+    $use_overscan = $limit > 0;
+    if ($use_overscan) {
+        $fetch_args['limit'] = $limit + 1;
     }
 
-    $attributes = is_array($attributes) ? $attributes : [];
-
-    $limit = isset($attributes['limit']) ? (int) $attributes['limit'] : 50;
-    $group = isset($attributes['group']) ? sanitize_text_field((string) $attributes['group']) : '';
-    $yearGrouping = array_key_exists('yearGrouping', $attributes) ? (bool) $attributes['yearGrouping'] : true;
-
     $items = function_exists('iss_timeline_get_items_advanced')
-        ? iss_timeline_get_items_advanced(['limit' => $limit, 'order' => 'ASC', 'group' => $group, 'range' => 'future'])
+        ? iss_timeline_get_items_advanced($fetch_args)
         : [];
-    $render_opts = iss_timeline_build_render_options($attributes);
+    $has_more = false;
+    if ($use_overscan && count($items) > $limit) {
+        $has_more = true;
+        $items = array_slice($items, 0, $limit);
+    }
+    $visible_count = $offset + count($items);
 
-    $use_block_wrapper = function_exists('get_block_wrapper_attributes') && ($block instanceof WP_Block);
-    $attrs = $use_block_wrapper
-        ? get_block_wrapper_attributes(['class' => 'iss-timeline iss-container'])
-        : 'class="iss-timeline iss-container"';
-
-    $out = '<section ' . $attrs . '>';
-    $out .= iss_timeline_render_items_list($items, [
-        'yearGrouping' => $yearGrouping,
-        'order' => 'ASC',
-        'showDetailsButton' => (bool) $render_opts['showDetailsButton'],
-        'showRecommendButton' => (bool) $render_opts['showRecommendButton'],
-        'showTicketsButton' => (bool) $render_opts['showTicketsButton'],
-        'detailsButtonUrl' => (string) $render_opts['detailsButtonUrl'],
-        'recommendButtonUrl' => (string) $render_opts['recommendButtonUrl'],
-        'ticketsButtonUrl' => (string) $render_opts['ticketsButtonUrl'],
-        'detailsButtonText' => (string) $render_opts['detailsButtonText'],
-        'recommendButtonText' => (string) $render_opts['recommendButtonText'],
-        'ticketsButtonText' => (string) $render_opts['ticketsButtonText'],
-    ]);
-    $out .= iss_timeline_render_bottom_button($render_opts);
-    $out .= '</section>';
-    return $out;
+    return [
+        'items' => $items,
+        'count' => $visible_count,
+        'batchCount' => count($items),
+        'isEmpty' => empty($items),
+        'offset' => $offset,
+        'nextOffset' => $visible_count,
+        'hasMore' => $has_more,
+        'html' => iss_timeline_render_items_list($items, $render_opts),
+    ];
 }
 
-function iss_timeline_render_latest($attributes = [], $content = '', $block = null) {
-    if (function_exists('iss_programm_enqueue_timeline_assets')) {
-        iss_programm_enqueue_timeline_assets();
+function iss_timeline_get_attribute_token_list($values, $default = []) {
+    $default = is_array($default) ? $default : [];
+
+    $values = is_array($values) ? array_values(array_unique(array_filter(array_map(static function ($value) {
+            return sanitize_key((string) $value);
+        }, $values)))) : [];
+
+    if (empty($values)) {
+        $values = array_values(array_unique(array_filter(array_map(static function ($value) {
+            return sanitize_key((string) $value);
+        }, $default))));
+    }
+
+    return $values;
+}
+
+function iss_timeline_normalize_taxonomy_rule_list($rules) {
+    if (!is_array($rules)) {
+        return [];
+    }
+
+    $normalized = [];
+    foreach ($rules as $rule) {
+        if (!is_array($rule)) {
+            continue;
+        }
+
+        $taxonomy = sanitize_key((string) ($rule['taxonomy'] ?? ''));
+        if ($taxonomy === '' || !taxonomy_exists($taxonomy)) {
+            continue;
+        }
+
+        $terms = $rule['terms'] ?? [];
+        if (!is_array($terms)) {
+            $terms = [$terms];
+        }
+        $terms = array_values(array_unique(array_filter(array_map('sanitize_title', $terms))));
+        if (empty($terms)) {
+            continue;
+        }
+
+        $normalized[] = [
+            'taxonomy' => $taxonomy,
+            'field' => 'slug',
+            'terms' => $terms,
+            'operator' => 'IN',
+            'label' => isset($rule['label']) ? sanitize_text_field((string) $rule['label']) : '',
+        ];
+    }
+
+    return $normalized;
+}
+
+function iss_timeline_get_taxonomy_preset_rules_from_attributes($attributes = []) {
+    $attributes = is_array($attributes) ? $attributes : [];
+    return !empty($attributes['taxonomyPresetRules']) && is_array($attributes['taxonomyPresetRules'])
+        ? iss_timeline_normalize_taxonomy_rule_list($attributes['taxonomyPresetRules'])
+        : [];
+}
+
+function iss_timeline_get_taxonomy_ui_rules_from_attributes($attributes = []) {
+    $attributes = is_array($attributes) ? $attributes : [];
+
+    if (!empty($attributes['taxonomyUiRules']) && is_array($attributes['taxonomyUiRules'])) {
+        $rules = iss_timeline_normalize_taxonomy_rule_list($attributes['taxonomyUiRules']);
+        if (!empty($rules)) {
+            $ui_rules = [];
+            foreach ($rules as $rule) {
+                $taxonomy = $rule['taxonomy'];
+                $term_query = [
+                    'taxonomy' => $taxonomy,
+                    'hide_empty' => false,
+                    'slug' => $rule['terms'],
+                ];
+                $terms = get_terms($term_query);
+                if (is_wp_error($terms) || empty($terms)) {
+                    continue;
+                }
+
+                $taxonomy_obj = get_taxonomy($taxonomy);
+                $label = $rule['label'] !== ''
+                    ? $rule['label']
+                    : (($taxonomy_obj && !empty($taxonomy_obj->labels->singular_name)) ? (string) $taxonomy_obj->labels->singular_name : ucfirst($taxonomy));
+
+                $options = [[
+                    'value' => '',
+                    'label' => __('Alle', 'iss-timeline'),
+                ]];
+                foreach ($terms as $term) {
+                    if (!$term instanceof WP_Term) {
+                        continue;
+                    }
+                    $options[] = [
+                        'value' => (string) $term->slug,
+                        'label' => (string) $term->name,
+                    ];
+                }
+
+                if (count($options) > 1) {
+                    $ui_rules[] = [
+                        'taxonomy' => $taxonomy,
+                        'label' => $label,
+                        'options' => $options,
+                    ];
+                }
+            }
+
+            if (!empty($ui_rules)) {
+                return $ui_rules;
+            }
+        }
+    }
+
+    return [];
+}
+
+function iss_timeline_get_type_options_from_attributes($attributes = []) {
+    $attributes = is_array($attributes) ? $attributes : [];
+    $allowed_types = iss_timeline_get_attribute_token_list($attributes['allowedTypesList'] ?? [], ['fuehrungen', 'veranstaltungen']);
+
+    $labels = [
+        'all' => __('Alle', 'iss-timeline'),
+        'fuehrungen' => __('Führungen', 'iss-timeline'),
+        'veranstaltungen' => __('Veranstaltungen', 'iss-timeline'),
+        'event' => __('Veranstaltungen', 'iss-timeline'),
+        'tour' => __('Führungen', 'iss-timeline'),
+        'ausstellungen' => __('Ausstellungen', 'iss-timeline'),
+        'ausstellung' => __('Ausstellungen', 'iss-timeline'),
+    ];
+
+    $options = [['value' => 'all', 'label' => $labels['all']]];
+    foreach ($allowed_types as $type) {
+        $options[] = [
+            'value' => $type,
+            'label' => $labels[$type] ?? ucfirst($type),
+        ];
+    }
+
+    return $options;
+}
+
+function iss_timeline_get_post_type_options_from_attributes($attributes = []) {
+    $attributes = is_array($attributes) ? $attributes : [];
+    $post_types = iss_timeline_get_attribute_token_list($attributes['postTypesList'] ?? [], []);
+
+    if (empty($post_types)) {
+        return [];
+    }
+
+    $options = [[
+        'value' => '',
+        'label' => __('Alle', 'iss-timeline'),
+    ]];
+
+    foreach ($post_types as $post_type) {
+        if (!post_type_exists($post_type)) {
+            continue;
+        }
+
+        $post_type_obj = get_post_type_object($post_type);
+        $label = $post_type_obj && !empty($post_type_obj->labels->singular_name)
+            ? (string) $post_type_obj->labels->singular_name
+            : ucfirst($post_type);
+
+        $options[] = [
+            'value' => $post_type,
+            'label' => $label,
+        ];
+    }
+
+    return count($options) > 1 ? $options : [];
+}
+
+function iss_timeline_get_time_mode_options_from_attributes($attributes = []) {
+    $attributes = is_array($attributes) ? $attributes : [];
+    $allowed_modes = iss_timeline_get_attribute_token_list($attributes['allowedTimeModesList'] ?? [], ['upcoming', 'month', 'past', 'all']);
+
+    $labels = [
+        'upcoming' => __('Kommend', 'iss-timeline'),
+        'month' => __('Monat', 'iss-timeline'),
+        'past' => __('Archiv', 'iss-timeline'),
+        'all' => __('Alle', 'iss-timeline'),
+    ];
+
+    $options = [];
+    foreach ($allowed_modes as $mode) {
+        if (!isset($labels[$mode])) {
+            continue;
+        }
+
+        $options[] = [
+            'value' => $mode,
+            'label' => $labels[$mode],
+        ];
+    }
+
+    return $options;
+}
+
+function iss_timeline_build_query_block_config($attributes = []) {
+    $attributes = is_array($attributes) ? $attributes : [];
+
+    $group = sanitize_text_field((string) ($attributes['group'] ?? ''));
+    $default_month = preg_replace('/[^0-9\-]/', '', (string) ($attributes['defaultMonth'] ?? ''));
+    if (!preg_match('/^\d{4}-\d{2}$/', $default_month)) {
+        $default_month = wp_date('Y-m', null, wp_timezone());
+    }
+
+    $default_type = sanitize_key((string) ($attributes['defaultType'] ?? 'all'));
+    if ($default_type === '') {
+        $default_type = 'all';
+    }
+
+    return [
+        'limit' => max(1, (int) ($attributes['limit'] ?? 12)),
+        'order' => 'ASC',
+        'groups' => $group !== '' ? [$group] : [],
+        'filters' => [
+            'time_mode' => sanitize_key((string) ($attributes['timeMode'] ?? 'upcoming')) ?: 'upcoming',
+            'month' => $default_month,
+            'item_type' => $default_type,
+            'item_types' => iss_timeline_get_attribute_token_list($attributes['presetItemTypesList'] ?? [], []),
+            'include_running_ranges' => !empty($attributes['includeRunningRanges']),
+            'post_types' => iss_timeline_get_attribute_token_list($attributes['postTypesList'] ?? [], []),
+            'taxonomy_filters' => iss_timeline_get_taxonomy_preset_rules_from_attributes($attributes),
+        ],
+        'render' => [
+            'yearGrouping' => !empty($attributes['yearGrouping']),
+            'showMeta' => !array_key_exists('showMeta', $attributes) || (bool) $attributes['showMeta'],
+            'showDetailsButton' => !array_key_exists('showDetailsButton', $attributes) || (bool) $attributes['showDetailsButton'],
+            'showRecommendButton' => !array_key_exists('showRecommendButton', $attributes) || (bool) $attributes['showRecommendButton'],
+            'showTicketsButton' => !array_key_exists('showTicketsButton', $attributes) || (bool) $attributes['showTicketsButton'],
+            'showLoadMore' => !empty($attributes['showLoadMore']),
+            'showBottomButton' => !empty($attributes['showBottomButton']),
+            'loadMoreText' => isset($attributes['loadMoreText']) ? (string) $attributes['loadMoreText'] : '',
+            'bottomButtonText' => isset($attributes['bottomButtonText']) ? (string) $attributes['bottomButtonText'] : '',
+            'bottomButtonUrl' => isset($attributes['bottomButtonUrl']) ? (string) $attributes['bottomButtonUrl'] : '',
+            'detailsButtonText' => isset($attributes['detailsButtonText']) ? (string) $attributes['detailsButtonText'] : '',
+            'recommendButtonText' => isset($attributes['recommendButtonText']) ? (string) $attributes['recommendButtonText'] : '',
+            'ticketsButtonText' => isset($attributes['ticketsButtonText']) ? (string) $attributes['ticketsButtonText'] : '',
+            'detailsButtonUrl' => isset($attributes['detailsButtonUrl']) ? (string) $attributes['detailsButtonUrl'] : '',
+            'recommendButtonUrl' => isset($attributes['recommendButtonUrl']) ? (string) $attributes['recommendButtonUrl'] : '',
+            'ticketsButtonUrl' => isset($attributes['ticketsButtonUrl']) ? (string) $attributes['ticketsButtonUrl'] : '',
+        ],
+        'ui' => [
+            'showTimeModeFilter' => !empty($attributes['showTimeModeFilter']),
+            'showTypeFilter' => !empty($attributes['showTypeFilter']),
+            'showPostTypeFilter' => !empty($attributes['showPostTypeFilter']),
+            'showMonthFilter' => !empty($attributes['showMonthFilter']),
+            'timeModeOptions' => iss_timeline_get_time_mode_options_from_attributes($attributes),
+            'typeOptions' => iss_timeline_get_type_options_from_attributes($attributes),
+            'postTypeOptions' => iss_timeline_get_post_type_options_from_attributes($attributes),
+            'taxonomyUiFilters' => iss_timeline_get_taxonomy_ui_rules_from_attributes($attributes),
+        ],
+    ];
+}
+
+function iss_timeline_render_query_block($attributes = [], $content = '', $block = null) {
+    if (function_exists('iss_programm_enqueue_timeline_query_assets')) {
+        iss_programm_enqueue_timeline_query_assets();
     }
 
     $attributes = is_array($attributes) ? $attributes : [];
+    $config = iss_timeline_build_query_block_config($attributes);
+    $listing = iss_timeline_get_listing_response($config, $config['render']);
 
-    $group = isset($attributes['group']) ? sanitize_text_field((string) $attributes['group']) : '';
-
-    $items = function_exists('iss_timeline_get_items_advanced')
-        ? iss_timeline_get_items_advanced([
-            'range' => 'future',
-            'order' => 'ASC',
-            'limit' => 4,
-            'group' => $group,
-        ])
-        : [];
-    $render_opts = iss_timeline_build_render_options($attributes);
+    $title = trim((string) ($attributes['title'] ?? ''));
+    $intro = trim((string) ($attributes['intro'] ?? ''));
+    $months = iss_timeline_collect_future_month_options(function_exists('iss_timeline_get_future_horizon_months') ? iss_timeline_get_future_horizon_months() : 6);
 
     $use_block_wrapper = function_exists('get_block_wrapper_attributes') && ($block instanceof WP_Block);
     $attrs = $use_block_wrapper
-        ? get_block_wrapper_attributes(['class' => 'iss-timeline-latest iss-container'])
-        : 'class="iss-timeline-latest iss-container"';
+        ? get_block_wrapper_attributes(['class' => 'iss-timeline-query iss-container'])
+        : 'class="iss-timeline-query iss-container"';
 
-    $out = '<section ' . $attrs . '>';
-    $out .= '<div class="iss-timeline iss-timeline--latest">';
-    $out .= iss_timeline_render_items_list($items, [
-        'yearGrouping' => false,
-        'order' => 'ASC',
-        'showDetailsButton' => (bool) $render_opts['showDetailsButton'],
-        'showRecommendButton' => (bool) $render_opts['showRecommendButton'],
-        'showTicketsButton' => (bool) $render_opts['showTicketsButton'],
-        'detailsButtonUrl' => (string) $render_opts['detailsButtonUrl'],
-        'recommendButtonUrl' => (string) $render_opts['recommendButtonUrl'],
-        'ticketsButtonUrl' => (string) $render_opts['ticketsButtonUrl'],
-        'detailsButtonText' => (string) $render_opts['detailsButtonText'],
-        'recommendButtonText' => (string) $render_opts['recommendButtonText'],
-        'ticketsButtonText' => (string) $render_opts['ticketsButtonText'],
-    ]);
-    $out .= iss_timeline_render_bottom_button($render_opts);
-    $out .= '</div></section>';
+    $out = '<section ' . $attrs . ' data-timeline-query data-config="' . esc_attr(wp_json_encode($config)) . '">';
+
+    if ($title !== '') {
+        $out .= '<h2 class="iss-timeline__section-title">' . esc_html($title) . '</h2>';
+    }
+    if ($intro !== '') {
+        $out .= '<p class="iss-timeline__summary">' . esc_html($intro) . '</p>';
+    }
+
+    if (!empty($config['ui']['showTimeModeFilter']) || !empty($config['ui']['showTypeFilter']) || !empty($config['ui']['showPostTypeFilter']) || !empty($config['ui']['showMonthFilter']) || !empty($config['ui']['taxonomyUiFilters'])) {
+        $out .= '<form class="iss-timeline__filters" data-timeline-query-form>';
+
+        if (!empty($config['ui']['showTimeModeFilter']) && !empty($config['ui']['timeModeOptions']) && is_array($config['ui']['timeModeOptions'])) {
+            $out .= '<label class="iss-timeline__filter"><span class="iss-timeline__filter-label">' . esc_html__('Zeitraum', 'iss-timeline') . '</span>';
+            $out .= '<select name="time_mode" data-filter-key="time_mode">';
+            foreach ($config['ui']['timeModeOptions'] as $option) {
+                if (!is_array($option)) {
+                    continue;
+                }
+                $value = isset($option['value']) ? sanitize_key((string) $option['value']) : '';
+                $label = isset($option['label']) ? (string) $option['label'] : $value;
+                if ($value === '') {
+                    continue;
+                }
+                $out .= '<option value="' . esc_attr($value) . '"' . selected($config['filters']['time_mode'], $value, false) . '>' . esc_html($label) . '</option>';
+            }
+            $out .= '</select></label>';
+        }
+
+        if (!empty($config['ui']['showTypeFilter'])) {
+            $out .= '<label class="iss-timeline__filter"><span class="iss-timeline__filter-label">' . esc_html__('Typ', 'iss-timeline') . '</span>';
+            $out .= '<select name="item_type" data-filter-key="item_type">';
+            foreach ($config['ui']['typeOptions'] as $option) {
+                if (!is_array($option)) {
+                    continue;
+                }
+                $value = isset($option['value']) ? sanitize_key((string) $option['value']) : '';
+                $label = isset($option['label']) ? (string) $option['label'] : $value;
+                if ($value === '') {
+                    continue;
+                }
+                $out .= '<option value="' . esc_attr($value) . '"' . selected($config['filters']['item_type'], $value, false) . '>' . esc_html($label) . '</option>';
+            }
+            $out .= '</select></label>';
+        }
+
+        if (!empty($config['ui']['showMonthFilter'])) {
+            $out .= '<label class="iss-timeline__filter"><span class="iss-timeline__filter-label">' . esc_html__('Monat', 'iss-timeline') . '</span>';
+            $month_hidden = ($config['filters']['time_mode'] === 'month') ? '' : ' hidden';
+            $out .= '<select name="month" data-filter-key="month"' . $month_hidden . '>';
+            foreach ($months as $ym) {
+                $out .= '<option value="' . esc_attr($ym) . '"' . selected($config['filters']['month'], $ym, false) . '>' . esc_html(iss_timeline_format_month_label($ym)) . '</option>';
+            }
+            $out .= '</select></label>';
+        }
+
+        if (!empty($config['ui']['showPostTypeFilter']) && !empty($config['ui']['postTypeOptions']) && is_array($config['ui']['postTypeOptions'])) {
+            $out .= '<label class="iss-timeline__filter"><span class="iss-timeline__filter-label">' . esc_html__('Inhaltstyp', 'iss-timeline') . '</span>';
+            $out .= '<select name="post_type" data-filter-key="post_type">';
+            foreach ($config['ui']['postTypeOptions'] as $option) {
+                if (!is_array($option)) {
+                    continue;
+                }
+                $value = isset($option['value']) ? sanitize_key((string) $option['value']) : '';
+                $label = isset($option['label']) ? (string) $option['label'] : $value;
+                $selected = count($config['filters']['post_types']) === 1 ? (string) $config['filters']['post_types'][0] : '';
+                $out .= '<option value="' . esc_attr($value) . '"' . selected($selected, $value, false) . '>' . esc_html($label) . '</option>';
+            }
+            $out .= '</select></label>';
+        }
+
+        if (!empty($config['ui']['taxonomyUiFilters']) && is_array($config['ui']['taxonomyUiFilters'])) {
+            foreach ($config['ui']['taxonomyUiFilters'] as $taxonomy_filter) {
+                if (!is_array($taxonomy_filter)) {
+                    continue;
+                }
+                $taxonomy = isset($taxonomy_filter['taxonomy']) ? sanitize_key((string) $taxonomy_filter['taxonomy']) : '';
+                if ($taxonomy === '' || empty($taxonomy_filter['options']) || !is_array($taxonomy_filter['options'])) {
+                    continue;
+                }
+                $label = isset($taxonomy_filter['label']) ? (string) $taxonomy_filter['label'] : $taxonomy;
+                $out .= '<label class="iss-timeline__filter"><span class="iss-timeline__filter-label">' . esc_html($label) . '</span>';
+                $out .= '<select name="taxonomy_' . esc_attr($taxonomy) . '" data-filter-taxonomy="' . esc_attr($taxonomy) . '">';
+                foreach ($taxonomy_filter['options'] as $option) {
+                    if (!is_array($option)) {
+                        continue;
+                    }
+                    $value = isset($option['value']) ? sanitize_title((string) $option['value']) : '';
+                    $option_label = isset($option['label']) ? (string) $option['label'] : $value;
+                    $out .= '<option value="' . esc_attr($value) . '">' . esc_html($option_label) . '</option>';
+                }
+                $out .= '</select></label>';
+            }
+        }
+
+        $out .= '</form>';
+    }
+
+    if (!empty($config['render']['showMeta'])) {
+        $count_label = sprintf(
+            /* translators: %d number of timeline entries */
+            _n('%d Eintrag', '%d Einträge', (int) $listing['count'], 'iss-timeline'),
+            (int) $listing['count']
+        );
+        $meta_class = 'iss-timeline-query__meta';
+        if (!empty($listing['isEmpty'])) {
+            $meta_class .= ' is-empty';
+        }
+        $out .= '<p class="' . esc_attr($meta_class) . '" data-timeline-query-meta>';
+        $out .= '<span class="iss-timeline-query__count" data-timeline-query-count>' . esc_html($count_label) . '</span>';
+        $out .= '<span class="iss-timeline-query__empty-note" data-timeline-query-empty-note>';
+        if (!empty($listing['isEmpty'])) {
+            $out .= esc_html__('Keine Einträge für die aktuelle Auswahl.', 'iss-timeline');
+        }
+        $out .= '</span>';
+        $out .= '</p>';
+    }
+
+    $out .= '<div class="iss-timeline" data-timeline-query-results>';
+    $out .= $listing['html'];
+    $out .= '</div>';
+    if (!empty($config['render']['showLoadMore'])) {
+        $load_more_text = trim((string) ($config['render']['loadMoreText'] ?? ''));
+        if ($load_more_text === '') {
+            $load_more_text = __('Mehr laden', 'iss-timeline');
+        }
+        $button_hidden = !empty($listing['hasMore']) ? '' : ' hidden';
+        $out .= '<div class="iss-timeline-query__load-more"' . $button_hidden . ' data-timeline-query-load-more-wrap>';
+        $out .= '<button type="button" class="iss-timeline__btn iss-timeline__btn--secondary" data-timeline-query-load-more>';
+        $out .= esc_html($load_more_text);
+        $out .= '</button></div>';
+    }
+    $out .= iss_timeline_render_bottom_button($config['render']);
+    $out .= '</section>';
+
     return $out;
 }
 
@@ -469,124 +842,4 @@ function iss_timeline_collect_future_month_options($horizon_months = 12) {
         $months[] = $ym;
     }
     return $months;
-}
-
-function iss_timeline_render_sections($attributes = [], $content = '', $block = null) {
-    if (function_exists('iss_programm_enqueue_timeline_assets')) {
-        iss_programm_enqueue_timeline_assets();
-    }
-
-    $attributes = is_array($attributes) ? $attributes : [];
-
-    $next_title = isset($attributes['nextTitle']) ? sanitize_text_field((string) $attributes['nextTitle']) : 'Was kommt als Nächstes';
-    $next_limit = isset($attributes['nextLimit']) ? (int) $attributes['nextLimit'] : 4;
-
-    $monthly_title = isset($attributes['monthlyTitle']) ? sanitize_text_field((string) $attributes['monthlyTitle']) : 'Monatsübersicht';
-    $monthly_limit = isset($attributes['monthlyLimit']) ? (int) $attributes['monthlyLimit'] : 80;
-
-    $archive_title = isset($attributes['archiveTitle']) ? sanitize_text_field((string) $attributes['archiveTitle']) : 'Archiv';
-    $archive_limit = isset($attributes['archiveLimit']) ? (int) $attributes['archiveLimit'] : 250;
-
-    $group = isset($attributes['group']) ? sanitize_text_field((string) $attributes['group']) : '';
-
-    // Monthly filters via GET.
-    $type = isset($_GET['iss_tl_type']) ? sanitize_key((string) $_GET['iss_tl_type']) : 'all';
-    if (!in_array($type, ['all', 'fuehrungen', 'veranstaltungen'], true)) $type = 'all';
-
-    $month = isset($_GET['iss_tl_month']) ? preg_replace('/[^0-9\\-]/', '', (string) $_GET['iss_tl_month']) : '';
-    $month = preg_match('/^\\d{4}-\\d{2}$/', $month) ? $month : '';
-    if ($month === '') {
-        $month = wp_date('Y-m', null, wp_timezone());
-    }
-
-    $use_block_wrapper = function_exists('get_block_wrapper_attributes') && ($block instanceof WP_Block);
-    $attrs = $use_block_wrapper
-        ? get_block_wrapper_attributes(['class' => 'iss-timeline-sections iss-container'])
-        : 'class="iss-timeline-sections iss-container"';
-
-    $section_heading_tag = 'h2';
-
-    $out = '<section ' . $attrs . '>';
-
-    // 1) Next
-    $out .= '<div class="iss-timeline__section iss-timeline__section--next">';
-    $out .= '<' . $section_heading_tag . ' class="iss-timeline__section-title">' . esc_html($next_title) . '</' . $section_heading_tag . '>';
-
-    $next_items = function_exists('iss_timeline_get_items_advanced')
-        ? iss_timeline_get_items_advanced([
-            'range' => 'future',
-            'order' => 'ASC',
-            'limit' => $next_limit,
-            'group' => $group,
-        ])
-        : [];
-    $out .= '<div class="iss-timeline iss-timeline--next">';
-    $out .= iss_timeline_render_items_list($next_items, ['yearGrouping' => false, 'order' => 'ASC']);
-    $out .= '</div></div>';
-
-    // 2) Monthly
-    $out .= '<div class="iss-timeline__section iss-timeline__section--monthly">';
-    $out .= '<' . $section_heading_tag . ' class="iss-timeline__section-title">' . esc_html($monthly_title) . '</' . $section_heading_tag . '>';
-
-    $horizon_months = function_exists('iss_timeline_get_future_horizon_months')
-        ? iss_timeline_get_future_horizon_months()
-        : 6;
-    $months = iss_timeline_collect_future_month_options($horizon_months);
-    $out .= '<form class="iss-timeline__filters" method="get">';
-    foreach ($_GET as $k => $v) {
-        $k = (string) $k;
-        if (in_array($k, ['iss_tl_type', 'iss_tl_month'], true)) continue;
-        if (is_array($v)) continue;
-        $out .= '<input type="hidden" name="' . esc_attr($k) . '" value="' . esc_attr((string) $v) . '">';
-    }
-    $out .= '<label class="iss-timeline__filter"><span class="iss-timeline__filter-label">' . esc_html__('Typ', 'iss-timeline') . '</span>';
-    $out .= '<select name="iss_tl_type">';
-    $out .= '<option value="all"' . selected($type, 'all', false) . '>' . esc_html__('Alle', 'iss-timeline') . '</option>';
-    $out .= '<option value="fuehrungen"' . selected($type, 'fuehrungen', false) . '>' . esc_html__('Führungen', 'iss-timeline') . '</option>';
-    $out .= '<option value="veranstaltungen"' . selected($type, 'veranstaltungen', false) . '>' . esc_html__('Veranstaltungen', 'iss-timeline') . '</option>';
-    $out .= '</select></label>';
-
-    $out .= '<label class="iss-timeline__filter"><span class="iss-timeline__filter-label">' . esc_html__('Monat', 'iss-timeline') . '</span>';
-    $out .= '<select name="iss_tl_month">';
-    foreach ($months as $ym) {
-        $out .= '<option value="' . esc_attr($ym) . '"' . selected($month, $ym, false) . '>' . esc_html(iss_timeline_format_month_label($ym)) . '</option>';
-    }
-    $out .= '</select></label>';
-
-    $out .= '<button type="submit" class="iss-timeline__apply">' . esc_html__('Anwenden', 'iss-timeline') . '</button>';
-    $out .= '</form>';
-
-    $monthly_items = function_exists('iss_timeline_get_items_advanced')
-        ? iss_timeline_get_items_advanced([
-            'range' => 'future',
-            'order' => 'ASC',
-            'limit' => $monthly_limit,
-            'month' => $month,
-            'type' => $type,
-            'group' => $group,
-        ])
-        : [];
-    $out .= '<div class="iss-timeline iss-timeline--monthly">';
-    $out .= '<h3 class="iss-timeline__month-label">' . esc_html(iss_timeline_format_month_label($month)) . '</h3>';
-    $out .= iss_timeline_render_items_list($monthly_items, ['yearGrouping' => false, 'order' => 'ASC']);
-    $out .= '</div></div>';
-
-    // 3) Archive
-    $out .= '<div class="iss-timeline__section iss-timeline__section--archive">';
-    $out .= '<' . $section_heading_tag . ' class="iss-timeline__section-title">' . esc_html($archive_title) . '</' . $section_heading_tag . '>';
-
-    $archive_items = function_exists('iss_timeline_get_items_advanced')
-        ? iss_timeline_get_items_advanced([
-            'range' => 'past',
-            'order' => 'DESC',
-            'limit' => $archive_limit,
-            'group' => $group,
-        ])
-        : [];
-    $out .= '<div class="iss-timeline iss-timeline--archive">';
-    $out .= iss_timeline_render_items_list($archive_items, ['yearGrouping' => true, 'order' => 'DESC']);
-    $out .= '</div></div>';
-
-    $out .= '</section>';
-    return $out;
 }

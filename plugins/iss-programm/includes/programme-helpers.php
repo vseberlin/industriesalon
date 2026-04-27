@@ -12,13 +12,17 @@ if (!function_exists('iss_programm_get_items')) {
             return [];
         }
 
+        $groups = isset($args['groups']) && is_array($args['groups']) ? $args['groups'] : [];
+        $single_group = isset($args['group']) ? sanitize_title((string) $args['group']) : '';
+        if ($single_group !== '') {
+            $groups[] = $single_group;
+        }
+
         $mapped = [
             'limit' => isset($args['limit']) ? (int) $args['limit'] : 50,
             'order' => isset($args['order']) ? (string) $args['order'] : 'ASC',
-            'group' => isset($args['group']) ? (string) $args['group'] : '',
-            'range' => isset($args['range']) ? (string) $args['range'] : 'all',
-            'month' => isset($args['month']) ? (string) $args['month'] : '',
-            'type' => isset($args['type']) ? (string) $args['type'] : '',
+            'groups' => $groups,
+            'filters' => isset($args['filters']) && is_array($args['filters']) ? $args['filters'] : [],
         ];
 
         return iss_timeline_get_items_advanced($mapped);
@@ -458,10 +462,10 @@ if (!function_exists('iss_programm_render_calendar')) {
 if (!function_exists('iss_programm_render_timeline')) {
     function iss_programm_render_timeline($args = []) {
         $args = is_array($args) ? $args : [];
-        if (!function_exists('iss_timeline_render')) {
+        if (!function_exists('iss_timeline_render_query_block')) {
             return '';
         }
 
-        return iss_timeline_render($args, '');
+        return iss_timeline_render_query_block($args, '');
     }
 }

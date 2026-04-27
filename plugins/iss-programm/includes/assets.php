@@ -50,6 +50,14 @@ function iss_programm_register_frontend_assets() {
         filemtime(plugin_dir_path(ISS_PROGRAMM_FILE) . 'assets/timeline.css')
     );
 
+    wp_register_script(
+        'iss-timeline-query',
+        plugin_dir_url(ISS_PROGRAMM_FILE) . 'assets/timeline-query.js',
+        [],
+        filemtime(plugin_dir_path(ISS_PROGRAMM_FILE) . 'assets/timeline-query.js'),
+        true
+    );
+
     wp_add_inline_script(
         'is-tour-calendar',
         'window.IS_TOUR_CALENDAR = ' . wp_json_encode([
@@ -64,6 +72,14 @@ function iss_programm_register_frontend_assets() {
         '"bookUrl": ' . wp_json_encode(rest_url('is-tours/v1/book')) .
         '});',
         'after'
+    );
+
+    wp_add_inline_script(
+        'iss-timeline-query',
+        'window.ISS_TIMELINE = ' . wp_json_encode([
+            'restUrl' => rest_url('iss-programm/v1/timeline'),
+        ]) . ';',
+        'before'
     );
 }
 add_action('wp_enqueue_scripts', 'iss_programm_register_frontend_assets');
@@ -88,3 +104,12 @@ function iss_programm_enqueue_timeline_assets() {
     wp_enqueue_style('iss-timeline');
 }
 
+function iss_programm_enqueue_timeline_query_assets() {
+    iss_programm_enqueue_timeline_assets();
+
+    if (!wp_script_is('iss-timeline-query', 'registered')) {
+        iss_programm_register_frontend_assets();
+    }
+
+    wp_enqueue_script('iss-timeline-query');
+}
