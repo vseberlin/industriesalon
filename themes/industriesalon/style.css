@@ -126,6 +126,10 @@ Tags: block-theme, full-site-editing, custom-colors, custom-spacing, editor-styl
   --iss-blue: #869fba;
   --iss-yellow: #ebbc1e;
   --iss-brown: #753a18;
+  --iss-accent: var(--iss-red);
+  --iss-accent-rgb: 232, 29, 37;
+  --iss-accent-soft: rgba(var(--iss-accent-rgb), 0.16);
+  --iss-accent-border: rgba(var(--iss-accent-rgb), 0.28);
 
   /* Layout & Spacing */
   --iss-content-width: 1720px;
@@ -162,6 +166,41 @@ Tags: block-theme, full-site-editing, custom-colors, custom-spacing, editor-styl
   --is--transition: var(--iss-transition);
   --is--container-pad: var(--iss-container-pad);
   --is--content-width: var(--iss-content-width);
+}
+
+.iss-scheme-red {
+  --iss-accent: var(--iss-red);
+  --iss-accent-rgb: 232, 29, 37;
+  --iss-accent-soft: rgba(var(--iss-accent-rgb), 0.16);
+  --iss-accent-border: rgba(var(--iss-accent-rgb), 0.28);
+}
+
+.iss-scheme-blue {
+  --iss-accent: var(--iss-blue);
+  --iss-accent-rgb: 134, 159, 186;
+  --iss-accent-soft: rgba(var(--iss-accent-rgb), 0.16);
+  --iss-accent-border: rgba(var(--iss-accent-rgb), 0.28);
+}
+
+.iss-scheme-green {
+  --iss-accent: var(--iss-green);
+  --iss-accent-rgb: 87, 158, 125;
+  --iss-accent-soft: rgba(var(--iss-accent-rgb), 0.16);
+  --iss-accent-border: rgba(var(--iss-accent-rgb), 0.28);
+}
+
+.iss-scheme-yellow {
+  --iss-accent: var(--iss-yellow);
+  --iss-accent-rgb: 235, 188, 30;
+  --iss-accent-soft: rgba(var(--iss-accent-rgb), 0.16);
+  --iss-accent-border: rgba(var(--iss-accent-rgb), 0.28);
+}
+
+.iss-scheme-brown {
+  --iss-accent: var(--iss-brown);
+  --iss-accent-rgb: 117, 58, 24;
+  --iss-accent-soft: rgba(var(--iss-accent-rgb), 0.16);
+  --iss-accent-border: rgba(var(--iss-accent-rgb), 0.28);
 }
 
 *,
@@ -294,8 +333,8 @@ body {
 }
 
 .iss-nav-toggle .wp-block-button__link:hover {
-  background: var(--iss-red);
-  border-color: var(--iss-red);
+  background: var(--iss-accent);
+  border-color: var(--iss-accent);
   transform: translateY(-2px);
   box-shadow: 0 8px 20px rgba(0,0,0,0.2);
 }
@@ -691,7 +730,7 @@ body.iss-nav-open {
   padding-left: 0.9rem;
   text-indent: 0;
 
-  border-left: 3px solid var(--iss-red);
+  border-left: 3px solid var(--iss-accent);
 
   font-size: 0.8rem;
   font-weight: 700;
@@ -709,7 +748,7 @@ body.iss-nav-open {
   content: "";
   width: 6px;
   height: 6px;
-  background: var(--iss-red);
+  background: var(--iss-accent);
   border-radius: 50%;
   flex-shrink: 0;
 }
@@ -745,14 +784,14 @@ body.iss-nav-open {
 /* Light (on dark backgrounds) */
 /* .iss-kicker--light: Modifier class for `iss-kicker`; combine for `light` variant. */
 .iss-kicker--light {
-  border-left-color: var(--iss-red);
+  border-left-color: var(--iss-accent);
   color: var(--iss-white);
   opacity: 0.9;
 }
 
 /* .iss-kicker--light: Modifier class for `iss-kicker`; combine for `light` variant. */
 .iss-kicker--light::before {
-  background: var(--iss-red);
+  background: var(--iss-accent);
 }
 
 /* Accent variants (use sparingly for thematic grouping) */
@@ -914,7 +953,7 @@ body.iss-nav-open {
 /* .iss-separator--accent: Modifier class for `iss-separator`; combine for `accent` variant. */
 .iss-separator--accent {
   height: 2px;
-  background: var(--iss-red);
+  background: var(--iss-accent);
   width: 80px;
   margin: 3rem 0;
 }
@@ -945,7 +984,7 @@ body.iss-nav-open {
   --iss-indent-pad-right: 0;
   --iss-indent-margin-right: 0;
 
-  border-left: 3px solid var(--iss-red);
+  border-left: 3px solid var(--iss-accent);
   padding-left: 1rem;
   padding-right: var(--iss-indent-pad-right);
   margin-right: var(--iss-indent-margin-right);
@@ -1218,9 +1257,9 @@ body.iss-nav-open {
 
    background: linear-gradient(
     to left,
-    rgba(232, 29, 37, 0.45),  /* main red */
-    rgba(232, 29, 37, 0.18),
-    rgba(232, 29, 37, 0)
+    rgba(var(--iss-accent-rgb), 0.45),
+    rgba(var(--iss-accent-rgb), 0.18),
+    rgba(var(--iss-accent-rgb), 0)
   );
 
   pointer-events: none;
@@ -1230,9 +1269,9 @@ body.iss-nav-open {
 .section--with-rail-accent::after {
   background: linear-gradient(
     to left,
-    rgba(232, 29, 37, 0.35),
-    rgba(232, 29, 37, 0.15),
-    rgba(232, 29, 37, 0)
+    rgba(var(--iss-accent-rgb), 0.35),
+    rgba(var(--iss-accent-rgb), 0.15),
+    rgba(var(--iss-accent-rgb), 0)
   );
 }
 
@@ -1327,7 +1366,7 @@ body.iss-nav-open {
 .iss-icon--xl { width: 1.6rem; height: 1.6rem; flex-basis: 1.6rem; }
 
 .iss-icon--muted { color: rgba(30,30,30,0.55); }
-.iss-icon--accent { color: var(--iss-red); }
+.iss-icon--accent { color: var(--iss-accent); }
 .iss-icon--green { color: var(--iss-green); }
 .iss-icon--blue { color: var(--iss-blue); }
 .iss-icon--yellow { color: var(--iss-yellow); }

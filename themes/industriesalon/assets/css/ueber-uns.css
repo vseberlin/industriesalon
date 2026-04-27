@@ -165,7 +165,7 @@
   width: 0.38rem;
   height: 0.38rem;
   border-radius: 50%;
-  background: var(--iss-red);
+  background: var(--iss-accent);
 }
 
 .iss-award-item strong {
@@ -190,7 +190,7 @@
   padding: clamp(1.25rem, 2vw, 1.75rem);
   background: #f6f6f7;
   border: 1px solid var(--iss-border);
-  border-left: 5px solid var(--iss-red);
+  border-left: 5px solid var(--iss-accent);
   border-radius: var(--iss-radius-md);
 }
 

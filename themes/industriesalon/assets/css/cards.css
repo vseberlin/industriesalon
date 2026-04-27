@@ -192,7 +192,7 @@
 .iss-card__title a:hover,
 /* .iss-card__title: Element class for `iss-card`; apply on `title` element. */
 .iss-card__title a:focus-visible {
-  color: var(--iss-red);
+  color: var(--iss-accent);
 }
 
 /* .iss-card__text: Element class for `iss-card`; apply on `text` element. */
@@ -253,7 +253,7 @@
 .iss-card__link:hover,
 /* .iss-card__link: Element class for `iss-card`; apply on `link` element. */
 .iss-card__link:focus-visible {
-  color: var(--iss-red);
+  color: var(--iss-accent);
 }
 
 /* .iss-card__link: Element class for `iss-card`; apply on `link` element. */
@@ -270,7 +270,7 @@
   position: absolute;
   inset: 0 auto 0 0;
   width: 5px;
-  background: var(--iss-red);
+  background: var(--iss-accent);
   z-index: 1;
 }
 
@@ -559,7 +559,7 @@
 
 /* .iss-media-card: Base class for iss media card; apply on primary wrapper/scope. */
 .iss-media-card {
-  --iss-media-card-rail-color: var(--iss-red);
+  --iss-media-card-rail-color: var(--iss-accent);
   --iss-media-card-shadow: 0 10px 28px rgba(0, 0, 0, 0.06);
   --iss-media-card-bg: var(--iss-white);
   --iss-media-card-border-width: 1px;
@@ -996,7 +996,7 @@
 /* .iss-1to4-grid__lead-card: Element class for `iss-1to4-grid`; apply on `lead-card` element. */
 /* .wp-block-read-more: Base class for wp block read more; apply on primary wrapper/scope. */
 .iss-1to4-grid .iss-1to4-grid__lead-card .wp-block-read-more:focus-visible {
-  color: var(--iss-red);
+  color: var(--iss-accent);
 }
 
 /* ---------------------------------------------------------------------
@@ -1456,8 +1456,8 @@
   min-height: 1.8rem;
   padding: 0.15rem 0.65rem;
   border-radius: 999px;
-  background: rgba(232, 29, 37, 0.08);
-  color: var(--iss-red);
+  background: rgba(var(--iss-accent-rgb), 0.08);
+  color: var(--iss-accent);
   font-size: 0.75rem;
   font-weight: 700;
   letter-spacing: 0.08em;
@@ -1524,7 +1524,7 @@
 .iss-fuehrung-card__more:hover,
 /* .iss-fuehrung-card__more: Element class for `iss-fuehrung-card`; apply on `more` element. */
 .iss-fuehrung-card__more:focus-visible {
-  color: var(--iss-red);
+  color: var(--iss-accent);
 }
 
 /* .iss-fuehrungen-query__empty: Element class for `iss-fuehrungen-query`; apply on `empty` element. */
@@ -1552,7 +1552,7 @@
 /* .iss-fuehrungen-service__panel-kicker: Element class for `iss-fuehrungen-service`; apply on `panel-kicker` element. */
 .iss-fuehrungen-service__panel-kicker {
   margin: 0 0 0.65rem;
-  color: var(--iss-red);
+  color: var(--iss-accent);
   font-size: 0.76rem;
   font-weight: 700;
   letter-spacing: 0.12em;

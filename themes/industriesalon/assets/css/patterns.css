@@ -411,20 +411,26 @@
 /* .home: Base class for home; apply on primary wrapper/scope. */
 /* .wp-block-cover: Base class for wp block cover; apply on primary wrapper/scope. */
 /* .iss-front-hero: Base class for iss front hero; apply on primary wrapper/scope. */
-.home .wp-block-cover.iss-front-hero {
+/* .iss-media-text--overlay-heading: Modifier class for `iss-media-text`; combine for `overlay-heading` variant.
+   Shared gradient token for hero cover and overlay media cards so both use the same atmospheric fade. */
+.home .wp-block-cover.iss-front-hero,
+.iss-media-text.iss-media-text--overlay-heading .iss-media-text__media {
   --iss-hero-min-h: 80svh;
-  --iss-hero-pad-bottom: clamp(2rem, 5vh, 4rem);
-  --iss-hero-left-pad: max(var(--iss-container-pad), calc((100vw - var(--iss-content-width)) / 2 + var(--iss-container-pad)));
-  --iss-hero-right-pad: clamp(0.75rem, 2.2vw, 2.25rem);
-  --iss-banner-shift-x: 250px;
-  --iss-banner-shift-y: 90px;
   --iss-hero-overlay: linear-gradient(
     90deg,
     rgba(30, 30, 30, 0.78) 0%,
     rgba(30, 30, 30, 0.48) 42%,
     rgba(30, 30, 30, 0.16) 100%
   );
+}
 
+/* .iss-front-hero: Base class for iss front hero; apply on primary wrapper/scope. */
+.home .wp-block-cover.iss-front-hero {
+  --iss-hero-pad-bottom: clamp(2rem, 5vh, 4rem);
+  --iss-hero-left-pad: max(var(--iss-container-pad), calc((100vw - var(--iss-content-width)) / 2 + var(--iss-container-pad)));
+  --iss-hero-right-pad: clamp(0.75rem, 2.2vw, 2.25rem);
+  --iss-banner-shift-x: 250px;
+  --iss-banner-shift-y: 90px;
   position: relative;
   min-height: var(--iss-hero-min-h);
   margin: 0;
@@ -959,6 +965,86 @@
 /* .iss-media-text__inner: Element class for `iss-media-text`; apply on `inner` element. */
 .home .iss-media-text__inner {
   max-width: 42rem;
+}
+
+/* Front-page overlay media-text rows keep the CTA at the lower-right edge under the microblocks. */
+/* .home: Base class for home; apply on primary wrapper/scope. */
+/* .iss-media-text: Base class for iss media text; apply on primary wrapper/scope. */
+/* .iss-media-text--overlay-heading: Modifier class for `iss-media-text`; combine for `overlay-heading` variant. */
+/* .iss-media-text__layout: Element class for `iss-media-text`; apply on `layout` element. */
+.home .iss-media-text.iss-media-text--overlay-heading .iss-media-text__layout {
+  align-items: stretch;
+}
+
+/* .home: Base class for home; apply on primary wrapper/scope. */
+/* .iss-media-text: Base class for iss media text; apply on primary wrapper/scope. */
+/* .iss-media-text--overlay-heading: Modifier class for `iss-media-text`; combine for `overlay-heading` variant. */
+/* .iss-media-text__content: Element class for `iss-media-text`; apply on `content` element. */
+.home .iss-media-text.iss-media-text--overlay-heading .iss-media-text__content {
+  display: flex;
+}
+
+/* .home: Base class for home; apply on primary wrapper/scope. */
+/* .iss-media-text: Base class for iss media text; apply on primary wrapper/scope. */
+/* .iss-media-text--overlay-heading: Modifier class for `iss-media-text`; combine for `overlay-heading` variant. */
+/* .iss-media-text__inner: Element class for `iss-media-text`; apply on `inner` element. */
+.home .iss-media-text.iss-media-text--overlay-heading .iss-media-text__inner {
+  flex: 1 1 auto;
+  justify-content: flex-start;
+  gap: 1.5rem;
+}
+
+/* .home: Base class for home; apply on primary wrapper/scope. */
+/* .iss-media-text: Base class for iss media text; apply on primary wrapper/scope. */
+/* .iss-media-text--overlay-heading: Modifier class for `iss-media-text`; combine for `overlay-heading` variant. */
+/* .iss-media-text__actions: Element class for `iss-media-text`; apply on `actions` element. */
+.home .iss-media-text.iss-media-text--overlay-heading .iss-media-text__actions {
+  width: 100%;
+  margin: 1rem 0 0;
+  text-align: right;
+}
+
+/* .home: Base class for home; apply on primary wrapper/scope. */
+/* .iss-media-text: Base class for iss media text; apply on primary wrapper/scope. */
+/* .iss-media-text--overlay-heading: Modifier class for `iss-media-text`; combine for `overlay-heading` variant. */
+/* .iss-media-text__link: Element class for `iss-media-text`; apply on `link` element. */
+.home .iss-media-text.iss-media-text--overlay-heading .iss-media-text__link {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  color: var(--iss-black);
+  font-size: 0.95rem;
+  font-weight: 600;
+  text-decoration: none;
+}
+
+/* .home: Base class for home; apply on primary wrapper/scope. */
+/* .iss-media-text: Base class for iss media text; apply on primary wrapper/scope. */
+/* .iss-media-text--overlay-heading: Modifier class for `iss-media-text`; combine for `overlay-heading` variant. */
+/* .iss-media-text__link: Element class for `iss-media-text`; apply on `link` element. */
+.home .iss-media-text.iss-media-text--overlay-heading .iss-media-text__link::after {
+  content: "→";
+  font-size: 1rem;
+  line-height: 1;
+  transition: transform var(--iss-transition);
+}
+
+/* .home: Base class for home; apply on primary wrapper/scope. */
+/* .iss-media-text: Base class for iss media text; apply on primary wrapper/scope. */
+/* .iss-media-text--overlay-heading: Modifier class for `iss-media-text`; combine for `overlay-heading` variant. */
+/* .iss-media-text__link: Element class for `iss-media-text`; apply on `link` element. */
+.home .iss-media-text.iss-media-text--overlay-heading .iss-media-text__link:hover,
+.home .iss-media-text.iss-media-text--overlay-heading .iss-media-text__link:focus-visible {
+  color: var(--iss-accent);
+}
+
+/* .home: Base class for home; apply on primary wrapper/scope. */
+/* .iss-media-text: Base class for iss media text; apply on primary wrapper/scope. */
+/* .iss-media-text--overlay-heading: Modifier class for `iss-media-text`; combine for `overlay-heading` variant. */
+/* .iss-media-text__link: Element class for `iss-media-text`; apply on `link` element. */
+.home .iss-media-text.iss-media-text--overlay-heading .iss-media-text__link:hover::after,
+.home .iss-media-text.iss-media-text--overlay-heading .iss-media-text__link:focus-visible::after {
+  transform: translateX(2px);
 }
 
 /* .home: Base class for home; apply on primary wrapper/scope. */
@@ -1585,6 +1671,7 @@
   display: flex;
   align-items: flex-start;
   justify-content: center;
+  margin: 0;
   padding-top: 0.1rem;
   width: 1.35rem;
   height: 1.35rem;
@@ -1592,11 +1679,11 @@
 }
 
 /* .iss-microblock__icon: Element class for `iss-microblock`; apply on `icon` element. */
-.iss-microblock__icon img {
+.iss-microblock__icon .iss-icon {
   display: block;
   width: 100%;
   height: 100%;
-  object-fit: contain;
+  color: var(--iss-accent);
 }
 
 /* .iss-microblock__content: Element class for `iss-microblock`; apply on `content` element. */
@@ -1887,7 +1974,7 @@
   width: 100%;
   max-width: 23rem;
   padding: 1.4rem 1.35rem 1.5rem;
-  border-left: 3px solid var(--iss-red);
+  border-left: 3px solid var(--iss-accent);
   background: rgba(30, 30, 30, 0.38);
   backdrop-filter: blur(8px);
   -webkit-backdrop-filter: blur(8px);
@@ -2049,8 +2136,8 @@
 .iss-timeline-latest {
   --iss-tl-text: var(--iss-black, #1e1e1e);
   --iss-tl-muted: rgba(30, 30, 30, 0.72);
-  --iss-tl-line: var(--iss-border, rgba(30, 30, 30, 0.14));
-  --iss-tl-primary: var(--iss-red, #e81d25);
+  --iss-tl-line: var(--iss-accent-border, rgba(232, 29, 37, 0.28));
+  --iss-tl-primary: var(--iss-accent, #e81d25);
   --iss-tl-pill-bg: #f5f5f5;
 }
 
@@ -2800,14 +2887,14 @@
 /* .iss-visit-hours__table: Element class for `iss-visit-hours`; apply on `table` element. */
 /* .is-today: Base class for is today; apply on primary wrapper/scope. */
 .iss-visit-hours__table tbody tr.is-today td {
-  background: rgba(232, 29, 37, 0.04);
+  background: rgba(var(--iss-accent-rgb), 0.04);
   font-weight: 600;
 }
 
 /* .iss-visit-hours__table: Element class for `iss-visit-hours`; apply on `table` element. */
 /* .is-today: Base class for is today; apply on primary wrapper/scope. */
 .iss-visit-hours__table tbody tr.is-today td:first-child {
-  box-shadow: inset 4px 0 0 var(--iss-red);
+  box-shadow: inset 4px 0 0 var(--iss-accent);
 }
 
 /* .iss-visit-hours__badge: Element class for `iss-visit-hours`; apply on `badge` element. */
@@ -3512,7 +3599,7 @@ Raum / Vermietung → brown
 
 /* .iss-info-panel: Base class for iss info panel; apply on primary wrapper/scope. */
 .iss-info-panel {
-  --iss-info-accent: var(--iss-red);
+  --iss-info-accent: var(--iss-accent);
   --iss-info-rule: color-mix(in srgb, var(--iss-info-accent) 58%, white 42%);
 
   width: 100%;
@@ -4198,6 +4285,101 @@ Raum / Vermietung → brown
   border-radius: var(--iss-radius-lg);
 }
 
+/* .iss-media-text: Base class for iss media text; apply on primary wrapper/scope. */
+/* .iss-media-text--overlay-heading: Modifier class for `iss-media-text`; use when the heading should live inside the media card instead of above the columns.
+   Admin note: add this class to the section wrapper and move `.iss-media-text__heading` into `.iss-media-text__media`
+   so the overlay is scoped to one section and does not depend on global `.section--alt` overrides. */
+.iss-media-text.iss-media-text--overlay-heading .iss-media-text__layout {
+  margin-top: 0;
+}
+
+/* .iss-media-text: Base class for iss media text; apply on primary wrapper/scope. */
+/* .iss-media-text--overlay-heading: Modifier class for `iss-media-text`; combine for `overlay-heading` variant. */
+/* .iss-media-text__media: Element class for `iss-media-text`; apply on `media` element. */
+.iss-media-text.iss-media-text--overlay-heading .iss-media-text__media {
+  position: relative;
+  overflow: hidden;
+  justify-content: flex-end;
+  border-radius: var(--iss-radius-lg);
+}
+
+/* .iss-media-text: Base class for iss media text; apply on primary wrapper/scope. */
+/* .iss-media-text--overlay-heading: Modifier class for `iss-media-text`; combine for `overlay-heading` variant.
+   Reuse the same overlay gradient as the hero cover block without duplicating the gradient definition. */
+.iss-media-text.iss-media-text--overlay-heading .iss-media-text__media::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: var(--iss-hero-overlay);
+  z-index: 1;
+  pointer-events: none;
+  border-radius: inherit;
+}
+
+/* .iss-media-text: Base class for iss media text; apply on primary wrapper/scope. */
+/* .iss-media-text--overlay-heading: Modifier class for `iss-media-text`; combine for `overlay-heading` variant. */
+/* .iss-media-text__heading: Element class for `iss-media-text`; apply on `heading` element.
+   Admin note: this stays inside the media card for this variant so the image becomes the positioning context. */
+.iss-media-text.iss-media-text--overlay-heading .iss-media-text__heading {
+  position: absolute;
+  inset: 0 auto auto 0;
+  z-index: 2;
+  pointer-events: none;
+  width: min(100%, 34rem);
+  margin: 0;
+  padding: clamp(1.5rem, 4vw, 3rem) clamp(1.25rem, 3vw, 2rem) clamp(3rem, 7vw, 5rem);
+  background: transparent;
+}
+
+/* .iss-media-text: Base class for iss media text; apply on primary wrapper/scope. */
+/* .iss-media-text--overlay-heading: Modifier class for `iss-media-text`; combine for `overlay-heading` variant. */
+/* .iss-kicker: Base class for kicker; apply on primary wrapper/scope. */
+/* .iss-media-text__title: Element class for `iss-media-text`; apply on `title` element. */
+/* .iss-media-text__text: Element class for `iss-media-text`; apply on `text` element. */
+.iss-media-text.iss-media-text--overlay-heading .iss-kicker,
+.iss-media-text.iss-media-text--overlay-heading .iss-media-text__title,
+.iss-media-text.iss-media-text--overlay-heading .iss-media-text__text {
+  color: var(--iss-white, #f9f9fa);
+}
+
+/* .iss-media-text: Base class for iss media text; apply on primary wrapper/scope. */
+/* .iss-media-text--overlay-heading: Modifier class for `iss-media-text`; combine for `overlay-heading` variant. */
+/* .iss-media-text__image: Element class for `iss-media-text`; apply on `image` element. */
+.iss-media-text.iss-media-text--overlay-heading .iss-media-text__image {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  width: 100%;
+  height: 100%;
+  margin: 0;
+  border-radius: inherit;
+  overflow: hidden;
+}
+
+/* .iss-media-text: Base class for iss media text; apply on primary wrapper/scope. */
+/* .iss-media-text--overlay-heading: Modifier class for `iss-media-text`; combine for `overlay-heading` variant. */
+/* .iss-media-text__image: Element class for `iss-media-text`; apply on `image` element. */
+.iss-media-text.iss-media-text--overlay-heading .iss-media-text__image.wp-block-image,
+.iss-media-text.iss-media-text--overlay-heading .iss-media-text__image figure {
+  width: 100%;
+  height: 100%;
+  margin: 0;
+  border-radius: inherit;
+  overflow: hidden;
+}
+
+/* .iss-media-text: Base class for iss media text; apply on primary wrapper/scope. */
+/* .iss-media-text--overlay-heading: Modifier class for `iss-media-text`; combine for `overlay-heading` variant.
+   Fill the card area instead of sizing from the image's intrinsic aspect ratio. */
+.iss-media-text.iss-media-text--overlay-heading .iss-media-text__image img {
+  width: 100%;
+  height: 100%;
+  max-height: none;
+  border-radius: inherit;
+  object-fit: cover;
+  object-position: top left;
+}
+
 /* Width utilities */
 /* .iss-media-text: Base class for iss media text; apply on primary wrapper/scope. */
 /* .iss-media-text--40-60: Modifier class for `iss-media-text`; combine for `40-60` variant. */
@@ -4285,6 +4467,13 @@ Raum / Vermietung → brown
   .iss-media-text .iss-media-text__layout {
     flex-wrap: nowrap !important;
     align-items: flex-start;
+  }
+
+/* .iss-media-text: Base class for iss media text; apply on primary wrapper/scope. */
+/* .iss-media-text--overlay-heading: Modifier class for `iss-media-text`; combine for `overlay-heading` variant. */
+/* .iss-media-text__media: Element class for `iss-media-text`; apply on `media` element. */
+  .iss-media-text.iss-media-text--overlay-heading .iss-media-text__media {
+    min-height: max(32rem, var(--iss-media-text-media-min-height));
   }
 
 /* .iss-media-text: Base class for iss media text; apply on primary wrapper/scope. */
@@ -4383,6 +4572,14 @@ Raum / Vermietung → brown
   .iss-media-text .iss-media-text__media img {
     aspect-ratio: 4 / 3;
     height: auto;
+  }
+
+/* .iss-media-text: Base class for iss media text; apply on primary wrapper/scope. */
+/* .iss-media-text--overlay-heading: Modifier class for `iss-media-text`; combine for `overlay-heading` variant.
+   Admin note: on mobile the heading remains over the image, but uses full width and shorter padding. */
+  .iss-media-text.iss-media-text--overlay-heading .iss-media-text__heading {
+    width: 100%;
+    padding: 1.25rem 1rem 2.5rem;
   }
 }
 
@@ -4514,7 +4711,7 @@ Raum / Vermietung → brown
   bottom: clamp(-1.5rem, -2vw, -0.5rem);
   width: clamp(10rem, 18vw, 18rem);
   aspect-ratio: 1 / 1;
-  border: 1.5px solid rgba(232, 29, 37, 0.45);
+  border: 1.5px solid rgba(var(--iss-accent-rgb), 0.45);
   border-radius: 50%;
   pointer-events: none;
 }
@@ -4751,10 +4948,10 @@ Raum / Vermietung → brown
 /* .iss-newsletter-form__input: Element class for `iss-newsletter-form`; apply on `input` element. */
 .iss-newsletter-form__input:focus {
   outline: none;
-  border-color: rgba(232, 29, 37, 0.3);
+  border-color: rgba(var(--iss-accent-rgb), 0.3);
   box-shadow:
-    inset 0 0 0 1px rgba(232, 29, 37, 0.24),
-    0 0 0 3px rgba(232, 29, 37, 0.08);
+    inset 0 0 0 1px rgba(var(--iss-accent-rgb), 0.24),
+    0 0 0 3px rgba(var(--iss-accent-rgb), 0.08);
 }
 
 /* .iss-newsletter-form__button: Element class for `iss-newsletter-form`; apply on `button` element. */
@@ -4765,7 +4962,7 @@ Raum / Vermietung → brown
   padding: 0 1.6rem;
   border: 0;
   border-radius: 999px;
-  background: var(--iss-red, #e81d25);
+  background: var(--iss-accent, #e81d25);
   color: var(--iss-white, #f9f9fa);
   font: inherit;
   font-size: 1.05rem;
@@ -4784,7 +4981,7 @@ Raum / Vermietung → brown
 .iss-newsletter-form__button:focus-visible {
   transform: translateY(-1px);
   opacity: 0.96;
-  box-shadow: 0 14px 28px rgba(232, 29, 37, 0.18);
+  box-shadow: 0 14px 28px rgba(var(--iss-accent-rgb), 0.18);
 }
 
 /* .iss-newsletter-band__note: Element class for `iss-newsletter-band`; apply on `note` element. */
@@ -5044,7 +5241,7 @@ Raum / Vermietung → brown
   inset: 0 auto 0 0;
   width: 4px;
   border-radius: var(--iss-archive-radius) 0 0 var(--iss-archive-radius);
-  background: var(--iss-red);
+  background: var(--iss-accent);
 }
 
 /* .iss-archive-entry__eyebrow: Element class for `iss-archive-entry`; apply on `eyebrow` element. */
@@ -5297,7 +5494,7 @@ Raum / Vermietung → brown
 .iss-archive-card__link:hover,
 /* .iss-archive-card__link: Element class for `iss-archive-card`; apply on `link` element. */
 .iss-archive-card__link:focus-visible {
-  color: var(--iss-red);
+  color: var(--iss-accent);
 }
 
 /* type accents */
@@ -5710,7 +5907,7 @@ Raum / Vermietung → brown
 /* .iss-mission-fact: Base class for iss mission fact; apply on primary wrapper/scope. */
 /* .iss-mission-fact__title: Element class for `iss-mission-fact`; apply on `title` element. */
 .iss-mission-fact:focus-within .iss-mission-fact__title {
-  color: var(--iss-red);
+  color: var(--iss-accent);
 }
 
 @media (max-width: 1100px) {
@@ -5889,7 +6086,7 @@ Raum / Vermietung → brown
 
 /* .iss-rental-list: Base class for iss rental list; apply on primary wrapper/scope. */
 .iss-rental-list li::marker {
-  color: var(--iss-red);
+  color: var(--iss-accent);
 }
 
 /* .iss-rental-steps: Base class for iss rental steps; apply on primary wrapper/scope. */
@@ -5915,7 +6112,7 @@ Raum / Vermietung → brown
   font-weight: 700;
   letter-spacing: 0.14em;
   text-transform: uppercase;
-  color: var(--iss-red);
+  color: var(--iss-accent);
 }
 
 /* .iss-rental-step__title: Element class for `iss-rental-step`; apply on `title` element. */
