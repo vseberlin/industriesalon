@@ -61,7 +61,7 @@
   z-index: 1;
   display: grid;
   align-content: end;
-  gap: clamp(1.7rem, 3vw, 2.5rem);
+  gap: clamp(1.2rem, 2.2vw, 1.8rem);
   min-height: 100svh;
   padding-top: calc(var(--iss-header-height) + 6.25rem);
   padding-bottom: clamp(1.1rem, 2.4vw, 1.75rem);
@@ -72,7 +72,7 @@
   grid-template-columns: 1fr minmax(16rem, 34rem) clamp(7rem, 10vw, 10rem);
   align-items: end;
   width: 100%;
-  padding-bottom: clamp(0.95rem, 1.8vw, 1.5rem);
+  padding-bottom: clamp(0.35rem, 0.9vw, 0.7rem);
 }
 
 .iss-about-hero__intro {
@@ -96,7 +96,7 @@
   gap: clamp(0.9rem, 1.8vw, 1.25rem);
   align-items: stretch;
   margin: 0;
-  transform: translateY(clamp(-0.7rem, -1vw, -0.35rem));
+  transform: translateY(-5px);
 }
 
 .iss-about-hero__panel {
@@ -125,7 +125,7 @@
 
 .iss-about-hero__caption {
   min-height: 100%;
-  padding: 0.65rem 0 0;
+  padding: 0.65rem 0 0.2rem;
   border-top: 1px solid rgba(249, 249, 250, 0.16);
 }
 
@@ -136,6 +136,7 @@
 
 .iss-about-hero__caption > p:last-child {
   margin: 0;
+  padding-bottom: 0.05rem;
   color: rgba(249, 249, 250, 0.82);
   font-size: 0.88rem;
   line-height: 1.33;
@@ -734,7 +735,7 @@
 @media (max-width: 1024px) {
   .iss-about-hero__inner {
     min-height: auto;
-    gap: 1.5rem;
+    gap: 1.2rem;
     padding-top: calc(var(--iss-header-height) + 4.9rem);
   }
 
@@ -814,14 +815,14 @@
 
   .iss-about-hero__inner {
     min-height: auto;
-    gap: 1.75rem;
+    gap: 1.35rem;
     padding-top: calc(var(--iss-header-height) + 4.1rem);
     padding-bottom: 1.5rem;
   }
 
   .iss-about-hero__intro-row {
     grid-template-columns: 1fr;
-    padding-bottom: 0.75rem;
+    padding-bottom: 0.35rem;
   }
 
   .iss-about-hero__intro {
