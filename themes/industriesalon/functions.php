@@ -218,6 +218,51 @@ function industriesalon_register_block_patterns(): void
 add_action('init', 'industriesalon_register_block_patterns');
 
 /**
+ * Keep role-based About-page team queries portable across databases.
+ */
+function industriesalon_portable_team_role_queries(array $parsed_block, array $source_block): array
+{
+    if (($parsed_block['blockName'] ?? '') !== 'core/query') {
+        return $parsed_block;
+    }
+
+    $attrs = $parsed_block['attrs'] ?? array();
+    $class_name = isset($attrs['className']) ? (string) $attrs['className'] : '';
+    $role_map = array(
+        'iss-about-team__query--staff' => 'mitarbeiter',
+        'iss-about-team__query--guides' => 'guides',
+    );
+
+    $target_slug = '';
+    foreach ($role_map as $needle => $slug) {
+        if ($class_name !== '' && str_contains($class_name, $needle)) {
+            $target_slug = $slug;
+            break;
+        }
+    }
+
+    if ($target_slug === '') {
+        return $parsed_block;
+    }
+
+    $term = get_term_by('slug', $target_slug, 'team_role');
+    if (!$term || is_wp_error($term)) {
+        return $parsed_block;
+    }
+
+    if (!isset($parsed_block['attrs']['query']) || !is_array($parsed_block['attrs']['query'])) {
+        $parsed_block['attrs']['query'] = array();
+    }
+
+    $parsed_block['attrs']['query']['taxQuery'] = array(
+        'team_role' => array((int) $term->term_id),
+    );
+
+    return $parsed_block;
+}
+add_filter('render_block_data', 'industriesalon_portable_team_role_queries', 10, 2);
+
+/**
  * Force zero margin in editor canvas to match frontend gap-less layout.
  */
 add_action('admin_head', function() {
