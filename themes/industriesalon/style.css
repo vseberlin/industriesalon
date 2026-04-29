@@ -306,16 +306,16 @@ body {
    ========================================================= */
 
 :root {
-  --iss-site-header-pad-top: 3rem;
+  --iss-site-header-pad-top: 0.1rem;
   --iss-site-header-pad-bottom: 1rem;
-  --iss-site-logo-size: 80px;
+  --iss-site-logo-size: 120px;
   --iss-site-logo-bottom: calc(var(--iss-site-header-pad-top) + var(--iss-site-logo-size));
 }
 
 @media (min-width: 782px) {
   :root {
-    --iss-site-header-pad-top: 4.5rem;
-    --iss-site-logo-size: 120px;
+    --iss-site-header-pad-top: 0rem;
+    --iss-site-logo-size: 176px;
   }
 }
 
