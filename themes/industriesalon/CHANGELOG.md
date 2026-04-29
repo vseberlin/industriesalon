@@ -1,5 +1,20 @@
 # Industriesalon Theme Changelog
 
+## 2026-04-28
+- Added a new front-page research/object contrast section for the Teilchendetektor:
+  - pattern: `patterns/iss-section-object-highlight.html`
+  - registration: `functions.php`
+  - insertion: `templates/front-page.html`
+  - styles: `assets/css/patterns.css`
+- Added theme-owned detector assets for frontend use:
+  - `assets/img/teilchendetektor/teilchen.png`
+  - `assets/img/teilchendetektor/teilchen-back.png`
+  - `assets/img/teilchendetektor/note.png`
+- Extended the detector section to show the back side of the object next to the handwritten note.
+- Updated `templates/page-ueber-uns.html` team query loop from 3 to 4 columns.
+- Tightened `Über uns` team-card spacing in `assets/css/ueber-uns.css` for a cleaner 4-up row.
+- Removed the page-wide `iss-page--compact` wrapper class from the file-backed `Über uns` template.
+
 ## 2026-04-27
 - Restored front-page disk authority after syncing current live content back into `templates/front-page.html` and removing the DB `front-page` template override.
 - Replaced remaining front-page discovery pills with arrow/text links:

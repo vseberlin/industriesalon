@@ -25,6 +25,15 @@ add_action('after_setup_theme', function () {
     );
 });
 
+add_filter('get_site_icon_url', function ($url, $size, $blog_id) {
+    $favicon_path = get_stylesheet_directory() . '/assets/img/logo-industriesalon-favicon.svg';
+    if (!file_exists($favicon_path)) {
+        return $url;
+    }
+
+    return get_stylesheet_directory_uri() . '/assets/img/logo-industriesalon-favicon.svg';
+}, 10, 3);
+
 /**
  * Register local block patterns from theme files.
  */
@@ -160,6 +169,20 @@ function industriesalon_register_block_patterns(): void
             'description' => 'Editorial recognition section with a tall media column, trio intro, and two supporting award cards. Remove iss-flex-split--reverse to move the media left.',
             'categories' => array('industriesalon', 'text', 'media'),
             'file' => '/patterns/iss-section-recognition-split.html',
+        ),
+        array(
+            'name' => 'industriesalon/team-query-grid',
+            'title' => 'ISS Team Query Grid',
+            'description' => 'Featured team profile plus portrait card grid for team_member query loops.',
+            'categories' => array('industriesalon', 'query', 'cards'),
+            'file' => '/patterns/iss-team-query-grid.html',
+        ),
+        array(
+            'name' => 'industriesalon/object-highlight',
+            'title' => 'ISS Object Highlight',
+            'description' => 'Dark contrast section for a single collection or research object with supporting note image.',
+            'categories' => array('industriesalon', 'text', 'media'),
+            'file' => '/patterns/iss-section-object-highlight.html',
         ),
     );
 

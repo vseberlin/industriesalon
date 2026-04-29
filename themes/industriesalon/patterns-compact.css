@@ -559,100 +559,6 @@
   background: transparent;
 }
 
-/* Focused dark contrast block for one research/sammlung object.
-   Scoped to this pattern so it does not alter the global zebra section system. */
-.iss-object-highlight {
-  padding: clamp(4.5rem, 8vw, 7.5rem) 0;
-  background:
-    radial-gradient(circle at 18% 24%, rgba(232, 29, 37, 0.14), transparent 24%),
-    radial-gradient(circle at 82% 70%, rgba(255, 255, 255, 0.06), transparent 22%),
-    linear-gradient(180deg, #161616 0%, #0e0e0e 100%);
-  color: var(--iss-white);
-}
-
-.iss-object-highlight .iss-object-highlight__layout {
-  gap: clamp(2rem, 4vw, 4.75rem);
-  align-items: center;
-}
-
-.iss-object-highlight .iss-heading__title,
-.iss-object-highlight .iss-heading__text {
-  color: var(--iss-white);
-}
-
-.iss-object-highlight .iss-heading__title {
-  max-width: 12ch;
-}
-
-.iss-object-highlight .iss-heading__text {
-  max-width: 36rem;
-  color: rgba(249, 249, 250, 0.82);
-}
-
-.iss-object-highlight .iss-object-highlight__meta {
-  max-width: 34rem;
-  margin: 0 0 1.4rem;
-  color: rgba(249, 249, 250, 0.64);
-  font-size: 0.95rem;
-}
-
-.iss-object-highlight .iss-object-highlight__media-stack {
-  display: grid;
-  gap: 1.1rem;
-}
-
-.iss-object-highlight .iss-object-highlight__support {
-  gap: 1.1rem;
-  align-items: start;
-}
-
-.iss-object-highlight .iss-object-highlight__support-col {
-  min-width: 0;
-}
-
-.iss-object-highlight .iss-media-card {
-  --iss-media-card-bg: rgba(255, 255, 255, 0.03);
-  --iss-media-card-border-width: 1px;
-  --iss-media-card-rail-width: 0;
-  border-color: rgba(255, 255, 255, 0.12);
-  box-shadow: 0 26px 70px rgba(0, 0, 0, 0.34);
-}
-
-.iss-object-highlight .iss-object-highlight__figure {
-  padding: clamp(1rem, 2vw, 1.5rem);
-}
-
-.iss-object-highlight .iss-object-highlight__figure img {
-  aspect-ratio: 4 / 3;
-  object-fit: contain;
-}
-
-.iss-object-highlight .iss-object-highlight__back {
-  padding: 0.8rem;
-}
-
-.iss-object-highlight .iss-object-highlight__back img {
-  aspect-ratio: 1 / 1;
-  object-fit: contain;
-}
-
-.iss-object-highlight .iss-object-highlight__note {
-  padding: 0.9rem;
-}
-
-.iss-object-highlight .iss-object-highlight__note img {
-  display: block;
-  width: 100%;
-  height: auto;
-}
-
-@media (max-width: 781px) {
-  .iss-object-highlight .iss-object-highlight__support {
-    display: grid;
-    gap: 1rem;
-  }
-}
-
 /* .home: Base class for home; apply on primary wrapper/scope. */
 /* .iss-front-hero__actions: Element class for `iss-front-hero`; apply on `actions` element. */
 /* .wp-block-button: Base class for wp block button; apply on primary wrapper/scope. */
@@ -1129,7 +1035,7 @@
 /* .iss-media-text__link: Element class for `iss-media-text`; apply on `link` element. */
 .home .iss-media-text.iss-media-text--overlay-heading .iss-media-text__link:hover,
 .home .iss-media-text.iss-media-text--overlay-heading .iss-media-text__link:focus-visible {
-  color: var(--iss-accent);
+  color: var(--iss-red);
 }
 
 /* .home: Base class for home; apply on primary wrapper/scope. */
@@ -1777,7 +1683,7 @@
   display: block;
   width: 100%;
   height: 100%;
-  color: var(--iss-accent);
+  color: var(--iss-red);
 }
 
 /* .iss-microblock__content: Element class for `iss-microblock`; apply on `content` element. */
@@ -1852,18 +1758,11 @@
 
 /* .iss-page-hero: Base class for iss page hero; apply on primary wrapper/scope. */
 .iss-page-hero {
-  --iss-hero-pad-bottom: clamp(2rem, 5vh, 4rem);
-  --iss-hero-left-pad: max(var(--iss-container-pad), calc((100vw - var(--iss-content-width)) / 2 + var(--iss-container-pad)));
-  --iss-hero-right-pad: clamp(0.75rem, 2.2vw, 2.25rem);
-  --iss-banner-shift-x: 250px;
-  --iss-banner-shift-y: 90px;
-  --iss-banner-width: 23rem;
-
   position: relative;
-  min-height: 80svh;
-  min-height: 80vh;
+  min-height: 60svh;
+  min-height: 60vh;
   padding: 0;
-  overflow: visible;
+  overflow: clip;
   background-color: var(--iss-black);
 }
 
@@ -1898,145 +1797,8 @@
 .iss-page-hero > .wp-block-cover__inner-container {
   position: relative;
   z-index: 2;
-  display: grid;
-  grid-template-columns: minmax(0, 1fr) minmax(0, var(--iss-banner-width));
-  align-items: end;
-  align-content: end;
-  column-gap: clamp(1rem, 3vw, 2.5rem);
   width: 100%;
   min-height: inherit;
-  max-width: none;
-  margin: 0;
-  padding: calc(var(--iss-header-height) + 1.5rem) var(--iss-hero-right-pad) var(--iss-hero-pad-bottom) var(--iss-hero-left-pad);
-  box-sizing: border-box;
-  overflow: visible;
-}
-
-.iss-page-hero .iss-front-hero__row {
-  display: contents;
-}
-
-.iss-page-hero .iss-front-hero__shell {
-  position: relative;
-  display: grid;
-  grid-template-columns: minmax(0, 44rem);
-  gap: 1.5rem;
-  width: 100%;
-  max-width: none;
-  margin: 0;
-  min-height: 0;
-  align-content: end;
-  justify-content: start;
-  overflow: visible;
-}
-
-.iss-page-hero > .wp-block-cover__inner-container > .iss-front-hero__shell,
-.iss-page-hero > .wp-block-cover__inner-container > .iss-front-hero__row > .iss-front-hero__shell {
-  grid-column: 1;
-}
-
-.iss-page-hero .iss-front-banner-slot {
-  position: relative;
-  width: min(100%, var(--iss-banner-width));
-  max-width: var(--iss-banner-width);
-  grid-column: 2;
-  justify-self: end;
-  transform: translateX(var(--iss-banner-shift-x)) translateY(var(--iss-banner-shift-y));
-  z-index: 5;
-}
-
-.iss-page-hero .iss-front-banner-slot .wp-block-industriesalon-notice-banner.iss-notice-skin--front .iss-hero-note {
-  position: relative;
-  display: flex;
-  flex-direction: column;
-  gap: 0.55rem;
-  width: 100%;
-  min-height: 20rem;
-  padding: 0.15rem 0 0.25rem 1.15rem;
-  background: none;
-  color: var(--iss-white);
-  border-left: 3px solid rgba(232, 29, 37, 0.95);
-  text-align: left;
-}
-
-.iss-page-hero .iss-front-banner-slot .wp-block-industriesalon-notice-banner.iss-notice-skin--front .iss-hero-note__marker {
-  position: absolute;
-  top: -0.2rem;
-  left: -0.42rem;
-  width: 0.65rem;
-  height: 0.65rem;
-  background: var(--iss-red);
-  border-radius: 50%;
-  box-shadow: 0 0 0 4px rgba(232, 29, 37, 0.12);
-}
-
-.iss-page-hero .iss-front-banner-slot .wp-block-industriesalon-notice-banner.iss-notice-skin--front .iss-hero-note__kicker {
-  margin: 0 0 0.1rem;
-  color: rgba(249, 249, 250, 0.82);
-  font-size: 0.72rem;
-  font-weight: 700;
-  line-height: 1;
-  letter-spacing: 0.14em;
-  text-transform: uppercase;
-}
-
-.iss-page-hero .iss-front-banner-slot .wp-block-industriesalon-notice-banner.iss-notice-skin--front .iss-hero-note__title {
-  margin: 0;
-  color: var(--iss-white);
-  font-size: clamp(1.7rem, 1.2rem + 0.8vw, 2.25rem);
-  font-weight: 700;
-  line-height: 1.02;
-  max-width: 11ch;
-  text-wrap: balance;
-}
-
-.iss-page-hero .iss-front-banner-slot .wp-block-industriesalon-notice-banner.iss-notice-skin--front .iss-hero-note__text {
-  position: relative;
-  margin-top: 0.7rem;
-  padding-top: 0.95rem;
-  max-width: 21ch;
-}
-
-.iss-page-hero .iss-front-banner-slot .wp-block-industriesalon-notice-banner.iss-notice-skin--front .iss-hero-note__text::before {
-  content: "";
-  position: absolute;
-  top: 0;
-  left: 0;
-  width: 1.2rem;
-  height: 2px;
-  background: var(--iss-red);
-}
-
-.iss-page-hero .iss-front-banner-slot .wp-block-industriesalon-notice-banner.iss-notice-skin--front .iss-hero-note__text,
-.iss-page-hero .iss-front-banner-slot .wp-block-industriesalon-notice-banner.iss-notice-skin--front .iss-hero-note__text p {
-  margin: 0;
-  color: rgba(255, 255, 255, 0.8);
-  font-size: 1rem;
-  line-height: 1.45;
-}
-
-.iss-page-hero .iss-front-banner-slot .wp-block-industriesalon-notice-banner.iss-notice-skin--front .iss-hero-note__link {
-  position: relative;
-  margin-top: 1rem;
-  padding-top: 0.95rem;
-}
-
-.iss-page-hero .iss-front-banner-slot .wp-block-industriesalon-notice-banner.iss-notice-skin--front .iss-hero-note__link::before {
-  content: "";
-  position: absolute;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 1px;
-  background: rgba(255, 255, 255, 0.14);
-}
-
-.iss-page-hero .iss-front-banner-slot .wp-block-industriesalon-notice-banner.iss-notice-skin--front .iss-hero-note__link a {
-  color: var(--iss-white);
-}
-
-.iss-page-hero .iss-front-banner-slot .wp-block-industriesalon-notice-banner.iss-notice-skin--front .iss-hero-note__link-icon {
-  color: var(--iss-red);
 }
 
 /* .iss-page-hero__inner: Element class for `iss-page-hero`; apply on `inner` element. */
@@ -2048,9 +1810,12 @@
   gap: 1rem;
   min-height: inherit;
   width: 100%;
-  max-width: 44rem;
-  margin: 0;
-  padding: 0;
+  max-width: var(--iss-content-width);
+  margin: 0 auto;
+  padding-top: calc(var(--iss-header-height) + 2rem);
+  padding-bottom: clamp(2rem, 5vw, 4rem);
+  padding-left: var(--iss-container-pad);
+  padding-right: var(--iss-container-pad);
   text-align: left;
 }
 
@@ -2177,19 +1942,6 @@
   margin-top: 0.75rem;
 }
 
-.iss-landing-hero__actions > p,
-.iss-landing-hero__actions > .wp-block-buttons,
-.iss-hero__actions > p,
-.iss-hero__actions > .wp-block-buttons,
-.iss-feature-stack__actions > p,
-.iss-feature-stack__actions > .wp-block-buttons {
-  margin: 0;
-}
-
-.iss-hero__actions {
-  margin-top: 0.75rem;
-}
-
 /* .iss-landing-hero__actions: Element class for `iss-landing-hero`; apply on `actions` element. */
 /* .is-style-outline: Base class for is style outline; apply on primary wrapper/scope. */
 /* .wp-block-button__link: Element class for `wp-block-button`; apply on `link` element. */
@@ -2222,7 +1974,7 @@
   width: 100%;
   max-width: 23rem;
   padding: 1.4rem 1.35rem 1.5rem;
-  border-left: 3px solid var(--iss-accent);
+  border-left: 3px solid var(--iss-red);
   background: rgba(30, 30, 30, 0.38);
   backdrop-filter: blur(8px);
   -webkit-backdrop-filter: blur(8px);
@@ -2264,24 +2016,8 @@
 @media (max-width: 1024px) {
 /* .iss-page-hero: Base class for iss page hero; apply on primary wrapper/scope. */
   .iss-page-hero {
-    min-height: 80svh;
-    min-height: 80vh;
-  }
-
-  .iss-page-hero > .wp-block-cover__inner-container {
-    grid-template-columns: 1fr;
-    row-gap: 1rem;
-    padding-left: var(--iss-container-pad);
-    padding-right: var(--iss-container-pad);
-  }
-
-  .iss-page-hero .iss-front-banner-slot {
-    grid-column: 1;
-    width: 100%;
-    max-width: 100%;
-    margin-top: 0.75rem;
-    justify-self: stretch;
-    transform: none;
+    min-height: 56svh;
+    min-height: 56vh;
   }
 
 /* .iss-page-hero__inner: Element class for `iss-page-hero`; apply on `inner` element. */
@@ -2314,8 +2050,8 @@
 @media (max-width: 781px) {
 /* .iss-page-hero: Base class for iss page hero; apply on primary wrapper/scope. */
   .iss-page-hero {
-    min-height: 80svh;
-    min-height: 80vh;
+    min-height: 52svh;
+    min-height: 52vh;
   }
 
 /* .iss-page-hero: Base class for iss page hero; apply on primary wrapper/scope. */
@@ -2353,20 +2089,6 @@
 /* .iss-page-hero__text: Element class for `iss-page-hero`; apply on `text` element. */
   .iss-page-hero__text {
     font-size: 0.98rem;
-  }
-
-  .iss-page-hero .iss-front-banner-slot .wp-block-industriesalon-notice-banner.iss-notice-skin--front .iss-hero-note {
-    min-height: 0;
-    max-width: 100%;
-  }
-
-  .iss-page-hero .iss-front-banner-slot .wp-block-industriesalon-notice-banner.iss-notice-skin--front .iss-hero-note__title,
-  .iss-page-hero .iss-front-banner-slot .wp-block-industriesalon-notice-banner.iss-notice-skin--front .iss-hero-note__text {
-    max-width: none;
-  }
-
-  .iss-page-hero .iss-front-banner-slot .wp-block-industriesalon-notice-banner.iss-notice-skin--front .iss-hero-note__link::before {
-    max-width: 100%;
   }
 
 /* .iss-landing-hero: Base class for iss landing hero; apply on primary wrapper/scope. */
@@ -2410,12 +2132,12 @@
 .iss-timeline,
 /* .iss-timeline-sections: Base class for iss timeline sections; apply on primary wrapper/scope. */
 .iss-timeline-sections,
-/* .iss-timeline-query: Base class for iss timeline query; apply on primary wrapper/scope. */
-.iss-timeline-query {
+/* .iss-timeline-latest: Base class for iss timeline latest; apply on primary wrapper/scope. */
+.iss-timeline-latest {
   --iss-tl-text: var(--iss-black, #1e1e1e);
   --iss-tl-muted: rgba(30, 30, 30, 0.72);
-  --iss-tl-line: var(--iss-accent-border, rgba(232, 29, 37, 0.28));
-  --iss-tl-primary: var(--iss-accent, #e81d25);
+  --iss-tl-line: var(--iss-border, rgba(30, 30, 30, 0.14));
+  --iss-tl-primary: var(--iss-red, #e81d25);
   --iss-tl-pill-bg: #f5f5f5;
 }
 
@@ -2439,6 +2161,11 @@
   justify-content: right;
 }
 
+/* .iss-timeline--latest: Modifier class for `iss-timeline`; combine for `latest` variant. */
+.iss-timeline--latest {
+  width: 100%;
+}
+
 /* =====================================================================
    TIMELINE COLOR SCHEMES
    ---------------------------------------------------------------------
@@ -2459,17 +2186,17 @@
 /* .iss-timeline-sections: Base class for iss timeline sections; apply on primary wrapper/scope. */
 /* .iss-timeline--scheme-scarlet-red: Modifier class for `iss-timeline`; combine for `scheme-scarlet-red` variant. */
 .iss-timeline-sections.iss-timeline--scheme-scarlet-red,
-/* .iss-timeline-query: Base class for iss timeline query; apply on primary wrapper/scope. */
+/* .iss-timeline-latest: Base class for iss timeline latest; apply on primary wrapper/scope. */
 /* .iss-timeline--scheme-scarlet-red: Modifier class for `iss-timeline`; combine for `scheme-scarlet-red` variant. */
-.iss-timeline-query.iss-timeline--scheme-scarlet-red,
+.iss-timeline-latest.iss-timeline--scheme-scarlet-red,
 /* .iss-timeline-sections: Base class for iss timeline sections; apply on primary wrapper/scope. */
 /* .iss-timeline--scheme-scarlet-red: Modifier class for `iss-timeline`; combine for `scheme-scarlet-red` variant. */
 /* .iss-timeline: Base class for iss timeline; apply on primary wrapper/scope. */
 .iss-timeline-sections.iss-timeline--scheme-scarlet-red .iss-timeline,
-/* .iss-timeline-query: Base class for iss timeline query; apply on primary wrapper/scope. */
+/* .iss-timeline-latest: Base class for iss timeline latest; apply on primary wrapper/scope. */
 /* .iss-timeline--scheme-scarlet-red: Modifier class for `iss-timeline`; combine for `scheme-scarlet-red` variant. */
 /* .iss-timeline: Base class for iss timeline; apply on primary wrapper/scope. */
-.iss-timeline-query.iss-timeline--scheme-scarlet-red .iss-timeline {
+.iss-timeline-latest.iss-timeline--scheme-scarlet-red .iss-timeline {
   --iss-tl-primary: var(--wp--preset--color--scarlet-red, #e81d25);
   --iss-tl-line: rgba(232, 29, 37, 0.28);
 }
@@ -2480,17 +2207,17 @@
 /* .iss-timeline-sections: Base class for iss timeline sections; apply on primary wrapper/scope. */
 /* .iss-timeline--scheme-vaporous-white: Modifier class for `iss-timeline`; combine for `scheme-vaporous-white` variant. */
 .iss-timeline-sections.iss-timeline--scheme-vaporous-white,
-/* .iss-timeline-query: Base class for iss timeline query; apply on primary wrapper/scope. */
+/* .iss-timeline-latest: Base class for iss timeline latest; apply on primary wrapper/scope. */
 /* .iss-timeline--scheme-vaporous-white: Modifier class for `iss-timeline`; combine for `scheme-vaporous-white` variant. */
-.iss-timeline-query.iss-timeline--scheme-vaporous-white,
+.iss-timeline-latest.iss-timeline--scheme-vaporous-white,
 /* .iss-timeline-sections: Base class for iss timeline sections; apply on primary wrapper/scope. */
 /* .iss-timeline--scheme-vaporous-white: Modifier class for `iss-timeline`; combine for `scheme-vaporous-white` variant. */
 /* .iss-timeline: Base class for iss timeline; apply on primary wrapper/scope. */
 .iss-timeline-sections.iss-timeline--scheme-vaporous-white .iss-timeline,
-/* .iss-timeline-query: Base class for iss timeline query; apply on primary wrapper/scope. */
+/* .iss-timeline-latest: Base class for iss timeline latest; apply on primary wrapper/scope. */
 /* .iss-timeline--scheme-vaporous-white: Modifier class for `iss-timeline`; combine for `scheme-vaporous-white` variant. */
 /* .iss-timeline: Base class for iss timeline; apply on primary wrapper/scope. */
-.iss-timeline-query.iss-timeline--scheme-vaporous-white .iss-timeline {
+.iss-timeline-latest.iss-timeline--scheme-vaporous-white .iss-timeline {
   --iss-tl-primary: var(--wp--preset--color--vaporous-white, #f9f9fa);
   --iss-tl-line: rgba(249, 249, 250, 0.55);
 }
@@ -2501,17 +2228,17 @@
 /* .iss-timeline-sections: Base class for iss timeline sections; apply on primary wrapper/scope. */
 /* .iss-timeline--scheme-eerie-black: Modifier class for `iss-timeline`; combine for `scheme-eerie-black` variant. */
 .iss-timeline-sections.iss-timeline--scheme-eerie-black,
-/* .iss-timeline-query: Base class for iss timeline query; apply on primary wrapper/scope. */
+/* .iss-timeline-latest: Base class for iss timeline latest; apply on primary wrapper/scope. */
 /* .iss-timeline--scheme-eerie-black: Modifier class for `iss-timeline`; combine for `scheme-eerie-black` variant. */
-.iss-timeline-query.iss-timeline--scheme-eerie-black,
+.iss-timeline-latest.iss-timeline--scheme-eerie-black,
 /* .iss-timeline-sections: Base class for iss timeline sections; apply on primary wrapper/scope. */
 /* .iss-timeline--scheme-eerie-black: Modifier class for `iss-timeline`; combine for `scheme-eerie-black` variant. */
 /* .iss-timeline: Base class for iss timeline; apply on primary wrapper/scope. */
 .iss-timeline-sections.iss-timeline--scheme-eerie-black .iss-timeline,
-/* .iss-timeline-query: Base class for iss timeline query; apply on primary wrapper/scope. */
+/* .iss-timeline-latest: Base class for iss timeline latest; apply on primary wrapper/scope. */
 /* .iss-timeline--scheme-eerie-black: Modifier class for `iss-timeline`; combine for `scheme-eerie-black` variant. */
 /* .iss-timeline: Base class for iss timeline; apply on primary wrapper/scope. */
-.iss-timeline-query.iss-timeline--scheme-eerie-black .iss-timeline {
+.iss-timeline-latest.iss-timeline--scheme-eerie-black .iss-timeline {
   --iss-tl-primary: var(--wp--preset--color--eerie-black, #1e1e1e);
   --iss-tl-line: rgba(30, 30, 30, 0.35);
 }
@@ -2522,17 +2249,17 @@
 /* .iss-timeline-sections: Base class for iss timeline sections; apply on primary wrapper/scope. */
 /* .iss-timeline--scheme-cerebral-grey: Modifier class for `iss-timeline`; combine for `scheme-cerebral-grey` variant. */
 .iss-timeline-sections.iss-timeline--scheme-cerebral-grey,
-/* .iss-timeline-query: Base class for iss timeline query; apply on primary wrapper/scope. */
+/* .iss-timeline-latest: Base class for iss timeline latest; apply on primary wrapper/scope. */
 /* .iss-timeline--scheme-cerebral-grey: Modifier class for `iss-timeline`; combine for `scheme-cerebral-grey` variant. */
-.iss-timeline-query.iss-timeline--scheme-cerebral-grey,
+.iss-timeline-latest.iss-timeline--scheme-cerebral-grey,
 /* .iss-timeline-sections: Base class for iss timeline sections; apply on primary wrapper/scope. */
 /* .iss-timeline--scheme-cerebral-grey: Modifier class for `iss-timeline`; combine for `scheme-cerebral-grey` variant. */
 /* .iss-timeline: Base class for iss timeline; apply on primary wrapper/scope. */
 .iss-timeline-sections.iss-timeline--scheme-cerebral-grey .iss-timeline,
-/* .iss-timeline-query: Base class for iss timeline query; apply on primary wrapper/scope. */
+/* .iss-timeline-latest: Base class for iss timeline latest; apply on primary wrapper/scope. */
 /* .iss-timeline--scheme-cerebral-grey: Modifier class for `iss-timeline`; combine for `scheme-cerebral-grey` variant. */
 /* .iss-timeline: Base class for iss timeline; apply on primary wrapper/scope. */
-.iss-timeline-query.iss-timeline--scheme-cerebral-grey .iss-timeline {
+.iss-timeline-latest.iss-timeline--scheme-cerebral-grey .iss-timeline {
   --iss-tl-primary: var(--wp--preset--color--cerebral-grey, #c0b8b5);
   --iss-tl-line: rgba(192, 184, 181, 0.38);
 }
@@ -2543,17 +2270,17 @@
 /* .iss-timeline-sections: Base class for iss timeline sections; apply on primary wrapper/scope. */
 /* .iss-timeline--scheme-turtle-green: Modifier class for `iss-timeline`; combine for `scheme-turtle-green` variant. */
 .iss-timeline-sections.iss-timeline--scheme-turtle-green,
-/* .iss-timeline-query: Base class for iss timeline query; apply on primary wrapper/scope. */
+/* .iss-timeline-latest: Base class for iss timeline latest; apply on primary wrapper/scope. */
 /* .iss-timeline--scheme-turtle-green: Modifier class for `iss-timeline`; combine for `scheme-turtle-green` variant. */
-.iss-timeline-query.iss-timeline--scheme-turtle-green,
+.iss-timeline-latest.iss-timeline--scheme-turtle-green,
 /* .iss-timeline-sections: Base class for iss timeline sections; apply on primary wrapper/scope. */
 /* .iss-timeline--scheme-turtle-green: Modifier class for `iss-timeline`; combine for `scheme-turtle-green` variant. */
 /* .iss-timeline: Base class for iss timeline; apply on primary wrapper/scope. */
 .iss-timeline-sections.iss-timeline--scheme-turtle-green .iss-timeline,
-/* .iss-timeline-query: Base class for iss timeline query; apply on primary wrapper/scope. */
+/* .iss-timeline-latest: Base class for iss timeline latest; apply on primary wrapper/scope. */
 /* .iss-timeline--scheme-turtle-green: Modifier class for `iss-timeline`; combine for `scheme-turtle-green` variant. */
 /* .iss-timeline: Base class for iss timeline; apply on primary wrapper/scope. */
-.iss-timeline-query.iss-timeline--scheme-turtle-green .iss-timeline {
+.iss-timeline-latest.iss-timeline--scheme-turtle-green .iss-timeline {
   --iss-tl-primary: var(--wp--preset--color--turtle-green, #579e7d);
   --iss-tl-line: rgba(87, 158, 125, 0.32);
 }
@@ -2564,17 +2291,17 @@
 /* .iss-timeline-sections: Base class for iss timeline sections; apply on primary wrapper/scope. */
 /* .iss-timeline--scheme-pale-rock-blue: Modifier class for `iss-timeline`; combine for `scheme-pale-rock-blue` variant. */
 .iss-timeline-sections.iss-timeline--scheme-pale-rock-blue,
-/* .iss-timeline-query: Base class for iss timeline query; apply on primary wrapper/scope. */
+/* .iss-timeline-latest: Base class for iss timeline latest; apply on primary wrapper/scope. */
 /* .iss-timeline--scheme-pale-rock-blue: Modifier class for `iss-timeline`; combine for `scheme-pale-rock-blue` variant. */
-.iss-timeline-query.iss-timeline--scheme-pale-rock-blue,
+.iss-timeline-latest.iss-timeline--scheme-pale-rock-blue,
 /* .iss-timeline-sections: Base class for iss timeline sections; apply on primary wrapper/scope. */
 /* .iss-timeline--scheme-pale-rock-blue: Modifier class for `iss-timeline`; combine for `scheme-pale-rock-blue` variant. */
 /* .iss-timeline: Base class for iss timeline; apply on primary wrapper/scope. */
 .iss-timeline-sections.iss-timeline--scheme-pale-rock-blue .iss-timeline,
-/* .iss-timeline-query: Base class for iss timeline query; apply on primary wrapper/scope. */
+/* .iss-timeline-latest: Base class for iss timeline latest; apply on primary wrapper/scope. */
 /* .iss-timeline--scheme-pale-rock-blue: Modifier class for `iss-timeline`; combine for `scheme-pale-rock-blue` variant. */
 /* .iss-timeline: Base class for iss timeline; apply on primary wrapper/scope. */
-.iss-timeline-query.iss-timeline--scheme-pale-rock-blue .iss-timeline {
+.iss-timeline-latest.iss-timeline--scheme-pale-rock-blue .iss-timeline {
   --iss-tl-primary: var(--wp--preset--color--pale-rock-blue, #869fba);
   --iss-tl-line: rgba(134, 159, 186, 0.34);
 }
@@ -2585,17 +2312,17 @@
 /* .iss-timeline-sections: Base class for iss timeline sections; apply on primary wrapper/scope. */
 /* .iss-timeline--scheme-sunrise-yellow: Modifier class for `iss-timeline`; combine for `scheme-sunrise-yellow` variant. */
 .iss-timeline-sections.iss-timeline--scheme-sunrise-yellow,
-/* .iss-timeline-query: Base class for iss timeline query; apply on primary wrapper/scope. */
+/* .iss-timeline-latest: Base class for iss timeline latest; apply on primary wrapper/scope. */
 /* .iss-timeline--scheme-sunrise-yellow: Modifier class for `iss-timeline`; combine for `scheme-sunrise-yellow` variant. */
-.iss-timeline-query.iss-timeline--scheme-sunrise-yellow,
+.iss-timeline-latest.iss-timeline--scheme-sunrise-yellow,
 /* .iss-timeline-sections: Base class for iss timeline sections; apply on primary wrapper/scope. */
 /* .iss-timeline--scheme-sunrise-yellow: Modifier class for `iss-timeline`; combine for `scheme-sunrise-yellow` variant. */
 /* .iss-timeline: Base class for iss timeline; apply on primary wrapper/scope. */
 .iss-timeline-sections.iss-timeline--scheme-sunrise-yellow .iss-timeline,
-/* .iss-timeline-query: Base class for iss timeline query; apply on primary wrapper/scope. */
+/* .iss-timeline-latest: Base class for iss timeline latest; apply on primary wrapper/scope. */
 /* .iss-timeline--scheme-sunrise-yellow: Modifier class for `iss-timeline`; combine for `scheme-sunrise-yellow` variant. */
 /* .iss-timeline: Base class for iss timeline; apply on primary wrapper/scope. */
-.iss-timeline-query.iss-timeline--scheme-sunrise-yellow .iss-timeline {
+.iss-timeline-latest.iss-timeline--scheme-sunrise-yellow .iss-timeline {
   --iss-tl-primary: var(--wp--preset--color--sunrise-yellow, #ebbc1e);
   --iss-tl-line: rgba(235, 188, 30, 0.38);
 }
@@ -2606,17 +2333,17 @@
 /* .iss-timeline-sections: Base class for iss timeline sections; apply on primary wrapper/scope. */
 /* .iss-timeline--scheme-russet-brown: Modifier class for `iss-timeline`; combine for `scheme-russet-brown` variant. */
 .iss-timeline-sections.iss-timeline--scheme-russet-brown,
-/* .iss-timeline-query: Base class for iss timeline query; apply on primary wrapper/scope. */
+/* .iss-timeline-latest: Base class for iss timeline latest; apply on primary wrapper/scope. */
 /* .iss-timeline--scheme-russet-brown: Modifier class for `iss-timeline`; combine for `scheme-russet-brown` variant. */
-.iss-timeline-query.iss-timeline--scheme-russet-brown,
+.iss-timeline-latest.iss-timeline--scheme-russet-brown,
 /* .iss-timeline-sections: Base class for iss timeline sections; apply on primary wrapper/scope. */
 /* .iss-timeline--scheme-russet-brown: Modifier class for `iss-timeline`; combine for `scheme-russet-brown` variant. */
 /* .iss-timeline: Base class for iss timeline; apply on primary wrapper/scope. */
 .iss-timeline-sections.iss-timeline--scheme-russet-brown .iss-timeline,
-/* .iss-timeline-query: Base class for iss timeline query; apply on primary wrapper/scope. */
+/* .iss-timeline-latest: Base class for iss timeline latest; apply on primary wrapper/scope. */
 /* .iss-timeline--scheme-russet-brown: Modifier class for `iss-timeline`; combine for `scheme-russet-brown` variant. */
 /* .iss-timeline: Base class for iss timeline; apply on primary wrapper/scope. */
-.iss-timeline-query.iss-timeline--scheme-russet-brown .iss-timeline {
+.iss-timeline-latest.iss-timeline--scheme-russet-brown .iss-timeline {
   --iss-tl-primary: var(--wp--preset--color--russet-brown, #753a18);
   --iss-tl-line: rgba(117, 58, 24, 0.36);
 }
@@ -2635,9 +2362,9 @@
 /* .iss-timeline-sections: Base class for iss timeline sections; apply on primary wrapper/scope. */
 /* .iss-heading: Base class for iss heading; apply on primary wrapper/scope. */
 .iss-timeline-sections .iss-heading,
-/* .iss-timeline-query: Base class for iss timeline query; apply on primary wrapper/scope. */
+/* .iss-timeline-latest: Base class for iss timeline latest; apply on primary wrapper/scope. */
 /* .iss-heading: Base class for iss heading; apply on primary wrapper/scope. */
-.iss-timeline-query .iss-heading {
+.iss-timeline-latest .iss-heading {
   width: 100%;
   margin-left: 0;
   margin-right: auto;
@@ -2655,10 +2382,10 @@
 /* .iss-heading: Base class for iss heading; apply on primary wrapper/scope. */
 /* .iss-heading--uncaged: Modifier class for `iss-heading`; combine for `uncaged` variant. */
 .iss-timeline-sections .iss-heading:not(.iss-heading--uncaged),
-/* .iss-timeline-query: Base class for iss timeline query; apply on primary wrapper/scope. */
+/* .iss-timeline-latest: Base class for iss timeline latest; apply on primary wrapper/scope. */
 /* .iss-heading: Base class for iss heading; apply on primary wrapper/scope. */
 /* .iss-heading--uncaged: Modifier class for `iss-heading`; combine for `uncaged` variant. */
-.iss-timeline-query .iss-heading:not(.iss-heading--uncaged) {
+.iss-timeline-latest .iss-heading:not(.iss-heading--uncaged) {
   max-width: var(--iss-heading-max-width, 42rem);
 }
 
@@ -2687,18 +2414,18 @@
 /* .iss-heading: Base class for iss heading; apply on primary wrapper/scope. */
 /* .iss-heading__text: Element class for `iss-heading`; apply on `text` element. */
 .iss-timeline-sections .iss-heading > .iss-heading__text,
-/* .iss-timeline-query: Base class for iss timeline query; apply on primary wrapper/scope. */
+/* .iss-timeline-latest: Base class for iss timeline latest; apply on primary wrapper/scope. */
 /* .iss-heading: Base class for iss heading; apply on primary wrapper/scope. */
 /* .iss-kicker: Base class for iss kicker; apply on primary wrapper/scope. */
-.iss-timeline-query .iss-heading > .iss-kicker,
-/* .iss-timeline-query: Base class for iss timeline query; apply on primary wrapper/scope. */
+.iss-timeline-latest .iss-heading > .iss-kicker,
+/* .iss-timeline-latest: Base class for iss timeline latest; apply on primary wrapper/scope. */
 /* .iss-heading: Base class for iss heading; apply on primary wrapper/scope. */
 /* .iss-heading__title: Element class for `iss-heading`; apply on `title` element. */
-.iss-timeline-query .iss-heading > .iss-heading__title,
-/* .iss-timeline-query: Base class for iss timeline query; apply on primary wrapper/scope. */
+.iss-timeline-latest .iss-heading > .iss-heading__title,
+/* .iss-timeline-latest: Base class for iss timeline latest; apply on primary wrapper/scope. */
 /* .iss-heading: Base class for iss heading; apply on primary wrapper/scope. */
 /* .iss-heading__text: Element class for `iss-heading`; apply on `text` element. */
-.iss-timeline-query .iss-heading > .iss-heading__text {
+.iss-timeline-latest .iss-heading > .iss-heading__text {
   margin-left: 0;
   margin-right: 0;
   text-align: inherit;
@@ -2715,10 +2442,10 @@
 .iss-timeline-sections__header,
 /* .iss-timeline-sections__intro: Element class for `iss-timeline-sections`; apply on `intro` element. */
 .iss-timeline-sections__intro,
-/* .iss-timeline-query__header: Element class for `iss-timeline-query`; apply on `header` element. */
-.iss-timeline-query__header,
-/* .iss-timeline-query__intro: Element class for `iss-timeline-query`; apply on `intro` element. */
-.iss-timeline-query__intro {
+/* .iss-timeline-latest__header: Element class for `iss-timeline-latest`; apply on `header` element. */
+.iss-timeline-latest__header,
+/* .iss-timeline-latest__intro: Element class for `iss-timeline-latest`; apply on `intro` element. */
+.iss-timeline-latest__intro {
   justify-items: start;
   align-items: flex-start;
 }
@@ -2730,9 +2457,9 @@
 /* .iss-timeline-sections: Base class for iss timeline sections; apply on primary wrapper/scope. */
 /* .wp-block-buttons: Base class for wp block buttons; apply on primary wrapper/scope. */
 .iss-timeline-sections .wp-block-buttons,
-/* .iss-timeline-query: Base class for iss timeline query; apply on primary wrapper/scope. */
+/* .iss-timeline-latest: Base class for iss timeline latest; apply on primary wrapper/scope. */
 /* .wp-block-buttons: Base class for wp block buttons; apply on primary wrapper/scope. */
-.iss-timeline-query .wp-block-buttons {
+.iss-timeline-latest .wp-block-buttons {
   justify-content: flex-start;
 }
 
@@ -2742,9 +2469,9 @@
 /* .iss-timeline-sections: Base class for iss timeline sections; apply on primary wrapper/scope. */
 /* .has-text-align-center: Base class for has text align center; apply on primary wrapper/scope. */
 .iss-timeline-sections .has-text-align-center,
-/* .iss-timeline-query: Base class for iss timeline query; apply on primary wrapper/scope. */
+/* .iss-timeline-latest: Base class for iss timeline latest; apply on primary wrapper/scope. */
 /* .has-text-align-center: Base class for has text align center; apply on primary wrapper/scope. */
-.iss-timeline-query .has-text-align-center {
+.iss-timeline-latest .has-text-align-center {
   text-align: left;
 }
 
@@ -3160,14 +2887,14 @@
 /* .iss-visit-hours__table: Element class for `iss-visit-hours`; apply on `table` element. */
 /* .is-today: Base class for is today; apply on primary wrapper/scope. */
 .iss-visit-hours__table tbody tr.is-today td {
-  background: rgba(var(--iss-accent-rgb), 0.04);
+  background: rgba(232, 29, 37, 0.04);
   font-weight: 600;
 }
 
 /* .iss-visit-hours__table: Element class for `iss-visit-hours`; apply on `table` element. */
 /* .is-today: Base class for is today; apply on primary wrapper/scope. */
 .iss-visit-hours__table tbody tr.is-today td:first-child {
-  box-shadow: inset 4px 0 0 var(--iss-accent);
+  box-shadow: inset 4px 0 0 var(--iss-red);
 }
 
 /* .iss-visit-hours__badge: Element class for `iss-visit-hours`; apply on `badge` element. */
@@ -3872,7 +3599,7 @@ Raum / Vermietung → brown
 
 /* .iss-info-panel: Base class for iss info panel; apply on primary wrapper/scope. */
 .iss-info-panel {
-  --iss-info-accent: var(--iss-accent);
+  --iss-info-accent: var(--iss-red);
   --iss-info-rule: color-mix(in srgb, var(--iss-info-accent) 58%, white 42%);
 
   width: 100%;
@@ -4209,9 +3936,6 @@ Raum / Vermietung → brown
 /* .iss-feature-stack__title: Element class for `iss-feature-stack`; apply on `title` element. */
 .iss-feature-stack__title {
   margin: 0;
-  font-size: clamp(1.55rem, 1.2rem + 1vw, 2.15rem);
-  line-height: 1.12;
-  max-width: 12ch;
 }
 
 /* .iss-feature-stack__text: Element class for `iss-feature-stack`; apply on `text` element. */
@@ -4227,9 +3951,8 @@ Raum / Vermietung → brown
 
 /* .iss-feature-stack__actions: Element class for `iss-feature-stack`; apply on `actions` element. */
 .iss-feature-stack__actions {
-  margin-top: auto;
-  width: 100%;
-  justify-content: flex-end;
+  margin-top: 0;
+  justify-content: flex-start;
 }
 
 /* .iss-feature-stack__media-col: Element class for `iss-feature-stack`; apply on `media-col` element. */
@@ -4240,7 +3963,6 @@ Raum / Vermietung → brown
   align-items: stretch;
   align-self: stretch;
   min-height: 0;
-  gap: 1rem;
 }
 
 /* .iss-feature-stack__media-grid: Element class for `iss-feature-stack`; apply on `media-grid` element. */
@@ -4250,7 +3972,7 @@ Raum / Vermietung → brown
   gap: var(--iss-feature-stack-media-gap);
   width: 100%;
   max-width: none;
-  min-height: clamp(18rem, 28vw, 24rem);
+  height: 100%;
   margin-left: 0;
   margin-right: 0;
   align-items: stretch;
@@ -4265,13 +3987,12 @@ Raum / Vermietung → brown
   min-width: 0;
   height: 100%;
   min-height: 0;
-  aspect-ratio: 3 / 4;
   background: rgba(30, 30, 30, 0.04);
 }
 
 /* .iss-feature-stack__media--primary: Element class for `iss-feature-stack`; apply on `media--primary` element. */
 .iss-feature-stack__media--primary {
-  flex: 1 1 0;
+  flex: 1.2 1 0;
 }
 
 /* .iss-feature-stack__media--secondary: Element class for `iss-feature-stack`; apply on `media--secondary` element. */
@@ -4281,16 +4002,7 @@ Raum / Vermietung → brown
 
 /* .iss-feature-stack__media--detail: Element class for `iss-feature-stack`; apply on `media--detail` element. */
 .iss-feature-stack__media--detail {
-  flex: 1 1 0;
-}
-
-/* .iss-feature-stack__media: Element class for `iss-feature-stack`; apply on `media` element. */
-.iss-feature-stack__media > .wp-block-image,
-.iss-feature-stack__media > figure,
-.iss-feature-stack__image {
-  width: 100%;
-  height: 100%;
-  margin: 0;
+  flex: 0.8 1 0;
 }
 
 /* .iss-feature-stack__media: Element class for `iss-feature-stack`; apply on `media` element. */
@@ -4299,16 +4011,6 @@ Raum / Vermietung → brown
   width: 100%;
   height: 100%;
   object-fit: cover;
-}
-
-/* .iss-feature-stack__media-copy: Element class for `iss-feature-stack`; apply on `media-copy` element. */
-.iss-feature-stack__media-copy {
-  max-width: 34rem;
-}
-
-/* .iss-feature-stack__media-copy: Element class for `iss-feature-stack`; apply on `media-copy` element. */
-.iss-feature-stack__media-copy > * {
-  margin-top: 0;
 }
 
 @media (max-width: 781px) {
@@ -5009,7 +4711,7 @@ Raum / Vermietung → brown
   bottom: clamp(-1.5rem, -2vw, -0.5rem);
   width: clamp(10rem, 18vw, 18rem);
   aspect-ratio: 1 / 1;
-  border: 1.5px solid rgba(var(--iss-accent-rgb), 0.45);
+  border: 1.5px solid rgba(232, 29, 37, 0.45);
   border-radius: 50%;
   pointer-events: none;
 }
@@ -5246,10 +4948,10 @@ Raum / Vermietung → brown
 /* .iss-newsletter-form__input: Element class for `iss-newsletter-form`; apply on `input` element. */
 .iss-newsletter-form__input:focus {
   outline: none;
-  border-color: rgba(var(--iss-accent-rgb), 0.3);
+  border-color: rgba(232, 29, 37, 0.3);
   box-shadow:
-    inset 0 0 0 1px rgba(var(--iss-accent-rgb), 0.24),
-    0 0 0 3px rgba(var(--iss-accent-rgb), 0.08);
+    inset 0 0 0 1px rgba(232, 29, 37, 0.24),
+    0 0 0 3px rgba(232, 29, 37, 0.08);
 }
 
 /* .iss-newsletter-form__button: Element class for `iss-newsletter-form`; apply on `button` element. */
@@ -5260,7 +4962,7 @@ Raum / Vermietung → brown
   padding: 0 1.6rem;
   border: 0;
   border-radius: 999px;
-  background: var(--iss-accent, #e81d25);
+  background: var(--iss-red, #e81d25);
   color: var(--iss-white, #f9f9fa);
   font: inherit;
   font-size: 1.05rem;
@@ -5279,7 +4981,7 @@ Raum / Vermietung → brown
 .iss-newsletter-form__button:focus-visible {
   transform: translateY(-1px);
   opacity: 0.96;
-  box-shadow: 0 14px 28px rgba(var(--iss-accent-rgb), 0.18);
+  box-shadow: 0 14px 28px rgba(232, 29, 37, 0.18);
 }
 
 /* .iss-newsletter-band__note: Element class for `iss-newsletter-band`; apply on `note` element. */
@@ -5539,7 +5241,7 @@ Raum / Vermietung → brown
   inset: 0 auto 0 0;
   width: 4px;
   border-radius: var(--iss-archive-radius) 0 0 var(--iss-archive-radius);
-  background: var(--iss-accent);
+  background: var(--iss-red);
 }
 
 /* .iss-archive-entry__eyebrow: Element class for `iss-archive-entry`; apply on `eyebrow` element. */
@@ -5792,7 +5494,7 @@ Raum / Vermietung → brown
 .iss-archive-card__link:hover,
 /* .iss-archive-card__link: Element class for `iss-archive-card`; apply on `link` element. */
 .iss-archive-card__link:focus-visible {
-  color: var(--iss-accent);
+  color: var(--iss-red);
 }
 
 /* type accents */
@@ -6167,12 +5869,20 @@ Raum / Vermietung → brown
 
 /* .iss-mission-fact__icon: Element class for `iss-mission-fact`; apply on `icon` element. */
 .iss-mission-fact__icon {
-  display: inline-block;
+  display: block;
   width: 1.15rem;
   height: 1.15rem;
   flex: 0 0 auto;
   transform: translateY(-0.02em);
-  margin: 0;
+}
+
+/* .iss-mission-fact__icon: Element class for `iss-mission-fact`; apply on `icon` element. */
+.iss-mission-fact__icon svg,
+/* .iss-mission-fact__icon: Element class for `iss-mission-fact`; apply on `icon` element. */
+.iss-mission-fact__icon img {
+  display: block;
+  width: 100%;
+  height: 100%;
 }
 
 /* .iss-mission-fact__title: Element class for `iss-mission-fact`; apply on `title` element. */
@@ -6197,7 +5907,7 @@ Raum / Vermietung → brown
 /* .iss-mission-fact: Base class for iss mission fact; apply on primary wrapper/scope. */
 /* .iss-mission-fact__title: Element class for `iss-mission-fact`; apply on `title` element. */
 .iss-mission-fact:focus-within .iss-mission-fact__title {
-  color: var(--iss-accent);
+  color: var(--iss-red);
 }
 
 @media (max-width: 1100px) {
@@ -6376,7 +6086,7 @@ Raum / Vermietung → brown
 
 /* .iss-rental-list: Base class for iss rental list; apply on primary wrapper/scope. */
 .iss-rental-list li::marker {
-  color: var(--iss-accent);
+  color: var(--iss-red);
 }
 
 /* .iss-rental-steps: Base class for iss rental steps; apply on primary wrapper/scope. */
@@ -6402,7 +6112,7 @@ Raum / Vermietung → brown
   font-weight: 700;
   letter-spacing: 0.14em;
   text-transform: uppercase;
-  color: var(--iss-accent);
+  color: var(--iss-red);
 }
 
 /* .iss-rental-step__title: Element class for `iss-rental-step`; apply on `title` element. */
@@ -6829,5 +6539,138 @@ Raum / Vermietung → brown
 
   .iss-publication-single__sidebar {
     order: -1;
+  }
+}
+
+
+/* =====================================================================
+   COMPACT INNER PAGE TUNING
+   Applies to standard inner-page shells and optional narrative wrappers.
+   Front page remains controlled by the dedicated `.home` rules above.
+   ===================================================================== */
+
+body:not(.home) .iss-page-hero {
+  min-height: 48svh;
+  min-height: 48vh;
+}
+
+body:not(.home) .iss-page-hero__inner {
+  gap: 0.75rem;
+  padding-top: calc(var(--iss-header-height) + 1.4rem);
+  padding-bottom: clamp(1.75rem, 3.6vw, 3rem);
+}
+
+body:not(.home) .iss-page-hero__kicker,
+body:not(.home) .iss-page-hero__title,
+body:not(.home) .iss-page-hero__text {
+  max-width: 42rem;
+}
+
+body:not(.home) .iss-page-hero__title {
+  font-size: clamp(2.05rem, 3.9vw, 3.65rem);
+  line-height: 1.03;
+  max-width: 16ch;
+}
+
+body:not(.home) .iss-page-hero__text {
+  font-size: clamp(0.98rem, 0.55vw + 0.9rem, 1.1rem);
+  line-height: 1.55;
+  max-width: 38rem;
+}
+
+body:not(.home) .iss-landing-hero__shell {
+  min-height: 48vh;
+  gap: clamp(1.25rem, 3vw, 3rem);
+}
+
+body:not(.home) .iss-landing-hero > .wp-block-cover__inner-container {
+  padding-top: calc(var(--iss-header-height) + 1.4rem);
+  padding-bottom: clamp(1.75rem, 3.6vw, 3rem);
+}
+
+body:not(.home) .iss-landing-hero__title {
+  font-size: clamp(2.1rem, 4.2vw, 4rem);
+  line-height: 1.02;
+  max-width: 14ch;
+}
+
+body:not(.home) .iss-landing-hero__text {
+  max-width: 36rem;
+  font-size: clamp(0.98rem, 0.55vw + 0.9rem, 1.1rem);
+}
+
+.iss-page--narrative .iss-page-hero,
+.iss-page--compact .iss-page-hero {
+  min-height: 42svh;
+  min-height: 42vh;
+}
+
+.iss-page--narrative .iss-page-hero__inner,
+.iss-page--compact .iss-page-hero__inner {
+  padding-bottom: clamp(1.5rem, 3vw, 2.5rem);
+}
+
+.iss-page--narrative .iss-page-hero__title,
+.iss-page--compact .iss-page-hero__title {
+  font-size: clamp(2rem, 3.3vw, 3.25rem);
+  max-width: 18ch;
+}
+
+.iss-page--narrative .iss-media-text__layout,
+.iss-page--compact .iss-media-text__layout,
+.iss-page--narrative .iss-asymmetric-feature__layout,
+.iss-page--compact .iss-asymmetric-feature__layout,
+.iss-page--narrative .iss-feature-split-stack__layout,
+.iss-page--compact .iss-feature-split-stack__layout {
+  gap: clamp(1rem, 2.2vw, 2rem);
+}
+
+.iss-page--narrative .iss-media-text__inner,
+.iss-page--compact .iss-media-text__inner {
+  max-width: 38rem;
+}
+
+.iss-page--narrative .iss-microblocks,
+.iss-page--compact .iss-microblocks {
+  gap: 0.85rem;
+}
+
+.iss-page--narrative .iss-microblock,
+.iss-page--compact .iss-microblock {
+  gap: 0.7rem;
+}
+
+.iss-page--narrative .iss-microblock + .iss-microblock,
+.iss-page--compact .iss-microblock + .iss-microblock {
+  padding-top: 0.8rem;
+}
+
+@media (max-width: 1024px) {
+  body:not(.home) .iss-page-hero {
+    min-height: 44svh;
+    min-height: 44vh;
+  }
+
+  body:not(.home) .iss-page-hero__inner {
+    padding-top: calc(var(--iss-header-height) + 1rem);
+    padding-bottom: 2rem;
+  }
+}
+
+@media (max-width: 781px) {
+  body:not(.home) .iss-page-hero {
+    min-height: 40svh;
+    min-height: 40vh;
+  }
+
+  body:not(.home) .iss-page-hero__title,
+  body:not(.home) .iss-landing-hero__title {
+    font-size: clamp(1.85rem, 8vw, 2.85rem);
+    max-width: 14ch;
+  }
+
+  body:not(.home) .iss-page-hero__text,
+  body:not(.home) .iss-landing-hero__text {
+    font-size: 0.96rem;
   }
 }

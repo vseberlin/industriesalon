@@ -29,6 +29,9 @@
         if (!toggle.getAttribute('aria-label')) {
             toggle.setAttribute('aria-label', 'Navigation öffnen');
         }
+        if (!panel.getAttribute('aria-label')) {
+            panel.setAttribute('aria-label', 'Hauptmenü');
+        }
         if (!close.getAttribute('aria-label')) {
             close.setAttribute('aria-label', 'Navigation schließen');
         }

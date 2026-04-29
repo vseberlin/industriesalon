@@ -4,15 +4,17 @@
         <div class="wp-block-group iss-site-header__inner">
                 <!-- wp:group {"className":"iss-site-brand","layout":{"type":"flex","flexWrap":"nowrap","verticalAlignment":"center"}} -->
                 <div class="wp-block-group iss-site-brand">
-                        <!-- wp:site-logo {"width":80,"shouldSyncIcon":true} /-->
+                        <!-- wp:html -->
+                        <figure class="wp-block-image size-full wp-block-site-logo"><a href="/"><img src="/wp-content/themes/industriesalon/assets/img/logo-industriesalon-circle.svg" alt="Industriesalon Schöneweide" class="custom-logo"/></a></figure>
+                        <!-- /wp:html -->
                 </div>
                 <!-- /wp:group -->
 
                 <!-- wp:buttons {"className":"iss-header-actions"} -->
                 <div class="wp-block-buttons iss-header-actions">
-                        <!-- wp:button {"className":"iss-nav-toggle"} -->
+                        <!-- wp:html -->
                         <div class="wp-block-button iss-nav-toggle"><a class="wp-block-button__link wp-element-button" href="#iss-menu-shell">Menü</a></div>
-                        <!-- /wp:button -->
+                        <!-- /wp:html -->
                 </div>
                 <!-- /wp:buttons -->
         </div>
@@ -22,31 +24,42 @@
         <div class="wp-block-group iss-nav-overlay"></div>
         <!-- /wp:group -->
 
-        <!-- wp:group {"className":"iss-menu-shell","layout":{"type":"default"}} -->
-        <div id="iss-menu-shell" class="wp-block-group iss-menu-shell" aria-label="Hauptmenü" aria-hidden="true">
+        <!-- wp:group {"anchor":"iss-menu-shell","className":"iss-menu-shell","layout":{"type":"default"}} -->
+        <div id="iss-menu-shell" class="wp-block-group iss-menu-shell">
                 <!-- wp:group {"className":"iss-menu-shell__inner","layout":{"type":"default"}} -->
                 <div class="wp-block-group iss-menu-shell__inner">
+                        <!-- wp:html -->
                         <div class="iss-menu-shell__top">
                                 <span class="iss-menu-icon" aria-hidden="true">☰</span>
                                 <span class="iss-menu-icon" aria-hidden="true"><span class="iss-icon iss-icon--menu-top iss-icon--calendar"></span></span>
                                 <span class="iss-menu-icon" aria-hidden="true"><span class="iss-icon iss-icon--menu-top iss-icon--info"></span></span>
                                 <span class="iss-menu-icon iss-menu-icon--search" aria-hidden="true"><span class="iss-icon iss-icon--menu-top iss-icon--search"></span></span>
-
                                 <div class="iss-menu-shell__spacer"></div>
                                 <button type="button" class="iss-menu-close" aria-label="Schließen">×</button>
                         </div>
+                        <!-- /wp:html -->
 
-                        <div class="iss-menu-shell__primary">
+                        <!-- wp:group {"className":"iss-menu-shell__primary","layout":{"type":"default"}} -->
+                        <div class="wp-block-group iss-menu-shell__primary">
+                                <!-- wp:paragraph {"className":"iss-kicker iss-kicker--light iss-kicker--compact"} -->
                                 <p class="iss-kicker iss-kicker--light iss-kicker--compact">In kürze</p>
+                                <!-- /wp:paragraph -->
                         </div>
+                        <!-- /wp:group -->
 
+                        <!-- wp:html -->
                         <div class="iss-menu-shell__rule"></div>
+                        <!-- /wp:html -->
 
-                        <div class="iss-menu-shell__section">
+                        <!-- wp:group {"className":"iss-menu-shell__section","layout":{"type":"default"}} -->
+                        <div class="wp-block-group iss-menu-shell__section">
                                 <!-- wp:navigation {"ref":11537,"overlayMenu":"never","layout":{"type":"flex","orientation":"vertical","justifyContent":"left","flexWrap":"nowrap"},"className":"iss-menu-shell__audiences"} /-->
                         </div>
+                        <!-- /wp:group -->
 
+                        <!-- wp:html -->
                         <div class="iss-menu-shell__rule"></div>
+                        <!-- /wp:html -->
 
                         <!-- wp:navigation {"ref":12974,"overlayMenu":"never","layout":{"type":"flex","orientation":"vertical","justifyContent":"left","flexWrap":"nowrap"},"className":"iss-menu-shell__secondary"} /-->
                 </div>

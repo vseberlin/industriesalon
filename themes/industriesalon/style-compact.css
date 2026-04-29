@@ -72,13 +72,6 @@ Tags: block-theme, full-site-editing, custom-colors, custom-spacing, editor-styl
 
    MAIN CONTROL CLASSES
    --------------------
-   .iss-scheme-red / --blue / --green / --yellow / --brown
-       Optional wrapper classes for page or section-level accent switching.
-       Apply one of these on the outer Group/Section block in Gutenberg
-       when a whole section should inherit a different accent color.
-       They only affect shared accent-driven UI, not explicit red/blue/
-       green component modifiers.
-
    .iss-container
        Standard content cage. Use this for almost every normal section.
 
@@ -113,13 +106,6 @@ Tags: block-theme, full-site-editing, custom-colors, custom-spacing, editor-styl
        - --indent: shorter left-aligned line
        - --accent: short red thematic break
 
-   .iss-action-link + modifiers
-       Default low-chrome CTA. Use this for generic "read more" or
-       discovery links instead of pill buttons. Preferred label: "Mehr".
-       Variants:
-       - default: dark text on light backgrounds, accent on hover
-       - --light: white text for dark hero/cover contexts
-
    .section--with-rail
        Decorative right-side fade rail for selected sections only. Use
        sparingly so it stays meaningful.
@@ -140,10 +126,6 @@ Tags: block-theme, full-site-editing, custom-colors, custom-spacing, editor-styl
   --iss-blue: #869fba;
   --iss-yellow: #ebbc1e;
   --iss-brown: #753a18;
-  --iss-accent: var(--iss-red);
-  --iss-accent-rgb: 232, 29, 37;
-  --iss-accent-soft: rgba(var(--iss-accent-rgb), 0.16);
-  --iss-accent-border: rgba(var(--iss-accent-rgb), 0.28);
 
   /* Layout & Spacing */
   --iss-content-width: 1720px;
@@ -182,41 +164,6 @@ Tags: block-theme, full-site-editing, custom-colors, custom-spacing, editor-styl
   --is--content-width: var(--iss-content-width);
 }
 
-.iss-scheme-red {
-  --iss-accent: var(--iss-red);
-  --iss-accent-rgb: 232, 29, 37;
-  --iss-accent-soft: rgba(var(--iss-accent-rgb), 0.16);
-  --iss-accent-border: rgba(var(--iss-accent-rgb), 0.28);
-}
-
-.iss-scheme-blue {
-  --iss-accent: var(--iss-blue);
-  --iss-accent-rgb: 134, 159, 186;
-  --iss-accent-soft: rgba(var(--iss-accent-rgb), 0.16);
-  --iss-accent-border: rgba(var(--iss-accent-rgb), 0.28);
-}
-
-.iss-scheme-green {
-  --iss-accent: var(--iss-green);
-  --iss-accent-rgb: 87, 158, 125;
-  --iss-accent-soft: rgba(var(--iss-accent-rgb), 0.16);
-  --iss-accent-border: rgba(var(--iss-accent-rgb), 0.28);
-}
-
-.iss-scheme-yellow {
-  --iss-accent: var(--iss-yellow);
-  --iss-accent-rgb: 235, 188, 30;
-  --iss-accent-soft: rgba(var(--iss-accent-rgb), 0.16);
-  --iss-accent-border: rgba(var(--iss-accent-rgb), 0.28);
-}
-
-.iss-scheme-brown {
-  --iss-accent: var(--iss-brown);
-  --iss-accent-rgb: 117, 58, 24;
-  --iss-accent-soft: rgba(var(--iss-accent-rgb), 0.16);
-  --iss-accent-border: rgba(var(--iss-accent-rgb), 0.28);
-}
-
 *,
 *::before,
 *::after {
@@ -232,39 +179,6 @@ body {
   line-height: 1.6;
 }
 
-/* Default arrow CTA for discovery links. Use pill buttons only for explicit actions. */
-.iss-action-link {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.45rem;
-  color: var(--iss-black);
-  font-size: 0.95rem;
-  font-weight: 600;
-  text-decoration: none;
-  transition: color var(--iss-transition);
-}
-
-.iss-action-link::after {
-  content: "→";
-  font-size: 1rem;
-  line-height: 1;
-  transition: transform var(--iss-transition);
-}
-
-.iss-action-link:hover,
-.iss-action-link:focus-visible {
-  color: var(--iss-accent);
-}
-
-.iss-action-link:hover::after,
-.iss-action-link:focus-visible::after {
-  transform: translateX(2px);
-}
-
-.iss-action-link--light {
-  color: var(--iss-white);
-}
-
 /* Base Container */
 /* .iss-container: Base class for iss container; apply on primary wrapper/scope. */
 .iss-container {
@@ -274,16 +188,6 @@ body {
   margin-right: auto;
   padding-left: var(--iss-container-pad);
   padding-right: var(--iss-container-pad);
-}
-
-/* .iss-block--center: Utility class for centering a block as an element while keeping inner content alignment untouched. */
-.iss-block--center {
-  --iss-block-max-width: 42rem;
-
-  width: 100%;
-  max-width: min(100%, var(--iss-block-max-width));
-  margin-left: auto;
-  margin-right: auto;
 }
 
 /* .section: Base class for section; apply on primary wrapper/scope. */
@@ -390,8 +294,8 @@ body {
 }
 
 .iss-nav-toggle .wp-block-button__link:hover {
-  background: var(--iss-accent);
-  border-color: var(--iss-accent);
+  background: var(--iss-red);
+  border-color: var(--iss-red);
   transform: translateY(-2px);
   box-shadow: 0 8px 20px rgba(0,0,0,0.2);
 }
@@ -787,7 +691,7 @@ body.iss-nav-open {
   padding-left: 0.9rem;
   text-indent: 0;
 
-  border-left: 3px solid var(--iss-accent);
+  border-left: 3px solid var(--iss-red);
 
   font-size: 0.8rem;
   font-weight: 700;
@@ -805,7 +709,7 @@ body.iss-nav-open {
   content: "";
   width: 6px;
   height: 6px;
-  background: var(--iss-accent);
+  background: var(--iss-red);
   border-radius: 50%;
   flex-shrink: 0;
 }
@@ -841,14 +745,14 @@ body.iss-nav-open {
 /* Light (on dark backgrounds) */
 /* .iss-kicker--light: Modifier class for `iss-kicker`; combine for `light` variant. */
 .iss-kicker--light {
-  border-left-color: var(--iss-accent);
+  border-left-color: var(--iss-red);
   color: var(--iss-white);
   opacity: 0.9;
 }
 
 /* .iss-kicker--light: Modifier class for `iss-kicker`; combine for `light` variant. */
 .iss-kicker--light::before {
-  background: var(--iss-accent);
+  background: var(--iss-red);
 }
 
 /* Accent variants (use sparingly for thematic grouping) */
@@ -1010,7 +914,7 @@ body.iss-nav-open {
 /* .iss-separator--accent: Modifier class for `iss-separator`; combine for `accent` variant. */
 .iss-separator--accent {
   height: 2px;
-  background: var(--iss-accent);
+  background: var(--iss-red);
   width: 80px;
   margin: 3rem 0;
 }
@@ -1041,7 +945,7 @@ body.iss-nav-open {
   --iss-indent-pad-right: 0;
   --iss-indent-margin-right: 0;
 
-  border-left: 3px solid var(--iss-accent);
+  border-left: 3px solid var(--iss-red);
   padding-left: 1rem;
   padding-right: var(--iss-indent-pad-right);
   margin-right: var(--iss-indent-margin-right);
@@ -1314,9 +1218,9 @@ body.iss-nav-open {
 
    background: linear-gradient(
     to left,
-    rgba(var(--iss-accent-rgb), 0.45),
-    rgba(var(--iss-accent-rgb), 0.18),
-    rgba(var(--iss-accent-rgb), 0)
+    rgba(232, 29, 37, 0.45),  /* main red */
+    rgba(232, 29, 37, 0.18),
+    rgba(232, 29, 37, 0)
   );
 
   pointer-events: none;
@@ -1326,9 +1230,9 @@ body.iss-nav-open {
 .section--with-rail-accent::after {
   background: linear-gradient(
     to left,
-    rgba(var(--iss-accent-rgb), 0.35),
-    rgba(var(--iss-accent-rgb), 0.15),
-    rgba(var(--iss-accent-rgb), 0)
+    rgba(232, 29, 37, 0.35),
+    rgba(232, 29, 37, 0.15),
+    rgba(232, 29, 37, 0)
   );
 }
 
@@ -1423,7 +1327,7 @@ body.iss-nav-open {
 .iss-icon--xl { width: 1.6rem; height: 1.6rem; flex-basis: 1.6rem; }
 
 .iss-icon--muted { color: rgba(30,30,30,0.55); }
-.iss-icon--accent { color: var(--iss-accent); }
+.iss-icon--accent { color: var(--iss-red); }
 .iss-icon--green { color: var(--iss-green); }
 .iss-icon--blue { color: var(--iss-blue); }
 .iss-icon--yellow { color: var(--iss-yellow); }
@@ -1495,8 +1399,7 @@ body.iss-nav-open {
    ===================================================================== */
 
 .iss-page--narrative,
-.iss-page--compact,
-.iss-compact-scope {
+.iss-page--compact {
   --iss-narrative-width: 1180px;
   --iss-narrative-text-width: 68ch;
   --iss-narrative-intro-width: 58rem;
@@ -1506,76 +1409,55 @@ body.iss-nav-open {
 }
 
 .iss-page--narrative .iss-container,
-.iss-page--compact .iss-container,
-.iss-compact-scope .iss-container {
+.iss-page--compact .iss-container {
   max-width: var(--iss-narrative-width);
 }
 
-.iss-page--narrative .iss-section--wide > .iss-container,
-.iss-page--compact .iss-section--wide > .iss-container,
-.iss-compact-scope .iss-section--wide > .iss-container,
-.iss-page--narrative .section.iss-section--wide > .iss-container,
-.iss-page--compact .section.iss-section--wide > .iss-container,
-.iss-compact-scope .section.iss-section--wide > .iss-container {
-  max-width: var(--iss-content-width);
-}
-
 .iss-page--narrative .section,
-.iss-page--compact .section,
-.iss-compact-scope .section {
+.iss-page--compact .section {
   padding-top: var(--iss-narrative-section-pad);
   padding-bottom: var(--iss-narrative-section-pad);
 }
 
 .iss-page--narrative .section + .section,
-.iss-page--compact .section + .section,
-.iss-compact-scope .section + .section {
+.iss-page--compact .section + .section {
   padding-top: var(--iss-narrative-section-pad-tight);
 }
 
 .iss-page--narrative .iss-heading,
-.iss-page--compact .iss-heading,
-.iss-compact-scope .iss-heading {
+.iss-page--compact .iss-heading {
   --iss-heading-max-width: var(--iss-narrative-intro-width);
   gap: 0.45rem;
   margin-bottom: clamp(0.85rem, 1.4vw, 1.35rem);
 }
 
-.iss-page--narrative .iss-heading > .iss-heading__title,
-.iss-page--compact .iss-heading > .iss-heading__title,
-.iss-compact-scope .iss-heading > .iss-heading__title,
 .iss-page--narrative .iss-heading__title,
-.iss-page--compact .iss-heading__title,
-.iss-compact-scope .iss-heading__title {
-  font-size: clamp(1.55rem, 2vw, 2.15rem);
+.iss-page--compact .iss-heading__title {
+  font-size: clamp(1.85rem, 2.7vw, 2.75rem);
   line-height: 1.08;
   letter-spacing: -0.025em;
 }
 
 .iss-page--narrative h1:not([class*="__title"]),
-.iss-page--compact h1:not([class*="__title"]),
-.iss-compact-scope h1:not([class*="__title"]) {
-  font-size: clamp(1.85rem, 2.8vw, 2.7rem);
+.iss-page--compact h1:not([class*="__title"]) {
+  font-size: clamp(2.1rem, 3.5vw, 3.4rem);
   line-height: 1.06;
 }
 
 .iss-page--narrative h2:not([class*="__title"]),
-.iss-page--compact h2:not([class*="__title"]),
-.iss-compact-scope h2:not([class*="__title"]) {
-  font-size: clamp(1.45rem, 1.9vw, 1.95rem);
+.iss-page--compact h2:not([class*="__title"]) {
+  font-size: clamp(1.75rem, 2.35vw, 2.45rem);
   line-height: 1.12;
 }
 
 .iss-page--narrative h3:not([class*="__title"]),
-.iss-page--compact h3:not([class*="__title"]),
-.iss-compact-scope h3:not([class*="__title"]) {
-  font-size: clamp(1.18rem, 1.2vw, 1.45rem);
+.iss-page--compact h3:not([class*="__title"]) {
+  font-size: clamp(1.35rem, 1.65vw, 1.85rem);
   line-height: 1.18;
 }
 
 .iss-page--narrative .iss-heading__text,
-.iss-page--compact .iss-heading__text,
-.iss-compact-scope .iss-heading__text {
+.iss-page--compact .iss-heading__text {
   max-width: var(--iss-narrative-text-width);
   color: rgba(30, 30, 30, 0.72);
   font-size: clamp(1rem, 0.35vw + 0.95rem, 1.12rem);
@@ -1584,68 +1466,55 @@ body.iss-nav-open {
 
 .iss-page--narrative p,
 .iss-page--compact p,
-.iss-compact-scope p,
 .iss-page--narrative li,
-.iss-page--compact li,
-.iss-compact-scope li {
+.iss-page--compact li {
   max-width: var(--iss-narrative-text-width);
 }
 
 .iss-page--narrative .iss-kicker,
-.iss-page--compact .iss-kicker,
-.iss-compact-scope .iss-kicker {
+.iss-page--compact .iss-kicker {
   margin-bottom: 0.65rem;
   font-size: 0.72rem;
   letter-spacing: 0.13em;
 }
 
 .iss-page--narrative .iss-kicker--lg,
-.iss-page--compact .iss-kicker--lg,
-.iss-compact-scope .iss-kicker--lg {
+.iss-page--compact .iss-kicker--lg {
   font-size: 0.78rem;
   letter-spacing: 0.14em;
 }
 
 .iss-page--narrative .iss-separator,
-.iss-page--compact .iss-separator,
-.iss-compact-scope .iss-separator {
+.iss-page--compact .iss-separator {
   margin-top: clamp(2rem, 4vw, 3rem);
   margin-bottom: clamp(2rem, 4vw, 3rem);
 }
 
 .iss-page--narrative .iss-separator--accent,
-.iss-page--compact .iss-separator--accent,
-.iss-compact-scope .iss-separator--accent {
+.iss-page--compact .iss-separator--accent {
   margin-top: clamp(1.5rem, 3vw, 2.25rem);
   margin-bottom: clamp(1.5rem, 3vw, 2.25rem);
 }
 
 .iss-page--narrative .wp-block-columns,
-.iss-page--compact .wp-block-columns,
-.iss-compact-scope .wp-block-columns {
+.iss-page--compact .wp-block-columns {
   gap: var(--iss-narrative-gap);
 }
 
 @media (max-width: 781px) {
   .iss-page--narrative .section,
-  .iss-page--compact .section,
-  .iss-compact-scope .section {
+  .iss-page--compact .section {
     padding-top: 2rem;
     padding-bottom: 2rem;
   }
 
   .iss-page--narrative .section + .section,
-  .iss-page--compact .section + .section,
-  .iss-compact-scope .section + .section {
+  .iss-page--compact .section + .section {
     padding-top: 1.35rem;
   }
 
-  .iss-page--narrative .iss-heading > .iss-heading__title,
-  .iss-page--compact .iss-heading > .iss-heading__title,
-  .iss-compact-scope .iss-heading > .iss-heading__title,
   .iss-page--narrative .iss-heading__title,
-  .iss-page--compact .iss-heading__title,
-  .iss-compact-scope .iss-heading__title {
-    font-size: clamp(1.4rem, 6vw, 1.85rem);
+  .iss-page--compact .iss-heading__title {
+    font-size: clamp(1.65rem, 7vw, 2.25rem);
   }
 }

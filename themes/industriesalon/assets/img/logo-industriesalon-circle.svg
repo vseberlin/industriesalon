@@ -1,0 +1,13 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1024 1024" role="img" aria-labelledby="title desc">
+  <title id="title">Industriesalon Schöneweide</title>
+  <desc id="desc">Red circular Industriesalon Schöneweide logo with white roof symbol and wordmark.</desc>
+  <defs>
+    <style>
+      .bg{fill:#e81d25}.fg{fill:#f9f9fa}.roof{fill:none;stroke:#f9f9fa;stroke-width:39;stroke-linejoin:miter;stroke-linecap:square}.word{font-family:"IBM Plex Sans","Myriad Pro","Open Sans",Arial,sans-serif;font-weight:800;letter-spacing:-.035em}.line1{font-size:116px}.line2{font-size:122px}
+    </style>
+  </defs>
+  <circle class="bg" cx="512" cy="512" r="512"/>
+  <path class="roof" d="M74 685V371L176 280l105 94 103-94 106 94"/>
+  <text class="fg word line1" x="145" y="566">industriesalon</text>
+  <text class="fg word line2" x="145" y="686">schöneweide</text>
+</svg>

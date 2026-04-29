@@ -192,7 +192,7 @@
 .iss-card__title a:hover,
 /* .iss-card__title: Element class for `iss-card`; apply on `title` element. */
 .iss-card__title a:focus-visible {
-  color: var(--iss-accent);
+  color: var(--iss-red);
 }
 
 /* .iss-card__text: Element class for `iss-card`; apply on `text` element. */
@@ -253,7 +253,7 @@
 .iss-card__link:hover,
 /* .iss-card__link: Element class for `iss-card`; apply on `link` element. */
 .iss-card__link:focus-visible {
-  color: var(--iss-accent);
+  color: var(--iss-red);
 }
 
 /* .iss-card__link: Element class for `iss-card`; apply on `link` element. */
@@ -270,7 +270,7 @@
   position: absolute;
   inset: 0 auto 0 0;
   width: 5px;
-  background: var(--iss-accent);
+  background: var(--iss-red);
   z-index: 1;
 }
 
@@ -530,226 +530,6 @@
   }
 }
 
-/* =========================================================
-   GROUP: TEAM CARD FAMILY
-   PURPOSE:
-   Reusable portrait-led team member card for Query Loop sections and
-   featured staff/profile listings.
-
-   USE THIS WHEN:
-   - Listing `team_member` posts in a reusable grid.
-   - One profile should be featured ahead of the remaining team cards.
-
-   PRIMARY HOOKS:
-   .iss-team-card
-   .iss-team-card--lead
-   .iss-team-card__media-wrap
-   .iss-team-card__body
-   .iss-team-card__kicker
-   .iss-team-card__title
-   .iss-team-card__role
-   .iss-team-card__text
-   ========================================================= */
-/* .iss-team-card: Base class for iss team card; apply on primary wrapper/scope. */
-.iss-team-card {
-  display: flex;
-  flex-direction: column;
-  gap: 0;
-  align-items: stretch;
-  min-height: 100%;
-  padding: 0;
-  background: transparent;
-  box-shadow: none;
-  border-color: rgba(30, 30, 30, 0.1);
-  border-radius: 0;
-}
-
-/* .iss-team-card: Base class for iss team card; apply on primary wrapper/scope. */
-.iss-team-card:hover,
-/* .iss-team-card: Base class for iss team card; apply on primary wrapper/scope. */
-.iss-team-card:focus-within {
-  transform: none;
-  box-shadow: none;
-  border-color: rgba(30, 30, 30, 0.14);
-}
-
-/* .iss-team-card: Base class for iss team card; apply on primary wrapper/scope. */
-.iss-team-card::before {
-  display: none;
-}
-
-/* .iss-team-card: Base class for iss team card; apply on primary wrapper/scope. */
-/* .iss-team-card__media-wrap: Element class for `iss-team-card`; apply on `media-wrap` element. */
-.iss-team-card .iss-team-card__media-wrap {
-  margin: 0;
-  width: 100%;
-  background: transparent;
-  border: 0;
-  border-radius: 0;
-  box-shadow: none;
-  overflow: hidden;
-}
-
-/* .iss-team-card: Base class for iss team card; apply on primary wrapper/scope. */
-/* .iss-team-card__media-wrap: Element class for `iss-team-card`; apply on `media-wrap` element. */
-.iss-team-card .iss-team-card__media-wrap::before {
-  display: none;
-}
-
-/* .iss-team-card: Base class for iss team card; apply on primary wrapper/scope. */
-/* .iss-card__media: Element class for `iss-card`; apply on `media` element. */
-.iss-team-card .iss-card__media {
-  aspect-ratio: 3 / 4;
-  background: transparent;
-  margin: 0;
-}
-
-/* .iss-team-card: Base class for iss team card; apply on primary wrapper/scope. */
-/* .iss-card__media: Element class for `iss-card`; apply on `media` element. */
-/* img: card media image */
-.iss-team-card .iss-card__media img {
-  display: block;
-  width: 100%;
-  aspect-ratio: 3 / 4;
-  height: auto;
-  border-radius: 0;
-  object-position: center top;
-}
-
-/* .iss-team-card: Base class for iss team card; apply on primary wrapper/scope. */
-/* .iss-card-grid: Base class for iss card grid; apply on primary wrapper/scope. */
-/* .iss-card__media: Element class for `iss-card`; apply on `media` element. */
-.iss-card-grid .iss-team-card .iss-card__media img,
-/* .wp-block-group: Base class for wp block group; apply on primary wrapper/scope. */
-/* .iss-card-grid: Base class for iss card grid; apply on primary wrapper/scope. */
-/* .iss-team-card: Base class for iss team card; apply on primary wrapper/scope. */
-/* figure img: card media image */
-.wp-block-group.iss-card-grid .iss-team-card figure img {
-  aspect-ratio: 3 / 4;
-  height: auto;
-  border-radius: 0;
-}
-
-/* .iss-team-card: Base class for iss team card; apply on primary wrapper/scope. */
-/* .iss-team-card__body: Element class for `iss-team-card`; apply on `body` element. */
-.iss-team-card .iss-team-card__body {
-  gap: 0.3rem;
-  padding: 0.95rem 0.95rem 1rem;
-  min-width: 0;
-}
-
-/* .iss-team-card: Base class for iss team card; apply on primary wrapper/scope. */
-/* .iss-team-card__kicker: Element class for `iss-team-card`; apply on `kicker` element. */
-.iss-team-card .iss-team-card__kicker {
-  color: rgba(30, 30, 30, 0.56);
-}
-
-/* .iss-team-card: Base class for iss team card; apply on primary wrapper/scope. */
-/* .iss-team-card__title: Element class for `iss-team-card`; apply on `title` element. */
-.iss-team-card .iss-team-card__title {
-  min-height: 0;
-  font-size: clamp(1.15rem, 1.04rem + 0.28vw, 1.35rem);
-  line-height: 1.14;
-  letter-spacing: -0.02em;
-  display: block;
-}
-
-/* .iss-team-card: Base class for iss team card; apply on primary wrapper/scope. */
-/* .iss-team-card__role: Element class for `iss-team-card`; apply on `role` element. */
-.iss-team-card .iss-team-card__role {
-  margin: 0.05rem 0 0;
-  color: var(--iss-red);
-  font-size: 0.95rem;
-  font-weight: 600;
-  line-height: 1.35;
-}
-
-/* .iss-team-card: Base class for iss team card; apply on primary wrapper/scope. */
-/* .iss-team-card__role: Element class for `iss-team-card`; apply on `role` element. */
-.iss-team-card .iss-team-card__role a {
-  color: inherit;
-  text-decoration: none;
-}
-
-/* .iss-team-card: Base class for iss team card; apply on primary wrapper/scope. */
-/* .iss-team-card__role: Element class for `iss-team-card`; apply on `role` element. */
-.iss-team-card .iss-team-card__role a:hover,
-/* .iss-team-card: Base class for iss team card; apply on primary wrapper/scope. */
-/* .iss-team-card__role: Element class for `iss-team-card`; apply on `role` element. */
-.iss-team-card .iss-team-card__role a:focus-visible {
-  text-decoration: underline;
-}
-
-/* .iss-team-card: Base class for iss team card; apply on primary wrapper/scope. */
-/* .iss-team-card__text: Element class for `iss-team-card`; apply on `text` element. */
-.iss-team-card .iss-team-card__text {
-  margin-top: 0.2rem;
-  color: rgba(30, 30, 30, 0.72);
-  font-size: 0.92rem;
-  line-height: 1.45;
-  display: -webkit-box;
-  -webkit-line-clamp: 3;
-  line-clamp: 3;
-  -webkit-box-orient: vertical;
-  overflow: hidden;
-}
-
-/* .iss-team-card: Base class for iss team card; apply on primary wrapper/scope. */
-/* .wp-block-post-excerpt__excerpt: Base class for wp block post excerpt excerpt; apply on primary wrapper/scope. */
-.iss-team-card .wp-block-post-excerpt__excerpt {
-  margin: 0;
-}
-
-/* .iss-team-card--lead: Modifier class for `iss-team-card`; combine for `lead` variant. */
-.iss-team-card--lead {
-  display: flex;
-  flex-direction: column;
-}
-
-/* .iss-team-card--lead: Modifier class for `iss-team-card`; combine for `lead` variant. */
-/* .iss-team-card__body: Element class for `iss-team-card`; apply on `body` element. */
-.iss-team-card--lead .iss-team-card__body {
-  justify-content: start;
-  padding: 1.05rem 1.05rem 1.1rem;
-}
-
-/* .iss-team-card--lead: Modifier class for `iss-team-card`; combine for `lead` variant. */
-/* .iss-team-card__title: Element class for `iss-team-card`; apply on `title` element. */
-.iss-team-card--lead .iss-team-card__title {
-  font-size: clamp(1.22rem, 1.08rem + 0.45vw, 1.55rem);
-}
-
-/* .iss-team-card--lead: Modifier class for `iss-team-card`; combine for `lead` variant. */
-/* .iss-card__media: Element class for `iss-card`; apply on `media` element. */
-.iss-team-card--lead .iss-card__media,
-/* .iss-team-card--lead: Modifier class for `iss-team-card`; combine for `lead` variant. */
-/* .iss-card__media: Element class for `iss-card`; apply on `media` element. */
-/* img: card media image */
-.iss-team-card--lead .iss-card__media img {
-  aspect-ratio: 3 / 4;
-}
-
-@media (max-width: 782px) {
-/* .iss-team-card: Base class for iss team card; apply on primary wrapper/scope. */
-  .iss-team-card {
-    padding: 0;
-  }
-
-/* .iss-team-card: Base class for iss team card; apply on primary wrapper/scope. */
-/* .iss-card__media: Element class for `iss-card`; apply on `media` element. */
-/* img: card media image */
-  .iss-team-card .iss-card__media,
-  .iss-team-card .iss-card__media img {
-    aspect-ratio: 3 / 4;
-  }
-
-/* .iss-team-card: Base class for iss team card; apply on primary wrapper/scope. */
-/* .iss-team-card__body: Element class for `iss-team-card`; apply on `body` element. */
-  .iss-team-card .iss-team-card__body {
-    padding: 0.85rem 0.85rem 0.95rem;
-  }
-}
-
 
 /* =========================================================
    GROUP: CARD MEDIA UTILITIES
@@ -779,7 +559,7 @@
 
 /* .iss-media-card: Base class for iss media card; apply on primary wrapper/scope. */
 .iss-media-card {
-  --iss-media-card-rail-color: var(--iss-accent);
+  --iss-media-card-rail-color: var(--iss-red);
   --iss-media-card-shadow: 0 10px 28px rgba(0, 0, 0, 0.06);
   --iss-media-card-bg: var(--iss-white);
   --iss-media-card-border-width: 1px;
@@ -1216,7 +996,7 @@
 /* .iss-1to4-grid__lead-card: Element class for `iss-1to4-grid`; apply on `lead-card` element. */
 /* .wp-block-read-more: Base class for wp block read more; apply on primary wrapper/scope. */
 .iss-1to4-grid .iss-1to4-grid__lead-card .wp-block-read-more:focus-visible {
-  color: var(--iss-accent);
+  color: var(--iss-red);
 }
 
 /* ---------------------------------------------------------------------
@@ -1676,8 +1456,8 @@
   min-height: 1.8rem;
   padding: 0.15rem 0.65rem;
   border-radius: 999px;
-  background: rgba(var(--iss-accent-rgb), 0.08);
-  color: var(--iss-accent);
+  background: rgba(232, 29, 37, 0.08);
+  color: var(--iss-red);
   font-size: 0.75rem;
   font-weight: 700;
   letter-spacing: 0.08em;
@@ -1744,7 +1524,7 @@
 .iss-fuehrung-card__more:hover,
 /* .iss-fuehrung-card__more: Element class for `iss-fuehrung-card`; apply on `more` element. */
 .iss-fuehrung-card__more:focus-visible {
-  color: var(--iss-accent);
+  color: var(--iss-red);
 }
 
 /* .iss-fuehrungen-query__empty: Element class for `iss-fuehrungen-query`; apply on `empty` element. */
@@ -1772,7 +1552,7 @@
 /* .iss-fuehrungen-service__panel-kicker: Element class for `iss-fuehrungen-service`; apply on `panel-kicker` element. */
 .iss-fuehrungen-service__panel-kicker {
   margin: 0 0 0.65rem;
-  color: var(--iss-accent);
+  color: var(--iss-red);
   font-size: 0.76rem;
   font-weight: 700;
   letter-spacing: 0.12em;
@@ -1802,4 +1582,51 @@
     flex-direction: column;
     align-items: flex-start;
   }
+}
+
+
+/* =====================================================================
+   COMPACT / NARRATIVE CARD MODE
+   Reduces card visual weight on institutional and long-read pages.
+   ===================================================================== */
+
+.iss-page--narrative .iss-card,
+.iss-page--compact .iss-card {
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.055);
+}
+
+.iss-page--narrative .iss-card:hover,
+.iss-page--narrative .iss-card:focus-within,
+.iss-page--compact .iss-card:hover,
+.iss-page--compact .iss-card:focus-within {
+  transform: translateY(-1px);
+  box-shadow: 0 12px 32px rgba(0, 0, 0, 0.08);
+}
+
+.iss-page--narrative .iss-card__body,
+.iss-page--compact .iss-card__body {
+  gap: 0.7rem;
+  padding: 1rem 1rem 1.1rem;
+}
+
+.iss-page--narrative .iss-card__title,
+.iss-page--compact .iss-card__title {
+  font-size: clamp(1.12rem, 0.85rem + 0.45vw, 1.45rem);
+  line-height: 1.16;
+}
+
+.iss-page--narrative .iss-card__text,
+.iss-page--compact .iss-card__text {
+  font-size: 0.94rem;
+  line-height: 1.5;
+}
+
+.iss-page--narrative .iss-card-grid,
+.iss-page--compact .iss-card-grid {
+  gap: clamp(0.9rem, 1.4vw, 1.25rem);
+}
+
+.iss-page--narrative .iss-media-card,
+.iss-page--compact .iss-media-card {
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.055);
 }
