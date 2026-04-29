@@ -198,6 +198,20 @@ function industriesalon_register_block_patterns(): void
             'categories' => array('industriesalon', 'text'),
             'file' => '/patterns/page-salon-vermietung-template.html',
         ),
+        array(
+            'name' => 'industriesalon/page-projekte-template',
+            'title' => 'ISS Projekte Page Template',
+            'description' => 'Projects landing page content for the dedicated projekte page.',
+            'categories' => array('industriesalon', 'text'),
+            'file' => '/patterns/page-projekte-template.html',
+        ),
+        array(
+            'name' => 'industriesalon/page-repair-cafe-template',
+            'title' => 'ISS Repair Cafe Page Template',
+            'description' => 'Repair Cafe page content for the dedicated repair-cafe page.',
+            'categories' => array('industriesalon', 'text'),
+            'file' => '/patterns/page-repair-cafe-template.html',
+        ),
     );
 
     foreach ($patterns as $pattern) {

@@ -9,11 +9,53 @@ if (!defined('ABSPATH')) {
     exit;
 }
 
+add_action('wp_enqueue_scripts', function () {
+    if (!is_singular('publication')) {
+        return;
+    }
+
+    $post_id = get_queried_object_id();
+    if ($post_id <= 0) {
+        return;
+    }
+
+    $sale_enabled = !empty(get_post_meta($post_id, '_iss_publication_sale_enabled', true));
+    $price_cents = (int) get_post_meta($post_id, '_iss_publication_price_cents', true);
+    if (!$sale_enabled || $price_cents <= 0) {
+        return;
+    }
+
+    wp_enqueue_style(
+        'iss-payments-lite-publications',
+        plugin_dir_url(__FILE__) . 'assets/publication-order.css',
+        [],
+        '0.1.0'
+    );
+
+    wp_enqueue_script(
+        'iss-payments-lite-publications',
+        plugin_dir_url(__FILE__) . 'assets/publication-order.js',
+        [],
+        '0.1.0',
+        true
+    );
+
+    wp_localize_script('iss-payments-lite-publications', 'ISS_PUBLICATION_ORDER', [
+        'orderUrl' => esc_url_raw(rest_url('iss-payments/v1/publication-order')),
+    ]);
+});
+
 add_action('rest_api_init', function () {
     // Public intentionally: visitors submit tour booking requests without a WordPress account.
     register_rest_route('is-tours/v1', '/book', [
         'methods'  => 'POST',
         'callback' => 'iss_payments_lite_create_tour_booking',
+        'permission_callback' => '__return_true',
+    ]);
+
+    register_rest_route('iss-payments/v1', '/publication-order', [
+        'methods'  => 'POST',
+        'callback' => 'iss_payments_lite_create_publication_order',
         'permission_callback' => '__return_true',
     ]);
 });
@@ -148,3 +190,101 @@ function iss_payments_lite_create_tour_booking(WP_REST_Request $request) {
 
     return new WP_REST_Response(['ok' => true], 200);
 }
+
+function iss_payments_lite_create_publication_order(WP_REST_Request $request) {
+    $payload = json_decode($request->get_body(), true);
+    if (!is_array($payload)) {
+        return new WP_REST_Response(['ok' => false, 'error' => 'Invalid payload'], 400);
+    }
+
+    $publication_id = isset($payload['publication_id']) ? (int) $payload['publication_id'] : 0;
+    $name = sanitize_text_field($payload['name'] ?? '');
+    $email = sanitize_email($payload['email'] ?? '');
+    $quantity = isset($payload['quantity']) ? (int) $payload['quantity'] : 0;
+    $payment = sanitize_text_field($payload['payment'] ?? '');
+
+    $errors = [];
+
+    if ($publication_id <= 0 || get_post_type($publication_id) !== 'publication') {
+        $errors[] = 'Ungültige Publikation.';
+    }
+
+    $sale_enabled = !empty(get_post_meta($publication_id, '_iss_publication_sale_enabled', true));
+    $price_cents = (int) get_post_meta($publication_id, '_iss_publication_price_cents', true);
+    if (!$sale_enabled || $price_cents <= 0) {
+        $errors[] = 'Diese Publikation ist derzeit nicht bestellbar.';
+    }
+
+    if ($name === '') {
+        $errors[] = 'Name fehlt.';
+    }
+
+    if (!is_email($email)) {
+        $errors[] = 'Ungültige E-Mail.';
+    }
+
+    if ($quantity < 1) {
+        $errors[] = 'Bitte mindestens 1 Exemplar.';
+    }
+
+    if (!in_array($payment, ['onsite', 'mollie'], true)) {
+        $errors[] = 'Ungültige Zahlungsart.';
+    }
+
+    if (!empty($errors)) {
+        return new WP_REST_Response(['ok' => false, 'error' => implode(' ', $errors)], 400);
+    }
+
+    $entry = [
+        'time' => current_time('mysql'),
+        'publication_id' => $publication_id,
+        'title' => get_the_title($publication_id),
+        'name' => $name,
+        'email' => $email,
+        'quantity' => $quantity,
+        'payment' => $payment,
+        'price_cents' => $price_cents,
+        'amount_cents' => $price_cents * $quantity,
+        'ip' => isset($_SERVER['REMOTE_ADDR']) ? sanitize_text_field((string) $_SERVER['REMOTE_ADDR']) : '',
+        'ua' => isset($_SERVER['HTTP_USER_AGENT']) ? sanitize_text_field((string) $_SERVER['HTTP_USER_AGENT']) : '',
+    ];
+
+    $orders = get_option('iss_publication_order_requests', []);
+    if (!is_array($orders)) {
+        $orders = [];
+    }
+    $orders[] = $entry;
+    if (count($orders) > 200) {
+        $orders = array_slice($orders, -200);
+    }
+    update_option('iss_publication_order_requests', $orders, false);
+
+    do_action('iss_payments_lite_publication_order_created', $entry, $request);
+    do_action('iss_payments_lite_order_created', 'publication', $entry, $request);
+
+    return new WP_REST_Response(['ok' => true], 200);
+}
+
+add_filter('iss_publications_order_button_html', function ($html, $post_id, $context) {
+    $post_id = (int) $post_id;
+    if ($post_id <= 0) {
+        return $html;
+    }
+
+    $label = isset($context['label']) ? trim((string) $context['label']) : '';
+    if ($label === '') {
+        $label = 'Publikation bestellen';
+    }
+
+    $amount = isset($context['amount']) ? (int) $context['amount'] : 0;
+    $title = isset($context['title']) ? (string) $context['title'] : get_the_title($post_id);
+
+    return sprintf(
+        '<div class="iss-publication-order-panel__actions"><button type="button" class="iss-publication-order-trigger" data-publication-id="%1$d" data-title="%2$s" data-amount="%3$d" data-label="%4$s">%5$s</button></div>',
+        $post_id,
+        esc_attr($title),
+        $amount,
+        esc_attr($label),
+        esc_html($label)
+    );
+}, 10, 3);

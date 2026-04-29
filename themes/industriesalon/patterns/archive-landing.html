@@ -1,10 +1,10 @@
-<!-- wp:group {"tagName":"main","className":"iss-archive-landing","layout":{"type":"constrained"}} -->
+<!-- wp:group {"tagName":"main","className":"iss-archive-landing","layout":{"type":"default"}} -->
 <main class="wp-block-group iss-archive-landing">
 
-  <!-- wp:group {"align":"full","className":"iss-archive-hero","layout":{"type":"constrained"}} -->
+  <!-- wp:group {"align":"full","className":"iss-archive-hero","layout":{"type":"default"}} -->
   <div class="wp-block-group alignfull iss-archive-hero">
 
-    <!-- wp:group {"className":"iss-archive-hero__media","layout":{"type":"constrained"}} -->
+    <!-- wp:group {"className":"iss-archive-hero__media","layout":{"type":"default"}} -->
     <div class="wp-block-group iss-archive-hero__media">
       <!-- wp:image {"sizeSlug":"full","linkDestination":"none"} -->
       <figure class="wp-block-image size-full"><img src="/wp-content/themes/industriesalon/assets/images/archive-hero.jpg" alt="Archiv und Mediathek Industriesalon Schöneweide"/></figure>
@@ -12,7 +12,7 @@
     </div>
     <!-- /wp:group -->
 
-    <!-- wp:group {"className":"iss-container iss-archive-hero__inner","layout":{"type":"constrained"}} -->
+    <!-- wp:group {"className":"iss-container iss-archive-hero__inner","layout":{"type":"default"}} -->
     <div class="wp-block-group iss-container iss-archive-hero__inner">
 
       <!-- wp:group {"className":"iss-heading"} -->
@@ -26,8 +26,20 @@
         <!-- /wp:heading -->
 
         <!-- wp:paragraph {"className":"iss-heading__text"} -->
-        <p class="iss-heading__text">Das Archiv des Industriesalons verbindet Bestände im Haus, die Mediathek, digitale Sammlungen und weiterführende Rechercheportale. So lassen sich Objekte, Geschichten und Kontexte auf unterschiedlichen Wegen entdecken.</p>
+        <p class="iss-heading__text">Das Archiv des Industriesalons verbindet Bestände im Haus, die Mediathek, digitale Sammlungen und weiterführende Rechercheportale. Wählen Sie den passenden Einstieg und vertiefen Sie Ihre Recherche je nach Thema, Medium oder Fragestellung.</p>
         <!-- /wp:paragraph -->
+
+        <!-- wp:buttons {"className":"iss-front-hero__actions"} -->
+        <div class="wp-block-buttons iss-front-hero__actions">
+          <!-- wp:button {"className":"is-style-fill"} -->
+          <div class="wp-block-button is-style-fill"><a class="wp-block-button__link wp-element-button" href="#zugaenge">Zugänge ansehen</a></div>
+          <!-- /wp:button -->
+
+          <!-- wp:button {"className":"is-style-outline"} -->
+          <div class="wp-block-button is-style-outline"><a class="wp-block-button__link wp-element-button" href="/kontakt/">Recherche anfragen</a></div>
+          <!-- /wp:button -->
+        </div>
+        <!-- /wp:buttons -->
       </div>
       <!-- /wp:group -->
 
@@ -37,9 +49,9 @@
   </div>
   <!-- /wp:group -->
 
-  <!-- wp:group {"className":"section","layout":{"type":"constrained"}} -->
+  <!-- wp:group {"className":"section","layout":{"type":"default"}} -->
   <div class="wp-block-group section">
-    <!-- wp:group {"className":"iss-container","layout":{"type":"constrained"}} -->
+    <!-- wp:group {"className":"iss-container","layout":{"type":"default"}} -->
     <div class="wp-block-group iss-container">
 
       <!-- wp:columns {"className":"iss-archive-entry-grid"} -->
@@ -60,6 +72,9 @@
             <!-- /wp:paragraph -->
             <!-- wp:paragraph {"className":"iss-archive-entry__meta"} -->
             <p class="iss-archive-entry__meta">Bestände · Beratung · Voranfrage</p>
+            <!-- /wp:paragraph -->
+            <!-- wp:paragraph -->
+            <p><a class="iss-card__link" href="#hausarchiv">Zum Hausarchiv</a></p>
             <!-- /wp:paragraph -->
           </div>
           <!-- /wp:group -->
@@ -82,6 +97,9 @@
             <!-- wp:paragraph {"className":"iss-archive-entry__meta"} -->
             <p class="iss-archive-entry__meta">Video · Bild · Text</p>
             <!-- /wp:paragraph -->
+            <!-- wp:paragraph -->
+            <p><a class="iss-card__link" href="#mediathek">Zur Mediathek</a></p>
+            <!-- /wp:paragraph -->
           </div>
           <!-- /wp:group -->
         </div>
@@ -102,6 +120,9 @@
             <!-- /wp:paragraph -->
             <!-- wp:paragraph {"className":"iss-archive-entry__meta"} -->
             <p class="iss-archive-entry__meta">Objekte · Schlagworte · Recherche</p>
+            <!-- /wp:paragraph -->
+            <!-- wp:paragraph -->
+            <p><a class="iss-card__link" href="#online-sammlung">Zur Online-Sammlung</a></p>
             <!-- /wp:paragraph -->
           </div>
           <!-- /wp:group -->
@@ -124,6 +145,9 @@
             <!-- wp:paragraph {"className":"iss-archive-entry__meta"} -->
             <p class="iss-archive-entry__meta">DDB · Europeana · Verweise</p>
             <!-- /wp:paragraph -->
+            <!-- wp:paragraph -->
+            <p><a class="iss-card__link" href="#portale">Zu den Portalen</a></p>
+            <!-- /wp:paragraph -->
           </div>
           <!-- /wp:group -->
         </div>
@@ -137,12 +161,12 @@
   </div>
   <!-- /wp:group -->
 
-  <!-- wp:group {"className":"section section--alt","layout":{"type":"constrained"}} -->
-  <div class="wp-block-group section section--alt">
-    <!-- wp:group {"className":"iss-container","layout":{"type":"constrained"}} -->
+  <!-- wp:group {"className":"section section--alt","layout":{"type":"default"}} -->
+  <div id="zugaenge" class="wp-block-group section section--alt">
+    <!-- wp:group {"className":"iss-container","layout":{"type":"default"}} -->
     <div class="wp-block-group iss-container">
 
-      <!-- wp:group {"className":"iss-archive-section-head","layout":{"type":"constrained"}} -->
+      <!-- wp:group {"className":"iss-archive-section-head","layout":{"type":"default"}} -->
       <div class="wp-block-group iss-archive-section-head">
         <!-- wp:group {"className":"iss-heading"} -->
         <div class="wp-block-group iss-heading">
@@ -165,7 +189,7 @@
 
         <!-- wp:column -->
         <div class="wp-block-column">
-          <!-- wp:group {"className":"iss-archive-path","layout":{"type":"constrained"}} -->
+          <!-- wp:group {"className":"iss-archive-path","layout":{"type":"default"}} -->
           <div class="wp-block-group iss-archive-path">
             <!-- wp:heading {"level":3,"className":"iss-archive-path__title"} -->
             <h3 class="wp-block-heading iss-archive-path__title">Schnell einsteigen</h3>
@@ -180,7 +204,7 @@
 
         <!-- wp:column -->
         <div class="wp-block-column">
-          <!-- wp:group {"className":"iss-archive-path","layout":{"type":"constrained"}} -->
+          <!-- wp:group {"className":"iss-archive-path","layout":{"type":"default"}} -->
           <div class="wp-block-group iss-archive-path">
             <!-- wp:heading {"level":3,"className":"iss-archive-path__title"} -->
             <h3 class="wp-block-heading iss-archive-path__title">Gezielt recherchieren</h3>
@@ -195,7 +219,7 @@
 
         <!-- wp:column -->
         <div class="wp-block-column">
-          <!-- wp:group {"className":"iss-archive-path","layout":{"type":"constrained"}} -->
+          <!-- wp:group {"className":"iss-archive-path","layout":{"type":"default"}} -->
           <div class="wp-block-group iss-archive-path">
             <!-- wp:heading {"level":3,"className":"iss-archive-path__title"} -->
             <h3 class="wp-block-heading iss-archive-path__title">Vor Ort vertiefen</h3>
@@ -216,12 +240,12 @@
   </div>
   <!-- /wp:group -->
 
-  <!-- wp:group {"className":"section","layout":{"type":"constrained"}} -->
+  <!-- wp:group {"className":"section","layout":{"type":"default"}} -->
   <div class="wp-block-group section">
-    <!-- wp:group {"className":"iss-container","layout":{"type":"constrained"}} -->
+    <!-- wp:group {"className":"iss-container","layout":{"type":"default"}} -->
     <div class="wp-block-group iss-container">
 
-      <!-- wp:group {"className":"iss-archive-section-head","layout":{"type":"constrained"}} -->
+      <!-- wp:group {"className":"iss-archive-section-head","layout":{"type":"default"}} -->
       <div class="wp-block-group iss-archive-section-head">
         <!-- wp:group {"className":"iss-heading"} -->
         <div class="wp-block-group iss-heading">
@@ -348,12 +372,12 @@
   </div>
   <!-- /wp:group -->
 
-  <!-- wp:group {"className":"section section--alt","layout":{"type":"constrained"}} -->
-  <div class="wp-block-group section section--alt">
-    <!-- wp:group {"className":"iss-container","layout":{"type":"constrained"}} -->
+  <!-- wp:group {"className":"section section--alt","layout":{"type":"default"}} -->
+  <div id="hausarchiv" class="wp-block-group section section--alt">
+    <!-- wp:group {"className":"iss-container","layout":{"type":"default"}} -->
     <div class="wp-block-group iss-container">
 
-      <!-- wp:group {"className":"iss-archive-section-head","layout":{"type":"constrained"}} -->
+      <!-- wp:group {"className":"iss-archive-section-head","layout":{"type":"default"}} -->
       <div class="wp-block-group iss-archive-section-head">
         <!-- wp:group {"className":"iss-heading"} -->
         <div class="wp-block-group iss-heading">
@@ -436,12 +460,12 @@
   </div>
   <!-- /wp:group -->
 
-  <!-- wp:group {"className":"section","layout":{"type":"constrained"}} -->
-  <div class="wp-block-group section">
-    <!-- wp:group {"className":"iss-container","layout":{"type":"constrained"}} -->
+  <!-- wp:group {"className":"section","layout":{"type":"default"}} -->
+  <div id="mediathek" class="wp-block-group section">
+    <!-- wp:group {"className":"iss-container","layout":{"type":"default"}} -->
     <div class="wp-block-group iss-container">
 
-      <!-- wp:group {"className":"iss-archive-section-head","layout":{"type":"constrained"}} -->
+      <!-- wp:group {"className":"iss-archive-section-head","layout":{"type":"default"}} -->
       <div class="wp-block-group iss-archive-section-head">
         <!-- wp:group {"className":"iss-heading"} -->
         <div class="wp-block-group iss-heading">
@@ -554,12 +578,12 @@
   </div>
   <!-- /wp:group -->
 
-  <!-- wp:group {"className":"section section--alt","layout":{"type":"constrained"}} -->
-  <div class="wp-block-group section section--alt">
-    <!-- wp:group {"className":"iss-container","layout":{"type":"constrained"}} -->
+  <!-- wp:group {"className":"section section--alt","layout":{"type":"default"}} -->
+  <div id="online-sammlung" class="wp-block-group section section--alt">
+    <!-- wp:group {"className":"iss-container","layout":{"type":"default"}} -->
     <div class="wp-block-group iss-container">
 
-      <!-- wp:group {"className":"iss-archive-section-head","layout":{"type":"constrained"}} -->
+      <!-- wp:group {"className":"iss-archive-section-head","layout":{"type":"default"}} -->
       <div class="wp-block-group iss-archive-section-head">
         <!-- wp:group {"className":"iss-heading"} -->
         <div class="wp-block-group iss-heading">
@@ -672,12 +696,12 @@
   </div>
   <!-- /wp:group -->
 
-  <!-- wp:group {"className":"section","layout":{"type":"constrained"}} -->
-  <div class="wp-block-group section">
-    <!-- wp:group {"className":"iss-container","layout":{"type":"constrained"}} -->
+  <!-- wp:group {"className":"section","layout":{"type":"default"}} -->
+  <div id="portale" class="wp-block-group section">
+    <!-- wp:group {"className":"iss-container","layout":{"type":"default"}} -->
     <div class="wp-block-group iss-container">
 
-      <!-- wp:group {"className":"iss-archive-section-head","layout":{"type":"constrained"}} -->
+      <!-- wp:group {"className":"iss-archive-section-head","layout":{"type":"default"}} -->
       <div class="wp-block-group iss-archive-section-head">
         <!-- wp:group {"className":"iss-heading"} -->
         <div class="wp-block-group iss-heading">
@@ -700,7 +724,7 @@
 
         <!-- wp:column -->
         <div class="wp-block-column">
-          <!-- wp:group {"className":"iss-portal-link","layout":{"type":"constrained"}} -->
+          <!-- wp:group {"className":"iss-portal-link","layout":{"type":"default"}} -->
           <div class="wp-block-group iss-portal-link">
             <!-- wp:paragraph {"className":"iss-portal-link__logo"} -->
             <p class="iss-portal-link__logo">DDB</p>
@@ -721,7 +745,7 @@
 
         <!-- wp:column -->
         <div class="wp-block-column">
-          <!-- wp:group {"className":"iss-portal-link","layout":{"type":"constrained"}} -->
+          <!-- wp:group {"className":"iss-portal-link","layout":{"type":"default"}} -->
           <div class="wp-block-group iss-portal-link">
             <!-- wp:paragraph {"className":"iss-portal-link__logo"} -->
             <p class="iss-portal-link__logo">Europeana</p>
@@ -748,9 +772,9 @@
   </div>
   <!-- /wp:group -->
 
-  <!-- wp:group {"className":"section","layout":{"type":"constrained"}} -->
+  <!-- wp:group {"className":"section","layout":{"type":"default"}} -->
   <div class="wp-block-group section">
-    <!-- wp:group {"className":"iss-container","layout":{"type":"constrained"}} -->
+    <!-- wp:group {"className":"iss-container","layout":{"type":"default"}} -->
     <div class="wp-block-group iss-container">
 
       <!-- wp:columns {"className":"iss-archive-research-cta"} -->

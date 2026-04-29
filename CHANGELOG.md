@@ -1,5 +1,34 @@
 # Changelog
 
+## 2026-04-29
+- Added a dedicated file-backed `Repair Café` landing page in `themes/industriesalon`:
+  - `templates/page-repair-cafe.html`
+  - `patterns/page-repair-cafe-template.html`
+  - registered `industriesalon/page-repair-cafe-template` in `functions.php`
+  - created live page `13253` with slug `/repair-cafe/`
+- Integrated the existing `industriesalon-notices` plugin into the Repair hero:
+  - replaced hardcoded hero note markup with `industriesalon/notice-banner`
+  - created page-scoped notice `13254`
+  - fixed the hero slot structure and added page-scoped cover grid rules so the banner sits on the right track without the front-page underlap behavior
+- Refined the publications archive and single-publication templates:
+  - archive now uses a restrained two-column masthead with custom title instead of WordPress archive-title output
+  - single publication now uses a tighter intro/sidebar long-read opening
+  - archive listing limited to 3 cards
+  - archive CTA changed to `Mehr`
+  - masthead and single intro now clear the oversized sticky logo
+- Fixed publication card media rendering:
+  - corrected the cover stretch chain
+  - switched archive covers to full-bleed behavior
+  - removed the half-empty white lower area in publication cards
+- Wired publication ordering into `iss-payments-lite`:
+  - added frontend modal assets:
+    - `plugins/iss-payments-lite/assets/publication-order.js`
+    - `plugins/iss-payments-lite/assets/publication-order.css`
+  - added REST endpoint:
+    - `POST /wp-json/iss-payments/v1/publication-order`
+  - implemented the `iss_publications_order_button_html` hook so the order panel now renders a real action button
+  - order flow now works as thin pre-gateway path: modal -> submit -> local request record
+
 ## 2026-04-27
 - Rebuilt the live `Über uns` page onto the theme-owned `page-ueber-uns` template:
   - merged the previous theme draft, live page content, and local `register.md` notes

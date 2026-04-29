@@ -5631,6 +5631,12 @@ Raum / Vermietung → brown
   display: flex;
   flex-direction: column;
   gap: var(--iss-archive-section-gap);
+  padding-top: 0;
+  margin-top: 0 !important;
+}
+
+#wp--skip-link--target {
+  margin-top: 0 !important;
 }
 
 /* .iss-archive-landing: Base class for iss archive landing; apply on primary wrapper/scope. */
@@ -5689,13 +5695,13 @@ Raum / Vermietung → brown
   position: relative;
   z-index: 1;
   width: 100%;
-  max-width: min(56rem, 100%);
+  max-width: 100%;
 }
 
 /* .iss-archive-hero: Base class for iss archive hero; apply on primary wrapper/scope. */
 /* .iss-heading: Base class for iss heading; apply on primary wrapper/scope. */
 .iss-archive-hero .iss-heading {
-  --iss-heading-max-width: 52rem;
+  --iss-heading-max-width: 56rem;
 }
 
 /* .iss-archive-hero: Base class for iss archive hero; apply on primary wrapper/scope. */
@@ -5868,7 +5874,7 @@ Raum / Vermietung → brown
 /* .iss-archive-section-head: Base class for iss archive section head; apply on primary wrapper/scope. */
 /* .iss-heading: Base class for iss heading; apply on primary wrapper/scope. */
 .iss-archive-section-head .iss-heading {
-  --iss-heading-max-width: 48rem;
+  --iss-heading-max-width: 56rem;
 }
 
 /* =====================================================
@@ -6759,6 +6765,644 @@ Raum / Vermietung → brown
   }
 }
 
+/* .iss-projects-page: Base class for iss projects page; apply on primary wrapper/scope. */
+.iss-projects-page {
+  background: var(--iss-white);
+  color: var(--iss-black);
+  padding-top: 0;
+}
+
+.iss-projects-page,
+#wp--skip-link--target {
+  margin-top: 0 !important;
+}
+
+.iss-projects-page .iss-front-hero__shell {
+  padding-top: max(5.5rem, calc(var(--iss-header-height, 88px) + 1rem));
+  padding-bottom: clamp(2.5rem, 6vh, 4.25rem);
+}
+
+.iss-projects-page .iss-front-hero__content {
+  max-width: 56rem;
+}
+
+.iss-projects-page .iss-front-hero__title,
+.iss-projects-page .iss-front-hero__text,
+.iss-projects-page .iss-kicker--light {
+  color: #fff !important;
+}
+
+.iss-projects-page .iss-front-hero__text {
+  max-width: 46rem;
+}
+
+.iss-project-card .iss-card__media {
+  aspect-ratio: 16 / 10;
+}
+
+.iss-project-card {
+  position: relative;
+  display: flex;
+  min-height: 100%;
+  flex-direction: column;
+  overflow: hidden;
+  background: #fff;
+  border: 1px solid var(--iss-border);
+  border-radius: var(--iss-radius-md);
+  color: var(--iss-black);
+  text-decoration: none;
+  transition: transform 0.2s ease, border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.iss-project-card:hover,
+.iss-project-card:focus-visible {
+  transform: translateY(-2px);
+  border-color: rgba(30, 30, 30, 0.24);
+  box-shadow: 0 14px 40px rgba(0, 0, 0, 0.08);
+  outline: none;
+}
+
+.iss-project-card::before {
+  content: "";
+  position: absolute;
+  inset: 0 auto 0 0;
+  width: 5px;
+  background: var(--iss-red);
+  z-index: 2;
+}
+
+.iss-project-card--green::before {
+  background: var(--iss-green);
+}
+
+.iss-project-card--blue::before {
+  background: var(--iss-blue);
+}
+
+.iss-project-card--yellow::before {
+  background: var(--iss-yellow);
+}
+
+.iss-project-card .iss-project-card__media {
+  margin: 0;
+  aspect-ratio: 16 / 9;
+  background: #dedbd9;
+  overflow: hidden;
+}
+
+.iss-project-card--lead {
+  min-height: 34rem;
+}
+
+.iss-project-card--lead .iss-project-card__media {
+  aspect-ratio: 16 / 10;
+}
+
+.iss-project-card__media img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.iss-project-card .iss-project-card__body {
+  gap: 0.8rem;
+  display: flex;
+  flex: 1 1 auto;
+  flex-direction: column;
+  padding: clamp(1.1rem, 1.5vw, 1.5rem);
+}
+
+.iss-now-grid {
+  display: grid;
+  grid-template-columns: 1.25fr 1fr 1fr;
+  gap: clamp(1rem, 1.6vw, 1.5rem);
+  align-items: stretch;
+}
+
+.iss-project-card__meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem 0.65rem;
+  margin: 0;
+}
+
+.iss-status {
+  display: inline-flex;
+  align-items: center;
+  width: fit-content;
+  min-height: 1.7rem;
+  padding: 0.28rem 0.62rem;
+  border: 1px solid rgba(30, 30, 30, 0.14);
+  border-radius: 999px;
+  background: #f4f4f5;
+  color: rgba(30, 30, 30, 0.74);
+  font-size: 0.72rem;
+  font-weight: 750;
+  line-height: 1;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.iss-project-card__title {
+  margin: 0;
+  font-size: clamp(1.45rem, 1.3vw + 1rem, 2.35rem);
+  font-weight: 800;
+  line-height: 1.06;
+  letter-spacing: -0.035em;
+  text-wrap: balance;
+}
+
+.iss-project-card__text {
+  margin: 0;
+  color: rgba(30, 30, 30, 0.74);
+  font-size: 1rem;
+  line-height: 1.58;
+}
+
+.iss-project-card__link {
+  margin-top: auto;
+  padding-top: 0.5rem;
+  color: var(--iss-black);
+  font-weight: 700;
+  text-decoration: none;
+}
+
+.iss-project-card__link::after {
+  content: " ->";
+  color: var(--iss-red);
+}
+
+.iss-method-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 1px;
+  margin-top: clamp(2rem, 4vw, 4rem);
+  border: 1px solid rgba(249, 249, 250, 0.18);
+  background: rgba(249, 249, 250, 0.18);
+}
+
+.iss-method-item {
+  min-height: 15rem;
+  padding: clamp(1.25rem, 2vw, 2rem);
+  background: var(--iss-black);
+}
+
+.iss-method-item__number {
+  display: block;
+  margin-bottom: 2rem;
+  color: var(--iss-red);
+  font-size: 0.85rem;
+  font-weight: 800;
+  letter-spacing: 0.12em;
+}
+
+.iss-method-item__title {
+  margin: 0 0 0.75rem;
+  color: var(--iss-white);
+  font-size: clamp(1.25rem, 1.2vw, 1.75rem);
+  line-height: 1.12;
+  letter-spacing: -0.025em;
+}
+
+.iss-method-item__text {
+  margin: 0;
+  color: rgba(249, 249, 250, 0.72);
+  font-size: 0.98rem;
+  line-height: 1.55;
+}
+
+.iss-selected-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: clamp(1rem, 1.5vw, 1.5rem);
+  margin-top: clamp(2rem, 4vw, 4rem);
+}
+
+.iss-small-card {
+  display: flex;
+  min-height: 18rem;
+  flex-direction: column;
+  gap: 0.85rem;
+  padding: clamp(1.1rem, 1.5vw, 1.45rem);
+  border: 1px solid var(--iss-border);
+  border-radius: var(--iss-radius-md);
+  background: var(--iss-white);
+  text-decoration: none;
+  color: inherit;
+  transition: border-color 0.2s ease, transform 0.2s ease;
+}
+
+.iss-small-card:hover,
+.iss-small-card:focus-visible {
+  transform: translateY(-2px);
+  border-color: rgba(30, 30, 30, 0.28);
+  outline: none;
+}
+
+.iss-small-card__kicker {
+  margin: 0;
+  color: rgba(30, 30, 30, 0.58);
+  font-size: 0.72rem;
+  font-weight: 800;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+.iss-small-card__title {
+  margin: 0;
+  font-size: clamp(1.25rem, 1vw, 1.65rem);
+  line-height: 1.12;
+  letter-spacing: -0.025em;
+}
+
+.iss-small-card__text {
+  margin: 0;
+  color: rgba(30, 30, 30, 0.72);
+  font-size: 0.98rem;
+  line-height: 1.55;
+}
+
+.iss-small-card__link {
+  margin-top: auto;
+  font-weight: 700;
+}
+
+.iss-small-card__link::after {
+  content: " ->";
+  color: var(--iss-red);
+}
+
+@media (max-width: 1180px) {
+  .iss-now-grid,
+  .iss-selected-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .iss-project-card--lead {
+    grid-column: 1 / -1;
+  }
+
+  .iss-method-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 781px) {
+  .iss-projects-page .iss-front-hero__shell {
+    padding-top: 6.5rem;
+    padding-bottom: 2.5rem;
+  }
+
+  .iss-now-grid,
+  .iss-selected-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .iss-method-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .iss-project-card--lead {
+    min-height: 0;
+  }
+}
+
+/* .iss-repair-page: Base class for iss repair page; apply on primary wrapper/scope. */
+.iss-repair-page {
+  background: var(--iss-white);
+  color: var(--iss-black);
+  padding-top: 0;
+}
+
+.iss-repair-page,
+.iss-repair-page #wp--skip-link--target {
+  margin-top: 0;
+  padding-top: 0;
+}
+
+.iss-repair-page .wp-block-cover.iss-front-hero {
+  --iss-hero-min-h: 80svh;
+  --iss-hero-pad-bottom: clamp(2rem, 5vh, 4rem);
+  --iss-hero-left-pad: max(var(--iss-container-pad), calc((100vw - var(--iss-content-width)) / 2 + var(--iss-container-pad)));
+  --iss-hero-right-pad: clamp(0.75rem, 2.2vw, 2.25rem);
+  --iss-banner-width: 23rem;
+  --iss-hero-overlay: linear-gradient(
+    90deg,
+    rgba(30, 30, 30, 0.78) 0%,
+    rgba(30, 30, 30, 0.48) 42%,
+    rgba(30, 30, 30, 0.16) 100%
+  );
+  position: relative;
+  min-height: var(--iss-hero-min-h);
+  margin: 0;
+  padding: 0;
+  overflow: visible;
+}
+
+@supports (min-height: 100dvh) {
+  .iss-repair-page .wp-block-cover.iss-front-hero {
+    --iss-hero-min-h: 80dvh;
+  }
+}
+
+.iss-repair-page .wp-block-cover.iss-front-hero::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: var(--iss-hero-overlay);
+  z-index: 1;
+  pointer-events: none;
+}
+
+.iss-repair-page .wp-block-cover.iss-front-hero > .wp-block-cover__inner-container {
+  position: relative;
+  z-index: 2;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, var(--iss-banner-width));
+  align-items: end;
+  align-content: end;
+  column-gap: clamp(1rem, 3vw, 2.5rem);
+  width: 100% !important;
+  min-height: inherit;
+  max-width: none !important;
+  margin: 0 !important;
+  padding: calc(var(--iss-header-height) + 1.5rem) var(--iss-hero-right-pad) var(--iss-hero-pad-bottom) var(--iss-hero-left-pad);
+  box-sizing: border-box;
+  overflow: visible;
+}
+
+.iss-repair-page .iss-front-hero__shell {
+  position: relative;
+  display: grid;
+  grid-template-columns: minmax(0, 44rem);
+  gap: 1.5rem;
+  width: 100%;
+  max-width: none;
+  margin: 0;
+  min-height: 0;
+  align-content: end;
+  justify-content: start;
+  overflow: visible;
+}
+
+.iss-repair-page .iss-front-hero__row {
+  display: contents;
+}
+
+.iss-repair-page .iss-front-hero__content {
+  max-width: 44rem;
+}
+
+.iss-repair-page .iss-front-hero__title,
+.iss-repair-page .iss-front-hero__text,
+.iss-repair-page .iss-kicker--light,
+.iss-repair-page .iss-hero-note,
+.iss-repair-page .iss-hero-note__kicker,
+.iss-repair-page .iss-hero-note__title,
+.iss-repair-page .iss-hero-note__text,
+.iss-repair-page .iss-hero-note__link a {
+  color: #fff !important;
+}
+
+.iss-repair-page .iss-front-hero__text {
+  max-width: 43rem;
+}
+
+.iss-repair-page .iss-front-hero__actions {
+  gap: 0.85rem;
+}
+
+.iss-repair-banner-slot {
+  position: relative;
+  width: min(100%, var(--iss-banner-width, 23rem));
+  max-width: var(--iss-banner-width, 23rem);
+  grid-column: 2;
+  justify-self: end;
+  align-self: end;
+}
+
+.iss-repair-banner-slot .wp-block-industriesalon-notice-banner {
+  width: 100%;
+}
+
+.iss-repair-page .iss-repair-banner-slot .wp-block-industriesalon-notice-banner.iss-notice-skin--landing .iss-hero-note {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: 0.55rem;
+  width: 100%;
+  padding: 0.25rem 0 0.25rem 1.25rem;
+  border-left: 3px solid var(--iss-red);
+}
+
+.iss-repair-page .iss-repair-banner-slot .wp-block-industriesalon-notice-banner.iss-notice-skin--landing .iss-hero-note::before {
+  content: "";
+  position: absolute;
+  top: 0.05rem;
+  left: -0.45rem;
+  width: 0.72rem;
+  height: 0.72rem;
+  border-radius: 999px;
+  background: var(--iss-red);
+}
+
+.iss-repair-page .iss-repair-banner-slot .wp-block-industriesalon-notice-banner.iss-notice-skin--landing .iss-hero-note__marker {
+  display: none;
+}
+
+.iss-repair-page .iss-repair-banner-slot .wp-block-industriesalon-notice-banner.iss-notice-skin--landing .iss-hero-note__kicker {
+  margin-bottom: 0.65rem;
+  color: rgba(255, 255, 255, 0.76) !important;
+}
+
+.iss-repair-page .iss-repair-banner-slot .wp-block-industriesalon-notice-banner.iss-notice-skin--landing .iss-hero-note__title {
+  max-width: 12ch;
+  margin: 0;
+  font-size: clamp(1.9rem, 2vw, 2.6rem);
+  line-height: 0.98;
+}
+
+.iss-repair-page .iss-repair-banner-slot .wp-block-industriesalon-notice-banner.iss-notice-skin--landing .iss-hero-note__text {
+  position: relative;
+  max-width: 25ch;
+  margin-top: 0.95rem;
+  padding-top: 0.95rem;
+  color: rgba(255, 255, 255, 0.84) !important;
+}
+
+.iss-repair-page .iss-repair-banner-slot .wp-block-industriesalon-notice-banner.iss-notice-skin--landing .iss-hero-note__text::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 1.2rem;
+  height: 2px;
+  background: var(--iss-red);
+}
+
+.iss-repair-page .iss-repair-banner-slot .wp-block-industriesalon-notice-banner.iss-notice-skin--landing .iss-hero-note__text,
+.iss-repair-page .iss-repair-banner-slot .wp-block-industriesalon-notice-banner.iss-notice-skin--landing .iss-hero-note__text p {
+  margin-bottom: 0;
+}
+
+.iss-repair-page .iss-repair-banner-slot .wp-block-industriesalon-notice-banner.iss-notice-skin--landing .iss-hero-note__link {
+  position: relative;
+  margin-top: 1rem;
+  padding-top: 0.95rem;
+}
+
+.iss-repair-page .iss-repair-banner-slot .wp-block-industriesalon-notice-banner.iss-notice-skin--landing .iss-hero-note__link::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  max-width: 8.5rem;
+  height: 1px;
+  background: rgba(255, 255, 255, 0.22);
+}
+
+.iss-repair-page .iss-repair-banner-slot .wp-block-industriesalon-notice-banner.iss-notice-skin--landing .iss-hero-note__link a {
+  border-bottom-color: rgba(255, 255, 255, 0.45);
+}
+
+.iss-repair-page .iss-repair-banner-slot .wp-block-industriesalon-notice-banner.iss-notice-skin--landing .iss-hero-note__link-icon {
+  color: var(--iss-red) !important;
+}
+
+.iss-repair-facts .iss-info-panel,
+.iss-repair-contact .iss-info-panel {
+  max-width: none;
+}
+
+.iss-repair-steps {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 1px;
+  margin-top: 2.5rem;
+  background: color-mix(in srgb, var(--iss-black) 12%, white 88%);
+  border: 1px solid color-mix(in srgb, var(--iss-black) 12%, white 88%);
+}
+
+.iss-repair-step {
+  min-height: 14rem;
+  padding: 1.4rem;
+  background: var(--iss-white);
+}
+
+.iss-repair-step__number {
+  display: inline-block;
+  margin-bottom: 1.05rem;
+  color: var(--iss-red);
+  font-size: 0.82rem;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+}
+
+.iss-repair-step__title {
+  margin: 0;
+  font-size: clamp(1.08rem, 0.98rem + 0.45vw, 1.35rem);
+  line-height: 1.14;
+}
+
+.iss-repair-step__text {
+  margin: 0.8rem 0 0;
+  color: var(--iss-grey);
+  line-height: 1.6;
+}
+
+.iss-repair-bring__grid,
+.iss-repair-frank__grid {
+  gap: clamp(2rem, 4vw, 4rem);
+}
+
+.iss-repair-prep-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 1.25rem;
+}
+
+.iss-repair-prep-card {
+  height: 100%;
+  padding: 1.5rem;
+  border: 1px solid color-mix(in srgb, var(--iss-black) 10%, white 90%);
+  background: var(--iss-white);
+}
+
+.iss-repair-prep-card__title {
+  margin: 0 0 1rem;
+  font-size: clamp(1.08rem, 0.96rem + 0.4vw, 1.3rem);
+  line-height: 1.15;
+}
+
+.iss-repair-prep-list {
+  margin: 0;
+  padding-left: 1.15rem;
+  color: var(--iss-grey);
+  line-height: 1.65;
+}
+
+.iss-repair-prep-list li + li {
+  margin-top: 0.45rem;
+}
+
+.iss-repair-bring__note {
+  margin: 1.25rem 0 0;
+  max-width: 56rem;
+  color: var(--iss-grey);
+}
+
+.iss-repair-frank__image {
+  height: 100%;
+}
+
+.iss-repair-frank__image img {
+  width: 100%;
+  aspect-ratio: 4 / 3;
+  object-fit: cover;
+}
+
+.iss-repair-frank__contact {
+  margin-top: 1.2rem;
+}
+
+.iss-repair-frank__contact a,
+.iss-repair-contact .iss-info-row__text a {
+  color: inherit;
+}
+
+.iss-repair-values .iss-method-grid {
+  margin-top: 2.5rem;
+}
+
+@media (max-width: 1080px) {
+  .iss-repair-page .wp-block-cover.iss-front-hero > .wp-block-cover__inner-container {
+    grid-template-columns: 1fr;
+  }
+
+  .iss-repair-banner-slot {
+    grid-column: auto;
+    justify-self: start;
+  }
+
+  .iss-repair-steps {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 781px) {
+  .iss-repair-page .wp-block-cover.iss-front-hero > .wp-block-cover__inner-container {
+    padding-top: 6.5rem;
+    padding-bottom: 2.5rem;
+  }
+
+  .iss-repair-prep-grid,
+  .iss-repair-steps {
+    grid-template-columns: 1fr;
+  }
+}
+
 /* =========================================================
    TIMELINE – REFINED (mapped to plugin timeline markup)
    ========================================================= */
@@ -6894,8 +7538,32 @@ Raum / Vermietung → brown
   background: linear-gradient(180deg, rgba(30, 30, 30, 0.03), rgba(30, 30, 30, 0.05));
 }
 
+.iss-publications-masthead {
+  padding-top: max(8.5rem, calc(var(--iss-site-logo-bottom, 176px) + 2rem));
+  background: linear-gradient(180deg, rgba(162, 128, 97, 0.24) 0%, rgba(162, 128, 97, 0.14) 32%, rgba(162, 128, 97, 0.06) 58%, rgba(255, 255, 255, 0) 100%);
+}
+
+.iss-publications-masthead__grid {
+  gap: clamp(2rem, 4vw, 4rem);
+  align-items: start;
+}
+
 .iss-publications-intro {
   max-width: 62rem;
+  margin-left: auto;
+}
+
+.iss-publications-masthead__aside {
+  display: grid;
+  gap: 0.85rem;
+  max-width: 28rem;
+  padding-top: 0.35rem;
+}
+
+.iss-publications-masthead__aside p {
+  margin: 0;
+  color: rgba(30, 30, 30, 0.78);
+  line-height: 1.55;
 }
 
 .iss-publications-prose {
@@ -6919,14 +7587,31 @@ Raum / Vermietung → brown
 }
 
 .iss-publication-card__cover {
+  display: flex;
+  align-items: stretch;
   background: #fff;
   aspect-ratio: 5 / 4;
   margin: 0;
 }
 
+.iss-publication-card__cover,
+.iss-publication-card__cover a {
+  display: flex;
+  flex: 1 1 auto;
+  align-items: stretch;
+  width: 100%;
+  height: 100%;
+}
+
 .iss-publication-card__cover img {
-  object-fit: contain;
-  padding: 1.25rem;
+  display: block;
+  flex: 1 1 auto;
+  width: 100%;
+  height: 100%;
+  min-height: 100%;
+  max-height: none;
+  object-fit: cover !important;
+  object-position: center;
   background: #fff;
 }
 
@@ -6957,6 +7642,7 @@ Raum / Vermietung → brown
 
 .iss-publication-single__intro {
   max-width: 60rem;
+  margin-left: auto;
 }
 
 .iss-publication-single__standfirst {
@@ -6972,8 +7658,17 @@ Raum / Vermietung → brown
   min-width: 0;
 }
 
+.iss-publication-single__layout--intro {
+  align-items: start;
+  padding-top: max(8.5rem, calc(var(--iss-site-logo-bottom, 176px) + 2rem));
+}
+
+.iss-publication-single__layout--intro .iss-publication-single__sidebar {
+  padding-top: 0.3rem;
+}
+
 .iss-publication-single__body {
-  margin-top: 1.5rem;
+  margin-top: 2rem;
 }
 
 .iss-publication-single__body > :first-child {
@@ -7075,7 +7770,31 @@ Raum / Vermietung → brown
     grid-template-columns: 1fr;
   }
 
+  .iss-publications-masthead__grid {
+    gap: 1.5rem;
+  }
+
   .iss-publication-single__sidebar {
     order: -1;
+  }
+
+  .iss-publication-single__layout--intro .iss-publication-single__sidebar {
+    padding-top: 0;
+  }
+
+  .iss-publications-masthead {
+    padding-top: max(7rem, calc(var(--iss-header-height, 88px) + 1.5rem));
+  }
+
+  .iss-publications-intro {
+    margin-left: 0;
+  }
+
+  .iss-publication-single__layout--intro {
+    padding-top: max(7rem, calc(var(--iss-header-height, 88px) + 1.5rem));
+  }
+
+  .iss-publication-single__intro {
+    margin-left: 0;
   }
 }
