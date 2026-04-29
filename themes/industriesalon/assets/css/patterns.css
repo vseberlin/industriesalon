@@ -3630,8 +3630,50 @@
 
 /* .iss-tours-page: Base class for iss tours page; apply on primary wrapper/scope. */
 .iss-tours-page {
-  padding-top: calc(var(--iss-header-height) + 2rem);
+  padding-top: 0;
   padding-bottom: 3rem;
+}
+
+#wp--skip-link--target .iss-tours-page,
+.iss-tours-page {
+  margin-top: 0 !important;
+}
+
+#wp--skip-link--target:has(.iss-tours-page) {
+  margin-top: 0 !important;
+}
+
+.iss-tours-page .iss-section--hero {
+  padding-top: 0;
+}
+
+.iss-tours-page .wp-block-cover.iss-front-hero {
+  min-height: 82vh;
+}
+
+.iss-tours-page .wp-block-cover.iss-front-hero > .wp-block-cover__inner-container {
+  display: grid;
+  align-items: end;
+  min-height: inherit;
+  padding: calc(var(--iss-header-height) + 1.5rem) var(--iss-container-pad) clamp(2rem, 6vh, 4.5rem);
+}
+
+.iss-tours-page .iss-front-hero__row {
+  display: grid;
+}
+
+.iss-tours-page .iss-front-hero__shell {
+  width: min(100%, 44rem);
+}
+
+.iss-tours-page .iss-front-hero__content .iss-kicker,
+.iss-tours-page .iss-front-hero__content .iss-heading__title,
+.iss-tours-page .iss-front-hero__content .iss-heading__text {
+  color: #fff;
+}
+
+.iss-tours-page .iss-front-hero__text {
+  color: #fff;
 }
 
 /* .iss-tours-hero: Base class for iss tours hero; apply on primary wrapper/scope. */
@@ -3653,6 +3695,127 @@
 /* .iss-tours-overview__heading: Element class for `iss-tours-overview`; apply on `heading` element. */
 .iss-tours-overview__heading {
   max-width: 56rem;
+}
+
+/* .iss-tours-booking__heading: Element class for `iss-tours-booking`; apply on `heading` element. */
+.iss-tours-booking__heading {
+  max-width: 34rem;
+}
+
+/* .iss-tours-booking__heading .iss-heading__text: Keep booking intro short and functional. */
+.iss-tours-booking__heading .iss-heading__text {
+  max-width: 32rem;
+}
+
+/* .iss-tours-booking__views: Element class for `iss-tours-booking`; apply on `views` element. */
+.iss-tours-booking__views {
+  gap: 0.5rem;
+  margin-top: 1.5rem;
+}
+
+/* .iss-tours-booking__view: Element class for `iss-tours-booking`; apply on `view` element. */
+.iss-tours-booking__view {
+  margin: 0;
+}
+
+/* .iss-tours-booking__view: Element class for `iss-tours-booking`; apply on `view` element. */
+.iss-tours-booking__view > a,
+/* .iss-tours-booking__view: Element class for `iss-tours-booking`; apply on `view` element. */
+.iss-tours-booking__view > span {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 2rem;
+  padding: 0.3rem 0.75rem;
+  border: 1px solid var(--iss-border);
+  border-radius: var(--iss-radius-pill);
+  font-size: 0.9rem;
+  font-weight: 600;
+  line-height: 1;
+  text-decoration: none;
+}
+
+/* .iss-tours-booking__view.is-active: Active list view should read as state, not promo CTA. */
+.iss-tours-booking__view.is-active > a {
+  background: var(--iss-black);
+  border-color: var(--iss-black);
+  color: var(--iss-white);
+}
+
+/* .iss-tours-booking__view.is-disabled: Calendar placeholder stays visually secondary. */
+.iss-tours-booking__view.is-disabled > span {
+  opacity: 0.45;
+}
+
+/* .iss-tours-booking__secondary-cta: Separate inquiry CTA from view controls. */
+.iss-tours-booking__secondary-cta {
+  margin: 0.5rem 0 1.25rem;
+  font-size: 0.95rem;
+}
+
+.iss-tours-booking__secondary-cta a {
+  color: rgba(30, 30, 30, 0.72);
+  font-weight: 600;
+  text-decoration-thickness: 1px;
+  text-underline-offset: 0.18em;
+}
+
+.iss-tours-booking__secondary-cta a:hover,
+.iss-tours-booking__secondary-cta a:focus-visible {
+  color: var(--iss-red);
+}
+
+/* .iss-tours-booking__surface: Element class for `iss-tours-booking`; apply on `surface` element. */
+.iss-tours-booking__surface {
+  margin-top: 0.75rem;
+  padding: clamp(1rem, 1.5vw, 1.35rem);
+  border: 1px solid var(--iss-border);
+  border-radius: var(--iss-radius-md);
+  background: #fff;
+}
+
+/* .iss-tours-booking__cards: Program cards become the default booking surface. */
+.iss-tours-booking__cards {
+  width: 100%;
+}
+
+/* .iss-tours-booking__cards: Keep the booking cards dense and scannable. */
+.iss-tours-booking__cards .iss-card-grid {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: clamp(1rem, 1.7vw, 1.5rem);
+}
+
+.iss-tours-booking__cards .iss-card {
+  box-shadow: none;
+}
+
+.iss-tours-booking__cards .iss-card:hover,
+.iss-tours-booking__cards .iss-card:focus-within {
+  border-color: rgba(30, 30, 30, 0.24);
+  box-shadow: 0 10px 26px rgba(0, 0, 0, 0.06);
+}
+
+/* .iss-tours-booking__cards: Compact card body for a functional booking section. */
+.iss-tours-booking__cards .iss-card__body {
+  gap: 0.65rem;
+  padding: 1.1rem 1.1rem 1.2rem;
+}
+
+/* .iss-tours-booking__cards: Date/meta should carry stronger hierarchy than body copy. */
+.iss-tours-booking__cards .iss-card__meta {
+  font-size: 1.05rem;
+  font-weight: 700;
+  color: var(--iss-black);
+}
+
+/* .iss-tours-booking__cards: Slightly tighten titles for compact list scanning. */
+.iss-tours-booking__cards .iss-card__title {
+  font-size: clamp(1.15rem, 1rem + 0.4vw, 1.45rem);
+}
+
+/* .iss-tours-booking__cards: Avoid extra bottom whitespace below the action row. */
+.iss-tours-booking__cards .iss-card__body > p:last-child {
+  margin-bottom: 0;
 }
 
 /* .iss-tours-entry-grid: Base class for iss tours entry grid; apply on primary wrapper/scope. */
@@ -3771,10 +3934,52 @@
   max-width: 64rem;
 }
 
+.iss-tours-context {
+  padding-top: clamp(3rem, 5vw, 5rem);
+}
+
+.iss-tours-format-card {
+  box-shadow: none;
+  background: transparent;
+}
+
+.iss-tours-format-card:hover,
+.iss-tours-format-card:focus-within {
+  transform: none;
+  box-shadow: none;
+  border-color: rgba(30, 30, 30, 0.24);
+}
+
+.iss-tours-inquiry .iss-info-panel--red {
+  background: #fff;
+  border-left: 3px solid var(--iss-red);
+}
+
+.iss-tours-context {
+  padding-top: clamp(3rem, 5vw, 5rem);
+}
+
+.iss-tours-format-card {
+  box-shadow: none;
+  background: transparent;
+}
+
+.iss-tours-format-card:hover,
+.iss-tours-format-card:focus-within {
+  transform: none;
+  box-shadow: none;
+  border-color: rgba(30, 30, 30, 0.24);
+}
+
+.iss-tours-inquiry .iss-info-panel--red {
+  background: #fff;
+  border-left: 3px solid var(--iss-red);
+}
+
 @media (min-width: 1024px) {
 /* .iss-tours-page: Base class for iss tours page; apply on primary wrapper/scope. */
   .iss-tours-page {
-    padding-top: calc(var(--iss-header-height) + 3rem);
+    padding-top: 0;
   }
 
 /* .iss-tours-hero: Base class for iss tours hero; apply on primary wrapper/scope. */
@@ -3786,7 +3991,12 @@
 @media (max-width: 1023px) {
 /* .iss-tours-page: Base class for iss tours page; apply on primary wrapper/scope. */
   .iss-tours-page {
-    padding-top: calc(var(--iss-header-height) + 1.5rem);
+    padding-top: 0;
+  }
+
+/* .iss-tours-booking__cards: Compact cards drop to two columns on medium widths. */
+  .iss-tours-booking__cards .iss-card-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 
 /* .iss-tours-lead-card: Base class for iss tours lead card; apply on primary wrapper/scope. */
@@ -3809,6 +4019,15 @@
 /* .iss-tours-page: Base class for iss tours page; apply on primary wrapper/scope. */
   .iss-tours-page {
     padding-bottom: 2rem;
+  }
+
+  .iss-tours-page .wp-block-cover.iss-front-hero > .wp-block-cover__inner-container {
+    padding-top: calc(var(--iss-header-height) + 0.75rem);
+    padding-bottom: 1.5rem;
+  }
+
+  .iss-tours-page .iss-front-hero__shell {
+    width: 100%;
   }
 
 /* .iss-tours-hero: Base class for iss tours hero; apply on primary wrapper/scope. */
@@ -3834,6 +4053,11 @@
 /* .iss-card__media: Element class for `iss-card`; apply on `media` element. */
   .iss-tours-card-grid .iss-card__media {
     aspect-ratio: 16 / 9;
+  }
+
+/* .iss-tours-booking__cards: Compact cards stack on mobile. */
+  .iss-tours-booking__cards .iss-card-grid {
+    grid-template-columns: 1fr;
   }
 }
 
@@ -6256,9 +6480,46 @@ Raum / Vermietung → brown
   color: var(--iss-black);
 }
 
+.iss-rental-page {
+  padding-top: 0;
+}
+
+#wp--skip-link--target,
+.iss-rental-page {
+  margin-top: 0 !important;
+}
+
 /* .iss-rental-hero: Base class for iss rental hero; apply on primary wrapper/scope. */
 .iss-rental-hero {
   position: relative;
+}
+
+.iss-rental-page .iss-front-hero__inner-container,
+.iss-rental-page .wp-block-cover__inner-container {
+  width: 100%;
+}
+
+.iss-rental-page .iss-front-hero__shell {
+  padding-top: max(5.5rem, calc(var(--iss-header-height, 88px) + 1rem));
+  padding-bottom: clamp(2.5rem, 6vh, 4.25rem);
+}
+
+.iss-rental-page .iss-front-hero__content {
+  max-width: 56rem;
+}
+
+.iss-rental-page .iss-front-hero__title,
+.iss-rental-page .iss-front-hero__text,
+.iss-rental-page .iss-kicker--light {
+  color: #fff !important;
+}
+
+.iss-rental-page .iss-front-hero__text {
+  max-width: 46rem;
+}
+
+.iss-rental-page .iss-front-hero__actions {
+  margin-top: 0.5rem;
 }
 
 /* .iss-rental-hero: Base class for iss rental hero; apply on primary wrapper/scope. */
@@ -6338,6 +6599,12 @@ Raum / Vermietung → brown
   margin-top: 1.5rem;
 }
 
+.iss-rental-facts-panel .iss-info-panel {
+  margin-top: clamp(-4rem, -5vw, -2rem);
+  position: relative;
+  z-index: 2;
+}
+
 /* .iss-rental-usage-card: Base class for iss rental usage card; apply on primary wrapper/scope. */
 /* .iss-card__media: Element class for `iss-card`; apply on `media` element. */
 .iss-rental-usage-card .iss-card__media {
@@ -6379,48 +6646,20 @@ Raum / Vermietung → brown
   color: var(--iss-accent);
 }
 
-/* .iss-rental-steps: Base class for iss rental steps; apply on primary wrapper/scope. */
-.iss-rental-steps {
-  margin-top: 1.5rem;
-  gap: 1rem;
-}
-
-/* .iss-rental-step: Base class for iss rental step; apply on primary wrapper/scope. */
-.iss-rental-step {
-  height: 100%;
-  padding: 1.5rem 1.5rem 1.75rem;
-  background: var(--iss-white);
-  border: 1px solid var(--iss-border);
-  border-radius: var(--iss-radius-md);
-  box-shadow: 0 10px 24px rgba(0, 0, 0, 0.04);
-}
-
-/* .iss-rental-step__number: Element class for `iss-rental-step`; apply on `number` element. */
-.iss-rental-step__number {
-  margin: 0 0 0.75rem;
-  font-size: 0.8rem;
-  font-weight: 700;
-  letter-spacing: 0.14em;
-  text-transform: uppercase;
-  color: var(--iss-accent);
-}
-
-/* .iss-rental-step__title: Element class for `iss-rental-step`; apply on `title` element. */
-.iss-rental-step__title {
-  margin: 0 0 0.75rem;
-  font-size: clamp(1.15rem, 1rem + 0.35vw, 1.5rem);
-  line-height: 1.15;
-}
-
-/* .iss-rental-step: Base class for iss rental step; apply on primary wrapper/scope. */
-.iss-rental-step p:last-child {
-  margin-bottom: 0;
-}
-
 /* .iss-rental-cta: Base class for iss rental cta; apply on primary wrapper/scope. */
 .iss-rental-cta {
   padding-top: clamp(3.5rem, 6vw, 5rem);
   padding-bottom: clamp(3.5rem, 6vw, 5rem);
+}
+
+.iss-rental-inquiry .iss-info-panel {
+  background: #fff;
+  color: var(--iss-black);
+  border-left: 4px solid var(--iss-accent);
+}
+
+.iss-rental-inquiry .iss-info-panel .iss-info-row__text a {
+  color: inherit;
 }
 
 /* .iss-rental-cta: Base class for iss rental cta; apply on primary wrapper/scope. */
@@ -6461,6 +6700,10 @@ Raum / Vermietung → brown
     min-height: 62vh;
   }
 
+  .iss-rental-page .iss-front-hero__shell {
+    padding-top: max(5.5rem, calc(var(--iss-header-height, 88px) + 0.75rem));
+  }
+
 /* .iss-rental-hero__title: Element class for `iss-rental-hero`; apply on `title` element. */
   .iss-rental-hero__title {
     max-width: 18ch;
@@ -6478,6 +6721,15 @@ Raum / Vermietung → brown
     min-height: 60vh;
   }
 
+  .iss-rental-page .iss-front-hero__shell {
+    padding-top: 6.5rem;
+    padding-bottom: 2.5rem;
+  }
+
+  .iss-rental-facts-panel .iss-info-panel {
+    margin-top: -1.5rem;
+  }
+
 /* .iss-rental-hero__inner: Element class for `iss-rental-hero`; apply on `inner` element. */
   .iss-rental-hero__inner {
     min-height: 60vh;
@@ -6492,14 +6744,10 @@ Raum / Vermietung → brown
   }
 
 /* .iss-rental-facts: Base class for iss rental facts; apply on primary wrapper/scope. */
-  .iss-rental-facts,
-/* .iss-rental-steps: Base class for iss rental steps; apply on primary wrapper/scope. */
-  .iss-rental-steps {
+  .iss-rental-facts {
     gap: 0.9rem;
   }
 
-/* .iss-rental-step: Base class for iss rental step; apply on primary wrapper/scope. */
-  .iss-rental-step,
 /* .iss-rental-contact: Base class for iss rental contact; apply on primary wrapper/scope. */
   .iss-rental-contact {
     padding: 1.2rem;

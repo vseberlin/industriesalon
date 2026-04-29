@@ -97,8 +97,11 @@ function iss_timeline_prepare_item($item_id) {
     $cta_url = (string) get_post_meta($item_id, 'cta_url', true);
     $cta_label = (string) get_post_meta($item_id, 'cta_label', true);
     $booking_url = (string) get_post_meta($item_id, 'booking_url', true);
+    $slot_id = (string) get_post_meta($item_id, 'external_id', true);
+    $slot_start = (string) get_post_meta($item_id, 'event_start', true);
 
     $source_post_id = (int) get_post_meta($item_id, 'source_post_id', true);
+    $source_post_type = $source_post_id > 0 ? (string) get_post_type($source_post_id) : '';
 
     $ts = null;
     $end_ts = null;
@@ -166,7 +169,10 @@ function iss_timeline_prepare_item($item_id) {
         'cta_url' => $cta_url,
         'cta_label' => $cta_label !== '' ? $cta_label : __('Mehr erfahren', 'iss-timeline'),
         'booking_url' => $booking_url,
+        'slot_id' => trim($slot_id),
+        'slot_start' => trim($slot_start),
         'source_post_id' => $source_post_id,
+        'source_post_type' => $source_post_type,
         'year' => $ts ? (int) wp_date('Y', $ts) : null,
     ];
 }
@@ -282,14 +288,168 @@ function iss_timeline_build_actions($row, $opts = []) {
         ];
     }
     if ($show_tickets && $booking_url !== '') {
-        $actions[] = [
+        $ticket_action = [
             'url' => $booking_url,
             'label' => $tickets_label,
             'variant' => 'primary',
         ];
+        $slot_id = trim((string) ($row['slot_id'] ?? ''));
+        $slot_start = trim((string) ($row['slot_start'] ?? ''));
+        $source_post_type = trim((string) ($row['source_post_type'] ?? ''));
+        if ($slot_id !== '' && $slot_start !== '') {
+            $ticket_action['classes'] = ['js-is-tour-slot-trigger'];
+            $ticket_action['attrs'] = [
+                'data-slot-id' => $slot_id,
+                'data-start' => $slot_start,
+                'data-title' => trim((string) ($row['title'] ?? '')),
+            ];
+            if ($source_post_id > 0) {
+                $ticket_action['attrs']['data-source-post-id'] = (string) $source_post_id;
+            }
+            if ($source_post_type !== '') {
+                $ticket_action['attrs']['data-source-post-type'] = $source_post_type;
+            }
+        }
+        $actions[] = $ticket_action;
     }
 
     return $actions;
+}
+
+function iss_timeline_render_action_link($action = []) {
+    if (!is_array($action) || empty($action['url'])) {
+        return '';
+    }
+
+    $variant = isset($action['variant']) ? sanitize_key((string) $action['variant']) : 'secondary';
+    if (!in_array($variant, ['secondary', 'primary'], true)) {
+        $variant = 'secondary';
+    }
+
+    $classes = ['iss-timeline__btn', 'iss-timeline__btn--' . $variant];
+    if (!empty($action['classes']) && is_array($action['classes'])) {
+        foreach ($action['classes'] as $class_name) {
+            $class_name = trim((string) $class_name);
+            if ($class_name !== '') {
+                $classes[] = $class_name;
+            }
+        }
+    }
+
+    $attrs = '';
+    if (!empty($action['attrs']) && is_array($action['attrs'])) {
+        foreach ($action['attrs'] as $attr_name => $attr_value) {
+            $attr_name = trim((string) $attr_name);
+            if ($attr_name === '' || $attr_value === null || $attr_value === '') {
+                continue;
+            }
+            $attrs .= ' ' . esc_attr($attr_name) . '="' . esc_attr((string) $attr_value) . '"';
+        }
+    }
+
+    return '<a class="' . esc_attr(implode(' ', array_values(array_unique($classes)))) . '" href="'
+        . esc_url((string) $action['url']) . '"' . $attrs . '>'
+        . esc_html((string) ($action['label'] ?? '')) . '</a>';
+}
+
+function iss_timeline_render_booking_host() {
+    return '<div class="is-tour-calendar iss-tour-calendar--booking-host" data-booking-host="1" hidden aria-hidden="true"></div>';
+}
+
+function iss_timeline_get_type_label($item_type) {
+    $item_type = sanitize_key((string) $item_type);
+
+    if (in_array($item_type, ['tour', 'fuehrung', 'fuehrungen'], true)) {
+        return __('Führung', 'iss-timeline');
+    }
+
+    if (in_array($item_type, ['event', 'veranstaltung', 'veranstaltungen'], true)) {
+        return __('Veranstaltung', 'iss-timeline');
+    }
+
+    if (in_array($item_type, ['ausstellung', 'ausstellungen', 'exhibition'], true)) {
+        return __('Ausstellung', 'iss-timeline');
+    }
+
+    return $item_type !== '' ? ucfirst($item_type) : '';
+}
+
+function iss_timeline_get_card_badge_label($row) {
+    $row = is_array($row) ? $row : [];
+    $item_type = sanitize_key((string) ($row['type'] ?? ''));
+    $source_post_id = isset($row['source_post_id']) ? (int) $row['source_post_id'] : 0;
+
+    if ($source_post_id > 0 && in_array($item_type, ['tour', 'fuehrung', 'fuehrungen'], true) && taxonomy_exists('fuehrung_typ')) {
+        $terms = wp_get_post_terms($source_post_id, 'fuehrung_typ', ['fields' => 'names']);
+        if (!is_wp_error($terms) && !empty($terms)) {
+            $first_term = trim((string) reset($terms));
+            if ($first_term !== '') {
+                return $first_term;
+            }
+        }
+
+        // Avoid tautological "Führung" badges on the tours landing when no useful type term exists yet.
+        return '';
+    }
+
+    return iss_timeline_get_type_label($item_type);
+}
+
+function iss_timeline_render_items_cards($items, $opts = []) {
+    $items = is_array($items) ? $items : [];
+    $out = '<div class="iss-card-grid iss-timeline-cards">';
+
+    foreach ($items as $item) {
+        if (!$item instanceof WP_Post) {
+            continue;
+        }
+
+        $row = iss_timeline_prepare_item($item->ID);
+        if (empty($row) || !is_array($row)) {
+            continue;
+        }
+
+        $type_label = iss_timeline_get_card_badge_label($row);
+        $summary = trim((string) ($row['summary'] ?? ''));
+        $actions = iss_timeline_build_actions($row, $opts);
+
+        $out .= '<article class="iss-card iss-card--flat iss-timeline-card">';
+        $out .= '<div class="iss-card__body">';
+
+        if ($type_label !== '') {
+            $out .= '<p class="iss-kicker iss-kicker--compact iss-timeline-card__kicker">' . esc_html($type_label) . '</p>';
+        }
+
+        $out .= '<h3 class="iss-card__title iss-timeline-card__title">' . esc_html((string) ($row['title'] ?? '')) . '</h3>';
+
+        if (!empty($row['date_label'])) {
+            $meta = (string) $row['date_label'];
+            if (!empty($row['time_label'])) {
+                $meta .= ' · ' . (string) $row['time_label'];
+            }
+            $out .= '<p class="iss-card__meta iss-timeline-card__meta">' . esc_html($meta) . '</p>';
+        }
+
+        if ($summary !== '') {
+            $out .= '<p class="iss-card__text iss-timeline-card__text">' . esc_html($summary) . '</p>';
+        }
+
+        if (!empty($actions)) {
+            $out .= '<div class="iss-timeline-card__actions">';
+            foreach ($actions as $action) {
+                if (!is_array($action) || empty($action['url'])) {
+                    continue;
+                }
+                $out .= iss_timeline_render_action_link($action);
+            }
+            $out .= '</div>';
+        }
+
+        $out .= '</div></article>';
+    }
+
+    $out .= '</div>';
+    return $out;
 }
 
 function iss_timeline_render_items_list($items, $opts = []) {
@@ -351,13 +511,7 @@ function iss_timeline_render_items_list($items, $opts = []) {
                 $out .= '<div class="iss-timeline__actions">';
                 foreach ($actions as $action) {
                     if (!is_array($action) || empty($action['url'])) continue;
-                    $variant = isset($action['variant']) ? sanitize_key((string) $action['variant']) : 'secondary';
-                    if (!in_array($variant, ['secondary', 'primary'], true)) {
-                        $variant = 'secondary';
-                    }
-                    $out .= '<a class="iss-timeline__btn iss-timeline__btn--' . esc_attr($variant) . '" href="'
-                        . esc_url((string) $action['url']) . '">'
-                        . esc_html((string) ($action['label'] ?? '')) . '</a>';
+                    $out .= iss_timeline_render_action_link($action);
                 }
                 $out .= '</div>';
             }
@@ -401,7 +555,9 @@ function iss_timeline_get_listing_response($query_args = [], $render_opts = []) 
         'offset' => $offset,
         'nextOffset' => $visible_count,
         'hasMore' => $has_more,
-        'html' => iss_timeline_render_items_list($items, $render_opts),
+        'html' => (isset($render_opts['renderMode']) && $render_opts['renderMode'] === 'cards')
+            ? iss_timeline_render_items_cards($items, $render_opts)
+            : iss_timeline_render_items_list($items, $render_opts),
     ];
 }
 
@@ -632,6 +788,7 @@ function iss_timeline_build_query_block_config($attributes = []) {
             'taxonomy_filters' => iss_timeline_get_taxonomy_preset_rules_from_attributes($attributes),
         ],
         'render' => [
+            'renderMode' => (($attributes['renderMode'] ?? 'timeline') === 'cards') ? 'cards' : 'timeline',
             'yearGrouping' => !empty($attributes['yearGrouping']),
             'showMeta' => !array_key_exists('showMeta', $attributes) || (bool) $attributes['showMeta'],
             'showDetailsButton' => !array_key_exists('showDetailsButton', $attributes) || (bool) $attributes['showDetailsButton'],
@@ -654,6 +811,7 @@ function iss_timeline_build_query_block_config($attributes = []) {
             'showTypeFilter' => !empty($attributes['showTypeFilter']),
             'showPostTypeFilter' => !empty($attributes['showPostTypeFilter']),
             'showMonthFilter' => !empty($attributes['showMonthFilter']),
+            'showCalendarBridge' => !empty($attributes['showCalendarBridge']),
             'timeModeOptions' => iss_timeline_get_time_mode_options_from_attributes($attributes),
             'typeOptions' => iss_timeline_get_type_options_from_attributes($attributes),
             'postTypeOptions' => iss_timeline_get_post_type_options_from_attributes($attributes),
@@ -669,6 +827,9 @@ function iss_timeline_render_query_block($attributes = [], $content = '', $block
 
     $attributes = is_array($attributes) ? $attributes : [];
     $config = iss_timeline_build_query_block_config($attributes);
+    if (!empty($config['render']['showTicketsButton']) && function_exists('iss_programm_enqueue_calendar_assets')) {
+        iss_programm_enqueue_calendar_assets();
+    }
     $listing = iss_timeline_get_listing_response($config, $config['render']);
 
     $title = trim((string) ($attributes['title'] ?? ''));
@@ -689,8 +850,23 @@ function iss_timeline_render_query_block($attributes = [], $content = '', $block
         $out .= '<p class="iss-timeline__summary">' . esc_html($intro) . '</p>';
     }
 
-    if (!empty($config['ui']['showTimeModeFilter']) || !empty($config['ui']['showTypeFilter']) || !empty($config['ui']['showPostTypeFilter']) || !empty($config['ui']['showMonthFilter']) || !empty($config['ui']['taxonomyUiFilters'])) {
+    if (!empty($config['ui']['showTimeModeFilter']) || !empty($config['ui']['showTypeFilter']) || !empty($config['ui']['showPostTypeFilter']) || !empty($config['ui']['showMonthFilter']) || !empty($config['ui']['showCalendarBridge']) || !empty($config['ui']['taxonomyUiFilters'])) {
         $out .= '<form class="iss-timeline__filters" data-timeline-query-form>';
+
+        if (!empty($config['ui']['showCalendarBridge'])) {
+            $out .= '<div class="iss-timeline__calendar-bridge" data-timeline-calendar-bridge>';
+            $out .= '<label class="iss-timeline__filter iss-timeline__filter--calendar">';
+            $out .= '<span class="iss-timeline__filter-label">' . esc_html__('Monat', 'iss-timeline') . '</span>';
+            $out .= '<input type="month" value="' . esc_attr($config['filters']['month']) . '" data-calendar-bridge-month />';
+            $out .= '</label>';
+            $out .= '<label class="iss-timeline__filter iss-timeline__filter--calendar">';
+            $out .= '<span class="iss-timeline__filter-label">' . esc_html__('Tag', 'iss-timeline') . '</span>';
+            $out .= '<input type="date" value="" data-calendar-bridge-day />';
+            $out .= '</label>';
+            $out .= '<button type="button" class="iss-timeline__apply iss-timeline__apply--ghost" data-calendar-bridge-reset>'
+                . esc_html__('Zurücksetzen', 'iss-timeline') . '</button>';
+            $out .= '</div>';
+        }
 
         if (!empty($config['ui']['showTimeModeFilter']) && !empty($config['ui']['timeModeOptions']) && is_array($config['ui']['timeModeOptions'])) {
             $out .= '<label class="iss-timeline__filter"><span class="iss-timeline__filter-label">' . esc_html__('Zeitraum', 'iss-timeline') . '</span>';
@@ -801,6 +977,9 @@ function iss_timeline_render_query_block($attributes = [], $content = '', $block
     $out .= '<div class="iss-timeline" data-timeline-query-results>';
     $out .= $listing['html'];
     $out .= '</div>';
+    if (!empty($config['render']['showTicketsButton'])) {
+        $out .= iss_timeline_render_booking_host();
+    }
     if (!empty($config['render']['showLoadMore'])) {
         $load_more_text = trim((string) ($config['render']['loadMoreText'] ?? ''));
         if ($load_more_text === '') {

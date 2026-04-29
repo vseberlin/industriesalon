@@ -205,6 +205,7 @@
 }
 
 .iss-timeline__filter select,
+.iss-timeline__filter input,
 .iss-timeline__apply {
   min-height: 2.35rem;
   border-radius: 0.75rem;
@@ -219,6 +220,47 @@
   font-weight: 600;
 }
 
+.iss-timeline__apply--ghost {
+  background: transparent;
+}
+
+.iss-timeline__calendar-bridge {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+  align-items: flex-end;
+  width: 100%;
+}
+
+.iss-timeline__filter--calendar {
+  min-width: min(100%, 13rem);
+}
+
+.iss-timeline-cards {
+  margin-top: 0.5rem;
+}
+
+.iss-timeline-card {
+  height: 100%;
+}
+
+.iss-timeline-card__meta {
+  font-size: 1rem;
+  font-weight: 600;
+  color: var(--iss-tl-text);
+}
+
+.iss-timeline-card__text {
+  color: var(--iss-tl-muted);
+}
+
+.iss-timeline-card__actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin-top: 0.25rem;
+}
+
 /* =========================================================
    Responsive behavior
    ========================================================= */
@@ -230,5 +272,14 @@
 
   .iss-timeline__title {
     font-size: clamp(1.2rem, 4.2vw, 1.5rem);
+  }
+
+  .iss-timeline__calendar-bridge {
+    width: 100%;
+  }
+
+  .iss-timeline__filter--calendar {
+    min-width: 0;
+    width: 100%;
   }
 }

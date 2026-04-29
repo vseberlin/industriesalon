@@ -1,296 +1,314 @@
-<!-- wp:group {"tagName":"main","layout":{"type":"default"}} -->
-<main class="wp-block-group">
+<!--
+Title: ISS Fuehrungen Page Template
+Slug: industriesalon/page-fuehrungen-template
+Categories: industriesalon, text
+Block Types: core/group
+Description: Booking-first tours page content for use inside the shared hero-page shell.
+Inserter: yes
+-->
+<!-- wp:group {"tagName":"section","anchor":"naechste-termine","className":"section section--plain iss-tours-booking","layout":{"type":"default"}} -->
+<section id="naechste-termine" class="wp-block-group section section--plain iss-tours-booking">
+	<!-- wp:group {"className":"iss-container","layout":{"type":"default"}} -->
+	<div class="wp-block-group iss-container">
+		<!-- wp:group {"className":"iss-heading iss-tours-booking__heading","layout":{"type":"default"}} -->
+		<div class="wp-block-group iss-heading iss-tours-booking__heading">
+			<!-- wp:heading {"level":2,"className":"iss-heading__title"} -->
+			<h2 class="wp-block-heading iss-heading__title">Nächste Termine</h2>
+			<!-- /wp:heading -->
 
-  <!-- wp:cover {"url":"https://images.unsplash.com/photo-1511818966892-d7d671e672a2?auto=format&fit=crop&w=1800&q=80","dimRatio":45,"overlayColor":"eerie-black","minHeight":68,"minHeightUnit":"vh","align":"full","className":"iss-hero iss-hero--fuehrungen"} -->
-  <div class="wp-block-cover alignfull iss-hero iss-hero--fuehrungen" style="min-height:68vh"><span aria-hidden="true" class="wp-block-cover__background has-eerie-black-background-color has-background-dim-45 has-background-dim"></span><img class="wp-block-cover__image-background" alt="" src="https://images.unsplash.com/photo-1511818966892-d7d671e672a2?auto=format&fit=crop&w=1800&q=80" data-object-fit="cover"/><div class="wp-block-cover__inner-container">
-    <!-- wp:group {"className":"iss-container iss-hero__inner","layout":{"type":"constrained"}} -->
-    <div class="wp-block-group iss-container iss-hero__inner">
-      <!-- wp:group {"className":"iss-heading iss-heading--uncaged","layout":{"type":"constrained"}} -->
-      <div class="wp-block-group iss-heading iss-heading--uncaged">
-        <!-- wp:paragraph {"className":"iss-kicker iss-kicker--light iss-kicker--lg"} -->
-        <p class="iss-kicker iss-kicker--light iss-kicker--lg">Führungen</p>
-        <!-- /wp:paragraph -->
+			<!-- wp:paragraph {"className":"iss-heading__text"} -->
+			<p class="iss-heading__text">Öffentliche Führungen erscheinen zuerst und lassen sich nach Zeitraum eingrenzen.</p>
+			<!-- /wp:paragraph -->
+		</div>
+		<!-- /wp:group -->
 
-        <!-- wp:heading {"level":1,"className":"iss-heading__title has-vaporous-white-color has-text-color"} -->
-        <h1 class="wp-block-heading iss-heading__title has-vaporous-white-color has-text-color">Schöneweide entdecken – Industriegeschichte vor Ort erleben</h1>
-        <!-- /wp:heading -->
+		<!-- wp:group {"className":"iss-tours-booking__views","layout":{"type":"flex","flexWrap":"wrap","justifyContent":"left"}} -->
+		<div class="wp-block-group iss-tours-booking__views">
+			<!-- wp:paragraph {"className":"iss-tours-booking__view is-active"} -->
+			<p class="iss-tours-booking__view is-active"><a class="iss-action-link" href="#tour-liste">Liste</a></p>
+			<!-- /wp:paragraph -->
 
-        <!-- wp:paragraph {"className":"iss-heading__text has-vaporous-white-color has-text-color"} -->
-        <p class="iss-heading__text has-vaporous-white-color has-text-color">Ob öffentliche Tour, Gruppe, Schulklasse oder thematische Spezialführung: Unsere Rundgänge verbinden Architektur, Arbeit, Technik und persönliche Geschichten direkt am historischen Ort.</p>
-        <!-- /wp:paragraph -->
+			<!-- wp:paragraph {"className":"iss-tours-booking__view is-disabled"} -->
+			<p class="iss-tours-booking__view is-disabled"><span>Kalender</span></p>
+			<!-- /wp:paragraph -->
+		</div>
+		<!-- /wp:group -->
 
-        <!-- wp:group {"className":"iss-hero__actions","layout":{"type":"flex","flexWrap":"wrap"}} -->
-        <div class="wp-block-group iss-hero__actions">
-          <!-- wp:paragraph -->
-          <p><a class="iss-action-link iss-action-link--light" href="#angebote">Mehr</a></p>
-          <!-- /wp:paragraph -->
+			<!-- wp:paragraph {"className":"iss-tours-booking__secondary-cta"} -->
+			<p class="iss-tours-booking__secondary-cta"><a class="iss-action-link" href="#tour-anfrage">Gruppen anfragen</a></p>
+			<!-- /wp:paragraph -->
 
-          <!-- wp:buttons -->
-          <div class="wp-block-buttons"><!-- wp:button {"className":"is-style-outline","textColor":"vaporous-white","borderColor":"vaporous-white"} -->
-          <div class="wp-block-button is-style-outline"><a class="wp-block-button__link has-border-color has-vaporous-white-border-color has-vaporous-white-color has-text-color wp-element-button" href="#anfrage">Führung anfragen</a></div>
-          <!-- /wp:button --></div>
-          <!-- /wp:buttons -->
-        </div>
-        <!-- /wp:group -->
-      </div>
-      <!-- /wp:group -->
-    </div>
-    <!-- /wp:group -->
-  </div></div>
-  <!-- /wp:cover -->
+		<!-- wp:group {"anchor":"tour-liste","className":"iss-tours-booking__surface iss-tours-booking__surface--list","layout":{"type":"default"}} -->
+		<div id="tour-liste" class="wp-block-group iss-tours-booking__surface iss-tours-booking__surface--list">
+			<!-- wp:industriesalon/timeline-query {"limit":3,"showMeta":false,"timeMode":"upcoming","includeRunningRanges":false,"allowedTimeModesList":["upcoming","month","all"],"presetItemTypesList":["fuehrungen"],"allowedTypesList":["fuehrungen"],"showTimeModeFilter":false,"showTypeFilter":false,"showPostTypeFilter":false,"showMonthFilter":false,"showCalendarBridge":true,"renderMode":"cards","yearGrouping":false,"showDetailsButton":true,"showRecommendButton":false,"showTicketsButton":true,"showLoadMore":true,"loadMoreText":"Weitere Termine laden","detailsButtonText":"Mehr","ticketsButtonText":"Buchen","className":"iss-tours-booking__cards"} /-->
+		</div>
+		<!-- /wp:group -->
 
-  <!-- wp:group {"tagName":"section","anchor":"intro","className":"section section--with-rail","layout":{"type":"default"}} -->
-  <section id="intro" class="wp-block-group section section--with-rail">
-    <!-- wp:group {"className":"iss-container iss-fuehrungen-intro","layout":{"type":"constrained"}} -->
-    <div class="wp-block-group iss-container iss-fuehrungen-intro">
-      <!-- wp:columns {"verticalAlignment":"top","className":"iss-fuehrungen-intro__layout"} -->
-      <div class="wp-block-columns are-vertically-aligned-top iss-fuehrungen-intro__layout">
-        <!-- wp:column {"verticalAlignment":"top","width":"42%"} -->
-        <div class="wp-block-column is-vertically-aligned-top" style="flex-basis:42%">
-          <!-- wp:group {"className":"iss-heading","layout":{"type":"constrained"}} -->
-          <div class="wp-block-group iss-heading">
-            <!-- wp:paragraph {"className":"iss-kicker"} -->
-            <p class="iss-kicker">Vor Ort</p>
-            <!-- /wp:paragraph -->
+	</div>
+	<!-- /wp:group -->
+</section>
+<!-- /wp:group -->
 
-            <!-- wp:heading {"level":2,"className":"iss-heading__title"} -->
-            <h2 class="wp-block-heading iss-heading__title">Rundgänge durch Geschichte, Wandel und Gegenwart</h2>
-            <!-- /wp:heading -->
-          </div>
-          <!-- /wp:group -->
-        </div>
-        <!-- /wp:column -->
+<!-- wp:group {"tagName":"section","className":"section section--plain iss-tours-context","layout":{"type":"default"}} -->
+<section class="wp-block-group section section--plain iss-tours-context">
+	<!-- wp:group {"className":"iss-container","layout":{"type":"default"}} -->
+	<div class="wp-block-group iss-container">
+		<!-- wp:columns {"className":"iss-media-text__layout"} -->
+		<div class="wp-block-columns iss-media-text__layout">
+			<!-- wp:column {"verticalAlignment":"top","className":"iss-media-text__content"} -->
+			<div class="wp-block-column is-vertically-aligned-top iss-media-text__content">
+				<!-- wp:group {"className":"iss-media-text__inner","layout":{"type":"default"}} -->
+				<div class="wp-block-group iss-media-text__inner">
+					<!-- wp:group {"className":"iss-heading iss-media-text__heading","layout":{"type":"default"}} -->
+					<div class="wp-block-group iss-heading iss-media-text__heading">
+						<!-- wp:paragraph {"className":"iss-kicker"} -->
+						<p class="iss-kicker">Vor Ort</p>
+						<!-- /wp:paragraph -->
 
-        <!-- wp:column {"verticalAlignment":"top","width":"58%"} -->
-        <div class="wp-block-column is-vertically-aligned-top" style="flex-basis:58%">
-          <!-- wp:paragraph -->
-          <p>Unsere Führungen richten sich an Einzelbesucherinnen und -besucher, Gruppen, Familien, Schulklassen und Fachpublikum. Je nach Format stehen Architektur, Industriegeschichte, Arbeitswelten, Transformationszeit oder einzelne Orte in Oberschöneweide im Mittelpunkt.</p>
-          <!-- /wp:paragraph -->
+						<!-- wp:heading {"level":2,"className":"iss-heading__title iss-media-text__title"} -->
+						<h2 class="wp-block-heading iss-heading__title iss-media-text__title">Geschichte wird im Stadtraum lesbar</h2>
+						<!-- /wp:heading -->
 
-          <!-- wp:paragraph -->
-          <p>Die Seite ist so angelegt, dass sie sowohl mit festen Angeboten als auch später mit dynamischen Inhalten aus Plugin, CPT oder Buchungssystem arbeiten kann. Die drei Angebotskarten unten können daher statisch bleiben oder später durch Query Loop bzw. Block-Bindings ersetzt werden.</p>
-          <!-- /wp:paragraph -->
-        </div>
-        <!-- /wp:column -->
-      </div>
-      <!-- /wp:columns -->
-    </div>
-    <!-- /wp:group -->
-  </section>
-  <!-- /wp:group -->
+						<!-- wp:paragraph {"className":"iss-heading__text iss-media-text__text"} -->
+						<p class="iss-heading__text iss-media-text__text">Die Führungen beginnen nicht bei einer abstrakten Erzählung, sondern an Gebäuden, Wegen, Objekten und Spuren in Schöneweide selbst. Architektur, Arbeitsgeschichte, Technik und Gegenwart werden direkt am Ort miteinander verbunden.</p>
+						<!-- /wp:paragraph -->
 
-  <!-- wp:group {"tagName":"section","anchor":"angebote","className":"section section--alt iss-fuehrungen-offers","layout":{"type":"default"}} -->
-  <section id="angebote" class="wp-block-group section section--alt iss-fuehrungen-offers">
-    <!-- wp:group {"className":"iss-container","layout":{"type":"constrained"}} -->
-    <div class="wp-block-group iss-container">
-      <!-- wp:group {"className":"iss-heading","layout":{"type":"constrained"}} -->
-      <div class="wp-block-group iss-heading">
-        <!-- wp:paragraph {"className":"iss-kicker iss-kicker--blue"} -->
-        <p class="iss-kicker iss-kicker--blue">Angebote</p>
-        <!-- /wp:paragraph -->
+						<!-- wp:paragraph -->
+						<p>Je nach Format verschiebt sich der Fokus: öffentliche Rundgänge geben einen klaren Einstieg, Gruppenformate lassen mehr Raum für bestimmte Themen, Altersstufen und Interessen.</p>
+						<!-- /wp:paragraph -->
+					</div>
+					<!-- /wp:group -->
+				</div>
+				<!-- /wp:group -->
+			</div>
+			<!-- /wp:column -->
 
-        <!-- wp:heading {"level":2,"className":"iss-heading__title"} -->
-        <h2 class="wp-block-heading iss-heading__title">Formate für unterschiedliche Besuchergruppen</h2>
-        <!-- /wp:heading -->
+			<!-- wp:column {"verticalAlignment":"top","className":"iss-media-text__media-col"} -->
+			<div class="wp-block-column is-vertically-aligned-top iss-media-text__media-col">
+				<!-- wp:group {"className":"iss-media-text__media iss-media-card iss-media-card--cover","layout":{"type":"default"}} -->
+				<div class="wp-block-group iss-media-text__media iss-media-card iss-media-card--cover">
+					<!-- wp:image {"sizeSlug":"full","linkDestination":"none","className":"iss-media-text__image"} -->
+					<figure class="wp-block-image size-full iss-media-text__image"><img src="/wp-content/uploads/2026/03/2024-09-04-Sven-Bock-Touren-Industriesalon-Vermittlung-Industriekultur-32.jpg" alt="Führung im Stadtraum von Schöneweide"/></figure>
+					<!-- /wp:image -->
+				</div>
+				<!-- /wp:group -->
+			</div>
+			<!-- /wp:column -->
+		</div>
+		<!-- /wp:columns -->
+	</div>
+	<!-- /wp:group -->
+</section>
+<!-- /wp:group -->
 
-        <!-- wp:paragraph {"className":"iss-heading__text"} -->
-        <p class="iss-heading__text">Diese drei Karten sind als wiederverwendbares Angebotsmuster aufgebaut. Farben, Titel, Kurztexte und Links lassen sich pro Einsatz anpassen.</p>
-        <!-- /wp:paragraph -->
-      </div>
-      <!-- /wp:group -->
+<!-- wp:group {"tagName":"section","className":"section section--tint iss-tours-formats","layout":{"type":"default"}} -->
+<section class="wp-block-group section section--tint iss-tours-formats">
+	<!-- wp:group {"className":"iss-container","layout":{"type":"default"}} -->
+	<div class="wp-block-group iss-container">
+		<!-- wp:group {"className":"iss-heading","layout":{"type":"default"}} -->
+		<div class="wp-block-group iss-heading">
+			<!-- wp:paragraph {"className":"iss-kicker"} -->
+			<p class="iss-kicker">Formate</p>
+			<!-- /wp:paragraph -->
 
-      <!-- wp:group {"className":"iss-card-grid iss-card-grid--offers","layout":{"type":"default"}} -->
-      <div class="wp-block-group iss-card-grid iss-card-grid--offers">
+			<!-- wp:heading {"level":2,"className":"iss-heading__title"} -->
+			<h2 class="wp-block-heading iss-heading__title">Weitere Führungsformate</h2>
+			<!-- /wp:heading -->
 
-        <!-- wp:group {"className":"iss-card iss-card--blue iss-card--tour","layout":{"type":"constrained"}} -->
-        <div class="wp-block-group iss-card iss-card--blue iss-card--tour">
-          <!-- wp:image {"sizeSlug":"large","linkDestination":"none","className":"iss-card__media"} -->
-          <figure class="wp-block-image size-large iss-card__media"><img src="https://images.unsplash.com/photo-1529429617124-aee711a5ac1c?auto=format&fit=crop&w=1200&q=80" alt="Führung im Stadtraum"/></figure>
-          <!-- /wp:image -->
+			<!-- wp:paragraph {"className":"iss-heading__text"} -->
+			<p class="iss-heading__text">Neben den öffentlichen Terminen können Führungen in Umfang, Thema und Ansprache an unterschiedliche Gruppen angepasst werden.</p>
+			<!-- /wp:paragraph -->
+		</div>
+		<!-- /wp:group -->
 
-          <!-- wp:group {"className":"iss-card__body","layout":{"type":"constrained"}} -->
-          <div class="wp-block-group iss-card__body">
-            <!-- wp:paragraph {"className":"iss-kicker iss-kicker--compact iss-card__kicker"} -->
-            <p class="iss-kicker iss-kicker--compact iss-card__kicker">Öffentlich</p>
-            <!-- /wp:paragraph -->
+		<!-- wp:columns {"className":"iss-tours-formats__grid"} -->
+		<div class="wp-block-columns iss-tours-formats__grid">
+			<!-- wp:column -->
+			<div class="wp-block-column">
+				<!-- wp:group {"className":"iss-card iss-card--info iss-tours-format-card","layout":{"type":"default"}} -->
+				<div class="wp-block-group iss-card iss-card--info iss-tours-format-card">
+					<!-- wp:group {"className":"iss-card__body","layout":{"type":"default"}} -->
+					<div class="wp-block-group iss-card__body">
+						<!-- wp:paragraph {"className":"iss-kicker iss-kicker--compact iss-card__kicker"} -->
+						<p class="iss-kicker iss-kicker--compact iss-card__kicker">Gruppe</p>
+						<!-- /wp:paragraph -->
 
-            <!-- wp:heading {"level":3,"className":"iss-card__title"} -->
-            <h3 class="wp-block-heading iss-card__title">Offene Führungen</h3>
-            <!-- /wp:heading -->
+						<!-- wp:heading {"level":3,"className":"iss-card__title"} -->
+						<h3 class="wp-block-heading iss-card__title">Gruppenführungen</h3>
+						<!-- /wp:heading -->
 
-            <!-- wp:paragraph {"className":"iss-card__text"} -->
-            <p class="iss-card__text">Regelmäßige Termine für Einzelbesucherinnen und -besucher. Ideal für einen ersten Einstieg in die Geschichte Schöneweides und des Industrieareals.</p>
-            <!-- /wp:paragraph -->
+						<!-- wp:paragraph {"className":"iss-card__text"} -->
+						<p class="iss-card__text">Für Vereine, Unternehmen, Reisegruppen oder private Anlässe. Route, Dauer und Schwerpunkt können gemeinsam abgestimmt werden.</p>
+						<!-- /wp:paragraph -->
 
-            <!-- wp:paragraph {"className":"iss-card__meta"} -->
-            <p class="iss-card__meta">Feste Termine · Einzelbuchung · Einstieg</p>
-            <!-- /wp:paragraph -->
+						<!-- wp:paragraph -->
+						<p><a class="iss-card__link" href="#tour-anfrage">Anfrage</a></p>
+						<!-- /wp:paragraph -->
+					</div>
+					<!-- /wp:group -->
+				</div>
+				<!-- /wp:group -->
+			</div>
+			<!-- /wp:column -->
 
-            <!-- wp:group {"className":"iss-card__footer","layout":{"type":"flex","justifyContent":"space-between"}} -->
-            <div class="wp-block-group iss-card__footer"><a class="iss-card__link" href="#anfrage">Termine und Teilnahme</a></div>
-            <!-- /wp:group -->
-          </div>
-          <!-- /wp:group -->
-        </div>
-        <!-- /wp:group -->
+			<!-- wp:column -->
+			<div class="wp-block-column">
+				<!-- wp:group {"className":"iss-card iss-card--info iss-tours-format-card","layout":{"type":"default"}} -->
+				<div class="wp-block-group iss-card iss-card--info iss-tours-format-card">
+					<!-- wp:group {"className":"iss-card__body","layout":{"type":"default"}} -->
+					<div class="wp-block-group iss-card__body">
+						<!-- wp:paragraph {"className":"iss-kicker iss-kicker--compact iss-card__kicker"} -->
+						<p class="iss-kicker iss-kicker--compact iss-card__kicker">Schule</p>
+						<!-- /wp:paragraph -->
 
-        <!-- wp:group {"className":"iss-card iss-card--green iss-card--tour","layout":{"type":"constrained"}} -->
-        <div class="wp-block-group iss-card iss-card--green iss-card--tour">
-          <!-- wp:image {"sizeSlug":"large","linkDestination":"none","className":"iss-card__media"} -->
-          <figure class="wp-block-image size-large iss-card__media"><img src="https://images.unsplash.com/photo-1517457373958-b7bdd4587205?auto=format&fit=crop&w=1200&q=80" alt="Gruppenführung"/></figure>
-          <!-- /wp:image -->
+						<!-- wp:heading {"level":3,"className":"iss-card__title"} -->
+						<h3 class="wp-block-heading iss-card__title">Schulklassen</h3>
+						<!-- /wp:heading -->
 
-          <!-- wp:group {"className":"iss-card__body","layout":{"type":"constrained"}} -->
-          <div class="wp-block-group iss-card__body">
-            <!-- wp:paragraph {"className":"iss-kicker iss-kicker--compact iss-card__kicker iss-kicker--green"} -->
-            <p class="iss-kicker iss-kicker--compact iss-card__kicker iss-kicker--green">Gruppe</p>
-            <!-- /wp:paragraph -->
+						<!-- wp:paragraph {"className":"iss-card__text"} -->
+						<p class="iss-card__text">Formate mit angepasster Länge, klarer Sprache und thematischen Zugängen zu Industrie, Arbeit, Stadtentwicklung und Erinnerung.</p>
+						<!-- /wp:paragraph -->
 
-            <!-- wp:heading {"level":3,"className":"iss-card__title"} -->
-            <h3 class="wp-block-heading iss-card__title">Gruppen und individuelle Buchungen</h3>
-            <!-- /wp:heading -->
+						<!-- wp:paragraph -->
+						<p><a class="iss-card__link" href="#tour-anfrage">Anfrage</a></p>
+						<!-- /wp:paragraph -->
+					</div>
+					<!-- /wp:group -->
+				</div>
+				<!-- /wp:group -->
+			</div>
+			<!-- /wp:column -->
 
-            <!-- wp:paragraph {"className":"iss-card__text"} -->
-            <p class="iss-card__text">Für Vereine, Unternehmen, Reisegruppen oder private Anlässe. Termin, Schwerpunkt und Umfang können passend zur Gruppe abgestimmt werden.</p>
-            <!-- /wp:paragraph -->
+			<!-- wp:column -->
+			<div class="wp-block-column">
+				<!-- wp:group {"className":"iss-card iss-card--info iss-tours-format-card","layout":{"type":"default"}} -->
+				<div class="wp-block-group iss-card iss-card--info iss-tours-format-card">
+					<!-- wp:group {"className":"iss-card__body","layout":{"type":"default"}} -->
+					<div class="wp-block-group iss-card__body">
+						<!-- wp:paragraph {"className":"iss-kicker iss-kicker--compact iss-card__kicker"} -->
+						<p class="iss-kicker iss-kicker--compact iss-card__kicker">Kooperation</p>
+						<!-- /wp:paragraph -->
 
-            <!-- wp:paragraph {"className":"iss-card__meta"} -->
-            <p class="iss-card__meta">Auf Anfrage · Flexibel · Buchbar</p>
-            <!-- /wp:paragraph -->
+						<!-- wp:heading {"level":3,"className":"iss-card__title"} -->
+						<h3 class="wp-block-heading iss-card__title">Kooperationen</h3>
+						<!-- /wp:heading -->
 
-            <!-- wp:group {"className":"iss-card__footer","layout":{"type":"flex","justifyContent":"space-between"}} -->
-            <div class="wp-block-group iss-card__footer"><a class="iss-card__link" href="#anfrage">Anfrage stellen</a></div>
-            <!-- /wp:group -->
-          </div>
-          <!-- /wp:group -->
-        </div>
-        <!-- /wp:group -->
+						<!-- wp:paragraph {"className":"iss-card__text"} -->
+						<p class="iss-card__text">Hochschulen, Initiativen und Projektpartner können Führungen mit Gesprächen, Recherche, Ausstellungsbezug oder Stadtraumbezug verbinden.</p>
+						<!-- /wp:paragraph -->
 
-        <!-- wp:group {"className":"iss-card iss-card--yellow iss-card--tour","layout":{"type":"constrained"}} -->
-        <div class="wp-block-group iss-card iss-card--yellow iss-card--tour">
-          <!-- wp:image {"sizeSlug":"large","linkDestination":"none","className":"iss-card__media"} -->
-          <figure class="wp-block-image size-large iss-card__media"><img src="https://images.unsplash.com/photo-1503676260728-1c00da094a0b?auto=format&fit=crop&w=1200&q=80" alt="Familien- oder Schulführung"/></figure>
-          <!-- /wp:image -->
+						<!-- wp:paragraph -->
+						<p><a class="iss-card__link" href="#tour-anfrage">Anfrage</a></p>
+						<!-- /wp:paragraph -->
+					</div>
+					<!-- /wp:group -->
+				</div>
+				<!-- /wp:group -->
+			</div>
+			<!-- /wp:column -->
+		</div>
+		<!-- /wp:columns -->
+	</div>
+	<!-- /wp:group -->
+</section>
+<!-- /wp:group -->
 
-          <!-- wp:group {"className":"iss-card__body","layout":{"type":"constrained"}} -->
-          <div class="wp-block-group iss-card__body">
-            <!-- wp:paragraph {"className":"iss-kicker iss-kicker--compact iss-card__kicker iss-kicker--yellow"} -->
-            <p class="iss-kicker iss-kicker--compact iss-card__kicker iss-kicker--yellow">Familie & Schule</p>
-            <!-- /wp:paragraph -->
+<!-- wp:group {"tagName":"section","anchor":"tour-anfrage","className":"section section--plain iss-tours-inquiry","layout":{"type":"default"}} -->
+<section id="tour-anfrage" class="wp-block-group section section--plain iss-tours-inquiry">
+	<!-- wp:group {"className":"iss-container","layout":{"type":"default"}} -->
+	<div class="wp-block-group iss-container">
+		<!-- wp:group {"className":"iss-info-panel iss-info-panel--red","layout":{"type":"constrained"}} -->
+		<div class="wp-block-group iss-info-panel iss-info-panel--red">
+			<!-- wp:paragraph {"className":"iss-kicker"} -->
+			<p class="iss-kicker">Anfrage</p>
+			<!-- /wp:paragraph -->
 
-            <!-- wp:heading {"level":3,"className":"iss-card__title"} -->
-            <h3 class="wp-block-heading iss-card__title">Themenführungen für Kinder, Familien und Schulen</h3>
-            <!-- /wp:heading -->
+			<!-- wp:columns {"className":"iss-info-panel__grid"} -->
+			<div class="wp-block-columns iss-info-panel__grid">
+				<!-- wp:column {"width":"34%","className":"iss-info-panel__title-col"} -->
+				<div class="wp-block-column iss-info-panel__title-col" style="flex-basis:34%">
+					<!-- wp:heading {"level":2,"className":"iss-info-panel__title"} -->
+					<h2 class="wp-block-heading iss-info-panel__title">Individuelle Führung anfragen</h2>
+					<!-- /wp:heading -->
 
-            <!-- wp:paragraph {"className":"iss-card__text"} -->
-            <p class="iss-card__text">Formate mit anderer Ansprache, angepasster Länge und klaren Themen. Geeignet für Lernkontexte, Familienbesuche und besondere Zielgruppen.</p>
-            <!-- /wp:paragraph -->
+					<!-- wp:paragraph {"className":"iss-info-panel__intro"} -->
+					<p class="iss-info-panel__intro">Für Gruppen, Schulen oder thematische Schwerpunkte helfen wir bei Termin, Umfang und passendem Format.</p>
+					<!-- /wp:paragraph -->
+				</div>
+				<!-- /wp:column -->
 
-            <!-- wp:paragraph {"className":"iss-card__meta"} -->
-            <p class="iss-card__meta">Vermittlung · Zielgruppen · Themen</p>
-            <!-- /wp:paragraph -->
+				<!-- wp:column {"width":"66%","className":"iss-info-panel__rows-col"} -->
+				<div class="wp-block-column iss-info-panel__rows-col" style="flex-basis:66%">
+					<!-- wp:group {"className":"iss-info-panel__rows","layout":{"type":"default"}} -->
+					<div class="wp-block-group iss-info-panel__rows">
+						<!-- wp:group {"className":"iss-info-row","layout":{"type":"default"}} -->
+						<div class="wp-block-group iss-info-row">
+							<!-- wp:group {"className":"iss-info-row__main","layout":{"type":"default"}} -->
+							<div class="wp-block-group iss-info-row__main">
+								<!-- wp:paragraph {"className":"iss-info-row__text"} -->
+								<p class="iss-info-row__text"><strong>Für wen:</strong> Gruppen, Schulklassen, Fachbesuche und Kooperationen</p>
+								<!-- /wp:paragraph -->
+							</div>
+							<!-- /wp:group -->
+						</div>
+						<!-- /wp:group -->
 
-            <!-- wp:group {"className":"iss-card__footer","layout":{"type":"flex","justifyContent":"space-between"}} -->
-            <div class="wp-block-group iss-card__footer"><a class="iss-card__link" href="#anfrage">Möglichkeiten ansehen</a></div>
-            <!-- /wp:group -->
-          </div>
-          <!-- /wp:group -->
-        </div>
-        <!-- /wp:group -->
+						<!-- wp:group {"className":"iss-info-row","layout":{"type":"default"}} -->
+						<div class="wp-block-group iss-info-row">
+							<!-- wp:group {"className":"iss-info-row__main","layout":{"type":"default"}} -->
+							<div class="wp-block-group iss-info-row__main">
+								<!-- wp:paragraph {"className":"iss-info-row__text"} -->
+								<p class="iss-info-row__text"><strong>Was hilft:</strong> gewünschter Zeitraum, Gruppengröße, Thema, Sprache und Ansprechperson</p>
+								<!-- /wp:paragraph -->
+							</div>
+							<!-- /wp:group -->
+						</div>
+						<!-- /wp:group -->
 
-      </div>
-      <!-- /wp:group -->
-    </div>
-    <!-- /wp:group -->
-  </section>
-  <!-- /wp:group -->
+						<!-- wp:group {"className":"iss-info-row","layout":{"type":"default"}} -->
+						<div class="wp-block-group iss-info-row">
+							<!-- wp:group {"className":"iss-info-row__main","layout":{"type":"default"}} -->
+							<div class="wp-block-group iss-info-row__main">
+								<!-- wp:paragraph {"className":"iss-info-row__text"} -->
+								<p class="iss-info-row__text"><strong>E-Mail:</strong> <a href="mailto:info@industriesalon.de?subject=Anfrage%20F%C3%BChrung">info@industriesalon.de</a></p>
+								<!-- /wp:paragraph -->
+							</div>
+							<!-- /wp:group -->
 
-  <!-- wp:group {"tagName":"section","className":"section iss-fuehrungen-highlight","layout":{"type":"default"}} -->
-  <section class="wp-block-group section iss-fuehrungen-highlight">
-    <!-- wp:group {"className":"iss-container","layout":{"type":"constrained"}} -->
-    <div class="wp-block-group iss-container">
-      <!-- wp:media-text {"mediaPosition":"left","mediaId":0,"mediaType":"image","verticalAlignment":"top","className":"iss-media-panel"} -->
-      <div class="wp-block-media-text alignwide is-stacked-on-mobile is-vertically-aligned-top iss-media-panel">
-        <figure class="wp-block-media-text__media"><img src="https://images.unsplash.com/photo-1489515217757-5fd1be406fef?auto=format&fit=crop&w=1400&q=80" alt="Historischer Ort in Schöneweide"/></figure>
-        <div class="wp-block-media-text__content">
-          <!-- wp:group {"className":"iss-heading","layout":{"type":"constrained"}} -->
-          <div class="wp-block-group iss-heading">
-            <!-- wp:paragraph {"className":"iss-kicker iss-kicker--brown"} -->
-            <p class="iss-kicker iss-kicker--brown">Schwerpunkt</p>
-            <!-- /wp:paragraph -->
+							<!-- wp:group {"className":"iss-info-row__actions","layout":{"type":"default"}} -->
+							<div class="wp-block-group iss-info-row__actions">
+								<!-- wp:buttons -->
+								<div class="wp-block-buttons">
+									<!-- wp:button {"className":"is-style-outline iss-info-row__button"} -->
+									<div class="wp-block-button is-style-outline iss-info-row__button"><a class="wp-block-button__link wp-element-button" href="mailto:info@industriesalon.de?subject=Anfrage%20F%C3%BChrung">E-Mail senden</a></div>
+									<!-- /wp:button -->
+								</div>
+								<!-- /wp:buttons -->
+							</div>
+							<!-- /wp:group -->
+						</div>
+						<!-- /wp:group -->
 
-            <!-- wp:heading {"level":2,"className":"iss-heading__title"} -->
-            <h2 class="wp-block-heading iss-heading__title">Jede Führung kann einen anderen Fokus setzen</h2>
-            <!-- /wp:heading -->
-
-            <!-- wp:paragraph -->
-            <p>Je nach Gruppe können Architektur, AEG- und WF-Geschichte, Alltagsleben im Werk, Transformation nach 1990 oder heutige Entwicklungen in Oberschöneweide stärker gewichtet werden.</p>
-            <!-- /wp:paragraph -->
-
-            <!-- wp:list {"className":"iss-feature-list"} -->
-            <ul class="iss-feature-list"><li>Industriegeschichte und Stadtraum</li><li>Arbeit, Technik und Erinnerung</li><li>Transformation und Gegenwart</li><li>Anpassbar an Zielgruppe und Anlass</li></ul>
-            <!-- /wp:list -->
-          </div>
-          <!-- /wp:group -->
-        </div>
-      </div>
-      <!-- /wp:media-text -->
-    </div>
-    <!-- /wp:group -->
-  </section>
-  <!-- /wp:group -->
-
-  <!-- wp:group {"tagName":"section","anchor":"anfrage","className":"section section--alt iss-fuehrungen-cta","layout":{"type":"default"}} -->
-  <section id="anfrage" class="wp-block-group section section--alt iss-fuehrungen-cta">
-    <!-- wp:group {"className":"iss-container","layout":{"type":"constrained"}} -->
-    <div class="wp-block-group iss-container">
-      <!-- wp:group {"className":"iss-cta-panel","layout":{"type":"constrained"}} -->
-      <div class="wp-block-group iss-cta-panel">
-        <!-- wp:columns {"verticalAlignment":"top","className":"iss-cta-panel__layout"} -->
-        <div class="wp-block-columns are-vertically-aligned-top iss-cta-panel__layout">
-          <!-- wp:column {"verticalAlignment":"top","width":"65%"} -->
-          <div class="wp-block-column is-vertically-aligned-top" style="flex-basis:65%">
-            <!-- wp:group {"className":"iss-heading iss-heading--uncaged","layout":{"type":"constrained"}} -->
-            <div class="wp-block-group iss-heading iss-heading--uncaged">
-              <!-- wp:paragraph {"className":"iss-kicker"} -->
-              <p class="iss-kicker">Anfrage</p>
-              <!-- /wp:paragraph -->
-
-              <!-- wp:heading {"level":2,"className":"iss-heading__title"} -->
-              <h2 class="wp-block-heading iss-heading__title">Sie möchten eine Führung planen?</h2>
-              <!-- /wp:heading -->
-
-              <!-- wp:paragraph {"className":"iss-heading__text"} -->
-              <p class="iss-heading__text">Nennen Sie Terminwunsch, Gruppengröße, Sprache und thematischen Schwerpunkt. So lässt sich das passende Format schnell abstimmen.</p>
-              <!-- /wp:paragraph -->
-            </div>
-            <!-- /wp:group -->
-          </div>
-          <!-- /wp:column -->
-
-          <!-- wp:column {"verticalAlignment":"top","width":"35%"} -->
-          <div class="wp-block-column is-vertically-aligned-top" style="flex-basis:35%">
-            <!-- wp:buttons {"layout":{"type":"flex","orientation":"vertical","justifyContent":"right"},"className":"iss-cta-panel__actions"} -->
-            <div class="wp-block-buttons iss-cta-panel__actions">
-              <!-- wp:button -->
-              <div class="wp-block-button"><a class="wp-block-button__link wp-element-button" href="mailto:info@industriesalon.de">Per E-Mail anfragen</a></div>
-              <!-- /wp:button -->
-
-              <!-- wp:button {"className":"is-style-outline"} -->
-              <div class="wp-block-button is-style-outline"><a class="wp-block-button__link wp-element-button" href="/kontakt/">Kontaktseite</a></div>
-              <!-- /wp:button -->
-            </div>
-            <!-- /wp:buttons -->
-          </div>
-          <!-- /wp:column -->
-        </div>
-        <!-- /wp:columns -->
-      </div>
-      <!-- /wp:group -->
-    </div>
-    <!-- /wp:group -->
-  </section>
-  <!-- /wp:group -->
-
-</main>
+						<!-- wp:group {"className":"iss-info-row","layout":{"type":"default"}} -->
+						<div class="wp-block-group iss-info-row">
+							<!-- wp:group {"className":"iss-info-row__main","layout":{"type":"default"}} -->
+							<div class="wp-block-group iss-info-row__main">
+								<!-- wp:paragraph {"className":"iss-info-row__text"} -->
+								<p class="iss-info-row__text"><strong>Hinweis:</strong> Für konkrete Terminwünsche am besten kurz Zeitraum, Gruppengröße und Thema mitschicken.</p>
+								<!-- /wp:paragraph -->
+							</div>
+							<!-- /wp:group -->
+						</div>
+						<!-- /wp:group -->
+					</div>
+					<!-- /wp:group -->
+				</div>
+				<!-- /wp:column -->
+			</div>
+			<!-- /wp:columns -->
+		</div>
+		<!-- /wp:group -->
+	</div>
+	<!-- /wp:group -->
+</section>
 <!-- /wp:group -->

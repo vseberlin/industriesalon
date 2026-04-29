@@ -1,7 +1,7 @@
 document.addEventListener('DOMContentLoaded', () => {
   initExternalBookingTriggers();
 
-  document.querySelectorAll('.is-tour-calendar').forEach(async (widget) => {
+  document.querySelectorAll('.is-tour-calendar:not([data-booking-host="1"])').forEach(async (widget) => {
     let tag = widget.dataset.tag;
     const fallbackUrl = widget.dataset.fallback;
     const sourcePostId = (widget.dataset && (widget.dataset.sourcePostId || widget.dataset.postId)) ? String(widget.dataset.sourcePostId || widget.dataset.postId) : '';
@@ -457,6 +457,8 @@ function buildSlotMeta(slot) {
 }
 
 function openBookingForm(widget, slot, clickedEl) {
+  ensureCalendarShell(widget);
+
   const bookingPanel = widget.querySelector('.is-tour-calendar__booking');
   if (!bookingPanel) return;
 

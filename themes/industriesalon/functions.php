@@ -184,6 +184,20 @@ function industriesalon_register_block_patterns(): void
             'categories' => array('industriesalon', 'text', 'media'),
             'file' => '/patterns/iss-section-object-highlight.html',
         ),
+        array(
+            'name' => 'industriesalon/page-fuehrungen-template',
+            'title' => 'ISS Fuehrungen Page Template',
+            'description' => 'Booking-first tours page content for the dedicated fuehrungen landing page.',
+            'categories' => array('industriesalon', 'text'),
+            'file' => '/patterns/page-fuehrungen-template.html',
+        ),
+        array(
+            'name' => 'industriesalon/page-salon-vermietung-template',
+            'title' => 'ISS Salon Vermietung Page Template',
+            'description' => 'Practical-first room rental page content for the dedicated salon-vermietung landing page.',
+            'categories' => array('industriesalon', 'text'),
+            'file' => '/patterns/page-salon-vermietung-template.html',
+        ),
     );
 
     foreach ($patterns as $pattern) {

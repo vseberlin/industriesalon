@@ -30,6 +30,8 @@
     "showTypeFilter": { "type": "boolean", "default": true },
     "showPostTypeFilter": { "type": "boolean", "default": false },
     "showMonthFilter": { "type": "boolean", "default": false },
+    "showCalendarBridge": { "type": "boolean", "default": false },
+    "renderMode": { "type": "string", "default": "timeline" },
     "yearGrouping": { "type": "boolean", "default": false },
     "showDetailsButton": { "type": "boolean", "default": true },
     "showRecommendButton": { "type": "boolean", "default": true },

@@ -388,6 +388,15 @@
                   : null,
                 ToggleControl
                   ? el(ToggleControl, {
+                      label: 'Show calendar bridge',
+                      checked: !!attrs.showCalendarBridge,
+                      onChange: function (v) {
+                        setAttributes({ showCalendarBridge: !!v });
+                      },
+                    })
+                  : null,
+                ToggleControl
+                  ? el(ToggleControl, {
                       label: 'Show post type filter',
                       checked: !!attrs.showPostTypeFilter,
                       onChange: function (v) {
@@ -401,6 +410,19 @@
                       checked: !!attrs.yearGrouping,
                       onChange: function (v) {
                         setAttributes({ yearGrouping: !!v });
+                      },
+                    })
+                  : null,
+                SelectControl
+                  ? el(SelectControl, {
+                      label: 'Render mode',
+                      value: attrs.renderMode || 'timeline',
+                      options: [
+                        { label: 'Timeline', value: 'timeline' },
+                        { label: 'Cards', value: 'cards' },
+                      ],
+                      onChange: function (v) {
+                        setAttributes({ renderMode: v || 'timeline' });
                       },
                     })
                   : null,

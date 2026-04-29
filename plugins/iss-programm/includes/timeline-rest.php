@@ -60,6 +60,7 @@ function iss_timeline_rest_prepare_render_opts($params) {
     $render = isset($params['render']) && is_array($params['render']) ? $params['render'] : [];
 
     $opts = [
+        'renderMode' => (($render['renderMode'] ?? 'timeline') === 'cards') ? 'cards' : 'timeline',
         'yearGrouping' => iss_timeline_rest_to_bool($render['yearGrouping'] ?? true, true),
         'order' => strtoupper(sanitize_text_field((string) ($params['order'] ?? 'ASC'))),
         'showDetailsButton' => iss_timeline_rest_to_bool($render['showDetailsButton'] ?? true, true),
