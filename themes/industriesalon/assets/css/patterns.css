@@ -5698,6 +5698,26 @@ Raum / Vermietung → brown
   max-width: 100%;
 }
 
+.iss-archive-hero__layout {
+  gap: clamp(2rem, 5vw, 5rem);
+}
+
+.iss-archive-hero-note {
+  max-width: 28rem;
+  margin-left: auto;
+  border-left: 3px solid var(--iss-red);
+  border-radius: 0;
+  background: transparent;
+  padding: 0.25rem 0 0.25rem 1.25rem;
+}
+
+.iss-archive-hero-note,
+.iss-archive-hero-note .iss-kicker,
+.iss-archive-hero-note .iss-archive-callout__title,
+.iss-archive-hero-note .iss-archive-callout__text {
+  color: var(--iss-white);
+}
+
 /* .iss-archive-hero: Base class for iss archive hero; apply on primary wrapper/scope. */
 /* .iss-heading: Base class for iss heading; apply on primary wrapper/scope. */
 .iss-archive-hero .iss-heading {
@@ -5860,6 +5880,29 @@ Raum / Vermietung → brown
   color: rgba(30, 30, 30, 0.78);
 }
 
+.iss-archive-intro {
+  gap: clamp(2rem, 5vw, 5rem);
+  align-items: start;
+  margin-bottom: clamp(2rem, 5vw, 3.5rem);
+}
+
+.iss-archive-intro__lead {
+  max-width: 34ch;
+  margin: 0 0 1.25rem;
+  font-size: clamp(1.15rem, 1rem + 0.45vw, 1.45rem);
+  line-height: 1.5;
+  color: rgba(30, 30, 30, 0.9);
+}
+
+.iss-archive-intro__texts {
+  gap: 1.25rem;
+}
+
+.iss-archive-intro__texts p {
+  margin: 0;
+  color: rgba(30, 30, 30, 0.76);
+}
+
 /* =====================================================
    SECTION HEADS
    ===================================================== */
@@ -5919,6 +5962,109 @@ Raum / Vermietung → brown
 .iss-archive-callout__text {
   margin: 0;
   color: rgba(249, 249, 250, 0.86);
+}
+
+.iss-archive-discovery {
+  display: grid;
+  grid-template-columns: minmax(0, 1.1fr) minmax(18rem, 0.9fr);
+  gap: var(--iss-archive-gap);
+  align-items: stretch;
+}
+
+.iss-archive-discovery__lead {
+  position: relative;
+  overflow: hidden;
+  border-radius: var(--iss-radius-lg, 24px);
+  min-height: 100%;
+  background:
+    linear-gradient(145deg, rgba(30, 30, 30, 0.94), rgba(63, 63, 63, 0.9)),
+    var(--iss-black);
+  color: var(--iss-white);
+}
+
+.iss-archive-discovery__lead::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background:
+    radial-gradient(circle at top right, rgba(232, 29, 37, 0.22), transparent 34%),
+    linear-gradient(180deg, rgba(255, 255, 255, 0.04), transparent 55%);
+  pointer-events: none;
+}
+
+.iss-archive-discovery__lead-body {
+  position: relative;
+  z-index: 1;
+  display: grid;
+  gap: 1rem;
+  padding: clamp(1.4rem, 2.6vw, 2.3rem);
+}
+
+.iss-archive-discovery__lead-body h2,
+.iss-archive-discovery__lead-body p {
+  margin: 0;
+}
+
+.iss-archive-discovery__lead-body p:not(.iss-kicker) {
+  max-width: 36rem;
+  color: rgba(249, 249, 250, 0.86);
+}
+
+.iss-archive-discovery__lead-body .iss-kicker,
+.iss-archive-discovery__lead-body h2,
+.iss-archive-discovery__lead-body p,
+.iss-archive-discovery__lead-body .iss-archive-card__link {
+  color: var(--iss-white);
+}
+
+.iss-archive-discovery__lead-body .iss-archive-card__link {
+  text-decoration-color: rgba(255, 255, 255, 0.35);
+}
+
+.iss-archive-public-stack {
+  display: grid;
+  gap: var(--iss-archive-gap);
+}
+
+.iss-archive-public-card {
+  display: grid;
+  gap: 0.65rem;
+  padding: clamp(1.15rem, 2vw, 1.5rem);
+  border: var(--iss-archive-border);
+  border-radius: var(--iss-archive-radius);
+  background: #fff;
+  box-shadow: var(--iss-archive-shadow);
+}
+
+.iss-archive-public-card__label {
+  margin: 0;
+  font-size: 0.76rem;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+.iss-archive-public-card__title {
+  margin: 0;
+  font-size: clamp(1.05rem, 0.98rem + 0.3vw, 1.28rem);
+  line-height: 1.16;
+}
+
+.iss-archive-public-card__text {
+  margin: 0;
+  color: rgba(30, 30, 30, 0.76);
+}
+
+.iss-archive-public-card--red .iss-archive-public-card__label {
+  color: var(--iss-red);
+}
+
+.iss-archive-public-card--blue .iss-archive-public-card__label {
+  color: #3d5873;
+}
+
+.iss-archive-public-card--green .iss-archive-public-card__label {
+  color: #336b4f;
 }
 
 /* =====================================================
@@ -6068,6 +6214,32 @@ Raum / Vermietung → brown
   grid-template-columns: repeat(4, minmax(0, 1fr));
 }
 
+.iss-archive-landing .iss-archive-band {
+  padding-top: clamp(3rem, 6vw, 5rem);
+  padding-bottom: clamp(3rem, 6vw, 5rem);
+  background: linear-gradient(180deg, rgba(30, 30, 30, 0.94), rgba(53, 53, 53, 0.98));
+  color: var(--iss-white);
+}
+
+.iss-archive-band > .iss-container {
+  display: grid;
+  gap: clamp(1.5rem, 3vw, 2rem);
+}
+
+.iss-archive-band .iss-heading__title,
+.iss-archive-band .iss-heading__text,
+.iss-archive-band .iss-kicker {
+  color: var(--iss-white);
+}
+
+.iss-archive-band .iss-heading__text {
+  color: rgba(249, 249, 250, 0.84);
+}
+
+.iss-archive-band .iss-archive-card {
+  background: rgba(255, 255, 255, 0.98);
+}
+
 /* =====================================================
    ONSITE ARCHIVE PANEL
    ===================================================== */
@@ -6092,6 +6264,16 @@ Raum / Vermietung → brown
   padding: clamp(1.25rem, 2vw, 1.8rem);
   border-left: 4px solid var(--iss-brown);
   background: rgba(117, 58, 24, 0.04);
+}
+
+.iss-archive-landing #objekte.section--alt::before {
+  display: none;
+}
+
+.iss-onsite-panel__main .iss-kicker--brown,
+.iss-onsite-panel__main h2,
+.iss-onsite-panel__main p {
+  color: var(--iss-black);
 }
 
 /* .iss-onsite-panel__main: Element class for `iss-onsite-panel`; apply on `main` element. */
@@ -6185,6 +6367,79 @@ Raum / Vermietung → brown
   color: rgba(30, 30, 30, 0.55);
 }
 
+.iss-archive-company-layout {
+  display: grid;
+  grid-template-columns: minmax(0, 0.8fr) minmax(0, 1.2fr);
+  gap: clamp(2rem, 5vw, 4rem);
+  align-items: start;
+}
+
+.iss-archive-company-copy {
+  display: grid;
+  gap: 1rem;
+}
+
+.iss-archive-company-copy > * {
+  margin: 0;
+}
+
+.iss-archive-company-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: var(--iss-archive-gap);
+}
+
+.iss-archive-company-card {
+  display: grid;
+  gap: 0.75rem;
+  min-height: 100%;
+  padding: clamp(1.15rem, 2vw, 1.5rem);
+  border: var(--iss-archive-border);
+  border-radius: var(--iss-archive-radius);
+  background: #fff;
+  box-shadow: var(--iss-archive-shadow);
+}
+
+.iss-archive-company-card > * {
+  margin: 0;
+}
+
+.iss-archive-company-code {
+  color: rgba(30, 30, 30, 0.5);
+  font-size: 0.78rem;
+  font-weight: 700;
+  letter-spacing: 0.11em;
+  text-transform: uppercase;
+}
+
+.iss-archive-company-title {
+  font-size: clamp(1.15rem, 1rem + 0.45vw, 1.45rem);
+  line-height: 1.14;
+}
+
+.iss-archive-company-meta {
+  margin-top: auto;
+  padding-top: 0.2rem;
+  color: rgba(30, 30, 30, 0.56);
+  font-size: 0.8rem;
+}
+
+.iss-archive-company-card--red {
+  border-top: 3px solid var(--iss-red);
+}
+
+.iss-archive-company-card--blue {
+  border-top: 3px solid #567595;
+}
+
+.iss-archive-company-card--brown {
+  border-top: 3px solid var(--iss-brown);
+}
+
+.iss-archive-company-card--gold {
+  border-top: 3px solid #a28061;
+}
+
 /* =====================================================
    FINAL CTA
    ===================================================== */
@@ -6228,6 +6483,85 @@ Raum / Vermietung → brown
   justify-content: flex-end;
 }
 
+.iss-archive-research-cta,
+.iss-archive-research-cta .iss-kicker,
+.iss-archive-research-cta .iss-archive-research-cta__title,
+.iss-archive-research-cta .iss-archive-research-cta__text,
+.iss-archive-research-cta h2,
+.iss-archive-research-cta p {
+  color: var(--iss-white);
+}
+
+.iss-archive-research-cta .is-style-outline .wp-block-button__link {
+  border-color: rgba(255, 255, 255, 0.65);
+  color: var(--iss-white);
+}
+
+.iss-archive-research-layout {
+  display: grid;
+  grid-template-columns: minmax(0, 0.8fr) minmax(0, 1.2fr);
+  gap: clamp(2rem, 5vw, 4rem);
+  align-items: start;
+}
+
+.iss-archive-research-copy,
+.iss-archive-research-list {
+  min-width: 0;
+}
+
+.iss-archive-research-copy {
+  display: grid;
+  gap: 1rem;
+}
+
+.iss-archive-research-copy > * {
+  margin: 0;
+}
+
+.iss-archive-research-title {
+  margin: 0;
+  max-width: 14ch;
+  text-wrap: balance;
+}
+
+.iss-archive-research-list {
+  display: grid;
+  gap: 0;
+}
+
+.iss-archive-research-item {
+  display: grid;
+  grid-template-columns: minmax(6rem, 8rem) minmax(0, 1fr);
+  gap: 1.2rem;
+  align-items: start;
+  padding: 1.2rem 0;
+  border-top: 1px solid var(--iss-border);
+}
+
+.iss-archive-research-item:last-child {
+  border-bottom: 1px solid var(--iss-border);
+}
+
+.iss-archive-research-item__label {
+  margin: 0;
+  color: rgba(30, 30, 30, 0.52);
+  font-size: 0.76rem;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+.iss-archive-research-item__title {
+  margin: 0 0 0.35rem;
+  font-size: clamp(1.08rem, 0.98rem + 0.35vw, 1.3rem);
+  line-height: 1.16;
+}
+
+.iss-archive-research-item__text {
+  margin: 0;
+  color: rgba(30, 30, 30, 0.76);
+}
+
 /* =====================================================
    RESPONSIVE
    ===================================================== */
@@ -6252,8 +6586,15 @@ Raum / Vermietung → brown
 /* .iss-archive-paths: Base class for iss archive paths; apply on primary wrapper/scope. */
   .iss-archive-paths,
 /* .iss-archive-grid: Base class for iss archive grid; apply on primary wrapper/scope. */
-  .iss-archive-grid {
+  .iss-archive-grid,
+  .iss-archive-company-grid {
     grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .iss-archive-discovery,
+  .iss-archive-company-layout,
+  .iss-archive-research-layout {
+    grid-template-columns: 1fr;
   }
 }
 
@@ -6275,9 +6616,26 @@ Raum / Vermietung → brown
   .iss-archive-grid--2,
 /* .iss-archive-grid--4: Modifier class for `iss-archive-grid`; combine for `4` variant. */
   .iss-archive-grid--4,
+  .iss-archive-company-grid,
 /* .iss-portal-links: Base class for iss portal links; apply on primary wrapper/scope. */
   .iss-portal-links {
     grid-template-columns: 1fr;
+  }
+
+  .iss-archive-hero__layout,
+  .iss-archive-intro,
+  .iss-archive-intro__texts {
+    gap: 1.25rem;
+  }
+
+  .iss-archive-hero-note {
+    max-width: none;
+    margin-left: 0;
+  }
+
+  .iss-archive-research-item {
+    grid-template-columns: 1fr;
+    gap: 0.55rem;
   }
 
 /* .iss-archive-callout: Base class for iss archive callout; apply on primary wrapper/scope. */
@@ -8595,5 +8953,320 @@ Raum / Vermietung → brown
 
   .iss-publication-single__intro {
     margin-left: 0;
+  }
+}
+
+/* =========================================================
+   GROUP: Verein Page
+   PURPOSE:
+   Page-specific layout for the Verein landing page. Scoped to
+   `.iss-verein-page` so it does not affect other narrative pages.
+   ========================================================= */
+
+.iss-verein-hero {
+  padding-top: max(7rem, calc(var(--iss-header-height, 88px) + 2.5rem));
+  padding-bottom: clamp(3.5rem, 7vw, 6rem);
+  background:
+    linear-gradient(135deg, rgba(30, 30, 30, 0.96), rgba(30, 30, 30, 0.84)),
+    radial-gradient(circle at top right, rgba(207, 34, 44, 0.28), transparent 34%),
+    var(--iss-black);
+  color: var(--iss-white);
+}
+
+.iss-verein-hero .iss-heading__title,
+.iss-verein-hero .iss-heading__text,
+.iss-verein-hero .iss-kicker {
+  color: var(--iss-white);
+}
+
+.iss-verein-hero .iss-heading__title {
+  max-width: 10ch;
+}
+
+.iss-verein-hero .iss-heading__text {
+  max-width: 46rem;
+  color: rgba(249, 249, 250, 0.86);
+}
+
+.iss-verein-hero__grid {
+  gap: clamp(2rem, 5vw, 5rem);
+}
+
+.iss-verein-hero__note {
+  padding: 1.4rem 0 0 1.4rem;
+  border-left: 3px solid var(--iss-red);
+}
+
+.iss-verein-hero__note p:last-child {
+  margin-bottom: 0;
+  color: rgba(249, 249, 250, 0.82);
+}
+
+.iss-verein-fast {
+  padding-top: 1.4rem;
+}
+
+.iss-verein-fast__grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 1rem;
+}
+
+.iss-verein-fast__item {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+  min-height: 11rem;
+  padding: 1.2rem 1.25rem;
+  border: 1px solid var(--iss-border);
+  border-radius: var(--iss-radius-lg);
+  background: var(--iss-white);
+  box-shadow: var(--iss-shadow);
+}
+
+.iss-verein-fast__item h3 {
+  margin: 0;
+  font-size: clamp(1.2rem, 2vw, 1.55rem);
+  line-height: 1.08;
+}
+
+.iss-verein-fast__item p:last-child {
+  margin-bottom: 0;
+  color: rgba(30, 30, 30, 0.72);
+}
+
+.iss-verein-fast__item a {
+  color: inherit;
+  text-decoration: none;
+}
+
+.iss-verein-fast__item a:hover,
+.iss-verein-fast__item a:focus-visible {
+  color: var(--iss-red);
+}
+
+.iss-verein-story__grid {
+  display: grid;
+  grid-template-columns: minmax(12rem, 15rem) minmax(0, 1fr);
+  gap: clamp(2rem, 5vw, 5rem);
+  align-items: start;
+}
+
+.iss-verein-story__nav {
+  position: sticky;
+  top: calc(var(--iss-header-height, 88px) + 1.5rem);
+  display: grid;
+  gap: 0.5rem;
+}
+
+.iss-verein-story__nav p {
+  margin: 0;
+}
+
+.iss-verein-story__nav a {
+  display: block;
+  padding-bottom: 0.7rem;
+  border-bottom: 1px solid var(--iss-border);
+  color: rgba(30, 30, 30, 0.7);
+  font-weight: 700;
+  text-decoration: none;
+}
+
+.iss-verein-story__nav a:hover,
+.iss-verein-story__nav a:focus-visible {
+  color: var(--iss-red);
+}
+
+.iss-verein-story__body {
+  display: grid;
+  gap: clamp(2.25rem, 5vw, 4rem);
+}
+
+.iss-verein-story__intro {
+  padding-bottom: clamp(1.5rem, 3vw, 2.5rem);
+  border-bottom: 2px solid var(--iss-red);
+}
+
+.iss-verein-story__intro h2,
+.iss-verein-story__chapter h3 {
+  max-width: 14ch;
+  text-wrap: balance;
+}
+
+.iss-verein-story__chapter {
+  padding-bottom: clamp(1.75rem, 3vw, 2.5rem);
+  border-bottom: 1px solid var(--iss-border);
+}
+
+.iss-verein-story__chapter p:last-child,
+.iss-verein-story__intro p:last-child {
+  margin-bottom: 0;
+}
+
+.iss-verein-actions__grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 1rem;
+}
+
+.iss-verein-action {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  min-height: 21rem;
+  padding: 1.35rem 1.35rem 1.5rem;
+  border: 1px solid var(--iss-border);
+  border-radius: var(--iss-radius-lg);
+  background: var(--iss-white);
+  box-shadow: var(--iss-shadow);
+}
+
+.iss-verein-action::before {
+  content: "";
+  position: absolute;
+  inset: 0 auto 0 0;
+  width: 4px;
+  border-radius: var(--iss-radius-lg) 0 0 var(--iss-radius-lg);
+  background: var(--iss-red);
+}
+
+.iss-verein-action--blue::before {
+  background: var(--iss-blue);
+}
+
+.iss-verein-action--green::before {
+  background: var(--iss-green);
+}
+
+.iss-verein-action__kicker {
+  margin: 0;
+  color: rgba(30, 30, 30, 0.56);
+  font-size: 0.76rem;
+  font-weight: 800;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+.iss-verein-action h3 {
+  margin-top: 2.4rem;
+}
+
+.iss-verein-action p:last-child {
+  margin-top: auto;
+  margin-bottom: 0;
+}
+
+.iss-verein-org__grid,
+.iss-verein-docs__grid {
+  gap: clamp(2rem, 5vw, 4rem);
+}
+
+.iss-verein-panel {
+  height: 100%;
+  padding: 1.4rem 1.45rem;
+  border: 1px solid var(--iss-border);
+  border-radius: var(--iss-radius-lg);
+  background: var(--iss-white);
+  box-shadow: var(--iss-shadow);
+}
+
+.iss-verein-panel--soft {
+  background: rgba(255, 255, 255, 0.82);
+}
+
+.iss-verein-panel > *:last-child {
+  margin-bottom: 0;
+}
+
+.iss-verein-board {
+  display: grid;
+  gap: 0.9rem;
+  margin: 1.25rem 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+.iss-verein-board li {
+  display: grid;
+  gap: 0.15rem;
+  padding-bottom: 0.9rem;
+  border-bottom: 1px solid var(--iss-border);
+}
+
+.iss-verein-board li:last-child {
+  padding-bottom: 0;
+  border-bottom: 0;
+}
+
+.iss-verein-board span {
+  color: rgba(30, 30, 30, 0.74);
+}
+
+.iss-verein-facts {
+  margin-top: 1rem;
+  gap: 1rem;
+}
+
+.iss-verein-docs__list {
+  display: grid;
+}
+
+.iss-verein-doc {
+  gap: 1rem;
+  padding: 1.1rem 0;
+  border-top: 1px solid var(--iss-border);
+}
+
+.iss-verein-doc:last-child {
+  border-bottom: 1px solid var(--iss-border);
+}
+
+.iss-verein-doc__body {
+  display: grid;
+  gap: 0.35rem;
+}
+
+.iss-verein-doc__body h3,
+.iss-verein-doc__body p {
+  margin: 0;
+}
+
+.iss-verein-doc > p {
+  flex-shrink: 0;
+  margin: 0;
+}
+
+@media (max-width: 900px) {
+  .iss-verein-fast__grid,
+  .iss-verein-actions__grid,
+  .iss-verein-story__grid {
+    grid-template-columns: 1fr;
+  }
+
+  .iss-verein-story__nav {
+    position: static;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 0.65rem 1rem;
+  }
+
+  .iss-verein-doc {
+    display: grid;
+  }
+
+  .iss-verein-doc > p {
+    margin-top: 0.25rem;
+  }
+}
+
+@media (max-width: 640px) {
+  .iss-verein-fast__grid,
+  .iss-verein-story__nav {
+    grid-template-columns: 1fr;
+  }
+
+  .iss-verein-panel,
+  .iss-verein-fast__item,
+  .iss-verein-action {
+    padding: 1.15rem;
   }
 }

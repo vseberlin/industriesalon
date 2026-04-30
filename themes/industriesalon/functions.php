@@ -451,12 +451,16 @@ function industriesalon_enqueue_assets(): void
     $theme_uri = get_stylesheet_directory_uri();
     $theme = wp_get_theme();
     $version = $theme->get('Version');
+    $base_stylesheet = get_stylesheet_directory() . '/style.css';
+    $base_version = file_exists($base_stylesheet)
+        ? (string) filemtime($base_stylesheet)
+        : $version;
 
     wp_enqueue_style(
         'industriesalon-base',
         get_stylesheet_uri(),
         array(),
-        $version
+        $base_version
     );
 
     $cards_rel = '/assets/css/cards.css';
@@ -554,3 +558,23 @@ function industriesalon_enqueue_assets(): void
     }
 }
 add_action('wp_enqueue_scripts', 'industriesalon_enqueue_assets');
+
+function industriesalon_render_menu_shell(): void
+{
+    if (is_admin()) {
+        return;
+    }
+
+    $menu_shell_path = get_stylesheet_directory() . '/assets/menu-shell.html';
+    if (!file_exists($menu_shell_path)) {
+        return;
+    }
+
+    $content = file_get_contents($menu_shell_path);
+    if ($content === false || trim($content) === '') {
+        return;
+    }
+
+    echo do_blocks($content);
+}
+add_action('wp_footer', 'industriesalon_render_menu_shell', 5);

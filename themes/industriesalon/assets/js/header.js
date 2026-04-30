@@ -4,34 +4,43 @@
     }
     window.__issNavInit = true;
 
-    function initHeader(header, index) {
-        if (!header || header.dataset.issNavBound === '1') {
+    function init() {
+        var toggles = document.querySelectorAll('.iss-site-header .iss-nav-toggle button, .iss-site-header .iss-nav-toggle a');
+        var panel = document.querySelector('.iss-menu-shell');
+        var overlay = document.querySelector('.iss-nav-overlay');
+        var close = panel ? panel.querySelector('.iss-menu-close') : null;
+
+        if (!toggles.length) {
+            toggles = document.querySelectorAll('.iss-site-header .iss-nav-toggle');
+        }
+
+        if (!toggles.length || !panel || !overlay || !close || panel.dataset.issNavBound === '1') {
             return;
         }
-        header.dataset.issNavBound = '1';
+        panel.dataset.issNavBound = '1';
 
-        var toggle = header.querySelector('.iss-nav-toggle a, .iss-nav-toggle button, .iss-nav-toggle');
-        var panel = header.querySelector('.iss-menu-shell');
-        var overlay = header.querySelector('.iss-nav-overlay');
-        var close = header.querySelector('.iss-menu-close');
-
-        if (!toggle || !panel || !overlay || !close) {
-            return;
+        if (!panel.id) {
+            panel.id = 'iss-menu-shell';
         }
 
-        panel.id = 'iss-menu-shell-' + (index + 1);
-        if (toggle.tagName && toggle.tagName.toLowerCase() === 'a') {
-            toggle.setAttribute('href', '#' + panel.id);
+        var activeToggle = null;
+
+        function setToggleState(isExpanded) {
+            Array.prototype.forEach.call(toggles, function (toggle) {
+                toggle.setAttribute('aria-expanded', isExpanded ? 'true' : 'false');
+                toggle.setAttribute('aria-controls', panel.id);
+                if (!toggle.getAttribute('aria-label')) {
+                    toggle.setAttribute('aria-label', 'Navigation öffnen');
+                }
+            });
         }
 
-        toggle.setAttribute('aria-expanded', 'false');
-        toggle.setAttribute('aria-controls', panel.id);
-        if (!toggle.getAttribute('aria-label')) {
-            toggle.setAttribute('aria-label', 'Navigation öffnen');
-        }
+        setToggleState(false);
         if (!panel.getAttribute('aria-label')) {
             panel.setAttribute('aria-label', 'Hauptmenü');
         }
+        panel.setAttribute('role', 'dialog');
+        panel.setAttribute('aria-modal', 'true');
         if (!close.getAttribute('aria-label')) {
             close.setAttribute('aria-label', 'Navigation schließen');
         }
@@ -52,7 +61,7 @@
             document.body.classList.add('iss-nav-open');
             panel.classList.add('is-open');
             overlay.classList.add('is-open');
-            toggle.setAttribute('aria-expanded', 'true');
+            setToggleState(true);
             panel.setAttribute('aria-hidden', 'false');
 
             var items = getFocusable();
@@ -68,18 +77,23 @@
             document.body.classList.remove('iss-nav-open');
             panel.classList.remove('is-open');
             overlay.classList.remove('is-open');
-            toggle.setAttribute('aria-expanded', 'false');
+            setToggleState(false);
             panel.setAttribute('aria-hidden', 'true');
 
             if (returnFocus === false) {
+                activeToggle = null;
                 return;
             }
 
             if (lastFocusedElement && typeof lastFocusedElement.focus === 'function') {
                 lastFocusedElement.focus();
-            } else {
-                toggle.focus();
+            } else if (activeToggle && typeof activeToggle.focus === 'function') {
+                activeToggle.focus();
+            } else if (toggles[0] && typeof toggles[0].focus === 'function') {
+                toggles[0].focus();
             }
+
+            activeToggle = null;
         }
 
         function onKeydown(event) {
@@ -114,13 +128,16 @@
             }
         }
 
-        toggle.addEventListener('click', function (event) {
-            event.preventDefault();
-            if (panel.classList.contains('is-open')) {
-                closeNav();
-            } else {
-                openNav();
-            }
+        Array.prototype.forEach.call(toggles, function (toggle) {
+            toggle.addEventListener('click', function (event) {
+                event.preventDefault();
+                activeToggle = toggle;
+                if (panel.classList.contains('is-open')) {
+                    closeNav();
+                } else {
+                    openNav();
+                }
+            });
         });
 
         close.addEventListener('click', function (event) {
@@ -139,17 +156,6 @@
                 return;
             }
             closeNav(false);
-        });
-    }
-
-    function init() {
-        var headers = document.querySelectorAll('.iss-site-header');
-        if (!headers.length) {
-            return;
-        }
-
-        Array.prototype.forEach.call(headers, function (header, index) {
-            initHeader(header, index);
         });
     }
 

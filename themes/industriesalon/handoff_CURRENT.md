@@ -1,59 +1,48 @@
 # Handoff Current (Theme)
 
 ## Status
-- `ready_for_next_session`
+- `committed`
 
 ## Date / Window
-- Date: `2026-04-27`
+- Date: `2026-04-30`
 - Timezone: `Europe/Berlin`
 
 ## Branch / Commit
 - Branch: `master`
-- HEAD before final handoff commit: `b462dc2`
+- HEAD before final handoff commit: `7ed1f92`
 
 ## What Was Done This Session
-- Added a reusable recognition pattern:
-  - `patterns/iss-section-recognition-split.html`
-  - registered as `industriesalon/recognition-split`
-- Extended the shared split system in `assets/css/iss-flex-split.css`:
-  - added `iss-flex-split--reverse` so tall media columns can swap left/right on desktop and reset on mobile
-- Rebuilt `templates/page-ueber-uns.html` as the live source of truth for the About page:
-  - merged the previous template draft, live page content, and local `register.md` notes
-  - switched the live page to the file-backed `page-ueber-uns` template
-  - removed the stale DB `wp_template` override after syncing useful content into the theme file
-  - changed the live page slug from `/test/` to `/ueber-uns/`
-- Refined the About-page layout/rhythm in `assets/css/ueber-uns.css`:
-  - hero now uses a taller viewport treatment
-  - opener gets a wide image band
-  - `Was wir tun` now uses one larger lead card plus two quieter cards
-  - `Sammlung und Archiv` now includes a compact fact row
-  - `Gründung` now uses a stronger human callout
-  - `Team` now starts with a featured lead profile before the remaining grid
-  - `Mitmachen` keeps one primary button and quieter follow-up action links
+- Recovered disk authority for remaining theme templates by flushing DB overrides and syncing `page-ueber-uns` back to file before deleting its DB copy.
+- Normalized confusing template names and removed redundant archive templates:
+  - `page-ausstellungen.html`
+  - `page-publikationen.html`
+  - `fuehrungen-landing.html`
+  - removed `archive-projekt.html` and `archive-veranstaltung.html`
+- Made the off-canvas menu durable against Gutenberg header breakage:
+  - shell lives in `assets/menu-shell.html`
+  - rendered globally from `functions.php`
+  - trigger remains in `parts/header.html`
+  - `assets/js/header.js` now binds to the global shell
+  - `style.css` got menu sizing/layout refinements plus filemtime cache-busting
+- Added new Verein landing page support in the live theme:
+  - `templates/page-verein.html`
+  - scoped `iss-verein-*` styles in `assets/css/patterns.css`
+- Repaired the rebuilt Archiv landing after style drift:
+  - added missing `iss-archive-*` selectors for the newer mixed-layout template
+  - fixed dark-section text color collisions
+  - removed the inherited `section--alt` red top line from the object panel
+  - restored padding on the dark exhibitions band
+  - removed the extra red halo from the Zeitzeugen lead
 
 ## Runtime Verification Snapshot
-- `page-ueber-uns` resolves from theme source, not a DB override.
-- `/ueber-uns/` returns `200`.
-- old `/test/` route returns `404`.
-- Live output confirms:
-  - taller hero
-  - opener band
-  - asymmetric pillars section
-  - archive stats row
-  - lead team card
-  - dark CTA links
+- Active theme: `industriesalon`
+- `page-verein` template is registered
+- `page-verein.html` parses in WordPress
+- `page-archiv` is disk-backed, not DB-backed
+- archive template/style mismatch check returned zero missing archive selectors
 
 ## Open Item
-- The page now depends more on good featured imagery:
-  - hero image
-  - opener band image
-  - lead pillar image
-- If editorial wants more separation between those three visual moments, use distinct source images rather than the same featured image repeatedly.
-
-## Suggested Next Step
-1. QA `/ueber-uns/` in browser on desktop and mobile with real content/images.
-2. Decide whether the About page should keep using featured image reuse or get dedicated section-specific media.
-3. If wanted, carry the same asymmetric rhythm logic into one more high-visibility landing page.
+- `page-verein.html` is ready, but no local `/verein/` page exists yet in this database snapshot.
 
 ## Continuity Prompt
-- Start next session with: `read /home/vladimir/wp/themes/industriesalon/handoff_CURRENT.md`.
+- Start next session with: `read /home/vladimir/wp/themes/industriesalon/handoff_CURRENT.md`

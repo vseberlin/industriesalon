@@ -31,7 +31,7 @@ function iss_publications_register_post_type() {
         'public'             => true,
         'show_ui'            => true,
         'show_in_rest'       => true,
-        'has_archive'        => 'publikationen',
+        'has_archive'        => false,
         'rewrite'            => ['slug' => 'publikationen', 'with_front' => false],
         'menu_position'      => 22,
         'menu_icon'          => 'dashicons-book-alt',

@@ -1,5 +1,23 @@
 # Industriesalon Theme Changelog
 
+## 2026-04-30
+- Recovered theme authority by syncing `page-ueber-uns` back to disk and flushing the remaining DB template overrides.
+- Normalized confusing landing-template names:
+  - `page-ausstellungen.html`
+  - `page-publikationen.html`
+  - `fuehrungen-landing.html`
+- Removed redundant archive templates:
+  - `archive-projekt.html`
+  - `archive-veranstaltung.html`
+- Hardened the off-canvas menu against Gutenberg header edits:
+  - added `assets/menu-shell.html`
+  - moved shell rendering to `functions.php`
+  - updated `parts/header.html`, `assets/js/header.js`, and `style.css`
+- Added the new Verein landing template:
+  - `templates/page-verein.html`
+  - scoped styles in `assets/css/patterns.css`
+- Repaired Archiv landing styling after the mixed-layout rebuild by restoring the missing `iss-archive-*` selector set and resolving dark-section color collisions.
+
 ## 2026-04-28
 - Added a new front-page research/object contrast section for the Teilchendetektor:
   - pattern: `patterns/iss-section-object-highlight.html`
@@ -32,7 +50,7 @@
 
 ## 2026-04-26
 - Moved publication page rendering into native Gutenberg theme templates:
-  - `templates/archive-publication.html`
+  - `templates/page-publikationen.html`
   - `templates/single-publication.html`
 - Added reusable editorial pattern for publication intros:
   - `patterns/iss-publications-intro.html`
