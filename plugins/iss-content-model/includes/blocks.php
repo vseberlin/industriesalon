@@ -103,9 +103,14 @@ function iss_content_model_get_meta_rows_for_post($post_id) {
     } elseif ($post_type === ISS_CONTENT_MODEL_AUSSTELLUNG_POST_TYPE) {
         $start = iss_content_model_format_date(get_post_meta($post_id, 'iss_start_date', true));
         $end = iss_content_model_format_date(get_post_meta($post_id, 'iss_end_date', true));
+        $type_terms = iss_content_model_get_term_name_list($post_id, ISS_CONTENT_MODEL_AUSSTELLUNG_TYPE_TAXONOMY);
+        $collection_terms = iss_content_model_get_term_name_list($post_id, ISS_CONTENT_MODEL_COLLECTION_AREA_TAXONOMY);
+        $site_terms = iss_content_model_get_term_name_list($post_id, ISS_CONTENT_MODEL_INDUSTRY_SITE_TAXONOMY);
         $is_permanent = !empty(get_post_meta($post_id, 'iss_is_permanent', true));
 
-        if ($is_permanent) {
+        if (!empty($type_terms)) {
+            $rows[] = ['label' => __('Typ', 'iss-content-model'), 'value' => implode(', ', $type_terms)];
+        } elseif ($is_permanent) {
             $rows[] = ['label' => __('Typ', 'iss-content-model'), 'value' => __('Dauerausstellung', 'iss-content-model')];
         }
 
@@ -115,6 +120,14 @@ function iss_content_model_get_meta_rows_for_post($post_id) {
             $rows[] = ['label' => $is_permanent ? __('Seit', 'iss-content-model') : __('Beginn', 'iss-content-model'), 'value' => $start];
         } elseif ($end !== '') {
             $rows[] = ['label' => __('Bis', 'iss-content-model'), 'value' => $end];
+        }
+
+        if (!empty($collection_terms)) {
+            $rows[] = ['label' => __('Sammlungsbereich', 'iss-content-model'), 'value' => implode(', ', $collection_terms)];
+        }
+
+        if (!empty($site_terms)) {
+            $rows[] = ['label' => __('Industrieort', 'iss-content-model'), 'value' => implode(', ', $site_terms)];
         }
     } elseif ($post_type === ISS_CONTENT_MODEL_PROJEKT_POST_TYPE) {
         $period = trim((string) get_post_meta($post_id, 'iss_period_label', true));
@@ -163,6 +176,27 @@ function iss_content_model_get_meta_rows_for_post($post_id) {
     }
 
     return $rows;
+}
+
+function iss_content_model_get_term_name_list($post_id, $taxonomy) {
+    $terms = get_the_terms((int) $post_id, (string) $taxonomy);
+    if (!is_array($terms) || empty($terms)) {
+        return [];
+    }
+
+    $names = [];
+    foreach ($terms as $term) {
+        if (!$term instanceof WP_Term) {
+            continue;
+        }
+
+        $name = trim((string) $term->name);
+        if ($name !== '') {
+            $names[] = $name;
+        }
+    }
+
+    return array_values(array_unique($names));
 }
 
 function iss_content_model_render_meta_block($attributes = [], $content = '', $block = null) {

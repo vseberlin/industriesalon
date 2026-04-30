@@ -412,15 +412,37 @@ function iss_timeline_render_items_cards($items, $opts = []) {
         $type_label = iss_timeline_get_card_badge_label($row);
         $summary = trim((string) ($row['summary'] ?? ''));
         $actions = iss_timeline_build_actions($row, $opts);
+        $source_post_id = isset($row['source_post_id']) ? (int) $row['source_post_id'] : 0;
+        $permalink = $source_post_id > 0 ? get_permalink($source_post_id) : '';
+        $permalink = is_string($permalink) ? trim($permalink) : '';
 
         $out .= '<article class="iss-card iss-card--flat iss-timeline-card">';
+
+        if ($source_post_id > 0 && has_post_thumbnail($source_post_id)) {
+            $out .= '<figure class="iss-card__media iss-timeline-card__media">';
+            if ($permalink !== '') {
+                $out .= '<a href="' . esc_url($permalink) . '">';
+            }
+            $out .= get_the_post_thumbnail($source_post_id, 'large');
+            if ($permalink !== '') {
+                $out .= '</a>';
+            }
+            $out .= '</figure>';
+        }
+
         $out .= '<div class="iss-card__body">';
 
         if ($type_label !== '') {
             $out .= '<p class="iss-kicker iss-kicker--compact iss-timeline-card__kicker">' . esc_html($type_label) . '</p>';
         }
 
-        $out .= '<h3 class="iss-card__title iss-timeline-card__title">' . esc_html((string) ($row['title'] ?? '')) . '</h3>';
+        $out .= '<h3 class="iss-card__title iss-timeline-card__title">';
+        if ($permalink !== '') {
+            $out .= '<a href="' . esc_url($permalink) . '">' . esc_html((string) ($row['title'] ?? '')) . '</a>';
+        } else {
+            $out .= esc_html((string) ($row['title'] ?? ''));
+        }
+        $out .= '</h3>';
 
         if (!empty($row['date_label'])) {
             $meta = (string) $row['date_label'];
@@ -938,18 +960,26 @@ function iss_timeline_render_query_block($attributes = [], $content = '', $block
                 }
                 $label = isset($taxonomy_filter['label']) ? (string) $taxonomy_filter['label'] : $taxonomy;
                 $out .= '<label class="iss-timeline__filter"><span class="iss-timeline__filter-label">' . esc_html($label) . '</span>';
-                $out .= '<select name="taxonomy_' . esc_attr($taxonomy) . '" data-filter-taxonomy="' . esc_attr($taxonomy) . '">';
+                $out .= '<select name="taxonomy_' . esc_attr($taxonomy) . '[]" data-filter-taxonomy="' . esc_attr($taxonomy) . '" multiple size="' . esc_attr((string) min(8, max(4, count($taxonomy_filter['options']) - 1))) . '">';
                 foreach ($taxonomy_filter['options'] as $option) {
                     if (!is_array($option)) {
                         continue;
                     }
                     $value = isset($option['value']) ? sanitize_title((string) $option['value']) : '';
                     $option_label = isset($option['label']) ? (string) $option['label'] : $value;
+                    if ($value === '') {
+                        continue;
+                    }
                     $out .= '<option value="' . esc_attr($value) . '">' . esc_html($option_label) . '</option>';
                 }
                 $out .= '</select></label>';
             }
         }
+
+        $out .= '<div class="iss-timeline__filter-actions">';
+        $out .= '<button type="button" class="iss-timeline__apply iss-timeline__apply--ghost" data-timeline-query-reset>'
+            . esc_html__('Filter zurücksetzen', 'iss-timeline') . '</button>';
+        $out .= '</div>';
 
         $out .= '</form>';
     }

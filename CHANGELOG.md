@@ -1,5 +1,45 @@
 # Changelog
 
+## 2026-04-30
+- Extended the existing `ausstellung` content model in `iss-content-model` instead of creating a second CPT:
+  - added taxonomies `ausstellung_typ`, `sammlungsbereich`, `industrieort`
+  - seeded agreed default terms
+  - removed the duplicate visible `Dauerausstellung` checkbox path from admin
+  - exposed taxonomy values in the single exhibition meta output
+- Fixed `ausstellung` timeline syncing so the landing and archive filters can resolve real exhibitions:
+  - `iss_timeline_enabled` now defaults to on for `ausstellung`
+  - permanent exhibitions can sync without manually entered dates
+  - `Dauerausstellung` keeps legacy `iss_is_permanent` synced from taxonomy
+- Reworked `iss-programm` exhibition filtering:
+  - taxonomy filters now support multi-select
+  - added preset-button support for the top quick overview on `/ausstellungen/`
+  - added a shared filter reset button to the query UI
+  - optimized `past` / `Archiv` exhibition queries by using a dedicated `event_end` fast path for `ausstellung`-only requests
+- Rebuilt `themes/industriesalon/templates/archive-ausstellung.html` into a narrative archive landing:
+  - quick top overview
+  - Elektropolis context
+  - full-width panorama transition
+  - Kaiserzeit card strip
+  - DDR card strip in `Nach 1945`
+  - `Ausstellung im Raum`
+  - rebuilt `Draußen` upper block in the `Woran wir arbeiten` language
+  - route cards retained below
+  - closing research/archive register block with filters
+- Extracted the earlier workstation deep-dive into a reusable pattern:
+  - `themes/industriesalon/patterns/iss-section-ausstellung-workstation.html`
+  - registered as `industriesalon/ausstellung-workstation`
+  - later removed it from the landing because the new Kaiserzeit/DDR systems made it redundant there
+- Reduced major static image payload on the archive landing:
+  - switched the hero image to a generated `2048x1410` variant
+  - switched the panorama to a generated `1536x518` variant
+  - switched the outside/tour image to a generated `1024x683` variant
+  - removed the expensive live Kaiserzeit image filter and replaced it with a cheaper warm overlay
+- Wired the archive hero banner to `industriesalon-notices`:
+  - replaced the hardcoded hero note with `industriesalon/notice-banner`
+  - added dedicated area `ausstellungen_banner`
+  - note: no notice was assigned to that area yet, so the slot remains empty until one is created in admin
+- Deleted the stale custom DB `wp_template` row for `archive-ausstellung` so the theme file is authoritative again
+
 ## 2026-04-29
 - Added a dedicated file-backed `Repair Café` landing page in `themes/industriesalon`:
   - `templates/page-repair-cafe.html`

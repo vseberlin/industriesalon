@@ -185,6 +185,13 @@ function industriesalon_register_block_patterns(): void
             'file' => '/patterns/iss-section-object-highlight.html',
         ),
         array(
+            'name' => 'industriesalon/ausstellung-workstation',
+            'title' => 'ISS Ausstellung Workstation',
+            'description' => 'Editorial deep-dive for one permanent exhibition workstation or object ensemble.',
+            'categories' => array('industriesalon', 'text', 'media'),
+            'file' => '/patterns/iss-section-ausstellung-workstation.html',
+        ),
+        array(
             'name' => 'industriesalon/page-fuehrungen-template',
             'title' => 'ISS Fuehrungen Page Template',
             'description' => 'Booking-first tours page content for the dedicated fuehrungen landing page.',

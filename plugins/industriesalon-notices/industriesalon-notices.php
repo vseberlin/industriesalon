@@ -911,6 +911,7 @@ final class Industriesalon_Notices {
             'front_page_banner' => __('Startseiten-Banner', 'industriesalon-notices'),
             'site_notice'       => __('Website-Hinweis', 'industriesalon-notices'),
             'selected_pages_banner' => __('Ausgewählte Seiten (Banner)', 'industriesalon-notices'),
+            'ausstellungen_banner' => __('Ausstellungen (Banner)', 'industriesalon-notices'),
             'admin_notice'      => __('Admin-Hinweis', 'industriesalon-notices'),
         ];
     }

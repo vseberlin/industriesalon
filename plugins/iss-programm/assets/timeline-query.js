@@ -23,20 +23,32 @@ document.addEventListener('DOMContentLoaded', function () {
     var results = root.querySelector('[data-timeline-query-results]');
     var loadMoreWrap = root.querySelector('[data-timeline-query-load-more-wrap]');
     var loadMoreButton = root.querySelector('[data-timeline-query-load-more]');
+    var presetButtons = root.querySelectorAll('[data-timeline-preset]');
     var calendarMonthInput = root.querySelector('[data-calendar-bridge-month]');
     var calendarDayInput = root.querySelector('[data-calendar-bridge-day]');
     var calendarResetButton = root.querySelector('[data-calendar-bridge-reset]');
+    var queryResetButton = root.querySelector('[data-timeline-query-reset]');
     if (!form || !results) return;
 
     var requestInFlight = null;
     var nextOffset = 0;
     var calendarBridgeMode = '';
+    var activePreset = null;
+
+    function getControlValue(input) {
+      if (!input) return '';
+      if (input.type === 'radio') {
+        var checked = form.querySelector('[data-filter-key="' + input.getAttribute('data-filter-key') + '"]:checked');
+        return checked ? checked.value : '';
+      }
+      return input.value;
+    }
 
     function syncMonthVisibility() {
       var timeMode = form.querySelector('[data-filter-key="time_mode"]');
       var monthSelect = form.querySelector('[data-filter-key="month"]');
       if (!timeMode || !monthSelect) return;
-      monthSelect.hidden = timeMode.value !== 'month';
+      monthSelect.hidden = getControlValue(timeMode) !== 'month';
     }
 
     function getTimeModeInput() {
@@ -68,6 +80,65 @@ document.addEventListener('DOMContentLoaded', function () {
       }
     }
 
+    function resetToInitialFilters() {
+      var defaultMonth = initialFilters && initialFilters.month ? String(initialFilters.month) : '';
+      var defaultTimeMode = initialFilters && initialFilters.time_mode ? String(initialFilters.time_mode) : 'upcoming';
+
+      calendarBridgeMode = '';
+
+      form.querySelectorAll('[data-filter-key]').forEach(function (input) {
+        var key = input.getAttribute('data-filter-key');
+        if (!key) return;
+
+        if (key === 'post_type') {
+          var selectedPostType = initialFilters && Array.isArray(initialFilters.post_types) && initialFilters.post_types.length
+            ? String(initialFilters.post_types[0])
+            : '';
+          input.value = selectedPostType;
+          return;
+        }
+
+        if (key === 'month') {
+          input.value = defaultMonth;
+          return;
+        }
+
+        if (key === 'time_mode') {
+          input.value = defaultTimeMode;
+          return;
+        }
+
+        input.value = initialFilters && Object.prototype.hasOwnProperty.call(initialFilters, key)
+          ? String(initialFilters[key] || '')
+          : '';
+      });
+
+      form.querySelectorAll('[data-filter-taxonomy]').forEach(function (input) {
+        Array.prototype.forEach.call(input.options || [], function (option) {
+          option.selected = false;
+        });
+      });
+
+      if (calendarDayInput) {
+        calendarDayInput.value = '';
+      }
+      if (calendarMonthInput) {
+        calendarMonthInput.value = defaultMonth;
+      }
+
+      if (presetButtons.length) {
+        presetButtons.forEach(function (button) {
+          var shouldBeActive = button.getAttribute('aria-pressed') === 'true' && !activePreset;
+          button.classList.toggle('is-active', !!shouldBeActive);
+        });
+        activePreset = null;
+      }
+
+      config.filters = JSON.parse(JSON.stringify(initialFilters || {}));
+      syncMonthVisibility();
+      syncCalendarBridge();
+    }
+
     function buildPayload() {
       var payload = JSON.parse(JSON.stringify(config || {}));
       if (!payload.filters) payload.filters = {};
@@ -75,6 +146,7 @@ document.addEventListener('DOMContentLoaded', function () {
       form.querySelectorAll('[data-filter-key]').forEach(function (input) {
         var key = input.getAttribute('data-filter-key');
         if (!key) return;
+        if ((input.type === 'radio' || input.type === 'checkbox') && !input.checked) return;
         if (key === 'post_type') {
           payload.filters.post_types = input.value ? [input.value] : [];
           return;
@@ -102,12 +174,15 @@ document.addEventListener('DOMContentLoaded', function () {
       var visibleTaxonomyFilters = [];
       form.querySelectorAll('[data-filter-taxonomy]').forEach(function (input) {
         var taxonomy = input.getAttribute('data-filter-taxonomy');
-        var value = input.value;
-        if (!taxonomy || !value) return;
+        if (!taxonomy) return;
+        var values = input.multiple
+          ? Array.prototype.slice.call(input.selectedOptions || []).map(function (option) { return option.value; }).filter(Boolean)
+          : [input.value].filter(Boolean);
+        if (!values.length) return;
         visibleTaxonomyFilters.push({
           taxonomy: taxonomy,
           field: 'slug',
-          terms: [value],
+          terms: values,
           operator: 'IN'
         });
       });
@@ -115,6 +190,21 @@ document.addEventListener('DOMContentLoaded', function () {
       var presetTaxonomyFilters = Array.isArray(payload.filters.taxonomy_filters)
         ? payload.filters.taxonomy_filters.slice()
         : [];
+
+      if (activePreset) {
+        if (activePreset.timeMode) {
+          payload.filters.time_mode = activePreset.timeMode;
+        }
+        if (activePreset.taxonomy && activePreset.terms.length) {
+          presetTaxonomyFilters.push({
+            taxonomy: activePreset.taxonomy,
+            field: 'slug',
+            terms: activePreset.terms,
+            operator: 'IN'
+          });
+        }
+      }
+
       payload.filters.taxonomy_filters = presetTaxonomyFilters.concat(visibleTaxonomyFilters);
 
       if (!payload.render) payload.render = {};
@@ -125,12 +215,35 @@ document.addEventListener('DOMContentLoaded', function () {
 
     function setBusy(isBusy) {
       root.classList.toggle('is-loading', !!isBusy);
-      form.querySelectorAll('select').forEach(function (select) {
-        select.disabled = !!isBusy;
+      form.querySelectorAll('select, input, button').forEach(function (control) {
+        control.disabled = !!isBusy;
+      });
+      presetButtons.forEach(function (button) {
+        button.disabled = !!isBusy;
       });
       if (calendarMonthInput) calendarMonthInput.disabled = !!isBusy;
       if (calendarDayInput) calendarDayInput.disabled = !!isBusy;
       if (calendarResetButton) calendarResetButton.disabled = !!isBusy;
+    }
+
+    function setActivePreset(button) {
+      activePreset = null;
+
+      presetButtons.forEach(function (node) {
+        var isActive = node === button;
+        node.classList.toggle('is-active', isActive);
+        node.setAttribute('aria-pressed', isActive ? 'true' : 'false');
+        if (!isActive) return;
+
+        activePreset = {
+          timeMode: node.getAttribute('data-preset-time-mode') || '',
+          taxonomy: node.getAttribute('data-preset-taxonomy') || '',
+          terms: (node.getAttribute('data-preset-terms') || '')
+            .split(',')
+            .map(function (term) { return term.trim(); })
+            .filter(Boolean)
+        };
+      });
     }
 
     function updateMeta(data) {
@@ -231,25 +344,15 @@ document.addEventListener('DOMContentLoaded', function () {
 
     if (calendarResetButton) {
       calendarResetButton.addEventListener('click', function () {
-        var timeMode = getTimeModeInput();
-        var monthSelect = getMonthSelect();
-        var defaultMonth = initialFilters && initialFilters.month ? String(initialFilters.month) : '';
+        resetToInitialFilters();
+        if (requestInFlight) return;
+        refresh({ append: false });
+      });
+    }
 
-        calendarBridgeMode = '';
-        if (calendarDayInput) {
-          calendarDayInput.value = '';
-        }
-        if (calendarMonthInput) {
-          calendarMonthInput.value = defaultMonth;
-        }
-        if (monthSelect) {
-          monthSelect.value = defaultMonth;
-        }
-        if (timeMode) {
-          timeMode.value = initialFilters && initialFilters.time_mode ? String(initialFilters.time_mode) : 'upcoming';
-        }
-        config.filters = JSON.parse(JSON.stringify(initialFilters || {}));
-        syncMonthVisibility();
+    if (queryResetButton) {
+      queryResetButton.addEventListener('click', function () {
+        resetToInitialFilters();
         if (requestInFlight) return;
         refresh({ append: false });
       });
@@ -259,6 +362,20 @@ document.addEventListener('DOMContentLoaded', function () {
       loadMoreButton.addEventListener('click', function () {
         if (requestInFlight) return;
         refresh({ append: true });
+      });
+    }
+
+    if (presetButtons.length) {
+      presetButtons.forEach(function (button) {
+        if (button.getAttribute('aria-pressed') === 'true') {
+          setActivePreset(button);
+        }
+
+        button.addEventListener('click', function () {
+          if (requestInFlight) return;
+          setActivePreset(button);
+          refresh({ append: false });
+        });
       });
     }
 

@@ -68,8 +68,8 @@ function iss_content_model_render_ausstellung_box($post) {
 
     $start = (string) get_post_meta($post->ID, 'iss_start_date', true);
     $end = (string) get_post_meta($post->ID, 'iss_end_date', true);
-    $is_permanent = (bool) get_post_meta($post->ID, 'iss_is_permanent', true);
-    $timeline_enabled = (bool) get_post_meta($post->ID, 'iss_timeline_enabled', true);
+    $timeline_enabled = get_post_meta($post->ID, 'iss_timeline_enabled', true);
+    $timeline_enabled = $timeline_enabled === '' ? true : (bool) $timeline_enabled;
 
     echo '<p><label for="iss_start_date"><strong>' . esc_html__('Startdatum', 'iss-content-model') . '</strong></label>';
     echo '<input class="widefat" type="date" id="iss_start_date" name="iss_content_model[iss_start_date]" value="' . esc_attr($start) . '"></p>';
@@ -77,7 +77,7 @@ function iss_content_model_render_ausstellung_box($post) {
     echo '<p><label for="iss_end_date"><strong>' . esc_html__('Enddatum', 'iss-content-model') . '</strong></label>';
     echo '<input class="widefat" type="date" id="iss_end_date" name="iss_content_model[iss_end_date]" value="' . esc_attr($end) . '"></p>';
 
-    echo '<p><label><input type="checkbox" name="iss_content_model[iss_is_permanent]" value="1" ' . checked($is_permanent, true, false) . '> ' . esc_html__('Dauerausstellung', 'iss-content-model') . '</label></p>';
+    echo '<p class="description">' . esc_html__('Typ, Sammlungsbereich und Industrieort werden in den Taxonomie-Boxen verwaltet.', 'iss-content-model') . '</p>';
     echo '<p><label><input type="checkbox" name="iss_content_model[iss_timeline_enabled]" value="1" ' . checked($timeline_enabled, true, false) . '> ' . esc_html__('In Timeline zeigen', 'iss-content-model') . '</label></p>';
 }
 

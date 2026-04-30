@@ -10,7 +10,7 @@ if (!defined('ABSPATH')) {
     exit;
 }
 
-define('ISS_CONTENT_MODEL_VERSION', '0.1.0');
+define('ISS_CONTENT_MODEL_VERSION', '0.2.0');
 define('ISS_CONTENT_MODEL_PATH', plugin_dir_path(__FILE__));
 
 define('ISS_CONTENT_MODEL_VERANSTALTUNG_POST_TYPE', 'veranstaltung');
@@ -20,6 +20,9 @@ define('ISS_CONTENT_MODEL_TEAM_POST_TYPE', 'team_member');
 
 define('ISS_CONTENT_MODEL_TEAM_ROLE_TAXONOMY', 'team_role');
 define('ISS_CONTENT_MODEL_PROJECT_STATUS_TAXONOMY', 'project_status');
+define('ISS_CONTENT_MODEL_AUSSTELLUNG_TYPE_TAXONOMY', 'ausstellung_typ');
+define('ISS_CONTENT_MODEL_COLLECTION_AREA_TAXONOMY', 'sammlungsbereich');
+define('ISS_CONTENT_MODEL_INDUSTRY_SITE_TAXONOMY', 'industrieort');
 
 require_once ISS_CONTENT_MODEL_PATH . 'includes/post-types.php';
 require_once ISS_CONTENT_MODEL_PATH . 'includes/meta.php';

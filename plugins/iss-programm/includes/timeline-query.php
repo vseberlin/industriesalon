@@ -270,6 +270,25 @@ function iss_timeline_filters_need_running_ranges($filters) {
     return true;
 }
 
+function iss_timeline_filters_are_only_post_type($filters, $post_type) {
+    $filters = is_array($filters) ? $filters : [];
+    $post_type = sanitize_key((string) $post_type);
+    if ($post_type === '') {
+        return false;
+    }
+
+    $resolved_types = iss_timeline_get_requested_resolved_item_types($filters);
+    if (!empty($resolved_types)) {
+        return count($resolved_types) === 1 && $resolved_types[0] === $post_type;
+    }
+
+    $post_types = isset($filters['post_types']) && is_array($filters['post_types'])
+        ? array_values(array_unique(array_filter(array_map('sanitize_key', $filters['post_types']))))
+        : [];
+
+    return count($post_types) === 1 && $post_types[0] === $post_type;
+}
+
 function iss_timeline_normalize_filter_payload($args = []) {
     $args = is_array($args) ? $args : [];
 
@@ -511,6 +530,19 @@ function iss_timeline_build_time_meta_query($filters) {
         ];
     } elseif ($time_mode === 'past') {
         $now = iss_timeline_get_now_mysql();
+
+        // Ausstellung items are synced with a concrete `event_end`, so use a single
+        // indexed-style comparison here instead of the broader mixed-date fallback.
+        if (iss_timeline_filters_are_only_post_type($filters, 'ausstellung')) {
+            $meta_query[] = [
+                'key' => 'event_end',
+                'value' => $now,
+                'compare' => '<',
+                'type' => 'DATETIME',
+            ];
+            return $meta_query;
+        }
+
         $meta_query[] = [
             'relation' => 'OR',
             [

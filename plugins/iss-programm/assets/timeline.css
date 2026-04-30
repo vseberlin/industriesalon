@@ -215,6 +215,11 @@
   padding: 0.42rem 0.8rem;
 }
 
+.iss-timeline__filter select[multiple] {
+  min-height: 9.5rem;
+  padding-block: 0.6rem;
+}
+
 .iss-timeline__apply {
   cursor: pointer;
   font-weight: 600;
