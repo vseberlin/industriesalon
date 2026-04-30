@@ -1,6 +1,10 @@
 # Changelog
 
 ## 2026-04-30
+- Refactored `plugins/iss-programm/includes/timeline-query.php` to remove the worst timeline filter slowdown without changing filter behavior:
+  - replaced the expensive overlap `OR` meta-query branch with split simple queries plus PHP-side merge/dedupe/sort
+  - kept `upcoming`, `past`, `month`, `range`, offset, and limit behavior aligned with the previous result set
+  - reduced the worst local `upcoming` timeline-query path from multi-second / 20s+ runtimes to roughly `100-180 ms` in the verified cases
 - Extended the existing `ausstellung` content model in `iss-content-model` instead of creating a second CPT:
   - added taxonomies `ausstellung_typ`, `sammlungsbereich`, `industrieort`
   - seeded agreed default terms

@@ -705,11 +705,10 @@ function iss_timeline_build_custom_meta_filters($filters) {
     return $normalized;
 }
 
-function iss_timeline_build_meta_query($filters) {
+function iss_timeline_build_core_meta_query($filters) {
     $filters = is_array($filters) ? $filters : [];
 
     $meta_query = [iss_timeline_build_visibility_meta_query()];
-    $meta_query = array_merge($meta_query, iss_timeline_build_time_meta_query($filters));
 
     $selected_type = isset($filters['item_type']) ? sanitize_key((string) $filters['item_type']) : '';
     $type_filters = ($selected_type !== '' && $selected_type !== 'all')
@@ -752,6 +751,21 @@ function iss_timeline_build_meta_query($filters) {
     return $meta_query;
 }
 
+function iss_timeline_build_meta_query($filters, $time_meta_query = null) {
+    $filters = is_array($filters) ? $filters : [];
+
+    $meta_query = iss_timeline_build_core_meta_query($filters);
+    if ($time_meta_query === null) {
+        $time_meta_query = iss_timeline_build_time_meta_query($filters);
+    }
+
+    if (is_array($time_meta_query) && !empty($time_meta_query)) {
+        $meta_query = array_merge($meta_query, $time_meta_query);
+    }
+
+    return $meta_query;
+}
+
 function iss_timeline_build_tax_query($filters) {
     $filters = is_array($filters) ? $filters : [];
     $groups = isset($filters['item_groups']) && is_array($filters['item_groups']) ? $filters['item_groups'] : [];
@@ -767,9 +781,9 @@ function iss_timeline_build_tax_query($filters) {
     ]];
 }
 
-function iss_timeline_build_query_args($args = []) {
+function iss_timeline_build_query_args_from_filters($filters, $time_meta_query = null) {
     $post_type = function_exists('iss_timeline_get_post_type') ? iss_timeline_get_post_type() : 'iss_calendar_item';
-    $filters = iss_timeline_normalize_filter_payload($args);
+    $filters = is_array($filters) ? $filters : [];
 
     $limit = (int) ($filters['limit'] ?? 50);
     if ($limit <= 0) {
@@ -787,7 +801,7 @@ function iss_timeline_build_query_args($args = []) {
         'orderby' => 'meta_value',
         'meta_type' => 'DATETIME',
         'order' => $filters['order'],
-        'meta_query' => iss_timeline_build_meta_query($filters),
+        'meta_query' => iss_timeline_build_meta_query($filters, $time_meta_query),
     ];
 
     $tax_query = iss_timeline_build_tax_query($filters);
@@ -798,7 +812,249 @@ function iss_timeline_build_query_args($args = []) {
     return $query_args;
 }
 
+function iss_timeline_build_query_args($args = []) {
+    $filters = iss_timeline_normalize_filter_payload($args);
+    return iss_timeline_build_query_args_from_filters($filters);
+}
+
+function iss_timeline_build_split_time_meta_queries($filters) {
+    $filters = is_array($filters) ? $filters : [];
+    if (!iss_timeline_filters_need_running_ranges($filters)) {
+        return [];
+    }
+
+    $time_mode = sanitize_key((string) ($filters['time_mode'] ?? 'all'));
+    $now = iss_timeline_get_now_mysql();
+
+    if ($time_mode === 'upcoming') {
+        $primary_filters = $filters;
+        $primary_filters['include_running_ranges'] = false;
+
+        return [
+            iss_timeline_build_time_meta_query($primary_filters),
+            [
+                [
+                    'key' => 'event_end',
+                    'value' => $now,
+                    'compare' => '>=',
+                    'type' => 'DATETIME',
+                ],
+                [
+                    'key' => 'sort_date',
+                    'value' => $now,
+                    'compare' => '<',
+                    'type' => 'DATETIME',
+                ],
+            ],
+        ];
+    }
+
+    if ($time_mode === 'past') {
+        if (iss_timeline_filters_are_only_post_type($filters, 'ausstellung')) {
+            return [];
+        }
+
+        return [
+            [
+                [
+                    'key' => 'event_end',
+                    'value' => $now,
+                    'compare' => '<',
+                    'type' => 'DATETIME',
+                ],
+            ],
+            [
+                [
+                    'key' => 'sort_date',
+                    'value' => $now,
+                    'compare' => '<',
+                    'type' => 'DATETIME',
+                ],
+                [
+                    'relation' => 'OR',
+                    [
+                        'key' => 'event_end',
+                        'compare' => 'NOT EXISTS',
+                    ],
+                    [
+                        'key' => 'event_end',
+                        'value' => '',
+                        'compare' => '=',
+                    ],
+                ],
+            ],
+        ];
+    }
+
+    if ($time_mode === 'month') {
+        $range = iss_timeline_month_to_range((string) ($filters['month'] ?? ''));
+        if (!is_array($range)) {
+            return [];
+        }
+
+        $primary_filters = $filters;
+        $primary_filters['include_running_ranges'] = false;
+
+        return [
+            iss_timeline_build_time_meta_query($primary_filters),
+            [
+                [
+                    'key' => 'event_end',
+                    'value' => $range['start'],
+                    'compare' => '>=',
+                    'type' => 'DATETIME',
+                ],
+                [
+                    'key' => 'sort_date',
+                    'value' => $range['start'],
+                    'compare' => '<',
+                    'type' => 'DATETIME',
+                ],
+            ],
+        ];
+    }
+
+    if ($time_mode === 'range') {
+        $date_start = trim((string) ($filters['date_start'] ?? ''));
+
+        if ($date_start === '') {
+            return [];
+        }
+
+        $primary_filters = $filters;
+        $primary_filters['include_running_ranges'] = false;
+
+        return [
+            iss_timeline_build_time_meta_query($primary_filters),
+            [
+                [
+                    'key' => 'event_end',
+                    'value' => $date_start,
+                    'compare' => '>=',
+                    'type' => 'DATETIME',
+                ],
+                [
+                    'key' => 'sort_date',
+                    'value' => $date_start,
+                    'compare' => '<',
+                    'type' => 'DATETIME',
+                ],
+            ],
+        ];
+    }
+
+    return [];
+}
+
+function iss_timeline_query_ids_by_time_meta($filters, $time_meta_query) {
+    $query_args = iss_timeline_build_query_args_from_filters($filters, $time_meta_query);
+    $query_args['posts_per_page'] = -1;
+    $query_args['offset'] = 0;
+    $query_args['fields'] = 'ids';
+    $query_args['update_post_meta_cache'] = false;
+    $query_args['update_post_term_cache'] = false;
+
+    $query = new WP_Query($query_args);
+
+    return array_values(array_unique(array_filter(array_map('intval', is_array($query->posts) ? $query->posts : []))));
+}
+
+function iss_timeline_sort_ids_by_sort_date($ids, $order = 'ASC') {
+    $ids = array_values(array_unique(array_filter(array_map('intval', is_array($ids) ? $ids : []))));
+    if (count($ids) < 2) {
+        return $ids;
+    }
+
+    $order = strtoupper(sanitize_text_field((string) $order));
+    if (!in_array($order, ['ASC', 'DESC'], true)) {
+        $order = 'ASC';
+    }
+
+    update_meta_cache('post', $ids);
+
+    $sort_map = [];
+    foreach ($ids as $id) {
+        $sort_map[$id] = (string) get_post_meta($id, 'sort_date', true);
+    }
+
+    usort($ids, static function ($left, $right) use ($sort_map, $order) {
+        $left_value = $sort_map[$left] ?? '';
+        $right_value = $sort_map[$right] ?? '';
+
+        if ($left_value === $right_value) {
+            return $order === 'DESC' ? ($right <=> $left) : ($left <=> $right);
+        }
+
+        $comparison = strcmp($left_value, $right_value);
+        return $order === 'DESC' ? -$comparison : $comparison;
+    });
+
+    return $ids;
+}
+
+function iss_timeline_load_posts_by_ids($ids) {
+    $ids = array_values(array_unique(array_filter(array_map('intval', is_array($ids) ? $ids : []))));
+    if (empty($ids)) {
+        return [];
+    }
+
+    $post_type = function_exists('iss_timeline_get_post_type') ? iss_timeline_get_post_type() : 'iss_calendar_item';
+    $posts = get_posts([
+        'post_type' => $post_type,
+        'post_status' => 'publish',
+        'posts_per_page' => count($ids),
+        'post__in' => $ids,
+        'orderby' => 'post__in',
+        'no_found_rows' => true,
+    ]);
+
+    if (empty($posts)) {
+        return [];
+    }
+
+    $posts_by_id = [];
+    foreach ($posts as $post) {
+        if ($post instanceof WP_Post) {
+            $posts_by_id[$post->ID] = $post;
+        }
+    }
+
+    $ordered_posts = [];
+    foreach ($ids as $id) {
+        if (isset($posts_by_id[$id])) {
+            $ordered_posts[] = $posts_by_id[$id];
+        }
+    }
+
+    return $ordered_posts;
+}
+
 function iss_timeline_get_items_advanced($args = []) {
-    $q = new WP_Query(iss_timeline_build_query_args($args));
-    return $q->posts;
+    $filters = iss_timeline_normalize_filter_payload($args);
+    $split_time_meta_queries = iss_timeline_build_split_time_meta_queries($filters);
+
+    if (empty($split_time_meta_queries)) {
+        $q = new WP_Query(iss_timeline_build_query_args_from_filters($filters));
+        return $q->posts;
+    }
+
+    $merged_ids = [];
+    foreach ($split_time_meta_queries as $time_meta_query) {
+        $merged_ids = array_merge($merged_ids, iss_timeline_query_ids_by_time_meta($filters, $time_meta_query));
+    }
+
+    $merged_ids = iss_timeline_sort_ids_by_sort_date($merged_ids, $filters['order'] ?? 'ASC');
+    if (empty($merged_ids)) {
+        return [];
+    }
+
+    $offset = max(0, (int) ($filters['offset'] ?? 0));
+    $limit = isset($filters['limit']) ? (int) $filters['limit'] : 50;
+    if ($limit > 0) {
+        $merged_ids = array_slice($merged_ids, $offset, $limit);
+    } elseif ($offset > 0) {
+        $merged_ids = array_slice($merged_ids, $offset);
+    }
+
+    return iss_timeline_load_posts_by_ids($merged_ids);
 }
