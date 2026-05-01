@@ -5839,10 +5839,6 @@ Raum / Vermietung → brown
   width: 100%;
 }
 
-.iss-rental-page .iss-front-hero__actions {
-  margin-top: 0.5rem;
-}
-
 /* .iss-rental-hero: Base class for iss rental hero; apply on primary wrapper/scope. */
 /* .wp-block-cover__inner-container: Element class for `wp-block-cover`; apply on `inner-container` element. */
 .iss-rental-hero .wp-block-cover__inner-container {
@@ -7211,8 +7207,43 @@ Raum / Vermietung → brown
   padding-top: 0;
 }
 
-.iss-repair-page .iss-front-hero__actions {
+.iss-front-hero__actions-wrap {
+  position: relative;
+  z-index: 6;
+  margin-top: 1rem;
+}
+
+.iss-front-hero__actions-wrap .iss-front-hero__actions {
+  margin-top: 0;
   gap: 0.85rem;
+}
+
+.iss-front-hero__actions-wrap .iss-front-hero__actions .wp-block-button .wp-block-button__link {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.75rem 1.25rem 0.75rem 1rem;
+  background: transparent;
+  color: var(--iss-black);
+  border: 1px solid var(--iss-border);
+  border-left: 4px solid var(--iss-red);
+  border-radius: 0;
+  font-weight: 600;
+  text-decoration: none;
+  transition: all var(--iss-transition);
+}
+
+.iss-front-hero__actions-wrap .iss-front-hero__actions .wp-block-button .wp-block-button__link:hover,
+.iss-front-hero__actions-wrap .iss-front-hero__actions .wp-block-button .wp-block-button__link:focus-visible {
+  background: rgba(232, 29, 37, 0.06);
+  border-color: var(--iss-red);
+  color: var(--iss-black);
+}
+
+@media (max-width: 782px) {
+  .iss-front-hero__actions-wrap {
+    margin-top: 1rem;
+  }
 }
 
 .iss-repair-facts .iss-info-panel,
