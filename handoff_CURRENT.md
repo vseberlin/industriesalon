@@ -71,6 +71,7 @@
 - `page-veranstaltungen.html.bak-20260501-rollback` still exists as the requested rollback snapshot.
 - `Verein` remains intentionally outside the shared front-hero system even though the page is now live.
 - TODO: add a new timeline design/render for program-style pages, especially `Veranstaltungen`, with stronger date rhythm and a cleaner culture-calendar presentation.
+- TODO after UAT: revamp the editorial creation flow into a local CPT-first path where editors create `Veranstaltung`, `Ausstellung`, or `Führung` once with minimal fields and the item then appears in calendar, timeline, and cards without SaaS dependency in the normal publishing flow.
 
 ## Continuity Prompt
 - Start next session with: `read /home/vladimir/wp/handoff_CURRENT.md`

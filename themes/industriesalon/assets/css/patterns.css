@@ -6136,6 +6136,336 @@ Raum / Vermietung → brown
   border-color: rgba(134, 159, 186, 0.4);
 }
 
+/* =========================================================
+   SINGLE VERANSTALTUNG
+   ========================================================= */
+
+.iss-event-page {
+  --iss-single-accent: var(--iss-blue);
+  --iss-single-title: clamp(2rem, 3vw, 3.35rem);
+  --iss-single-h2: clamp(1.45rem, 1.8vw, 2rem);
+  --iss-single-h3: clamp(1.18rem, 1.2vw, 1.45rem);
+  --iss-single-measure: 72ch;
+  background: var(--iss-white);
+  color: var(--iss-black);
+}
+
+.iss-event-page,
+.iss-event-page #wp--skip-link--target {
+  margin-top: 0;
+  padding-top: 0;
+}
+
+.iss-event-intro {
+  padding-top: clamp(7rem, 10vw, 10rem);
+  padding-bottom: clamp(2rem, 4vw, 3.25rem);
+  border-bottom: 1px solid rgba(30, 30, 30, 0.08);
+}
+
+.iss-event-intro__grid,
+.iss-event-body__grid {
+  gap: clamp(1.5rem, 4vw, 3.5rem);
+  align-items: end;
+}
+
+.iss-event-intro__media {
+  margin: 0;
+  border-radius: 2px;
+  border-left: 4px solid var(--iss-single-accent);
+  box-shadow: none;
+  background: rgba(30, 30, 30, 0.04);
+  overflow: hidden;
+}
+
+.iss-event-intro__media figure,
+.iss-event-intro__media .wp-block-post-featured-image {
+  margin: 0;
+}
+
+.iss-event-intro__media img {
+  display: block;
+  width: 100%;
+  aspect-ratio: 16 / 9;
+  height: auto;
+  object-fit: cover;
+}
+
+.iss-event-intro__media:empty,
+.iss-event-intro__media-col:has(.iss-event-intro__media:empty) {
+  display: none;
+}
+
+.iss-event-intro__copy {
+  max-width: 46rem;
+  gap: 0.85rem;
+}
+
+.iss-event-intro__title {
+  max-width: 18ch;
+  margin: 0;
+  font-size: var(--iss-single-title);
+  line-height: 1.02;
+  letter-spacing: -0.035em;
+  text-wrap: balance;
+}
+
+.iss-event-intro__lede {
+  max-width: 38rem;
+  margin: 0;
+  color: rgba(30, 30, 30, 0.72);
+  font-size: clamp(1rem, 0.8rem + 0.35vw, 1.15rem);
+  line-height: 1.55;
+}
+
+.iss-event-intro__lede p {
+  margin: 0;
+}
+
+.iss-event-intro__meta,
+.iss-event-body__meta {
+  padding: 1rem 1.1rem;
+  border: 1px solid rgba(30, 30, 30, 0.12);
+  border-left: 4px solid var(--iss-single-accent);
+  background: rgba(30, 30, 30, 0.025);
+  border-radius: 2px;
+  box-shadow: none;
+}
+
+.iss-event-intro__meta {
+  display: none;
+  margin-top: 1rem;
+}
+
+.iss-event-intro__meta .iss-content-meta,
+.iss-event-body__meta .iss-content-meta {
+  margin: 0;
+}
+
+.iss-event-body {
+  padding-top: clamp(2.5rem, 5vw, 4.5rem);
+}
+
+.iss-event-body__content-col {
+  flex-basis: 68% !important;
+}
+
+.iss-event-body__meta-col {
+  flex-basis: 32% !important;
+}
+
+.iss-event-body__intro {
+  margin-bottom: 1.5rem;
+}
+
+.iss-event-body__intro .iss-heading__title {
+  font-size: var(--iss-single-h2);
+  line-height: 1.12;
+}
+
+.iss-event-body__content {
+  max-width: var(--iss-single-measure);
+  font-size: clamp(1rem, 0.95rem + 0.15vw, 1.08rem);
+  line-height: 1.72;
+}
+
+.iss-event-body__content > * {
+  margin-top: 0;
+}
+
+.iss-event-body__content > * + * {
+  margin-top: 1.25rem;
+}
+
+.iss-event-body__content h2 {
+  margin-top: 2.4rem;
+  font-size: var(--iss-single-h2);
+  line-height: 1.14;
+  letter-spacing: -0.02em;
+}
+
+.iss-event-body__content h3 {
+  margin-top: 2rem;
+  font-size: var(--iss-single-h3);
+  line-height: 1.2;
+}
+
+.iss-event-body__content p {
+  max-width: var(--iss-single-measure);
+}
+
+.iss-event-body__content a {
+  color: var(--iss-single-accent);
+  text-underline-offset: 0.16em;
+}
+
+.iss-event-body__content figure {
+  margin-top: 2rem;
+  margin-bottom: 2rem;
+}
+
+.iss-event-body__content img {
+  display: block;
+  width: 100%;
+  height: auto;
+  border-radius: 2px;
+}
+
+.iss-event-body__content .wp-block-gallery {
+  margin-top: 2rem;
+  margin-bottom: 2rem;
+  gap: 0.75rem;
+}
+
+.iss-event-body__content figcaption {
+  margin-top: 0.5rem;
+  color: rgba(30, 30, 30, 0.62);
+  font-size: 0.88rem;
+  line-height: 1.45;
+  text-align: left;
+}
+
+.iss-event-body__content blockquote {
+  margin: 2rem 0;
+  padding: 1rem 0 1rem 1.25rem;
+  border-left: 4px solid var(--iss-single-accent);
+  color: rgba(30, 30, 30, 0.78);
+  font-size: 1.12rem;
+  line-height: 1.55;
+}
+
+.iss-event-body__meta {
+  position: sticky;
+  top: calc(var(--iss-header-height) + 1.5rem);
+}
+
+.iss-event-more {
+  border-top: 1px solid rgba(30, 30, 30, 0.08);
+}
+
+.iss-event-more .iss-heading__title {
+  font-size: var(--iss-single-h2);
+}
+
+.iss-event-body__content > *:last-child {
+  margin-bottom: 0;
+}
+
+.iss-event-more .wp-block-query {
+  margin-top: clamp(1.25rem, 3vw, 2rem);
+}
+
+.single-veranstaltung.iss-event-layout-compact .iss-event-intro {
+  padding-bottom: clamp(1.25rem, 3vw, 2rem);
+}
+
+.single-veranstaltung.iss-event-layout-compact .iss-event-intro__media-col,
+.single-veranstaltung.iss-event-layout-compact .iss-event-body__meta-col,
+.single-veranstaltung.iss-event-layout-compact .iss-event-body__intro {
+  display: none;
+}
+
+.single-veranstaltung.iss-event-layout-compact .iss-event-intro__meta {
+  display: block;
+}
+
+.single-veranstaltung.iss-event-layout-compact .iss-event-intro__copy-col,
+.single-veranstaltung.iss-event-layout-compact .iss-event-body__content-col {
+  flex-basis: 100% !important;
+}
+
+.single-veranstaltung.iss-event-layout-compact .iss-event-intro__copy {
+  max-width: 44rem;
+}
+
+.single-veranstaltung.iss-event-layout-compact .iss-event-intro__title {
+  max-width: 24ch;
+}
+
+.single-veranstaltung.iss-event-layout-feature .iss-event-intro__meta {
+  display: block;
+}
+
+.single-veranstaltung.iss-event-layout-feature .iss-event-body__meta-col {
+  display: none;
+}
+
+.single-veranstaltung.iss-event-layout-feature .iss-event-intro__media img {
+  aspect-ratio: 4 / 3;
+  min-height: clamp(20rem, 42vw, 34rem);
+}
+
+.single-veranstaltung.iss-event-layout-feature .iss-event-body__content-col {
+  flex-basis: 100% !important;
+}
+
+.single-veranstaltung.iss-event-layout-feature .iss-event-body__content {
+  max-width: 82ch;
+}
+
+.single-veranstaltung.iss-event-layout-long .iss-event-intro__meta {
+  display: block;
+}
+
+.single-veranstaltung.iss-event-layout-long .iss-event-body__meta-col {
+  display: none;
+}
+
+.single-veranstaltung.iss-event-layout-long .iss-event-body__content-col {
+  flex-basis: 100% !important;
+}
+
+.single-veranstaltung.iss-event-layout-long .iss-event-body__content {
+  max-width: 78ch;
+}
+
+.single-veranstaltung.iss-event-layout-long .iss-event-body__content .alignwide {
+  max-width: min(100vw - 2.5rem, 1120px);
+  width: min(100vw - 2.5rem, 1120px);
+}
+
+@media (max-width: 900px) {
+  .iss-event-intro__grid,
+  .iss-event-body__grid {
+    display: grid;
+    grid-template-columns: 1fr;
+  }
+
+  .iss-event-intro__media-col,
+  .iss-event-intro__copy-col,
+  .iss-event-body__content-col,
+  .iss-event-body__meta-col {
+    flex-basis: 100% !important;
+  }
+
+  .iss-event-body__meta {
+    position: static;
+  }
+
+  .iss-event-intro__meta {
+    display: block;
+  }
+
+  .iss-event-body__meta-col {
+    display: none;
+  }
+}
+
+@media (max-width: 640px) {
+  .iss-event-intro {
+    padding-top: clamp(6rem, 22vw, 8rem);
+  }
+
+  .iss-event-intro__title {
+    max-width: none;
+    font-size: clamp(1.85rem, 9vw, 2.65rem);
+  }
+
+  .iss-event-body__content {
+    font-size: 1rem;
+    line-height: 1.68;
+  }
+}
+
 .iss-ausstellungen-page {
   --iss-accent: var(--iss-brown);
 }
@@ -7238,6 +7568,10 @@ Raum / Vermietung → brown
   background: rgba(232, 29, 37, 0.06);
   border-color: var(--iss-red);
   color: var(--iss-black);
+}
+
+.iss-post-layout-short .iss-post-hero__lede .wp-block-post-excerpt__excerpt {
+  white-space: pre-line;
 }
 
 @media (max-width: 782px) {

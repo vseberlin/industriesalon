@@ -442,6 +442,181 @@ JS;
 }
 add_action('enqueue_block_editor_assets', 'industriesalon_enqueue_post_layout_editor_assets');
 
+function industriesalon_format_short_post_excerpt_from_content(int $post_id): string
+{
+    $content = (string) get_post_field('post_content', $post_id);
+    if ($content === '') {
+        return '';
+    }
+
+    $content = preg_replace('/<!--\s*wp:paragraph[^>]*-->/', '', $content);
+    $content = preg_replace('/<!--\s*\/wp:paragraph\s*-->/', "\n\n", $content);
+    $content = preg_replace('/<br\s*\/?>/i', "\n", $content);
+    $content = preg_replace('/<\/p>/i', "\n\n", $content);
+    $content = preg_replace('/<p[^>]*>/i', '', $content);
+    $content = wp_strip_all_tags($content, false);
+    $content = preg_replace("/\n{3,}/", "\n\n", $content);
+
+    return trim((string) $content);
+}
+
+function industriesalon_filter_short_post_excerpt($excerpt, $post): string
+{
+    $post = get_post($post);
+    if (!$post instanceof WP_Post || $post->post_type !== 'post') {
+        return (string) $excerpt;
+    }
+
+    $layout = industriesalon_sanitize_post_layout(get_post_meta($post->ID, '_iss_post_layout', true));
+    if ($layout !== 'short') {
+        return (string) $excerpt;
+    }
+
+    if (has_excerpt($post)) {
+        return (string) $excerpt;
+    }
+
+    $formatted = industriesalon_format_short_post_excerpt_from_content((int) $post->ID);
+    return $formatted !== '' ? $formatted : (string) $excerpt;
+}
+add_filter('get_the_excerpt', 'industriesalon_filter_short_post_excerpt', 20, 2);
+
+/**
+ * Veranstaltung layout variants (standard / compact / feature / long).
+ */
+function industriesalon_event_layout_choices(): array
+{
+    return array('standard', 'compact', 'feature', 'long');
+}
+
+function industriesalon_sanitize_event_layout($value): string
+{
+    $value = sanitize_key((string) $value);
+    return in_array($value, industriesalon_event_layout_choices(), true) ? $value : 'standard';
+}
+
+function industriesalon_register_event_layout_meta(): void
+{
+    register_post_meta('veranstaltung', '_iss_event_layout', array(
+        'single' => true,
+        'type' => 'string',
+        'default' => 'standard',
+        'show_in_rest' => true,
+        'sanitize_callback' => 'industriesalon_sanitize_event_layout',
+        'auth_callback' => static function ($allowed = null, $meta_key = '', $post_id = 0) {
+            $post_id = (int) $post_id;
+            if ($post_id > 0) {
+                return current_user_can('edit_post', $post_id);
+            }
+            return current_user_can('edit_posts');
+        },
+    ));
+}
+add_action('init', 'industriesalon_register_event_layout_meta');
+
+function industriesalon_add_event_layout_body_class(array $classes): array
+{
+    if (!is_singular('veranstaltung')) {
+        return $classes;
+    }
+
+    $post_id = get_queried_object_id();
+    $layout = industriesalon_sanitize_event_layout(get_post_meta($post_id, '_iss_event_layout', true));
+    $classes[] = 'iss-event-layout-' . $layout;
+
+    return $classes;
+}
+add_filter('body_class', 'industriesalon_add_event_layout_body_class');
+
+function industriesalon_enqueue_event_layout_editor_assets(): void
+{
+    if (!function_exists('get_current_screen')) {
+        return;
+    }
+
+    $screen = get_current_screen();
+    if (!$screen || $screen->base !== 'post' || $screen->post_type !== 'veranstaltung') {
+        return;
+    }
+
+    wp_register_script(
+        'industriesalon-event-layout-editor',
+        false,
+        array('wp-plugins', 'wp-edit-post', 'wp-element', 'wp-components', 'wp-data'),
+        wp_get_theme()->get('Version'),
+        true
+    );
+    wp_enqueue_script('industriesalon-event-layout-editor');
+
+    $script = <<<'JS'
+(function (wp) {
+  if (!wp || !wp.plugins || !wp.editPost || !wp.element || !wp.components || !wp.data) {
+    return;
+  }
+
+  var registerPlugin = wp.plugins.registerPlugin;
+  var PluginDocumentSettingPanel = wp.editPost.PluginDocumentSettingPanel;
+  var SelectControl = wp.components.SelectControl;
+  var createElement = wp.element.createElement;
+  var useSelect = wp.data.useSelect;
+  var useDispatch = wp.data.useDispatch;
+
+  var options = [
+    { label: 'Standard (Bild + Meta)', value: 'standard' },
+    { label: 'Kompakt (kurze Meldung)', value: 'compact' },
+    { label: 'Feature (editorial)', value: 'feature' },
+    { label: 'Longread (viel Text)', value: 'long' }
+  ];
+
+  function isValidLayout(value) {
+    return value === 'standard' || value === 'compact' || value === 'feature' || value === 'long';
+  }
+
+  function EventLayoutPanel() {
+    var postType = useSelect(function (select) {
+      return select('core/editor').getCurrentPostType();
+    }, []);
+
+    var meta = useSelect(function (select) {
+      return select('core/editor').getEditedPostAttribute('meta') || {};
+    }, []);
+
+    var editPost = useDispatch('core/editor').editPost;
+
+    if (postType !== 'veranstaltung') {
+      return null;
+    }
+
+    var value = isValidLayout(meta._iss_event_layout) ? meta._iss_event_layout : 'standard';
+
+    return createElement(
+      PluginDocumentSettingPanel,
+      { name: 'iss-event-layout', title: 'Veranstaltungslayout', className: 'iss-event-layout-panel' },
+      createElement(SelectControl, {
+        label: 'Layout',
+        value: value,
+        options: options,
+        help: 'Steuert Dichte, Bildgewicht und Meta-Anordnung auf der Einzelansicht.',
+        onChange: function (nextValue) {
+          if (!isValidLayout(nextValue)) {
+            nextValue = 'standard';
+          }
+          editPost({ meta: Object.assign({}, meta, { _iss_event_layout: nextValue }) });
+        }
+      })
+    );
+  }
+
+  registerPlugin('iss-event-layout-panel', {
+    render: EventLayoutPanel
+  });
+})(window.wp);
+JS;
+
+    wp_add_inline_script('industriesalon-event-layout-editor', $script);
+}
+add_action('enqueue_block_editor_assets', 'industriesalon_enqueue_event_layout_editor_assets');
+
 /**
  * Enqueue theme assets.
  */
