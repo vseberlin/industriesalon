@@ -33,10 +33,7 @@
        Footer layout and legal/contact navigation.
 
    .iss-front-hero*
-       Homepage hero system and note/banner logic.
-
-   .iss-page-hero* / .iss-landing-hero*
-       Shared inner-page hero systems.
+       Shared hero system and note/banner logic for home and landing pages.
 
    .iss-timeline*
        Theme bridge for plugin timeline output.
@@ -408,14 +405,13 @@
    HERO
    ===================================================================== */
 
-/* .home: Base class for home; apply on primary wrapper/scope. */
 /* .wp-block-cover: Base class for wp block cover; apply on primary wrapper/scope. */
 /* .iss-front-hero: Base class for iss front hero; apply on primary wrapper/scope. */
 /* .iss-media-text--overlay-heading: Modifier class for `iss-media-text`; combine for `overlay-heading` variant.
    Shared gradient token for hero cover and overlay media cards so both use the same atmospheric fade. */
-.home .wp-block-cover.iss-front-hero,
+.wp-block-cover.iss-front-hero,
 .iss-media-text.iss-media-text--overlay-heading .iss-media-text__media {
-  --iss-hero-min-h: 80svh;
+  --iss-hero-min-h: 90svh;
   --iss-hero-overlay: linear-gradient(
     90deg,
     rgba(30, 30, 30, 0.78) 0%,
@@ -425,7 +421,7 @@
 }
 
 /* .iss-front-hero: Base class for iss front hero; apply on primary wrapper/scope. */
-.home .wp-block-cover.iss-front-hero {
+.wp-block-cover.iss-front-hero {
   --iss-hero-pad-bottom: clamp(2rem, 5vh, 4rem);
   --iss-hero-left-pad: max(var(--iss-container-pad), calc((100vw - var(--iss-content-width)) / 2 + var(--iss-container-pad)));
   --iss-hero-right-pad: clamp(0.75rem, 2.2vw, 2.25rem);
@@ -438,19 +434,13 @@
   overflow: visible;
 }
 
-@supports (min-height: 80dvh) {
-/* .home: Base class for home; apply on primary wrapper/scope. */
-/* .wp-block-cover: Base class for wp block cover; apply on primary wrapper/scope. */
-/* .iss-front-hero: Base class for iss front hero; apply on primary wrapper/scope. */
-  .home .wp-block-cover.iss-front-hero {
-    --iss-hero-min-h: 80dvh;
+@supports (min-height: 90dvh) {
+  .wp-block-cover.iss-front-hero {
+    --iss-hero-min-h: 90dvh;
   }
 }
 
-/* .home: Base class for home; apply on primary wrapper/scope. */
-/* .wp-block-cover: Base class for wp block cover; apply on primary wrapper/scope. */
-/* .iss-front-hero: Base class for iss front hero; apply on primary wrapper/scope. */
-.home .wp-block-cover.iss-front-hero::before {
+.wp-block-cover.iss-front-hero::before {
   content: "";
   position: absolute;
   inset: 0;
@@ -459,11 +449,8 @@
   pointer-events: none;
 }
 
-/* .home: Base class for home; apply on primary wrapper/scope. */
-/* .wp-block-cover: Base class for wp block cover; apply on primary wrapper/scope. */
-/* .iss-front-hero: Base class for iss front hero; apply on primary wrapper/scope. */
 /* .wp-block-cover__inner-container: Element class for `wp-block-cover`; apply on `inner-container` element. */
-.home .wp-block-cover.iss-front-hero > .wp-block-cover__inner-container {
+.wp-block-cover.iss-front-hero > .wp-block-cover__inner-container {
   position: relative;
   z-index: 2;
   display: grid;
@@ -480,15 +467,11 @@
   overflow: visible;
 }
 
-/* .home: Base class for home; apply on primary wrapper/scope. */
-/* .iss-front-hero__row: Element class for `iss-front-hero`; apply on `row` element. */
-.home .iss-front-hero__row {
+.iss-front-hero__row {
   display: contents;
 }
 
-/* .home: Base class for home; apply on primary wrapper/scope. */
-/* .iss-front-hero__shell: Element class for `iss-front-hero`; apply on `shell` element. */
-.home .iss-front-hero__shell {
+.iss-front-hero__shell {
   position: relative;
   display: grid;
   grid-template-columns: minmax(0, 44rem);
@@ -502,58 +485,36 @@
   overflow: visible;
 }
 
-/* .home: Base class for home; apply on primary wrapper/scope. */
-/* .iss-front-hero__content: Element class for `iss-front-hero`; apply on `content` element. */
-.home .iss-front-hero__content {
+.iss-front-hero__content {
   max-width: 44rem;
   color: var(--iss-white);
 }
 
-/* .home: Base class for home; apply on primary wrapper/scope. */
-/* .iss-front-hero__content: Element class for `iss-front-hero`; apply on `content` element. */
-/* .iss-kicker: Base class for iss kicker; apply on primary wrapper/scope. */
-.home .iss-front-hero__content .iss-kicker,
-/* .home: Base class for home; apply on primary wrapper/scope. */
-/* .iss-front-hero__content: Element class for `iss-front-hero`; apply on `content` element. */
-/* .iss-heading__title: Element class for `iss-heading`; apply on `title` element. */
-.home .iss-front-hero__content .iss-heading__title,
-/* .home: Base class for home; apply on primary wrapper/scope. */
-/* .iss-front-hero__content: Element class for `iss-front-hero`; apply on `content` element. */
-/* .iss-heading__text: Element class for `iss-heading`; apply on `text` element. */
-.home .iss-front-hero__content .iss-heading__text {
+.iss-front-hero__content .iss-kicker,
+.iss-front-hero__content .iss-heading__title,
+.iss-front-hero__content .iss-heading__text {
   color: var(--iss-white);
 }
 
-/* .home: Base class for home; apply on primary wrapper/scope. */
-/* .iss-front-hero__title: Element class for `iss-front-hero`; apply on `title` element. */
-.home .iss-front-hero__title {
+.iss-front-hero__title {
   max-width: 13ch;
   font-size: clamp(2.9rem, 6vw, 5.5rem);
   line-height: 0.96;
   text-wrap: balance;
 }
 
-/* .home: Base class for home; apply on primary wrapper/scope. */
-/* .iss-front-hero__text: Element class for `iss-front-hero`; apply on `text` element. */
-.home .iss-front-hero__text {
+.iss-front-hero__text {
   max-width: 40rem;
   font-size: clamp(1rem, 1vw + 0.8rem, 1.2rem);
   line-height: 1.55;
   color: rgba(249, 249, 250, 0.9);
 }
 
-/* .home: Base class for home; apply on primary wrapper/scope. */
-/* .iss-front-hero__actions: Element class for `iss-front-hero`; apply on `actions` element. */
-.home .iss-front-hero__actions {
+.iss-front-hero__actions {
   margin-top: 0.75rem;
 }
 
-/* .home: Base class for home; apply on primary wrapper/scope. */
-/* .iss-front-hero__actions: Element class for `iss-front-hero`; apply on `actions` element. */
-/* .wp-block-button: Base class for wp block button; apply on primary wrapper/scope. */
-/* .is-style-outline: Base class for is style outline; apply on primary wrapper/scope. */
-/* .wp-block-button__link: Element class for `wp-block-button`; apply on `link` element. */
-.home .iss-front-hero__actions .wp-block-button.is-style-outline .wp-block-button__link {
+.iss-front-hero__actions .wp-block-button.is-style-outline .wp-block-button__link {
   border-color: rgba(249, 249, 250, 0.55);
   color: var(--iss-white);
   background: transparent;
@@ -653,18 +614,8 @@
   }
 }
 
-/* .home: Base class for home; apply on primary wrapper/scope. */
-/* .iss-front-hero__actions: Element class for `iss-front-hero`; apply on `actions` element. */
-/* .wp-block-button: Base class for wp block button; apply on primary wrapper/scope. */
-/* .is-style-outline: Base class for is style outline; apply on primary wrapper/scope. */
-/* .wp-block-button__link: Element class for `wp-block-button`; apply on `link` element. */
-.home .iss-front-hero__actions .wp-block-button.is-style-outline .wp-block-button__link:hover,
-/* .home: Base class for home; apply on primary wrapper/scope. */
-/* .iss-front-hero__actions: Element class for `iss-front-hero`; apply on `actions` element. */
-/* .wp-block-button: Base class for wp block button; apply on primary wrapper/scope. */
-/* .is-style-outline: Base class for is style outline; apply on primary wrapper/scope. */
-/* .wp-block-button__link: Element class for `wp-block-button`; apply on `link` element. */
-.home .iss-front-hero__actions .wp-block-button.is-style-outline .wp-block-button__link:focus-visible {
+.iss-front-hero__actions .wp-block-button.is-style-outline .wp-block-button__link:hover,
+.iss-front-hero__actions .wp-block-button.is-style-outline .wp-block-button__link:focus-visible {
   border-color: var(--iss-white);
   background: rgba(249, 249, 250, 0.1);
 }
@@ -673,18 +624,11 @@
    HERO BANNER / NOTE
    ===================================================================== */
 
-/* .home: Base class for home; apply on primary wrapper/scope. */
-/* .wp-block-cover: Base class for wp block cover; apply on primary wrapper/scope. */
-/* .iss-front-hero: Base class for iss front hero; apply on primary wrapper/scope. */
-.home .wp-block-cover.iss-front-hero {
+.wp-block-cover.iss-front-hero {
   --iss-banner-width: 23rem;
 }
 
-/* .home: Base class for home; apply on primary wrapper/scope. */
-/* .wp-block-cover: Base class for wp block cover; apply on primary wrapper/scope. */
-/* .iss-front-hero: Base class for iss front hero; apply on primary wrapper/scope. */
-/* .iss-front-banner-slot: Base class for iss front banner slot; apply on primary wrapper/scope. */
-.home .wp-block-cover.iss-front-hero .iss-front-banner-slot {
+.wp-block-cover.iss-front-hero .iss-front-banner-slot {
   position: relative;
   width: min(100%, var(--iss-banner-width));
   max-width: var(--iss-banner-width);
@@ -694,26 +638,12 @@
   z-index: 5;
 }
 
-/* .home: Base class for home; apply on primary wrapper/scope. */
-/* .wp-block-cover: Base class for wp block cover; apply on primary wrapper/scope. */
-/* .iss-front-hero: Base class for iss front hero; apply on primary wrapper/scope. */
-/* .wp-block-cover__inner-container: Element class for `wp-block-cover`; apply on `inner-container` element. */
-/* .iss-front-hero__shell: Element class for `iss-front-hero`; apply on `shell` element. */
-.home .wp-block-cover.iss-front-hero > .wp-block-cover__inner-container > .iss-front-hero__shell,
-/* .home: Base class for home; apply on primary wrapper/scope. */
-/* .wp-block-cover: Base class for wp block cover; apply on primary wrapper/scope. */
-/* .iss-front-hero: Base class for iss front hero; apply on primary wrapper/scope. */
-/* .wp-block-cover__inner-container: Element class for `wp-block-cover`; apply on `inner-container` element. */
-/* .iss-front-hero__row: Element class for `iss-front-hero`; apply on `row` element. */
-/* .iss-front-hero__shell: Element class for `iss-front-hero`; apply on `shell` element. */
-.home .wp-block-cover.iss-front-hero > .wp-block-cover__inner-container > .iss-front-hero__row > .iss-front-hero__shell {
+.wp-block-cover.iss-front-hero > .wp-block-cover__inner-container > .iss-front-hero__shell,
+.wp-block-cover.iss-front-hero > .wp-block-cover__inner-container > .iss-front-hero__row > .iss-front-hero__shell {
   grid-column: 1;
 }
 
-/* .home: Base class for home; apply on primary wrapper/scope. */
-/* .iss-front-banner-slot: Base class for iss front banner slot; apply on primary wrapper/scope. */
-/* .iss-hero-note: Base class for iss hero note; apply on primary wrapper/scope. */
-.home .iss-front-banner-slot .wp-block-industriesalon-notice-banner.iss-notice-skin--front .iss-hero-note {
+.iss-front-banner-slot .wp-block-industriesalon-notice-banner.iss-notice-skin--front .iss-hero-note {
   position: relative;
   display: flex;
   flex-direction: column;
@@ -732,7 +662,7 @@
 /* .home: Base class for home; apply on primary wrapper/scope. */
 /* .iss-front-banner-slot: Base class for iss front banner slot; apply on primary wrapper/scope. */
 /* .iss-hero-note__marker: Element class for `iss-hero-note`; apply on `marker` element. */
-.home .iss-front-banner-slot .wp-block-industriesalon-notice-banner.iss-notice-skin--front .iss-hero-note__marker {
+.iss-front-banner-slot .wp-block-industriesalon-notice-banner.iss-notice-skin--front .iss-hero-note__marker {
   position: absolute;
   top: -0.2rem;
   left: -0.42rem;
@@ -748,7 +678,7 @@
 /* .home: Base class for home; apply on primary wrapper/scope. */
 /* .iss-front-banner-slot: Base class for iss front banner slot; apply on primary wrapper/scope. */
 /* .iss-hero-note__kicker: Element class for `iss-hero-note`; apply on `kicker` element. */
-.home .iss-front-banner-slot .wp-block-industriesalon-notice-banner.iss-notice-skin--front .iss-hero-note__kicker {
+.iss-front-banner-slot .wp-block-industriesalon-notice-banner.iss-notice-skin--front .iss-hero-note__kicker {
   margin: 0 0 0.1rem;
   color: rgba(249, 249, 250, 0.82);
   font-size: 0.72rem;
@@ -763,7 +693,7 @@
 /* .home: Base class for home; apply on primary wrapper/scope. */
 /* .iss-front-banner-slot: Base class for iss front banner slot; apply on primary wrapper/scope. */
 /* .iss-hero-note__title: Element class for `iss-hero-note`; apply on `title` element. */
-.home .iss-front-banner-slot .wp-block-industriesalon-notice-banner.iss-notice-skin--front .iss-hero-note__title {
+.iss-front-banner-slot .wp-block-industriesalon-notice-banner.iss-notice-skin--front .iss-hero-note__title {
   margin: 0;
   color: var(--iss-white);
   font-size: clamp(1.7rem, 1.2rem + 0.8vw, 2.25rem);
@@ -778,7 +708,7 @@
 /* .home: Base class for home; apply on primary wrapper/scope. */
 /* .iss-front-banner-slot: Base class for iss front banner slot; apply on primary wrapper/scope. */
 /* .iss-hero-note__text: Element class for `iss-hero-note`; apply on `text` element. */
-.home .iss-front-banner-slot .wp-block-industriesalon-notice-banner.iss-notice-skin--front .iss-hero-note__text {
+.iss-front-banner-slot .wp-block-industriesalon-notice-banner.iss-notice-skin--front .iss-hero-note__text {
   position: relative;
   margin-top: 0.7rem;
   padding-top: 0.95rem;
@@ -788,7 +718,7 @@
 /* .home: Base class for home; apply on primary wrapper/scope. */
 /* .iss-front-banner-slot: Base class for iss front banner slot; apply on primary wrapper/scope. */
 /* .iss-hero-note__text: Element class for `iss-hero-note`; apply on `text` element. */
-.home .iss-front-banner-slot .wp-block-industriesalon-notice-banner.iss-notice-skin--front .iss-hero-note__text::before {
+.iss-front-banner-slot .wp-block-industriesalon-notice-banner.iss-notice-skin--front .iss-hero-note__text::before {
   content: "";
   position: absolute;
   top: 0;
@@ -801,11 +731,8 @@
 /* .home: Base class for home; apply on primary wrapper/scope. */
 /* .iss-front-banner-slot: Base class for iss front banner slot; apply on primary wrapper/scope. */
 /* .iss-hero-note__text: Element class for `iss-hero-note`; apply on `text` element. */
-.home .iss-front-banner-slot .wp-block-industriesalon-notice-banner.iss-notice-skin--front .iss-hero-note__text,
-/* .home: Base class for home; apply on primary wrapper/scope. */
-/* .iss-front-banner-slot: Base class for iss front banner slot; apply on primary wrapper/scope. */
-/* .iss-hero-note__text: Element class for `iss-hero-note`; apply on `text` element. */
-.home .iss-front-banner-slot .wp-block-industriesalon-notice-banner.iss-notice-skin--front .iss-hero-note__text p {
+.iss-front-banner-slot .wp-block-industriesalon-notice-banner.iss-notice-skin--front .iss-hero-note__text,
+.iss-front-banner-slot .wp-block-industriesalon-notice-banner.iss-notice-skin--front .iss-hero-note__text p {
   margin: 0;
   color: rgba(255, 255, 255, 0.8);
   font-size: 1rem;
@@ -817,7 +744,7 @@
 /* .home: Base class for home; apply on primary wrapper/scope. */
 /* .iss-front-banner-slot: Base class for iss front banner slot; apply on primary wrapper/scope. */
 /* .iss-hero-note__link: Element class for `iss-hero-note`; apply on `link` element. */
-.home .iss-front-banner-slot .wp-block-industriesalon-notice-banner.iss-notice-skin--front .iss-hero-note__link {
+.iss-front-banner-slot .wp-block-industriesalon-notice-banner.iss-notice-skin--front .iss-hero-note__link {
   position: relative;
   margin-top: 1rem;
   padding-top: 0.95rem;
@@ -826,7 +753,7 @@
 /* .home: Base class for home; apply on primary wrapper/scope. */
 /* .iss-front-banner-slot: Base class for iss front banner slot; apply on primary wrapper/scope. */
 /* .iss-hero-note__link: Element class for `iss-hero-note`; apply on `link` element. */
-.home .iss-front-banner-slot .wp-block-industriesalon-notice-banner.iss-notice-skin--front .iss-hero-note__link::before {
+.iss-front-banner-slot .wp-block-industriesalon-notice-banner.iss-notice-skin--front .iss-hero-note__link::before {
   content: "";
   position: absolute;
   top: 0;
@@ -842,7 +769,7 @@
 /* .home: Base class for home; apply on primary wrapper/scope. */
 /* .iss-front-banner-slot: Base class for iss front banner slot; apply on primary wrapper/scope. */
 /* .iss-hero-note__link: Element class for `iss-hero-note`; apply on `link` element. */
-.home .iss-front-banner-slot .wp-block-industriesalon-notice-banner.iss-notice-skin--front .iss-hero-note__link a {
+.iss-front-banner-slot .wp-block-industriesalon-notice-banner.iss-notice-skin--front .iss-hero-note__link a {
   display: inline-flex;
   align-items: center;
   gap: 0.5rem;
@@ -855,7 +782,7 @@
 /* .home: Base class for home; apply on primary wrapper/scope. */
 /* .iss-front-banner-slot: Base class for iss front banner slot; apply on primary wrapper/scope. */
 /* .iss-hero-note__link-icon: Element class for `iss-hero-note`; apply on `link-icon` element. */
-.home .iss-front-banner-slot .wp-block-industriesalon-notice-banner.iss-notice-skin--front .iss-hero-note__link-icon {
+.iss-front-banner-slot .wp-block-industriesalon-notice-banner.iss-notice-skin--front .iss-hero-note__link-icon {
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -869,7 +796,7 @@
 /* .home: Base class for home; apply on primary wrapper/scope. */
 /* .iss-front-banner-slot: Base class for iss front banner slot; apply on primary wrapper/scope. */
 /* .iss-hero-note__link-text: Element class for `iss-hero-note`; apply on `link-text` element. */
-.home .iss-front-banner-slot .wp-block-industriesalon-notice-banner.iss-notice-skin--front .iss-hero-note__link-text {
+.iss-front-banner-slot .wp-block-industriesalon-notice-banner.iss-notice-skin--front .iss-hero-note__link-text {
   text-decoration: underline;
   text-underline-offset: 0.16em;
   text-decoration-thickness: 1px;
@@ -878,11 +805,8 @@
 /* .home: Base class for home; apply on primary wrapper/scope. */
 /* .iss-front-banner-slot: Base class for iss front banner slot; apply on primary wrapper/scope. */
 /* .iss-hero-note__link: Element class for `iss-hero-note`; apply on `link` element. */
-.home .iss-front-banner-slot .wp-block-industriesalon-notice-banner.iss-notice-skin--front .iss-hero-note__link a:hover,
-/* .home: Base class for home; apply on primary wrapper/scope. */
-/* .iss-front-banner-slot: Base class for iss front banner slot; apply on primary wrapper/scope. */
-/* .iss-hero-note__link: Element class for `iss-hero-note`; apply on `link` element. */
-.home .iss-front-banner-slot .wp-block-industriesalon-notice-banner.iss-notice-skin--front .iss-hero-note__link a:focus-visible {
+.iss-front-banner-slot .wp-block-industriesalon-notice-banner.iss-notice-skin--front .iss-hero-note__link a:hover,
+.iss-front-banner-slot .wp-block-industriesalon-notice-banner.iss-notice-skin--front .iss-hero-note__link a:focus-visible {
   color: var(--iss-red);
   transform: translateX(2px);
 }
@@ -1210,22 +1134,14 @@
    RESPONSIVE
    ===================================================================== */
 @media (max-width: 1100px) {
-/* .home: Base class for home; apply on primary wrapper/scope. */
-/* .wp-block-cover: Base class for wp block cover; apply on primary wrapper/scope. */
-/* .iss-front-hero: Base class for iss front hero; apply on primary wrapper/scope. */
-/* .wp-block-cover__inner-container: Element class for `wp-block-cover`; apply on `inner-container` element. */
-  .home .wp-block-cover.iss-front-hero > .wp-block-cover__inner-container {
+  .wp-block-cover.iss-front-hero > .wp-block-cover__inner-container {
     grid-template-columns: 1fr;
     row-gap: 1rem;
     padding-left: var(--iss-container-pad);
     padding-right: var(--iss-container-pad);
   }
 
-/* .home: Base class for home; apply on primary wrapper/scope. */
-/* .wp-block-cover: Base class for wp block cover; apply on primary wrapper/scope. */
-/* .iss-front-hero: Base class for iss front hero; apply on primary wrapper/scope. */
-/* .iss-front-banner-slot: Base class for iss front banner slot; apply on primary wrapper/scope. */
-  .home .wp-block-cover.iss-front-hero .iss-front-banner-slot {
+  .wp-block-cover.iss-front-hero .iss-front-banner-slot {
     grid-column: 1;
     width: 100%;
     max-width: 100%;
@@ -1248,63 +1164,39 @@
 }
 
 @media (max-width: 782px) {
-/* .home: Base class for home; apply on primary wrapper/scope. */
-/* .iss-front-banner-slot: Base class for iss front banner slot; apply on primary wrapper/scope. */
-/* .iss-hero-note: Base class for iss hero note; apply on primary wrapper/scope. */
-  .home .iss-front-banner-slot .wp-block-industriesalon-notice-banner.iss-notice-skin--front .iss-hero-note {
+  .iss-front-banner-slot .wp-block-industriesalon-notice-banner.iss-notice-skin--front .iss-hero-note {
     min-height: 0;
     max-width: 100%;
   }
 
-/* .home: Base class for home; apply on primary wrapper/scope. */
-/* .iss-front-banner-slot: Base class for iss front banner slot; apply on primary wrapper/scope. */
-/* .iss-hero-note__title: Element class for `iss-hero-note`; apply on `title` element. */
-  .home .iss-front-banner-slot .wp-block-industriesalon-notice-banner.iss-notice-skin--front .iss-hero-note__title,
-/* .home: Base class for home; apply on primary wrapper/scope. */
-/* .iss-front-banner-slot: Base class for iss front banner slot; apply on primary wrapper/scope. */
-/* .iss-hero-note__text: Element class for `iss-hero-note`; apply on `text` element. */
-  .home .iss-front-banner-slot .wp-block-industriesalon-notice-banner.iss-notice-skin--front .iss-hero-note__text {
+  .iss-front-banner-slot .wp-block-industriesalon-notice-banner.iss-notice-skin--front .iss-hero-note__title,
+  .iss-front-banner-slot .wp-block-industriesalon-notice-banner.iss-notice-skin--front .iss-hero-note__text {
     max-width: none;
   }
 
-/* .home: Base class for home; apply on primary wrapper/scope. */
-/* .iss-front-banner-slot: Base class for iss front banner slot; apply on primary wrapper/scope. */
-/* .iss-hero-note__link: Element class for `iss-hero-note`; apply on `link` element. */
-  .home .iss-front-banner-slot .wp-block-industriesalon-notice-banner.iss-notice-skin--front .iss-hero-note__link::before {
+  .iss-front-banner-slot .wp-block-industriesalon-notice-banner.iss-notice-skin--front .iss-hero-note__link::before {
     max-width: 100%;
   }
 
-/* .home: Base class for home; apply on primary wrapper/scope. */
-/* .wp-block-cover: Base class for wp block cover; apply on primary wrapper/scope. */
-/* .iss-front-hero: Base class for iss front hero; apply on primary wrapper/scope. */
-/* .wp-block-cover__inner-container: Element class for `wp-block-cover`; apply on `inner-container` element. */
-  .home .wp-block-cover.iss-front-hero > .wp-block-cover__inner-container {
+  .wp-block-cover.iss-front-hero > .wp-block-cover__inner-container {
     padding-top: calc(var(--iss-header-height) + 0.75rem);
     padding-bottom: clamp(1.25rem, 4vh, 2rem);
   }
 
-/* .home: Base class for home; apply on primary wrapper/scope. */
-/* .iss-front-hero__shell: Element class for `iss-front-hero`; apply on `shell` element. */
-  .home .iss-front-hero__shell {
+  .iss-front-hero__shell {
     gap: 1rem;
   }
 
-/* .home: Base class for home; apply on primary wrapper/scope. */
-/* .iss-front-hero__title: Element class for `iss-front-hero`; apply on `title` element. */
-  .home .iss-front-hero__title {
+  .iss-front-hero__title {
     max-width: 11ch;
     font-size: clamp(2.4rem, 10vw, 3.75rem);
   }
 
-/* .home: Base class for home; apply on primary wrapper/scope. */
-/* .iss-front-hero__text: Element class for `iss-front-hero`; apply on `text` element. */
-  .home .iss-front-hero__text {
+  .iss-front-hero__text {
     max-width: 100%;
   }
 
-/* .home: Base class for home; apply on primary wrapper/scope. */
-/* .iss-front-hero__actions: Element class for `iss-front-hero`; apply on `actions` element. */
-  .home .iss-front-hero__actions {
+  .iss-front-hero__actions {
     flex-direction: column;
     align-items: flex-start;
   }
@@ -1325,415 +1217,6 @@
   }
 }
 
-/* =====================================================================
-   HERO PAGE TEMPLATE
-   Reuses front-hero composition for non-home pages with controlled hero
-   height and the same banner/text offset behavior.
-   ===================================================================== */
-
-/* .page-template-hero-page: Base class for hero-page template body scope. */
-/* .iss-hero-page-main: Base class for hero-page main wrapper. */
-.page-template-hero-page .iss-hero-page-main {
-  overflow: clip;
-}
-
-/* .page-template-hero-page: Base class for hero-page template body scope. */
-/* #wp--skip-link--target: Main skip-link target wrapper rendered by WP. */
-.page-template-hero-page #wp--skip-link--target {
-  margin-top: 0 !important;
-}
-
-/* .page-template-hero-page: Base class for hero-page template body scope. */
-/* .iss-section--hero: Hero wrapper should not inherit generic section paddings. */
-.page-template-hero-page .iss-section--hero {
-  padding-top: 0;
-  padding-bottom: 0;
-}
-
-/* .page-template-hero-page: Base class for hero-page template body scope. */
-/* .wp-block-cover: Base class for wp block cover. */
-/* .iss-front-hero: Base class for front hero shell reused in hero-page. */
-.page-template-hero-page .wp-block-cover.iss-front-hero {
-  --iss-hero-min-h: 80svh;
-  --iss-hero-pad-bottom: clamp(2rem, 5vh, 4rem);
-  --iss-hero-left-pad: max(var(--iss-container-pad), calc((100vw - var(--iss-content-width)) / 2 + var(--iss-container-pad)));
-  --iss-hero-right-pad: clamp(0.75rem, 2.2vw, 2.25rem);
-  --iss-banner-shift-x: -400px;
-  --iss-banner-shift-y: -200px;
-  --iss-banner-width: 23rem;
-  --iss-hero-overlay: linear-gradient(
-    90deg,
-    rgba(30, 30, 30, 0.78) 0%,
-    rgba(30, 30, 30, 0.48) 42%,
-    rgba(30, 30, 30, 0.16) 100%
-  );
-
-  position: relative;
-  min-height: var(--iss-hero-min-h);
-  margin: 0;
-  padding: 0;
-  overflow: visible;
-}
-
-@supports (min-height: 100dvh) {
-/* .page-template-hero-page: Base class for hero-page template body scope. */
-/* .wp-block-cover: Base class for wp block cover. */
-/* .iss-front-hero: Base class for front hero shell reused in hero-page. */
-  .page-template-hero-page .wp-block-cover.iss-front-hero {
-    --iss-hero-min-h: 80dvh;
-  }
-}
-
-/* .page-template-hero-page: Base class for hero-page template body scope. */
-/* .wp-block-cover: Base class for wp block cover. */
-/* .iss-front-hero: Base class for front hero shell reused in hero-page. */
-.page-template-hero-page .wp-block-cover.iss-front-hero::before {
-  content: "";
-  position: absolute;
-  inset: 0;
-  background: var(--iss-hero-overlay);
-  z-index: 1;
-  pointer-events: none;
-}
-
-/* .page-template-hero-page: Base class for hero-page template body scope. */
-/* .wp-block-cover__inner-container: Element class for wp cover inner container. */
-.page-template-hero-page .wp-block-cover.iss-front-hero > .wp-block-cover__inner-container {
-  position: relative;
-  z-index: 2;
-  display: grid;
-  grid-template-columns: minmax(0, 1fr) minmax(0, var(--iss-banner-width));
-  align-items: end;
-  align-content: end;
-  column-gap: clamp(1rem, 3vw, 2.5rem);
-  width: 100% !important;
-  min-height: inherit;
-  max-width: none !important;
-  margin: 0 !important;
-  padding: calc(var(--iss-header-height) + 1.5rem) var(--iss-hero-right-pad) var(--iss-hero-pad-bottom) var(--iss-hero-left-pad);
-  box-sizing: border-box;
-  overflow: visible;
-}
-
-/* .page-template-hero-page: Base class for hero-page template body scope. */
-/* .iss-front-hero__row: Element class for row wrapper. */
-.page-template-hero-page .iss-front-hero__row {
-  display: contents;
-}
-
-/* .page-template-hero-page: Base class for hero-page template body scope. */
-/* .iss-front-hero__shell: Element class for content shell. */
-.page-template-hero-page .iss-front-hero__shell {
-  position: relative;
-  display: grid;
-  grid-template-columns: minmax(0, 44rem);
-  gap: 1.5rem;
-  width: 100%;
-  max-width: none;
-  margin: 0;
-  min-height: 0;
-  align-content: end;
-  justify-content: start;
-  overflow: visible;
-}
-
-/* .page-template-hero-page: Base class for hero-page template body scope. */
-/* .iss-front-hero__content: Element class for hero copy column. */
-.page-template-hero-page .iss-front-hero__content {
-  max-width: 44rem;
-  color: var(--iss-white);
-}
-
-/* .page-template-hero-page: Base class for hero-page template body scope. */
-/* .iss-front-hero__content: Element class for hero copy column. */
-.page-template-hero-page .iss-front-hero__content .iss-kicker,
-.page-template-hero-page .iss-front-hero__content .iss-heading__title,
-.page-template-hero-page .iss-front-hero__content .iss-heading__text {
-  color: var(--iss-white);
-}
-
-/* .page-template-hero-page: Base class for hero-page template body scope. */
-/* .iss-front-hero__title: Element class for hero title. */
-.page-template-hero-page .iss-front-hero__title {
-  max-width: 13ch;
-  font-size: clamp(2.9rem, 6vw, 5.5rem);
-  line-height: 0.96;
-  text-wrap: balance;
-}
-
-/* .page-template-hero-page: Base class for hero-page template body scope. */
-/* .iss-front-hero__text: Element class for hero text. */
-.page-template-hero-page .iss-front-hero__text {
-  max-width: 40rem;
-  font-size: clamp(1rem, 1vw + 0.8rem, 1.2rem);
-  line-height: 1.55;
-  color: rgba(249, 249, 250, 0.9);
-}
-
-/* .page-template-hero-page: Base class for hero-page template body scope. */
-/* .iss-front-hero__actions: Element class for hero action row. */
-.page-template-hero-page .iss-front-hero__actions {
-  margin-top: 0.75rem;
-}
-
-/* .page-template-hero-page: Base class for hero-page template body scope. */
-/* .iss-front-hero__actions: Element class for hero action row. */
-.page-template-hero-page .iss-front-hero__actions .wp-block-button.is-style-outline .wp-block-button__link {
-  border-color: rgba(249, 249, 250, 0.55);
-  color: var(--iss-white);
-  background: transparent;
-}
-
-/* .page-template-hero-page: Base class for hero-page template body scope. */
-/* .iss-front-hero__actions: Element class for hero action row. */
-.page-template-hero-page .iss-front-hero__actions .wp-block-button.is-style-outline .wp-block-button__link:hover,
-.page-template-hero-page .iss-front-hero__actions .wp-block-button.is-style-outline .wp-block-button__link:focus-visible {
-  border-color: var(--iss-white);
-  background: rgba(249, 249, 250, 0.1);
-}
-
-/* .page-template-hero-page: Base class for hero-page template body scope. */
-/* .iss-front-banner-slot: Base class for notice banner slot. */
-.page-template-hero-page .wp-block-cover.iss-front-hero .iss-front-banner-slot {
-  position: relative;
-  width: min(100%, var(--iss-banner-width));
-  max-width: var(--iss-banner-width);
-  grid-column: 2;
-  justify-self: end;
-  transform: translateX(var(--iss-banner-shift-x)) translateY(var(--iss-banner-shift-y));
-  z-index: 5;
-}
-
-/* .page-template-hero-page: Base class for hero-page template body scope. */
-/* .iss-front-hero__shell: Element class for content shell. */
-.page-template-hero-page .wp-block-cover.iss-front-hero > .wp-block-cover__inner-container > .iss-front-hero__shell,
-.page-template-hero-page .wp-block-cover.iss-front-hero > .wp-block-cover__inner-container > .iss-front-hero__row > .iss-front-hero__shell {
-  grid-column: 1;
-}
-
-/* .page-template-hero-page: Base class for hero-page template body scope. */
-/* .iss-hero-note: Base class for notice banner body. */
-.page-template-hero-page .iss-front-banner-slot .wp-block-industriesalon-notice-banner.iss-notice-skin--front .iss-hero-note {
-  position: relative;
-  display: flex;
-  flex-direction: column;
-  gap: 0.55rem;
-  width: 100%;
-  min-height: 20rem;
-  padding: 0.15rem 0 0.25rem 1.15rem;
-  background: none;
-  color: var(--iss-white);
-  border-left: 3px solid rgba(232, 29, 37, 0.95);
-  text-align: left;
-}
-
-/* .page-template-hero-page: Base class for hero-page template body scope. */
-/* .iss-hero-note__marker: Element class for marker dot. */
-.page-template-hero-page .iss-front-banner-slot .wp-block-industriesalon-notice-banner.iss-notice-skin--front .iss-hero-note__marker {
-  position: absolute;
-  top: -0.2rem;
-  left: -0.42rem;
-  width: 0.65rem;
-  height: 0.65rem;
-  background: var(--iss-red);
-  border-radius: 50%;
-  box-shadow: 0 0 0 4px rgba(232, 29, 37, 0.12);
-}
-
-/* .page-template-hero-page: Base class for hero-page template body scope. */
-/* .iss-hero-note__kicker: Element class for note kicker. */
-.page-template-hero-page .iss-front-banner-slot .wp-block-industriesalon-notice-banner.iss-notice-skin--front .iss-hero-note__kicker {
-  margin: 0 0 0.1rem;
-  color: rgba(249, 249, 250, 0.82);
-  font-size: 0.72rem;
-  font-weight: 700;
-  line-height: 1;
-  letter-spacing: 0.14em;
-  text-transform: uppercase;
-}
-
-/* .page-template-hero-page: Base class for hero-page template body scope. */
-/* .iss-hero-note__title: Element class for note title. */
-.page-template-hero-page .iss-front-banner-slot .wp-block-industriesalon-notice-banner.iss-notice-skin--front .iss-hero-note__title {
-  margin: 0;
-  color: var(--iss-white);
-  font-size: clamp(1.7rem, 1.2rem + 0.8vw, 2.25rem);
-  font-weight: 700;
-  line-height: 1.02;
-  max-width: 11ch;
-  text-wrap: balance;
-}
-
-/* .page-template-hero-page: Base class for hero-page template body scope. */
-/* .iss-hero-note__text: Element class for note copy. */
-.page-template-hero-page .iss-front-banner-slot .wp-block-industriesalon-notice-banner.iss-notice-skin--front .iss-hero-note__text {
-  position: relative;
-  margin-top: 0.7rem;
-  padding-top: 0.95rem;
-  max-width: 21ch;
-}
-
-/* .page-template-hero-page: Base class for hero-page template body scope. */
-/* .iss-hero-note__text: Element class for note copy separator. */
-.page-template-hero-page .iss-front-banner-slot .wp-block-industriesalon-notice-banner.iss-notice-skin--front .iss-hero-note__text::before {
-  content: "";
-  position: absolute;
-  top: 0;
-  left: 0;
-  width: 1.2rem;
-  height: 2px;
-  background: var(--iss-red);
-}
-
-/* .page-template-hero-page: Base class for hero-page template body scope. */
-/* .iss-hero-note__text: Element class for note copy text nodes. */
-.page-template-hero-page .iss-front-banner-slot .wp-block-industriesalon-notice-banner.iss-notice-skin--front .iss-hero-note__text,
-.page-template-hero-page .iss-front-banner-slot .wp-block-industriesalon-notice-banner.iss-notice-skin--front .iss-hero-note__text p {
-  margin: 0;
-  color: rgba(255, 255, 255, 0.8);
-  font-size: 1rem;
-  line-height: 1.45;
-}
-
-/* .page-template-hero-page: Base class for hero-page template body scope. */
-/* .iss-hero-note__link: Element class for note CTA wrapper. */
-.page-template-hero-page .iss-front-banner-slot .wp-block-industriesalon-notice-banner.iss-notice-skin--front .iss-hero-note__link {
-  position: relative;
-  margin-top: 1rem;
-  padding-top: 0.95rem;
-}
-
-/* .page-template-hero-page: Base class for hero-page template body scope. */
-/* .iss-hero-note__link: Element class for note CTA separator. */
-.page-template-hero-page .iss-front-banner-slot .wp-block-industriesalon-notice-banner.iss-notice-skin--front .iss-hero-note__link::before {
-  content: "";
-  position: absolute;
-  top: 0;
-  left: 0;
-  width: 100%;
-  max-width: 8.5rem;
-  height: 1px;
-  background: rgba(255, 255, 255, 0.22);
-}
-
-/* .page-template-hero-page: Base class for hero-page template body scope. */
-/* .iss-hero-note__link: Element class for note CTA link. */
-.page-template-hero-page .iss-front-banner-slot .wp-block-industriesalon-notice-banner.iss-notice-skin--front .iss-hero-note__link a {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.5rem;
-  color: var(--iss-white);
-  font-weight: 600;
-  text-decoration: none;
-  transition: color var(--iss-transition), transform var(--iss-transition);
-}
-
-/* .page-template-hero-page: Base class for hero-page template body scope. */
-/* .iss-hero-note__link-icon: Element class for note CTA icon. */
-.page-template-hero-page .iss-front-banner-slot .wp-block-industriesalon-notice-banner.iss-notice-skin--front .iss-hero-note__link-icon {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  width: 1rem;
-  color: var(--iss-red);
-  font-size: 0.95rem;
-  line-height: 1;
-  transform: translateY(-0.02em);
-}
-
-/* .page-template-hero-page: Base class for hero-page template body scope. */
-/* .iss-hero-note__link-text: Element class for note CTA text. */
-.page-template-hero-page .iss-front-banner-slot .wp-block-industriesalon-notice-banner.iss-notice-skin--front .iss-hero-note__link-text {
-  text-decoration: underline;
-  text-underline-offset: 0.16em;
-  text-decoration-thickness: 1px;
-}
-
-/* .page-template-hero-page: Base class for hero-page template body scope. */
-/* .iss-hero-note__link: Element class for note CTA hover/focus state. */
-.page-template-hero-page .iss-front-banner-slot .wp-block-industriesalon-notice-banner.iss-notice-skin--front .iss-hero-note__link a:hover,
-.page-template-hero-page .iss-front-banner-slot .wp-block-industriesalon-notice-banner.iss-notice-skin--front .iss-hero-note__link a:focus-visible {
-  color: var(--iss-red);
-  transform: translateX(2px);
-}
-
-@media (max-width: 1100px) {
-/* .page-template-hero-page: Base class for hero-page template body scope. */
-/* .wp-block-cover__inner-container: Element class for wp cover inner container. */
-  .page-template-hero-page .wp-block-cover.iss-front-hero > .wp-block-cover__inner-container {
-    grid-template-columns: 1fr;
-    row-gap: 1rem;
-    padding-left: var(--iss-container-pad);
-    padding-right: var(--iss-container-pad);
-  }
-
-/* .page-template-hero-page: Base class for hero-page template body scope. */
-/* .iss-front-banner-slot: Base class for notice banner slot. */
-  .page-template-hero-page .wp-block-cover.iss-front-hero .iss-front-banner-slot {
-    grid-column: 1;
-    width: 100%;
-    max-width: 100%;
-    margin-top: 0.75rem;
-    justify-self: stretch;
-    transform: none;
-  }
-}
-
-@media (max-width: 782px) {
-/* .page-template-hero-page: Base class for hero-page template body scope. */
-/* .iss-hero-note: Base class for note panel on mobile. */
-  .page-template-hero-page .iss-front-banner-slot .wp-block-industriesalon-notice-banner.iss-notice-skin--front .iss-hero-note {
-    min-height: 0;
-    max-width: 100%;
-  }
-
-/* .page-template-hero-page: Base class for hero-page template body scope. */
-/* .iss-hero-note__title: Element class for note title on mobile. */
-/* .iss-hero-note__text: Element class for note text on mobile. */
-  .page-template-hero-page .iss-front-banner-slot .wp-block-industriesalon-notice-banner.iss-notice-skin--front .iss-hero-note__title,
-  .page-template-hero-page .iss-front-banner-slot .wp-block-industriesalon-notice-banner.iss-notice-skin--front .iss-hero-note__text {
-    max-width: none;
-  }
-
-/* .page-template-hero-page: Base class for hero-page template body scope. */
-/* .iss-hero-note__link: Element class for note link separator on mobile. */
-  .page-template-hero-page .iss-front-banner-slot .wp-block-industriesalon-notice-banner.iss-notice-skin--front .iss-hero-note__link::before {
-    max-width: 100%;
-  }
-
-/* .page-template-hero-page: Base class for hero-page template body scope. */
-/* .wp-block-cover__inner-container: Element class for wp cover inner container on mobile. */
-  .page-template-hero-page .wp-block-cover.iss-front-hero > .wp-block-cover__inner-container {
-    padding-top: calc(var(--iss-header-height) + 0.75rem);
-    padding-bottom: clamp(1.25rem, 4vh, 2rem);
-  }
-
-/* .page-template-hero-page: Base class for hero-page template body scope. */
-/* .iss-front-hero__shell: Element class for content shell on mobile. */
-  .page-template-hero-page .iss-front-hero__shell {
-    gap: 1rem;
-  }
-
-/* .page-template-hero-page: Base class for hero-page template body scope. */
-/* .iss-front-hero__title: Element class for hero title on mobile. */
-  .page-template-hero-page .iss-front-hero__title {
-    max-width: 11ch;
-    font-size: clamp(2.4rem, 10vw, 3.75rem);
-  }
-
-/* .page-template-hero-page: Base class for hero-page template body scope. */
-/* .iss-front-hero__text: Element class for hero text on mobile. */
-  .page-template-hero-page .iss-front-hero__text {
-    max-width: 100%;
-  }
-
-/* .page-template-hero-page: Base class for hero-page template body scope. */
-/* .iss-front-hero__actions: Element class for action row on mobile. */
-  .page-template-hero-page .iss-front-hero__actions {
-    flex-direction: column;
-    align-items: flex-start;
-  }
-}
 /* =====================================================
    MICROBLOCKS
    cleaner icon version
@@ -1843,217 +1326,6 @@
   margin: 0;
 }
 
-/* .iss-page-template: Base class for iss page template; apply on primary wrapper/scope. */
-/* .iss-page-hero: Base class for iss page hero; apply on primary wrapper/scope. */
-.iss-page-template > .iss-page-hero {
-  margin-top: 0;
-  margin-bottom: 0;
-}
-
-/* .iss-page-hero: Base class for iss page hero; apply on primary wrapper/scope. */
-.iss-page-hero {
-  --iss-hero-pad-bottom: clamp(2rem, 5vh, 4rem);
-  --iss-hero-left-pad: max(var(--iss-container-pad), calc((100vw - var(--iss-content-width)) / 2 + var(--iss-container-pad)));
-  --iss-hero-right-pad: clamp(0.75rem, 2.2vw, 2.25rem);
-  --iss-banner-shift-x: 250px;
-  --iss-banner-shift-y: 90px;
-  --iss-banner-width: 23rem;
-
-  position: relative;
-  min-height: 80svh;
-  min-height: 80vh;
-  padding: 0;
-  overflow: visible;
-  background-color: var(--iss-black);
-}
-
-/* .iss-page-hero: Base class for iss page hero; apply on primary wrapper/scope. */
-.iss-page-hero::before {
-  content: "";
-  position: absolute;
-  inset: 0;
-  background:
-    linear-gradient(
-      90deg,
-      rgba(30, 30, 30, 0.78) 0%,
-      rgba(30, 30, 30, 0.66) 34%,
-      rgba(30, 30, 30, 0.36) 58%,
-      rgba(30, 30, 30, 0.16) 100%
-    );
-  z-index: 1;
-  pointer-events: none;
-}
-
-/* .iss-page-hero: Base class for iss page hero; apply on primary wrapper/scope. */
-/* .wp-block-cover__image-background: Element class for `wp-block-cover`; apply on `image-background` element. */
-.iss-page-hero > .wp-block-cover__image-background,
-/* .iss-page-hero: Base class for iss page hero; apply on primary wrapper/scope. */
-/* .wp-block-cover__video-background: Element class for `wp-block-cover`; apply on `video-background` element. */
-.iss-page-hero > .wp-block-cover__video-background {
-  object-fit: cover;
-}
-
-/* .iss-page-hero: Base class for iss page hero; apply on primary wrapper/scope. */
-/* .wp-block-cover__inner-container: Element class for `wp-block-cover`; apply on `inner-container` element. */
-.iss-page-hero > .wp-block-cover__inner-container {
-  position: relative;
-  z-index: 2;
-  display: grid;
-  grid-template-columns: minmax(0, 1fr) minmax(0, var(--iss-banner-width));
-  align-items: end;
-  align-content: end;
-  column-gap: clamp(1rem, 3vw, 2.5rem);
-  width: 100%;
-  min-height: inherit;
-  max-width: none;
-  margin: 0;
-  padding: calc(var(--iss-header-height) + 1.5rem) var(--iss-hero-right-pad) var(--iss-hero-pad-bottom) var(--iss-hero-left-pad);
-  box-sizing: border-box;
-  overflow: visible;
-}
-
-.iss-page-hero .iss-front-hero__row {
-  display: contents;
-}
-
-.iss-page-hero .iss-front-hero__shell {
-  position: relative;
-  display: grid;
-  grid-template-columns: minmax(0, 44rem);
-  gap: 1.5rem;
-  width: 100%;
-  max-width: none;
-  margin: 0;
-  min-height: 0;
-  align-content: end;
-  justify-content: start;
-  overflow: visible;
-}
-
-.iss-page-hero > .wp-block-cover__inner-container > .iss-front-hero__shell,
-.iss-page-hero > .wp-block-cover__inner-container > .iss-front-hero__row > .iss-front-hero__shell {
-  grid-column: 1;
-}
-
-.iss-page-hero .iss-front-banner-slot {
-  position: relative;
-  width: min(100%, var(--iss-banner-width));
-  max-width: var(--iss-banner-width);
-  grid-column: 2;
-  justify-self: end;
-  transform: translateX(var(--iss-banner-shift-x)) translateY(var(--iss-banner-shift-y));
-  z-index: 5;
-}
-
-.iss-page-hero .iss-front-banner-slot .wp-block-industriesalon-notice-banner.iss-notice-skin--front .iss-hero-note {
-  position: relative;
-  display: flex;
-  flex-direction: column;
-  gap: 0.55rem;
-  width: 100%;
-  min-height: 20rem;
-  padding: 0.15rem 0 0.25rem 1.15rem;
-  background: none;
-  color: var(--iss-white);
-  border-left: 3px solid rgba(232, 29, 37, 0.95);
-  text-align: left;
-}
-
-.iss-page-hero .iss-front-banner-slot .wp-block-industriesalon-notice-banner.iss-notice-skin--front .iss-hero-note__marker {
-  position: absolute;
-  top: -0.2rem;
-  left: -0.42rem;
-  width: 0.65rem;
-  height: 0.65rem;
-  background: var(--iss-red);
-  border-radius: 50%;
-  box-shadow: 0 0 0 4px rgba(232, 29, 37, 0.12);
-}
-
-.iss-page-hero .iss-front-banner-slot .wp-block-industriesalon-notice-banner.iss-notice-skin--front .iss-hero-note__kicker {
-  margin: 0 0 0.1rem;
-  color: rgba(249, 249, 250, 0.82);
-  font-size: 0.72rem;
-  font-weight: 700;
-  line-height: 1;
-  letter-spacing: 0.14em;
-  text-transform: uppercase;
-}
-
-.iss-page-hero .iss-front-banner-slot .wp-block-industriesalon-notice-banner.iss-notice-skin--front .iss-hero-note__title {
-  margin: 0;
-  color: var(--iss-white);
-  font-size: clamp(1.7rem, 1.2rem + 0.8vw, 2.25rem);
-  font-weight: 700;
-  line-height: 1.02;
-  max-width: 11ch;
-  text-wrap: balance;
-}
-
-.iss-page-hero .iss-front-banner-slot .wp-block-industriesalon-notice-banner.iss-notice-skin--front .iss-hero-note__text {
-  position: relative;
-  margin-top: 0.7rem;
-  padding-top: 0.95rem;
-  max-width: 21ch;
-}
-
-.iss-page-hero .iss-front-banner-slot .wp-block-industriesalon-notice-banner.iss-notice-skin--front .iss-hero-note__text::before {
-  content: "";
-  position: absolute;
-  top: 0;
-  left: 0;
-  width: 1.2rem;
-  height: 2px;
-  background: var(--iss-red);
-}
-
-.iss-page-hero .iss-front-banner-slot .wp-block-industriesalon-notice-banner.iss-notice-skin--front .iss-hero-note__text,
-.iss-page-hero .iss-front-banner-slot .wp-block-industriesalon-notice-banner.iss-notice-skin--front .iss-hero-note__text p {
-  margin: 0;
-  color: rgba(255, 255, 255, 0.8);
-  font-size: 1rem;
-  line-height: 1.45;
-}
-
-.iss-page-hero .iss-front-banner-slot .wp-block-industriesalon-notice-banner.iss-notice-skin--front .iss-hero-note__link {
-  position: relative;
-  margin-top: 1rem;
-  padding-top: 0.95rem;
-}
-
-.iss-page-hero .iss-front-banner-slot .wp-block-industriesalon-notice-banner.iss-notice-skin--front .iss-hero-note__link::before {
-  content: "";
-  position: absolute;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 1px;
-  background: rgba(255, 255, 255, 0.14);
-}
-
-.iss-page-hero .iss-front-banner-slot .wp-block-industriesalon-notice-banner.iss-notice-skin--front .iss-hero-note__link a {
-  color: var(--iss-white);
-}
-
-.iss-page-hero .iss-front-banner-slot .wp-block-industriesalon-notice-banner.iss-notice-skin--front .iss-hero-note__link-icon {
-  color: var(--iss-red);
-}
-
-/* .iss-page-hero__inner: Element class for `iss-page-hero`; apply on `inner` element. */
-.iss-page-hero__inner {
-  display: flex;
-  flex-direction: column;
-  justify-content: flex-end;
-  align-items: flex-start;
-  gap: 1rem;
-  min-height: inherit;
-  width: 100%;
-  max-width: 44rem;
-  margin: 0;
-  padding: 0;
-  text-align: left;
-}
-
 /* .iss-page-hero__kicker: Element class for `iss-page-hero`; apply on `kicker` element. */
 .iss-page-hero__kicker,
 /* .iss-page-hero__title: Element class for `iss-page-hero`; apply on `title` element. */
@@ -2111,74 +1383,8 @@
   margin-top: 0;
 }
 
-/* =====================================================================
-   SECONDARY LANDING COVER (DB page content)
-   ===================================================================== */
-
-/* .iss-landing-hero: Base class for iss landing hero; apply on primary wrapper/scope. */
-.iss-landing-hero {
-  position: relative;
-  margin: 0;
-  padding: 0;
-}
-
-/* .iss-landing-hero: Base class for iss landing hero; apply on primary wrapper/scope. */
-/* .wp-block-cover__inner-container: Element class for `wp-block-cover`; apply on `inner-container` element. */
-.iss-landing-hero > .wp-block-cover__inner-container {
-  width: 100%;
-  min-height: inherit;
-  padding: calc(var(--iss-header-height) + 2rem) var(--iss-container-pad) clamp(2rem, 5vh, 4rem);
-  box-sizing: border-box;
-}
-
-/* .iss-landing-hero__shell: Element class for `iss-landing-hero`; apply on `shell` element. */
-.iss-landing-hero__shell {
-  display: grid;
-  grid-template-columns: minmax(0, 44rem) minmax(18rem, 24rem);
-  justify-content: space-between;
-  align-items: end;
-  gap: clamp(1.5rem, 4vw, 4rem);
-  min-height: 60vh;
-}
-
-/* .iss-landing-hero__content: Element class for `iss-landing-hero`; apply on `content` element. */
-.iss-landing-hero__content {
-  max-width: 44rem;
-}
-
-/* .iss-landing-hero__content: Element class for `iss-landing-hero`; apply on `content` element. */
-/* .iss-heading__title: Element class for `iss-heading`; apply on `title` element. */
-.iss-landing-hero__content .iss-heading__title,
-/* .iss-landing-hero__content: Element class for `iss-landing-hero`; apply on `content` element. */
-/* .iss-heading__text: Element class for `iss-heading`; apply on `text` element. */
-.iss-landing-hero__content .iss-heading__text,
-/* .iss-landing-hero__content: Element class for `iss-landing-hero`; apply on `content` element. */
-/* .iss-kicker: Base class for iss kicker; apply on primary wrapper/scope. */
-.iss-landing-hero__content .iss-kicker {
-  color: var(--iss-white);
-}
-
-/* .iss-landing-hero__title: Element class for `iss-landing-hero`; apply on `title` element. */
-.iss-landing-hero__title {
-  max-width: 11ch;
-  font-size: clamp(3rem, 6vw, 5.5rem);
-  line-height: 0.96;
-  text-wrap: balance;
-}
-
-/* .iss-landing-hero__text: Element class for `iss-landing-hero`; apply on `text` element. */
-.iss-landing-hero__text {
-  max-width: 38rem;
-  color: rgba(249, 249, 250, 0.9);
-}
-
-/* .iss-landing-hero__actions: Element class for `iss-landing-hero`; apply on `actions` element. */
-.iss-landing-hero__actions {
-  margin-top: 0.75rem;
-}
-
-.iss-landing-hero__actions > p,
-.iss-landing-hero__actions > .wp-block-buttons,
+.iss-hero__actions > p,
+.iss-hero__actions > .wp-block-buttons,
 .iss-hero__actions > p,
 .iss-hero__actions > .wp-block-buttons,
 .iss-feature-stack__actions > p,
@@ -2188,33 +1394,6 @@
 
 .iss-hero__actions {
   margin-top: 0.75rem;
-}
-
-/* .iss-landing-hero__actions: Element class for `iss-landing-hero`; apply on `actions` element. */
-/* .is-style-outline: Base class for is style outline; apply on primary wrapper/scope. */
-/* .wp-block-button__link: Element class for `wp-block-button`; apply on `link` element. */
-.iss-landing-hero__actions .is-style-outline .wp-block-button__link {
-  border-color: rgba(249, 249, 250, 0.55);
-  color: var(--iss-white);
-  background: transparent;
-}
-
-/* .iss-landing-hero__actions: Element class for `iss-landing-hero`; apply on `actions` element. */
-/* .is-style-outline: Base class for is style outline; apply on primary wrapper/scope. */
-/* .wp-block-button__link: Element class for `wp-block-button`; apply on `link` element. */
-.iss-landing-hero__actions .is-style-outline .wp-block-button__link:hover,
-/* .iss-landing-hero__actions: Element class for `iss-landing-hero`; apply on `actions` element. */
-/* .is-style-outline: Base class for is style outline; apply on primary wrapper/scope. */
-/* .wp-block-button__link: Element class for `wp-block-button`; apply on `link` element. */
-.iss-landing-hero__actions .is-style-outline .wp-block-button__link:focus-visible {
-  border-color: var(--iss-white);
-  background: rgba(249, 249, 250, 0.1);
-}
-
-/* .iss-landing-hero__aside: Element class for `iss-landing-hero`; apply on `aside` element. */
-.iss-landing-hero__aside {
-  display: flex;
-  justify-content: flex-end;
 }
 
 /* .iss-hero-note: Base class for iss hero note; apply on primary wrapper/scope. */
@@ -2262,34 +1441,6 @@
 }
 
 @media (max-width: 1024px) {
-/* .iss-page-hero: Base class for iss page hero; apply on primary wrapper/scope. */
-  .iss-page-hero {
-    min-height: 80svh;
-    min-height: 80vh;
-  }
-
-  .iss-page-hero > .wp-block-cover__inner-container {
-    grid-template-columns: 1fr;
-    row-gap: 1rem;
-    padding-left: var(--iss-container-pad);
-    padding-right: var(--iss-container-pad);
-  }
-
-  .iss-page-hero .iss-front-banner-slot {
-    grid-column: 1;
-    width: 100%;
-    max-width: 100%;
-    margin-top: 0.75rem;
-    justify-self: stretch;
-    transform: none;
-  }
-
-/* .iss-page-hero__inner: Element class for `iss-page-hero`; apply on `inner` element. */
-  .iss-page-hero__inner {
-    padding-top: calc(var(--iss-header-height) + 1.5rem);
-    padding-bottom: 2.5rem;
-  }
-
 /* .iss-page-hero__title: Element class for `iss-page-hero`; apply on `title` element. */
   .iss-page-hero__title,
 /* .iss-page-hero__text: Element class for `iss-page-hero`; apply on `text` element. */
@@ -2298,44 +1449,7 @@
   }
 }
 
-@media (max-width: 1100px) {
-/* .iss-landing-hero__shell: Element class for `iss-landing-hero`; apply on `shell` element. */
-  .iss-landing-hero__shell {
-    grid-template-columns: 1fr;
-    min-height: 56vh;
-  }
-
-/* .iss-landing-hero__aside: Element class for `iss-landing-hero`; apply on `aside` element. */
-  .iss-landing-hero__aside {
-    justify-content: flex-start;
-  }
-}
-
 @media (max-width: 781px) {
-/* .iss-page-hero: Base class for iss page hero; apply on primary wrapper/scope. */
-  .iss-page-hero {
-    min-height: 80svh;
-    min-height: 80vh;
-  }
-
-/* .iss-page-hero: Base class for iss page hero; apply on primary wrapper/scope. */
-  .iss-page-hero::before {
-    background:
-      linear-gradient(
-        180deg,
-        rgba(30, 30, 30, 0.58) 0%,
-        rgba(30, 30, 30, 0.68) 45%,
-        rgba(30, 30, 30, 0.78) 100%
-      );
-  }
-
-/* .iss-page-hero__inner: Element class for `iss-page-hero`; apply on `inner` element. */
-  .iss-page-hero__inner {
-    gap: 0.85rem;
-    padding-top: calc(var(--iss-header-height) + 1.25rem);
-    padding-bottom: 2rem;
-  }
-
 /* .iss-page-hero__kicker: Element class for `iss-page-hero`; apply on `kicker` element. */
   .iss-page-hero__kicker,
 /* .iss-page-hero__title: Element class for `iss-page-hero`; apply on `title` element. */
@@ -2353,32 +1467,6 @@
 /* .iss-page-hero__text: Element class for `iss-page-hero`; apply on `text` element. */
   .iss-page-hero__text {
     font-size: 0.98rem;
-  }
-
-  .iss-page-hero .iss-front-banner-slot .wp-block-industriesalon-notice-banner.iss-notice-skin--front .iss-hero-note {
-    min-height: 0;
-    max-width: 100%;
-  }
-
-  .iss-page-hero .iss-front-banner-slot .wp-block-industriesalon-notice-banner.iss-notice-skin--front .iss-hero-note__title,
-  .iss-page-hero .iss-front-banner-slot .wp-block-industriesalon-notice-banner.iss-notice-skin--front .iss-hero-note__text {
-    max-width: none;
-  }
-
-  .iss-page-hero .iss-front-banner-slot .wp-block-industriesalon-notice-banner.iss-notice-skin--front .iss-hero-note__link::before {
-    max-width: 100%;
-  }
-
-/* .iss-landing-hero: Base class for iss landing hero; apply on primary wrapper/scope. */
-/* .wp-block-cover__inner-container: Element class for `wp-block-cover`; apply on `inner-container` element. */
-  .iss-landing-hero > .wp-block-cover__inner-container {
-    padding-top: calc(var(--iss-header-height) + 1rem);
-  }
-
-/* .iss-landing-hero__title: Element class for `iss-landing-hero`; apply on `title` element. */
-  .iss-landing-hero__title {
-    max-width: 10ch;
-    font-size: clamp(2.5rem, 10vw, 3.9rem);
   }
 
 /* .iss-hero-note: Base class for iss hero note; apply on primary wrapper/scope. */
@@ -3647,35 +2735,6 @@
   padding-top: 0;
 }
 
-.iss-tours-page .wp-block-cover.iss-front-hero {
-  min-height: 82vh;
-}
-
-.iss-tours-page .wp-block-cover.iss-front-hero > .wp-block-cover__inner-container {
-  display: grid;
-  align-items: end;
-  min-height: inherit;
-  padding: calc(var(--iss-header-height) + 1.5rem) var(--iss-container-pad) clamp(2rem, 6vh, 4.5rem);
-}
-
-.iss-tours-page .iss-front-hero__row {
-  display: grid;
-}
-
-.iss-tours-page .iss-front-hero__shell {
-  width: min(100%, 44rem);
-}
-
-.iss-tours-page .iss-front-hero__content .iss-kicker,
-.iss-tours-page .iss-front-hero__content .iss-heading__title,
-.iss-tours-page .iss-front-hero__content .iss-heading__text {
-  color: #fff;
-}
-
-.iss-tours-page .iss-front-hero__text {
-  color: #fff;
-}
-
 /* .iss-tours-hero: Base class for iss tours hero; apply on primary wrapper/scope. */
 .iss-tours-hero,
 /* .iss-tours-overview: Base class for iss tours overview; apply on primary wrapper/scope. */
@@ -4019,15 +3078,6 @@
 /* .iss-tours-page: Base class for iss tours page; apply on primary wrapper/scope. */
   .iss-tours-page {
     padding-bottom: 2rem;
-  }
-
-  .iss-tours-page .wp-block-cover.iss-front-hero > .wp-block-cover__inner-container {
-    padding-top: calc(var(--iss-header-height) + 0.75rem);
-    padding-bottom: 1.5rem;
-  }
-
-  .iss-tours-page .iss-front-hero__shell {
-    width: 100%;
   }
 
 /* .iss-tours-hero: Base class for iss tours hero; apply on primary wrapper/scope. */
@@ -5650,58 +4700,6 @@ Raum / Vermietung → brown
    HERO / INTRO
    ===================================================== */
 
-/* .iss-archive-hero: Base class for iss archive hero; apply on primary wrapper/scope. */
-.iss-archive-hero {
-  position: relative;
-  display: grid;
-  gap: 1.5rem;
-  align-items: end;
-  min-height: min(72vh, 880px);
-  padding-top: clamp(7rem, 12vh, 10rem);
-  padding-bottom: clamp(3rem, 7vh, 5rem);
-  background:
-    linear-gradient(
-      180deg,
-      rgba(30, 30, 30, 0.18) 0%,
-      rgba(30, 30, 30, 0.38) 100%
-    ),
-    linear-gradient(
-      90deg,
-      rgba(30, 30, 30, 0.78) 0%,
-      rgba(30, 30, 30, 0.52) 34%,
-      rgba(30, 30, 30, 0.18) 62%,
-      rgba(30, 30, 30, 0.04) 100%
-    );
-  color: var(--iss-white);
-  overflow: hidden;
-}
-
-/* .iss-archive-hero__media: Element class for `iss-archive-hero`; apply on `media` element. */
-.iss-archive-hero__media {
-  position: absolute;
-  inset: 0;
-  z-index: 0;
-}
-
-/* .iss-archive-hero__media: Element class for `iss-archive-hero`; apply on `media` element. */
-.iss-archive-hero__media img {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-}
-
-/* .iss-archive-hero__inner: Element class for `iss-archive-hero`; apply on `inner` element. */
-.iss-archive-hero__inner {
-  position: relative;
-  z-index: 1;
-  width: 100%;
-  max-width: 100%;
-}
-
-.iss-archive-hero__layout {
-  gap: clamp(2rem, 5vw, 5rem);
-}
-
 .iss-archive-hero-note {
   max-width: 28rem;
   margin-left: auto;
@@ -5716,28 +4714,6 @@ Raum / Vermietung → brown
 .iss-archive-hero-note .iss-archive-callout__title,
 .iss-archive-hero-note .iss-archive-callout__text {
   color: var(--iss-white);
-}
-
-/* .iss-archive-hero: Base class for iss archive hero; apply on primary wrapper/scope. */
-/* .iss-heading: Base class for iss heading; apply on primary wrapper/scope. */
-.iss-archive-hero .iss-heading {
-  --iss-heading-max-width: 56rem;
-}
-
-/* .iss-archive-hero: Base class for iss archive hero; apply on primary wrapper/scope. */
-/* .iss-heading__title: Element class for `iss-heading`; apply on `title` element. */
-.iss-archive-hero .iss-heading__title,
-/* .iss-archive-hero: Base class for iss archive hero; apply on primary wrapper/scope. */
-/* .iss-heading__text: Element class for `iss-heading`; apply on `text` element. */
-.iss-archive-hero .iss-heading__text {
-  color: var(--iss-white);
-}
-
-/* .iss-archive-hero: Base class for iss archive hero; apply on primary wrapper/scope. */
-/* .iss-heading__text: Element class for `iss-heading`; apply on `text` element. */
-.iss-archive-hero .iss-heading__text {
-  max-width: 42rem;
-  color: rgba(249, 249, 250, 0.9);
 }
 
 /* =====================================================
@@ -6863,25 +5839,6 @@ Raum / Vermietung → brown
   width: 100%;
 }
 
-.iss-rental-page .iss-front-hero__shell {
-  padding-top: max(5.5rem, calc(var(--iss-header-height, 88px) + 1rem));
-  padding-bottom: clamp(2.5rem, 6vh, 4.25rem);
-}
-
-.iss-rental-page .iss-front-hero__content {
-  max-width: 56rem;
-}
-
-.iss-rental-page .iss-front-hero__title,
-.iss-rental-page .iss-front-hero__text,
-.iss-rental-page .iss-kicker--light {
-  color: #fff !important;
-}
-
-.iss-rental-page .iss-front-hero__text {
-  max-width: 46rem;
-}
-
 .iss-rental-page .iss-front-hero__actions {
   margin-top: 0.5rem;
 }
@@ -7064,10 +6021,6 @@ Raum / Vermietung → brown
     min-height: 62vh;
   }
 
-  .iss-rental-page .iss-front-hero__shell {
-    padding-top: max(5.5rem, calc(var(--iss-header-height, 88px) + 0.75rem));
-  }
-
 /* .iss-rental-hero__title: Element class for `iss-rental-hero`; apply on `title` element. */
   .iss-rental-hero__title {
     max-width: 18ch;
@@ -7083,11 +6036,6 @@ Raum / Vermietung → brown
 /* .iss-rental-hero: Base class for iss rental hero; apply on primary wrapper/scope. */
   .iss-rental-hero {
     min-height: 60vh;
-  }
-
-  .iss-rental-page .iss-front-hero__shell {
-    padding-top: 6.5rem;
-    padding-bottom: 2.5rem;
   }
 
   .iss-rental-facts-panel .iss-info-panel {
@@ -7135,27 +6083,61 @@ Raum / Vermietung → brown
   margin-top: 0 !important;
 }
 
-.iss-projects-page .iss-front-hero__shell {
-  padding-top: max(5.5rem, calc(var(--iss-header-height, 88px) + 1rem));
-  padding-bottom: clamp(2.5rem, 6vh, 4.25rem);
+.iss-events-page {
+  --iss-accent: var(--iss-blue);
+  background: var(--iss-white);
+  color: var(--iss-black);
+  padding-top: 0;
 }
 
-.iss-projects-page .iss-front-hero__content {
-  max-width: 56rem;
+.iss-events-page,
+#wp--skip-link--target .iss-events-page {
+  margin-top: 0 !important;
 }
 
-.iss-projects-page .iss-front-hero__title,
-.iss-projects-page .iss-front-hero__text,
-.iss-projects-page .iss-kicker--light {
-  color: #fff !important;
+.iss-events-page > .section:not(.iss-section--hero) {
+  border-top: 1px solid rgba(134, 159, 186, 0.22);
 }
 
-.iss-projects-page .iss-front-hero__text {
-  max-width: 46rem;
+.iss-events-page .section:not(.iss-section--hero) .iss-heading > .iss-kicker,
+.iss-events-page .section:not(.iss-section--hero) .iss-heading > .iss-kicker--compact {
+  padding-left: 0.85rem;
+  border-left: 3px solid var(--iss-blue);
+  color: var(--iss-blue);
 }
 
-.iss-ausstellungen-page .iss-front-hero__shell {
-  max-width: 44rem;
+.iss-events-query .iss-timeline-query {
+  max-width: none;
+  padding-inline: 0;
+}
+
+.iss-events-query .iss-timeline__filters {
+  align-items: end;
+}
+
+.iss-events-query__calendar-link {
+  margin-top: 1.25rem;
+}
+
+.iss-events-page .iss-action-link {
+  color: var(--iss-blue);
+}
+
+.iss-events-page .iss-small-card::before,
+.iss-events-page .iss-selected-grid__item::before {
+  background: var(--iss-blue);
+}
+
+.iss-events-page .iss-small-card,
+.iss-events-page .iss-selected-grid__item {
+  border-color: rgba(134, 159, 186, 0.24);
+}
+
+.iss-events-page .iss-small-card:hover,
+.iss-events-page .iss-small-card:focus-within,
+.iss-events-page .iss-selected-grid__item:hover,
+.iss-events-page .iss-selected-grid__item:focus-within {
+  border-color: rgba(134, 159, 186, 0.4);
 }
 
 .iss-ausstellungen-page {
@@ -8173,21 +7155,12 @@ Raum / Vermietung → brown
 }
 
 @media (max-width: 781px) {
-  .iss-ausstellungen-page .iss-front-hero__shell {
-    max-width: 100%;
-  }
-
   .iss-ausstellungen-outside__title {
     max-width: none;
   }
 
   .iss-ausstellungen-outside__textcols {
     column-count: 1;
-  }
-
-  .iss-projects-page .iss-front-hero__shell {
-    padding-top: 6.5rem;
-    padding-bottom: 2.5rem;
   }
 
   .iss-now-grid,
@@ -8238,194 +7211,8 @@ Raum / Vermietung → brown
   padding-top: 0;
 }
 
-.iss-repair-page .wp-block-cover.iss-front-hero {
-  --iss-hero-min-h: 80svh;
-  --iss-hero-pad-bottom: clamp(2rem, 5vh, 4rem);
-  --iss-hero-left-pad: max(var(--iss-container-pad), calc((100vw - var(--iss-content-width)) / 2 + var(--iss-container-pad)));
-  --iss-hero-right-pad: clamp(0.75rem, 2.2vw, 2.25rem);
-  --iss-banner-width: 23rem;
-  --iss-hero-overlay: linear-gradient(
-    90deg,
-    rgba(30, 30, 30, 0.78) 0%,
-    rgba(30, 30, 30, 0.48) 42%,
-    rgba(30, 30, 30, 0.16) 100%
-  );
-  position: relative;
-  min-height: var(--iss-hero-min-h);
-  margin: 0;
-  padding: 0;
-  overflow: visible;
-}
-
-@supports (min-height: 100dvh) {
-  .iss-repair-page .wp-block-cover.iss-front-hero {
-    --iss-hero-min-h: 80dvh;
-  }
-}
-
-.iss-repair-page .wp-block-cover.iss-front-hero::before {
-  content: "";
-  position: absolute;
-  inset: 0;
-  background: var(--iss-hero-overlay);
-  z-index: 1;
-  pointer-events: none;
-}
-
-.iss-repair-page .wp-block-cover.iss-front-hero > .wp-block-cover__inner-container {
-  position: relative;
-  z-index: 2;
-  display: grid;
-  grid-template-columns: minmax(0, 1fr) minmax(0, var(--iss-banner-width));
-  align-items: end;
-  align-content: end;
-  column-gap: clamp(1rem, 3vw, 2.5rem);
-  width: 100% !important;
-  min-height: inherit;
-  max-width: none !important;
-  margin: 0 !important;
-  padding: calc(var(--iss-header-height) + 1.5rem) var(--iss-hero-right-pad) var(--iss-hero-pad-bottom) var(--iss-hero-left-pad);
-  box-sizing: border-box;
-  overflow: visible;
-}
-
-.iss-repair-page .iss-front-hero__shell {
-  position: relative;
-  display: grid;
-  grid-template-columns: minmax(0, 44rem);
-  gap: 1.5rem;
-  width: 100%;
-  max-width: none;
-  margin: 0;
-  min-height: 0;
-  align-content: end;
-  justify-content: start;
-  overflow: visible;
-}
-
-.iss-repair-page .iss-front-hero__row {
-  display: contents;
-}
-
-.iss-repair-page .iss-front-hero__content {
-  max-width: 44rem;
-}
-
-.iss-repair-page .iss-front-hero__title,
-.iss-repair-page .iss-front-hero__text,
-.iss-repair-page .iss-kicker--light,
-.iss-repair-page .iss-hero-note,
-.iss-repair-page .iss-hero-note__kicker,
-.iss-repair-page .iss-hero-note__title,
-.iss-repair-page .iss-hero-note__text,
-.iss-repair-page .iss-hero-note__link a {
-  color: #fff !important;
-}
-
-.iss-repair-page .iss-front-hero__text {
-  max-width: 43rem;
-}
-
 .iss-repair-page .iss-front-hero__actions {
   gap: 0.85rem;
-}
-
-.iss-repair-banner-slot {
-  position: relative;
-  width: min(100%, var(--iss-banner-width, 23rem));
-  max-width: var(--iss-banner-width, 23rem);
-  grid-column: 2;
-  justify-self: end;
-  align-self: end;
-}
-
-.iss-repair-banner-slot .wp-block-industriesalon-notice-banner {
-  width: 100%;
-}
-
-.iss-repair-page .iss-repair-banner-slot .wp-block-industriesalon-notice-banner.iss-notice-skin--landing .iss-hero-note {
-  position: relative;
-  display: flex;
-  flex-direction: column;
-  gap: 0.55rem;
-  width: 100%;
-  padding: 0.25rem 0 0.25rem 1.25rem;
-  border-left: 3px solid var(--iss-red);
-}
-
-.iss-repair-page .iss-repair-banner-slot .wp-block-industriesalon-notice-banner.iss-notice-skin--landing .iss-hero-note::before {
-  content: "";
-  position: absolute;
-  top: 0.05rem;
-  left: -0.45rem;
-  width: 0.72rem;
-  height: 0.72rem;
-  border-radius: 999px;
-  background: var(--iss-red);
-}
-
-.iss-repair-page .iss-repair-banner-slot .wp-block-industriesalon-notice-banner.iss-notice-skin--landing .iss-hero-note__marker {
-  display: none;
-}
-
-.iss-repair-page .iss-repair-banner-slot .wp-block-industriesalon-notice-banner.iss-notice-skin--landing .iss-hero-note__kicker {
-  margin-bottom: 0.65rem;
-  color: rgba(255, 255, 255, 0.76) !important;
-}
-
-.iss-repair-page .iss-repair-banner-slot .wp-block-industriesalon-notice-banner.iss-notice-skin--landing .iss-hero-note__title {
-  max-width: 12ch;
-  margin: 0;
-  font-size: clamp(1.9rem, 2vw, 2.6rem);
-  line-height: 0.98;
-}
-
-.iss-repair-page .iss-repair-banner-slot .wp-block-industriesalon-notice-banner.iss-notice-skin--landing .iss-hero-note__text {
-  position: relative;
-  max-width: 25ch;
-  margin-top: 0.95rem;
-  padding-top: 0.95rem;
-  color: rgba(255, 255, 255, 0.84) !important;
-}
-
-.iss-repair-page .iss-repair-banner-slot .wp-block-industriesalon-notice-banner.iss-notice-skin--landing .iss-hero-note__text::before {
-  content: "";
-  position: absolute;
-  top: 0;
-  left: 0;
-  width: 1.2rem;
-  height: 2px;
-  background: var(--iss-red);
-}
-
-.iss-repair-page .iss-repair-banner-slot .wp-block-industriesalon-notice-banner.iss-notice-skin--landing .iss-hero-note__text,
-.iss-repair-page .iss-repair-banner-slot .wp-block-industriesalon-notice-banner.iss-notice-skin--landing .iss-hero-note__text p {
-  margin-bottom: 0;
-}
-
-.iss-repair-page .iss-repair-banner-slot .wp-block-industriesalon-notice-banner.iss-notice-skin--landing .iss-hero-note__link {
-  position: relative;
-  margin-top: 1rem;
-  padding-top: 0.95rem;
-}
-
-.iss-repair-page .iss-repair-banner-slot .wp-block-industriesalon-notice-banner.iss-notice-skin--landing .iss-hero-note__link::before {
-  content: "";
-  position: absolute;
-  top: 0;
-  left: 0;
-  width: 100%;
-  max-width: 8.5rem;
-  height: 1px;
-  background: rgba(255, 255, 255, 0.22);
-}
-
-.iss-repair-page .iss-repair-banner-slot .wp-block-industriesalon-notice-banner.iss-notice-skin--landing .iss-hero-note__link a {
-  border-bottom-color: rgba(255, 255, 255, 0.45);
-}
-
-.iss-repair-page .iss-repair-banner-slot .wp-block-industriesalon-notice-banner.iss-notice-skin--landing .iss-hero-note__link-icon {
-  color: var(--iss-red) !important;
 }
 
 .iss-repair-facts .iss-info-panel,
@@ -8534,26 +7321,12 @@ Raum / Vermietung → brown
 }
 
 @media (max-width: 1080px) {
-  .iss-repair-page .wp-block-cover.iss-front-hero > .wp-block-cover__inner-container {
-    grid-template-columns: 1fr;
-  }
-
-  .iss-repair-banner-slot {
-    grid-column: auto;
-    justify-self: start;
-  }
-
   .iss-repair-steps {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 }
 
 @media (max-width: 781px) {
-  .iss-repair-page .wp-block-cover.iss-front-hero > .wp-block-cover__inner-container {
-    padding-top: 6.5rem;
-    padding-bottom: 2.5rem;
-  }
-
   .iss-repair-prep-grid,
   .iss-repair-steps {
     grid-template-columns: 1fr;

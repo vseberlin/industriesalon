@@ -1,51 +1,76 @@
 # Handoff Current
 
 ## Status
-- `committed`
+- `not committed`
 
 ## Date / Window
-- Date: `2026-04-30`
+- Date: `2026-05-01`
 - Timezone: `Europe/Berlin`
 
 ## Branch / Commit
 - Branch: `master`
-- HEAD before final handoff commit: `7ed1f92`
+- HEAD at session start: `536443e`
 
 ## What Was Done This Session
-- Continued the `industriesalon` theme cleanup and authority recovery:
-  - flushed remaining DB `wp_template` overrides
-  - synced `page-ueber-uns` back to disk before removing its DB override
-  - removed stale template/archive files that were not used anymore
-- Normalized landing-template naming in the active theme:
-  - `archive-ausstellung.html` -> `page-ausstellungen.html`
-  - `archive-publication.html` -> `page-publikationen.html`
-  - `page-a-fuhrungen.html` -> `fuehrungen-landing.html`
-  - removed redundant `archive-projekt.html` and `archive-veranstaltung.html`
-- Fixed the `/publikationen/` slug collision in `plugins/iss-publications/includes/cpt-publication.php` by disabling the CPT archive while preserving single publication URLs.
-- Hardened the off-canvas menu against Gutenberg header edits:
-  - moved shell/overlay markup out of the editable header part into `assets/menu-shell.html`
-  - rendered that shell from `functions.php`
-  - updated `parts/header.html`, `assets/js/header.js`, and `style.css`
-  - refined drawer layout, bottom contact row, spacing, and live stylesheet cache-busting
-- Added a new theme-native Verein landing template:
-  - `themes/industriesalon/templates/page-verein.html`
-  - scoped styles in `themes/industriesalon/assets/css/patterns.css`
-  - structure: hero, quick-entry grid, longread, action cards, organisation block, legal/documents register
-- Repaired the rebuilt Archiv landing styling:
-  - matched the newer archive template markup to missing `iss-archive-*` selectors
-  - restored discovery lead, dark exhibition band, company cards, research list, and CTA styling
-  - resolved remaining dark-section text collisions and removed the stray `section--alt` red rule from the object panel
+- Fixed page/archive route ownership collisions in the active site:
+  - confirmed `/ausstellungen/` had fallen back to the CPT archive after the archive template rename
+  - confirmed `page-ausstellungen.html` still held the intended landing content
+  - added route-guard logic in `plugins/iss-content-model/iss-content-model.php` so page-owned landing slugs can disable colliding CPT archives automatically
+  - restored `/ausstellungen/` to the page-owned landing route
+- Continued the same page-owned route cleanup for program landings:
+  - `Veranstaltungen`:
+    - confirmed the old `archive-veranstaltung.html` was the only prior dedicated template and was sparse
+    - created `themes/industriesalon/templates/page-veranstaltungen.html` as the page-owned landing
+    - created/assigned the live page route so `/veranstaltungen/` is no longer archive-owned
+  - `Führungen`:
+    - confirmed the live page already existed but under slug `/fuhrungen/`
+    - renamed `fuehrungen-landing.html` to `page-fuehrungen.html`
+    - moved the existing live page to slug `/fuehrungen/`
+    - let the archive auto-disable under the shared route guard
+- Reworked the `Veranstaltungen` landing structure using existing theme systems instead of one-off sections:
+  - reused the `Ausstellungen` text-block rhythm
+  - reused existing route-card/image-text patterns
+  - removed the redundant archive section
+  - kept the existing filter/timeline-query system as the functional core
+  - added a handoff TODO to design a stronger next-generation timeline/calendar render
+  - later tightened the page again:
+    - switched accents to theme blue
+    - replaced the custom `Mitmachen` box with the shared info-panel pattern
+- Updated the shell menu:
+  - refined spacing between primary items, secondary items, divider areas, and the contact row in `themes/industriesalon/style.css`
+  - corrected the requested primary/secondary navigation targets in the stored navigation records
+  - fixed `Über uns` links to use the actual live slug `/about/`
+- Normalized the active landing-page hero system around the home-page hero markup/CSS:
+  - converted active landing templates and generic page templates to the shared `iss-front-hero` + `iss-front-banner-slot` structure
+  - kept `Über uns`, `Publikationen`, and `Verein` on their separate hero systems
+  - removed stale page-level hero compensation layers and old inner-page hero overlap where no longer needed
+  - unified viewport-height ownership under the shared hero CSS by removing inline cover `min-height` values from:
+    - `front-page.html`
+    - `page.html`
+    - `hero-page.html`
+    - `page-fuehrungen.html`
+    - `page-ausstellungen.html`
+    - `page-veranstaltungen.html`
+    - `page-salon-vermietung.html`
+    - `page-repair-cafe.html`
+    - `page-projekte.html`
+    - `page-archiv.html`
+  - shared hero viewport height now follows the home-page value globally through `themes/industriesalon/assets/css/patterns.css`
 
 ## Verification
 - Active theme remained `industriesalon`
-- `page-verein.html` is recognized by WordPress as `page-verein`
-- `page-verein.html` parses successfully in WordPress
-- `page-archiv` has no DB `wp_template` override
-- archive template/style mismatch check returned `0` missing `iss-archive-*` selectors
+- `/ausstellungen/`, `/fuehrungen/`, `/veranstaltungen/`, `/salon-vermietung/`, `/repair-cafe/`, `/archiv/`, and `/projekte/` returned `200`
+- live route checks showed the shared `iss-front-hero` markup on the normalized landing pages
+- `/about/` still rendered its separate `iss-page-hero__title`-based hero
+- `/publikationen/` still rendered `iss-publications-masthead`
+- `/verein/` still rendered `iss-verein-hero`
+- leftover scan for inline front-hero `min-height` markup in the active templates returned clean after the final template pass
 
 ## Important Notes
-- There is still no local page with slug `verein` in this DB snapshot, so `page-verein.html` is ready but not routable until that page exists.
-- This commit includes the current outstanding `themes/industriesalon` worktree plus the earlier `iss-publications` route fix because the user asked to `commit all`.
+- Worktree is still uncommitted.
+- `page-veranstaltungen.html.bak-20260501-rollback` still exists as the requested rollback snapshot.
+- `Verein` remains intentionally outside the shared front-hero system even though the page is now live.
+- TODO: add a new timeline design/render for program-style pages, especially `Veranstaltungen`, with stronger date rhythm and a cleaner culture-calendar presentation.
 
 ## Continuity Prompt
 - Start next session with: `read /home/vladimir/wp/handoff_CURRENT.md`

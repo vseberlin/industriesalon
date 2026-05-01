@@ -1,0 +1,271 @@
+<!-- wp:template-part {"slug":"header","theme":"industriesalon","tagName":"header"} /-->
+
+<!-- wp:group {"tagName":"main","className":"iss-events-page","layout":{"type":"default"}} -->
+<main class="wp-block-group iss-events-page">
+	<!-- wp:group {"tagName":"section","className":"iss-section iss-section--hero","layout":{"type":"default"}} -->
+	<section class="wp-block-group iss-section iss-section--hero">
+		<!-- wp:cover {"url":"/wp-content/uploads/2026/03/2021-04-22-Sven-Bock-Aussen-Industriesalon-16.jpg","dimRatio":48,"overlayColor":"eerie-black","contentPosition":"bottom left","isDark":false,"className":"iss-front-hero alignfull"} -->
+		<div class="wp-block-cover alignfull is-light has-custom-content-position is-position-bottom-left iss-front-hero"><span aria-hidden="true" class="wp-block-cover__background has-eerie-black-background-color has-background-dim-48 has-background-dim"></span><img class="wp-block-cover__image-background" alt="Industriesalon als Ort für Veranstaltungen und öffentliche Gespräche" src="/wp-content/uploads/2026/03/2021-04-22-Sven-Bock-Aussen-Industriesalon-16.jpg" data-object-fit="cover"/><div class="wp-block-cover__inner-container">
+			<!-- wp:group {"className":"iss-front-hero__row","layout":{"type":"default"}} -->
+			<div class="wp-block-group iss-front-hero__row">
+				<!-- wp:group {"className":"iss-front-hero__shell","layout":{"type":"default"}} -->
+				<div class="wp-block-group iss-front-hero__shell">
+					<!-- wp:group {"className":"iss-heading iss-front-hero__content","layout":{"type":"default"}} -->
+					<div class="wp-block-group iss-heading iss-front-hero__content">
+						<!-- wp:paragraph {"className":"iss-kicker iss-kicker--light iss-kicker--lg"} -->
+						<p class="iss-kicker iss-kicker--light iss-kicker--lg">Veranstaltungen</p>
+						<!-- /wp:paragraph -->
+
+						<!-- wp:heading {"level":1,"className":"iss-heading__title iss-front-hero__title"} -->
+						<h1 class="wp-block-heading iss-heading__title iss-front-hero__title">Treffen, Gespräche und öffentliche Anlässe</h1>
+						<!-- /wp:heading -->
+
+						<!-- wp:paragraph {"className":"iss-heading__text iss-front-hero__text"} -->
+						<p class="iss-heading__text iss-front-hero__text">Im Industriesalon kommen Nachbarschaft, Stadtgeschichte, Forschung, Politik und persönliche Erinnerungen in wechselnden Formaten zusammen. Die Veranstaltungen folgen keinem starren Schema, aber sie teilen denselben Ort und dieselbe öffentliche Haltung.</p>
+						<!-- /wp:paragraph -->
+
+						<!-- wp:buttons {"className":"iss-front-hero__actions"} -->
+						<div class="wp-block-buttons iss-front-hero__actions">
+							<!-- wp:button {"className":"is-style-fill"} -->
+							<div class="wp-block-button is-style-fill"><a class="wp-block-button__link wp-element-button" href="#naechste-veranstaltungen">Nächste Veranstaltungen</a></div>
+							<!-- /wp:button -->
+						</div>
+						<!-- /wp:buttons -->
+					</div>
+					<!-- /wp:group -->
+				</div>
+				<!-- /wp:group -->
+			</div>
+			<!-- /wp:group -->
+		</div></div>
+		<!-- /wp:cover -->
+	</section>
+	<!-- /wp:group -->
+
+	<!-- wp:group {"tagName":"section","className":"section section--plain iss-events-intro","layout":{"type":"default"}} -->
+	<section class="wp-block-group section section--plain iss-events-intro">
+		<!-- wp:group {"className":"iss-container","layout":{"type":"default"}} -->
+		<div class="wp-block-group iss-container">
+			<!-- wp:columns {"verticalAlignment":"top","className":"iss-events-intro__grid"} -->
+			<div class="wp-block-columns are-vertically-aligned-top iss-events-intro__grid">
+				<!-- wp:column {"verticalAlignment":"top","width":"44%"} -->
+				<div class="wp-block-column is-vertically-aligned-top" style="flex-basis:44%">
+					<!-- wp:group {"className":"iss-heading iss-heading--uncaged","layout":{"type":"default"}} -->
+					<div class="wp-block-group iss-heading iss-heading--uncaged">
+						<!-- wp:paragraph {"className":"iss-kicker iss-kicker--compact"} -->
+						<p class="iss-kicker iss-kicker--compact">Was hier passiert</p>
+						<!-- /wp:paragraph -->
+
+						<!-- wp:heading {"level":2,"className":"iss-heading__title"} -->
+						<h2 class="wp-block-heading iss-heading__title">Nicht jede Veranstaltung sieht gleich aus</h2>
+						<!-- /wp:heading -->
+
+						<!-- wp:paragraph {"className":"iss-heading__text iss-events-intro__lead"} -->
+						<p class="iss-heading__text iss-events-intro__lead">Manchmal ist es ein kleiner Abend mit wenigen Stimmen. Manchmal eine Buchvorstellung, ein Vortrag oder ein Gespräch über Stadtentwicklung, Industriekultur und Nachbarschaft.</p>
+						<!-- /wp:paragraph -->
+					</div>
+					<!-- /wp:group -->
+				</div>
+				<!-- /wp:column -->
+
+				<!-- wp:column {"verticalAlignment":"top","width":"56%"} -->
+				<div class="wp-block-column is-vertically-aligned-top" style="flex-basis:56%">
+					<!-- wp:paragraph -->
+					<p>Und manchmal wird der Industriesalon zum öffentlichen Ort für größere Anlässe mit Institutionen, Initiativen, Verwaltung und Gästen, die Schöneweide aus unterschiedlichen Perspektiven betrachten.</p>
+					<!-- /wp:paragraph -->
+
+					<!-- wp:paragraph -->
+					<p>Was die Termine verbindet, ist weniger das Format als der Zusammenhang: ein ehemaliger Industriestandort, an dem Erinnerung, Gegenwart und Stadtraum immer wieder neu miteinander ins Gespräch kommen.</p>
+					<!-- /wp:paragraph -->
+				</div>
+				<!-- /wp:column -->
+			</div>
+			<!-- /wp:columns -->
+		</div>
+		<!-- /wp:group -->
+	</section>
+	<!-- /wp:group -->
+
+	<!-- wp:group {"tagName":"section","anchor":"naechste-veranstaltungen","className":"section section--soft iss-events-query","layout":{"type":"default"}} -->
+	<section id="naechste-veranstaltungen" class="wp-block-group section section--soft iss-events-query">
+		<!-- wp:group {"className":"iss-container","layout":{"type":"default"}} -->
+		<div class="wp-block-group iss-container">
+			<!-- wp:group {"className":"iss-heading iss-heading--uncaged iss-events-query__heading","layout":{"type":"default"}} -->
+			<div class="wp-block-group iss-heading iss-heading--uncaged iss-events-query__heading">
+				<!-- wp:paragraph {"className":"iss-kicker iss-kicker--compact"} -->
+				<p class="iss-kicker iss-kicker--compact">Demnächst</p>
+				<!-- /wp:paragraph -->
+
+				<!-- wp:heading {"level":2,"className":"iss-heading__title"} -->
+				<h2 class="wp-block-heading iss-heading__title">Nächste Veranstaltungen</h2>
+				<!-- /wp:heading -->
+
+				<!-- wp:paragraph {"className":"iss-heading__text"} -->
+				<p class="iss-heading__text">Hier steht das laufende Programm. Die Filter aus der Führungen-Seite passen auch hier: Zeitraum, Monat und später ein eigener verbesserter Timeline-Render für kulturprogrammartige Abläufe.</p>
+				<!-- /wp:paragraph -->
+			</div>
+			<!-- /wp:group -->
+
+			<!-- wp:industriesalon/timeline-query {"title":"","intro":"","limit":12,"timeMode":"upcoming","postTypesList":["veranstaltung"],"showTimeModeFilter":true,"showMonthFilter":true,"allowedTimeModesList":["upcoming","month","past","all"],"yearGrouping":true,"showTypeFilter":false,"showLoadMore":true,"loadMoreText":"Mehr laden"} /-->
+		</div>
+		<!-- /wp:group -->
+	</section>
+	<!-- /wp:group -->
+
+	<!-- wp:group {"tagName":"section","className":"section section--plain iss-events-formats","layout":{"type":"default"}} -->
+	<section class="wp-block-group section section--plain iss-events-formats">
+		<!-- wp:group {"className":"iss-container","layout":{"type":"default"}} -->
+		<div class="wp-block-group iss-container">
+			<!-- wp:group {"className":"iss-heading iss-heading--uncaged iss-events-formats__heading","layout":{"type":"default"}} -->
+			<div class="wp-block-group iss-heading iss-heading--uncaged iss-events-formats__heading">
+				<!-- wp:paragraph {"className":"iss-kicker iss-kicker--compact"} -->
+				<p class="iss-kicker iss-kicker--compact">Formate</p>
+				<!-- /wp:paragraph -->
+
+				<!-- wp:heading {"level":2,"className":"iss-heading__title"} -->
+				<h2 class="wp-block-heading iss-heading__title">Vom kleinen Gespräch bis zum öffentlichen Anlass</h2>
+				<!-- /wp:heading -->
+
+				<!-- wp:paragraph {"className":"iss-heading__text"} -->
+				<p class="iss-heading__text">Die Veranstaltungen folgen keinem festen Raster. Sie entstehen aus Kooperationen, Fragen aus dem Stadtteil, historischen Themen oder aktuellen Debatten.</p>
+				<!-- /wp:paragraph -->
+			</div>
+			<!-- /wp:group -->
+
+			<!-- wp:columns {"className":"iss-events-formats__grid"} -->
+			<div class="wp-block-columns iss-events-formats__grid">
+				<!-- wp:column -->
+				<div class="wp-block-column">
+					<!-- wp:group {"className":"iss-events-format iss-events-format--red","layout":{"type":"default"}} -->
+					<div class="wp-block-group iss-events-format iss-events-format--red">
+						<!-- wp:heading {"level":3,"className":"iss-events-format__title"} -->
+						<h3 class="wp-block-heading iss-events-format__title">Gespräche</h3>
+						<!-- /wp:heading -->
+
+						<!-- wp:paragraph {"className":"iss-events-format__text"} -->
+						<p class="iss-events-format__text">Abende mit Gästen, Zeitzeuginnen, Fachleuten und Nachbarschaft, oft rund um konkrete Fragen des Ortes.</p>
+						<!-- /wp:paragraph -->
+					</div>
+					<!-- /wp:group -->
+				</div>
+				<!-- /wp:column -->
+
+				<!-- wp:column -->
+				<div class="wp-block-column">
+					<!-- wp:group {"className":"iss-events-format iss-events-format--green","layout":{"type":"default"}} -->
+					<div class="wp-block-group iss-events-format iss-events-format--green">
+						<!-- wp:heading {"level":3,"className":"iss-events-format__title"} -->
+						<h3 class="wp-block-heading iss-events-format__title">Vorträge</h3>
+						<!-- /wp:heading -->
+
+						<!-- wp:paragraph {"className":"iss-events-format__text"} -->
+						<p class="iss-events-format__text">Einführungen, Buchvorstellungen und thematische Abende zu Industriegeschichte, Stadtentwicklung und Erinnerungskultur.</p>
+						<!-- /wp:paragraph -->
+					</div>
+					<!-- /wp:group -->
+				</div>
+				<!-- /wp:column -->
+
+				<!-- wp:column -->
+				<div class="wp-block-column">
+					<!-- wp:group {"className":"iss-events-format iss-events-format--blue","layout":{"type":"default"}} -->
+					<div class="wp-block-group iss-events-format iss-events-format--blue">
+						<!-- wp:heading {"level":3,"className":"iss-events-format__title"} -->
+						<h3 class="wp-block-heading iss-events-format__title">Austausch</h3>
+						<!-- /wp:heading -->
+
+						<!-- wp:paragraph {"className":"iss-events-format__text"} -->
+						<p class="iss-events-format__text">Formate, in denen unterschiedliche Perspektiven auf Schöneweide, Industriekultur und Gegenwart direkt aufeinandertreffen.</p>
+						<!-- /wp:paragraph -->
+					</div>
+					<!-- /wp:group -->
+				</div>
+				<!-- /wp:column -->
+
+				<!-- wp:column -->
+				<div class="wp-block-column">
+					<!-- wp:group {"className":"iss-events-format iss-events-format--brown","layout":{"type":"default"}} -->
+					<div class="wp-block-group iss-events-format iss-events-format--brown">
+						<!-- wp:heading {"level":3,"className":"iss-events-format__title"} -->
+						<h3 class="wp-block-heading iss-events-format__title">Öffentliche Anlässe</h3>
+						<!-- /wp:heading -->
+
+						<!-- wp:paragraph {"className":"iss-events-format__text"} -->
+						<p class="iss-events-format__text">Größere Termine mit Institutionen, Politik, Initiativen und Stadtgesellschaft, wenn der Salon zum öffentlichen Forum wird.</p>
+						<!-- /wp:paragraph -->
+					</div>
+					<!-- /wp:group -->
+				</div>
+				<!-- /wp:column -->
+			</div>
+			<!-- /wp:columns -->
+		</div>
+		<!-- /wp:group -->
+	</section>
+	<!-- /wp:group -->
+
+	<!-- wp:group {"tagName":"section","className":"section section--dark iss-events-archive","layout":{"type":"default"}} -->
+	<section class="wp-block-group section section--dark iss-events-archive">
+		<!-- wp:group {"className":"iss-container","layout":{"type":"default"}} -->
+		<div class="wp-block-group iss-container">
+			<!-- wp:group {"className":"iss-heading iss-heading--light iss-events-archive__heading","layout":{"type":"default"}} -->
+			<div class="wp-block-group iss-heading iss-heading--light iss-events-archive__heading">
+				<!-- wp:paragraph {"className":"iss-kicker iss-kicker--light"} -->
+				<p class="iss-kicker iss-kicker--light">Archiv</p>
+				<!-- /wp:paragraph -->
+
+				<!-- wp:heading {"level":2,"className":"iss-heading__title"} -->
+				<h2 class="wp-block-heading iss-heading__title">Vergangene Veranstaltungen bleiben Teil der Ortsgeschichte</h2>
+				<!-- /wp:heading -->
+
+				<!-- wp:paragraph {"className":"iss-heading__text"} -->
+				<p class="iss-heading__text">Das Archiv ist nicht nur eine Ablage für vergangene Termine. Es zeigt, welche Themen, Gäste und öffentlichen Fragen den Industriesalon über die Jahre geprägt haben.</p>
+				<!-- /wp:paragraph -->
+			</div>
+			<!-- /wp:group -->
+
+			<!-- wp:industriesalon/timeline-query {"title":"","intro":"","limit":8,"timeMode":"past","postTypesList":["veranstaltung"],"showTimeModeFilter":true,"showMonthFilter":false,"allowedTimeModesList":["past","all"],"yearGrouping":true,"showTypeFilter":false,"showLoadMore":true,"loadMoreText":"Weiter im Archiv"} /-->
+		</div>
+		<!-- /wp:group -->
+	</section>
+	<!-- /wp:group -->
+
+	<!-- wp:group {"tagName":"section","className":"section section--plain iss-events-cta","layout":{"type":"default"}} -->
+	<section class="wp-block-group section section--plain iss-events-cta">
+		<!-- wp:group {"className":"iss-container","layout":{"type":"default"}} -->
+		<div class="wp-block-group iss-container">
+			<!-- wp:group {"className":"iss-events-cta__panel","layout":{"type":"default"}} -->
+			<div class="wp-block-group iss-events-cta__panel">
+				<!-- wp:group {"className":"iss-heading iss-heading--uncaged iss-events-cta__heading","layout":{"type":"default"}} -->
+				<div class="wp-block-group iss-heading iss-heading--uncaged iss-events-cta__heading">
+					<!-- wp:paragraph {"className":"iss-kicker iss-kicker--compact"} -->
+					<p class="iss-kicker iss-kicker--compact">Mitmachen</p>
+					<!-- /wp:paragraph -->
+
+					<!-- wp:heading {"level":2,"className":"iss-heading__title"} -->
+					<h2 class="wp-block-heading iss-heading__title">Eine Idee für eine Veranstaltung?</h2>
+					<!-- /wp:heading -->
+
+					<!-- wp:paragraph {"className":"iss-heading__text"} -->
+					<p class="iss-heading__text">Der Industriesalon ist offen für Kooperationen, Gespräche und Formate, die zum Ort und zu seinen Themen passen.</p>
+					<!-- /wp:paragraph -->
+				</div>
+				<!-- /wp:group -->
+
+				<!-- wp:buttons {"className":"iss-events-cta__actions"} -->
+				<div class="wp-block-buttons iss-events-cta__actions">
+					<!-- wp:button {"className":"is-style-fill"} -->
+					<div class="wp-block-button is-style-fill"><a class="wp-block-button__link wp-element-button" href="/kontakt/">Kontakt aufnehmen</a></div>
+					<!-- /wp:button -->
+				</div>
+				<!-- /wp:buttons -->
+			</div>
+			<!-- /wp:group -->
+		</div>
+		<!-- /wp:group -->
+	</section>
+	<!-- /wp:group -->
+</main>
+<!-- /wp:group -->
+
+<!-- wp:template-part {"slug":"footer","theme":"industriesalon","tagName":"footer"} /-->

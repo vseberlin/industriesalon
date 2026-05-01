@@ -1,5 +1,28 @@
 # Changelog
 
+## 2026-05-01
+- Restored clean page-owned public routes for the main landing sections instead of leaving CPT/page slug collisions in place:
+  - added route-guard logic in `plugins/iss-content-model/iss-content-model.php` so page-owned landing slugs disable colliding CPT archives automatically
+  - restored `/ausstellungen/` to the page template after the archive-template rename had exposed the CPT archive fallback
+  - moved `Führungen` onto the intended public route `/fuehrungen/` and renamed the template from `fuehrungen-landing.html` to `page-fuehrungen.html`
+  - created/assigned `page-veranstaltungen.html` so `/veranstaltungen/` is page-owned rather than dependent on the removed archive template
+- Reworked the `Veranstaltungen` landing using existing theme parts instead of one-off sections:
+  - reused the `Ausstellungen` editorial text rhythm
+  - reused existing route-card/image-text patterns for the visual program section
+  - kept the live `industriesalon/timeline-query` filter system as the functional core
+  - removed the redundant archive section
+  - switched the page accent treatment to theme blue
+  - replaced the custom `Mitmachen` card with the shared info-panel pattern
+- Refined the shell menu:
+  - adjusted spacing between primary/secondary items, section dividers, and the contact row in `themes/industriesalon/style.css`
+  - corrected the requested shell navigation links, including the final `Über uns` target `/about/`
+- Normalized the shared hero/cover/banner system across the active landing templates in `themes/industriesalon`:
+  - active landing pages and generic page heroes now use the home-page `iss-front-hero` + `iss-front-banner-slot` structure
+  - kept `Über uns`, `Publikationen`, and `Verein` on their own hero systems
+  - removed stale inner-page hero overlap in `assets/css/patterns.css`
+  - moved viewport-height ownership fully into shared CSS by deleting inline cover `min-height` values from the home page and active front-hero templates
+  - shared hero viewport height now follows the home-page value globally via `90svh` / `90dvh`
+
 ## 2026-04-30
 - Refactored `plugins/iss-programm/includes/timeline-query.php` to remove the worst timeline filter slowdown without changing filter behavior:
   - replaced the expensive overlap `OR` meta-query branch with split simple queries plus PHP-side merge/dedupe/sort
