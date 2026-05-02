@@ -308,16 +308,21 @@ add_action('admin_head', function() {
 });
 
 /**
- * Single post layout variants (standard / image / short).
+ * Single post layout variants (standard / compact / long).
  */
 function industriesalon_post_layout_choices(): array
 {
-    return array('standard', 'image', 'short');
+    return array('standard', 'compact', 'long');
 }
 
 function industriesalon_sanitize_post_layout($value): string
 {
     $value = sanitize_key((string) $value);
+    if ($value === 'short') {
+        $value = 'compact';
+    } elseif ($value === 'image') {
+        $value = 'standard';
+    }
     return in_array($value, industriesalon_post_layout_choices(), true) ? $value : 'standard';
 }
 
@@ -388,13 +393,22 @@ function industriesalon_enqueue_post_layout_editor_assets(): void
   var useDispatch = wp.data.useDispatch;
 
   var options = [
-    { label: 'Standard (Bild im Container)', value: 'standard' },
-    { label: 'Bildfokus (Hero Full Width)', value: 'image' },
-    { label: 'Kurze Meldung (kompakt)', value: 'short' }
+    { label: 'Standard', value: 'standard' },
+    { label: 'Kurze Meldung', value: 'compact' },
+    { label: 'Longread', value: 'long' }
   ];
 
-  function isValidLayout(value) {
-    return value === 'standard' || value === 'image' || value === 'short';
+  function normalizeLayout(value) {
+    if (value === 'short') {
+      return 'compact';
+    }
+    if (value === 'image') {
+      return 'standard';
+    }
+    if (value === 'standard' || value === 'compact' || value === 'long') {
+      return value;
+    }
+    return 'standard';
   }
 
   function PostLayoutPanel() {
@@ -412,7 +426,7 @@ function industriesalon_enqueue_post_layout_editor_assets(): void
       return null;
     }
 
-    var value = isValidLayout(meta._iss_post_layout) ? meta._iss_post_layout : 'standard';
+    var value = normalizeLayout(meta._iss_post_layout);
 
     return createElement(
       PluginDocumentSettingPanel,
@@ -423,7 +437,8 @@ function industriesalon_enqueue_post_layout_editor_assets(): void
         options: options,
         help: 'Wählt die Darstellung für diesen Beitrag im Frontend.',
         onChange: function (nextValue) {
-          if (!isValidLayout(nextValue)) {
+          nextValue = normalizeLayout(nextValue);
+          if (!nextValue) {
             nextValue = 'standard';
           }
           editPost({ meta: Object.assign({}, meta, { _iss_post_layout: nextValue }) });

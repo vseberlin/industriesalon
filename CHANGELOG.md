@@ -1,5 +1,15 @@
 # Changelog
 
+## 2026-05-02
+- Redesigned regular single posts to follow the same layout logic as `Veranstaltung`, but in the theme red scheme:
+  - replaced the old `standard / image / short` post layout model with `standard / compact / long`
+  - preserved backwards compatibility by normalizing stored `_iss_post_layout` values:
+    - `short` -> `compact`
+    - `image` -> `standard`
+  - rebuilt `themes/industriesalon/templates/single.html` around one authoritative intro/body shell
+  - added the corresponding red post layout variants in `themes/industriesalon/assets/css/patterns.css`
+- Added the required intro gradient treatment to single `Führung` pages by moving top spacing ownership into `.iss-tour-hero`.
+
 ## 2026-05-01
 - Moved project follow-up items out of scattered handoff/changelog notes into root `TODO.md`.
 - Restored clean page-owned public routes for the main landing sections instead of leaving CPT/page slug collisions in place:

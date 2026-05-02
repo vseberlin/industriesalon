@@ -2,48 +2,82 @@
 
 <!-- wp:group {"tagName":"main","className":"iss-post-page","layout":{"type":"default"}} -->
 <main class="wp-block-group iss-post-page">
-
-	<!-- wp:group {"tagName":"section","className":"iss-post-hero section","layout":{"type":"default"}} -->
-	<section class="wp-block-group iss-post-hero section">
+	<!-- wp:group {"tagName":"section","className":"iss-post-intro section","layout":{"type":"default"}} -->
+	<section class="wp-block-group iss-post-intro section">
 		<!-- wp:group {"className":"iss-container","layout":{"type":"default"}} -->
 		<div class="wp-block-group iss-container">
+			<!-- wp:columns {"verticalAlignment":"top","className":"iss-post-intro__content-grid"} -->
+			<div class="wp-block-columns are-vertically-aligned-top iss-post-intro__content-grid">
+				<!-- wp:column {"verticalAlignment":"top","width":"46%","className":"iss-post-intro__media-col"} -->
+				<div class="wp-block-column is-vertically-aligned-top iss-post-intro__media-col" style="flex-basis:46%">
+					<!-- wp:group {"className":"iss-post-intro__media iss-media-card iss-media-card--cover iss-media-card--red","layout":{"type":"default"}} -->
+					<div class="wp-block-group iss-post-intro__media iss-media-card iss-media-card--cover iss-media-card--red">
+						<!-- wp:post-featured-image {"isLink":false} /-->
+					</div>
+					<!-- /wp:group -->
 
-			<!-- wp:group {"className":"iss-post-hero__media iss-media-card iss-media-card--cover iss-media-card--red","layout":{"type":"default"}} -->
-			<div class="wp-block-group iss-post-hero__media iss-media-card iss-media-card--cover iss-media-card--red">
-				<!-- wp:post-featured-image {"isLink":false} /-->
-			</div>
-			<!-- /wp:group -->
+					<!-- wp:group {"className":"iss-post-intro__meta iss-info-panel iss-info-panel--red","layout":{"type":"default"}} -->
+					<div class="wp-block-group iss-post-intro__meta iss-info-panel iss-info-panel--red">
+						<!-- wp:paragraph {"className":"iss-kicker iss-kicker--compact"} -->
+						<p class="iss-kicker iss-kicker--compact">Beitrag</p>
+						<!-- /wp:paragraph -->
 
-			<!-- wp:group {"className":"iss-post-hero__intro iss-heading iss-heading--uncaged","layout":{"type":"default"}} -->
-			<div class="wp-block-group iss-post-hero__intro iss-heading iss-heading--uncaged">
+						<!-- wp:heading {"level":3,"className":"iss-info-panel__title"} -->
+						<h3 class="wp-block-heading iss-info-panel__title">Veröffentlicht</h3>
+						<!-- /wp:heading -->
 
-				<!-- wp:post-terms {"term":"category","className":"iss-kicker iss-kicker--compact"} /-->
+						<!-- wp:group {"className":"iss-info-panel__rows","layout":{"type":"default"}} -->
+						<div class="wp-block-group iss-info-panel__rows">
+							<!-- wp:group {"className":"iss-info-row","layout":{"type":"default"}} -->
+							<div class="wp-block-group iss-info-row">
+								<!-- wp:group {"className":"iss-info-row__main","layout":{"type":"default"}} -->
+								<div class="wp-block-group iss-info-row__main">
+									<!-- wp:paragraph {"className":"iss-info-row__text iss-post-intro__meta-label"} -->
+									<p class="iss-info-row__text iss-post-intro__meta-label"><strong>Datum</strong></p>
+									<!-- /wp:paragraph -->
+									<!-- wp:post-date {"format":"j. F Y","className":"iss-info-row__text iss-post-intro__meta-value"} /-->
+								</div>
+								<!-- /wp:group -->
+							</div>
+							<!-- /wp:group -->
 
-				<!-- wp:post-title {"level":1,"className":"iss-post-hero__title iss-heading__title"} /-->
-
-				<!-- wp:post-excerpt {"moreText":"","showMoreOnNewLine":false,"excerptLength":36,"className":"iss-post-hero__lede iss-heading__text"} /-->
-
-				<!-- wp:group {"className":"iss-post-meta","layout":{"type":"default"}} -->
-				<div class="wp-block-group iss-post-meta">
-					<!-- wp:post-date {"format":"j. F Y","className":"iss-post-meta__date"} /-->
+							<!-- wp:group {"className":"iss-info-row","layout":{"type":"default"}} -->
+							<div class="wp-block-group iss-info-row">
+								<!-- wp:group {"className":"iss-info-row__main","layout":{"type":"default"}} -->
+								<div class="wp-block-group iss-info-row__main">
+									<!-- wp:paragraph {"className":"iss-info-row__text iss-post-intro__meta-label"} -->
+									<p class="iss-info-row__text iss-post-intro__meta-label"><strong>Kategorie</strong></p>
+									<!-- /wp:paragraph -->
+									<!-- wp:post-terms {"term":"category","className":"iss-info-row__text iss-post-intro__meta-value"} /-->
+								</div>
+								<!-- /wp:group -->
+							</div>
+							<!-- /wp:group -->
+						</div>
+						<!-- /wp:group -->
+					</div>
+					<!-- /wp:group -->
 				</div>
-				<!-- /wp:group -->
+				<!-- /wp:column -->
 
+				<!-- wp:column {"verticalAlignment":"top","width":"54%","className":"iss-post-intro__copy-col"} -->
+				<div class="wp-block-column is-vertically-aligned-top iss-post-intro__copy-col" style="flex-basis:54%">
+					<!-- wp:group {"className":"iss-post-intro__copy iss-heading iss-heading--uncaged","layout":{"type":"default"}} -->
+					<div class="wp-block-group iss-post-intro__copy iss-heading iss-heading--uncaged">
+						<!-- wp:post-terms {"term":"category","className":"iss-kicker iss-kicker--compact"} /-->
+						<!-- wp:post-title {"level":1,"className":"iss-post-intro__title iss-heading__title"} /-->
+					</div>
+					<!-- /wp:group -->
+
+					<!-- wp:group {"className":"iss-post-body__content iss-post-intro__body","layout":{"type":"default"}} -->
+					<div class="wp-block-group iss-post-body__content iss-post-intro__body">
+						<!-- wp:post-content /-->
+					</div>
+					<!-- /wp:group -->
+				</div>
+				<!-- /wp:column -->
 			</div>
-			<!-- /wp:group -->
-
-		</div>
-		<!-- /wp:group -->
-	</section>
-	<!-- /wp:group -->
-
-	<!-- wp:group {"tagName":"section","className":"iss-post-main section","layout":{"type":"default"}} -->
-	<section class="wp-block-group iss-post-main section">
-		<!-- wp:group {"className":"iss-post-content","layout":{"type":"default"}} -->
-		<div class="wp-block-group iss-post-content">
-
-			<!-- wp:post-content /-->
-
+			<!-- /wp:columns -->
 		</div>
 		<!-- /wp:group -->
 	</section>

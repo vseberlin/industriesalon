@@ -1,75 +1,47 @@
 # Handoff Current
 
 ## Status
-- `not committed`
+- `committed`
 
 ## Date / Window
-- Date: `2026-05-01`
+- Date: `2026-05-02`
 - Timezone: `Europe/Berlin`
 
 ## Branch / Commit
 - Branch: `master`
-- HEAD at session start: `536443e`
+- HEAD at session start: `b68638e`
 
 ## What Was Done This Session
-- Fixed page/archive route ownership collisions in the active site:
-  - confirmed `/ausstellungen/` had fallen back to the CPT archive after the archive template rename
-  - confirmed `page-ausstellungen.html` still held the intended landing content
-  - added route-guard logic in `plugins/iss-content-model/iss-content-model.php` so page-owned landing slugs can disable colliding CPT archives automatically
-  - restored `/ausstellungen/` to the page-owned landing route
-- Continued the same page-owned route cleanup for program landings:
-  - `Veranstaltungen`:
-    - confirmed the old `archive-veranstaltung.html` was the only prior dedicated template and was sparse
-    - created `themes/industriesalon/templates/page-veranstaltungen.html` as the page-owned landing
-    - created/assigned the live page route so `/veranstaltungen/` is no longer archive-owned
-  - `Führungen`:
-    - confirmed the live page already existed but under slug `/fuhrungen/`
-    - renamed `fuehrungen-landing.html` to `page-fuehrungen.html`
-    - moved the existing live page to slug `/fuehrungen/`
-    - let the archive auto-disable under the shared route guard
-- Reworked the `Veranstaltungen` landing structure using existing theme systems instead of one-off sections:
-  - reused the `Ausstellungen` text-block rhythm
-  - reused existing route-card/image-text patterns
-  - removed the redundant archive section
-  - kept the existing filter/timeline-query system as the functional core
-  - later tightened the page again:
-    - switched accents to theme blue
-    - replaced the custom `Mitmachen` box with the shared info-panel pattern
-- Updated the shell menu:
-  - refined spacing between primary items, secondary items, divider areas, and the contact row in `themes/industriesalon/style.css`
-  - corrected the requested primary/secondary navigation targets in the stored navigation records
-  - fixed `Über uns` links to use the actual live slug `/about/`
-- Normalized the active landing-page hero system around the home-page hero markup/CSS:
-  - converted active landing templates and generic page templates to the shared `iss-front-hero` + `iss-front-banner-slot` structure
-  - kept `Über uns`, `Publikationen`, and `Verein` on their separate hero systems
-  - removed stale page-level hero compensation layers and old inner-page hero overlap where no longer needed
-  - unified viewport-height ownership under the shared hero CSS by removing inline cover `min-height` values from:
-    - `front-page.html`
-    - `page.html`
-    - `hero-page.html`
-    - `page-fuehrungen.html`
-    - `page-ausstellungen.html`
-    - `page-veranstaltungen.html`
-    - `page-salon-vermietung.html`
-    - `page-repair-cafe.html`
-    - `page-projekte.html`
-    - `page-archiv.html`
-  - shared hero viewport height now follows the home-page value globally through `themes/industriesalon/assets/css/patterns.css`
+- Replaced the old generic post single shell with the same layout logic used for `Veranstaltung`, but in the theme red scheme:
+  - converted the `post` layout selector from `standard / image / short` to `standard / compact / long`
+  - preserved old stored values safely:
+    - `short` now normalizes to `compact`
+    - `image` now normalizes to `standard`
+  - rebuilt `themes/industriesalon/templates/single.html` to use one authoritative intro/body structure:
+    - media + meta on the left
+    - title + content on the right
+    - `compact` and `long` handled by body-class variants in CSS
+- Added the red post single layout system in `themes/industriesalon/assets/css/patterns.css`:
+  - `standard`: split editorial layout
+  - `compact`: narrow centered short-message layout
+  - `long`: one-column longread layout
+  - restored sane inline-image wrapping behavior inside post content
+- Added the must-have intro gradient treatment to single `Führung` pages by moving top spacing ownership into `.iss-tour-hero` instead of `.iss-tour-page`
+- Left `single-tour.html` and `single-tour-on-demand.html` structurally unchanged; booking and calendar behavior were not touched
+- Earlier in the session:
+  - redesigned `single-ausstellung.html` into an exhibition-specific layout with intro media, brown meta panel, and template-led story shell
+  - committed that exhibition-specific redesign separately as `b68638e`
 
 ## Verification
 - Active theme remained `industriesalon`
-- `/ausstellungen/`, `/fuehrungen/`, `/veranstaltungen/`, `/salon-vermietung/`, `/repair-cafe/`, `/archiv/`, and `/projekte/` returned `200`
-- live route checks showed the shared `iss-front-hero` markup on the normalized landing pages
-- `/about/` still rendered its separate `iss-page-hero__title`-based hero
-- `/publikationen/` still rendered `iss-publications-masthead`
-- `/verein/` still rendered `iss-verein-hero`
-- leftover scan for inline front-hero `min-height` markup in the active templates returned clean after the final template pass
+- `single.html` parses cleanly through WordPress `parse_blocks()`
+- `/offnungszeiten/` now renders with `iss-post-layout-compact` while still storing legacy meta value `short`
+- `/fuehrungen/elektropolis-tour/` still renders the expected `iss-tour-page` / `iss-tour-hero` structure after the gradient change
 
 ## Important Notes
-- Worktree is still uncommitted.
-- `page-veranstaltungen.html.bak-20260501-rollback` still exists as the requested rollback snapshot.
-- `Verein` remains intentionally outside the shared front-hero system even though the page is now live.
-- Follow-up backlog now lives in `TODO.md`.
+- The post layout editor UI now exposes `Standard`, `Kurze Meldung`, and `Longread`.
+- Existing posts using `_iss_post_layout=short` remain valid through normalization; no data migration was required.
+- `single-ausstellung` was already committed earlier in this session chain as `b68638e`.
 
 ## Continuity Prompt
 - Start next session with: `read /home/vladimir/wp/handoff_CURRENT.md`
