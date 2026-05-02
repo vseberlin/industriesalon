@@ -1,10 +1,7 @@
 # Changelog
 
 ## 2026-05-01
-- Added a post-UAT follow-up TODO in project handoff/changelog:
-  - revamp editorial publishing toward a local CPT-first flow for `Veranstaltung`, `Ausstellung`, and `Führung`
-  - target one minimal create/publish path with automatic visibility in calendar, timeline, and cards
-  - reduce SaaS dependency out of the normal content-creation workflow after UAT
+- Moved project follow-up items out of scattered handoff/changelog notes into root `TODO.md`.
 - Restored clean page-owned public routes for the main landing sections instead of leaving CPT/page slug collisions in place:
   - added route-guard logic in `plugins/iss-content-model/iss-content-model.php` so page-owned landing slugs disable colliding CPT archives automatically
   - restored `/ausstellungen/` to the page template after the archive-template rename had exposed the CPT archive fallback

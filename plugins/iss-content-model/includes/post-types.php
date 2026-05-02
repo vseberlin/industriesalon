@@ -19,7 +19,7 @@ function iss_content_model_register_post_types() {
         'rewrite' => ['slug' => 'veranstaltungen', 'with_front' => false],
         'menu_position' => 22,
         'menu_icon' => 'dashicons-calendar',
-        'supports' => ['title', 'editor', 'excerpt', 'thumbnail', 'revisions', 'page-attributes'],
+        'supports' => ['title', 'editor', 'excerpt', 'thumbnail', 'revisions', 'page-attributes', 'custom-fields'],
         'taxonomies' => ['category', 'post_tag'],
     ]);
 
