@@ -1,59 +1,37 @@
 <!-- wp:template-part {"slug":"header","tagName":"header"} /-->
 
-<!-- wp:group {"tagName":"main","className":"iss-post-page","layout":{"type":"default"}} -->
-<main class="wp-block-group iss-post-page">
-	<!-- wp:group {"tagName":"section","className":"iss-post-hero section","layout":{"type":"default"}} -->
-	<section class="wp-block-group iss-post-hero section">
+<!-- wp:group {"tagName":"main","className":"iss-ausstellung-page","layout":{"type":"default"}} -->
+<main class="wp-block-group iss-ausstellung-page">
+	<!-- wp:group {"tagName":"section","className":"section iss-ausstellung-intro","layout":{"type":"default"}} -->
+	<section class="wp-block-group section iss-ausstellung-intro">
 		<!-- wp:group {"className":"iss-container","layout":{"type":"default"}} -->
 		<div class="wp-block-group iss-container">
-			<!-- wp:group {"className":"iss-post-hero__media iss-media-card iss-media-card--cover iss-media-card--red","layout":{"type":"default"}} -->
-			<div class="wp-block-group iss-post-hero__media iss-media-card iss-media-card--cover iss-media-card--red">
-				<!-- wp:post-featured-image {"isLink":false} /-->
-			</div>
-			<!-- /wp:group -->
-
-			<!-- wp:group {"className":"iss-post-hero__intro iss-heading iss-heading--uncaged","layout":{"type":"default"}} -->
-			<div class="wp-block-group iss-post-hero__intro iss-heading iss-heading--uncaged">
-				<!-- wp:paragraph {"className":"iss-kicker iss-kicker--compact"} -->
-				<p class="iss-kicker iss-kicker--compact">Ausstellung</p>
-				<!-- /wp:paragraph -->
-
-				<!-- wp:post-title {"level":1,"className":"iss-post-hero__title iss-heading__title"} /-->
-				<!-- wp:post-excerpt {"moreText":"","showMoreOnNewLine":false,"excerptLength":36,"className":"iss-post-hero__lede iss-heading__text"} /-->
-			</div>
-			<!-- /wp:group -->
-		</div>
-		<!-- /wp:group -->
-	</section>
-	<!-- /wp:group -->
-
-	<!-- wp:group {"tagName":"section","className":"section section--plain","layout":{"type":"default"}} -->
-	<section class="wp-block-group section section--plain">
-		<!-- wp:group {"className":"iss-container","layout":{"type":"default"}} -->
-		<div class="wp-block-group iss-container">
-			<!-- wp:columns {"verticalAlignment":"top"} -->
-			<div class="wp-block-columns are-vertically-aligned-top">
-				<!-- wp:column {"verticalAlignment":"top","width":"68%"} -->
-				<div class="wp-block-column is-vertically-aligned-top" style="flex-basis:68%">
-					<!-- wp:group {"className":"iss-heading","layout":{"type":"default"}} -->
-					<div class="wp-block-group iss-heading">
-						<!-- wp:paragraph {"className":"iss-kicker iss-kicker--compact"} -->
-						<p class="iss-kicker iss-kicker--compact">Zur Ausstellung</p>
-						<!-- /wp:paragraph -->
-
-						<!-- wp:heading {"level":2,"className":"iss-heading__title"} -->
-						<h2 class="wp-block-heading iss-heading__title">Beschreibung</h2>
-						<!-- /wp:heading -->
+			<!-- wp:columns {"verticalAlignment":"top","className":"iss-ausstellung-intro__grid"} -->
+			<div class="wp-block-columns are-vertically-aligned-top iss-ausstellung-intro__grid">
+				<!-- wp:column {"verticalAlignment":"top","width":"42%","className":"iss-ausstellung-intro__media-col"} -->
+				<div class="wp-block-column is-vertically-aligned-top iss-ausstellung-intro__media-col" style="flex-basis:42%">
+					<!-- wp:group {"className":"iss-ausstellung-intro__media iss-media-card iss-media-card--cover iss-media-card--brown","layout":{"type":"default"}} -->
+					<div class="wp-block-group iss-ausstellung-intro__media iss-media-card iss-media-card--cover iss-media-card--brown">
+						<!-- wp:post-featured-image {"isLink":false} /-->
 					</div>
 					<!-- /wp:group -->
-
-					<!-- wp:post-content /-->
 				</div>
 				<!-- /wp:column -->
 
-				<!-- wp:column {"verticalAlignment":"top","width":"32%"} -->
-				<div class="wp-block-column is-vertically-aligned-top" style="flex-basis:32%">
-					<!-- wp:iss/content-meta {"variant":"blue"} /-->
+				<!-- wp:column {"verticalAlignment":"top","width":"58%","className":"iss-ausstellung-intro__copy-col"} -->
+				<div class="wp-block-column is-vertically-aligned-top iss-ausstellung-intro__copy-col" style="flex-basis:58%">
+					<!-- wp:group {"className":"iss-ausstellung-intro__copy iss-heading iss-heading--uncaged","layout":{"type":"default"}} -->
+					<div class="wp-block-group iss-ausstellung-intro__copy iss-heading iss-heading--uncaged">
+						<!-- wp:paragraph {"className":"iss-kicker iss-kicker--compact"} -->
+						<p class="iss-kicker iss-kicker--compact">Ausstellung</p>
+						<!-- /wp:paragraph -->
+
+						<!-- wp:post-title {"level":1,"className":"iss-ausstellung-intro__title iss-heading__title"} /-->
+						<!-- wp:post-excerpt {"moreText":"","showMoreOnNewLine":false,"excerptLength":18,"className":"iss-ausstellung-intro__lede iss-heading__text"} /-->
+					</div>
+					<!-- /wp:group -->
+
+					<!-- wp:iss/content-meta {"variant":"brown","kicker":"Besuch","title":"Laufzeit und Kontext"} /-->
 				</div>
 				<!-- /wp:column -->
 			</div>
@@ -63,8 +41,34 @@
 	</section>
 	<!-- /wp:group -->
 
-	<!-- wp:group {"tagName":"section","className":"section section--soft","layout":{"type":"default"}} -->
-	<section class="wp-block-group section section--soft">
+	<!-- wp:group {"tagName":"section","className":"section section--plain iss-ausstellung-story","layout":{"type":"default"}} -->
+	<section class="wp-block-group section section--plain iss-ausstellung-story">
+		<!-- wp:group {"className":"iss-container","layout":{"type":"default"}} -->
+		<div class="wp-block-group iss-container">
+			<!-- wp:group {"className":"iss-heading iss-ausstellung-story__heading","layout":{"type":"default"}} -->
+			<div class="wp-block-group iss-heading iss-ausstellung-story__heading">
+				<!-- wp:paragraph {"className":"iss-kicker iss-kicker--compact"} -->
+				<p class="iss-kicker iss-kicker--compact">Zur Ausstellung</p>
+				<!-- /wp:paragraph -->
+
+				<!-- wp:heading {"level":2,"className":"iss-heading__title"} -->
+				<h2 class="wp-block-heading iss-heading__title">Objekte, Geschichte, Zusammenhang</h2>
+				<!-- /wp:heading -->
+			</div>
+			<!-- /wp:group -->
+
+			<!-- wp:group {"className":"iss-ausstellung-story__content","layout":{"type":"default"}} -->
+			<div class="wp-block-group iss-ausstellung-story__content">
+				<!-- wp:post-content /-->
+			</div>
+			<!-- /wp:group -->
+		</div>
+		<!-- /wp:group -->
+	</section>
+	<!-- /wp:group -->
+
+	<!-- wp:group {"tagName":"section","className":"section section--soft iss-ausstellung-more","layout":{"type":"default"}} -->
+	<section class="wp-block-group section section--soft iss-ausstellung-more">
 		<!-- wp:group {"className":"iss-container","layout":{"type":"default"}} -->
 		<div class="wp-block-group iss-container">
 			<!-- wp:group {"className":"iss-heading","layout":{"type":"default"}} -->
