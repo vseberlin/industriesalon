@@ -1,108 +1,242 @@
 # Industriesalon Steuerung
 
-Diese Anleitung ist für die Redaktion.
+Diese Anleitung ist für die Redaktion und alle, die Inhalte im WordPress-Admin pflegen.
 
 ## Wofür ist das Plugin da?
 
-Hier werden wichtige Angaben an einer Stelle gepflegt:
+`Industriesalon Steuerung` ist die zentrale Stelle für wiederverwendbare Besuchs- und Basisinformationen.
 
-- Adresse
+Hier pflegen Sie:
+
+- Standort und Adresse
 - Kontakt
+- Google Maps / Anfahrt
 - Besuchszeiten
 - Bürozeiten
 - Sondertage
 - Preise
 - Barrierefreiheit
-- FAQ
-- kurzer Beschreibungstext
+- häufige Fragen
+- Mission Statement
 
-Nach dem Speichern erscheinen die Änderungen automatisch auf der Website.
+Die Angaben werden danach automatisch an verschiedenen Stellen der Website ausgegeben.
 
-## Wo finde ich die Zeiten?
+Das wichtigste Prinzip:
 
-Im WordPress-Menü:
+- Daten nur hier pflegen
+- nicht dieselben Angaben zusätzlich in einzelnen Seiten eintragen
 
-`Industriesalon Steuerung -> Besuchszeiten`
+## Wo finde ich das Plugin?
 
-Dort gibt es drei Bereiche:
+Im WordPress-Admin:
 
-1. Besuchszeiten
-2. Bürozeiten
-3. Sondertage
+- `Industriesalon Steuerung`
 
-## Normale Zeiten eintragen
+Dort finden Sie oben Reiter für die einzelnen Bereiche.
 
-Für jeden Wochentag:
+## Was sind normale Zeiten und was sind Sondertage?
 
-- Haken bei `Geschlossen`, wenn der Tag zu ist
-- sonst Uhrzeit von und bis eintragen
-- optional einen kurzen Hinweis schreiben
+Es gibt zwei Arten von Zeitangaben:
+
+- `Besuchszeiten`
+  Das sind die normalen regulären Öffnungszeiten für Besucherinnen und Besucher.
+
+- `Bürozeiten`
+  Das sind interne oder organisatorische Zeiten, die getrennt gepflegt werden können.
+
+- `Sondertage`
+  Das sind Abweichungen für ein bestimmtes Datum.
 
 Beispiel:
 
-- Montag bis Donnerstag: `10:00` bis `18:00`
-- Freitag: `10:00` bis `14:00`
-- Samstag und Sonntag: geschlossen
+- regulär: `Do–So 14–18 Uhr`
+- Sondertag: `01.05. geschlossen`
+- Sondertag: `12.05. Sonderöffnung 16–20 Uhr`
 
-## Sondertage eintragen
+## Sondertage richtig verwenden
 
-Sondertage gelten nur für ein bestimmtes Datum.
+Jeder Sondertag hat jetzt eine klare Bedeutung.
 
-So gehen Sie vor:
+Sie wählen für jedes Datum eine `Art des Sondertags`:
 
-1. Datum wählen
-2. Bereich wählen
-3. Geschlossen markieren oder Zeiten eintragen
-4. optional einen kurzen Hinweis schreiben
+- `Geschlossen`
+  Der Ort ist an diesem Datum geschlossen.
+
+- `Sonderöffnung`
+  Ein zusätzlicher oder abweichender Öffnungstermin.
+
+- `Länger geöffnet`
+  Der Ort ist länger als sonst offen.
+
+- `Verkürzte Zeit`
+  Der Ort ist offen, aber kürzer als sonst.
+
+- `Veranstaltungstag`
+  Es gibt einen besonderen Veranstaltungstag. Das kann normale Besuche beeinflussen.
+
+- `Nur nach Vereinbarung`
+  Kein freier Besuch, nur mit Absprache.
+
+Diese Auswahl ist wichtig, weil die Website daraus automatisch passende Texte bildet:
+
+- `Heute geschlossen`
+- `Heute Sonderöffnung`
+- `Heute länger geöffnet`
+- `Heute nur nach Vereinbarung`
+
+## So tragen Sie reguläre Öffnungszeiten ein
+
+Im Reiter `Besuchszeiten`:
+
+1. Für jeden Wochentag `von` und `bis` eintragen.
+2. Falls geschlossen: Haken bei `Geschlossen`.
+3. Optional: kurzer Hinweis pro Wochentag.
+4. Optional: `Globaler Hinweis` für die ganze Gruppe.
+
+Beispiel:
+
+- Donnerstag `14:00` bis `18:00`
+- Freitag `14:00` bis `18:00`
+- Samstag `14:00` bis `18:00`
+- Sonntag `14:00` bis `18:00`
+
+## So tragen Sie einen Sondertag ein
+
+Im Reiter `Besuchszeiten` im Abschnitt `Sondertage`:
+
+1. `Sondertag hinzufügen`
+2. Datum auswählen
+3. Bereich wählen:
+   - `Besuchszeiten`
+   - `Bürozeiten`
+   - `Beides`
+4. `Art des Sondertags` wählen
+5. Falls nötig Zeit von/bis eintragen
+6. Optional `Kurzes Label` ergänzen
+7. Optional `Hinweis` ergänzen
+
+### Wofür ist das kurze Label?
+
+Das kurze Label überschreibt die automatische Kurzbezeichnung in Listen oder Statuszeilen.
 
 Beispiele:
 
-- Feiertag geschlossen
-- nur am Nachmittag geöffnet
-- Büro an diesem Tag geschlossen
+- `Ferienöffnung`
+- `Nur Abendprogramm`
+- `Aufbau`
 
-## Was sehe ich auf der Website?
+Bitte sparsam verwenden. Meist reicht die gewählte Art des Sondertags.
 
-Kurz und klar:
+### Wofür ist der Hinweis?
 
-- `Heute geöffnet`
-- `Heute geschlossen`
-- `Heute Sonderöffnung`
-- kurze Zeitangaben
-- Sondertage nur, wenn sie wichtig sind
+Der Hinweis ist ein ergänzender kurzer Satz für Menschen, die mehr Kontext brauchen.
 
-## Wie verwende ich den Inhalt?
+Beispiele:
 
-Sie müssen die Daten nur im Plugin pflegen.
+- `Nur Erdgeschoss zugänglich`
+- `Einlass nur bis 17 Uhr`
+- `Besuch parallel zur Veranstaltung möglich`
+
+## Wie werden die Daten auf der Website genutzt?
+
+Die Website kann dieselben Daten in verschiedenen Formen anzeigen:
+
+- als kurze Fußzeile
+- als Karte auf der Startseite
+- als Info-Panel
+- als ausführliche Tabelle
+- als kurze Statuszeile wie `Heute geöffnet`
+
+Sie müssen dafür nichts extra einstellen.
+
+Wichtig ist nur:
+
+- Zeiten korrekt pflegen
+- Sondertage semantisch korrekt auswählen
+
+## Was Sie nicht tun sollten
 
 Bitte nicht:
 
-- Texte auf einzelnen Seiten doppelt pflegen
-- Zeiten direkt in Seiten eintragen
-- Inhalte an mehreren Stellen unterschiedlich ändern
-
-## Sichern und Wiederherstellen
-
-Im Bereich `Import / Export` können Sie:
-
-- Daten sichern
-- Daten wiederherstellen
-
-Das ist für Sicherungen oder einen Umzug gedacht, nicht für den Alltag.
+- Öffnungszeiten direkt in Seitentexte schreiben
+- dieselbe Adresse an mehreren Stellen manuell pflegen
+- Sonderfälle als freien Fließtext ohne Datum eintragen
+- Sondertage mit falscher Art anlegen, nur um einen Text zu erzwingen
 
 ## Gute Arbeitsweise
 
-1. Änderungen machen
-2. Speichern
-3. Seite kurz prüfen
-4. Bei größeren Änderungen vorher eine Sicherung machen
+Vor einer Änderung:
 
-## Wenn etwas nicht stimmt
+1. Prüfen, ob es eine reguläre Änderung oder ein Sondertag ist.
+2. Bei größeren Änderungen zuerst sichern.
 
-Bitte prüfen:
+Nach einer Änderung:
 
-1. Wurde gespeichert?
-2. Wurde der richtige Bereich bearbeitet?
-3. Seite neu laden
+1. Speichern
+2. Seite im Frontend prüfen
+3. Bei Zeitangaben besonders Status und Sondertage anschauen
 
-Wenn es weiter nicht stimmt, die technische Betreuung informieren.
+## Sicherung und Wiederherstellung
+
+Im Reiter `Werkzeuge` können Sie:
+
+- eine JSON-Sicherung exportieren
+- eine vorhandene Sicherung importieren
+
+Empfehlung:
+
+- vor größeren Änderungen exportieren
+- nach dem Import eine Frontend-Seite prüfen
+
+## Typische Beispiele
+
+### Feiertag geschlossen
+
+- Datum wählen
+- Bereich: `Besuchszeiten`
+- Art: `Geschlossen`
+- keine Uhrzeiten eintragen
+
+### Nur kürzer geöffnet
+
+- Datum wählen
+- Bereich: `Besuchszeiten`
+- Art: `Verkürzte Zeit`
+- z. B. `14:00` bis `16:00`
+
+### Längerer Veranstaltungsabend
+
+- Datum wählen
+- Bereich: `Besuchszeiten`
+- Art: `Veranstaltungstag`
+- z. B. `14:00` bis `20:00`
+- optional Hinweis: `Ab 18 Uhr Konzertbetrieb`
+
+### Büro geschlossen, Museum offen
+
+- Datum wählen
+- Bereich: `Bürozeiten`
+- Art: `Geschlossen`
+
+## Wenn etwas im Frontend falsch aussieht
+
+Bitte zuerst prüfen:
+
+1. Wurden die Änderungen gespeichert?
+2. Wurde der richtige Bereich gewählt?
+3. Ist der Sondertag auf das richtige Datum gesetzt?
+4. Wurde die richtige Art des Sondertags gewählt?
+5. Seite neu laden
+
+Wenn es danach noch falsch ist:
+
+- technische Betreuung informieren
+- am besten mit Datum, Bereich und genauer Beobachtung
+
+## Kurzfassung
+
+Merksatz:
+
+- regelmäßige Zeiten in `Besuchszeiten` oder `Bürozeiten`
+- Ausnahmen als `Sondertage`
+- keine doppelten Angaben in Seiteninhalten

@@ -1,7 +1,7 @@
 <?php
 /**
  * Plugin Name: Industriesalon Steuerung
- * Description: Zentrale Seiteneinstellungen für Industriesalon: Öffnungszeiten, Bürozeiten, Kontakt, Adresse, Mission Statement, Barrierefreiheit, FAQ und Preise mit wiederverwendbarer Ausgabe per PHP, Shortcodes und Gutenberg-Blöcke.
+ * Description: Zentrale Seiteneinstellungen für Industriesalon: Öffnungszeiten, Bürozeiten, Kontakt, Adresse, Mission Statement, Barrierefreiheit, FAQ und Preise mit wiederverwendbarer Ausgabe per PHP und Gutenberg-Blöcke.
  * Version: 0.3.0
  * Author: OpenAI
  * Text Domain: industriesalon-steuerung
@@ -61,7 +61,6 @@ final class Industriesalon_Steuerung {
         add_action('admin_post_iss_control_export', [$this, 'handle_export']);
         add_action('admin_post_iss_control_import', [$this, 'handle_import']);
 
-        add_action('init', [$this, 'register_shortcodes']);
         add_action('init', [$this, 'register_blocks']);
     }
 
@@ -126,19 +125,18 @@ final class Industriesalon_Steuerung {
         ]);
 
         $screen->add_help_tab([
-            'id'      => 'iss-help-shortcodes',
-            'title'   => __('Shortcodes & PHP', 'industriesalon-steuerung'),
+            'id'      => 'iss-help-blocks',
+            'title'   => __('Blöcke & PHP', 'industriesalon-steuerung'),
             'content' =>
                 '<p>' . esc_html__('Beispiele für technische Einbindung in Seiten/Theme:', 'industriesalon-steuerung') . '</p>' .
-                '<p><code>[iss_field key="contact.phone"]</code></p>' .
-                '<p><code>[iss_hours type="public"]</code></p>' .
-                '<p><code>[iss_mission_statement title="Mission Statement" heading="Unsere Haltung"]</code></p>' .
+                '<p><code>&lt;!-- wp:industriesalon/hours {"type":"public","variant":"full"} /--&gt;</code></p>' .
+                '<p><code>&lt;!-- wp:industriesalon/visit-info {"variant":"info-panel","accent":"green","surface":"light"} /--&gt;</code></p>' .
                 '<p><code>&lt;?php echo Industriesalon_Steuerung::instance()->render_contact(); ?&gt;</code></p>',
         ]);
 
         $screen->set_help_sidebar(
             '<p><strong>' . esc_html__('Hinweis', 'industriesalon-steuerung') . '</strong></p>' .
-            '<p>' . esc_html__('Für Redaktion: nur Inhalte pflegen und speichern. Für Entwickler: Shortcodes/PHP nutzen.', 'industriesalon-steuerung') . '</p>'
+            '<p>' . esc_html__('Für Redaktion: nur Inhalte pflegen und speichern. Für Entwickler: Blöcke oder direkte Render-Methoden nutzen.', 'industriesalon-steuerung') . '</p>'
         );
     }
 
@@ -322,7 +320,16 @@ final class Industriesalon_Steuerung {
                             <?php
                             $special = isset($hours['exceptions']) && is_array($hours['exceptions']) ? $hours['exceptions'] : [];
                             if (empty($special)) {
-                                $special = [['date' => '', 'type' => 'public', 'closed' => 0, 'open' => '', 'close' => '', 'note' => '']];
+                                $special = [[
+                                    'date' => '',
+                                    'type' => 'public',
+                                    'kind' => 'special_open',
+                                    'closed' => 0,
+                                    'open' => '',
+                                    'close' => '',
+                                    'label' => '',
+                                    'note' => '',
+                                ]];
                             }
                             foreach ($special as $index => $item) :
                                 $this->special_date_fields((int) $index, $item);
@@ -330,7 +337,18 @@ final class Industriesalon_Steuerung {
                             ?>
                         </div>
                         <template id="iss-special-template">
-                            <?php $this->special_date_fields('__INDEX__', ['date' => '', 'type' => 'public', 'closed' => 0, 'open' => '', 'close' => '', 'note' => '']); ?>
+                            <?php
+                            $this->special_date_fields('__INDEX__', [
+                                'date' => '',
+                                'type' => 'public',
+                                'kind' => 'special_open',
+                                'closed' => 0,
+                                'open' => '',
+                                'close' => '',
+                                'label' => '',
+                                'note' => '',
+                            ]);
+                            ?>
                         </template>
                         <p><button type="button" class="button" data-iss-add-special><?php esc_html_e('Sondertag hinzufügen', 'industriesalon-steuerung'); ?></button></p>
                     </div>
@@ -555,22 +573,13 @@ final class Industriesalon_Steuerung {
         exit;
     }
 
-    public function register_shortcodes(): void {
-        add_shortcode('iss_field', [$this, 'shortcode_field']);
-        add_shortcode('iss_hours', [$this, 'shortcode_hours']);
-        add_shortcode('iss_status', [$this, 'shortcode_status']);
-        add_shortcode('iss_exceptions', [$this, 'shortcode_exceptions']);
-        add_shortcode('iss_contact', [$this, 'shortcode_contact']);
-        add_shortcode('iss_prices', [$this, 'shortcode_prices']);
-        add_shortcode('iss_faq', [$this, 'shortcode_faq']);
-        add_shortcode('iss_mission_statement', [$this, 'shortcode_mission_statement']);
-    }
-
     public function register_blocks(): void {
         if (! function_exists('register_block_type')) {
             return;
         }
 
+        // One shared editor script keeps the remaining block controls
+        // consistent across field, hours, contact, FAQ and visit-info outputs.
         wp_register_script(
             'iss-control-blocks',
             plugins_url('assets/blocks.js', __FILE__),
@@ -596,8 +605,12 @@ final class Industriesalon_Steuerung {
             'editor_script'   => 'iss-control-blocks',
             'render_callback' => [$this, 'render_hours_block'],
             'attributes'      => [
-                'type'  => ['type' => 'string', 'default' => 'public'],
-                'title' => ['type' => 'string', 'default' => ''],
+                'type'            => ['type' => 'string', 'default' => 'public'],
+                'title'           => ['type' => 'string', 'default' => ''],
+                'variant'         => ['type' => 'string', 'default' => 'compact'],
+                'skin'            => ['type' => 'string', 'default' => 'default'],
+                'show_status'     => ['type' => 'boolean', 'default' => false],
+                'show_exceptions' => ['type' => 'boolean', 'default' => false],
             ],
         ]);
 
@@ -611,24 +624,17 @@ final class Industriesalon_Steuerung {
             ],
             'attributes'      => [
                 'align'              => ['type' => 'string', 'default' => ''],
-                'show_status'        => ['type' => 'boolean', 'default' => true],
+                'variant'            => ['type' => 'string', 'default' => 'info-panel'],
+                'accent'             => ['type' => 'string', 'default' => 'green'],
+                'surface'            => ['type' => 'string', 'default' => 'light'],
+                'kicker'             => ['type' => 'string', 'default' => 'ANREISE & MEHR'],
+                'title'              => ['type' => 'string', 'default' => 'Besuch planen'],
+                'intro'              => ['type' => 'string', 'default' => 'Die wichtigsten Hinweise für Ihren Besuch im Industriesalon.'],
+                'show_address'       => ['type' => 'boolean', 'default' => true],
                 'show_museum_hours'  => ['type' => 'boolean', 'default' => true],
-                'show_office_hours'   => ['type' => 'boolean', 'default' => true],
-                'show_exceptions'    => ['type' => 'boolean', 'default' => false],
-                'variant'            => ['type' => 'string', 'default' => 'compact'],
-                'kicker'             => ['type' => 'string', 'default' => ''],
-                'title'              => ['type' => 'string', 'default' => ''],
-                'primary_label'      => ['type' => 'string', 'default' => 'Einfach vorbeikommen'],
-                'primary_url'        => ['type' => 'string', 'default' => ''],
-                'show_upcoming'      => ['type' => 'boolean', 'default' => true],
-                'upcoming_label'     => ['type' => 'string', 'default' => 'Demnächst'],
-                'upcoming_url'       => ['type' => 'string', 'default' => ''],
-                'tour_label'         => ['type' => 'string', 'default' => 'Individuell geführt oder bei einer Tour dabei sein? Auch besondere Führungen für Kinder und Familien. Planen Sie einen Betriebsausflug? Schauen Sie mal rein.'],
-                'tour_url'           => ['type' => 'string', 'default' => ''],
-                'room_label'         => ['type' => 'string', 'default' => 'Feier, Treffen, Party oder Vortrag? Sie brauchen Raum? Wir haben etwas Passendes'],
-                'room_url'           => ['type' => 'string', 'default' => ''],
-                'address_label'      => ['type' => 'string', 'default' => 'Sie finden uns am Spreeufer.'],
-                'show_social'        => ['type' => 'boolean', 'default' => true],
+                'show_office_hours'  => ['type' => 'boolean', 'default' => true],
+                'show_arrival'       => ['type' => 'boolean', 'default' => true],
+                'show_accessibility' => ['type' => 'boolean', 'default' => true],
             ],
         ]);
 
@@ -637,16 +643,9 @@ final class Industriesalon_Steuerung {
             'editor_script'   => 'iss-control-blocks',
             'render_callback' => [$this, 'render_contact_block'],
             'attributes'      => [
-                'title' => ['type' => 'string', 'default' => ''],
-            ],
-        ]);
-
-        register_block_type('industriesalon/prices', [
-            'api_version'     => 2,
-            'editor_script'   => 'iss-control-blocks',
-            'render_callback' => [$this, 'render_prices_block'],
-            'attributes'      => [
-                'title' => ['type' => 'string', 'default' => ''],
+                'title'   => ['type' => 'string', 'default' => ''],
+                'variant' => ['type' => 'string', 'default' => 'card'],
+                'skin'    => ['type' => 'string', 'default' => 'default'],
             ],
         ]);
 
@@ -654,15 +653,6 @@ final class Industriesalon_Steuerung {
             'api_version'     => 2,
             'editor_script'   => 'iss-control-blocks',
             'render_callback' => [$this, 'render_faq_block'],
-            'attributes'      => [
-                'title' => ['type' => 'string', 'default' => ''],
-            ],
-        ]);
-
-        register_block_type('industriesalon/mission-statement', [
-            'api_version'     => 2,
-            'editor_script'   => 'iss-control-blocks',
-            'render_callback' => [$this, 'render_mission_statement_block'],
             'attributes'      => [
                 'title' => ['type' => 'string', 'default' => ''],
             ],
@@ -679,7 +669,17 @@ final class Industriesalon_Steuerung {
     }
 
     public function render_hours_block(array $attributes = []): string {
-        return $this->render_hours((string) ($attributes['type'] ?? 'public'), (string) ($attributes['title'] ?? ''));
+        return $this->render_visit_hours(
+            (string) ($attributes['type'] ?? 'public'),
+            (string) ($attributes['variant'] ?? 'compact'),
+            (string) ($attributes['title'] ?? ''),
+            true,
+            [
+                'skin' => (string) ($attributes['skin'] ?? 'default'),
+                'show_status' => ! empty($attributes['show_status']),
+                'show_exceptions' => ! empty($attributes['show_exceptions']),
+            ]
+        );
     }
 
     public function render_visit_info_block(array $attributes = []): string {
@@ -687,87 +687,17 @@ final class Industriesalon_Steuerung {
     }
 
     public function render_contact_block(array $attributes = []): string {
-        return $this->render_contact((string) ($attributes['title'] ?? ''));
-    }
-
-    public function render_prices_block(array $attributes = []): string {
-        return $this->render_prices((string) ($attributes['title'] ?? ''));
+        return $this->render_contact(
+            (string) ($attributes['title'] ?? ''),
+            [
+                'variant' => (string) ($attributes['variant'] ?? 'card'),
+                'skin' => (string) ($attributes['skin'] ?? 'default'),
+            ]
+        );
     }
 
     public function render_faq_block(array $attributes = []): string {
         return $this->render_faq((string) ($attributes['title'] ?? ''));
-    }
-
-    public function render_mission_statement_block(array $attributes = []): string {
-        return $this->render_mission_statement(
-            (string) ($attributes['title'] ?? ''),
-            (string) ($attributes['heading'] ?? '')
-        );
-    }
-
-    public function shortcode_field(array $atts): string {
-        $atts = shortcode_atts([
-            'key'   => '',
-            'label' => '',
-            'tag'   => 'div',
-            'link'  => 'auto',
-        ], $atts, 'iss_field');
-
-        return $this->render_field($atts);
-    }
-
-    public function shortcode_hours(array $atts): string {
-        $atts = shortcode_atts([
-            'type'  => 'museum',
-            'variant' => 'full',
-            'title' => '',
-        ], $atts, 'iss_hours');
-
-        return $this->render_visit_hours((string) $atts['type'], (string) $atts['variant'], (string) $atts['title']);
-    }
-
-    public function shortcode_status(array $atts): string {
-        $atts = shortcode_atts([
-            'type' => 'museum',
-        ], $atts, 'iss_status');
-
-        return $this->render_visit_status((string) $atts['type']);
-    }
-
-    public function shortcode_exceptions(array $atts): string {
-        $atts = shortcode_atts([
-            'type' => 'museum',
-        ], $atts, 'iss_exceptions');
-
-        return $this->render_visit_exceptions((string) $atts['type']);
-    }
-
-    public function shortcode_contact(array $atts): string {
-        $atts = shortcode_atts(['title' => ''], $atts, 'iss_contact');
-        return $this->render_contact((string) $atts['title']);
-    }
-
-    public function shortcode_prices(array $atts): string {
-        $atts = shortcode_atts(['title' => ''], $atts, 'iss_prices');
-        return $this->render_prices((string) $atts['title']);
-    }
-
-    public function shortcode_faq(array $atts): string {
-        $atts = shortcode_atts(['title' => ''], $atts, 'iss_faq');
-        return $this->render_faq((string) $atts['title']);
-    }
-
-    public function shortcode_mission_statement(array $atts): string {
-        $atts = shortcode_atts([
-            'title'   => '',
-            'heading' => '',
-            'layout'  => 'offset',
-        ], $atts, 'iss_mission_statement');
-        return $this->render_mission_statement(
-            (string) $atts['title'],
-            (string) $atts['heading'],
-            (string) $atts['layout']
-        );
     }
 
     public function render_field(array $args): string {
@@ -784,7 +714,7 @@ final class Industriesalon_Steuerung {
 
         $link_mode = isset($args['link']) ? (string) $args['link'] : 'auto';
         $label = isset($args['label']) ? (string) $args['label'] : '';
-        $value = iss_control_get($key);
+        $value = $this->get_field_value($key);
 
         if ($value === '' || $value === null) {
             return '';
@@ -813,132 +743,93 @@ final class Industriesalon_Steuerung {
         return sprintf('<%1$s class="%2$s">%3$s%4$s</%1$s>', esc_html($tag), esc_attr($class), $label_html, $content);
     }
 
-    public function render_hours(string $type = 'public', string $title = ''): string {
-        $hours = get_option(self::OPTION_HOURS, $this->default_hours());
-        $type = $type === 'office' ? 'office' : 'public';
-        $group = $hours[$type] ?? [];
-        $days = $this->days();
-        $exceptions = isset($hours['exceptions']) && is_array($hours['exceptions']) ? $hours['exceptions'] : [];
-        $exceptions = array_values(array_filter($exceptions, function ($item) use ($type) {
-            if (! is_array($item)) {
-                return false;
-            }
-            $item_type = isset($item['type']) ? (string) $item['type'] : 'public';
-            $date = isset($item['date']) ? (string) $item['date'] : '';
-            if ($date === '') {
-                return false;
-            }
-            return $item_type === 'both' || $item_type === $type;
-        }));
-        usort($exceptions, static function ($a, $b) {
-            return strcmp((string) ($a['date'] ?? ''), (string) ($b['date'] ?? ''));
+    public function render_visit_info(array $attributes = []): string {
+        $align = isset($attributes['align']) ? (string) $attributes['align'] : '';
+        $align_class = in_array($align, ['wide', 'full'], true) ? ' align' . $align : '';
+        $variant = $this->normalize_visit_variant((string) ($attributes['variant'] ?? 'info-panel'), 'visit_info');
+        $accent = $this->normalize_info_panel_accent((string) ($attributes['accent'] ?? 'green'));
+        $surface = $this->normalize_info_panel_surface((string) ($attributes['surface'] ?? 'light'));
+        $kicker = trim((string) ($attributes['kicker'] ?? ''));
+        $title = trim((string) ($attributes['title'] ?? ''));
+        $intro = trim((string) ($attributes['intro'] ?? ''));
+        $show_address = array_key_exists('show_address', $attributes) ? (bool) $attributes['show_address'] : true;
+        $show_museum = array_key_exists('show_museum_hours', $attributes) ? (bool) $attributes['show_museum_hours'] : true;
+        $show_office = array_key_exists('show_office_hours', $attributes) ? (bool) $attributes['show_office_hours'] : true;
+        $show_arrival = array_key_exists('show_arrival', $attributes) ? (bool) $attributes['show_arrival'] : true;
+        $show_accessibility = array_key_exists('show_accessibility', $attributes) ? (bool) $attributes['show_accessibility'] : true;
+
+        $rows = [];
+        if ($show_address) {
+            $rows[] = $this->build_visit_info_address_row();
+        }
+        if ($show_museum) {
+            $rows[] = $this->build_visit_info_hours_row('museum');
+        }
+        if ($show_office) {
+            $rows[] = $this->build_visit_info_hours_row('office');
+        }
+        if ($show_arrival) {
+            $rows[] = $this->build_visit_info_arrival_row();
+        }
+        if ($show_accessibility) {
+            $rows[] = $this->build_visit_info_accessibility_row();
+        }
+        $rows = array_filter($rows, static function ($part) {
+            return trim((string) $part) !== '';
         });
+
+        if (empty($rows)) {
+            return '<div class="iss-visit-info iss-visit-info--empty">' . esc_html__('Keine Zeiten eingetragen.', 'industriesalon-steuerung') . '</div>';
+        }
 
         ob_start();
         ?>
-        <div class="iss-hours iss-hours--<?php echo esc_attr($type); ?>">
-            <?php if ($title !== '') : ?>
-                <h3 class="iss-hours__title"><?php echo esc_html($title); ?></h3>
-            <?php endif; ?>
-            <ul class="iss-hours__list">
-                <?php foreach ($days as $slug => $label) : ?>
-                    <?php $row = $group['days'][$slug] ?? []; ?>
-                    <li class="iss-hours__item">
-                        <span class="iss-hours__day"><?php echo esc_html($label); ?></span>
-                        <span class="iss-hours__time"><?php echo esc_html($this->format_hours_row($row)); ?></span>
-                    </li>
-                <?php endforeach; ?>
-            </ul>
-            <?php if (! empty($group['note'])) : ?>
-                <p class="iss-hours__note"><?php echo nl2br(esc_html((string) $group['note'])); ?></p>
-            <?php endif; ?>
-            <?php if (! empty($exceptions)) : ?>
-                <div class="iss-hours__special">
-                    <h4 class="iss-hours__special-title"><?php esc_html_e('Sondertage', 'industriesalon-steuerung'); ?></h4>
-                    <ul class="iss-hours__special-list">
-                        <?php foreach ($exceptions as $item) : ?>
-                            <li class="iss-hours__special-item">
-                                <span class="iss-hours__special-date"><?php echo esc_html($this->format_date_label((string) ($item['date'] ?? ''))); ?></span>
-                                <span class="iss-hours__special-time"><?php echo esc_html($this->format_hours_row($item)); ?></span>
-                            </li>
-                        <?php endforeach; ?>
-                    </ul>
+        <div class="iss-visit-info iss-visit-info--<?php echo esc_attr(sanitize_html_class($variant)); ?><?php echo esc_attr($align_class); ?>" data-variant="<?php echo esc_attr($variant); ?>">
+            <section class="iss-info-panel iss-info-panel--<?php echo esc_attr($accent); ?> iss-control-info-panel iss-control-info-panel--surface-<?php echo esc_attr($surface); ?>">
+                <?php if ($kicker !== '') : ?>
+                    <p class="iss-kicker iss-control-info-panel__kicker"><?php echo esc_html($kicker); ?></p>
+                <?php endif; ?>
+                <div class="wp-block-columns iss-info-panel__grid">
+                    <div class="wp-block-column iss-info-panel__title-col" style="flex-basis:34%">
+                        <?php if ($title !== '') : ?>
+                            <h2 class="iss-info-panel__title"><?php echo esc_html($title); ?></h2>
+                        <?php endif; ?>
+                        <?php if ($intro !== '') : ?>
+                            <p class="iss-info-panel__intro"><?php echo nl2br(esc_html($intro)); ?></p>
+                        <?php endif; ?>
+                    </div>
+                    <div class="wp-block-column iss-info-panel__rows-col" style="flex-basis:66%">
+                        <div class="iss-info-panel__rows">
+                            <?php echo implode('', $rows); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped ?>
+                        </div>
+                    </div>
                 </div>
-            <?php endif; ?>
+            </section>
         </div>
         <?php
         return (string) ob_get_clean();
     }
 
-    public function render_visit_info(array $attributes = []): string {
-        $align = isset($attributes['align']) ? (string) $attributes['align'] : '';
-        $align_class = in_array($align, ['wide', 'full'], true) ? ' align' . $align : '';
-        $variant = isset($attributes['variant']) ? (string) $attributes['variant'] : 'compact';
-        if (! in_array($variant, ['compact', 'full', 'inline'], true)) {
-            $variant = 'compact';
-        }
-
-        $show_status = array_key_exists('show_status', $attributes) ? (bool) $attributes['show_status'] : true;
-        $show_museum = array_key_exists('show_museum_hours', $attributes) ? (bool) $attributes['show_museum_hours'] : true;
-        $show_office = array_key_exists('show_office_hours', $attributes) ? (bool) $attributes['show_office_hours'] : true;
-        $show_exceptions = array_key_exists('show_exceptions', $attributes) ? (bool) $attributes['show_exceptions'] : false;
-
-        $left_parts = [];
-        if ($show_status) {
-            $left_parts[] = $this->render_visit_status('museum');
-        }
-        if ($show_museum) {
-            $left_parts[] = $this->render_visit_hours('museum', $variant, '', false);
-        }
-        if ($show_office) {
-            $left_parts[] = $this->render_visit_hours('office', $variant, '', false);
-        }
-        if ($show_exceptions) {
-            $left_parts[] = $this->render_visit_exceptions('museum');
-        }
-
-        $left_parts = array_filter($left_parts, static function ($part) {
-            return trim((string) $part) !== '';
-        });
-
-        $card = $this->render_visit_card($attributes);
-
-        if (empty($left_parts) && $card === '') {
-            return '<div class="iss-visit-info iss-visit-info--empty">' . esc_html__('Keine Zeiten eingetragen.', 'industriesalon-steuerung') . '</div>';
-        }
-
-        $left_html = '';
-        if (! empty($left_parts)) {
-            $left_html = '<div class="iss-visit-info__col iss-visit-info__col--hours">' . implode('', $left_parts) . '</div>';
-        }
-
-        $right_html = '';
-        if ($card !== '') {
-            $right_html = '<div class="iss-visit-info__col iss-visit-info__col--card">' . $card . '</div>';
-        }
-
-        $body = '';
-        if ($left_html !== '' && $right_html !== '') {
-            $body = '<div class="iss-visit-info__grid">' . $left_html . $right_html . '</div>';
-        } else {
-            $body = $left_html . $right_html;
-        }
-
-        return '<div class="iss-visit-info iss-visit-info--' . esc_attr(sanitize_html_class($variant)) . $align_class . '">' . $body . '</div>';
-    }
-
-    public function render_visit_status(string $type = 'museum'): string {
+    public function render_visit_status(string $type = 'museum', array $options = []): string {
         $resolved = $this->get_visit_day($type, $this->current_visit_moment());
         if ($resolved === []) {
             return '';
         }
 
-        return '<p class="iss-visit-status iss-visit-status--' . esc_attr(sanitize_html_class((string) ($resolved['status'] ?? 'closed'))) . '">' . esc_html((string) ($resolved['label'] ?? '')) . '</p>';
+        $variant = $this->normalize_visit_variant((string) ($options['variant'] ?? 'default'), 'status');
+        $skin = $this->normalize_output_skin((string) ($options['skin'] ?? 'default'));
+        $status = (string) ($resolved['status'] ?? 'open');
+        $kind = (string) ($resolved['kind'] ?? 'regular');
+
+        return '<p class="iss-visit-status iss-visit-status--' . esc_attr(sanitize_html_class($status)) . ' iss-visit-status--kind-' . esc_attr(sanitize_html_class($kind)) . ' iss-visit-status--variant-' . esc_attr(sanitize_html_class($variant)) . ' iss-visit-status--skin-' . esc_attr($skin) . '" data-status="' . esc_attr($status) . '" data-kind="' . esc_attr($kind) . '" data-source="' . esc_attr((string) ($resolved['source'] ?? 'regular')) . '">' . esc_html((string) ($resolved['label'] ?? '')) . '</p>';
     }
 
-    public function render_visit_hours(string $type = 'museum', string $variant = 'compact', string $title = '', bool $show_heading = true): string {
+    public function render_visit_hours(string $type = 'museum', string $variant = 'compact', string $title = '', bool $show_heading = true, array $options = []): string {
         $type = $this->normalize_visit_type($type);
-        $variant = in_array($variant, ['compact', 'full', 'inline'], true) ? $variant : 'compact';
+        $variant = $this->normalize_visit_variant($variant, 'hours');
+        $skin = $this->normalize_output_skin((string) ($options['skin'] ?? 'default'));
+        $show_status = ! empty($options['show_status']);
+        $show_exceptions = ! empty($options['show_exceptions']) || $variant === 'info-panel';
         $group = $this->visit_group_for_type($this->get_visit_schedule(), $type);
         if ($group === []) {
             return '';
@@ -946,22 +837,35 @@ final class Industriesalon_Steuerung {
 
         $heading = $title !== '' ? $title : $this->visit_type_label($type);
         $summary = $this->build_visit_summary($group);
-        $details = $this->build_visit_details($group);
-        $exceptions = $this->build_visit_exception_list($type);
+        $exceptions = $show_exceptions ? $this->build_visit_exception_list($type, [
+            'variant' => $variant === 'footer' ? 'footer' : 'list',
+            'skin' => $skin,
+        ]) : '';
+        $status_html = $show_status ? $this->render_visit_status($type, ['variant' => $variant === 'footer' ? 'footer' : 'default', 'skin' => $skin]) : '';
 
         if ($variant === 'inline') {
             $line = $summary !== '' ? $summary : __('Keine Zeiten eingetragen.', 'industriesalon-steuerung');
-            return '<p class="iss-visit-hours iss-visit-hours--inline iss-visit-hours--' . esc_attr($type) . '">' . esc_html($heading . ': ' . wp_strip_all_tags($line)) . '</p>';
+            $status_text = $show_status && $status_html !== '' ? wp_strip_all_tags($status_html) . '. ' : '';
+            return '<p class="iss-visit-hours iss-visit-hours--inline iss-visit-hours--' . esc_attr($type) . ' iss-visit-hours--skin-' . esc_attr($skin) . '" data-variant="' . esc_attr($variant) . '" data-skin="' . esc_attr($skin) . '">' . esc_html($status_text . $heading . ': ' . wp_strip_all_tags($line)) . '</p>';
         }
 
         ob_start();
         ?>
-        <section class="iss-visit-hours iss-visit-hours--<?php echo esc_attr($variant); ?> iss-visit-hours--<?php echo esc_attr($type); ?>">
+        <section class="iss-visit-hours iss-visit-hours--<?php echo esc_attr($variant); ?> iss-visit-hours--<?php echo esc_attr($type); ?> iss-visit-hours--skin-<?php echo esc_attr($skin); ?>" data-variant="<?php echo esc_attr($variant); ?>" data-skin="<?php echo esc_attr($skin); ?>" data-type="<?php echo esc_attr($type); ?>">
             <?php if ($show_heading) : ?>
                 <h3 class="iss-visit-hours__title"><?php echo esc_html($heading); ?></h3>
             <?php endif; ?>
-            <?php if ($variant === 'compact') : ?>
+            <?php if ($status_html !== '') : ?>
+                <?php echo $status_html; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped ?>
+            <?php endif; ?>
+            <?php if ($variant !== 'full') : ?>
                 <p class="iss-visit-hours__summary"><?php echo esc_html($summary !== '' ? $summary : __('Keine Zeiten eingetragen.', 'industriesalon-steuerung')); ?></p>
+                <?php if (! empty($group['note']) && in_array($variant, ['info-panel', 'front-card'], true)) : ?>
+                    <p class="iss-visit-hours__note"><?php echo nl2br(esc_html((string) $group['note'])); ?></p>
+                <?php endif; ?>
+                <?php if (! empty($exceptions) && in_array($variant, ['info-panel', 'front-card', 'footer'], true)) : ?>
+                    <div class="iss-visit-hours__exceptions"><?php echo $exceptions; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped ?></div>
+                <?php endif; ?>
             <?php else : ?>
                 <div class="iss-visit-hours__table-wrap iss-open-hours__table-wrap">
                     <?php if (! $show_heading) : ?>
@@ -978,11 +882,11 @@ final class Industriesalon_Steuerung {
                             </thead>
                             <tbody>
                                 <?php foreach ($this->render_visit_hours_rows($group['days'] ?? [], $type) as $row) : ?>
-                                    <tr class="<?php echo esc_attr($row['today'] ? 'is-today' : ''); ?>">
+                                    <tr class="<?php echo esc_attr(trim(($row['today'] ? 'is-today ' : '') . 'iss-visit-hours__row--' . ($row['badge'] ?? 'closed') . ' iss-visit-hours__row--kind-' . ($row['kind'] ?? 'regular'))); ?>" data-status="<?php echo esc_attr((string) ($row['badge'] ?? 'closed')); ?>" data-kind="<?php echo esc_attr((string) ($row['kind'] ?? 'regular')); ?>">
                                         <td><?php echo esc_html((string) $row['day']); ?></td>
                                         <td><?php echo esc_html((string) $row['time']); ?></td>
                                         <td>
-                                            <span class="iss-visit-hours__badge iss-open-hours__badge iss-open-hours__badge--<?php echo esc_attr((string) $row['badge']); ?>">
+                                            <span class="iss-visit-hours__badge iss-open-hours__badge iss-open-hours__badge--<?php echo esc_attr((string) $row['badge']); ?> iss-visit-hours__badge--kind-<?php echo esc_attr((string) ($row['kind'] ?? 'regular')); ?>" data-kind="<?php echo esc_attr((string) ($row['kind'] ?? 'regular')); ?>">
                                                 <?php echo esc_html((string) $row['badge_label']); ?>
                                             </span>
                                         </td>
@@ -1022,8 +926,14 @@ final class Industriesalon_Steuerung {
 
             $resolved = $this->resolve_visit_day($this->get_visit_schedule(), $type, $day_date);
             $is_today = $index === $today_index;
-            $badge = $resolved['status'] ?? 'closed';
-            $badge_label = $badge === 'special' ? __('heute', 'industriesalon-steuerung') : ($badge === 'open' ? __('offen', 'industriesalon-steuerung') : __('geschlossen', 'industriesalon-steuerung'));
+            $badge = (string) ($resolved['status'] ?? 'open');
+            $kind = (string) ($resolved['kind'] ?? 'regular');
+            $kind_meta = $this->get_exception_kind_meta($kind);
+            $badge_label = $badge === 'closed'
+                ? __('geschlossen', 'industriesalon-steuerung')
+                : ($kind !== 'regular'
+                    ? (string) ($kind_meta['badge'] ?? __('sonder', 'industriesalon-steuerung'))
+                    : __('offen', 'industriesalon-steuerung'));
             if ($is_today && $badge === 'open') {
                 $badge_label = __('heute', 'industriesalon-steuerung');
             } elseif ($is_today && $badge === 'closed') {
@@ -1032,9 +942,10 @@ final class Industriesalon_Steuerung {
 
             $rows[] = [
                 'day'        => $day_labels[$slug] ?? $slug,
-                'time'       => $this->format_hours_row($row),
+                'time'       => $is_today ? $this->format_visit_time_ranges((array) ($resolved['ranges'] ?? [])) : $this->format_hours_row($row),
                 'badge'      => $badge,
                 'badge_label'=> $badge_label,
+                'kind'       => $kind,
                 'today'      => $is_today,
             ];
         }
@@ -1042,80 +953,27 @@ final class Industriesalon_Steuerung {
         return $rows;
     }
 
-    public function render_visit_card(array $attributes = []): string {
-        $kicker = trim((string) ($attributes['kicker'] ?? ''));
-        $title = trim((string) ($attributes['title'] ?? ''));
-        $upcoming_label = trim((string) ($attributes['upcoming_label'] ?? ''));
-        $upcoming_url = trim((string) ($attributes['upcoming_url'] ?? ''));
-        $tour_label = trim((string) ($attributes['tour_label'] ?? ''));
-        $tour_url = trim((string) ($attributes['tour_url'] ?? ''));
-        $room_label = trim((string) ($attributes['room_label'] ?? ''));
-        $room_url = trim((string) ($attributes['room_url'] ?? ''));
-        $address_label = trim((string) ($attributes['address_label'] ?? ''));
-        $show_social = array_key_exists('show_social', $attributes) ? (bool) $attributes['show_social'] : true;
-
-        $social = $this->visit_social_links();
-        $address = trim($address_label !== '' ? $address_label : __('Sie finden uns am Spreeufer.', 'industriesalon-steuerung'));
-        $full_address = trim($this->compose_full_address());
-
-        $parts = [];
-        if ($kicker !== '') {
-            $parts[] = '<p class="iss-visit-card__kicker iss-kicker">' . esc_html($kicker) . '</p>';
-        }
-        if ($title !== '') {
-            $parts[] = '<h3 class="iss-visit-card__title">' . esc_html($title) . '</h3>';
-        }
-        if (! empty($attributes['show_upcoming'])) {
-            $upcoming = $this->visit_card_upcoming_entry($upcoming_label, $upcoming_url);
-            if ($upcoming !== '') {
-                $parts[] = $upcoming;
-            }
-        }
-        $items = [];
-        $tour_item = $this->visit_card_item($tour_label, $tour_url);
-        if ($tour_item !== '') {
-            $items[] = $tour_item;
-        }
-        $room_item = $this->visit_card_item($room_label, $room_url);
-        if ($room_item !== '') {
-            $items[] = $room_item;
-        }
-
-        if (! empty($items)) {
-            $parts[] = '<div class="iss-visitor-card__list">' . implode('', $items) . '</div>';
-        }
-        if ($address !== '' || $full_address !== '') {
-            $parts[] = $this->visit_card_address($address, $full_address);
-        }
-        if ($show_social && $social !== '') {
-            $parts[] = $social;
-        }
-
-        $parts = array_filter($parts, static function ($part) {
-            return trim((string) $part) !== '';
-        });
-
-        if (empty($parts)) {
-            return '';
-        }
-
-        return '<article class="iss-visit-card iss-visitor-card">' . implode('', $parts) . '</article>';
-    }
-
-    public function render_visit_exceptions(string $type = 'museum'): string {
+    public function render_visit_exceptions(string $type = 'museum', array $options = []): string {
         $type = $this->normalize_visit_type($type);
         $list = $this->get_relevant_visit_exceptions($type);
         if (empty($list)) {
             return '';
         }
 
+        $variant = $this->normalize_visit_variant((string) ($options['variant'] ?? 'list'), 'exceptions');
+        $skin = $this->normalize_output_skin((string) ($options['skin'] ?? 'default'));
+        $title = trim((string) ($options['title'] ?? ''));
+        if ($title === '') {
+            $title = __('Sondertage', 'industriesalon-steuerung');
+        }
+
         ob_start();
         ?>
-        <section class="iss-visit-exceptions iss-visit-exceptions--<?php echo esc_attr($type); ?>">
-            <h3 class="iss-visit-exceptions__title"><?php esc_html_e('Sondertage', 'industriesalon-steuerung'); ?></h3>
+        <section class="iss-visit-exceptions iss-visit-exceptions--<?php echo esc_attr($type); ?> iss-visit-exceptions--<?php echo esc_attr($variant); ?> iss-visit-exceptions--skin-<?php echo esc_attr($skin); ?>" data-variant="<?php echo esc_attr($variant); ?>" data-skin="<?php echo esc_attr($skin); ?>">
+            <h3 class="iss-visit-exceptions__title"><?php echo esc_html($title); ?></h3>
             <ul class="iss-visit-exceptions__list">
                 <?php foreach ($list as $item) : ?>
-                    <li class="iss-visit-exceptions__item">
+                    <li class="iss-visit-exceptions__item iss-visit-exceptions__item--<?php echo esc_attr(sanitize_html_class((string) ($item['status'] ?? 'special'))); ?> iss-visit-exceptions__item--kind-<?php echo esc_attr(sanitize_html_class((string) ($item['kind'] ?? 'special_open'))); ?>" data-status="<?php echo esc_attr((string) ($item['status'] ?? 'special')); ?>" data-kind="<?php echo esc_attr((string) ($item['kind'] ?? 'special_open')); ?>">
                         <span class="iss-visit-exceptions__date"><?php echo esc_html((string) $item['date_label']); ?></span>
                         <span class="iss-visit-exceptions__time"><?php echo esc_html((string) $item['label']); ?></span>
                     </li>
@@ -1126,255 +984,128 @@ final class Industriesalon_Steuerung {
         return (string) ob_get_clean();
     }
 
-    private function visit_card_button(string $label, string $url, string $class = '', bool $allow_placeholder = false): string {
-        if ($label === '') {
+    private function build_visit_info_address_row(): string {
+        $address = trim($this->compose_full_address());
+        if ($address === '') {
             return '';
         }
 
-        $base_class = 'iss-visit-card__button';
-        if ($class !== '') {
-            $base_class .= ' ' . $class;
-        }
-
-        if ($url !== '') {
-            return '<a class="' . esc_attr($base_class) . '" href="' . esc_url($url) . '">' . esc_html($label) . '</a>';
-        }
-
-        if ($allow_placeholder) {
-            return '<span class="' . esc_attr($base_class . ' iss-visit-card__button--placeholder') . '">' . esc_html($label) . '</span>';
-        }
-
-        return '';
-    }
-
-    private function visit_card_item(string $text, string $url): string {
-        $text = trim($text);
-        $url = trim($url);
-
-        if ($text === '' || $url === '') {
-            return '';
-        }
-
-        ob_start();
-        ?>
-        <div class="iss-visitor-card__item">
-            <div class="iss-visitor-card__item-text">
-                <p><?php echo esc_html($text); ?></p>
-            </div>
-            <div class="iss-visitor-card__item-action">
-                <a href="<?php echo esc_url($url); ?>" class="iss-visitor-card__mini-button">
-                    <?php esc_html_e('Mehr', 'industriesalon-steuerung'); ?>
-                </a>
-            </div>
-        </div>
-        <?php
-        return (string) ob_get_clean();
-    }
-
-    private function visit_card_upcoming_entry(string $label, string $url = ''): string {
-        $item = $this->visit_card_next_calendar_item();
-        if (! $item instanceof WP_Post) {
-            return '';
-        }
-
-        $item_id = (int) $item->ID;
-        $title = trim((string) get_the_title($item_id));
-        if ($title === '') {
-            return '';
-        }
-
-        $date_raw = (string) get_post_meta($item_id, 'sort_date', true);
-        $date_label = $this->format_visit_upcoming_date($date_raw);
-        $summary = $this->format_visit_upcoming_summary($item_id);
-        $permalink = trim($url);
-        if ($permalink === '') {
-            $permalink = (string) get_permalink($item_id);
-        }
-        if ($label === '') {
-            $label = __('Demnächst', 'industriesalon-steuerung');
-        }
-
-        ob_start();
-        ?>
-        <div class="iss-visitor-card__upcoming">
-            <p class="iss-visitor-card__upcoming-label"><?php echo esc_html($label); ?></p>
-            <?php if (is_string($permalink) && $permalink !== '') : ?>
-                <a class="iss-visitor-card__upcoming-link" href="<?php echo esc_url($permalink); ?>">
-                <span class="iss-visitor-card__upcoming-title"><?php echo esc_html($title); ?></span>
-                <?php if ($date_label !== '') : ?>
-                    <span class="iss-visitor-card__upcoming-date"><?php echo esc_html($date_label); ?></span>
-                <?php endif; ?>
-                <?php if ($summary !== '') : ?>
-                    <span class="iss-visitor-card__upcoming-summary"><?php echo esc_html($summary); ?></span>
-                <?php endif; ?>
-            </a>
-        <?php else : ?>
-            <div class="iss-visitor-card__upcoming-link">
-                <span class="iss-visitor-card__upcoming-title"><?php echo esc_html($title); ?></span>
-                <?php if ($date_label !== '') : ?>
-                    <span class="iss-visitor-card__upcoming-date"><?php echo esc_html($date_label); ?></span>
-                <?php endif; ?>
-                <?php if ($summary !== '') : ?>
-                    <span class="iss-visitor-card__upcoming-summary"><?php echo esc_html($summary); ?></span>
-                <?php endif; ?>
-            </div>
-        <?php endif; ?>
-        </div>
-        <?php
-        return (string) ob_get_clean();
-    }
-
-    private function visit_card_next_calendar_item(): ?WP_Post {
-        if (function_exists('iss_timeline_get_items_advanced')) {
-            $items = iss_timeline_get_items_advanced([
-                'limit' => 1,
-                'range' => 'future',
-                'order' => 'ASC',
-            ]);
-            if (! empty($items) && $items[0] instanceof WP_Post) {
-                return $items[0];
-            }
-        }
-
-        $query = new WP_Query([
-            'post_type' => defined('ISS_CALENDAR_ITEM_POST_TYPE') ? ISS_CALENDAR_ITEM_POST_TYPE : 'iss_calendar_item',
-            'post_status' => 'publish',
-            'posts_per_page' => 1,
-            'no_found_rows' => true,
-            'meta_key' => 'sort_date',
-            'orderby' => 'meta_value',
-            'meta_type' => 'DATETIME',
-            'order' => 'ASC',
-            'meta_query' => [
-                [
-                    'key' => 'sort_date',
-                    'value' => current_time('mysql'),
-                    'compare' => '>=',
-                    'type' => 'DATETIME',
-                ],
-            ],
-        ]);
-
-        if (! empty($query->posts) && $query->posts[0] instanceof WP_Post) {
-            return $query->posts[0];
-        }
-
-        return null;
-    }
-
-    private function format_visit_upcoming_date(string $date_raw): string {
-        $date_raw = trim($date_raw);
-        if ($date_raw === '') {
-            return '';
-        }
-
-        try {
-            $ts = (new DateTimeImmutable($date_raw, wp_timezone()))->getTimestamp();
-        } catch (Throwable $e) {
-            return '';
-        }
-
-        return wp_date('j. F Y', $ts);
-    }
-
-    private function format_visit_upcoming_summary(int $item_id): string {
-        $item_id = (int) $item_id;
-        if ($item_id <= 0) {
-            return '';
-        }
-
-        $summary = trim((string) get_post_meta($item_id, 'public_summary', true));
-        if ($summary !== '') {
-            return wp_trim_words(wp_strip_all_tags($summary), 18);
-        }
-
-        $post = get_post($item_id);
-        if (! $post instanceof WP_Post) {
-            return '';
-        }
-
-        $content = trim((string) $post->post_content);
-        if ($content === '') {
-            return '';
-        }
-
-        return wp_trim_words(wp_strip_all_tags($content), 18);
-    }
-
-    private function visit_card_address(string $label, string $full_address): string {
         $maps = get_option(self::OPTION_MAPS, $this->default_maps());
-        $maps_url = isset($maps['google_maps_url']) ? (string) $maps['google_maps_url'] : '';
+        $action = '';
+        if (! empty($maps['google_maps_url'])) {
+            $action = $this->visit_info_action_button((string) $maps['google_maps_url'], __('Google Maps', 'industriesalon-steuerung'));
+        }
 
-        ob_start();
-        ?>
-        <div class="iss-visit-card__address">
-            <p class="iss-visit-card__address-lead"><?php echo esc_html($label); ?></p>
-            <?php if ($full_address !== '') : ?>
-                <address class="iss-visit-card__address-value"><?php echo esc_html($full_address); ?></address>
-            <?php endif; ?>
-            <?php if ($maps_url !== '') : ?>
-                <a class="iss-visit-card__map-link" href="<?php echo esc_url($maps_url); ?>" target="_blank" rel="noopener noreferrer">
-                    <?php esc_html_e('Karte öffnen', 'industriesalon-steuerung'); ?>
-                </a>
-            <?php endif; ?>
-        </div>
-        <?php
-        return (string) ob_get_clean();
+        return $this->render_visit_info_row(
+            'address',
+            __('Adresse', 'industriesalon-steuerung'),
+            $address,
+            $action
+        );
     }
 
-    private function visit_social_links(): string {
-        $contact = get_option(self::OPTION_CONTACT, $this->default_contact());
-        $items = [];
+    private function build_visit_info_hours_row(string $type): string {
+        $type = $this->normalize_visit_type($type);
+        $group = $this->visit_group_for_type($this->get_visit_schedule(), $type);
+        $summary = $this->build_visit_summary($group);
+        if ($summary === '') {
+            $summary = __('Keine Zeiten eingetragen.', 'industriesalon-steuerung');
+        }
 
-        $socials = [
-            'instagram' => [
-                'label' => 'Instagram',
-                'url'   => (string) ($contact['instagram'] ?? ''),
-            ],
-            'facebook' => [
-                'label' => 'Facebook',
-                'url'   => (string) ($contact['facebook'] ?? ''),
-            ],
-            'website' => [
-                'label' => __('Website', 'industriesalon-steuerung'),
-                'url'   => (string) ($contact['website'] ?? ''),
-            ],
+        return $this->render_visit_info_row(
+            $type === 'office' ? 'office-hours' : 'museum-hours',
+            $this->visit_type_label($type),
+            $summary
+        );
+    }
+
+    private function build_visit_info_arrival_row(): string {
+        $general = get_option(self::OPTION_GENERAL, $this->default_general());
+        $arrival = trim((string) ($general['arrival'] ?? ''));
+        if ($arrival === '') {
+            return '';
+        }
+
+        return $this->render_visit_info_row(
+            'arrival',
+            __('ÖPNV', 'industriesalon-steuerung'),
+            $arrival
+        );
+    }
+
+    private function build_visit_info_accessibility_row(): string {
+        $summary = $this->visit_info_accessibility_summary();
+        if ($summary === '') {
+            return '';
+        }
+
+        $badge = '<span class="iss-control-info-panel__badge">' . $this->visit_info_icon('accessibility') . '<span>' . esc_html__('Barrierefreiheit geprüft', 'industriesalon-steuerung') . '</span></span>';
+
+        return $this->render_visit_info_row(
+            'accessibility',
+            __('Barrierefreiheit', 'industriesalon-steuerung'),
+            $summary,
+            $badge
+        );
+    }
+
+    private function render_visit_info_row(string $icon, string $label, string $text, string $action = ''): string {
+        $main = '<div class="iss-info-row__main"><p class="iss-info-row__text"><span class="iss-control-info-panel__icon">' . $this->visit_info_icon($icon) . '</span><span class="iss-control-info-panel__copy"><strong>' . esc_html($label) . ':</strong> ' . nl2br(esc_html($text)) . '</span></p></div>';
+        $action_html = $action !== '' ? '<div class="iss-info-row__actions">' . $action . '</div>' : '';
+
+        return '<div class="iss-info-row iss-control-info-panel__row iss-control-info-panel__row--' . esc_attr(sanitize_html_class($icon)) . '">' . $main . $action_html . '</div>';
+    }
+
+    private function visit_info_action_button(string $url, string $label): string {
+        return '<p class="iss-control-info-panel__action-link"><a class="iss-action-link" href="' . esc_url($url) . '" target="_blank" rel="noopener noreferrer">' . esc_html($label) . '</a></p>';
+    }
+
+    private function visit_info_accessibility_summary(): string {
+        $accessibility = get_option(self::OPTION_ACCESSIBILITY, $this->default_accessibility());
+        $parts = [];
+        if (! empty($accessibility['wheelchair'])) {
+            $parts[] = __('Stufenloser Zugang', 'industriesalon-steuerung');
+        }
+        if (! empty($accessibility['accessible_toilet'])) {
+            $parts[] = __('Barrierefreies WC', 'industriesalon-steuerung');
+        }
+        if (! empty($accessibility['elevator'])) {
+            $parts[] = __('Aufzug vorhanden', 'industriesalon-steuerung');
+        }
+        if (! empty($accessibility['parking'])) {
+            $parts[] = __('Parken in der Nähe', 'industriesalon-steuerung');
+        }
+        if (! empty($accessibility['companion'])) {
+            $parts[] = __('Begleitperson möglich', 'industriesalon-steuerung');
+        }
+
+        $summary = implode(', ', $parts);
+        $note = trim((string) ($accessibility['note'] ?? ''));
+        if ($note !== '') {
+            $summary = $summary !== '' ? $summary . '. ' . $note : $note;
+        }
+
+        return $summary;
+    }
+
+    private function visit_info_icon(string $icon): string {
+        $icons = [
+            'address' => '<svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M12 21s-6-5.6-6-10.5A6 6 0 1 1 18 10.5C18 15.4 12 21 12 21Z" fill="none" stroke="currentColor" stroke-width="1.8"/><circle cx="12" cy="10" r="2.2" fill="none" stroke="currentColor" stroke-width="1.8"/></svg>',
+            'museum-hours' => '<svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><circle cx="12" cy="12" r="8" fill="none" stroke="currentColor" stroke-width="1.8"/><path d="M12 7.5v5l3.2 1.8" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>',
+            'office-hours' => '<svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><rect x="4" y="5" width="16" height="14" rx="1.8" fill="none" stroke="currentColor" stroke-width="1.8"/><path d="M9 5V3.8M15 5V3.8M4 9.5h16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>',
+            'arrival' => '<svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M5 17h14M7 17l1.1-6.2A2 2 0 0 1 10.1 9h3.8a2 2 0 0 1 2 1.8L17 17M8.5 17a1.5 1.5 0 1 0 0 3 1.5 1.5 0 0 0 0-3Zm7 0a1.5 1.5 0 1 0 0 3 1.5 1.5 0 0 0 0-3ZM9 9V6.8A1.8 1.8 0 0 1 10.8 5h2.4A1.8 1.8 0 0 1 15 6.8V9" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>',
+            'accessibility' => '<svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><circle cx="12" cy="5" r="2" fill="currentColor"/><path d="M8 8.5h8M12 8.5v4m0 0 3 3.5m-3-3.5-2.5 6M12 12.5H8.5" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/><circle cx="12" cy="12" r="8.2" fill="none" stroke="currentColor" stroke-width="1.2"/></svg>',
         ];
 
-        foreach ($socials as $key => $item) {
-            $url = trim((string) ($item['url'] ?? ''));
-            if ($url === '') {
-                continue;
-            }
-            $label = (string) ($item['label'] ?? $key);
-            $items[] = '<li class="iss-visit-card__social-item iss-visit-card__social-item--' . esc_attr($key) . '"><a href="' . esc_url($url) . '" target="_blank" rel="noopener noreferrer">' . $this->visit_social_icon($key) . '<span>' . esc_html($label) . '</span></a></li>';
-        }
-
-        if (empty($items)) {
-            return '';
-        }
-
-        return '<div class="iss-visit-card__social"><p class="iss-visit-card__social-lead">' . esc_html__('Bleiben Sie auf dem Laufenden – folgen Sie uns.', 'industriesalon-steuerung') . '</p><ul class="iss-visit-card__social-list">' . implode('', $items) . '</ul></div>';
+        return $icons[$icon] ?? $icons['address'];
     }
 
-    private function visit_social_icon(string $key): string {
-        $svg = '';
-
-        if ($key === 'instagram') {
-            $svg = '<svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><rect x="4" y="4" width="16" height="16" rx="4" ry="4" fill="none" stroke="currentColor" stroke-width="1.8"/><circle cx="12" cy="12" r="4.2" fill="none" stroke="currentColor" stroke-width="1.8"/><circle cx="17" cy="7" r="1.1" fill="currentColor"/></svg>';
-        } elseif ($key === 'facebook') {
-            $svg = '<svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M14 8.5V7.1c0-.8.5-1.1 1.2-1.1H17V3h-2.5C12.1 3 11 4.2 11 6.2v2.3H9v3h2V21h3v-9.5h2.5l.5-3H14Z" fill="currentColor"/></svg>';
-        } else {
-            $svg = '<svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><circle cx="12" cy="12" r="8.5" fill="none" stroke="currentColor" stroke-width="1.8"/><path d="M3.5 12h17M12 3.5c2.2 2 3.3 4.8 3.3 8.5s-1.1 6.5-3.3 8.5M12 3.5c-2.2 2-3.3 4.8-3.3 8.5s1.1 6.5 3.3 8.5" fill="none" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"/></svg>';
-        }
-
-        return '<span class="iss-visit-card__social-icon iss-visit-card__social-icon--' . esc_attr($key) . '">' . $svg . '</span>';
-    }
-
-    public function render_contact(string $title = ''): string {
+    public function render_contact(string $title = '', array $options = []): string {
         $contact = get_option(self::OPTION_CONTACT, $this->default_contact());
         $general = get_option(self::OPTION_GENERAL, $this->default_general());
         $maps = get_option(self::OPTION_MAPS, $this->default_maps());
+        $variant = $this->normalize_visit_variant((string) ($options['variant'] ?? 'card'), 'contact');
+        $skin = $this->normalize_output_skin((string) ($options['skin'] ?? 'default'));
 
         $address_lines = array_filter([
             $general['site_name'] ?? '',
@@ -1382,9 +1113,31 @@ final class Industriesalon_Steuerung {
             trim(($general['postal_code'] ?? '') . ' ' . ($general['city'] ?? '')),
         ]);
 
+        if ($variant === 'compact-row' || $variant === 'footer') {
+            $parts = [];
+            if (! empty($address_lines)) {
+                $parts[] = '<span class="iss-contact-card__compact-address">' . esc_html(implode(', ', $address_lines)) . '</span>';
+            }
+            if (! empty($contact['phone'])) {
+                $parts[] = '<a href="' . esc_url('tel:' . $this->normalize_phone_href((string) $contact['phone'])) . '">' . esc_html((string) $contact['phone']) . '</a>';
+            }
+            if (! empty($contact['email'])) {
+                $parts[] = '<a href="' . esc_url('mailto:' . antispambot((string) $contact['email'])) . '">' . esc_html((string) $contact['email']) . '</a>';
+            }
+            if (! empty($maps['google_maps_url'])) {
+                $parts[] = '<a href="' . esc_url((string) $maps['google_maps_url']) . '" target="_blank" rel="noopener noreferrer">' . esc_html__('Karte', 'industriesalon-steuerung') . '</a>';
+            }
+
+            if (empty($parts)) {
+                return '';
+            }
+
+            return '<div class="iss-contact-card iss-contact-card--' . esc_attr($variant) . ' iss-contact-card--skin-' . esc_attr($skin) . '" data-variant="' . esc_attr($variant) . '" data-skin="' . esc_attr($skin) . '">' . implode('<span class="iss-contact-card__separator" aria-hidden="true">·</span>', $parts) . '</div>';
+        }
+
         ob_start();
         ?>
-        <div class="iss-contact-card">
+        <div class="iss-contact-card iss-contact-card--<?php echo esc_attr($variant); ?> iss-contact-card--skin-<?php echo esc_attr($skin); ?>" data-variant="<?php echo esc_attr($variant); ?>" data-skin="<?php echo esc_attr($skin); ?>">
             <?php if ($title !== '') : ?>
                 <h3 class="iss-contact-card__title"><?php echo esc_html($title); ?></h3>
             <?php endif; ?>
@@ -1537,7 +1290,16 @@ final class Industriesalon_Steuerung {
     }
 
     private function special_date_fields($index, array $item): void {
-        $item = wp_parse_args($item, ['date' => '', 'type' => 'public', 'closed' => 0, 'open' => '', 'close' => '', 'note' => '']);
+        $item = wp_parse_args($item, [
+            'date' => '',
+            'type' => 'public',
+            'kind' => 'special_open',
+            'closed' => 0,
+            'open' => '',
+            'close' => '',
+            'label' => '',
+            'note' => '',
+        ]);
         ?>
         <div class="iss-special-item" data-iss-special-item>
             <div class="iss-grid iss-grid--2">
@@ -1553,10 +1315,15 @@ final class Industriesalon_Steuerung {
                         <option value="both" <?php selected((string) $item['type'], 'both'); ?>><?php esc_html_e('Beides', 'industriesalon-steuerung'); ?></option>
                     </select>
                 </div>
-                <label class="iss-checkbox">
-                    <input type="checkbox" name="<?php echo esc_attr(self::OPTION_HOURS . '[exceptions][' . $index . '][closed]'); ?>" value="1" <?php checked(! empty($item['closed'])); ?>>
-                    <span><?php esc_html_e('Geschlossen', 'industriesalon-steuerung'); ?></span>
-                </label>
+                <div class="iss-field">
+                    <label><?php esc_html_e('Art des Sondertags', 'industriesalon-steuerung'); ?></label>
+                    <select class="regular-text" name="<?php echo esc_attr(self::OPTION_HOURS . '[exceptions][' . $index . '][kind]'); ?>">
+                        <?php foreach ($this->exception_kind_options() as $value => $label) : ?>
+                            <option value="<?php echo esc_attr($value); ?>" <?php selected($this->normalize_exception_kind((string) $item['kind'], ! empty($item['closed'])), $value); ?>><?php echo esc_html($label); ?></option>
+                        <?php endforeach; ?>
+                    </select>
+                    <p class="description iss-field-help"><?php esc_html_e('Bestimmt Text, Status und spätere Darstellung im Frontend.', 'industriesalon-steuerung'); ?></p>
+                </div>
                 <div class="iss-field">
                     <label><?php esc_html_e('Von', 'industriesalon-steuerung'); ?></label>
                     <input type="time" class="regular-text iss-time" step="300" name="<?php echo esc_attr(self::OPTION_HOURS . '[exceptions][' . $index . '][open]'); ?>" value="<?php echo esc_attr((string) $item['open']); ?>">
@@ -1564,6 +1331,11 @@ final class Industriesalon_Steuerung {
                 <div class="iss-field">
                     <label><?php esc_html_e('Bis', 'industriesalon-steuerung'); ?></label>
                     <input type="time" class="regular-text iss-time" step="300" name="<?php echo esc_attr(self::OPTION_HOURS . '[exceptions][' . $index . '][close]'); ?>" value="<?php echo esc_attr((string) $item['close']); ?>">
+                </div>
+                <div class="iss-field">
+                    <label><?php esc_html_e('Kurzes Label', 'industriesalon-steuerung'); ?></label>
+                    <input type="text" class="regular-text" name="<?php echo esc_attr(self::OPTION_HOURS . '[exceptions][' . $index . '][label]'); ?>" value="<?php echo esc_attr((string) $item['label']); ?>">
+                    <p class="description iss-field-help"><?php esc_html_e('Optional. Überschreibt die automatische Kurzbezeichnung für Listen und Statuszeilen.', 'industriesalon-steuerung'); ?></p>
                 </div>
                 <div class="iss-field">
                     <label><?php esc_html_e('Hinweis', 'industriesalon-steuerung'); ?></label>
@@ -1720,6 +1492,10 @@ final class Industriesalon_Steuerung {
             if (! is_array($item)) {
                 continue;
             }
+
+            // Special days are stored as typed semantic exceptions. This keeps
+            // editor input simple while giving frontend renderers stable meaning
+            // for status text, badges and variant-specific styling.
             $date = $this->sanitize_date_value($item['date'] ?? '');
             $type = isset($item['type']) ? (string) $item['type'] : 'public';
             if (! in_array($type, ['public', 'office', 'both'], true)) {
@@ -1730,14 +1506,25 @@ final class Industriesalon_Steuerung {
             if ($open !== '' && $close !== '' && strcmp($open, $close) > 0) {
                 $close = '';
             }
+            $kind = $this->normalize_exception_kind((string) ($item['kind'] ?? ''), ! empty($item['closed']));
+            if ($kind === 'closed') {
+                $open = '';
+                $close = '';
+            }
+            if ($kind === 'by_appointment' && $open === '' && $close === '') {
+                $open = '';
+                $close = '';
+            }
 
             $row = [
-                'date' => $date,
-                'type' => $type,
-                'closed' => ! empty($item['closed']) ? 1 : 0,
-                'open' => $open,
-                'close' => $close,
-                'note' => sanitize_text_field($item['note'] ?? ''),
+                'date'   => $date,
+                'type'   => $type,
+                'kind'   => $kind,
+                'closed' => $kind === 'closed' ? 1 : (! empty($item['closed']) ? 1 : 0),
+                'open'   => $open,
+                'close'  => $close,
+                'label'  => sanitize_text_field($item['label'] ?? ''),
+                'note'   => sanitize_text_field($item['note'] ?? ''),
             ];
             if ($row['date'] === '') {
                 continue;
@@ -1825,28 +1612,134 @@ final class Industriesalon_Steuerung {
         return sprintf('%04d-%02d-%02d', $year, $month, $day);
     }
 
-    private function format_date_label(string $value): string {
-        $timestamp = strtotime($value);
-        if ($timestamp === false) {
-            return $value;
-        }
-        return wp_date('d.m.Y', $timestamp);
-    }
-
     private function normalize_visit_type(string $type): string {
         return $type === 'office' ? 'office' : 'public';
+    }
+
+    /**
+     * Rendering variants are intentionally separated from data semantics.
+     * The same structured data can therefore be exposed as footer output,
+     * a front-page card, an info panel or a dense schedule without changing
+     * how editors enter address, hours or special-day rows.
+     */
+    private function normalize_visit_variant(string $variant, string $domain = 'hours'): string {
+        $variant = sanitize_key($variant);
+        $allowed = [
+            'hours' => ['compact', 'full', 'inline', 'footer', 'front-card', 'info-panel'],
+            'status' => ['default', 'footer', 'front-card', 'info-panel'],
+            'exceptions' => ['list', 'footer', 'compact'],
+            'contact' => ['card', 'footer', 'front-card', 'info-panel', 'compact-row'],
+            'visit_info' => ['info-panel'],
+        ];
+        $fallback = [
+            'hours' => 'compact',
+            'status' => 'default',
+            'exceptions' => 'list',
+            'contact' => 'card',
+            'visit_info' => 'info-panel',
+        ];
+
+        if (!isset($allowed[$domain]) || !in_array($variant, $allowed[$domain], true)) {
+            return $fallback[$domain] ?? 'compact';
+        }
+
+        return $variant;
+    }
+
+    /**
+     * Skin is a pure visual hook. Theme CSS may style the same semantic output
+     * differently without introducing new data structures or new block types.
+     */
+    private function normalize_output_skin(string $skin): string {
+        $skin = sanitize_key($skin);
+        $allowed = ['default', 'light', 'dark', 'muted', 'front', 'accent-red'];
+        return in_array($skin, $allowed, true) ? $skin : 'default';
+    }
+
+    private function normalize_info_panel_accent(string $accent): string {
+        $accent = sanitize_key($accent);
+        $allowed = ['red', 'green', 'blue', 'yellow', 'brown'];
+        return in_array($accent, $allowed, true) ? $accent : 'green';
+    }
+
+    private function normalize_info_panel_surface(string $surface): string {
+        $surface = sanitize_key($surface);
+        $allowed = ['light', 'dark'];
+        return in_array($surface, $allowed, true) ? $surface : 'light';
+    }
+
+    /**
+     * Editors choose from a small semantic vocabulary. Each value carries
+     * stable meaning for frontend text, badges and future styling.
+     */
+    private function exception_kind_options(): array {
+        return [
+            'closed' => __('Geschlossen', 'industriesalon-steuerung'),
+            'special_open' => __('Sonderöffnung', 'industriesalon-steuerung'),
+            'extended' => __('Länger geöffnet', 'industriesalon-steuerung'),
+            'reduced' => __('Verkürzte Zeit', 'industriesalon-steuerung'),
+            'event_day' => __('Veranstaltungstag', 'industriesalon-steuerung'),
+            'by_appointment' => __('Nur nach Vereinbarung', 'industriesalon-steuerung'),
+        ];
+    }
+
+    private function normalize_exception_kind(string $kind, bool $legacy_closed = false): string {
+        $kind = sanitize_key($kind);
+        if ($legacy_closed) {
+            return 'closed';
+        }
+
+        $allowed = array_keys($this->exception_kind_options());
+        return in_array($kind, $allowed, true) ? $kind : 'special_open';
+    }
+
+    private function resolve_exception_kind(array $exception): string {
+        return $this->normalize_exception_kind((string) ($exception['kind'] ?? ''), !empty($exception['closed']));
+    }
+
+    private function get_exception_kind_meta(string $kind): array {
+        $labels = $this->exception_kind_options();
+
+        $map = [
+            'closed' => [
+                'status' => 'closed',
+                'badge' => __('geschlossen', 'industriesalon-steuerung'),
+                'summary' => $labels['closed'],
+            ],
+            'special_open' => [
+                'status' => 'open',
+                'badge' => __('sonder', 'industriesalon-steuerung'),
+                'summary' => $labels['special_open'],
+            ],
+            'extended' => [
+                'status' => 'open',
+                'badge' => __('verlängert', 'industriesalon-steuerung'),
+                'summary' => $labels['extended'],
+            ],
+            'reduced' => [
+                'status' => 'open',
+                'badge' => __('verkürzt', 'industriesalon-steuerung'),
+                'summary' => $labels['reduced'],
+            ],
+            'event_day' => [
+                'status' => 'open',
+                'badge' => __('event', 'industriesalon-steuerung'),
+                'summary' => $labels['event_day'],
+            ],
+            'by_appointment' => [
+                'status' => 'open',
+                'badge' => __('vereinbarung', 'industriesalon-steuerung'),
+                'summary' => $labels['by_appointment'],
+            ],
+        ];
+
+        return $map[$kind] ?? $map['special_open'];
     }
 
     private function visit_type_label(string $type): string {
         return $this->normalize_visit_type($type) === 'office'
             ? __('Bürozeiten', 'industriesalon-steuerung')
             : __('Besuchszeiten', 'industriesalon-steuerung');
-    }
-
-    private function visit_type_short_label(string $type): string {
-        return $this->normalize_visit_type($type) === 'office'
-            ? __('Büro', 'industriesalon-steuerung')
-            : __('Besuch', 'industriesalon-steuerung');
     }
 
     private function current_visit_moment(): DateTimeImmutable {
@@ -1927,20 +1820,18 @@ final class Industriesalon_Steuerung {
         $day_label = $is_today ? __('Heute', 'industriesalon-steuerung') : wp_date('d.m.Y', $date->getTimestamp());
 
         if (is_array($exception)) {
-            $closed = ! empty($exception['closed']) || ((string) ($exception['open'] ?? '') === '' && (string) ($exception['close'] ?? '') === '');
-            $ranges = $closed ? [] : [[
+            $kind = $this->resolve_exception_kind($exception);
+            $meta = $this->get_exception_kind_meta($kind);
+            $closed = $kind === 'closed' || ($kind !== 'by_appointment' && ((string) ($exception['open'] ?? '') === '' && (string) ($exception['close'] ?? '') === ''));
+            $ranges = ($closed || $kind === 'by_appointment') ? [] : [[
                 'open'  => (string) ($exception['open'] ?? ''),
                 'close' => (string) ($exception['close'] ?? ''),
             ]];
-            $label = $closed
-                ? ($is_today ? __('Heute geschlossen', 'industriesalon-steuerung') : sprintf(__('%s geschlossen', 'industriesalon-steuerung'), $day_label))
-                : ($is_today ? __('Heute Sonderöffnung', 'industriesalon-steuerung') : sprintf(__('%s Sonderöffnung', 'industriesalon-steuerung'), $day_label));
-            if (! $closed && ! empty($ranges[0]['close'])) {
-                $label .= ' ' . sprintf(__('bis %s Uhr', 'industriesalon-steuerung'), $this->format_visit_clock((string) $ranges[0]['close']));
-            }
+            $label = $this->build_exception_status_label($exception, $kind, $day_label, $is_today, $ranges);
             return [
-                'status'  => $closed ? 'closed' : 'special',
+                'status'  => (string) $meta['status'],
                 'source'  => 'exception',
+                'kind'    => $kind,
                 'date'    => $date_key,
                 'label'   => $label,
                 'ranges'  => $ranges,
@@ -1964,6 +1855,7 @@ final class Industriesalon_Steuerung {
         return [
             'status'  => $closed ? 'closed' : 'open',
             'source'  => 'regular',
+            'kind'    => 'regular',
             'date'    => $date_key,
             'label'   => $label,
             'ranges'  => $ranges,
@@ -2030,6 +1922,41 @@ final class Industriesalon_Steuerung {
         return empty($parts) ? __('geschlossen', 'industriesalon-steuerung') : implode('; ', $parts);
     }
 
+    private function build_exception_status_label(array $exception, string $kind, string $day_label, bool $is_today, array $ranges): string {
+        $custom = trim((string) ($exception['label'] ?? ''));
+        $kind_meta = $this->get_exception_kind_meta($kind);
+        $range_label = $this->format_visit_time_ranges($ranges);
+
+        if ($custom !== '') {
+            if ($is_today) {
+                return $day_label . ' ' . $custom;
+            }
+            return $day_label . ' ' . $custom;
+        }
+
+        if ($kind === 'closed') {
+            return $is_today ? __('Heute geschlossen', 'industriesalon-steuerung') : sprintf(__('%s geschlossen', 'industriesalon-steuerung'), $day_label);
+        }
+
+        if ($kind === 'by_appointment') {
+            return $is_today ? __('Heute nur nach Vereinbarung', 'industriesalon-steuerung') : sprintf(__('%s nur nach Vereinbarung', 'industriesalon-steuerung'), $day_label);
+        }
+
+        $prefix_map = [
+            'special_open' => $is_today ? __('Heute Sonderöffnung', 'industriesalon-steuerung') : sprintf(__('%s Sonderöffnung', 'industriesalon-steuerung'), $day_label),
+            'extended' => $is_today ? __('Heute länger geöffnet', 'industriesalon-steuerung') : sprintf(__('%s länger geöffnet', 'industriesalon-steuerung'), $day_label),
+            'reduced' => $is_today ? __('Heute verkürzte Öffnungszeit', 'industriesalon-steuerung') : sprintf(__('%s verkürzte Öffnungszeit', 'industriesalon-steuerung'), $day_label),
+            'event_day' => $is_today ? __('Heute Veranstaltungstag', 'industriesalon-steuerung') : sprintf(__('%s Veranstaltungstag', 'industriesalon-steuerung'), $day_label),
+        ];
+
+        $prefix = $prefix_map[$kind] ?? ($is_today ? (string) $kind_meta['summary'] : $day_label . ' ' . (string) $kind_meta['summary']);
+        if ($range_label !== '' && $range_label !== __('geschlossen', 'industriesalon-steuerung')) {
+            return $prefix . ': ' . $range_label;
+        }
+
+        return $prefix;
+    }
+
     private function format_visit_day_range(array $days): string {
         $map = [
             'monday' => __('Mo', 'industriesalon-steuerung'),
@@ -2080,10 +2007,6 @@ final class Industriesalon_Steuerung {
             $parts[] = $row['days'] . ', ' . $row['times'];
         }
         return implode('; ', $parts);
-    }
-
-    private function build_visit_details(array $group): array {
-        return $this->group_visit_rows($group['days'] ?? []);
     }
 
     private function group_visit_rows(array $days): array {
@@ -2169,17 +2092,23 @@ final class Industriesalon_Steuerung {
                 continue;
             }
 
-            $closed = ! empty($item['closed']) || ((string) ($item['open'] ?? '') === '' && (string) ($item['close'] ?? '') === '');
-            $ranges = $closed ? [] : [[
+            $kind = $this->resolve_exception_kind($item);
+            $meta = $this->get_exception_kind_meta($kind);
+            $closed = $kind === 'closed' || ($kind !== 'by_appointment' && ((string) ($item['open'] ?? '') === '' && (string) ($item['close'] ?? '') === ''));
+            $ranges = ($closed || $kind === 'by_appointment') ? [] : [[
                 'open'  => (string) ($item['open'] ?? ''),
                 'close' => (string) ($item['close'] ?? ''),
             ]];
-            $label = $closed ? __('geschlossen', 'industriesalon-steuerung') : $this->format_visit_time_ranges($ranges);
+            $custom_label = trim((string) ($item['label'] ?? ''));
+            $label = $custom_label !== '' ? $custom_label : ($kind === 'by_appointment' ? __('nur nach Vereinbarung', 'industriesalon-steuerung') : ($closed ? __('geschlossen', 'industriesalon-steuerung') : $this->format_visit_time_ranges($ranges)));
 
             $list[] = [
                 'date'       => $date,
                 'date_label' => wp_date('d.m.Y', $moment->getTimestamp()),
                 'label'      => $label,
+                'status'     => (string) $meta['status'],
+                'kind'       => $kind,
+                'note'       => (string) ($item['note'] ?? ''),
             ];
         }
 
@@ -2191,19 +2120,25 @@ final class Industriesalon_Steuerung {
         return $list;
     }
 
-    private function build_visit_exception_list(string $type): string {
+    private function build_visit_exception_list(string $type, array $options = []): string {
         $list = $this->get_relevant_visit_exceptions($type);
         if (empty($list)) {
             return '';
         }
 
+        $variant = $this->normalize_visit_variant((string) ($options['variant'] ?? 'list'), 'exceptions');
+        $skin = $this->normalize_output_skin((string) ($options['skin'] ?? 'default'));
+
         ob_start();
         ?>
-        <ul class="iss-visit-exceptions__list">
+        <ul class="iss-visit-exceptions__list iss-visit-exceptions__list--<?php echo esc_attr($variant); ?> iss-visit-exceptions__list--skin-<?php echo esc_attr($skin); ?>" data-variant="<?php echo esc_attr($variant); ?>" data-skin="<?php echo esc_attr($skin); ?>">
             <?php foreach ($list as $item) : ?>
-                <li class="iss-visit-exceptions__item">
+                <li class="iss-visit-exceptions__item iss-visit-exceptions__item--<?php echo esc_attr(sanitize_html_class((string) ($item['status'] ?? 'special'))); ?> iss-visit-exceptions__item--kind-<?php echo esc_attr(sanitize_html_class((string) ($item['kind'] ?? 'special_open'))); ?>" data-status="<?php echo esc_attr((string) ($item['status'] ?? 'special')); ?>" data-kind="<?php echo esc_attr((string) ($item['kind'] ?? 'special_open')); ?>">
                     <span class="iss-visit-exceptions__date"><?php echo esc_html((string) $item['date_label']); ?></span>
                     <span class="iss-visit-exceptions__time"><?php echo esc_html((string) $item['label']); ?></span>
+                    <?php if (! empty($item['note']) && $variant !== 'footer') : ?>
+                        <span class="iss-visit-exceptions__note"><?php echo esc_html((string) $item['note']); ?></span>
+                    <?php endif; ?>
                 </li>
             <?php endforeach; ?>
         </ul>
@@ -2257,11 +2192,6 @@ final class Industriesalon_Steuerung {
         }
 
         return $data[$section][$field] ?? $default;
-    }
-
-    public function get_section(string $section): array {
-        $data = $this->get_all_data();
-        return isset($data[$section]) && is_array($data[$section]) ? $data[$section] : [];
     }
 
     private function auto_link_for_key(string $key, string $value): string {
@@ -2366,27 +2296,3 @@ final class Industriesalon_Steuerung {
 register_activation_hook(__FILE__, ['Industriesalon_Steuerung', 'activate']);
 register_deactivation_hook(__FILE__, ['Industriesalon_Steuerung', 'deactivate']);
 Industriesalon_Steuerung::instance();
-
-function iss_control_get(string $key, $default = '') {
-    return Industriesalon_Steuerung::instance()->get_field_value($key, $default);
-}
-
-function iss_control_get_section(string $section): array {
-    return Industriesalon_Steuerung::instance()->get_section($section);
-}
-
-function iss_get_status(string $type = 'museum'): string {
-    return Industriesalon_Steuerung::instance()->render_visit_status($type);
-}
-
-function iss_get_hours(string $type = 'museum', string $variant = 'compact'): string {
-    return Industriesalon_Steuerung::instance()->render_visit_hours($type, $variant);
-}
-
-function iss_get_hours_block(array $attributes = []): string {
-    return Industriesalon_Steuerung::instance()->render_visit_info($attributes);
-}
-
-function iss_get_exceptions(string $type = 'museum'): string {
-    return Industriesalon_Steuerung::instance()->render_visit_exceptions($type);
-}

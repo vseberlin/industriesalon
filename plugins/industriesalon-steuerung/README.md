@@ -1,42 +1,74 @@
 # Industriesalon Steuerung
 
-Zentrale Pflege für wiederverwendbare Inhalte im WordPress-Admin.
+Central source of truth for repeated institutional content on the Industriesalon site.
 
-## Dokumentation
+## What it manages
 
-- Redaktion: `README.de.md`
-- Technik: `README.admin.md`
+- address and location
+- contact details
+- maps / arrival links
+- visit hours
+- office hours
+- typed special-day exceptions
+- prices
+- accessibility
+- FAQ
+- mission statement
 
-## Enthalten
+## Main principle
 
-- Besuchszeiten, Bürozeiten und Sondertage
-- Adresse, Kontakt, Karte, Preise, FAQ, Barrierefreiheit, Kurztext
-- Ausgabe per PHP, Shortcode und Gutenberg-Block
-- JSON-Export und JSON-Import
+Data is entered once and rendered in multiple places.
 
-## Wichtige Ausgabe
+The plugin owns:
 
-```php
-iss_get_status('museum');
-iss_get_hours('museum', 'compact');
-iss_get_hours('office', 'full');
-iss_get_hours_block([
-    'variant' => 'compact',
-    'show_status' => true,
-    'show_museum_hours' => true,
-    'show_office_hours' => true,
-    'show_exceptions' => false,
-]);
-iss_get_exceptions('museum');
-```
+- structured data
+- semantic resolution
+- render variants
 
-Block:
+The theme owns:
 
-`industriesalon/visit-info`
+- visual styling
+- spacing
+- color treatment
 
-## Styling
+## Documentation
 
-Theme stylesheet:
+- editor / non-technical guide:
+  - [`README.de.md`](./README.de.md)
+- developer guide:
+  - [`README.admin.md`](./README.admin.md)
 
-`themes/industriesalon/assets/css/visit-info.css`
+## Primary output surface
 
+Dynamic blocks:
+
+- `industriesalon/field`
+- `industriesalon/hours`
+- `industriesalon/visit-info`
+- `industriesalon/contact`
+- `industriesalon/faq`
+
+## Key semantic change
+
+Special days are no longer treated as plain date overrides.
+
+They now carry typed semantics through `kind`, for example:
+
+- `closed`
+- `special_open`
+- `extended`
+- `reduced`
+- `event_day`
+- `by_appointment`
+
+That makes it possible to:
+
+- render better status text
+- style exceptions predictably
+- add new skins without changing stored data
+
+## Integration rule
+
+Use dynamic blocks or PHP render methods first.
+
+Use dynamic blocks or direct PHP render methods for all new integrations.

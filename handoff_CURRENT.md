@@ -4,44 +4,88 @@
 - `committed`
 
 ## Date / Window
-- Date: `2026-05-02`
+- Date: `2026-05-03`
 - Timezone: `Europe/Berlin`
 
 ## Branch / Commit
 - Branch: `master`
-- HEAD at session start: `b68638e`
+- HEAD before final commit: `d88fd8b`
 
 ## What Was Done This Session
-- Replaced the old generic post single shell with the same layout logic used for `Veranstaltung`, but in the theme red scheme:
-  - converted the `post` layout selector from `standard / image / short` to `standard / compact / long`
-  - preserved old stored values safely:
-    - `short` now normalizes to `compact`
-    - `image` now normalizes to `standard`
-  - rebuilt `themes/industriesalon/templates/single.html` to use one authoritative intro/body structure:
-    - media + meta on the left
-    - title + content on the right
-    - `compact` and `long` handled by body-class variants in CSS
-- Added the red post single layout system in `themes/industriesalon/assets/css/patterns.css`:
-  - `standard`: split editorial layout
-  - `compact`: narrow centered short-message layout
-  - `long`: one-column longread layout
-  - restored sane inline-image wrapping behavior inside post content
-- Added the must-have intro gradient treatment to single `Führung` pages by moving top spacing ownership into `.iss-tour-hero` instead of `.iss-tour-page`
-- Left `single-tour.html` and `single-tour-on-demand.html` structurally unchanged; booking and calendar behavior were not touched
-- Earlier in the session:
-  - redesigned `single-ausstellung.html` into an exhibition-specific layout with intro media, brown meta panel, and template-led story shell
-  - committed that exhibition-specific redesign separately as `b68638e`
+- Preserved manager-authored DB template overrides without touching disk templates:
+  - exported the live custom `wp_template` copies for `industriesalon`
+  - committed them under `themes/industriesalon/db-template-copies/2026-05-03-susanne-changes`
+  - commit: `d88fd8b` message `susanne changes`
+- Restored disk template authority by deleting the live DB overrides for:
+  - `front-page`
+  - `page-veranstaltungen`
+  - `page-ausstellungen`
+  - `page-fuehrungen`
+  - `page-projekte`
+  - `page`
+  - `page-publikationen`
+- Continued the `industriesalon-steuerung` cleanup:
+  - removed obsolete editor block registrations:
+    - `industriesalon/status`
+    - `industriesalon/exceptions`
+    - `industriesalon/prices`
+    - `industriesalon/mission-statement`
+  - kept the editor block surface to:
+    - `industriesalon/field`
+    - `industriesalon/hours`
+    - `industriesalon/visit-info`
+    - `industriesalon/contact`
+    - `industriesalon/faq`
+- Changed opening-hour semantics so exceptional open-day cases remain semantically `open` and carry their detail via `kind`.
+- Rebuilt `industriesalon/visit-info` into a real info panel driven by plugin data:
+  - editable `kicker`, `title`, `intro`
+  - rows for:
+    - address
+    - Besuchszeiten
+    - Bürozeiten
+    - ÖPNV
+    - Barrierefreiheit
+  - panel controls for:
+    - accent color
+    - light/dark surface
+- Removed the old visitor-card-based `visit-info` render path and related dead helper methods.
+- Added theme styling in `themes/industriesalon/assets/css/patterns.css` so the plugin panel uses the existing `iss-info-panel` pattern language.
+- Tightened the panel visual direction:
+  - white light surface
+  - smaller radius
+  - soft elevation
+  - no visible border
+  - Maps action now uses `iss-action-link`
 
 ## Verification
-- Active theme remained `industriesalon`
-- `single.html` parses cleanly through WordPress `parse_blocks()`
-- `/offnungszeiten/` now renders with `iss-post-layout-compact` while still storing legacy meta value `short`
-- `/fuehrungen/elektropolis-tour/` still renders the expected `iss-tour-page` / `iss-tour-hero` structure after the gradient change
+- Active theme confirmed: `industriesalon`
+- DB template overrides for the target pages were flushed successfully.
+- `get_block_template(...)->source` now resolves to `theme` for the restored page templates.
+- `industriesalon-steuerung.php` passes PHP syntax check through container `php -l`.
+- `assets/blocks.js` passes `node --check`.
+- Runtime registration check confirms only the intended dynamic blocks remain:
+  - `industriesalon/field`
+  - `industriesalon/hours`
+  - `industriesalon/visit-info`
+  - `industriesalon/contact`
+  - `industriesalon/faq`
+- Runtime render check confirms `industriesalon/visit-info` now emits:
+  - `iss-info-panel`
+  - `iss-control-info-panel`
+  - icon-led rows
+  - right-aligned Maps action link
+  - accessibility badge slot
 
 ## Important Notes
-- The post layout editor UI now exposes `Standard`, `Kurze Meldung`, and `Longread`.
-- Existing posts using `_iss_post_layout=short` remain valid through normalization; no data migration was required.
-- `single-ausstellung` was already committed earlier in this session chain as `b68638e`.
+- The accessibility/certification badge asset was not wired yet.
+- A legacy uploads candidate exists (`logo-pikto_500_100_c.jpg`) but was not confirmed as the correct mark.
+- Next step after asset upload:
+  - replace the inline placeholder accessibility symbol in `industriesalon-steuerung.php`
+  - use the uploaded media-library image for the `Barrierefreiheit geprüft` badge
+- Unrelated untracked theme files still exist and were intentionally left alone:
+  - `themes/industriesalon/templates-backup.zip`
+  - `themes/industriesalon/templates/page-das-museum.html`
+  - `themes/industriesalon/templates/page-videos.html`
 
 ## Continuity Prompt
 - Start next session with: `read /home/vladimir/wp/handoff_CURRENT.md`

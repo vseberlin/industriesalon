@@ -1,36 +1,42 @@
-# Industriesalon Steuerung - Technical Guide
+# Industriesalon Steuerung - Developer Guide
 
-This guide is for developers and administrators.
+This guide is for developers and technical maintainers.
 
 ## Purpose
 
-The plugin provides a central source for shared site data:
+`industriesalon-steuerung` is the authoritative source for persistent visitor-facing institutional data.
+
+It owns:
 
 - address
 - contact
-- visit hours
+- map links
+- regular visit hours
 - office hours
-- special days
+- typed special-day exceptions
 - prices
 - accessibility
 - FAQ
-- short house text
+- mission statement
 
-Outputs read from the same stored data and should not duplicate content.
+It is not a notice system.
 
-## Active code path
+Temporary campaign banners and temporary editorial alerts belong elsewhere.
 
-Plugin directory:
+## Design goals
 
-`plugins/industriesalon-steuerung/`
+The plugin follows these rules:
 
-Theme directory:
-
-`themes/industriesalon/`
+1. one structured source of truth
+2. render by semantic intent, not duplicated page text
+3. dynamic blocks first
+4. dynamic blocks are the primary editor and integration surface
+5. `variant` controls layout purpose
+6. `skin` controls visual treatment only
 
 ## Data model
 
-Stored options:
+Main options:
 
 - `iss_control_general`
 - `iss_control_contact`
@@ -41,125 +47,282 @@ Stored options:
 - `iss_control_faq`
 - `iss_control_mission_statement`
 
-Visit hours data:
-
-- `public` = visit hours
-- `office` = office hours
-- `exceptions` = special days
-
-## Rendering model
-
-The preferred output path is the new visit-info flow:
-
-- status
-- compact hours
-- full hours
-- exceptions
-
-Legacy `iss_hours` remains for compatibility.
-
-## PHP helpers
+Visit-hours structure:
 
 ```php
-iss_get_status('museum');
-iss_get_hours('museum', 'compact');
-iss_get_hours('office', 'full');
-iss_get_hours_block([
-    'variant' => 'compact',
-    'show_status' => true,
-    'show_museum_hours' => true,
-    'show_office_hours' => true,
-    'show_exceptions' => false,
-]);
-iss_get_exceptions('museum');
+[
+    'public' => [
+        'note' => '',
+        'days' => [
+            'monday' => ['closed' => 0, 'open' => '', 'close' => '', 'note' => ''],
+            ...
+        ],
+    ],
+    'office' => [
+        'note' => '',
+        'days' => [...],
+    ],
+    'exceptions' => [
+        [
+            'date'   => '2026-05-12',
+            'type'   => 'public|office|both',
+            'kind'   => 'closed|special_open|extended|reduced|event_day|by_appointment',
+            'closed' => 0,
+            'open'   => '16:00',
+            'close'  => '20:00',
+            'label'  => '',
+            'note'   => '',
+        ],
+    ],
+]
 ```
 
-Existing helpers still work:
+`closed` is kept for backward compatibility.
 
-```php
-iss_control_get('contact.phone');
-iss_control_get_section('hours');
-```
+`kind` is the authoritative semantic field for new data.
 
-## Shortcodes
+## Sondertage semantics
 
-```text
-[iss_status type="museum"]
-[iss_hours type="museum" variant="compact"]
-[iss_hours type="office" variant="full"]
-[iss_exceptions type="museum"]
-```
+Special days are typed semantic exceptions.
 
-Legacy grouped outputs remain available for compatibility.
+Supported `kind` values:
 
-## Gutenberg blocks
+- `closed`
+- `special_open`
+- `extended`
+- `reduced`
+- `event_day`
+- `by_appointment`
 
-- `industriesalon/visit-info`
+The frontend uses these values to produce:
+
+- status text
+- list labels
+- CSS classes
+- future skin hooks
+
+Do not infer semantics from free text if structured data is available.
+
+## Render model
+
+There are three layers:
+
+1. data resolution
+2. semantic render variant
+3. theme skin
+
+### Variant
+
+Variant describes structure and intended placement.
+
+Examples:
+
+- `compact`
+- `full`
+- `inline`
+- `footer`
+- `front-card`
+- `info-panel`
+- `list`
+- `compact-row`
+
+### Skin
+
+Skin is only a styling hook.
+
+Current supported skin values:
+
+- `default`
+- `light`
+- `dark`
+- `muted`
+- `front`
+- `accent-red`
+
+The plugin only emits classes/data attributes.
+The theme is responsible for actual styling.
+
+## Dynamic blocks
+
+Primary block surface:
+
 - `industriesalon/field`
 - `industriesalon/hours`
+- `industriesalon/visit-info`
 - `industriesalon/contact`
-- `industriesalon/prices`
 - `industriesalon/faq`
-- `industriesalon/mission-statement`
 
 All are server-rendered.
 
-## Admin UX
+### `industriesalon/hours`
 
-The visit-hours section uses plain labels:
+Core attributes:
 
-- Besuchszeiten
-- Bürozeiten
-- Sondertage
+- `type`
+- `title`
+- `variant`
+- `skin`
+- `show_status`
+- `show_exceptions`
 
-Keep user-facing wording short and avoid technical terms in admin copy.
+### `industriesalon/contact`
 
-## Styling hooks
+Core attributes:
 
-Theme stylesheet:
+- `title`
+- `variant`
 
-`themes/industriesalon/assets/css/visit-info.css`
+### `industriesalon/visit-info`
 
-Loaded from:
+Core attributes:
 
-`themes/industriesalon/functions.php`
+- `variant`
+- `accent`
+- `surface`
+- `kicker`
+- `title`
+- `intro`
+- `show_address`
+- `show_museum_hours`
+- `show_office_hours`
+- `show_arrival`
+- `show_accessibility`
 
-CSS custom properties:
+## PHP helpers
 
-- `--iss-visit-surface`
-- `--iss-visit-text`
-- `--iss-visit-muted`
-- `--iss-visit-border`
-- `--iss-visit-accent`
-- `--iss-visit-radius`
-- `--iss-visit-pad`
-- `--iss-visit-gap`
+Preferred PHP outputs:
 
-These tokens control the visual layer without changing plugin markup.
+```php
+Industriesalon_Steuerung::instance()->render_visit_hours('museum', 'info-panel', 'Öffnungszeiten', true, [
+    'skin' => 'dark',
+    'show_status' => true,
+    'show_exceptions' => true,
+]);
 
-## Cache
+Industriesalon_Steuerung::instance()->render_visit_exceptions('museum', [
+    'variant' => 'list',
+    'skin' => 'default',
+]);
 
-Resolved visit output is cached in transients and invalidated when hours are saved or imported.
+Industriesalon_Steuerung::instance()->render_contact('Kontakt', [
+    'variant' => 'footer',
+    'skin' => 'dark',
+]);
+```
 
-## Validation
+Do not build new features on wrapper helpers or shortcode-like compatibility APIs.
 
-- timezone uses `wp_timezone()`
-- invalid dates are dropped
-- invalid times are dropped
-- `open > close` is cleared during sanitizing
+## Semantic output hooks
 
-## Install
+The plugin now emits stable semantic hooks for styling:
 
-Copy the plugin folder into:
+- `data-status`
+- `data-kind`
+- `data-variant`
+- `data-skin`
 
-`wp-content/plugins/industriesalon-steuerung/`
+Examples:
 
-Then activate it in WordPress.
+- `.iss-visit-status--kind-event_day`
+- `.iss-visit-exceptions__item[data-kind="closed"]`
+- `.iss-contact-card--footer`
+- `.iss-visit-hours[data-variant="info-panel"]`
 
-## Operational notes
+This allows new skins without changing stored data or adding special-case render methods.
 
-1. Export before larger changes.
-2. Edit data in the plugin, not in page content.
-3. Save.
-4. Check one frontend page.
-5. Clear page cache if needed.
+## Caching
+
+Visit data is cached via transients.
+
+Important methods:
+
+- `visit_cache_version()`
+- `bump_visit_cache_version()`
+- `visit_cache_key()`
+
+Whenever hours or exceptions are sanitized and saved, the cache version is bumped.
+
+## Backward compatibility
+
+The plugin keeps:
+
+- legacy `closed` field in exceptions
+- existing regular schedule structure
+
+New code should prefer:
+
+- `kind`
+- dynamic blocks
+- variant/skin-aware renderers
+
+## Recommended extension pattern
+
+When you need a new output:
+
+1. check if it is only a visual change
+2. if yes, add a new `skin`
+3. if the markup structure genuinely changes, add a new `variant`
+4. do not add a new data model unless semantics really changed
+
+When you need a new special-day meaning:
+
+1. add a new `kind`
+2. update `exception_kind_options()`
+3. update semantic label mapping
+4. update any editor docs
+
+## What not to do
+
+Do not:
+
+- duplicate address or opening-hour text in page templates
+- use notices for persistent visit/contact facts
+- create one-off render methods for styling-only needs
+- add new wrapper helper layers when a block or renderer method already exists
+
+## Theme boundary
+
+The plugin owns:
+
+- data
+- normalization
+- semantic meaning
+- render variants
+
+The theme owns:
+
+- final visual styling
+- spacing
+- color treatment
+- variant/skin-specific CSS
+
+## Operational checklist
+
+After code changes:
+
+1. verify admin save still works
+2. verify one status output
+3. verify one hours output
+4. verify one exceptions output
+5. verify one contact output
+6. check frontend classes/data attributes
+
+## File map
+
+- plugin bootstrap:
+  - `industriesalon-steuerung.php`
+- block editor controls:
+  - `assets/blocks.js`
+- admin UI:
+  - `assets/admin.js`
+  - `assets/admin.css`
+- editor-facing docs:
+  - `README.de.md`
+
+## Short summary
+
+If you remember only one rule:
+
+- keep semantics in plugin data
+- keep layout purpose in `variant`
+- keep look and feel in `skin`

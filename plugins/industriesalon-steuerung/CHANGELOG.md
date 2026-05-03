@@ -1,5 +1,27 @@
 # Changelog
 
+## 0.3.1 - 2026-05-03
+
+- Removed obsolete editor blocks:
+  - `industriesalon/status`
+  - `industriesalon/exceptions`
+  - `industriesalon/prices`
+  - `industriesalon/mission-statement`
+- Kept the remaining editor block surface focused on:
+  - `industriesalon/field`
+  - `industriesalon/hours`
+  - `industriesalon/visit-info`
+  - `industriesalon/contact`
+  - `industriesalon/faq`
+- Refactored `industriesalon/visit-info` into a real info-panel renderer:
+  - editable `kicker`, `title`, `intro`
+  - plugin-driven rows for address, Besuchszeiten, Bürozeiten, ÖPNV and Barrierefreiheit
+  - accent/surface controls for panel color and light/dark background
+- Changed opening-hour semantics so exceptional open states stay semantically `open` and carry finer meaning in `kind`.
+- Removed the old visitor-card-based visit-info render path and related dead helpers.
+- Simplified editor controls so contact/FAQ no longer expose unused skin options.
+- Removed leftover legacy spec/example files from the plugin root.
+
 ## 0.3.0 - 2026-04-17
 
 - Show the next SaaS calendar item even when it is not linked to a content page.

@@ -1,5 +1,15 @@
 # Industriesalon Theme Changelog
 
+## 2026-05-03
+- Added `iss-control-info-panel` theme styling so the `industriesalon-steuerung` visit-info block renders through the existing `iss-info-panel` pattern language.
+- Tightened the new visit panel visual treatment:
+  - white light surface
+  - smaller radius
+  - lighter elevation
+  - no visible card border
+- Switched the row action treatment to site-native `iss-action-link` styling for Maps / route links.
+- Added dark-surface handling and icon-row styling for plugin-driven visit/address/accessibility rows.
+
 ## 2026-04-30
 - Recovered theme authority by syncing `page-ueber-uns` back to disk and flushing the remaining DB template overrides.
 - Normalized confusing landing-template names:

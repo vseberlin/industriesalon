@@ -2074,6 +2074,15 @@
   --iss-visit-accent: var(--iss-green, #579e7d);
 }
 
+/* Exceptional opening states remain semantically open but need a distinct accent. */
+.iss-visit-status--kind-special_open,
+.iss-visit-status--kind-extended,
+.iss-visit-status--kind-reduced,
+.iss-visit-status--kind-event_day,
+.iss-visit-status--kind-by_appointment {
+  --iss-visit-accent: var(--iss-yellow, #ebbc1e);
+}
+
 /* .iss-visit-status--closed: Modifier class for `iss-visit-status`; combine for `closed` variant. */
 .iss-visit-status--closed {
   --iss-visit-accent: var(--iss-brown, #753a18);
@@ -2430,6 +2439,15 @@
 
 /* .iss-visit-hours__badge--special: Element class for `iss-visit-hours`; apply on `badge--special` element. */
 .iss-visit-hours__badge--special {
+  background: rgba(235, 188, 30, 0.16);
+  color: var(--iss-brown, #753a18);
+}
+
+.iss-visit-hours__badge--kind-special_open,
+.iss-visit-hours__badge--kind-extended,
+.iss-visit-hours__badge--kind-reduced,
+.iss-visit-hours__badge--kind-event_day,
+.iss-visit-hours__badge--kind-by_appointment {
   background: rgba(235, 188, 30, 0.16);
   color: var(--iss-brown, #753a18);
 }
@@ -3505,6 +3523,100 @@ Raum / Vermietung → brown
 /* .iss-info-panel--brown: Modifier class for `iss-info-panel`; combine for `brown` variant. */
 .iss-info-panel--brown { --iss-info-accent: var(--iss-brown); }
 
+.iss-control-info-panel {
+  padding: clamp(1.5rem, 2vw, 2rem);
+  border-radius: 0.75rem;
+  border: 0;
+  box-shadow: 0 0.65rem 1.5rem rgba(0, 0, 0, 0.06);
+}
+
+.iss-control-info-panel--surface-light {
+  background: var(--iss-white);
+  color: var(--iss-black);
+}
+
+.iss-control-info-panel--surface-dark {
+  background: color-mix(in srgb, var(--iss-black) 88%, var(--iss-info-accent) 12%);
+  color: var(--iss-white);
+}
+
+.iss-control-info-panel--surface-dark .iss-info-panel__intro,
+.iss-control-info-panel--surface-dark .iss-info-row__text,
+.iss-control-info-panel--surface-dark .iss-info-row__text strong,
+.iss-control-info-panel--surface-dark .iss-control-info-panel__badge,
+.iss-control-info-panel--surface-dark .iss-control-info-panel__badge span {
+  color: var(--iss-white);
+}
+
+.iss-control-info-panel--surface-dark .iss-info-panel__rows-col,
+.iss-control-info-panel--surface-dark .iss-info-row {
+  border-color: color-mix(in srgb, var(--iss-white) 18%, transparent);
+}
+
+.iss-control-info-panel__kicker {
+  margin-bottom: 0.75rem;
+}
+
+.iss-control-info-panel__row .iss-info-row__text {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.9rem;
+}
+
+.iss-control-info-panel__icon {
+  flex: 0 0 1.3rem;
+  width: 1.3rem;
+  height: 1.3rem;
+  color: var(--iss-info-accent);
+}
+
+.iss-control-info-panel__icon svg {
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+
+.iss-control-info-panel__copy {
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+.iss-control-info-panel__badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.6rem;
+  padding: 0.6rem 0.9rem;
+  border: 1px solid color-mix(in srgb, var(--iss-info-accent) 42%, transparent);
+  border-radius: 999px;
+  font-size: 0.95rem;
+  font-weight: 600;
+  line-height: 1;
+  color: var(--iss-black);
+}
+
+.iss-control-info-panel__badge .iss-control-info-panel__icon {
+  width: 1.05rem;
+  height: 1.05rem;
+  flex-basis: 1.05rem;
+}
+
+.iss-control-info-panel__action-link {
+  margin: 0;
+}
+
+.iss-control-info-panel__action-link .iss-action-link {
+  display: inline-flex;
+  align-items: center;
+}
+
+.iss-control-info-panel--surface-dark .iss-control-info-panel__action-link .iss-action-link {
+  color: var(--iss-white);
+}
+
+.iss-control-info-panel--surface-dark .iss-control-info-panel__action-link .iss-action-link::after {
+  color: var(--iss-white);
+}
+
 @media (min-width: 782px) {
 /* .iss-info-panel__title-col: Element class for `iss-info-panel`; apply on `title-col` element. */
   .iss-info-panel__title-col {
@@ -3573,6 +3685,10 @@ Raum / Vermietung → brown
   .iss-info-row__button .wp-block-button__link {
     width: auto;
     text-align: center;
+  }
+
+  .iss-control-info-panel__row .iss-info-row__text {
+    gap: 0.75rem;
   }
 }
 
@@ -7013,6 +7129,609 @@ Raum / Vermietung → brown
   .iss-calendar-page .iss-timeline__choice-list {
     display: grid;
     grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+/* =========================================================
+   DAS MUSEUM
+   ========================================================= */
+
+.iss-museum-page,
+#wp--skip-link--target .iss-museum-page {
+  margin-top: 0 !important;
+}
+
+.iss-museum-page > .section:not(.iss-section--hero) {
+  border-top: 1px solid rgba(134, 159, 186, 0.18);
+}
+
+.iss-museum-page .section:not(.iss-section--hero) .iss-heading > .iss-kicker,
+.iss-museum-page .section:not(.iss-section--hero) .iss-heading > .iss-kicker--compact {
+  padding-left: 0.85rem;
+  border-left: 3px solid var(--iss-red);
+  color: var(--iss-red);
+}
+
+.iss-museum-hero .wp-block-cover__inner-container {
+  min-height: clamp(32rem, 68vw, 46rem);
+}
+
+.iss-museum-hero__text {
+  max-width: 36rem;
+}
+
+.iss-museum-hero-note {
+  max-width: 22rem;
+  padding: 1.35rem 1.35rem 1.45rem;
+  background: rgba(255, 255, 255, 0.92);
+  color: var(--iss-black);
+  box-shadow: 0 18px 42px rgba(0, 0, 0, 0.14);
+}
+
+.iss-museum-hero-note .iss-kicker {
+  color: var(--iss-red);
+  border-left-color: var(--iss-red);
+}
+
+.iss-museum-hero-note__title {
+  margin: 0;
+  font-size: clamp(1.35rem, 1.15rem + 0.5vw, 1.8rem);
+  line-height: 1.08;
+  letter-spacing: -0.03em;
+  text-wrap: balance;
+}
+
+.iss-museum-hero-note__text {
+  margin: 0.7rem 0 0;
+  color: rgba(30, 30, 30, 0.86);
+}
+
+.iss-museum-intro,
+.iss-museum-topics,
+.iss-museum-object,
+.iss-museum-cta {
+  padding-top: clamp(2.15rem, 4vw, 3rem);
+}
+
+.iss-museum-intro__grid,
+.iss-museum-object__grid,
+.iss-museum-object__media-grid,
+.iss-museum-cta__grid {
+  gap: 0;
+}
+
+.iss-museum-intro__copy-col,
+.iss-museum-intro__text-col,
+.iss-museum-object__copy-col,
+.iss-museum-object__media-col,
+.iss-museum-cta__copy-col,
+.iss-museum-cta__actions-col {
+  display: grid;
+  align-content: start;
+  gap: 1rem;
+  padding: 0 1.75rem;
+  border-left: 1px solid rgba(134, 159, 186, 0.18);
+}
+
+.iss-museum-intro__copy-col,
+.iss-museum-object__copy-col,
+.iss-museum-cta__copy-col {
+  padding-left: 0;
+  border-left: 0;
+}
+
+.iss-museum-intro .iss-heading__title,
+.iss-museum-topics__head .iss-heading__title,
+.iss-museum-object .iss-heading__title {
+  margin: 0;
+  font-size: clamp(2.2rem, 3.8vw, 4.2rem);
+  line-height: 0.98;
+  letter-spacing: -0.05em;
+  text-wrap: balance;
+}
+
+.iss-museum-intro__lead {
+  margin: 0;
+  font-size: 1.18rem;
+  line-height: 1.58;
+}
+
+.iss-museum-intro__link {
+  margin: 0.2rem 0 0;
+}
+
+.iss-museum-topics__head {
+  margin-bottom: 1.35rem;
+}
+
+.iss-museum-topics__grid {
+  gap: 1rem;
+}
+
+.iss-museum-topics .iss-archive-card {
+  height: 100%;
+}
+
+.iss-museum-topics .iss-archive-card__media img {
+  aspect-ratio: 1.15 / 1;
+  object-fit: cover;
+}
+
+.iss-museum-topics .iss-archive-card__title {
+  font-size: clamp(1.1rem, 1.02rem + 0.35vw, 1.4rem);
+}
+
+.iss-museum-topics__actions {
+  margin-top: 1.35rem;
+}
+
+.iss-museum-object__copy-col,
+.iss-museum-object__media-col {
+  gap: 1.1rem;
+}
+
+.iss-museum-object__main,
+.iss-museum-object__thumb {
+  margin: 0;
+}
+
+.iss-museum-object__main img,
+.iss-museum-object__thumb img {
+  display: block;
+  width: 100%;
+  height: auto;
+}
+
+.iss-museum-object__main img {
+  aspect-ratio: 1.45 / 1;
+  object-fit: cover;
+}
+
+.iss-museum-object__thumbs-col {
+  display: grid;
+  align-content: start;
+  gap: 0.8rem;
+  padding-left: 0.8rem;
+}
+
+.iss-museum-object__thumb img {
+  aspect-ratio: 1 / 1;
+  object-fit: cover;
+}
+
+.iss-museum-object__link {
+  margin: 0.2rem 0 0;
+}
+
+.iss-museum-cta__grid {
+  align-items: center;
+  padding: 1.35rem 0;
+  border-top: 1px solid rgba(134, 159, 186, 0.18);
+}
+
+.iss-museum-cta__copy {
+  display: grid;
+  gap: 0.7rem;
+}
+
+.iss-museum-cta__title {
+  margin: 0;
+  font-size: clamp(1.5rem, 1.28rem + 0.7vw, 2.2rem);
+  line-height: 1.08;
+  letter-spacing: -0.035em;
+  text-wrap: balance;
+}
+
+.iss-museum-cta__text {
+  margin: 0;
+  color: rgba(30, 30, 30, 0.82);
+}
+
+.iss-museum-cta__actions {
+  gap: 0.75rem;
+}
+
+@media (max-width: 1100px) {
+  .iss-museum-intro__grid,
+  .iss-museum-object__grid,
+  .iss-museum-cta__grid {
+    gap: 1.25rem;
+  }
+
+  .iss-museum-intro__copy-col,
+  .iss-museum-intro__text-col,
+  .iss-museum-object__copy-col,
+  .iss-museum-object__media-col,
+  .iss-museum-cta__copy-col,
+  .iss-museum-cta__actions-col {
+    padding: 0;
+    border-left: 0;
+  }
+
+  .iss-museum-topics__grid {
+    gap: 1.25rem;
+  }
+
+  .iss-museum-object__media-grid {
+    gap: 1rem;
+  }
+
+  .iss-museum-object__thumbs-col {
+    padding-left: 0;
+  }
+
+  .iss-museum-cta__actions {
+    justify-content: flex-start;
+  }
+}
+
+@media (max-width: 781px) {
+  .iss-museum-hero .wp-block-cover__inner-container {
+    min-height: 30rem;
+  }
+
+  .iss-museum-intro .iss-heading__title,
+  .iss-museum-topics__head .iss-heading__title,
+  .iss-museum-object .iss-heading__title {
+    font-size: clamp(1.95rem, 10vw, 3rem);
+  }
+
+  .iss-museum-topics__grid {
+    gap: 1rem;
+  }
+
+  .iss-museum-object__media-grid {
+    gap: 0.8rem;
+  }
+
+  .iss-museum-object__thumbs-col {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}
+
+/* =========================================================
+   VIDEOS
+   ========================================================= */
+
+.iss-videos-page,
+#wp--skip-link--target .iss-videos-page {
+  margin-top: 0 !important;
+  background: #0f0f10;
+  color: var(--iss-white);
+}
+
+.iss-videos-page > .section:not(.iss-section--hero) {
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.iss-videos-page .section:not(.iss-section--hero) .iss-heading > .iss-kicker,
+.iss-videos-page .section:not(.iss-section--hero) .iss-heading > .iss-kicker--compact {
+  padding-left: 0.85rem;
+  border-left: 3px solid var(--iss-red);
+  color: var(--iss-red);
+}
+
+.iss-videos-hero .wp-block-cover__inner-container {
+  min-height: clamp(30rem, 64vw, 42rem);
+}
+
+.iss-videos-hero__text {
+  max-width: 38rem;
+}
+
+.iss-videos-hero-note {
+  max-width: 19rem;
+  padding: 1.2rem 0 0;
+}
+
+.iss-videos-hero-note__title {
+  margin: 0;
+  font-size: clamp(1.28rem, 1.08rem + 0.45vw, 1.7rem);
+  line-height: 1.1;
+  letter-spacing: -0.03em;
+  text-wrap: balance;
+}
+
+.iss-videos-hero-note__text {
+  margin: 0.65rem 0 0;
+  color: rgba(255, 255, 255, 0.78);
+}
+
+.iss-videos-library-wrap {
+  padding-top: clamp(2.25rem, 4vw, 3rem);
+  padding-bottom: clamp(2.5rem, 4.8vw, 3.75rem);
+}
+
+.iss-video-library {
+  display: grid;
+  gap: 2rem;
+}
+
+.iss-video-library .iss-heading__title,
+.iss-video-library__section-title {
+  margin: 0;
+  letter-spacing: -0.04em;
+  text-wrap: balance;
+}
+
+.iss-video-library .iss-heading__title {
+  font-size: clamp(2.1rem, 3.3vw, 3.8rem);
+  line-height: 0.98;
+}
+
+.iss-video-library .iss-heading__text,
+.iss-video-library__feature-text,
+.iss-video-card__text,
+.iss-video-library__cta-text {
+  color: rgba(255, 255, 255, 0.78);
+}
+
+.iss-video-library__filters {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.8rem 1rem;
+  padding-bottom: 0.9rem;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.12);
+}
+
+.iss-video-library__filter {
+  color: rgba(255, 255, 255, 0.82);
+  text-decoration: none;
+  font-weight: 600;
+}
+
+.iss-video-library__filter.is-active,
+.iss-video-library__filter:hover,
+.iss-video-library__filter:focus {
+  color: var(--iss-red);
+}
+
+.iss-video-library__feature {
+  display: grid;
+  grid-template-columns: minmax(0, 1.25fr) minmax(22rem, 0.75fr);
+  gap: clamp(1.5rem, 3vw, 3rem);
+  align-items: start;
+  padding: 1.4rem;
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.iss-video-library__feature-media iframe,
+.iss-video-library__feature-media video,
+.iss-video-library__feature-media img {
+  display: block;
+  width: 100%;
+  height: auto;
+  aspect-ratio: 16 / 9;
+}
+
+.iss-video-library__feature-copy {
+  display: grid;
+  gap: 0.9rem;
+}
+
+.iss-video-library__feature-kicker {
+  margin: 0;
+  color: var(--iss-red);
+  font-size: 0.82rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+}
+
+.iss-video-library__feature-title {
+  font-size: clamp(1.8rem, 2.1vw, 2.8rem);
+  line-height: 1.02;
+}
+
+.iss-video-library__feature-meta {
+  display: grid;
+  gap: 0.35rem;
+  color: rgba(255, 255, 255, 0.85);
+}
+
+.iss-video-library__feature-meta p,
+.iss-video-library__feature-link,
+.iss-video-library__series-link,
+.iss-video-library__cta-title {
+  margin: 0;
+}
+
+.iss-video-library__feature-link .iss-action-link--light,
+.iss-video-library__series-link .iss-action-link {
+  color: var(--iss-white);
+}
+
+.iss-video-library__section-head {
+  display: grid;
+  gap: 0.4rem;
+}
+
+.iss-video-library__section-title {
+  font-size: clamp(1.55rem, 1.25rem + 0.85vw, 2.25rem);
+  line-height: 1.05;
+}
+
+.iss-video-library__grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 1.15rem;
+}
+
+.iss-video-library__grid--compact {
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+}
+
+.iss-video-card {
+  display: grid;
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.iss-video-card__trigger {
+  display: grid;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+
+.iss-video-card__media {
+  position: relative;
+  display: block;
+  text-decoration: none;
+}
+
+.iss-video-card__media img,
+.iss-video-card__fallback {
+  display: block;
+  width: 100%;
+  aspect-ratio: 16 / 10;
+  object-fit: cover;
+}
+
+.iss-video-card__fallback {
+  background: linear-gradient(135deg, rgba(232, 29, 37, 0.35), rgba(255, 255, 255, 0.06));
+}
+
+.iss-video-card__duration {
+  position: absolute;
+  right: 0.6rem;
+  bottom: 0.6rem;
+  padding: 0.18rem 0.42rem;
+  background: rgba(0, 0, 0, 0.82);
+  color: var(--iss-white);
+  font-size: 0.78rem;
+  font-weight: 700;
+}
+
+.iss-video-card__body {
+  display: grid;
+  gap: 0.7rem;
+  padding: 0.95rem 1rem 1rem;
+}
+
+.iss-video-card__title {
+  margin: 0;
+  font-size: clamp(1.12rem, 1.02rem + 0.35vw, 1.4rem);
+  line-height: 1.15;
+}
+
+.iss-video-card__title a,
+.iss-video-card__title span {
+  color: var(--iss-white);
+  text-decoration: none;
+}
+
+.iss-video-card.is-active {
+  border-color: rgba(232, 29, 37, 0.7);
+  box-shadow: 0 0 0 1px rgba(232, 29, 37, 0.36);
+}
+
+.iss-video-card__trigger:hover .iss-video-card__title span,
+.iss-video-card__trigger:focus-visible .iss-video-card__title span {
+  color: var(--iss-red);
+}
+
+.iss-video-card__trigger:focus-visible {
+  outline: 2px solid rgba(232, 29, 37, 0.7);
+  outline-offset: 2px;
+}
+
+.iss-video-card__text,
+.iss-video-card__meta,
+.iss-video-library__series-count,
+.iss-video-library__empty {
+  margin: 0;
+}
+
+.iss-video-card__meta,
+.iss-video-library__series-count {
+  color: rgba(255, 255, 255, 0.58);
+  font-size: 0.92rem;
+}
+
+.iss-video-library__series-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 1.15rem;
+}
+
+.iss-video-library__series-card {
+  display: grid;
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.iss-video-library__series-media img {
+  display: block;
+  width: 100%;
+  aspect-ratio: 16 / 9;
+  object-fit: cover;
+}
+
+.iss-video-library__series-body {
+  display: grid;
+  gap: 0.55rem;
+  padding: 0.95rem 1rem 1rem;
+}
+
+.iss-video-library__series-title {
+  margin: 0;
+  font-size: clamp(1.15rem, 1.05rem + 0.35vw, 1.4rem);
+  line-height: 1.12;
+}
+
+.iss-video-library__cta {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 1rem 2rem;
+  align-items: center;
+  padding: 1.35rem 1.5rem;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+}
+
+.iss-video-library__cta-copy {
+  display: grid;
+  gap: 0.55rem;
+}
+
+.iss-video-library__cta-title {
+  font-size: clamp(1.3rem, 1.15rem + 0.55vw, 1.8rem);
+  line-height: 1.08;
+  letter-spacing: -0.03em;
+}
+
+.iss-video-library__cta-actions .wp-block-button__link {
+  border: 1px solid rgba(255, 255, 255, 0.34);
+  background: transparent;
+  color: var(--iss-white);
+}
+
+@media (max-width: 1100px) {
+  .iss-video-library__feature {
+    grid-template-columns: 1fr;
+  }
+
+  .iss-video-library__grid,
+  .iss-video-library__grid--compact,
+  .iss-video-library__series-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 781px) {
+  .iss-video-library .iss-heading__title {
+    font-size: clamp(1.95rem, 11vw, 3rem);
+  }
+
+  .iss-video-library__grid,
+  .iss-video-library__grid--compact,
+  .iss-video-library__series-grid,
+  .iss-video-library__cta {
+    grid-template-columns: 1fr;
   }
 }
 

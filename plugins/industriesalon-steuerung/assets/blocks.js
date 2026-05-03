@@ -8,6 +8,40 @@
   var TextareaControl = components.TextareaControl;
   var ToggleControl = components.ToggleControl;
   var ServerSideRender = serverSideRender;
+  var skinOptions = [
+    { label: 'Standard', value: 'default' },
+    { label: 'Hell', value: 'light' },
+    { label: 'Dunkel', value: 'dark' },
+    { label: 'Gedämpft', value: 'muted' },
+    { label: 'Front', value: 'front' },
+    { label: 'Akzent Rot', value: 'accent-red' }
+  ];
+  var hoursVariantOptions = [
+    { label: 'Kurz', value: 'compact' },
+    { label: 'Ausführlich', value: 'full' },
+    { label: 'Einzeilig', value: 'inline' },
+    { label: 'Footer', value: 'footer' },
+    { label: 'Front Card', value: 'front-card' },
+    { label: 'Info Panel', value: 'info-panel' }
+  ];
+  var contactVariantOptions = [
+    { label: 'Karte', value: 'card' },
+    { label: 'Footer', value: 'footer' },
+    { label: 'Front Card', value: 'front-card' },
+    { label: 'Info Panel', value: 'info-panel' },
+    { label: 'Kompakte Zeile', value: 'compact-row' }
+  ];
+  var infoPanelAccentOptions = [
+    { label: 'Grün', value: 'green' },
+    { label: 'Rot', value: 'red' },
+    { label: 'Blau', value: 'blue' },
+    { label: 'Gelb', value: 'yellow' },
+    { label: 'Braun', value: 'brown' }
+  ];
+  var infoPanelSurfaceOptions = [
+    { label: 'Hell', value: 'light' },
+    { label: 'Dunkel', value: 'dark' }
+  ];
 
   var fieldOptions = [
     { label: 'Telefon', value: 'contact.phone' },
@@ -107,7 +141,11 @@
     category: 'widgets',
     attributes: {
       type: { type: 'string', default: 'public' },
-      title: { type: 'string', default: '' }
+      title: { type: 'string', default: '' },
+      variant: { type: 'string', default: 'compact' },
+      skin: { type: 'string', default: 'default' },
+      show_status: { type: 'boolean', default: false },
+      show_exceptions: { type: 'boolean', default: false }
     },
     edit: function (props) {
       return el(
@@ -128,10 +166,32 @@
               ],
               onChange: function (value) { props.setAttributes({ type: value }); }
             }),
+            el(SelectControl, {
+              label: 'Variante',
+              value: props.attributes.variant,
+              options: hoursVariantOptions,
+              onChange: function (value) { props.setAttributes({ variant: value }); }
+            }),
+            el(SelectControl, {
+              label: 'Skin',
+              value: props.attributes.skin,
+              options: skinOptions,
+              onChange: function (value) { props.setAttributes({ skin: value }); }
+            }),
             el(TextControl, {
               label: 'Optionaler Titel',
               value: props.attributes.title,
               onChange: function (value) { props.setAttributes({ title: value }); }
+            }),
+            el(ToggleControl, {
+              label: 'Status davor zeigen',
+              checked: !!props.attributes.show_status,
+              onChange: function (value) { props.setAttributes({ show_status: value }); }
+            }),
+            el(ToggleControl, {
+              label: 'Sondertage einblenden',
+              checked: !!props.attributes.show_exceptions,
+              onChange: function (value) { props.setAttributes({ show_exceptions: value }); }
             })
           )
         ),
@@ -154,22 +214,17 @@
     },
     attributes: {
       align: { type: 'string', default: '' },
-      show_status: { type: 'boolean', default: true },
+      variant: { type: 'string', default: 'info-panel' },
+      accent: { type: 'string', default: 'green' },
+      surface: { type: 'string', default: 'light' },
+      kicker: { type: 'string', default: 'ANREISE & MEHR' },
+      title: { type: 'string', default: 'Besuch planen' },
+      intro: { type: 'string', default: 'Die wichtigsten Hinweise für Ihren Besuch im Industriesalon.' },
+      show_address: { type: 'boolean', default: true },
       show_museum_hours: { type: 'boolean', default: true },
       show_office_hours: { type: 'boolean', default: true },
-      show_exceptions: { type: 'boolean', default: false },
-      variant: { type: 'string', default: 'compact' },
-      kicker: { type: 'string', default: '' },
-      title: { type: 'string', default: '' },
-      show_upcoming: { type: 'boolean', default: true },
-      upcoming_label: { type: 'string', default: 'Demnächst' },
-      upcoming_url: { type: 'string', default: '' },
-      tour_label: { type: 'string', default: 'Individuell geführt oder bei einer Tour dabei sein? Auch besondere Führungen für Kinder und Familien. Planen Sie einen Betriebsausflug? Schauen Sie mal rein.' },
-      tour_url: { type: 'string', default: '' },
-      room_label: { type: 'string', default: 'Feier, Treffen, Party oder Vortrag? Sie brauchen Raum? Wir haben etwas Passendes' },
-      room_url: { type: 'string', default: '' },
-      address_label: { type: 'string', default: 'Sie finden uns am Spreeufer.' },
-      show_social: { type: 'boolean', default: true }
+      show_arrival: { type: 'boolean', default: true },
+      show_accessibility: { type: 'boolean', default: true }
     },
     edit: function (props) {
       return el(
@@ -180,21 +235,23 @@
           null,
           el(
             PanelBody,
-            { title: 'Besuchszeiten', initialOpen: true },
+            { title: 'Info Panel', initialOpen: true },
             el(SelectControl, {
-              label: 'Darstellung',
-              value: props.attributes.variant,
-              options: [
-                { label: 'Kurz', value: 'compact' },
-                { label: 'Ausführlich', value: 'full' },
-                { label: 'Einzeilig', value: 'inline' }
-              ],
-              onChange: function (value) { props.setAttributes({ variant: value }); }
+              label: 'Akzentfarbe',
+              value: props.attributes.accent,
+              options: infoPanelAccentOptions,
+              onChange: function (value) { props.setAttributes({ accent: value }); }
+            }),
+            el(SelectControl, {
+              label: 'Hintergrund',
+              value: props.attributes.surface,
+              options: infoPanelSurfaceOptions,
+              onChange: function (value) { props.setAttributes({ surface: value }); }
             }),
             el(ToggleControl, {
-              label: 'Status zeigen',
-              checked: !!props.attributes.show_status,
-              onChange: function (value) { props.setAttributes({ show_status: value }); }
+              label: 'Adresse zeigen',
+              checked: !!props.attributes.show_address,
+              onChange: function (value) { props.setAttributes({ show_address: value }); }
             }),
             el(ToggleControl, {
               label: 'Besuchszeiten zeigen',
@@ -207,19 +264,19 @@
               onChange: function (value) { props.setAttributes({ show_office_hours: value }); }
             }),
             el(ToggleControl, {
-              label: 'Sondertage zeigen',
-              checked: !!props.attributes.show_exceptions,
-              onChange: function (value) { props.setAttributes({ show_exceptions: value }); }
+              label: 'ÖPNV zeigen',
+              checked: !!props.attributes.show_arrival,
+              onChange: function (value) { props.setAttributes({ show_arrival: value }); }
             }),
             el(ToggleControl, {
-              label: 'Social zeigen',
-              checked: !!props.attributes.show_social,
-              onChange: function (value) { props.setAttributes({ show_social: value }); }
+              label: 'Barrierefreiheit zeigen',
+              checked: !!props.attributes.show_accessibility,
+              onChange: function (value) { props.setAttributes({ show_accessibility: value }); }
             })
           ),
           el(
             PanelBody,
-            { title: 'Besucherkarte', initialOpen: true },
+            { title: 'Texte', initialOpen: true },
             el(TextControl, {
               label: 'Kicker',
               value: props.attributes.kicker,
@@ -230,48 +287,10 @@
               value: props.attributes.title,
               onChange: function (value) { props.setAttributes({ title: value }); }
             }),
-            el(ToggleControl, {
-              label: 'Demnächst zeigen',
-              checked: !!props.attributes.show_upcoming,
-              onChange: function (value) { props.setAttributes({ show_upcoming: value }); }
-            }),
-            el(TextControl, {
-              label: 'Demnächst Text',
-              value: props.attributes.upcoming_label,
-              onChange: function (value) { props.setAttributes({ upcoming_label: value }); }
-            }),
-            el(TextControl, {
-              label: 'Demnächst Link',
-              value: props.attributes.upcoming_url,
-              placeholder: 'https://…',
-              onChange: function (value) { props.setAttributes({ upcoming_url: value }); }
-            }),
             el(TextareaControl, {
-              label: 'Touren Text',
-              value: props.attributes.tour_label,
-              onChange: function (value) { props.setAttributes({ tour_label: value }); }
-            }),
-            el(TextControl, {
-              label: 'Touren Link',
-              value: props.attributes.tour_url,
-              placeholder: 'https://…',
-              onChange: function (value) { props.setAttributes({ tour_url: value }); }
-            }),
-            el(TextareaControl, {
-              label: 'Raum Text',
-              value: props.attributes.room_label,
-              onChange: function (value) { props.setAttributes({ room_label: value }); }
-            }),
-            el(TextControl, {
-              label: 'Raum Link',
-              value: props.attributes.room_url,
-              placeholder: 'https://…',
-              onChange: function (value) { props.setAttributes({ room_url: value }); }
-            }),
-            el(TextControl, {
-              label: 'Adresssatz',
-              value: props.attributes.address_label,
-              onChange: function (value) { props.setAttributes({ address_label: value }); }
+              label: 'Intro',
+              value: props.attributes.intro,
+              onChange: function (value) { props.setAttributes({ intro: value }); }
             })
           )
         ),
@@ -284,15 +303,43 @@
     save: function () { return null; }
   });
 
-  function simpleGroupBlock(name, title, icon) {
+  function simpleGroupBlock(name, title, icon, variantOptions, supportsSkin) {
     blocks.registerBlockType(name, {
       title: title,
       icon: icon,
       category: 'widgets',
       attributes: {
-        title: { type: 'string', default: '' }
+        title: { type: 'string', default: '' },
+        variant: { type: 'string', default: name === 'industriesalon/contact' ? 'card' : 'default' },
+        skin: { type: 'string', default: 'default' }
       },
       edit: function (props) {
+        var controls = [
+          el(TextControl, {
+            label: 'Optionaler Titel',
+            value: props.attributes.title,
+            onChange: function (value) { props.setAttributes({ title: value }); }
+          })
+        ];
+
+        if (supportsSkin) {
+          controls.push(el(SelectControl, {
+            label: 'Skin',
+            value: props.attributes.skin,
+            options: skinOptions,
+            onChange: function (value) { props.setAttributes({ skin: value }); }
+          }));
+        }
+
+        if (variantOptions) {
+          controls.splice(1, 0, el(SelectControl, {
+            label: 'Variante',
+            value: props.attributes.variant,
+            options: variantOptions,
+            onChange: function (value) { props.setAttributes({ variant: value }); }
+          }));
+        }
+
         return el(
           Fragment,
           null,
@@ -302,11 +349,7 @@
             el(
               PanelBody,
               { title: title, initialOpen: true },
-              el(TextControl, {
-                label: 'Optionaler Titel',
-                value: props.attributes.title,
-                onChange: function (value) { props.setAttributes({ title: value }); }
-              })
+              controls
             )
           ),
           el(ServerSideRender, {
@@ -319,46 +362,6 @@
     });
   }
 
-  simpleGroupBlock('industriesalon/contact', 'IS Kontakt', 'id');
-  simpleGroupBlock('industriesalon/prices', 'IS Preise', 'tickets-alt');
-  simpleGroupBlock('industriesalon/faq', 'IS FAQ', 'editor-help');
-
-  blocks.registerBlockType('industriesalon/mission-statement', {
-    title: 'IS Mission Statement',
-    icon: 'excerpt-view',
-    category: 'widgets',
-    attributes: {
-      title: { type: 'string', default: '' },
-      heading: { type: 'string', default: '' }
-    },
-    edit: function (props) {
-      return el(
-        Fragment,
-        null,
-        el(
-          InspectorControls,
-          null,
-          el(
-            PanelBody,
-            { title: 'IS Mission Statement', initialOpen: true },
-            el(TextControl, {
-              label: 'Kicker Titel',
-              value: props.attributes.title,
-              onChange: function (value) { props.setAttributes({ title: value }); }
-            }),
-            el(TextControl, {
-              label: 'Überschrift',
-              value: props.attributes.heading,
-              onChange: function (value) { props.setAttributes({ heading: value }); }
-            })
-          )
-        ),
-        el(ServerSideRender, {
-          block: 'industriesalon/mission-statement',
-          attributes: props.attributes
-        })
-      );
-    },
-    save: function () { return null; }
-  });
+  simpleGroupBlock('industriesalon/contact', 'IS Kontakt', 'id', contactVariantOptions, false);
+  simpleGroupBlock('industriesalon/faq', 'IS FAQ', 'editor-help', null, false);
 })(window.wp.blocks, window.wp.element, window.wp.components, window.wp.blockEditor, window.wp.serverSideRender);
