@@ -868,6 +868,69 @@
   box-sizing: border-box;
 }
 
+/* .home: Base class for home; apply on primary wrapper/scope. */
+/* .iss-front-visit-strip: Base class for homepage visit strip; apply on primary wrapper/scope. */
+.home .iss-front-visit-strip {
+  padding-top: clamp(1.35rem, 2.5vw, 2rem);
+  padding-bottom: clamp(1.35rem, 2.5vw, 2rem);
+  border-top: 1px solid rgba(30, 30, 30, 0.08);
+  border-bottom: 1px solid rgba(30, 30, 30, 0.08);
+  background: linear-gradient(180deg, #fff 0%, #fbf9f5 100%);
+}
+
+/* .home: Base class for home; apply on primary wrapper/scope. */
+/* .iss-front-visit-strip__grid: Element class for `iss-front-visit-strip`; apply on `grid` element. */
+.home .iss-front-visit-strip__grid {
+  gap: 0;
+  align-items: center;
+}
+
+.home .iss-front-visit-strip__grid > .wp-block-column {
+  margin-top: 0;
+}
+
+/* .home: Base class for home; apply on primary wrapper/scope. */
+/* .iss-front-visit-strip__item: Element class for `iss-front-visit-strip`; apply on `item` element. */
+.home .iss-front-visit-strip__item {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  min-width: 0;
+  padding: 0 1.5rem;
+  border-left: 1px solid rgba(30, 30, 30, 0.08);
+}
+
+.home .iss-front-visit-strip__item:first-child {
+  padding-left: 0;
+  border-left: 0;
+}
+
+.home .iss-front-visit-strip__item--cta {
+  justify-content: flex-end;
+  padding-right: 0;
+}
+
+.home .iss-front-visit-strip__copy {
+  min-width: 0;
+}
+
+.home .iss-front-visit-strip__label {
+  margin: 0 0 0.2rem;
+  font-size: 0.9rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.home .iss-front-visit-strip__text {
+  margin: 0;
+  color: rgba(30, 30, 30, 0.8);
+}
+
+.home .iss-front-visit-strip__cta {
+  margin: 0;
+}
+
 /* =====================================================================
    CARD ROWS
    These selectors intentionally sit in patterns.css because they are
@@ -967,6 +1030,64 @@
 .home .iss-4-card-row__title {
   font-size: clamp(1.1rem, 1rem + 0.35vw, 1.35rem);
   line-height: 1.15;
+}
+
+/* .home: Base class for home; apply on primary wrapper/scope. */
+/* .iss-front-explore: Base class for homepage explore band; apply on primary wrapper/scope. */
+.home .iss-front-explore {
+  padding-top: clamp(2.25rem, 4vw, 3.5rem);
+}
+
+.home .iss-front-explore__heading {
+  max-width: 52rem;
+}
+
+.home .iss-front-explore__grid {
+  align-items: stretch;
+}
+
+.home .iss-front-explore__card {
+  gap: 0.85rem;
+  padding: 1rem;
+  border: 1px solid rgba(30, 30, 30, 0.1);
+  border-radius: var(--iss-radius-md);
+  background: #fff;
+  box-shadow: 0 10px 32px rgba(0, 0, 0, 0.04);
+}
+
+.home .iss-front-explore__meta {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+}
+
+.home .iss-front-explore__label {
+  margin: 0;
+  font-size: 0.88rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.home .iss-front-explore__body {
+  display: flex;
+  flex: 1 1 auto;
+  flex-direction: column;
+  gap: 0.7rem;
+}
+
+.home .iss-front-explore__body .iss-4-card-row__title {
+  font-size: clamp(1.2rem, 1.1rem + 0.35vw, 1.55rem);
+}
+
+.home .iss-front-explore__text {
+  margin: 0;
+  color: rgba(30, 30, 30, 0.8);
+}
+
+.home .iss-front-explore__body p:last-child {
+  margin-top: auto;
+  margin-bottom: 0;
 }
 
 /* =====================================================================
@@ -1161,6 +1282,19 @@
   .home .iss-4-card-row__grid {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
+
+  .home .iss-front-visit-strip__grid {
+    gap: 1rem;
+  }
+
+  .home .iss-front-visit-strip__item {
+    padding: 0;
+    border-left: 0;
+  }
+
+  .home .iss-front-visit-strip__item--cta {
+    justify-content: flex-start;
+  }
 }
 
 @media (max-width: 782px) {
@@ -1214,6 +1348,15 @@
 /* .iss-newsletter-band__grid: Element class for `iss-newsletter-band`; apply on `grid` element. */
   .home .iss-newsletter-band__grid {
     grid-template-columns: 1fr;
+  }
+
+  .home .iss-front-visit-strip {
+    padding-top: 1rem;
+    padding-bottom: 1rem;
+  }
+
+  .home .iss-front-visit-strip__item {
+    gap: 0.8rem;
   }
 }
 
@@ -4887,6 +5030,86 @@ Raum / Vermietung → brown
   color: rgba(30, 30, 30, 0.76);
 }
 
+.iss-archive-topics {
+  gap: var(--iss-archive-gap);
+  margin-top: clamp(1.5rem, 3vw, 2.25rem);
+}
+
+.iss-archive-topics > .wp-block-column {
+  margin-top: 0;
+}
+
+.iss-archive-topics .iss-archive-card__media {
+  aspect-ratio: 16 / 9;
+}
+
+.iss-archive-topics .iss-archive-card__actions {
+  margin: 0;
+  padding-top: 0;
+}
+
+.iss-archive-tools-head {
+  margin-top: clamp(2rem, 4vw, 3rem);
+}
+
+.iss-archive-tools-grid {
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+}
+
+.iss-archive-tools-grid .iss-archive-entry {
+  box-shadow: none;
+}
+
+.iss-archive-tools-grid .iss-archive-entry__title {
+  font-size: clamp(1.1rem, 0.98rem + 0.35vw, 1.35rem);
+}
+
+.iss-archive-tools-grid .iss-archive-entry__meta {
+  padding-top: 0.5rem;
+}
+
+.iss-archive-tools-grid .iss-archive-entry__meta a {
+  color: inherit;
+  text-decoration: none;
+}
+
+.iss-archive-tools-grid .iss-archive-entry__meta a:hover,
+.iss-archive-tools-grid .iss-archive-entry__meta a:focus-visible {
+  color: var(--iss-accent);
+}
+
+.iss-archive-facts {
+  gap: 0;
+  margin-top: clamp(2rem, 4vw, 3rem);
+  border-top: 1px solid rgba(30, 30, 30, 0.1);
+}
+
+.iss-archive-facts > .wp-block-column {
+  margin-top: 0;
+}
+
+.iss-archive-fact {
+  height: 100%;
+  padding: 1.25rem 1.5rem;
+  border-left: 1px solid rgba(30, 30, 30, 0.1);
+}
+
+.iss-archive-facts > .wp-block-column:first-child .iss-archive-fact {
+  padding-left: 0;
+  border-left: 0;
+}
+
+.iss-archive-fact__title {
+  margin: 0;
+  font-size: 1.08rem;
+  line-height: 1.2;
+}
+
+.iss-archive-fact__text {
+  margin: 0.35rem 0 0;
+  color: rgba(30, 30, 30, 0.74);
+}
+
 /* =====================================================
    SECTION HEADS
    ===================================================== */
@@ -5571,7 +5794,8 @@ Raum / Vermietung → brown
   .iss-archive-paths,
 /* .iss-archive-grid: Base class for iss archive grid; apply on primary wrapper/scope. */
   .iss-archive-grid,
-  .iss-archive-company-grid {
+  .iss-archive-company-grid,
+  .iss-archive-tools-grid {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 
@@ -5579,6 +5803,16 @@ Raum / Vermietung → brown
   .iss-archive-company-layout,
   .iss-archive-research-layout {
     grid-template-columns: 1fr;
+  }
+
+  .iss-archive-facts {
+    gap: 1rem;
+    border-top: 0;
+  }
+
+  .iss-archive-fact {
+    padding: 0;
+    border-left: 0;
   }
 }
 
@@ -5604,6 +5838,10 @@ Raum / Vermietung → brown
 /* .iss-portal-links: Base class for iss portal links; apply on primary wrapper/scope. */
   .iss-portal-links {
     grid-template-columns: 1fr;
+  }
+
+  .iss-archive-topics {
+    gap: 1rem;
   }
 
   .iss-archive-hero__layout,
@@ -5898,58 +6136,19 @@ Raum / Vermietung → brown
   border-color: rgba(249, 249, 250, 0.5);
 }
 
-/* .iss-rental-intro__grid: Element class for `iss-rental-intro`; apply on `grid` element. */
-.iss-rental-intro__grid,
-/* .iss-rental-qualities__grid: Element class for `iss-rental-qualities`; apply on `grid` element. */
-.iss-rental-qualities__grid,
-/* .iss-rental-cta__grid: Element class for `iss-rental-cta`; apply on `grid` element. */
-.iss-rental-cta__grid {
+/* .iss-rental-story__grid: Element class for `iss-rental-story`; apply on `grid` element. */
+.iss-rental-story__grid {
   gap: clamp(1.5rem, 2vw, 3rem);
 }
 
-/* .iss-rental-facts: Base class for iss rental facts; apply on primary wrapper/scope. */
-.iss-rental-facts {
-  display: grid;
-  gap: 1rem;
-}
-
-/* .iss-rental-facts: Base class for iss rental facts; apply on primary wrapper/scope. */
-/* .iss-card: Base class for iss card; apply on primary wrapper/scope. */
-.iss-rental-facts .iss-card {
-  min-height: 0;
-}
-
-/* .iss-rental-uses__grid: Element class for `iss-rental-uses`; apply on `grid` element. */
-.iss-rental-uses__grid {
-  margin-top: 1.5rem;
-}
-
-.iss-rental-facts-panel .iss-info-panel {
-  margin-top: clamp(-4rem, -5vw, -2rem);
-  position: relative;
-  z-index: 2;
-}
-
-/* .iss-rental-usage-card: Base class for iss rental usage card; apply on primary wrapper/scope. */
-/* .iss-card__media: Element class for `iss-card`; apply on `media` element. */
-.iss-rental-usage-card .iss-card__media {
-  aspect-ratio: 5 / 4;
-}
-
-/* .iss-rental-usage-card: Base class for iss rental usage card; apply on primary wrapper/scope. */
-/* .iss-card__body: Element class for `iss-card`; apply on `body` element. */
-.iss-rental-usage-card .iss-card__body {
-  gap: 0.8rem;
-}
-
-/* .iss-rental-qualities__image: Element class for `iss-rental-qualities`; apply on `image` element. */
-.iss-rental-qualities__image {
+/* .iss-rental-story__image: Element class for `iss-rental-story`; apply on `image` element. */
+.iss-rental-story__image {
   margin: 0;
   height: 100%;
 }
 
-/* .iss-rental-qualities__image: Element class for `iss-rental-qualities`; apply on `image` element. */
-.iss-rental-qualities__image img {
+/* .iss-rental-story__image: Element class for `iss-rental-story`; apply on `image` element. */
+.iss-rental-story__image img {
   display: block;
   width: 100%;
   height: 100%;
@@ -5958,65 +6157,184 @@ Raum / Vermietung → brown
   border-radius: var(--iss-radius-lg);
 }
 
-/* .iss-rental-list: Base class for iss rental list; apply on primary wrapper/scope. */
-.iss-rental-list {
+/* .iss-rental-story__heading: Element class for `iss-rental-story`; apply on `heading` element. */
+.iss-rental-story__heading {
+  max-width: 36rem;
+}
+
+/* .iss-rental-section-heading: Base class for repeated rental section headings; apply on primary wrapper/scope. */
+.iss-rental-section-heading {
+  margin-bottom: 1.5rem;
+}
+
+/* .iss-rental-occasions: Base class for rental occasions section; apply on primary wrapper/scope. */
+.iss-rental-occasions {
+  padding-top: clamp(1.75rem, 3vw, 2.5rem);
+  padding-bottom: clamp(1.75rem, 3vw, 2.5rem);
+}
+
+/* .iss-rental-special: Base class for rental special-features section; apply on primary wrapper/scope. */
+.iss-rental-special {
+  padding-top: clamp(1.75rem, 3vw, 2.5rem);
+}
+
+/* .iss-rental-story: Base class for rental story section; apply on primary wrapper/scope. */
+.iss-rental-story {
+  padding-bottom: clamp(1.75rem, 3vw, 2.5rem);
+}
+
+/* .iss-rental-occasion-row: Element class for `iss-rental-occasions`; apply on `row` element. */
+.iss-rental-occasion-row,
+/* .iss-rental-feature-row: Element class for `iss-rental-special`; apply on `row` element. */
+.iss-rental-feature-row {
+  gap: 0;
+  row-gap: 1.25rem;
+}
+
+.iss-rental-occasion-row > .wp-block-column,
+.iss-rental-feature-row > .wp-block-column {
+  margin-top: 0;
+}
+
+/* .iss-rental-occasion: Base class for rental occasion items; apply on primary wrapper/scope. */
+.iss-rental-occasion,
+/* .iss-rental-feature: Base class for rental feature items; apply on primary wrapper/scope. */
+.iss-rental-feature {
+  height: 100%;
+  padding: 0 1.25rem;
+  border-left: 1px solid var(--iss-border);
+}
+
+.iss-rental-occasion:first-child,
+.iss-rental-feature:first-child {
+  padding-left: 0;
+  border-left: 0;
+}
+
+.iss-rental-occasion .iss-icon,
+.iss-rental-feature .iss-icon {
+  margin-bottom: 1rem;
+}
+
+/* .iss-rental-occasion__title: Element class for `iss-rental-occasion`; apply on `title` element. */
+.iss-rental-occasion__title,
+/* .iss-rental-feature__title: Element class for `iss-rental-feature`; apply on `title` element. */
+.iss-rental-feature__title {
+  margin-top: 0;
+  margin-bottom: 0.55rem;
+  font-size: clamp(1.15rem, 1rem + 0.35vw, 1.45rem);
+}
+
+/* .iss-rental-occasion__text: Element class for `iss-rental-occasion`; apply on `text` element. */
+.iss-rental-occasion__text,
+/* .iss-rental-feature__text: Element class for `iss-rental-feature`; apply on `text` element. */
+.iss-rental-feature__text {
+  margin: 0;
+  color: rgba(30, 30, 30, 0.8);
+}
+
+/* .iss-rental-gallery__grid: Element class for `iss-rental-gallery`; apply on `grid` element. */
+.iss-rental-gallery__grid {
+  margin-top: 0;
+}
+
+.iss-rental-gallery__grid .wp-block-image {
+  border-radius: var(--iss-radius-md);
+  overflow: hidden;
+}
+
+.iss-rental-gallery__grid img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  min-height: 15rem;
+  object-fit: cover;
+}
+
+/* .iss-rental-inquiry__grid: Element class for `iss-rental-inquiry`; apply on `grid` element. */
+.iss-rental-inquiry__grid {
+  gap: clamp(1.5rem, 2vw, 2.5rem);
+  align-items: stretch;
+}
+
+/* .iss-rental-inquiry__cta: Element class for `iss-rental-inquiry`; apply on `cta` element. */
+.iss-rental-inquiry__cta {
+  height: 100%;
+  padding: clamp(1.75rem, 3vw, 3rem);
+  border-radius: var(--iss-radius-lg);
+  background: #111;
+  color: var(--iss-white);
+}
+
+/* .iss-rental-inquiry__title: Element class for `iss-rental-inquiry`; apply on `title` element. */
+.iss-rental-inquiry__title {
+  margin-top: 0;
+  margin-bottom: 1rem;
+  color: var(--iss-white);
+}
+
+/* .iss-rental-inquiry__text: Element class for `iss-rental-inquiry`; apply on `text` element. */
+.iss-rental-inquiry__text {
+  margin-top: 0;
+  margin-bottom: 1.5rem;
+  color: rgba(249, 249, 250, 0.86);
+}
+
+/* .iss-rental-inquiry__overview: Element class for `iss-rental-inquiry`; apply on `overview` element. */
+.iss-rental-inquiry__overview {
+  height: 100%;
+  padding: clamp(1.75rem, 3vw, 3rem);
+  border: 1px solid var(--iss-border);
+  border-radius: var(--iss-radius-lg);
+  background: linear-gradient(180deg, #fffdf9 0%, #f7f3ec 100%);
+}
+
+/* .iss-rental-inquiry__overview-grid: Element class for `iss-rental-inquiry`; apply on `overview-grid` element. */
+.iss-rental-inquiry__overview-grid {
+  gap: clamp(1rem, 1.8vw, 2rem);
+  align-items: stretch;
+}
+
+/* .iss-rental-inquiry__overview-copy: Element class for `iss-rental-inquiry`; apply on `overview-copy` element. */
+.iss-rental-inquiry__overview-copy,
+/* .iss-rental-inquiry__overview-figure: Element class for `iss-rental-inquiry`; apply on `overview-figure` element. */
+.iss-rental-inquiry__overview-figure {
+  margin-top: 0;
+}
+
+/* .iss-rental-overview-list: Base class for rental overview list; apply on primary wrapper/scope. */
+.iss-rental-overview-list {
   margin: 0;
   padding-left: 1.2rem;
   display: grid;
   gap: 0.75rem;
 }
 
-/* .iss-rental-list: Base class for iss rental list; apply on primary wrapper/scope. */
-.iss-rental-list li::marker {
+/* .iss-rental-overview-list: Base class for rental overview list; apply on primary wrapper/scope. */
+.iss-rental-overview-list li::marker {
   color: var(--iss-accent);
 }
 
-/* .iss-rental-cta: Base class for iss rental cta; apply on primary wrapper/scope. */
-.iss-rental-cta {
-  padding-top: clamp(3.5rem, 6vw, 5rem);
-  padding-bottom: clamp(3.5rem, 6vw, 5rem);
+/* .iss-rental-inquiry__note: Element class for `iss-rental-inquiry`; apply on `note` element. */
+.iss-rental-inquiry__note {
+  margin-top: 1.5rem;
+  margin-bottom: 0;
+  color: rgba(30, 30, 30, 0.72);
 }
 
-.iss-rental-inquiry .iss-info-panel {
-  background: #fff;
-  color: var(--iss-black);
-  border-left: 4px solid var(--iss-accent);
-}
-
-.iss-rental-inquiry .iss-info-panel .iss-info-row__text a {
-  color: inherit;
-}
-
-/* .iss-rental-cta: Base class for iss rental cta; apply on primary wrapper/scope. */
-/* .iss-heading__text: Element class for `iss-heading`; apply on `text` element. */
-.iss-rental-cta .iss-heading__text {
-  color: rgba(249, 249, 250, 0.82) !important;
-}
-
-/* .iss-rental-contact: Base class for iss rental contact; apply on primary wrapper/scope. */
-.iss-rental-contact {
-  height: 100%;
-  padding: 1.5rem;
-  border: 1px solid rgba(249, 249, 250, 0.14);
-  border-radius: var(--iss-radius-md);
-  background: rgba(249, 249, 250, 0.04);
-  backdrop-filter: blur(6px);
-}
-
-/* .iss-rental-contact: Base class for iss rental contact; apply on primary wrapper/scope. */
-.iss-rental-contact p {
+/* .iss-rental-inquiry__illustration: Element class for `iss-rental-inquiry`; apply on `illustration` element. */
+.iss-rental-inquiry__illustration {
   margin-top: 0;
-  margin-bottom: 1rem;
+  margin-bottom: 0;
+  margin-left: auto;
+  max-width: 100%;
 }
 
-/* .iss-rental-contact: Base class for iss rental contact; apply on primary wrapper/scope. */
-.iss-rental-contact p:last-of-type {
-  margin-bottom: 1.25rem;
-}
-
-/* .iss-rental-contact: Base class for iss rental contact; apply on primary wrapper/scope. */
-.iss-rental-contact a {
-  color: var(--iss-white);
+/* .iss-rental-inquiry__illustration: Element class for `iss-rental-inquiry`; apply on `illustration` element. */
+.iss-rental-inquiry__illustration img {
+  display: block;
+  width: 100%;
+  height: auto;
 }
 
 @media (max-width: 1024px) {
@@ -6030,9 +6348,17 @@ Raum / Vermietung → brown
     max-width: 18ch;
   }
 
-/* .iss-rental-qualities__image: Element class for `iss-rental-qualities`; apply on `image` element. */
-  .iss-rental-qualities__image img {
+/* .iss-rental-story__image: Element class for `iss-rental-story`; apply on `image` element. */
+  .iss-rental-story__image img {
     min-height: 320px;
+  }
+
+  .iss-rental-gallery__grid img {
+    min-height: 12rem;
+  }
+
+  .iss-rental-inquiry__overview-grid {
+    gap: 1rem;
   }
 }
 
@@ -6040,10 +6366,6 @@ Raum / Vermietung → brown
 /* .iss-rental-hero: Base class for iss rental hero; apply on primary wrapper/scope. */
   .iss-rental-hero {
     min-height: 60vh;
-  }
-
-  .iss-rental-facts-panel .iss-info-panel {
-    margin-top: -1.5rem;
   }
 
 /* .iss-rental-hero__inner: Element class for `iss-rental-hero`; apply on `inner` element. */
@@ -6059,19 +6381,40 @@ Raum / Vermietung → brown
     max-width: 100%;
   }
 
-/* .iss-rental-facts: Base class for iss rental facts; apply on primary wrapper/scope. */
-  .iss-rental-facts {
-    gap: 0.9rem;
+  .iss-rental-occasion,
+  .iss-rental-feature {
+    padding-left: 0;
+    padding-top: 1.25rem;
+    border-left: 0;
+    border-top: 1px solid var(--iss-border);
   }
 
-/* .iss-rental-contact: Base class for iss rental contact; apply on primary wrapper/scope. */
-  .iss-rental-contact {
-    padding: 1.2rem;
+  .iss-rental-occasion:first-child,
+  .iss-rental-feature:first-child {
+    padding-top: 0;
+    border-top: 0;
   }
 
-/* .iss-rental-qualities__image: Element class for `iss-rental-qualities`; apply on `image` element. */
-  .iss-rental-qualities__image img {
+/* .iss-rental-story__image: Element class for `iss-rental-story`; apply on `image` element. */
+  .iss-rental-story__image img {
     min-height: 260px;
+  }
+
+  .iss-rental-gallery__grid {
+    gap: 0.75rem;
+  }
+
+  .iss-rental-gallery__grid img {
+    min-height: 10rem;
+  }
+
+  .iss-rental-inquiry__overview-grid {
+    gap: 1.25rem;
+  }
+
+  .iss-rental-inquiry__illustration {
+    margin-left: 0;
+    max-width: min(22rem, 100%);
   }
 }
 
@@ -6103,6 +6446,92 @@ Raum / Vermietung → brown
   border-top: 1px solid rgba(134, 159, 186, 0.22);
 }
 
+.iss-events-program {
+  padding-top: clamp(2.1rem, 4vw, 3rem);
+}
+
+.iss-events-program__grid,
+.iss-events-formats__grid {
+  gap: 0;
+}
+
+.iss-events-program__grid > .wp-block-column,
+.iss-events-formats__grid > .wp-block-column {
+  margin-top: 0;
+}
+
+.iss-events-program__intro-col,
+.iss-events-program__listing-col,
+.iss-events-program__aside-col,
+.iss-events-formats__lead-col,
+.iss-events-format-col {
+  display: grid;
+  align-content: start;
+  gap: 1rem;
+  padding: 0 1.75rem;
+  border-left: 1px solid rgba(134, 159, 186, 0.18);
+}
+
+.iss-events-program__intro-col,
+.iss-events-formats__lead-col {
+  padding-left: 0;
+  border-left: 0;
+}
+
+.iss-events-program__intro {
+  max-width: 19rem;
+}
+
+.iss-events-program__intro .iss-heading__title,
+.iss-events-formats__lead .iss-heading__title {
+  margin: 0;
+  font-size: clamp(2rem, 3vw, 3.2rem);
+  line-height: 1.02;
+  letter-spacing: -0.045em;
+  text-wrap: balance;
+}
+
+.iss-events-program__intro .iss-heading__text,
+.iss-events-formats__lead .iss-heading__text {
+  font-size: 1.08rem;
+  line-height: 1.6;
+}
+
+.iss-events-program__intro p:last-child,
+.iss-events-formats__lead p:last-child {
+  margin-bottom: 0;
+}
+
+.iss-events-program__listing {
+  display: grid;
+  gap: 1.4rem;
+}
+
+.iss-events-program__listing-head {
+  display: flex;
+  align-items: end;
+  justify-content: space-between;
+  gap: 1rem;
+  padding-bottom: 0.9rem;
+  border-bottom: 1px solid rgba(134, 159, 186, 0.18);
+}
+
+.iss-events-program__listing-head .iss-heading {
+  margin: 0;
+  max-width: 30rem;
+}
+
+.iss-events-program__listing-head .iss-heading__title {
+  font-size: clamp(2rem, 3vw, 3rem);
+  line-height: 1.02;
+  letter-spacing: -0.04em;
+}
+
+.iss-events-program__all-link {
+  margin: 0;
+  white-space: nowrap;
+}
+
 .iss-events-page .section:not(.iss-section--hero) .iss-heading > .iss-kicker,
 .iss-events-page .section:not(.iss-section--hero) .iss-heading > .iss-kicker--compact {
   padding-left: 0.85rem;
@@ -6110,13 +6539,119 @@ Raum / Vermietung → brown
   color: var(--iss-blue);
 }
 
+.iss-events-program .iss-timeline-query,
 .iss-events-query .iss-timeline-query {
   max-width: none;
   padding-inline: 0;
 }
 
-.iss-events-query .iss-timeline__filters {
+.iss-events-program .iss-timeline__filters {
+  display: grid;
+  gap: 0.85rem;
+  margin-bottom: 1rem;
+  padding: 0 0 1rem;
+  border-bottom: 1px solid rgba(134, 159, 186, 0.18);
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+.iss-events-program .iss-timeline__filter {
+  min-width: 0;
+}
+
+.iss-events-program .iss-timeline__filter select,
+.iss-events-program .iss-timeline__filter input {
+  width: 100%;
+}
+
+.iss-events-program .iss-timeline__filter-actions {
+  display: flex;
   align-items: end;
+  justify-content: flex-end;
+}
+
+.iss-events-program .iss-timeline-query__meta {
+  margin-bottom: 1rem;
+}
+
+.iss-events-program .iss-timeline__year-label {
+  margin-bottom: 0.9rem;
+}
+
+.iss-events-program .iss-timeline__item {
+  padding: 1rem 0;
+}
+
+.iss-events-program__aside {
+  display: grid;
+  gap: 1.5rem;
+}
+
+.iss-events-program__aside-block {
+  display: grid;
+  gap: 0.8rem;
+}
+
+.iss-events-program__aside-title {
+  margin: 0;
+  font-size: clamp(1.35rem, 1.2rem + 0.5vw, 1.9rem);
+  line-height: 1.1;
+  letter-spacing: -0.03em;
+  text-wrap: balance;
+}
+
+.iss-events-program__aside-list {
+  margin: 0;
+  padding-left: 1.15rem;
+  display: grid;
+  gap: 0.65rem;
+}
+
+.iss-events-program__aside-list li::marker {
+  color: var(--iss-blue);
+}
+
+.iss-events-program__aside-link,
+.iss-events-format__link {
+  margin: 0.2rem 0 0;
+}
+
+.iss-events-formats {
+  padding-top: clamp(2rem, 4vw, 3rem);
+}
+
+.iss-events-formats__lead {
+  max-width: 18rem;
+}
+
+.iss-events-format {
+  display: grid;
+  gap: 0.7rem;
+}
+
+.iss-events-format__kicker {
+  margin: 0;
+  color: var(--iss-blue);
+  font-size: 0.82rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+}
+
+.iss-events-format__title {
+  margin: 0;
+  font-size: clamp(1.2rem, 1.05rem + 0.45vw, 1.6rem);
+  line-height: 1.12;
+  letter-spacing: -0.03em;
+  text-wrap: balance;
+}
+
+.iss-events-format__text {
+  margin: 0;
+  color: rgba(30, 30, 30, 0.8);
+}
+
+.iss-events-format--archive .iss-kicker {
+  margin: 0;
 }
 
 .iss-events-query__calendar-link {
@@ -6144,12 +6679,351 @@ Raum / Vermietung → brown
   border-color: rgba(134, 159, 186, 0.4);
 }
 
+@media (max-width: 1100px) {
+  .iss-events-program__grid {
+    gap: 1.25rem;
+  }
+
+  .iss-events-program__intro-col,
+  .iss-events-program__listing-col,
+  .iss-events-program__aside-col {
+    padding: 0;
+    border-left: 0;
+  }
+
+  .iss-events-program__listing-head {
+    align-items: start;
+    flex-direction: column;
+  }
+
+  .iss-events-program .iss-timeline__filters {
+    grid-template-columns: 1fr;
+  }
+
+  .iss-events-program .iss-timeline__filter-actions {
+    justify-content: flex-start;
+  }
+
+  .iss-events-formats__grid {
+    gap: 1.25rem;
+  }
+
+  .iss-events-formats__lead-col,
+  .iss-events-format-col {
+    padding: 0;
+    border-left: 0;
+  }
+}
+
+@media (max-width: 781px) {
+  .iss-events-program {
+    padding-top: 1.5rem;
+  }
+
+  .iss-events-program__listing-head .iss-heading__title,
+  .iss-events-program__intro .iss-heading__title,
+  .iss-events-formats__lead .iss-heading__title {
+    font-size: clamp(1.8rem, 9vw, 2.65rem);
+  }
+
+  .iss-events-program__aside {
+    gap: 1.25rem;
+  }
+}
+
+/* =========================================================
+   KALENDER
+   ========================================================= */
+
+.iss-calendar-page,
+#wp--skip-link--target .iss-calendar-page {
+  margin-top: 0 !important;
+}
+
+.iss-calendar-page > .section {
+  border-top: 1px solid rgba(134, 159, 186, 0.18);
+}
+
+.iss-calendar-page .section:first-child {
+  border-top: 0;
+}
+
+.iss-calendar-page .iss-heading > .iss-kicker,
+.iss-calendar-page .iss-heading > .iss-kicker--compact {
+  padding-left: 0.85rem;
+  border-left: 3px solid var(--iss-red);
+  color: var(--iss-red);
+}
+
+.iss-calendar-intro {
+  padding-top: clamp(2.75rem, 5vw, 4rem);
+}
+
+.iss-calendar-intro__grid,
+.iss-calendar-intro__facts,
+.iss-calendar-links__grid {
+  gap: 0;
+}
+
+.iss-calendar-intro__copy-col,
+.iss-calendar-intro__notes-col,
+.iss-calendar-fact-col,
+.iss-calendar-link-col {
+  display: grid;
+  align-content: start;
+  gap: 1rem;
+  padding: 0 1.75rem;
+  border-left: 1px solid rgba(134, 159, 186, 0.18);
+}
+
+.iss-calendar-intro__copy-col,
+.iss-calendar-fact-col:first-child,
+.iss-calendar-link-col:first-child {
+  padding-left: 0;
+  border-left: 0;
+}
+
+.iss-calendar-intro__copy {
+  max-width: 38rem;
+}
+
+.iss-calendar-intro__copy .iss-heading__title,
+.iss-calendar-query__head .iss-heading__title {
+  margin: 0;
+  font-size: clamp(2.4rem, 4vw, 4.5rem);
+  line-height: 0.98;
+  letter-spacing: -0.05em;
+  text-wrap: balance;
+}
+
+.iss-calendar-intro__copy .iss-heading__text {
+  font-size: 1.12rem;
+  line-height: 1.55;
+}
+
+.iss-calendar-intro__copy p:last-child {
+  margin-bottom: 0;
+}
+
+.iss-calendar-intro__notes-col {
+  gap: 1.5rem;
+}
+
+.iss-calendar-intro__facts {
+  border-bottom: 1px solid rgba(134, 159, 186, 0.18);
+  padding-bottom: 1rem;
+}
+
+.iss-calendar-fact {
+  display: grid;
+  gap: 0.55rem;
+}
+
+.iss-calendar-fact__label {
+  margin: 0;
+  color: var(--iss-red);
+  font-size: 0.82rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+}
+
+.iss-calendar-fact__text {
+  margin: 0;
+  color: rgba(30, 30, 30, 0.8);
+}
+
+.iss-calendar-intro__aside {
+  display: grid;
+  gap: 0.75rem;
+}
+
+.iss-calendar-intro__list {
+  margin: 0;
+  padding-left: 1.1rem;
+  display: grid;
+  gap: 0.55rem;
+}
+
+.iss-calendar-intro__list li::marker {
+  color: var(--iss-red);
+}
+
+.iss-calendar-query {
+  padding-top: clamp(2.25rem, 4vw, 3.2rem);
+}
+
+.iss-calendar-query__head {
+  display: flex;
+  align-items: end;
+  justify-content: space-between;
+  gap: 1rem;
+  margin-bottom: 1.2rem;
+  padding-bottom: 1rem;
+  border-bottom: 1px solid rgba(134, 159, 186, 0.18);
+}
+
+.iss-calendar-query__head .iss-heading {
+  margin: 0;
+  max-width: 36rem;
+}
+
+.iss-calendar-query__head-link {
+  margin: 0;
+  white-space: nowrap;
+}
+
+.iss-calendar-page .iss-timeline-query {
+  max-width: none;
+  padding-inline: 0;
+}
+
+.iss-calendar-page .iss-timeline__filters {
+  display: grid;
+  grid-template-columns: minmax(0, 1.05fr) minmax(0, 1.6fr) auto;
+  gap: 1rem;
+  align-items: end;
+  margin: 0 0 1rem;
+  padding: 0 0 1rem;
+  border-bottom: 1px solid rgba(134, 159, 186, 0.18);
+}
+
+.iss-calendar-page .iss-timeline__calendar-bridge {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 0.85rem;
+  width: 100%;
+}
+
+.iss-calendar-page .iss-timeline__filter--type {
+  align-self: start;
+}
+
+.iss-calendar-page .iss-timeline__filter select,
+.iss-calendar-page .iss-timeline__filter input {
+  width: 100%;
+}
+
+.iss-calendar-page .iss-timeline__choice-list {
+  gap: 0.6rem;
+}
+
+.iss-calendar-page .iss-timeline__choice-label {
+  min-width: 0;
+  padding-inline: 1rem;
+}
+
+.iss-calendar-page .iss-timeline__filter-actions {
+  justify-content: flex-end;
+}
+
+.iss-calendar-page .iss-timeline-query__meta {
+  margin: 0 0 1rem;
+}
+
+.iss-calendar-page .iss-timeline__year-label {
+  margin-bottom: 1rem;
+}
+
+.iss-calendar-page .iss-timeline__item {
+  grid-template-columns: minmax(9rem, 12rem) minmax(0, 1fr);
+  padding: 1.2rem 0;
+}
+
+.iss-calendar-page .iss-timeline__title {
+  font-size: clamp(1.45rem, 2.1vw, 2.2rem);
+}
+
+.iss-calendar-page .iss-timeline__summary {
+  max-width: 52rem;
+  font-size: clamp(1rem, 1.18vw, 1.2rem);
+}
+
+.iss-calendar-links {
+  padding-top: clamp(2rem, 4vw, 3rem);
+}
+
+.iss-calendar-link-card {
+  display: grid;
+  gap: 0.75rem;
+}
+
+.iss-calendar-link-card__title {
+  margin: 0;
+  font-size: clamp(1.28rem, 1.12rem + 0.55vw, 1.75rem);
+  line-height: 1.08;
+  letter-spacing: -0.035em;
+  text-wrap: balance;
+}
+
+.iss-calendar-link-card p:last-child {
+  margin-bottom: 0;
+}
+
+.iss-calendar-link-card__link {
+  margin: 0.15rem 0 0;
+}
+
+@media (max-width: 1100px) {
+  .iss-calendar-intro__grid,
+  .iss-calendar-links__grid {
+    gap: 1.25rem;
+  }
+
+  .iss-calendar-intro__copy-col,
+  .iss-calendar-intro__notes-col,
+  .iss-calendar-fact-col,
+  .iss-calendar-link-col {
+    padding: 0;
+    border-left: 0;
+  }
+
+  .iss-calendar-query__head {
+    align-items: start;
+    flex-direction: column;
+  }
+
+  .iss-calendar-page .iss-timeline__filters {
+    grid-template-columns: 1fr;
+  }
+
+  .iss-calendar-page .iss-timeline__calendar-bridge {
+    grid-template-columns: 1fr 1fr auto;
+  }
+
+  .iss-calendar-page .iss-timeline__filter-actions {
+    justify-content: flex-start;
+  }
+}
+
+@media (max-width: 781px) {
+  .iss-calendar-intro {
+    padding-top: 1.75rem;
+  }
+
+  .iss-calendar-intro__copy .iss-heading__title,
+  .iss-calendar-query__head .iss-heading__title {
+    font-size: clamp(2rem, 11vw, 3.1rem);
+  }
+
+  .iss-calendar-page .iss-timeline__calendar-bridge {
+    grid-template-columns: 1fr;
+  }
+
+  .iss-calendar-page .iss-timeline__choice-list {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
 /* =========================================================
    SINGLE AUSSTELLUNG
    ========================================================= */
 
 .iss-ausstellung-page {
   --iss-single-accent: var(--iss-brown);
+  --iss-single-title: clamp(2.75rem, 4.9vw, 5.4rem);
+  --iss-single-h2: clamp(1.8rem, 2.4vw, 3rem);
   background: var(--iss-white);
   color: var(--iss-black);
 }
@@ -6160,97 +7034,164 @@ Raum / Vermietung → brown
   padding-top: 0;
 }
 
-.iss-ausstellung-intro {
+.iss-ausstellung-hero {
   padding-top: clamp(6.25rem, 9vw, 8.25rem);
-  padding-bottom: clamp(2rem, 4vw, 3rem);
-  border-bottom: 1px solid rgba(78, 46, 27, 0.14);
+  padding-bottom: clamp(3rem, 5vw, 4.25rem);
   background:
-    linear-gradient(180deg, rgba(117, 58, 24, 0.09) 0%, rgba(117, 58, 24, 0.04) 26%, rgba(249, 249, 250, 0) 72%);
+    linear-gradient(180deg, rgba(117, 58, 24, 0.08) 0%, rgba(117, 58, 24, 0.03) 24%, rgba(249, 249, 250, 0) 70%);
 }
 
-.iss-ausstellung-intro__grid {
-  gap: clamp(1.25rem, 3vw, 2.75rem);
+.iss-ausstellung-hero__grid {
+  gap: clamp(1.5rem, 3.2vw, 3.5rem);
   align-items: start;
 }
 
-.iss-ausstellung-intro__media-col,
-.iss-ausstellung-intro__copy-col {
+.iss-ausstellung-hero__media-col,
+.iss-ausstellung-hero__copy-col,
+.iss-ausstellung-facts__intro-col,
+.iss-ausstellung-facts__meta-col {
   display: grid;
   align-content: start;
-  gap: 1rem;
+  gap: 1.15rem;
 }
 
-.iss-ausstellung-intro__media {
+.iss-ausstellung-hero__media {
   margin: 0;
   min-height: 100%;
   border-radius: 2px;
   --iss-media-card-rail-color: var(--iss-brown);
   --iss-media-card-radius: 2px;
-  box-shadow: 0 16px 30px rgba(62, 34, 19, 0.09);
+  box-shadow: 0 24px 44px rgba(62, 34, 19, 0.11);
   overflow: hidden;
 }
 
-.iss-ausstellung-intro__media .wp-block-post-featured-image,
-.iss-ausstellung-intro__media .wp-block-post-featured-image img {
+.iss-ausstellung-hero__media .wp-block-post-featured-image,
+.iss-ausstellung-hero__media .wp-block-post-featured-image img {
   height: 100%;
 }
 
-.iss-ausstellung-intro__media .wp-block-post-featured-image img {
+.iss-ausstellung-hero__media .wp-block-post-featured-image {
+  margin: 0;
+}
+
+.iss-ausstellung-hero__media .wp-block-post-featured-image img {
   display: block;
   width: 100%;
-  min-height: clamp(18rem, 34vw, 33rem);
+  min-height: clamp(22rem, 42vw, 39rem);
   object-fit: cover;
 }
 
-.iss-ausstellung-intro__copy {
-  gap: 0.9rem;
+.iss-ausstellung-hero__copy {
+  max-width: 38rem;
+  gap: 1rem;
 }
 
-.iss-ausstellung-intro__copy > .iss-kicker,
+.iss-ausstellung-hero__copy > .iss-kicker,
+.iss-ausstellung-facts__intro > .iss-kicker,
 .iss-ausstellung-story__heading > .iss-kicker {
   padding-left: 0.85rem;
   border-left: 3px solid var(--iss-brown);
   color: var(--iss-brown);
 }
 
-.iss-ausstellung-intro__title {
+.iss-ausstellung-hero__title {
   margin: 0;
-  max-width: 12ch;
-  font-size: clamp(2.35rem, 4.5vw, 5rem);
-  line-height: 0.94;
+  max-width: 10ch;
+  font-size: var(--iss-single-title);
+  line-height: 0.92;
   letter-spacing: -0.05em;
   text-wrap: balance;
 }
 
-.iss-ausstellung-intro__lede {
+.iss-ausstellung-hero__lede {
   margin: 0;
-  max-width: 40rem;
+  max-width: 32rem;
   color: rgba(30, 30, 30, 0.76);
-  font-size: clamp(1.05rem, 1vw + 0.92rem, 1.28rem);
-  line-height: 1.62;
+  font-size: clamp(1.08rem, 1.1vw + 0.92rem, 1.36rem);
+  line-height: 1.68;
 }
 
-.iss-ausstellung-intro__lede .wp-block-post-excerpt__excerpt {
+.iss-ausstellung-hero__lede .wp-block-post-excerpt__excerpt {
   margin: 0;
 }
 
-.iss-ausstellung-intro .iss-info-panel {
-  max-width: 40rem;
+.iss-ausstellung-hero__actions {
+  margin-top: clamp(0.35rem, 1vw, 0.85rem);
 }
 
-.iss-ausstellung-intro .iss-info-row__text a,
+.iss-ausstellung-hero__actions .iss-action-link {
+  margin: 0;
+}
+
+.iss-ausstellung-hero__actions .iss-action-link a,
+.iss-ausstellung-facts .iss-info-row__text a,
 .iss-ausstellung-page .iss-card__link,
 .iss-ausstellung-page .iss-action-link {
   color: var(--iss-brown);
 }
 
+.iss-ausstellung-facts {
+  padding-top: clamp(2rem, 3vw, 2.75rem);
+  padding-bottom: clamp(2rem, 3vw, 2.75rem);
+  border-top: 1px solid rgba(78, 46, 27, 0.12);
+  border-bottom: 1px solid rgba(78, 46, 27, 0.12);
+}
+
+.iss-ausstellung-facts__grid {
+  gap: clamp(1.2rem, 2.6vw, 2.75rem);
+  align-items: center;
+}
+
+.iss-ausstellung-facts__intro {
+  max-width: 31rem;
+}
+
+.iss-ausstellung-facts__intro .iss-heading__title {
+  margin: 0;
+  font-size: var(--iss-single-h2);
+  line-height: 1.06;
+  letter-spacing: -0.035em;
+  text-wrap: balance;
+}
+
+.iss-ausstellung-facts__meta {
+  margin: 0;
+  padding: clamp(1.1rem, 2vw, 1.45rem) clamp(1.15rem, 2.3vw, 1.7rem);
+  border: 1px solid rgba(117, 58, 24, 0.16);
+  border-left: 4px solid var(--iss-brown);
+  background: rgba(255, 255, 255, 0.96);
+  box-shadow: 0 12px 26px rgba(62, 34, 19, 0.06);
+}
+
+.iss-ausstellung-facts__meta .iss-content-meta,
+.iss-ausstellung-facts__meta .wp-block-iss-content-meta,
+.iss-ausstellung-facts__meta .iss-info-panel {
+  margin: 0;
+}
+
+.iss-ausstellung-facts__meta .iss-info-panel {
+  padding: 0;
+  border: 0;
+  background: transparent;
+  box-shadow: none;
+}
+
+.iss-ausstellung-facts__meta .iss-info-panel__title {
+  font-size: clamp(1.25rem, 1rem + 0.7vw, 1.8rem);
+}
+
+.iss-ausstellung-facts__meta .iss-info-row {
+  border-top-color: rgba(117, 58, 24, 0.16);
+}
+
 .iss-ausstellung-story {
   border-top: 0;
+  padding-top: clamp(2.75rem, 5vw, 4.75rem);
 }
 
 .iss-ausstellung-story__heading {
   max-width: 40rem;
-  margin-bottom: clamp(1.5rem, 2.8vw, 2.4rem);
+  margin-bottom: clamp(1.7rem, 3vw, 2.7rem);
 }
 
 .iss-ausstellung-story:has(.iss-ausstellung-story__content > .section:first-child) .iss-ausstellung-story__heading,
@@ -6260,7 +7201,7 @@ Raum / Vermietung → brown
 
 .iss-ausstellung-story__content {
   display: grid;
-  gap: clamp(1rem, 2vw, 1.5rem);
+  gap: clamp(1rem, 2vw, 1.6rem);
 }
 
 .iss-ausstellung-story__content > :where(p, ul, ol, h2, h3, h4, h5, h6, blockquote, pre, table, figure, .wp-block-image, .wp-block-gallery, .wp-block-columns, .wp-block-cover, .wp-block-media-text, .wp-block-buttons, .wp-block-pullquote, .wp-block-quote, .wp-block-table, .wp-block-file, .wp-block-separator, .wp-block-embed, .wp-block-video, .wp-block-audio) {
@@ -6334,17 +7275,48 @@ Raum / Vermietung → brown
   color: var(--iss-brown);
 }
 
+.iss-ausstellung-more .iss-heading {
+  margin-bottom: clamp(1.4rem, 2.5vw, 2rem);
+}
+
+.iss-ausstellung-more .iss-heading__title {
+  font-size: clamp(2rem, 3vw, 3.1rem);
+  line-height: 1.02;
+  letter-spacing: -0.04em;
+}
+
 .iss-ausstellung-more .iss-card::before {
   background: var(--iss-brown);
 }
 
 .iss-ausstellung-more .iss-card {
   border-color: rgba(117, 58, 24, 0.18);
+  background: rgba(255, 255, 255, 0.96);
+  box-shadow: 0 14px 28px rgba(62, 34, 19, 0.05);
 }
 
 .iss-ausstellung-more .iss-card:hover,
 .iss-ausstellung-more .iss-card:focus-within {
   border-color: rgba(117, 58, 24, 0.34);
+}
+
+@media (max-width: 900px) {
+  .iss-ausstellung-hero {
+    padding-bottom: clamp(2.4rem, 6vw, 3rem);
+  }
+
+  .iss-ausstellung-hero__title {
+    max-width: 12ch;
+    font-size: clamp(2.35rem, 7vw, 4rem);
+  }
+
+  .iss-ausstellung-hero__media .wp-block-post-featured-image img {
+    min-height: clamp(18rem, 56vw, 28rem);
+  }
+
+  .iss-ausstellung-facts__intro .iss-heading__title {
+    max-width: 18ch;
+  }
 }
 
 /* =========================================================
@@ -8191,6 +9163,60 @@ Raum / Vermietung → brown
   max-width: none;
 }
 
+.iss-repair-limits__grid,
+.iss-repair-bring__grid,
+.iss-repair-frank__grid {
+  gap: clamp(2rem, 4vw, 4rem);
+}
+
+.iss-repair-limits__lead {
+  margin: 1.1rem 0 0;
+  max-width: 34rem;
+  color: var(--iss-grey);
+}
+
+.iss-repair-limits__link {
+  margin: 1.2rem 0 0;
+}
+
+.iss-repair-limits-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 1.25rem;
+}
+
+.iss-repair-limits-card {
+  height: 100%;
+  padding: 1.5rem;
+  border: 1px solid color-mix(in srgb, var(--iss-black) 10%, white 90%);
+  background: var(--iss-white);
+}
+
+.iss-repair-limits-card--warning {
+  border-top: 3px solid var(--iss-red);
+}
+
+.iss-repair-limits-card--rules {
+  border-top: 3px solid var(--iss-green);
+}
+
+.iss-repair-limits-card__title {
+  margin: 0 0 1rem;
+  font-size: clamp(1.08rem, 0.96rem + 0.4vw, 1.3rem);
+  line-height: 1.15;
+}
+
+.iss-repair-limits-card__list {
+  margin: 0;
+  padding-left: 1.15rem;
+  color: var(--iss-grey);
+  line-height: 1.65;
+}
+
+.iss-repair-limits-card__list li + li {
+  margin-top: 0.45rem;
+}
+
 .iss-repair-steps {
   display: grid;
   grid-template-columns: repeat(4, minmax(0, 1fr));
@@ -8225,11 +9251,6 @@ Raum / Vermietung → brown
   margin: 0.8rem 0 0;
   color: var(--iss-grey);
   line-height: 1.6;
-}
-
-.iss-repair-bring__grid,
-.iss-repair-frank__grid {
-  gap: clamp(2rem, 4vw, 4rem);
 }
 
 .iss-repair-prep-grid {
@@ -8292,12 +9313,14 @@ Raum / Vermietung → brown
 }
 
 @media (max-width: 1080px) {
+  .iss-repair-limits-grid,
   .iss-repair-steps {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 }
 
 @media (max-width: 781px) {
+  .iss-repair-limits-grid,
   .iss-repair-prep-grid,
   .iss-repair-steps {
     grid-template-columns: 1fr;

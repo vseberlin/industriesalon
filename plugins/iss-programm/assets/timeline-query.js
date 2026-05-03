@@ -44,6 +44,22 @@ document.addEventListener('DOMContentLoaded', function () {
       return input.value;
     }
 
+    function setControlValue(key, value) {
+      if (!key) return;
+      var inputs = form.querySelectorAll('[data-filter-key="' + key + '"]');
+      if (!inputs.length) return;
+
+      var first = inputs[0];
+      if (first.type === 'radio') {
+        inputs.forEach(function (node) {
+          node.checked = String(node.value) === String(value);
+        });
+        return;
+      }
+
+      first.value = value;
+    }
+
     function syncMonthVisibility() {
       var timeMode = form.querySelector('[data-filter-key="time_mode"]');
       var monthSelect = form.querySelector('[data-filter-key="month"]');
@@ -89,28 +105,37 @@ document.addEventListener('DOMContentLoaded', function () {
       form.querySelectorAll('[data-filter-key]').forEach(function (input) {
         var key = input.getAttribute('data-filter-key');
         if (!key) return;
+        if (input.dataset.resetHandled === 'true') return;
+        input.dataset.resetHandled = 'true';
 
         if (key === 'post_type') {
           var selectedPostType = initialFilters && Array.isArray(initialFilters.post_types) && initialFilters.post_types.length
             ? String(initialFilters.post_types[0])
             : '';
-          input.value = selectedPostType;
+          setControlValue(key, selectedPostType);
           return;
         }
 
         if (key === 'month') {
-          input.value = defaultMonth;
+          setControlValue(key, defaultMonth);
           return;
         }
 
         if (key === 'time_mode') {
-          input.value = defaultTimeMode;
+          setControlValue(key, defaultTimeMode);
           return;
         }
 
-        input.value = initialFilters && Object.prototype.hasOwnProperty.call(initialFilters, key)
-          ? String(initialFilters[key] || '')
-          : '';
+        setControlValue(
+          key,
+          initialFilters && Object.prototype.hasOwnProperty.call(initialFilters, key)
+            ? String(initialFilters[key] || '')
+            : ''
+        );
+      });
+
+      form.querySelectorAll('[data-filter-key]').forEach(function (input) {
+        delete input.dataset.resetHandled;
       });
 
       form.querySelectorAll('[data-filter-taxonomy]').forEach(function (input) {

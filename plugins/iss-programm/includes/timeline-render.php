@@ -782,6 +782,54 @@ function iss_timeline_get_time_mode_options_from_attributes($attributes = []) {
     return $options;
 }
 
+function iss_timeline_render_choice_filter($args = []) {
+    $args = is_array($args) ? $args : [];
+
+    $name = sanitize_key((string) ($args['name'] ?? ''));
+    $filter_key = sanitize_key((string) ($args['filter_key'] ?? $name));
+    $label = (string) ($args['label'] ?? '');
+    $selected = sanitize_key((string) ($args['selected'] ?? ''));
+    $options = isset($args['options']) && is_array($args['options']) ? $args['options'] : [];
+    $class_name = trim((string) ($args['className'] ?? ''));
+
+    if ($name === '' || $filter_key === '' || empty($options)) {
+        return '';
+    }
+
+    $field_class = 'iss-timeline__filter iss-timeline__filter--choices';
+    if ($class_name !== '') {
+        $field_class .= ' ' . sanitize_html_class($class_name);
+    }
+
+    $out = '<fieldset class="' . esc_attr($field_class) . '">';
+    if ($label !== '') {
+        $out .= '<legend class="iss-timeline__filter-label">' . esc_html($label) . '</legend>';
+    }
+
+    $out .= '<div class="iss-timeline__choice-list">';
+    foreach ($options as $index => $option) {
+        if (!is_array($option)) {
+            continue;
+        }
+
+        $value = isset($option['value']) ? sanitize_key((string) $option['value']) : '';
+        $option_label = isset($option['label']) ? (string) $option['label'] : $value;
+        if ($value === '') {
+            continue;
+        }
+
+        $id = sprintf('iss-timeline-%s-%d-%s', $filter_key, (int) $index, wp_unique_id());
+        $out .= '<label class="iss-timeline__choice" for="' . esc_attr($id) . '">';
+        $out .= '<input class="iss-timeline__choice-input" type="radio" id="' . esc_attr($id) . '" name="' . esc_attr($name) . '" value="' . esc_attr($value) . '" data-filter-key="' . esc_attr($filter_key) . '"' . checked($selected, $value, false) . ' />';
+        $out .= '<span class="iss-timeline__choice-label">' . esc_html($option_label) . '</span>';
+        $out .= '</label>';
+    }
+    $out .= '</div>';
+    $out .= '</fieldset>';
+
+    return $out;
+}
+
 function iss_timeline_build_query_block_config($attributes = []) {
     $attributes = is_array($attributes) ? $attributes : [];
 
@@ -908,20 +956,14 @@ function iss_timeline_render_query_block($attributes = [], $content = '', $block
         }
 
         if (!empty($config['ui']['showTypeFilter'])) {
-            $out .= '<label class="iss-timeline__filter"><span class="iss-timeline__filter-label">' . esc_html__('Typ', 'iss-timeline') . '</span>';
-            $out .= '<select name="item_type" data-filter-key="item_type">';
-            foreach ($config['ui']['typeOptions'] as $option) {
-                if (!is_array($option)) {
-                    continue;
-                }
-                $value = isset($option['value']) ? sanitize_key((string) $option['value']) : '';
-                $label = isset($option['label']) ? (string) $option['label'] : $value;
-                if ($value === '') {
-                    continue;
-                }
-                $out .= '<option value="' . esc_attr($value) . '"' . selected($config['filters']['item_type'], $value, false) . '>' . esc_html($label) . '</option>';
-            }
-            $out .= '</select></label>';
+            $out .= iss_timeline_render_choice_filter([
+                'name' => 'item_type',
+                'filter_key' => 'item_type',
+                'label' => __('Typ', 'iss-timeline'),
+                'selected' => (string) ($config['filters']['item_type'] ?? 'all'),
+                'options' => is_array($config['ui']['typeOptions']) ? $config['ui']['typeOptions'] : [],
+                'className' => 'iss-timeline__filter--type',
+            ]);
         }
 
         if (!empty($config['ui']['showMonthFilter'])) {

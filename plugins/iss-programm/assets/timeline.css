@@ -196,12 +196,61 @@
   display: flex;
   flex-direction: column;
   gap: 0.25rem;
+  min-width: 0;
+  margin: 0;
+  padding: 0;
+  border: 0;
 }
 
 .iss-timeline__filter-label {
   font-size: 0.82rem;
   font-weight: 600;
   color: var(--iss-tl-muted);
+}
+
+.iss-timeline__choice-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.55rem;
+}
+
+.iss-timeline__choice {
+  position: relative;
+  display: inline-flex;
+}
+
+.iss-timeline__choice-input {
+  position: absolute;
+  inset: 0;
+  opacity: 0;
+  pointer-events: none;
+}
+
+.iss-timeline__choice-label {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 2.35rem;
+  padding: 0.42rem 0.9rem;
+  border: 1px solid var(--iss-tl-line);
+  border-radius: 999px;
+  background: var(--iss-white, #fff);
+  color: var(--iss-tl-text);
+  font-size: 0.96rem;
+  font-weight: 600;
+  line-height: 1.1;
+  transition: background-color 0.2s ease, border-color 0.2s ease, color 0.2s ease;
+}
+
+.iss-timeline__choice-input:checked + .iss-timeline__choice-label {
+  border-color: var(--iss-tl-primary);
+  background: var(--iss-tl-primary);
+  color: var(--iss-white, #fff);
+}
+
+.iss-timeline__choice-input:focus-visible + .iss-timeline__choice-label,
+.iss-timeline__choice:hover .iss-timeline__choice-label {
+  border-color: var(--iss-tl-primary);
 }
 
 .iss-timeline__filter select,
@@ -227,6 +276,12 @@
 
 .iss-timeline__apply--ghost {
   background: transparent;
+}
+
+.iss-timeline__filter-actions {
+  display: flex;
+  align-items: flex-end;
+  justify-content: flex-start;
 }
 
 .iss-timeline__calendar-bridge {
