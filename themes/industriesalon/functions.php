@@ -637,6 +637,7 @@ add_action('enqueue_block_editor_assets', 'industriesalon_enqueue_event_layout_e
  */
 function industriesalon_enqueue_assets(): void
 {
+    $is_schoneweide_page = is_page('schoneweide');
     $theme_dir = get_stylesheet_directory();
     $theme_uri = get_stylesheet_directory_uri();
     $theme = wp_get_theme();
@@ -698,7 +699,7 @@ function industriesalon_enqueue_assets(): void
 
     $ueber_uns_rel = '/assets/css/ueber-uns.css';
     $ueber_uns_abs = $theme_dir . $ueber_uns_rel;
-    if (file_exists($ueber_uns_abs)) {
+    if (!$is_schoneweide_page && file_exists($ueber_uns_abs)) {
         $ueber_uns_dependencies = file_exists($overrides_abs)
             ? array('industriesalon-overrides')
             : (file_exists($patterns_abs)
@@ -717,7 +718,7 @@ function industriesalon_enqueue_assets(): void
 
     $flex_split_rel = '/assets/css/iss-flex-split.css';
     $flex_split_abs = $theme_dir . $flex_split_rel;
-    if (file_exists($flex_split_abs)) {
+    if (!$is_schoneweide_page && file_exists($flex_split_abs)) {
         $flex_split_dependencies = file_exists($overrides_abs)
             ? array('industriesalon-overrides')
             : (file_exists($patterns_abs)
@@ -747,7 +748,7 @@ function industriesalon_enqueue_assets(): void
         );
     }
 
-    if (is_page('schoneweide')) {
+    if ($is_schoneweide_page) {
         $atlas_css_rel = '/assets/css/oberschoeneweide-atlas.css';
         $atlas_css_abs = $theme_dir . $atlas_css_rel;
 
@@ -772,8 +773,8 @@ function industriesalon_enqueue_assets(): void
         $schoneweide_script_abs = $theme_dir . $schoneweide_script_rel;
 
         if (file_exists($schoneweide_script_abs) && defined('ISS_REGISTER_REST_NAMESPACE')) {
-            $atlas_timeline = function_exists('iss_register_get_atlas_story_payload')
-                ? iss_register_get_atlas_story_payload('transformatorenwerk-oberschoeneweide')
+            $atlas_timeline = function_exists('iss_register_get_atlas_story_public_payload')
+                ? iss_register_get_atlas_story_public_payload('transformatorenwerk-oberschoeneweide')
                 : array();
 
             wp_enqueue_script(
@@ -788,7 +789,7 @@ function industriesalon_enqueue_assets(): void
                 'industriesalon-schoneweide',
                 'industriesalonSchoneweide',
                 array(
-                    'placesUrl' => industriesalon_make_relative_url(untrailingslashit(rest_url(ISS_REGISTER_REST_NAMESPACE)) . '/places'),
+                    'placesUrl' => industriesalon_make_relative_url(untrailingslashit(rest_url(ISS_REGISTER_REST_NAMESPACE)) . '/atlas'),
                     'registerUrl' => industriesalon_make_relative_url(home_url('/register-schoneweide/')),
                     'featuredTimeline' => $atlas_timeline,
                 )

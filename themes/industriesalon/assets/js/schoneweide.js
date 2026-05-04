@@ -115,6 +115,10 @@
   }
 
   function getNarrativeText(place) {
+    if (textOrEmpty(place.narrative_text)) {
+      return textOrEmpty(place.narrative_text);
+    }
+
     return [
       textOrEmpty(place.history),
       textOrEmpty(place.current),
@@ -124,6 +128,10 @@
   }
 
   function detectEra(place) {
+    if (textOrEmpty(place.era_id)) {
+      return textOrEmpty(place.era_id);
+    }
+
     var narrative = getNarrativeText(place);
     var years = extractYears(narrative);
     var firstYear = years.length ? Math.min.apply(null, years) : null;
@@ -156,6 +164,10 @@
   }
 
   function getPlaceScore(place) {
+    if (Number.isFinite(Number(place.story_score))) {
+      return Number(place.story_score);
+    }
+
     var score = 0;
 
     score += Math.min(textOrEmpty(place.history).length, 600);
@@ -177,6 +189,7 @@
 
   function getPrimarySummary(place) {
     return (
+      compactText(place.summary, 260) ||
       compactText(place.excerpt, 260) ||
       compactText(place.current, 260) ||
       compactText(place.history, 260) ||
@@ -185,6 +198,10 @@
   }
 
   function getSecondaryText(place) {
+    if (textOrEmpty(place.secondary)) {
+      return compactText(place.secondary, 180);
+    }
+
     var source = textOrEmpty(place.history) || textOrEmpty(place.current) || textOrEmpty(place.sources);
     return compactText(source, 180);
   }
@@ -201,7 +218,12 @@
       slug: slug,
       post_id: Number.parseInt(place.post_id, 10) || 0,
       eraId: eraId,
-      era: getEraById(eraId),
+      era: {
+        id: eraId,
+        label: textOrEmpty(place.era_label) || getEraById(eraId).label,
+        shortLabel: textOrEmpty(place.era_short_label) || getEraById(eraId).shortLabel,
+        caption: textOrEmpty(place.era_caption) || getEraById(eraId).caption
+      },
       storyScore: getPlaceScore(place),
       summary: getPrimarySummary(place),
       secondary: getSecondaryText(place)
@@ -426,7 +448,7 @@
         background: 'linear-gradient(145deg, rgba(64, 63, 61, 0.92), rgba(180, 177, 172, 0.82))',
         meta: place.era.caption,
         note: textOrEmpty(place.area) || getStatusLabel(place.status),
-        summary: textOrEmpty(place.history) || textOrEmpty(place.excerpt)
+        summary: textOrEmpty(place.archive_summary) || textOrEmpty(place.history) || textOrEmpty(place.excerpt)
       }
     );
     var currentPanel = renderVisualPanel(
@@ -437,7 +459,7 @@
         background: textOrEmpty(place.color) || 'linear-gradient(145deg, rgba(191, 40, 46, 0.92), rgba(68, 55, 51, 0.88))',
         meta: getRoleLabel(place.role),
         note: textOrEmpty(place.area) || getStatusLabel(place.status),
-        summary: textOrEmpty(place.current) || textOrEmpty(place.excerpt)
+        summary: textOrEmpty(place.current_summary) || textOrEmpty(place.current) || textOrEmpty(place.excerpt)
       }
     );
     var badge = createElement('div', 'iss-atlas-stage__badge');
@@ -454,7 +476,7 @@
     return [
       { label: 'Zeit', value: place.era.label + ' · ' + place.era.caption },
       { label: 'Ort', value: textOrEmpty(place.address) || textOrEmpty(place.area) },
-      { label: 'Profil', value: compactText(textOrEmpty(place.branche) || textOrEmpty(place.current), 80) },
+      { label: 'Profil', value: compactText(textOrEmpty(place.profile) || textOrEmpty(place.branche) || textOrEmpty(place.current), 80) },
       { label: 'Status', value: getStatusLabel(place.status) }
     ].filter(function (row) {
       return textOrEmpty(row.value);
@@ -492,7 +514,7 @@
 
     var noteSecondary = createElement('div', 'iss-atlas-story__note-card iss-atlas-story__note-card--light');
     noteSecondary.appendChild(createElement('strong', 'iss-atlas-story__note-title', 'Atlas-Lesart'));
-    noteSecondary.appendChild(createElement('p', 'iss-atlas-story__note-text', compactText(textOrEmpty(place.sources) || textOrEmpty(place.current) || textOrEmpty(place.history), 120) || 'Räumliche Bezüge, Quellen und Transformation werden im Dossier vertieft.'));
+    noteSecondary.appendChild(createElement('p', 'iss-atlas-story__note-text', compactText(textOrEmpty(place.note_text) || textOrEmpty(place.sources) || textOrEmpty(place.current) || textOrEmpty(place.history), 120) || 'Räumliche Bezüge, Quellen und Transformation werden im Dossier vertieft.'));
     aside.appendChild(noteSecondary);
 
     container.appendChild(aside);

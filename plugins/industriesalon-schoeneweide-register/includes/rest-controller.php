@@ -7,6 +7,7 @@ if (!defined('ABSPATH')) {
 function iss_register_clear_places_cache(): void
 {
     delete_transient('iss_register_places_cache');
+    delete_transient('iss_register_atlas_places_cache');
 }
 
 function iss_register_get_places_path(): string
@@ -237,6 +238,223 @@ function iss_register_get_places_data(): array
     return $places;
 }
 
+function iss_register_atlas_compact_text(string $text, int $limit): string
+{
+    $text = trim(preg_replace('/\s+/u', ' ', $text));
+    if ($text === '') {
+        return '';
+    }
+
+    $length = function_exists('mb_strlen')
+        ? mb_strlen($text)
+        : strlen($text);
+
+    if ($length <= $limit) {
+        return $text;
+    }
+
+    $slice = function_exists('mb_substr')
+        ? (string) mb_substr($text, 0, $limit)
+        : substr($text, 0, $limit);
+
+    $slice = preg_replace('/\s+\S*$/u', '', $slice);
+
+    return rtrim((string) $slice, " \t\n\r\0\x0B.,;:") . '…';
+}
+
+function iss_register_atlas_extract_years(string $text): array
+{
+    if (!preg_match_all('/\b(18\d{2}|19\d{2}|20\d{2})\b/u', $text, $matches)) {
+        return [];
+    }
+
+    $years = [];
+
+    foreach ($matches[1] as $match) {
+        $year = (int) $match;
+        if (!in_array($year, $years, true)) {
+            $years[] = $year;
+        }
+    }
+
+    return $years;
+}
+
+function iss_register_get_atlas_eras(): array
+{
+    return [
+        '1890-1910' => [
+            'id' => '1890-1910',
+            'label' => '1890–1910',
+            'short_label' => '1890',
+            'caption' => 'Aufbruch',
+            'start' => 1890,
+            'end' => 1910,
+        ],
+        '1910-1930' => [
+            'id' => '1910-1930',
+            'label' => '1910–1930',
+            'short_label' => '1910',
+            'caption' => 'Wachstum',
+            'start' => 1910,
+            'end' => 1930,
+        ],
+        '1930-1945' => [
+            'id' => '1930-1945',
+            'label' => '1930–1945',
+            'short_label' => '1930',
+            'caption' => 'Krise und Krieg',
+            'start' => 1930,
+            'end' => 1945,
+        ],
+        '1945-1960' => [
+            'id' => '1945-1960',
+            'label' => '1945–1960',
+            'short_label' => '1945',
+            'caption' => 'Neubeginn',
+            'start' => 1945,
+            'end' => 1960,
+        ],
+        '1960-1990' => [
+            'id' => '1960-1990',
+            'label' => '1960–1990',
+            'short_label' => '1960',
+            'caption' => 'Sozialistische Industrie',
+            'start' => 1960,
+            'end' => 1990,
+        ],
+        'heute' => [
+            'id' => 'heute',
+            'label' => '1990–heute',
+            'short_label' => 'Heute',
+            'caption' => 'Transformation',
+            'start' => 1990,
+            'end' => 2100,
+        ],
+    ];
+}
+
+function iss_register_detect_atlas_era(array $place): array
+{
+    $eras = iss_register_get_atlas_eras();
+    $narrative = trim(implode(' ', array_filter([
+        (string) ($place['history'] ?? ''),
+        (string) ($place['current'] ?? ''),
+        (string) ($place['excerpt'] ?? ''),
+        (string) ($place['sources'] ?? ''),
+    ])));
+    $years = iss_register_atlas_extract_years($narrative);
+    $first_year = $years ? min($years) : null;
+
+    if ($first_year !== null) {
+        foreach ($eras as $era) {
+            if ($first_year >= $era['start'] && $first_year < $era['end']) {
+                return $era;
+            }
+        }
+    }
+
+    $status = strtolower(trim((string) ($place['status'] ?? '')));
+    $role = strtoupper(trim((string) ($place['role'] ?? '')));
+
+    if ($status === 'entwicklung' || $status === 'geplant' || $role === 'P') {
+        return $eras['heute'];
+    }
+
+    if (preg_match('/ddr|kombinat|v[eé]b|sozial/i', $narrative)) {
+        return $eras['1960-1990'];
+    }
+
+    return $eras['heute'];
+}
+
+function iss_register_get_atlas_place_score(array $place): int
+{
+    $score = 0;
+    $history = (string) ($place['history'] ?? '');
+    $excerpt = (string) ($place['excerpt'] ?? '');
+    $current = (string) ($place['current'] ?? '');
+
+    $score += min(strlen($history), 600);
+    $score += (int) round(min(strlen($excerpt), 220) * 1.2);
+    $score += (int) round(min(strlen($current), 220) * 0.8);
+    $score += !empty($place['featured_image_url']) ? 120 : 0;
+    $score += !empty($place['area']) ? 30 : 0;
+
+    if (strtoupper((string) ($place['role'] ?? '')) === 'E+P') {
+        $score += 40;
+    }
+
+    return $score;
+}
+
+function iss_register_map_place_for_atlas(array $place): array
+{
+    $lat = isset($place['lat']) ? (float) $place['lat'] : 0.0;
+    $lng = isset($place['lng']) ? (float) $place['lng'] : 0.0;
+
+    if ($lat === 0.0 || $lng === 0.0) {
+        return [];
+    }
+
+    if (empty($place['post_id']) || empty($place['permalink'])) {
+        return [];
+    }
+
+    $era = iss_register_detect_atlas_era($place);
+    $excerpt = (string) ($place['excerpt'] ?? '');
+    $history = (string) ($place['history'] ?? '');
+    $current = (string) ($place['current'] ?? '');
+    $sources = (string) ($place['sources'] ?? '');
+    $branche = (string) ($place['branche'] ?? '');
+
+    return [
+        'id' => (string) ($place['id'] ?? ''),
+        'post_id' => (int) ($place['post_id'] ?? 0),
+        'slug' => (string) ($place['slug'] ?? ''),
+        'name' => (string) ($place['name'] ?? ''),
+        'excerpt' => $excerpt,
+        'permalink' => (string) ($place['permalink'] ?? ''),
+        'featured_image_url' => (string) ($place['featured_image_url'] ?? ''),
+        'role' => (string) ($place['role'] ?? ''),
+        'area' => (string) ($place['area'] ?? ''),
+        'address' => (string) ($place['address'] ?? ''),
+        'status' => (string) ($place['status'] ?? ''),
+        'color' => (string) ($place['color'] ?? ''),
+        'branche' => $branche,
+        'lat' => $lat,
+        'lng' => $lng,
+        'era_id' => (string) $era['id'],
+        'era_label' => (string) $era['label'],
+        'era_short_label' => (string) $era['short_label'],
+        'era_caption' => (string) $era['caption'],
+        'story_score' => iss_register_get_atlas_place_score($place),
+        'summary' => iss_register_atlas_compact_text($excerpt !== '' ? $excerpt : ($current !== '' ? $current : ($history !== '' ? $history : (string) ($place['address'] ?? ''))), 260),
+        'secondary' => iss_register_atlas_compact_text($history !== '' ? $history : ($current !== '' ? $current : $sources), 180),
+        'archive_summary' => iss_register_atlas_compact_text($history !== '' ? $history : $excerpt, 140),
+        'current_summary' => iss_register_atlas_compact_text($current !== '' ? $current : $excerpt, 140),
+        'note_text' => iss_register_atlas_compact_text($sources !== '' ? $sources : ($current !== '' ? $current : $history), 120),
+        'profile' => iss_register_atlas_compact_text($branche !== '' ? $branche : $current, 80),
+    ];
+}
+
+function iss_register_get_atlas_places_data(): array
+{
+    $cached = get_transient('iss_register_atlas_places_cache');
+    if (is_array($cached)) {
+        return $cached;
+    }
+
+    $atlas_places = array_values(array_filter(array_map(
+        'iss_register_map_place_for_atlas',
+        iss_register_get_places_data()
+    )));
+
+    set_transient('iss_register_atlas_places_cache', $atlas_places, HOUR_IN_SECONDS);
+
+    return $atlas_places;
+}
+
 function iss_register_normalize_text($value): string
 {
     if (!is_scalar($value)) {
@@ -377,6 +595,11 @@ function iss_register_rest_get_places(WP_REST_Request $request): WP_REST_Respons
     return rest_ensure_response($places);
 }
 
+function iss_register_rest_get_atlas_places(): WP_REST_Response
+{
+    return rest_ensure_response(iss_register_get_atlas_places_data());
+}
+
 function iss_register_rest_get_place(WP_REST_Request $request)
 {
     $target_id = trim((string) $request['id']);
@@ -442,6 +665,12 @@ add_action('rest_api_init', function () {
     register_rest_route(ISS_REGISTER_REST_NAMESPACE, '/places', [
         'methods' => WP_REST_Server::READABLE,
         'callback' => 'iss_register_rest_get_places',
+        'permission_callback' => '__return_true',
+    ]);
+
+    register_rest_route(ISS_REGISTER_REST_NAMESPACE, '/atlas', [
+        'methods' => WP_REST_Server::READABLE,
+        'callback' => 'iss_register_rest_get_atlas_places',
         'permission_callback' => '__return_true',
     ]);
 

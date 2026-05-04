@@ -457,58 +457,41 @@ function iss_register_import_attachment_from_source_url(string $url, string $tit
     return (int) $attachment_id;
 }
 
-function iss_register_prime_atlas_story_media(string $slug): array
+function iss_register_enrich_atlas_story_payload_media(array $payload): array
 {
-    $payload = iss_register_get_atlas_story_payload($slug, [
-        'allow_remote_fallback' => true,
-    ]);
+    $events = is_array($payload['events'] ?? null) ? $payload['events'] : [];
 
-    if (!$payload) {
-        return [];
-    }
-
-    $imported = 0;
-
-    foreach ($payload['events'] as &$event) {
+    $payload['events'] = array_map(function (array $event): array {
         $source_url = (string) ($event['image_source_url'] ?? '');
-        if ($source_url === '') {
-            continue;
-        }
+        $attachment_id = $source_url !== '' ? iss_register_get_attachment_id_by_source_url($source_url) : 0;
+        $image_url = $attachment_id > 0 ? (string) (wp_get_attachment_image_url($attachment_id, 'large') ?: '') : '';
 
-        $attachment_id = isset($event['attachment_id']) ? (int) $event['attachment_id'] : 0;
-        if ($attachment_id <= 0) {
-            $attachment_id = iss_register_import_attachment_from_source_url($source_url, trim(($payload['title'] ?? '') . ' ' . ($event['year'] ?? '')));
-            if ($attachment_id > 0) {
-                $imported++;
-            }
-        }
+        $event['attachment_id'] = $attachment_id;
+        $event['image_url'] = $image_url;
 
-        if ($attachment_id > 0) {
-            $event['attachment_id'] = $attachment_id;
-            $event['image_url'] = (string) (wp_get_attachment_image_url($attachment_id, 'large') ?: '');
-        }
-    }
-    unset($event);
-
-    delete_transient(iss_register_touchtable_story_cache_key($slug, (string) ($payload['modified'] ?? '')));
-    $payload['imported_images'] = $imported;
+        return $event;
+    }, $events);
 
     return $payload;
 }
 
-function iss_register_get_atlas_story_payload(string $slug, array $args = []): array
+function iss_register_get_atlas_story_payload(string $slug): array
 {
     $snapshot = iss_register_get_source_snapshot_by_slug($slug, 'detail_page');
     if (!$snapshot) {
         return [];
     }
 
-    $allow_remote_fallback = !empty($args['allow_remote_fallback']);
     $cache_key = iss_register_touchtable_story_cache_key($slug, (string) ($snapshot['source_modified'] ?? ''));
     $cached = get_transient($cache_key);
 
     if (is_array($cached)) {
-        return $cached;
+        $enriched_cached = iss_register_enrich_atlas_story_payload_media($cached);
+        if ($enriched_cached !== $cached) {
+            set_transient($cache_key, $enriched_cached, 6 * HOUR_IN_SECONDS);
+        }
+
+        return $enriched_cached;
     }
 
     $payload = iss_register_extract_touchtable_story_payload($snapshot);
@@ -519,22 +502,34 @@ function iss_register_get_atlas_story_payload(string $slug, array $args = []): a
     $payload['slug'] = $slug;
     $payload['source_post_id'] = (int) ($snapshot['post_id'] ?? 0);
     $payload['modified'] = (string) ($snapshot['source_modified'] ?? '');
-    $payload['events'] = array_map(function (array $event) use ($allow_remote_fallback): array {
-        $source_url = (string) ($event['image_source_url'] ?? '');
-        $attachment_id = $source_url !== '' ? iss_register_get_attachment_id_by_source_url($source_url) : 0;
-        $image_url = $attachment_id > 0 ? (string) (wp_get_attachment_image_url($attachment_id, 'large') ?: '') : '';
-
-        if ($image_url === '' && $allow_remote_fallback) {
-            $image_url = $source_url;
-        }
-
-        $event['attachment_id'] = $attachment_id;
-        $event['image_url'] = $image_url;
-
-        return $event;
-    }, $payload['events']);
+    $payload = iss_register_enrich_atlas_story_payload_media($payload);
 
     set_transient($cache_key, $payload, 6 * HOUR_IN_SECONDS);
 
     return $payload;
+}
+
+function iss_register_get_atlas_story_public_payload(string $slug): array
+{
+    $payload = iss_register_get_atlas_story_payload($slug);
+    if (!$payload) {
+        return [];
+    }
+
+    $public_events = array_map(function (array $event): array {
+        return [
+            'year' => (string) ($event['year'] ?? ''),
+            'year_label' => (string) ($event['year_label'] ?? ''),
+            'title' => (string) ($event['title'] ?? ''),
+            'summary' => (string) ($event['summary'] ?? ''),
+            'image_url' => (string) ($event['image_url'] ?? ''),
+        ];
+    }, (array) ($payload['events'] ?? []));
+
+    return [
+        'title' => (string) ($payload['title'] ?? ''),
+        'intro' => (string) ($payload['intro'] ?? ''),
+        'slug' => (string) ($payload['slug'] ?? $slug),
+        'events' => $public_events,
+    ];
 }

@@ -1,6 +1,23 @@
 # Changelog
 
 ## 2026-05-04
+- Recast the Schöneweide Atlas runtime around a dedicated Atlas payload instead of the full register dataset:
+  - added `/wp-json/iss-register/v1/atlas`
+  - precomputed Atlas-era/story fields in `industriesalon-schoeneweide-register`
+  - switched `/schoneweide/` to the lighter Atlas endpoint
+  - stopped loading unrelated `ueber-uns` / `flex-split` styles on the Atlas page
+  - switched the Atlas hero cover source to the lighter `atlas-header-1536x768.png` variant
+- Removed Touchtable from the active Schöneweide runtime/editor flow while preserving local source snapshots:
+  - stopped loading the Touchtable pull/review modules from the plugin bootstrap
+  - removed remote fallback from Atlas timeline/story media
+  - enriched cached Atlas story payloads from local attachments only
+  - verified the named Touchtable value pages are present locally and their referenced media are localized
+- Added editor-facing Wikimedia image sourcing for `register_place`:
+  - new `Bildvorschläge` metabox in `industriesalon-schoeneweide-register`
+  - queries Wikimedia Commons from local title/address/coordinates
+  - stores candidates locally on the post
+  - imports selected candidates into existing `Archivbilder`, `Aktuelle Bilder`, or `Dokumentbilder`
+  - saves imports locally into the Media Library with image-group visibility defaulting to `pending`
 - Advanced the Schöneweide register integration so the main site can own public place output while keeping sync/model logic in `industriesalon-schoeneweide-register`:
   - made `register_place` publicly queryable under `/schoeneweide/orte/{slug}/`
   - added real taxonomies `register_area`, `register_status`, `register_role`

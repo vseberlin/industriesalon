@@ -9,79 +9,72 @@
 
 ## Branch / Commit
 - Branch: `master`
-- HEAD before final commit: `41f9026`
+- HEAD before final commit: `e39b773`
 
 ## What Was Done This Session
-- Continued the `industriesalon-schoeneweide-register` integration foundation so Schöneweide places are real public content on the main site:
-  - made `register_place` public under `/schoeneweide/orte/{slug}/`
-  - added real taxonomies:
-    - `register_area`
-    - `register_status`
-    - `register_role`
-  - backfilled existing `area/status/role` meta into those taxonomies
-  - added theme-owned public templates:
-    - `themes/industriesalon/templates/page-schoneweide.html`
-    - `themes/industriesalon/templates/single-register_place.html`
-- Added public-field sync for `register_place`:
-  - fills `post_excerpt` conservatively from existing register data when blank
-  - assigns featured image only from `public` image-group items when available
-  - current dataset still has no public images, so the single template was adjusted to stay text-first without empty hero-media dependence
-- Saved the revised Schöneweide/Touchtable specs into the plugin docs folder:
-  - `plugins/industriesalon-schoeneweide-register/docs/integration-proposal.md`
-  - `plugins/industriesalon-schoeneweide-register/docs/integration-spec.md`
-- Added one-way Touchtable source pull into the plugin:
-  - local non-public source snapshot CPT: `register_source_item`
-  - source pull admin page: `Tools -> Touchtable Pull`
-  - pulls public Touchtable pages and media via WordPress REST
-  - extracts map hotspots and coordinates from rendered map pages plus Elementor CSS
-- Added the first real review/match workflow in the main site admin:
-  - `Schöneweide Register -> Touchtable Review`
-  - separates:
-    - auto-match candidate
-    - approved linked `register_place`
-    - review status
-  - supports actions:
-    - accept auto-match
-    - link existing place
-    - create new draft `register_place` from a source item
-    - ignore
-    - reset
-  - adds a `Touchtable Quelle` metabox on `register_place`
-- Improved review usability for mixed-quality Touchtable detail pages:
-  - source snapshots now derive normalized text, preview text, text lengths, and hotspot counts
-  - review table now shows an `Inhalt` column with preview/metrics
-  - text-rich detail pages sort to the top, zero-text pages fall to the bottom
+- Continued the Schöneweide Atlas/public-layer work in the active theme and register plugin:
+  - added a dedicated Atlas REST payload in `industriesalon-schoeneweide-register`
+  - switched `/schoneweide/` to that lighter Atlas endpoint instead of the full register payload
+  - moved Atlas-era/story summarization into PHP so the theme JS no longer has to derive as much from long research fields
+  - stopped enqueuing unrelated `ueber-uns` / `iss-flex-split` styles on the Atlas page
+  - switched the Atlas hero image source to the lighter `atlas-header-1536x768.png`
+- Removed Touchtable from the active runtime/editor scene while preserving local source snapshots:
+  - plugin bootstrap no longer loads the Touchtable pull/review modules
+  - Atlas story/timeline payloads now resolve media locally only
+  - cached Atlas story payloads are enriched from current local attachments on read
+  - verified the named value pages are preserved locally as source snapshots
+- Localized media for the named Touchtable value pages and verified local timeline image coverage:
+  - `transformatorenwerk-oberschoeneweide`
+  - `kabelwerk-oberspree`
+  - `stromnetz-berlin`
+  - `htw-berlin`
+  - `elektro-innung-berlin`
+  - `stephanus-stiftung-betriebsstaette-wilhelminenhof`
+  - `getraenke-lydicke`
+  - `first-sensor-ag`
+  - `sven-thomsen`
+- Added the first editor-facing external image sourcing flow for `register_place`:
+  - new `Bildvorschläge` metabox in `industriesalon-schoeneweide-register`
+  - Wikimedia Commons search driven by local title, address, and coordinates
+  - candidate storage is local on the post
+  - selected images import into existing image groups:
+    - `Archivbilder`
+    - `Aktuelle Bilder`
+    - `Dokumentbilder`
+  - imports go into the Media Library and default to image-group visibility `pending`
 
 ## Verification
 - Active theme confirmed: `industriesalon`
-- Runtime function checks confirmed the new Touchtable workflow loads:
-  - review page renderer
-  - review query helper
-  - source metabox renderer
-- Real Touchtable pull completed successfully after the workflow refactor:
-  - `32` page snapshots
-  - `152` media snapshots
-  - `184` total local source snapshots
-- Existing snapshots were backfilled into the new workflow model:
-  - all source items now have candidate/link/review-status metadata
-- Review queue verification:
-  - `27` open `detail_page` review items
-  - text-rich detail pages like `Transformatorenwerk Oberschöneweide` surface at the top
-  - zero-text items like `Behrens-Ufer` sort to the bottom
-- Workflow helper verification through WP-CLI:
-  - link candidate -> `linked`
-  - reset -> back to `new`
-  - create draft `register_place` from snapshot works; temporary verification draft was deleted again
+- Active plugin confirmed: `industriesalon-schoeneweide-register`
+- Runtime checks confirmed Touchtable runtime hooks are off:
+  - `pull-off`
+  - `review-off`
+- Named value-page media/timeline audit after localization:
+  - `transformatorenwerk-oberschoeneweide`: `events=4`, `local_event_images=4`, `remote_event_images=0`
+  - `kabelwerk-oberspree`: `events=2`, `local_event_images=2`, `remote_event_images=0`
+  - the remaining audited pages keep local text/media where present and currently have no timeline events
+- PHP lint passed in the running `wp_app` container for:
+  - `plugins/industriesalon-schoeneweide-register/includes/image-suggestions.php`
+  - `plugins/industriesalon-schoeneweide-register/industriesalon-schoeneweide-register.php`
+- JS syntax check passed:
+  - `plugins/industriesalon-schoeneweide-register/assets/js/register-image-suggestions-admin.js`
+- Live WP-CLI verification for Wikimedia sourcing:
+  - `HTW Campus` returned `18` image candidates from Wikimedia Commons
+  - import workflow was smoke-tested end to end on a temporary draft `register_place`
+  - imported candidate saved into `current_images` with `visibility=pending`
 
 ## Important Notes
-- The Touchtable review workflow still does not promote content into live public fields automatically after linking. It is review/match first, not full editorial promotion yet.
-- Some Touchtable detail pages are effectively empty; others are large Elementor timelines. The current preview logic normalizes text enough for review, but long Elementor-derived content is still flattened and wants cleaner extraction later.
-- No browser-level admin UI pass was done yet. The workflow was verified through WordPress runtime checks and WP-CLI helper calls.
+- Touchtable source snapshots still exist locally as archive/provenance via `register_source_item`; they are no longer part of the active runtime/editor flow.
+- The old Touchtable source/admin/review files still exist on disk, but they are no longer loaded by the plugin bootstrap.
+- The new image-sourcing flow is Wikimedia-only in this slice. Flickr and Google preview were intentionally not added.
+- Google should stay preview-only if added later; it is not a clean local-import source.
 
 ## Next Recommended Steps
-- Add deliberate promote/sync actions from linked source snapshots into curated `register_place` fields instead of only linking source items.
-- Improve Touchtable extraction for Elementor-heavy narrative pages so previews and future promoted content are cleaner than flattened timeline text.
-- Add reviewed media import/attachment flow with rights-safe handling before public image use.
+- Improve the `register_place` editor structure for non-technical editors by splitting raw register fields into smaller editorial groups instead of one large meta box.
+- Add field-level promote actions from local source snapshots into curated `register_place` content if historical Touchtable material should become first-class local dossier content.
+- Extend image sourcing only after the Wikimedia workflow settles:
+  - Flickr with explicit license filtering
+  - optional Google preview only, not local import
 
 ## Continuity Prompt
 - Start next session with: `read /home/vladimir/wp/handoff_CURRENT.md`
