@@ -30,6 +30,7 @@ require_once ISS_REGISTER_PATH . 'includes/source-items.php';
 require_once ISS_REGISTER_PATH . 'includes/taxonomies.php';
 require_once ISS_REGISTER_PATH . 'includes/meta-fields.php';
 require_once ISS_REGISTER_PATH . 'includes/public-fields.php';
+require_once ISS_REGISTER_PATH . 'includes/geocoding.php';
 require_once ISS_REGISTER_PATH . 'includes/importer.php';
 require_once ISS_REGISTER_PATH . 'includes/touchtable-source.php';
 require_once ISS_REGISTER_PATH . 'includes/touchtable-admin.php';

@@ -124,11 +124,16 @@ function iss_register_map_place_post(WP_Post $post): array
     $archive_images = iss_register_filter_public_images(iss_register_get_meta_value($post_id, 'archive_images', []));
     $current_images = iss_register_filter_public_images(iss_register_get_meta_value($post_id, 'current_images', []));
     $document_images = iss_register_filter_public_images(iss_register_get_meta_value($post_id, 'document_images', []));
+    $featured_image_url = get_the_post_thumbnail_url($post, 'large');
 
     return [
         'id' => $register_id,
         'post_id' => $post_id,
+        'slug' => (string) $post->post_name,
         'name' => get_the_title($post),
+        'excerpt' => (string) get_post_field('post_excerpt', $post_id),
+        'permalink' => (string) get_permalink($post),
+        'featured_image_url' => is_string($featured_image_url) ? $featured_image_url : '',
         'owner' => (string) iss_register_get_meta_value($post_id, 'owner', ''),
         'operator' => (string) iss_register_get_meta_value($post_id, 'operator', ''),
         'developer' => (string) iss_register_get_meta_value($post_id, 'developer', ''),

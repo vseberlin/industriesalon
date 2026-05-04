@@ -1,18 +1,82 @@
 <!-- wp:template-part {"slug":"header","theme":"industriesalon","tagName":"header"} /-->
 
 <!-- wp:group {"tagName":"main","className":"iss-post-page iss-register-place-page","layout":{"type":"default"}} -->
-<main class="wp-block-group iss-post-page iss-register-place-page"><!-- wp:group {"tagName":"section","className":"section section--plain","layout":{"type":"default"}} -->
-<section class="wp-block-group section section--plain"><!-- wp:group {"className":"iss-container","layout":{"type":"default"}} -->
-<div class="wp-block-group iss-container"><!-- wp:columns {"className":"iss-register-place__layout iss-register-place__layout--intro"} -->
-<div class="wp-block-columns iss-register-place__layout iss-register-place__layout--intro"><!-- wp:column {"width":"68%","className":"iss-register-place__content"} -->
-<div class="wp-block-column iss-register-place__content" style="flex-basis:68%"><!-- wp:group {"className":"iss-heading iss-heading--uncaged iss-register-place__intro","layout":{"type":"default"}} -->
+<main class="wp-block-group iss-post-page iss-register-place-page"><!-- wp:group {"tagName":"section","className":"section section--plain iss-register-place-hero","layout":{"type":"default"}} -->
+<section class="wp-block-group section section--plain iss-register-place-hero"><!-- wp:group {"className":"iss-container","layout":{"type":"default"}} -->
+<div class="wp-block-group iss-container"><!-- wp:columns {"className":"iss-register-place__hero-grid"} -->
+<div class="wp-block-columns iss-register-place__hero-grid"><!-- wp:column {"width":"64%","className":"iss-register-place__hero-copy"} -->
+<div class="wp-block-column iss-register-place__hero-copy" style="flex-basis:64%"><!-- wp:group {"className":"iss-heading iss-heading--uncaged iss-register-place__intro","layout":{"type":"default"}} -->
 <div class="wp-block-group iss-heading iss-heading--uncaged iss-register-place__intro"><!-- wp:paragraph {"className":"iss-kicker iss-kicker--compact"} -->
-<p class="iss-kicker iss-kicker--compact">Schoneweide</p>
+<p class="iss-kicker iss-kicker--compact">Schöneweide Dossier</p>
 <!-- /wp:paragraph -->
 
 <!-- wp:post-title {"level":1,"className":"iss-heading__title"} /-->
 
-<!-- wp:post-excerpt {"moreText":"","showMoreOnNewLine":false,"excerptLength":36,"className":"iss-register-place__standfirst"} /--></div>
+<!-- wp:post-excerpt {"moreText":"","showMoreOnNewLine":false,"excerptLength":40,"className":"iss-register-place__standfirst"} /-->
+
+<!-- wp:group {"className":"iss-register-place__hero-meta","layout":{"type":"flex","flexWrap":"wrap","justifyContent":"left"}} -->
+<div class="wp-block-group iss-register-place__hero-meta"><!-- wp:post-terms {"term":"register_status","className":"iss-register-place__hero-term"} /-->
+
+<!-- wp:post-terms {"term":"register_area","className":"iss-register-place__hero-term"} /-->
+
+<!-- wp:post-terms {"term":"register_role","className":"iss-register-place__hero-term"} /--></div>
+<!-- /wp:group -->
+
+<!-- wp:buttons {"className":"iss-register-place__hero-actions","layout":{"type":"flex","justifyContent":"left"}} -->
+<div class="wp-block-buttons iss-register-place__hero-actions"><!-- wp:button {"className":"is-style-outline"} -->
+<div class="wp-block-button is-style-outline"><a class="wp-block-button__link wp-element-button" href="/schoneweide/">Zur Schöneweide-Übersicht</a></div>
+<!-- /wp:button -->
+
+<!-- wp:button {"backgroundColor":"black","textColor":"base"} -->
+<div class="wp-block-button"><a class="wp-block-button__link has-base-color has-black-background-color has-text-color has-background wp-element-button" href="/register-schoneweide/">Vollständiges Register</a></div>
+<!-- /wp:button --></div>
+<!-- /wp:buttons --></div>
+<!-- /wp:group --></div>
+<!-- /wp:column -->
+
+<!-- wp:column {"width":"36%","className":"iss-register-place__hero-aside"} -->
+<div class="wp-block-column iss-register-place__hero-aside" style="flex-basis:36%"><!-- wp:group {"className":"iss-info-panel iss-info-panel--brown iss-register-place__hero-panel","layout":{"type":"default"}} -->
+<div class="wp-block-group iss-info-panel iss-info-panel--brown iss-register-place__hero-panel"><!-- wp:paragraph {"className":"iss-kicker"} -->
+<p class="iss-kicker">Steckbrief</p>
+<!-- /wp:paragraph -->
+
+<!-- wp:group {"className":"iss-register-place__fact","layout":{"type":"default"}} -->
+<div class="wp-block-group iss-register-place__fact"><!-- wp:paragraph {"className":"iss-register-place__fact-label"} -->
+<p class="iss-register-place__fact-label">Adresse</p>
+<!-- /wp:paragraph -->
+
+<!-- wp:paragraph {"className":"iss-register-place__fact-value","metadata":{"bindings":{"content":{"source":"core/post-meta","args":{"key":"address"}}}}} -->
+<p class="iss-register-place__fact-value"></p>
+<!-- /wp:paragraph --></div>
+<!-- /wp:group -->
+
+<!-- wp:group {"className":"iss-register-place__fact","layout":{"type":"default"}} -->
+<div class="wp-block-group iss-register-place__fact"><!-- wp:paragraph {"className":"iss-register-place__fact-label"} -->
+<p class="iss-register-place__fact-label">Status</p>
+<!-- /wp:paragraph -->
+
+<!-- wp:post-terms {"term":"register_status","className":"iss-register-place__fact-value iss-register-place__fact-value--terms"} /--></div>
+<!-- /wp:group --></div>
+<!-- /wp:group -->
+
+<!-- wp:post-featured-image {"isLink":false,"className":"iss-register-place__cover"} /--></div>
+<!-- /wp:column --></div>
+<!-- /wp:columns --></div>
+<!-- /wp:group --></section>
+<!-- /wp:group -->
+
+<!-- wp:group {"tagName":"section","className":"section section--soft iss-register-place-story","layout":{"type":"default"}} -->
+<section class="wp-block-group section section--soft iss-register-place-story"><!-- wp:group {"className":"iss-container","layout":{"type":"default"}} -->
+<div class="wp-block-group iss-container"><!-- wp:columns {"className":"iss-register-place__story-grid"} -->
+<div class="wp-block-columns iss-register-place__story-grid"><!-- wp:column {"width":"65%","className":"iss-register-place__content"} -->
+<div class="wp-block-column iss-register-place__content" style="flex-basis:65%"><!-- wp:group {"className":"iss-heading iss-heading--uncaged","layout":{"type":"default"}} -->
+<div class="wp-block-group iss-heading iss-heading--uncaged"><!-- wp:paragraph {"className":"iss-kicker"} -->
+<p class="iss-kicker">Erzählung</p>
+<!-- /wp:paragraph -->
+
+<!-- wp:heading {"level":2,"className":"iss-heading__title"} -->
+<h2 class="wp-block-heading iss-heading__title">Geschichte, Nutzung und Umbau</h2>
+<!-- /wp:heading --></div>
 <!-- /wp:group -->
 
 <!-- wp:group {"className":"iss-indent iss-indent--uncaged iss-register-place__body","layout":{"type":"default"}} -->
@@ -20,12 +84,10 @@
 <!-- /wp:group --></div>
 <!-- /wp:column -->
 
-<!-- wp:column {"width":"32%","className":"iss-register-place__sidebar"} -->
-<div class="wp-block-column iss-register-place__sidebar" style="flex-basis:32%"><!-- wp:post-featured-image {"isLink":false,"className":"iss-register-place__cover"} /-->
-
-<!-- wp:group {"className":"iss-info-panel iss-register-place__terms","layout":{"type":"default"}} -->
+<!-- wp:column {"width":"35%","className":"iss-register-place__sidebar"} -->
+<div class="wp-block-column iss-register-place__sidebar" style="flex-basis:35%"><!-- wp:group {"className":"iss-info-panel iss-register-place__terms","layout":{"type":"default"}} -->
 <div class="wp-block-group iss-info-panel iss-register-place__terms"><!-- wp:paragraph {"className":"iss-kicker"} -->
-<p class="iss-kicker">Ort</p>
+<p class="iss-kicker">Einordnung</p>
 <!-- /wp:paragraph -->
 
 <!-- wp:post-terms {"term":"register_area","prefix":"Gebiet: ","className":"iss-register-place__term"} /-->
@@ -33,6 +95,62 @@
 <!-- wp:post-terms {"term":"register_status","prefix":"Status: ","className":"iss-register-place__term"} /-->
 
 <!-- wp:post-terms {"term":"register_role","prefix":"Rolle: ","className":"iss-register-place__term"} /--></div>
+<!-- /wp:group -->
+
+<!-- wp:group {"className":"iss-info-panel iss-register-place__overview","layout":{"type":"default"}} -->
+<div class="wp-block-group iss-info-panel iss-register-place__overview"><!-- wp:paragraph {"className":"iss-kicker"} -->
+<p class="iss-kicker">Kurzfassung</p>
+<!-- /wp:paragraph -->
+
+<!-- wp:group {"className":"iss-register-place__fact","layout":{"type":"default"}} -->
+<div class="wp-block-group iss-register-place__fact"><!-- wp:paragraph {"className":"iss-register-place__fact-label"} -->
+<p class="iss-register-place__fact-label">Historie</p>
+<!-- /wp:paragraph -->
+
+<!-- wp:paragraph {"className":"iss-register-place__fact-value","metadata":{"bindings":{"content":{"source":"core/post-meta","args":{"key":"history_short"}}}}} -->
+<p class="iss-register-place__fact-value"></p>
+<!-- /wp:paragraph --></div>
+<!-- /wp:group -->
+
+<!-- wp:group {"className":"iss-register-place__fact","layout":{"type":"default"}} -->
+<div class="wp-block-group iss-register-place__fact"><!-- wp:paragraph {"className":"iss-register-place__fact-label"} -->
+<p class="iss-register-place__fact-label">Adresse</p>
+<!-- /wp:paragraph -->
+
+<!-- wp:paragraph {"className":"iss-register-place__fact-value","metadata":{"bindings":{"content":{"source":"core/post-meta","args":{"key":"address"}}}}} -->
+<p class="iss-register-place__fact-value"></p>
+<!-- /wp:paragraph --></div>
+<!-- /wp:group -->
+
+<!-- wp:group {"className":"iss-register-place__fact","layout":{"type":"default"}} -->
+<div class="wp-block-group iss-register-place__fact"><!-- wp:paragraph {"className":"iss-register-place__fact-label"} -->
+<p class="iss-register-place__fact-label">Aktuelle Nutzung</p>
+<!-- /wp:paragraph -->
+
+<!-- wp:paragraph {"className":"iss-register-place__fact-value","metadata":{"bindings":{"content":{"source":"core/post-meta","args":{"key":"current_use"}}}}} -->
+<p class="iss-register-place__fact-value"></p>
+<!-- /wp:paragraph --></div>
+<!-- /wp:group --></div>
+<!-- /wp:group -->
+
+<!-- wp:group {"className":"iss-register-place__next","layout":{"type":"default"}} -->
+<div class="wp-block-group iss-register-place__next"><!-- wp:paragraph {"className":"iss-kicker iss-kicker--compact"} -->
+<p class="iss-kicker iss-kicker--compact">Weiterlesen</p>
+<!-- /wp:paragraph -->
+
+<!-- wp:paragraph -->
+<p>Zurück zur Übersicht oder direkt in die vollständige Register-Recherche wechseln.</p>
+<!-- /wp:paragraph -->
+
+<!-- wp:buttons {"layout":{"type":"flex","justifyContent":"left"}} -->
+<div class="wp-block-buttons"><!-- wp:button {"className":"is-style-outline"} -->
+<div class="wp-block-button is-style-outline"><a class="wp-block-button__link wp-element-button" href="/schoneweide/">Schöneweide</a></div>
+<!-- /wp:button -->
+
+<!-- wp:button {"className":"is-style-outline"} -->
+<div class="wp-block-button is-style-outline"><a class="wp-block-button__link wp-element-button" href="/register-schoneweide/">Register</a></div>
+<!-- /wp:button --></div>
+<!-- /wp:buttons --></div>
 <!-- /wp:group --></div>
 <!-- /wp:column --></div>
 <!-- /wp:columns --></div>

@@ -1,6 +1,17 @@
 # Project TODO
 
 ## Active
+- Resolve the remaining `register_place` coordinate gaps after the first address-based geocoding pass:
+  - `Innovationspark Wuhlheide`
+  - `IRIS GmbH`
+  - `ITZ 4.0`
+  - `Rahmenplan Oberschöneweide`
+  - `IBA 2034 Berlin – Standort Oberschöneweide`
+  - `Standortgemeinschaft Oberschöneweide`
+  - `Energie-Museum Berlin`
+  - `Treptow-Ateliers e.V.`
+  - `Spree 27`
+  - for each of these, either improve the stored address or set coordinates manually because the current source text is too vague for reliable geocoding
 - Turn the current Touchtable review/match layer into a real promote workflow for `register_place`:
   - add deliberate field-level promotion from linked source snapshots into curated public fields instead of stopping at source linking
   - decide which fields stay source-only vs which can overwrite local editorial fields

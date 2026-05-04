@@ -746,6 +746,30 @@ function industriesalon_enqueue_assets(): void
             true
         );
     }
+
+    if (is_page('schoneweide')) {
+        $schoneweide_script_rel = '/assets/js/schoneweide.js';
+        $schoneweide_script_abs = $theme_dir . $schoneweide_script_rel;
+
+        if (file_exists($schoneweide_script_abs) && defined('ISS_REGISTER_REST_NAMESPACE')) {
+            wp_enqueue_script(
+                'industriesalon-schoneweide',
+                industriesalon_make_relative_url($theme_uri . $schoneweide_script_rel),
+                array(),
+                (string) filemtime($schoneweide_script_abs),
+                true
+            );
+
+            wp_localize_script(
+                'industriesalon-schoneweide',
+                'industriesalonSchoneweide',
+                array(
+                    'placesUrl' => industriesalon_make_relative_url(untrailingslashit(rest_url(ISS_REGISTER_REST_NAMESPACE)) . '/places'),
+                    'registerUrl' => industriesalon_make_relative_url(home_url('/register-schoneweide/')),
+                )
+            );
+        }
+    }
 }
 add_action('wp_enqueue_scripts', 'industriesalon_enqueue_assets');
 
@@ -768,3 +792,35 @@ function industriesalon_render_menu_shell(): void
     echo do_blocks($content);
 }
 add_action('wp_footer', 'industriesalon_render_menu_shell', 5);
+
+function industriesalon_make_relative_url(string $url): string
+{
+    if ($url === '') {
+        return '';
+    }
+
+    $parts = wp_parse_url($url);
+    if (!is_array($parts)) {
+        return $url;
+    }
+
+    $relative = $parts['path'] ?? '';
+
+    if (isset($parts['query']) && $parts['query'] !== '') {
+        $relative .= '?' . $parts['query'];
+    }
+
+    if (isset($parts['fragment']) && $parts['fragment'] !== '') {
+        $relative .= '#' . $parts['fragment'];
+    }
+
+    return $relative !== '' ? $relative : '/';
+}
+
+add_filter('script_loader_src', function ($src, $handle) {
+    if ($handle !== 'industriesalon-schoneweide' || !is_string($src) || $src === '') {
+        return $src;
+    }
+
+    return industriesalon_make_relative_url($src);
+}, 10, 2);
