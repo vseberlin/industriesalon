@@ -3535,17 +3535,35 @@ Raum / Vermietung → brown
   color: var(--iss-black);
 }
 
+.iss-control-info-panel--surface-light .iss-info-panel__title {
+  color: var(--iss-black);
+}
+
+.iss-control-info-panel--surface-light .iss-control-info-panel__kicker {
+  color: var(--iss-info-accent);
+  border-left-color: var(--iss-info-accent);
+}
+
 .iss-control-info-panel--surface-dark {
   background: color-mix(in srgb, var(--iss-black) 88%, var(--iss-info-accent) 12%);
   color: var(--iss-white);
 }
 
+.iss-control-info-panel--surface-dark .iss-info-panel__title,
 .iss-control-info-panel--surface-dark .iss-info-panel__intro,
 .iss-control-info-panel--surface-dark .iss-info-row__text,
-.iss-control-info-panel--surface-dark .iss-info-row__text strong,
-.iss-control-info-panel--surface-dark .iss-control-info-panel__badge,
-.iss-control-info-panel--surface-dark .iss-control-info-panel__badge span {
+.iss-control-info-panel--surface-dark .iss-info-row__text strong {
   color: var(--iss-white);
+}
+
+.iss-control-info-panel--surface-dark .iss-control-info-panel__kicker {
+  color: color-mix(in srgb, var(--iss-info-accent) 78%, var(--iss-white) 22%);
+  border-left-color: var(--iss-info-accent);
+}
+
+.iss-control-info-panel__kicker::before {
+  background: var(--iss-info-accent);
+  border-color: var(--iss-info-accent);
 }
 
 .iss-control-info-panel--surface-dark .iss-info-panel__rows-col,
@@ -3576,28 +3594,33 @@ Raum / Vermietung → brown
   height: 100%;
 }
 
+.iss-control-info-panel__icon img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+}
+
 .iss-control-info-panel__copy {
   flex: 1 1 auto;
   min-width: 0;
 }
 
-.iss-control-info-panel__badge {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.6rem;
-  padding: 0.6rem 0.9rem;
-  border: 1px solid color-mix(in srgb, var(--iss-info-accent) 42%, transparent);
-  border-radius: 999px;
-  font-size: 0.95rem;
-  font-weight: 600;
-  line-height: 1;
-  color: var(--iss-black);
+.iss-control-info-panel__subline {
+  display: block;
+  margin-top: 0.45rem;
+  font-size: 0.92rem;
+  line-height: 1.45;
 }
 
-.iss-control-info-panel__badge .iss-control-info-panel__icon {
-  width: 1.05rem;
-  height: 1.05rem;
-  flex-basis: 1.05rem;
+.iss-control-info-panel__subline--exception {
+  padding: 0.35rem 0.55rem;
+  border-left: 3px solid var(--iss-info-accent);
+  background: color-mix(in srgb, var(--iss-info-accent) 10%, transparent);
+}
+
+.iss-control-info-panel__subline-label {
+  font-weight: 700;
 }
 
 .iss-control-info-panel__action-link {
