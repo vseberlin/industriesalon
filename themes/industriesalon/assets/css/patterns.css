@@ -10528,6 +10528,134 @@ Raum / Vermietung → brown
   margin: 0;
 }
 
+.iss-register-places-grid {
+  margin-top: clamp(1.5rem, 3vw, 2rem);
+}
+
+.iss-register-places-query .wp-block-post-template {
+  margin-top: clamp(1.5rem, 3vw, 2rem);
+  margin-bottom: 0;
+  padding-left: 0;
+  list-style: none;
+}
+
+.iss-register-places-query .wp-block-post {
+  margin: 0;
+}
+
+.iss-register-place-card .iss-card__body {
+  gap: 0.75rem;
+}
+
+.iss-register-place-card__meta {
+  gap: 0.45rem 0.75rem;
+}
+
+.iss-register-place-card__meta .wp-block-post-terms {
+  margin: 0;
+  color: rgba(30, 30, 30, 0.54);
+  font-size: 0.76rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  line-height: 1.3;
+  text-transform: uppercase;
+}
+
+.iss-register-place-card__meta a {
+  color: inherit;
+  text-decoration: none;
+}
+
+.iss-register-place-card .iss-card__text {
+  font-size: 0.95rem;
+  line-height: 1.6;
+}
+
+.iss-register-place-card .iss-card__footer {
+  padding-top: 0.1rem;
+}
+
+.iss-register-place__layout {
+  display: grid;
+  grid-template-columns: minmax(0, 1.18fr) minmax(18rem, 0.82fr);
+  gap: clamp(1.5rem, 4vw, 4rem);
+  align-items: start;
+}
+
+.iss-register-place__intro {
+  max-width: 60rem;
+  margin-left: auto;
+}
+
+.iss-register-place__standfirst,
+.iss-register-place__standfirst p {
+  margin: 0;
+}
+
+.iss-register-place__standfirst p {
+  font-size: clamp(1.05rem, 0.98rem + 0.28vw, 1.22rem);
+  line-height: 1.72;
+  color: rgba(30, 30, 30, 0.86);
+}
+
+.iss-register-place__content {
+  min-width: 0;
+}
+
+.iss-register-place__layout--intro {
+  align-items: start;
+  padding-top: max(8.5rem, calc(var(--iss-site-logo-bottom, 176px) + 2rem));
+}
+
+.iss-register-place__sidebar {
+  display: grid;
+  gap: 1.25rem;
+}
+
+.iss-register-place__body {
+  margin-top: 2rem;
+}
+
+.iss-register-place__body > :first-child {
+  margin-top: 0;
+}
+
+.iss-register-place__body > :last-child {
+  margin-bottom: 0;
+}
+
+.iss-register-place__body p,
+.iss-register-place__body li {
+  font-size: 1.02rem;
+  line-height: 1.75;
+}
+
+.iss-register-place__cover {
+  margin: 0;
+}
+
+.iss-register-place__cover img {
+  display: block;
+  width: 100%;
+  height: auto;
+  border-radius: var(--iss-radius-md, 16px);
+}
+
+.iss-register-place__terms {
+  gap: 0.75rem;
+}
+
+.iss-register-place__term {
+  margin: 0;
+  line-height: 1.5;
+  color: rgba(30, 30, 30, 0.78);
+}
+
+.iss-register-place__term a {
+  color: inherit;
+  text-decoration: none;
+}
+
 .iss-publication-single__content {
   min-width: 0;
 }
@@ -10640,7 +10768,8 @@ Raum / Vermietung → brown
 
 @media (max-width: 900px) {
   .iss-publications-feature,
-  .iss-publication-single__layout {
+  .iss-publication-single__layout,
+  .iss-register-place__layout {
     grid-template-columns: 1fr;
   }
 
@@ -10652,8 +10781,16 @@ Raum / Vermietung → brown
     order: -1;
   }
 
+  .iss-register-place__sidebar {
+    order: -1;
+  }
+
   .iss-publication-single__layout--intro .iss-publication-single__sidebar {
     padding-top: 0;
+  }
+
+  .iss-register-place__layout--intro {
+    padding-top: max(7rem, calc(var(--iss-header-height, 88px) + 1.5rem));
   }
 
   .iss-publications-masthead {
@@ -10669,6 +10806,10 @@ Raum / Vermietung → brown
   }
 
   .iss-publication-single__intro {
+    margin-left: 0;
+  }
+
+  .iss-register-place__intro {
     margin-left: 0;
   }
 }

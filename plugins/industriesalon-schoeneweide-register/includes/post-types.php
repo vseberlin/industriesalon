@@ -24,11 +24,19 @@ function iss_register_register_post_types(): void
 
     register_post_type(ISS_REGISTER_POST_TYPE, [
         'labels' => $labels,
-        'public' => false,
+        'public' => true,
+        'publicly_queryable' => true,
         'show_ui' => true,
         'show_in_rest' => true,
         'menu_icon' => 'dashicons-location-alt',
-        'supports' => ['title', 'editor', 'thumbnail', 'revisions'],
+        'has_archive' => false,
+        'rewrite' => [
+            'slug' => 'schoeneweide/orte',
+            'with_front' => false,
+            'feeds' => false,
+            'pages' => false,
+        ],
+        'supports' => ['title', 'editor', 'excerpt', 'thumbnail', 'revisions'],
     ]);
 }
 

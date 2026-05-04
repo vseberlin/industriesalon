@@ -4,88 +4,84 @@
 - `committed`
 
 ## Date / Window
-- Date: `2026-05-03`
+- Date: `2026-05-04`
 - Timezone: `Europe/Berlin`
 
 ## Branch / Commit
 - Branch: `master`
-- HEAD before final commit: `d88fd8b`
+- HEAD before final commit: `41f9026`
 
 ## What Was Done This Session
-- Preserved manager-authored DB template overrides without touching disk templates:
-  - exported the live custom `wp_template` copies for `industriesalon`
-  - committed them under `themes/industriesalon/db-template-copies/2026-05-03-susanne-changes`
-  - commit: `d88fd8b` message `susanne changes`
-- Restored disk template authority by deleting the live DB overrides for:
-  - `front-page`
-  - `page-veranstaltungen`
-  - `page-ausstellungen`
-  - `page-fuehrungen`
-  - `page-projekte`
-  - `page`
-  - `page-publikationen`
-- Continued the `industriesalon-steuerung` cleanup:
-  - removed obsolete editor block registrations:
-    - `industriesalon/status`
-    - `industriesalon/exceptions`
-    - `industriesalon/prices`
-    - `industriesalon/mission-statement`
-  - kept the editor block surface to:
-    - `industriesalon/field`
-    - `industriesalon/hours`
-    - `industriesalon/visit-info`
-    - `industriesalon/contact`
-    - `industriesalon/faq`
-- Changed opening-hour semantics so exceptional open-day cases remain semantically `open` and carry their detail via `kind`.
-- Rebuilt `industriesalon/visit-info` into a real info panel driven by plugin data:
-  - editable `kicker`, `title`, `intro`
-  - rows for:
-    - address
-    - Besuchszeiten
-    - Bürozeiten
-    - ÖPNV
-    - Barrierefreiheit
-  - panel controls for:
-    - accent color
-    - light/dark surface
-- Removed the old visitor-card-based `visit-info` render path and related dead helper methods.
-- Added theme styling in `themes/industriesalon/assets/css/patterns.css` so the plugin panel uses the existing `iss-info-panel` pattern language.
-- Tightened the panel visual direction:
-  - white light surface
-  - smaller radius
-  - soft elevation
-  - no visible border
-  - Maps action now uses `iss-action-link`
+- Continued the `industriesalon-schoeneweide-register` integration foundation so Schöneweide places are real public content on the main site:
+  - made `register_place` public under `/schoeneweide/orte/{slug}/`
+  - added real taxonomies:
+    - `register_area`
+    - `register_status`
+    - `register_role`
+  - backfilled existing `area/status/role` meta into those taxonomies
+  - added theme-owned public templates:
+    - `themes/industriesalon/templates/page-schoneweide.html`
+    - `themes/industriesalon/templates/single-register_place.html`
+- Added public-field sync for `register_place`:
+  - fills `post_excerpt` conservatively from existing register data when blank
+  - assigns featured image only from `public` image-group items when available
+  - current dataset still has no public images, so the single template was adjusted to stay text-first without empty hero-media dependence
+- Saved the revised Schöneweide/Touchtable specs into the plugin docs folder:
+  - `plugins/industriesalon-schoeneweide-register/docs/integration-proposal.md`
+  - `plugins/industriesalon-schoeneweide-register/docs/integration-spec.md`
+- Added one-way Touchtable source pull into the plugin:
+  - local non-public source snapshot CPT: `register_source_item`
+  - source pull admin page: `Tools -> Touchtable Pull`
+  - pulls public Touchtable pages and media via WordPress REST
+  - extracts map hotspots and coordinates from rendered map pages plus Elementor CSS
+- Added the first real review/match workflow in the main site admin:
+  - `Schöneweide Register -> Touchtable Review`
+  - separates:
+    - auto-match candidate
+    - approved linked `register_place`
+    - review status
+  - supports actions:
+    - accept auto-match
+    - link existing place
+    - create new draft `register_place` from a source item
+    - ignore
+    - reset
+  - adds a `Touchtable Quelle` metabox on `register_place`
+- Improved review usability for mixed-quality Touchtable detail pages:
+  - source snapshots now derive normalized text, preview text, text lengths, and hotspot counts
+  - review table now shows an `Inhalt` column with preview/metrics
+  - text-rich detail pages sort to the top, zero-text pages fall to the bottom
 
 ## Verification
 - Active theme confirmed: `industriesalon`
-- DB template overrides for the target pages were flushed successfully.
-- `get_block_template(...)->source` now resolves to `theme` for the restored page templates.
-- `industriesalon-steuerung.php` passes PHP syntax check through container `php -l`.
-- `assets/blocks.js` passes `node --check`.
-- Runtime registration check confirms only the intended dynamic blocks remain:
-  - `industriesalon/field`
-  - `industriesalon/hours`
-  - `industriesalon/visit-info`
-  - `industriesalon/contact`
-  - `industriesalon/faq`
-- Runtime render check confirms `industriesalon/visit-info` now emits:
-  - `iss-info-panel`
-  - `iss-control-info-panel`
-  - icon-led rows
-  - right-aligned Maps action link
-  - accessibility badge slot
+- Runtime function checks confirmed the new Touchtable workflow loads:
+  - review page renderer
+  - review query helper
+  - source metabox renderer
+- Real Touchtable pull completed successfully after the workflow refactor:
+  - `32` page snapshots
+  - `152` media snapshots
+  - `184` total local source snapshots
+- Existing snapshots were backfilled into the new workflow model:
+  - all source items now have candidate/link/review-status metadata
+- Review queue verification:
+  - `27` open `detail_page` review items
+  - text-rich detail pages like `Transformatorenwerk Oberschöneweide` surface at the top
+  - zero-text items like `Behrens-Ufer` sort to the bottom
+- Workflow helper verification through WP-CLI:
+  - link candidate -> `linked`
+  - reset -> back to `new`
+  - create draft `register_place` from snapshot works; temporary verification draft was deleted again
 
 ## Important Notes
-- The accessibility/certification badge asset was not wired yet.
-- A legacy uploads candidate exists (`logo-pikto_500_100_c.jpg`) but was not confirmed as the correct mark.
-- Next step after asset upload:
-  - replace the inline placeholder accessibility symbol in `industriesalon-steuerung.php`
-  - use the uploaded media-library image for the `Barrierefreiheit geprüft` badge
-- Unrelated untracked theme files still exist and were intentionally left alone:
-  - `themes/industriesalon/templates-backup.zip`
-  - `themes/industriesalon/templates/page-das-museum.html`
-  - `themes/industriesalon/templates/page-videos.html`
+- The Touchtable review workflow still does not promote content into live public fields automatically after linking. It is review/match first, not full editorial promotion yet.
+- Some Touchtable detail pages are effectively empty; others are large Elementor timelines. The current preview logic normalizes text enough for review, but long Elementor-derived content is still flattened and wants cleaner extraction later.
+- No browser-level admin UI pass was done yet. The workflow was verified through WordPress runtime checks and WP-CLI helper calls.
+
+## Next Recommended Steps
+- Add deliberate promote/sync actions from linked source snapshots into curated `register_place` fields instead of only linking source items.
+- Improve Touchtable extraction for Elementor-heavy narrative pages so previews and future promoted content are cleaner than flattened timeline text.
+- Add reviewed media import/attachment flow with rights-safe handling before public image use.
 
 ## Continuity Prompt
 - Start next session with: `read /home/vladimir/wp/handoff_CURRENT.md`

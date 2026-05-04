@@ -185,6 +185,13 @@ function iss_register_upsert_place(array $item, bool $dry_run, array &$stats, ar
         update_post_meta($post_id, $key, $value);
     }
 
+    if (function_exists('iss_register_sync_public_terms_for_post')) {
+        iss_register_sync_public_terms_for_post((int) $post_id);
+    }
+    if (function_exists('iss_register_sync_public_fields_for_post')) {
+        iss_register_sync_public_fields_for_post((int) $post_id);
+    }
+
     update_post_meta($post_id, '_iss_register_source_hash', $item['source_hash']);
 
     if ($existing_post_id > 0) {

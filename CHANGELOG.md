@@ -1,5 +1,40 @@
 # Changelog
 
+## 2026-05-04
+- Advanced the Schöneweide register integration so the main site can own public place output while keeping sync/model logic in `industriesalon-schoeneweide-register`:
+  - made `register_place` publicly queryable under `/schoeneweide/orte/{slug}/`
+  - added real taxonomies `register_area`, `register_status`, `register_role`
+  - backfilled existing place meta into those taxonomies
+  - added theme-owned public templates:
+    - `themes/industriesalon/templates/page-schoneweide.html`
+    - `themes/industriesalon/templates/single-register_place.html`
+- Added conservative public-field sync for `register_place`:
+  - fills blank excerpts from existing register content
+  - promotes a featured image only from `public` image-group entries
+  - adjusted the single template and related theme CSS so places without public media still render cleanly
+- Saved the revised Schöneweide/Touchtable architecture docs into the plugin:
+  - `plugins/industriesalon-schoeneweide-register/docs/integration-proposal.md`
+  - `plugins/industriesalon-schoeneweide-register/docs/integration-spec.md`
+- Added one-way Touchtable intake into `industriesalon-schoeneweide-register`:
+  - non-public source snapshot CPT `register_source_item`
+  - admin pull screen `Tools -> Touchtable Pull`
+  - page/media pull from the public Touchtable WordPress REST API
+  - map hotspot extraction from rendered map pages plus Elementor CSS coordinates
+- Added the first editorial Touchtable review/match workflow on the main site:
+  - `Schöneweide Register -> Touchtable Review`
+  - separate auto-match candidate, approved linked place, and review status
+  - actions to accept candidate, link existing place, create draft place, ignore, and reset
+  - `Touchtable Quelle` metabox on `register_place`
+- Improved Touchtable review ergonomics for mixed-quality source pages:
+  - snapshots now derive normalized text, preview text, preview length, and hotspot count
+  - review table now shows content preview/metrics
+  - text-rich detail pages sort ahead of zero-text shells so empty Touchtable pages do not dominate review
+- Verified the new runtime flow with live source pulls and WP-CLI checks:
+  - `32` page snapshots
+  - `152` media snapshots
+  - `184` total local source snapshots
+  - `27` open `detail_page` review items after backfill
+
 ## 2026-05-02
 - Redesigned regular single posts to follow the same layout logic as `Veranstaltung`, but in the theme red scheme:
   - replaced the old `standard / image / short` post layout model with `standard / compact / long`
