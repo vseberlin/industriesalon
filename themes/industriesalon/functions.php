@@ -748,10 +748,34 @@ function industriesalon_enqueue_assets(): void
     }
 
     if (is_page('schoneweide')) {
+        $atlas_css_rel = '/assets/css/oberschoeneweide-atlas.css';
+        $atlas_css_abs = $theme_dir . $atlas_css_rel;
+
+        if (file_exists($atlas_css_abs)) {
+            $atlas_dependencies = file_exists($overrides_abs)
+                ? array('industriesalon-overrides')
+                : (file_exists($patterns_abs)
+                    ? array('industriesalon-patterns')
+                    : (file_exists($cards_abs)
+                        ? array('industriesalon-cards')
+                        : array('industriesalon-base')));
+
+            wp_enqueue_style(
+                'industriesalon-oberschoeneweide-atlas',
+                $theme_uri . $atlas_css_rel,
+                $atlas_dependencies,
+                (string) filemtime($atlas_css_abs)
+            );
+        }
+
         $schoneweide_script_rel = '/assets/js/schoneweide.js';
         $schoneweide_script_abs = $theme_dir . $schoneweide_script_rel;
 
         if (file_exists($schoneweide_script_abs) && defined('ISS_REGISTER_REST_NAMESPACE')) {
+            $atlas_timeline = function_exists('iss_register_get_atlas_story_payload')
+                ? iss_register_get_atlas_story_payload('transformatorenwerk-oberschoeneweide')
+                : array();
+
             wp_enqueue_script(
                 'industriesalon-schoneweide',
                 industriesalon_make_relative_url($theme_uri . $schoneweide_script_rel),
@@ -766,6 +790,7 @@ function industriesalon_enqueue_assets(): void
                 array(
                     'placesUrl' => industriesalon_make_relative_url(untrailingslashit(rest_url(ISS_REGISTER_REST_NAMESPACE)) . '/places'),
                     'registerUrl' => industriesalon_make_relative_url(home_url('/register-schoneweide/')),
+                    'featuredTimeline' => $atlas_timeline,
                 )
             );
         }

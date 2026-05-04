@@ -27,6 +27,7 @@ require_once ISS_REGISTER_PATH . 'includes/blocks.php';
 require_once ISS_REGISTER_PATH . 'includes/render-register-app.php';
 require_once ISS_REGISTER_PATH . 'includes/post-types.php';
 require_once ISS_REGISTER_PATH . 'includes/source-items.php';
+require_once ISS_REGISTER_PATH . 'includes/atlas-content.php';
 require_once ISS_REGISTER_PATH . 'includes/taxonomies.php';
 require_once ISS_REGISTER_PATH . 'includes/meta-fields.php';
 require_once ISS_REGISTER_PATH . 'includes/public-fields.php';
