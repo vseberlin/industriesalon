@@ -31,6 +31,10 @@
     { label: 'Info Panel', value: 'info-panel' },
     { label: 'Kompakte Zeile', value: 'compact-row' }
   ];
+  var footerSectionOptions = [
+    { label: 'Brand', value: 'brand' },
+    { label: 'Besuch', value: 'visit' }
+  ];
   var infoPanelAccentOptions = [
     { label: 'Grün', value: 'green' },
     { label: 'Rot', value: 'red' },
@@ -49,7 +53,11 @@
     { label: 'Buchungs-E-Mail', value: 'contact.booking_email' },
     { label: 'Ansprechperson', value: 'contact.contact_person' },
     { label: 'Website', value: 'contact.website' },
+    { label: 'Instagram', value: 'contact.instagram' },
+    { label: 'Facebook', value: 'contact.facebook' },
+    { label: 'YouTube', value: 'contact.youtube' },
     { label: 'Buchungslink', value: 'contact.booking_url' },
+    { label: 'Tagline', value: 'general.tagline' },
     { label: 'Straße', value: 'general.street' },
     { label: 'PLZ', value: 'general.postal_code' },
     { label: 'Ort', value: 'general.city' },
@@ -361,6 +369,46 @@
       save: function () { return null; }
     });
   }
+
+  blocks.registerBlockType('industriesalon/footer-info', {
+    title: 'IS Footer Info',
+    icon: 'feedback',
+    category: 'widgets',
+    attributes: {
+      title: { type: 'string', default: '' },
+      section: { type: 'string', default: 'visit' }
+    },
+    edit: function (props) {
+      return el(
+        Fragment,
+        null,
+        el(
+          InspectorControls,
+          null,
+          el(
+            PanelBody,
+            { title: 'Footer Info', initialOpen: true },
+            el(SelectControl, {
+              label: 'Bereich',
+              value: props.attributes.section,
+              options: footerSectionOptions,
+              onChange: function (value) { props.setAttributes({ section: value }); }
+            }),
+            el(TextControl, {
+              label: 'Optionaler Titel',
+              value: props.attributes.title,
+              onChange: function (value) { props.setAttributes({ title: value }); }
+            })
+          )
+        ),
+        el(ServerSideRender, {
+          block: 'industriesalon/footer-info',
+          attributes: props.attributes
+        })
+      );
+    },
+    save: function () { return null; }
+  });
 
   simpleGroupBlock('industriesalon/contact', 'IS Kontakt', 'id', contactVariantOptions, false);
   simpleGroupBlock('industriesalon/faq', 'IS FAQ', 'editor-help', null, false);

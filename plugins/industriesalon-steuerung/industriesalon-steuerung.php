@@ -287,6 +287,7 @@ final class Industriesalon_Steuerung {
                         <?php $this->url_field(self::OPTION_CONTACT, 'booking_url', __('Buchungslink', 'industriesalon-steuerung'), $contact['booking_url'] ?? '', 'https://…', __('Zum Beispiel SuperSaaS, Formular oder externe Buchungsseite.', 'industriesalon-steuerung')); ?>
                         <?php $this->url_field(self::OPTION_CONTACT, 'instagram', __('Instagram', 'industriesalon-steuerung'), $contact['instagram'] ?? '', 'https://instagram.com/...', __('Optional.', 'industriesalon-steuerung')); ?>
                         <?php $this->url_field(self::OPTION_CONTACT, 'facebook', __('Facebook', 'industriesalon-steuerung'), $contact['facebook'] ?? '', 'https://facebook.com/...', __('Optional.', 'industriesalon-steuerung')); ?>
+                        <?php $this->url_field(self::OPTION_CONTACT, 'youtube', __('YouTube', 'industriesalon-steuerung'), $contact['youtube'] ?? '', 'https://youtube.com/...', __('Optional.', 'industriesalon-steuerung')); ?>
                     </div>
                 </section>
 
@@ -649,6 +650,16 @@ final class Industriesalon_Steuerung {
             ],
         ]);
 
+        register_block_type('industriesalon/footer-info', [
+            'api_version'     => 2,
+            'editor_script'   => 'iss-control-blocks',
+            'render_callback' => [$this, 'render_footer_info_block'],
+            'attributes'      => [
+                'title'   => ['type' => 'string', 'default' => ''],
+                'section' => ['type' => 'string', 'default' => 'visit'],
+            ],
+        ]);
+
         register_block_type('industriesalon/faq', [
             'api_version'     => 2,
             'editor_script'   => 'iss-control-blocks',
@@ -693,6 +704,13 @@ final class Industriesalon_Steuerung {
                 'variant' => (string) ($attributes['variant'] ?? 'card'),
                 'skin' => (string) ($attributes['skin'] ?? 'default'),
             ]
+        );
+    }
+
+    public function render_footer_info_block(array $attributes = []): string {
+        return $this->render_footer_info(
+            (string) ($attributes['section'] ?? 'visit'),
+            (string) ($attributes['title'] ?? '')
         );
     }
 
@@ -1227,7 +1245,7 @@ final class Industriesalon_Steuerung {
             trim(($general['postal_code'] ?? '') . ' ' . ($general['city'] ?? '')),
         ]);
 
-        if ($variant === 'compact-row' || $variant === 'footer') {
+        if ($variant === 'compact-row') {
             $parts = [];
             if (! empty($address_lines)) {
                 $parts[] = '<span class="iss-contact-card__compact-address">' . esc_html(implode(', ', $address_lines)) . '</span>';
@@ -1247,6 +1265,10 @@ final class Industriesalon_Steuerung {
             }
 
             return '<div class="iss-contact-card iss-contact-card--' . esc_attr($variant) . ' iss-contact-card--skin-' . esc_attr($skin) . '" data-variant="' . esc_attr($variant) . '" data-skin="' . esc_attr($skin) . '">' . implode('<span class="iss-contact-card__separator" aria-hidden="true">·</span>', $parts) . '</div>';
+        }
+
+        if ($variant === 'footer') {
+            return $this->render_footer_contact($title, $contact);
         }
 
         ob_start();
@@ -1275,15 +1297,29 @@ final class Industriesalon_Steuerung {
                     <li><a href="<?php echo esc_url('mailto:' . antispambot((string) $contact['booking_email'])); ?>"><?php echo esc_html((string) $contact['booking_email']); ?></a></li>
                 <?php endif; ?>
                 <?php if (! empty($contact['website'])) : ?>
-                    <li><a href="<?php echo esc_url((string) $contact['website']); ?>" target="_blank" rel="noopener noreferrer"><?php echo esc_html((string) $contact['website']); ?></a></li>
+                    <li><a href="<?php echo esc_url($this->normalize_public_url((string) $contact['website'])); ?>" target="_blank" rel="noopener noreferrer"><?php echo esc_html((string) $contact['website']); ?></a></li>
                 <?php endif; ?>
                 <?php if (! empty($maps['google_maps_url'])) : ?>
-                    <li><a href="<?php echo esc_url((string) $maps['google_maps_url']); ?>" target="_blank" rel="noopener noreferrer"><?php esc_html_e('Google Maps', 'industriesalon-steuerung'); ?></a></li>
+                    <li><a href="<?php echo esc_url($this->normalize_public_url((string) $maps['google_maps_url'])); ?>" target="_blank" rel="noopener noreferrer"><?php esc_html_e('Google Maps', 'industriesalon-steuerung'); ?></a></li>
                 <?php endif; ?>
             </ul>
         </div>
         <?php
         return (string) ob_get_clean();
+    }
+
+    public function render_footer_info(string $section = 'visit', string $title = ''): string {
+        $section = sanitize_key($section);
+
+        if ($section === 'brand') {
+            return $this->render_footer_brand($title);
+        }
+
+        if ($section === 'visit') {
+            return $this->render_footer_visit($title);
+        }
+
+        return '';
     }
 
     public function render_prices(string $title = ''): string {
@@ -1541,10 +1577,11 @@ final class Industriesalon_Steuerung {
             'email'          => sanitize_email($input['email'] ?? ''),
             'booking_email'  => sanitize_email($input['booking_email'] ?? ''),
             'contact_person' => sanitize_text_field($input['contact_person'] ?? ''),
-            'website'        => esc_url_raw($input['website'] ?? ''),
-            'booking_url'    => esc_url_raw($input['booking_url'] ?? ''),
-            'instagram'      => esc_url_raw($input['instagram'] ?? ''),
-            'facebook'       => esc_url_raw($input['facebook'] ?? ''),
+            'website'        => $this->normalize_public_url((string) ($input['website'] ?? '')),
+            'booking_url'    => $this->normalize_public_url((string) ($input['booking_url'] ?? '')),
+            'instagram'      => $this->normalize_public_url((string) ($input['instagram'] ?? '')),
+            'facebook'       => $this->normalize_public_url((string) ($input['facebook'] ?? '')),
+            'youtube'        => $this->normalize_public_url((string) ($input['youtube'] ?? '')),
         ];
     }
 
@@ -2324,10 +2361,25 @@ final class Industriesalon_Steuerung {
         if (str_contains($key, 'phone')) {
             return 'tel:' . $this->normalize_phone_href($value);
         }
-        if (str_contains($key, 'url') || str_contains($key, 'website') || str_contains($key, 'instagram') || str_contains($key, 'facebook') || str_contains($key, 'maps')) {
-            return $value;
+        if (str_contains($key, 'url') || str_contains($key, 'website') || str_contains($key, 'instagram') || str_contains($key, 'facebook') || str_contains($key, 'youtube') || str_contains($key, 'maps')) {
+            return $this->normalize_public_url($value);
         }
         return '';
+    }
+
+    private function normalize_public_url(string $value): string {
+        $value = trim($value);
+        if ($value === '') {
+            return '';
+        }
+
+        if (preg_match('#^(https?):([^/])#i', $value, $matches) === 1) {
+            $value = $matches[1] . '://' . substr($value, strlen($matches[1]) + 1);
+        } elseif (! preg_match('#^[a-z][a-z0-9+\-.]*://#i', $value)) {
+            $value = 'https://' . ltrim($value, '/');
+        }
+
+        return esc_url_raw($value);
     }
 
     private function normalize_phone_href(string $value): string {
@@ -2384,7 +2436,151 @@ final class Industriesalon_Steuerung {
     }
 
     private function default_contact(): array {
-        return ['phone' => '', 'email' => '', 'booking_email' => '', 'contact_person' => '', 'website' => '', 'booking_url' => '', 'instagram' => '', 'facebook' => ''];
+        return ['phone' => '', 'email' => '', 'booking_email' => '', 'contact_person' => '', 'website' => '', 'booking_url' => '', 'instagram' => '', 'facebook' => '', 'youtube' => ''];
+    }
+
+    private function render_footer_brand(string $title = ''): string {
+        $general = get_option(self::OPTION_GENERAL, $this->default_general());
+        $contact = get_option(self::OPTION_CONTACT, $this->default_contact());
+        $tagline = trim((string) ($general['tagline'] ?? ''));
+        $social_links = $this->footer_social_links($contact);
+
+        if ($title === '' && $tagline === '' && $social_links === '') {
+            return '';
+        }
+
+        ob_start();
+        ?>
+        <div class="iss-site-footer__plugin iss-site-footer__plugin--brand">
+            <?php if ($title !== '') : ?>
+                <h3 class="iss-site-footer__title"><?php echo esc_html($title); ?></h3>
+            <?php endif; ?>
+            <?php if ($tagline !== '') : ?>
+                <p class="iss-site-footer__tagline"><?php echo esc_html($tagline); ?></p>
+            <?php endif; ?>
+            <?php if ($social_links !== '') : ?>
+                <?php echo $social_links; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped ?>
+            <?php endif; ?>
+        </div>
+        <?php
+        return (string) ob_get_clean();
+    }
+
+    private function render_footer_visit(string $title = ''): string {
+        $general = get_option(self::OPTION_GENERAL, $this->default_general());
+        $maps = get_option(self::OPTION_MAPS, $this->default_maps());
+        $address_lines = array_filter([
+            trim((string) ($general['site_name'] ?? '')),
+            trim((string) ($general['street'] ?? '')),
+            trim((string) (($general['postal_code'] ?? '') . ' ' . ($general['city'] ?? ''))),
+            trim((string) ($general['district'] ?? '')),
+        ]);
+        $arrival = trim((string) ($general['arrival'] ?? ''));
+        $accessibility = $this->visit_info_accessibility_summary();
+        $maps_url = $this->normalize_public_url((string) ($maps['google_maps_url'] ?? ''));
+
+        if ($title === '' && empty($address_lines) && $arrival === '' && $accessibility === '' && $maps_url === '') {
+            return '';
+        }
+
+        ob_start();
+        ?>
+        <div class="iss-site-footer__plugin iss-site-footer__plugin--visit">
+            <?php if ($title !== '') : ?>
+                <h3 class="iss-site-footer__title"><?php echo esc_html($title); ?></h3>
+            <?php endif; ?>
+            <?php if (! empty($address_lines)) : ?>
+                <div class="iss-site-footer__fact iss-site-footer__fact--address">
+                    <p class="iss-site-footer__text"><?php echo nl2br(esc_html(implode("\n", $address_lines))); ?></p>
+                </div>
+            <?php endif; ?>
+            <?php if ($arrival !== '') : ?>
+                <div class="iss-site-footer__fact iss-site-footer__fact--transport">
+                    <p class="iss-site-footer__fact-label"><?php esc_html_e('ÖPNV', 'industriesalon-steuerung'); ?></p>
+                    <p class="iss-site-footer__text iss-site-footer__transport"><?php echo nl2br(esc_html($arrival)); ?></p>
+                </div>
+            <?php endif; ?>
+            <?php if ($accessibility !== '') : ?>
+                <div class="iss-site-footer__access"><?php echo $this->render_footer_accessibility_badge(); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped ?></div>
+            <?php endif; ?>
+            <?php if ($maps_url !== '') : ?>
+                <p class="iss-site-footer__map-link-wrap"><a class="iss-site-footer__map-link" href="<?php echo esc_url($maps_url); ?>" target="_blank" rel="noopener noreferrer"><?php esc_html_e('Google Maps', 'industriesalon-steuerung'); ?></a></p>
+            <?php endif; ?>
+        </div>
+        <?php
+        return (string) ob_get_clean();
+    }
+
+    private function render_footer_contact(string $title, array $contact): string {
+        $items = [];
+
+        if (! empty($contact['contact_person'])) {
+            $items[] = '<p class="iss-site-footer__text"><strong>' . esc_html__('Ansprechperson', 'industriesalon-steuerung') . ':</strong><br>' . esc_html((string) $contact['contact_person']) . '</p>';
+        }
+        if (! empty($contact['email'])) {
+            $items[] = '<p class="iss-site-footer__text"><strong>' . esc_html__('E-Mail', 'industriesalon-steuerung') . ':</strong><br><a href="' . esc_url('mailto:' . antispambot((string) $contact['email'])) . '">' . esc_html((string) $contact['email']) . '</a></p>';
+        }
+        if (! empty($contact['phone'])) {
+            $items[] = '<p class="iss-site-footer__text"><strong>' . esc_html__('Telefon', 'industriesalon-steuerung') . ':</strong><br><a href="' . esc_url('tel:' . $this->normalize_phone_href((string) $contact['phone'])) . '">' . esc_html((string) $contact['phone']) . '</a></p>';
+        }
+        if (! empty($contact['booking_email'])) {
+            $items[] = '<p class="iss-site-footer__text"><strong>' . esc_html__('Buchungen', 'industriesalon-steuerung') . ':</strong><br><a href="' . esc_url('mailto:' . antispambot((string) $contact['booking_email'])) . '">' . esc_html((string) $contact['booking_email']) . '</a></p>';
+        }
+        if (! empty($contact['website'])) {
+            $items[] = '<p class="iss-site-footer__text"><a href="' . esc_url($this->normalize_public_url((string) $contact['website'])) . '" target="_blank" rel="noopener noreferrer">' . esc_html__('Website', 'industriesalon-steuerung') . '</a></p>';
+        }
+
+        if (empty($items)) {
+            return '';
+        }
+
+        return '<div class="iss-site-footer__plugin iss-site-footer__plugin--contact">' . ($title !== '' ? '<h3 class="iss-site-footer__title">' . esc_html($title) . '</h3>' : '') . implode('', $items) . '</div>';
+    }
+
+    private function footer_social_links(array $contact): string {
+        $services = [
+            'facebook' => __('Facebook', 'industriesalon-steuerung'),
+            'instagram' => __('Instagram', 'industriesalon-steuerung'),
+            'youtube' => __('YouTube', 'industriesalon-steuerung'),
+        ];
+        $items = [];
+
+        foreach ($services as $key => $label) {
+            $url = $this->normalize_public_url((string) ($contact[$key] ?? ''));
+            if ($url === '') {
+                continue;
+            }
+            $items[] = '<li class="iss-site-footer__social-item"><a class="iss-site-footer__social-link" href="' . esc_url($url) . '" target="_blank" rel="noopener noreferrer" aria-label="' . esc_attr($label) . '">' . $this->footer_social_icon($key) . '<span class="screen-reader-text">' . esc_html($label) . '</span></a></li>';
+        }
+
+        if (empty($items)) {
+            return '';
+        }
+
+        return '<ul class="iss-site-footer__social-list">' . implode('', $items) . '</ul>';
+    }
+
+    private function footer_social_icon(string $service): string {
+        $symbols = [
+            'facebook' => 'iss-icon-facebook',
+            'instagram' => 'iss-icon-instagram',
+            'youtube' => 'iss-icon-youtube',
+        ];
+
+        if (! isset($symbols[$service])) {
+            return '';
+        }
+
+        $sprite_url = trailingslashit(get_stylesheet_directory_uri()) . 'assets/img/iss-social-sprite.svg';
+        $symbol = $sprite_url . '#' . $symbols[$service];
+
+        return '<svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><use href="' . esc_url($symbol) . '" xlink:href="' . esc_url($symbol) . '"></use></svg>';
+    }
+
+    private function render_footer_accessibility_badge(): string {
+        $badge_url = plugins_url('assets/barrierefreiheit-geprueft-badge.webp', __FILE__);
+
+        return '<img class="iss-site-footer__access-badge" src="' . esc_url($badge_url) . '" alt="' . esc_attr__('Barrierefreiheit geprüft', 'industriesalon-steuerung') . '" loading="lazy" decoding="async">';
     }
 
     private function default_maps(): array {
