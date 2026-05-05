@@ -1,5 +1,56 @@
 # Changelog
 
+## 2026-05-05
+- Added a shared local place-relation layer for Atlas, events, tours, posts, and archive content:
+  - new plugin `plugins/iss-relations`
+  - relation meta source `iss_related_places`
+  - hidden query/index taxonomy `iss_place_ref`
+  - editor metabox plus automatic sync helpers
+  - dynamic block `iss/related-content`
+  - first relation consumption on `register_place`, `veranstaltung`, and `fuehrung` output
+- Mirrored the WF Museum archive into local WordPress content instead of depending on the remote site:
+  - new plugin `plugins/iss-wf-import`
+  - local archive CPTs:
+    - `archivbeitrag`
+    - `archivsammlung`
+    - `archivobjekt`
+  - imported WF article content with local provenance/meta
+  - added local routes/templates for archive collections and archive objects
+  - added review tooling for place suggestions on imported archive content
+- Extended the archive mirror beyond editorial posts so curated albums and museum-digital objects survive locally as reusable data:
+  - imported museum-digital objects into `archivobjekt`
+  - localized museum-digital media into local attachments
+  - imported WF collection/album pages into `archivsammlung`
+  - stored ordered collection membership and object-to-object sequence relations
+  - repaired empty museum-digital stub objects with a dedicated CLI recovery path
+- Extended `register_place` image discovery beyond Wikimedia Commons:
+  - kept Wikimedia as the direct local-import source
+  - added Deutsche Digitale Bibliothek as discovery-only suggestions
+  - added Europeana API-backed discovery using the local API key
+  - preserved provider/source/provenance links while intentionally not turning DDB/Europeana into direct import flows
+- Created session backup artifacts for the richer local content state:
+  - DB dump
+  - WXR export
+  - uploads archive
+  - SHA manifest
+  - all saved under `/home/vladimir/wp/backups`
+- Refactored theme and plugin UI ownership to stop plugins from acting as the theme:
+  - split page-specific and single-specific CSS out of overloaded shared styles
+  - added dedicated theme bundles for:
+    - page archive/events/ausstellungen/museum/videos/verein/publications
+    - single ausstellung/content/event/tour
+    - timeline, calendar, and fuehrungen skins
+  - normalized global CTA/button/link styles around one industrial shared theme system
+  - moved timeline/calendar/tour/facts presentation skin out of `iss-programm` and `iss-fuehrungen` plugin CSS into theme-owned stylesheets
+- Normalized exhibition and event card systems onto one shared theme card family:
+  - `/ausstellungen/` `Draussen` route cards and `/veranstaltungen/` `Formate` cards now use shared `iss-small-card iss-small-card--split`
+  - removed the older parallel quiet-card/event-format card layer from those sections
+  - kept card structure global in `themes/industriesalon/assets/css/cards.css` instead of page-local duplication
+- Cleaned the exhibition landing template/runtime boundary:
+  - removed the remaining page-owned preset HTML hack from `/ausstellungen/`
+  - added real preset-button support to the `industriesalon/timeline-query` block/plugin
+  - kept the page disk-authoritative and aligned live rendering back to the shared timeline/card system
+
 ## 2026-05-04
 - Recast the Schöneweide Atlas runtime around a dedicated Atlas payload instead of the full register dataset:
   - added `/wp-json/iss-register/v1/atlas`

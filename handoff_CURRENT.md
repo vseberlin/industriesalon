@@ -4,77 +4,77 @@
 - `committed`
 
 ## Date / Window
-- Date: `2026-05-04`
+- Date: `2026-05-05`
 - Timezone: `Europe/Berlin`
 
 ## Branch / Commit
 - Branch: `master`
-- HEAD before final commit: `e39b773`
+- HEAD before final commit: `d74f0e7`
 
 ## What Was Done This Session
-- Continued the Schöneweide Atlas/public-layer work in the active theme and register plugin:
-  - added a dedicated Atlas REST payload in `industriesalon-schoeneweide-register`
-  - switched `/schoneweide/` to that lighter Atlas endpoint instead of the full register payload
-  - moved Atlas-era/story summarization into PHP so the theme JS no longer has to derive as much from long research fields
-  - stopped enqueuing unrelated `ueber-uns` / `iss-flex-split` styles on the Atlas page
-  - switched the Atlas hero image source to the lighter `atlas-header-1536x768.png`
-- Removed Touchtable from the active runtime/editor scene while preserving local source snapshots:
-  - plugin bootstrap no longer loads the Touchtable pull/review modules
-  - Atlas story/timeline payloads now resolve media locally only
-  - cached Atlas story payloads are enriched from current local attachments on read
-  - verified the named value pages are preserved locally as source snapshots
-- Localized media for the named Touchtable value pages and verified local timeline image coverage:
-  - `transformatorenwerk-oberschoeneweide`
-  - `kabelwerk-oberspree`
-  - `stromnetz-berlin`
-  - `htw-berlin`
-  - `elektro-innung-berlin`
-  - `stephanus-stiftung-betriebsstaette-wilhelminenhof`
-  - `getraenke-lydicke`
-  - `first-sensor-ag`
-  - `sven-thomsen`
-- Added the first editor-facing external image sourcing flow for `register_place`:
-  - new `Bildvorschläge` metabox in `industriesalon-schoeneweide-register`
-  - Wikimedia Commons search driven by local title, address, and coordinates
-  - candidate storage is local on the post
-  - selected images import into existing image groups:
-    - `Archivbilder`
-    - `Aktuelle Bilder`
-    - `Dokumentbilder`
-  - imports go into the Media Library and default to image-group visibility `pending`
+- Added the first shared place relation layer across Atlas, events, tours, posts, and future archive content:
+  - new plugin `plugins/iss-relations`
+  - relation meta source of truth `iss_related_places`
+  - hidden query/index taxonomy `iss_place_ref`
+  - editor metabox and sync helpers
+  - dynamic block `iss/related-content`
+- Mirrored the WF archive and museum-digital material into local archive entities instead of leaving them as remote-only HTML:
+  - new plugin `plugins/iss-wf-import`
+  - local CPTs:
+    - `archivbeitrag`
+    - `archivsammlung`
+    - `archivobjekt`
+  - localized media import, provenance meta, collection/object relations, and repair tooling for empty museum-digital stubs
+  - public routes and theme templates for archive collections and archive objects
+- Extended external archive/image discovery:
+  - kept Wikimedia Commons import flow in `industriesalon-schoeneweide-register`
+  - added Deutsche Digitale Bibliothek as discovery-only source
+  - added Europeana API-backed discovery using the local key
+  - kept DDB/Europeana as review/discovery sources, not direct local import paths
+- Refactored the active theme/plugin UI ownership so the theme owns presentation and plugins keep structure/runtime:
+  - split page/single-specific CSS out of the overloaded shared pattern sheet
+  - added dedicated page and single stylesheet bundles in `themes/industriesalon/assets/css`
+  - normalized global CTA/button/link styling onto one industrial theme system
+  - moved timeline/calendar/tour/facts visual skins out of plugin CSS and into theme-owned skin files
+  - normalized `/ausstellungen/` and `/veranstaltungen/` cards onto one shared card family in `cards.css`
+  - removed the last exhibition preset HTML hack by rendering preset buttons from the timeline-query block/plugin
+- Created local recovery artifacts for the now much richer content/media state:
+  - DB dump
+  - WXR export
+  - uploads archive
+  - checksum manifest under `/home/vladimir/wp/backups`
 
 ## Verification
 - Active theme confirmed: `industriesalon`
-- Active plugin confirmed: `industriesalon-schoeneweide-register`
-- Runtime checks confirmed Touchtable runtime hooks are off:
-  - `pull-off`
-  - `review-off`
-- Named value-page media/timeline audit after localization:
-  - `transformatorenwerk-oberschoeneweide`: `events=4`, `local_event_images=4`, `remote_event_images=0`
-  - `kabelwerk-oberspree`: `events=2`, `local_event_images=2`, `remote_event_images=0`
-  - the remaining audited pages keep local text/media where present and currently have no timeline events
-- PHP lint passed in the running `wp_app` container for:
-  - `plugins/industriesalon-schoeneweide-register/includes/image-suggestions.php`
-  - `plugins/industriesalon-schoeneweide-register/industriesalon-schoeneweide-register.php`
-- JS syntax check passed:
-  - `plugins/industriesalon-schoeneweide-register/assets/js/register-image-suggestions-admin.js`
-- Live WP-CLI verification for Wikimedia sourcing:
-  - `HTW Campus` returned `18` image candidates from Wikimedia Commons
-  - import workflow was smoke-tested end to end on a temporary draft `register_place`
-  - imported candidate saved into `current_images` with `visibility=pending`
+- Active plugins rechecked in the final CSS/UI pass:
+  - `iss-programm`
+  - `iss-fuehrungen`
+- Live route checks were repeatedly verified during the session on:
+  - `/ausstellungen/`
+  - `/veranstaltungen/`
+  - `/kalender/`
+  - `/archivsammlungen/`
+  - `/archivobjekte/`
+- Shared-card normalization was verified live:
+  - `/ausstellungen/` `Draussen` route cards and `/veranstaltungen/` `Formate` cards now both render `iss-small-card iss-small-card--split`
+- Timeline-query preset buttons on `/ausstellungen/` are now plugin-rendered instead of raw page HTML
+- Archive object stub repair completed successfully so the local museum-digital mirror no longer consists of empty shell posts
 
 ## Important Notes
-- Touchtable source snapshots still exist locally as archive/provenance via `register_source_item`; they are no longer part of the active runtime/editor flow.
-- The old Touchtable source/admin/review files still exist on disk, but they are no longer loaded by the plugin bootstrap.
-- The new image-sourcing flow is Wikimedia-only in this slice. Flickr and Google preview were intentionally not added.
-- Google should stay preview-only if added later; it is not a clean local-import source.
+- `plugins/iss-relations` and `plugins/iss-wf-import` are now real local infrastructure in this repo; they are not temporary experiments.
+- The new CSS split is theme-owned:
+  - page/single bundles live in `themes/industriesalon/assets/css`
+  - plugin CSS for `iss-programm` and `iss-fuehrungen` was reduced toward structure/state only
+- The remaining visible placeholder banner content on `/ausstellungen/` is unrelated to the card/template cleanup; it comes from the notice/banner content layer.
+- Backup snapshot from this session exists in `/home/vladimir/wp/backups` with timestamp `2026-05-05_12-53`.
 
 ## Next Recommended Steps
-- Improve the `register_place` editor structure for non-technical editors by splitting raw register fields into smaller editorial groups instead of one large meta box.
-- Add field-level promote actions from local source snapshots into curated `register_place` content if historical Touchtable material should become first-class local dossier content.
-- Extend image sourcing only after the Wikimedia workflow settles:
-  - Flickr with explicit license filtering
-  - optional Google preview only, not local import
+- Continue editorial curation on top of the new relation/archive layer:
+  - review archive/object place suggestions
+  - approve obvious links into `iss_related_places`
+- Run a calmer responsive QA pass across the newly split page/single stylesheets and remove any remaining selectors that still belong in the theme skin rather than shared pattern CSS.
+- Resolve the remaining notice/banner placeholder content if `/ausstellungen/` stays a public-facing landing.
+- If external discovery stays important, tune DDB/Europeana ranking and provider filtering rather than adding more ad hoc source-specific UI.
 
 ## Continuity Prompt
 - Start next session with: `read /home/vladimir/wp/handoff_CURRENT.md`
