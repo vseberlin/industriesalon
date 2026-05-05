@@ -1,1239 +1,565 @@
-.iss-oberschoeneweide-atlas-page {
-  --iss-atlas-ink: #171514;
-  --iss-atlas-muted: rgba(23, 21, 20, 0.68);
-  --iss-atlas-line: rgba(23, 21, 20, 0.11);
-  --iss-atlas-soft-line: rgba(23, 21, 20, 0.08);
-  --iss-atlas-paper: #fffdfa;
-  --iss-atlas-surface: #fffaf5;
-  --iss-atlas-surface-alt: #f6efe9;
-  --iss-atlas-tint: #f9ede8;
-  --iss-atlas-accent: #cb272d;
-  --iss-atlas-accent-dark: #94141b;
-  --iss-atlas-shadow: 0 2rem 5rem rgba(44, 28, 18, 0.12);
-  --iss-atlas-radius-xl: 2rem;
-  --iss-atlas-radius-lg: 1.5rem;
-  --iss-atlas-radius-md: 1rem;
-  color: var(--iss-atlas-ink);
-  background:
-    radial-gradient(circle at 12% 8%, rgba(203, 39, 45, 0.08), transparent 22rem),
-    radial-gradient(circle at 88% 12%, rgba(53, 92, 142, 0.08), transparent 26rem),
-    linear-gradient(180deg, #fffcf8 0%, #f8f2ec 100%);
+.iss-schoneweide-atlas-page {
+  --iss-schoneweide-panel: #fffdf9;
+  --iss-schoneweide-panel-border: rgba(30, 30, 30, 0.12);
+  --iss-schoneweide-muted: rgba(30, 30, 30, 0.7);
+  --iss-schoneweide-soft-muted: rgba(30, 30, 30, 0.56);
+  color: var(--iss-black);
+  background: linear-gradient(180deg, #fffdf8 0%, #f5eee6 100%);
 }
 
-.iss-oberschoeneweide-atlas-page .section {
-  overflow: clip;
-}
-
-.iss-oberschoeneweide-atlas-page .iss-container {
-  width: min(1680px, calc(100vw - 3rem));
-}
-
-.iss-oberschoeneweide-atlas-page .iss-heading__title,
-.iss-oberschoeneweide-atlas-page .iss-heading__text,
-.iss-oberschoeneweide-atlas-page .iss-kicker {
-  color: var(--iss-atlas-ink);
-}
-
-.iss-oberschoeneweide-atlas-page .iss-atlas-loading {
-  margin: 0;
-  color: var(--iss-atlas-muted);
-}
-
-.iss-oberschoeneweide-atlas-page .iss-atlas-eyebrow,
-.iss-oberschoeneweide-atlas-page .iss-atlas-story__meta,
-.iss-oberschoeneweide-atlas-page .iss-atlas-hero__stat-label,
-.iss-oberschoeneweide-atlas-page .iss-atlas-eras__eyebrow,
-.iss-oberschoeneweide-atlas-page .iss-atlas-link-card__eyebrow,
-.iss-oberschoeneweide-atlas-page .iss-atlas-minimap__eyebrow,
-.iss-oberschoeneweide-atlas-page .iss-atlas-story__fact-label,
-.iss-oberschoeneweide-atlas-page .iss-atlas-stage__tag {
-  font-size: 0.75rem;
-  font-weight: 700;
-  letter-spacing: 0.16em;
-  line-height: 1.2;
-  text-transform: uppercase;
-}
-
-.iss-oberschoeneweide-atlas-page .iss-atlas-eyebrow,
-.iss-oberschoeneweide-atlas-page .iss-atlas-story__meta,
-.iss-oberschoeneweide-atlas-page .iss-atlas-stage__tag {
-  color: var(--iss-atlas-accent);
-}
-
-.wp-block-cover.iss-front-hero.iss-atlas-cover {
+.wp-block-cover.iss-front-hero.iss-schoneweide-atlas-hero {
   --iss-hero-overlay: linear-gradient(
-    96deg,
-    rgba(19, 18, 18, 0.68) 0%,
-    rgba(19, 18, 18, 0.42) 34%,
-    rgba(19, 18, 18, 0.18) 62%,
-    rgba(19, 18, 18, 0.42) 100%
+    94deg,
+    rgba(18, 16, 15, 0.74) 0%,
+    rgba(18, 16, 15, 0.44) 34%,
+    rgba(18, 16, 15, 0.18) 66%,
+    rgba(18, 16, 15, 0.42) 100%
   );
 }
 
-.wp-block-cover.iss-front-hero.iss-atlas-cover > .wp-block-cover__inner-container {
-  grid-template-columns: minmax(0, 1fr);
-  align-items: end;
-  align-content: end;
+.iss-schoneweide-atlas-page .iss-schoneweide-atlas-hero__text {
+  max-width: 38rem;
 }
 
-.wp-block-cover.iss-front-hero.iss-atlas-cover .wp-block-cover__image-background {
-  object-position: center center;
+.iss-schoneweide-atlas-page .iss-schoneweide-atlas-hero-note {
+  max-width: 24rem;
+  padding: 1.25rem 1.4rem 1.35rem;
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  background: rgba(24, 21, 19, 0.54);
+  color: var(--iss-white);
+  backdrop-filter: blur(8px);
 }
 
-.iss-oberschoeneweide-atlas-page .iss-atlas-hero {
-  display: grid;
-  grid-template-columns: minmax(0, 0.92fr) minmax(0, 1.38fr);
-  gap: 2rem;
-  align-items: stretch;
-}
-
-.iss-oberschoeneweide-atlas-page .iss-atlas-hero__lead,
-.iss-oberschoeneweide-atlas-page .iss-atlas-hero__panorama,
-.iss-oberschoeneweide-atlas-page .iss-atlas-board,
-.iss-oberschoeneweide-atlas-page .iss-atlas-link-card,
-.iss-oberschoeneweide-atlas-page .iss-atlas-project__note,
-.iss-oberschoeneweide-atlas-page .iss-atlas-dossier-card {
-  background: rgba(255, 253, 250, 0.88);
-  border: 1px solid rgba(255, 255, 255, 0.8);
-  border-radius: var(--iss-atlas-radius-xl);
-  box-shadow: var(--iss-atlas-shadow);
-  backdrop-filter: blur(10px);
-}
-
-.iss-oberschoeneweide-atlas-page .iss-atlas-hero__lead {
-  padding: 2.6rem clamp(1.6rem, 2.6vw, 3rem);
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
-  min-height: 36rem;
-}
-
-.iss-oberschoeneweide-atlas-page .iss-atlas-hero__title {
-  margin: 0.8rem 0 1.1rem;
-  font-size: clamp(3.2rem, 6vw, 5.8rem);
-  line-height: 0.95;
-  letter-spacing: -0.05em;
-}
-
-.iss-oberschoeneweide-atlas-page .iss-atlas-hero__text {
-  max-width: 34rem;
+.iss-schoneweide-atlas-page .iss-schoneweide-atlas-hero-note__title,
+.iss-schoneweide-atlas-page .iss-schoneweide-atlas-hero-note__text {
   margin: 0;
-  color: var(--iss-atlas-muted);
-  font-size: 1.18rem;
-  line-height: 1.6;
+  color: inherit;
 }
 
-.iss-oberschoeneweide-atlas-page .iss-atlas-hero__actions,
-.iss-oberschoeneweide-atlas-page .iss-atlas-story__actions {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 0.9rem;
-  margin-top: 2rem;
+.iss-schoneweide-atlas-page .iss-schoneweide-atlas-hero-note__title {
+  font-size: clamp(1.25rem, 1rem + 0.6vw, 1.8rem);
+  line-height: 1.12;
 }
 
-.iss-oberschoeneweide-atlas-page .iss-atlas-button {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  gap: 0.55rem;
-  min-height: 3.2rem;
-  padding: 0 1.3rem;
-  border: 1px solid var(--iss-atlas-line);
-  border-radius: 999px;
-  background: rgba(255, 255, 255, 0.82);
-  color: var(--iss-atlas-ink);
-  font-weight: 700;
-  line-height: 1;
-  text-decoration: none;
-  transition: transform 160ms ease, border-color 160ms ease, background-color 160ms ease;
+.iss-schoneweide-atlas-page .iss-schoneweide-atlas-hero-note__text {
+  margin-top: 0.75rem;
+  line-height: 1.58;
+  color: rgba(255, 255, 255, 0.84);
 }
 
-.iss-oberschoeneweide-atlas-page .iss-atlas-button:hover,
-.iss-oberschoeneweide-atlas-page .iss-atlas-button:focus-visible {
-  border-color: rgba(203, 39, 45, 0.34);
-  transform: translateY(-1px);
+.iss-schoneweide-atlas-page .iss-front-hero__actions-wrap {
+  position: relative;
+  z-index: 2;
+  margin-top: -2rem;
 }
 
-.iss-oberschoeneweide-atlas-page .iss-atlas-button--primary {
-  border-color: transparent;
-  background: linear-gradient(135deg, var(--iss-atlas-accent), var(--iss-atlas-accent-dark));
-  color: #fff;
+.iss-schoneweide-atlas-stage-section {
+  padding-top: 2rem;
+  padding-bottom: 1.5rem;
 }
 
-.iss-oberschoeneweide-atlas-page .iss-atlas-hero__panorama {
-  padding: 1.4rem;
-  display: flex;
-  flex-direction: column;
+.iss-schoneweide-atlas-stage-section > .iss-container {
+  max-width: 108rem;
+}
+
+.iss-schoneweide-atlas-stories-section {
+  padding-top: 0.75rem;
+}
+
+.iss-schoneweide-atlas-stories-section > .iss-container {
+  max-width: 92rem;
+}
+
+.iss-schoneweide-atlas {
+  display: grid;
+  grid-template-columns: minmax(18rem, 21rem) minmax(0, 1fr);
+  gap: 1.25rem;
+  align-items: start;
+}
+
+.iss-schoneweide-atlas__sidebar,
+.iss-schoneweide-atlas__map-surface {
+  border: 1px solid var(--iss-schoneweide-panel-border);
+  background: var(--iss-schoneweide-panel);
+}
+
+.iss-schoneweide-atlas__sidebar {
+  display: grid;
   gap: 1rem;
-  min-height: 36rem;
+  padding: 1.3rem;
 }
 
-.iss-oberschoeneweide-atlas-page .iss-atlas-hero__stats {
-  display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: 0.8rem;
+.iss-schoneweide-atlas__panel-heading .iss-heading__title,
+.iss-schoneweide-atlas__panel-heading .iss-heading__text {
+  margin-bottom: 0;
 }
 
-.iss-oberschoeneweide-atlas-page .iss-atlas-hero__stat {
-  padding: 1rem 0.2rem 0.2rem;
-  border-left: 1px solid var(--iss-atlas-soft-line);
-}
-
-.iss-oberschoeneweide-atlas-page .iss-atlas-hero__stat:first-child {
-  border-left: 0;
-}
-
-.iss-oberschoeneweide-atlas-page .iss-atlas-hero__stat-value {
-  display: block;
-  margin-bottom: 0.4rem;
-  color: var(--iss-atlas-accent);
-  font-size: clamp(1.9rem, 2.8vw, 3rem);
-  font-weight: 700;
-  line-height: 1;
-}
-
-.iss-oberschoeneweide-atlas-page .iss-atlas-hero__stat-label {
-  color: var(--iss-atlas-muted);
-}
-
-.iss-oberschoeneweide-atlas-page .iss-atlas-hero__image {
-  position: relative;
-  flex: 1 1 auto;
-  min-height: 24rem;
-  overflow: hidden;
-  border-radius: calc(var(--iss-atlas-radius-xl) - 0.4rem);
-  border: 1px solid rgba(255, 255, 255, 0.56);
-  background:
-    linear-gradient(180deg, rgba(255, 252, 247, 0.4), rgba(255, 252, 247, 0.08) 38%, rgba(255, 252, 247, 0.34) 100%),
-    linear-gradient(100deg, rgba(244, 236, 224, 0.4) 0 24%, rgba(255, 255, 255, 0.04) 48%, rgba(255, 255, 255, 0.24) 100%);
-  backdrop-filter: blur(5px);
-  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.32);
-}
-
-.iss-oberschoeneweide-atlas-page .iss-atlas-hero__yearrail {
-  position: absolute;
-  inset: auto 1.5rem 1.2rem 1.5rem;
-  display: grid;
-  grid-template-columns: repeat(6, minmax(0, 1fr));
-  gap: 0.8rem;
-  align-items: end;
-}
-
-.iss-oberschoeneweide-atlas-page .iss-atlas-hero__year {
-  position: relative;
-  border: 0;
-  padding: 1.3rem 0 0;
-  background: transparent;
-  color: rgba(23, 21, 20, 0.74);
-  font-weight: 700;
-  line-height: 1;
-  text-align: center;
-  cursor: pointer;
-}
-
-.iss-oberschoeneweide-atlas-page .iss-atlas-hero__year::before {
-  content: "";
-  position: absolute;
-  inset: 0.25rem 50% auto;
-  width: 1px;
-  height: 1rem;
-  background: rgba(23, 21, 20, 0.16);
-}
-
-.iss-oberschoeneweide-atlas-page .iss-atlas-hero__year::after {
-  content: "";
-  position: absolute;
-  inset: auto 50% 1.05rem;
-  width: 0.72rem;
-  height: 0.72rem;
-  border: 3px solid #fff;
-  border-radius: 50%;
-  background: rgba(23, 21, 20, 0.22);
-  transform: translateX(-50%);
-  box-shadow: 0 0 0 1px rgba(23, 21, 20, 0.08);
-}
-
-.iss-oberschoeneweide-atlas-page .iss-atlas-hero__year.is-active {
-  color: var(--iss-atlas-accent);
-}
-
-.iss-oberschoeneweide-atlas-page .iss-atlas-hero__year.is-active::after {
-  background: var(--iss-atlas-accent);
-  box-shadow: 0 0 0 0.45rem rgba(203, 39, 45, 0.14);
-}
-
-.iss-oberschoeneweide-atlas-page .iss-atlas-mode-pills,
-.iss-oberschoeneweide-atlas-page .iss-atlas-link-grid,
-.iss-oberschoeneweide-atlas-page .iss-atlas-story__nav,
-.iss-oberschoeneweide-atlas-page .iss-atlas-story__facts,
-.iss-oberschoeneweide-atlas-page .iss-atlas-story__notes,
-.iss-oberschoeneweide-atlas-page .iss-atlas-dossier-card__meta {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 0.9rem;
-}
-
-.iss-oberschoeneweide-atlas-page .iss-atlas-stage-section {
-  background:
-    linear-gradient(180deg, rgba(255, 255, 255, 0.92), rgba(250, 244, 238, 0.98)),
-    linear-gradient(90deg, rgba(23, 21, 20, 0.04), rgba(23, 21, 20, 0));
-}
-
-.iss-oberschoeneweide-atlas-page .iss-atlas-mode-pills {
-  gap: 0;
-  margin-bottom: 2rem;
-  border: 1px solid rgba(23, 21, 20, 0.14);
-  background: rgba(255, 255, 255, 0.92);
-  box-shadow: 0 1rem 2.4rem rgba(44, 28, 18, 0.06);
-}
-
-.iss-oberschoeneweide-atlas-page .iss-atlas-mode-pill {
-  min-width: 0;
-  flex: 1 1 0;
-  padding: 1.25rem 1.5rem 1.1rem;
-  border-right: 1px solid rgba(23, 21, 20, 0.12);
-  border-radius: 0;
-  background: transparent;
-  color: var(--iss-atlas-ink);
-  text-decoration: none;
-}
-
-.iss-oberschoeneweide-atlas-page .iss-atlas-mode-pill:last-child {
-  border-right: 0;
-}
-
-.iss-oberschoeneweide-atlas-page .iss-atlas-mode-pill strong,
-.iss-oberschoeneweide-atlas-page .iss-atlas-mode-pill span {
-  display: block;
-}
-
-.iss-oberschoeneweide-atlas-page .iss-atlas-mode-pill strong {
-  margin-bottom: 0.35rem;
-  font-size: 1.1rem;
-  letter-spacing: 0.12em;
-  text-transform: uppercase;
-}
-
-.iss-oberschoeneweide-atlas-page .iss-atlas-mode-pill span {
-  color: var(--iss-atlas-muted);
-  font-size: 0.98rem;
-}
-
-.iss-oberschoeneweide-atlas-page .iss-atlas-mode-pill.is-active {
-  position: relative;
-  background: rgba(255, 250, 248, 0.92);
-}
-
-.iss-oberschoeneweide-atlas-page .iss-atlas-mode-pill.is-active strong {
-  color: var(--iss-atlas-accent);
-}
-
-.iss-oberschoeneweide-atlas-page .iss-atlas-mode-pill.is-active::after {
-  content: "";
-  position: absolute;
-  inset: auto 0 0;
-  height: 4px;
-  background: var(--iss-atlas-accent);
-}
-
-.iss-oberschoeneweide-atlas-page .iss-atlas-stage-intro {
-  display: grid;
-  gap: 0.45rem;
-  max-width: 58rem;
-  margin-bottom: 1.6rem;
-}
-
-.iss-oberschoeneweide-atlas-page .iss-atlas-stage-intro__title {
+.iss-schoneweide-atlas__scope-note {
   margin: 0;
-  font-size: clamp(2.2rem, 4vw, 3.3rem);
-  line-height: 1.02;
-  letter-spacing: -0.04em;
-}
-
-.iss-oberschoeneweide-atlas-page .iss-atlas-stage-intro__text {
-  margin: 0;
-  color: var(--iss-atlas-muted);
-  font-size: 1.15rem;
+  color: var(--iss-schoneweide-muted);
+  font-size: 0.96rem;
   line-height: 1.55;
 }
 
-.iss-oberschoeneweide-atlas-page .iss-atlas-board {
-  display: grid;
-  grid-template-columns: 17rem minmax(0, 1fr) 22rem;
-  gap: 0;
-  border: 1px solid rgba(23, 21, 20, 0.14);
-  background: rgba(255, 255, 255, 0.92);
-  box-shadow: 0 1.2rem 3rem rgba(44, 28, 18, 0.06);
-}
-
-.iss-oberschoeneweide-atlas-page .iss-atlas-eras,
-.iss-oberschoeneweide-atlas-page .iss-atlas-minimap {
-  padding: 1.35rem;
-  border-radius: 0;
-  background: rgba(255, 255, 255, 0.92);
-  border: 0;
-}
-
-.iss-oberschoeneweide-atlas-page .iss-atlas-eras__intro {
-  display: grid;
-  gap: 0.45rem;
-  padding-bottom: 1rem;
-  border-bottom: 1px solid var(--iss-atlas-soft-line);
-}
-
-.iss-oberschoeneweide-atlas-page .iss-atlas-eras__title {
-  font-size: 1rem;
-  line-height: 1.35;
-}
-
-.iss-oberschoeneweide-atlas-page .iss-atlas-eras__item {
+.iss-schoneweide-atlas__search input {
   width: 100%;
+  min-height: 3rem;
+  padding: 0 0.95rem;
+  border: 1px solid var(--iss-border);
+  background: var(--iss-white);
+  color: inherit;
+  font: inherit;
+}
+
+.iss-schoneweide-atlas__filter-block {
   display: grid;
-  grid-template-columns: 1rem minmax(0, 1fr) auto;
-  gap: 0.9rem;
-  align-items: start;
-  padding: 1rem 0.2rem;
-  border: 0;
-  border-bottom: 1px solid var(--iss-atlas-soft-line);
-  background: transparent;
-  color: var(--iss-atlas-ink);
-  text-align: left;
-  cursor: pointer;
+  gap: 0.6rem;
 }
 
-.iss-oberschoeneweide-atlas-page .iss-atlas-eras__item:last-child {
-  border-bottom: 0;
-}
-
-.iss-oberschoeneweide-atlas-page .iss-atlas-eras__dot {
-  width: 0.72rem;
-  height: 0.72rem;
-  margin-top: 0.25rem;
-  border-radius: 50%;
-  background: rgba(23, 21, 20, 0.32);
-  box-shadow: 0 0 0 0 rgba(203, 39, 45, 0);
-  transition: box-shadow 160ms ease, background-color 160ms ease;
-}
-
-.iss-oberschoeneweide-atlas-page .iss-atlas-eras__item.is-active .iss-atlas-eras__dot {
-  background: var(--iss-atlas-accent);
-  box-shadow: 0 0 0 0.35rem rgba(203, 39, 45, 0.15);
-}
-
-.iss-oberschoeneweide-atlas-page .iss-atlas-eras__body {
-  display: grid;
-  gap: 0.18rem;
-}
-
-.iss-oberschoeneweide-atlas-page .iss-atlas-eras__caption,
-.iss-oberschoeneweide-atlas-page .iss-atlas-eras__count,
-.iss-oberschoeneweide-atlas-page .iss-atlas-minimap__meta,
-.iss-oberschoeneweide-atlas-page .iss-atlas-story__summary,
-.iss-oberschoeneweide-atlas-page .iss-atlas-story__note-text,
-.iss-oberschoeneweide-atlas-page .iss-atlas-project__note li,
-.iss-oberschoeneweide-atlas-page .iss-atlas-dossier-card__text,
-.iss-oberschoeneweide-atlas-page .iss-atlas-dossier-card__address {
-  color: var(--iss-atlas-muted);
-}
-
-.iss-oberschoeneweide-atlas-page .iss-atlas-eras__item.is-active {
-  background: linear-gradient(90deg, rgba(203, 39, 45, 0.06), rgba(203, 39, 45, 0));
-}
-
-.iss-oberschoeneweide-atlas-page .iss-atlas-spotlight {
-  display: grid;
-  gap: 1rem;
-  padding: 1.35rem;
-  border-left: 1px solid rgba(23, 21, 20, 0.12);
-  border-right: 1px solid rgba(23, 21, 20, 0.12);
-}
-
-.iss-oberschoeneweide-atlas-page .iss-atlas-stage,
-.iss-oberschoeneweide-atlas-page .iss-atlas-story {
-  padding: 1.35rem;
-  border-radius: 0;
-  background: rgba(255, 255, 255, 0.92);
-  border: 1px solid rgba(23, 21, 20, 0.1);
-}
-
-.iss-oberschoeneweide-atlas-page .iss-atlas-stage__frame {
-  position: relative;
-  display: grid;
-  grid-template-columns: minmax(0, 0.86fr) minmax(0, 1fr);
-  gap: 1.2rem;
-}
-
-.iss-oberschoeneweide-atlas-page .iss-atlas-stage__panel {
-  position: relative;
-  min-height: 0;
-  display: grid;
-  grid-template-rows: minmax(14rem, 18rem) auto;
-  overflow: hidden;
-  border: 1px solid rgba(23, 21, 20, 0.12);
-  border-radius: 0;
-  background: rgba(255, 255, 255, 0.98);
-  box-shadow: 0 0.9rem 2rem rgba(44, 28, 18, 0.05);
-}
-
-.iss-oberschoeneweide-atlas-page .iss-atlas-stage__panel::after {
-  content: "";
-  position: absolute;
-  inset: 0 auto 0 0;
-  width: 6px;
-  background: var(--iss-atlas-accent);
-}
-
-.iss-oberschoeneweide-atlas-page .iss-atlas-stage__panel-media {
-  position: relative;
-  overflow: hidden;
-  background-position: center;
-  background-size: cover;
-}
-
-.iss-oberschoeneweide-atlas-page .iss-atlas-stage__panel-media::before {
-  content: "";
-  position: absolute;
-  inset: 0;
-  background:
-    linear-gradient(180deg, rgba(255, 255, 255, 0.08), rgba(18, 18, 18, 0.28)),
-    radial-gradient(circle at 14% 12%, rgba(255, 255, 255, 0.34), rgba(255, 255, 255, 0) 10rem);
-}
-
-.iss-oberschoeneweide-atlas-page .iss-atlas-stage__panel-media.is-fallback::after {
-  content: "";
-  position: absolute;
-  inset: 0;
-  background:
-    linear-gradient(90deg, transparent 0 26%, rgba(31, 30, 29, 0.28) 26% 26.4%, transparent 26.4% 100%),
-    linear-gradient(90deg, transparent 0 52%, rgba(31, 30, 29, 0.24) 52% 52.35%, transparent 52.35% 100%),
-    linear-gradient(90deg, transparent 0 72%, rgba(31, 30, 29, 0.32) 72% 72.5%, transparent 72.5% 100%),
-    linear-gradient(180deg, rgba(255, 255, 255, 0) 58%, rgba(25, 24, 24, 0.3) 58% 100%);
-}
-
-.iss-oberschoeneweide-atlas-page .iss-atlas-stage__panel--archive {
-  filter: saturate(0.18);
-}
-
-.iss-oberschoeneweide-atlas-page .iss-atlas-stage__panel-body {
-  display: grid;
-  gap: 0.55rem;
-  padding: 1.25rem 1.4rem 1.35rem 1.55rem;
-  background:
-    linear-gradient(180deg, rgba(255, 255, 255, 0.98), rgba(250, 245, 240, 0.98));
-}
-
-.iss-oberschoeneweide-atlas-page .iss-atlas-stage__panel-meta {
+.iss-schoneweide-atlas__filter-label {
   margin: 0;
-  color: var(--iss-atlas-accent);
+  color: var(--iss-schoneweide-soft-muted);
   font-size: 0.78rem;
   font-weight: 700;
-  letter-spacing: 0.16em;
-  line-height: 1.25;
+  letter-spacing: 0.08em;
+  line-height: 1.3;
   text-transform: uppercase;
 }
 
-.iss-oberschoeneweide-atlas-page .iss-atlas-stage__panel-title {
-  display: block;
-  max-width: 20rem;
-  color: var(--iss-atlas-ink);
-  font-size: clamp(1.35rem, 2.1vw, 2.1rem);
-  line-height: 1.08;
-}
-
-.iss-oberschoeneweide-atlas-page .iss-atlas-stage__panel-note {
-  display: inline-block;
-  color: var(--iss-atlas-ink);
-  font-size: 1rem;
-  font-weight: 600;
-}
-
-.iss-oberschoeneweide-atlas-page .iss-atlas-stage__panel-summary {
-  margin: 0.2rem 0 0;
-  color: var(--iss-atlas-muted);
-  line-height: 1.6;
-}
-
-.iss-oberschoeneweide-atlas-page .iss-atlas-stage__badge {
-  position: absolute;
-  right: 1rem;
-  top: 1rem;
+.iss-schoneweide-atlas__filter-group {
   display: grid;
-  gap: 0.2rem;
-  min-width: 11rem;
-  padding: 0.8rem 0.95rem;
-  border: 1px solid rgba(23, 21, 20, 0.12);
-  border-radius: 0;
-  background: rgba(255, 252, 248, 0.94);
-  color: var(--iss-atlas-ink);
-  box-shadow: 0 0.7rem 1.6rem rgba(22, 20, 20, 0.08);
+  gap: 0.45rem;
 }
 
-.iss-oberschoeneweide-atlas-page .iss-atlas-story__chip {
-  position: relative;
+.iss-schoneweide-atlas__filter-button {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 0.75rem;
+  width: 100%;
+  min-height: 2.75rem;
+  padding: 0.65rem 0.85rem;
+  border: 1px solid var(--iss-border);
+  background: var(--iss-white);
+  color: inherit;
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+  transition:
+    border-color var(--iss-transition),
+    background-color var(--iss-transition),
+    color var(--iss-transition);
+}
+
+.iss-schoneweide-atlas__filter-button:hover,
+.iss-schoneweide-atlas__filter-button:focus-visible {
+  border-color: rgba(30, 30, 30, 0.28);
+  outline: none;
+}
+
+.iss-schoneweide-atlas__filter-button.is-active {
+  border-color: var(--iss-accent);
+  background: var(--iss-accent);
+  color: var(--iss-white);
+}
+
+.iss-schoneweide-atlas__filter-text {
   min-width: 0;
-  flex: 1 1 12rem;
-  padding: 1rem 2.6rem 1rem 1rem;
-  border: 1px solid rgba(23, 21, 20, 0.12);
-  border-radius: 0;
-  background: rgba(255, 255, 255, 0.96);
+}
+
+.iss-schoneweide-atlas__filter-count {
+  color: var(--iss-schoneweide-soft-muted);
+  font-size: 0.9rem;
+  font-weight: 700;
+}
+
+.iss-schoneweide-atlas__filter-button.is-active .iss-schoneweide-atlas__filter-count {
+  color: rgba(255, 255, 255, 0.8);
+}
+
+.iss-schoneweide-atlas__result-count,
+.iss-schoneweide-atlas__loading {
+  margin: 0;
+  color: var(--iss-schoneweide-muted);
+}
+
+.iss-schoneweide-atlas__result-count {
+  margin-top: auto;
+}
+
+.iss-schoneweide-atlas__reset {
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: var(--iss-schoneweide-muted);
+  font: inherit;
   text-align: left;
   cursor: pointer;
 }
 
-.iss-oberschoeneweide-atlas-page .iss-atlas-story__chip::after {
-  content: "→";
+.iss-schoneweide-atlas__main,
+.iss-schoneweide-atlas__map-stage {
+  min-width: 0;
+}
+
+.iss-schoneweide-atlas__map-stage {
+  position: relative;
+}
+
+.iss-schoneweide-atlas__map-surface {
+  position: relative;
+  width: 100%;
+  max-width: 100%;
+  min-height: clamp(34rem, 72vh, 58rem);
+  height: clamp(34rem, 72vh, 58rem);
+  overflow: hidden;
+  background: #ece6de;
+}
+
+.iss-schoneweide-atlas__map-canvas {
   position: absolute;
-  right: 1rem;
-  top: 50%;
-  color: var(--iss-atlas-accent);
-  transform: translateY(-50%);
+  inset: 0;
 }
 
-.iss-oberschoeneweide-atlas-page .iss-atlas-story__chip.is-active {
-  border-color: rgba(203, 39, 45, 0.22);
-  background: rgba(255, 247, 244, 0.98);
+.iss-schoneweide-atlas__map-status {
+  position: absolute;
+  inset: 0;
+  z-index: 450;
+  display: grid;
+  place-items: center;
+  padding: 2rem;
+  background: rgba(255, 253, 249, 0.84);
+  text-align: center;
 }
 
-.iss-oberschoeneweide-atlas-page .iss-atlas-story__chip-eyebrow,
-.iss-oberschoeneweide-atlas-page .iss-atlas-story__chip-title {
+.iss-schoneweide-atlas__map-status.is-hidden {
+  display: none;
+}
+
+.iss-schoneweide-atlas__map-canvas.leaflet-container {
+  background: #ece6de;
+  color: inherit;
+  font: inherit;
+}
+
+.iss-schoneweide-atlas__map-canvas .leaflet-control-zoom,
+.iss-schoneweide-atlas__map-canvas .leaflet-control-attribution {
+  box-shadow: none;
+}
+
+.iss-schoneweide-atlas__map-canvas .leaflet-control-zoom a {
+  width: 2rem;
+  height: 2rem;
+  line-height: 2rem;
+  border-color: var(--iss-schoneweide-panel-border);
+  color: var(--iss-black);
+}
+
+.iss-schoneweide-atlas__map-canvas .leaflet-control-attribution {
+  margin: 0 0.5rem 0.5rem 0;
+  border: 1px solid var(--iss-schoneweide-panel-border);
+  background: rgba(255, 253, 249, 0.94);
+  color: var(--iss-schoneweide-muted);
+  font-size: 0.7rem;
+}
+
+.iss-schoneweide-atlas__legend,
+.iss-schoneweide-atlas__map-summary {
+  position: absolute;
+  left: 1rem;
+  z-index: 500;
+  border: 1px solid var(--iss-schoneweide-panel-border);
+  background: rgba(255, 253, 249, 0.94);
+}
+
+.iss-schoneweide-atlas__legend {
+  top: 1rem;
+  display: grid;
+  gap: 0.45rem;
+  padding: 0.75rem 0.85rem;
+}
+
+.iss-schoneweide-atlas__legend-item {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.55rem;
+  color: var(--iss-schoneweide-muted);
+  font-size: 0.92rem;
+  line-height: 1.25;
+}
+
+.iss-schoneweide-atlas__legend-dot {
+  width: 0.78rem;
+  height: 0.78rem;
+  border-radius: 999px;
+  background: rgba(30, 30, 30, 0.6);
+}
+
+.iss-schoneweide-atlas__legend-dot.is-selected {
+  background: var(--iss-accent);
+}
+
+.iss-schoneweide-atlas__map-summary {
+  bottom: 1rem;
+  min-width: 12rem;
+  padding: 0.8rem 0.95rem;
+}
+
+.iss-schoneweide-atlas__map-summary strong,
+.iss-schoneweide-atlas__map-summary span {
   display: block;
 }
 
-.iss-oberschoeneweide-atlas-page .iss-atlas-story__chip-eyebrow {
-  margin-bottom: 0.45rem;
-  color: var(--iss-atlas-muted);
-  font-size: 0.78rem;
+.iss-schoneweide-atlas__map-summary strong {
+  margin-bottom: 0.2rem;
 }
 
-.iss-oberschoeneweide-atlas-page .iss-atlas-story__title {
-  margin: 0.45rem 0 1rem;
-  font-size: clamp(2rem, 3.6vw, 3.4rem);
-  line-height: 0.98;
-  letter-spacing: -0.04em;
+.iss-schoneweide-atlas__popup-slot {
+  position: absolute;
+  top: 1rem;
+  right: 1rem;
+  z-index: 550;
+  width: min(23rem, calc(100% - 2rem));
 }
 
-.iss-oberschoeneweide-atlas-page .iss-atlas-story__summary {
-  margin: 0;
-  font-size: 1.05rem;
-  line-height: 1.65;
+.iss-schoneweide-atlas__popup-slot.is-empty {
+  display: none;
 }
 
-.iss-oberschoeneweide-atlas-page .iss-atlas-story__facts {
-  margin-top: 1.3rem;
+.iss-schoneweide-atlas__popup-card {
+  position: relative;
+  overflow: hidden;
 }
 
-.iss-oberschoeneweide-atlas-page .iss-atlas-story__fact {
-  min-width: 10rem;
-  flex: 1 1 10rem;
+.iss-schoneweide-atlas__popup-card::before {
+  display: none;
+}
+
+.iss-schoneweide-atlas__popup-card::after {
+  content: "";
+  position: absolute;
+  inset: 0 0 auto 0;
+  height: 4px;
+  background: var(--iss-accent);
+  z-index: 2;
+}
+
+.iss-schoneweide-atlas__popup-close {
+  position: absolute;
+  top: 0.85rem;
+  right: 0.85rem;
+  z-index: 3;
+  width: 2.4rem;
+  height: 2.4rem;
+  padding: 0;
+  border: 1px solid rgba(30, 30, 30, 0.14);
+  border-radius: 999px;
+  background: rgba(255, 253, 249, 0.96);
+  color: rgba(30, 30, 30, 0.76);
+  font-size: 1.3rem;
+  line-height: 1;
+  cursor: pointer;
+}
+
+.iss-schoneweide-atlas__popup-media {
+  aspect-ratio: 16 / 9;
+  background: #d9d2cb;
+}
+
+.iss-schoneweide-atlas__popup-media.is-fallback,
+.iss-schoneweide-atlas__story-card .iss-card__media.is-fallback {
   display: grid;
-  gap: 0.18rem;
-  padding: 0.85rem 0.95rem;
-  border: 1px solid rgba(23, 21, 20, 0.1);
-  border-radius: 0;
-  background: rgba(249, 241, 236, 0.8);
+  align-content: end;
+  padding: 1rem;
+  color: var(--iss-white);
 }
 
-.iss-oberschoeneweide-atlas-page .iss-atlas-story__fact-value {
-  font-weight: 600;
+.iss-schoneweide-atlas__popup-fallback-label {
+  font-size: 0.8rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  line-height: 1.3;
+  text-transform: uppercase;
+}
+
+.iss-schoneweide-atlas__popup-fallback-title {
+  margin-top: 0.35rem;
+  font-size: 1.2rem;
+  font-weight: 700;
+  line-height: 1.12;
+}
+
+.iss-schoneweide-atlas__popup-body {
+  gap: 0.85rem;
+}
+
+.iss-schoneweide-atlas__popup-kicker,
+.iss-schoneweide-atlas__story-card .iss-card__kicker {
+  color: var(--iss-accent);
+  font-size: 0.78rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  line-height: 1.3;
+  text-transform: uppercase;
+}
+
+.iss-schoneweide-atlas__popup-facts {
+  display: grid;
+  gap: 0.35rem;
+  padding-top: 0.15rem;
+}
+
+.iss-schoneweide-atlas__popup-fact {
+  color: rgba(30, 30, 30, 0.62);
+  font-size: 0.9rem;
   line-height: 1.45;
 }
 
-.iss-oberschoeneweide-atlas-page .iss-atlas-story__notes {
-  margin-top: 1rem;
+.iss-schoneweide-atlas__popup-fact strong {
+  color: rgba(30, 30, 30, 0.92);
 }
 
-.iss-oberschoeneweide-atlas-page .iss-atlas-story__note-card {
-  flex: 1 1 16rem;
-  display: grid;
-  gap: 0.5rem;
-  padding: 1rem 1.05rem;
-  border: 1px solid rgba(23, 21, 20, 0.1);
-  border-radius: 0;
-  background: rgba(249, 236, 232, 0.92);
+.iss-schoneweide-atlas__leaflet-marker {
+  width: 1rem !important;
+  height: 1rem !important;
+  margin-left: -0.5rem !important;
+  margin-top: -0.5rem !important;
+  overflow: visible !important;
+  background: transparent !important;
+  border: 0 !important;
 }
 
-.iss-oberschoeneweide-atlas-page .iss-atlas-story__note-card--light {
-  background: rgba(255, 255, 255, 0.84);
-}
-
-.iss-oberschoeneweide-atlas-page .iss-atlas-story__note-title {
-  font-size: 0.98rem;
-}
-
-.iss-oberschoeneweide-atlas-page .iss-atlas-story__note-text {
-  margin: 0;
-  line-height: 1.55;
-}
-
-.iss-oberschoeneweide-atlas-page .iss-atlas-minimap__title {
-  margin: 0.25rem 0 0.55rem;
-  font-size: 1.4rem;
-  line-height: 1.1;
-}
-
-.iss-oberschoeneweide-atlas-page .iss-atlas-minimap__meta {
-  margin: 0 0 1rem;
-}
-
-.iss-oberschoeneweide-atlas-page .iss-atlas-minimap__track {
-  position: relative;
-  min-height: 25rem;
-  margin: 1.1rem 0 1.4rem;
-  overflow: hidden;
-  border: 1px solid rgba(23, 21, 20, 0.1);
-  border-radius: 0;
-  background:
-    linear-gradient(0deg, rgba(255, 255, 255, 0.14) 1px, transparent 1px),
-    linear-gradient(90deg, rgba(255, 255, 255, 0.14) 1px, transparent 1px),
-    linear-gradient(135deg, rgba(219, 226, 228, 0.72), rgba(242, 237, 230, 0.96));
-  background-size: 2.4rem 2.4rem, 2.4rem 2.4rem, auto;
-}
-
-.iss-oberschoeneweide-atlas-page .iss-atlas-minimap__track::before {
-  content: "";
-  position: absolute;
-  inset: 6% 50% 6%;
-  width: 2px;
-  background: linear-gradient(180deg, rgba(23, 21, 20, 0.1), rgba(23, 21, 20, 0.32), rgba(23, 21, 20, 0.1));
-  transform: translateX(-50%);
-}
-
-.iss-oberschoeneweide-atlas-page .iss-atlas-minimap__node {
-  position: absolute;
-  inset: var(--iss-node-y) auto auto var(--iss-node-x);
-  transform: translate(-50%, -50%);
-  display: flex;
-  align-items: center;
-  gap: 0.55rem;
-  border: 0;
-  background: transparent;
-  cursor: pointer;
-}
-
-.iss-oberschoeneweide-atlas-page .iss-atlas-minimap__dot {
-  width: 0.78rem;
-  height: 0.78rem;
-  border-radius: 50%;
-  background: rgba(23, 21, 20, 0.55);
-  box-shadow: 0 0 0 0 rgba(203, 39, 45, 0);
-}
-
-.iss-oberschoeneweide-atlas-page .iss-atlas-minimap__node.is-active .iss-atlas-minimap__dot {
-  background: var(--iss-atlas-accent);
-  box-shadow: 0 0 0 0.45rem rgba(203, 39, 45, 0.16);
-}
-
-.iss-oberschoeneweide-atlas-page .iss-atlas-minimap__label {
-  display: grid;
-  gap: 0.14rem;
-  max-width: 11rem;
-  padding: 0.8rem 0.9rem;
-  border: 1px solid rgba(23, 21, 20, 0.1);
-  border-radius: 0;
-  background: rgba(255, 253, 248, 0.96);
-  box-shadow: 0 0.9rem 1.4rem rgba(23, 21, 20, 0.06);
-  color: var(--iss-atlas-ink);
-  text-align: left;
-}
-
-.iss-oberschoeneweide-atlas-page .iss-atlas-minimap__label span:last-child {
-  color: var(--iss-atlas-muted);
-  font-size: 0.86rem;
-}
-
-.iss-oberschoeneweide-atlas-page .iss-atlas-minimap__link {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.4rem;
-  color: var(--iss-atlas-ink);
-  font-weight: 700;
-  text-decoration: none;
-}
-
-.iss-oberschoeneweide-atlas-page .iss-atlas-corridor {
-  margin-top: 1.4rem;
-  padding: 1.4rem;
-  border-radius: 0;
-  background: rgba(255, 255, 255, 0.92);
-  border: 1px solid rgba(23, 21, 20, 0.14);
-  box-shadow: 0 1rem 2.4rem rgba(44, 28, 18, 0.06);
-}
-
-.iss-oberschoeneweide-atlas-page .iss-atlas-corridor__header {
-  display: flex;
-  justify-content: space-between;
-  gap: 1rem;
-  align-items: end;
-  margin-bottom: 1rem;
-}
-
-.iss-oberschoeneweide-atlas-page .iss-atlas-corridor__header-copy {
-  display: grid;
-  gap: 0.2rem;
-}
-
-.iss-oberschoeneweide-atlas-page .iss-atlas-corridor__title {
-  font-size: 1.15rem;
-}
-
-.iss-oberschoeneweide-atlas-page .iss-atlas-corridor__text,
-.iss-oberschoeneweide-atlas-page .iss-atlas-corridor__direction,
-.iss-oberschoeneweide-atlas-page .iss-atlas-corridor__hint {
-  color: var(--iss-atlas-muted);
-}
-
-.iss-oberschoeneweide-atlas-page .iss-atlas-corridor__band {
-  position: relative;
-  min-height: 12.5rem;
-  overflow: hidden;
-  border: 1px solid rgba(23, 21, 20, 0.1);
-  border-radius: 0;
-  background: linear-gradient(180deg, rgba(255, 255, 255, 0.58), rgba(255, 255, 255, 0));
-}
-
-.iss-oberschoeneweide-atlas-page .iss-atlas-corridor__scenic {
-  position: absolute;
-  inset: 0;
-  background:
-    linear-gradient(180deg, rgba(153, 176, 191, 0.78) 0 40%, rgba(103, 129, 149, 0.86) 40% 58%, rgba(68, 79, 79, 0.72) 58% 100%),
-    linear-gradient(90deg, transparent 0 16%, rgba(54, 54, 54, 0.75) 16% 16.4%, transparent 16.4% 100%),
-    linear-gradient(90deg, transparent 0 28%, rgba(54, 54, 54, 0.78) 28% 28.6%, transparent 28.6% 100%),
-    linear-gradient(90deg, transparent 0 47%, rgba(54, 54, 54, 0.78) 47% 47.7%, transparent 47.7% 100%),
-    linear-gradient(90deg, transparent 0 72%, rgba(54, 54, 54, 0.74) 72% 72.5%, transparent 72.5% 100%),
-    radial-gradient(circle at 18% 16%, rgba(255, 255, 255, 0.4), rgba(255, 255, 255, 0) 9rem);
-}
-
-.iss-oberschoeneweide-atlas-page .iss-atlas-corridor__track {
-  position: relative;
-  min-height: 12.5rem;
-}
-
-.iss-oberschoeneweide-atlas-page .iss-atlas-corridor__track::before {
-  content: "";
-  position: absolute;
-  inset: auto 4% 2.6rem;
-  height: 1px;
-  background: rgba(255, 255, 255, 0.6);
-}
-
-.iss-oberschoeneweide-atlas-page .iss-atlas-corridor__marker {
-  position: absolute;
-  left: var(--iss-marker-x);
-  bottom: 2.2rem;
-  transform: translateX(-50%);
-  border: 0;
-  background: transparent;
-  cursor: pointer;
-}
-
-.iss-oberschoeneweide-atlas-page .iss-atlas-corridor__dot {
+.iss-schoneweide-atlas__marker-dot {
   display: block;
-  width: 0.92rem;
-  height: 0.92rem;
-  border: 3px solid rgba(255, 255, 255, 0.86);
-  border-radius: 50%;
-  background: rgba(24, 24, 24, 0.86);
-  box-shadow: 0 0 0 0 rgba(203, 39, 45, 0);
+  width: 1rem;
+  height: 1rem;
+  border: 3px solid rgba(255, 255, 255, 0.98);
+  border-radius: 999px;
+  background: rgba(30, 30, 30, 0.64);
+  box-shadow: 0 0 0 0 rgba(207, 34, 44, 0.18);
+  transition:
+    transform 180ms ease,
+    box-shadow 180ms ease,
+    background-color 180ms ease;
 }
 
-.iss-oberschoeneweide-atlas-page .iss-atlas-corridor__marker.is-active .iss-atlas-corridor__dot {
-  background: var(--iss-atlas-accent);
-  box-shadow: 0 0 0 0.55rem rgba(203, 39, 45, 0.18);
+.iss-schoneweide-atlas__leaflet-marker:hover .iss-schoneweide-atlas__marker-dot,
+.iss-schoneweide-atlas__leaflet-marker:focus .iss-schoneweide-atlas__marker-dot,
+.iss-schoneweide-atlas__leaflet-marker.is-active .iss-schoneweide-atlas__marker-dot {
+  transform: scale(1.18);
+  background: var(--iss-accent);
+  box-shadow: 0 0 0 0.55rem rgba(207, 34, 44, 0.18);
 }
 
-.iss-oberschoeneweide-atlas-page .iss-atlas-corridor__label {
+.iss-schoneweide-atlas__marker-label {
   position: absolute;
-  inset: auto 50% 1.6rem auto;
-  display: grid;
-  gap: 0.12rem;
-  min-width: 10rem;
-  padding: 0.7rem 0.82rem;
-  border: 1px solid rgba(23, 21, 20, 0.1);
-  border-radius: 0;
+  left: 50%;
+  bottom: calc(100% + 0.55rem);
+  width: max-content;
+  max-width: 14rem;
+  padding: 0.28rem 0.48rem;
+  border: 1px solid var(--iss-schoneweide-panel-border);
   background: rgba(255, 253, 249, 0.96);
-  color: var(--iss-atlas-ink);
+  color: var(--iss-black);
+  font-size: 0.8rem;
+  font-weight: 700;
+  line-height: 1.25;
   text-align: left;
-  box-shadow: 0 0.9rem 1.6rem rgba(23, 21, 20, 0.08);
+  white-space: normal;
   transform: translateX(-50%);
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 160ms ease;
 }
 
-.iss-oberschoeneweide-atlas-page .iss-atlas-corridor__label span:last-child {
-  color: var(--iss-atlas-muted);
-  font-size: 0.82rem;
+.iss-schoneweide-atlas__leaflet-marker:hover .iss-schoneweide-atlas__marker-label,
+.iss-schoneweide-atlas__leaflet-marker:focus .iss-schoneweide-atlas__marker-label,
+.iss-schoneweide-atlas__leaflet-marker.is-active .iss-schoneweide-atlas__marker-label {
+  opacity: 1;
 }
 
-.iss-oberschoeneweide-atlas-page .iss-atlas-corridor__hint {
-  margin: 0.9rem 0 0;
-}
-
-.iss-oberschoeneweide-atlas-page .iss-atlas-timeline-section {
-  background:
-    linear-gradient(180deg, rgba(247, 241, 235, 0.9), rgba(255, 255, 255, 0.96)),
-    linear-gradient(90deg, rgba(23, 21, 20, 0.04), rgba(23, 21, 20, 0));
-}
-
-.iss-oberschoeneweide-atlas-page .iss-atlas-timeline-heading {
-  max-width: 46rem;
-}
-
-.iss-oberschoeneweide-atlas-page .iss-atlas-timeline {
-  margin-top: 1.6rem;
-}
-
-.iss-oberschoeneweide-atlas-page .iss-atlas-timeline__rail {
-  position: relative;
-}
-
-.iss-oberschoeneweide-atlas-page .iss-atlas-timeline__rail::before {
-  content: "";
-  position: absolute;
-  inset: 2.15rem 0 auto;
-  height: 1px;
-  background:
-    linear-gradient(90deg, rgba(23, 21, 20, 0.12), rgba(23, 21, 20, 0.04));
-}
-
-.iss-oberschoeneweide-atlas-page .iss-atlas-timeline__scroller {
-  position: relative;
-  z-index: 1;
+.iss-schoneweide-atlas__stories {
   display: grid;
-  grid-auto-flow: column;
-  grid-auto-columns: minmax(min(40vw, 34rem), 42rem);
-  gap: 1.4rem;
-  overflow-x: auto;
-  overscroll-behavior-x: contain;
-  padding: 0.2rem 0 1.2rem;
-  scroll-snap-type: x proximity;
-  scrollbar-width: thin;
-}
-
-.iss-oberschoeneweide-atlas-page .iss-atlas-timeline__card {
-  display: grid;
-  gap: 0;
-  min-height: 100%;
-  border: 1px solid rgba(23, 21, 20, 0.14);
-  background: rgba(255, 255, 255, 0.96);
-  box-shadow: 0 1rem 2.4rem rgba(44, 28, 18, 0.06);
-  scroll-snap-align: start;
-}
-
-.iss-oberschoeneweide-atlas-page .iss-atlas-timeline__year {
-  margin: 0;
-  padding: 0.9rem 1.15rem 0.75rem;
-  border-bottom: 1px solid rgba(23, 21, 20, 0.1);
-  color: var(--iss-atlas-accent);
-  font-size: 0.92rem;
-  font-weight: 700;
-  letter-spacing: 0.16em;
-  line-height: 1.2;
-  text-transform: uppercase;
-}
-
-.iss-oberschoeneweide-atlas-page .iss-atlas-timeline__media {
-  min-height: 20rem;
-  background-position: center;
-  background-size: cover;
-  filter: grayscale(0.1);
-}
-
-.iss-oberschoeneweide-atlas-page .iss-atlas-timeline__media.is-empty {
-  background:
-    linear-gradient(145deg, rgba(62, 60, 58, 0.92), rgba(182, 178, 172, 0.82)),
-    linear-gradient(90deg, transparent 0 26%, rgba(31, 30, 29, 0.28) 26% 26.4%, transparent 26.4% 100%),
-    linear-gradient(90deg, transparent 0 52%, rgba(31, 30, 29, 0.24) 52% 52.35%, transparent 52.35% 100%);
-}
-
-.iss-oberschoeneweide-atlas-page .iss-atlas-timeline__body {
-  display: grid;
-  gap: 0.85rem;
-  padding: 1.2rem 1.2rem 1.35rem;
-  border-top: 6px solid var(--iss-atlas-accent);
-  background:
-    linear-gradient(180deg, rgba(255, 255, 255, 0.98), rgba(249, 244, 239, 0.98));
-}
-
-.iss-oberschoeneweide-atlas-page .iss-atlas-timeline__card-title {
-  margin: 0;
-  font-size: clamp(1.35rem, 1.9vw, 1.85rem);
-  line-height: 1.1;
-}
-
-.iss-oberschoeneweide-atlas-page .iss-atlas-timeline__summary {
-  margin: 0;
-  color: var(--iss-atlas-muted);
-  line-height: 1.65;
-}
-
-.iss-oberschoeneweide-atlas-page .iss-atlas-link-grid {
-  margin-top: 1.4rem;
-  display: grid;
-  grid-template-columns: repeat(4, minmax(0, 1fr));
-}
-
-.iss-oberschoeneweide-atlas-page .iss-atlas-link-card {
-  min-height: 12rem;
-  display: grid;
-  align-content: start;
-  gap: 0.7rem;
-  padding: 1.35rem 1.4rem;
-  color: var(--iss-atlas-ink);
-  text-decoration: none;
-  transition: transform 160ms ease, border-color 160ms ease;
-}
-
-.iss-oberschoeneweide-atlas-page .iss-atlas-link-card:hover,
-.iss-oberschoeneweide-atlas-page .iss-atlas-link-card:focus-visible {
-  transform: translateY(-2px);
-  border-color: rgba(203, 39, 45, 0.24);
-}
-
-.iss-oberschoeneweide-atlas-page .iss-atlas-link-card__title {
-  font-size: 1.32rem;
-  line-height: 1.1;
-}
-
-.iss-oberschoeneweide-atlas-page .iss-atlas-link-card__text {
-  color: var(--iss-atlas-muted);
-  line-height: 1.55;
-}
-
-.iss-oberschoeneweide-atlas-page .iss-atlas-project {
-  gap: 2rem;
-}
-
-.iss-oberschoeneweide-atlas-page .iss-atlas-project__note {
-  margin-top: 1.3rem;
-  padding: 1.25rem 1.35rem;
-}
-
-.iss-oberschoeneweide-atlas-page .iss-atlas-project__note strong {
-  display: block;
-  margin-bottom: 0.9rem;
-}
-
-.iss-oberschoeneweide-atlas-page .iss-atlas-project__note ul {
-  margin: 0;
-  padding-left: 1.1rem;
-}
-
-.iss-oberschoeneweide-atlas-page .iss-atlas-project__content > :first-child,
-.iss-oberschoeneweide-atlas-page .iss-atlas-project__content > :last-child {
-  margin-block-start: 0;
-  margin-block-end: 0;
-}
-
-.iss-oberschoeneweide-atlas-page .iss-atlas-project__content p,
-.iss-oberschoeneweide-atlas-page .iss-atlas-project__content li {
-  color: var(--iss-atlas-muted);
-  line-height: 1.7;
-}
-
-.iss-oberschoeneweide-atlas-page .iss-atlas-dossier-grid {
-  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
   gap: 1rem;
+  margin-top: 1.25rem;
 }
 
-.iss-oberschoeneweide-atlas-page .iss-atlas-dossier-card {
-  height: 100%;
-  display: grid;
-  gap: 1rem;
-  padding: 1.35rem 1.4rem;
+.iss-schoneweide-atlas__story-card {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
 }
 
-.iss-oberschoeneweide-atlas-page .iss-atlas-dossier-card__meta .wp-block-post-terms {
-  margin: 0;
-  font-size: 0.82rem;
-  font-weight: 700;
-  letter-spacing: 0.06em;
-  text-transform: uppercase;
+.iss-schoneweide-atlas__story-card .iss-card__media {
+  background: #dbd4cd;
 }
 
-.iss-oberschoeneweide-atlas-page .iss-atlas-dossier-card__meta a {
-  color: var(--iss-atlas-accent);
-  text-decoration: none;
+.iss-schoneweide-atlas__story-card .iss-card__footer {
+  justify-content: flex-start;
 }
 
-.iss-oberschoeneweide-atlas-page .iss-atlas-dossier-card__title {
-  margin: 0;
-  font-size: 1.55rem;
-  line-height: 1.08;
+.iss-schoneweide-atlas__story-links {
+  margin: 1rem 0 0;
 }
 
-.iss-oberschoeneweide-atlas-page .iss-atlas-dossier-card__address,
-.iss-oberschoeneweide-atlas-page .iss-atlas-dossier-card__text,
-.iss-oberschoeneweide-atlas-page .iss-atlas-dossier-card__link {
-  margin: 0;
+.iss-schoneweide-atlas__story-links a + a {
+  margin-left: 1.25rem;
 }
 
-.iss-oberschoeneweide-atlas-page .iss-atlas-dossier-card__link {
-  color: var(--iss-atlas-ink);
-  font-weight: 700;
-  text-decoration: none;
-}
-
-.iss-oberschoeneweide-atlas-page .iss-atlas-dossier-card__link::after,
-.iss-oberschoeneweide-atlas-page .wp-block-read-more.iss-atlas-dossier-card__link::after {
-  content: " →";
-}
-
-@media (max-width: 1320px) {
-  .iss-oberschoeneweide-atlas-page .iss-atlas-hero,
-  .iss-oberschoeneweide-atlas-page .iss-atlas-board {
+@media (max-width: 1160px) {
+  .iss-schoneweide-atlas {
     grid-template-columns: 1fr;
   }
 
-  .wp-block-cover.iss-front-hero.iss-atlas-cover > .wp-block-cover__inner-container {
-    align-items: stretch;
-    align-content: stretch;
+  .iss-schoneweide-atlas__popup-slot {
+    position: static;
+    width: auto;
+    margin-top: 1rem;
   }
 
-  .iss-oberschoeneweide-atlas-page .iss-atlas-hero__lead,
-  .iss-oberschoeneweide-atlas-page .iss-atlas-hero__panorama {
-    min-height: auto;
-  }
-
-  .iss-oberschoeneweide-atlas-page .iss-atlas-link-grid {
+  .iss-schoneweide-atlas__stories {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
-
-  .iss-oberschoeneweide-atlas-page .iss-atlas-spotlight {
-    border-left: 0;
-    border-right: 0;
-    border-top: 1px solid rgba(23, 21, 20, 0.12);
-    border-bottom: 1px solid rgba(23, 21, 20, 0.12);
-  }
 }
 
-@media (max-width: 980px) {
-  .iss-oberschoeneweide-atlas-page .iss-container {
-    width: min(100vw - 1.6rem, 100%);
+@media (max-width: 781px) {
+  .iss-schoneweide-atlas-page .iss-front-hero__actions-wrap {
+    margin-top: -1.25rem;
   }
 
-  .wp-block-cover.iss-front-hero.iss-atlas-cover > .wp-block-cover__inner-container {
-    padding-top: calc(var(--iss-header-height) + 1rem);
-  }
-
-  .iss-oberschoeneweide-atlas-page .iss-atlas-hero__lead,
-  .iss-oberschoeneweide-atlas-page .iss-atlas-hero__panorama,
-  .iss-oberschoeneweide-atlas-page .iss-atlas-board,
-  .iss-oberschoeneweide-atlas-page .iss-atlas-link-card,
-  .iss-oberschoeneweide-atlas-page .iss-atlas-project__note,
-  .iss-oberschoeneweide-atlas-page .iss-atlas-dossier-card,
-  .iss-oberschoeneweide-atlas-page .iss-atlas-stage,
-  .iss-oberschoeneweide-atlas-page .iss-atlas-story,
-  .iss-oberschoeneweide-atlas-page .iss-atlas-eras,
-  .iss-oberschoeneweide-atlas-page .iss-atlas-minimap,
-  .iss-oberschoeneweide-atlas-page .iss-atlas-corridor {
-    border-radius: 1.35rem;
-  }
-
-  .iss-oberschoeneweide-atlas-page .iss-atlas-stage__frame,
-  .iss-oberschoeneweide-atlas-page .iss-atlas-link-grid {
-    grid-template-columns: 1fr;
-  }
-
-  .iss-oberschoeneweide-atlas-page .iss-atlas-mode-pills {
-    display: grid;
-  }
-
-  .iss-oberschoeneweide-atlas-page .iss-atlas-mode-pill {
-    border-right: 0;
-    border-bottom: 1px solid rgba(23, 21, 20, 0.12);
-  }
-
-  .iss-oberschoeneweide-atlas-page .iss-atlas-mode-pill:last-child {
-    border-bottom: 0;
-  }
-
-  .iss-oberschoeneweide-atlas-page .iss-atlas-project {
-    display: grid;
-  }
-
-  .iss-oberschoeneweide-atlas-page .iss-atlas-timeline__scroller {
-    grid-auto-columns: minmax(78vw, 1fr);
-  }
-
-  .iss-oberschoeneweide-atlas-page .iss-atlas-hero__stats {
-    grid-template-columns: 1fr;
-  }
-
-  .iss-oberschoeneweide-atlas-page .iss-atlas-hero__stat {
-    padding-top: 0.4rem;
-    border-left: 0;
-    border-top: 1px solid var(--iss-atlas-soft-line);
-  }
-
-  .iss-oberschoeneweide-atlas-page .iss-atlas-hero__stat:first-child {
-    border-top: 0;
-  }
-
-  .iss-oberschoeneweide-atlas-page .iss-atlas-hero__image {
-    min-height: 24rem;
-  }
-
-  .iss-oberschoeneweide-atlas-page .iss-atlas-corridor__label {
-    min-width: 8.5rem;
-  }
-
-  .iss-oberschoeneweide-atlas-page .iss-atlas-stage-intro__text {
-    font-size: 1rem;
-  }
-}
-
-@media (max-width: 720px) {
-  .wp-block-cover.iss-front-hero.iss-atlas-cover > .wp-block-cover__inner-container {
-    padding-bottom: 2rem;
-  }
-
-  .iss-oberschoeneweide-atlas-page .iss-atlas-hero__lead,
-  .iss-oberschoeneweide-atlas-page .iss-atlas-hero__panorama,
-  .iss-oberschoeneweide-atlas-page .iss-atlas-board,
-  .iss-oberschoeneweide-atlas-page .iss-atlas-stage,
-  .iss-oberschoeneweide-atlas-page .iss-atlas-story,
-  .iss-oberschoeneweide-atlas-page .iss-atlas-eras,
-  .iss-oberschoeneweide-atlas-page .iss-atlas-minimap,
-  .iss-oberschoeneweide-atlas-page .iss-atlas-corridor,
-  .iss-oberschoeneweide-atlas-page .iss-atlas-link-card,
-  .iss-oberschoeneweide-atlas-page .iss-atlas-dossier-card {
+  .iss-schoneweide-atlas__sidebar {
     padding: 1rem;
   }
 
-  .iss-oberschoeneweide-atlas-page .iss-atlas-hero__title {
-    font-size: clamp(2.4rem, 12vw, 4rem);
+  .iss-schoneweide-atlas__map-surface {
+    min-height: 28rem;
+    height: 28rem;
   }
 
-  .iss-oberschoeneweide-atlas-page .iss-atlas-hero__text,
-  .iss-oberschoeneweide-atlas-page .iss-atlas-story__summary {
-    font-size: 1rem;
+  .iss-schoneweide-atlas__legend,
+  .iss-schoneweide-atlas__map-summary {
+    left: 0.75rem;
   }
 
-  .iss-oberschoeneweide-atlas-page .iss-atlas-hero__yearrail {
-    grid-template-columns: repeat(3, minmax(0, 1fr));
-    row-gap: 1rem;
+  .iss-schoneweide-atlas__legend {
+    top: 0.75rem;
   }
 
-  .iss-oberschoeneweide-atlas-page .iss-atlas-mode-pill {
-    width: 100%;
+  .iss-schoneweide-atlas__map-summary {
+    bottom: 0.75rem;
   }
 
-  .iss-oberschoeneweide-atlas-page .iss-atlas-corridor__header {
-    display: grid;
+  .iss-schoneweide-atlas__stories {
+    grid-template-columns: 1fr;
   }
 
-  .iss-oberschoeneweide-atlas-page .iss-atlas-timeline__media {
-    min-height: 14rem;
+  .iss-schoneweide-atlas__story-links a {
+    display: inline-flex;
+    margin-bottom: 0.45rem;
   }
 
-  .iss-oberschoeneweide-atlas-page .iss-atlas-corridor__band,
-  .iss-oberschoeneweide-atlas-page .iss-atlas-minimap__track {
-    min-height: 10rem;
-  }
-
-  .iss-oberschoeneweide-atlas-page .iss-atlas-corridor__label {
-    display: none;
-  }
-
-  .iss-oberschoeneweide-atlas-page .iss-atlas-minimap__label {
-    max-width: 9rem;
+  .iss-schoneweide-atlas__story-links a + a {
+    margin-left: 0;
   }
 }

@@ -1,6 +1,32 @@
 # Changelog
 
 ## 2026-05-05
+- Rebuilt the live `/schoneweide/` landing into a simpler theme-owned Atlas surface:
+  - replaced the heavy earlier Atlas shell in `themes/industriesalon/templates/page-schoneweide.html`
+  - switched to the standard landing-page hero/cover structure used on other pages
+  - changed the page body to one fixed composition:
+    - left filter column
+    - right larger interactive map surface
+    - popup info panel inside the map
+    - live story-card strip below
+- Rewrote the Schöneweide page CSS/JS around that simpler surface:
+  - `themes/industriesalon/assets/css/oberschoeneweide-atlas.css`
+  - `themes/industriesalon/assets/js/schoneweide.js`
+  - removed the earlier glassy Atlas-app treatment
+  - reused the theme’s normal hero/button/card language
+  - rendered filters, markers, popup, and live story cards from the existing Atlas REST payload
+- Switched the live Schöneweide Atlas away from the temporary static SVG approach and onto a real Leaflet map:
+  - vendored `Leaflet 1.9.4` locally under `themes/industriesalon/assets/vendor/leaflet/`
+  - added a bounded `CARTO light_all` raster basemap with required `OpenStreetMap` + `CARTO` attribution
+  - rendered Atlas places as real Leaflet markers from stored geographic coordinates
+  - removed the temporary theme map image path from the live runtime before commit
+- Cleaned the Schöneweide enqueue/runtime path in `themes/industriesalon/functions.php`:
+  - enqueued local Leaflet CSS/JS only on `/schoneweide/`
+  - reduced localized page config back to the Atlas REST URL only
+- Fixed live template authority for `/schoneweide/` so the disk template is used again:
+  - reset page `13251` `_wp_page_template` from `schoneweide-alt` to `default`
+  - deleted stale DB `wp_template` override `page-schoneweide` (`ID 13794`)
+
 - Added a shared local place-relation layer for Atlas, events, tours, posts, and archive content:
   - new plugin `plugins/iss-relations`
   - relation meta source `iss_related_places`
