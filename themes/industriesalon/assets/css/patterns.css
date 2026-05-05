@@ -9999,6 +9999,44 @@ Raum / Vermietung → brown
   margin-inline: auto;
 }
 
+.iss-post-body__content--wide {
+  max-width: none;
+}
+
+.iss-archive-records {
+  padding-top: clamp(2.5rem, 5vw, 4rem);
+  padding-bottom: clamp(3rem, 6vw, 5rem);
+}
+
+.iss-archive-records__section {
+  display: grid;
+  gap: clamp(1.25rem, 2vw, 1.75rem);
+}
+
+.iss-archive-records__section + .iss-archive-records__section {
+  margin-top: clamp(3rem, 5vw, 4.5rem);
+}
+
+.iss-archive-records__intro {
+  gap: 0.75rem;
+}
+
+.iss-archive-records__grid {
+  align-items: start;
+}
+
+.iss-archive-records__card .iss-archive-card__text {
+  white-space: pre-line;
+}
+
+.iss-archive-media-card .iss-archive-card__media {
+  aspect-ratio: 4 / 3;
+}
+
+.iss-archive-media-card .iss-archive-card__body {
+  gap: 0.55rem;
+}
+
 .iss-post-related .iss-heading > .iss-kicker,
 .iss-post-related .iss-heading > .iss-kicker--compact {
   padding-left: 0.85rem;
@@ -11399,6 +11437,77 @@ Raum / Vermietung → brown
   border: 1px solid rgba(30, 30, 30, 0.1);
   border-radius: var(--iss-radius-lg);
   background: rgba(255, 255, 255, 0.76);
+}
+
+.iss-related-feed__intro {
+  max-width: 40rem;
+}
+
+.iss-related-feed__grid {
+  display: grid;
+  gap: 1.4rem;
+  margin-top: clamp(1.4rem, 3vw, 2rem);
+}
+
+.iss-related-feed__grid--fuehrung {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.iss-related-feed__grid--veranstaltung,
+.iss-related-feed__grid--post,
+.iss-related-feed__grid--ausstellung,
+.iss-related-feed__grid--projekt,
+.iss-related-feed__grid--page {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+.iss-related-feed__grid > * {
+  min-width: 0;
+}
+
+.iss-related-feed__grid .iss-card,
+.iss-related-feed__grid .iss-fuehrung-card {
+  height: 100%;
+}
+
+.iss-related-feed__meta {
+  margin: 0;
+  color: rgba(30, 30, 30, 0.72);
+  font-size: 0.92rem;
+  line-height: 1.5;
+}
+
+.iss-related-links a {
+  color: inherit;
+  text-decoration: underline;
+  text-underline-offset: 0.16em;
+}
+
+.iss-related-links a:hover,
+.iss-related-links a:focus-visible {
+  color: var(--iss-red);
+}
+
+@media (max-width: 900px) {
+  .iss-related-feed__grid--veranstaltung,
+  .iss-related-feed__grid--post,
+  .iss-related-feed__grid--ausstellung,
+  .iss-related-feed__grid--projekt,
+  .iss-related-feed__grid--page {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 680px) {
+  .iss-related-feed__grid,
+  .iss-related-feed__grid--fuehrung,
+  .iss-related-feed__grid--veranstaltung,
+  .iss-related-feed__grid--post,
+  .iss-related-feed__grid--ausstellung,
+  .iss-related-feed__grid--projekt,
+  .iss-related-feed__grid--page {
+    grid-template-columns: minmax(0, 1fr);
+  }
 }
 
 .iss-publication-single__content {

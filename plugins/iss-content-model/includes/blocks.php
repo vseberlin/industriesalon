@@ -85,6 +85,12 @@ function iss_content_model_get_meta_rows_for_post($post_id) {
     $post_id = (int) $post_id;
     $post_type = (string) get_post_type($post_id);
     $rows = [];
+    $related_places = function_exists('iss_relations_get_related_place_items')
+        ? iss_relations_get_related_place_items($post_id)
+        : [];
+    $related_links = ($related_places && function_exists('iss_relations_render_related_place_links_html'))
+        ? iss_relations_render_related_place_links_html($post_id)
+        : '';
 
     if ($post_type === ISS_CONTENT_MODEL_VERANSTALTUNG_POST_TYPE) {
         $start = iss_content_model_format_datetime(get_post_meta($post_id, 'iss_start_datetime', true));
@@ -98,7 +104,17 @@ function iss_content_model_get_meta_rows_for_post($post_id) {
             $rows[] = ['label' => __('Ende', 'iss-content-model'), 'value' => $end];
         }
         if ($location !== '') {
-            $rows[] = ['label' => __('Ort', 'iss-content-model'), 'value' => $location];
+            $single_related_place_title = count($related_places) === 1
+                ? trim((string) ($related_places[0]['title'] ?? ''))
+                : '';
+
+            if ($single_related_place_title !== '' && $related_links !== '' && $location === $single_related_place_title) {
+                $rows[] = ['label' => __('Ort', 'iss-content-model'), 'value' => $related_links, 'html' => true];
+            } else {
+                $rows[] = ['label' => __('Ort', 'iss-content-model'), 'value' => $location];
+            }
+        } elseif (count($related_places) === 1 && $related_links !== '') {
+            $rows[] = ['label' => __('Ort', 'iss-content-model'), 'value' => $related_links, 'html' => true];
         }
     } elseif ($post_type === ISS_CONTENT_MODEL_AUSSTELLUNG_POST_TYPE) {
         $start = iss_content_model_format_date(get_post_meta($post_id, 'iss_start_date', true));
@@ -170,6 +186,22 @@ function iss_content_model_get_meta_rows_for_post($post_id) {
             $rows[] = [
                 'label' => __('Telefon', 'iss-content-model'),
                 'value' => $tel !== '' ? '<a href="tel:' . esc_attr($tel) . '">' . esc_html($phone) . '</a>' : esc_html($phone),
+                'html' => true,
+            ];
+        }
+    }
+
+    if ($related_places && $related_links !== '') {
+        $render_related_places_row = true;
+
+        if ($post_type === ISS_CONTENT_MODEL_VERANSTALTUNG_POST_TYPE && count($related_places) <= 1) {
+            $render_related_places_row = false;
+        }
+
+        if ($render_related_places_row) {
+            $rows[] = [
+                'label' => count($related_places) > 1 ? __('Orte', 'iss-content-model') : __('Ort', 'iss-content-model'),
+                'value' => $related_links,
                 'html' => true,
             ];
         }

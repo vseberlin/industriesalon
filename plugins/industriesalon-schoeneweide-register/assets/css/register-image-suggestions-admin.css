@@ -29,6 +29,12 @@
   gap: 12px;
 }
 
+.iss-register-image-suggestions__research {
+  color: #50575e;
+  font-size: 12px;
+  margin: 12px 0 0;
+}
+
 .iss-register-image-suggestion-card {
   background: #fff;
   border: 1px solid #dcdcde;
@@ -79,7 +85,8 @@
 .iss-register-image-suggestion-card__meta,
 .iss-register-image-suggestion-card__details,
 .iss-register-image-suggestion-card__links,
-.iss-register-image-suggestion-card__imported {
+.iss-register-image-suggestion-card__imported,
+.iss-register-image-suggestion-card__note {
   color: #50575e;
   font-size: 12px;
   margin: 0;

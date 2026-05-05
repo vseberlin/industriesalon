@@ -75,6 +75,17 @@
   line-height: 1.45;
 }
 
+.iss-fuehrung-fact__value a {
+  color: inherit;
+  text-decoration: underline;
+  text-underline-offset: 0.16em;
+}
+
+.iss-fuehrung-fact__value a:hover,
+.iss-fuehrung-fact__value a:focus-visible {
+  color: var(--iss-red, #e81d25);
+}
+
 .iss-fuehrung-booking {
   position: sticky;
   top: calc(var(--iss-header-height, 5.5rem) + 1rem);

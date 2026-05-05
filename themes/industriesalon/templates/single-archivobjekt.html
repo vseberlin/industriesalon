@@ -19,11 +19,11 @@
 					<!-- wp:group {"className":"iss-post-intro__meta iss-info-panel iss-info-panel--red","layout":{"type":"default"}} -->
 					<div class="wp-block-group iss-post-intro__meta iss-info-panel iss-info-panel--red">
 						<!-- wp:paragraph {"className":"iss-kicker iss-kicker--compact"} -->
-						<p class="iss-kicker iss-kicker--compact">Beitrag</p>
+						<p class="iss-kicker iss-kicker--compact">Archivobjekt</p>
 						<!-- /wp:paragraph -->
 
 						<!-- wp:heading {"level":3,"className":"iss-info-panel__title"} -->
-						<h3 class="wp-block-heading iss-info-panel__title">Veröffentlicht</h3>
+						<h3 class="wp-block-heading iss-info-panel__title">Quelle</h3>
 						<!-- /wp:heading -->
 
 						<!-- wp:group {"className":"iss-info-panel__rows","layout":{"type":"default"}} -->
@@ -33,22 +33,9 @@
 								<!-- wp:group {"className":"iss-info-row__main","layout":{"type":"default"}} -->
 								<div class="wp-block-group iss-info-row__main">
 									<!-- wp:paragraph {"className":"iss-info-row__text iss-post-intro__meta-label"} -->
-									<p class="iss-info-row__text iss-post-intro__meta-label"><strong>Datum</strong></p>
+									<p class="iss-info-row__text iss-post-intro__meta-label"><strong>Archivquelle</strong></p>
 									<!-- /wp:paragraph -->
-									<!-- wp:post-date {"format":"j. F Y","className":"iss-info-row__text iss-post-intro__meta-value"} /-->
-								</div>
-								<!-- /wp:group -->
-							</div>
-							<!-- /wp:group -->
-
-							<!-- wp:group {"className":"iss-info-row","layout":{"type":"default"}} -->
-							<div class="wp-block-group iss-info-row">
-								<!-- wp:group {"className":"iss-info-row__main","layout":{"type":"default"}} -->
-								<div class="wp-block-group iss-info-row__main">
-									<!-- wp:paragraph {"className":"iss-info-row__text iss-post-intro__meta-label"} -->
-									<p class="iss-info-row__text iss-post-intro__meta-label"><strong>Kategorie</strong></p>
-									<!-- /wp:paragraph -->
-									<!-- wp:post-terms {"term":"category","className":"iss-info-row__text iss-post-intro__meta-value"} /-->
+									<!-- wp:post-terms {"term":"archiv_quelle","className":"iss-info-row__text iss-post-intro__meta-value"} /-->
 								</div>
 								<!-- /wp:group -->
 							</div>
@@ -64,8 +51,11 @@
 				<div class="wp-block-column is-vertically-aligned-top iss-post-intro__copy-col" style="flex-basis:54%">
 					<!-- wp:group {"className":"iss-post-intro__copy iss-heading iss-heading--uncaged","layout":{"type":"default"}} -->
 					<div class="wp-block-group iss-post-intro__copy iss-heading iss-heading--uncaged">
-						<!-- wp:post-terms {"term":"category","className":"iss-kicker iss-kicker--compact"} /-->
+						<!-- wp:paragraph {"className":"iss-kicker iss-kicker--compact"} -->
+						<p class="iss-kicker iss-kicker--compact">Archivobjekt</p>
+						<!-- /wp:paragraph -->
 						<!-- wp:post-title {"level":1,"className":"iss-post-intro__title iss-heading__title"} /-->
+						<!-- wp:post-excerpt {"className":"iss-heading__text"} /-->
 					</div>
 					<!-- /wp:group -->
 
@@ -83,51 +73,9 @@
 	</section>
 	<!-- /wp:group -->
 
+	<!-- wp:iss-wf-import/archive-object-media /-->
+
 	<!-- wp:iss/related-content {"postType":"register_place","kicker":"Ort","title":"Verknüpfte Orte","perPage":3} /-->
-
-	<!-- wp:group {"tagName":"section","className":"iss-post-related section section--soft","layout":{"type":"default"}} -->
-	<section class="wp-block-group iss-post-related section section--soft">
-		<!-- wp:group {"className":"iss-container","layout":{"type":"default"}} -->
-		<div class="wp-block-group iss-container">
-
-			<!-- wp:group {"className":"iss-heading","layout":{"type":"default"}} -->
-			<div class="wp-block-group iss-heading">
-				<!-- wp:paragraph {"className":"iss-kicker iss-kicker--compact"} -->
-				<p class="iss-kicker iss-kicker--compact">Weiterlesen</p>
-				<!-- /wp:paragraph -->
-
-				<!-- wp:heading {"level":2,"className":"iss-heading__title"} -->
-				<h2 class="iss-heading__title">Weitere Beiträge</h2>
-				<!-- /wp:heading -->
-			</div>
-			<!-- /wp:group -->
-
-			<!-- wp:query {"queryId":1,"query":{"perPage":3,"pages":0,"offset":0,"postType":"post","order":"desc","orderBy":"date","author":"","search":"","exclude":[0],"sticky":"","inherit":false},"className":"iss-card-grid","displayLayout":{"type":"grid","columns":3}} -->
-			<div class="wp-block-query iss-card-grid">
-				<!-- wp:post-template -->
-					<!-- wp:group {"className":"iss-card iss-card--flat","layout":{"type":"default"}} -->
-					<div class="wp-block-group iss-card iss-card--flat">
-						<!-- wp:post-featured-image {"isLink":true,"className":"iss-card__media"} /-->
-
-						<!-- wp:group {"className":"iss-card__body","layout":{"type":"default"}} -->
-						<div class="wp-block-group iss-card__body">
-							<!-- wp:post-terms {"term":"category","className":"iss-kicker iss-kicker--compact"} /-->
-							<!-- wp:post-title {"isLink":true,"level":3,"className":"iss-card__title"} /-->
-							<!-- wp:post-excerpt {"moreText":"","showMoreOnNewLine":false,"excerptLength":18,"className":"iss-card__text"} /-->
-							<!-- wp:read-more {"content":"Weiterlesen","className":"iss-card__link"} /-->
-						</div>
-						<!-- /wp:group -->
-					</div>
-					<!-- /wp:group -->
-				<!-- /wp:post-template -->
-			</div>
-			<!-- /wp:query -->
-
-		</div>
-		<!-- /wp:group -->
-	</section>
-	<!-- /wp:group -->
-
 </main>
 <!-- /wp:group -->
 

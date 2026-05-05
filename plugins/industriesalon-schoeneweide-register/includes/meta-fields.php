@@ -223,15 +223,54 @@ add_action('init', 'iss_register_register_meta_fields');
 
 function iss_register_render_meta_box(WP_Post $post): void
 {
-    wp_nonce_field('iss_register_save_meta_box', 'iss_register_meta_nonce');
+    iss_register_render_fields_table($post, array_keys(iss_register_get_meta_schema()));
+}
+
+function iss_register_get_meta_box_groups(): array
+{
+    return [
+        'atlas_basics' => [
+            'title' => __('Atlas Pflichtangaben', 'industriesalon-schoeneweide-register'),
+            'context' => 'normal',
+            'priority' => 'high',
+            'description' => __('Für einen nutzbaren Atlas-Ort reichen der Titel oben, Adresse, Koordinaten und mindestens ein kurzer öffentlicher Text. Alles andere kann später ergänzt werden.', 'industriesalon-schoeneweide-register'),
+            'fields' => ['area', 'address', 'lat', 'lng', 'coordinates_accuracy', 'status', 'role', 'is_unclear', 'sort_order'],
+        ],
+        'atlas_public' => [
+            'title' => __('Öffentliche Atlas-Texte', 'industriesalon-schoeneweide-register'),
+            'context' => 'normal',
+            'priority' => 'default',
+            'description' => __('Diese Angaben speisen Atlas-Karten, Vorschauteaser und Dossiers. Wenn kein manueller Auszug gepflegt ist, wird er automatisch aus „Historie kurz“, „Aktuelle Nutzung“ oder dem Hauptinhalt gebildet.', 'industriesalon-schoeneweide-register'),
+            'fields' => ['history_short', 'current_use', 'industry', 'source_summary', 'tags'],
+        ],
+        'atlas_media' => [
+            'title' => __('Medien', 'industriesalon-schoeneweide-register'),
+            'context' => 'normal',
+            'priority' => 'default',
+            'description' => __('Öffentliche Atlas-Bilder müssen in einer Bildgruppe auf „public“ stehen. Bildvorschläge werden in der separaten Metabox verwaltet.', 'industriesalon-schoeneweide-register'),
+            'fields' => ['archive_images', 'current_images', 'document_images'],
+        ],
+        'atlas_research' => [
+            'title' => __('Dossier und Forschung', 'industriesalon-schoeneweide-register'),
+            'context' => 'normal',
+            'priority' => 'default',
+            'description' => __('Diese Angaben bleiben wichtig für Recherche und längere Dossiers, sind aber nicht nötig, um einen Ort zuerst im Atlas sichtbar zu machen.', 'industriesalon-schoeneweide-register'),
+            'fields' => ['register_id', 'owner', 'operator', 'developer', 'tenant', 'investment', 'size', 'jobs', 'previous_use', 'history_long', 'research_note', 'source_links', 'legacy_website', 'legacy_kaufpreis', 'legacy_questions', 'legacy_icon', 'legacy_color'],
+        ],
+    ];
+}
+
+function iss_register_render_fields_table(WP_Post $post, array $field_keys): void
+{
     $schema = iss_register_get_meta_schema();
 
     echo '<table class="form-table" role="presentation"><tbody>';
-    foreach ($schema as $key => $field) {
-        if (empty($field['admin'])) {
+    foreach ($field_keys as $key) {
+        if (!isset($schema[$key]) || empty($schema[$key]['admin'])) {
             continue;
         }
 
+        $field = $schema[$key];
         $value = get_post_meta($post->ID, $key, true);
         $label = esc_html($field['label']);
         $input_name = 'iss_register_meta[' . esc_attr($key) . ']';
@@ -270,15 +309,42 @@ function iss_register_render_meta_box(WP_Post $post): void
     echo '</tbody></table>';
 }
 
+function iss_register_render_group_meta_box(WP_Post $post, array $box): void
+{
+    $args = isset($box['args']) && is_array($box['args']) ? $box['args'] : [];
+    $groups = iss_register_get_meta_box_groups();
+    $group_key = sanitize_key((string) ($args['group_key'] ?? ''));
+
+    if (!isset($groups[$group_key])) {
+        iss_register_render_meta_box($post);
+        return;
+    }
+
+    wp_nonce_field('iss_register_save_meta_box', 'iss_register_meta_nonce');
+
+    $group = $groups[$group_key];
+    $description = trim((string) ($group['description'] ?? ''));
+    if ($description !== '') {
+        echo '<p>' . esc_html($description) . '</p>';
+    }
+
+    iss_register_render_fields_table($post, (array) ($group['fields'] ?? []));
+}
+
 add_action('add_meta_boxes', function () {
-    add_meta_box(
-        'iss-register-fields',
-        'Register Felder',
-        'iss_register_render_meta_box',
-        ISS_REGISTER_POST_TYPE,
-        'normal',
-        'high'
-    );
+    foreach (iss_register_get_meta_box_groups() as $group_key => $group) {
+        add_meta_box(
+            'iss-register-' . $group_key,
+            (string) ($group['title'] ?? __('Register Felder', 'industriesalon-schoeneweide-register')),
+            'iss_register_render_group_meta_box',
+            ISS_REGISTER_POST_TYPE,
+            (string) ($group['context'] ?? 'normal'),
+            (string) ($group['priority'] ?? 'default'),
+            [
+                'group_key' => $group_key,
+            ]
+        );
+    }
 });
 
 function iss_register_save_meta_box(int $post_id): void

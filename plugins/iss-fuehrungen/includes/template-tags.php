@@ -11,16 +11,38 @@ function iss_fuehrung_get_color_class($post_id) {
 }
 
 function iss_fuehrung_render_facts($post_id) {
-    $items = [
-        'Dauer'      => get_post_meta($post_id, 'duration', true),
+    $items = [];
+
+    foreach ([
+        'Dauer' => get_post_meta($post_id, 'duration', true),
         'Treffpunkt' => get_post_meta($post_id, 'meeting_point', true),
         'Zielgruppe' => get_post_meta($post_id, 'target_group', true),
-        'Preis'      => get_post_meta($post_id, 'price_note', true),
-    ];
+        'Preis' => get_post_meta($post_id, 'price_note', true),
+    ] as $label => $value) {
+        $value = trim((string) $value);
+        if ($value === '') {
+            continue;
+        }
 
-    $items = array_filter($items, static function ($value) {
-        return trim((string) $value) !== '';
-    });
+        $items[] = [
+            'label' => $label,
+            'value' => $value,
+            'html' => false,
+        ];
+    }
+
+    if (function_exists('iss_relations_get_related_place_items') && function_exists('iss_relations_render_related_place_links_html')) {
+        $related_places = iss_relations_get_related_place_items($post_id);
+        $related_links = iss_relations_render_related_place_links_html($post_id);
+
+        if ($related_places && $related_links !== '') {
+            $items[] = [
+                'label' => count($related_places) > 1 ? __('Orte', 'iss-fuehrungen') : __('Ort', 'iss-fuehrungen'),
+                'value' => $related_links,
+                'html' => true,
+            ];
+        }
+    }
 
     if (!$items) {
         return '';
@@ -28,10 +50,12 @@ function iss_fuehrung_render_facts($post_id) {
 
     ob_start();
     echo '<div class="iss-fuehrung-facts">';
-    foreach ($items as $label => $value) {
+    foreach ($items as $item) {
         echo '<div class="iss-fuehrung-fact">';
-        echo '<div class="iss-fuehrung-fact__label">' . esc_html($label) . '</div>';
-        echo '<div class="iss-fuehrung-fact__value">' . esc_html((string) $value) . '</div>';
+        echo '<div class="iss-fuehrung-fact__label">' . esc_html((string) $item['label']) . '</div>';
+        echo '<div class="iss-fuehrung-fact__value">';
+        echo !empty($item['html']) ? wp_kses_post((string) $item['value']) : esc_html((string) $item['value']);
+        echo '</div>';
         echo '</div>';
     }
     echo '</div>';
