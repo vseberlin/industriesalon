@@ -1,0 +1,381 @@
+/* =========================================================
+   TOUR CALENDAR SKIN
+   Theme-owned visual language for iss-programm calendar UI.
+   The plugin keeps only structure/state in programm.css.
+   ========================================================= */
+
+.is-tour-calendar {
+  --iss-cal-bg: var(--iss-white, #f9f9fa);
+  --iss-cal-surface: color-mix(in srgb, var(--iss-grey, #c0b8b5) 10%, var(--iss-cal-bg));
+  --iss-cal-surface-strong: color-mix(in srgb, var(--iss-accent) 6%, var(--iss-cal-bg));
+  --iss-cal-text: var(--iss-black, #1e1e1e);
+  --iss-cal-muted: rgba(30, 30, 30, 0.68);
+  --iss-cal-line: var(--iss-border, rgba(30, 30, 30, 0.14));
+  --iss-cal-line-strong: rgba(30, 30, 30, 0.22);
+  --iss-cal-accent: var(--iss-accent, var(--iss-red, #e81d25));
+  --iss-cal-accent-rgb: var(--iss-accent-rgb, 232, 29, 37);
+  --iss-cal-accent-hover: color-mix(in srgb, var(--iss-cal-accent) 84%, #000);
+  --iss-cal-radius: var(--iss-radius-sm, 8px);
+  --iss-cal-radius-panel: var(--iss-radius-md, 16px);
+  --iss-cal-panel-rail: 4px;
+  color: var(--iss-cal-text);
+}
+
+.is-tour-calendar__eyebrow {
+  color: var(--iss-cal-accent);
+  font-size: 0.8rem;
+  font-weight: 800;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+.is-tour-calendar__heading {
+  color: var(--iss-cal-text);
+  font-size: clamp(1.7rem, 2.3vw, 2.4rem);
+}
+
+.is-tour-calendar__status,
+.is-tour-calendar__fallback,
+.is-tour-calendar__appointment-meta,
+.is-tour-calendar__slot-meta,
+.is-tour-calendar__empty {
+  color: var(--iss-cal-muted);
+}
+
+.is-tour-calendar__fallback-link {
+  color: inherit;
+  text-decoration: underline;
+  text-decoration-color: color-mix(in srgb, var(--iss-cal-accent) 55%, transparent);
+  text-underline-offset: 0.18em;
+}
+
+.is-tour-calendar__fallback-link:hover,
+.is-tour-calendar__fallback-link:focus-visible {
+  color: var(--iss-cal-accent);
+  text-decoration-color: currentColor;
+}
+
+.is-tour-calendar__calendar,
+.is-tour-calendar__appointments,
+.is-tour-calendar-modal__panel {
+  background: var(--iss-cal-bg);
+  border: 1px solid var(--iss-cal-line);
+  border-radius: var(--iss-cal-radius-panel);
+  box-shadow: none;
+}
+
+.is-tour-calendar__calendar,
+.is-tour-calendar-modal__panel {
+  border-left: var(--iss-cal-panel-rail) solid var(--iss-cal-accent);
+}
+
+.is-tour-calendar .flatpickr-calendar {
+  background: transparent;
+  border: 0;
+  box-shadow: none;
+}
+
+.is-tour-calendar .flatpickr-months {
+  margin-bottom: 0.5rem;
+  padding: 0.75rem;
+  border: 1px solid var(--iss-cal-line);
+  border-radius: var(--iss-cal-radius-panel);
+  background: var(--iss-cal-surface);
+}
+
+.is-tour-calendar .flatpickr-current-month {
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.is-tour-calendar .flatpickr-weekdays {
+  margin: 0 0 0.45rem;
+}
+
+.is-tour-calendar .flatpickr-weekday,
+.is-tour-calendar__weekday {
+  color: var(--iss-cal-muted);
+  font-size: 0.8rem;
+  font-weight: 800;
+}
+
+.is-tour-calendar .flatpickr-day,
+.is-tour-calendar__day-cell {
+  border: 1px solid var(--iss-cal-line);
+  border-radius: var(--iss-cal-radius);
+  background: var(--iss-cal-bg);
+  color: var(--iss-cal-text);
+}
+
+.is-tour-calendar .flatpickr-day.prevMonthDay,
+.is-tour-calendar .flatpickr-day.nextMonthDay,
+.is-tour-calendar .flatpickr-day.flatpickr-disabled,
+.is-tour-calendar__day-cell--inactive {
+  border-color: color-mix(in srgb, var(--iss-cal-line) 90%, transparent);
+  background: color-mix(in srgb, var(--iss-grey, #c0b8b5) 28%, white);
+  color: rgba(30, 30, 30, 0.46);
+}
+
+.is-tour-calendar .flatpickr-day.today {
+  border-color: var(--iss-cal-accent) !important;
+  border-width: 2px !important;
+}
+
+.is-tour-calendar .flatpickr-day.selected,
+.is-tour-calendar__day-cell--selected {
+  border-color: var(--iss-cal-accent) !important;
+  background: var(--iss-cal-accent) !important;
+  color: #fff !important;
+}
+
+.is-tour-calendar__day-cell--active,
+.is-tour-calendar__time-btn,
+.is-tour-calendar__appointment-btn,
+.is-tour-calendar__slot-card,
+.is-tour-calendar__nav-btn.wp-block-button__link,
+.is-tour-calendar-modal__close,
+.is-tour-calendar__form-actions button {
+  border: 1px solid var(--iss-cal-line);
+  border-radius: var(--iss-cal-radius);
+  background: var(--iss-cal-bg);
+  color: var(--iss-cal-text);
+}
+
+.is-tour-calendar__day-cell--active {
+  border-color: color-mix(in srgb, var(--iss-cal-accent) 45%, var(--iss-cal-line));
+  background: color-mix(in srgb, var(--iss-cal-accent) 4%, var(--iss-cal-bg));
+  font-weight: 700;
+}
+
+.is-tour-calendar__day-cell--active:hover,
+.is-tour-calendar__day-cell--active:focus-visible {
+  border-color: var(--iss-cal-accent);
+  background: color-mix(in srgb, var(--iss-cal-accent) 10%, var(--iss-cal-bg));
+  transform: translateY(-1px);
+}
+
+.is-tour-calendar__day-dot {
+  border-radius: 999px;
+  background: var(--iss-cal-accent);
+}
+
+.is-tour-calendar__slot-label,
+.is-tour-calendar__form-row label,
+.is-tour-calendar__form-row legend {
+  color: var(--iss-cal-text);
+  font-size: 0.94rem;
+  font-weight: 700;
+}
+
+.is-tour-calendar__slot-select,
+.is-tour-calendar__form-row input {
+  border: 1px solid var(--iss-cal-line);
+  border-radius: var(--iss-cal-radius);
+  background: #fff;
+  color: var(--iss-cal-text);
+}
+
+.is-tour-calendar__slot-select:focus,
+.is-tour-calendar__form-row input:focus {
+  outline: none;
+  border-color: var(--iss-cal-accent);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--iss-cal-accent) 10%, transparent);
+}
+
+.is-tour-calendar__selected-date {
+  color: var(--iss-cal-text);
+  font-size: 0.98rem;
+  font-weight: 700;
+}
+
+.is-tour-calendar__appointments {
+  background: color-mix(in srgb, var(--iss-cal-bg) 85%, white);
+}
+
+.is-tour-calendar__appointments-title-label {
+  color: var(--iss-cal-text);
+  font-size: 1rem;
+  font-weight: 600;
+}
+
+.is-tour-calendar__appointments-title-date {
+  color: var(--iss-cal-text);
+  font-size: 1.05rem;
+  font-weight: 800;
+}
+
+.is-tour-calendar__appointments-divider,
+.is-tour-calendar__appointment,
+.is-tour-calendar__booking {
+  border-top: 1px solid var(--iss-cal-line);
+}
+
+.is-tour-calendar__time-btn,
+.is-tour-calendar__slot-card {
+  border-left-width: 3px;
+  border-left-style: solid;
+  border-left-color: color-mix(in srgb, var(--iss-cal-accent) 45%, var(--iss-cal-line));
+}
+
+.is-tour-calendar__time-btn:hover,
+.is-tour-calendar__time-btn:focus-visible,
+.is-tour-calendar__slot-card:hover,
+.is-tour-calendar__slot-card:focus-visible,
+.is-tour-calendar__appointment.is-selected {
+  border-color: var(--iss-cal-accent);
+  background: color-mix(in srgb, var(--iss-cal-accent) 8%, var(--iss-cal-bg));
+  transform: translateY(-1px);
+}
+
+.is-tour-calendar__time-btn.is-selected,
+.is-tour-calendar__slot-card.is-selected {
+  border-color: var(--iss-cal-accent);
+  background: color-mix(in srgb, var(--iss-cal-accent) 14%, var(--iss-cal-bg));
+}
+
+.is-tour-calendar__slot-card--disabled,
+.is-tour-calendar__time-btn:disabled,
+.is-tour-calendar__appointment-btn:disabled {
+  border-color: color-mix(in srgb, var(--iss-cal-line) 90%, transparent);
+  background: color-mix(in srgb, var(--iss-grey, #c0b8b5) 18%, white);
+  color: rgba(30, 30, 30, 0.42);
+  cursor: not-allowed;
+  transform: none;
+}
+
+.is-tour-calendar__appointment-btn,
+.is-tour-calendar__form-actions button,
+.iss-tour-single .is-tour-calendar__slot-card::after {
+  position: relative;
+  border-color: var(--iss-cal-accent);
+  background: var(--iss-cal-accent);
+  color: #fff;
+  font-size: 0.92rem;
+  font-weight: 700;
+}
+
+.is-tour-calendar__appointment-btn:hover,
+.is-tour-calendar__appointment-btn:focus-visible,
+.is-tour-calendar__form-actions button:hover,
+.is-tour-calendar__form-actions button:focus-visible {
+  border-color: var(--iss-cal-accent-hover);
+  background: var(--iss-cal-accent-hover);
+  color: #fff;
+  transform: translateY(-1px);
+}
+
+.is-tour-calendar__nav-btn.wp-block-button__link,
+.is-tour-calendar-modal__close {
+  min-width: 2.5rem;
+  min-height: 2.5rem;
+  padding: 0.4rem 0.8rem;
+  text-decoration: none;
+}
+
+.is-tour-calendar__nav-btn.wp-block-button__link:hover,
+.is-tour-calendar__nav-btn.wp-block-button__link:focus-visible,
+.is-tour-calendar-modal__close:hover,
+.is-tour-calendar-modal__close:focus-visible {
+  border-color: var(--iss-cal-accent);
+  background: color-mix(in srgb, var(--iss-cal-accent) 8%, var(--iss-cal-bg));
+  color: var(--iss-cal-accent);
+  transform: none;
+}
+
+.is-tour-calendar-modal__overlay {
+  background: color-mix(in srgb, var(--iss-cal-text) 46%, transparent);
+}
+
+.is-tour-calendar__form-status {
+  color: var(--iss-cal-accent);
+  font-size: 1rem;
+  font-weight: 700;
+}
+
+.iss-tour-single__termine-bar {
+  background: var(--iss-cal-surface);
+  border-top: 1px solid var(--iss-cal-line);
+  border-bottom: 1px solid var(--iss-cal-line);
+}
+
+.iss-tour-single .is-tour-calendar__heading {
+  color: var(--iss-cal-text);
+  font-size: clamp(1.5rem, 2.4vw, 2rem);
+}
+
+.iss-tour-single .is-tour-calendar__status {
+  color: var(--iss-cal-muted);
+}
+
+.iss-tour-single .is-tour-calendar__calendar {
+  border: 1px solid var(--iss-cal-line);
+  border-left: var(--iss-cal-panel-rail) solid var(--iss-cal-accent);
+  border-radius: calc(var(--iss-cal-radius-panel) - 2px);
+  background: var(--iss-cal-bg);
+  box-shadow: none;
+}
+
+.iss-tour-single .is-tour-calendar__weekdays {
+  color: var(--iss-cal-muted);
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.iss-tour-single .is-tour-calendar__day-cell {
+  border-radius: calc(var(--iss-cal-radius) - 1px);
+}
+
+.iss-tour-single .is-tour-calendar__selected-date {
+  border-bottom: 1px solid var(--iss-cal-line);
+  color: var(--iss-cal-text);
+  font-size: 1.05rem;
+}
+
+.iss-tour-single .is-tour-calendar__slot-card {
+  border-color: var(--iss-cal-line);
+  border-left: 3px solid color-mix(in srgb, var(--iss-cal-accent) 45%, var(--iss-cal-line));
+  border-radius: calc(var(--iss-cal-radius) + 1px);
+  background: #fff;
+}
+
+.iss-tour-single .is-tour-calendar__slot-card:hover,
+.iss-tour-single .is-tour-calendar__slot-card:focus-visible {
+  border-color: var(--iss-cal-accent);
+  background: color-mix(in srgb, var(--iss-cal-accent) 8%, white);
+}
+
+.iss-tour-single .is-tour-calendar__slot-card.is-selected {
+  border-color: var(--iss-cal-accent);
+  background: color-mix(in srgb, var(--iss-cal-accent) 12%, white);
+}
+
+.iss-tour-single .is-tour-calendar__slot-time {
+  color: var(--iss-cal-text);
+  font-size: 1rem;
+  font-weight: 700;
+}
+
+.iss-tour-single .is-tour-calendar__slot-meta {
+  color: var(--iss-cal-muted);
+  font-size: 0.95rem;
+}
+
+.iss-tour-single .is-tour-calendar__empty {
+  border: 1px dashed var(--iss-cal-line);
+  border-radius: calc(var(--iss-cal-radius) + 1px);
+  background: #fff;
+}
+
+.iss-tour-single .is-tour-calendar__slot-card::after {
+  border-left: 3px solid color-mix(in srgb, #000 12%, transparent);
+  border-radius: calc(var(--iss-cal-radius) - 1px);
+}
+
+@media (max-width: 900px) {
+  .iss-tour-single .is-tour-calendar__slot-card::after {
+    justify-self: stretch;
+  }
+}

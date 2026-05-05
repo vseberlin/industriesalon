@@ -1,0 +1,358 @@
+/* =====================================================================
+   FILE: page-events.css
+   ROLE: Veranstaltungen landing page.
+   LOAD: only on /veranstaltungen/.
+
+   OWNERSHIP:
+   - Event-specific section layout belongs here.
+   - Shared card anatomy stays in cards.css.
+   - Shared heading, hero, and utility behavior stays in patterns.css.
+   ===================================================================== */
+
+.iss-events-page {
+  --iss-accent: var(--iss-blue);
+  background: var(--iss-white);
+  color: var(--iss-black);
+  padding-top: 0;
+}
+
+.iss-events-page,
+#wp--skip-link--target .iss-events-page {
+  margin-top: 0 !important;
+}
+
+.iss-events-page > .section:not(.iss-section--hero) {
+  border-top: 1px solid rgba(134, 159, 186, 0.22);
+}
+
+.iss-events-page .section:not(.iss-section--hero) .iss-heading > .iss-kicker,
+.iss-events-page .section:not(.iss-section--hero) .iss-heading > .iss-kicker--compact {
+  padding-left: 0.85rem;
+  border-left: 3px solid var(--iss-blue);
+  color: var(--iss-blue);
+}
+
+.iss-events-context,
+.iss-events-program,
+.iss-events-formats,
+.iss-events-cta {
+  padding-top: clamp(2.15rem, 4vw, 3rem);
+}
+
+.iss-events-context__work {
+  display: grid;
+  gap: clamp(1.5rem, 3vw, 2.4rem);
+}
+
+.iss-events-context__top {
+  display: grid;
+  grid-template-columns: minmax(0, 1.12fr) minmax(16rem, 0.82fr);
+  gap: clamp(2rem, 5vw, 4.75rem);
+  align-items: start;
+}
+
+.iss-events-context__copy {
+  max-width: 62rem;
+}
+
+.iss-events-context__lead {
+  max-width: 50rem;
+  margin: 0;
+  font-size: clamp(1.28rem, 1.65vw, 1.92rem);
+  line-height: 1.24;
+  letter-spacing: -0.03em;
+}
+
+.iss-events-context__textcols {
+  column-count: 2;
+  column-gap: clamp(1.75rem, 3.5vw, 3.75rem);
+  max-width: 64rem;
+  margin-top: clamp(1.15rem, 2.3vw, 1.85rem);
+  color: rgba(30, 30, 30, 0.78);
+  font-size: 1.02rem;
+  line-height: 1.64;
+}
+
+.iss-events-context__textcols p {
+  margin: 0;
+}
+
+.iss-events-context__textcols p + p {
+  margin-top: 1.15rem;
+}
+
+.iss-events-context__head-wrap {
+  display: flex;
+  justify-content: flex-end;
+}
+
+.iss-events-context__head {
+  max-width: 32rem;
+}
+
+.iss-events-context__title {
+  max-width: 11ch;
+  margin: 0;
+  font-size: clamp(2.3rem, 4vw, 4.7rem);
+  line-height: 0.95;
+  letter-spacing: -0.055em;
+  text-wrap: balance;
+}
+
+.iss-events-context__note {
+  max-width: 30rem;
+  padding-top: 1rem;
+  border-top: 3px solid var(--iss-blue);
+}
+
+.iss-events-context__note p {
+  margin: 0;
+  color: rgba(30, 30, 30, 0.78);
+  font-size: 1rem;
+  line-height: 1.6;
+}
+
+.iss-events-program__grid {
+  gap: 0;
+}
+
+.iss-events-program__grid > .wp-block-column {
+  margin-top: 0;
+}
+
+.iss-events-program__listing-col,
+.iss-events-program__aside-col {
+  display: grid;
+  align-content: start;
+  gap: 1rem;
+  padding: 0 1.75rem;
+  border-left: 1px solid rgba(134, 159, 186, 0.18);
+}
+
+.iss-events-program__listing-col {
+  padding-left: 0;
+  border-left: 0;
+}
+
+.iss-events-program__listing {
+  display: grid;
+  gap: 1.35rem;
+}
+
+.iss-events-program__listing-head {
+  display: flex;
+  align-items: end;
+  justify-content: space-between;
+  gap: 1rem;
+  padding-bottom: 0.95rem;
+  border-bottom: 1px solid rgba(134, 159, 186, 0.18);
+}
+
+.iss-events-program__listing-head .iss-heading {
+  margin: 0;
+  max-width: 34rem;
+}
+
+.iss-events-program__listing-head .iss-heading__title {
+  margin: 0;
+  font-size: clamp(2rem, 3vw, 3rem);
+  line-height: 1.02;
+  letter-spacing: -0.04em;
+}
+
+.iss-events-program__listing-head .iss-heading__text {
+  margin-top: 0.45rem;
+  color: rgba(30, 30, 30, 0.78);
+  font-size: 1.02rem;
+  line-height: 1.55;
+}
+
+.iss-events-program__all-link {
+  margin: 0;
+  white-space: nowrap;
+}
+
+.iss-events-program .iss-timeline-query,
+.iss-events-program .iss-timeline-query.iss-container {
+  width: auto;
+  max-width: none;
+  margin: 0;
+  padding-inline: 0;
+}
+
+.iss-events-program .iss-timeline__filters {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.85rem 1rem;
+  align-items: end;
+  margin-bottom: 1rem;
+  padding: 0 0 1rem;
+  border-bottom: 1px solid rgba(134, 159, 186, 0.18);
+}
+
+.iss-events-program .iss-timeline__filter {
+  flex: 1 1 12rem;
+  max-width: 14rem;
+  min-width: 0;
+}
+
+.iss-events-program .iss-timeline__filter select,
+.iss-events-program .iss-timeline__filter input {
+  width: 100%;
+}
+
+.iss-events-program .iss-timeline__filter-actions {
+  display: flex;
+  flex: 0 0 auto;
+  align-items: end;
+  justify-content: flex-end;
+  margin-left: auto;
+}
+
+.iss-events-program .iss-timeline__filter-actions .iss-timeline__apply {
+  width: auto;
+  white-space: nowrap;
+}
+
+.iss-events-program .iss-timeline-query__meta {
+  margin-bottom: 1rem;
+}
+
+.iss-events-program .iss-timeline__year-label {
+  margin-bottom: 0.9rem;
+}
+
+.iss-events-program .iss-timeline__item {
+  padding: 1rem 0;
+}
+
+.iss-events-program__aside {
+  display: grid;
+  gap: 1.5rem;
+}
+
+.iss-events-program__aside-block {
+  display: grid;
+  gap: 0.8rem;
+}
+
+.iss-events-program__archive-teaser {
+  padding-top: 0.95rem;
+  border-top: 1px solid rgba(134, 159, 186, 0.18);
+}
+
+.iss-events-program__aside-title {
+  margin: 0;
+  font-size: clamp(1.35rem, 1.2rem + 0.5vw, 1.9rem);
+  line-height: 1.1;
+  letter-spacing: -0.03em;
+  text-wrap: balance;
+}
+
+.iss-events-program__aside-list {
+  margin: 0;
+  padding-left: 1.15rem;
+  display: grid;
+  gap: 0.65rem;
+}
+
+.iss-events-program__aside-list li::marker {
+  color: var(--iss-blue);
+}
+
+.iss-events-program__aside-link {
+  margin: 0.2rem 0 0;
+}
+
+.iss-events-formats__head {
+  max-width: 46rem;
+}
+
+.iss-events-formats__head .iss-heading__title {
+  margin: 0;
+  font-size: clamp(2rem, 3vw, 3.15rem);
+  line-height: 1.02;
+  letter-spacing: -0.045em;
+  text-wrap: balance;
+}
+
+.iss-events-formats__head .iss-heading__text {
+  font-size: 1.08rem;
+  line-height: 1.6;
+}
+
+@media (max-width: 1100px) {
+  .iss-events-context__top {
+    grid-template-columns: 1fr;
+    gap: 1.5rem;
+  }
+
+  .iss-events-context__head-wrap {
+    justify-content: flex-start;
+  }
+
+  .iss-events-context__head {
+    max-width: none;
+  }
+
+  .iss-events-context__title {
+    max-width: none;
+  }
+
+  .iss-events-program__grid {
+    gap: 1.25rem;
+  }
+
+  .iss-events-program__listing-col,
+  .iss-events-program__aside-col {
+    padding: 0;
+    border-left: 0;
+  }
+
+  .iss-events-program__listing-head {
+    align-items: start;
+    flex-direction: column;
+  }
+
+  .iss-events-program .iss-timeline__filter-actions {
+    justify-content: flex-start;
+    margin-left: 0;
+  }
+}
+
+@media (max-width: 781px) {
+  .iss-events-context,
+  .iss-events-program,
+  .iss-events-formats,
+  .iss-events-cta {
+    padding-top: 1.6rem;
+  }
+
+  .iss-events-context__lead {
+    font-size: clamp(1.14rem, 4.4vw, 1.45rem);
+  }
+
+  .iss-events-context__textcols {
+    column-count: 1;
+    margin-top: 1rem;
+  }
+
+  .iss-events-context__title,
+  .iss-events-program__listing-head .iss-heading__title,
+  .iss-events-formats__head .iss-heading__title {
+    font-size: clamp(1.85rem, 8.5vw, 2.75rem);
+  }
+
+  .iss-events-program__aside {
+    gap: 1.25rem;
+  }
+
+  .iss-events-program .iss-timeline__filter {
+    flex-basis: 100%;
+    max-width: none;
+  }
+
+  .iss-events-program .iss-timeline__filter-actions {
+    width: 100%;
+  }
+}

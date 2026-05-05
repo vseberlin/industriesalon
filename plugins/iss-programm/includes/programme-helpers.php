@@ -437,10 +437,11 @@ if (!function_exists('iss_programm_render_card')) {
             ? (string) get_the_excerpt($post_id)
             : wp_trim_words(wp_strip_all_tags((string) $post->post_content), 28);
 
-        return '<article class="iss-programm-card iss-programm-card--' . esc_attr(sanitize_html_class((string) $context)) . '">'
-            . '<h3 class="iss-programm-card__title"><a href="' . esc_url((string) $permalink) . '">' . esc_html((string) $title) . '</a></h3>'
-            . ($excerpt !== '' ? '<p class="iss-programm-card__excerpt">' . esc_html($excerpt) . '</p>' : '')
-            . '</article>';
+        return '<article class="iss-card iss-card--flat iss-program-cards__card iss-program-cards__card--' . esc_attr(sanitize_html_class((string) $context)) . '">'
+            . '<div class="iss-card__body">'
+            . '<h3 class="iss-card__title"><a href="' . esc_url((string) $permalink) . '">' . esc_html((string) $title) . '</a></h3>'
+            . ($excerpt !== '' ? '<p class="iss-card__text">' . esc_html($excerpt) . '</p>' : '')
+            . '</div></article>';
     }
 }
 

@@ -26,6 +26,7 @@
     "postTypesList": { "type": "array", "default": [] },
     "taxonomyPresetRules": { "type": "array", "default": [] },
     "taxonomyUiRules": { "type": "array", "default": [] },
+    "presetButtons": { "type": "array", "default": [] },
     "showTimeModeFilter": { "type": "boolean", "default": false },
     "showTypeFilter": { "type": "boolean", "default": true },
     "showPostTypeFilter": { "type": "boolean", "default": false },

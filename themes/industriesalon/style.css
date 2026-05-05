@@ -232,19 +232,53 @@ body {
   line-height: 1.6;
 }
 
-/* Default arrow CTA for discovery links. Use pill buttons only for explicit actions. */
-.iss-action-link {
+/* Global CTA primitives.
+   Accent comes from the surrounding page or component wrapper via --iss-accent.
+   Use .iss-action-link / .iss-card__link for discovery and wp buttons for actions. */
+:root {
+  --iss-link-fg: var(--iss-accent);
+  --iss-link-hover-fg: var(--iss-black);
+  --iss-button-fg: var(--iss-black);
+  --iss-button-bg: transparent;
+  --iss-button-fill-bg: var(--iss-accent-soft);
+  --iss-button-border: var(--iss-border);
+  --iss-button-fill-border: var(--iss-accent-border);
+  --iss-button-hover-bg: var(--iss-accent-soft);
+  --iss-button-hover-border: var(--iss-accent);
+  --iss-button-hover-fg: var(--iss-black);
+}
+
+.iss-about-cta,
+.iss-archive-research-cta,
+.iss-videos-page,
+.iss-control-info-panel--surface-dark,
+.iss-rental-cta {
+  --iss-link-fg: var(--iss-white);
+  --iss-link-hover-fg: var(--iss-white);
+  --iss-button-fg: var(--iss-white);
+  --iss-button-bg: transparent;
+  --iss-button-fill-bg: rgba(249, 249, 250, 0.08);
+  --iss-button-border: rgba(249, 249, 250, 0.42);
+  --iss-button-fill-border: rgba(249, 249, 250, 0.58);
+  --iss-button-hover-bg: rgba(249, 249, 250, 0.12);
+  --iss-button-hover-border: rgba(249, 249, 250, 0.72);
+  --iss-button-hover-fg: var(--iss-white);
+}
+
+.iss-action-link,
+.iss-card__link {
   display: inline-flex;
   align-items: center;
   gap: 0.45rem;
-  color: var(--iss-black);
+  color: var(--iss-link-fg);
   font-size: 0.95rem;
   font-weight: 600;
   text-decoration: none;
   transition: color var(--iss-transition);
 }
 
-.iss-action-link::after {
+.iss-action-link::after,
+.iss-card__link::after {
   content: "→";
   font-size: 1rem;
   line-height: 1;
@@ -252,17 +286,57 @@ body {
 }
 
 .iss-action-link:hover,
-.iss-action-link:focus-visible {
-  color: var(--iss-accent);
+.iss-action-link:focus-visible,
+.iss-card__link:hover,
+.iss-card__link:focus-visible {
+  color: var(--iss-link-hover-fg);
 }
 
 .iss-action-link:hover::after,
-.iss-action-link:focus-visible::after {
+.iss-action-link:focus-visible::after,
+.iss-card__link:hover::after,
+.iss-card__link:focus-visible::after {
   transform: translateX(2px);
 }
 
 .iss-action-link--light {
-  color: var(--iss-white);
+  --iss-link-fg: var(--iss-white);
+  --iss-link-hover-fg: var(--iss-white);
+}
+
+.wp-block-button > .wp-block-button__link {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  min-height: 48px;
+  padding: 0.75rem 1.25rem 0.75rem 1rem;
+  border: 1px solid var(--iss-button-fill-border);
+  border-left: 4px solid var(--iss-accent);
+  border-radius: 0;
+  background: var(--iss-button-fill-bg);
+  color: var(--iss-button-fg);
+  box-shadow: none;
+  font-size: 1rem;
+  font-weight: 600;
+  line-height: 1.1;
+  text-decoration: none;
+  transition:
+    background-color var(--iss-transition),
+    color var(--iss-transition),
+    border-color var(--iss-transition);
+}
+
+.wp-block-button.is-style-outline > .wp-block-button__link {
+  background: var(--iss-button-bg);
+  border-color: var(--iss-button-border);
+}
+
+.wp-block-button > .wp-block-button__link:hover,
+.wp-block-button > .wp-block-button__link:focus-visible {
+  background: var(--iss-button-hover-bg);
+  border-color: var(--iss-button-hover-border);
+  color: var(--iss-button-hover-fg);
 }
 
 /* Base Container */

@@ -950,27 +950,6 @@
   margin: 0;
 }
 
-.iss-about-cta__links .iss-action-link {
-  color: var(--iss-white);
-}
-
-.iss-about-cta__links .iss-action-link:hover,
-.iss-about-cta__links .iss-action-link:focus-visible {
-  color: var(--iss-white);
-}
-
-.iss-about-cta .wp-block-button.is-style-outline .wp-block-button__link {
-  color: var(--iss-white);
-  border-color: rgba(249, 249, 250, 0.45);
-  background: transparent;
-}
-
-.iss-about-cta .wp-block-button.is-style-outline .wp-block-button__link:hover,
-.iss-about-cta .wp-block-button.is-style-outline .wp-block-button__link:focus-visible {
-  border-color: var(--iss-white);
-  background: rgba(249, 249, 250, 0.1);
-}
-
 @media (max-width: 1024px) {
   .iss-about-hero__inner {
     min-height: auto;

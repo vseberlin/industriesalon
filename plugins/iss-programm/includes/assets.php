@@ -91,6 +91,7 @@ function iss_programm_enqueue_calendar_assets() {
 
     wp_enqueue_style('is-tour-calendar-flatpickr');
     wp_enqueue_style('is-tour-calendar');
+    do_action('iss_programm_calendar_assets_enqueued');
     wp_enqueue_script('is-tour-calendar-flatpickr');
     wp_enqueue_script('is-tour-calendar-flatpickr-l10n-de');
     wp_enqueue_script('is-tour-calendar');
@@ -102,6 +103,7 @@ function iss_programm_enqueue_timeline_assets() {
     }
 
     wp_enqueue_style('iss-timeline');
+    do_action('iss_programm_timeline_assets_enqueued');
 }
 
 function iss_programm_enqueue_timeline_query_assets() {

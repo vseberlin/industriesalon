@@ -1,0 +1,164 @@
+/* =========================================================
+   GROUP: Publications
+   PURPOSE:
+   Editorial publication archive and single publication layout for the
+   ISS publications plugin.
+   ========================================================= */
+
+.iss-publications-feature {
+  display: grid;
+  grid-template-columns: minmax(0, 0.9fr) minmax(0, 1.1fr);
+  gap: clamp(1.5rem, 4vw, 4rem);
+  align-items: center;
+}
+
+.iss-publications-feature__cover .iss-media-card {
+  height: 100%;
+}
+
+.iss-publications-feature__cover img {
+  display: block;
+  width: 100%;
+  height: auto;
+  object-fit: contain;
+}
+
+.iss-publications-feature__action {
+  margin: 1.25rem 0 0;
+}
+
+.iss-publications-grid {
+  margin-top: clamp(1.5rem, 3vw, 2rem);
+}
+
+.iss-publications-query .wp-block-post-template {
+  margin-top: clamp(1.5rem, 3vw, 2rem);
+  margin-bottom: 0;
+  padding-left: 0;
+  list-style: none;
+}
+
+.iss-publications-query .wp-block-post {
+  margin: 0;
+}
+
+.iss-publications-page--narrative .section--soft {
+  background: linear-gradient(180deg, rgba(30, 30, 30, 0.03), rgba(30, 30, 30, 0.05));
+}
+
+.iss-publications-masthead {
+  padding-top: max(8.5rem, calc(var(--iss-site-logo-bottom, 176px) + 2rem));
+  background: linear-gradient(180deg, rgba(162, 128, 97, 0.24) 0%, rgba(162, 128, 97, 0.14) 32%, rgba(162, 128, 97, 0.06) 58%, rgba(255, 255, 255, 0) 100%);
+}
+
+.iss-publications-masthead__grid {
+  gap: clamp(2rem, 4vw, 4rem);
+  align-items: start;
+}
+
+.iss-publications-intro {
+  max-width: 62rem;
+  margin-left: auto;
+}
+
+.iss-publications-masthead__aside {
+  display: grid;
+  gap: 0.85rem;
+  max-width: 28rem;
+  padding-top: 0.35rem;
+}
+
+.iss-publications-masthead__aside p {
+  margin: 0;
+  color: rgba(30, 30, 30, 0.78);
+  line-height: 1.55;
+}
+
+.iss-publications-prose {
+  max-width: 58rem;
+  display: grid;
+  gap: 1.1rem;
+}
+
+.iss-publications-prose p,
+.iss-publication-single__standfirst p {
+  margin: 0;
+  font-size: clamp(1.05rem, 0.98rem + 0.28vw, 1.22rem);
+  line-height: 1.72;
+  color: rgba(30, 30, 30, 0.86);
+}
+
+.iss-publications-prose__aside {
+  padding-top: 0.35rem;
+  color: rgba(30, 30, 30, 0.62);
+  font-size: 0.98rem;
+}
+
+.iss-publication-card__cover {
+  display: flex;
+  align-items: stretch;
+  background: #fff;
+  aspect-ratio: 5 / 4;
+  margin: 0;
+}
+
+.iss-publication-card__cover,
+.iss-publication-card__cover a {
+  display: flex;
+  flex: 1 1 auto;
+  align-items: stretch;
+  width: 100%;
+  height: 100%;
+}
+
+.iss-publication-card__cover img {
+  display: block;
+  flex: 1 1 auto;
+  width: 100%;
+  height: 100%;
+  min-height: 100%;
+  max-height: none;
+  object-fit: cover !important;
+  object-position: center;
+  background: #fff;
+}
+
+.iss-publication-card .iss-card__body {
+  gap: 0.75rem;
+}
+
+.iss-publication-card .iss-card__text {
+  font-size: 0.95rem;
+  line-height: 1.6;
+}
+
+.iss-publication-card .iss-card__meta {
+  font-size: 0.76rem;
+  color: rgba(30, 30, 30, 0.54);
+}
+
+.iss-publication-card .iss-card__footer {
+  padding-top: 0.1rem;
+}
+
+.iss-publication-single__layout {
+  display: grid;
+  grid-template-columns: minmax(0, 1.2fr) minmax(18rem, 0.8fr);
+  gap: clamp(1.5rem, 4vw, 4rem);
+  align-items: start;
+}
+
+.iss-publication-single__intro {
+  max-width: 60rem;
+  margin-left: auto;
+}
+
+.iss-publication-single__standfirst {
+  max-width: 46rem;
+}
+
+.iss-publication-single__standfirst,
+.iss-publication-single__standfirst p {
+  margin: 0;
+}
+

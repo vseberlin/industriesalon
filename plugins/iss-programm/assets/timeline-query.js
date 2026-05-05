@@ -24,6 +24,7 @@ document.addEventListener('DOMContentLoaded', function () {
     var loadMoreWrap = root.querySelector('[data-timeline-query-load-more-wrap]');
     var loadMoreButton = root.querySelector('[data-timeline-query-load-more]');
     var presetButtons = root.querySelectorAll('[data-timeline-preset]');
+    var defaultPresetButton = root.querySelector('[data-timeline-preset-default="true"]');
     var calendarMonthInput = root.querySelector('[data-calendar-bridge-month]');
     var calendarDayInput = root.querySelector('[data-calendar-bridge-day]');
     var calendarResetButton = root.querySelector('[data-calendar-bridge-reset]');
@@ -63,8 +64,13 @@ document.addEventListener('DOMContentLoaded', function () {
     function syncMonthVisibility() {
       var timeMode = form.querySelector('[data-filter-key="time_mode"]');
       var monthSelect = form.querySelector('[data-filter-key="month"]');
+      var monthFilter = form.querySelector('[data-timeline-month-filter]');
       if (!timeMode || !monthSelect) return;
-      monthSelect.hidden = getControlValue(timeMode) !== 'month';
+      var showMonth = getControlValue(timeMode) === 'month';
+      monthSelect.hidden = !showMonth;
+      if (monthFilter) {
+        monthFilter.hidden = !showMonth;
+      }
     }
 
     function getTimeModeInput() {
@@ -152,11 +158,7 @@ document.addEventListener('DOMContentLoaded', function () {
       }
 
       if (presetButtons.length) {
-        presetButtons.forEach(function (button) {
-          var shouldBeActive = button.getAttribute('aria-pressed') === 'true' && !activePreset;
-          button.classList.toggle('is-active', !!shouldBeActive);
-        });
-        activePreset = null;
+        setActivePreset(defaultPresetButton || null);
       }
 
       config.filters = JSON.parse(JSON.stringify(initialFilters || {}));
@@ -255,7 +257,7 @@ document.addEventListener('DOMContentLoaded', function () {
       activePreset = null;
 
       presetButtons.forEach(function (node) {
-        var isActive = node === button;
+        var isActive = !!button && node === button;
         node.classList.toggle('is-active', isActive);
         node.setAttribute('aria-pressed', isActive ? 'true' : 'false');
         if (!isActive) return;
@@ -391,11 +393,17 @@ document.addEventListener('DOMContentLoaded', function () {
     }
 
     if (presetButtons.length) {
-      presetButtons.forEach(function (button) {
-        if (button.getAttribute('aria-pressed') === 'true') {
-          setActivePreset(button);
-        }
+      if (defaultPresetButton) {
+        setActivePreset(defaultPresetButton);
+      } else {
+        presetButtons.forEach(function (button) {
+          if (button.getAttribute('aria-pressed') === 'true') {
+            setActivePreset(button);
+          }
+        });
+      }
 
+      presetButtons.forEach(function (button) {
         button.addEventListener('click', function () {
           if (requestInFlight) return;
           setActivePreset(button);

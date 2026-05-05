@@ -397,6 +397,8 @@ function iss_timeline_get_card_badge_label($row) {
 
 function iss_timeline_render_items_cards($items, $opts = []) {
     $items = is_array($items) ? $items : [];
+    $opts = is_array($opts) ? $opts : [];
+    $show_meta = !array_key_exists('showMeta', $opts) || (bool) $opts['showMeta'];
     $out = '<div class="iss-card-grid iss-timeline-cards">';
 
     foreach ($items as $item) {
@@ -415,8 +417,26 @@ function iss_timeline_render_items_cards($items, $opts = []) {
         $source_post_id = isset($row['source_post_id']) ? (int) $row['source_post_id'] : 0;
         $permalink = $source_post_id > 0 ? get_permalink($source_post_id) : '';
         $permalink = is_string($permalink) ? trim($permalink) : '';
+        $card_footer = '';
 
-        $out .= '<article class="iss-card iss-card--flat iss-timeline-card">';
+        if (count($actions) === 1 && $permalink !== '') {
+            $action = $actions[0];
+            $variant = isset($action['variant']) ? sanitize_key((string) $action['variant']) : 'secondary';
+            $action_url = isset($action['url']) ? untrailingslashit((string) $action['url']) : '';
+            $details_url = untrailingslashit($permalink);
+
+            if ($variant === 'secondary'
+                && $action_url === $details_url
+                && empty($action['attrs'])
+                && empty($action['classes'])
+            ) {
+                $card_footer = '<div class="iss-card__footer"><a class="iss-card__link" href="'
+                    . esc_url($permalink) . '">' . esc_html((string) ($action['label'] ?? '')) . '</a></div>';
+                $actions = [];
+            }
+        }
+
+        $out .= '<article class="iss-card iss-card--flat iss-card--media-wide iss-timeline-card">';
 
         if ($source_post_id > 0 && has_post_thumbnail($source_post_id)) {
             $out .= '<figure class="iss-card__media iss-timeline-card__media">';
@@ -444,7 +464,7 @@ function iss_timeline_render_items_cards($items, $opts = []) {
         }
         $out .= '</h3>';
 
-        if (!empty($row['date_label'])) {
+        if ($show_meta && !empty($row['date_label'])) {
             $meta = (string) $row['date_label'];
             if (!empty($row['time_label'])) {
                 $meta .= ' · ' . (string) $row['time_label'];
@@ -454,6 +474,10 @@ function iss_timeline_render_items_cards($items, $opts = []) {
 
         if ($summary !== '') {
             $out .= '<p class="iss-card__text iss-timeline-card__text">' . esc_html($summary) . '</p>';
+        }
+
+        if ($card_footer !== '') {
+            $out .= $card_footer;
         }
 
         if (!empty($actions)) {
@@ -782,6 +806,145 @@ function iss_timeline_get_time_mode_options_from_attributes($attributes = []) {
     return $options;
 }
 
+function iss_timeline_normalize_preset_button_list($buttons = []) {
+    $buttons = is_array($buttons) ? $buttons : [];
+    $normalized = [];
+    $default_index = -1;
+    $allowed_time_modes = ['upcoming', 'month', 'past', 'all'];
+
+    foreach ($buttons as $button) {
+        if (!is_array($button)) {
+            continue;
+        }
+
+        $label = trim(sanitize_text_field((string) ($button['label'] ?? '')));
+        if ($label === '') {
+            continue;
+        }
+
+        $time_mode = sanitize_key((string) ($button['timeMode'] ?? ''));
+        if (!in_array($time_mode, $allowed_time_modes, true)) {
+            $time_mode = '';
+        }
+
+        $taxonomy = sanitize_key((string) ($button['taxonomy'] ?? ''));
+        if ($taxonomy !== '' && !taxonomy_exists($taxonomy)) {
+            $taxonomy = '';
+        }
+
+        $terms = $button['terms'] ?? [];
+        if (!is_array($terms)) {
+            $terms = preg_split('/[\r\n,]+/', (string) $terms);
+        }
+        $terms = array_values(array_unique(array_filter(array_map('sanitize_title', $terms))));
+        if ($taxonomy === '') {
+            $terms = [];
+        }
+
+        $is_default = !empty($button['isDefault']);
+        if ($is_default && $default_index < 0) {
+            $default_index = count($normalized);
+        }
+
+        $normalized[] = [
+            'label' => $label,
+            'timeMode' => $time_mode,
+            'taxonomy' => $taxonomy,
+            'terms' => $terms,
+            'isDefault' => false,
+        ];
+    }
+
+    if (!empty($normalized)) {
+        if ($default_index < 0) {
+            $default_index = 0;
+        }
+
+        foreach ($normalized as $index => &$button) {
+            $button['isDefault'] = ($index === $default_index);
+        }
+        unset($button);
+    }
+
+    return $normalized;
+}
+
+function iss_timeline_get_preset_buttons_from_attributes($attributes = []) {
+    $attributes = is_array($attributes) ? $attributes : [];
+
+    return !empty($attributes['presetButtons']) && is_array($attributes['presetButtons'])
+        ? iss_timeline_normalize_preset_button_list($attributes['presetButtons'])
+        : [];
+}
+
+function iss_timeline_get_default_preset_button($attributes = []) {
+    $buttons = iss_timeline_get_preset_buttons_from_attributes($attributes);
+    foreach ($buttons as $button) {
+        if (!empty($button['isDefault'])) {
+            return $button;
+        }
+    }
+
+    return [];
+}
+
+function iss_timeline_merge_preset_filters($filters = [], $preset = []) {
+    $filters = is_array($filters) ? $filters : [];
+    $preset = is_array($preset) ? $preset : [];
+
+    if (!empty($preset['timeMode'])) {
+        $filters['time_mode'] = sanitize_key((string) $preset['timeMode']);
+    }
+
+    if (!isset($filters['taxonomy_filters']) || !is_array($filters['taxonomy_filters'])) {
+        $filters['taxonomy_filters'] = [];
+    }
+
+    if (!empty($preset['taxonomy']) && !empty($preset['terms']) && is_array($preset['terms'])) {
+        $filters['taxonomy_filters'][] = [
+            'taxonomy' => sanitize_key((string) $preset['taxonomy']),
+            'field' => 'slug',
+            'terms' => array_values(array_unique(array_filter(array_map('sanitize_title', $preset['terms'])))),
+            'operator' => 'IN',
+        ];
+    }
+
+    return $filters;
+}
+
+function iss_timeline_render_preset_buttons($attributes = []) {
+    $buttons = iss_timeline_get_preset_buttons_from_attributes($attributes);
+    if (empty($buttons)) {
+        return '';
+    }
+
+    $out = '<div class="iss-timeline__presets" data-timeline-presets>';
+    foreach ($buttons as $button) {
+        $label = $button['label'];
+        $time_mode = $button['timeMode'] ?? '';
+        $taxonomy = $button['taxonomy'] ?? '';
+        $terms = !empty($button['terms']) && is_array($button['terms']) ? implode(',', $button['terms']) : '';
+        $is_default = !empty($button['isDefault']);
+
+        $out .= '<button type="button" class="iss-timeline__preset' . ($is_default ? ' is-active' : '') . '" data-timeline-preset';
+        $out .= ' data-timeline-preset-default="' . ($is_default ? 'true' : 'false') . '"';
+        $out .= ' aria-pressed="' . ($is_default ? 'true' : 'false') . '"';
+        if ($time_mode !== '') {
+            $out .= ' data-preset-time-mode="' . esc_attr($time_mode) . '"';
+        }
+        if ($taxonomy !== '') {
+            $out .= ' data-preset-taxonomy="' . esc_attr($taxonomy) . '"';
+        }
+        if ($terms !== '') {
+            $out .= ' data-preset-terms="' . esc_attr($terms) . '"';
+        }
+        $out .= '>' . esc_html($label) . '</button>';
+    }
+    $out .= '</div>';
+
+    return $out;
+}
+
 function iss_timeline_render_choice_filter($args = []) {
     $args = is_array($args) ? $args : [];
 
@@ -897,10 +1060,15 @@ function iss_timeline_render_query_block($attributes = [], $content = '', $block
 
     $attributes = is_array($attributes) ? $attributes : [];
     $config = iss_timeline_build_query_block_config($attributes);
+    $listing_config = $config;
+    $default_preset = iss_timeline_get_default_preset_button($attributes);
+    if (!empty($default_preset)) {
+        $listing_config['filters'] = iss_timeline_merge_preset_filters($listing_config['filters'], $default_preset);
+    }
     if (!empty($config['render']['showTicketsButton']) && function_exists('iss_programm_enqueue_calendar_assets')) {
         iss_programm_enqueue_calendar_assets();
     }
-    $listing = iss_timeline_get_listing_response($config, $config['render']);
+    $listing = iss_timeline_get_listing_response($listing_config, $listing_config['render']);
 
     $title = trim((string) ($attributes['title'] ?? ''));
     $intro = trim((string) ($attributes['intro'] ?? ''));
@@ -919,6 +1087,8 @@ function iss_timeline_render_query_block($attributes = [], $content = '', $block
     if ($intro !== '') {
         $out .= '<p class="iss-timeline__summary">' . esc_html($intro) . '</p>';
     }
+
+    $out .= iss_timeline_render_preset_buttons($attributes);
 
     if (!empty($config['ui']['showTimeModeFilter']) || !empty($config['ui']['showTypeFilter']) || !empty($config['ui']['showPostTypeFilter']) || !empty($config['ui']['showMonthFilter']) || !empty($config['ui']['showCalendarBridge']) || !empty($config['ui']['taxonomyUiFilters'])) {
         $out .= '<form class="iss-timeline__filters" data-timeline-query-form>';
@@ -967,8 +1137,8 @@ function iss_timeline_render_query_block($attributes = [], $content = '', $block
         }
 
         if (!empty($config['ui']['showMonthFilter'])) {
-            $out .= '<label class="iss-timeline__filter"><span class="iss-timeline__filter-label">' . esc_html__('Monat', 'iss-timeline') . '</span>';
             $month_hidden = ($config['filters']['time_mode'] === 'month') ? '' : ' hidden';
+            $out .= '<label class="iss-timeline__filter iss-timeline__filter--month"' . $month_hidden . ' data-timeline-month-filter><span class="iss-timeline__filter-label">' . esc_html__('Monat', 'iss-timeline') . '</span>';
             $out .= '<select name="month" data-filter-key="month"' . $month_hidden . '>';
             foreach ($months as $ym) {
                 $out .= '<option value="' . esc_attr($ym) . '"' . selected($config['filters']['month'], $ym, false) . '>' . esc_html(iss_timeline_format_month_label($ym)) . '</option>';

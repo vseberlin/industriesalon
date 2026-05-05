@@ -10,6 +10,7 @@
   const ToggleControl = window.wp.components && window.wp.components.ToggleControl;
   const SelectControl = window.wp.components && window.wp.components.SelectControl;
   const CheckboxControl = window.wp.components && window.wp.components.CheckboxControl;
+  const Button = window.wp.components && window.wp.components.Button;
 
   function normalizeList(values) {
     if (!Array.isArray(values)) return [];
@@ -90,6 +91,26 @@
     });
   }
 
+  function normalizePresetButtons(buttons) {
+    if (!Array.isArray(buttons)) return [];
+
+    return buttons
+      .map(function (button) {
+        if (!button) return null;
+
+        return {
+          label: String(button.label || '').trim(),
+          timeMode: String(button.timeMode || '').trim(),
+          taxonomy: String(button.taxonomy || '').trim(),
+          terms: normalizeList(button.terms || []),
+          isDefault: !!button.isDefault,
+        };
+      })
+      .filter(function (button) {
+        return button && button.label;
+      });
+  }
+
   window.wp.blocks.registerBlockType('industriesalon/timeline-query', {
     edit: function (props) {
       const attrs = props.attributes || {};
@@ -138,6 +159,7 @@
       const postTypesList = normalizeList(attrs.postTypesList || []);
       const taxonomyPresetRules = normalizeRuleList(attrs.taxonomyPresetRules || []);
       const taxonomyUiRules = normalizeRuleList(attrs.taxonomyUiRules || []);
+      const presetButtons = normalizePresetButtons(attrs.presetButtons || []);
       const defaultTypeOptions = [{ label: 'Alle', value: 'all' }].concat(
         typeChoices
           .filter(function (choice) {
@@ -483,6 +505,109 @@
                         setAttributes({ includeRunningRanges: !!v });
                       },
                     })
+                  : null,
+                presetButtons.map(function (preset, index) {
+                  var taxonomyOptions = [{ label: 'Keine Taxonomie', value: '' }].concat(taxonomyChoices.map(function (choice) {
+                    return { label: choice.label, value: choice.value };
+                  }));
+
+                  function updatePreset(nextPatch) {
+                    var nextPresets = normalizePresetButtons(attrs.presetButtons || []);
+                    if (!nextPresets[index]) return;
+                    nextPresets[index] = Object.assign({}, nextPresets[index], nextPatch);
+                    if (Object.prototype.hasOwnProperty.call(nextPatch, 'isDefault') && nextPatch.isDefault) {
+                      nextPresets = nextPresets.map(function (item, itemIndex) {
+                        return Object.assign({}, item, { isDefault: itemIndex === index });
+                      });
+                    }
+                    setAttributes({ presetButtons: nextPresets });
+                  }
+
+                  return el(
+                    'div',
+                    { key: 'preset-' + index, style: { marginTop: '1rem', paddingTop: '1rem', borderTop: '1px solid #ddd' } },
+                    TextControl
+                      ? el(TextControl, {
+                          label: 'Preset-Label',
+                          value: preset.label,
+                          onChange: function (value) {
+                            updatePreset({ label: value });
+                          },
+                        })
+                      : null,
+                    SelectControl
+                      ? el(SelectControl, {
+                          label: 'Zeitraum',
+                          value: preset.timeMode || '',
+                          options: [{ label: 'Kein Zeitraum-Override', value: '' }].concat(timeModeChoices.map(function (choice) {
+                            return { label: choice.label, value: choice.value };
+                          })),
+                          onChange: function (value) {
+                            updatePreset({ timeMode: value || '' });
+                          },
+                        })
+                      : null,
+                    SelectControl
+                      ? el(SelectControl, {
+                          label: 'Taxonomie',
+                          value: preset.taxonomy || '',
+                          options: taxonomyOptions,
+                          onChange: function (value) {
+                            updatePreset({
+                              taxonomy: value || '',
+                              terms: value ? preset.terms : [],
+                            });
+                          },
+                        })
+                      : null,
+                    TextControl
+                      ? el(TextControl, {
+                          label: 'Terms (Slug, kommagetrennt)',
+                          value: (preset.terms || []).join(', '),
+                          onChange: function (value) {
+                            updatePreset({ terms: normalizeList(String(value || '').split(',')) });
+                          },
+                          help: 'Nur noetig, wenn eine Taxonomie gesetzt ist.',
+                        })
+                      : null,
+                    ToggleControl
+                      ? el(ToggleControl, {
+                          label: 'Als Standard aktiv',
+                          checked: !!preset.isDefault,
+                          onChange: function (value) {
+                            updatePreset({ isDefault: !!value });
+                          },
+                        })
+                      : null,
+                    Button
+                      ? el(Button, {
+                          isDestructive: true,
+                          variant: 'secondary',
+                          onClick: function () {
+                            var nextPresets = normalizePresetButtons(attrs.presetButtons || []).filter(function (_preset, presetIndex) {
+                              return presetIndex !== index;
+                            });
+                            setAttributes({ presetButtons: nextPresets });
+                          },
+                        }, 'Preset entfernen')
+                      : null
+                  );
+                }),
+                Button
+                  ? el(Button, {
+                      variant: 'secondary',
+                      onClick: function () {
+                        var nextPresets = normalizePresetButtons(attrs.presetButtons || []);
+                        nextPresets.push({
+                          label: 'Neues Preset',
+                          timeMode: '',
+                          taxonomy: '',
+                          terms: [],
+                          isDefault: nextPresets.length === 0,
+                        });
+                        setAttributes({ presetButtons: nextPresets });
+                      },
+                    }, 'Preset hinzufuegen')
                   : null,
                 presetControls
               ),

@@ -1,0 +1,257 @@
+/* =========================================================
+   DAS MUSEUM
+   ========================================================= */
+
+.iss-museum-page,
+#wp--skip-link--target .iss-museum-page {
+  margin-top: 0 !important;
+}
+
+.iss-museum-page > .section:not(.iss-section--hero) {
+  border-top: 1px solid rgba(134, 159, 186, 0.18);
+}
+
+.iss-museum-page .section:not(.iss-section--hero) .iss-heading > .iss-kicker,
+.iss-museum-page .section:not(.iss-section--hero) .iss-heading > .iss-kicker--compact {
+  padding-left: 0.85rem;
+  border-left: 3px solid var(--iss-red);
+  color: var(--iss-red);
+}
+
+.iss-museum-hero .wp-block-cover__inner-container {
+  min-height: clamp(32rem, 68vw, 46rem);
+}
+
+.iss-museum-hero__text {
+  max-width: 36rem;
+}
+
+.iss-museum-hero-note {
+  max-width: 22rem;
+  padding: 1.35rem 1.35rem 1.45rem;
+  background: rgba(255, 255, 255, 0.92);
+  color: var(--iss-black);
+  box-shadow: 0 18px 42px rgba(0, 0, 0, 0.14);
+}
+
+.iss-museum-hero-note .iss-kicker {
+  color: var(--iss-red);
+  border-left-color: var(--iss-red);
+}
+
+.iss-museum-hero-note__title {
+  margin: 0;
+  font-size: clamp(1.35rem, 1.15rem + 0.5vw, 1.8rem);
+  line-height: 1.08;
+  letter-spacing: -0.03em;
+  text-wrap: balance;
+}
+
+.iss-museum-hero-note__text {
+  margin: 0.7rem 0 0;
+  color: rgba(30, 30, 30, 0.86);
+}
+
+.iss-museum-intro,
+.iss-museum-topics,
+.iss-museum-object,
+.iss-museum-cta {
+  padding-top: clamp(2.15rem, 4vw, 3rem);
+}
+
+.iss-museum-intro__grid,
+.iss-museum-object__grid,
+.iss-museum-object__media-grid,
+.iss-museum-cta__grid {
+  gap: 0;
+}
+
+.iss-museum-intro__copy-col,
+.iss-museum-intro__text-col,
+.iss-museum-object__copy-col,
+.iss-museum-object__media-col,
+.iss-museum-cta__copy-col,
+.iss-museum-cta__actions-col {
+  display: grid;
+  align-content: start;
+  gap: 1rem;
+  padding: 0 1.75rem;
+  border-left: 1px solid rgba(134, 159, 186, 0.18);
+}
+
+.iss-museum-intro__copy-col,
+.iss-museum-object__copy-col,
+.iss-museum-cta__copy-col {
+  padding-left: 0;
+  border-left: 0;
+}
+
+.iss-museum-intro .iss-heading__title,
+.iss-museum-topics__head .iss-heading__title,
+.iss-museum-object .iss-heading__title {
+  margin: 0;
+  font-size: clamp(2.2rem, 3.8vw, 4.2rem);
+  line-height: 0.98;
+  letter-spacing: -0.05em;
+  text-wrap: balance;
+}
+
+.iss-museum-intro__lead {
+  margin: 0;
+  font-size: 1.18rem;
+  line-height: 1.58;
+}
+
+.iss-museum-intro__link {
+  margin: 0.2rem 0 0;
+}
+
+.iss-museum-topics__head {
+  margin-bottom: 1.35rem;
+}
+
+.iss-museum-topics__grid {
+  gap: 1rem;
+}
+
+.iss-museum-topics .iss-archive-card {
+  height: 100%;
+}
+
+.iss-museum-topics .iss-archive-card__media img {
+  aspect-ratio: 1.15 / 1;
+  object-fit: cover;
+}
+
+.iss-museum-topics .iss-archive-card__title {
+  font-size: clamp(1.1rem, 1.02rem + 0.35vw, 1.4rem);
+}
+
+.iss-museum-topics__actions {
+  margin-top: 1.35rem;
+}
+
+.iss-museum-object__copy-col,
+.iss-museum-object__media-col {
+  gap: 1.1rem;
+}
+
+.iss-museum-object__main,
+.iss-museum-object__thumb {
+  margin: 0;
+}
+
+.iss-museum-object__main img,
+.iss-museum-object__thumb img {
+  display: block;
+  width: 100%;
+  height: auto;
+}
+
+.iss-museum-object__main img {
+  aspect-ratio: 1.45 / 1;
+  object-fit: cover;
+}
+
+.iss-museum-object__thumbs-col {
+  display: grid;
+  align-content: start;
+  gap: 0.8rem;
+  padding-left: 0.8rem;
+}
+
+.iss-museum-object__thumb img {
+  aspect-ratio: 1 / 1;
+  object-fit: cover;
+}
+
+.iss-museum-object__link {
+  margin: 0.2rem 0 0;
+}
+
+.iss-museum-cta__grid {
+  align-items: center;
+  padding: 1.35rem 0;
+  border-top: 1px solid rgba(134, 159, 186, 0.18);
+}
+
+.iss-museum-cta__copy {
+  display: grid;
+  gap: 0.7rem;
+}
+
+.iss-museum-cta__title {
+  margin: 0;
+  font-size: clamp(1.5rem, 1.28rem + 0.7vw, 2.2rem);
+  line-height: 1.08;
+  letter-spacing: -0.035em;
+  text-wrap: balance;
+}
+
+.iss-museum-cta__text {
+  margin: 0;
+  color: rgba(30, 30, 30, 0.82);
+}
+
+.iss-museum-cta__actions {
+  gap: 0.75rem;
+}
+
+@media (max-width: 1100px) {
+  .iss-museum-intro__grid,
+  .iss-museum-object__grid,
+  .iss-museum-cta__grid {
+    gap: 1.25rem;
+  }
+
+  .iss-museum-intro__copy-col,
+  .iss-museum-intro__text-col,
+  .iss-museum-object__copy-col,
+  .iss-museum-object__media-col,
+  .iss-museum-cta__copy-col,
+  .iss-museum-cta__actions-col {
+    padding: 0;
+    border-left: 0;
+  }
+
+  .iss-museum-topics__grid {
+    gap: 1.25rem;
+  }
+
+  .iss-museum-object__media-grid {
+    gap: 1rem;
+  }
+
+  .iss-museum-object__thumbs-col {
+    padding-left: 0;
+  }
+
+  .iss-museum-cta__actions {
+    justify-content: flex-start;
+  }
+}
+
+@media (max-width: 781px) {
+  .iss-museum-hero .wp-block-cover__inner-container {
+    min-height: 30rem;
+  }
+
+  .iss-museum-intro .iss-heading__title,
+  .iss-museum-topics__head .iss-heading__title,
+  .iss-museum-object .iss-heading__title {
+    font-size: clamp(1.95rem, 10vw, 3rem);
+  }
+
+  .iss-museum-topics__grid {
+    gap: 1rem;
+  }
+
+  .iss-museum-object__media-grid {
+    gap: 0.8rem;
+  }
+
+  .iss-museum-object__thumbs-col {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}
+

@@ -1,21 +1,8 @@
 /* =========================================================
-   ISS PLUGIN TOKEN BRIDGE
-   Maps --iss-* theme tokens into plugin-local --iss-fuehrung-* tokens.
-   Fallback chain: --iss-token → hardcoded.
-   Do not override --iss-* here; override --iss-fuehrung-* in customizer output.
+   ISS FUEHRUNGEN BASE
+   Structure only. Theme skin owns colors, surfaces, radii,
+   shadows, and interactive appearance.
    ========================================================= */
-:root {
-  --iss-fuehrung-gap: clamp(1rem, 2vw, 2rem);
-  --iss-fuehrung-border: var(--iss-border, rgba(30, 30, 30, 0.12));
-  --iss-fuehrung-surface: var(--iss-white, #ffffff);
-  --iss-fuehrung-surface-muted: rgba(192, 184, 181, 0.14);
-}
-
-.iss-fuehrung-single,
-.post-type-archive-fuehrung .wp-site-blocks,
-.tax-fuehrung_typ .wp-site-blocks {
-  background: var(--iss-white, #f9f9fa);
-}
 
 .iss-fuehrung-hero {
   margin: 0 0 clamp(2rem, 4vw, 3rem);
@@ -55,35 +42,10 @@
 
 .iss-fuehrung-fact {
   padding: 1rem 1.1rem;
-  border: 1px solid var(--iss-fuehrung-border);
-  border-left: 4px solid var(--iss-red, #e81d25);
-  border-radius: 16px;
-  background: var(--iss-fuehrung-surface);
 }
 
 .iss-fuehrung-fact__label {
   margin: 0 0 0.35rem;
-  font-size: 0.76rem;
-  font-weight: 700;
-  letter-spacing: 0.12em;
-  text-transform: uppercase;
-  opacity: 0.72;
-}
-
-.iss-fuehrung-fact__value {
-  font-size: 1rem;
-  line-height: 1.45;
-}
-
-.iss-fuehrung-fact__value a {
-  color: inherit;
-  text-decoration: underline;
-  text-underline-offset: 0.16em;
-}
-
-.iss-fuehrung-fact__value a:hover,
-.iss-fuehrung-fact__value a:focus-visible {
-  color: var(--iss-red, #e81d25);
 }
 
 .iss-fuehrung-booking {
@@ -93,29 +55,18 @@
 
 .iss-fuehrung-booking__inner {
   padding: 1.4rem;
-  border: 1px solid var(--iss-fuehrung-border);
-  border-left: 4px solid var(--iss-red, #e81d25);
-  border-radius: 20px;
-  background: var(--iss-fuehrung-surface);
-  box-shadow: 0 10px 28px rgba(0, 0, 0, 0.05);
 }
 
-.iss-fuehrung-booking__title {
-  margin: 0 0 0.5rem;
-  font-size: clamp(1.3rem, 1.15rem + 0.6vw, 1.8rem);
-  line-height: 1.1;
-}
-
-.iss-fuehrung-next-date {
+.iss-fuehrung-booking__title,
+.iss-fuehrung-next-date,
+.iss-fuehrung-booking__status,
+.iss-fuehrung-booking__note {
   margin: 0;
-  font-size: 1rem;
-  font-weight: 600;
 }
 
 .iss-fuehrung-booking__status,
 .iss-fuehrung-booking__note {
-  margin: 0.65rem 0 0;
-  color: rgba(30, 30, 30, 0.76);
+  margin-top: 0.65rem;
 }
 
 .iss-fuehrung-booking__actions {
@@ -128,14 +79,7 @@
 .iss-fuehrung-booking__secondary {
   display: inline-flex;
   align-items: center;
-  color: var(--iss-black, #1e1e1e);
-  font-weight: 600;
   text-decoration: none;
-}
-
-.iss-fuehrung-booking__secondary:hover,
-.iss-fuehrung-booking__secondary:focus-visible {
-  color: var(--iss-red, #e81d25);
 }
 
 .iss-fuehrung-dates-grid {
@@ -159,32 +103,22 @@
 }
 
 .iss-fuehrung-related-grid,
-.iss-fuehrungen-archive-grid {
+.iss-fuehrungen-archive-grid,
+.iss-fuehrungen-pagination {
   margin-top: 2rem;
 }
 
 .iss-fuehrung-card__meta,
 .iss-fuehrung-card__date {
   margin: 0;
-  font-size: 0.95rem;
-  line-height: 1.5;
-  color: rgba(30, 30, 30, 0.76);
-}
-
-.iss-fuehrung-card__meta {
-  font-weight: 600;
-}
-
-.iss-fuehrungen-pagination {
-  margin-top: 2rem;
 }
 
 .iss-fuehrungen-pagination .page-numbers {
   display: flex;
   flex-wrap: wrap;
   gap: 0.5rem;
-  list-style: none;
   padding: 0;
+  list-style: none;
 }
 
 .iss-fuehrungen-pagination a,
@@ -195,16 +129,7 @@
   min-width: 2.5rem;
   min-height: 2.5rem;
   padding: 0.35rem 0.75rem;
-  border: 1px solid var(--iss-fuehrung-border);
-  border-radius: 999px;
-  background: #fff;
   text-decoration: none;
-}
-
-.iss-fuehrungen-pagination .current {
-  color: var(--iss-white, #f9f9fa);
-  background: var(--iss-red, #e81d25);
-  border-color: var(--iss-red, #e81d25);
 }
 
 .iss-tour-hero-gallery {
@@ -218,15 +143,8 @@
   width: 100%;
   aspect-ratio: 4 / 3;
   padding: 0;
-  border: 1px solid rgba(30, 30, 30, 0.16);
-  border-radius: 10px;
-  background: #fff;
-  cursor: pointer;
   overflow: hidden;
-}
-
-.iss-tour-hero-gallery__thumb.is-active {
-  border-color: var(--iss-red, #e81d25);
+  cursor: pointer;
 }
 
 .iss-tour-hero-gallery__thumb-img {
@@ -235,19 +153,6 @@
   height: 100%;
   object-fit: cover;
 }
-
-.iss-fuehrung--blue .iss-fuehrung-fact,
-.iss-fuehrung--blue .iss-fuehrung-booking__inner,
-.iss-fuehrung-card.iss-fuehrung--blue::before { border-left-color: var(--iss-blue, #869fba); }
-.iss-fuehrung--green .iss-fuehrung-fact,
-.iss-fuehrung--green .iss-fuehrung-booking__inner,
-.iss-fuehrung-card.iss-fuehrung--green::before { border-left-color: var(--iss-green, #579e7d); }
-.iss-fuehrung--yellow .iss-fuehrung-fact,
-.iss-fuehrung--yellow .iss-fuehrung-booking__inner,
-.iss-fuehrung-card.iss-fuehrung--yellow::before { border-left-color: var(--iss-yellow, #ebbc1e); }
-.iss-fuehrung--brown .iss-fuehrung-fact,
-.iss-fuehrung--brown .iss-fuehrung-booking__inner,
-.iss-fuehrung-card.iss-fuehrung--brown::before { border-left-color: var(--iss-brown, #753a18); }
 
 @media (max-width: 1024px) {
   .iss-fuehrung-intro,
@@ -277,6 +182,5 @@
 
   .iss-tour-hero-gallery__thumb {
     aspect-ratio: 16 / 10;
-    border-radius: 8px;
   }
 }

@@ -108,6 +108,15 @@
 
 /* .iss-card: Base class for iss card; apply on primary wrapper/scope. */
 .iss-card {
+  --iss-card-bg: var(--iss-white);
+  --iss-card-border: rgba(30, 30, 30, 0.12);
+  --iss-card-border-hover: rgba(30, 30, 30, 0.22);
+  --iss-card-radius: var(--iss-radius-sm);
+  --iss-card-rail-width: 3px;
+  --iss-card-rail-width-hover: 5px;
+  --iss-link-fg: var(--iss-accent);
+  --iss-link-hover-fg: var(--iss-black);
+
   position: relative;
   display: flex;
   flex-direction: column;
@@ -115,16 +124,16 @@
   min-height: 100%;
   overflow: hidden;
 
-  background: var(--iss-white);
+  background: var(--iss-card-bg);
   color: var(--iss-black);
-  border: 1px solid var(--iss-border);
-  border-radius: var(--iss-radius-md);
-  box-shadow: var(--iss-shadow);
+  border: 1px solid var(--iss-card-border);
+  border-radius: var(--iss-card-radius);
+  box-shadow: none;
+  text-decoration: none;
 
   transition:
-    transform var(--iss-transition),
-    box-shadow var(--iss-transition),
-    border-color var(--iss-transition);
+    border-color var(--iss-transition),
+    background-color var(--iss-transition);
 }
 
 
@@ -132,9 +141,7 @@
 .iss-card:hover,
 /* .iss-card: Base class for iss card; apply on primary wrapper/scope. */
 .iss-card:focus-within {
-  transform: translateY(-2px);
-  box-shadow: 0 18px 48px rgba(0, 0, 0, 0.12);
-  border-color: rgba(30, 30, 30, 0.2);
+  border-color: var(--iss-card-border-hover);
 }
 
 /* .iss-card__media: Element class for `iss-card`; apply on `media` element. */
@@ -151,6 +158,15 @@
   width: 100%;
   height: 100%;
   object-fit: cover;
+  transform: scale(1.001);
+  transition:
+    transform 0.45s ease,
+    filter 0.45s ease;
+}
+
+.iss-card:hover .iss-card__media img,
+.iss-card:focus-within .iss-card__media img {
+  transform: scale(1.025);
 }
 
 /* .iss-card__body: Element class for `iss-card`; apply on `body` element. */
@@ -158,8 +174,8 @@
   display: flex;
   flex: 1 1 auto;
   flex-direction: column;
-  gap: 0.9rem;
-  padding: 1.25rem 1.25rem 1.35rem;
+  gap: 0.7rem;
+  padding: 1rem 1rem 1.1rem;
 }
 
 /* .iss-card__kicker: Element class for `iss-card`; apply on `kicker` element. */
@@ -171,7 +187,7 @@
 .iss-card__title {
   margin: 0;
   font-size: clamp(1.25rem, 1rem + 0.6vw, 1.75rem);
-  font-weight: 700;
+  font-weight: 600;
   line-height: 1.15;
   letter-spacing: -0.01em;
   min-height: calc(2 * 1.15em);
@@ -192,15 +208,15 @@
 .iss-card__title a:hover,
 /* .iss-card__title: Element class for `iss-card`; apply on `title` element. */
 .iss-card__title a:focus-visible {
-  color: var(--iss-accent);
+  color: var(--iss-link-fg);
 }
 
 /* .iss-card__text: Element class for `iss-card`; apply on `text` element. */
 .iss-card__text {
   margin: 0;
-  color: rgba(30, 30, 30, 0.78);
-  font-size: 0.98rem;
-  line-height: 1.55;
+  color: rgba(30, 30, 30, 0.72);
+  font-size: 0.95rem;
+  line-height: 1.58;
 }
 
 /* .iss-card__meta: Element class for `iss-card`; apply on `meta` element. */
@@ -229,49 +245,23 @@
   padding-top: 0.5rem;
 }
 
-/* .iss-card__link: Element class for `iss-card`; apply on `link` element. */
-.iss-card__link {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.45rem;
-
-  color: var(--iss-black);
-  font-size: 0.95rem;
-  font-weight: 600;
-  text-decoration: none;
-}
-
-/* .iss-card__link: Element class for `iss-card`; apply on `link` element. */
-.iss-card__link::after {
-  content: "→";
-  font-size: 1rem;
-  line-height: 1;
-  transition: transform var(--iss-transition);
-}
-
-/* .iss-card__link: Element class for `iss-card`; apply on `link` element. */
-.iss-card__link:hover,
-/* .iss-card__link: Element class for `iss-card`; apply on `link` element. */
-.iss-card__link:focus-visible {
-  color: var(--iss-accent);
-}
-
-/* .iss-card__link: Element class for `iss-card`; apply on `link` element. */
-.iss-card__link:hover::after,
-/* .iss-card__link: Element class for `iss-card`; apply on `link` element. */
-.iss-card__link:focus-visible::after {
-  transform: translateX(2px);
-}
-
 /* Accent rail */
 /* .iss-card: Base class for iss card; apply on primary wrapper/scope. */
 .iss-card::before {
   content: "";
   position: absolute;
   inset: 0 auto 0 0;
-  width: 5px;
+  width: var(--iss-card-rail-width);
   background: var(--iss-accent);
   z-index: 1;
+  transition:
+    width var(--iss-transition),
+    background-color var(--iss-transition);
+}
+
+.iss-card:hover::before,
+.iss-card:focus-within::before {
+  width: var(--iss-card-rail-width-hover);
 }
 
 /* Compact text-only version */
@@ -307,43 +297,29 @@
 
 /* Soft thematic variants */
 /* .iss-card--green: Modifier class for `iss-card`; combine for `green` variant. */
+.iss-card--green {
+  --iss-link-fg: var(--iss-green);
+  --iss-link-hover-fg: var(--iss-green);
+}
 .iss-card--green::before { background: var(--iss-green); }
 /* .iss-card--blue: Modifier class for `iss-card`; combine for `blue` variant. */
+.iss-card--blue {
+  --iss-link-fg: var(--iss-blue);
+  --iss-link-hover-fg: var(--iss-blue);
+}
 .iss-card--blue::before  { background: var(--iss-blue); }
 /* .iss-card--yellow: Modifier class for `iss-card`; combine for `yellow` variant. */
+.iss-card--yellow {
+  --iss-link-fg: var(--iss-yellow);
+  --iss-link-hover-fg: var(--iss-yellow);
+}
 .iss-card--yellow::before{ background: var(--iss-yellow); }
 /* .iss-card--brown: Modifier class for `iss-card`; combine for `brown` variant. */
+.iss-card--brown {
+  --iss-link-fg: var(--iss-brown);
+  --iss-link-hover-fg: var(--iss-brown);
+}
 .iss-card--brown::before { background: var(--iss-brown); }
-
-/* .iss-card--green: Modifier class for `iss-card`; combine for `green` variant. */
-/* .iss-card__link: Element class for `iss-card`; apply on `link` element. */
-.iss-card--green .iss-card__link:hover,
-/* .iss-card--green: Modifier class for `iss-card`; combine for `green` variant. */
-/* .iss-card__link: Element class for `iss-card`; apply on `link` element. */
-.iss-card--green .iss-card__link:focus-visible,
-/* .iss-card--green: Modifier class for `iss-card`; combine for `green` variant. */
-/* .iss-card__title: Element class for `iss-card`; apply on `title` element. */
-.iss-card--green .iss-card__title a:hover,
-/* .iss-card--green: Modifier class for `iss-card`; combine for `green` variant. */
-/* .iss-card__title: Element class for `iss-card`; apply on `title` element. */
-.iss-card--green .iss-card__title a:focus-visible {
-  color: var(--iss-green);
-}
-
-/* .iss-card--blue: Modifier class for `iss-card`; combine for `blue` variant. */
-/* .iss-card__link: Element class for `iss-card`; apply on `link` element. */
-.iss-card--blue .iss-card__link:hover,
-/* .iss-card--blue: Modifier class for `iss-card`; combine for `blue` variant. */
-/* .iss-card__link: Element class for `iss-card`; apply on `link` element. */
-.iss-card--blue .iss-card__link:focus-visible,
-/* .iss-card--blue: Modifier class for `iss-card`; combine for `blue` variant. */
-/* .iss-card__title: Element class for `iss-card`; apply on `title` element. */
-.iss-card--blue .iss-card__title a:hover,
-/* .iss-card--blue: Modifier class for `iss-card`; combine for `blue` variant. */
-/* .iss-card__title: Element class for `iss-card`; apply on `title` element. */
-.iss-card--blue .iss-card__title a:focus-visible {
-  color: var(--iss-blue);
-}
 
 /* Outline mode for dense grids */
 /* .iss-card--flat: Modifier class for `iss-card`; combine for `flat` variant. */
@@ -356,7 +332,31 @@
 /* .iss-card--flat: Modifier class for `iss-card`; combine for `flat` variant. */
 .iss-card--flat:focus-within {
   box-shadow: none;
-  border-color: rgba(30, 30, 30, 0.28);
+  border-color: var(--iss-card-border-hover);
+}
+
+.iss-card--media-wide .iss-card__media {
+  aspect-ratio: 16 / 9;
+  background: transparent;
+}
+
+/* Shared wrapper variant for exhibition/editorial brown card runs. */
+.iss-card-skin--exhibition .iss-card {
+  --iss-card-border: rgba(117, 58, 24, 0.18);
+  --iss-card-border-hover: rgba(117, 58, 24, 0.32);
+  --iss-card-radius: 2px;
+}
+
+.iss-card-skin--exhibition .iss-timeline-card__kicker,
+.iss-card-skin--exhibition .iss-card__meta {
+  color: rgba(117, 58, 24, 0.92);
+}
+
+.iss-card-skin--exhibition .iss-card__title a:hover,
+.iss-card-skin--exhibition .iss-card__title a:focus-visible,
+.iss-card-skin--exhibition .iss-card__link:hover,
+.iss-card-skin--exhibition .iss-card__link:focus-visible {
+  color: var(--iss-brown);
 }
 
 /* Responsive */
@@ -393,21 +393,26 @@
 }
 
 @media (max-width: 1200px) {
-  .iss-card-grid.columns-4 {
+  .iss-card-grid.columns-4,
+  .wp-block-group.iss-card-grid.columns-4 {
     grid-template-columns: repeat(3, minmax(0, 1fr));
   }
 }
 
 @media (max-width: 1024px) {
   .iss-card-grid,
-  .iss-card-grid.columns-4 {
+  .iss-card-grid.columns-4,
+  .wp-block-group.iss-card-grid,
+  .wp-block-group.iss-card-grid.columns-4 {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 }
 
 @media (max-width: 640px) {
 /* .iss-card-grid: Base class for iss card grid; apply on primary wrapper/scope. */
-  .iss-card-grid {
+  .iss-card-grid,
+  .wp-block-group.iss-card-grid,
+  .wp-block-group.iss-card-grid.columns-4 {
     grid-template-columns: 1fr;
   }
 }
@@ -421,6 +426,11 @@
 .wp-block-group.iss-card-grid {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
+}
+
+/* Keep four-up grid variants working for Gutenberg Group wrappers too. */
+.wp-block-group.iss-card-grid.columns-4 {
+  grid-template-columns: repeat(4, minmax(0, 1fr));
 }
 
 /* .wp-block-group: Base class for wp block group; apply on primary wrapper/scope. */
@@ -482,26 +492,18 @@
 /* .iss-card: Base class for iss card; apply on primary wrapper/scope. */
 .iss-card-grid > .iss-card,
 /* .iss-card-grid: Base class for iss card grid; apply on primary wrapper/scope. */
+/* .iss-quiet-card: Base class for iss quiet card; apply on primary wrapper/scope. */
+.iss-card-grid > .iss-quiet-card,
+/* .iss-card-grid: Base class for iss card grid; apply on primary wrapper/scope. */
 /* .wp-block-group: Base class for wp block group; apply on primary wrapper/scope. */
 /* .iss-card: Base class for iss card; apply on primary wrapper/scope. */
-.iss-card-grid > .wp-block-group.iss-card {
+.iss-card-grid > .wp-block-group.iss-card,
+/* .iss-card-grid: Base class for iss card grid; apply on primary wrapper/scope. */
+/* .wp-block-group: Base class for wp block group; apply on primary wrapper/scope. */
+/* .iss-quiet-card: Base class for iss quiet card; apply on primary wrapper/scope. */
+.iss-card-grid > .wp-block-group.iss-quiet-card {
   min-width: 0;
   margin: 0;
-}
-
-/* Card media images */
-/* .iss-card-grid: Base class for iss card grid; apply on primary wrapper/scope. */
-/* .iss-card: Base class for iss card; apply on primary wrapper/scope. */
-/* figure img: card media image */
-.iss-card-grid .iss-card figure img,
-/* .iss-card-grid: Base class for iss card grid; apply on primary wrapper/scope. */
-/* .iss-card__media: Element class for `iss-card`; apply on `media` element. */
-.iss-card-grid .iss-card__media img {
-  display: block;
-  width: 100%;
-  aspect-ratio: 16 / 9;
-  height: auto;
-  object-fit: cover;
 }
 
 /* Tablet */
@@ -527,6 +529,386 @@
     display: grid;
     grid-template-columns: 1fr;
     gap: 24px;
+  }
+}
+
+/* =========================================================
+   GROUP: QUIET EDITORIAL CARDS
+   PURPOSE:
+   Modest editorial cards for atlas, story, archive, and narrative use.
+   Shared rules:
+   - slight radius
+   - very light frame
+   - no default shadow
+   - page accent inheritance via --iss-accent
+   - hover changes rail + tiny image motion only
+   ========================================================= */
+
+.iss-quiet-card {
+  --iss-quiet-card-radius: var(--iss-radius-sm);
+  --iss-quiet-card-border: rgba(30, 30, 30, 0.12);
+  --iss-quiet-card-border-hover: rgba(30, 30, 30, 0.22);
+  --iss-quiet-card-rail: rgba(30, 30, 30, 0.18);
+  --iss-quiet-card-rail-hover: var(--iss-accent);
+  --iss-quiet-card-bg: #fff;
+  --iss-quiet-card-title-size: clamp(1.1rem, 0.98rem + 0.45vw, 1.45rem);
+
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  height: 100%;
+  overflow: hidden;
+  color: var(--iss-black);
+  background: var(--iss-quiet-card-bg);
+  border: 1px solid var(--iss-quiet-card-border);
+  border-radius: var(--iss-quiet-card-radius);
+  box-shadow: none;
+  text-decoration: none;
+  transition:
+    border-color var(--iss-transition),
+    background-color var(--iss-transition);
+}
+
+.iss-quiet-card::before {
+  content: "";
+  position: absolute;
+  inset: 0 auto 0 0;
+  z-index: 2;
+  width: 3px;
+  background: var(--iss-quiet-card-rail);
+  transition:
+    width var(--iss-transition),
+    background-color var(--iss-transition);
+}
+
+.iss-quiet-card:hover,
+.iss-quiet-card:focus-within {
+  border-color: var(--iss-quiet-card-border-hover);
+  box-shadow: none;
+}
+
+.iss-quiet-card:hover::before,
+.iss-quiet-card:focus-within::before {
+  width: 5px;
+  background: var(--iss-quiet-card-rail-hover);
+}
+
+.iss-quiet-card__media {
+  position: relative;
+  margin: 0;
+  overflow: hidden;
+  background: rgba(30, 30, 30, 0.04);
+}
+
+.iss-quiet-card__media img {
+  display: block;
+  width: 100%;
+  height: auto;
+  aspect-ratio: 16 / 10;
+  object-fit: cover;
+  transform: scale(1.001);
+  transition:
+    transform 0.45s ease,
+    filter 0.45s ease;
+}
+
+.iss-quiet-card:hover .iss-quiet-card__media img,
+.iss-quiet-card:focus-within .iss-quiet-card__media img {
+  transform: scale(1.025);
+}
+
+.iss-quiet-card__body {
+  display: flex;
+  flex: 1 1 auto;
+  flex-direction: column;
+  gap: 0.55rem;
+  padding: 1rem 1rem 1.1rem;
+}
+
+.iss-quiet-card__kicker,
+.iss-quiet-card__meta {
+  margin: 0;
+  color: var(--iss-accent);
+  font-size: 0.76rem;
+  font-weight: 700;
+  line-height: 1.25;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.iss-quiet-card__title {
+  margin: 0;
+  color: var(--iss-black);
+  font-size: var(--iss-quiet-card-title-size);
+  font-weight: 600;
+  line-height: 1.18;
+  letter-spacing: -0.01em;
+}
+
+.iss-quiet-card__title a {
+  color: inherit;
+  text-decoration: none;
+}
+
+.iss-quiet-card__text {
+  margin: 0;
+  color: rgba(30, 30, 30, 0.72);
+  font-size: 0.95rem;
+  line-height: 1.5;
+}
+
+.iss-quiet-card--overlay {
+  min-height: clamp(18rem, 32vw, 26rem);
+  background: var(--iss-black);
+}
+
+.iss-quiet-card--overlay::before {
+  inset: 0 0 auto 0;
+  width: auto;
+  height: 3px;
+}
+
+.iss-quiet-card--overlay:hover::before,
+.iss-quiet-card--overlay:focus-within::before {
+  width: auto;
+  height: 5px;
+}
+
+.iss-quiet-card--overlay .iss-quiet-card__media {
+  position: absolute;
+  inset: 0;
+}
+
+.iss-quiet-card--overlay .iss-quiet-card__media img {
+  height: 100%;
+  aspect-ratio: auto;
+  filter: grayscale(1) contrast(1.04);
+}
+
+.iss-quiet-card--overlay .iss-quiet-card__media::after {
+  content: "";
+  position: absolute;
+  inset: 35% 0 0;
+  background: linear-gradient(
+    180deg,
+    rgba(30, 30, 30, 0) 0%,
+    rgba(30, 30, 30, 0.72) 72%,
+    rgba(30, 30, 30, 0.86) 100%
+  );
+}
+
+.iss-quiet-card--overlay .iss-quiet-card__body {
+  position: relative;
+  z-index: 2;
+  justify-content: flex-end;
+  padding: 1.15rem;
+  color: var(--iss-white);
+}
+
+.iss-quiet-card--overlay .iss-quiet-card__title,
+.iss-quiet-card--overlay .iss-quiet-card__text {
+  color: var(--iss-white);
+}
+
+.iss-quiet-card--overlay .iss-quiet-card__text {
+  color: rgba(249, 249, 250, 0.82);
+}
+
+.iss-quiet-card--atlas {
+  --iss-quiet-card-title-size: clamp(1.45rem, 1.1rem + 1vw, 2.05rem);
+}
+
+.iss-quiet-card--atlas .iss-quiet-card__media img {
+  aspect-ratio: 16 / 9;
+  filter: grayscale(1) contrast(1.02);
+}
+
+.iss-quiet-card--atlas .iss-quiet-card__body {
+  gap: 0.75rem;
+  padding: clamp(1.15rem, 2vw, 1.6rem);
+}
+
+.iss-quiet-card--atlas .iss-quiet-card__text {
+  max-width: 38rem;
+  font-size: 1rem;
+}
+
+.iss-quiet-card--timeline {
+  --iss-quiet-card-title-size: clamp(1.02rem, 0.96rem + 0.3vw, 1.22rem);
+}
+
+.iss-quiet-card--timeline::before {
+  inset: 0 0 auto 0;
+  width: auto;
+  height: 3px;
+}
+
+.iss-quiet-card--timeline:hover::before,
+.iss-quiet-card--timeline:focus-within::before {
+  width: auto;
+  height: 5px;
+}
+
+.iss-quiet-card--timeline .iss-quiet-card__media img {
+  aspect-ratio: 4 / 3;
+  filter: grayscale(1) contrast(1.04);
+}
+
+.iss-quiet-card--timeline .iss-quiet-card__body {
+  gap: 0.45rem;
+  padding: 0.9rem 0.9rem 1rem;
+}
+
+.iss-quiet-card--knowledge {
+  background: linear-gradient(180deg, rgba(30, 30, 30, 0.98), rgba(40, 40, 40, 0.94));
+  border-color: rgba(255, 255, 255, 0.12);
+}
+
+.iss-quiet-card--knowledge .iss-quiet-card__media img {
+  filter: grayscale(1) contrast(1.06);
+}
+
+.iss-quiet-card--knowledge .iss-quiet-card__title,
+.iss-quiet-card--knowledge .iss-quiet-card__text {
+  color: var(--iss-white);
+}
+
+.iss-quiet-card--knowledge .iss-quiet-card__text {
+  color: rgba(249, 249, 250, 0.78);
+}
+
+/* Selected-grid family.
+   Four-up grid for compact route, format, and project-card rows that
+   still need enough room for real text. */
+.iss-selected-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: clamp(1rem, 1.5vw, 1.5rem);
+  margin-top: clamp(2rem, 4vw, 4rem);
+}
+
+/* Small editorial card.
+   Reusable compact card for project teasers, route lists, and format
+   rows. Keep it flatter and more direct than the main `.iss-card`
+   family. */
+.iss-small-card {
+  display: flex;
+  min-height: 18rem;
+  flex-direction: column;
+  gap: 0.85rem;
+  padding: clamp(1.1rem, 1.5vw, 1.45rem);
+  border: 1px solid var(--iss-border);
+  border-radius: var(--iss-radius-md);
+  background: var(--iss-white);
+  color: inherit;
+  text-decoration: none;
+  transition: border-color 0.2s ease, transform 0.2s ease;
+}
+
+.iss-small-card:hover,
+.iss-small-card:focus-visible,
+.iss-small-card:focus-within {
+  transform: translateY(-2px);
+  border-color: rgba(30, 30, 30, 0.28);
+  outline: none;
+}
+
+.iss-small-card__kicker {
+  margin: 0;
+  color: rgba(30, 30, 30, 0.58);
+  font-size: 0.72rem;
+  font-weight: 800;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+.iss-small-card__title {
+  margin: 0;
+  font-size: clamp(1.25rem, 1vw, 1.65rem);
+  line-height: 1.12;
+  letter-spacing: -0.025em;
+}
+
+.iss-small-card__text {
+  margin: 0;
+  color: rgba(30, 30, 30, 0.72);
+  font-size: 0.98rem;
+  line-height: 1.55;
+}
+
+.iss-small-card__media {
+  margin: 0;
+  width: 100%;
+  height: 100%;
+  min-height: 100%;
+  background: #d8d0c4;
+  overflow: hidden;
+}
+
+.iss-small-card__media img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.iss-small-card__body {
+  display: flex;
+  flex-direction: column;
+  gap: 0.85rem;
+  min-width: 0;
+  padding: 0;
+}
+
+.iss-small-card__footer {
+  margin: 0;
+  margin-top: auto;
+}
+
+.iss-small-card__link {
+  display: inline-flex;
+  align-items: center;
+  width: fit-content;
+  font-weight: 700;
+  color: inherit;
+  text-decoration: none;
+}
+
+.iss-small-card__link::after {
+  content: " ->";
+  color: var(--iss-accent);
+}
+
+/* Split variant for image-left / text-right rows.
+   Shared by the Ausstellungen route cards and Veranstaltungen formats. */
+.iss-small-card--split {
+  display: grid;
+  grid-template-columns: 40% minmax(0, 1fr);
+  align-items: stretch;
+  min-height: 14rem;
+  gap: 0.95rem;
+  padding: clamp(1rem, 1.4vw, 1.35rem);
+  overflow: hidden;
+}
+
+@media (max-width: 1180px) {
+  .iss-selected-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .iss-small-card--split {
+    grid-template-columns: 36% minmax(0, 1fr);
+  }
+}
+
+@media (max-width: 781px) {
+  .iss-selected-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .iss-small-card--split {
+    grid-template-columns: 40% minmax(0, 1fr);
   }
 }
 
@@ -780,16 +1162,16 @@
 /* .iss-media-card: Base class for iss media card; apply on primary wrapper/scope. */
 .iss-media-card {
   --iss-media-card-rail-color: var(--iss-accent);
-  --iss-media-card-shadow: 0 10px 28px rgba(0, 0, 0, 0.06);
+  --iss-media-card-shadow: none;
   --iss-media-card-bg: var(--iss-white);
   --iss-media-card-border-width: 1px;
-  --iss-media-card-rail-width: 5px;
-  --iss-media-card-radius: var(--iss-radius-md);
+  --iss-media-card-rail-width: 3px;
+  --iss-media-card-radius: var(--iss-radius-sm);
 
   position: relative;
   min-width: 0;
   background: var(--iss-media-card-bg);
-  border: var(--iss-media-card-border-width) solid var(--iss-border);
+  border: var(--iss-media-card-border-width) solid rgba(30, 30, 30, 0.12);
   border-radius: var(--iss-media-card-radius);
   overflow: hidden;
   box-shadow: var(--iss-media-card-shadow);
@@ -909,17 +1291,17 @@
 
 /* .iss-media-card--soft: Modifier class for `iss-media-card`; combine for `soft` variant. */
 .iss-media-card--soft {
-  --iss-media-card-shadow: 0 6px 18px rgba(0, 0, 0, 0.04);
+  --iss-media-card-shadow: 0 8px 22px rgba(0, 0, 0, 0.04);
 }
 
 /* .iss-media-card--strong: Modifier class for `iss-media-card`; combine for `strong` variant. */
 .iss-media-card--strong {
-  --iss-media-card-shadow: 0 16px 40px rgba(0, 0, 0, 0.1);
+  --iss-media-card-shadow: 0 14px 34px rgba(0, 0, 0, 0.08);
 }
 
 /* .iss-media-card--framed: Modifier class for `iss-media-card`; combine for `framed` variant. */
 .iss-media-card--framed {
-  padding: 0.75rem;
+  padding: 0.55rem;
 }
 
 /* .iss-media-card--framed: Modifier class for `iss-media-card`; combine for `framed` variant. */
@@ -938,7 +1320,7 @@
 /* .iss-media-card--framed: Modifier class for `iss-media-card`; combine for `framed` variant. */
 /* .iss-card__media: Element class for `iss-card`; apply on `media` element. */
 .iss-media-card--framed > .iss-card__media img {
-  border-radius: calc(var(--iss-media-card-radius) - 6px);
+  border-radius: calc(var(--iss-media-card-radius) - 4px);
 }
 
 /* Rail color variants */

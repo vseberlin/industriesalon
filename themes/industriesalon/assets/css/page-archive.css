@@ -1,0 +1,1076 @@
+/* =========================================================
+   GROUP: ARCHIVE LANDING
+   PURPOSE:
+   Landing-page styling for archive entry points, mediathek-related
+   sections, and discovery structures.
+
+   USE THIS WHEN:
+   - Archive content needs framing distinct from tours or normal pages.
+   ========================================================= */
+/* =====================================================
+   PAGE WRAPPER
+   Use on the main landing page wrapper:
+   .iss-archive-landing
+   ===================================================== */
+
+/* .iss-archive-landing: Base class for iss archive landing; apply on primary wrapper/scope. */
+.iss-archive-landing {
+  --iss-archive-gap: clamp(1rem, 2vw, 1.5rem);
+  --iss-archive-section-gap: clamp(3rem, 6vw, 6rem);
+  --iss-archive-card-pad: clamp(1rem, 1.8vw, 1.4rem);
+  --iss-archive-radius: var(--iss-radius-sm, 8px);
+  --iss-archive-border: 1px solid rgba(30, 30, 30, 0.12);
+  --iss-archive-border-hover: rgba(30, 30, 30, 0.22);
+  --iss-archive-shadow: none;
+  --iss-archive-shadow-hover: none;
+
+  display: flex;
+  flex-direction: column;
+  gap: var(--iss-archive-section-gap);
+  padding-top: 0;
+  margin-top: 0 !important;
+}
+
+#wp--skip-link--target {
+  margin-top: 0 !important;
+}
+
+/* .iss-archive-landing: Base class for iss archive landing; apply on primary wrapper/scope. */
+/* .section: Base class for section; apply on primary wrapper/scope. */
+.iss-archive-landing .section {
+  padding-top: 0;
+  padding-bottom: 0;
+}
+
+/* =====================================================
+   HERO / INTRO
+   ===================================================== */
+
+.iss-archive-hero-note {
+  max-width: 28rem;
+  margin-left: auto;
+  border-left: 3px solid var(--iss-red);
+  border-radius: 0;
+  background: transparent;
+  padding: 0.25rem 0 0.25rem 1.25rem;
+}
+
+.iss-archive-hero-note,
+.iss-archive-hero-note .iss-kicker,
+.iss-archive-hero-note .iss-archive-callout__title,
+.iss-archive-hero-note .iss-archive-callout__text {
+  color: var(--iss-white);
+}
+
+/* =====================================================
+   ENTRY GRID
+   4 cards at top:
+   Hausarchiv / Mediathek / Online-Sammlung / Portale
+   ===================================================== */
+
+/* .iss-archive-entry-grid: Base class for iss archive entry grid; apply on primary wrapper/scope. */
+.iss-archive-entry-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: var(--iss-archive-gap);
+}
+
+/* .iss-archive-entry: Base class for iss archive entry; apply on primary wrapper/scope. */
+.iss-archive-entry {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: 0.85rem;
+  min-height: 100%;
+  padding: var(--iss-archive-card-pad);
+  border: var(--iss-archive-border);
+  border-radius: var(--iss-archive-radius);
+  background: #fff;
+  box-shadow: var(--iss-archive-shadow);
+  text-decoration: none;
+  color: inherit;
+  transition:
+    border-color var(--iss-transition),
+    background-color var(--iss-transition);
+}
+
+/* .iss-archive-entry: Base class for iss archive entry; apply on primary wrapper/scope. */
+.iss-archive-entry:hover,
+/* .iss-archive-entry: Base class for iss archive entry; apply on primary wrapper/scope. */
+.iss-archive-entry:focus-visible {
+  box-shadow: var(--iss-archive-shadow-hover);
+  border-color: var(--iss-archive-border-hover);
+}
+
+/* .iss-archive-entry: Base class for iss archive entry; apply on primary wrapper/scope. */
+.iss-archive-entry::before {
+  content: "";
+  position: absolute;
+  inset: 0 auto 0 0;
+  width: 3px;
+  border-radius: var(--iss-archive-radius) 0 0 var(--iss-archive-radius);
+  background: var(--iss-accent);
+  transition:
+    width var(--iss-transition),
+    background-color var(--iss-transition);
+}
+
+.iss-archive-entry:hover::before,
+.iss-archive-entry:focus-visible::before {
+  width: 5px;
+}
+
+/* .iss-archive-entry__eyebrow: Element class for `iss-archive-entry`; apply on `eyebrow` element. */
+.iss-archive-entry__eyebrow {
+  margin: 0;
+  font-size: 0.74rem;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: rgba(30, 30, 30, 0.55);
+}
+
+/* .iss-archive-entry__title: Element class for `iss-archive-entry`; apply on `title` element. */
+.iss-archive-entry__title {
+  margin: 0;
+  font-size: clamp(1.25rem, 1rem + 0.65vw, 1.8rem);
+  line-height: 1.12;
+}
+
+/* .iss-archive-entry__text: Element class for `iss-archive-entry`; apply on `text` element. */
+.iss-archive-entry__text {
+  margin: 0;
+  color: rgba(30, 30, 30, 0.78);
+}
+
+/* .iss-archive-entry__meta: Element class for `iss-archive-entry`; apply on `meta` element. */
+.iss-archive-entry__meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem 0.65rem;
+  margin-top: auto;
+  padding-top: 0.25rem;
+  font-size: 0.78rem;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: rgba(30, 30, 30, 0.52);
+}
+
+/* .iss-archive-entry--hausarchiv: Modifier class for `iss-archive-entry`; combine for `hausarchiv` variant. */
+.iss-archive-entry--hausarchiv::before {
+  background: var(--iss-brown);
+}
+
+/* .iss-archive-entry--mediathek: Modifier class for `iss-archive-entry`; combine for `mediathek` variant. */
+.iss-archive-entry--mediathek::before {
+  background: var(--iss-red);
+}
+
+/* .iss-archive-entry--sammlung: Modifier class for `iss-archive-entry`; combine for `sammlung` variant. */
+.iss-archive-entry--sammlung::before {
+  background: var(--iss-blue);
+}
+
+/* .iss-archive-entry--portale: Modifier class for `iss-archive-entry`; combine for `portale` variant. */
+.iss-archive-entry--portale::before {
+  background: var(--iss-green);
+}
+
+/* =====================================================
+   PATHS / HOW TO USE
+   ===================================================== */
+
+/* .iss-archive-paths: Base class for iss archive paths; apply on primary wrapper/scope. */
+.iss-archive-paths {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: var(--iss-archive-gap);
+}
+
+/* .iss-archive-path: Base class for iss archive path; apply on primary wrapper/scope. */
+.iss-archive-path {
+  padding: var(--iss-archive-card-pad);
+  border-top: 2px solid var(--iss-border, rgba(30, 30, 30, 0.14));
+  background: rgba(30, 30, 30, 0.02);
+}
+
+/* .iss-archive-path__title: Element class for `iss-archive-path`; apply on `title` element. */
+.iss-archive-path__title {
+  margin: 0 0 0.5rem;
+  font-size: 1.1rem;
+}
+
+/* .iss-archive-path__text: Element class for `iss-archive-path`; apply on `text` element. */
+.iss-archive-path__text {
+  margin: 0;
+  max-width: 34ch;
+  color: rgba(30, 30, 30, 0.78);
+}
+
+.iss-archive-intro {
+  gap: clamp(2rem, 5vw, 5rem);
+  align-items: start;
+  margin-bottom: clamp(2rem, 5vw, 3.5rem);
+}
+
+.iss-archive-intro__lead {
+  max-width: 34ch;
+  margin: 0 0 1.25rem;
+  font-size: clamp(1.15rem, 1rem + 0.45vw, 1.45rem);
+  line-height: 1.5;
+  color: rgba(30, 30, 30, 0.9);
+}
+
+.iss-archive-intro__texts {
+  gap: 1.25rem;
+}
+
+.iss-archive-intro__texts p {
+  margin: 0;
+  color: rgba(30, 30, 30, 0.76);
+}
+
+.iss-archive-topics {
+  gap: var(--iss-archive-gap);
+  margin-top: clamp(1.5rem, 3vw, 2.25rem);
+}
+
+.iss-archive-topics > .wp-block-column {
+  margin-top: 0;
+}
+
+.iss-archive-topics .iss-archive-card__media {
+  aspect-ratio: 16 / 9;
+}
+
+.iss-archive-topics .iss-archive-card__actions {
+  margin: 0;
+  padding-top: 0;
+}
+
+.iss-archive-tools-head {
+  margin-top: clamp(2rem, 4vw, 3rem);
+}
+
+.iss-archive-tools-grid {
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+}
+
+.iss-archive-tools-grid .iss-archive-entry {
+  box-shadow: none;
+}
+
+.iss-archive-tools-grid .iss-archive-entry__title {
+  font-size: clamp(1.1rem, 0.98rem + 0.35vw, 1.35rem);
+}
+
+.iss-archive-tools-grid .iss-archive-entry__meta {
+  padding-top: 0.5rem;
+}
+
+.iss-archive-tools-grid .iss-archive-entry__meta a {
+  color: inherit;
+  text-decoration: none;
+}
+
+.iss-archive-tools-grid .iss-archive-entry__meta a:hover,
+.iss-archive-tools-grid .iss-archive-entry__meta a:focus-visible {
+  color: var(--iss-accent);
+}
+
+.iss-archive-facts {
+  gap: 0;
+  margin-top: clamp(2rem, 4vw, 3rem);
+  border-top: 1px solid rgba(30, 30, 30, 0.1);
+}
+
+.iss-archive-facts > .wp-block-column {
+  margin-top: 0;
+}
+
+.iss-archive-fact {
+  height: 100%;
+  padding: 1.25rem 1.5rem;
+  border-left: 1px solid rgba(30, 30, 30, 0.1);
+}
+
+.iss-archive-facts > .wp-block-column:first-child .iss-archive-fact {
+  padding-left: 0;
+  border-left: 0;
+}
+
+.iss-archive-fact__title {
+  margin: 0;
+  font-size: 1.08rem;
+  line-height: 1.2;
+}
+
+.iss-archive-fact__text {
+  margin: 0.35rem 0 0;
+  color: rgba(30, 30, 30, 0.74);
+}
+
+/* =====================================================
+   SECTION HEADS
+   ===================================================== */
+
+/* .iss-archive-section-head: Base class for iss archive section head; apply on primary wrapper/scope. */
+.iss-archive-section-head {
+  display: grid;
+  gap: 0.75rem;
+  margin-bottom: clamp(1.25rem, 2vw, 1.75rem);
+}
+
+/* .iss-archive-section-head: Base class for iss archive section head; apply on primary wrapper/scope. */
+/* .iss-heading: Base class for iss heading; apply on primary wrapper/scope. */
+.iss-archive-section-head .iss-heading {
+  --iss-heading-max-width: 56rem;
+}
+
+/* =====================================================
+   FEATURED STRIP
+   ===================================================== */
+
+/* .iss-archive-featured: Base class for iss archive featured; apply on primary wrapper/scope. */
+.iss-archive-featured {
+  display: grid;
+  grid-template-columns: 1.2fr 1.2fr 0.8fr;
+  gap: var(--iss-archive-gap);
+  align-items: stretch;
+}
+
+/* .iss-archive-featured__stack: Element class for `iss-archive-featured`; apply on `stack` element. */
+.iss-archive-featured__stack {
+  display: grid;
+  gap: var(--iss-archive-gap);
+}
+
+/* .iss-archive-callout: Base class for iss archive callout; apply on primary wrapper/scope. */
+.iss-archive-callout {
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  gap: 1rem;
+  min-height: 100%;
+  padding: clamp(1.25rem, 2vw, 1.75rem);
+  border-radius: var(--iss-radius-lg, 24px);
+  background: var(--iss-black);
+  color: var(--iss-white);
+}
+
+/* .iss-archive-callout__title: Element class for `iss-archive-callout`; apply on `title` element. */
+.iss-archive-callout__title {
+  margin: 0;
+  font-size: clamp(1.4rem, 1rem + 1vw, 2rem);
+  line-height: 1.1;
+}
+
+/* .iss-archive-callout__text: Element class for `iss-archive-callout`; apply on `text` element. */
+.iss-archive-callout__text {
+  margin: 0;
+  color: rgba(249, 249, 250, 0.86);
+}
+
+.iss-archive-discovery {
+  display: grid;
+  grid-template-columns: minmax(0, 1.1fr) minmax(18rem, 0.9fr);
+  gap: var(--iss-archive-gap);
+  align-items: stretch;
+}
+
+.iss-archive-discovery__lead {
+  position: relative;
+  overflow: hidden;
+  border-radius: var(--iss-radius-lg, 24px);
+  min-height: 100%;
+  background:
+    linear-gradient(145deg, rgba(30, 30, 30, 0.94), rgba(63, 63, 63, 0.9)),
+    var(--iss-black);
+  color: var(--iss-white);
+}
+
+.iss-archive-discovery__lead::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background:
+    radial-gradient(circle at top right, rgba(232, 29, 37, 0.22), transparent 34%),
+    linear-gradient(180deg, rgba(255, 255, 255, 0.04), transparent 55%);
+  pointer-events: none;
+}
+
+.iss-archive-discovery__lead-body {
+  position: relative;
+  z-index: 1;
+  display: grid;
+  gap: 1rem;
+  padding: clamp(1.4rem, 2.6vw, 2.3rem);
+}
+
+.iss-archive-discovery__lead-body h2,
+.iss-archive-discovery__lead-body p {
+  margin: 0;
+}
+
+.iss-archive-discovery__lead-body p:not(.iss-kicker) {
+  max-width: 36rem;
+  color: rgba(249, 249, 250, 0.86);
+}
+
+.iss-archive-discovery__lead-body .iss-kicker,
+.iss-archive-discovery__lead-body h2,
+.iss-archive-discovery__lead-body p,
+.iss-archive-discovery__lead-body .iss-archive-card__link {
+  color: var(--iss-white);
+}
+
+.iss-archive-discovery__lead-body .iss-archive-card__link {
+  text-decoration-color: rgba(255, 255, 255, 0.35);
+}
+
+.iss-archive-public-stack {
+  display: grid;
+  gap: var(--iss-archive-gap);
+}
+
+.iss-archive-public-card {
+  display: grid;
+  gap: 0.65rem;
+  padding: clamp(1.15rem, 2vw, 1.5rem);
+  border: var(--iss-archive-border);
+  border-radius: var(--iss-archive-radius);
+  background: #fff;
+  box-shadow: var(--iss-archive-shadow);
+}
+
+.iss-archive-public-card__label {
+  margin: 0;
+  font-size: 0.76rem;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+.iss-archive-public-card__title {
+  margin: 0;
+  font-size: clamp(1.05rem, 0.98rem + 0.3vw, 1.28rem);
+  line-height: 1.16;
+}
+
+.iss-archive-public-card__text {
+  margin: 0;
+  color: rgba(30, 30, 30, 0.76);
+}
+
+.iss-archive-public-card--red .iss-archive-public-card__label {
+  color: var(--iss-red);
+}
+
+.iss-archive-public-card--blue .iss-archive-public-card__label {
+  color: #3d5873;
+}
+
+.iss-archive-public-card--green .iss-archive-public-card__label {
+  color: #336b4f;
+}
+
+/* =====================================================
+   SHARED CONTENT CARD
+   Use for mediathek + collection items
+   ===================================================== */
+
+/* .iss-archive-card: Base class for iss archive card; apply on primary wrapper/scope. */
+.iss-archive-card {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  overflow: hidden;
+  border: var(--iss-archive-border);
+  border-radius: var(--iss-archive-radius);
+  background: #fff;
+  box-shadow: var(--iss-archive-shadow);
+}
+
+/* .iss-archive-card__media: Element class for `iss-archive-card`; apply on `media` element. */
+.iss-archive-card__media {
+  aspect-ratio: 16 / 10;
+  background: var(--iss-grey);
+  overflow: hidden;
+}
+
+/* .iss-archive-card__media: Element class for `iss-archive-card`; apply on `media` element. */
+.iss-archive-card__media img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+/* .iss-archive-card__body: Element class for `iss-archive-card`; apply on `body` element. */
+.iss-archive-card__body {
+  display: flex;
+  flex: 1 1 auto;
+  flex-direction: column;
+  gap: 0.8rem;
+  padding: var(--iss-archive-card-pad);
+}
+
+/* .iss-archive-card__type: Element class for `iss-archive-card`; apply on `type` element. */
+.iss-archive-card__type {
+  display: inline-flex;
+  align-items: center;
+  width: fit-content;
+  min-height: 1.9rem;
+  padding: 0.3rem 0.65rem;
+  border-radius: 999px;
+  background: rgba(30, 30, 30, 0.06);
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+
+/* .iss-archive-card__title: Element class for `iss-archive-card`; apply on `title` element. */
+.iss-archive-card__title {
+  margin: 0;
+  font-size: clamp(1.1rem, 1rem + 0.45vw, 1.4rem);
+  line-height: 1.16;
+}
+
+/* .iss-archive-card__text: Element class for `iss-archive-card`; apply on `text` element. */
+.iss-archive-card__text {
+  margin: 0;
+  color: rgba(30, 30, 30, 0.78);
+}
+
+/* .iss-archive-card__meta: Element class for `iss-archive-card`; apply on `meta` element. */
+.iss-archive-card__meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem 0.6rem;
+  margin-top: auto;
+  padding-top: 0.2rem;
+  font-size: 0.78rem;
+  color: rgba(30, 30, 30, 0.56);
+}
+
+/* .iss-archive-card__actions: Element class for `iss-archive-card`; apply on `actions` element. */
+.iss-archive-card__actions {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  margin-top: auto;
+  padding-top: 0.5rem;
+}
+
+/* .iss-archive-card__link: Element class for `iss-archive-card`; apply on `link` element. */
+.iss-archive-card__link {
+  color: var(--iss-black);
+  font-weight: 600;
+  text-decoration: none;
+}
+
+/* .iss-archive-card__link: Element class for `iss-archive-card`; apply on `link` element. */
+.iss-archive-card__link:hover,
+/* .iss-archive-card__link: Element class for `iss-archive-card`; apply on `link` element. */
+.iss-archive-card__link:focus-visible {
+  color: var(--iss-accent);
+}
+
+/* type accents */
+/* .iss-archive-card--mediathek: Modifier class for `iss-archive-card`; combine for `mediathek` variant. */
+/* .iss-archive-card__type: Element class for `iss-archive-card`; apply on `type` element. */
+.iss-archive-card--mediathek .iss-archive-card__type {
+  background: rgba(232, 29, 37, 0.1);
+  color: var(--iss-red);
+}
+
+/* .iss-archive-card--sammlung: Modifier class for `iss-archive-card`; combine for `sammlung` variant. */
+/* .iss-archive-card__type: Element class for `iss-archive-card`; apply on `type` element. */
+.iss-archive-card--sammlung .iss-archive-card__type {
+  background: rgba(134, 159, 186, 0.18);
+  color: #3d5873;
+}
+
+/* .iss-archive-card--hausarchiv: Modifier class for `iss-archive-card`; combine for `hausarchiv` variant. */
+/* .iss-archive-card__type: Element class for `iss-archive-card`; apply on `type` element. */
+.iss-archive-card--hausarchiv .iss-archive-card__type {
+  background: rgba(117, 58, 24, 0.12);
+  color: var(--iss-brown);
+}
+
+/* =====================================================
+   CONTENT GRIDS
+   ===================================================== */
+
+/* .iss-archive-grid: Base class for iss archive grid; apply on primary wrapper/scope. */
+.iss-archive-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: var(--iss-archive-gap);
+}
+
+/* .iss-archive-grid--2: Modifier class for `iss-archive-grid`; combine for `2` variant. */
+.iss-archive-grid--2 {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+/* .iss-archive-grid--4: Modifier class for `iss-archive-grid`; combine for `4` variant. */
+.iss-archive-grid--4 {
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+}
+
+.iss-archive-landing .iss-archive-band {
+  padding-top: clamp(3rem, 6vw, 5rem);
+  padding-bottom: clamp(3rem, 6vw, 5rem);
+  background: linear-gradient(180deg, rgba(30, 30, 30, 0.94), rgba(53, 53, 53, 0.98));
+  color: var(--iss-white);
+}
+
+.iss-archive-band > .iss-container {
+  display: grid;
+  gap: clamp(1.5rem, 3vw, 2rem);
+}
+
+.iss-archive-band .iss-heading__title,
+.iss-archive-band .iss-heading__text,
+.iss-archive-band .iss-kicker {
+  color: var(--iss-white);
+}
+
+.iss-archive-band .iss-heading__text {
+  color: rgba(249, 249, 250, 0.84);
+}
+
+.iss-archive-band .iss-archive-card {
+  background: rgba(255, 255, 255, 0.98);
+}
+
+/* =====================================================
+   ONSITE ARCHIVE PANEL
+   ===================================================== */
+
+/* .iss-onsite-panel: Base class for iss onsite panel; apply on primary wrapper/scope. */
+.iss-onsite-panel {
+  display: grid;
+  grid-template-columns: 1.15fr 0.85fr;
+  gap: var(--iss-archive-gap);
+  align-items: stretch;
+}
+
+/* .iss-onsite-panel__main: Element class for `iss-onsite-panel`; apply on `main` element. */
+.iss-onsite-panel__main,
+/* .iss-onsite-panel__aside: Element class for `iss-onsite-panel`; apply on `aside` element. */
+.iss-onsite-panel__aside {
+  min-width: 0;
+}
+
+/* .iss-onsite-panel__main: Element class for `iss-onsite-panel`; apply on `main` element. */
+.iss-onsite-panel__main {
+  padding: clamp(1.25rem, 2vw, 1.8rem);
+  border-left: 4px solid var(--iss-brown);
+  background: rgba(117, 58, 24, 0.04);
+}
+
+.iss-archive-landing #objekte.section--alt::before {
+  display: none;
+}
+
+.iss-onsite-panel__main .iss-kicker--brown,
+.iss-onsite-panel__main h2,
+.iss-onsite-panel__main p {
+  color: var(--iss-black);
+}
+
+/* .iss-onsite-panel__main: Element class for `iss-onsite-panel`; apply on `main` element. */
+.iss-onsite-panel__main > *:first-child {
+  margin-top: 0;
+}
+
+/* .iss-onsite-panel__main: Element class for `iss-onsite-panel`; apply on `main` element. */
+.iss-onsite-panel__main > *:last-child {
+  margin-bottom: 0;
+}
+
+/* .iss-onsite-facts: Base class for iss onsite facts; apply on primary wrapper/scope. */
+.iss-onsite-facts {
+  display: grid;
+  gap: 0.75rem;
+}
+
+/* .iss-onsite-fact: Base class for iss onsite fact; apply on primary wrapper/scope. */
+.iss-onsite-fact {
+  padding: 1rem 1rem 1rem 1.1rem;
+  border: var(--iss-archive-border);
+  border-radius: var(--iss-archive-radius);
+  background: #fff;
+}
+
+/* .iss-onsite-fact__title: Element class for `iss-onsite-fact`; apply on `title` element. */
+.iss-onsite-fact__title {
+  margin: 0 0 0.3rem;
+  font-size: 1rem;
+}
+
+/* .iss-onsite-fact__text: Element class for `iss-onsite-fact`; apply on `text` element. */
+.iss-onsite-fact__text {
+  margin: 0;
+  color: rgba(30, 30, 30, 0.74);
+}
+
+/* =====================================================
+   PORTAL LINKS
+   ===================================================== */
+
+/* .iss-portal-links: Base class for iss portal links; apply on primary wrapper/scope. */
+.iss-portal-links {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: var(--iss-archive-gap);
+}
+
+/* .iss-portal-link: Base class for iss portal link; apply on primary wrapper/scope. */
+.iss-portal-link {
+  display: flex;
+  flex-direction: column;
+  gap: 0.8rem;
+  min-height: 100%;
+  padding: var(--iss-archive-card-pad);
+  border: var(--iss-archive-border);
+  border-radius: var(--iss-archive-radius);
+  background: #fff;
+  text-decoration: none;
+  color: inherit;
+}
+
+/* .iss-portal-link__logo: Element class for `iss-portal-link`; apply on `logo` element. */
+.iss-portal-link__logo {
+  font-size: 0.82rem;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: rgba(30, 30, 30, 0.45);
+}
+
+/* .iss-portal-link__title: Element class for `iss-portal-link`; apply on `title` element. */
+.iss-portal-link__title {
+  margin: 0;
+  font-size: 1.25rem;
+  line-height: 1.14;
+}
+
+/* .iss-portal-link__text: Element class for `iss-portal-link`; apply on `text` element. */
+.iss-portal-link__text {
+  margin: 0;
+  color: rgba(30, 30, 30, 0.78);
+}
+
+/* .iss-portal-link__meta: Element class for `iss-portal-link`; apply on `meta` element. */
+.iss-portal-link__meta {
+  margin-top: auto;
+  font-size: 0.84rem;
+  font-weight: 600;
+  color: rgba(30, 30, 30, 0.55);
+}
+
+.iss-archive-company-layout {
+  display: grid;
+  grid-template-columns: minmax(0, 0.8fr) minmax(0, 1.2fr);
+  gap: clamp(2rem, 5vw, 4rem);
+  align-items: start;
+}
+
+.iss-archive-company-copy {
+  display: grid;
+  gap: 1rem;
+}
+
+.iss-archive-company-copy > * {
+  margin: 0;
+}
+
+.iss-archive-company-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: var(--iss-archive-gap);
+}
+
+.iss-archive-company-card {
+  display: grid;
+  gap: 0.75rem;
+  min-height: 100%;
+  padding: clamp(1.15rem, 2vw, 1.5rem);
+  border: var(--iss-archive-border);
+  border-radius: var(--iss-archive-radius);
+  background: #fff;
+  box-shadow: var(--iss-archive-shadow);
+}
+
+.iss-archive-company-card > * {
+  margin: 0;
+}
+
+.iss-archive-company-code {
+  color: rgba(30, 30, 30, 0.5);
+  font-size: 0.78rem;
+  font-weight: 700;
+  letter-spacing: 0.11em;
+  text-transform: uppercase;
+}
+
+.iss-archive-company-title {
+  font-size: clamp(1.15rem, 1rem + 0.45vw, 1.45rem);
+  line-height: 1.14;
+}
+
+.iss-archive-company-meta {
+  margin-top: auto;
+  padding-top: 0.2rem;
+  color: rgba(30, 30, 30, 0.56);
+  font-size: 0.8rem;
+}
+
+.iss-archive-company-card--red {
+  border-top: 3px solid var(--iss-red);
+}
+
+.iss-archive-company-card--blue {
+  border-top: 3px solid #567595;
+}
+
+.iss-archive-company-card--brown {
+  border-top: 3px solid var(--iss-brown);
+}
+
+.iss-archive-company-card--gold {
+  border-top: 3px solid #a28061;
+}
+
+/* =====================================================
+   FINAL CTA
+   ===================================================== */
+
+/* .iss-archive-research-cta: Base class for iss archive research cta; apply on primary wrapper/scope. */
+.iss-archive-research-cta {
+  display: grid;
+  grid-template-columns: 1.15fr 0.85fr;
+  gap: var(--iss-archive-gap);
+  align-items: center;
+  padding: clamp(1.5rem, 3vw, 2.5rem);
+  border-radius: var(--iss-radius-lg, 24px);
+  background: linear-gradient(
+    135deg,
+    rgba(30, 30, 30, 0.98) 0%,
+    rgba(54, 54, 54, 0.98) 100%
+  );
+  color: var(--iss-white);
+}
+
+/* .iss-archive-research-cta__title: Element class for `iss-archive-research-cta`; apply on `title` element. */
+.iss-archive-research-cta__title {
+  margin: 0 0 0.65rem;
+  font-size: clamp(1.5rem, 1.1rem + 1vw, 2.2rem);
+  line-height: 1.08;
+}
+
+/* .iss-archive-research-cta__text: Element class for `iss-archive-research-cta`; apply on `text` element. */
+.iss-archive-research-cta__text {
+  margin: 0;
+  max-width: 40rem;
+  color: rgba(249, 249, 250, 0.88);
+}
+
+/* .iss-archive-research-cta: Base class for iss archive research cta; apply on primary wrapper/scope. */
+/* .wp-block-buttons: Base class for wp block buttons; apply on primary wrapper/scope. */
+.iss-archive-research-cta .wp-block-buttons,
+/* .iss-archive-research-cta: Base class for iss archive research cta; apply on primary wrapper/scope. */
+/* .iss-buttons: Base class for iss buttons; apply on primary wrapper/scope. */
+.iss-archive-research-cta .iss-buttons {
+  justify-content: flex-end;
+}
+
+.iss-archive-research-cta,
+.iss-archive-research-cta .iss-kicker,
+.iss-archive-research-cta .iss-archive-research-cta__title,
+.iss-archive-research-cta .iss-archive-research-cta__text,
+.iss-archive-research-cta h2,
+.iss-archive-research-cta p {
+  color: var(--iss-white);
+}
+
+.iss-archive-research-layout {
+  display: grid;
+  grid-template-columns: minmax(0, 0.8fr) minmax(0, 1.2fr);
+  gap: clamp(2rem, 5vw, 4rem);
+  align-items: start;
+}
+
+.iss-archive-research-copy,
+.iss-archive-research-list {
+  min-width: 0;
+}
+
+.iss-archive-research-copy {
+  display: grid;
+  gap: 1rem;
+}
+
+.iss-archive-research-copy > * {
+  margin: 0;
+}
+
+.iss-archive-research-title {
+  margin: 0;
+  max-width: 14ch;
+  text-wrap: balance;
+}
+
+.iss-archive-research-list {
+  display: grid;
+  gap: 0;
+}
+
+.iss-archive-research-item {
+  display: grid;
+  grid-template-columns: minmax(6rem, 8rem) minmax(0, 1fr);
+  gap: 1.2rem;
+  align-items: start;
+  padding: 1.2rem 0;
+  border-top: 1px solid var(--iss-border);
+}
+
+.iss-archive-research-item:last-child {
+  border-bottom: 1px solid var(--iss-border);
+}
+
+.iss-archive-research-item__label {
+  margin: 0;
+  color: rgba(30, 30, 30, 0.52);
+  font-size: 0.76rem;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+.iss-archive-research-item__title {
+  margin: 0 0 0.35rem;
+  font-size: clamp(1.08rem, 0.98rem + 0.35vw, 1.3rem);
+  line-height: 1.16;
+}
+
+.iss-archive-research-item__text {
+  margin: 0;
+  color: rgba(30, 30, 30, 0.76);
+}
+
+/* =====================================================
+   RESPONSIVE
+   ===================================================== */
+
+@media (max-width: 1180px) {
+/* .iss-archive-entry-grid: Base class for iss archive entry grid; apply on primary wrapper/scope. */
+  .iss-archive-entry-grid,
+/* .iss-archive-grid--4: Modifier class for `iss-archive-grid`; combine for `4` variant. */
+  .iss-archive-grid--4 {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+/* .iss-archive-featured: Base class for iss archive featured; apply on primary wrapper/scope. */
+  .iss-archive-featured,
+/* .iss-onsite-panel: Base class for iss onsite panel; apply on primary wrapper/scope. */
+  .iss-onsite-panel,
+/* .iss-archive-research-cta: Base class for iss archive research cta; apply on primary wrapper/scope. */
+  .iss-archive-research-cta {
+    grid-template-columns: 1fr;
+  }
+
+/* .iss-archive-paths: Base class for iss archive paths; apply on primary wrapper/scope. */
+  .iss-archive-paths,
+/* .iss-archive-grid: Base class for iss archive grid; apply on primary wrapper/scope. */
+  .iss-archive-grid,
+  .iss-archive-company-grid,
+  .iss-archive-tools-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .iss-archive-discovery,
+  .iss-archive-company-layout,
+  .iss-archive-research-layout {
+    grid-template-columns: 1fr;
+  }
+
+  .iss-archive-facts {
+    gap: 1rem;
+    border-top: 0;
+  }
+
+  .iss-archive-fact {
+    padding: 0;
+    border-left: 0;
+  }
+}
+
+@media (max-width: 782px) {
+/* .iss-archive-hero: Base class for iss archive hero; apply on primary wrapper/scope. */
+  .iss-archive-hero {
+    min-height: auto;
+    padding-top: 7rem;
+    padding-bottom: 3rem;
+  }
+
+/* .iss-archive-entry-grid: Base class for iss archive entry grid; apply on primary wrapper/scope. */
+  .iss-archive-entry-grid,
+/* .iss-archive-paths: Base class for iss archive paths; apply on primary wrapper/scope. */
+  .iss-archive-paths,
+/* .iss-archive-grid: Base class for iss archive grid; apply on primary wrapper/scope. */
+  .iss-archive-grid,
+/* .iss-archive-grid--2: Modifier class for `iss-archive-grid`; combine for `2` variant. */
+  .iss-archive-grid--2,
+/* .iss-archive-grid--4: Modifier class for `iss-archive-grid`; combine for `4` variant. */
+  .iss-archive-grid--4,
+  .iss-archive-company-grid,
+/* .iss-portal-links: Base class for iss portal links; apply on primary wrapper/scope. */
+  .iss-portal-links {
+    grid-template-columns: 1fr;
+  }
+
+  .iss-archive-topics {
+    gap: 1rem;
+  }
+
+  .iss-archive-hero__layout,
+  .iss-archive-intro,
+  .iss-archive-intro__texts {
+    gap: 1.25rem;
+  }
+
+  .iss-archive-hero-note {
+    max-width: none;
+    margin-left: 0;
+  }
+
+  .iss-archive-research-item {
+    grid-template-columns: 1fr;
+    gap: 0.55rem;
+  }
+
+/* .iss-archive-callout: Base class for iss archive callout; apply on primary wrapper/scope. */
+  .iss-archive-callout,
+/* .iss-onsite-panel__main: Element class for `iss-onsite-panel`; apply on `main` element. */
+  .iss-onsite-panel__main,
+/* .iss-archive-research-cta: Base class for iss archive research cta; apply on primary wrapper/scope. */
+  .iss-archive-research-cta {
+    padding: 1.2rem;
+  }
+
+/* .iss-archive-research-cta: Base class for iss archive research cta; apply on primary wrapper/scope. */
+/* .wp-block-buttons: Base class for wp block buttons; apply on primary wrapper/scope. */
+  .iss-archive-research-cta .wp-block-buttons,
+/* .iss-archive-research-cta: Base class for iss archive research cta; apply on primary wrapper/scope. */
+/* .iss-buttons: Base class for iss buttons; apply on primary wrapper/scope. */
+  .iss-archive-research-cta .iss-buttons {
+    justify-content: flex-start;
+  }
+}

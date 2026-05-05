@@ -1,0 +1,334 @@
+/* =========================================================
+   VIDEOS
+   ========================================================= */
+
+.iss-videos-page,
+#wp--skip-link--target .iss-videos-page {
+  margin-top: 0 !important;
+  background: #0f0f10;
+  color: var(--iss-white);
+}
+
+.iss-videos-page > .section:not(.iss-section--hero) {
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.iss-videos-page .section:not(.iss-section--hero) .iss-heading > .iss-kicker,
+.iss-videos-page .section:not(.iss-section--hero) .iss-heading > .iss-kicker--compact {
+  padding-left: 0.85rem;
+  border-left: 3px solid var(--iss-red);
+  color: var(--iss-red);
+}
+
+.iss-videos-hero .wp-block-cover__inner-container {
+  min-height: clamp(30rem, 64vw, 42rem);
+}
+
+.iss-videos-hero__text {
+  max-width: 38rem;
+}
+
+.iss-videos-hero-note {
+  max-width: 19rem;
+  padding: 1.2rem 0 0;
+}
+
+.iss-videos-hero-note__title {
+  margin: 0;
+  font-size: clamp(1.28rem, 1.08rem + 0.45vw, 1.7rem);
+  line-height: 1.1;
+  letter-spacing: -0.03em;
+  text-wrap: balance;
+}
+
+.iss-videos-hero-note__text {
+  margin: 0.65rem 0 0;
+  color: rgba(255, 255, 255, 0.78);
+}
+
+.iss-videos-library-wrap {
+  padding-top: clamp(2.25rem, 4vw, 3rem);
+  padding-bottom: clamp(2.5rem, 4.8vw, 3.75rem);
+}
+
+.iss-video-library {
+  display: grid;
+  gap: 2rem;
+}
+
+.iss-video-library .iss-heading__title,
+.iss-video-library__section-title {
+  margin: 0;
+  letter-spacing: -0.04em;
+  text-wrap: balance;
+}
+
+.iss-video-library .iss-heading__title {
+  font-size: clamp(2.1rem, 3.3vw, 3.8rem);
+  line-height: 0.98;
+}
+
+.iss-video-library .iss-heading__text,
+.iss-video-library__feature-text,
+.iss-video-card__text,
+.iss-video-library__cta-text {
+  color: rgba(255, 255, 255, 0.78);
+}
+
+.iss-video-library__filters {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.8rem 1rem;
+  padding-bottom: 0.9rem;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.12);
+}
+
+.iss-video-library__filter {
+  color: rgba(255, 255, 255, 0.82);
+  text-decoration: none;
+  font-weight: 600;
+}
+
+.iss-video-library__filter.is-active,
+.iss-video-library__filter:hover,
+.iss-video-library__filter:focus {
+  color: var(--iss-red);
+}
+
+.iss-video-library__feature {
+  display: grid;
+  grid-template-columns: minmax(0, 1.25fr) minmax(22rem, 0.75fr);
+  gap: clamp(1.5rem, 3vw, 3rem);
+  align-items: start;
+  padding: 1.4rem;
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.iss-video-library__feature-media iframe,
+.iss-video-library__feature-media video,
+.iss-video-library__feature-media img {
+  display: block;
+  width: 100%;
+  height: auto;
+  aspect-ratio: 16 / 9;
+}
+
+.iss-video-library__feature-copy {
+  display: grid;
+  gap: 0.9rem;
+}
+
+.iss-video-library__feature-kicker {
+  margin: 0;
+  color: var(--iss-red);
+  font-size: 0.82rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+}
+
+.iss-video-library__feature-title {
+  font-size: clamp(1.8rem, 2.1vw, 2.8rem);
+  line-height: 1.02;
+}
+
+.iss-video-library__feature-meta {
+  display: grid;
+  gap: 0.35rem;
+  color: rgba(255, 255, 255, 0.85);
+}
+
+.iss-video-library__feature-meta p,
+.iss-video-library__feature-link,
+.iss-video-library__series-link,
+.iss-video-library__cta-title {
+  margin: 0;
+}
+
+.iss-video-library__section-head {
+  display: grid;
+  gap: 0.4rem;
+}
+
+.iss-video-library__section-title {
+  font-size: clamp(1.55rem, 1.25rem + 0.85vw, 2.25rem);
+  line-height: 1.05;
+}
+
+.iss-video-library__grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 1.15rem;
+}
+
+.iss-video-library__grid--compact {
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+}
+
+.iss-video-card {
+  display: grid;
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.iss-video-card__trigger {
+  display: grid;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+
+.iss-video-card__media {
+  position: relative;
+  display: block;
+  text-decoration: none;
+}
+
+.iss-video-card__media img,
+.iss-video-card__fallback {
+  display: block;
+  width: 100%;
+  aspect-ratio: 16 / 10;
+  object-fit: cover;
+}
+
+.iss-video-card__fallback {
+  background: linear-gradient(135deg, rgba(232, 29, 37, 0.35), rgba(255, 255, 255, 0.06));
+}
+
+.iss-video-card__duration {
+  position: absolute;
+  right: 0.6rem;
+  bottom: 0.6rem;
+  padding: 0.18rem 0.42rem;
+  background: rgba(0, 0, 0, 0.82);
+  color: var(--iss-white);
+  font-size: 0.78rem;
+  font-weight: 700;
+}
+
+.iss-video-card__body {
+  display: grid;
+  gap: 0.7rem;
+  padding: 0.95rem 1rem 1rem;
+}
+
+.iss-video-card__title {
+  margin: 0;
+  font-size: clamp(1.12rem, 1.02rem + 0.35vw, 1.4rem);
+  line-height: 1.15;
+}
+
+.iss-video-card__title a,
+.iss-video-card__title span {
+  color: var(--iss-white);
+  text-decoration: none;
+}
+
+.iss-video-card.is-active {
+  border-color: rgba(232, 29, 37, 0.7);
+  box-shadow: 0 0 0 1px rgba(232, 29, 37, 0.36);
+}
+
+.iss-video-card__trigger:hover .iss-video-card__title span,
+.iss-video-card__trigger:focus-visible .iss-video-card__title span {
+  color: var(--iss-red);
+}
+
+.iss-video-card__trigger:focus-visible {
+  outline: 2px solid rgba(232, 29, 37, 0.7);
+  outline-offset: 2px;
+}
+
+.iss-video-card__text,
+.iss-video-card__meta,
+.iss-video-library__series-count,
+.iss-video-library__empty {
+  margin: 0;
+}
+
+.iss-video-card__meta,
+.iss-video-library__series-count {
+  color: rgba(255, 255, 255, 0.58);
+  font-size: 0.92rem;
+}
+
+.iss-video-library__series-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 1.15rem;
+}
+
+.iss-video-library__series-card {
+  display: grid;
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.iss-video-library__series-media img {
+  display: block;
+  width: 100%;
+  aspect-ratio: 16 / 9;
+  object-fit: cover;
+}
+
+.iss-video-library__series-body {
+  display: grid;
+  gap: 0.55rem;
+  padding: 0.95rem 1rem 1rem;
+}
+
+.iss-video-library__series-title {
+  margin: 0;
+  font-size: clamp(1.15rem, 1.05rem + 0.35vw, 1.4rem);
+  line-height: 1.12;
+}
+
+.iss-video-library__cta {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 1rem 2rem;
+  align-items: center;
+  padding: 1.35rem 1.5rem;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+}
+
+.iss-video-library__cta-copy {
+  display: grid;
+  gap: 0.55rem;
+}
+
+.iss-video-library__cta-title {
+  font-size: clamp(1.3rem, 1.15rem + 0.55vw, 1.8rem);
+  line-height: 1.08;
+  letter-spacing: -0.03em;
+}
+
+@media (max-width: 1100px) {
+  .iss-video-library__feature {
+    grid-template-columns: 1fr;
+  }
+
+  .iss-video-library__grid,
+  .iss-video-library__grid--compact,
+  .iss-video-library__series-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 781px) {
+  .iss-video-library .iss-heading__title {
+    font-size: clamp(1.95rem, 11vw, 3rem);
+  }
+
+  .iss-video-library__grid,
+  .iss-video-library__grid--compact,
+  .iss-video-library__series-grid,
+  .iss-video-library__cta {
+    grid-template-columns: 1fr;
+  }
+}

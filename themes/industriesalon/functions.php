@@ -21,6 +21,17 @@ add_action('after_setup_theme', function () {
             'assets/css/overrides.css',
             'assets/css/iss-flex-split.css',
             'assets/css/ueber-uns.css',
+            'assets/css/page-archive.css',
+            'assets/css/page-events.css',
+            'assets/css/page-museum.css',
+            'assets/css/page-videos.css',
+            'assets/css/page-ausstellungen.css',
+            'assets/css/page-verein.css',
+            'assets/css/publications.css',
+            'assets/css/single-tour.css',
+            'assets/css/single-ausstellung.css',
+            'assets/css/single-event.css',
+            'assets/css/single-content.css',
         )
     );
 });
@@ -638,6 +649,9 @@ add_action('enqueue_block_editor_assets', 'industriesalon_enqueue_event_layout_e
 function industriesalon_enqueue_assets(): void
 {
     $is_schoneweide_page = is_page('schoneweide');
+    $current_page_template = is_page()
+        ? (string) get_post_meta(get_queried_object_id(), '_wp_page_template', true)
+        : '';
     $theme_dir = get_stylesheet_directory();
     $theme_uri = get_stylesheet_directory_uri();
     $theme = wp_get_theme();
@@ -646,6 +660,22 @@ function industriesalon_enqueue_assets(): void
     $base_version = file_exists($base_stylesheet)
         ? (string) filemtime($base_stylesheet)
         : $version;
+    $enqueue_theme_style = static function (string $handle, string $relative_path, array $dependencies) use ($theme_dir, $theme_uri): bool {
+        $absolute_path = $theme_dir . $relative_path;
+
+        if (!file_exists($absolute_path)) {
+            return false;
+        }
+
+        wp_enqueue_style(
+            $handle,
+            $theme_uri . $relative_path,
+            $dependencies,
+            (string) filemtime($absolute_path)
+        );
+
+        return true;
+    };
 
     wp_enqueue_style(
         'industriesalon-base',
@@ -654,85 +684,119 @@ function industriesalon_enqueue_assets(): void
         $base_version
     );
 
-    $cards_rel = '/assets/css/cards.css';
-    $cards_abs = $theme_dir . $cards_rel;
-    if (file_exists($cards_abs)) {
-        wp_enqueue_style(
-            'industriesalon-cards',
-            $theme_uri . $cards_rel,
-            array('industriesalon-base'),
-            (string) filemtime($cards_abs)
-        );
-    }
+    $cards_loaded = $enqueue_theme_style(
+        'industriesalon-cards',
+        '/assets/css/cards.css',
+        array('industriesalon-base')
+    );
 
-    $patterns_rel = '/assets/css/patterns.css';
-    $patterns_abs = $theme_dir . $patterns_rel;
-    if (file_exists($patterns_abs)) {
-        $patterns_dependencies = file_exists($cards_abs)
+    $patterns_dependencies = $cards_loaded
+        ? array('industriesalon-cards')
+        : array('industriesalon-base');
+    $patterns_loaded = $enqueue_theme_style(
+        'industriesalon-patterns',
+        '/assets/css/patterns.css',
+        $patterns_dependencies
+    );
+
+    $overrides_dependencies = $patterns_loaded
+        ? array('industriesalon-patterns')
+        : ($cards_loaded
             ? array('industriesalon-cards')
-            : array('industriesalon-base');
+            : array('industriesalon-base'));
+    $overrides_loaded = $enqueue_theme_style(
+        'industriesalon-overrides',
+        '/assets/css/overrides.css',
+        $overrides_dependencies
+    );
 
-        wp_enqueue_style(
-            'industriesalon-patterns',
-            $theme_uri . $patterns_rel,
-            $patterns_dependencies,
-            (string) filemtime($patterns_abs)
-        );
-    }
-
-    $overrides_rel = '/assets/css/overrides.css';
-    $overrides_abs = $theme_dir . $overrides_rel;
-    if (file_exists($overrides_abs)) {
-        $overrides_dependencies = file_exists($patterns_abs)
+    $page_dependencies = $overrides_loaded
+        ? array('industriesalon-overrides')
+        : ($patterns_loaded
             ? array('industriesalon-patterns')
-            : (file_exists($cards_abs)
+            : ($cards_loaded
                 ? array('industriesalon-cards')
-                : array('industriesalon-base'));
+                : array('industriesalon-base')));
 
-        wp_enqueue_style(
-            'industriesalon-overrides',
-            $theme_uri . $overrides_rel,
-            $overrides_dependencies,
-            (string) filemtime($overrides_abs)
-        );
-    }
-
-    $ueber_uns_rel = '/assets/css/ueber-uns.css';
-    $ueber_uns_abs = $theme_dir . $ueber_uns_rel;
-    if (!$is_schoneweide_page && file_exists($ueber_uns_abs)) {
-        $ueber_uns_dependencies = file_exists($overrides_abs)
-            ? array('industriesalon-overrides')
-            : (file_exists($patterns_abs)
-                ? array('industriesalon-patterns')
-                : (file_exists($cards_abs)
-                    ? array('industriesalon-cards')
-                    : array('industriesalon-base')));
-
-        wp_enqueue_style(
-            'industriesalon-ueber-uns',
-            $theme_uri . $ueber_uns_rel,
-            $ueber_uns_dependencies,
-            (string) filemtime($ueber_uns_abs)
-        );
-    }
-
-    $flex_split_rel = '/assets/css/iss-flex-split.css';
-    $flex_split_abs = $theme_dir . $flex_split_rel;
-    if (!$is_schoneweide_page && file_exists($flex_split_abs)) {
-        $flex_split_dependencies = file_exists($overrides_abs)
-            ? array('industriesalon-overrides')
-            : (file_exists($patterns_abs)
-                ? array('industriesalon-patterns')
-                : (file_exists($cards_abs)
-                    ? array('industriesalon-cards')
-                    : array('industriesalon-base')));
-
-        wp_enqueue_style(
+    if (!$is_schoneweide_page) {
+        $enqueue_theme_style(
             'industriesalon-flex-split',
-            $theme_uri . $flex_split_rel,
-            $flex_split_dependencies,
-            (string) filemtime($flex_split_abs)
+            '/assets/css/iss-flex-split.css',
+            $page_dependencies
         );
+    }
+
+    $conditional_styles = array(
+        array(
+            'handle' => 'industriesalon-ueber-uns',
+            'path' => '/assets/css/ueber-uns.css',
+            'condition' => $current_page_template === 'page-ueber-uns'
+                || is_page(array('ueber-uns', 'about')),
+        ),
+        array(
+            'handle' => 'industriesalon-page-archive',
+            'path' => '/assets/css/page-archive.css',
+            'condition' => is_page('archiv'),
+        ),
+        array(
+            'handle' => 'industriesalon-page-events',
+            'path' => '/assets/css/page-events.css',
+            'condition' => is_page('veranstaltungen'),
+        ),
+        array(
+            'handle' => 'industriesalon-page-museum',
+            'path' => '/assets/css/page-museum.css',
+            'condition' => is_page('das-museum'),
+        ),
+        array(
+            'handle' => 'industriesalon-page-videos',
+            'path' => '/assets/css/page-videos.css',
+            'condition' => is_page('videos'),
+        ),
+        array(
+            'handle' => 'industriesalon-page-ausstellungen',
+            'path' => '/assets/css/page-ausstellungen.css',
+            'condition' => is_page('ausstellungen'),
+        ),
+        array(
+            'handle' => 'industriesalon-page-verein',
+            'path' => '/assets/css/page-verein.css',
+            'condition' => is_page('verein'),
+        ),
+        array(
+            'handle' => 'industriesalon-publications',
+            'path' => '/assets/css/publications.css',
+            'condition' => is_page('publikationen') || is_singular('publication'),
+        ),
+        array(
+            'handle' => 'industriesalon-single-tour',
+            'path' => '/assets/css/single-tour.css',
+            'condition' => is_singular('fuehrung'),
+        ),
+        array(
+            'handle' => 'industriesalon-single-ausstellung',
+            'path' => '/assets/css/single-ausstellung.css',
+            'condition' => is_singular('ausstellung'),
+        ),
+        array(
+            'handle' => 'industriesalon-single-event',
+            'path' => '/assets/css/single-event.css',
+            'condition' => is_singular('veranstaltung'),
+        ),
+        array(
+            'handle' => 'industriesalon-single-content',
+            'path' => '/assets/css/single-content.css',
+            'condition' => is_singular(array('post', 'archivsammlung', 'archivobjekt', 'register_place', 'team_member', 'projekt'))
+                || is_post_type_archive(array('archivsammlung', 'archivobjekt')),
+        ),
+    );
+
+    foreach ($conditional_styles as $style) {
+        if (!$style['condition']) {
+            continue;
+        }
+
+        $enqueue_theme_style($style['handle'], $style['path'], $page_dependencies);
     }
 
     // Header JS
@@ -749,25 +813,11 @@ function industriesalon_enqueue_assets(): void
     }
 
     if ($is_schoneweide_page) {
-        $atlas_css_rel = '/assets/css/oberschoeneweide-atlas.css';
-        $atlas_css_abs = $theme_dir . $atlas_css_rel;
-
-        if (file_exists($atlas_css_abs)) {
-            $atlas_dependencies = file_exists($overrides_abs)
-                ? array('industriesalon-overrides')
-                : (file_exists($patterns_abs)
-                    ? array('industriesalon-patterns')
-                    : (file_exists($cards_abs)
-                        ? array('industriesalon-cards')
-                        : array('industriesalon-base')));
-
-            wp_enqueue_style(
-                'industriesalon-oberschoeneweide-atlas',
-                $theme_uri . $atlas_css_rel,
-                $atlas_dependencies,
-                (string) filemtime($atlas_css_abs)
-            );
-        }
+        $enqueue_theme_style(
+            'industriesalon-oberschoeneweide-atlas',
+            '/assets/css/oberschoeneweide-atlas.css',
+            $page_dependencies
+        );
 
         $schoneweide_script_rel = '/assets/js/schoneweide.js';
         $schoneweide_script_abs = $theme_dir . $schoneweide_script_rel;
@@ -798,6 +848,79 @@ function industriesalon_enqueue_assets(): void
     }
 }
 add_action('wp_enqueue_scripts', 'industriesalon_enqueue_assets');
+
+function industriesalon_collect_skin_style_dependencies(string $primary_handle): array
+{
+    $dependencies = array($primary_handle, 'industriesalon-base');
+
+    if (wp_style_is('industriesalon-cards', 'enqueued')) {
+        $dependencies[] = 'industriesalon-cards';
+    }
+
+    if (wp_style_is('industriesalon-patterns', 'enqueued')) {
+        $dependencies[] = 'industriesalon-patterns';
+    }
+
+    if (wp_style_is('industriesalon-overrides', 'enqueued')) {
+        $dependencies[] = 'industriesalon-overrides';
+    }
+
+    return array_values(array_unique($dependencies));
+}
+
+function industriesalon_enqueue_timeline_skin(): void
+{
+    $relative_path = '/assets/css/timeline-skin.css';
+    $absolute_path = get_stylesheet_directory() . $relative_path;
+
+    if (!file_exists($absolute_path)) {
+        return;
+    }
+
+    wp_enqueue_style(
+        'industriesalon-timeline-skin',
+        get_stylesheet_directory_uri() . $relative_path,
+        industriesalon_collect_skin_style_dependencies('iss-timeline'),
+        (string) filemtime($absolute_path)
+    );
+}
+add_action('iss_programm_timeline_assets_enqueued', 'industriesalon_enqueue_timeline_skin');
+
+function industriesalon_enqueue_tour_calendar_skin(): void
+{
+    $relative_path = '/assets/css/tour-calendar-skin.css';
+    $absolute_path = get_stylesheet_directory() . $relative_path;
+
+    if (!file_exists($absolute_path)) {
+        return;
+    }
+
+    wp_enqueue_style(
+        'industriesalon-tour-calendar-skin',
+        get_stylesheet_directory_uri() . $relative_path,
+        industriesalon_collect_skin_style_dependencies('is-tour-calendar'),
+        (string) filemtime($absolute_path)
+    );
+}
+add_action('iss_programm_calendar_assets_enqueued', 'industriesalon_enqueue_tour_calendar_skin');
+
+function industriesalon_enqueue_fuehrungen_skin(): void
+{
+    $relative_path = '/assets/css/fuehrungen-skin.css';
+    $absolute_path = get_stylesheet_directory() . $relative_path;
+
+    if (!file_exists($absolute_path)) {
+        return;
+    }
+
+    wp_enqueue_style(
+        'industriesalon-fuehrungen-skin',
+        get_stylesheet_directory_uri() . $relative_path,
+        industriesalon_collect_skin_style_dependencies('iss-fuehrungen'),
+        (string) filemtime($absolute_path)
+    );
+}
+add_action('iss_fuehrungen_assets_enqueued', 'industriesalon_enqueue_fuehrungen_skin');
 
 function industriesalon_render_menu_shell(): void
 {

@@ -23,7 +23,7 @@ require_once ISS_FUEHRUNGEN_PATH . 'includes/template-tags.php';
 require_once ISS_FUEHRUNGEN_PATH . 'includes/blocks.php';
 require_once ISS_FUEHRUNGEN_PATH . 'includes/templates.php';
 
-add_action('wp_enqueue_scripts', function () {
+function iss_fuehrungen_enqueue_assets() {
     if (!is_singular(ISS_FUEHRUNGEN_POST_TYPE) && !is_post_type_archive(ISS_FUEHRUNGEN_POST_TYPE) && !is_tax('fuehrung_typ')) {
         return;
     }
@@ -34,6 +34,7 @@ add_action('wp_enqueue_scripts', function () {
         [],
         ISS_FUEHRUNGEN_VERSION
     );
+    do_action('iss_fuehrungen_assets_enqueued');
 
     if (is_singular(ISS_FUEHRUNGEN_POST_TYPE)) {
         wp_enqueue_script(
@@ -44,7 +45,8 @@ add_action('wp_enqueue_scripts', function () {
             true
         );
     }
-});
+}
+add_action('wp_enqueue_scripts', 'iss_fuehrungen_enqueue_assets');
 
 register_activation_hook(__FILE__, function () {
     iss_fuehrungen_register_post_type();
