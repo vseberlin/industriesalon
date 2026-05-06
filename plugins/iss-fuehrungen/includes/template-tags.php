@@ -262,6 +262,101 @@ function iss_fuehrung_block_resolve_post_id($attributes = []) {
     return $post_id > 0 ? $post_id : 0;
 }
 
+function iss_fuehrung_get_description_leaf_blocks(): array
+{
+    return [
+        'core/paragraph',
+        'core/list',
+        'core/quote',
+    ];
+}
+
+function iss_fuehrung_get_description_container_blocks(): array
+{
+    return [
+        'core/group',
+        'core/columns',
+        'core/column',
+    ];
+}
+
+function iss_fuehrung_collect_description_markup(array $blocks): array
+{
+    $markup = [];
+    $leaf_blocks = iss_fuehrung_get_description_leaf_blocks();
+    $container_blocks = iss_fuehrung_get_description_container_blocks();
+
+    foreach ($blocks as $block) {
+        if (!is_array($block)) {
+            continue;
+        }
+
+        $block_name = (string) ($block['blockName'] ?? '');
+
+        if ($block_name === '') {
+            $html = trim((string) ($block['innerHTML'] ?? ''));
+            if ($html !== '') {
+                $markup[] = wp_kses_post($html);
+            }
+            continue;
+        }
+
+        if (in_array($block_name, $leaf_blocks, true)) {
+            $markup[] = render_block($block);
+            continue;
+        }
+
+        if (in_array($block_name, $container_blocks, true) && !empty($block['innerBlocks']) && is_array($block['innerBlocks'])) {
+            $markup = array_merge($markup, iss_fuehrung_collect_description_markup($block['innerBlocks']));
+        }
+    }
+
+    return $markup;
+}
+
+function iss_fuehrung_render_description_html(int $post_id): string
+{
+    $content = trim((string) get_post_field('post_content', $post_id));
+    if ($content === '') {
+        return '';
+    }
+
+    if (!function_exists('parse_blocks') || !function_exists('render_block')) {
+        return wpautop(wp_kses_post($content));
+    }
+
+    $blocks = parse_blocks($content);
+    if (!$blocks) {
+        return wpautop(wp_kses_post($content));
+    }
+
+    $markup = array_filter(iss_fuehrung_collect_description_markup($blocks));
+    if ($markup) {
+        return implode('', $markup);
+    }
+
+    return wpautop(wp_kses_post($content));
+}
+
+function iss_fuehrung_render_description_block($attributes = [], $content = '')
+{
+    $post_id = iss_fuehrung_block_resolve_post_id($attributes);
+    if ($post_id <= 0) {
+        return '';
+    }
+
+    $description_html = iss_fuehrung_render_description_html($post_id);
+    if ($description_html === '') {
+        return '';
+    }
+
+    $wrapper = function_exists('get_block_wrapper_attributes')
+        ? get_block_wrapper_attributes(['class' => 'wp-block-iss-tour-description'])
+        : 'class="wp-block-iss-tour-description"';
+
+    return '<div ' . $wrapper . '>' . $description_html . '</div>';
+}
+
 function iss_fuehrung_render_facts_block($attributes = [], $content = '') {
     $post_id = iss_fuehrung_block_resolve_post_id($attributes);
     if ($post_id <= 0) {

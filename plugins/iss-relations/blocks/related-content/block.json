@@ -5,7 +5,7 @@
   "title": "Related Content",
   "category": "widgets",
   "icon": "share-alt2",
-  "description": "Shows posts related to one or more linked places.",
+  "description": "Shows related cards inside a standalone section with heading and container.",
   "editorScript": "file:./index.js",
   "attributes": {
     "title": {

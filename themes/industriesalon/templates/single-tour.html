@@ -38,7 +38,7 @@
 							</div>
 							<!-- /wp:group -->
 
-							<!-- wp:post-content /-->
+							<!-- wp:iss/tour-description /-->
 						</div>
 						<!-- /wp:group -->
 					</div>
@@ -106,39 +106,89 @@
 		<div class="wp-block-group iss-container">
 			<!-- wp:group {"className":"iss-tour-main__body","layout":{"type":"default"}} -->
 			<div class="wp-block-group iss-tour-main__body">
-				<!-- wp:group {"className":"iss-heading","layout":{"type":"default"}} -->
-				<div class="wp-block-group iss-heading">
+				<!-- wp:group {"className":"iss-heading iss-tour-main__intro","layout":{"type":"default"}} -->
+				<div class="wp-block-group iss-heading iss-tour-main__intro">
 					<!-- wp:paragraph {"className":"iss-kicker iss-kicker--compact"} -->
 					<p class="iss-kicker iss-kicker--compact">Weiter entdecken</p>
 					<!-- /wp:paragraph -->
 
 					<!-- wp:heading {"level":2,"className":"iss-heading__title"} -->
-					<h2 class="iss-heading__title">Weitere Führungen</h2>
+					<h2 class="iss-heading__title">Weiter entdecken</h2>
 					<!-- /wp:heading -->
 				</div>
 				<!-- /wp:group -->
 
-				<!-- wp:query {"queryId":1,"query":{"perPage":2,"pages":0,"offset":0,"postType":"fuehrung","order":"desc","orderBy":"date","author":"","search":"","exclude":[0],"sticky":"","inherit":false},"className":"iss-card-grid","displayLayout":{"type":"grid","columns":2}} -->
-				<div class="wp-block-query iss-card-grid">
-					<!-- wp:post-template -->
-						<!-- wp:group {"className":"iss-card iss-card--flat","layout":{"type":"default"}} -->
-						<div class="wp-block-group iss-card iss-card--flat">
-							<!-- wp:post-featured-image {"isLink":true,"className":"iss-card__media"} /-->
-							<!-- wp:group {"className":"iss-card__body","layout":{"type":"default"}} -->
-							<div class="wp-block-group iss-card__body">
+				<!-- wp:columns {"verticalAlignment":"top","className":"iss-tour-main__subsections"} -->
+				<div class="wp-block-columns are-vertically-aligned-top iss-tour-main__subsections">
+					<!-- wp:column {"verticalAlignment":"top","className":"iss-tour-main__subsection-col"} -->
+					<div class="wp-block-column is-vertically-aligned-top iss-tour-main__subsection-col">
+						<!-- wp:group {"className":"iss-tour-main__subsection iss-tour-main__subsection--tours","layout":{"type":"default"}} -->
+						<div class="wp-block-group iss-tour-main__subsection iss-tour-main__subsection--tours">
+							<!-- wp:group {"className":"iss-heading iss-tour-main__subsection-intro","layout":{"type":"default"}} -->
+							<div class="wp-block-group iss-heading iss-tour-main__subsection-intro">
 								<!-- wp:paragraph {"className":"iss-kicker iss-kicker--compact"} -->
 								<p class="iss-kicker iss-kicker--compact">Führung</p>
 								<!-- /wp:paragraph -->
-								<!-- wp:post-title {"isLink":true,"level":3,"className":"iss-card__title"} /-->
-								<!-- wp:post-excerpt {"moreText":"","showMoreOnNewLine":false,"excerptLength":18,"className":"iss-card__text"} /-->
-								<!-- wp:read-more {"content":"Mehr erfahren","className":"iss-card__link"} /-->
+
+								<!-- wp:heading {"level":3,"className":"iss-heading__title"} -->
+								<h3 class="iss-heading__title">Weitere Führungen</h3>
+								<!-- /wp:heading -->
 							</div>
 							<!-- /wp:group -->
+
+							<!-- wp:query {"queryId":1,"query":{"perPage":2,"pages":0,"offset":0,"postType":"fuehrung","order":"desc","orderBy":"date","author":"","search":"","exclude":[0],"sticky":"","inherit":false},"className":"iss-card-grid iss-tour-main__cards","displayLayout":{"type":"grid","columns":2}} -->
+							<div class="wp-block-query iss-card-grid iss-tour-main__cards">
+								<!-- wp:post-template -->
+									<!-- wp:group {"className":"iss-card iss-card--flat","layout":{"type":"default"}} -->
+									<div class="wp-block-group iss-card iss-card--flat">
+										<!-- wp:post-featured-image {"isLink":true,"className":"iss-card__media"} /-->
+										<!-- wp:group {"className":"iss-card__body","layout":{"type":"default"}} -->
+										<div class="wp-block-group iss-card__body">
+											<!-- wp:paragraph {"className":"iss-kicker iss-kicker--compact"} -->
+											<p class="iss-kicker iss-kicker--compact">Führung</p>
+											<!-- /wp:paragraph -->
+											<!-- wp:post-title {"isLink":true,"level":3,"className":"iss-card__title"} /-->
+											<!-- wp:post-excerpt {"moreText":"","showMoreOnNewLine":false,"excerptLength":18,"className":"iss-card__text"} /-->
+											<!-- wp:group {"className":"iss-card__footer","layout":{"type":"default"}} -->
+											<div class="wp-block-group iss-card__footer">
+												<!-- wp:read-more {"content":"Mehr erfahren","showContent":false,"className":"iss-card__link"} /-->
+											</div>
+											<!-- /wp:group -->
+										</div>
+										<!-- /wp:group -->
+									</div>
+									<!-- /wp:group -->
+								<!-- /wp:post-template -->
+							</div>
+							<!-- /wp:query -->
 						</div>
 						<!-- /wp:group -->
-					<!-- /wp:post-template -->
+					</div>
+					<!-- /wp:column -->
+
+					<!-- wp:column {"verticalAlignment":"top","className":"iss-tour-main__subsection-col"} -->
+					<div class="wp-block-column is-vertically-aligned-top iss-tour-main__subsection-col">
+						<!-- wp:group {"className":"iss-tour-main__subsection iss-tour-main__subsection--places","layout":{"type":"default"}} -->
+						<div class="wp-block-group iss-tour-main__subsection iss-tour-main__subsection--places">
+							<!-- wp:group {"className":"iss-heading iss-tour-main__subsection-intro","layout":{"type":"default"}} -->
+							<div class="wp-block-group iss-heading iss-tour-main__subsection-intro">
+								<!-- wp:paragraph {"className":"iss-kicker iss-kicker--compact"} -->
+								<p class="iss-kicker iss-kicker--compact">Ort</p>
+								<!-- /wp:paragraph -->
+
+								<!-- wp:heading {"level":3,"className":"iss-heading__title"} -->
+								<h3 class="iss-heading__title">Orte entdecken</h3>
+								<!-- /wp:heading -->
+							</div>
+							<!-- /wp:group -->
+
+							<!-- wp:iss/related-cards {"postType":"register_place","perPage":2,"source":"route","className":"iss-tour-main__related"} /-->
+						</div>
+						<!-- /wp:group -->
+					</div>
+					<!-- /wp:column -->
 				</div>
-				<!-- /wp:query -->
+				<!-- /wp:columns -->
 			</div>
 			<!-- /wp:group -->
 		</div>

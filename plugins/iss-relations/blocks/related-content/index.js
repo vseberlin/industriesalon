@@ -25,6 +25,7 @@
 
   const SOURCE_OPTIONS = [
     { label: 'Aktueller Kontext', value: 'current' },
+    { label: 'Aktuelle Route', value: 'route' },
     { label: 'Manuelle Ortsauswahl', value: 'manual' },
   ];
 
@@ -53,152 +54,182 @@
     return title !== '' ? title + ' (#' + post.id + ')' : '#' + post.id;
   }
 
-  window.wp.blocks.registerBlockType('iss/related-content', {
-    edit: function (props) {
-      var attrs = props.attributes || {};
-      var setAttributes = props.setAttributes || function () {};
-      var controls = null;
-      var selectedIds = parsePlaceIds(attrs.placeIds || '');
-      var placeRecords = useSelect
-        ? useSelect(function (select) {
-            return select('core').getEntityRecords('postType', PLACE_POST_TYPE, {
-              per_page: 100,
-              orderby: 'title',
-              order: 'asc',
-              status: 'publish',
-            });
-          }, [])
-        : [];
-      var placePosts = Array.isArray(placeRecords) ? placeRecords : [];
-      var tokenToPlaceId = {};
-      var placeIdToToken = {};
-      var suggestions = [];
-      var selectedTokens = [];
+  function renderManualPlaceControl(attrs, setAttributes, selectedTokens, suggestions, tokenToPlaceId) {
+    if (attrs.source !== 'manual') return null;
 
-      placePosts.forEach(function (post) {
-        var label = getPlaceLabel(post);
-        tokenToPlaceId[label] = post.id;
-        placeIdToToken[post.id] = label;
-        suggestions.push(label);
-      });
+    if (!FormTokenField) {
+      return TextControl
+        ? el(TextControl, {
+            label: 'Orts-IDs',
+            help: 'Kommagetrennte register_place IDs, z.B. 12921,12865',
+            value: attrs.placeIds || '',
+            onChange: function (value) {
+              setAttributes({ placeIds: value });
+            },
+          })
+        : null;
+    }
 
-      selectedTokens = selectedIds
-        .map(function (id) {
-          return placeIdToToken[id] || '';
-        })
-        .filter(Boolean);
+    return el(
+      'div',
+      null,
+      el(
+        'p',
+        { className: 'components-base-control__help' },
+        'Wählt veröffentlichte Orte aus. Die gespeicherte Auswahl bleibt relationstauglich und wiederverwendbar.'
+      ),
+      el(FormTokenField, {
+        value: selectedTokens,
+        suggestions: suggestions,
+        onChange: function (tokens) {
+          var ids = [];
+          (Array.isArray(tokens) ? tokens : []).forEach(function (token) {
+            var id = tokenToPlaceId[token] || 0;
+            if (id && ids.indexOf(id) === -1) {
+              ids.push(id);
+            }
+          });
+          setAttributes({ placeIds: ids.join(',') });
+        },
+        placeholder: 'Orte auswählen',
+      }),
+      TextControl
+        ? el(TextControl, {
+            label: 'Orts-IDs',
+            help: 'Fallback für direkte Eingabe oder Kontrolle der gespeicherten Auswahl.',
+            value: attrs.placeIds || '',
+            onChange: function (value) {
+              setAttributes({ placeIds: value });
+            },
+          })
+        : null
+    );
+  }
 
-      if (InspectorControls && PanelBody && TextControl && SelectControl && RangeControl) {
-        controls = el(
-          InspectorControls,
-          null,
-          el(
-            PanelBody,
-            { title: 'Related Content', initialOpen: true },
-            el(SelectControl, {
-              label: 'Inhaltstyp',
-              value: attrs.postType || 'post',
-              options: POST_TYPE_OPTIONS,
-              onChange: function (value) {
-                setAttributes({ postType: value });
-              },
-            }),
-            el(SelectControl, {
-              label: 'Ortsquelle',
-              value: attrs.source || 'current',
-              options: SOURCE_OPTIONS,
-              onChange: function (value) {
-                setAttributes({ source: value });
-              },
-            }),
-            attrs.source === 'manual'
-              ? FormTokenField
-                ? el(
-                    'div',
-                    null,
-                    el(
-                      'p',
-                      { className: 'components-base-control__help' },
-                      'Wählt veröffentlichte Orte aus. Gespeichert wird weiterhin die relationstaugliche Ortsliste im Block.'
-                    ),
-                    el(FormTokenField, {
-                      value: selectedTokens,
-                      suggestions: suggestions,
-                      onChange: function (tokens) {
-                        var ids = [];
-                        (Array.isArray(tokens) ? tokens : []).forEach(function (token) {
-                          var id = tokenToPlaceId[token] || 0;
-                          if (id && ids.indexOf(id) === -1) {
-                            ids.push(id);
-                          }
-                        });
-                        setAttributes({ placeIds: ids.join(',') });
-                      },
-                      placeholder: 'Orte auswählen',
-                    }),
-                    el(TextControl, {
-                      label: 'Orts-IDs',
-                      help: 'Fallback für direkte Eingabe oder Kontrolle der gespeicherten Auswahl.',
-                      value: attrs.placeIds || '',
-                      onChange: function (value) {
-                        setAttributes({ placeIds: value });
-                      },
-                    })
-                  )
-                : el(TextControl, {
-                    label: 'Orts-IDs',
-                    help: 'Kommagetrennte register_place IDs, z.B. 12921,12865',
-                    value: attrs.placeIds || '',
+  function registerRelatedBlock(name, config) {
+    window.wp.blocks.registerBlockType(name, {
+      edit: function (props) {
+        var attrs = props.attributes || {};
+        var setAttributes = props.setAttributes || function () {};
+        var controls = null;
+        var selectedIds = parsePlaceIds(attrs.placeIds || '');
+        var placeRecords = useSelect
+          ? useSelect(function (select) {
+              return select('core').getEntityRecords('postType', PLACE_POST_TYPE, {
+                per_page: 100,
+                orderby: 'title',
+                order: 'asc',
+                status: 'publish',
+              });
+            }, [])
+          : [];
+        var placePosts = Array.isArray(placeRecords) ? placeRecords : [];
+        var tokenToPlaceId = {};
+        var placeIdToToken = {};
+        var suggestions = [];
+        var selectedTokens = [];
+
+        placePosts.forEach(function (post) {
+          var label = getPlaceLabel(post);
+          tokenToPlaceId[label] = post.id;
+          placeIdToToken[post.id] = label;
+          suggestions.push(label);
+        });
+
+        selectedTokens = selectedIds
+          .map(function (id) {
+            return placeIdToToken[id] || '';
+          })
+          .filter(Boolean);
+
+        if (InspectorControls && PanelBody && SelectControl && RangeControl) {
+          controls = el(
+            InspectorControls,
+            null,
+            el(
+              PanelBody,
+              { title: config.panelTitle, initialOpen: true },
+              el(SelectControl, {
+                label: 'Inhaltstyp',
+                value: attrs.postType || 'post',
+                options: POST_TYPE_OPTIONS,
+                onChange: function (value) {
+                  setAttributes({ postType: value });
+                },
+              }),
+              el(SelectControl, {
+                label: 'Ortsquelle',
+                value: attrs.source || 'current',
+                options: SOURCE_OPTIONS,
+                onChange: function (value) {
+                  setAttributes({ source: value });
+                },
+              }),
+              renderManualPlaceControl(attrs, setAttributes, selectedTokens, suggestions, tokenToPlaceId),
+              config.showHeadingFields && TextControl
+                ? el(TextControl, {
+                    label: 'Kicker',
+                    value: attrs.kicker || '',
                     onChange: function (value) {
-                      setAttributes({ placeIds: value });
+                      setAttributes({ kicker: value });
                     },
                   })
-              : null,
-            el(TextControl, {
-              label: 'Kicker',
-              value: attrs.kicker || '',
-              onChange: function (value) {
-                setAttributes({ kicker: value });
-              },
-            }),
-            el(TextControl, {
-              label: 'Titel',
-              value: attrs.title || '',
-              onChange: function (value) {
-                setAttributes({ title: value });
-              },
-            }),
-            el(RangeControl, {
-              label: 'Anzahl',
-              min: 1,
-              max: 12,
-              value: attrs.perPage || 3,
-              onChange: function (value) {
-                setAttributes({ perPage: value || 3 });
-              },
-            })
+                : null,
+              config.showHeadingFields && TextControl
+                ? el(TextControl, {
+                    label: 'Titel',
+                    value: attrs.title || '',
+                    onChange: function (value) {
+                      setAttributes({ title: value });
+                    },
+                  })
+                : null,
+              el(RangeControl, {
+                label: 'Anzahl',
+                min: 1,
+                max: 12,
+                value: attrs.perPage || 3,
+                onChange: function (value) {
+                  setAttributes({ perPage: value || 3 });
+                },
+              })
+            )
+          );
+        }
+
+        return el(
+          'div',
+          null,
+          controls,
+          el(
+            'div',
+            { className: 'components-placeholder ' + config.placeholderClassName },
+            el('strong', null, config.placeholderTitle),
+            el('p', null, config.placeholderText)
           )
         );
-      }
+      },
+      save: function () {
+        return null;
+      },
+    });
+  }
 
-      return el(
-        'div',
-        null,
-        controls,
-        el(
-          'div',
-          { className: 'components-placeholder wp-block-iss-related-content-editor' },
-          el('strong', null, 'Related Content'),
-          el(
-            'p',
-            null,
-            'Rendert Inhalte, die über verknüpfte Orte mit dem aktuellen Eintrag oder einer manuellen Ortsauswahl verbunden sind.'
-          )
-        )
-      );
-    },
-    save: function () {
-      return null;
-    },
+  registerRelatedBlock('iss/related-content', {
+    panelTitle: 'Related Section',
+    placeholderClassName: 'wp-block-iss-related-content-editor',
+    placeholderTitle: 'Related Section',
+    placeholderText:
+      'Rendert einen vollständigen Abschnitt mit Überschrift und Karten, basierend auf verknüpften Orten oder einer manuellen Ortsauswahl.',
+    showHeadingFields: true,
+  });
+
+  registerRelatedBlock('iss/related-cards', {
+    panelTitle: 'Related Cards',
+    placeholderClassName: 'wp-block-iss-related-cards-editor',
+    placeholderTitle: 'Related Cards',
+    placeholderText:
+      'Rendert nur Karten. Abschnitt, Überschrift und Container bleiben der umgebenden Vorlage oder dem Pattern überlassen.',
+    showHeadingFields: false,
   });
 })();

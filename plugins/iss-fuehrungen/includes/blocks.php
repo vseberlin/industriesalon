@@ -30,6 +30,13 @@ add_action('init', function () {
         ]);
     }
 
+    $description_dir = ISS_FUEHRUNGEN_PATH . 'blocks/tour-description';
+    if (file_exists($description_dir . '/block.json')) {
+        register_block_type($description_dir, [
+            'render_callback' => 'iss_fuehrung_render_description_block',
+        ]);
+    }
+
     $route_dir = ISS_FUEHRUNGEN_PATH . 'blocks/tour-route';
     if (file_exists($route_dir . '/block.json')) {
         register_block_type($route_dir, [

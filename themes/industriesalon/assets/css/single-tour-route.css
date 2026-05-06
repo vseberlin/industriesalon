@@ -91,17 +91,20 @@
   letter-spacing: -0.02em;
 }
 
-.iss-tour-hero__description .wp-block-post-content {
+.iss-tour-hero__description .wp-block-post-content,
+.iss-tour-hero__description .wp-block-iss-tour-description {
   font-size: 0.9rem;
   line-height: 1.62;
   color: rgba(30, 30, 30, 0.82);
 }
 
-.iss-tour-hero__description .wp-block-post-content > *:first-child {
+.iss-tour-hero__description .wp-block-post-content > *:first-child,
+.iss-tour-hero__description .wp-block-iss-tour-description > *:first-child {
   margin-top: 0;
 }
 
-.iss-tour-hero__description .wp-block-post-content > * + * {
+.iss-tour-hero__description .wp-block-post-content > * + *,
+.iss-tour-hero__description .wp-block-iss-tour-description > * + * {
   margin-top: 0.9rem;
 }
 
@@ -406,7 +409,7 @@
 }
 
 .iss-tour-main__body {
-  max-width: 56rem;
+  max-width: min(100%, 92rem);
   margin: 0 auto;
 }
 
@@ -414,21 +417,136 @@
   margin-top: 0;
 }
 
+.iss-tour-main__intro {
+  margin-bottom: 1.15rem;
+}
+
 .iss-tour-main .iss-heading__title {
   font-size: clamp(1.72rem, 1.8vw, 2.12rem);
 }
 
-.iss-tour-main .wp-block-post-content {
+.iss-tour-main .wp-block-post-content,
+.iss-tour-main .wp-block-iss-tour-description {
   font-size: 0.95rem;
   line-height: 1.68;
 }
 
-.iss-tour-main .wp-block-post-content > * + * {
+.iss-tour-main .wp-block-post-content > * + *,
+.iss-tour-main .wp-block-iss-tour-description > * + * {
   margin-top: 1.15rem;
 }
 
-.iss-tour-main .iss-card-grid {
-  margin-top: 1.2rem;
+.iss-tour-main__subsections {
+  display: grid !important;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: clamp(1rem, 2.2vw, 1.5rem);
+  align-items: start;
+}
+
+.iss-tour-main__subsection-col {
+  min-width: 0;
+}
+
+.iss-tour-main__subsection {
+  display: grid;
+  gap: 0.95rem;
+  height: 100%;
+  padding: 1rem;
+  border: 1px solid rgba(30, 30, 30, 0.12);
+  border-radius: 0.65rem;
+  background: #fbfaf7;
+}
+
+.iss-tour-main__subsection-intro {
+  display: grid;
+  gap: 0.2rem;
+  margin: 0;
+}
+
+.iss-tour-main__subsection .iss-heading__title {
+  margin: 0;
+  font-size: clamp(1.08rem, 1.4vw, 1.3rem);
+  line-height: 1.14;
+  letter-spacing: -0.02em;
+}
+
+.iss-tour-main__related {
+  display: block;
+}
+
+.iss-tour-main__cards,
+.iss-tour-main__related .iss-related-feed__grid {
+  display: grid !important;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.9rem;
+  margin-top: 0;
+}
+
+.iss-tour-main__subsection .iss-card {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  border: 1px solid rgba(30, 30, 30, 0.12);
+  border-radius: 0.55rem;
+  background: #fff;
+  box-shadow: none;
+  overflow: hidden;
+}
+
+.iss-tour-main__subsection .iss-related-feed__card--no-media::before {
+  content: "";
+  display: block;
+  width: 100%;
+  aspect-ratio: 1.45;
+  background:
+    linear-gradient(135deg, rgba(232, 29, 37, 0.08), rgba(30, 30, 30, 0.04)),
+    #f1efea;
+  border-bottom: 1px solid rgba(30, 30, 30, 0.08);
+}
+
+.iss-tour-main__subsection .iss-card__media {
+  display: block;
+  width: 100%;
+  aspect-ratio: 1.45;
+  margin: 0;
+  overflow: hidden;
+  background: rgba(30, 30, 30, 0.06);
+}
+
+.iss-tour-main__subsection .iss-card__media img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.iss-tour-main__subsection .iss-card__body {
+  display: grid;
+  gap: 0.42rem;
+  height: 100%;
+  padding: 0.92rem 0.94rem 0.98rem;
+}
+
+.iss-tour-main__subsection .iss-card__title {
+  margin: 0;
+  font-size: 1rem;
+  line-height: 1.24;
+}
+
+.iss-tour-main__subsection .iss-card__text,
+.iss-tour-main__subsection .iss-related-feed__meta {
+  margin: 0;
+  font-size: 0.82rem;
+  line-height: 1.46;
+  color: rgba(30, 30, 30, 0.74);
+}
+
+.iss-tour-main__subsection .iss-card__footer {
+  margin-top: auto;
+  padding-top: 0.2rem;
+}
+
+.iss-tour-main__subsection .wp-block-read-more {
+  margin: 0;
 }
 
 .iss-tour-route {
@@ -773,6 +891,10 @@
     border-top: 0;
     border-left: 1px solid rgba(30, 30, 30, 0.12);
   }
+
+  .iss-tour-main__subsections {
+    grid-template-columns: 1fr;
+  }
 }
 
 @media (max-width: 900px) {
@@ -801,6 +923,11 @@
     padding-left: 0;
     border-top: 1px solid rgba(30, 30, 30, 0.12);
     border-left: 0;
+  }
+
+  .iss-tour-main__cards,
+  .iss-tour-main__related .iss-related-feed__grid {
+    grid-template-columns: 1fr;
   }
 
   .iss-tour-route__station {
