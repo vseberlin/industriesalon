@@ -10,8 +10,9 @@ function iss_fuehrung_get_color_class($post_id) {
     return 'iss-fuehrung--' . sanitize_html_class($color);
 }
 
-function iss_fuehrung_render_facts($post_id) {
+function iss_fuehrung_render_facts($post_id, array $args = []) {
     $items = [];
+    $include_related_places = !empty($args['include_related_places']);
 
     foreach ([
         'Dauer' => get_post_meta($post_id, 'duration', true),
@@ -31,7 +32,7 @@ function iss_fuehrung_render_facts($post_id) {
         ];
     }
 
-    if (function_exists('iss_relations_get_related_place_items') && function_exists('iss_relations_render_related_place_links_html')) {
+    if ($include_related_places && function_exists('iss_relations_get_related_place_items') && function_exists('iss_relations_render_related_place_links_html')) {
         $related_places = iss_relations_get_related_place_items($post_id);
         $related_links = iss_relations_render_related_place_links_html($post_id);
 
@@ -51,7 +52,8 @@ function iss_fuehrung_render_facts($post_id) {
     ob_start();
     echo '<div class="iss-fuehrung-facts">';
     foreach ($items as $item) {
-        echo '<div class="iss-fuehrung-fact">';
+        $modifier = sanitize_html_class((string) sanitize_title((string) $item['label']));
+        echo '<div class="iss-fuehrung-fact iss-fuehrung-fact--' . esc_attr($modifier) . '">';
         echo '<div class="iss-fuehrung-fact__label">' . esc_html((string) $item['label']) . '</div>';
         echo '<div class="iss-fuehrung-fact__value">';
         echo !empty($item['html']) ? wp_kses_post((string) $item['value']) : esc_html((string) $item['value']);
@@ -266,7 +268,9 @@ function iss_fuehrung_render_facts_block($attributes = [], $content = '') {
         return '';
     }
 
-    $facts = iss_fuehrung_render_facts($post_id);
+    $facts = iss_fuehrung_render_facts($post_id, [
+        'include_related_places' => false,
+    ]);
     if ($facts === '') {
         return '';
     }
@@ -412,6 +416,73 @@ function iss_fuehrung_get_route_station_linked_post(int $post_id): ?WP_Post
     return $post;
 }
 
+function iss_fuehrung_get_route_station_detail_label(WP_Post $post): string
+{
+    $post_type = (string) get_post_type($post);
+
+    if ($post_type === 'archivobjekt') {
+        return __('Objekt der Station', 'iss-fuehrungen');
+    }
+
+    if ($post_type === 'publication') {
+        return __('Publikation', 'iss-fuehrungen');
+    }
+
+    if ($post_type === 'veranstaltung') {
+        return __('Veranstaltung', 'iss-fuehrungen');
+    }
+
+    return __('Mehr zur Station', 'iss-fuehrungen');
+}
+
+function iss_fuehrung_render_route_station_detail_card(WP_Post $post): string
+{
+    $permalink = get_permalink($post);
+    if (!is_string($permalink) || trim($permalink) === '') {
+        return '';
+    }
+
+    $title = trim((string) get_the_title($post));
+    if ($title === '') {
+        return '';
+    }
+
+    $excerpt = trim((string) get_the_excerpt($post));
+    if ($excerpt === '') {
+        $excerpt = wp_strip_all_tags((string) get_post_field('post_content', $post->ID));
+    }
+
+    $excerpt = preg_replace('#https?://\S+#', '', $excerpt);
+    $excerpt = trim((string) $excerpt);
+    if ($excerpt !== '') {
+        $excerpt = wp_trim_words($excerpt, 16, '…');
+    }
+
+    $label = iss_fuehrung_get_route_station_detail_label($post);
+    $image = has_post_thumbnail($post) ? get_the_post_thumbnail($post, 'medium_large') : '';
+
+    ob_start();
+    echo '<article class="iss-tour-route__detail-card">';
+    echo '<div class="iss-tour-route__figure-kicker">' . esc_html($label) . '</div>';
+
+    if ($image !== '') {
+        echo '<a class="iss-tour-route__detail-card-image" href="' . esc_url($permalink) . '">';
+        echo $image;
+        echo '</a>';
+    }
+
+    echo '<div class="iss-tour-route__detail-card-body">';
+    echo '<h4 class="iss-tour-route__detail-card-title"><a href="' . esc_url($permalink) . '">' . esc_html($title) . '</a></h4>';
+    if ($excerpt !== '') {
+        echo '<p class="iss-tour-route__detail-card-text">' . esc_html($excerpt) . '</p>';
+    }
+    echo '<p class="iss-tour-route__detail-card-link"><a class="iss-action-link" href="' . esc_url($permalink) . '">' . esc_html__('Mehr zum Thema', 'iss-fuehrungen') . '</a></p>';
+    echo '</div>';
+    echo '</article>';
+
+    return (string) ob_get_clean();
+}
+
 function iss_fuehrung_get_public_station_image_entry(int $place_id, string $meta_key): ?array
 {
     $entries = get_post_meta($place_id, $meta_key, true);
@@ -502,6 +573,53 @@ function iss_fuehrung_render_station_media_figure(array $entry, string $label, s
     return (string) ob_get_clean();
 }
 
+function iss_fuehrung_get_route_summary(array $items, int $post_id): string
+{
+    $count = count($items);
+    if ($count === 0) {
+        return '';
+    }
+
+    $first_item = reset($items);
+    $last_item = end($items);
+    $first_title = is_array($first_item) ? iss_fuehrung_get_route_station_title($first_item) : '';
+    $last_title = is_array($last_item) ? iss_fuehrung_get_route_station_title($last_item) : '';
+    $summary = '';
+
+    if ($count === 1 && $first_title !== '') {
+        $summary = sprintf(
+            /* translators: %s is the station title. */
+            __('Die Führung konzentriert sich auf die Station %s.', 'iss-fuehrungen'),
+            $first_title
+        );
+    } elseif ($first_title !== '' && $last_title !== '') {
+        $summary = sprintf(
+            /* translators: 1: stop count, 2: first stop, 3: last stop. */
+            __('Die Route führt über %1$d Stationen von %2$s bis %3$s.', 'iss-fuehrungen'),
+            $count,
+            $first_title,
+            $last_title
+        );
+    } else {
+        $summary = sprintf(
+            /* translators: %d is the number of stops. */
+            __('Die Route führt über %d Stationen.', 'iss-fuehrungen'),
+            $count
+        );
+    }
+
+    $duration = trim((string) get_post_meta($post_id, 'duration', true));
+    if ($duration !== '') {
+        $summary .= ' ' . sprintf(
+            /* translators: %s is the duration value. */
+            __('Geplante Dauer: %s.', 'iss-fuehrungen'),
+            $duration
+        );
+    }
+
+    return trim($summary);
+}
+
 function iss_fuehrung_render_route_block($attributes = [], $content = '')
 {
     $post_id = iss_fuehrung_block_resolve_post_id($attributes);
@@ -521,21 +639,28 @@ function iss_fuehrung_render_route_block($attributes = [], $content = '')
     ob_start();
     echo '<section ' . $wrapper . '>';
     echo '<div class="iss-container">';
+    echo '<div class="iss-tour-route__overview">';
     echo '<div class="iss-heading iss-tour-route__intro">';
-    echo '<p class="iss-kicker iss-kicker--compact">Route</p>';
-    echo '<h2 class="iss-heading__title">Stationen der Führung</h2>';
+    echo '<p class="iss-kicker iss-kicker--compact">Auf einen Blick</p>';
+    echo '<h2 class="iss-heading__title">Die Route</h2>';
+    $summary = iss_fuehrung_get_route_summary($items, $post_id);
+    if ($summary !== '') {
+        echo '<p class="iss-heading__text">' . esc_html($summary) . '</p>';
+    }
+    echo '<p class="iss-tour-route__overview-link"><a class="iss-action-link" href="#tour-stations">' . esc_html__('Zur Detailroute', 'iss-fuehrungen') . '</a></p>';
+    echo '</div>';
     echo '</div>';
 
     echo '<ol class="iss-tour-route__rail" aria-label="' . esc_attr__('Route dieser Führung', 'iss-fuehrungen') . '">';
     foreach ($items as $index => $item) {
         $title = iss_fuehrung_get_route_station_title($item);
-        $permalink = trim((string) ($item['permalink'] ?? ''));
         $number = $index + 1;
+        $anchor = 'tour-stop-' . $number;
 
         echo '<li class="iss-tour-route__rail-stop">';
         echo '<span class="iss-tour-route__rail-index">' . esc_html((string) $number) . '</span>';
-        if ($permalink !== '' && $title !== '') {
-            echo '<a class="iss-tour-route__rail-link" href="' . esc_url($permalink) . '">' . esc_html($title) . '</a>';
+        if ($title !== '') {
+            echo '<a class="iss-tour-route__rail-link" href="#' . esc_attr($anchor) . '" data-route-target="' . esc_attr($anchor) . '" aria-controls="' . esc_attr($anchor) . '">' . esc_html($title) . '</a>';
         } else {
             echo '<span class="iss-tour-route__rail-link">' . esc_html($title) . '</span>';
         }
@@ -543,7 +668,9 @@ function iss_fuehrung_render_route_block($attributes = [], $content = '')
     }
     echo '</ol>';
 
-    echo '<div class="iss-tour-route__stations">';
+    echo '<div id="tour-stations" class="iss-tour-route__carousel">';
+    echo '<div class="iss-tour-route__viewport" data-route-viewport>';
+    echo '<div class="iss-tour-route__stations" data-route-track>';
     foreach ($items as $index => $item) {
         $place = $item['post'] ?? null;
         if (!$place instanceof WP_Post) {
@@ -555,9 +682,14 @@ function iss_fuehrung_render_route_block($attributes = [], $content = '')
         $permalink = trim((string) ($item['permalink'] ?? ''));
         $object_post = iss_fuehrung_get_route_station_linked_post((int) ($item['station_object_id'] ?? 0));
         $story_post = iss_fuehrung_get_route_station_linked_post((int) ($item['station_story_id'] ?? 0));
+        $detail_post = $object_post instanceof WP_Post ? $object_post : $story_post;
+        $detail_post_id = $detail_post instanceof WP_Post ? (int) $detail_post->ID : 0;
         $archive_image = iss_fuehrung_get_public_station_image_entry((int) $place->ID, 'archive_images');
         $current_image = iss_fuehrung_get_public_station_image_entry((int) $place->ID, 'current_images');
         $media_html = '';
+        $station_number = (string) ($index + 1);
+        $station_anchor = 'tour-stop-' . $station_number;
+        $station_title_id = $station_anchor . '-title';
 
         if (is_array($archive_image)) {
             $media_html .= iss_fuehrung_render_station_media_figure($archive_image, __('Damals', 'iss-fuehrungen'), $permalink);
@@ -567,11 +699,11 @@ function iss_fuehrung_render_route_block($attributes = [], $content = '')
             $media_html .= iss_fuehrung_render_station_media_figure($current_image, __('Heute', 'iss-fuehrungen'), $permalink);
         }
 
-        echo '<article class="iss-tour-route__station">';
+        echo '<article id="' . esc_attr($station_anchor) . '" class="iss-tour-route__station" data-route-slide aria-labelledby="' . esc_attr($station_title_id) . '">';
         echo '<div class="iss-tour-route__station-body">';
-        echo '<p class="iss-tour-route__station-index">' . esc_html((string) ($index + 1)) . '</p>';
+        echo '<p class="iss-tour-route__station-index">' . esc_html($station_number) . '</p>';
         echo '<div class="iss-tour-route__station-copy">';
-        echo '<h3 class="iss-tour-route__station-title">';
+        echo '<h3 id="' . esc_attr($station_title_id) . '" class="iss-tour-route__station-title">';
         if ($permalink !== '' && $title !== '') {
             echo '<a href="' . esc_url($permalink) . '">' . esc_html($title) . '</a>';
         } else {
@@ -587,10 +719,10 @@ function iss_fuehrung_render_route_block($attributes = [], $content = '')
         if ($permalink !== '') {
             echo '<a class="iss-action-link" href="' . esc_url($permalink) . '">' . esc_html__('Ort ansehen', 'iss-fuehrungen') . '</a>';
         }
-        if ($object_post instanceof WP_Post) {
+        if ($object_post instanceof WP_Post && (int) $object_post->ID !== $detail_post_id) {
             echo '<a class="iss-action-link" href="' . esc_url((string) get_permalink($object_post)) . '">' . esc_html__('Archivobjekt', 'iss-fuehrungen') . '</a>';
         }
-        if ($story_post instanceof WP_Post) {
+        if ($story_post instanceof WP_Post && (int) $story_post->ID !== $detail_post_id) {
             echo '<a class="iss-action-link" href="' . esc_url((string) get_permalink($story_post)) . '">' . esc_html__('Hintergrund', 'iss-fuehrungen') . '</a>';
         }
         echo '</div>';
@@ -598,26 +730,40 @@ function iss_fuehrung_render_route_block($attributes = [], $content = '')
         echo '</div>';
 
         echo '<div class="iss-tour-route__station-media">';
-        if ($media_html !== '') {
-            echo '<div class="iss-tour-route__station-pair">';
-            echo $media_html;
-            echo '</div>';
-        } elseif (has_post_thumbnail($place)) {
-            if ($permalink !== '') {
-                echo '<a class="iss-tour-route__station-image" href="' . esc_url($permalink) . '">';
-                echo get_the_post_thumbnail($place, 'large');
-                echo '</a>';
-            } else {
-                echo '<div class="iss-tour-route__station-image">';
-                echo get_the_post_thumbnail($place, 'large');
+        $detail_card_html = $detail_post instanceof WP_Post ? iss_fuehrung_render_route_station_detail_card($detail_post) : '';
+        if ($media_html !== '' || has_post_thumbnail($place) || $detail_card_html !== '') {
+            echo '<div class="iss-tour-route__station-media-grid' . ($detail_card_html !== '' ? ' has-detail' : '') . '">';
+
+            if ($media_html !== '') {
+                echo '<div class="iss-tour-route__station-pair">';
+                echo $media_html;
+                echo '</div>';
+            } elseif (has_post_thumbnail($place)) {
+                echo '<div class="iss-tour-route__station-pair iss-tour-route__station-pair--single">';
+                if ($permalink !== '') {
+                    echo '<a class="iss-tour-route__station-image" href="' . esc_url($permalink) . '">';
+                    echo get_the_post_thumbnail($place, 'large');
+                    echo '</a>';
+                } else {
+                    echo '<div class="iss-tour-route__station-image">';
+                    echo get_the_post_thumbnail($place, 'large');
+                    echo '</div>';
+                }
                 echo '</div>';
             }
+
+            if ($detail_card_html !== '') {
+                echo $detail_card_html;
+            }
+
+            echo '</div>';
         } else {
             echo '<div class="iss-tour-route__station-placeholder" aria-hidden="true"></div>';
         }
         echo '</div>';
         echo '</article>';
     }
+    echo '</div>';
     echo '</div>';
 
     echo '</div>';

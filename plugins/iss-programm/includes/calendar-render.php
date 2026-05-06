@@ -167,9 +167,22 @@ function iss_calendar_render_dates($attributes = [], $content = '') {
         }
 
         $data = iss_calendar_prepare_item($item->ID);
-        $label = isset($data['datetime_label']) ? (string) $data['datetime_label'] : '';
-        if ($label === '') {
-            $label = isset($data['title']) ? (string) $data['title'] : '';
+        $date_label = isset($data['date_label']) ? trim((string) $data['date_label']) : '';
+        $time_label = isset($data['time_label']) ? trim((string) $data['time_label']) : '';
+        $fallback_label = isset($data['datetime_label']) ? trim((string) $data['datetime_label']) : '';
+        if ($fallback_label === '') {
+            $fallback_label = isset($data['title']) ? trim((string) $data['title']) : '';
+        }
+
+        $label_html = '';
+        if ($date_label !== '') {
+            $label_html .= '<span class="iss-tour-dates__date">' . esc_html($date_label) . '</span>';
+        }
+        if ($time_label !== '') {
+            $label_html .= '<span class="iss-tour-dates__time">' . esc_html($time_label) . '</span>';
+        }
+        if ($label_html === '') {
+            $label_html = '<span class="iss-tour-dates__date">' . esc_html($fallback_label) . '</span>';
         }
 
         $booking_url = isset($data['booking_url']) ? (string) $data['booking_url'] : '';
@@ -181,9 +194,9 @@ function iss_calendar_render_dates($attributes = [], $content = '') {
         $out .= '<li class="iss-tour-dates__item">';
         $content_url = isset($data['content_url']) ? trim((string) $data['content_url']) : '';
         if ($content_url !== '') {
-            $out .= '<a class="iss-tour-dates__label" href="' . esc_url($content_url) . '">' . esc_html($label) . '</a>';
+            $out .= '<a class="iss-tour-dates__label" href="' . esc_url($content_url) . '">' . $label_html . '</a>';
         } else {
-            $out .= '<span class="iss-tour-dates__label">' . esc_html($label) . '</span>';
+            $out .= '<span class="iss-tour-dates__label">' . $label_html . '</span>';
         }
 
         if ($booking_url !== '') {
