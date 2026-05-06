@@ -76,6 +76,7 @@ require_once ISS_WF_IMPORT_PATH . 'includes/meta.php';
 require_once ISS_WF_IMPORT_PATH . 'includes/suggestions.php';
 require_once ISS_WF_IMPORT_PATH . 'includes/blocks.php';
 require_once ISS_WF_IMPORT_PATH . 'includes/admin.php';
+require_once ISS_WF_IMPORT_PATH . 'includes/collection-editor.php';
 
 register_activation_hook(__FILE__, function () {
     iss_wf_import_register_post_type_and_taxonomies();

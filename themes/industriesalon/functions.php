@@ -28,6 +28,7 @@ add_action('after_setup_theme', function () {
             'assets/css/page-ausstellungen.css',
             'assets/css/page-verein.css',
             'assets/css/publications.css',
+            'assets/css/digital-exhibition.css',
             'assets/css/single-tour.css',
             'assets/css/single-ausstellung.css',
             'assets/css/single-event.css',
@@ -554,6 +555,125 @@ function industriesalon_add_event_layout_body_class(array $classes): array
 }
 add_filter('body_class', 'industriesalon_add_event_layout_body_class');
 
+function industriesalon_is_compact_header_context(): bool
+{
+    if (is_admin()) {
+        return false;
+    }
+
+    if (is_singular(array('archivsammlung', 'archivobjekt', 'ausstellung'))) {
+        return true;
+    }
+
+    if (is_singular('post')) {
+        $post_id = get_queried_object_id();
+        return industriesalon_sanitize_post_layout(get_post_meta($post_id, '_iss_post_layout', true)) === 'long';
+    }
+
+    if (is_singular('veranstaltung')) {
+        $post_id = get_queried_object_id();
+        return industriesalon_sanitize_event_layout(get_post_meta($post_id, '_iss_event_layout', true)) === 'long';
+    }
+
+    return false;
+}
+
+function industriesalon_add_compact_header_body_class(array $classes): array
+{
+    if (industriesalon_is_compact_header_context()) {
+        $classes[] = 'iss-header-mode-compact';
+    }
+
+    return $classes;
+}
+add_filter('body_class', 'industriesalon_add_compact_header_body_class');
+
+function industriesalon_get_compact_header_context(): array
+{
+    $post_id = get_queried_object_id();
+    if ($post_id <= 0) {
+        return array();
+    }
+
+    $post = get_post($post_id);
+    if (!$post instanceof WP_Post) {
+        return array();
+    }
+
+    $crumbs = array();
+    $crumbs[] = sprintf(
+        '<a href="%s">%s</a>',
+        esc_url(home_url('/')),
+        esc_html__('Start', 'industriesalon')
+    );
+
+    $archive_link = '';
+    $archive_label = '';
+
+    if ($post->post_type === 'post') {
+        $posts_page_id = (int) get_option('page_for_posts');
+        if ($posts_page_id > 0) {
+            $archive_link = get_permalink($posts_page_id) ?: '';
+            $archive_label = get_the_title($posts_page_id);
+        } else {
+            $archive_label = __('Beiträge', 'industriesalon');
+        }
+    } else {
+        $post_type_object = get_post_type_object($post->post_type);
+        if ($post_type_object) {
+            $archive_label = $post_type_object->labels->name ?? '';
+            if (!empty($post_type_object->has_archive)) {
+                $archive_link = get_post_type_archive_link($post->post_type) ?: '';
+            }
+        }
+    }
+
+    if ($archive_label !== '') {
+        if ($archive_link !== '') {
+            $crumbs[] = sprintf('<a href="%s">%s</a>', esc_url($archive_link), esc_html($archive_label));
+        } else {
+            $crumbs[] = '<span>' . esc_html($archive_label) . '</span>';
+        }
+    }
+
+    return array(
+        'crumbs' => $crumbs,
+        'title' => get_the_title($post),
+    );
+}
+
+function industriesalon_render_compact_header_context(): string
+{
+    if (!industriesalon_is_compact_header_context()) {
+        return '';
+    }
+
+    $context = industriesalon_get_compact_header_context();
+    if (!$context) {
+        return '';
+    }
+
+    $crumbs = $context['crumbs'] ?? array();
+    $title = trim((string) ($context['title'] ?? ''));
+
+    ob_start();
+    ?>
+    <div class="iss-header-context__inner">
+        <?php if ($crumbs) : ?>
+            <nav class="iss-header-context__breadcrumbs" aria-label="<?php echo esc_attr__('Breadcrumb', 'industriesalon'); ?>">
+                <?php echo wp_kses_post(implode('<span class="iss-header-context__sep">/</span>', $crumbs)); ?>
+            </nav>
+        <?php endif; ?>
+        <?php if ($title !== '') : ?>
+            <p class="iss-header-context__title"><?php echo esc_html($title); ?></p>
+        <?php endif; ?>
+    </div>
+    <?php
+
+    return trim((string) ob_get_clean());
+}
+add_shortcode('iss_compact_header_context', 'industriesalon_render_compact_header_context');
+
 function industriesalon_enqueue_event_layout_editor_assets(): void
 {
     if (!function_exists('get_current_screen')) {
@@ -794,6 +914,13 @@ function industriesalon_enqueue_assets(): void
             'condition' => is_singular(array('post', 'archivsammlung', 'archivobjekt', 'register_place', 'team_member', 'projekt'))
                 || is_post_type_archive(array('archivsammlung', 'archivobjekt')),
         ),
+        array(
+            'handle' => 'industriesalon-digital-exhibition',
+            'path' => '/assets/css/digital-exhibition.css',
+            'condition' => is_tax('archiv_kategorie', 'kinder-im-wf')
+                || is_page('kinder-in-wf')
+                || (is_singular('ausstellung') && get_post_field('post_name', get_queried_object_id()) === 'kinder-im-wf'),
+        ),
     );
 
     foreach ($conditional_styles as $style) {
@@ -886,6 +1013,23 @@ function industriesalon_enqueue_assets(): void
 
 }
 add_action('wp_enqueue_scripts', 'industriesalon_enqueue_assets');
+
+function industriesalon_adjust_kinder_im_wf_archive_query(WP_Query $query): void
+{
+    if (is_admin() || !$query->is_main_query()) {
+        return;
+    }
+
+    if (!$query->is_tax('archiv_kategorie', 'kinder-im-wf')) {
+        return;
+    }
+
+    $query->set('post_type', 'archivbeitrag');
+    $query->set('orderby', 'date');
+    $query->set('order', 'ASC');
+    $query->set('posts_per_page', -1);
+}
+add_action('pre_get_posts', 'industriesalon_adjust_kinder_im_wf_archive_query');
 
 function industriesalon_collect_skin_style_dependencies(string $primary_handle): array
 {

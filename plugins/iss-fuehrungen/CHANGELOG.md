@@ -5,6 +5,7 @@ All notable changes for `iss-fuehrungen` are documented here.
 ## [Unreleased]
 
 ### Added
+- Added `iss/tour-description`, a dynamic block for curated prose-only tour descriptions that can be safely reused inside controlled single-tour layouts.
 - Added tour-level calendar mapping field back to the editor UI:
   - `calendar_tag` meta field in `Führungsdaten`.
   - tag suggestions sourced from `iss_calendar_source_map`.
@@ -35,6 +36,13 @@ All notable changes for `iss-fuehrungen` are documented here.
 - Removed shortcode/ACF placeholders from those two HTML templates and replaced them with dynamic blocks.
 
 ### Changed
+- Reworked the single-tour render path to use explicit layout blocks instead of context-sensitive output hacks:
+  - scheduled and on-demand templates now consume `iss/tour-description` instead of raw `post_content` in controlled description slots,
+  - the old single-tour suppression hook for related-place block output was removed,
+  - route-aware place discovery now uses the explicit cards-only relation output path.
+- Refined tour route rendering for the current single-tour composition:
+  - route navigation now drives the station carousel instead of only anchor jumps,
+  - station rows support denser editorial media/detail-card combinations.
 - Updated ownership docs to reflect the thin booking boundary split:
   - `saas-api` is documented as calendar infrastructure only,
   - `iss-payments-lite` is documented as the booking submit owner for `/is-tours/v1/book`.

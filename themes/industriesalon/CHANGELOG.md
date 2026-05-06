@@ -1,6 +1,15 @@
 # Industriesalon Theme Changelog
 
 ## 2026-05-06
+- Reworked the single-tour theme composition for `Führungen`:
+  - tightened the hero into a three-column editorial layout,
+  - moved tour description into explicit template slots,
+  - split `Weiter entdecken` into `Weitere Führungen` and `Orte entdecken`.
+- Updated `assets/css/single-tour-route.css` to carry the isolated industrial single-tour skin:
+  - flatter facts and booking rail,
+  - route rail/carousel styling,
+  - normalized route-card media sizing,
+  - shared subsection card treatment for tours and places.
 - Rebuilt the public `/schoneweide/` Atlas as a leaner theme-owned Leaflet surface with a dedicated app stylesheet in `assets/css/atlas-app.css` and a reduced page-skin file in `assets/css/oberschoeneweide-atlas.css`.
 - Switched the Atlas page to the shared landing-page hero structure and moved its data loading/interaction layer into the simplified `assets/js/schoneweide.js` runtime.
 - Made the public Atlas skinnable through `.iss-scheme-*` wrapper accents and moved shared card/kicker presentation back onto the global `style.css` and `cards.css` systems.
