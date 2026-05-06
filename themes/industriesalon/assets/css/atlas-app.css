@@ -11,10 +11,11 @@
   --iss-atlas-story-media: var(--iss-atlas-story-media-fallback-bg, #dbd4cd);
   --iss-atlas-marker-idle: var(--iss-atlas-marker-idle-color, rgba(30, 30, 30, 0.64));
   --iss-atlas-marker-ring-color: var(--iss-atlas-marker-ring, rgba(var(--iss-accent-rgb), 0.18));
+  --iss-atlas-stage-height: clamp(34rem, 72vh, 58rem);
   display: grid;
   grid-template-columns: minmax(18rem, 21rem) minmax(0, 1fr);
   gap: 1.25rem;
-  align-items: start;
+  align-items: stretch;
 }
 
 .iss-atlas-app__sidebar,
@@ -24,8 +25,10 @@
 }
 
 .iss-atlas-app__sidebar {
-  display: grid;
+  display: flex;
+  flex-direction: column;
   gap: 1rem;
+  min-height: var(--iss-atlas-stage-height);
   padding: 1.3rem;
 }
 
@@ -161,18 +164,23 @@
 .iss-atlas-app__main,
 .iss-atlas-app__map-stage {
   min-width: 0;
+  min-height: var(--iss-atlas-stage-height);
+  height: 100%;
 }
 
 .iss-atlas-app__map-stage {
   position: relative;
+  display: flex;
+  flex-direction: column;
 }
 
 .iss-atlas-app__map-surface {
   position: relative;
+  flex: 1 1 auto;
   width: 100%;
   max-width: 100%;
-  min-height: clamp(34rem, 72vh, 58rem);
-  height: clamp(34rem, 72vh, 58rem);
+  min-height: var(--iss-atlas-stage-height);
+  height: 100%;
   overflow: hidden;
   background: var(--iss-atlas-map-bg);
 }
@@ -473,6 +481,14 @@
 @media (max-width: 1160px) {
   .iss-atlas-app {
     grid-template-columns: 1fr;
+    align-items: start;
+  }
+
+  .iss-atlas-app__sidebar,
+  .iss-atlas-app__main,
+  .iss-atlas-app__map-stage {
+    min-height: 0;
+    height: auto;
   }
 
   .iss-atlas-app__popup-slot {
@@ -487,13 +503,17 @@
 }
 
 @media (max-width: 781px) {
+  .iss-atlas-app {
+    --iss-atlas-stage-height: 28rem;
+  }
+
   .iss-atlas-app__sidebar {
     padding: 1rem;
   }
 
   .iss-atlas-app__map-surface {
-    min-height: 28rem;
-    height: 28rem;
+    min-height: var(--iss-atlas-stage-height);
+    height: var(--iss-atlas-stage-height);
   }
 
   .iss-atlas-app__legend,

@@ -20,7 +20,7 @@
     'Nalepastraße': true,
     Schöneweide: true
   };
-  var ERAS = [
+  var STORY_ERAS = [
     { id: EMPTY, label: 'Alle Zeiten' },
     { id: '1890-1910', label: '1890-1910' },
     { id: '1910-1930', label: '1910-1930' },
@@ -168,10 +168,6 @@
         return false;
       }
 
-      if (state.era && place.era_id !== state.era) {
-        return false;
-      }
-
       if (!search) {
         return true;
       }
@@ -238,30 +234,6 @@
         active: state.role === role,
         onClick: function () {
           state.role = role;
-          state.selectedPostId = 0;
-          state.shouldPan = false;
-          state.render();
-        }
-      }));
-    });
-  }
-
-  function renderEraFilters(container, state) {
-    var counts = { '': state.places.length };
-
-    state.places.forEach(function (place) {
-      counts[place.era_id] = (counts[place.era_id] || 0) + 1;
-    });
-
-    container.innerHTML = EMPTY;
-
-    ERAS.forEach(function (era) {
-      container.appendChild(buildFilterButton({
-        label: era.label,
-        count: counts[era.id] || 0,
-        active: state.era === era.id,
-        onClick: function () {
-          state.era = era.id;
           state.selectedPostId = 0;
           state.shouldPan = false;
           state.render();
@@ -508,7 +480,7 @@
     var chosen = [];
     var seen = {};
 
-    ERAS.filter(function (era) {
+    STORY_ERAS.filter(function (era) {
       return era.id;
     }).forEach(function (era) {
       var match = source
@@ -588,7 +560,6 @@
     }
 
     renderRoleFilters(elements.roleFilters, state);
-    renderEraFilters(elements.eraFilters, state);
     renderCount(elements.count, filteredPlaces);
     renderSummary(elements.summary, filteredPlaces, selectedPlace);
     renderMap(state, filteredPlaces, selectedPlace);
@@ -599,7 +570,6 @@
 
   function renderError(elements, message) {
     elements.roleFilters.innerHTML = EMPTY;
-    elements.eraFilters.innerHTML = EMPTY;
     elements.summary.innerHTML = EMPTY;
     elements.popup.innerHTML = EMPTY;
     elements.popup.classList.add('is-empty');
@@ -612,7 +582,7 @@
   function collectElements(root) {
     return {
       roleFilters: root.querySelector('[data-iss-schoneweide-role-filters]'),
-      eraFilters: root.querySelector('[data-iss-schoneweide-era-filters]'),
+      mapSurface: root.querySelector('.iss-atlas-app__map-surface'),
       mapCanvas: root.querySelector('[data-iss-schoneweide-map]'),
       mapStatus: root.querySelector('[data-iss-schoneweide-map-status]'),
       summary: root.querySelector('[data-iss-schoneweide-summary]'),
@@ -622,6 +592,30 @@
       search: root.querySelector('[data-iss-schoneweide-search]'),
       reset: root.querySelector('[data-iss-schoneweide-reset]')
     };
+  }
+
+  function bindMapSizeSync(map, surface) {
+    var frameId = 0;
+
+    function sync() {
+      if (frameId) {
+        return;
+      }
+
+      frameId = window.requestAnimationFrame(function () {
+        frameId = 0;
+        map.invalidateSize({ pan: false });
+      });
+    }
+
+    window.addEventListener('resize', sync);
+
+    if (window.ResizeObserver && surface) {
+      var observer = new window.ResizeObserver(sync);
+      observer.observe(surface);
+    }
+
+    sync();
   }
 
   function init() {
@@ -677,7 +671,6 @@
           leaflet: leafletState,
           places: places,
           role: EMPTY,
-          era: EMPTY,
           search: EMPTY,
           selectedPostId: places[0].post_id,
           shouldPan: false,
@@ -695,7 +688,6 @@
 
         elements.reset.addEventListener('click', function () {
           state.role = EMPTY;
-          state.era = EMPTY;
           state.search = EMPTY;
           state.selectedPostId = 0;
           state.shouldPan = false;
@@ -709,13 +701,8 @@
           state.render();
         });
 
-        window.addEventListener('resize', function () {
-          state.leaflet.map.invalidateSize({ pan: false });
-        });
-
-        window.requestAnimationFrame(function () {
-          state.leaflet.map.invalidateSize({ pan: false });
-        });
+        // Resize the Leaflet surface through real layout changes, never CSS scaling.
+        bindMapSizeSync(state.leaflet.map, elements.mapSurface);
 
         state.render();
       })

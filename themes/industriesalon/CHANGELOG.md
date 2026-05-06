@@ -1,5 +1,14 @@
 # Industriesalon Theme Changelog
 
+## 2026-05-06
+- Rebuilt the public `/schoneweide/` Atlas as a leaner theme-owned Leaflet surface with a dedicated app stylesheet in `assets/css/atlas-app.css` and a reduced page-skin file in `assets/css/oberschoeneweide-atlas.css`.
+- Switched the Atlas page to the shared landing-page hero structure and moved its data loading/interaction layer into the simplified `assets/js/schoneweide.js` runtime.
+- Made the public Atlas skinnable through `.iss-scheme-*` wrapper accents and moved shared card/kicker presentation back onto the global `style.css` and `cards.css` systems.
+- Moved the Atlas hero note into `industriesalon-notices` with a dedicated `atlas` skin so the banner is plugin-owned instead of page-local markup/CSS.
+- Removed the remaining JSON import/fallback path from `industriesalon-schoeneweide-register`; local `register_place` posts are now the authoritative Atlas/Register source and the import-only build metadata was deleted.
+- Removed the public `Zeitraum` sidebar filter from `/schoneweide/` while keeping era data for story selection and place metadata.
+- Equalized the public Atlas filter/map stage height in the two-column layout and bound Leaflet resize handling to the actual map surface so marker coordinates stay correct when the stage resizes.
+
 ## 2026-05-03
 - Added `iss-control-info-panel` theme styling so the `industriesalon-steuerung` visit-info block renders through the existing `iss-info-panel` pattern language.
 - Tightened the new visit panel visual treatment:
