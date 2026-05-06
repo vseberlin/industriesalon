@@ -362,6 +362,63 @@ function iss_register_get_atlas_place_score(array $place): int
     return $score;
 }
 
+/**
+ * Atlas may expose that a place participates in tours, but it must not expose
+ * route ordering or stop-specific route presentation fields.
+ */
+function iss_register_get_place_tour_usage(int $place_id): array
+{
+    if ($place_id <= 0 || !post_type_exists('fuehrung')) {
+        return [];
+    }
+
+    $tour_posts = get_posts([
+        'post_type' => 'fuehrung',
+        'post_status' => 'publish',
+        'posts_per_page' => -1,
+        'orderby' => 'title',
+        'order' => 'ASC',
+        'suppress_filters' => true,
+    ]);
+
+    if (!$tour_posts) {
+        return [];
+    }
+
+    $related_tours = [];
+
+    foreach ($tour_posts as $tour_post) {
+        if (!$tour_post instanceof WP_Post) {
+            continue;
+        }
+
+        $related_places = get_post_meta((int) $tour_post->ID, 'iss_related_places', true);
+        if (!is_array($related_places)) {
+            continue;
+        }
+
+        foreach ($related_places as $related_place) {
+            if (!is_array($related_place)) {
+                continue;
+            }
+
+            if ((int) ($related_place['place_id'] ?? 0) !== $place_id) {
+                continue;
+            }
+
+            $related_tours[] = [
+                'id' => (int) $tour_post->ID,
+                'slug' => (string) $tour_post->post_name,
+                'title' => get_the_title($tour_post),
+                'permalink' => (string) get_permalink($tour_post),
+            ];
+            break;
+        }
+    }
+
+    return $related_tours;
+}
+
 function iss_register_map_place_for_atlas(array $place): array
 {
     $lat = isset($place['lat']) ? (float) $place['lat'] : 0.0;
@@ -381,6 +438,7 @@ function iss_register_map_place_for_atlas(array $place): array
     $current = (string) ($place['current'] ?? '');
     $sources = (string) ($place['sources'] ?? '');
     $branche = (string) ($place['branche'] ?? '');
+    $related_tours = iss_register_get_place_tour_usage((int) ($place['post_id'] ?? 0));
 
     return [
         'id' => (string) ($place['id'] ?? ''),
@@ -408,6 +466,8 @@ function iss_register_map_place_for_atlas(array $place): array
         'explicit_era_slugs' => array_values(array_map(static function (array $item): string {
             return (string) ($item['slug'] ?? '');
         }, (array) ($era['explicit_eras'] ?? []))),
+        'has_tour_usage' => !empty($related_tours),
+        'related_tours' => $related_tours,
         'story_score' => iss_register_get_atlas_place_score($place),
         'summary' => iss_register_atlas_compact_text($excerpt !== '' ? $excerpt : ($current !== '' ? $current : ($history !== '' ? $history : (string) ($place['address'] ?? ''))), 260),
         'secondary' => iss_register_atlas_compact_text($history !== '' ? $history : ($current !== '' ? $current : $sources), 180),

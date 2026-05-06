@@ -774,6 +774,11 @@ function industriesalon_enqueue_assets(): void
             'condition' => is_singular('fuehrung'),
         ),
         array(
+            'handle' => 'industriesalon-single-tour-route',
+            'path' => '/assets/css/single-tour-route.css',
+            'condition' => is_singular('fuehrung'),
+        ),
+        array(
             'handle' => 'industriesalon-single-ausstellung',
             'path' => '/assets/css/single-ausstellung.css',
             'condition' => is_singular('ausstellung'),

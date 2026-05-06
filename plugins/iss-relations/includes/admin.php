@@ -57,13 +57,18 @@ function iss_relations_add_meta_boxes(): void
 }
 add_action('add_meta_boxes', 'iss_relations_add_meta_boxes');
 
-function iss_relations_render_row(array $relation, array $places, int $index): string
+function iss_relations_render_row(array $relation, array $places, int $index, string $post_type = ''): string
 {
     $roles = iss_relations_get_role_options();
     $place_id = (int) ($relation['place_id'] ?? 0);
     $role = (string) ($relation['role'] ?? 'related');
     $weight = (int) ($relation['weight'] ?? 0);
     $label = (string) ($relation['label'] ?? '');
+    $route_title = (string) ($relation['route_title'] ?? '');
+    $route_teaser = (string) ($relation['route_teaser'] ?? '');
+    $station_object_id = (int) ($relation['station_object_id'] ?? 0);
+    $station_story_id = (int) ($relation['station_story_id'] ?? 0);
+    $supports_route_fields = iss_relations_supports_route_fields($post_type);
 
     ob_start();
     ?>
@@ -92,6 +97,18 @@ function iss_relations_render_row(array $relation, array $places, int $index): s
         </td>
         <td>
             <input class="widefat" type="text" name="iss_relations[<?php echo esc_attr((string) $index); ?>][label]" value="<?php echo esc_attr($label); ?>" placeholder="<?php esc_attr_e('Optionales Anzeige-Label', 'iss-relations'); ?>">
+            <?php if ($supports_route_fields) : ?>
+                <div style="margin-top:8px">
+                    <input class="widefat" type="text" name="iss_relations[<?php echo esc_attr((string) $index); ?>][route_title]" value="<?php echo esc_attr($route_title); ?>" placeholder="<?php esc_attr_e('Stations-Titel im Routenblock', 'iss-relations'); ?>">
+                </div>
+                <div style="margin-top:8px">
+                    <textarea class="widefat" rows="3" name="iss_relations[<?php echo esc_attr((string) $index); ?>][route_teaser]" placeholder="<?php esc_attr_e('Kurzer Stations-Teaser', 'iss-relations'); ?>"><?php echo esc_textarea($route_teaser); ?></textarea>
+                </div>
+                <div style="margin-top:8px; display:grid; grid-template-columns:1fr 1fr; gap:8px;">
+                    <input class="widefat" type="number" min="0" name="iss_relations[<?php echo esc_attr((string) $index); ?>][station_object_id]" value="<?php echo esc_attr($station_object_id > 0 ? (string) $station_object_id : ''); ?>" placeholder="<?php esc_attr_e('Archivobjekt-ID', 'iss-relations'); ?>">
+                    <input class="widefat" type="number" min="0" name="iss_relations[<?php echo esc_attr((string) $index); ?>][station_story_id]" value="<?php echo esc_attr($station_story_id > 0 ? (string) $station_story_id : ''); ?>" placeholder="<?php esc_attr_e('Story/Beitrags-ID', 'iss-relations'); ?>">
+                </div>
+            <?php endif; ?>
         </td>
         <td>
             <button type="button" class="button-link" data-iss-relations-move="up"><?php esc_html_e('Hoch', 'iss-relations'); ?></button>
@@ -112,6 +129,7 @@ function iss_relations_render_meta_box(WP_Post $post): void
 
     $places = iss_relations_get_place_choices();
     $relations = iss_relations_get_post_relations((int) $post->ID);
+    $supports_route_fields = iss_relations_supports_route_fields($post->post_type);
 
     echo '<div data-iss-relations-box>';
 
@@ -122,6 +140,9 @@ function iss_relations_render_meta_box(WP_Post $post): void
     }
 
     echo '<p>' . esc_html__('Verknüpft diesen Inhalt mit einem oder mehreren Orten. Die Auswahl bleibt in Meta gespeichert und wird zusätzlich in eine versteckte Query-Taxonomie gespiegelt.', 'iss-relations') . '</p>';
+    if ($supports_route_fields) {
+        echo '<p>' . esc_html__('Für Führungen bilden Einträge mit Rolle "Station" die Route. Gewicht = Reihenfolge. Titel und Teaser können pro Station für den Tour-Routenblock überschrieben werden.', 'iss-relations') . '</p>';
+    }
     echo '<table class="widefat striped">';
     echo '<thead><tr>';
     echo '<th>' . esc_html__('Ort', 'iss-relations') . '</th>';
@@ -134,7 +155,7 @@ function iss_relations_render_meta_box(WP_Post $post): void
 
     if ($relations) {
         foreach ($relations as $index => $relation) {
-            echo iss_relations_render_row($relation, $places, (int) $index);
+            echo iss_relations_render_row($relation, $places, (int) $index, $post->post_type);
         }
     }
 
@@ -144,10 +165,14 @@ function iss_relations_render_meta_box(WP_Post $post): void
     echo '<p><button type="button" class="button" data-iss-relations-add>' . esc_html__('Ort hinzufügen', 'iss-relations') . '</button></p>';
     echo '<template data-iss-relations-template>' . iss_relations_render_row([
         'place_id' => 0,
-        'role' => 'related',
+        'role' => $supports_route_fields ? 'stop' : 'related',
         'weight' => 0,
         'label' => '',
-    ], $places, 9999) . '</template>';
+        'route_title' => '',
+        'route_teaser' => '',
+        'station_object_id' => 0,
+        'station_story_id' => 0,
+    ], $places, 9999, $post->post_type) . '</template>';
     echo '</div>';
 }
 
@@ -201,4 +226,3 @@ function iss_relations_enqueue_admin_assets(string $hook_suffix): void
     );
 }
 add_action('admin_enqueue_scripts', 'iss_relations_enqueue_admin_assets');
-

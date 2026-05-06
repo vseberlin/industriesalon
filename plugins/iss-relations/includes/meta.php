@@ -23,8 +23,20 @@ function iss_relations_register_meta(): void
                 'label' => [
                     'type' => 'string',
                 ],
+                'route_title' => [
+                    'type' => 'string',
+                ],
+                'route_teaser' => [
+                    'type' => 'string',
+                ],
+                'station_object_id' => [
+                    'type' => 'integer',
+                ],
+                'station_story_id' => [
+                    'type' => 'integer',
+                ],
             ],
-            'required' => ['place_id', 'role', 'weight', 'label'],
+            'required' => ['place_id', 'role', 'weight', 'label', 'route_title', 'route_teaser', 'station_object_id', 'station_story_id'],
             'additionalProperties' => false,
         ],
     ];
@@ -50,4 +62,3 @@ function iss_relations_sanitize_meta_value($value): array
 {
     return iss_relations_normalize_relations(is_array($value) ? $value : []);
 }
-

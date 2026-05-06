@@ -45,6 +45,11 @@ function iss_relations_is_supported_post_type(string $post_type): bool
     return in_array($post_type, iss_relations_get_supported_post_types(), true);
 }
 
+function iss_relations_supports_route_fields(string $post_type): bool
+{
+    return in_array($post_type, ['fuehrung'], true);
+}
+
 function iss_relations_register_taxonomy(): void
 {
     $object_types = iss_relations_get_supported_post_types();
@@ -155,11 +160,20 @@ function iss_relations_normalize_relation(array $relation, int $context_post_id 
         $role = 'related';
     }
 
+    $route_title = sanitize_text_field((string) ($relation['route_title'] ?? ''));
+    $route_teaser = sanitize_textarea_field((string) ($relation['route_teaser'] ?? ''));
+    $station_object_id = absint($relation['station_object_id'] ?? 0);
+    $station_story_id = absint($relation['station_story_id'] ?? 0);
+
     return [
         'place_id' => $place_id,
         'role' => $role,
         'weight' => (int) ($relation['weight'] ?? 0),
         'label' => sanitize_text_field((string) ($relation['label'] ?? '')),
+        'route_title' => $route_title,
+        'route_teaser' => $route_teaser,
+        'station_object_id' => $station_object_id,
+        'station_story_id' => $station_story_id,
     ];
 }
 
@@ -198,6 +212,29 @@ function iss_relations_get_post_relations(int $post_id): array
 {
     $stored = get_post_meta($post_id, ISS_RELATIONS_META_KEY, true);
     return iss_relations_normalize_relations(is_array($stored) ? $stored : [], $post_id);
+}
+
+function iss_relations_get_ordered_route_items(int $post_id): array
+{
+    $items = array_values(array_filter(
+        iss_relations_get_related_place_items($post_id),
+        static function (array $item): bool {
+            return (($item['role'] ?? '') === 'stop');
+        }
+    ));
+
+    usort($items, static function (array $left, array $right): int {
+        $left_weight = (int) ($left['weight'] ?? 0);
+        $right_weight = (int) ($right['weight'] ?? 0);
+
+        if ($left_weight === $right_weight) {
+            return ((int) ($left['place_id'] ?? 0)) <=> ((int) ($right['place_id'] ?? 0));
+        }
+
+        return $left_weight <=> $right_weight;
+    });
+
+    return $items;
 }
 
 function iss_relations_get_related_place_items(int $post_id): array
