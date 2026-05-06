@@ -19,6 +19,7 @@ define('ISS_REGISTER_SOURCE_POST_TYPE', 'register_source_item');
 define('ISS_REGISTER_TOOLS_PAGE_SLUG', 'iss-register-tools');
 
 require_once ISS_REGISTER_PATH . 'includes/assets.php';
+require_once ISS_REGISTER_PATH . 'includes/atlas-model.php';
 require_once ISS_REGISTER_PATH . 'includes/rest-controller.php';
 require_once ISS_REGISTER_PATH . 'includes/blocks.php';
 require_once ISS_REGISTER_PATH . 'includes/render-register-app.php';
@@ -43,8 +44,17 @@ register_activation_hook(__FILE__, function () {
     if (function_exists('iss_register_register_source_post_type')) {
         iss_register_register_source_post_type();
     }
+    if (function_exists('iss_register_register_atlas_story_post_type')) {
+        iss_register_register_atlas_story_post_type();
+    }
     if (function_exists('iss_register_register_taxonomies')) {
         iss_register_register_taxonomies();
+    }
+    if (function_exists('iss_register_register_atlas_era_taxonomy')) {
+        iss_register_register_atlas_era_taxonomy();
+    }
+    if (function_exists('iss_register_seed_atlas_era_terms')) {
+        iss_register_seed_atlas_era_terms();
     }
     flush_rewrite_rules();
     iss_register_clear_places_cache();

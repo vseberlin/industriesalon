@@ -873,6 +873,7 @@ function industriesalon_enqueue_assets(): void
                 'industriesalonSchoneweide',
                 array(
                     'placesUrl' => industriesalon_make_relative_url(untrailingslashit(rest_url(ISS_REGISTER_REST_NAMESPACE)) . '/atlas'),
+                    'contextUrl' => industriesalon_make_relative_url(untrailingslashit(rest_url(ISS_REGISTER_REST_NAMESPACE)) . '/atlas-context'),
                 )
             );
         }

@@ -1,5 +1,6 @@
 (function () {
   var EMPTY = '';
+  var DEFAULT_ERA_LABEL = 'Alle Zeiten';
   var ROLE_LABELS = {
     '': 'Alle Orte',
     E: 'Industrieorte',
@@ -20,15 +21,6 @@
     'Nalepastraße': true,
     Schöneweide: true
   };
-  var STORY_ERAS = [
-    { id: EMPTY, label: 'Alle Zeiten' },
-    { id: '1890-1910', label: '1890-1910' },
-    { id: '1910-1930', label: '1910-1930' },
-    { id: '1930-1945', label: '1930-1945' },
-    { id: '1945-1960', label: '1945-1960' },
-    { id: '1960-1990', label: '1960-1990' },
-    { id: 'heute', label: '1990-heute' }
-  ];
   var MAP_BOUNDS = {
     minLat: 52.4448,
     maxLat: 52.4724,
@@ -103,7 +95,6 @@
     }
 
     var total = 0;
-
     total += Math.min(text(place.summary || place.excerpt).length, 260);
     total += Math.min(text(place.current_summary || place.current).length, 220);
     total += text(place.featured_image_url) ? 160 : 0;
@@ -120,8 +111,6 @@
       lat: number(place.lat),
       lng: number(place.lng),
       role: text(place.role).toUpperCase(),
-      era_id: text(place.era_id),
-      era_label: text(place.era_label),
       area: text(place.area),
       address: text(place.address),
       status: text(place.status),
@@ -130,7 +119,47 @@
       color: text(place.color),
       summary: compact(place.summary || place.excerpt || place.current_summary || place.current, 220),
       secondary: compact(place.secondary || place.archive_summary || place.note_text, 160),
+      era_id: text(place.era_id),
+      era_label: text(place.era_label),
+      era_slug: text(place.era_slug),
+      era_name: text(place.era_name),
+      era_source: text(place.era_source),
+      explicit_era_slugs: Array.isArray(place.explicit_era_slugs)
+        ? place.explicit_era_slugs.map(text).filter(Boolean)
+        : [],
       storyScore: score(place)
+    };
+  }
+
+  function normalizeStory(story) {
+    return {
+      id: Number.parseInt(story.id, 10) || 0,
+      slug: text(story.slug),
+      title: text(story.title),
+      excerpt: compact(story.excerpt, 260),
+      permalink: relativeUrl(story.permalink),
+      featured_image_url: relativeUrl(story.featured_image_url),
+      eraSlugs: Array.isArray(story.era_slugs) ? story.era_slugs.map(text).filter(Boolean) : [],
+      eraLegacyIds: Array.isArray(story.era_legacy_ids) ? story.era_legacy_ids.map(text).filter(Boolean) : [],
+      placeIds: Array.isArray(story.place_ids)
+        ? story.place_ids.map(function (value) {
+            return Number.parseInt(value, 10) || 0;
+          }).filter(Boolean)
+        : []
+    };
+  }
+
+  function normalizeEra(era) {
+    return {
+      slug: text(era.slug),
+      name: text(era.name),
+      caption: text(era.caption),
+      legacyId: text(era.legacy_id),
+      legacyLabel: text(era.legacy_label),
+      legacyShortLabel: text(era.legacy_short_label),
+      legacyCaption: text(era.legacy_caption),
+      placeCount: Number.parseInt(era.place_count, 10) || 0,
+      storyCount: Number.parseInt(era.story_count, 10) || 0
     };
   }
 
@@ -158,6 +187,59 @@
     }
 
     return text(left.name).localeCompare(text(right.name), 'de');
+  }
+
+  function buildEraMap(eras) {
+    var map = {};
+
+    eras.forEach(function (era) {
+      if (era.slug) {
+        map[era.slug] = era;
+      }
+    });
+
+    return map;
+  }
+
+  function deriveFallbackEras(places) {
+    var seen = {};
+    var eras = [];
+
+    places.forEach(function (place) {
+      var slug = text(place.era_slug);
+      if (!slug || seen[slug]) {
+        return;
+      }
+
+      seen[slug] = true;
+      eras.push({
+        slug: slug,
+        name: text(place.era_name) || text(place.era_label) || slug,
+        caption: EMPTY,
+        legacyId: text(place.era_id),
+        legacyLabel: text(place.era_label),
+        legacyShortLabel: EMPTY,
+        legacyCaption: EMPTY,
+        placeCount: 0,
+        storyCount: 0
+      });
+    });
+
+    return eras;
+  }
+
+  function getEraScopedPlaces(places, eraSlug) {
+    if (!eraSlug) {
+      return places.slice();
+    }
+
+    return places.filter(function (place) {
+      if (text(place.era_slug) === eraSlug) {
+        return true;
+      }
+
+      return place.explicit_era_slugs.indexOf(eraSlug) !== -1;
+    });
   }
 
   function filterPlaces(places, state) {
@@ -217,11 +299,53 @@
     return button;
   }
 
-  function renderRoleFilters(container, state) {
-    var counts = { '': state.places.length };
-    var roles = [EMPTY, 'E', 'M', 'P', 'E+P'];
+  function renderEraFilters(container, state) {
+    var eraCounts = {};
+    var eras = state.eras.length ? state.eras : deriveFallbackEras(state.places);
 
     state.places.forEach(function (place) {
+      if (!place.era_slug) {
+        return;
+      }
+
+      eraCounts[place.era_slug] = (eraCounts[place.era_slug] || 0) + 1;
+    });
+
+    container.innerHTML = EMPTY;
+    container.appendChild(buildFilterButton({
+      label: DEFAULT_ERA_LABEL,
+      count: state.places.length,
+      active: state.era === EMPTY,
+      onClick: function () {
+        state.era = EMPTY;
+        state.selectedPostId = 0;
+        state.shouldPan = false;
+        state.render();
+      }
+    }));
+
+    eras.forEach(function (era) {
+      var label = era.name || era.legacyLabel || era.slug;
+
+      container.appendChild(buildFilterButton({
+        label: label,
+        count: eraCounts[era.slug] || 0,
+        active: state.era === era.slug,
+        onClick: function () {
+          state.era = era.slug;
+          state.selectedPostId = 0;
+          state.shouldPan = false;
+          state.render();
+        }
+      }));
+    });
+  }
+
+  function renderRoleFilters(container, state, eraScopedPlaces) {
+    var counts = { '': eraScopedPlaces.length };
+    var roles = [EMPTY, 'E', 'M', 'P', 'E+P'];
+
+    eraScopedPlaces.forEach(function (place) {
       counts[place.role] = (counts[place.role] || 0) + 1;
     });
 
@@ -242,29 +366,31 @@
     });
   }
 
-  function renderCount(container, filteredPlaces) {
+  function renderCount(container, filteredPlaces, state) {
     if (!filteredPlaces.length) {
-      container.textContent = 'Keine Orte im aktuellen Ausschnitt.';
+      container.textContent = 'Keine Orte in der aktuellen Auswahl.';
       return;
     }
 
-    container.textContent = String(filteredPlaces.length) + ' Orte im aktuellen Ausschnitt';
+    var label = state.activeEra ? state.activeEra.name || state.activeEra.legacyLabel : DEFAULT_ERA_LABEL;
+    container.textContent = String(filteredPlaces.length) + ' Orte für ' + label;
   }
 
-  function renderSummary(container, filteredPlaces, selectedPlace) {
+  function renderSummary(container, filteredPlaces, selectedPlace, state) {
     container.innerHTML = EMPTY;
 
     if (!filteredPlaces.length) {
       return;
     }
 
-    container.appendChild(
-      createElement(
-        'strong',
-        EMPTY,
-        selectedPlace && text(selectedPlace.area) ? selectedPlace.area : 'Kernraum Oberschöneweide'
-      )
-    );
+    var headline = DEFAULT_ERA_LABEL;
+    if (selectedPlace && text(selectedPlace.area)) {
+      headline = selectedPlace.area;
+    } else if (state.activeEra) {
+      headline = state.activeEra.name || state.activeEra.legacyLabel || DEFAULT_ERA_LABEL;
+    }
+
+    container.appendChild(createElement('strong', EMPTY, headline));
     container.appendChild(
       createElement('span', EMPTY, String(filteredPlaces.length) + ' Orte in der aktuellen Auswahl')
     );
@@ -372,7 +498,7 @@
     state.shouldPan = false;
   }
 
-  function buildMediaFigure(place, className, fallbackLabel) {
+  function buildPlaceMediaFigure(place, className, fallbackLabel) {
     var figure = createElement(
       'figure',
       className + (text(place.featured_image_url) ? EMPTY : ' is-fallback')
@@ -390,12 +516,31 @@
     figure.style.background =
       text(place.color) ||
       'var(--iss-atlas-fallback-gradient, linear-gradient(145deg, rgba(56, 52, 48, 0.94), rgba(139, 127, 118, 0.82)))';
-    figure.appendChild(
-      createElement('span', 'iss-atlas-fallback__label', fallbackLabel)
+    figure.appendChild(createElement('span', 'iss-atlas-fallback__label', fallbackLabel));
+    figure.appendChild(createElement('strong', 'iss-atlas-fallback__title', compact(place.name, 54)));
+
+    return figure;
+  }
+
+  function buildStoryMediaFigure(story, className, fallbackLabel) {
+    var figure = createElement(
+      'figure',
+      className + (text(story.featured_image_url) ? EMPTY : ' is-fallback')
     );
-    figure.appendChild(
-      createElement('strong', 'iss-atlas-fallback__title', compact(place.name, 54))
-    );
+
+    if (text(story.featured_image_url)) {
+      var image = document.createElement('img');
+      image.src = story.featured_image_url;
+      image.alt = story.title || EMPTY;
+      image.decoding = 'async';
+      figure.appendChild(image);
+      return figure;
+    }
+
+    figure.style.background =
+      'var(--iss-atlas-fallback-gradient, linear-gradient(145deg, rgba(56, 52, 48, 0.94), rgba(139, 127, 118, 0.82)))';
+    figure.appendChild(createElement('span', 'iss-atlas-fallback__label', fallbackLabel));
+    figure.appendChild(createElement('strong', 'iss-atlas-fallback__title', compact(story.title, 54)));
 
     return figure;
   }
@@ -422,7 +567,7 @@
 
     card.appendChild(close);
     card.appendChild(
-      buildMediaFigure(place, 'iss-card__media iss-atlas-popup-card__media', 'Industrieort')
+      buildPlaceMediaFigure(place, 'iss-card__media iss-atlas-popup-card__media', 'Industrieort')
     );
 
     body.appendChild(
@@ -430,12 +575,12 @@
     );
     body.appendChild(createElement('h3', 'iss-card__title', place.name || 'Ort'));
 
-    if (place.address || place.era_label) {
+    if (place.address || place.era_name || place.era_label) {
       body.appendChild(
         createElement(
           'p',
           'iss-card__meta',
-          [place.era_label, place.address].filter(Boolean).join(' · ')
+          [place.era_name || place.era_label, place.address].filter(Boolean).join(' · ')
         )
       );
     }
@@ -476,20 +621,41 @@
     container.appendChild(card);
   }
 
+  function getSelectedStories(state) {
+    if (!state.stories.length) {
+      return [];
+    }
+
+    if (!state.era) {
+      return state.stories.slice();
+    }
+
+    return state.stories.filter(function (story) {
+      return story.eraSlugs.indexOf(state.era) !== -1;
+    });
+  }
+
   function pickStoryPlaces(source) {
     var chosen = [];
     var seen = {};
+    var eraBuckets = {};
 
-    STORY_ERAS.filter(function (era) {
-      return era.id;
-    }).forEach(function (era) {
-      var match = source
-        .filter(function (place) {
-          return place.era_id === era.id && !seen[place.post_id];
-        })
-        .sort(sortPlaces)[0];
+    source.forEach(function (place) {
+      if (!place.era_slug) {
+        return;
+      }
 
-      if (match) {
+      if (!eraBuckets[place.era_slug]) {
+        eraBuckets[place.era_slug] = [];
+      }
+
+      eraBuckets[place.era_slug].push(place);
+    });
+
+    Object.keys(eraBuckets).forEach(function (slug) {
+      var match = eraBuckets[slug].sort(sortPlaces)[0];
+
+      if (match && !seen[match.post_id]) {
         chosen.push(match);
         seen[match.post_id] = true;
       }
@@ -510,29 +676,77 @@
     return chosen.slice(0, 6);
   }
 
-  function renderStories(container, places) {
+  function renderStoryIntro(container, state, stories, filteredPlaces) {
     container.innerHTML = EMPTY;
 
-    if (!places.length) {
-      container.appendChild(
-        createElement('p', 'iss-atlas-loading', 'Keine Geschichten für diese Auswahl.')
-      );
+    if (!state.activeEra && !stories.length) {
       return;
     }
 
+    var title = state.activeEra
+      ? state.activeEra.name || state.activeEra.legacyLabel
+      : 'Atlas';
+    var body = EMPTY;
+
+    if (stories.length && stories[0].excerpt) {
+      body = stories[0].excerpt;
+    } else if (state.activeEra && state.activeEra.caption) {
+      body = state.activeEra.caption;
+    } else if (filteredPlaces.length) {
+      body = 'Die aktuelle Auswahl zeigt Orte, die zur gewählten Zeitschicht und Suche passen.';
+    }
+
+    var panel = createElement('div', 'iss-atlas-app__story-note');
+    panel.appendChild(createElement('p', 'iss-atlas-app__story-note-kicker', state.activeEra ? 'Epoche' : 'Atlas'));
+    panel.appendChild(createElement('h3', 'iss-atlas-app__story-note-title', title));
+
+    if (body) {
+      panel.appendChild(createElement('p', 'iss-atlas-app__story-note-text', body));
+    }
+
+    container.appendChild(panel);
+  }
+
+  function renderStoryCards(container, stories, state) {
+    stories.forEach(function (story) {
+      var card = createElement('article', 'iss-card iss-card--flat iss-atlas-story-card');
+      var body = createElement('div', 'iss-card__body');
+      var footer = createElement('div', 'iss-card__footer');
+      var kicker = state.activeEra
+        ? state.activeEra.name || state.activeEra.legacyLabel
+        : (story.eraSlugs[0] && state.eraMap[story.eraSlugs[0]]
+            ? state.eraMap[story.eraSlugs[0]].name
+            : 'Atlas');
+
+      card.appendChild(buildStoryMediaFigure(story, 'iss-card__media', kicker));
+      body.appendChild(createElement('p', 'iss-card__kicker iss-kicker iss-kicker--compact', kicker));
+      body.appendChild(createElement('h3', 'iss-card__title', story.title || 'Geschichte'));
+
+      if (story.excerpt) {
+        body.appendChild(createElement('p', 'iss-card__text', story.excerpt));
+      }
+
+      if (story.permalink) {
+        var link = createElement('a', 'iss-action-link', 'Geschichte lesen');
+        link.href = story.permalink;
+        footer.appendChild(link);
+      }
+
+      body.appendChild(footer);
+      card.appendChild(body);
+      container.appendChild(card);
+    });
+  }
+
+  function renderFallbackPlaceCards(container, places) {
     pickStoryPlaces(places).forEach(function (place) {
       var card = createElement('article', 'iss-card iss-card--flat iss-atlas-story-card');
       var body = createElement('div', 'iss-card__body');
       var footer = createElement('div', 'iss-card__footer');
+      var kicker = text(place.era_name) || text(place.era_label) || 'Schöneweide';
 
-      card.appendChild(buildMediaFigure(place, 'iss-card__media', text(place.era_label) || 'Schöneweide'));
-      body.appendChild(
-        createElement(
-          'p',
-          'iss-card__kicker iss-kicker iss-kicker--compact',
-          text(place.era_label) || 'Schöneweide'
-        )
-      );
+      card.appendChild(buildPlaceMediaFigure(place, 'iss-card__media', kicker));
+      body.appendChild(createElement('p', 'iss-card__kicker iss-kicker iss-kicker--compact', kicker));
       body.appendChild(createElement('h3', 'iss-card__title', place.name || 'Ort'));
 
       if (place.summary) {
@@ -551,26 +765,54 @@
     });
   }
 
+  function renderStories(container, state, filteredPlaces) {
+    var stories = getSelectedStories(state);
+
+    container.innerHTML = EMPTY;
+
+    if (stories.length) {
+      renderStoryCards(container, stories, state);
+      return;
+    }
+
+    if (!filteredPlaces.length) {
+      container.appendChild(
+        createElement('p', 'iss-atlas-loading', 'Keine Geschichten für diese Auswahl.')
+      );
+      return;
+    }
+
+    renderFallbackPlaceCards(container, filteredPlaces);
+  }
+
   function render(elements, state) {
-    var filteredPlaces = filterPlaces(state.places, state).sort(sortPlaces);
+    var eraScopedPlaces = getEraScopedPlaces(state.places, state.era).sort(sortPlaces);
+    var filteredPlaces = filterPlaces(eraScopedPlaces, state).sort(sortPlaces);
     var selectedPlace = getSelectedPlace(state, filteredPlaces);
+    var selectedStories = getSelectedStories(state);
+
+    state.activeEra = state.era ? (state.eraMap[state.era] || null) : null;
 
     if (selectedPlace) {
       state.selectedPostId = selectedPlace.post_id;
     }
 
-    renderRoleFilters(elements.roleFilters, state);
-    renderCount(elements.count, filteredPlaces);
-    renderSummary(elements.summary, filteredPlaces, selectedPlace);
+    renderEraFilters(elements.eraFilters, state);
+    renderRoleFilters(elements.roleFilters, state, eraScopedPlaces);
+    renderStoryIntro(elements.storyIntro, state, selectedStories, filteredPlaces);
+    renderCount(elements.count, filteredPlaces, state);
+    renderSummary(elements.summary, filteredPlaces, selectedPlace, state);
     renderMap(state, filteredPlaces, selectedPlace);
     renderPopup(elements.popup, selectedPlace);
-    renderStories(elements.stories, filteredPlaces);
+    renderStories(elements.stories, state, filteredPlaces);
     setMapStatus(elements.mapStatus, EMPTY);
   }
 
   function renderError(elements, message) {
+    elements.eraFilters.innerHTML = EMPTY;
     elements.roleFilters.innerHTML = EMPTY;
     elements.summary.innerHTML = EMPTY;
+    elements.storyIntro.innerHTML = EMPTY;
     elements.popup.innerHTML = EMPTY;
     elements.popup.classList.add('is-empty');
     elements.stories.innerHTML = EMPTY;
@@ -581,11 +823,13 @@
 
   function collectElements(root) {
     return {
+      eraFilters: root.querySelector('[data-iss-schoneweide-era-filters]'),
       roleFilters: root.querySelector('[data-iss-schoneweide-role-filters]'),
       mapSurface: root.querySelector('.iss-atlas-app__map-surface'),
       mapCanvas: root.querySelector('[data-iss-schoneweide-map]'),
       mapStatus: root.querySelector('[data-iss-schoneweide-map-status]'),
       summary: root.querySelector('[data-iss-schoneweide-summary]'),
+      storyIntro: root.querySelector('[data-iss-schoneweide-story-intro]'),
       popup: root.querySelector('[data-iss-schoneweide-popup]'),
       stories: root.querySelector('[data-iss-schoneweide-stories]'),
       count: root.querySelector('[data-iss-schoneweide-count]'),
@@ -618,6 +862,16 @@
     sync();
   }
 
+  function fetchJson(url) {
+    return fetch(url, { credentials: 'same-origin' }).then(function (response) {
+      if (!response.ok) {
+        throw new Error('Request failed');
+      }
+
+      return response.json();
+    });
+  }
+
   function init() {
     var root = document.querySelector('[data-iss-schoneweide-atlas]');
 
@@ -641,19 +895,27 @@
       return;
     }
 
-    fetch(config.placesUrl, { credentials: 'same-origin' })
-      .then(function (response) {
-        if (!response.ok) {
-          throw new Error('Atlas payload unavailable');
-        }
+    var placesRequest = fetchJson(config.placesUrl);
+    var contextRequest = text(config.contextUrl)
+      ? fetchJson(config.contextUrl).catch(function () {
+          return { eras: [], stories: [] };
+        })
+      : Promise.resolve({ eras: [], stories: [] });
 
-        return response.json();
-      })
-      .then(function (payload) {
-        var places = (Array.isArray(payload) ? payload : [])
+    Promise.all([placesRequest, contextRequest])
+      .then(function (results) {
+        var placePayload = Array.isArray(results[0]) ? results[0] : [];
+        var contextPayload = results[1] && typeof results[1] === 'object' ? results[1] : {};
+        var places = placePayload
           .map(normalizePlace)
           .filter(isAtlasPlace)
           .sort(sortPlaces);
+        var eras = Array.isArray(contextPayload.eras)
+          ? contextPayload.eras.map(normalizeEra).filter(function (era) { return era.slug; })
+          : [];
+        var stories = Array.isArray(contextPayload.stories)
+          ? contextPayload.stories.map(normalizeStory).filter(function (story) { return story.id > 0; })
+          : [];
 
         if (!places.length) {
           renderError(elements, 'Keine Atlas-Orte verfügbar.');
@@ -670,6 +932,11 @@
         var state = {
           leaflet: leafletState,
           places: places,
+          eras: eras,
+          eraMap: buildEraMap(eras.length ? eras : deriveFallbackEras(places)),
+          stories: stories,
+          era: EMPTY,
+          activeEra: null,
           role: EMPTY,
           search: EMPTY,
           selectedPostId: places[0].post_id,
@@ -687,6 +954,7 @@
         });
 
         elements.reset.addEventListener('click', function () {
+          state.era = EMPTY;
           state.role = EMPTY;
           state.search = EMPTY;
           state.selectedPostId = 0;
@@ -701,9 +969,7 @@
           state.render();
         });
 
-        // Resize the Leaflet surface through real layout changes, never CSS scaling.
         bindMapSizeSync(state.leaflet.map, elements.mapSurface);
-
         state.render();
       })
       .catch(function () {

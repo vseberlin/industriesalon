@@ -243,59 +243,26 @@ function iss_register_atlas_extract_years(string $text): array
 
 function iss_register_get_atlas_eras(): array
 {
-    return [
-        '1890-1910' => [
-            'id' => '1890-1910',
-            'label' => '1890–1910',
-            'short_label' => '1890',
-            'caption' => 'Aufbruch',
-            'start' => 1890,
-            'end' => 1910,
-        ],
-        '1910-1930' => [
-            'id' => '1910-1930',
-            'label' => '1910–1930',
-            'short_label' => '1910',
-            'caption' => 'Wachstum',
-            'start' => 1910,
-            'end' => 1930,
-        ],
-        '1930-1945' => [
-            'id' => '1930-1945',
-            'label' => '1930–1945',
-            'short_label' => '1930',
-            'caption' => 'Krise und Krieg',
-            'start' => 1930,
-            'end' => 1945,
-        ],
-        '1945-1960' => [
-            'id' => '1945-1960',
-            'label' => '1945–1960',
-            'short_label' => '1945',
-            'caption' => 'Neubeginn',
-            'start' => 1945,
-            'end' => 1960,
-        ],
-        '1960-1990' => [
-            'id' => '1960-1990',
-            'label' => '1960–1990',
-            'short_label' => '1960',
-            'caption' => 'Sozialistische Industrie',
-            'start' => 1960,
-            'end' => 1990,
-        ],
-        'heute' => [
-            'id' => 'heute',
-            'label' => '1990–heute',
-            'short_label' => 'Heute',
-            'caption' => 'Transformation',
-            'start' => 1990,
-            'end' => 2100,
-        ],
-    ];
+    $eras = [];
+
+    foreach (iss_register_get_atlas_era_definitions() as $definition) {
+        $legacy_id = (string) ($definition['legacy_id'] ?? '');
+        if ($legacy_id === '') {
+            continue;
+        }
+
+        $eras[$legacy_id] = [
+            'id' => $legacy_id,
+            'label' => (string) ($definition['legacy_label'] ?? $legacy_id),
+            'short_label' => (string) ($definition['legacy_short_label'] ?? $legacy_id),
+            'caption' => (string) ($definition['legacy_caption'] ?? ''),
+        ];
+    }
+
+    return $eras;
 }
 
-function iss_register_detect_atlas_era(array $place): array
+function iss_register_infer_atlas_era_from_place(array $place): array
 {
     $eras = iss_register_get_atlas_eras();
     $narrative = trim(implode(' ', array_filter([
@@ -308,11 +275,23 @@ function iss_register_detect_atlas_era(array $place): array
     $first_year = $years ? min($years) : null;
 
     if ($first_year !== null) {
-        foreach ($eras as $era) {
-            if ($first_year >= $era['start'] && $first_year < $era['end']) {
-                return $era;
-            }
+        if ($first_year < 1910) {
+            return $eras['1890-1910'];
         }
+        if ($first_year < 1930) {
+            return $eras['1910-1930'];
+        }
+        if ($first_year < 1945) {
+            return $eras['1930-1945'];
+        }
+        if ($first_year < 1960) {
+            return $eras['1945-1960'];
+        }
+        if ($first_year < 1990) {
+            return $eras['1960-1990'];
+        }
+
+        return $eras['heute'];
     }
 
     $status = strtolower(trim((string) ($place['status'] ?? '')));
@@ -327,6 +306,40 @@ function iss_register_detect_atlas_era(array $place): array
     }
 
     return $eras['heute'];
+}
+
+function iss_register_detect_atlas_era(array $place): array
+{
+    $post_id = isset($place['post_id']) ? (int) $place['post_id'] : 0;
+    $explicit = $post_id > 0 ? iss_register_get_primary_explicit_era_payload_for_post($post_id) : [];
+
+    if ($explicit) {
+        return [
+            'id' => (string) $explicit['legacy_id'],
+            'label' => (string) $explicit['legacy_label'],
+            'short_label' => (string) $explicit['legacy_short_label'],
+            'caption' => (string) $explicit['legacy_caption'],
+            'slug' => (string) $explicit['slug'],
+            'name' => (string) $explicit['name'],
+            'source' => 'taxonomy',
+            'explicit_eras' => $post_id > 0 ? iss_register_get_explicit_era_payloads_for_post($post_id) : [],
+        ];
+    }
+
+    $inferred = iss_register_infer_atlas_era_from_place($place);
+    $slug = iss_register_map_legacy_era_to_editorial_slug((string) ($inferred['id'] ?? ''));
+    $editorial = $slug !== '' ? iss_register_get_editorial_era_payload_from_slug($slug) : [];
+
+    return [
+        'id' => (string) ($inferred['id'] ?? ''),
+        'label' => (string) ($inferred['label'] ?? ''),
+        'short_label' => (string) ($inferred['short_label'] ?? ''),
+        'caption' => (string) ($inferred['caption'] ?? ''),
+        'slug' => (string) ($editorial['slug'] ?? $slug),
+        'name' => (string) ($editorial['name'] ?? ($inferred['label'] ?? '')),
+        'source' => 'inferred',
+        'explicit_eras' => [],
+    ];
 }
 
 function iss_register_get_atlas_place_score(array $place): int
@@ -389,6 +402,12 @@ function iss_register_map_place_for_atlas(array $place): array
         'era_label' => (string) $era['label'],
         'era_short_label' => (string) $era['short_label'],
         'era_caption' => (string) $era['caption'],
+        'era_slug' => (string) ($era['slug'] ?? ''),
+        'era_name' => (string) ($era['name'] ?? ''),
+        'era_source' => (string) ($era['source'] ?? 'inferred'),
+        'explicit_era_slugs' => array_values(array_map(static function (array $item): string {
+            return (string) ($item['slug'] ?? '');
+        }, (array) ($era['explicit_eras'] ?? []))),
         'story_score' => iss_register_get_atlas_place_score($place),
         'summary' => iss_register_atlas_compact_text($excerpt !== '' ? $excerpt : ($current !== '' ? $current : ($history !== '' ? $history : (string) ($place['address'] ?? ''))), 260),
         'secondary' => iss_register_atlas_compact_text($history !== '' ? $history : ($current !== '' ? $current : $sources), 180),
@@ -561,6 +580,20 @@ function iss_register_rest_get_atlas_places(): WP_REST_Response
     return rest_ensure_response(iss_register_get_atlas_places_data());
 }
 
+function iss_register_rest_get_atlas_context(WP_REST_Request $request): WP_REST_Response
+{
+    $era_slug = sanitize_title((string) $request->get_param('era'));
+    $context = iss_register_get_atlas_context_data();
+
+    if ($era_slug !== '') {
+        $context['stories'] = array_values(array_filter((array) ($context['stories'] ?? []), static function (array $story) use ($era_slug): bool {
+            return in_array($era_slug, (array) ($story['era_slugs'] ?? []), true);
+        }));
+    }
+
+    return rest_ensure_response($context);
+}
+
 function iss_register_rest_get_place(WP_REST_Request $request)
 {
     $target_id = trim((string) $request['id']);
@@ -632,6 +665,12 @@ add_action('rest_api_init', function () {
     register_rest_route(ISS_REGISTER_REST_NAMESPACE, '/atlas', [
         'methods' => WP_REST_Server::READABLE,
         'callback' => 'iss_register_rest_get_atlas_places',
+        'permission_callback' => '__return_true',
+    ]);
+
+    register_rest_route(ISS_REGISTER_REST_NAMESPACE, '/atlas-context', [
+        'methods' => WP_REST_Server::READABLE,
+        'callback' => 'iss_register_rest_get_atlas_context',
         'permission_callback' => '__return_true',
     ]);
 

@@ -9,7 +9,7 @@ function iss_wf_import_add_suggestions_meta_box(): void
     foreach (iss_wf_import_get_suggestion_post_types() as $post_type) {
         add_meta_box(
             'iss-wf-import-suggestions',
-            __('Ortvorschläge', 'iss-wf-import'),
+            __('Orte prüfen', 'iss-wf-import'),
             'iss_wf_import_render_suggestions_meta_box',
             $post_type,
             'side',
@@ -26,14 +26,14 @@ function iss_wf_import_render_suggestions_meta_box(WP_Post $post): void
     $suggestions = iss_wf_import_sanitize_place_suggestions((array) get_post_meta($post->ID, ISS_WF_IMPORT_PLACE_SUGGESTIONS_META, true));
     $generated_at = (string) get_post_meta($post->ID, ISS_WF_IMPORT_PLACE_SUGGESTED_AT_META, true);
 
-    echo '<p>' . esc_html__('Die Vorschläge bleiben rein beratend, bis sie ausdrücklich als Ortsbeziehungen übernommen werden.', 'iss-wf-import') . '</p>';
+    echo '<p>' . esc_html__('Die vorgeschlagenen Orte bleiben unverbindlich, bis sie ausdrücklich als Ortsbeziehungen übernommen werden.', 'iss-wf-import') . '</p>';
 
     if ($generated_at !== '') {
-        echo '<p><small>' . esc_html(sprintf(__('Zuletzt berechnet: %s', 'iss-wf-import'), $generated_at)) . '</small></p>';
+        echo '<p><small>' . esc_html(sprintf(__('Zuletzt aktualisiert: %s', 'iss-wf-import'), $generated_at)) . '</small></p>';
     }
 
     if (!$suggestions) {
-        echo '<p>' . esc_html__('Aktuell keine belastbaren Ortvorschläge gespeichert.', 'iss-wf-import') . '</p>';
+        echo '<p>' . esc_html__('Aktuell sind keine belastbaren Ortvorschläge gespeichert.', 'iss-wf-import') . '</p>';
     } else {
         echo '<div class="iss-wf-suggestions">';
         foreach ($suggestions as $index => $suggestion) {
@@ -53,7 +53,7 @@ function iss_wf_import_render_suggestions_meta_box(WP_Post $post): void
             echo '<input type="checkbox" name="iss_wf_apply_place_ids[]" value="' . esc_attr((string) $place_id) . '">';
             echo '<span>';
             echo '<strong>' . esc_html($title) . '</strong><br>';
-            echo '<small>' . esc_html(sprintf(__('Score %d', 'iss-wf-import'), $score)) . '</small>';
+            echo '<small>' . esc_html(sprintf(__('Trefferwert %d', 'iss-wf-import'), $score)) . '</small>';
             echo '</span>';
             echo '</label>';
 
@@ -75,9 +75,9 @@ function iss_wf_import_render_suggestions_meta_box(WP_Post $post): void
     }
 
     echo '<p>';
-    submit_button(__('Vorschläge neu berechnen', 'iss-wf-import'), 'secondary', 'iss_wf_refresh_suggestions', false);
+    submit_button(__('Ortvorschläge aktualisieren', 'iss-wf-import'), 'secondary', 'iss_wf_refresh_suggestions', false);
     echo ' ';
-    submit_button(__('Ausgewählte übernehmen', 'iss-wf-import'), 'primary', 'iss_wf_apply_suggestions', false);
+    submit_button(__('Ausgewählte Orte verknüpfen', 'iss-wf-import'), 'primary', 'iss_wf_apply_suggestions', false);
     echo '</p>';
 
     echo '<p><small>' . esc_html__('Übernommene Orte erscheinen danach in der Metabox „Verknüpfte Orte“ und im gemeinsamen Relations-Index.', 'iss-wf-import') . '</small></p>';
@@ -116,10 +116,10 @@ add_action('save_post', 'iss_wf_import_handle_suggestions_meta_box_save', 20, 2)
 function iss_wf_import_get_admin_review_filters(): array
 {
     return [
-        'has_suggestions' => __('Mit Vorschlägen', 'iss-wf-import'),
-        'without_suggestions' => __('Ohne Vorschläge', 'iss-wf-import'),
+        'has_suggestions' => __('Mit Ortvorschlägen', 'iss-wf-import'),
+        'without_suggestions' => __('Ohne Ortvorschläge', 'iss-wf-import'),
         'has_relations' => __('Mit verknüpften Orten', 'iss-wf-import'),
-        'needs_review' => __('Noch unverbunden', 'iss-wf-import'),
+        'needs_review' => __('Orte prüfen', 'iss-wf-import'),
     ];
 }
 
@@ -140,9 +140,9 @@ function iss_wf_import_render_admin_review_filter(string $post_type): void
     $selected = iss_wf_import_get_selected_admin_review_filter();
     $filters = iss_wf_import_get_admin_review_filters();
 
-    echo '<label class="screen-reader-text" for="filter-by-iss-wf-review">' . esc_html__('Archivreview filtern', 'iss-wf-import') . '</label>';
+    echo '<label class="screen-reader-text" for="filter-by-iss-wf-review">' . esc_html__('Ortsprüfung filtern', 'iss-wf-import') . '</label>';
     echo '<select name="iss_wf_review" id="filter-by-iss-wf-review">';
-    echo '<option value="">' . esc_html__('Alle Review-Stati', 'iss-wf-import') . '</option>';
+    echo '<option value="">' . esc_html__('Alle Ortsbezüge', 'iss-wf-import') . '</option>';
 
     foreach ($filters as $value => $label) {
         echo '<option value="' . esc_attr($value) . '"' . selected($selected, $value, false) . '>' . esc_html($label) . '</option>';
@@ -231,7 +231,7 @@ function iss_wf_import_get_admin_place_preview(array $items, string $context, in
 
         if ($context === 'suggestion') {
             $score = (int) ($item['score'] ?? 0);
-            $title .= ' (' . sprintf(__('Score %d', 'iss-wf-import'), $score) . ')';
+            $title .= ' (' . sprintf(__('Trefferwert %d', 'iss-wf-import'), $score) . ')';
         }
 
         $lines[] = $title;
@@ -242,7 +242,7 @@ function iss_wf_import_get_admin_place_preview(array $items, string $context, in
     }
 
     if ($total > $limit) {
-        $lines[] = sprintf(__('plus %d weitere', 'iss-wf-import'), $total - $limit);
+        $lines[] = sprintf(__('plus %d weitere Orte', 'iss-wf-import'), $total - $limit);
     }
 
     return implode('<br>', array_map('esc_html', $lines));

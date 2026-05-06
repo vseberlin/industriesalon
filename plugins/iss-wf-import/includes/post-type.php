@@ -4,6 +4,58 @@ if (!defined('ABSPATH')) {
     exit;
 }
 
+/**
+ * Editor-facing labels can evolve, but stored slugs and constants stay stable.
+ * Keep label generation in one place so future WP upgrades only require one
+ * review when admin copy needs to change.
+ */
+function iss_wf_import_build_post_type_labels(array $args): array
+{
+    $plural = (string) ($args['plural'] ?? '');
+    $singular = (string) ($args['singular'] ?? '');
+    $menu_name = (string) ($args['menu_name'] ?? $plural);
+    $text_domain = (string) ($args['text_domain'] ?? 'iss-wf-import');
+
+    return [
+        'name' => __($plural, $text_domain),
+        'singular_name' => __($singular, $text_domain),
+        'menu_name' => __($menu_name, $text_domain),
+        'all_items' => sprintf(__('Alle %s', $text_domain), __($plural, $text_domain)),
+        'add_new' => __('Neu hinzufügen', $text_domain),
+        'add_new_item' => sprintf(__('%s hinzufügen', $text_domain), __($singular, $text_domain)),
+        'edit_item' => sprintf(__('%s bearbeiten', $text_domain), __($singular, $text_domain)),
+        'new_item' => sprintf(__('Neuer Eintrag: %s', $text_domain), __($singular, $text_domain)),
+        'view_item' => sprintf(__('%s ansehen', $text_domain), __($singular, $text_domain)),
+        'view_items' => sprintf(__('%s ansehen', $text_domain), __($plural, $text_domain)),
+        'search_items' => sprintf(__('%s durchsuchen', $text_domain), __($plural, $text_domain)),
+        'not_found' => sprintf(__('Keine %s gefunden.', $text_domain), mb_strtolower($plural)),
+        'not_found_in_trash' => sprintf(__('Keine %s im Papierkorb gefunden.', $text_domain), mb_strtolower($plural)),
+        'archives' => sprintf(__('%s-Archiv', $text_domain), __($singular, $text_domain)),
+        'featured_image' => __('Beitragsbild', $text_domain),
+        'set_featured_image' => __('Beitragsbild festlegen', $text_domain),
+        'remove_featured_image' => __('Beitragsbild entfernen', $text_domain),
+        'use_featured_image' => __('Als Beitragsbild verwenden', $text_domain),
+        'items_list' => sprintf(__('%s-Liste', $text_domain), __($plural, $text_domain)),
+        'items_list_navigation' => sprintf(__('Navigation für %s-Liste', $text_domain), __($plural, $text_domain)),
+        'filter_items_list' => sprintf(__('%s-Liste filtern', $text_domain), __($plural, $text_domain)),
+    ];
+}
+
+function iss_wf_import_build_taxonomy_labels(string $plural, string $singular): array
+{
+    return [
+        'name' => __($plural, 'iss-wf-import'),
+        'singular_name' => __($singular, 'iss-wf-import'),
+        'search_items' => sprintf(__('%s durchsuchen', 'iss-wf-import'), __($plural, 'iss-wf-import')),
+        'all_items' => sprintf(__('Alle %s', 'iss-wf-import'), __($plural, 'iss-wf-import')),
+        'edit_item' => sprintf(__('%s bearbeiten', 'iss-wf-import'), __($singular, 'iss-wf-import')),
+        'update_item' => sprintf(__('%s aktualisieren', 'iss-wf-import'), __($singular, 'iss-wf-import')),
+        'add_new_item' => sprintf(__('%s hinzufügen', 'iss-wf-import'), __($singular, 'iss-wf-import')),
+        'new_item_name' => sprintf(__('Neuer Name für %s', 'iss-wf-import'), __($singular, 'iss-wf-import')),
+        'menu_name' => __($plural, 'iss-wf-import'),
+    ];
+}
+
 function iss_wf_import_register_post_type_and_taxonomies(): void
 {
     $archive_post_types = [
@@ -13,10 +65,7 @@ function iss_wf_import_register_post_type_and_taxonomies(): void
     ];
 
     register_taxonomy(ISS_WF_IMPORT_SOURCE_TAXONOMY, $archive_post_types, [
-        'labels' => [
-            'name' => __('Archivquellen', 'iss-wf-import'),
-            'singular_name' => __('Archivquelle', 'iss-wf-import'),
-        ],
+        'labels' => iss_wf_import_build_taxonomy_labels('Archivquellen', 'Archivquelle'),
         'public' => true,
         'show_ui' => true,
         'show_in_rest' => true,
@@ -25,10 +74,7 @@ function iss_wf_import_register_post_type_and_taxonomies(): void
     ]);
 
     register_taxonomy(ISS_WF_IMPORT_CATEGORY_TAXONOMY, [ISS_WF_IMPORT_POST_TYPE], [
-        'labels' => [
-            'name' => __('Archivkategorien', 'iss-wf-import'),
-            'singular_name' => __('Archivkategorie', 'iss-wf-import'),
-        ],
+        'labels' => iss_wf_import_build_taxonomy_labels('Archivkategorien', 'Archivkategorie'),
         'public' => true,
         'show_ui' => true,
         'show_in_rest' => true,
@@ -37,10 +83,7 @@ function iss_wf_import_register_post_type_and_taxonomies(): void
     ]);
 
     register_taxonomy(ISS_WF_IMPORT_TAG_TAXONOMY, [ISS_WF_IMPORT_POST_TYPE], [
-        'labels' => [
-            'name' => __('Archivschlagwörter', 'iss-wf-import'),
-            'singular_name' => __('Archivschlagwort', 'iss-wf-import'),
-        ],
+        'labels' => iss_wf_import_build_taxonomy_labels('Archivschlagwörter', 'Archivschlagwort'),
         'public' => true,
         'show_ui' => true,
         'show_in_rest' => true,
@@ -49,16 +92,12 @@ function iss_wf_import_register_post_type_and_taxonomies(): void
     ]);
 
     register_post_type(ISS_WF_IMPORT_POST_TYPE, [
-        'labels' => [
-            'name' => __('Archivbeiträge', 'iss-wf-import'),
-            'singular_name' => __('Archivbeitrag', 'iss-wf-import'),
-            'menu_name' => __('Archivbeiträge', 'iss-wf-import'),
-            'add_new_item' => __('Archivbeitrag hinzufügen', 'iss-wf-import'),
-            'edit_item' => __('Archivbeitrag bearbeiten', 'iss-wf-import'),
-            'new_item' => __('Neuer Archivbeitrag', 'iss-wf-import'),
-            'view_item' => __('Archivbeitrag ansehen', 'iss-wf-import'),
-            'search_items' => __('Archivbeiträge durchsuchen', 'iss-wf-import'),
-        ],
+        'labels' => iss_wf_import_build_post_type_labels([
+            'plural' => 'Archivbeiträge',
+            'singular' => 'Archivbeitrag',
+            'menu_name' => 'Archiv',
+        ]),
+        'description' => __('Kuratorische Archivtexte und Hintergrundbeiträge.', 'iss-wf-import'),
         'public' => true,
         'publicly_queryable' => true,
         'show_ui' => true,
@@ -79,16 +118,12 @@ function iss_wf_import_register_post_type_and_taxonomies(): void
     ]);
 
     register_post_type(ISS_WF_IMPORT_COLLECTION_POST_TYPE, [
-        'labels' => [
-            'name' => __('Archivsammlungen', 'iss-wf-import'),
-            'singular_name' => __('Archivsammlung', 'iss-wf-import'),
-            'menu_name' => __('Sammlungen', 'iss-wf-import'),
-            'add_new_item' => __('Archivsammlung hinzufügen', 'iss-wf-import'),
-            'edit_item' => __('Archivsammlung bearbeiten', 'iss-wf-import'),
-            'new_item' => __('Neue Archivsammlung', 'iss-wf-import'),
-            'view_item' => __('Archivsammlung ansehen', 'iss-wf-import'),
-            'search_items' => __('Archivsammlungen durchsuchen', 'iss-wf-import'),
-        ],
+        'labels' => iss_wf_import_build_post_type_labels([
+            'plural' => 'Archivsammlungen',
+            'singular' => 'Archivsammlung',
+            'menu_name' => 'Sammlungen',
+        ]),
+        'description' => __('Archivsammlungen, Alben und geordnete Objektgruppen.', 'iss-wf-import'),
         'public' => true,
         'publicly_queryable' => true,
         'show_ui' => true,
@@ -108,16 +143,12 @@ function iss_wf_import_register_post_type_and_taxonomies(): void
     ]);
 
     register_post_type(ISS_WF_IMPORT_OBJECT_POST_TYPE, [
-        'labels' => [
-            'name' => __('Archivobjekte', 'iss-wf-import'),
-            'singular_name' => __('Archivobjekt', 'iss-wf-import'),
-            'menu_name' => __('Objekte', 'iss-wf-import'),
-            'add_new_item' => __('Archivobjekt hinzufügen', 'iss-wf-import'),
-            'edit_item' => __('Archivobjekt bearbeiten', 'iss-wf-import'),
-            'new_item' => __('Neues Archivobjekt', 'iss-wf-import'),
-            'view_item' => __('Archivobjekt ansehen', 'iss-wf-import'),
-            'search_items' => __('Archivobjekte durchsuchen', 'iss-wf-import'),
-        ],
+        'labels' => iss_wf_import_build_post_type_labels([
+            'plural' => 'Archivobjekte',
+            'singular' => 'Archivobjekt',
+            'menu_name' => 'Objekte',
+        ]),
+        'description' => __('Einzelobjekte des Archivs mit Metadaten und Medien.', 'iss-wf-import'),
         'public' => true,
         'publicly_queryable' => true,
         'show_ui' => true,

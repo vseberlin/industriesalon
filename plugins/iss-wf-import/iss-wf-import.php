@@ -1,8 +1,8 @@
 <?php
 /**
- * Plugin Name: ISS WF Import
- * Description: Mirrors WF-Museum archive posts into a local CPT with provenance, local media, and taxonomies for reuse.
- * Version: 0.3.0
+ * Plugin Name: ISS Archive
+ * Description: Owns the local archive content model for archive posts, collections, and objects.
+ * Version: 0.4.0
  * Author: Industriesalon
  */
 
@@ -10,10 +10,18 @@ if (!defined('ABSPATH')) {
     exit;
 }
 
-define('ISS_WF_IMPORT_VERSION', '0.3.0');
+/**
+ * Internal compatibility note:
+ * the plugin directory and PHP prefixes stay `iss_wf_import` for now so the
+ * existing runtime and stored references remain stable.
+ */
+define('ISS_WF_IMPORT_VERSION', '0.4.0');
 define('ISS_WF_IMPORT_PATH', plugin_dir_path(__FILE__));
 define('ISS_WF_IMPORT_URL', plugin_dir_url(__FILE__));
 define('ISS_WF_IMPORT_REWRITE_VERSION', '2026-05-05-archive-routing-2');
+define('ISS_ARCHIVE_VERSION', ISS_WF_IMPORT_VERSION);
+define('ISS_ARCHIVE_PATH', ISS_WF_IMPORT_PATH);
+define('ISS_ARCHIVE_URL', ISS_WF_IMPORT_URL);
 
 define('ISS_WF_IMPORT_POST_TYPE', 'archivbeitrag');
 define('ISS_WF_IMPORT_COLLECTION_POST_TYPE', 'archivsammlung');
@@ -60,15 +68,14 @@ define('ISS_WF_IMPORT_ATTACHMENT_SOURCE_URL_META', '_iss_wf_source_media_url');
 define('ISS_WF_IMPORT_PLACE_SUGGESTIONS_META', 'iss_wf_place_suggestions');
 define('ISS_WF_IMPORT_PLACE_SUGGESTED_AT_META', '_iss_wf_place_suggested_at_gmt');
 
+/**
+ * Stable archive model modules.
+ */
 require_once ISS_WF_IMPORT_PATH . 'includes/post-type.php';
 require_once ISS_WF_IMPORT_PATH . 'includes/meta.php';
 require_once ISS_WF_IMPORT_PATH . 'includes/suggestions.php';
-require_once ISS_WF_IMPORT_PATH . 'includes/importer.php';
-require_once ISS_WF_IMPORT_PATH . 'includes/md-importer.php';
-require_once ISS_WF_IMPORT_PATH . 'includes/wf-collections.php';
 require_once ISS_WF_IMPORT_PATH . 'includes/blocks.php';
 require_once ISS_WF_IMPORT_PATH . 'includes/admin.php';
-require_once ISS_WF_IMPORT_PATH . 'includes/cli.php';
 
 register_activation_hook(__FILE__, function () {
     iss_wf_import_register_post_type_and_taxonomies();

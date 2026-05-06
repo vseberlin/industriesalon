@@ -1,5 +1,34 @@
 # Changelog
 
+## 2026-05-06
+- Added the first explicit Atlas editorial model to `industriesalon-schoeneweide-register`:
+  - new `atlas_era` taxonomy for `register_place` and `atlas_story`
+  - new `atlas_story` CPT for curated epoch narratives
+  - activation seeding for the initial era vocabulary
+- Extended the Atlas REST contract without breaking the current frontend payload:
+  - explicit editorial eras now override inferred buckets when assigned
+  - legacy `/wp-json/iss-register/v1/atlas` era fields remain available
+  - new additive `/wp-json/iss-register/v1/atlas-context` endpoint exposes eras and story context
+- Switched the Schöneweide Atlas frontend to the new era/story-aware context in `themes/industriesalon`:
+  - updated `assets/js/schoneweide.js`
+  - updated `assets/css/atlas-app.css`
+  - updated `templates/page-schoneweide.html`
+  - updated `functions.php`
+  - UI now supports explicit era filters and story-first fallbacks while preserving the existing map/place flow
+- Documented the Atlas migration stages:
+  - `plugins/industriesalon-schoeneweide-register/docs/atlas-phase-1.md`
+  - `plugins/industriesalon-schoeneweide-register/docs/atlas-phase-2.md`
+  - updated plugin `readme.md`
+- Retired obsolete WF import/sync runtime from `iss-wf-import`:
+  - removed CLI/importer/collection sync modules
+  - kept only the stable local archive model bootstrap
+  - plugin now acts as the authoritative owner of `archivbeitrag`, `archivsammlung`, and `archivobjekt`
+- Cleaned the archive editor naming and review interface:
+  - top-level archive menu now reads `Archiv`
+  - centralized label generation and added CPT descriptions
+  - rewrote place-suggestion/admin review copy to use clearer editor language
+  - preserved stored slugs, meta keys, and block namespaces for compatibility
+
 ## 2026-05-05
 - Rebuilt the live `/schoneweide/` landing into a simpler theme-owned Atlas surface:
   - replaced the heavy earlier Atlas shell in `themes/industriesalon/templates/page-schoneweide.html`

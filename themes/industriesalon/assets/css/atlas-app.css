@@ -65,6 +65,40 @@
   line-height: 1.45;
 }
 
+.iss-atlas-app__story-note {
+  display: grid;
+  gap: 0.3rem;
+  padding: 0.85rem 0.9rem;
+  border: 1px solid var(--iss-atlas-panel-border);
+  background: var(--iss-atlas-panel-bg-strong);
+}
+
+.iss-atlas-app__story-note-kicker,
+.iss-atlas-app__story-note-title,
+.iss-atlas-app__story-note-text {
+  margin: 0;
+}
+
+.iss-atlas-app__story-note-kicker {
+  color: var(--iss-atlas-soft-muted);
+  font-size: 0.7rem;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  line-height: 1.3;
+  text-transform: uppercase;
+}
+
+.iss-atlas-app__story-note-title {
+  font-size: 1rem;
+  line-height: 1.18;
+}
+
+.iss-atlas-app__story-note-text {
+  color: var(--iss-atlas-muted);
+  font-size: 0.85rem;
+  line-height: 1.45;
+}
+
 .iss-atlas-app__search input {
   width: 100%;
   min-height: 2.55rem;
