@@ -353,7 +353,7 @@
           icon: createMarkerIcon(place, active),
           keyboard: true,
           riseOnHover: true,
-          zIndexOffset: active ? 1000 : 0
+          zIndexOffset: active ? 2400 : 0
         });
 
         marker.on('click', function () {
