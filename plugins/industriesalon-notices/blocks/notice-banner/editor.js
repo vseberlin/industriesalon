@@ -51,6 +51,7 @@
                 { label: "Aus Hinweis übernehmen", value: "" },
                 { label: "Front Banner", value: "front" },
                 { label: "Landing Note", value: "landing" },
+                { label: "Atlas Note", value: "atlas" },
               ],
               onChange: function (value) {
                 props.setAttributes({ skin: value });

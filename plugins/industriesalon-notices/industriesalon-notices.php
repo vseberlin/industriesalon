@@ -315,7 +315,7 @@ final class Industriesalon_Notices {
                     <option value="<?php echo esc_attr($value); ?>" <?php selected($skin, $value); ?>><?php echo esc_html($label); ?></option>
                 <?php endforeach; ?>
             </select>
-            <span class="description"><?php esc_html_e('Steuert die visuelle Banner-Variante (Front Banner oder Landing Note).', 'industriesalon-notices'); ?></span>
+            <span class="description"><?php esc_html_e('Steuert die visuelle Banner-Variante (Front Banner, Landing Note oder Atlas Note).', 'industriesalon-notices'); ?></span>
         </p>
 
         <p data-iss-scope-selected>
@@ -636,7 +636,6 @@ final class Industriesalon_Notices {
         $eyebrow_text = $kicker !== '' ? $kicker : __('Hinweis', 'industriesalon-notices');
         $title_text   = $headline !== '' ? $headline : __('Heute im Industriesalon', 'industriesalon-notices');
         $cta_text     = $link_label !== '' ? $link_label : __('Mehr erfahren', 'industriesalon-notices');
-        $cta_href     = $link_url !== '' ? $link_url : '#';
 
         ob_start();
         ?>
@@ -645,12 +644,14 @@ final class Industriesalon_Notices {
             <p class="iss-hero-note__kicker"><?php echo esc_html($eyebrow_text); ?></p>
             <h3 class="iss-hero-note__title"><?php echo esc_html($title_text); ?></h3>
             <div class="iss-hero-note__text"><?php echo wp_kses_post(wpautop($notice->post_content)); ?></div>
+            <?php if ($link_url !== '') : ?>
             <p class="iss-hero-note__link">
-                <a href="<?php echo esc_url($cta_href); ?>"<?php echo $link_url !== '' ? $this->link_target_attributes($notice->ID) : ''; ?>>
+                <a href="<?php echo esc_url($link_url); ?>"<?php echo $this->link_target_attributes($notice->ID); ?>>
                     <span class="iss-hero-note__link-icon" aria-hidden="true">→</span>
-                    <span><?php echo esc_html($cta_text); ?></span>
+                    <span class="iss-hero-note__link-text"><?php echo esc_html($cta_text); ?></span>
                 </a>
             </p>
+            <?php endif; ?>
         </aside>
         <?php
         return (string) ob_get_clean();
@@ -920,6 +921,7 @@ final class Industriesalon_Notices {
         return [
             'front'   => __('Front Banner', 'industriesalon-notices'),
             'landing' => __('Landing Note', 'industriesalon-notices'),
+            'atlas'   => __('Atlas Note', 'industriesalon-notices'),
         ];
     }
 

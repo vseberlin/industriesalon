@@ -16,7 +16,7 @@ define('ISS_REGISTER_URL', plugin_dir_url(__FILE__));
 define('ISS_REGISTER_REST_NAMESPACE', 'iss-register/v1');
 define('ISS_REGISTER_POST_TYPE', 'register_place');
 define('ISS_REGISTER_SOURCE_POST_TYPE', 'register_source_item');
-define('ISS_REGISTER_IMPORT_PAGE_SLUG', 'iss-register-import');
+define('ISS_REGISTER_TOOLS_PAGE_SLUG', 'iss-register-tools');
 
 require_once ISS_REGISTER_PATH . 'includes/assets.php';
 require_once ISS_REGISTER_PATH . 'includes/rest-controller.php';
@@ -30,7 +30,7 @@ require_once ISS_REGISTER_PATH . 'includes/meta-fields.php';
 require_once ISS_REGISTER_PATH . 'includes/image-suggestions.php';
 require_once ISS_REGISTER_PATH . 'includes/public-fields.php';
 require_once ISS_REGISTER_PATH . 'includes/geocoding.php';
-require_once ISS_REGISTER_PATH . 'includes/importer.php';
+require_once ISS_REGISTER_PATH . 'includes/admin-tools.php';
 require_once ISS_REGISTER_PATH . 'includes/feedback.php';
 require_once ISS_REGISTER_PATH . 'includes/render-register-list.php';
 require_once ISS_REGISTER_PATH . 'includes/render-register-map.php';

@@ -10,41 +10,6 @@ function iss_register_clear_places_cache(): void
     delete_transient('iss_register_atlas_places_cache');
 }
 
-function iss_register_get_places_path(): string
-{
-    return ISS_REGISTER_PATH . 'data/import-source.json';
-}
-
-function iss_register_get_places_from_static_json(): array
-{
-    $file = iss_register_get_places_path();
-    if (!file_exists($file)) {
-        return [];
-    }
-
-    $raw = file_get_contents($file);
-    if (!is_string($raw) || $raw === '') {
-        return [];
-    }
-
-    $decoded = json_decode($raw, true);
-    if (!is_array($decoded)) {
-        return [];
-    }
-
-    $places = array_values(array_filter($decoded, 'is_array'));
-
-    return array_map(function (array $place): array {
-        if (!array_key_exists('post_id', $place)) {
-            $place['post_id'] = 0;
-        } else {
-            $place['post_id'] = (int) $place['post_id'];
-        }
-
-        return $place;
-    }, $places);
-}
-
 function iss_register_get_meta_value(int $post_id, string $key, $default = '')
 {
     $value = get_post_meta($post_id, $key, true);
@@ -229,10 +194,6 @@ function iss_register_get_places_data(): array
     }
 
     $places = iss_register_get_places_from_cpt();
-    if (!$places) {
-        $places = iss_register_get_places_from_static_json();
-    }
-
     set_transient('iss_register_places_cache', $places, HOUR_IN_SECONDS);
 
     return $places;

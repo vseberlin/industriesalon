@@ -1,7 +1,7 @@
 <!-- wp:template-part {"slug":"header","theme":"industriesalon","tagName":"header"} /-->
 
-<!-- wp:group {"tagName":"main","className":"iss-page-template iss-schoneweide-atlas-page","layout":{"type":"default"}} -->
-<main class="wp-block-group iss-page-template iss-schoneweide-atlas-page" data-iss-schoneweide-atlas><!-- wp:group {"tagName":"section","className":"iss-section iss-section--hero","layout":{"type":"default"}} -->
+<!-- wp:group {"tagName":"main","className":"iss-page-template iss-schoneweide-atlas-page iss-scheme-red","layout":{"type":"default"}} -->
+<main class="wp-block-group iss-page-template iss-schoneweide-atlas-page iss-scheme-red" data-iss-schoneweide-atlas><!-- wp:group {"tagName":"section","className":"iss-section iss-section--hero","layout":{"type":"default"}} -->
 <section class="wp-block-group iss-section iss-section--hero"><!-- wp:cover {"url":"/wp-content/uploads/2026/05/atlas-header-1536x768.png","dimRatio":52,"customOverlayColor":"#2e2217","isUserOverlayColor":false,"contentPosition":"bottom left","sizeSlug":"full","className":"alignfull iss-front-hero iss-schoneweide-atlas-hero"} -->
 <div class="wp-block-cover has-custom-content-position is-position-bottom-left alignfull iss-front-hero iss-schoneweide-atlas-hero"><img class="wp-block-cover__image-background size-full" alt="Panorama von Oberschöneweide" src="/wp-content/uploads/2026/05/atlas-header-1536x768.png" data-object-fit="cover"/><span aria-hidden="true" class="wp-block-cover__background has-background-dim-50 has-background-dim" style="background-color:#2e2217"></span><div class="wp-block-cover__inner-container"><!-- wp:group {"className":"iss-front-hero__row","layout":{"type":"default"}} -->
 <div class="wp-block-group iss-front-hero__row"><!-- wp:group {"className":"iss-front-hero__shell","layout":{"type":"default"}} -->
@@ -18,21 +18,9 @@
 <!-- /wp:group --></div>
 <!-- /wp:group -->
 
-<!-- wp:group {"className":"iss-front-banner-slot","layout":{"type":"default"}} -->
-<div class="wp-block-group iss-front-banner-slot"><!-- wp:group {"className":"iss-schoneweide-atlas-hero-note","layout":{"type":"default"}} -->
-<div class="wp-block-group iss-schoneweide-atlas-hero-note"><!-- wp:paragraph {"className":"iss-kicker iss-kicker--light"} -->
-<p class="iss-kicker iss-kicker--light">Ausschnitt</p>
-<!-- /wp:paragraph -->
-
-<!-- wp:heading {"level":3,"className":"iss-schoneweide-atlas-hero-note__title"} -->
-<h3 class="wp-block-heading iss-schoneweide-atlas-hero-note__title">Der Atlas bleibt ein lesbarer Einstieg.</h3>
-<!-- /wp:heading -->
-
-<!-- wp:paragraph {"className":"iss-schoneweide-atlas-hero-note__text"} -->
-<p class="iss-schoneweide-atlas-hero-note__text">Die Karte zeigt den industriellen Kernraum Oberschöneweide. Vollständige Felder, Quellen und weitere Orte bleiben im Register.</p>
-<!-- /wp:paragraph --></div>
-<!-- /wp:group --></div>
-<!-- /wp:group --></div>
+    <!-- wp:group {"className":"iss-front-banner-slot","layout":{"type":"default"}} -->
+    <div class="wp-block-group iss-front-banner-slot"><!-- wp:industriesalon/notice-banner {"area":"selected_pages_banner","skin":"atlas"} /--></div>
+    <!-- /wp:group --></div>
 <!-- /wp:group --></div></div>
 <!-- /wp:cover -->
 
@@ -52,56 +40,56 @@
 <!-- wp:group {"tagName":"section","anchor":"atlas-buehne","className":"section section--plain iss-schoneweide-atlas-stage-section","layout":{"type":"default"}} -->
 <section id="atlas-buehne" class="wp-block-group section section--plain iss-schoneweide-atlas-stage-section"><!-- wp:group {"className":"iss-container","layout":{"type":"default"}} -->
 <div class="wp-block-group iss-container"><!-- wp:html -->
-<div class="iss-schoneweide-atlas">
-  <aside class="iss-schoneweide-atlas__sidebar">
-    <div class="iss-heading iss-heading--uncaged iss-schoneweide-atlas__panel-heading">
+<div class="iss-atlas-app">
+  <aside class="iss-atlas-app__sidebar">
+    <div class="iss-heading iss-heading--uncaged iss-atlas-app__panel-heading">
       <p class="iss-kicker iss-kicker--compact">Schöneweide Atlas</p>
       <h2 class="iss-heading__title">Orte finden</h2>
       <p class="iss-heading__text">Nach Typ, Zeit und Namen filtern. Die Karte bleibt auf den industriellen Kernraum konzentriert und führt direkt in die lokalen Dossiers.</p>
     </div>
 
-    <p class="iss-schoneweide-atlas__scope-note">Im Atlas erscheinen Orte aus Oberschöneweide und dem Nalepastraßen-Korridor. Erweiterte Einträge bleiben im Register.</p>
+    <p class="iss-atlas-app__scope-note">Im Atlas erscheinen Orte aus Oberschöneweide und dem Nalepastraßen-Korridor. Erweiterte Einträge bleiben im Register.</p>
 
-    <div class="iss-schoneweide-atlas__search">
+    <div class="iss-atlas-app__search">
       <label class="screen-reader-text" for="iss-schoneweide-atlas-search">Ort suchen</label>
       <input id="iss-schoneweide-atlas-search" type="search" placeholder="Ort, Straße, Werk, Firma …" data-iss-schoneweide-search />
     </div>
 
-    <div class="iss-schoneweide-atlas__filter-block">
-      <p class="iss-schoneweide-atlas__filter-label">Orte</p>
-      <div class="iss-schoneweide-atlas__filter-group" data-iss-schoneweide-role-filters>
-        <p class="iss-schoneweide-atlas__loading">Filter werden geladen.</p>
+    <div class="iss-atlas-app__filter-block">
+      <p class="iss-atlas-app__filter-label">Orte</p>
+      <div class="iss-atlas-app__filter-group" data-iss-schoneweide-role-filters>
+        <p class="iss-atlas-loading">Filter werden geladen.</p>
       </div>
     </div>
 
-    <div class="iss-schoneweide-atlas__filter-block">
-      <p class="iss-schoneweide-atlas__filter-label">Zeitraum</p>
-      <div class="iss-schoneweide-atlas__filter-group" data-iss-schoneweide-era-filters>
-        <p class="iss-schoneweide-atlas__loading">Zeiträume werden geladen.</p>
+    <div class="iss-atlas-app__filter-block">
+      <p class="iss-atlas-app__filter-label">Zeitraum</p>
+      <div class="iss-atlas-app__filter-group" data-iss-schoneweide-era-filters>
+        <p class="iss-atlas-loading">Zeiträume werden geladen.</p>
       </div>
     </div>
 
-    <p class="iss-schoneweide-atlas__result-count" data-iss-schoneweide-count>Atlas wird geladen.</p>
-    <button class="iss-schoneweide-atlas__reset" type="button" data-iss-schoneweide-reset>Filter zurücksetzen</button>
+    <p class="iss-atlas-app__result-count" data-iss-schoneweide-count>Atlas wird geladen.</p>
+    <button class="iss-atlas-app__reset" type="button" data-iss-schoneweide-reset>Filter zurücksetzen</button>
   </aside>
 
-  <div class="iss-schoneweide-atlas__main">
-    <div class="iss-schoneweide-atlas__map-stage">
-      <div class="iss-schoneweide-atlas__map-surface">
-        <div class="iss-schoneweide-atlas__map-canvas" data-iss-schoneweide-map></div>
-        <div class="iss-schoneweide-atlas__map-status" data-iss-schoneweide-map-status>
-          <p class="iss-schoneweide-atlas__loading">Atlas wird geladen.</p>
+  <div class="iss-atlas-app__main">
+    <div class="iss-atlas-app__map-stage">
+      <div class="iss-atlas-app__map-surface">
+        <div class="iss-atlas-app__map-canvas" data-iss-schoneweide-map></div>
+        <div class="iss-atlas-app__map-status" data-iss-schoneweide-map-status>
+          <p class="iss-atlas-loading">Atlas wird geladen.</p>
         </div>
 
-        <div class="iss-schoneweide-atlas__legend">
-          <span class="iss-schoneweide-atlas__legend-item"><span class="iss-schoneweide-atlas__legend-dot is-selected"></span> Ausgewählter Ort</span>
-          <span class="iss-schoneweide-atlas__legend-item"><span class="iss-schoneweide-atlas__legend-dot"></span> Weitere Orte</span>
+        <div class="iss-atlas-app__legend">
+          <span class="iss-atlas-app__legend-item"><span class="iss-atlas-app__legend-dot is-selected"></span> Ausgewählter Ort</span>
+          <span class="iss-atlas-app__legend-item"><span class="iss-atlas-app__legend-dot"></span> Weitere Orte</span>
         </div>
 
-        <div class="iss-schoneweide-atlas__map-summary" data-iss-schoneweide-summary></div>
+        <div class="iss-atlas-app__map-summary" data-iss-schoneweide-summary></div>
       </div>
 
-      <div class="iss-schoneweide-atlas__popup-slot is-empty" data-iss-schoneweide-popup></div>
+      <div class="iss-atlas-app__popup-slot is-empty" data-iss-schoneweide-popup></div>
     </div>
   </div>
 </div>
@@ -126,13 +114,13 @@
 <!-- /wp:group -->
 
 <!-- wp:html -->
-<div class="iss-schoneweide-atlas__stories" data-iss-schoneweide-stories>
-  <p class="iss-schoneweide-atlas__loading">Geschichten werden geladen.</p>
+<div class="iss-atlas-stories" data-iss-schoneweide-stories>
+  <p class="iss-atlas-loading">Geschichten werden geladen.</p>
 </div>
 <!-- /wp:html -->
 
-<!-- wp:paragraph {"className":"iss-schoneweide-atlas__story-links"} -->
-<p class="iss-schoneweide-atlas__story-links"><a class="iss-action-link" href="/register-schoneweide/">Alle Orte im Register</a> <a class="iss-action-link" href="/fuehrungen/">Führungen vor Ort</a></p>
+<!-- wp:paragraph {"className":"iss-atlas-story-links"} -->
+<p class="iss-atlas-story-links"><a class="iss-action-link" href="/register-schoneweide/">Alle Orte im Register</a> <a class="iss-action-link" href="/fuehrungen/">Führungen vor Ort</a></p>
 <!-- /wp:paragraph --></div>
 <!-- /wp:group --></section>
 <!-- /wp:group --></main>

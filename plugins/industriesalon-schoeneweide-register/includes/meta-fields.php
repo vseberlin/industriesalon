@@ -41,7 +41,6 @@ function iss_register_get_meta_schema(): array
         'legacy_website' => ['type' => 'string', 'label' => 'Website', 'input' => 'text', 'show_in_rest' => false, 'admin' => true],
         'legacy_kaufpreis' => ['type' => 'string', 'label' => 'Kaufpreis', 'input' => 'text', 'show_in_rest' => false, 'admin' => true],
         'legacy_questions' => ['type' => 'array', 'label' => 'Fragen', 'input' => 'array_textarea', 'show_in_rest' => false, 'admin' => true],
-        '_iss_register_source_hash' => ['type' => 'string', 'label' => 'Source Hash', 'input' => 'text', 'show_in_rest' => false, 'admin' => false],
     ];
 }
 

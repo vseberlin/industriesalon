@@ -3,6 +3,6 @@
 Phase-1 plugin scaffold:
 
 - dynamic block `iss-register/register-app`
-- static JSON source at `data/import-source.json`
+- local `register_place` posts as the only source of truth
 - REST endpoints under `iss-register/v1`
 - frontend app mounted in block context

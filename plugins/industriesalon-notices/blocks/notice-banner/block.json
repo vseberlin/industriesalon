@@ -6,6 +6,7 @@
   "category": "theme",
   "description": "Displays the active notice for a specific area.",
   "editorScript": "file:./editor.js",
+  "style": "file:./style.css",
   "attributes": {
     "area": {
       "type": "string",

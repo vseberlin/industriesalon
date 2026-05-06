@@ -813,7 +813,7 @@ function industriesalon_enqueue_assets(): void
     }
 
     if ($is_schoneweide_page) {
-        $atlas_style_dependencies = $page_dependencies;
+        $atlas_component_dependencies = $page_dependencies;
         $leaflet_style_rel = '/assets/vendor/leaflet/leaflet.css';
         $leaflet_style_abs = $theme_dir . $leaflet_style_rel;
 
@@ -825,13 +825,19 @@ function industriesalon_enqueue_assets(): void
                 (string) filemtime($leaflet_style_abs)
             );
 
-            $atlas_style_dependencies = array('industriesalon-leaflet');
+            $atlas_component_dependencies = array('industriesalon-leaflet');
         }
+
+        $enqueue_theme_style(
+            'industriesalon-atlas-app',
+            '/assets/css/atlas-app.css',
+            $atlas_component_dependencies
+        );
 
         $enqueue_theme_style(
             'industriesalon-oberschoeneweide-atlas',
             '/assets/css/oberschoeneweide-atlas.css',
-            $atlas_style_dependencies
+            array('industriesalon-atlas-app')
         );
 
         $schoneweide_script_rel = '/assets/js/schoneweide.js';

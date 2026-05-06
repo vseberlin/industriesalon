@@ -149,7 +149,7 @@
   position: relative;
   aspect-ratio: 4 / 3;
   overflow: hidden;
-  background: var(--iss-grey);
+  background: var(--iss-card-media-bg, var(--iss-grey));
 }
 
 /* .iss-card__media: Element class for `iss-card`; apply on `media` element. */
@@ -174,12 +174,13 @@
   display: flex;
   flex: 1 1 auto;
   flex-direction: column;
-  gap: 0.7rem;
+  gap: var(--iss-card-body-gap, 0.7rem);
   padding: 1rem 1rem 1.1rem;
 }
 
 /* .iss-card__kicker: Element class for `iss-card`; apply on `kicker` element. */
-.iss-card__kicker {
+.iss-card__kicker,
+.iss-card__body > .iss-kicker {
   margin: 0;
 }
 

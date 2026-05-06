@@ -203,16 +203,16 @@
   function buildFilterButton(options) {
     var button = createElement(
       'button',
-      'iss-schoneweide-atlas__filter-button' + (options.active ? ' is-active' : EMPTY)
+      'iss-atlas-app__filter-button' + (options.active ? ' is-active' : EMPTY)
     );
 
     button.type = 'button';
     button.setAttribute('aria-pressed', options.active ? 'true' : 'false');
-    button.appendChild(createElement('span', 'iss-schoneweide-atlas__filter-text', options.label));
+    button.appendChild(createElement('span', 'iss-atlas-app__filter-text', options.label));
 
     if (typeof options.count === 'number') {
       button.appendChild(
-        createElement('span', 'iss-schoneweide-atlas__filter-count', String(options.count))
+        createElement('span', 'iss-atlas-app__filter-count', String(options.count))
       );
     }
 
@@ -307,15 +307,15 @@
     }
 
     container.classList.remove('is-hidden');
-    container.appendChild(createElement('p', 'iss-schoneweide-atlas__loading', message));
+    container.appendChild(createElement('p', 'iss-atlas-loading', message));
   }
 
   function createMarkerIcon(place, active) {
     return window.L.divIcon({
-      className: 'iss-schoneweide-atlas__leaflet-marker' + (active ? ' is-active' : EMPTY),
+      className: 'iss-atlas-marker' + (active ? ' is-active' : EMPTY),
       html:
-        '<span class="iss-schoneweide-atlas__marker-dot"></span>' +
-        '<span class="iss-schoneweide-atlas__marker-label">' +
+        '<span class="iss-atlas-marker__dot"></span>' +
+        '<span class="iss-atlas-marker__label">' +
         escapeHtml(compact(place.name, 42)) +
         '</span>',
       iconSize: [16, 16],
@@ -415,12 +415,14 @@
       return figure;
     }
 
-    figure.style.background = text(place.color) || 'linear-gradient(145deg, rgba(56, 52, 48, 0.94), rgba(139, 127, 118, 0.82))';
+    figure.style.background =
+      text(place.color) ||
+      'var(--iss-atlas-fallback-gradient, linear-gradient(145deg, rgba(56, 52, 48, 0.94), rgba(139, 127, 118, 0.82)))';
     figure.appendChild(
-      createElement('span', 'iss-schoneweide-atlas__popup-fallback-label', fallbackLabel)
+      createElement('span', 'iss-atlas-fallback__label', fallbackLabel)
     );
     figure.appendChild(
-      createElement('strong', 'iss-schoneweide-atlas__popup-fallback-title', compact(place.name, 54))
+      createElement('strong', 'iss-atlas-fallback__title', compact(place.name, 54))
     );
 
     return figure;
@@ -434,11 +436,11 @@
       return;
     }
 
-    var card = createElement('article', 'iss-card iss-card--flat iss-schoneweide-atlas__popup-card');
-    var close = createElement('button', 'iss-schoneweide-atlas__popup-close', '×');
-    var body = createElement('div', 'iss-card__body iss-schoneweide-atlas__popup-body');
+    var card = createElement('article', 'iss-card iss-card--flat iss-atlas-popup-card');
+    var close = createElement('button', 'iss-atlas-popup-card__close', '×');
+    var body = createElement('div', 'iss-card__body');
     var footer = createElement('div', 'iss-card__footer');
-    var facts = createElement('div', 'iss-schoneweide-atlas__popup-facts');
+    var facts = createElement('div', 'iss-atlas-popup-card__facts');
 
     close.type = 'button';
     close.setAttribute('aria-label', 'Ort schließen');
@@ -448,11 +450,11 @@
 
     card.appendChild(close);
     card.appendChild(
-      buildMediaFigure(place, 'iss-card__media iss-schoneweide-atlas__popup-media', 'Industrieort')
+      buildMediaFigure(place, 'iss-card__media iss-atlas-popup-card__media', 'Industrieort')
     );
 
     body.appendChild(
-      createElement('p', 'iss-card__kicker iss-schoneweide-atlas__popup-kicker', roleLabel(place.role))
+      createElement('p', 'iss-card__kicker iss-kicker iss-kicker--compact', roleLabel(place.role))
     );
     body.appendChild(createElement('h3', 'iss-card__title', place.name || 'Ort'));
 
@@ -471,14 +473,14 @@
     }
 
     if (place.area) {
-      var area = createElement('p', 'iss-schoneweide-atlas__popup-fact');
+      var area = createElement('p', 'iss-atlas-popup-card__fact');
       area.appendChild(createElement('strong', EMPTY, 'Bereich: '));
       area.appendChild(document.createTextNode(place.area));
       facts.appendChild(area);
     }
 
     if (place.status) {
-      var status = createElement('p', 'iss-schoneweide-atlas__popup-fact');
+      var status = createElement('p', 'iss-atlas-popup-card__fact');
       status.appendChild(createElement('strong', EMPTY, 'Status: '));
       status.appendChild(document.createTextNode(statusLabel(place.status)));
       facts.appendChild(status);
@@ -541,18 +543,24 @@
 
     if (!places.length) {
       container.appendChild(
-        createElement('p', 'iss-schoneweide-atlas__loading', 'Keine Geschichten für diese Auswahl.')
+        createElement('p', 'iss-atlas-loading', 'Keine Geschichten für diese Auswahl.')
       );
       return;
     }
 
     pickStoryPlaces(places).forEach(function (place) {
-      var card = createElement('article', 'iss-card iss-card--flat iss-schoneweide-atlas__story-card');
+      var card = createElement('article', 'iss-card iss-card--flat iss-atlas-story-card');
       var body = createElement('div', 'iss-card__body');
       var footer = createElement('div', 'iss-card__footer');
 
       card.appendChild(buildMediaFigure(place, 'iss-card__media', text(place.era_label) || 'Schöneweide'));
-      body.appendChild(createElement('p', 'iss-card__kicker', text(place.era_label) || 'Schöneweide'));
+      body.appendChild(
+        createElement(
+          'p',
+          'iss-card__kicker iss-kicker iss-kicker--compact',
+          text(place.era_label) || 'Schöneweide'
+        )
+      );
       body.appendChild(createElement('h3', 'iss-card__title', place.name || 'Ort'));
 
       if (place.summary) {
@@ -597,7 +605,7 @@
     elements.popup.classList.add('is-empty');
     elements.stories.innerHTML = EMPTY;
     elements.count.textContent = message;
-    elements.stories.appendChild(createElement('p', 'iss-schoneweide-atlas__loading', message));
+    elements.stories.appendChild(createElement('p', 'iss-atlas-loading', message));
     setMapStatus(elements.mapStatus, message);
   }
 

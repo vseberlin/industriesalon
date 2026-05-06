@@ -43,6 +43,7 @@
 
 ## Open Item
 - `page-verein.html` is ready, but no local `/verein/` page exists yet in this database snapshot.
+- `industriesalon-schoeneweide-register` still needs a later architecture pass to remove or refactor the remaining legacy Atlas/register app surface and keep plugin scope focused on local data, review, feedback, and research-only interfaces.
 
 ## Continuity Prompt
 - Start next session with: `read /home/vladimir/wp/themes/industriesalon/handoff_CURRENT.md`
