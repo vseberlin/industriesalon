@@ -15,8 +15,98 @@ function iss_content_model_register_blocks() {
             'render_callback' => 'iss_content_model_render_meta_block',
         ]);
     }
+
+    $corpus_dir = ISS_CONTENT_MODEL_PATH . 'blocks/ausstellung-corpus';
+    if (file_exists($corpus_dir . '/block.json')) {
+        register_block_type($corpus_dir, [
+            'render_callback' => 'iss_content_model_render_ausstellung_corpus_block',
+        ]);
+    }
 }
 add_action('init', 'iss_content_model_register_blocks');
+
+function iss_content_model_get_ausstellung_corpus_chapters(int $post_id): array
+{
+    $ids = function_exists('iss_content_model_get_ausstellung_corpus_chapter_ids')
+        ? iss_content_model_get_ausstellung_corpus_chapter_ids($post_id)
+        : [];
+
+    if (!$ids) {
+        return [];
+    }
+
+    $posts = get_posts([
+        'post_type' => 'archivbeitrag',
+        'post_status' => 'publish',
+        'posts_per_page' => count($ids),
+        'post__in' => $ids,
+        'orderby' => 'post__in',
+        'suppress_filters' => true,
+    ]);
+
+    return array_values(array_filter($posts, static function ($post) {
+        return $post instanceof WP_Post;
+    }));
+}
+
+function iss_content_model_render_ausstellung_corpus_block($attributes = [], $content = '', $block = null) {
+    $post_id = (int) get_the_ID();
+    if ($post_id <= 0 || get_post_type($post_id) !== ISS_CONTENT_MODEL_AUSSTELLUNG_POST_TYPE) {
+        return '';
+    }
+
+    $chapters = iss_content_model_get_ausstellung_corpus_chapters($post_id);
+    $publication_id = function_exists('iss_content_model_get_ausstellung_companion_publication_id')
+        ? iss_content_model_get_ausstellung_companion_publication_id($post_id)
+        : 0;
+
+    if (!$chapters && $publication_id <= 0) {
+        return '';
+    }
+
+    $wrapper = (function_exists('get_block_wrapper_attributes') && $block instanceof WP_Block)
+        ? get_block_wrapper_attributes(['class' => 'wp-block-iss-ausstellung-corpus'])
+        : 'class="wp-block-iss-ausstellung-corpus"';
+
+    ob_start();
+    echo '<div ' . $wrapper . '>';
+    echo '<section class="iss-ausstellung-corpus">';
+    echo '<div class="iss-heading iss-ausstellung-corpus__head">';
+    echo '<p class="iss-kicker iss-kicker--compact">' . esc_html__('Lesepfad', 'iss-content-model') . '</p>';
+    echo '<h2 class="iss-heading__title">' . esc_html__('Ausstellung und Longread greifen auf denselben Korpus zu.', 'iss-content-model') . '</h2>';
+    echo '<p class="iss-heading__text">' . esc_html__('Die Ausstellung bleibt der Ort für Einstieg und Überblick. Die Kapitelreihenfolge hier steuert zugleich den linearen Lesepfad der verknüpften Publikation.', 'iss-content-model') . '</p>';
+    echo '</div>';
+
+    if ($publication_id > 0 && get_post_status($publication_id)) {
+        echo '<p class="iss-ausstellung-corpus__publication-link"><a class="iss-action-link" href="' . esc_url(get_permalink($publication_id)) . '">' . esc_html__('Als Longread lesen', 'iss-content-model') . '</a></p>';
+    }
+
+    if ($chapters) {
+        echo '<ol class="iss-ausstellung-corpus__toc">';
+        foreach ($chapters as $index => $chapter) {
+            $number = str_pad((string) ($index + 1), 2, '0', STR_PAD_LEFT);
+            $excerpt = get_the_excerpt($chapter);
+
+            echo '<li class="iss-ausstellung-corpus__toc-item">';
+            echo '<a class="iss-ausstellung-corpus__toc-link" href="' . esc_url(get_permalink($chapter)) . '">';
+            echo '<span class="iss-ausstellung-corpus__toc-number">' . esc_html($number) . '</span>';
+            echo '<span class="iss-ausstellung-corpus__toc-copy">';
+            echo '<span class="iss-ausstellung-corpus__toc-title">' . esc_html(get_the_title($chapter)) . '</span>';
+            if ($excerpt !== '') {
+                echo '<span class="iss-ausstellung-corpus__toc-text">' . esc_html($excerpt) . '</span>';
+            }
+            echo '</span>';
+            echo '</a>';
+            echo '</li>';
+        }
+        echo '</ol>';
+    }
+
+    echo '</section>';
+    echo '</div>';
+
+    return (string) ob_get_clean();
+}
 
 function iss_content_model_format_datetime($value) {
     $value = trim((string) $value);

@@ -36,4 +36,11 @@ add_action('init', function () {
             'render_callback' => 'iss_publications_render_meta_block',
         ]);
     }
+
+    $corpus_dir = ISS_PUBLICATIONS_PATH . 'blocks/publication-corpus-stream';
+    if (file_exists($corpus_dir . '/block.json')) {
+        register_block_type($corpus_dir, [
+            'render_callback' => 'iss_publications_render_corpus_stream_block',
+        ]);
+    }
 });

@@ -27,6 +27,44 @@ function iss_content_model_sync_ausstellung_legacy_type_meta($post_id) {
     delete_post_meta($post_id, 'iss_is_permanent');
 }
 
+function iss_content_model_has_managed_corpus($post_id) {
+    $post_id = (int) $post_id;
+    if ($post_id <= 0 || get_post_type($post_id) !== ISS_CONTENT_MODEL_AUSSTELLUNG_POST_TYPE) {
+        return false;
+    }
+
+    $chapter_ids = function_exists('iss_content_model_get_ausstellung_corpus_chapter_ids')
+        ? iss_content_model_get_ausstellung_corpus_chapter_ids($post_id)
+        : [];
+    if (!empty($chapter_ids)) {
+        return true;
+    }
+
+    return (int) get_post_meta($post_id, 'iss_companion_publication_id', true) > 0;
+}
+
+function iss_content_model_maybe_assign_default_ausstellung_type($post_id) {
+    $post_id = (int) $post_id;
+    if ($post_id <= 0 || get_post_type($post_id) !== ISS_CONTENT_MODEL_AUSSTELLUNG_POST_TYPE) {
+        return;
+    }
+
+    if (!taxonomy_exists(ISS_CONTENT_MODEL_AUSSTELLUNG_TYPE_TAXONOMY)) {
+        return;
+    }
+
+    $type_slugs = wp_get_post_terms($post_id, ISS_CONTENT_MODEL_AUSSTELLUNG_TYPE_TAXONOMY, ['fields' => 'slugs']);
+    if (!empty($type_slugs) && !is_wp_error($type_slugs)) {
+        return;
+    }
+
+    if (!iss_content_model_has_managed_corpus($post_id)) {
+        return;
+    }
+
+    wp_set_object_terms($post_id, ['dauerausstellung'], ISS_CONTENT_MODEL_AUSSTELLUNG_TYPE_TAXONOMY, false);
+}
+
 function iss_content_model_ausstellung_is_permanent($post_id) {
     $post_id = (int) $post_id;
     if ($post_id <= 0 || get_post_type($post_id) !== ISS_CONTENT_MODEL_AUSSTELLUNG_POST_TYPE) {
@@ -270,6 +308,7 @@ add_action('save_post', function ($post_id, $post) {
     }
 
     if ($post->post_type === ISS_CONTENT_MODEL_AUSSTELLUNG_POST_TYPE) {
+        iss_content_model_maybe_assign_default_ausstellung_type($post_id);
         iss_content_model_sync_ausstellung_legacy_type_meta($post_id);
     }
 

@@ -31,6 +31,10 @@
   margin-top: 0 !important;
 }
 
+.iss-archive-landing--compact {
+  --iss-archive-section-gap: clamp(2rem, 4vw, 3.25rem);
+}
+
 #wp--skip-link--target {
   margin-top: 0 !important;
 }
@@ -40,6 +44,121 @@
 .iss-archive-landing .section {
   padding-top: 0;
   padding-bottom: 0;
+}
+
+/* =====================================================
+   COMPACT ARCHIVE PAGE
+   ===================================================== */
+
+.iss-archive-topband {
+  padding-top: clamp(1.4rem, 2.5vw, 2.25rem);
+}
+
+.iss-archive-topband__layout {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(18rem, 0.95fr);
+  gap: clamp(1.2rem, 2vw, 2rem);
+  align-items: start;
+  padding-bottom: clamp(1rem, 2vw, 1.4rem);
+  border-bottom: 1px solid rgba(30, 30, 30, 0.1);
+}
+
+.iss-archive-topband__copy {
+  display: grid;
+  gap: 0.75rem;
+}
+
+.iss-archive-topband__title {
+  margin: 0;
+  max-width: 12ch;
+  font-size: clamp(2rem, 1.55rem + 2vw, 3.4rem);
+  line-height: 0.98;
+}
+
+.iss-archive-topband__lead {
+  max-width: 43ch;
+  margin: 0;
+  color: rgba(30, 30, 30, 0.82);
+  font-size: clamp(1rem, 0.96rem + 0.24vw, 1.12rem);
+}
+
+.iss-archive-topband__platforms {
+  max-width: 52ch;
+  margin: 0.15rem 0 0;
+  color: rgba(30, 30, 30, 0.74);
+  font-size: 0.94rem;
+  line-height: 1.5;
+}
+
+.iss-archive-topband__platforms a {
+  color: inherit;
+  text-decoration-color: rgba(180, 45, 45, 0.35);
+}
+
+.iss-archive-topband__platforms a:hover,
+.iss-archive-topband__platforms a:focus-visible {
+  color: var(--iss-red);
+}
+
+.iss-archive-topband__lead a {
+  color: inherit;
+  text-decoration-color: rgba(180, 45, 45, 0.35);
+}
+
+.iss-archive-topband__lead a:hover,
+.iss-archive-topband__lead a:focus-visible {
+  color: var(--iss-red);
+}
+
+.iss-archive-topband__links {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.8rem;
+}
+
+.iss-archive-toplink {
+  display: grid;
+  gap: 0.35rem;
+  min-height: 100%;
+  padding: 0.95rem 1rem 1rem;
+  border: 1px solid rgba(30, 30, 30, 0.12);
+  border-radius: var(--iss-radius-sm, 8px);
+  background: #fff;
+}
+
+.iss-archive-toplink__label {
+  margin: 0;
+  font-size: 0.74rem;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: rgba(30, 30, 30, 0.52);
+}
+
+.iss-archive-toplink__title,
+.iss-archive-toplink__text {
+  margin: 0;
+}
+
+.iss-archive-toplink__title {
+  font-size: 1.08rem;
+  font-weight: 600;
+  line-height: 1.15;
+}
+
+.iss-archive-toplink__title a {
+  color: inherit;
+  text-decoration: none;
+}
+
+.iss-archive-toplink__title a:hover,
+.iss-archive-toplink__title a:focus-visible {
+  color: var(--iss-red);
+}
+
+.iss-archive-toplink__text {
+  color: rgba(30, 30, 30, 0.72);
+  font-size: 0.95rem;
 }
 
 /* =====================================================
@@ -966,6 +1085,274 @@
 }
 
 /* =====================================================
+   ARCHIVE OBJECT BROWSER
+   ===================================================== */
+
+.iss-archive-browser {
+  padding-top: clamp(1.5rem, 3vw, 2.5rem);
+}
+
+.iss-archive-landing--compact .iss-archive-browser {
+  padding-top: 0;
+}
+
+.iss-archive-browser .iss-container {
+  display: grid;
+  gap: clamp(2rem, 4vw, 4rem);
+}
+
+.iss-archive-landing--compact .iss-archive-browser .iss-container {
+  gap: clamp(1.5rem, 3vw, 2.4rem);
+}
+
+.iss-archive-browser__hero {
+  display: grid;
+  grid-template-columns: minmax(0, 1.15fr) minmax(18rem, 0.85fr);
+  gap: clamp(1.5rem, 3vw, 3rem);
+  align-items: start;
+}
+
+.iss-archive-browser__heading .iss-heading__title {
+  max-width: 12ch;
+}
+
+.iss-archive-landing--compact .iss-archive-browser__heading .iss-heading__title {
+  max-width: 13ch;
+  font-size: clamp(2rem, 1.65rem + 1.55vw, 3rem);
+  line-height: 0.98;
+}
+
+.iss-archive-landing--compact .iss-archive-browser__heading .iss-heading__text {
+  max-width: 42ch;
+  font-size: 1rem;
+}
+
+.iss-archive-browser__stats {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: var(--iss-archive-gap);
+}
+
+.iss-archive-browser__stat {
+  min-height: 100%;
+  padding: 1.1rem 1rem 1rem;
+  border-top: 3px solid var(--iss-red);
+  background: rgba(30, 30, 30, 0.03);
+}
+
+.iss-archive-browser__stat h2 {
+  margin: 0;
+  font-size: clamp(2rem, 1.2rem + 1.2vw, 3rem);
+  line-height: 1;
+}
+
+.iss-archive-landing--compact .iss-archive-browser__stat h2 {
+  font-size: clamp(1.65rem, 1.2rem + 1vw, 2.4rem);
+}
+
+.iss-archive-browser__stat p:last-child {
+  margin: 0.55rem 0 0;
+  color: rgba(30, 30, 30, 0.72);
+}
+
+.iss-archive-browser__section-head {
+  margin-bottom: 1.2rem;
+}
+
+.iss-archive-browser__quick {
+  display: grid;
+  gap: 1rem;
+}
+
+.iss-archive-browser__quick-grid {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+.iss-archive-landing--compact .iss-archive-browser__quick-grid {
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+}
+
+.iss-archive-browser__layout {
+  display: grid;
+  grid-template-columns: minmax(20rem, 23rem) minmax(0, 1fr);
+  gap: clamp(1.75rem, 3vw, 3rem);
+  align-items: start;
+}
+
+.iss-archive-browser__sidebar {
+  align-self: stretch;
+  min-width: 0;
+  padding: 1.2rem;
+  border: 1px solid rgba(30, 30, 30, 0.12);
+  border-radius: var(--iss-radius-sm);
+  background: rgba(30, 30, 30, 0.02);
+}
+
+.iss-archive-browser__filters {
+  display: grid;
+  gap: 1rem;
+  min-width: 0;
+  position: sticky;
+  top: calc(var(--iss-site-header-compact-height, 4.5rem) + 1.5rem);
+  padding: 0;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+}
+
+.iss-archive-browser__form {
+  display: grid;
+  gap: 0.9rem;
+  min-width: 0;
+}
+
+.iss-archive-browser__field {
+  display: grid;
+  gap: 0.35rem;
+  margin: 0;
+  min-width: 0;
+}
+
+.iss-archive-browser__field > span {
+  font-size: 0.82rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.iss-archive-browser__input,
+.iss-archive-browser__select {
+  display: block;
+  box-sizing: border-box;
+  width: 100%;
+  max-width: 100%;
+  min-width: 0;
+  min-height: 2.8rem;
+  padding: 0.72rem 0.8rem;
+  border: 1px solid rgba(30, 30, 30, 0.16);
+  border-radius: var(--iss-radius-sm);
+  background: #fff;
+  color: var(--iss-black);
+}
+
+.iss-archive-browser__actions {
+  display: grid;
+  gap: 0.75rem;
+  margin-top: 0.25rem;
+}
+
+.iss-archive-browser__actions .wp-element-button {
+  width: 100%;
+  justify-content: center;
+}
+
+.iss-archive-browser__note {
+  margin: 0;
+  padding-top: 0.9rem;
+  border-top: 1px solid rgba(30, 30, 30, 0.1);
+  color: rgba(30, 30, 30, 0.7);
+  font-size: 0.92rem;
+}
+
+.iss-archive-browser__results {
+  display: grid;
+  gap: 1.35rem;
+  min-width: 0;
+  padding-left: clamp(0.15rem, 0.7vw, 0.75rem);
+}
+
+.iss-archive-browser__results-head {
+  display: flex;
+  gap: 1rem;
+  justify-content: space-between;
+  align-items: end;
+}
+
+.iss-archive-browser__results-head .iss-heading__title,
+.iss-archive-browser__results-head h2 {
+  margin: 0;
+}
+
+.iss-archive-landing--compact .iss-archive-browser__results-head h2,
+.iss-archive-landing--compact .iss-archive-browser__results-head .iss-heading__title {
+  font-size: clamp(1.35rem, 1.12rem + 0.5vw, 1.8rem);
+  line-height: 1.05;
+}
+
+.iss-archive-browser__active {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.45rem;
+  justify-content: flex-end;
+}
+
+.iss-archive-browser__active span {
+  display: inline-flex;
+  align-items: center;
+  min-height: 2rem;
+  padding: 0.25rem 0.65rem;
+  border: 1px solid rgba(30, 30, 30, 0.14);
+  border-radius: 999px;
+  background: rgba(30, 30, 30, 0.04);
+  font-size: 0.84rem;
+}
+
+.iss-archive-browser__grid {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+.iss-archive-browser__result-card .iss-card__body {
+  gap: 0.75rem;
+}
+
+.iss-archive-browser__result-card .iss-card__meta {
+  margin-top: auto;
+}
+
+.iss-archive-browser__result-card .iss-card__link {
+  margin-top: 0.2rem;
+}
+
+.iss-archive-browser__pagination ul {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  align-items: center;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.iss-archive-browser__pagination a,
+.iss-archive-browser__pagination span {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 2.4rem;
+  min-height: 2.4rem;
+  padding: 0.4rem 0.7rem;
+  border: 1px solid rgba(30, 30, 30, 0.14);
+  border-radius: 999px;
+  text-decoration: none;
+  color: inherit;
+}
+
+.iss-archive-browser__pagination .current {
+  border-color: var(--iss-red);
+  background: rgba(180, 45, 45, 0.08);
+}
+
+.iss-archive-browser__empty {
+  padding: 1.5rem;
+  border-left: 3px solid var(--iss-red);
+  background: rgba(30, 30, 30, 0.03);
+}
+
+.iss-archive-browser__empty p {
+  margin: 0;
+}
+
+/* =====================================================
    RESPONSIVE
    ===================================================== */
 
@@ -996,8 +1383,11 @@
   }
 
   .iss-archive-discovery,
+  .iss-archive-topband__layout,
   .iss-archive-company-layout,
-  .iss-archive-research-layout {
+  .iss-archive-research-layout,
+  .iss-archive-browser__hero,
+  .iss-archive-browser__layout {
     grid-template-columns: 1fr;
   }
 
@@ -1009,6 +1399,27 @@
   .iss-archive-fact {
     padding: 0;
     border-left: 0;
+  }
+
+  .iss-archive-topband__links,
+  .iss-archive-browser__stats,
+  .iss-archive-browser__grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .iss-archive-browser__quick-grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+
+  .iss-archive-browser__sidebar {
+    padding: 0;
+    border: 0;
+    border-radius: 0;
+    background: transparent;
+  }
+
+  .iss-archive-browser__filters {
+    position: static;
   }
 }
 
@@ -1022,6 +1433,7 @@
 
 /* .iss-archive-entry-grid: Base class for iss archive entry grid; apply on primary wrapper/scope. */
   .iss-archive-entry-grid,
+  .iss-archive-topband__links,
 /* .iss-archive-paths: Base class for iss archive paths; apply on primary wrapper/scope. */
   .iss-archive-paths,
 /* .iss-archive-grid: Base class for iss archive grid; apply on primary wrapper/scope. */
@@ -1031,6 +1443,9 @@
 /* .iss-archive-grid--4: Modifier class for `iss-archive-grid`; combine for `4` variant. */
   .iss-archive-grid--4,
   .iss-archive-company-grid,
+  .iss-archive-browser__stats,
+  .iss-archive-browser__quick-grid,
+  .iss-archive-browser__grid,
 /* .iss-portal-links: Base class for iss portal links; apply on primary wrapper/scope. */
   .iss-portal-links {
     grid-template-columns: 1fr;
@@ -1038,6 +1453,14 @@
 
   .iss-archive-topics {
     gap: 1rem;
+  }
+
+  .iss-archive-topband__layout {
+    gap: 1rem;
+  }
+
+  .iss-archive-browser__results {
+    padding-left: 0;
   }
 
   .iss-archive-hero__layout,
@@ -1071,6 +1494,15 @@
 /* .iss-archive-research-cta: Base class for iss archive research cta; apply on primary wrapper/scope. */
 /* .iss-buttons: Base class for iss buttons; apply on primary wrapper/scope. */
   .iss-archive-research-cta .iss-buttons {
+    justify-content: flex-start;
+  }
+
+  .iss-archive-browser__results-head {
+    align-items: start;
+    flex-direction: column;
+  }
+
+  .iss-archive-browser__active {
     justify-content: flex-start;
   }
 }

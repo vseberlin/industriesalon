@@ -247,6 +247,72 @@
   overflow: hidden;
 }
 
+.iss-ausstellung-corpus {
+  margin-top: clamp(2.4rem, 5vw, 4rem);
+  padding-top: clamp(2rem, 4vw, 3rem);
+  border-top: 1px solid rgba(117, 58, 24, 0.14);
+}
+
+.iss-ausstellung-corpus__head {
+  max-width: 48rem;
+}
+
+.iss-ausstellung-corpus__publication-link {
+  margin: 1rem 0 0;
+}
+
+.iss-ausstellung-corpus__toc {
+  list-style: none;
+  margin: clamp(1.4rem, 3vw, 2rem) 0 0;
+  padding: 0;
+  border-top: 1px solid rgba(117, 58, 24, 0.16);
+}
+
+.iss-ausstellung-corpus__toc-item {
+  margin: 0;
+  border-bottom: 1px solid rgba(117, 58, 24, 0.16);
+}
+
+.iss-ausstellung-corpus__toc-link {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  gap: 1rem;
+  align-items: start;
+  padding: 1rem 0;
+  color: var(--iss-black);
+  text-decoration: none;
+}
+
+.iss-ausstellung-corpus__toc-number {
+  min-width: 2.3rem;
+  color: rgba(117, 58, 24, 0.72);
+  font-size: 0.8rem;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+}
+
+.iss-ausstellung-corpus__toc-copy {
+  display: grid;
+  gap: 0.2rem;
+}
+
+.iss-ausstellung-corpus__toc-title {
+  font-size: clamp(1.08rem, 1vw + 0.95rem, 1.35rem);
+  line-height: 1.24;
+}
+
+.iss-ausstellung-corpus__toc-text {
+  color: rgba(30, 30, 30, 0.62);
+  font-size: 0.94rem;
+  line-height: 1.58;
+}
+
+.iss-ausstellung-corpus__toc-link:hover .iss-ausstellung-corpus__toc-title,
+.iss-ausstellung-corpus__toc-link:focus-visible .iss-ausstellung-corpus__toc-title {
+  text-decoration: underline;
+  text-underline-offset: 0.18em;
+}
+
 .iss-ausstellung-more .iss-heading > .iss-kicker,
 .iss-ausstellung-more .iss-heading > .iss-kicker--compact {
   padding-left: 0.85rem;

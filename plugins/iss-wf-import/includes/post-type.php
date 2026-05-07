@@ -91,6 +91,42 @@ function iss_wf_import_register_post_type_and_taxonomies(): void
         'rewrite' => false,
     ]);
 
+    register_taxonomy(ISS_WF_IMPORT_FIELD_TAXONOMY, [ISS_WF_IMPORT_OBJECT_POST_TYPE], [
+        'labels' => iss_wf_import_build_taxonomy_labels('Themenfelder', 'Themenfeld'),
+        'public' => true,
+        'show_ui' => true,
+        'show_in_rest' => true,
+        'hierarchical' => true,
+        'rewrite' => false,
+    ]);
+
+    register_taxonomy(ISS_WF_IMPORT_FAMILY_TAXONOMY, [ISS_WF_IMPORT_OBJECT_POST_TYPE], [
+        'labels' => iss_wf_import_build_taxonomy_labels('Objektfamilien', 'Objektfamilie'),
+        'public' => true,
+        'show_ui' => true,
+        'show_in_rest' => true,
+        'hierarchical' => true,
+        'rewrite' => false,
+    ]);
+
+    register_taxonomy(ISS_WF_IMPORT_CONTEXT_TAXONOMY, [ISS_WF_IMPORT_OBJECT_POST_TYPE], [
+        'labels' => iss_wf_import_build_taxonomy_labels('Kontexte', 'Kontext'),
+        'public' => true,
+        'show_ui' => true,
+        'show_in_rest' => true,
+        'hierarchical' => true,
+        'rewrite' => false,
+    ]);
+
+    register_taxonomy(ISS_WF_IMPORT_DECADE_TAXONOMY, [ISS_WF_IMPORT_OBJECT_POST_TYPE], [
+        'labels' => iss_wf_import_build_taxonomy_labels('Dekaden', 'Dekade'),
+        'public' => true,
+        'show_ui' => true,
+        'show_in_rest' => true,
+        'hierarchical' => true,
+        'rewrite' => false,
+    ]);
+
     register_post_type(ISS_WF_IMPORT_POST_TYPE, [
         'labels' => iss_wf_import_build_post_type_labels([
             'plural' => 'Archivbeiträge',
@@ -168,6 +204,45 @@ function iss_wf_import_register_post_type_and_taxonomies(): void
 }
 add_action('init', 'iss_wf_import_register_post_type_and_taxonomies', 10);
 
+function iss_wf_import_normalize_nested_archive_paths(): void
+{
+    if (is_admin()) {
+        return;
+    }
+
+    $request_uri = isset($_SERVER['REQUEST_URI']) ? wp_unslash((string) $_SERVER['REQUEST_URI']) : '';
+    if ($request_uri === '') {
+        return;
+    }
+
+    $path = (string) wp_parse_url($request_uri, PHP_URL_PATH);
+    if ($path === '') {
+        return;
+    }
+
+    $normalized_path = trailingslashit($path);
+    $targets = [
+        '/archivsammlungen/archivobjekte/' => get_post_type_archive_link(ISS_WF_IMPORT_OBJECT_POST_TYPE),
+        '/archivobjekte/roehren-und-halbleiter/' => home_url('/roehren-und-halbleiter/'),
+        '/archivobjekte/anlagen-automaten-arbeitsplaetze/' => home_url('/anlagen-automaten-arbeitsplaetze/'),
+    ];
+
+    foreach ($targets as $candidate => $destination) {
+        if ($normalized_path !== $candidate || !$destination) {
+            continue;
+        }
+
+        $query = (string) wp_parse_url($request_uri, PHP_URL_QUERY);
+        if ($query !== '') {
+            $destination = add_query_arg(wp_parse_args($query), $destination);
+        }
+
+        wp_safe_redirect($destination, 301);
+        exit;
+    }
+}
+add_action('template_redirect', 'iss_wf_import_normalize_nested_archive_paths', 1);
+
 function iss_wf_import_ensure_source_term_by_slug(string $slug, string $label): int
 {
     $slug = sanitize_title($slug);
@@ -198,6 +273,95 @@ function iss_wf_import_ensure_source_term(): int
 {
     return iss_wf_import_ensure_source_term_by_slug('wf-museum', 'WF-Museum');
 }
+
+function iss_wf_import_ensure_taxonomy_term(string $taxonomy, string $slug, string $label): int
+{
+    $taxonomy = sanitize_key($taxonomy);
+    $slug = sanitize_title($slug);
+    $label = sanitize_text_field($label);
+
+    if ($taxonomy === '' || $slug === '' || $label === '' || !taxonomy_exists($taxonomy)) {
+        return 0;
+    }
+
+    $term = get_term_by('slug', $slug, $taxonomy);
+    if ($term instanceof WP_Term) {
+        return (int) $term->term_id;
+    }
+
+    $created = wp_insert_term($label, $taxonomy, [
+        'slug' => $slug,
+    ]);
+
+    if (is_wp_error($created)) {
+        $term = get_term_by('slug', $slug, $taxonomy);
+        return $term instanceof WP_Term ? (int) $term->term_id : 0;
+    }
+
+    return (int) ($created['term_id'] ?? 0);
+}
+
+function iss_wf_import_ensure_museum_digital_terms(): void
+{
+    $taxonomy_terms = [
+        ISS_WF_IMPORT_FIELD_TAXONOMY => [
+            'roehre' => 'Röhre',
+            'halbleiter' => 'Halbleiter',
+            'anlage' => 'Anlage',
+            'arbeitsplatz' => 'Arbeitsplatz',
+            'automat' => 'Automat',
+        ],
+        ISS_WF_IMPORT_FAMILY_TAXONOMY => [
+            'thyratron' => 'Thyratron',
+            'klystron' => 'Klystron',
+            'magnetron' => 'Magnetron',
+            'bildroehre' => 'Bildröhre',
+            'miniaturroehre' => 'Miniaturröhre',
+            'gasentladungsroehre' => 'Gasentladungsröhre',
+            'roehrensystem' => 'Röhrensystem',
+            'diode' => 'Diode',
+            'werkstoff' => 'Werkstoff',
+            'verpackung' => 'Verpackung',
+            'baugruppe' => 'Bauteilgruppe',
+            'trockenanlage' => 'Trockenanlage',
+            'ofen' => 'Ofen',
+            'pruefstand' => 'Prüfstand',
+            'fertigungslinie' => 'Fertigungslinie',
+            'montageplatz' => 'Montageplatz',
+            'arbeitsplatz' => 'Arbeitsplatz',
+            'innenraum' => 'Innenraum/Fabrikhalle',
+            'laboraufbau' => 'Laboraufbau',
+            'transport' => 'Transport/Materialfluss',
+        ],
+        ISS_WF_IMPORT_CONTEXT_TAXONOMY => [
+            'produkt' => 'Produkt',
+            'komponente' => 'Komponente',
+            'werkstoff' => 'Werkstoff',
+            'produktion' => 'Produktion',
+            'vergleichsaufnahme' => 'Vergleichsaufnahme',
+            'verpackung' => 'Verpackung',
+            'innenraumansicht' => 'Innenraumansicht',
+            'arbeitsprozess' => 'Arbeitsprozess',
+            'montage' => 'Montage',
+            'sachaufnahme' => 'Sachaufnahme',
+            'maschine' => 'Maschine',
+        ],
+        ISS_WF_IMPORT_DECADE_TAXONOMY => [
+            '1940er' => '1940er',
+            '1950er' => '1950er',
+            '1960er' => '1960er',
+            '1970er' => '1970er',
+            '1980er' => '1980er',
+        ],
+    ];
+
+    foreach ($taxonomy_terms as $taxonomy => $terms) {
+        foreach ($terms as $slug => $label) {
+            iss_wf_import_ensure_taxonomy_term($taxonomy, (string) $slug, (string) $label);
+        }
+    }
+}
+add_action('init', 'iss_wf_import_ensure_museum_digital_terms', 30);
 
 function iss_wf_import_add_to_relations_post_types(array $post_types): array
 {

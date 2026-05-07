@@ -21,12 +21,6 @@
 						<!-- wp:post-excerpt {"moreText":"","showMoreOnNewLine":false,"excerptLength":32,"className":"iss-publication-single__standfirst"} /-->
 					</div>
 					<!-- /wp:group -->
-
-					<!-- wp:group {"className":"iss-indent iss-indent--uncaged iss-publication-single__body","layout":{"type":"default"}} -->
-					<div class="wp-block-group iss-indent iss-indent--uncaged iss-publication-single__body">
-						<!-- wp:post-content {"layout":{"type":"default"}} /-->
-					</div>
-					<!-- /wp:group -->
 				</div>
 				<!-- /wp:column -->
 
@@ -49,6 +43,18 @@
 				<!-- /wp:column -->
 			</div>
 			<!-- /wp:columns -->
+
+			<!-- wp:group {"className":"iss-publication-single__body-wrap","layout":{"type":"default"}} -->
+			<div class="wp-block-group iss-publication-single__body-wrap">
+				<!-- wp:group {"className":"iss-indent iss-indent--uncaged iss-publication-single__body","layout":{"type":"default"}} -->
+				<div class="wp-block-group iss-indent iss-indent--uncaged iss-publication-single__body">
+					<!-- wp:post-content {"layout":{"type":"default"}} /-->
+				</div>
+				<!-- /wp:group -->
+			</div>
+			<!-- /wp:group -->
+
+			<!-- wp:iss/publication-corpus-stream /-->
 		</div>
 		<!-- /wp:group -->
 	</section>

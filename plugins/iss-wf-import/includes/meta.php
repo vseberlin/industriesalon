@@ -444,6 +444,17 @@ function iss_wf_import_register_post_meta(): void
     iss_wf_import_register_string_meta(ISS_WF_IMPORT_OBJECT_POST_TYPE, ISS_WF_IMPORT_OBJECT_MATERIAL_META);
     iss_wf_import_register_string_meta(ISS_WF_IMPORT_OBJECT_POST_TYPE, ISS_WF_IMPORT_OBJECT_DIMENSIONS_META);
     iss_wf_import_register_url_meta(ISS_WF_IMPORT_OBJECT_POST_TYPE, ISS_WF_IMPORT_OBJECT_JSON_URL_META);
+    iss_wf_import_register_integer_meta(ISS_WF_IMPORT_OBJECT_POST_TYPE, ISS_WF_IMPORT_OBJECT_MD_ID_META);
+    iss_wf_import_register_url_meta(ISS_WF_IMPORT_OBJECT_POST_TYPE, ISS_WF_IMPORT_OBJECT_MD_MANIFEST_URL_META);
+    iss_wf_import_register_url_meta(ISS_WF_IMPORT_OBJECT_POST_TYPE, ISS_WF_IMPORT_OBJECT_MD_IMAGE_URL_META);
+    iss_wf_import_register_string_meta(ISS_WF_IMPORT_OBJECT_POST_TYPE, ISS_WF_IMPORT_OBJECT_MD_IMAGE_RIGHTS_META);
+    iss_wf_import_register_string_meta(ISS_WF_IMPORT_OBJECT_POST_TYPE, ISS_WF_IMPORT_OBJECT_MD_IMAGE_OWNER_META);
+    iss_wf_import_register_string_meta(ISS_WF_IMPORT_OBJECT_POST_TYPE, ISS_WF_IMPORT_OBJECT_MD_METADATA_RIGHTS_META);
+    iss_wf_import_register_string_meta(ISS_WF_IMPORT_OBJECT_POST_TYPE, ISS_WF_IMPORT_OBJECT_MD_METADATA_HOLDER_META);
+    iss_wf_import_register_integer_meta(ISS_WF_IMPORT_OBJECT_POST_TYPE, ISS_WF_IMPORT_OBJECT_MD_INSTITUTION_ID_META);
+    iss_wf_import_register_string_meta(ISS_WF_IMPORT_OBJECT_POST_TYPE, ISS_WF_IMPORT_OBJECT_MD_INSTITUTION_NAME_META);
+    iss_wf_import_register_string_meta(ISS_WF_IMPORT_OBJECT_POST_TYPE, ISS_WF_IMPORT_OBJECT_YEAR_META);
+    iss_wf_import_register_string_meta(ISS_WF_IMPORT_OBJECT_POST_TYPE, ISS_WF_IMPORT_OBJECT_DECADE_META);
     iss_wf_import_register_array_meta(ISS_WF_IMPORT_OBJECT_POST_TYPE, ISS_WF_IMPORT_OBJECT_IMAGE_SOURCE_META, 'iss_wf_import_sanitize_archive_image_sources');
     iss_wf_import_register_array_meta(ISS_WF_IMPORT_OBJECT_POST_TYPE, ISS_WF_IMPORT_OBJECT_TAGS_META, 'iss_wf_import_sanitize_archive_named_refs');
     iss_wf_import_register_array_meta(ISS_WF_IMPORT_OBJECT_POST_TYPE, ISS_WF_IMPORT_OBJECT_COLLECTIONS_META, 'iss_wf_import_sanitize_archive_named_refs');

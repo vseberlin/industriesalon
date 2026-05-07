@@ -51,6 +51,14 @@ function iss_publications_meta_fields() {
             'sanitize' => 'sanitize_text_field',
             'default' => '',
         ],
+        '_iss_publication_layout' => [
+            'type' => 'string',
+            'sanitize' => static function ($value) {
+                $value = sanitize_key((string) $value);
+                return in_array($value, ['standard', 'longread', 'timeline'], true) ? $value : 'standard';
+            },
+            'default' => 'standard',
+        ],
         '_iss_publication_sale_enabled' => [
             'type' => 'boolean',
             'sanitize' => static function ($value) {
@@ -79,6 +87,11 @@ function iss_publications_meta_fields() {
                 return !empty($value);
             },
             'default' => false,
+        ],
+        '_iss_publication_source_ausstellung_id' => [
+            'type' => 'integer',
+            'sanitize' => 'absint',
+            'default' => 0,
         ],
     ];
 }

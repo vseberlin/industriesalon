@@ -10,6 +10,18 @@ function iss_register_clear_places_cache(): void
     delete_transient('iss_register_atlas_places_cache');
 }
 
+function iss_register_maybe_clear_places_cache_on_relations_meta($meta_id, int $post_id, string $meta_key): void
+{
+    if (!defined('ISS_RELATIONS_META_KEY') || $meta_key !== ISS_RELATIONS_META_KEY) {
+        return;
+    }
+
+    iss_register_clear_places_cache();
+}
+add_action('added_post_meta', 'iss_register_maybe_clear_places_cache_on_relations_meta', 10, 3);
+add_action('updated_post_meta', 'iss_register_maybe_clear_places_cache_on_relations_meta', 10, 3);
+add_action('deleted_post_meta', 'iss_register_maybe_clear_places_cache_on_relations_meta', 10, 3);
+
 function iss_register_get_meta_value(int $post_id, string $key, $default = '')
 {
     $value = get_post_meta($post_id, $key, true);
@@ -68,6 +80,61 @@ function iss_register_filter_public_images($value): array
     return $public_images;
 }
 
+function iss_register_get_related_objects_for_place(int $place_id, int $limit = 6): array
+{
+    if ($place_id <= 0 || !function_exists('iss_relations_get_place_term_ids')) {
+        return [];
+    }
+
+    $term_ids = iss_relations_get_place_term_ids([$place_id]);
+    if (!$term_ids || !post_type_exists('archivobjekt')) {
+        return [];
+    }
+
+    $posts = get_posts([
+        'post_type' => 'archivobjekt',
+        'post_status' => 'publish',
+        'posts_per_page' => max(1, min(12, $limit)),
+        'orderby' => 'date',
+        'order' => 'DESC',
+        'suppress_filters' => true,
+        'ignore_sticky_posts' => true,
+        'tax_query' => [
+            [
+                'taxonomy' => ISS_RELATIONS_TAXONOMY,
+                'field' => 'term_id',
+                'terms' => $term_ids,
+                'operator' => 'IN',
+            ],
+        ],
+    ]);
+
+    if (!$posts) {
+        return [];
+    }
+
+    $items = [];
+
+    foreach ($posts as $post) {
+        if (!$post instanceof WP_Post) {
+            continue;
+        }
+
+        $featured_image_url = get_the_post_thumbnail_url($post, 'medium_large');
+
+        $items[] = [
+            'post_id' => (int) $post->ID,
+            'slug' => (string) $post->post_name,
+            'title' => get_the_title($post),
+            'excerpt' => (string) get_post_field('post_excerpt', $post->ID),
+            'permalink' => (string) get_permalink($post),
+            'featured_image_url' => is_string($featured_image_url) ? $featured_image_url : '',
+        ];
+    }
+
+    return $items;
+}
+
 function iss_register_map_place_post(WP_Post $post): array
 {
     $post_id = (int) $post->ID;
@@ -91,6 +158,7 @@ function iss_register_map_place_post(WP_Post $post): array
     $current_images = iss_register_filter_public_images(iss_register_get_meta_value($post_id, 'current_images', []));
     $document_images = iss_register_filter_public_images(iss_register_get_meta_value($post_id, 'document_images', []));
     $featured_image_url = get_the_post_thumbnail_url($post, 'large');
+    $related_objects = iss_register_get_related_objects_for_place($post_id);
 
     return [
         'id' => $register_id,
@@ -127,6 +195,7 @@ function iss_register_map_place_post(WP_Post $post): array
         'archive_images' => $archive_images,
         'current_images' => $current_images,
         'document_images' => $document_images,
+        'related_objects' => $related_objects,
         'lat' => iss_register_get_meta_value($post_id, 'lat', ''),
         'lng' => iss_register_get_meta_value($post_id, 'lng', ''),
         'sort_order' => (int) iss_register_get_meta_value($post_id, 'sort_order', 0),

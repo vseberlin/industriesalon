@@ -22,6 +22,7 @@ add_action('after_setup_theme', function () {
             'assets/css/iss-flex-split.css',
             'assets/css/ueber-uns.css',
             'assets/css/page-archive.css',
+            'assets/css/page-sammlungen.css',
             'assets/css/page-events.css',
             'assets/css/page-museum.css',
             'assets/css/page-videos.css',
@@ -308,6 +309,34 @@ function industriesalon_portable_team_role_queries(array $parsed_block, array $s
     return $parsed_block;
 }
 add_filter('render_block_data', 'industriesalon_portable_team_role_queries', 10, 2);
+
+/**
+ * Replace static About-page team card kicker text with the team role label meta.
+ */
+function industriesalon_render_about_team_role_label(string $block_content, array $block, WP_Block $instance): string
+{
+    if ($block_content === '') {
+        return $block_content;
+    }
+
+    $class_name = (string) ($block['attrs']['className'] ?? '');
+    if ($class_name === '' || !str_contains($class_name, 'iss-about-person-card__kicker')) {
+        return $block_content;
+    }
+
+    $post_id = (int) ($instance->context['postId'] ?? 0);
+    if ($post_id <= 0 || get_post_type($post_id) !== 'team_member') {
+        return $block_content;
+    }
+
+    $role_label = trim((string) get_post_meta($post_id, 'iss_role_label', true));
+    if ($role_label === '') {
+        return $block_content;
+    }
+
+    return preg_replace('/(<p\b[^>]*>)(.*?)(<\/p>)/is', '$1' . esc_html($role_label) . '$3', $block_content, 1) ?: $block_content;
+}
+add_filter('render_block_core/paragraph', 'industriesalon_render_about_team_role_label', 10, 3);
 
 /**
  * Force zero margin in editor canvas to match frontend gap-less layout.
@@ -856,7 +885,15 @@ function industriesalon_enqueue_assets(): void
         array(
             'handle' => 'industriesalon-page-archive',
             'path' => '/assets/css/page-archive.css',
-            'condition' => is_page('archiv'),
+            'condition' => is_page('archiv')
+                || is_page('roehren-und-halbleiter')
+                || is_page('anlagen-automaten-arbeitsplaetze')
+                || is_post_type_archive(array('archivobjekt', 'archivsammlung')),
+        ),
+        array(
+            'handle' => 'industriesalon-page-sammlungen',
+            'path' => '/assets/css/page-sammlungen.css',
+            'condition' => is_page('sammlungen'),
         ),
         array(
             'handle' => 'industriesalon-page-events',

@@ -262,6 +262,80 @@ function iss_register_finalize_story_timeline_event(array $event): array
     return $event;
 }
 
+function iss_register_extract_touchtable_timeline_events(DOMElement $widget, string $title = ''): array
+{
+    $document = $widget->ownerDocument;
+    if (!$document instanceof DOMDocument) {
+        return [];
+    }
+
+    $xpath = new DOMXPath($document);
+    $entries = $xpath->query('.//*[self::span[contains(concat(" ", normalize-space(@class), " "), " wpr-year-wrap ")] or self::article[contains(concat(" ", normalize-space(@class), " "), " wpr-timeline-entry ")]]', $widget);
+    if (!$entries instanceof DOMNodeList) {
+        return [];
+    }
+
+    $events = [];
+    $current_year_label = '';
+
+    foreach ($entries as $entry) {
+        if (!$entry instanceof DOMElement) {
+            continue;
+        }
+
+        if ($entry->tagName === 'span' && strpos(' ' . $entry->getAttribute('class') . ' ', ' wpr-year-wrap ') !== false) {
+            $year_text = iss_register_normalize_source_text($entry->textContent ?? '');
+            if ($year_text !== '') {
+                $current_year_label = $year_text;
+            }
+            continue;
+        }
+
+        if ($entry->tagName !== 'article' || strpos(' ' . $entry->getAttribute('class') . ' ', ' wpr-timeline-entry ') === false) {
+            continue;
+        }
+
+        $title_node = $xpath->query('.//*[contains(concat(" ", normalize-space(@class), " "), " wpr-title ")]', $entry)->item(0);
+        $summary_node = $xpath->query('.//*[contains(concat(" ", normalize-space(@class), " "), " wpr-description ")]', $entry)->item(0);
+
+        $event_title = $title_node instanceof DOMNode
+            ? iss_register_normalize_source_text($title_node->textContent ?? '')
+            : '';
+        $event_summary = $summary_node instanceof DOMNode
+            ? iss_register_normalize_source_text($summary_node->textContent ?? '')
+            : '';
+
+        if ($event_title === '' && $summary_node instanceof DOMNode) {
+            $event_title = '';
+        }
+
+        $entry_text = iss_register_normalize_source_text($entry->textContent ?? '');
+        $year_label = $current_year_label !== '' ? $current_year_label : iss_register_build_period_label($entry_text);
+        $years = $year_label !== '' ? iss_register_extract_years_from_text($year_label) : iss_register_extract_years_from_text($entry_text);
+
+        $event = [
+            'year' => $years ? (string) $years[0] : '',
+            'year_label' => $year_label,
+            'title' => iss_register_should_skip_story_heading($event_title, $title) ? '' : $event_title,
+            'summary' => $event_summary,
+            'image_source_url' => iss_register_extract_touchtable_image_url($entry),
+        ];
+
+        if ($event['summary'] === '' && $entry_text !== '') {
+            $event['summary'] = $entry_text;
+        }
+
+        $event = iss_register_finalize_story_timeline_event($event);
+        if (($event['year_label'] ?? '') === '' || (($event['summary'] ?? '') === '' && ($event['image_source_url'] ?? '') === '' && ($event['title'] ?? '') === '')) {
+            continue;
+        }
+
+        $events[] = $event;
+    }
+
+    return $events;
+}
+
 function iss_register_extract_touchtable_story_payload(array $snapshot): array
 {
     $raw_payload = $snapshot['raw_payload'] ?? [];
@@ -322,6 +396,18 @@ function iss_register_extract_touchtable_story_payload(array $snapshot): array
         }
 
         if (iss_register_touchtable_is_widget_class($widget, 'elementor-widget-wpr-posts-timeline')) {
+            $timeline_events = iss_register_extract_touchtable_timeline_events($widget, $title);
+            if ($timeline_events) {
+                if (is_array($current_event) && (($current_event['summary'] ?? '') !== '' || ($current_event['image_source_url'] ?? '') !== '' || ($current_event['title'] ?? '') !== '')) {
+                    $events[] = iss_register_finalize_story_timeline_event($current_event);
+                }
+
+                $timeline_started = true;
+                $current_event = null;
+                $events = array_merge($events, $timeline_events);
+                continue;
+            }
+
             $timeline_image_url = iss_register_extract_touchtable_image_url($widget);
 
             if (is_array($current_event) && (($current_event['summary'] ?? '') !== '' || ($current_event['image_source_url'] ?? '') !== '' || ($current_event['title'] ?? '') !== '')) {

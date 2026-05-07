@@ -31,7 +31,46 @@ add_action('add_meta_boxes', function () {
         'side',
         'default'
     );
+
+    add_meta_box(
+        'iss-publication-corpus',
+        __('Korpus', 'iss-publications'),
+        'iss_publications_render_corpus_box',
+        ISS_PUBLICATIONS_POST_TYPE,
+        'side',
+        'default'
+    );
 });
+
+function iss_publications_get_ausstellung_choices(): array
+{
+    if (!post_type_exists('ausstellung')) {
+        return [];
+    }
+
+    $choices = [];
+    $posts = get_posts([
+        'post_type' => 'ausstellung',
+        'post_status' => ['publish', 'future', 'draft', 'pending', 'private'],
+        'posts_per_page' => -1,
+        'orderby' => 'menu_order title',
+        'order' => 'ASC',
+        'suppress_filters' => true,
+    ]);
+
+    foreach ($posts as $post) {
+        if (!$post instanceof WP_Post) {
+            continue;
+        }
+
+        $choices[] = [
+            'id' => (int) $post->ID,
+            'title' => get_the_title($post),
+        ];
+    }
+
+    return $choices;
+}
 
 function iss_publications_render_bibliography_box($post) {
     wp_nonce_field('iss_publication_save_meta', 'iss_publication_meta_nonce');
@@ -88,7 +127,41 @@ function iss_publications_render_sale_box($post) {
 
 function iss_publications_render_display_box($post) {
     $featured = !empty(get_post_meta($post->ID, '_iss_publication_featured', true));
+    $layout = (string) get_post_meta($post->ID, '_iss_publication_layout', true);
+    if (!in_array($layout, ['longread', 'timeline'], true)) {
+        $layout = 'standard';
+    }
+
+    echo '<p>';
+    echo '<label for="_iss_publication_layout"><strong>' . esc_html__('Layout', 'iss-publications') . '</strong></label>';
+    echo '<select class="widefat" id="_iss_publication_layout" name="iss_publication[_iss_publication_layout]">';
+    echo '<option value="standard"' . selected($layout, 'standard', false) . '>' . esc_html__('Publikation / Broschüre', 'iss-publications') . '</option>';
+    echo '<option value="longread"' . selected($layout, 'longread', false) . '>' . esc_html__('Longread', 'iss-publications') . '</option>';
+    echo '<option value="timeline"' . selected($layout, 'timeline', false) . '>' . esc_html__('Longread / Zeitleiste', 'iss-publications') . '</option>';
+    echo '</select>';
+    echo '</p>';
     echo '<p><label><input type="checkbox" name="iss_publication[_iss_publication_featured]" value="1" ' . checked($featured, true, false) . '> ' . esc_html__('Als ausgewählte Publikation hervorheben', 'iss-publications') . '</label></p>';
+    echo '<p style="margin-top:1rem;color:#666;font-size:12px;line-height:1.5;">';
+    echo esc_html__('Longread ist für fortlaufende Lesestücke gedacht. Longread / Zeitleiste öffnet die Inhaltsfläche für chronologische Entwicklungsstücke mit Jahr-zu-Jahr-Abschnitten. Verkauf bleibt optional.', 'iss-publications');
+    echo '</p>';
+}
+
+function iss_publications_render_corpus_box($post) {
+    $source_ausstellung_id = (int) get_post_meta($post->ID, '_iss_publication_source_ausstellung_id', true);
+    $choices = iss_publications_get_ausstellung_choices();
+
+    echo '<p>';
+    echo '<label for="_iss_publication_source_ausstellung_id"><strong>' . esc_html__('Quell-Ausstellung', 'iss-publications') . '</strong></label>';
+    echo '<select class="widefat" id="_iss_publication_source_ausstellung_id" name="iss_publication[_iss_publication_source_ausstellung_id]">';
+    echo '<option value="">' . esc_html__('Keine Ausstellung auswählen', 'iss-publications') . '</option>';
+    foreach ($choices as $choice) {
+        echo '<option value="' . esc_attr((string) $choice['id']) . '"' . selected($source_ausstellung_id, (int) $choice['id'], false) . '>' . esc_html((string) $choice['title']) . '</option>';
+    }
+    echo '</select>';
+    echo '</p>';
+    echo '<p style="margin-top:0.75rem;color:#666;font-size:12px;line-height:1.5;">';
+    echo esc_html__('Wenn diese Publikation die lineare Lesefassung einer Ausstellung ist, hier die Ausstellung wählen. Die Kapitelzuordnung bleibt dort an einem Ort gepflegt.', 'iss-publications');
+    echo '</p>';
 }
 
 function iss_publications_parse_price_to_cents($value) {
@@ -125,6 +198,8 @@ add_action('save_post_' . ISS_PUBLICATIONS_POST_TYPE, function ($post_id) {
         return;
     }
 
+    $previous_source_ausstellung_id = (int) get_post_meta($post_id, '_iss_publication_source_ausstellung_id', true);
+
     $raw = isset($_POST['iss_publication']) && is_array($_POST['iss_publication']) ? wp_unslash($_POST['iss_publication']) : [];
     $fields = iss_publications_meta_fields();
 
@@ -153,5 +228,17 @@ add_action('save_post_' . ISS_PUBLICATIONS_POST_TYPE, function ($post_id) {
     $price_cents = (int) get_post_meta($post_id, '_iss_publication_price_cents', true);
     if ($sale_enabled && $price_cents <= 0) {
         delete_post_meta($post_id, '_iss_publication_sale_enabled');
+    }
+
+    $source_ausstellung_id = (int) get_post_meta($post_id, '_iss_publication_source_ausstellung_id', true);
+    if ($previous_source_ausstellung_id > 0 && $previous_source_ausstellung_id !== $source_ausstellung_id) {
+        $previous_companion = (int) get_post_meta($previous_source_ausstellung_id, 'iss_companion_publication_id', true);
+        if ($previous_companion === (int) $post_id) {
+            delete_post_meta($previous_source_ausstellung_id, 'iss_companion_publication_id');
+        }
+    }
+
+    if ($source_ausstellung_id > 0) {
+        update_post_meta($source_ausstellung_id, 'iss_companion_publication_id', (int) $post_id);
     }
 }, 10, 1);

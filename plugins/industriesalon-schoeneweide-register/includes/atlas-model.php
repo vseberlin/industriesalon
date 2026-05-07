@@ -194,6 +194,7 @@ add_action('init', 'iss_register_seed_atlas_era_terms', 30);
 function iss_register_add_atlas_story_to_place_relations(array $post_types): array
 {
     $post_types[] = ISS_REGISTER_ATLAS_STORY_POST_TYPE;
+    $post_types[] = 'archivobjekt';
 
     return array_values(array_unique(array_filter(array_map('sanitize_key', $post_types))));
 }

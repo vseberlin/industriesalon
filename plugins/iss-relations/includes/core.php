@@ -24,7 +24,9 @@ function iss_relations_get_candidate_post_types(): array
 {
     return (array) apply_filters('iss_relations_candidate_post_types', [
         iss_relations_get_place_post_type(),
+        'archivbeitrag',
         'fuehrung',
+        'publication',
         'veranstaltung',
         'ausstellung',
         'projekt',
@@ -356,6 +358,46 @@ function iss_relations_update_post_relations(int $post_id, array $relations): vo
     }
 
     update_post_meta($post_id, ISS_RELATIONS_META_KEY, $clean);
+}
+
+function iss_relations_ensure_post_has_place_relation(int $post_id, int $place_id, array $overrides = []): bool
+{
+    if (
+        $post_id <= 0
+        || $place_id <= 0
+        || !iss_relations_is_usable_place($place_id)
+    ) {
+        return false;
+    }
+
+    $post = get_post($post_id);
+    if (!$post instanceof WP_Post || !iss_relations_is_supported_post_type($post->post_type)) {
+        return false;
+    }
+
+    $relations = iss_relations_get_post_relations($post_id);
+
+    foreach ($relations as $relation) {
+        if ((int) ($relation['place_id'] ?? 0) === $place_id) {
+            return false;
+        }
+    }
+
+    $defaults = [
+        'place_id' => $place_id,
+        'role' => 'related',
+        'weight' => 0,
+        'label' => '',
+        'route_title' => '',
+        'route_teaser' => '',
+        'station_object_id' => 0,
+        'station_story_id' => 0,
+    ];
+
+    $relations[] = array_merge($defaults, $overrides);
+    iss_relations_update_post_relations($post_id, $relations);
+
+    return true;
 }
 
 function iss_relations_collect_taxonomy_place_ids_for_post(int $post_id): array

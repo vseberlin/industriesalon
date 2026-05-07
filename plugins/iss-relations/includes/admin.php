@@ -4,6 +4,155 @@ if (!defined('ABSPATH')) {
     exit;
 }
 
+function iss_relations_get_station_object_choice(int $post_id): ?array
+{
+    if ($post_id <= 0) {
+        return null;
+    }
+
+    $post = get_post($post_id);
+    if (!$post instanceof WP_Post || $post->post_type !== 'archivobjekt') {
+        return null;
+    }
+
+    return [
+        'id' => (int) $post->ID,
+        'title' => get_the_title($post),
+    ];
+}
+
+function iss_relations_get_station_story_post_types(): array
+{
+    $types = [
+        'archivbeitrag',
+        'post',
+        'publication',
+        'veranstaltung',
+        'ausstellung',
+        'projekt',
+        'page',
+    ];
+
+    return array_values(array_filter($types, 'post_type_exists'));
+}
+
+function iss_relations_get_station_story_choice(int $post_id): ?array
+{
+    if ($post_id <= 0) {
+        return null;
+    }
+
+    $post = get_post($post_id);
+    if (!$post instanceof WP_Post || !in_array($post->post_type, iss_relations_get_station_story_post_types(), true)) {
+        return null;
+    }
+
+    return [
+        'id' => (int) $post->ID,
+        'title' => get_the_title($post),
+    ];
+}
+
+function iss_relations_get_station_object_choices_for_place(int $place_id): array
+{
+    if (
+        $place_id <= 0
+        || !defined('ISS_RELATIONS_TAXONOMY')
+        || !taxonomy_exists(ISS_RELATIONS_TAXONOMY)
+        || !post_type_exists('archivobjekt')
+        || !function_exists('iss_relations_get_place_term_id')
+    ) {
+        return [];
+    }
+
+    $term_id = iss_relations_get_place_term_id($place_id);
+    if ($term_id <= 0) {
+        return [];
+    }
+
+    $posts = get_posts([
+        'post_type' => 'archivobjekt',
+        'post_status' => ['publish', 'future', 'draft', 'pending', 'private'],
+        'posts_per_page' => -1,
+        'orderby' => 'title',
+        'order' => 'ASC',
+        'suppress_filters' => true,
+        'tax_query' => [
+            [
+                'taxonomy' => ISS_RELATIONS_TAXONOMY,
+                'field' => 'term_id',
+                'terms' => [$term_id],
+            ],
+        ],
+    ]);
+
+    $choices = [];
+
+    foreach ($posts as $post) {
+        if (!$post instanceof WP_Post) {
+            continue;
+        }
+
+        $choices[] = [
+            'id' => (int) $post->ID,
+            'title' => get_the_title($post),
+        ];
+    }
+
+    return $choices;
+}
+
+function iss_relations_get_station_story_choices_for_place(int $place_id): array
+{
+    $post_types = iss_relations_get_station_story_post_types();
+
+    if (
+        $place_id <= 0
+        || !$post_types
+        || !defined('ISS_RELATIONS_TAXONOMY')
+        || !taxonomy_exists(ISS_RELATIONS_TAXONOMY)
+        || !function_exists('iss_relations_get_place_term_id')
+    ) {
+        return [];
+    }
+
+    $term_id = iss_relations_get_place_term_id($place_id);
+    if ($term_id <= 0) {
+        return [];
+    }
+
+    $posts = get_posts([
+        'post_type' => $post_types,
+        'post_status' => ['publish', 'future', 'draft', 'pending', 'private'],
+        'posts_per_page' => -1,
+        'orderby' => 'title',
+        'order' => 'ASC',
+        'suppress_filters' => true,
+        'tax_query' => [
+            [
+                'taxonomy' => ISS_RELATIONS_TAXONOMY,
+                'field' => 'term_id',
+                'terms' => [$term_id],
+            ],
+        ],
+    ]);
+
+    $choices = [];
+
+    foreach ($posts as $post) {
+        if (!$post instanceof WP_Post) {
+            continue;
+        }
+
+        $choices[] = [
+            'id' => (int) $post->ID,
+            'title' => get_the_title($post),
+        ];
+    }
+
+    return $choices;
+}
+
 function iss_relations_get_place_choices(): array
 {
     static $choices = null;
@@ -69,6 +218,26 @@ function iss_relations_render_row(array $relation, array $places, int $index, st
     $station_object_id = (int) ($relation['station_object_id'] ?? 0);
     $station_story_id = (int) ($relation['station_story_id'] ?? 0);
     $supports_route_fields = iss_relations_supports_route_fields($post_type);
+    $station_object_choices = $supports_route_fields ? iss_relations_get_station_object_choices_for_place($place_id) : [];
+    $selected_station_object = $supports_route_fields ? iss_relations_get_station_object_choice($station_object_id) : null;
+    $station_story_choices = $supports_route_fields ? iss_relations_get_station_story_choices_for_place($place_id) : [];
+    $selected_station_story = $supports_route_fields ? iss_relations_get_station_story_choice($station_story_id) : null;
+
+    if (
+        $supports_route_fields
+        && $selected_station_object
+        && !in_array($station_object_id, array_column($station_object_choices, 'id'), true)
+    ) {
+        array_unshift($station_object_choices, $selected_station_object);
+    }
+
+    if (
+        $supports_route_fields
+        && $selected_station_story
+        && !in_array($station_story_id, array_column($station_story_choices, 'id'), true)
+    ) {
+        array_unshift($station_story_choices, $selected_station_story);
+    }
 
     ob_start();
     ?>
@@ -105,9 +274,39 @@ function iss_relations_render_row(array $relation, array $places, int $index, st
                     <textarea class="widefat" rows="3" name="iss_relations[<?php echo esc_attr((string) $index); ?>][route_teaser]" placeholder="<?php esc_attr_e('Kurzer Stations-Teaser', 'iss-relations'); ?>"><?php echo esc_textarea($route_teaser); ?></textarea>
                 </div>
                 <div style="margin-top:8px; display:grid; grid-template-columns:1fr 1fr; gap:8px;">
-                    <input class="widefat" type="number" min="0" name="iss_relations[<?php echo esc_attr((string) $index); ?>][station_object_id]" value="<?php echo esc_attr($station_object_id > 0 ? (string) $station_object_id : ''); ?>" placeholder="<?php esc_attr_e('Archivobjekt-ID', 'iss-relations'); ?>">
-                    <input class="widefat" type="number" min="0" name="iss_relations[<?php echo esc_attr((string) $index); ?>][station_story_id]" value="<?php echo esc_attr($station_story_id > 0 ? (string) $station_story_id : ''); ?>" placeholder="<?php esc_attr_e('Story/Beitrags-ID', 'iss-relations'); ?>">
+                    <select
+                        class="widefat"
+                        name="iss_relations[<?php echo esc_attr((string) $index); ?>][station_object_id]"
+                        data-iss-relations-station-object
+                        data-selected-object-id="<?php echo esc_attr($station_object_id > 0 ? (string) $station_object_id : ''); ?>"
+                    >
+                        <option value=""><?php esc_html_e('Objekt wählen', 'iss-relations'); ?></option>
+                        <?php foreach ($station_object_choices as $object_choice) : ?>
+                            <option value="<?php echo esc_attr((string) $object_choice['id']); ?>" <?php selected($station_object_id, (int) $object_choice['id']); ?>>
+                                <?php echo esc_html((string) $object_choice['title']); ?>
+                            </option>
+                        <?php endforeach; ?>
+                    </select>
+                    <select
+                        class="widefat"
+                        name="iss_relations[<?php echo esc_attr((string) $index); ?>][station_story_id]"
+                        data-iss-relations-station-story
+                        data-selected-story-id="<?php echo esc_attr($station_story_id > 0 ? (string) $station_story_id : ''); ?>"
+                    >
+                        <option value=""><?php esc_html_e('Beitrag wählen', 'iss-relations'); ?></option>
+                        <?php foreach ($station_story_choices as $story_choice) : ?>
+                            <option value="<?php echo esc_attr((string) $story_choice['id']); ?>" <?php selected($station_story_id, (int) $story_choice['id']); ?>>
+                                <?php echo esc_html((string) $story_choice['title']); ?>
+                            </option>
+                        <?php endforeach; ?>
+                    </select>
                 </div>
+                <p class="description" style="margin-top:8px;">
+                    <?php esc_html_e('Nach Ortswahl werden nur verknüpfte Objekte und Beiträge für diese Station angeboten.', 'iss-relations'); ?>
+                </p>
+                <p class="description">
+                    <?php esc_html_e('Beim Speichern wird ausgewählter Inhalt bei Bedarf automatisch auch mit diesem Ort verknüpft.', 'iss-relations'); ?>
+                </p>
             <?php endif; ?>
         </td>
         <td>
@@ -198,6 +397,25 @@ function iss_relations_save_meta_box(int $post_id, WP_Post $post): void
     $raw_relations = $_POST['iss_relations'] ?? [];
     $relations = iss_relations_normalize_relations(is_array($raw_relations) ? wp_unslash($raw_relations) : [], $post_id);
     iss_relations_update_post_relations($post_id, $relations);
+
+    if ($post->post_type === 'fuehrung') {
+        foreach ($relations as $relation) {
+            $place_id = (int) ($relation['place_id'] ?? 0);
+            if ($place_id <= 0) {
+                continue;
+            }
+
+            $station_object_id = (int) ($relation['station_object_id'] ?? 0);
+            if ($station_object_id > 0) {
+                iss_relations_ensure_post_has_place_relation($station_object_id, $place_id);
+            }
+
+            $station_story_id = (int) ($relation['station_story_id'] ?? 0);
+            if ($station_story_id > 0) {
+                iss_relations_ensure_post_has_place_relation($station_story_id, $place_id);
+            }
+        }
+    }
 }
 add_action('save_post', 'iss_relations_save_meta_box', 10, 2);
 
@@ -224,5 +442,76 @@ function iss_relations_enqueue_admin_assets(string $hook_suffix): void
         (string) filemtime($script_path),
         true
     );
+
+    wp_localize_script('iss-relations-admin', 'issRelationsAdmin', [
+        'ajaxUrl' => admin_url('admin-ajax.php'),
+        'nonce' => wp_create_nonce('iss_relations_station_objects'),
+        'strings' => [
+            'objectPlaceholder' => __('Objekt wählen', 'iss-relations'),
+            'objectLoading' => __('Objekte werden geladen …', 'iss-relations'),
+            'objectNone' => __('Keine verknüpften Objekte für diesen Ort', 'iss-relations'),
+            'objectError' => __('Objekte konnten nicht geladen werden', 'iss-relations'),
+            'storyPlaceholder' => __('Beitrag wählen', 'iss-relations'),
+            'storyLoading' => __('Beiträge werden geladen …', 'iss-relations'),
+            'storyNone' => __('Keine verknüpften Beiträge für diesen Ort', 'iss-relations'),
+            'storyError' => __('Beiträge konnten nicht geladen werden', 'iss-relations'),
+        ],
+    ]);
 }
 add_action('admin_enqueue_scripts', 'iss_relations_enqueue_admin_assets');
+
+function iss_relations_ajax_station_objects(): void
+{
+    check_ajax_referer('iss_relations_station_objects', 'nonce');
+
+    if (!current_user_can('edit_posts')) {
+        wp_send_json_error(['message' => __('Keine Berechtigung.', 'iss-relations')], 403);
+    }
+
+    $place_id = isset($_GET['place_id']) ? absint($_GET['place_id']) : 0;
+    $selected_id = isset($_GET['selected_id']) ? absint($_GET['selected_id']) : 0;
+    $choices = iss_relations_get_station_object_choices_for_place($place_id);
+
+    if ($selected_id > 0) {
+        $selected_choice = iss_relations_get_station_object_choice($selected_id);
+        if (
+            $selected_choice
+            && !in_array($selected_id, array_column($choices, 'id'), true)
+        ) {
+            array_unshift($choices, $selected_choice);
+        }
+    }
+
+    wp_send_json_success([
+        'objects' => $choices,
+    ]);
+}
+add_action('wp_ajax_iss_relations_station_objects', 'iss_relations_ajax_station_objects');
+
+function iss_relations_ajax_station_stories(): void
+{
+    check_ajax_referer('iss_relations_station_objects', 'nonce');
+
+    if (!current_user_can('edit_posts')) {
+        wp_send_json_error(['message' => __('Keine Berechtigung.', 'iss-relations')], 403);
+    }
+
+    $place_id = isset($_GET['place_id']) ? absint($_GET['place_id']) : 0;
+    $selected_id = isset($_GET['selected_id']) ? absint($_GET['selected_id']) : 0;
+    $choices = iss_relations_get_station_story_choices_for_place($place_id);
+
+    if ($selected_id > 0) {
+        $selected_choice = iss_relations_get_station_story_choice($selected_id);
+        if (
+            $selected_choice
+            && !in_array($selected_id, array_column($choices, 'id'), true)
+        ) {
+            array_unshift($choices, $selected_choice);
+        }
+    }
+
+    wp_send_json_success([
+        'stories' => $choices,
+    ]);
+}
+add_action('wp_ajax_iss_relations_station_stories', 'iss_relations_ajax_station_stories');

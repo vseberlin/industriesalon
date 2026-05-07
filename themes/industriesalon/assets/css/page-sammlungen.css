@@ -1,0 +1,870 @@
+/* FILE: page-sammlungen.css
+   Scope: dedicated discovery landing for /sammlungen/
+   Intent: isolated dense "switchboard" UI; color-led and materially richer than the default page rhythm
+*/
+
+.iss-sammlungen-page {
+    background:
+        radial-gradient(circle at top center, rgba(122, 64, 36, 0.22), transparent 34%),
+        linear-gradient(180deg, #120f0d 0, #120f0d 24rem, #efe7da 24rem, #efe7da 100%);
+    color: #171412;
+}
+
+.iss-sammlungen-page .iss-section {
+    position: relative;
+}
+
+.iss-sammlungen-page .iss-heading__title,
+.iss-sammlungen-page .iss-info-panel__title {
+    font-size: clamp(1.75rem, 2vw, 2.45rem);
+    line-height: 1.02;
+    text-wrap: balance;
+}
+
+.iss-sammlungen-page .iss-heading__text,
+.iss-sammlungen-page .iss-info-panel__intro {
+    font-size: 1rem;
+    line-height: 1.5;
+}
+
+.iss-sammlungen-switchboard {
+    padding: 1.25rem 0 0;
+}
+
+.iss-sammlungen-switchboard .iss-container {
+    padding-top: 1.25rem;
+    padding-bottom: 2rem;
+}
+
+.iss-sammlungen-switchboard__top {
+    gap: 1rem;
+    margin-bottom: 0;
+}
+
+.iss-sammlungen-masthead,
+.iss-sammlungen-mini-nav,
+.iss-sammlungen-focus,
+.iss-sammlungen-related,
+.iss-sammlungen-gateway,
+.iss-sammlungen-pick {
+    position: relative;
+    border: 1px solid rgba(241, 230, 216, 0.11);
+    background: rgba(20, 16, 14, 0.9);
+    box-shadow: 0 24px 60px rgba(10, 8, 7, 0.22);
+}
+
+.iss-sammlungen-masthead,
+.iss-sammlungen-mini-nav,
+.iss-sammlungen-focus__body,
+.iss-sammlungen-related,
+.iss-sammlungen-gateway,
+.iss-sammlungen-pick {
+    padding: 1.1rem 1.15rem 1.15rem;
+}
+
+.iss-sammlungen-masthead::before,
+.iss-sammlungen-focus::before,
+.iss-sammlungen-related::before,
+.iss-sammlungen-gateway::before,
+.iss-sammlungen-pick::before {
+    content: "";
+    position: absolute;
+    inset: 0 auto auto 0;
+    width: 100%;
+    height: 0.18rem;
+    background: linear-gradient(90deg, #b74b26 0%, rgba(183, 75, 38, 0.12) 100%);
+}
+
+.iss-sammlungen-masthead__title {
+    margin: 0.2rem 0 0;
+    font-size: clamp(2rem, 3vw, 3.4rem);
+    line-height: 0.98;
+    color: #f4ece1;
+    text-wrap: balance;
+}
+
+.iss-sammlungen-masthead__text {
+    margin: 0.9rem 0 0;
+    max-width: 26rem;
+    color: rgba(244, 236, 225, 0.84);
+}
+
+.iss-sammlungen-masthead__links {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.75rem 1rem;
+    margin: 1rem 0 0;
+}
+
+.iss-sammlungen-mini-nav {
+    display: grid;
+    gap: 0.5rem;
+    margin-top: 1rem;
+    background: rgba(33, 27, 23, 0.86);
+}
+
+.iss-sammlungen-mini-nav__label {
+    margin: 0;
+    font-size: 0.74rem;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: #cf6f49;
+}
+
+.iss-sammlungen-mini-nav__items {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.45rem 0.55rem;
+    margin: 0;
+}
+
+.iss-sammlungen-mini-nav__items a {
+    display: inline-flex;
+    align-items: center;
+    min-height: 2rem;
+    padding: 0.35rem 0.62rem;
+    border: 1px solid rgba(244, 236, 225, 0.14);
+    color: #f4ece1;
+    text-decoration: none;
+}
+
+.iss-sammlungen-focus {
+    overflow: hidden;
+    background: #1a1512;
+}
+
+.iss-sammlungen-focus__media {
+    margin: 0;
+    aspect-ratio: 1.18 / 1;
+}
+
+.iss-sammlungen-focus__media img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+    filter: saturate(0.78) contrast(1.02);
+}
+
+.iss-sammlungen-focus__body {
+    position: relative;
+    background:
+        linear-gradient(180deg, rgba(26, 21, 18, 0) 0, rgba(26, 21, 18, 0.9) 3rem),
+        #1a1512;
+    margin-top: -2.75rem;
+}
+
+.iss-sammlungen-focus__kicker,
+.iss-sammlungen-related__label,
+.iss-sammlungen-gateway__kicker,
+.iss-sammlungen-pick__type {
+    margin: 0;
+    font-size: 0.74rem;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: #cf6f49;
+}
+
+.iss-sammlungen-focus__title {
+    margin: 0.42rem 0 0;
+    font-size: clamp(1.45rem, 2vw, 2rem);
+    line-height: 1.05;
+    color: #f4ece1;
+}
+
+.iss-sammlungen-focus__text {
+    margin: 0.85rem 0 0;
+    color: rgba(244, 236, 225, 0.84);
+}
+
+.iss-sammlungen-focus__link {
+    margin: 0.95rem 0 0;
+}
+
+.iss-sammlungen-related {
+    height: 100%;
+    background:
+        radial-gradient(circle at top right, rgba(183, 75, 38, 0.24), transparent 34%),
+        rgba(18, 15, 13, 0.95);
+}
+
+.iss-sammlungen-related__stack {
+    display: grid;
+    gap: 0.65rem;
+    margin-top: 0.9rem;
+}
+
+.iss-sammlungen-related-item {
+    display: grid;
+    gap: 0.3rem;
+    padding: 0.8rem 0.9rem;
+    border: 1px solid rgba(244, 236, 225, 0.1);
+    background: rgba(34, 28, 25, 0.7);
+}
+
+.iss-sammlungen-related-item__type {
+    margin: 0;
+    font-size: 0.72rem;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: rgba(244, 236, 225, 0.62);
+}
+
+.iss-sammlungen-related-item__title {
+    margin: 0;
+    font-size: 1rem;
+    line-height: 1.15;
+    color: #f4ece1;
+}
+
+.iss-sammlungen-related-item__link {
+    margin: 0;
+}
+
+.iss-sammlungen-related-item__link a {
+    color: #f4ece1;
+}
+
+.iss-sammlungen-stage {
+    padding: 0 0 0;
+}
+
+.iss-sammlungen-stage__shell {
+    width: 100%;
+    max-width: var(--iss-content-width);
+    margin: 0 auto;
+    padding-inline: var(--iss-container-pad);
+    box-sizing: border-box;
+}
+
+.iss-sammlungen-stage__shell > * {
+    max-width: none !important;
+}
+
+.iss-sammlungen-stage__head {
+    margin-bottom: 0.85rem;
+}
+
+.iss-sammlungen-stage__head .iss-heading__title {
+    max-width: 56rem;
+}
+
+.iss-sammlungen-gateways {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 0.85rem;
+}
+
+.iss-sammlungen-gateways.is-layout-flow > *,
+.iss-sammlungen-stage__secondary.is-layout-flow > * {
+    margin-block-start: 0;
+}
+
+.iss-sammlungen-gateway {
+    min-height: 100%;
+}
+
+.iss-sammlungen-gateway__title,
+.iss-sammlungen-pick__title {
+    margin: 0.45rem 0 0;
+    font-size: clamp(1.16rem, 1.6vw, 1.5rem);
+    line-height: 1.08;
+    color: #f4ece1;
+}
+
+.iss-sammlungen-gateway__text,
+.iss-sammlungen-pick__text {
+    margin: 0.72rem 0 0;
+    color: rgba(244, 236, 225, 0.79);
+}
+
+.iss-sammlungen-gateway__links,
+.iss-sammlungen-pick__link {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.65rem 0.85rem;
+    margin: 0.9rem 0 0;
+}
+
+.iss-sammlungen-stage__secondary {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 0.85rem;
+    margin-top: 0.95rem;
+}
+
+.iss-sammlungen-panel {
+    padding: 1rem 1.05rem;
+    border: 1px solid rgba(31, 26, 23, 0.12);
+    background: #f7f2e8;
+    box-shadow: 0 16px 40px rgba(22, 18, 15, 0.07);
+}
+
+.iss-sammlungen-panel .iss-kicker {
+    color: #8f391b;
+}
+
+.iss-sammlungen-panel__title {
+    margin: 0.12rem 0 0.7rem;
+    font-size: clamp(1.25rem, 1.7vw, 1.65rem);
+    line-height: 1.08;
+}
+
+.iss-sammlungen-panel p,
+.iss-sammlungen-panel li {
+    color: rgba(23, 20, 18, 0.8);
+}
+
+.iss-sammlungen-panel__intro {
+    margin: 0 0 0.85rem;
+    color: rgba(23, 20, 18, 0.74);
+}
+
+.iss-sammlungen-ways {
+    margin-top: 0.35rem;
+}
+
+.iss-sammlungen-ways__item {
+    margin: 0;
+}
+
+.iss-sammlungen-ways__item + .iss-sammlungen-ways__item {
+    border-top: 1px solid rgba(23, 20, 18, 0.12);
+}
+
+.iss-sammlungen-ways__item a {
+    display: block;
+    padding: 0.9rem 0;
+    text-decoration: none;
+    color: #171412;
+}
+
+.iss-sammlungen-ways__item strong {
+    display: block;
+    font-size: 1rem;
+    line-height: 1.15;
+    font-weight: 600;
+}
+
+.iss-sammlungen-ways__item span {
+    display: block;
+    margin-top: 0.15rem;
+    color: rgba(23, 20, 18, 0.66);
+}
+
+.iss-sammlungen-linklist {
+    margin: 0.35rem 0 0;
+    padding: 0;
+    list-style: none;
+}
+
+.iss-sammlungen-linklist li {
+    margin: 0;
+}
+
+.iss-sammlungen-linklist li + li {
+    border-top: 1px solid rgba(23, 20, 18, 0.12);
+}
+
+.iss-sammlungen-linklist a {
+    display: block;
+    padding: 0.9rem 0;
+    color: #171412;
+    text-decoration: none;
+}
+
+.iss-sammlungen-chain {
+    position: relative;
+    display: grid;
+    gap: 0.85rem;
+    margin-top: 1rem;
+    padding-left: 1.15rem;
+}
+
+.iss-sammlungen-chain::before {
+    content: "";
+    position: absolute;
+    top: 0.4rem;
+    bottom: 0.4rem;
+    left: 0.34rem;
+    width: 1px;
+    background: rgba(145, 97, 68, 0.48);
+}
+
+.iss-sammlungen-chain__item {
+    position: relative;
+    display: grid;
+    grid-template-columns: 6.25rem minmax(0, 1fr);
+    gap: 0.85rem;
+    align-items: center;
+}
+
+.iss-sammlungen-chain__item::before {
+    content: "";
+    position: absolute;
+    top: 50%;
+    left: -1.15rem;
+    width: 0.62rem;
+    height: 0.62rem;
+    border: 1px solid #916144;
+    border-radius: 999px;
+    background: #f7f2e8;
+    transform: translateY(-50%);
+}
+
+.iss-sammlungen-chain__thumb {
+    margin: 0;
+    aspect-ratio: 1.5 / 1;
+}
+
+.iss-sammlungen-chain__thumb img {
+    display: block;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.iss-sammlungen-chain__copy {
+    display: grid;
+    gap: 0.12rem;
+}
+
+.iss-sammlungen-chain__title {
+    margin: 0;
+    font-size: 1rem;
+    line-height: 1.14;
+}
+
+.iss-sammlungen-chain__meta {
+    margin: 0;
+    color: rgba(23, 20, 18, 0.64);
+}
+
+.iss-sammlungen-formats {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.55rem;
+    margin: 0.45rem 0 0;
+}
+
+.iss-sammlungen-formats span {
+    display: inline-flex;
+    align-items: center;
+    min-height: 2.1rem;
+    padding: 0.38rem 0.72rem;
+    border: 1px solid rgba(23, 20, 18, 0.12);
+    color: #171412;
+}
+
+.iss-sammlungen-formats span.is-active {
+    border-color: rgba(163, 61, 31, 0.32);
+    color: #a33d1f;
+    background: rgba(163, 61, 31, 0.05);
+}
+
+.iss-sammlungen-spotlight {
+    display: grid;
+    grid-template-columns: minmax(0, 1.2fr) minmax(11rem, 0.8fr);
+    gap: 0.95rem;
+    align-items: start;
+    margin-top: 1rem;
+}
+
+.iss-sammlungen-spotlight__media {
+    margin: 0;
+}
+
+.iss-sammlungen-spotlight__media img {
+    display: block;
+    width: 100%;
+    aspect-ratio: 0.95 / 1;
+    object-fit: cover;
+}
+
+.iss-sammlungen-spotlight__title {
+    margin: 0;
+    font-size: 1.1rem;
+    line-height: 1.15;
+}
+
+.iss-sammlungen-spotlight__meta,
+.iss-sammlungen-related-strip__caption {
+    margin: 0.2rem 0 0;
+    color: rgba(23, 20, 18, 0.64);
+}
+
+.iss-sammlungen-spotlight__text {
+    margin: 0.8rem 0 0;
+}
+
+.iss-sammlungen-spotlight__link,
+.iss-sammlungen-panel__footer {
+    margin: 0.95rem 0 0;
+}
+
+.iss-sammlungen-spotlight__link a,
+.iss-sammlungen-panel__footer a {
+    color: #a33d1f;
+    text-decoration: none;
+    border-bottom: 1px solid rgba(163, 61, 31, 0.38);
+}
+
+.iss-sammlungen-related-strip {
+    margin-top: 1.1rem;
+    padding-top: 1rem;
+    border-top: 1px solid rgba(23, 20, 18, 0.12);
+}
+
+.iss-sammlungen-related-strip__label {
+    margin: 0 0 0.8rem;
+    font-weight: 500;
+}
+
+.iss-sammlungen-related-strip__items {
+    gap: 0.7rem;
+    margin-bottom: 0;
+}
+
+.iss-sammlungen-related-strip__thumb {
+    margin: 0;
+}
+
+.iss-sammlungen-related-strip__thumb img {
+    display: block;
+    width: 100%;
+    aspect-ratio: 1.15 / 1;
+    object-fit: cover;
+}
+
+.iss-sammlungen-related-strip__caption {
+    font-size: 0.92rem;
+}
+
+.iss-sammlungen-time {
+    padding: 1.5rem 0 0;
+}
+
+.iss-sammlungen-time__head {
+    max-width: 46rem;
+    margin-bottom: 1rem;
+}
+
+.iss-sammlungen-epochs {
+    display: grid;
+    grid-template-columns: repeat(5, minmax(0, 1fr));
+    gap: 0.7rem;
+    align-items: stretch;
+}
+
+.iss-sammlungen-epochs.is-layout-flow > * {
+    margin-block-start: 0;
+}
+
+.iss-sammlungen-epoch {
+    display: flex;
+    flex-direction: column;
+    min-height: 100%;
+    overflow: hidden;
+    box-shadow: 0 16px 36px rgba(18, 15, 13, 0.1);
+}
+
+.iss-sammlungen-epoch__media {
+    margin: 0;
+}
+
+.iss-sammlungen-epoch__media img {
+    display: block;
+    width: 100%;
+    height: 13rem;
+    object-fit: cover;
+}
+
+.iss-sammlungen-epoch__body {
+    display: flex;
+    flex: 1 1 auto;
+    flex-direction: column;
+    padding: 1rem 1rem 1.05rem;
+    border-top: 3px solid currentColor;
+}
+
+.iss-sammlungen-epoch__index {
+    margin: 0;
+    font-size: clamp(1.8rem, 2.8vw, 2.6rem);
+    font-weight: 500;
+    line-height: 0.95;
+    letter-spacing: 0.02em;
+}
+
+.iss-sammlungen-epoch__title {
+    margin: 0.55rem 0 0;
+    font-size: clamp(1.08rem, 1.35vw, 1.35rem);
+    line-height: 1.06;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    text-wrap: balance;
+}
+
+.iss-sammlungen-epoch__years {
+    margin: 0.8rem 0 0;
+    font-size: 0.96rem;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: inherit;
+    opacity: 0.88;
+}
+
+.iss-sammlungen-epoch__text {
+    margin: 0.9rem 0 0;
+    line-height: 1.6;
+}
+
+.iss-sammlungen-epoch__link {
+    margin: auto 0 0;
+    padding-top: 1rem;
+}
+
+.iss-sammlungen-epoch__link a {
+    color: inherit;
+    text-decoration: none;
+    border-bottom: 1px solid currentColor;
+    opacity: 0.92;
+}
+
+.iss-sammlungen-epoch--kaiserzeit {
+    background: #221c18;
+    color: #f0c46d;
+}
+
+.iss-sammlungen-epoch--kaiserzeit .iss-sammlungen-epoch__media img {
+    filter: sepia(0.42) saturate(0.78) brightness(0.95);
+}
+
+.iss-sammlungen-epoch--kaiserzeit .iss-sammlungen-epoch__title,
+.iss-sammlungen-epoch--kaiserzeit .iss-sammlungen-epoch__index,
+.iss-sammlungen-epoch--kaiserzeit .iss-sammlungen-epoch__link a {
+    color: #f0c46d;
+}
+
+.iss-sammlungen-epoch--kaiserzeit .iss-sammlungen-epoch__years,
+.iss-sammlungen-epoch--kaiserzeit .iss-sammlungen-epoch__text {
+    color: rgba(240, 196, 109, 0.9);
+}
+
+.iss-sammlungen-epoch--aufbruch {
+    background: linear-gradient(180deg, #6d2f1f 0, #7e3c26 100%);
+    color: #f3a264;
+}
+
+.iss-sammlungen-epoch--aufbruch .iss-sammlungen-epoch__media img {
+    filter: sepia(0.55) saturate(1.15) brightness(0.88);
+}
+
+.iss-sammlungen-epoch--krieg {
+    background: #0f0f10;
+    color: #8d8f94;
+}
+
+.iss-sammlungen-epoch--krieg .iss-sammlungen-epoch__media img {
+    filter: grayscale(1) contrast(1.08) brightness(0.92);
+}
+
+.iss-sammlungen-epoch--krieg .iss-sammlungen-epoch__body {
+    border-top-color: #5d6066;
+}
+
+.iss-sammlungen-epoch--krieg .iss-sammlungen-epoch__title {
+    color: #b1b4ba;
+}
+
+.iss-sammlungen-epoch--krieg .iss-sammlungen-epoch__years,
+.iss-sammlungen-epoch--krieg .iss-sammlungen-epoch__text,
+.iss-sammlungen-epoch--krieg .iss-sammlungen-epoch__link a {
+    color: #8d8f94;
+}
+
+.iss-sammlungen-epoch--ddr {
+    background: #486d61;
+    color: #d2eadb;
+}
+
+.iss-sammlungen-epoch--ddr .iss-sammlungen-epoch__media img {
+    filter: saturate(0.74) contrast(0.98) brightness(0.95);
+}
+
+.iss-sammlungen-epoch--wende {
+    background: #f3ede2;
+    color: #171412;
+}
+
+.iss-sammlungen-epoch--wende .iss-sammlungen-epoch__body {
+    border-top-color: #171412;
+}
+
+.iss-sammlungen-epoch--wende .iss-sammlungen-epoch__years,
+.iss-sammlungen-epoch--wende .iss-sammlungen-epoch__text {
+    color: rgba(23, 20, 18, 0.84);
+}
+
+.iss-sammlungen-selection {
+    padding: 1.65rem 0 0;
+}
+
+.iss-sammlungen-selection__head {
+    margin-bottom: 0.85rem;
+}
+
+.iss-sammlungen-selection__grid {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 0.85rem;
+}
+
+.iss-sammlungen-pick {
+    background:
+        linear-gradient(180deg, rgba(54, 43, 37, 0.06), rgba(54, 43, 37, 0) 100%),
+        #fbf7f0;
+    border-color: rgba(33, 27, 23, 0.12);
+    box-shadow: 0 16px 42px rgba(22, 18, 15, 0.08);
+}
+
+.iss-sammlungen-pick__title,
+.iss-sammlungen-pick__text {
+    color: #171412;
+}
+
+.iss-sammlungen-gateway__media,
+.iss-sammlungen-pick__media {
+    margin: -1.1rem -1.15rem 0.9rem;
+    aspect-ratio: 1.7 / 1;
+    overflow: hidden;
+}
+
+.iss-sammlungen-gateway__media img,
+.iss-sammlungen-pick__media img {
+    display: block;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    filter: saturate(0.8) contrast(1.03);
+}
+
+.iss-sammlungen-gateway__media::after,
+.iss-sammlungen-pick__media::after {
+    content: "";
+    position: absolute;
+    inset: auto 0 0 0;
+    height: 46%;
+    background: linear-gradient(180deg, rgba(0, 0, 0, 0) 0, rgba(17, 14, 12, 0.72) 100%);
+    pointer-events: none;
+}
+
+.iss-sammlungen-gateway__media,
+.iss-sammlungen-pick__media {
+    position: relative;
+}
+
+.iss-sammlungen-gateway__kicker,
+.iss-sammlungen-pick__type {
+    position: relative;
+    z-index: 1;
+}
+
+.iss-sammlungen-gateway__title,
+.iss-sammlungen-pick__title {
+    text-wrap: balance;
+}
+
+.iss-sammlungen-selection__grid .iss-sammlungen-pick {
+    padding-top: 0;
+}
+
+.iss-sammlungen-gateways .iss-sammlungen-gateway {
+    padding-top: 0;
+}
+
+.iss-sammlungen-research {
+    padding: 1.75rem 0 5rem;
+}
+
+.iss-sammlungen-research__panel {
+    margin-top: 0;
+}
+
+.iss-sammlungen-page .iss-action-link,
+.iss-sammlungen-page .iss-sammlungen-mini-nav a,
+.iss-sammlungen-page .iss-sammlungen-epoch__link a,
+.iss-sammlungen-page .iss-sammlungen-linklist a,
+.iss-sammlungen-page .iss-sammlungen-ways__item a,
+.iss-sammlungen-page .iss-sammlungen-spotlight__link a,
+.iss-sammlungen-page .iss-sammlungen-panel__footer a,
+.iss-sammlungen-page .iss-sammlungen-related-item__link a {
+    transition: color 0.2s ease, border-color 0.2s ease, background-color 0.2s ease, transform 0.2s ease;
+}
+
+.iss-sammlungen-page .iss-action-link:hover,
+.iss-sammlungen-page .iss-sammlungen-mini-nav a:hover,
+.iss-sammlungen-page .iss-sammlungen-epoch__link a:hover,
+.iss-sammlungen-page .iss-sammlungen-linklist a:hover,
+.iss-sammlungen-page .iss-sammlungen-ways__item a:hover,
+.iss-sammlungen-page .iss-sammlungen-spotlight__link a:hover,
+.iss-sammlungen-page .iss-sammlungen-panel__footer a:hover,
+.iss-sammlungen-page .iss-sammlungen-related-item__link a:hover {
+    transform: translateY(-1px);
+}
+
+.iss-sammlungen-page .iss-sammlungen-linklist a:hover {
+    color: #a33d1f;
+}
+
+.iss-sammlungen-page .iss-sammlungen-ways__item a:hover strong,
+.iss-sammlungen-page .iss-sammlungen-ways__item a:hover span {
+    color: #a33d1f;
+}
+
+@media (max-width: 1100px) {
+    .iss-sammlungen-switchboard__top,
+    .iss-sammlungen-stage__secondary {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    .iss-sammlungen-gateways {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    .iss-sammlungen-epochs,
+    .iss-sammlungen-selection__grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+}
+
+@media (max-width: 860px) {
+    .iss-sammlungen-page {
+        background:
+            radial-gradient(circle at top center, rgba(122, 64, 36, 0.18), transparent 28%),
+            linear-gradient(180deg, #120f0d 0, #120f0d 18rem, #efe7da 18rem, #efe7da 100%);
+    }
+
+    .iss-sammlungen-switchboard__top {
+        display: flex;
+        flex-direction: column;
+    }
+
+    .iss-sammlungen-stage__shell {
+        padding-inline: 0.7rem;
+    }
+
+    .iss-sammlungen-stage__secondary,
+    .iss-sammlungen-gateways,
+    .iss-sammlungen-epochs,
+    .iss-sammlungen-selection__grid {
+        grid-template-columns: minmax(0, 1fr);
+    }
+
+    .iss-sammlungen-spotlight {
+        grid-template-columns: minmax(0, 1fr);
+    }
+
+    .iss-sammlungen-chain__item {
+        grid-template-columns: 5rem minmax(0, 1fr);
+    }
+}

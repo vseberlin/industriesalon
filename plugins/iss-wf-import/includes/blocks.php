@@ -31,6 +31,11 @@ function iss_wf_import_register_blocks(): void
         'api_version' => 2,
         'render_callback' => 'iss_wf_import_render_archive_object_media_block',
     ]);
+
+    register_block_type('iss-wf-import/archive-object-browser', [
+        'api_version' => 2,
+        'render_callback' => 'iss_wf_import_render_archive_object_browser_block',
+    ]);
 }
 add_action('init', 'iss_wf_import_register_blocks', 20);
 
@@ -432,6 +437,48 @@ function iss_wf_import_render_archive_object_card(array $item): string
     return trim((string) ob_get_clean());
 }
 
+function iss_wf_import_get_public_source_label(string $slug, string $name = ''): string
+{
+    $slug = sanitize_title($slug);
+    $name = trim($name);
+
+    $map = [
+        'museum-digital' => 'museum-digital',
+        'wf-museum' => 'WF-Museum',
+        'ddb' => 'Deutsche Digitale Bibliothek',
+        'deutsche-digitale-bibliothek' => 'Deutsche Digitale Bibliothek',
+        'europeana' => 'Europeana',
+    ];
+
+    if ($slug !== '' && isset($map[$slug])) {
+        return $map[$slug];
+    }
+
+    return $name !== '' ? $name : $slug;
+}
+
+function iss_wf_import_get_public_source_names(int $post_id): array
+{
+    $terms = get_the_terms($post_id, ISS_WF_IMPORT_SOURCE_TAXONOMY);
+    if (!is_array($terms)) {
+        return [];
+    }
+
+    $names = [];
+    foreach ($terms as $term) {
+        if (!$term instanceof WP_Term) {
+            continue;
+        }
+
+        $label = iss_wf_import_get_public_source_label($term->slug, $term->name);
+        if ($label !== '') {
+            $names[] = $label;
+        }
+    }
+
+    return array_values(array_unique($names));
+}
+
 function iss_wf_import_render_archive_collection_card(array $item): string
 {
     $post_id = absint($item['collection_id'] ?? 0);
@@ -545,7 +592,7 @@ function iss_wf_import_get_archive_album_source_links(int $post_id): array
 
             $label = trim((string) ($item['label'] ?? ''));
             $links[] = [
-                'label' => $label !== '' ? $label : __('Quelle', 'iss-wf-import'),
+                'label' => $label !== '' ? $label : __('Digitaler Nachweis', 'iss-wf-import'),
                 'url' => $url,
             ];
         }
@@ -666,10 +713,7 @@ function iss_wf_import_render_archive_album_block($attributes = [], $content = '
     }
 
     $source_links = iss_wf_import_get_archive_album_source_links($post_id);
-    $source_terms = get_the_terms($post_id, ISS_WF_IMPORT_SOURCE_TAXONOMY);
-    $source_names = is_array($source_terms) ? array_values(array_filter(array_map(static function ($term): string {
-        return $term instanceof WP_Term ? trim((string) $term->name) : '';
-    }, $source_terms))) : [];
+    $source_names = iss_wf_import_get_public_source_names($post_id);
 
     $album_items = [];
     $album_nav = [];
@@ -712,12 +756,13 @@ function iss_wf_import_render_archive_album_block($attributes = [], $content = '
     $out .= '<div class="iss-archive-album__overview">';
     $out .= '<div class="iss-archive-album__facts iss-info-panel iss-info-panel--red">';
     $out .= '<p class="iss-kicker iss-kicker--compact">' . esc_html__('Albumdaten', 'iss-wf-import') . '</p>';
-    $out .= '<h2 class="iss-info-panel__title">' . esc_html__('Bestand und Quelle', 'iss-wf-import') . '</h2>';
+    $out .= '<h2 class="iss-info-panel__title">' . esc_html__('Bestand und Nachweise', 'iss-wf-import') . '</h2>';
     $out .= '<div class="iss-info-panel__rows">';
     $out .= '<div class="iss-info-row"><div class="iss-info-row__main"><p class="iss-info-row__text"><strong>' . esc_html__('Umfang', 'iss-wf-import') . '</strong></p><p class="iss-info-row__text">' . esc_html(sprintf(_n('%d Albumblatt', '%d Albumblätter', count($album_items), 'iss-wf-import'), count($album_items))) . '</p></div></div>';
+    $out .= '<div class="iss-info-row"><div class="iss-info-row__main"><p class="iss-info-row__text"><strong>' . esc_html__('Bestand', 'iss-wf-import') . '</strong></p><p class="iss-info-row__text">' . esc_html__('Industriesalon Schöneweide', 'iss-wf-import') . '</p></div></div>';
 
     if ($source_names) {
-        $out .= '<div class="iss-info-row"><div class="iss-info-row__main"><p class="iss-info-row__text"><strong>' . esc_html__('Archivquelle', 'iss-wf-import') . '</strong></p><p class="iss-info-row__text">' . esc_html(implode(', ', $source_names)) . '</p></div></div>';
+        $out .= '<div class="iss-info-row"><div class="iss-info-row__main"><p class="iss-info-row__text"><strong>' . esc_html__('Digitale Nachweise', 'iss-wf-import') . '</strong></p><p class="iss-info-row__text">' . esc_html(implode(', ', $source_names)) . '</p></div></div>';
     }
 
     if ($source_links) {
@@ -918,4 +963,616 @@ function iss_wf_import_render_archive_object_media_block($attributes = [], $cont
     $out .= '</section>';
 
     return $out;
+}
+
+function iss_wf_import_get_archive_object_browser_request(): array
+{
+    $page = max(1, absint($_GET['seite'] ?? get_query_var('seite') ?? 0));
+    if ($page <= 1) {
+        $page = max(1, absint(get_query_var('paged')));
+    }
+
+    return [
+        'source' => sanitize_title(wp_unslash((string) ($_GET['quelle'] ?? ''))),
+        'field' => sanitize_title(wp_unslash((string) ($_GET['feld'] ?? ''))),
+        'family' => sanitize_title(wp_unslash((string) ($_GET['familie'] ?? ''))),
+        'context' => sanitize_title(wp_unslash((string) ($_GET['kontext'] ?? ''))),
+        'search' => sanitize_text_field(wp_unslash((string) ($_GET['suche'] ?? ''))),
+        'page' => $page,
+    ];
+}
+
+function iss_wf_import_get_archive_object_browser_term_options(string $taxonomy, int $limit = 0): array
+{
+    if (!taxonomy_exists($taxonomy)) {
+        return [];
+    }
+
+    $terms = get_terms([
+        'taxonomy' => $taxonomy,
+        'hide_empty' => true,
+        'orderby' => 'count',
+        'order' => 'DESC',
+        'number' => $limit > 0 ? $limit : 0,
+    ]);
+
+    return is_array($terms) ? array_values(array_filter($terms, static function ($term): bool {
+        return $term instanceof WP_Term;
+    })) : [];
+}
+
+function iss_wf_import_get_archive_object_browser_selected_term(string $taxonomy, string $slug): ?WP_Term
+{
+    if ($slug === '' || !taxonomy_exists($taxonomy)) {
+        return null;
+    }
+
+    $term = get_term_by('slug', $slug, $taxonomy);
+    return $term instanceof WP_Term ? $term : null;
+}
+
+function iss_wf_import_get_archive_object_browser_terms_by_slugs(string $taxonomy, array $slugs): array
+{
+    if (!taxonomy_exists($taxonomy)) {
+        return [];
+    }
+
+    $ordered = [];
+    foreach ($slugs as $slug) {
+        $slug = sanitize_title((string) $slug);
+        if ($slug === '') {
+            continue;
+        }
+
+        $term = get_term_by('slug', $slug, $taxonomy);
+        if ($term instanceof WP_Term && $term->count > 0) {
+            $ordered[] = $term;
+        }
+    }
+
+    return $ordered;
+}
+
+function iss_wf_import_get_archive_object_browser_stats(array $state = []): array
+{
+    $state = array_merge([
+        'source' => '',
+        'field' => '',
+        'family' => '',
+        'context' => '',
+        'search' => '',
+        'page' => 1,
+    ], $state);
+
+    $base_tax_query = [];
+
+    if ($state['source'] !== '') {
+        $base_tax_query[] = [
+            'taxonomy' => ISS_WF_IMPORT_SOURCE_TAXONOMY,
+            'field' => 'slug',
+            'terms' => [$state['source']],
+        ];
+    }
+
+    if ($state['field'] !== '') {
+        $base_tax_query[] = [
+            'taxonomy' => ISS_WF_IMPORT_FIELD_TAXONOMY,
+            'field' => 'slug',
+            'terms' => [$state['field']],
+        ];
+    }
+
+    if ($state['context'] !== '') {
+        $base_tax_query[] = [
+            'taxonomy' => ISS_WF_IMPORT_CONTEXT_TAXONOMY,
+            'field' => 'slug',
+            'terms' => [$state['context']],
+        ];
+    }
+
+    $base_args = [
+        'post_type' => ISS_WF_IMPORT_OBJECT_POST_TYPE,
+        'post_status' => 'publish',
+        'posts_per_page' => 1,
+        'fields' => 'ids',
+        'no_found_rows' => false,
+        'ignore_sticky_posts' => true,
+        'suppress_filters' => true,
+    ];
+
+    if ($state['search'] !== '') {
+        $base_args['s'] = $state['search'];
+    }
+
+    if ($base_tax_query) {
+        if (count($base_tax_query) > 1) {
+            $base_tax_query['relation'] = 'AND';
+        }
+
+        $base_args['tax_query'] = $base_tax_query;
+    }
+
+    $total_query = new WP_Query($base_args);
+
+    $classified_args = $base_args;
+    $classified_tax_query = $base_tax_query;
+    $classified_tax_query[] = [
+        'taxonomy' => ISS_WF_IMPORT_FAMILY_TAXONOMY,
+        'operator' => 'EXISTS',
+    ];
+
+    if (count($classified_tax_query) > 1) {
+        $classified_tax_query['relation'] = 'AND';
+    }
+
+    $classified_args['tax_query'] = $classified_tax_query;
+    $classified_query = new WP_Query($classified_args);
+
+    $source_counts = [];
+    $source_terms = iss_wf_import_get_archive_object_browser_term_options(ISS_WF_IMPORT_SOURCE_TAXONOMY);
+    foreach ($source_terms as $term) {
+        $source_state = $state;
+        $source_state['source'] = $term->slug;
+        $source_counts[$term->slug] = (int) iss_wf_import_get_archive_object_browser_query($source_state, 1)->found_posts;
+    }
+
+    return [
+        'total_objects' => (int) $total_query->found_posts,
+        'source_counts' => $source_counts,
+        'classified_objects' => (int) $classified_query->found_posts,
+        'family_terms' => wp_count_terms([
+            'taxonomy' => ISS_WF_IMPORT_FAMILY_TAXONOMY,
+            'hide_empty' => true,
+        ]),
+    ];
+}
+
+function iss_wf_import_get_archive_object_browser_query(array $state, int $per_page = 18): WP_Query
+{
+    $tax_query = [];
+
+    if ($state['source'] !== '') {
+        $tax_query[] = [
+            'taxonomy' => ISS_WF_IMPORT_SOURCE_TAXONOMY,
+            'field' => 'slug',
+            'terms' => [$state['source']],
+        ];
+    }
+
+    if ($state['field'] !== '') {
+        $tax_query[] = [
+            'taxonomy' => ISS_WF_IMPORT_FIELD_TAXONOMY,
+            'field' => 'slug',
+            'terms' => [$state['field']],
+        ];
+    }
+
+    if ($state['family'] !== '') {
+        $tax_query[] = [
+            'taxonomy' => ISS_WF_IMPORT_FAMILY_TAXONOMY,
+            'field' => 'slug',
+            'terms' => [$state['family']],
+        ];
+    }
+
+    if ($state['context'] !== '') {
+        $tax_query[] = [
+            'taxonomy' => ISS_WF_IMPORT_CONTEXT_TAXONOMY,
+            'field' => 'slug',
+            'terms' => [$state['context']],
+        ];
+    }
+
+    $args = [
+        'post_type' => ISS_WF_IMPORT_OBJECT_POST_TYPE,
+        'post_status' => 'publish',
+        'posts_per_page' => $per_page,
+        'paged' => max(1, (int) $state['page']),
+        'orderby' => 'date',
+        'order' => 'DESC',
+        'ignore_sticky_posts' => true,
+        'suppress_filters' => true,
+    ];
+
+    if ($state['search'] !== '') {
+        $args['s'] = $state['search'];
+    }
+
+    if ($tax_query) {
+        if (count($tax_query) > 1) {
+            $tax_query['relation'] = 'AND';
+        }
+
+        $args['tax_query'] = $tax_query;
+    }
+
+    return new WP_Query($args);
+}
+
+function iss_wf_import_get_archive_object_browser_url(array $overrides = [], bool $reset_page = false, ?array $base_state = null, string $base_url = ''): string
+{
+    $state = array_merge($base_state ?? iss_wf_import_get_archive_object_browser_request(), $overrides);
+    $url = $base_url !== '' ? $base_url : get_post_type_archive_link(ISS_WF_IMPORT_OBJECT_POST_TYPE);
+    if (!$url) {
+        $url = home_url('/archivobjekte/');
+    }
+
+    $args = [];
+    foreach ([
+        'quelle' => $state['source'] ?? '',
+        'feld' => $state['field'] ?? '',
+        'familie' => $state['family'] ?? '',
+        'kontext' => $state['context'] ?? '',
+        'suche' => $state['search'] ?? '',
+    ] as $key => $value) {
+        $value = is_string($value) ? trim($value) : '';
+        if ($value !== '') {
+            $args[$key] = $value;
+        }
+    }
+
+    $page = max(1, (int) ($state['page'] ?? 1));
+    if (!$reset_page && $page > 1) {
+        $args['seite'] = $page;
+    }
+
+    return $args ? add_query_arg($args, $url) : $url;
+}
+
+function iss_wf_import_get_archive_object_browser_result_meta(int $post_id): array
+{
+    $meta = [];
+
+    $source_names = iss_wf_import_get_public_source_names($post_id);
+    if ($source_names) {
+        $meta[] = implode(', ', array_slice($source_names, 0, 2));
+    }
+
+    $year = trim((string) get_post_meta($post_id, ISS_WF_IMPORT_OBJECT_YEAR_META, true));
+    if ($year !== '') {
+        $meta[] = $year;
+    }
+
+    $family_names = wp_get_post_terms($post_id, ISS_WF_IMPORT_FAMILY_TAXONOMY, ['fields' => 'names']);
+    if (is_array($family_names) && $family_names) {
+        $meta[] = implode(', ', array_slice(array_map('strval', $family_names), 0, 2));
+    }
+
+    return $meta;
+}
+
+function iss_wf_import_get_archive_object_browser_kicker(int $post_id): string
+{
+    $taxonomy_order = [
+        ISS_WF_IMPORT_FAMILY_TAXONOMY,
+        ISS_WF_IMPORT_FIELD_TAXONOMY,
+        ISS_WF_IMPORT_CONTEXT_TAXONOMY,
+    ];
+
+    foreach ($taxonomy_order as $taxonomy) {
+        $names = wp_get_post_terms($post_id, $taxonomy, ['fields' => 'names']);
+        if (is_array($names) && !empty($names[0]) && is_string($names[0])) {
+            return $names[0];
+        }
+    }
+
+    return __('Archivobjekt', 'iss-wf-import');
+}
+
+function iss_wf_import_render_archive_object_browser_card(WP_Post $post): string
+{
+    $meta = iss_wf_import_get_archive_object_browser_result_meta($post->ID);
+    $kicker = iss_wf_import_get_archive_object_browser_kicker($post->ID);
+    $excerpt = trim((string) get_the_excerpt($post));
+    $permalink = (string) get_permalink($post);
+    if ($excerpt === '') {
+        $excerpt = wp_trim_words(wp_strip_all_tags((string) $post->post_content), 26, '…');
+    }
+
+    ob_start();
+    ?>
+    <article class="iss-card iss-card--flat iss-archive-browser__result-card">
+        <?php if (has_post_thumbnail($post)) : ?>
+            <a class="iss-card__media" href="<?php echo esc_url($permalink); ?>">
+                <?php echo get_the_post_thumbnail($post, 'large'); ?>
+            </a>
+        <?php endif; ?>
+        <div class="iss-card__body">
+            <p class="iss-kicker iss-kicker--compact"><?php echo esc_html($kicker); ?></p>
+            <h3 class="iss-card__title">
+                <a href="<?php echo esc_url($permalink); ?>"><?php echo esc_html(get_the_title($post)); ?></a>
+            </h3>
+            <?php if ($excerpt !== '') : ?>
+                <p class="iss-card__text"><?php echo esc_html($excerpt); ?></p>
+            <?php endif; ?>
+            <?php if ($meta) : ?>
+                <div class="iss-card__meta">
+                    <?php foreach ($meta as $item) : ?>
+                        <span><?php echo esc_html($item); ?></span>
+                    <?php endforeach; ?>
+                </div>
+            <?php endif; ?>
+            <a class="iss-card__link" href="<?php echo esc_url($permalink); ?>"><?php esc_html_e('Objekt öffnen', 'iss-wf-import'); ?></a>
+        </div>
+    </article>
+    <?php
+
+    return trim((string) ob_get_clean());
+}
+
+function iss_wf_import_render_archive_object_browser_block($attributes = [], $content = '', $block = null): string
+{
+    $state = iss_wf_import_get_archive_object_browser_request();
+    $default_source = sanitize_title((string) ($attributes['defaultSource'] ?? ''));
+    $lock_source = !empty($attributes['lockSource']);
+    $default_field = sanitize_title((string) ($attributes['defaultField'] ?? ''));
+    $lock_field = !empty($attributes['lockField']);
+    $browser_kicker = sanitize_text_field((string) ($attributes['kicker'] ?? __('Archiv', 'iss-wf-import')));
+    $browser_title = sanitize_text_field((string) ($attributes['title'] ?? __('Archivobjekte', 'iss-wf-import')));
+    $browser_intro = sanitize_text_field((string) ($attributes['introText'] ?? __('Lokale Objektkopien, Findbuchfotos und technische Bestände mit Quellenbezug. Das größte Segment stammt aktuell aus museum-digital; Themenfelder und Objektfamilien werden schrittweise für editorische Zugänge ergänzt.', 'iss-wf-import')));
+    $quick_kicker = sanitize_text_field((string) ($attributes['quickKicker'] ?? __('Einstiege', 'iss-wf-import')));
+    $quick_title = sanitize_text_field((string) ($attributes['quickTitle'] ?? __('Nachweise und strukturierte Zugänge', 'iss-wf-import')));
+    $show_source_cards = array_key_exists('showSourceCards', $attributes) ? !empty($attributes['showSourceCards']) : true;
+    $quick_family_slugs = is_array($attributes['quickFamilySlugs'] ?? null) ? array_values(array_map('sanitize_title', (array) $attributes['quickFamilySlugs'])) : [];
+    $use_current_url = !empty($attributes['useCurrentUrl']);
+
+    if ($default_source !== '' && ($lock_source || $state['source'] === '')) {
+        $state['source'] = $default_source;
+    }
+
+    if ($default_field !== '' && ($lock_field || $state['field'] === '')) {
+        $state['field'] = $default_field;
+    }
+
+    $base_url = '';
+    if ($use_current_url) {
+        $queried_id = get_queried_object_id();
+        if ($queried_id > 0) {
+            $base_url = (string) get_permalink($queried_id);
+        }
+    }
+
+    if ($base_url === '') {
+        $base_url = (string) (get_post_type_archive_link(ISS_WF_IMPORT_OBJECT_POST_TYPE) ?: home_url('/archivobjekte/'));
+    }
+
+    $selected_terms = [
+        'source' => iss_wf_import_get_archive_object_browser_selected_term(ISS_WF_IMPORT_SOURCE_TAXONOMY, $state['source']),
+        'field' => iss_wf_import_get_archive_object_browser_selected_term(ISS_WF_IMPORT_FIELD_TAXONOMY, $state['field']),
+        'family' => iss_wf_import_get_archive_object_browser_selected_term(ISS_WF_IMPORT_FAMILY_TAXONOMY, $state['family']),
+        'context' => iss_wf_import_get_archive_object_browser_selected_term(ISS_WF_IMPORT_CONTEXT_TAXONOMY, $state['context']),
+    ];
+
+    $query = iss_wf_import_get_archive_object_browser_query($state, 18);
+    $stats = iss_wf_import_get_archive_object_browser_stats($state);
+    $source_options = iss_wf_import_get_archive_object_browser_term_options(ISS_WF_IMPORT_SOURCE_TAXONOMY);
+    $field_options = iss_wf_import_get_archive_object_browser_term_options(ISS_WF_IMPORT_FIELD_TAXONOMY);
+    $family_options = iss_wf_import_get_archive_object_browser_term_options(ISS_WF_IMPORT_FAMILY_TAXONOMY, 8);
+    $context_options = iss_wf_import_get_archive_object_browser_term_options(ISS_WF_IMPORT_CONTEXT_TAXONOMY);
+    $quick_families = $quick_family_slugs
+        ? iss_wf_import_get_archive_object_browser_terms_by_slugs(ISS_WF_IMPORT_FAMILY_TAXONOMY, $quick_family_slugs)
+        : array_slice($family_options, 0, 4);
+    $active_filters = array_values(array_filter($selected_terms));
+    $cards = [];
+
+    foreach ($query->posts as $post) {
+        if ($post instanceof WP_Post) {
+            $cards[] = iss_wf_import_render_archive_object_browser_card($post);
+        }
+    }
+
+    $wrapper = function_exists('get_block_wrapper_attributes')
+        ? get_block_wrapper_attributes([
+            'class' => 'section iss-archive-browser',
+        ])
+        : 'class="section iss-archive-browser"';
+
+    $results_label = sprintf(
+        _n('%d Archivobjekt', '%d Archivobjekte', (int) $query->found_posts, 'iss-wf-import'),
+        (int) $query->found_posts
+    );
+
+    $pagination = paginate_links([
+        'base' => add_query_arg('seite', '%#%', iss_wf_import_get_archive_object_browser_url([], true, $state, $base_url)),
+        'format' => '',
+        'current' => max(1, (int) $state['page']),
+        'total' => max(1, (int) $query->max_num_pages),
+        'type' => 'list',
+        'prev_text' => __('Zurück', 'iss-wf-import'),
+        'next_text' => __('Weiter', 'iss-wf-import'),
+    ]);
+
+    ob_start();
+    ?>
+    <section <?php echo $wrapper; ?>>
+        <div class="iss-container">
+            <div class="iss-archive-browser__hero">
+                <div class="iss-heading iss-archive-browser__heading">
+                    <p class="iss-kicker iss-kicker--compact"><?php echo esc_html($browser_kicker); ?></p>
+                    <h1 class="iss-heading__title"><?php echo esc_html($browser_title); ?></h1>
+                    <p class="iss-heading__text"><?php echo esc_html($browser_intro); ?></p>
+                </div>
+
+                <div class="iss-archive-browser__stats">
+                    <article class="iss-archive-browser__stat">
+                        <p class="iss-kicker iss-kicker--compact"><?php esc_html_e('Gesamt', 'iss-wf-import'); ?></p>
+                        <h2><?php echo esc_html(number_format_i18n($stats['total_objects'])); ?></h2>
+                        <p><?php esc_html_e('veröffentlichte Archivobjekte', 'iss-wf-import'); ?></p>
+                    </article>
+                    <article class="iss-archive-browser__stat">
+                        <p class="iss-kicker iss-kicker--compact"><?php esc_html_e('Digital nachgewiesen', 'iss-wf-import'); ?></p>
+                        <h2><?php echo esc_html(number_format_i18n((int) ($stats['source_counts']['museum-digital'] ?? 0))); ?></h2>
+                        <p><?php esc_html_e('Objekte mit externem Plattformnachweis', 'iss-wf-import'); ?></p>
+                    </article>
+                    <article class="iss-archive-browser__stat">
+                        <p class="iss-kicker iss-kicker--compact"><?php esc_html_e('Typisiert', 'iss-wf-import'); ?></p>
+                        <h2><?php echo esc_html(number_format_i18n((int) $stats['classified_objects'])); ?></h2>
+                        <p><?php esc_html_e('Objekte mit neuer Familienzuordnung', 'iss-wf-import'); ?></p>
+                    </article>
+                </div>
+            </div>
+
+            <div class="iss-archive-browser__quick">
+                <div class="iss-heading iss-archive-browser__section-head">
+                    <p class="iss-kicker iss-kicker--compact"><?php echo esc_html($quick_kicker); ?></p>
+                    <h2 class="iss-heading__title"><?php echo esc_html($quick_title); ?></h2>
+                </div>
+                <div class="iss-archive-entry-grid iss-archive-browser__quick-grid">
+                    <?php if ($show_source_cards) : ?>
+                        <?php foreach (array_slice($source_options, 0, 2) as $term) : ?>
+                            <a class="iss-archive-entry iss-archive-entry--sammlung" href="<?php echo esc_url(iss_wf_import_get_archive_object_browser_url([
+                                'source' => $term->slug,
+                            'field' => '',
+                            'family' => '',
+                            'context' => '',
+                            'search' => '',
+                            'page' => 1,
+                            ], true, $state, $base_url)); ?>">
+                                <p class="iss-archive-entry__eyebrow"><?php esc_html_e('Nachweis', 'iss-wf-import'); ?></p>
+                                <h3 class="iss-archive-entry__title"><?php echo esc_html(iss_wf_import_get_public_source_label($term->slug, $term->name)); ?></h3>
+                                <p class="iss-archive-entry__text"><?php esc_html_e('Archivobjekte mit diesem digitalen Nachweis direkt im lokalen Bestand durchsuchen.', 'iss-wf-import'); ?></p>
+                                <div class="iss-archive-entry__meta"><span><?php echo esc_html(sprintf(_n('%d Objekt', '%d Objekte', (int) $term->count, 'iss-wf-import'), (int) $term->count)); ?></span></div>
+                            </a>
+                        <?php endforeach; ?>
+                    <?php endif; ?>
+
+                    <?php foreach ($quick_families as $term) : ?>
+                        <a class="iss-archive-entry iss-archive-entry--mediathek" href="<?php echo esc_url(iss_wf_import_get_archive_object_browser_url([
+                            'source' => $lock_source ? $state['source'] : '',
+                            'field' => '',
+                            'family' => $term->slug,
+                            'context' => '',
+                            'search' => '',
+                            'page' => 1,
+                        ], true, $state, $base_url)); ?>">
+                            <p class="iss-archive-entry__eyebrow"><?php esc_html_e('Objektfamilie', 'iss-wf-import'); ?></p>
+                            <h3 class="iss-archive-entry__title"><?php echo esc_html($term->name); ?></h3>
+                            <p class="iss-archive-entry__text"><?php esc_html_e('Bereits editorisch typisierte Objekte dieser Familie direkt öffnen.', 'iss-wf-import'); ?></p>
+                            <div class="iss-archive-entry__meta"><span><?php echo esc_html(sprintf(_n('%d Objekt', '%d Objekte', (int) $term->count, 'iss-wf-import'), (int) $term->count)); ?></span></div>
+                        </a>
+                    <?php endforeach; ?>
+                </div>
+            </div>
+
+            <div class="iss-archive-browser__layout">
+                <aside class="iss-archive-browser__sidebar">
+                    <div class="iss-archive-browser__filters">
+                        <div class="iss-heading iss-archive-browser__section-head">
+                            <p class="iss-kicker iss-kicker--compact"><?php esc_html_e('Filter', 'iss-wf-import'); ?></p>
+                            <h2 class="iss-heading__title"><?php esc_html_e('Archiv durchsuchen', 'iss-wf-import'); ?></h2>
+                        </div>
+                        <form class="iss-archive-browser__form" method="get" action="<?php echo esc_url($base_url); ?>">
+                            <label class="iss-archive-browser__field">
+                                <span><?php esc_html_e('Suche', 'iss-wf-import'); ?></span>
+                                <input class="iss-archive-browser__input" type="search" name="suche" value="<?php echo esc_attr($state['search']); ?>" />
+                            </label>
+
+                            <?php if ($lock_source) : ?>
+                                <input type="hidden" name="quelle" value="<?php echo esc_attr($state['source']); ?>" />
+                            <?php else : ?>
+                                <label class="iss-archive-browser__field">
+                                    <span><?php esc_html_e('Digitaler Nachweis', 'iss-wf-import'); ?></span>
+                                    <select class="iss-archive-browser__select" name="quelle">
+                                        <option value=""><?php esc_html_e('Alle Nachweise', 'iss-wf-import'); ?></option>
+                                        <?php foreach ($source_options as $term) : ?>
+                                            <option value="<?php echo esc_attr($term->slug); ?>" <?php selected($state['source'], $term->slug); ?>><?php echo esc_html(iss_wf_import_get_public_source_label($term->slug, $term->name) . ' (' . $term->count . ')'); ?></option>
+                                        <?php endforeach; ?>
+                                    </select>
+                                </label>
+                            <?php endif; ?>
+
+                            <?php if ($lock_field) : ?>
+                                <input type="hidden" name="feld" value="<?php echo esc_attr($state['field']); ?>" />
+                            <?php else : ?>
+                                <label class="iss-archive-browser__field">
+                                    <span><?php esc_html_e('Themenfeld', 'iss-wf-import'); ?></span>
+                                    <select class="iss-archive-browser__select" name="feld">
+                                        <option value=""><?php esc_html_e('Alle Themenfelder', 'iss-wf-import'); ?></option>
+                                        <?php foreach ($field_options as $term) : ?>
+                                            <option value="<?php echo esc_attr($term->slug); ?>" <?php selected($state['field'], $term->slug); ?>><?php echo esc_html($term->name . ' (' . $term->count . ')'); ?></option>
+                                        <?php endforeach; ?>
+                                    </select>
+                                </label>
+                            <?php endif; ?>
+
+                            <label class="iss-archive-browser__field">
+                                <span><?php esc_html_e('Objektfamilie', 'iss-wf-import'); ?></span>
+                                <select class="iss-archive-browser__select" name="familie">
+                                    <option value=""><?php esc_html_e('Alle Objektfamilien', 'iss-wf-import'); ?></option>
+                                    <?php foreach ($family_options as $term) : ?>
+                                        <option value="<?php echo esc_attr($term->slug); ?>" <?php selected($state['family'], $term->slug); ?>><?php echo esc_html($term->name . ' (' . $term->count . ')'); ?></option>
+                                    <?php endforeach; ?>
+                                </select>
+                            </label>
+
+                            <label class="iss-archive-browser__field">
+                                <span><?php esc_html_e('Kontext', 'iss-wf-import'); ?></span>
+                                <select class="iss-archive-browser__select" name="kontext">
+                                    <option value=""><?php esc_html_e('Alle Kontexte', 'iss-wf-import'); ?></option>
+                                    <?php foreach ($context_options as $term) : ?>
+                                        <option value="<?php echo esc_attr($term->slug); ?>" <?php selected($state['context'], $term->slug); ?>><?php echo esc_html($term->name . ' (' . $term->count . ')'); ?></option>
+                                    <?php endforeach; ?>
+                                </select>
+                            </label>
+
+                            <div class="iss-archive-browser__actions">
+                                <button class="wp-element-button" type="submit"><?php esc_html_e('Filtern', 'iss-wf-import'); ?></button>
+                                <a class="iss-action-link" href="<?php echo esc_url(iss_wf_import_get_archive_object_browser_url([
+                                    'source' => $lock_source ? $state['source'] : '',
+                                    'field' => $lock_field ? $state['field'] : '',
+                                    'family' => '',
+                                    'context' => '',
+                                    'search' => '',
+                                    'page' => 1,
+                                ], true, $state, $base_url)); ?>"><?php esc_html_e('Filter zurücksetzen', 'iss-wf-import'); ?></a>
+                            </div>
+                        </form>
+
+                        <p class="iss-archive-browser__note"><?php esc_html_e('Hinweis: Die editorische Typisierung läuft schrittweise. Noch nicht alle Bestände haben bereits Themenfeld- oder Familienzuordnungen.', 'iss-wf-import'); ?></p>
+                    </div>
+                </aside>
+
+                <div class="iss-archive-browser__results">
+                    <div class="iss-archive-browser__results-head">
+                        <div>
+                            <p class="iss-kicker iss-kicker--compact"><?php esc_html_e('Ergebnisse', 'iss-wf-import'); ?></p>
+                            <h2 class="iss-heading__title"><?php echo esc_html($results_label); ?></h2>
+                        </div>
+                        <?php if ($active_filters) : ?>
+                            <div class="iss-archive-browser__active">
+                                <?php foreach ($active_filters as $term) : ?>
+                                    <span><?php echo esc_html($term->name); ?></span>
+                                <?php endforeach; ?>
+                                <?php if ($state['search'] !== '') : ?>
+                                    <span><?php echo esc_html($state['search']); ?></span>
+                                <?php endif; ?>
+                            </div>
+                        <?php elseif ($state['search'] !== '') : ?>
+                            <div class="iss-archive-browser__active"><span><?php echo esc_html($state['search']); ?></span></div>
+                        <?php endif; ?>
+                    </div>
+
+                    <?php if ($cards) : ?>
+                        <div class="iss-card-grid iss-archive-browser__grid">
+                            <?php echo implode('', $cards); ?>
+                        </div>
+                        <?php if ($pagination) : ?>
+                            <nav class="iss-archive-browser__pagination" aria-label="<?php esc_attr_e('Archivobjekt Seiten', 'iss-wf-import'); ?>">
+                                <?php echo $pagination; ?>
+                            </nav>
+                        <?php endif; ?>
+                    <?php else : ?>
+                        <div class="iss-archive-browser__empty">
+                            <p><?php esc_html_e('Für diese Kombination wurden noch keine veröffentlichten Archivobjekte gefunden.', 'iss-wf-import'); ?></p>
+                        </div>
+                    <?php endif; ?>
+                </div>
+            </div>
+        </div>
+    </section>
+    <?php
+
+    wp_reset_postdata();
+
+    return trim((string) ob_get_clean());
 }

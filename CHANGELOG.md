@@ -1,6 +1,63 @@
 # Changelog
 
+## 2026-05-07
+- Finished the `Menschen im WF` evening rescue as a reconciliation-first museum-digital pass instead of a fresh-import run:
+  - hardened `plugins/iss-wf-import/includes/museum-digital-importer.php` so weak fallback payloads merge seed-row identity back in
+  - prevented duplicate scanning on empty title/inventory records
+  - completed the full `721`-row source pass in update-only batches with `0` creates and `0` errors
+- Clarified archive/public ownership and portal wording:
+  - shifted public archive language toward `Bestand` and `Digitale Nachweise`
+  - surfaced `museum-digital`, `DDB`, and `Europeana` as public portal traces rather than confusing ownership/source labels
+- Built the new dense discovery landing `/sammlungen/` in `themes/industriesalon` with isolated page CSS:
+  - `templates/page-sammlungen.html`
+  - `assets/css/page-sammlungen.css`
+  - compact switchboard intro
+  - denser editorial second section
+  - epoch cards and archive-discovery pathways
+  - synced the final Gutenberg-edited live template back to disk and removed the DB override
+- Tightened `/archiv/` into the stricter research-side counterpart to `/sammlungen/`:
+  - compact intro/orientation band
+  - denser sidebar/results surface
+  - sidebar width and native form control fixes
+  - archive object cards now use family/thematic kicker terms instead of generic `Archivobjekt`
+- Expanded the exhibition/publication twin system with major WF corpora:
+  - `Geschichte des WF` exhibition + publication
+  - `Röhren für die Republik` exhibition + publication
+  - `Fundstücke aus dem Landesarchiv Berlin` exhibition + publication
+- Promoted technical/editorial standalone pieces into real publications:
+  - `Farbfernsehen in der DDR schon vor dem Mauerbau?`
+  - `Fundstücke zur Geschichte des NEF im Archiv des Industriesalons`
+- Added the curated technical umbrella exhibition:
+  - `Elektrotechnik im WF`
+- Fixed source-content defects uncovered during promotion:
+  - repaired broken slugs in `Aus der Geschichte des WF`
+  - normalized obvious `Röhren für die Republik` title/slug defects (`Folge 11`, `Folge 20`, `Folge 24`)
+
 ## 2026-05-06
+- Turned `iss-wf-import` into a working museum-digital-backed archive browser/import workflow for WF technical corpora:
+  - added the dynamic object browser in `plugins/iss-wf-import/includes/blocks.php`
+  - switched `themes/industriesalon/templates/archive-archivobjekt.html` to the browser block
+  - added page-level archive browser styling in `themes/industriesalon/assets/css/page-archive.css`
+  - extended `themes/industriesalon/functions.php` to load the archive browser CSS on the new archive pages
+- Added dedicated technical archive landings in `themes/industriesalon`:
+  - `/roehren-und-halbleiter/`
+  - `/anlagen-automaten-arbeitsplaetze/`
+  - added nested archive path normalization in `plugins/iss-wf-import/includes/post-type.php`
+- Hardened the museum-digital importer in `plugins/iss-wf-import/includes/museum-digital-importer.php`:
+  - WF / Industriesalon source gate
+  - stable `--selection=remaining`
+  - `--only-new` alias
+  - `--skip-possible-duplicates`
+  - clearer dry-run summary buckets
+- Added the second classifier profile for `Anlagen, Automaten, Arbeitsplätze` with dedicated production-environment fields, families, and contexts.
+- Imported and structured the current WF technical corpora into local `archivobjekt` records:
+  - `Röhren und Halbleiter`
+  - `Anlagen, Automaten, Arbeitsplätze`
+- Exhausted safe bulk import for the noisy `Anlagen, Automaten, Arbeitsplätze` main families while holding back the manual duplicate-review tail.
+- Reclassified `Maschine` from a primary family into a secondary context and migrated existing imported records accordingly.
+- Narrowed `Montageplatz` into a true station family and moved generic assembly language into context `Montage`.
+- Fixed year extraction so explicit `Foto ... YYYY` dates outrank stray event dates and model numbers, then backfilled stored year/decade meta on imported museum-digital objects.
+
 - Added the first explicit Atlas editorial model to `industriesalon-schoeneweide-register`:
   - new `atlas_era` taxonomy for `register_place` and `atlas_story`
   - new `atlas_story` CPT for curated epoch narratives

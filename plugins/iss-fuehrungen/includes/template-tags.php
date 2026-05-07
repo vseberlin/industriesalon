@@ -519,6 +519,10 @@ function iss_fuehrung_get_route_station_detail_label(WP_Post $post): string
         return __('Objekt der Station', 'iss-fuehrungen');
     }
 
+    if ($post_type === 'archivbeitrag') {
+        return __('Archivbeitrag', 'iss-fuehrungen');
+    }
+
     if ($post_type === 'publication') {
         return __('Publikation', 'iss-fuehrungen');
     }

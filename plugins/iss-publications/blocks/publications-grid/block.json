@@ -10,6 +10,24 @@
       "type": "number",
       "default": 6
     },
+    "layout": {
+      "type": "string",
+      "default": ""
+    },
+    "includeIds": {
+      "type": "array",
+      "items": {
+        "type": "number"
+      },
+      "default": []
+    },
+    "excludeIds": {
+      "type": "array",
+      "items": {
+        "type": "number"
+      },
+      "default": []
+    },
     "excludeFeatured": {
       "type": "boolean",
       "default": false

@@ -19,6 +19,8 @@ function iss_content_model_meta_definitions() {
             'iss_is_permanent' => ['type' => 'boolean', 'sanitize' => 'rest_sanitize_boolean', 'default' => false],
             'iss_timeline_enabled' => ['type' => 'boolean', 'sanitize' => 'rest_sanitize_boolean', 'default' => true],
             'iss_timeline_item_id' => ['type' => 'integer', 'sanitize' => 'absint', 'default' => 0],
+            'iss_corpus_chapter_ids' => ['type' => 'string', 'sanitize' => 'sanitize_text_field', 'default' => ''],
+            'iss_companion_publication_id' => ['type' => 'integer', 'sanitize' => 'absint', 'default' => 0],
         ],
         ISS_CONTENT_MODEL_PROJEKT_POST_TYPE => [
             'iss_period_label' => ['type' => 'string', 'sanitize' => 'sanitize_text_field', 'default' => ''],

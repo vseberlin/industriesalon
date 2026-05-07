@@ -29,6 +29,10 @@ define('ISS_WF_IMPORT_OBJECT_POST_TYPE', 'archivobjekt');
 define('ISS_WF_IMPORT_SOURCE_TAXONOMY', 'archiv_quelle');
 define('ISS_WF_IMPORT_CATEGORY_TAXONOMY', 'archiv_kategorie');
 define('ISS_WF_IMPORT_TAG_TAXONOMY', 'archiv_schlagwort');
+define('ISS_WF_IMPORT_FIELD_TAXONOMY', 'archiv_themenfeld');
+define('ISS_WF_IMPORT_FAMILY_TAXONOMY', 'archiv_objektfamilie');
+define('ISS_WF_IMPORT_CONTEXT_TAXONOMY', 'archiv_kontext');
+define('ISS_WF_IMPORT_DECADE_TAXONOMY', 'archiv_dekade');
 
 define('ISS_WF_IMPORT_REMOTE_POST_ID_META', 'iss_source_post_id');
 define('ISS_WF_IMPORT_SOURCE_SITE_META', 'iss_source_site');
@@ -61,6 +65,17 @@ define('ISS_WF_IMPORT_OBJECT_EVENTS_META', 'iss_archive_object_events');
 define('ISS_WF_IMPORT_OBJECT_PLACE_RELATIONS_META', 'iss_archive_object_places');
 define('ISS_WF_IMPORT_OBJECT_PEOPLE_RELATIONS_META', 'iss_archive_object_people');
 define('ISS_WF_IMPORT_OBJECT_RELATIONS_META', 'iss_related_archive_objects');
+define('ISS_WF_IMPORT_OBJECT_MD_ID_META', 'iss_md_object_id');
+define('ISS_WF_IMPORT_OBJECT_MD_MANIFEST_URL_META', 'iss_md_manifest_url');
+define('ISS_WF_IMPORT_OBJECT_MD_IMAGE_URL_META', 'iss_md_image_url');
+define('ISS_WF_IMPORT_OBJECT_MD_IMAGE_RIGHTS_META', 'iss_md_image_rights');
+define('ISS_WF_IMPORT_OBJECT_MD_IMAGE_OWNER_META', 'iss_md_image_owner');
+define('ISS_WF_IMPORT_OBJECT_MD_METADATA_RIGHTS_META', 'iss_md_metadata_rights_status');
+define('ISS_WF_IMPORT_OBJECT_MD_METADATA_HOLDER_META', 'iss_md_metadata_rights_holder');
+define('ISS_WF_IMPORT_OBJECT_MD_INSTITUTION_ID_META', 'iss_md_institution_id');
+define('ISS_WF_IMPORT_OBJECT_MD_INSTITUTION_NAME_META', 'iss_md_institution_name');
+define('ISS_WF_IMPORT_OBJECT_YEAR_META', 'iss_archive_year');
+define('ISS_WF_IMPORT_OBJECT_DECADE_META', 'iss_archive_decade');
 
 define('ISS_WF_IMPORT_HASH_META', '_iss_wf_source_hash');
 define('ISS_WF_IMPORT_LAST_SYNCED_META', '_iss_wf_last_synced_gmt');
@@ -77,6 +92,7 @@ require_once ISS_WF_IMPORT_PATH . 'includes/suggestions.php';
 require_once ISS_WF_IMPORT_PATH . 'includes/blocks.php';
 require_once ISS_WF_IMPORT_PATH . 'includes/admin.php';
 require_once ISS_WF_IMPORT_PATH . 'includes/collection-editor.php';
+require_once ISS_WF_IMPORT_PATH . 'includes/museum-digital-importer.php';
 
 register_activation_hook(__FILE__, function () {
     iss_wf_import_register_post_type_and_taxonomies();
