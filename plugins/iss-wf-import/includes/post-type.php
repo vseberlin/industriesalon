@@ -225,6 +225,9 @@ function iss_wf_import_normalize_nested_archive_paths(): void
         '/archivsammlungen/archivobjekte/' => get_post_type_archive_link(ISS_WF_IMPORT_OBJECT_POST_TYPE),
         '/archivobjekte/roehren-und-halbleiter/' => home_url('/roehren-und-halbleiter/'),
         '/archivobjekte/anlagen-automaten-arbeitsplaetze/' => home_url('/anlagen-automaten-arbeitsplaetze/'),
+        '/archivobjekte/geraete-einschuebe-bauteile/' => home_url('/geraete-einschuebe-bauteile/'),
+        '/archivobjekte/telekommunikation-sende-und-fernsehtechnik/' => home_url('/telekommunikation-sende-und-fernsehtechnik/'),
+        '/archivobjekte/diverses-gebaeude-schaltbilder-etc/' => home_url('/diverses-gebaeude-schaltbilder-etc/'),
     ];
 
     foreach ($targets as $candidate => $destination) {
@@ -310,6 +313,11 @@ function iss_wf_import_ensure_museum_digital_terms(): void
             'anlage' => 'Anlage',
             'arbeitsplatz' => 'Arbeitsplatz',
             'automat' => 'Automat',
+            'geraete-bauteile' => 'Geräte / Bauteile',
+            'telekommunikation-fernsehtechnik' => 'Telekommunikation / Fernsehtechnik',
+            'diverses' => 'Diverses',
+            'schaltbild' => 'Schaltbild / Repro',
+            'gebaeude' => 'Gebäude / Werkumfeld',
         ],
         ISS_WF_IMPORT_FAMILY_TAXONOMY => [
             'thyratron' => 'Thyratron',
@@ -332,6 +340,17 @@ function iss_wf_import_ensure_museum_digital_terms(): void
             'innenraum' => 'Innenraum/Fabrikhalle',
             'laboraufbau' => 'Laboraufbau',
             'transport' => 'Transport/Materialfluss',
+            'geraet' => 'Gerät',
+            'bauteil' => 'Bauteil',
+            'einschub' => 'Einschub',
+            'messgeraet' => 'Messgerät',
+            'kamera' => 'Kamera',
+            'sender' => 'Sender / Sendeeinheit',
+            'relais' => 'Relais / Schaltung',
+            'schrank' => 'Geräteschrank',
+            'schaltbild' => 'Schaltbild / Repro',
+            'gebaeudeansicht' => 'Gebäudeansicht',
+            'musikinstrument' => 'Elektronisches Instrument',
         ],
         ISS_WF_IMPORT_CONTEXT_TAXONOMY => [
             'produkt' => 'Produkt',
@@ -345,6 +364,9 @@ function iss_wf_import_ensure_museum_digital_terms(): void
             'montage' => 'Montage',
             'sachaufnahme' => 'Sachaufnahme',
             'maschine' => 'Maschine',
+            'dokumentation' => 'Dokumentation',
+            'reproduktion' => 'Reproduktion',
+            'aussenaufnahme' => 'Außenaufnahme',
         ],
         ISS_WF_IMPORT_DECADE_TAXONOMY => [
             '1940er' => '1940er',

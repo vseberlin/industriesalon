@@ -1,10 +1,10 @@
 # Handoff Current
 
 ## Status
-- `in progress`
+- `paused at clean checkpoint`
 
 ## Date / Window
-- Date: `2026-05-07`
+- Date: `2026-05-08`
 - Timezone: `Europe/Berlin`
 
 ## Branch / Commit
@@ -12,104 +12,109 @@
 - HEAD at start of this pass: `9759d82`
 
 ## What Was Done This Session
-- Finished the `Menschen im WF` evening museum-digital reconciliation as an update-first rescue instead of a fresh-import run:
-  - fixed fallback identity handling in `plugins/iss-wf-import/includes/museum-digital-importer.php`
-  - merged seed-row metadata back into weak museum-digital fallback payloads when title/inventory were missing
-  - stopped duplicate scans from running on empty title/inventory records
-  - completed the full `721`-row source pass in safe update batches with `0` creates and `0` errors
-- Confirmed the `Menschen im WF` remaining tail is no longer a bulk-import blocker:
-  - safe `remaining` runs now leave only a tiny duplicate residue instead of a large unresolved corpus
-  - the local `/menschen-im-wf/` landing remains the right public entry surface while editorial review continues
-- Continued the archive/public wording cleanup so Industriesalon ownership is clearer than external hosting traces:
-  - public archive wording now favors `Bestand` and `Digitale Nachweise`
-  - highlighted `museum-digital`, `DDB`, and `Europeana` as public portals instead of treating them as ownership/source labels
-- Built the new dense `/sammlungen/` discovery landing in the theme as a separate safe page/template with isolated CSS:
-  - `themes/industriesalon/templates/page-sammlungen.html`
-  - `themes/industriesalon/assets/css/page-sammlungen.css`
-  - compact switchboard intro
-  - denser second-section three-panel logic
-  - epoch cards and archive-discovery pathways
-  - synced the final edited template back to disk after Gutenberg DB override creation
-- Tightened `/archiv/` into the stricter research surface beside `/sammlungen/`:
-  - compact archive intro/orientation band
-  - denser sidebar/results layout
-  - fixed sidebar width and native control overflow behavior
-- Added archive/object UI wording and taxonomy improvements:
-  - archive object cards now use family/thematic kicker terms instead of the generic `Archivobjekt`
-  - single archive objects and collections surface public portal context more clearly
-- Expanded the exhibition/publication twin model with additional WF corpora and technical longreads:
-  - `Geschichte des WF` exhibition + publication
-  - `Röhren für die Republik` exhibition + publication, explicitly marked as an incomplete first secured run
-  - `Fundstücke aus dem Landesarchiv Berlin` exhibition + publication
-  - standalone longread publications:
-    - `Farbfernsehen in der DDR schon vor dem Mauerbau?`
-    - `Fundstücke zur Geschichte des NEF im Archiv des Industriesalons`
-  - umbrella exhibition:
-    - `Elektrotechnik im WF`
-- Fixed source-content defects discovered while promoting corpora:
-  - repaired broken slugs in `Aus der Geschichte des WF` chapters
-  - normalized obvious `Röhren für die Republik` title/slug defects (`Folge 11`, `Folge 20`, `Folge 24`)
+- Promoted WF technical material from `wf-museum.de` into stronger local public surfaces instead of leaving it as scattered imported objects:
+  - rebuilt `Elektrotechnik im WF` as a denser editorial gateway in WordPress content
+  - created new `ausstellung` `Betriebsfotoalben im WF` (`ID 21128`) as the umbrella for the four existing album publications plus their archive collections
+- Confirmed the structural boundary for the technical archive:
+  - `publication` remains the readable/interpretive layer
+  - `ausstellung` remains the curated entry layer
+  - `archivobjekt` remains the source-of-truth object layer
+  - `WF-Technik` should grow as a taxonomy-led technical corpus, not as many parallel longreads
+- Extended the technical archive/browser system in `iss-wf-import` so the remaining WF-Technik sections can scale:
+  - added nested route normalization for:
+    - `/geraete-einschuebe-bauteile/`
+    - `/telekommunikation-sende-und-fernsehtechnik/`
+    - `/diverses-gebaeude-schaltbilder-etc/`
+  - extended editor-facing archive taxonomy vocabulary with additional fields/families/contexts for:
+    - devices/components
+    - telecommunication/television
+    - buildings/work environment
+    - schematics/reproductions
+  - added new classifier profiles in `plugins/iss-wf-import/includes/museum-digital-importer.php`:
+    - `geraete-bauteile`
+    - `telekommunikation-fernsehtechnik`
+    - `diverses-gebaeude-schaltbilder`
+  - hardened the CLI importer so large WF-Museum seed pages fall back from `discover_seed_rows()` to raw object-id discovery when row extraction comes back empty
+- Added three new page-owned browser landings in the active theme:
+  - `themes/industriesalon/templates/page-geraete-einschuebe-bauteile.html`
+  - `themes/industriesalon/templates/page-telekommunikation-sende-und-fernsehtechnik.html`
+  - `themes/industriesalon/templates/page-diverses-gebaeude-schaltbilder-etc.html`
+- Created the missing page owners in WordPress content:
+  - `Geräte, Einschübe, Bauteile` (`ID 21133`)
+  - `Telekommunikation, Sende- und Fernsehtechnik` (`ID 21131`)
+  - `Diverses, Gebäude, Schaltbilder` (`ID 21132`)
+- Ran chunked museum-digital imports with the now-validated safe pattern:
+  - use `--selection=remaining`
+  - use `--skip-possible-duplicates`
+  - stop long runs at visible checkpoints instead of one opaque full-seed pass
+- Brought the technical taxonomy to these checkpoint counts:
+  - `Geräte / Bauteile`: `1165`
+  - `Telekommunikation / Fernsehtechnik`: `268`
+  - `Diverses`: `333`
+  - `Gebäude / Werkumfeld`: `21`
+  - `Schaltbild / Repro`: `52`
 
 ## Verification
 - Active theme rechecked: `industriesalon`
-- Relevant plugins repeatedly verified live during this pass:
+- Relevant plugin verified during this pass:
   - `iss-wf-import`
-  - `iss-content-model`
-  - `iss-publications`
-  - `iss-relations`
-  - `industriesalon-schoeneweide-register`
-- `Menschen im WF` importer pass verified through full WP-CLI batch summaries:
-  - `721` discovered source rows covered
-  - `0` creates
-  - `0` errors
-  - only a minimal duplicate residue left in safe `remaining` mode
-- New publication/exhibition URLs verified live:
-  - `/ausstellungen/geschichte-des-wf/`
-  - `/publikationen/geschichte-des-wf-eine-entwicklungsgeschichte/`
-  - `/ausstellungen/rohren-fur-die-republik/`
-  - `/publikationen/rohren-fur-die-republik-eine-technikgeschichte/`
-  - `/ausstellungen/fundstucke-aus-dem-landesarchiv-berlin/`
-  - `/publikationen/fundstucke-aus-dem-landesarchiv-berlin-eine-quellengeschichte/`
-  - `/publikationen/farbfernsehen-in-der-ddr-schon-vor-dem-mauerbau/`
-  - `/publikationen/fundstucke-zur-geschichte-des-nef-im-archiv-des-industriesalons/`
+- PHP syntax verified inside the WordPress container:
+  - `plugins/iss-wf-import/includes/post-type.php`
+  - `plugins/iss-wf-import/includes/museum-digital-importer.php`
+- Live page checks passed:
   - `/ausstellungen/elektrotechnik-im-wf/`
-- `/sammlungen/` verified live after template sync-back to disk
-- `/archiv/` verified live after compact-research-page refinements
+  - `/ausstellungen/betriebsfotoalben-im-wf/`
+  - `/geraete-einschuebe-bauteile/`
+  - `/telekommunikation-sende-und-fernsehtechnik/`
+  - `/diverses-gebaeude-schaltbilder-etc/`
+- Archive redirect path verified:
+  - `/archivobjekte/geraete-einschuebe-bauteile/` redirects to the page-owned landing
+- The new browser pages are not empty shells anymore:
+  - `Geräte / Bauteile` shows real local object cards
+  - `Telekommunikation / Fernsehtechnik` shows relays, senders, meters, cameras, TV equipment
+  - `Diverses` now visibly surfaces `Schaltbild / Repro` objects such as the imported `Dunkelschaltbild ...` series
 
 ## Important Notes
-- `Menschen im WF` is now functionally rescued as a reconciled local corpus rather than an importer problem.
-- The remaining work there is editorial/data review, not bulk mechanics.
-- `Röhren für die Republik` is intentionally published as an incomplete first secured run:
-  - present: `11–13`, `18–48`, `50`
-  - missing: `1–10`, `14–17`, `49`
-- `Geschichten vom Herrn A. (nicht K.)` remains partial locally:
-  - current local coverage is only `Folge 1`, `Folge 2`, and `Folge 5`
-  - do not promote it to `ausstellung` yet
-  - only consider a selection-style publication after missing parts `3` and `4` are verified locally or recovered
-- `Elektrotechnik im WF` is now a real editorial umbrella, but it is still a first-stage technical program rather than a finished refined museum section.
+- The current import workflow is workable and should be continued, but in chunks:
+  - giant one-shot runs are technically possible but operationally poor
+  - the practical pattern is chunked `remaining` imports with visible checkpoints
+- `wf-museum.de/home-2/wf-technik/geraete-einschuebe-bauteile/` is the largest of the remaining technical source pages:
+  - source-side object-id discovery showed `1881` links
+- `wf-museum.de/home-2/wf-technik/telekommunikation-sende-und-fernsehtechnik/` showed `793`
+- `wf-museum.de/home-2/wf-technik/diverses-gebaeude-schaltbilder-etc/` showed `334`
+- Database size is still reasonable for continuing toward the larger museum-digital corpus:
+  - current `archivobjekt` count: `2779`
+  - `wp_posts`: about `34.77 MB`
+  - `wp_postmeta`: about `52.52 MB`
+  - current archive objects average about `33.52` meta rows per object
+- The real scaling risk is not object count alone, but bad query design or uncontrolled attachments. The current browser/taxonomy direction is the right one.
 
 ## Current Worktree
-- Pending commit at handoff time:
-  - full theme/plugin worktree from the session, including archive/archive-object, publications, relations, content-model, and Schöneweide register changes
+- Source-file changes from this pass:
+  - `plugins/iss-wf-import/includes/post-type.php`
+  - `themes/industriesalon/templates/page-geraete-einschuebe-bauteile.html`
+  - `themes/industriesalon/templates/page-telekommunikation-sende-und-fernsehtechnik.html`
+  - `themes/industriesalon/templates/page-diverses-gebaeude-schaltbilder-etc.html`
+- There are also older unrelated pending worktree changes from earlier sessions in theme/plugin files; do not revert them casually.
+- Large parts of this pass also live in WordPress content/database, not only in repo files:
+  - updated `Elektrotechnik im WF`
+  - created `Betriebsfotoalben im WF`
+  - created the three technical page owners
+  - imported many new `archivobjekt` records
 
 ## Next Recommended Steps
-- Review and refine the new technical/editorial shells instead of creating more structure blindly:
-  - `Elektrotechnik im WF`
-  - `Röhren für die Republik`
-  - `Geschichte des WF`
-  - `Fundstücke aus dem Landesarchiv Berlin`
-- Decide whether the next pass should be:
-  - editorial cleanup of rough chapter bodies/slugs/notes
-  - relation enrichment to places/Atlas/tours
-  - or visual refinement of the new archive/publication/exhibition landing surfaces
-- Keep `Geschichten vom Herrn A. (nicht K.)` on the editorial review list only after missing parts are recovered
-
-## Todo: Menschen im WF Follow-up
-- `Menschen im WF` is no longer blocked on bulk importer mechanics.
-- Remaining tasks there are editorial:
-  - inspect the tiny duplicate residue
-  - refine local taxonomy/family assignments where the corpus is still rough
-  - decide whether stronger sub-landings or thematic exhibitions should grow out of that collection
+- Continue the same chunked import pattern, not a redesign:
+  - `Telekommunikation / Fernsehtechnik` next `remaining` slice
+  - then the remaining `Geräte / Bauteile` tail
+  - then any still-missing `Diverses` residue
+- After enough import coverage, refine the taxonomy semantics where it still drifts:
+  - some objects in `Diverses` are still broad and may need sharper family/context assignment
+  - `Geräte / Bauteile` will likely need later splits inside the field once the corpus stabilizes
+- Only after import coverage is materially stronger, consider new curated surfaces such as:
+  - `Röhren und Halbleiter im WF`
+  - `Arbeitsplätze und Prüfstände`
+  - more device/television-focused exhibitions or publications
 
 ## Continuity Prompt
 - Start next session with: `read /home/vladimir/wp/handoff_CURRENT.md`
+- Then continue chunked `remaining` imports for the WF-Technik pages, using the new profiles and stopping at explicit checkpoints instead of one-shot full-seed runs.

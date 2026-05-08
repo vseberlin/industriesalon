@@ -1,5 +1,49 @@
 # Changelog
 
+## 2026-05-08
+- Promoted the WF technical/archive material into stronger first-class public surfaces in WordPress content:
+  - rebuilt `Elektrotechnik im WF` as a denser editorial gateway instead of a thin placeholder shell
+  - created `Betriebsfotoalben im WF` as a real umbrella exhibition over the four existing album publications and archive collections
+- Extended the `iss-wf-import` archive/browser system to support the larger WF-Technik corpus instead of only the earlier `Röhren`/`Anlagen` slices:
+  - added nested route normalization for:
+    - `/geraete-einschuebe-bauteile/`
+    - `/telekommunikation-sende-und-fernsehtechnik/`
+    - `/diverses-gebaeude-schaltbilder-etc/`
+  - extended the editor-facing archive taxonomy vocabulary with new fields/families/contexts for:
+    - devices/components
+    - telecommunication/television
+    - buildings/work environment
+    - schematics/reproductions
+  - added the classifier profiles:
+    - `geraete-bauteile`
+    - `telekommunikation-fernsehtechnik`
+    - `diverses-gebaeude-schaltbilder`
+  - hardened the CLI importer to fall back from rich seed-row parsing to raw object-id discovery on the very large WF-Museum seed pages
+- Added three new page-owned technical browser landings in the active theme:
+  - `themes/industriesalon/templates/page-geraete-einschuebe-bauteile.html`
+  - `themes/industriesalon/templates/page-telekommunikation-sende-und-fernsehtechnik.html`
+  - `themes/industriesalon/templates/page-diverses-gebaeude-schaltbilder-etc.html`
+- Created the corresponding public page owners in WordPress content:
+  - `Geräte, Einschübe, Bauteile`
+  - `Telekommunikation, Sende- und Fernsehtechnik`
+  - `Diverses, Gebäude, Schaltbilder`
+- Continued museum-digital ingestion with chunked, duplicate-safe import runs rather than one giant opaque batch:
+  - kept the validated pattern `--selection=remaining --skip-possible-duplicates`
+  - imported a substantial first slice of:
+    - `Geräte / Bauteile`
+    - `Telekommunikation / Fernsehtechnik`
+    - `Diverses / Gebäude / Schaltbilder`
+- Brought the technical taxonomy to these checkpoint counts:
+  - `Geräte / Bauteile`: `1165`
+  - `Telekommunikation / Fernsehtechnik`: `268`
+  - `Diverses`: `333`
+  - `Gebäude / Werkumfeld`: `21`
+  - `Schaltbild / Repro`: `52`
+- Verified:
+  - PHP syntax in the WordPress container for the touched `iss-wf-import` files
+  - live responses for the new technical browser pages
+  - live public rendering of new imported `Schaltbild / Repro` objects such as the `Dunkelschaltbild ...` series
+
 ## 2026-05-07
 - Finished the `Menschen im WF` evening rescue as a reconciliation-first museum-digital pass instead of a fresh-import run:
   - hardened `plugins/iss-wf-import/includes/museum-digital-importer.php` so weak fallback payloads merge seed-row identity back in

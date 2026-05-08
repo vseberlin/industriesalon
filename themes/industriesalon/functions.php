@@ -34,6 +34,7 @@ add_action('after_setup_theme', function () {
             'assets/css/single-ausstellung.css',
             'assets/css/single-event.css',
             'assets/css/single-content.css',
+            'assets/css/single-video.css',
         )
     );
 });
@@ -924,6 +925,11 @@ function industriesalon_enqueue_assets(): void
             'handle' => 'industriesalon-publications',
             'path' => '/assets/css/publications.css',
             'condition' => is_page('publikationen') || is_singular('publication'),
+        ),
+        array(
+            'handle' => 'industriesalon-single-video',
+            'path' => '/assets/css/single-video.css',
+            'condition' => is_singular('video'),
         ),
         array(
             'handle' => 'industriesalon-single-tour',

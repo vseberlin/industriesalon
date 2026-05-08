@@ -32,6 +32,14 @@ function iss_content_model_meta_definitions() {
             'iss_email' => ['type' => 'string', 'sanitize' => 'sanitize_email', 'default' => ''],
             'iss_phone' => ['type' => 'string', 'sanitize' => 'sanitize_text_field', 'default' => ''],
         ],
+        ISS_CONTENT_MODEL_VIDEO_POST_TYPE => [
+            'iss_video_url' => ['type' => 'string', 'sanitize' => 'esc_url_raw', 'default' => ''],
+            'iss_video_source_family' => ['type' => 'string', 'sanitize' => 'sanitize_key', 'default' => 'core'],
+            'iss_video_source_label' => ['type' => 'string', 'sanitize' => 'sanitize_text_field', 'default' => ''],
+            'iss_video_source_url' => ['type' => 'string', 'sanitize' => 'esc_url_raw', 'default' => ''],
+            'iss_video_year' => ['type' => 'string', 'sanitize' => 'sanitize_text_field', 'default' => ''],
+            'iss_video_featured' => ['type' => 'boolean', 'sanitize' => 'rest_sanitize_boolean', 'default' => false],
+        ],
     ];
 }
 

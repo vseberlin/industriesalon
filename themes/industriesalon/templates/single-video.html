@@ -1,0 +1,33 @@
+<!-- wp:template-part {"slug":"header","tagName":"header"} /-->
+
+<!-- wp:group {"tagName":"main","className":"iss-video-single","layout":{"type":"default"}} -->
+<main class="wp-block-group iss-video-single">
+	<!-- wp:group {"tagName":"section","className":"section section--plain iss-video-single__intro","layout":{"type":"default"}} -->
+	<section class="wp-block-group section section--plain iss-video-single__intro">
+		<!-- wp:group {"className":"iss-container","layout":{"type":"default"}} -->
+		<div class="wp-block-group iss-container">
+			<!-- wp:iss/video-player /-->
+		</div>
+		<!-- /wp:group -->
+	</section>
+	<!-- /wp:group -->
+
+	<!-- wp:group {"tagName":"section","className":"section section--plain iss-video-single__transcript-wrap","layout":{"type":"default"}} -->
+	<section class="wp-block-group section section--plain iss-video-single__transcript-wrap">
+		<!-- wp:group {"className":"iss-container","layout":{"type":"default"}} -->
+		<div class="wp-block-group iss-container">
+			<!-- wp:iss/video-transcript /-->
+		</div>
+		<!-- /wp:group -->
+	</section>
+	<!-- /wp:group -->
+
+	<!-- wp:iss/related-place-map {"kicker":"Verortung","title":"Orte zum Video","perPage":5} /-->
+
+	<!-- wp:iss/related-content {"postType":"register_place","kicker":"Ort","title":"Verknüpfte Orte","perPage":4} /-->
+
+	<!-- wp:iss/related-content {"postType":"publication","kicker":"Weiterlesen","title":"Verwandte Publikationen","perPage":3} /-->
+</main>
+<!-- /wp:group -->
+
+<!-- wp:template-part {"slug":"footer","tagName":"footer"} /-->

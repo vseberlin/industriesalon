@@ -83,6 +83,24 @@ function iss_content_model_register_post_types() {
         'taxonomies' => [ISS_CONTENT_MODEL_TEAM_ROLE_TAXONOMY],
     ]);
 
+    register_post_type(ISS_CONTENT_MODEL_VIDEO_POST_TYPE, [
+        'labels' => [
+            'name' => __('Videos', 'iss-content-model'),
+            'singular_name' => __('Video', 'iss-content-model'),
+            'menu_name' => __('Videos', 'iss-content-model'),
+            'add_new_item' => __('Neues Video anlegen', 'iss-content-model'),
+            'edit_item' => __('Video bearbeiten', 'iss-content-model'),
+        ],
+        'public' => true,
+        'show_in_rest' => true,
+        'has_archive' => false,
+        'rewrite' => ['slug' => 'video', 'with_front' => false],
+        'menu_position' => 26,
+        'menu_icon' => 'dashicons-video-alt3',
+        'supports' => ['title', 'editor', 'excerpt', 'thumbnail', 'revisions', 'page-attributes', 'custom-fields'],
+        'taxonomies' => [ISS_CONTENT_MODEL_VIDEO_CATEGORY_TAXONOMY],
+    ]);
+
     register_taxonomy(ISS_CONTENT_MODEL_TEAM_ROLE_TAXONOMY, [ISS_CONTENT_MODEL_TEAM_POST_TYPE], [
         'labels' => [
             'name' => __('Teamrollen', 'iss-content-model'),
@@ -147,6 +165,19 @@ function iss_content_model_register_post_types() {
         'show_in_rest' => true,
         'rewrite' => ['slug' => 'industrieort', 'with_front' => false],
     ]);
+
+    register_taxonomy(ISS_CONTENT_MODEL_VIDEO_CATEGORY_TAXONOMY, [ISS_CONTENT_MODEL_VIDEO_POST_TYPE], [
+        'labels' => [
+            'name' => __('Videokategorien', 'iss-content-model'),
+            'singular_name' => __('Videokategorie', 'iss-content-model'),
+            'menu_name' => __('Videokategorien', 'iss-content-model'),
+        ],
+        'public' => true,
+        'hierarchical' => true,
+        'show_admin_column' => true,
+        'show_in_rest' => true,
+        'rewrite' => ['slug' => 'videokategorie', 'with_front' => false],
+    ]);
 }
 add_action('init', 'iss_content_model_register_post_types');
 
@@ -173,6 +204,13 @@ function iss_content_model_get_default_taxonomy_terms() {
             ['name' => __('Kabelwerk Oberspree', 'iss-content-model'), 'slug' => 'kabelwerk-oberspree'],
             ['name' => __('Transformatorenwerk Oberschöneweide', 'iss-content-model'), 'slug' => 'transformatorenwerk-oberschoeneweide'],
             ['name' => __('Werk für Fernsehelektronik', 'iss-content-model'), 'slug' => 'werk-fuer-fernsehelektronik'],
+        ],
+        ISS_CONTENT_MODEL_VIDEO_CATEGORY_TAXONOMY => [
+            ['name' => __('Zeitzeugen', 'iss-content-model'), 'slug' => 'zeitzeugen'],
+            ['name' => __('Werk & Technik', 'iss-content-model'), 'slug' => 'werk-technik'],
+            ['name' => __('Führungen', 'iss-content-model'), 'slug' => 'fuehrungen'],
+            ['name' => __('Orte & Wandel', 'iss-content-model'), 'slug' => 'orte-wandel'],
+            ['name' => __('Gespräche & Debatten', 'iss-content-model'), 'slug' => 'gespraeche-debatten'],
         ],
     ];
 }

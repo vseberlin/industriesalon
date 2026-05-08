@@ -79,6 +79,41 @@ function iss_relations_register_blocks(): void
         ],
         'render_callback' => 'iss_relations_render_related_cards_block',
     ]);
+
+    register_block_type('iss/related-place-map', [
+        'api_version' => 3,
+        'title' => __('Related Place Map', 'iss-relations'),
+        'category' => 'widgets',
+        'icon' => 'location-alt',
+        'description' => __('Shows related places as a compact map stage with linked place summaries.', 'iss-relations'),
+        'editor_script' => 'iss-relations-related-blocks',
+        'attributes' => [
+            'title' => [
+                'type' => 'string',
+                'default' => '',
+            ],
+            'kicker' => [
+                'type' => 'string',
+                'default' => '',
+            ],
+            'perPage' => [
+                'type' => 'number',
+                'default' => 5,
+            ],
+            'source' => [
+                'type' => 'string',
+                'default' => 'current',
+            ],
+            'placeIds' => [
+                'type' => 'string',
+                'default' => '',
+            ],
+        ],
+        'supports' => [
+            'html' => false,
+        ],
+        'render_callback' => 'iss_relations_render_related_place_map_block',
+    ]);
 }
 add_action('init', 'iss_relations_register_blocks', 20);
 
@@ -182,6 +217,9 @@ function iss_relations_build_place_item(int $place_id, array $overrides = []): ?
         'post' => $place,
         'title' => get_the_title($place),
         'permalink' => (string) get_permalink($place),
+        'excerpt' => iss_relations_get_card_excerpt($place, 18),
+        'lat' => is_numeric(get_post_meta($place_id, 'lat', true)) ? (float) get_post_meta($place_id, 'lat', true) : null,
+        'lng' => is_numeric(get_post_meta($place_id, 'lng', true)) ? (float) get_post_meta($place_id, 'lng', true) : null,
     ], $overrides);
 }
 
@@ -338,6 +376,29 @@ function iss_relations_get_card_excerpt(WP_Post $post, int $max_words = 22): str
     return wp_trim_words(wp_strip_all_tags((string) get_post_field('post_content', $post->ID)), $max_words, '…');
 }
 
+function iss_relations_get_place_map_defaults(): array
+{
+    return [
+        'kicker' => __('Atlas', 'iss-relations'),
+        'title' => __('Orte im Zusammenhang', 'iss-relations'),
+        'link_text' => __('Zum Atlas', 'iss-relations'),
+    ];
+}
+
+function iss_relations_collect_map_places(array $attributes = [], $block = null): array
+{
+    $attributes = is_array($attributes) ? $attributes : [];
+    $current_post_id = isset($block->context['postId']) ? (int) $block->context['postId'] : (int) get_the_ID();
+    $per_page = max(1, min(12, absint($attributes['perPage'] ?? 5)));
+    $place_items = iss_relations_resolve_block_place_items($attributes, $current_post_id);
+
+    if (!$place_items) {
+        return [];
+    }
+
+    return array_slice($place_items, 0, $per_page);
+}
+
 function iss_relations_render_generic_card(WP_Post $post, array $copy): string
 {
     $post_type = (string) $post->post_type;
@@ -445,6 +506,93 @@ function iss_relations_render_cards_grid(array $cards, string $post_type): strin
     return $out;
 }
 
+function iss_relations_render_place_map_stage(array $places): string
+{
+    $geo_places = array_values(array_filter($places, static function (array $place): bool {
+        return is_numeric($place['lat'] ?? null) && is_numeric($place['lng'] ?? null);
+    }));
+
+    if (!$geo_places) {
+        return '<div class="iss-related-place-map__empty">' . esc_html__('Für diese Auswahl sind noch keine Koordinaten hinterlegt.', 'iss-relations') . '</div>';
+    }
+
+    $lats = array_column($geo_places, 'lat');
+    $lngs = array_column($geo_places, 'lng');
+    $min_lat = min($lats);
+    $max_lat = max($lats);
+    $min_lng = min($lngs);
+    $max_lng = max($lngs);
+    $lat_range = max(0.0001, $max_lat - $min_lat);
+    $lng_range = max(0.0001, $max_lng - $min_lng);
+    $markers = '';
+
+    foreach ($geo_places as $index => $place) {
+        $x = (($place['lng'] - $min_lng) / $lng_range) * 100;
+        $y = (($max_lat - $place['lat']) / $lat_range) * 100;
+        $x = max(6, min(94, $x));
+        $y = max(8, min(92, $y));
+        $label = trim((string) ($place['label'] ?? ''));
+        $marker_label = $label !== '' ? ($label . ': ' . $place['title']) : $place['title'];
+
+        $markers .= sprintf(
+            '<a class="iss-related-place-map__marker" href="%1$s" style="--x:%2$s%%;--y:%3$s%%" aria-label="%4$s"><span class="iss-related-place-map__marker-dot" aria-hidden="true"></span><span class="iss-related-place-map__marker-label">%5$s</span></a>',
+            esc_url((string) ($place['permalink'] ?? '')),
+            esc_attr(number_format($x, 3, '.', '')),
+            esc_attr(number_format($y, 3, '.', '')),
+            esc_attr($marker_label),
+            esc_html((string) ($index + 1))
+        );
+    }
+
+    return '<div class="iss-related-place-map__stage">' . $markers . '</div>';
+}
+
+function iss_relations_render_place_map_list(array $places): string
+{
+    $out = '<div class="iss-related-place-map__list">';
+
+    foreach ($places as $index => $place) {
+        $permalink = (string) ($place['permalink'] ?? '');
+        $title = trim((string) ($place['title'] ?? ''));
+        $label = trim((string) ($place['label'] ?? ''));
+        $excerpt = trim((string) ($place['excerpt'] ?? ''));
+
+        $out .= '<article class="iss-related-place-map__item">';
+        $out .= '<div class="iss-related-place-map__item-index">' . esc_html((string) ($index + 1)) . '</div>';
+        $out .= '<div class="iss-related-place-map__item-body">';
+        if ($label !== '') {
+            $out .= '<p class="iss-related-place-map__item-kicker">' . esc_html($label) . '</p>';
+        }
+        $out .= '<h3 class="iss-related-place-map__item-title"><a href="' . esc_url($permalink) . '">' . esc_html($title) . '</a></h3>';
+        if ($excerpt !== '') {
+            $out .= '<p class="iss-related-place-map__item-text">' . esc_html($excerpt) . '</p>';
+        }
+        $out .= '<p class="iss-related-place-map__item-link"><a class="iss-action-link" href="' . esc_url($permalink) . '">' . esc_html__('Zum Ort', 'iss-relations') . '</a></p>';
+        $out .= '</div>';
+        $out .= '</article>';
+    }
+
+    $out .= '</div>';
+
+    return $out;
+}
+
+function iss_relations_get_place_map_description(string $source, int $count): string
+{
+    if ($count <= 0) {
+        return '';
+    }
+
+    switch ($source) {
+        case 'route':
+            return __('Die Stationen dieser Führung lassen sich hier als Orte lesen und im Atlas weiterverfolgen.', 'iss-relations');
+        case 'manual':
+            return __('Eine kleine Auswahl markiert Orte, an denen Industriegeschichte, Nutzung und Wandel im Stadtraum sichtbar werden.', 'iss-relations');
+        default:
+            return __('Die verknüpften Orte führen vom Beitrag oder Video weiter in den Schöneweider Stadtraum.', 'iss-relations');
+    }
+}
+
 function iss_relations_render_related_cards_block($attributes = [], $content = '', $block = null): string
 {
     $data = iss_relations_collect_related_cards($attributes, $block);
@@ -496,6 +644,53 @@ function iss_relations_render_related_content_block($attributes = [], $content =
     }
     $out .= '</div>';
     $out .= iss_relations_render_cards_grid($data['cards'], $post_type);
+    $out .= '</div>';
+    $out .= '</section>';
+
+    return $out;
+}
+
+function iss_relations_render_related_place_map_block($attributes = [], $content = '', $block = null): string
+{
+    $attributes = is_array($attributes) ? $attributes : [];
+    $places = iss_relations_collect_map_places($attributes, $block);
+    if (!$places) {
+        return '';
+    }
+
+    $defaults = iss_relations_get_place_map_defaults();
+    $source = sanitize_key((string) ($attributes['source'] ?? 'current'));
+    $kicker = trim(sanitize_text_field((string) ($attributes['kicker'] ?? $defaults['kicker'])));
+    $title = trim(sanitize_text_field((string) ($attributes['title'] ?? $defaults['title'])));
+    $description = iss_relations_get_place_map_description($source, count($places));
+    $link_text = (string) $defaults['link_text'];
+
+    $wrapper = function_exists('get_block_wrapper_attributes')
+        ? get_block_wrapper_attributes([
+            'class' => 'section section--plain iss-related-place-map',
+        ])
+        : 'class="' . esc_attr('section section--plain iss-related-place-map') . '"';
+
+    $out = '<section ' . $wrapper . '>';
+    $out .= '<div class="iss-container">';
+    $out .= '<div class="iss-related-place-map__shell">';
+    $out .= '<div class="iss-heading iss-related-place-map__intro">';
+    if ($kicker !== '') {
+        $out .= '<p class="iss-kicker iss-kicker--compact">' . esc_html($kicker) . '</p>';
+    }
+    if ($title !== '') {
+        $out .= '<h2 class="iss-heading__title">' . esc_html($title) . '</h2>';
+    }
+    if ($description !== '') {
+        $out .= '<p class="iss-heading__text">' . esc_html($description) . '</p>';
+    }
+    $out .= '<p class="iss-related-place-map__cta"><a class="iss-action-link" href="' . esc_url(home_url('/schoneweide/')) . '">' . esc_html($link_text) . '</a></p>';
+    $out .= '</div>';
+    $out .= '<div class="iss-related-place-map__layout">';
+    $out .= iss_relations_render_place_map_stage($places);
+    $out .= iss_relations_render_place_map_list($places);
+    $out .= '</div>';
+    $out .= '</div>';
     $out .= '</div>';
     $out .= '</section>';
 

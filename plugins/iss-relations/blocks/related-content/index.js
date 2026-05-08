@@ -149,14 +149,16 @@
             el(
               PanelBody,
               { title: config.panelTitle, initialOpen: true },
-              el(SelectControl, {
-                label: 'Inhaltstyp',
-                value: attrs.postType || 'post',
-                options: POST_TYPE_OPTIONS,
-                onChange: function (value) {
-                  setAttributes({ postType: value });
-                },
-              }),
+              config.showPostTypeField !== false
+                ? el(SelectControl, {
+                    label: 'Inhaltstyp',
+                    value: attrs.postType || config.fixedPostType || 'post',
+                    options: POST_TYPE_OPTIONS,
+                    onChange: function (value) {
+                      setAttributes({ postType: value });
+                    },
+                  })
+                : null,
               el(SelectControl, {
                 label: 'Ortsquelle',
                 value: attrs.source || 'current',
@@ -231,5 +233,16 @@
     placeholderText:
       'Rendert nur Karten. Abschnitt, Überschrift und Container bleiben der umgebenden Vorlage oder dem Pattern überlassen.',
     showHeadingFields: false,
+  });
+
+  registerRelatedBlock('iss/related-place-map', {
+    panelTitle: 'Related Place Map',
+    placeholderClassName: 'wp-block-iss-related-place-map-editor',
+    placeholderTitle: 'Related Place Map',
+    placeholderText:
+      'Rendert eine kleine Kartenbühne mit verknüpften Orten, ideal für Videos, Führungen und Atlas-Teaser auf anderen Seiten.',
+    showHeadingFields: true,
+    showPostTypeField: false,
+    fixedPostType: PLACE_POST_TYPE,
   });
 })();

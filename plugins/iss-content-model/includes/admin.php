@@ -40,6 +40,15 @@ add_action('add_meta_boxes', function () {
         'side',
         'high'
     );
+
+    add_meta_box(
+        'iss-content-model-video',
+        __('Videodaten', 'iss-content-model'),
+        'iss_content_model_render_video_box',
+        ISS_CONTENT_MODEL_VIDEO_POST_TYPE,
+        'side',
+        'high'
+    );
 });
 
 add_action('admin_enqueue_scripts', function ($hook) {
@@ -371,6 +380,48 @@ function iss_content_model_render_team_box($post) {
 
     echo '<p><label for="iss_phone"><strong>' . esc_html__('Telefon', 'iss-content-model') . '</strong></label>';
     echo '<input class="widefat" type="text" id="iss_phone" name="iss_content_model[iss_phone]" value="' . esc_attr($phone) . '"></p>';
+}
+
+function iss_content_model_render_video_box($post) {
+    wp_nonce_field('iss_content_model_save_meta', 'iss_content_model_meta_nonce');
+
+    $video_url = (string) get_post_meta($post->ID, 'iss_video_url', true);
+    $source_family = (string) get_post_meta($post->ID, 'iss_video_source_family', true);
+    $source_label = (string) get_post_meta($post->ID, 'iss_video_source_label', true);
+    $source_url = (string) get_post_meta($post->ID, 'iss_video_source_url', true);
+    $year = (string) get_post_meta($post->ID, 'iss_video_year', true);
+    $featured = (bool) get_post_meta($post->ID, 'iss_video_featured', true);
+    $source_family = $source_family !== '' ? $source_family : 'core';
+    $source_options = function_exists('iss_content_model_get_video_source_family_options')
+        ? iss_content_model_get_video_source_family_options()
+        : [
+            'core' => __('Eigener Bestand', 'iss-content-model'),
+            'external_report' => __('Externer Bericht', 'iss-content-model'),
+            'place_context' => __('Ort / Kontext', 'iss-content-model'),
+        ];
+
+    echo '<p><label for="iss_video_url"><strong>' . esc_html__('Video-URL', 'iss-content-model') . '</strong></label>';
+    echo '<input class="widefat" type="url" id="iss_video_url" name="iss_content_model[iss_video_url]" value="' . esc_attr($video_url) . '" placeholder="https://www.youtube.com/watch?v=..."></p>';
+
+    echo '<p><label for="iss_video_source_family"><strong>' . esc_html__('Quellentyp', 'iss-content-model') . '</strong></label>';
+    echo '<select class="widefat" id="iss_video_source_family" name="iss_content_model[iss_video_source_family]">';
+    foreach ($source_options as $value => $label) {
+        echo '<option value="' . esc_attr($value) . '"' . selected($source_family, $value, false) . '>' . esc_html($label) . '</option>';
+    }
+    echo '</select></p>';
+
+    echo '<p><label for="iss_video_source_label"><strong>' . esc_html__('Herausgeber / Herkunft', 'iss-content-model') . '</strong></label>';
+    echo '<input class="widefat" type="text" id="iss_video_source_label" name="iss_content_model[iss_video_source_label]" value="' . esc_attr($source_label) . '" placeholder="' . esc_attr__('Industriesalon Schöneweide / tv.berlin / rbb / DDR Museum', 'iss-content-model') . '"></p>';
+
+    echo '<p><label for="iss_video_source_url"><strong>' . esc_html__('Originalseite', 'iss-content-model') . '</strong></label>';
+    echo '<input class="widefat" type="url" id="iss_video_source_url" name="iss_content_model[iss_video_source_url]" value="' . esc_attr($source_url) . '"></p>';
+
+    echo '<p><label for="iss_video_year"><strong>' . esc_html__('Jahr / Zeitraum', 'iss-content-model') . '</strong></label>';
+    echo '<input class="widefat" type="text" id="iss_video_year" name="iss_content_model[iss_video_year]" value="' . esc_attr($year) . '" placeholder="' . esc_attr__('1987 / ca. 1990 / 1965–2005', 'iss-content-model') . '"></p>';
+
+    echo '<p><label><input type="checkbox" name="iss_content_model[iss_video_featured]" value="1" ' . checked($featured, true, false) . '> ' . esc_html__('Als Leitvideo hervorheben', 'iss-content-model') . '</label></p>';
+    echo '<p class="description">' . esc_html__('Kategorien steuern die thematischen Einstiege. Quellentyp und Herausgeber trennen eigenen Bestand von Presse, Berichten und Ortskontext.', 'iss-content-model') . '</p>';
+    echo '<p class="description">' . esc_html__('Volles Transkript und längerer Kontext gehören in den normalen Inhaltsbereich des Video-Beitrags, nicht in eigenes Zusatz-Markup auf der Landingpage.', 'iss-content-model') . '</p>';
 }
 
 function iss_content_model_mysql_to_local_input($value) {

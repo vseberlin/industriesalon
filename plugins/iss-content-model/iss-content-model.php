@@ -17,12 +17,14 @@ define('ISS_CONTENT_MODEL_VERANSTALTUNG_POST_TYPE', 'veranstaltung');
 define('ISS_CONTENT_MODEL_AUSSTELLUNG_POST_TYPE', 'ausstellung');
 define('ISS_CONTENT_MODEL_PROJEKT_POST_TYPE', 'projekt');
 define('ISS_CONTENT_MODEL_TEAM_POST_TYPE', 'team_member');
+define('ISS_CONTENT_MODEL_VIDEO_POST_TYPE', 'video');
 
 define('ISS_CONTENT_MODEL_TEAM_ROLE_TAXONOMY', 'team_role');
 define('ISS_CONTENT_MODEL_PROJECT_STATUS_TAXONOMY', 'project_status');
 define('ISS_CONTENT_MODEL_AUSSTELLUNG_TYPE_TAXONOMY', 'ausstellung_typ');
 define('ISS_CONTENT_MODEL_COLLECTION_AREA_TAXONOMY', 'sammlungsbereich');
 define('ISS_CONTENT_MODEL_INDUSTRY_SITE_TAXONOMY', 'industrieort');
+define('ISS_CONTENT_MODEL_VIDEO_CATEGORY_TAXONOMY', 'video_kategorie');
 
 function iss_content_model_landing_route_map() {
     return [
@@ -98,6 +100,7 @@ require_once ISS_CONTENT_MODEL_PATH . 'includes/meta.php';
 require_once ISS_CONTENT_MODEL_PATH . 'includes/admin.php';
 require_once ISS_CONTENT_MODEL_PATH . 'includes/blocks.php';
 require_once ISS_CONTENT_MODEL_PATH . 'includes/timeline-sync.php';
+require_once ISS_CONTENT_MODEL_PATH . 'includes/videos.php';
 
 register_activation_hook(__FILE__, function () {
     iss_content_model_register_post_types();
