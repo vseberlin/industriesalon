@@ -6,8 +6,6 @@ document.addEventListener('DOMContentLoaded', () => {
     const fallbackUrl = widget.dataset.fallback;
     const sourcePostId = (widget.dataset && (widget.dataset.sourcePostId || widget.dataset.postId)) ? String(widget.dataset.sourcePostId || widget.dataset.postId) : '';
 
-    ensureCalendarShell(widget);
-
     const status = widget.querySelector('.is-tour-calendar__status');
     const dateInput = widget.querySelector('.is-tour-calendar__date-input');
     const selectedDateLabel = widget.querySelector('.is-tour-calendar__selected-date');
@@ -31,13 +29,13 @@ document.addEventListener('DOMContentLoaded', () => {
         widget.prepend(statusEl);
       }
 
-      renderStatus(statusEl, fallbackUrl, 'Keine Zuordnung vorhanden.', 'Alle Termine anzeigen');
+      renderStatus(statusEl, 'Keine Zuordnung vorhanden.');
       return;
     }
 
     if (!restUrl) {
       widget.classList.add('is-tour-calendar--no-slots');
-      renderStatus(status, fallbackUrl, 'Kalender momentan nicht verfügbar.', fallbackLinkText(fallbackUrl, 'Direkt buchen'));
+      renderStatus(status, 'Kalender momentan nicht verfügbar.');
       return;
     }
 
@@ -66,13 +64,13 @@ document.addEventListener('DOMContentLoaded', () => {
 
       if (res.ok && source === 'nomap') {
         widget.classList.add('is-tour-calendar--no-slots');
-        renderStatus(status, fallbackUrl, 'Keine Zuordnung vorhanden.', 'Alle Termine anzeigen');
+        renderStatus(status, 'Keine Zuordnung vorhanden.');
         return;
       }
 
       if (!res.ok || slotRows.length === 0) {
         widget.classList.add('is-tour-calendar--no-slots');
-        renderStatus(status, fallbackUrl, 'Für diese Führung sind aktuell keine Termine verfügbar.', 'Alle Termine anzeigen');
+        renderStatus(status, 'Für diese Führung sind aktuell keine Termine verfügbar.');
         return;
       }
 
@@ -313,90 +311,15 @@ document.addEventListener('DOMContentLoaded', () => {
 
     } catch (e) {
       widget.classList.add('is-tour-calendar--no-slots');
-      renderStatus(status, fallbackUrl, 'Kalender momentan nicht verfügbar.', fallbackLinkText(fallbackUrl, 'Direkt buchen'));
+      renderStatus(status, 'Kalender momentan nicht verfügbar.');
     }
   });
 });
 
-function renderStatus(el, url, msg, linkText) {
+function renderStatus(el, msg) {
   if (!el) return;
-  if (url) {
-    el.innerHTML = `${escapeHtml(msg)} <a href="${escapeHtml(url)}">${escapeHtml(linkText)}</a>`;
-    return;
-  }
   el.textContent = msg;
 }
-
-function fallbackLinkText(url, defaultText) {
-  const u = String(url || '').trim();
-  if (!u) return defaultText;
-  if (u.startsWith('#')) return 'Alle Termine anzeigen';
-  try {
-    const parsed = new URL(u, window.location.href);
-    if (parsed.hash && parsed.origin === window.location.origin && parsed.pathname === window.location.pathname) {
-      return 'Alle Termine anzeigen';
-    }
-  } catch {}
-  return defaultText;
-}
-
-function ensureCalendarShell(widget) {
-  if (!widget) return;
-  if (widget.querySelector('.is-tour-calendar__date-input')) return;
-
-  const tag = (widget.dataset && widget.dataset.tag) ? String(widget.dataset.tag) : '';
-  const sourcePostId = (widget.dataset && (widget.dataset.sourcePostId || widget.dataset.postId)) ? String(widget.dataset.sourcePostId || widget.dataset.postId) : '';
-  const fallbackUrl = (widget.dataset && widget.dataset.fallback) ? String(widget.dataset.fallback) : '';
-  const title = (widget.dataset && widget.dataset.title) ? String(widget.dataset.title) : 'Termine wählen';
-  if (!tag && !sourcePostId) return;
-  const fallbackLabel = fallbackLinkText(fallbackUrl, 'Direkt buchen');
-
-  const safeKey = (tag || sourcePostId).toLowerCase().replace(/[^a-z0-9_-]/g, '');
-  const slotSelectId = `is-tour-slot-${safeKey || 'tour'}-${Math.floor(Math.random() * 9000 + 1000)}`;
-
-  widget.innerHTML = `
-    <div class="is-tour-calendar__inner wp-block-group is-layout-constrained">
-      <div class="is-tour-calendar__header wp-block-group is-layout-constrained">
-        <p class="is-tour-calendar__eyebrow has-small-font-size">Kalender</p>
-        <h3 class="is-tour-calendar__heading wp-block-heading">${escapeHtml(title)}</h3>
-        <p class="is-tour-calendar__status has-small-font-size">Termine werden geladen …</p>
-        ${fallbackUrl ? `
-          <p class="is-tour-calendar__fallback has-small-font-size">
-            <a class="is-tour-calendar__fallback-link" href="${escapeHtml(fallbackUrl)}">${escapeHtml(fallbackLabel)}</a>
-          </p>
-        ` : ``}
-      </div>
-      <div class="is-tour-calendar__layout">
-        <div class="is-tour-calendar__calendar">
-          <input type="text" class="is-tour-calendar__date-input" aria-label="Datum auswählen" />
-          <div class="is-tour-calendar__slots-panel">
-            <p class="is-tour-calendar__selected-date has-small-font-size">Bitte wählen Sie einen Tag.</p>
-            <div class="is-tour-calendar__appointments">
-              <p class="is-tour-calendar__appointments-title">
-                <span class="is-tour-calendar__appointments-title-label">Verfügbare Termine am</span>
-                <span class="is-tour-calendar__appointments-title-date"></span>
-              </p>
-              <div class="is-tour-calendar__appointments-divider" aria-hidden="true"></div>
-              <div class="is-tour-calendar__appointments-list"></div>
-            </div>
-            <div class="is-tour-calendar__slot-select-wrap">
-              <label class="is-tour-calendar__slot-label" for="${escapeHtml(slotSelectId)}">Uhrzeit</label>
-              <select id="${escapeHtml(slotSelectId)}" class="is-tour-calendar__slot-select" disabled>
-                <option value="">Bitte zuerst ein Datum wählen</option>
-              </select>
-            </div>
-            <div class="is-tour-calendar__booking"></div>
-          </div>
-        </div>
-      </div>
-    </div>
-  `;
-
-  // Ensure data attributes exist.
-  if (tag && !widget.dataset.tag) widget.dataset.tag = tag;
-  if (fallbackUrl && !widget.dataset.fallback) widget.dataset.fallback = fallbackUrl;
-}
-
 
 function parseDate(value) {
   if (!value) return null;
@@ -457,21 +380,26 @@ function buildSlotMeta(slot) {
 }
 
 function openBookingForm(widget, slot, clickedEl) {
-  ensureCalendarShell(widget);
+  const bookingPanel = widget && widget.querySelector
+    ? widget.querySelector('.is-tour-calendar__booking')
+    : null;
 
-  const bookingPanel = widget.querySelector('.is-tour-calendar__booking');
-  if (!bookingPanel) return;
+  if (widget && widget.dataset) {
+    widget.dataset.selectedSlotId = String(slot.id ?? '');
+  }
 
-  widget.dataset.selectedSlotId = String(slot.id ?? '');
-
-  const slotSelect = widget.querySelector('.is-tour-calendar__slot-select');
+  const slotSelect = widget && widget.querySelector
+    ? widget.querySelector('.is-tour-calendar__slot-select')
+    : null;
   if (slotSelect) {
     slotSelect.value = String(slot.id ?? '');
   }
 
-  widget.querySelectorAll('.is-tour-calendar__slot-card.is-selected, .is-tour-calendar__appointment.is-selected, .is-tour-calendar__time-btn.is-selected').forEach((el) => {
-    el.classList.remove('is-selected');
-  });
+  if (widget && widget.querySelectorAll) {
+    widget.querySelectorAll('.is-tour-calendar__slot-card.is-selected, .is-tour-calendar__appointment.is-selected, .is-tour-calendar__time-btn.is-selected').forEach((el) => {
+      el.classList.remove('is-selected');
+    });
+  }
 
   if (clickedEl) {
     clickedEl.classList.add('is-selected');
@@ -479,14 +407,16 @@ function openBookingForm(widget, slot, clickedEl) {
 
   const formWrap = createBookingForm(widget, slot);
 
-  // Best case: open as modal.
   const modal = getTourCalendarModal();
   if (modal && modal.open(formWrap, slot)) {
-    bookingPanel.innerHTML = '';
+    if (bookingPanel) {
+      bookingPanel.innerHTML = '';
+    }
     return;
   }
 
-  // Fallback: inline.
+  if (!bookingPanel) return;
+
   bookingPanel.innerHTML = '';
   bookingPanel.appendChild(formWrap);
 }
@@ -498,70 +428,55 @@ let __isTourCalendarModal = null;
 function getTourCalendarModal() {
   if (__isTourCalendarModal) return __isTourCalendarModal;
 
-  try {
-    const root = document.createElement('div');
-    root.className = 'is-tour-calendar-modal';
-    root.hidden = true;
-
-    root.innerHTML = `
-      <div class="is-tour-calendar-modal__overlay" data-close="1" tabindex="-1"></div>
-      <div class="is-tour-calendar-modal__panel" role="dialog" aria-modal="true" aria-label="Buchung">
-        <button type="button" class="is-tour-calendar-modal__close" data-close="1" aria-label="Schließen">×</button>
-        <div class="is-tour-calendar-modal__content"></div>
-      </div>
-    `;
-
-    document.body.appendChild(root);
-
-    const content = root.querySelector('.is-tour-calendar-modal__content');
-    const closeBtns = root.querySelectorAll('[data-close="1"]');
-
-    let lastActive = null;
-
-    function close() {
-      if (root.hidden) return;
-      root.hidden = true;
-      root.classList.remove('is-open');
-      document.documentElement.classList.remove('is-tour-calendar-modal-open');
-      if (content) content.innerHTML = '';
-      if (lastActive && typeof lastActive.focus === 'function') lastActive.focus();
-      lastActive = null;
-    }
-
-    closeBtns.forEach((btn) => {
-      btn.addEventListener('click', close);
-    });
-
-    document.addEventListener('keydown', (e) => {
-      if (!root.hidden && e.key === 'Escape') close();
-    });
-
-    function open(node /* HTMLElement */, slot) {
-      try {
-        lastActive = document.activeElement;
-        if (content) {
-          content.innerHTML = '';
-          content.appendChild(node);
-        }
-        root.hidden = false;
-        root.classList.add('is-open');
-        document.documentElement.classList.add('is-tour-calendar-modal-open');
-
-        // Focus first input if available.
-        const first = root.querySelector('input, select, textarea, button');
-        if (first && typeof first.focus === 'function') first.focus();
-        return true;
-      } catch {
-        close();
-        return false;
-      }
-    }
-
-    __isTourCalendarModal = { open, close };
-    return __isTourCalendarModal;
-  } catch {
+  const root = document.querySelector('[data-shared-tour-calendar-modal="1"]');
+  if (!root) {
     return null;
   }
+
+  const content = root.querySelector('.is-tour-calendar-modal__content');
+  const closeBtns = root.querySelectorAll('[data-close="1"]');
+  let lastActive = null;
+
+  function close() {
+    if (root.hidden) return;
+    root.hidden = true;
+    root.classList.remove('is-open');
+    document.documentElement.classList.remove('is-tour-calendar-modal-open');
+    if (content) content.innerHTML = '';
+    if (lastActive && typeof lastActive.focus === 'function') lastActive.focus();
+    lastActive = null;
+  }
+
+  closeBtns.forEach((btn) => {
+    btn.addEventListener('click', close);
+  });
+
+  document.addEventListener('keydown', (e) => {
+    if (!root.hidden && e.key === 'Escape') close();
+  });
+
+  function open(node) {
+    try {
+      lastActive = document.activeElement;
+      if (content) {
+        content.innerHTML = '';
+        content.appendChild(node);
+      }
+      root.hidden = false;
+      root.classList.add('is-open');
+      document.documentElement.classList.add('is-tour-calendar-modal-open');
+
+      const first = root.querySelector('input, select, textarea, button');
+      if (first && typeof first.focus === 'function') first.focus();
+      return true;
+    } catch {
+      close();
+      return false;
+    }
+  }
+
+  __isTourCalendarModal = { open, close };
+  return __isTourCalendarModal;
 }
 
 function createBookingForm(widget, slot) {

@@ -1,0 +1,11 @@
+{
+  "apiVersion": 3,
+  "name": "iss-content-model/ausstellung-corpus",
+  "title": "ISS Ausstellung Corpus",
+  "category": "widgets",
+  "icon": "index-card",
+  "description": "Server-rendered chapter overview and longread link for Ausstellung corpora.",
+  "supports": {
+    "html": false
+  }
+}

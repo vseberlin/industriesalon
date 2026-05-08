@@ -4,6 +4,28 @@ if (!defined('ABSPATH')) {
     exit;
 }
 
+function iss_programm_render_calendar_modal_host() {
+    if (!wp_script_is('is-tour-calendar', 'enqueued')) {
+        return;
+    }
+
+    static $rendered = false;
+    if ($rendered) {
+        return;
+    }
+
+    $rendered = true;
+
+    echo '<div class="is-tour-calendar-modal" data-shared-tour-calendar-modal="1" hidden>';
+    echo '<div class="is-tour-calendar-modal__overlay" data-close="1" tabindex="-1"></div>';
+    echo '<div class="is-tour-calendar-modal__panel" role="dialog" aria-modal="true" aria-label="' . esc_attr__('Buchung', 'iss-calendar') . '">';
+    echo '<button type="button" class="is-tour-calendar-modal__close" data-close="1" aria-label="' . esc_attr__('Schließen', 'iss-calendar') . '">×</button>';
+    echo '<div class="is-tour-calendar-modal__content"></div>';
+    echo '</div>';
+    echo '</div>';
+}
+add_action('wp_footer', 'iss_programm_render_calendar_modal_host', 20);
+
 function iss_programm_register_frontend_assets() {
     wp_register_style(
         'is-tour-calendar-flatpickr',

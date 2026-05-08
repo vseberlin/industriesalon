@@ -227,6 +227,110 @@
   margin-top: 1.5rem;
 }
 
+/* .iss-tour-single__termine-bar: Element class for `iss-tour-single`; apply on tour calendar section wrapper. */
+.iss-tour-single__termine-bar {
+  margin-top: clamp(2rem, 4vw, 3rem);
+  padding: clamp(1.4rem, 3vw, 2rem) 0;
+}
+
+/* .iss-tour-single__termine-inner: Element class for `iss-tour-single`; apply on constrained inner wrapper. */
+.iss-tour-single__termine-inner {
+  width: min(1720px, calc(100% - 2rem));
+  margin: 0 auto;
+}
+
+/* .iss-tour-single__calendar-introcol: Element class for `iss-tour-single`; apply on optional intro column. */
+.iss-tour-single__calendar-introcol,
+/* .iss-tour-single__calendar-text: Element class for `iss-tour-single`; apply on optional intro text. */
+.iss-tour-single__calendar-text {
+  display: none;
+}
+
+.iss-tour-single .is-tour-calendar {
+  margin: 0;
+}
+
+.iss-tour-single .is-tour-calendar__header {
+  margin: 0 0 1rem;
+}
+
+.iss-tour-single .is-tour-calendar__eyebrow {
+  display: none;
+}
+
+.iss-tour-single .is-tour-calendar__heading {
+  margin: 0;
+  line-height: 1.05;
+}
+
+.iss-tour-single .is-tour-calendar__status {
+  margin: 0.35rem 0 0;
+}
+
+.iss-tour-single .is-tour-calendar__layout {
+  display: block;
+}
+
+.iss-tour-single .is-tour-calendar__calendar {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  padding: 1.5rem;
+}
+
+.iss-tour-single .is-tour-calendar__slots-panel {
+  padding: 0;
+}
+
+.iss-tour-single .is-tour-calendar__selected-date {
+  margin: 0 0 1rem;
+  padding-bottom: 0.75rem;
+}
+
+.iss-tour-single .is-tour-calendar__slots {
+  display: grid;
+  gap: 0.75rem;
+}
+
+.iss-tour-single .is-tour-calendar__slot-card {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  align-items: center;
+  gap: 1rem;
+  padding: 0.9rem 1rem;
+  text-align: left;
+}
+
+.iss-tour-single .is-tour-calendar__slot-meta {
+  margin: 0;
+}
+
+.iss-tour-single .is-tour-calendar__empty {
+  margin: 0;
+  padding: 1rem;
+}
+
+.iss-tour-single .is-tour-calendar__booking {
+  margin-top: 1rem;
+  padding-top: 1rem;
+}
+
+.iss-tour-single .is-tour-calendar__slot-card::after {
+  content: "Buchen";
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 2.25rem;
+  padding: 0.45rem 0.9rem;
+  line-height: 1;
+}
+
+@media (max-width: 900px) {
+  .iss-tour-single .is-tour-calendar__slot-card::after {
+    justify-self: stretch;
+  }
+}
+
 @media (max-width: 1023px) {
 /* .iss-tour-page: Base class for iss tour page; apply on primary wrapper/scope. */
   .iss-tour-page {
@@ -253,7 +357,7 @@
   .iss-tour-main__content-col,
   .iss-tour-hero__media-col,
   .iss-tour-main__aside-col {
-    flex-basis: 100% !important;
+    flex-basis: 100%;
     width: 100%;
   }
 

@@ -17,17 +17,8 @@
   function getModal() {
     if (modal) return modal;
 
-    const root = document.createElement('div');
-    root.className = 'iss-publication-order-modal';
-    root.hidden = true;
-    root.innerHTML = `
-      <div class="iss-publication-order-modal__overlay" data-close="1" tabindex="-1"></div>
-      <div class="iss-publication-order-modal__panel" role="dialog" aria-modal="true" aria-label="Publikation bestellen">
-        <button type="button" class="iss-publication-order-modal__close" data-close="1" aria-label="Schließen">×</button>
-        <div class="iss-publication-order-modal__content"></div>
-      </div>
-    `;
-
+    const root = document.querySelector('[data-shared-publication-order-modal="1"]');
+    if (!root) return null;
     const content = root.querySelector('.iss-publication-order-modal__content');
     if (!content) return null;
 
@@ -57,7 +48,6 @@
       }
     });
 
-    document.body.appendChild(root);
     modal = { open, close };
     return modal;
   }

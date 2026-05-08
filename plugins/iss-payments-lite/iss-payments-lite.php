@@ -25,18 +25,11 @@ add_action('wp_enqueue_scripts', function () {
         return;
     }
 
-    wp_enqueue_style(
-        'iss-payments-lite-publications',
-        plugin_dir_url(__FILE__) . 'assets/publication-order.css',
-        [],
-        '0.1.0'
-    );
-
     wp_enqueue_script(
         'iss-payments-lite-publications',
         plugin_dir_url(__FILE__) . 'assets/publication-order.js',
         [],
-        '0.1.0',
+        filemtime(__DIR__ . '/assets/publication-order.js'),
         true
     );
 
@@ -44,6 +37,27 @@ add_action('wp_enqueue_scripts', function () {
         'orderUrl' => esc_url_raw(rest_url('iss-payments/v1/publication-order')),
     ]);
 });
+
+add_action('wp_footer', function () {
+    if (!wp_script_is('iss-payments-lite-publications', 'enqueued')) {
+        return;
+    }
+
+    static $rendered = false;
+    if ($rendered) {
+        return;
+    }
+
+    $rendered = true;
+
+    echo '<div class="iss-publication-order-modal" data-shared-publication-order-modal="1" hidden>';
+    echo '<div class="iss-publication-order-modal__overlay" data-close="1" tabindex="-1"></div>';
+    echo '<div class="iss-publication-order-modal__panel" role="dialog" aria-modal="true" aria-label="' . esc_attr__('Publikation bestellen', 'iss-payments-lite') . '">';
+    echo '<button type="button" class="iss-publication-order-modal__close" data-close="1" aria-label="' . esc_attr__('Schließen', 'iss-payments-lite') . '">×</button>';
+    echo '<div class="iss-publication-order-modal__content"></div>';
+    echo '</div>';
+    echo '</div>';
+}, 20);
 
 add_action('rest_api_init', function () {
     // Public intentionally: visitors submit tour booking requests without a WordPress account.

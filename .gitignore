@@ -9,23 +9,11 @@
 !/themes/industriesalon/
 !/themes/industriesalon/**
 
-# Keep only selected plugins.
+# Keep all plugins.
 !/plugins/
-/plugins/*
-!/plugins/industriesalon-notices/
-!/plugins/industriesalon-notices/**
-!/plugins/industriesalon-steuerung/
-!/plugins/industriesalon-steuerung/**
-!/plugins/industriesalon-schoeneweide-register/
-!/plugins/industriesalon-schoeneweide-register/**
-!/plugins/iss-calendar/
-!/plugins/iss-calendar/**
-!/plugins/iss-fuehrungen/
-!/plugins/iss-fuehrungen/**
-!/plugins/iss-programm/
-!/plugins/iss-programm/**
-!/plugins/saas-api/
-!/plugins/saas-api/**
+!/plugins/**
 
 # Ignore editor lock noise.
 *~lock*
+__pycache__/
+*.pyc

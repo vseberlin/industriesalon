@@ -105,6 +105,99 @@ function iss_calendar_prepare_item($item_id) {
     ];
 }
 
+function iss_calendar_render_shell($title, $fallback_url, $post_id = 0, $post_type = '', $wrapper_attributes = '', $tag = '') {
+    $title = trim((string) $title);
+    if ($title === '') {
+        $title = __('Termine wählen', 'iss-calendar');
+    }
+
+    $post_id = (int) $post_id;
+    $post_type = sanitize_key((string) $post_type);
+    $tag = strtoupper(sanitize_text_field((string) $tag));
+    $slot_select_id = 'is-tour-slot-';
+
+    if ($tag !== '') {
+        $slot_select_id .= sanitize_title($tag);
+    } elseif ($post_id > 0) {
+        $slot_select_id .= 'post-' . $post_id;
+    } else {
+        $slot_select_id .= 'calendar';
+    }
+
+    $slot_select_id = sanitize_html_class($slot_select_id) . '-time';
+
+    $fallback_label = iss_calendar_is_fallback_anchor($fallback_url, $post_id)
+        ? esc_html__('Alle Termine anzeigen', 'iss-calendar')
+        : esc_html__('Direkt buchen', 'iss-calendar');
+
+    $fallback_html = '';
+    if ($fallback_url) {
+        $fallback_html = '<p class="is-tour-calendar__fallback has-small-font-size">'
+            . '<a class="is-tour-calendar__fallback-link" href="' . esc_url($fallback_url) . '">' . $fallback_label . '</a>'
+            . '</p>';
+    }
+
+    $noscript = '<noscript><p class="is-tour-calendar__status has-small-font-size">'
+        . esc_html__('Bitte JavaScript aktivieren, um den Kalender zu nutzen.', 'iss-calendar')
+        . '</p>'
+        . $fallback_html
+        . '</noscript>';
+
+    return sprintf(
+        '<div %1$s data-tag="%2$s" data-fallback="%3$s" data-title="%4$s" data-source-post-id="%5$s" data-source-post-type="%6$s">'
+        . '<div class="is-tour-calendar__inner wp-block-group is-layout-constrained">'
+        . '<div class="is-tour-calendar__header wp-block-group is-layout-constrained">'
+        . '<p class="is-tour-calendar__eyebrow has-small-font-size">%7$s</p>'
+        . '<h3 class="is-tour-calendar__heading wp-block-heading">%8$s</h3>'
+        . '<p class="is-tour-calendar__status has-small-font-size">%9$s</p>'
+        . '%10$s'
+        . '</div>'
+        . '<div class="is-tour-calendar__layout">'
+        . '<div class="is-tour-calendar__calendar">'
+        . '<input type="text" class="is-tour-calendar__date-input" aria-label="%11$s" />'
+        . '<div class="is-tour-calendar__slots-panel">'
+        . '<p class="is-tour-calendar__selected-date has-small-font-size">%12$s</p>'
+        . '<div class="is-tour-calendar__appointments">'
+        . '<p class="is-tour-calendar__appointments-title">'
+        . '<span class="is-tour-calendar__appointments-title-label">%13$s</span>'
+        . '<span class="is-tour-calendar__appointments-title-date"></span>'
+        . '</p>'
+        . '<div class="is-tour-calendar__appointments-divider" aria-hidden="true"></div>'
+        . '<div class="is-tour-calendar__appointments-list"></div>'
+        . '</div>'
+        . '<div class="is-tour-calendar__slot-select-wrap">'
+        . '<label class="is-tour-calendar__slot-label" for="%14$s">%15$s</label>'
+        . '<select id="%14$s" class="is-tour-calendar__slot-select" disabled>'
+        . '<option value="">%16$s</option>'
+        . '</select>'
+        . '</div>'
+        . '<div class="is-tour-calendar__booking"></div>'
+        . '</div>'
+        . '</div>'
+        . '</div>'
+        . '%17$s'
+        . '</div>'
+        . '</div>',
+        $wrapper_attributes,
+        esc_attr($tag),
+        esc_url($fallback_url),
+        esc_attr($title),
+        esc_attr($post_id > 0 ? (string) $post_id : ''),
+        esc_attr($post_type),
+        esc_html__('Kalender', 'iss-calendar'),
+        esc_html($title),
+        esc_html__('Termine werden geladen …', 'iss-calendar'),
+        $fallback_html,
+        esc_attr__('Datum auswählen', 'iss-calendar'),
+        esc_html__('Bitte wählen Sie einen Tag.', 'iss-calendar'),
+        esc_html__('Verfügbare Termine am', 'iss-calendar'),
+        esc_attr($slot_select_id),
+        esc_html__('Uhrzeit', 'iss-calendar'),
+        esc_html__('Bitte zuerst ein Datum wählen', 'iss-calendar'),
+        $noscript
+    );
+}
+
 /**
  * Dynamic block renderer: iss/tour-dates.
  *
@@ -286,35 +379,7 @@ function iss_render_tour_calendar($attributes = [], $content = '') {
         ])
         : 'class="is-tour-calendar wp-block-group alignwide has-global-padding is-layout-constrained"';
 
-    $fallback_label = iss_calendar_is_fallback_anchor($fallback_url, $post_id)
-        ? esc_html__('Alle Termine anzeigen', 'iss-calendar')
-        : esc_html__('Direkt buchen', 'iss-calendar');
-
-    $fallback_html = '';
-    if ($fallback_url) {
-        $fallback_html = '<p class="is-tour-calendar__fallback has-small-font-size">'
-            . '<a class="is-tour-calendar__fallback-link" href="' . esc_url($fallback_url) . '">' . $fallback_label . '</a>'
-            . '</p>';
-    }
-
-    $noscript = '<noscript><p class="is-tour-calendar__status has-small-font-size">'
-        . esc_html__('Bitte JavaScript aktivieren, um den Kalender zu nutzen.', 'iss-calendar')
-        . '</p>'
-        . $fallback_html
-        . '</noscript>';
-
-    return sprintf(
-        '<div %s data-tag="%s" data-fallback="%s" data-title="%s" data-source-post-id="%s" data-source-post-type="%s"><p class="is-tour-calendar__status has-small-font-size">%s</p>%s%s</div>',
-        $attrs,
-        esc_attr($tag),
-        esc_url($fallback_url),
-        esc_attr($title),
-        esc_attr($post_id ? (string) $post_id : ''),
-        esc_attr((string) $post_type),
-        esc_html__('Termine werden geladen …', 'iss-calendar'),
-        $fallback_html,
-        $noscript
-    );
+    return iss_calendar_render_shell($title, $fallback_url, $post_id, (string) $post_type, $attrs, $tag);
 }
 
 /**

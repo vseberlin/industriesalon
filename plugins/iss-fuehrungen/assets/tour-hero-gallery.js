@@ -5,7 +5,7 @@
     var heroColumn = gallery.closest('.iss-tour-hero__media-col');
     if (!heroColumn) return;
 
-    var heroImage = heroColumn.querySelector('.wp-block-post-featured-image img');
+    var heroImage = heroColumn.querySelector('.iss-tour-hero__featured-image img');
     if (!heroImage) return;
 
     var thumbs = gallery.querySelectorAll('.iss-tour-hero-gallery__thumb');

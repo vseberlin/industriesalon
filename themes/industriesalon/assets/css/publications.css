@@ -345,6 +345,138 @@ body.iss-publication-layout-timeline .iss-publication-order-panel {
   border-color: rgba(162, 128, 97, 0.32);
 }
 
+.iss-publication-order-panel__actions {
+  margin-top: 1rem;
+}
+
+.iss-publication-order-trigger,
+.iss-publication-order-form__actions button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 46px;
+  padding: 0.8rem 1.2rem;
+  border: 1px solid var(--iss-black, #1e1e1e);
+  border-radius: 999px;
+  background: var(--iss-black, #1e1e1e);
+  color: var(--iss-white, #fff);
+  font: inherit;
+  font-weight: 700;
+  line-height: 1;
+  cursor: pointer;
+}
+
+.iss-publication-order-modal {
+  position: fixed;
+  inset: 0;
+  z-index: 100001;
+  display: grid;
+  place-items: center;
+  padding: 1rem;
+}
+
+.iss-publication-order-modal[hidden] {
+  display: none;
+}
+
+.iss-publication-order-modal__overlay {
+  position: absolute;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.5);
+}
+
+.iss-publication-order-modal__panel {
+  position: relative;
+  z-index: 1;
+  width: min(100%, 36rem);
+  max-height: min(82vh, 56rem);
+  padding: 1.5rem;
+  overflow: auto;
+  border: 1px solid var(--iss-border);
+  border-radius: var(--iss-radius-lg);
+  background: var(--iss-white);
+  box-shadow: var(--iss-shadow);
+}
+
+.iss-publication-order-modal__close {
+  position: absolute;
+  top: 0.75rem;
+  right: 0.75rem;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 2.5rem;
+  height: 2.5rem;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  font-size: 2rem;
+  line-height: 1;
+  cursor: pointer;
+}
+
+.iss-publication-order-form__intro {
+  margin-bottom: 1rem;
+}
+
+.iss-publication-order-form__title {
+  margin: 0;
+  font-size: clamp(1.8rem, 2vw, 2.4rem);
+  line-height: 1.05;
+}
+
+.iss-publication-order-form__price {
+  margin: 0.8rem 0 0;
+  font-size: 1.1rem;
+  font-weight: 700;
+}
+
+.iss-publication-order-form__row {
+  margin-top: 1rem;
+}
+
+.iss-publication-order-form__row label,
+.iss-publication-order-form__row legend {
+  font-weight: 600;
+}
+
+.iss-publication-order-form__row input[type="text"],
+.iss-publication-order-form__row input[type="email"],
+.iss-publication-order-form__row input[type="number"] {
+  width: 100%;
+  margin-top: 0.35rem;
+  padding: 0.75rem 0.85rem;
+  border: 1px solid rgba(30, 30, 30, 0.18);
+  border-radius: 0.6rem;
+  font: inherit;
+}
+
+.iss-publication-order-form__row fieldset,
+.iss-publication-order-form fieldset {
+  margin: 1rem 0 0;
+  padding: 0;
+  border: 0;
+}
+
+.iss-publication-order-form fieldset label {
+  display: block;
+  margin-top: 0.5rem;
+  font-weight: 400;
+}
+
+.iss-publication-order-form__actions {
+  margin-top: 1.25rem;
+}
+
+.iss-publication-order-form__status {
+  margin-top: 0.85rem;
+  color: rgba(30, 30, 30, 0.74);
+}
+
+.iss-publication-order-modal-open {
+  overflow: hidden;
+}
+
 .iss-publication-chronicle {
   position: relative;
   display: grid;
