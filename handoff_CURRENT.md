@@ -1,3 +1,46 @@
+## Persistent Architecture Guardrails
+- `industriesalon-schoeneweide-register` now has an explicit contract split:
+  - summary = lightweight list/bootstrap payload
+  - detail = per-place full record
+  - export = full filtered dataset
+  - atlas = map/story contract
+- Keep presentation and data boundaries explicit:
+  - page bootstrap consumes summary only
+  - REST routes are adapters onto shared data services, not the data layer itself
+  - do not reintroduce load-order coupling between render/bootstrap and REST modules
+- For lightweight reuse across pages, prefer summary field projection on:
+  - `/wp-json/iss-register/v1/places?fields=id,name,lat,lng`
+  - do not create ad hoc mini-endpoints for each page need
+- Invalid summary field projection must fail closed:
+  - bad `fields=` requests now return `400`
+  - do not revert to silent widening of payloads
+- Treat these checks as required after contract or bootstrap changes:
+  - `docker compose run --rm wpcli iss-register contract-check --allow-root`
+  - verifies summary, projected summary, detail, export, atlas, and bootstrap summary shapes
+- When adding fields, decide ownership first:
+  - `summary` only if needed on first load or for lightweight cross-page reuse
+  - `detail` if it is place-specific deep content
+  - `export` if it is bulk/research oriented
+  - `atlas` only if it belongs to map/story behavior
+- Do not let summary drift toward detail again. If a page needs richer data, prefer:
+  - projected summary fields when possible
+  - detail fetch for one place
+  - dedicated export/research path for bulk-rich data
+  - Register plugin owns data contracts and semantic view-models.
+- Theme owns card layout, section layout, color scheme, and visual hierarchy.
+- Plugin-rendered frontend HTML must stay minimal and semantic.
+- Do not add layout classes such as grid/card-size/rail/homepage variants inside register PHP.
+- Do not query register DB tables directly from templates, blocks, or JS.
+- All consumers must use shared data services or documented REST contracts.
+- REST routes must not contain independent query logic that differs from service logic.
+- Before adding a new field or endpoint, state:
+  - which existing contract cannot serve it
+  - what would become harder to remove later
+  - whether this creates a new public dependency
+- Prefer extending an existing contract only when the field belongs to that contract’s purpose.
+- atlas = map/story behavior contract, not full research payload and not visual layout contract
+
+
 # Handoff Current
 
 ## Status
@@ -88,6 +131,9 @@
   - `wp_postmeta`: about `52.52 MB`
   - current archive objects average about `33.52` meta rows per object
 - The real scaling risk is not object count alone, but bad query design or uncontrolled attachments. The current browser/taxonomy direction is the right one.
+
+
+
 
 ## Current Worktree
 - Source-file changes from this pass:

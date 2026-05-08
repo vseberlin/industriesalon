@@ -4,14 +4,16 @@ if (!defined('ABSPATH')) {
     exit;
 }
 
-$api_root_url = isset($api_root_url) && is_string($api_root_url)
-    ? untrailingslashit($api_root_url)
-    : untrailingslashit(rest_url(ISS_REGISTER_REST_NAMESPACE));
-
-$places_url = esc_url($api_root_url . '/places');
-$feedback_url = esc_url($api_root_url . '/feedback');
+$is_active = ($view['active_tab'] ?? 'discover') === 'research';
+$research_links = isset($view['research_links']) && is_array($view['research_links'])
+    ? $view['research_links']
+    : [];
+$places_url = (string) ($research_links['places_url'] ?? '');
+$export_url = (string) ($research_links['export_url'] ?? '');
+$feedback_url = (string) ($research_links['feedback_url'] ?? '');
+$enable_export = !empty($view['enable_export']);
 ?>
-<section class="iss-register-panel" data-panel="research" aria-labelledby="iss-register-panel-research">
+<section class="iss-register-panel<?php echo $is_active ? ' is-active' : ''; ?>" data-panel="research" aria-labelledby="iss-register-panel-research">
   <header class="iss-register-panel__header">
     <h3 id="iss-register-panel-research">Recherche</h3>
     <p>Vollständiger Analysemodus mit erweiterten Filtern, Rollenblick, Quellenübersicht und Export.</p>
@@ -69,10 +71,11 @@ $feedback_url = esc_url($api_root_url . '/feedback');
   </div>
 
   <div class="iss-register-research-actions">
-    <?php if (!empty($enable_export)) : ?>
-      <button type="button" class="iss-register-button iss-register-button--ghost" data-action-export-json>Gefilterte Daten exportieren</button>
+    <?php if ($enable_export) : ?>
+      <button type="button" class="iss-register-button iss-register-button--ghost" data-action-export-json>Gefilterten Voll-Export laden</button>
     <?php endif; ?>
-    <a href="<?php echo $places_url; ?>" target="_blank" rel="noopener" class="iss-register-link">Lokaler JSON-Feed</a>
+    <a href="<?php echo $places_url; ?>" target="_blank" rel="noopener" class="iss-register-link">Summary-JSON-Feed</a>
+    <a href="<?php echo $export_url; ?>" target="_blank" rel="noopener" class="iss-register-link">Vollständiger Export-Feed</a>
     <a href="<?php echo $feedback_url; ?>" target="_blank" rel="noopener" class="iss-register-link">Feedback-Endpunkt</a>
   </div>
 
@@ -84,6 +87,25 @@ $feedback_url = esc_url($api_root_url . '/feedback');
   </div>
 
   <div class="iss-register-research-summary" data-research-summary>Keine Daten geladen.</div>
-  <div class="iss-register-research-sources" data-research-sources></div>
-  <div class="iss-register-research-results" data-research-results></div>
+
+  <div class="iss-register-research-sources">
+    <h4>Quellen im aktuellen Filter</h4>
+    <ul data-research-sources-list></ul>
+    <p class="iss-register-empty" data-research-sources-empty>Keine Quellenhinweise vorhanden.</p>
+  </div>
+
+  <div class="iss-register-research-results" data-research-results>
+    <table class="iss-register-research-table" data-research-table hidden>
+      <thead>
+        <tr>
+          <th>Standort</th>
+          <th>Status</th>
+          <th>Rollen</th>
+          <th>Aktion</th>
+        </tr>
+      </thead>
+      <tbody data-research-results-body></tbody>
+    </table>
+    <p class="iss-register-empty" data-research-results-empty>Keine Datensätze für die Recherche-Ansicht.</p>
+  </div>
 </section>

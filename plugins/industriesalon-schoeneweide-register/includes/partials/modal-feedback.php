@@ -4,7 +4,7 @@ if (!defined('ABSPATH')) {
     exit;
 }
 
-if (empty($show_feedback)) {
+if (empty($view['show_feedback'])) {
     return;
 }
 ?>

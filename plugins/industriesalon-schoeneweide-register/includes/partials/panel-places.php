@@ -4,9 +4,9 @@ if (!defined('ABSPATH')) {
     exit;
 }
 
-$places = isset($places) && is_array($places) ? $places : [];
+$is_active = ($view['active_tab'] ?? 'discover') === 'places';
 ?>
-<section class="iss-register-panel" data-panel="places" aria-labelledby="iss-register-panel-places">
+<section class="iss-register-panel<?php echo $is_active ? ' is-active' : ''; ?>" data-panel="places" aria-labelledby="iss-register-panel-places">
   <header class="iss-register-panel__header">
     <h3 id="iss-register-panel-places">Orte</h3>
     <p>Suche nach Gebiet und Status. Karten zeigen Bild, Kurzprofil und direkten Einstieg in die Detailansicht.</p>
@@ -72,12 +72,7 @@ $places = isset($places) && is_array($places) ? $places : [];
   </div>
 
   <div class="iss-register-places-list" data-places-list>
-    <?php
-    if (function_exists('iss_register_render_places_cards')) {
-        echo iss_register_render_places_cards($places);
-    } else {
-        echo '<p class="iss-register-empty">Orte-Ansicht nicht verfügbar.</p>';
-    }
-    ?>
+    <div class="iss-register-places-grid" data-places-grid></div>
+    <p class="iss-register-empty" data-places-empty>Lade Orte…</p>
   </div>
 </section>

@@ -1,0 +1,17 @@
+{
+  "apiVersion": 3,
+  "name": "iss/publication-corpus-stream",
+  "title": "ISS Publication Corpus Stream",
+  "category": "widgets",
+  "icon": "welcome-write-blog",
+  "description": "Server-rendered linear chapter stream from a linked Ausstellung corpus.",
+  "attributes": {
+    "postId": {
+      "type": "number",
+      "default": 0
+    }
+  },
+  "supports": {
+    "html": false
+  }
+}

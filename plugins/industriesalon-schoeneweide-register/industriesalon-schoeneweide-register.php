@@ -19,7 +19,9 @@ define('ISS_REGISTER_SOURCE_POST_TYPE', 'register_source_item');
 define('ISS_REGISTER_TOOLS_PAGE_SLUG', 'iss-register-tools');
 
 require_once ISS_REGISTER_PATH . 'includes/assets.php';
+require_once ISS_REGISTER_PATH . 'includes/register-data.php';
 require_once ISS_REGISTER_PATH . 'includes/atlas-model.php';
+require_once ISS_REGISTER_PATH . 'includes/register-data/atlas-contracts.php';
 require_once ISS_REGISTER_PATH . 'includes/rest-controller.php';
 require_once ISS_REGISTER_PATH . 'includes/blocks.php';
 require_once ISS_REGISTER_PATH . 'includes/render-register-app.php';
@@ -33,9 +35,7 @@ require_once ISS_REGISTER_PATH . 'includes/public-fields.php';
 require_once ISS_REGISTER_PATH . 'includes/geocoding.php';
 require_once ISS_REGISTER_PATH . 'includes/admin-tools.php';
 require_once ISS_REGISTER_PATH . 'includes/feedback.php';
-require_once ISS_REGISTER_PATH . 'includes/render-register-list.php';
-require_once ISS_REGISTER_PATH . 'includes/render-register-map.php';
-require_once ISS_REGISTER_PATH . 'includes/render-register-featured.php';
+require_once ISS_REGISTER_PATH . 'includes/cli.php';
 
 register_activation_hook(__FILE__, function () {
     if (function_exists('iss_register_register_post_types')) {

@@ -3,12 +3,14 @@
 if (!defined('ABSPATH')) {
     exit;
 }
+
+$show_intro = !empty($view['show_intro']);
 ?>
 <section class="iss-register-hero" aria-label="Schöneweide Register Überblick">
   <div class="iss-register-hero__copy">
     <p class="iss-register-hero__kicker">Schöneweide im Wandel</p>
     <h2 class="iss-register-hero__title">Orte, Geschichten und Veränderungen sichtbar machen</h2>
-    <?php if (!empty($show_intro)) : ?>
+    <?php if ($show_intro) : ?>
       <p class="iss-register-hero__text">Eine interaktive Übersicht zu Standorten, Projekten und Erinnerungen in Schöneweide – vom industriellen Erbe bis zu heutigen Entwicklungen.</p>
     <?php endif; ?>
   </div>

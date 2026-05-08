@@ -369,9 +369,7 @@ function iss_register_get_editorial_atlas_story_items(string $era_slug = ''): ar
  */
 function iss_register_get_atlas_context_data(): array
 {
-    $places = function_exists('iss_register_get_atlas_places_data')
-        ? iss_register_get_atlas_places_data()
-        : [];
+    $places = iss_register_get_atlas_places_data();
     $stories = iss_register_get_editorial_atlas_story_items();
     $place_counts = [];
     $story_counts = [];

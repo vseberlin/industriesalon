@@ -3,6 +3,8 @@
 if (!defined('ABSPATH')) {
     exit;
 }
+
+$show_feedback = !empty($view['show_feedback']);
 ?>
 <section class="iss-register-panel" data-panel="detail" aria-labelledby="iss-register-panel-detail">
   <header class="iss-register-panel__header iss-register-detail-header">
@@ -82,7 +84,7 @@ if (!defined('ABSPATH')) {
     <a href="#" class="iss-register-link" data-detail-website hidden target="_blank" rel="noopener">Website öffnen</a>
   </details>
 
-  <?php if (!empty($show_feedback)) : ?>
+  <?php if ($show_feedback) : ?>
     <div class="iss-register-detail-feedback">
       <button type="button" class="iss-register-button iss-register-button--ghost" data-action="open-feedback" data-feedback-type="correction">Fehler melden</button>
       <button type="button" class="iss-register-button iss-register-button--ghost" data-action="open-feedback" data-feedback-type="memory">Erinnerung senden</button>
