@@ -1776,6 +1776,10 @@ body.iss-nav-open {
   mask-image: url('/wp-content/themes/industriesalon/assets/icons/iss-info.svg');
   -webkit-mask-image: url('/wp-content/themes/industriesalon/assets/icons/iss-info.svg');
 }
+.iss-icon--accessibility {
+  mask-image: url('/wp-content/themes/industriesalon/assets/icons/iss-accessibility.svg');
+  -webkit-mask-image: url('/wp-content/themes/industriesalon/assets/icons/iss-accessibility.svg');
+}
 
 .iss-icon--dot {
   width: 0.42rem;

@@ -1215,21 +1215,17 @@ final class Industriesalon_Steuerung {
     }
 
     private function visit_info_icon(string $icon): string {
-        if ($icon === 'accessibility') {
-            $icon_url = plugins_url('assets/accessibility-icon.png', __FILE__);
-
-            return '<img src="' . esc_url($icon_url) . '" alt="" loading="lazy" decoding="async">';
-        }
-
         $icons = [
-            'address' => '<svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M12 21s-6-5.6-6-10.5A6 6 0 1 1 18 10.5C18 15.4 12 21 12 21Z" fill="none" stroke="currentColor" stroke-width="1.8"/><circle cx="12" cy="10" r="2.2" fill="none" stroke="currentColor" stroke-width="1.8"/></svg>',
-            'museum-hours' => '<svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><circle cx="12" cy="12" r="8" fill="none" stroke="currentColor" stroke-width="1.8"/><path d="M12 7.5v5l3.2 1.8" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>',
-            'office-hours' => '<svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><rect x="4" y="5" width="16" height="14" rx="1.8" fill="none" stroke="currentColor" stroke-width="1.8"/><path d="M9 5V3.8M15 5V3.8M4 9.5h16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>',
-            'arrival' => '<svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M5 17h14M7 17l1.1-6.2A2 2 0 0 1 10.1 9h3.8a2 2 0 0 1 2 1.8L17 17M8.5 17a1.5 1.5 0 1 0 0 3 1.5 1.5 0 0 0 0-3Zm7 0a1.5 1.5 0 1 0 0 3 1.5 1.5 0 0 0 0-3ZM9 9V6.8A1.8 1.8 0 0 1 10.8 5h2.4A1.8 1.8 0 0 1 15 6.8V9" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>',
-            'accessibility' => '<svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><circle cx="12" cy="5" r="2" fill="currentColor"/><path d="M8 8.5h8M12 8.5v4m0 0 3 3.5m-3-3.5-2.5 6M12 12.5H8.5" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/><circle cx="12" cy="12" r="8.2" fill="none" stroke="currentColor" stroke-width="1.2"/></svg>',
+            'address' => 'location',
+            'museum-hours' => 'clock',
+            'office-hours' => 'calendar',
+            'arrival' => 'location',
+            'accessibility' => 'accessibility',
         ];
 
-        return $icons[$icon] ?? $icons['address'];
+        $icon_name = $icons[$icon] ?? $icons['address'];
+
+        return '<span class="iss-icon iss-icon--' . esc_attr($icon_name) . '" aria-hidden="true"></span>';
     }
 
     public function render_contact(string $title = '', array $options = []): string {
