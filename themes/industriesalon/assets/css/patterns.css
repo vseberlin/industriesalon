@@ -1248,7 +1248,7 @@
 /* .home: Base class for home; apply on primary wrapper/scope. */
 /* .iss-front-explore: Base class for homepage explore band; apply on primary wrapper/scope. */
 .home .iss-front-explore {
-  padding-top: clamp(2.25rem, 4vw, 3.5rem);
+  padding-top: clamp(1.1rem, 2vw, 1.75rem);
 }
 
 .home .iss-front-explore__heading {
@@ -1878,7 +1878,7 @@
 .iss-timeline__footer {
   margin-inline: auto;
   width: 100%;
-  padding-top: 4rem;
+  padding-top: 2rem;
   border-top: 1px solid var(--iss-tl-line);
   justify-content: right;
 }
@@ -5826,90 +5826,150 @@ Raum / Vermietung → brown
 }
 
 /* =========================================================
-   TIMELINE – REFINED (mapped to plugin timeline markup)
+   FRONT PAGE TIMELINE SECTION
    ========================================================= */
 
-.iss-timeline {
-  display: flex;
-  flex-direction: column;
-  gap: 1.25rem;
-}
-
-/* row */
-.iss-timeline .iss-timeline__item {
+.iss-timeline-section__header {
   display: grid;
-  grid-template-columns: 160px 1fr;
-  gap: 1.5rem;
-
-  padding: 1.25rem 1.25rem 1.25rem 0.75rem;
-
-  border: 1px solid var(--iss-border);
-  /*border-radius: var(--iss-radius-md);*/
-  background: #fff;
+  grid-template-columns: minmax(0, 1.7fr) minmax(18rem, 1fr);
+  gap: clamp(1.5rem, 3vw, 3rem);
+  align-items: end;
+  margin-bottom: clamp(2rem, 4vw, 3rem);
 }
 
-/* left column */
-.iss-timeline .iss-timeline__date {
+.iss-timeline-section__intro {
+  max-width: none;
+}
+
+.iss-timeline-promo-slot {
+  justify-self: end;
+  width: min(100%, 22rem);
+}
+
+.iss-timeline-promo-slot.iss-notice-skin--pinned .iss-hero-note {
+  position: relative;
   display: flex;
   flex-direction: column;
-  gap: 0.25rem;
-
-  font-size: 0.9rem;
-  font-weight: 600;
-  color: rgba(30,30,30,0.65);
-
-  position: relative;
-  padding-left: 0.75rem;
+  gap: 0.85rem;
+  min-height: 100%;
+  padding: clamp(1.5rem, 2.4vw, 2rem) clamp(1.35rem, 2.1vw, 1.8rem) clamp(1.35rem, 2.2vw, 1.9rem);
+  border: 1px solid color-mix(in srgb, var(--iss-black) 12%, transparent);
+  background:
+    linear-gradient(180deg, color-mix(in srgb, var(--iss-white) 92%, var(--iss-black) 8%) 0 3.25rem, var(--iss-white) 3.25rem 100%);
+  box-shadow:
+    0 0.45rem 0 color-mix(in srgb, var(--iss-black) 14%, transparent),
+    0 1.2rem 1.8rem color-mix(in srgb, var(--iss-black) 18%, transparent);
+  color: var(--iss-black);
+  transform: rotate(-1.25deg);
 }
 
-/* subtle rail */
-.iss-timeline .iss-timeline__date::before {
+.iss-timeline-promo-slot.iss-notice-skin--pinned .iss-hero-note::before {
   content: "";
   position: absolute;
-  left: 0;
-  top: 0.2rem;
-  bottom: 0.2rem;
-  width: 2px;
-  background: var(--iss-border);
+  top: 1rem;
+  left: 50%;
+  width: 1.2rem;
+  height: 1.2rem;
+  border-radius: 50%;
+  background: radial-gradient(circle at 35% 35%, color-mix(in srgb, var(--iss-white) 28%, transparent), transparent 35%), var(--iss-red);
+  box-shadow:
+    0 0.18rem 0 color-mix(in srgb, var(--iss-black) 22%, transparent),
+    0 0.7rem 0.85rem color-mix(in srgb, var(--iss-black) 18%, transparent);
+  transform: translateX(-50%);
 }
 
-/* content */
-.iss-timeline .iss-timeline__content {
-  display: flex;
-  flex-direction: column;
-  gap: 0.4rem;
+.iss-timeline-promo-slot.iss-notice-skin--pinned .iss-hero-note::after {
+  content: "";
+  position: absolute;
+  top: 2rem;
+  left: 50%;
+  width: 1.5rem;
+  height: 1rem;
+  background: color-mix(in srgb, var(--iss-black) 14%, transparent);
+  clip-path: polygon(50% 0, 100% 100%, 0 100%);
+  transform: translateX(-35%) rotate(14deg);
+  opacity: 0.45;
 }
 
-/* title */
-.iss-timeline .iss-timeline__title {
-  font-size: 1.4rem;
-  font-weight: 700;
-  line-height: 1.2;
+.iss-timeline-promo-slot.iss-notice-skin--pinned .iss-hero-note__kicker,
+.iss-timeline-promo-slot.iss-notice-skin--pinned .iss-hero-note__title,
+.iss-timeline-promo-slot.iss-notice-skin--pinned .iss-hero-note__text,
+.iss-timeline-promo-slot.iss-notice-skin--pinned .iss-hero-note__link {
+  margin: 0;
 }
 
-/* description */
-.iss-timeline .iss-timeline__summary {
-  font-size: 0.95rem;
-  color: rgba(30,30,30,0.75);
+.iss-timeline-promo-slot.iss-notice-skin--pinned .iss-hero-note__marker {
+  display: none;
 }
 
-/* actions */
-.iss-timeline .iss-timeline__actions {
-  margin-top: 0.5rem;
-  display: flex;
-  gap: 0.5rem;
+.iss-timeline-promo-slot.iss-notice-skin--pinned .iss-hero-note__kicker {
+  margin-top: 1.6rem;
+  color: color-mix(in srgb, var(--iss-black) 68%, transparent);
+  font-size: 0.76rem;
+  letter-spacing: 0.09em;
 }
 
-/* make secondary buttons quieter */
-.iss-timeline .iss-timeline__actions .iss-timeline__btn--secondary {
-  padding: 0.55rem 0.9rem;
-  font-size: 0.85rem;
+.iss-timeline-promo-slot.iss-notice-skin--pinned .iss-hero-note__title {
+  font-size: clamp(1.25rem, 1.2rem + 0.45vw, 1.7rem);
+  line-height: 1.12;
+  color: var(--iss-black);
 }
 
-/* hover = slight lift */
-.iss-timeline .iss-timeline__item:hover {
-  transform: translateY(-2px);
-/*  box-shadow: 0 14px 32px rgba(0,0,0,0.08);*/
+.iss-timeline-promo-slot.iss-notice-skin--pinned .iss-hero-note__text,
+.iss-timeline-promo-slot.iss-notice-skin--pinned .iss-hero-note__text p {
+  max-width: 34ch;
+  margin-bottom: 0;
+  color: color-mix(in srgb, var(--iss-black) 78%, transparent);
+  line-height: 1.5;
+}
+
+.iss-timeline-promo-slot.iss-notice-skin--pinned .iss-hero-note__link {
+  margin-top: 0.25rem;
+}
+
+.iss-timeline-promo-slot.iss-notice-skin--pinned .iss-hero-note__link a {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  color: var(--iss-black);
+  text-decoration: none;
+}
+
+.iss-timeline-promo-slot.iss-notice-skin--pinned .iss-hero-note__link-icon {
+  color: var(--iss-red);
+}
+
+.iss-timeline-promo-slot.iss-notice-skin--pinned .iss-hero-note__link-text {
+  text-decoration: underline;
+  text-underline-offset: 0.16em;
+  text-decoration-thickness: 1px;
+}
+
+@media (max-width: 900px) {
+  .iss-timeline-section__header {
+    grid-template-columns: 1fr;
+    align-items: start;
+  }
+
+  .iss-timeline-promo-slot {
+    justify-self: stretch;
+    width: 100%;
+  }
+
+  .iss-timeline-promo-slot.iss-notice-skin--pinned .iss-hero-note {
+    gap: 0.4rem;
+    padding: 1rem 1.1rem 1.05rem;
+    transform: rotate(-0.65deg);
+  }
+
+  .iss-timeline-promo-slot.iss-notice-skin--pinned .iss-hero-note__kicker {
+    margin-top: 1.35rem;
+  }
+
+  .iss-timeline-promo-slot.iss-notice-skin--pinned .iss-hero-note__text,
+  .iss-timeline-promo-slot.iss-notice-skin--pinned .iss-hero-note__link {
+    display: none;
+  }
 }
 
 .iss-schoneweide-hero {

@@ -36,6 +36,7 @@
               value: props.attributes.area || "front_page_banner",
               options: [
                 { label: "Startseiten-Banner", value: "front_page_banner" },
+                { label: "Startseite Kalender-Hinweis", value: "front_page_timeline_promo" },
                 { label: "Website-Hinweis", value: "site_notice" },
                 { label: "Ausgewählte Seiten (Banner)", value: "selected_pages_banner" },
                 { label: "Admin-Hinweis", value: "admin_notice" },
@@ -52,6 +53,7 @@
                 { label: "Front Banner", value: "front" },
                 { label: "Landing Note", value: "landing" },
                 { label: "Atlas Note", value: "atlas" },
+                { label: "Pinned Note", value: "pinned" },
               ],
               onChange: function (value) {
                 props.setAttributes({ skin: value });

@@ -12,7 +12,7 @@ Pragmatic notice plugin for central banners/notices in the Industriesalon setup.
 - native meta boxes
 - Classic Editor for notice text
 - internal/external button target
-- front page banner / website notice / admin notice
+- front page banner / front-page timeline promo / website notice / admin notice
 - basic scheduling
 - basic priority handling
 - admin list columns
@@ -23,6 +23,7 @@ Pragmatic notice plugin for central banners/notices in the Industriesalon setup.
 - uses standard WordPress editing capabilities (no extra role setup needed)
 - frontend helper functions
 - shortcode `[iss_notice area="front_page_banner"]`
+- shortcode `[iss_notice area="front_page_timeline_promo"]`
 
 ## Deliberately left out
 

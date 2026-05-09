@@ -52,16 +52,45 @@
   color: var(--iss-tl-muted);
 }
 
+.iss-timeline__kicker {
+  color: var(--iss-tl-primary);
+  letter-spacing: 0.06em;
+}
+
 .iss-timeline__title {
   font-size: clamp(1.35rem, 2.2vw, 2.05rem);
   line-height: 1.15;
   font-weight: 700;
 }
 
+.iss-timeline__title a {
+  color: inherit;
+  text-decoration: none;
+}
+
+.iss-timeline__title a:hover,
+.iss-timeline__title a:focus {
+  color: var(--iss-tl-primary);
+}
+
 .iss-timeline__summary {
-  font-size: clamp(1.05rem, 1.35vw, 1.35rem);
-  line-height: 1.3;
+  font-size: clamp(0.92rem, 0.86rem + 0.4vw, 1.08rem);
+  line-height: 1.45;
   color: var(--iss-tl-muted);
+  max-width: 34ch;
+  display: -webkit-box;
+  -webkit-line-clamp: 3;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.iss-timeline__media {
+  background: rgba(30, 30, 30, 0.05);
+  overflow: hidden;
+}
+
+.iss-timeline__media img {
+  object-fit: cover;
 }
 
 .iss-timeline__btn {

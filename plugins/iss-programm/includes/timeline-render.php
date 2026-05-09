@@ -569,9 +569,6 @@ function iss_timeline_get_card_badge_label($row) {
                 return $first_term;
             }
         }
-
-        // Avoid tautological "Führung" badges on the tours landing when no useful type term exists yet.
-        return '';
     }
 
     return iss_timeline_get_type_label($item_type);
@@ -714,7 +711,15 @@ function iss_timeline_render_items_list($items, $opts = []) {
         }
 
         foreach ($groupRows as $row) {
-            $out .= '<article class="iss-timeline__item">';
+            $type_label = iss_timeline_get_card_badge_label($row);
+            $source_post_id = isset($row['source_post_id']) ? (int) $row['source_post_id'] : 0;
+            $permalink = $source_post_id > 0 ? get_permalink($source_post_id) : '';
+            $permalink = is_string($permalink) ? trim($permalink) : '';
+            $has_media = $source_post_id > 0 && has_post_thumbnail($source_post_id);
+            $item_classes = 'iss-timeline__item';
+            $item_classes .= $has_media ? ' iss-timeline__item--has-media' : ' iss-timeline__item--no-media';
+
+            $out .= '<article class="' . esc_attr($item_classes) . '">';
             $out .= '<div class="iss-timeline__date">';
             $out .= '<div class="iss-timeline__day">' . esc_html((string) ($row['day_label'] ?? '')) . '</div>';
             if (!empty($row['time_label'])) {
@@ -722,7 +727,16 @@ function iss_timeline_render_items_list($items, $opts = []) {
             }
             $out .= '</div>';
             $out .= '<div class="iss-timeline__content">';
-            $out .= '<h4 class="iss-timeline__title">' . esc_html((string) ($row['title'] ?? '')) . '</h4>';
+            if ($type_label !== '') {
+                $out .= '<p class="iss-kicker iss-kicker--compact iss-timeline__kicker">' . esc_html($type_label) . '</p>';
+            }
+            $out .= '<h4 class="iss-timeline__title">';
+            if ($permalink !== '') {
+                $out .= '<a href="' . esc_url($permalink) . '">' . esc_html((string) ($row['title'] ?? '')) . '</a>';
+            } else {
+                $out .= esc_html((string) ($row['title'] ?? ''));
+            }
+            $out .= '</h4>';
             if (!empty($row['summary'])) {
                 $out .= '<div class="iss-timeline__summary">' . esc_html((string) $row['summary']) . '</div>';
             } elseif (!empty($row['type'])) {
@@ -742,7 +756,19 @@ function iss_timeline_render_items_list($items, $opts = []) {
                 }
                 $out .= '</div>';
             }
-            $out .= '</div></article>';
+            $out .= '</div>';
+            if ($has_media) {
+                $out .= '<figure class="iss-timeline__media">';
+                if ($permalink !== '') {
+                    $out .= '<a href="' . esc_url($permalink) . '">';
+                }
+                $out .= get_the_post_thumbnail($source_post_id, 'large');
+                if ($permalink !== '') {
+                    $out .= '</a>';
+                }
+                $out .= '</figure>';
+            }
+            $out .= '</article>';
         }
 
         if ($yearGrouping) {
