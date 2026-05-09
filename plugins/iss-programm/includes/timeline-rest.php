@@ -95,7 +95,9 @@ function iss_timeline_rest_prepare_render_opts($params) {
     $opts = [
         'renderMode' => (($render['renderMode'] ?? 'timeline') === 'cards') ? 'cards' : 'timeline',
         'yearGrouping' => iss_timeline_rest_to_bool($render['yearGrouping'] ?? true, true),
+        'groupRecurringTours' => iss_timeline_rest_to_bool($render['groupRecurringTours'] ?? false, false),
         'order' => strtoupper(sanitize_text_field((string) ($params['order'] ?? 'ASC'))),
+        'showMeta' => iss_timeline_rest_to_bool($render['showMeta'] ?? true, true),
         'showDetailsButton' => iss_timeline_rest_to_bool($render['showDetailsButton'] ?? true, true),
         'showRecommendButton' => iss_timeline_rest_to_bool($render['showRecommendButton'] ?? true, true),
         'showTicketsButton' => iss_timeline_rest_to_bool($render['showTicketsButton'] ?? true, true),

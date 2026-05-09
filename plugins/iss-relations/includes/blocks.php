@@ -108,9 +108,22 @@ function iss_relations_register_blocks(): void
                 'type' => 'string',
                 'default' => '',
             ],
+            'mapPreset' => [
+                'type' => 'string',
+                'default' => 'default',
+            ],
+            'panelMode' => [
+                'type' => 'string',
+                'default' => 'show',
+            ],
+            'panelPosition' => [
+                'type' => 'string',
+                'default' => 'right',
+            ],
         ],
         'supports' => [
             'html' => false,
+            'align' => ['wide', 'full'],
         ],
         'render_callback' => 'iss_relations_render_related_place_map_block',
     ]);
@@ -154,6 +167,7 @@ function iss_relations_enqueue_block_editor_script(): void
             'placePostType' => iss_relations_get_place_post_type(),
             'taxonomy' => ISS_RELATIONS_TAXONOMY,
             'supportedPostTypes' => iss_relations_get_supported_post_types(),
+            'mapPresets' => iss_relations_get_place_map_editor_presets(),
         ]) . ';',
         'before'
     );
@@ -385,6 +399,244 @@ function iss_relations_get_place_map_defaults(): array
     ];
 }
 
+function iss_relations_get_place_map_presets(): array
+{
+    static $cache = null;
+
+    if ($cache !== null) {
+        return $cache;
+    }
+
+    $fallback = [
+        'default' => [
+            'label' => __('Atlas Übersicht', 'iss-relations'),
+            'image_url' => '',
+            'markers_path' => '',
+            'image_alt' => __('Übersichtskarte des Schöneweide-Atlas.', 'iss-relations'),
+            'width' => 2400,
+            'height' => 1313,
+        ],
+    ];
+    $presets = apply_filters('iss_relations_place_map_presets', $fallback);
+
+    if (!is_array($presets)) {
+        $cache = $fallback;
+        return $cache;
+    }
+
+    $normalized = [];
+
+    foreach ($presets as $preset_key => $preset_config) {
+        if (!is_array($preset_config)) {
+            continue;
+        }
+
+        $preset = sanitize_key(is_string($preset_key) ? $preset_key : (string) ($preset_config['id'] ?? ''));
+        if ($preset === '') {
+            continue;
+        }
+
+        $width = max(1, absint($preset_config['width'] ?? 2400));
+        $height = max(1, absint($preset_config['height'] ?? 1313));
+
+        $normalized[$preset] = [
+            'label' => trim((string) ($preset_config['label'] ?? $preset)),
+            'image_url' => isset($preset_config['image_url']) ? (string) $preset_config['image_url'] : '',
+            'markers_path' => isset($preset_config['markers_path']) ? (string) $preset_config['markers_path'] : '',
+            'image_alt' => isset($preset_config['image_alt']) ? (string) $preset_config['image_alt'] : __('Übersichtskarte des Schöneweide-Atlas.', 'iss-relations'),
+            'width' => $width,
+            'height' => $height,
+        ];
+    }
+
+    if (!$normalized) {
+        $normalized = $fallback;
+    }
+
+    $cache = $normalized;
+
+    return $cache;
+}
+
+function iss_relations_get_place_map_editor_presets(): array
+{
+    $options = [];
+
+    foreach (iss_relations_get_place_map_presets() as $preset => $config) {
+        $options[] = [
+            'label' => (string) ($config['label'] ?? $preset),
+            'value' => (string) $preset,
+        ];
+    }
+
+    return $options;
+}
+
+function iss_relations_get_place_map_config(string $preset = 'default'): array
+{
+    $presets = iss_relations_get_place_map_presets();
+
+    if (isset($presets[$preset])) {
+        return $presets[$preset];
+    }
+
+    $first_key = array_key_first($presets);
+    if ($first_key !== null && isset($presets[$first_key])) {
+        return $presets[$first_key];
+    }
+
+    return [
+        'label' => __('Atlas Übersicht', 'iss-relations'),
+        'image_url' => '',
+        'markers_path' => '',
+        'image_alt' => __('Übersichtskarte des Schöneweide-Atlas.', 'iss-relations'),
+        'width' => 2400,
+        'height' => 1313,
+    ];
+}
+
+function iss_relations_get_place_map_coord_key(float $lat, float $lng): string
+{
+    return number_format($lat, 6, '.', '') . ':' . number_format($lng, 6, '.', '');
+}
+
+function iss_relations_resolve_place_map_preset(array $attributes = []): string
+{
+    $preset = sanitize_key((string) ($attributes['mapPreset'] ?? ''));
+    $presets = iss_relations_get_place_map_presets();
+
+    if ($preset !== '' && isset($presets[$preset])) {
+        return $preset;
+    }
+
+    $first_key = array_key_first($presets);
+
+    if ($first_key === null) {
+        return 'default';
+    }
+
+    return (string) $first_key;
+}
+
+function iss_relations_normalize_place_map_panel_mode(array $attributes = []): string
+{
+    $value = sanitize_key((string) ($attributes['panelMode'] ?? 'show'));
+
+    return in_array($value, ['show', 'hide'], true) ? $value : 'show';
+}
+
+function iss_relations_normalize_place_map_panel_position(array $attributes = []): string
+{
+    $value = sanitize_key((string) ($attributes['panelPosition'] ?? 'right'));
+
+    return in_array($value, ['right', 'below'], true) ? $value : 'right';
+}
+
+function iss_relations_get_place_map_marker_lookup(string $markers_path): array
+{
+    static $cache = [];
+
+    $markers_path = wp_normalize_path($markers_path);
+
+    if ($markers_path === '') {
+        return [];
+    }
+
+    if (array_key_exists($markers_path, $cache)) {
+        return $cache[$markers_path];
+    }
+
+    if (!is_readable($markers_path)) {
+        $cache[$markers_path] = [];
+        return $cache[$markers_path];
+    }
+
+    $contents = file_get_contents($markers_path);
+    if (!is_string($contents) || $contents === '') {
+        $cache[$markers_path] = [];
+        return $cache[$markers_path];
+    }
+
+    $decoded = json_decode($contents, true);
+    if (!is_array($decoded)) {
+        $cache[$markers_path] = [];
+        return $cache[$markers_path];
+    }
+
+    $lookup = [
+        'by_id' => [],
+        'by_name' => [],
+        'by_coords' => [],
+    ];
+
+    foreach ($decoded as $item) {
+        if (!is_array($item)) {
+            continue;
+        }
+
+        $place_id = isset($item['id']) ? (string) $item['id'] : '';
+        $name = sanitize_title((string) ($item['name'] ?? ''));
+        $lat = isset($item['lat']) && is_numeric($item['lat']) ? (float) $item['lat'] : null;
+        $lng = isset($item['lng']) && is_numeric($item['lng']) ? (float) $item['lng'] : null;
+        $x = isset($item['xNorm']) && is_numeric($item['xNorm']) ? (float) $item['xNorm'] : null;
+        $y = isset($item['yNorm']) && is_numeric($item['yNorm']) ? (float) $item['yNorm'] : null;
+
+        if ($x === null || $y === null) {
+            continue;
+        }
+
+        $position = [
+            'x' => max(0, min(100, $x * 100)),
+            'y' => max(0, min(100, $y * 100)),
+        ];
+
+        if ($place_id !== '') {
+            $lookup['by_id'][$place_id] = $position;
+        }
+
+        if ($name !== '') {
+            $lookup['by_name'][$name] = $position;
+        }
+
+        if ($lat !== null && $lng !== null) {
+            $lookup['by_coords'][iss_relations_get_place_map_coord_key($lat, $lng)] = $position;
+        }
+    }
+
+    if (!$lookup['by_id'] && !$lookup['by_name'] && !$lookup['by_coords']) {
+        $cache[$markers_path] = [];
+        return $cache[$markers_path];
+    }
+
+    $cache[$markers_path] = $lookup;
+
+    return $cache[$markers_path];
+}
+
+function iss_relations_get_place_map_marker_position(array $place, array $marker_lookup): ?array
+{
+    $place_id = isset($place['place_id']) ? (string) $place['place_id'] : '';
+    if ($place_id !== '' && isset($marker_lookup['by_id'][$place_id])) {
+        return $marker_lookup['by_id'][$place_id];
+    }
+
+    $lat = isset($place['lat']) && is_numeric($place['lat']) ? (float) $place['lat'] : null;
+    $lng = isset($place['lng']) && is_numeric($place['lng']) ? (float) $place['lng'] : null;
+    if ($lat !== null && $lng !== null) {
+        $coord_key = iss_relations_get_place_map_coord_key($lat, $lng);
+        if (isset($marker_lookup['by_coords'][$coord_key])) {
+            return $marker_lookup['by_coords'][$coord_key];
+        }
+    }
+
+    $title = sanitize_title((string) ($place['title'] ?? ''));
+    if ($title !== '' && isset($marker_lookup['by_name'][$title])) {
+        return $marker_lookup['by_name'][$title];
+    }
+
+    return null;
+}
+
 function iss_relations_collect_map_places(array $attributes = [], $block = null): array
 {
     $attributes = is_array($attributes) ? $attributes : [];
@@ -506,50 +758,65 @@ function iss_relations_render_cards_grid(array $cards, string $post_type): strin
     return $out;
 }
 
-function iss_relations_render_place_map_stage(array $places): string
+function iss_relations_render_place_map_stage(array $places, array $config): string
 {
-    $geo_places = array_values(array_filter($places, static function (array $place): bool {
-        return is_numeric($place['lat'] ?? null) && is_numeric($place['lng'] ?? null);
-    }));
+    $image_url = $config['image_url'] ?? '';
+    $image_alt = $config['image_alt'] ?? '';
+    $marker_lookup = iss_relations_get_place_map_marker_lookup((string) ($config['markers_path'] ?? ''));
 
-    if (!$geo_places) {
+    if ($image_url === '' || !$marker_lookup) {
+        return '<div class="iss-related-place-map__empty">' . esc_html__('Für diese Auswahl ist noch keine Atlaskarte hinterlegt.', 'iss-relations') . '</div>';
+    }
+
+    $mapped_places = [];
+
+    foreach ($places as $index => $place) {
+        $position = iss_relations_get_place_map_marker_position($place, $marker_lookup);
+        if ($position === null) {
+            continue;
+        }
+
+        $mapped_places[] = [
+            'index' => $index,
+            'place' => $place,
+            'position' => $position,
+        ];
+    }
+
+    if (!$mapped_places) {
         return '<div class="iss-related-place-map__empty">' . esc_html__('Für diese Auswahl sind noch keine Koordinaten hinterlegt.', 'iss-relations') . '</div>';
     }
 
-    $lats = array_column($geo_places, 'lat');
-    $lngs = array_column($geo_places, 'lng');
-    $min_lat = min($lats);
-    $max_lat = max($lats);
-    $min_lng = min($lngs);
-    $max_lng = max($lngs);
-    $lat_range = max(0.0001, $max_lat - $min_lat);
-    $lng_range = max(0.0001, $max_lng - $min_lng);
     $markers = '';
+    $ratio_style = '';
 
-    foreach ($geo_places as $index => $place) {
-        $x = (($place['lng'] - $min_lng) / $lng_range) * 100;
-        $y = (($max_lat - $place['lat']) / $lat_range) * 100;
-        $x = max(6, min(94, $x));
-        $y = max(8, min(92, $y));
+    if (!empty($config['width']) && !empty($config['height'])) {
+        $ratio_style = ' style="--iss-related-place-map-ratio:' . esc_attr((int) $config['width']) . ' / ' . esc_attr((int) $config['height']) . ';"';
+    }
+
+    foreach ($mapped_places as $item) {
+        $index = (int) $item['index'];
+        $place = $item['place'];
+        $position = $item['position'];
         $label = trim((string) ($place['label'] ?? ''));
         $marker_label = $label !== '' ? ($label . ': ' . $place['title']) : $place['title'];
 
         $markers .= sprintf(
             '<a class="iss-related-place-map__marker" href="%1$s" style="--x:%2$s%%;--y:%3$s%%" aria-label="%4$s"><span class="iss-related-place-map__marker-dot" aria-hidden="true"></span><span class="iss-related-place-map__marker-label">%5$s</span></a>',
             esc_url((string) ($place['permalink'] ?? '')),
-            esc_attr(number_format($x, 3, '.', '')),
-            esc_attr(number_format($y, 3, '.', '')),
+            esc_attr(number_format((float) $position['x'], 3, '.', '')),
+            esc_attr(number_format((float) $position['y'], 3, '.', '')),
             esc_attr($marker_label),
             esc_html((string) ($index + 1))
         );
     }
 
-    return '<div class="iss-related-place-map__stage">' . $markers . '</div>';
+    return '<div class="iss-related-place-map__stage"' . $ratio_style . '><img class="iss-related-place-map__image" src="' . esc_url($image_url) . '" alt="' . esc_attr($image_alt) . '" loading="lazy" decoding="async"><div class="iss-related-place-map__markers">' . $markers . '</div></div>';
 }
 
-function iss_relations_render_place_map_list(array $places): string
+function iss_relations_render_place_map_panel(array $places): string
 {
-    $out = '<div class="iss-related-place-map__list">';
+    $out = '<div class="iss-related-place-map__panel">';
 
     foreach ($places as $index => $place) {
         $permalink = (string) ($place['permalink'] ?? '');
@@ -557,17 +824,17 @@ function iss_relations_render_place_map_list(array $places): string
         $label = trim((string) ($place['label'] ?? ''));
         $excerpt = trim((string) ($place['excerpt'] ?? ''));
 
-        $out .= '<article class="iss-related-place-map__item">';
-        $out .= '<div class="iss-related-place-map__item-index">' . esc_html((string) ($index + 1)) . '</div>';
-        $out .= '<div class="iss-related-place-map__item-body">';
+        $out .= '<article class="iss-related-place-map__entry">';
+        $out .= '<div class="iss-related-place-map__entry-index">' . esc_html((string) ($index + 1)) . '</div>';
+        $out .= '<div class="iss-related-place-map__entry-body">';
         if ($label !== '') {
-            $out .= '<p class="iss-related-place-map__item-kicker">' . esc_html($label) . '</p>';
+            $out .= '<p class="iss-related-place-map__entry-kicker">' . esc_html($label) . '</p>';
         }
-        $out .= '<h3 class="iss-related-place-map__item-title"><a href="' . esc_url($permalink) . '">' . esc_html($title) . '</a></h3>';
+        $out .= '<h3 class="iss-related-place-map__entry-title"><a href="' . esc_url($permalink) . '">' . esc_html($title) . '</a></h3>';
         if ($excerpt !== '') {
-            $out .= '<p class="iss-related-place-map__item-text">' . esc_html($excerpt) . '</p>';
+            $out .= '<p class="iss-related-place-map__entry-text">' . esc_html($excerpt) . '</p>';
         }
-        $out .= '<p class="iss-related-place-map__item-link"><a class="iss-action-link" href="' . esc_url($permalink) . '">' . esc_html__('Zum Ort', 'iss-relations') . '</a></p>';
+        $out .= '<p class="iss-related-place-map__entry-link"><a class="iss-action-link" href="' . esc_url($permalink) . '">' . esc_html__('Zum Ort', 'iss-relations') . '</a></p>';
         $out .= '</div>';
         $out .= '</article>';
     }
@@ -664,6 +931,15 @@ function iss_relations_render_related_place_map_block($attributes = [], $content
     $title = trim(sanitize_text_field((string) ($attributes['title'] ?? $defaults['title'])));
     $description = iss_relations_get_place_map_description($source, count($places));
     $link_text = (string) $defaults['link_text'];
+    $preset = iss_relations_resolve_place_map_preset($attributes);
+    $config = iss_relations_get_place_map_config($preset);
+    $panel_mode = iss_relations_normalize_place_map_panel_mode($attributes);
+    $panel_position = iss_relations_normalize_place_map_panel_position($attributes);
+    $body_classes = ['iss-related-place-map__body', 'iss-related-place-map__body--panel-' . $panel_mode];
+
+    if ($panel_mode === 'show') {
+        $body_classes[] = 'iss-related-place-map__body--panel-' . $panel_position;
+    }
 
     $wrapper = function_exists('get_block_wrapper_attributes')
         ? get_block_wrapper_attributes([
@@ -686,9 +962,11 @@ function iss_relations_render_related_place_map_block($attributes = [], $content
     }
     $out .= '<p class="iss-related-place-map__cta"><a class="iss-action-link" href="' . esc_url(home_url('/schoneweide/')) . '">' . esc_html($link_text) . '</a></p>';
     $out .= '</div>';
-    $out .= '<div class="iss-related-place-map__layout">';
-    $out .= iss_relations_render_place_map_stage($places);
-    $out .= iss_relations_render_place_map_list($places);
+    $out .= '<div class="' . esc_attr(implode(' ', $body_classes)) . '">';
+    $out .= iss_relations_render_place_map_stage($places, $config);
+    if ($panel_mode === 'show') {
+        $out .= iss_relations_render_place_map_panel($places);
+    }
     $out .= '</div>';
     $out .= '</div>';
     $out .= '</div>';

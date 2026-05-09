@@ -92,6 +92,7 @@ function iss_timeline_prepare_item($item_id) {
     $public_title = (string) get_post_meta($item_id, 'public_title', true);
     $public_summary = (string) get_post_meta($item_id, 'public_summary', true);
     $item_type = (string) get_post_meta($item_id, 'item_type', true);
+    $series_key = (string) get_post_meta($item_id, 'series_key', true);
 
     $cta_mode = (string) get_post_meta($item_id, 'cta_mode', true);
     $cta_url = (string) get_post_meta($item_id, 'cta_url', true);
@@ -164,6 +165,7 @@ function iss_timeline_prepare_item($item_id) {
         'time_label' => $time_label,
         'end_raw' => $event_end,
         'type' => $item_type,
+        'series_key' => trim($series_key),
         'summary' => $summary,
         'cta_mode' => $cta_mode,
         'cta_url' => $cta_url,
@@ -177,6 +179,185 @@ function iss_timeline_prepare_item($item_id) {
     ];
 }
 
+function iss_timeline_prepare_rows($items) {
+    $items = is_array($items) ? $items : [];
+    $rows = [];
+
+    foreach ($items as $item) {
+        if (is_array($item)) {
+            $rows[] = $item;
+            continue;
+        }
+
+        $id = ($item instanceof WP_Post) ? (int) $item->ID : (int) $item;
+        if ($id <= 0) {
+            continue;
+        }
+
+        $row = iss_timeline_prepare_item($id);
+        if (!empty($row) && is_array($row)) {
+            $rows[] = $row;
+        }
+    }
+
+    return $rows;
+}
+
+function iss_timeline_is_groupable_tour_row($row) {
+    if (!is_array($row)) {
+        return false;
+    }
+
+    return iss_timeline_resolve_item_type_value($row['type'] ?? '') === 'tour';
+}
+
+function iss_timeline_get_row_group_key($row) {
+    if (!is_array($row)) {
+        return '';
+    }
+
+    $series_key = trim((string) ($row['series_key'] ?? ''));
+    if ($series_key !== '') {
+        return 'series:' . $series_key;
+    }
+
+    $source_post_id = (int) ($row['source_post_id'] ?? 0);
+    if ($source_post_id > 0) {
+        return 'source:' . $source_post_id;
+    }
+
+    $item_id = (int) ($row['id'] ?? 0);
+    return $item_id > 0 ? 'item:' . $item_id : '';
+}
+
+function iss_timeline_get_occurrence_label($row) {
+    if (!is_array($row)) {
+        return '';
+    }
+
+    $label = trim((string) ($row['date_label'] ?? ''));
+    $time_label = trim((string) ($row['time_label'] ?? ''));
+
+    if ($label === '') {
+        return $time_label;
+    }
+
+    if ($time_label !== '') {
+        $label .= ' · ' . $time_label;
+    }
+
+    return $label;
+}
+
+function iss_timeline_get_recurring_note($row, $visible_limit = 2) {
+    if (!is_array($row) || empty($row['grouped'])) {
+        return '';
+    }
+
+    $occurrences = !empty($row['occurrences']) && is_array($row['occurrences']) ? array_values($row['occurrences']) : [];
+    if (count($occurrences) < 2) {
+        return '';
+    }
+
+    $remaining = array_slice($occurrences, 1);
+    if (empty($remaining)) {
+        return '';
+    }
+
+    $labels = [];
+    foreach (array_slice($remaining, 0, max(1, (int) $visible_limit)) as $occurrence) {
+        $label = iss_timeline_get_occurrence_label($occurrence);
+        if ($label !== '') {
+            $labels[] = $label;
+        }
+    }
+
+    $remaining_count = count($remaining);
+    $more_count = max(0, $remaining_count - count($labels));
+    $note = '';
+
+    if (!empty($labels)) {
+        $note = sprintf(
+            /* translators: %s comma-separated list of further dates */
+            __('Weitere Termine: %s', 'iss-timeline'),
+            implode(', ', $labels)
+        );
+    }
+
+    if ($more_count > 0) {
+        $more_label = sprintf(
+            /* translators: %d number of additional future dates */
+            _n('+ %d weiterer Termin', '+ %d weitere Termine', $more_count, 'iss-timeline'),
+            $more_count
+        );
+        $note = $note !== '' ? $note . ' ' . $more_label : $more_label;
+    }
+
+    if ($note === '') {
+        $note = sprintf(
+            /* translators: %d number of further dates */
+            _n('%d weiterer Termin', '%d weitere Termine', $remaining_count, 'iss-timeline'),
+            $remaining_count
+        );
+    }
+
+    return $note;
+}
+
+function iss_timeline_group_recurring_tour_rows($items) {
+    $rows = iss_timeline_prepare_rows($items);
+    if (empty($rows)) {
+        return [];
+    }
+
+    $grouped_rows = [];
+    $group_indexes = [];
+
+    foreach ($rows as $row) {
+        if (!is_array($row)) {
+            continue;
+        }
+
+        if (!iss_timeline_is_groupable_tour_row($row)) {
+            $grouped_rows[] = $row;
+            continue;
+        }
+
+        $group_key = iss_timeline_get_row_group_key($row);
+        if ($group_key === '' || !isset($group_indexes[$group_key])) {
+            $row['occurrences'] = [$row];
+            $group_indexes[$group_key] = count($grouped_rows);
+            $grouped_rows[] = $row;
+            continue;
+        }
+
+        $target_index = $group_indexes[$group_key];
+        if (empty($grouped_rows[$target_index]['occurrences']) || !is_array($grouped_rows[$target_index]['occurrences'])) {
+            $grouped_rows[$target_index]['occurrences'] = [$grouped_rows[$target_index]];
+        }
+        $grouped_rows[$target_index]['occurrences'][] = $row;
+    }
+
+    foreach ($grouped_rows as &$row) {
+        if (!is_array($row) || empty($row['occurrences']) || !is_array($row['occurrences'])) {
+            continue;
+        }
+
+        $occurrences = array_values(array_filter($row['occurrences'], 'is_array'));
+        if (count($occurrences) <= 1) {
+            unset($row['occurrences']);
+            continue;
+        }
+
+        $row['grouped'] = true;
+        $row['occurrences'] = $occurrences;
+        $row['occurrence_count'] = count($occurrences);
+    }
+    unset($row);
+
+    return $grouped_rows;
+}
+
 function iss_timeline_build_render_options($attributes = []) {
     $attributes = is_array($attributes) ? $attributes : [];
 
@@ -187,6 +368,7 @@ function iss_timeline_build_render_options($attributes = []) {
         'detailsButtonUrl' => isset($attributes['detailsButtonUrl']) ? (string) $attributes['detailsButtonUrl'] : '',
         'recommendButtonUrl' => isset($attributes['recommendButtonUrl']) ? (string) $attributes['recommendButtonUrl'] : '',
         'ticketsButtonUrl' => isset($attributes['ticketsButtonUrl']) ? (string) $attributes['ticketsButtonUrl'] : '',
+        'groupRecurringTours' => !empty($attributes['groupRecurringTours']) && (bool) $attributes['groupRecurringTours'],
         'detailsButtonText' => isset($attributes['detailsButtonText']) ? (string) $attributes['detailsButtonText'] : '',
         'recommendButtonText' => isset($attributes['recommendButtonText']) ? (string) $attributes['recommendButtonText'] : '',
         'ticketsButtonText' => isset($attributes['ticketsButtonText']) ? (string) $attributes['ticketsButtonText'] : '',
@@ -396,17 +578,12 @@ function iss_timeline_get_card_badge_label($row) {
 }
 
 function iss_timeline_render_items_cards($items, $opts = []) {
-    $items = is_array($items) ? $items : [];
+    $rows = iss_timeline_prepare_rows($items);
     $opts = is_array($opts) ? $opts : [];
     $show_meta = !array_key_exists('showMeta', $opts) || (bool) $opts['showMeta'];
     $out = '<div class="iss-card-grid iss-timeline-cards">';
 
-    foreach ($items as $item) {
-        if (!$item instanceof WP_Post) {
-            continue;
-        }
-
-        $row = iss_timeline_prepare_item($item->ID);
+    foreach ($rows as $row) {
         if (empty($row) || !is_array($row)) {
             continue;
         }
@@ -464,12 +641,16 @@ function iss_timeline_render_items_cards($items, $opts = []) {
         }
         $out .= '</h3>';
 
-        if ($show_meta && !empty($row['date_label'])) {
-            $meta = (string) $row['date_label'];
-            if (!empty($row['time_label'])) {
-                $meta .= ' · ' . (string) $row['time_label'];
-            }
-            $out .= '<p class="iss-card__meta iss-timeline-card__meta">' . esc_html($meta) . '</p>';
+        $meta_lines = [];
+        if (($show_meta || !empty($row['grouped'])) && !empty($row['date_label'])) {
+            $meta_lines[] = iss_timeline_get_occurrence_label($row);
+        }
+        $recurring_note = iss_timeline_get_recurring_note($row);
+        if ($recurring_note !== '') {
+            $meta_lines[] = $recurring_note;
+        }
+        foreach ($meta_lines as $meta_line) {
+            $out .= '<p class="iss-card__meta iss-timeline-card__meta">' . esc_html($meta_line) . '</p>';
         }
 
         if ($summary !== '') {
@@ -503,15 +684,11 @@ function iss_timeline_render_items_list($items, $opts = []) {
     $yearGrouping = array_key_exists('yearGrouping', $opts) ? (bool) $opts['yearGrouping'] : true;
     $order = isset($opts['order']) ? strtoupper((string) $opts['order']) : 'ASC';
     if (!in_array($order, ['ASC', 'DESC'], true)) $order = 'ASC';
+    $rows = iss_timeline_prepare_rows($items);
 
-    if (empty($items)) {
+    if (empty($rows)) {
         return '<p class="iss-timeline__empty">' . esc_html__('Keine Einträge gefunden.', 'iss-timeline') . '</p>';
     }
-
-    $rows = array_map(function ($post) {
-        $id = ($post instanceof WP_Post) ? $post->ID : (int) $post;
-        return iss_timeline_prepare_item($id);
-    }, $items);
 
     $groups = [];
     foreach ($rows as $row) {
@@ -551,6 +728,10 @@ function iss_timeline_render_items_list($items, $opts = []) {
             } elseif (!empty($row['type'])) {
                 $out .= '<div class="iss-timeline__summary">' . esc_html((string) $row['type']) . '</div>';
             }
+            $recurring_note = iss_timeline_get_recurring_note($row);
+            if ($recurring_note !== '') {
+                $out .= '<div class="iss-timeline__summary">' . esc_html($recurring_note) . '</div>';
+            }
 
             $actions = iss_timeline_build_actions($row, $opts);
             if (!empty($actions)) {
@@ -577,6 +758,44 @@ function iss_timeline_get_listing_response($query_args = [], $render_opts = []) 
     $render_opts = is_array($render_opts) ? $render_opts : [];
     $offset = isset($query_args['offset']) ? max(0, (int) $query_args['offset']) : 0;
     $limit = isset($query_args['limit']) ? (int) $query_args['limit'] : 0;
+    $group_recurring_tours = !empty($render_opts['groupRecurringTours']);
+
+    if ($group_recurring_tours) {
+        $fetch_args = $query_args;
+        $fetch_args['offset'] = 0;
+        $fetch_args['limit'] = -1;
+
+        $items = function_exists('iss_timeline_get_items_advanced')
+            ? iss_timeline_get_items_advanced($fetch_args)
+            : [];
+        $grouped_rows = iss_timeline_group_recurring_tour_rows($items);
+        $total_count = count($grouped_rows);
+
+        if ($limit > 0) {
+            $visible_rows = array_slice($grouped_rows, $offset, $limit);
+        } elseif ($offset > 0) {
+            $visible_rows = array_slice($grouped_rows, $offset);
+        } else {
+            $visible_rows = $grouped_rows;
+        }
+
+        $visible_count = $offset + count($visible_rows);
+        $has_more = $visible_count < $total_count;
+
+        return [
+            'items' => $visible_rows,
+            'count' => $visible_count,
+            'batchCount' => count($visible_rows),
+            'isEmpty' => empty($visible_rows),
+            'offset' => $offset,
+            'nextOffset' => $visible_count,
+            'hasMore' => $has_more,
+            'html' => (isset($render_opts['renderMode']) && $render_opts['renderMode'] === 'cards')
+                ? iss_timeline_render_items_cards($visible_rows, $render_opts)
+                : iss_timeline_render_items_list($visible_rows, $render_opts),
+        ];
+    }
+
     $fetch_args = $query_args;
     $use_overscan = $limit > 0;
     if ($use_overscan) {
@@ -1023,6 +1242,7 @@ function iss_timeline_build_query_block_config($attributes = []) {
         'render' => [
             'renderMode' => (($attributes['renderMode'] ?? 'timeline') === 'cards') ? 'cards' : 'timeline',
             'yearGrouping' => !empty($attributes['yearGrouping']),
+            'groupRecurringTours' => !empty($attributes['groupRecurringTours']),
             'showMeta' => !array_key_exists('showMeta', $attributes) || (bool) $attributes['showMeta'],
             'showDetailsButton' => !array_key_exists('showDetailsButton', $attributes) || (bool) $attributes['showDetailsButton'],
             'showRecommendButton' => !array_key_exists('showRecommendButton', $attributes) || (bool) $attributes['showRecommendButton'],

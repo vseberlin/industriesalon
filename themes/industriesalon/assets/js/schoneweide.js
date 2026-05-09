@@ -17,6 +17,7 @@
     sucht: 'Standortsuche'
   };
   var ATLAS_AREAS = {
+    'Niederschöneweide': true,
     'Oberschöneweide': true,
     'Nalepastraße': true,
     Schöneweide: true

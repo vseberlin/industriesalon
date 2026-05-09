@@ -541,11 +541,7 @@ function iss_content_model_save_meta_box(int $post_id): void
         $sanitized = iss_content_model_sanitize_meta_value($value, $key, null);
 
         if ($config['type'] === 'boolean') {
-            if ($sanitized) {
-                update_post_meta($post_id, $key, '1');
-            } else {
-                delete_post_meta($post_id, $key);
-            }
+            update_post_meta($post_id, $key, $sanitized ? '1' : '0');
             continue;
         }
 

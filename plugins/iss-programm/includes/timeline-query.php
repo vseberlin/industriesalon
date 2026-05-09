@@ -250,6 +250,68 @@ function iss_timeline_get_requested_resolved_item_types($filters) {
     return array_values(array_unique($resolved_types));
 }
 
+function iss_timeline_build_requested_type_meta_query($filters) {
+    $filters = is_array($filters) ? $filters : [];
+    $resolved_types = iss_timeline_get_requested_resolved_item_types($filters);
+    if (empty($resolved_types)) {
+        return [];
+    }
+
+    $clauses = [];
+    foreach ($resolved_types as $resolved_type) {
+        if ($resolved_type === 'event') {
+            $clauses[] = [
+                'relation' => 'AND',
+                [
+                    'key' => 'item_type',
+                    'value' => 'event',
+                    'compare' => '=',
+                ],
+                [
+                    'key' => 'source_post_type',
+                    'value' => 'veranstaltung',
+                    'compare' => '=',
+                ],
+            ];
+            continue;
+        }
+
+        if ($resolved_type === 'ausstellung') {
+            $clauses[] = [
+                'relation' => 'AND',
+                [
+                    'key' => 'item_type',
+                    'value' => 'ausstellung',
+                    'compare' => '=',
+                ],
+                [
+                    'key' => 'source_post_type',
+                    'value' => 'ausstellung',
+                    'compare' => '=',
+                ],
+            ];
+            continue;
+        }
+
+        $clauses[] = [
+            'key' => 'item_type',
+            'value' => $resolved_type,
+            'compare' => '=',
+        ];
+    }
+
+    if (count($clauses) === 1) {
+        return $clauses[0];
+    }
+
+    $query = ['relation' => 'OR'];
+    foreach ($clauses as $clause) {
+        $query[] = $clause;
+    }
+
+    return $query;
+}
+
 function iss_timeline_filters_need_running_ranges($filters) {
     $filters = is_array($filters) ? $filters : [];
 
@@ -710,11 +772,7 @@ function iss_timeline_build_core_meta_query($filters) {
 
     $meta_query = [iss_timeline_build_visibility_meta_query()];
 
-    $selected_type = isset($filters['item_type']) ? sanitize_key((string) $filters['item_type']) : '';
-    $type_filters = ($selected_type !== '' && $selected_type !== 'all')
-        ? $selected_type
-        : ($filters['item_types'] ?? []);
-    $type_q = iss_timeline_build_type_meta_query($type_filters);
+    $type_q = iss_timeline_build_requested_type_meta_query($filters);
     if (!empty($type_q)) {
         $meta_query[] = $type_q;
     }
@@ -946,6 +1004,26 @@ function iss_timeline_build_split_time_meta_queries($filters) {
     return [];
 }
 
+function iss_timeline_build_split_item_type_filters($filters) {
+    $filters = is_array($filters) ? $filters : [];
+    $resolved_types = iss_timeline_get_requested_resolved_item_types($filters);
+    if (count($resolved_types) <= 1) {
+        return [];
+    }
+
+    $split_filters = [];
+    foreach ($resolved_types as $resolved_type) {
+        $single_filters = $filters;
+        $single_filters['item_type'] = $resolved_type;
+        $single_filters['item_types'] = [];
+        $single_filters['limit'] = -1;
+        $single_filters['offset'] = 0;
+        $split_filters[] = $single_filters;
+    }
+
+    return $split_filters;
+}
+
 function iss_timeline_query_ids_by_time_meta($filters, $time_meta_query) {
     $query_args = iss_timeline_build_query_args_from_filters($filters, $time_meta_query);
     $query_args['posts_per_page'] = -1;
@@ -957,6 +1035,41 @@ function iss_timeline_query_ids_by_time_meta($filters, $time_meta_query) {
     $query = new WP_Query($query_args);
 
     return array_values(array_unique(array_filter(array_map('intval', is_array($query->posts) ? $query->posts : []))));
+}
+
+function iss_timeline_query_ids_for_filters($filters) {
+    $filters = is_array($filters) ? $filters : [];
+    $split_time_meta_queries = iss_timeline_build_split_time_meta_queries($filters);
+
+    if (empty($split_time_meta_queries)) {
+        $query_args = iss_timeline_build_query_args_from_filters($filters);
+        $query_args['fields'] = 'ids';
+        $query_args['update_post_meta_cache'] = false;
+        $query_args['update_post_term_cache'] = false;
+
+        $query = new WP_Query($query_args);
+        return array_values(array_unique(array_filter(array_map('intval', is_array($query->posts) ? $query->posts : []))));
+    }
+
+    $merged_ids = [];
+    foreach ($split_time_meta_queries as $time_meta_query) {
+        $merged_ids = array_merge($merged_ids, iss_timeline_query_ids_by_time_meta($filters, $time_meta_query));
+    }
+
+    $merged_ids = iss_timeline_sort_ids_by_sort_date($merged_ids, $filters['order'] ?? 'ASC');
+    if (empty($merged_ids)) {
+        return [];
+    }
+
+    $offset = max(0, (int) ($filters['offset'] ?? 0));
+    $limit = isset($filters['limit']) ? (int) $filters['limit'] : 50;
+    if ($limit > 0) {
+        $merged_ids = array_slice($merged_ids, $offset, $limit);
+    } elseif ($offset > 0) {
+        $merged_ids = array_slice($merged_ids, $offset);
+    }
+
+    return $merged_ids;
 }
 
 function iss_timeline_sort_ids_by_sort_date($ids, $order = 'ASC') {
@@ -1031,30 +1144,29 @@ function iss_timeline_load_posts_by_ids($ids) {
 
 function iss_timeline_get_items_advanced($args = []) {
     $filters = iss_timeline_normalize_filter_payload($args);
-    $split_time_meta_queries = iss_timeline_build_split_time_meta_queries($filters);
+    $split_type_filters = iss_timeline_build_split_item_type_filters($filters);
 
-    if (empty($split_time_meta_queries)) {
-        $q = new WP_Query(iss_timeline_build_query_args_from_filters($filters));
-        return $q->posts;
+    if (!empty($split_type_filters)) {
+        $merged_ids = [];
+        foreach ($split_type_filters as $single_filters) {
+            $merged_ids = array_merge($merged_ids, iss_timeline_query_ids_for_filters($single_filters));
+        }
+
+        $merged_ids = iss_timeline_sort_ids_by_sort_date($merged_ids, $filters['order'] ?? 'ASC');
+        if (empty($merged_ids)) {
+            return [];
+        }
+
+        $offset = max(0, (int) ($filters['offset'] ?? 0));
+        $limit = isset($filters['limit']) ? (int) $filters['limit'] : 50;
+        if ($limit > 0) {
+            $merged_ids = array_slice($merged_ids, $offset, $limit);
+        } elseif ($offset > 0) {
+            $merged_ids = array_slice($merged_ids, $offset);
+        }
+
+        return iss_timeline_load_posts_by_ids($merged_ids);
     }
 
-    $merged_ids = [];
-    foreach ($split_time_meta_queries as $time_meta_query) {
-        $merged_ids = array_merge($merged_ids, iss_timeline_query_ids_by_time_meta($filters, $time_meta_query));
-    }
-
-    $merged_ids = iss_timeline_sort_ids_by_sort_date($merged_ids, $filters['order'] ?? 'ASC');
-    if (empty($merged_ids)) {
-        return [];
-    }
-
-    $offset = max(0, (int) ($filters['offset'] ?? 0));
-    $limit = isset($filters['limit']) ? (int) $filters['limit'] : 50;
-    if ($limit > 0) {
-        $merged_ids = array_slice($merged_ids, $offset, $limit);
-    } elseif ($offset > 0) {
-        $merged_ids = array_slice($merged_ids, $offset);
-    }
-
-    return iss_timeline_load_posts_by_ids($merged_ids);
+    return iss_timeline_load_posts_by_ids(iss_timeline_query_ids_for_filters($filters));
 }

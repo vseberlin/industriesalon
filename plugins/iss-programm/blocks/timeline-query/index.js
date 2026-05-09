@@ -435,6 +435,15 @@
                       },
                     })
                   : null,
+                ToggleControl
+                  ? el(ToggleControl, {
+                      label: 'Wiederkehrende Führungen bündeln',
+                      checked: !!attrs.groupRecurringTours,
+                      onChange: function (v) {
+                        setAttributes({ groupRecurringTours: !!v });
+                      },
+                    })
+                  : null,
                 SelectControl
                   ? el(SelectControl, {
                       label: 'Render mode',

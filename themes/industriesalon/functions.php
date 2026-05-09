@@ -48,6 +48,50 @@ add_filter('get_site_icon_url', function ($url, $size, $blog_id) {
     return get_stylesheet_directory_uri() . '/assets/img/logo-industriesalon-favicon.svg';
 }, 10, 3);
 
+add_filter('iss_relations_place_map_presets', function (array $presets): array {
+    $variants = [
+        'default' => [
+            'label' => __('Atlas Übersicht', 'industriesalon'),
+            'map' => '/assets/maps/schoeneweide-static-map.png',
+            'markers' => '/assets/maps/schoeneweide-static-markers.json',
+            'width' => 2400,
+            'height' => 1313,
+        ],
+        'front-page' => [
+            'label' => __('Frontpage Fokus', 'industriesalon'),
+            'map' => '/assets/maps/schoeneweide-front-page-map.png',
+            'markers' => '/assets/maps/schoeneweide-front-page-markers.json',
+            'width' => 2400,
+            'height' => 1313,
+        ],
+    ];
+    $theme_dir = get_stylesheet_directory();
+    $theme_uri = get_stylesheet_directory_uri();
+    $configured = [];
+
+    foreach ($variants as $preset => $variant) {
+        $map_rel = (string) ($variant['map'] ?? '');
+        $markers_rel = (string) ($variant['markers'] ?? '');
+        $map_path = $theme_dir . $map_rel;
+        $markers_path = $theme_dir . $markers_rel;
+
+        if (!file_exists($map_path) || !file_exists($markers_path)) {
+            continue;
+        }
+
+        $configured[$preset] = [
+            'label' => (string) ($variant['label'] ?? $preset),
+            'image_url' => $theme_uri . $map_rel,
+            'markers_path' => $markers_path,
+            'image_alt' => __('Übersichtskarte des Schöneweide-Atlas.', 'industriesalon'),
+            'width' => max(1, absint($variant['width'] ?? 2400)),
+            'height' => max(1, absint($variant['height'] ?? 1313)),
+        ];
+    }
+
+    return $configured ?: $presets;
+}, 10, 1);
+
 /**
  * Register local block patterns from theme files.
  */

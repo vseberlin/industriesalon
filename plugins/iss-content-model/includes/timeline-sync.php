@@ -321,6 +321,7 @@ add_action('set_object_terms', function ($object_id, $terms, $tt_ids, $taxonomy)
     }
 
     iss_content_model_sync_ausstellung_legacy_type_meta((int) $object_id);
+    iss_content_model_upsert_timeline_item_for_post((int) $object_id);
 }, 10, 4);
 
 add_action('trashed_post', function ($post_id) {
