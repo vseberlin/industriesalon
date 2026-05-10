@@ -227,6 +227,21 @@
   border-top: 1px solid rgba(30, 30, 30, 0.12);
 }
 
+.iss-publications-page-nav {
+  position: sticky;
+  top: calc(var(--iss-header-height) + 0.35rem);
+  z-index: 20;
+  padding: 0.35rem 0 1.25rem;
+  border-top: 1px solid rgba(30, 30, 30, 0.08);
+  border-bottom: 1px solid rgba(30, 30, 30, 0.12);
+  background: rgba(249, 249, 250, 0.94);
+  backdrop-filter: blur(10px);
+}
+
+.iss-publications-page-nav .iss-container {
+  max-width: var(--iss-narrative-width);
+}
+
 .iss-publications-start__nav {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -818,7 +833,7 @@ body.iss-publication-kind-album .iss-publication-single__body {
 
 .iss-publication-essay__nav {
   position: sticky;
-  top: 0;
+  top: calc(var(--iss-header-height) + 0.35rem);
   z-index: 20;
   border-top: 1px solid rgba(30, 30, 30, 0.08);
   border-bottom: 1px solid rgba(30, 30, 30, 0.12);
@@ -901,7 +916,7 @@ body.iss-publication-kind-album .iss-publication-single__body {
 
 .iss-publication-chapter__aside {
   position: sticky;
-  top: 5rem;
+  top: calc(var(--iss-header-height) + 1rem);
   align-self: start;
   padding-left: 1rem;
   border-left: 3px solid rgba(162, 128, 97, 0.7);
@@ -980,7 +995,7 @@ body.iss-publication-layout-timeline .iss-publication-single__body li {
 
 body.iss-publication-layout-timeline .iss-publication-single__sidebar {
   position: sticky;
-  top: 1.5rem;
+  top: calc(var(--iss-header-height) + 1rem);
   align-self: start;
 }
 
@@ -1170,7 +1185,7 @@ body.iss-publication-layout-timeline .iss-publication-order-panel {
 
 .iss-publication-timeline__nav {
   position: sticky;
-  top: 0;
+  top: calc(var(--iss-header-height) + 0.35rem);
   z-index: 20;
   border-top: 1px solid rgba(30, 30, 30, 0.08);
   border-bottom: 1px solid rgba(30, 30, 30, 0.12);
@@ -1223,7 +1238,7 @@ body.iss-publication-layout-timeline .iss-publication-order-panel {
 
 .iss-publication-epoch__aside {
   position: sticky;
-  top: 5rem;
+  top: calc(var(--iss-header-height) + 1rem);
   align-self: start;
   padding-left: 1rem;
   border-left: 4px solid var(--iss-publication-epoch-accent, var(--iss-red));
@@ -1428,6 +1443,15 @@ body.iss-publication-layout-timeline .iss-publication-order-panel {
 }
 
 @media (max-width: 900px) {
+  .iss-publications-page-nav {
+    position: static;
+    padding: 0;
+    border-top: 0;
+    border-bottom: 0;
+    background: transparent;
+    backdrop-filter: none;
+  }
+
   .iss-publications-masthead__grid,
   .iss-publications-reading-rail__head,
   .iss-publications-reading-room__grid,

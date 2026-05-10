@@ -400,6 +400,7 @@ body {
   right: 0;
   z-index: 1100;
   margin: 0;
+  pointer-events: none;
 }
 
 .iss-site-header__inner {
@@ -417,12 +418,14 @@ body {
   display: inline-flex;
   align-items: center;
   min-width: 0;
+  pointer-events: auto;
 }
 
 .iss-header-actions {
   display: flex;
   align-items: center;
   gap: 0.75rem;
+  pointer-events: auto;
 }
 
 .iss-site-header .wp-block-site-logo {
@@ -439,6 +442,7 @@ body {
 
 .iss-header-context {
   display: none;
+  pointer-events: auto;
 }
 
 .iss-header-context__inner {
@@ -485,11 +489,28 @@ body.iss-header-mode-compact {
   --iss-site-header-pad-top: 0.45rem;
   --iss-site-header-pad-bottom: 0.45rem;
   --iss-header-height: 4.5rem;
+  --iss-site-logo-size: 4.2rem;
+}
+
+body:has(.iss-page--header-offset),
+body:has(.iss-verein-page) {
+  --iss-site-header-pad-top: 0.45rem;
+  --iss-site-header-pad-bottom: 0.45rem;
+  --iss-header-height: 4.5rem;
+  --iss-site-logo-size: 4.2rem;
 }
 
 body.iss-header-mode-compact .iss-site-header {
-  background: rgba(255, 252, 251, 0.94);
-  border-bottom: 1px solid rgba(30, 30, 30, 0.08);
+  background: rgba(18, 15, 13, 0.94);
+  border-bottom: 1px solid rgba(249, 249, 250, 0.12);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+}
+
+body:has(.iss-page--header-offset) .iss-site-header,
+body:has(.iss-verein-page) .iss-site-header {
+  background: rgba(18, 15, 13, 0.94);
+  border-bottom: 1px solid rgba(249, 249, 250, 0.12);
   backdrop-filter: blur(14px);
   -webkit-backdrop-filter: blur(14px);
 }
@@ -499,11 +520,31 @@ body.iss-header-mode-compact .iss-site-header__inner {
   align-items: center;
 }
 
+body:has(.iss-page--header-offset) .iss-site-header__inner,
+body:has(.iss-verein-page) .iss-site-header__inner {
+  gap: 1rem;
+  align-items: center;
+}
+
 body.iss-header-mode-compact .iss-site-brand {
-  display: none;
+  display: inline-flex;
+  flex: 0 0 auto;
+}
+
+body:has(.iss-page--header-offset) .iss-site-brand,
+body:has(.iss-verein-page) .iss-site-brand {
+  display: inline-flex;
+  flex: 0 0 auto;
 }
 
 body.iss-header-mode-compact .iss-header-context {
+  display: block;
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+body:has(.iss-page--header-offset) .iss-header-context,
+body:has(.iss-verein-page) .iss-header-context {
   display: block;
   flex: 1 1 auto;
   min-width: 0;
@@ -513,13 +554,53 @@ body.iss-header-mode-compact .iss-header-actions {
   flex: 0 0 auto;
 }
 
+body:has(.iss-page--header-offset) .iss-header-actions,
+body:has(.iss-verein-page) .iss-header-actions {
+  flex: 0 0 auto;
+}
+
+body.iss-header-mode-compact .iss-header-context__breadcrumbs,
+body:has(.iss-page--header-offset) .iss-header-context__breadcrumbs,
+body:has(.iss-verein-page) .iss-header-context__breadcrumbs {
+  color: rgba(249, 249, 250, 0.72);
+}
+
+body.iss-header-mode-compact .iss-header-context__sep,
+body:has(.iss-page--header-offset) .iss-header-context__sep,
+body:has(.iss-verein-page) .iss-header-context__sep {
+  color: rgba(249, 249, 250, 0.32);
+}
+
+body.iss-header-mode-compact .iss-header-context__title,
+body:has(.iss-page--header-offset) .iss-header-context__title,
+body:has(.iss-verein-page) .iss-header-context__title {
+  color: var(--iss-white);
+}
+
 @media (max-width: 781px) {
+  body.iss-header-mode-compact,
+  body:has(.iss-page--header-offset),
+  body:has(.iss-verein-page) {
+    --iss-site-logo-size: 3.2rem;
+  }
+
   body.iss-header-mode-compact .iss-header-context__breadcrumbs {
     font-size: 0.72rem;
     letter-spacing: 0.06em;
   }
 
+  body:has(.iss-page--header-offset) .iss-header-context__breadcrumbs,
+  body:has(.iss-verein-page) .iss-header-context__breadcrumbs {
+    font-size: 0.72rem;
+    letter-spacing: 0.06em;
+  }
+
   body.iss-header-mode-compact .iss-header-context__title {
+    font-size: 0.92rem;
+  }
+
+  body:has(.iss-page--header-offset) .iss-header-context__title,
+  body:has(.iss-verein-page) .iss-header-context__title {
     font-size: 0.92rem;
   }
 }
@@ -1799,6 +1880,11 @@ body.iss-nav-open {
    - Apply `.iss-page--narrative` or `.iss-page--compact` on the outer
      page Group/Main block.
    ===================================================================== */
+
+/* .iss-page--header-offset: Apply on top-level main wrappers that start without a hero or intro section that already clears the fixed site header. */
+.iss-page--header-offset {
+  padding-top: var(--iss-header-height);
+}
 
 .iss-page--narrative,
 .iss-page--compact,
