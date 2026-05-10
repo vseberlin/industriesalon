@@ -6,6 +6,7 @@
   const Button = window.wp.components && window.wp.components.Button;
   const PanelBody = window.wp.components && window.wp.components.PanelBody;
   const TextControl = window.wp.components && window.wp.components.TextControl;
+  const TextareaControl = window.wp.components && window.wp.components.TextareaControl;
   const SelectControl = window.wp.components && window.wp.components.SelectControl;
   const RangeControl = window.wp.components && window.wp.components.RangeControl;
   const useSelect = window.wp.data && window.wp.data.useSelect;
@@ -341,6 +342,16 @@
                     },
                   })
                 : null,
+              config.showIntroTextField && TextareaControl
+                ? el(TextareaControl, {
+                    label: 'Introtext',
+                    value: attrs.text || '',
+                    help: 'Leer lassen, wenn die Karte ohne Einleitung gerendert werden soll.',
+                    onChange: function (value) {
+                      setAttributes({ text: value });
+                    },
+                  })
+                : null,
               config.showMapFields
                 ? el(SelectControl, {
                     label: 'Kartenausschnitt',
@@ -429,6 +440,7 @@
     showHeadingFields: true,
     showPostTypeField: false,
     fixedPostType: PLACE_POST_TYPE,
+    showIntroTextField: true,
     showMapFields: true,
     supports: {
       align: ['wide', 'full'],
