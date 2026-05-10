@@ -31,12 +31,29 @@
   margin-top: clamp(1.5rem, 3vw, 2rem);
 }
 
+.iss-publications-masthead__grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1.08fr) minmax(18rem, 0.92fr);
+  gap: clamp(1.75rem, 4vw, 4.5rem);
+  align-items: start;
+}
+
 .iss-publications-reading-rail .iss-publications-grid {
   grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: clamp(1rem, 2vw, 1.5rem);
 }
 
 .iss-publications-reading-rail .iss-publication-card {
   min-height: 100%;
+}
+
+.iss-publications-reading-room .iss-publications-archive-grid {
+  margin-top: 0;
+}
+
+.iss-publications-shelf .iss-publications-grid,
+.iss-publications-closing .iss-publications-grid {
+  gap: clamp(1rem, 2vw, 1.45rem);
 }
 
 .iss-publications-featured-story .iss-publications-feature {
@@ -76,6 +93,125 @@
   background: linear-gradient(180deg, rgba(162, 128, 97, 0.24) 0%, rgba(162, 128, 97, 0.14) 32%, rgba(162, 128, 97, 0.06) 58%, rgba(255, 255, 255, 0) 100%);
 }
 
+/* Page opener: two-part editorial desk with object presence and calm indexing. */
+.iss-publications-masthead__intro {
+  gap: 1rem;
+}
+
+.iss-publications-masthead__title {
+  max-width: 12ch;
+}
+
+.iss-publications-masthead__keywords {
+  margin: 0;
+  color: rgba(30, 30, 30, 0.62);
+  font-size: 0.92rem;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+}
+
+.iss-publications-masthead__lead {
+  max-width: 42rem;
+}
+
+.iss-publications-masthead__textcols {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 1rem 1.25rem;
+  max-width: 46rem;
+  padding-top: 0.25rem;
+  border-top: 1px solid rgba(30, 30, 30, 0.12);
+}
+
+.iss-publications-masthead__textcols p {
+  margin: 0;
+  color: rgba(30, 30, 30, 0.84);
+  font-size: 0.98rem;
+  line-height: 1.7;
+}
+
+/* Publication object stack: four covers build the tactile masthead right rail. */
+.iss-publications-object-stack {
+  display: grid;
+  grid-template-columns: repeat(6, minmax(0, 1fr));
+  gap: 0.9rem;
+  align-self: center;
+  padding: clamp(1rem, 2vw, 1.5rem);
+  border: 1px solid rgba(30, 30, 30, 0.08);
+  border-radius: var(--iss-radius-lg);
+  background: rgba(249, 249, 250, 0.8);
+  box-shadow: 0 24px 60px rgba(0, 0, 0, 0.08);
+}
+
+.iss-publications-object-stack__item {
+  margin: 0;
+  overflow: hidden;
+  border-radius: var(--iss-radius-md);
+  background: var(--iss-white);
+  box-shadow: 0 18px 40px rgba(0, 0, 0, 0.12);
+}
+
+.iss-publications-object-stack__item a,
+.iss-publications-object-stack__item img {
+  display: block;
+  width: 100%;
+}
+
+.iss-publications-object-stack__item img {
+  height: 100%;
+  object-fit: cover;
+}
+
+.iss-publications-object-stack__item--hero {
+  grid-column: 1 / span 3;
+  grid-row: 1 / span 2;
+  transform: translateY(0.8rem) rotate(-5deg);
+}
+
+.iss-publications-object-stack__item--tall {
+  grid-column: 4 / span 2;
+  grid-row: 1 / span 2;
+  transform: translateY(-0.2rem) rotate(4deg);
+}
+
+.iss-publications-object-stack__item--paper {
+  grid-column: 2 / span 2;
+  grid-row: 3;
+  transform: rotate(-2deg);
+}
+
+.iss-publications-object-stack__item--wide {
+  grid-column: 4 / span 3;
+  grid-row: 3;
+  transform: translateY(-0.6rem) rotate(3deg);
+}
+
+/* Metadata strip: short descriptors for how the publication corpus is organized. */
+.iss-publications-masthead__facts {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 1rem;
+  margin-top: clamp(1.5rem, 3vw, 2rem);
+  padding-top: 1rem;
+  border-top: 1px solid rgba(30, 30, 30, 0.12);
+}
+
+.iss-publications-masthead__fact {
+  display: grid;
+  gap: 0.25rem;
+  margin: 0;
+}
+
+.iss-publications-masthead__fact strong {
+  font-size: 0.92rem;
+}
+
+.iss-publications-masthead__fact span {
+  color: rgba(30, 30, 30, 0.66);
+  font-size: 0.9rem;
+  line-height: 1.55;
+}
+
 .iss-publication-single__standfirst p {
   margin: 0;
   font-size: clamp(1.05rem, 0.98rem + 0.28vw, 1.22rem);
@@ -83,12 +219,12 @@
   color: rgba(30, 30, 30, 0.86);
 }
 
-.iss-publications-start .iss-events-context__work {
-  gap: clamp(1.6rem, 3vw, 2.5rem);
-}
-
 .iss-publications-start__note {
+  display: grid;
   gap: 1.2rem;
+  margin-top: clamp(1.5rem, 3vw, 2rem);
+  padding-top: 1rem;
+  border-top: 1px solid rgba(30, 30, 30, 0.12);
 }
 
 .iss-publications-start__nav {
@@ -101,7 +237,9 @@
   display: grid;
   gap: 0.8rem;
   padding: 1rem 1.1rem 1.1rem;
-  border-top: 1px solid rgba(30, 30, 30, 0.12);
+  border: 1px solid rgba(30, 30, 30, 0.08);
+  border-radius: var(--iss-radius-md);
+  background: rgba(249, 249, 250, 0.72);
 }
 
 .iss-publications-start__linklist,
@@ -196,7 +334,7 @@
   height: 100%;
   min-height: 100%;
   max-height: none;
-  object-fit: cover !important;
+  object-fit: cover;
   object-position: center;
   background: #fff;
 }
@@ -217,6 +355,130 @@
 
 .iss-publication-card .iss-card__footer {
   padding-top: 0.1rem;
+}
+
+/* Reading rail: quieter longread cards with more breathing room and less card chrome. */
+.iss-publications-reading-rail__head {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(16rem, 24rem);
+  gap: clamp(1rem, 2vw, 1.8rem);
+  align-items: end;
+}
+
+.iss-publications-reading-rail__note {
+  margin: 0;
+  padding-left: 1rem;
+  border-left: 1px solid rgba(30, 30, 30, 0.12);
+  color: rgba(30, 30, 30, 0.72);
+  font-size: 0.98rem;
+  line-height: 1.7;
+}
+
+.iss-publications-reading-rail .iss-publication-card {
+  border-color: rgba(30, 30, 30, 0.1);
+  background: rgba(249, 249, 250, 0.68);
+}
+
+.iss-publications-reading-rail .iss-publication-card__cover {
+  aspect-ratio: 16 / 10;
+}
+
+/* Shelf mode: denser publication browsing with more cover-first emphasis. */
+.iss-publications-shelf {
+  display: grid;
+  gap: 1.5rem;
+}
+
+.iss-publications-shelf__intro {
+  max-width: 44rem;
+  padding-top: 0.9rem;
+  border-top: 1px solid rgba(30, 30, 30, 0.12);
+}
+
+.iss-publications-shelf__intro p {
+  margin: 0;
+  color: rgba(30, 30, 30, 0.74);
+}
+
+.iss-publications-shelf .iss-publication-card {
+  border-color: rgba(30, 30, 30, 0.08);
+  background: rgba(249, 249, 250, 0.82);
+}
+
+.iss-publications-shelf .iss-publication-card__cover {
+  aspect-ratio: 4 / 5;
+}
+
+.iss-publications-shelf .iss-publication-card .iss-card__body {
+  gap: 0.6rem;
+}
+
+.iss-publications-shelf .iss-card__meta {
+  padding-top: 0.45rem;
+  border-top: 1px solid rgba(30, 30, 30, 0.08);
+}
+
+/* Reading room: text-led bridge between publications and archive discovery. */
+.iss-publications-reading-room {
+  background:
+    linear-gradient(180deg, rgba(30, 30, 30, 0.03), rgba(30, 30, 30, 0.06)),
+    linear-gradient(90deg, rgba(117, 58, 24, 0.05), rgba(117, 58, 24, 0));
+}
+
+.iss-publications-reading-room__grid {
+  display: grid;
+  grid-template-columns: minmax(0, 0.9fr) minmax(0, 1.1fr);
+  gap: clamp(1.5rem, 4vw, 3.5rem);
+  align-items: start;
+}
+
+.iss-publications-reading-room__copy {
+  display: grid;
+  gap: 1rem;
+}
+
+.iss-publications-reading-room__note {
+  max-width: 38rem;
+  margin: 0;
+  color: rgba(30, 30, 30, 0.76);
+  font-size: 1rem;
+  line-height: 1.72;
+}
+
+.iss-publications-reading-room__links,
+.iss-publications-closing__links {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.6rem 1.1rem;
+  margin: 0;
+}
+
+.iss-publications-reading-room .iss-publications-archive-card {
+  min-height: 100%;
+  border-color: rgba(30, 30, 30, 0.08);
+  background: rgba(249, 249, 250, 0.78);
+}
+
+/* Closing rail: concise recap plus a compact trio of tangible publications. */
+.iss-publications-closing__grid {
+  display: grid;
+  grid-template-columns: minmax(0, 0.92fr) minmax(0, 1.08fr);
+  gap: clamp(1.5rem, 3vw, 3rem);
+  align-items: start;
+}
+
+.iss-publications-closing .iss-publications-grid {
+  margin-top: 0;
+}
+
+.iss-publications-closing .iss-publication-card {
+  min-height: 100%;
+  border-color: rgba(30, 30, 30, 0.08);
+  background: rgba(249, 249, 250, 0.82);
+}
+
+.iss-publications-closing .iss-publication-card__cover {
+  aspect-ratio: 11 / 8;
 }
 
 .iss-publication-single__layout {
@@ -252,6 +514,100 @@
 
 .iss-publication-single__body > * + * {
   margin-top: 1.4rem;
+}
+
+/* Standard publication view: treat brochures as objects and catalog entries, not generic posts. */
+body.iss-publication-layout-standard .iss-publication-single__layout {
+  grid-template-columns: minmax(0, 1fr) minmax(18rem, 24rem);
+  gap: clamp(1.5rem, 3vw, 3rem);
+  align-items: start;
+}
+
+body.iss-publication-layout-standard .iss-publication-single__intro {
+  max-width: 48rem;
+}
+
+body.iss-publication-layout-standard .iss-publication-single__standfirst {
+  max-width: 40rem;
+}
+
+body.iss-publication-layout-standard .iss-publication-single__standfirst p {
+  font-size: clamp(1.08rem, 1rem + 0.22vw, 1.22rem);
+  line-height: 1.76;
+}
+
+body.iss-publication-layout-standard .iss-publication-single__sidebar {
+  position: sticky;
+  top: 1.5rem;
+  gap: 1rem;
+}
+
+body.iss-publication-layout-standard .iss-publication-single__cover .iss-media-card {
+  padding: clamp(1rem, 2vw, 1.35rem);
+  border-color: rgba(30, 30, 30, 0.1);
+  background: linear-gradient(180deg, rgba(244, 241, 234, 0.98), rgba(255, 255, 255, 0.98));
+  box-shadow: 0 20px 48px rgba(0, 0, 0, 0.08);
+}
+
+body.iss-publication-layout-standard .iss-publication-single__panel,
+body.iss-publication-layout-standard .iss-publication-order-panel {
+  border-color: rgba(30, 30, 30, 0.1);
+  background: rgba(249, 249, 250, 0.86);
+}
+
+body.iss-publication-layout-standard .iss-publication-order-panel {
+  padding: 1.25rem 1.35rem;
+  border: 1px solid rgba(30, 30, 30, 0.1);
+  border-radius: var(--iss-radius-lg);
+}
+
+body.iss-publication-layout-standard .iss-publication-single__body-wrap {
+  margin-top: clamp(2.25rem, 4vw, 4rem);
+  padding-top: clamp(1.25rem, 3vw, 1.8rem);
+  border-top: 1px solid rgba(30, 30, 30, 0.1);
+}
+
+body.iss-publication-layout-standard .iss-publication-single__body {
+  max-width: 46rem;
+  margin-left: 0;
+}
+
+body.iss-publication-layout-standard .iss-publication-single__body p,
+body.iss-publication-layout-standard .iss-publication-single__body li {
+  font-size: 1rem;
+  line-height: 1.8;
+}
+
+body.iss-publication-kind-brochure .iss-publication-single__cover img {
+  max-height: min(72vh, 40rem);
+  object-fit: contain;
+}
+
+body.iss-publication-kind-brochure .iss-publication-single__panel {
+  backdrop-filter: blur(6px);
+}
+
+body.iss-publication-kind-brochure .iss-publication-meta {
+  gap: 0.55rem;
+  font-size: 0.95rem;
+}
+
+body.iss-publication-kind-brochure .iss-publication-order-panel__price {
+  margin: 0.7rem 0 0;
+  font-size: 1.3rem;
+}
+
+body.iss-publication-kind-brochure .iss-publication-order-panel__text {
+  color: rgba(30, 30, 30, 0.72);
+  line-height: 1.65;
+}
+
+body.iss-publication-no-cover .iss-publication-single__cover {
+  display: none;
+}
+
+body.iss-publication-no-cover .iss-publication-single__sidebar {
+  align-content: start;
 }
 
 body.iss-publication-layout-longread .iss-publication-single__layout {
@@ -296,6 +652,137 @@ body.iss-publication-layout-longread .wp-block-iss-publication-meta {
 
 body.iss-publication-layout-longread .iss-publication-order-panel {
   border-color: rgba(162, 128, 97, 0.32);
+}
+
+/* Chaptered essay mode: place-history longreads with section rail and sticky chapter navigation. */
+.iss-publication-essay {
+  display: grid;
+  gap: clamp(1.75rem, 3vw, 2.5rem);
+}
+
+.iss-publication-essay__intro {
+  max-width: 54rem;
+}
+
+.iss-publication-essay__summary {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 1px;
+  border: 1px solid rgba(30, 30, 30, 0.12);
+  background: rgba(30, 30, 30, 0.12);
+}
+
+.iss-publication-essay__summary-item {
+  display: grid;
+  gap: 0.35rem;
+  margin: 0;
+  padding: 1rem;
+  background: var(--iss-white);
+}
+
+.iss-publication-essay__summary-item strong {
+  font-size: clamp(1.3rem, 1.05rem + 0.8vw, 2rem);
+  line-height: 1;
+}
+
+.iss-publication-essay__summary-item span {
+  color: rgba(30, 30, 30, 0.64);
+  font-size: 0.9rem;
+}
+
+.iss-publication-essay__nav {
+  position: sticky;
+  top: 0;
+  z-index: 20;
+  border-top: 1px solid rgba(30, 30, 30, 0.08);
+  border-bottom: 1px solid rgba(30, 30, 30, 0.12);
+  background: rgba(249, 249, 250, 0.94);
+  backdrop-filter: blur(10px);
+}
+
+.iss-publication-essay__nav-inner {
+  display: flex;
+  gap: 1px;
+  overflow-x: auto;
+  background: rgba(30, 30, 30, 0.12);
+}
+
+.iss-publication-essay__nav a {
+  flex: 1 0 13rem;
+  padding: 1rem;
+  background: var(--iss-white);
+  color: inherit;
+  font-size: 0.9rem;
+  font-weight: 600;
+  text-decoration: none;
+}
+
+.iss-publication-essay__chapters {
+  display: grid;
+}
+
+/* Chapter sections: left-side chapter index, right-side reading column, designed for place-history essays. */
+.iss-publication-chapter {
+  display: grid;
+  grid-template-columns: minmax(12rem, 0.28fr) minmax(0, 1fr);
+  gap: clamp(1.5rem, 4vw, 4rem);
+  padding: clamp(2rem, 5vw, 4rem) 0;
+  border-top: 1px solid rgba(30, 30, 30, 0.1);
+}
+
+.iss-publication-chapter:first-child {
+  border-top: 0;
+}
+
+.iss-publication-chapter__aside {
+  position: sticky;
+  top: 5rem;
+  align-self: start;
+  padding-left: 1rem;
+  border-left: 3px solid rgba(162, 128, 97, 0.7);
+}
+
+.iss-publication-chapter__index {
+  margin: 0 0 0.7rem;
+  color: rgba(30, 30, 30, 0.56);
+  font-size: 0.78rem;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+.iss-publication-chapter__title {
+  margin: 0;
+  font-size: clamp(1.5rem, 1.24rem + 0.7vw, 2.2rem);
+  line-height: 1.08;
+  letter-spacing: -0.03em;
+}
+
+.iss-publication-chapter__body {
+  max-width: 48rem;
+}
+
+.iss-publication-chapter__body > :first-child {
+  margin-top: 0;
+}
+
+.iss-publication-chapter__body > :last-child {
+  margin-bottom: 0;
+}
+
+.iss-publication-chapter__body h3 {
+  margin-top: 1.8rem;
+  font-size: clamp(1.08rem, 1rem + 0.28vw, 1.3rem);
+  line-height: 1.25;
+}
+
+.iss-publication-chapter__body p,
+.iss-publication-chapter__body li {
+  color: rgba(30, 30, 30, 0.82);
+}
+
+body.iss-publication-longread-chaptered .iss-publication-single__body {
+  max-width: 84rem;
 }
 
 body.iss-publication-layout-timeline .iss-publication-single__layout {
@@ -477,84 +964,225 @@ body.iss-publication-layout-timeline .iss-publication-order-panel {
   overflow: hidden;
 }
 
-.iss-publication-chronicle {
-  position: relative;
+/* Timeline publication wrapper: shared epoch-based chronology shell for long industrial histories. */
+.iss-publication-timeline {
   display: grid;
-  gap: clamp(1.5rem, 3vw, 2.4rem);
-  padding-left: clamp(4.5rem, 7vw, 7rem);
+  gap: clamp(1.75rem, 3vw, 2.5rem);
 }
 
-.iss-publication-chronicle::before {
+.iss-publication-source-note {
+  max-width: 46rem;
+  margin: 0;
+  color: rgba(30, 30, 30, 0.64);
+  font-size: 0.92rem;
+}
+
+.iss-publication-timeline__summary {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 1px;
+  border: 1px solid rgba(30, 30, 30, 0.12);
+  background: rgba(30, 30, 30, 0.12);
+}
+
+.iss-publication-timeline__summary-item {
+  display: grid;
+  gap: 0.35rem;
+  margin: 0;
+  padding: 1rem;
+  background: var(--iss-white);
+}
+
+.iss-publication-timeline__summary-item strong {
+  font-size: clamp(1.4rem, 1.1rem + 0.9vw, 2.2rem);
+  line-height: 1;
+}
+
+.iss-publication-timeline__summary-item span {
+  color: rgba(30, 30, 30, 0.64);
+  font-size: 0.9rem;
+}
+
+.iss-publication-timeline__nav {
+  position: sticky;
+  top: 0;
+  z-index: 20;
+  border-top: 1px solid rgba(30, 30, 30, 0.08);
+  border-bottom: 1px solid rgba(30, 30, 30, 0.12);
+  background: rgba(249, 249, 250, 0.94);
+  backdrop-filter: blur(10px);
+}
+
+.iss-publication-timeline__nav-inner {
+  display: flex;
+  gap: 1px;
+  overflow-x: auto;
+  background: rgba(30, 30, 30, 0.12);
+}
+
+.iss-publication-timeline__nav a {
+  flex: 1 0 12rem;
+  padding: 1rem;
+  background: var(--iss-white);
+  color: inherit;
+  font-size: 0.86rem;
+  font-weight: 700;
+  letter-spacing: 0.07em;
+  text-decoration: none;
+  text-transform: uppercase;
+}
+
+.iss-publication-timeline__nav span {
+  display: block;
+  margin-bottom: 0.25rem;
+  color: var(--iss-red);
+  font-size: 0.76rem;
+}
+
+.iss-publication-timeline__epochs {
+  display: grid;
+}
+
+/* Epoch sections: sticky left rail and grouped moments for one historical phase. */
+.iss-publication-epoch {
+  display: grid;
+  grid-template-columns: minmax(13rem, 0.3fr) minmax(0, 1fr);
+  gap: clamp(1.5rem, 4vw, 4rem);
+  padding: clamp(2.5rem, 6vw, 5rem) 0;
+  border-top: 1px solid rgba(30, 30, 30, 0.12);
+}
+
+.iss-publication-epoch:first-child {
+  border-top: 0;
+}
+
+.iss-publication-epoch__aside {
+  position: sticky;
+  top: 5rem;
+  align-self: start;
+  padding-left: 1rem;
+  border-left: 4px solid var(--iss-publication-epoch-accent, var(--iss-red));
+}
+
+.iss-publication-epoch__range {
+  margin: 0 0 0.75rem;
+  color: var(--iss-publication-epoch-accent, var(--iss-red));
+  font-size: clamp(1.6rem, 2.6vw, 2.7rem);
+  font-weight: 700;
+  line-height: 1;
+  letter-spacing: -0.04em;
+}
+
+.iss-publication-epoch__title {
+  margin: 0;
+  font-size: clamp(1.2rem, 1.4rem + 0.2vw, 1.6rem);
+  line-height: 1.14;
+}
+
+.iss-publication-epoch__note {
+  margin: 0.9rem 0 0;
+  color: rgba(30, 30, 30, 0.66);
+  font-size: 0.95rem;
+  line-height: 1.6;
+}
+
+.iss-publication-epoch__body {
+  position: relative;
+  display: grid;
+  gap: clamp(1rem, 2vw, 1.75rem);
+}
+
+.iss-publication-epoch__body::before {
   content: "";
   position: absolute;
-  left: clamp(1.5rem, 2.5vw, 2.2rem);
   top: 0.5rem;
   bottom: 0.5rem;
-  width: 2px;
-  background: linear-gradient(180deg, rgba(130, 86, 50, 0.2), rgba(130, 86, 50, 0.55), rgba(130, 86, 50, 0.2));
+  left: 1.05rem;
+  width: 1px;
+  background: rgba(30, 30, 30, 0.12);
 }
 
-.iss-publication-chronicle__item {
+/* Timeline moment: one chronicle entry inside an epoch, reusing the saved figure/title/text markup. */
+.iss-publication-moment {
   position: relative;
   display: grid;
-  grid-template-columns: minmax(0, 10rem) minmax(0, 1fr);
+  grid-template-columns: 4rem minmax(0, 1fr);
   gap: 1.25rem;
   align-items: start;
 }
 
-.iss-publication-chronicle__item::before {
-  content: "";
-  position: absolute;
-  left: calc(clamp(1.5rem, 2.5vw, 2.2rem) * -1 + 0.1rem);
-  top: 1.2rem;
-  width: 0.9rem;
-  height: 0.9rem;
-  border-radius: 999px;
-  background: #a28061;
-  box-shadow: 0 0 0 6px rgba(162, 128, 97, 0.12);
-}
-
-.iss-publication-chronicle__year {
-  position: sticky;
-  top: 1.5rem;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  min-height: 3.6rem;
-  padding: 0.7rem 1rem;
-  border: 1px solid rgba(130, 86, 50, 0.22);
-  border-radius: 0.5rem;
-  background: #f4f1ea;
-  color: #5f4735;
-  font-size: 1.15rem;
-  font-weight: 700;
-  letter-spacing: 0.04em;
-  line-height: 1;
-}
-
-.iss-publication-chronicle__card {
+.iss-publication-moment__year {
+  position: relative;
+  z-index: 2;
   display: grid;
-  gap: 1rem;
-  padding: clamp(1rem, 2vw, 1.4rem);
-  background: #fff;
-  border: 1px solid rgba(30, 30, 30, 0.08);
-  box-shadow: 0 16px 40px rgba(30, 30, 30, 0.06);
+  place-items: center;
+  width: 2.2rem;
+  height: 2.2rem;
+  margin: 0.85rem 0 0;
+  border: 1px solid var(--iss-publication-epoch-accent, var(--iss-red));
+  border-radius: 999px;
+  background: var(--iss-white);
+  color: var(--iss-publication-epoch-accent, var(--iss-red));
+  font-size: 0.72rem;
+  font-weight: 700;
+  text-align: center;
+}
+
+.iss-publication-moment__card {
+  display: grid;
+  grid-template-columns: minmax(0, 0.92fr) minmax(0, 1.08fr);
+  gap: clamp(1.25rem, 3vw, 2.5rem);
+  padding: clamp(1rem, 2.4vw, 1.8rem);
+  border: 1px solid rgba(30, 30, 30, 0.1);
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.98), rgba(244, 241, 234, 0.86));
+}
+
+.iss-publication-moment--portrait .iss-publication-moment__card {
+  grid-template-columns: minmax(0, 0.8fr) minmax(0, 1.2fr);
+}
+
+.iss-publication-moment--wide .iss-publication-moment__card {
+  grid-template-columns: 1fr;
 }
 
 .iss-publication-chronicle__media {
   margin: 0;
+  align-self: start;
+  border: 1px solid rgba(30, 30, 30, 0.1);
+  background: rgba(244, 241, 234, 0.8);
+  overflow: hidden;
 }
 
 .iss-publication-chronicle__media img {
   display: block;
   width: 100%;
   height: auto;
+  aspect-ratio: 4 / 3;
+  object-fit: cover;
+  filter: grayscale(0.88) contrast(1.05);
 }
 
 .iss-publication-chronicle__title {
   margin: 0;
-  font-size: clamp(1.15rem, 1.02rem + 0.35vw, 1.45rem);
-  line-height: 1.28;
+  font-size: clamp(1.3rem, 1.08rem + 0.7vw, 2rem);
+  line-height: 1.1;
+  letter-spacing: -0.03em;
+}
+
+.iss-publication-chronicle__text {
+  max-width: 48rem;
+}
+
+.iss-publication-chronicle__text p {
+  color: rgba(30, 30, 30, 0.82);
+}
+
+.iss-publication-moment--portrait .iss-publication-chronicle__media img {
+  aspect-ratio: 3 / 4;
+}
+
+.iss-publication-moment--wide .iss-publication-chronicle__media img {
+  aspect-ratio: 16 / 8;
 }
 
 .iss-publication-chronicle__text > :first-child {
@@ -635,13 +1263,66 @@ body.iss-publication-layout-timeline .iss-publication-order-panel {
 }
 
 @media (max-width: 900px) {
+  .iss-publications-masthead__grid,
+  .iss-publications-reading-rail__head,
+  .iss-publications-reading-room__grid,
+  .iss-publications-closing__grid {
+    grid-template-columns: 1fr;
+  }
+
+  .iss-publications-masthead__textcols,
+  .iss-publications-masthead__facts,
   .iss-publications-reading-rail .iss-publications-grid {
     grid-template-columns: 1fr;
+  }
+
+  .iss-publications-object-stack {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .iss-publications-object-stack__item,
+  .iss-publications-object-stack__item--hero,
+  .iss-publications-object-stack__item--tall,
+  .iss-publications-object-stack__item--paper,
+  .iss-publications-object-stack__item--wide {
+    grid-column: auto;
+    grid-row: auto;
+    transform: none;
+  }
+
+  .iss-publications-reading-rail__note {
+    padding-left: 0;
+    border-left: 0;
+    border-top: 1px solid rgba(30, 30, 30, 0.12);
+    padding-top: 1rem;
   }
 
   .iss-publications-start__nav,
   .iss-publications-topic-grid {
     grid-template-columns: 1fr;
+  }
+
+  body.iss-publication-layout-standard .iss-publication-single__layout {
+    grid-template-columns: 1fr;
+  }
+
+  body.iss-publication-layout-standard .iss-publication-single__sidebar {
+    position: static;
+  }
+
+  body.iss-publication-layout-standard .iss-publication-single__intro,
+  body.iss-publication-layout-standard .iss-publication-single__standfirst,
+  body.iss-publication-layout-standard .iss-publication-single__body {
+    max-width: none;
+  }
+
+  .iss-publication-essay__summary,
+  .iss-publication-chapter {
+    grid-template-columns: 1fr;
+  }
+
+  .iss-publication-chapter__aside {
+    position: static;
   }
 
   body.iss-publication-layout-longread .iss-publication-single__layout {
@@ -672,24 +1353,16 @@ body.iss-publication-layout-timeline .iss-publication-order-panel {
     max-width: none;
   }
 
-  .iss-publication-chronicle {
-    padding-left: 2.75rem;
-  }
-
-  .iss-publication-chronicle::before {
-    left: 0.8rem;
-  }
-
-  .iss-publication-chronicle__item {
+  .iss-publication-timeline__summary,
+  .iss-publication-epoch {
     grid-template-columns: 1fr;
   }
 
-  .iss-publication-chronicle__item::before {
-    left: -2.35rem;
+  .iss-publication-epoch__aside {
+    position: static;
   }
 
-  .iss-publication-chronicle__year {
-    position: static;
-    justify-self: start;
+  .iss-publication-moment__card {
+    grid-template-columns: 1fr;
   }
 }

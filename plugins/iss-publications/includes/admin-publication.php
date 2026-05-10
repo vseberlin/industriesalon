@@ -4,6 +4,29 @@ if (!defined('ABSPATH')) {
     exit;
 }
 
+function iss_publications_is_disallowed_page_template(string $template_slug): bool
+{
+    $template_slug = preg_replace('/\.html$/', '', trim($template_slug));
+    return in_array($template_slug, ['single-tour', 'single-tour-on-demand'], true);
+}
+
+function iss_publications_clear_disallowed_page_template(int $post_id): bool
+{
+    $post_id = (int) $post_id;
+    if ($post_id <= 0) {
+        return false;
+    }
+
+    $template_slug = (string) get_post_meta($post_id, '_wp_page_template', true);
+    if (!iss_publications_is_disallowed_page_template($template_slug)) {
+        return false;
+    }
+
+    delete_post_meta($post_id, '_wp_page_template');
+    clean_post_cache($post_id);
+    return true;
+}
+
 add_action('add_meta_boxes', function () {
     add_meta_box(
         'iss-publication-bibliography',
@@ -198,6 +221,8 @@ add_action('save_post_' . ISS_PUBLICATIONS_POST_TYPE, function ($post_id) {
         return;
     }
 
+    iss_publications_clear_disallowed_page_template((int) $post_id);
+
     $previous_source_ausstellung_id = (int) get_post_meta($post_id, '_iss_publication_source_ausstellung_id', true);
 
     $raw = isset($_POST['iss_publication']) && is_array($_POST['iss_publication']) ? wp_unslash($_POST['iss_publication']) : [];
@@ -242,3 +267,40 @@ add_action('save_post_' . ISS_PUBLICATIONS_POST_TYPE, function ($post_id) {
         update_post_meta($source_ausstellung_id, 'iss_companion_publication_id', (int) $post_id);
     }
 }, 10, 1);
+
+add_action('init', function () {
+    $cleanup_option = 'iss_publications_page_template_cleanup_v1';
+    if (get_option($cleanup_option)) {
+        return;
+    }
+
+    $posts = get_posts([
+        'post_type' => ISS_PUBLICATIONS_POST_TYPE,
+        'post_status' => ['publish', 'future', 'draft', 'pending', 'private'],
+        'posts_per_page' => -1,
+        'meta_key' => '_wp_page_template',
+        'meta_value' => 'single-tour',
+        'fields' => 'ids',
+        'suppress_filters' => true,
+    ]);
+
+    foreach ($posts as $post_id) {
+        iss_publications_clear_disallowed_page_template((int) $post_id);
+    }
+
+    $posts = get_posts([
+        'post_type' => ISS_PUBLICATIONS_POST_TYPE,
+        'post_status' => ['publish', 'future', 'draft', 'pending', 'private'],
+        'posts_per_page' => -1,
+        'meta_key' => '_wp_page_template',
+        'meta_value' => 'single-tour-on-demand',
+        'fields' => 'ids',
+        'suppress_filters' => true,
+    ]);
+
+    foreach ($posts as $post_id) {
+        iss_publications_clear_disallowed_page_template((int) $post_id);
+    }
+
+    update_option($cleanup_option, 1, false);
+}, 30);

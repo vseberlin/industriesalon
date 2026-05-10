@@ -430,8 +430,40 @@ add_filter('body_class', function ($classes) {
     }
 
     $classes[] = 'iss-publication-layout-' . sanitize_html_class(iss_publications_get_layout($post_id));
+    $classes[] = 'iss-publication-kind-' . sanitize_html_class(iss_publications_get_collection_kind($post_id));
+    if (!has_post_thumbnail($post_id)) {
+        $classes[] = 'iss-publication-no-cover';
+    }
+    if (iss_publications_is_chaptered_longread($post_id)) {
+        $classes[] = 'iss-publication-longread-chaptered';
+    }
     return $classes;
 });
+
+add_filter('the_content', function ($content) {
+    if (!is_singular(ISS_PUBLICATIONS_POST_TYPE) || !in_the_loop() || !is_main_query()) {
+        return $content;
+    }
+
+    $post_id = (int) get_queried_object_id();
+    if ($post_id <= 0) {
+        return $content;
+    }
+
+    if (iss_publications_is_timeline($post_id)) {
+        if (strpos($content, 'iss-publication-chronicle') === false) {
+            return $content;
+        }
+
+        return iss_publications_transform_timeline_content((string) $content);
+    }
+
+    if (!iss_publications_is_chaptered_longread($post_id)) {
+        return $content;
+    }
+
+    return iss_publications_transform_longread_content($post_id, (string) $content);
+}, 20);
 
 function iss_publications_get_related_posts($post_id, $limit = 3) {
     $post_id = (int) $post_id;
@@ -495,6 +527,452 @@ function iss_publications_get_collection_kind($post_id) {
     }
 
     return 'other';
+}
+
+function iss_publications_timeline_get_epoch_definitions(): array
+{
+    return [
+        [
+            'slug' => 'industrialisierung',
+            'start' => null,
+            'end' => 1918,
+            'range_label' => '1880-1918',
+            'title' => __('Gruendung und Industrialisierung', 'iss-publications'),
+            'note' => __('Werkgruendung, Elektrifizierung und fruehe Expansion.', 'iss-publications'),
+            'accent' => 'var(--iss-red)',
+        ],
+        [
+            'slug' => 'zwischenkrieg',
+            'start' => 1919,
+            'end' => 1945,
+            'range_label' => '1919-1945',
+            'title' => __('Zwischenkriegszeit und Krieg', 'iss-publications'),
+            'note' => __('Konzernumbau, politische Brueche und Kriegswirtschaft.', 'iss-publications'),
+            'accent' => 'var(--iss-brown)',
+        ],
+        [
+            'slug' => 'neuordnung',
+            'start' => 1946,
+            'end' => 1960,
+            'range_label' => '1946-1960',
+            'title' => __('Neuordnung und Verstaatlichung', 'iss-publications'),
+            'note' => __('Neubeginn, Umbau und neue Eigentumsordnung.', 'iss-publications'),
+            'accent' => 'var(--iss-blue)',
+        ],
+        [
+            'slug' => 'spaetphase',
+            'start' => 1961,
+            'end' => null,
+            'range_label' => '1961-1989',
+            'title' => __('Kombinat und Umbruch', 'iss-publications'),
+            'note' => __('Ausbau, spaete DDR und die Zaesur von 1989.', 'iss-publications'),
+            'accent' => 'var(--iss-green)',
+        ],
+    ];
+}
+
+function iss_publications_timeline_find_epoch(array $definitions, int $year): array
+{
+    foreach ($definitions as $definition) {
+        $start = isset($definition['start']) ? (int) $definition['start'] : null;
+        $end = isset($definition['end']) ? (int) $definition['end'] : null;
+
+        if ($start !== null && $year < $start) {
+            continue;
+        }
+
+        if ($end !== null && $year > $end) {
+            continue;
+        }
+
+        return $definition;
+    }
+
+    return $definitions[count($definitions) - 1];
+}
+
+function iss_publications_timeline_detect_moment_variant(DOMXPath $xpath, DOMElement $item): string
+{
+    $image = $xpath->query('.//*[contains(concat(" ", normalize-space(@class), " "), " iss-publication-chronicle__media ")]//img', $item)->item(0);
+    if (!$image instanceof DOMElement) {
+        return '';
+    }
+
+    $width = (int) $image->getAttribute('width');
+    $height = (int) $image->getAttribute('height');
+    if ($width <= 0 || $height <= 0) {
+        return '';
+    }
+
+    $ratio = $width / $height;
+    if ($ratio >= 1.45) {
+        return 'wide';
+    }
+
+    if ($ratio <= 0.85) {
+        return 'portrait';
+    }
+
+    return '';
+}
+
+function iss_publications_timeline_get_inner_html(DOMNode $node): string
+{
+    $html = '';
+    foreach ($node->childNodes as $child) {
+        $html .= $node->ownerDocument->saveHTML($child);
+    }
+
+    return $html;
+}
+
+function iss_publications_longread_get_inner_html(DOMNode $node): string
+{
+    $html = '';
+    foreach ($node->childNodes as $child) {
+        $html .= $node->ownerDocument->saveHTML($child);
+    }
+
+    return $html;
+}
+
+function iss_publications_is_chaptered_longread(int $post_id): bool
+{
+    $post_id = (int) $post_id;
+    if ($post_id <= 0 || iss_publications_get_layout($post_id) !== 'longread') {
+        return false;
+    }
+
+    $post = get_post($post_id);
+    if (!$post instanceof WP_Post) {
+        return false;
+    }
+
+    $content = (string) $post->post_content;
+    return strpos($content, '<!-- wp:list -->') !== false
+        && strpos($content, '<!-- wp:heading {"level":2') !== false;
+}
+
+function iss_publications_transform_longread_content(int $post_id, string $content): string
+{
+    if ($post_id <= 0 || trim($content) === '' || !class_exists('DOMDocument')) {
+        return $content;
+    }
+
+    libxml_use_internal_errors(true);
+
+    $document = new DOMDocument('1.0', 'UTF-8');
+    $loaded = $document->loadHTML('<?xml encoding="utf-8" ?><div class="iss-publication-essay-parser-root">' . $content . '</div>', LIBXML_HTML_NOIMPLIED | LIBXML_HTML_NODEFDTD);
+    if (!$loaded) {
+        libxml_clear_errors();
+        return $content;
+    }
+
+    $xpath = new DOMXPath($document);
+    $root = $xpath->query('//*[contains(concat(" ", normalize-space(@class), " "), " iss-publication-essay-parser-root ")]')->item(0);
+    if (!$root instanceof DOMElement) {
+        libxml_clear_errors();
+        return $content;
+    }
+
+    $source_note_html = '';
+    $intro_nodes = [];
+    $nav_node = null;
+    $sections = [];
+    $current_section = null;
+    $subheading_count = 0;
+
+    foreach ($root->childNodes as $child) {
+        if (!$child instanceof DOMElement) {
+            continue;
+        }
+
+        $class_attr = ' ' . trim((string) $child->getAttribute('class')) . ' ';
+        $tag = strtolower($child->tagName);
+
+        if (strpos($class_attr, ' iss-publication-source-note ') !== false) {
+            $source_note_html = trim($document->saveHTML($child));
+            continue;
+        }
+
+        if ($tag === 'ul' && $current_section === null && $nav_node === null) {
+            $nav_node = $child;
+            continue;
+        }
+
+        if ($tag === 'h2') {
+            if ($current_section !== null) {
+                $sections[] = $current_section;
+            }
+
+            $anchor = trim((string) $child->getAttribute('id'));
+            if ($anchor === '') {
+                $anchor = sanitize_title($child->textContent);
+            }
+
+            $current_section = [
+                'anchor' => $anchor,
+                'title' => trim((string) $child->textContent),
+                'body' => [],
+            ];
+            continue;
+        }
+
+        if ($current_section === null) {
+            $intro_nodes[] = trim($document->saveHTML($child));
+            continue;
+        }
+
+        if ($tag === 'h3') {
+            $subheading_count++;
+        }
+
+        $current_section['body'][] = trim($document->saveHTML($child));
+    }
+
+    if ($current_section !== null) {
+        $sections[] = $current_section;
+    }
+
+    if (count($sections) < 3) {
+        libxml_clear_errors();
+        return $content;
+    }
+
+    $topic_names = iss_publications_get_shared_topic_names($post_id);
+    $summary = [
+        [
+            'value' => (string) count($sections),
+            'label' => __('Kapitel', 'iss-publications'),
+        ],
+        [
+            'value' => (string) $subheading_count,
+            'label' => __('Unterthemen', 'iss-publications'),
+        ],
+        [
+            'value' => (string) max(1, count($topic_names)),
+            'label' => __('Themenfelder', 'iss-publications'),
+        ],
+        [
+            'value' => __('Ort', 'iss-publications'),
+            'label' => __('Schoneweide', 'iss-publications'),
+        ],
+    ];
+
+    $nav_items = [];
+    if ($nav_node instanceof DOMElement) {
+        foreach ($nav_node->getElementsByTagName('a') as $link) {
+            $href = trim((string) $link->getAttribute('href'));
+            $label = trim((string) $link->textContent);
+            if ($href !== '' && $label !== '') {
+                $nav_items[] = [
+                    'href' => $href,
+                    'label' => $label,
+                ];
+            }
+        }
+    }
+
+    if (empty($nav_items)) {
+        foreach ($sections as $section) {
+            $nav_items[] = [
+                'href' => '#' . $section['anchor'],
+                'label' => $section['title'],
+            ];
+        }
+    }
+
+    $intro_html = '';
+    if (!empty($intro_nodes)) {
+        $intro_html = '<div class="iss-publication-essay__intro">' . implode('', $intro_nodes) . '</div>';
+    }
+
+    $summary_html = '<div class="iss-publication-essay__summary" aria-label="' . esc_attr__('Rahmendaten', 'iss-publications') . '">';
+    foreach ($summary as $item) {
+        $summary_html .= '<p class="iss-publication-essay__summary-item"><strong>' . esc_html($item['value']) . '</strong><span>' . esc_html($item['label']) . '</span></p>';
+    }
+    $summary_html .= '</div>';
+
+    $nav_html = '<nav class="iss-publication-essay__nav" aria-label="' . esc_attr__('Kapitelnavigation', 'iss-publications') . '"><div class="iss-publication-essay__nav-inner">';
+    foreach ($nav_items as $item) {
+        $nav_html .= '<a href="' . esc_attr($item['href']) . '">' . esc_html($item['label']) . '</a>';
+    }
+    $nav_html .= '</div></nav>';
+
+    $chapters_html = '<div class="iss-publication-essay__chapters">';
+    foreach ($sections as $index => $section) {
+        $chapters_html .= '<section id="' . esc_attr($section['anchor']) . '" class="iss-publication-chapter">';
+        $chapters_html .= '<div class="iss-publication-chapter__aside">';
+        $chapters_html .= '<p class="iss-publication-chapter__index">' . esc_html(sprintf(__('Kapitel %02d', 'iss-publications'), $index + 1)) . '</p>';
+        $chapters_html .= '<h2 class="iss-publication-chapter__title">' . esc_html($section['title']) . '</h2>';
+        $chapters_html .= '</div>';
+        $chapters_html .= '<div class="iss-publication-chapter__body">' . implode('', $section['body']) . '</div>';
+        $chapters_html .= '</section>';
+    }
+    $chapters_html .= '</div>';
+
+    $html = '<div class="iss-publication-essay">';
+    if ($source_note_html !== '') {
+        $html .= $source_note_html;
+    }
+    $html .= $intro_html;
+    $html .= $summary_html;
+    $html .= $nav_html;
+    $html .= $chapters_html;
+    $html .= '</div>';
+
+    libxml_clear_errors();
+    return $html;
+}
+
+function iss_publications_transform_timeline_content(string $content): string
+{
+    if (trim($content) === '' || !class_exists('DOMDocument')) {
+        return $content;
+    }
+
+    libxml_use_internal_errors(true);
+
+    $document = new DOMDocument('1.0', 'UTF-8');
+    $loaded = $document->loadHTML('<?xml encoding="utf-8" ?><div class="iss-publication-timeline-parser-root">' . $content . '</div>', LIBXML_HTML_NOIMPLIED | LIBXML_HTML_NODEFDTD);
+    if (!$loaded) {
+        libxml_clear_errors();
+        return $content;
+    }
+
+    $xpath = new DOMXPath($document);
+    $root = $xpath->query('//*[contains(concat(" ", normalize-space(@class), " "), " iss-publication-timeline-parser-root ")]')->item(0);
+    $chronicle = $xpath->query('.//*[contains(concat(" ", normalize-space(@class), " "), " iss-publication-chronicle ")]', $root)->item(0);
+    if (!$root instanceof DOMElement || !$chronicle instanceof DOMElement) {
+        libxml_clear_errors();
+        return $content;
+    }
+
+    $source_note_node = $xpath->query('.//*[contains(concat(" ", normalize-space(@class), " "), " iss-publication-source-note ")]', $root)->item(0);
+    $source_note_html = $source_note_node instanceof DOMElement ? trim($document->saveHTML($source_note_node)) : '';
+
+    $item_nodes = $xpath->query('./*[contains(concat(" ", normalize-space(@class), " "), " iss-publication-chronicle__item ")]', $chronicle);
+    if (!$item_nodes || $item_nodes->length === 0) {
+        libxml_clear_errors();
+        return $content;
+    }
+
+    $definitions = iss_publications_timeline_get_epoch_definitions();
+    $epochs = [];
+    $total_items = 0;
+    $first_year = null;
+    $last_year = null;
+
+    foreach ($item_nodes as $item) {
+        if (!$item instanceof DOMElement) {
+            continue;
+        }
+
+        $year_node = $xpath->query('.//*[contains(concat(" ", normalize-space(@class), " "), " iss-publication-chronicle__year ")]', $item)->item(0);
+        $card_node = $xpath->query('.//*[contains(concat(" ", normalize-space(@class), " "), " iss-publication-chronicle__card ")]', $item)->item(0);
+        if (!$year_node instanceof DOMElement || !$card_node instanceof DOMElement) {
+            continue;
+        }
+
+        $year_text = trim($year_node->textContent);
+        if (!preg_match('/\d{4}/', $year_text, $matches)) {
+            continue;
+        }
+
+        $year = (int) $matches[0];
+        $epoch = iss_publications_timeline_find_epoch($definitions, $year);
+        $slug = (string) $epoch['slug'];
+
+        if (!isset($epochs[$slug])) {
+            $epochs[$slug] = [
+                'definition' => $epoch,
+                'items' => [],
+            ];
+        }
+
+        $epochs[$slug]['items'][] = [
+            'year' => $year,
+            'title' => trim((string) $xpath->evaluate('string(.//*[contains(concat(" ", normalize-space(@class), " "), " iss-publication-chronicle__title ")][1])', $item)),
+            'variant' => iss_publications_timeline_detect_moment_variant($xpath, $item),
+            'card_html' => trim(iss_publications_timeline_get_inner_html($card_node)),
+        ];
+
+        $total_items++;
+        $first_year = $first_year === null ? $year : min($first_year, $year);
+        $last_year = $last_year === null ? $year : max($last_year, $year);
+    }
+
+    if ($total_items === 0 || empty($epochs)) {
+        libxml_clear_errors();
+        return $content;
+    }
+
+    $epoch_count = count($epochs);
+    $summary = [
+        [
+            'value' => $first_year !== null ? (string) $first_year : '—',
+            'label' => __('Auftakt', 'iss-publications'),
+        ],
+        [
+            'value' => $last_year !== null ? (string) $last_year : '—',
+            'label' => __('Letzte Zaesur', 'iss-publications'),
+        ],
+        [
+            'value' => (string) $total_items,
+            'label' => __('Stationen', 'iss-publications'),
+        ],
+        [
+            'value' => (string) $epoch_count,
+            'label' => __('Epochen', 'iss-publications'),
+        ],
+    ];
+
+    $nav_html = '';
+    $epochs_html = '';
+    $index = 0;
+    foreach ($epochs as $slug => $epoch_data) {
+        $index++;
+        $definition = $epoch_data['definition'];
+        $anchor = 'iss-publication-epoch-' . sanitize_html_class($slug);
+
+        $nav_html .= '<a href="#' . esc_attr($anchor) . '"><span>' . esc_html((string) $definition['range_label']) . '</span>' . esc_html((string) $definition['title']) . '</a>';
+
+        $moments_html = '';
+        foreach ($epoch_data['items'] as $item) {
+            $variant_class = $item['variant'] !== '' ? ' iss-publication-moment--' . sanitize_html_class($item['variant']) : '';
+            $moments_html .= '<article class="iss-publication-moment' . $variant_class . '">';
+            $moments_html .= '<p class="iss-publication-moment__year">' . esc_html((string) $item['year']) . '</p>';
+            $moments_html .= '<div class="iss-publication-moment__card">' . $item['card_html'] . '</div>';
+            $moments_html .= '</article>';
+        }
+
+        $epochs_html .= '<section id="' . esc_attr($anchor) . '" class="iss-publication-epoch" style="--iss-publication-epoch-accent:' . esc_attr((string) $definition['accent']) . ';">';
+        $epochs_html .= '<div class="iss-publication-epoch__aside">';
+        $epochs_html .= '<p class="iss-publication-epoch__range">' . esc_html((string) $definition['range_label']) . '</p>';
+        $epochs_html .= '<h2 class="iss-publication-epoch__title">' . esc_html((string) $definition['title']) . '</h2>';
+        $epochs_html .= '<p class="iss-publication-epoch__note">' . esc_html((string) $definition['note']) . '</p>';
+        $epochs_html .= '</div>';
+        $epochs_html .= '<div class="iss-publication-epoch__body">' . $moments_html . '</div>';
+        $epochs_html .= '</section>';
+    }
+
+    $summary_html = '<div class="iss-publication-timeline__summary" aria-label="' . esc_attr__('Rahmendaten', 'iss-publications') . '">';
+    foreach ($summary as $item) {
+        $summary_html .= '<p class="iss-publication-timeline__summary-item"><strong>' . esc_html($item['value']) . '</strong><span>' . esc_html($item['label']) . '</span></p>';
+    }
+    $summary_html .= '</div>';
+
+    $timeline_html = '<div class="iss-publication-timeline">';
+    if ($source_note_html !== '') {
+        $timeline_html .= $source_note_html;
+    }
+    $timeline_html .= $summary_html;
+    $timeline_html .= '<nav class="iss-publication-timeline__nav" aria-label="' . esc_attr__('Kapitelnavigation', 'iss-publications') . '"><div class="iss-publication-timeline__nav-inner">' . $nav_html . '</div></nav>';
+    $timeline_html .= '<div class="iss-publication-timeline__epochs">' . $epochs_html . '</div>';
+    $timeline_html .= '</div>';
+
+    libxml_clear_errors();
+    return $timeline_html;
 }
 
 function iss_publications_get_archive_posts($args = []) {

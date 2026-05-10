@@ -373,9 +373,6 @@ function iss_timeline_normalize_filter_payload($args = []) {
 
     $month = isset($filters['month']) ? preg_replace('/[^0-9\-]/', '', (string) $filters['month']) : '';
     $month = preg_match('/^\d{4}-\d{2}$/', $month) ? $month : '';
-    if ($month !== '' && $time_mode === 'all') {
-        $time_mode = 'month';
-    }
 
     $date_start = isset($filters['date_start']) ? sanitize_text_field((string) $filters['date_start']) : '';
     $date_end = isset($filters['date_end']) ? sanitize_text_field((string) $filters['date_end']) : '';

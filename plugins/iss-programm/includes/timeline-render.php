@@ -905,11 +905,19 @@ function iss_timeline_normalize_taxonomy_rule_list($rules) {
     return $normalized;
 }
 
-function iss_timeline_get_taxonomy_preset_rules_from_attributes($attributes = []) {
+function iss_timeline_get_fixed_taxonomy_rules_from_attributes($attributes = []) {
     $attributes = is_array($attributes) ? $attributes : [];
+    if (!empty($attributes['fixedTaxonomyRules']) && is_array($attributes['fixedTaxonomyRules'])) {
+        return iss_timeline_normalize_taxonomy_rule_list($attributes['fixedTaxonomyRules']);
+    }
+
     return !empty($attributes['taxonomyPresetRules']) && is_array($attributes['taxonomyPresetRules'])
         ? iss_timeline_normalize_taxonomy_rule_list($attributes['taxonomyPresetRules'])
         : [];
+}
+
+function iss_timeline_get_taxonomy_preset_rules_from_attributes($attributes = []) {
+    return iss_timeline_get_fixed_taxonomy_rules_from_attributes($attributes);
 }
 
 function iss_timeline_get_taxonomy_ui_rules_from_attributes($attributes = []) {
@@ -1269,6 +1277,10 @@ function iss_timeline_build_query_block_config($attributes = []) {
         $default_type = 'all';
     }
 
+    $fixed_item_types = !empty($attributes['fixedItemTypesList']) && is_array($attributes['fixedItemTypesList'])
+        ? iss_timeline_get_attribute_token_list($attributes['fixedItemTypesList'], [])
+        : iss_timeline_get_attribute_token_list($attributes['presetItemTypesList'] ?? [], []);
+
     return [
         'limit' => max(1, (int) ($attributes['limit'] ?? 12)),
         'order' => 'ASC',
@@ -1277,10 +1289,10 @@ function iss_timeline_build_query_block_config($attributes = []) {
             'time_mode' => sanitize_key((string) ($attributes['timeMode'] ?? 'upcoming')) ?: 'upcoming',
             'month' => $default_month,
             'item_type' => $default_type,
-            'item_types' => iss_timeline_get_attribute_token_list($attributes['presetItemTypesList'] ?? [], []),
+            'item_types' => $fixed_item_types,
             'include_running_ranges' => !empty($attributes['includeRunningRanges']),
             'post_types' => iss_timeline_get_attribute_token_list($attributes['postTypesList'] ?? [], []),
-            'taxonomy_filters' => iss_timeline_get_taxonomy_preset_rules_from_attributes($attributes),
+            'taxonomy_filters' => iss_timeline_get_fixed_taxonomy_rules_from_attributes($attributes),
         ],
         'render' => [
             'renderMode' => (($attributes['renderMode'] ?? 'timeline') === 'cards') ? 'cards' : 'timeline',
@@ -1304,7 +1316,7 @@ function iss_timeline_build_query_block_config($attributes = []) {
         ],
         'ui' => [
             'showTimeModeFilter' => !empty($attributes['showTimeModeFilter']),
-            'showTypeFilter' => array_key_exists('showItemTypeFilter', $attributes)
+            'showItemTypeFilter' => array_key_exists('showItemTypeFilter', $attributes)
                 ? !empty($attributes['showItemTypeFilter'])
                 : !empty($attributes['showTypeFilter']),
             'showPostTypeFilter' => !empty($attributes['showPostTypeFilter']),
@@ -1325,11 +1337,12 @@ function iss_timeline_render_query_block($attributes = [], $content = '', $block
 
     $attributes = is_array($attributes) ? $attributes : [];
     $config = iss_timeline_build_query_block_config($attributes);
-    $listing_config = $config;
+    $config['baseFilters'] = $config['filters'];
     $default_preset = iss_timeline_get_default_preset_button($attributes);
     if (!empty($default_preset)) {
-        $listing_config['filters'] = iss_timeline_merge_preset_filters($listing_config['filters'], $default_preset);
+        $config['filters'] = iss_timeline_merge_preset_filters($config['filters'], $default_preset);
     }
+    $listing_config = $config;
     if (!empty($config['render']['showTicketsButton']) && function_exists('iss_programm_enqueue_calendar_assets')) {
         iss_programm_enqueue_calendar_assets();
     }
@@ -1355,7 +1368,7 @@ function iss_timeline_render_query_block($attributes = [], $content = '', $block
 
     $out .= iss_timeline_render_preset_buttons($attributes);
 
-    if (!empty($config['ui']['showTimeModeFilter']) || !empty($config['ui']['showTypeFilter']) || !empty($config['ui']['showPostTypeFilter']) || !empty($config['ui']['showMonthFilter']) || !empty($config['ui']['showCalendarBridge']) || !empty($config['ui']['taxonomyUiFilters'])) {
+    if (!empty($config['ui']['showTimeModeFilter']) || !empty($config['ui']['showItemTypeFilter']) || !empty($config['ui']['showPostTypeFilter']) || !empty($config['ui']['showMonthFilter']) || !empty($config['ui']['showCalendarBridge']) || !empty($config['ui']['taxonomyUiFilters'])) {
         $out .= '<form class="iss-timeline__filters" data-timeline-query-form>';
 
         if (!empty($config['ui']['showCalendarBridge'])) {
@@ -1390,7 +1403,7 @@ function iss_timeline_render_query_block($attributes = [], $content = '', $block
             $out .= '</select></label>';
         }
 
-        if (!empty($config['ui']['showTypeFilter'])) {
+        if (!empty($config['ui']['showItemTypeFilter'])) {
             $out .= iss_timeline_render_choice_filter([
                 'name' => 'item_type',
                 'filter_key' => 'item_type',

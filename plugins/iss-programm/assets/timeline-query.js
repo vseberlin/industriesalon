@@ -5,6 +5,54 @@ document.addEventListener('DOMContentLoaded', function () {
   var restUrl = window.ISS_TIMELINE && window.ISS_TIMELINE.restUrl ? String(window.ISS_TIMELINE.restUrl) : '';
   if (!restUrl) return;
 
+  function cloneData(value) {
+    return JSON.parse(JSON.stringify(value || {}));
+  }
+
+  function normalizeTaxonomyFilters(filters) {
+    if (!Array.isArray(filters)) return [];
+
+    return filters
+      .filter(function (rule) {
+        return rule && rule.taxonomy;
+      })
+      .map(function (rule) {
+        var terms = Array.isArray(rule.terms) ? rule.terms : [rule.terms];
+        return {
+          taxonomy: String(rule.taxonomy || ''),
+          field: String(rule.field || 'slug'),
+          terms: terms
+            .map(function (term) {
+              return String(term || '').trim();
+            })
+            .filter(Boolean),
+          operator: String(rule.operator || 'IN'),
+        };
+      })
+      .filter(function (rule) {
+        return rule.taxonomy && rule.terms.length;
+      });
+  }
+
+  function taxonomyRuleEquals(left, right) {
+    if (!left || !right) return false;
+    if (String(left.taxonomy || '') !== String(right.taxonomy || '')) return false;
+    if (String(left.field || 'slug') !== String(right.field || 'slug')) return false;
+    if (String(left.operator || 'IN') !== String(right.operator || 'IN')) return false;
+
+    var leftTerms = Array.isArray(left.terms) ? left.terms.slice().sort() : [];
+    var rightTerms = Array.isArray(right.terms) ? right.terms.slice().sort() : [];
+    if (leftTerms.length !== rightTerms.length) return false;
+
+    for (var index = 0; index < leftTerms.length; index += 1) {
+      if (String(leftTerms[index]) !== String(rightTerms[index])) {
+        return false;
+      }
+    }
+
+    return true;
+  }
+
   rootNodes.forEach(function (root) {
     var configRaw = root.getAttribute('data-config') || '';
     var config = {};
@@ -14,7 +62,9 @@ document.addEventListener('DOMContentLoaded', function () {
     } catch (err) {
       config = {};
     }
-    var initialFilters = config && config.filters ? JSON.parse(JSON.stringify(config.filters)) : {};
+
+    var initialFilters = cloneData(config && config.filters ? config.filters : {});
+    var baseFilters = cloneData(config && config.baseFilters ? config.baseFilters : initialFilters);
 
     var form = root.querySelector('[data-timeline-query-form]');
     var meta = root.querySelector('[data-timeline-query-meta]');
@@ -61,6 +111,22 @@ document.addEventListener('DOMContentLoaded', function () {
       first.value = value;
     }
 
+    function setTaxonomyControlValue(taxonomy, values) {
+      if (!taxonomy) return;
+
+      var selectedValues = Array.isArray(values) ? values.map(String) : [];
+      form.querySelectorAll('[data-filter-taxonomy="' + taxonomy + '"]').forEach(function (input) {
+        Array.prototype.forEach.call(input.options || [], function (option) {
+          option.selected = selectedValues.indexOf(String(option.value || '')) !== -1;
+        });
+      });
+    }
+
+    function clearTaxonomyControlValue(taxonomy) {
+      if (!taxonomy) return;
+      setTaxonomyControlValue(taxonomy, []);
+    }
+
     function syncMonthVisibility() {
       var timeMode = form.querySelector('[data-filter-key="time_mode"]');
       var monthSelect = form.querySelector('[data-filter-key="month"]');
@@ -100,6 +166,83 @@ document.addEventListener('DOMContentLoaded', function () {
       if (/^\d{4}-\d{2}-\d{2}/.test(dateStart)) {
         calendarDayInput.value = dateStart.slice(0, 10);
       }
+    }
+
+    function getPresetStateFromButton(button) {
+      if (!button) return null;
+
+      return {
+        timeMode: button.getAttribute('data-preset-time-mode') || '',
+        taxonomy: button.getAttribute('data-preset-taxonomy') || '',
+        terms: (button.getAttribute('data-preset-terms') || '')
+          .split(',')
+          .map(function (term) {
+            return term.trim();
+          })
+          .filter(Boolean),
+      };
+    }
+
+    function mergePresetIntoFilters(filters, preset) {
+      var nextFilters = cloneData(filters || {});
+      if (!preset) return nextFilters;
+
+      if (preset.timeMode) {
+        nextFilters.time_mode = preset.timeMode;
+      }
+
+      var taxonomyFilters = normalizeTaxonomyFilters(nextFilters.taxonomy_filters || []);
+      if (preset.taxonomy) {
+        taxonomyFilters = taxonomyFilters.filter(function (rule) {
+          return rule.taxonomy !== preset.taxonomy;
+        });
+
+        if (preset.terms.length) {
+          taxonomyFilters.push({
+            taxonomy: preset.taxonomy,
+            field: 'slug',
+            terms: preset.terms.slice(),
+            operator: 'IN',
+          });
+        }
+      }
+
+      nextFilters.taxonomy_filters = taxonomyFilters;
+      return nextFilters;
+    }
+
+    function applyActivePresetToControls(previousPreset) {
+      var nextTimeMode = activePreset && activePreset.timeMode
+        ? activePreset.timeMode
+        : (initialFilters && initialFilters.time_mode ? String(initialFilters.time_mode) : 'upcoming');
+      var nextMonth = initialFilters && initialFilters.month
+        ? String(initialFilters.month)
+        : (baseFilters && baseFilters.month ? String(baseFilters.month) : '');
+
+      if (calendarDayInput) {
+        calendarDayInput.value = '';
+      }
+
+      setControlValue('time_mode', nextTimeMode);
+
+      if (nextMonth !== '') {
+        if (calendarMonthInput) {
+          calendarMonthInput.value = nextMonth;
+        }
+        setControlValue('month', nextMonth);
+      }
+
+      if (previousPreset && previousPreset.taxonomy && (!activePreset || activePreset.taxonomy !== previousPreset.taxonomy)) {
+        clearTaxonomyControlValue(previousPreset.taxonomy);
+      }
+
+      if (activePreset && activePreset.taxonomy) {
+        setTaxonomyControlValue(activePreset.taxonomy, activePreset.terms);
+      }
+
+      calendarBridgeMode = nextTimeMode === 'month' ? 'month' : '';
+      syncMonthVisibility();
+      syncCalendarBridge();
     }
 
     function resetToInitialFilters() {
@@ -158,17 +301,23 @@ document.addEventListener('DOMContentLoaded', function () {
       }
 
       if (presetButtons.length) {
+        var previousPreset = activePreset;
         setActivePreset(defaultPresetButton || null);
+        applyActivePresetToControls(previousPreset);
       }
 
-      config.filters = JSON.parse(JSON.stringify(initialFilters || {}));
+      config.filters = cloneData(initialFilters || {});
       syncMonthVisibility();
       syncCalendarBridge();
     }
 
     function buildPayload() {
-      var payload = JSON.parse(JSON.stringify(config || {}));
-      if (!payload.filters) payload.filters = {};
+      var payload = cloneData(config || {});
+      payload.filters = cloneData(baseFilters || {});
+
+      if (activePreset) {
+        payload.filters = mergePresetIntoFilters(payload.filters, activePreset);
+      }
 
       form.querySelectorAll('[data-filter-key]').forEach(function (input) {
         var key = input.getAttribute('data-filter-key');
@@ -181,21 +330,20 @@ document.addEventListener('DOMContentLoaded', function () {
         payload.filters[key] = input.value;
       });
 
-      if (calendarMonthInput && calendarMonthInput.value) {
-        payload.filters.month = calendarMonthInput.value;
-      }
-
       if (calendarDayInput && calendarDayInput.value) {
         payload.filters.time_mode = 'range';
         payload.filters.date_start = calendarDayInput.value + ' 00:00:00';
         payload.filters.date_end = calendarDayInput.value + ' 23:59:59';
-      } else if (calendarBridgeMode === 'month' && calendarMonthInput && calendarMonthInput.value) {
-        payload.filters.time_mode = 'month';
-        delete payload.filters.date_start;
-        delete payload.filters.date_end;
       } else {
         delete payload.filters.date_start;
         delete payload.filters.date_end;
+
+        if (calendarBridgeMode === 'month' && calendarMonthInput && calendarMonthInput.value) {
+          payload.filters.time_mode = 'month';
+          payload.filters.month = calendarMonthInput.value;
+        } else if (payload.filters.time_mode !== 'month') {
+          delete payload.filters.month;
+        }
       }
 
       var visibleTaxonomyFilters = [];
@@ -203,36 +351,40 @@ document.addEventListener('DOMContentLoaded', function () {
         var taxonomy = input.getAttribute('data-filter-taxonomy');
         if (!taxonomy) return;
         var values = input.multiple
-          ? Array.prototype.slice.call(input.selectedOptions || []).map(function (option) { return option.value; }).filter(Boolean)
+          ? Array.prototype.slice.call(input.selectedOptions || [])
+              .map(function (option) {
+                return option.value;
+              })
+              .filter(Boolean)
           : [input.value].filter(Boolean);
         if (!values.length) return;
         visibleTaxonomyFilters.push({
           taxonomy: taxonomy,
           field: 'slug',
           terms: values,
-          operator: 'IN'
+          operator: 'IN',
         });
       });
 
-      var presetTaxonomyFilters = Array.isArray(payload.filters.taxonomy_filters)
-        ? payload.filters.taxonomy_filters.slice()
-        : [];
+      var baseTaxonomyFilters = normalizeTaxonomyFilters(baseFilters && baseFilters.taxonomy_filters ? baseFilters.taxonomy_filters : []);
+      var effectiveTaxonomyFilters = normalizeTaxonomyFilters(payload.filters.taxonomy_filters || []);
+      if (visibleTaxonomyFilters.length) {
+        var visibleTaxonomies = visibleTaxonomyFilters.map(function (rule) {
+          return rule.taxonomy;
+        });
 
-      if (activePreset) {
-        if (activePreset.timeMode) {
-          payload.filters.time_mode = activePreset.timeMode;
-        }
-        if (activePreset.taxonomy && activePreset.terms.length) {
-          presetTaxonomyFilters.push({
-            taxonomy: activePreset.taxonomy,
-            field: 'slug',
-            terms: activePreset.terms,
-            operator: 'IN'
+        effectiveTaxonomyFilters = effectiveTaxonomyFilters.filter(function (rule) {
+          if (visibleTaxonomies.indexOf(rule.taxonomy) === -1) {
+            return true;
+          }
+
+          return baseTaxonomyFilters.some(function (baseRule) {
+            return taxonomyRuleEquals(baseRule, rule);
           });
-        }
+        });
       }
 
-      payload.filters.taxonomy_filters = presetTaxonomyFilters.concat(visibleTaxonomyFilters);
+      payload.filters.taxonomy_filters = effectiveTaxonomyFilters.concat(visibleTaxonomyFilters);
 
       if (!payload.render) payload.render = {};
       payload.render.yearGrouping = !!(payload.render && payload.render.yearGrouping);
@@ -254,6 +406,7 @@ document.addEventListener('DOMContentLoaded', function () {
     }
 
     function setActivePreset(button) {
+      var previousPreset = activePreset;
       activePreset = null;
 
       presetButtons.forEach(function (node) {
@@ -261,16 +414,10 @@ document.addEventListener('DOMContentLoaded', function () {
         node.classList.toggle('is-active', isActive);
         node.setAttribute('aria-pressed', isActive ? 'true' : 'false');
         if (!isActive) return;
-
-        activePreset = {
-          timeMode: node.getAttribute('data-preset-time-mode') || '',
-          taxonomy: node.getAttribute('data-preset-taxonomy') || '',
-          terms: (node.getAttribute('data-preset-terms') || '')
-            .split(',')
-            .map(function (term) { return term.trim(); })
-            .filter(Boolean)
-        };
+        activePreset = getPresetStateFromButton(node);
       });
+
+      return previousPreset;
     }
 
     function updateMeta(data) {
@@ -300,9 +447,9 @@ document.addEventListener('DOMContentLoaded', function () {
         method: 'POST',
         credentials: 'same-origin',
         headers: {
-          'Content-Type': 'application/json'
+          'Content-Type': 'application/json',
         },
-        body: JSON.stringify(payload)
+        body: JSON.stringify(payload),
       })
         .then(function (response) {
           return response.json();
@@ -336,8 +483,8 @@ document.addEventListener('DOMContentLoaded', function () {
       refresh({ append: false });
     });
 
-      if (calendarMonthInput) {
-        calendarMonthInput.addEventListener('change', function () {
+    if (calendarMonthInput) {
+      calendarMonthInput.addEventListener('change', function () {
         var timeMode = getTimeModeInput();
         var monthSelect = getMonthSelect();
         if (calendarDayInput) {
@@ -403,10 +550,15 @@ document.addEventListener('DOMContentLoaded', function () {
         });
       }
 
+      if (activePreset) {
+        applyActivePresetToControls(null);
+      }
+
       presetButtons.forEach(function (button) {
         button.addEventListener('click', function () {
           if (requestInFlight) return;
-          setActivePreset(button);
+          var previousPreset = setActivePreset(button);
+          applyActivePresetToControls(previousPreset);
           refresh({ append: false });
         });
       });

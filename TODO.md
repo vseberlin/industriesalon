@@ -29,6 +29,10 @@
   - keep CTA/mode switching in render logic (`booking_mode`, inquiry fields, booking panel), not in parallel full-page templates
   - make `iss/tour-calendar` bail out cleanly when a tour has no usable calendar mapping instead of rendering an empty widget shell
   - audit calendar-mode tours whose content/title implies on-demand behavior but whose effective mode still resolves to `calendar`
+- Review the `industriesalon/timeline-query` block after the preset refactor:
+  - too many overlapping controls still describe similar ideas across base scope, default selection, visible filters, and preset buttons
+  - simplify the editor contract so `allowed*`, `fixed*`, `default*`, and preset state have clearer ownership and fewer ways to express the same query
+  - verify that `Alle`, `Inhaltstyp`, month/calendar bridge, and taxonomy filters always compose predictably on the frontend
 - Add a stronger next-generation timeline/calendar render for program-style pages, especially `Veranstaltungen`, with better date rhythm and a cleaner culture-calendar presentation.
 - Review the footer navigation and column spacing after the current footer refactor:
   - check whether `Entdecken` / `Service` should stay as two separate menus or move to real footer menu assignments

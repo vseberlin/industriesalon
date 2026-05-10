@@ -85,6 +85,17 @@
     });
   }
 
+  function setRuleLabel(rules, taxonomy, label) {
+    return normalizeRuleList(rules).map(function (rule) {
+      if (rule.taxonomy !== taxonomy) return rule;
+      return {
+        taxonomy: rule.taxonomy,
+        label: String(label || ''),
+        terms: normalizeList(rule.terms || []),
+      };
+    });
+  }
+
   function removeRule(rules, taxonomy) {
     return normalizeRuleList(rules).filter(function (rule) {
       return rule.taxonomy !== taxonomy;
@@ -153,11 +164,19 @@
         { value: 'past', label: 'Archiv' },
         { value: 'all', label: 'Alle' },
       ];
-      const allowedTimeModesList = normalizeList(attrs.allowedTimeModesList && attrs.allowedTimeModesList.length ? attrs.allowedTimeModesList : ['upcoming', 'month', 'past', 'all']);
-      const allowedTypesList = normalizeList(attrs.allowedTypesList && attrs.allowedTypesList.length ? attrs.allowedTypesList : ['fuehrungen', 'veranstaltungen']);
-      const presetItemTypesList = normalizeList(attrs.presetItemTypesList || []);
+      const allowedTimeModesList = normalizeList(
+        attrs.allowedTimeModesList && attrs.allowedTimeModesList.length ? attrs.allowedTimeModesList : ['upcoming', 'month', 'past', 'all']
+      );
+      const allowedTypesList = normalizeList(
+        attrs.allowedTypesList && attrs.allowedTypesList.length ? attrs.allowedTypesList : ['fuehrungen', 'veranstaltungen']
+      );
+      const fixedItemTypesList = normalizeList(
+        attrs.fixedItemTypesList && attrs.fixedItemTypesList.length ? attrs.fixedItemTypesList : attrs.presetItemTypesList || []
+      );
       const postTypesList = normalizeList(attrs.postTypesList || []);
-      const taxonomyPresetRules = normalizeRuleList(attrs.taxonomyPresetRules || []);
+      const fixedTaxonomyRules = normalizeRuleList(
+        attrs.fixedTaxonomyRules && attrs.fixedTaxonomyRules.length ? attrs.fixedTaxonomyRules : attrs.taxonomyPresetRules || []
+      );
       const taxonomyUiRules = normalizeRuleList(attrs.taxonomyUiRules || []);
       const presetButtons = normalizePresetButtons(attrs.presetButtons || []);
       const showItemTypeFilter =
@@ -174,38 +193,41 @@
       const timeModeOptions = timeModeChoices.filter(function (choice) {
         return allowedTimeModesList.indexOf(choice.value) !== -1;
       });
-      const presetControls = [];
-      const taxonomyControls = [];
+      const scopeControls = [];
+      const fixedTaxonomyControls = [];
+      const visibleTaxonomyControls = [];
 
       var timeModeCheckboxes = renderCheckboxGroup(timeModeChoices, allowedTimeModesList, function (value, checked) {
         setAttributes({ allowedTimeModesList: toggleListValue(allowedTimeModesList, value, checked) });
       });
       if (Array.isArray(timeModeCheckboxes)) {
-        presetControls.push.apply(presetControls, timeModeCheckboxes);
+        scopeControls.push(el('p', { key: 'allowed-time-modes-label' }, 'Allowed Zeitraum options'));
+        scopeControls.push.apply(scopeControls, timeModeCheckboxes);
       }
 
       var typeCheckboxes = renderCheckboxGroup(typeChoices, allowedTypesList, function (value, checked) {
         setAttributes({ allowedTypesList: toggleListValue(allowedTypesList, value, checked) });
       });
       if (Array.isArray(typeCheckboxes)) {
-        presetControls.push.apply(presetControls, typeCheckboxes);
+        scopeControls.push(el('p', { key: 'allowed-item-types-label' }, 'Allowed Inhaltstyp options'));
+        scopeControls.push.apply(scopeControls, typeCheckboxes);
       }
 
-      var presetTypeCheckboxes = renderCheckboxGroup(typeChoices, presetItemTypesList, function (value, checked) {
-        setAttributes({ presetItemTypesList: toggleListValue(presetItemTypesList, value, checked) });
+      var fixedTypeCheckboxes = renderCheckboxGroup(typeChoices, fixedItemTypesList, function (value, checked) {
+        var nextValues = toggleListValue(fixedItemTypesList, value, checked);
+        setAttributes({ fixedItemTypesList: nextValues, presetItemTypesList: nextValues });
       });
-      if (Array.isArray(presetTypeCheckboxes)) {
-        presetControls.push(
-          el('p', { key: 'presetTypeLabel' }, 'Fixed content families (used when no visible Inhaltstyp filter selection overrides them).')
-        );
-        presetControls.push.apply(presetControls, presetTypeCheckboxes);
+      if (Array.isArray(fixedTypeCheckboxes)) {
+        scopeControls.push(el('p', { key: 'fixed-item-types-label' }, 'Fixed content families'));
+        scopeControls.push.apply(scopeControls, fixedTypeCheckboxes);
       }
 
       var postTypeCheckboxes = renderCheckboxGroup(postTypeChoices, postTypesList, function (value, checked) {
         setAttributes({ postTypesList: toggleListValue(postTypesList, value, checked) });
       });
       if (Array.isArray(postTypeCheckboxes)) {
-        presetControls.push.apply(presetControls, postTypeCheckboxes);
+        scopeControls.push(el('p', { key: 'post-types-label' }, 'Fixed post types'));
+        scopeControls.push.apply(scopeControls, postTypeCheckboxes);
       }
 
       taxonomyChoices.forEach(function (taxonomyChoice) {
@@ -222,34 +244,44 @@
               };
             })
           : [];
-        var presetRule = taxonomyPresetRules.find(function (rule) { return rule.taxonomy === taxonomySlug; }) || null;
-        var uiRule = taxonomyUiRules.find(function (rule) { return rule.taxonomy === taxonomySlug; }) || null;
+        var fixedRule = fixedTaxonomyRules.find(function (rule) {
+          return rule.taxonomy === taxonomySlug;
+        }) || null;
+        var uiRule = taxonomyUiRules.find(function (rule) {
+          return rule.taxonomy === taxonomySlug;
+        }) || null;
 
-        taxonomyControls.push(
+        fixedTaxonomyControls.push(
           el(ToggleControl, {
-            key: taxonomySlug + '-preset-toggle',
-            label: 'Preset: ' + taxonomyLabel,
-            checked: !!presetRule,
+            key: taxonomySlug + '-fixed-toggle',
+            label: 'Fixed filter: ' + taxonomyLabel,
+            checked: !!fixedRule,
             onChange: function (checked) {
+              var nextRules = checked
+                ? setRuleTerms(fixedTaxonomyRules, taxonomySlug, fixedRule ? fixedRule.terms : [])
+                : removeRule(fixedTaxonomyRules, taxonomySlug);
               setAttributes({
-                taxonomyPresetRules: checked
-                  ? setRuleTerms(taxonomyPresetRules, taxonomySlug, presetRule ? presetRule.terms : [])
-                  : removeRule(taxonomyPresetRules, taxonomySlug),
+                fixedTaxonomyRules: nextRules,
+                taxonomyPresetRules: nextRules,
               });
             },
           })
         );
-        if (presetRule && termChoices.length) {
-          var presetTermControls = renderCheckboxGroup(termChoices, presetRule.terms, function (value, checked) {
-            var nextTerms = toggleListValue(presetRule.terms, value, checked);
-            setAttributes({ taxonomyPresetRules: setRuleTerms(taxonomyPresetRules, taxonomySlug, nextTerms) });
+        if (fixedRule && termChoices.length) {
+          var fixedTermControls = renderCheckboxGroup(termChoices, fixedRule.terms, function (value, checked) {
+            var nextTerms = toggleListValue(fixedRule.terms, value, checked);
+            var nextRules = setRuleTerms(fixedTaxonomyRules, taxonomySlug, nextTerms);
+            setAttributes({
+              fixedTaxonomyRules: nextRules,
+              taxonomyPresetRules: nextRules,
+            });
           });
-          if (Array.isArray(presetTermControls)) {
-            taxonomyControls.push.apply(taxonomyControls, presetTermControls);
+          if (Array.isArray(fixedTermControls)) {
+            fixedTaxonomyControls.push.apply(fixedTaxonomyControls, fixedTermControls);
           }
         }
 
-        taxonomyControls.push(
+        visibleTaxonomyControls.push(
           el(ToggleControl, {
             key: taxonomySlug + '-ui-toggle',
             label: 'Visible filter: ' + taxonomyLabel,
@@ -264,17 +296,13 @@
           })
         );
         if (uiRule) {
-          taxonomyControls.push(
+          visibleTaxonomyControls.push(
             el(TextControl, {
               key: taxonomySlug + '-ui-label',
               label: taxonomyLabel + ' label',
               value: uiRule.label || taxonomyLabel,
               onChange: function (value) {
-                var nextRules = normalizeRuleList(taxonomyUiRules).map(function (rule) {
-                  if (rule.taxonomy !== taxonomySlug) return rule;
-                  return { taxonomy: rule.taxonomy, terms: rule.terms, label: value };
-                });
-                setAttributes({ taxonomyUiRules: nextRules });
+                setAttributes({ taxonomyUiRules: setRuleLabel(taxonomyUiRules, taxonomySlug, value) });
               },
             })
           );
@@ -282,14 +310,10 @@
         if (uiRule && termChoices.length) {
           var uiTermControls = renderCheckboxGroup(termChoices, uiRule.terms, function (value, checked) {
             var nextTerms = toggleListValue(uiRule.terms, value, checked);
-            var nextRules = normalizeRuleList(taxonomyUiRules).map(function (rule) {
-              if (rule.taxonomy !== taxonomySlug) return rule;
-              return { taxonomy: rule.taxonomy, label: rule.label, terms: nextTerms };
-            });
-            setAttributes({ taxonomyUiRules: nextRules });
+            setAttributes({ taxonomyUiRules: setRuleTerms(taxonomyUiRules, taxonomySlug, nextTerms) });
           });
           if (Array.isArray(uiTermControls)) {
-            taxonomyControls.push.apply(taxonomyControls, uiTermControls);
+            visibleTaxonomyControls.push.apply(visibleTaxonomyControls, uiTermControls);
           }
         }
       });
@@ -306,8 +330,8 @@
                   ? el(TextControl, {
                       label: 'Title',
                       value: attrs.title || '',
-                      onChange: function (v) {
-                        setAttributes({ title: v });
+                      onChange: function (value) {
+                        setAttributes({ title: value });
                       },
                     })
                   : null,
@@ -315,8 +339,8 @@
                   ? el(TextareaControl, {
                       label: 'Intro',
                       value: attrs.intro || '',
-                      onChange: function (v) {
-                        setAttributes({ intro: v });
+                      onChange: function (value) {
+                        setAttributes({ intro: value });
                       },
                     })
                   : null,
@@ -326,8 +350,8 @@
                       value: attrs.limit || 12,
                       min: 1,
                       max: 50,
-                      onChange: function (v) {
-                        setAttributes({ limit: v });
+                      onChange: function (value) {
+                        setAttributes({ limit: value });
                       },
                     })
                   : null,
@@ -335,18 +359,18 @@
                   ? el(TextControl, {
                       label: 'Group (slug, optional)',
                       value: attrs.group || '',
-                      onChange: function (v) {
-                        setAttributes({ group: v });
+                      onChange: function (value) {
+                        setAttributes({ group: value });
                       },
                     })
                   : null,
                 SelectControl
                   ? el(SelectControl, {
-                      label: 'Time mode',
+                      label: 'Default Zeitraum',
                       value: attrs.timeMode || 'upcoming',
                       options: timeModeOptions.length ? timeModeOptions : timeModeChoices,
-                      onChange: function (v) {
-                        setAttributes({ timeMode: v });
+                      onChange: function (value) {
+                        setAttributes({ timeMode: value });
                       },
                     })
                   : null,
@@ -354,22 +378,37 @@
                   ? el(TextControl, {
                       label: 'Default month (YYYY-MM)',
                       value: attrs.defaultMonth || '',
-                      onChange: function (v) {
-                        setAttributes({ defaultMonth: v });
+                      onChange: function (value) {
+                        setAttributes({ defaultMonth: value });
                       },
                     })
                   : null,
-                TextControl
-                  && SelectControl
+                SelectControl
                   ? el(SelectControl, {
                       label: 'Default Inhaltstyp',
                       value: attrs.defaultType || 'all',
                       options: defaultTypeOptions,
-                      onChange: function (v) {
-                        setAttributes({ defaultType: v });
+                      onChange: function (value) {
+                        setAttributes({ defaultType: value });
+                      },
+                    })
+                  : null,
+                ToggleControl
+                  ? el(ToggleControl, {
+                      label: 'Laufende Ausstellungen einbeziehen',
+                      checked: !!attrs.includeRunningRanges,
+                      onChange: function (value) {
+                        setAttributes({ includeRunningRanges: !!value });
                       },
                     })
                   : null
+              ),
+              el(
+                PanelBody,
+                { title: 'Base Scope', initialOpen: false },
+                scopeControls,
+                fixedTaxonomyControls.length ? el('p', null, 'Fixed taxonomy filters') : null,
+                fixedTaxonomyControls
               ),
               el(
                 PanelBody,
@@ -378,8 +417,8 @@
                   ? el(ToggleControl, {
                       label: 'Show result count / empty note',
                       checked: attrs.showMeta !== false,
-                      onChange: function (v) {
-                        setAttributes({ showMeta: !!v });
+                      onChange: function (value) {
+                        setAttributes({ showMeta: !!value });
                       },
                     })
                   : null,
@@ -387,8 +426,8 @@
                   ? el(ToggleControl, {
                       label: 'Show time scope filter',
                       checked: !!attrs.showTimeModeFilter,
-                      onChange: function (v) {
-                        setAttributes({ showTimeModeFilter: !!v });
+                      onChange: function (value) {
+                        setAttributes({ showTimeModeFilter: !!value });
                       },
                     })
                   : null,
@@ -396,8 +435,8 @@
                   ? el(ToggleControl, {
                       label: 'Show Inhaltstyp filter',
                       checked: showItemTypeFilter,
-                      onChange: function (v) {
-                        setAttributes({ showItemTypeFilter: !!v, showTypeFilter: !!v });
+                      onChange: function (value) {
+                        setAttributes({ showItemTypeFilter: !!value, showTypeFilter: !!value });
                       },
                     })
                   : null,
@@ -405,8 +444,8 @@
                   ? el(ToggleControl, {
                       label: 'Show month filter',
                       checked: !!attrs.showMonthFilter,
-                      onChange: function (v) {
-                        setAttributes({ showMonthFilter: !!v });
+                      onChange: function (value) {
+                        setAttributes({ showMonthFilter: !!value });
                       },
                     })
                   : null,
@@ -414,8 +453,8 @@
                   ? el(ToggleControl, {
                       label: 'Show calendar bridge',
                       checked: !!attrs.showCalendarBridge,
-                      onChange: function (v) {
-                        setAttributes({ showCalendarBridge: !!v });
+                      onChange: function (value) {
+                        setAttributes({ showCalendarBridge: !!value });
                       },
                     })
                   : null,
@@ -423,8 +462,8 @@
                   ? el(ToggleControl, {
                       label: 'Show post type filter',
                       checked: !!attrs.showPostTypeFilter,
-                      onChange: function (v) {
-                        setAttributes({ showPostTypeFilter: !!v });
+                      onChange: function (value) {
+                        setAttributes({ showPostTypeFilter: !!value });
                       },
                     })
                   : null,
@@ -432,8 +471,8 @@
                   ? el(ToggleControl, {
                       label: 'Group by year',
                       checked: !!attrs.yearGrouping,
-                      onChange: function (v) {
-                        setAttributes({ yearGrouping: !!v });
+                      onChange: function (value) {
+                        setAttributes({ yearGrouping: !!value });
                       },
                     })
                   : null,
@@ -441,8 +480,8 @@
                   ? el(ToggleControl, {
                       label: 'Wiederkehrende Führungen bündeln',
                       checked: !!attrs.groupRecurringTours,
-                      onChange: function (v) {
-                        setAttributes({ groupRecurringTours: !!v });
+                      onChange: function (value) {
+                        setAttributes({ groupRecurringTours: !!value });
                       },
                     })
                   : null,
@@ -454,8 +493,8 @@
                         { label: 'Timeline', value: 'timeline' },
                         { label: 'Cards', value: 'cards' },
                       ],
-                      onChange: function (v) {
-                        setAttributes({ renderMode: v || 'timeline' });
+                      onChange: function (value) {
+                        setAttributes({ renderMode: value || 'timeline' });
                       },
                     })
                   : null,
@@ -463,8 +502,8 @@
                   ? el(ToggleControl, {
                       label: 'Show load more',
                       checked: !!attrs.showLoadMore,
-                      onChange: function (v) {
-                        setAttributes({ showLoadMore: !!v });
+                      onChange: function (value) {
+                        setAttributes({ showLoadMore: !!value });
                       },
                     })
                   : null,
@@ -472,8 +511,8 @@
                   ? el(ToggleControl, {
                       label: 'Show bottom button',
                       checked: !!attrs.showBottomButton,
-                      onChange: function (v) {
-                        setAttributes({ showBottomButton: !!v });
+                      onChange: function (value) {
+                        setAttributes({ showBottomButton: !!value });
                       },
                     })
                   : null,
@@ -481,8 +520,8 @@
                   ? el(TextControl, {
                       label: 'Load more text',
                       value: attrs.loadMoreText || '',
-                      onChange: function (v) {
-                        setAttributes({ loadMoreText: v });
+                      onChange: function (value) {
+                        setAttributes({ loadMoreText: value });
                       },
                     })
                   : null,
@@ -490,8 +529,8 @@
                   ? el(TextControl, {
                       label: 'Bottom button text',
                       value: attrs.bottomButtonText || '',
-                      onChange: function (v) {
-                        setAttributes({ bottomButtonText: v });
+                      onChange: function (value) {
+                        setAttributes({ bottomButtonText: value });
                       },
                     })
                   : null,
@@ -499,28 +538,23 @@
                   ? el(TextControl, {
                       label: 'Bottom button URL',
                       value: attrs.bottomButtonUrl || '',
-                      onChange: function (v) {
-                        setAttributes({ bottomButtonUrl: v });
-                      },
-                    })
-                  : null
-              ),
-              el(
-                PanelBody,
-                { title: 'Presets', initialOpen: false },
-                ToggleControl
-                  ? el(ToggleControl, {
-                      label: 'Laufende Ausstellungen einbeziehen',
-                      checked: !!attrs.includeRunningRanges,
-                      onChange: function (v) {
-                        setAttributes({ includeRunningRanges: !!v });
+                      onChange: function (value) {
+                        setAttributes({ bottomButtonUrl: value });
                       },
                     })
                   : null,
+                visibleTaxonomyControls.length ? el('p', null, 'Visible taxonomy filters') : null,
+                visibleTaxonomyControls
+              ),
+              el(
+                PanelBody,
+                { title: 'Preset Buttons', initialOpen: false },
                 presetButtons.map(function (preset, index) {
-                  var taxonomyOptions = [{ label: 'Keine Taxonomie', value: '' }].concat(taxonomyChoices.map(function (choice) {
-                    return { label: choice.label, value: choice.value };
-                  }));
+                  var taxonomyOptions = [{ label: 'Keine Taxonomie', value: '' }].concat(
+                    taxonomyChoices.map(function (choice) {
+                      return { label: choice.label, value: choice.value };
+                    })
+                  );
 
                   function updatePreset(nextPatch) {
                     var nextPresets = normalizePresetButtons(attrs.presetButtons || []);
@@ -550,9 +584,11 @@
                       ? el(SelectControl, {
                           label: 'Zeitraum',
                           value: preset.timeMode || '',
-                          options: [{ label: 'Kein Zeitraum-Override', value: '' }].concat(timeModeChoices.map(function (choice) {
-                            return { label: choice.label, value: choice.value };
-                          })),
+                          options: [{ label: 'Kein Zeitraum-Override', value: '' }].concat(
+                            timeModeChoices.map(function (choice) {
+                              return { label: choice.label, value: choice.value };
+                            })
+                          ),
                           onChange: function (value) {
                             updatePreset({ timeMode: value || '' });
                           },
@@ -591,41 +627,43 @@
                         })
                       : null,
                     Button
-                      ? el(Button, {
-                          isDestructive: true,
-                          variant: 'secondary',
-                          onClick: function () {
-                            var nextPresets = normalizePresetButtons(attrs.presetButtons || []).filter(function (_preset, presetIndex) {
-                              return presetIndex !== index;
-                            });
-                            setAttributes({ presetButtons: nextPresets });
+                      ? el(
+                          Button,
+                          {
+                            isDestructive: true,
+                            variant: 'secondary',
+                            onClick: function () {
+                              var nextPresets = normalizePresetButtons(attrs.presetButtons || []).filter(function (_preset, presetIndex) {
+                                return presetIndex !== index;
+                              });
+                              setAttributes({ presetButtons: nextPresets });
+                            },
                           },
-                        }, 'Preset entfernen')
+                          'Preset entfernen'
+                        )
                       : null
                   );
                 }),
                 Button
-                  ? el(Button, {
-                      variant: 'secondary',
-                      onClick: function () {
-                        var nextPresets = normalizePresetButtons(attrs.presetButtons || []);
-                        nextPresets.push({
-                          label: 'Neues Preset',
-                          timeMode: '',
-                          taxonomy: '',
-                          terms: [],
-                          isDefault: nextPresets.length === 0,
-                        });
-                        setAttributes({ presetButtons: nextPresets });
+                  ? el(
+                      Button,
+                      {
+                        variant: 'secondary',
+                        onClick: function () {
+                          var nextPresets = normalizePresetButtons(attrs.presetButtons || []);
+                          nextPresets.push({
+                            label: 'Neues Preset',
+                            timeMode: '',
+                            taxonomy: '',
+                            terms: [],
+                            isDefault: nextPresets.length === 0,
+                          });
+                          setAttributes({ presetButtons: nextPresets });
+                        },
                       },
-                    }, 'Preset hinzufuegen')
-                  : null,
-                presetControls
-              ),
-              el(
-                PanelBody,
-                { title: 'Taxonomies', initialOpen: false },
-                taxonomyControls
+                      'Preset hinzufuegen'
+                    )
+                  : null
               )
             )
           : null;

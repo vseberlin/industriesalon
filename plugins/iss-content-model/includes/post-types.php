@@ -221,6 +221,18 @@ function iss_content_model_get_default_taxonomy_terms() {
             ['name' => __('Dauerausstellung', 'iss-content-model'), 'slug' => 'dauerausstellung'],
             ['name' => __('Sonderausstellung', 'iss-content-model'), 'slug' => 'sonderausstellung'],
         ],
+        ISS_CONTENT_MODEL_TOPIC_TAXONOMY => [
+            ['name' => __('Elektropolis', 'iss-content-model'), 'slug' => 'elektropolis'],
+            ['name' => __('Schöneweide & Stadtraum', 'iss-content-model'), 'slug' => 'schoeneweide-stadtraum'],
+            ['name' => __('Transformation', 'iss-content-model'), 'slug' => 'transformation'],
+            ['name' => __('Werk für Fernsehelektronik (WF)', 'iss-content-model'), 'slug' => 'wf'],
+            ['name' => __('Kabelwerk Oberspree (KWO)', 'iss-content-model'), 'slug' => 'kwo'],
+            ['name' => __('Transformatorenwerk Oberschöneweide (TRO)', 'iss-content-model'), 'slug' => 'tro'],
+            ['name' => __('Röhren & Fernsehtechnik', 'iss-content-model'), 'slug' => 'roehren-fernsehtechnik'],
+            ['name' => __('Arbeits- und Sozialgeschichte', 'iss-content-model'), 'slug' => 'arbeits-und-sozialgeschichte'],
+            ['name' => __('Quellen & Fundstücke', 'iss-content-model'), 'slug' => 'quellen-und-fundstuecke'],
+            ['name' => __('Licht & Lampentechnik', 'iss-content-model'), 'slug' => 'licht-und-lampentechnik'],
+        ],
         ISS_CONTENT_MODEL_COLLECTION_AREA_TAXONOMY => [
             ['name' => __('WF / Werk für Fernsehelektronik', 'iss-content-model'), 'slug' => 'wf-werk-fuer-fernsehelektronik'],
             ['name' => __('TRO / Transformatorenwerk Oberschöneweide', 'iss-content-model'), 'slug' => 'tro-transformatorenwerk-oberschoeneweide'],
@@ -250,11 +262,6 @@ function iss_content_model_get_default_taxonomy_terms() {
 }
 
 function iss_content_model_maybe_seed_taxonomy_terms() {
-    $seed_version = (string) get_option('iss_content_model_taxonomy_seed_version', '');
-    if ($seed_version === ISS_CONTENT_MODEL_VERSION) {
-        return;
-    }
-
     foreach (iss_content_model_get_default_taxonomy_terms() as $taxonomy => $terms) {
         if (!taxonomy_exists($taxonomy) || !is_array($terms)) {
             continue;
@@ -278,3 +285,144 @@ function iss_content_model_maybe_seed_taxonomy_terms() {
     update_option('iss_content_model_taxonomy_seed_version', ISS_CONTENT_MODEL_VERSION, false);
 }
 add_action('init', 'iss_content_model_maybe_seed_taxonomy_terms', 30);
+
+function iss_content_model_get_initial_topic_assignments(): array
+{
+    return [
+        ISS_CONTENT_MODEL_AUSSTELLUNG_POST_TYPE => [
+            'betriebsfotoalben-im-wf' => ['wf', 'quellen-und-fundstuecke', 'arbeits-und-sozialgeschichte'],
+            'fundstucke-aus-dem-landesarchiv-berlin' => ['quellen-und-fundstuecke', 'schoeneweide-stadtraum'],
+            'elektrotechnik-im-wf' => ['wf', 'roehren-fernsehtechnik'],
+            'rohren-fur-die-republik' => ['wf', 'roehren-fernsehtechnik'],
+            'geschichte-des-wf' => ['wf', 'elektropolis'],
+            'brigadebuecher-im-industriesalon' => ['quellen-und-fundstuecke', 'arbeits-und-sozialgeschichte'],
+            'produktionspropaganda-im-wf-sender' => ['wf', 'quellen-und-fundstuecke', 'roehren-fernsehtechnik'],
+            'frauen-im-wf' => ['wf', 'arbeits-und-sozialgeschichte'],
+            'kinder-im-wf' => ['wf', 'arbeits-und-sozialgeschichte'],
+            'arbeitsplatze-der-lampen' => ['licht-und-lampentechnik', 'arbeits-und-sozialgeschichte'],
+        ],
+        'publication' => [
+            'schoeneweide-eine-ortsgeschichte' => ['elektropolis', 'schoeneweide-stadtraum', 'transformation'],
+            'fundstucke-aus-dem-landesarchiv-berlin-eine-quellengeschichte' => ['quellen-und-fundstuecke', 'schoeneweide-stadtraum'],
+            'fundstucke-zur-geschichte-des-nef-im-archiv-des-industriesalons' => ['quellen-und-fundstuecke', 'schoeneweide-stadtraum'],
+            'farbfernsehen-in-der-ddr-schon-vor-dem-mauerbau' => ['wf', 'roehren-fernsehtechnik'],
+            'rohren-fur-die-republik-eine-technikgeschichte' => ['wf', 'roehren-fernsehtechnik'],
+            'geschichte-des-wf-eine-entwicklungsgeschichte' => ['wf', 'elektropolis'],
+            'fotoalbum-produktion-im-werk-fuer-fernmeldewesen-hf-1951' => ['quellen-und-fundstuecke', 'arbeits-und-sozialgeschichte'],
+            'nef-album' => ['quellen-und-fundstuecke', 'schoeneweide-stadtraum'],
+            'fotoalbum-produkte-lkvo-1946' => ['quellen-und-fundstuecke', 'arbeits-und-sozialgeschichte'],
+            'fotoalbum-labor-konstruktions-und-versuchswerk-oberspree-1946' => ['quellen-und-fundstuecke', 'kwo'],
+            'brigadebuecher-im-industriesalon-eine-quellengeschichte' => ['quellen-und-fundstuecke', 'arbeits-und-sozialgeschichte'],
+            'fundstuecke-aus-dem-wf-sender-eine-quellengeschichte' => ['wf', 'quellen-und-fundstuecke', 'roehren-fernsehtechnik'],
+            'frauen-im-wf-eine-entwicklungsgeschichte' => ['wf', 'arbeits-und-sozialgeschichte'],
+            'kinder-im-wf-eine-entwicklungsgeschichte' => ['wf', 'arbeits-und-sozialgeschichte'],
+            'kabelwerk-oberspree-chronik' => ['kwo', 'elektropolis'],
+            'transformatorenwerk-oberschoeneweide-chronik' => ['tro', 'elektropolis'],
+            'aus-der-vergangenheit-des-werks-fur-fernsehelektronik' => ['wf', 'quellen-und-fundstuecke'],
+            'erdfund-eines-agentenfunkgerates' => ['quellen-und-fundstuecke', 'roehren-fernsehtechnik'],
+            'das-werk-fur-fernsehelektronik-wf-in-oberschoneweide' => ['wf', 'elektropolis'],
+            'das-kabelwerk-oberspree-bruchstucke-eines-industriegiganten' => ['kwo', 'elektropolis'],
+        ],
+        ISS_CONTENT_MODEL_VERANSTALTUNG_POST_TYPE => [
+            'zukunft-im-gesprach' => ['transformation', 'schoeneweide-stadtraum'],
+        ],
+        'post' => [
+            'futura-zukuenfte-erleben-eroeffnung-am-freitag-10-4-26-19-uhr' => ['transformation', 'schoeneweide-stadtraum'],
+            'zukunft-im-gespraech' => ['transformation', 'schoeneweide-stadtraum'],
+            'kiez-tour-wilhelminenhofstrasse-2' => ['elektropolis', 'schoeneweide-stadtraum'],
+            'fuehrungen-waldfriedhof-oberschoeneweide' => ['schoeneweide-stadtraum'],
+            'kiez-tour-wilhelminenhofstrasse-am-3-januar-faellt-aus' => ['elektropolis', 'schoeneweide-stadtraum'],
+            'filmpremiere-am-13-januar-im-industriesalon' => ['transformation', 'schoeneweide-stadtraum'],
+            'das-archiv-von-fraeulein-krause' => ['quellen-und-fundstuecke'],
+            'salongespraech-vielfaeltig-tolerant-zukunftsoffen-perspektiven-fuer-eine-solidarische-zukunft-in-schoeneweide' => ['transformation', 'schoeneweide-stadtraum'],
+            'sonderprogramm-zum-tag-des-offenen-denkmals' => ['elektropolis', 'schoeneweide-stadtraum'],
+            'brueckenfest-schoeneweide' => ['schoeneweide-stadtraum'],
+            'elektropolis-tour-standard' => ['elektropolis', 'schoeneweide-stadtraum'],
+            'nachhall-der-elektropolis-2' => ['elektropolis', 'schoeneweide-stadtraum'],
+            'boulevard-der-industriekultur-eine-projektidee-in-vorbereitung' => ['transformation', 'schoeneweide-stadtraum'],
+            'der-boulevard-der-industriekultur' => ['transformation', 'schoeneweide-stadtraum'],
+            'eroeffnung-stadtlabor-wilhelminenhofstrasse' => ['transformation', 'schoeneweide-stadtraum'],
+            'update-fuer-stadtlabor-wilhelminenhofstrasse' => ['transformation', 'schoeneweide-stadtraum'],
+            'informationsveranstaltung-zum-stadtlabor-wilhelminenhofstrasse-am-30-april' => ['transformation', 'schoeneweide-stadtraum'],
+            'die-entstehung-der-elektropolis-schoeneweide-das-werk-fuer-fernsehelektronik' => ['elektropolis', 'wf'],
+            'die-entstehung-der-elektropolis-schoeneweide-das-kabelwerk-oberspree' => ['elektropolis', 'kwo'],
+            'die-entstehung-der-elektropolis-schoeneweide-das-transformatorenwerk' => ['elektropolis', 'tro'],
+            'die-trolli-werbung' => ['quellen-und-fundstuecke'],
+            'licht-und-transparenz-3' => ['licht-und-lampentechnik'],
+            'licht-und-transparenz-2' => ['licht-und-lampentechnik'],
+            'light-magic' => ['licht-und-lampentechnik'],
+        ],
+    ];
+}
+
+function iss_content_model_find_post_id_by_type_and_slug(string $post_type, string $post_name): int
+{
+    $post_type = sanitize_key($post_type);
+    $post_name = sanitize_title($post_name);
+    if ($post_type === '' || $post_name === '' || !post_type_exists($post_type)) {
+        return 0;
+    }
+
+    $posts = get_posts([
+        'post_type' => $post_type,
+        'name' => $post_name,
+        'post_status' => 'any',
+        'posts_per_page' => 1,
+        'fields' => 'ids',
+        'no_found_rows' => true,
+    ]);
+
+    return !empty($posts) ? (int) $posts[0] : 0;
+}
+
+function iss_content_model_maybe_seed_initial_topic_assignments(): void
+{
+    $migration_version = '2026-05-10-starter-topics-v1';
+    $stored_version = (string) get_option('iss_content_model_topic_assignment_version', '');
+    if ($stored_version === $migration_version || !taxonomy_exists(ISS_CONTENT_MODEL_TOPIC_TAXONOMY)) {
+        return;
+    }
+
+    foreach (iss_content_model_get_initial_topic_assignments() as $post_type => $slug_map) {
+        if (!is_array($slug_map)) {
+            continue;
+        }
+
+        foreach ($slug_map as $post_name => $topic_slugs) {
+            $post_id = iss_content_model_find_post_id_by_type_and_slug((string) $post_type, (string) $post_name);
+            if ($post_id <= 0) {
+                continue;
+            }
+
+            $resolved_terms = [];
+            foreach ((array) $topic_slugs as $topic_slug) {
+                $topic_slug = sanitize_title((string) $topic_slug);
+                if ($topic_slug === '' || !term_exists($topic_slug, ISS_CONTENT_MODEL_TOPIC_TAXONOMY)) {
+                    continue;
+                }
+                $resolved_terms[] = $topic_slug;
+            }
+
+            if (empty($resolved_terms)) {
+                continue;
+            }
+
+            $existing_terms = wp_get_post_terms($post_id, ISS_CONTENT_MODEL_TOPIC_TAXONOMY, ['fields' => 'slugs']);
+            if (is_wp_error($existing_terms)) {
+                $existing_terms = [];
+            }
+
+            sort($existing_terms);
+            $next_terms = array_values(array_unique($resolved_terms));
+            sort($next_terms);
+            if ($existing_terms === $next_terms) {
+                continue;
+            }
+
+            wp_set_object_terms($post_id, array_values(array_unique($resolved_terms)), ISS_CONTENT_MODEL_TOPIC_TAXONOMY, false);
+        }
+    }
+
+    update_option('iss_content_model_topic_assignment_version', $migration_version, false);
+}
+add_action('init', 'iss_content_model_maybe_seed_initial_topic_assignments', 40);
