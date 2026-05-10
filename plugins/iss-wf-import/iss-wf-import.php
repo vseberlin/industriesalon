@@ -80,6 +80,8 @@ define('ISS_WF_IMPORT_OBJECT_DECADE_META', 'iss_archive_decade');
 define('ISS_WF_IMPORT_HASH_META', '_iss_wf_source_hash');
 define('ISS_WF_IMPORT_LAST_SYNCED_META', '_iss_wf_last_synced_gmt');
 define('ISS_WF_IMPORT_ATTACHMENT_SOURCE_URL_META', '_iss_wf_source_media_url');
+define('ISS_WF_IMPORT_ATTACHMENT_OWNER_OBJECT_META', 'iss_archive_owner_object_id');
+define('ISS_WF_IMPORT_ATTACHMENT_ARCHIVE_OWNED_META', 'iss_archive_owned_asset');
 define('ISS_WF_IMPORT_PLACE_SUGGESTIONS_META', 'iss_wf_place_suggestions');
 define('ISS_WF_IMPORT_PLACE_SUGGESTED_AT_META', '_iss_wf_place_suggested_at_gmt');
 
@@ -115,3 +117,105 @@ function iss_wf_import_maybe_flush_rewrite_rules(): void
     update_option('iss_wf_import_rewrite_version', ISS_WF_IMPORT_REWRITE_VERSION, false);
 }
 add_action('init', 'iss_wf_import_maybe_flush_rewrite_rules', 99);
+
+function iss_wf_import_is_archive_owned_attachment(int $attachment_id): bool
+{
+    if ($attachment_id <= 0 || get_post_type($attachment_id) !== 'attachment') {
+        return false;
+    }
+
+    if (get_post_meta($attachment_id, ISS_WF_IMPORT_ATTACHMENT_ARCHIVE_OWNED_META, true) === 'yes') {
+        return true;
+    }
+
+    $parent_id = (int) wp_get_post_parent_id($attachment_id);
+    return ($parent_id > 0 && get_post_type($parent_id) === ISS_WF_IMPORT_OBJECT_POST_TYPE);
+}
+
+function iss_wf_import_mark_attachment_as_archive_owned(int $attachment_id, int $object_id = 0, string $source_url = ''): void
+{
+    if ($attachment_id <= 0 || get_post_type($attachment_id) !== 'attachment') {
+        return;
+    }
+
+    if ($object_id <= 0) {
+        $object_id = (int) wp_get_post_parent_id($attachment_id);
+    }
+
+    update_post_meta($attachment_id, ISS_WF_IMPORT_ATTACHMENT_ARCHIVE_OWNED_META, 'yes');
+
+    if ($object_id > 0) {
+        update_post_meta($attachment_id, ISS_WF_IMPORT_ATTACHMENT_OWNER_OBJECT_META, $object_id);
+
+        $parent_id = (int) wp_get_post_parent_id($attachment_id);
+        if ($parent_id !== $object_id) {
+            wp_update_post([
+                'ID' => $attachment_id,
+                'post_parent' => $object_id,
+            ]);
+        }
+    }
+
+    if ($source_url !== '') {
+        update_post_meta($attachment_id, ISS_WF_IMPORT_ATTACHMENT_SOURCE_URL_META, esc_url_raw($source_url));
+    }
+}
+
+function iss_wf_import_backfill_archive_attachment_flags(): void
+{
+    $version = '2026-05-10-archive-attachment-protection-1';
+    $stored = (string) get_option('iss_wf_import_archive_attachment_backfill_version', '');
+    if ($stored === $version) {
+        return;
+    }
+
+    global $wpdb;
+
+    $attachment_ids = $wpdb->get_col($wpdb->prepare(
+        "SELECT a.ID
+        FROM {$wpdb->posts} a
+        INNER JOIN {$wpdb->posts} p ON p.ID = a.post_parent
+        WHERE a.post_type = %s
+          AND p.post_type = %s",
+        'attachment',
+        ISS_WF_IMPORT_OBJECT_POST_TYPE
+    ));
+
+    foreach ((array) $attachment_ids as $attachment_id) {
+        iss_wf_import_mark_attachment_as_archive_owned((int) $attachment_id);
+    }
+
+    $object_ids = get_posts([
+        'post_type' => ISS_WF_IMPORT_OBJECT_POST_TYPE,
+        'post_status' => 'publish',
+        'posts_per_page' => -1,
+        'fields' => 'ids',
+        'meta_query' => [
+            [
+                'key' => ISS_WF_IMPORT_OBJECT_PRIMARY_ATTACHMENT_META,
+                'compare' => 'EXISTS',
+            ],
+        ],
+        'no_found_rows' => true,
+    ]);
+
+    foreach ($object_ids as $object_id) {
+        $attachment_id = (int) get_post_meta((int) $object_id, ISS_WF_IMPORT_OBJECT_PRIMARY_ATTACHMENT_META, true);
+        if ($attachment_id > 0) {
+            iss_wf_import_mark_attachment_as_archive_owned($attachment_id, (int) $object_id);
+        }
+    }
+
+    update_option('iss_wf_import_archive_attachment_backfill_version', $version, false);
+}
+add_action('init', 'iss_wf_import_backfill_archive_attachment_flags', 100);
+
+function iss_wf_import_skip_archive_owned_webp_attachment_paths(array $paths, int $attachment_id): array
+{
+    if (iss_wf_import_is_archive_owned_attachment($attachment_id)) {
+        return [];
+    }
+
+    return $paths;
+}
+add_filter('webpc_attachment_paths', 'iss_wf_import_skip_archive_owned_webp_attachment_paths', 10, 2);

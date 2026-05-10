@@ -1456,7 +1456,7 @@ function iss_wf_import_md_download_image(string $url, int $post_id, string $titl
         return $attachment_id;
     }
 
-    update_post_meta($attachment_id, ISS_WF_IMPORT_ATTACHMENT_SOURCE_URL_META, esc_url_raw($url));
+    iss_wf_import_mark_attachment_as_archive_owned((int) $attachment_id, $post_id, $url);
 
     return (int) $attachment_id;
 }

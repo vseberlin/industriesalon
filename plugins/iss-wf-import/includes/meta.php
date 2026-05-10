@@ -403,6 +403,10 @@ function iss_wf_import_sanitize_archive_relations($value): array
 
 function iss_wf_import_register_post_meta(): void
 {
+    iss_wf_import_register_integer_meta('attachment', ISS_WF_IMPORT_ATTACHMENT_OWNER_OBJECT_META, false);
+    iss_wf_import_register_string_meta('attachment', ISS_WF_IMPORT_ATTACHMENT_ARCHIVE_OWNED_META, false);
+    iss_wf_import_register_url_meta('attachment', ISS_WF_IMPORT_ATTACHMENT_SOURCE_URL_META, false);
+
     $archive_post_types = [
         ISS_WF_IMPORT_POST_TYPE,
         ISS_WF_IMPORT_COLLECTION_POST_TYPE,
