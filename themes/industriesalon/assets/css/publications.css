@@ -660,8 +660,36 @@ body.iss-publication-layout-longread .iss-publication-order-panel {
   gap: clamp(1.75rem, 3vw, 2.5rem);
 }
 
+.iss-publication-essay__lead {
+  display: grid;
+  grid-template-columns: minmax(0, 0.86fr) minmax(20rem, 1fr);
+  gap: clamp(1.5rem, 3vw, 3rem);
+  align-items: start;
+}
+
 .iss-publication-essay__intro {
   max-width: 54rem;
+}
+
+.iss-publication-essay__map {
+  align-self: start;
+}
+
+.iss-publication-essay__map .iss-container {
+  max-width: none;
+  padding-inline: 0;
+}
+
+.iss-publication-essay__map .iss-related-place-map__shell {
+  gap: 1rem;
+}
+
+.iss-publication-essay__map .iss-related-place-map__intro {
+  display: none;
+}
+
+.iss-publication-essay__map .iss-related-place-map__body {
+  gap: 0.85rem;
 }
 
 .iss-publication-essay__summary {
@@ -1316,6 +1344,7 @@ body.iss-publication-layout-timeline .iss-publication-order-panel {
     max-width: none;
   }
 
+  .iss-publication-essay__lead,
   .iss-publication-essay__summary,
   .iss-publication-chapter {
     grid-template-columns: 1fr;

@@ -636,6 +636,50 @@ function iss_publications_longread_get_inner_html(DOMNode $node): string
     return $html;
 }
 
+function iss_publications_replace_inline_css_var(string $html, string $variable, string $value): string
+{
+    if ($html === '' || $variable === '' || $value === '') {
+        return $html;
+    }
+
+    $pattern = '/(' . preg_quote($variable, '/') . '\s*:\s*)([^;"]+)/';
+
+    if (!preg_match($pattern, $html)) {
+        return $html;
+    }
+
+    return (string) preg_replace_callback(
+        $pattern,
+        static function (array $matches) use ($value): string {
+            return (string) ($matches[1] ?? '') . $value;
+        },
+        $html,
+        1
+    );
+}
+
+function iss_publications_transform_essay_map_html(string $html): string
+{
+    $html = trim($html);
+    if ($html === '' || strpos($html, 'iss-related-place-map') === false) {
+        return $html;
+    }
+
+    $html = preg_replace(
+        '/iss-related-place-map(\s+)wp-block-iss-related-place-map/',
+        'iss-related-place-map iss-related-place-map--essay$1wp-block-iss-related-place-map',
+        $html,
+        1
+    );
+    $html = str_replace('iss-related-place-map__body--panel-right', 'iss-related-place-map__body--panel-below', $html);
+    $html = iss_publications_replace_inline_css_var($html, '--iss-related-place-map-scale-x', '2.8000');
+    $html = iss_publications_replace_inline_css_var($html, '--iss-related-place-map-scale-y', '2.4500');
+    $html = iss_publications_replace_inline_css_var($html, '--iss-related-place-map-offset-x', '-106.710%');
+    $html = iss_publications_replace_inline_css_var($html, '--iss-related-place-map-offset-y', '-74.308%');
+
+    return $html;
+}
+
 function iss_publications_is_chaptered_longread(int $post_id): bool
 {
     $post_id = (int) $post_id;
@@ -680,6 +724,7 @@ function iss_publications_transform_longread_content(int $post_id, string $conte
     $nav_node = null;
     $sections = [];
     $current_section = null;
+    $lead_map_html = '';
     $subheading_count = 0;
 
     foreach ($root->childNodes as $child) {
@@ -739,6 +784,22 @@ function iss_publications_transform_longread_content(int $post_id, string $conte
         return $content;
     }
 
+    foreach ($sections as $section_index => $section) {
+        $body = is_array($section['body'] ?? null) ? $section['body'] : [];
+        foreach ($body as $body_index => $body_html) {
+            if ($lead_map_html !== '' || strpos((string) $body_html, 'iss-related-place-map') === false) {
+                continue;
+            }
+
+            $lead_map_html = iss_publications_transform_essay_map_html((string) $body_html);
+            unset($body[$body_index]);
+            $sections[$section_index]['body'] = array_values(array_filter($body, static function ($item): bool {
+                return trim((string) $item) !== '';
+            }));
+            break 2;
+        }
+    }
+
     $topic_names = iss_publications_get_shared_topic_names($post_id);
     $summary = [
         [
@@ -784,7 +845,14 @@ function iss_publications_transform_longread_content(int $post_id, string $conte
 
     $intro_html = '';
     if (!empty($intro_nodes)) {
-        $intro_html = '<div class="iss-publication-essay__intro">' . implode('', $intro_nodes) . '</div>';
+        $intro_copy = '<div class="iss-publication-essay__intro">' . implode('', $intro_nodes) . '</div>';
+        if ($lead_map_html !== '') {
+            $intro_html = '<div class="iss-publication-essay__lead">' . $intro_copy . '<div class="iss-publication-essay__map">' . $lead_map_html . '</div></div>';
+        } else {
+            $intro_html = $intro_copy;
+        }
+    } elseif ($lead_map_html !== '') {
+        $intro_html = '<div class="iss-publication-essay__lead"><div class="iss-publication-essay__map">' . $lead_map_html . '</div></div>';
     }
 
     $summary_html = '<div class="iss-publication-essay__summary" aria-label="' . esc_attr__('Rahmendaten', 'iss-publications') . '">';
