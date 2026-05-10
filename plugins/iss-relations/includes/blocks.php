@@ -413,8 +413,14 @@ function iss_relations_get_place_map_presets(): array
             'image_url' => '',
             'markers_path' => '',
             'image_alt' => __('Übersichtskarte des Schöneweide-Atlas.', 'iss-relations'),
-            'width' => 2400,
-            'height' => 1313,
+            'width' => 4096,
+            'height' => 2389,
+            'viewport' => [
+                'scale_x' => 1,
+                'scale_y' => 1,
+                'offset_x' => 0,
+                'offset_y' => 0,
+            ],
         ],
     ];
     $presets = apply_filters('iss_relations_place_map_presets', $fallback);
@@ -438,6 +444,12 @@ function iss_relations_get_place_map_presets(): array
 
         $width = max(1, absint($preset_config['width'] ?? 2400));
         $height = max(1, absint($preset_config['height'] ?? 1313));
+        $viewport = is_array($preset_config['viewport'] ?? null) ? $preset_config['viewport'] : [];
+        $scale = isset($viewport['scale']) && is_numeric($viewport['scale']) ? (float) $viewport['scale'] : 1.0;
+        $scale_x = isset($viewport['scale_x']) && is_numeric($viewport['scale_x']) ? (float) $viewport['scale_x'] : $scale;
+        $scale_y = isset($viewport['scale_y']) && is_numeric($viewport['scale_y']) ? (float) $viewport['scale_y'] : $scale;
+        $offset_x = isset($viewport['offset_x']) && is_numeric($viewport['offset_x']) ? (float) $viewport['offset_x'] : 0.0;
+        $offset_y = isset($viewport['offset_y']) && is_numeric($viewport['offset_y']) ? (float) $viewport['offset_y'] : 0.0;
 
         $normalized[$preset] = [
             'label' => trim((string) ($preset_config['label'] ?? $preset)),
@@ -446,6 +458,12 @@ function iss_relations_get_place_map_presets(): array
             'image_alt' => isset($preset_config['image_alt']) ? (string) $preset_config['image_alt'] : __('Übersichtskarte des Schöneweide-Atlas.', 'iss-relations'),
             'width' => $width,
             'height' => $height,
+            'viewport' => [
+                'scale_x' => $scale_x > 0 ? $scale_x : 1.0,
+                'scale_y' => $scale_y > 0 ? $scale_y : 1.0,
+                'offset_x' => $offset_x,
+                'offset_y' => $offset_y,
+            ],
         ];
     }
 
@@ -490,8 +508,14 @@ function iss_relations_get_place_map_config(string $preset = 'default'): array
         'image_url' => '',
         'markers_path' => '',
         'image_alt' => __('Übersichtskarte des Schöneweide-Atlas.', 'iss-relations'),
-        'width' => 2400,
-        'height' => 1313,
+        'width' => 4096,
+        'height' => 2389,
+        'viewport' => [
+            'scale_x' => 1,
+            'scale_y' => 1,
+            'offset_x' => 0,
+            'offset_y' => 0,
+        ],
     ];
 }
 
@@ -575,6 +599,7 @@ function iss_relations_get_place_map_marker_lookup(string $markers_path): array
         }
 
         $place_id = isset($item['id']) ? (string) $item['id'] : '';
+        $post_id = isset($item['post_id']) ? (string) $item['post_id'] : '';
         $name = sanitize_title((string) ($item['name'] ?? ''));
         $lat = isset($item['lat']) && is_numeric($item['lat']) ? (float) $item['lat'] : null;
         $lng = isset($item['lng']) && is_numeric($item['lng']) ? (float) $item['lng'] : null;
@@ -592,6 +617,10 @@ function iss_relations_get_place_map_marker_lookup(string $markers_path): array
 
         if ($place_id !== '') {
             $lookup['by_id'][$place_id] = $position;
+        }
+
+        if ($post_id !== '') {
+            $lookup['by_id'][$post_id] = $position;
         }
 
         if ($name !== '') {
@@ -788,30 +817,49 @@ function iss_relations_render_place_map_stage(array $places, array $config): str
     }
 
     $markers = '';
-    $ratio_style = '';
+    $stage_styles = [];
 
     if (!empty($config['width']) && !empty($config['height'])) {
-        $ratio_style = ' style="--iss-related-place-map-ratio:' . esc_attr((int) $config['width']) . ' / ' . esc_attr((int) $config['height']) . ';"';
+        $stage_styles[] = '--iss-related-place-map-ratio:' . (int) $config['width'] . ' / ' . (int) $config['height'];
+    }
+
+    $viewport = is_array($config['viewport'] ?? null) ? $config['viewport'] : [];
+    $scale = isset($viewport['scale']) && is_numeric($viewport['scale']) ? (float) $viewport['scale'] : 1.0;
+    $scale_x = isset($viewport['scale_x']) && is_numeric($viewport['scale_x']) ? (float) $viewport['scale_x'] : $scale;
+    $scale_y = isset($viewport['scale_y']) && is_numeric($viewport['scale_y']) ? (float) $viewport['scale_y'] : $scale;
+    $offset_x = isset($viewport['offset_x']) && is_numeric($viewport['offset_x']) ? (float) $viewport['offset_x'] : 0.0;
+    $offset_y = isset($viewport['offset_y']) && is_numeric($viewport['offset_y']) ? (float) $viewport['offset_y'] : 0.0;
+
+    $stage_styles[] = '--iss-related-place-map-scale-x:' . number_format($scale_x > 0 ? $scale_x : 1.0, 4, '.', '');
+    $stage_styles[] = '--iss-related-place-map-scale-y:' . number_format($scale_y > 0 ? $scale_y : 1.0, 4, '.', '');
+    $stage_styles[] = '--iss-related-place-map-offset-x:' . number_format($offset_x, 3, '.', '') . '%';
+    $stage_styles[] = '--iss-related-place-map-offset-y:' . number_format($offset_y, 3, '.', '') . '%';
+
+    $stage_attr = '';
+    if ($stage_styles) {
+        $stage_attr = ' style="' . esc_attr(implode(';', $stage_styles)) . '"';
     }
 
     foreach ($mapped_places as $item) {
         $index = (int) $item['index'];
         $place = $item['place'];
         $position = $item['position'];
+        $marker_x = ((float) $position['x'] * ($scale_x > 0 ? $scale_x : 1.0)) + $offset_x;
+        $marker_y = ((float) $position['y'] * ($scale_y > 0 ? $scale_y : 1.0)) + $offset_y;
         $label = trim((string) ($place['label'] ?? ''));
         $marker_label = $label !== '' ? ($label . ': ' . $place['title']) : $place['title'];
 
         $markers .= sprintf(
             '<a class="iss-related-place-map__marker" href="%1$s" style="--x:%2$s%%;--y:%3$s%%" aria-label="%4$s"><span class="iss-related-place-map__marker-dot" aria-hidden="true"></span><span class="iss-related-place-map__marker-label">%5$s</span></a>',
             esc_url((string) ($place['permalink'] ?? '')),
-            esc_attr(number_format((float) $position['x'], 3, '.', '')),
-            esc_attr(number_format((float) $position['y'], 3, '.', '')),
+            esc_attr(number_format($marker_x, 3, '.', '')),
+            esc_attr(number_format($marker_y, 3, '.', '')),
             esc_attr($marker_label),
             esc_html((string) ($index + 1))
         );
     }
 
-    return '<div class="iss-related-place-map__stage"' . $ratio_style . '><img class="iss-related-place-map__image" src="' . esc_url($image_url) . '" alt="' . esc_attr($image_alt) . '" loading="lazy" decoding="async"><div class="iss-related-place-map__markers">' . $markers . '</div></div>';
+    return '<div class="iss-related-place-map__stage"' . $stage_attr . '><div class="iss-related-place-map__viewport"><img class="iss-related-place-map__image" src="' . esc_url($image_url) . '" alt="' . esc_attr($image_alt) . '" loading="lazy" decoding="async"></div><div class="iss-related-place-map__markers">' . $markers . '</div></div>';
 }
 
 function iss_relations_render_place_map_panel(array $places): string

@@ -6945,20 +6945,39 @@ Raum / Vermietung → brown
 }
 
 .iss-related-place-map__stage {
+  position: relative;
   overflow: hidden;
   aspect-ratio: var(--iss-related-place-map-ratio, 2400 / 1313);
   background: rgba(239, 233, 223, 1);
 }
 
+.iss-related-place-map__viewport {
+  position: absolute;
+  inset: 0;
+  transform-origin: top left;
+  transform:
+    translate(
+      var(--iss-related-place-map-offset-x, 0),
+      var(--iss-related-place-map-offset-y, 0)
+    )
+    scale(
+      var(--iss-related-place-map-scale-x, 1),
+      var(--iss-related-place-map-scale-y, 1)
+    );
+}
+
 .iss-related-place-map__image {
+  position: absolute;
+  inset: 0;
   display: block;
   width: 100%;
-  height: auto;
+  height: 100%;
 }
 
 .iss-related-place-map__markers {
   position: absolute;
   inset: 0;
+  pointer-events: none;
 }
 
 .iss-related-place-map__marker {
@@ -6972,6 +6991,7 @@ Raum / Vermietung → brown
   width: 2rem;
   height: 2rem;
   transform: translate(-50%, -50%);
+  pointer-events: auto;
   text-decoration: none;
 }
 

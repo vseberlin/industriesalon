@@ -52,17 +52,29 @@ add_filter('iss_relations_place_map_presets', function (array $presets): array {
     $variants = [
         'default' => [
             'label' => __('Atlas Übersicht', 'industriesalon'),
-            'map' => '/assets/maps/schoeneweide-static-map.png',
-            'markers' => '/assets/maps/schoeneweide-static-markers.json',
-            'width' => 2400,
-            'height' => 1313,
+            'map' => '/assets/maps/schoneweide-static-map-big-industrial-v3.png',
+            'markers' => '/assets/maps/schoneweide-static-markers-new.json',
+            'width' => 4096,
+            'height' => 2389,
+            'viewport' => [
+                'scale_x' => 1,
+                'scale_y' => 1,
+                'offset_x' => 0,
+                'offset_y' => 0,
+            ],
         ],
         'front-page' => [
             'label' => __('Frontpage Fokus', 'industriesalon'),
-            'map' => '/assets/maps/schoeneweide-front-page-map.png',
-            'markers' => '/assets/maps/schoeneweide-front-page-markers.json',
-            'width' => 2400,
-            'height' => 1313,
+            'map' => '/assets/maps/schoneweide-static-map-big-industrial-v3.png',
+            'markers' => '/assets/maps/schoneweide-static-markers-new.json',
+            'width' => 4096,
+            'height' => 2389,
+            'viewport' => [
+                'scale_x' => 2.507,
+                'scale_y' => 2.676,
+                'offset_x' => -68.411,
+                'offset_y' => -77.398,
+            ],
         ],
     ];
     $theme_dir = get_stylesheet_directory();
@@ -86,6 +98,7 @@ add_filter('iss_relations_place_map_presets', function (array $presets): array {
             'image_alt' => __('Übersichtskarte des Schöneweide-Atlas.', 'industriesalon'),
             'width' => max(1, absint($variant['width'] ?? 2400)),
             'height' => max(1, absint($variant['height'] ?? 1313)),
+            'viewport' => is_array($variant['viewport'] ?? null) ? $variant['viewport'] : [],
         ];
     }
 
