@@ -44,6 +44,42 @@ function iss_publications_get_type_label($post_id) {
     return $term instanceof WP_Term ? $term->name : '';
 }
 
+function iss_publications_get_shared_topic_taxonomy(): string
+{
+    if (defined('ISS_CONTENT_MODEL_TOPIC_TAXONOMY')) {
+        return (string) ISS_CONTENT_MODEL_TOPIC_TAXONOMY;
+    }
+
+    return 'iss_topic';
+}
+
+function iss_publications_get_shared_topic_names($post_id): array
+{
+    $taxonomy = iss_publications_get_shared_topic_taxonomy();
+    if (!taxonomy_exists($taxonomy)) {
+        return [];
+    }
+
+    $terms = get_the_terms((int) $post_id, $taxonomy);
+    if (!is_array($terms) || empty($terms)) {
+        return [];
+    }
+
+    $names = [];
+    foreach ($terms as $term) {
+        if (!$term instanceof WP_Term) {
+            continue;
+        }
+
+        $name = trim((string) $term->name);
+        if ($name !== '') {
+            $names[] = $name;
+        }
+    }
+
+    return array_values(array_unique($names));
+}
+
 function iss_publications_get_year_label($post_id) {
     return trim((string) iss_publications_get_meta($post_id, '_iss_publication_year', ''));
 }
@@ -106,11 +142,22 @@ function iss_publications_get_summary_meta($post_id) {
         }
     }
 
+    $topic_names = iss_publications_get_shared_topic_names($post_id);
+    if (!empty($topic_names)) {
+        $rows[__('Thema', 'iss-publications')] = implode(', ', $topic_names);
+    }
+
     return $rows;
 }
 
 function iss_publications_get_archive_tax_query() {
-    if (!is_tax(['publication_type', 'publication_topic'])) {
+    $supported_taxonomies = ['publication_type', 'publication_topic'];
+    $shared_topic_taxonomy = iss_publications_get_shared_topic_taxonomy();
+    if (taxonomy_exists($shared_topic_taxonomy)) {
+        $supported_taxonomies[] = $shared_topic_taxonomy;
+    }
+
+    if (!is_tax($supported_taxonomies)) {
         return [];
     }
 

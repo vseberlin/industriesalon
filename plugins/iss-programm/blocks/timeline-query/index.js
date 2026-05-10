@@ -160,6 +160,8 @@
       const taxonomyPresetRules = normalizeRuleList(attrs.taxonomyPresetRules || []);
       const taxonomyUiRules = normalizeRuleList(attrs.taxonomyUiRules || []);
       const presetButtons = normalizePresetButtons(attrs.presetButtons || []);
+      const showItemTypeFilter =
+        typeof attrs.showItemTypeFilter === 'boolean' ? attrs.showItemTypeFilter : attrs.showTypeFilter !== false;
       const defaultTypeOptions = [{ label: 'Alle', value: 'all' }].concat(
         typeChoices
           .filter(function (choice) {
@@ -194,7 +196,7 @@
       });
       if (Array.isArray(presetTypeCheckboxes)) {
         presetControls.push(
-          el('p', { key: 'presetTypeLabel' }, 'Fixed item types (used when no visible type filter selection overrides them).')
+          el('p', { key: 'presetTypeLabel' }, 'Fixed content families (used when no visible Inhaltstyp filter selection overrides them).')
         );
         presetControls.push.apply(presetControls, presetTypeCheckboxes);
       }
@@ -360,7 +362,7 @@
                 TextControl
                   && SelectControl
                   ? el(SelectControl, {
-                      label: 'Default type',
+                      label: 'Default Inhaltstyp',
                       value: attrs.defaultType || 'all',
                       options: defaultTypeOptions,
                       onChange: function (v) {
@@ -392,10 +394,10 @@
                   : null,
                 ToggleControl
                   ? el(ToggleControl, {
-                      label: 'Show type filter',
-                      checked: attrs.showTypeFilter !== false,
+                      label: 'Show Inhaltstyp filter',
+                      checked: showItemTypeFilter,
                       onChange: function (v) {
-                        setAttributes({ showTypeFilter: !!v });
+                        setAttributes({ showItemTypeFilter: !!v, showTypeFilter: !!v });
                       },
                     })
                   : null,

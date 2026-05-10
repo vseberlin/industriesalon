@@ -916,52 +916,69 @@ function iss_timeline_get_taxonomy_ui_rules_from_attributes($attributes = []) {
     $attributes = is_array($attributes) ? $attributes : [];
 
     if (!empty($attributes['taxonomyUiRules']) && is_array($attributes['taxonomyUiRules'])) {
-        $rules = iss_timeline_normalize_taxonomy_rule_list($attributes['taxonomyUiRules']);
-        if (!empty($rules)) {
-            $ui_rules = [];
-            foreach ($rules as $rule) {
-                $taxonomy = $rule['taxonomy'];
-                $term_query = [
-                    'taxonomy' => $taxonomy,
-                    'hide_empty' => false,
-                    'slug' => $rule['terms'],
-                ];
-                $terms = get_terms($term_query);
-                if (is_wp_error($terms) || empty($terms)) {
+        $ui_rules = [];
+        foreach ($attributes['taxonomyUiRules'] as $rule) {
+            if (!is_array($rule)) {
+                continue;
+            }
+
+            $taxonomy = sanitize_key((string) ($rule['taxonomy'] ?? ''));
+            if ($taxonomy === '' || !taxonomy_exists($taxonomy)) {
+                continue;
+            }
+
+            $terms = $rule['terms'] ?? [];
+            if (!is_array($terms)) {
+                $terms = preg_split('/[\r\n,]+/', (string) $terms);
+            }
+            $terms = array_values(array_unique(array_filter(array_map('sanitize_title', $terms))));
+
+            $term_query = [
+                'taxonomy' => $taxonomy,
+                'hide_empty' => false,
+            ];
+            if (!empty($terms)) {
+                $term_query['slug'] = $terms;
+            }
+
+            $term_records = get_terms($term_query);
+            if (is_wp_error($term_records) || empty($term_records)) {
+                continue;
+            }
+
+            $taxonomy_obj = get_taxonomy($taxonomy);
+            $label = isset($rule['label']) ? sanitize_text_field((string) $rule['label']) : '';
+            if ($label === '') {
+                $label = ($taxonomy_obj && !empty($taxonomy_obj->labels->singular_name))
+                    ? (string) $taxonomy_obj->labels->singular_name
+                    : ucfirst($taxonomy);
+            }
+
+            $options = [[
+                'value' => '',
+                'label' => __('Alle', 'iss-timeline'),
+            ]];
+            foreach ($term_records as $term) {
+                if (!$term instanceof WP_Term) {
                     continue;
                 }
-
-                $taxonomy_obj = get_taxonomy($taxonomy);
-                $label = $rule['label'] !== ''
-                    ? $rule['label']
-                    : (($taxonomy_obj && !empty($taxonomy_obj->labels->singular_name)) ? (string) $taxonomy_obj->labels->singular_name : ucfirst($taxonomy));
-
-                $options = [[
-                    'value' => '',
-                    'label' => __('Alle', 'iss-timeline'),
-                ]];
-                foreach ($terms as $term) {
-                    if (!$term instanceof WP_Term) {
-                        continue;
-                    }
-                    $options[] = [
-                        'value' => (string) $term->slug,
-                        'label' => (string) $term->name,
-                    ];
-                }
-
-                if (count($options) > 1) {
-                    $ui_rules[] = [
-                        'taxonomy' => $taxonomy,
-                        'label' => $label,
-                        'options' => $options,
-                    ];
-                }
+                $options[] = [
+                    'value' => (string) $term->slug,
+                    'label' => (string) $term->name,
+                ];
             }
 
-            if (!empty($ui_rules)) {
-                return $ui_rules;
+            if (count($options) > 1) {
+                $ui_rules[] = [
+                    'taxonomy' => $taxonomy,
+                    'label' => $label,
+                    'options' => $options,
+                ];
             }
+        }
+
+        if (!empty($ui_rules)) {
+            return $ui_rules;
         }
     }
 
@@ -1287,7 +1304,9 @@ function iss_timeline_build_query_block_config($attributes = []) {
         ],
         'ui' => [
             'showTimeModeFilter' => !empty($attributes['showTimeModeFilter']),
-            'showTypeFilter' => !empty($attributes['showTypeFilter']),
+            'showTypeFilter' => array_key_exists('showItemTypeFilter', $attributes)
+                ? !empty($attributes['showItemTypeFilter'])
+                : !empty($attributes['showTypeFilter']),
             'showPostTypeFilter' => !empty($attributes['showPostTypeFilter']),
             'showMonthFilter' => !empty($attributes['showMonthFilter']),
             'showCalendarBridge' => !empty($attributes['showCalendarBridge']),
@@ -1375,7 +1394,7 @@ function iss_timeline_render_query_block($attributes = [], $content = '', $block
             $out .= iss_timeline_render_choice_filter([
                 'name' => 'item_type',
                 'filter_key' => 'item_type',
-                'label' => __('Typ', 'iss-timeline'),
+                'label' => __('Inhaltstyp', 'iss-timeline'),
                 'selected' => (string) ($config['filters']['item_type'] ?? 'all'),
                 'options' => is_array($config['ui']['typeOptions']) ? $config['ui']['typeOptions'] : [],
                 'className' => 'iss-timeline__filter--type',
@@ -1393,7 +1412,7 @@ function iss_timeline_render_query_block($attributes = [], $content = '', $block
         }
 
         if (!empty($config['ui']['showPostTypeFilter']) && !empty($config['ui']['postTypeOptions']) && is_array($config['ui']['postTypeOptions'])) {
-            $out .= '<label class="iss-timeline__filter"><span class="iss-timeline__filter-label">' . esc_html__('Inhaltstyp', 'iss-timeline') . '</span>';
+            $out .= '<label class="iss-timeline__filter"><span class="iss-timeline__filter-label">' . esc_html__('Post-Typ', 'iss-timeline') . '</span>';
             $out .= '<select name="post_type" data-filter-key="post_type">';
             foreach ($config['ui']['postTypeOptions'] as $option) {
                 if (!is_array($option)) {

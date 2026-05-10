@@ -175,6 +175,9 @@ function iss_content_model_get_meta_rows_for_post($post_id) {
     $post_id = (int) $post_id;
     $post_type = (string) get_post_type($post_id);
     $rows = [];
+    $topic_terms = taxonomy_exists(ISS_CONTENT_MODEL_TOPIC_TAXONOMY)
+        ? iss_content_model_get_term_name_list($post_id, ISS_CONTENT_MODEL_TOPIC_TAXONOMY)
+        : [];
     $related_places = function_exists('iss_relations_get_related_place_items')
         ? iss_relations_get_related_place_items($post_id)
         : [];
@@ -206,6 +209,9 @@ function iss_content_model_get_meta_rows_for_post($post_id) {
         } elseif (count($related_places) === 1 && $related_links !== '') {
             $rows[] = ['label' => __('Ort', 'iss-content-model'), 'value' => $related_links, 'html' => true];
         }
+        if (!empty($topic_terms)) {
+            $rows[] = ['label' => __('Thema', 'iss-content-model'), 'value' => implode(', ', $topic_terms)];
+        }
     } elseif ($post_type === ISS_CONTENT_MODEL_AUSSTELLUNG_POST_TYPE) {
         $start = iss_content_model_format_date(get_post_meta($post_id, 'iss_start_date', true));
         $end = iss_content_model_format_date(get_post_meta($post_id, 'iss_end_date', true));
@@ -235,6 +241,10 @@ function iss_content_model_get_meta_rows_for_post($post_id) {
         if (!empty($site_terms)) {
             $rows[] = ['label' => __('Industrieort', 'iss-content-model'), 'value' => implode(', ', $site_terms)];
         }
+
+        if (!empty($topic_terms)) {
+            $rows[] = ['label' => __('Thema', 'iss-content-model'), 'value' => implode(', ', $topic_terms)];
+        }
     } elseif ($post_type === ISS_CONTENT_MODEL_PROJEKT_POST_TYPE) {
         $period = trim((string) get_post_meta($post_id, 'iss_period_label', true));
         $status_terms = get_the_terms($post_id, ISS_CONTENT_MODEL_PROJECT_STATUS_TAXONOMY);
@@ -247,6 +257,9 @@ function iss_content_model_get_meta_rows_for_post($post_id) {
                 'label' => __('Status', 'iss-content-model'),
                 'value' => implode(', ', wp_list_pluck($status_terms, 'name')),
             ];
+        }
+        if (!empty($topic_terms)) {
+            $rows[] = ['label' => __('Thema', 'iss-content-model'), 'value' => implode(', ', $topic_terms)];
         }
     } elseif ($post_type === ISS_CONTENT_MODEL_TEAM_POST_TYPE) {
         $role_label = trim((string) get_post_meta($post_id, 'iss_role_label', true));

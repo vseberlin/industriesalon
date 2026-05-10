@@ -24,6 +24,7 @@ define('ISS_CONTENT_MODEL_PROJECT_STATUS_TAXONOMY', 'project_status');
 define('ISS_CONTENT_MODEL_AUSSTELLUNG_TYPE_TAXONOMY', 'ausstellung_typ');
 define('ISS_CONTENT_MODEL_COLLECTION_AREA_TAXONOMY', 'sammlungsbereich');
 define('ISS_CONTENT_MODEL_INDUSTRY_SITE_TAXONOMY', 'industrieort');
+define('ISS_CONTENT_MODEL_TOPIC_TAXONOMY', 'iss_topic');
 define('ISS_CONTENT_MODEL_VIDEO_CATEGORY_TAXONOMY', 'video_kategorie');
 
 function iss_content_model_landing_route_map() {

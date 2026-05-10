@@ -166,6 +166,24 @@ function iss_content_model_register_post_types() {
         'rewrite' => ['slug' => 'industrieort', 'with_front' => false],
     ]);
 
+    register_taxonomy(ISS_CONTENT_MODEL_TOPIC_TAXONOMY, [
+        'post',
+        ISS_CONTENT_MODEL_VERANSTALTUNG_POST_TYPE,
+        ISS_CONTENT_MODEL_AUSSTELLUNG_POST_TYPE,
+        ISS_CONTENT_MODEL_PROJEKT_POST_TYPE,
+    ], [
+        'labels' => [
+            'name' => __('Themen', 'iss-content-model'),
+            'singular_name' => __('Thema', 'iss-content-model'),
+            'menu_name' => __('Themen', 'iss-content-model'),
+        ],
+        'public' => true,
+        'hierarchical' => true,
+        'show_admin_column' => true,
+        'show_in_rest' => true,
+        'rewrite' => ['slug' => 'thema', 'with_front' => false],
+    ]);
+
     register_taxonomy(ISS_CONTENT_MODEL_VIDEO_CATEGORY_TAXONOMY, [ISS_CONTENT_MODEL_VIDEO_POST_TYPE], [
         'labels' => [
             'name' => __('Videokategorien', 'iss-content-model'),
@@ -180,6 +198,22 @@ function iss_content_model_register_post_types() {
     ]);
 }
 add_action('init', 'iss_content_model_register_post_types');
+
+function iss_content_model_attach_shared_topic_taxonomy(): void
+{
+    if (!taxonomy_exists(ISS_CONTENT_MODEL_TOPIC_TAXONOMY)) {
+        return;
+    }
+
+    foreach (['publication'] as $post_type) {
+        if (!post_type_exists($post_type)) {
+            continue;
+        }
+
+        register_taxonomy_for_object_type(ISS_CONTENT_MODEL_TOPIC_TAXONOMY, $post_type);
+    }
+}
+add_action('init', 'iss_content_model_attach_shared_topic_taxonomy', 20);
 
 function iss_content_model_get_default_taxonomy_terms() {
     return [
