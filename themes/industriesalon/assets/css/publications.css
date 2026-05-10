@@ -654,6 +654,104 @@ body.iss-publication-layout-longread .iss-publication-order-panel {
   border-color: rgba(162, 128, 97, 0.32);
 }
 
+body.iss-publication-kind-album .iss-publication-single__body-wrap {
+  margin-top: clamp(2rem, 4vw, 3.25rem);
+}
+
+body.iss-publication-kind-album .iss-publication-single__body {
+  max-width: none;
+  margin-left: 0;
+  margin-right: 0;
+}
+
+/* Album edition mode: scanned page sequences presented as a facsimile grid rather than essay flow. */
+.iss-publication-album {
+  display: grid;
+  gap: clamp(1.6rem, 3vw, 2.4rem);
+}
+
+.iss-publication-album__intro {
+  max-width: 52rem;
+}
+
+.iss-publication-album__summary {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 1px;
+  border: 1px solid rgba(30, 30, 30, 0.12);
+  background: rgba(30, 30, 30, 0.12);
+}
+
+.iss-publication-album__summary-item {
+  display: grid;
+  gap: 0.35rem;
+  margin: 0;
+  padding: 1rem;
+  background: var(--iss-white);
+}
+
+.iss-publication-album__summary-item strong {
+  font-size: clamp(1.2rem, 1rem + 0.6vw, 1.8rem);
+  line-height: 1;
+}
+
+.iss-publication-album__summary-item span {
+  color: rgba(30, 30, 30, 0.64);
+  font-size: 0.9rem;
+}
+
+.iss-publication-album__source {
+  max-width: 56rem;
+}
+
+.iss-publication-album__body {
+  display: grid;
+  gap: clamp(1.5rem, 3vw, 2rem);
+}
+
+.iss-publication-album__head {
+  max-width: 44rem;
+}
+
+.iss-publication-album__grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: clamp(1rem, 2vw, 1.5rem);
+}
+
+.iss-publication-album__sheet {
+  display: grid;
+  gap: 0.7rem;
+  margin: 0;
+  padding: clamp(0.9rem, 2vw, 1.15rem);
+  border: 1px solid rgba(30, 30, 30, 0.1);
+  border-radius: var(--iss-radius-lg);
+  background: rgba(249, 249, 250, 0.88);
+}
+
+.iss-publication-album__sheet-label {
+  margin: 0;
+}
+
+.iss-publication-album__sheet .wp-block-image {
+  margin: 0;
+}
+
+.iss-publication-album__sheet img {
+  display: block;
+  width: 100%;
+  height: auto;
+  border-radius: var(--iss-radius-md);
+  background: var(--iss-white);
+  box-shadow: 0 14px 34px rgba(0, 0, 0, 0.08);
+}
+
+.iss-publication-album__sheet figcaption {
+  color: rgba(30, 30, 30, 0.68);
+  font-size: 0.92rem;
+  line-height: 1.6;
+}
+
 /* Chaptered essay mode: place-history longreads with section rail and sticky chapter navigation. */
 .iss-publication-essay {
   display: grid;
@@ -743,6 +841,45 @@ body.iss-publication-layout-longread .iss-publication-order-panel {
   font-size: 0.9rem;
   font-weight: 600;
   text-decoration: none;
+}
+
+.iss-publication-essay__atlas {
+  display: grid;
+  gap: clamp(1.25rem, 2.4vw, 1.75rem);
+  padding: clamp(1.4rem, 3vw, 2rem);
+  border: 1px solid rgba(30, 30, 30, 0.1);
+  border-radius: var(--iss-radius-lg);
+  background: linear-gradient(180deg, rgba(249, 249, 250, 0.92), rgba(255, 255, 255, 0.96));
+}
+
+.iss-publication-essay__atlas-intro {
+  max-width: 48rem;
+}
+
+.iss-publication-essay__atlas-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 1rem;
+}
+
+.iss-publication-essay__atlas-card {
+  display: grid;
+  gap: 0.7rem;
+  padding: 1rem 1.05rem 1.15rem;
+  border: 1px solid rgba(30, 30, 30, 0.08);
+  border-radius: var(--iss-radius-md);
+  background: rgba(255, 255, 255, 0.92);
+}
+
+.iss-publication-essay__atlas-title {
+  margin: 0;
+  font-size: clamp(1.15rem, 1.04rem + 0.34vw, 1.4rem);
+  line-height: 1.2;
+}
+
+.iss-publication-essay__atlas-text,
+.iss-publication-essay__atlas-links {
+  margin: 0;
 }
 
 .iss-publication-essay__chapters {
@@ -1344,8 +1481,14 @@ body.iss-publication-layout-timeline .iss-publication-order-panel {
     max-width: none;
   }
 
+  .iss-publication-album__summary,
+  .iss-publication-album__grid {
+    grid-template-columns: 1fr;
+  }
+
   .iss-publication-essay__lead,
   .iss-publication-essay__summary,
+  .iss-publication-essay__atlas-grid,
   .iss-publication-chapter {
     grid-template-columns: 1fr;
   }

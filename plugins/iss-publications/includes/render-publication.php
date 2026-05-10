@@ -458,6 +458,10 @@ add_filter('the_content', function ($content) {
         return iss_publications_transform_timeline_content((string) $content);
     }
 
+    if (iss_publications_is_album($post_id)) {
+        return iss_publications_transform_album_content($post_id, (string) $content);
+    }
+
     if (!iss_publications_is_chaptered_longread($post_id)) {
         return $content;
     }
@@ -491,10 +495,65 @@ function iss_publications_get_related_posts($post_id, $limit = 3) {
     return get_posts($args);
 }
 
+function iss_publications_get_image_sequence_profile(int $post_id): array
+{
+    $post = get_post($post_id);
+    if (!$post instanceof WP_Post) {
+        return [
+            'images' => 0,
+            'paragraphs' => 0,
+            'headings' => 0,
+            'lists' => 0,
+        ];
+    }
+
+    $content = (string) $post->post_content;
+    return [
+        'images' => substr_count($content, '<!-- wp:image'),
+        'paragraphs' => substr_count($content, '<!-- wp:paragraph'),
+        'headings' => substr_count($content, '<!-- wp:heading'),
+        'lists' => substr_count($content, '<!-- wp:list'),
+    ];
+}
+
+function iss_publications_is_album(int $post_id): bool
+{
+    $post_id = (int) $post_id;
+    if ($post_id <= 0 || iss_publications_get_layout($post_id) !== 'longread') {
+        return false;
+    }
+
+    $needles = [
+        sanitize_title((string) get_the_title($post_id)),
+        sanitize_title((string) iss_publications_get_meta($post_id, '_iss_publication_subtitle', '')),
+        sanitize_title((string) iss_publications_get_meta($post_id, '_iss_publication_format', '')),
+    ];
+
+    foreach ($needles as $needle) {
+        if ($needle === '') {
+            continue;
+        }
+
+        if (str_contains($needle, 'fotoalbum') || str_contains($needle, 'album') || str_contains($needle, 'betriebsfotoalbum')) {
+            return true;
+        }
+    }
+
+    $profile = iss_publications_get_image_sequence_profile($post_id);
+    return $profile['images'] >= 12
+        && $profile['paragraphs'] <= 5
+        && $profile['headings'] <= 2
+        && $profile['lists'] === 0;
+}
+
 function iss_publications_get_collection_kind($post_id) {
     $post_id = (int) $post_id;
     if ($post_id <= 0) {
         return 'other';
+    }
+
+    if (iss_publications_is_album($post_id)) {
+        return 'album';
     }
 
     $type_terms = get_the_terms($post_id, 'publication_type');
@@ -683,7 +742,7 @@ function iss_publications_transform_essay_map_html(string $html): string
 function iss_publications_is_chaptered_longread(int $post_id): bool
 {
     $post_id = (int) $post_id;
-    if ($post_id <= 0 || iss_publications_get_layout($post_id) !== 'longread') {
+    if ($post_id <= 0 || iss_publications_get_layout($post_id) !== 'longread' || iss_publications_is_album($post_id)) {
         return false;
     }
 
@@ -695,6 +754,202 @@ function iss_publications_is_chaptered_longread(int $post_id): bool
     $content = (string) $post->post_content;
     return strpos($content, '<!-- wp:list -->') !== false
         && strpos($content, '<!-- wp:heading {"level":2') !== false;
+}
+
+function iss_publications_album_get_sheet_label(string $caption_text, int $index): string
+{
+    if (preg_match('/(?:seite|blatt)\s+(\d{1,3})/iu', $caption_text, $matches)) {
+        return sprintf(__('Seite %02d', 'iss-publications'), (int) $matches[1]);
+    }
+
+    return sprintf(__('Blatt %02d', 'iss-publications'), $index + 1);
+}
+
+function iss_publications_transform_album_content(int $post_id, string $content): string
+{
+    if ($post_id <= 0 || trim($content) === '' || !class_exists('DOMDocument')) {
+        return $content;
+    }
+
+    libxml_use_internal_errors(true);
+
+    $document = new DOMDocument('1.0', 'UTF-8');
+    $loaded = $document->loadHTML('<?xml encoding="utf-8" ?><div class="iss-publication-album-parser-root">' . $content . '</div>', LIBXML_HTML_NOIMPLIED | LIBXML_HTML_NODEFDTD);
+    if (!$loaded) {
+        libxml_clear_errors();
+        return $content;
+    }
+
+    $xpath = new DOMXPath($document);
+    $root = $xpath->query('//*[contains(concat(" ", normalize-space(@class), " "), " iss-publication-album-parser-root ")]')->item(0);
+    if (!$root instanceof DOMElement) {
+        libxml_clear_errors();
+        return $content;
+    }
+
+    $intro_nodes = [];
+    $context_nodes = [];
+    $figure_nodes = [];
+    $after_heading = false;
+
+    foreach ($root->childNodes as $child) {
+        if (!$child instanceof DOMElement) {
+            continue;
+        }
+
+        $tag = strtolower($child->tagName);
+        if ($tag === 'h2') {
+            $after_heading = true;
+            continue;
+        }
+
+        if (!$after_heading) {
+            if ($tag === 'p' && count($intro_nodes) === 0) {
+                $intro_nodes[] = trim($document->saveHTML($child));
+            } elseif ($tag === 'p') {
+                $context_nodes[] = trim($document->saveHTML($child));
+            }
+            continue;
+        }
+
+        if ($tag === 'figure') {
+            $figure_nodes[] = $child;
+        }
+    }
+
+    if (count($figure_nodes) < 6) {
+        libxml_clear_errors();
+        return $content;
+    }
+
+    $topic_names = iss_publications_get_shared_topic_names($post_id);
+    $summary = [
+        [
+            'value' => (string) count($figure_nodes),
+            'label' => __('Albumblaetter', 'iss-publications'),
+        ],
+        [
+            'value' => (string) max(1, count($topic_names)),
+            'label' => __('Themenfelder', 'iss-publications'),
+        ],
+        [
+            'value' => trim((string) iss_publications_get_meta($post_id, '_iss_publication_year', '')) ?: __('o. J.', 'iss-publications'),
+            'label' => __('Jahr', 'iss-publications'),
+        ],
+        [
+            'value' => __('Digitalisat', 'iss-publications'),
+            'label' => __('Edition', 'iss-publications'),
+        ],
+    ];
+
+    $summary_html = '<div class="iss-publication-album__summary" aria-label="' . esc_attr__('Rahmendaten', 'iss-publications') . '">';
+    foreach ($summary as $item) {
+        $summary_html .= '<p class="iss-publication-album__summary-item"><strong>' . esc_html($item['value']) . '</strong><span>' . esc_html($item['label']) . '</span></p>';
+    }
+    $summary_html .= '</div>';
+
+    $source_html = '';
+    if (!empty($context_nodes)) {
+        $source_html = '<div class="iss-publication-source-note iss-publication-album__source">' . implode('', $context_nodes) . '</div>';
+    }
+
+    $sheets_html = '<div class="iss-publication-album__grid">';
+    foreach ($figure_nodes as $index => $figure) {
+        $figure_html = trim($document->saveHTML($figure));
+        $caption_text = trim((string) $xpath->evaluate('string(.//figcaption[1])', $figure));
+        $sheet_label = iss_publications_album_get_sheet_label($caption_text, $index);
+        $sheets_html .= '<article class="iss-publication-album__sheet">';
+        $sheets_html .= '<p class="iss-kicker iss-kicker--compact iss-publication-album__sheet-label">' . esc_html($sheet_label) . '</p>';
+        $sheets_html .= $figure_html;
+        $sheets_html .= '</article>';
+    }
+    $sheets_html .= '</div>';
+
+    $html = '<div class="iss-publication-album">';
+    if (!empty($intro_nodes)) {
+        $html .= '<div class="iss-publication-album__intro">' . implode('', $intro_nodes) . '</div>';
+    }
+    $html .= $summary_html;
+    $html .= $source_html;
+    $html .= '<div class="iss-publication-album__body">';
+    $html .= '<div class="iss-heading iss-publication-album__head">';
+    $html .= '<p class="iss-kicker iss-kicker--compact">' . esc_html__('Albumblaetter', 'iss-publications') . '</p>';
+    $html .= '<h2 class="iss-heading__title">' . esc_html__('Digitale Blaetter der Edition', 'iss-publications') . '</h2>';
+    $html .= '<p class="iss-heading__text">' . esc_html__('Die Scans werden als fortlaufende Edition gezeigt. Jede Albumseite bleibt mit ihrer Beschriftung und Materialspur lesbar.', 'iss-publications') . '</p>';
+    $html .= '</div>';
+    $html .= $sheets_html;
+    $html .= '</div>';
+    $html .= '</div>';
+
+    libxml_clear_errors();
+    return $html;
+}
+
+function iss_publications_get_essay_bridge_html(int $post_id): string
+{
+    $post = get_post($post_id);
+    if (!$post instanceof WP_Post || $post->post_name !== 'schoeneweide-eine-ortsgeschichte') {
+        return '';
+    }
+
+    $cards = [
+        [
+            'kicker' => __('Atlas', 'iss-publications'),
+            'title' => __('Schoneweide raeumlich erkunden', 'iss-publications'),
+            'text' => __('Orte, Epochen und Umbrueche im Atlas oeffnen und denselben Raum nicht linear, sondern als Netz von Dossiers lesen.', 'iss-publications'),
+            'links' => [
+                [
+                    'label' => __('Zum Atlas', 'iss-publications'),
+                    'url' => '/schoneweide/#atlas-buehne',
+                ],
+                [
+                    'label' => __('Zur Uebersicht', 'iss-publications'),
+                    'url' => '/schoneweide/',
+                ],
+            ],
+        ],
+        [
+            'kicker' => __('Register', 'iss-publications'),
+            'title' => __('Alle Orte und Rollen im Register', 'iss-publications'),
+            'text' => __('Wer direkt nach Werken, Strassen, Instituten oder Nachnutzungen sucht, bekommt im Register den vollstaendigen Einstieg.', 'iss-publications'),
+            'links' => [
+                [
+                    'label' => __('Zum Register', 'iss-publications'),
+                    'url' => '/register-schoneweide/',
+                ],
+                [
+                    'label' => __('Fuehrungen vor Ort', 'iss-publications'),
+                    'url' => '/fuehrungen/',
+                ],
+            ],
+        ],
+    ];
+
+    $html = '<aside class="iss-publication-essay__atlas">';
+    $html .= '<div class="iss-heading iss-heading--uncaged iss-publication-essay__atlas-intro">';
+    $html .= '<p class="iss-kicker iss-kicker--compact">' . esc_html__('Weiter erkunden', 'iss-publications') . '</p>';
+    $html .= '<h2 class="iss-heading__title">' . esc_html__('Dieselbe Ortsgeschichte laesst sich auch als Atlas lesen.', 'iss-publications') . '</h2>';
+    $html .= '<p class="iss-heading__text">' . esc_html__('Die Publikation fuehrt linear durch Schoneweide. Atlas und Register oeffnen denselben Raum parallel als Orte, Geschichten und Dossiers.', 'iss-publications') . '</p>';
+    $html .= '</div>';
+    $html .= '<div class="iss-publication-essay__atlas-grid">';
+
+    foreach ($cards as $card) {
+        $html .= '<article class="iss-publication-essay__atlas-card">';
+        $html .= '<p class="iss-kicker iss-kicker--compact">' . esc_html((string) $card['kicker']) . '</p>';
+        $html .= '<h3 class="iss-publication-essay__atlas-title">' . esc_html((string) $card['title']) . '</h3>';
+        $html .= '<p class="iss-publication-essay__atlas-text">' . esc_html((string) $card['text']) . '</p>';
+        $html .= '<p class="iss-publication-essay__atlas-links">';
+        foreach ($card['links'] as $link) {
+            $html .= '<a class="iss-action-link" href="' . esc_url((string) $link['url']) . '">' . esc_html((string) $link['label']) . '</a> ';
+        }
+        $html .= '</p>';
+        $html .= '</article>';
+    }
+
+    $html .= '</div>';
+    $html .= '</aside>';
+
+    return $html;
 }
 
 function iss_publications_transform_longread_content(int $post_id, string $content): string
@@ -867,6 +1122,8 @@ function iss_publications_transform_longread_content(int $post_id, string $conte
     }
     $nav_html .= '</div></nav>';
 
+    $bridge_html = iss_publications_get_essay_bridge_html($post_id);
+
     $chapters_html = '<div class="iss-publication-essay__chapters">';
     foreach ($sections as $index => $section) {
         $chapters_html .= '<section id="' . esc_attr($section['anchor']) . '" class="iss-publication-chapter">';
@@ -886,6 +1143,7 @@ function iss_publications_transform_longread_content(int $post_id, string $conte
     $html .= $intro_html;
     $html .= $summary_html;
     $html .= $nav_html;
+    $html .= $bridge_html;
     $html .= $chapters_html;
     $html .= '</div>';
 
