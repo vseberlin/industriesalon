@@ -1,3 +1,4 @@
+<!-- Swap-ready fallback for the main menu shell before the visit-info panel replaced the second nav section. -->
 <!-- wp:group {"className":"iss-nav-overlay","layout":{"type":"default"}} -->
 <div class="wp-block-group iss-nav-overlay"></div>
 <!-- /wp:group -->
@@ -39,9 +40,21 @@
                 <div class="iss-menu-shell__rule"></div>
                 <!-- /wp:html -->
 
-                <!-- wp:group {"className":"iss-menu-shell__utility","layout":{"type":"default"}} -->
-                <div class="wp-block-group iss-menu-shell__utility">
-                        <!-- wp:industriesalon/visit-info {"variant":"info-panel","accent":"red","surface":"dark","skin":"menu", "kicker":"", "intro":"", "title":"","show_address":true,"show_museum_hours":true,"show_office_hours":true,"show_arrival":true,"show_accessibility":true,"show_contact":true} /-->
+                <!-- wp:navigation {"ref":12974,"overlayMenu":"never","layout":{"type":"flex","orientation":"vertical","justifyContent":"left","flexWrap":"nowrap"},"className":"iss-menu-shell__secondary"} /-->
+
+                <!-- wp:html -->
+                <div class="iss-menu-shell__rule"></div>
+                <!-- /wp:html -->
+
+                <!-- wp:group {"className":"iss-menu-shell__contact","layout":{"type":"default"}} -->
+                <div class="wp-block-group iss-menu-shell__contact">
+                        <!-- wp:paragraph {"className":"iss-menu-shell__address"} -->
+                        <p class="iss-menu-shell__address"><strong>Industriesalon Schöneweide</strong><br>Reinbeckstraße 10<br>12459 Berlin-Schöneweide</p>
+                        <!-- /wp:paragraph -->
+
+                        <!-- wp:html -->
+                        <a class="iss-menu-shell__map-link" href="https://www.google.com/maps/search/?api=1&amp;query=Industriesalon%20Sch%C3%B6neweide%2C%20Reinbeckstra%C3%9Fe%2010%2C%2012459%20Berlin" target="_blank" rel="noopener">Google Maps</a>
+                        <!-- /wp:html -->
                 </div>
                 <!-- /wp:group -->
         </div>

@@ -3515,6 +3515,106 @@ Raum / Vermietung → brown
   align-items: center;
 }
 
+/* .iss-control-info-panel--skin-menu: Compact single-column visit-info skin for the off-canvas menu shell. */
+.iss-control-info-panel--skin-menu {
+  padding: 0.95rem 1rem;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  box-shadow: none;
+}
+
+/* .iss-control-info-panel--skin-menu .iss-control-info-panel__kicker: Optional kicker stays understated in the menu skin. */
+.iss-control-info-panel--skin-menu .iss-control-info-panel__kicker {
+  margin-bottom: 0.35rem;
+  color: rgba(249, 249, 250, 0.58);
+  font-size: 0.64rem;
+  letter-spacing: 0.1em;
+}
+
+/* .iss-control-info-panel--skin-menu .iss-info-panel__grid: Collapse the default two-column info panel into one compact stack. */
+.iss-control-info-panel--skin-menu .iss-info-panel__grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 0.6rem;
+}
+
+/* .iss-control-info-panel--skin-menu .iss-info-panel__title-col: Remove the dedicated left-column feel in the menu shell. */
+.iss-control-info-panel--skin-menu .iss-info-panel__title-col {
+  display: grid;
+  gap: 0.2rem;
+}
+
+/* .iss-control-info-panel--skin-menu .iss-info-panel__title: Keep title small enough to sit under main navigation. */
+.iss-control-info-panel--skin-menu .iss-info-panel__title {
+  margin: 0;
+  color: var(--iss-white);
+  font-size: 0.82rem;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  line-height: 1.25;
+  text-transform: uppercase;
+}
+
+/* .iss-control-info-panel--skin-menu .iss-info-panel__intro: Quiet optional intro copy for compact menu use. */
+.iss-control-info-panel--skin-menu .iss-info-panel__intro {
+  color: rgba(249, 249, 250, 0.7);
+  font-size: 0.74rem;
+  line-height: 1.35;
+}
+
+/* .iss-control-info-panel--skin-menu .iss-info-panel__rows: Tighten row rhythm for drawer-height constraints. */
+.iss-control-info-panel--skin-menu .iss-info-panel__rows {
+  gap: 0.5rem;
+}
+
+/* .iss-control-info-panel--skin-menu .iss-info-row: Reduce row padding and keep panel compact. */
+.iss-control-info-panel--skin-menu .iss-info-row {
+  padding-top: 0.5rem;
+}
+
+/* .iss-control-info-panel--skin-menu .iss-info-row__text: Small readable copy for menu-shell utility content. */
+.iss-control-info-panel--skin-menu .iss-info-row__text {
+  font-size: 0.78rem;
+  line-height: 1.35;
+}
+
+/* .iss-control-info-panel--skin-menu .iss-control-info-panel__icon: Scale icons to the compact menu rhythm. */
+.iss-control-info-panel--skin-menu .iss-control-info-panel__icon {
+  width: 0.9rem;
+  height: 0.9rem;
+  flex-basis: 0.9rem;
+}
+
+/* .iss-control-info-panel__contact: Optional compact contact slot appended below visit-info rows. */
+.iss-control-info-panel__contact {
+  margin-top: 0.7rem;
+}
+
+/* .iss-control-info-panel--skin-menu .iss-contact-card--compact-row: Additional contact info line for the compact menu panel. */
+.iss-control-info-panel--skin-menu .iss-contact-card--compact-row {
+  color: rgba(249, 249, 250, 0.74);
+  font-size: 0.72rem;
+  line-height: 1.35;
+}
+
+/* .iss-control-info-panel--skin-menu .iss-contact-card__compact-label: Short inline label for compact menu contact info. */
+.iss-control-info-panel--skin-menu .iss-contact-card__compact-label {
+  color: rgba(249, 249, 250, 0.58);
+  font-weight: 700;
+}
+
+/* .iss-control-info-panel--skin-menu .iss-contact-card--compact-row a: Keep contact links readable inside the compact skin. */
+.iss-control-info-panel--skin-menu .iss-contact-card--compact-row a {
+  color: rgba(249, 249, 250, 0.88);
+  text-decoration: none;
+}
+
+/* .iss-control-info-panel--skin-menu .iss-contact-card__separator: Muted separators for the compact contact row. */
+.iss-control-info-panel--skin-menu .iss-contact-card__separator {
+  color: rgba(249, 249, 250, 0.42);
+}
+
 @media (min-width: 782px) {
 /* .iss-info-panel__title-col: Element class for `iss-info-panel`; apply on `title-col` element. */
   .iss-info-panel__title-col {

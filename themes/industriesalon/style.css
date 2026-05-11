@@ -702,7 +702,7 @@ body.iss-nav-open {
 .iss-menu-shell__inner > *,
 .iss-menu-shell__primary > *,
 .iss-menu-shell__section > *,
-.iss-menu-shell__contact > * {
+.iss-menu-shell__utility > * {
   margin-block-start: 0;
   margin-block-end: 0;
 }
@@ -779,8 +779,7 @@ body.iss-nav-open {
   transform-origin: center;
 }
 
-.iss-menu-shell__audiences,
-.iss-menu-shell__secondary {
+.iss-menu-shell__audiences {
   display: flex;
   flex-direction: column;
   align-items: flex-start;
@@ -854,89 +853,16 @@ body.iss-nav-open {
   text-decoration: none;
 }
 
-.iss-menu-shell__secondary {
-  display: flex;
-  flex-direction: column;
-  align-items: flex-start;
-  gap: 0.4rem;
+/* .iss-menu-shell__utility: Compact drawer slot for dynamic utility panels such as visit info. */
+.iss-menu-shell__utility {
+  width: 100%;
   margin-top: clamp(0.12rem, 0.35vh, 0.22rem);
   margin-bottom: auto;
 }
 
-.iss-menu-shell__secondary .wp-block-navigation__container {
-  display: flex;
-  flex-direction: column;
-  align-items: flex-start;
-  gap: 0.4rem;
-  width: 100%;
-}
-
-.iss-menu-shell__secondary .wp-block-navigation-item {
-  margin: 0;
-}
-
-.iss-menu-shell__secondary a,
-.iss-menu-shell__secondary .wp-block-navigation-item__label {
-  color: rgba(249, 249, 250, 0.84);
-  font-size: clamp(0.98rem, 0.42rem + 1.3vh, 1.34rem);
-  font-weight: 700;
-  line-height: 1.24;
-  text-decoration: none;
-}
-
-.iss-menu-shell__contact {
-  display: flex;
-  flex-direction: row;
-  align-items: center;
-  justify-content: space-between;
-  gap: 0.75rem;
-  width: 100%;
-  margin-top: clamp(0.35rem, 0.8vh, 0.6rem);
-  padding-top: clamp(0.1rem, 0.3vh, 0.2rem);
-}
-
-.iss-menu-shell__address {
-  margin: 0;
-  color: rgba(249, 249, 250, 0.88);
-  font-size: clamp(0.72rem, 0.6rem + 0.18vh, 0.82rem);
-  line-height: 1.12;
-  flex: 1 1 auto;
-}
-
-.iss-menu-shell__address strong {
-  color: var(--iss-white, #f9f9fa);
-  font-weight: 700;
-}
-
-.iss-menu-shell__map-link {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  min-height: 1.85rem;
-  padding: 0.36rem 0.74rem;
-  border-radius: var(--iss-radius-pill);
-  background: var(--iss-red, #e81d25);
-  color: var(--iss-white, #f9f9fa);
-  font-size: 0.8rem;
-  font-weight: 700;
-  line-height: 1;
-  text-decoration: none;
-  transition: background var(--iss-transition), transform var(--iss-transition);
-  white-space: nowrap;
-  flex: 0 0 auto;
-}
-
-.iss-menu-shell__map-link:hover,
-.iss-menu-shell__map-link:focus-visible {
-  background: #f1454c;
-  color: var(--iss-white, #f9f9fa);
-  transform: translateY(-1px);
-}
-
 .iss-menu-shell__audiences a:hover,
 .iss-menu-shell__audiences .wp-block-navigation-item__content:hover .wp-block-navigation-item__label,
-.iss-menu-shell__secondary .wp-block-navigation-item__content:hover .wp-block-navigation-item__label,
-.iss-menu-shell__secondary a:hover {
+.iss-menu-shell__audiences a:focus-visible {
   color: var(--iss-red, #e81d25);
 }
 
@@ -968,17 +894,6 @@ body.iss-nav-open {
     font-size: 1.06rem;
   }
 
-  .iss-menu-shell__secondary a,
-  .iss-menu-shell__secondary .wp-block-navigation-item__label,
-  .iss-menu-shell__address {
-    font-size: 0.9rem;
-  }
-
-  .iss-menu-shell__map-link {
-    min-height: 1.7rem;
-    padding: 0.3rem 0.62rem;
-    font-size: 0.76rem;
-  }
 }
 
 @media (max-height: 680px) {
@@ -987,17 +902,6 @@ body.iss-nav-open {
     font-size: 0.94rem;
   }
 
-  .iss-menu-shell__secondary a,
-  .iss-menu-shell__secondary .wp-block-navigation-item__label,
-  .iss-menu-shell__address {
-    font-size: 0.82rem;
-  }
-
-  .iss-menu-shell__map-link {
-    min-height: 1.55rem;
-    padding: 0.26rem 0.54rem;
-    font-size: 0.72rem;
-  }
 }
 
 @media (max-width: 640px) {
@@ -1013,8 +917,8 @@ body.iss-nav-open {
     font-size: clamp(2.25rem, 11vw, 3.75rem);
   }
 
-  .iss-menu-shell__contact {
-    gap: 0.55rem;
+  .iss-menu-shell__utility {
+    margin-top: 0.18rem;
   }
 }
 

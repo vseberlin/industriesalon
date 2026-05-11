@@ -628,6 +628,7 @@ final class Industriesalon_Steuerung {
                 'variant'            => ['type' => 'string', 'default' => 'info-panel'],
                 'accent'             => ['type' => 'string', 'default' => 'green'],
                 'surface'            => ['type' => 'string', 'default' => 'light'],
+                'skin'               => ['type' => 'string', 'default' => 'default'],
                 'kicker'             => ['type' => 'string', 'default' => 'ANREISE & MEHR'],
                 'title'              => ['type' => 'string', 'default' => 'Besuch planen'],
                 'intro'              => ['type' => 'string', 'default' => 'Die wichtigsten Hinweise für Ihren Besuch im Industriesalon.'],
@@ -636,6 +637,7 @@ final class Industriesalon_Steuerung {
                 'show_office_hours'  => ['type' => 'boolean', 'default' => true],
                 'show_arrival'       => ['type' => 'boolean', 'default' => true],
                 'show_accessibility' => ['type' => 'boolean', 'default' => true],
+                'show_contact'       => ['type' => 'boolean', 'default' => false],
             ],
         ]);
 
@@ -767,6 +769,7 @@ final class Industriesalon_Steuerung {
         $variant = $this->normalize_visit_variant((string) ($attributes['variant'] ?? 'info-panel'), 'visit_info');
         $accent = $this->normalize_info_panel_accent((string) ($attributes['accent'] ?? 'green'));
         $surface = $this->normalize_info_panel_surface((string) ($attributes['surface'] ?? 'light'));
+        $skin = $this->normalize_output_skin((string) ($attributes['skin'] ?? 'default'));
         $kicker = trim((string) ($attributes['kicker'] ?? ''));
         $title = trim((string) ($attributes['title'] ?? ''));
         $intro = trim((string) ($attributes['intro'] ?? ''));
@@ -775,6 +778,7 @@ final class Industriesalon_Steuerung {
         $show_office = array_key_exists('show_office_hours', $attributes) ? (bool) $attributes['show_office_hours'] : true;
         $show_arrival = array_key_exists('show_arrival', $attributes) ? (bool) $attributes['show_arrival'] : true;
         $show_accessibility = array_key_exists('show_accessibility', $attributes) ? (bool) $attributes['show_accessibility'] : true;
+        $show_contact = array_key_exists('show_contact', $attributes) ? (bool) $attributes['show_contact'] : false;
 
         $rows = [];
         if ($show_address) {
@@ -800,10 +804,14 @@ final class Industriesalon_Steuerung {
             return '<div class="iss-visit-info iss-visit-info--empty">' . esc_html__('Keine Zeiten eingetragen.', 'industriesalon-steuerung') . '</div>';
         }
 
+        $contact_html = $show_contact
+            ? $this->render_contact('', ['variant' => 'compact-row', 'skin' => $skin])
+            : '';
+
         ob_start();
         ?>
         <div class="iss-visit-info iss-visit-info--<?php echo esc_attr(sanitize_html_class($variant)); ?><?php echo esc_attr($align_class); ?>" data-variant="<?php echo esc_attr($variant); ?>">
-            <section class="iss-info-panel iss-info-panel--<?php echo esc_attr($accent); ?> iss-control-info-panel iss-control-info-panel--surface-<?php echo esc_attr($surface); ?>">
+            <section class="iss-info-panel iss-info-panel--<?php echo esc_attr($accent); ?> iss-control-info-panel iss-control-info-panel--surface-<?php echo esc_attr($surface); ?> iss-control-info-panel--skin-<?php echo esc_attr($skin); ?>" data-skin="<?php echo esc_attr($skin); ?>">
                 <?php if ($kicker !== '') : ?>
                     <p class="iss-kicker iss-control-info-panel__kicker"><?php echo esc_html($kicker); ?></p>
                 <?php endif; ?>
@@ -822,6 +830,11 @@ final class Industriesalon_Steuerung {
                         </div>
                     </div>
                 </div>
+                <?php if ($contact_html !== '') : ?>
+                    <div class="iss-control-info-panel__contact">
+                        <?php echo $contact_html; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped ?>
+                    </div>
+                <?php endif; ?>
             </section>
         </div>
         <?php
@@ -1243,24 +1256,21 @@ final class Industriesalon_Steuerung {
 
         if ($variant === 'compact-row') {
             $parts = [];
-            if (! empty($address_lines)) {
-                $parts[] = '<span class="iss-contact-card__compact-address">' . esc_html(implode(', ', $address_lines)) . '</span>';
-            }
             if (! empty($contact['phone'])) {
                 $parts[] = '<a href="' . esc_url('tel:' . $this->normalize_phone_href((string) $contact['phone'])) . '">' . esc_html((string) $contact['phone']) . '</a>';
             }
             if (! empty($contact['email'])) {
                 $parts[] = '<a href="' . esc_url('mailto:' . antispambot((string) $contact['email'])) . '">' . esc_html((string) $contact['email']) . '</a>';
             }
-            if (! empty($maps['google_maps_url'])) {
-                $parts[] = '<a href="' . esc_url((string) $maps['google_maps_url']) . '" target="_blank" rel="noopener noreferrer">' . esc_html__('Karte', 'industriesalon-steuerung') . '</a>';
+            if (! empty($contact['website'])) {
+                $parts[] = '<a href="' . esc_url($this->normalize_public_url((string) $contact['website'])) . '" target="_blank" rel="noopener noreferrer">' . esc_html((string) $contact['website']) . '</a>';
             }
 
             if (empty($parts)) {
                 return '';
             }
 
-            return '<div class="iss-contact-card iss-contact-card--' . esc_attr($variant) . ' iss-contact-card--skin-' . esc_attr($skin) . '" data-variant="' . esc_attr($variant) . '" data-skin="' . esc_attr($skin) . '">' . implode('<span class="iss-contact-card__separator" aria-hidden="true">·</span>', $parts) . '</div>';
+            return '<div class="iss-contact-card iss-contact-card--' . esc_attr($variant) . ' iss-contact-card--skin-' . esc_attr($skin) . '" data-variant="' . esc_attr($variant) . '" data-skin="' . esc_attr($skin) . '"><span class="iss-contact-card__compact-label">' . esc_html__('Kontakt:', 'industriesalon-steuerung') . '</span> ' . implode('<span class="iss-contact-card__separator" aria-hidden="true">·</span>', $parts) . '</div>';
         }
 
         if ($variant === 'footer') {
@@ -1799,7 +1809,7 @@ final class Industriesalon_Steuerung {
      */
     private function normalize_output_skin(string $skin): string {
         $skin = sanitize_key($skin);
-        $allowed = ['default', 'light', 'dark', 'muted', 'front', 'accent-red'];
+        $allowed = ['default', 'light', 'dark', 'muted', 'front', 'accent-red', 'menu'];
         return in_array($skin, $allowed, true) ? $skin : 'default';
     }
 
