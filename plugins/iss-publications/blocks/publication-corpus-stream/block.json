@@ -9,6 +9,10 @@
     "postId": {
       "type": "number",
       "default": 0
+    },
+    "shellMode": {
+      "type": "string",
+      "default": "section"
     }
   },
   "supports": {

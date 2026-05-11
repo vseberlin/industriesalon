@@ -222,6 +222,7 @@
     },
     attributes: {
       align: { type: 'string', default: '' },
+      shellMode: { type: 'string', default: 'section' },
       variant: { type: 'string', default: 'info-panel' },
       accent: { type: 'string', default: 'green' },
       surface: { type: 'string', default: 'light' },

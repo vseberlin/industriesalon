@@ -835,27 +835,7 @@ body.iss-publication-kind-album .iss-publication-single__body {
   position: sticky;
   top: calc(var(--iss-header-height) + 0.35rem);
   z-index: 20;
-  border-top: 1px solid rgba(30, 30, 30, 0.08);
-  border-bottom: 1px solid rgba(30, 30, 30, 0.12);
-  background: rgba(249, 249, 250, 0.94);
   backdrop-filter: blur(10px);
-}
-
-.iss-publication-essay__nav-inner {
-  display: flex;
-  gap: 1px;
-  overflow-x: auto;
-  background: rgba(30, 30, 30, 0.12);
-}
-
-.iss-publication-essay__nav a {
-  flex: 1 0 13rem;
-  padding: 1rem;
-  background: var(--iss-white);
-  color: inherit;
-  font-size: 0.9rem;
-  font-weight: 600;
-  text-decoration: none;
 }
 
 .iss-publication-essay__atlas {

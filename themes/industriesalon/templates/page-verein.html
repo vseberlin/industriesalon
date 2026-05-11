@@ -1,7 +1,7 @@
 <!-- wp:template-part {"slug":"header","tagName":"header"} /-->
 
-<!-- wp:group {"tagName":"main","className":"iss-verein-page iss-page--narrative","layout":{"type":"default"}} -->
-<main class="wp-block-group iss-verein-page iss-page--narrative">
+<!-- wp:group {"tagName":"main","className":"iss-verein-page iss-page--narrative iss-scheme-green","layout":{"type":"default"}} -->
+<main class="wp-block-group iss-verein-page iss-page--narrative iss-scheme-green">
 	<!-- wp:group {"tagName":"section","className":"section section--plain iss-verein-hero","layout":{"type":"default"}} -->
 	<section class="wp-block-group section section--plain iss-verein-hero">
 		<!-- wp:group {"className":"iss-container","layout":{"type":"default"}} -->
@@ -57,6 +57,7 @@
 				<!-- /wp:column -->
 			</div>
 			<!-- /wp:columns -->
+
 		</div>
 		<!-- /wp:group -->
 	</section>
@@ -362,9 +363,7 @@
 					<p>Wenn Sie sich ehrenamtlich einbringen möchten, ist ein direktes Gespräch meist der beste Anfang.</p>
 					<!-- /wp:paragraph -->
 
-					<!-- wp:paragraph -->
-					<p><a class="iss-action-link" href="mailto:info@industriesalon.de?subject=Mitarbeit%20im%20Industriesalon">Mitarbeit anbieten</a></p>
-					<!-- /wp:paragraph -->
+					<!-- wp:industriesalon/field {"key":"contact.email","tagName":"a","linkMode":"email","text":"Mitarbeit anbieten","cssClass":"iss-action-link","hrefSuffix":"?subject=Mitarbeit%20im%20Industriesalon"} /-->
 				</div>
 				<!-- /wp:group -->
 
@@ -463,12 +462,14 @@
 								<!-- /wp:paragraph -->
 
 								<!-- wp:paragraph -->
-								<p><strong>Industriesalon Schöneweide e.V.</strong><br>Reinbeckstraße 10<br>12459 Berlin-Schöneweide</p>
+								<p><strong>Industriesalon Schöneweide e.V.</strong></p>
 								<!-- /wp:paragraph -->
 
-								<!-- wp:paragraph -->
-								<p><a href="mailto:info@industriesalon.de">info@industriesalon.de</a><br><a href="tel:+493053007042">030 / 53 00 70 42</a></p>
-								<!-- /wp:paragraph -->
+								<!-- wp:industriesalon/field {"key":"address.full","tagName":"p","linkMode":"none"} /-->
+
+								<!-- wp:industriesalon/field {"key":"contact.email","tagName":"p","linkMode":"email"} /-->
+
+								<!-- wp:industriesalon/field {"key":"contact.phone","tagName":"p","linkMode":"tel"} /-->
 							</div>
 							<!-- /wp:group -->
 						</div>
@@ -548,9 +549,7 @@
 							</div>
 							<!-- /wp:group -->
 
-							<!-- wp:paragraph -->
-							<p><a class="iss-action-link" href="mailto:info@industriesalon.de?subject=Satzung%20Industriesalon">Anfordern</a></p>
-							<!-- /wp:paragraph -->
+							<!-- wp:industriesalon/field {"key":"contact.email","tagName":"a","linkMode":"email","text":"Anfordern","cssClass":"iss-action-link","hrefSuffix":"?subject=Satzung%20Industriesalon"} /-->
 						</div>
 						<!-- /wp:group -->
 
@@ -563,13 +562,13 @@
 								<!-- /wp:heading -->
 
 								<!-- wp:paragraph -->
-								<p>Angaben zum Anbieter und zu den Verantwortlichkeiten.</p>
+								<p>Anbieterangaben, Zuständigkeiten und Haftungshinweise jetzt lokal auf dieser Seite.</p>
 								<!-- /wp:paragraph -->
 							</div>
 							<!-- /wp:group -->
 
 							<!-- wp:paragraph -->
-							<p><a class="iss-action-link" href="/impressum/">Öffnen</a></p>
+							<p><a class="iss-action-link" href="#impressum">Lesen</a></p>
 							<!-- /wp:paragraph -->
 						</div>
 						<!-- /wp:group -->
@@ -583,13 +582,13 @@
 								<!-- /wp:heading -->
 
 								<!-- wp:paragraph -->
-								<p>Hinweise zur Verarbeitung personenbezogener Daten.</p>
+								<p>Hinweise zur Verarbeitung personenbezogener Daten jetzt lokal auf dieser Seite.</p>
 								<!-- /wp:paragraph -->
 							</div>
 							<!-- /wp:group -->
 
 							<!-- wp:paragraph -->
-							<p><a class="iss-action-link" href="/datenschutzerklaerung/">Öffnen</a></p>
+							<p><a class="iss-action-link" href="#datenschutz">Lesen</a></p>
 							<!-- /wp:paragraph -->
 						</div>
 						<!-- /wp:group -->
@@ -603,13 +602,13 @@
 								<!-- /wp:heading -->
 
 								<!-- wp:paragraph -->
-								<p>Regelungen für Buchungen, Kauf und organisatorische Abläufe.</p>
+								<p>Regelungen für Buchungen, Kauf und organisatorische Abläufe jetzt lokal auf dieser Seite.</p>
 								<!-- /wp:paragraph -->
 							</div>
 							<!-- /wp:group -->
 
 							<!-- wp:paragraph -->
-							<p><a class="iss-action-link" href="/agb/">Öffnen</a></p>
+							<p><a class="iss-action-link" href="#agb">Lesen</a></p>
 							<!-- /wp:paragraph -->
 						</div>
 						<!-- /wp:group -->
@@ -623,13 +622,13 @@
 								<!-- /wp:heading -->
 
 								<!-- wp:paragraph -->
-								<p>Informationen zum Widerruf bei entsprechenden Vertragsabschlüssen.</p>
+								<p>Informationen zum Widerruf bei entsprechenden Vertragsabschlüssen jetzt lokal auf dieser Seite.</p>
 								<!-- /wp:paragraph -->
 							</div>
 							<!-- /wp:group -->
 
 							<!-- wp:paragraph -->
-							<p><a class="iss-action-link" href="/widerrufsbelehrung/">Öffnen</a></p>
+							<p><a class="iss-action-link" href="#widerruf">Lesen</a></p>
 							<!-- /wp:paragraph -->
 						</div>
 						<!-- /wp:group -->
@@ -639,6 +638,214 @@
 				<!-- /wp:column -->
 			</div>
 			<!-- /wp:columns -->
+
+			<!-- wp:group {"className":"iss-verein-facts","layout":{"type":"default"}} -->
+			<div class="wp-block-group iss-verein-facts">
+				<!-- wp:group {"anchor":"impressum","className":"iss-verein-panel iss-verein-panel--soft","layout":{"type":"default"}} -->
+				<div id="impressum" class="wp-block-group iss-verein-panel iss-verein-panel--soft">
+					<!-- wp:paragraph {"className":"iss-kicker iss-kicker--compact"} -->
+					<p class="iss-kicker iss-kicker--compact">Rechtliches</p>
+					<!-- /wp:paragraph -->
+
+					<!-- wp:heading {"level":3} -->
+					<h3 class="wp-block-heading">Impressum</h3>
+					<!-- /wp:heading -->
+
+					<!-- wp:paragraph -->
+					<p>Fotos: Andreas Wendt, Susanne Reumschüssel, Sven Bock …</p>
+					<!-- /wp:paragraph -->
+
+					<!-- wp:paragraph -->
+					<p>Der Industriesalon Schöneweide ist ein eingetragener Verein. Registereintragung beim Amtsgericht Charlottenburg, Aktenzeichen VR 29071 B, laufende Nummer 3.</p>
+					<!-- /wp:paragraph -->
+
+					<!-- wp:paragraph -->
+					<p>Der Industriesalon Schöneweide ist eine eingetragene Körperschaft und besitzt die Gemeinnützigkeit. Letzter Freistellungsbescheid Finanzamt für Körperschaften 1 vom 21.09.2021.</p>
+					<!-- /wp:paragraph -->
+
+					<!-- wp:paragraph -->
+					<p><strong>Adresse</strong><br>Reinbeckstr. 10<br>12459 Berlin-Oberschöneweide<br>Tel.: (0 30) 53 00 70 42<br><a href="mailto:info@industriesalon.de">info@industriesalon.de</a></p>
+					<!-- /wp:paragraph -->
+
+					<!-- wp:paragraph -->
+					<p>Alle Seiten dieser Website unterliegen dem Copyright. Texte und Bilder dürfen nicht ohne ausdrückliche Zustimmung weiterverbreitet werden. Zitate in üblicher Form sind zulässig. Für verwendete Texte und Bilder liegt das Copyright beim Industriesalon oder es besteht die ausdrückliche Zustimmung der Rechteinhaber.</p>
+					<!-- /wp:paragraph -->
+
+					<!-- wp:paragraph -->
+					<p><strong>Websitemanager</strong><br>Steffen Ostermaier</p>
+					<!-- /wp:paragraph -->
+
+					<!-- wp:paragraph -->
+					<p><strong>Haftungsausschluss</strong></p>
+					<!-- /wp:paragraph -->
+
+					<!-- wp:list {"ordered":true} -->
+					<ol class="wp-block-list">
+						<li>Inhalt des Onlineangebotes: Der Industriesalon Schöneweide e.V. übernimmt keine Gewähr für Aktualität, Korrektheit, Vollständigkeit oder Qualität der bereitgestellten Informationen. Haftungsansprüche sind ausgeschlossen, sofern kein nachweislich vorsätzliches oder grob fahrlässiges Verschulden vorliegt. Alle Angebote sind freibleibend und unverbindlich. Der Verein behält sich vor, Teile des Angebots ohne gesonderte Ankündigung zu verändern, zu ergänzen, zu löschen oder die Veröffentlichung zeitweise oder endgültig einzustellen.</li>
+						<li>Verweise und Links: Bei direkten oder indirekten Verweisen auf fremde Internetseiten außerhalb des eigenen Verantwortungsbereiches haftet der Verein nur dann, wenn er von rechtswidrigen Inhalten Kenntnis hat und es technisch möglich und zumutbar wäre, deren Nutzung zu verhindern. Zum Zeitpunkt der Linksetzung waren keine illegalen Inhalte erkennbar. Auf spätere Änderungen verlinkter Inhalte besteht kein Einfluss. Für illegale, fehlerhafte oder unvollständige Inhalte sowie daraus entstehende Schäden haftet allein der Anbieter der jeweiligen Seite.</li>
+						<li>Urheber- und Kennzeichenrecht: Der Verein ist bestrebt, in allen Publikationen die Urheberrechte der verwendeten Grafiken, Tondokumente, Videosequenzen und Texte zu beachten, selbst erstellte Inhalte zu nutzen oder auf lizenzfreies Material zurückzugreifen. Alle genannten Marken- und Warenzeichen unterliegen den Rechten der jeweiligen Eigentümer. Das Copyright für veröffentlichte, vom Verein selbst erstellte Objekte bleibt allein beim Verein. Eine Vervielfältigung oder Verwendung in anderen elektronischen oder gedruckten Publikationen ist ohne ausdrückliche Zustimmung nicht gestattet.</li>
+						<li>Datenschutz: Sofern innerhalb des Internetangebotes die Möglichkeit zur Eingabe persönlicher oder geschäftlicher Daten besteht, erfolgt die Preisgabe dieser Daten seitens des Nutzers auf ausdrücklich freiwilliger Basis.</li>
+						<li>Rechtswirksamkeit: Dieser Haftungsausschluss ist als Teil des Internetangebotes zu betrachten, von dem aus auf diese Seite verwiesen wurde. Sollten einzelne Formulierungen der geltenden Rechtslage nicht oder nicht mehr vollständig entsprechen, bleiben die übrigen Teile des Dokumentes in Inhalt und Gültigkeit unberührt.</li>
+					</ol>
+					<!-- /wp:list -->
+				</div>
+				<!-- /wp:group -->
+
+				<!-- wp:group {"anchor":"datenschutz","className":"iss-verein-panel iss-verein-panel--soft","layout":{"type":"default"}} -->
+				<div id="datenschutz" class="wp-block-group iss-verein-panel iss-verein-panel--soft">
+					<!-- wp:paragraph {"className":"iss-kicker iss-kicker--compact"} -->
+					<p class="iss-kicker iss-kicker--compact">Rechtliches</p>
+					<!-- /wp:paragraph -->
+
+					<!-- wp:heading {"level":3} -->
+					<h3 class="wp-block-heading">Datenschutzerklärung</h3>
+					<!-- /wp:heading -->
+
+					<!-- wp:list {"ordered":true} -->
+					<ol class="wp-block-list">
+						<li>Der Industriesalon Schöneweide e.V. nimmt das Thema Datenschutz sehr ernst. Beim Betrieb der Website sowie der darüber angebotenen Leistungen und geschäftlichen Aktivitäten werden die anwendbaren Rechtsvorschriften zum Schutz personenbezogener Daten und zur Datensicherheit beachtet. Grundsätzlich können die Webseiten besucht werden, ohne personenbezogene Daten zu hinterlassen. In einigen Fällen werden Daten benötigt, insbesondere beim Newsletter abonnieren oder abbestellen, bei der Teilnahme an Gewinnspielen, bei der Kontaktaufnahme, bei der Online-Buchung von Touren, bei Broschüren und bei Bestellungen.</li>
+						<li>Umgang mit personenbezogenen Daten: Personenbezogene Daten werden für die Zusendung von Informationen, zum Beispiel in Form des Newsletters, gespeichert. Eine Weitergabe an andere Unternehmen erfolgt nicht. Der Newsletter kann jederzeit abbestellt werden. Wenn Kontaktdaten vollständig gelöscht werden sollen, genügt eine formlose Mitteilung an Industriesalon Schöneweide e.V., Reinbeckstraße 9, 12459 Berlin oder per E-Mail an <a href="mailto:info@industriesalon.de">info@industriesalon.de</a>.</li>
+						<li>Schutz personenbezogener Daten: Wenn sich Nutzer für den Newsletter oder zur Teilnahme an einem Gewinnspiel anmelden oder ein Kontaktformular ausfüllen, werden personenbezogene Daten an den Verein übermittelt. Diese Daten werden auf besonders gesicherten Webservern innerhalb der Bundesrepublik Deutschland gespeichert.</li>
+						<li>Einsatz von Cookies: Wenn personenbezogene Daten überlassen wurden, besteht jederzeit die Möglichkeit, die sofortige Löschung zu fordern und der Anfertigung pseudonymer Nutzerprofile zu widersprechen. Wer Cookies nicht nutzen möchte, kann sie im Browser deaktivieren. Für die Nutzung der Website kann es erforderlich sein, dass Session-Cookies für die Navigation genutzt werden. Session-Cookies verlieren ihre Gültigkeit, wenn der Browser geschlossen oder 60 Minuten keine Aktivität auf den Websites stattfindet. Registrierungsangaben werden in anonymisierter Form zu statistischen Zwecken ausgewertet. Ein Verkauf von Adressen an Dritte findet nicht statt.</li>
+						<li>Weitere Informationen: Bei Fragen zum Datenschutz hilft der Verein gern weiter unter <a href="mailto:info@industriesalon.de">info@industriesalon.de</a>.</li>
+					</ol>
+					<!-- /wp:list -->
+				</div>
+				<!-- /wp:group -->
+
+				<!-- wp:group {"anchor":"agb","className":"iss-verein-panel iss-verein-panel--soft","layout":{"type":"default"}} -->
+				<div id="agb" class="wp-block-group iss-verein-panel iss-verein-panel--soft">
+					<!-- wp:paragraph {"className":"iss-kicker iss-kicker--compact"} -->
+					<p class="iss-kicker iss-kicker--compact">Rechtliches</p>
+					<!-- /wp:paragraph -->
+
+					<!-- wp:heading {"level":3} -->
+					<h3 class="wp-block-heading">Allgemeine Geschäftsbedingungen</h3>
+					<!-- /wp:heading -->
+
+					<!-- wp:paragraph -->
+					<p>Bitte beachten Sie unsere Allgemeinen Geschäftsbedingungen für Touren und Veranstaltungen.</p>
+					<!-- /wp:paragraph -->
+
+					<!-- wp:list {"ordered":true} -->
+					<ol class="wp-block-list">
+						<li><strong>§1 Gegenstand und Geltungsbereich</strong>: Diese AGB regeln die Rechte und Pflichten im Zusammenhang mit der Buchung von Veranstaltungen über den Industriesalon Schöneweide. Touren können im Internet unter <a href="/">www.industriesalon.de</a> sowie über andere Vertriebswege gebucht werden. Es gelten ausschließlich diese AGB.</li>
+						<li><strong>§2 Vertragsschluss</strong>: Ein Vertrag kommt zustande, wenn eine Tour elektronisch gebucht oder per Mail bestellt und durch den Industriesalon bestätigt wurde. Ein Anspruch auf Abschluss eines Vertrages besteht nicht. Voraussetzung für den Vertragsschluss ist, dass Buchende mindestens 18 Jahre alt sind oder mit Zustimmung ihrer gesetzlichen Vertreter handeln.</li>
+						<li><strong>§3 Leistungen</strong>: Angeboten werden Touren und Veranstaltungen zu verschiedenen Themengebieten. Die Buchung erfolgt in der Regel online über die Internetseite oder über andere Vertriebswege, zum Beispiel per Mail oder Print.</li>
+						<li><strong>§4 Widerrufsrecht</strong>: Der Vertrag kann bis zu 48 Stunden vor Beginn widerrufen werden. Zur Ausübung des Widerrufsrechts genügt eine eindeutige Erklärung per E-Mail an <a href="mailto:info@industriesalon.de">info@industriesalon.de</a>. Bei wirksamem Widerruf werden erhaltene Zahlungen binnen vierzehn Tagen zurückgezahlt.</li>
+						<li><strong>§5 Preise</strong>: Die Preise ergeben sich aus den jeweiligen Angebotsinformationen auf der Internetseite oder in der Veranstaltungsbeschreibung.</li>
+						<li><strong>§6 Zahlung</strong>: Alle Entgelte sind grundsätzlich im Voraus ohne Abzug zu entrichten. Die Zahlung erfolgt in der Regel nach Rechnungsstellung per Banküberweisung. Je nach Veranstaltung kann im Einzelfall eine andere Zahlungsweise vereinbart werden.</li>
+						<li><strong>§7 Stornierung und Rücktritt</strong>: Der Rücktritt von der Teilnahme ist jederzeit schriftlich möglich. Bei Rücktritt mehr als 48 Stunden vor Veranstaltungsbeginn fallen keine Stornokosten an. Bei Rücktritt weniger als 48 Stunden und mehr als 4 Stunden vor Beginn werden 50 Prozent der Kosten fällig. Bei Rücktritt innerhalb von 4 Stunden vor Beginn ist das volle Entgelt zu zahlen. Im Einzelfall kann eine geeignete Ersatzperson benannt werden.</li>
+						<li><strong>§8 Datenschutz</strong>: Personenbezogene Daten werden nur erhoben, gespeichert und verarbeitet, soweit dies zur vertragsgemäßen Leistungserbringung erforderlich und gesetzlich zulässig ist. Die Daten werden vertraulich behandelt und nicht an Dritte weitergegeben, sofern dies nicht zur Vertragserfüllung erforderlich oder gesetzlich vorgeschrieben ist.</li>
+						<li><strong>§9 Haftungsbeschränkung</strong>: Die Teilnahme an Touren und Veranstaltungen erfolgt auf eigene Gefahr. Bei Vorsatz oder grober Fahrlässigkeit haftet der Industriesalon unbeschränkt. Bei leichter Fahrlässigkeit besteht unbeschränkte Haftung bei Verletzung von Leben, Körper oder Gesundheit. Im Übrigen ist die Haftung auf den vorhersehbaren, typischerweise eintretenden Schaden beschränkt. Die Haftung nach dem Produkthaftungsgesetz bleibt unberührt.</li>
+						<li><strong>§10 Änderungen der Geschäftsbedingungen</strong>: Für Leistungsänderungen, Anpassungen oder rechtliche Pflichten können diese AGB auch innerhalb bestehender Vertragsverhältnisse geändert werden. Über Änderungen wird mindestens 6 Wochen vor Inkrafttreten informiert. Erfolgt kein Widerspruch innerhalb von 6 Wochen und werden die Dienste weiter genutzt, gelten die Änderungen als angenommen.</li>
+						<li><strong>§11 Schlussbestimmungen</strong>: Es gilt das Recht der Bundesrepublik Deutschland. Ist der Vertragspartner Kaufmann, juristische Person des öffentlichen Rechts oder öffentlich-rechtliches Sondervermögen, ist der Sitz des Industriesalons ausschließlicher Gerichtsstand. Sollten einzelne Bestimmungen unwirksam sein oder werden, bleibt die Wirksamkeit der übrigen Bestimmungen unberührt. Stand: 20.10.2021.</li>
+					</ol>
+					<!-- /wp:list -->
+				</div>
+				<!-- /wp:group -->
+
+				<!-- wp:group {"anchor":"widerruf","className":"iss-verein-panel iss-verein-panel--soft","layout":{"type":"default"}} -->
+				<div id="widerruf" class="wp-block-group iss-verein-panel iss-verein-panel--soft">
+					<!-- wp:paragraph {"className":"iss-kicker iss-kicker--compact"} -->
+					<p class="iss-kicker iss-kicker--compact">Rechtliches</p>
+					<!-- /wp:paragraph -->
+
+					<!-- wp:heading {"level":3} -->
+					<h3 class="wp-block-heading">Widerrufsbelehrung</h3>
+					<!-- /wp:heading -->
+
+					<!-- wp:paragraph -->
+					<p><strong>Widerrufsrecht des Kunden als Verbraucher</strong></p>
+					<!-- /wp:paragraph -->
+
+					<!-- wp:paragraph -->
+					<p>Verbrauchern steht ein Widerrufsrecht nach folgender Maßgabe zu. Verbraucher ist jede natürliche Person, die ein Rechtsgeschäft zu Zwecken abschließt, die überwiegend weder ihrer gewerblichen noch ihrer selbständigen beruflichen Tätigkeit zugerechnet werden können.</p>
+					<!-- /wp:paragraph -->
+
+					<!-- wp:paragraph -->
+					<p><strong>Widerrufsrecht</strong><br>Sie haben das Recht, binnen vierzehn Tagen ohne Angabe von Gründen diesen Vertrag zu widerrufen. Die Widerrufsfrist beträgt vierzehn Tage ab dem Tag, an dem Sie oder ein von Ihnen benannter Dritter, der nicht der Beförderer ist, die Waren in Besitz genommen haben.</p>
+					<!-- /wp:paragraph -->
+
+					<!-- wp:paragraph -->
+					<p>Um Ihr Widerrufsrecht auszuüben, müssen Sie uns, Industriesalon Schöneweide e.V., Reinbeckstr. 10, 12459 Berlin-Oberschöneweide, Tel. (030) 53 00 70 42, <a href="mailto:info@industriesalon.de">info@industriesalon.de</a>, mittels einer eindeutigen Erklärung, zum Beispiel per Brief oder E-Mail, über Ihren Entschluss informieren. Dafür kann das beigefügte Muster-Widerrufsformular verwendet werden, vorgeschrieben ist das jedoch nicht.</p>
+					<!-- /wp:paragraph -->
+
+					<!-- wp:paragraph -->
+					<p><strong>Widerrufsfolgen</strong><br>Wenn Sie diesen Vertrag widerrufen, werden alle Zahlungen einschließlich Lieferkosten unverzüglich und spätestens binnen vierzehn Tagen ab Eingang der Widerrufserklärung zurückgezahlt. Für die Rückzahlung wird dasselbe Zahlungsmittel verwendet, das bei der ursprünglichen Transaktion eingesetzt wurde, sofern nicht ausdrücklich etwas anderes vereinbart wurde. Entgelte für diese Rückzahlung werden nicht berechnet.</p>
+					<!-- /wp:paragraph -->
+
+					<!-- wp:paragraph -->
+					<p>Die Rückzahlung kann verweigert werden, bis die Waren zurückerhalten wurden oder der Nachweis der Rücksendung vorliegt, je nachdem, welcher Zeitpunkt früher eintritt. Die Waren sind unverzüglich und spätestens binnen vierzehn Tagen ab dem Tag der Unterrichtung über den Widerruf zurückzusenden oder zu übergeben. Die Frist ist gewahrt, wenn die Waren vor Ablauf von vierzehn Tagen abgesendet werden. Die unmittelbaren Kosten der Rücksendung tragen die Verbraucher.</p>
+					<!-- /wp:paragraph -->
+
+					<!-- wp:heading {"level":4} -->
+					<h4 class="wp-block-heading">Muster-Widerrufsformular</h4>
+					<!-- /wp:heading -->
+
+					<!-- wp:paragraph -->
+					<p>Wenn Sie den Vertrag widerrufen wollen, füllen Sie bitte dieses Formular aus und senden Sie es zurück.</p>
+					<!-- /wp:paragraph -->
+
+					<!-- wp:paragraph -->
+					<p>An:<br>Industriesalon Schöneweide e.V.<br>Reinbeckstr. 10<br>12459 Berlin-Oberschöneweide<br>Tel.: (0 30) 53 00 70 42<br><a href="mailto:info@industriesalon.de">info@industriesalon.de</a></p>
+					<!-- /wp:paragraph -->
+
+					<!-- wp:paragraph -->
+					<p>Hiermit widerrufe(n) ich/wir (*) den von mir/uns (*) abgeschlossenen Vertrag über den Kauf der folgenden Waren (*) / die Erbringung der folgenden Dienstleistung (*)</p>
+					<!-- /wp:paragraph -->
+
+					<!-- wp:paragraph -->
+					<p>_____________________________________________________</p>
+					<!-- /wp:paragraph -->
+
+					<!-- wp:paragraph -->
+					<p>Bestellt am (*) / erhalten am (*)</p>
+					<!-- /wp:paragraph -->
+
+					<!-- wp:paragraph -->
+					<p>__________________</p>
+					<!-- /wp:paragraph -->
+
+					<!-- wp:paragraph -->
+					<p>Name des/der Verbraucher(s)</p>
+					<!-- /wp:paragraph -->
+
+					<!-- wp:paragraph -->
+					<p>_____________________________________________________</p>
+					<!-- /wp:paragraph -->
+
+					<!-- wp:paragraph -->
+					<p>Anschrift des/der Verbraucher(s)</p>
+					<!-- /wp:paragraph -->
+
+					<!-- wp:paragraph -->
+					<p>_____________________________________________________</p>
+					<!-- /wp:paragraph -->
+
+					<!-- wp:paragraph -->
+					<p>Unterschrift des/der Verbraucher(s), nur bei Mitteilung auf Papier</p>
+					<!-- /wp:paragraph -->
+
+					<!-- wp:paragraph -->
+					<p>__________________</p>
+					<!-- /wp:paragraph -->
+
+					<!-- wp:paragraph -->
+					<p>Datum</p>
+					<!-- /wp:paragraph -->
+
+					<!-- wp:paragraph -->
+					<p>__________________</p>
+					<!-- /wp:paragraph -->
+
+					<!-- wp:paragraph -->
+					<p>(*) Unzutreffendes streichen.</p>
+					<!-- /wp:paragraph -->
+				</div>
+				<!-- /wp:group -->
+			</div>
+			<!-- /wp:group -->
 		</div>
 		<!-- /wp:group -->
 	</section>

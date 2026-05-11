@@ -36,7 +36,7 @@
 }
 
 .iss-videos-hero .wp-block-cover__inner-container {
-  min-height: clamp(24rem, 50vw, 33rem);
+  min-height: clamp(18rem, 40vw, 25rem);
 }
 
 .iss-videos-hero__text {
@@ -68,6 +68,10 @@
 .iss-videos-context {
   padding-top: clamp(1.75rem, 3vw, 2.5rem);
   padding-bottom: clamp(1.75rem, 3vw, 2.75rem);
+}
+
+.iss-videos-library-wrap--lead {
+  padding-top: clamp(1.25rem, 2.5vw, 2rem);
 }
 
 .iss-videos-gateways__head,
@@ -509,6 +513,12 @@
   align-content: start;
 }
 
+.iss-video-library__feature-links {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.65rem 1rem;
+}
+
 .iss-video-library__feature-title {
   margin: 0;
   font-size: clamp(1.6rem, 2vw, 2.25rem);
@@ -519,6 +529,22 @@
 .iss-video-library__feature-text {
   margin: 0;
   color: rgba(23, 20, 18, 0.8);
+}
+
+.iss-video-library__return-link {
+  padding: 0;
+  border: 0;
+  color: #8f391b;
+  font: inherit;
+  text-decoration: underline;
+  text-underline-offset: 0.16em;
+  background: transparent;
+  cursor: pointer;
+}
+
+.iss-video-library__return-link:hover,
+.iss-video-library__return-link:focus-visible {
+  color: #a33d1f;
 }
 
 .iss-video-library__feature-meta {
@@ -935,7 +961,7 @@
   }
 
   .iss-videos-hero .wp-block-cover__inner-container {
-    min-height: clamp(20rem, 78vw, 26rem);
+    min-height: clamp(16rem, 72vw, 22rem);
   }
 
   .iss-videos-focus .wp-block-cover__inner-container {

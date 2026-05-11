@@ -1,7 +1,7 @@
 <!-- wp:template-part {"slug":"header","theme":"industriesalon","tagName":"header"} /-->
 
-<!-- wp:group {"tagName":"main","className":"iss-events-page","layout":{"type":"default"}} -->
-<main class="wp-block-group iss-events-page"><!-- wp:group {"tagName":"section","className":"iss-section iss-section\u002d\u002dhero","layout":{"type":"default"}} -->
+<!-- wp:group {"tagName":"main","className":"iss-events-page iss-scheme-blue","layout":{"type":"default"}} -->
+<main class="wp-block-group iss-events-page iss-scheme-blue"><!-- wp:group {"tagName":"section","className":"iss-section iss-section\u002d\u002dhero","layout":{"type":"default"}} -->
 <section class="wp-block-group iss-section iss-section--hero"><!-- wp:cover {"url":"http://192.168.2.31:8082/wp-content/uploads/2026/05/2011-10-07-Geburtstag-Industriesalon-2011-27-1024x768.jpg","id":13333,"dimRatio":48,"customOverlayColor":"#5f5145","isUserOverlayColor":false,"contentPosition":"bottom left","sizeSlug":"large","className":"alignfull iss-front-hero"} -->
 <div class="wp-block-cover has-custom-content-position is-position-bottom-left alignfull iss-front-hero"><img class="wp-block-cover__image-background wp-image-13333 size-large" alt="" src="http://192.168.2.31:8082/wp-content/uploads/2026/05/2011-10-07-Geburtstag-Industriesalon-2011-27-1024x768.jpg" data-object-fit="cover"/><span aria-hidden="true" class="wp-block-cover__background has-background-dim-50 has-background-dim" style="background-color:#5f5145"></span><div class="wp-block-cover__inner-container"><!-- wp:group {"className":"iss-front-hero__row","layout":{"type":"default"}} -->
 <div class="wp-block-group iss-front-hero__row"><!-- wp:group {"className":"iss-front-hero__shell","layout":{"type":"default"}} -->
@@ -98,7 +98,7 @@
 <!-- /wp:paragraph --></div>
 <!-- /wp:group -->
 
-<!-- wp:industriesalon/timeline-query {"postTypesList":["veranstaltung"],"taxonomyUiRules":[{"taxonomy":"iss_topic","label":"Thema","terms":[]}],"showTimeModeFilter":true,"showItemTypeFilter":false,"showMonthFilter":true,"yearGrouping":true,"showLoadMore":true,"loadMoreText":"Mehr laden"} /--></div>
+<!-- wp:industriesalon/timeline-query {"shellMode":"body","postTypesList":["veranstaltung"],"taxonomyUiRules":[{"taxonomy":"iss_topic","label":"Thema","terms":[]}],"showTimeModeFilter":true,"showItemTypeFilter":false,"showMonthFilter":true,"yearGrouping":true,"showLoadMore":true,"loadMoreText":"Mehr laden"} /--></div>
 <!-- /wp:group --></div>
 <!-- /wp:column -->
 
@@ -292,15 +292,13 @@
 
 <!-- wp:group {"className":"iss-info-row","layout":{"type":"default"}} -->
 <div class="wp-block-group iss-info-row"><!-- wp:group {"className":"iss-info-row__main","layout":{"type":"default"}} -->
-<div class="wp-block-group iss-info-row__main"><!-- wp:paragraph {"className":"iss-info-row__text"} -->
-<p class="iss-info-row__text"><strong>Kontakt:</strong> <a href="mailto:info@industriesalon.de">info@industriesalon.de</a></p>
-<!-- /wp:paragraph --></div>
+<div class="wp-block-group iss-info-row__main"><!-- wp:industriesalon/field {"key":"contact.email","tagName":"p","linkMode":"email","label":"Kontakt:","cssClass":"iss-info-row__text"} /--></div>
 <!-- /wp:group -->
 
 <!-- wp:group {"className":"iss-info-row__actions","layout":{"type":"default"}} -->
 <div class="wp-block-group iss-info-row__actions"><!-- wp:buttons -->
 <div class="wp-block-buttons"><!-- wp:button {"className":"is-style-outline iss-info-row__button"} -->
-<div class="wp-block-button is-style-outline iss-info-row__button"><a class="wp-block-button__link wp-element-button" href="mailto:info@industriesalon.de?subject=Veranstaltungsanfrage">Kontakt aufnehmen</a></div>
+<div class="wp-block-button is-style-outline iss-info-row__button"><!-- wp:industriesalon/field {"key":"contact.email","tagName":"a","linkMode":"email","text":"Kontakt aufnehmen","cssClass":"wp-block-button__link wp-element-button","hrefSuffix":"?subject=Veranstaltungsanfrage"} /--></div>
 <!-- /wp:button --></div>
 <!-- /wp:buttons --></div>
 <!-- /wp:group --></div>

@@ -873,8 +873,33 @@
     });
   }
 
-  function init() {
+  function resolveRoot() {
     var root = document.querySelector('[data-iss-schoneweide-atlas]');
+
+    if (root) {
+      return root;
+    }
+
+    root = document.querySelector('.iss-schoneweide-atlas-page.iss-atlas-app--boot');
+    if (root) {
+      return root;
+    }
+
+    root = document.querySelector('.iss-schoneweide-atlas-page');
+    if (root) {
+      return root;
+    }
+
+    root = document.querySelector('.iss-atlas-app');
+    if (root && root.closest('.iss-schoneweide-atlas-page')) {
+      return root.closest('.iss-schoneweide-atlas-page');
+    }
+
+    return null;
+  }
+
+  function init() {
+    var root = resolveRoot();
 
     if (!root) {
       return;

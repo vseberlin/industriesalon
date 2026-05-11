@@ -341,6 +341,57 @@ function iss_content_model_render_ausstellung_corpus_stations(array $chapters): 
     return (string) ob_get_clean();
 }
 
+function iss_content_model_render_ausstellung_corpus_toc(array $chapters): string
+{
+    if (!$chapters) {
+        return '';
+    }
+
+    ob_start();
+    echo '<ol class="iss-ausstellung-corpus__toc">';
+    foreach ($chapters as $index => $chapter) {
+        $number = str_pad((string) ($index + 1), 2, '0', STR_PAD_LEFT);
+        $excerpt = get_the_excerpt($chapter);
+
+        echo '<li class="iss-ausstellung-corpus__toc-item">';
+        echo '<a class="iss-ausstellung-corpus__toc-link" href="' . esc_url(get_permalink($chapter)) . '">';
+        echo '<span class="iss-ausstellung-corpus__toc-number">' . esc_html($number) . '</span>';
+        echo '<span class="iss-ausstellung-corpus__toc-copy">';
+        echo '<span class="iss-ausstellung-corpus__toc-title">' . esc_html(get_the_title($chapter)) . '</span>';
+        if ($excerpt !== '') {
+            echo '<span class="iss-ausstellung-corpus__toc-text">' . esc_html($excerpt) . '</span>';
+        }
+        echo '</span>';
+        echo '</a>';
+        echo '</li>';
+    }
+    echo '</ol>';
+
+    return (string) ob_get_clean();
+}
+
+function iss_content_model_render_ausstellung_corpus_body(array $chapters, int $publication_id): string
+{
+    if (!$chapters && $publication_id <= 0) {
+        return '';
+    }
+
+    ob_start();
+    if ($chapters) {
+        echo iss_content_model_render_ausstellung_corpus_stations($chapters);
+    }
+
+    if ($publication_id > 0 && get_post_status($publication_id)) {
+        echo '<p class="iss-ausstellung-corpus__publication-link"><a class="iss-action-link" href="' . esc_url(get_permalink($publication_id)) . '">' . esc_html__('Als Longread lesen', 'iss-content-model') . '</a></p>';
+    }
+
+    if ($chapters) {
+        echo iss_content_model_render_ausstellung_corpus_toc($chapters);
+    }
+
+    return (string) ob_get_clean();
+}
+
 function iss_content_model_render_ausstellung_corpus_block($attributes = [], $content = '', $block = null) {
     $post_id = (int) get_the_ID();
     if ($post_id <= 0 || get_post_type($post_id) !== ISS_CONTENT_MODEL_AUSSTELLUNG_POST_TYPE) {
@@ -354,6 +405,16 @@ function iss_content_model_render_ausstellung_corpus_block($attributes = [], $co
 
     if (!$chapters && $publication_id <= 0) {
         return '';
+    }
+
+    $shell_mode = sanitize_key((string) ($attributes['shellMode'] ?? 'section'));
+    $body_html = iss_content_model_render_ausstellung_corpus_body($chapters, $publication_id);
+    if ($body_html === '') {
+        return '';
+    }
+
+    if ($shell_mode === 'body') {
+        return $body_html;
     }
 
     $wrapper = (function_exists('get_block_wrapper_attributes') && $block instanceof WP_Block)
@@ -375,34 +436,7 @@ function iss_content_model_render_ausstellung_corpus_block($attributes = [], $co
     }
     echo '</div>';
 
-    if ($chapters) {
-        echo iss_content_model_render_ausstellung_corpus_stations($chapters);
-    }
-
-    if ($publication_id > 0 && get_post_status($publication_id)) {
-        echo '<p class="iss-ausstellung-corpus__publication-link"><a class="iss-action-link" href="' . esc_url(get_permalink($publication_id)) . '">' . esc_html__('Als Longread lesen', 'iss-content-model') . '</a></p>';
-    }
-
-    if ($chapters) {
-        echo '<ol class="iss-ausstellung-corpus__toc">';
-        foreach ($chapters as $index => $chapter) {
-            $number = str_pad((string) ($index + 1), 2, '0', STR_PAD_LEFT);
-            $excerpt = get_the_excerpt($chapter);
-
-            echo '<li class="iss-ausstellung-corpus__toc-item">';
-            echo '<a class="iss-ausstellung-corpus__toc-link" href="' . esc_url(get_permalink($chapter)) . '">';
-            echo '<span class="iss-ausstellung-corpus__toc-number">' . esc_html($number) . '</span>';
-            echo '<span class="iss-ausstellung-corpus__toc-copy">';
-            echo '<span class="iss-ausstellung-corpus__toc-title">' . esc_html(get_the_title($chapter)) . '</span>';
-            if ($excerpt !== '') {
-                echo '<span class="iss-ausstellung-corpus__toc-text">' . esc_html($excerpt) . '</span>';
-            }
-            echo '</span>';
-            echo '</a>';
-            echo '</li>';
-        }
-        echo '</ol>';
-    }
+    echo $body_html;
 
     echo '</section>';
     echo '</div>';

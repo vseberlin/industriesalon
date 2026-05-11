@@ -4,7 +4,7 @@
       return null;
     }
 
-    return node.closest("[data-video-library-root]");
+    return node.closest("[data-video-library-root], .iss-video-library--interactive");
   }
 
   function setText(node, value) {
@@ -26,6 +26,10 @@
     }
 
     node.hidden = (value || "").trim() === "";
+  }
+
+  function getPlayer(root) {
+    return root ? root.querySelector("[data-video-player]") : null;
   }
 
   function activateCard(root, videoId) {
@@ -51,6 +55,7 @@
     var link = root.querySelector("[data-video-player-link]");
     var transcriptLink = root.querySelector("[data-video-player-transcript]");
     var transcriptWrap = root.querySelector("[data-video-player-transcript-wrap]");
+    var returnWrap = root.querySelector("[data-video-player-return-wrap]");
 
     var embedUrl = (trigger.getAttribute("data-video-embed") || "").trim();
     var titleText = trigger.getAttribute("data-video-title") || "";
@@ -85,6 +90,7 @@
       transcriptLink.href = permalink ? permalink.replace(/\/?$/, "/") + "#transkript" : "#transkript";
     }
     setWrapVisibility(transcriptWrap, hasTranscript ? "1" : "");
+    setWrapVisibility(returnWrap, "1");
 
     activateCard(root, videoId);
   }
@@ -100,19 +106,40 @@
       return;
     }
 
-    var player = libraryRoot.querySelector("[data-video-player]");
+    var player = getPlayer(libraryRoot);
     if (!player) {
       return;
     }
 
     event.preventDefault();
+    player.__lastTrigger = trigger;
     updatePlayer(player, trigger);
     player.scrollIntoView({ behavior: "smooth", block: "nearest" });
   });
 
+  document.addEventListener("click", function (event) {
+    var button = event.target.closest("[data-video-player-return]");
+    if (!button) {
+      return;
+    }
+
+    var libraryRoot = getLibraryRoot(button);
+    var player = getPlayer(libraryRoot);
+    var trigger = player && player.__lastTrigger ? player.__lastTrigger : null;
+    if (!trigger) {
+      return;
+    }
+
+    event.preventDefault();
+    trigger.scrollIntoView({ behavior: "smooth", block: "center" });
+    window.setTimeout(function () {
+      trigger.focus({ preventScroll: true });
+    }, 220);
+  });
+
   document.addEventListener("DOMContentLoaded", function () {
-    document.querySelectorAll("[data-video-library-root]").forEach(function (libraryRoot) {
-      var player = libraryRoot.querySelector("[data-video-player]");
+    document.querySelectorAll("[data-video-library-root], .iss-video-library--interactive").forEach(function (libraryRoot) {
+      var player = getPlayer(libraryRoot);
       if (!player) {
         return;
       }

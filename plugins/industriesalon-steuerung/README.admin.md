@@ -177,6 +177,7 @@ Core attributes:
 Core attributes:
 
 - `variant`
+- `shellMode`
 - `accent`
 - `surface`
 - `kicker`

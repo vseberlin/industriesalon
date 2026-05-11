@@ -15,6 +15,36 @@ function iss_content_model_register_video_library_block(): void
         'render_callback' => 'iss_content_model_render_video_library_block',
     ]);
 
+    register_block_type('iss/video-library-filters', [
+        'api_version' => 2,
+        'render_callback' => 'iss_content_model_render_video_library_filters_block',
+    ]);
+
+    register_block_type('iss/video-library-feature', [
+        'api_version' => 2,
+        'render_callback' => 'iss_content_model_render_video_library_feature_block',
+    ]);
+
+    register_block_type('iss/video-library-playlists', [
+        'api_version' => 2,
+        'render_callback' => 'iss_content_model_render_video_library_playlists_block',
+    ]);
+
+    register_block_type('iss/video-library-external', [
+        'api_version' => 2,
+        'render_callback' => 'iss_content_model_render_video_library_external_block',
+    ]);
+
+    register_block_type('iss/video-library-inventory', [
+        'api_version' => 2,
+        'render_callback' => 'iss_content_model_render_video_library_inventory_block',
+    ]);
+
+    register_block_type('iss/video-library-cta', [
+        'api_version' => 2,
+        'render_callback' => 'iss_content_model_render_video_library_cta_block',
+    ]);
+
     register_block_type('iss/video-player', [
         'api_version' => 2,
         'render_callback' => 'iss_content_model_render_video_player_block',
@@ -26,6 +56,17 @@ function iss_content_model_register_video_library_block(): void
     ]);
 }
 add_action('init', 'iss_content_model_register_video_library_block', 25);
+
+function iss_content_model_enqueue_video_library_assets(): void
+{
+    wp_enqueue_script(
+        'iss-content-model-video-library',
+        plugins_url('../assets/video-library.js', __FILE__),
+        [],
+        ISS_CONTENT_MODEL_VERSION,
+        true
+    );
+}
 
 function iss_content_model_normalize_video_watch_url(string $url): string
 {
@@ -465,6 +506,114 @@ function iss_content_model_filter_video_cards_by_source_family(array $cards, str
     }));
 }
 
+function iss_content_model_get_video_library_payload(): array
+{
+    $cards = iss_content_model_get_video_cards();
+    if (!$cards) {
+        return [];
+    }
+
+    $featured = iss_content_model_pick_featured_video($cards);
+    if (!$featured) {
+        return [];
+    }
+
+    $external_cards = iss_content_model_filter_video_cards_by_source_family($cards, 'external_report');
+    $core_cards = array_values(array_filter($cards, static function (array $card): bool {
+        return (($card['source_family'] ?? 'core') !== 'external_report');
+    }));
+
+    return [
+        'cards' => $cards,
+        'featured' => $featured,
+        'external_cards' => $external_cards,
+        'groups' => iss_content_model_group_video_cards($core_cards),
+    ];
+}
+
+function iss_content_model_render_video_library_filters(array $groups, array $external_cards): string
+{
+    ob_start();
+    ?>
+    <nav class="iss-video-library__filters" aria-label="<?php echo esc_attr__('Thematische Einstiege', 'iss-content-model'); ?>">
+        <?php foreach ($groups as $group) : ?>
+            <a class="iss-video-library__filter" href="#<?php echo esc_attr((string) $group['term']['slug']); ?>">
+                <?php echo esc_html((string) $group['term']['name']); ?>
+            </a>
+        <?php endforeach; ?>
+        <?php if ($external_cards) : ?>
+            <a class="iss-video-library__filter" href="#externe-berichte">
+                <?php esc_html_e('Externe Berichte', 'iss-content-model'); ?>
+            </a>
+        <?php endif; ?>
+    </nav>
+    <?php
+
+    return (string) ob_get_clean();
+}
+
+function iss_content_model_render_video_library_feature(array $featured): string
+{
+    $category_names = implode(', ', array_filter(array_map(static function ($category) {
+        return (string) ($category['name'] ?? '');
+    }, $featured['categories'] ?? [])));
+
+    ob_start();
+    ?>
+    <section
+        class="iss-video-library__feature"
+        data-video-player
+        data-default-video-id="<?php echo esc_attr((string) $featured['id']); ?>"
+    >
+        <div class="iss-video-library__feature-media">
+            <iframe
+                data-video-player-frame
+                src="<?php echo esc_url($featured['embed_url']); ?>"
+                title="<?php echo esc_attr($featured['title']); ?>"
+                loading="lazy"
+                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+                referrerpolicy="strict-origin-when-cross-origin"
+                allowfullscreen
+            ></iframe>
+        </div>
+
+        <div class="iss-video-library__feature-copy">
+            <p class="iss-video-library__feature-kicker" data-video-player-kicker><?php echo esc_html($category_names); ?></p>
+            <h2 class="iss-video-library__feature-title" data-video-player-title><?php echo esc_html($featured['title']); ?></h2>
+            <p class="iss-video-library__feature-text" data-video-player-text><?php echo esc_html($featured['excerpt']); ?></p>
+            <div class="iss-video-library__feature-meta">
+                <p data-video-player-year-wrap <?php echo $featured['year'] === '' ? 'hidden' : ''; ?>><strong><?php esc_html_e('Jahr', 'iss-content-model'); ?></strong> <span data-video-player-year><?php echo esc_html($featured['year']); ?></span></p>
+                <p><strong><?php esc_html_e('Quelle', 'iss-content-model'); ?></strong> <?php echo esc_html($featured['source_label'] !== '' ? $featured['source_label'] : __('Video', 'iss-content-model')); ?></p>
+                <div class="iss-video-library__feature-links">
+                    <p class="iss-video-library__feature-link"><a class="iss-action-link" data-video-player-link href="<?php echo esc_url($featured['source_url']); ?>" target="_blank" rel="noopener noreferrer"><?php esc_html_e('Zum Original', 'iss-content-model'); ?></a></p>
+                    <p class="iss-video-library__feature-link" data-video-player-transcript-wrap <?php echo empty($featured['has_transcript']) ? 'hidden' : ''; ?>><a class="iss-action-link" data-video-player-transcript href="<?php echo esc_url(trailingslashit((string) $featured['permalink']) . '#transkript'); ?>"><?php esc_html_e('Transkript lesen', 'iss-content-model'); ?></a></p>
+                    <p class="iss-video-library__feature-link" data-video-player-return-wrap hidden><button type="button" class="iss-video-library__return-link" data-video-player-return><?php esc_html_e('Zur Auswahl zurück', 'iss-content-model'); ?></button></p>
+                </div>
+            </div>
+        </div>
+    </section>
+    <?php
+
+    return (string) ob_get_clean();
+}
+
+function iss_content_model_render_video_library_cta(): string
+{
+    ob_start();
+    ?>
+    <section class="iss-video-library__cta">
+        <div class="iss-video-library__cta-copy">
+            <p class="iss-kicker iss-kicker--compact"><?php esc_html_e('Weiter lesen', 'iss-content-model'); ?></p>
+            <h3 class="iss-video-library__cta-title"><?php esc_html_e('Diese Videos sind Teil derselben Sammlung wie Archiv, Atlas, Führungen und Ausstellungen.', 'iss-content-model'); ?></h3>
+            <p class="iss-video-library__cta-text"><?php esc_html_e('Nicht als Nebenmaterial, sondern als eigene Lesart des Ortsgedächtnisses.', 'iss-content-model'); ?></p>
+        </div>
+        <p><a class="iss-action-link" href="/sammlungen/"><?php esc_html_e('Zur Sammlungsseite', 'iss-content-model'); ?></a></p>
+    </section>
+    <?php
+
+    return (string) ob_get_clean();
+}
+
 function iss_content_model_render_video_inventory_section(array $cards): string
 {
     ob_start();
@@ -519,109 +668,113 @@ function iss_content_model_render_video_external_reports_section(array $cards): 
 
 function iss_content_model_render_video_library_block($attributes = [], $content = '', $block = null): string
 {
-    $cards = iss_content_model_get_video_cards();
-    if (!$cards) {
+    $payload = iss_content_model_get_video_library_payload();
+    if ($payload === []) {
         return '<div class="iss-video-library"><p class="iss-video-library__empty">' . esc_html__('Zurzeit sind noch keine Videos veröffentlicht.', 'iss-content-model') . '</p></div>';
     }
-
-    $featured = iss_content_model_pick_featured_video($cards);
-    if (!$featured) {
-        return '';
-    }
-
-    $external_cards = iss_content_model_filter_video_cards_by_source_family($cards, 'external_report');
-    $core_cards = array_values(array_filter($cards, static function (array $card): bool {
-        return (($card['source_family'] ?? 'core') !== 'external_report');
-    }));
-    $groups = iss_content_model_group_video_cards($core_cards);
-
-    wp_enqueue_script(
-        'iss-content-model-video-library',
-        plugins_url('../assets/video-library.js', __FILE__),
-        [],
-        ISS_CONTENT_MODEL_VERSION,
-        true
-    );
+    iss_content_model_enqueue_video_library_assets();
 
     $wrapper = (function_exists('get_block_wrapper_attributes') && $block instanceof WP_Block)
         ? get_block_wrapper_attributes([
-            'class' => 'iss-video-library',
-            'data-video-library-root' => '1',
+            'class' => 'iss-video-library iss-video-library--interactive',
         ])
-        : 'class="iss-video-library" data-video-library-root="1"';
+        : 'class="iss-video-library iss-video-library--interactive"';
 
     ob_start();
     ?>
     <div <?php echo $wrapper; ?>>
-        <nav class="iss-video-library__filters" aria-label="<?php echo esc_attr__('Thematische Einstiege', 'iss-content-model'); ?>">
-            <?php foreach ($groups as $group) : ?>
-                <a class="iss-video-library__filter" href="#<?php echo esc_attr((string) $group['term']['slug']); ?>">
-                    <?php echo esc_html((string) $group['term']['name']); ?>
-                </a>
-            <?php endforeach; ?>
-            <?php if ($external_cards) : ?>
-                <a class="iss-video-library__filter" href="#externe-berichte">
-                    <?php esc_html_e('Externe Berichte', 'iss-content-model'); ?>
-                </a>
-            <?php endif; ?>
-        </nav>
+        <?php echo iss_content_model_render_video_library_filters($payload['groups'], $payload['external_cards']); ?>
 
-        <section
-            class="iss-video-library__feature"
-            data-video-player
-            data-default-video-id="<?php echo esc_attr((string) $featured['id']); ?>"
-        >
-            <div class="iss-video-library__feature-media">
-                <iframe
-                    data-video-player-frame
-                    src="<?php echo esc_url($featured['embed_url']); ?>"
-                    title="<?php echo esc_attr($featured['title']); ?>"
-                    loading="lazy"
-                    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
-                    referrerpolicy="strict-origin-when-cross-origin"
-                    allowfullscreen
-                ></iframe>
-            </div>
-
-            <div class="iss-video-library__feature-copy">
-                <p class="iss-video-library__feature-kicker" data-video-player-kicker><?php echo esc_html(implode(', ', array_filter(array_map(static function ($category) { return (string) ($category['name'] ?? ''); }, $featured['categories'])))); ?></p>
-                <h2 class="iss-video-library__feature-title" data-video-player-title><?php echo esc_html($featured['title']); ?></h2>
-                <p class="iss-video-library__feature-text" data-video-player-text><?php echo esc_html($featured['excerpt']); ?></p>
-                <div class="iss-video-library__feature-meta">
-                    <p data-video-player-year-wrap <?php echo $featured['year'] === '' ? 'hidden' : ''; ?>><strong><?php esc_html_e('Jahr', 'iss-content-model'); ?></strong> <span data-video-player-year><?php echo esc_html($featured['year']); ?></span></p>
-                    <p><strong><?php esc_html_e('Quelle', 'iss-content-model'); ?></strong> <?php echo esc_html($featured['source_label'] !== '' ? $featured['source_label'] : __('Video', 'iss-content-model')); ?></p>
-                    <div class="iss-video-library__feature-links">
-                        <p class="iss-video-library__feature-link"><a class="iss-action-link" data-video-player-link href="<?php echo esc_url($featured['source_url']); ?>" target="_blank" rel="noopener noreferrer"><?php esc_html_e('Zum Original', 'iss-content-model'); ?></a></p>
-                        <p class="iss-video-library__feature-link" data-video-player-transcript-wrap <?php echo empty($featured['has_transcript']) ? 'hidden' : ''; ?>><a class="iss-action-link" data-video-player-transcript href="<?php echo esc_url(trailingslashit((string) $featured['permalink']) . '#transkript'); ?>"><?php esc_html_e('Transkript lesen', 'iss-content-model'); ?></a></p>
-                    </div>
-                </div>
-            </div>
-        </section>
+        <?php echo iss_content_model_render_video_library_feature($payload['featured']); ?>
 
         <div class="iss-video-library__playlists">
             <?php
-            foreach ($groups as $group) {
+            foreach ($payload['groups'] as $group) {
                 echo iss_content_model_render_video_playlist_section($group);
             }
             ?>
         </div>
 
-        <?php echo iss_content_model_render_video_external_reports_section($external_cards); ?>
+        <?php echo iss_content_model_render_video_external_reports_section($payload['external_cards']); ?>
 
-        <?php echo iss_content_model_render_video_inventory_section($cards); ?>
+        <?php echo iss_content_model_render_video_inventory_section($payload['cards']); ?>
 
-        <section class="iss-video-library__cta">
-            <div class="iss-video-library__cta-copy">
-                <p class="iss-kicker iss-kicker--compact"><?php esc_html_e('Weiter lesen', 'iss-content-model'); ?></p>
-                <h3 class="iss-video-library__cta-title"><?php esc_html_e('Diese Videos sind Teil derselben Sammlung wie Archiv, Atlas, Führungen und Ausstellungen.', 'iss-content-model'); ?></h3>
-                <p class="iss-video-library__cta-text"><?php esc_html_e('Nicht als Nebenmaterial, sondern als eigene Lesart des Ortsgedächtnisses.', 'iss-content-model'); ?></p>
-            </div>
-            <p><a class="iss-action-link" href="/sammlungen/"><?php esc_html_e('Zur Sammlungsseite', 'iss-content-model'); ?></a></p>
-        </section>
+        <?php echo iss_content_model_render_video_library_cta(); ?>
     </div>
     <?php
 
     return (string) ob_get_clean();
+}
+
+function iss_content_model_render_video_library_filters_block($attributes = [], $content = '', $block = null): string
+{
+    $payload = iss_content_model_get_video_library_payload();
+    if ($payload === []) {
+        return '';
+    }
+
+    return iss_content_model_render_video_library_filters($payload['groups'], $payload['external_cards']);
+}
+
+function iss_content_model_render_video_library_feature_block($attributes = [], $content = '', $block = null): string
+{
+    $payload = iss_content_model_get_video_library_payload();
+    if ($payload === []) {
+        return '';
+    }
+
+    iss_content_model_enqueue_video_library_assets();
+    return iss_content_model_render_video_library_feature($payload['featured']);
+}
+
+function iss_content_model_render_video_library_playlists_block($attributes = [], $content = '', $block = null): string
+{
+    $payload = iss_content_model_get_video_library_payload();
+    if ($payload === []) {
+        return '';
+    }
+
+    iss_content_model_enqueue_video_library_assets();
+    ob_start();
+    echo '<div class="iss-video-library__playlists">';
+    foreach ($payload['groups'] as $group) {
+        echo iss_content_model_render_video_playlist_section($group);
+    }
+    echo '</div>';
+
+    return (string) ob_get_clean();
+}
+
+function iss_content_model_render_video_library_external_block($attributes = [], $content = '', $block = null): string
+{
+    $payload = iss_content_model_get_video_library_payload();
+    if ($payload === []) {
+        return '';
+    }
+
+    iss_content_model_enqueue_video_library_assets();
+    return iss_content_model_render_video_external_reports_section($payload['external_cards']);
+}
+
+function iss_content_model_render_video_library_inventory_block($attributes = [], $content = '', $block = null): string
+{
+    $payload = iss_content_model_get_video_library_payload();
+    if ($payload === []) {
+        return '';
+    }
+
+    iss_content_model_enqueue_video_library_assets();
+    return iss_content_model_render_video_inventory_section($payload['cards']);
+}
+
+function iss_content_model_render_video_library_cta_block($attributes = [], $content = '', $block = null): string
+{
+    $payload = iss_content_model_get_video_library_payload();
+    if ($payload === []) {
+        return '';
+    }
+
+    return iss_content_model_render_video_library_cta();
 }
 
 function iss_content_model_get_single_video_card(int $post_id): ?array

@@ -594,10 +594,13 @@ final class Industriesalon_Steuerung {
             'editor_script'   => 'iss-control-blocks',
             'render_callback' => [$this, 'render_field_block'],
             'attributes'      => [
-                'key'      => ['type' => 'string', 'default' => 'contact.phone'],
-                'tagName'  => ['type' => 'string', 'default' => 'div'],
-                'linkMode' => ['type' => 'string', 'default' => 'auto'],
-                'label'    => ['type' => 'string', 'default' => ''],
+                'key'        => ['type' => 'string', 'default' => 'contact.phone'],
+                'tagName'    => ['type' => 'string', 'default' => 'div'],
+                'linkMode'   => ['type' => 'string', 'default' => 'auto'],
+                'label'      => ['type' => 'string', 'default' => ''],
+                'text'       => ['type' => 'string', 'default' => ''],
+                'cssClass'   => ['type' => 'string', 'default' => ''],
+                'hrefSuffix' => ['type' => 'string', 'default' => ''],
             ],
         ]);
 
@@ -674,10 +677,13 @@ final class Industriesalon_Steuerung {
 
     public function render_field_block(array $attributes = []): string {
         return $this->render_field([
-            'key'   => $attributes['key'] ?? 'contact.phone',
-            'tag'   => $attributes['tagName'] ?? 'div',
-            'link'  => $attributes['linkMode'] ?? 'auto',
-            'label' => $attributes['label'] ?? '',
+            'key'        => $attributes['key'] ?? 'contact.phone',
+            'tag'        => $attributes['tagName'] ?? 'div',
+            'link'       => $attributes['linkMode'] ?? 'auto',
+            'label'      => $attributes['label'] ?? '',
+            'text'       => $attributes['text'] ?? '',
+            'class_name' => $attributes['cssClass'] ?? '',
+            'hrefSuffix' => $attributes['hrefSuffix'] ?? '',
         ]);
     }
 
@@ -727,13 +733,16 @@ final class Industriesalon_Steuerung {
         }
 
         $tag = isset($args['tag']) ? strtolower((string) $args['tag']) : 'div';
-        $allowed_tags = ['div', 'p', 'span', 'strong', 'h1', 'h2', 'h3'];
+        $allowed_tags = ['a', 'div', 'p', 'span', 'strong', 'h1', 'h2', 'h3'];
         if (! in_array($tag, $allowed_tags, true)) {
             $tag = 'div';
         }
 
         $link_mode = isset($args['link']) ? (string) $args['link'] : 'auto';
         $label = isset($args['label']) ? (string) $args['label'] : '';
+        $text = isset($args['text']) ? (string) $args['text'] : '';
+        $class_name = isset($args['class_name']) ? trim((string) $args['class_name']) : '';
+        $href_suffix = isset($args['hrefSuffix']) ? (string) $args['hrefSuffix'] : '';
         $value = $this->get_field_value($key);
 
         if ($value === '' || $value === null) {
@@ -741,7 +750,8 @@ final class Industriesalon_Steuerung {
         }
 
         $label_html = $label !== '' ? '<span class="iss-control-field__label">' . esc_html($label) . '</span> ' : '';
-        $content = esc_html((string) $value);
+        $content_text = $text !== '' ? $text : (string) $value;
+        $content = esc_html($content_text);
         $href = '';
 
         if ($link_mode === 'auto') {
@@ -754,11 +764,26 @@ final class Industriesalon_Steuerung {
             $href = esc_url((string) $value);
         }
 
-        if ($href !== '' && $link_mode !== 'none') {
-            $content = '<a href="' . esc_url($href) . '">' . $content . '</a>';
+        if ($href !== '' && $href_suffix !== '') {
+            $href .= $href_suffix;
         }
 
         $class = 'iss-control-field iss-control-field--' . sanitize_html_class(str_replace('.', '-', $key));
+        if ($class_name !== '') {
+            $class .= ' ' . trim(preg_replace('/\s+/', ' ', $class_name));
+        }
+
+        if ($tag === 'a') {
+            if ($href === '' || $link_mode === 'none') {
+                return '';
+            }
+
+            return sprintf('<a class="%1$s" href="%2$s">%3$s%4$s</a>', esc_attr($class), esc_url($href), $label_html, $content);
+        }
+
+        if ($href !== '' && $link_mode !== 'none') {
+            $content = '<a href="' . esc_url($href) . '">' . $content . '</a>';
+        }
 
         return sprintf('<%1$s class="%2$s">%3$s%4$s</%1$s>', esc_html($tag), esc_attr($class), $label_html, $content);
     }
@@ -766,6 +791,7 @@ final class Industriesalon_Steuerung {
     public function render_visit_info(array $attributes = []): string {
         $align = isset($attributes['align']) ? (string) $attributes['align'] : '';
         $align_class = in_array($align, ['wide', 'full'], true) ? ' align' . $align : '';
+        $shell_mode = sanitize_key((string) ($attributes['shellMode'] ?? 'section'));
         $variant = $this->normalize_visit_variant((string) ($attributes['variant'] ?? 'info-panel'), 'visit_info');
         $accent = $this->normalize_info_panel_accent((string) ($attributes['accent'] ?? 'green'));
         $surface = $this->normalize_info_panel_surface((string) ($attributes['surface'] ?? 'light'));
@@ -810,7 +836,9 @@ final class Industriesalon_Steuerung {
 
         ob_start();
         ?>
+        <?php if ($shell_mode !== 'body') : ?>
         <div class="iss-visit-info iss-visit-info--<?php echo esc_attr(sanitize_html_class($variant)); ?><?php echo esc_attr($align_class); ?>" data-variant="<?php echo esc_attr($variant); ?>">
+        <?php endif; ?>
             <section class="iss-info-panel iss-info-panel--<?php echo esc_attr($accent); ?> iss-control-info-panel iss-control-info-panel--surface-<?php echo esc_attr($surface); ?> iss-control-info-panel--skin-<?php echo esc_attr($skin); ?>" data-skin="<?php echo esc_attr($skin); ?>">
                 <?php if ($kicker !== '') : ?>
                     <p class="iss-kicker iss-control-info-panel__kicker"><?php echo esc_html($kicker); ?></p>
@@ -836,7 +864,9 @@ final class Industriesalon_Steuerung {
                     </div>
                 <?php endif; ?>
             </section>
+        <?php if ($shell_mode !== 'body') : ?>
         </div>
+        <?php endif; ?>
         <?php
         return (string) ob_get_clean();
     }

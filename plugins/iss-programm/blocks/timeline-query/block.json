@@ -11,6 +11,7 @@
     "align": ["wide", "full"]
   },
   "attributes": {
+    "shellMode": { "type": "string", "default": "section" },
     "title": { "type": "string", "default": "" },
     "intro": { "type": "string", "default": "" },
     "limit": { "type": "number", "default": 12 },

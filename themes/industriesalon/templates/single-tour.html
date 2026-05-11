@@ -1,7 +1,7 @@
 <!-- wp:template-part {"slug":"header","tagName":"header"} /-->
 
-<!-- wp:group {"tagName":"main","className":"iss-tour-page","layout":{"type":"default"}} -->
-<main class="wp-block-group iss-tour-page">
+<!-- wp:group {"tagName":"main","className":"iss-tour-page iss-scheme-red","layout":{"type":"default"}} -->
+<main class="wp-block-group iss-tour-page iss-scheme-red">
 
 	<!-- wp:group {"tagName":"section","className":"iss-tour-hero section section--with-rail","layout":{"type":"default"}} -->
 	<section class="wp-block-group iss-tour-hero section section--with-rail">
@@ -100,7 +100,35 @@
 
 	<!-- wp:iss/tour-route /-->
 
-	<!-- wp:iss/related-place-map {"kicker":"Route im Atlas","title":"Die Stationen dieser Führung im Stadtraum","source":"route","perPage":6} /-->
+	<!-- wp:group {"tagName":"section","className":"section section--plain iss-related-place-map","layout":{"type":"default"}} -->
+	<section class="wp-block-group section section--plain iss-related-place-map">
+		<!-- wp:group {"className":"iss-container","layout":{"type":"default"}} -->
+		<div class="wp-block-group iss-container">
+			<!-- wp:group {"className":"iss-related-place-map__shell","layout":{"type":"default"}} -->
+			<div class="wp-block-group iss-related-place-map__shell">
+				<!-- wp:group {"className":"iss-heading iss-related-place-map__intro","layout":{"type":"default"}} -->
+				<div class="wp-block-group iss-heading iss-related-place-map__intro">
+					<!-- wp:paragraph {"className":"iss-kicker iss-kicker--compact"} -->
+					<p class="iss-kicker iss-kicker--compact">Route im Atlas</p>
+					<!-- /wp:paragraph -->
+
+					<!-- wp:heading {"level":2,"className":"iss-heading__title"} -->
+					<h2 class="iss-heading__title">Die Stationen dieser Führung im Stadtraum</h2>
+					<!-- /wp:heading -->
+
+					<!-- wp:paragraph {"className":"iss-related-place-map__cta"} -->
+					<p class="iss-related-place-map__cta"><a class="iss-action-link" href="/schoneweide/">Zum Schöneweide-Atlas</a></p>
+					<!-- /wp:paragraph -->
+				</div>
+				<!-- /wp:group -->
+
+				<!-- wp:iss/related-place-map {"source":"route","perPage":6,"shellMode":"body"} /-->
+			</div>
+			<!-- /wp:group -->
+		</div>
+		<!-- /wp:group -->
+	</section>
+	<!-- /wp:group -->
 
 	<!-- wp:group {"tagName":"section","className":"iss-tour-main section","layout":{"type":"default"}} -->
 	<section class="wp-block-group iss-tour-main section">
@@ -198,9 +226,49 @@
 	</section>
 	<!-- /wp:group -->
 
-	<!-- wp:iss/related-content {"postType":"post","kicker":"Hintergrund","title":"Beiträge zu den Orten dieser Führung","perPage":3} /-->
+	<!-- wp:group {"tagName":"section","className":"section section--plain iss-related-feed iss-related-feed--post","layout":{"type":"default"}} -->
+	<section class="wp-block-group section section--plain iss-related-feed iss-related-feed--post">
+		<!-- wp:group {"className":"iss-container","layout":{"type":"default"}} -->
+		<div class="wp-block-group iss-container">
+			<!-- wp:group {"className":"iss-heading iss-related-feed__intro","layout":{"type":"default"}} -->
+			<div class="wp-block-group iss-heading iss-related-feed__intro">
+				<!-- wp:paragraph {"className":"iss-kicker iss-kicker--compact"} -->
+				<p class="iss-kicker iss-kicker--compact">Hintergrund</p>
+				<!-- /wp:paragraph -->
 
-	<!-- wp:iss/related-content {"postType":"veranstaltung","kicker":"Programm","title":"Veranstaltungen mit Ortsbezug","perPage":2} /-->
+				<!-- wp:heading {"level":2,"className":"iss-heading__title"} -->
+				<h2 class="iss-heading__title">Beiträge zu den Orten dieser Führung</h2>
+				<!-- /wp:heading -->
+			</div>
+			<!-- /wp:group -->
+
+			<!-- wp:iss/related-cards {"postType":"post","perPage":3} /-->
+		</div>
+		<!-- /wp:group -->
+	</section>
+	<!-- /wp:group -->
+
+	<!-- wp:group {"tagName":"section","className":"section section--plain iss-related-feed iss-related-feed--veranstaltung","layout":{"type":"default"}} -->
+	<section class="wp-block-group section section--plain iss-related-feed iss-related-feed--veranstaltung">
+		<!-- wp:group {"className":"iss-container","layout":{"type":"default"}} -->
+		<div class="wp-block-group iss-container">
+			<!-- wp:group {"className":"iss-heading iss-related-feed__intro","layout":{"type":"default"}} -->
+			<div class="wp-block-group iss-heading iss-related-feed__intro">
+				<!-- wp:paragraph {"className":"iss-kicker iss-kicker--compact"} -->
+				<p class="iss-kicker iss-kicker--compact">Programm</p>
+				<!-- /wp:paragraph -->
+
+				<!-- wp:heading {"level":2,"className":"iss-heading__title"} -->
+				<h2 class="iss-heading__title">Veranstaltungen mit Ortsbezug</h2>
+				<!-- /wp:heading -->
+			</div>
+			<!-- /wp:group -->
+
+			<!-- wp:iss/related-cards {"postType":"veranstaltung","perPage":2} /-->
+		</div>
+		<!-- /wp:group -->
+	</section>
+	<!-- /wp:group -->
 
 </main>
 <!-- /wp:group -->

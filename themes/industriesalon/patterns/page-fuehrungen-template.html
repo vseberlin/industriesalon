@@ -40,7 +40,7 @@ Inserter: yes
 
 		<!-- wp:group {"anchor":"tour-liste","className":"iss-tours-booking__surface iss-tours-booking__surface--list","layout":{"type":"default"}} -->
 		<div id="tour-liste" class="wp-block-group iss-tours-booking__surface iss-tours-booking__surface--list">
-			<!-- wp:industriesalon/timeline-query {"limit":3,"showMeta":false,"timeMode":"upcoming","includeRunningRanges":false,"allowedTimeModesList":["upcoming","month","all"],"presetItemTypesList":["fuehrungen"],"allowedTypesList":["fuehrungen"],"showTimeModeFilter":false,"showTypeFilter":false,"showPostTypeFilter":false,"showMonthFilter":false,"showCalendarBridge":true,"renderMode":"cards","yearGrouping":false,"showDetailsButton":true,"showRecommendButton":false,"showTicketsButton":true,"showLoadMore":true,"loadMoreText":"Weitere Termine laden","detailsButtonText":"Mehr","ticketsButtonText":"Buchen","className":"iss-tours-booking__cards"} /-->
+			<!-- wp:industriesalon/timeline-query {"shellMode":"body","limit":3,"showMeta":false,"timeMode":"upcoming","includeRunningRanges":false,"allowedTimeModesList":["upcoming","month","all"],"presetItemTypesList":["fuehrungen"],"allowedTypesList":["fuehrungen"],"showTimeModeFilter":false,"showTypeFilter":false,"showPostTypeFilter":false,"showMonthFilter":false,"showCalendarBridge":true,"renderMode":"cards","yearGrouping":false,"showDetailsButton":true,"showRecommendButton":false,"showTicketsButton":true,"showLoadMore":true,"loadMoreText":"Weitere Termine laden","detailsButtonText":"Mehr","ticketsButtonText":"Buchen","className":"iss-tours-booking__cards"} /-->
 		</div>
 		<!-- /wp:group -->
 
@@ -268,11 +268,7 @@ Inserter: yes
 						<!-- wp:group {"className":"iss-info-row","layout":{"type":"default"}} -->
 						<div class="wp-block-group iss-info-row">
 							<!-- wp:group {"className":"iss-info-row__main","layout":{"type":"default"}} -->
-							<div class="wp-block-group iss-info-row__main">
-								<!-- wp:paragraph {"className":"iss-info-row__text"} -->
-								<p class="iss-info-row__text"><strong>E-Mail:</strong> <a href="mailto:info@industriesalon.de?subject=Anfrage%20F%C3%BChrung">info@industriesalon.de</a></p>
-								<!-- /wp:paragraph -->
-							</div>
+							<div class="wp-block-group iss-info-row__main"><!-- wp:industriesalon/field {"key":"contact.email","tagName":"p","linkMode":"email","label":"E-Mail:","cssClass":"iss-info-row__text"} /--></div>
 							<!-- /wp:group -->
 
 							<!-- wp:group {"className":"iss-info-row__actions","layout":{"type":"default"}} -->
@@ -280,7 +276,7 @@ Inserter: yes
 								<!-- wp:buttons -->
 								<div class="wp-block-buttons">
 									<!-- wp:button {"className":"is-style-outline iss-info-row__button"} -->
-									<div class="wp-block-button is-style-outline iss-info-row__button"><a class="wp-block-button__link wp-element-button" href="mailto:info@industriesalon.de?subject=Anfrage%20F%C3%BChrung">E-Mail senden</a></div>
+									<div class="wp-block-button is-style-outline iss-info-row__button"><!-- wp:industriesalon/field {"key":"contact.email","tagName":"a","linkMode":"email","text":"E-Mail senden","cssClass":"wp-block-button__link wp-element-button","hrefSuffix":"?subject=Anfrage%20F%C3%BChrung"} /--></div>
 									<!-- /wp:button -->
 								</div>
 								<!-- /wp:buttons -->

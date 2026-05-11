@@ -83,11 +83,7 @@ Inserter: yes
 				<!-- wp:group {"className":"iss-info-row","layout":{"type":"default"}} -->
 				<div class="wp-block-group iss-info-row">
 					<!-- wp:group {"className":"iss-info-row__main","layout":{"type":"default"}} -->
-					<div class="wp-block-group iss-info-row__main">
-						<!-- wp:paragraph {"className":"iss-info-row__text"} -->
-						<p class="iss-info-row__text"><strong>E-Mail:</strong> <a href="mailto:info@industriesalon.de">info@industriesalon.de</a></p>
-						<!-- /wp:paragraph -->
-					</div>
+					<div class="wp-block-group iss-info-row__main"><!-- wp:industriesalon/field {"key":"contact.email","tagName":"p","linkMode":"email","label":"E-Mail:","cssClass":"iss-info-row__text"} /--></div>
 					<!-- /wp:group -->
 
 					<!-- wp:group {"className":"iss-info-row__actions","layout":{"type":"default"}} -->
@@ -95,7 +91,7 @@ Inserter: yes
 						<!-- wp:buttons -->
 						<div class="wp-block-buttons">
 							<!-- wp:button {"className":"is-style-outline iss-info-row__button"} -->
-							<div class="wp-block-button is-style-outline iss-info-row__button"><a class="wp-block-button__link wp-element-button" href="mailto:info@industriesalon.de">E-Mail senden</a></div>
+							<div class="wp-block-button is-style-outline iss-info-row__button"><!-- wp:industriesalon/field {"key":"contact.email","tagName":"a","linkMode":"email","text":"E-Mail senden","cssClass":"wp-block-button__link wp-element-button"} /--></div>
 							<!-- /wp:button -->
 						</div>
 						<!-- /wp:buttons -->

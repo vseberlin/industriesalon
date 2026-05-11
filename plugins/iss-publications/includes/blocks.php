@@ -43,4 +43,25 @@ add_action('init', function () {
             'render_callback' => 'iss_publications_render_corpus_stream_block',
         ]);
     }
+
+    $summary_dir = ISS_PUBLICATIONS_PATH . 'blocks/publication-essay-summary';
+    if (file_exists($summary_dir . '/block.json')) {
+        register_block_type($summary_dir, [
+            'render_callback' => 'iss_publications_render_essay_summary_block',
+        ]);
+    }
+
+    $nav_dir = ISS_PUBLICATIONS_PATH . 'blocks/publication-essay-nav';
+    if (file_exists($nav_dir . '/block.json')) {
+        register_block_type($nav_dir, [
+            'render_callback' => 'iss_publications_render_essay_nav_block',
+        ]);
+    }
+
+    $bridge_dir = ISS_PUBLICATIONS_PATH . 'blocks/publication-essay-bridge';
+    if (file_exists($bridge_dir . '/block.json')) {
+        register_block_type($bridge_dir, [
+            'render_callback' => 'iss_publications_render_essay_bridge_block',
+        ]);
+    }
 });

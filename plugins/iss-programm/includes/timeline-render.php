@@ -1350,20 +1350,28 @@ function iss_timeline_render_query_block($attributes = [], $content = '', $block
 
     $title = trim((string) ($attributes['title'] ?? ''));
     $intro = trim((string) ($attributes['intro'] ?? ''));
+    $shell_mode = sanitize_key((string) ($attributes['shellMode'] ?? 'section'));
     $months = iss_timeline_collect_future_month_options(function_exists('iss_timeline_get_future_horizon_months') ? iss_timeline_get_future_horizon_months() : 6);
 
     $use_block_wrapper = function_exists('get_block_wrapper_attributes') && ($block instanceof WP_Block);
-    $attrs = $use_block_wrapper
-        ? get_block_wrapper_attributes(['class' => 'iss-timeline-query iss-container'])
-        : 'class="iss-timeline-query iss-container"';
-
-    $out = '<section ' . $attrs . ' data-timeline-query data-config="' . esc_attr(wp_json_encode($config)) . '">';
-
-    if ($title !== '') {
-        $out .= '<h2 class="iss-timeline__section-title">' . esc_html($title) . '</h2>';
+    $wrapper_class = 'iss-timeline-query';
+    if ($shell_mode !== 'body') {
+        $wrapper_class .= ' iss-container';
     }
-    if ($intro !== '') {
-        $out .= '<p class="iss-timeline__summary">' . esc_html($intro) . '</p>';
+    $attrs = $use_block_wrapper
+        ? get_block_wrapper_attributes(['class' => $wrapper_class])
+        : 'class="' . esc_attr($wrapper_class) . '"';
+
+    $tag = $shell_mode === 'body' ? 'div' : 'section';
+    $out = '<' . $tag . ' ' . $attrs . ' data-timeline-query data-config="' . esc_attr(wp_json_encode($config)) . '">';
+
+    if ($shell_mode !== 'body') {
+        if ($title !== '') {
+            $out .= '<h2 class="iss-timeline__section-title">' . esc_html($title) . '</h2>';
+        }
+        if ($intro !== '') {
+            $out .= '<p class="iss-timeline__summary">' . esc_html($intro) . '</p>';
+        }
     }
 
     $out .= iss_timeline_render_preset_buttons($attributes);
@@ -1512,7 +1520,7 @@ function iss_timeline_render_query_block($attributes = [], $content = '', $block
         $out .= '</button></div>';
     }
     $out .= iss_timeline_render_bottom_button($config['render']);
-    $out .= '</section>';
+    $out .= '</' . $tag . '>';
 
     return $out;
 }

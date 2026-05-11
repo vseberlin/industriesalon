@@ -1,7 +1,7 @@
 <!-- wp:template-part {"slug":"header","tagName":"header"} /-->
 
-<!-- wp:group {"tagName":"main","className":"iss-ausstellung-page","layout":{"type":"default"}} -->
-<main class="wp-block-group iss-ausstellung-page">
+<!-- wp:group {"tagName":"main","className":"iss-ausstellung-page iss-scheme-brown","layout":{"type":"default"}} -->
+<main class="wp-block-group iss-ausstellung-page iss-scheme-brown">
 	<!-- wp:group {"tagName":"section","className":"section iss-ausstellung-hero","layout":{"type":"default"}} -->
 	<section class="wp-block-group section iss-ausstellung-hero">
 		<!-- wp:group {"className":"iss-container","layout":{"type":"default"}} -->
@@ -107,7 +107,27 @@
 			</div>
 			<!-- /wp:group -->
 
-			<!-- wp:iss-content-model/ausstellung-corpus /-->
+			<!-- wp:group {"className":"iss-ausstellung-corpus","layout":{"type":"default"}} -->
+			<div class="wp-block-group iss-ausstellung-corpus">
+				<!-- wp:group {"className":"iss-heading iss-ausstellung-corpus__head","layout":{"type":"default"}} -->
+				<div class="wp-block-group iss-heading iss-ausstellung-corpus__head">
+					<!-- wp:paragraph {"className":"iss-kicker iss-kicker--compact"} -->
+					<p class="iss-kicker iss-kicker--compact">Ausstellungspfad</p>
+					<!-- /wp:paragraph -->
+
+					<!-- wp:heading {"level":2,"className":"iss-heading__title"} -->
+					<h2 class="wp-block-heading iss-heading__title">Die Ausstellung ordnet den Korpus als geführten Rundgang.</h2>
+					<!-- /wp:heading -->
+
+					<!-- wp:paragraph {"className":"iss-heading__text"} -->
+					<p class="iss-heading__text">Ausgewählte Stationen führen in das Thema ein. Darunter bleiben alle Kapitel und die begleitende Publikation als vollständiger Lesepfad zugänglich.</p>
+					<!-- /wp:paragraph -->
+				</div>
+				<!-- /wp:group -->
+
+				<!-- wp:iss-content-model/ausstellung-corpus {"shellMode":"body"} /-->
+			</div>
+			<!-- /wp:group -->
 		</div>
 		<!-- /wp:group -->
 	</section>

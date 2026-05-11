@@ -48,13 +48,36 @@
 			<div class="wp-block-group iss-publication-single__body-wrap">
 				<!-- wp:group {"className":"iss-indent iss-indent--uncaged iss-publication-single__body","layout":{"type":"default"}} -->
 				<div class="wp-block-group iss-indent iss-indent--uncaged iss-publication-single__body">
+					<!-- wp:iss/publication-essay-summary /-->
+					<!-- wp:iss/publication-essay-nav /-->
+					<!-- wp:iss/publication-essay-bridge /-->
 					<!-- wp:post-content {"layout":{"type":"default"}} /-->
 				</div>
 				<!-- /wp:group -->
 			</div>
 			<!-- /wp:group -->
 
-			<!-- wp:iss/publication-corpus-stream /-->
+			<!-- wp:group {"tagName":"section","className":"iss-publication-corpus","layout":{"type":"default"}} -->
+			<section class="wp-block-group iss-publication-corpus">
+				<!-- wp:group {"className":"iss-heading iss-publication-corpus__head","layout":{"type":"default"}} -->
+				<div class="wp-block-group iss-heading iss-publication-corpus__head">
+					<!-- wp:paragraph {"className":"iss-kicker iss-kicker--compact"} -->
+					<p class="iss-kicker iss-kicker--compact">Kapitelpfad</p>
+					<!-- /wp:paragraph -->
+
+					<!-- wp:heading {"level":2,"className":"iss-heading__title"} -->
+					<h2 class="wp-block-heading iss-heading__title">Diese Publikation liest denselben Korpus linear.</h2>
+					<!-- /wp:heading -->
+
+					<!-- wp:paragraph {"className":"iss-heading__text"} -->
+					<p class="iss-heading__text">Die Ausstellung bietet Überblick und thematische Einstiege. Hier laufen dieselben Kapitel als fortlaufender Lesepfad untereinander.</p>
+					<!-- /wp:paragraph -->
+				</div>
+				<!-- /wp:group -->
+
+				<!-- wp:iss/publication-corpus-stream {"shellMode":"body"} /-->
+			</section>
+			<!-- /wp:group -->
 		</div>
 		<!-- /wp:group -->
 	</section>

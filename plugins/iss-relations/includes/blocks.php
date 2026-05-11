@@ -124,6 +124,10 @@ function iss_relations_register_blocks(): void
                 'type' => 'string',
                 'default' => 'right',
             ],
+            'shellMode' => [
+                'type' => 'string',
+                'default' => 'section',
+            ],
         ],
         'supports' => [
             'html' => false,
@@ -896,6 +900,33 @@ function iss_relations_render_place_map_panel(array $places): string
     return $out;
 }
 
+function iss_relations_render_related_place_map_body(array $attributes, $block = null): string
+{
+    $places = iss_relations_collect_map_places($attributes, $block);
+    if (!$places) {
+        return '';
+    }
+
+    $preset = iss_relations_resolve_place_map_preset($attributes);
+    $config = iss_relations_get_place_map_config($preset);
+    $panel_mode = iss_relations_normalize_place_map_panel_mode($attributes);
+    $panel_position = iss_relations_normalize_place_map_panel_position($attributes);
+    $body_classes = ['iss-related-place-map__body', 'iss-related-place-map__body--panel-' . $panel_mode];
+
+    if ($panel_mode === 'show') {
+        $body_classes[] = 'iss-related-place-map__body--panel-' . $panel_position;
+    }
+
+    $out = '<div class="' . esc_attr(implode(' ', $body_classes)) . '">';
+    $out .= iss_relations_render_place_map_stage($places, $config);
+    if ($panel_mode === 'show') {
+        $out .= iss_relations_render_place_map_panel($places);
+    }
+    $out .= '</div>';
+
+    return $out;
+}
+
 function iss_relations_render_related_cards_block($attributes = [], $content = '', $block = null): string
 {
     $data = iss_relations_collect_related_cards($attributes, $block);
@@ -956,9 +987,14 @@ function iss_relations_render_related_content_block($attributes = [], $content =
 function iss_relations_render_related_place_map_block($attributes = [], $content = '', $block = null): string
 {
     $attributes = is_array($attributes) ? $attributes : [];
-    $places = iss_relations_collect_map_places($attributes, $block);
-    if (!$places) {
+    $shell_mode = sanitize_key((string) ($attributes['shellMode'] ?? 'section'));
+    $body_html = iss_relations_render_related_place_map_body($attributes, $block);
+    if ($body_html === '') {
         return '';
+    }
+
+    if ($shell_mode === 'body') {
+        return $body_html;
     }
 
     $defaults = iss_relations_get_place_map_defaults();
@@ -966,15 +1002,6 @@ function iss_relations_render_related_place_map_block($attributes = [], $content
     $title = trim(sanitize_text_field((string) ($attributes['title'] ?? $defaults['title'])));
     $text = trim((string) ($attributes['text'] ?? ''));
     $link_text = (string) $defaults['link_text'];
-    $preset = iss_relations_resolve_place_map_preset($attributes);
-    $config = iss_relations_get_place_map_config($preset);
-    $panel_mode = iss_relations_normalize_place_map_panel_mode($attributes);
-    $panel_position = iss_relations_normalize_place_map_panel_position($attributes);
-    $body_classes = ['iss-related-place-map__body', 'iss-related-place-map__body--panel-' . $panel_mode];
-
-    if ($panel_mode === 'show') {
-        $body_classes[] = 'iss-related-place-map__body--panel-' . $panel_position;
-    }
 
     $wrapper = function_exists('get_block_wrapper_attributes')
         ? get_block_wrapper_attributes([
@@ -1001,12 +1028,7 @@ function iss_relations_render_related_place_map_block($attributes = [], $content
         $out .= '<p class="iss-related-place-map__cta"><a class="iss-action-link" href="' . esc_url(home_url('/schoneweide/')) . '">' . esc_html($link_text) . '</a></p>';
         $out .= '</div>';
     }
-    $out .= '<div class="' . esc_attr(implode(' ', $body_classes)) . '">';
-    $out .= iss_relations_render_place_map_stage($places, $config);
-    if ($panel_mode === 'show') {
-        $out .= iss_relations_render_place_map_panel($places);
-    }
-    $out .= '</div>';
+    $out .= $body_html;
     $out .= '</div>';
     $out .= '</div>';
     $out .= '</section>';

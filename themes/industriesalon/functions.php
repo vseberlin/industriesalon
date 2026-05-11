@@ -48,6 +48,44 @@ add_filter('get_site_icon_url', function ($url, $size, $blog_id) {
     return get_stylesheet_directory_uri() . '/assets/img/logo-industriesalon-favicon.svg';
 }, 10, 3);
 
+add_action('template_redirect', function (): void {
+    if (!is_404()) {
+        return;
+    }
+
+    $request_path = wp_parse_url($_SERVER['REQUEST_URI'] ?? '', PHP_URL_PATH);
+    if (!is_string($request_path)) {
+        return;
+    }
+
+    $normalized_path = untrailingslashit($request_path);
+    if ($normalized_path !== '/ueber-uns') {
+        return;
+    }
+
+    wp_redirect(home_url('/about/'), 301);
+    exit;
+});
+
+add_action('template_redirect', function (): void {
+    if (!is_404()) {
+        return;
+    }
+
+    $request_path = wp_parse_url($_SERVER['REQUEST_URI'] ?? '', PHP_URL_PATH);
+    if (!is_string($request_path)) {
+        return;
+    }
+
+    $normalized_path = untrailingslashit($request_path);
+    if ($normalized_path !== '/aktuelles') {
+        return;
+    }
+
+    wp_redirect(home_url('/kalender/'), 301);
+    exit;
+});
+
 add_filter('iss_relations_place_map_presets', function (array $presets): array {
     $variants = [
         'default' => [
@@ -1040,6 +1078,18 @@ function industriesalon_enqueue_assets(): void
             get_stylesheet_directory_uri() . $script_rel_path,
             array(),
             $version,
+            true
+        );
+    }
+
+    $reading_nav_script_rel = '/assets/js/reading-nav.js';
+    $reading_nav_script_abs = $theme_dir . $reading_nav_script_rel;
+    if (file_exists($reading_nav_script_abs) && ($is_schoneweide_page || is_singular('publication'))) {
+        wp_enqueue_script(
+            'industriesalon-reading-nav',
+            industriesalon_make_relative_url($theme_uri . $reading_nav_script_rel),
+            array(),
+            (string) filemtime($reading_nav_script_abs),
             true
         );
     }

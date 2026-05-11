@@ -126,7 +126,9 @@
 /* .iss-site-footer__hours: Element class for `iss-site-footer`; apply on `hours` element. */
 .iss-site-footer__hours,
 /* .iss-site-footer__nav: Element class for `iss-site-footer`; apply on `nav` element. */
-.iss-site-footer__nav {
+.iss-site-footer__nav,
+/* .iss-site-footer__legal: Element class for `iss-site-footer`; apply on `legal` element. */
+.iss-site-footer__legal {
   display: flex;
   flex-direction: column;
   align-items: flex-start;
@@ -181,6 +183,11 @@
 
 .iss-site-footer__plugin {
   width: 100%;
+}
+
+.iss-site-footer__nav,
+.iss-site-footer__legal {
+  gap: 1.1rem;
 }
 
 /* .iss-site-footer__socials: Element class for `iss-site-footer`; apply on `socials` element. */
@@ -259,11 +266,6 @@
   line-height: 1;
   letter-spacing: 0.04em;
   text-transform: uppercase;
-}
-
-/* .iss-site-footer__title--spaced: Element class for `iss-site-footer`; apply on `title--spaced` element. */
-.iss-site-footer__title--spaced {
-  margin-top: 1.75rem;
 }
 
 /* .iss-site-footer__text: Element class for `iss-site-footer`; apply on `text` element. */
@@ -511,7 +513,7 @@
     padding-right: 1.5rem;
   }
 
-  .iss-site-footer__grid > .wp-block-column:nth-child(3)::before {
+  .iss-site-footer__grid > .wp-block-column::before {
     display: none;
   }
 }
@@ -6157,6 +6159,98 @@ Raum / Vermietung → brown
   line-height: 1.75;
 }
 
+.iss-schoneweide-intro__content {
+  display: grid;
+  gap: 1rem;
+  margin-top: 1.4rem;
+}
+
+/* Schoneweide reading path: compact numbered chapter rail that bridges atlas and longread. */
+.iss-reading-nav {
+  display: grid;
+  grid-template-columns: min-content minmax(0, 1fr) min-content;
+  align-items: stretch;
+  border-top: 1px solid rgba(30, 30, 30, 0.08);
+  border-bottom: 1px solid rgba(30, 30, 30, 0.12);
+  background: rgba(249, 249, 250, 0.94);
+}
+
+.iss-reading-nav__inner {
+  display: flex;
+  gap: 1px;
+  overflow-x: auto;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  background: rgba(30, 30, 30, 0.12);
+  scrollbar-width: none;
+}
+
+.iss-reading-nav__inner::-webkit-scrollbar {
+  display: none;
+}
+
+.iss-reading-nav__inner > li,
+.iss-reading-nav__inner > a {
+  flex: 1 0 13rem;
+}
+
+.iss-reading-nav__inner > li {
+  margin: 0;
+}
+
+.iss-reading-nav__inner > li > a,
+.iss-reading-nav__inner > a {
+  display: block;
+  min-height: 100%;
+  padding: 1rem;
+  background: var(--iss-white);
+  color: inherit;
+  font-size: 0.9rem;
+  font-weight: 600;
+  line-height: 1.4;
+  text-decoration: none;
+}
+
+.iss-reading-nav__control {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 2.9rem;
+  padding: 0;
+  border: 0;
+  background: rgba(239, 236, 231, 0.98);
+  color: rgba(30, 30, 30, 0.82);
+  font-size: 1rem;
+  cursor: pointer;
+}
+
+.iss-reading-nav__control[disabled] {
+  opacity: 0.36;
+  cursor: default;
+}
+
+.iss-reading-nav__control:not([disabled]):hover,
+.iss-reading-nav__control:not([disabled]):focus-visible,
+.iss-reading-nav__inner > li > a:hover,
+.iss-reading-nav__inner > li > a:focus-visible,
+.iss-reading-nav a:hover,
+.iss-reading-nav a:focus-visible {
+  color: var(--iss-accent);
+}
+
+.iss-schoneweide-reading-path {
+  margin-top: 1.4rem;
+}
+
+.iss-schoneweide-reading-path__actions {
+  gap: 1rem;
+}
+
+.iss-schoneweide-reading-path__actions p {
+  margin: 0;
+}
+
 .iss-schoneweide-entry-stack,
 .iss-register-place__sidebar {
   display: grid;
@@ -6194,6 +6288,23 @@ Raum / Vermietung → brown
 .iss-schoneweide-entry-card--contrast p,
 .iss-schoneweide-entry-card--contrast .iss-schoneweide-entry-card__title {
   color: inherit;
+}
+
+.iss-schoneweide-entry-links {
+  display: grid;
+  gap: 0.8rem;
+  margin: 0;
+  padding-left: 1.1rem;
+}
+
+.iss-schoneweide-entry-links li {
+  margin: 0;
+}
+
+.iss-schoneweide-entry-links a {
+  color: inherit;
+  text-decoration-thickness: 1px;
+  text-underline-offset: 0.16em;
 }
 
 .iss-schoneweide-map__top,

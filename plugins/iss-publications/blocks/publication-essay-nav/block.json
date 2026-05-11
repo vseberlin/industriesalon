@@ -1,0 +1,11 @@
+{
+  "apiVersion": 3,
+  "name": "iss/publication-essay-nav",
+  "title": "ISS Publication Essay Nav",
+  "category": "widgets",
+  "icon": "menu",
+  "description": "Server-rendered chapter navigation for chaptered publication essays.",
+  "supports": {
+    "html": false
+  }
+}

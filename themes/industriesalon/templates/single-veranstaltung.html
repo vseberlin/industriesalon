@@ -1,7 +1,7 @@
 <!-- wp:template-part {"slug":"header","tagName":"header"} /-->
 
-<!-- wp:group {"tagName":"main","className":"iss-event-page","layout":{"type":"default"}} -->
-<main class="wp-block-group iss-event-page">
+<!-- wp:group {"tagName":"main","className":"iss-event-page iss-scheme-blue","layout":{"type":"default"}} -->
+<main class="wp-block-group iss-event-page iss-scheme-blue">
 	<!-- wp:group {"tagName":"section","className":"iss-event-intro section","layout":{"type":"default"}} -->
 	<section class="wp-block-group iss-event-intro section">
 		<!-- wp:group {"className":"iss-container","layout":{"type":"default"}} -->
@@ -50,11 +50,71 @@
 	</section>
 	<!-- /wp:group -->
 
-	<!-- wp:iss/related-content {"postType":"register_place","kicker":"Ort","title":"Verknüpfte Orte","perPage":3} /-->
+	<!-- wp:group {"tagName":"section","className":"section section--plain iss-related-feed iss-related-feed--register_place","layout":{"type":"default"}} -->
+	<section class="wp-block-group section section--plain iss-related-feed iss-related-feed--register_place">
+		<!-- wp:group {"className":"iss-container","layout":{"type":"default"}} -->
+		<div class="wp-block-group iss-container">
+			<!-- wp:group {"className":"iss-heading iss-related-feed__intro","layout":{"type":"default"}} -->
+			<div class="wp-block-group iss-heading iss-related-feed__intro">
+				<!-- wp:paragraph {"className":"iss-kicker iss-kicker--compact"} -->
+				<p class="iss-kicker iss-kicker--compact">Ort</p>
+				<!-- /wp:paragraph -->
 
-	<!-- wp:iss/related-content {"postType":"fuehrung","kicker":"Vor Ort","title":"Führungen zum Ort","perPage":2} /-->
+				<!-- wp:heading {"level":2,"className":"iss-heading__title"} -->
+				<h2 class="iss-heading__title">Verknüpfte Orte</h2>
+				<!-- /wp:heading -->
+			</div>
+			<!-- /wp:group -->
 
-	<!-- wp:iss/related-content {"postType":"post","kicker":"Archiv","title":"Beiträge und Hintergründe zum Ort","perPage":3} /-->
+			<!-- wp:iss/related-cards {"postType":"register_place","perPage":3} /-->
+		</div>
+		<!-- /wp:group -->
+	</section>
+	<!-- /wp:group -->
+
+	<!-- wp:group {"tagName":"section","className":"section section--plain iss-related-feed iss-related-feed--fuehrung","layout":{"type":"default"}} -->
+	<section class="wp-block-group section section--plain iss-related-feed iss-related-feed--fuehrung">
+		<!-- wp:group {"className":"iss-container","layout":{"type":"default"}} -->
+		<div class="wp-block-group iss-container">
+			<!-- wp:group {"className":"iss-heading iss-related-feed__intro","layout":{"type":"default"}} -->
+			<div class="wp-block-group iss-heading iss-related-feed__intro">
+				<!-- wp:paragraph {"className":"iss-kicker iss-kicker--compact"} -->
+				<p class="iss-kicker iss-kicker--compact">Vor Ort</p>
+				<!-- /wp:paragraph -->
+
+				<!-- wp:heading {"level":2,"className":"iss-heading__title"} -->
+				<h2 class="iss-heading__title">Führungen zum Ort</h2>
+				<!-- /wp:heading -->
+			</div>
+			<!-- /wp:group -->
+
+			<!-- wp:iss/related-cards {"postType":"fuehrung","perPage":2} /-->
+		</div>
+		<!-- /wp:group -->
+	</section>
+	<!-- /wp:group -->
+
+	<!-- wp:group {"tagName":"section","className":"section section--plain iss-related-feed iss-related-feed--post","layout":{"type":"default"}} -->
+	<section class="wp-block-group section section--plain iss-related-feed iss-related-feed--post">
+		<!-- wp:group {"className":"iss-container","layout":{"type":"default"}} -->
+		<div class="wp-block-group iss-container">
+			<!-- wp:group {"className":"iss-heading iss-related-feed__intro","layout":{"type":"default"}} -->
+			<div class="wp-block-group iss-heading iss-related-feed__intro">
+				<!-- wp:paragraph {"className":"iss-kicker iss-kicker--compact"} -->
+				<p class="iss-kicker iss-kicker--compact">Archiv</p>
+				<!-- /wp:paragraph -->
+
+				<!-- wp:heading {"level":2,"className":"iss-heading__title"} -->
+				<h2 class="iss-heading__title">Beiträge und Hintergründe zum Ort</h2>
+				<!-- /wp:heading -->
+			</div>
+			<!-- /wp:group -->
+
+			<!-- wp:iss/related-cards {"postType":"post","perPage":3} /-->
+		</div>
+		<!-- /wp:group -->
+	</section>
+	<!-- /wp:group -->
 
 	<!-- wp:group {"tagName":"section","className":"iss-event-more section section--soft","layout":{"type":"default"}} -->
 	<section class="wp-block-group iss-event-more section section--soft">

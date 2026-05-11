@@ -380,15 +380,19 @@ function iss_publications_render_corpus_stream_block($attributes = [], $content 
     $wrapper = function_exists('get_block_wrapper_attributes')
         ? get_block_wrapper_attributes(['class' => 'wp-block-iss-publication-corpus'])
         : 'class="wp-block-iss-publication-corpus"';
+    $shell_mode = sanitize_key((string) ($attributes['shellMode'] ?? 'section'));
+    $use_section_shell = ($shell_mode !== 'body');
 
     ob_start();
     echo '<div ' . $wrapper . '>';
-    echo '<section class="iss-publication-corpus">';
-    echo '<div class="iss-heading iss-publication-corpus__head">';
-    echo '<p class="iss-kicker iss-kicker--compact">' . esc_html__('Kapitelpfad', 'iss-publications') . '</p>';
-    echo '<h2 class="iss-heading__title">' . esc_html__('Diese Publikation liest denselben Korpus linear.', 'iss-publications') . '</h2>';
-    echo '<p class="iss-heading__text">' . esc_html__('Die Ausstellung bietet Überblick und thematische Einstiege. Hier laufen dieselben Kapitel als fortlaufender Lesepfad untereinander.', 'iss-publications') . '</p>';
-    echo '</div>';
+    echo $use_section_shell ? '<section class="iss-publication-corpus">' : '<div class="iss-publication-corpus">';
+    if ($use_section_shell) {
+        echo '<div class="iss-heading iss-publication-corpus__head">';
+        echo '<p class="iss-kicker iss-kicker--compact">' . esc_html__('Kapitelpfad', 'iss-publications') . '</p>';
+        echo '<h2 class="iss-heading__title">' . esc_html__('Diese Publikation liest denselben Korpus linear.', 'iss-publications') . '</h2>';
+        echo '<p class="iss-heading__text">' . esc_html__('Die Ausstellung bietet Überblick und thematische Einstiege. Hier laufen dieselben Kapitel als fortlaufender Lesepfad untereinander.', 'iss-publications') . '</p>';
+        echo '</div>';
+    }
 
     echo '<div class="iss-publication-corpus__topline">';
     echo '<p class="iss-publication-corpus__backlink"><a class="iss-action-link" href="' . esc_url(get_permalink($source_ausstellung_id)) . '">' . esc_html__('Zur Ausstellung', 'iss-publications') . '</a></p>';
@@ -413,7 +417,7 @@ function iss_publications_render_corpus_stream_block($attributes = [], $content 
         echo '</article>';
     }
     echo '</div>';
-    echo '</section>';
+    echo $use_section_shell ? '</section>' : '</div>';
     echo '</div>';
 
     return (string) ob_get_clean();
@@ -952,10 +956,10 @@ function iss_publications_get_essay_bridge_html(int $post_id): string
     return $html;
 }
 
-function iss_publications_transform_longread_content(int $post_id, string $content): string
+function iss_publications_parse_longread_payload(int $post_id, string $content): array
 {
     if ($post_id <= 0 || trim($content) === '' || !class_exists('DOMDocument')) {
-        return $content;
+        return [];
     }
 
     libxml_use_internal_errors(true);
@@ -964,14 +968,14 @@ function iss_publications_transform_longread_content(int $post_id, string $conte
     $loaded = $document->loadHTML('<?xml encoding="utf-8" ?><div class="iss-publication-essay-parser-root">' . $content . '</div>', LIBXML_HTML_NOIMPLIED | LIBXML_HTML_NODEFDTD);
     if (!$loaded) {
         libxml_clear_errors();
-        return $content;
+        return [];
     }
 
     $xpath = new DOMXPath($document);
     $root = $xpath->query('//*[contains(concat(" ", normalize-space(@class), " "), " iss-publication-essay-parser-root ")]')->item(0);
     if (!$root instanceof DOMElement) {
         libxml_clear_errors();
-        return $content;
+        return [];
     }
 
     $source_note_html = '';
@@ -1036,7 +1040,7 @@ function iss_publications_transform_longread_content(int $post_id, string $conte
 
     if (count($sections) < 3) {
         libxml_clear_errors();
-        return $content;
+        return [];
     }
 
     foreach ($sections as $section_index => $section) {
@@ -1110,20 +1114,63 @@ function iss_publications_transform_longread_content(int $post_id, string $conte
         $intro_html = '<div class="iss-publication-essay__lead"><div class="iss-publication-essay__map">' . $lead_map_html . '</div></div>';
     }
 
-    $summary_html = '<div class="iss-publication-essay__summary" aria-label="' . esc_attr__('Rahmendaten', 'iss-publications') . '">';
+    libxml_clear_errors();
+
+    return [
+        'source_note_html' => $source_note_html,
+        'intro_html' => $intro_html,
+        'summary' => $summary,
+        'nav_items' => $nav_items,
+        'bridge_html' => iss_publications_get_essay_bridge_html($post_id),
+        'sections' => $sections,
+    ];
+}
+
+function iss_publications_render_longread_summary_html(array $summary): string
+{
+    if (!$summary) {
+        return '';
+    }
+
+    $html = '<div class="iss-publication-essay__summary" aria-label="' . esc_attr__('Rahmendaten', 'iss-publications') . '">';
     foreach ($summary as $item) {
-        $summary_html .= '<p class="iss-publication-essay__summary-item"><strong>' . esc_html($item['value']) . '</strong><span>' . esc_html($item['label']) . '</span></p>';
+        $html .= '<p class="iss-publication-essay__summary-item"><strong>' . esc_html((string) ($item['value'] ?? '')) . '</strong><span>' . esc_html((string) ($item['label'] ?? '')) . '</span></p>';
     }
-    $summary_html .= '</div>';
+    $html .= '</div>';
 
-    $nav_html = '<nav class="iss-publication-essay__nav" aria-label="' . esc_attr__('Kapitelnavigation', 'iss-publications') . '"><div class="iss-publication-essay__nav-inner">';
+    return $html;
+}
+
+function iss_publications_render_longread_nav_html(array $nav_items): string
+{
+    if (!$nav_items) {
+        return '';
+    }
+
+    $html = '<nav class="iss-reading-nav iss-publication-essay__nav" aria-label="' . esc_attr__('Kapitelnavigation', 'iss-publications') . '"><div class="iss-reading-nav__inner iss-publication-essay__nav-inner">';
     foreach ($nav_items as $item) {
-        $nav_html .= '<a href="' . esc_attr($item['href']) . '">' . esc_html($item['label']) . '</a>';
+        $href = trim((string) ($item['href'] ?? ''));
+        $label = trim((string) ($item['label'] ?? ''));
+        if ($href === '' || $label === '') {
+            continue;
+        }
+        $html .= '<a href="' . esc_attr($href) . '">' . esc_html($label) . '</a>';
     }
-    $nav_html .= '</div></nav>';
+    $html .= '</div></nav>';
 
-    $bridge_html = iss_publications_get_essay_bridge_html($post_id);
+    return $html;
+}
 
+function iss_publications_transform_longread_content(int $post_id, string $content): string
+{
+    $payload = iss_publications_parse_longread_payload($post_id, $content);
+    if ($payload === []) {
+        return $content;
+    }
+
+    $source_note_html = (string) ($payload['source_note_html'] ?? '');
+    $intro_html = (string) ($payload['intro_html'] ?? '');
+    $sections = is_array($payload['sections'] ?? null) ? $payload['sections'] : [];
     $chapters_html = '<div class="iss-publication-essay__chapters">';
     foreach ($sections as $index => $section) {
         $chapters_html .= '<section id="' . esc_attr($section['anchor']) . '" class="iss-publication-chapter">';
@@ -1141,13 +1188,8 @@ function iss_publications_transform_longread_content(int $post_id, string $conte
         $html .= $source_note_html;
     }
     $html .= $intro_html;
-    $html .= $summary_html;
-    $html .= $nav_html;
-    $html .= $bridge_html;
     $html .= $chapters_html;
     $html .= '</div>';
-
-    libxml_clear_errors();
     return $html;
 }
 
@@ -1519,6 +1561,63 @@ function iss_publications_render_meta_block($attributes = [], $content = '') {
         : 'class="' . esc_attr($classes) . '"';
 
     return '<div ' . $wrapper . '>' . (string) ob_get_clean() . '</div>';
+}
+
+function iss_publications_render_essay_summary_block($attributes = [], $content = '') {
+    $post_id = iss_publications_block_resolve_post_id($attributes);
+    if ($post_id <= 0 || !iss_publications_is_chaptered_longread($post_id)) {
+        return '';
+    }
+
+    $post = get_post($post_id);
+    if (!$post instanceof WP_Post) {
+        return '';
+    }
+
+    $payload = iss_publications_parse_longread_payload($post_id, (string) $post->post_content);
+    if ($payload === []) {
+        return '';
+    }
+
+    return iss_publications_render_longread_summary_html(is_array($payload['summary'] ?? null) ? $payload['summary'] : []);
+}
+
+function iss_publications_render_essay_nav_block($attributes = [], $content = '') {
+    $post_id = iss_publications_block_resolve_post_id($attributes);
+    if ($post_id <= 0 || !iss_publications_is_chaptered_longread($post_id)) {
+        return '';
+    }
+
+    $post = get_post($post_id);
+    if (!$post instanceof WP_Post) {
+        return '';
+    }
+
+    $payload = iss_publications_parse_longread_payload($post_id, (string) $post->post_content);
+    if ($payload === []) {
+        return '';
+    }
+
+    return iss_publications_render_longread_nav_html(is_array($payload['nav_items'] ?? null) ? $payload['nav_items'] : []);
+}
+
+function iss_publications_render_essay_bridge_block($attributes = [], $content = '') {
+    $post_id = iss_publications_block_resolve_post_id($attributes);
+    if ($post_id <= 0 || !iss_publications_is_chaptered_longread($post_id)) {
+        return '';
+    }
+
+    $post = get_post($post_id);
+    if (!$post instanceof WP_Post) {
+        return '';
+    }
+
+    $payload = iss_publications_parse_longread_payload($post_id, (string) $post->post_content);
+    if ($payload === []) {
+        return '';
+    }
+
+    return (string) ($payload['bridge_html'] ?? '');
 }
 
 add_shortcode('iss_featured_publication', function ($atts = []) {

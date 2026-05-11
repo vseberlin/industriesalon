@@ -1,7 +1,7 @@
 <!-- wp:template-part {"slug":"header","theme":"industriesalon","tagName":"header"} /-->
 
-<!-- wp:group {"tagName":"main","className":"iss-about-page","layout":{"type":"default"}} -->
-<main class="wp-block-group iss-about-page"><!-- wp:group {"tagName":"section","className":"alignfull iss-about-hero iss-about-herou002du002dtriptych","layout":{"type":"default"}} -->
+<!-- wp:group {"tagName":"main","className":"iss-about-page iss-scheme-green","layout":{"type":"default"}} -->
+<main class="wp-block-group iss-about-page iss-scheme-green"><!-- wp:group {"tagName":"section","className":"alignfull iss-about-hero iss-about-herou002du002dtriptych","layout":{"type":"default"}} -->
 <section class="wp-block-group alignfull iss-about-hero iss-about-hero--triptych"><!-- wp:group {"className":"iss-container iss-about-hero__inner","layout":{"type":"default"}} -->
 <div class="wp-block-group iss-container iss-about-hero__inner"><!-- wp:group {"className":"iss-about-hero__intro-row","layout":{"type":"default"}} -->
 <div class="wp-block-group iss-about-hero__intro-row"><!-- wp:group {"className":"iss-about-hero__intro","layout":{"type":"default"}} -->
@@ -492,14 +492,12 @@
 
 <!-- wp:buttons {"className":"iss-about-cta__buttons"} -->
 <div class="wp-block-buttons iss-about-cta__buttons"><!-- wp:button -->
-<div class="wp-block-button"><a class="wp-block-button__link wp-element-button" href="mailto:info@industriesalon.de?subject=Mitgliedschaft%20und%20Engagement">Mitgliedschaft anfragen</a></div>
+<div class="wp-block-button"><!-- wp:industriesalon/field {"key":"contact.email","tagName":"a","linkMode":"email","text":"Mitgliedschaft anfragen","cssClass":"wp-block-button__link wp-element-button","hrefSuffix":"?subject=Mitgliedschaft%20und%20Engagement"} /--></div>
 <!-- /wp:button --></div>
 <!-- /wp:buttons -->
 
 <!-- wp:group {"className":"iss-about-cta__links","layout":{"type":"flex","flexWrap":"wrap"}} -->
-<div class="wp-block-group iss-about-cta__links"><!-- wp:paragraph -->
-<p><a class="iss-action-link" href="mailto:info@industriesalon.de?subject=Ehrenamt%20im%20Industriesalon">Ehrenamt anbieten</a></p>
-<!-- /wp:paragraph -->
+<div class="wp-block-group iss-about-cta__links"><!-- wp:industriesalon/field {"key":"contact.email","tagName":"a","linkMode":"email","text":"Ehrenamt anbieten","cssClass":"iss-action-link","hrefSuffix":"?subject=Ehrenamt%20im%20Industriesalon"} /-->
 
 <!-- wp:paragraph -->
 <p><a class="iss-action-link" href="/a-fuhrungen/">Führungen ansehen</a></p>
@@ -530,9 +528,7 @@
 <div class="wp-block-column iss-info-panel__rows-col" style="flex-basis:66%"><!-- wp:group {"className":"iss-info-panel__rows","layout":{"type":"default"}} -->
 <div class="wp-block-group iss-info-panel__rows"><!-- wp:group {"className":"iss-info-row","layout":{"type":"default"}} -->
 <div class="wp-block-group iss-info-row"><!-- wp:group {"className":"iss-info-row__main","layout":{"type":"default"}} -->
-<div class="wp-block-group iss-info-row__main"><!-- wp:paragraph {"className":"iss-info-row__text"} -->
-<p class="iss-info-row__text"><strong>Adresse:</strong> Reinbeckstraße 9, 12459 Berlin</p>
-<!-- /wp:paragraph --></div>
+<div class="wp-block-group iss-info-row__main"><!-- wp:industriesalon/field {"key":"address.full","tagName":"p","linkMode":"none","label":"Adresse:","cssClass":"iss-info-row__text"} /--></div>
 <!-- /wp:group --></div>
 <!-- /wp:group -->
 
