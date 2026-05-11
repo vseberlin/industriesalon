@@ -131,21 +131,57 @@ function iss_register_render_place_context(array $attributes = []): string
         );
     }
 
+    if ($variant === 'facts_row') {
+        $items = [
+            ['label' => 'Adresse', 'value' => $context['address']],
+            ['label' => 'Historisch', 'value' => $context['history_label'] !== '' ? $context['history_label'] : 'Noch nicht eingeordnet'],
+            ['label' => 'Heute', 'value' => $context['current_status_label']],
+            ['label' => 'Nutzung', 'value' => $context['current_use_type_label']],
+            ['label' => 'Gebiet', 'value' => $context['area']],
+        ];
+
+        return iss_register_render_place_context_items(
+            $items,
+            'wp-block-group iss-register-place__compact-fact',
+            'iss-register-place__compact-label',
+            'iss-register-place__compact-value'
+        );
+    }
+
+    if ($variant === 'today_panel') {
+        $items = [
+            ['label' => 'Heute', 'value' => $context['current_status_label']],
+            ['label' => 'Nutzung', 'value' => $context['current_use_type_label']],
+        ];
+
+        $html = '<div class="wp-block-group iss-register-place__today-meta">';
+        $html .= iss_register_render_place_context_items(
+            $items,
+            'wp-block-group iss-register-place__today-fact',
+            'iss-register-place__today-label',
+            'iss-register-place__today-value'
+        );
+        $html .= '</div>';
+
+        return $html;
+    }
+
     $terms = array_values(array_filter([
-        $context['history_label'] !== '' ? 'Historisch: ' . $context['history_label'] : 'Historisch: noch nicht eingeordnet',
-        $context['current_status_label'] !== '' ? 'Heute: ' . $context['current_status_label'] : '',
-        $context['current_use_type_label'] !== '' ? 'Nutzung: ' . $context['current_use_type_label'] : '',
-        $context['area'] !== '' ? 'Gebiet: ' . $context['area'] : '',
+        $context['history_label'] !== '' ? $context['history_label'] : 'Noch nicht eingeordnet',
+        $context['current_status_label'] !== '' ? $context['current_status_label'] : '',
+        $context['current_use_type_label'] !== '' ? $context['current_use_type_label'] : '',
+        $context['area'] !== '' ? $context['area'] : '',
     ]));
 
     if (!$terms) {
         return '';
     }
 
-    $html = '';
+    $html = '<div class="wp-block-group iss-register-place__chip-list">';
     foreach ($terms as $term) {
         $html .= '<p class="iss-register-place__term">' . esc_html($term) . '</p>';
     }
+    $html .= '</div>';
 
     return $html;
 }
