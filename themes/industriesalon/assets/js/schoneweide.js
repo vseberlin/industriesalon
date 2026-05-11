@@ -1,20 +1,28 @@
 (function () {
   var EMPTY = '';
   var DEFAULT_ERA_LABEL = 'Alle Zeiten';
-  var ROLE_LABELS = {
-    '': 'Alle Orte',
-    E: 'Industrieorte',
-    M: 'Heutige Nutzungen',
-    P: 'Projekte',
-    'E+P': 'Bestand + Projekt'
+  var DEFAULT_STATUS_LABEL = 'Alle Situationen';
+  var DEFAULT_USE_TYPE_LABEL = 'Alle Nutzungen';
+  var CURRENT_STATUS_LABELS = {
+    '': DEFAULT_STATUS_LABEL,
+    in_use: 'In Nutzung',
+    vacant: 'Leerstand',
+    temporary_use: 'Zwischennutzung',
+    in_transition: 'Im Umbau',
+    planned: 'Projekt / Planung',
+    for_sale: 'Verkauf / offen',
+    unclear: 'Unklar'
   };
-  var STATUS_LABELS = {
-    aktiv: 'Aktiv',
-    entwicklung: 'In Entwicklung',
-    geplant: 'Geplant',
-    unklar: 'Unklar',
-    abzug: 'Im Abzug',
-    sucht: 'Standortsuche'
+  var CURRENT_USE_TYPE_LABELS = {
+    '': DEFAULT_USE_TYPE_LABEL,
+    culture: 'Kultur',
+    education: 'Bildung / Forschung',
+    commercial: 'Gewerbe / Bueros',
+    industrial: 'Produktion',
+    residential: 'Wohnen',
+    administration: 'Verwaltung',
+    community: 'Gemeinwohl / Soziales',
+    mixed: 'Mischnutzung'
   };
   var ATLAS_AREAS = {
     'Niederschöneweide': true,
@@ -99,7 +107,7 @@
     total += Math.min(text(place.summary || place.excerpt).length, 260);
     total += Math.min(text(place.current_summary || place.current).length, 220);
     total += text(place.featured_image_url) ? 160 : 0;
-    total += text(place.role).toUpperCase() === 'E+P' ? 40 : 0;
+    total += text(place.current_status) === 'in_transition' ? 24 : 0;
 
     return total;
   }
@@ -115,6 +123,11 @@
       area: text(place.area),
       address: text(place.address),
       status: text(place.status),
+      current_status: text(place.current_status).toLowerCase(),
+      current_status_label: text(place.current_status_label),
+      current_use_type: text(place.current_use_type).toLowerCase(),
+      current_use_type_label: text(place.current_use_type_label),
+      present_label: text(place.present_label),
       permalink: relativeUrl(place.permalink),
       featured_image_url: relativeUrl(place.featured_image_url),
       color: text(place.color),
@@ -128,6 +141,12 @@
       explicit_era_slugs: Array.isArray(place.explicit_era_slugs)
         ? place.explicit_era_slugs.map(text).filter(Boolean)
         : [],
+      explicit_era_names: Array.isArray(place.explicit_era_names)
+        ? place.explicit_era_names.map(text).filter(Boolean)
+        : [],
+      archive_summary: compact(place.archive_summary, 160),
+      current_summary: compact(place.current_summary, 160),
+      note_text: compact(place.note_text, 120),
       storyScore: score(place)
     };
   }
@@ -172,14 +191,60 @@
     return ATLAS_AREAS[place.area] === true;
   }
 
-  function statusLabel(status) {
-    var normalized = text(status).toLowerCase();
-    return STATUS_LABELS[normalized] || 'Ort';
+  function currentStatusLabel(place) {
+    if (text(place.current_status_label)) {
+      return place.current_status_label;
+    }
+
+    return CURRENT_STATUS_LABELS[text(place.current_status).toLowerCase()] || 'Ort';
   }
 
-  function roleLabel(role) {
-    var normalized = text(role).toUpperCase();
-    return ROLE_LABELS[normalized] || 'Ort';
+  function currentUseTypeLabel(place) {
+    if (text(place.current_use_type_label)) {
+      return place.current_use_type_label;
+    }
+
+    return CURRENT_USE_TYPE_LABELS[text(place.current_use_type).toLowerCase()] || EMPTY;
+  }
+
+  function presentLabel(place) {
+    if (text(place.present_label)) {
+      return place.present_label;
+    }
+
+    var pieces = [];
+    var status = currentStatusLabel(place);
+    var type = currentUseTypeLabel(place);
+
+    if (status && status !== 'Ort') {
+      pieces.push(status);
+    }
+
+    if (type) {
+      pieces.push(type);
+    }
+
+    return pieces.join(' · ') || 'Ort';
+  }
+
+  function historyLabel(place) {
+    if (place.explicit_era_names.length) {
+      return place.explicit_era_names.join(' · ');
+    }
+
+    return text(place.era_name) || text(place.era_label) || 'Zeitschicht offen';
+  }
+
+  function activeSummary(place, state) {
+    if (state.currentStatus || state.currentUseType) {
+      return text(place.current_summary) || text(place.summary);
+    }
+
+    if (state.activeEra) {
+      return text(place.archive_summary) || text(place.summary);
+    }
+
+    return text(place.summary);
   }
 
   function sortPlaces(left, right) {
@@ -229,17 +294,25 @@
     return eras;
   }
 
+  function matchesEra(place, eraSlug) {
+    if (!eraSlug) {
+      return true;
+    }
+
+    if (text(place.era_slug) === eraSlug) {
+      return true;
+    }
+
+    return place.explicit_era_slugs.indexOf(eraSlug) !== -1;
+  }
+
   function getEraScopedPlaces(places, eraSlug) {
     if (!eraSlug) {
       return places.slice();
     }
 
     return places.filter(function (place) {
-      if (text(place.era_slug) === eraSlug) {
-        return true;
-      }
-
-      return place.explicit_era_slugs.indexOf(eraSlug) !== -1;
+      return matchesEra(place, eraSlug);
     });
   }
 
@@ -247,7 +320,11 @@
     var search = text(state.search).toLowerCase();
 
     return places.filter(function (place) {
-      if (state.role && place.role !== state.role) {
+      if (state.currentStatus && place.current_status !== state.currentStatus) {
+        return false;
+      }
+
+      if (state.currentUseType && place.current_use_type !== state.currentUseType) {
         return false;
       }
 
@@ -259,6 +336,8 @@
         place.name,
         place.address,
         place.area,
+        place.current_status_label,
+        place.current_use_type_label,
         place.summary,
         place.secondary
       ].join(' ').toLowerCase();
@@ -305,11 +384,11 @@
     var eras = state.eras.length ? state.eras : deriveFallbackEras(state.places);
 
     state.places.forEach(function (place) {
-      if (!place.era_slug) {
-        return;
-      }
-
-      eraCounts[place.era_slug] = (eraCounts[place.era_slug] || 0) + 1;
+      eras.forEach(function (era) {
+        if (matchesEra(place, era.slug)) {
+          eraCounts[era.slug] = (eraCounts[era.slug] || 0) + 1;
+        }
+      });
     });
 
     container.innerHTML = EMPTY;
@@ -342,23 +421,31 @@
     });
   }
 
-  function renderRoleFilters(container, state, eraScopedPlaces) {
+  function renderCurrentStatusFilters(container, state, eraScopedPlaces) {
     var counts = { '': eraScopedPlaces.length };
-    var roles = [EMPTY, 'E', 'M', 'P', 'E+P'];
+    var statuses = [EMPTY].concat(Object.keys(CURRENT_STATUS_LABELS).filter(Boolean));
 
     eraScopedPlaces.forEach(function (place) {
-      counts[place.role] = (counts[place.role] || 0) + 1;
+      counts[place.current_status] = (counts[place.current_status] || 0) + 1;
     });
 
     container.innerHTML = EMPTY;
 
-    roles.forEach(function (role) {
+    statuses.forEach(function (status) {
       container.appendChild(buildFilterButton({
-        label: ROLE_LABELS[role] || role,
-        count: counts[role] || 0,
-        active: state.role === role,
+        label: CURRENT_STATUS_LABELS[status] || status,
+        count: counts[status] || 0,
+        active: state.currentStatus === status,
         onClick: function () {
-          state.role = role;
+          state.currentStatus = status;
+          if (status && state.currentUseType) {
+            var useTypeStillExists = eraScopedPlaces.some(function (place) {
+              return place.current_status === status && place.current_use_type === state.currentUseType;
+            });
+            if (!useTypeStillExists) {
+              state.currentUseType = EMPTY;
+            }
+          }
           state.selectedPostId = 0;
           state.shouldPan = false;
           state.render();
@@ -367,14 +454,76 @@
     });
   }
 
+  function renderCurrentUseTypeFilters(container, state, statusScopedPlaces) {
+    var counts = { '': statusScopedPlaces.length };
+    var types = Object.keys(CURRENT_USE_TYPE_LABELS).filter(Boolean);
+    var activeTypes = [];
+
+    statusScopedPlaces.forEach(function (place) {
+      if (!place.current_use_type) {
+        return;
+      }
+
+      counts[place.current_use_type] = (counts[place.current_use_type] || 0) + 1;
+    });
+
+    types.forEach(function (type) {
+      if (counts[type]) {
+        activeTypes.push(type);
+      }
+    });
+
+    container.innerHTML = EMPTY;
+    container.parentElement.hidden = activeTypes.length === 0;
+
+    if (!activeTypes.length) {
+      state.currentUseType = EMPTY;
+      return;
+    }
+
+    [EMPTY].concat(activeTypes).forEach(function (type) {
+      container.appendChild(buildFilterButton({
+        label: CURRENT_USE_TYPE_LABELS[type] || type,
+        count: counts[type] || 0,
+        active: state.currentUseType === type,
+        onClick: function () {
+          state.currentUseType = type;
+          state.selectedPostId = 0;
+          state.shouldPan = false;
+          state.render();
+        }
+      }));
+    });
+  }
+
+  function buildScopeLabel(state) {
+    var pieces = [];
+
+    if (state.activeEra) {
+      pieces.push(state.activeEra.name || state.activeEra.legacyLabel || DEFAULT_ERA_LABEL);
+    }
+
+    if (state.currentStatus) {
+      pieces.push(CURRENT_STATUS_LABELS[state.currentStatus] || state.currentStatus);
+    }
+
+    if (state.currentUseType) {
+      pieces.push(CURRENT_USE_TYPE_LABELS[state.currentUseType] || state.currentUseType);
+    }
+
+    return pieces.join(' · ');
+  }
+
   function renderCount(container, filteredPlaces, state) {
     if (!filteredPlaces.length) {
       container.textContent = 'Keine Orte in der aktuellen Auswahl.';
       return;
     }
 
-    var label = state.activeEra ? state.activeEra.name || state.activeEra.legacyLabel : DEFAULT_ERA_LABEL;
-    container.textContent = String(filteredPlaces.length) + ' Orte für ' + label;
+    var label = buildScopeLabel(state);
+    container.textContent = label
+      ? String(filteredPlaces.length) + ' Orte mit Bezug zu ' + label
+      : String(filteredPlaces.length) + ' Orte in der aktuellen Auswahl';
   }
 
   function renderSummary(container, filteredPlaces, selectedPlace, state) {
@@ -389,6 +538,8 @@
       headline = selectedPlace.area;
     } else if (state.activeEra) {
       headline = state.activeEra.name || state.activeEra.legacyLabel || DEFAULT_ERA_LABEL;
+    } else if (state.currentStatus) {
+      headline = CURRENT_STATUS_LABELS[state.currentStatus] || DEFAULT_STATUS_LABEL;
     }
 
     container.appendChild(createElement('strong', EMPTY, headline));
@@ -523,6 +674,20 @@
     return figure;
   }
 
+  function appendFactItem(container, label, value, accentClass) {
+    if (!text(value)) {
+      return;
+    }
+
+    var item = createElement(
+      'p',
+      'iss-atlas-popup-card__fact' + (accentClass ? ' ' + accentClass : EMPTY)
+    );
+    item.appendChild(createElement('strong', EMPTY, label));
+    item.appendChild(document.createTextNode(value));
+    container.appendChild(item);
+  }
+
   function buildStoryMediaFigure(story, className, fallbackLabel) {
     var figure = createElement(
       'figure',
@@ -546,7 +711,7 @@
     return figure;
   }
 
-  function renderPopup(container, place) {
+  function renderPopup(container, place, state) {
     container.innerHTML = EMPTY;
     container.classList.toggle('is-empty', !place);
 
@@ -559,6 +724,9 @@
     var body = createElement('div', 'iss-card__body');
     var footer = createElement('div', 'iss-card__footer');
     var facts = createElement('div', 'iss-atlas-popup-card__facts');
+    var primaryFacts = createElement('div', 'iss-atlas-popup-card__fact-group');
+    var secondaryFacts = createElement('div', 'iss-atlas-popup-card__fact-group');
+    var summaryText = activeSummary(place, state);
 
     close.type = 'button';
     close.setAttribute('aria-label', 'Ort schließen');
@@ -568,11 +736,11 @@
 
     card.appendChild(close);
     card.appendChild(
-      buildPlaceMediaFigure(place, 'iss-card__media iss-atlas-popup-card__media', 'Industrieort')
+      buildPlaceMediaFigure(place, 'iss-card__media iss-atlas-popup-card__media', 'Ort')
     );
 
     body.appendChild(
-      createElement('p', 'iss-card__kicker iss-kicker iss-kicker--compact', roleLabel(place.role))
+      createElement('p', 'iss-card__kicker iss-kicker iss-kicker--compact', presentLabel(place))
     );
     body.appendChild(createElement('h3', 'iss-card__title', place.name || 'Ort'));
 
@@ -580,32 +748,45 @@
       body.appendChild(
         createElement(
           'p',
-          'iss-card__meta',
+          'iss-atlas-popup-card__meta',
           [place.era_name || place.era_label, place.address].filter(Boolean).join(' · ')
         )
       );
     }
 
-    if (place.summary) {
-      body.appendChild(createElement('p', 'iss-card__text', place.summary));
+    appendFactItem(primaryFacts, 'Historisch: ', historyLabel(place));
+    appendFactItem(primaryFacts, 'Heute: ', currentStatusLabel(place), 'is-emphasis');
+    appendFactItem(primaryFacts, 'Nutzung: ', currentUseTypeLabel(place));
+
+    appendFactItem(secondaryFacts, 'Bereich: ', place.area);
+    if (place.has_tour_usage) {
+      appendFactItem(secondaryFacts, 'Führung: ', 'Im Rundgang verknüpft');
     }
 
-    if (place.area) {
-      var area = createElement('p', 'iss-atlas-popup-card__fact');
-      area.appendChild(createElement('strong', EMPTY, 'Bereich: '));
-      area.appendChild(document.createTextNode(place.area));
-      facts.appendChild(area);
+    if (primaryFacts.children.length) {
+      facts.appendChild(primaryFacts);
     }
 
-    if (place.status) {
-      var status = createElement('p', 'iss-atlas-popup-card__fact');
-      status.appendChild(createElement('strong', EMPTY, 'Status: '));
-      status.appendChild(document.createTextNode(statusLabel(place.status)));
-      facts.appendChild(status);
+    if (secondaryFacts.children.length) {
+      facts.appendChild(secondaryFacts);
     }
 
     if (facts.children.length) {
       body.appendChild(facts);
+    }
+
+    if (summaryText) {
+      var summary = createElement('div', 'iss-atlas-popup-card__summary');
+      var summaryLabel = state.currentStatus || state.currentUseType
+        ? 'Kurznotiz zur heutigen Situation'
+        : (state.activeEra ? 'Kurznotiz zur gewählten Zeitschicht' : 'Kurznotiz');
+      summary.appendChild(createElement('p', 'iss-atlas-popup-card__summary-label', summaryLabel));
+      summary.appendChild(createElement('p', 'iss-atlas-popup-card__summary-text', summaryText));
+      body.appendChild(summary);
+    }
+
+    if (place.note_text) {
+      body.appendChild(createElement('p', 'iss-atlas-popup-card__note', place.note_text));
     }
 
     if (place.permalink) {
@@ -788,6 +969,11 @@
 
   function render(elements, state) {
     var eraScopedPlaces = getEraScopedPlaces(state.places, state.era).sort(sortPlaces);
+    var statusScopedPlaces = state.currentStatus
+      ? eraScopedPlaces.filter(function (place) {
+          return place.current_status === state.currentStatus;
+        })
+      : eraScopedPlaces.slice();
     var filteredPlaces = filterPlaces(eraScopedPlaces, state).sort(sortPlaces);
     var selectedPlace = getSelectedPlace(state, filteredPlaces);
     var selectedStories = getSelectedStories(state);
@@ -799,19 +985,21 @@
     }
 
     renderEraFilters(elements.eraFilters, state);
-    renderRoleFilters(elements.roleFilters, state, eraScopedPlaces);
+    renderCurrentStatusFilters(elements.statusFilters, state, eraScopedPlaces);
+    renderCurrentUseTypeFilters(elements.useTypeFilters, state, statusScopedPlaces);
     renderStoryIntro(elements.storyIntro, state, selectedStories, filteredPlaces);
     renderCount(elements.count, filteredPlaces, state);
     renderSummary(elements.summary, filteredPlaces, selectedPlace, state);
     renderMap(state, filteredPlaces, selectedPlace);
-    renderPopup(elements.popup, selectedPlace);
+    renderPopup(elements.popup, selectedPlace, state);
     renderStories(elements.stories, state, filteredPlaces);
     setMapStatus(elements.mapStatus, EMPTY);
   }
 
   function renderError(elements, message) {
     elements.eraFilters.innerHTML = EMPTY;
-    elements.roleFilters.innerHTML = EMPTY;
+    elements.statusFilters.innerHTML = EMPTY;
+    elements.useTypeFilters.innerHTML = EMPTY;
     elements.summary.innerHTML = EMPTY;
     elements.storyIntro.innerHTML = EMPTY;
     elements.popup.innerHTML = EMPTY;
@@ -825,7 +1013,8 @@
   function collectElements(root) {
     return {
       eraFilters: root.querySelector('[data-iss-schoneweide-era-filters]'),
-      roleFilters: root.querySelector('[data-iss-schoneweide-role-filters]'),
+      statusFilters: root.querySelector('[data-iss-schoneweide-status-filters]'),
+      useTypeFilters: root.querySelector('[data-iss-schoneweide-use-type-filters]'),
       mapSurface: root.querySelector('.iss-atlas-app__map-surface'),
       mapCanvas: root.querySelector('[data-iss-schoneweide-map]'),
       mapStatus: root.querySelector('[data-iss-schoneweide-map-status]'),
@@ -963,7 +1152,8 @@
           stories: stories,
           era: EMPTY,
           activeEra: null,
-          role: EMPTY,
+          currentStatus: EMPTY,
+          currentUseType: EMPTY,
           search: EMPTY,
           selectedPostId: places[0].post_id,
           shouldPan: false,
@@ -981,7 +1171,8 @@
 
         elements.reset.addEventListener('click', function () {
           state.era = EMPTY;
-          state.role = EMPTY;
+          state.currentStatus = EMPTY;
+          state.currentUseType = EMPTY;
           state.search = EMPTY;
           state.selectedPostId = 0;
           state.shouldPan = false;

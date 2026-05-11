@@ -22,6 +22,16 @@ function iss_register_get_public_taxonomy_map(): array
             'single_label' => 'Rolle',
             'plural_label' => 'Rollen',
         ],
+        'register_current_status' => [
+            'meta_key' => 'current_status',
+            'single_label' => 'Heutige Situation',
+            'plural_label' => 'Heutige Situationen',
+        ],
+        'register_current_use_type' => [
+            'meta_key' => 'current_use_type',
+            'single_label' => 'Nutzungstyp',
+            'plural_label' => 'Nutzungstypen',
+        ],
     ];
 }
 

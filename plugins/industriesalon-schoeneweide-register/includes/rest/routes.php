@@ -23,6 +23,14 @@ function iss_register_get_places_route_args(): array
             'type' => 'string',
             'required' => false,
         ],
+        'current_status' => [
+            'type' => 'string',
+            'required' => false,
+        ],
+        'current_use_type' => [
+            'type' => 'string',
+            'required' => false,
+        ],
         'tag' => [
             'type' => 'string',
             'required' => false,

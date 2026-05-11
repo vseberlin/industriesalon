@@ -67,6 +67,210 @@ function iss_register_get_atlas_eras(): array
     return $eras;
 }
 
+function iss_register_get_atlas_current_status_definitions(): array
+{
+    return [
+        'in_use' => [
+            'key' => 'in_use',
+            'label' => 'In Nutzung',
+            'caption' => 'Aktuell genutzt',
+        ],
+        'vacant' => [
+            'key' => 'vacant',
+            'label' => 'Leerstand',
+            'caption' => 'Der Ort steht aktuell leer',
+        ],
+        'temporary_use' => [
+            'key' => 'temporary_use',
+            'label' => 'Zwischennutzung',
+            'caption' => 'Temporär oder provisorisch genutzt',
+        ],
+        'in_transition' => [
+            'key' => 'in_transition',
+            'label' => 'Im Umbau',
+            'caption' => 'Umbau, Entwicklung oder Abzug',
+        ],
+        'planned' => [
+            'key' => 'planned',
+            'label' => 'Projekt / Planung',
+            'caption' => 'Geplante oder noch nicht umgesetzte Nutzung',
+        ],
+        'for_sale' => [
+            'key' => 'for_sale',
+            'label' => 'Verkauf / offen',
+            'caption' => 'Verkauf oder offene Perspektive',
+        ],
+        'unclear' => [
+            'key' => 'unclear',
+            'label' => 'Unklar',
+            'caption' => 'Aktuelle Situation nicht gesichert',
+        ],
+    ];
+}
+
+function iss_register_get_atlas_current_use_type_definitions(): array
+{
+    return [
+        'culture' => [
+            'key' => 'culture',
+            'label' => 'Kultur',
+        ],
+        'education' => [
+            'key' => 'education',
+            'label' => 'Bildung / Forschung',
+        ],
+        'commercial' => [
+            'key' => 'commercial',
+            'label' => 'Gewerbe / Bueros',
+        ],
+        'industrial' => [
+            'key' => 'industrial',
+            'label' => 'Produktion',
+        ],
+        'residential' => [
+            'key' => 'residential',
+            'label' => 'Wohnen',
+        ],
+        'administration' => [
+            'key' => 'administration',
+            'label' => 'Verwaltung',
+        ],
+        'community' => [
+            'key' => 'community',
+            'label' => 'Gemeinwohl / Soziales',
+        ],
+        'mixed' => [
+            'key' => 'mixed',
+            'label' => 'Mischnutzung',
+        ],
+    ];
+}
+
+function iss_register_get_atlas_current_status_payload(string $key): array
+{
+    $definitions = iss_register_get_atlas_current_status_definitions();
+    $key = sanitize_key($key);
+
+    return $definitions[$key] ?? [];
+}
+
+function iss_register_get_atlas_current_use_type_payload(string $key): array
+{
+    $definitions = iss_register_get_atlas_current_use_type_definitions();
+    $key = sanitize_key($key);
+
+    return $definitions[$key] ?? [];
+}
+
+function iss_register_detect_current_status(array $place): array
+{
+    $explicit = sanitize_key((string) ($place['current_status'] ?? ''));
+    if ($explicit !== '') {
+        $payload = iss_register_get_atlas_current_status_payload($explicit);
+        if ($payload) {
+            return $payload + ['source' => 'meta'];
+        }
+    }
+
+    $legacy_status = strtolower(trim((string) ($place['status'] ?? '')));
+    $current = strtolower(trim((string) ($place['current'] ?? '')));
+
+    $legacy_map = [
+        'aktiv' => 'in_use',
+        'mieter' => 'in_use',
+        'entwicklung' => 'in_transition',
+        'abzug' => 'in_transition',
+        'geplant' => 'planned',
+        'sucht' => 'planned',
+        'unklar' => 'unclear',
+    ];
+
+    if (isset($legacy_map[$legacy_status])) {
+        $payload = iss_register_get_atlas_current_status_payload($legacy_map[$legacy_status]);
+        if ($payload) {
+            return $payload + ['source' => 'legacy_status'];
+        }
+    }
+
+    if (preg_match('/leerstand|steht\s+leer|ungenutzt|brach|verlassen|stillgelegt/u', $current)) {
+        return iss_register_get_atlas_current_status_payload('vacant') + ['source' => 'inferred'];
+    }
+
+    if (preg_match('/zwischennutz|tempor[aä]r|interim/u', $current)) {
+        return iss_register_get_atlas_current_status_payload('temporary_use') + ['source' => 'inferred'];
+    }
+
+    if (preg_match('/verkauf|zu verkaufen|investorensuche|offene perspektive|ungewiss/u', $current)) {
+        return iss_register_get_atlas_current_status_payload('for_sale') + ['source' => 'inferred'];
+    }
+
+    if (preg_match('/umbau|sanierung|entwicklung|transformation|revitalisierung/u', $current)) {
+        return iss_register_get_atlas_current_status_payload('in_transition') + ['source' => 'inferred'];
+    }
+
+    if (preg_match('/planung|projekt|vorgesehen|soll|geplant/u', $current) || strtoupper(trim((string) ($place['role'] ?? ''))) === 'P') {
+        return iss_register_get_atlas_current_status_payload('planned') + ['source' => 'inferred'];
+    }
+
+    if ($current !== '') {
+        return iss_register_get_atlas_current_status_payload('in_use') + ['source' => 'inferred'];
+    }
+
+    return iss_register_get_atlas_current_status_payload('unclear') + ['source' => 'fallback'];
+}
+
+function iss_register_detect_current_use_type(array $place): array
+{
+    $explicit = sanitize_key((string) ($place['current_use_type'] ?? ''));
+    if ($explicit !== '') {
+        $payload = iss_register_get_atlas_current_use_type_payload($explicit);
+        if ($payload) {
+            return $payload + ['source' => 'meta'];
+        }
+    }
+
+    $current = strtolower(trim(implode(' ', array_filter([
+        (string) ($place['current'] ?? ''),
+        is_array($place['tags'] ?? null) ? implode(' ', (array) $place['tags']) : '',
+    ]))));
+
+    $patterns = [
+        'culture' => '/kultur|museum|kunst|atelier|ausstellung|veranstaltung|club|theater|musik/u',
+        'education' => '/schule|hochschule|universit[aä]t|bildung|forschung|labor|campus/u',
+        'commercial' => '/gewerbe|b[uü]ro|handel|dienstleistung|firma|agentur/u',
+        'industrial' => '/produktion|fertigung|werkstatt|industrie|werk\b/u',
+        'residential' => '/wohnen|wohnhaus|wohnanlage|wohnungen|apartments?/u',
+        'administration' => '/verwaltung|amt|beh[oö]rde/u',
+        'community' => '/verein|jugend|nachbarschaft|gemeinwohl|sozial|community/u',
+        'mixed' => '/mischnutzung|gemischt/u',
+    ];
+
+    foreach ($patterns as $key => $pattern) {
+        if (preg_match($pattern, $current)) {
+            return iss_register_get_atlas_current_use_type_payload($key) + ['source' => 'inferred'];
+        }
+    }
+
+    return [];
+}
+
+function iss_register_build_present_label(array $current_status, array $current_use_type): string
+{
+    $pieces = [];
+    $status_label = trim((string) ($current_status['label'] ?? ''));
+    $type_label = trim((string) ($current_use_type['label'] ?? ''));
+
+    if ($status_label !== '') {
+        $pieces[] = $status_label;
+    }
+
+    if ($type_label !== '') {
+        $pieces[] = $type_label;
+    }
+
+    return implode(' · ', $pieces);
+}
+
 function iss_register_infer_atlas_era_from_place(array $place): array
 {
     $eras = iss_register_get_atlas_eras();
@@ -187,6 +391,9 @@ function iss_register_build_atlas_place_contract(array $place): array
     $sources = (string) ($place['sources'] ?? '');
     $branche = (string) ($place['branche'] ?? '');
     $related_tours = iss_register_get_place_tour_usage((int) ($place['post_id'] ?? 0));
+    $current_status = iss_register_detect_current_status($place);
+    $current_use_type = iss_register_detect_current_use_type($place);
+    $present_label = iss_register_build_present_label($current_status, $current_use_type);
 
     return [
         'id' => (string) ($place['id'] ?? ''),
@@ -200,6 +407,14 @@ function iss_register_build_atlas_place_contract(array $place): array
         'area' => (string) ($place['area'] ?? ''),
         'address' => (string) ($place['address'] ?? ''),
         'status' => (string) ($place['status'] ?? ''),
+        'current_status' => (string) ($current_status['key'] ?? ''),
+        'current_status_label' => (string) ($current_status['label'] ?? ''),
+        'current_status_caption' => (string) ($current_status['caption'] ?? ''),
+        'current_status_source' => (string) ($current_status['source'] ?? ''),
+        'current_use_type' => (string) ($current_use_type['key'] ?? ''),
+        'current_use_type_label' => (string) ($current_use_type['label'] ?? ''),
+        'current_use_type_source' => (string) ($current_use_type['source'] ?? ''),
+        'present_label' => $present_label,
         'color' => (string) ($place['color'] ?? ''),
         'branche' => $branche,
         'lat' => $lat,
@@ -213,6 +428,9 @@ function iss_register_build_atlas_place_contract(array $place): array
         'era_source' => (string) ($era['source'] ?? 'inferred'),
         'explicit_era_slugs' => array_values(array_map(static function (array $item): string {
             return (string) ($item['slug'] ?? '');
+        }, (array) ($era['explicit_eras'] ?? []))),
+        'explicit_era_names' => array_values(array_map(static function (array $item): string {
+            return (string) ($item['name'] ?? '');
         }, (array) ($era['explicit_eras'] ?? []))),
         'has_tour_usage' => !empty($related_tours),
         'related_tours' => $related_tours,

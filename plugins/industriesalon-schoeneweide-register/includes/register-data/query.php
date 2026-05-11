@@ -109,6 +109,8 @@ function iss_register_normalize_place_query_args(array $args): array
         'area' => iss_register_normalize_place_query_text($args['area'] ?? ''),
         'status' => iss_register_normalize_place_query_text($args['status'] ?? ''),
         'role' => iss_register_normalize_place_query_text($args['role'] ?? ''),
+        'current_status' => iss_register_normalize_place_query_text($args['current_status'] ?? ''),
+        'current_use_type' => iss_register_normalize_place_query_text($args['current_use_type'] ?? ''),
         'tag' => iss_register_normalize_place_query_text($args['tag'] ?? ''),
         'has_unclear_filter' => $has_unclear_filter,
         'unclear' => $has_unclear_filter ? (bool) rest_sanitize_boolean($unclear) : null,
@@ -124,6 +126,8 @@ function iss_register_get_place_query_args_from_request(WP_REST_Request $request
         'area' => $request->get_param('area'),
         'status' => $request->get_param('status'),
         'role' => $request->get_param('role'),
+        'current_status' => $request->get_param('current_status'),
+        'current_use_type' => $request->get_param('current_use_type'),
         'tag' => $request->get_param('tag'),
         'unclear' => $request->get_param('unclear'),
         'orderby' => $request->get_param('orderby'),
@@ -145,6 +149,14 @@ function iss_register_filter_place_entities(array $places, array $query_args): a
         }
 
         if ($query_args['role'] !== '' && iss_register_normalize_place_query_text($place['role'] ?? '') !== $query_args['role']) {
+            return false;
+        }
+
+        if ($query_args['current_status'] !== '' && iss_register_normalize_place_query_text($place['current_status'] ?? '') !== $query_args['current_status']) {
+            return false;
+        }
+
+        if ($query_args['current_use_type'] !== '' && iss_register_normalize_place_query_text($place['current_use_type'] ?? '') !== $query_args['current_use_type']) {
             return false;
         }
 

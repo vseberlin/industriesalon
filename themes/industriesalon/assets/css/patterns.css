@@ -6993,9 +6993,36 @@ Raum / Vermietung → brown
 }
 
 .iss-register-place__hero-panel,
-.iss-register-place__terms,
-.iss-register-place__overview {
+.iss-register-place__terms {
   gap: 0.85rem;
+}
+
+.iss-register-place__section {
+  display: grid;
+  gap: 1.35rem;
+}
+
+.iss-register-place__section + .iss-register-place__section {
+  margin-top: clamp(2.25rem, 5vw, 4rem);
+  padding-top: clamp(1.75rem, 4vw, 3rem);
+  border-top: 1px solid rgba(30, 30, 30, 0.1);
+}
+
+.iss-register-place__lead-primary,
+.iss-register-place__lead-secondary {
+  margin: 0;
+}
+
+.iss-register-place__lead-primary {
+  font-size: clamp(1.04rem, 0.98rem + 0.22vw, 1.18rem);
+  line-height: 1.68;
+  color: rgba(30, 30, 30, 0.9);
+}
+
+.iss-register-place__lead-secondary {
+  font-size: 0.98rem;
+  line-height: 1.72;
+  color: rgba(30, 30, 30, 0.76);
 }
 
 .iss-register-place__fact {
@@ -7040,6 +7067,16 @@ Raum / Vermietung → brown
   margin-top: 2rem;
 }
 
+.iss-register-place__section .iss-register-place__body {
+  margin-top: 0.6rem;
+}
+
+.iss-register-place__lead,
+.iss-register-place__present {
+  display: grid;
+  gap: 1rem;
+}
+
 .iss-register-place__term {
   line-height: 1.5;
 }
@@ -7049,11 +7086,17 @@ Raum / Vermietung → brown
   text-decoration: none;
 }
 
-.iss-register-place__next {
-  padding: 1.35rem 1.45rem;
-  border: 1px solid rgba(30, 30, 30, 0.1);
-  border-radius: var(--iss-radius-lg);
-  background: rgba(255, 255, 255, 0.76);
+.iss-register-place__terms {
+  display: grid;
+  gap: 0.65rem;
+  padding-top: 0.15rem;
+}
+
+.iss-register-place__rail {
+  display: grid;
+  gap: 0.9rem;
+  padding-top: 1.25rem;
+  border-top: 1px solid rgba(30, 30, 30, 0.1);
 }
 
 .iss-related-feed__intro {

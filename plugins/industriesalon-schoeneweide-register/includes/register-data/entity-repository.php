@@ -101,6 +101,8 @@ function iss_register_map_place_entity(WP_Post $post): array
         'role' => (string) iss_register_get_meta_value($post_id, 'role', ''),
         'area' => (string) iss_register_get_meta_value($post_id, 'area', ''),
         'address' => (string) iss_register_get_meta_value($post_id, 'address', ''),
+        'current_status' => (string) iss_register_get_meta_value($post_id, 'current_status', ''),
+        'current_use_type' => (string) iss_register_get_meta_value($post_id, 'current_use_type', ''),
         'size' => (string) iss_register_get_meta_value($post_id, 'size', ''),
         'investment' => (string) iss_register_get_meta_value($post_id, 'investment', ''),
         'jobs' => (string) iss_register_get_meta_value($post_id, 'jobs', ''),
@@ -207,6 +209,21 @@ function iss_register_get_place_entity_by_id(string $target_id): ?array
 
     foreach (iss_register_get_place_entities() as $place) {
         if ((string) ($place['id'] ?? '') === $target_id) {
+            return $place;
+        }
+    }
+
+    return null;
+}
+
+function iss_register_get_place_entity_by_post_id(int $target_post_id): ?array
+{
+    if ($target_post_id <= 0) {
+        return null;
+    }
+
+    foreach (iss_register_get_place_entities() as $place) {
+        if ((int) ($place['post_id'] ?? 0) === $target_post_id) {
             return $place;
         }
     }

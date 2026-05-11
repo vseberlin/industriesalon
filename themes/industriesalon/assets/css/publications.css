@@ -888,6 +888,7 @@ body.iss-publication-kind-album .iss-publication-single__body {
   gap: clamp(1.5rem, 4vw, 4rem);
   padding: clamp(2rem, 5vw, 4rem) 0;
   border-top: 1px solid rgba(30, 30, 30, 0.1);
+  scroll-margin-top: calc(var(--iss-header-height) + 4.75rem);
 }
 
 .iss-publication-chapter:first-child {
@@ -939,6 +940,25 @@ body.iss-publication-kind-album .iss-publication-single__body {
 .iss-publication-chapter__body p,
 .iss-publication-chapter__body li {
   color: rgba(30, 30, 30, 0.82);
+}
+
+.iss-publication-chapter__atlas-link {
+  margin-top: 1.8rem;
+  padding-top: 0.9rem;
+  border-top: 1px solid rgba(30, 30, 30, 0.1);
+  color: rgba(30, 30, 30, 0.68);
+  font-size: 0.98rem;
+  font-weight: 600;
+}
+
+.iss-publication-chapter__atlas-link a {
+  color: inherit;
+  text-decoration: none;
+}
+
+.iss-publication-chapter__atlas-link a:hover,
+.iss-publication-chapter__atlas-link a:focus-visible {
+  color: var(--iss-accent);
 }
 
 body.iss-publication-longread-chaptered .iss-publication-single__body {

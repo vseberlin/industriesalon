@@ -4,6 +4,35 @@ if (!defined('ABSPATH')) {
     exit;
 }
 
+function iss_register_get_current_status_options(): array
+{
+    return [
+        '' => 'Nicht gesetzt',
+        'in_use' => 'In Nutzung',
+        'vacant' => 'Leerstand',
+        'temporary_use' => 'Zwischennutzung',
+        'in_transition' => 'Im Umbau / in Entwicklung',
+        'planned' => 'Projekt / Planung',
+        'for_sale' => 'Verkauf / Perspektive offen',
+        'unclear' => 'Unklare Situation',
+    ];
+}
+
+function iss_register_get_current_use_type_options(): array
+{
+    return [
+        '' => 'Nicht gesetzt',
+        'culture' => 'Kultur',
+        'education' => 'Bildung / Forschung',
+        'commercial' => 'Gewerbe / Bueros',
+        'industrial' => 'Produktion',
+        'residential' => 'Wohnen',
+        'administration' => 'Verwaltung',
+        'community' => 'Gemeinwohl / Soziales',
+        'mixed' => 'Mischnutzung',
+    ];
+}
+
 function iss_register_get_meta_schema(): array
 {
     return [
@@ -15,6 +44,8 @@ function iss_register_get_meta_schema(): array
         'coordinates_accuracy' => ['type' => 'string', 'label' => 'Koordinaten-Genauigkeit', 'input' => 'text', 'show_in_rest' => true, 'admin' => true],
         'status' => ['type' => 'string', 'label' => 'Status', 'input' => 'text', 'show_in_rest' => true, 'admin' => true],
         'role' => ['type' => 'string', 'label' => 'Rolle', 'input' => 'text', 'show_in_rest' => true, 'admin' => true],
+        'current_status' => ['type' => 'string', 'label' => 'Heutige Situation', 'input' => 'select', 'options' => iss_register_get_current_status_options(), 'show_in_rest' => true, 'admin' => true],
+        'current_use_type' => ['type' => 'string', 'label' => 'Nutzung heute', 'input' => 'select', 'options' => iss_register_get_current_use_type_options(), 'show_in_rest' => true, 'admin' => true],
         'owner' => ['type' => 'string', 'label' => 'Eigentümer', 'input' => 'text', 'show_in_rest' => true, 'admin' => true],
         'operator' => ['type' => 'string', 'label' => 'Operator', 'input' => 'text', 'show_in_rest' => true, 'admin' => true],
         'developer' => ['type' => 'string', 'label' => 'Developer', 'input' => 'text', 'show_in_rest' => true, 'admin' => true],
@@ -233,7 +264,7 @@ function iss_register_get_meta_box_groups(): array
             'context' => 'normal',
             'priority' => 'high',
             'description' => __('Für einen nutzbaren Atlas-Ort reichen der Titel oben, Adresse, Koordinaten und mindestens ein kurzer öffentlicher Text. Alles andere kann später ergänzt werden.', 'industriesalon-schoeneweide-register'),
-            'fields' => ['area', 'address', 'lat', 'lng', 'coordinates_accuracy', 'status', 'role', 'is_unclear', 'sort_order'],
+            'fields' => ['area', 'address', 'lat', 'lng', 'coordinates_accuracy', 'status', 'role', 'current_status', 'current_use_type', 'is_unclear', 'sort_order'],
         ],
         'atlas_public' => [
             'title' => __('Öffentliche Atlas-Texte', 'industriesalon-schoeneweide-register'),
@@ -280,6 +311,13 @@ function iss_register_render_fields_table(WP_Post $post, array $field_keys): voi
 
         if ($field['input'] === 'textarea') {
             echo '<textarea id="iss-register-' . esc_attr($key) . '" name="' . $input_name . '" class="large-text" rows="3">' . esc_textarea((string) $value) . '</textarea>';
+        } elseif ($field['input'] === 'select') {
+            $options = isset($field['options']) && is_array($field['options']) ? $field['options'] : [];
+            echo '<select id="iss-register-' . esc_attr($key) . '" name="' . $input_name . '" class="regular-text">';
+            foreach ($options as $option_value => $option_label) {
+                echo '<option value="' . esc_attr((string) $option_value) . '" ' . selected((string) $value, (string) $option_value, false) . '>' . esc_html((string) $option_label) . '</option>';
+            }
+            echo '</select>';
         } elseif ($field['input'] === 'array_textarea') {
             $array_value = is_array($value) ? $value : [];
             echo '<textarea id="iss-register-' . esc_attr($key) . '" name="' . $input_name . '" class="large-text" rows="4">' . esc_textarea(implode("\n", $array_value)) . '</textarea>';

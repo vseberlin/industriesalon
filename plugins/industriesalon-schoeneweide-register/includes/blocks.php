@@ -4,6 +4,152 @@ if (!defined('ABSPATH')) {
     exit;
 }
 
+function iss_register_place_context_fallback_history_label(array $place, array $era): string
+{
+    $explicit_names = array_values(array_filter(array_map(static function ($item): string {
+        return is_array($item) ? trim((string) ($item['name'] ?? '')) : '';
+    }, (array) ($era['explicit_eras'] ?? []))));
+    if ($explicit_names) {
+        return implode(' · ', $explicit_names);
+    }
+
+    $history_signal = trim(implode(' ', array_filter([
+        (string) ($place['history'] ?? ''),
+        (string) ($place['excerpt'] ?? ''),
+    ])));
+
+    if ($history_signal !== '' && preg_match('/\b(18\d{2}|19\d{2}|20\d{2})\b/u', $history_signal)) {
+        return trim((string) ($era['name'] ?? $era['label'] ?? ''));
+    }
+
+    return '';
+}
+
+function iss_register_get_place_context_payload(int $post_id): array
+{
+    $place = function_exists('iss_register_get_place_entity_by_post_id')
+        ? iss_register_get_place_entity_by_post_id($post_id)
+        : null;
+
+    if (!is_array($place)) {
+        return [];
+    }
+
+    $era = function_exists('iss_register_detect_atlas_era')
+        ? iss_register_detect_atlas_era($place)
+        : [];
+    $current_status = function_exists('iss_register_detect_current_status')
+        ? iss_register_detect_current_status($place)
+        : [];
+    $current_use_type = function_exists('iss_register_detect_current_use_type')
+        ? iss_register_detect_current_use_type($place)
+        : [];
+
+    return [
+        'address' => trim((string) ($place['address'] ?? '')),
+        'area' => trim((string) ($place['area'] ?? '')),
+        'history_label' => iss_register_place_context_fallback_history_label($place, $era),
+        'history_missing' => trim((string) ($place['history'] ?? '')) === '' && empty($era['explicit_eras']),
+        'current_status_label' => trim((string) ($current_status['label'] ?? '')),
+        'current_use_type_label' => trim((string) ($current_use_type['label'] ?? '')),
+    ];
+}
+
+function iss_register_render_place_context_items(array $items, string $item_class, string $label_class, string $value_class): string
+{
+    if (!$items) {
+        return '';
+    }
+
+    $html = '';
+
+    foreach ($items as $item) {
+        $label = trim((string) ($item['label'] ?? ''));
+        $value = trim((string) ($item['value'] ?? ''));
+
+        if ($label === '' || $value === '') {
+            continue;
+        }
+
+        $html .= '<div class="' . esc_attr($item_class) . '">';
+        $html .= '<p class="' . esc_attr($label_class) . '">' . esc_html($label) . '</p>';
+        $html .= '<p class="' . esc_attr($value_class) . '">' . esc_html($value) . '</p>';
+        $html .= '</div>';
+    }
+
+    return $html;
+}
+
+function iss_register_render_place_context(array $attributes = []): string
+{
+    $post_id = get_the_ID();
+    if (!$post_id || get_post_type($post_id) !== ISS_REGISTER_POST_TYPE) {
+        return '';
+    }
+
+    $context = iss_register_get_place_context_payload((int) $post_id);
+    if (!$context) {
+        return '';
+    }
+
+    $variant = sanitize_key((string) ($attributes['variant'] ?? 'terms'));
+
+    if ($variant === 'hero_meta') {
+        $labels = array_values(array_filter([
+            $context['history_label'] !== '' ? $context['history_label'] : '',
+            $context['current_status_label'],
+            $context['current_use_type_label'],
+            $context['area'],
+        ]));
+
+        if (!$labels) {
+            return '';
+        }
+
+        $html = '<div class="wp-block-group iss-register-place__hero-meta">';
+        foreach ($labels as $label) {
+            $html .= '<p class="iss-register-place__hero-term">' . esc_html($label) . '</p>';
+        }
+        $html .= '</div>';
+
+        return $html;
+    }
+
+    if ($variant === 'hero_panel') {
+        $items = [
+            ['label' => 'Adresse', 'value' => $context['address']],
+            ['label' => 'Historisch', 'value' => $context['history_label'] !== '' ? $context['history_label'] : 'Noch nicht eingeordnet'],
+            ['label' => 'Heute', 'value' => $context['current_status_label']],
+            ['label' => 'Nutzung', 'value' => $context['current_use_type_label']],
+        ];
+
+        return iss_register_render_place_context_items(
+            $items,
+            'wp-block-group iss-register-place__fact',
+            'iss-register-place__fact-label',
+            'iss-register-place__fact-value'
+        );
+    }
+
+    $terms = array_values(array_filter([
+        $context['history_label'] !== '' ? 'Historisch: ' . $context['history_label'] : 'Historisch: noch nicht eingeordnet',
+        $context['current_status_label'] !== '' ? 'Heute: ' . $context['current_status_label'] : '',
+        $context['current_use_type_label'] !== '' ? 'Nutzung: ' . $context['current_use_type_label'] : '',
+        $context['area'] !== '' ? 'Gebiet: ' . $context['area'] : '',
+    ]));
+
+    if (!$terms) {
+        return '';
+    }
+
+    $html = '';
+    foreach ($terms as $term) {
+        $html .= '<p class="iss-register-place__term">' . esc_html($term) . '</p>';
+    }
+
+    return $html;
+}
+
 add_action('init', function () {
     if (!function_exists('register_block_type')) {
         return;
@@ -15,4 +161,15 @@ add_action('init', function () {
             'render_callback' => 'iss_register_render_register_app',
         ]);
     }
+
+    register_block_type('iss/register-place-context', [
+        'api_version' => 3,
+        'attributes' => [
+            'variant' => [
+                'type' => 'string',
+                'default' => 'terms',
+            ],
+        ],
+        'render_callback' => 'iss_register_render_place_context',
+    ]);
 });

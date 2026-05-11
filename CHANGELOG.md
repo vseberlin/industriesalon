@@ -477,3 +477,35 @@
 - Timeline mapping save now updates series map + source map and propagates links across series entries.
 - Slot/title output now prefers linked content and exposes `content_url` for consumers.
 - Removed redirect-based workaround; behavior now depends on stable CPT mapping.
+
+## 2026-05-11
+- Refactored the Schöneweide register/atlas model from single-role/single-era bias toward explicit historical phases plus present-day status/use:
+  - added `current_status` and `current_use_type` editor fields
+  - synced `register_current_status` / `register_current_use_type` public taxonomies
+  - extended register entity, service, REST, and atlas contracts with present-state labels and explicit era names
+- Reworked the public Schöneweide atlas and place popup:
+  - public filters now use `Epochen`, `Heutige Situation`, `Nutzung heute`
+  - popup now leads with structured facts instead of generic prose
+- Added single-place context rendering via `iss/register-place-context` and updated `single-register_place.html` to reuse atlas-era/present-state logic instead of legacy status/role terms.
+- Curated key Schöneweide places directly in WordPress content:
+  - `Spreehöfe / ADMOS`
+  - `Behrensbau`
+  - `Rathenau-Hallen`
+  - `Bärenquell`
+  - `BAE`
+  - `Funkhaus`
+  - `Dokumentationszentrum NS-Zwangsarbeit`
+  - `FEZ`
+  - `Behrens-Ufer`
+- Completed a corpus-wide normalization pass for all `register_place` entries so every place now has:
+  - `history_short`
+  - `history_long`
+  - `current_status`
+  - `current_use_type`
+  - explicit `atlas_era`
+- Improved Wikimedia image suggestion scoring for dense urban addresses by weighting house-number/street matches more strongly and penalizing mismatched nearby streets.
+- Adjusted the Schöneweide publication reading loop:
+  - chapter-end atlas return link
+  - corrected sticky publication-nav scroll offset
+- Refactored `single-register_place.html` from a stacked dossier layout into a more public text-first place page.
+- Fixed a malformed place template markup regression that had duplicated content before and after the footer on single place pages.

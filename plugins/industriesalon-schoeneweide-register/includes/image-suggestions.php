@@ -149,6 +149,57 @@ function iss_register_candidate_overlap_score(array $haystack_tokens, array $nee
     return count(array_intersect($haystack_tokens, $needle_tokens));
 }
 
+function iss_register_extract_numeric_tokens(string $value): array
+{
+    if (!preg_match_all('/\b\d+[a-z]?\b/u', iss_register_normalize_candidate_phrase($value), $matches)) {
+        return [];
+    }
+
+    return array_values(array_unique(array_filter(array_map('trim', $matches[0] ?? []))));
+}
+
+function iss_register_extract_address_street_tokens(string $value): array
+{
+    $value = trim((string) preg_replace('/,.*/', '', $value));
+    if ($value === '') {
+        return [];
+    }
+
+    if (preg_match('/^(.+?)\s+\d+[a-z\-\/]*$/ui', $value, $matches)) {
+        $value = trim((string) $matches[1]);
+    }
+
+    return iss_register_candidate_tokens($value);
+}
+
+function iss_register_candidate_contains_foreign_street(string $blob, array $street_tokens): bool
+{
+    $markers = [
+        'wilhelminenhof',
+        'nalepa',
+        'siemens',
+        'reinbeck',
+        'griechische',
+        'edison',
+        'rathenau',
+        'ostend',
+        'mathilden',
+    ];
+
+    $expected = array_values(array_intersect($markers, $street_tokens));
+    foreach ($markers as $marker) {
+        if (!str_contains($blob, $marker)) {
+            continue;
+        }
+
+        if (!in_array($marker, $expected, true)) {
+            return true;
+        }
+    }
+
+    return false;
+}
+
 function iss_register_candidate_year_from_value(string $value): string
 {
     if (preg_match('/\b(18\d{2}|19\d{2}|20\d{2})\b/', $value, $matches)) {
@@ -1174,14 +1225,49 @@ function iss_register_fetch_wikimedia_file_details(array $titles): array
     return $details;
 }
 
-function iss_register_score_wikimedia_candidate(array $candidate, array $context_tokens): int
+function iss_register_score_wikimedia_candidate(array $candidate, array $context_tokens, array $queries = [], string $address = ''): int
 {
-    $candidate_tokens = iss_register_candidate_tokens((string) ($candidate['file_title'] ?? '') . ' ' . (string) ($candidate['title'] ?? ''));
+    $candidate_blob = implode(' ', array_filter([
+        (string) ($candidate['file_title'] ?? ''),
+        (string) ($candidate['title'] ?? ''),
+        (string) ($candidate['description'] ?? ''),
+    ]));
+    $candidate_tokens = iss_register_candidate_tokens($candidate_blob);
     $overlap = iss_register_candidate_overlap_score($candidate_tokens, $context_tokens);
     $distance = isset($candidate['distance_m']) && $candidate['distance_m'] !== '' ? max(0, (int) $candidate['distance_m']) : 9999;
     $distance_score = $distance < 9999 ? max(0, 80 - (int) floor($distance / 30)) : 0;
+    $score = ($overlap * 18) + $distance_score;
 
-    return ($overlap * 18) + $distance_score;
+    $normalized_blob = iss_register_normalize_candidate_phrase($candidate_blob);
+    foreach ($queries as $query) {
+        $normalized_query = iss_register_normalize_candidate_phrase((string) $query);
+        if ($normalized_query !== '' && str_contains($normalized_blob, $normalized_query)) {
+            $score += 28;
+        }
+    }
+
+    $query_number_tokens = iss_register_extract_numeric_tokens(implode(' ', $queries) . ' ' . $address);
+    $candidate_number_tokens = iss_register_extract_numeric_tokens($candidate_blob);
+    if ($query_number_tokens && $candidate_number_tokens) {
+        $number_overlap = array_intersect($candidate_number_tokens, $query_number_tokens);
+        if ($number_overlap) {
+            $score += 24;
+        } else {
+            $score -= 18;
+        }
+    }
+
+    $street_tokens = iss_register_extract_address_street_tokens($address);
+    if ($street_tokens) {
+        $street_overlap = iss_register_candidate_overlap_score($candidate_tokens, $street_tokens);
+        if ($street_overlap > 0) {
+            $score += 18;
+        } elseif (iss_register_candidate_contains_foreign_street($normalized_blob, $street_tokens)) {
+            $score -= 24;
+        }
+    }
+
+    return $score;
 }
 
 function iss_register_search_image_candidates(int $post_id)
@@ -1301,7 +1387,12 @@ function iss_register_search_wikimedia_candidates(int $post_id)
             );
         }
 
-        $candidate['score'] = iss_register_score_wikimedia_candidate($candidate, $context_tokens);
+        $candidate['score'] = iss_register_score_wikimedia_candidate(
+            $candidate,
+            $context_tokens,
+            $title_queries,
+            (string) get_post_meta($post_id, 'address', true)
+        );
         $candidates[] = $candidate;
     }
 

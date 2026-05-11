@@ -27,53 +27,160 @@
   - detail fetch for one place
   - dedicated export/research path for bulk-rich data
   - Register plugin owns data contracts and semantic view-models.
-- Theme owns card layout, section layout, color scheme, and visual hierarchy.
-- Plugin-rendered frontend HTML must stay minimal and semantic.
-- Do not add layout classes such as grid/card-size/rail/homepage variants inside register PHP.
-- Do not query register DB tables directly from templates, blocks, or JS.
-- All consumers must use shared data services or documented REST contracts.
-- REST routes must not contain independent query logic that differs from service logic.
-- Before adding a new field or endpoint, state:
-  - which existing contract cannot serve it
-  - what would become harder to remove later
-  - whether this creates a new public dependency
-- Prefer extending an existing contract only when the field belongs to that contract’s purpose.
-- atlas = map/story behavior contract, not full research payload and not visual layout contract
+  - Theme owns card layout, section layout, color scheme, and visual hierarchy.
+  - Plugin-rendered frontend HTML must stay minimal and semantic.
+  - Do not add layout classes such as grid/card-size/rail/homepage variants inside register PHP.
+  - Do not query register DB tables directly from templates, blocks, or JS.
+  - All consumers must use shared data services or documented REST contracts.
+  - REST routes must not contain independent query logic that differs from service logic.
+  - Before adding a new field or endpoint, state:
+    - which existing contract cannot serve it
+    - what would become harder to remove later
+    - whether this creates a new public dependency
+  - Prefer extending an existing contract only when the field belongs to that contract’s purpose.
+  - atlas = map/story behavior contract, not full research payload and not visual layout contract
 
 
 # Handoff Current
 
 ## Status
-- `paused at clean checkpoint`
+- `clean checkpoint after schoneweide register/place-page refactor`
 
 ## Date / Window
-- Date: `2026-05-08`
+- Date: `2026-05-11`
 - Timezone: `Europe/Berlin`
 
 ## Branch / Commit
 - Branch: `master`
-- HEAD at start of this pass: `9759d82`
+- HEAD at start of this pass: `27d5575`
 
 ## What Was Done This Session
-- Promoted WF technical material from `wf-museum.de` into stronger local public surfaces instead of leaving it as scattered imported objects:
-  - rebuilt `Elektrotechnik im WF` as a denser editorial gateway in WordPress content
-  - created new `ausstellung` `Betriebsfotoalben im WF` (`ID 21128`) as the umbrella for the four existing album publications plus their archive collections
-- Confirmed the structural boundary for the technical archive:
-  - `publication` remains the readable/interpretive layer
-  - `ausstellung` remains the curated entry layer
-  - `archivobjekt` remains the source-of-truth object layer
-  - `WF-Technik` should grow as a taxonomy-led technical corpus, not as many parallel longreads
-- Extended the technical archive/browser system in `iss-wf-import` so the remaining WF-Technik sections can scale:
-  - added nested route normalization for:
-    - `/geraete-einschuebe-bauteile/`
-    - `/telekommunikation-sende-und-fernsehtechnik/`
-    - `/diverses-gebaeude-schaltbilder-etc/`
-  - extended editor-facing archive taxonomy vocabulary with additional fields/families/contexts for:
-    - devices/components
-    - telecommunication/television
-    - buildings/work environment
-    - schematics/reproductions
-  - added new classifier profiles in `plugins/iss-wf-import/includes/museum-digital-importer.php`:
+- Continued the Schöneweide atlas/register refactor in `industriesalon-schoeneweide-register`:
+  - added explicit editor-facing present-day fields:
+    - `current_status`
+    - `current_use_type`
+  - synced those fields into public taxonomies via:
+    - `register_current_status`
+    - `register_current_use_type`
+  - extended entity/repository, contracts, query layer, services and REST payloads so atlas/detail consumers receive:
+    - present-state labels
+    - present-use labels
+    - present combined label
+    - explicit era names
+- Refactored the public Schöneweide atlas UI and popup:
+  - public role filter was replaced by:
+    - `Epochen`
+    - `Heutige Situation`
+    - `Nutzung heute`
+  - popup/card output is now structured-first instead of prose-first
+  - era handling now respects explicit multi-era membership
+- Added a narrow dynamic block for single place context in:
+  - `plugins/industriesalon-schoeneweide-register/includes/blocks.php`
+  - single place pages now reuse atlas-era/present-state logic instead of old status/role-only terms
+- Curated high-value Schöneweide place records directly in WordPress content:
+  - `Spreehöfe / ADMOS`
+  - `Ostendstraße 1-5 / Behrensbau`
+  - `Rathenau-Hallen-Komplex / Urban Banks Berlin`
+  - `Bärenquell-Brauerei`
+  - `BAE Batterien`
+  - `Funkhaus Nalepastraße`
+  - `Dokumentationszentrum NS-Zwangsarbeit`
+  - `FEZ Berlin`
+  - `Behrens-Ufer`
+- Then completed a corpus-wide normalization pass for all `register_place` entries:
+  - every place now has:
+    - `history_short`
+    - `history_long`
+    - `current_status`
+    - `current_use_type`
+    - at least one explicit `atlas_era`
+  - spot-corrected edge cases after the bulk fill, for example:
+    - `1. FC Union Berlin` → `Gemeinwohl / Soziales`
+    - `Wilhelminenhofstr. 91` → `Gewerbe / Bueros`
+- Improved image suggestion scoring in:
+  - `plugins/industriesalon-schoeneweide-register/includes/image-suggestions.php`
+  - nearby-but-wrong Wikimedia hits are now penalized more when house number or street mismatch
+- Reworked the publication-side Schöneweide reading loop:
+  - publication chapter-end now offers a quiet atlas return link
+  - publication sticky-nav jump offset was corrected so chapter headings are not hidden
+- Refactored `themes/industriesalon/templates/single-register_place.html` from dossier-like stacked panels toward a public-facing editorial page:
+  - public hero wording
+  - atlas action near the top
+  - text-first lead and present-day sections
+  - one support rail instead of multiple summary cards
+- Fixed a markup regression in `single-register_place.html`:
+  - missing container closures caused duplicate content before/after footer
+  - featured image was not missing; the page was being misparsed and rendered twice
+
+## Verification
+- PHP syntax / runtime checks passed inside `wp_app` for touched register plugin files.
+- `node --check` passed for touched frontend JS files during the atlas popup/filter work.
+- Live verification completed for:
+  - `/schoneweide/`
+  - `/schoeneweide/orte/spreehofe-admos/`
+  - `/schoeneweide/orte/kaos-93-kunst-und-gewerbehof-genossenschaft-i-gr/`
+  - `/publikationen/schoeneweide-eine-ortsgeschichte/`
+- Register corpus completeness check now returns:
+  - `missing_history_short = 0`
+  - `missing_history_long = 0`
+  - `missing_status = 0`
+  - `missing_type = 0`
+  - `missing_eras = 0`
+- Verified the featured image pipeline for KAOS 93:
+  - image asset returns `200`
+  - image tag is rendered in HTML
+  - duplicate-before/after-footer behavior was caused by malformed template markup, now fixed
+
+## Important Notes
+- Many `register_place` records are now structurally complete, but not all are deeply researched editorial texts.
+- The corpus now has a usable explicit metadata layer across atlas and single pages; later work can focus on improving prose quality, not filling missing fields.
+- Single place pages currently render only the featured image:
+  - `current_images`
+  - `archive_images`
+  - `document_images`
+  are not yet shown as a public gallery
+- Some stored image-group items are still marked `pending`, so even if a gallery is added later they should not automatically appear without visibility review.
+- The single place template is now safe again, but it remains a Gutenberg HTML file:
+  - malformed wrappers can still cause parser drift
+  - keep block structure disciplined when editing
+
+## Current Worktree
+- Source-file changes from this pass:
+  - `plugins/industriesalon-schoeneweide-register/includes/blocks.php`
+  - `plugins/industriesalon-schoeneweide-register/includes/image-suggestions.php`
+  - `plugins/industriesalon-schoeneweide-register/includes/meta-fields.php`
+  - `plugins/industriesalon-schoeneweide-register/includes/register-data/atlas-contracts.php`
+  - `plugins/industriesalon-schoeneweide-register/includes/register-data/contracts.php`
+  - `plugins/industriesalon-schoeneweide-register/includes/register-data/entity-repository.php`
+  - `plugins/industriesalon-schoeneweide-register/includes/register-data/query.php`
+  - `plugins/industriesalon-schoeneweide-register/includes/register-data/services.php`
+  - `plugins/industriesalon-schoeneweide-register/includes/rest/routes.php`
+  - `plugins/industriesalon-schoeneweide-register/includes/taxonomies.php`
+  - `plugins/iss-publications/includes/render-publication.php`
+  - `themes/industriesalon/assets/css/atlas-app.css`
+  - `themes/industriesalon/assets/css/patterns.css`
+  - `themes/industriesalon/assets/css/publications.css`
+  - `themes/industriesalon/assets/js/schoneweide.js`
+  - `themes/industriesalon/templates/page-schoneweide.html`
+  - `themes/industriesalon/templates/single-register_place.html`
+- A large share of this session’s work also lives in WordPress content/database:
+  - curated register-place text/meta updates
+  - explicit era/status/use assignments for the full register corpus
+
+## Next Recommended Steps
+- Add a public image section for single place pages:
+  - keep featured image in hero
+  - show reviewed `current_images` / `archive_images` below the narrative
+  - respect visibility and do not expose `pending` items by default
+- Continue editorial improvement on the weakest machine-like places:
+  - planning entries
+  - owner-unclear parcels
+  - thin current-use records
+- Consider dedicated short public summary fields later if `history_short` / `current_use` start carrying too much burden as the public-facing lead text.
+
+## Continuity Prompt
+- Start next session with: `read /home/vladimir/wp/handoff_CURRENT.md`
+- Then continue with single-place gallery/public-image rendering or targeted editorial cleanup of weak Schöneweide records, not another schema rewrite.
     - `geraete-bauteile`
     - `telekommunikation-fernsehtechnik`
     - `diverses-gebaeude-schaltbilder`

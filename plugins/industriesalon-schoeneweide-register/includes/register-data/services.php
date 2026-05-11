@@ -39,6 +39,8 @@ function iss_register_get_meta_contract(): array
     $areas = [];
     $statuses = [];
     $roles = [];
+    $current_statuses = [];
+    $current_use_types = [];
     $tags = [];
 
     foreach ($places as $place) {
@@ -50,6 +52,12 @@ function iss_register_get_meta_contract(): array
         }
         if (isset($place['role']) && $place['role'] !== '') {
             $roles[$place['role']] = ($roles[$place['role']] ?? 0) + 1;
+        }
+        if (isset($place['current_status']) && $place['current_status'] !== '') {
+            $current_statuses[$place['current_status']] = ($current_statuses[$place['current_status']] ?? 0) + 1;
+        }
+        if (isset($place['current_use_type']) && $place['current_use_type'] !== '') {
+            $current_use_types[$place['current_use_type']] = ($current_use_types[$place['current_use_type']] ?? 0) + 1;
         }
 
         $place_tags = $place['tags'] ?? [];
@@ -73,6 +81,8 @@ function iss_register_get_meta_contract(): array
         'areas' => $areas,
         'statuses' => $statuses,
         'roles' => $roles,
+        'current_statuses' => $current_statuses,
+        'current_use_types' => $current_use_types,
         'tags' => $tags,
     ];
 }

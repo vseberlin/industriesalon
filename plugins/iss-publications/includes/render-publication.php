@@ -1178,7 +1178,9 @@ function iss_publications_transform_longread_content(int $post_id, string $conte
         $chapters_html .= '<p class="iss-publication-chapter__index">' . esc_html(sprintf(__('Kapitel %02d', 'iss-publications'), $index + 1)) . '</p>';
         $chapters_html .= '<h2 class="iss-publication-chapter__title">' . esc_html($section['title']) . '</h2>';
         $chapters_html .= '</div>';
-        $chapters_html .= '<div class="iss-publication-chapter__body">' . implode('', $section['body']) . '</div>';
+        $chapters_html .= '<div class="iss-publication-chapter__body">' . implode('', $section['body']);
+        $chapters_html .= '<p class="iss-publication-chapter__atlas-link"><a href="' . esc_url(home_url('/schoneweide/#atlas-buehne')) . '">' . esc_html__('Im Atlas weiterlesen', 'iss-publications') . '</a></p>';
+        $chapters_html .= '</div>';
         $chapters_html .= '</section>';
     }
     $chapters_html .= '</div>';
