@@ -59,6 +59,11 @@ register_activation_hook(__FILE__, function () {
     if (function_exists('iss_register_get_epoch_service')) {
         iss_register_get_epoch_service()->install_schema();
     }
+    if (function_exists('iss_register_get_place_state_service')) {
+        iss_register_get_place_state_service()->install_schema();
+        iss_register_get_place_state_service()->backfill_all_places();
+        update_option(ISS_REGISTER_PLACE_STATE_BACKFILL_OPTION, ISS_REGISTER_PLACE_STATE_BACKFILL_VERSION, false);
+    }
     flush_rewrite_rules();
     iss_register_clear_places_cache();
 });

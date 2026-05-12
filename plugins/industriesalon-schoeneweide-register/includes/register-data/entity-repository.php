@@ -200,13 +200,13 @@ function iss_register_read_place_entities_from_cpt(): array
         $places[] = iss_register_map_place_entity($post);
     }
 
-    $epochs_by_place = iss_register_get_epoch_service()->get_epochs_for_places(array_map(static function (array $place): int {
+    $states_by_place = iss_register_get_place_state_service()->get_states_for_places(array_map(static function (array $place): int {
         return (int) ($place['post_id'] ?? 0);
     }, $places));
 
     foreach ($places as $index => $place) {
         $post_id = (int) ($place['post_id'] ?? 0);
-        $places[$index] = iss_register_enrich_place_with_epochs($place, $epochs_by_place[$post_id] ?? []);
+        $places[$index] = iss_register_enrich_place_with_states($place, $states_by_place[$post_id] ?? []);
     }
 
     iss_register_sort_place_entities_default($places);

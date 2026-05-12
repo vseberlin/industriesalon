@@ -4,6 +4,7 @@
 
 # Keep this ignore file.
 !.gitignore
+!/*.md
 !/themes/
 /themes/*
 !/themes/industriesalon/

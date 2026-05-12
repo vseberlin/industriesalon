@@ -166,6 +166,9 @@ final class ISS_Register_Place_Epoch_Service
         $wpdb->delete($this->get_table_name(), ['place_post_id' => $place_post_id], ['%d']);
         delete_post_meta($place_post_id, ISS_REGISTER_EPOCH_SNAPSHOT_META_KEY);
         delete_post_meta($place_post_id, ISS_REGISTER_EPOCH_SNAPSHOTS_META_KEY);
+        if (function_exists('iss_register_get_place_state_service')) {
+            iss_register_get_place_state_service()->delete_states_for_place($place_post_id);
+        }
     }
 
     public function save_epochs_for_place(int $place_post_id, array $rows, array $context = [])
@@ -257,6 +260,9 @@ final class ISS_Register_Place_Epoch_Service
 
         $saved_rows = $this->get_epochs_for_place($place_post_id);
         $this->write_snapshot_meta($place_post_id, $saved_rows, $context);
+        if (function_exists('iss_register_get_place_state_service')) {
+            iss_register_get_place_state_service()->sync_place_state_for_post($place_post_id);
+        }
         iss_register_clear_places_cache();
 
         return $saved_rows;

@@ -180,6 +180,7 @@ function iss_register_get_summary_contract_field_names(): array
         'branche',
         'summary',
         'source_labels',
+        'current_state',
         'available_era_slugs',
         'available_function_keys',
         'primary_historical_era_slug',
@@ -291,6 +292,7 @@ function iss_register_build_place_summary_contract(array $place, array $fields =
         'branche' => isset($place['branche']) ? (string) $place['branche'] : '',
         'summary' => iss_register_build_place_summary_text($place),
         'source_labels' => iss_register_build_place_source_labels($place),
+        'current_state' => isset($place['current_state']) && is_array($place['current_state']) ? $place['current_state'] : [],
         'available_era_slugs' => isset($place['available_era_slugs']) && is_array($place['available_era_slugs']) ? array_values($place['available_era_slugs']) : [],
         'available_function_keys' => isset($place['available_function_keys']) && is_array($place['available_function_keys']) ? array_values($place['available_function_keys']) : [],
         'primary_historical_era_slug' => isset($place['primary_historical_era_slug']) ? (string) $place['primary_historical_era_slug'] : '',
@@ -350,6 +352,8 @@ function iss_register_get_detail_contract_field_names(): array
         'primary_historical_era_slug',
         'has_epochs',
         'historical_phase_labels',
+        'current_state',
+        'place_states',
         'epochs',
         'related_objects',
     ];
@@ -401,6 +405,8 @@ function iss_register_build_place_detail_contract_data(array $place): array
         'primary_historical_era_slug' => isset($place['primary_historical_era_slug']) ? (string) $place['primary_historical_era_slug'] : '',
         'has_epochs' => !empty($place['has_epochs']),
         'historical_phase_labels' => isset($place['historical_phase_labels']) && is_array($place['historical_phase_labels']) ? array_values($place['historical_phase_labels']) : [],
+        'current_state' => isset($place['current_state']) && is_array($place['current_state']) ? $place['current_state'] : [],
+        'place_states' => isset($place['place_states']) && is_array($place['place_states']) ? array_values($place['place_states']) : [],
         'epochs' => isset($place['epochs']) && is_array($place['epochs']) ? array_values($place['epochs']) : [],
         'related_objects' => isset($place['related_objects']) && is_array($place['related_objects']) ? array_values($place['related_objects']) : [],
     ];

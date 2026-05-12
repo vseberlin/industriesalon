@@ -99,9 +99,11 @@ function iss_register_run_contract_smoke_check(): array
         'detail-shape',
         !empty($detail_place)
             && iss_register_contract_has_exact_keys($detail_place, $detail_fields)
-            && iss_register_contract_has_keys($detail_place, ['size', 'history', 'current', 'source_links', 'related_objects'])
+            && iss_register_contract_has_keys($detail_place, ['size', 'history', 'current', 'source_links', 'related_objects', 'current_state', 'place_states'])
             && iss_register_contract_has_no_keys($detail_place, ['icon', 'color', 'kaufpreis', 'sort_order'])
-            && is_array($detail_place['related_objects']),
+            && is_array($detail_place['related_objects'])
+            && is_array($detail_place['current_state'])
+            && is_array($detail_place['place_states']),
         !empty($detail_place) ? '' : 'No detail place available.'
     );
 
