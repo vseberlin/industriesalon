@@ -21,8 +21,12 @@ function iss_wf_import_render_collection_editor_meta_box(WP_Post $post): void
 {
     wp_nonce_field('iss_wf_import_collection_editor_action', 'iss_wf_import_collection_editor_nonce');
 
-    $items = get_post_meta($post->ID, ISS_WF_IMPORT_COLLECTION_ITEMS_META, true);
-    $items = is_array($items) ? $items : [];
+    $items = iss_wf_import_get_collection_service()->get_projection_for_post($post->ID);
+    $items = is_array($items) ? (array) ($items['items'] ?? []) : null;
+    if (!is_array($items)) {
+        $items = get_post_meta($post->ID, ISS_WF_IMPORT_COLLECTION_ITEMS_META, true);
+        $items = is_array($items) ? $items : [];
+    }
 
     echo '<p>' . esc_html__('Für Album-Sammlungen gilt: Der Kurztext gehört in das Feld "Auszug". Die Albumreihenfolge, Seitentitel und Beschriftungen werden hier gepflegt.', 'iss-wf-import') . '</p>';
 

@@ -47,6 +47,26 @@ define('ISS_WF_IMPORT_SOURCE_AUTHOR_META', 'iss_source_author');
 define('ISS_WF_IMPORT_COLLECTION_ITEMS_META', 'iss_archive_collection_items');
 define('ISS_WF_IMPORT_COLLECTION_CHILDREN_META', 'iss_archive_collection_children');
 define('ISS_WF_IMPORT_COLLECTION_SOURCE_IDS_META', 'iss_archive_collection_source_ids');
+define('ISS_WF_IMPORT_COLLECTION_SCHEMA_OPTION', 'iss_wf_import_collection_schema_version');
+define('ISS_WF_IMPORT_COLLECTION_SCHEMA_VERSION', '2026-05-12-collection-schema-3');
+define('ISS_WF_IMPORT_COLLECTION_BACKFILL_OPTION', 'iss_wf_import_collection_backfill_version');
+define('ISS_WF_IMPORT_COLLECTION_BACKFILL_VERSION', '2026-05-12-collection-backfill-3');
+define('ISS_WF_IMPORT_OBJECT_SCHEMA_OPTION', 'iss_wf_import_object_schema_version');
+define('ISS_WF_IMPORT_OBJECT_SCHEMA_VERSION', '2026-05-12-object-schema-1');
+define('ISS_WF_IMPORT_OBJECT_BACKFILL_OPTION', 'iss_wf_import_object_backfill_version');
+define('ISS_WF_IMPORT_OBJECT_BACKFILL_VERSION', '2026-05-12-object-backfill-2');
+define('ISS_WF_IMPORT_MEDIA_SCHEMA_OPTION', 'iss_wf_import_media_schema_version');
+define('ISS_WF_IMPORT_MEDIA_SCHEMA_VERSION', '2026-05-12-media-schema-1');
+define('ISS_WF_IMPORT_MEDIA_BACKFILL_OPTION', 'iss_wf_import_media_backfill_version');
+define('ISS_WF_IMPORT_MEDIA_BACKFILL_VERSION', '2026-05-12-media-backfill-1');
+define('ISS_WF_IMPORT_RELATION_SCHEMA_OPTION', 'iss_wf_import_relation_schema_version');
+define('ISS_WF_IMPORT_RELATION_SCHEMA_VERSION', '2026-05-12-relation-schema-1');
+define('ISS_WF_IMPORT_RELATION_BACKFILL_OPTION', 'iss_wf_import_relation_backfill_version');
+define('ISS_WF_IMPORT_RELATION_BACKFILL_VERSION', '2026-05-12-relation-backfill-2');
+define('ISS_WF_IMPORT_IMPORT_SCHEMA_OPTION', 'iss_wf_import_import_schema_version');
+define('ISS_WF_IMPORT_IMPORT_SCHEMA_VERSION', '2026-05-12-import-schema-1');
+define('ISS_WF_IMPORT_IMPORT_BACKFILL_OPTION', 'iss_wf_import_import_backfill_version');
+define('ISS_WF_IMPORT_IMPORT_BACKFILL_VERSION', '2026-05-12-import-backfill-2');
 define('ISS_WF_IMPORT_OBJECT_PRIMARY_ATTACHMENT_META', 'iss_archive_primary_attachment_id');
 define('ISS_WF_IMPORT_OBJECT_PREVIEW_ATTACHMENT_META', 'iss_archive_preview_attachment_id');
 define('ISS_WF_IMPORT_OBJECT_TYPE_META', 'iss_archive_object_type');
@@ -84,12 +104,19 @@ define('ISS_WF_IMPORT_ATTACHMENT_OWNER_OBJECT_META', 'iss_archive_owner_object_i
 define('ISS_WF_IMPORT_ATTACHMENT_ARCHIVE_OWNED_META', 'iss_archive_owned_asset');
 define('ISS_WF_IMPORT_PLACE_SUGGESTIONS_META', 'iss_wf_place_suggestions');
 define('ISS_WF_IMPORT_PLACE_SUGGESTED_AT_META', '_iss_wf_place_suggested_at_gmt');
+define('ISS_WF_IMPORT_MD_PARSER_VERSION', 'museum-digital-importer-2026-05-12');
 
 /**
  * Stable archive model modules.
  */
 require_once ISS_WF_IMPORT_PATH . 'includes/post-type.php';
 require_once ISS_WF_IMPORT_PATH . 'includes/meta.php';
+require_once ISS_WF_IMPORT_PATH . 'includes/collection-service.php';
+require_once ISS_WF_IMPORT_PATH . 'includes/object-service.php';
+require_once ISS_WF_IMPORT_PATH . 'includes/media-service.php';
+require_once ISS_WF_IMPORT_PATH . 'includes/relation-service.php';
+require_once ISS_WF_IMPORT_PATH . 'includes/import-service.php';
+require_once ISS_WF_IMPORT_PATH . 'includes/archive-browser-service.php';
 require_once ISS_WF_IMPORT_PATH . 'includes/suggestions.php';
 require_once ISS_WF_IMPORT_PATH . 'includes/blocks.php';
 require_once ISS_WF_IMPORT_PATH . 'includes/admin.php';
@@ -99,6 +126,21 @@ require_once ISS_WF_IMPORT_PATH . 'includes/museum-digital-importer.php';
 register_activation_hook(__FILE__, function () {
     iss_wf_import_register_post_type_and_taxonomies();
     iss_wf_import_ensure_source_term();
+    iss_wf_import_get_collection_service()->install_schema();
+    iss_wf_import_get_collection_service()->backfill_all_collections();
+    update_option(ISS_WF_IMPORT_COLLECTION_BACKFILL_OPTION, ISS_WF_IMPORT_COLLECTION_BACKFILL_VERSION, false);
+    iss_wf_import_get_object_service()->install_schema();
+    iss_wf_import_get_object_service()->backfill_all_objects();
+    update_option(ISS_WF_IMPORT_OBJECT_BACKFILL_OPTION, ISS_WF_IMPORT_OBJECT_BACKFILL_VERSION, false);
+    iss_wf_import_get_media_service()->install_schema();
+    iss_wf_import_get_media_service()->backfill_all_media();
+    update_option(ISS_WF_IMPORT_MEDIA_BACKFILL_OPTION, ISS_WF_IMPORT_MEDIA_BACKFILL_VERSION, false);
+    iss_wf_import_get_relation_service()->install_schema();
+    iss_wf_import_get_relation_service()->backfill_all_relations();
+    update_option(ISS_WF_IMPORT_RELATION_BACKFILL_OPTION, ISS_WF_IMPORT_RELATION_BACKFILL_VERSION, false);
+    iss_wf_import_get_import_service()->install_schema();
+    iss_wf_import_get_import_service()->backfill_all_source_records();
+    update_option(ISS_WF_IMPORT_IMPORT_BACKFILL_OPTION, ISS_WF_IMPORT_IMPORT_BACKFILL_VERSION, false);
     flush_rewrite_rules();
 });
 

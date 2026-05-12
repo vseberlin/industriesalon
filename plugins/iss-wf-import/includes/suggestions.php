@@ -544,11 +544,23 @@ function iss_wf_import_build_archivobjekt_corpus(WP_Post $post): array
     $title = trim((string) $post->post_title);
     $content = trim(wp_strip_all_tags((string) $post->post_content));
     $excerpt = trim((string) $post->post_excerpt);
-    $inventory = trim((string) get_post_meta($post->ID, ISS_WF_IMPORT_OBJECT_INVENTORY_META, true));
-    $object_type = trim((string) get_post_meta($post->ID, ISS_WF_IMPORT_OBJECT_TYPE_META, true));
-    $tags = iss_wf_import_extract_named_ref_names((array) get_post_meta($post->ID, ISS_WF_IMPORT_OBJECT_TAGS_META, true));
-    $collections = iss_wf_import_extract_named_ref_names((array) get_post_meta($post->ID, ISS_WF_IMPORT_OBJECT_COLLECTIONS_META, true));
-    $series = iss_wf_import_extract_named_ref_names((array) get_post_meta($post->ID, ISS_WF_IMPORT_OBJECT_SERIES_META, true));
+    $projection = iss_wf_import_get_object_service()->get_projection_for_post((int) $post->ID);
+    $relation_projection = iss_wf_import_get_relation_service()->get_projection_for_post((int) $post->ID);
+    $inventory = is_array($projection)
+        ? trim((string) ($projection['inventory_number'] ?? ''))
+        : trim((string) get_post_meta($post->ID, ISS_WF_IMPORT_OBJECT_INVENTORY_META, true));
+    $object_type = is_array($projection)
+        ? trim((string) ($projection['object_type_label'] ?? ''))
+        : trim((string) get_post_meta($post->ID, ISS_WF_IMPORT_OBJECT_TYPE_META, true));
+    $tags = is_array($relation_projection)
+        ? iss_wf_import_extract_named_ref_names((array) ($relation_projection['tags'] ?? []))
+        : iss_wf_import_extract_named_ref_names((array) get_post_meta($post->ID, ISS_WF_IMPORT_OBJECT_TAGS_META, true));
+    $collections = is_array($relation_projection)
+        ? iss_wf_import_extract_named_ref_names((array) ($relation_projection['collections'] ?? []))
+        : iss_wf_import_extract_named_ref_names((array) get_post_meta($post->ID, ISS_WF_IMPORT_OBJECT_COLLECTIONS_META, true));
+    $series = is_array($relation_projection)
+        ? iss_wf_import_extract_named_ref_names((array) ($relation_projection['series'] ?? []))
+        : iss_wf_import_extract_named_ref_names((array) get_post_meta($post->ID, ISS_WF_IMPORT_OBJECT_SERIES_META, true));
 
     return [
         'title' => ' ' . iss_wf_import_normalize_text($title) . ' ',

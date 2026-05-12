@@ -57,9 +57,45 @@ function iss_relations_get_station_object_choices_for_place(int $place_id): arra
 {
     if (
         $place_id <= 0
-        || !defined('ISS_RELATIONS_TAXONOMY')
-        || !taxonomy_exists(ISS_RELATIONS_TAXONOMY)
         || !post_type_exists('archivobjekt')
+    ) {
+        return [];
+    }
+
+    if (function_exists('iss_wf_import_get_relation_service')) {
+        $post_ids = iss_wf_import_get_relation_service()->get_object_post_ids_for_local_place($place_id);
+        if ($post_ids) {
+            $posts = get_posts([
+                'post_type' => 'archivobjekt',
+                'post_status' => ['publish', 'future', 'draft', 'pending', 'private'],
+                'posts_per_page' => -1,
+                'orderby' => 'title',
+                'order' => 'ASC',
+                'suppress_filters' => true,
+                'post__in' => array_map('intval', $post_ids),
+            ]);
+
+            $choices = [];
+            foreach ($posts as $post) {
+                if (!$post instanceof WP_Post) {
+                    continue;
+                }
+
+                $choices[] = [
+                    'id' => (int) $post->ID,
+                    'title' => get_the_title($post),
+                ];
+            }
+
+            if ($choices) {
+                return $choices;
+            }
+        }
+    }
+
+    if (
+        !defined('ISS_RELATIONS_TAXONOMY')
+        || !taxonomy_exists(ISS_RELATIONS_TAXONOMY)
         || !function_exists('iss_relations_get_place_term_id')
     ) {
         return [];

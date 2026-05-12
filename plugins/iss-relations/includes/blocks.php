@@ -293,8 +293,38 @@ function iss_relations_resolve_block_place_items(array $attributes, int $current
 
 function iss_relations_query_related_posts(array $place_ids, string $post_type, int $per_page, int $exclude_post_id = 0): array
 {
+    if (!post_type_exists($post_type)) {
+        return [];
+    }
+
+    if ($post_type === 'archivobjekt' && function_exists('iss_wf_import_get_relation_service')) {
+        $post_ids = [];
+
+        foreach ($place_ids as $place_id) {
+            $post_ids = array_merge($post_ids, iss_wf_import_get_relation_service()->get_object_post_ids_for_local_place((int) $place_id));
+        }
+
+        $post_ids = array_values(array_unique(array_filter(array_map('intval', $post_ids))));
+        if ($exclude_post_id > 0) {
+            $post_ids = array_values(array_diff($post_ids, [$exclude_post_id]));
+        }
+
+        if ($post_ids) {
+            return get_posts([
+                'post_type' => $post_type,
+                'post_status' => 'publish',
+                'posts_per_page' => max(1, min(12, $per_page)),
+                'orderby' => 'date',
+                'order' => 'DESC',
+                'suppress_filters' => true,
+                'ignore_sticky_posts' => true,
+                'post__in' => $post_ids,
+            ]);
+        }
+    }
+
     $term_ids = iss_relations_get_place_term_ids($place_ids);
-    if (!$term_ids || !post_type_exists($post_type)) {
+    if (!$term_ids) {
         return [];
     }
 

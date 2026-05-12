@@ -1326,11 +1326,20 @@ function iss_wf_import_md_build_record(array $payload, string $profile = 'roehre
 
 function iss_wf_import_md_find_existing_post(array $record): ?WP_Post
 {
+    $object_service = iss_wf_import_get_object_service();
     $object_id = (int) ($record['object_id'] ?? 0);
     $source_url = (string) ($record['source_url'] ?? '');
     $inventory = (string) ($record['inventory_number'] ?? '');
 
     if ($object_id > 0) {
+        $canonical_post_id = $object_service->find_post_id_by_md_object_id($object_id);
+        if ($canonical_post_id > 0) {
+            $post = get_post($canonical_post_id);
+            if ($post instanceof WP_Post) {
+                return $post;
+            }
+        }
+
         $posts = get_posts([
             'post_type' => ISS_WF_IMPORT_OBJECT_POST_TYPE,
             'post_status' => 'any',
@@ -1344,6 +1353,14 @@ function iss_wf_import_md_find_existing_post(array $record): ?WP_Post
     }
 
     if ($inventory !== '') {
+        $canonical_post_ids = $object_service->find_post_ids_by_inventory_number($inventory, 2);
+        if (count($canonical_post_ids) === 1) {
+            $post = get_post((int) $canonical_post_ids[0]);
+            if ($post instanceof WP_Post) {
+                return $post;
+            }
+        }
+
         $posts = get_posts([
             'post_type' => ISS_WF_IMPORT_OBJECT_POST_TYPE,
             'post_status' => 'any',
@@ -1357,6 +1374,14 @@ function iss_wf_import_md_find_existing_post(array $record): ?WP_Post
     }
 
     if ($source_url !== '') {
+        $canonical_post_id = $object_service->find_post_id_by_source_url($source_url);
+        if ($canonical_post_id > 0) {
+            $post = get_post($canonical_post_id);
+            if ($post instanceof WP_Post) {
+                return $post;
+            }
+        }
+
         $posts = get_posts([
             'post_type' => ISS_WF_IMPORT_OBJECT_POST_TYPE,
             'post_status' => 'any',
@@ -1374,6 +1399,7 @@ function iss_wf_import_md_find_existing_post(array $record): ?WP_Post
 
 function iss_wf_import_md_find_possible_duplicates(array $record): array
 {
+    $object_service = iss_wf_import_get_object_service();
     $title = (string) ($record['title'] ?? '');
     $inventory = (string) ($record['inventory_number'] ?? '');
 
@@ -1387,14 +1413,28 @@ function iss_wf_import_md_find_possible_duplicates(array $record): array
         'numberposts' => 10,
     ];
 
+    $posts = [];
     if ($inventory !== '') {
+        $canonical_post_ids = $object_service->find_post_ids_by_inventory_number($inventory, 10);
+        if ($canonical_post_ids) {
+            $posts = get_posts([
+                'post_type' => ISS_WF_IMPORT_OBJECT_POST_TYPE,
+                'post_status' => 'any',
+                'numberposts' => 10,
+                'post__in' => array_map('intval', $canonical_post_ids),
+                'orderby' => 'post__in',
+            ]);
+        }
+
         $args['meta_query'] = [[
             'key' => ISS_WF_IMPORT_OBJECT_INVENTORY_META,
             'value' => $inventory,
         ]];
     }
 
-    $posts = get_posts($args);
+    if (!$posts) {
+        $posts = get_posts($args);
+    }
     $matches = [];
 
     foreach ($posts as $post) {
@@ -1478,7 +1518,21 @@ function iss_wf_import_md_assign_terms(int $post_id, array $record): void
     wp_set_object_terms($post_id, $decade !== '' ? [$decade] : [], ISS_WF_IMPORT_DECADE_TAXONOMY, false);
 }
 
-function iss_wf_import_md_save_record(array $record): array
+function iss_wf_import_md_build_snapshot_payload(array $fetched_payload, array $seed_payload, array $effective_payload, array $record, string $profile): array
+{
+    return [
+        'scope' => 'museum-digital-import',
+        'profile' => sanitize_key($profile),
+        'fetched_source' => sanitize_key((string) ($fetched_payload['source'] ?? '')),
+        'fetched_message' => sanitize_text_field((string) ($fetched_payload['message'] ?? '')),
+        'fetched_payload' => is_array($fetched_payload['payload'] ?? null) ? (array) $fetched_payload['payload'] : [],
+        'seed_payload' => $seed_payload,
+        'effective_payload' => $effective_payload,
+        'normalized_record' => $record,
+    ];
+}
+
+function iss_wf_import_md_save_record(array $record, array $capture = []): array
 {
     $existing = iss_wf_import_md_find_existing_post($record);
     $postarr = [
@@ -1563,7 +1617,20 @@ function iss_wf_import_md_save_record(array $record): array
         }
     }
 
+    $applied_at = current_time('mysql', true);
+    if (!empty($capture['snapshot_hash']) && is_string($capture['snapshot_hash'])) {
+        iss_wf_import_get_import_service()->apply_post_import_state($post_id, $capture['snapshot_hash'], $applied_at);
+    }
+
     iss_wf_import_md_assign_terms($post_id, $record);
+    iss_wf_import_get_object_service()->sync_object_post($post_id);
+    iss_wf_import_get_media_service()->sync_object_media($post_id);
+    iss_wf_import_get_relation_service()->sync_object_relations($post_id);
+    iss_wf_import_get_import_service()->sync_object_source_record($post_id);
+
+    if (!empty($capture['snapshot_id'])) {
+        iss_wf_import_get_import_service()->mark_snapshot_applied($capture, $post_id, $action, $applied_at);
+    }
 
     return [
         'ok' => true,
@@ -1635,6 +1702,19 @@ if (defined('WP_CLI') && WP_CLI) {
             if ($object_id <= 0 && $seed_url === '') {
                 WP_CLI::error('Provide either --object-id or --seed-url.');
             }
+
+            $run_id = iss_wf_import_get_import_service()->start_import_run([
+                'source_system' => 'museum-digital-object',
+                'source_site' => 'berlin.museum-digital.de',
+                'seed_url' => $seed_url,
+                'requested_object_id' => $object_id,
+                'mode' => $mode,
+                'profile' => $profile,
+                'selection' => $selection,
+                'family_filter' => $family_filter,
+                'limit_count' => $limit,
+                'offset_count' => $offset,
+            ]);
 
             $source_term_id = iss_wf_import_ensure_source_term_by_slug('museum-digital', 'museum-digital');
             if ($source_term_id <= 0) {
@@ -1779,9 +1859,24 @@ if (defined('WP_CLI') && WP_CLI) {
                 $match_note = $existing instanceof WP_Post
                     ? ('exact:' . $existing->ID)
                     : ($possible_duplicates ? ('possible:' . implode(',', wp_list_pluck($possible_duplicates, 'post_id'))) : 'new');
+                $capture = iss_wf_import_get_import_service()->record_runtime_snapshot([
+                    'source_system' => 'museum-digital-object',
+                    'source_site' => 'berlin.museum-digital.de',
+                    'source_external_id' => (string) ($record['object_id'] ?? ''),
+                    'source_url' => (string) ($record['source_url'] ?? ''),
+                    'record_url' => (string) ($record['source_url'] ?? ''),
+                    'record_kind' => 'archive_object',
+                    'local_post_id' => $existing instanceof WP_Post ? (int) $existing->ID : 0,
+                    'payload_bundle' => iss_wf_import_md_build_snapshot_payload($fetched_payload, $seed_payload, $payload, $record, $profile),
+                    'parser_version' => ISS_WF_IMPORT_MD_PARSER_VERSION,
+                    'payload_format' => sanitize_key((string) ($fetched_payload['source'] ?? 'json')),
+                    'content_modified_at' => (string) ($record['last_updated'] ?? ''),
+                    'fetched_at' => current_time('mysql', true),
+                    'run_id' => $run_id,
+                ]);
 
                 if ($mode === 'import') {
-                    $result = iss_wf_import_md_save_record($record);
+                    $result = iss_wf_import_md_save_record($record, $capture);
                     if (empty($result['ok'])) {
                         $summary['errors']++;
                         $rows[] = [
@@ -1823,6 +1918,7 @@ if (defined('WP_CLI') && WP_CLI) {
                 ];
             }
 
+            iss_wf_import_get_import_service()->finish_import_run($run_id, $summary, $rows);
             WP_CLI::log('Summary: ' . wp_json_encode($summary, JSON_UNESCAPED_UNICODE));
             WP_CLI\Utils\format_items('table', $rows, ['object_id', 'action', 'family', 'year', 'match', 'title']);
         }

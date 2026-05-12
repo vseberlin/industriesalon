@@ -392,7 +392,10 @@ function iss_wf_import_render_archive_object_card(array $item): string
         }
 
         if ($caption === '') {
-            $caption = trim((string) get_post_meta($post->ID, ISS_WF_IMPORT_OBJECT_CREATOR_META, true));
+            $projection = iss_wf_import_get_object_service()->get_projection_for_post((int) $post->ID);
+            $caption = is_array($projection)
+                ? trim((string) ($projection['creator_label'] ?? ''))
+                : trim((string) get_post_meta($post->ID, ISS_WF_IMPORT_OBJECT_CREATOR_META, true));
             if ($caption === '') {
                 $caption = trim((string) get_the_excerpt($post));
             }
@@ -521,10 +524,13 @@ function iss_wf_import_render_archive_collection_card(array $item): string
 
 function iss_wf_import_get_collection_items_for_render(int $post_id): array
 {
-    $items = get_post_meta($post_id, ISS_WF_IMPORT_COLLECTION_ITEMS_META, true);
-
+    $projection = iss_wf_import_get_collection_service()->get_projection_for_post($post_id);
+    $items = is_array($projection) ? (array) ($projection['items'] ?? []) : null;
     if (!is_array($items)) {
-        return [];
+        $items = get_post_meta($post_id, ISS_WF_IMPORT_COLLECTION_ITEMS_META, true);
+        if (!is_array($items)) {
+            return [];
+        }
     }
 
     return array_values(array_filter($items, static function ($item): bool {
@@ -534,10 +540,13 @@ function iss_wf_import_get_collection_items_for_render(int $post_id): array
 
 function iss_wf_import_get_collection_children_for_render(int $post_id): array
 {
-    $children = get_post_meta($post_id, ISS_WF_IMPORT_COLLECTION_CHILDREN_META, true);
-
+    $projection = iss_wf_import_get_collection_service()->get_projection_for_post($post_id);
+    $children = is_array($projection) ? (array) ($projection['children'] ?? []) : null;
     if (!is_array($children)) {
-        return [];
+        $children = get_post_meta($post_id, ISS_WF_IMPORT_COLLECTION_CHILDREN_META, true);
+        if (!is_array($children)) {
+            return [];
+        }
     }
 
     return array_values(array_filter($children, static function ($item): bool {
@@ -570,7 +579,13 @@ function iss_wf_import_get_archive_album_source_links(int $post_id): array
 {
     $links = [];
 
-    $source_url = trim((string) get_post_meta($post_id, ISS_WF_IMPORT_SOURCE_URL_META, true));
+    $projection = iss_wf_import_get_collection_service()->get_projection_for_post($post_id);
+    $source_url = is_array($projection)
+        ? trim((string) (($projection['collection']['source_url'] ?? '')))
+        : '';
+    if ($source_url === '') {
+        $source_url = trim((string) get_post_meta($post_id, ISS_WF_IMPORT_SOURCE_URL_META, true));
+    }
     if ($source_url !== '') {
         $links[] = [
             'label' => __('Originalquelle', 'iss-wf-import'),
@@ -578,7 +593,12 @@ function iss_wf_import_get_archive_album_source_links(int $post_id): array
         ];
     }
 
-    $source_ids = get_post_meta($post_id, ISS_WF_IMPORT_COLLECTION_SOURCE_IDS_META, true);
+    $source_ids = is_array($projection)
+        ? (array) ($projection['source_refs'] ?? [])
+        : null;
+    if (!is_array($source_ids) || !$source_ids) {
+        $source_ids = get_post_meta($post_id, ISS_WF_IMPORT_COLLECTION_SOURCE_IDS_META, true);
+    }
     if (is_array($source_ids)) {
         foreach ($source_ids as $item) {
             if (!is_array($item)) {
@@ -897,7 +917,10 @@ function iss_wf_import_render_archive_object_media_block($attributes = [], $cont
         return '';
     }
 
-    $images = get_post_meta($post_id, ISS_WF_IMPORT_OBJECT_IMAGE_SOURCE_META, true);
+    $projection = iss_wf_import_get_media_service()->get_projection_for_post($post_id);
+    $images = is_array($projection)
+        ? (array) ($projection['media'] ?? [])
+        : get_post_meta($post_id, ISS_WF_IMPORT_OBJECT_IMAGE_SOURCE_META, true);
     $images = is_array($images) ? array_values(array_filter($images, static function ($item): bool {
         return is_array($item) && (!empty($item['source_url']) || absint($item['attachment_id'] ?? 0) > 0 || absint($item['preview_attachment_id'] ?? 0) > 0);
     })) : [];
@@ -984,21 +1007,7 @@ function iss_wf_import_get_archive_object_browser_request(): array
 
 function iss_wf_import_get_archive_object_browser_term_options(string $taxonomy, int $limit = 0): array
 {
-    if (!taxonomy_exists($taxonomy)) {
-        return [];
-    }
-
-    $terms = get_terms([
-        'taxonomy' => $taxonomy,
-        'hide_empty' => true,
-        'orderby' => 'count',
-        'order' => 'DESC',
-        'number' => $limit > 0 ? $limit : 0,
-    ]);
-
-    return is_array($terms) ? array_values(array_filter($terms, static function ($term): bool {
-        return $term instanceof WP_Term;
-    })) : [];
+    return iss_wf_import_get_archive_browser_service()->get_term_options($taxonomy, $limit);
 }
 
 function iss_wf_import_get_archive_object_browser_selected_term(string $taxonomy, string $slug): ?WP_Term
@@ -1013,180 +1022,17 @@ function iss_wf_import_get_archive_object_browser_selected_term(string $taxonomy
 
 function iss_wf_import_get_archive_object_browser_terms_by_slugs(string $taxonomy, array $slugs): array
 {
-    if (!taxonomy_exists($taxonomy)) {
-        return [];
-    }
-
-    $ordered = [];
-    foreach ($slugs as $slug) {
-        $slug = sanitize_title((string) $slug);
-        if ($slug === '') {
-            continue;
-        }
-
-        $term = get_term_by('slug', $slug, $taxonomy);
-        if ($term instanceof WP_Term && $term->count > 0) {
-            $ordered[] = $term;
-        }
-    }
-
-    return $ordered;
+    return iss_wf_import_get_archive_browser_service()->get_terms_by_slugs($taxonomy, $slugs);
 }
 
 function iss_wf_import_get_archive_object_browser_stats(array $state = []): array
 {
-    $state = array_merge([
-        'source' => '',
-        'field' => '',
-        'family' => '',
-        'context' => '',
-        'search' => '',
-        'page' => 1,
-    ], $state);
-
-    $base_tax_query = [];
-
-    if ($state['source'] !== '') {
-        $base_tax_query[] = [
-            'taxonomy' => ISS_WF_IMPORT_SOURCE_TAXONOMY,
-            'field' => 'slug',
-            'terms' => [$state['source']],
-        ];
-    }
-
-    if ($state['field'] !== '') {
-        $base_tax_query[] = [
-            'taxonomy' => ISS_WF_IMPORT_FIELD_TAXONOMY,
-            'field' => 'slug',
-            'terms' => [$state['field']],
-        ];
-    }
-
-    if ($state['context'] !== '') {
-        $base_tax_query[] = [
-            'taxonomy' => ISS_WF_IMPORT_CONTEXT_TAXONOMY,
-            'field' => 'slug',
-            'terms' => [$state['context']],
-        ];
-    }
-
-    $base_args = [
-        'post_type' => ISS_WF_IMPORT_OBJECT_POST_TYPE,
-        'post_status' => 'publish',
-        'posts_per_page' => 1,
-        'fields' => 'ids',
-        'no_found_rows' => false,
-        'ignore_sticky_posts' => true,
-        'suppress_filters' => true,
-    ];
-
-    if ($state['search'] !== '') {
-        $base_args['s'] = $state['search'];
-    }
-
-    if ($base_tax_query) {
-        if (count($base_tax_query) > 1) {
-            $base_tax_query['relation'] = 'AND';
-        }
-
-        $base_args['tax_query'] = $base_tax_query;
-    }
-
-    $total_query = new WP_Query($base_args);
-
-    $classified_args = $base_args;
-    $classified_tax_query = $base_tax_query;
-    $classified_tax_query[] = [
-        'taxonomy' => ISS_WF_IMPORT_FAMILY_TAXONOMY,
-        'operator' => 'EXISTS',
-    ];
-
-    if (count($classified_tax_query) > 1) {
-        $classified_tax_query['relation'] = 'AND';
-    }
-
-    $classified_args['tax_query'] = $classified_tax_query;
-    $classified_query = new WP_Query($classified_args);
-
-    $source_counts = [];
-    $source_terms = iss_wf_import_get_archive_object_browser_term_options(ISS_WF_IMPORT_SOURCE_TAXONOMY);
-    foreach ($source_terms as $term) {
-        $source_state = $state;
-        $source_state['source'] = $term->slug;
-        $source_counts[$term->slug] = (int) iss_wf_import_get_archive_object_browser_query($source_state, 1)->found_posts;
-    }
-
-    return [
-        'total_objects' => (int) $total_query->found_posts,
-        'source_counts' => $source_counts,
-        'classified_objects' => (int) $classified_query->found_posts,
-        'family_terms' => wp_count_terms([
-            'taxonomy' => ISS_WF_IMPORT_FAMILY_TAXONOMY,
-            'hide_empty' => true,
-        ]),
-    ];
+    return iss_wf_import_get_archive_browser_service()->get_stats($state);
 }
 
-function iss_wf_import_get_archive_object_browser_query(array $state, int $per_page = 18): WP_Query
+function iss_wf_import_get_archive_object_browser_query(array $state, int $per_page = 18): object
 {
-    $tax_query = [];
-
-    if ($state['source'] !== '') {
-        $tax_query[] = [
-            'taxonomy' => ISS_WF_IMPORT_SOURCE_TAXONOMY,
-            'field' => 'slug',
-            'terms' => [$state['source']],
-        ];
-    }
-
-    if ($state['field'] !== '') {
-        $tax_query[] = [
-            'taxonomy' => ISS_WF_IMPORT_FIELD_TAXONOMY,
-            'field' => 'slug',
-            'terms' => [$state['field']],
-        ];
-    }
-
-    if ($state['family'] !== '') {
-        $tax_query[] = [
-            'taxonomy' => ISS_WF_IMPORT_FAMILY_TAXONOMY,
-            'field' => 'slug',
-            'terms' => [$state['family']],
-        ];
-    }
-
-    if ($state['context'] !== '') {
-        $tax_query[] = [
-            'taxonomy' => ISS_WF_IMPORT_CONTEXT_TAXONOMY,
-            'field' => 'slug',
-            'terms' => [$state['context']],
-        ];
-    }
-
-    $args = [
-        'post_type' => ISS_WF_IMPORT_OBJECT_POST_TYPE,
-        'post_status' => 'publish',
-        'posts_per_page' => $per_page,
-        'paged' => max(1, (int) $state['page']),
-        'orderby' => 'date',
-        'order' => 'DESC',
-        'ignore_sticky_posts' => true,
-        'suppress_filters' => true,
-    ];
-
-    if ($state['search'] !== '') {
-        $args['s'] = $state['search'];
-    }
-
-    if ($tax_query) {
-        if (count($tax_query) > 1) {
-            $tax_query['relation'] = 'AND';
-        }
-
-        $args['tax_query'] = $tax_query;
-    }
-
-    return new WP_Query($args);
+    return iss_wf_import_get_archive_browser_service()->get_query($state, $per_page);
 }
 
 function iss_wf_import_get_archive_object_browser_url(array $overrides = [], bool $reset_page = false, ?array $base_state = null, string $base_url = ''): string
@@ -1228,7 +1074,10 @@ function iss_wf_import_get_archive_object_browser_result_meta(int $post_id): arr
         $meta[] = implode(', ', array_slice($source_names, 0, 2));
     }
 
-    $year = trim((string) get_post_meta($post_id, ISS_WF_IMPORT_OBJECT_YEAR_META, true));
+    $projection = iss_wf_import_get_object_service()->get_projection_for_post($post_id);
+    $year = is_array($projection)
+        ? trim((string) ($projection['year_label'] ?? ''))
+        : trim((string) get_post_meta($post_id, ISS_WF_IMPORT_OBJECT_YEAR_META, true));
     if ($year !== '') {
         $meta[] = $year;
     }
