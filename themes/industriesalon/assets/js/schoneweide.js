@@ -36,10 +36,39 @@
     minLng: 13.4988,
     maxLng: 13.5405
   };
-  var BASE_TILE_URL = 'https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png';
-  var BASE_TILE_ATTRIBUTION =
-    '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>, ' +
-    '&copy; <a href="https://carto.com/attributions">CARTO</a>';
+  var CARTO_BASEMAP = {
+    tileUrl: 'https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png',
+    options: {
+      attribution:
+        '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>, ' +
+        '&copy; <a href="https://carto.com/attributions">CARTO</a>',
+      maxZoom: 20,
+      subdomains: 'abcd'
+    }
+  };
+  var OVERLAY_FAMILY_STYLES = {
+    company: {
+      color: '#8f1e14',
+      weight: 1,
+      opacity: 0.72,
+      fillColor: '#d33a2c',
+      fillOpacity: 0.12
+    },
+    infrastructure: {
+      color: '#183949',
+      weight: 1,
+      opacity: 0.7,
+      fillColor: '#2f5f7a',
+      fillOpacity: 0.1
+    },
+    default: {
+      color: '#574d44',
+      weight: 1,
+      opacity: 0.66,
+      fillColor: '#8b7f76',
+      fillOpacity: 0.08
+    }
+  };
 
   function text(value) {
     return typeof value === 'string' ? value.trim() : EMPTY;
@@ -82,6 +111,31 @@
       .replace(/>/g, '&gt;')
       .replace(/"/g, '&quot;')
       .replace(/'/g, '&#039;');
+  }
+
+  function getBasemapConfig() {
+    var config = window.industriesalonSchoneweide || {};
+    var provider = text(config.basemapProvider).toLowerCase();
+    var maptilerKey = text(config.maptilerKey);
+    var maptilerStyle = text(config.maptilerStyle) || 'streets-v2';
+
+    if (provider === 'maptiler' && maptilerKey) {
+      return {
+        tileUrl: 'https://api.maptiler.com/maps/' + encodeURIComponent(maptilerStyle) + '/{z}/{x}/{y}.png?key=' + encodeURIComponent(maptilerKey),
+        options: {
+          attribution:
+            '<a href="https://www.maptiler.com/copyright/" target="_blank">&copy; MapTiler</a> ' +
+            '<a href="https://www.openstreetmap.org/copyright" target="_blank">&copy; OpenStreetMap contributors</a>',
+          tileSize: 512,
+          zoomOffset: -1,
+          minZoom: 1,
+          maxZoom: 20,
+          crossOrigin: true
+        }
+      };
+    }
+
+    return CARTO_BASEMAP;
   }
 
   function createElement(tagName, className, textValue) {
@@ -594,19 +648,113 @@
     });
 
     window.L.control.zoom({ position: 'bottomright' }).addTo(map);
-    window.L.tileLayer(BASE_TILE_URL, {
-      attribution: BASE_TILE_ATTRIBUTION,
-      maxZoom: 20,
-      subdomains: 'abcd'
-    }).addTo(map);
+    var basemap = getBasemapConfig();
+    window.L.tileLayer(basemap.tileUrl, basemap.options).addTo(map);
+
+    map.createPane('issAtlasOverlays');
+    map.getPane('issAtlasOverlays').style.zIndex = 350;
 
     map.fitBounds(atlasBounds, { padding: [24, 24] });
     map.setMinZoom(map.getZoom() - 0.25);
 
     return {
       map: map,
-      markerLayer: window.L.layerGroup().addTo(map)
+      markerLayer: window.L.layerGroup().addTo(map),
+      overlayLayer: null
     };
+  }
+
+  function getOverlayStyle(feature) {
+    var properties = feature && feature.properties ? feature.properties : {};
+    var family = text(properties.overlay_family).toLowerCase();
+    return OVERLAY_FAMILY_STYLES[family] || OVERLAY_FAMILY_STYLES.default;
+  }
+
+  function normalizeOverlayFeature(feature) {
+    if (!feature || typeof feature !== 'object' || !feature.geometry || !feature.properties) {
+      return null;
+    }
+
+    var properties = feature.properties;
+    var status = text(properties.status).toLowerCase();
+    var family = text(properties.overlay_family).toLowerCase();
+    var visibility = properties.default_visibility;
+
+    if (status === 'hidden' || status === 'deprecated') {
+      return null;
+    }
+
+    if (visibility === false) {
+      return null;
+    }
+
+    return {
+      type: 'Feature',
+      geometry: feature.geometry,
+      properties: {
+        overlay_slug: text(properties.overlay_slug),
+        label: text(properties.label),
+        overlay_family: family || 'default',
+        overlay_kind: text(properties.overlay_kind),
+        status: status || 'active',
+        priority: Number.isFinite(Number(properties.priority)) ? Number(properties.priority) : 0,
+        color_token: text(properties.color_token),
+        panel_theme: text(properties.panel_theme),
+        source_type: text(properties.source_type),
+        source_confidence: text(properties.source_confidence),
+        notes: text(properties.notes),
+        era_slugs: Array.isArray(properties.era_slugs) ? properties.era_slugs.map(text).filter(Boolean) : [],
+        function_keys: Array.isArray(properties.function_keys) ? properties.function_keys.map(text).filter(Boolean) : [],
+        current_statuses: Array.isArray(properties.current_statuses) ? properties.current_statuses.map(text).filter(Boolean) : [],
+        current_use_types: Array.isArray(properties.current_use_types) ? properties.current_use_types.map(text).filter(Boolean) : [],
+        risk_flags: Array.isArray(properties.risk_flags) ? properties.risk_flags.map(text).filter(Boolean) : [],
+        problem_flags: Array.isArray(properties.problem_flags) ? properties.problem_flags.map(text).filter(Boolean) : [],
+        future_flags: Array.isArray(properties.future_flags) ? properties.future_flags.map(text).filter(Boolean) : [],
+        topic_tags: Array.isArray(properties.topic_tags) ? properties.topic_tags.map(text).filter(Boolean) : [],
+        relation_slugs: Array.isArray(properties.relation_slugs) ? properties.relation_slugs.map(text).filter(Boolean) : []
+      }
+    };
+  }
+
+  function addOverlayLayer(state, geojson) {
+    if (!state || !state.map || !window.L || !geojson || !Array.isArray(geojson.features) || !geojson.features.length) {
+      return;
+    }
+
+    if (state.overlayLayer) {
+      state.map.removeLayer(state.overlayLayer);
+      state.overlayLayer = null;
+    }
+
+    var features = geojson.features
+      .map(normalizeOverlayFeature)
+      .filter(Boolean);
+
+    if (!features.length) {
+      return;
+    }
+
+    state.overlayLayer = window.L.geoJSON(null, {
+      pane: 'issAtlasOverlays',
+      interactive: false,
+      filter: function (feature) {
+        return !!normalizeOverlayFeature(feature);
+      },
+      style: function (feature) {
+        var normalized = normalizeOverlayFeature(feature);
+        var style = getOverlayStyle(normalized || feature);
+        style.lineJoin = 'round';
+        style.lineCap = 'round';
+        style.smoothFactor = 1.2;
+        return style;
+      }
+    });
+
+    state.overlayLayer.addData({
+      type: 'FeatureCollection',
+      features: features
+    });
+    state.overlayLayer.addTo(state.map);
   }
 
   function renderMap(state, filteredPlaces, selectedPlace) {
@@ -1116,11 +1264,17 @@
           return { eras: [], stories: [] };
         })
       : Promise.resolve({ eras: [], stories: [] });
+    var overlaysRequest = text(config.overlaysUrl)
+      ? fetchJson(config.overlaysUrl).catch(function () {
+          return { type: 'FeatureCollection', features: [] };
+        })
+      : Promise.resolve({ type: 'FeatureCollection', features: [] });
 
-    Promise.all([placesRequest, contextRequest])
+    Promise.all([placesRequest, contextRequest, overlaysRequest])
       .then(function (results) {
         var placePayload = Array.isArray(results[0]) ? results[0] : [];
         var contextPayload = results[1] && typeof results[1] === 'object' ? results[1] : {};
+        var overlayPayload = results[2] && typeof results[2] === 'object' ? results[2] : { type: 'FeatureCollection', features: [] };
         var places = placePayload
           .map(normalizePlace)
           .filter(isAtlasPlace)
@@ -1143,6 +1297,8 @@
           renderError(elements, 'Die Karte konnte nicht initialisiert werden.');
           return;
         }
+
+        addOverlayLayer(leafletState, overlayPayload);
 
         var state = {
           leaflet: leafletState,

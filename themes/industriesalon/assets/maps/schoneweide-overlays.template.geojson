@@ -1,0 +1,98 @@
+{
+  "type": "FeatureCollection",
+  "meta": {
+    "schema_version": 1,
+    "name": "Schoneweide overlays template",
+    "bbox_source": "shared-atlas-bounds",
+    "notes": [
+      "Use this as the canonical editable overlay schema.",
+      "Keep tokens and flags query-first, not UI-first.",
+      "Do not hardcode final era colors yet; see schoneweide-overlays.todo.md."
+    ]
+  },
+  "features": [
+    {
+      "type": "Feature",
+      "properties": {
+        "overlay_slug": "wf",
+        "label": "Werk fuer Fernsehelektronik",
+        "overlay_family": "company",
+        "overlay_kind": "areal",
+        "status": "draft",
+        "priority": 80,
+
+        "era_slugs": [
+          "ddr",
+          "nach-1990"
+        ],
+        "function_keys": [
+          "produktion",
+          "forschung"
+        ],
+        "current_statuses": [
+          "in_use",
+          "in_transition"
+        ],
+        "current_use_types": [
+          "industrial",
+          "education"
+        ],
+
+        "risk_flags": [
+          "financing_risk"
+        ],
+        "problem_flags": [
+          "fragmented_ownership"
+        ],
+        "future_flags": [
+          "use_uncertain"
+        ],
+
+        "topic_tags": [
+          "industrie",
+          "arbeit",
+          "transformation"
+        ],
+        "relation_slugs": [
+          "tro",
+          "kwo"
+        ],
+
+        "color_token": "TODO",
+        "panel_theme": "TODO",
+        "default_visibility": true,
+
+        "source_type": "editorial",
+        "source_confidence": "medium",
+        "notes": "Replace with real editorial note."
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              13.5148,
+              52.4623
+            ],
+            [
+              13.5152,
+              52.4632
+            ],
+            [
+              13.5160,
+              52.4629
+            ],
+            [
+              13.5157,
+              52.4622
+            ],
+            [
+              13.5148,
+              52.4623
+            ]
+          ]
+        ]
+      }
+    }
+  ]
+}

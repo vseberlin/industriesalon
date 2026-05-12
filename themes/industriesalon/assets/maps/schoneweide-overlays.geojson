@@ -1,0 +1,103 @@
+{
+  "type": "FeatureCollection",
+  "meta": {
+    "schema_version": 1,
+    "name": "Schoneweide overlays",
+    "bbox_source": "shared-atlas-bounds",
+    "notes": [
+      "Editable canonical overlay dataset for the Schoneweide atlas.",
+      "Color tokens and panel themes are stubs until the era color system is defined."
+    ]
+  },
+  "features": [
+    {
+      "type": "Feature",
+      "properties": {
+        "overlay_slug": "wf",
+        "label": "Werk fuer Fernsehelektronik",
+        "overlay_family": "company",
+        "overlay_kind": "areal",
+        "status": "draft",
+        "priority": 80,
+        "era_slugs": [
+          "ddr",
+          "nach-1990"
+        ],
+        "function_keys": [
+          "produktion",
+          "forschung"
+        ],
+        "current_statuses": [
+          "in_use",
+          "in_transition"
+        ],
+        "current_use_types": [
+          "industrial",
+          "education"
+        ],
+        "risk_flags": [],
+        "problem_flags": [],
+        "future_flags": [],
+        "topic_tags": [
+          "industrie",
+          "arbeit",
+          "transformation"
+        ],
+        "relation_slugs": [],
+        "color_token": "TODO",
+        "panel_theme": "TODO",
+        "default_visibility": true,
+        "source_type": "editorial",
+        "source_confidence": "medium",
+        "notes": "First manually traced WF area. Replace and refine as the canonical editorial geometry matures."
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              13.514884706705399,
+              52.462364922211016
+            ],
+            [
+              13.515203382315109,
+              52.46328130293322
+            ],
+            [
+              13.515482223473605,
+              52.46316177609468
+            ],
+            [
+              13.515880567985743,
+              52.46304224893162
+            ],
+            [
+              13.516000071339384,
+              52.462922721444045
+            ],
+            [
+              13.515761064632102,
+              52.46260397989056
+            ],
+            [
+              13.515601726827246,
+              52.462285236029366
+            ],
+            [
+              13.515522057924818,
+              52.46208601994416
+            ],
+            [
+              13.51532288566875,
+              52.46208601994416
+            ],
+            [
+              13.514884706705399,
+              52.462364922211016
+            ]
+          ]
+        ]
+      }
+    }
+  ]
+}

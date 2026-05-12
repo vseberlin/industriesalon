@@ -1156,6 +1156,10 @@ function industriesalon_enqueue_assets(): void
                 array(
                     'placesUrl' => industriesalon_make_relative_url(untrailingslashit(rest_url(ISS_REGISTER_REST_NAMESPACE)) . '/atlas'),
                     'contextUrl' => industriesalon_make_relative_url(untrailingslashit(rest_url(ISS_REGISTER_REST_NAMESPACE)) . '/atlas-context'),
+                    'overlaysUrl' => industriesalon_make_relative_url($theme_uri . '/assets/maps/schoneweide-overlays.geojson'),
+                    'basemapProvider' => defined('INDUSTRIESALON_MAP_BASEMAP_PROVIDER') ? (string) INDUSTRIESALON_MAP_BASEMAP_PROVIDER : 'carto',
+                    'maptilerKey' => defined('INDUSTRIESALON_MAPTILER_KEY') ? (string) INDUSTRIESALON_MAPTILER_KEY : '',
+                    'maptilerStyle' => defined('INDUSTRIESALON_MAPTILER_STYLE') ? (string) INDUSTRIESALON_MAPTILER_STYLE : 'streets-v2',
                 )
             );
         }
