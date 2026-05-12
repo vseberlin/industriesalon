@@ -392,10 +392,10 @@ function iss_wf_import_render_archive_object_card(array $item): string
         }
 
         if ($caption === '') {
-            $projection = iss_wf_import_get_object_service()->get_projection_for_post((int) $post->ID);
+            $projection = iss_wf_import_get_object_service()->ensure_projection_for_post((int) $post->ID);
             $caption = is_array($projection)
                 ? trim((string) ($projection['creator_label'] ?? ''))
-                : trim((string) get_post_meta($post->ID, ISS_WF_IMPORT_OBJECT_CREATOR_META, true));
+                : '';
             if ($caption === '') {
                 $caption = trim((string) get_the_excerpt($post));
             }
@@ -905,10 +905,8 @@ function iss_wf_import_render_archive_object_media_block($attributes = [], $cont
         return '';
     }
 
-    $projection = iss_wf_import_get_media_service()->get_projection_for_post($post_id);
-    $images = is_array($projection)
-        ? (array) ($projection['media'] ?? [])
-        : get_post_meta($post_id, ISS_WF_IMPORT_OBJECT_IMAGE_SOURCE_META, true);
+    $projection = iss_wf_import_get_media_service()->ensure_projection_for_post($post_id);
+    $images = is_array($projection) ? (array) ($projection['media'] ?? []) : [];
     $images = is_array($images) ? array_values(array_filter($images, static function ($item): bool {
         return is_array($item) && (!empty($item['source_url']) || absint($item['attachment_id'] ?? 0) > 0 || absint($item['preview_attachment_id'] ?? 0) > 0);
     })) : [];
@@ -1062,10 +1060,10 @@ function iss_wf_import_get_archive_object_browser_result_meta(int $post_id): arr
         $meta[] = implode(', ', array_slice($source_names, 0, 2));
     }
 
-    $projection = iss_wf_import_get_object_service()->get_projection_for_post($post_id);
+    $projection = iss_wf_import_get_object_service()->ensure_projection_for_post($post_id);
     $year = is_array($projection)
         ? trim((string) ($projection['year_label'] ?? ''))
-        : trim((string) get_post_meta($post_id, ISS_WF_IMPORT_OBJECT_YEAR_META, true));
+        : '';
     if ($year !== '') {
         $meta[] = $year;
     }

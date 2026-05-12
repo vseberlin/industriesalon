@@ -163,6 +163,18 @@ class ISS_WF_Import_Media_Service
         return $projection;
     }
 
+    public function ensure_projection_for_post(int $post_id): ?array
+    {
+        $projection = $this->get_projection_for_post($post_id);
+        if (is_array($projection)) {
+            return $projection;
+        }
+
+        $this->sync_object_media($post_id);
+
+        return $this->get_projection_for_post($post_id);
+    }
+
     protected function build_legacy_snapshot(int $post_id): ?array
     {
         $post = get_post($post_id);

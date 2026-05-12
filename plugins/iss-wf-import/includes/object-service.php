@@ -153,6 +153,18 @@ class ISS_WF_Import_Object_Service
         return $this->projection_cache[$post_id];
     }
 
+    public function ensure_projection_for_post(int $post_id): ?array
+    {
+        $projection = $this->get_projection_for_post($post_id);
+        if (is_array($projection)) {
+            return $projection;
+        }
+
+        $this->sync_object_post($post_id);
+
+        return $this->get_projection_for_post($post_id);
+    }
+
     public function find_post_id_by_md_object_id(int $md_object_id): int
     {
         if ($md_object_id <= 0) {
