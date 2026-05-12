@@ -216,6 +216,9 @@ function iss_register_render_place_context(array $attributes = []): string
             $year_label = '';
             if ($years) {
                 $year_label = count($years) === 2 ? implode('–', $years) : $years[0];
+                if (count($years) === 1 && !empty($epoch['is_current'])) {
+                    $year_label .= '–heute';
+                }
             }
 
             $summary = trim((string) ($epoch['summary'] ?? ''));
