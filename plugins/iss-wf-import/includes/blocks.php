@@ -524,14 +524,8 @@ function iss_wf_import_render_archive_collection_card(array $item): string
 
 function iss_wf_import_get_collection_items_for_render(int $post_id): array
 {
-    $projection = iss_wf_import_get_collection_service()->get_projection_for_post($post_id);
-    $items = is_array($projection) ? (array) ($projection['items'] ?? []) : null;
-    if (!is_array($items)) {
-        $items = get_post_meta($post_id, ISS_WF_IMPORT_COLLECTION_ITEMS_META, true);
-        if (!is_array($items)) {
-            return [];
-        }
-    }
+    $projection = iss_wf_import_get_collection_service()->ensure_projection_for_post($post_id);
+    $items = is_array($projection) ? (array) ($projection['items'] ?? []) : [];
 
     return array_values(array_filter($items, static function ($item): bool {
         return is_array($item) && (absint($item['object_id'] ?? 0) > 0 || !empty($item['source_url']));
@@ -540,14 +534,8 @@ function iss_wf_import_get_collection_items_for_render(int $post_id): array
 
 function iss_wf_import_get_collection_children_for_render(int $post_id): array
 {
-    $projection = iss_wf_import_get_collection_service()->get_projection_for_post($post_id);
-    $children = is_array($projection) ? (array) ($projection['children'] ?? []) : null;
-    if (!is_array($children)) {
-        $children = get_post_meta($post_id, ISS_WF_IMPORT_COLLECTION_CHILDREN_META, true);
-        if (!is_array($children)) {
-            return [];
-        }
-    }
+    $projection = iss_wf_import_get_collection_service()->ensure_projection_for_post($post_id);
+    $children = is_array($projection) ? (array) ($projection['children'] ?? []) : [];
 
     return array_values(array_filter($children, static function ($item): bool {
         return is_array($item) && absint($item['collection_id'] ?? 0) > 0;

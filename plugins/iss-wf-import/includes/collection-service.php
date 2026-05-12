@@ -204,6 +204,54 @@ class ISS_WF_Import_Collection_Service
         return $projection;
     }
 
+    public function ensure_projection_for_post(int $post_id): ?array
+    {
+        $projection = $this->get_projection_for_post($post_id);
+        if (is_array($projection)) {
+            return $projection;
+        }
+
+        $this->sync_collection_post($post_id);
+
+        return $this->get_projection_for_post($post_id);
+    }
+
+    public function save_collection_items(int $post_id, array $items): bool
+    {
+        $post = get_post($post_id);
+        if (!$post instanceof WP_Post || $post->post_type !== ISS_WF_IMPORT_COLLECTION_POST_TYPE) {
+            return false;
+        }
+
+        if (in_array($post->post_status, ['auto-draft', 'trash'], true)) {
+            return false;
+        }
+
+        $items = iss_wf_import_sanitize_collection_items($items);
+        $snapshot = $this->build_legacy_snapshot($post_id);
+        if (!$snapshot) {
+            return false;
+        }
+
+        $snapshot['items'] = $items;
+        $snapshot['collection_type'] = $this->derive_collection_type(
+            $items,
+            is_array($snapshot['children'] ?? null) ? (array) $snapshot['children'] : []
+        );
+
+        $timestamp = current_time('mysql', true);
+        $collection_id = $this->upsert_collection_row($snapshot, $timestamp);
+        if ($collection_id <= 0) {
+            return false;
+        }
+
+        $this->replace_member_rows($collection_id, $snapshot, $timestamp);
+        $this->project_snapshot_to_legacy_meta($post_id, $snapshot);
+        unset($this->projection_cache[$post_id]);
+
+        return true;
+    }
+
     protected function build_legacy_snapshot(int $post_id): ?array
     {
         $post = get_post($post_id);
@@ -240,6 +288,25 @@ class ISS_WF_Import_Collection_Service
             'items' => $items,
             'children' => $children,
         ];
+    }
+
+    protected function project_snapshot_to_legacy_meta(int $post_id, array $snapshot): void
+    {
+        update_post_meta(
+            $post_id,
+            ISS_WF_IMPORT_COLLECTION_ITEMS_META,
+            iss_wf_import_sanitize_collection_items(is_array($snapshot['items'] ?? null) ? (array) $snapshot['items'] : [])
+        );
+        update_post_meta(
+            $post_id,
+            ISS_WF_IMPORT_COLLECTION_CHILDREN_META,
+            iss_wf_import_sanitize_collection_children(is_array($snapshot['children'] ?? null) ? (array) $snapshot['children'] : [])
+        );
+        update_post_meta(
+            $post_id,
+            ISS_WF_IMPORT_COLLECTION_SOURCE_IDS_META,
+            iss_wf_import_sanitize_collection_source_ids(is_array($snapshot['source_refs'] ?? null) ? (array) $snapshot['source_refs'] : [])
+        );
     }
 
     protected function build_collection_key(WP_Post $post, string $source_system, string $source_id): string
