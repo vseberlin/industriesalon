@@ -67,6 +67,10 @@ define('ISS_WF_IMPORT_IMPORT_SCHEMA_OPTION', 'iss_wf_import_import_schema_versio
 define('ISS_WF_IMPORT_IMPORT_SCHEMA_VERSION', '2026-05-12-import-schema-1');
 define('ISS_WF_IMPORT_IMPORT_BACKFILL_OPTION', 'iss_wf_import_import_backfill_version');
 define('ISS_WF_IMPORT_IMPORT_BACKFILL_VERSION', '2026-05-12-import-backfill-2');
+define('ISS_WF_IMPORT_ASSERTION_SCHEMA_OPTION', 'iss_wf_import_assertion_schema_version');
+define('ISS_WF_IMPORT_ASSERTION_SCHEMA_VERSION', '2026-05-12-assertion-schema-1');
+define('ISS_WF_IMPORT_ASSERTION_BACKFILL_OPTION', 'iss_wf_import_assertion_backfill_version');
+define('ISS_WF_IMPORT_ASSERTION_BACKFILL_VERSION', '2026-05-12-assertion-backfill-1');
 define('ISS_WF_IMPORT_OBJECT_PRIMARY_ATTACHMENT_META', 'iss_archive_primary_attachment_id');
 define('ISS_WF_IMPORT_OBJECT_PREVIEW_ATTACHMENT_META', 'iss_archive_preview_attachment_id');
 define('ISS_WF_IMPORT_OBJECT_TYPE_META', 'iss_archive_object_type');
@@ -116,6 +120,7 @@ require_once ISS_WF_IMPORT_PATH . 'includes/object-service.php';
 require_once ISS_WF_IMPORT_PATH . 'includes/media-service.php';
 require_once ISS_WF_IMPORT_PATH . 'includes/relation-service.php';
 require_once ISS_WF_IMPORT_PATH . 'includes/import-service.php';
+require_once ISS_WF_IMPORT_PATH . 'includes/assertion-service.php';
 require_once ISS_WF_IMPORT_PATH . 'includes/archive-browser-service.php';
 require_once ISS_WF_IMPORT_PATH . 'includes/suggestions.php';
 require_once ISS_WF_IMPORT_PATH . 'includes/blocks.php';
@@ -141,6 +146,9 @@ register_activation_hook(__FILE__, function () {
     iss_wf_import_get_import_service()->install_schema();
     iss_wf_import_get_import_service()->backfill_all_source_records();
     update_option(ISS_WF_IMPORT_IMPORT_BACKFILL_OPTION, ISS_WF_IMPORT_IMPORT_BACKFILL_VERSION, false);
+    iss_wf_import_get_assertion_service()->install_schema();
+    iss_wf_import_get_assertion_service()->backfill_all_object_assertions();
+    update_option(ISS_WF_IMPORT_ASSERTION_BACKFILL_OPTION, ISS_WF_IMPORT_ASSERTION_BACKFILL_VERSION, false);
     flush_rewrite_rules();
 });
 

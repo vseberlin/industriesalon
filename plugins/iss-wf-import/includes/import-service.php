@@ -250,6 +250,38 @@ class ISS_WF_Import_Import_Service
         return $row;
     }
 
+    public function get_latest_applied_snapshot_for_post(int $post_id): ?array
+    {
+        if ($post_id <= 0) {
+            return null;
+        }
+
+        global $wpdb;
+
+        $rows = $wpdb->get_results($wpdb->prepare(
+            "SELECT ss.*, sr.record_identifier, sr.record_url, sr.object_post_id, s.source_key, s.label AS source_label, s.source_kind
+            FROM {$this->get_source_snapshots_table_name()} ss
+            INNER JOIN {$this->get_source_records_table_name()} sr ON sr.id = ss.source_record_id
+            INNER JOIN {$this->get_sources_table_name()} s ON s.id = sr.source_id
+            WHERE sr.object_post_id = %d
+              AND ss.applied_post_id = %d
+            ORDER BY ss.applied_at DESC, ss.id DESC
+            LIMIT 1",
+            $post_id,
+            $post_id
+        ), ARRAY_A);
+
+        return is_array($rows) && isset($rows[0]) && is_array($rows[0]) ? $rows[0] : null;
+    }
+
+    public function decode_snapshot_payload(array $snapshot_row): array
+    {
+        $payload_json = (string) ($snapshot_row['payload_json'] ?? '{}');
+        $decoded = json_decode($payload_json, true);
+
+        return is_array($decoded) ? $decoded : [];
+    }
+
     public function get_source_record_projection_by_identity(string $source_key, string $record_identifier): ?array
     {
         $source_key = sanitize_title($source_key);
