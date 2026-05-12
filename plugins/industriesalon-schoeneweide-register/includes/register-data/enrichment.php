@@ -135,5 +135,7 @@ function iss_register_build_place_detail_contract(array $place): array
         $place['related_objects'] = iss_register_get_related_objects_for_place($post_id);
     }
 
-    return $place;
+    return function_exists('iss_register_build_place_detail_contract_data')
+        ? iss_register_build_place_detail_contract_data($place)
+        : $place;
 }

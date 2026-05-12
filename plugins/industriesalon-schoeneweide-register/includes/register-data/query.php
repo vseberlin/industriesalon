@@ -109,6 +109,8 @@ function iss_register_normalize_place_query_args(array $args): array
         'area' => iss_register_normalize_place_query_text($args['area'] ?? ''),
         'status' => iss_register_normalize_place_query_text($args['status'] ?? ''),
         'role' => iss_register_normalize_place_query_text($args['role'] ?? ''),
+        'era_slug' => sanitize_title((string) ($args['era_slug'] ?? '')),
+        'function_key' => sanitize_key((string) ($args['function_key'] ?? '')),
         'current_status' => iss_register_normalize_place_query_text($args['current_status'] ?? ''),
         'current_use_type' => iss_register_normalize_place_query_text($args['current_use_type'] ?? ''),
         'tag' => iss_register_normalize_place_query_text($args['tag'] ?? ''),
@@ -126,6 +128,8 @@ function iss_register_get_place_query_args_from_request(WP_REST_Request $request
         'area' => $request->get_param('area'),
         'status' => $request->get_param('status'),
         'role' => $request->get_param('role'),
+        'era_slug' => $request->get_param('era_slug'),
+        'function_key' => $request->get_param('function_key'),
         'current_status' => $request->get_param('current_status'),
         'current_use_type' => $request->get_param('current_use_type'),
         'tag' => $request->get_param('tag'),
@@ -152,7 +156,16 @@ function iss_register_filter_place_entities(array $places, array $query_args): a
             return false;
         }
 
-        if ($query_args['current_status'] !== '' && iss_register_normalize_place_query_text($place['current_status'] ?? '') !== $query_args['current_status']) {
+        if ($query_args['era_slug'] !== '' && !in_array($query_args['era_slug'], (array) ($place['available_era_slugs'] ?? []), true)) {
+            return false;
+        }
+
+        if ($query_args['function_key'] !== '' && !in_array($query_args['function_key'], (array) ($place['available_function_keys'] ?? []), true)) {
+            return false;
+        }
+
+        $place_current_status = $place['normalized_current_status'] ?? ($place['current_status'] ?? '');
+        if ($query_args['current_status'] !== '' && iss_register_normalize_place_query_text($place_current_status) !== $query_args['current_status']) {
             return false;
         }
 

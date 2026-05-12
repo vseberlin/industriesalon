@@ -18,11 +18,37 @@ function iss_register_place_context_fallback_history_label(array $place, array $
         (string) ($place['excerpt'] ?? ''),
     ])));
 
-    if ($history_signal !== '' && preg_match('/\b(18\d{2}|19\d{2}|20\d{2})\b/u', $history_signal)) {
+    $era_slug = trim((string) ($era['slug'] ?? ''));
+    if (
+        $history_signal !== ''
+        && preg_match('/\b(18\d{2}|19\d{2}|20\d{2})\b/u', $history_signal)
+        && $era_slug !== ''
+        && $era_slug !== 'nach-1990'
+    ) {
         return trim((string) ($era['name'] ?? $era['label'] ?? ''));
     }
 
     return '';
+}
+
+function iss_register_get_place_context_history_terms(array $place, array $era): array
+{
+    if (!empty($place['historical_phase_labels']) && is_array($place['historical_phase_labels'])) {
+        return array_values(array_filter(array_map(static function ($label): string {
+            return is_scalar($label) ? trim((string) $label) : '';
+        }, $place['historical_phase_labels'])));
+    }
+
+    $explicit_names = array_values(array_filter(array_map(static function ($item): string {
+        return is_array($item) ? trim((string) ($item['name'] ?? '')) : '';
+    }, (array) ($era['explicit_eras'] ?? []))));
+    if ($explicit_names) {
+        return $explicit_names;
+    }
+
+    $fallback = iss_register_place_context_fallback_history_label($place, $era);
+
+    return $fallback !== '' ? [$fallback] : [];
 }
 
 function iss_register_get_place_context_payload(int $post_id): array
@@ -38,8 +64,8 @@ function iss_register_get_place_context_payload(int $post_id): array
     $era = function_exists('iss_register_detect_atlas_era')
         ? iss_register_detect_atlas_era($place)
         : [];
-    $current_status = function_exists('iss_register_detect_current_status')
-        ? iss_register_detect_current_status($place)
+    $current_status = function_exists('iss_register_get_normalized_current_status_payload')
+        ? iss_register_get_normalized_current_status_payload($place)
         : [];
     $current_use_type = function_exists('iss_register_detect_current_use_type')
         ? iss_register_detect_current_use_type($place)
@@ -48,7 +74,9 @@ function iss_register_get_place_context_payload(int $post_id): array
     return [
         'address' => trim((string) ($place['address'] ?? '')),
         'area' => trim((string) ($place['area'] ?? '')),
-        'history_label' => iss_register_place_context_fallback_history_label($place, $era),
+        'epochs' => isset($place['epochs']) && is_array($place['epochs']) ? array_values($place['epochs']) : [],
+        'history_terms' => iss_register_get_place_context_history_terms($place, $era),
+        'history_label' => implode(' · ', iss_register_get_place_context_history_terms($place, $era)),
         'history_missing' => trim((string) ($place['history'] ?? '')) === '' && empty($era['explicit_eras']),
         'current_status_label' => trim((string) ($current_status['label'] ?? '')),
         'current_use_type_label' => trim((string) ($current_use_type['label'] ?? '')),
@@ -166,12 +194,49 @@ function iss_register_render_place_context(array $attributes = []): string
         return $html;
     }
 
-    $terms = array_values(array_filter([
-        $context['history_label'] !== '' ? $context['history_label'] : 'Noch nicht eingeordnet',
-        $context['current_status_label'] !== '' ? $context['current_status_label'] : '',
-        $context['current_use_type_label'] !== '' ? $context['current_use_type_label'] : '',
-        $context['area'] !== '' ? $context['area'] : '',
-    ]));
+    if ($variant === 'terms' && !empty($context['epochs'])) {
+        $html = '<div class="wp-block-group iss-register-place__phase-list">';
+        foreach ($context['epochs'] as $epoch) {
+            if (!is_array($epoch)) {
+                continue;
+            }
+
+            $title = trim((string) ($epoch['phase_name'] ?? ''));
+            if ($title === '') {
+                continue;
+            }
+
+            $years = [];
+            if (isset($epoch['start_year']) && $epoch['start_year'] !== null && $epoch['start_year'] !== '') {
+                $years[] = (string) $epoch['start_year'];
+            }
+            if (isset($epoch['end_year']) && $epoch['end_year'] !== null && $epoch['end_year'] !== '') {
+                $years[] = (string) $epoch['end_year'];
+            }
+            $year_label = '';
+            if ($years) {
+                $year_label = count($years) === 2 ? implode('–', $years) : $years[0];
+            }
+
+            $summary = trim((string) ($epoch['summary'] ?? ''));
+            $html .= '<div class="wp-block-group iss-register-place__phase">';
+            if ($year_label !== '') {
+                $html .= '<p class="iss-register-place__phase-years">' . esc_html($year_label) . '</p>';
+            }
+            $html .= '<p class="iss-register-place__phase-title">' . esc_html($title) . '</p>';
+            if ($summary !== '') {
+                $html .= '<p class="iss-register-place__phase-text">' . esc_html($summary) . '</p>';
+            }
+            $html .= '</div>';
+        }
+        $html .= '</div>';
+
+        return $html;
+    }
+
+    $terms = array_values(array_filter(array_map(static function ($term): string {
+        return is_scalar($term) ? trim((string) $term) : '';
+    }, (array) ($context['history_terms'] ?? []))));
 
     if (!$terms) {
         return '';

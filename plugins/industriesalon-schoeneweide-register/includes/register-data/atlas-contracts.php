@@ -219,6 +219,33 @@ function iss_register_detect_current_status(array $place): array
     return iss_register_get_atlas_current_status_payload('unclear') + ['source' => 'fallback'];
 }
 
+function iss_register_get_normalized_current_status_payload(array $place): array
+{
+    $normalized_key = sanitize_key((string) ($place['normalized_current_status'] ?? ''));
+    if ($normalized_key === '') {
+        return iss_register_detect_current_status($place);
+    }
+
+    $payload = iss_register_get_atlas_current_status_payload($normalized_key);
+    if (!$payload) {
+        return iss_register_detect_current_status($place);
+    }
+
+    $label = trim((string) ($place['normalized_current_status_label'] ?? ''));
+    $caption = trim((string) ($place['normalized_current_status_caption'] ?? ''));
+    $source = trim((string) ($place['normalized_current_status_source'] ?? ''));
+
+    if ($label !== '') {
+        $payload['label'] = $label;
+    }
+
+    if ($caption !== '') {
+        $payload['caption'] = $caption;
+    }
+
+    return $payload + ['source' => $source !== '' ? $source : 'meta'];
+}
+
 function iss_register_detect_current_use_type(array $place): array
 {
     $explicit = sanitize_key((string) ($place['current_use_type'] ?? ''));
@@ -319,6 +346,27 @@ function iss_register_infer_atlas_era_from_place(array $place): array
 
 function iss_register_detect_atlas_era(array $place): array
 {
+    $epochs = isset($place['epochs']) && is_array($place['epochs']) ? array_values($place['epochs']) : [];
+    if ($epochs) {
+        $primary_slug = sanitize_title((string) ($place['primary_historical_era_slug'] ?? ($epochs[0]['era_slug'] ?? '')));
+        $primary = $primary_slug !== '' ? iss_register_get_editorial_era_payload_from_slug($primary_slug) : [];
+
+        if ($primary) {
+            return [
+                'id' => (string) $primary['legacy_id'],
+                'label' => (string) $primary['legacy_label'],
+                'short_label' => (string) $primary['legacy_short_label'],
+                'caption' => (string) $primary['legacy_caption'],
+                'slug' => (string) $primary['slug'],
+                'name' => (string) $primary['name'],
+                'source' => 'epochs',
+                'explicit_eras' => array_values(array_filter(array_map(static function (string $slug): array {
+                    return iss_register_get_editorial_era_payload_from_slug($slug);
+                }, (array) ($place['available_era_slugs'] ?? [])))),
+            ];
+        }
+    }
+
     $post_id = isset($place['post_id']) ? (int) $place['post_id'] : 0;
     $explicit = $post_id > 0 ? iss_register_get_primary_explicit_era_payload_for_post($post_id) : [];
 
@@ -391,9 +439,21 @@ function iss_register_build_atlas_place_contract(array $place): array
     $sources = (string) ($place['sources'] ?? '');
     $branche = (string) ($place['branche'] ?? '');
     $related_tours = iss_register_get_place_tour_usage((int) ($place['post_id'] ?? 0));
-    $current_status = iss_register_detect_current_status($place);
+    $current_status = iss_register_get_normalized_current_status_payload($place);
     $current_use_type = iss_register_detect_current_use_type($place);
     $present_label = iss_register_build_present_label($current_status, $current_use_type);
+    $epoch_summaries = array_values(array_map(static function (array $epoch): array {
+        return [
+            'id' => (int) ($epoch['id'] ?? 0),
+            'era_slug' => (string) ($epoch['era_slug'] ?? ''),
+            'function_key' => (string) ($epoch['function_key'] ?? ''),
+            'phase_name' => (string) ($epoch['phase_name'] ?? ''),
+            'summary' => iss_register_atlas_compact_text((string) ($epoch['summary'] ?? ''), 180),
+            'start_year' => isset($epoch['start_year']) ? $epoch['start_year'] : null,
+            'end_year' => isset($epoch['end_year']) ? $epoch['end_year'] : null,
+            'is_current' => !empty($epoch['is_current']),
+        ];
+    }, (array) ($place['epochs'] ?? [])));
 
     return [
         'id' => (string) ($place['id'] ?? ''),
@@ -432,6 +492,8 @@ function iss_register_build_atlas_place_contract(array $place): array
         'explicit_era_names' => array_values(array_map(static function (array $item): string {
             return (string) ($item['name'] ?? '');
         }, (array) ($era['explicit_eras'] ?? []))),
+        'has_epochs' => !empty($place['has_epochs']),
+        'epoch_summaries' => $epoch_summaries,
         'has_tour_usage' => !empty($related_tours),
         'related_tours' => $related_tours,
         'story_score' => iss_register_get_atlas_place_score($place),
@@ -444,19 +506,56 @@ function iss_register_build_atlas_place_contract(array $place): array
     ];
 }
 
-function iss_register_get_atlas_places_data(): array
+function iss_register_get_atlas_places_data(array $filters = []): array
 {
-    $cached = get_transient('iss_register_atlas_places_cache');
+    $cache_key = 'iss_register_atlas_places_cache';
+    if (!empty($filters['era_slug']) || !empty($filters['function_key'])) {
+        $cache_key .= ':' . md5(wp_json_encode($filters));
+    }
+
+    $cached = get_transient($cache_key);
     if (is_array($cached)) {
         return $cached;
     }
 
+    $places = iss_register_get_place_entities();
+    $era_slug = sanitize_title((string) ($filters['era_slug'] ?? ''));
+    $function_key = sanitize_key((string) ($filters['function_key'] ?? ''));
+
+    if ($era_slug !== '' || $function_key !== '') {
+        $allowed_post_ids = iss_register_get_epoch_service()->get_place_ids_for_filters([
+            'era_slug' => $era_slug,
+            'function_key' => $function_key,
+        ]);
+
+        $places = array_values(array_filter($places, static function (array $place) use ($allowed_post_ids, $era_slug, $function_key): bool {
+            if (!$allowed_post_ids) {
+                return false;
+            }
+
+            $post_id = (int) ($place['post_id'] ?? 0);
+            if (!in_array($post_id, $allowed_post_ids, true)) {
+                return false;
+            }
+
+            if ($era_slug !== '' && !in_array($era_slug, (array) ($place['available_era_slugs'] ?? []), true)) {
+                return false;
+            }
+
+            if ($function_key !== '' && !in_array($function_key, (array) ($place['available_function_keys'] ?? []), true)) {
+                return false;
+            }
+
+            return true;
+        }));
+    }
+
     $atlas_places = array_values(array_filter(array_map(
         'iss_register_build_atlas_place_contract',
-        iss_register_get_place_entities()
+        $places
     )));
 
-    set_transient('iss_register_atlas_places_cache', $atlas_places, HOUR_IN_SECONDS);
+    set_transient($cache_key, $atlas_places, HOUR_IN_SECONDS);
 
     return $atlas_places;
 }

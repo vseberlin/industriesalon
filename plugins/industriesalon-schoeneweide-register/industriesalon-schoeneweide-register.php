@@ -56,6 +56,9 @@ register_activation_hook(__FILE__, function () {
     if (function_exists('iss_register_seed_atlas_era_terms')) {
         iss_register_seed_atlas_era_terms();
     }
+    if (function_exists('iss_register_get_epoch_service')) {
+        iss_register_get_epoch_service()->install_schema();
+    }
     flush_rewrite_rules();
     iss_register_clear_places_cache();
 });

@@ -44,6 +44,175 @@
 # Handoff Current
 
 ## Status
+- `verified checkpoint after historical epoch infrastructure implementation for register_place`
+
+## Date / Window
+- Date: `2026-05-11`
+- Timezone: `Europe/Berlin`
+
+## Branch / Commit
+- Branch: `master`
+- HEAD at start of this pass: `27d5575`
+
+## What Was Done This Session
+- Implemented historical epoch infrastructure in `plugins/industriesalon-schoeneweide-register` without introducing a new public CPT.
+- Added custom-table storage via:
+  - `plugins/industriesalon-schoeneweide-register/includes/register-data/epochs.php`
+  - table: `wp_iss_register_place_epochs`
+  - schema/version option: `iss_register_epoch_schema_version`
+  - snapshot meta:
+    - `_iss_register_epoch_snapshot_latest`
+    - `_iss_register_epoch_snapshots`
+- Added epoch service responsibilities:
+  - schema install / upgrade
+  - CRUD through one service boundary
+  - vocabulary definitions for:
+    - era slugs from existing `atlas_era` definitions
+    - fixed `function_key` list
+    - fixed `source_confidence` list
+  - validation for:
+    - invalid era slugs
+    - invalid function keys
+    - invalid year ranges
+    - multiple `is_current` rows
+  - cleanup of invalid media IDs and invalid URLs
+  - export/import document builder
+  - seed migration helper for historical first-pass rows
+- Extended place entity enrichment so `register_place` records now carry:
+  - `epochs`
+  - `has_epochs`
+  - `available_era_slugs`
+  - `available_function_keys`
+  - `historical_phase_labels`
+  - `primary_historical_era_slug`
+- Added editor UI on the existing place screen:
+  - `Zeitschichten` meta box in `includes/meta-fields.php`
+  - transport stored as hidden JSON textarea
+  - persistent save still goes through the epoch service on `save_post_register_place`
+  - new admin assets:
+    - `assets/js/register-place-epochs-admin.js`
+    - `assets/css/register-place-epochs-admin.css`
+  - compact snapshot notice shown in the meta box
+  - save errors are surfaced back in the editor via `_iss_register_epoch_save_error`
+- Extended REST/data contracts:
+  - summary contract now can expose:
+    - `available_era_slugs`
+    - `available_function_keys`
+    - `primary_historical_era_slug`
+    - `has_epochs`
+  - detail contract now exposes:
+    - `epochs`
+    - `historical_phase_labels`
+    - the same epoch availability fields
+  - `/wp-json/iss-register/v1/meta` now includes:
+    - era vocabulary
+    - epoch function vocabulary
+    - source confidence vocabulary
+    - counts by era/function
+  - `/wp-json/iss-register/v1/export` now returns structured export with:
+    - `places`
+    - `epochs`
+    - schema metadata
+- Extended atlas behavior:
+  - atlas contract now includes:
+    - `has_epochs`
+    - `epoch_summaries`
+  - atlas era detection now prefers epoch data when present
+  - `/wp-json/iss-register/v1/atlas` now accepts:
+    - `era_slug`
+    - `function_key`
+  - atlas filter narrowing now uses the epoch table first when those filters are active
+- Extended single place rendering:
+  - `plugins/industriesalon-schoeneweide-register/includes/blocks.php`
+  - `iss/register-place-context` `terms` variant now renders chronological phase rows when epochs exist
+  - fallback inferred/taxonomy-era behavior remains for places without epochs
+- Tightened register app bootstrap behavior:
+  - `plugins/industriesalon-schoeneweide-register/includes/register-app/bootstrap.php`
+  - bootstrap summary payload now respects configured `limitArea` / `limitStatus` filters instead of always loading the full summary list
+- Added tools-page support for tomorrow/editorial operations:
+  - export button on the Register tools page
+  - guarded seed migration action requiring:
+    - backup confirmation
+    - export confirmation
+
+## Verification
+- PHP syntax checks passed inside `wp_app` for the touched register plugin PHP files, including:
+  - `includes/admin-tools.php`
+  - `includes/meta-fields.php`
+  - `includes/register-data/epochs.php`
+- `node --check` passed for:
+  - `plugins/industriesalon-schoeneweide-register/assets/js/register-place-epochs-admin.js`
+- Live WordPress runtime verification passed for:
+  - epoch service load
+  - schema option resolution
+  - repeated `maybe_install_schema()` call after timestamp-column simplification
+  - contract smoke check via `docker compose run --rm wpcli iss-register contract-check --allow-root`
+- Verified epoch table indexes exist:
+  - `place_post_id`
+  - `era_function`
+  - `place_sort`
+  - `place_current`
+  - `chronology`
+- Sample live payload checks confirmed:
+  - summary contracts contain epoch availability fields
+  - detail contracts contain `epochs`
+  - atlas contracts contain `has_epochs` and `epoch_summaries`
+
+## Important Notes
+- No seed migration was run yet.
+  - current places still mostly show `has_epochs = false`
+  - this is expected until editors add rows or the migration tool is executed
+- The epoch schema originally used `ON UPDATE CURRENT_TIMESTAMP`.
+  - this caused noisy repeated `dbDelta` behavior
+  - it was simplified to explicit `created_at` / `updated_at` values set in service code
+- No theme CSS architecture changes were made in this pass.
+  - work stayed inside plugin PHP/admin assets and existing single-place dynamic rendering
+- The public single template file itself was not edited in this pass.
+  - phase output was added through the existing dynamic block path
+
+## Current Worktree
+- Source-file changes from this pass:
+  - `plugins/industriesalon-schoeneweide-register/industriesalon-schoeneweide-register.php`
+  - `plugins/industriesalon-schoeneweide-register/includes/admin-tools.php`
+  - `plugins/industriesalon-schoeneweide-register/includes/blocks.php`
+  - `plugins/industriesalon-schoeneweide-register/includes/meta-fields.php`
+  - `plugins/industriesalon-schoeneweide-register/includes/register-app/bootstrap.php`
+  - `plugins/industriesalon-schoeneweide-register/includes/register-data.php`
+  - `plugins/industriesalon-schoeneweide-register/includes/register-data/atlas-contracts.php`
+  - `plugins/industriesalon-schoeneweide-register/includes/register-data/cache.php`
+  - `plugins/industriesalon-schoeneweide-register/includes/register-data/contracts.php`
+  - `plugins/industriesalon-schoeneweide-register/includes/register-data/enrichment.php`
+  - `plugins/industriesalon-schoeneweide-register/includes/register-data/entity-repository.php`
+  - `plugins/industriesalon-schoeneweide-register/includes/register-data/epochs.php`
+  - `plugins/industriesalon-schoeneweide-register/includes/register-data/guardrails.php`
+  - `plugins/industriesalon-schoeneweide-register/includes/register-data/query.php`
+  - `plugins/industriesalon-schoeneweide-register/includes/register-data/services.php`
+  - `plugins/industriesalon-schoeneweide-register/includes/rest/routes.php`
+  - `plugins/industriesalon-schoeneweide-register/assets/js/register-place-epochs-admin.js`
+  - `plugins/industriesalon-schoeneweide-register/assets/css/register-place-epochs-admin.css`
+
+## Next Recommended Steps
+- Commit the epoch infrastructure pass if the surrounding unrelated plugin-tree changes stay intentionally excluded.
+- Decide whether to run seed migration now or keep epoch entry manual-first.
+- If migration is run:
+  - create DB backup first
+  - download `/wp-json/iss-register/v1/export` first
+  - use the tools page migration action instead of direct SQL
+- Then test one real editor workflow on a known place:
+  - add multiple phases
+  - toggle one current phase
+  - verify detail + atlas + single-place output
+
+## Continuity Prompt
+- Start next session with: `read /home/vladimir/wp/handoff_CURRENT.md`
+- Then:
+  - decide on seed migration timing before broader content editing
+  - test one editor-owned place with multiple saved epochs
+
+
+# Handoff Current
+
+## Status
 - `clean checkpoint after schoneweide register/place-page refactor`
 
 ## Date / Window

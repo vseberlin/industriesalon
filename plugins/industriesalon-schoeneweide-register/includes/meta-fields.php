@@ -368,6 +368,63 @@ function iss_register_render_group_meta_box(WP_Post $post, array $box): void
     iss_register_render_fields_table($post, (array) ($group['fields'] ?? []));
 }
 
+function iss_register_render_epoch_meta_box(WP_Post $post): void
+{
+    wp_nonce_field('iss_register_save_meta_box', 'iss_register_meta_nonce');
+
+    $service = iss_register_get_epoch_service();
+    $epochs = $service->get_epochs_for_place((int) $post->ID);
+    $latest_snapshot = $service->get_latest_snapshot((int) $post->ID);
+    $eras = array_values(array_map(static function (array $definition): array {
+        return [
+            'slug' => (string) ($definition['slug'] ?? ''),
+            'label' => (string) ($definition['name'] ?? ''),
+        ];
+    }, array_values($service->get_era_definitions())));
+    $functions = array_values(array_map(static function (array $definition): array {
+        return [
+            'key' => (string) ($definition['key'] ?? ''),
+            'label' => (string) ($definition['label'] ?? ''),
+        ];
+    }, array_values($service->get_function_definitions())));
+    $confidences = array_values(array_map(static function (array $definition): array {
+        return [
+            'key' => (string) ($definition['key'] ?? ''),
+            'label' => (string) ($definition['label'] ?? ''),
+        ];
+    }, array_values($service->get_source_confidence_definitions())));
+
+    $json_epochs = wp_json_encode($epochs, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
+    if (!is_string($json_epochs) || $json_epochs === '') {
+        $json_epochs = '[]';
+    }
+
+    echo '<p>Chronologische Zeitschichten bleiben im Hintergrund in einer eigenen Tabelle gespeichert. Der Ort selbst bleibt Eigentümer von Adresse, Koordinaten, aktueller Nutzung und Permalink.</p>';
+
+    $save_error = trim((string) get_post_meta($post->ID, '_iss_register_epoch_save_error', true));
+    if ($save_error !== '') {
+        echo '<div class="notice notice-error inline"><p>' . esc_html($save_error) . '</p></div>';
+        delete_post_meta($post->ID, '_iss_register_epoch_save_error');
+    }
+
+    if ($latest_snapshot) {
+        $saved_at = trim((string) ($latest_snapshot['saved_at'] ?? ''));
+        $count = (int) ($latest_snapshot['count'] ?? 0);
+        echo '<p class="description">Letzter Snapshot: <strong>' . esc_html($saved_at !== '' ? $saved_at : 'unbekannt') . '</strong> mit <strong>' . esc_html((string) $count) . '</strong> Phase(n).</p>';
+    } else {
+        echo '<p class="description">Noch kein Epochensnapshot gespeichert.</p>';
+    }
+
+    echo '<div class="iss-register-epochs"';
+    echo ' data-eras="' . esc_attr(wp_json_encode($eras, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES)) . '"';
+    echo ' data-functions="' . esc_attr(wp_json_encode($functions, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES)) . '"';
+    echo ' data-confidences="' . esc_attr(wp_json_encode($confidences, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES)) . '">';
+    echo '<div class="iss-register-epochs__rows"></div>';
+    echo '<p><button type="button" class="button button-secondary iss-register-epochs__add">Zeitschicht hinzufügen</button></p>';
+    echo '</div>';
+    echo '<textarea id="iss-register-epoch-rows" name="iss_register_epoch_rows" rows="6" style="display:none;">' . esc_textarea($json_epochs) . '</textarea>';
+}
+
 add_action('add_meta_boxes', function () {
     foreach (iss_register_get_meta_box_groups() as $group_key => $group) {
         add_meta_box(
@@ -382,6 +439,15 @@ add_action('add_meta_boxes', function () {
             ]
         );
     }
+
+    add_meta_box(
+        'iss-register-epochs',
+        __('Zeitschichten', 'industriesalon-schoeneweide-register'),
+        'iss_register_render_epoch_meta_box',
+        ISS_REGISTER_POST_TYPE,
+        'normal',
+        'default'
+    );
 });
 
 function iss_register_save_meta_box(int $post_id): void
@@ -424,6 +490,23 @@ function iss_register_save_meta_box(int $post_id): void
 
         update_post_meta($post_id, $key, $sanitized);
     }
+
+    $epoch_rows = $_POST['iss_register_epoch_rows'] ?? '[]';
+    if (is_string($epoch_rows)) {
+        $decoded = json_decode(wp_unslash($epoch_rows), true);
+        if (!is_array($decoded)) {
+            $decoded = [];
+        }
+
+        $result = iss_register_get_epoch_service()->save_epochs_for_place($post_id, $decoded, [
+            'source' => 'editor',
+        ]);
+        if (is_wp_error($result)) {
+            update_post_meta($post_id, '_iss_register_epoch_save_error', $result->get_error_message());
+        } else {
+            delete_post_meta($post_id, '_iss_register_epoch_save_error');
+        }
+    }
 }
 
 add_action('save_post_' . ISS_REGISTER_POST_TYPE, 'iss_register_save_meta_box');
@@ -450,6 +533,19 @@ function iss_register_admin_enqueue_image_group_assets(string $hook): void
     wp_enqueue_style(
         'iss-register-image-groups-admin',
         ISS_REGISTER_URL . 'assets/css/register-image-groups-admin.css',
+        [],
+        ISS_REGISTER_VERSION
+    );
+    wp_enqueue_script(
+        'iss-register-place-epochs-admin',
+        ISS_REGISTER_URL . 'assets/js/register-place-epochs-admin.js',
+        [],
+        ISS_REGISTER_VERSION,
+        true
+    );
+    wp_enqueue_style(
+        'iss-register-place-epochs-admin',
+        ISS_REGISTER_URL . 'assets/css/register-place-epochs-admin.css',
         [],
         ISS_REGISTER_VERSION
     );

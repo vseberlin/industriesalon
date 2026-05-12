@@ -23,6 +23,14 @@ function iss_register_get_places_route_args(): array
             'type' => 'string',
             'required' => false,
         ],
+        'era_slug' => [
+            'type' => 'string',
+            'required' => false,
+        ],
+        'function_key' => [
+            'type' => 'string',
+            'required' => false,
+        ],
         'current_status' => [
             'type' => 'string',
             'required' => false,
@@ -78,21 +86,21 @@ function iss_register_rest_export_places(WP_REST_Request $request): WP_REST_Resp
     $places = iss_register_get_export_places_contracts(
         iss_register_get_place_query_args_from_request($request)
     );
-
-    $response = rest_ensure_response([
-        'generatedAt' => gmdate('c'),
-        'total' => count($places),
-        'places' => array_values($places),
-    ]);
+    $response = rest_ensure_response(
+        iss_register_get_epoch_service()->build_export_document($places)
+    );
 
     $response->header('Content-Disposition', 'attachment; filename="schoeneweide-register-export.json"');
 
     return $response;
 }
 
-function iss_register_rest_get_atlas_places(): WP_REST_Response
+function iss_register_rest_get_atlas_places(WP_REST_Request $request): WP_REST_Response
 {
-    return rest_ensure_response(iss_register_get_atlas_places_data());
+    return rest_ensure_response(iss_register_get_atlas_places_data([
+        'era_slug' => $request->get_param('era_slug'),
+        'function_key' => $request->get_param('function_key'),
+    ]));
 }
 
 function iss_register_rest_get_atlas_context(WP_REST_Request $request): WP_REST_Response
@@ -149,6 +157,16 @@ function iss_register_register_rest_routes(): void
         'methods' => WP_REST_Server::READABLE,
         'callback' => 'iss_register_rest_get_atlas_places',
         'permission_callback' => '__return_true',
+        'args' => [
+            'era_slug' => [
+                'type' => 'string',
+                'required' => false,
+            ],
+            'function_key' => [
+                'type' => 'string',
+                'required' => false,
+            ],
+        ],
     ]);
 
     register_rest_route(ISS_REGISTER_REST_NAMESPACE, '/atlas-context', [

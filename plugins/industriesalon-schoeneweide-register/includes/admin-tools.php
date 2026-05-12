@@ -36,6 +36,8 @@ function iss_register_render_tools_page(): void
 
     $geocode_result = null;
     $geocode_error = '';
+    $epoch_migration_result = null;
+    $epoch_migration_error = '';
 
     if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['iss_register_tools_action'])) {
         $action = sanitize_key((string) wp_unslash($_POST['iss_register_tools_action']));
@@ -53,6 +55,16 @@ function iss_register_render_tools_page(): void
 
             if (($geocode_result['stats']['selected'] ?? 0) === 0) {
                 $geocode_error = 'Keine passenden Register-Orte für diesen Koordinatenlauf gefunden.';
+            }
+        } elseif ($action === 'epoch_seed_migration') {
+            check_admin_referer('iss_register_run_epoch_seed_migration', 'iss_register_epoch_seed_nonce');
+
+            $confirmed_backup = !empty($_POST['confirm_backup']);
+            $confirmed_export = !empty($_POST['confirm_export']);
+            if (!$confirmed_backup || !$confirmed_export) {
+                $epoch_migration_error = 'Vor der Epochensaat bitte Datenbank-Backup und Exportbestaetigung setzen.';
+            } else {
+                $epoch_migration_result = iss_register_get_epoch_service()->run_seed_migration();
             }
         }
     }
@@ -83,6 +95,36 @@ function iss_register_render_tools_page(): void
         echo '<div class="notice notice-error"><p>' . esc_html($geocode_error) . '</p></div>';
     } elseif (is_array($geocode_result)) {
         iss_register_render_coordinate_backfill_result($geocode_result);
+    }
+
+    $epoch_counts = iss_register_get_epoch_service()->get_counts_by_era_and_function();
+    $epoch_total = array_sum((array) ($epoch_counts['eras'] ?? []));
+    $export_url = rest_url(ISS_REGISTER_REST_NAMESPACE . '/export');
+
+    echo '<hr>';
+    echo '<h2>Historische Zeitschichten</h2>';
+    echo '<p>Die Epochen liegen in einer eigenen Tabelle hinter <code>register_place</code>. Bestehende URLs und Ortseintraege bleiben unveraendert.</p>';
+    echo '<p>Gespeicherte Epochen: <strong>' . esc_html((string) $epoch_total) . '</strong></p>';
+    echo '<p><a class="button" href="' . esc_url($export_url) . '">Vollständigen Register-Export herunterladen</a></p>';
+    echo '<form method="post">';
+    wp_nonce_field('iss_register_run_epoch_seed_migration', 'iss_register_epoch_seed_nonce');
+    echo '<input type="hidden" name="iss_register_tools_action" value="epoch_seed_migration">';
+    echo '<p><label><input type="checkbox" name="confirm_backup" value="1"> DB-Backup wurde vorab erstellt.</label></p>';
+    echo '<p><label><input type="checkbox" name="confirm_export" value="1"> Exportdatei wurde vor der Migration erzeugt.</label></p>';
+    submit_button('Historische Start-Epochen erzeugen', 'secondary', 'submit', false);
+    echo '</form>';
+
+    if ($epoch_migration_error !== '') {
+        echo '<div class="notice notice-error"><p>' . esc_html($epoch_migration_error) . '</p></div>';
+    } elseif (is_array($epoch_migration_result)) {
+        $stats = (array) ($epoch_migration_result['stats'] ?? []);
+        echo '<div class="notice notice-success"><p>';
+        echo 'Ausgewählt: ' . esc_html((string) ($stats['selected'] ?? 0));
+        echo ', erzeugt: ' . esc_html((string) ($stats['seeded'] ?? 0));
+        echo ', übersprungen (vorhanden): ' . esc_html((string) ($stats['skipped_existing'] ?? 0));
+        echo ', übersprungen (leer): ' . esc_html((string) ($stats['skipped_empty'] ?? 0));
+        echo ', Fehler: ' . esc_html((string) ($stats['errors'] ?? 0));
+        echo '</p></div>';
     }
 
     echo '</div>';

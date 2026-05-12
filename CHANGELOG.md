@@ -1,5 +1,28 @@
 # Changelog
 
+## 2026-05-12
+- Added historical epoch infrastructure to `plugins/industriesalon-schoeneweide-register` without creating a new public content type:
+  - new epoch storage service in `includes/register-data/epochs.php`
+  - dedicated table `wp_iss_register_place_epochs`
+  - snapshot tracking in post meta for editor saves and migration history
+- Extended the existing `register_place` editor instead of branching the model:
+  - added the `Zeitschichten` meta box in `includes/meta-fields.php`
+  - added lightweight admin assets for managing chronological phase rows
+  - kept persistence behind the shared epoch service with validation and save-error feedback
+- Expanded register contracts and consumers so epoch data is available where it belongs:
+  - summary contracts can expose epoch availability fields
+  - detail contracts now include full `epochs` data
+  - atlas contracts now include `has_epochs` and `epoch_summaries`
+  - single-place `iss/register-place-context` terms output now renders phase rows when epoch data exists
+- Added operational support for the first editorial rollout:
+  - register tools page now exposes a full export download
+  - added a guarded seed-migration action that requires backup and export confirmation
+  - bootstrap summary loading now respects configured area/status limits again instead of loading the full place list unconditionally
+- Verified:
+  - `docker compose exec -T wordpress php -l` on the touched register PHP entry points
+  - `node --check` for `assets/js/register-place-epochs-admin.js`
+  - `docker compose run --rm wpcli iss-register contract-check --allow-root`
+
 ## 2026-05-08
 - Promoted the WF technical/archive material into stronger first-class public surfaces in WordPress content:
   - rebuilt `Elektrotechnik im WF` as a denser editorial gateway instead of a thin placeholder shell

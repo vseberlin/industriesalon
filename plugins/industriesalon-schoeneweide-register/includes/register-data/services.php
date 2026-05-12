@@ -42,6 +42,7 @@ function iss_register_get_meta_contract(): array
     $current_statuses = [];
     $current_use_types = [];
     $tags = [];
+    $epoch_counts = iss_register_get_epoch_service()->get_counts_by_era_and_function();
 
     foreach ($places as $place) {
         if (isset($place['area']) && $place['area'] !== '') {
@@ -53,8 +54,9 @@ function iss_register_get_meta_contract(): array
         if (isset($place['role']) && $place['role'] !== '') {
             $roles[$place['role']] = ($roles[$place['role']] ?? 0) + 1;
         }
-        if (isset($place['current_status']) && $place['current_status'] !== '') {
-            $current_statuses[$place['current_status']] = ($current_statuses[$place['current_status']] ?? 0) + 1;
+        $current_status = isset($place['normalized_current_status']) ? (string) $place['normalized_current_status'] : '';
+        if ($current_status !== '') {
+            $current_statuses[$current_status] = ($current_statuses[$current_status] ?? 0) + 1;
         }
         if (isset($place['current_use_type']) && $place['current_use_type'] !== '') {
             $current_use_types[$place['current_use_type']] = ($current_use_types[$place['current_use_type']] ?? 0) + 1;
@@ -84,5 +86,25 @@ function iss_register_get_meta_contract(): array
         'current_statuses' => $current_statuses,
         'current_use_types' => $current_use_types,
         'tags' => $tags,
+        'eras' => array_map(static function (array $definition): array {
+            return [
+                'slug' => (string) ($definition['slug'] ?? ''),
+                'name' => (string) ($definition['name'] ?? ''),
+                'caption' => (string) ($definition['caption'] ?? ''),
+            ];
+        }, array_values(iss_register_get_epoch_service()->get_era_definitions())),
+        'epoch_functions' => array_map(static function (array $definition): array {
+            return [
+                'key' => (string) ($definition['key'] ?? ''),
+                'label' => (string) ($definition['label'] ?? ''),
+            ];
+        }, array_values(iss_register_get_epoch_function_definitions())),
+        'epoch_source_confidence' => array_map(static function (array $definition): array {
+            return [
+                'key' => (string) ($definition['key'] ?? ''),
+                'label' => (string) ($definition['label'] ?? ''),
+            ];
+        }, array_values(iss_register_get_epoch_source_confidence_definitions())),
+        'epoch_counts' => $epoch_counts,
     ];
 }

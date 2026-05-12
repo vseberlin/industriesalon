@@ -51,6 +51,9 @@ function iss_register_run_contract_smoke_check(): array
 {
     $checks = [];
     $summary_fields = iss_register_get_summary_contract_field_names();
+    $detail_fields = function_exists('iss_register_get_detail_contract_field_names')
+        ? iss_register_get_detail_contract_field_names()
+        : [];
     $summary_places = iss_register_get_summary_places_contracts();
     $summary_place = is_array($summary_places[0] ?? null) ? $summary_places[0] : [];
     $detail_forbidden_in_summary = [
@@ -95,7 +98,9 @@ function iss_register_run_contract_smoke_check(): array
     $checks[] = iss_register_contract_check_result(
         'detail-shape',
         !empty($detail_place)
+            && iss_register_contract_has_exact_keys($detail_place, $detail_fields)
             && iss_register_contract_has_keys($detail_place, ['size', 'history', 'current', 'source_links', 'related_objects'])
+            && iss_register_contract_has_no_keys($detail_place, ['icon', 'color', 'kaufpreis', 'sort_order'])
             && is_array($detail_place['related_objects']),
         !empty($detail_place) ? '' : 'No detail place available.'
     );

@@ -86,7 +86,7 @@ function iss_register_map_place_entity(WP_Post $post): array
     $document_images = iss_register_filter_public_images(iss_register_get_meta_value($post_id, 'document_images', []));
     $featured_image_url = get_the_post_thumbnail_url($post, 'large');
 
-    return [
+    $place = [
         'id' => $register_id,
         'post_id' => $post_id,
         'slug' => (string) $post->post_name,
@@ -112,9 +112,11 @@ function iss_register_map_place_entity(WP_Post $post): array
         'branche' => (string) iss_register_get_meta_value($post_id, 'industry', ''),
         'kaufpreis' => (string) iss_register_get_meta_value($post_id, 'legacy_kaufpreis', ''),
         'vornutzung' => (string) iss_register_get_meta_value($post_id, 'previous_use', ''),
+        'history_short' => (string) iss_register_get_meta_value($post_id, 'history_short', ''),
         'history' => (string) iss_register_get_meta_value($post_id, 'history_long', ''),
         'current' => (string) iss_register_get_meta_value($post_id, 'current_use', ''),
         'sources' => (string) iss_register_get_meta_value($post_id, 'source_summary', ''),
+        'source_summary' => (string) iss_register_get_meta_value($post_id, 'source_summary', ''),
         'source_links' => $source_links,
         'website' => $website,
         'questions' => $questions,
@@ -127,6 +129,22 @@ function iss_register_map_place_entity(WP_Post $post): array
         'lng' => iss_register_get_meta_value($post_id, 'lng', ''),
         'sort_order' => (int) iss_register_get_meta_value($post_id, 'sort_order', 0),
     ];
+
+    if (function_exists('iss_register_detect_current_status')) {
+        $normalized_current_status = iss_register_detect_current_status($place);
+
+        $place['normalized_current_status'] = (string) ($normalized_current_status['key'] ?? '');
+        $place['normalized_current_status_label'] = (string) ($normalized_current_status['label'] ?? '');
+        $place['normalized_current_status_caption'] = (string) ($normalized_current_status['caption'] ?? '');
+        $place['normalized_current_status_source'] = (string) ($normalized_current_status['source'] ?? '');
+    } else {
+        $place['normalized_current_status'] = (string) ($place['current_status'] ?? '');
+        $place['normalized_current_status_label'] = '';
+        $place['normalized_current_status_caption'] = '';
+        $place['normalized_current_status_source'] = $place['current_status'] !== '' ? 'meta' : '';
+    }
+
+    return $place;
 }
 
 function iss_register_sort_place_entities_default(array &$places): void
@@ -180,6 +198,15 @@ function iss_register_read_place_entities_from_cpt(): array
         }
 
         $places[] = iss_register_map_place_entity($post);
+    }
+
+    $epochs_by_place = iss_register_get_epoch_service()->get_epochs_for_places(array_map(static function (array $place): int {
+        return (int) ($place['post_id'] ?? 0);
+    }, $places));
+
+    foreach ($places as $index => $place) {
+        $post_id = (int) ($place['post_id'] ?? 0);
+        $places[$index] = iss_register_enrich_place_with_epochs($place, $epochs_by_place[$post_id] ?? []);
     }
 
     iss_register_sort_place_entities_default($places);
