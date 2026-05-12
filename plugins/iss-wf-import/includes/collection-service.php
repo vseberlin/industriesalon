@@ -126,7 +126,7 @@ class ISS_WF_Import_Collection_Service
 
     public function sync_collection_post(int $post_id): void
     {
-        $snapshot = $this->build_legacy_snapshot($post_id);
+        $snapshot = $this->build_snapshot($post_id);
         if (!$snapshot) {
             return;
         }
@@ -174,20 +174,20 @@ class ISS_WF_Import_Collection_Service
         }
 
         $member_rows = $this->get_member_rows((int) $row['id']);
-        if (!$member_rows && $this->legacy_collection_has_member_payload($post_id)) {
-            $this->projection_cache[$post_id] = null;
-            return null;
+        if (!$member_rows && $this->collection_has_member_payload($post_id)) {
+            $this->sync_collection_post($post_id);
+            $member_rows = $this->get_member_rows((int) $row['id']);
         }
 
         $items = [];
         $children = [];
         foreach ($member_rows as $member_row) {
             if (($member_row['member_kind'] ?? '') === 'collection') {
-                $children[] = $this->map_member_row_to_legacy_child($member_row);
+                $children[] = $this->map_member_row_to_child_item($member_row);
                 continue;
             }
 
-            $items[] = $this->map_member_row_to_legacy_object_item($member_row);
+            $items[] = $this->map_member_row_to_object_item($member_row);
         }
 
         $projection = [
@@ -228,7 +228,7 @@ class ISS_WF_Import_Collection_Service
         }
 
         $items = iss_wf_import_sanitize_collection_items($items);
-        $snapshot = $this->build_legacy_snapshot($post_id);
+        $snapshot = $this->build_snapshot($post_id);
         if (!$snapshot) {
             return false;
         }
@@ -246,13 +246,13 @@ class ISS_WF_Import_Collection_Service
         }
 
         $this->replace_member_rows($collection_id, $snapshot, $timestamp);
-        $this->project_snapshot_to_legacy_meta($post_id, $snapshot);
+        $this->project_snapshot_to_meta($post_id, $snapshot);
         unset($this->projection_cache[$post_id]);
 
         return true;
     }
 
-    protected function build_legacy_snapshot(int $post_id): ?array
+    protected function build_snapshot(int $post_id): ?array
     {
         $post = get_post($post_id);
         if (!$post instanceof WP_Post || $post->post_type !== ISS_WF_IMPORT_COLLECTION_POST_TYPE) {
@@ -290,7 +290,7 @@ class ISS_WF_Import_Collection_Service
         ];
     }
 
-    protected function project_snapshot_to_legacy_meta(int $post_id, array $snapshot): void
+    protected function project_snapshot_to_meta(int $post_id, array $snapshot): void
     {
         update_post_meta(
             $post_id,
@@ -470,7 +470,7 @@ class ISS_WF_Import_Collection_Service
         return is_array($rows) ? $rows : [];
     }
 
-    protected function map_member_row_to_legacy_object_item(array $row): array
+    protected function map_member_row_to_object_item(array $row): array
     {
         return [
             'object_id' => absint($row['member_post_id'] ?? 0),
@@ -483,7 +483,7 @@ class ISS_WF_Import_Collection_Service
         ];
     }
 
-    protected function map_member_row_to_legacy_child(array $row): array
+    protected function map_member_row_to_child_item(array $row): array
     {
         return [
             'collection_id' => absint($row['member_post_id'] ?? 0),
@@ -547,7 +547,7 @@ class ISS_WF_Import_Collection_Service
         return substr($value, 0, $limit);
     }
 
-    protected function legacy_collection_has_member_payload(int $post_id): bool
+    protected function collection_has_member_payload(int $post_id): bool
     {
         $items = get_post_meta($post_id, ISS_WF_IMPORT_COLLECTION_ITEMS_META, true);
         if (is_array($items) && $items) {
@@ -631,11 +631,11 @@ if (defined('WP_CLI') && WP_CLI) {
             $total_child_rows = 0;
 
             foreach ($post_ids as $post_id) {
-                $legacy_items = get_post_meta((int) $post_id, ISS_WF_IMPORT_COLLECTION_ITEMS_META, true);
-                $legacy_children = get_post_meta((int) $post_id, ISS_WF_IMPORT_COLLECTION_CHILDREN_META, true);
+                $projected_items = get_post_meta((int) $post_id, ISS_WF_IMPORT_COLLECTION_ITEMS_META, true);
+                $projected_children = get_post_meta((int) $post_id, ISS_WF_IMPORT_COLLECTION_CHILDREN_META, true);
 
-                $legacy_items = iss_wf_import_sanitize_collection_items(is_array($legacy_items) ? $legacy_items : []);
-                $legacy_children = iss_wf_import_sanitize_collection_children(is_array($legacy_children) ? $legacy_children : []);
+                $projected_items = iss_wf_import_sanitize_collection_items(is_array($projected_items) ? $projected_items : []);
+                $projected_children = iss_wf_import_sanitize_collection_children(is_array($projected_children) ? $projected_children : []);
 
                 $projection = $service->get_projection_for_post((int) $post_id);
                 if (!is_array($projection)) {
@@ -649,12 +649,12 @@ if (defined('WP_CLI') && WP_CLI) {
                 $total_item_rows += count($canonical_items);
                 $total_child_rows += count($canonical_children);
 
-                if ($legacy_items !== $canonical_items) {
-                    $errors[] = sprintf('Collection %d object members do not match legacy meta.', (int) $post_id);
+                if ($projected_items !== $canonical_items) {
+                    $errors[] = sprintf('Collection %d object members do not match the projected collection state.', (int) $post_id);
                 }
 
-                if ($legacy_children !== $canonical_children) {
-                    $errors[] = sprintf('Collection %d child members do not match legacy meta.', (int) $post_id);
+                if ($projected_children !== $canonical_children) {
+                    $errors[] = sprintf('Collection %d child members do not match the projected collection state.', (int) $post_id);
                 }
             }
 

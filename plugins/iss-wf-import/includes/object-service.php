@@ -119,7 +119,7 @@ class ISS_WF_Import_Object_Service
 
     public function sync_object_post(int $post_id): void
     {
-        $snapshot = $this->build_legacy_snapshot($post_id);
+        $snapshot = $this->build_snapshot($post_id);
         if (!$snapshot) {
             return;
         }
@@ -232,7 +232,7 @@ class ISS_WF_Import_Object_Service
         return absint($post_id);
     }
 
-    protected function build_legacy_snapshot(int $post_id): ?array
+    protected function build_snapshot(int $post_id): ?array
     {
         $post = get_post($post_id);
         if (!$post instanceof WP_Post || $post->post_type !== ISS_WF_IMPORT_OBJECT_POST_TYPE) {

@@ -720,13 +720,13 @@ class ISS_WF_Import_Import_Service
             'wf_gallery_object' => [
                 'source_key' => 'wf-gallery',
                 'label' => 'WF gallery',
-                'source_kind' => 'legacy_gallery',
+                'source_kind' => 'gallery_archive',
                 'base_url' => '',
             ],
             'wf-gallery-object' => [
                 'source_key' => 'wf-gallery',
                 'label' => 'WF gallery',
-                'source_kind' => 'legacy_gallery',
+                'source_kind' => 'gallery_archive',
                 'base_url' => '',
             ],
             'local-curated-object' => [

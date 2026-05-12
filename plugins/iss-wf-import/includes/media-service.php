@@ -102,7 +102,7 @@ class ISS_WF_Import_Media_Service
 
     public function sync_object_media(int $post_id): void
     {
-        $snapshot = $this->build_legacy_snapshot($post_id);
+        $snapshot = $this->build_snapshot($post_id);
         if (!$snapshot) {
             return;
         }
@@ -148,14 +148,14 @@ class ISS_WF_Import_Media_Service
         }
 
         $media_rows = $this->get_media_rows((int) $object_row['id']);
-        if (!$media_rows && $this->legacy_media_has_payload($post_id)) {
-            $this->projection_cache[$post_id] = null;
-            return null;
+        if (!$media_rows && $this->media_has_payload($post_id)) {
+            $this->sync_object_media($post_id);
+            $media_rows = $this->get_media_rows((int) $object_row['id']);
         }
 
         $projection = [
             'object' => $object_row,
-            'media' => array_map([$this, 'map_media_row_to_legacy_image'], $media_rows),
+            'media' => array_map([$this, 'map_media_row_to_image'], $media_rows),
         ];
 
         $this->projection_cache[$post_id] = $projection;
@@ -175,7 +175,7 @@ class ISS_WF_Import_Media_Service
         return $this->get_projection_for_post($post_id);
     }
 
-    protected function build_legacy_snapshot(int $post_id): ?array
+    protected function build_snapshot(int $post_id): ?array
     {
         $post = get_post($post_id);
         if (!$post instanceof WP_Post || $post->post_type !== ISS_WF_IMPORT_OBJECT_POST_TYPE) {
@@ -268,7 +268,7 @@ class ISS_WF_Import_Media_Service
         return is_array($rows) ? $rows : [];
     }
 
-    protected function map_media_row_to_legacy_image(array $row): array
+    protected function map_media_row_to_image(array $row): array
     {
         return [
             'source_id' => absint($row['source_media_id'] ?? 0),
@@ -312,7 +312,7 @@ class ISS_WF_Import_Media_Service
         return hash('sha256', $url);
     }
 
-    protected function legacy_media_has_payload(int $post_id): bool
+    protected function media_has_payload(int $post_id): bool
     {
         $images = get_post_meta($post_id, ISS_WF_IMPORT_OBJECT_IMAGE_SOURCE_META, true);
         $images = iss_wf_import_sanitize_archive_image_sources(is_array($images) ? $images : []);
@@ -394,28 +394,30 @@ if (defined('WP_CLI') && WP_CLI) {
                     continue;
                 }
 
-                $legacy_images = get_post_meta((int) $post_id, ISS_WF_IMPORT_OBJECT_IMAGE_SOURCE_META, true);
-                $legacy_images = iss_wf_import_sanitize_archive_image_sources(is_array($legacy_images) ? $legacy_images : []);
-
                 $projection = $service->get_projection_for_post((int) $post_id);
-                if ($legacy_images && !is_array($projection)) {
-                    $errors[] = sprintf('Object %d has legacy media but no canonical projection.', (int) $post_id);
+                if (!is_array($projection)) {
+                    $errors[] = sprintf('Object %d has no canonical media projection.', (int) $post_id);
                     continue;
                 }
 
-                $canonical_images = is_array($projection)
-                    ? iss_wf_import_sanitize_archive_image_sources((array) ($projection['media'] ?? []))
-                    : [];
+                $canonical_images = iss_wf_import_sanitize_archive_image_sources((array) ($projection['media'] ?? []));
+                foreach ($canonical_images as $image) {
+                    if (
+                        empty($image['source_url'])
+                        && absint($image['attachment_id'] ?? 0) <= 0
+                        && absint($image['preview_attachment_id'] ?? 0) <= 0
+                    ) {
+                        $errors[] = sprintf('Object %d has a media row without any usable asset reference.', (int) $post_id);
+                        continue 2;
+                    }
+                }
 
-                if ($legacy_images !== $canonical_images) {
-                    $errors[] = sprintf('Object %d media rows do not match legacy data.', (int) $post_id);
+                if (!$canonical_images) {
                     continue;
                 }
 
-                if ($canonical_images) {
-                    $verified_posts++;
-                    $verified_items += count($canonical_images);
-                }
+                $verified_posts++;
+                $verified_items += count($canonical_images);
             }
 
             if ($errors) {

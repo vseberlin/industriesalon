@@ -107,7 +107,7 @@ class ISS_WF_Import_Relation_Service
 
     public function sync_object_relations(int $post_id): void
     {
-        $snapshot = $this->build_legacy_snapshot($post_id);
+        $snapshot = $this->build_snapshot($post_id);
         if (!$snapshot) {
             return;
         }
@@ -153,9 +153,9 @@ class ISS_WF_Import_Relation_Service
         }
 
         $rows = $this->get_relation_rows((int) $object_row['id']);
-        if (!$rows && $this->legacy_relation_has_payload($post_id)) {
-            $this->projection_cache[$post_id] = null;
-            return null;
+        if (!$rows && $this->relation_has_payload($post_id)) {
+            $this->sync_object_relations($post_id);
+            $rows = $this->get_relation_rows((int) $object_row['id']);
         }
 
         $projection = [
@@ -288,7 +288,7 @@ class ISS_WF_Import_Relation_Service
         return $this->normalize_local_place_relations($relations);
     }
 
-    protected function build_legacy_snapshot(int $post_id): ?array
+    protected function build_snapshot(int $post_id): ?array
     {
         $post = get_post($post_id);
         if (!$post instanceof WP_Post || $post->post_type !== ISS_WF_IMPORT_OBJECT_POST_TYPE) {
@@ -678,7 +678,7 @@ class ISS_WF_Import_Relation_Service
         return number_format(round((float) $value, 7), 7, '.', '');
     }
 
-    protected function legacy_relation_has_payload(int $post_id): bool
+    protected function relation_has_payload(int $post_id): bool
     {
         foreach ([
             ISS_WF_IMPORT_OBJECT_TAGS_META,
@@ -803,7 +803,7 @@ if (defined('WP_CLI') && WP_CLI) {
                     continue;
                 }
 
-                $legacy = [
+                $projected = [
                     'tags' => iss_wf_import_sanitize_archive_named_refs((array) get_post_meta((int) $post_id, ISS_WF_IMPORT_OBJECT_TAGS_META, true)),
                     'collections' => iss_wf_import_sanitize_archive_named_refs((array) get_post_meta((int) $post_id, ISS_WF_IMPORT_OBJECT_COLLECTIONS_META, true)),
                     'series' => iss_wf_import_sanitize_archive_named_refs((array) get_post_meta((int) $post_id, ISS_WF_IMPORT_OBJECT_SERIES_META, true)),
@@ -815,8 +815,8 @@ if (defined('WP_CLI') && WP_CLI) {
                 ];
 
                 $projection = $service->get_projection_for_post((int) $post_id);
-                if (!$projection && array_filter($legacy)) {
-                    $errors[] = sprintf('Object %d has legacy relations but no canonical projection.', (int) $post_id);
+                if (!$projection && array_filter($projected)) {
+                    $errors[] = sprintf('Object %d has projected relations but no canonical projection.', (int) $post_id);
                     continue;
                 }
 
@@ -840,9 +840,9 @@ if (defined('WP_CLI') && WP_CLI) {
                     'local_places' => [],
                 ];
 
-                foreach ($legacy as $key => $value) {
+                foreach ($projected as $key => $value) {
                     if ($canonical[$key] !== $value) {
-                        $errors[] = sprintf('Object %d relation group %s does not match legacy data.', (int) $post_id, $key);
+                        $errors[] = sprintf('Object %d relation group %s does not match the projected relation state.', (int) $post_id, $key);
                         continue 2;
                     }
                 }

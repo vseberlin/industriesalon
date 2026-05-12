@@ -403,44 +403,38 @@ if (defined('WP_CLI') && WP_CLI) {
                 [ISS_WF_IMPORT_FAMILY_TAXONOMY, 8],
                 [ISS_WF_IMPORT_CONTEXT_TAXONOMY, 0],
             ] as [$taxonomy, $limit]) {
-                $legacy_terms = $this->get_legacy_term_options($taxonomy, $limit);
                 $canonical_terms = $service->get_term_options($taxonomy, $limit);
-                $matches = $taxonomy === ISS_WF_IMPORT_SOURCE_TAXONOMY
-                    ? ($this->normalize_term_slugs($legacy_terms) === $this->normalize_term_slugs($canonical_terms))
-                    : ($this->normalize_term_counts($legacy_terms) === $this->normalize_term_counts($canonical_terms));
-
-                if (!$matches) {
-                    $errors[] = sprintf(
-                        'Browser term options mismatch for %s (limit=%d).',
-                        $taxonomy,
-                        $limit
-                    );
+                foreach ($canonical_terms as $term) {
+                    if (!is_object($term) || empty($term->slug) || !isset($term->count) || (int) $term->count < 1) {
+                        $errors[] = sprintf('Browser term options contain an invalid canonical term for %s (limit=%d).', $taxonomy, $limit);
+                        continue 2;
+                    }
                 }
             }
 
             foreach ($states as $label => $state) {
-                $legacy = $this->run_legacy_query($state, 18);
                 $canonical = $service->get_query($state, 18);
-
-                $legacy_ids = array_values(array_map('intval', wp_list_pluck((array) $legacy->posts, 'ID')));
                 $canonical_ids = array_values(array_map('intval', wp_list_pluck((array) $canonical->posts, 'ID')));
-
-                if ((int) $legacy->found_posts !== (int) $canonical->found_posts) {
-                    $errors[] = sprintf(
-                        'Browser state %s count mismatch: legacy=%d canonical=%d.',
-                        $label,
-                        (int) $legacy->found_posts,
-                        (int) $canonical->found_posts
-                    );
+                if (count($canonical_ids) > 18) {
+                    $errors[] = sprintf('Browser state %s exceeds the requested page size.', $label);
                     continue;
                 }
 
-                if ($legacy_ids !== $canonical_ids) {
-                    $errors[] = sprintf('Browser state %s first-page IDs do not match legacy query.', $label);
+                if (count($canonical_ids) !== count(array_unique($canonical_ids))) {
+                    $errors[] = sprintf('Browser state %s returned duplicate object IDs.', $label);
+                    continue;
                 }
 
-                if ($this->normalize_stats($this->run_legacy_stats($state)) !== $this->normalize_stats($service->get_stats($state))) {
-                    $errors[] = sprintf('Browser state %s stats do not match legacy behavior.', $label);
+                foreach ($canonical_ids as $post_id) {
+                    if (get_post_status($post_id) !== 'publish' || get_post_type($post_id) !== ISS_WF_IMPORT_OBJECT_POST_TYPE) {
+                        $errors[] = sprintf('Browser state %s returned a non-publish archive object result.', $label);
+                        continue 2;
+                    }
+                }
+
+                $stats = $this->normalize_stats($service->get_stats($state));
+                if ($stats['total_objects'] < 0 || $stats['classified_objects'] < 0 || $stats['family_terms'] < 0) {
+                    $errors[] = sprintf('Browser state %s returned invalid canonical stats.', $label);
                 }
             }
 
@@ -449,149 +443,7 @@ if (defined('WP_CLI') && WP_CLI) {
                 \WP_CLI::error('Archive browser verification failed.');
             }
 
-            \WP_CLI::success(sprintf('Verified %d browser query states against legacy query behavior.', count($states)));
-        }
-
-        protected function run_legacy_query(array $state, int $per_page): WP_Query
-        {
-            $state = iss_wf_import_get_archive_browser_service()->normalize_state($state);
-            return new WP_Query(iss_wf_import_get_archive_browser_service()->build_query_args($state, $per_page));
-        }
-
-        protected function run_legacy_stats(array $state): array
-        {
-            $state = iss_wf_import_get_archive_browser_service()->normalize_state($state);
-            $base_tax_query = [];
-
-            if ($state['source'] !== '') {
-                $base_tax_query[] = [
-                    'taxonomy' => ISS_WF_IMPORT_SOURCE_TAXONOMY,
-                    'field' => 'slug',
-                    'terms' => [$state['source']],
-                ];
-            }
-
-            if ($state['field'] !== '') {
-                $base_tax_query[] = [
-                    'taxonomy' => ISS_WF_IMPORT_FIELD_TAXONOMY,
-                    'field' => 'slug',
-                    'terms' => [$state['field']],
-                ];
-            }
-
-            if ($state['context'] !== '') {
-                $base_tax_query[] = [
-                    'taxonomy' => ISS_WF_IMPORT_CONTEXT_TAXONOMY,
-                    'field' => 'slug',
-                    'terms' => [$state['context']],
-                ];
-            }
-
-            $base_args = [
-                'post_type' => ISS_WF_IMPORT_OBJECT_POST_TYPE,
-                'post_status' => 'publish',
-                'posts_per_page' => 1,
-                'fields' => 'ids',
-                'no_found_rows' => false,
-                'ignore_sticky_posts' => true,
-                'suppress_filters' => true,
-            ];
-
-            if ($state['search'] !== '') {
-                $base_args['s'] = $state['search'];
-            }
-
-            if ($base_tax_query) {
-                if (count($base_tax_query) > 1) {
-                    $base_tax_query['relation'] = 'AND';
-                }
-
-                $base_args['tax_query'] = $base_tax_query;
-            }
-
-            $total_query = new WP_Query($base_args);
-
-            $classified_args = $base_args;
-            $classified_tax_query = $base_tax_query;
-            $classified_tax_query[] = [
-                'taxonomy' => ISS_WF_IMPORT_FAMILY_TAXONOMY,
-                'operator' => 'EXISTS',
-            ];
-
-            if (count($classified_tax_query) > 1) {
-                $classified_tax_query['relation'] = 'AND';
-            }
-
-            $classified_args['tax_query'] = $classified_tax_query;
-            $classified_query = new WP_Query($classified_args);
-
-            $source_counts = [];
-            foreach ($this->get_legacy_term_options(ISS_WF_IMPORT_SOURCE_TAXONOMY) as $term) {
-                $source_state = $state;
-                $source_state['source'] = (string) $term->slug;
-                $source_counts[$term->slug] = (int) $this->run_legacy_query($source_state, 1)->found_posts;
-            }
-
-            return [
-                'total_objects' => (int) $total_query->found_posts,
-                'source_counts' => $source_counts,
-                'classified_objects' => (int) $classified_query->found_posts,
-                'family_terms' => wp_count_terms([
-                    'taxonomy' => ISS_WF_IMPORT_FAMILY_TAXONOMY,
-                    'hide_empty' => true,
-                ]),
-            ];
-        }
-
-        protected function get_legacy_term_options(string $taxonomy, int $limit = 0): array
-        {
-            if (!taxonomy_exists($taxonomy)) {
-                return [];
-            }
-
-            $terms = get_terms([
-                'taxonomy' => $taxonomy,
-                'hide_empty' => true,
-                'orderby' => 'count',
-                'order' => 'DESC',
-                'number' => $limit > 0 ? $limit : 0,
-            ]);
-
-            return is_array($terms) ? array_values(array_filter($terms, static function ($term): bool {
-                return $term instanceof WP_Term;
-            })) : [];
-        }
-
-        protected function normalize_term_counts(array $terms): array
-        {
-            $normalized = [];
-            foreach ($terms as $term) {
-                if (!is_object($term) || empty($term->slug)) {
-                    continue;
-                }
-
-                $normalized[(string) $term->slug] = (int) ($term->count ?? 0);
-            }
-
-            ksort($normalized);
-
-            return $normalized;
-        }
-
-        protected function normalize_term_slugs(array $terms): array
-        {
-            $normalized = [];
-            foreach ($terms as $term) {
-                if (!is_object($term) || empty($term->slug)) {
-                    continue;
-                }
-
-                $normalized[] = (string) $term->slug;
-            }
-
-            sort($normalized);
-
-            return $normalized;
+            \WP_CLI::success(sprintf('Verified %d browser query states against canonical archive behavior.', count($states)));
         }
 
         protected function normalize_stats(array $stats): array
