@@ -40,6 +40,7 @@
   var HISTORICAL_NO_DATA_KEY = 'no_data';
   var ERA_FILTER_CONTEXT_ONLY = true;
   var DEFAULT_ACTOR_LABEL = 'Alle Akteure';
+  var DEFAULT_RELATION_MAP_URL = '/wp-content/themes/industriesalon/assets/maps/schoneweide-static-map-big.png';
   var UNKNOWN_EPOCH_SUMMARY =
     'Für diesen Ort liegen im gewählten Zeitfenster bisher keine gesicherten historischen Nachweise vor. Wenn Sie historische Dokumente, Fotos oder andere Objekte haben, freuen wir uns über Ihre Kontaktaufnahme.';
   var ATLAS_AREAS = {
@@ -155,6 +156,12 @@
     }
 
     return CARTO_BASEMAP;
+  }
+
+  function getStaticRelationMapUrl() {
+    var config = window.industriesalonSchoneweide || {};
+    var configured = text(config.relationStaticMapUrl);
+    return configured ? relativeUrl(configured) : DEFAULT_RELATION_MAP_URL;
   }
 
   function createElement(tagName, className, textValue) {
@@ -453,6 +460,501 @@
     }
 
     return text(place.summary);
+  }
+
+  function toRadians(value) {
+    return (value * Math.PI) / 180;
+  }
+
+  function distanceMeters(left, right) {
+    if (
+      !left
+      || !right
+      || !Number.isFinite(left.lat)
+      || !Number.isFinite(left.lng)
+      || !Number.isFinite(right.lat)
+      || !Number.isFinite(right.lng)
+    ) {
+      return Number.POSITIVE_INFINITY;
+    }
+
+    var earthRadius = 6371000;
+    var dLat = toRadians(right.lat - left.lat);
+    var dLng = toRadians(right.lng - left.lng);
+    var lat1 = toRadians(left.lat);
+    var lat2 = toRadians(right.lat);
+    var sinLat = Math.sin(dLat / 2);
+    var sinLng = Math.sin(dLng / 2);
+    var a = (sinLat * sinLat) + (Math.cos(lat1) * Math.cos(lat2) * sinLng * sinLng);
+    var c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+
+    return earthRadius * c;
+  }
+
+  function formatDistanceLabel(value) {
+    if (!Number.isFinite(value)) {
+      return EMPTY;
+    }
+
+    if (value < 1000) {
+      return Math.round(value) + ' m entfernt';
+    }
+
+    return (Math.round((value / 1000) * 10) / 10).toFixed(1).replace('.', ',') + ' km entfernt';
+  }
+
+  function uniqueList(values) {
+    var seen = {};
+    var result = [];
+
+    (Array.isArray(values) ? values : []).forEach(function (value) {
+      var key = text(value).toLowerCase();
+      if (!key || seen[key]) {
+        return;
+      }
+
+      seen[key] = true;
+      result.push(key);
+    });
+
+    return result;
+  }
+
+  function intersectList(left, right) {
+    var rightSet = {};
+    var result = [];
+
+    uniqueList(right).forEach(function (value) {
+      rightSet[value] = true;
+    });
+
+    uniqueList(left).forEach(function (value) {
+      if (rightSet[value]) {
+        result.push(value);
+      }
+    });
+
+    return result;
+  }
+
+  function getEraSlugsForPlace(place) {
+    var fromEpochs = Array.isArray(place.epoch_summaries)
+      ? place.epoch_summaries.map(function (epoch) { return text(epoch.era_slug); }).filter(Boolean)
+      : [];
+
+    if (fromEpochs.length) {
+      return uniqueList(fromEpochs);
+    }
+
+    if (Array.isArray(place.explicit_era_slugs) && place.explicit_era_slugs.length) {
+      return uniqueList(place.explicit_era_slugs);
+    }
+
+    if (text(place.era_slug)) {
+      return [text(place.era_slug)];
+    }
+
+    return [];
+  }
+
+  function getEpochForEra(place, eraSlug) {
+    if (!eraSlug || !Array.isArray(place.epoch_summaries)) {
+      return null;
+    }
+
+    var matches = place.epoch_summaries.filter(function (epoch) {
+      return text(epoch.era_slug) === eraSlug;
+    });
+
+    if (!matches.length) {
+      return null;
+    }
+
+    var withSummary = matches.find(function (epoch) {
+      return text(epoch.summary) || text(epoch.phase_name);
+    });
+
+    return withSummary || matches[0];
+  }
+
+  function getEpochFunctionKeys(place, eraSlug) {
+    if (!Array.isArray(place.epoch_summaries) || !place.epoch_summaries.length) {
+      return [];
+    }
+
+    if (eraSlug) {
+      var single = getEpochForEra(place, eraSlug);
+      return single && text(single.function_key) ? [text(single.function_key)] : [];
+    }
+
+    return uniqueList(place.epoch_summaries.map(function (epoch) {
+      return text(epoch.function_key);
+    }).filter(Boolean));
+  }
+
+  function getPublicationIds(place) {
+    if (!Array.isArray(place.related_publications) || !place.related_publications.length) {
+      return [];
+    }
+
+    return uniqueList(place.related_publications.map(function (publication) {
+      return String(Number.parseInt(publication.id, 10) || 0);
+    }).filter(function (value) {
+      return value !== '0';
+    }));
+  }
+
+  function getAllActorKeys(place) {
+    if (Array.isArray(place.industry_actor_relations) && place.industry_actor_relations.length) {
+      return uniqueList(place.industry_actor_relations.map(function (relation) {
+        return text(relation.actor_key);
+      }).filter(Boolean));
+    }
+
+    return uniqueList(place.industry_actor_keys || []);
+  }
+
+  function mapEraNames(state, eraSlugs) {
+    return eraSlugs.map(function (slug) {
+      if (state.eraMap[slug]) {
+        return state.eraMap[slug].name || state.eraMap[slug].legacyLabel || slug;
+      }
+
+      return slug;
+    });
+  }
+
+  function buildSpatialRelations(selectedPlace, places, state) {
+    var selectedActors = state.activeEra
+      ? getActorKeysForEra(selectedPlace, state.era)
+      : getAllActorKeys(selectedPlace);
+
+    return places
+      .filter(function (place) {
+        return place.post_id !== selectedPlace.post_id;
+      })
+      .map(function (place) {
+        var distance = distanceMeters(selectedPlace, place);
+        if (!Number.isFinite(distance)) {
+          return null;
+        }
+
+        var placeActors = state.activeEra
+          ? getActorKeysForEra(place, state.era)
+          : getAllActorKeys(place);
+        var sharedActors = intersectList(selectedActors, placeActors);
+        var sharedUseType = text(selectedPlace.current_use_type) !== EMPTY
+          && text(selectedPlace.current_use_type) === text(place.current_use_type);
+        var score = Math.max(0, 4200 - Math.min(distance, 4200)) / 480;
+
+        if (sharedActors.length) {
+          score += sharedActors.length * 1.7;
+        }
+        if (sharedUseType) {
+          score += 0.6;
+        }
+
+        var parts = [formatDistanceLabel(distance)];
+        if (sharedActors.length) {
+          parts.push('Akteur: ' + sharedActors.map(function (key) {
+            return actorFilterLabel(state, key);
+          }).join(', '));
+        }
+        if (sharedUseType) {
+          parts.push('ähnliche heutige Nutzung');
+        }
+
+        return {
+          place: place,
+          score: score,
+          meta: parts.filter(Boolean).join(' · ')
+        };
+      })
+      .filter(Boolean)
+      .sort(function (left, right) {
+        if (right.score !== left.score) {
+          return right.score - left.score;
+        }
+
+        return text(left.place.name).localeCompare(text(right.place.name), 'de');
+      })
+      .slice(0, 4);
+  }
+
+  function buildTemporalRelations(selectedPlace, places, state) {
+    var selectedEraSlugs = getEraSlugsForPlace(selectedPlace);
+    var selectedActiveEpoch = state.activeEra ? getEpochForEra(selectedPlace, state.era) : null;
+    var selectedFunctions = getEpochFunctionKeys(selectedPlace, state.activeEra ? state.era : EMPTY);
+
+    return places
+      .filter(function (place) {
+        return place.post_id !== selectedPlace.post_id;
+      })
+      .map(function (place) {
+        var placeEraSlugs = getEraSlugsForPlace(place);
+        var sharedEras = intersectList(selectedEraSlugs, placeEraSlugs);
+        var activeEpoch = state.activeEra ? getEpochForEra(place, state.era) : null;
+        var placeFunctions = getEpochFunctionKeys(place, state.activeEra ? state.era : EMPTY);
+        var sharedFunctions = intersectList(selectedFunctions, placeFunctions);
+        var score = sharedEras.length * 1.2;
+
+        if (state.activeEra && sharedEras.indexOf(state.era) === -1) {
+          return null;
+        }
+
+        if (sharedFunctions.length) {
+          score += sharedFunctions.length * 1.5;
+        }
+
+        if (selectedActiveEpoch && activeEpoch) {
+          var selectedStart = Number.isFinite(selectedActiveEpoch.start_year) ? selectedActiveEpoch.start_year : null;
+          var selectedEnd = Number.isFinite(selectedActiveEpoch.end_year) ? selectedActiveEpoch.end_year : 2026;
+          var activeStart = Number.isFinite(activeEpoch.start_year) ? activeEpoch.start_year : null;
+          var activeEnd = Number.isFinite(activeEpoch.end_year) ? activeEpoch.end_year : 2026;
+          if (selectedStart !== null && activeStart !== null && activeStart <= selectedEnd && selectedStart <= activeEnd) {
+            score += 1.1;
+          }
+        }
+
+        if (score <= 0) {
+          return null;
+        }
+
+        var parts = [];
+        if (state.activeEra && activeEpoch) {
+          var range = epochRangeLabel(activeEpoch);
+          if (range) {
+            parts.push(range);
+          }
+          if (text(activeEpoch.phase_name)) {
+            parts.push(text(activeEpoch.phase_name));
+          }
+          if (sharedFunctions.length) {
+            parts.push('Funktion: ' + useTypeFilterLabel(state, sharedFunctions[0]));
+          }
+        } else {
+          if (sharedEras.length) {
+            parts.push('Gemeinsame Epochen: ' + mapEraNames(state, sharedEras).slice(0, 3).join(', '));
+          }
+          if (sharedFunctions.length) {
+            parts.push('Ähnliche Funktionen');
+          }
+        }
+
+        return {
+          place: place,
+          score: score,
+          meta: parts.filter(Boolean).join(' · ')
+        };
+      })
+      .filter(Boolean)
+      .sort(function (left, right) {
+        if (right.score !== left.score) {
+          return right.score - left.score;
+        }
+
+        return text(left.place.name).localeCompare(text(right.place.name), 'de');
+      })
+      .slice(0, 4);
+  }
+
+  function buildSocialRelations(selectedPlace, places, state) {
+    var selectedPublications = getPublicationIds(selectedPlace);
+    var selectedActors = state.activeEra
+      ? getActorKeysForEra(selectedPlace, state.era)
+      : getAllActorKeys(selectedPlace);
+    var selectedFunctions = getEpochFunctionKeys(selectedPlace, state.activeEra ? state.era : EMPTY);
+
+    return places
+      .filter(function (place) {
+        return place.post_id !== selectedPlace.post_id;
+      })
+      .map(function (place) {
+        var publicationOverlap = intersectList(selectedPublications, getPublicationIds(place));
+        var sharedActors = intersectList(selectedActors, state.activeEra ? getActorKeysForEra(place, state.era) : getAllActorKeys(place));
+        var sharedFunctions = intersectList(selectedFunctions, getEpochFunctionKeys(place, state.activeEra ? state.era : EMPTY));
+        var sharedUseType = text(selectedPlace.current_use_type) !== EMPTY
+          && text(selectedPlace.current_use_type) === text(place.current_use_type);
+        var score = 0;
+
+        if (publicationOverlap.length) {
+          score += publicationOverlap.length * 2.3;
+        }
+        if (sharedFunctions.length) {
+          score += sharedFunctions.length * 1.5;
+        }
+        if (sharedActors.length) {
+          score += sharedActors.length * 1.1;
+        }
+        if (sharedUseType) {
+          score += 0.7;
+        }
+
+        if (score <= 0) {
+          return null;
+        }
+
+        var parts = [];
+        if (publicationOverlap.length) {
+          parts.push('gemeinsame Publikation(en)');
+        }
+        if (sharedFunctions.length) {
+          parts.push('Funktionsbezug: ' + useTypeFilterLabel(state, sharedFunctions[0]));
+        }
+        if (sharedActors.length) {
+          parts.push('Akteurnetz: ' + actorFilterLabel(state, sharedActors[0]));
+        }
+        if (sharedUseType) {
+          parts.push('ähnliche heutige Nutzung');
+        }
+
+        return {
+          place: place,
+          score: score,
+          meta: parts.filter(Boolean).join(' · ')
+        };
+      })
+      .filter(Boolean)
+      .sort(function (left, right) {
+        if (right.score !== left.score) {
+          return right.score - left.score;
+        }
+
+        return text(left.place.name).localeCompare(text(right.place.name), 'de');
+      })
+      .slice(0, 4);
+  }
+
+  function renderRelationRail(container, state, title, description, rows, emptyText, selectedPlaceId) {
+    function buildMiniMap(place) {
+      var map = createElement('div', 'iss-atlas-relations__mini-map');
+      var dot = createElement('span', 'iss-atlas-relations__mini-map-dot');
+      var hasMap = text(state.relationMapUrl);
+      var x;
+      var y;
+
+      if (!hasMap) {
+        return null;
+      }
+
+      x = ((number(place.lng) - MAP_BOUNDS.minLng) / (MAP_BOUNDS.maxLng - MAP_BOUNDS.minLng)) * 100;
+      y = ((MAP_BOUNDS.maxLat - number(place.lat)) / (MAP_BOUNDS.maxLat - MAP_BOUNDS.minLat)) * 100;
+
+      if (!Number.isFinite(x) || !Number.isFinite(y)) {
+        return null;
+      }
+
+      x = Math.max(0, Math.min(100, x));
+      y = Math.max(0, Math.min(100, y));
+
+      map.style.backgroundImage = 'url("' + state.relationMapUrl + '")';
+      map.style.backgroundPosition = x.toFixed(2) + '% ' + y.toFixed(2) + '%';
+      map.appendChild(dot);
+
+      return map;
+    }
+
+    var rail = createElement('article', 'iss-atlas-relations__rail');
+    var head = createElement('header', 'iss-atlas-relations__rail-head');
+    var list = createElement('div', 'iss-atlas-relations__rail-list');
+
+    head.appendChild(createElement('p', 'iss-atlas-relations__rail-kicker', title));
+    head.appendChild(createElement('p', 'iss-atlas-relations__rail-description', description));
+    rail.appendChild(head);
+
+    if (!rows.length) {
+      list.appendChild(createElement('p', 'iss-atlas-relations__empty', emptyText));
+      rail.appendChild(list);
+      container.appendChild(rail);
+      return;
+    }
+
+    rows.forEach(function (row) {
+      var item = createElement('article', 'iss-atlas-relations__item' + (row.place.post_id === selectedPlaceId ? ' is-active' : EMPTY));
+      var selectButton = createElement('button', 'iss-atlas-relations__select', row.place.name || 'Ort');
+      var meta = createElement('p', 'iss-atlas-relations__meta', row.meta || 'Bezug im Korridor');
+      var footer = createElement('div', 'iss-atlas-relations__footer');
+      var miniMap = buildMiniMap(row.place);
+
+      if (miniMap) {
+        item.appendChild(miniMap);
+      }
+
+      selectButton.type = 'button';
+      selectButton.addEventListener('click', function () {
+        state.selectedPostId = row.place.post_id;
+        state.shouldPan = true;
+        state.render();
+      });
+
+      item.appendChild(selectButton);
+      item.appendChild(meta);
+
+      if (row.place.permalink) {
+        var link = createElement('a', 'iss-action-link iss-atlas-relations__link', 'Dossier');
+        link.href = row.place.permalink;
+        footer.appendChild(link);
+      }
+
+      if (footer.children.length) {
+        item.appendChild(footer);
+      }
+
+      list.appendChild(item);
+    });
+
+    rail.appendChild(list);
+    container.appendChild(rail);
+  }
+
+  function renderRelations(container, state, selectedPlace, relationPool) {
+    if (!container) {
+      return;
+    }
+
+    container.innerHTML = EMPTY;
+
+    if (!selectedPlace) {
+      container.appendChild(
+        createElement('p', 'iss-atlas-relations__empty', 'Ort auswählen, um räumliche, zeitliche und soziale Beziehungen zu sehen.')
+      );
+      return;
+    }
+
+    var pool = relationPool.filter(function (place) {
+      return place.post_id !== selectedPlace.post_id;
+    });
+    var spatial = buildSpatialRelations(selectedPlace, pool, state);
+    var temporal = buildTemporalRelations(selectedPlace, pool, state);
+    var social = buildSocialRelations(selectedPlace, pool, state);
+
+    renderRelationRail(
+      container,
+      state,
+      'Räumliche Beziehungen',
+      'Nähe im Korridor, ergänzt um Akteursbezüge.',
+      spatial,
+      'Keine belastbaren räumlichen Nachbarschaften in der aktuellen Auswahl.',
+      selectedPlace.post_id
+    );
+    renderRelationRail(
+      container,
+      state,
+      'Zeitliche Beziehungen',
+      'Gemeinsame Epochen, Phasen und Funktionslogiken.',
+      temporal,
+      'Keine zeitlichen Überschneidungen in der aktuellen Auswahl.',
+      selectedPlace.post_id
+    );
+    renderRelationRail(
+      container,
+      state,
+      'Soziale Beziehungen',
+      'Publikationen, Nutzungsmuster und institutionelle Verbindungen.',
+      social,
+      'Keine sozialen bzw. funktionalen Verknüpfungen in der aktuellen Auswahl.',
+      selectedPlace.post_id
+    );
   }
 
   function sortPlaces(left, right) {
@@ -1635,6 +2137,7 @@
     renderCurrentUseTypeFilters(elements.useTypeFilters, state, statusScopedPlaces);
     renderStoryIntro(elements.storyIntro, state, selectedStories, filteredPlaces);
     renderCount(elements.count, filteredPlaces, state);
+    renderRelations(elements.relations, state, selectedPlace, eraScopedPlaces);
     renderSummary(elements.summary, filteredPlaces, selectedPlace, state);
     renderMap(state, filteredPlaces, selectedPlace);
     renderPopup(elements.popup, selectedPlace, state);
@@ -1653,6 +2156,9 @@
     }
     elements.summary.innerHTML = EMPTY;
     elements.storyIntro.innerHTML = EMPTY;
+    if (elements.relations) {
+      elements.relations.innerHTML = EMPTY;
+    }
     elements.popup.innerHTML = EMPTY;
     elements.popup.classList.add('is-empty');
     elements.stories.innerHTML = EMPTY;
@@ -1673,6 +2179,7 @@
       mapCanvas: root.querySelector('[data-iss-schoneweide-map]'),
       mapStatus: root.querySelector('[data-iss-schoneweide-map-status]'),
       summary: root.querySelector('[data-iss-schoneweide-summary]'),
+      relations: root.querySelector('[data-iss-schoneweide-relations]'),
       storyIntro: root.querySelector('[data-iss-schoneweide-story-intro]'),
       popup: root.querySelector('[data-iss-schoneweide-popup]'),
       stories: root.querySelector('[data-iss-schoneweide-stories]'),
@@ -1826,6 +2333,7 @@
         var state = {
           root: root,
           leaflet: leafletState,
+          relationMapUrl: getStaticRelationMapUrl(),
           places: places,
           eras: eras,
           eraMap: buildEraMap(eras.length ? eras : deriveFallbackEras(places)),

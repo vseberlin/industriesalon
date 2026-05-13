@@ -58,6 +58,15 @@
   padding-top: 0.75rem;
 }
 
+.iss-schoneweide-relations-section {
+  padding-top: 0.5rem;
+  padding-bottom: 0.75rem;
+}
+
+.iss-schoneweide-relations-section > .iss-container {
+  max-width: 92rem;
+}
+
 .iss-schoneweide-atlas-stories-section > .iss-container {
   max-width: 92rem;
 }
