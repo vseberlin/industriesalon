@@ -23,6 +23,7 @@ add_action('after_setup_theme', function () {
             'assets/css/ueber-uns.css',
             'assets/css/page-archive.css',
             'assets/css/page-sammlungen.css',
+            'assets/css/page-fuehrungen.css',
             'assets/css/page-events.css',
             'assets/css/page-museum.css',
             'assets/css/page-videos.css',
@@ -990,6 +991,12 @@ function industriesalon_enqueue_assets(): void
             'handle' => 'industriesalon-page-sammlungen',
             'path' => '/assets/css/page-sammlungen.css',
             'condition' => is_page('sammlungen'),
+        ),
+        array(
+            'handle' => 'industriesalon-page-fuehrungen',
+            'path' => '/assets/css/page-fuehrungen.css',
+            'condition' => $current_page_template === 'page-fuehrungen'
+                || is_page('fuehrungen'),
         ),
         array(
             'handle' => 'industriesalon-page-events',

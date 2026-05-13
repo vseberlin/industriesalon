@@ -248,6 +248,274 @@ function iss_fuehrung_render_archive_card($post_id) {
     return (string) ob_get_clean();
 }
 
+function iss_fuehrung_get_offer_catalog_groups() {
+    return [
+        'calendar' => [
+            'title' => __('Öffentliche Termine', 'iss-fuehrungen'),
+            'description' => __('Führungen mit aktuell sichtbaren öffentlichen Terminen.', 'iss-fuehrungen'),
+        ],
+        'hybrid' => [
+            'title' => __('Öffentlich und individuell buchbar', 'iss-fuehrungen'),
+            'description' => __('Formate mit öffentlichem Terminangebot und zusätzlicher Möglichkeit für Gruppen oder Sonderanfragen.', 'iss-fuehrungen'),
+        ],
+        'on_demand' => [
+            'title' => __('Auf Anfrage', 'iss-fuehrungen'),
+            'description' => __('Führungen für Gruppen, Schulen, Familien oder thematische Schwerpunkte mit individueller Terminabsprache.', 'iss-fuehrungen'),
+        ],
+        'other' => [
+            'title' => __('Weitere Führungen', 'iss-fuehrungen'),
+            'description' => __('Weitere Tourangebote ohne eindeutige Buchungslogik.', 'iss-fuehrungen'),
+        ],
+    ];
+}
+
+function iss_fuehrung_get_offer_catalog_group_key($post_id) {
+    $post_id = (int) $post_id;
+    if ($post_id <= 0) {
+        return 'other';
+    }
+
+    $mode = iss_fuehrung_get_effective_booking_mode($post_id);
+    $next_event = iss_fuehrung_get_next_event($post_id);
+    $booking_note = trim((string) get_post_meta($post_id, 'booking_note', true));
+    $inquiry = iss_fuehrung_get_inquiry_data($post_id);
+    $has_inquiry = trim((string) ($inquiry['url'] ?? '')) !== '' || trim((string) ($inquiry['note'] ?? '')) !== '';
+
+    if ($next_event instanceof WP_Post) {
+        return in_array($mode, ['hybrid', 'on_demand'], true) ? 'hybrid' : 'calendar';
+    }
+
+    if (in_array($mode, ['hybrid', 'on_demand'], true) || $has_inquiry || $booking_note !== '') {
+        return 'on_demand';
+    }
+
+    return 'other';
+}
+
+function iss_fuehrung_group_offer_catalog_posts(array $posts) {
+    $groups = [
+        'calendar' => [],
+        'hybrid' => [],
+        'on_demand' => [],
+        'other' => [],
+    ];
+
+    foreach ($posts as $post) {
+        if (!$post instanceof WP_Post) {
+            continue;
+        }
+
+        $group_key = iss_fuehrung_get_offer_catalog_group_key($post->ID);
+        if (!isset($groups[$group_key])) {
+            $group_key = 'other';
+        }
+
+        $groups[$group_key][] = $post;
+    }
+
+    return $groups;
+}
+
+function iss_fuehrung_get_offer_catalog_item_state($post_id) {
+    $mode = iss_fuehrung_get_effective_booking_mode($post_id);
+    $next_event = iss_fuehrung_get_next_event($post_id);
+    $booking_note = trim((string) get_post_meta($post_id, 'booking_note', true));
+    $inquiry = iss_fuehrung_get_inquiry_data($post_id);
+    $inquiry_url = trim((string) ($inquiry['url'] ?? ''));
+    $inquiry_label = trim((string) ($inquiry['label'] ?? ''));
+    $inquiry_note = trim((string) ($inquiry['note'] ?? ''));
+    $primary_action = null;
+    $secondary_action = [
+        'url' => get_permalink($post_id),
+        'label' => __('Mehr', 'iss-fuehrungen'),
+    ];
+
+    if ($next_event instanceof WP_Post) {
+        $booking_url = iss_fuehrung_get_event_booking_url($next_event->ID, $post_id);
+        $availability = trim((string) get_post_meta($next_event->ID, 'availability_state', true));
+        $availability_label = iss_fuehrung_get_availability_label($availability);
+        $note_parts = [];
+
+        if ($availability_label !== '') {
+            $note_parts[] = $availability_label;
+        }
+
+        if ($mode === 'hybrid') {
+            $note_parts[] = __('Auch auf Anfrage buchbar', 'iss-fuehrungen');
+        } elseif ($booking_note !== '') {
+            $note_parts[] = $booking_note;
+        }
+
+        if ($booking_url !== '') {
+            $primary_action = [
+                'url' => $booking_url,
+                'label' => __('Buchen', 'iss-fuehrungen'),
+            ];
+        }
+
+        return [
+            'mode' => $mode,
+            'label' => __('Nächster Termin', 'iss-fuehrungen'),
+            'value' => iss_fuehrung_get_event_start_label($next_event->ID),
+            'note' => implode(' · ', array_filter($note_parts)),
+            'primary_action' => $primary_action,
+            'secondary_action' => $secondary_action,
+        ];
+    }
+
+    if ($mode === 'on_demand') {
+        if ($inquiry_url !== '') {
+            $primary_action = [
+                'url' => $inquiry_url,
+                'label' => $inquiry_label,
+            ];
+        } else {
+            $primary_action = [
+                'url' => '#tour-anfrage',
+                'label' => __('Anfrage', 'iss-fuehrungen'),
+            ];
+        }
+
+        return [
+            'mode' => $mode,
+            'label' => __('Buchung', 'iss-fuehrungen'),
+            'value' => __('Auf Anfrage', 'iss-fuehrungen'),
+            'note' => $inquiry_note !== '' ? $inquiry_note : ($booking_note !== '' ? $booking_note : __('Termin und Schwerpunkt werden individuell abgestimmt.', 'iss-fuehrungen')),
+            'primary_action' => $primary_action,
+            'secondary_action' => $secondary_action,
+        ];
+    }
+
+    if ($mode === 'hybrid') {
+        if ($inquiry_url !== '') {
+            $primary_action = [
+                'url' => $inquiry_url,
+                'label' => $inquiry_label,
+            ];
+        } else {
+            $primary_action = [
+                'url' => '#tour-anfrage',
+                'label' => __('Anfrage', 'iss-fuehrungen'),
+            ];
+        }
+
+        return [
+            'mode' => $mode,
+            'label' => __('Status', 'iss-fuehrungen'),
+            'value' => __('Aktuell keine Termine online', 'iss-fuehrungen'),
+            'note' => $inquiry_note !== '' ? $inquiry_note : ($booking_note !== '' ? $booking_note : __('Diese Führung bleibt individuell anfragbar.', 'iss-fuehrungen')),
+            'primary_action' => $primary_action,
+            'secondary_action' => $secondary_action,
+        ];
+    }
+
+    return [
+        'mode' => $mode,
+        'label' => __('Status', 'iss-fuehrungen'),
+        'value' => __('Aktuell keine Termine online', 'iss-fuehrungen'),
+        'note' => $booking_note,
+        'primary_action' => $primary_action,
+        'secondary_action' => $secondary_action,
+    ];
+}
+
+function iss_fuehrung_render_offer_catalog_item($post_id) {
+    $post_id = (int) $post_id;
+    if ($post_id <= 0) {
+        return '';
+    }
+
+    $badge = trim((string) get_post_meta($post_id, 'tour_badge', true));
+    $meta = iss_fuehrung_get_card_meta($post_id);
+    $excerpt = trim((string) get_the_excerpt($post_id));
+    $state = iss_fuehrung_get_offer_catalog_item_state($post_id);
+
+    ob_start();
+    echo '<article class="iss-tour-offer-catalog__item iss-tour-offer-catalog__item--' . esc_attr(sanitize_html_class((string) $state['mode'])) . '">';
+    echo '<div class="iss-tour-offer-catalog__item-main">';
+
+    if ($badge !== '') {
+        echo '<p class="iss-kicker iss-kicker--compact iss-tour-offer-catalog__badge">' . esc_html($badge) . '</p>';
+    }
+
+    echo '<h4 class="iss-tour-offer-catalog__item-title"><a href="' . esc_url(get_permalink($post_id)) . '">' . esc_html(get_the_title($post_id)) . '</a></h4>';
+
+    if ($excerpt !== '') {
+        echo '<p class="iss-tour-offer-catalog__item-text">' . esc_html($excerpt) . '</p>';
+    }
+
+    if (!empty($meta)) {
+        echo '<p class="iss-tour-offer-catalog__item-meta">' . esc_html(implode(' · ', $meta)) . '</p>';
+    }
+
+    echo '</div>';
+    echo '<div class="iss-tour-offer-catalog__item-side">';
+    echo '<p class="iss-tour-offer-catalog__item-label">' . esc_html((string) $state['label']) . '</p>';
+    echo '<p class="iss-tour-offer-catalog__item-value">' . esc_html((string) $state['value']) . '</p>';
+
+    if (!empty($state['note'])) {
+        echo '<p class="iss-tour-offer-catalog__item-note">' . esc_html((string) $state['note']) . '</p>';
+    }
+
+    echo '<div class="iss-tour-offer-catalog__item-actions">';
+
+    if (!empty($state['primary_action']['url']) && !empty($state['primary_action']['label'])) {
+        echo '<a class="iss-action-link" href="' . esc_url((string) $state['primary_action']['url']) . '">' . esc_html((string) $state['primary_action']['label']) . '</a>';
+    }
+
+    if (!empty($state['secondary_action']['url']) && !empty($state['secondary_action']['label'])) {
+        echo '<a class="iss-card__link" href="' . esc_url((string) $state['secondary_action']['url']) . '">' . esc_html((string) $state['secondary_action']['label']) . '</a>';
+    }
+
+    echo '</div>';
+    echo '</div>';
+    echo '</article>';
+
+    return (string) ob_get_clean();
+}
+
+function iss_fuehrung_render_offer_catalog_block($attributes = [], $content = '') {
+    $posts = iss_fuehrung_get_catalog_posts();
+    if (!$posts) {
+        return '';
+    }
+
+    $groups = iss_fuehrung_get_offer_catalog_groups();
+    $grouped_posts = iss_fuehrung_group_offer_catalog_posts($posts);
+    $wrapper = function_exists('get_block_wrapper_attributes')
+        ? get_block_wrapper_attributes(['class' => 'wp-block-iss-tour-offer-catalog'])
+        : 'class="wp-block-iss-tour-offer-catalog"';
+
+    ob_start();
+    echo '<div ' . $wrapper . '>';
+    echo '<div class="iss-tour-offer-catalog">';
+
+    foreach ($groups as $group_key => $group) {
+        if (empty($grouped_posts[$group_key])) {
+            continue;
+        }
+
+        echo '<section class="iss-tour-offer-catalog__group iss-tour-offer-catalog__group--' . esc_attr(sanitize_html_class($group_key)) . '">';
+        echo '<div class="iss-tour-offer-catalog__group-head">';
+        echo '<h3 class="iss-tour-offer-catalog__group-title">' . esc_html((string) $group['title']) . '</h3>';
+        echo '<p class="iss-tour-offer-catalog__group-text">' . esc_html((string) $group['description']) . '</p>';
+        echo '</div>';
+        echo '<div class="iss-tour-offer-catalog__items">';
+
+        foreach ($grouped_posts[$group_key] as $post) {
+            echo iss_fuehrung_render_offer_catalog_item($post->ID);
+        }
+
+        echo '</div>';
+        echo '</section>';
+    }
+
+    echo '</div>';
+    echo '</div>';
+
+    return (string) ob_get_clean();
+}
+
 function iss_fuehrung_block_resolve_post_id($attributes = []) {
     $attributes = is_array($attributes) ? $attributes : [];
 

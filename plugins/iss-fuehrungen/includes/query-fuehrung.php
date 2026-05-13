@@ -144,3 +144,23 @@ function iss_fuehrung_get_effective_booking_mode($post_id) {
 
     return 'calendar';
 }
+
+function iss_fuehrung_get_catalog_posts(array $args = []) {
+    $defaults = [
+        'post_type'              => ISS_FUEHRUNGEN_POST_TYPE,
+        'post_status'            => 'publish',
+        'posts_per_page'         => -1,
+        'orderby'                => [
+            'menu_order' => 'ASC',
+            'title'      => 'ASC',
+        ],
+        'order'                  => 'ASC',
+        'suppress_filters'       => false,
+        'ignore_sticky_posts'    => true,
+        'no_found_rows'          => true,
+        'update_post_meta_cache' => true,
+        'update_post_term_cache' => false,
+    ];
+
+    return get_posts(wp_parse_args($args, $defaults));
+}
