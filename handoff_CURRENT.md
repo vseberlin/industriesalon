@@ -440,3 +440,40 @@
 ## Continuity Prompt
 - Start next session with: `read /home/vladimir/wp/handoff_CURRENT.md`
 - Then continue chunked `remaining` imports for the WF-Technik pages, using the new profiles and stopping at explicit checkpoints instead of one-shot full-seed runs.
+
+## 2026-05-13 Closeout
+- WordPress/database work completed in this session:
+  - enriched multiple `fuehrung` entries from local source folders
+  - folded TRO chronology material into tour pages
+  - rebuilt `Waldfriedhof Oberschöneweide` as an on-demand tour and added `tour_only` cemetery route stations
+  - created first real `projekt`, `ausstellung`, and `veranstaltung` entries from legacy `post` content
+  - privatized large parts of the legacy/noise layer in `post`
+- Resulting public content shape after the cleanup pass:
+  - `post`: `30` publish, `58` private
+  - `projekt`: `5` publish
+  - `ausstellung`: `15` publish
+  - `veranstaltung`: `8` publish
+- Repo worktree that should now be committed:
+  - `plugins/industriesalon-schoeneweide-register/includes/meta-fields.php`
+  - `plugins/industriesalon-schoeneweide-register/includes/post-types.php`
+  - `plugins/industriesalon-schoeneweide-register/includes/register-data/atlas-contracts.php`
+  - `plugins/industriesalon-schoeneweide-register/includes/register-data/entity-repository.php`
+  - `plugins/industriesalon-schoeneweide-register/includes/register-data/query.php`
+  - `plugins/industriesalon-schoeneweide-register/includes/register-data/services.php`
+  - `linux-stack-migration.md`
+  - `plugins/media-library-assistant/`
+- Backup created:
+  - `backups/db_20260513-222652.sql`
+
+## Next Recommended Steps
+- Review the remaining public multilingual tour posts and decide whether they stay as language variants or should be folded into a cleaner language model.
+- Do a second pass on the remaining public legacy posts with content value:
+  - `2953`, `2999`, `3078`, `11093` are the strongest candidates for a clearer `video` or place-story model
+  - `4095`, `5120`, `5516`, `5695`, `6082`, `6266`, `7738`, `9357` still need an explicit keep/migrate/archive decision
+- Finish the structurally weak remaining tours:
+  - `12034 Energie am Fluss – Fahrradtour`
+  - `12027 Jüdische Unternehmen im historischen Berlin – Bustour`
+  - `12028 Kiez-Tour Wilhelminenhofstraße`
+  - `12186 Light & Magic`
+  - `12188 Mit dem Fahrrad: Die Wäschewasch-Tour`
+- Add a gallery to `11940 Waldfriedhof Oberschöneweide`.

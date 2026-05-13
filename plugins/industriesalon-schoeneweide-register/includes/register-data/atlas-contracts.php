@@ -644,7 +644,7 @@ function iss_register_get_atlas_places_data(array $filters = []): array
         return $cached;
     }
 
-    $places = iss_register_get_place_entities();
+    $places = iss_register_get_public_place_entities();
     $era_slug = sanitize_title((string) ($filters['era_slug'] ?? ''));
     $function_key = sanitize_key((string) ($filters['function_key'] ?? ''));
     $actor_key = sanitize_key((string) ($filters['actor_key'] ?? ''));

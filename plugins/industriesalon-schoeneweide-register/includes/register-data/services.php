@@ -8,7 +8,7 @@ function iss_register_get_summary_places_contracts(array $query_args = [], array
 {
     $places = $query_args
         ? iss_register_get_filtered_place_entities($query_args)
-        : iss_register_get_place_entities();
+        : iss_register_get_public_place_entities();
 
     return iss_register_build_summary_place_contracts($places, $fields);
 }
@@ -28,14 +28,14 @@ function iss_register_get_export_places_contracts(array $query_args = []): array
 {
     $places = $query_args
         ? iss_register_get_filtered_place_entities($query_args)
-        : iss_register_get_place_entities();
+        : iss_register_get_public_place_entities();
 
     return array_values($places);
 }
 
 function iss_register_get_meta_contract(): array
 {
-    $places = iss_register_get_place_entities();
+    $places = iss_register_get_public_place_entities();
     $areas = [];
     $statuses = [];
     $roles = [];

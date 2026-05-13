@@ -1,5 +1,19 @@
 # Changelog
 
+## 2026-05-13
+- Extended `industriesalon-schoeneweide-register` with a `tour_only` visibility mode for `register_place`:
+  - added the editor field and persistence wiring
+  - excluded `tour_only` places from public register summary/search/atlas/sitemap outputs
+  - kept `tour_only` places reusable in `iss_related_places` route relations
+- Added Waldfriedhof route-only cemetery stops in WordPress content and attached them to the `Waldfriedhof Oberschöneweide` tour so the tour can render a structured internal route without polluting the public places register.
+- Ran a legacy-content cleanup pass directly in WordPress:
+  - created canonical `projekt` entries for `Das Landmark der Elektropolis`, `connected by lights`, `Boulevard der Industriekultur`, `Stadtlabor Wilhelminenhofstraße`, and `Industrieabfälle`
+  - created canonical `ausstellung` entries for `Wandel mit Wirkung`, `15 Jahre Industriesalon`, `Das Archiv von Fräulein Krause`, `Faszination Modellbahn in 1:120`, and `Futura – Zukünfte erleben`
+  - created canonical `veranstaltung` entries for `Jesus im Frack`, two `Salongespräch` posts, `Tag des offenen Denkmals`, `Ulrike Herrmann`, `Sir Rudolph Peierls`, and `Feldliebe`
+  - privatized legacy duplicate tour promos, housekeeping/service posts, and migrated source posts
+  - reduced public `post` count from `88` to `30`
+- Created a fresh database backup at `backups/db_20260513-222652.sql` before checkpointing the repo.
+
 ## 2026-05-12
 - Added historical epoch infrastructure to `plugins/industriesalon-schoeneweide-register` without creating a new public content type:
   - new epoch storage service in `includes/register-data/epochs.php`

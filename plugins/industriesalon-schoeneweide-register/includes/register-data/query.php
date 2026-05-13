@@ -34,6 +34,41 @@ function iss_register_match_place_tag(array $place, string $needle): bool
     return false;
 }
 
+function iss_register_normalize_place_visibility($value): string
+{
+    $visibility = sanitize_key((string) $value);
+
+    return in_array($visibility, ['public', 'tour_only'], true)
+        ? $visibility
+        : 'public';
+}
+
+function iss_register_is_public_place_entity(array $place): bool
+{
+    return iss_register_normalize_place_visibility($place['place_visibility'] ?? 'public') !== 'tour_only';
+}
+
+function iss_register_filter_public_place_entities(array $places): array
+{
+    return array_values(array_filter($places, 'iss_register_is_public_place_entity'));
+}
+
+function iss_register_build_public_place_visibility_meta_query_clause(): array
+{
+    return [
+        'relation' => 'OR',
+        [
+            'key' => 'place_visibility',
+            'compare' => 'NOT EXISTS',
+        ],
+        [
+            'key' => 'place_visibility',
+            'value' => 'tour_only',
+            'compare' => '!=',
+        ],
+    ];
+}
+
 function iss_register_is_unclear_place(array $place): bool
 {
     if (($place['status'] ?? '') === 'unklar') {
@@ -142,6 +177,7 @@ function iss_register_get_place_query_args_from_request(WP_REST_Request $request
 function iss_register_filter_place_entities(array $places, array $query_args): array
 {
     $query_args = iss_register_normalize_place_query_args($query_args);
+    $places = iss_register_filter_public_place_entities($places);
 
     $places = array_values(array_filter($places, static function (array $place) use ($query_args): bool {
         if ($query_args['area'] !== '' && iss_register_normalize_place_query_text($place['area'] ?? '') !== $query_args['area']) {

@@ -33,6 +33,14 @@ function iss_register_get_current_use_type_options(): array
     ];
 }
 
+function iss_register_get_place_visibility_options(): array
+{
+    return [
+        'public' => 'Öffentlich im Register / Atlas',
+        'tour_only' => 'Nur fuer Tour-Routen',
+    ];
+}
+
 function iss_register_get_meta_schema(): array
 {
     return [
@@ -46,6 +54,7 @@ function iss_register_get_meta_schema(): array
         'role' => ['type' => 'string', 'label' => 'Rolle', 'input' => 'text', 'show_in_rest' => true, 'admin' => true],
         'current_status' => ['type' => 'string', 'label' => 'Heutige Situation', 'input' => 'select', 'options' => iss_register_get_current_status_options(), 'show_in_rest' => true, 'admin' => true],
         'current_use_type' => ['type' => 'string', 'label' => 'Nutzung heute', 'input' => 'select', 'options' => iss_register_get_current_use_type_options(), 'show_in_rest' => true, 'admin' => true],
+        'place_visibility' => ['type' => 'string', 'label' => 'Sichtbarkeit', 'input' => 'select', 'options' => iss_register_get_place_visibility_options(), 'show_in_rest' => true, 'admin' => true, 'description' => 'Tour-only Orte bleiben in Fuehrungsrouten nutzbar, erscheinen aber nicht im oeffentlichen Register, Atlas, in der Suche oder Sitemap.'],
         'owner' => ['type' => 'string', 'label' => 'Eigentümer', 'input' => 'text', 'show_in_rest' => true, 'admin' => true],
         'operator' => ['type' => 'string', 'label' => 'Operator', 'input' => 'text', 'show_in_rest' => true, 'admin' => true],
         'developer' => ['type' => 'string', 'label' => 'Developer', 'input' => 'text', 'show_in_rest' => true, 'admin' => true],
@@ -264,7 +273,7 @@ function iss_register_get_meta_box_groups(): array
             'context' => 'normal',
             'priority' => 'high',
             'description' => __('Für einen nutzbaren Atlas-Ort reichen der Titel oben, Adresse, Koordinaten und mindestens ein kurzer öffentlicher Text. Alles andere kann später ergänzt werden.', 'industriesalon-schoeneweide-register'),
-            'fields' => ['area', 'address', 'lat', 'lng', 'coordinates_accuracy', 'status', 'role', 'current_status', 'current_use_type', 'is_unclear', 'sort_order'],
+            'fields' => ['area', 'address', 'lat', 'lng', 'coordinates_accuracy', 'status', 'role', 'current_status', 'current_use_type', 'place_visibility', 'is_unclear', 'sort_order'],
         ],
         'atlas_public' => [
             'title' => __('Öffentliche Atlas-Texte', 'industriesalon-schoeneweide-register'),
@@ -338,6 +347,11 @@ function iss_register_render_fields_table(WP_Post $post, array $field_keys): voi
         } else {
             $input_type = $field['input'] === 'number' ? 'number' : 'text';
             echo '<input id="iss-register-' . esc_attr($key) . '" type="' . esc_attr($input_type) . '" name="' . $input_name . '" class="regular-text" value="' . esc_attr((string) $value) . '">';
+        }
+
+        $description = trim((string) ($field['description'] ?? ''));
+        if ($description !== '') {
+            echo '<p class="description">' . esc_html($description) . '</p>';
         }
 
         echo '</td>';
