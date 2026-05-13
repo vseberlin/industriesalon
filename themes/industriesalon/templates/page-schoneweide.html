@@ -139,7 +139,7 @@
     <div class="iss-heading iss-heading--uncaged iss-atlas-app__panel-heading">
       <p class="iss-kicker iss-kicker--compact">Index</p>
       <h2 class="iss-heading__title">Orte</h2>
-      <p class="iss-heading__text">Nach Zeitschicht, heutiger Situation und Nutzung filtern oder direkt suchen.</p>
+      <p class="iss-heading__text">Heutige Nutzung filtern, Zeitfenster wechseln und im Korridor suchen.</p>
     </div>
 
     <p class="iss-atlas-app__scope-note">Ausschnitt: Schöneweide beidseits der Spree mit Nalepastraßen-Korridor.</p>
@@ -150,21 +150,7 @@
     </div>
 
     <div class="iss-atlas-app__filter-block">
-      <p class="iss-atlas-app__filter-label">Epochen</p>
-      <div class="iss-atlas-app__filter-group" data-iss-schoneweide-era-filters>
-        <p class="iss-atlas-loading">Epochen werden geladen.</p>
-      </div>
-    </div>
-
-    <div class="iss-atlas-app__filter-block">
-      <p class="iss-atlas-app__filter-label">Heutige Situation</p>
-      <div class="iss-atlas-app__filter-group" data-iss-schoneweide-status-filters>
-        <p class="iss-atlas-loading">Filter werden geladen.</p>
-      </div>
-    </div>
-
-    <div class="iss-atlas-app__filter-block">
-      <p class="iss-atlas-app__filter-label">Nutzung heute</p>
+      <p class="iss-atlas-app__filter-label" data-iss-schoneweide-use-type-label>Nutzung heute</p>
       <div class="iss-atlas-app__filter-group" data-iss-schoneweide-use-type-filters>
         <p class="iss-atlas-loading">Filter werden geladen.</p>
       </div>
@@ -177,6 +163,15 @@
   </aside>
 
   <div class="iss-atlas-app__main">
+    <div class="iss-atlas-app__era-strip">
+      <div class="iss-atlas-app__era-strip-head">
+        <p class="iss-atlas-app__filter-label">Zeitfenster</p>
+      </div>
+      <div class="iss-atlas-app__era-strip-body" data-iss-schoneweide-era-filters>
+        <p class="iss-atlas-loading">Epochen werden geladen.</p>
+      </div>
+    </div>
+
     <div class="iss-atlas-app__map-stage">
       <div class="iss-atlas-app__map-surface">
         <div class="iss-atlas-app__map-canvas" data-iss-schoneweide-map></div>
@@ -212,7 +207,7 @@
 <!-- /wp:heading -->
 
 <!-- wp:paragraph {"className":"iss-heading__text"} -->
-<p class="iss-heading__text">Die Auswahl kommt direkt aus den vorhandenen Orten und Zeitschichten. Jeder Einstieg führt in ein lokales Dossier weiter.</p>
+<p class="iss-heading__text">Die Auswahl kommt direkt aus den vorhandenen Orten und Zeitfenstern. Jeder Einstieg führt in ein lokales Dossier weiter.</p>
 <!-- /wp:paragraph --></div>
 <!-- /wp:group -->
 
