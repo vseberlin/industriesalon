@@ -24,6 +24,7 @@ add_action('after_setup_theme', function () {
             'assets/css/page-archive.css',
             'assets/css/page-sammlungen.css',
             'assets/css/page-fuehrungen.css',
+            'assets/css/page-fuehrungen-mosaic.css',
             'assets/css/page-events.css',
             'assets/css/page-museum.css',
             'assets/css/page-videos.css',
@@ -996,7 +997,15 @@ function industriesalon_enqueue_assets(): void
             'handle' => 'industriesalon-page-fuehrungen',
             'path' => '/assets/css/page-fuehrungen.css',
             'condition' => $current_page_template === 'page-fuehrungen'
+                || $current_page_template === 'page-fuehrungen-mosaic'
+                || $current_page_template === 'fuehrungen-mosaic'
                 || is_page('fuehrungen'),
+        ),
+        array(
+            'handle' => 'industriesalon-page-fuehrungen-mosaic',
+            'path' => '/assets/css/page-fuehrungen-mosaic.css',
+            'condition' => $current_page_template === 'page-fuehrungen-mosaic'
+                || $current_page_template === 'fuehrungen-mosaic',
         ),
         array(
             'handle' => 'industriesalon-page-events',

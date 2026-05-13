@@ -1,0 +1,376 @@
+/* =========================================================
+   FILE: page-fuehrungen-mosaic.css
+   PURPOSE: Alternate mosaic-based UAT variant for the Fuehrungen landing.
+   ========================================================= */
+
+.iss-tours-page--mosaic {
+  --iss-tour-mosaic-line: rgba(30, 30, 30, 0.16);
+  --iss-tour-mosaic-muted: rgba(30, 30, 30, 0.72);
+  --iss-tour-mosaic-surface: #fff;
+  --iss-tour-mosaic-surface-soft: #e8e2dc;
+  --iss-tour-mosaic-surface-panel: #ece9e4;
+}
+
+.iss-tours-page--mosaic .iss-tours-mosaic {
+  padding-top: clamp(2.5rem, 5vw, 5rem);
+}
+
+.iss-tours-mosaic__layout {
+  gap: clamp(1.5rem, 2.75vw, 2.75rem);
+  align-items: stretch;
+}
+
+.iss-tours-mosaic__rail {
+  flex-basis: 24% !important;
+}
+
+.iss-tours-mosaic__content {
+  flex-basis: 76% !important;
+}
+
+.iss-tours-mosaic__rail-inner {
+  position: sticky;
+  top: calc(var(--iss-header-height, 5.5rem) + 1rem);
+  display: grid;
+  gap: 1.5rem;
+  align-content: start;
+}
+
+.iss-tours-mosaic__heading {
+  display: grid;
+  gap: 1rem;
+}
+
+.iss-tours-mosaic__heading > * {
+  margin: 0;
+}
+
+.iss-tours-mosaic__heading .iss-heading__title {
+  max-width: 11ch;
+}
+
+.iss-tours-mosaic__heading .iss-heading__text {
+  max-width: 28rem;
+}
+
+.iss-tours-mosaic__minimap {
+  min-height: 280px;
+  border: 1px solid var(--iss-tour-mosaic-line);
+  background:
+    linear-gradient(115deg, transparent 0 45%, color-mix(in srgb, var(--iss-blue, #869fba) 45%, transparent) 46% 52%, transparent 53%),
+    radial-gradient(circle at 36% 42%, var(--iss-red) 0 4px, transparent 5px),
+    radial-gradient(circle at 58% 70%, var(--iss-red) 0 4px, transparent 5px),
+    repeating-linear-gradient(25deg, rgba(30, 30, 30, 0.05) 0 1px, transparent 1px 18px),
+    #efefec;
+  position: relative;
+  overflow: hidden;
+}
+
+.iss-tours-mosaic__minimap::after {
+  content: "Oberschoneweide\A\A Spree\A\A Niederschoneweide";
+  white-space: pre-line;
+  position: absolute;
+  inset: 1rem;
+  font-size: 0.78rem;
+  color: var(--iss-tour-mosaic-muted);
+}
+
+.iss-tours-mosaic__grid {
+  display: grid;
+  grid-template-columns: repeat(6, minmax(0, 1fr));
+  grid-auto-rows: 180px;
+  border-top: 1px solid var(--iss-tour-mosaic-line);
+  border-left: 1px solid var(--iss-tour-mosaic-line);
+}
+
+.iss-tours-mosaic__tile {
+  position: relative;
+  min-width: 0;
+  padding: 1.5rem;
+  overflow: hidden;
+  border-right: 1px solid var(--iss-tour-mosaic-line);
+  border-bottom: 1px solid var(--iss-tour-mosaic-line);
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  color: inherit;
+  text-decoration: none;
+}
+
+.iss-tours-mosaic__tile h3 {
+  margin: 0;
+  font-size: clamp(1.55rem, 1.9vw, 2.35rem);
+  line-height: 1.05;
+  letter-spacing: -0.03em;
+}
+
+.iss-tours-mosaic__tile p {
+  margin: 1rem 0 0;
+  max-width: 24rem;
+  font-size: 0.96rem;
+}
+
+.iss-tours-mosaic__tile:hover,
+.iss-tours-mosaic__tile:focus-visible {
+  z-index: 1;
+  box-shadow: inset 0 0 0 2px rgba(30, 30, 30, 0.1);
+}
+
+.iss-tours-mosaic__num {
+  font-size: 0.9rem;
+  font-weight: 700;
+  opacity: 0.72;
+}
+
+.iss-tours-mosaic__foot {
+  display: flex;
+  justify-content: space-between;
+  gap: 1rem;
+  margin-top: 1.5rem;
+  font-size: 0.86rem;
+  font-weight: 600;
+}
+
+.iss-tours-mosaic__tile--blue,
+.iss-tours-mosaic__tile--green,
+.iss-tours-mosaic__tile--brown,
+.iss-tours-mosaic__tile--yellow,
+.iss-tours-mosaic__tile--soft,
+.iss-tours-mosaic__tile--image,
+.iss-tours-mosaic__tile--map {
+  grid-column: span 2;
+  grid-row: span 2;
+}
+
+.iss-tours-mosaic__tile--blue {
+  background: var(--iss-blue, #254967);
+  color: var(--iss-white);
+}
+
+.iss-tours-mosaic__tile--green {
+  background: var(--iss-green, #579e7d);
+  color: var(--iss-white);
+}
+
+.iss-tours-mosaic__tile--brown {
+  background: var(--iss-brown, #753a18);
+  color: var(--iss-white);
+}
+
+.iss-tours-mosaic__tile--yellow {
+  background: var(--iss-yellow, #ebbc1e);
+}
+
+.iss-tours-mosaic__tile--soft {
+  background: var(--iss-tour-mosaic-surface-soft);
+}
+
+.iss-tours-mosaic__tile--image,
+.iss-tours-mosaic__tile--portrait {
+  padding: 0;
+}
+
+.iss-tours-mosaic__tile--image img,
+.iss-tours-mosaic__tile--portrait img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.iss-tours-mosaic__tile--map {
+  background:
+    linear-gradient(110deg, transparent 0 42%, color-mix(in srgb, var(--iss-blue, #869fba) 55%, transparent) 43% 50%, transparent 51%),
+    repeating-linear-gradient(0deg, rgba(30, 30, 30, 0.06) 0 1px, transparent 1px 26px),
+    repeating-linear-gradient(90deg, rgba(30, 30, 30, 0.05) 0 1px, transparent 1px 34px),
+    #ebe7df;
+}
+
+.iss-tours-mosaic__tile--map::before {
+  content: "";
+  position: absolute;
+  inset: 22% 18%;
+  border: 2px dashed var(--iss-red);
+  transform: rotate(-12deg);
+}
+
+.iss-tours-mosaic__tile--doc,
+.iss-tours-mosaic__tile--portrait {
+  grid-column: span 3;
+  grid-row: span 2;
+}
+
+.iss-tours-mosaic__tile--doc {
+  background:
+    linear-gradient(rgba(249, 249, 250, 0.8), rgba(249, 249, 250, 0.8)),
+    repeating-linear-gradient(0deg, rgba(117, 58, 24, 0.18) 0 1px, transparent 1px 28px),
+    #eee3d0;
+  font-family: Georgia, serif;
+  color: var(--iss-tour-mosaic-muted);
+}
+
+.iss-tours-mosaic__tile--doc strong {
+  display: block;
+  margin-top: 1rem;
+  font-size: clamp(1.35rem, 1.95vw, 2.15rem);
+  line-height: 1.18;
+  letter-spacing: 0.03em;
+  color: rgba(30, 30, 30, 0.62);
+}
+
+.iss-tours-mosaic__label {
+  position: absolute;
+  left: 1.5rem;
+  right: 1.5rem;
+  bottom: 1.5rem;
+  z-index: 2;
+  color: var(--iss-white);
+  font-size: clamp(1.4rem, 1.9vw, 2.15rem);
+  font-weight: 700;
+  line-height: 1.05;
+  text-shadow: 0 2px 18px rgba(0, 0, 0, 0.45);
+}
+
+.iss-tours-mosaic-formats__grid,
+.iss-tours-mosaic-facts__grid {
+  display: grid;
+  gap: 0;
+  border-top: 1px solid var(--iss-tour-mosaic-line);
+  border-left: 1px solid var(--iss-tour-mosaic-line);
+}
+
+.iss-tours-mosaic-formats__grid {
+  grid-template-columns: minmax(14rem, 24%) repeat(5, 1fr);
+}
+
+.iss-tours-mosaic-facts__grid {
+  grid-template-columns: minmax(14rem, 24%) repeat(4, 1fr);
+  background: var(--iss-tour-mosaic-surface-panel);
+}
+
+.iss-tours-mosaic-formats__item,
+.iss-tours-mosaic-facts__item {
+  min-height: 170px;
+  padding: 1.4rem;
+  border-right: 1px solid var(--iss-tour-mosaic-line);
+  border-bottom: 1px solid var(--iss-tour-mosaic-line);
+}
+
+.iss-tours-mosaic-formats__item h2,
+.iss-tours-mosaic-formats__item h3,
+.iss-tours-mosaic-facts__item h3 {
+  margin: 0 0 0.7rem;
+}
+
+.iss-tours-mosaic-formats__item h2 {
+  font-size: clamp(1.8rem, 2.3vw, 3rem);
+  line-height: 1.05;
+}
+
+.iss-tours-mosaic-formats__item h3,
+.iss-tours-mosaic-facts__item h3 {
+  font-size: 1.05rem;
+}
+
+.iss-tours-mosaic-formats__item p,
+.iss-tours-mosaic-facts__item p {
+  margin: 0;
+}
+
+.iss-tours-mosaic-formats__item p + p {
+  margin-top: 1rem;
+}
+
+.iss-tours-mosaic-formats__item--lead {
+  grid-column: 1 / span 1;
+}
+
+@media (max-width: 1200px) {
+  .iss-tours-mosaic__rail {
+    flex-basis: 29% !important;
+  }
+
+  .iss-tours-mosaic__content {
+    flex-basis: 71% !important;
+  }
+
+  .iss-tours-mosaic__grid {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
+
+  .iss-tours-mosaic__tile--doc,
+  .iss-tours-mosaic__tile--portrait {
+    grid-column: span 4;
+  }
+
+  .iss-tours-mosaic-formats__grid,
+  .iss-tours-mosaic-facts__grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+
+  .iss-tours-mosaic-formats__item--lead,
+  .iss-tours-mosaic-facts__item:first-child {
+    grid-column: span 3;
+  }
+}
+
+@media (max-width: 1023px) {
+  .iss-tours-mosaic__layout {
+    flex-direction: column;
+  }
+
+  .iss-tours-mosaic__rail,
+  .iss-tours-mosaic__content {
+    flex-basis: 100% !important;
+  }
+
+  .iss-tours-mosaic__rail-inner {
+    position: static;
+  }
+
+  .iss-tours-mosaic__grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    grid-auto-rows: 190px;
+  }
+
+  .iss-tours-mosaic__tile,
+  .iss-tours-mosaic__tile--blue,
+  .iss-tours-mosaic__tile--green,
+  .iss-tours-mosaic__tile--brown,
+  .iss-tours-mosaic__tile--yellow,
+  .iss-tours-mosaic__tile--soft,
+  .iss-tours-mosaic__tile--image,
+  .iss-tours-mosaic__tile--map,
+  .iss-tours-mosaic__tile--doc,
+  .iss-tours-mosaic__tile--portrait {
+    grid-column: span 2;
+  }
+
+  .iss-tours-mosaic-formats__grid,
+  .iss-tours-mosaic-facts__grid {
+    grid-template-columns: 1fr;
+  }
+
+  .iss-tours-mosaic-formats__item--lead,
+  .iss-tours-mosaic-facts__item:first-child {
+    grid-column: auto;
+  }
+}
+
+@media (max-width: 640px) {
+  .iss-tours-mosaic__grid {
+    grid-template-columns: 1fr;
+  }
+
+  .iss-tours-mosaic__tile,
+  .iss-tours-mosaic__tile--blue,
+  .iss-tours-mosaic__tile--green,
+  .iss-tours-mosaic__tile--brown,
+  .iss-tours-mosaic__tile--yellow,
+  .iss-tours-mosaic__tile--soft,
+  .iss-tours-mosaic__tile--image,
+  .iss-tours-mosaic__tile--map,
+  .iss-tours-mosaic__tile--doc,
+  .iss-tours-mosaic__tile--portrait {
+    grid-column: span 1;
+  }
+}
