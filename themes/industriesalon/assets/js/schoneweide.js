@@ -39,6 +39,7 @@
   };
   var HISTORICAL_NO_DATA_KEY = 'no_data';
   var ERA_FILTER_CONTEXT_ONLY = true;
+  var DEFAULT_ACTOR_LABEL = 'Alle Akteure';
   var UNKNOWN_EPOCH_SUMMARY =
     'Für diesen Ort liegen im gewählten Zeitfenster bisher keine gesicherten historischen Nachweise vor. Wenn Sie historische Dokumente, Fotos oder andere Objekte haben, freuen wir uns über Ihre Kontaktaufnahme.';
   var ATLAS_AREAS = {
@@ -217,6 +218,31 @@
       explicit_era_names: Array.isArray(place.explicit_era_names)
         ? place.explicit_era_names.map(text).filter(Boolean)
         : [],
+      industry_actor_keys: Array.isArray(place.industry_actor_keys)
+        ? place.industry_actor_keys.map(function (key) {
+            return text(key).toLowerCase();
+          }).filter(Boolean)
+        : [],
+      industry_actor_labels: Array.isArray(place.industry_actor_labels)
+        ? place.industry_actor_labels.map(text).filter(Boolean)
+        : [],
+      industry_actor_relations: Array.isArray(place.industry_actor_relations)
+        ? place.industry_actor_relations.map(function (relation) {
+            return {
+              actor_key: text(relation.actor_key).toLowerCase(),
+              actor_label: text(relation.actor_label),
+              actor_name: text(relation.actor_name),
+              actor_color: text(relation.actor_color),
+              era_slug: text(relation.era_slug),
+              relation_role: text(relation.relation_role),
+              strength: text(relation.strength),
+              source_confidence: text(relation.source_confidence),
+              note: text(relation.note)
+            };
+          }).filter(function (relation) {
+            return relation.actor_key;
+          })
+        : [],
       epoch_summaries: Array.isArray(place.epoch_summaries)
         ? place.epoch_summaries.map(function (epoch) {
             return {
@@ -267,6 +293,17 @@
       legacyCaption: text(era.legacy_caption),
       placeCount: Number.parseInt(era.place_count, 10) || 0,
       storyCount: Number.parseInt(era.story_count, 10) || 0
+    };
+  }
+
+  function normalizeActor(actor) {
+    return {
+      key: text(actor.key).toLowerCase(),
+      label: text(actor.label),
+      name: text(actor.name),
+      color: text(actor.color),
+      placeCount: Number.parseInt(actor.place_count, 10) || 0,
+      eraCounts: actor.era_counts && typeof actor.era_counts === 'object' ? actor.era_counts : {}
     };
   }
 
@@ -427,6 +464,44 @@
     return map;
   }
 
+  function buildActorMap(actors) {
+    var map = {};
+
+    actors.forEach(function (actor) {
+      if (actor.key) {
+        map[actor.key] = actor;
+      }
+    });
+
+    return map;
+  }
+
+  function deriveFallbackActors(places) {
+    var seen = {};
+    var actors = [];
+
+    places.forEach(function (place) {
+      place.industry_actor_relations.forEach(function (relation) {
+        var key = text(relation.actor_key).toLowerCase();
+        if (!key || seen[key]) {
+          return;
+        }
+
+        seen[key] = true;
+        actors.push({
+          key: key,
+          label: text(relation.actor_label) || key.toUpperCase(),
+          name: text(relation.actor_name) || text(relation.actor_label) || key.toUpperCase(),
+          color: text(relation.actor_color),
+          placeCount: 0,
+          eraCounts: {}
+        });
+      });
+    });
+
+    return actors;
+  }
+
   function deriveFallbackEras(places) {
     var seen = {};
     var eras = [];
@@ -501,6 +576,53 @@
     return Object.keys(keys);
   }
 
+  function getActorKeysForEra(place, eraSlug) {
+    if (!Array.isArray(place.industry_actor_relations) || !place.industry_actor_relations.length) {
+      return Array.isArray(place.industry_actor_keys) ? place.industry_actor_keys.slice() : [];
+    }
+
+    var keys = {};
+    place.industry_actor_relations.forEach(function (relation) {
+      var key = text(relation.actor_key).toLowerCase();
+      if (!key) {
+        return;
+      }
+
+      if (!eraSlug) {
+        keys[key] = true;
+        return;
+      }
+
+      var relationEra = text(relation.era_slug);
+      if (relationEra === eraSlug) {
+        keys[key] = true;
+      }
+    });
+
+    return Object.keys(keys);
+  }
+
+  function placeMatchesActor(place, actorKey, eraSlug) {
+    if (!actorKey) {
+      return true;
+    }
+
+    return getActorKeysForEra(place, eraSlug).indexOf(actorKey) !== -1;
+  }
+
+  function actorFilterLabel(state, key) {
+    if (!key) {
+      return DEFAULT_ACTOR_LABEL;
+    }
+
+    var actor = state.actorMap[key];
+    if (actor && actor.label) {
+      return actor.label;
+    }
+
+    return key.toUpperCase();
+  }
+
   function useTypeFilterLabel(state, key) {
     if (state.activeEra) {
       return HISTORICAL_FUNCTION_LABELS[key] || key;
@@ -522,6 +644,10 @@
 
     return places.filter(function (place) {
       if (state.currentStatus && place.current_status !== state.currentStatus) {
+        return false;
+      }
+
+      if (state.actorKey && !placeMatchesActor(place, state.actorKey, state.era)) {
         return false;
       }
 
@@ -629,6 +755,7 @@
       },
       onClick: function () {
         state.era = EMPTY;
+        state.currentUseType = EMPTY;
         state.shouldPan = false;
         state.render();
       }
@@ -647,6 +774,7 @@
         },
         onClick: function () {
           state.era = era.slug;
+          state.currentUseType = EMPTY;
           state.shouldPan = false;
           state.render();
         }
@@ -679,6 +807,63 @@
               state.currentUseType = EMPTY;
             }
           }
+          state.selectedPostId = 0;
+          state.shouldPan = false;
+          state.render();
+        }
+      }));
+    });
+  }
+
+  function renderActorFilters(container, state, eraScopedPlaces) {
+    var counts = { '': eraScopedPlaces.length };
+    var actors = state.actors.length ? state.actors : deriveFallbackActors(state.places);
+    var activeKeys = [];
+
+    eraScopedPlaces.forEach(function (place) {
+      getActorKeysForEra(place, state.era).forEach(function (key) {
+        counts[key] = (counts[key] || 0) + 1;
+      });
+    });
+
+    actors.forEach(function (actor) {
+      if (actor.key && counts[actor.key]) {
+        activeKeys.push(actor.key);
+      }
+    });
+
+    if (state.actorKey && activeKeys.indexOf(state.actorKey) === -1) {
+      state.actorKey = EMPTY;
+    }
+
+    container.innerHTML = EMPTY;
+    container.appendChild(buildFilterButton({
+      label: DEFAULT_ACTOR_LABEL,
+      count: counts[''] || 0,
+      active: state.actorKey === EMPTY,
+      className: 'iss-atlas-app__filter-button--actor',
+      attributes: {
+        'data-actor-key': 'all'
+      },
+      onClick: function () {
+        state.actorKey = EMPTY;
+        state.selectedPostId = 0;
+        state.shouldPan = false;
+        state.render();
+      }
+    }));
+
+    activeKeys.forEach(function (key) {
+      container.appendChild(buildFilterButton({
+        label: actorFilterLabel(state, key),
+        count: counts[key] || 0,
+        active: state.actorKey === key,
+        className: 'iss-atlas-app__filter-button--actor',
+        attributes: {
+          'data-actor-key': key
+        },
+        onClick: function () {
+          state.actorKey = key;
           state.selectedPostId = 0;
           state.shouldPan = false;
           state.render();
@@ -727,6 +912,14 @@
       return;
     }
 
+    if (state.currentUseType && state.currentUseType !== HISTORICAL_NO_DATA_KEY && activeTypes.indexOf(state.currentUseType) === -1) {
+      state.currentUseType = EMPTY;
+    }
+
+    if (state.currentUseType === HISTORICAL_NO_DATA_KEY && !counts[HISTORICAL_NO_DATA_KEY]) {
+      state.currentUseType = EMPTY;
+    }
+
     [EMPTY].concat(activeTypes).forEach(function (type) {
       container.appendChild(buildFilterButton({
         label: useTypeFilterLabel(state, type),
@@ -755,6 +948,10 @@
 
     if (state.currentUseType) {
       pieces.push(useTypeFilterLabel(state, state.currentUseType));
+    }
+
+    if (state.actorKey) {
+      pieces.push(actorFilterLabel(state, state.actorKey));
     }
 
     return pieces.join(' · ');
@@ -810,16 +1007,21 @@
     var statusClass = text(place.current_status)
       ? ' is-status-' + text(place.current_status).replace(/[^a-z0-9_-]+/g, '-')
       : EMPTY;
+    var actorClass = EMPTY;
     var unknownFunctionClass = EMPTY;
     var highlightUnknowns = state && state.activeEra &&
       (state.currentUseType === HISTORICAL_NO_DATA_KEY || state.currentUseType === EMPTY);
+
+    if (state && state.actorKey && placeMatchesActor(place, state.actorKey, state.era)) {
+      actorClass = ' is-actor-focus is-actor-' + state.actorKey.replace(/[^a-z0-9_-]+/g, '-');
+    }
 
     if (highlightUnknowns && isUnknownEpochFunction(place, state)) {
       unknownFunctionClass = ' is-function-unknown';
     }
 
     return window.L.divIcon({
-      className: 'iss-atlas-marker' + statusClass + unknownFunctionClass + (active ? ' is-active' : EMPTY),
+      className: 'iss-atlas-marker' + statusClass + actorClass + unknownFunctionClass + (active ? ' is-active' : EMPTY),
       html:
         '<span class="iss-atlas-marker__dot"></span>' +
         '<span class="iss-atlas-marker__label">' +
@@ -1373,6 +1575,11 @@
       } else {
         state.root.removeAttribute('data-active-era');
       }
+      if (state.actorKey) {
+        state.root.setAttribute('data-active-actor', state.actorKey);
+      } else {
+        state.root.removeAttribute('data-active-actor');
+      }
     }
 
     if (selectedPlace) {
@@ -1380,6 +1587,12 @@
     }
 
     renderEraFilters(elements.eraFilters, state);
+    if (elements.actorFilters) {
+      renderActorFilters(elements.actorFilters, state, eraScopedPlaces);
+    }
+    if (elements.actorLabel) {
+      elements.actorLabel.textContent = 'Industrieakteure';
+    }
     if (elements.useTypeLabel) {
       elements.useTypeLabel.textContent = state.activeEra ? 'Funktion im Zeitfenster' : 'Nutzung heute';
     }
@@ -1404,6 +1617,9 @@
       elements.statusFilters.innerHTML = EMPTY;
     }
     elements.useTypeFilters.innerHTML = EMPTY;
+    if (elements.actorFilters) {
+      elements.actorFilters.innerHTML = EMPTY;
+    }
     elements.summary.innerHTML = EMPTY;
     elements.storyIntro.innerHTML = EMPTY;
     elements.popup.innerHTML = EMPTY;
@@ -1417,6 +1633,8 @@
   function collectElements(root) {
     return {
       eraFilters: root.querySelector('[data-iss-schoneweide-era-filters]'),
+      actorFilters: root.querySelector('[data-iss-schoneweide-actor-filters]'),
+      actorLabel: root.querySelector('[data-iss-schoneweide-actor-label]'),
       statusFilters: root.querySelector('[data-iss-schoneweide-status-filters]'),
       useTypeFilters: root.querySelector('[data-iss-schoneweide-use-type-filters]'),
       useTypeLabel: root.querySelector('[data-iss-schoneweide-use-type-label]'),
@@ -1503,6 +1721,7 @@
     var elements = collectElements(root);
     var requiredKeys = [
       'eraFilters',
+      'actorFilters',
       'useTypeFilters',
       'mapSurface',
       'mapCanvas',
@@ -1555,6 +1774,9 @@
         var stories = Array.isArray(contextPayload.stories)
           ? contextPayload.stories.map(normalizeStory).filter(function (story) { return story.id > 0; })
           : [];
+        var actors = Array.isArray(contextPayload.actors)
+          ? contextPayload.actors.map(normalizeActor).filter(function (actor) { return actor.key; })
+          : [];
 
         if (!places.length) {
           renderError(elements, 'Keine Atlas-Orte verfügbar.');
@@ -1576,9 +1798,12 @@
           places: places,
           eras: eras,
           eraMap: buildEraMap(eras.length ? eras : deriveFallbackEras(places)),
+          actors: actors.length ? actors : deriveFallbackActors(places),
+          actorMap: buildActorMap(actors.length ? actors : deriveFallbackActors(places)),
           stories: stories,
           era: EMPTY,
           activeEra: null,
+          actorKey: EMPTY,
           currentStatus: EMPTY,
           currentUseType: EMPTY,
           search: EMPTY,
@@ -1598,6 +1823,7 @@
 
         elements.reset.addEventListener('click', function () {
           state.era = EMPTY;
+          state.actorKey = EMPTY;
           state.currentStatus = EMPTY;
           state.currentUseType = EMPTY;
           state.search = EMPTY;

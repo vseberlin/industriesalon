@@ -14,6 +14,8 @@
   --iss-atlas-era-accent: var(--iss-accent);
   --iss-atlas-era-accent-strong: var(--iss-accent);
   --iss-atlas-era-rgb: var(--iss-accent-rgb);
+  --iss-atlas-actor-accent: #574d44;
+  --iss-atlas-actor-rgb: 87, 77, 68;
   --iss-atlas-stage-height: clamp(34rem, 72vh, 58rem);
   display: grid;
   grid-template-columns: minmax(14.5rem, 17rem) minmax(0, 1fr);
@@ -55,6 +57,36 @@
   --iss-atlas-era-accent: #8f4b57;
   --iss-atlas-era-accent-strong: #753845;
   --iss-atlas-era-rgb: 143, 75, 87;
+}
+
+.iss-schoneweide-atlas-page[data-active-actor="tro"] .iss-atlas-app {
+  --iss-atlas-actor-accent: #8f1e14;
+  --iss-atlas-actor-rgb: 143, 30, 20;
+}
+
+.iss-schoneweide-atlas-page[data-active-actor="nag"] .iss-atlas-app {
+  --iss-atlas-actor-accent: #6f4d16;
+  --iss-atlas-actor-rgb: 111, 77, 22;
+}
+
+.iss-schoneweide-atlas-page[data-active-actor="wf"] .iss-atlas-app {
+  --iss-atlas-actor-accent: #2b5c7a;
+  --iss-atlas-actor-rgb: 43, 92, 122;
+}
+
+.iss-schoneweide-atlas-page[data-active-actor="kwo"] .iss-atlas-app {
+  --iss-atlas-actor-accent: #5f2d22;
+  --iss-atlas-actor-rgb: 95, 45, 34;
+}
+
+.iss-schoneweide-atlas-page[data-active-actor="bae"] .iss-atlas-app {
+  --iss-atlas-actor-accent: #25534b;
+  --iss-atlas-actor-rgb: 37, 83, 75;
+}
+
+.iss-schoneweide-atlas-page[data-active-actor="admos"] .iss-atlas-app {
+  --iss-atlas-actor-accent: #8a5a18;
+  --iss-atlas-actor-rgb: 138, 90, 24;
 }
 
 .iss-atlas-app__sidebar,
@@ -286,6 +318,11 @@
   gap: 0.45rem;
 }
 
+.iss-atlas-app__actor-strip {
+  display: grid;
+  gap: 0.35rem;
+}
+
 .iss-atlas-app__era-strip-body {
   display: flex;
   flex-wrap: wrap;
@@ -293,7 +330,18 @@
   align-items: center;
 }
 
+.iss-atlas-app__actor-strip-body {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem;
+  align-items: center;
+}
+
 .iss-atlas-app__era-strip-body .iss-atlas-loading {
+  width: 100%;
+}
+
+.iss-atlas-app__actor-strip-body .iss-atlas-loading {
   width: 100%;
 }
 
@@ -352,6 +400,62 @@
 
 .iss-atlas-app__filter-button--era[data-era-slug="nach-1990"] {
   --iss-era-chip-color: #8f4b57;
+}
+
+.iss-atlas-app__filter-button--actor {
+  display: inline-grid;
+  width: auto;
+  max-width: 100%;
+  min-height: 2rem;
+  padding: 0.36rem 0.72rem;
+  border-radius: 0;
+  border-color: rgba(20, 18, 16, 0.3);
+  border-left: 3px solid var(--iss-actor-chip-color, rgba(20, 18, 16, 0.3));
+  background: rgba(246, 244, 239, 0.95);
+  font-size: 0.82rem;
+  font-weight: 800;
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+}
+
+.iss-atlas-app__filter-button--actor:hover,
+.iss-atlas-app__filter-button--actor:focus-visible {
+  border-color: rgba(20, 18, 16, 0.5);
+  background: rgba(234, 231, 223, 0.98);
+}
+
+.iss-atlas-app__filter-button--actor.is-active {
+  border-color: color-mix(in srgb, var(--iss-actor-chip-color, var(--iss-atlas-actor-accent)) 75%, rgba(18, 16, 15, 0.28));
+  background: color-mix(in srgb, var(--iss-actor-chip-color, var(--iss-atlas-actor-accent)) 90%, rgba(255, 255, 255, 0.1));
+  color: var(--iss-white);
+}
+
+.iss-atlas-app__filter-button--actor[data-actor-key="all"] {
+  --iss-actor-chip-color: #574d44;
+}
+
+.iss-atlas-app__filter-button--actor[data-actor-key="tro"] {
+  --iss-actor-chip-color: #8f1e14;
+}
+
+.iss-atlas-app__filter-button--actor[data-actor-key="nag"] {
+  --iss-actor-chip-color: #6f4d16;
+}
+
+.iss-atlas-app__filter-button--actor[data-actor-key="wf"] {
+  --iss-actor-chip-color: #2b5c7a;
+}
+
+.iss-atlas-app__filter-button--actor[data-actor-key="kwo"] {
+  --iss-actor-chip-color: #5f2d22;
+}
+
+.iss-atlas-app__filter-button--actor[data-actor-key="bae"] {
+  --iss-actor-chip-color: #25534b;
+}
+
+.iss-atlas-app__filter-button--actor[data-actor-key="admos"] {
+  --iss-actor-chip-color: #8a5a18;
 }
 
 .iss-atlas-app__main,
@@ -786,6 +890,12 @@
   --iss-atlas-marker-fill: color-mix(in srgb, var(--iss-atlas-era-accent) 84%, rgba(20, 20, 20, 0.2));
   --iss-atlas-marker-active-fill: var(--iss-atlas-era-accent-strong);
   --iss-atlas-marker-local-ring: rgba(var(--iss-atlas-era-rgb), 0.24);
+}
+
+.iss-schoneweide-atlas-page[data-active-actor] .iss-atlas-marker.is-actor-focus {
+  --iss-atlas-marker-fill: color-mix(in srgb, var(--iss-atlas-actor-accent) 85%, rgba(20, 20, 20, 0.2));
+  --iss-atlas-marker-active-fill: var(--iss-atlas-actor-accent);
+  --iss-atlas-marker-local-ring: rgba(var(--iss-atlas-actor-rgb), 0.28);
 }
 
 .iss-schoneweide-atlas-page[data-active-era] .iss-atlas-marker.is-function-unknown {

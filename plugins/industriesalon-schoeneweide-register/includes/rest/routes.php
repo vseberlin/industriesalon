@@ -100,6 +100,7 @@ function iss_register_rest_get_atlas_places(WP_REST_Request $request): WP_REST_R
     return rest_ensure_response(iss_register_get_atlas_places_data([
         'era_slug' => $request->get_param('era_slug'),
         'function_key' => $request->get_param('function_key'),
+        'actor_key' => $request->get_param('actor_key'),
     ]));
 }
 
@@ -163,6 +164,10 @@ function iss_register_register_rest_routes(): void
                 'required' => false,
             ],
             'function_key' => [
+                'type' => 'string',
+                'required' => false,
+            ],
+            'actor_key' => [
                 'type' => 'string',
                 'required' => false,
             ],

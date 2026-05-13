@@ -371,6 +371,9 @@ function iss_register_get_atlas_context_data(): array
 {
     $places = iss_register_get_atlas_places_data();
     $stories = iss_register_get_editorial_atlas_story_items();
+    $actors = function_exists('iss_register_get_industry_actor_service')
+        ? iss_register_get_industry_actor_service()->build_actor_context_from_places($places)
+        : [];
     $place_counts = [];
     $story_counts = [];
 
@@ -411,6 +414,7 @@ function iss_register_get_atlas_context_data(): array
 
     return [
         'eras' => $eras,
+        'actors' => $actors,
         'stories' => $stories,
     ];
 }

@@ -283,19 +283,23 @@ function iss_register_detect_current_use_type(array $place): array
 
 function iss_register_build_present_label(array $current_status, array $current_use_type): string
 {
-    $pieces = [];
     $status_label = trim((string) ($current_status['label'] ?? ''));
+    $status_key = sanitize_key((string) ($current_status['key'] ?? ''));
     $type_label = trim((string) ($current_use_type['label'] ?? ''));
 
-    if ($status_label !== '') {
-        $pieces[] = $status_label;
+    if ($type_label !== '' && in_array($status_key, ['in_use'], true)) {
+        return $type_label;
     }
 
-    if ($type_label !== '') {
-        $pieces[] = $type_label;
+    if ($status_label === '') {
+        return $type_label;
     }
 
-    return implode(' · ', $pieces);
+    if ($type_label === '') {
+        return $status_label;
+    }
+
+    return $status_label . ' · ' . $type_label;
 }
 
 function iss_register_infer_atlas_era_from_place(array $place): array
@@ -419,7 +423,7 @@ function iss_register_get_atlas_place_score(array $place): int
     return $score;
 }
 
-function iss_register_build_atlas_place_contract(array $place): array
+function iss_register_build_atlas_place_contract(array $place, array $actor_relations_by_place = []): array
 {
     $lat = isset($place['lat']) ? (float) $place['lat'] : 0.0;
     $lng = isset($place['lng']) ? (float) $place['lng'] : 0.0;
@@ -438,10 +442,23 @@ function iss_register_build_atlas_place_contract(array $place): array
     $current = (string) ($place['current'] ?? '');
     $sources = (string) ($place['sources'] ?? '');
     $branche = (string) ($place['branche'] ?? '');
+    $archive_images = isset($place['archive_images']) && is_array($place['archive_images']) ? array_values($place['archive_images']) : [];
+    $primary_archive_image = $archive_images[0] ?? [];
+    $archive_image_url = is_array($primary_archive_image) ? esc_url_raw((string) ($primary_archive_image['url'] ?? '')) : '';
     $related_tours = iss_register_get_place_tour_usage((int) ($place['post_id'] ?? 0));
     $current_status = iss_register_get_normalized_current_status_payload($place);
     $current_use_type = iss_register_detect_current_use_type($place);
     $present_label = iss_register_build_present_label($current_status, $current_use_type);
+    $post_id = (int) ($place['post_id'] ?? 0);
+    $actor_relations = isset($actor_relations_by_place[$post_id]) && is_array($actor_relations_by_place[$post_id])
+        ? array_values($actor_relations_by_place[$post_id])
+        : [];
+    $industry_actor_keys = array_values(array_unique(array_filter(array_map(static function (array $relation): string {
+        return sanitize_key((string) ($relation['actor_key'] ?? ''));
+    }, $actor_relations))));
+    $industry_actor_labels = array_values(array_unique(array_filter(array_map(static function (array $relation): string {
+        return trim((string) ($relation['actor_label'] ?? ''));
+    }, $actor_relations))));
     $epoch_summaries = array_values(array_map(static function (array $epoch): array {
         return [
             'id' => (int) ($epoch['id'] ?? 0),
@@ -463,6 +480,7 @@ function iss_register_build_atlas_place_contract(array $place): array
         'excerpt' => $excerpt,
         'permalink' => (string) ($place['permalink'] ?? ''),
         'featured_image_url' => (string) ($place['featured_image_url'] ?? ''),
+        'archive_image_url' => $archive_image_url,
         'role' => (string) ($place['role'] ?? ''),
         'area' => (string) ($place['area'] ?? ''),
         'address' => (string) ($place['address'] ?? ''),
@@ -475,6 +493,9 @@ function iss_register_build_atlas_place_contract(array $place): array
         'current_use_type_label' => (string) ($current_use_type['label'] ?? ''),
         'current_use_type_source' => (string) ($current_use_type['source'] ?? ''),
         'present_label' => $present_label,
+        'industry_actor_keys' => $industry_actor_keys,
+        'industry_actor_labels' => $industry_actor_labels,
+        'industry_actor_relations' => $actor_relations,
         'color' => (string) ($place['color'] ?? ''),
         'branche' => $branche,
         'lat' => $lat,
@@ -509,7 +530,7 @@ function iss_register_build_atlas_place_contract(array $place): array
 function iss_register_get_atlas_places_data(array $filters = []): array
 {
     $cache_key = 'iss_register_atlas_places_cache';
-    if (!empty($filters['era_slug']) || !empty($filters['function_key'])) {
+    if (!empty($filters['era_slug']) || !empty($filters['function_key']) || !empty($filters['actor_key'])) {
         $cache_key .= ':' . md5(wp_json_encode($filters));
     }
 
@@ -521,6 +542,7 @@ function iss_register_get_atlas_places_data(array $filters = []): array
     $places = iss_register_get_place_entities();
     $era_slug = sanitize_title((string) ($filters['era_slug'] ?? ''));
     $function_key = sanitize_key((string) ($filters['function_key'] ?? ''));
+    $actor_key = sanitize_key((string) ($filters['actor_key'] ?? ''));
 
     if ($era_slug !== '' || $function_key !== '') {
         $allowed_post_ids = iss_register_get_epoch_service()->get_place_ids_for_filters([
@@ -550,8 +572,42 @@ function iss_register_get_atlas_places_data(array $filters = []): array
         }));
     }
 
+    $place_post_ids = array_values(array_filter(array_map(static function (array $place): int {
+        return (int) ($place['post_id'] ?? 0);
+    }, $places)));
+    $actor_relations_by_place = function_exists('iss_register_get_industry_actor_service')
+        ? iss_register_get_industry_actor_service()->get_relations_for_places($place_post_ids)
+        : [];
+
+    if ($actor_key !== '') {
+        $places = array_values(array_filter($places, static function (array $place) use ($actor_key, $actor_relations_by_place, $era_slug): bool {
+            $post_id = (int) ($place['post_id'] ?? 0);
+            $relations = isset($actor_relations_by_place[$post_id]) && is_array($actor_relations_by_place[$post_id])
+                ? $actor_relations_by_place[$post_id]
+                : [];
+            foreach ($relations as $relation) {
+                if (sanitize_key((string) ($relation['actor_key'] ?? '')) !== $actor_key) {
+                    continue;
+                }
+
+                if ($era_slug !== '') {
+                    $relation_era_slug = sanitize_title((string) ($relation['era_slug'] ?? ''));
+                    if ($relation_era_slug !== $era_slug) {
+                        continue;
+                    }
+                }
+
+                return true;
+            }
+
+            return false;
+        }));
+    }
+
     $atlas_places = array_values(array_filter(array_map(
-        'iss_register_build_atlas_place_contract',
+        static function (array $place) use ($actor_relations_by_place): array {
+            return iss_register_build_atlas_place_contract($place, $actor_relations_by_place);
+        },
         $places
     )));
 

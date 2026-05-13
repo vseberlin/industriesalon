@@ -80,6 +80,9 @@ function iss_register_get_place_context_payload(int $post_id): array
         'history_missing' => trim((string) ($place['history'] ?? '')) === '' && empty($era['explicit_eras']),
         'current_status_label' => trim((string) ($current_status['label'] ?? '')),
         'current_use_type_label' => trim((string) ($current_use_type['label'] ?? '')),
+        'present_label' => function_exists('iss_register_build_present_label')
+            ? trim((string) iss_register_build_present_label($current_status, $current_use_type))
+            : '',
     ];
 }
 
@@ -125,8 +128,7 @@ function iss_register_render_place_context(array $attributes = []): string
     if ($variant === 'hero_meta') {
         $labels = array_values(array_filter([
             $context['history_label'] !== '' ? $context['history_label'] : '',
-            $context['current_status_label'],
-            $context['current_use_type_label'],
+            $context['present_label'],
             $context['area'],
         ]));
 
@@ -147,8 +149,7 @@ function iss_register_render_place_context(array $attributes = []): string
         $items = [
             ['label' => 'Adresse', 'value' => $context['address']],
             ['label' => 'Historisch', 'value' => $context['history_label'] !== '' ? $context['history_label'] : 'Noch nicht eingeordnet'],
-            ['label' => 'Heute', 'value' => $context['current_status_label']],
-            ['label' => 'Nutzung', 'value' => $context['current_use_type_label']],
+            ['label' => 'Heute', 'value' => $context['present_label']],
         ];
 
         return iss_register_render_place_context_items(
@@ -163,8 +164,7 @@ function iss_register_render_place_context(array $attributes = []): string
         $items = [
             ['label' => 'Adresse', 'value' => $context['address']],
             ['label' => 'Historisch', 'value' => $context['history_label'] !== '' ? $context['history_label'] : 'Noch nicht eingeordnet'],
-            ['label' => 'Heute', 'value' => $context['current_status_label']],
-            ['label' => 'Nutzung', 'value' => $context['current_use_type_label']],
+            ['label' => 'Heute', 'value' => $context['present_label']],
             ['label' => 'Gebiet', 'value' => $context['area']],
         ];
 
@@ -178,8 +178,7 @@ function iss_register_render_place_context(array $attributes = []): string
 
     if ($variant === 'today_panel') {
         $items = [
-            ['label' => 'Heute', 'value' => $context['current_status_label']],
-            ['label' => 'Nutzung', 'value' => $context['current_use_type_label']],
+            ['label' => 'Heute', 'value' => $context['present_label']],
         ];
 
         $html = '<div class="wp-block-group iss-register-place__today-meta">';

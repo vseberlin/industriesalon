@@ -59,6 +59,9 @@ register_activation_hook(__FILE__, function () {
     if (function_exists('iss_register_get_epoch_service')) {
         iss_register_get_epoch_service()->install_schema();
     }
+    if (function_exists('iss_register_get_industry_actor_service')) {
+        iss_register_get_industry_actor_service()->install_schema();
+    }
     if (function_exists('iss_register_get_place_state_service')) {
         iss_register_get_place_state_service()->install_schema();
         iss_register_get_place_state_service()->backfill_all_places();

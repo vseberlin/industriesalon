@@ -139,7 +139,11 @@ final class ISS_Register_Place_State_Service
             $wpdb->prepare(
                 "SELECT * FROM {$table_name}
                 WHERE place_post_id IN ({$placeholders})
-                ORDER BY place_post_id ASC, is_current DESC, start_year ASC, sort_order ASC, id ASC",
+                ORDER BY place_post_id ASC,
+                    CASE WHEN state_kind = 'current' THEN 1 ELSE 0 END ASC,
+                    start_year ASC,
+                    sort_order ASC,
+                    id ASC",
                 $place_post_ids
             ),
             ARRAY_A
@@ -215,7 +219,7 @@ final class ISS_Register_Place_State_Service
             "SELECT COUNT(*) FROM {$table_name} WHERE state_kind = %s",
             'historical'
         ));
-        $sample_keys = $wpdb->get_col("SELECT state_key FROM {$table_name} ORDER BY place_post_id ASC, is_current DESC, sort_order ASC, id ASC LIMIT 5");
+        $sample_keys = $wpdb->get_col("SELECT state_key FROM {$table_name} ORDER BY place_post_id ASC, CASE WHEN state_kind = 'current' THEN 1 ELSE 0 END ASC, sort_order ASC, id ASC LIMIT 5");
 
         return [
             'table_exists' => true,
@@ -256,8 +260,11 @@ final class ISS_Register_Place_State_Service
         }));
 
         usort($rows, static function (array $left, array $right): int {
-            if ((int) $left['is_current'] !== (int) $right['is_current']) {
-                return (int) $right['is_current'] <=> (int) $left['is_current'];
+            $left_kind = (string) ($left['state_kind'] ?? '');
+            $right_kind = (string) ($right['state_kind'] ?? '');
+
+            if (($left_kind === 'current') !== ($right_kind === 'current')) {
+                return ($left_kind === 'current') ? 1 : -1;
             }
 
             $left_year = $left['start_year'] === null ? PHP_INT_MAX : (int) $left['start_year'];
