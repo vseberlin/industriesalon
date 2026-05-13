@@ -243,6 +243,17 @@
             return relation.actor_key;
           })
         : [],
+      related_publications: Array.isArray(place.related_publications)
+        ? place.related_publications.map(function (item) {
+            return {
+              id: Number.parseInt(item.id, 10) || 0,
+              title: text(item.title),
+              permalink: relativeUrl(item.permalink)
+            };
+          }).filter(function (item) {
+            return item.id > 0 && item.permalink;
+          })
+        : [],
       epoch_summaries: Array.isArray(place.epoch_summaries)
         ? place.epoch_summaries.map(function (epoch) {
             return {
@@ -1379,6 +1390,26 @@
       var link = createElement('a', 'iss-action-link', 'Zum Ort');
       link.href = place.permalink;
       footer.appendChild(link);
+    }
+
+    if (Array.isArray(place.related_publications) && place.related_publications.length) {
+      var publication = place.related_publications[0];
+      var prefersKwoPublication = text(place.name).toLowerCase().indexOf('kwo') !== -1
+        || getActorKeysForEra(place, state.era).indexOf('kwo') !== -1;
+      if (prefersKwoPublication) {
+        var kwoPublication = place.related_publications.find(function (item) {
+          return /kwo|kabelwerk/i.test(text(item.title));
+        });
+        if (kwoPublication) {
+          publication = kwoPublication;
+        }
+      }
+      if (publication && publication.permalink) {
+        var publicationLink = createElement('a', 'iss-action-link', 'Zur Publikation');
+        publicationLink.href = publication.permalink;
+        publicationLink.title = publication.title || 'Publikation';
+        footer.appendChild(publicationLink);
+      }
     }
 
     if (footer.children.length) {

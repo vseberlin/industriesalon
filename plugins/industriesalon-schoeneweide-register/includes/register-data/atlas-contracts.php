@@ -423,7 +423,108 @@ function iss_register_get_atlas_place_score(array $place): int
     return $score;
 }
 
-function iss_register_build_atlas_place_contract(array $place, array $actor_relations_by_place = []): array
+function iss_register_get_related_publications_by_place(array $place_post_ids, int $limit_per_place = 2): array
+{
+    $place_post_ids = array_values(array_filter(array_map('absint', $place_post_ids)));
+    if (!$place_post_ids) {
+        return [];
+    }
+
+    if (
+        !defined('ISS_RELATIONS_TAXONOMY')
+        || !taxonomy_exists(ISS_RELATIONS_TAXONOMY)
+        || !post_type_exists('publication')
+        || !function_exists('iss_relations_get_place_term_id')
+    ) {
+        return [];
+    }
+
+    $limit_per_place = max(1, min(3, $limit_per_place));
+    $term_to_place = [];
+
+    foreach ($place_post_ids as $place_post_id) {
+        $term_id = (int) iss_relations_get_place_term_id((int) $place_post_id);
+        if ($term_id <= 0) {
+            continue;
+        }
+
+        $term_to_place[$term_id] = (int) $place_post_id;
+    }
+
+    if (!$term_to_place) {
+        return [];
+    }
+
+    $posts = get_posts([
+        'post_type' => 'publication',
+        'post_status' => 'publish',
+        'posts_per_page' => -1,
+        'orderby' => 'date',
+        'order' => 'DESC',
+        'suppress_filters' => true,
+        'ignore_sticky_posts' => true,
+        'tax_query' => [[
+            'taxonomy' => ISS_RELATIONS_TAXONOMY,
+            'field' => 'term_id',
+            'terms' => array_keys($term_to_place),
+            'operator' => 'IN',
+        ]],
+    ]);
+
+    if (!$posts) {
+        return [];
+    }
+
+    $result = [];
+    foreach ($posts as $post) {
+        if (!$post instanceof WP_Post) {
+            continue;
+        }
+
+        $post_id = (int) $post->ID;
+        $term_ids = wp_get_object_terms($post_id, ISS_RELATIONS_TAXONOMY, ['fields' => 'ids']);
+        if (is_wp_error($term_ids) || !is_array($term_ids) || !$term_ids) {
+            continue;
+        }
+
+        foreach ($term_ids as $term_id) {
+            $term_id = (int) $term_id;
+            if ($term_id <= 0 || !isset($term_to_place[$term_id])) {
+                continue;
+            }
+
+            $place_post_id = (int) $term_to_place[$term_id];
+            if (!isset($result[$place_post_id])) {
+                $result[$place_post_id] = [];
+            }
+
+            if (count($result[$place_post_id]) >= $limit_per_place) {
+                continue;
+            }
+
+            $already_present = false;
+            foreach ($result[$place_post_id] as $item) {
+                if ((int) ($item['id'] ?? 0) === $post_id) {
+                    $already_present = true;
+                    break;
+                }
+            }
+            if ($already_present) {
+                continue;
+            }
+
+            $result[$place_post_id][] = [
+                'id' => $post_id,
+                'title' => get_the_title($post),
+                'permalink' => (string) get_permalink($post),
+            ];
+        }
+    }
+
+    return $result;
+}
+
+function iss_register_build_atlas_place_contract(array $place, array $actor_relations_by_place = [], array $related_publications_by_place = []): array
 {
     $lat = isset($place['lat']) ? (float) $place['lat'] : 0.0;
     $lng = isset($place['lng']) ? (float) $place['lng'] : 0.0;
@@ -459,6 +560,9 @@ function iss_register_build_atlas_place_contract(array $place, array $actor_rela
     $industry_actor_labels = array_values(array_unique(array_filter(array_map(static function (array $relation): string {
         return trim((string) ($relation['actor_label'] ?? ''));
     }, $actor_relations))));
+    $related_publications = isset($related_publications_by_place[$post_id]) && is_array($related_publications_by_place[$post_id])
+        ? array_values($related_publications_by_place[$post_id])
+        : [];
     $epoch_summaries = array_values(array_map(static function (array $epoch): array {
         return [
             'id' => (int) ($epoch['id'] ?? 0),
@@ -496,6 +600,7 @@ function iss_register_build_atlas_place_contract(array $place, array $actor_rela
         'industry_actor_keys' => $industry_actor_keys,
         'industry_actor_labels' => $industry_actor_labels,
         'industry_actor_relations' => $actor_relations,
+        'related_publications' => $related_publications,
         'color' => (string) ($place['color'] ?? ''),
         'branche' => $branche,
         'lat' => $lat,
@@ -578,6 +683,7 @@ function iss_register_get_atlas_places_data(array $filters = []): array
     $actor_relations_by_place = function_exists('iss_register_get_industry_actor_service')
         ? iss_register_get_industry_actor_service()->get_relations_for_places($place_post_ids)
         : [];
+    $related_publications_by_place = iss_register_get_related_publications_by_place($place_post_ids, 2);
 
     if ($actor_key !== '') {
         $places = array_values(array_filter($places, static function (array $place) use ($actor_key, $actor_relations_by_place, $era_slug): bool {
@@ -605,8 +711,8 @@ function iss_register_get_atlas_places_data(array $filters = []): array
     }
 
     $atlas_places = array_values(array_filter(array_map(
-        static function (array $place) use ($actor_relations_by_place): array {
-            return iss_register_build_atlas_place_contract($place, $actor_relations_by_place);
+        static function (array $place) use ($actor_relations_by_place, $related_publications_by_place): array {
+            return iss_register_build_atlas_place_contract($place, $actor_relations_by_place, $related_publications_by_place);
         },
         $places
     )));
