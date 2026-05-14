@@ -975,6 +975,11 @@ function industriesalon_enqueue_assets(): void
 
     $conditional_styles = array(
         array(
+            'handle' => 'industriesalon-front-page',
+            'path' => '/assets/css/front-page.css',
+            'condition' => is_front_page(),
+        ),
+        array(
             'handle' => 'industriesalon-ueber-uns',
             'path' => '/assets/css/ueber-uns.css',
             'condition' => $current_page_template === 'page-ueber-uns'
@@ -1133,8 +1138,8 @@ function industriesalon_enqueue_assets(): void
         );
 
         $enqueue_theme_style(
-            'industriesalon-oberschoeneweide-atlas',
-            '/assets/css/oberschoeneweide-atlas.css',
+            'industriesalon-page-schoneweide',
+            '/assets/css/page-schoneweide.css',
             array('industriesalon-atlas-app')
         );
 

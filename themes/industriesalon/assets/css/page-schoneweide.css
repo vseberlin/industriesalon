@@ -1,24 +1,11 @@
-/* Swap `.iss-scheme-*` on the page wrapper to recolor the public Atlas. */
+/* =====================================================================
+   SCHONEWEIDE PAGE
+   Page-shell styling around the standalone Atlas app.
+   ===================================================================== */
+
 .iss-schoneweide-atlas-page {
-  --iss-atlas-surface: rgba(255, 253, 249, 0.96);
-  --iss-atlas-surface-strong: rgba(255, 253, 249, 0.94);
-  --iss-atlas-border: rgba(30, 30, 30, 0.12);
-  --iss-atlas-text-muted: rgba(30, 30, 30, 0.7);
-  --iss-atlas-text-soft-muted: rgba(30, 30, 30, 0.56);
-  --iss-atlas-status-surface: rgba(255, 253, 249, 0.84);
-  --iss-atlas-map-surface: color-mix(in srgb, var(--iss-accent) 4%, #ece6de);
-  --iss-atlas-label-surface: rgba(255, 253, 249, 0.96);
-  --iss-atlas-media-fallback-bg: color-mix(in srgb, var(--iss-accent) 9%, #d9d2cb);
-  --iss-atlas-story-media-fallback-bg: color-mix(in srgb, var(--iss-accent) 8%, #dbd4cd);
-  --iss-atlas-fallback-gradient: linear-gradient(
-    145deg,
-    rgba(56, 52, 48, 0.94),
-    color-mix(in srgb, var(--iss-accent) 24%, rgba(139, 127, 118, 0.82))
-  );
   --iss-schoneweide-panel-radius: 0.35rem;
   --iss-schoneweide-card-radius: 0.25rem;
-  --iss-atlas-marker-idle-color: color-mix(in srgb, var(--iss-black) 72%, var(--iss-accent) 28%);
-  --iss-atlas-marker-ring: rgba(var(--iss-accent-rgb), 0.18);
   --iss-schoneweide-track-image: url("/wp-content/themes/industriesalon/assets/maps/schoneweide-static-map-big-industrial-v3.png");
   color: var(--iss-black);
   background:
@@ -26,99 +13,14 @@
     linear-gradient(180deg, color-mix(in srgb, var(--iss-accent) 2%, #fffdf8) 0%, color-mix(in srgb, var(--iss-accent) 7%, #f5eee6) 100%);
 }
 
-.wp-block-cover.iss-front-hero.iss-schoneweide-atlas-hero {
-  --iss-hero-overlay: linear-gradient(
-    94deg,
-    rgba(18, 16, 15, 0.76) 0%,
-    rgba(18, 16, 15, 0.48) 34%,
-    rgba(18, 16, 15, 0.18) 66%,
-    rgba(18, 16, 15, 0.42) 100%
-  );
-}
-
-.iss-schoneweide-atlas-page .iss-schoneweide-atlas-hero__text {
-  max-width: 34rem;
-}
-
-.iss-schoneweide-atlas-page .iss-front-hero__actions-wrap {
-  position: relative;
-  z-index: 2;
-  margin-top: -2rem;
-}
-
 .iss-schoneweide-intro-section {
   padding-top: clamp(2.75rem, 6vw, 5rem);
   padding-bottom: clamp(2rem, 4vw, 3.25rem);
 }
 
-.iss-schoneweide-intro-block {
-  display: grid;
-  gap: 1.35rem;
-}
-
-.iss-schoneweide-intro-block__top {
-  display: grid;
-  grid-template-columns: minmax(0, 1.08fr) minmax(17rem, 20rem);
-  gap: clamp(2rem, 5vw, 4.5rem);
-  align-items: end;
-}
-
-.iss-schoneweide-intro-block__copy,
-.iss-schoneweide-intro-block__head-wrap {
-  min-width: 0;
-}
-
-.iss-schoneweide-intro-block__lead {
-  max-width: 48rem;
-  margin: 0;
-  color: rgba(30, 30, 30, 0.9);
-  font-size: clamp(1.18rem, 1.02rem + 0.42vw, 1.55rem);
-  line-height: 1.5;
-}
-
-.iss-schoneweide-intro-block__textcols {
-  display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: 1rem 1.35rem;
-  margin-top: 1.35rem;
-}
-
-.iss-schoneweide-intro-block__textcols p {
-  margin: 0;
-  color: rgba(30, 30, 30, 0.74);
-  line-height: 1.62;
-}
-
-.iss-schoneweide-intro-block__head {
-  display: grid;
-  gap: 0.35rem;
-}
-
-.iss-schoneweide-intro-block__label {
-  margin: 0;
-}
-
-.iss-schoneweide-intro-block__title {
-  max-width: 11ch;
-  margin: 0;
-  font-size: clamp(2rem, 1.5rem + 1.15vw, 3.4rem);
-  line-height: 1.02;
-  letter-spacing: -0.03em;
-}
-
-.iss-schoneweide-intro-block__note {
-  max-width: 62rem;
-  padding: 1rem 1.15rem 1.05rem;
-  border: 1px solid rgba(30, 30, 30, 0.1);
-  border-left: 4px solid var(--iss-accent);
-  border-radius: var(--iss-schoneweide-card-radius);
-  background: rgba(255, 255, 255, 0.72);
-  box-shadow: var(--iss-shadow);
-}
-
-.iss-schoneweide-intro-block__note p {
-  margin: 0;
-  color: rgba(30, 30, 30, 0.78);
+.iss-schoneweide-intro-section .iss-story-intro {
+  --iss-story-intro-top-align: end;
+  --iss-story-intro-head-align: end;
 }
 
 .iss-schoneweide-landing-section {
@@ -126,50 +28,9 @@
   padding-bottom: clamp(1.5rem, 3vw, 2.5rem);
 }
 
-.iss-schoneweide-landing-shell {
-  display: grid;
-  grid-template-columns: minmax(17rem, 21rem) minmax(0, 1fr);
-  gap: clamp(2rem, 4vw, 4.25rem);
-  align-items: start;
-}
-
-.iss-schoneweide-landing-shell > * {
-  min-width: 0;
-}
-
-.iss-schoneweide-landing-shell--flip {
-  grid-template-columns: minmax(0, 1fr) minmax(17rem, 21rem);
-}
-
-.iss-schoneweide-landing-rail {
-  display: grid;
-  gap: 1rem;
-  align-content: start;
-  min-width: 0;
-  padding-right: clamp(0rem, 1.6vw, 1.35rem);
-}
-
-.iss-schoneweide-landing-shell--flip .iss-schoneweide-landing-rail {
-  order: 2;
-  padding-right: 0;
-  padding-left: clamp(0rem, 1.6vw, 1.35rem);
-}
-
-.iss-schoneweide-landing-rail .iss-heading__title {
-  margin-top: 0;
-  margin-bottom: 0.6rem;
-  font-size: clamp(2rem, 1.65rem + 1vw, 3rem);
-  line-height: 0.96;
-}
-
-.iss-schoneweide-landing-rail .iss-heading__text,
 .iss-schoneweide-today-panel__statement {
   font-size: 1.02rem;
   line-height: 1.72;
-}
-
-.iss-schoneweide-landing-rail > p {
-  margin: 0;
 }
 
 .iss-schoneweide-landscape-panel,
@@ -474,52 +335,30 @@
 }
 
 @media (max-width: 1200px) {
-  .iss-schoneweide-intro-block__textcols {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-  }
-
   .iss-schoneweide-keyplaces-grid {
     grid-template-columns: repeat(3, minmax(0, 1fr));
   }
 }
 
 @media (max-width: 1024px) {
-  .iss-schoneweide-intro-block__top {
+  .iss-schoneweide-intro-section .iss-story-intro__top {
     grid-template-columns: minmax(0, 1fr);
     gap: 1.35rem;
   }
 
-  .iss-schoneweide-intro-block__head-wrap {
+  .iss-schoneweide-intro-section .iss-story-intro__head-wrap {
     order: -1;
-  }
-
-  .iss-schoneweide-landing-shell {
-    grid-template-columns: minmax(0, 1fr);
-  }
-
-  .iss-schoneweide-landing-rail,
-  .iss-schoneweide-landing-shell--flip .iss-schoneweide-landing-rail {
-    order: 0;
-    padding-right: 0;
-    padding-left: 0;
   }
 
   .iss-schoneweide-epochs-grid {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 
-  .iss-schoneweide-atlas-page .iss-front-hero__actions-wrap {
-    margin-top: -1.25rem;
-  }
 }
 
 @media (max-width: 781px) {
   .iss-schoneweide-landing-section {
     padding-top: 1.75rem;
-  }
-
-  .iss-schoneweide-intro-block__textcols {
-    grid-template-columns: minmax(0, 1fr);
   }
 
   .iss-schoneweide-landscape-panel__labels,

@@ -664,7 +664,7 @@
   position: relative;
   z-index: 2;
   display: grid;
-  grid-template-columns: minmax(0, 1fr) minmax(0, var(--iss-banner-width));
+  grid-template-columns: minmax(0, 1fr) auto;
   align-items: end;
   align-content: end;
   column-gap: clamp(1rem, 3vw, 2.5rem);
@@ -722,6 +722,227 @@
 
 .iss-front-hero__actions {
   margin-top: 0.75rem;
+}
+
+/* =====================================================================
+   LANDING SHELL
+   Shared rail-and-content layout for curated landing sections.
+   ===================================================================== */
+
+.iss-landing-shell {
+  display: grid;
+  grid-template-columns: minmax(17rem, 21rem) minmax(0, 1fr);
+  gap: clamp(2rem, 4vw, 4.25rem);
+  align-items: start;
+}
+
+.iss-landing-shell > * {
+  min-width: 0;
+}
+
+.iss-landing-shell--flip {
+  grid-template-columns: minmax(0, 1fr) minmax(17rem, 21rem);
+}
+
+.iss-landing-rail {
+  display: grid;
+  gap: 1rem;
+  align-content: start;
+  min-width: 0;
+  padding-right: clamp(0rem, 1.6vw, 1.35rem);
+}
+
+.iss-landing-shell--flip .iss-landing-rail {
+  order: 2;
+  padding-right: 0;
+  padding-left: clamp(0rem, 1.6vw, 1.35rem);
+}
+
+.iss-landing-rail .iss-heading__title {
+  margin-top: 0;
+  margin-bottom: 0.6rem;
+  font-size: clamp(2rem, 1.65rem + 1vw, 3rem);
+  line-height: 0.96;
+}
+
+.iss-landing-rail .iss-heading__text {
+  font-size: 1.02rem;
+  line-height: 1.72;
+}
+
+.iss-landing-rail > p {
+  margin: 0;
+}
+
+/* =====================================================================
+   STORY INTRO
+   Shared lead + text-columns + note-line composition for editorial sections.
+   ===================================================================== */
+
+.iss-story-intro {
+  --iss-story-intro-gap: 1.35rem;
+  --iss-story-intro-top-columns: minmax(0, 1.08fr) minmax(17rem, 20rem);
+  --iss-story-intro-top-gap: clamp(2rem, 5vw, 4.5rem);
+  --iss-story-intro-top-align: start;
+  --iss-story-intro-copy-max: none;
+  --iss-story-intro-head-justify: flex-start;
+  --iss-story-intro-head-max: none;
+  --iss-story-intro-head-gap: 0.55rem;
+  --iss-story-intro-head-align: start;
+  --iss-story-intro-lead-max: 48rem;
+  --iss-story-intro-lead-size: clamp(1.18rem, 1.02rem + 0.42vw, 1.55rem);
+  --iss-story-intro-lead-line: 1.5;
+  --iss-story-intro-lead-track: normal;
+  --iss-story-intro-lead-color: rgba(30, 30, 30, 0.9);
+  --iss-story-intro-title-max: none;
+  --iss-story-intro-title-size: clamp(2rem, 1.8rem + 1vw, 3.35rem);
+  --iss-story-intro-title-line: 0.96;
+  --iss-story-intro-title-track: normal;
+  --iss-story-intro-textcols-max: none;
+  --iss-story-intro-textcols-gap: 1rem;
+  --iss-story-intro-textcols-margin-top: 1.1rem;
+  --iss-story-intro-text-color: rgba(30, 30, 30, 0.78);
+  --iss-story-intro-text-size: 1.02rem;
+  --iss-story-intro-text-line: 1.64;
+  --iss-story-intro-text-item-gap: 0.85rem;
+  --iss-story-intro-note-max: 46rem;
+  --iss-story-intro-note-border: 1px solid rgba(30, 30, 30, 0.08);
+  --iss-story-intro-note-color: rgba(30, 30, 30, 0.78);
+  --iss-story-intro-note-size: 0.98rem;
+  --iss-story-intro-note-line: 1.55;
+  display: grid;
+  gap: var(--iss-story-intro-gap);
+}
+
+.iss-story-intro__top {
+  display: grid;
+  grid-template-columns: var(--iss-story-intro-top-columns);
+  gap: var(--iss-story-intro-top-gap);
+  align-items: var(--iss-story-intro-top-align);
+}
+
+.iss-story-intro__copy,
+.iss-story-intro__head-wrap {
+  min-width: 0;
+}
+
+.iss-story-intro__copy {
+  max-width: var(--iss-story-intro-copy-max);
+}
+
+.iss-story-intro__head-wrap {
+  display: flex;
+  justify-content: var(--iss-story-intro-head-justify);
+}
+
+.iss-story-intro__head {
+  display: grid;
+  gap: var(--iss-story-intro-head-gap);
+  align-content: var(--iss-story-intro-head-align);
+  max-width: var(--iss-story-intro-head-max);
+}
+
+.iss-story-intro__head > * {
+  margin: 0;
+}
+
+.iss-story-intro__lead {
+  max-width: var(--iss-story-intro-lead-max);
+  margin: 0;
+  color: var(--iss-story-intro-lead-color);
+  font-size: var(--iss-story-intro-lead-size);
+  line-height: var(--iss-story-intro-lead-line);
+  letter-spacing: var(--iss-story-intro-lead-track);
+}
+
+.iss-story-intro__textcols {
+  max-width: var(--iss-story-intro-textcols-max);
+  margin-top: var(--iss-story-intro-textcols-margin-top);
+  color: var(--iss-story-intro-text-color);
+  font-size: var(--iss-story-intro-text-size);
+  line-height: var(--iss-story-intro-text-line);
+}
+
+.iss-story-intro__textcols > * {
+  margin: 0;
+}
+
+.iss-story-intro__textcols--grid-3 {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: var(--iss-story-intro-textcols-gap);
+}
+
+.iss-story-intro__textcols--columns-2 {
+  column-count: 2;
+  column-gap: var(--iss-story-intro-textcols-gap);
+}
+
+.iss-story-intro__textcols--columns-2 > * {
+  break-inside: avoid;
+}
+
+.iss-story-intro__textcols--columns-2 > * + * {
+  margin-top: var(--iss-story-intro-text-item-gap);
+}
+
+.iss-story-intro__title {
+  max-width: var(--iss-story-intro-title-max);
+  margin: 0;
+  font-size: var(--iss-story-intro-title-size);
+  line-height: var(--iss-story-intro-title-line);
+  letter-spacing: var(--iss-story-intro-title-track);
+  text-wrap: balance;
+}
+
+.iss-story-intro__note {
+  max-width: var(--iss-story-intro-note-max);
+  padding-top: 1rem;
+  border-top: var(--iss-story-intro-note-border);
+  color: var(--iss-story-intro-note-color);
+  font-size: var(--iss-story-intro-note-size);
+  line-height: var(--iss-story-intro-note-line);
+}
+
+.iss-story-intro__note > * {
+  margin: 0;
+}
+
+.iss-story-intro__note > :last-child {
+  margin-bottom: 0;
+}
+
+.iss-story-intro__note strong {
+  color: var(--iss-text);
+}
+
+@media (max-width: 1024px) {
+  .iss-landing-shell {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .iss-landing-rail,
+  .iss-landing-shell--flip .iss-landing-rail {
+    order: 0;
+    padding-right: 0;
+    padding-left: 0;
+  }
+}
+
+@media (max-width: 1200px) {
+  .iss-story-intro__textcols--grid-3 {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 781px) {
+  .iss-story-intro__textcols--grid-3 {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .iss-story-intro__textcols--columns-2 {
+    column-count: 1;
+  }
 }
 
 /* Focused dark contrast block for one research/sammlung object.
@@ -821,7 +1042,8 @@
 .iss-front-hero__actions-wrap {
   position: relative;
   z-index: 6;
-  margin-top: 1rem;
+  width: 100%;
+  margin-top: 0.45rem;
 }
 
 .iss-front-hero__actions-wrap .iss-front-hero__actions {
@@ -831,7 +1053,8 @@
 
 @media (max-width: 782px) {
   .iss-front-hero__actions-wrap {
-    margin-top: 1rem;
+    width: 100%;
+    margin-top: 0.45rem;
   }
 }
 
@@ -851,6 +1074,10 @@
   justify-self: end;
   transform: translateX(var(--iss-banner-shift-x)) translateY(var(--iss-banner-shift-y));
   z-index: 5;
+}
+
+.wp-block-cover.iss-front-hero .iss-front-banner-slot:empty {
+  display: none;
 }
 
 .wp-block-cover.iss-front-hero > .wp-block-cover__inner-container > .iss-front-hero__shell,

@@ -10,7 +10,7 @@
   - route rail/carousel styling,
   - normalized route-card media sizing,
   - shared subsection card treatment for tours and places.
-- Rebuilt the public `/schoneweide/` Atlas as a leaner theme-owned Leaflet surface with a dedicated app stylesheet in `assets/css/atlas-app.css` and a reduced page-skin file in `assets/css/oberschoeneweide-atlas.css`.
+- Rebuilt the public `/schoneweide/` Atlas as a leaner theme-owned Leaflet surface with a dedicated app stylesheet in `assets/css/atlas-app.css` and a separate page-shell stylesheet in `assets/css/page-schoneweide.css`.
 - Switched the Atlas page to the shared landing-page hero structure and moved its data loading/interaction layer into the simplified `assets/js/schoneweide.js` runtime.
 - Made the public Atlas skinnable through `.iss-scheme-*` wrapper accents and moved shared card/kicker presentation back onto the global `style.css` and `cards.css` systems.
 - Moved the Atlas hero note into `industriesalon-notices` with a dedicated `atlas` skin so the banner is plugin-owned instead of page-local markup/CSS.

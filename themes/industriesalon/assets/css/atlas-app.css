@@ -1,3 +1,23 @@
+.iss-schoneweide-atlas-page {
+  --iss-atlas-surface: rgba(255, 253, 249, 0.96);
+  --iss-atlas-surface-strong: rgba(255, 253, 249, 0.94);
+  --iss-atlas-border: rgba(30, 30, 30, 0.12);
+  --iss-atlas-text-muted: rgba(30, 30, 30, 0.7);
+  --iss-atlas-text-soft-muted: rgba(30, 30, 30, 0.56);
+  --iss-atlas-status-surface: rgba(255, 253, 249, 0.84);
+  --iss-atlas-map-surface: color-mix(in srgb, var(--iss-accent) 4%, #ece6de);
+  --iss-atlas-label-surface: rgba(255, 253, 249, 0.96);
+  --iss-atlas-media-fallback-bg: color-mix(in srgb, var(--iss-accent) 9%, #d9d2cb);
+  --iss-atlas-story-media-fallback-bg: color-mix(in srgb, var(--iss-accent) 8%, #dbd4cd);
+  --iss-atlas-fallback-gradient: linear-gradient(
+    145deg,
+    rgba(56, 52, 48, 0.94),
+    color-mix(in srgb, var(--iss-accent) 24%, rgba(139, 127, 118, 0.82))
+  );
+  --iss-atlas-marker-idle-color: color-mix(in srgb, var(--iss-black) 72%, var(--iss-accent) 28%);
+  --iss-atlas-marker-ring: rgba(var(--iss-accent-rgb), 0.18);
+}
+
 .iss-atlas-app {
   --iss-atlas-panel-bg: var(--iss-atlas-surface, #f3f1eb);
   --iss-atlas-panel-bg-strong: var(--iss-atlas-surface-strong, rgba(245, 243, 238, 0.96));
