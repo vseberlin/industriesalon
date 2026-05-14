@@ -433,32 +433,119 @@ If the goal is "no hidden overrides, no workarounds, no deep selectors, coherent
 
 ---
 
-## Supplemental Audit: Gutenberg Integrity & Plugin Synchronization (Peer Evaluation)
+## Peer Review: Cleanup Commit Audit (3ed2211)
 
-Following an investigative audit of the underlying markup and custom plugin ecosystem, I have identified three critical "Silent Failures" that contribute to the current system's fragility.
+Commit `3ed2211` ("Audit CSS system and clean theme plugin assets") was the first concrete response to this review. The following section evaluates what it did against the priority refactor plan above, notes what is now closed, and flags what remains open or was introduced as new debt.
 
-### 1. The "Shadowing" Crisis (Plugin/Theme Desync)
-The custom plugins (`iss-fuehrungen`, `industriesalon-notices`) are currently **re-implementing theme HTML structures** in PHP (e.g., hardcoded BEM classes for `.iss-hero-note`, `.iss-kicker`).
-*   **Verdict:** This creates a secondary source of truth. If the theme's `.iss-kicker` markup changes to resolve a Gutenberg nesting bug, the plugin-generated kickers will remain broken.
-*   **Target:** Move all plugin-generated HTML to **Theme Partials** or shared PHP helpers. The plugin should strictly provide data; the theme must own 100% of the markup.
+### What was deleted
 
-### 2. The Gutenberg "Layout Fighting" Conflict
-A major source of editor breakage is the conflict between WordPress's `constrained` layout and the theme's manual `.iss-container`.
-*   **Finding:** Patterns are frequently saved with `layout: {"type":"constrained"}`. This causes Gutenberg to inject `.is-layout-constrained` CSS, which adds internal padding and margins that clash with the theme's caging.
-*   **Target:** Standardize the **"Section Contract"**: 
-    1. Parent Section (`tagName: "section"`) uses `layout: {"type":"default"}`.
-    2. Inner Child uses `.iss-container` for caging.
-    3. **Action:** Batch-strip `constrained` layout attributes from all pattern Group blocks.
+**Orphaned compact CSS stack** — resolved.
+`style-compact.css` (1,520 lines), `cards-compact.css` (1,632 lines), and `patterns-compact.css` (6,676 lines) were all removed. These were not enqueued anywhere and posed a maintenance trap. Removal is correct. No replacement is needed.
 
-### 3. Vertical "Jumping" Root Cause (The Hero Latitue)
-The reported "jumping CTAs" under hero sections are caused by **variable floor calculations**.
-*   **Finding:** Some pages calculate the hero bottom based on content height, while others use `90svh` or hardcoded `clamp()` values. 
-*   **Target:** Implement the **"Hero-Action Contract"**:
-    1. Define a global `--iss-hero-height: 80vh` (or similar) in `style.css`.
-    2. Ensure the "Action Wrap" (CTAs) is either consistently **INSIDE** the bottom-aligned grid of the hero or consistently **OUTSIDE** with a shared margin-top from the container. 
-    3. **Recommendation:** Keep CTAs **OUTSIDE** but lock the hero height globally to ensure they sit at the same latitude across all landing pages.
+**`_archive/` directory** — resolved.
+The entire contents of `assets/css/_archive/` were deleted: all staged experiment files, the staging organization drafts including `CSS-SYSTEM-MANUAL.md`, `unused.css` (1,211 lines), `style.css-orig` (552 lines), and HTML test snapshots. The README that documented the archive is also gone. This is clean. The development history now lives in git rather than in tracked files.
 
-### 4. Hardcoded Environmentals
-The system remains fragile due to hardcoded development IPs (e.g., `192.168.2.31`) in both templates and plugin logic.
-*   **Verdict:** This invalidates block checksums in Gutenberg when moving between local and production environments.
-*   **Target:** Batch replace all dev IPs with relative paths (`/wp-content/...`) or dynamic URL functions.
+**`test.css`** — resolved.
+The 38-line scratch file at the theme root is gone.
+
+**Two ACF block plugins** — resolved.
+`acf-field-group-block` and `acf-field-group-block-plugin1` were removed entirely, taking 87 and 80 lines of plugin CSS with them. These were dead weight; the plugins were not referenced from active templates.
+
+**`industriesalon-notices/assets/example-banner.css`** — resolved.
+Removed. The block's live `style.css` remains.
+
+**Binary asset bloat** — resolved.
+Map image exports, zip archives, and backup template files were removed from the tracked tree. Correct; these should not be in version control.
+
+---
+
+### What was added or changed
+
+#### `iss-story-intro` and `iss-landing-shell` — strong addition
+
+The most significant CSS change in this commit is the introduction of `iss-story-intro` in `patterns.css` (roughly lines 724–943 after the commit). This is a properly designed shared component:
+
+- 25+ CSS custom properties cover every dimension of the layout: grid columns, gaps, typographic scale, color, note borders.
+- Consumers set only the properties they need to override; the component handles the rest.
+- First consumers are `page-ausstellungen.css` (`iss-ausstellungen-outside`) and `ueber-uns.css` (`iss-about-work`), both of which now use variable blocks instead of bespoke selectors.
+
+This directly addresses finding 3 from the high-severity section ("page-shell border and kicker contract is duplicated") for the editorial intro pattern family specifically. The approach is exactly right.
+
+The companion `iss-landing-shell` component (a two-column rail-and-content grid) follows the same pattern and gives the Fuehrungen landing redesign a shared structural root.
+
+#### `front-page.css` — correct direction, incomplete migration
+
+A new `front-page.css` is introduced and conditionally enqueued via `is_front_page()`. It covers the landscape strip layout for the homepage.
+
+What it does not yet do: the bulk of homepage-specific layout logic (`.home .wp-site-blocks`, `.home .iss-front-page-main`, `.home #wp--skip-link--target`, the visit strip, card-row tuning, and overlay media-text overrides) still lives in `patterns.css` starting around line 591. The file has been started, but the migration from `patterns.css` is not complete. Findings 1 and 4 from the high-severity section remain partially open.
+
+#### `atlas-app.css` token block — correct
+
+A `.iss-schoneweide-atlas-page` block was added at the top of `atlas-app.css`. It collects all atlas surface colors into one scoped token declaration that other rules inside the file can inherit. This replaces hardcoded inline values and makes the atlas color contract legible. The 7 previously questionable `!important` declarations in this file remain; they are not eliminated but the context around them is now cleaner.
+
+#### `page-ausstellungen.css` — partially migrated, stray rule remains
+
+The bespoke `.iss-ausstellungen-outside__*` selectors (~100 lines) were removed and replaced with `iss-story-intro` variable overrides. This is good. However, lines 821–830 in the current file still contain `.iss-repair-page` rules. This was flagged in the file-ownership-leaks section above ("page ownership leakage inside the wrong stylesheet") and was not addressed.
+
+#### `style.css` — minor utility addition
+
+`.iss-section--full-bleed` (8 lines) was added. It is a reasonable full-width escape hatch for sections that need to own their own viewport width. The comment on the rule is sufficient.
+
+#### Grid column bug fix in `patterns.css`
+
+Line 664: `grid-template-columns: minmax(0, 1fr) minmax(0, var(--iss-banner-width))` was changed to `minmax(0, 1fr) auto`. The variable `--iss-banner-width` was being consumed without being defined on the element, which would produce a zero-width column. Replacing it with `auto` is correct.
+
+---
+
+### Findings status after this commit
+
+| Finding | Status |
+|---------|--------|
+| Orphaned compact CSS files | **Closed** — deleted |
+| `test.css` scratch file | **Closed** — deleted |
+| `_archive/` bloat in tracked tree | **Closed** — deleted |
+| Dead ACF plugins | **Closed** — deleted |
+| `iss-story-intro` component missing | **Closed** — added in patterns.css |
+| `iss-ausstellungen-outside__*` bespoke selectors | **Closed** — migrated to `iss-story-intro` |
+| Homepage CSS in `patterns.css` | **Partially open** — `front-page.css` started but `.home` logic not fully extracted |
+| Repeated `margin-top: 0 !important` hacks | **Open** — unchanged in page-events.css, page-museum.css, page-videos.css, patterns.css lines 4940, 5295, 5304 |
+| Stale `iss-schoneweide-intro__*` selectors | **Open** — still present at patterns.css lines 5925–5988 and 7460 |
+| Stray `iss-repair-page` in page-ausstellungen.css | **Open** — still present at lines 821–830 |
+| `iss-card-grid` duplicated in cards.css | **Open** — two definitions remain at lines 384 and 471 |
+| `iss-events-context` not replaced by `iss-story-intro` | **Open** — page-events.css still uses its own intro system |
+| `iss-archive-card` not moved to shared cards layer | **Open** — still in page-archive.css:603–718 |
+| `body:has(...)` page-header mode | **Open** — unchanged in style.css |
+
+---
+
+### New observations not in the original audit
+
+#### `ueber-uns.css` CSS nesting syntax issue
+
+The `iss-about-work` variable block added by this commit contains what appears to be invalid native CSS nesting. The rules starting around line 30 of the added block open with:
+
+```css
+.iss-about-work .iss-story-intro {
+  --iss-story-intro-gap: ...;
+  /* ... */
+  .iss-about-work .iss-story-intro__top {
+  .iss-about-work .iss-story-intro__head-wrap {
+```
+
+Inside a native CSS nesting context, the nested selectors would be relative to the parent, so `.iss-about-work .iss-story-intro__top` inside `.iss-about-work .iss-story-intro` would resolve to `.iss-about-work .iss-story-intro .iss-about-work .iss-story-intro__top`, which is a non-matching double-scope. If this is intentional flat CSS, the nesting braces are mismatched. This needs verification against a browser dev tools computed styles check.
+
+#### `iss-story-intro` custom property defaults are partially redundant
+
+The component defaults in `patterns.css` set `--iss-story-intro-text-color: rgba(30, 30, 30, 0.78)` and `--iss-story-intro-lead-color: rgba(30, 30, 30, 0.9)`. These are inline hex/rgba values rather than references to the global token candidates noted in the original audit. If named text-hierarchy tokens are added to `:root` in `style.css`, these component defaults should reference them. Not blocking for now, but worth keeping consistent.
+
+#### `page-fuehrungen-mosaic.css` — new file, no audit yet
+
+This commit also introduced `page-fuehrungen-mosaic.css` (376 lines) via a prior commit in the same push window. It has not been reviewed. Given the pattern of `!important` fights in other Fuehrungen CSS (`page-fuehrungen.css:133-138`, `page-fuehrungen-mosaic.css:23-28`, `page-fuehrungen-mosaic.css:287-323`), this file should be checked for the same inline flex-basis vs. stylesheet override conflict that the original audit flagged.
+
+---
+
+### Overall assessment
+
+The cleanup commit is a meaningful step. The deletion work is comprehensive and correct. The addition of `iss-story-intro` and `iss-landing-shell` is the most architecturally significant change: it proves the shared component pattern works in this codebase and gives future pages a clean integration point.
+
+The remaining open items are all from Phase 1 and Phase 2 of the priority plan. None of them are regressions introduced by this commit. The two new concerns — the CSS nesting issue in `ueber-uns.css` and the incomplete homepage extraction — should be the immediate follow-up targets before Phase 2 work continues.
