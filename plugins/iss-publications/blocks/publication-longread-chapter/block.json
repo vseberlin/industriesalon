@@ -1,0 +1,26 @@
+{
+  "$schema": "https://schemas.wp.org/trunk/block.json",
+  "apiVersion": 3,
+  "name": "iss/publication-longread-chapter",
+  "title": "Longread-Kapitel",
+  "category": "widgets",
+  "icon": "excerpt-view",
+  "description": "One chapter inside a publication longread.",
+  "parent": ["iss/publication-longread"],
+  "keywords": ["Kapitel", "Longread", "Publikation"],
+  "supports": {
+    "html": false,
+    "reusable": false
+  },
+  "editorScript": "file:./index.js",
+  "attributes": {
+    "title": {
+      "type": "string",
+      "default": ""
+    },
+    "anchor": {
+      "type": "string",
+      "default": ""
+    }
+  }
+}

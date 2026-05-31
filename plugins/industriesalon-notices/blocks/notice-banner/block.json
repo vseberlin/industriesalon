@@ -1,0 +1,29 @@
+{
+  "$schema": "https://schemas.wp.org/trunk/block.json",
+  "apiVersion": 2,
+  "name": "industriesalon/notice-banner",
+  "title": "Notice Banner",
+  "category": "theme",
+  "description": "Displays the active notice for a specific area.",
+  "editorScript": "file:./editor.js",
+  "style": "file:./style.css",
+  "attributes": {
+    "area": {
+      "type": "string",
+      "default": "front_page_banner"
+    },
+    "skin": {
+      "type": "string",
+      "default": ""
+    }
+  },
+  "textdomain": "industriesalon-notices",
+  "supports": {
+    "html": false,
+    "className": true,
+    "spacing": {
+      "margin": true,
+      "padding": true
+    }
+  }
+}

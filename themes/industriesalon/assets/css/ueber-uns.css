@@ -1,0 +1,1102 @@
+/* =====================================================================
+   FILE: ueber-uns.css
+   ROLE: Über-uns page pattern module.
+   LOAD: after style.css, cards.css, patterns.css.
+   NOTE: Markup intentionally avoids Gutenberg constrained layout tags.
+   ===================================================================== */
+
+.iss-about-page {
+  background: var(--iss-white);
+  color: var(--iss-black);
+  overflow: clip;
+}
+
+.wp-site-blocks > .iss-about-page {
+  margin-block-start: 0;
+}
+
+.iss-about-hero {
+  min-height: 100svh;
+  background: var(--iss-black);
+}
+
+.iss-about-hero::before {
+  background:
+    linear-gradient(
+      90deg,
+      rgba(30, 30, 30, 0.84) 0%,
+      rgba(30, 30, 30, 0.62) 42%,
+      rgba(30, 30, 30, 0.2) 100%
+    );
+}
+
+.iss-about-hero .iss-page-hero__inner {
+  padding-bottom: clamp(3rem, 7vw, 6rem);
+}
+
+.iss-about-hero--triptych {
+  position: relative;
+  min-height: 100svh;
+  background:
+    linear-gradient(
+      180deg,
+      rgba(30, 30, 30, 0.94) 0%,
+      rgba(30, 30, 30, 0.88) 100%
+    );
+  overflow: hidden;
+}
+
+.iss-about-hero--triptych::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background:
+    radial-gradient(circle at top left, rgba(232, 29, 37, 0.16), transparent 38%),
+    linear-gradient(180deg, rgba(30, 30, 30, 0.28), rgba(30, 30, 30, 0));
+  pointer-events: none;
+}
+
+.iss-about-hero__inner {
+  position: relative;
+  z-index: 1;
+  display: grid;
+  align-content: end;
+  gap: clamp(1.2rem, 2.2vw, 1.8rem);
+  min-height: 100svh;
+  padding-top: calc(var(--iss-header-height) + 6.25rem);
+  padding-bottom: clamp(1.1rem, 2.4vw, 1.75rem);
+}
+
+.iss-about-hero__intro-row {
+  display: grid;
+  grid-template-columns: 1fr minmax(16rem, 34rem) clamp(7rem, 10vw, 10rem);
+  align-items: end;
+  width: 100%;
+  padding-bottom: clamp(0.35rem, 0.9vw, 0.7rem);
+}
+
+.iss-about-hero__intro {
+  grid-column: 2;
+  text-align: right;
+}
+
+.iss-about-hero__intro .iss-page-hero__kicker,
+.iss-about-hero__intro .iss-page-hero__title {
+  max-width: none;
+  text-align: right;
+  margin-left: auto;
+  margin-right: 0;
+}
+
+.iss-about-hero__intro .iss-page-hero__kicker {
+  margin-bottom: 0.7rem;
+}
+
+.iss-about-hero__triptych {
+  gap: clamp(0.9rem, 1.8vw, 1.25rem);
+  align-items: stretch;
+  margin: 0;
+  transform: translateY(-5px);
+}
+
+.iss-about-hero__panel {
+  display: grid;
+  grid-template-rows: minmax(0, 1fr) auto;
+  gap: 0.75rem;
+}
+
+.iss-about-hero__image,
+.iss-about-hero__image img {
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+
+.iss-about-hero__image {
+  margin: 0;
+  min-height: clamp(12.5rem, 20vh, 17.5rem);
+  overflow: hidden;
+}
+
+.iss-about-hero__image img {
+  aspect-ratio: 4 / 3.3;
+  object-fit: cover;
+}
+
+.iss-about-hero__caption {
+  min-height: 100%;
+  padding: 0.65rem 0 0.2rem;
+  border-top: 1px solid rgba(249, 249, 250, 0.16);
+}
+
+.iss-about-hero__caption .iss-kicker,
+.iss-about-hero__caption p {
+  color: var(--iss-white);
+}
+
+.iss-about-hero__caption > p:last-child {
+  margin: 0;
+  padding-bottom: 0.05rem;
+  color: rgba(249, 249, 250, 0.82);
+  font-size: 0.88rem;
+  line-height: 1.33;
+}
+
+.iss-about-origin {
+  padding-top: clamp(3rem, 6vw, 5rem);
+}
+
+.iss-about-origin__top,
+.iss-about-origin__layout,
+.iss-about-evidence__grid {
+  gap: clamp(1.5rem, 4vw, 4.5rem);
+  align-items: flex-start;
+}
+
+.iss-about-origin__intro-col {
+  flex-basis: 34%;
+}
+
+.iss-about-origin__lead-col {
+  flex-basis: 66%;
+}
+
+.iss-about-origin__title {
+  margin: 0;
+  max-width: 13ch;
+  font-size: clamp(2.25rem, 3.3vw, 4.25rem);
+  line-height: 1.02;
+  letter-spacing: -0.035em;
+}
+
+.iss-about-origin__lead {
+  max-width: 38rem;
+  margin: 0;
+  margin-top: 1rem;
+  color: rgba(30, 30, 30, 0.74);
+  font-size: clamp(1.02rem, 0.96rem + 0.25vw, 1.16rem);
+  line-height: 1.58;
+}
+
+.iss-about-origin__plain {
+  max-width: 40rem;
+  margin: 1rem 0 0;
+  color: rgba(30, 30, 30, 0.74);
+}
+
+.iss-about-origin__main-col {
+  flex-basis: 56%;
+}
+
+.iss-about-origin__side-col {
+  flex-basis: 44%;
+}
+
+.iss-about-origin__image,
+.iss-about-origin__image img,
+.iss-about-evidence__main-image,
+.iss-about-evidence__main-image img,
+.iss-about-evidence__side-image,
+.iss-about-evidence__side-image img {
+  display: block;
+  width: 100%;
+}
+
+.iss-about-origin__image img,
+.iss-about-evidence__main-image img {
+  aspect-ratio: 16 / 10;
+  object-fit: cover;
+}
+
+.iss-about-evidence__side-image img {
+  aspect-ratio: 4 / 3;
+  object-fit: cover;
+}
+
+.iss-about-origin__caption,
+.iss-about-evidence__caption {
+  margin: 0.7rem 0 0;
+  color: rgba(30, 30, 30, 0.6);
+  font-size: 0.9rem;
+  line-height: 1.45;
+}
+
+.iss-about-origin__quote {
+  margin: 0;
+  padding-left: 1rem;
+  border-left: 3px solid var(--iss-accent);
+  font-size: clamp(1.1rem, 1rem + 0.5vw, 1.45rem);
+  line-height: 1.3;
+  letter-spacing: -0.02em;
+}
+
+.iss-about-origin__textcols {
+  margin-top: 1.1rem;
+  column-count: 2;
+  column-gap: clamp(1.5rem, 3vw, 3rem);
+  color: rgba(30, 30, 30, 0.78);
+}
+
+.iss-about-origin__textcols p {
+  margin: 0;
+  break-inside: avoid;
+}
+
+.iss-about-origin__textcols p + p {
+  margin-top: 0.85rem;
+}
+
+.iss-about-origin__factcard,
+.iss-about-evidence__note {
+  margin-top: 1.25rem;
+  padding: 1.15rem 1.25rem;
+  background: rgba(192, 184, 181, 0.12);
+  border-left: 3px solid var(--iss-accent);
+  border-radius: 0 10px 10px 0;
+}
+
+.iss-about-origin__label {
+  margin: 0 0 0.45rem;
+  color: var(--iss-accent);
+  font-size: 0.72rem;
+  font-weight: 700;
+  line-height: 1;
+  letter-spacing: 0.13em;
+  text-transform: uppercase;
+}
+
+.iss-about-origin__card-title {
+  margin: 0;
+  font-size: clamp(1.45rem, 1.2rem + 0.8vw, 2.2rem);
+  line-height: 1.02;
+}
+
+.iss-about-evidence {
+  margin-top: clamp(-1.5rem, -2vw, -0.75rem);
+  padding-top: clamp(0.25rem, 0.8vw, 0.75rem);
+}
+
+.iss-about-evidence__head-wrap {
+  display: flex;
+  justify-content: flex-end;
+}
+
+.iss-about-evidence__head {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  width: min(100%, 24rem);
+  margin-bottom: clamp(0.9rem, 2vw, 1.35rem);
+  text-align: left;
+}
+
+.iss-about-evidence__title {
+  max-width: 18ch;
+  margin-top: 0;
+}
+
+.iss-about-evidence__main-col {
+  flex-basis: 70%;
+}
+
+.iss-about-evidence__side-col {
+  flex-basis: 30%;
+  display: grid;
+  gap: 0.85rem;
+}
+
+.iss-about-opener__grid,
+.iss-about-split,
+.iss-about-awards__grid,
+.iss-about-founder__grid {
+  gap: clamp(2rem, 5vw, 6rem);
+  align-items: flex-start;
+}
+
+.iss-about-opener__band {
+  margin-bottom: clamp(1.5rem, 3vw, 2.5rem);
+}
+
+.iss-about-opener__band .iss-about-opener__image,
+.iss-about-opener__band .iss-about-opener__image figure,
+.iss-about-opener__band .iss-about-opener__image img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  min-height: clamp(18rem, 34vw, 28rem);
+  margin: 0;
+  object-fit: cover;
+}
+
+.iss-about-opener__lead {
+  flex-basis: 40%;
+}
+
+.iss-about-opener__text {
+  flex-basis: 60%;
+}
+
+.iss-about-opener__title {
+  margin-top: 0;
+}
+
+.iss-about-opener__text p {
+  margin-top: 0;
+}
+
+.iss-about-opener__text p + p {
+  margin-top: 1.2rem;
+}
+
+.iss-about-team .iss-heading {
+  margin-bottom: clamp(1.75rem, 3vw, 2.75rem);
+}
+
+.iss-about-card-grid {
+  margin-top: clamp(1.75rem, 3vw, 2.5rem);
+}
+
+.iss-about-work {
+  position: relative;
+}
+
+.iss-about-work .iss-story-intro {
+  --iss-story-intro-gap: clamp(1.5rem, 3vw, 2.5rem);
+  --iss-story-intro-top-columns: minmax(0, 1.18fr) minmax(17rem, 0.72fr);
+  --iss-story-intro-top-gap: clamp(2rem, 5vw, 5.5rem);
+  --iss-story-intro-top-align: start;
+  --iss-story-intro-copy-max: 62rem;
+  --iss-story-intro-head-justify: flex-end;
+  --iss-story-intro-head-max: 34rem;
+  --iss-story-intro-title-max: 11ch;
+  --iss-story-intro-title-size: clamp(2.3rem, 4vw, 4.8rem);
+  --iss-story-intro-title-line: 0.94;
+  --iss-story-intro-title-track: -0.055em;
+  --iss-story-intro-lead-max: 50rem;
+  --iss-story-intro-lead-size: clamp(1.3rem, 1.7vw, 2rem);
+  --iss-story-intro-lead-line: 1.24;
+  --iss-story-intro-lead-track: -0.03em;
+  --iss-story-intro-textcols-max: 64rem;
+  --iss-story-intro-textcols-gap: clamp(1.75rem, 3.5vw, 3.75rem);
+  --iss-story-intro-textcols-margin-top: clamp(1.25rem, 2.4vw, 2rem);
+  --iss-story-intro-text-item-gap: 0.85rem;
+  --iss-story-intro-text-color: rgba(30, 30, 30, 0.78);
+  --iss-story-intro-text-size: 1.02rem;
+  --iss-story-intro-text-line: 1.64;
+  --iss-story-intro-note-max: 38rem;
+  --iss-story-intro-note-border: 1px solid rgba(30, 30, 30, 0.14);
+  --iss-story-intro-note-color: rgba(30, 30, 30, 0.68);
+  --iss-story-intro-note-size: 0.98rem;
+  --iss-story-intro-note-line: 1.55;
+}
+
+.iss-about-future .iss-container {
+  display: grid;
+  gap: clamp(1.75rem, 3vw, 2.75rem);
+}
+
+.iss-about-future__top {
+  display: grid;
+  grid-template-columns: minmax(17rem, 0.72fr) minmax(0, 1.22fr);
+  gap: clamp(2rem, 5vw, 5rem);
+  align-items: start;
+}
+
+.iss-about-future__head {
+  max-width: 34rem;
+}
+
+.iss-about-future__title {
+  max-width: 12ch;
+  margin: 0;
+  font-size: clamp(2.15rem, 3.8vw, 4.35rem);
+  line-height: 0.95;
+  letter-spacing: -0.05em;
+  text-wrap: balance;
+}
+
+.iss-about-future__lead {
+  max-width: 58rem;
+  margin: 0;
+  font-size: clamp(1.24rem, 1.65vw, 1.95rem);
+  line-height: 1.24;
+  letter-spacing: -0.03em;
+}
+
+.iss-about-future__plain {
+  max-width: 46rem;
+  margin: 1.15rem 0 0;
+  color: rgba(30, 30, 30, 0.76);
+  font-size: 1.04rem;
+  line-height: 1.65;
+}
+
+.iss-about-future__middle {
+  display: grid;
+  grid-template-columns: minmax(0, 1.05fr) minmax(18rem, 0.7fr);
+  gap: clamp(1.75rem, 4vw, 4rem);
+  align-items: start;
+}
+
+.iss-about-future__textcols {
+  column-count: 2;
+  column-gap: clamp(1.75rem, 3.5vw, 3.75rem);
+  max-width: 68rem;
+  color: rgba(30, 30, 30, 0.78);
+  font-size: 1.02rem;
+  line-height: 1.64;
+}
+
+.iss-about-future__textcols p {
+  margin: 0;
+  break-inside: avoid;
+}
+
+.iss-about-future__textcols p + p {
+  margin-top: 0.85rem;
+}
+
+.iss-about-future__note {
+  padding: 1.15rem 1.25rem 1.25rem;
+  background: rgba(192, 184, 181, 0.11);
+  border-left: 3px solid var(--iss-accent);
+  border-radius: 0 10px 10px 0;
+}
+
+.iss-about-future__note-title {
+  margin: 0;
+  font-size: clamp(1.55rem, 2vw, 2.2rem);
+  line-height: 1.04;
+  letter-spacing: -0.035em;
+}
+
+.iss-about-future__note p:last-child {
+  margin: 0.75rem 0 0;
+  color: rgba(30, 30, 30, 0.74);
+  font-size: 0.96rem;
+  line-height: 1.5;
+}
+
+.iss-about-future__closing {
+  max-width: 52rem;
+  margin: 0;
+  padding-top: 1rem;
+  border-top: 1px solid rgba(30, 30, 30, 0.14);
+  font-size: clamp(1.05rem, 1rem + 0.2vw, 1.22rem);
+  line-height: 1.48;
+  color: rgba(30, 30, 30, 0.88);
+}
+
+.iss-about-split {
+  align-items: center;
+}
+
+.iss-about-split__media {
+  flex-basis: 48%;
+}
+
+.iss-about-split__content {
+  flex-basis: 52%;
+}
+
+.iss-about-split__media figure {
+  min-height: clamp(24rem, 52vh, 38rem);
+}
+
+.iss-about-split__content > p {
+  margin-top: 1.1rem;
+  color: rgba(30, 30, 30, 0.78);
+}
+
+.iss-about-split__content > p:first-of-type {
+  font-size: clamp(1.05rem, 0.95rem + 0.2vw, 1.18rem);
+  color: rgba(30, 30, 30, 0.9);
+}
+
+.iss-about-awards__intro {
+  flex-basis: 42%;
+}
+
+.iss-about-awards__list {
+  flex-basis: 58%;
+}
+
+.iss-award-list {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 1rem;
+  margin: 0;
+}
+
+.iss-award-item {
+  position: relative;
+  min-height: 100%;
+  margin: 0;
+  padding: 1.15rem 1.25rem 1.2rem 1.6rem;
+  background: var(--iss-white);
+  border: 1px solid var(--iss-border);
+  border-radius: var(--iss-radius-md);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.045);
+  color: rgba(30, 30, 30, 0.76);
+}
+
+.iss-award-item::before {
+  content: "";
+  position: absolute;
+  top: 1.25rem;
+  left: 0.85rem;
+  width: 0.38rem;
+  height: 0.38rem;
+  border-radius: 50%;
+  background: var(--iss-accent);
+}
+
+.iss-award-item strong {
+  color: var(--iss-black);
+  font-weight: 700;
+}
+
+.iss-about-facts {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 0.85rem;
+  margin-top: 1.5rem;
+}
+
+.iss-about-fact {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  min-height: 100%;
+  margin: 0;
+  padding: 1rem 1.05rem 1.05rem;
+  border: 1px solid rgba(30, 30, 30, 0.1);
+  border-radius: var(--iss-radius-md);
+  background: rgba(246, 246, 247, 0.75);
+}
+
+.iss-about-fact strong {
+  display: block;
+  color: var(--iss-black);
+  font-size: clamp(1.2rem, 1rem + 0.5vw, 1.55rem);
+  line-height: 1.05;
+}
+
+.iss-about-fact span {
+  color: rgba(30, 30, 30, 0.7);
+  font-size: 0.92rem;
+  line-height: 1.35;
+}
+
+.iss-about-founder__content {
+  flex-basis: 62%;
+}
+
+.iss-about-founder__note {
+  flex-basis: 38%;
+}
+
+.iss-about-founder__content h2 {
+  max-width: 13ch;
+  margin-top: 0;
+}
+
+.iss-founder-note {
+  padding: clamp(1.25rem, 2vw, 1.75rem);
+  background: #f6f6f7;
+  border: 1px solid var(--iss-border);
+  border-left: 5px solid var(--iss-accent);
+  border-radius: var(--iss-radius-md);
+}
+
+.iss-founder-note h3 {
+  margin-top: 0;
+  margin-bottom: 0.8rem;
+  font-size: clamp(1.15rem, 1rem + 0.35vw, 1.45rem);
+  line-height: 1.2;
+}
+
+.iss-founder-note p:last-child {
+  margin-bottom: 0;
+  color: rgba(30, 30, 30, 0.76);
+}
+
+.iss-about-team__strip {
+  max-width: 58rem;
+  padding: clamp(1.25rem, 2vw, 1.75rem);
+  background: var(--iss-white);
+  border: 1px solid var(--iss-border);
+  border-radius: var(--iss-radius-md);
+}
+
+.iss-about-team__strip p {
+  margin: 0;
+  color: rgba(30, 30, 30, 0.78);
+}
+
+.iss-about-team__query {
+  margin-top: clamp(1.5rem, 3vw, 2.5rem);
+}
+
+.iss-about-team__groups {
+  display: grid;
+  gap: clamp(2rem, 4vw, 3.5rem);
+}
+
+.iss-about-team__group {
+  display: grid;
+  gap: 0.85rem;
+}
+
+.iss-about-team__group-head {
+  display: grid;
+  gap: 0.35rem;
+}
+
+.iss-about-team__group-title {
+  margin: 0;
+  max-width: 20ch;
+  font-size: clamp(1.5rem, 1.22rem + 0.7vw, 2.1rem);
+  line-height: 1.06;
+  letter-spacing: -0.03em;
+}
+
+.iss-about-team__people {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: clamp(1rem, 1.9vw, 1.35rem);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.iss-about-team__people > .wp-block-post {
+  display: flex;
+  margin: 0;
+  min-width: 0;
+}
+
+.iss-about-person-card {
+  display: flex;
+  flex: 1 1 auto;
+  width: 100%;
+  min-height: 100%;
+  border-top: 1px solid rgba(30, 30, 30, 0.12);
+  box-shadow: none;
+}
+
+.iss-about-person-card:hover,
+.iss-about-person-card:focus-within {
+  box-shadow: var(--iss-shadow);
+}
+
+.iss-about-person-card .iss-card__media,
+.iss-about-person-card .iss-card__media img {
+  aspect-ratio: 3 / 4.25;
+}
+
+.iss-about-person-card__media.iss-about-person-card__media--susanne-reumschuessel img {
+  object-position: 32% top;
+}
+
+.iss-about-person-card__body {
+  gap: 0.38rem;
+  padding: 0.95rem 0.95rem 1rem;
+}
+
+.iss-about-person-card__kicker {
+  color: rgba(30, 30, 30, 0.56);
+}
+
+.iss-about-person-card__title {
+  min-height: 0;
+  font-size: clamp(1rem, 0.95rem + 0.18vw, 1.15rem);
+  line-height: 1.12;
+  letter-spacing: -0.02em;
+}
+
+.iss-about-person-card__role {
+  margin: 0.02rem 0 0;
+  font-size: 0.9rem;
+  font-weight: 600;
+  line-height: 1.35;
+}
+
+.iss-about-person-card__text {
+  margin-top: 0.14rem;
+  font-size: 0.88rem;
+  line-height: 1.42;
+  color: rgba(30, 30, 30, 0.74);
+}
+
+.iss-about-person-card__text .wp-block-post-excerpt__excerpt {
+  margin: 0;
+}
+
+.iss-about-person-card__text.wp-block-post-excerpt {
+  display: -webkit-box;
+  -webkit-line-clamp: 4;
+  line-clamp: 4;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.iss-about-team__empty {
+  margin: 0;
+  padding: 1.25rem 0 0;
+  color: rgba(30, 30, 30, 0.72);
+}
+
+.iss-about-award-strip .iss-mission-support__title {
+  max-width: 15ch;
+}
+
+.iss-about-award-strip__fact--medal {
+  gap: 0.95rem;
+}
+
+.iss-about-award-strip__image,
+.iss-about-award-strip__thumb {
+  margin: 0;
+  aspect-ratio: 16 / 10;
+  overflow: hidden;
+  border: 1px solid rgba(30, 30, 30, 0.08);
+  border-radius: var(--iss-radius-sm);
+  background: rgba(246, 246, 247, 0.8);
+}
+
+.iss-about-award-strip__image img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  margin: 0;
+  object-fit: cover;
+  padding: 0;
+}
+
+.iss-about-award-strip__thumb img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.iss-about-award-strip__fact .iss-mission-fact__text {
+  max-width: none;
+}
+
+.iss-about-origin__split {
+  display: grid;
+  grid-template-columns: minmax(0, 0.92fr) minmax(28rem, 1.08fr);
+  gap: clamp(2rem, 5vw, 5rem);
+  align-items: start;
+}
+
+.iss-about-origin__copy {
+  max-width: 42rem;
+}
+
+.iss-about-origin__body {
+  display: grid;
+  gap: 1rem;
+  margin-top: 1.5rem;
+  color: rgba(30, 30, 30, 0.9);
+}
+
+.iss-about-origin__body p {
+  margin: 0;
+  max-width: 41rem;
+}
+
+.iss-about-origin__media {
+  min-height: clamp(28rem, 54vw, 42rem);
+  margin-top: 0.55rem;
+}
+
+.iss-about-origin__media img {
+  width: 100%;
+  min-height: clamp(28rem, 54vw, 42rem);
+  height: 100%;
+  object-fit: cover;
+}
+
+.iss-about-origin__facts {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 0.75rem;
+  margin-top: 2rem;
+}
+
+.iss-about-fact-mini {
+  margin: 0;
+  padding: 1rem;
+  border: 1px solid var(--iss-border);
+  border-radius: var(--iss-radius-md);
+  background: rgba(255, 255, 255, 0.72);
+}
+
+.iss-about-fact-mini strong {
+  display: block;
+  font-size: 1.35rem;
+  line-height: 1.1;
+  color: var(--iss-black);
+}
+
+.iss-about-fact-mini span {
+  display: block;
+  margin-top: 0.35rem;
+  color: rgba(30, 30, 30, 0.68);
+  font-size: 0.88rem;
+  line-height: 1.35;
+}
+
+.iss-about-quiet-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: var(--iss-gap);
+}
+
+.iss-about-people-strip {
+  display: grid;
+  grid-template-columns: minmax(0, 0.85fr) minmax(0, 1.15fr);
+  gap: clamp(2rem, 5vw, 5rem);
+  align-items: start;
+}
+
+.iss-about-people-strip__cards {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: var(--iss-gap);
+}
+
+.iss-about-bridge-card {
+  max-width: 58rem;
+}
+
+.iss-about-cta {
+  position: relative;
+  max-width: 76rem;
+  padding: clamp(1.5rem, 4vw, 3rem);
+  background: var(--iss-black);
+  color: var(--iss-white);
+  border-radius: var(--iss-radius-lg);
+  overflow: hidden;
+}
+
+.iss-about-cta::after {
+  content: "";
+  position: absolute;
+  inset: auto -8rem -9rem auto;
+  width: 22rem;
+  height: 22rem;
+  border: 1px solid rgba(249, 249, 250, 0.14);
+  border-radius: 50%;
+  pointer-events: none;
+}
+
+.iss-about-cta .iss-kicker,
+.iss-about-cta h2,
+.iss-about-cta p {
+  color: var(--iss-white);
+}
+
+.iss-about-cta h2 {
+  max-width: 14ch;
+  margin-top: 0;
+}
+
+.iss-about-cta p {
+  max-width: 56rem;
+  color: rgba(249, 249, 250, 0.82);
+}
+
+.iss-about-cta__buttons {
+  margin-top: 1.4rem;
+}
+
+.iss-about-cta__links {
+  gap: 0.9rem 1.4rem;
+  margin-top: 1rem;
+}
+
+.iss-about-cta__links p {
+  margin: 0;
+}
+
+@media (max-width: 1024px) {
+  .iss-about-hero__inner {
+    min-height: auto;
+    gap: 1.2rem;
+    padding-top: calc(var(--iss-header-height) + 4.9rem);
+  }
+
+  .iss-about-hero__triptych {
+    gap: 1rem;
+  }
+
+  .iss-about-hero__intro-row {
+    grid-template-columns: 1fr minmax(14rem, 28rem) clamp(5.5rem, 8vw, 8rem);
+  }
+
+  .iss-about-opener__lead,
+  .iss-about-opener__text,
+  .iss-about-split__media,
+  .iss-about-split__content,
+  .iss-about-awards__intro,
+  .iss-about-awards__list,
+  .iss-about-founder__content,
+  .iss-about-founder__note {
+    flex-basis: 100% !important;
+  }
+
+  .iss-about-opener__grid,
+  .iss-about-split,
+  .iss-about-awards__grid,
+  .iss-about-founder__grid {
+    gap: 2rem;
+  }
+
+  .iss-about-split__media figure {
+    min-height: 22rem;
+  }
+
+  .iss-about-origin__split,
+  .iss-about-people-strip {
+    grid-template-columns: 1fr;
+  }
+
+  .iss-about-origin__textcols {
+    column-count: 1;
+  }
+
+  .iss-about-origin__copy,
+  .iss-about-origin__lead,
+  .iss-about-origin__body p {
+    max-width: 100%;
+  }
+
+  .iss-about-origin__media,
+  .iss-about-origin__media img {
+    min-height: 24rem;
+  }
+
+  .iss-about-facts,
+  .iss-about-origin__facts,
+  .iss-about-quiet-grid,
+  .iss-about-people-strip__cards {
+    grid-template-columns: 1fr;
+  }
+
+  .iss-about-team__people {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 782px) {
+  .iss-about-hero {
+    min-height: 80svh;
+  }
+
+  .iss-about-hero::before {
+    background:
+      linear-gradient(
+        180deg,
+        rgba(30, 30, 30, 0.5) 0%,
+        rgba(30, 30, 30, 0.78) 100%
+      );
+  }
+
+  .iss-about-hero__inner {
+    min-height: auto;
+    gap: 1.35rem;
+    padding-top: calc(var(--iss-header-height) + 4.1rem);
+    padding-bottom: 1.5rem;
+  }
+
+  .iss-about-hero__intro-row {
+    grid-template-columns: 1fr;
+    padding-bottom: 0.35rem;
+  }
+
+  .iss-about-hero__intro {
+    grid-column: 1;
+    text-align: left;
+  }
+
+  .iss-about-hero__intro .iss-page-hero__kicker,
+  .iss-about-hero__intro .iss-page-hero__title {
+    text-align: left;
+    margin-left: 0;
+  }
+
+  .iss-about-hero__intro .iss-page-hero__kicker {
+    margin-bottom: 0.55rem;
+  }
+
+  .iss-about-hero__triptych {
+    display: grid;
+    grid-template-columns: 1fr;
+    transform: none;
+  }
+
+  .iss-about-hero__image {
+    min-height: 13rem;
+  }
+
+  .iss-about-hero__image img {
+    aspect-ratio: 16 / 10;
+  }
+
+  .iss-about-team__people {
+    grid-template-columns: 1fr;
+  }
+
+  .iss-award-list {
+    grid-template-columns: 1fr;
+  }
+
+  .iss-about-work .iss-story-intro__top {
+    grid-template-columns: 1fr;
+    gap: 1.5rem;
+  }
+
+  .iss-about-future__top,
+  .iss-about-future__middle {
+    grid-template-columns: 1fr;
+    gap: 1.5rem;
+  }
+
+  .iss-about-work .iss-story-intro__head-wrap {
+    justify-content: flex-start;
+    order: -1;
+  }
+
+  .iss-about-work .iss-story-intro__head,
+  .iss-about-work .iss-story-intro__title,
+  .iss-about-future__title {
+    max-width: none;
+  }
+
+  .iss-about-work .iss-story-intro__textcols--columns-2,
+  .iss-about-future__textcols {
+    column-count: 1;
+  }
+
+  .iss-about-origin__top,
+  .iss-about-origin__layout,
+  .iss-about-evidence__grid {
+    gap: 1.5rem;
+  }
+
+  .iss-about-card-grid .iss-card {
+    min-height: 0;
+  }
+
+  .iss-about-split__media figure {
+    min-height: 18rem;
+  }
+
+  .iss-about-cta {
+    border-radius: var(--iss-radius-md);
+  }
+}

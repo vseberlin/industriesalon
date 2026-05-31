@@ -1,0 +1,2460 @@
+/*
+Theme Name: industriesalon
+Theme URI: /
+Author: Industriesalon
+Author URI: /
+Description: Base block theme for Industriesalon Schöneweide.
+Version: 1.1.0
+Requires at least: 6.6
+Tested up to: 6.8
+Requires PHP: 8.2
+Text Domain: industriesalon
+Tags: block-theme, full-site-editing, custom-colors, custom-spacing, editor-style
+*/
+
+/* =====================================================================
+   FILE: style.css
+   ROLE: Global authority stylesheet.
+   PURPOSE:
+   - Own shared design tokens and low-level layout primitives.
+   - Define section intros, kicker logic, alignment behavior, and
+     site-wide structural helpers that multiple templates rely on.
+   - Stay free of page-specific composition rules. Those belong in
+     patterns.css. Card internals belong in cards.css.
+
+   HOW TO MAINTAIN THIS FILE:
+   1. Edit tokens here first when a visual change should affect the
+      whole site.
+   2. Add new global helpers here only if they are reusable across
+      multiple templates or plugins.
+   3. Do not place one-off landing-page or hero fixes here.
+   4. Keep selector depth low. This file should remain the calmest layer
+      in the stack.
+
+   PRIMARY CONTROL SURFACE
+   -----------------------
+   VARIABLES IN :root
+   --iss-red / --iss-white / --iss-black / --iss-grey / --iss-green /
+   --iss-blue / --iss-yellow / --iss-brown
+       Core theme colors. Change only if the brand palette changes.
+       They follow the Industriesalon palette in theme.json and the
+       uploaded brand guide.
+
+   --iss-content-width
+       Master content width for normal site sections. Increase or reduce
+       this to make the whole site feel wider or tighter.
+
+   --iss-container-pad
+       Horizontal breathing room inside containers. This is the main safe
+       control for edge distance on tablet and mobile.
+
+   --iss-gap
+       Default inter-component gap for shared grid/flex patterns that do
+       not define their own local gap token.
+
+   --iss-header-height
+       Reference value used by heroes and sticky-header-aware layouts.
+       Update this if header height changes visibly.
+
+   --iss-border
+       Default border color for cards, panels, separators, and quiet
+       structural lines.
+
+   --iss-radius-sm / --iss-radius-md / --iss-radius-lg / --iss-radius-pill
+       Corner system. Use sm for minor surfaces, md for cards and panels,
+       lg for large framed blocks, pill for buttons and chips.
+
+   --iss-shadow
+       Default soft elevation for cards and panel surfaces.
+
+   --iss-transition
+       Shared motion timing for hover/focus micro-interactions.
+
+   MAIN CONTROL CLASSES
+   --------------------
+   .iss-scheme-red / --blue / --green / --yellow / --brown
+       Optional wrapper classes for page or section-level accent switching.
+       Apply one of these on the outer Group/Section block in Gutenberg
+       when a whole section should inherit a different accent color.
+       They only affect shared accent-driven UI, not explicit red/blue/
+       green component modifiers.
+
+   .iss-container
+       Standard content cage. Use this for almost every normal section.
+
+   .section
+       Vertical rhythm wrapper. Use for top/bottom section spacing.
+
+   .iss-kicker + modifiers
+       Small section label with left accent rail.
+       Variants:
+       - --compact: dense cards and lists
+       - --lg: larger hero and opener use
+       - --light: dark backgrounds
+       - --muted / --green / --blue / --yellow: tone variants
+
+   .iss-heading + modifiers
+       Standard intro wrapper for kicker + title + text.
+       Variants:
+       - --uncaged: remove max width cap
+       - --pad-right: reserve internal right spacing
+       - --margin-right: add outer right offset
+       - --center / --right: alternate alignment
+
+   .iss-indent + modifiers
+       Text intro block with a simple left rail instead of full heading
+       composition.
+       Variants mirror .iss-heading: --uncaged, --pad-right,
+       --margin-right, --light, --muted.
+
+   .iss-separator + modifiers
+       Quiet section breaks.
+       - default: full-width hairline
+       - --indent: shorter left-aligned line
+       - --accent: short red thematic break
+
+   .iss-action-link + modifiers
+       Default low-chrome CTA. Use this for generic "read more" or
+       discovery links instead of pill buttons. Preferred label: "Mehr".
+       Variants:
+       - default: dark text on light backgrounds, accent on hover
+       - --light: white text for dark hero/cover contexts
+
+   .section--with-rail
+       Decorative right-side fade rail for selected sections only. Use
+       sparingly so it stays meaningful.
+
+   LOAD ORDER
+   ----------
+   theme.json -> style.css -> cards.css -> patterns.css -> plugin CSS
+   ===================================================================== */
+
+
+:root {
+  /* Core Colors - Mapped to theme.json presets */
+  --iss-red: #e81d25;
+  --iss-white: #ffffff;
+  --iss-black: #1e1e1e;
+  --iss-grey: #c0b8b5;
+  --iss-green: #579e7d;
+  --iss-blue: #869fba;
+  --iss-yellow: #ebbc1e;
+  --iss-brown: #753a18;
+  --iss-accent: var(--iss-red);
+  --iss-accent-rgb: 232, 29, 37;
+  --iss-accent-soft: rgba(var(--iss-accent-rgb), 0.16);
+  --iss-accent-border: rgba(var(--iss-accent-rgb), 0.28);
+
+  /* Layout & Spacing */
+  --iss-content-width: 1720px;
+  --iss-container-pad: 1.25rem;
+  --iss-gap: 1.35rem;
+  --iss-header-height: 5.5rem;
+  --iss-space-2xs: 0.35rem;
+  --iss-space-xs: 0.5rem;
+  --iss-space-sm: 0.75rem;
+  --iss-space-md: 1rem;
+  --iss-space-lg: 1.5rem;
+  --iss-space-xl: 2.5rem;
+  --iss-space-2xl: 4rem;
+  --iss-section-pad-y: clamp(1.75rem, 3.4vw, 3.5rem);
+  --iss-section-pad-y-tight: clamp(1rem, 2.2vw, 2rem);
+
+  /* Border & Radius */
+  --iss-border: rgba(30, 30, 30, 0.12);
+  --iss-border-strong: rgba(30, 30, 30, 0.2);
+  --iss-radius-sm: 4px;
+  --iss-radius-md: 6px;
+  --iss-radius-lg: 10px;
+  --iss-radius-pill: 999px;
+
+  /* Surfaces */
+  --iss-surface-base: #ffffff;
+  --iss-surface-paper: #ffffff;
+  --iss-surface-panel: #f6f6f7;
+  --iss-surface-archive: #f1f1f2;
+  --iss-surface-dark: #201d1b;
+  --iss-surface-map: #efefee;
+  --iss-surface-overlay: rgba(255, 255, 255, 0.94);
+
+  /* Effects */
+  --iss-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.24);
+  --iss-transition: 0.2s ease;
+
+  /* Legacy aliases for older classes/templates. Keep until old markup is fully retired. */
+  --is--color-red: var(--iss-red);
+  --is--color-white: var(--iss-white);
+  --is--color-black: var(--iss-black);
+  --is--color-grey: var(--iss-grey);
+  --is--color-green: var(--iss-green);
+  --is--color-blue: var(--iss-blue);
+  --is--color-yellow: var(--iss-yellow);
+  --is--color-brown: var(--iss-brown);
+  --is--radius-sm: var(--iss-radius-sm);
+  --is--radius-md: var(--iss-radius-md);
+  --is--radius-lg: var(--iss-radius-lg);
+  --is--radius-pill: var(--iss-radius-pill);
+  --is--transition: var(--iss-transition);
+  --is--container-pad: var(--iss-container-pad);
+  --is--content-width: var(--iss-content-width);
+  --iss-link-fg: var(--iss-accent);
+  --iss-link-hover-fg: var(--iss-black);
+  --iss-button-fg: var(--iss-black);
+  --iss-button-bg: transparent;
+  --iss-button-accent: var(--iss-accent);
+  --iss-button-fill-bg: var(--iss-accent-soft);
+  --iss-button-border: var(--iss-border);
+  --iss-button-fill-border: var(--iss-accent-border);
+  --iss-button-hover-bg: var(--iss-accent-soft);
+  --iss-button-hover-border: var(--iss-accent);
+  --iss-button-hover-fg: var(--iss-black);
+
+  --iss-site-header-pad-top: 0.1rem;
+  --iss-site-header-pad-bottom: 1rem;
+  --iss-site-logo-size: 120px;
+  --iss-site-logo-bottom: calc(var(--iss-site-header-pad-top) + var(--iss-site-logo-size));
+}
+
+.iss-scheme-red {
+  --iss-accent: var(--iss-red);
+  --iss-accent-rgb: 232, 29, 37;
+  --iss-accent-soft: rgba(var(--iss-accent-rgb), 0.16);
+  --iss-accent-border: rgba(var(--iss-accent-rgb), 0.28);
+}
+
+.iss-scheme-blue {
+  --iss-accent: var(--iss-blue);
+  --iss-accent-rgb: 134, 159, 186;
+  --iss-accent-soft: rgba(var(--iss-accent-rgb), 0.16);
+  --iss-accent-border: rgba(var(--iss-accent-rgb), 0.28);
+}
+
+.iss-scheme-green {
+  --iss-accent: var(--iss-green);
+  --iss-accent-rgb: 87, 158, 125;
+  --iss-accent-soft: rgba(var(--iss-accent-rgb), 0.16);
+  --iss-accent-border: rgba(var(--iss-accent-rgb), 0.28);
+}
+
+.iss-scheme-yellow {
+  --iss-accent: var(--iss-yellow);
+  --iss-accent-rgb: 235, 188, 30;
+  --iss-accent-soft: rgba(var(--iss-accent-rgb), 0.16);
+  --iss-accent-border: rgba(var(--iss-accent-rgb), 0.28);
+}
+
+.iss-scheme-brown {
+  --iss-accent: var(--iss-brown);
+  --iss-accent-rgb: 117, 58, 24;
+  --iss-accent-soft: rgba(var(--iss-accent-rgb), 0.16);
+  --iss-accent-border: rgba(var(--iss-accent-rgb), 0.28);
+}
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  background: var(--iss-surface-base);
+  color: var(--iss-black);
+  font-family: "IBM Plex Sans", system-ui, sans-serif;
+  font-size: 16px;
+  line-height: 1.58;
+}
+
+.iss-about-cta,
+.iss-archive-research-cta,
+.iss-videos-page,
+.iss-control-info-panel--surface-dark,
+.iss-rental-cta {
+  --iss-link-fg: var(--iss-white);
+  --iss-link-hover-fg: var(--iss-white);
+  --iss-button-fg: var(--iss-white);
+  --iss-button-bg: transparent;
+  --iss-button-fill-bg: rgba(249, 249, 250, 0.08);
+  --iss-button-border: rgba(249, 249, 250, 0.42);
+  --iss-button-fill-border: rgba(249, 249, 250, 0.58);
+  --iss-button-hover-bg: rgba(249, 249, 250, 0.12);
+  --iss-button-hover-border: rgba(249, 249, 250, 0.72);
+  --iss-button-hover-fg: var(--iss-white);
+}
+
+.iss-action-link,
+.iss-card__link {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  color: var(--iss-link-fg);
+  font-size: 0.9rem;
+  font-weight: 700;
+  text-decoration: none;
+  transition: color var(--iss-transition);
+}
+
+.iss-action-link::after,
+.iss-card__link::after {
+  content: "→";
+  font-size: 1rem;
+  line-height: 1;
+  transition: transform var(--iss-transition);
+}
+
+.iss-action-link:hover,
+.iss-action-link:focus-visible,
+.iss-card__link:hover,
+.iss-card__link:focus-visible {
+  color: var(--iss-link-hover-fg);
+}
+
+.iss-action-link:hover::after,
+.iss-action-link:focus-visible::after,
+.iss-card__link:hover::after,
+.iss-card__link:focus-visible::after {
+  transform: translateX(2px);
+}
+
+.iss-action-link--light {
+  --iss-link-fg: var(--iss-white);
+  --iss-link-hover-fg: var(--iss-white);
+}
+
+.wp-block-button > .wp-block-button__link {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  min-height: 44px;
+  padding: 0.65rem 1.1rem 0.65rem 0.9rem;
+  border: 1px solid var(--iss-button-fill-border);
+  border-left: 3px solid var(--iss-button-accent);
+  border-radius: 0;
+  background: var(--iss-button-fill-bg);
+  color: var(--iss-button-fg);
+  box-shadow: none;
+  font-size: 0.95rem;
+  font-weight: 600;
+  line-height: 1.1;
+  text-decoration: none;
+  transition:
+    background-color var(--iss-transition),
+    color var(--iss-transition),
+    border-color var(--iss-transition);
+}
+
+.wp-block-button.is-style-outline > .wp-block-button__link {
+  background: var(--iss-button-bg);
+  border-color: var(--iss-button-border);
+}
+
+.wp-block-button > .wp-block-button__link:hover,
+.wp-block-button > .wp-block-button__link:focus-visible {
+  background: var(--iss-button-hover-bg);
+  border-color: var(--iss-button-hover-border);
+  color: var(--iss-button-hover-fg);
+}
+
+/* Base Container */
+/* .iss-container: Base class for iss container; apply on primary wrapper/scope. */
+.iss-container {
+  width: 100%;
+  max-width: var(--iss-content-width);
+  margin-left: auto;
+  margin-right: auto;
+  padding-left: var(--iss-container-pad);
+  padding-right: var(--iss-container-pad);
+}
+
+/* .iss-block--center: Utility class for centering a block as an element while keeping inner content alignment untouched. */
+.iss-block--center {
+  --iss-block-max-width: 42rem;
+
+  width: 100%;
+  max-width: min(100%, var(--iss-block-max-width));
+  margin-left: auto;
+  margin-right: auto;
+}
+
+/* .section: Base class for section; apply on primary wrapper/scope. */
+.section {
+  padding-top: var(--iss-section-pad-y);
+  padding-bottom: var(--iss-section-pad-y);
+}
+
+.section + .section {
+  padding-top: var(--iss-section-pad-y-tight);
+}
+
+/* .section--compact: Modifier class for `section`; combine for `compact` variant. */
+.section--compact {
+  padding-top: 0.35rem;
+  padding-bottom: 0.35rem;
+}
+
+/* =========================================================
+   SITE HEADER
+   Global header shell overlays the first hero instead of taking layout space.
+   ========================================================= */
+
+@media (min-width: 782px) {
+  :root {
+    --iss-site-header-pad-top: 0rem;
+    --iss-site-logo-size: 176px;
+  }
+}
+
+.iss-site-header {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 1100;
+  margin: 0;
+  pointer-events: none;
+}
+
+.iss-site-header__inner {
+  width: 100%;
+  max-width: var(--iss-content-width);
+  margin: 0 auto;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1.5rem;
+  padding: var(--iss-site-header-pad-top) var(--iss-container-pad) var(--iss-site-header-pad-bottom);
+}
+
+.iss-site-brand {
+  display: inline-flex;
+  align-items: center;
+  min-width: 0;
+  pointer-events: auto;
+}
+
+.iss-header-actions {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  pointer-events: auto;
+}
+
+.iss-site-header .wp-block-site-logo {
+  margin: 0;
+}
+
+.iss-site-header .custom-logo,
+.iss-site-header .wp-block-site-logo img {
+  width: var(--iss-site-logo-size);
+  height: auto;
+  object-fit: contain;
+  filter: drop-shadow(0 4px 12px rgba(0,0,0,0.15));
+}
+
+.iss-header-context {
+  display: none;
+  pointer-events: auto;
+}
+
+.iss-header-context__inner {
+  display: grid;
+  gap: 0.2rem;
+  min-width: 0;
+}
+
+.iss-header-context__breadcrumbs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.45rem;
+  align-items: center;
+  color: rgba(30, 30, 30, 0.62);
+  font-size: 0.78rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.iss-header-context__breadcrumbs a,
+.iss-header-context__breadcrumbs span {
+  color: inherit;
+  text-decoration: none;
+}
+
+.iss-header-context__sep {
+  color: rgba(30, 30, 30, 0.34);
+}
+
+.iss-header-context__title {
+  margin: 0;
+  max-width: 48rem;
+  color: var(--iss-black);
+  font-size: 1rem;
+  font-weight: 700;
+  line-height: 1.2;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+body.iss-header-mode-compact {
+  --iss-site-header-pad-top: 0.45rem;
+  --iss-site-header-pad-bottom: 0.45rem;
+  --iss-header-height: 4.5rem;
+  --iss-site-logo-size: 4.2rem;
+}
+
+body.iss-header-mode-offset {
+  --iss-site-header-pad-top: 0.45rem;
+  --iss-site-header-pad-bottom: 0.45rem;
+  --iss-header-height: 4.5rem;
+  --iss-site-logo-size: 4.2rem;
+}
+
+body.iss-header-mode-compact .iss-site-header {
+  background: rgba(18, 15, 13, 0.94);
+  border-bottom: 1px solid rgba(249, 249, 250, 0.12);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+}
+
+body.iss-header-mode-offset .iss-site-header {
+  background: rgba(18, 15, 13, 0.94);
+  border-bottom: 1px solid rgba(249, 249, 250, 0.12);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+}
+
+body.iss-header-mode-compact .iss-site-header__inner {
+  gap: 1rem;
+  align-items: center;
+}
+
+body.iss-header-mode-offset .iss-site-header__inner {
+  gap: 1rem;
+  align-items: center;
+}
+
+body.iss-header-mode-compact .iss-site-brand {
+  display: inline-flex;
+  flex: 0 0 auto;
+}
+
+body.iss-header-mode-offset .iss-site-brand {
+  display: inline-flex;
+  flex: 0 0 auto;
+}
+
+body.iss-header-mode-compact .iss-header-context {
+  display: block;
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+body.iss-header-mode-offset .iss-header-context {
+  display: block;
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+body.iss-header-mode-compact .iss-header-actions {
+  flex: 0 0 auto;
+}
+
+body.iss-header-mode-offset .iss-header-actions {
+  flex: 0 0 auto;
+}
+
+body.iss-header-mode-compact .iss-header-context__breadcrumbs,
+body.iss-header-mode-offset .iss-header-context__breadcrumbs {
+  color: rgba(249, 249, 250, 0.72);
+}
+
+body.iss-header-mode-compact .iss-header-context__sep,
+body.iss-header-mode-offset .iss-header-context__sep {
+  color: rgba(249, 249, 250, 0.32);
+}
+
+body.iss-header-mode-compact .iss-header-context__title,
+body.iss-header-mode-offset .iss-header-context__title {
+  color: var(--iss-white);
+}
+
+@media (max-width: 781px) {
+  body.iss-header-mode-compact,
+  body.iss-header-mode-offset {
+    --iss-site-logo-size: 3.2rem;
+  }
+
+  body.iss-header-mode-compact .iss-header-context__breadcrumbs {
+    font-size: 0.72rem;
+    letter-spacing: 0.06em;
+  }
+
+  body.iss-header-mode-offset .iss-header-context__breadcrumbs {
+    font-size: 0.72rem;
+    letter-spacing: 0.06em;
+  }
+
+  body.iss-header-mode-compact .iss-header-context__title {
+    font-size: 0.92rem;
+  }
+
+  body.iss-header-mode-offset .iss-header-context__title {
+    font-size: 0.92rem;
+  }
+}
+
+.iss-nav-toggle {
+  margin: 0;
+}
+
+.iss-nav-toggle .wp-block-button__link {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 48px;
+  min-width: 100px;
+  padding: 0.5rem 1.5rem;
+  border: 1px solid rgba(255, 255, 255, 0.25);
+  border-radius: var(--iss-radius-pill);
+  background: rgba(30, 30, 30, 0.4);
+  color: var(--iss-white);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  font-size: 0.95rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  cursor: pointer;
+  text-decoration: none;
+  transition: all var(--iss-transition);
+}
+
+.iss-nav-toggle .wp-block-button__link:hover {
+  background: var(--iss-accent);
+  border-color: var(--iss-accent);
+  transform: translateY(-2px);
+  box-shadow: 0 8px 20px rgba(0,0,0,0.2);
+}
+
+/* =========================================================
+   SITE MENU SHELL
+   Global off-canvas menu / desktop drawer / mobile full screen
+   ========================================================= */
+
+html.iss-nav-open,
+body.iss-nav-open,
+html.iss-search-modal-open,
+body.iss-search-modal-open {
+  overflow: hidden;
+}
+
+.iss-nav-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 2998;
+  background: rgba(0, 0, 0, 0.45);
+  opacity: 0;
+  visibility: hidden;
+  pointer-events: none;
+  transition: opacity 0.25s ease, visibility 0.25s ease;
+}
+
+.iss-nav-overlay.is-open {
+  opacity: 1;
+  visibility: visible;
+  pointer-events: auto;
+}
+
+.iss-menu-shell {
+  position: fixed;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  left: auto;
+  z-index: 2999;
+  width: min(100vw, 560px);
+  height: 100dvh;
+  overflow: hidden;
+  overflow-x: hidden;
+  background: var(--iss-black, #1e1e1e);
+  color: var(--iss-white, #f9f9fa);
+  transform: translateX(100%);
+  visibility: hidden;
+  pointer-events: none;
+  transition: transform 0.32s ease, visibility 0.32s ease;
+}
+
+.iss-menu-shell.is-open {
+  transform: translateX(0);
+  visibility: visible;
+  pointer-events: auto;
+}
+
+.iss-menu-shell__inner {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  box-sizing: border-box;
+  min-height: 100dvh;
+  height: 100dvh;
+  overflow-y: auto;
+  padding: clamp(1rem, 1.9vh, 1.38rem) clamp(1.05rem, 2.6vw, 1.75rem);
+}
+
+.iss-menu-shell__inner > *,
+.iss-menu-shell__primary > *,
+.iss-menu-shell__section > *,
+.iss-menu-shell__utility > * {
+  margin-block-start: 0;
+  margin-block-end: 0;
+}
+
+.iss-menu-shell__top {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  margin-bottom: clamp(1rem, 2vh, 1.35rem);
+}
+
+.iss-menu-shell__top > * {
+  margin: 0;
+}
+
+.iss-menu-shell__spacer {
+  flex: 1;
+}
+
+.iss-menu-icon,
+.iss-menu-close {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 1.65rem;
+  height: 1.65rem;
+  border: 0;
+  background: transparent;
+  color: rgba(249, 249, 250, 0.72);
+  font: inherit;
+  font-size: 1.08rem;
+  line-height: 1;
+  cursor: pointer;
+  transition: color var(--iss-transition);
+}
+
+.iss-menu-icon::before {
+  content: "";
+  display: block;
+  width: 1.05rem;
+  height: 1.05rem;
+  flex-basis: 1.05rem;
+  color: currentColor;
+  background: currentColor;
+  mask-size: contain;
+  mask-repeat: no-repeat;
+  mask-position: center;
+  -webkit-mask-size: contain;
+  -webkit-mask-repeat: no-repeat;
+  -webkit-mask-position: center;
+}
+
+.iss-menu-icon--hamburger::before {
+  content: "☰";
+  width: auto;
+  height: auto;
+  background: none;
+  font-size: 1.08rem;
+  line-height: 1;
+}
+
+.iss-menu-icon--calendar::before {
+  mask-image: url('/wp-content/themes/industriesalon/assets/icons/iss-calendar.svg');
+  -webkit-mask-image: url('/wp-content/themes/industriesalon/assets/icons/iss-calendar.svg');
+}
+
+.iss-menu-icon--info::before {
+  mask-image: url('/wp-content/themes/industriesalon/assets/icons/iss-info.svg');
+  -webkit-mask-image: url('/wp-content/themes/industriesalon/assets/icons/iss-info.svg');
+}
+
+.iss-menu-close {
+  margin-left: 0.25rem;
+  font-size: 1.6rem;
+  text-decoration: none;
+}
+
+.iss-menu-icon--search {
+  position: relative;
+}
+
+.iss-menu-icon--search::before {
+  width: 0.88rem;
+  height: 0.88rem;
+  border: 0.11rem solid currentColor;
+  border-radius: 999px;
+  background: transparent;
+  mask: none;
+  -webkit-mask: none;
+}
+
+.iss-menu-icon--search::after {
+  content: "";
+  position: absolute;
+  right: -0.22rem;
+  bottom: -0.16rem;
+  width: 0.46rem;
+  height: 0.14rem;
+  border-radius: 999px;
+  background: currentColor;
+  transform: rotate(45deg);
+  transform-origin: center;
+}
+
+.iss-menu-icon.is-active,
+.iss-menu-icon:hover,
+.iss-menu-close.is-active,
+.iss-menu-close:hover {
+  color: var(--iss-red, #e81d25);
+}
+
+.iss-menu-search-card {
+  margin: 0 0 clamp(0.78rem, 1.55vh, 1rem);
+}
+
+.iss-menu-search-card a {
+  display: grid;
+  grid-template-columns: 2.2rem minmax(0, 1fr);
+  gap: 0.12rem 0.82rem;
+  align-items: center;
+  width: 100%;
+  padding: clamp(0.62rem, 1.35vh, 0.84rem);
+  background: var(--iss-white, #f9f9fa);
+  color: var(--iss-black, #1e1e1e);
+  text-decoration: none;
+}
+
+.iss-menu-search-card a:hover,
+.iss-menu-search-card a:focus-visible {
+  color: var(--iss-black, #1e1e1e);
+}
+
+.iss-menu-search-card__icon {
+  position: relative;
+  grid-row: 1 / span 2;
+  width: 1.45rem;
+  height: 1.45rem;
+  color: var(--iss-red, #e81d25);
+}
+
+.iss-menu-search-card__icon::before {
+  content: "";
+  position: absolute;
+  inset: 0.08rem 0.22rem 0.22rem 0.08rem;
+  border: 0.13rem solid currentColor;
+  border-radius: 999px;
+}
+
+.iss-menu-search-card__icon::after {
+  content: "";
+  position: absolute;
+  right: 0.1rem;
+  bottom: 0.12rem;
+  width: 0.62rem;
+  height: 0.15rem;
+  border-radius: 999px;
+  background: currentColor;
+  transform: rotate(45deg);
+}
+
+.iss-menu-search-card strong,
+.iss-menu-search-card em {
+  display: block;
+  min-width: 0;
+}
+
+.iss-menu-search-card strong {
+  font-size: clamp(1.02rem, 0.9rem + 0.38vw, 1.18rem);
+  font-weight: 780;
+  line-height: 1.05;
+}
+
+.iss-menu-search-card em {
+  color: rgba(30, 30, 30, 0.62);
+  font-size: 0.76rem;
+  font-style: normal;
+  font-weight: 650;
+  line-height: 1.25;
+}
+
+nav.iss-menu-shell__quick-grid {
+  display: block;
+  width: 100%;
+  margin: 0 0 clamp(0.86rem, 1.8vh, 1.16rem);
+  background: rgba(249, 249, 250, 0.16);
+}
+
+nav.iss-menu-shell__quick-grid > .wp-block-navigation__container {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 1px;
+  width: 100%;
+  margin: 0;
+  padding: 0;
+  background: transparent;
+}
+
+.iss-menu-shell__quick-grid .wp-block-navigation-item {
+  min-width: 0;
+  margin: 0;
+}
+
+.iss-menu-shell__quick-grid a,
+.iss-menu-shell__quick-grid .wp-block-navigation-item__label {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: clamp(2.35rem, 5vh, 2.8rem);
+  width: 100%;
+  background: rgba(249, 249, 250, 0.08);
+  color: var(--iss-white, #f9f9fa);
+  font-size: 0.82rem;
+  font-weight: 760;
+  line-height: 1.1;
+  text-align: center;
+  text-decoration: none;
+}
+
+.iss-menu-shell__quick-grid a:hover,
+.iss-menu-shell__quick-grid .wp-block-navigation-item__content:hover .wp-block-navigation-item__label,
+.iss-menu-shell__quick-grid a:focus-visible {
+  color: var(--iss-red, #e81d25);
+}
+
+.iss-menu-shell__nav-section {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: clamp(0.78rem, 1.6vh, 1.05rem);
+  width: 100%;
+  padding-top: clamp(0.9rem, 1.9vh, 1.22rem);
+  padding-bottom: clamp(0.82rem, 1.7vh, 1.05rem);
+  border-top: 1px solid rgba(249, 249, 250, 0.16);
+}
+
+.iss-menu-shell__nav-section--quick {
+  --iss-menu-link-size: clamp(1.06rem, 0.92rem + 0.42vw, 1.24rem);
+}
+
+.iss-menu-shell__nav-section--identity {
+  --iss-menu-link-size: clamp(1rem, 0.86rem + 0.34vw, 1.14rem);
+}
+
+.iss-menu-shell__nav-section--content {
+  --iss-menu-link-size: clamp(0.94rem, 0.84rem + 0.24vw, 1.04rem);
+}
+
+.iss-menu-shell__nav-section--utility {
+  --iss-menu-link-size: clamp(0.84rem, 0.78rem + 0.14vw, 0.92rem);
+}
+
+.iss-menu-shell__nav-section--archive {
+  --iss-menu-link-size: clamp(0.94rem, 0.84rem + 0.24vw, 1.04rem);
+
+  padding-bottom: clamp(1rem, 2.2vh, 1.45rem);
+  margin-bottom: 0;
+}
+
+.iss-menu-shell__kicker {
+  --iss-kicker-accent: var(--iss-red, #e81d25);
+  --iss-kicker-color: var(--iss-red, #e81d25);
+
+  margin: 0;
+  color: var(--iss-red, #e81d25);
+  font-size: 0.68rem;
+  font-weight: 820;
+  letter-spacing: 0.08em;
+}
+
+.iss-menu-shell__kicker::before,
+.iss-menu-shell__kicker::after {
+  content: none;
+}
+
+.iss-menu-shell__nav,
+.iss-menu-shell__nav .wp-block-navigation__container {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: clamp(0.26rem, 0.7vh, 0.42rem);
+  width: 100%;
+  overflow: visible;
+}
+
+.iss-menu-shell__nav .wp-block-navigation-item {
+  margin: 0;
+}
+
+.iss-menu-shell__nav a,
+.iss-menu-shell__nav .wp-block-navigation-item__label {
+  width: fit-content;
+  color: var(--iss-white, #f9f9fa);
+  font-size: var(--iss-menu-link-size, 1rem);
+  font-weight: 760;
+  line-height: 1.16;
+  letter-spacing: 0;
+  text-decoration: none;
+}
+
+.iss-menu-shell__nav--utility a,
+.iss-menu-shell__nav--utility .wp-block-navigation-item__label {
+  color: rgba(249, 249, 250, 0.84);
+  font-weight: 700;
+}
+
+.iss-menu-shell__nav-section--content .wp-block-navigation__container,
+.iss-menu-shell__nav-section--archive .wp-block-navigation__container {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  column-gap: clamp(0.9rem, 2.4vw, 1.4rem);
+  row-gap: clamp(0.18rem, 0.55vh, 0.32rem);
+}
+
+.iss-menu-shell__nav a:hover,
+.iss-menu-shell__nav .wp-block-navigation-item__content:hover .wp-block-navigation-item__label,
+.iss-menu-shell__nav a:focus-visible {
+  color: var(--iss-red, #e81d25);
+}
+
+.iss-menu-shell__status {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: clamp(0.7rem, 1.7vw, 1rem);
+  width: 100%;
+  margin-top: auto;
+  padding-top: clamp(0.72rem, 1.5vh, 0.95rem);
+  border-top: 1px solid rgba(249, 249, 250, 0.16);
+}
+
+.iss-menu-shell__status-item {
+  display: flex;
+  min-width: 0;
+  flex-direction: column;
+  gap: 0.18rem;
+  color: var(--iss-white, #f9f9fa);
+  text-decoration: none;
+}
+
+.iss-menu-shell__status-item span {
+  color: var(--iss-red, #e81d25);
+  font-size: 0.68rem;
+  font-weight: 820;
+  line-height: 1.1;
+  text-transform: uppercase;
+}
+
+.iss-menu-shell__status-item strong {
+  color: rgba(249, 249, 250, 0.88);
+  font-size: clamp(0.82rem, 0.78rem + 0.12vw, 0.9rem);
+  font-weight: 760;
+  line-height: 1.24;
+}
+
+.iss-menu-shell__status-item em {
+  color: rgba(249, 249, 250, 0.56);
+  font-size: 0.72rem;
+  font-style: normal;
+  font-weight: 650;
+  line-height: 1.25;
+}
+
+.iss-menu-shell__status-item:hover strong,
+.iss-menu-shell__status-item:focus-visible strong {
+  color: var(--iss-red, #e81d25);
+}
+
+.iss-search-modal {
+  position: fixed;
+  inset: 0;
+  z-index: 3200;
+  display: flex;
+  align-items: flex-start;
+  justify-content: center;
+  padding: clamp(3rem, 8vh, 5rem) clamp(1rem, 4vw, 2rem);
+  visibility: hidden;
+  pointer-events: none;
+}
+
+.iss-search-modal.is-open {
+  visibility: visible;
+  pointer-events: auto;
+}
+
+.iss-search-modal__overlay {
+  position: absolute;
+  inset: 0;
+  background: rgba(20, 20, 20, 0.86);
+  opacity: 0;
+  transition: opacity 0.2s ease;
+}
+
+.iss-search-modal.is-open .iss-search-modal__overlay {
+  opacity: 1;
+}
+
+.iss-search-modal__panel {
+  position: relative;
+  width: min(100%, 900px);
+  max-height: min(760px, calc(100dvh - 4rem));
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  border-radius: 8px;
+  background: var(--iss-white, #f9f9fa);
+  color: var(--iss-black, #1e1e1e);
+  box-shadow: 0 30px 80px rgba(0, 0, 0, 0.35);
+  opacity: 0;
+  transform: translateY(0.75rem);
+  transition: opacity 0.2s ease, transform 0.2s ease;
+}
+
+.iss-search-modal.is-open .iss-search-modal__panel {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+.iss-search-modal__header,
+.iss-search-modal__footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 1rem clamp(1rem, 4vw, 2rem);
+  border-bottom: 1px solid rgba(30, 30, 30, 0.12);
+}
+
+.iss-search-modal__header > *,
+.iss-search-modal__footer > * {
+  margin: 0;
+}
+
+.iss-search-modal__close {
+  width: 2rem;
+  height: 2rem;
+  border: 0;
+  background: transparent;
+  color: inherit;
+  cursor: pointer;
+  font: inherit;
+  font-size: 1.55rem;
+  line-height: 1;
+}
+
+.iss-search-modal__form {
+  padding: clamp(1.25rem, 4vw, 2rem);
+  border-bottom: 1px solid rgba(30, 30, 30, 0.12);
+}
+
+.iss-search-modal__input {
+  width: 100%;
+  border: 0;
+  outline: 0;
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  font-size: clamp(1.35rem, 4vw, 2.1rem);
+  font-weight: 680;
+  line-height: 1.16;
+}
+
+.iss-search-modal__input::placeholder {
+  color: rgba(30, 30, 30, 0.38);
+}
+
+.iss-search-modal__status {
+  padding: 0.82rem clamp(1rem, 4vw, 2rem);
+  border-bottom: 1px solid rgba(30, 30, 30, 0.1);
+  color: rgba(30, 30, 30, 0.58);
+  font-size: 0.78rem;
+  font-weight: 760;
+  line-height: 1.2;
+  text-transform: uppercase;
+}
+
+.iss-search-modal__results {
+  overflow-y: auto;
+}
+
+.iss-search-modal__result {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 0.28rem 1rem;
+  padding: 0.95rem clamp(1rem, 4vw, 2rem);
+  border-bottom: 1px solid rgba(30, 30, 30, 0.1);
+  color: inherit;
+  text-decoration: none;
+}
+
+.iss-search-modal__result:hover,
+.iss-search-modal__result:focus-visible {
+  background: rgba(232, 29, 37, 0.06);
+}
+
+.iss-search-modal__result-title {
+  min-width: 0;
+  font-size: clamp(1rem, 0.92rem + 0.25vw, 1.16rem);
+  font-weight: 760;
+  line-height: 1.2;
+}
+
+.iss-search-modal__result-meta {
+  color: var(--iss-red, #e81d25);
+  font-size: 0.76rem;
+  font-weight: 760;
+  line-height: 1.2;
+  text-transform: uppercase;
+}
+
+.iss-search-modal__result-excerpt {
+  grid-column: 1 / -1;
+  max-width: 62rem;
+  color: rgba(30, 30, 30, 0.62);
+  font-size: 0.9rem;
+  line-height: 1.38;
+}
+
+.iss-search-modal__footer {
+  border-top: 1px solid rgba(30, 30, 30, 0.12);
+  border-bottom: 0;
+  color: rgba(30, 30, 30, 0.55);
+  font-size: 0.82rem;
+  font-weight: 650;
+}
+
+.iss-search-modal__all {
+  border: 0;
+  background: transparent;
+  color: var(--iss-red, #e81d25);
+  cursor: pointer;
+  font: inherit;
+  font-weight: 760;
+  padding: 0;
+  text-align: left;
+}
+
+.iss-search-modal__close:hover,
+.iss-search-modal__close:focus-visible,
+.iss-search-modal__all:hover,
+.iss-search-modal__all:focus-visible {
+  color: var(--iss-red, #e81d25);
+}
+
+@media (max-height: 760px) {
+  .iss-menu-shell__inner {
+    padding: 0.68rem 0.9rem;
+  }
+
+  .iss-menu-shell__top {
+    gap: 0.45rem;
+    margin-bottom: 0.75rem;
+  }
+
+  .iss-menu-icon:not(:first-child) {
+    display: none;
+  }
+
+  .iss-menu-search-card,
+  nav.iss-menu-shell__quick-grid {
+    margin-bottom: 0.72rem;
+  }
+
+  .iss-menu-shell__nav-section {
+    gap: 0.62rem;
+    padding-top: 0.72rem;
+    padding-bottom: 0.68rem;
+  }
+
+  .iss-menu-shell__nav,
+  .iss-menu-shell__nav .wp-block-navigation__container {
+    gap: 0.18rem;
+  }
+
+}
+
+@media (max-height: 680px) {
+  .iss-menu-shell__nav-section--quick {
+    --iss-menu-link-size: 0.98rem;
+  }
+
+  .iss-menu-shell__nav-section--identity {
+    --iss-menu-link-size: 0.9rem;
+  }
+
+  .iss-menu-shell__nav-section--content {
+    --iss-menu-link-size: 0.84rem;
+  }
+
+  .iss-menu-shell__nav-section--utility {
+    --iss-menu-link-size: 0.76rem;
+  }
+
+  .iss-menu-shell__nav-section--archive {
+    --iss-menu-link-size: 0.84rem;
+  }
+
+}
+
+@media (max-width: 640px) {
+  .iss-menu-shell {
+    width: 100vw;
+  }
+
+  .iss-menu-shell__inner {
+    padding: 0.85rem;
+  }
+
+  .iss-menu-shell__nav-section--quick {
+    --iss-menu-link-size: 1rem;
+  }
+
+  .iss-menu-shell__nav-section--identity {
+    --iss-menu-link-size: 0.94rem;
+  }
+
+  .iss-menu-shell__nav-section--content {
+    --iss-menu-link-size: 0.88rem;
+  }
+
+  .iss-menu-shell__nav-section--utility {
+    --iss-menu-link-size: 0.8rem;
+  }
+
+  .iss-menu-shell__nav-section--archive {
+    --iss-menu-link-size: 0.88rem;
+  }
+
+  .iss-search-modal {
+    padding: 0;
+  }
+
+  .iss-search-modal__panel {
+    min-height: 100dvh;
+    max-height: 100dvh;
+    border-radius: 0;
+  }
+
+  .iss-search-modal__result {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+
+
+
+/* =========================================================
+   SECTION SURFACE SYSTEM
+   Contract:
+   - apply only on `.section` wrappers
+   - patterns choose surface explicitly
+   - keep backgrounds neutral; red is accent only
+   - structure default: `.section > .iss-container`
+
+   Usage examples:
+   1) Plain default section
+      <section class="section section--plain">
+        <div class="iss-container">...</div>
+      </section>
+
+   2) Soft grouped content
+      <section class="section section--soft">
+        <div class="iss-container">...</div>
+      </section>
+
+   3) Inset featured block
+      <section class="section section--inset">
+        <div class="iss-container">...</div>
+      </section>
+
+   4) Archive/timeline directional rhythm
+      <section class="section section--fade-right">
+        <div class="iss-container">...</div>
+      </section>
+
+   5) Compact low-chrome band
+      <section class="section section--compact">
+        <div class="iss-container">...</div>
+      </section>
+
+   6) Legacy compatibility
+      - `section--alt` maps to `section--tint`
+      - use `section--tint` for new patterns
+   ========================================================= */
+
+.section--plain {
+  background: transparent;
+}
+
+/* Soft neutral gradient grouping (default zebra replacement). */
+.section--tint,
+.section--alt {
+  position: relative;
+  border-top: 1px solid rgba(192, 184, 181, 0.2);
+  background: linear-gradient(
+        180deg,
+        rgba(255, 255, 255, 0) 0%,
+        rgba(192, 184, 181, 0.10) 120px,
+        rgba(192, 184, 181, 0.05) 100%
+      );
+  /* background: linear-gradient(
+    180deg,
+    rgba(192, 184, 181, 0.10) 0%,
+    rgba(192, 184, 181, 0.05) 100%
+  ); */
+}
+
+.section--tint::before,
+.section--alt::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: var(--iss-container-pad);
+  width: 120px;
+  height: 2px;
+  background: var(--iss-accent);
+  opacity: 0.6;
+}
+
+.section--soft {
+  background: #f6f6f7;
+}
+
+/* Inset panel on full-width section; keeps content cage unchanged. */
+.section--inset {
+  position: relative;
+  isolation: isolate;
+}
+
+.section--inset::before {
+  content: "";
+  position: absolute;
+  inset: 1.25rem 0;
+  max-width: var(--iss-content-width);
+  margin: 0 auto;
+  background: #f4f4f5;
+  border: 1px solid rgba(30, 30, 30, 0.06);
+  border-radius: var(--iss-radius-lg);
+  z-index: -1;
+  pointer-events: none;
+}
+
+/* Directional tonal rail; useful for archive/timeline sections. */
+.section--fade-right {
+  position: relative;
+  overflow: clip;
+}
+
+.section--fade-right::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    90deg,
+    rgba(255, 255, 255, 0) 0%,
+    rgba(192, 184, 181, 0.05) 70%,
+    rgba(192, 184, 181, 0.12) 100%
+  );
+  pointer-events: none;
+}
+
+.section--dark {
+  --iss-heading-title-color: var(--iss-white);
+  --iss-heading-text-color: rgba(249, 249, 250, 0.78);
+  --iss-kicker-color: var(--iss-white);
+  --iss-link-fg: var(--iss-white);
+  --iss-link-hover-fg: var(--iss-white);
+  --iss-button-fg: var(--iss-white);
+  --iss-button-bg: transparent;
+  --iss-button-fill-bg: rgba(249, 249, 250, 0.08);
+  --iss-button-border: rgba(249, 249, 250, 0.42);
+  --iss-button-fill-border: rgba(249, 249, 250, 0.58);
+  --iss-button-hover-bg: rgba(249, 249, 250, 0.12);
+  --iss-button-hover-border: rgba(249, 249, 250, 0.72);
+  --iss-button-hover-fg: var(--iss-white);
+
+  background: color-mix(in srgb, var(--iss-black) 88%, var(--iss-accent) 12%);
+  color: var(--iss-white);
+}
+
+
+/* =====================================================================
+   GROUP: KICKER SYSTEM
+   PURPOSE:
+   Shared small-label treatment used before headings, card titles, and
+   section intros.
+
+   USE THIS WHEN:
+   - A section needs a compact category label.
+   - A card needs a lighter pre-title cue.
+   - A hero needs a brand-consistent preheading.
+
+   PRIMARY HOOKS:
+   .iss-kicker
+   .iss-kicker--compact
+   .iss-kicker--lg
+   .iss-kicker--muted
+   .iss-kicker--light
+   .iss-kicker--red / --green / --blue / --yellow / --brown
+
+   TUNE CAREFULLY:
+   Border width, padding-left, letter spacing, and opacity define the
+   character of this pattern. Small changes affect the whole site.
+   ===================================================================== */
+
+/* Base kicker */
+/* .iss-kicker: Base class for iss kicker; apply on primary wrapper/scope. */
+.iss-kicker {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.6rem;
+
+  margin: 0 0 1rem;
+  margin-left: 0;
+  padding-left: 0.9rem;
+  text-indent: 0;
+
+  border-left: 3px solid var(--iss-kicker-accent, var(--iss-accent));
+
+  font-size: 0.8rem;
+  font-weight: 700;
+  line-height: 1;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+
+  color: var(--iss-kicker-color, var(--iss-black));
+  opacity: 0.85;
+}
+
+/* Optional prefix element (dot / line / icon) */
+/* .iss-kicker: Base class for iss kicker; apply on primary wrapper/scope. */
+.iss-kicker::before {
+  content: "";
+  width: 6px;
+  height: 6px;
+  background: var(--iss-kicker-accent, var(--iss-accent));
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+/* Dense variant (for cards / lists) */
+/* .iss-kicker--compact: Modifier class for `iss-kicker`; combine for `compact` variant. */
+.iss-kicker--compact {
+  font-size: 0.7rem;
+  letter-spacing: 0.14em;
+  padding-left: 0.7rem;
+}
+
+/* Large variant (hero / section openers) */
+/* .iss-kicker--lg: Modifier class for `iss-kicker`; combine for `lg` variant. */
+.iss-kicker--lg {
+  font-size: 0.95rem;
+  letter-spacing: 0.16em;
+  padding-left: 1.1rem;
+}
+
+/* Muted */
+/* .iss-kicker--muted: Modifier class for `iss-kicker`; combine for `muted` variant. */
+.iss-kicker--muted {
+  --iss-kicker-accent: var(--iss-grey);
+  --iss-kicker-color: var(--iss-grey);
+}
+
+/* Light (on dark backgrounds) */
+/* .iss-kicker--light: Modifier class for `iss-kicker`; combine for `light` variant. */
+.iss-kicker--light {
+  --iss-kicker-color: var(--iss-white);
+  opacity: 0.9;
+}
+
+/* Accent variants (use sparingly for thematic grouping) */
+/* .iss-kicker--red: Modifier class for `iss-kicker`; combine for `red` variant. */
+.iss-kicker--red {
+  --iss-kicker-accent: var(--iss-red);
+  --iss-kicker-color: var(--iss-red);
+}
+/* .iss-kicker--green: Modifier class for `iss-kicker`; combine for `green` variant. */
+.iss-kicker--green {
+  --iss-kicker-accent: var(--iss-green);
+  --iss-kicker-color: var(--iss-green);
+}
+/* .iss-kicker--blue: Modifier class for `iss-kicker`; combine for `blue` variant. */
+.iss-kicker--blue  {
+  --iss-kicker-accent: var(--iss-blue);
+  --iss-kicker-color: var(--iss-blue);
+}
+/* .iss-kicker--yellow: Modifier class for `iss-kicker`; combine for `yellow` variant. */
+.iss-kicker--yellow{
+  --iss-kicker-accent: var(--iss-yellow);
+  --iss-kicker-color: var(--iss-yellow);
+}
+/* .iss-kicker--brown: Modifier class for `iss-kicker`; combine for `brown` variant. */
+.iss-kicker--brown {
+  --iss-kicker-accent: var(--iss-brown);
+  --iss-kicker-color: var(--iss-brown);
+}
+
+/* .iss-info-panel: Base class for iss info panel; apply on primary wrapper/scope. */
+/* .iss-kicker: Base class for iss kicker; apply on primary wrapper/scope. */
+.iss-info-panel > .iss-kicker {
+  margin: -0.45rem 0 0.75rem;
+}
+
+/* =====================================================================
+   GROUP: HEADING COMPOSITION
+   PURPOSE:
+   Standard wrapper for section openers: kicker, title, and intro text.
+
+   USE THIS WHEN:
+   - You need a predictable intro block at the top of a section.
+   - Editors should be able to reuse the same intro rhythm everywhere.
+
+   PRIMARY HOOKS:
+   .iss-heading
+   .iss-heading__title
+   .iss-heading__text
+   .iss-heading--uncaged
+   .iss-heading--pad-right
+   .iss-heading--margin-right
+   .iss-heading--center
+   .iss-heading--right
+
+   CONTROL NOTES:
+   --iss-heading-max-width keeps intros readable.
+   Use --uncaged only when a layout already controls measure.
+   ===================================================================== */
+
+/* .iss-heading: Base class for iss heading; apply on primary wrapper/scope. */
+.iss-heading {
+  --iss-heading-max-width: 46rem;
+  --iss-heading-pad-right: 0;
+  --iss-heading-margin-right: 0;
+  --iss-heading-title-color: inherit;
+  --iss-heading-text-color: rgba(30, 30, 30, 0.72);
+
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  width: 100%;
+  max-width: var(--iss-heading-max-width);
+  align-items: flex-start;
+  text-align: left;
+  margin-right: var(--iss-heading-margin-right);
+  padding-right: var(--iss-heading-pad-right);
+  box-sizing: border-box;
+}
+
+/* .iss-heading: Base class for iss heading; apply on primary wrapper/scope. */
+/* .iss-kicker: Base class for iss kicker; apply on primary wrapper/scope. */
+.iss-heading > .iss-kicker,
+/* .iss-heading: Base class for iss heading; apply on primary wrapper/scope. */
+/* .iss-heading__title: Element class for `iss-heading`; apply on `title` element. */
+.iss-heading > .iss-heading__title,
+/* .iss-heading: Base class for iss heading; apply on primary wrapper/scope. */
+/* .iss-heading__text: Element class for `iss-heading`; apply on `text` element. */
+.iss-heading > .iss-heading__text {
+  margin-left: 0;
+  margin-right: 0;
+  max-width: none;
+  text-align: inherit;
+}
+
+/* .iss-heading--uncaged: Modifier class for `iss-heading`; combine for `uncaged` variant. */
+.iss-heading--uncaged {
+  --iss-heading-max-width: none;
+}
+
+/* .iss-heading--pad-right: Modifier class for `iss-heading`; combine for `pad-right` variant. */
+.iss-heading--pad-right {
+  --iss-heading-pad-right: var(--wp--preset--spacing--l, 1.5rem);
+}
+
+/* .iss-heading--margin-right: Modifier class for `iss-heading`; combine for `margin-right` variant. */
+.iss-heading--margin-right {
+  --iss-heading-margin-right: var(--wp--preset--spacing--l, 1.5rem);
+}
+
+/* .iss-heading--light: Modifier class for `iss-heading`; combine for `light` variant. */
+.iss-heading--light {
+  --iss-heading-title-color: var(--iss-white);
+  --iss-heading-text-color: rgba(249, 249, 250, 0.78);
+}
+
+
+/* .iss-heading__title: Element class for `iss-heading`; apply on `title` element. */
+.iss-heading__title {
+  margin: 0;
+  color: var(--iss-heading-title-color);
+}
+
+/* .iss-heading__text: Element class for `iss-heading`; apply on `text` element. */
+.iss-heading__text {
+  margin: 0;
+  font-size: 1rem;
+  color: var(--iss-heading-text-color);
+  
+}
+
+/* alignment helpers */
+/* .iss-heading--center: Modifier class for `iss-heading`; combine for `center` variant. */
+.iss-heading--center {
+  align-items: center;
+  text-align: center;
+}
+
+/* .iss-heading--right: Modifier class for `iss-heading`; combine for `right` variant. */
+.iss-heading--right {
+  align-items: flex-end;
+  text-align: right;
+}
+
+/* =====================================================================
+   GROUP: SECTION SEPARATORS
+   PURPOSE:
+   Simple visual breaks between large blocks without introducing another
+   heavy design element.
+
+   USE THIS WHEN:
+   - White space alone feels too open.
+   - A thematic break is needed between unrelated content zones.
+
+   PRIMARY HOOKS:
+   .iss-separator
+   .iss-separator--indent
+   .iss-separator--accent
+   ===================================================================== */
+
+/* Option 1 — subtle hairline (recommended default) */   
+/* .iss-separator: Base class for iss separator; apply on primary wrapper/scope. */
+.iss-separator {
+  height: 1px;
+  background: var(--iss-border);
+  margin: 4rem 0;
+  width: 100%;
+}
+/* Option 2 — indented */   
+
+/* .iss-separator--indent: Modifier class for `iss-separator`; combine for `indent` variant. */
+.iss-separator--indent {
+  height: 1px;
+  background: var(--iss-border);
+  margin: 4rem 0;
+  width: 60%;
+  margin-left: 0;
+}
+/* Option 3 — accent (rare, for thematic break) */  
+
+/* .iss-separator--accent: Modifier class for `iss-separator`; combine for `accent` variant. */
+.iss-separator--accent {
+  height: 2px;
+  background: var(--iss-accent);
+  width: 80px;
+  margin: 3rem 0;
+}
+
+/* =====================================================================
+   GROUP: INDENTED TEXT INTRO
+   PURPOSE:
+   Alternative intro pattern for text-led sections that do not need a
+   full kicker + title stack.
+
+   USE THIS WHEN:
+   - You want a simpler left-rail text block.
+   - The title is already handled elsewhere.
+   - You need an editorial note or context paragraph.
+
+   PRIMARY HOOKS:
+   .iss-indent
+   .iss-indent--uncaged
+   .iss-indent--pad-right
+   .iss-indent--margin-right
+   .iss-indent--light
+   .iss-indent--muted
+   ===================================================================== */
+
+/* .iss-indent: Base class for iss indent; apply on primary wrapper/scope. */
+.iss-indent {
+  --iss-indent-max-width: 60ch;
+  --iss-indent-pad-right: 0;
+  --iss-indent-margin-right: 0;
+
+  border-left: 3px solid var(--iss-accent);
+  padding-left: 1rem;
+  padding-right: var(--iss-indent-pad-right);
+  margin-right: var(--iss-indent-margin-right);
+  max-width: var(--iss-indent-max-width);
+  width: 100%;
+  text-align: left;
+}
+
+/* .iss-indent--uncaged: Modifier class for `iss-indent`; combine for `uncaged` variant. */
+.iss-indent--uncaged {
+  --iss-indent-max-width: none;
+}
+
+/* .iss-indent--pad-right: Modifier class for `iss-indent`; combine for `pad-right` variant. */
+.iss-indent--pad-right {
+  --iss-indent-pad-right: var(--wp--preset--spacing--l, 1.5rem);
+}
+
+/* .iss-indent--margin-right: Modifier class for `iss-indent`; combine for `margin-right` variant. */
+.iss-indent--margin-right {
+  --iss-indent-margin-right: var(--wp--preset--spacing--l, 1.5rem);
+}
+
+/* .iss-indent--light: Modifier class for `iss-indent`; combine for `light` variant. */
+.iss-indent--light {
+  border-left-color: var(--iss-white);
+}
+
+/* .iss-indent--muted: Modifier class for `iss-indent`; combine for `muted` variant. */
+.iss-indent--muted {
+  border-left-color: var(--iss-grey);
+}
+
+
+/* =====================================================================
+   GROUP: GLOBAL LEFT-ALIGN FLOW
+   PURPOSE:
+   Keep intro trios left-aligned without uncaging normal post content or
+   pulling constrained Gutenberg blocks to the screen edge.
+
+   USE THIS WHEN:
+   - Section intros should align to the left edge of the content cage.
+   - Single pages, posts, and tour templates need stable heading flow.
+   - Normal post content must still respect the theme container width.
+
+   IMPORTANT:
+   This block deliberately avoids global margin resets on every
+   constrained child. Do not reintroduce broad rules such as
+   `.iss-container > *` or `.wp-block-group.is-layout-constrained > *`
+   with forced margins, because those uncage content on single templates.
+   ===================================================================== */
+
+/* Section wrappers stay left-oriented, but the container itself remains caged. */
+/* .section: Base class for section; apply on primary wrapper/scope. */
+.section,
+/* .iss-container: Base class for iss container; apply on primary wrapper/scope. */
+.iss-container {
+  text-align: left;
+}
+
+/* Narrow intro blocks anchor left inside normal sections and single templates. */
+/* .section: Base class for section; apply on primary wrapper/scope. */
+/* .iss-container: Base class for iss container; apply on primary wrapper/scope. */
+/* .iss-heading: Base class for iss heading; apply on primary wrapper/scope. */
+.section > .iss-container > .iss-heading,
+/* .section: Base class for section; apply on primary wrapper/scope. */
+/* .iss-container: Base class for iss container; apply on primary wrapper/scope. */
+/* .iss-indent: Base class for iss indent; apply on primary wrapper/scope. */
+.section > .iss-container > .iss-indent,
+/* .iss-tour-page: Base class for iss tour page; apply on primary wrapper/scope. */
+/* .iss-heading: Base class for iss heading; apply on primary wrapper/scope. */
+.iss-tour-page .iss-heading,
+/* .iss-tour-page: Base class for iss tour page; apply on primary wrapper/scope. */
+/* .iss-indent: Base class for iss indent; apply on primary wrapper/scope. */
+.iss-tour-page .iss-indent,
+/* .single: Base class for single; apply on primary wrapper/scope. */
+/* .iss-heading: Base class for iss heading; apply on primary wrapper/scope. */
+.single .iss-heading,
+/* .single: Base class for single; apply on primary wrapper/scope. */
+/* .iss-indent: Base class for iss indent; apply on primary wrapper/scope. */
+.single .iss-indent,
+/* .page: Base class for page; apply on primary wrapper/scope. */
+/* .iss-heading: Base class for iss heading; apply on primary wrapper/scope. */
+.page .iss-heading,
+/* .page: Base class for page; apply on primary wrapper/scope. */
+/* .iss-indent: Base class for iss indent; apply on primary wrapper/scope. */
+.page .iss-indent {
+  margin-left: 0;
+  margin-right: auto;
+}
+
+/* Heading trios follow left alignment unless an explicit alternate modifier is used. */
+/* .section: Base class for section; apply on primary wrapper/scope. */
+/* .iss-heading: Base class for iss heading; apply on primary wrapper/scope. */
+.section .iss-heading:not(.iss-heading--center, .iss-heading--right),
+/* .iss-tour-page: Base class for iss tour page; apply on primary wrapper/scope. */
+/* .iss-heading: Base class for iss heading; apply on primary wrapper/scope. */
+.iss-tour-page .iss-heading:not(.iss-heading--center, .iss-heading--right),
+/* .single: Base class for single; apply on primary wrapper/scope. */
+/* .iss-heading: Base class for iss heading; apply on primary wrapper/scope. */
+.single .iss-heading:not(.iss-heading--center, .iss-heading--right),
+/* .page: Base class for page; apply on primary wrapper/scope. */
+/* .iss-heading: Base class for iss heading; apply on primary wrapper/scope. */
+.page .iss-heading:not(.iss-heading--center, .iss-heading--right) {
+  align-items: flex-start;
+  text-align: left;
+}
+
+/* Text inside intro blocks inherits left alignment cleanly. */
+/* .section: Base class for section; apply on primary wrapper/scope. */
+/* .iss-heading: Base class for iss heading; apply on primary wrapper/scope. */
+/* .iss-kicker: Base class for iss kicker; apply on primary wrapper/scope. */
+.section .iss-heading > .iss-kicker,
+/* .section: Base class for section; apply on primary wrapper/scope. */
+/* .iss-heading: Base class for iss heading; apply on primary wrapper/scope. */
+/* .iss-heading__title: Element class for `iss-heading`; apply on `title` element. */
+.section .iss-heading > .iss-heading__title,
+/* .section: Base class for section; apply on primary wrapper/scope. */
+/* .iss-heading: Base class for iss heading; apply on primary wrapper/scope. */
+/* .iss-heading__text: Element class for `iss-heading`; apply on `text` element. */
+.section .iss-heading > .iss-heading__text,
+/* .iss-tour-page: Base class for iss tour page; apply on primary wrapper/scope. */
+/* .iss-heading: Base class for iss heading; apply on primary wrapper/scope. */
+/* .iss-kicker: Base class for iss kicker; apply on primary wrapper/scope. */
+.iss-tour-page .iss-heading > .iss-kicker,
+/* .iss-tour-page: Base class for iss tour page; apply on primary wrapper/scope. */
+/* .iss-heading: Base class for iss heading; apply on primary wrapper/scope. */
+/* .iss-heading__title: Element class for `iss-heading`; apply on `title` element. */
+.iss-tour-page .iss-heading > .iss-heading__title,
+/* .iss-tour-page: Base class for iss tour page; apply on primary wrapper/scope. */
+/* .iss-heading: Base class for iss heading; apply on primary wrapper/scope. */
+/* .iss-heading__text: Element class for `iss-heading`; apply on `text` element. */
+.iss-tour-page .iss-heading > .iss-heading__text,
+/* .single: Base class for single; apply on primary wrapper/scope. */
+/* .iss-heading: Base class for iss heading; apply on primary wrapper/scope. */
+/* .iss-kicker: Base class for iss kicker; apply on primary wrapper/scope. */
+.single .iss-heading > .iss-kicker,
+/* .single: Base class for single; apply on primary wrapper/scope. */
+/* .iss-heading: Base class for iss heading; apply on primary wrapper/scope. */
+/* .iss-heading__title: Element class for `iss-heading`; apply on `title` element. */
+.single .iss-heading > .iss-heading__title,
+/* .single: Base class for single; apply on primary wrapper/scope. */
+/* .iss-heading: Base class for iss heading; apply on primary wrapper/scope. */
+/* .iss-heading__text: Element class for `iss-heading`; apply on `text` element. */
+.single .iss-heading > .iss-heading__text,
+/* .page: Base class for page; apply on primary wrapper/scope. */
+/* .iss-heading: Base class for iss heading; apply on primary wrapper/scope. */
+/* .iss-kicker: Base class for iss kicker; apply on primary wrapper/scope. */
+.page .iss-heading > .iss-kicker,
+/* .page: Base class for page; apply on primary wrapper/scope. */
+/* .iss-heading: Base class for iss heading; apply on primary wrapper/scope. */
+/* .iss-heading__title: Element class for `iss-heading`; apply on `title` element. */
+.page .iss-heading > .iss-heading__title,
+/* .page: Base class for page; apply on primary wrapper/scope. */
+/* .iss-heading: Base class for iss heading; apply on primary wrapper/scope. */
+/* .iss-heading__text: Element class for `iss-heading`; apply on `text` element. */
+.page .iss-heading > .iss-heading__text,
+/* .section: Base class for section; apply on primary wrapper/scope. */
+/* .iss-indent: Base class for iss indent; apply on primary wrapper/scope. */
+.section .iss-indent,
+/* .section: Base class for section; apply on primary wrapper/scope. */
+/* .iss-indent: Base class for iss indent; apply on primary wrapper/scope. */
+.section .iss-indent > *,
+/* .iss-tour-page: Base class for iss tour page; apply on primary wrapper/scope. */
+/* .iss-indent: Base class for iss indent; apply on primary wrapper/scope. */
+.iss-tour-page .iss-indent,
+/* .iss-tour-page: Base class for iss tour page; apply on primary wrapper/scope. */
+/* .iss-indent: Base class for iss indent; apply on primary wrapper/scope. */
+.iss-tour-page .iss-indent > *,
+/* .single: Base class for single; apply on primary wrapper/scope. */
+/* .iss-indent: Base class for iss indent; apply on primary wrapper/scope. */
+.single .iss-indent,
+/* .single: Base class for single; apply on primary wrapper/scope. */
+/* .iss-indent: Base class for iss indent; apply on primary wrapper/scope. */
+.single .iss-indent > *,
+/* .page: Base class for page; apply on primary wrapper/scope. */
+/* .iss-indent: Base class for iss indent; apply on primary wrapper/scope. */
+.page .iss-indent,
+/* .page: Base class for page; apply on primary wrapper/scope. */
+/* .iss-indent: Base class for iss indent; apply on primary wrapper/scope. */
+.page .iss-indent > * {
+  text-align: left;
+  margin-left: 0;
+  margin-right: 0;
+}
+
+/* Enforce left alignment inside heading trios and card bodies, even when
+   Gutenberg constrained-layout auto margins are present. */
+.iss-heading > .iss-kicker,
+.iss-heading > .iss-heading__title,
+.iss-heading > .iss-heading__text,
+.iss-card__body > .iss-kicker,
+.iss-card__body > .iss-card__title,
+.iss-card__body > .iss-card__text,
+.iss-card__body > .wp-block-post-title,
+.iss-card__body > .wp-block-post-excerpt {
+  text-align: left;
+  margin-left: 0;
+  margin-right: 0;
+  align-self: flex-start;
+}
+
+.iss-card__body {
+  align-items: flex-start;
+  text-align: left;
+}
+
+.iss-heading > .iss-kicker,
+.iss-card__body > .iss-kicker {
+  justify-content: flex-start;
+}
+
+/* Keep buttons left inside section intros and single side panels. */
+/* .section: Base class for section; apply on primary wrapper/scope. */
+/* .wp-block-buttons: Base class for wp block buttons; apply on primary wrapper/scope. */
+.section .wp-block-buttons,
+/* .iss-tour-page: Base class for iss tour page; apply on primary wrapper/scope. */
+/* .wp-block-buttons: Base class for wp block buttons; apply on primary wrapper/scope. */
+.iss-tour-page .wp-block-buttons,
+/* .single: Base class for single; apply on primary wrapper/scope. */
+/* .wp-block-buttons: Base class for wp block buttons; apply on primary wrapper/scope. */
+.single .wp-block-buttons,
+/* .page: Base class for page; apply on primary wrapper/scope. */
+/* .wp-block-buttons: Base class for wp block buttons; apply on primary wrapper/scope. */
+.page .wp-block-buttons {
+  justify-content: flex-start;
+}
+
+
+
+/* Kicker stays visually left even inside flex wrappers */
+/* .section: Base class for section; apply on primary wrapper/scope. */
+/* .iss-kicker: Base class for iss kicker; apply on primary wrapper/scope. */
+.section .iss-kicker {
+  justify-content: flex-start;
+  margin-left: 0;
+  margin-right: 0;
+}
+
+/* =====================================================================
+   GROUP: SECTION RAIL ACCENT
+   PURPOSE:
+   Adds a quiet right-side fading line at section start for pages that
+   need a bit more directional structure.
+
+   USE THIS WHEN:
+   - A section feels visually empty.
+   - You want asymmetry without adding another full decoration block.
+
+   PRIMARY HOOKS:
+   .section--with-rail
+   .section--with-rail-accent
+   ===================================================================== */
+
+/* .section--with-rail: Modifier class for `section`; combine for `with-rail` variant. */
+.section--with-rail {
+  position: relative;
+}
+
+/* .section--with-rail: Modifier class for `section`; combine for `with-rail` variant. */
+.section--with-rail::after {
+  content: "";
+  position: absolute;
+
+  top: 0; /* align with section start */
+  right: var(--iss-container-pad);
+
+  height: 1px;
+  width: 33%;
+
+   background: linear-gradient(
+    to left,
+    rgba(var(--iss-accent-rgb), 0.45),
+    rgba(var(--iss-accent-rgb), 0.18),
+    rgba(var(--iss-accent-rgb), 0)
+  );
+
+  pointer-events: none;
+}
+
+/* .section--with-rail-accent: Modifier class for `section`; combine for `with-rail-accent` variant. */
+.section--with-rail-accent::after {
+  background: linear-gradient(
+    to left,
+    rgba(var(--iss-accent-rgb), 0.35),
+    rgba(var(--iss-accent-rgb), 0.15),
+    rgba(var(--iss-accent-rgb), 0)
+  );
+}
+
+/* =====================================================================
+   GROUP: GUTENBERG CORE FIXES
+   PURPOSE:
+   Counteract default Gutenberg runtime styles that clash with the theme's
+   layout system (e.g. flow margins, query loop item spacing).
+   ===================================================================== */
+
+/* Reset query loop list item margins to ensure a consistent baseline.
+   Gutenberg flow layout injects per-item block margins that break grids. */
+.iss-card-grid .wp-block-post-template > li,
+.iss-card-grid .wp-block-post-template .wp-block-post,
+.iss-card-grid .wp-block-post {
+  margin-block-start: 0 !important;
+  margin-block-end: 0 !important;
+  margin-top: 0 !important;
+  margin-bottom: 0 !important;
+  padding: 0;
+}
+
+/* =====================================================================
+   GROUP: GLOBAL PATTERN STANDARDS
+   PURPOSE:
+   Shared rhythm and measure tokens for all section-based patterns.
+   ===================================================================== */
+
+/* Full-bleed sections own viewport width; inner content chooses its own cage. */
+.iss-section--full-bleed {
+  width: 100%;
+  max-width: none;
+  margin-left: 0;
+  margin-right: 0;
+}
+
+/* Common alternate section background */
+
+/* Hero Anchor: Adds a quiet red rail to the left of hero content */
+.iss-hero-anchor {
+  border-left: 5px solid var(--iss-accent);
+  padding-left: clamp(1.25rem, 3vw, 2.5rem);
+}
+
+/* Sticky Aside: Keeps booking/info panels visible during scroll */
+@media (min-width: 900px) {
+  .is-sticky-aside {
+    position: sticky;
+    top: calc(var(--iss-header-height) + 2rem);
+    align-self: start;
+  }
+}
+
+/* Section Fade-Out: Soft vertical transition for discovery strips */
+.section--fade-out {
+  background: linear-gradient(180deg, rgba(192, 184, 181, 0.16) 0%, rgba(192, 184, 181, 0) 100%);
+  border-top: 1px solid var(--iss-border);
+}
+
+
+/* =========================================================
+   ISS ICON SYSTEM
+   Theme-controlled mask icons. Use with /assets/icons/*.svg.
+   ========================================================= */
+
+.iss-icon {
+  display: inline-block;
+  width: 1rem;
+  height: 1rem;
+  flex: 0 0 1rem;
+  color: currentColor;
+  background: currentColor;
+  mask-size: contain;
+  mask-repeat: no-repeat;
+  mask-position: center;
+  -webkit-mask-size: contain;
+  -webkit-mask-repeat: no-repeat;
+  -webkit-mask-position: center;
+}
+
+.iss-icon--sm {
+  width: 0.8rem;
+  height: 0.8rem;
+  flex-basis: 0.8rem;
+}
+
+.iss-icon--lg {
+  width: 1.25rem;
+  height: 1.25rem;
+  flex-basis: 1.25rem;
+}
+
+.iss-icon--xl {
+  width: 1.6rem;
+  height: 1.6rem;
+  flex-basis: 1.6rem;
+}
+
+.iss-icon--muted {
+  color: rgba(30, 30, 30, 0.55);
+}
+
+.iss-icon--accent {
+  color: var(--iss-accent);
+}
+
+.iss-icon--green {
+  color: var(--iss-green);
+}
+
+.iss-icon--blue {
+  color: var(--iss-blue);
+}
+
+.iss-icon--yellow {
+  color: var(--iss-yellow);
+}
+
+.iss-icon--brown {
+  color: var(--iss-brown);
+}
+
+.iss-icon--white {
+  color: var(--iss-white);
+}
+
+.iss-icon--roof {
+  mask-image: url('/wp-content/themes/industriesalon/assets/icons/iss-roof.svg');
+  -webkit-mask-image: url('/wp-content/themes/industriesalon/assets/icons/iss-roof.svg');
+}
+
+.iss-icon--calendar {
+  mask-image: url('/wp-content/themes/industriesalon/assets/icons/iss-calendar.svg');
+  -webkit-mask-image: url('/wp-content/themes/industriesalon/assets/icons/iss-calendar.svg');
+}
+
+.iss-icon--clock {
+  mask-image: url('/wp-content/themes/industriesalon/assets/icons/iss-clock.svg');
+  -webkit-mask-image: url('/wp-content/themes/industriesalon/assets/icons/iss-clock.svg');
+}
+
+.iss-icon--location {
+  mask-image: url('/wp-content/themes/industriesalon/assets/icons/iss-location.svg');
+  -webkit-mask-image: url('/wp-content/themes/industriesalon/assets/icons/iss-location.svg');
+}
+
+.iss-icon--ticket {
+  mask-image: url('/wp-content/themes/industriesalon/assets/icons/iss-ticket.svg');
+  -webkit-mask-image: url('/wp-content/themes/industriesalon/assets/icons/iss-ticket.svg');
+}
+
+.iss-icon--group {
+  mask-image: url('/wp-content/themes/industriesalon/assets/icons/iss-group.svg');
+  -webkit-mask-image: url('/wp-content/themes/industriesalon/assets/icons/iss-group.svg');
+}
+
+.iss-icon--archive {
+  mask-image: url('/wp-content/themes/industriesalon/assets/icons/iss-archive.svg');
+  -webkit-mask-image: url('/wp-content/themes/industriesalon/assets/icons/iss-archive.svg');
+}
+
+.iss-icon--award {
+  mask-image: url('/wp-content/themes/industriesalon/assets/icons/iss-award.svg');
+  -webkit-mask-image: url('/wp-content/themes/industriesalon/assets/icons/iss-award.svg');
+}
+
+.iss-icon--donation {
+  mask-image: url('/wp-content/themes/industriesalon/assets/icons/iss-donation.svg');
+  -webkit-mask-image: url('/wp-content/themes/industriesalon/assets/icons/iss-donation.svg');
+}
+
+.iss-icon--arrow {
+  mask-image: url('/wp-content/themes/industriesalon/assets/icons/iss-arrow-right.svg');
+  -webkit-mask-image: url('/wp-content/themes/industriesalon/assets/icons/iss-arrow-right.svg');
+}
+
+.iss-icon--info {
+  mask-image: url('/wp-content/themes/industriesalon/assets/icons/iss-info.svg');
+  -webkit-mask-image: url('/wp-content/themes/industriesalon/assets/icons/iss-info.svg');
+}
+
+.iss-icon--accessibility {
+  mask-image: url('/wp-content/themes/industriesalon/assets/icons/iss-accessibility.svg');
+  -webkit-mask-image: url('/wp-content/themes/industriesalon/assets/icons/iss-accessibility.svg');
+}
+
+.iss-icon--dot {
+  width: 0.42rem;
+  height: 0.42rem;
+  flex-basis: 0.42rem;
+  border-radius: 999px;
+  mask: none;
+  -webkit-mask: none;
+}
+
+
+/* =====================================================================
+   COMPACT / NARRATIVE PAGE MODE
+   Purpose:
+   - Use on about pages, publications, long reads, and institutional pages.
+   - Keeps the front page and campaign-style landing pages intact.
+   - Apply `.iss-page--narrative` or `.iss-page--compact` on the outer
+     page Group/Main block.
+   ===================================================================== */
+
+/* .iss-page--header-offset: Apply on top-level main wrappers that start without a hero or intro section that already clears the fixed site header. */
+.iss-page--header-offset {
+  padding-top: var(--iss-header-height);
+}
+
+.iss-scroll-target {
+  scroll-margin-top: calc(var(--iss-header-height) + 1rem);
+}
+
+/* Primary page wrappers sit directly after the header template part. Reset
+   the block-gap margin here once instead of page by page. */
+.wp-site-blocks > main {
+  margin-block-start: 0;
+}
+
+.iss-page--narrative,
+.iss-page--compact,
+.iss-compact-scope {
+  --iss-narrative-width: 1180px;
+  --iss-narrative-text-width: 68ch;
+  --iss-narrative-intro-width: 58rem;
+  --iss-narrative-gap: clamp(1rem, 1.8vw, 1.5rem);
+  --iss-narrative-section-pad: clamp(1.75rem, 3.4vw, 3.25rem);
+  --iss-narrative-section-pad-tight: clamp(1rem, 2.2vw, 1.85rem);
+}
+
+.iss-page--narrative .iss-container,
+.iss-page--compact .iss-container,
+.iss-compact-scope .iss-container {
+  max-width: var(--iss-narrative-width);
+}
+
+.iss-page--narrative .iss-section--wide > .iss-container,
+.iss-page--compact .iss-section--wide > .iss-container,
+.iss-compact-scope .iss-section--wide > .iss-container,
+.iss-page--narrative .section.iss-section--wide > .iss-container,
+.iss-page--compact .section.iss-section--wide > .iss-container,
+.iss-compact-scope .section.iss-section--wide > .iss-container {
+  max-width: var(--iss-content-width);
+}
+
+.iss-page--narrative .section,
+.iss-page--compact .section,
+.iss-compact-scope .section {
+  padding-top: var(--iss-narrative-section-pad);
+  padding-bottom: var(--iss-narrative-section-pad);
+}
+
+.iss-page--narrative .section + .section,
+.iss-page--compact .section + .section,
+.iss-compact-scope .section + .section {
+  padding-top: var(--iss-narrative-section-pad-tight);
+}
+
+.iss-page--narrative .iss-heading,
+.iss-page--compact .iss-heading,
+.iss-compact-scope .iss-heading {
+  --iss-heading-max-width: var(--iss-narrative-intro-width);
+  gap: 0.45rem;
+  margin-bottom: clamp(0.85rem, 1.4vw, 1.35rem);
+}
+
+.iss-page--narrative .iss-heading > .iss-heading__title,
+.iss-page--compact .iss-heading > .iss-heading__title,
+.iss-compact-scope .iss-heading > .iss-heading__title,
+.iss-page--narrative .iss-heading__title,
+.iss-page--compact .iss-heading__title,
+.iss-compact-scope .iss-heading__title {
+  font-size: clamp(1.55rem, 2vw, 2.15rem);
+  line-height: 1.08;
+  letter-spacing: -0.025em;
+}
+
+.iss-page--narrative h1:not([class*="__title"]),
+.iss-page--compact h1:not([class*="__title"]),
+.iss-compact-scope h1:not([class*="__title"]) {
+  font-size: clamp(1.85rem, 2.8vw, 2.7rem);
+  line-height: 1.06;
+}
+
+.iss-page--narrative h2:not([class*="__title"]),
+.iss-page--compact h2:not([class*="__title"]),
+.iss-compact-scope h2:not([class*="__title"]) {
+  font-size: clamp(1.45rem, 1.9vw, 1.95rem);
+  line-height: 1.12;
+}
+
+.iss-page--narrative h3:not([class*="__title"]),
+.iss-page--compact h3:not([class*="__title"]),
+.iss-compact-scope h3:not([class*="__title"]) {
+  font-size: clamp(1.18rem, 1.2vw, 1.45rem);
+  line-height: 1.18;
+}
+
+.iss-page--narrative .iss-heading__text,
+.iss-page--compact .iss-heading__text,
+.iss-compact-scope .iss-heading__text {
+  max-width: var(--iss-narrative-text-width);
+  color: rgba(30, 30, 30, 0.72);
+  font-size: clamp(1rem, 0.35vw + 0.95rem, 1.12rem);
+  line-height: 1.58;
+}
+
+.iss-page--narrative p,
+.iss-page--compact p,
+.iss-compact-scope p,
+.iss-page--narrative li,
+.iss-page--compact li,
+.iss-compact-scope li {
+  max-width: var(--iss-narrative-text-width);
+}
+
+.iss-page--narrative .iss-kicker,
+.iss-page--compact .iss-kicker,
+.iss-compact-scope .iss-kicker {
+  margin-bottom: 0.65rem;
+  font-size: 0.72rem;
+  letter-spacing: 0.13em;
+}
+
+.iss-page--narrative .iss-kicker--lg,
+.iss-page--compact .iss-kicker--lg,
+.iss-compact-scope .iss-kicker--lg {
+  font-size: 0.78rem;
+  letter-spacing: 0.14em;
+}
+
+.iss-page--narrative .iss-separator,
+.iss-page--compact .iss-separator,
+.iss-compact-scope .iss-separator {
+  margin-top: clamp(2rem, 4vw, 3rem);
+  margin-bottom: clamp(2rem, 4vw, 3rem);
+}
+
+.iss-page--narrative .iss-separator--accent,
+.iss-page--compact .iss-separator--accent,
+.iss-compact-scope .iss-separator--accent {
+  margin-top: clamp(1.5rem, 3vw, 2.25rem);
+  margin-bottom: clamp(1.5rem, 3vw, 2.25rem);
+}
+
+.iss-page--narrative .wp-block-columns,
+.iss-page--compact .wp-block-columns,
+.iss-compact-scope .wp-block-columns {
+  gap: var(--iss-narrative-gap);
+}
+
+@media (max-width: 781px) {
+  .section {
+    padding-top: 1.6rem;
+    padding-bottom: 1.6rem;
+  }
+
+  .section + .section {
+    padding-top: 0.95rem;
+  }
+
+  .iss-page--narrative .section,
+  .iss-page--compact .section,
+  .iss-compact-scope .section {
+    padding-top: 1.6rem;
+    padding-bottom: 1.6rem;
+  }
+
+  .iss-page--narrative .section + .section,
+  .iss-page--compact .section + .section,
+  .iss-compact-scope .section + .section {
+    padding-top: 0.95rem;
+  }
+
+  .iss-page--narrative .iss-heading > .iss-heading__title,
+  .iss-page--compact .iss-heading > .iss-heading__title,
+  .iss-compact-scope .iss-heading > .iss-heading__title,
+  .iss-page--narrative .iss-heading__title,
+  .iss-page--compact .iss-heading__title,
+  .iss-compact-scope .iss-heading__title {
+    font-size: clamp(1.4rem, 6vw, 1.85rem);
+  }
+}

@@ -1,0 +1,36 @@
+/*
+ * File role: modest admin-only polish for structured classic-editor screens.
+ * Scope: custom post types forced onto the classic editor by
+ * `Industriesalon_Steuerung::apply_structured_content_editor_policy()`.
+ * This is intentionally conservative. It should improve readability without
+ * creating a second design system inside wp-admin.
+ */
+
+#poststuff .postbox .inside p {
+    max-width: 56rem;
+}
+
+#poststuff .postbox .inside label strong {
+    display: block;
+    margin-bottom: 0.3rem;
+}
+
+#poststuff .postbox .inside .description {
+    display: block;
+    margin-top: 0.35rem;
+    color: #50575e;
+}
+
+#poststuff .postbox .inside input.widefat,
+#poststuff .postbox .inside select.widefat,
+#poststuff .postbox .inside textarea.widefat {
+    min-height: 2.4rem;
+}
+
+#poststuff .postbox .inside textarea.widefat {
+    min-height: 7rem;
+}
+
+#poststuff .postbox .inside .button-link {
+    text-decoration: none;
+}

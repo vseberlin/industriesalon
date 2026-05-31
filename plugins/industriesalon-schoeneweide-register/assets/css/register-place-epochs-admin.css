@@ -1,0 +1,47 @@
+.iss-register-epochs__rows {
+  display: grid;
+  gap: 12px;
+  margin: 0 0 12px;
+}
+
+.iss-register-epoch-row {
+  background: #fff;
+  border: 1px solid #dcdcde;
+  border-radius: 6px;
+  padding: 12px;
+}
+
+.iss-register-epoch-row__top {
+  align-items: center;
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 10px;
+}
+
+.iss-register-epoch-row__actions {
+  display: flex;
+  gap: 10px;
+}
+
+.iss-register-epoch-row__grid {
+  display: grid;
+  gap: 10px;
+  grid-template-columns: repeat(2, minmax(220px, 1fr));
+}
+
+.iss-register-epoch-row__grid label {
+  display: grid;
+  font-size: 12px;
+  gap: 4px;
+}
+
+.iss-register-epoch-row__full {
+  grid-column: 1 / -1;
+}
+
+.iss-register-epoch__current-wrap {
+  align-items: center;
+  display: flex;
+  gap: 8px;
+  padding-top: 20px;
+}

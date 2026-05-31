@@ -1,0 +1,28 @@
+{
+  "$schema": "https://schemas.wp.org/trunk/block.json",
+  "apiVersion": 3,
+  "name": "iss/tour-calendar",
+  "title": "Tour Calendar (Interactive)",
+  "category": "widgets",
+  "icon": "calendar-alt",
+  "description": "Interactive booking calendar (Flatpickr + SuperSaaS + JS).",
+  "editorScript": "file:./index.js",
+  "supports": {
+    "html": false
+  },
+  "attributes": {
+    "tag": {
+      "type": "string",
+      "default": ""
+    },
+    "title": {
+      "type": "string",
+      "default": "Termine wählen"
+    },
+    "fallbackUrl": {
+      "type": "string",
+      "default": ""
+    }
+  }
+}
+

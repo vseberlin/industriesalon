@@ -1,0 +1,39 @@
+{
+  "$schema": "https://schemas.wp.org/trunk/block.json",
+  "apiVersion": 3,
+  "name": "iss/related-content",
+  "title": "Related Content",
+  "category": "widgets",
+  "icon": "share-alt2",
+  "description": "Shows related cards inside a standalone section with heading and container.",
+  "editorScript": "file:./index.js",
+  "attributes": {
+    "title": {
+      "type": "string",
+      "default": ""
+    },
+    "kicker": {
+      "type": "string",
+      "default": ""
+    },
+    "postType": {
+      "type": "string",
+      "default": "post"
+    },
+    "perPage": {
+      "type": "number",
+      "default": 3
+    },
+    "source": {
+      "type": "string",
+      "default": "current"
+    },
+    "placeIds": {
+      "type": "string",
+      "default": ""
+    }
+  },
+  "supports": {
+    "html": false
+  }
+}

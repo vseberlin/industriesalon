@@ -1,0 +1,113 @@
+.iss-register-image-suggestions__toolbar {
+  align-items: center;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin-bottom: 12px;
+}
+
+.iss-register-image-suggestions__spinner {
+  float: none;
+  margin: 0;
+}
+
+.iss-register-image-suggestions__updated {
+  margin: 0;
+}
+
+.iss-register-image-suggestions__status {
+  margin: 0 0 12px;
+}
+
+.iss-register-image-suggestions__empty {
+  color: #646970;
+  margin: 0;
+}
+
+.iss-register-image-suggestions__results {
+  display: grid;
+  gap: 12px;
+}
+
+.iss-register-image-suggestions__research {
+  color: #50575e;
+  font-size: 12px;
+  margin: 12px 0 0;
+}
+
+.iss-register-image-suggestion-card {
+  background: #fff;
+  border: 1px solid #dcdcde;
+  border-radius: 6px;
+  display: grid;
+  gap: 14px;
+  grid-template-columns: 180px minmax(0, 1fr);
+  padding: 12px;
+}
+
+.iss-register-image-suggestion-card__media {
+  align-items: center;
+  background: #f6f7f7;
+  border: 1px solid #dcdcde;
+  border-radius: 4px;
+  display: flex;
+  justify-content: center;
+  min-height: 140px;
+  overflow: hidden;
+}
+
+.iss-register-image-suggestion-card__media img {
+  display: block;
+  height: auto;
+  max-width: 100%;
+}
+
+.iss-register-image-suggestion-card__no-media {
+  color: #646970;
+  font-size: 12px;
+}
+
+.iss-register-image-suggestion-card__body {
+  display: grid;
+  gap: 8px;
+}
+
+.iss-register-image-suggestion-card__meta,
+.iss-register-image-suggestion-card__details,
+.iss-register-image-suggestion-card__actions {
+  align-items: center;
+  column-gap: 12px;
+  display: flex;
+  flex-wrap: wrap;
+  row-gap: 6px;
+}
+
+.iss-register-image-suggestion-card__meta,
+.iss-register-image-suggestion-card__details,
+.iss-register-image-suggestion-card__links,
+.iss-register-image-suggestion-card__imported,
+.iss-register-image-suggestion-card__note {
+  color: #50575e;
+  font-size: 12px;
+  margin: 0;
+}
+
+.iss-register-image-suggestion-card__title {
+  font-size: 18px;
+  line-height: 1.2;
+  margin: 0;
+}
+
+.iss-register-image-suggestion-card__description {
+  margin: 0;
+}
+
+.iss-register-image-suggestion-card__links a {
+  text-decoration: none;
+}
+
+@media (max-width: 960px) {
+  .iss-register-image-suggestion-card {
+    grid-template-columns: 1fr;
+  }
+}

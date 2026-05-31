@@ -1,0 +1,74 @@
+services:
+  db:
+    image: mariadb:10.11
+    container_name: wp_db
+    restart: unless-stopped
+    environment:
+      MARIADB_DATABASE: wordpress
+      MARIADB_USER: wpuser
+      MARIADB_PASSWORD: wp_pass
+      MARIADB_ROOT_PASSWORD: root_pass
+    volumes:
+      - ./db:/var/lib/mysql
+    command: --max_allowed_packet=64M
+
+  wordpress:
+    image: wordpress:php8.2-apache
+    container_name: wp_app
+    restart: unless-stopped
+    depends_on:
+      - db
+    ports:
+      - "8082:80"
+    environment:
+      WORDPRESS_DB_HOST: db:3306
+      WORDPRESS_DB_NAME: wordpress
+      WORDPRESS_DB_USER: wpuser
+      WORDPRESS_DB_PASSWORD: wp_pass
+    volumes:
+      - ./wp:/var/www/html
+      - ./plugins:/var/www/html/wp-content/plugins
+      - ./themes:/var/www/html/wp-content/themes
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+
+  wpcli:
+    image: wordpress:cli
+    container_name: wp_cli
+    depends_on:
+      - db
+      - wordpress
+    user: "33:33"
+    working_dir: /var/www/html
+    entrypoint: ["wp"]
+    environment:
+      WORDPRESS_DB_HOST: db:3306
+      WORDPRESS_DB_NAME: wordpress
+      WORDPRESS_DB_USER: wpuser
+      WORDPRESS_DB_PASSWORD: wp_pass
+    volumes:
+      - ./wp:/var/www/html
+      - ./plugins:/var/www/html/wp-content/plugins
+      - ./themes:/var/www/html/wp-content/themes
+
+  phpmyadmin:
+    image: phpmyadmin:latest
+    container_name: wp_pma
+    restart: unless-stopped
+    depends_on:
+      - db
+    ports:
+      - "8083:80"
+    environment:
+      PMA_HOST: db
+      PMA_USER: root
+      PMA_PASSWORD: root_pass
+      UPLOAD_LIMIT: 64M
+
+  mailpit:
+    image: axllent/mailpit:latest
+    container_name: wp_mailpit
+    restart: unless-stopped
+    ports:
+      - "8025:8025"
+      - "1025:1025"

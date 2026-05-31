@@ -1,0 +1,19 @@
+{
+  "$schema": "https://schemas.wp.org/trunk/block.json",
+  "apiVersion": 3,
+  "name": "iss/tour-description",
+  "title": "Tour Description",
+  "category": "widgets",
+  "icon": "text-page",
+  "description": "Curated prose-only description output for tour hero layouts.",
+  "editorScript": "file:./index.js",
+  "attributes": {
+    "postId": {
+      "type": "number",
+      "default": 0
+    }
+  },
+  "supports": {
+    "html": false
+  }
+}

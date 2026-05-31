@@ -1,0 +1,33 @@
+{
+  "$schema": "https://schemas.wp.org/trunk/block.json",
+  "apiVersion": 3,
+  "name": "industriesalon/program-cards",
+  "title": "Programm Karten",
+  "category": "widgets",
+  "icon": "grid-view",
+  "description": "Server-rendered program cards based on the shared timeline query layer.",
+  "supports": {
+    "html": false,
+    "align": ["wide", "full"]
+  },
+  "attributes": {
+    "title": { "type": "string", "default": "" },
+    "kicker": { "type": "string", "default": "" },
+    "intro": { "type": "string", "default": "" },
+    "limit": { "type": "number", "default": 3 },
+    "group": { "type": "string", "default": "" },
+    "timeMode": { "type": "string", "default": "upcoming" },
+    "defaultMonth": { "type": "string", "default": "" },
+    "includeRunningRanges": { "type": "boolean", "default": false },
+    "postTypesList": { "type": "array", "default": [] },
+    "presetItemTypesList": { "type": "array", "default": [] },
+    "showImage": { "type": "boolean", "default": true },
+    "showExcerpt": { "type": "boolean", "default": true },
+    "excerptLength": { "type": "number", "default": 20 },
+    "showDate": { "type": "boolean", "default": true },
+    "showType": { "type": "boolean", "default": true },
+    "showButton": { "type": "boolean", "default": true },
+    "buttonText": { "type": "string", "default": "" }
+  },
+  "editorScript": "file:./index.js"
+}

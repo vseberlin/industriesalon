@@ -1,0 +1,101 @@
+<!-- wp:template-part {"slug":"header","tagName":"header"} /-->
+
+<!-- wp:group {"tagName":"main","className":"iss-event-page iss-event-sheet iss-scheme-blue","layout":{"type":"default"}} -->
+<main class="wp-block-group iss-event-page iss-event-sheet iss-scheme-blue">
+	<!-- wp:group {"tagName":"section","className":"iss-event-hero section","layout":{"type":"default"}} -->
+	<section class="wp-block-group iss-event-hero section">
+		<!-- wp:group {"className":"iss-container","layout":{"type":"default"}} -->
+		<div class="wp-block-group iss-container">
+			<!-- wp:columns {"verticalAlignment":"top","className":"iss-event-hero__grid"} -->
+			<div class="wp-block-columns are-vertically-aligned-top iss-event-hero__grid">
+				<!-- wp:column {"verticalAlignment":"top","width":"64%","className":"iss-event-hero__copy-col"} -->
+				<div class="wp-block-column is-vertically-aligned-top iss-event-hero__copy-col" style="flex-basis:64%">
+					<!-- wp:group {"className":"iss-event-hero__copy iss-heading iss-heading--uncaged","layout":{"type":"default"}} -->
+					<div class="wp-block-group iss-event-hero__copy iss-heading iss-heading--uncaged">
+						<!-- wp:paragraph {"className":"iss-kicker iss-kicker--compact"} -->
+						<p class="iss-kicker iss-kicker--compact">Veranstaltung</p>
+						<!-- /wp:paragraph -->
+
+						<!-- wp:post-title {"level":1,"className":"iss-event-hero__title iss-heading__title"} /-->
+
+						<!-- wp:post-excerpt {"moreText":"","showMoreOnNewLine":false,"excerptLength":38,"className":"iss-event-hero__lede iss-heading__text"} /-->
+					</div>
+					<!-- /wp:group -->
+				</div>
+				<!-- /wp:column -->
+
+				<!-- wp:column {"verticalAlignment":"top","width":"36%","className":"iss-event-hero__meta-col"} -->
+				<div class="wp-block-column is-vertically-aligned-top iss-event-hero__meta-col" style="flex-basis:36%">
+					<!-- wp:group {"className":"iss-event-hero__meta","layout":{"type":"default"}} -->
+					<div class="wp-block-group iss-event-hero__meta">
+						<!-- wp:iss/content-meta {"kicker":"Termin","title":"Auf einen Blick","variant":"blue"} /-->
+					</div>
+					<!-- /wp:group -->
+				</div>
+				<!-- /wp:column -->
+			</div>
+			<!-- /wp:columns -->
+		</div>
+		<!-- /wp:group -->
+	</section>
+	<!-- /wp:group -->
+
+	<!-- wp:group {"tagName":"section","className":"iss-event-main section section--plain","layout":{"type":"default"}} -->
+	<section class="wp-block-group iss-event-main section section--plain">
+		<!-- wp:group {"className":"iss-container","layout":{"type":"default"}} -->
+		<div class="wp-block-group iss-container">
+			<!-- wp:columns {"verticalAlignment":"top","className":"iss-event-main__grid"} -->
+			<div class="wp-block-columns are-vertically-aligned-top iss-event-main__grid">
+				<!-- wp:column {"verticalAlignment":"top","width":"32%","className":"iss-event-main__media-col"} -->
+				<div class="wp-block-column is-vertically-aligned-top iss-event-main__media-col" style="flex-basis:32%">
+					<!-- wp:group {"className":"iss-event-main__media","layout":{"type":"default"}} -->
+					<div class="wp-block-group iss-event-main__media">
+						<!-- wp:post-featured-image {"isLink":false,"scale":"contain"} /-->
+					</div>
+					<!-- /wp:group -->
+				</div>
+				<!-- /wp:column -->
+
+				<!-- wp:column {"verticalAlignment":"top","width":"68%","className":"iss-event-main__content-col"} -->
+				<div class="wp-block-column is-vertically-aligned-top iss-event-main__content-col" style="flex-basis:68%">
+					<!-- wp:group {"className":"iss-event-body__content","layout":{"type":"default"}} -->
+					<div class="wp-block-group iss-event-body__content">
+						<!-- wp:post-content /-->
+					</div>
+					<!-- /wp:group -->
+				</div>
+				<!-- /wp:column -->
+			</div>
+			<!-- /wp:columns -->
+		</div>
+		<!-- /wp:group -->
+	</section>
+	<!-- /wp:group -->
+
+	<!-- wp:iss-graph/entity-relations {"entityKind":"organization","kicker":"Akteure","title":"Organisationen im Zusammenhang"} /-->
+
+	<!-- wp:iss-graph/entity-relations {"entityKind":"person","kicker":"Akteure","title":"Personen im Zusammenhang"} /-->
+
+	<!-- wp:group {"tagName":"section","className":"iss-event-network section section--plain","layout":{"type":"default"}} -->
+	<section class="wp-block-group iss-event-network section section--plain">
+		<!-- wp:group {"className":"iss-container","layout":{"type":"default"}} -->
+		<div class="wp-block-group iss-container">
+			<!-- wp:group {"className":"iss-event-network__rail","layout":{"type":"default"}} -->
+			<div class="wp-block-group iss-event-network__rail">
+				<!-- wp:iss/related-content {"title":"Orte","kicker":"Ort","postType":"register_place","perPage":3,"layoutVariant":"rail","showImage":false,"showExcerpt":false} /-->
+
+				<!-- wp:iss/related-content {"title":"Führungen","kicker":"Vor Ort","postType":"fuehrung","perPage":3,"layoutVariant":"rail","showImage":false,"showExcerpt":false} /-->
+
+				<!-- wp:iss/related-content {"title":"Archiv","kicker":"Hintergrund","postTypes":["post","archivbeitrag"],"perPage":4,"layoutVariant":"rail","showImage":false,"showExcerpt":false} /-->
+
+				<!-- wp:iss/related-content {"title":"Veranstaltungen","kicker":"Weiter","postType":"veranstaltung","perPage":3,"layoutVariant":"rail","showImage":false,"showExcerpt":false} /-->
+			</div>
+			<!-- /wp:group -->
+		</div>
+		<!-- /wp:group -->
+	</section>
+	<!-- /wp:group -->
+</main>
+<!-- /wp:group -->
+
+<!-- wp:template-part {"slug":"footer","tagName":"footer"} /-->

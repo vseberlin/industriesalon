@@ -1,0 +1,107 @@
+.iss-admin .iss-panel {
+  background: #fff;
+  border: 1px solid #dcdcde;
+  padding: 24px;
+  margin: 16px 0 24px;
+}
+
+.iss-admin .iss-panel[hidden] {
+  display: none;
+}
+
+.iss-admin .iss-panel__hint {
+  color: #50575e;
+  margin-top: 0;
+}
+
+.iss-admin .iss-help-panel {
+  background: #f6f7f7;
+  border: 1px solid #dcdcde;
+  border-left: 4px solid #2271b1;
+  padding: 16px 18px;
+  margin: 16px 0 18px;
+}
+
+.iss-admin .iss-help-panel h2 {
+  margin-top: 0;
+  margin-bottom: 8px;
+}
+
+.iss-admin .iss-help-panel ul {
+  margin: 0 0 8px 18px;
+}
+
+.iss-admin .iss-help-panel p {
+  margin: 0;
+}
+
+.iss-grid {
+  display: grid;
+  gap: 16px 24px;
+}
+
+.iss-grid--1 {
+  grid-template-columns: 1fr;
+}
+
+.iss-grid--2 {
+  grid-template-columns: repeat(2, minmax(280px, 1fr));
+}
+
+.iss-field label {
+  display: block;
+  font-weight: 600;
+  margin-bottom: 6px;
+}
+
+.iss-field input[type="text"],
+.iss-field input[type="email"],
+.iss-field input[type="url"],
+.iss-field input[type="time"],
+.iss-field input[type="date"],
+.iss-field select,
+.iss-field textarea {
+  width: 100%;
+}
+
+.iss-checkbox {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  min-height: 40px;
+}
+
+.iss-hours-group + .iss-hours-group {
+  margin-top: 28px;
+}
+
+.iss-hours-table th,
+.iss-hours-table td {
+  vertical-align: middle;
+}
+
+.iss-special-item {
+  border: 1px solid #dcdcde;
+  background: #fafafa;
+  padding: 16px;
+  margin-bottom: 12px;
+}
+
+.iss-tools-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(280px, 1fr));
+  gap: 24px;
+}
+
+.iss-tool-card {
+  border: 1px solid #dcdcde;
+  padding: 20px;
+  background: #fff;
+}
+
+@media (max-width: 960px) {
+  .iss-grid--2,
+  .iss-tools-grid {
+    grid-template-columns: 1fr;
+  }
+}

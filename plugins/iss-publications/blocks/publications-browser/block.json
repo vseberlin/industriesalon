@@ -1,0 +1,31 @@
+{
+  "apiVersion": 3,
+  "name": "iss/publications-browser",
+  "title": "ISS Publications Browser",
+  "category": "widgets",
+  "icon": "filter",
+  "description": "Server-rendered publication landing browser with chapter and topic navigation.",
+  "editorScript": "file:./index.js",
+  "providesContext": {
+    "issPublicationsBrowser/copy": "copy",
+    "issPublicationsBrowser/formatCopy": "formatCopy",
+    "issPublicationsBrowser/filterCopy": "filterCopy"
+  },
+  "attributes": {
+    "copy": {
+      "type": "object",
+      "default": {}
+    },
+    "formatCopy": {
+      "type": "object",
+      "default": {}
+    },
+    "filterCopy": {
+      "type": "object",
+      "default": {}
+    }
+  },
+  "supports": {
+    "html": false
+  }
+}

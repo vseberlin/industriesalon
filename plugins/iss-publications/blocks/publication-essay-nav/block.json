@@ -1,0 +1,11 @@
+{
+  "apiVersion": 3,
+  "name": "iss/publication-essay-nav",
+  "title": "Publikations-Lesenavigation",
+  "category": "widgets",
+  "icon": "menu",
+  "description": "Server-rendered reading navigation for chaptered longreads and photoalbums.",
+  "supports": {
+    "html": false
+  }
+}

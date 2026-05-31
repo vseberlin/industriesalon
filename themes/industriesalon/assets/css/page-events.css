@@ -1,0 +1,303 @@
+/* =====================================================================
+   FILE: page-events.css
+   ROLE: Veranstaltungen landing page.
+   LOAD: only on /veranstaltungen/.
+
+   OWNERSHIP:
+   - Event-specific section layout belongs here.
+   - Shared card anatomy stays in cards.css.
+   - Shared heading, hero, and utility behavior stays in patterns.css.
+   ===================================================================== */
+
+.iss-events-page {
+  background: var(--iss-white);
+  color: var(--iss-black);
+  padding-top: 0;
+}
+
+.iss-events-page > .section:not(.iss-section--hero) {
+  border-top: 1px solid rgba(var(--iss-accent-rgb), 0.22);
+}
+
+.iss-events-page .section:not(.iss-section--hero) .iss-heading > .iss-kicker,
+.iss-events-page .section:not(.iss-section--hero) .iss-heading > .iss-kicker--compact {
+  --iss-kicker-accent: var(--iss-accent);
+  --iss-kicker-color: var(--iss-accent);
+  padding-left: 0.85rem;
+}
+
+.iss-events-context,
+.iss-events-program,
+.iss-events-formats,
+.iss-events-cta {
+  padding-top: var(--iss-section-pad-y);
+}
+
+.iss-events-context .iss-story-intro {
+  --iss-story-intro-gap: clamp(1.5rem, 3vw, 2.4rem);
+  --iss-story-intro-top-columns: minmax(0, 1.12fr) minmax(16rem, 0.82fr);
+  --iss-story-intro-top-gap: clamp(2rem, 5vw, 4.75rem);
+  --iss-story-intro-top-align: start;
+  --iss-story-intro-copy-max: 62rem;
+  --iss-story-intro-head-justify: flex-end;
+  --iss-story-intro-head-max: 32rem;
+  --iss-story-intro-title-max: 11ch;
+  --iss-story-intro-title-size: clamp(2.3rem, 4vw, 4.7rem);
+  --iss-story-intro-title-line: 0.95;
+  --iss-story-intro-title-track: -0.055em;
+  --iss-story-intro-lead-max: 50rem;
+  --iss-story-intro-lead-size: clamp(1.28rem, 1.65vw, 1.92rem);
+  --iss-story-intro-lead-line: 1.24;
+  --iss-story-intro-lead-track: -0.03em;
+  --iss-story-intro-textcols-max: 64rem;
+  --iss-story-intro-textcols-gap: clamp(1.75rem, 3.5vw, 3.75rem);
+  --iss-story-intro-textcols-margin-top: clamp(1.15rem, 2.3vw, 1.85rem);
+  --iss-story-intro-text-item-gap: 1.15rem;
+  --iss-story-intro-text-color: rgba(30, 30, 30, 0.78);
+  --iss-story-intro-text-size: 1.02rem;
+  --iss-story-intro-text-line: 1.64;
+  --iss-story-intro-note-max: 30rem;
+  --iss-story-intro-note-border: 3px solid var(--iss-accent);
+  --iss-story-intro-note-color: rgba(30, 30, 30, 0.78);
+  --iss-story-intro-note-size: 1rem;
+  --iss-story-intro-note-line: 1.6;
+}
+
+.iss-events-program__grid {
+  gap: 0;
+}
+
+.iss-events-program__grid > .wp-block-column {
+  margin-top: 0;
+}
+
+.iss-events-program__listing-col,
+.iss-events-program__aside-col {
+  display: grid;
+  flex-basis: 32%;
+  align-content: start;
+  gap: 1rem;
+  padding: 0 1.75rem;
+  border-left: 1px solid rgba(var(--iss-accent-rgb), 0.18);
+}
+
+.iss-events-program__listing-col {
+  flex-basis: 68%;
+  padding-left: 0;
+  border-left: 0;
+}
+
+.iss-events-program__listing {
+  display: grid;
+  gap: 1.35rem;
+}
+
+.iss-events-program__listing-head {
+  display: flex;
+  align-items: end;
+  justify-content: space-between;
+  gap: 1rem;
+  padding-bottom: 0.95rem;
+  border-bottom: 1px solid rgba(var(--iss-accent-rgb), 0.18);
+}
+
+.iss-events-program__listing-head .iss-heading {
+  margin: 0;
+  max-width: 34rem;
+}
+
+.iss-events-program__listing-head .iss-heading__title {
+  margin: 0;
+  font-size: clamp(2rem, 3vw, 3rem);
+  line-height: 1.02;
+  letter-spacing: -0.04em;
+}
+
+.iss-events-program__listing-head .iss-heading__text {
+  margin-top: 0.45rem;
+  color: rgba(30, 30, 30, 0.78);
+  font-size: 1.02rem;
+  line-height: 1.55;
+}
+
+.iss-events-program__all-link {
+  margin: 0;
+  white-space: nowrap;
+}
+
+.iss-events-program .iss-timeline-query,
+.iss-events-program .iss-timeline-query.iss-container {
+  width: auto;
+  max-width: none;
+  margin: 0;
+  padding-inline: 0;
+}
+
+.iss-events-program .iss-timeline__filters {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.85rem 1rem;
+  align-items: end;
+  margin-bottom: 1rem;
+  padding: 0 0 1rem;
+  border-bottom: 1px solid rgba(var(--iss-accent-rgb), 0.18);
+}
+
+.iss-events-program .iss-timeline__filter {
+  flex: 1 1 12rem;
+  max-width: 14rem;
+  min-width: 0;
+}
+
+.iss-events-program .iss-timeline__filter select,
+.iss-events-program .iss-timeline__filter input {
+  width: 100%;
+}
+
+.iss-events-program .iss-timeline__filter-actions {
+  display: flex;
+  flex: 0 0 auto;
+  align-items: end;
+  justify-content: flex-end;
+  margin-left: auto;
+}
+
+.iss-events-program .iss-timeline__filter-actions .iss-timeline__apply {
+  width: auto;
+  white-space: nowrap;
+}
+
+.iss-events-program .iss-timeline-query__meta {
+  margin-bottom: 1rem;
+}
+
+.iss-events-program .iss-timeline__year-label {
+  margin-bottom: 0.9rem;
+}
+
+.iss-events-program .iss-timeline__item {
+  padding: 1rem 0;
+}
+
+.iss-events-program__aside {
+  display: grid;
+  gap: 1.5rem;
+}
+
+.iss-events-program__aside-block {
+  display: grid;
+  gap: 0.8rem;
+}
+
+.iss-events-program__archive-teaser {
+  padding-top: 0.95rem;
+  border-top: 1px solid rgba(var(--iss-accent-rgb), 0.18);
+}
+
+.iss-events-program__aside-title {
+  margin: 0;
+  font-size: clamp(1.35rem, 1.2rem + 0.5vw, 1.9rem);
+  line-height: 1.1;
+  letter-spacing: -0.03em;
+  text-wrap: balance;
+}
+
+.iss-events-program__aside-list {
+  margin: 0;
+  padding-left: 1.15rem;
+  display: grid;
+  gap: 0.65rem;
+}
+
+.iss-events-program__aside-list li::marker {
+  color: var(--iss-accent);
+}
+
+.iss-events-program__aside-link {
+  margin: 0.2rem 0 0;
+}
+
+.iss-events-formats__head {
+  max-width: 46rem;
+}
+
+.iss-events-formats__head .iss-heading__title {
+  margin: 0;
+  font-size: clamp(2rem, 3vw, 3.15rem);
+  line-height: 1.02;
+  letter-spacing: -0.045em;
+  text-wrap: balance;
+}
+
+.iss-events-formats__head .iss-heading__text {
+  font-size: 1.08rem;
+  line-height: 1.6;
+}
+
+@media (max-width: 1100px) {
+  .iss-events-context .iss-story-intro {
+    --iss-story-intro-top-columns: minmax(0, 1fr);
+    --iss-story-intro-top-gap: 1.5rem;
+    --iss-story-intro-head-justify: flex-start;
+    --iss-story-intro-head-max: none;
+    --iss-story-intro-title-max: none;
+  }
+
+  .iss-events-program__grid {
+    gap: 1.25rem;
+  }
+
+  .iss-events-program__listing-col,
+  .iss-events-program__aside-col {
+    padding: 0;
+    border-left: 0;
+  }
+
+  .iss-events-program__listing-head {
+    align-items: start;
+    flex-direction: column;
+  }
+
+  .iss-events-program .iss-timeline__filter-actions {
+    justify-content: flex-start;
+    margin-left: 0;
+  }
+}
+
+@media (max-width: 781px) {
+  .iss-events-context,
+  .iss-events-program,
+  .iss-events-formats,
+  .iss-events-cta {
+    padding-top: 1.6rem;
+  }
+
+  .iss-events-context .iss-story-intro {
+    --iss-story-intro-lead-size: clamp(1.14rem, 4.4vw, 1.45rem);
+    --iss-story-intro-title-size: clamp(1.85rem, 8.5vw, 2.75rem);
+    --iss-story-intro-textcols-margin-top: 1rem;
+  }
+
+  .iss-events-program__listing-head .iss-heading__title,
+  .iss-events-formats__head .iss-heading__title {
+    font-size: clamp(1.85rem, 8.5vw, 2.75rem);
+  }
+
+  .iss-events-program__aside {
+    gap: 1.25rem;
+  }
+
+  .iss-events-program__listing-col,
+  .iss-events-program__aside-col {
+    flex-basis: 100%;
+  }
+
+  .iss-events-program .iss-timeline__filter {
+    flex-basis: 100%;
+    max-width: none;
+  }
+
+  .iss-events-program .iss-timeline__filter-actions {
+    width: 100%;
+  }
+}

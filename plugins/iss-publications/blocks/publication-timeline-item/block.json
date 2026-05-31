@@ -1,0 +1,38 @@
+{
+  "$schema": "https://schemas.wp.org/trunk/block.json",
+  "apiVersion": 3,
+  "name": "iss/publication-timeline-item",
+  "title": "Zeitleisten-Eintrag",
+  "category": "widgets",
+  "icon": "marker",
+  "description": "One dated station inside a publication timeline.",
+  "parent": ["iss/publication-timeline"],
+  "keywords": ["Station", "Jahr", "Chronik"],
+  "supports": {
+    "html": false,
+    "reusable": false
+  },
+  "editorScript": "file:./index.js",
+  "attributes": {
+    "year": {
+      "type": "string",
+      "default": ""
+    },
+    "title": {
+      "type": "string",
+      "default": ""
+    },
+    "imageId": {
+      "type": "number",
+      "default": 0
+    },
+    "imageUrl": {
+      "type": "string",
+      "default": ""
+    },
+    "imageAlt": {
+      "type": "string",
+      "default": ""
+    }
+  }
+}

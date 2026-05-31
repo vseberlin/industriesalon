@@ -1,0 +1,11 @@
+{
+  "apiVersion": 3,
+  "name": "iss/publication-essay-summary",
+  "title": "ISS Publication Essay Summary",
+  "category": "widgets",
+  "icon": "editor-table",
+  "description": "Server-rendered longread summary strip for chaptered publication essays.",
+  "supports": {
+    "html": false
+  }
+}

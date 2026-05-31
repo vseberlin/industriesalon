@@ -1,0 +1,99 @@
+<!--
+Title: ISS Team Query Grid
+Slug: industriesalon/team-query-grid
+Categories: industriesalon, query, cards
+Block Types: core/query
+Description: Editorial team section with one featured profile and a reusable portrait card grid for team_member posts.
+Inserter: yes
+-->
+<!-- wp:group {"tagName":"section","className":"section","layout":{"type":"default"}} -->
+<section class="wp-block-group section">
+	<!-- wp:group {"className":"iss-container","layout":{"type":"default"}} -->
+	<div class="wp-block-group iss-container">
+		<!-- wp:group {"className":"iss-heading","layout":{"type":"default"}} -->
+		<div class="wp-block-group iss-heading">
+			<!-- wp:paragraph {"className":"iss-kicker"} -->
+			<p class="iss-kicker">Team</p>
+			<!-- /wp:paragraph -->
+
+			<!-- wp:heading {"level":2,"className":"iss-heading__title"} -->
+			<h2 class="wp-block-heading iss-heading__title">Menschen, die den Ort tragen</h2>
+			<!-- /wp:heading -->
+
+			<!-- wp:paragraph {"className":"iss-heading__text"} -->
+			<p class="iss-heading__text">Portraitkarten für Vermittlung, Sammlung, Programm und Besuch. Die erste Karte kann als stärkeres Profil stehen, darunter läuft der Rest als ruhiges Raster.</p>
+			<!-- /wp:paragraph -->
+		</div>
+		<!-- /wp:group -->
+
+		<!-- wp:query {"queryId":40,"query":{"perPage":1,"pages":0,"offset":0,"postType":"team_member","order":"asc","orderBy":"menu_order","inherit":false},"layout":{"type":"default"}} -->
+		<div class="wp-block-query">
+			<!-- wp:post-template {"layout":{"type":"default"}} -->
+			<!-- wp:group {"className":"iss-card iss-team-card iss-team-card--lead","layout":{"type":"default"}} -->
+			<div class="wp-block-group iss-card iss-team-card iss-team-card--lead">
+				<!-- wp:group {"className":"iss-team-card__media-wrap","layout":{"type":"default"}} -->
+				<div class="wp-block-group iss-team-card__media-wrap">
+					<!-- wp:post-featured-image {"isLink":true,"className":"iss-card__media iss-team-card__media"} /-->
+				</div>
+				<!-- /wp:group -->
+
+				<!-- wp:group {"className":"iss-card__body iss-team-card__body","layout":{"type":"default"}} -->
+				<div class="wp-block-group iss-card__body iss-team-card__body">
+					<!-- wp:paragraph {"className":"iss-kicker iss-kicker--compact iss-card__kicker iss-team-card__kicker"} -->
+					<p class="iss-kicker iss-kicker--compact iss-card__kicker iss-team-card__kicker">Profil</p>
+					<!-- /wp:paragraph -->
+
+					<!-- wp:post-title {"level":2,"isLink":true,"className":"iss-card__title iss-team-card__title"} /-->
+					<!-- wp:post-terms {"term":"team_role","className":"iss-team-card__role"} /-->
+					<!-- wp:post-excerpt {"moreText":"","showMoreOnNewLine":false,"excerptLength":34,"className":"iss-card__text iss-team-card__text"} /-->
+					<!-- wp:read-more {"content":"Profil ansehen","className":"iss-card__link"} /-->
+				</div>
+				<!-- /wp:group -->
+			</div>
+			<!-- /wp:group -->
+			<!-- /wp:post-template -->
+		</div>
+		<!-- /wp:query -->
+
+		<!-- wp:spacer {"height":"clamp(1.5rem, 3vw, 2rem)"} -->
+		<div style="height:clamp(1.5rem, 3vw, 2rem)" aria-hidden="true" class="wp-block-spacer"></div>
+		<!-- /wp:spacer -->
+
+		<!-- wp:query {"queryId":41,"query":{"perPage":6,"pages":0,"offset":1,"postType":"team_member","order":"asc","orderBy":"menu_order","inherit":false},"layout":{"type":"default"}} -->
+		<div class="wp-block-query">
+			<!-- wp:post-template {"className":"iss-card-grid","layout":{"type":"grid","columnCount":3}} -->
+			<!-- wp:group {"className":"iss-card iss-team-card","layout":{"type":"default"}} -->
+			<div class="wp-block-group iss-card iss-team-card">
+				<!-- wp:group {"className":"iss-team-card__media-wrap","layout":{"type":"default"}} -->
+				<div class="wp-block-group iss-team-card__media-wrap">
+					<!-- wp:post-featured-image {"isLink":true,"className":"iss-card__media iss-team-card__media"} /-->
+				</div>
+				<!-- /wp:group -->
+
+				<!-- wp:group {"className":"iss-card__body iss-team-card__body","layout":{"type":"default"}} -->
+				<div class="wp-block-group iss-card__body iss-team-card__body">
+					<!-- wp:paragraph {"className":"iss-kicker iss-kicker--compact iss-card__kicker iss-team-card__kicker"} -->
+					<p class="iss-kicker iss-kicker--compact iss-card__kicker iss-team-card__kicker">Team</p>
+					<!-- /wp:paragraph -->
+
+					<!-- wp:post-title {"level":3,"isLink":true,"className":"iss-card__title iss-team-card__title"} /-->
+					<!-- wp:post-terms {"term":"team_role","className":"iss-team-card__role"} /-->
+					<!-- wp:post-excerpt {"moreText":"","showMoreOnNewLine":false,"excerptLength":22,"className":"iss-card__text iss-team-card__text"} /-->
+					<!-- wp:read-more {"content":"Profil ansehen","className":"iss-card__link"} /-->
+				</div>
+				<!-- /wp:group -->
+			</div>
+			<!-- /wp:group -->
+			<!-- /wp:post-template -->
+
+			<!-- wp:query-no-results -->
+			<!-- wp:paragraph -->
+			<p>Noch keine Teamprofile angelegt.</p>
+			<!-- /wp:paragraph -->
+			<!-- /wp:query-no-results -->
+		</div>
+		<!-- /wp:query -->
+	</div>
+	<!-- /wp:group -->
+</section>
+<!-- /wp:group -->

@@ -1,0 +1,28 @@
+{
+  "apiVersion": 3,
+  "name": "iss/publications-browser-format",
+  "title": "Publication Browser Format Copy",
+  "category": "widgets",
+  "icon": "index-card",
+  "description": "Editorial section copy for one publication browser format.",
+  "parent": ["iss/publications-browser-results"],
+  "usesContext": ["issPublicationsBrowser/copy"],
+  "attributes": {
+    "format": {
+      "type": "string",
+      "default": "standard"
+    },
+    "title": {
+      "type": "string",
+      "default": ""
+    },
+    "description": {
+      "type": "string",
+      "default": ""
+    }
+  },
+  "supports": {
+    "html": false,
+    "reusable": false
+  }
+}

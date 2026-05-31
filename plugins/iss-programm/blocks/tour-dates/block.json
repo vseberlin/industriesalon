@@ -1,0 +1,24 @@
+{
+  "$schema": "https://schemas.wp.org/trunk/block.json",
+  "apiVersion": 3,
+  "name": "iss/tour-dates",
+  "title": "Tour Dates (List)",
+  "category": "widgets",
+  "icon": "calendar",
+  "description": "SEO-friendly list of upcoming dates (CPT fallback).",
+  "editorScript": "file:./index.js",
+  "editorStyle": "file:./editor.css",
+  "attributes": {
+    "limit": {
+      "type": "number",
+      "default": 12
+    },
+    "title": {
+      "type": "string",
+      "default": "Termine"
+    }
+  },
+  "supports": {
+    "html": false
+  }
+}

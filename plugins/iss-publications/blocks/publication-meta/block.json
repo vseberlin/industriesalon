@@ -1,0 +1,17 @@
+{
+  "apiVersion": 3,
+  "name": "iss/publication-meta",
+  "title": "ISS Publication Meta",
+  "category": "widgets",
+  "icon": "excerpt-view",
+  "description": "Server-rendered bibliography/meta panel for a publication.",
+  "attributes": {
+    "postId": {
+      "type": "number",
+      "default": 0
+    }
+  },
+  "supports": {
+    "html": false
+  }
+}

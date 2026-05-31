@@ -1,0 +1,34 @@
+<?xml version="1.0"?>
+<ruleset name="Industriesalon Custom Code">
+  <description>PHPCS rules for the custom Industriesalon theme and plugins.</description>
+
+  <arg name="basepath" value="."/>
+  <arg name="colors"/>
+  <arg value="p"/>
+  <arg name="extensions" value="php"/>
+
+  <file>themes/industriesalon</file>
+  <file>plugins/industriesalon-notices</file>
+  <file>plugins/industriesalon-schoeneweide-register</file>
+  <file>plugins/industriesalon-steuerung</file>
+  <file>plugins/iss-calendar</file>
+  <file>plugins/iss-content-model</file>
+  <file>plugins/iss-fuehrungen</file>
+  <file>plugins/iss-graph</file>
+  <file>plugins/iss-media-control</file>
+  <file>plugins/iss-payments-lite</file>
+  <file>plugins/iss-programm</file>
+  <file>plugins/iss-publications</file>
+  <file>plugins/iss-relations</file>
+  <file>plugins/iss-wf-import</file>
+
+  <exclude-pattern>*/vendor/*</exclude-pattern>
+  <exclude-pattern>*/node_modules/*</exclude-pattern>
+  <exclude-pattern>*/data/*</exclude-pattern>
+  <exclude-pattern>*/tests/*</exclude-pattern>
+
+  <rule ref="WordPress.DB"/>
+  <rule ref="WordPress.Security.EscapeOutput"/>
+  <rule ref="WordPress.Security.NonceVerification"/>
+  <rule ref="WordPress.Security.SafeRedirect"/>
+</ruleset>

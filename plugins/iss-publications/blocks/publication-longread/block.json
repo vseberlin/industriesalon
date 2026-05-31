@@ -1,0 +1,67 @@
+{
+  "$schema": "https://schemas.wp.org/trunk/block.json",
+  "apiVersion": 3,
+  "name": "iss/publication-longread",
+  "title": "Publikations-Longread",
+  "category": "widgets",
+  "icon": "welcome-write-blog",
+  "description": "Editor block for chaptered longread publications with generated rail, summary, and chapters.",
+  "keywords": ["Publikation", "Longread", "Kapitel"],
+  "supports": {
+    "html": false,
+    "multiple": false
+  },
+  "editorScript": "file:./index.js",
+  "attributes": {
+    "sourceNote": {
+      "type": "string",
+      "default": ""
+    },
+    "introHtml": {
+      "type": "string",
+      "source": "html",
+      "selector": ".iss-publication-longread-source__intro",
+      "default": ""
+    },
+    "showSummaryChapters": {
+      "type": "boolean",
+      "default": true
+    },
+    "showSummarySubheadings": {
+      "type": "boolean",
+      "default": true
+    },
+    "showSummaryTopics": {
+      "type": "boolean",
+      "default": true
+    },
+    "showSummaryContext": {
+      "type": "boolean",
+      "default": true
+    },
+    "showAtlasMap": {
+      "type": "boolean",
+      "default": true
+    },
+    "summaryChaptersLabel": {
+      "type": "string",
+      "default": "Kapitel"
+    },
+    "summarySubheadingsLabel": {
+      "type": "string",
+      "default": "Unterthemen"
+    },
+    "summaryTopicsLabel": {
+      "type": "string",
+      "default": "Themenfelder"
+    },
+    "summaryContextLabel": {
+      "type": "string",
+      "default": "Kontext"
+    },
+    "summaryContextValue": {
+      "type": "string",
+      "default": "Ort"
+    }
+  }
+}

@@ -1,0 +1,42 @@
+{
+  "$schema": "https://schemas.wp.org/trunk/block.json",
+  "apiVersion": 3,
+  "name": "iss/publication-photoalbum-sheet",
+  "title": "Fotoalbum-Blatt",
+  "category": "widgets",
+  "icon": "format-image",
+  "description": "One image sheet inside a publication photoalbum.",
+  "parent": ["iss/publication-photoalbum"],
+  "keywords": ["Albumblatt", "Fotoalbum", "Publikation"],
+  "supports": {
+    "html": false,
+    "reusable": false
+  },
+  "editorScript": "file:./index.js",
+  "attributes": {
+    "sheetLabel": {
+      "type": "string",
+      "default": ""
+    },
+    "title": {
+      "type": "string",
+      "default": ""
+    },
+    "caption": {
+      "type": "string",
+      "default": ""
+    },
+    "imageId": {
+      "type": "number",
+      "default": 0
+    },
+    "imageUrl": {
+      "type": "string",
+      "default": ""
+    },
+    "imageAlt": {
+      "type": "string",
+      "default": ""
+    }
+  }
+}

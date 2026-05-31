@@ -1,0 +1,1093 @@
+# Changelog
+
+## 2026-05-31
+- Rebuilt the off-canvas menu shell around the `Theme_assets/nav.md` grouping:
+  - replaced the two DB-referenced drawer menus with file-backed sectioned Navigation blocks for quick actions, identity, content, and utility links
+  - connected the shell search icon to a theme-owned fast-search modal that reuses the existing `iss-graph` REST search endpoint for the first results and hands full searches to the native `/?s=` results page
+  - promoted search to a full drawer tile, added compact Kalender/Besuch/Atlas quick links, split discovery from archive links, and added red section labels plus a dynamic Heute / Nächste Veranstaltung status row fed by Steuerung hours and Veranstaltung date meta
+  - normalized the quick-link grid against the rendered Navigation block markup so Firefox and Chromium keep the same three-column button layout, and pinned the status row to the bottom of the drawer
+  - made the drawer inner own `100dvh` directly and added section bottom padding so the status row and separators are stable across Firefox, Chromium, and logged-in viewport chrome
+  - corrected stale utility targets and the `Film & Ton` label while keeping the shell in the theme presentation layer
+  - reduced drawer typography into a stepped section rhythm with clear grouping while dropping the redundant address block from the drawer
+- Normalized the four Veranstaltung Terminblatt format patterns around an explicit `Materialien` / `Downloads und Quellen` chapter, so PDFs, slides, handouts, links, and follow-up documents have a predictable editable place on every event format without introducing a separate media-library abstraction.
+- Made the Veranstaltung format selector seed editable Terminblatt structures from the existing theme pattern files:
+  - choosing `Vortrag`, `Gespräch`, `Lesung`, or `Präsentation` on an empty Veranstaltung now inserts the matching editable pattern and keeps the event on the standard Terminblatt layout
+  - existing event content is never overwritten; the editor panel instead exposes a manual `Terminblatt-Struktur einfügen` action when a format is selected but no format sheet exists
+  - reused the registered theme pattern files as the single source for inserted structures so the selector does not create a parallel event-template system
+
+## 2026-05-30
+- Added a reusable Terminblatt format layer for Veranstaltungen:
+  - registered `_iss_event_format` with editor choices for `Allgemein`, `Vortrag`, `Gespräch`, `Lesung`, and `Präsentation`, adding stable `iss-event-format-*` body classes without creating separate templates
+  - added four editor-insertable Terminblatt patterns so speaker-, participant-, publication-, and material-first structures stay normal Gutenberg content
+  - refined the standard Terminblatt skin with a stricter paper hero and dark facts rail while reusing the existing `iss/content-meta` facts block and event color scheme tokens
+- Added an editor-selectable Veranstaltung color scheme (`_iss_event_scheme`) to the existing layout panel, mapped to the global theme color tokens so reusable fest pages can vary their accent and hero color without new templates or per-event CSS.
+  - Set `Fête de la Musique Berlin 2026` (`25808`) to the red event scheme, preserving the current festival presentation while leaving new events on the blue default.
+- Rebuilt the `single-veranstaltung` surface as a strict event-sheet v1:
+  - moved event facts into the hero rail via the existing `iss/content-meta` block and moved editorial copy into its own body section
+  - changed featured event artwork from cropped hero media to a contained poster/artwork rail so flyers and photographic images scale without local per-event markup
+  - flattened `single-event.css` away from gradients, rounded media cards, and shadows while preserving the `standard`, `compact`, `fest`, and `long` editor layout variants
+  - added an editor-insertable `ISS Veranstaltungsprogramm` pattern for larger events, using a native table inside the post body rather than creating a separate program data model
+  - extended the existing content-model Gutenberg opt-in from `projekt` to `veranstaltung` so the event layout panel and program pattern are reachable despite the global structured-CPT Classic Editor policy
+- Replaced the `single-veranstaltung` related-content card sections with compact `iss/related-content` rail groups for places, tours, archive material, and other events, reusing the existing relation renderer instead of adding a page-specific discovery component.
+- Added the reusable Veranstaltung layout value `fest` (`Fest / Programm`) with `feature` kept as a saved-data alias, plus an `ISS Festprogramm` editor pattern and a strict festival skin for repeatable public festival/program pages without microsites.
+- Switched `Fête de la Musique Berlin 2026` (`25808`) from the temporary `feature` layout to `fest` and reshaped its body content into the reusable program plus festival info-cell structure.
+  - Changed the festival info-cell address to render through the Steuerung `industriesalon/field` block (`address.full`) instead of saving a static address string in event content.
+- Corrected the canonical Steuerung street value from `Reinbeckstr, 10` to `Reinbeckstraße 10`, so Steuerung-backed public address fields render the proper current visitor address.
+- Synced the public `Industriesalon Schöneweide /` register-place address (`17960`) from `Reinbeckstraße 9, 12459 Berlin` to `Reinbeckstraße 10, 12459 Berlin` and cleared the register place/atlas transients that cached the old value.
+- Created the published Veranstaltung `Fête de la Musique Berlin 2026` (`25808`) with structured start/end metadata, Industriesalon place relation, fest layout, timeline item `25809`, and the imported flyer media attachment `25807`.
+- Normalized `iss/content-meta` date labels to German month names independent of the site locale, so Veranstaltung and Ausstellung facts no longer render English month names when WordPress runs with `en_US`.
+- Changed the single-project hero featured-image frame from cover to contain rendering, so logo-like project marks such as the `Walk of Fame Schöneweide` spyglass scale inside the framed media area without cropping.
+- Condensed `handoff_CURRENT.md` from a chronological session log into a current-state operational handoff, keeping active architecture notes, recent register/project context, tooling, guardrails, verification commands, and closeout rules while leaving full history in this changelog.
+- Restored `themes/industriesalon/templates/front-page.html` from the current live `wp_template` DB override (`front-page`, post `25782`) after an accidental disk save, preserving the live front-page spine-strip state for later deliberate cleanup.
+- Adjusted the shared `iss/spine-strip` map/atlas primitive so normal Atlas markers are opt-in through `showMapMarkers`, direction labels are block-owned rather than inherited from the map preset, and multiline editorial intro text renders with preserved line breaks.
+  - Removed the mandatory `direction_label` from the Schöneweide viewport preset, kept normal Atlas markers hidden on the front-page spine strip, and kept `/fuehrungen/` behavior by setting its `directionLabel` explicitly while leaving its map markers disabled.
+  - Added a global, variable-skinned `iss-quote` primitive and wired `iss/spine-strip` to support explicit quote intro mode with separate quote text and attribution fields.
+  - Converted the front-page spine intro from a plain paragraph into semantic quote markup using the compact fit skin, keeping the quote inside the existing intro column without pushing the map stripe down.
+  - Removed the spine-strip decorative gradient treatment so the shared primitive uses a plain surface and the map stripe renders without non-semantic fade overlays.
+  - Added shared map-plane zoom control and set a small front-page spine-strip bias/zoom so the rotated atlas crop fills the lower corners without adding a visual mask.
+  - Reworked the spine overlay geometry so the direction/baseline runs through the center of larger spine dots, the full baseline follows the active color skin instead of only coloring the selected route segment, station labels alternate by visual x-position, edge labels align inward, and labels use a light readable backing instead of dark text directly on the map.
+  - Added a `station_offset_x` calibration to the Schöneweide spine-strip rail preset so projected station spots and the active route/corridor segment shift together without moving the underlying map plane.
+  - Contained the spine-strip map stage responsively in the primitive CSS, including the thin `/fuehrungen/` variant, so desktop and mobile labels stay visible without page-local selectors.
+  - Synced the active front-page DB template override (`front-page`, post `25789`) with the disk template after a new custom override appeared during verification; the live front page still resolves from the DB override.
+- Added a v1 front-page projects band between `Vor Ort` and `Demnächst`, using the existing `projekt` Query Loop ordered by `menu_order` and a strict rule-based homepage skin without rounded cards or shadows.
+- Imported a transparent-canvas-trimmed `Walk of Fame Schöneweide` spyglass PNG from `Downloads` as media attachment `25803` and set it as the project featured image, replacing the earlier flyer-style JPEG thumbnail with a clearer project motif.
+- Added the native project featured-image block to the front-page project Query Loop cards, shortened teaser excerpts for the tighter media layout, and styled the image slot as a rule-separated project-mark surface so Futura, Walk of Fame, and Boulevard reuse editor-owned project media without per-project template markup.
+- Replaced the generated `01`/`02`/`03` project-card counters with the project featured-image marks, including Futura, so the top-right card signal is editorial media rather than decorative numbering.
+
+## 2026-05-29
+- Refined the Schöneweide single-place dossier into v2:
+  - removed hero metadata chips and the repeated fact strip under the hero
+  - replaced the fact strip with an existing `iss/atlas-slice` using `source: current`, so each place shows a static Schöneweide map crop with a visible current-place marker
+  - changed the left rail overview away from repeated historical classification by removing the `Historisch` row; epoch history now lives in the epoch rail
+  - taught atlas slice copy to use register-place current-use/history metadata, address, area, and optional link labels while keeping map ownership in `iss-relations`
+  - contained atlas-slice map overflow at the primitive CSS level and verified desktop/mobile rendering without horizontal overflow
+- Reworked the Schöneweide single-place page into a dossier/network template:
+  - extended `iss/register-place-context` with structured render variants for an epoch rail, current data grid, and potential/risk/open-question notes
+  - added editor-visible `potential_note` and `risk_note` meta fields to the register plugin and exposed them through the place entity/detail contract
+  - added a compact `rail` layout to `iss/related-content` and a `related` place source for `iss/related-place-links`, keeping relations in `iss-relations` rather than creating a new network system
+  - rebuilt `templates/single-register_place.html` so place pages now use a fact strip, left rail, epoch chronology, current-status data grid, and related content as compact rail links instead of heavy related-card sections at the end
+  - kept empty relation groups invisible by removing the fixed `Netzwerk` wrapper and letting each relation block render only when it has data
+  - verified file template authority (`source=theme`), template parsing, frontend rendering for KAOS 93 and KWO, and Playwright desktop/mobile smoke checks without horizontal overflow
+- Added a contemporary/commercial data pass for the same Schöneweide register backfill tranche:
+  - exported the pre-change state to `/tmp/register-place-contemporary-data-before-20260529.json`
+  - updated owner/operator/developer/tenant/investment/size/website/kaufpreis fields on 31 `register_place` posts using the existing register meta schema rather than adding a parallel data model
+  - marked weak values directly as `vermutlich`, `nicht bestätigt`, `App-Datensatz`, or `nicht öffentlich` so provisional market data does not read as verified provenance
+  - moved several misleading owner-like values into the more accurate operator/developer/tenant fields where public sources only support a management or operating role
+  - appended source links and `research_note` context for the contemporary data pass without rewriting public narrative prose
+  - verified touched field coverage after the pass: owner `25`, operator `30`, developer `15`, tenant `31`, investment `30`, size `30`, website `26`, kaufpreis `30`
+  - exported the post-change state to `/tmp/register-place-contemporary-data-after-20260529.json`
+  - created a fresh SQL backup after the pass: `backups/full_20260529-213252.sql` and `backups/full_20260529-213252.sql.sha256`
+- Backfilled the Schöneweide register epoch model for the public places that still had no structured history rows:
+  - exported the pre-change state for the 32 audited candidates to `/tmp/register-place-epoch-backfill-before-20260529.json`
+  - added 47 sourced epoch rows across 31 `register_place` posts through `iss_register_get_epoch_service()->save_epochs_for_place()`, preserving the register plugin as the structured-data owner
+  - left `Zeitlose Kunst` (`12901`) untouched because the address is unclear and public source research still has no reliable hit
+  - corrected present-use classifications where the old shell data was misleading: `Funkytown` and `Spree 27` to `mixed`, `First Sensor` and `Rolls-Royce Solutions Berlin` to `industrial`, `BUWOG Weydenhof + Wohnwerk` to `residential`, `IBA 2034` to `mixed`, `Standortgemeinschaft Oberschöneweide` to `community`, `BTB` to `infrastructure`, and `ibis Styles` to `commercial`
+  - resynchronized derived place states via the epoch service so the single-place template, atlas payload, and export contracts see the same phases
+  - verified that public-visible published places without epochs dropped from 32 to 1; the remaining no-epoch public record is `12901` `Zeitlose Kunst`
+  - exported the post-change state to `/tmp/register-place-epoch-backfill-after-20260529.json`
+  - created a fresh SQL backup after the backfill: `backups/full_20260529-204248.sql` and `backups/full_20260529-204248.sql.sha256`
+- Unpublished the weak `ADMOS Immobilien AG` public register stub:
+  - changed post `12928` to `draft` and set `place_visibility` to `tour_only`
+  - removed it from the public related-place list on `Spreehöfe / ADMOS` (`12881`)
+  - cleared its derived place-state and industry-actor rows so it no longer participates in public register/atlas surfaces
+  - kept the source candidate and research notes as an internal boundary record rather than deleting the provenance
+- Clarified the ADMOS actor boundary in the Schöneweide register:
+  - normalized `ADMOS Immobilien AG` (`12928`, register ID `65`) to the limited known facts: independent actor, not identical with `ADMOS Gleitlager GmbH` / location `#17`, UKSW member, Immobilienbestand in Schöneweide
+  - removed duplicated long-history text from the `ADMOS Immobilien AG` entry and kept the public body intentionally concise
+  - added a cross-record research note on `Spreehöfe / ADMOS` (`12881`, register ID `17`) so the location/industrial ADMOS line is not merged with the separate ADMOS Immobilien AG actor
+  - corrected `Spreehöfe / ADMOS` previous-use metadata away from the neighboring Frister/Lampenfabrik context and back to Norddeutsche Eisenwerke / ADMOS / SAG ADMOS / VEB BMHW / Spreehöfe
+- Enriched Schöneweide register place `12889` (`89 Lighthouse`) from historical source research:
+  - replaced the empty/vague place record with sourced address, current use, previous-use summary, short/long history, source links, and an editor research note
+  - added six structured place epochs for Gasanstalt Oberspree, gasworks continuation, ADMOS, SAG ADMOS, VEB BMHW, and the post-1990 Spreehöfe / 89 Lighthouse phase
+  - set the present use classification to `mixed` and resynchronized register place states so the single-place template renders `Mischnutzung`
+  - kept Frister and Norddeutsche Eisenwerke/ADMOS as neighboring-source boundaries rather than assigning them as the direct prior use of `89 Lighthouse`
+  - saved the pre-enrichment DB snapshot for this post/meta/epoch state at `/tmp/89-lighthouse-before-enrichment.json`
+- Unlocked Gutenberg for Schöneweide place entries by adding a narrow `register_place` block-editor opt-in in `industriesalon-schoeneweide-register`, preserving the broader `industriesalon-steuerung` Classic Editor policy for other structured CPTs.
+- Refined the file-backed `single-register_place` template for Schöneweide place pages:
+  - kept theme ownership of the single-place page skin and left structured place data rendering in `industriesalon-schoeneweide-register`
+  - removed the duplicated excerpt/hero-meta lead from the body intro so `history_short`, `current_use`, and the structured facts row carry the editable Kurzprofil
+  - replaced manual related-feed wrapper sections with existing `iss/related-content` blocks so empty related areas no longer print headings
+  - flattened the sidebar overview and Today band in the existing register-place CSS, reducing rounded/card treatment and keeping the industrial rail language
+  - normalized `register_place` post `12909` (`KAOS 93 / Kunst- und Gewerbehof`) from one escaped-newline paragraph into three Gutenberg paragraphs and normalized its `history_long` line breaks
+- Reconstructed the first Berlin.de-backed Industriesalon history tranche as structured CPT content:
+  - added eight published `ausstellung` records with structured `iss_start_date` / `iss_end_date`, source URLs, topic terms, place relations, and synced timeline items:
+    - `25772` `Bine studiert die Polizei`
+    - `25735` `Das historische Silicon Valley in Schöneweide`
+    - `25737` `Stolperstein-Geschichten in Schöneweide`
+    - `25739` `Ostberliner Zeitreisen - Fotografien von Kurt Schwarz`
+    - `25741` `Maschinen-Portraits`
+    - `25743` `Historische Architektur in Treptow-Köpenick: Heute`
+    - `25745` `Die laufende Produktion`
+    - `25747` `Historische Baukästen`
+  - added nine published `veranstaltung` records with structured `iss_start_datetime`, location, Berlin.de provenance, relations, and timeline sync:
+    - `25749` `Schöneweider Salongespräch: Neuer Wind am Zukunftsort`
+    - `25751` `Schöneweider Salongespräch: Frisch gepresst - Vinyl aus Oberschöneweide`
+    - `25753` `Tag des offenen Industriesalons`
+    - `25755` `Tag des offenen Denkmals 2020: Nachhaltige Transformation in Schöneweide`
+    - `25757` `Tag des offenen Denkmals 2023: Boulevard der Industriekultur`
+    - `25759` `10 Jahre Industriesalon Schöneweide - Festwoche`
+    - `25761` `Jesus im Frack: Vortrag über Walther Rathenau`
+    - `25774` `Lesung: Mord an Walther Rathenau`
+    - `25763` `Spezialführung: Auf den Spuren Walther Rathenaus in Oberschöneweide`
+  - added two publication records:
+    - `25766` `Machbarkeitsstudie Industriemuseum „Electropolis Berlin“ im AEG-Kasino`
+    - `25767` `Historische Architektur in Treptow-Köpenick: Heute`
+  - imported the Berlin.de Electropolis study PDF as attachment `25768` and the 10-year Festwoche program PDF as attachment `25770`.
+  - preserved the existing `Bine studiert die Polizei` image attachment `8654` and used it as the exhibition's featured image after resolving the slug collision.
+  - kept Berlin.de and local old-post provenance in `_iss_source_url`, `_iss_source_context`, `source_post_id`, and `source_post_ids` rather than relying on unsourced free prose.
+- Created host-owned database backups around the history import:
+  - pre-import SQL dump: `backups/full_20260529-162058.sql`
+  - pre-import checksum: `backups/full_20260529-162058.sql.sha256`
+  - final post-import SQL dump: `backups/full_20260529-163100.sql`
+  - final post-import checksum: `backups/full_20260529-163100.sql.sha256`
+- Restored the missing 2019 Schöneweider Salongespräch continuity around Peter Strunk and WF transformation:
+  - created published `veranstaltung` post `25729` at `/veranstaltungen/salongespraech-vom-umbruch-zum-aufbruch-hidden-champions-aus-schoeneweide/`
+  - sourced it from the Berlin.de Treptow-Köpenick press release dated `05.04.2019` for the `11.04.2019` event
+  - set `iss_start_datetime`, location, `iss_timeline_enabled`, and synchronized timeline item `25730`
+  - linked the event to Industriesalon Schöneweide, Werk für Fernsehelektronik / Behrensbau, First Sensor, and IRIS through `iss-relations`
+  - assigned focused `iss_topic` terms `WF` and `Transformation`
+- Promoted the old `Strunk-Vortrag.pdf` media item into the publication system:
+  - created published `publication` post `25731` at `/publikationen/die-aeg-aufstieg-und-niedergang-einer-deutschen-industrielegende/`
+  - attached media item `2090` to the new publication and exposed it through a Gutenberg File block instead of copying the manuscript into public prose
+  - added bibliographic metadata for Peter Strunk's 2011, 28-page PDF/Vortragsmanuskript
+  - linked the publication to AEG/TRO, KWO, Kraftwerk Oberspree, and Oberschöneweide industrial-heritage places
+  - related it to existing Schöneweide/WF/KWO/TRO publications and added a rights-aware note because the PDF carries its own reuse restriction
+- Enriched the existing `Peter Strunk` entity profile `24980` and its graph-backed profile facts so they now cover the 2019 WF transformation Salongespräch as well as the prior Rathenau/AEG context.
+- Added the upcoming `Walk of Fame Schöneweide` project from the four-page DOCX flyer:
+  - created published project post `25720` at `/projekte/walk-of-fame-schoeneweide/`
+  - set status to `In Vorbereitung`, period label to `12.09.-04.10.2026`, menu order to `15`, and topics to `Elektropolis`, `Schöneweide & Stadtraum`, and `Transformation`
+  - imported three flyer images as project media (`25725`, `25726`, `25727`) with descriptive filenames/alt text and set the Sehrohr motif as featured image
+  - converted the flyer copy into the existing six-anchor `iss-project-dossier` structure with image wall, Rail/Facts list styles, material links, project stand, and centralized contact field
+  - linked the project to Wilhelminenhofstraße / Rathenaustraße, Industriesalon Schöneweide, and Wilhelminenhofstraße 66/67 und 68/69 through `iss-relations`
+  - kept the flyer’s direct personal phone/email/address out of free project prose
+- Created a fresh host-owned database backup after adding `Walk of Fame Schöneweide`:
+  - SQL dump: `backups/full_20260529-143205.sql`
+  - checksum: `backups/full_20260529-143205.sql.sha256`
+- Replaced the misleading `projekt` archive with a real `/projekte/` landing page:
+  - added a file-backed `page-projekte` template with a strict project index, visible status/topics, related-place text links, and centralized contact output
+  - added a restrained dark project-continuity hero with a compact light rail, so the landing route shares the single-project visual language without using a full-width media band
+  - split the first two curated upcoming projects into a full-width zebra feature section before the remaining project index
+  - changed featured project media to a white/paper contain surface so transparent PNG logos, especially FUTURA, no longer show the old gray card placeholder behind them
+  - rewrote `page-projekte.css` for the new page surface and removed the older rounded/shadowed archive-card treatment
+  - deleted the stale `archive-projekt` template so the CPT archive no longer owns the public landing route
+  - changed the project-page stylesheet enqueue condition from `is_post_type_archive('projekt')` to `is_page('projekte')`
+  - created the published `Projekte` page (`/projekte/`), flushed rewrite rules, and let the existing landing-route collision guard disable the `projekt` archive while keeping project singles at `/projekte/{slug}/`
+  - added `Projekte` to the main navigation and set project menu order so preparatory dossiers appear before documented/completed projects
+  - corrected `Boulevard der Industriekultur` back to the `In Vorbereitung` status during route verification
+- Created a fresh host-owned database backup after the projects landing route switch:
+  - SQL dump: `backups/full_20260529-134731.sql`
+  - checksum: `backups/full_20260529-134731.sql.sha256`
+- Normalized `Boulevard der Industriekultur` into the project dossier model:
+  - replaced the merged legacy body on project post `24817` with an editable `iss-project-dossier` using the six single-project anchors
+  - folded the two June 2022 source posts into chaptered project prose around Wilhelminenhofstraße, Elektropolis, Erlebnisorte, partner roles, material, and concept history
+  - added a v3 image wall with the direct Boulevard project image plus Behrens-Ufer, Behrens-Turm, Industriebahn, and `Klingender Boulevard` media-library context
+  - removed the old form/contact leakage from free prose and kept the contact line on the centralized `industriesalon/field` Steuerung block
+  - assigned `In Vorbereitung`, set focused `iss_topic` terms, and aligned the visible rail relations to KWO/Wilhelminenhofstraße, Rathenau-Hallen, Behrens-Ufer, and Behrensbau
+- Created a fresh host-owned database backup after the project dossier normalization pass:
+  - SQL dump: `backups/full_20260529-132553.sql`
+  - checksum: `backups/full_20260529-132553.sql.sha256`
+- Normalized `Das Landmark der Elektropolis` into the project dossier model:
+  - replaced the short imported body on project post `24815` with an editable `iss-project-dossier` using the six single-project anchors
+  - enriched the page from the direct source post, the Polish parallel post, and the four-page `Infos zum Landmark` PDF instead of relying only on the old two-paragraph summary
+  - added a v3 image treatment with the winning design rendering, PDF preview, and Kaisersteg/Stadtplatz context images from the media library
+  - set the direct design rendering as featured image, kept `Abgeschlossen`, and narrowed topics to `Elektropolis`, `Schöneweide & Stadtraum`, and `Transformation`
+  - added lean place relations for `Unter der Kranbahn / Platz am Kaisersteg`, `Behrens-Ufer`, `Wilhelminenhofstraße / Rathenaustraße (KWO)`, and `Industriesalon Schöneweide`
+- Normalized `Stadtlabor Wilhelminenhofstraße` into the project dossier model:
+  - replaced the imported merged legacy body on project post `24818` with an editable `iss-project-dossier` using the six single-project anchors
+  - folded the April/September/October 2022 invitation/update posts into chaptered project prose, with past dates kept in `Rückblick`
+  - added an existing-media `iss-dense-image-wall` and material section for the Stadtlabor mark, exhibition view, Street-Prints, and street-walk context
+  - kept address/anreise details out of free prose by using `industriesalon/field` for contact and `iss-relations` for related places
+  - assigned `Abgeschlossen`, set focused `iss_topic` terms, and added lean place relations for Industriesalon, Stiftung Reinbeckhallen, WF-Kulturhaus context, and KWO/Rathenaustraße
+- Normalized `Industrieabfälle` into the same project dossier direction:
+  - replaced the merged legacy post body on project post `24819` with an editable `iss-project-dossier` body using the six single-project anchors
+  - moved old workshop invitation details into `Rückblick` so past April-June 2025 dates no longer read as current registration copy
+  - added a four-cell `iss-dense-image-wall` and a visual `Industriesalonfunk` material block using existing project media
+  - kept venue/address facts out of prose by adding `Industriesalon Schöneweide` and `Novilla` as `iss-relations` venue links for the rail
+  - created and assigned the `project_status` term `Abgeschlossen`, narrowed the project topics to the relevant four terms, and refreshed the hero excerpt
+- Backfilled `Connected by Lights` into the v2 project dossier model:
+  - replaced the small legacy intro/PDF body on project post `24816` with an editable `iss-project-dossier` body using the existing six single-project anchors
+  - extracted the PDF competition material into chaptered Gutenberg content with the shared Rail, Facts, and Steps list styles instead of adding a custom block or page-specific styling
+  - kept the PDF as the documented source, set the project status term to `In Vorbereitung`, and refreshed the excerpt for the project hero
+  - added conservative `iss-relations` place links for `Industriesalon Schöneweide` and `Bärenquell-Brauerei` so the existing rail place block has relevant context without inventing missing route locations
+  - kept address/anreise out of free project prose; the contact line now renders through the centralized `industriesalon/field` Steuerung block
+- Tested the v3 image direction on `Connected by Lights`:
+  - added a compact `iss-dense-image-wall` image strip after the dossier source note using existing project media and the PDF preview image
+  - replaced the plain PDF text link in `Material` with a visual document block that keeps the generated PDF preview and explicit `PDF öffnen` action together
+  - avoided new CSS/template/PHP by using existing Gutenberg blocks, `iss-dense-image-wall`, and `iss-media-card`
+  - rejected the first feature-stack fit inside project content after browser verification showed mobile horizontal overflow
+- Refined the project single rail after FUTURA fit testing:
+  - removed the heavy full-width related-content sections from the file-backed `single-projekt` template
+  - added `iss/related-place-links` as a text-only related-place block for compact rail usage, backed by the existing `iss-relations` place relation data
+  - moved `Orte im Projekt` under the project chapter rail as linked text with relation roles instead of cards or media
+  - added a `showPlaces` toggle to `iss/content-meta` and disabled it in the project template so `Projektprofil` no longer duplicates the same place links
+  - deleted the `single-projekt` DB template override after backing it up, restoring file authority for the project route
+- Added reusable Gutenberg list style variations for `core/list`:
+  - registered `Plain list`, `Rail list`, `Steps`, and `Facts` as normal List block styles instead of introducing a custom block
+  - added the global `.wp-block-list.is-style-iss-list-*` treatments in the theme pattern stylesheet, using the inherited `--iss-accent` token so project chapters can keep their own color
+  - backfilled the FUTURA project lists with Rail, Facts, and Steps styles while preserving the authored list text and block editability
+  - made list markers accept inherited section/page accents and bridged project chapters to that contract through `--iss-list-accent`
+  - changed the Steps list from grid children to a positioned number gutter so Gutenberg list items with inline `<strong>` text do not collapse prose into the number column
+  - kept unstyled core lists unchanged so normal editorial pages are not forced into the new schema
+- Pulled persistent visit/contact facts back under `industriesalon-steuerung`:
+  - replaced the hand-built `industriesalon/info-panel-besuch` pattern with the existing dynamic `industriesalon/visit-info` block so address, opening hours, ÖPNV, maps, and accessibility come from Steuerung
+  - replaced hardcoded Verein Impressum/Widerruf address, phone, and email prose with `industriesalon/field` blocks fed by Steuerung
+  - changed the front-page image caption so it no longer carries a stale postal address as editorial text
+  - verified `front-page` and `page-verein` templates are file-backed (`source=theme`, `wp_id=0`)
+
+## 2026-05-28
+- Modeled the first project-single template for scalable project pages:
+  - replaced the generic project single with a theme-owned dark project hero, metadata rail, editorial content column, and related-place/program/context sections
+  - kept project data, dates, places, and related cards on the existing CPT, content-meta, relations, and calendar contracts instead of introducing a parallel project system
+  - added a scoped project-single skin to the shared single-content stylesheet so project pages can handle small and larger project narratives without custom per-project markup
+  - opted the `projekt` CPT back into the block editor at the CPT owner so imported project narratives remain maintainable despite the global Classic Editor policy
+  - imported the FUTURA Biennale 2027 source material as a first live fit test, including the project record, featured media, QR image, related Schöneweide places, and a preparation meeting event
+  - added a theme-owned project dossier starter pattern for chaptered project prose so future microsite-style project texts can be absorbed as editable Gutenberg content without reusing publication-owned longread blocks
+  - moved the project single to a v2 dossier shell with the metadata rail kept on the ISS side and the project voice organized in anchored chapters with the existing `iss-reading-nav` visual language
+  - backfilled the FUTURA project body from the external microsite into `Worum es geht`, `Konzept`, `Mitwirken`, `Zukunftsquiz`, `Rückblick 2025`, and `Kontakt` chapters while keeping events, places, media, and context in their existing ISS systems
+  - moved project chapter navigation out of editable body content and into the left rail below the `Projektprofil`, using the publication rail pattern with restrained project color accents so future projects get navigation without maintaining custom HTML
+  - purged remaining active-theme Gutenberg DB template overrides so file-backed templates are authoritative again
+  - refined the project left rail so `Projektprofil` behaves as a non-sticky, strict topography-note style profile surface while only the chapter navigation remains sticky on desktop
+  - aligned project chapter kickers, heading markers, and chapter rules with the left-rail chapter color sequence through stable chapter anchors instead of document-order selectors
+- Refactored the archive landing page toward the publication landing pattern while keeping the archive browser as the single server-rendered data path:
+  - switched `/archiv/` to the theme red scheme and replaced the masthead quick-link grid with a featured archive object block
+  - added `iss-wf-import/featured-archive-object` as a Gutenberg-recognized dynamic block with theme-owned public markup
+  - added a Gutenberg editor script and block metadata for `iss-wf-import/archive-object-browser`
+  - exposed archive-browser display switches for hero, statistics, source cards, source filter, and context filter
+  - removed source/context/stat surfaces from the archive landing instance while keeping search, Themenfeld, Objektfamilie, object-family quick entries, results, and pagination intact
+  - aligned the archive filter rail with the dark publication rail treatment
+  - removed the archive browser note under the filters and replaced it on `/archiv/` with editor/template-owned discovery links to Publikationen, Videos, Führungen, Sammlungen, Ausstellungen, and Veranstaltungen
+  - moved the featured archive object onto the same dark rail surface so archive photos balance the dark navigation column
+  - tested the same dark archive surface on archive object result cards while keeping the treatment scoped to `.iss-archive-browser__result-card`
+  - inset archive object result-card photos on the dark card surface so the images read with a dark frame
+  - improved the featured archive object block selector with search and direct object-ID entry for the large archive-object corpus
+  - opted `archivobjekt` singles back into the block editor through the `iss-wf-import` CPT owner, matching the publication CPT override pattern
+  - exposed the `archiv_dekade` taxonomy as the archive browser's decade filter, including GET state, active filter chips, reset/pagination URLs, service queries, and the editor display toggle
+  - widened the archive masthead copy measure so the text column uses the available two-column layout instead of the previous narrow editorial cage
+  - aligned single archive object featured media with the dark archive image frame and removed the red intro gradient from archive object singles
+  - removed the legacy empty WF landing page redirects to Ausstellungen, deleted the empty page records, and retired the raw `/archivobjekte/` archive route so `/archiv/` remains the canonical archive browser while archive-object singles keep their existing URLs
+  - replaced remaining public links to the stale `/register-schoneweide/` page with the current Schöneweide overview and Atlas anchors instead of adding redirects
+  - removed the stale `page-das-museum` template and its orphan page stylesheet wiring after confirming there is no `das-museum` page record
+  - retired the unused `page-fuehrungen-mosaic` UAT template and its dedicated stylesheet wiring while keeping the canonical `/fuehrungen/` template intact
+  - retired the legacy `taxonomy-archiv_kategorie-kinder-im-wf` exhibition shell and its taxonomy-specific query/style hooks now that `/ausstellungen/kinder-im-wf/` owns the public surface
+  - retired the stale `page-projekte` landing template, pattern, and custom-template entry while keeping the live `/projekte/` CPT archive and its stylesheet intact
+  - retired the raw `/archivsammlungen/` archive route by disabling the `archivsammlung` archive at the CPT owner and deleting the unused archive template while keeping collection singles intact
+- Refined `/sammlungen/` so the secondary landing area has two semantic panels: `Wege hinein` and `Jetzt stark`, with a visual access rail on the left and a vertical image-example grid nested under the current cross-reading column; removed the stale DB template override after backing it up so the file template owns the route again.
+- Rebuilt `/publikationen/` from a curated narrative landing into a navigable publication index:
+  - kept a compact editorial head plus the existing `iss/featured-publication` dynamic block
+  - replaced the hard-coded format/topic sections with the server-rendered `iss/publications-browser` block
+  - exposed publications, chronologies, longreads, and photoalbums as chapter navigation instead of search-style format filters
+  - exposed shared `iss_topic` terms as the landing page's thematic carousel and left `publication_type` / `publication_topic` out of the landing UI for now
+  - skipped epoch filtering for now because the current publication corpus does not support Kaiserzeit/Weimar-style filtering reliably
+- Kept ownership boundaries explicit:
+  - `iss-publications` owns browser state, shared-topic payloads, computed format grouping, and graph-backed publication search
+  - the theme owns the public browser markup, sticky chapter rail, thematic carousel, and publication card/strip skin
+  - carousel behavior reuses the existing `iss-relations` related-strip script and card grid contract
+- Extended `iss/publications-grid` with a `layoutVariant` attribute so the existing grid block can render through the shared strip/carousel skin.
+- Aligned `tools/phpstan-target.sh` with the repo-wide PHPStan memory limit by defaulting changed-file analysis to `1G`, while keeping `PHPSTAN_MEMORY_LIMIT` available as an override.
+- Added the unified public search service on top of the existing `iss-graph` search projection:
+  - exposed `/wp-json/iss-search/v1/search?q=...&type=publication,event,archive_object`
+  - added a provider boundary with the SQL provider active now and a reserved Meili provider stub for the later external index
+  - normalized result payloads with stable type aliases, title, excerpt, URL, image, and relevance fields
+  - added `archive_object` / `archivobjekt` to the public search bucket map and expanded archive-object indexing from the archive projection and relation payloads
+- Refactored duplicate page search paths into the unified service:
+  - retired publication-browser text search from the landing page so publication text search belongs to the unified search service
+  - archive object browser text search now uses the shared search provider while keeping archive-specific source, field, family, and context facets in the archive browser service
+  - removed the archive browser's live `LIKE` scan over object title/summary/description from text-filtered counts
+- Updated the public search page copy and archive-object result badge now that archive objects are part of public search.
+- Restored `iss_register_build_summary_places_payload()` as a thin wrapper over the existing register summary contract service so the register contract smoke check validates the current bootstrap data path.
+- Added a PHPStan `WP_CLI` test stub so changed CLI-bearing plugin files can be analyzed without local ignore annotations.
+- Added a shared `iss-scroll-target` anchor contract and wired publication/archive browser filter, search, reset, and pagination URLs to stable in-page targets so full-page GET refreshes no longer jump back to the top of the page.
+- Moved canonical publication-browser labels, section titles, descriptions, chapter labels, and topic labels out of `iss-publications` and into the theme render contract; the plugin browser payload now carries semantic keys, state, counts, and posts.
+- Added an editor script for `iss/publications-browser` so Gutenberg recognizes the dynamic block.
+- Reworked the publication-browser editor contract around explicit sidebar, results, and format child blocks so page/template InnerBlocks own editorial browser copy, parent attributes own operational labels, and Gutenberg shows a non-navigating editable shell instead of the live frontend filter UI.
+- Added a Gutenberg editor script for `iss/featured-publication` so the dynamic featured block is recognized in the editor, previews through the server renderer, and exposes the existing publication selection attribute.
+- Polished the theme-owned `iss/featured-publication` masthead skin with a stable media ratio, local compact metadata, and quieter editorial type so the featured item reads as part of the publication landing head.
+- Tightened publication browser polish with uniform publication-card excerpt clamps and a lower chapter-anchor landing offset so left-rail navigation keeps more visual context.
+- Replaced the shared carousel side rails with floating translucent chevron controls and positioned publication-strip controls over the media row instead of the full card height.
+- Added a second `Weiterentdecken` navigation group to the publication browser rail with theme-owned links to Archiv, Führungen, Sammlungen, Ausstellungen, and Veranstaltungen; the Gutenberg preview mirrors the group without making the links live in the editor.
+- Removed the regenerated `page-publikationen` DB template override after diffing it against the file template; it only lacked the new `discoveryTitle` contract and was backed up before restoring file authority.
+- Simplified the publication landing browser from full search/filter UI to a chapter rail plus shared-topic carousel, keeping the rendered sections inside the main page container.
+- Removed the stale `page-publikationen` DB template override after comparing it with the file template so `/publikationen/` is served from `themes/industriesalon/templates/page-publikationen.html` again; the later corrupted override copy was backed up before restoring file authority.
+- Aligned the publication landing browser styling with longread/timeline publication layouts: the browser now uses the normal 1720px content container, a dark chapter rail, and the existing related-strip carousel controls for the topic row instead of a visible native scrollbar.
+- Polished the publication landing browser: the chapter rail keeps all canonical formats visible, the sidebar kicker uses the theme red token, the masthead owns the route's header clearance instead of relying on a generic main spacer, and shared carousel controls now render as themed left/right rails.
+
+## 2026-05-27
+- Added a dedicated public single-publication route for sale-enabled brochure publications:
+  - theme-owned selector and renderer in `themes/industriesalon/includes/publications-render.php`
+  - dedicated template in `themes/industriesalon/single-publication-brochure.php`
+  - brochure-specific layout skin in `themes/industriesalon/assets/css/publications.css`
+- Kept the ownership split explicit:
+  - `iss-publications` still owns sale state, brochure classification, summary metadata, and order-panel data
+  - the theme now owns the brochure-facing public markup and layout
+- Brochure singles now render as a lighter product-sheet surface with:
+  - left cover column
+  - central editorial description and compact fact strip
+  - sticky right purchase panel
+  - relationship groups for related publications, places, and people
+- Added structural no-cover handling for the brochure route so future brochure publications do not leave an empty lead column.
+- Follow-up on the brochure route:
+  - moved the related context stack into the first column under the cover image
+  - tightened the related-card type scale for the narrower column
+  - added author-meta fallback for the `Personen` group when a brochure has no linked `iss-graph` person relations yet
+- Reworked `photoalbum` publications under the shared publication shell instead of a second album page surface:
+  - `themes/industriesalon/templates/single-publication.html` remains the only public wrapper for non-brochure publications
+  - `plugins/iss-publications/includes/render-publication.php` now parses structured album payload data and feeds album navigation into the shared reading-rail block contract
+  - `themes/industriesalon/includes/publications-render.php` now renders photoalbum navigation in the shell rail and album sheets in the shell content column
+  - `themes/industriesalon/functions.php` no longer loads `single-content.css` for photoalbum publication singles because the archive-album surface is no longer used on the publication route
+- Tightened the photoalbum payload/render quality:
+  - removed nested `<figure>` output in album items by passing clean media HTML from the plugin parser to the theme renderer
+  - shortened navigation/item titles by preferring concise lead captions over very long translated staff-list or roster text
+  - restored the shared publication intro/meta/featured-image head above the rail/content split and reduced the left rail to navigation only
+- Hardened the photoalbum contract:
+  - added editor-facing `iss/publication-photoalbum` and `iss/publication-photoalbum-sheet` blocks plus a starter pattern
+  - made explicit `iss/publication-photoalbum` blocks promote standard publications to the shared photoalbum layout contract
+  - moved photoalbum section heading copy into editor-authored block attributes instead of theme-generated default text
+  - restored parsed intro/source context in the theme-owned album content column
+  - added a parsed-payload body class so the shell rail only opens when album navigation can render
+  - moved publication accent ownership to the route body scheme and aligned photoalbum rail hover inheritance with timeline/longread rails
+  - consolidated the shared longread/photoalbum rail-navigation CSS and removed the previous `!important` rail control overrides
+  - removed the stale plugin-side photoalbum presentation fallback so raw authored content is the fallback when no theme renderer is available
+  - corrected the single-publication intro offset to use the shared header-height token instead of the larger logo-bottom reservation
+  - made the first parsed album sheet render through the existing featured-image slot on photoalbum singles
+  - kept parsed photoalbums out of the no-cover state so the shared cover column remains available
+  - broadened the existing rail related-content block to render for photoalbums as well as chaptered longreads
+- Fixed the duplicate video iframe CSS selector that blocked repo-wide CSS lint after the video landing changes.
+- Removed stale JavaScript locals in the tour-route carousel and program calendar assets so repo-wide JS lint no longer reports unused-symbol warnings.
+- Reworked `iss-publications` slow-query lint findings:
+  - replaced the one-time page-template cleanup meta queries with a publication ID scan plus cached meta checks
+  - moved publication-grid layout/taxonomy filtering to the existing small editorial publication collection instead of adding public meta/tax queries
+  - removed the unused related-publications helper that still carried an obsolete taxonomy query
+- Clarified the photoalbum editor contract: starter-pattern sheets need images before the album rail is generated.
+- Committed the publication/photoalbum hardening checkpoint as `6d086ab Harden publication photoalbum contract`.
+
+## 2026-05-26
+- Rebuilt `/videos/` into a darker browse-first landing with:
+  - sticky under-header player rail on desktop
+  - horizontal thematic strips
+  - in-page `Übersicht / Transkript / Kapitel` tabs
+  - poster-first player behavior instead of the old hero-led layout
+- Redesigned the publication surfaces around archival rail logic:
+  - `/publikationen/` no longer depends on sticky top toolbar behavior
+  - single publications now use the shared `single-publication` theme wrapper with rail-based longread and timeline layouts
+  - the publication bibliography moved into the left intro column as a split note
+- Moved more active publication rendering into the theme:
+  - `themes/industriesalon/includes/publications-render.php`
+  - `themes/industriesalon/templates/single-publication.html`
+  - deleted the stale `single-publication` DB `wp_template` override so the theme file is authoritative again
+- Normalized the publication layout contract:
+  - added explicit `photoalbum`
+  - preserved `standard`, `longread`, and `timeline`
+  - removed the old hidden album heuristic inside `longread`
+  - forced block editor support for `publication` posts
+- Added real timeline authoring tools to `iss-publications`:
+  - block `iss/publication-timeline`
+  - child block `iss/publication-timeline-item`
+  - starter pattern `iss-publications/timeline-starter`
+- Retired the mirror publication model and removed the obsolete `publication-corpus-stream` block.
+- Normalized the WF archive-backed surfaces under `ausstellung`:
+  - removed the empty top-level page-shell WF templates
+  - kept `iss-wf-import` as the archive/query/browser owner
+  - made the public WF surfaces run through `single-ausstellung` plus theme-owned render helpers
+
+## 2026-05-25
+- Reworked `/videos/` from a long landing page into a browse-first library:
+  - removed the forced scroll jump when choosing a new video
+  - made the active player a sticky right rail on desktop
+  - converted thematic groups into horizontal browse strips using the shared `iss-relations` carousel contract
+  - removed the old long editorial tail and the separate full-inventory dump from the main page flow
+- Extended the `video` content type metadata contract in `plugins/iss-content-model`:
+  - `iss_video_original_date`
+  - `iss_video_duration`
+  - `iss_video_language`
+  - `iss_video_rights`
+  - `iss_video_transcript_status`
+  - `iss_video_transcript_source`
+- Wired the new video metadata through:
+  - the video admin meta box
+  - the interactive library player
+  - the single-video metadata panel
+  - transcript/context labeling on single-video pages
+- Fixed a bootstrap gap in `plugins/iss-content-model` by loading `includes/video-import.php`, so the existing video importer/CLI code is now actually registered.
+- Added a reusable CLI enrichment pass:
+  - `docker compose run --rm wpcli iss-content-model videos backfill --allow-root`
+- Ran the local DB backfill for all current `video` posts:
+  - `30/30` now have `duration`
+  - `30/30` now have `original_date`
+  - `30/30` now have explicit `year`
+  - `24/30` now have `language`
+  - `30/30` now have explicit `transcript_status`
+  - `1/30` received `transcript_source`
+- Important limitation:
+  - full transcript text was not imported; `yt-dlp` hit YouTube anti-bot sign-in checks on this machine and the caption/timedtext endpoints returned empty bodies here, so the pass only normalized transcript state and related metadata
+
+## 2026-05-21
+- Promoted the recolored Schöneweide atlas base into a readable canonical asset pair:
+  - `themes/industriesalon/assets/maps/schoneweide-map-canonical.png`
+  - `themes/industriesalon/assets/maps/schoneweide-map-canonical.webp`
+- Retargeted the main canonical map consumers to the new canonical filenames:
+  - theme preset loader in `themes/industriesalon/functions.php`
+  - JS fallback in `themes/industriesalon/assets/js/schoneweide.js`
+  - marker calibration helper in `themes/industriesalon/assets/maps/schoneweide-marker-calibration.js`
+  - variant-generator default source in `themes/industriesalon/scripts/generate-schoneweide-map-variants.sh`
+- Updated the finished `viewport-industrial-spine-strip` preset first instead of regenerating the whole viewport family:
+  - added `viewports/industrial-spine-strip/industrial-spine-strip--strip--canonical.webp`
+  - pointed `themes/industriesalon/assets/maps/schoneweide-viewport-manifest.json` at the canonical crop for that preset
+- Kept the rest of the military-style viewport/image experiments out of the commit.
+- Swapped only the `Führungen` Formate territorial strip to the new `iss/spine-strip` block while leaving the image wall, notes column, and rail markup unchanged.
+
+## 2026-05-20
+- Re-centered Schöneweide static-map work on the canonical light-map geometry:
+  - confirmed that the current marker coordinates were already correct on the canonical map
+  - stopped treating the older dark derivative as coordinate authority
+  - added a dedicated marker calibration helper under `themes/industriesalon/assets/maps/`
+- Added a first reusable viewport system for Schöneweide:
+  - blueprint source `schoneweide-viewport-blueprints.json`
+  - generator `generate-schoneweide-viewport-family.php`
+  - generated manifest `schoneweide-viewport-manifest.json`
+  - crop-local marker JSON files under `assets/maps/viewports/**`
+- Extended `iss-relations` map primitives:
+  - fixed-crop support for named viewport presets
+  - new `spine` variant on `iss/atlas-strip`
+  - preset-level `rail` metadata for ordered station rows
+- Added the first Schöneweide programmatic spine row and wired a real demo row into `page-schoneweide`.
+- Generated multiple military-style map variants and viewport image crops as working visual experiments, but intentionally left those generated image files out of the commit.
+- Important follow-up note:
+  - the viewport images are still only sketched toward the intended `2D -> 3D` look
+  - visual corrections and nudging will still be needed before treating them as final production map art
+- Reran the batch image conversion flow from `Theme_assets/to-convert` to `Theme_assets/to-convert-webp`, including a second additive pass for newly added source files.
+
+## 2026-05-19
+- Recovered file authority on several active theme templates by syncing useful live DB `wp_template` edits back to disk before flushing the overrides:
+  - `front-page`
+  - `page-ausstellungen`
+  - `page-schoneweide`
+- Reworked the front-page `Raum nutzen` section into a shorter editorial split:
+  - facts/info panel on the left
+  - rental image on the right
+  - no more oversized hero-like treatment
+- Continued Gutenberg-safe cleanup on `page-ausstellungen`:
+  - normalized several raw HTML islands into safer block markup
+  - simplified `Konstellationen` to the shared 4-card-row structure
+  - fixed the real card-row contract bug by restoring the missing canonical media wrapper nesting
+- Replaced the old `Die Landschaft` block on `/schoneweide/` with the `Ausstellungen`-style topography section and aligned its annotation / overlay treatment with the cleaner `Führungen` note pattern.
+- Tightened Schöneweide topography cards:
+  - kept the atlas-plate structure
+  - replaced the decorative atlas map strip with a simpler dark strip
+  - fixed the recurring Gutenberg first-item vertical offset at the shared atlas-plate grid layer
+- Added local image optimization helpers and shipped smaller static assets:
+  - installed `cwebp`, `webpinfo`, `avifenc`, `avifdec`
+  - created and wired `themes/industriesalon/assets/maps/schoneweide-static-map-big-industrial-v3-q90.webp`
+  - converted additional Schöneweide and `teilchendetektor` assets to WebP
+- Rebuilt `Schöneweide heute` around the cleaner `Führungen` strip pattern and switched the Schöneweide territorial strip background to the uploaded panorama WebP.
+- Normalized Gutenberg image-fit drift on `page-schoneweide` by removing redundant inline media-fit overrides where the theme media components already own `aspect-ratio` and `object-fit`.
+- Unified the shared related/discovery card system much more aggressively:
+  - publications and tours now delegate their archive-card rendering to the shared generic relations renderer
+  - removed remaining page/section-specific related-card skins from `Ausstellungen`, single-route, entity-profile, post, and publications CSS
+  - switched the remaining manual single-post “Weitere Beiträge” section to `iss/related-cards`
+  - fixed the missed plugin-side `single-fuehrung.php` related grid so it now emits the shared related-feed wrapper instead of its own grid shell
+
+## 2026-05-18
+- Reworked the page-backed `/fuehrungen/` landing into a tighter editorial sequence:
+  - replaced the old multi-block `Vertiefen` closeout with a shared curated `iss-pathway-strip`
+  - added reusable theme pattern `industriesalon/pathway-strip`
+  - wired the new strip into `themes/industriesalon/templates/page-fuehrungen.html`
+  - added shared pathway-strip styling in `themes/industriesalon/assets/css/patterns.css`
+- Continued `/fuehrungen/` visual tightening:
+  - refined the `Überblick` booking note toward the annotation-system direction
+  - tightened the `Nächste Termine` card skin into a flatter printed-sheet rhythm
+  - fixed the booking-card CSS hook to target the real live wrapper `.iss-tours-booking__surface`
+- Extended `iss-relations` related-card usability without breaking the SQL-first graph approach:
+  - added `publication` and `video` to the editor post-type picker
+  - added explicit related-card default copy for those types
+  - added block-level sort control:
+    - `auto`
+    - `relevance`
+    - `relevance_title`
+    - `relevance_date`
+  - changed `auto` so editorial/documentary types prefer title-based tie-breaks instead of date-driven wins
+- Added a persistent handoff note clarifying the current booking contract:
+  - public tour booking on `/fuehrungen/` now opens the repo-owned local modal host
+  - the external SaaS remains only the slot/schedule source behind that modal flow
+
+## 2026-05-17
+- Stabilized the page-backed `/fuehrungen/` template and reduced Gutenberg-hostile raw markup:
+  - converted most simple `wp:html` islands in `themes/industriesalon/templates/page-fuehrungen.html` to native block markup
+  - kept only the atlas-plate grid as an intentional raw-HTML exception
+  - resynced the cleaned disk template into the active `wp_template` override `25036`
+- Added and refined shared editorial primitives in `plugins/iss-relations`:
+  - new dynamic block `iss/atlas-strip`
+  - new block `iss/dense-image-wall`
+  - new dynamic block `iss/asymmetric-split-field`
+  - compacted the `Dense Image Wall` editor UI so Gutenberg works as a list manager instead of a long image stack
+- Improved `iss/related-cards` / `iss/related-content`:
+  - added editor-side layout controls for `layoutVariant`, `columns`, `showImage`, and `showExcerpt`
+  - added a REST preview endpoint for editor previews at `POST /iss-relations/v1/related-preview`
+  - added request-local caching for repeated relation/query lookups in `iss-relations`
+  - updated `/fuehrungen/` related-card sections to use sane narrow-column layouts
+- Hardened `/fuehrungen/` dense image wall frontend output:
+  - switched renderer to `wp_get_attachment_image()` when attachment IDs exist
+  - normalized the wall items on `page-fuehrungen` so all six images now carry attachment IDs
+  - removed the per-image CSS filter from `themes/industriesalon/assets/css/primitives.css`
+- Slimmed the `/fuehrungen/` landing timeline into a no-filters, text-first cards mode:
+  - extended `industriesalon/timeline-query` with `showCardImage` and `showCardSummary`
+  - updated frontend JS so `load more` still works when there is no filter form
+  - changed the `Nächste Termine` block on `/fuehrungen/` to:
+    - `upcoming` only
+    - no filter UI
+    - no calendar bridge
+    - compact cards without media or summary text
+- Verified with:
+  - `php -l plugins/iss-programm/includes/timeline-render.php`
+  - `php -l plugins/iss-relations/includes/blocks.php`
+  - `php -l plugins/iss-relations/includes/core.php`
+  - JS parse checks via `node`
+  - `npm run lint:css`
+  - `git diff --check`
+  - live `/fuehrungen/` HTML probes after cache flush / DB template sync
+
+## 2026-05-13
+- Extended `industriesalon-schoeneweide-register` with a `tour_only` visibility mode for `register_place`:
+  - added the editor field and persistence wiring
+  - excluded `tour_only` places from public register summary/search/atlas/sitemap outputs
+  - kept `tour_only` places reusable in `iss_related_places` route relations
+- Added Waldfriedhof route-only cemetery stops in WordPress content and attached them to the `Waldfriedhof Oberschöneweide` tour so the tour can render a structured internal route without polluting the public places register.
+- Ran a legacy-content cleanup pass directly in WordPress:
+  - created canonical `projekt` entries for `Das Landmark der Elektropolis`, `connected by lights`, `Boulevard der Industriekultur`, `Stadtlabor Wilhelminenhofstraße`, and `Industrieabfälle`
+  - created canonical `ausstellung` entries for `Wandel mit Wirkung`, `15 Jahre Industriesalon`, `Das Archiv von Fräulein Krause`, `Faszination Modellbahn in 1:120`, and `Futura – Zukünfte erleben`
+  - created canonical `veranstaltung` entries for `Jesus im Frack`, two `Salongespräch` posts, `Tag des offenen Denkmals`, `Ulrike Herrmann`, `Sir Rudolph Peierls`, and `Feldliebe`
+  - privatized legacy duplicate tour promos, housekeeping/service posts, and migrated source posts
+  - reduced public `post` count from `88` to `30`
+- Created a fresh database backup at `backups/db_20260513-222652.sql` before checkpointing the repo.
+
+## 2026-05-12
+- Added historical epoch infrastructure to `plugins/industriesalon-schoeneweide-register` without creating a new public content type:
+  - new epoch storage service in `includes/register-data/epochs.php`
+  - dedicated table `wp_iss_register_place_epochs`
+  - snapshot tracking in post meta for editor saves and migration history
+- Extended the existing `register_place` editor instead of branching the model:
+  - added the `Zeitschichten` meta box in `includes/meta-fields.php`
+  - added lightweight admin assets for managing chronological phase rows
+  - kept persistence behind the shared epoch service with validation and save-error feedback
+- Expanded register contracts and consumers so epoch data is available where it belongs:
+  - summary contracts can expose epoch availability fields
+  - detail contracts now include full `epochs` data
+  - atlas contracts now include `has_epochs` and `epoch_summaries`
+  - single-place `iss/register-place-context` terms output now renders phase rows when epoch data exists
+- Added operational support for the first editorial rollout:
+  - register tools page now exposes a full export download
+  - added a guarded seed-migration action that requires backup and export confirmation
+  - bootstrap summary loading now respects configured area/status limits again instead of loading the full place list unconditionally
+- Verified:
+  - `docker compose exec -T wordpress php -l` on the touched register PHP entry points
+  - `node --check` for `assets/js/register-place-epochs-admin.js`
+  - `docker compose run --rm wpcli iss-register contract-check --allow-root`
+
+## 2026-05-08
+- Promoted the WF technical/archive material into stronger first-class public surfaces in WordPress content:
+  - rebuilt `Elektrotechnik im WF` as a denser editorial gateway instead of a thin placeholder shell
+  - created `Betriebsfotoalben im WF` as a real umbrella exhibition over the four existing album publications and archive collections
+- Extended the `iss-wf-import` archive/browser system to support the larger WF-Technik corpus instead of only the earlier `Röhren`/`Anlagen` slices:
+  - added nested route normalization for:
+    - `/geraete-einschuebe-bauteile/`
+    - `/telekommunikation-sende-und-fernsehtechnik/`
+    - `/diverses-gebaeude-schaltbilder-etc/`
+  - extended the editor-facing archive taxonomy vocabulary with new fields/families/contexts for:
+    - devices/components
+    - telecommunication/television
+    - buildings/work environment
+    - schematics/reproductions
+  - added the classifier profiles:
+    - `geraete-bauteile`
+    - `telekommunikation-fernsehtechnik`
+    - `diverses-gebaeude-schaltbilder`
+  - hardened the CLI importer to fall back from rich seed-row parsing to raw object-id discovery on the very large WF-Museum seed pages
+- Added three new page-owned technical browser landings in the active theme:
+  - `themes/industriesalon/templates/page-geraete-einschuebe-bauteile.html`
+  - `themes/industriesalon/templates/page-telekommunikation-sende-und-fernsehtechnik.html`
+  - `themes/industriesalon/templates/page-diverses-gebaeude-schaltbilder-etc.html`
+- Created the corresponding public page owners in WordPress content:
+  - `Geräte, Einschübe, Bauteile`
+  - `Telekommunikation, Sende- und Fernsehtechnik`
+  - `Diverses, Gebäude, Schaltbilder`
+- Continued museum-digital ingestion with chunked, duplicate-safe import runs rather than one giant opaque batch:
+  - kept the validated pattern `--selection=remaining --skip-possible-duplicates`
+  - imported a substantial first slice of:
+    - `Geräte / Bauteile`
+    - `Telekommunikation / Fernsehtechnik`
+    - `Diverses / Gebäude / Schaltbilder`
+- Brought the technical taxonomy to these checkpoint counts:
+  - `Geräte / Bauteile`: `1165`
+  - `Telekommunikation / Fernsehtechnik`: `268`
+  - `Diverses`: `333`
+  - `Gebäude / Werkumfeld`: `21`
+  - `Schaltbild / Repro`: `52`
+- Verified:
+  - PHP syntax in the WordPress container for the touched `iss-wf-import` files
+  - live responses for the new technical browser pages
+  - live public rendering of new imported `Schaltbild / Repro` objects such as the `Dunkelschaltbild ...` series
+
+## 2026-05-07
+- Finished the `Menschen im WF` evening rescue as a reconciliation-first museum-digital pass instead of a fresh-import run:
+  - hardened `plugins/iss-wf-import/includes/museum-digital-importer.php` so weak fallback payloads merge seed-row identity back in
+  - prevented duplicate scanning on empty title/inventory records
+  - completed the full `721`-row source pass in update-only batches with `0` creates and `0` errors
+- Clarified archive/public ownership and portal wording:
+  - shifted public archive language toward `Bestand` and `Digitale Nachweise`
+  - surfaced `museum-digital`, `DDB`, and `Europeana` as public portal traces rather than confusing ownership/source labels
+- Built the new dense discovery landing `/sammlungen/` in `themes/industriesalon` with isolated page CSS:
+  - `templates/page-sammlungen.html`
+  - `assets/css/page-sammlungen.css`
+  - compact switchboard intro
+  - denser editorial second section
+  - epoch cards and archive-discovery pathways
+  - synced the final Gutenberg-edited live template back to disk and removed the DB override
+- Tightened `/archiv/` into the stricter research-side counterpart to `/sammlungen/`:
+  - compact intro/orientation band
+  - denser sidebar/results surface
+  - sidebar width and native form control fixes
+  - archive object cards now use family/thematic kicker terms instead of generic `Archivobjekt`
+- Expanded the exhibition/publication twin system with major WF corpora:
+  - `Geschichte des WF` exhibition + publication
+  - `Röhren für die Republik` exhibition + publication
+  - `Fundstücke aus dem Landesarchiv Berlin` exhibition + publication
+- Promoted technical/editorial standalone pieces into real publications:
+  - `Farbfernsehen in der DDR schon vor dem Mauerbau?`
+  - `Fundstücke zur Geschichte des NEF im Archiv des Industriesalons`
+- Added the curated technical umbrella exhibition:
+  - `Elektrotechnik im WF`
+- Fixed source-content defects uncovered during promotion:
+  - repaired broken slugs in `Aus der Geschichte des WF`
+  - normalized obvious `Röhren für die Republik` title/slug defects (`Folge 11`, `Folge 20`, `Folge 24`)
+
+## 2026-05-06
+- Turned `iss-wf-import` into a working museum-digital-backed archive browser/import workflow for WF technical corpora:
+  - added the dynamic object browser in `plugins/iss-wf-import/includes/blocks.php`
+  - switched `themes/industriesalon/templates/archive-archivobjekt.html` to the browser block
+  - added page-level archive browser styling in `themes/industriesalon/assets/css/page-archive.css`
+  - extended `themes/industriesalon/functions.php` to load the archive browser CSS on the new archive pages
+- Added dedicated technical archive landings in `themes/industriesalon`:
+  - `/roehren-und-halbleiter/`
+  - `/anlagen-automaten-arbeitsplaetze/`
+  - added nested archive path normalization in `plugins/iss-wf-import/includes/post-type.php`
+- Hardened the museum-digital importer in `plugins/iss-wf-import/includes/museum-digital-importer.php`:
+  - WF / Industriesalon source gate
+  - stable `--selection=remaining`
+  - `--only-new` alias
+  - `--skip-possible-duplicates`
+  - clearer dry-run summary buckets
+- Added the second classifier profile for `Anlagen, Automaten, Arbeitsplätze` with dedicated production-environment fields, families, and contexts.
+- Imported and structured the current WF technical corpora into local `archivobjekt` records:
+  - `Röhren und Halbleiter`
+  - `Anlagen, Automaten, Arbeitsplätze`
+- Exhausted safe bulk import for the noisy `Anlagen, Automaten, Arbeitsplätze` main families while holding back the manual duplicate-review tail.
+- Reclassified `Maschine` from a primary family into a secondary context and migrated existing imported records accordingly.
+- Narrowed `Montageplatz` into a true station family and moved generic assembly language into context `Montage`.
+- Fixed year extraction so explicit `Foto ... YYYY` dates outrank stray event dates and model numbers, then backfilled stored year/decade meta on imported museum-digital objects.
+
+- Added the first explicit Atlas editorial model to `industriesalon-schoeneweide-register`:
+  - new `atlas_era` taxonomy for `register_place` and `atlas_story`
+  - new `atlas_story` CPT for curated epoch narratives
+  - activation seeding for the initial era vocabulary
+- Extended the Atlas REST contract without breaking the current frontend payload:
+  - explicit editorial eras now override inferred buckets when assigned
+  - legacy `/wp-json/iss-register/v1/atlas` era fields remain available
+  - new additive `/wp-json/iss-register/v1/atlas-context` endpoint exposes eras and story context
+- Switched the Schöneweide Atlas frontend to the new era/story-aware context in `themes/industriesalon`:
+  - updated `assets/js/schoneweide.js`
+  - updated `assets/css/atlas-app.css`
+  - updated `templates/page-schoneweide.html`
+  - updated `functions.php`
+  - UI now supports explicit era filters and story-first fallbacks while preserving the existing map/place flow
+- Documented the Atlas migration stages:
+  - `plugins/industriesalon-schoeneweide-register/docs/atlas-phase-1.md`
+  - `plugins/industriesalon-schoeneweide-register/docs/atlas-phase-2.md`
+  - updated plugin `readme.md`
+- Retired obsolete WF import/sync runtime from `iss-wf-import`:
+  - removed CLI/importer/collection sync modules
+  - kept only the stable local archive model bootstrap
+  - plugin now acts as the authoritative owner of `archivbeitrag`, `archivsammlung`, and `archivobjekt`
+- Cleaned the archive editor naming and review interface:
+  - top-level archive menu now reads `Archiv`
+  - centralized label generation and added CPT descriptions
+  - rewrote place-suggestion/admin review copy to use clearer editor language
+  - preserved stored slugs, meta keys, and block namespaces for compatibility
+
+## 2026-05-05
+- Rebuilt the live `/schoneweide/` landing into a simpler theme-owned Atlas surface:
+  - replaced the heavy earlier Atlas shell in `themes/industriesalon/templates/page-schoneweide.html`
+  - switched to the standard landing-page hero/cover structure used on other pages
+  - changed the page body to one fixed composition:
+    - left filter column
+    - right larger interactive map surface
+    - popup info panel inside the map
+    - live story-card strip below
+- Rewrote the Schöneweide page CSS/JS around that simpler surface:
+  - `themes/industriesalon/assets/css/oberschoeneweide-atlas.css`
+  - `themes/industriesalon/assets/js/schoneweide.js`
+  - removed the earlier glassy Atlas-app treatment
+  - reused the theme’s normal hero/button/card language
+  - rendered filters, markers, popup, and live story cards from the existing Atlas REST payload
+- Switched the live Schöneweide Atlas away from the temporary static SVG approach and onto a real Leaflet map:
+  - vendored `Leaflet 1.9.4` locally under `themes/industriesalon/assets/vendor/leaflet/`
+  - added a bounded `CARTO light_all` raster basemap with required `OpenStreetMap` + `CARTO` attribution
+  - rendered Atlas places as real Leaflet markers from stored geographic coordinates
+  - removed the temporary theme map image path from the live runtime before commit
+- Cleaned the Schöneweide enqueue/runtime path in `themes/industriesalon/functions.php`:
+  - enqueued local Leaflet CSS/JS only on `/schoneweide/`
+  - reduced localized page config back to the Atlas REST URL only
+- Fixed live template authority for `/schoneweide/` so the disk template is used again:
+  - reset page `13251` `_wp_page_template` from `schoneweide-alt` to `default`
+  - deleted stale DB `wp_template` override `page-schoneweide` (`ID 13794`)
+
+- Added a shared local place-relation layer for Atlas, events, tours, posts, and archive content:
+  - new plugin `plugins/iss-relations`
+  - relation meta source `iss_related_places`
+  - hidden query/index taxonomy `iss_place_ref`
+  - editor metabox plus automatic sync helpers
+  - dynamic block `iss/related-content`
+  - first relation consumption on `register_place`, `veranstaltung`, and `fuehrung` output
+- Mirrored the WF Museum archive into local WordPress content instead of depending on the remote site:
+  - new plugin `plugins/iss-wf-import`
+  - local archive CPTs:
+    - `archivbeitrag`
+    - `archivsammlung`
+    - `archivobjekt`
+  - imported WF article content with local provenance/meta
+  - added local routes/templates for archive collections and archive objects
+  - added review tooling for place suggestions on imported archive content
+- Extended the archive mirror beyond editorial posts so curated albums and museum-digital objects survive locally as reusable data:
+  - imported museum-digital objects into `archivobjekt`
+  - localized museum-digital media into local attachments
+  - imported WF collection/album pages into `archivsammlung`
+  - stored ordered collection membership and object-to-object sequence relations
+  - repaired empty museum-digital stub objects with a dedicated CLI recovery path
+- Extended `register_place` image discovery beyond Wikimedia Commons:
+  - kept Wikimedia as the direct local-import source
+  - added Deutsche Digitale Bibliothek as discovery-only suggestions
+  - added Europeana API-backed discovery using the local API key
+  - preserved provider/source/provenance links while intentionally not turning DDB/Europeana into direct import flows
+- Created session backup artifacts for the richer local content state:
+  - DB dump
+  - WXR export
+  - uploads archive
+  - SHA manifest
+  - all saved under `/home/vladimir/wp/backups`
+- Refactored theme and plugin UI ownership to stop plugins from acting as the theme:
+  - split page-specific and single-specific CSS out of overloaded shared styles
+  - added dedicated theme bundles for:
+    - page archive/events/ausstellungen/museum/videos/verein/publications
+    - single ausstellung/content/event/tour
+    - timeline, calendar, and fuehrungen skins
+  - normalized global CTA/button/link styles around one industrial shared theme system
+  - moved timeline/calendar/tour/facts presentation skin out of `iss-programm` and `iss-fuehrungen` plugin CSS into theme-owned stylesheets
+- Normalized exhibition and event card systems onto one shared theme card family:
+  - `/ausstellungen/` `Draussen` route cards and `/veranstaltungen/` `Formate` cards now use shared `iss-small-card iss-small-card--split`
+  - removed the older parallel quiet-card/event-format card layer from those sections
+  - kept card structure global in `themes/industriesalon/assets/css/cards.css` instead of page-local duplication
+- Cleaned the exhibition landing template/runtime boundary:
+  - removed the remaining page-owned preset HTML hack from `/ausstellungen/`
+  - added real preset-button support to the `industriesalon/timeline-query` block/plugin
+  - kept the page disk-authoritative and aligned live rendering back to the shared timeline/card system
+
+## 2026-05-04
+- Recast the Schöneweide Atlas runtime around a dedicated Atlas payload instead of the full register dataset:
+  - added `/wp-json/iss-register/v1/atlas`
+  - precomputed Atlas-era/story fields in `industriesalon-schoeneweide-register`
+  - switched `/schoneweide/` to the lighter Atlas endpoint
+  - stopped loading unrelated `ueber-uns` / `flex-split` styles on the Atlas page
+  - switched the Atlas hero cover source to the lighter `atlas-header-1536x768.png` variant
+- Removed Touchtable from the active Schöneweide runtime/editor flow while preserving local source snapshots:
+  - stopped loading the Touchtable pull/review modules from the plugin bootstrap
+  - removed remote fallback from Atlas timeline/story media
+  - enriched cached Atlas story payloads from local attachments only
+  - verified the named Touchtable value pages are present locally and their referenced media are localized
+- Added editor-facing Wikimedia image sourcing for `register_place`:
+  - new `Bildvorschläge` metabox in `industriesalon-schoeneweide-register`
+  - queries Wikimedia Commons from local title/address/coordinates
+  - stores candidates locally on the post
+  - imports selected candidates into existing `Archivbilder`, `Aktuelle Bilder`, or `Dokumentbilder`
+  - saves imports locally into the Media Library with image-group visibility defaulting to `pending`
+- Advanced the Schöneweide register integration so the main site can own public place output while keeping sync/model logic in `industriesalon-schoeneweide-register`:
+  - made `register_place` publicly queryable under `/schoeneweide/orte/{slug}/`
+  - added real taxonomies `register_area`, `register_status`, `register_role`
+  - backfilled existing place meta into those taxonomies
+  - added theme-owned public templates:
+    - `themes/industriesalon/templates/page-schoneweide.html`
+    - `themes/industriesalon/templates/single-register_place.html`
+- Added conservative public-field sync for `register_place`:
+  - fills blank excerpts from existing register content
+  - promotes a featured image only from `public` image-group entries
+  - adjusted the single template and related theme CSS so places without public media still render cleanly
+- Saved the revised Schöneweide/Touchtable architecture docs into the plugin:
+  - `plugins/industriesalon-schoeneweide-register/docs/integration-proposal.md`
+  - `plugins/industriesalon-schoeneweide-register/docs/integration-spec.md`
+- Added one-way Touchtable intake into `industriesalon-schoeneweide-register`:
+  - non-public source snapshot CPT `register_source_item`
+  - admin pull screen `Tools -> Touchtable Pull`
+  - page/media pull from the public Touchtable WordPress REST API
+  - map hotspot extraction from rendered map pages plus Elementor CSS coordinates
+- Added the first editorial Touchtable review/match workflow on the main site:
+  - `Schöneweide Register -> Touchtable Review`
+  - separate auto-match candidate, approved linked place, and review status
+  - actions to accept candidate, link existing place, create draft place, ignore, and reset
+  - `Touchtable Quelle` metabox on `register_place`
+- Improved Touchtable review ergonomics for mixed-quality source pages:
+  - snapshots now derive normalized text, preview text, preview length, and hotspot count
+  - review table now shows content preview/metrics
+  - text-rich detail pages sort ahead of zero-text shells so empty Touchtable pages do not dominate review
+- Verified the new runtime flow with live source pulls and WP-CLI checks:
+  - `32` page snapshots
+  - `152` media snapshots
+  - `184` total local source snapshots
+  - `27` open `detail_page` review items after backfill
+
+## 2026-05-02
+- Redesigned regular single posts to follow the same layout logic as `Veranstaltung`, but in the theme red scheme:
+  - replaced the old `standard / image / short` post layout model with `standard / compact / long`
+  - preserved backwards compatibility by normalizing stored `_iss_post_layout` values:
+    - `short` -> `compact`
+    - `image` -> `standard`
+  - rebuilt `themes/industriesalon/templates/single.html` around one authoritative intro/body shell
+  - added the corresponding red post layout variants in `themes/industriesalon/assets/css/patterns.css`
+- Added the required intro gradient treatment to single `Führung` pages by moving top spacing ownership into `.iss-tour-hero`.
+
+## 2026-05-01
+- Moved project follow-up items out of scattered handoff/changelog notes into root `TODO.md`.
+- Restored clean page-owned public routes for the main landing sections instead of leaving CPT/page slug collisions in place:
+  - added route-guard logic in `plugins/iss-content-model/iss-content-model.php` so page-owned landing slugs disable colliding CPT archives automatically
+  - restored `/ausstellungen/` to the page template after the archive-template rename had exposed the CPT archive fallback
+  - moved `Führungen` onto the intended public route `/fuehrungen/` and renamed the template from `fuehrungen-landing.html` to `page-fuehrungen.html`
+  - created/assigned `page-veranstaltungen.html` so `/veranstaltungen/` is page-owned rather than dependent on the removed archive template
+- Reworked the `Veranstaltungen` landing using existing theme parts instead of one-off sections:
+  - reused the `Ausstellungen` editorial text rhythm
+  - reused existing route-card/image-text patterns for the visual program section
+  - kept the live `industriesalon/timeline-query` filter system as the functional core
+  - removed the redundant archive section
+  - switched the page accent treatment to theme blue
+  - replaced the custom `Mitmachen` card with the shared info-panel pattern
+- Refined the shell menu:
+  - adjusted spacing between primary/secondary items, section dividers, and the contact row in `themes/industriesalon/style.css`
+  - corrected the requested shell navigation links, including the final `Über uns` target `/about/`
+- Normalized the shared hero/cover/banner system across the active landing templates in `themes/industriesalon`:
+  - active landing pages and generic page heroes now use the home-page `iss-front-hero` + `iss-front-banner-slot` structure
+  - kept `Über uns`, `Publikationen`, and `Verein` on their own hero systems
+  - removed stale inner-page hero overlap in `assets/css/patterns.css`
+  - moved viewport-height ownership fully into shared CSS by deleting inline cover `min-height` values from the home page and active front-hero templates
+  - shared hero viewport height now follows the home-page value globally via `90svh` / `90dvh`
+
+## 2026-04-30
+- Refactored `plugins/iss-programm/includes/timeline-query.php` to remove the worst timeline filter slowdown without changing filter behavior:
+  - replaced the expensive overlap `OR` meta-query branch with split simple queries plus PHP-side merge/dedupe/sort
+  - kept `upcoming`, `past`, `month`, `range`, offset, and limit behavior aligned with the previous result set
+  - reduced the worst local `upcoming` timeline-query path from multi-second / 20s+ runtimes to roughly `100-180 ms` in the verified cases
+- Extended the existing `ausstellung` content model in `iss-content-model` instead of creating a second CPT:
+  - added taxonomies `ausstellung_typ`, `sammlungsbereich`, `industrieort`
+  - seeded agreed default terms
+  - removed the duplicate visible `Dauerausstellung` checkbox path from admin
+  - exposed taxonomy values in the single exhibition meta output
+- Fixed `ausstellung` timeline syncing so the landing and archive filters can resolve real exhibitions:
+  - `iss_timeline_enabled` now defaults to on for `ausstellung`
+  - permanent exhibitions can sync without manually entered dates
+  - `Dauerausstellung` keeps legacy `iss_is_permanent` synced from taxonomy
+- Reworked `iss-programm` exhibition filtering:
+  - taxonomy filters now support multi-select
+  - added preset-button support for the top quick overview on `/ausstellungen/`
+  - added a shared filter reset button to the query UI
+  - optimized `past` / `Archiv` exhibition queries by using a dedicated `event_end` fast path for `ausstellung`-only requests
+- Rebuilt `themes/industriesalon/templates/archive-ausstellung.html` into a narrative archive landing:
+  - quick top overview
+  - Elektropolis context
+  - full-width panorama transition
+  - Kaiserzeit card strip
+  - DDR card strip in `Nach 1945`
+  - `Ausstellung im Raum`
+  - rebuilt `Draußen` upper block in the `Woran wir arbeiten` language
+  - route cards retained below
+  - closing research/archive register block with filters
+- Extracted the earlier workstation deep-dive into a reusable pattern:
+  - `themes/industriesalon/patterns/iss-section-ausstellung-workstation.html`
+  - registered as `industriesalon/ausstellung-workstation`
+  - later removed it from the landing because the new Kaiserzeit/DDR systems made it redundant there
+- Reduced major static image payload on the archive landing:
+  - switched the hero image to a generated `2048x1410` variant
+  - switched the panorama to a generated `1536x518` variant
+  - switched the outside/tour image to a generated `1024x683` variant
+  - removed the expensive live Kaiserzeit image filter and replaced it with a cheaper warm overlay
+- Wired the archive hero banner to `industriesalon-notices`:
+  - replaced the hardcoded hero note with `industriesalon/notice-banner`
+  - added dedicated area `ausstellungen_banner`
+  - note: no notice was assigned to that area yet, so the slot remains empty until one is created in admin
+- Deleted the stale custom DB `wp_template` row for `archive-ausstellung` so the theme file is authoritative again
+
+## 2026-04-29
+- Added a dedicated file-backed `Repair Café` landing page in `themes/industriesalon`:
+  - `templates/page-repair-cafe.html`
+  - `patterns/page-repair-cafe-template.html`
+  - registered `industriesalon/page-repair-cafe-template` in `functions.php`
+  - created live page `13253` with slug `/repair-cafe/`
+- Integrated the existing `industriesalon-notices` plugin into the Repair hero:
+  - replaced hardcoded hero note markup with `industriesalon/notice-banner`
+  - created page-scoped notice `13254`
+  - fixed the hero slot structure and added page-scoped cover grid rules so the banner sits on the right track without the front-page underlap behavior
+- Refined the publications archive and single-publication templates:
+  - archive now uses a restrained two-column masthead with custom title instead of WordPress archive-title output
+  - single publication now uses a tighter intro/sidebar long-read opening
+  - archive listing limited to 3 cards
+  - archive CTA changed to `Mehr`
+  - masthead and single intro now clear the oversized sticky logo
+- Fixed publication card media rendering:
+  - corrected the cover stretch chain
+  - switched archive covers to full-bleed behavior
+  - removed the half-empty white lower area in publication cards
+- Wired publication ordering into `iss-payments-lite`:
+  - added frontend modal assets:
+    - `plugins/iss-payments-lite/assets/publication-order.js`
+    - `plugins/iss-payments-lite/assets/publication-order.css`
+  - added REST endpoint:
+    - `POST /wp-json/iss-payments/v1/publication-order`
+  - implemented the `iss_publications_order_button_html` hook so the order panel now renders a real action button
+  - order flow now works as thin pre-gateway path: modal -> submit -> local request record
+
+## 2026-04-27
+- Rebuilt the live `Über uns` page onto the theme-owned `page-ueber-uns` template:
+  - merged the previous theme draft, live page content, and local `register.md` notes
+  - removed the stale DB `wp_template` override after syncing the useful content into the file-backed template
+  - assigned the live page to `page-ueber-uns`
+  - changed the public slug from `/test/` to `/ueber-uns/`
+  - flushed rewrite rules so the new pretty URL resolves
+- Added a new reusable recognition pattern for Industriesalon:
+  - `themes/industriesalon/patterns/iss-section-recognition-split.html`
+  - registered as `industriesalon/recognition-split`
+  - added shared `iss-flex-split--reverse` support for swapping tall media left/right on desktop
+- Refined the About-page rhythm and visuals in `themes/industriesalon/templates/page-ueber-uns.html` and `assets/css/ueber-uns.css`:
+  - taller hero treatment
+  - wide opener image band
+  - asymmetric `Was wir tun` lead card layout
+  - compact archive/stat fact row
+  - stronger founding/person callout
+  - featured lead team profile before the remaining query grid
+  - darker closing CTA with one primary action and quieter text links
+- Tightened About-page copy using locally supplied notes plus facts cross-checked against the Industriesalon Wikipedia article.
+
+- Continued the local WP content/timeline refactor:
+  - added `plugins/iss-content-model` with CPTs `veranstaltung`, `ausstellung`, `projekt`, `team_member`
+  - wired `veranstaltung` and opted-in `ausstellung` into the existing `iss_calendar_item` timeline contract
+  - added theme templates for the new CPTs and the `iss/content-meta` block
+- Reworked `iss-programm` onto a single active timeline block path:
+  - added normalized query payload + shared REST endpoint
+  - added/expanded `industriesalon/timeline-query` with structured filters, count/empty state, and load more
+  - removed active `timeline`, `timeline-sections`, and `timeline-latest` block paths
+  - added `industriesalon/program-cards` as a lean card renderer on the shared query layer
+- Fixed severe local timeline/program query delays:
+  - `program-cards` now defaults to point-only upcoming queries
+  - `timeline-query` now defaults to point-only upcoming queries
+  - shared query logic now only enables overlap-aware running-range filtering when `ausstellung` is actually in scope
+  - normal event/tour pages no longer pay the heavy exhibition-overlap query cost by default
+
+- Restored front-page file authority by deleting the live `wp_template` override after syncing current content back to `themes/industriesalon/templates/front-page.html`.
+- Reworked front-page discovery CTAs:
+  - `In kürzen` cards now use `Weiter` arrow links
+  - `Projekte` / `Über uns` media-text CTAs now use `Weiter` text links aligned to the microblock edge
+- Added a semantic accent scheme layer for the active theme:
+  - wrapper classes `.iss-scheme-red|blue|green|yellow|brown`
+  - shared default accent surfaces now read from `--iss-accent`
+- Documented scheme usage and default CTA guidance in `themes/industriesalon/style.css`.
+- Refactored reusable Industriesalon patterns toward a common CTA/color-switch model:
+  - generic discovery CTAs now default to `Mehr` arrow links
+  - fixed decorative red/yellow modifiers were removed from generic reusable patterns where they blocked wrapper-based scheme switching
+  - explicit request/inquiry actions remain buttons
+- Updated plugin discovery CTA defaults:
+  - `plugins/iss-fuehrungen/includes/template-tags.php` now outputs `Mehr`
+  - `plugins/v1/saas-api/iss-timeline` default CTA label/placeholder now uses `Mehr`
+- Committed pre-existing deletions under `plugins/v1/saas-api` and `plugins/v1/saas-api-v1.zip` as part of the user-requested `commit all` snapshot.
+
+## 2026-04-26
+- Replaced front-page `Projekte` Custom HTML/PNG microblock icons with theme SVG mask icons in `themes/industriesalon/templates/front-page.html`.
+- Applied the same icon cleanup to the front-page `Über uns` media-text section.
+- Refactored both front-page media-text sections to an overlay variant using `iss-media-text--overlay-heading`:
+  - moved heading blocks inside `.iss-media-text__media`
+  - added scoped admin/reuse comments in `themes/industriesalon/assets/css/patterns.css`
+- Updated overlay media-card styling in `themes/industriesalon/assets/css/patterns.css`:
+  - full-bleed image fill inside the card
+  - shared hero/card gradient via `--iss-hero-overlay`
+  - fixed rounded-corner clipping across card, overlay, figure, and image
+  - disabled pointer capture on overlay heading to avoid blocking header/menu clicks
+- Reverted temporary muted-red theme token changes after request.
+- Repeatedly diagnosed and removed Gutenberg-created DB template overrides that were taking precedence over theme files:
+  - removed `wp_template` `front-page` overrides
+  - removed `wp_template_part` `header` overrides
+- Synced the current live front-page DB template content back into `themes/industriesalon/templates/front-page.html` so user text corrections are preserved on disk.
+- Normalized malformed recovered icon markup while syncing the live front-page template back to disk.
+
+## 2026-04-25
+- Committed full repository snapshot state as `6a95f9a` (`chore: snapshot full repository state`).
+- Implemented multi-panel off-canvas header menu in active theme `industriesalon` (reference-inspired):
+  - tab switcher panels: `Navigation`, `Kalender`, `Info`, `Suche`
+  - updated files:
+    - `themes/industriesalon/parts/header.html`
+    - `themes/industriesalon/assets/js/header.js`
+    - `themes/industriesalon/assets/css/patterns.css`
+  - committed as `3e20381` (`feat(theme): add multi-panel off-canvas header menu`)
+- Refactored `industriesalon-schoeneweide-register` to server-rendered PHP partial layout with JS enhancement only.
+- Switched block registration to plugin-root `block.json` and completed block attributes/supports metadata.
+- Removed legacy iframe/app-shell dependency by deleting:
+  - `assets/register-app.html`
+  - `assets/js/register-frontend.js`
+  - `assets/css/register-shell.css`
+- Added reusable render helpers for featured cards, places cards, then-now cards, and local marker map:
+  - `includes/render-register-featured.php`
+  - `includes/render-register-list.php`
+  - `includes/render-register-map.php`
+- Rewrote `assets/js/register-frontend-app.js` to use only local embedded source payload for places/filtering/tabs/detail/research/map rendering.
+- Kept feedback submit endpoint and updated backend validation for image contributions (allow `image_attachment_id` or `source_url`, with rights confirmation).
+- Expanded mapped place payload fields (`operator`, `developer`, `tenant`, `source_links`) for research/detail usage.
+- Created/updated register test page at `http://192.168.2.31:8082/register-test/` (ID `12940`).
+- Synced repository with remote and applied a follow-up rollback to skip the risky theme runtime bundle (`functions.php` + injected filter helper) while keeping safe plugin/CSS updates.
+- Added post layout selector for Gutenberg posts via `_iss_post_layout` meta (`standard`, `image`, `short`) and frontend body classes.
+- Implemented single-post layout variants in theme CSS:
+  - `standard`: hero image stays caged in container,
+  - `image`: full-width hero with explicit viewport cap (prevents >100vh growth),
+  - `short`: compact title/content with hidden large hero.
+- Improved single-post content typography/media behavior in `patterns.css` (headings, lists, figures, captions, quotes, tables, responsive alignment handling).
+- Purged database template overrides for active theme (`front-page`, `hero-page`, `single`) so disk templates are authoritative.
+- Removed local SQL dump copies (`backup.sql`, `db_2026-04-06_10-36.sql`, `backups/db_*.sql`) while leaving live DB volume data untouched.
+
+## 2026-04-24
+- Refactored runtime program stack to CPT-first rendering in `iss-programm`.
+- Removed stale legacy dynamic block/runtime code from `saas-api`.
+- Fixed calendar/timeline source conflicts by enforcing linked-content mapping persistence.
+- Timeline mapping save now updates series map + source map and propagates links across series entries.
+- Slot/title output now prefers linked content and exposes `content_url` for consumers.
+- Removed redirect-based workaround; behavior now depends on stable CPT mapping.
+
+## 2026-05-11
+- Refactored the Schöneweide register/atlas model from single-role/single-era bias toward explicit historical phases plus present-day status/use:
+  - added `current_status` and `current_use_type` editor fields
+  - synced `register_current_status` / `register_current_use_type` public taxonomies
+  - extended register entity, service, REST, and atlas contracts with present-state labels and explicit era names
+- Reworked the public Schöneweide atlas and place popup:
+  - public filters now use `Epochen`, `Heutige Situation`, `Nutzung heute`
+  - popup now leads with structured facts instead of generic prose
+- Added single-place context rendering via `iss/register-place-context` and updated `single-register_place.html` to reuse atlas-era/present-state logic instead of legacy status/role terms.
+- Curated key Schöneweide places directly in WordPress content:
+  - `Spreehöfe / ADMOS`
+  - `Behrensbau`
+  - `Rathenau-Hallen`
+  - `Bärenquell`
+  - `BAE`
+  - `Funkhaus`
+  - `Dokumentationszentrum NS-Zwangsarbeit`
+  - `FEZ`
+  - `Behrens-Ufer`
+- Completed a corpus-wide normalization pass for all `register_place` entries so every place now has:
+  - `history_short`
+  - `history_long`
+  - `current_status`
+  - `current_use_type`
+  - explicit `atlas_era`
+- Improved Wikimedia image suggestion scoring for dense urban addresses by weighting house-number/street matches more strongly and penalizing mismatched nearby streets.
+- Adjusted the Schöneweide publication reading loop:
+  - chapter-end atlas return link
+  - corrected sticky publication-nav scroll offset
+- Refactored `single-register_place.html` from a stacked dossier layout into a more public text-first place page.
+- Fixed a malformed place template markup regression that had duplicated content before and after the footer on single place pages.

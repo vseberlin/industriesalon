@@ -1,0 +1,694 @@
+[
+  {
+    "id": "17960",
+    "name": "Industriesalon Schöneweide /",
+    "lng": 13.5185113,
+    "lat": 52.4604688,
+    "x": 3887,
+    "y": 2029,
+    "xNorm": 0.485837,
+    "yNorm": 0.434685
+  },
+  {
+    "id": "17966",
+    "name": "Ehemalige DDR-Poliklinik Reinbeckstraße 4–8",
+    "lng": 13.5187371,
+    "lat": 52.4609672,
+    "x": 3909,
+    "y": 1947,
+    "xNorm": 0.488646,
+    "yNorm": 0.417246
+  },
+  {
+    "id": "17969",
+    "name": "Unter der Kranbahn / Platz am Kaisersteg",
+    "lng": 13.520265,
+    "lat": 52.460819,
+    "x": 4061,
+    "y": 1971,
+    "xNorm": 0.507649,
+    "yNorm": 0.422431
+  },
+  {
+    "id": "17970",
+    "name": "Wilhelminenhofstraße 78 / Umspannwerk",
+    "lng": 13.5210262,
+    "lat": 52.4599804,
+    "x": 4137,
+    "y": 2108,
+    "xNorm": 0.517117,
+    "yNorm": 0.451775
+  },
+  {
+    "id": "17971",
+    "name": "Wilhelminenhofstraße 77 / Kraftwerk Oberspree",
+    "lng": 13.5245066,
+    "lat": 52.4591546,
+    "x": 4483,
+    "y": 2243,
+    "xNorm": 0.560406,
+    "yNorm": 0.48067
+  },
+  {
+    "id": "17972",
+    "name": "Mathildenstraße / AEG-Rüstungsproduktion",
+    "lng": 13.5260097,
+    "lat": 52.4595736,
+    "x": 4633,
+    "y": 2175,
+    "xNorm": 0.579101,
+    "yNorm": 0.466009
+  },
+  {
+    "id": "17973",
+    "name": "Wilhelminenhofstraße / Rathenaustraße (KWO)",
+    "lng": 13.5324307,
+    "lat": 52.461739,
+    "x": 5272,
+    "y": 1821,
+    "xNorm": 0.658964,
+    "yNorm": 0.390239
+  },
+  {
+    "id": "17974",
+    "name": "Wilhelminenhofstraße 76 / Gedenkort für NS-Opfer am KWO",
+    "lng": 13.5287291,
+    "lat": 52.456553,
+    "x": 4903,
+    "y": 2668,
+    "xNorm": 0.612924,
+    "yNorm": 0.571698
+  },
+  {
+    "id": "17975",
+    "name": "Wilhelminenhofstraße 66/67 und 68/69",
+    "lng": 13.532365,
+    "lat": 52.455457,
+    "x": 5265,
+    "y": 2847,
+    "xNorm": 0.658147,
+    "yNorm": 0.610044
+  },
+  {
+    "id": "17976",
+    "name": "Ostendstraße 1-5 / Behrensbau",
+    "lng": 13.5295733,
+    "lat": 52.4567117,
+    "x": 4987,
+    "y": 2642,
+    "xNorm": 0.623424,
+    "yNorm": 0.566145
+  },
+  {
+    "id": "01",
+    "name": "Behrens-Ufer (BE-U)",
+    "lng": 13.5138295,
+    "lat": 52.4630607,
+    "x": 3421,
+    "y": 1605,
+    "xNorm": 0.427606,
+    "yNorm": 0.343989
+  },
+  {
+    "id": "02",
+    "name": "Funkytown (Trockland)",
+    "lng": 13.5080944,
+    "lat": 52.4641616,
+    "x": 2850,
+    "y": 1426,
+    "xNorm": 0.356274,
+    "yNorm": 0.305464
+  },
+  {
+    "id": "03",
+    "name": "Wilhelmine (Trockland)",
+    "lng": 13.5258164,
+    "lat": 52.4587783,
+    "x": 4614,
+    "y": 2305,
+    "xNorm": 0.576697,
+    "yNorm": 0.493837
+  },
+  {
+    "id": "04",
+    "name": "Funkhaus Nalepastraße",
+    "lng": 13.5030369,
+    "lat": 52.4699677,
+    "x": 2347,
+    "y": 477,
+    "xNorm": 0.293369,
+    "yNorm": 0.102271
+  },
+  {
+    "id": "05",
+    "post_id": "12869",
+    "name": "Rathenau-Hallen / BaseCamp Campus",
+    "lng": 13.5164664,
+    "lat": 52.4611526,
+    "x": 3683,
+    "y": 1917,
+    "xNorm": 0.460403,
+    "yNorm": 0.410758
+  },
+  {
+    "id": "06",
+    "name": "Rathenau-Hallen-Komplex / Urban Banks Berlin",
+    "lng": 13.5164664,
+    "lat": 52.4611526,
+    "x": 3683,
+    "y": 1917,
+    "xNorm": 0.460403,
+    "yNorm": 0.410758
+  },
+  {
+    "id": "07",
+    "name": "Rathenau Villa",
+    "lng": 13.5276733,
+    "lat": 52.4571175,
+    "x": 4798,
+    "y": 2576,
+    "xNorm": 0.599792,
+    "yNorm": 0.551947
+  },
+  {
+    "id": "08",
+    "name": "Wilms / BDK Kabel",
+    "lng": 13.5258164,
+    "lat": 52.4587783,
+    "x": 4614,
+    "y": 2305,
+    "xNorm": 0.576697,
+    "yNorm": 0.493837
+  },
+  {
+    "id": "09",
+    "name": "BAE Batterien GmbH",
+    "lng": 13.5086735,
+    "lat": 52.4636414,
+    "x": 2908,
+    "y": 1511,
+    "xNorm": 0.363476,
+    "yNorm": 0.323668
+  },
+  {
+    "id": "10",
+    "name": "Leuchtenfabrik (Frister)",
+    "lng": 13.5225475,
+    "lat": 52.4603596,
+    "x": 4288,
+    "y": 2047,
+    "xNorm": 0.536039,
+    "yNorm": 0.438507
+  },
+  {
+    "id": "11",
+    "post_id": "12875",
+    "name": "Bärenquell-Brauerei",
+    "lng": 13.5052662,
+    "lat": 52.4599968,
+    "x": 2569,
+    "y": 2106,
+    "xNorm": 0.321097,
+    "yNorm": 0.451201
+  },
+  {
+    "id": "12",
+    "name": "MaHalla Berlin",
+    "lng": 13.5258164,
+    "lat": 52.4587783,
+    "x": 4614,
+    "y": 2305,
+    "xNorm": 0.576697,
+    "yNorm": 0.493837
+  },
+  {
+    "id": "13",
+    "name": "Stiftung Reinbeckhallen",
+    "lng": 13.5188859,
+    "lat": 52.4608803,
+    "x": 3924,
+    "y": 1961,
+    "xNorm": 0.490496,
+    "yNorm": 0.420287
+  },
+  {
+    "id": "14",
+    "name": "Spreehalle",
+    "lng": 13.5188859,
+    "lat": 52.4608803,
+    "x": 3924,
+    "y": 1961,
+    "xNorm": 0.490496,
+    "yNorm": 0.420287
+  },
+  {
+    "id": "15",
+    "name": "KAOS Berlin",
+    "lng": 13.5089234,
+    "lat": 52.4633719,
+    "x": 2933,
+    "y": 1555,
+    "xNorm": 0.366584,
+    "yNorm": 0.333099
+  },
+  {
+    "id": "17",
+    "name": "Spreehöfe / ADMOS",
+    "lng": 13.5258164,
+    "lat": 52.4587783,
+    "x": 4614,
+    "y": 2305,
+    "xNorm": 0.576697,
+    "yNorm": 0.493837
+  },
+  {
+    "id": "18",
+    "name": "HTW Campus",
+    "lng": 13.5253262,
+    "lat": 52.4550432,
+    "x": 4565,
+    "y": 2915,
+    "xNorm": 0.5706,
+    "yNorm": 0.624522
+  },
+  {
+    "id": "19",
+    "name": "First Sensor AG (TE Connectivity)",
+    "lng": 13.5274806,
+    "lat": 52.4548649,
+    "x": 4779,
+    "y": 2944,
+    "xNorm": 0.597396,
+    "yNorm": 0.63076
+  },
+  {
+    "id": "20",
+    "name": "Rolls-Royce Solutions Berlin",
+    "lng": 13.5234762,
+    "lat": 52.4624563,
+    "x": 4381,
+    "y": 1704,
+    "xNorm": 0.54759,
+    "yNorm": 0.365139
+  },
+  {
+    "id": "21",
+    "name": "Berliner Glasfaserkabel GmbH",
+    "lng": 13.5258164,
+    "lat": 52.4587783,
+    "x": 4614,
+    "y": 2305,
+    "xNorm": 0.576697,
+    "yNorm": 0.493837
+  },
+  {
+    "id": "22",
+    "name": "OBJECTS Manufacturing",
+    "lng": 13.5258164,
+    "lat": 52.4587783,
+    "x": 4614,
+    "y": 2305,
+    "xNorm": 0.576697,
+    "yNorm": 0.493837
+  },
+  {
+    "id": "23",
+    "name": "Skulpturengießerei Knaak",
+    "lng": 13.5258164,
+    "lat": 52.4587783,
+    "x": 4614,
+    "y": 2305,
+    "xNorm": 0.576697,
+    "yNorm": 0.493837
+  },
+  {
+    "id": "24",
+    "name": "SPREEPOLIS Boardinghaus",
+    "lng": 13.5234762,
+    "lat": 52.4624563,
+    "x": 4381,
+    "y": 1704,
+    "xNorm": 0.54759,
+    "yNorm": 0.365139
+  },
+  {
+    "id": "25",
+    "name": "89 Lighthouse",
+    "lng": 13.5332172,
+    "lat": 52.4528103,
+    "x": 5350,
+    "y": 3279,
+    "xNorm": 0.668746,
+    "yNorm": 0.702642
+  },
+  {
+    "id": "27",
+    "name": "BUWOG Weydenhof + Wohnwerk",
+    "lng": 13.5283605,
+    "lat": 52.4522754,
+    "x": 4867,
+    "y": 3367,
+    "xNorm": 0.60834,
+    "yNorm": 0.721356
+  },
+  {
+    "id": "28",
+    "name": "Lead Immobilien GmbH",
+    "lng": 13.5234762,
+    "lat": 52.4624563,
+    "x": 4381,
+    "y": 1704,
+    "xNorm": 0.54759,
+    "yNorm": 0.365139
+  },
+  {
+    "id": "29",
+    "name": "Zentrum Schöneweide",
+    "lng": 13.5079245,
+    "lat": 52.4570866,
+    "x": 2833,
+    "y": 2581,
+    "xNorm": 0.35416,
+    "yNorm": 0.553028
+  },
+  {
+    "id": "31",
+    "name": "XTRO Ateliers",
+    "lng": 13.5163098,
+    "lat": 52.4608647,
+    "x": 3668,
+    "y": 1964,
+    "xNorm": 0.458455,
+    "yNorm": 0.420832
+  },
+  {
+    "id": "32",
+    "name": "Novilla (Moving Poets Berlin)",
+    "lng": 13.5181738,
+    "lat": 52.4575425,
+    "x": 3853,
+    "y": 2507,
+    "xNorm": 0.481639,
+    "yNorm": 0.537077
+  },
+  {
+    "id": "33",
+    "name": "Würth (Niederlassung OSW)",
+    "lng": 13.5081402,
+    "lat": 52.4630302,
+    "x": 2855,
+    "y": 1610,
+    "xNorm": 0.356843,
+    "yNorm": 0.345056
+  },
+  {
+    "id": "34",
+    "name": "DAS FUTTERHAUS Berlin-Schöneweide",
+    "lng": 13.5082586,
+    "lat": 52.4631904,
+    "x": 2867,
+    "y": 1584,
+    "xNorm": 0.358316,
+    "yNorm": 0.33945
+  },
+  {
+    "id": "35",
+    "name": "Kino Spreehöfe",
+    "lng": 13.5121795,
+    "lat": 52.4620593,
+    "x": 3257,
+    "y": 1769,
+    "xNorm": 0.407083,
+    "yNorm": 0.379031
+  },
+  {
+    "id": "36",
+    "name": "Theaterhaus Berlin Schöneweide",
+    "lng": 13.5201453,
+    "lat": 52.4541193,
+    "x": 4049,
+    "y": 3066,
+    "xNorm": 0.50616,
+    "yNorm": 0.656846
+  },
+  {
+    "id": "37",
+    "name": "Zeitlose Kunst",
+    "lng": 13.5090923,
+    "lat": 52.4553601,
+    "x": 2949,
+    "y": 2863,
+    "xNorm": 0.368685,
+    "yNorm": 0.613435
+  },
+  {
+    "id": "38",
+    "name": "Dokumentationszentrum NS-Zwangsarbeit",
+    "lng": 13.5187979,
+    "lat": 52.4526094,
+    "x": 3915,
+    "y": 3312,
+    "xNorm": 0.489402,
+    "yNorm": 0.709671
+  },
+  {
+    "id": "39",
+    "name": "Spreeblau Apartments",
+    "lng": 13.5279103,
+    "lat": 52.452519,
+    "x": 4822,
+    "y": 3327,
+    "xNorm": 0.60274,
+    "yNorm": 0.712834
+  },
+  {
+    "id": "40",
+    "name": "Kulturzentrum Schöneweide (ehem. Ratz-Fatz)",
+    "lng": 13.532099,
+    "lat": 52.451991,
+    "x": 5239,
+    "y": 3413,
+    "xNorm": 0.654838,
+    "yNorm": 0.731305
+  },
+  {
+    "id": "42",
+    "name": "Mellowpark",
+    "lng": 13.5594195,
+    "lat": 52.4553237,
+    "x": 7957,
+    "y": 2869,
+    "xNorm": 0.994646,
+    "yNorm": 0.614708
+  },
+  {
+    "id": "43",
+    "name": "Freie Waldorfschule Berlin-Südost",
+    "lng": 13.5340678,
+    "lat": 52.4525132,
+    "x": 5435,
+    "y": 3328,
+    "xNorm": 0.679326,
+    "yNorm": 0.713036
+  },
+  {
+    "id": "44",
+    "name": "Kulturraum Wilhelminenhofstr. 90a (Land Berlin)",
+    "lng": 13.5107338,
+    "lat": 52.4629084,
+    "x": 3113,
+    "y": 1630,
+    "xNorm": 0.389102,
+    "yNorm": 0.349319
+  },
+  {
+    "id": "45",
+    "name": "Gewerbehof Wilhelminenhofstr. 92 (Önüc / Kumus)",
+    "lng": 13.5092577,
+    "lat": 52.462052,
+    "x": 2966,
+    "y": 1770,
+    "xNorm": 0.370742,
+    "yNorm": 0.379286
+  },
+  {
+    "id": "46",
+    "name": "KAOS 93 / Kunst- und Gewerbehof (Genossenschaft i.Gr.)",
+    "lng": 13.5089234,
+    "lat": 52.4633719,
+    "x": 2933,
+    "y": 1555,
+    "xNorm": 0.366584,
+    "yNorm": 0.333099
+  },
+  {
+    "id": "47",
+    "name": "Wilhelminenhofstr. 91 (Eigentümer unbekannt)",
+    "lng": 13.5102894,
+    "lat": 52.4628803,
+    "x": 3069,
+    "y": 1635,
+    "xNorm": 0.383575,
+    "yNorm": 0.350302
+  },
+  {
+    "id": "48",
+    "name": "Spreepark (Grün Berlin)",
+    "lng": 13.4911953,
+    "lat": 52.484234,
+    "x": 1169,
+    "y": -1853,
+    "xNorm": 0.146086,
+    "yNorm": -0.397112
+  },
+  {
+    "id": "49",
+    "name": "Atelierhaus Reinbeckstraße (Bryan Adams)",
+    "lng": 13.5176174,
+    "lat": 52.4599264,
+    "x": 3798,
+    "y": 2117,
+    "xNorm": 0.474719,
+    "yNorm": 0.453665
+  },
+  {
+    "id": "50",
+    "name": "Atelierhaus 79 (GSE gGmbH)",
+    "lng": 13.5163098,
+    "lat": 52.4608647,
+    "x": 3668,
+    "y": 1964,
+    "xNorm": 0.458455,
+    "yNorm": 0.420832
+  },
+  {
+    "id": "52",
+    "name": "Handwerkerhof Nalepastr. 176 (geplant)",
+    "lng": 13.5042429,
+    "lat": 52.4685689,
+    "x": 2467,
+    "y": 706,
+    "xNorm": 0.308369,
+    "yNorm": 0.151227
+  },
+  {
+    "id": "57",
+    "name": "TGS Spreeknie (Technologie- und Gründerzentrum)",
+    "lng": 13.5322128,
+    "lat": 52.4580021,
+    "x": 5250,
+    "y": 2431,
+    "xNorm": 0.656254,
+    "yNorm": 0.520996
+  },
+  {
+    "id": "58",
+    "name": "Electropolis Berlin (Industriemuseum-Projekt)",
+    "lng": 13.5188859,
+    "lat": 52.4608803,
+    "x": 3924,
+    "y": 1961,
+    "xNorm": 0.490496,
+    "yNorm": 0.420287
+  },
+  {
+    "id": "59",
+    "name": "botspot GmbH (3D-Scanning)",
+    "lng": 13.5383876,
+    "lat": 52.4575605,
+    "x": 5864,
+    "y": 2504,
+    "xNorm": 0.733055,
+    "yNorm": 0.536447
+  },
+  {
+    "id": "61",
+    "name": "TGS Technologie- und Gründerzentrum Schöneweide",
+    "lng": 13.5322128,
+    "lat": 52.4580021,
+    "x": 5250,
+    "y": 2431,
+    "xNorm": 0.656254,
+    "yNorm": 0.520996
+  },
+  {
+    "id": "62",
+    "name": "BTB GmbH (Blockheizkraftwerk)",
+    "lng": 13.530583,
+    "lat": 52.4460399,
+    "x": 5088,
+    "y": 4385,
+    "xNorm": 0.635983,
+    "yNorm": 0.939488
+  },
+  {
+    "id": "63",
+    "name": "1. FC Union Berlin",
+    "lng": 13.5680789,
+    "lat": 52.4569741,
+    "x": 8819,
+    "y": 2599,
+    "xNorm": 1.10235,
+    "yNorm": 0.556964
+  },
+  {
+    "id": "64",
+    "name": "FEZ Berlin (Kinder-, Jugend- und Familienzentrum)",
+    "lng": 13.5486588,
+    "lat": 52.4610303,
+    "x": 6886,
+    "y": 1937,
+    "xNorm": 0.860806,
+    "yNorm": 0.415038
+  },
+  {
+    "id": "65",
+    "name": "ADMOS Immobilien AG",
+    "lng": 13.5234762,
+    "lat": 52.4624563,
+    "x": 4381,
+    "y": 1704,
+    "xNorm": 0.54759,
+    "yNorm": 0.365139
+  },
+  {
+    "id": "66",
+    "name": "Stephanus gGmbH Betriebsstätte Wilhelminenhof",
+    "lng": 13.527566,
+    "lat": 52.457713,
+    "x": 4788,
+    "y": 2479,
+    "xNorm": 0.598458,
+    "yNorm": 0.531111
+  },
+  {
+    "id": "67",
+    "name": "ibis Styles Hotel Berlin Schöneweide",
+    "lng": 13.5234762,
+    "lat": 52.4624563,
+    "x": 4381,
+    "y": 1704,
+    "xNorm": 0.54759,
+    "yNorm": 0.365139
+  },
+  {
+    "id": "68",
+    "name": "kister scheithauer gross (ksg) Architekten",
+    "lng": 13.5234762,
+    "lat": 52.4624563,
+    "x": 4381,
+    "y": 1704,
+    "xNorm": 0.54759,
+    "yNorm": 0.365139
+  },
+  {
+    "id": "69",
+    "name": "Ateliergemeinschaft G59/G60 (W-Str. 83-85)",
+    "lng": 13.5163098,
+    "lat": 52.4608647,
+    "x": 3668,
+    "y": 1964,
+    "xNorm": 0.458455,
+    "yNorm": 0.420832
+  }
+]

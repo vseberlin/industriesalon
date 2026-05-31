@@ -1,0 +1,13 @@
+{
+  "$schema": "https://schemas.wp.org/trunk/block.json",
+  "apiVersion": 3,
+  "name": "iss/tour-offer-catalog",
+  "title": "Tour Offer Catalog",
+  "category": "widgets",
+  "icon": "excerpt-view",
+  "description": "Grouped text-first catalog of all published tour offers.",
+  "editorScript": "file:./index.js",
+  "supports": {
+    "html": false
+  }
+}

@@ -1,0 +1,76 @@
+.iss-front-banner-slot .wp-block-industriesalon-notice-banner.iss-notice-skin--atlas .iss-hero-note {
+  display: block;
+  width: 100%;
+  padding: 1.25rem 1.4rem 1.35rem;
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  background: rgba(24, 21, 19, 0.54);
+  color: var(--iss-white, #f9f9fa);
+  text-align: left;
+  backdrop-filter: blur(8px);
+}
+
+.iss-front-banner-slot .wp-block-industriesalon-notice-banner.iss-notice-skin--atlas .iss-hero-note__marker {
+  display: none;
+}
+
+.iss-front-banner-slot .wp-block-industriesalon-notice-banner.iss-notice-skin--atlas .iss-hero-note__kicker {
+  margin: 0;
+  color: rgba(255, 255, 255, 0.78);
+  font-size: 0.75rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  line-height: 1.2;
+  text-transform: uppercase;
+}
+
+.iss-front-banner-slot .wp-block-industriesalon-notice-banner.iss-notice-skin--atlas .iss-hero-note__title {
+  margin: 0;
+  color: inherit;
+  font-size: clamp(1.25rem, 1rem + 0.6vw, 1.8rem);
+  line-height: 1.12;
+}
+
+.iss-front-banner-slot .wp-block-industriesalon-notice-banner.iss-notice-skin--atlas .iss-hero-note__text {
+  margin-top: 0.75rem;
+}
+
+.iss-front-banner-slot .wp-block-industriesalon-notice-banner.iss-notice-skin--atlas .iss-hero-note__text,
+.iss-front-banner-slot .wp-block-industriesalon-notice-banner.iss-notice-skin--atlas .iss-hero-note__text p {
+  margin-bottom: 0;
+  color: rgba(255, 255, 255, 0.84);
+  line-height: 1.58;
+}
+
+.iss-front-banner-slot .wp-block-industriesalon-notice-banner.iss-notice-skin--atlas .iss-hero-note__link {
+  margin: 0.9rem 0 0;
+}
+
+.iss-front-banner-slot .wp-block-industriesalon-notice-banner.iss-notice-skin--atlas .iss-hero-note__link a {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  color: var(--iss-white, #f9f9fa);
+  font-weight: 600;
+  text-decoration: none;
+}
+
+.iss-front-banner-slot .wp-block-industriesalon-notice-banner.iss-notice-skin--atlas .iss-hero-note__link-icon {
+  color: var(--iss-accent, #e81d25);
+}
+
+.iss-front-banner-slot .wp-block-industriesalon-notice-banner.iss-notice-skin--atlas .iss-hero-note__link-text {
+  text-decoration: underline;
+  text-underline-offset: 0.16em;
+  text-decoration-thickness: 1px;
+}
+
+.iss-front-banner-slot .wp-block-industriesalon-notice-banner.iss-notice-skin--atlas .iss-hero-note__link a:hover,
+.iss-front-banner-slot .wp-block-industriesalon-notice-banner.iss-notice-skin--atlas .iss-hero-note__link a:focus-visible {
+  color: var(--iss-accent, #e81d25);
+}
+
+@media (max-width: 782px) {
+  .iss-front-banner-slot .wp-block-industriesalon-notice-banner.iss-notice-skin--atlas .iss-hero-note {
+    padding: 1rem 1.1rem 1.15rem;
+  }
+}

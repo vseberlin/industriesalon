@@ -1,0 +1,404 @@
+/* =====================================================================
+   FILE: page-salon-vermietung.css
+   ROLE: Salon-Vermietung landing page.
+   LOAD: only on /salon-vermietung/.
+   ===================================================================== */
+
+.iss-rental-page {
+  background: var(--iss-white);
+  color: var(--iss-black);
+  padding-top: 0;
+}
+
+.iss-rental-hero {
+  position: relative;
+}
+
+.iss-rental-page .iss-front-hero__inner-container,
+.iss-rental-page .wp-block-cover__inner-container,
+.iss-rental-hero .wp-block-cover__inner-container {
+  width: 100%;
+}
+
+.iss-rental-hero__inner {
+  display: flex;
+  align-items: flex-end;
+  min-height: 68vh;
+  padding-top: clamp(6rem, 10vh, 8rem);
+  padding-bottom: clamp(3rem, 7vh, 5rem);
+}
+
+.iss-rental-hero .iss-heading {
+  max-width: 56rem;
+}
+
+.iss-rental-hero__title,
+.iss-rental-hero__text {
+  color: var(--iss-white);
+}
+
+.iss-rental-hero__title {
+  max-width: 16ch;
+}
+
+.iss-rental-hero__text {
+  max-width: 44rem;
+  font-size: clamp(1.05rem, 1rem + 0.25vw, 1.2rem);
+  color: rgba(249, 249, 250, 0.9);
+}
+
+.iss-rental-hero__actions {
+  margin-top: 0.5rem;
+}
+
+.iss-rental-hero__secondary .wp-block-button__link {
+  border-color: rgba(249, 249, 250, 0.5);
+}
+
+.iss-rental-story {
+  padding-bottom: clamp(1.75rem, 3vw, 2.5rem);
+}
+
+.iss-rental-story__grid {
+  gap: clamp(1.5rem, 2vw, 3rem);
+}
+
+.iss-rental-intro__copy-col,
+.iss-rental-intro__facts-col,
+.iss-rental-story__content-col {
+  min-width: 0;
+}
+
+.iss-rental-intro__copy-col {
+  flex-basis: 60%;
+}
+
+.iss-rental-intro__facts-col,
+.iss-rental-story__content-col {
+  flex-basis: 40%;
+}
+
+.iss-rental-story__media-col {
+  min-width: 0;
+  flex-basis: 60%;
+}
+
+.iss-rental-story__image {
+  margin: 0;
+  height: 100%;
+}
+
+.iss-rental-story__image img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  min-height: 420px;
+  object-fit: cover;
+  border-radius: var(--iss-radius-lg);
+}
+
+.iss-rental-story__heading {
+  max-width: 36rem;
+}
+
+.iss-rental-section-heading {
+  margin-bottom: 1.5rem;
+}
+
+.iss-rental-occasions,
+.iss-rental-special {
+  padding-top: clamp(1.75rem, 3vw, 2.5rem);
+}
+
+.iss-rental-occasions {
+  padding-bottom: clamp(1.75rem, 3vw, 2.5rem);
+}
+
+.iss-rental-occasion-row,
+.iss-rental-feature-row {
+  gap: 0;
+  row-gap: 1.25rem;
+}
+
+.iss-rental-occasion-row > .wp-block-column,
+.iss-rental-feature-row > .wp-block-column {
+  margin-top: 0;
+}
+
+.iss-rental-occasion,
+.iss-rental-feature {
+  height: 100%;
+  padding: 0 1.25rem;
+  border-left: 1px solid var(--iss-border);
+}
+
+.iss-rental-occasion:first-child,
+.iss-rental-feature:first-child {
+  padding-left: 0;
+  border-left: 0;
+}
+
+.iss-rental-occasion::before,
+.iss-rental-feature::before {
+  content: "";
+  display: inline-block;
+  width: 1.25rem;
+  height: 1.25rem;
+  margin-bottom: 1rem;
+  color: var(--iss-accent);
+  background: currentColor;
+  mask-size: contain;
+  mask-repeat: no-repeat;
+  mask-position: center;
+}
+
+.iss-rental-occasion--award::before {
+  mask-image: url('/wp-content/themes/industriesalon/assets/icons/iss-award.svg');
+}
+
+.iss-rental-occasion--group::before {
+  mask-image: url('/wp-content/themes/industriesalon/assets/icons/iss-group.svg');
+}
+
+.iss-rental-occasion--archive::before {
+  mask-image: url('/wp-content/themes/industriesalon/assets/icons/iss-archive.svg');
+}
+
+.iss-rental-feature--location::before {
+  mask-image: url('/wp-content/themes/industriesalon/assets/icons/iss-location.svg');
+}
+
+.iss-rental-feature--roof::before {
+  mask-image: url('/wp-content/themes/industriesalon/assets/icons/iss-roof.svg');
+}
+
+.iss-rental-feature--info::before {
+  mask-image: url('/wp-content/themes/industriesalon/assets/icons/iss-info.svg');
+}
+
+.iss-rental-feature--clock::before {
+  mask-image: url('/wp-content/themes/industriesalon/assets/icons/iss-clock.svg');
+}
+
+.iss-rental-occasion__title,
+.iss-rental-feature__title {
+  margin-top: 0;
+  margin-bottom: 0.55rem;
+  font-size: clamp(1.15rem, 1rem + 0.35vw, 1.45rem);
+}
+
+.iss-rental-occasion__text,
+.iss-rental-feature__text {
+  margin: 0;
+  color: rgba(30, 30, 30, 0.8);
+}
+
+.iss-rental-gallery__grid {
+  margin-top: 0;
+}
+
+.iss-rental-qualities__media-col,
+.iss-rental-qualities__copy-col {
+  min-width: 0;
+}
+
+.iss-rental-qualities__media-col {
+  flex-basis: 42%;
+}
+
+.iss-rental-qualities__copy-col {
+  flex-basis: 58%;
+}
+
+.iss-rental-cta__copy-col,
+.iss-rental-cta__contact-col {
+  min-width: 0;
+}
+
+.iss-rental-cta__copy-col {
+  flex-basis: 62%;
+}
+
+.iss-rental-cta__contact-col {
+  flex-basis: 38%;
+}
+
+.iss-rental-gallery__grid .wp-block-image {
+  border-radius: var(--iss-radius-md);
+  overflow: hidden;
+}
+
+.iss-rental-gallery__grid img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  min-height: 15rem;
+  object-fit: cover;
+}
+
+.iss-rental-inquiry__grid {
+  gap: clamp(1.5rem, 2vw, 2.5rem);
+  align-items: stretch;
+}
+
+.iss-rental-inquiry__cta-col {
+  min-width: 0;
+  flex-basis: 42%;
+}
+
+.iss-rental-inquiry__overview-col {
+  min-width: 0;
+  flex-basis: 58%;
+}
+
+.iss-rental-inquiry__cta {
+  height: 100%;
+  padding: clamp(1.75rem, 3vw, 3rem);
+  border-radius: var(--iss-radius-lg);
+  background: #111;
+  color: var(--iss-white);
+}
+
+.iss-rental-inquiry__title {
+  margin-top: 0;
+  margin-bottom: 1rem;
+  color: var(--iss-white);
+}
+
+.iss-rental-inquiry__text {
+  margin-top: 0;
+  margin-bottom: 1.5rem;
+  color: rgba(249, 249, 250, 0.86);
+}
+
+.iss-rental-inquiry__overview {
+  height: 100%;
+  padding: clamp(1.75rem, 3vw, 3rem);
+  border: 1px solid var(--iss-border);
+  border-radius: var(--iss-radius-lg);
+  background: linear-gradient(180deg, #fffdf9 0%, #f7f3ec 100%);
+}
+
+.iss-rental-inquiry__overview-grid {
+  gap: clamp(1rem, 1.8vw, 2rem);
+  align-items: stretch;
+}
+
+.iss-rental-inquiry__overview-copy {
+  min-width: 0;
+  flex-basis: 58%;
+}
+
+.iss-rental-inquiry__overview-figure {
+  min-width: 0;
+  flex-basis: 42%;
+}
+
+.iss-rental-inquiry__overview-copy,
+.iss-rental-inquiry__overview-figure {
+  margin-top: 0;
+}
+
+.iss-rental-overview-list {
+  display: grid;
+  gap: 0.75rem;
+  margin: 0;
+  padding-left: 1.2rem;
+}
+
+.iss-rental-overview-list li::marker {
+  color: var(--iss-accent);
+}
+
+.iss-rental-inquiry__note {
+  margin-top: 1.5rem;
+  margin-bottom: 0;
+  color: rgba(30, 30, 30, 0.72);
+}
+
+.iss-rental-inquiry__illustration {
+  margin-top: 0;
+  margin-bottom: 0;
+  margin-left: auto;
+  max-width: 100%;
+}
+
+.iss-rental-inquiry__illustration img {
+  display: block;
+  width: 100%;
+  height: auto;
+}
+
+@media (max-width: 1024px) {
+  .iss-rental-hero__inner {
+    min-height: 62vh;
+  }
+
+  .iss-rental-hero__title {
+    max-width: 18ch;
+  }
+
+  .iss-rental-story__image img {
+    min-height: 320px;
+  }
+
+  .iss-rental-gallery__grid img {
+    min-height: 12rem;
+  }
+
+  .iss-rental-inquiry__overview-grid {
+    gap: 1rem;
+  }
+}
+
+@media (max-width: 781px) {
+  .iss-rental-hero {
+    min-height: 60vh;
+  }
+
+  .iss-rental-hero__inner {
+    min-height: 60vh;
+    align-items: flex-end;
+    padding-top: 6.5rem;
+    padding-bottom: 2.5rem;
+  }
+
+  .iss-rental-hero__title {
+    max-width: 100%;
+  }
+
+  .iss-rental-occasion,
+  .iss-rental-feature {
+    padding-left: 0;
+    padding-top: 1.25rem;
+    border-left: 0;
+    border-top: 1px solid var(--iss-border);
+  }
+
+  .iss-rental-occasion:first-child,
+  .iss-rental-feature:first-child {
+    padding-top: 0;
+    border-top: 0;
+  }
+
+  .iss-rental-story__image img {
+    min-height: 260px;
+  }
+
+  .iss-rental-gallery__grid {
+    gap: 0.75rem;
+  }
+
+  .iss-rental-gallery__grid img {
+    min-height: 10rem;
+  }
+
+  .iss-rental-inquiry__overview-grid {
+    gap: 1.25rem;
+  }
+
+  .iss-rental-inquiry__illustration {
+    margin-left: 0;
+    max-width: min(22rem, 100%);
+  }
+}

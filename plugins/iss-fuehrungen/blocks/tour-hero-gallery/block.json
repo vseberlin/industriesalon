@@ -1,0 +1,19 @@
+{
+  "$schema": "https://schemas.wp.org/trunk/block.json",
+  "apiVersion": 3,
+  "name": "iss/tour-hero-gallery",
+  "title": "Tour Hero Gallery",
+  "category": "widgets",
+  "icon": "images-alt2",
+  "description": "Thumbnail gallery for swapping the hero image.",
+  "editorScript": "file:./index.js",
+  "attributes": {
+    "postId": {
+      "type": "number",
+      "default": 0
+    }
+  },
+  "supports": {
+    "html": false
+  }
+}

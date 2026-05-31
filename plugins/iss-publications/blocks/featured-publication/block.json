@@ -1,0 +1,18 @@
+{
+  "apiVersion": 3,
+  "name": "iss/featured-publication",
+  "title": "ISS Featured Publication",
+  "category": "widgets",
+  "icon": "book-alt",
+  "description": "Server-rendered featured publication block with editor preview.",
+  "editorScript": "file:./index.js",
+  "attributes": {
+    "postId": {
+      "type": "number",
+      "default": 0
+    }
+  },
+  "supports": {
+    "html": false
+  }
+}

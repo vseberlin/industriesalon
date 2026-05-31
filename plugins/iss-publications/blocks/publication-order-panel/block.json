@@ -1,0 +1,17 @@
+{
+  "apiVersion": 3,
+  "name": "iss/publication-order-panel",
+  "title": "ISS Publication Order Panel",
+  "category": "widgets",
+  "icon": "cart",
+  "description": "Server-rendered order panel for a publication.",
+  "attributes": {
+    "postId": {
+      "type": "number",
+      "default": 0
+    }
+  },
+  "supports": {
+    "html": false
+  }
+}

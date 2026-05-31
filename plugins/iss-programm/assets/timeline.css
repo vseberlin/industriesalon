@@ -1,0 +1,281 @@
+/*
+ * Timeline structural base styles.
+ * Keeps layout, spacing, and interaction scaffolding only.
+ * Visual skin belongs to the active theme.
+ */
+
+.iss-timeline-query.is-loading [data-timeline-query-results] {
+  opacity: 0.55;
+  transition: opacity 0.2s ease;
+}
+
+.iss-timeline__section {
+  margin-top: 2.25rem;
+}
+
+.iss-timeline__section-title {
+  margin: 0 0 0.9rem;
+}
+
+.iss-timeline__month-label {
+  margin: 1rem 0 0.85rem;
+}
+
+.iss-timeline__year {
+  margin-top: 1.5rem;
+}
+
+.iss-timeline__year-label {
+  margin: 0 0 0.75rem;
+}
+
+.iss-timeline__item {
+  display: grid;
+  grid-template-columns: minmax(5.5rem, 6.75rem) minmax(0, 1.45fr);
+  column-gap: clamp(1rem, 2.4vw, 2.25rem);
+  align-items: stretch;
+  padding: 1.55rem 0;
+}
+
+.iss-timeline__date,
+.iss-timeline__content,
+.iss-timeline__media {
+  min-width: 0;
+}
+
+.iss-timeline__item--has-media {
+  grid-template-columns: minmax(5.5rem, 6.75rem) minmax(0, 1.45fr) minmax(12rem, 18rem);
+}
+
+.iss-timeline__time {
+  margin-top: 0.35rem;
+}
+
+.iss-timeline__content {
+  display: flex;
+  flex-direction: column;
+  gap: 0.45rem;
+}
+
+.iss-timeline__kicker {
+  margin: 0;
+}
+
+.iss-timeline__title {
+  margin: 0;
+}
+
+.iss-timeline__title a {
+  color: inherit;
+  text-decoration: none;
+}
+
+.iss-timeline__summary {
+  margin-top: 0.35rem;
+}
+
+.iss-timeline__media {
+  align-self: stretch;
+  margin: 0;
+}
+
+.iss-timeline__media a,
+.iss-timeline__media img {
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+
+.iss-timeline__actions,
+.iss-timeline-card__actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.iss-timeline__actions {
+  margin-top: 1rem;
+}
+
+.iss-timeline__btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 2.9rem;
+  padding: 0.72rem 1.18rem 0.72rem 0.95rem;
+  text-decoration: none;
+}
+
+.iss-timeline__empty {
+  margin: 0.75rem 0;
+}
+
+.iss-timeline__footer {
+  margin-top: 1.35rem;
+  display: flex;
+  justify-content: center;
+}
+
+.iss-timeline__btn--bottom {
+  padding-inline: 1.35rem;
+}
+
+.iss-timeline__filters {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+  align-items: flex-end;
+  margin-top: 0.25rem;
+}
+
+.iss-timeline__presets {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.65rem;
+  margin: 1.5rem 0 1rem;
+}
+
+.iss-timeline__preset {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 2.7rem;
+  padding: 0.7rem 1rem;
+  margin: 0;
+  border: 0;
+  background: transparent;
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+
+.iss-timeline-query__meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem 1rem;
+  align-items: baseline;
+  margin: 0.85rem 0 0;
+}
+
+.iss-timeline-query__empty-note:empty {
+  display: none;
+}
+
+.iss-timeline-query__load-more {
+  margin-top: 1rem;
+  display: flex;
+  justify-content: center;
+}
+
+.iss-timeline__filter {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  min-width: 0;
+  margin: 0;
+  padding: 0;
+  border: 0;
+}
+
+.iss-timeline__choice-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.55rem;
+}
+
+.iss-timeline__choice {
+  position: relative;
+  display: inline-flex;
+}
+
+.iss-timeline__choice-input {
+  position: absolute;
+  inset: 0;
+  opacity: 0;
+  pointer-events: none;
+}
+
+.iss-timeline__choice-label {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 2.6rem;
+  padding: 0.5rem 0.95rem 0.5rem 0.8rem;
+}
+
+.iss-timeline__filter select,
+.iss-timeline__filter input,
+.iss-timeline__apply {
+  min-height: 2.75rem;
+  padding: 0.5rem 0.85rem;
+}
+
+.iss-timeline__filter select[multiple] {
+  min-height: 9.5rem;
+  padding-block: 0.6rem;
+}
+
+.iss-timeline__apply {
+  cursor: pointer;
+}
+
+.iss-timeline__filter-actions {
+  display: flex;
+  align-items: flex-end;
+  justify-content: flex-start;
+}
+
+.iss-timeline__calendar-bridge {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+  align-items: flex-end;
+  width: 100%;
+}
+
+.iss-timeline__filter--calendar {
+  min-width: min(100%, 13rem);
+}
+
+.iss-timeline-cards {
+  margin-top: 0.5rem;
+}
+
+.iss-timeline-card {
+  height: 100%;
+}
+
+.iss-timeline-card__actions {
+  margin-top: 0.25rem;
+}
+
+@media (max-width: 900px) {
+  .iss-timeline__item {
+    grid-template-columns: 1fr;
+    row-gap: 0.7rem;
+  }
+
+  .iss-timeline__item--has-media {
+    grid-template-columns: 1fr;
+  }
+
+  .iss-timeline__media img {
+    height: auto;
+    aspect-ratio: 16 / 10;
+    object-fit: cover;
+  }
+
+  .iss-timeline__calendar-bridge {
+    width: 100%;
+  }
+
+  .iss-timeline__filter--calendar {
+    min-width: 0;
+    width: 100%;
+  }
+
+  .iss-timeline__preset {
+    width: 100%;
+    justify-content: flex-start;
+  }
+}

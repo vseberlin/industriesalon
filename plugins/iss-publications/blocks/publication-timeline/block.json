@@ -1,0 +1,53 @@
+{
+  "$schema": "https://schemas.wp.org/trunk/block.json",
+  "apiVersion": 3,
+  "name": "iss/publication-timeline",
+  "title": "Publikations-Zeitleiste",
+  "category": "widgets",
+  "icon": "schedule",
+  "description": "Editor block for timeline publications with computed rail, epochs, and dated stations.",
+  "keywords": ["Publikation", "Zeitleiste", "Chronik"],
+  "supports": {
+    "html": false,
+    "multiple": false
+  },
+  "editorScript": "file:./index.js",
+  "attributes": {
+    "sourceNote": {
+      "type": "string",
+      "default": ""
+    },
+    "showSummaryStart": {
+      "type": "boolean",
+      "default": true
+    },
+    "showSummaryEnd": {
+      "type": "boolean",
+      "default": true
+    },
+    "showSummaryItems": {
+      "type": "boolean",
+      "default": true
+    },
+    "showSummaryEpochs": {
+      "type": "boolean",
+      "default": true
+    },
+    "summaryStartLabel": {
+      "type": "string",
+      "default": "Auftakt"
+    },
+    "summaryEndLabel": {
+      "type": "string",
+      "default": "Letzte Zäsur"
+    },
+    "summaryItemsLabel": {
+      "type": "string",
+      "default": "Stationen"
+    },
+    "summaryEpochsLabel": {
+      "type": "string",
+      "default": "Epochen"
+    }
+  }
+}

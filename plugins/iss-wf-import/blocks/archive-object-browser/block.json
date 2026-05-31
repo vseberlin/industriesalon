@@ -1,0 +1,90 @@
+{
+  "apiVersion": 3,
+  "name": "iss-wf-import/archive-object-browser",
+  "title": "ISS Archivobjekt-Browser",
+  "category": "widgets",
+  "icon": "filter",
+  "description": "Server-gerenderter Archivobjekt-Browser mit Suche, Taxonomie-Filtern und paginierten Ergebnissen.",
+  "editorScript": "file:./index.js",
+  "attributes": {
+    "defaultSource": {
+      "type": "string",
+      "default": ""
+    },
+    "lockSource": {
+      "type": "boolean",
+      "default": false
+    },
+    "defaultField": {
+      "type": "string",
+      "default": ""
+    },
+    "lockField": {
+      "type": "boolean",
+      "default": false
+    },
+    "showHero": {
+      "type": "boolean",
+      "default": true
+    },
+    "showStats": {
+      "type": "boolean",
+      "default": true
+    },
+    "showSourceFilter": {
+      "type": "boolean",
+      "default": true
+    },
+    "showContextFilter": {
+      "type": "boolean",
+      "default": true
+    },
+    "showDecadeFilter": {
+      "type": "boolean",
+      "default": true
+    },
+    "kicker": {
+      "type": "string",
+      "default": "Archiv"
+    },
+    "title": {
+      "type": "string",
+      "default": "Archivobjekte"
+    },
+    "introText": {
+      "type": "string",
+      "default": "Lokale Objektkopien, Findbuchfotos und technische Bestände mit Quellenbezug. Das größte Segment stammt aktuell aus museum-digital; Themenfelder und Objektfamilien werden schrittweise für editorische Zugänge ergänzt."
+    },
+    "quickKicker": {
+      "type": "string",
+      "default": "Einstiege"
+    },
+    "quickTitle": {
+      "type": "string",
+      "default": "Nachweise und strukturierte Zugänge"
+    },
+    "showSourceCards": {
+      "type": "boolean",
+      "default": true
+    },
+    "quickFamilySlugs": {
+      "type": "array",
+      "default": []
+    },
+    "discoveryTitle": {
+      "type": "string",
+      "default": "Weiterentdecken"
+    },
+    "discoveryLinks": {
+      "type": "array",
+      "default": []
+    },
+    "useCurrentUrl": {
+      "type": "boolean",
+      "default": false
+    }
+  },
+  "supports": {
+    "html": false
+  }
+}

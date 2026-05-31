@@ -1,0 +1,86 @@
+<?php
+
+if (!defined('ABSPATH')) {
+    exit;
+}
+
+function iss_register_get_theme_asset_url(string $relative_path): string
+{
+    $url = get_stylesheet_directory_uri() . $relative_path;
+
+    if (function_exists('industriesalon_make_relative_url')) {
+        return industriesalon_make_relative_url($url);
+    }
+
+    return $url;
+}
+
+add_action('init', function () {
+    $theme_dir = get_stylesheet_directory();
+    $leaflet_style_rel = '/assets/vendor/leaflet/leaflet.css';
+    $leaflet_style_abs = $theme_dir . $leaflet_style_rel;
+    if (file_exists($leaflet_style_abs)) {
+        wp_register_style(
+            'iss-register-schoneweide-atlas-leaflet',
+            iss_register_get_theme_asset_url($leaflet_style_rel),
+            [],
+            (string) filemtime($leaflet_style_abs)
+        );
+    }
+
+    $atlas_style_rel = '/assets/css/atlas-app.css';
+    $atlas_style_abs = $theme_dir . $atlas_style_rel;
+    if (file_exists($atlas_style_abs)) {
+        $atlas_style_deps = wp_style_is('iss-register-schoneweide-atlas-leaflet', 'registered')
+            ? ['iss-register-schoneweide-atlas-leaflet']
+            : [];
+
+        if (wp_style_is('industriesalon-overrides', 'registered')) {
+            $atlas_style_deps[] = 'industriesalon-overrides';
+        }
+
+        wp_register_style(
+            'iss-register-schoneweide-atlas-style',
+            iss_register_get_theme_asset_url($atlas_style_rel),
+            $atlas_style_deps,
+            (string) filemtime($atlas_style_abs)
+        );
+    }
+
+    $leaflet_script_rel = '/assets/vendor/leaflet/leaflet.js';
+    $leaflet_script_abs = $theme_dir . $leaflet_script_rel;
+    if (file_exists($leaflet_script_abs)) {
+        wp_register_script(
+            'iss-register-schoneweide-atlas-leaflet',
+            iss_register_get_theme_asset_url($leaflet_script_rel),
+            [],
+            (string) filemtime($leaflet_script_abs),
+            true
+        );
+    }
+
+    $atlas_script_rel = '/assets/js/schoneweide.js';
+    $atlas_script_abs = $theme_dir . $atlas_script_rel;
+    if (file_exists($atlas_script_abs)) {
+        $atlas_script_deps = wp_script_is('iss-register-schoneweide-atlas-leaflet', 'registered')
+            ? ['iss-register-schoneweide-atlas-leaflet']
+            : [];
+
+        wp_register_script(
+            'iss-register-schoneweide-atlas-view',
+            iss_register_get_theme_asset_url($atlas_script_rel),
+            $atlas_script_deps,
+            (string) filemtime($atlas_script_abs),
+            true
+        );
+    }
+
+    wp_register_script(
+        'iss-register-schoneweide-atlas-block-editor',
+        ISS_REGISTER_URL . 'assets/js/schoneweide-atlas-block.js',
+        ['wp-blocks', 'wp-block-editor', 'wp-components', 'wp-element', 'wp-i18n'],
+        ISS_REGISTER_VERSION,
+        true
+    );
+
+});

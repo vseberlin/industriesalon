@@ -1,0 +1,20 @@
+{
+  "$schema": "https://schemas.wp.org/trunk/block.json",
+  "apiVersion": 3,
+  "name": "iss/tour-booking-panel",
+  "title": "Tour Booking Panel",
+  "category": "widgets",
+  "icon": "calendar-alt",
+  "description": "Mode-aware booking panel from iss-fuehrungen.",
+  "editorScript": "file:./index.js",
+  "attributes": {
+    "postId": {
+      "type": "number",
+      "default": 0
+    }
+  },
+  "supports": {
+    "html": false
+  }
+}
+

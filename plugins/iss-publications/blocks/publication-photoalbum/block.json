@@ -1,0 +1,40 @@
+{
+  "$schema": "https://schemas.wp.org/trunk/block.json",
+  "apiVersion": 3,
+  "name": "iss/publication-photoalbum",
+  "title": "Publikations-Fotoalbum",
+  "category": "widgets",
+  "icon": "format-gallery",
+  "description": "Editor block for photoalbum publications with generated album rail and sheet navigation.",
+  "keywords": ["Publikation", "Fotoalbum", "Album"],
+  "supports": {
+    "html": false,
+    "multiple": false
+  },
+  "usesContext": ["postId"],
+  "editorScript": "file:./index.js",
+  "attributes": {
+    "headingKicker": {
+      "type": "string",
+      "default": ""
+    },
+    "headingTitle": {
+      "type": "string",
+      "default": ""
+    },
+    "headingText": {
+      "type": "string",
+      "default": ""
+    },
+    "sourceNote": {
+      "type": "string",
+      "default": ""
+    },
+    "introHtml": {
+      "type": "string",
+      "source": "html",
+      "selector": ".iss-publication-photoalbum-source__intro",
+      "default": ""
+    }
+  }
+}

@@ -1,0 +1,24 @@
+{
+  "apiVersion": 3,
+  "name": "iss/publications-browser-results",
+  "title": "Publication Browser Results Copy",
+  "category": "widgets",
+  "icon": "editor-table",
+  "description": "Editorial topic heading for the publication browser.",
+  "parent": ["iss/publications-browser"],
+  "usesContext": ["issPublicationsBrowser/copy", "issPublicationsBrowser/filterCopy"],
+  "attributes": {
+    "kicker": {
+      "type": "string",
+      "default": ""
+    },
+    "title": {
+      "type": "string",
+      "default": ""
+    }
+  },
+  "supports": {
+    "html": false,
+    "reusable": false
+  }
+}

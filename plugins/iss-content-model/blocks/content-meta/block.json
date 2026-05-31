@@ -1,0 +1,35 @@
+{
+  "$schema": "https://schemas.wp.org/trunk/block.json",
+  "apiVersion": 3,
+  "name": "iss/content-meta",
+  "title": "Content Meta",
+  "category": "widgets",
+  "icon": "info",
+  "description": "Structured info panel for Veranstaltungen, Ausstellungen, Projekte, and Team entries.",
+  "supports": {
+    "html": false
+  },
+  "editorScript": "file:./index.js",
+  "attributes": {
+    "title": {
+      "type": "string",
+      "default": ""
+    },
+    "kicker": {
+      "type": "string",
+      "default": ""
+    },
+    "intro": {
+      "type": "string",
+      "default": ""
+    },
+    "variant": {
+      "type": "string",
+      "default": ""
+    },
+    "showPlaces": {
+      "type": "boolean",
+      "default": true
+    }
+  }
+}

@@ -1,0 +1,289 @@
+/* =====================================================================
+   FILE: page-kalender.css
+   ROLE: Kalender landing page.
+   LOAD: only on /kalender/.
+   ===================================================================== */
+
+.iss-calendar-page > .section {
+  border-top: 1px solid rgba(134, 159, 186, 0.18);
+}
+
+.iss-calendar-page .section:first-child {
+  border-top: 0;
+}
+
+.iss-calendar-page .iss-heading > .iss-kicker,
+.iss-calendar-page .iss-heading > .iss-kicker--compact {
+  --iss-kicker-accent: var(--iss-accent);
+  --iss-kicker-color: var(--iss-accent);
+  padding-left: 0.85rem;
+}
+
+.iss-calendar-intro {
+  padding-top: var(--iss-section-pad-y);
+}
+
+.iss-calendar-intro__grid,
+.iss-calendar-intro__facts,
+.iss-calendar-links__grid {
+  gap: 0;
+}
+
+.iss-calendar-intro__copy-col,
+.iss-calendar-intro__notes-col,
+.iss-calendar-fact-col,
+.iss-calendar-link-col {
+  display: grid;
+  align-content: start;
+  gap: 1rem;
+  padding: 0 1.75rem;
+  border-left: 1px solid rgba(134, 159, 186, 0.18);
+}
+
+.iss-calendar-link-col {
+  flex-basis: 33.333%;
+}
+
+.iss-calendar-intro__copy-col,
+.iss-calendar-fact-col:first-child,
+.iss-calendar-link-col:first-child {
+  padding-left: 0;
+  border-left: 0;
+}
+
+.iss-calendar-intro__copy {
+  max-width: 38rem;
+}
+
+.iss-calendar-intro__copy .iss-heading__title,
+.iss-calendar-query__head .iss-heading__title {
+  margin: 0;
+  font-size: clamp(2.4rem, 4vw, 4.5rem);
+  line-height: 0.98;
+  letter-spacing: -0.05em;
+  text-wrap: balance;
+}
+
+.iss-calendar-intro__copy .iss-heading__text {
+  font-size: 1.12rem;
+  line-height: 1.55;
+}
+
+.iss-calendar-intro__copy p:last-child {
+  margin-bottom: 0;
+}
+
+.iss-calendar-intro__notes-col {
+  gap: 1.5rem;
+}
+
+.iss-calendar-intro__facts {
+  border-bottom: 1px solid rgba(134, 159, 186, 0.18);
+  padding-bottom: 1rem;
+}
+
+.iss-calendar-fact {
+  display: grid;
+  gap: 0.55rem;
+}
+
+.iss-calendar-fact__label {
+  margin: 0;
+  color: var(--iss-accent);
+  font-size: 0.82rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+}
+
+.iss-calendar-fact__text {
+  margin: 0;
+  color: rgba(30, 30, 30, 0.8);
+}
+
+.iss-calendar-intro__aside {
+  display: grid;
+  gap: 0.75rem;
+}
+
+.iss-calendar-intro__list {
+  display: grid;
+  gap: 0.55rem;
+  margin: 0;
+  padding-left: 1.1rem;
+}
+
+.iss-calendar-intro__list li::marker {
+  color: var(--iss-accent);
+}
+
+.iss-calendar-query {
+  padding-top: var(--iss-section-pad-y);
+}
+
+.iss-calendar-query__head {
+  display: flex;
+  align-items: end;
+  justify-content: space-between;
+  gap: 1rem;
+  margin-bottom: 1.2rem;
+  padding-bottom: 1rem;
+  border-bottom: 1px solid rgba(134, 159, 186, 0.18);
+}
+
+.iss-calendar-query__head .iss-heading {
+  margin: 0;
+  max-width: 36rem;
+}
+
+.iss-calendar-query__head-link {
+  margin: 0;
+  white-space: nowrap;
+}
+
+.iss-calendar-page .iss-timeline-query {
+  max-width: none;
+  padding-inline: 0;
+}
+
+.iss-calendar-page .iss-timeline__filters {
+  display: grid;
+  grid-template-columns: minmax(0, 1.05fr) minmax(0, 1.6fr) auto;
+  gap: 1rem;
+  align-items: end;
+  margin: 0 0 1rem;
+  padding: 0 0 1rem;
+  border-bottom: 1px solid rgba(134, 159, 186, 0.18);
+}
+
+.iss-calendar-page .iss-timeline__calendar-bridge {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 0.85rem;
+  width: 100%;
+}
+
+.iss-calendar-page .iss-timeline__filter--type {
+  align-self: start;
+}
+
+.iss-calendar-page .iss-timeline__filter select,
+.iss-calendar-page .iss-timeline__filter input {
+  width: 100%;
+}
+
+.iss-calendar-page .iss-timeline__choice-list {
+  gap: 0.6rem;
+}
+
+.iss-calendar-page .iss-timeline__choice-label {
+  min-width: 0;
+  padding-inline: 1rem;
+}
+
+.iss-calendar-page .iss-timeline__filter-actions {
+  justify-content: flex-end;
+}
+
+.iss-calendar-page .iss-timeline-query__meta {
+  margin: 0 0 1rem;
+}
+
+.iss-calendar-page .iss-timeline__year-label {
+  margin-bottom: 1rem;
+}
+
+.iss-calendar-page .iss-timeline__item {
+  grid-template-columns: minmax(9rem, 12rem) minmax(0, 1fr);
+  padding: 1.2rem 0;
+}
+
+.iss-calendar-page .iss-timeline__title {
+  font-size: clamp(1.45rem, 2.1vw, 2.2rem);
+}
+
+.iss-calendar-page .iss-timeline__summary {
+  max-width: 52rem;
+  font-size: clamp(1rem, 1.18vw, 1.2rem);
+}
+
+.iss-calendar-links {
+  padding-top: var(--iss-section-pad-y);
+}
+
+.iss-calendar-link-card {
+  display: grid;
+  gap: 0.75rem;
+}
+
+.iss-calendar-link-card__title {
+  margin: 0;
+  font-size: clamp(1.28rem, 1.12rem + 0.55vw, 1.75rem);
+  line-height: 1.08;
+  letter-spacing: -0.035em;
+  text-wrap: balance;
+}
+
+.iss-calendar-link-card p:last-child {
+  margin-bottom: 0;
+}
+
+.iss-calendar-link-card__link {
+  margin: 0.15rem 0 0;
+}
+
+@media (max-width: 1100px) {
+  .iss-calendar-intro__grid,
+  .iss-calendar-links__grid {
+    gap: 1.25rem;
+  }
+
+  .iss-calendar-intro__copy-col,
+  .iss-calendar-intro__notes-col,
+  .iss-calendar-fact-col,
+  .iss-calendar-link-col {
+    padding: 0;
+    border-left: 0;
+  }
+
+  .iss-calendar-query__head {
+    align-items: start;
+    flex-direction: column;
+  }
+
+  .iss-calendar-page .iss-timeline__filters {
+    grid-template-columns: 1fr;
+  }
+
+  .iss-calendar-page .iss-timeline__calendar-bridge {
+    grid-template-columns: 1fr 1fr auto;
+  }
+
+  .iss-calendar-page .iss-timeline__filter-actions {
+    justify-content: flex-start;
+  }
+}
+
+@media (max-width: 781px) {
+  .iss-calendar-intro {
+    padding-top: 1.75rem;
+  }
+
+  .iss-calendar-link-col {
+    flex-basis: 100%;
+  }
+
+  .iss-calendar-intro__copy .iss-heading__title,
+  .iss-calendar-query__head .iss-heading__title {
+    font-size: clamp(2rem, 11vw, 3.1rem);
+  }
+
+  .iss-calendar-page .iss-timeline__calendar-bridge {
+    grid-template-columns: 1fr;
+  }
+
+  .iss-calendar-page .iss-timeline__choice-list {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}

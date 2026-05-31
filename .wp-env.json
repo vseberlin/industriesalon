@@ -1,0 +1,35 @@
+{
+  "$schema": "https://schemas.wp.org/trunk/wp-env.json",
+  "core": null,
+  "phpVersion": "8.2",
+  "port": 8888,
+  "testsEnvironment": false,
+  "config": {
+    "WP_DEBUG": true,
+    "WP_DEBUG_DISPLAY": false,
+    "WP_DEBUG_LOG": true,
+    "SCRIPT_DEBUG": true
+  },
+  "plugins": [
+    "./plugins/industriesalon-notices",
+    "./plugins/industriesalon-schoeneweide-register",
+    "./plugins/industriesalon-steuerung",
+    "./plugins/iss-calendar",
+    "./plugins/iss-content-model",
+    "./plugins/iss-fuehrungen",
+    "./plugins/iss-graph",
+    "./plugins/iss-media-control",
+    "./plugins/iss-payments-lite",
+    "./plugins/iss-programm",
+    "./plugins/iss-publications",
+    "./plugins/iss-relations",
+    "./plugins/iss-wf-import",
+    "./plugins/query-monitor"
+  ],
+  "themes": [
+    "./themes/industriesalon"
+  ],
+  "lifecycleScripts": {
+    "afterStart": "node tests/e2e/bin/setup-wp-env.js"
+  }
+}

@@ -1,0 +1,42 @@
+# Ignore everything by default.
+/*
+/.*
+
+# Keep this ignore file.
+!.gitignore
+!/*.md
+!/package.json
+!/package-lock.json
+!/composer.json
+!/composer.lock
+!/.stylelintrc.json
+!/eslint.config.js
+!/.wp-env.json
+!/docker-compose.yml
+!/playwright.config.js
+!/.yamllint.yml
+!/phpcs.xml.dist
+!/phpstan.neon.dist
+!/tools/
+/tools/*
+!/tools/*.sh
+!/tools/phpstan-bootstrap.php
+/tools/composer-setup.php
+/tools/composer.phar
+!/tests/
+/tests/*
+!/tests/e2e/
+!/tests/e2e/**
+!/themes/
+/themes/*
+!/themes/industriesalon/
+!/themes/industriesalon/**
+
+# Keep all plugins.
+!/plugins/
+!/plugins/**
+
+# Ignore editor lock noise.
+*~lock*
+__pycache__/
+*.pyc

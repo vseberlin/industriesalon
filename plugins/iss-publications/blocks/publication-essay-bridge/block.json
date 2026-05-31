@@ -1,0 +1,11 @@
+{
+  "apiVersion": 3,
+  "name": "iss/publication-essay-bridge",
+  "title": "ISS Publication Essay Bridge",
+  "category": "widgets",
+  "icon": "share-alt2",
+  "description": "Server-rendered bridge cards for selected publication essays.",
+  "supports": {
+    "html": false
+  }
+}

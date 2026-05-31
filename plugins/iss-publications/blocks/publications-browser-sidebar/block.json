@@ -1,0 +1,24 @@
+{
+  "apiVersion": 3,
+  "name": "iss/publications-browser-sidebar",
+  "title": "Publication Browser Sidebar Copy",
+  "category": "widgets",
+  "icon": "editor-alignleft",
+  "description": "Editorial sidebar copy for the publication browser.",
+  "parent": ["iss/publications-browser"],
+  "usesContext": ["issPublicationsBrowser/copy", "issPublicationsBrowser/formatCopy"],
+  "attributes": {
+    "kicker": {
+      "type": "string",
+      "default": ""
+    },
+    "title": {
+      "type": "string",
+      "default": ""
+    }
+  },
+  "supports": {
+    "html": false,
+    "reusable": false
+  }
+}

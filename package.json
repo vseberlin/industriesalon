@@ -1,0 +1,31 @@
+{
+  "name": "wp-css-tooling",
+  "private": true,
+  "scripts": {
+    "lint": "npm run lint:css && npm run lint:js && npm run lint:shell && npm run lint:yaml",
+    "lint:css": "stylelint \"themes/industriesalon/**/*.css\" \"plugins/iss-*/**/*.css\" \"plugins/industriesalon-*/**/*.css\" --ignore-pattern \"**/vendor/**\" --ignore-pattern \"**/*.min.css\"",
+    "lint:js": "eslint \"themes/industriesalon/**/*.js\" \"plugins/iss-*/**/*.js\" \"plugins/industriesalon-*/**/*.js\"",
+    "lint:shell": "bash tools/shellcheck-target.sh",
+    "lint:yaml": "bash tools/yamllint-target.sh",
+    "wp-env:start": "wp-env start",
+    "wp-env:stop": "wp-env stop",
+    "wp-env:clean": "wp-env destroy",
+    "wp-env:logs": "wp-env logs",
+    "test:e2e": "playwright test -c playwright.config.js",
+    "test:e2e:a11y": "playwright test -c playwright.config.js tests/e2e/specs/accessibility.spec.js",
+    "test:e2e:headed": "playwright test -c playwright.config.js --headed",
+    "test:e2e:debug": "playwright test -c playwright.config.js --debug"
+  },
+  "devDependencies": {
+    "@axe-core/playwright": "^4.11.3",
+    "@eslint/js": "^9.27.0",
+    "@playwright/test": "^1.60.0",
+    "@wordpress/e2e-test-utils-playwright": "^1.46.0",
+    "@wordpress/env": "^11.6.0",
+    "@wordpress/scripts": "^32.2.0",
+    "eslint": "^9.27.0",
+    "globals": "^15.15.0",
+    "stylelint": "^17.11.1",
+    "stylelint-config-standard": "^40.0.0"
+  }
+}

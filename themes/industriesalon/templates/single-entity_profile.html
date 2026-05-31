@@ -1,0 +1,73 @@
+<!-- wp:template-part {"slug":"header","tagName":"header"} /-->
+
+<!-- wp:group {"tagName":"main","className":"iss-entity-profile-single iss-page--header-offset","layout":{"type":"default"}} -->
+<main class="wp-block-group iss-entity-profile-single iss-page--header-offset">
+	<!-- wp:group {"tagName":"section","className":"section section--plain iss-entity-profile-single__hero","layout":{"type":"default"}} -->
+	<section class="wp-block-group section section--plain iss-entity-profile-single__hero">
+		<!-- wp:group {"className":"iss-container","layout":{"type":"default"}} -->
+		<div class="wp-block-group iss-container">
+			<!-- wp:columns {"verticalAlignment":"top","className":"iss-entity-profile-single__intro"} -->
+			<div class="wp-block-columns are-vertically-aligned-top iss-entity-profile-single__intro">
+				<!-- wp:column {"verticalAlignment":"top","width":"62%","className":"iss-entity-profile-single__content"} -->
+				<div class="wp-block-column is-vertically-aligned-top iss-entity-profile-single__content" style="flex-basis:62%">
+					<!-- wp:group {"className":"iss-heading iss-heading--uncaged","layout":{"type":"default"}} -->
+					<div class="wp-block-group iss-heading iss-heading--uncaged">
+						<!-- wp:paragraph {"className":"iss-kicker iss-kicker--compact"} -->
+						<p class="iss-kicker iss-kicker--compact">Profil</p>
+						<!-- /wp:paragraph -->
+
+						<!-- wp:post-title {"level":1,"className":"iss-heading__title"} /-->
+
+						<!-- wp:post-excerpt {"moreText":"","showMoreOnNewLine":false,"excerptLength":30,"className":"iss-heading__text"} /-->
+					</div>
+					<!-- /wp:group -->
+
+					<!-- wp:iss-graph/profile-facts /-->
+
+					<!-- wp:group {"className":"iss-entity-profile-single__narrative","layout":{"type":"default"}} -->
+					<div class="wp-block-group iss-entity-profile-single__narrative"><!-- wp:post-content {"layout":{"type":"default"}} /--></div>
+					<!-- /wp:group -->
+				</div>
+				<!-- /wp:column -->
+
+				<!-- wp:column {"verticalAlignment":"top","width":"38%","className":"iss-entity-profile-single__media"} -->
+				<div class="wp-block-column is-vertically-aligned-top iss-entity-profile-single__media" style="flex-basis:38%">
+					<!-- wp:group {"className":"iss-media-card iss-media-card--cover iss-media-card--soft iss-media-card--framed","layout":{"type":"default"}} -->
+					<div class="wp-block-group iss-media-card iss-media-card--cover iss-media-card--soft iss-media-card--framed">
+						<!-- wp:post-featured-image {"isLink":false} /-->
+					</div>
+					<!-- /wp:group -->
+				</div>
+				<!-- /wp:column -->
+			</div>
+			<!-- /wp:columns -->
+		</div>
+		<!-- /wp:group -->
+	</section>
+	<!-- /wp:group -->
+
+	<!-- wp:group {"tagName":"section","className":"section section--plain iss-entity-profile-single__map-section","layout":{"type":"default"}} -->
+	<section class="wp-block-group section section--plain iss-entity-profile-single__map-section">
+		<!-- wp:group {"className":"iss-container","layout":{"type":"default"}} -->
+		<div class="wp-block-group iss-container">
+			<!-- wp:iss/related-place-map {"kicker":"Verortung","title":"Orte im Zusammenhang","perPage":5,"shellMode":"body"} /-->
+		</div>
+		<!-- /wp:group -->
+	</section>
+	<!-- /wp:group -->
+
+	<!-- wp:group {"tagName":"section","className":"section section--soft iss-entity-profile-single__related","layout":{"type":"default"}} -->
+	<section class="wp-block-group section section--soft iss-entity-profile-single__related">
+		<!-- wp:group {"className":"iss-container","layout":{"type":"default"}} -->
+		<div class="wp-block-group iss-container">
+			<!-- wp:iss/related-content {"kicker":"Register","title":"Orte im Zusammenhang","postType":"register_place","perPage":4} /-->
+			<!-- wp:iss/related-content {"kicker":"Weiterlesen","title":"Publikationen im Zusammenhang","postType":"publication","perPage":3} /-->
+			<!-- wp:iss/related-content {"kicker":"Filme","title":"Videos im Zusammenhang","postType":"video","perPage":3} /-->
+		</div>
+		<!-- /wp:group -->
+	</section>
+	<!-- /wp:group -->
+</main>
+<!-- /wp:group -->
+
+<!-- wp:template-part {"slug":"footer","tagName":"footer"} /-->

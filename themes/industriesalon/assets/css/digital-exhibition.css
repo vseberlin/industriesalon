@@ -1,0 +1,427 @@
+/* Scoped digital exhibition layout for term-owned archive essays.
+   Keep this local to taxonomy-led editorial exhibitions, not generic archives. */
+
+.iss-digital-exhibition {
+  background: var(--iss-white);
+}
+
+.iss-digital-exhibition__hero {
+  padding-top: clamp(6.25rem, 9vw, 8.25rem);
+  padding-bottom: clamp(3rem, 5vw, 4.25rem);
+  background:
+    linear-gradient(180deg, rgba(117, 58, 24, 0.08) 0%, rgba(117, 58, 24, 0.03) 24%, rgba(249, 249, 250, 0) 70%);
+}
+
+.iss-digital-exhibition__hero-grid,
+.iss-digital-exhibition__hero-grid > .wp-block-column {
+  align-items: start;
+}
+
+.iss-digital-exhibition__hero-grid {
+  gap: clamp(1.5rem, 3.2vw, 3.5rem);
+}
+
+.iss-digital-exhibition__hero-media-col,
+.iss-digital-exhibition__hero-copy,
+.iss-digital-exhibition__hero-aside {
+  min-width: 0;
+}
+
+.iss-ausstellung-page.iss-digital-exhibition .iss-digital-exhibition__hero-media-col {
+  flex-basis: 49%;
+}
+
+.iss-ausstellung-page.iss-digital-exhibition .iss-digital-exhibition__hero-copy {
+  flex-basis: 51%;
+}
+
+.iss-ausstellung-page.iss-digital-exhibition .iss-digital-exhibition__hero-aside {
+  flex-basis: 0;
+}
+
+.iss-digital-exhibition:not(.iss-ausstellung-page) .iss-digital-exhibition__hero-copy {
+  flex-basis: 62%;
+}
+
+.iss-digital-exhibition:not(.iss-ausstellung-page) .iss-digital-exhibition__hero-aside {
+  flex-basis: 38%;
+}
+
+.iss-digital-exhibition__hero-media {
+  margin: 0;
+  min-height: 100%;
+  border-radius: 2px;
+  --iss-media-card-rail-color: var(--iss-brown);
+  --iss-media-card-radius: 2px;
+  box-shadow: 0 24px 44px rgba(62, 34, 19, 0.11);
+  overflow: hidden;
+}
+
+.iss-digital-exhibition__hero-media .wp-block-post-featured-image,
+.iss-digital-exhibition__hero-media .wp-block-post-featured-image img {
+  height: 100%;
+}
+
+.iss-digital-exhibition__hero-media .wp-block-post-featured-image {
+  margin: 0;
+}
+
+.iss-digital-exhibition__hero-media .wp-block-post-featured-image img {
+  display: block;
+  width: 100%;
+  min-height: clamp(22rem, 42vw, 39rem);
+  object-fit: cover;
+}
+
+.iss-digital-exhibition__hero-copy {
+  max-width: 38rem;
+  gap: 1rem;
+}
+
+.iss-digital-exhibition__hero-copy .iss-kicker {
+  padding-left: 0.85rem;
+  border-left: 3px solid var(--iss-brown);
+  color: var(--iss-brown);
+}
+
+.iss-digital-exhibition__hero-copy .iss-heading__title {
+  margin: 0;
+  max-width: 11ch;
+  font-size: clamp(2.75rem, 4.9vw, 5.4rem);
+  line-height: 0.92;
+  letter-spacing: -0.05em;
+  text-wrap: balance;
+}
+
+.iss-digital-exhibition__hero-copy .iss-heading__text {
+  margin: 0;
+  max-width: 32rem;
+  color: rgba(30, 30, 30, 0.76);
+  font-size: clamp(1.08rem, 1.1vw + 0.92rem, 1.36rem);
+  line-height: 1.68;
+}
+
+.iss-digital-exhibition__hero-aside {
+  display: none;
+}
+
+.iss-digital-exhibition__nav-band {
+  padding-top: clamp(2.5rem, 5vw, 4rem);
+  padding-bottom: clamp(2.5rem, 5vw, 4rem);
+  background: linear-gradient(180deg, rgba(30, 30, 30, 0.96), rgba(58, 58, 58, 0.98));
+}
+
+.iss-digital-exhibition__nav-band .iss-heading__title,
+.iss-digital-exhibition__nav-band .iss-heading__text,
+.iss-digital-exhibition__nav-band .iss-kicker {
+  color: var(--iss-white);
+}
+
+.iss-digital-exhibition__chapter-query {
+  margin-top: clamp(1.25rem, 3vw, 2rem);
+}
+
+.iss-digital-exhibition__toc {
+  margin-top: clamp(1.25rem, 3vw, 2rem);
+}
+
+.iss-digital-exhibition__toc-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  border-top: 1px solid rgba(117, 58, 24, 0.16);
+}
+
+.iss-digital-exhibition__toc-item {
+  margin: 0;
+  border-bottom: 1px solid rgba(117, 58, 24, 0.16);
+}
+
+.iss-digital-exhibition__toc-link {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  gap: 1rem;
+  align-items: start;
+  padding: 1rem 0;
+  color: var(--iss-black);
+  text-decoration: none;
+}
+
+.iss-digital-exhibition__toc-number {
+  min-width: 2.3rem;
+  color: rgba(117, 58, 24, 0.72);
+  font-size: 0.8rem;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+}
+
+.iss-digital-exhibition__toc-copy {
+  display: grid;
+  gap: 0.18rem;
+}
+
+.iss-digital-exhibition__toc-title {
+  font-size: clamp(1.08rem, 1vw + 0.95rem, 1.35rem);
+  line-height: 1.24;
+}
+
+.iss-digital-exhibition__toc-date {
+  color: rgba(30, 30, 30, 0.62);
+  font-size: 0.9rem;
+}
+
+.iss-digital-exhibition__toc-link:hover .iss-digital-exhibition__toc-title,
+.iss-digital-exhibition__toc-link:focus-visible .iss-digital-exhibition__toc-title {
+  text-decoration: underline;
+  text-underline-offset: 0.18em;
+}
+
+.iss-digital-exhibition__nav-band .iss-digital-exhibition__toc-list {
+  border-top-color: rgba(255, 255, 255, 0.18);
+}
+
+.iss-digital-exhibition__nav-band .iss-digital-exhibition__toc-item {
+  border-bottom-color: rgba(255, 255, 255, 0.18);
+}
+
+.iss-digital-exhibition__nav-band .iss-digital-exhibition__toc-link {
+  color: var(--iss-white);
+}
+
+.iss-digital-exhibition__nav-band .iss-digital-exhibition__toc-number {
+  color: rgba(255, 255, 255, 0.58);
+}
+
+.iss-digital-exhibition__nav-band .iss-digital-exhibition__toc-date {
+  color: rgba(255, 255, 255, 0.64);
+}
+
+.iss-digital-exhibition__chapter-query .wp-block-post-template {
+  gap: clamp(1rem, 2.4vw, 1.4rem);
+}
+
+.iss-digital-exhibition__chapter-card {
+  display: grid;
+  gap: 0.9rem;
+  min-height: 100%;
+  padding: clamp(1.1rem, 2vw, 1.4rem);
+  border-radius: 1.1rem;
+  background: rgba(255, 255, 255, 0.98);
+  box-shadow: 0 18px 50px rgba(0, 0, 0, 0.16);
+}
+
+.iss-digital-exhibition__chapter-card > * {
+  margin: 0;
+}
+
+.iss-digital-exhibition__chapter-kicker {
+  font-size: 0.74rem;
+  font-weight: 700;
+  letter-spacing: 0.11em;
+  text-transform: uppercase;
+  color: rgba(30, 30, 30, 0.48);
+}
+
+.iss-digital-exhibition__chapter-title {
+  font-size: clamp(1.25rem, 2vw, 1.55rem);
+  line-height: 1.08;
+}
+
+.iss-digital-exhibition__chapter-title a {
+  color: inherit;
+  text-decoration: none;
+}
+
+.iss-digital-exhibition__chapter-text,
+.iss-digital-exhibition__chapter-text p {
+  margin: 0;
+  color: rgba(30, 30, 30, 0.76);
+}
+
+.iss-digital-exhibition__chapters {
+  padding-top: clamp(3rem, 6vw, 5rem);
+  padding-bottom: clamp(4rem, 8vw, 6rem);
+}
+
+.iss-digital-exhibition__stream {
+  margin-top: clamp(1.5rem, 4vw, 2.5rem);
+}
+
+.iss-digital-exhibition__stream .wp-block-post-template {
+  display: grid;
+  gap: clamp(2.2rem, 6vw, 4rem);
+}
+
+.iss-digital-exhibition__chapter-entry {
+  display: grid;
+  gap: clamp(1.5rem, 3vw, 2rem);
+  padding-block: clamp(2.75rem, 5vw, 4rem);
+  border-top: 1px solid rgba(117, 58, 24, 0.14);
+}
+
+.iss-digital-exhibition__chapter-top {
+  display: grid;
+  grid-template-columns: minmax(0, 0.9fr) minmax(0, 1.1fr);
+  gap: clamp(1.5rem, 3vw, 3rem);
+  align-items: start;
+}
+
+.iss-digital-exhibition__chapter-entry--reverse .iss-digital-exhibition__chapter-top {
+  grid-template-columns: minmax(0, 1.1fr) minmax(0, 0.9fr);
+}
+
+.iss-digital-exhibition__chapter-entry--reverse .iss-digital-exhibition__chapter-copy {
+  order: 2;
+}
+
+.iss-digital-exhibition__chapter-entry--reverse .iss-digital-exhibition__chapter-media {
+  order: 1;
+}
+
+.iss-digital-exhibition__chapter-head {
+  display: grid;
+  gap: 0.6rem;
+}
+
+.iss-digital-exhibition__chapter-copy > * {
+  margin: 0;
+}
+
+.iss-digital-exhibition__entry-title {
+  font-size: clamp(2rem, 3vw, 3rem);
+  line-height: 1.02;
+  letter-spacing: -0.04em;
+}
+
+.iss-digital-exhibition__entry-title a {
+  color: inherit;
+  text-decoration: none;
+}
+
+.iss-digital-exhibition__entry-date {
+  color: rgba(30, 30, 30, 0.54);
+  font-size: 0.92rem;
+}
+
+.iss-digital-exhibition__entry-intro {
+  color: rgba(30, 30, 30, 0.8);
+  font-size: clamp(1.02rem, 0.6vw + 0.95rem, 1.22rem);
+  line-height: 1.7;
+}
+
+.iss-digital-exhibition__entry-intro > *:first-child {
+  margin-top: 0;
+}
+
+.iss-digital-exhibition__entry-intro > *:last-child {
+  margin-bottom: 0;
+}
+
+.iss-digital-exhibition__entry-body-lead > *:first-child {
+  margin-top: 0;
+}
+
+.iss-digital-exhibition__entry-body-lead > *:last-child {
+  margin-bottom: 0;
+}
+
+.iss-digital-exhibition__entry-body-lead p,
+.iss-digital-exhibition__entry-body-lead li,
+.iss-digital-exhibition__entry-body-lead blockquote,
+.iss-digital-exhibition__entry-body-lead ul,
+.iss-digital-exhibition__entry-body-lead ol {
+  color: rgba(30, 30, 30, 0.82);
+  font-size: 1rem;
+  line-height: 1.72;
+}
+
+.iss-digital-exhibition__chapter-figure {
+  margin: 0;
+}
+
+.iss-digital-exhibition__chapter-figure a,
+.iss-digital-exhibition__chapter-figure img {
+  display: block;
+  width: 100%;
+}
+
+.iss-digital-exhibition__chapter-figure img {
+  min-height: clamp(20rem, 34vw, 30rem);
+  object-fit: cover;
+}
+
+.iss-digital-exhibition__chapter-figure figcaption {
+  margin-top: 0.7rem;
+  color: rgba(30, 30, 30, 0.58);
+  font-size: 0.9rem;
+  line-height: 1.5;
+}
+
+.iss-digital-exhibition__entry-body > *:first-child {
+  margin-top: 0;
+}
+
+.iss-digital-exhibition__entry-body > *:last-child {
+  margin-bottom: 0;
+}
+
+.iss-digital-exhibition__entry-body {
+  column-count: 2;
+  column-gap: clamp(1.5rem, 3vw, 2.75rem);
+}
+
+.iss-digital-exhibition__entry-body > * {
+  break-inside: avoid;
+}
+
+.iss-digital-exhibition__entry-body p,
+.iss-digital-exhibition__entry-body li,
+.iss-digital-exhibition__entry-body blockquote,
+.iss-digital-exhibition__entry-body ul,
+.iss-digital-exhibition__entry-body ol {
+  color: rgba(30, 30, 30, 0.82);
+  font-size: 1rem;
+  line-height: 1.72;
+}
+
+.iss-digital-exhibition__chapter-return {
+  margin: 0;
+  padding-top: 0.25rem;
+}
+
+@media (max-width: 900px) {
+  .iss-digital-exhibition__hero-grid {
+    gap: 1.5rem;
+  }
+
+  .iss-digital-exhibition__hero-media .wp-block-post-featured-image img {
+    min-height: clamp(18rem, 56vw, 28rem);
+  }
+
+  .iss-digital-exhibition__chapter-query .wp-block-post-template {
+    grid-template-columns: 1fr;
+  }
+
+  .iss-digital-exhibition__toc-link {
+    grid-template-columns: 1fr;
+    gap: 0.35rem;
+  }
+
+  .iss-digital-exhibition__toc-number {
+    min-width: 0;
+  }
+
+  .iss-digital-exhibition__chapter-top,
+  .iss-digital-exhibition__chapter-entry--reverse .iss-digital-exhibition__chapter-top {
+    grid-template-columns: 1fr;
+  }
+
+  .iss-digital-exhibition__chapter-entry--reverse .iss-digital-exhibition__chapter-copy,
+  .iss-digital-exhibition__chapter-entry--reverse .iss-digital-exhibition__chapter-media {
+    order: initial;
+  }
+
+  .iss-digital-exhibition__entry-body {
+    column-count: 1;
+  }
+}

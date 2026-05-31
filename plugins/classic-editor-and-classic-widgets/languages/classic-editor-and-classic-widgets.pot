@@ -1,0 +1,219 @@
+#, fuzzy
+msgid ""
+msgstr ""
+"Project-Id-Version: Classic Editor and Classic Widgets\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2024-03-17 08:51+0000\n"
+"PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
+"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
+"Language-Team: \n"
+"Language: \n"
+"Plural-Forms: nplurals=INTEGER; plural=EXPRESSION;\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"X-Generator: Loco https://localise.biz/\n"
+"X-Loco-Version: 2.6.6; wp-6.4.3\n"
+"X-Domain: classic-editor-and-classic-widgets"
+
+#: templates/settings.php:9
+msgid "Advanced"
+msgstr ""
+
+#: templates/settings/general.php:49
+msgid "Allow Switch Editors"
+msgstr ""
+
+#: templates/settings/general.php:50
+msgid "Allow users to switch editors"
+msgstr ""
+
+#: includes/Gutenberg.php:111 templates/settings/general.php:19
+#: templates/settings/general.php:39
+msgid "Block Editor"
+msgstr ""
+
+#: templates/settings.php:37
+msgid "Changes saved!"
+msgstr ""
+
+#: includes/Dashboard.php:17 includes/Gutenberg.php:104
+#: templates/settings/general.php:15 templates/settings/general.php:35
+msgid "Classic Editor"
+msgstr ""
+
+#: includes/Dashboard.php:16
+msgid "Classic Editor & Classic Widgets"
+msgstr ""
+
+#: templates/settings.php:2
+msgid "Classic Editor & Classic Widgets Settings"
+msgstr ""
+
+#. Name of the plugin
+msgid "Classic Editor and Classic Widgets"
+msgstr ""
+
+#: templates/settings/advanced.php:26
+msgid "Custom Post Types"
+msgstr ""
+
+#: templates/settings/general.php:9
+msgid "Default Editor"
+msgstr ""
+
+#. %s: CPT Name
+#: templates/settings/users.php:15
+#, php-format
+msgid "Default editor is Gutenberg for \"%s\""
+msgstr ""
+
+#: templates/settings/general.php:30
+msgid "Default widgets editor"
+msgstr ""
+
+#. Description of the plugin
+msgid ""
+"Disables Gutenberg editor totally everywhere and enables Classic Editor & "
+"Classic Widgets."
+msgstr ""
+
+#: templates/settings/general.php:59
+msgid "Display Classic/Block editor links (if Allowed Switch Editors)"
+msgstr ""
+
+#: includes/Gutenberg.php:110
+#, php-format
+msgid "Edit &#8220;%s&#8221; in the Block Editor"
+msgstr ""
+
+#: includes/Gutenberg.php:103
+#, php-format
+msgid "Edit &#8220;%s&#8221; in the Classic Editor"
+msgstr ""
+
+#: templates/settings/advanced.php:11
+msgid "Edit posts with latest used Editor"
+msgstr ""
+
+#: includes/Gutenberg.php:132
+msgid "Editor Switcher"
+msgstr ""
+
+#: templates/settings/general.php:85
+msgid "Enable ACF Support"
+msgstr ""
+
+#: templates/settings/general.php:86
+msgid "Enable Custom Fields Meta Box (Default: ACF)"
+msgstr ""
+
+#. %s: CPT Name
+#: templates/settings/advanced.php:38
+#, php-format
+msgid "Enable Gutenberg Editor for \"%s\""
+msgstr ""
+
+#: templates/settings/users.php:13
+msgid "Enable Gutenberg for "
+msgstr ""
+
+#: templates/settings/general.php:67
+msgid "Enable Gutenberg Frontend"
+msgstr ""
+
+#: templates/settings/general.php:68
+msgid "Enqueue frontend Gutenberg/Block styles"
+msgstr ""
+
+#: templates/settings/advanced.php:18
+msgid "Exclude Posts"
+msgstr ""
+
+#: templates/settings.php:7
+msgid "General"
+msgstr ""
+
+#: templates/partials/pro-overlay.php:5
+msgid "Get Now"
+msgstr ""
+
+#: includes/Dashboard.php:44
+msgid "Get Pro"
+msgstr ""
+
+#: includes/Gutenberg.php:147
+msgid "Go to Block Editor"
+msgstr ""
+
+#: includes/Gutenberg.php:174
+msgid "Go to Classic Editor"
+msgstr ""
+
+#: templates/settings/general.php:76
+msgid "Hide Plugin Menu Item"
+msgstr ""
+
+#: templates/settings/general.php:77
+msgid "Hide this plugin’s menu item under Settings menu"
+msgstr ""
+
+#. URI of the plugin
+msgid "https://wordpress.org/plugins/classic-editor-and-classic-widgets/"
+msgstr ""
+
+#. Author URI of the plugin
+msgid "https://wpgrim.com/"
+msgstr ""
+
+#: includes/fields/Autocomplete.php:49
+msgid "No posts found."
+msgstr ""
+
+#: templates/settings/advanced.php:19
+msgid "Pages/Posts/CPT that always use Gutenberg"
+msgstr ""
+
+#: templates/settings/general.php:10
+msgid "Posts/Pages default editor"
+msgstr ""
+
+#: templates/partials/pro-overlay.php:4 templates/partials/pro-badge.php:1
+msgid "PRO"
+msgstr ""
+
+#: templates/settings/advanced.php:10
+msgid "Remember Last Editor"
+msgstr ""
+
+#: templates/settings.php:32
+msgid "Save Settings"
+msgstr ""
+
+#: includes/Dashboard.php:35
+msgid "Settings"
+msgstr ""
+
+#: templates/settings/general.php:58
+msgid "Show Edit Links"
+msgstr ""
+
+#: templates/partials/pro-overlay.php:3
+msgid "This feature is available on Premium version"
+msgstr ""
+
+#: templates/fields/autocomplete.php:19
+msgid "Type to Search..."
+msgstr ""
+
+#: templates/settings.php:8
+msgid "User Roles"
+msgstr ""
+
+#: templates/settings/general.php:29
+msgid "Widgets Editor"
+msgstr ""
+
+#. Author of the plugin
+msgid "WPGrim"
+msgstr ""

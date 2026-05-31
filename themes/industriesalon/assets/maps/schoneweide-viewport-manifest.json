@@ -1,0 +1,46 @@
+{
+  "version": 1,
+  "generated_at": "2026-05-21T00:00:00+00:00",
+  "presets": [
+    {
+      "id": "viewport-industrial-spine-strip",
+      "label": "Viewport · Industrial Spine Strip",
+      "viewport_id": "industrial-spine-strip",
+      "profile": "strip",
+      "style": "canonical",
+      "image": "viewports/industrial-spine-strip/industrial-spine-strip--strip--canonical.webp",
+      "markers": "viewports/industrial-spine-strip/industrial-spine-strip--strip--markers.json",
+      "width": 2200,
+      "height": 1000,
+      "rail": {
+        "station_offset_x": 3.25,
+        "stations": [
+          {
+            "id": "12869",
+            "label": "Rathenau-Hallen"
+          },
+          {
+            "id": "17960",
+            "label": "Industriesalon"
+          },
+          {
+            "id": "17969",
+            "label": "Kaisersteg"
+          },
+          {
+            "id": "17972",
+            "label": "AEG / Mathildenstraße"
+          },
+          {
+            "id": "17971",
+            "label": "Kraftwerk"
+          },
+          {
+            "id": "17973",
+            "label": "KWO"
+          }
+        ]
+      }
+    }
+  ]
+}

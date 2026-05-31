@@ -1,0 +1,126 @@
+/* =========================================================
+   FUEHRUNGEN SKIN
+   Theme-owned visual language for iss-fuehrungen pages.
+   ========================================================= */
+
+.iss-fuehrung-single,
+.post-type-archive-fuehrung .wp-site-blocks,
+.tax-fuehrung_typ .wp-site-blocks {
+  --iss-tour-surface: var(--iss-white, #fff);
+  --iss-tour-surface-muted: color-mix(in srgb, var(--iss-grey, #c0b8b5) 12%, var(--iss-tour-surface));
+  --iss-tour-line: var(--iss-border, rgba(30, 30, 30, 0.14));
+  --iss-tour-line-strong: rgba(30, 30, 30, 0.22);
+  --iss-tour-text: var(--iss-black, #1e1e1e);
+  --iss-tour-muted: rgba(30, 30, 30, 0.72);
+  background: var(--iss-white, #f9f9fa);
+  color: var(--iss-tour-text);
+}
+
+.iss-fuehrung-fact,
+.iss-fuehrung-booking__inner {
+  background: var(--iss-tour-surface);
+  border: 1px solid var(--iss-tour-line);
+  border-left: 4px solid var(--iss-accent);
+  border-radius: var(--iss-radius-sm, 8px);
+  box-shadow: none;
+}
+
+.iss-fuehrung-fact__label {
+  color: var(--iss-tour-muted);
+  font-size: 0.76rem;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+.iss-fuehrung-fact__value {
+  color: var(--iss-tour-text);
+  font-size: 1rem;
+  line-height: 1.45;
+}
+
+.iss-fuehrung-fact__value a,
+.iss-fuehrung-booking__secondary {
+  color: inherit;
+  text-decoration: underline;
+  text-decoration-color: color-mix(in srgb, var(--iss-accent) 55%, transparent);
+  text-underline-offset: 0.18em;
+}
+
+.iss-fuehrung-fact__value a:hover,
+.iss-fuehrung-fact__value a:focus-visible,
+.iss-fuehrung-booking__secondary:hover,
+.iss-fuehrung-booking__secondary:focus-visible {
+  color: var(--iss-accent);
+  text-decoration-color: currentColor;
+}
+
+.iss-fuehrung-booking__title {
+  margin-bottom: 0.5rem;
+  font-size: clamp(1.3rem, 1.15rem + 0.6vw, 1.8rem);
+  line-height: 1.1;
+}
+
+.iss-fuehrung-next-date {
+  color: var(--iss-tour-text);
+  font-size: 1rem;
+  font-weight: 600;
+}
+
+.iss-fuehrung-booking__status,
+.iss-fuehrung-booking__note {
+  color: var(--iss-tour-muted);
+  font-size: 0.95rem;
+  line-height: 1.5;
+}
+
+.iss-fuehrungen-pagination a,
+.iss-fuehrungen-pagination span {
+  border: 1px solid var(--iss-tour-line);
+  border-radius: var(--iss-radius-sm, 8px);
+  background: #fff;
+  color: var(--iss-tour-text);
+}
+
+.iss-fuehrungen-pagination a:hover,
+.iss-fuehrungen-pagination a:focus-visible {
+  border-color: var(--iss-accent);
+  background: color-mix(in srgb, var(--iss-accent) 6%, white);
+  color: var(--iss-accent);
+}
+
+.iss-fuehrungen-pagination .current {
+  border-color: var(--iss-accent);
+  background: var(--iss-accent);
+  color: #fff;
+}
+
+.iss-tour-hero-gallery__thumb {
+  border: 1px solid var(--iss-tour-line);
+  border-radius: var(--iss-radius-sm, 8px);
+  background: #fff;
+}
+
+.iss-tour-hero-gallery__thumb.is-active {
+  border-color: var(--iss-accent);
+}
+
+.iss-fuehrung--blue .iss-fuehrung-fact,
+.iss-fuehrung--blue .iss-fuehrung-booking__inner {
+  border-left-color: var(--iss-blue, #869fba);
+}
+
+.iss-fuehrung--green .iss-fuehrung-fact,
+.iss-fuehrung--green .iss-fuehrung-booking__inner {
+  border-left-color: var(--iss-green, #579e7d);
+}
+
+.iss-fuehrung--yellow .iss-fuehrung-fact,
+.iss-fuehrung--yellow .iss-fuehrung-booking__inner {
+  border-left-color: var(--iss-yellow, #ebbc1e);
+}
+
+.iss-fuehrung--brown .iss-fuehrung-fact,
+.iss-fuehrung--brown .iss-fuehrung-booking__inner {
+  border-left-color: var(--iss-brown, #753a18);
+}

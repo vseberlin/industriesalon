@@ -1,0 +1,12 @@
+{
+  "$schema": "https://schemas.wp.org/trunk/block.json",
+  "apiVersion": 3,
+  "name": "iss/publication-longread-related",
+  "title": "Publikation Weiterlesen",
+  "category": "widgets",
+  "icon": "share-alt2",
+  "description": "Server-rendered related links for longread and photoalbum publication rails.",
+  "supports": {
+    "html": false
+  }
+}

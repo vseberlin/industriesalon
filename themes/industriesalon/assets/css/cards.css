@@ -1,0 +1,1854 @@
+/* =====================================================================
+   FILE: cards.css
+   ROLE: Card systems and card-based pattern internals.
+   PURPOSE:
+   - Own reusable card surfaces and card media behavior.
+   - Hold layout logic for card-heavy modules that are reused across page
+     templates.
+   - Keep content-card behavior separate from global layout and page
+     shells.
+
+   HOW TO MAINTAIN THIS FILE:
+   1. Change shared card look here before touching a single pattern.
+   2. Prefer local custom properties over hard-coded one-off values.
+   3. Keep BEM structure stable. Editors and patterns already depend on
+      these names.
+   4. If a block is specific to one landing page and not reusable, move
+      it to patterns.css instead of expanding this file.
+
+   PRIMARY CONTROL SURFACE
+   -----------------------
+   GLOBAL TOKENS USED FROM style.css
+   --iss-white / --iss-black / --iss-border / --iss-radius-* /
+   --iss-shadow / --iss-transition / --iss-gap
+
+   MAIN SHARED CARD CLASSES
+   .iss-card
+       Default card shell. Use for most information and listing cards.
+
+   .iss-card__media / __body / __kicker / __title / __text / __meta /
+   __footer / __link
+       Internal card anatomy. Keep this structure intact when building
+       new patterns.
+
+   .iss-card--info
+       Text-first card. Hides media and increases body emphasis.
+
+   .iss-card--partner
+       Quieter partner/institution card.
+
+   .iss-card--green / --blue / --yellow / --brown
+       Rail color variants.
+
+   .iss-card--flat
+       Dense grid version with minimal elevation.
+
+   .iss-card-grid
+       Generic responsive grid for repeated cards.
+
+   .iss-media-card + modifiers
+       Image-heavy surface wrapper.
+       Useful controls:
+       - --cover / --contain / --natural
+       - --flat / --soft / --strong / --framed
+       - --red / --green / --blue / --yellow / --brown / --grey
+       - --rail-thin / --rail-wide
+       - --radius-sm / --radius-lg
+       - --vh-40 / --vh-50 / --vh-60
+
+   REUSABLE PATTERN FAMILIES IN THIS FILE
+   .iss-3-card-row*
+       Three-card row system.
+   .iss-4-card-row*
+       Four-card row system.
+   .iss-fuehrungen-card-query*
+       Card-query output for tours.
+
+   MAINTENANCE RULE:
+   If a change should affect every card of a certain family, edit the
+   shared family block first, not the page-specific selector.
+   ===================================================================== */
+
+/* =========================================================
+   GROUP: CARD CORE SYSTEM
+   PURPOSE:
+   Base reusable card shell for editorial cards, partner cards, query
+   results, and most standard content surfaces.
+
+   USE THIS WHEN:
+   - A layout needs a single card component that can be themed by
+     modifiers.
+   - A new card pattern should inherit the normal ISS look first.
+
+   PRIMARY HOOKS:
+   .iss-card
+   .iss-card__media
+   .iss-card__body
+   .iss-card__kicker
+   .iss-card__title
+   .iss-card__text
+   .iss-card__meta
+   .iss-card__footer
+   .iss-card__link
+   .iss-card--info
+   .iss-card--partner
+   .iss-card--green / --blue / --yellow / --brown
+   .iss-card--flat
+
+   CONTROL NOTES:
+   The left rail, radius, border, and hover lift define the base card
+   language. Keep these changes deliberate.
+   ========================================================= */
+/* =====================================================================
+   CARD SYSTEM
+   Reusable partner / info / query card
+   ===================================================================== */
+
+/* .iss-card: Base class for iss card; apply on primary wrapper/scope. */
+.iss-card {
+  --iss-card-accent: var(--iss-accent);
+  --iss-card-bg: var(--iss-white);
+  --iss-card-border: rgba(30, 30, 30, 0.12);
+  --iss-card-border-hover: rgba(30, 30, 30, 0.22);
+  --iss-card-radius: var(--iss-radius-sm);
+  --iss-card-rail-width: 2px;
+  --iss-card-rail-width-hover: 3px;
+  --iss-card-body-gap: 0.55rem;
+  --iss-card-title-size: clamp(0.98rem, 0.94rem + 0.22vw, 1.12rem);
+  --iss-card-title-line: 1.14;
+  --iss-card-title-track: -0.01em;
+  --iss-card-title-clamp: 2;
+  --iss-card-text-size: 0.88rem;
+  --iss-card-text-line: 1.5;
+  --iss-link-fg: var(--iss-card-accent);
+  --iss-link-hover-fg: var(--iss-black);
+
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  min-height: 100%;
+  overflow: hidden;
+
+  background: var(--iss-card-bg);
+  color: var(--iss-black);
+  border: 1px solid var(--iss-card-border);
+  border-radius: var(--iss-card-radius);
+  box-shadow: none;
+  text-decoration: none;
+
+  transition:
+    border-color var(--iss-transition),
+    background-color var(--iss-transition);
+}
+
+
+/* .iss-card: Base class for iss card; apply on primary wrapper/scope. */
+.iss-card:hover,
+/* .iss-card: Base class for iss card; apply on primary wrapper/scope. */
+.iss-card:focus-within {
+  border-color: var(--iss-card-border-hover);
+}
+
+/* .iss-card__media: Element class for `iss-card`; apply on `media` element. */
+.iss-card__media {
+  position: relative;
+  aspect-ratio: 4 / 3;
+  overflow: hidden;
+  background: var(--iss-card-media-bg, var(--iss-grey));
+}
+
+/* .iss-card__media: Element class for `iss-card`; apply on `media` element. */
+.iss-card__media img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: var(--iss-media-focus-x, 50%) var(--iss-media-focus-y, 50%);
+  transform: scale(1.001);
+  transition:
+    transform 0.3s ease,
+    filter 0.45s ease;
+}
+
+.iss-card:hover .iss-card__media img,
+.iss-card:focus-within .iss-card__media img {
+  transform: scale(1.01);
+}
+
+/* .iss-card__body: Element class for `iss-card`; apply on `body` element. */
+.iss-card__body {
+  display: flex;
+  flex: 1 1 auto;
+  flex-direction: column;
+  gap: var(--iss-card-body-gap, 0.7rem);
+  padding: 0.9rem 0.9rem 0.95rem;
+}
+
+/* .iss-card__kicker: Element class for `iss-card`; apply on `kicker` element. */
+.iss-card__kicker,
+.iss-card__body > .iss-kicker {
+  margin: 0;
+}
+
+/* .iss-card__title: Element class for `iss-card`; apply on `title` element. */
+.iss-card__title {
+  margin: 0;
+  font-size: var(--iss-card-title-size);
+  font-weight: 620;
+  line-height: var(--iss-card-title-line);
+  letter-spacing: var(--iss-card-title-track);
+  min-height: calc(var(--iss-card-title-clamp) * 1em * var(--iss-card-title-line));
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: var(--iss-card-title-clamp);
+  line-clamp: var(--iss-card-title-clamp);
+  overflow: hidden;
+}
+
+/* .iss-card__title: Element class for `iss-card`; apply on `title` element. */
+.iss-card__title a {
+  color: inherit;
+  text-decoration: none;
+}
+
+/* .iss-card__title: Element class for `iss-card`; apply on `title` element. */
+.iss-card__title a:hover,
+/* .iss-card__title: Element class for `iss-card`; apply on `title` element. */
+.iss-card__title a:focus-visible {
+  color: var(--iss-link-fg);
+}
+
+/* .iss-card__text: Element class for `iss-card`; apply on `text` element. */
+.iss-card__text {
+  margin: 0;
+  color: rgba(30, 30, 30, 0.72);
+  font-size: var(--iss-card-text-size);
+  line-height: var(--iss-card-text-line);
+}
+
+/* .iss-card__meta: Element class for `iss-card`; apply on `meta` element. */
+.iss-card__meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem 0.75rem;
+  margin-top: auto;
+  padding-top: 0.25rem;
+
+  font-size: 0.78rem;
+  font-weight: 600;
+  line-height: 1.3;
+  color: rgba(30, 30, 30, 0.62);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+/* .iss-card__footer: Element class for `iss-card`; apply on `footer` element. */
+.iss-card__footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  margin-top: auto;
+  padding-top: 0.5rem;
+}
+
+/* Accent rail */
+/* .iss-card: Base class for iss card; apply on primary wrapper/scope. */
+.iss-card::before {
+  content: "";
+  position: absolute;
+  inset: 0 auto 0 0;
+  width: var(--iss-card-rail-width);
+  background: var(--iss-card-accent);
+  z-index: 1;
+  transition:
+    width var(--iss-transition),
+    background-color var(--iss-transition);
+}
+
+.iss-card:hover::before,
+.iss-card:focus-within::before {
+  width: var(--iss-card-rail-width-hover);
+}
+
+/* Compact text-only version */
+/* .iss-card--info: Modifier class for `iss-card`; combine for `info` variant. */
+/* .iss-card__body: Element class for `iss-card`; apply on `body` element. */
+.iss-card--info .iss-card__body {
+  padding-top: 1.4rem;
+}
+
+/* .iss-card--info: Modifier class for `iss-card`; combine for `info` variant. */
+/* .iss-card__media: Element class for `iss-card`; apply on `media` element. */
+.iss-card--info .iss-card__media {
+  display: none;
+}
+
+/* Partner card: quieter */
+/* .iss-card--partner: Modifier class for `iss-card`; combine for `partner` variant. */
+.iss-card--partner {
+  background: #ffffff;
+}
+
+/* .iss-card--partner: Modifier class for `iss-card`; combine for `partner` variant. */
+/* .iss-card__title: Element class for `iss-card`; apply on `title` element. */
+.iss-card--partner .iss-card__title {
+  font-size: clamp(1rem, 0.96rem + 0.22vw, 1.16rem);
+}
+
+/* .iss-card--partner: Modifier class for `iss-card`; combine for `partner` variant. */
+/* .iss-card__text: Element class for `iss-card`; apply on `text` element. */
+.iss-card--partner .iss-card__text {
+  font-size: 0.88rem;
+}
+
+/* Soft thematic variants */
+/* .iss-card--green: Modifier class for `iss-card`; combine for `green` variant. */
+.iss-card--green {
+  --iss-card-accent: var(--iss-green);
+  --iss-link-hover-fg: var(--iss-green);
+}
+/* .iss-card--blue: Modifier class for `iss-card`; combine for `blue` variant. */
+.iss-card--blue {
+  --iss-card-accent: var(--iss-blue);
+  --iss-link-hover-fg: var(--iss-blue);
+}
+/* .iss-card--yellow: Modifier class for `iss-card`; combine for `yellow` variant. */
+.iss-card--yellow {
+  --iss-card-accent: var(--iss-yellow);
+  --iss-link-hover-fg: var(--iss-yellow);
+}
+/* .iss-card--brown: Modifier class for `iss-card`; combine for `brown` variant. */
+.iss-card--brown {
+  --iss-card-accent: var(--iss-brown);
+  --iss-link-hover-fg: var(--iss-brown);
+}
+
+/* Outline mode for dense grids */
+/* .iss-card--flat: Modifier class for `iss-card`; combine for `flat` variant. */
+.iss-card--flat {
+  --iss-card-body-gap: 0.52rem;
+  --iss-card-title-size: clamp(1rem, 0.95rem + 0.16vw, 1.12rem);
+  --iss-card-text-size: 0.88rem;
+  box-shadow: none;
+}
+
+/* .iss-card--flat: Modifier class for `iss-card`; combine for `flat` variant. */
+.iss-card--flat:hover,
+/* .iss-card--flat: Modifier class for `iss-card`; combine for `flat` variant. */
+.iss-card--flat:focus-within {
+  box-shadow: none;
+  border-color: var(--iss-card-border-hover);
+}
+
+.iss-card--media-wide .iss-card__media {
+  aspect-ratio: 16 / 9;
+  background: transparent;
+}
+
+/* Shared wrapper variant for exhibition/editorial brown card runs. */
+.iss-card-skin--exhibition .iss-card {
+  --iss-card-border: rgba(117, 58, 24, 0.18);
+  --iss-card-border-hover: rgba(117, 58, 24, 0.32);
+  --iss-card-radius: 2px;
+}
+
+.iss-card-skin--exhibition .iss-timeline-card__kicker,
+.iss-card-skin--exhibition .iss-card__meta {
+  color: rgba(117, 58, 24, 0.92);
+}
+
+.iss-card-skin--exhibition .iss-card__title a:hover,
+.iss-card-skin--exhibition .iss-card__title a:focus-visible,
+.iss-card-skin--exhibition .iss-card__link:hover,
+.iss-card-skin--exhibition .iss-card__link:focus-visible {
+  color: var(--iss-brown);
+}
+
+/* Responsive */
+@media (max-width: 782px) {
+/* .iss-card__body: Element class for `iss-card`; apply on `body` element. */
+  .iss-card__body {
+    padding: 0.9rem 0.9rem 1rem;
+  }
+
+/* .iss-card__title: Element class for `iss-card`; apply on `title` element. */
+  .iss-card__title {
+    font-size: 1.06rem;
+  }
+
+/* .iss-card__text: Element class for `iss-card`; apply on `text` element. */
+  .iss-card__text {
+    font-size: 0.9rem;
+  }
+}
+/* =====================================================================
+   CARD GRID WRAPPER
+   Use: Global reusable 3-column card rows for manual cards and Query Loop.
+   Apply `.iss-card-grid` on the outer wrapper or on the Query block.
+   ===================================================================== */
+
+/* .iss-card-grid: Base class for iss card grid; apply on primary wrapper/scope. */
+.iss-card-grid,
+.wp-block-group.iss-card-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: var(--iss-gap);
+  align-items: start;
+}
+
+/* Keep four-up discovery strips working for normal wrappers and Gutenberg Groups. */
+.iss-card-grid.columns-4,
+.wp-block-group.iss-card-grid.columns-4 {
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+}
+
+.iss-card-grid.iss-card-grid--compact,
+.wp-block-group.iss-card-grid.iss-card-grid--compact {
+  gap: 1rem;
+}
+
+/* Gutenberg Query Loop wrapper support */
+/* .iss-card-grid: Base class for iss card grid; apply on primary wrapper/scope. */
+/* .wp-block-post-template: Base class for wp block post template; apply on primary wrapper/scope. */
+.iss-card-grid > .wp-block-post-template {
+  display: contents;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+/* Normalize Gutenberg Query Loop item wrappers so the first `li.wp-block-post`
+   does not sit differently from later items in card-like grids. */
+.wp-block-post-template.is-layout-grid,
+.wp-block-post-template.is-flex-container {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.wp-block-post-template.is-layout-grid > li.wp-block-post,
+.wp-block-post-template.is-flex-container > li.wp-block-post {
+  display: flex;
+  min-width: 0;
+  min-height: 100%;
+  margin: 0;
+}
+
+.wp-block-post-template.is-layout-grid > li.wp-block-post > *,
+.wp-block-post-template.is-flex-container > li.wp-block-post > * {
+  width: 100%;
+}
+
+/* Each card/item inside grid */
+/* .iss-card-grid: Base class for iss card grid; apply on primary wrapper/scope. */
+/* .wp-block-post: Base class for wp block post; apply on primary wrapper/scope. */
+.iss-card-grid .wp-block-post,
+/* .iss-card-grid: Base class for iss card grid; apply on primary wrapper/scope. */
+/* .iss-card: Base class for iss card; apply on primary wrapper/scope. */
+.iss-card-grid > .iss-card,
+/* .iss-card-grid: Base class for iss card grid; apply on primary wrapper/scope. */
+/* .iss-quiet-card: Base class for iss quiet card; apply on primary wrapper/scope. */
+.iss-card-grid > .iss-quiet-card,
+/* .iss-card-grid: Base class for iss card grid; apply on primary wrapper/scope. */
+/* .wp-block-group: Base class for wp block group; apply on primary wrapper/scope. */
+/* .iss-card: Base class for iss card; apply on primary wrapper/scope. */
+.iss-card-grid > .wp-block-group.iss-card,
+/* .iss-card-grid: Base class for iss card grid; apply on primary wrapper/scope. */
+/* .wp-block-group: Base class for wp block group; apply on primary wrapper/scope. */
+/* .iss-quiet-card: Base class for iss quiet card; apply on primary wrapper/scope. */
+.iss-card-grid > .wp-block-group.iss-quiet-card {
+  min-width: 0;
+  margin: 0;
+}
+
+/* WordPress block-editor compatibility for generic card grids.
+   These rules belong with the grid wrapper because they normalize
+   Gutenberg group/query markup into the same card system. */
+.wp-block-group.iss-card-grid .iss-card figure img {
+  width: 100%;
+  aspect-ratio: 16 / 9;
+  height: auto;
+  object-fit: cover;
+}
+
+.wp-block-group.iss-card-grid .wp-block-group.iss-card {
+  margin-top: 0;
+  margin-bottom: 0;
+}
+
+@media (max-width: 1200px) {
+  .iss-card-grid.columns-4,
+  .wp-block-group.iss-card-grid.columns-4 {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 1024px) {
+  .iss-card-grid,
+  .iss-card-grid.columns-4,
+  .wp-block-group.iss-card-grid,
+  .wp-block-group.iss-card-grid.columns-4 {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 767px) {
+  .iss-card-grid,
+  .wp-block-group.iss-card-grid,
+  .wp-block-group.iss-card-grid.columns-4 {
+    grid-template-columns: 1fr;
+    row-gap: 24px;
+  }
+
+  .iss-card-grid > .wp-block-post-template {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 24px;
+  }
+
+  .iss-quiet-card--narrative,
+  .iss-quiet-card--gateway {
+    min-height: 18rem;
+  }
+}
+
+/* =========================================================
+   GROUP: QUIET EDITORIAL CARDS
+   PURPOSE:
+   Modest editorial cards for atlas, story, archive, and narrative use.
+   Shared rules:
+   - slight radius
+   - very light frame
+   - no default shadow
+   - page accent inheritance via --iss-accent
+   - hover changes rail + tiny image motion only
+   ========================================================= */
+
+.iss-quiet-card {
+  --iss-quiet-card-radius: var(--iss-radius-sm);
+  --iss-quiet-card-border: rgba(30, 30, 30, 0.12);
+  --iss-quiet-card-border-hover: rgba(30, 30, 30, 0.22);
+  --iss-quiet-card-rail: rgba(30, 30, 30, 0.18);
+  --iss-quiet-card-rail-hover: var(--iss-accent);
+  --iss-quiet-card-bg: #fff;
+  --iss-quiet-card-title-size: clamp(0.98rem, 0.94rem + 0.22vw, 1.12rem);
+
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  height: 100%;
+  overflow: hidden;
+  color: var(--iss-black);
+  background: var(--iss-quiet-card-bg);
+  border: 1px solid var(--iss-quiet-card-border);
+  border-radius: var(--iss-quiet-card-radius);
+  box-shadow: none;
+  text-decoration: none;
+  transition:
+    border-color var(--iss-transition),
+    background-color var(--iss-transition);
+}
+
+.iss-quiet-card::before {
+  content: "";
+  position: absolute;
+  inset: 0 auto 0 0;
+  z-index: 2;
+  width: 2px;
+  background: var(--iss-quiet-card-rail);
+  transition:
+    width var(--iss-transition),
+    background-color var(--iss-transition);
+}
+
+.iss-quiet-card:hover,
+.iss-quiet-card:focus-within {
+  border-color: var(--iss-quiet-card-border-hover);
+  box-shadow: none;
+}
+
+.iss-quiet-card:hover::before,
+.iss-quiet-card:focus-within::before {
+  width: 3px;
+  background: var(--iss-quiet-card-rail-hover);
+}
+
+.iss-quiet-card__media {
+  position: relative;
+  margin: 0;
+  overflow: hidden;
+  background: rgba(30, 30, 30, 0.04);
+}
+
+.iss-quiet-card__media img {
+  display: block;
+  width: 100%;
+  height: auto;
+  aspect-ratio: 16 / 10;
+  object-fit: cover;
+  transform: scale(1.001);
+  transition:
+    transform 0.3s ease,
+    filter 0.45s ease;
+}
+
+.iss-quiet-card:hover .iss-quiet-card__media img,
+.iss-quiet-card:focus-within .iss-quiet-card__media img {
+  transform: scale(1.01);
+}
+
+.iss-quiet-card__body {
+  display: flex;
+  flex: 1 1 auto;
+  flex-direction: column;
+  gap: 0.48rem;
+  padding: 0.9rem 0.9rem 0.95rem;
+}
+
+.iss-quiet-card__kicker,
+.iss-quiet-card__meta {
+  margin: 0;
+  color: var(--iss-accent);
+  font-size: 0.72rem;
+  font-weight: 700;
+  line-height: 1.25;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.iss-quiet-card__title {
+  margin: 0;
+  color: var(--iss-black);
+  font-size: var(--iss-quiet-card-title-size);
+  font-weight: 620;
+  line-height: 1.14;
+  letter-spacing: -0.01em;
+}
+
+.iss-quiet-card__title a {
+  color: inherit;
+  text-decoration: none;
+}
+
+.iss-quiet-card__text {
+  margin: 0;
+  color: rgba(30, 30, 30, 0.72);
+  font-size: 0.88rem;
+  line-height: 1.48;
+}
+
+.iss-quiet-card--overlay {
+  min-height: clamp(18rem, 32vw, 26rem);
+  background: var(--iss-black);
+}
+
+.iss-quiet-card--overlay::before {
+  inset: 0 0 auto 0;
+  width: auto;
+  height: 3px;
+}
+
+.iss-quiet-card--overlay:hover::before,
+.iss-quiet-card--overlay:focus-within::before {
+  width: auto;
+  height: 5px;
+}
+
+.iss-quiet-card--overlay .iss-quiet-card__media {
+  position: absolute;
+  inset: 0;
+}
+
+.iss-quiet-card--overlay .iss-quiet-card__media img {
+  height: 100%;
+  aspect-ratio: auto;
+  filter: grayscale(1) contrast(1.04);
+}
+
+.iss-quiet-card--overlay .iss-quiet-card__media::after {
+  content: "";
+  position: absolute;
+  inset: 35% 0 0;
+  background: linear-gradient(
+    180deg,
+    rgba(30, 30, 30, 0) 0%,
+    rgba(30, 30, 30, 0.72) 72%,
+    rgba(30, 30, 30, 0.86) 100%
+  );
+}
+
+.iss-quiet-card--overlay .iss-quiet-card__body {
+  position: relative;
+  z-index: 2;
+  justify-content: flex-end;
+  padding: 1.15rem;
+  color: var(--iss-white);
+}
+
+.iss-quiet-card--overlay .iss-quiet-card__title,
+.iss-quiet-card--overlay .iss-quiet-card__text {
+  color: var(--iss-white);
+}
+
+.iss-quiet-card--overlay .iss-quiet-card__text {
+  color: rgba(249, 249, 250, 0.82);
+}
+
+.iss-quiet-card--narrative,
+.iss-quiet-card--gateway {
+  --iss-quiet-card-radius: 0.25rem;
+
+  box-shadow: var(--iss-shadow);
+}
+
+.iss-quiet-card--narrative {
+  min-height: 22rem;
+}
+
+.iss-quiet-card--gateway {
+  min-height: 24rem;
+}
+
+.iss-quiet-card--narrative .iss-quiet-card__media::after,
+.iss-quiet-card--gateway .iss-quiet-card__media::after {
+  inset: 0;
+  background: linear-gradient(180deg, rgba(12, 11, 10, 0.16), rgba(12, 11, 10, 0.82));
+}
+
+.iss-quiet-card--narrative .iss-quiet-card__media img,
+.iss-quiet-card--gateway .iss-quiet-card__media img {
+  filter: none;
+}
+
+.iss-quiet-card--narrative .iss-quiet-card__body,
+.iss-quiet-card--gateway .iss-quiet-card__body {
+  gap: 0.35rem;
+  padding: 1.15rem 1.15rem 1.2rem;
+}
+
+.iss-quiet-card--gateway .iss-quiet-card__body {
+  gap: 0.45rem;
+  padding: 1.35rem 1.25rem 1.2rem;
+}
+
+.iss-quiet-card--narrative .iss-quiet-card__kicker,
+.iss-quiet-card--gateway .iss-quiet-card__kicker {
+  font-size: 0.78rem;
+  letter-spacing: 0.09em;
+}
+
+.iss-quiet-card--narrative .iss-quiet-card__title,
+.iss-quiet-card--gateway .iss-quiet-card__title {
+  font-size: clamp(1.25rem, 1.1rem + 0.35vw, 1.55rem);
+  line-height: 1.04;
+}
+
+.iss-quiet-card--narrative .iss-quiet-card__text,
+.iss-quiet-card--gateway .iss-quiet-card__text {
+  line-height: 1.58;
+}
+
+.iss-quiet-card__action {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  margin: 0.35rem 0 0;
+  font-size: 0.84rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: rgba(255, 255, 255, 0.94);
+}
+
+.iss-quiet-card--gateway .iss-quiet-card__title a,
+.iss-quiet-card__action a {
+  color: inherit;
+  text-decoration: none;
+}
+
+.iss-quiet-card__action::after {
+  content: "\2192";
+}
+
+.iss-quiet-card--atlas {
+  --iss-quiet-card-title-size: clamp(1.45rem, 1.1rem + 1vw, 2.05rem);
+}
+
+.iss-quiet-card--atlas .iss-quiet-card__media img {
+  aspect-ratio: 16 / 9;
+  filter: grayscale(1) contrast(1.02);
+}
+
+.iss-quiet-card--atlas .iss-quiet-card__body {
+  gap: 0.75rem;
+  padding: clamp(1.15rem, 2vw, 1.6rem);
+}
+
+.iss-quiet-card--atlas .iss-quiet-card__text {
+  max-width: 38rem;
+  font-size: 1rem;
+}
+
+.iss-quiet-card--timeline {
+  --iss-quiet-card-title-size: clamp(1.02rem, 0.96rem + 0.3vw, 1.22rem);
+}
+
+.iss-quiet-card--timeline::before {
+  inset: 0 0 auto 0;
+  width: auto;
+  height: 3px;
+}
+
+.iss-quiet-card--timeline:hover::before,
+.iss-quiet-card--timeline:focus-within::before {
+  width: auto;
+  height: 5px;
+}
+
+.iss-quiet-card--timeline .iss-quiet-card__media img {
+  aspect-ratio: 4 / 3;
+  filter: grayscale(1) contrast(1.04);
+}
+
+.iss-quiet-card--timeline .iss-quiet-card__body {
+  gap: 0.45rem;
+  padding: 0.9rem 0.9rem 1rem;
+}
+
+.iss-quiet-card--knowledge {
+  background: linear-gradient(180deg, rgba(30, 30, 30, 0.98), rgba(40, 40, 40, 0.94));
+  border-color: rgba(255, 255, 255, 0.12);
+}
+
+.iss-quiet-card--knowledge .iss-quiet-card__media img {
+  filter: grayscale(1) contrast(1.06);
+}
+
+.iss-quiet-card--knowledge .iss-quiet-card__title,
+.iss-quiet-card--knowledge .iss-quiet-card__text {
+  color: var(--iss-white);
+}
+
+.iss-quiet-card--knowledge .iss-quiet-card__text {
+  color: rgba(249, 249, 250, 0.78);
+}
+
+/* Archive card family.
+   Shared by archive landing, museum topic cards, and archive-related
+   singles that reuse the same metadata/card anatomy. */
+.iss-archive-card {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  height: 100%;
+  overflow: hidden;
+  border: var(--iss-archive-border, 1px solid rgba(30, 30, 30, 0.12));
+  border-radius: var(--iss-archive-radius, var(--iss-radius-sm));
+  background: var(--iss-archive-card-bg, #fff);
+  box-shadow: var(--iss-archive-shadow, none);
+}
+
+.iss-archive-card__media {
+  margin: 0;
+  aspect-ratio: 16 / 10;
+  overflow: hidden;
+  background: var(--iss-grey);
+}
+
+.iss-archive-card__media img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.iss-archive-card__body {
+  display: flex;
+  flex: 1 1 auto;
+  flex-direction: column;
+  gap: 0.8rem;
+  padding: var(--iss-archive-card-pad, clamp(1rem, 1.8vw, 1.4rem));
+}
+
+.iss-archive-card__type {
+  display: inline-flex;
+  align-items: center;
+  width: fit-content;
+  min-height: 1.9rem;
+  padding: 0.3rem 0.65rem;
+  border-radius: 999px;
+  background: rgba(30, 30, 30, 0.06);
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+
+.iss-archive-card__title {
+  margin: 0;
+  font-size: clamp(1.1rem, 1rem + 0.45vw, 1.4rem);
+  line-height: 1.16;
+}
+
+.iss-archive-card__text {
+  margin: 0;
+  color: rgba(30, 30, 30, 0.78);
+}
+
+.iss-archive-card__meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem 0.6rem;
+  margin-top: auto;
+  padding-top: 0.2rem;
+  font-size: 0.78rem;
+  color: rgba(30, 30, 30, 0.56);
+}
+
+.iss-archive-card__actions {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  margin-top: auto;
+  padding-top: 0.5rem;
+}
+
+.iss-archive-card__link {
+  color: var(--iss-black);
+  font-weight: 600;
+  text-decoration: none;
+}
+
+.iss-archive-card__link:hover,
+.iss-archive-card__link:focus-visible {
+  color: var(--iss-accent);
+}
+
+.iss-archive-card--mediathek .iss-archive-card__type {
+  background: rgba(232, 29, 37, 0.1);
+  color: var(--iss-red);
+}
+
+.iss-archive-card--sammlung .iss-archive-card__type {
+  background: rgba(134, 159, 186, 0.18);
+  color: #3d5873;
+}
+
+.iss-archive-card--hausarchiv .iss-archive-card__type {
+  background: rgba(117, 58, 24, 0.12);
+  color: var(--iss-brown);
+}
+
+/* Selected-grid family.
+   Four-up grid for compact route, format, and project-card rows that
+   still need enough room for real text. */
+.iss-selected-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: clamp(1rem, 1.5vw, 1.5rem);
+  margin-top: clamp(2rem, 4vw, 4rem);
+}
+
+/* Small editorial card.
+   Reusable compact card for project teasers, route lists, and format
+   rows. Keep it flatter and more direct than the main `.iss-card`
+   family. */
+.iss-small-card {
+  display: flex;
+  min-height: 18rem;
+  flex-direction: column;
+  gap: 0.85rem;
+  padding: clamp(1.1rem, 1.5vw, 1.45rem);
+  border: 1px solid var(--iss-border);
+  border-radius: var(--iss-radius-md);
+  background: var(--iss-white);
+  color: inherit;
+  text-decoration: none;
+  transition: border-color 0.2s ease, transform 0.2s ease;
+}
+
+.iss-small-card:hover,
+.iss-small-card:focus-visible,
+.iss-small-card:focus-within {
+  transform: translateY(-2px);
+  border-color: rgba(30, 30, 30, 0.28);
+  outline: none;
+}
+
+.iss-small-card__kicker {
+  margin: 0;
+  color: rgba(30, 30, 30, 0.58);
+  font-size: 0.72rem;
+  font-weight: 800;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+.iss-small-card__title {
+  margin: 0;
+  font-size: clamp(1.25rem, 1vw, 1.65rem);
+  line-height: 1.12;
+  letter-spacing: -0.025em;
+}
+
+.iss-small-card__text {
+  margin: 0;
+  color: rgba(30, 30, 30, 0.72);
+  font-size: 0.98rem;
+  line-height: 1.55;
+}
+
+.iss-small-card__media {
+  margin: 0;
+  width: 100%;
+  height: 100%;
+  min-height: 100%;
+  background: #d8d0c4;
+  overflow: hidden;
+}
+
+.iss-small-card__media img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.iss-small-card__body {
+  display: flex;
+  flex-direction: column;
+  gap: 0.85rem;
+  min-width: 0;
+  padding: 0;
+}
+
+.iss-small-card__footer {
+  margin: 0;
+  margin-top: auto;
+}
+
+.iss-small-card__link {
+  display: inline-flex;
+  align-items: center;
+  width: fit-content;
+  font-weight: 700;
+  color: inherit;
+  text-decoration: none;
+}
+
+.iss-small-card__link::after {
+  content: " ->";
+  color: var(--iss-accent);
+}
+
+/* Split variant for image-left / text-right rows.
+   Shared by the Ausstellungen route cards and Veranstaltungen formats. */
+.iss-small-card--split {
+  display: grid;
+  grid-template-columns: 40% minmax(0, 1fr);
+  align-items: stretch;
+  min-height: 14rem;
+  gap: 0.95rem;
+  padding: clamp(1rem, 1.4vw, 1.35rem);
+  overflow: hidden;
+}
+
+@media (max-width: 1180px) {
+  .iss-selected-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .iss-small-card--split {
+    grid-template-columns: 36% minmax(0, 1fr);
+  }
+}
+
+@media (max-width: 781px) {
+  .iss-selected-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .iss-small-card--split {
+    grid-template-columns: 40% minmax(0, 1fr);
+  }
+}
+
+/* =========================================================
+   GROUP: TEAM CARD FAMILY
+   PURPOSE:
+   Reusable portrait-led team member card for Query Loop sections and
+   featured staff/profile listings.
+
+   USE THIS WHEN:
+   - Listing `team_member` posts in a reusable grid.
+   - One profile should be featured ahead of the remaining team cards.
+
+   PRIMARY HOOKS:
+   .iss-team-card
+   .iss-team-card--lead
+   .iss-team-card__media-wrap
+   .iss-team-card__body
+   .iss-team-card__kicker
+   .iss-team-card__title
+   .iss-team-card__role
+   .iss-team-card__text
+   ========================================================= */
+/* .iss-team-card: Base class for iss team card; apply on primary wrapper/scope. */
+.iss-team-card {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+  align-items: stretch;
+  min-height: 100%;
+  padding: 0;
+  background: transparent;
+  box-shadow: none;
+  border-color: rgba(30, 30, 30, 0.1);
+  border-radius: 0;
+}
+
+/* .iss-team-card: Base class for iss team card; apply on primary wrapper/scope. */
+.iss-team-card:hover,
+/* .iss-team-card: Base class for iss team card; apply on primary wrapper/scope. */
+.iss-team-card:focus-within {
+  transform: none;
+  box-shadow: none;
+  border-color: rgba(30, 30, 30, 0.14);
+}
+
+/* .iss-team-card: Base class for iss team card; apply on primary wrapper/scope. */
+.iss-team-card::before {
+  display: none;
+}
+
+/* .iss-team-card: Base class for iss team card; apply on primary wrapper/scope. */
+/* .iss-team-card__media-wrap: Element class for `iss-team-card`; apply on `media-wrap` element. */
+.iss-team-card .iss-team-card__media-wrap {
+  margin: 0;
+  width: 100%;
+  background: transparent;
+  border: 0;
+  border-radius: 0;
+  box-shadow: none;
+  overflow: hidden;
+}
+
+/* .iss-team-card: Base class for iss team card; apply on primary wrapper/scope. */
+/* .iss-team-card__media-wrap: Element class for `iss-team-card`; apply on `media-wrap` element. */
+.iss-team-card .iss-team-card__media-wrap::before {
+  display: none;
+}
+
+/* .iss-team-card: Base class for iss team card; apply on primary wrapper/scope. */
+/* .iss-card__media: Element class for `iss-card`; apply on `media` element. */
+.iss-team-card .iss-card__media {
+  aspect-ratio: 3 / 4;
+  background: transparent;
+  margin: 0;
+}
+
+/* .iss-team-card: Base class for iss team card; apply on primary wrapper/scope. */
+/* .iss-card__media: Element class for `iss-card`; apply on `media` element. */
+/* img: card media image */
+.iss-team-card .iss-card__media img {
+  display: block;
+  width: 100%;
+  aspect-ratio: 3 / 4;
+  height: auto;
+  border-radius: 0;
+  object-position: center top;
+}
+
+/* .iss-team-card: Base class for iss team card; apply on primary wrapper/scope. */
+/* .iss-card-grid: Base class for iss card grid; apply on primary wrapper/scope. */
+/* .iss-card__media: Element class for `iss-card`; apply on `media` element. */
+.iss-card-grid .iss-team-card .iss-card__media img,
+/* .wp-block-group: Base class for wp block group; apply on primary wrapper/scope. */
+/* .iss-card-grid: Base class for iss card grid; apply on primary wrapper/scope. */
+/* .iss-team-card: Base class for iss team card; apply on primary wrapper/scope. */
+/* figure img: card media image */
+.wp-block-group.iss-card-grid .iss-team-card figure img {
+  aspect-ratio: 3 / 4;
+  height: auto;
+  border-radius: 0;
+}
+
+/* .iss-team-card: Base class for iss team card; apply on primary wrapper/scope. */
+/* .iss-team-card__body: Element class for `iss-team-card`; apply on `body` element. */
+.iss-team-card .iss-team-card__body {
+  gap: 0.3rem;
+  padding: 0.95rem 0.95rem 1rem;
+  min-width: 0;
+}
+
+/* .iss-team-card: Base class for iss team card; apply on primary wrapper/scope. */
+/* .iss-team-card__kicker: Element class for `iss-team-card`; apply on `kicker` element. */
+.iss-team-card .iss-team-card__kicker {
+  color: rgba(30, 30, 30, 0.56);
+}
+
+/* .iss-team-card: Base class for iss team card; apply on primary wrapper/scope. */
+/* .iss-team-card__title: Element class for `iss-team-card`; apply on `title` element. */
+.iss-team-card .iss-team-card__title {
+  min-height: 0;
+  font-size: clamp(1.15rem, 1.04rem + 0.28vw, 1.35rem);
+  line-height: 1.14;
+  letter-spacing: -0.02em;
+  display: block;
+}
+
+/* .iss-team-card: Base class for iss team card; apply on primary wrapper/scope. */
+/* .iss-team-card__role: Element class for `iss-team-card`; apply on `role` element. */
+.iss-team-card .iss-team-card__role {
+  margin: 0.05rem 0 0;
+  color: var(--iss-accent);
+  font-size: 0.95rem;
+  font-weight: 600;
+  line-height: 1.35;
+}
+
+/* .iss-team-card: Base class for iss team card; apply on primary wrapper/scope. */
+/* .iss-team-card__role: Element class for `iss-team-card`; apply on `role` element. */
+.iss-team-card .iss-team-card__role a {
+  color: inherit;
+  text-decoration: none;
+}
+
+/* .iss-team-card: Base class for iss team card; apply on primary wrapper/scope. */
+/* .iss-team-card__role: Element class for `iss-team-card`; apply on `role` element. */
+.iss-team-card .iss-team-card__role a:hover,
+/* .iss-team-card: Base class for iss team card; apply on primary wrapper/scope. */
+/* .iss-team-card__role: Element class for `iss-team-card`; apply on `role` element. */
+.iss-team-card .iss-team-card__role a:focus-visible {
+  text-decoration: underline;
+}
+
+/* .iss-team-card: Base class for iss team card; apply on primary wrapper/scope. */
+/* .iss-team-card__text: Element class for `iss-team-card`; apply on `text` element. */
+.iss-team-card .iss-team-card__text {
+  margin-top: 0.2rem;
+  color: rgba(30, 30, 30, 0.72);
+  font-size: 0.92rem;
+  line-height: 1.45;
+  display: -webkit-box;
+  -webkit-line-clamp: 3;
+  line-clamp: 3;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+/* .iss-team-card: Base class for iss team card; apply on primary wrapper/scope. */
+/* .wp-block-post-excerpt__excerpt: Base class for wp block post excerpt excerpt; apply on primary wrapper/scope. */
+.iss-team-card .wp-block-post-excerpt__excerpt {
+  margin: 0;
+}
+
+/* .iss-team-card--lead: Modifier class for `iss-team-card`; combine for `lead` variant. */
+.iss-team-card--lead {
+  display: flex;
+  flex-direction: column;
+}
+
+/* .iss-team-card--lead: Modifier class for `iss-team-card`; combine for `lead` variant. */
+/* .iss-team-card__body: Element class for `iss-team-card`; apply on `body` element. */
+.iss-team-card--lead .iss-team-card__body {
+  justify-content: start;
+  padding: 1.05rem 1.05rem 1.1rem;
+}
+
+/* .iss-team-card--lead: Modifier class for `iss-team-card`; combine for `lead` variant. */
+/* .iss-team-card__title: Element class for `iss-team-card`; apply on `title` element. */
+.iss-team-card--lead .iss-team-card__title {
+  font-size: clamp(1.22rem, 1.08rem + 0.45vw, 1.55rem);
+}
+
+/* .iss-team-card--lead: Modifier class for `iss-team-card`; combine for `lead` variant. */
+/* .iss-card__media: Element class for `iss-card`; apply on `media` element. */
+.iss-team-card--lead .iss-card__media,
+/* .iss-team-card--lead: Modifier class for `iss-team-card`; combine for `lead` variant. */
+/* .iss-card__media: Element class for `iss-card`; apply on `media` element. */
+/* img: card media image */
+.iss-team-card--lead .iss-card__media img {
+  aspect-ratio: 3 / 4;
+}
+
+@media (max-width: 782px) {
+/* .iss-team-card: Base class for iss team card; apply on primary wrapper/scope. */
+  .iss-team-card {
+    padding: 0;
+  }
+
+/* .iss-team-card: Base class for iss team card; apply on primary wrapper/scope. */
+/* .iss-card__media: Element class for `iss-card`; apply on `media` element. */
+/* img: card media image */
+  .iss-team-card .iss-card__media,
+  .iss-team-card .iss-card__media img {
+    aspect-ratio: 3 / 4;
+  }
+
+/* .iss-team-card: Base class for iss team card; apply on primary wrapper/scope. */
+/* .iss-team-card__body: Element class for `iss-team-card`; apply on `body` element. */
+  .iss-team-card .iss-team-card__body {
+    padding: 0.85rem 0.85rem 0.95rem;
+  }
+}
+
+
+/* =========================================================
+   GROUP: CARD MEDIA UTILITIES
+   PURPOSE:
+   Shared wrapper for image-led blocks where media treatment should be
+   configurable without rewriting the card shell.
+
+   USE THIS WHEN:
+   - The same image block needs cover vs contain behavior.
+   - A pattern needs stronger or quieter image framing.
+   - Rail color or radius should change without new CSS.
+
+   PRIMARY HOOKS:
+   .iss-media-card
+   .iss-media-card--cover / --contain / --natural
+   .iss-media-card--flat / --soft / --strong / --framed
+   .iss-media-card--red / --green / --blue / --yellow / --brown / --grey
+   .iss-media-card--rail-thin / --rail-wide
+   .iss-media-card--radius-sm / --radius-lg
+   .iss-media-card--vh-40 / --vh-50 / --vh-60
+   ========================================================= */
+/* =====================================================================
+   ISS MEDIA CARD UTILITIES
+   Reusable media wrapper for image-heavy blocks and cards.
+   Keep this file separate from style.css and load it before pattern CSS.
+   ===================================================================== */
+
+/* .iss-media-card: Base class for iss media card; apply on primary wrapper/scope. */
+.iss-media-card {
+  --iss-media-card-rail-color: var(--iss-accent);
+  --iss-media-card-shadow: none;
+  --iss-media-card-bg: var(--iss-white);
+  --iss-media-card-border-width: 1px;
+  --iss-media-card-rail-width: 2px;
+  --iss-media-card-radius: var(--iss-radius-sm);
+
+  position: relative;
+  min-width: 0;
+  background: var(--iss-media-card-bg);
+  border: var(--iss-media-card-border-width) solid rgba(30, 30, 30, 0.12);
+  border-radius: var(--iss-media-card-radius);
+  overflow: hidden;
+  box-shadow: var(--iss-media-card-shadow);
+}
+
+/* .iss-media-card: Base class for iss media card; apply on primary wrapper/scope. */
+.iss-media-card::before {
+  content: "";
+  position: absolute;
+  inset: 0 auto 0 0;
+  width: var(--iss-media-card-rail-width);
+  background: var(--iss-media-card-rail-color);
+  z-index: 2;
+  pointer-events: none;
+}
+
+/* .iss-media-card: Base class for iss media card; apply on primary wrapper/scope. */
+/* .wp-block-image: Base class for wp block image; apply on primary wrapper/scope. */
+.iss-media-card > .wp-block-image,
+/* .iss-media-card: Base class for iss media card; apply on primary wrapper/scope. */
+.iss-media-card > figure,
+/* .iss-media-card: Base class for iss media card; apply on primary wrapper/scope. */
+/* .iss-asymmetric-feature__image: Element class for `iss-asymmetric-feature`; apply on `image` element. */
+.iss-media-card > .iss-asymmetric-feature__image,
+/* .iss-media-card: Base class for iss media card; apply on primary wrapper/scope. */
+/* .iss-card__media: Element class for `iss-card`; apply on `media` element. */
+.iss-media-card > .iss-card__media {
+  margin: 0;
+  width: 100%;
+  height: 100%;
+}
+
+/* .iss-media-card: Base class for iss media card; apply on primary wrapper/scope. */
+/* .wp-block-image: Base class for wp block image; apply on primary wrapper/scope. */
+.iss-media-card > .wp-block-image img,
+/* .iss-media-card: Base class for iss media card; apply on primary wrapper/scope. */
+.iss-media-card > figure img,
+/* .iss-media-card: Base class for iss media card; apply on primary wrapper/scope. */
+/* .iss-asymmetric-feature__image: Element class for `iss-asymmetric-feature`; apply on `image` element. */
+.iss-media-card > .iss-asymmetric-feature__image img,
+/* .iss-media-card: Base class for iss media card; apply on primary wrapper/scope. */
+/* .iss-card__media: Element class for `iss-card`; apply on `media` element. */
+.iss-media-card > .iss-card__media img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+/* Scale modes */
+/* .iss-media-card--cover: Modifier class for `iss-media-card`; combine for `cover` variant. */
+/* .wp-block-image: Base class for wp block image; apply on primary wrapper/scope. */
+.iss-media-card--cover > .wp-block-image img,
+/* .iss-media-card--cover: Modifier class for `iss-media-card`; combine for `cover` variant. */
+.iss-media-card--cover > figure img,
+/* .iss-media-card--cover: Modifier class for `iss-media-card`; combine for `cover` variant. */
+/* .iss-asymmetric-feature__image: Element class for `iss-asymmetric-feature`; apply on `image` element. */
+.iss-media-card--cover > .iss-asymmetric-feature__image img,
+/* .iss-media-card--cover: Modifier class for `iss-media-card`; combine for `cover` variant. */
+/* .iss-card__media: Element class for `iss-card`; apply on `media` element. */
+.iss-media-card--cover > .iss-card__media img {
+  object-fit: cover;
+}
+
+/* .iss-media-card--contain: Modifier class for `iss-media-card`; combine for `contain` variant. */
+.iss-media-card--contain {
+  background: #fff;
+}
+
+/* .iss-media-card--contain: Modifier class for `iss-media-card`; combine for `contain` variant. */
+/* .wp-block-image: Base class for wp block image; apply on primary wrapper/scope. */
+.iss-media-card--contain > .wp-block-image img,
+/* .iss-media-card--contain: Modifier class for `iss-media-card`; combine for `contain` variant. */
+.iss-media-card--contain > figure img,
+/* .iss-media-card--contain: Modifier class for `iss-media-card`; combine for `contain` variant. */
+/* .iss-asymmetric-feature__image: Element class for `iss-asymmetric-feature`; apply on `image` element. */
+.iss-media-card--contain > .iss-asymmetric-feature__image img,
+/* .iss-media-card--contain: Modifier class for `iss-media-card`; combine for `contain` variant. */
+/* .iss-card__media: Element class for `iss-card`; apply on `media` element. */
+.iss-media-card--contain > .iss-card__media img {
+  object-fit: contain;
+}
+
+/* .iss-media-card--natural: Modifier class for `iss-media-card`; combine for `natural` variant. */
+/* .wp-block-image: Base class for wp block image; apply on primary wrapper/scope. */
+.iss-media-card--natural > .wp-block-image,
+/* .iss-media-card--natural: Modifier class for `iss-media-card`; combine for `natural` variant. */
+.iss-media-card--natural > figure,
+/* .iss-media-card--natural: Modifier class for `iss-media-card`; combine for `natural` variant. */
+/* .iss-asymmetric-feature__image: Element class for `iss-asymmetric-feature`; apply on `image` element. */
+.iss-media-card--natural > .iss-asymmetric-feature__image,
+/* .iss-media-card--natural: Modifier class for `iss-media-card`; combine for `natural` variant. */
+/* .iss-card__media: Element class for `iss-card`; apply on `media` element. */
+.iss-media-card--natural > .iss-card__media {
+  height: auto;
+}
+
+/* .iss-media-card--natural: Modifier class for `iss-media-card`; combine for `natural` variant. */
+/* .wp-block-image: Base class for wp block image; apply on primary wrapper/scope. */
+.iss-media-card--natural > .wp-block-image img,
+/* .iss-media-card--natural: Modifier class for `iss-media-card`; combine for `natural` variant. */
+.iss-media-card--natural > figure img,
+/* .iss-media-card--natural: Modifier class for `iss-media-card`; combine for `natural` variant. */
+/* .iss-asymmetric-feature__image: Element class for `iss-asymmetric-feature`; apply on `image` element. */
+.iss-media-card--natural > .iss-asymmetric-feature__image img,
+/* .iss-media-card--natural: Modifier class for `iss-media-card`; combine for `natural` variant. */
+/* .iss-card__media: Element class for `iss-card`; apply on `media` element. */
+.iss-media-card--natural > .iss-card__media img {
+  height: auto;
+}
+
+/* Surface variants */
+/* .iss-media-card--flat: Modifier class for `iss-media-card`; combine for `flat` variant. */
+.iss-media-card--flat {
+  box-shadow: none;
+}
+
+/* .iss-media-card--soft: Modifier class for `iss-media-card`; combine for `soft` variant. */
+.iss-media-card--soft {
+  --iss-media-card-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.22), 0 0 0 1px rgba(30, 30, 30, 0.04);
+}
+
+/* .iss-media-card--strong: Modifier class for `iss-media-card`; combine for `strong` variant. */
+.iss-media-card--strong {
+  --iss-media-card-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.22), 0 0 0 1px rgba(30, 30, 30, 0.08);
+}
+
+/* .iss-media-card--framed: Modifier class for `iss-media-card`; combine for `framed` variant. */
+.iss-media-card--framed {
+  padding: 0.4rem;
+}
+
+/* .iss-media-card--framed: Modifier class for `iss-media-card`; combine for `framed` variant. */
+.iss-media-card--framed::before {
+  inset: 0 auto 0 0;
+}
+
+/* .iss-media-card--framed: Modifier class for `iss-media-card`; combine for `framed` variant. */
+/* .wp-block-image: Base class for wp block image; apply on primary wrapper/scope. */
+.iss-media-card--framed > .wp-block-image img,
+/* .iss-media-card--framed: Modifier class for `iss-media-card`; combine for `framed` variant. */
+.iss-media-card--framed > figure img,
+/* .iss-media-card--framed: Modifier class for `iss-media-card`; combine for `framed` variant. */
+/* .iss-asymmetric-feature__image: Element class for `iss-asymmetric-feature`; apply on `image` element. */
+.iss-media-card--framed > .iss-asymmetric-feature__image img,
+/* .iss-media-card--framed: Modifier class for `iss-media-card`; combine for `framed` variant. */
+/* .iss-card__media: Element class for `iss-card`; apply on `media` element. */
+.iss-media-card--framed > .iss-card__media img {
+  border-radius: calc(var(--iss-media-card-radius) - 4px);
+}
+
+/* Rail color variants */
+/* .iss-media-card--red: Modifier class for `iss-media-card`; combine for `red` variant. */
+.iss-media-card--red    { --iss-media-card-rail-color: var(--iss-red); }
+/* .iss-media-card--green: Modifier class for `iss-media-card`; combine for `green` variant. */
+.iss-media-card--green  { --iss-media-card-rail-color: var(--iss-green); }
+/* .iss-media-card--blue: Modifier class for `iss-media-card`; combine for `blue` variant. */
+.iss-media-card--blue   { --iss-media-card-rail-color: var(--iss-blue); }
+/* .iss-media-card--yellow: Modifier class for `iss-media-card`; combine for `yellow` variant. */
+.iss-media-card--yellow { --iss-media-card-rail-color: var(--iss-yellow); }
+/* .iss-media-card--brown: Modifier class for `iss-media-card`; combine for `brown` variant. */
+.iss-media-card--brown  { --iss-media-card-rail-color: var(--iss-brown); }
+/* .iss-media-card--grey: Modifier class for `iss-media-card`; combine for `grey` variant. */
+.iss-media-card--grey   { --iss-media-card-rail-color: var(--iss-grey); }
+
+/* Rail size variants */
+/* .iss-media-card--rail-thin: Modifier class for `iss-media-card`; combine for `rail-thin` variant. */
+.iss-media-card--rail-thin { --iss-media-card-rail-width: 3px; }
+/* .iss-media-card--rail-wide: Modifier class for `iss-media-card`; combine for `rail-wide` variant. */
+.iss-media-card--rail-wide { --iss-media-card-rail-width: 8px; }
+
+/* Radius variants */
+/* .iss-media-card--radius-sm: Modifier class for `iss-media-card`; combine for `radius-sm` variant. */
+.iss-media-card--radius-sm { --iss-media-card-radius: var(--iss-radius-sm); }
+/* .iss-media-card--radius-lg: Modifier class for `iss-media-card`; combine for `radius-lg` variant. */
+.iss-media-card--radius-lg { --iss-media-card-radius: var(--iss-radius-lg); }
+
+/* Optional height helpers for non-pattern usage */
+/* .iss-media-card--vh-40: Modifier class for `iss-media-card`; combine for `vh-40` variant. */
+.iss-media-card--vh-40 { min-height: 40vh; }
+/* .iss-media-card--vh-50: Modifier class for `iss-media-card`; combine for `vh-50` variant. */
+.iss-media-card--vh-50 { min-height: 50vh; }
+/* .iss-media-card--vh-60: Modifier class for `iss-media-card`; combine for `vh-60` variant. */
+.iss-media-card--vh-60 { min-height: 60vh; }
+
+@media (max-width: 1024px) {
+/* .iss-media-card--vh-40: Modifier class for `iss-media-card`; combine for `vh-40` variant. */
+  .iss-media-card--vh-40,
+/* .iss-media-card--vh-50: Modifier class for `iss-media-card`; combine for `vh-50` variant. */
+  .iss-media-card--vh-50,
+/* .iss-media-card--vh-60: Modifier class for `iss-media-card`; combine for `vh-60` variant. */
+  .iss-media-card--vh-60 {
+    min-height: 0;
+  }
+
+/* .iss-media-card--stacked: Modifier class for `iss-media-card`; combine for `stacked` variant. */
+/* .wp-block-image: Base class for wp block image; apply on primary wrapper/scope. */
+  .iss-media-card--stacked > .wp-block-image img,
+/* .iss-media-card--stacked: Modifier class for `iss-media-card`; combine for `stacked` variant. */
+  .iss-media-card--stacked > figure img,
+/* .iss-media-card--stacked: Modifier class for `iss-media-card`; combine for `stacked` variant. */
+/* .iss-asymmetric-feature__image: Element class for `iss-asymmetric-feature`; apply on `image` element. */
+  .iss-media-card--stacked > .iss-asymmetric-feature__image img,
+/* .iss-media-card--stacked: Modifier class for `iss-media-card`; combine for `stacked` variant. */
+/* .iss-card__media: Element class for `iss-card`; apply on `media` element. */
+  .iss-media-card--stacked > .iss-card__media img {
+    height: auto;
+    aspect-ratio: 16 / 10;
+  }
+}
+
+
+/* =========================================================
+   GROUP: PATTERN 3 CARD ROW
+   PURPOSE:
+   Balanced three-up card row for featured topics, offers, or service
+   blocks.
+
+   USE THIS WHEN:
+   - Equal emphasis across three cards is desired.
+   - The section should feel orderly and editorial, not like a masonry
+     feed.
+   ========================================================= */
+/* =====================================================================
+   ISS 3 CARD ROW
+   Heading above a row of three compact info cards.
+   ===================================================================== */
+
+/* .iss-3-card-row: Base class for iss 3 card row; apply on primary wrapper/scope. */
+/* .iss-3-card-row__heading: Element class for `iss-3-card-row`; apply on `heading` element. */
+.iss-3-card-row .iss-3-card-row__heading {
+  margin-bottom: clamp(1rem, 2vw, 1.5rem);
+}
+
+/* .iss-3-card-row: Base class for iss 3 card row; apply on primary wrapper/scope. */
+/* .iss-3-card-row__grid: Element class for `iss-3-card-row`; apply on `grid` element. */
+.iss-3-card-row .iss-3-card-row__grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: clamp(0.85rem, 1.5vw, 1.25rem);
+  align-items: start;
+}
+
+/* .iss-3-card-row: Base class for iss 3 card row; apply on primary wrapper/scope. */
+/* .iss-3-card-row__grid: Element class for `iss-3-card-row`; apply on `grid` element. */
+.iss-3-card-row .iss-3-card-row__grid > * {
+  margin-block-start: 0 !important;
+}
+
+/* .iss-3-card-row: Base class for iss 3 card row; apply on primary wrapper/scope. */
+/* .iss-3-card-row__card: Element class for `iss-3-card-row`; apply on `card` element. */
+.iss-3-card-row .iss-3-card-row__card {
+  min-width: 0;
+}
+
+/* .iss-3-card-row: Base class for iss 3 card row; apply on primary wrapper/scope. */
+/* .iss-3-card-row__card: Element class for `iss-3-card-row`; apply on `card` element. */
+/* .wp-block-image: Base class for wp block image; apply on primary wrapper/scope. */
+.iss-3-card-row .iss-3-card-row__card > .wp-block-image,
+/* .iss-3-card-row: Base class for iss 3 card row; apply on primary wrapper/scope. */
+/* .iss-3-card-row__card: Element class for `iss-3-card-row`; apply on `card` element. */
+/* .wp-block-image: Base class for wp block image; apply on primary wrapper/scope. */
+/* .size-large: Base class for size large; apply on primary wrapper/scope. */
+.iss-3-card-row .iss-3-card-row__card > .wp-block-image.size-large {
+  margin: 0;
+  width: 100%;
+}
+
+/* .iss-3-card-row: Base class for iss 3 card row; apply on primary wrapper/scope. */
+/* .iss-3-card-row__card: Element class for `iss-3-card-row`; apply on `card` element. */
+/* .wp-block-image: Base class for wp block image; apply on primary wrapper/scope. */
+.iss-3-card-row .iss-3-card-row__card > .wp-block-image img {
+  display: block;
+  width: 100%;
+  aspect-ratio: 4 / 3;
+  height: auto;
+  object-fit: cover;
+}
+
+@media (max-width: 1024px) {
+/* .iss-3-card-row: Base class for iss 3 card row; apply on primary wrapper/scope. */
+/* .iss-3-card-row__grid: Element class for `iss-3-card-row`; apply on `grid` element. */
+  .iss-3-card-row .iss-3-card-row__grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 640px) {
+/* .iss-3-card-row: Base class for iss 3 card row; apply on primary wrapper/scope. */
+/* .section: Base class for section; apply on primary wrapper/scope. */
+  .iss-3-card-row.section {
+    padding-top: 2rem;
+    padding-bottom: 2rem;
+  }
+
+/* .iss-3-card-row: Base class for iss 3 card row; apply on primary wrapper/scope. */
+/* .iss-3-card-row__grid: Element class for `iss-3-card-row`; apply on `grid` element. */
+  .iss-3-card-row .iss-3-card-row__grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+
+/* =========================================================
+   GROUP: PATTERN 4 CARD ROW
+   PURPOSE:
+   Compact four-card row for denser overview sections and small repeated
+   entries.
+
+   USE THIS WHEN:
+   - Cards need to stay readable but more compact than the 3-card row.
+   - A section requires a quick scannable overview.
+   ========================================================= */
+/* =====================================================================
+   ISS 4 CARD ROW
+   Heading above a four-card media row.
+   Reuses:
+   - style.css
+   - iss-media-card-utilities.css
+   ===================================================================== */
+
+/* .iss-4-card-row: Base class for iss 4 card row; apply on primary wrapper/scope. */
+/* .iss-4-card-row__heading: Element class for `iss-4-card-row`; apply on `heading` element. */
+.iss-4-card-row .iss-4-card-row__heading {
+  margin-bottom: clamp(1rem, 2vw, 1.5rem);
+}
+
+/* .iss-4-card-row: Base class for iss 4 card row; apply on primary wrapper/scope. */
+/* .iss-4-card-row__grid: Element class for `iss-4-card-row`; apply on `grid` element. */
+.iss-4-card-row .iss-4-card-row__grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: clamp(0.75rem, 1.4vw, 1.25rem);
+  align-items: start;
+}
+
+/* .iss-4-card-row: Base class for iss 4 card row; apply on primary wrapper/scope. */
+/* .iss-4-card-row__grid: Element class for `iss-4-card-row`; apply on `grid` element. */
+.iss-4-card-row .iss-4-card-row__grid > * {
+  margin-block-start: 0 !important;
+}
+
+/* .iss-4-card-row: Base class for iss 4 card row; apply on primary wrapper/scope. */
+/* .iss-4-card-row__card: Element class for `iss-4-card-row`; apply on `card` element. */
+.iss-4-card-row .iss-4-card-row__card {
+  display: flex;
+  flex-direction: column;
+  gap: 0.85rem;
+  min-width: 0;
+}
+
+/* .iss-4-card-row: Base class for iss 4 card row; apply on primary wrapper/scope. */
+/* .iss-4-card-row__media: Element class for `iss-4-card-row`; apply on `media` element. */
+.iss-4-card-row .iss-4-card-row__media {
+  --iss-media-card-border-width: 1px;
+  --iss-media-card-rail-color: rgba(30, 30, 30, 0.18);
+  --iss-media-card-shadow: none;
+  --iss-media-card-radius: var(--iss-radius-sm);
+}
+
+/* .iss-4-card-row: Base class for iss 4 card row; apply on primary wrapper/scope. */
+/* .iss-4-card-row__image: Element class for `iss-4-card-row`; apply on `image` element. */
+.iss-4-card-row .iss-4-card-row__image,
+/* .iss-4-card-row: Base class for iss 4 card row; apply on primary wrapper/scope. */
+/* .iss-4-card-row__image: Element class for `iss-4-card-row`; apply on `image` element. */
+/* .wp-block-image: Base class for wp block image; apply on primary wrapper/scope. */
+.iss-4-card-row .iss-4-card-row__image.wp-block-image {
+  margin: 0;
+  width: 100%;
+}
+
+/* .iss-4-card-row: Base class for iss 4 card row; apply on primary wrapper/scope. */
+/* .iss-4-card-row__image: Element class for `iss-4-card-row`; apply on `image` element. */
+.iss-4-card-row .iss-4-card-row__image img {
+  aspect-ratio: 4 / 3;
+}
+
+/* .iss-4-card-row: Base class for iss 4 card row; apply on primary wrapper/scope. */
+/* .iss-4-card-row__title: Element class for `iss-4-card-row`; apply on `title` element. */
+.iss-4-card-row .iss-4-card-row__title {
+  margin: 0;
+  font-size: inherit;
+  color: inherit;
+}
+
+@media (max-width: 1200px) {
+/* .iss-4-card-row: Base class for iss 4 card row; apply on primary wrapper/scope. */
+/* .iss-4-card-row__grid: Element class for `iss-4-card-row`; apply on `grid` element. */
+  .iss-4-card-row .iss-4-card-row__grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 640px) {
+/* .iss-4-card-row: Base class for iss 4 card row; apply on primary wrapper/scope. */
+/* .section: Base class for section; apply on primary wrapper/scope. */
+  .iss-4-card-row.section {
+    padding-top: 2rem;
+    padding-bottom: 2rem;
+  }
+
+/* .iss-4-card-row: Base class for iss 4 card row; apply on primary wrapper/scope. */
+/* .iss-4-card-row__grid: Element class for `iss-4-card-row`; apply on `grid` element. */
+  .iss-4-card-row .iss-4-card-row__grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+
+/* =========================================================
+   GROUP: FUEHRUNGEN CARD QUERIES
+   PURPOSE:
+   Styling bridge for card query output used on tours/führungen listings.
+
+   USE THIS WHEN:
+   - Query Loop output for tours should inherit the standard card system.
+   - Tour cards need markup-specific tuning without forking the whole
+     base card component.
+   ========================================================= */
+/* =====================================================================
+   FÜHRUNGEN LANDING PAGE
+   Query-loop first page with direct booking actions
+   Depends on style.css and header.css
+   ===================================================================== */
+
+/* .iss-fuehrungen-page: Base class for iss fuehrungen page; apply on primary wrapper/scope. */
+.iss-fuehrungen-page {
+  overflow: clip;
+}
+
+/* .iss-fuehrungen-summary__layout: Element class for `iss-fuehrungen-summary`; apply on `layout` element. */
+.iss-fuehrungen-summary__layout,
+/* .iss-fuehrungen-service__layout: Element class for `iss-fuehrungen-service`; apply on `layout` element. */
+.iss-fuehrungen-service__layout {
+  gap: clamp(1.5rem, 3vw, 4rem);
+}
+
+/* .iss-fuehrungen-summary__list: Element class for `iss-fuehrungen-summary`; apply on `list` element. */
+.iss-fuehrungen-summary__list,
+/* .iss-fuehrungen-service__list: Element class for `iss-fuehrungen-service`; apply on `list` element. */
+.iss-fuehrungen-service__list {
+  margin: 0;
+  padding-left: 1.2rem;
+}
+
+/* .iss-fuehrungen-summary__list: Element class for `iss-fuehrungen-summary`; apply on `list` element. */
+.iss-fuehrungen-summary__list li + li,
+/* .iss-fuehrungen-service__list: Element class for `iss-fuehrungen-service`; apply on `list` element. */
+.iss-fuehrungen-service__list li + li {
+  margin-top: 0.55rem;
+}
+
+/* .iss-fuehrungen-loop-section__heading: Element class for `iss-fuehrungen-loop-section`; apply on `heading` element. */
+.iss-fuehrungen-loop-section__heading {
+  margin-bottom: clamp(1.5rem, 3vw, 2.25rem);
+}
+
+/* .iss-fuehrungen-query__grid: Element class for `iss-fuehrungen-query`; apply on `grid` element. */
+.iss-fuehrungen-query__grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: var(--iss-gap);
+}
+
+/* .iss-fuehrungen-query__empty: Element class for `iss-fuehrungen-query`; apply on `empty` element. */
+.iss-fuehrungen-query__empty {
+  padding: 1.5rem;
+  border: 1px dashed var(--iss-border);
+  border-radius: var(--iss-radius-md);
+  background: rgba(255,255,255,0.65);
+}
+
+/* .iss-fuehrungen-query__pagination: Element class for `iss-fuehrungen-query`; apply on `pagination` element. */
+.iss-fuehrungen-query__pagination {
+  margin-top: 2rem;
+}
+
+/* .iss-fuehrungen-service__panel: Element class for `iss-fuehrungen-service`; apply on `panel` element. */
+.iss-fuehrungen-service__panel {
+  padding: clamp(1.5rem, 3vw, 2rem);
+  border: 1px solid var(--iss-border);
+  border-radius: var(--iss-radius-md);
+  background: var(--iss-surface-paper);
+  box-shadow: none;
+}
+
+/* .iss-fuehrungen-service__panel-kicker: Element class for `iss-fuehrungen-service`; apply on `panel-kicker` element. */
+.iss-fuehrungen-service__panel-kicker {
+  margin: 0 0 0.65rem;
+  color: var(--iss-accent);
+  font-size: 0.76rem;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+/* .iss-fuehrungen-service__panel-title: Element class for `iss-fuehrungen-service`; apply on `panel-title` element. */
+.iss-fuehrungen-service__panel-title {
+  margin: 0 0 0.75rem;
+}
+
+@media (max-width: 1100px) {
+/* .iss-fuehrungen-query__grid: Element class for `iss-fuehrungen-query`; apply on `grid` element. */
+  .iss-fuehrungen-query__grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 782px) {
+/* .iss-fuehrungen-query__grid: Element class for `iss-fuehrungen-query`; apply on `grid` element. */
+  .iss-fuehrungen-query__grid {
+    grid-template-columns: 1fr;
+  }
+}

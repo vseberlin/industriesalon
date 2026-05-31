@@ -1,0 +1,223 @@
+/* =====================================================================
+   FILE: timeline-skin.css
+   ROLE: Theme-owned visual skin for iss-programm timeline/calendar output.
+   LOAD: only when iss-programm enqueues timeline assets.
+   ===================================================================== */
+
+.iss-timeline,
+.iss-timeline-sections,
+.iss-timeline-query {
+  --iss-tl-text: var(--iss-black, #1e1e1e);
+  --iss-tl-muted: rgba(30, 30, 30, 0.72);
+  --iss-tl-line: rgba(30, 30, 30, 0.18);
+  --iss-tl-primary: var(--iss-accent, var(--iss-red, #e81d25));
+  --iss-tl-primary-rgb: var(--iss-accent-rgb, 232, 29, 37);
+  --iss-tl-surface: var(--iss-white, #fff);
+  --iss-tl-border: var(--iss-button-border, rgba(30, 30, 30, 0.14));
+  --iss-tl-border-hover: var(--iss-button-hover-border, var(--iss-tl-primary));
+  --iss-tl-accent-soft: var(--iss-button-fill-bg, rgba(var(--iss-tl-primary-rgb), 0.16));
+  --iss-tl-accent-border: var(--iss-button-fill-border, rgba(var(--iss-tl-primary-rgb), 0.28));
+  --iss-tl-hover-bg: var(--iss-button-hover-bg, var(--iss-tl-accent-soft));
+  --iss-tl-btn-fg: var(--iss-button-fg, var(--iss-tl-text));
+  --iss-tl-btn-hover-fg: var(--iss-button-hover-fg, var(--iss-tl-text));
+  color: var(--iss-tl-text);
+}
+
+.iss-timeline__section-title {
+  font-size: clamp(1.4rem, 2.1vw, 2rem);
+  line-height: 1.2;
+}
+
+.iss-timeline__month-label {
+  font-size: clamp(1.1rem, 1.6vw, 1.35rem);
+}
+
+.iss-timeline__item {
+  border-top: 1px solid var(--iss-tl-line);
+}
+
+.iss-timeline__item:last-child {
+  border-bottom: 1px solid var(--iss-tl-line);
+}
+
+.iss-timeline__day {
+  font-weight: 700;
+  font-size: clamp(1.1rem, 1.8vw, 1.35rem);
+  line-height: 1.15;
+}
+
+.iss-timeline__time {
+  font-size: 1rem;
+  line-height: 1.25;
+  color: var(--iss-tl-muted);
+}
+
+.iss-timeline__kicker {
+  color: var(--iss-tl-primary);
+  letter-spacing: 0.06em;
+}
+
+.iss-timeline__title {
+  font-size: clamp(1.35rem, 2.2vw, 2.05rem);
+  line-height: 1.15;
+  font-weight: 700;
+}
+
+.iss-timeline__title a {
+  color: inherit;
+  text-decoration: none;
+}
+
+.iss-timeline__title a:hover,
+.iss-timeline__title a:focus {
+  color: var(--iss-tl-primary);
+}
+
+.iss-timeline__summary {
+  font-size: clamp(0.92rem, 0.86rem + 0.4vw, 1.08rem);
+  line-height: 1.45;
+  color: var(--iss-tl-muted);
+  max-width: 34ch;
+  display: -webkit-box;
+  -webkit-line-clamp: 3;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.iss-timeline__media {
+  background: rgba(30, 30, 30, 0.05);
+  overflow: hidden;
+}
+
+.iss-timeline__media img {
+  object-fit: cover;
+}
+
+.iss-timeline__btn {
+  border: 1px solid var(--iss-tl-accent-border);
+  border-left: 4px solid var(--iss-tl-primary);
+  border-radius: 0;
+  background: var(--iss-tl-accent-soft);
+  color: var(--iss-tl-btn-fg);
+  font-weight: 600;
+  line-height: 1.1;
+  transition:
+    background-color var(--iss-transition, 0.2s ease),
+    color var(--iss-transition, 0.2s ease),
+    border-color var(--iss-transition, 0.2s ease);
+}
+
+.iss-timeline__btn--secondary {
+  border-color: var(--iss-tl-border);
+  background: transparent;
+}
+
+.iss-timeline__btn--primary {
+  border-color: var(--iss-tl-accent-border);
+  background: var(--iss-tl-accent-soft);
+}
+
+.iss-timeline__btn--secondary:hover,
+.iss-timeline__btn--secondary:focus,
+.iss-timeline__btn--primary:hover,
+.iss-timeline__btn--primary:focus {
+  background: var(--iss-tl-hover-bg);
+  border-color: var(--iss-tl-border-hover);
+  color: var(--iss-tl-btn-hover-fg);
+}
+
+.iss-timeline__empty,
+.iss-timeline-query__meta,
+.iss-timeline__filter-label,
+.iss-timeline-card__text {
+  color: var(--iss-tl-muted);
+}
+
+.iss-timeline-query__meta {
+  font-size: 0.95rem;
+}
+
+.iss-timeline-query__count,
+.iss-timeline-card__meta {
+  font-weight: 600;
+  color: var(--iss-tl-text);
+}
+
+.iss-timeline-card__meta {
+  font-size: 1rem;
+}
+
+.iss-timeline__preset,
+.iss-timeline__choice-label {
+  border: 1px solid var(--iss-tl-border);
+  border-left: 3px solid transparent;
+  border-radius: 0;
+  background: var(--iss-tl-surface);
+  color: var(--iss-tl-text);
+  font-size: 0.96rem;
+  font-weight: 600;
+  line-height: 1.1;
+  transition:
+    background-color var(--iss-transition, 0.2s ease),
+    border-color var(--iss-transition, 0.2s ease),
+    color var(--iss-transition, 0.2s ease);
+}
+
+.iss-timeline__preset.is-active,
+.iss-timeline__preset[aria-pressed="true"],
+.iss-timeline__choice-input:checked + .iss-timeline__choice-label {
+  border-color: var(--iss-tl-primary);
+  border-left-color: var(--iss-tl-primary);
+  background: var(--iss-tl-accent-soft);
+  color: var(--iss-tl-text);
+}
+
+.iss-timeline__preset:hover,
+.iss-timeline__preset:focus-visible,
+.iss-timeline__choice-input:focus-visible + .iss-timeline__choice-label,
+.iss-timeline__choice:hover .iss-timeline__choice-label {
+  border-color: var(--iss-tl-primary);
+  border-left-color: var(--iss-tl-primary);
+  background: var(--iss-tl-hover-bg);
+  color: var(--iss-tl-btn-hover-fg);
+  outline: none;
+}
+
+.iss-timeline__filter select,
+.iss-timeline__filter input,
+.iss-timeline__apply {
+  border: 1px solid var(--iss-tl-border);
+  border-left: 3px solid transparent;
+  border-radius: 0;
+  background: var(--iss-tl-surface);
+  color: var(--iss-tl-text);
+}
+
+.iss-timeline__apply {
+  font-weight: 600;
+  transition:
+    background-color var(--iss-transition, 0.2s ease),
+    color var(--iss-transition, 0.2s ease),
+    border-color var(--iss-transition, 0.2s ease);
+}
+
+.iss-timeline__apply--ghost {
+  background: transparent;
+}
+
+.iss-timeline__filter select:focus,
+.iss-timeline__filter input:focus,
+.iss-timeline__apply:hover,
+.iss-timeline__apply:focus-visible {
+  border-color: var(--iss-tl-border-hover);
+  border-left-color: var(--iss-tl-primary);
+  background: var(--iss-tl-hover-bg);
+  color: var(--iss-tl-btn-hover-fg);
+  outline: none;
+}
+
+@media (max-width: 900px) {
+  .iss-timeline__title {
+    font-size: clamp(1.2rem, 4.2vw, 1.5rem);
+  }
+}

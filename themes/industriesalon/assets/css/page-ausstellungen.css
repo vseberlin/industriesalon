@@ -1,0 +1,310 @@
+/* =========================================================
+   FILE: page-ausstellungen.css
+   PURPOSE: Editorial landing layout for the page-backed Ausstellungen route.
+   ========================================================= */
+
+.iss-ausstellungen-page {
+  --iss-ausstellungen-line: rgba(30, 30, 30, 0.14);
+  --iss-ausstellungen-line-strong: rgba(30, 30, 30, 0.22);
+  --iss-ausstellungen-muted: rgba(30, 30, 30, 0.72);
+  --iss-ausstellungen-surface: #fff;
+  --iss-ausstellungen-surface-tint: color-mix(in srgb, var(--iss-grey, #c0b8b5) 10%, #fff);
+  padding-bottom: 3rem;
+}
+
+.iss-ausstellungen-page .iss-section--hero {
+  padding-top: 0;
+}
+
+.iss-ausstellungen-page > .section:not(.iss-section--hero),
+.iss-ausstellungen-page > .wp-block-pattern > .section:not(.iss-section--hero),
+.iss-ausstellungen-page > section:not(.iss-section--hero) {
+  border-top: 1px solid rgba(var(--iss-accent-rgb), 0.18);
+}
+
+.iss-ausstellungen-page .section:not(.iss-section--hero) .iss-heading > .iss-kicker,
+.iss-ausstellungen-page .section:not(.iss-section--hero) .iss-heading > .iss-kicker--compact {
+  --iss-kicker-accent: var(--iss-accent);
+  --iss-kicker-color: var(--iss-accent);
+  padding-left: 0.85rem;
+}
+
+.iss-ausstellungen-start,
+.iss-ausstellungen-material,
+.iss-ausstellungen-topography,
+.iss-ausstellungen-periods,
+.iss-ausstellungen-evidence,
+.iss-ausstellungen-current {
+  padding-top: var(--iss-section-pad-y);
+}
+
+.iss-ausstellungen-start .iss-heading {
+  max-width: 35rem;
+}
+
+.iss-ausstellungen-start .iss-heading__text {
+  max-width: 33rem;
+}
+
+.iss-ausstellungen-start .iss-timeline-query {
+  max-width: none;
+  padding-inline: 0;
+}
+
+.iss-ausstellungen-start .iss-timeline-cards {
+  margin-top: 1rem;
+  gap: clamp(0.95rem, 1.7vw, 1.35rem);
+}
+
+.iss-ausstellungen-start .iss-card {
+  box-shadow: none;
+}
+
+.iss-ausstellungen-start .iss-card:hover,
+.iss-ausstellungen-start .iss-card:focus-within {
+  border-color: var(--iss-ausstellungen-line-strong);
+  background: #fff;
+}
+
+.iss-ausstellungen-start .iss-card__body {
+  gap: 0.55rem;
+  padding: 0.95rem 0.95rem 1rem;
+}
+
+.iss-ausstellungen-start .iss-card__title {
+  font-size: clamp(1rem, 0.96rem + 0.2vw, 1.14rem);
+}
+
+.iss-ausstellungen-material__strip,
+.iss-ausstellungen-topography__intro,
+.iss-ausstellungen-evidence__intro {
+  margin-bottom: clamp(1.25rem, 2.5vw, 2rem);
+}
+
+.iss-ausstellungen-material__layout,
+.iss-ausstellungen-topography__intro,
+.iss-ausstellungen-periods__layout,
+.iss-ausstellungen-evidence__layout,
+.iss-ausstellungen-evidence__intro {
+  gap: clamp(1.25rem, 2.4vw, 2rem);
+  align-items: stretch;
+}
+
+.iss-ausstellungen-material__gallery-col {
+  flex-basis: 58%;
+}
+
+.iss-ausstellungen-material__notes-col {
+  flex-basis: 42%;
+  display: grid;
+  gap: 0.9rem;
+}
+
+.iss-ausstellungen-material__wall {
+  grid-auto-rows: clamp(7.6rem, 10vw, 9.4rem);
+}
+
+.iss-ausstellungen-material__cell {
+  position: relative;
+  margin: 0;
+}
+
+.iss-ausstellungen-material__cell.iss-dense-image-wall__cell--captioned::after {
+  inset: 42% 0 0;
+  background: linear-gradient(
+    180deg,
+    rgba(12, 11, 10, 0) 0%,
+    rgba(12, 11, 10, 0.66) 68%,
+    rgba(12, 11, 10, 0.84) 100%
+  );
+}
+
+.iss-ausstellungen-material__cell img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.iss-ausstellungen-material__caption {
+  position: absolute;
+  left: 0.8rem;
+  right: 0.8rem;
+  bottom: 0.8rem;
+  z-index: 2;
+  display: grid;
+  gap: 0.22rem;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  color: var(--iss-white);
+  pointer-events: none;
+}
+
+.iss-ausstellungen-material__caption strong {
+  font-size: 0.86rem;
+  font-weight: 700;
+  line-height: 1.1;
+  color: inherit;
+}
+
+.iss-ausstellungen-material__caption span {
+  color: rgba(249, 249, 250, 0.82);
+  font-size: 0.74rem;
+  line-height: 1.35;
+}
+
+.iss-ausstellungen-material__context p {
+  margin: 0;
+}
+
+.iss-ausstellungen-material__context p + p {
+  margin-top: 0.55rem;
+}
+
+.iss-ausstellungen-constellation {
+  margin-top: clamp(1.5rem, 2.8vw, 2.4rem);
+}
+
+.iss-ausstellungen-constellation__head {
+  max-width: 38rem;
+  margin-bottom: 1rem;
+}
+
+.iss-ausstellungen-constellation__grid {
+  gap: clamp(0.9rem, 1.8vw, 1.2rem);
+}
+
+.iss-ausstellungen-topography__intro-main {
+  flex-basis: 58%;
+}
+
+.iss-ausstellungen-topography__intro-side {
+  flex-basis: 42%;
+}
+
+.iss-ausstellungen-topography__context p {
+  margin: 0;
+}
+
+.iss-ausstellungen-topography__context p + p {
+  margin-top: 0.55rem;
+}
+
+.iss-ausstellungen-topography .iss-atlas-slice {
+  margin-top: 0.5rem;
+}
+
+.iss-ausstellungen-topography__plates {
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: clamp(0.9rem, 1.7vw, 1.3rem);
+  margin-top: clamp(1.25rem, 2.5vw, 1.8rem);
+}
+
+.iss-ausstellungen-periods__lead {
+  flex-basis: 60%;
+}
+
+.iss-ausstellungen-periods__notes {
+  flex-basis: 40%;
+  display: grid;
+  gap: 0.9rem;
+}
+
+.iss-ausstellungen-periods__feature .iss-full-bleed-zone__media img {
+  min-height: clamp(19rem, 34vw, 28rem);
+  object-fit: cover;
+}
+
+.iss-ausstellungen-periods__context p {
+  margin: 0;
+}
+
+.iss-ausstellungen-periods__context p + p {
+  margin-top: 0.55rem;
+}
+
+.iss-ausstellungen-periods__rail {
+  margin-top: clamp(1.25rem, 2.5vw, 2rem);
+}
+
+.iss-ausstellungen-evidence__intro-main {
+  flex-basis: 56%;
+}
+
+.iss-ausstellungen-evidence__intro-side {
+  flex-basis: 44%;
+}
+
+.iss-ausstellungen-evidence__context p {
+  margin: 0;
+}
+
+.iss-ausstellungen-evidence__context p + p {
+  margin-top: 0.55rem;
+}
+
+.iss-ausstellungen-evidence__main {
+  flex-basis: 58%;
+}
+
+.iss-ausstellungen-evidence__layout > .iss-ausstellungen-evidence__main:only-child {
+  flex-basis: 100%;
+}
+
+.iss-ausstellungen-evidence__side {
+  flex-basis: 42%;
+  display: grid;
+  gap: clamp(1rem, 2vw, 1.5rem);
+}
+
+.iss-ausstellungen-evidence__feed {
+  display: grid;
+  gap: 0.85rem;
+}
+
+.iss-ausstellungen-evidence__label {
+  margin-bottom: 0.15rem;
+}
+
+.iss-ausstellungen-current .iss-heading {
+  max-width: 36rem;
+  margin-bottom: 1.1rem;
+}
+
+.iss-ausstellungen-current .iss-timeline-query {
+  max-width: var(--iss-content-width);
+  margin-inline: auto;
+  padding-inline: 0;
+}
+
+.iss-ausstellungen-current .iss-timeline__filters {
+  align-items: end;
+}
+
+.iss-ausstellungen-current .iss-timeline__filter-actions {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+}
+
+@media (max-width: 1180px) {
+  .iss-ausstellungen-topography__plates {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 781px) {
+  .iss-ausstellungen-material__wall {
+    grid-auto-rows: clamp(6rem, 24vw, 8rem);
+  }
+
+  .iss-ausstellungen-topography__plates {
+    grid-template-columns: 1fr;
+  }
+
+  .iss-ausstellungen-current .iss-timeline__filter-actions {
+    justify-content: flex-start;
+  }
+}

@@ -1,0 +1,19 @@
+{
+  "$schema": "https://schemas.wp.org/trunk/block.json",
+  "apiVersion": 3,
+  "name": "iss/tour-route",
+  "title": "Tour Route",
+  "category": "widgets",
+  "icon": "location-alt",
+  "description": "Ordered route section for tour pages.",
+  "editorScript": "file:./index.js",
+  "attributes": {
+    "postId": {
+      "type": "number",
+      "default": 0
+    }
+  },
+  "supports": {
+    "html": false
+  }
+}

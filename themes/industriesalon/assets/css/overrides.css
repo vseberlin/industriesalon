@@ -1,0 +1,89 @@
+/* =====================================================================
+   FILE: overrides.css
+   ROLE: Gutenberg conflict fixes only (loaded last).
+   PURPOSE:
+   - Keep narrowly scoped CSS fixes that resolve Gutenberg/runtime clashes.
+   - Avoid polluting global design files (`style.css`, `cards.css`, `patterns.css`).
+
+   FORMAT FOR EVERY RULE:
+   Page: <template or context>
+   Block: <core/custom block and class>
+   Why: <what Gutenberg/runtime behavior breaks and why this override exists>
+   ===================================================================== */
+
+/* Page: tour calendar frontend
+   Block: Flatpickr inside `.is-tour-calendar`
+   Why: Flatpickr emits fixed-width wrapper markup that breaks the theme-owned full-width calendar grid without a scoped runtime correction. */
+.is-tour-calendar .flatpickr-calendar,
+.is-tour-calendar .flatpickr-calendar.inline,
+.is-tour-calendar .flatpickr-innerContainer,
+.is-tour-calendar .flatpickr-rContainer,
+.is-tour-calendar .flatpickr-days,
+.is-tour-calendar .dayContainer {
+  width: 100%;
+  max-width: 100%;
+}
+
+/* Page: tour calendar frontend
+   Block: Flatpickr inner wrappers
+   Why: Flatpickr defaults to row-oriented wrapper sizing; the calendar needs a constrained column flow so weekday and day grids can align. */
+.is-tour-calendar .flatpickr-innerContainer,
+.is-tour-calendar .flatpickr-rContainer {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+}
+
+/* Page: tour calendar frontend
+   Block: Flatpickr weekday and day containers
+   Why: Flatpickr's generated wrappers do not expose a semantic seven-column layout hook, so the runtime grid must be corrected here instead of in plugin CSS. */
+.is-tour-calendar .flatpickr-weekdaycontainer,
+.is-tour-calendar .dayContainer {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  width: 100%;
+  max-width: 100%;
+  min-width: 100%;
+}
+
+/* Page: tour calendar frontend
+   Block: Flatpickr weekday row
+   Why: Flatpickr injects inline width and spacing assumptions that otherwise prevent the theme calendar rhythm from matching the rest of the component. */
+.is-tour-calendar .flatpickr-weekdaycontainer {
+  margin: 0;
+  gap: 0.45rem;
+}
+
+/* Page: tour calendar frontend
+   Block: Flatpickr weekday cells
+   Why: Flatpickr weekday labels keep vendor widths unless reset; the theme calendar needs equal-width cells. */
+.is-tour-calendar .flatpickr-weekday {
+  width: auto;
+  max-width: none;
+  padding: 0.5rem 0;
+  text-align: center;
+}
+
+/* Page: tour calendar frontend
+   Block: Flatpickr day grid
+   Why: Flatpickr day cells keep vendor widths and heights unless corrected, which breaks the plugin's semantic day state classes. */
+.is-tour-calendar .dayContainer {
+  gap: 0.45rem;
+}
+
+/* Page: tour calendar frontend
+   Block: Flatpickr day cells
+   Why: The generated button sizing needs a scoped reset so the theme can style days as equal-height cards. */
+.is-tour-calendar .flatpickr-day {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  width: auto;
+  max-width: none;
+  height: auto;
+  min-height: 3rem;
+  margin: 0;
+  padding: 0.35rem;
+  gap: 3px;
+}
