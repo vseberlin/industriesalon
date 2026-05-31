@@ -1,6 +1,11 @@
 # Changelog
 
 ## 2026-05-31
+- Updated tracked third-party plugins through the local Git-first workflow, keeping staging free of direct admin-side code changes:
+  - `classic-editor-and-classic-widgets` from `1.5.1` to `1.5.3`
+  - `webp-converter-for-media` from `6.5.6` to `6.6.0`
+  - `media-library-assistant` from `3.35` to `3.37`
+  - verified changed PHP files with `php -l`, confirmed WordPress plugin loading through WP-CLI, and confirmed no local plugin updates remain available
 - Rebuilt the off-canvas menu shell around the `Theme_assets/nav.md` grouping:
   - replaced the two DB-referenced drawer menus with file-backed sectioned Navigation blocks for quick actions, identity, content, and utility links
   - connected the shell search icon to a theme-owned fast-search modal that reuses the existing `iss-graph` REST search endpoint for the first results and hands full searches to the native `/?s=` results page

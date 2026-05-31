@@ -21,7 +21,7 @@ class MLACore {
 	 *
 	 * @var	string
 	 */
-	const CURRENT_MLA_VERSION = '3.35';
+	const CURRENT_MLA_VERSION = '3.37';
 
 	/**
 	 * Current date for Development Versions, empty for production versions
@@ -455,8 +455,8 @@ class MLACore {
 		load_plugin_textdomain( $text_domain, false, MLA_PLUGIN_BASENAME . '/languages/' );
 
 		MLACoreOptions::mla_localize_option_definitions_array();
-		MLAObjects::mla_build_taxonomies();
-
+		MLAObjects::mla_build_taxonomies(); // Run again to translate labels, if needed
+		
 		if ( 'disabled' == MLACore::mla_get_option( MLACoreOptions::MLA_FEATURED_IN_TUNING ) ) {
 			MLACore::$process_featured_in = false;
 		}
@@ -2202,6 +2202,8 @@ class MLA_Checklist_Walker extends Walker_Category {
 
 // Custom Taxonomies and WordPress objects.
 require_once( MLA_PLUGIN_PATH . 'includes/class-mla-objects.php' );
+// Run mla_build_taxonomies early to ensure taxonomies are registered before WordPress needs them.
+add_action( 'init', 'MLAObjects::mla_build_taxonomies', 5 );
 add_action( 'init', 'MLAObjects::initialize', 0x800 ); // 0x7FFFFFFF );
 
 // MIME Type functions; some filters required in all modes.

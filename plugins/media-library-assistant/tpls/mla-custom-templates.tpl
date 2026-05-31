@@ -407,7 +407,8 @@ mla_shortcode_slug="custom-list"
 	#[+selector+] .archive-list-item {
 		text-align: left;
 	}
-	#[+selector+] li.[+current_archive_class+] a {
+	#[+selector+] li.[+current_archive_class+] a,
+	#[+selector+] li.[+current_archive_class+] a:visited {
 		font-weight: bold;
 		font-size: larger;
 	}
@@ -430,8 +431,8 @@ mla_shortcode_slug="archive-list"
 <!-- mla_shortcode_slug="archive-list" -->
 <!-- mla_description="CSS Styles for the 'flat,div' output format" -->
 <style type='text/css'>
-	#[+selector+] a.mla_archive_current,
-	#[+selector+] a.mla_archive_current:visited {
+	#[+selector+] a.[+current_archive_class+],
+	#[+selector+] a.[+current_archive_class+]:visited {
 		color:#FF0000;
 		font-weight:bold
 	}
@@ -471,8 +472,8 @@ mla_shortcode_slug="archive-list"
 		margin: auto;
 		width: 100%;
 	}
-	#[+selector+] li.mla_archive_current a,
-	#[+selector+] li.mla_archive_current:visited a {
+	#[+selector+] li.[+current_archive_class+] a,
+	#[+selector+] li.[+current_archive_class+]:visited a {
 		color:#FF0000;
 		font-weight:bold
 	}

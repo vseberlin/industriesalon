@@ -8,14 +8,14 @@
  * License: GNU General Public License v2 or later
  * License URI: http://www.gnu.org/licenses/gpl-2.0.html
  * Text Domain: classic-editor-and-classic-widgets
- * Version: 1.5.1
+ * Version: 1.5.3
  */
 
 if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
 
-define( 'CEW_VERSION', '1.5.1' );
+define( 'CEW_VERSION', '1.5.3' );
 define( 'CEW_FILE', __FILE__ );
 define( 'CEW_PATH', dirname( CEW_FILE ) );
 define( 'CEW_INCLUDES', CEW_PATH . '/includes' );

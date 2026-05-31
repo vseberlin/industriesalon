@@ -2006,12 +2006,12 @@ class MLA_List_Table extends WP_List_Table {
 				
 			if ( isset( $_REQUEST['shortcode_query'] ) ) {
 				$query = json_decode( wp_kses( wp_unslash( $_REQUEST['shortcode_query'] ), 'post' ), true );
-				$current_view = $query['slug'];
+				$current_view = isset( $query['slug'] ) ? $query['slug'] : $current_view;
 			}
 				
 			if ( isset( $_REQUEST['meta_query'] ) ) {
 				$query = json_decode( wp_kses( wp_unslash( $_REQUEST['meta_query'] ), 'post' ), true );
-				$current_view = $query['slug'];
+				$current_view = isset( $query['slug'] ) ? $query['slug'] : $current_view;
 			}
 		}
 

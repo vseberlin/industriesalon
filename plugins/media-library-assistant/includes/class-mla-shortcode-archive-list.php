@@ -1061,9 +1061,15 @@ class MLAArchiveList {
 		}
 
 		self::$archive_list_items = $wpdb->get_results( $query );
+		$found_rows = count ( self::$archive_list_items );
+
+		// Handle the case where a query returns no valid archive values`
+		if ( 1 === $found_rows && empty( self::$archive_list_items[0]->year ) ) {
+			self::$archive_list_items = array();
+			$found_rows = 0;
+		}
 
 		// Adjust for pagination
-		$found_rows = count ( self::$archive_list_items );
 		$offset = absint( $query_arguments['offset'] );
 		$limit = absint( $query_arguments['limit'] );
 		if ( 0 < $offset || 0 < $limit ) {

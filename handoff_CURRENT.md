@@ -7,8 +7,8 @@ This file is the working handoff only. Full historical detail belongs in `CHANGE
 ## Current Repo State
 
 - Branch: `main`
-- Latest active checkpoint: off-canvas menu shell and fast search entry flow on 2026-05-31, so the drawer is file-backed, grouped, graph-search-enabled, and cross-browser checked.
-- `main` is intentionally ahead of origin in this local workflow; check `git status --short` and `git log --oneline -5` before deployment or handoff.
+- Latest active checkpoint: tracked third-party plugin maintenance on 2026-05-31, following the local Git -> GitHub -> staging rule rather than direct staging admin updates.
+- `main` should track `origin/main` after closeout; check `git status --short` and `git log --oneline -5` before deployment or handoff.
 - Standard closeout files: root `handoff_CURRENT.md`, root `CHANGELOG.md`, and root `TODO.md` when next work needs to be preserved.
 - Root handoff/changelog files may be ignored by git in this repo; use `git add -f handoff_CURRENT.md CHANGELOG.md TODO.md` when committing closeout docs.
 
@@ -44,6 +44,19 @@ This file is the working handoff only. Full historical detail belongs in `CHANGE
 - For publication/project/video/editorial work, keep CPT/data ownership in plugins and public layout/skins in the theme unless an existing plugin explicitly owns the renderer.
 
 ## Recent State To Preserve
+
+### Deployment / Staging Workflow
+
+- Staging code changes should flow local repo -> GitHub `main` -> staging deploy. Do not update plugins directly in staging admin unless this rule is explicitly suspended.
+- GitHub `main` was reset to a clean one-commit staging baseline on 2026-05-31; the prior local history is preserved on `backup/pre-clean-main-20260531-c079b6a`.
+- Current tracked third-party plugin versions after local maintenance:
+  - `classic-editor-and-classic-widgets` `1.5.3` (inactive)
+  - `webp-converter-for-media` `6.6.0` (active)
+  - `media-library-assistant` `3.37` (active)
+- Last plugin maintenance verification:
+  - changed plugin PHP files passed `php -l`
+  - WP-CLI `plugin list` loaded all active plugins and reported the updated versions
+  - WP-CLI `plugin list --update=available` reported no remaining local plugin updates
 
 ### Single Place Dossier
 
