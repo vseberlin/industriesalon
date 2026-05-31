@@ -7,8 +7,9 @@ This file is the working handoff only. Full historical detail belongs in `CHANGE
 ## Current Repo State
 
 - Branch: `main`
-- Latest active checkpoint: tracked third-party plugin maintenance on 2026-05-31, following the local Git -> GitHub -> staging rule rather than direct staging admin updates.
-- `main` should track `origin/main` after closeout; check `git status --short` and `git log --oneline -5` before deployment or handoff.
+- Latest active checkpoint: `68abb93` (`Update tracked third-party plugins`) on 2026-05-31, pushed to GitHub `main`.
+- The current policy is local repo -> GitHub `main` -> staging deploy. Direct plugin/code updates in staging admin violate the workflow unless explicitly approved.
+- `main` tracks `origin/main` at `68abb93` after closeout; check `git status --short` and `git log --oneline -5` before deployment or handoff.
 - Standard closeout files: root `handoff_CURRENT.md`, root `CHANGELOG.md`, and root `TODO.md` when next work needs to be preserved.
 - Root handoff/changelog files may be ignored by git in this repo; use `git add -f handoff_CURRENT.md CHANGELOG.md TODO.md` when committing closeout docs.
 
@@ -48,6 +49,7 @@ This file is the working handoff only. Full historical detail belongs in `CHANGE
 ### Deployment / Staging Workflow
 
 - Staging code changes should flow local repo -> GitHub `main` -> staging deploy. Do not update plugins directly in staging admin unless this rule is explicitly suspended.
+- Next staging action after this handoff is to run the staging deploy script on the VPS so it pulls GitHub `main` at `68abb93`.
 - GitHub `main` was reset to a clean one-commit staging baseline on 2026-05-31; the prior local history is preserved on `backup/pre-clean-main-20260531-c079b6a`.
 - Current tracked third-party plugin versions after local maintenance:
   - `classic-editor-and-classic-widgets` `1.5.3` (inactive)
