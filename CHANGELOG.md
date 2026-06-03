@@ -2,6 +2,10 @@
 
 ## 2026-06-03
 - Added WebP placeholder assets and wired shared related-card media fallbacks so events, projects, exhibitions, places, and videos without featured images no longer render blank card media.
+- Added the `iss-newsletter` adapter plugin for The Newsletter Plugin, wired the front-page newsletter signup panel to the real `[newsletter_form]` output, configured privacy labels, antiflood, and address blacklist defaults, and blocked bot-shaped subscriptions before subscriber creation while keeping the visual form styling in the theme.
+- Replaced the front-page raw Newsletter shortcode block with a server-rendered `iss/newsletter-form` block so Gutenberg no longer exposes `[newsletter_form]` as editable text while the frontend still uses The Newsletter Plugin as the form engine.
+- Migrated useful Newsletter configuration from the old-site SQL dump into the local Newsletter setup: sender identity, organization/footer metadata, form field structure, default email theme settings, the existing Newsletter contract key, and 28 old campaign bodies as private non-sending reference drafts while leaving send/stat history out because subscriber IDs no longer align after bot cleanup.
+- Installed The Newsletter Plugin `9.2.5` locally under `plugins/newsletter` and imported the cleaned legacy subscriber CSV into the local Newsletter tables, tagging migrated rows with `legacy_import_clean_csv`.
 - Added `ops/sql/2026-06-03-production-video-transcripts-sync.sql` to transfer cleaned video transcript post content and transcript meta to production while keeping local transcription workflow files out of Git.
 - Added `ops/sql/2026-06-03-production-front-page-sync.sql` to sync production template authority and project ordering; video transcript DB content is handled by the separate transcript sync artifact.
 - Tightened the shared `iss-info-panel` design system site-wide by removing full borders, rounded shells, shadows, accent-tinted panel backgrounds, and decorative control-panel icons while keeping the straight left accent rail.

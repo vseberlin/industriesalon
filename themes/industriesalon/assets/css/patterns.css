@@ -4368,8 +4368,7 @@ iss-info-panel--brown
    Usage:
    1. Add the pattern markup to a pattern file or synced pattern.
    2. Load this stylesheet after the base theme stylesheet.
-   3. Replace the demo form inside .iss-newsletter-band__formwrap with your
-      newsletter shortcode, embed, or plugin output.
+   3. Render The Newsletter Plugin shortcode inside .iss-newsletter-band__formwrap.
    4. Replace the sponsor logo path with the correct media asset.
    ========================================================================== */
 
@@ -4448,34 +4447,43 @@ iss-info-panel--brown
   width: 100%;
 }
 
-/* .iss-newsletter-form__row: Element class for `iss-newsletter-form`; apply on `row` element. */
-.iss-newsletter-form__row {
-  display: flex;
+.iss-newsletter-form form {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
   gap: 0.9rem;
-  align-items: stretch;
+  align-items: start;
 }
 
-/* .iss-newsletter-form__input: Element class for `iss-newsletter-form`; apply on `input` element. */
-.iss-newsletter-form__input {
-  flex: 1 1 auto;
+.iss-newsletter-form .tnp-field {
+  margin: 0;
+}
+
+.iss-newsletter-form .tnp-field-email {
+  min-width: 0;
+}
+
+.iss-newsletter-form .tnp-email,
+.iss-newsletter-form .tnp-submit {
   min-height: 3.75rem;
+  font: inherit;
+  font-size: 1.05rem;
+}
+
+.iss-newsletter-form .tnp-email {
+  width: 100%;
   padding: 0 1.3rem;
   border: 1px solid transparent;
   border-radius: 999px;
   background: rgba(255, 255, 255, 0.42);
   color: var(--iss-black, #1e1e1e);
-  font: inherit;
-  font-size: 1.05rem;
   box-shadow: inset 0 0 0 1px rgba(30, 30, 30, 0.06);
 }
 
-/* .iss-newsletter-form__input: Element class for `iss-newsletter-form`; apply on `input` element. */
-.iss-newsletter-form__input::placeholder {
+.iss-newsletter-form .tnp-email::placeholder {
   color: rgba(30, 30, 30, 0.45);
 }
 
-/* .iss-newsletter-form__input: Element class for `iss-newsletter-form`; apply on `input` element. */
-.iss-newsletter-form__input:focus {
+.iss-newsletter-form .tnp-email:focus {
   outline: none;
   border-color: rgba(var(--iss-accent-rgb), 0.3);
   box-shadow:
@@ -4483,18 +4491,13 @@ iss-info-panel--brown
     0 0 0 3px rgba(var(--iss-accent-rgb), 0.08);
 }
 
-/* .iss-newsletter-form__button: Element class for `iss-newsletter-form`; apply on `button` element. */
-.iss-newsletter-form__button {
-  flex: 0 0 auto;
+.iss-newsletter-form .tnp-submit {
   min-width: 10rem;
-  min-height: 3.75rem;
   padding: 0 1.6rem;
   border: 0;
   border-radius: 999px;
   background: var(--iss-accent, #e81d25);
   color: var(--iss-white, #f9f9fa);
-  font: inherit;
-  font-size: 1.05rem;
   font-weight: 600;
   line-height: 1;
   cursor: pointer;
@@ -4504,13 +4507,34 @@ iss-info-panel--brown
     box-shadow 0.2s ease;
 }
 
-/* .iss-newsletter-form__button: Element class for `iss-newsletter-form`; apply on `button` element. */
-.iss-newsletter-form__button:hover,
-/* .iss-newsletter-form__button: Element class for `iss-newsletter-form`; apply on `button` element. */
-.iss-newsletter-form__button:focus-visible {
+.iss-newsletter-form .tnp-submit:hover,
+.iss-newsletter-form .tnp-submit:focus-visible {
   transform: translateY(-1px);
   opacity: 0.96;
   box-shadow: 0 14px 28px rgba(var(--iss-accent-rgb), 0.18);
+}
+
+.iss-newsletter-form .tnp-privacy-field {
+  grid-column: 1 / -1;
+  color: rgba(30, 30, 30, 0.72);
+  font-size: 0.95rem;
+  line-height: 1.45;
+}
+
+.iss-newsletter-form .tnp-privacy-field label {
+  display: flex;
+  gap: 0.55rem;
+  align-items: flex-start;
+}
+
+.iss-newsletter-form .tnp-privacy {
+  margin-top: 0.2rem;
+}
+
+.iss-newsletter-form .tnp-privacy-field a {
+  color: inherit;
+  text-decoration-thickness: 1px;
+  text-underline-offset: 0.14em;
 }
 
 /* .iss-newsletter-band__note: Element class for `iss-newsletter-band`; apply on `note` element. */
@@ -4573,13 +4597,11 @@ iss-info-panel--brown
     gap: 2.5rem;
   }
 
-/* .iss-newsletter-form__row: Element class for `iss-newsletter-form`; apply on `row` element. */
-  .iss-newsletter-form__row {
-    flex-direction: column;
+  .iss-newsletter-form form {
+    grid-template-columns: 1fr;
   }
 
-/* .iss-newsletter-form__button: Element class for `iss-newsletter-form`; apply on `button` element. */
-  .iss-newsletter-form__button {
+  .iss-newsletter-form .tnp-submit {
     width: 100%;
     min-width: 0;
   }

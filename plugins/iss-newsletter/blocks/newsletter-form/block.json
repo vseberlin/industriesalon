@@ -1,0 +1,13 @@
+{
+  "apiVersion": 3,
+  "name": "iss/newsletter-form",
+  "title": "Newsletter-Anmeldung",
+  "category": "widgets",
+  "icon": "email",
+  "description": "Rendert das Industriesalon-Newsletterformular über The Newsletter Plugin.",
+  "textdomain": "iss-newsletter",
+  "supports": {
+    "html": false,
+    "reusable": true
+  }
+}
