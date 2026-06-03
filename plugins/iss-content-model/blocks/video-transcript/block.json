@@ -1,0 +1,22 @@
+{
+  "$schema": "https://schemas.wp.org/trunk/block.json",
+  "apiVersion": 3,
+  "name": "iss/video-transcript",
+  "title": "ISS Video Transcript",
+  "category": "widgets",
+  "icon": "text-page",
+  "description": "Server-rendered transcript or context text for the current Video CPT entry.",
+  "keywords": [
+    "video",
+    "transcript",
+    "timecode"
+  ],
+  "usesContext": [
+    "postId",
+    "postType"
+  ],
+  "supports": {
+    "html": false
+  },
+  "editorScript": "file:./index.js"
+}

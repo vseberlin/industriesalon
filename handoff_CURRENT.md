@@ -1,15 +1,18 @@
 # Current Handoff
 
-Updated: 2026-05-31
+Updated: 2026-06-03
 
 This file is the working handoff only. Full historical detail belongs in `CHANGELOG.md`; active follow-up belongs in `TODO.md`.
 
 ## Current Repo State
 
 - Branch: `main`
-- Latest active checkpoint: `68abb93` (`Update tracked third-party plugins`) on 2026-05-31, pushed to GitHub `main`.
+- Latest pushed checkpoint at the start of the current video/video-transcript pass: `bfe82ec` (`Update handoff for staging workflow`) on `main` / `origin/main`.
 - The current policy is local repo -> GitHub `main` -> staging deploy. Direct plugin/code updates in staging admin violate the workflow unless explicitly approved.
-- `main` tracks `origin/main` at `68abb93` after closeout; check `git status --short` and `git log --oneline -5` before deployment or handoff.
+- Current video work is ready to commit. `AGENTS.md` is modified by user/session instructions and should remain unstaged unless explicitly requested.
+- The Git changes cover video block metadata registration, `/videos/` landing behavior, single-video template polish, theme CSS/JS, and closeout docs.
+- Transcript text cleanups were written to the local WordPress database and are not fully represented in Git; preserve database state before destructive resets.
+- Re-check `git status --short` before deployment or handoff.
 - Standard closeout files: root `handoff_CURRENT.md`, root `CHANGELOG.md`, and root `TODO.md` when next work needs to be preserved.
 - Root handoff/changelog files may be ignored by git in this repo; use `git add -f handoff_CURRENT.md CHANGELOG.md TODO.md` when committing closeout docs.
 
@@ -45,6 +48,64 @@ This file is the working handoff only. Full historical detail belongs in `CHANGE
 - For publication/project/video/editorial work, keep CPT/data ownership in plugins and public layout/skins in the theme unless an existing plugin explicitly owns the renderer.
 
 ## Recent State To Preserve
+
+### Video CPT / Transcripts / Landing Pages
+
+- `iss-content-model` now registers video dynamic blocks from metadata-backed directories while keeping the existing server render callbacks:
+  - `iss/video-library`
+  - `iss/video-library-feature`
+  - `iss/video-library-filters`
+  - `iss/video-library-playlists`
+  - `iss/video-library-external`
+  - `iss/video-library-inventory`
+  - `iss/video-library-cta`
+  - `iss/video-player`
+  - `iss/video-transcript`
+- The theme remains the owner of `/videos/` and single-video composition:
+  - `themes/industriesalon/templates/page-videos.html`
+  - `themes/industriesalon/templates/single-video.html`
+  - `themes/industriesalon/assets/css/page-videos.css`
+  - `themes/industriesalon/assets/css/single-video.css`
+  - `themes/industriesalon/assets/js/single-video.js`
+- `/videos/` current behavior:
+  - filters stay in the main listing column and are sticky at the same header offset as the right player column on desktop
+  - filter clicks use controlled smooth scrolling to avoid abrupt browser anchor jumps
+  - `Übersicht` shows overview facts only, not transcript status
+  - `Transkript lesen` opens the full transcript tab
+  - `Kapitel` shows a timecode table of contents
+- Single-video current behavior:
+  - the video panel sits flush below the fixed header
+  - source link is an icon-only YouTube link
+  - transcript heading is `Gesprächsdokumentation`
+  - transcript navigation/timecodes seek the YouTube iframe through the theme `single-video.js`
+  - related content is an editor-visible slot inside `iss/video-transcript` and renders as a right rail on wide screens
+- Local DB transcript state after the cleanup pass:
+  - 22 YouTube-caption transcripts were rewritten as timecoded Gutenberg paragraphs and pre-editorially cleaned
+  - `21120` and duplicate `24990` share the cleaned 63-paragraph Whisper transcript
+  - remaining Whisper fallback videos were reviewed/cleaned or explicitly marked as no usable timed transcript
+- Verification from the latest video landing/single-video pass:
+  - `php -l plugins/iss-content-model/includes/videos.php`
+  - `npx stylelint themes/industriesalon/assets/css/page-videos.css`
+  - `npx stylelint themes/industriesalon/assets/css/single-video.css`
+  - `npx eslint plugins/iss-content-model/assets/video-library.js`
+  - Playwright checks for `/videos/` confirmed sticky filters/player, distinct tab content, timecode chapter labels, smooth filter scroll, and no horizontal overflow
+  - Playwright checks for single videos confirmed no header gap and no horizontal overflow
+
+### Local Video Transcription Workflow
+
+- Local-only transcription files are intentionally ignored by Git:
+  - `docker-compose.transcription.local.yml`
+  - `local/transcription-cli.Dockerfile`
+  - `local/transcribe-videos.local.sh`
+  - `wp/wp-content/mu-plugins/iss-local-video-transcription.php`
+- Caption import worked for many videos: `22` full transcripts are marked as `YouTube captions DE, local WP-CLI 2026-06-01`.
+- Whisper fallback is too slow in the current CPU-only Docker image:
+  - backup created before the test: `backups/full_20260602-091424_before-video-transcription.sql` plus `.sha256`
+  - targeted run for post `24990` downloaded/converter audio and entered `whisper-cli`
+  - audio duration was about `3772.992` seconds (~63 minutes)
+  - the process was still CPU-active after ~54 minutes with no text output, then stopped
+  - post `24990` remained unchanged: `status=excerpt`, `words=93`, empty transcript source
+- TODO now records the need to evaluate a faster local-only external transcription fallback behind an environment API key, with chunking for OpenAI-style upload limits.
 
 ### Deployment / Staging Workflow
 

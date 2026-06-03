@@ -1,0 +1,18 @@
+{
+  "$schema": "https://schemas.wp.org/trunk/block.json",
+  "apiVersion": 3,
+  "name": "iss/video-library-external",
+  "title": "ISS Video External Reports",
+  "category": "widgets",
+  "icon": "external",
+  "description": "Server-rendered external video reports section.",
+  "keywords": [
+    "video",
+    "external",
+    "reports"
+  ],
+  "supports": {
+    "html": false
+  },
+  "editorScript": "file:./index.js"
+}

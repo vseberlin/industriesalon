@@ -1,5 +1,47 @@
 # Changelog
 
+## 2026-06-03
+- Editorially cleaned the German transcript for Video CPT `21120` (`Orte Ost - Oberschoeneweide. Das Silicon Valley des Ostens?`) while preserving the 63 existing timecoded Gutenberg paragraph anchors.
+  - mirrored the same cleaned transcript to duplicate source video `24990`
+  - updated both transcript source meta values to mark the text as a timecoded Whisper transcript with editorial cleanup
+- Reviewed and cleaned the remaining local Whisper fallback transcripts:
+  - `13371` now keeps a single `[00:00] [Musik]` timecoded note because no discernible speech was present
+  - `13373` now has a cleaned short German transcript instead of the broken Whisper text
+  - `13374` now uses conservative timecoded sound/context notes for sparse cab audio rather than hallucinated speech
+  - `13370`, `13377`, and `13391` remain excerpt-only and are marked as reviewed because no usable timed transcript was available
+- Applied a conservative pre-editorial cleanup pass to all 22 YouTube-caption video transcripts:
+  - standardized recurring domain terms including Industriesalon, Schöneweide, WF, KWO, TRO, AEG, Samsung, Rathenau, Behrens, Elektropolis, and Elektroindustrie
+  - preserved the timecoded Gutenberg paragraph structure and marked the transcript source meta as pre-editorially cleaned
+  - corrected cleanup artifacts from the term pass before handoff to editorial review
+- Polished the single-video template presentation:
+  - changed the player facts to semantic compact metadata rows and moved transcript provenance from the hero into the transcript heading
+  - tightened the existing three-column transcript layout, sticky rails, related-link rail, timecode links, and mobile collapse without changing the editor-visible block structure
+  - removed the extra header gap, suppressed public transcript provenance notes, renamed the transcript heading to `Gesprächsdokumentation`, reduced the video title scale, and changed the original-source text link to an icon-only YouTube link
+- Polished the video landing page:
+  - kept the video filters in the main listing column, made them sticky at the same header offset as the right-side player column, and changed filter clicks to controlled scrolling so the listing does not jump abruptly
+  - removed transcript status from the `Übersicht` panel, kept the `Transkript` link pointed at the full transcript tab, and changed `Kapitel` output to a timecode table of contents
+
+## 2026-06-02
+- Updated the local-only video transcription workflow to preserve timecodes:
+  - VTT captions are now parsed into timestamped Gutenberg paragraph blocks instead of flattened plain transcript text
+  - overlapping auto-caption cue text is de-duplicated before paragraph writeback so rolling YouTube captions do not repeat phrase windows
+  - Whisper transcription now requests VTT output so fallback transcripts can use the same timestamped storage shape
+  - transcript writeback now checks `wp_update_post()` before marking a video as fully transcribed
+- Rewrote the existing caption-backed video transcripts as timecoded Gutenberg transcript blocks:
+  - 22 Video CPT posts now store full transcripts with visible `[mm:ss]` timecode paragraphs from YouTube captions
+  - queued the unique no-caption fallback videos for local Whisper VTT transcription, with the duplicate `Orte Ost` video configured to copy the finished transcript from the matching URL
+  - confirmed unavailable YouTube sources remain excerpt-only until their source media is restored or replaced
+- Fixed Gutenberg registration for the `iss/video-*` dynamic blocks by adding explicit client-side block metadata, searchable keywords, and Gutenberg editor opt-in for the `video` CPT.
+- Started the transcript-first single-video v1:
+  - added separate canonical video-page links to `/videos/` cards and the landing-page feature player
+  - reshaped the single-video template around player, transcript, and simple `iss/related-content` rail lists instead of related cards/map panels
+  - turned generated transcript timecodes into seek links with a sticky transcript rail and progressive YouTube iframe seeking
+- Moved single-video related-content links into the transcript block as an editor-visible slot and placed them in a right-hand related column on wide screens, keeping the chapter rail sticky on the left and avoiding rail overflow.
+- Added proper Gutenberg metadata registration for the `iss/video-*` dynamic blocks in `iss-content-model`:
+  - added `block.json` definitions for the video library, feature, filters, playlists, external reports, inventory, CTA, single player, and transcript blocks
+  - added a shared lightweight editor script so the blocks have recognizable editor placeholders and inspector context instead of anonymous server-only registration
+  - switched video block registration to metadata-backed `register_block_type()` while keeping the existing server render callbacks and frontend output unchanged
+
 ## 2026-05-31
 - Updated tracked third-party plugins through the local Git-first workflow, keeping staging free of direct admin-side code changes:
   - `classic-editor-and-classic-widgets` from `1.5.1` to `1.5.3`

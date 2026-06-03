@@ -1665,6 +1665,18 @@ function industriesalon_enqueue_assets(): void
         );
     }
 
+    $single_video_script_rel = '/assets/js/single-video.js';
+    $single_video_script_abs = $theme_dir . $single_video_script_rel;
+    if (file_exists($single_video_script_abs) && is_singular('video')) {
+        wp_enqueue_script(
+            'industriesalon-single-video',
+            industriesalon_make_relative_url($theme_uri . $single_video_script_rel),
+            array(),
+            (string) filemtime($single_video_script_abs),
+            true
+        );
+    }
+
 }
 add_action('wp_enqueue_scripts', 'industriesalon_enqueue_assets');
 

@@ -165,7 +165,6 @@
     var language = root.querySelector("[data-video-player-language]");
     var year = root.querySelector("[data-video-player-year]");
     var duration = root.querySelector("[data-video-player-duration]");
-    var transcriptStatus = root.querySelector("[data-video-player-transcript-status]");
     var posterImage = root.querySelector("[data-video-player-poster-image]");
     var posterFallback = root.querySelector("[data-video-player-poster-fallback]");
     var posterTitle = root.querySelector("[data-video-player-poster-title]");
@@ -174,7 +173,7 @@
     var durationWrap = root.querySelector("[data-video-player-duration-wrap]");
     var languageWrap = root.querySelector("[data-video-player-language-wrap]");
     var link = root.querySelector("[data-video-player-link]");
-    var transcriptLink = root.querySelector("[data-video-player-transcript]");
+    var permalink = root.querySelector("[data-video-player-permalink]");
     var transcriptText = root.querySelector("[data-video-player-transcript-text]");
     var transcriptWrap = root.querySelector("[data-video-player-transcript-wrap]");
     var returnWrap = root.querySelector("[data-video-player-return-wrap]");
@@ -190,9 +189,9 @@
     var categoryText = trigger.getAttribute("data-video-categories") || "";
     var thumbnailUrl = trigger.getAttribute("data-video-thumbnail") || "";
     var videoUrl = trigger.getAttribute("data-video-url") || "";
+    var permalinkUrl = trigger.getAttribute("data-video-permalink") || "";
     var hasTranscript = (trigger.getAttribute("data-video-has-transcript") || "").trim() === "1";
     var transcriptLabel = trigger.getAttribute("data-video-transcript-link-label") || "";
-    var transcriptStatusText = trigger.getAttribute("data-video-transcript-status") || "";
     var videoId = trigger.getAttribute("data-video-id") || "";
 
     setText(title, titleText);
@@ -203,7 +202,6 @@
     setText(language, languageText);
     setText(year, yearText);
     setText(duration, durationText);
-    setText(transcriptStatus, transcriptStatusText);
     setImage(posterImage, thumbnailUrl, titleText);
     setText(posterTitle, titleText);
 
@@ -220,9 +218,10 @@
       link.href = videoUrl;
     }
 
-    if (transcriptLink) {
-      transcriptLink.href = "#videotranskript";
+    if (permalink) {
+      permalink.href = permalinkUrl;
     }
+
     setText(transcriptText, transcriptLabel);
     setWrapVisibility(transcriptWrap, hasTranscript ? "1" : "");
     setWrapVisibility(returnWrap, "");
@@ -233,6 +232,33 @@
     showFrame(root, embedUrl, titleText, true);
     activateCard(root, videoId);
   }
+
+  document.addEventListener("click", function (event) {
+    var filter = event.target.closest(".iss-video-library__filter");
+    if (!filter) {
+      return;
+    }
+
+    var libraryRoot = getLibraryRoot(filter);
+    if (!libraryRoot) {
+      return;
+    }
+
+    var targetId = (filter.getAttribute("href") || "").replace(/^#/, "");
+    var target = targetId ? document.getElementById(targetId) : null;
+    if (!target) {
+      return;
+    }
+
+    event.preventDefault();
+    libraryRoot.querySelectorAll(".iss-video-library__filter").forEach(function (item) {
+      item.classList.toggle("is-active", item === filter);
+    });
+    target.scrollIntoView({ behavior: "smooth", block: "start" });
+    if (window.history && window.history.replaceState) {
+      window.history.replaceState(null, "", "#" + targetId);
+    }
+  });
 
   document.addEventListener("click", function (event) {
     var trigger = event.target.closest(".iss-video-card__trigger, .iss-video-playlist__lead-trigger");

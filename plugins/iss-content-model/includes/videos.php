@@ -10,50 +10,28 @@ function iss_content_model_register_video_library_block(): void
         return;
     }
 
-    register_block_type('iss/video-library', [
-        'api_version' => 2,
-        'render_callback' => 'iss_content_model_render_video_library_block',
-    ]);
+    $blocks = [
+        'video-library' => 'iss_content_model_render_video_library_block',
+        'video-library-filters' => 'iss_content_model_render_video_library_filters_block',
+        'video-library-feature' => 'iss_content_model_render_video_library_feature_block',
+        'video-library-playlists' => 'iss_content_model_render_video_library_playlists_block',
+        'video-library-external' => 'iss_content_model_render_video_library_external_block',
+        'video-library-inventory' => 'iss_content_model_render_video_library_inventory_block',
+        'video-library-cta' => 'iss_content_model_render_video_library_cta_block',
+        'video-player' => 'iss_content_model_render_video_player_block',
+        'video-transcript' => 'iss_content_model_render_video_transcript_block',
+    ];
 
-    register_block_type('iss/video-library-filters', [
-        'api_version' => 2,
-        'render_callback' => 'iss_content_model_render_video_library_filters_block',
-    ]);
+    foreach ($blocks as $slug => $render_callback) {
+        $block_dir = ISS_CONTENT_MODEL_PATH . 'blocks/' . $slug;
+        if (!file_exists($block_dir . '/block.json')) {
+            continue;
+        }
 
-    register_block_type('iss/video-library-feature', [
-        'api_version' => 2,
-        'render_callback' => 'iss_content_model_render_video_library_feature_block',
-    ]);
-
-    register_block_type('iss/video-library-playlists', [
-        'api_version' => 2,
-        'render_callback' => 'iss_content_model_render_video_library_playlists_block',
-    ]);
-
-    register_block_type('iss/video-library-external', [
-        'api_version' => 2,
-        'render_callback' => 'iss_content_model_render_video_library_external_block',
-    ]);
-
-    register_block_type('iss/video-library-inventory', [
-        'api_version' => 2,
-        'render_callback' => 'iss_content_model_render_video_library_inventory_block',
-    ]);
-
-    register_block_type('iss/video-library-cta', [
-        'api_version' => 2,
-        'render_callback' => 'iss_content_model_render_video_library_cta_block',
-    ]);
-
-    register_block_type('iss/video-player', [
-        'api_version' => 2,
-        'render_callback' => 'iss_content_model_render_video_player_block',
-    ]);
-
-    register_block_type('iss/video-transcript', [
-        'api_version' => 2,
-        'render_callback' => 'iss_content_model_render_video_transcript_block',
-    ]);
+        register_block_type($block_dir, [
+            'render_callback' => $render_callback,
+        ]);
+    }
 }
 add_action('init', 'iss_content_model_register_video_library_block', 25);
 
@@ -91,7 +69,7 @@ function iss_content_model_get_video_embed_url(string $url): string
     }
 
     if (preg_match('~youtube\.com/watch\?v=([^&]+)~i', $watch_url, $matches)) {
-        return 'https://www.youtube-nocookie.com/embed/' . rawurlencode($matches[1]);
+        return 'https://www.youtube-nocookie.com/embed/' . rawurlencode($matches[1]) . '?enablejsapi=1&rel=0&playsinline=1';
     }
 
     return $watch_url;
@@ -121,10 +99,14 @@ function iss_content_model_get_video_chapter_rows(string $body_content, string $
             continue;
         }
 
-        $label = sprintf('%02d', count($rows) + 1);
-        if (preg_match('/^(\d{1,2}:\d{2})(?:\s+|[-:]\s*)?(.*)$/u', $segment, $matches)) {
+        $label = '';
+        if (preg_match('/^\[?(\d{1,2}:\d{2}(?::\d{2})?)\]?(?:\s+|[-:]\s*)?(.*)$/u', $segment, $matches)) {
             $label = $matches[1];
             $segment = trim((string) ($matches[2] ?? ''));
+        }
+
+        if ($label === '') {
+            continue;
         }
 
         $rows[] = [
@@ -138,6 +120,90 @@ function iss_content_model_get_video_chapter_rows(string $body_content, string $
     }
 
     return $rows;
+}
+
+function iss_content_model_parse_video_timecode(string $value): int
+{
+    $value = trim($value);
+    if (!preg_match('/^(?:(\d{1,2}):)?(\d{2}):(\d{2})$/', $value, $matches)) {
+        return -1;
+    }
+
+    $hours = isset($matches[1]) && $matches[1] !== '' ? (int) $matches[1] : 0;
+    $minutes = (int) $matches[2];
+    $seconds = (int) $matches[3];
+
+    return ($hours * 3600) + ($minutes * 60) + $seconds;
+}
+
+function iss_content_model_video_timecode_id(string $timecode): string
+{
+    return 't-' . str_replace(':', '-', trim($timecode));
+}
+
+function iss_content_model_link_video_timecodes(string $content_html): string
+{
+    return (string) preg_replace_callback('/<strong>\[([0-9]{2}:[0-9]{2}(?::[0-9]{2})?)\]<\/strong>/i', static function (array $matches): string {
+        $timecode = (string) $matches[1];
+        $seconds = iss_content_model_parse_video_timecode($timecode);
+        if ($seconds < 0) {
+            return (string) $matches[0];
+        }
+
+        return sprintf(
+            '<a class="iss-video-timecode" href="#%1$s" data-video-seek="%2$d"><span class="screen-reader-text">%3$s </span>%4$s</a>',
+            esc_attr(iss_content_model_video_timecode_id($timecode)),
+            esc_attr((string) $seconds),
+            esc_html__('Videozeit', 'iss-content-model'),
+            esc_html($timecode)
+        );
+    }, $content_html);
+}
+
+function iss_content_model_add_video_timecode_ids(string $content_html): string
+{
+    return (string) preg_replace_callback('/<p([^>]*)>\s*<a class="iss-video-timecode" href="#([^"]+)"/i', static function (array $matches): string {
+        $attrs = (string) $matches[1];
+        if (preg_match('/\sid=/i', $attrs)) {
+            return (string) $matches[0];
+        }
+
+        return '<p' . $attrs . ' id="' . esc_attr((string) $matches[2]) . '"><a class="iss-video-timecode" href="#' . esc_attr((string) $matches[2]) . '"';
+    }, $content_html);
+}
+
+function iss_content_model_prepare_video_transcript_html(string $content_html): string
+{
+    return iss_content_model_add_video_timecode_ids(iss_content_model_link_video_timecodes($content_html));
+}
+
+function iss_content_model_get_video_transcript_nav_items(string $content_html): array
+{
+    $items = [];
+    if (!preg_match_all('/<p[^>]*>\s*<a class="iss-video-timecode" href="#([^"]+)" data-video-seek="(\d+)">.*?<\/a>\s*(.*?)<\/p>/is', $content_html, $matches, PREG_SET_ORDER)) {
+        return [];
+    }
+
+    foreach ($matches as $match) {
+        $label = str_replace('-', ':', preg_replace('/^t-/', '', (string) $match[1]));
+        $text = trim(preg_replace('/\s+/', ' ', wp_strip_all_tags((string) $match[3])));
+        if ($label === '' || $text === '') {
+            continue;
+        }
+
+        $items[] = [
+            'id' => (string) $match[1],
+            'seconds' => (int) $match[2],
+            'label' => $label,
+            'text' => wp_trim_words($text, 12, ' ...'),
+        ];
+
+        if (count($items) >= 12) {
+            break;
+        }
+    }
+
+    return $items;
 }
 
 function iss_content_model_render_video_transcript_panel_content(array $card): string
@@ -502,6 +568,9 @@ function iss_content_model_render_video_card(array $card, array $options = []): 
                 </span>
             </span>
         </button>
+        <p class="iss-video-card__actions">
+            <a class="iss-video-card__permalink" href="<?php echo esc_url($card['permalink']); ?>"><?php esc_html_e('Zur Videoseite', 'iss-content-model'); ?></a>
+        </p>
         <template class="iss-video-card__panel-template">
             <div data-video-panel-source="transcript"><?php echo iss_content_model_render_video_transcript_panel_content($card); ?></div>
             <div data-video-panel-source="chapters"><?php echo iss_content_model_render_video_chapters_panel_content($card); ?></div>
@@ -691,7 +760,7 @@ function iss_content_model_render_video_library_feature(array $featured): string
 
         <div class="iss-video-library__feature-copy">
             <nav class="iss-video-library__feature-tabs" aria-label="<?php echo esc_attr__('Videobereiche', 'iss-content-model'); ?>">
-                <button type="button" class="iss-video-library__feature-tab is-active" data-video-player-tab="overview" aria-pressed="true"><?php esc_html_e('Uebersicht', 'iss-content-model'); ?></button>
+                <button type="button" class="iss-video-library__feature-tab is-active" data-video-player-tab="overview" aria-pressed="true"><?php esc_html_e('Übersicht', 'iss-content-model'); ?></button>
                 <button type="button" class="iss-video-library__feature-tab" data-video-player-tab="transcript" aria-pressed="false"><?php esc_html_e('Transkript', 'iss-content-model'); ?></button>
                 <button type="button" class="iss-video-library__feature-tab" data-video-player-tab="chapters" aria-pressed="false"><?php esc_html_e('Kapitel', 'iss-content-model'); ?></button>
             </nav>
@@ -726,12 +795,9 @@ function iss_content_model_render_video_library_feature(array $featured): string
                                 <dt><?php esc_html_e('Sprache', 'iss-content-model'); ?></dt>
                                 <dd data-video-player-language><?php echo esc_html($featured['language']); ?></dd>
                             </div>
-                            <div class="iss-video-library__feature-fact">
-                                <dt><?php esc_html_e('Transkript', 'iss-content-model'); ?></dt>
-                                <dd data-video-player-transcript-status><?php echo esc_html($featured['transcript_status_label']); ?></dd>
-                            </div>
                         </dl>
                         <div class="iss-video-library__feature-links">
+                            <p class="iss-video-library__feature-link"><a class="iss-action-link" data-video-player-permalink href="<?php echo esc_url($featured['permalink']); ?>"><?php esc_html_e('Zur Videoseite', 'iss-content-model'); ?></a></p>
                             <p class="iss-video-library__feature-link"><a class="iss-action-link" data-video-player-link href="<?php echo esc_url($featured['source_url']); ?>" target="_blank" rel="noopener noreferrer"><?php esc_html_e('Zum Original', 'iss-content-model'); ?></a></p>
                             <p class="iss-video-library__feature-link" data-video-player-transcript-wrap <?php echo empty($featured['has_transcript']) ? 'hidden' : ''; ?>><a class="iss-action-link" data-video-player-open-tab="transcript" href="#videotranskript"><span data-video-player-transcript-text><?php echo esc_html($featured['transcript_link_label']); ?></span></a></p>
                             <p class="iss-video-library__feature-link" data-video-player-return-wrap hidden><button type="button" class="iss-video-library__return-link" data-video-player-return><?php esc_html_e('Zur Auswahl zurück', 'iss-content-model'); ?></button></p>
@@ -836,21 +902,25 @@ function iss_content_model_render_video_library_block($attributes = [], $content
     ob_start();
     ?>
     <div <?php echo $wrapper; ?>>
-        <?php echo iss_content_model_render_video_library_filters($payload['groups'], $payload['external_cards']); ?>
-
-        <?php echo iss_content_model_render_video_library_feature($payload['featured']); ?>
-
-        <div class="iss-video-library__playlists">
-            <?php
-            foreach ($payload['groups'] as $group) {
-                echo iss_content_model_render_video_playlist_section($group);
-            }
-            ?>
+        <div class="iss-video-library__feature-column">
+            <?php echo iss_content_model_render_video_library_feature($payload['featured']); ?>
         </div>
 
-        <?php echo iss_content_model_render_video_external_reports_section($payload['external_cards']); ?>
+        <div class="iss-video-library__main-column">
+            <?php echo iss_content_model_render_video_library_filters($payload['groups'], $payload['external_cards']); ?>
 
-        <?php echo iss_content_model_render_video_library_cta(); ?>
+            <div class="iss-video-library__playlists">
+                <?php
+                foreach ($payload['groups'] as $group) {
+                    echo iss_content_model_render_video_playlist_section($group);
+                }
+                ?>
+            </div>
+
+            <?php echo iss_content_model_render_video_external_reports_section($payload['external_cards']); ?>
+
+            <?php echo iss_content_model_render_video_library_cta(); ?>
+        </div>
     </div>
     <?php
 
@@ -961,6 +1031,47 @@ function iss_content_model_render_video_player_block($attributes = [], $content 
     $category_names = implode(', ', array_filter(array_map(static function ($category) {
         return (string) ($category['name'] ?? '');
     }, $card['categories'])));
+    $meta_rows = [];
+    if ($card['original_date_label'] !== '') {
+        $meta_rows[] = [
+            'label' => __('Datum', 'iss-content-model'),
+            'value' => $card['original_date_label'],
+        ];
+    }
+    if (($card['year_label'] !== '') || ($card['original_date_label'] === '' && $card['year'] !== '')) {
+        $meta_rows[] = [
+            'label' => __('Jahr', 'iss-content-model'),
+            'value' => $card['year'],
+        ];
+    }
+    if ($card['duration'] !== '') {
+        $meta_rows[] = [
+            'label' => __('Dauer', 'iss-content-model'),
+            'value' => $card['duration'],
+        ];
+    }
+    if ($card['language'] !== '') {
+        $meta_rows[] = [
+            'label' => __('Sprache', 'iss-content-model'),
+            'value' => $card['language'],
+        ];
+    }
+    if ($card['source_label'] !== '') {
+        $meta_rows[] = [
+            'label' => __('Quelle', 'iss-content-model'),
+            'value' => $card['source_label'],
+        ];
+    }
+    if ($card['rights'] !== '') {
+        $meta_rows[] = [
+            'label' => __('Rechte', 'iss-content-model'),
+            'value' => $card['rights'],
+        ];
+    }
+    $meta_rows[] = [
+        'label' => __('Transkript', 'iss-content-model'),
+        'value' => $card['transcript_status_label'],
+    ];
 
     ob_start();
     ?>
@@ -968,6 +1079,7 @@ function iss_content_model_render_video_player_block($attributes = [], $content 
         <div class="iss-video-single-player__layout">
             <div class="iss-video-single-player__media">
                 <iframe
+                    data-video-single-frame
                     src="<?php echo esc_url($card['embed_url']); ?>"
                     title="<?php echo esc_attr($card['title']); ?>"
                     loading="lazy"
@@ -984,32 +1096,21 @@ function iss_content_model_render_video_player_block($attributes = [], $content 
                 <?php if ($excerpt !== '') : ?>
                     <p class="iss-video-single-player__standfirst"><?php echo esc_html($excerpt); ?></p>
                 <?php endif; ?>
-                <div class="iss-video-single-player__meta">
-                    <?php if ($card['original_date_label'] !== '') : ?>
-                        <p><strong><?php esc_html_e('Datum', 'iss-content-model'); ?></strong> <?php echo esc_html($card['original_date_label']); ?></p>
-                    <?php endif; ?>
-                    <?php if (($card['year_label'] !== '') || ($card['original_date_label'] === '' && $card['year'] !== '')) : ?>
-                        <p><strong><?php esc_html_e('Jahr', 'iss-content-model'); ?></strong> <?php echo esc_html($card['year']); ?></p>
-                    <?php endif; ?>
-                    <?php if ($card['duration'] !== '') : ?>
-                        <p><strong><?php esc_html_e('Dauer', 'iss-content-model'); ?></strong> <?php echo esc_html($card['duration']); ?></p>
-                    <?php endif; ?>
-                    <?php if ($card['language'] !== '') : ?>
-                        <p><strong><?php esc_html_e('Sprache', 'iss-content-model'); ?></strong> <?php echo esc_html($card['language']); ?></p>
-                    <?php endif; ?>
-                    <?php if ($card['source_label'] !== '') : ?>
-                        <p><strong><?php esc_html_e('Quelle', 'iss-content-model'); ?></strong> <?php echo esc_html($card['source_label']); ?></p>
-                    <?php endif; ?>
-                    <?php if ($card['rights'] !== '') : ?>
-                        <p><strong><?php esc_html_e('Rechte', 'iss-content-model'); ?></strong> <?php echo esc_html($card['rights']); ?></p>
-                    <?php endif; ?>
-                    <p><strong><?php esc_html_e('Transkriptstatus', 'iss-content-model'); ?></strong> <?php echo esc_html($card['transcript_status_label']); ?></p>
-                    <?php if ($card['transcript_source'] !== '') : ?>
-                        <p><strong><?php esc_html_e('Transkript-Herkunft', 'iss-content-model'); ?></strong> <?php echo esc_html($card['transcript_source']); ?></p>
-                    <?php endif; ?>
-                </div>
+                <dl class="iss-video-single-player__meta">
+                    <?php foreach ($meta_rows as $row) : ?>
+                        <div class="iss-video-single-player__meta-row">
+                            <dt><?php echo esc_html($row['label']); ?></dt>
+                            <dd><?php echo esc_html((string) $row['value']); ?></dd>
+                        </div>
+                    <?php endforeach; ?>
+                </dl>
                 <p class="iss-video-single-player__links">
-                    <a class="iss-action-link" href="<?php echo esc_url($card['source_url']); ?>" target="_blank" rel="noopener noreferrer"><?php esc_html_e('Zum Original', 'iss-content-model'); ?></a>
+                    <a class="iss-video-single-player__source-link" href="<?php echo esc_url($card['source_url']); ?>" target="_blank" rel="noopener noreferrer" aria-label="<?php esc_attr_e('YouTube', 'iss-content-model'); ?>">
+                        <svg class="iss-video-single-player__youtube-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+                            <path d="M21.6 7.2c-.2-.8-.8-1.4-1.6-1.6C18.6 5.2 12 5.2 12 5.2s-6.6 0-8 .4c-.8.2-1.4.8-1.6 1.6C2 8.6 2 12 2 12s0 3.4.4 4.8c.2.8.8 1.4 1.6 1.6 1.4.4 8 .4 8 .4s6.6 0 8-.4c.8-.2 1.4-.8 1.6-1.6.4-1.4.4-4.8.4-4.8s0-3.4-.4-4.8Z" />
+                            <path class="iss-video-single-player__youtube-play" d="m10 15.2 5.2-3.2L10 8.8v6.4Z" />
+                        </svg>
+                    </a>
                     <?php if (!empty($card['has_transcript'])) : ?>
                         <a class="iss-action-link" href="#transkript"><?php echo esc_html($card['transcript_link_label']); ?></a>
                     <?php endif; ?>
@@ -1033,6 +1134,8 @@ function iss_content_model_render_video_transcript_block($attributes = [], $cont
     if (trim(wp_strip_all_tags($content_html)) === '') {
         return '';
     }
+    $content_html = iss_content_model_prepare_video_transcript_html((string) $content_html);
+    $nav_items = iss_content_model_get_video_transcript_nav_items($content_html);
 
     $transcript_status = iss_content_model_resolve_video_transcript_status(
         (string) get_post_meta($post_id, 'iss_video_transcript_status', true),
@@ -1046,12 +1149,40 @@ function iss_content_model_render_video_transcript_block($attributes = [], $cont
     ob_start();
     ?>
     <section id="transkript" <?php echo $wrapper; ?>>
-        <div class="iss-heading">
-            <p class="iss-kicker iss-kicker--compact"><?php echo esc_html($transcript_status === 'full' ? __('Transkript', 'iss-content-model') : __('Textmaterial', 'iss-content-model')); ?></p>
-            <h2 class="iss-heading__title"><?php echo esc_html($transcript_status === 'full' ? __('Gespräch und Inhalt', 'iss-content-model') : __('Begleittext und Kontext', 'iss-content-model')); ?></h2>
-        </div>
-        <div class="iss-video-transcript__body">
-            <?php echo $content_html; ?>
+        <div class="iss-video-transcript__layout">
+            <aside class="iss-video-transcript__rail">
+                <div class="iss-video-transcript__rail-inner">
+                    <p class="iss-kicker iss-kicker--compact"><?php esc_html_e('Navigation', 'iss-content-model'); ?></p>
+                    <?php if ($nav_items) : ?>
+                        <nav class="iss-video-transcript__nav" aria-label="<?php echo esc_attr__('Transkript-Zeitmarken', 'iss-content-model'); ?>">
+                            <?php foreach ($nav_items as $item) : ?>
+                                <a href="#<?php echo esc_attr($item['id']); ?>" data-video-seek="<?php echo esc_attr((string) $item['seconds']); ?>">
+                                    <span><?php echo esc_html($item['label']); ?></span>
+                                    <strong><?php echo esc_html($item['text']); ?></strong>
+                                </a>
+                            <?php endforeach; ?>
+                        </nav>
+                    <?php else : ?>
+                        <p class="iss-video-transcript__rail-empty"><?php esc_html_e('Noch keine Zeitmarken im Text.', 'iss-content-model'); ?></p>
+                    <?php endif; ?>
+                </div>
+            </aside>
+            <div class="iss-video-transcript__main">
+                <div class="iss-heading">
+                    <p class="iss-kicker iss-kicker--compact"><?php echo esc_html($transcript_status === 'full' ? __('Transkript', 'iss-content-model') : __('Textmaterial', 'iss-content-model')); ?></p>
+                    <h2 class="iss-heading__title"><?php echo esc_html($transcript_status === 'full' ? __('Gesprächsdokumentation', 'iss-content-model') : __('Begleittext und Kontext', 'iss-content-model')); ?></h2>
+                </div>
+                <div class="iss-video-transcript__body">
+                    <?php echo $content_html; ?>
+                </div>
+            </div>
+            <?php if (trim(wp_strip_all_tags((string) $content)) !== '') : ?>
+                <aside class="iss-video-transcript__related" aria-label="<?php echo esc_attr__('Weiterfuehrende Inhalte', 'iss-content-model'); ?>">
+                    <div class="iss-video-transcript__related-inner">
+                        <?php echo $content; ?>
+                    </div>
+                </aside>
+            <?php endif; ?>
         </div>
     </section>
     <?php

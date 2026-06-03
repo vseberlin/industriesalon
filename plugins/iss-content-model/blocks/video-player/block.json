@@ -1,0 +1,22 @@
+{
+  "$schema": "https://schemas.wp.org/trunk/block.json",
+  "apiVersion": 3,
+  "name": "iss/video-player",
+  "title": "ISS Video Player",
+  "category": "widgets",
+  "icon": "controls-play",
+  "description": "Server-rendered player and metadata for the current Video CPT entry.",
+  "keywords": [
+    "video",
+    "player",
+    "single"
+  ],
+  "usesContext": [
+    "postId",
+    "postType"
+  ],
+  "supports": {
+    "html": false
+  },
+  "editorScript": "file:./index.js"
+}

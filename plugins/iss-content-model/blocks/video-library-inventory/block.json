@@ -1,0 +1,18 @@
+{
+  "$schema": "https://schemas.wp.org/trunk/block.json",
+  "apiVersion": 3,
+  "name": "iss/video-library-inventory",
+  "title": "ISS Video Inventory",
+  "category": "widgets",
+  "icon": "screenoptions",
+  "description": "Server-rendered complete video inventory strip.",
+  "keywords": [
+    "video",
+    "inventory",
+    "library"
+  ],
+  "supports": {
+    "html": false
+  },
+  "editorScript": "file:./index.js"
+}

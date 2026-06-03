@@ -9,6 +9,12 @@
   - avoid losing measurable YouTube views through autoplayed in-page embeds
   - test whether card selection should only update poster/metadata while playback starts only after an explicit user play click
   - keep a strong `Zum Original` / YouTube handoff path if on-site playback reduces channel traffic
+- Improve the local video transcription fallback before processing remaining non-caption videos:
+  - current local-only Docker/WP-CLI workflow successfully imported caption-based transcripts into existing `video` post content/meta, but CPU-only Whisper fallback is too slow for long videos
+  - keep transcript storage unchanged: write generated text into `video.post_content`, set `iss_video_transcript_status=full`, and record `iss_video_transcript_source`
+  - evaluate a local-only external transcription provider option such as OpenAI, Deepgram, or AssemblyAI behind an environment API key, never committed to Git or exposed on staging
+  - for OpenAI-style file limits, add audio chunking before upload and join returned text before saving through the existing WordPress DB path
+  - preserve backups and explicit per-post runs before writing generated transcripts
 - Resolve the remaining `register_place` coordinate gaps after the first address-based geocoding pass:
   - `Innovationspark Wuhlheide`
   - `IRIS GmbH`

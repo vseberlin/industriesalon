@@ -317,6 +317,10 @@
   padding-top: 0.1rem;
 }
 
+.iss-video-library__feature-panel[hidden] {
+  display: none;
+}
+
 .iss-video-library__feature-panel--overview {
   grid-template-columns: minmax(0, 1.15fr) minmax(10.5rem, 0.85fr);
   gap: 0.95rem 1.05rem;
@@ -393,6 +397,25 @@
   flex-wrap: wrap;
   gap: 0.75rem 1rem;
   padding-top: 0.1rem;
+}
+
+.iss-video-card__actions {
+  margin: 0;
+  padding: 0.7rem 0.05rem 0;
+}
+
+.iss-video-card__permalink {
+  color: var(--iss-videos-text);
+  font-size: 0.86rem;
+  font-weight: 850;
+  text-decoration-color: rgba(244, 241, 237, 0.34);
+  text-underline-offset: 0.22em;
+}
+
+.iss-video-card__permalink:hover,
+.iss-video-card__permalink:focus-visible {
+  color: var(--iss-accent);
+  text-decoration-color: currentColor;
 }
 
 .iss-video-library__panel-richtext {
@@ -477,7 +500,7 @@
 .iss-video-library__section {
   display: grid;
   gap: 0.75rem;
-  scroll-margin-top: calc(var(--iss-header-height) + 1rem);
+  scroll-margin-top: calc(var(--iss-header-height) + 4rem);
 }
 
 .iss-video-library__section-head {
@@ -713,17 +736,25 @@
     align-self: start;
   }
 
+  .iss-video-library__main-column > .iss-video-library__filters {
+    position: sticky;
+    top: var(--iss-header-height);
+    z-index: 5;
+    padding: 0.75rem 0;
+    background: var(--iss-videos-bg);
+  }
+
   .iss-video-library__feature-column {
     grid-area: feature;
-    align-self: stretch;
-    min-height: 100%;
+    position: sticky;
+    top: var(--iss-header-height);
+    align-self: start;
+    max-height: calc(100vh - var(--iss-header-height));
+    overflow: auto;
   }
 
   .iss-video-library__feature {
-    position: sticky;
-    top: var(--iss-header-height);
-    max-height: calc(100vh - var(--iss-header-height));
-    overflow: auto;
+    min-height: 0;
   }
 
   .iss-video-library__feature-copy {

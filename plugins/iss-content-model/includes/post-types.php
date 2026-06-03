@@ -227,6 +227,7 @@ function iss_content_model_block_editor_post_types(): array
     return [
         ISS_CONTENT_MODEL_VERANSTALTUNG_POST_TYPE,
         ISS_CONTENT_MODEL_PROJEKT_POST_TYPE,
+        ISS_CONTENT_MODEL_VIDEO_POST_TYPE,
     ];
 }
 

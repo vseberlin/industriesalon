@@ -1,7 +1,7 @@
 <!-- wp:template-part {"slug":"header","tagName":"header"} /-->
 
-<!-- wp:group {"tagName":"main","className":"iss-video-single iss-page--header-offset","layout":{"type":"default"}} -->
-<main class="wp-block-group iss-video-single iss-page--header-offset">
+<!-- wp:group {"tagName":"main","className":"iss-video-single iss-page--header-offset iss-scheme-blue","layout":{"type":"default"}} -->
+<main class="wp-block-group iss-video-single iss-page--header-offset iss-scheme-blue">
 	<!-- wp:group {"tagName":"section","className":"section section--plain iss-video-single__intro","layout":{"type":"default"}} -->
 	<section class="wp-block-group section section--plain iss-video-single__intro">
 		<!-- wp:group {"className":"iss-container","layout":{"type":"default"}} -->
@@ -16,7 +16,13 @@
 	<section class="wp-block-group section section--plain iss-video-single__transcript-wrap">
 		<!-- wp:group {"className":"iss-container","layout":{"type":"default"}} -->
 		<div class="wp-block-group iss-container">
-			<!-- wp:iss/video-transcript /-->
+			<!-- wp:iss/video-transcript -->
+				<!-- wp:iss/related-content {"title":"Orte","kicker":"Ort","postType":"register_place","perPage":3,"layoutVariant":"rail","showImage":false,"showExcerpt":false} /-->
+
+				<!-- wp:iss/related-content {"title":"Publikationen","kicker":"Weiterlesen","postType":"publication","perPage":3,"layoutVariant":"rail","showImage":false,"showExcerpt":false} /-->
+
+				<!-- wp:iss/related-content {"title":"Veranstaltungen","kicker":"Weiter","postType":"veranstaltung","perPage":3,"layoutVariant":"rail","showImage":false,"showExcerpt":false} /-->
+			<!-- /wp:iss/video-transcript -->
 		</div>
 		<!-- /wp:group -->
 	</section>
@@ -26,79 +32,6 @@
 
 	<!-- wp:iss-graph/entity-relations {"entityKind":"person","kicker":"Akteure","title":"Personen im Zusammenhang"} /-->
 
-	<!-- wp:group {"tagName":"section","className":"section section--plain iss-related-place-map","layout":{"type":"default"}} -->
-	<section class="wp-block-group section section--plain iss-related-place-map">
-		<!-- wp:group {"className":"iss-container","layout":{"type":"default"}} -->
-		<div class="wp-block-group iss-container">
-			<!-- wp:group {"className":"iss-related-place-map__shell","layout":{"type":"default"}} -->
-			<div class="wp-block-group iss-related-place-map__shell">
-				<!-- wp:group {"className":"iss-heading iss-related-place-map__intro","layout":{"type":"default"}} -->
-				<div class="wp-block-group iss-heading iss-related-place-map__intro">
-					<!-- wp:paragraph {"className":"iss-kicker iss-kicker--compact"} -->
-					<p class="iss-kicker iss-kicker--compact">Verortung</p>
-					<!-- /wp:paragraph -->
-
-					<!-- wp:heading {"level":2,"className":"iss-heading__title"} -->
-					<h2 class="iss-heading__title">Orte zum Video</h2>
-					<!-- /wp:heading -->
-
-					<!-- wp:paragraph {"className":"iss-related-place-map__cta"} -->
-					<p class="iss-related-place-map__cta"><a class="iss-action-link" href="/schoneweide/">Zum Schöneweide-Atlas</a></p>
-					<!-- /wp:paragraph -->
-				</div>
-				<!-- /wp:group -->
-
-				<!-- wp:iss/related-place-map {"perPage":5,"shellMode":"body"} /-->
-			</div>
-			<!-- /wp:group -->
-		</div>
-		<!-- /wp:group -->
-	</section>
-	<!-- /wp:group -->
-
-	<!-- wp:group {"tagName":"section","className":"section section--plain iss-related-feed iss-related-feed--register_place","layout":{"type":"default"}} -->
-	<section class="wp-block-group section section--plain iss-related-feed iss-related-feed--register_place">
-		<!-- wp:group {"className":"iss-container","layout":{"type":"default"}} -->
-		<div class="wp-block-group iss-container">
-			<!-- wp:group {"className":"iss-heading iss-related-feed__intro","layout":{"type":"default"}} -->
-			<div class="wp-block-group iss-heading iss-related-feed__intro">
-				<!-- wp:paragraph {"className":"iss-kicker iss-kicker--compact"} -->
-				<p class="iss-kicker iss-kicker--compact">Ort</p>
-				<!-- /wp:paragraph -->
-
-				<!-- wp:heading {"level":2,"className":"iss-heading__title"} -->
-				<h2 class="iss-heading__title">Verknüpfte Orte</h2>
-				<!-- /wp:heading -->
-			</div>
-			<!-- /wp:group -->
-
-			<!-- wp:iss/related-cards {"postType":"register_place","perPage":4} /-->
-		</div>
-		<!-- /wp:group -->
-	</section>
-	<!-- /wp:group -->
-
-	<!-- wp:group {"tagName":"section","className":"section section--plain iss-related-feed iss-related-feed--publication","layout":{"type":"default"}} -->
-	<section class="wp-block-group section section--plain iss-related-feed iss-related-feed--publication">
-		<!-- wp:group {"className":"iss-container","layout":{"type":"default"}} -->
-		<div class="wp-block-group iss-container">
-			<!-- wp:group {"className":"iss-heading iss-related-feed__intro","layout":{"type":"default"}} -->
-			<div class="wp-block-group iss-heading iss-related-feed__intro">
-				<!-- wp:paragraph {"className":"iss-kicker iss-kicker--compact"} -->
-				<p class="iss-kicker iss-kicker--compact">Weiterlesen</p>
-				<!-- /wp:paragraph -->
-
-				<!-- wp:heading {"level":2,"className":"iss-heading__title"} -->
-				<h2 class="iss-heading__title">Verwandte Publikationen</h2>
-				<!-- /wp:heading -->
-			</div>
-			<!-- /wp:group -->
-
-			<!-- wp:iss/related-cards {"postType":"publication","perPage":3} /-->
-		</div>
-		<!-- /wp:group -->
-	</section>
-	<!-- /wp:group -->
 </main>
 <!-- /wp:group -->
 

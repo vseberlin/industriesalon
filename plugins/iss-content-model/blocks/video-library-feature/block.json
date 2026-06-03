@@ -1,0 +1,18 @@
+{
+  "$schema": "https://schemas.wp.org/trunk/block.json",
+  "apiVersion": 3,
+  "name": "iss/video-library-feature",
+  "title": "ISS Video Feature",
+  "category": "widgets",
+  "icon": "format-video",
+  "description": "Server-rendered active video feature, player, metadata, transcript, and chapters panel.",
+  "keywords": [
+    "video",
+    "player",
+    "transcript"
+  ],
+  "supports": {
+    "html": false
+  },
+  "editorScript": "file:./index.js"
+}
