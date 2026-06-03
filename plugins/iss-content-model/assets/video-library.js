@@ -230,7 +230,7 @@
     root.setAttribute("data-active-video-title", titleText);
     updatePanelContent(root, trigger);
     showFrame(root, embedUrl, titleText, true);
-    activateCard(root, videoId);
+    activateCard(getLibraryRoot(trigger) || root, videoId);
   }
 
   document.addEventListener("click", function (event) {

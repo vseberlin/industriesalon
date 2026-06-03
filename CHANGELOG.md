@@ -1,6 +1,9 @@
 # Changelog
 
 ## 2026-06-03
+- Fixed video landing card highlighting so selecting a different video moves the active state from the initially featured card to the clicked card.
+- Corrected the video landing CTA kicker color on the dark CTA surface by scoping the shared kicker color token to the video CTA component.
+- Changed the video landing page to use the existing red page scheme token instead of the blue scheme.
 - Refactored the video dynamic blocks so landing-page and transcript-section editorial copy is supplied through Gutenberg block attributes or video-category term descriptions instead of hardcoded PHP copy maps, while the blocks continue to read Video CPT data from `iss-content-model`.
 - Editorially cleaned the German transcript for Video CPT `21120` (`Orte Ost - Oberschoeneweide. Das Silicon Valley des Ostens?`) while preserving the 63 existing timecoded Gutenberg paragraph anchors.
   - mirrored the same cleaned transcript to duplicate source video `24990`

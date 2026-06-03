@@ -684,6 +684,9 @@
 }
 
 .iss-video-library__cta {
+  --iss-kicker-accent: var(--iss-accent);
+  --iss-kicker-color: var(--iss-videos-text);
+
   display: grid;
   gap: 0.65rem;
   padding: 1rem;
