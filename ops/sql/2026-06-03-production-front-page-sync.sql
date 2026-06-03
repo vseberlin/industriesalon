@@ -1,6 +1,6 @@
 -- Production sync for 2026-06-03 front-page launch work.
 -- Scope: template authority and project ordering only.
--- Intentionally excludes local-only video transcript content and transcript meta.
+-- Video transcript DB content is handled separately in 2026-06-03-production-video-transcripts-sync.sql.
 -- Assumes the standard WordPress table prefix `wp_`.
 
 START TRANSACTION;
