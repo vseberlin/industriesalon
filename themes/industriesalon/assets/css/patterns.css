@@ -2744,11 +2744,11 @@ iss-info-panel--brown
   --iss-button-hover-bg: color-mix(in srgb, var(--iss-info-accent) 16%, white 84%);
   --iss-button-hover-border: var(--iss-info-accent);
   --iss-info-panel-shell-pad: clamp(1.4rem, 2vw, 1.9rem);
-  --iss-info-panel-shell-border: 1px solid color-mix(in srgb, var(--iss-info-accent) 16%, rgba(30, 30, 30, 0.14) 84%);
+  --iss-info-panel-shell-border: 0;
   --iss-info-panel-shell-border-left: 4px solid var(--iss-info-accent);
-  --iss-info-panel-shell-radius: var(--iss-radius-md, 16px);
-  --iss-info-panel-shell-bg: color-mix(in srgb, var(--iss-info-accent) 4%, white 96%);
-  --iss-info-panel-shell-shadow: 0 12px 26px rgba(0, 0, 0, 0.04);
+  --iss-info-panel-shell-radius: 0;
+  --iss-info-panel-shell-bg: var(--iss-white);
+  --iss-info-panel-shell-shadow: none;
   --iss-info-panel-grid-columns: minmax(0, 0.34fr) minmax(0, 0.66fr);
   --iss-info-panel-grid-gap: clamp(1.75rem, 2.2vw, 3rem);
   --iss-info-panel-title-pad-inline-end: clamp(1rem, 2vw, 2rem);
@@ -3042,9 +3042,9 @@ iss-info-panel--brown
   --iss-button-hover-bg: rgba(249, 249, 250, 0.12);
   --iss-button-hover-border: rgba(249, 249, 250, 0.72);
   --iss-button-hover-fg: var(--iss-white);
-  --iss-info-panel-shell-border: 1px solid color-mix(in srgb, var(--iss-white) 18%, transparent);
+  --iss-info-panel-shell-border: 0;
   --iss-info-panel-shell-border-left: 4px solid var(--iss-info-accent);
-  --iss-info-panel-shell-bg: color-mix(in srgb, var(--iss-black) 88%, var(--iss-info-accent) 12%);
+  --iss-info-panel-shell-bg: var(--iss-black);
   color: var(--iss-white);
 }
 
@@ -3128,10 +3128,7 @@ iss-info-panel--brown
 }
 
 .iss-control-info-panel__icon {
-  flex: 0 0 1.3rem;
-  width: 1.3rem;
-  height: 1.3rem;
-  color: var(--iss-info-accent);
+  display: none;
 }
 
 .iss-control-info-panel__icon svg {

@@ -149,10 +149,7 @@
 .iss-event-hero__meta .iss-info-panel--skin-aside {
   --iss-info-panel-shell-pad: 0;
   --iss-info-panel-shell-border: 0;
-  --iss-info-panel-shell-border-left: 0;
-  --iss-info-panel-shell-radius: 0;
   --iss-info-panel-shell-bg: transparent;
-  --iss-info-panel-shell-shadow: none;
   --iss-info-panel-title-size: 1.25rem;
   --iss-info-panel-heading-gap: 0.28rem;
 

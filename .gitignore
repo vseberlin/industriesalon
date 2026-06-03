@@ -23,6 +23,10 @@
 !/tools/phpstan-bootstrap.php
 /tools/composer-setup.php
 /tools/composer.phar
+!/ops/
+/ops/*
+!/ops/sql/
+!/ops/sql/*.sql
 !/tests/
 /tests/*
 !/tests/e2e/
