@@ -1824,6 +1824,7 @@ function iss_relations_render_generic_card(WP_Post $post, array $copy, array $op
     $layout_variant = iss_relations_normalize_related_cards_layout_variant($options);
     $skin = iss_relations_normalize_related_cards_skin($options);
     $has_media = $show_image && has_post_thumbnail($post);
+    $placeholder_image_url = $show_image && !$has_media ? iss_relations_get_card_placeholder_image_url($post, $options) : '';
 
     $card_class .= ' iss-related-feed__card--layout-' . sanitize_html_class($layout_variant);
     $card_class .= ' iss-related-feed__card--skin-' . sanitize_html_class($skin);
@@ -1842,7 +1843,11 @@ function iss_relations_render_generic_card(WP_Post $post, array $copy, array $op
                         <?php echo get_the_post_thumbnail($post, 'large'); ?>
                     </a>
                 <?php else : ?>
-                    <a class="iss-card__media iss-related-feed__placeholder" href="<?php echo esc_url($permalink); ?>" aria-label="<?php echo esc_attr($title); ?>"></a>
+                    <a class="iss-card__media iss-related-feed__placeholder<?php echo $placeholder_image_url !== '' ? ' iss-related-feed__placeholder--image' : ''; ?>" href="<?php echo esc_url($permalink); ?>" aria-label="<?php echo esc_attr($title); ?>">
+                        <?php if ($placeholder_image_url !== '') : ?>
+                            <img src="<?php echo esc_url($placeholder_image_url); ?>" alt="" loading="lazy" decoding="async">
+                        <?php endif; ?>
+                    </a>
                 <?php endif; ?>
             </div>
         <?php endif; ?>
@@ -1868,6 +1873,13 @@ function iss_relations_render_generic_card(WP_Post $post, array $copy, array $op
     <?php
 
     return trim((string) ob_get_clean());
+}
+
+function iss_relations_get_card_placeholder_image_url(WP_Post $post, array $options = []): string
+{
+    $url = (string) apply_filters('iss_relations_card_placeholder_image_url', '', $post, $options);
+
+    return esc_url_raw($url);
 }
 
 function iss_relations_render_related_content_card(WP_Post $post, array $defaults, array $options = []): string
@@ -1973,6 +1985,8 @@ function iss_relations_build_related_cards_preview_payload(array $attributes = [
         $thumb = '';
         if ($show_image && has_post_thumbnail($post)) {
             $thumb = (string) get_the_post_thumbnail_url($post, 'medium');
+        } elseif ($show_image) {
+            $thumb = iss_relations_get_card_placeholder_image_url($post, (array) ($data['card_options'] ?? []));
         }
 
         $items[] = [

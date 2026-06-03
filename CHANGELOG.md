@@ -1,6 +1,7 @@
 # Changelog
 
 ## 2026-06-03
+- Added WebP placeholder assets and wired shared related-card media fallbacks so events, projects, exhibitions, places, and videos without featured images no longer render blank card media.
 - Added `ops/sql/2026-06-03-production-video-transcripts-sync.sql` to transfer cleaned video transcript post content and transcript meta to production while keeping local transcription workflow files out of Git.
 - Added `ops/sql/2026-06-03-production-front-page-sync.sql` to sync production template authority and project ordering; video transcript DB content is handled by the separate transcript sync artifact.
 - Tightened the shared `iss-info-panel` design system site-wide by removing full borders, rounded shells, shadows, accent-tinted panel backgrounds, and decorative control-panel icons while keeping the straight left accent rail.

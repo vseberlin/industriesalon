@@ -906,6 +906,64 @@ function industriesalon_sanitize_event_format($value): string
     return in_array($value, industriesalon_event_format_choices(), true) ? $value : 'general';
 }
 
+function industriesalon_get_placeholder_asset_url(string $filename): string
+{
+    $filename = sanitize_file_name($filename);
+    if ($filename === '') {
+        return '';
+    }
+
+    $relative_path = 'assets/img/placeholders/' . $filename;
+    $absolute_path = get_stylesheet_directory() . '/' . $relative_path;
+    if (!is_readable($absolute_path)) {
+        return '';
+    }
+
+    return get_stylesheet_directory_uri() . '/' . $relative_path;
+}
+
+function industriesalon_get_related_card_placeholder_filename(WP_Post $post): string
+{
+    if ($post->post_type === 'veranstaltung') {
+        $layout = industriesalon_sanitize_event_layout(get_post_meta($post->ID, '_iss_event_layout', true));
+        if ($layout === 'fest') {
+            return 'fest.webp';
+        }
+
+        $format = industriesalon_sanitize_event_format(get_post_meta($post->ID, '_iss_event_format', true));
+        $event_format_placeholders = [
+            'vortrag' => 'vortrag.webp',
+            'gespraech' => 'gespach.webp',
+            'lesung' => 'lesung.webp',
+            'praesentation' => 'versanstaltung.webp',
+        ];
+
+        return $event_format_placeholders[$format] ?? 'versanstaltung.webp';
+    }
+
+    $post_type_placeholders = [
+        'ausstellung' => 'ausstellung.webp',
+        'projekt' => 'project.webp',
+        'register_place' => 'orte.webp',
+        'video' => 'video.webp',
+    ];
+
+    return $post_type_placeholders[$post->post_type] ?? '';
+}
+
+add_filter('iss_relations_card_placeholder_image_url', function (string $url, WP_Post $post): string {
+    if ($url !== '') {
+        return $url;
+    }
+
+    $filename = industriesalon_get_related_card_placeholder_filename($post);
+    if ($filename === '') {
+        return '';
+    }
+
+    return industriesalon_get_placeholder_asset_url($filename);
+}, 10, 2);
+
 function industriesalon_can_edit_event_meta($allowed = null, $meta_key = '', $post_id = 0): bool
 {
     $post_id = (int) $post_id;

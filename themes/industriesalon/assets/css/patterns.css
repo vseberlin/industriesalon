@@ -6980,6 +6980,11 @@ iss-info-panel--brown
   text-decoration: none;
 }
 
+.iss-related-feed__grid .iss-related-feed__placeholder--image {
+  padding: 0;
+  background: var(--iss-related-feed-media-bg, rgba(var(--iss-accent-rgb), 0.04));
+}
+
 .iss-related-feed__grid .iss-card__body {
   display: flex;
   flex: 1 1 auto;
