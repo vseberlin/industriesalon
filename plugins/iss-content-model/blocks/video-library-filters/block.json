@@ -14,5 +14,15 @@
   "supports": {
     "html": false
   },
+  "attributes": {
+    "ariaLabel": {
+      "type": "string",
+      "default": ""
+    },
+    "externalLabel": {
+      "type": "string",
+      "default": ""
+    }
+  },
   "editorScript": "file:./index.js"
 }

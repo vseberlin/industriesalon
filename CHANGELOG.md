@@ -1,6 +1,7 @@
 # Changelog
 
 ## 2026-06-03
+- Refactored the video dynamic blocks so landing-page and transcript-section editorial copy is supplied through Gutenberg block attributes or video-category term descriptions instead of hardcoded PHP copy maps, while the blocks continue to read Video CPT data from `iss-content-model`.
 - Editorially cleaned the German transcript for Video CPT `21120` (`Orte Ost - Oberschoeneweide. Das Silicon Valley des Ostens?`) while preserving the 63 existing timecoded Gutenberg paragraph anchors.
   - mirrored the same cleaned transcript to duplicate source video `24990`
   - updated both transcript source meta values to mark the text as a timecoded Whisper transcript with editorial cleanup

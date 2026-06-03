@@ -18,5 +18,39 @@
   "supports": {
     "html": false
   },
+  "attributes": {
+    "railKicker": {
+      "type": "string",
+      "default": ""
+    },
+    "timecodeNavLabel": {
+      "type": "string",
+      "default": ""
+    },
+    "emptyRailText": {
+      "type": "string",
+      "default": ""
+    },
+    "transcriptKicker": {
+      "type": "string",
+      "default": ""
+    },
+    "transcriptTitle": {
+      "type": "string",
+      "default": ""
+    },
+    "contextKicker": {
+      "type": "string",
+      "default": ""
+    },
+    "contextTitle": {
+      "type": "string",
+      "default": ""
+    },
+    "relatedAriaLabel": {
+      "type": "string",
+      "default": ""
+    }
+  },
   "editorScript": "file:./index.js"
 }

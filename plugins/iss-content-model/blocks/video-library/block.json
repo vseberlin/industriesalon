@@ -14,5 +14,59 @@
   "supports": {
     "html": false
   },
+  "attributes": {
+    "ariaLabel": {
+      "type": "string",
+      "default": ""
+    },
+    "externalLabel": {
+      "type": "string",
+      "default": ""
+    },
+    "showDescriptions": {
+      "type": "boolean",
+      "default": true
+    },
+    "showCounts": {
+      "type": "boolean",
+      "default": true
+    },
+    "externalKicker": {
+      "type": "string",
+      "default": ""
+    },
+    "externalTitle": {
+      "type": "string",
+      "default": ""
+    },
+    "externalText": {
+      "type": "string",
+      "default": ""
+    },
+    "externalShowCounts": {
+      "type": "boolean",
+      "default": true
+    },
+    "ctaKicker": {
+      "type": "string",
+      "default": ""
+    },
+    "ctaTitle": {
+      "type": "string",
+      "default": ""
+    },
+    "ctaText": {
+      "type": "string",
+      "default": ""
+    },
+    "ctaLinkUrl": {
+      "type": "string",
+      "default": ""
+    },
+    "ctaLinkLabel": {
+      "type": "string",
+      "default": ""
+    }
+  },
   "editorScript": "file:./index.js"
 }

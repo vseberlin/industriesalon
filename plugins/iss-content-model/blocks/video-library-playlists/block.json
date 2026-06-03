@@ -14,5 +14,15 @@
   "supports": {
     "html": false
   },
+  "attributes": {
+    "showDescriptions": {
+      "type": "boolean",
+      "default": true
+    },
+    "showCounts": {
+      "type": "boolean",
+      "default": true
+    }
+  },
   "editorScript": "file:./index.js"
 }

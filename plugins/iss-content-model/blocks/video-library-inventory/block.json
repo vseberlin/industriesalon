@@ -14,5 +14,23 @@
   "supports": {
     "html": false
   },
+  "attributes": {
+    "kicker": {
+      "type": "string",
+      "default": ""
+    },
+    "title": {
+      "type": "string",
+      "default": ""
+    },
+    "text": {
+      "type": "string",
+      "default": ""
+    },
+    "showCounts": {
+      "type": "boolean",
+      "default": true
+    }
+  },
   "editorScript": "file:./index.js"
 }
