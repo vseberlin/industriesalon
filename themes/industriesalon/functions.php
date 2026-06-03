@@ -964,6 +964,50 @@ add_filter('iss_relations_card_placeholder_image_url', function (string $url, WP
     return industriesalon_get_placeholder_asset_url($filename);
 }, 10, 2);
 
+function industriesalon_render_featured_image_placeholder_block(string $block_content, array $block, WP_Block $instance): string
+{
+    if (trim($block_content) !== '') {
+        return $block_content;
+    }
+
+    $post_id = (int) ($instance->context['postId'] ?? 0);
+    if ($post_id <= 0) {
+        $post_id = (int) get_the_ID();
+    }
+
+    $post = $post_id > 0 ? get_post($post_id) : null;
+    if (!$post instanceof WP_Post || has_post_thumbnail($post)) {
+        return $block_content;
+    }
+
+    $filename = industriesalon_get_related_card_placeholder_filename($post);
+    if ($filename === '') {
+        return $block_content;
+    }
+
+    $image_url = industriesalon_get_placeholder_asset_url($filename);
+    if ($image_url === '') {
+        return $block_content;
+    }
+
+    $class_names = ['wp-block-post-featured-image', 'iss-featured-image-placeholder'];
+    $extra_class = trim((string) ($block['attrs']['className'] ?? ''));
+    if ($extra_class !== '') {
+        $class_names[] = $extra_class;
+    }
+
+    $image = '<img src="' . esc_url($image_url) . '" alt="" loading="lazy" decoding="async">';
+    if (!empty($block['attrs']['isLink'])) {
+        $permalink = get_permalink($post);
+        if (is_string($permalink) && $permalink !== '') {
+            $image = '<a href="' . esc_url($permalink) . '" aria-label="' . esc_attr(get_the_title($post)) . '">' . $image . '</a>';
+        }
+    }
+
+    return '<figure class="' . esc_attr(implode(' ', array_filter($class_names))) . '">' . $image . '</figure>';
+}
+add_filter('render_block_core/post-featured-image', 'industriesalon_render_featured_image_placeholder_block', 9, 3);
+
 function industriesalon_can_edit_event_meta($allowed = null, $meta_key = '', $post_id = 0): bool
 {
     $post_id = (int) $post_id;

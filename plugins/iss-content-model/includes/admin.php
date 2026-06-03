@@ -7,8 +7,17 @@ if (!defined('ABSPATH')) {
 add_action('add_meta_boxes', function () {
     add_meta_box(
         'iss-content-model-veranstaltung',
-        __('Veranstaltungsdaten', 'iss-content-model'),
+        __('Veranstaltung', 'iss-content-model'),
         'iss_content_model_render_veranstaltung_box',
+        ISS_CONTENT_MODEL_VERANSTALTUNG_POST_TYPE,
+        'normal',
+        'high'
+    );
+
+    add_meta_box(
+        'iss-content-model-veranstaltung-status',
+        __('Redaktionsstatus', 'iss-content-model'),
+        'iss_content_model_render_veranstaltung_status_box',
         ISS_CONTENT_MODEL_VERANSTALTUNG_POST_TYPE,
         'side',
         'high'
@@ -68,6 +77,37 @@ add_action('admin_enqueue_scripts', function ($hook) {
         ISS_CONTENT_MODEL_VERSION,
         true
     );
+});
+
+add_action('admin_enqueue_scripts', function ($hook) {
+    if (!in_array($hook, ['post.php', 'post-new.php'], true)) {
+        return;
+    }
+
+    $screen = function_exists('get_current_screen') ? get_current_screen() : null;
+    if (!$screen || $screen->post_type !== ISS_CONTENT_MODEL_VERANSTALTUNG_POST_TYPE) {
+        return;
+    }
+
+    $style_path = ISS_CONTENT_MODEL_PATH . 'assets/admin-veranstaltung.css';
+    if (file_exists($style_path)) {
+        wp_enqueue_style(
+            'iss-content-model-veranstaltung-admin',
+            plugins_url('../assets/admin-veranstaltung.css', __FILE__),
+            [],
+            (string) filemtime($style_path)
+        );
+    }
+});
+
+add_action('add_meta_boxes_' . ISS_CONTENT_MODEL_VERANSTALTUNG_POST_TYPE, function (): void {
+    if (current_user_can('manage_options')) {
+        return;
+    }
+
+    remove_meta_box('postcustom', ISS_CONTENT_MODEL_VERANSTALTUNG_POST_TYPE, 'normal');
+    remove_meta_box('slugdiv', ISS_CONTENT_MODEL_VERANSTALTUNG_POST_TYPE, 'normal');
+    remove_meta_box('pageparentdiv', ISS_CONTENT_MODEL_VERANSTALTUNG_POST_TYPE, 'side');
 });
 
 function iss_content_model_get_veranstaltung_place_choices(): array
@@ -279,6 +319,127 @@ function iss_content_model_get_veranstaltung_place_title(int $place_id): string
     return trim((string) get_the_title($place_id));
 }
 
+function iss_content_model_get_veranstaltung_layout_options(): array
+{
+    return [
+        'standard' => [
+            'label' => __('Terminblatt', 'iss-content-model'),
+            'description' => __('Klassischer Termin mit Datum, Ort, Teaser und Inhalt.', 'iss-content-model'),
+        ],
+        'compact' => [
+            'label' => __('Kurzmeldung', 'iss-content-model'),
+            'description' => __('Kurze Ankündigung mit reduzierter Einzelansicht.', 'iss-content-model'),
+        ],
+        'fest' => [
+            'label' => __('Fest / Programm', 'iss-content-model'),
+            'description' => __('Programmorientierte Seite. Beitragsbild ist hier besonders wichtig.', 'iss-content-model'),
+        ],
+        'long' => [
+            'label' => __('Bericht / Rückblick', 'iss-content-model'),
+            'description' => __('Längere Dokumentation oder Nachbericht.', 'iss-content-model'),
+        ],
+    ];
+}
+
+function iss_content_model_get_veranstaltung_format_options(): array
+{
+    return [
+        'general' => [
+            'label' => __('Allgemein', 'iss-content-model'),
+            'description' => __('Keine besondere Terminblatt-Struktur.', 'iss-content-model'),
+        ],
+        'vortrag' => [
+            'label' => __('Vortrag', 'iss-content-model'),
+            'description' => __('Thema, Referent:in und Kontext.', 'iss-content-model'),
+        ],
+        'gespraech' => [
+            'label' => __('Gespräch', 'iss-content-model'),
+            'description' => __('Teilnehmende, Leitfragen und Gesprächsanlass.', 'iss-content-model'),
+        ],
+        'lesung' => [
+            'label' => __('Lesung', 'iss-content-model'),
+            'description' => __('Publikation, Autor:in oder Textgrundlage.', 'iss-content-model'),
+        ],
+        'praesentation' => [
+            'label' => __('Präsentation', 'iss-content-model'),
+            'description' => __('Projekt, Material oder Ergebnisvorstellung.', 'iss-content-model'),
+        ],
+    ];
+}
+
+function iss_content_model_get_veranstaltung_scheme_options(): array
+{
+    return [
+        'blue' => __('Blau', 'iss-content-model'),
+        'red' => __('Rot', 'iss-content-model'),
+        'green' => __('Grün', 'iss-content-model'),
+        'yellow' => __('Gelb', 'iss-content-model'),
+        'brown' => __('Braun', 'iss-content-model'),
+    ];
+}
+
+function iss_content_model_normalize_veranstaltung_layout(string $value): string
+{
+    if (function_exists('industriesalon_sanitize_event_layout')) {
+        return industriesalon_sanitize_event_layout($value);
+    }
+
+    $value = sanitize_key($value);
+    if ($value === 'feature') {
+        $value = 'fest';
+    }
+
+    return array_key_exists($value, iss_content_model_get_veranstaltung_layout_options()) ? $value : 'standard';
+}
+
+function iss_content_model_normalize_veranstaltung_format(string $value): string
+{
+    if (function_exists('industriesalon_sanitize_event_format')) {
+        return industriesalon_sanitize_event_format($value);
+    }
+
+    $value = sanitize_key(remove_accents($value));
+    if ($value === 'gesprach') {
+        $value = 'gespraech';
+    } elseif ($value === 'prasentation' || $value === 'presentation') {
+        $value = 'praesentation';
+    }
+
+    return array_key_exists($value, iss_content_model_get_veranstaltung_format_options()) ? $value : 'general';
+}
+
+function iss_content_model_normalize_veranstaltung_scheme(string $value): string
+{
+    if (function_exists('industriesalon_sanitize_event_scheme')) {
+        return industriesalon_sanitize_event_scheme($value);
+    }
+
+    $value = sanitize_key($value);
+
+    return array_key_exists($value, iss_content_model_get_veranstaltung_scheme_options()) ? $value : 'blue';
+}
+
+function iss_content_model_render_veranstaltung_option_cards(string $name, array $options, string $selected): void
+{
+    echo '<div class="iss-veranstaltung-admin__options">';
+    foreach ($options as $value => $config) {
+        $label = is_array($config) ? (string) ($config['label'] ?? $value) : (string) $config;
+        $description = is_array($config) ? (string) ($config['description'] ?? '') : '';
+        $id = sanitize_html_class($name . '-' . $value);
+
+        echo '<label class="iss-veranstaltung-admin__option" for="' . esc_attr($id) . '">';
+        echo '<input type="radio" id="' . esc_attr($id) . '" name="iss_content_model[' . esc_attr($name) . ']" value="' . esc_attr($value) . '" ' . checked($selected, (string) $value, false) . '>';
+        echo '<span class="iss-veranstaltung-admin__option-body">';
+        echo '<strong>' . esc_html($label) . '</strong>';
+        if ($description !== '') {
+            echo '<span>' . esc_html($description) . '</span>';
+        }
+        echo '</span>';
+        echo '</label>';
+    }
+    echo '</div>';
+}
+
 function iss_content_model_render_veranstaltung_box($post) {
     wp_nonce_field('iss_content_model_save_meta', 'iss_content_model_meta_nonce');
 
@@ -291,27 +452,111 @@ function iss_content_model_render_veranstaltung_box($post) {
     $location_override = $selected_place_title !== '' && $location === $selected_place_title ? '' : $location;
     $timeline_enabled = get_post_meta($post->ID, 'iss_timeline_enabled', true);
     $timeline_enabled = $timeline_enabled === '' ? true : (bool) $timeline_enabled;
+    $layout = iss_content_model_normalize_veranstaltung_layout((string) get_post_meta($post->ID, '_iss_event_layout', true));
+    $format = iss_content_model_normalize_veranstaltung_format((string) get_post_meta($post->ID, '_iss_event_format', true));
+    $scheme = iss_content_model_normalize_veranstaltung_scheme((string) get_post_meta($post->ID, '_iss_event_scheme', true));
 
-    echo '<p><label for="iss_start_datetime"><strong>' . esc_html__('Beginn', 'iss-content-model') . '</strong></label>';
+    echo '<div class="iss-veranstaltung-admin">';
+
+    echo '<section class="iss-veranstaltung-admin__section">';
+    echo '<div class="iss-veranstaltung-admin__section-head">';
+    echo '<h3>' . esc_html__('Basis', 'iss-content-model') . '</h3>';
+    echo '<p>' . esc_html__('Pflichtnahe Angaben für Kalender, Karten und die Einzelansicht.', 'iss-content-model') . '</p>';
+    echo '</div>';
+    echo '<div class="iss-veranstaltung-admin__grid">';
+
+    echo '<p class="iss-veranstaltung-admin__field"><label for="iss_start_datetime"><strong>' . esc_html__('Beginn', 'iss-content-model') . '</strong></label>';
     echo '<input class="widefat" type="datetime-local" id="iss_start_datetime" name="iss_content_model[iss_start_datetime]" value="' . esc_attr(iss_content_model_mysql_to_local_input($start)) . '"></p>';
 
-    echo '<p><label for="iss_end_datetime"><strong>' . esc_html__('Ende', 'iss-content-model') . '</strong></label>';
+    echo '<p class="iss-veranstaltung-admin__field"><label for="iss_end_datetime"><strong>' . esc_html__('Ende', 'iss-content-model') . '</strong></label>';
     echo '<input class="widefat" type="datetime-local" id="iss_end_datetime" name="iss_content_model[iss_end_datetime]" value="' . esc_attr(iss_content_model_mysql_to_local_input($end)) . '"></p>';
 
-    echo '<p><label for="iss_primary_place_id"><strong>' . esc_html__('Atlas-Ort', 'iss-content-model') . '</strong></label>';
+    echo '<p class="iss-veranstaltung-admin__field"><label for="iss_primary_place_id"><strong>' . esc_html__('Atlas-Ort', 'iss-content-model') . '</strong></label>';
     echo '<select class="widefat" id="iss_primary_place_id" name="iss_content_model[iss_primary_place_id]">';
     echo '<option value="">' . esc_html__('Keinen Atlas-Ort auswählen', 'iss-content-model') . '</option>';
     foreach ($place_choices as $place) {
         echo '<option value="' . esc_attr((string) $place['id']) . '" ' . selected($selected_place_id, (int) $place['id'], false) . '>' . esc_html((string) $place['title']) . '</option>';
     }
+    echo '</select>';
+    echo '<span class="description">' . esc_html__('Pflegt automatisch die primäre Ortsbeziehung.', 'iss-content-model') . '</span></p>';
+
+    echo '<p class="iss-veranstaltung-admin__field"><label for="iss_location"><strong>' . esc_html__('Treffpunkt / Ortstext', 'iss-content-model') . '</strong></label>';
+    echo '<input class="widefat" type="text" id="iss_location" name="iss_content_model[iss_location]" value="' . esc_attr($location_override) . '" placeholder="' . esc_attr__('Leer lassen, dann wird der Atlas-Ort übernommen.', 'iss-content-model') . '">';
+    echo '<span class="description">' . esc_html__('Nur ausfüllen, wenn der öffentliche Ortstext vom Atlas-Ort abweicht.', 'iss-content-model') . '</span></p>';
+
+    echo '</div>';
+    echo '</section>';
+
+    echo '<section class="iss-veranstaltung-admin__section">';
+    echo '<div class="iss-veranstaltung-admin__section-head">';
+    echo '<h3>' . esc_html__('Darstellung', 'iss-content-model') . '</h3>';
+    echo '<p>' . esc_html__('Steuert die Theme-Ausgabe. Bestehende Blockinhalte bleiben unverändert.', 'iss-content-model') . '</p>';
+    echo '</div>';
+
+    echo '<div class="iss-veranstaltung-admin__field">';
+    echo '<span class="iss-veranstaltung-admin__label">' . esc_html__('Seitentyp', 'iss-content-model') . '</span>';
+    iss_content_model_render_veranstaltung_option_cards('_iss_event_layout', iss_content_model_get_veranstaltung_layout_options(), $layout);
+    echo '</div>';
+
+    echo '<div class="iss-veranstaltung-admin__field">';
+    echo '<span class="iss-veranstaltung-admin__label">' . esc_html__('Format', 'iss-content-model') . '</span>';
+    iss_content_model_render_veranstaltung_option_cards('_iss_event_format', iss_content_model_get_veranstaltung_format_options(), $format);
+    echo '</div>';
+
+    echo '<p class="iss-veranstaltung-admin__field iss-veranstaltung-admin__field--narrow"><label for="iss_event_scheme"><strong>' . esc_html__('Farbschema', 'iss-content-model') . '</strong></label>';
+    echo '<select class="widefat" id="iss_event_scheme" name="iss_content_model[_iss_event_scheme]">';
+    foreach (iss_content_model_get_veranstaltung_scheme_options() as $value => $label) {
+        echo '<option value="' . esc_attr($value) . '"' . selected($scheme, (string) $value, false) . '>' . esc_html((string) $label) . '</option>';
+    }
     echo '</select></p>';
-    echo '<p class="description">' . esc_html__('Im Normalfall hier genau einen Atlas-Ort wählen. Dadurch wird die gemeinsame Ortsbeziehung automatisch gepflegt.', 'iss-content-model') . '</p>';
+    echo '</section>';
 
-    echo '<p><label for="iss_location"><strong>' . esc_html__('Treffpunkt / abweichender Ortstext', 'iss-content-model') . '</strong></label>';
-    echo '<input class="widefat" type="text" id="iss_location" name="iss_content_model[iss_location]" value="' . esc_attr($location_override) . '" placeholder="' . esc_attr__('Leer lassen, dann wird der Name des Atlas-Orts übernommen.', 'iss-content-model') . '"></p>';
-    echo '<p class="description">' . esc_html__('Die Metabox „Verknüpfte Orte“ darunter bleibt nur für mehrere Orte oder Sonderfälle nötig.', 'iss-content-model') . '</p>';
+    echo '<section class="iss-veranstaltung-admin__section iss-veranstaltung-admin__section--editorial">';
+    echo '<div class="iss-veranstaltung-admin__section-head">';
+    echo '<h3>' . esc_html__('Redaktion', 'iss-content-model') . '</h3>';
+    echo '<p>' . esc_html__('Kurzbeschreibung im Auszug pflegen, Beitragsbild setzen und Beziehungen unten ergänzen.', 'iss-content-model') . '</p>';
+    echo '</div>';
+    echo '<p><label><input type="checkbox" name="iss_content_model[iss_timeline_enabled]" value="1" ' . checked($timeline_enabled, true, false) . '> ' . esc_html__('In Kalender und Timeline zeigen', 'iss-content-model') . '</label></p>';
+    echo '<p class="description">' . esc_html__('Weitere Ortsbezüge bleiben in „Verknüpfte Orte“. Personenbezüge bleiben in „Personen“. Diese V1 bündelt nur die Kernfelder.', 'iss-content-model') . '</p>';
+    echo '</section>';
 
-    echo '<p><label><input type="checkbox" name="iss_content_model[iss_timeline_enabled]" value="1" ' . checked($timeline_enabled, true, false) . '> ' . esc_html__('In Timeline zeigen', 'iss-content-model') . '</label></p>';
+    echo '</div>';
+}
+
+function iss_content_model_render_veranstaltung_status_box($post): void
+{
+    $post_id = (int) $post->ID;
+    $selected_place_id = iss_content_model_get_veranstaltung_primary_place_id($post_id);
+    $location = trim((string) get_post_meta($post_id, 'iss_location', true));
+    $layout = iss_content_model_normalize_veranstaltung_layout((string) get_post_meta($post_id, '_iss_event_layout', true));
+    $format = iss_content_model_normalize_veranstaltung_format((string) get_post_meta($post_id, '_iss_event_format', true));
+    $layout_options = iss_content_model_get_veranstaltung_layout_options();
+    $format_options = iss_content_model_get_veranstaltung_format_options();
+    $checks = [
+        __('Titel', 'iss-content-model') => trim((string) get_the_title($post_id)) !== '',
+        __('Beginn', 'iss-content-model') => trim((string) get_post_meta($post_id, 'iss_start_datetime', true)) !== '',
+        __('Ort', 'iss-content-model') => $selected_place_id > 0 || $location !== '',
+        __('Kurzbeschreibung', 'iss-content-model') => has_excerpt($post_id),
+        __('Beitragsbild', 'iss-content-model') => has_post_thumbnail($post_id),
+    ];
+
+    echo '<div class="iss-veranstaltung-status">';
+    echo '<dl class="iss-veranstaltung-status__facts">';
+    echo '<div><dt>' . esc_html__('Seitentyp', 'iss-content-model') . '</dt><dd>' . esc_html((string) ($layout_options[$layout]['label'] ?? $layout)) . '</dd></div>';
+    echo '<div><dt>' . esc_html__('Format', 'iss-content-model') . '</dt><dd>' . esc_html((string) ($format_options[$format]['label'] ?? $format)) . '</dd></div>';
+    echo '</dl>';
+
+    echo '<ul class="iss-veranstaltung-status__checks">';
+    foreach ($checks as $label => $complete) {
+        echo '<li class="' . esc_attr($complete ? 'is-complete' : 'is-missing') . '">';
+        echo '<span aria-hidden="true">' . esc_html($complete ? 'OK' : '!') . '</span>';
+        echo esc_html((string) $label);
+        echo '</li>';
+    }
+    echo '</ul>';
+
+    echo '<p class="description">' . esc_html__('Das Beitragsbild wird als Kartenbild genutzt. Wenn es fehlt, greift die globale Platzhaltergrafik.', 'iss-content-model') . '</p>';
+    echo '</div>';
 }
 
 function iss_content_model_render_ausstellung_box($post) {
@@ -635,6 +880,23 @@ function iss_content_model_sync_veranstaltung_primary_place(int $post_id, int $p
     iss_relations_sync_post_terms($post_id);
 }
 
+function iss_content_model_save_veranstaltung_presentation_meta(int $post_id, array $raw): void
+{
+    $fields = [
+        '_iss_event_layout' => 'iss_content_model_normalize_veranstaltung_layout',
+        '_iss_event_format' => 'iss_content_model_normalize_veranstaltung_format',
+        '_iss_event_scheme' => 'iss_content_model_normalize_veranstaltung_scheme',
+    ];
+
+    foreach ($fields as $key => $normalizer) {
+        if (!array_key_exists($key, $raw)) {
+            continue;
+        }
+
+        update_post_meta($post_id, $key, $normalizer((string) $raw[$key]));
+    }
+}
+
 function iss_content_model_save_meta_box(int $post_id): void
 {
     if (defined('DOING_AUTOSAVE') && DOING_AUTOSAVE) {
@@ -661,7 +923,10 @@ function iss_content_model_save_meta_box(int $post_id): void
 
     if ($post_type === ISS_CONTENT_MODEL_VERANSTALTUNG_POST_TYPE) {
         $selected_place_id = absint($raw['iss_primary_place_id'] ?? 0);
+        iss_content_model_save_veranstaltung_presentation_meta($post_id, $raw);
+
         unset($raw['iss_primary_place_id']);
+        unset($raw['_iss_event_layout'], $raw['_iss_event_format'], $raw['_iss_event_scheme']);
 
         $manual_location = trim((string) ($raw['iss_location'] ?? ''));
         if ($selected_place_id > 0 && $manual_location === '') {

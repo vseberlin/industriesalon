@@ -1,7 +1,8 @@
 # Changelog
 
 ## 2026-06-03
-- Added WebP placeholder assets and wired shared related-card media fallbacks so events, projects, exhibitions, places, and videos without featured images no longer render blank card media.
+- Added a V1 `veranstaltung` editor shim in `iss-content-model` that moves event facts into a structured main panel, exposes existing layout/format/scheme fields, adds an editorial status checklist, and keeps current Gutenberg/event frontend behavior intact.
+- Added WebP placeholder assets and wired shared related-card and core featured-image fallbacks so events, projects, exhibitions, places, and videos without featured images no longer render blank card media.
 - Added the `iss-newsletter` adapter plugin for The Newsletter Plugin, wired the front-page newsletter signup panel to the real `[newsletter_form]` output, configured privacy labels, antiflood, and address blacklist defaults, and blocked bot-shaped subscriptions before subscriber creation while keeping the visual form styling in the theme.
 - Replaced the front-page raw Newsletter shortcode block with a server-rendered `iss/newsletter-form` block so Gutenberg no longer exposes `[newsletter_form]` as editable text while the frontend still uses The Newsletter Plugin as the form engine.
 - Migrated useful Newsletter configuration from the old-site SQL dump into the local Newsletter setup: sender identity, organization/footer metadata, form field structure, default email theme settings, the existing Newsletter contract key, and 28 old campaign bodies as private non-sending reference drafts while leaving send/stat history out because subscriber IDs no longer align after bot cleanup.
