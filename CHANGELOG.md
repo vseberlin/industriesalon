@@ -1,6 +1,17 @@
 # Changelog
 
 ## 2026-06-03
+- Increased front-page vertical rhythm by opening the gap between the hero CTA and `Wo sind wir`, and by giving `Archiv & Wissen` stronger top and bottom section padding.
+- Switched the front-page `Raum nutzen` panel to a high-contrast dark treatment matching the project-card language, with square edges, red rail, and dark-surface copy colors.
+- Rebalanced the front-page `Raum nutzen` panel toward the denser rental-offer variant with `Salon mieten`, room-size facts, equipment note, and a 50/50 image split.
+- Reworked the front-page `Raum nutzen` panel from a nested info-row facts panel into a simpler editable copy stack with CTA and compact meta lines beside the existing image.
+- Removed the temporary DB-backed `wp_template` overrides for `front-page` and `page-videos` after backing them up, returning both pages to the disk templates.
+- Removed the full border from the front-page `Raum nutzen` info panel while keeping its left accent rail.
+- Changed the front-page `Raum nutzen` info panel to inherit the page color scheme instead of forcing the brown panel modifier.
+- Centered the featured first project card title vertically within its available grid row on the front page.
+- Enlarged the first front-page project card media slot so logo-style featured images use more of the available dark card space without changing the Query Loop structure.
+- Rebalanced the featured first project card heading on the front page to a medium scale and centered it vertically while leaving standard project card titles unchanged.
+- Exposed the existing `projekt.menu_order` value as an editable `Startseiten-Reihenfolge` field and sortable admin-list column, so the front-page project Query Loop can be ordered without changing query logic.
 - Fixed video landing card highlighting so selecting a different video moves the active state from the initially featured card to the clicked card.
 - Corrected the video landing CTA kicker color on the dark CTA surface by scoping the shared kicker color token to the video CTA component.
 - Changed the video landing page to use the existing red page scheme token instead of the blue scheme.

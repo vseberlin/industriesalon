@@ -472,9 +472,14 @@ function iss_content_model_render_projekt_box($post) {
     wp_nonce_field('iss_content_model_save_meta', 'iss_content_model_meta_nonce');
 
     $period_label = (string) get_post_meta($post->ID, 'iss_period_label', true);
+    $front_page_order = (int) $post->menu_order;
 
     echo '<p><label for="iss_period_label"><strong>' . esc_html__('Zeitraum-Label', 'iss-content-model') . '</strong></label>';
     echo '<input class="widefat" type="text" id="iss_period_label" name="iss_content_model[iss_period_label]" value="' . esc_attr($period_label) . '" placeholder="' . esc_attr__('seit 2023 / laufend / 2024', 'iss-content-model') . '"></p>';
+
+    echo '<p><label for="iss_project_front_page_order"><strong>' . esc_html__('Startseiten-Reihenfolge', 'iss-content-model') . '</strong></label>';
+    echo '<input class="widefat" type="number" step="1" id="iss_project_front_page_order" name="iss_content_model[menu_order]" value="' . esc_attr((string) $front_page_order) . '"></p>';
+    echo '<p class="description">' . esc_html__('Steuert die Reihenfolge im Projekte-Query-Loop der Startseite. Niedrige Werte erscheinen zuerst; Abstände wie 10, 20, 30 lassen Platz für spätere Einfügungen.', 'iss-content-model') . '</p>';
 }
 
 function iss_content_model_render_team_box($post) {
@@ -705,5 +710,49 @@ function iss_content_model_save_meta_box(int $post_id): void
     if ($post_type === ISS_CONTENT_MODEL_VERANSTALTUNG_POST_TYPE) {
         iss_content_model_sync_veranstaltung_primary_place($post_id, $selected_place_id);
     }
+
+    if ($post_type === ISS_CONTENT_MODEL_PROJEKT_POST_TYPE && array_key_exists('menu_order', $raw)) {
+        $front_page_order = (int) $raw['menu_order'];
+
+        remove_action('save_post', 'iss_content_model_save_meta_box', 20);
+        wp_update_post([
+            'ID' => $post_id,
+            'menu_order' => $front_page_order,
+        ]);
+        add_action('save_post', 'iss_content_model_save_meta_box', 20, 1);
+    }
 }
 add_action('save_post', 'iss_content_model_save_meta_box', 20, 1);
+
+function iss_content_model_add_project_order_column(array $columns): array
+{
+    $ordered_columns = [];
+
+    foreach ($columns as $key => $label) {
+        $ordered_columns[$key] = $label;
+
+        if ($key === 'title') {
+            $ordered_columns['iss_project_front_page_order'] = __('Reihenfolge', 'iss-content-model');
+        }
+    }
+
+    return $ordered_columns;
+}
+add_filter('manage_' . ISS_CONTENT_MODEL_PROJEKT_POST_TYPE . '_posts_columns', 'iss_content_model_add_project_order_column');
+
+function iss_content_model_render_project_order_column(string $column, int $post_id): void
+{
+    if ($column !== 'iss_project_front_page_order') {
+        return;
+    }
+
+    echo esc_html((string) get_post_field('menu_order', $post_id));
+}
+add_action('manage_' . ISS_CONTENT_MODEL_PROJEKT_POST_TYPE . '_posts_custom_column', 'iss_content_model_render_project_order_column', 10, 2);
+
+function iss_content_model_make_project_order_column_sortable(array $columns): array
+{
+    $columns['iss_project_front_page_order'] = 'menu_order';
+    return $columns;
+}
+add_filter('manage_edit-' . ISS_CONTENT_MODEL_PROJEKT_POST_TYPE . '_sortable_columns', 'iss_content_model_make_project_order_column_sortable');

@@ -92,6 +92,10 @@
   margin: 0;
 }
 
+.home .iss-front-spine-strip {
+  margin-top: clamp(2.75rem, 5vw, 4.75rem);
+}
+
 .home .iss-3-card-row__grid,
 .home .iss-4-card-row__grid {
   display: grid;
@@ -216,6 +220,11 @@
 .home .iss-front-explore__body p:last-child {
   margin-top: auto;
   margin-bottom: 0;
+}
+
+.home #archiv-wissen {
+  padding-top: clamp(3rem, 5.5vw, 5.5rem);
+  padding-bottom: clamp(3rem, 5.5vw, 5.5rem);
 }
 
 .home .iss-front-projects {
@@ -360,7 +369,7 @@
 
 .home .iss-front-projects__items > li:first-child .iss-front-project-card__media {
   grid-row: 1;
-  height: clamp(6rem, 9vw, 8rem);
+  height: clamp(9rem, 14vw, 13rem);
 }
 
 .home .iss-front-project-card__terms {
@@ -402,7 +411,8 @@
 }
 
 .home .iss-front-projects__items > li:first-child .iss-front-project-card__title {
-  font-size: clamp(2.7rem, 5vw, 5.6rem);
+  align-self: center;
+  font-size: clamp(1.9rem, 3.4vw, 3.9rem);
   line-height: 0.98;
 }
 
@@ -475,28 +485,112 @@
 }
 
 .home .iss-front-rental__panel {
-  --iss-info-panel-grid-columns: 1fr;
-  --iss-info-panel-grid-gap: 1rem;
-  --iss-info-panel-title-pad-inline-end: 0;
-  --iss-info-panel-title-size: clamp(1.6rem, 1.2rem + 1vw, 2.35rem);
-  --iss-info-panel-row-gap: 0.95rem;
-  --iss-info-panel-heading-gap: 0.4rem;
-  --iss-info-panel-stack-gap: 0.7rem;
-  --iss-info-panel-shell-pad: clamp(1.15rem, 1.8vw, 1.6rem);
+  --iss-heading-text-color: rgba(255, 255, 255, 0.78);
+  --iss-info-panel-stack-gap: clamp(1.25rem, 2vw, 1.9rem);
+  --iss-info-panel-shell-pad: clamp(2rem, 3.7vw, 3.5rem);
+  --iss-info-panel-shell-border: 0;
+  --iss-info-panel-shell-border-left: 6px solid var(--iss-red);
+  --iss-info-panel-shell-radius: 0;
+  --iss-info-panel-shell-bg: var(--iss-black);
+  --iss-info-panel-shell-shadow: none;
+  --iss-kicker-color: #fff;
+  --iss-kicker-accent: var(--iss-red);
+  --iss-button-accent: var(--iss-red);
+  --iss-button-fg: #fff;
+  --iss-button-fill-bg: var(--iss-red);
+  --iss-button-fill-border: var(--iss-red);
+  --iss-button-hover-bg: #fff;
+  --iss-button-hover-border: #fff;
+  --iss-button-hover-fg: var(--iss-black);
 
+  justify-content: center;
   width: 100%;
-  min-height: clamp(20rem, 33vh, 28rem);
+  color: #fff;
+  min-height: clamp(31rem, 42vw, 36rem);
 }
 
-.home .iss-front-rental__panel .iss-info-panel__rows-col {
-  padding-top: 0.3rem;
+.home .iss-front-rental__heading {
+  --iss-heading-max-width: 34rem;
+
+  margin: 0;
+}
+
+.home .iss-front-rental__title {
+  max-width: 10ch;
+  margin: 0;
+  font-size: clamp(2.4rem, 4.4vw, 5rem);
+  line-height: 0.9;
+}
+
+.home .iss-front-rental__claim {
+  max-width: 34rem;
+  margin: 0;
+  color: rgba(255, 255, 255, 0.82);
+  font-size: clamp(1.08rem, 1.3vw, 1.35rem);
+  font-weight: 600;
+  line-height: 1.35;
+}
+
+.home .iss-front-rental__actions {
+  margin: 0;
+}
+
+.home .iss-front-rental__facts {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 0;
+  max-width: 38rem;
+  margin: 0;
+  border-top: 1px solid rgba(255, 255, 255, 0.26);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.26);
+}
+
+.home .iss-front-rental__fact {
+  margin: 0;
+  padding: 1rem 1rem 1rem 0;
+}
+
+.home .iss-front-rental__fact + .iss-front-rental__fact {
+  padding-left: 1rem;
+  border-left: 1px solid rgba(255, 255, 255, 0.26);
+}
+
+.home .iss-front-rental__fact-value,
+.home .iss-front-rental__fact-label,
+.home .iss-front-rental__note {
+  margin: 0;
+  color: inherit;
+}
+
+.home .iss-front-rental__fact-value {
+  margin-bottom: 0.35rem;
+  font-size: clamp(1.45rem, 1.8vw, 2rem);
+  line-height: 1;
+}
+
+.home .iss-front-rental__fact-value strong {
+  display: block;
+  font-weight: 700;
+}
+
+.home .iss-front-rental__fact-label {
+  color: rgba(255, 255, 255, 0.76);
+  font-size: 0.92rem;
+  line-height: 1.3;
+}
+
+.home .iss-front-rental__note {
+  max-width: 32rem;
+  color: rgba(255, 255, 255, 0.78);
+  font-size: 1rem;
+  line-height: 1.45;
 }
 
 .home .iss-front-rental__media {
   width: 100%;
-  min-height: clamp(20rem, 33vh, 28rem);
+  min-height: clamp(31rem, 42vw, 36rem);
   overflow: clip;
-  border-radius: var(--iss-radius-md);
+  border-radius: 0;
 }
 
 .home .iss-front-rental__image,
@@ -674,6 +768,24 @@
     min-height: 0;
   }
 
+  .home .iss-front-rental__title {
+    font-size: clamp(2.2rem, 12vw, 3.4rem);
+  }
+
+  .home .iss-front-rental__facts {
+    grid-template-columns: 1fr;
+  }
+
+  .home .iss-front-rental__fact {
+    padding: 0.9rem 0;
+  }
+
+  .home .iss-front-rental__fact + .iss-front-rental__fact {
+    padding-left: 0;
+    border-top: 1px solid rgba(255, 255, 255, 0.26);
+    border-left: 0;
+  }
+
   .home .iss-front-rental__image img {
     aspect-ratio: 16 / 10;
   }
@@ -710,6 +822,6 @@
   }
 
   .home .iss-front-projects__items > li:first-child .iss-front-project-card__title {
-    font-size: clamp(2rem, 9vw, 3.2rem);
+    font-size: clamp(1.35rem, 6vw, 2.2rem);
   }
 }
