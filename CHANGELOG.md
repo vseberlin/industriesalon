@@ -1,6 +1,7 @@
 # Changelog
 
 ## 2026-06-03
+- Updated the front-page hero heading to `Industriekultur und Transformation` and adjusted menu-shell quick links so `Kalender` points to `/kalender/` and `Atlas` jumps directly to the Schöneweide atlas section.
 - Added a V1 `veranstaltung` editor shim in `iss-content-model` that moves event facts into a structured main panel, exposes existing layout/format/scheme fields, adds an editorial status checklist, and keeps current Gutenberg/event frontend behavior intact.
 - Added WebP placeholder assets and wired shared related-card and core featured-image fallbacks so events, projects, exhibitions, places, and videos without featured images no longer render blank card media.
 - Added the `iss-newsletter` adapter plugin for The Newsletter Plugin, wired the front-page newsletter signup panel to the real `[newsletter_form]` output, configured privacy labels, antiflood, and address blacklist defaults, and blocked bot-shaped subscriptions before subscriber creation while keeping the visual form styling in the theme.
