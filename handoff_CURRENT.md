@@ -7,7 +7,13 @@ This file is the working handoff only. Full historical detail belongs in `CHANGE
 ## Current Repo State
 
 - Branch: `main`
-- Latest pushed checkpoint: `3b114ab` (`Update front page heading and menu links`) on `main` / `origin/main`.
+- Latest pushed checkpoint: `20e70ad` (`Add staging uploads delta archive`) on `main` / `origin/main`.
+- Local working clone: `/home/vladimir/projects/industriesalon`.
+- Staging deployment checkout: `/srv/industriesalon/stage/repo`.
+- Staging WordPress app root: `/srv/industriesalon/stage/app`.
+- Staging shared uploads root: `/srv/industriesalon/stage/shared/uploads` (`app/wp-content/uploads` symlinks here and the WordPress container mounts it at `/var/www/html/wp-content/uploads`).
+- Staging Docker Compose file: `/srv/industriesalon/stage/compose.yml`.
+- Staging nginx vhost: `/srv/industriesalon/shared/nginx/stage.industriesalon.info.conf`.
 - Latest local checkpoint prepared after `3b114ab`: front-page/footer visual polish, DB-template sync-back for `front-page` and `page-salon-vermietung`, local footer WebP assets, and newsletter partner row.
 - The current policy is local repo -> GitHub `main` -> staging deploy. Direct plugin/code updates in staging admin violate the workflow unless explicitly approved.
 - Current pushed production/staging transfer commits after `ffa3786`:
