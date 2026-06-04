@@ -98,10 +98,20 @@
 
 /* .iss-site-footer: Base class for iss site footer; apply on primary wrapper/scope. */
 .iss-site-footer {
-  background: #efefee;
+  --iss-footer-bg: var(--iss-black, #1e1e1e);
+  --iss-footer-fg: #f9f9fa;
+  --iss-footer-text: rgba(249, 249, 250, 0.82);
+  --iss-footer-muted: rgba(249, 249, 250, 0.68);
+  --iss-footer-rule: rgba(249, 249, 250, 0.16);
+  --iss-footer-rule-strong: rgba(249, 249, 250, 0.24);
+  --iss-footer-link: #f9f9fa;
+  --iss-footer-link-hover: var(--iss-red, #e81d25);
+
+  background: var(--iss-footer-bg);
+  color: var(--iss-footer-fg);
   padding-top: clamp(1.75rem, 4vw, 3rem);
   padding-bottom: clamp(1.25rem, 3vw, 2rem);
-  border-top: 1px solid rgba(30, 30, 30, 0.06);
+  border-top: 1px solid var(--iss-footer-rule);
 }
 
 .iss-site-footer__inner {
@@ -162,7 +172,7 @@
   top: 0;
   bottom: 0;
   width: 1px;
-  background: rgba(30, 30, 30, 0.11);
+  background: var(--iss-footer-rule);
 }
 
 /* .iss-site-footer__logo: Element class for `iss-site-footer`; apply on `logo` element. */
@@ -174,9 +184,11 @@
 .iss-site-footer__logo img {
   display: block;
   width: 100%;
-  max-width: 13.75rem;
+  max-width: 14rem;
+  max-height: none;
   height: auto;
   object-fit: contain;
+  object-position: left center;
 }
 
 /* .iss-site-footer__tagline: Element class for `iss-site-footer`; apply on `tagline` element. */
@@ -186,7 +198,7 @@
 /* .iss-site-footer__text: Element class for `iss-site-footer`; apply on `text` element. */
 .iss-site-footer__text {
   margin: 0;
-  color: rgba(30, 30, 30, 0.82);
+  color: var(--iss-footer-text);
 }
 
 /* .iss-site-footer__tagline: Element class for `iss-site-footer`; apply on `tagline` element. */
@@ -260,10 +272,10 @@
 .iss-site-footer__copyright {
   width: 100%;
   padding-top: 1rem;
-  border-top: 1px solid rgba(30, 30, 30, 0.11);
+  border-top: 1px solid var(--iss-footer-rule);
   font-size: 0.92rem;
   line-height: 1.45;
-  color: rgba(30, 30, 30, 0.74);
+  color: var(--iss-footer-muted);
 }
 
 /* .iss-site-footer__title: Element class for `iss-site-footer`; apply on `title` element. */
@@ -272,6 +284,7 @@
   margin: 0 0 1.15rem;
   padding-bottom: 0.45rem;
   border-bottom: 2px solid var(--iss-red, #e81d25);
+  color: var(--iss-footer-fg);
   font-size: 0.94rem;
   font-weight: 700;
   line-height: 1;
@@ -309,6 +322,8 @@
   background-repeat: no-repeat;
   background-position: center;
   background-size: 1rem 1rem;
+  filter: invert(1);
+  opacity: 0.82;
 }
 
 .iss-site-footer__fact--address::before {
@@ -321,7 +336,7 @@
 
 .iss-site-footer__fact-label {
   margin: 0 0 0.35rem;
-  color: var(--iss-black, #1e1e1e);
+  color: var(--iss-footer-fg);
   font-size: 0.94rem;
   font-weight: 700;
   line-height: 1.1;
@@ -330,13 +345,13 @@
 
 /* .iss-site-footer__text: Element class for `iss-site-footer`; apply on `text` element. */
 .iss-site-footer__text strong {
-  color: var(--iss-black, #1e1e1e);
+  color: var(--iss-footer-fg);
   font-weight: 600;
 }
 
 /* .iss-site-footer__text: Element class for `iss-site-footer`; apply on `text` element. */
 .iss-site-footer__text a {
-  color: var(--iss-red, #e81d25);
+  color: var(--iss-footer-link);
   text-decoration: none;
 }
 
@@ -344,6 +359,7 @@
 .iss-site-footer__text a:hover,
 /* .iss-site-footer__text: Element class for `iss-site-footer`; apply on `text` element. */
 .iss-site-footer__text a:focus-visible {
+  color: var(--iss-footer-link-hover);
   text-decoration: underline;
   text-underline-offset: 0.14em;
 }
@@ -357,6 +373,7 @@
   display: block;
   width: min(100%, 14rem);
   height: auto;
+  border: 1px solid var(--iss-footer-rule-strong);
 }
 
 .iss-site-footer__map-link-wrap {
@@ -367,7 +384,7 @@
   display: inline-flex;
   align-items: center;
   gap: 0.4rem;
-  color: var(--iss-black, #1e1e1e);
+  color: var(--iss-footer-link);
   font-size: 0.94rem;
   font-weight: 700;
   line-height: 1;
@@ -404,7 +421,7 @@
 .iss-site-footer__menu .wp-block-navigation-item__content {
   position: relative;
   padding: 0 0 0 0.9rem;
-  color: rgba(30, 30, 30, 0.82);
+  color: var(--iss-footer-text);
   font-size: 0.98rem;
   line-height: 1.55;
   text-decoration: none;
@@ -434,7 +451,7 @@
 /* .current-menu-item: Base class for current menu item; apply on primary wrapper/scope. */
 /* .wp-block-pages-list__item__link: Element class for `wp-block-pages-list`; apply on `item__link` element. */
 .iss-site-footer__menu .current-menu-item > .wp-block-pages-list__item__link {
-  color: var(--iss-red, #e81d25);
+  color: var(--iss-footer-link-hover);
 }
 
 /* .iss-site-footer__menu: Element class for `iss-site-footer`; apply on `menu` element. */
@@ -444,6 +461,35 @@
 /* .wp-block-navigation__container: Element class for `wp-block-navigation`; apply on `container` element. */
 .iss-site-footer__menu .wp-block-navigation__container {
   align-items: flex-start;
+}
+
+.iss-site-footer__legal-mark {
+  align-self: flex-end;
+  width: clamp(3.5rem, 5vw, 5.5rem);
+  margin: auto 0 0;
+  opacity: 0.95;
+}
+
+.iss-site-footer__twinkl-badge {
+  align-self: flex-end;
+  width: clamp(3.5rem, 5vw, 5.5rem);
+  margin: auto 0 0;
+}
+
+.iss-site-footer__twinkl-badge a {
+  display: block;
+}
+
+.iss-site-footer__legal-mark img {
+  display: block;
+  width: 100%;
+  height: auto;
+}
+
+.iss-site-footer__twinkl-badge img {
+  display: block;
+  width: 100%;
+  height: auto;
 }
 
 .iss-site-footer .iss-visit-hours--footer {
@@ -465,7 +511,7 @@
   margin: 0 0 1rem;
   padding-bottom: 0.45rem;
   border-bottom: 2px solid var(--iss-red, #e81d25);
-  color: var(--iss-black, #1e1e1e);
+  color: var(--iss-footer-fg);
   font-size: 0.94rem;
   font-weight: 700;
   line-height: 1;
@@ -475,7 +521,7 @@
 
 .iss-site-footer .iss-visit-hours--footer .iss-visit-hours__summary,
 .iss-site-footer .iss-visit-hours--footer .iss-visit-hours__note {
-  color: rgba(30, 30, 30, 0.82);
+  color: var(--iss-footer-text);
   font-size: 1rem;
   line-height: 1.5;
 }
@@ -497,7 +543,7 @@
 .iss-site-footer .iss-visit-hours--footer .iss-visit-exceptions__time,
 .iss-site-footer .iss-visit-hours--footer .iss-visit-exceptions__note {
   display: inline;
-  color: rgba(30, 30, 30, 0.72);
+  color: var(--iss-footer-muted);
   font-size: 0.93rem;
   line-height: 1.45;
   text-align: left;
@@ -505,7 +551,7 @@
 
 .iss-site-footer .iss-visit-hours--footer .iss-visit-exceptions__date {
   font-weight: 700;
-  color: rgba(30, 30, 30, 0.86);
+  color: var(--iss-footer-text);
 }
 
 .iss-site-footer .iss-visit-hours--footer .iss-visit-exceptions__date::after {
@@ -4558,8 +4604,8 @@ iss-info-panel--brown
 /* .iss-newsletter-band__support: Element class for `iss-newsletter-band`; apply on `support` element. */
 .iss-newsletter-band__support {
   width: 100%;
-  max-width: 23rem;
-  margin-left: auto;
+  max-width: none;
+  margin-left: 0;
 }
 
 /* .iss-newsletter-band__support-title: Element class for `iss-newsletter-band`; apply on `support-title` element. */
@@ -4579,9 +4625,45 @@ iss-info-panel--brown
 .iss-newsletter-band__logo img {
   display: block;
   width: 100%;
-  max-width: 18rem;
+  max-width: 34rem;
   height: auto;
   object-fit: contain;
+}
+
+.iss-newsletter-band__partners {
+  margin-top: clamp(1.5rem, 3vw, 2.5rem);
+}
+
+.iss-newsletter-band__partners-title {
+  margin: 0 0 1rem;
+  color: rgba(30, 30, 30, 0.72);
+  font-size: 0.98rem;
+  font-weight: 700;
+  line-height: 1.25;
+}
+
+.iss-newsletter-band__partner-logos {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 12rem));
+  gap: clamp(1rem, 3vw, 2rem);
+  align-items: center;
+}
+
+.iss-newsletter-band__partner-logo {
+  margin: 0;
+}
+
+.iss-newsletter-band__partner-logo img {
+  display: block;
+  width: 100%;
+  max-height: 5.25rem;
+  height: auto;
+  object-fit: contain;
+  object-position: left center;
+}
+
+.iss-newsletter-band__partner-logo--erih img {
+  width: min(100%, 5.25rem);
 }
 
 @media (max-width: 1024px) {
@@ -4621,7 +4703,11 @@ iss-info-panel--brown
 
 /* .iss-newsletter-band__logo: Element class for `iss-newsletter-band`; apply on `logo` element. */
   .iss-newsletter-band__logo img {
-    max-width: 15rem;
+    max-width: 100%;
+  }
+
+  .iss-newsletter-band__partner-logos {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
   }
 }
 

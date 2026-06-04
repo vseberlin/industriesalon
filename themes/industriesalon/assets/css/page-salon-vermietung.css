@@ -252,6 +252,16 @@
 }
 
 .iss-rental-inquiry__cta {
+  --iss-button-accent: rgba(249, 249, 250, 0.78);
+  --iss-button-fg: var(--iss-white);
+  --iss-button-fill-bg: rgba(249, 249, 250, 0.08);
+  --iss-button-fill-border: rgba(249, 249, 250, 0.58);
+  --iss-button-hover-bg: rgba(249, 249, 250, 0.14);
+  --iss-button-hover-border: rgba(249, 249, 250, 0.82);
+  --iss-button-hover-fg: var(--iss-white);
+  --iss-kicker-accent: rgba(249, 249, 250, 0.78);
+  --iss-kicker-color: var(--iss-white);
+
   height: 100%;
   padding: clamp(1.75rem, 3vw, 3rem);
   border-radius: var(--iss-radius-lg);

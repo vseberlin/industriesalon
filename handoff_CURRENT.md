@@ -1,17 +1,42 @@
 # Current Handoff
 
-Updated: 2026-06-03
+Updated: 2026-06-04
 
 This file is the working handoff only. Full historical detail belongs in `CHANGELOG.md`; active follow-up belongs in `TODO.md`.
 
 ## Current Repo State
 
 - Branch: `main`
-- Latest pushed checkpoint at the start of the current video/video-transcript pass: `bfe82ec` (`Update handoff for staging workflow`) on `main` / `origin/main`.
+- Latest pushed checkpoint: `3b114ab` (`Update front page heading and menu links`) on `main` / `origin/main`.
+- Latest local checkpoint prepared after `3b114ab`: front-page/footer visual polish, DB-template sync-back for `front-page` and `page-salon-vermietung`, local footer WebP assets, and newsletter partner row.
 - The current policy is local repo -> GitHub `main` -> staging deploy. Direct plugin/code updates in staging admin violate the workflow unless explicitly approved.
-- Current video work is ready to commit. `AGENTS.md` is modified by user/session instructions and should remain unstaged unless explicitly requested.
-- The Git changes cover video block metadata registration, `/videos/` landing behavior, single-video template polish, theme CSS/JS, and closeout docs.
-- Transcript text cleanups were written to the local WordPress database and are not fully represented in Git; preserve database state before destructive resets.
+- Current pushed production/staging transfer commits after `ffa3786`:
+  - `cfbd641` `Add related card placeholder fallbacks`
+  - `d426306` `Add newsletter plugin integration`
+  - `e9caac2` `Add event editor shim`
+  - `db1a171` `Add production newsletter SQL sync`
+  - `3b114ab` `Update front page heading and menu links`
+- Newsletter code is now tracked and pushed, including The Newsletter Plugin `9.2.5`, the `iss-newsletter` adapter, the live front-page `iss/newsletter-form` block integration, and bot-shaped subscription guards.
+- Production/staging SQL sync artifacts now include:
+  - `ops/sql/2026-06-03-production-video-transcripts-sync.sql`
+  - `ops/sql/2026-06-03-production-front-page-sync.sql`
+  - `ops/sql/2026-06-03-production-newsletter-sync.sql`
+- The newsletter SQL artifact was syntax/import checked in a temporary DB schema and contains 859 cleaned subscribers, 28 newsletter email/template rows, an empty user-meta sync, and 8 stable Newsletter Plugin options. It intentionally excludes logs, send/stat history, volatile locks/diagnostics, update caches, and remote add-on catalog cache.
+- Transcript text cleanups and newsletter subscriber imports were written to the local WordPress database and are represented for production transfer through the SQL artifacts above; preserve database state before destructive resets.
+- This closeout checkpoint includes:
+  - `front-page` and `page-salon-vermietung` Site Editor DB templates were synced back to disk and their DB overrides removed, so the file templates are authoritative again.
+  - `/salon-vermietung/` inquiry CTA text/button colors were corrected on the dark CTA background.
+  - The global footer now uses the dark `#1e1e1e` skin, the trimmed gray transparent footer logo, the red legal mark, and the linked Twinkl `Empfohlenes Museum` badge.
+  - The front-page newsletter/supporter section is uncaged, uses a larger supporter logo, and includes the Visit Berlin, ERIH, and BZI tourism partner logos below the supporter row.
+  - `themes/industriesalon/templates/page-salon-vermietung.html` still includes the `Räume & Ausstattung` section from old-site rental facts; page post `12606` body was restored from backup and should not be treated as the visible source.
+- Expected local work left unstaged after this checkpoint:
+  - `.gitignore` unignores `ops/seo/`.
+  - `ops/seo/` contains SEO URL/media inventory and redirect-map draft/ready artifacts.
+  - `CHANGELOG.md` still contains the uncommitted SEO inventory changelog line.
+  - `AGENTS.md` contains expanded local/server operating instructions from the user and should remain unstaged unless explicitly requested.
+- Local DB backup for the temporary Salon-Vermietung page-body attempt:
+  - `backups/page_salon_vermietung_12606_before_room_facts_20260603-2155.sql`
+  - `backups/page_salon_vermietung_12606_before_room_facts_20260603-2155.sql.sha256`
 - Re-check `git status --short` before deployment or handoff.
 - Standard closeout files: root `handoff_CURRENT.md`, root `CHANGELOG.md`, and root `TODO.md` when next work needs to be preserved.
 - Root handoff/changelog files may be ignored by git in this repo; use `git add -f handoff_CURRENT.md CHANGELOG.md TODO.md` when committing closeout docs.
@@ -35,6 +60,11 @@ This file is the working handoff only. Full historical detail belongs in `CHANGE
 
 ## Current Architecture Notes
 
+- Current direction from today’s work:
+  - theme owns visible public composition and design systems
+  - `iss-content-model` owns CPT/editor/data contracts
+  - `iss-newsletter` is a thin adapter around The Newsletter Plugin, not a parallel newsletter system
+  - production data transfer is explicit SQL under `ops/sql`, not hidden migration code
 - `register_place` is the local WordPress-owned Schöneweide place source. JSON imports and static fallback data were removed.
 - Register contracts are intentionally split:
   - summary = lightweight app/list/map payload
@@ -239,6 +269,16 @@ This file is the working handoff only. Full historical detail belongs in `CHANGE
 
 ## Active Next Steps
 
+- Deploy GitHub `main` at `3b114ab` to staging through the normal Git-first deployment path.
+- Before applying any SQL on staging/production, verify backups for database/uploads/config and confirm the target has the required plugins active.
+- Apply SQL artifacts deliberately and in dependency order:
+  - plugin/code deploy first
+  - newsletter plugin activation/schema creation
+  - `ops/sql/2026-06-03-production-newsletter-sync.sql`
+  - `ops/sql/2026-06-03-production-video-transcripts-sync.sql`
+  - `ops/sql/2026-06-03-production-front-page-sync.sql` only where the production DB still needs template authority/project-order sync
+- Review and commit or discard the local SEO inventory work under `ops/seo/` separately; it is not pushed yet.
+- Keep the local-only video transcription workflow out of Git. Transfer transcript data through SQL artifacts only.
 - Review existing Veranstaltung posts and set `_iss_event_format` where useful:
   - Salon Gespräch entries likely map to `gespraech`
   - lecture-style entries map to `vortrag`

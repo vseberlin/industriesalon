@@ -1,6 +1,25 @@
 # Changelog
 
+## 2026-06-04
+- Added `ops/sql/2026-06-04-staging-content-delta.sql` to transfer publish/inherit DB rows changed since 2026-06-03, their postmeta and term relationships, and targeted template-override cleanup for the file-backed staging deployment.
+- Synced the latest Site Editor `page-ausstellungen` DB template edits back into `themes/industriesalon/templates/page-ausstellungen.html`, normalized local image URLs, and removed the synced DB override so `/ausstellungen/` is file-backed again.
+- Synced the latest Site Editor `page-veranstaltungen` DB template edits back into `themes/industriesalon/templates/page-veranstaltungen.html`, normalized local image URLs, and removed the synced DB override so `/veranstaltungen/` is file-backed again.
+- Capped and centered logo-style featured images in the `/projekte/` featured-project cards so the Walk of Fame mark no longer fills the full media column height.
+- Synced the latest Site Editor `page-ueber-uns` DB template edits back into `themes/industriesalon/templates/page-ueber-uns.html`, normalized local image URLs, and removed the synced DB override so `/about/` is file-backed again.
+- Synced the latest Site Editor `page-fuehrungen` DB template edits back into `themes/industriesalon/templates/page-fuehrungen.html`, normalized local image URLs, and removed the synced DB override so `/fuehrungen/` is file-backed again.
+- Loosened the front-page newsletter/supporter section by removing its boxed card treatment, enlarging the supporter logo, and adding the Visit Berlin, ERIH, and BZI tourism partner logos below the supporter row using existing media-library assets.
+- Added the old-site Twinkl `Empfohlenes Museum` badge as a local WebP asset linked to `https://www.twinkl.de/blog/die-besten-museen-in-berlin` in the footer `Entdecken` column, aligned with the footer mark treatment.
+- Added a trimmed red Industriesalon icon WebP asset and placed it as a decorative bottom-right mark in the footer `Rechtliches` column.
+- Added a trimmed true-alpha dark-footer WebP logo asset derived from `logo-gray-transparent.png`, switched the footer template to use it, and removed the temporary light logo tile from the dark footer skin.
+- Switched the global footer to a dark `#1e1e1e` skin with `#f9f9fa` foreground tokens, light dividers, inverted footer utility icons, and a subtle edge for the rendered Barrierefreiheit badge.
+- Synced the latest Site Editor `front-page` DB template edits back into `themes/industriesalon/templates/front-page.html`, normalized local absolute upload URLs, repaired Gutenberg escape artifacts in saved block attributes, and removed the synced front-page DB override.
+- Synced the latest Site Editor `page-salon-vermietung` DB template edits back into `themes/industriesalon/templates/page-salon-vermietung.html`, normalized local absolute upload URLs to root-relative paths, and removed the synced DB override so `/salon-vermietung/` is file-backed again.
+- Corrected the Salon-Vermietung inquiry card kicker and button tokens so `Anfrage` and `Anfrage stellen` render light on the dark CTA background.
+
 ## 2026-06-03
+- Added a `Räume & Ausstattung` section to the Salon-Vermietung file template with the old-site room facts, exhibition-room and event-room photos, furniture/technical equipment, and guided-program notes while keeping the page body untouched.
+- Corrected the front-page newsletter Datenschutz links to `/verein/#datenschutz`, removed the Gutenberg constrained-layout centering from the newsletter kicker in the active DB `front-page` template, and restored the funder logo to its intended block width by loosening the homepage logo cap.
+- Added a repo-owned WordPress PHP upload override for the Docker stack so the local `wp_app` container no longer falls back to the image default `2M` upload cap.
 - Updated the front-page hero heading to `Industriekultur und Transformation` and adjusted menu-shell quick links so `Kalender` points to `/kalender/` and `Atlas` jumps directly to the Schöneweide atlas section.
 - Added a V1 `veranstaltung` editor shim in `iss-content-model` that moves event facts into a structured main panel, exposes existing layout/format/scheme fields, adds an editorial status checklist, and keeps current Gutenberg/event frontend behavior intact.
 - Added WebP placeholder assets and wired shared related-card and core featured-image fallbacks so events, projects, exhibitions, places, and videos without featured images no longer render blank card media.

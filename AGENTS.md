@@ -2,11 +2,275 @@
 
 ## Core priorities
 
+Design for graceful degradation. A failing service must not take down the website. Core website functionality has priority over convenience services, AI integrations, search indexing, analytics, or background jobs.
+
 Longevity, traceability, simplicity, stability, and coherence have priority over speed.
 
 Do not apply quick tweaks. Do not patch locally around a problem. First understand the existing system, dependencies, and intended architecture.
 
 All changes must be lean, traceable, documented, and justified.
+
+
+## Operations & Server Management
+
+### Principle
+
+This server exists to provide a stable staging environment.
+
+Treat the VPS as infrastructure, not as a development sandbox.
+
+Every system change must be:
+
+* reversible;
+* documented;
+* tested;
+* minimal.
+
+---
+
+## Before Any Server Change
+
+Always inspect first.
+
+Check:
+
+* system status;
+* disk usage;
+* memory usage;
+* running services;
+* active containers;
+* system logs;
+* backup status.
+
+Commands:
+
+```bash
+uptime
+free -h
+df -h
+systemctl --failed
+journalctl -p err -b
+docker ps
+```
+
+Never modify a system that has not been inspected.
+
+---
+
+## Logging First
+
+When troubleshooting:
+
+Do not guess.
+
+Check logs first.
+
+Priority:
+
+```bash
+journalctl -xe
+journalctl -u nginx
+journalctl -u php-fpm
+journalctl -u mysql
+docker logs <container>
+```
+
+Every conclusion must be based on observable evidence.
+
+---
+
+## Package Updates
+
+Do not run blind updates.
+
+Before updating:
+
+```bash
+apt update
+apt list --upgradable
+```
+
+Review packages.
+
+Prefer targeted upgrades.
+
+Avoid:
+
+```bash
+apt upgrade -y
+```
+
+without understanding what will change.
+
+Major upgrades require explicit approval.
+
+---
+
+## Service Changes
+
+Before restarting:
+
+* inspect status;
+* inspect logs;
+* understand dependency chain.
+
+After restarting:
+
+```bash
+systemctl status service
+journalctl -u service -n 100
+```
+
+Confirm successful startup.
+
+---
+
+## Container Rules
+
+Containers are disposable.
+
+Data is not.
+
+Never store important data inside containers.
+
+Persist data only through:
+
+* volumes;
+* bind mounts;
+* databases;
+* backups.
+
+Before recreating containers:
+
+```bash
+docker compose config
+docker compose ps
+docker volume ls
+```
+
+Verify data persistence.
+
+---
+
+## Docker Compose
+
+Preferred deployment method.
+
+Avoid manual container creation.
+
+Prefer:
+
+```bash
+docker compose pull
+docker compose up -d
+```
+
+over ad-hoc docker commands.
+
+Infrastructure must be reproducible.
+
+---
+
+## Backups
+
+Before significant changes:
+
+Verify backup existence.
+
+Critical data:
+
+* database;
+* uploads;
+* configuration;
+* environment files.
+
+No destructive operation without backup verification.
+
+---
+
+## Security
+
+Do not:
+
+* disable firewalls;
+* disable authentication;
+* expose databases publicly;
+* store secrets in repositories;
+* use root unnecessarily.
+
+Prefer:
+
+```bash
+sudo
+ssh keys
+least privilege
+```
+
+---
+
+## Resource Monitoring
+
+Regularly check:
+
+```bash
+htop
+free -h
+df -h
+docker stats
+```
+
+Investigate resource growth before it becomes an outage.
+
+---
+
+## Staging Integrity
+
+Staging should resemble production.
+
+Avoid:
+
+* staging-only hacks;
+* staging-only permissions;
+* staging-only configuration;
+* staging-only dependencies.
+
+If production cannot run it, staging should not depend on it.
+
+---
+
+## Failure Policy
+
+Assume failure is normal.
+
+When something breaks:
+
+1. Stop.
+2. Gather evidence.
+3. Read logs.
+4. Identify root cause.
+5. Apply minimal fix.
+6. Verify.
+7. Document.
+
+Never stack random fixes.
+
+Never continue after a fix if root cause remains unknown.
+
+---
+
+## Documentation
+
+Every server action should leave a trace.
+
+Record:
+
+* command executed;
+* files changed;
+* services affected;
+* containers affected;
+* rollback method.
+
+Future maintainers must understand what happened without guessing.
 
 
 ## Engineering Philosophy

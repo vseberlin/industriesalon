@@ -13,6 +13,10 @@
 !/eslint.config.js
 !/.wp-env.json
 !/docker-compose.yml
+!/docker/
+/docker/*
+!/docker/php/
+/docker/php/*
 !/playwright.config.js
 !/.yamllint.yml
 !/phpcs.xml.dist

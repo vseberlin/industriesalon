@@ -199,6 +199,11 @@
 }
 
 .iss-featured-projects__items .iss-project-index-card__media img {
+  width: auto;
+  max-width: min(72%, 24rem);
+  max-height: clamp(14rem, 24vw, 22rem);
+  height: auto;
+  margin: auto;
   object-fit: contain;
 }
 
