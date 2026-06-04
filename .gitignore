@@ -31,6 +31,10 @@
 /ops/*
 !/ops/sql/
 !/ops/sql/*.sql
+!/ops/uploads/
+!/ops/uploads/*.manifest
+!/ops/uploads/*.tar.gz
+!/ops/uploads/*.sha256
 !/tests/
 /tests/*
 !/tests/e2e/
