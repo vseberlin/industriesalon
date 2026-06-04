@@ -14,6 +14,8 @@ This file is the working handoff only. Full historical detail belongs in `CHANGE
 - Staging shared uploads root: `/srv/industriesalon/stage/shared/uploads` (`app/wp-content/uploads` symlinks here and the WordPress container mounts it at `/var/www/html/wp-content/uploads`).
 - Staging Docker Compose file: `/srv/industriesalon/stage/compose.yml`.
 - Staging nginx vhost: `/srv/industriesalon/shared/nginx/stage.industriesalon.info.conf`.
+- Server action notes: `/home/vladimir/server-actions/`.
+- Latest local documentation commit: `1dd6423` (`Document local project paths`), not yet pushed to GitHub.
 - Latest local checkpoint prepared after `3b114ab`: front-page/footer visual polish, DB-template sync-back for `front-page` and `page-salon-vermietung`, local footer WebP assets, and newsletter partner row.
 - The current policy is local repo -> GitHub `main` -> staging deploy. Direct plugin/code updates in staging admin violate the workflow unless explicitly approved.
 - Current pushed production/staging transfer commits after `ffa3786`:
@@ -46,6 +48,18 @@ This file is the working handoff only. Full historical detail belongs in `CHANGE
 - Re-check `git status --short` before deployment or handoff.
 - Standard closeout files: root `handoff_CURRENT.md`, root `CHANGELOG.md`, and root `TODO.md` when next work needs to be preserved.
 - Root handoff/changelog files may be ignored by git in this repo; use `git add -f handoff_CURRENT.md CHANGELOG.md TODO.md` when committing closeout docs.
+
+## Current Server State
+
+- Provider reported shutdowns after the fact; local evidence shows unclean host stops around 2026-06-01 02:28-02:43 UTC and 2026-06-03 00:00-00:08 UTC. MariaDB recovered cleanly after the 2026-06-03 restart.
+- Added a 2 GiB `/swapfile`, persisted in `/etc/fstab`, with `vm.swappiness=10` in `/etc/sysctl.d/99-industriesalon-swap.conf`.
+- Hardened SSH with `/etc/ssh/sshd_config.d/20-no-password-auth.conf`; effective setting is `PasswordAuthentication no`, with key auth still enabled.
+- Added nginx default catch-all server at `/etc/nginx/sites-available/00-catch-all.conf`, enabled via `/etc/nginx/sites-enabled/00-catch-all.conf`, returning `444` for unknown/raw-IP HTTP and HTTPS hosts.
+- Blocked `xmlrpc.php` in `/etc/nginx/sites-available/stage.industriesalon.info`; `https://staging.industriesalon.info/xmlrpc.php` returns `403`.
+- Server action notes and rollback commands are recorded in:
+  - `/home/vladimir/server-actions/2026-06-04-add-swapfile.md`
+  - `/home/vladimir/server-actions/2026-06-04-ssh-nginx-hardening.md`
+- Last verification: no failed systemd units, staging homepage returned `200 OK`, containers remained up and healthy.
 
 ## Operating Guardrails
 

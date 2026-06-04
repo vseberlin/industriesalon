@@ -1,6 +1,7 @@
 # Changelog
 
 ## 2026-06-04
+- Updated `handoff_CURRENT.md` with the current server hardening state, swapfile configuration, outage evidence summary, and rollback-note locations.
 - Documented the local project clone and staging file locations in `handoff_CURRENT.md` so future work starts from the correct repository and deployment paths.
 - Added `ops/sql/2026-06-04-staging-content-delta.sql` to transfer publish/inherit DB rows changed since 2026-06-03, their postmeta and term relationships, and targeted template-override cleanup for the file-backed staging deployment.
 - Synced the latest Site Editor `page-ausstellungen` DB template edits back into `themes/industriesalon/templates/page-ausstellungen.html`, normalized local image URLs, and removed the synced DB override so `/ausstellungen/` is file-backed again.
