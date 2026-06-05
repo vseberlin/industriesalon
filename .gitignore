@@ -37,6 +37,7 @@
 !/ops/uploads/*.sha256
 !/docs/
 /docs/*
+!/docs/*.md
 !/docs/agent/
 !/docs/agent/*.md
 !/docs/architecture/

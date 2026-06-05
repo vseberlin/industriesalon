@@ -1,6 +1,12 @@
 # Changelog
 
 ## 2026-06-05
+- Hardened the shared documentation model after staging-agent feedback:
+  - added `docs/README.md` as the repo-level documentation index and task-routing map
+  - added task classification, verification, and no-parallel-systems agent checklists
+  - added source-of-truth and first-party plugin ownership maps
+  - normalized runbooks toward scope, preconditions, inspect-first, procedure, verification, rollback, documentation, and pitfalls sections
+  - recorded the 2026-06-05 docs model decision so root docs stay small, deeper docs are task-loaded, runbooks remain canonical, and repo skills stay trigger-only
 - Restructured agent continuity docs so default context stays small and shareable with staging:
   - replaced the oversized root `AGENTS.md` with a compact load-order and core-rule entrypoint
   - added `docs/agent/` for durable WordPress engineering, server operations, and continuity rules

@@ -12,6 +12,8 @@ This repo uses WordPress editorial content as the primary authoring surface. Cus
 - `iss-graph`: shared entities, names, relations, graph-backed profiles, and public search projection.
 - `iss-relations`: relation queries and relation-aware blocks.
 
+For first-party plugin boundaries, see `plugin-map.md`.
+
 ## Rules
 
 - Prefer Gutenberg-editable content and reusable patterns for editorial surfaces.

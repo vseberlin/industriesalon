@@ -5,12 +5,13 @@ This is the compact entrypoint for agents working in this repository. Keep it sm
 ## Load Order
 
 1. Read this file first.
-2. For code, design, Gutenberg, CSS, PHP, JavaScript, or template work, read `docs/agent/wordpress-engineering.md`.
-3. For VPS, staging, Docker, deploy, backup, package, or service work, read `docs/agent/server-operations.md`.
-4. For checkpoint, memory, skill, changelog, handoff, or closeout work, read `docs/agent/continuity.md`.
-5. For task-triggered procedures, use the small repo skills under `skills/`; they point back to canonical docs/runbooks.
-6. For project structure, read the focused docs under `docs/architecture/`, `docs/infrastructure/`, `docs/project/`, or `docs/runbooks/` only when they match the task.
-7. Read `handoff_CURRENT.md` only when current project state matters. Read `CHANGELOG.md` only for historical detail or when writing a new entry.
+2. Classify the task with `docs/agent/change-classification.md`.
+3. For code, design, Gutenberg, CSS, PHP, JavaScript, or template work, read `docs/agent/wordpress-engineering.md`.
+4. For VPS, staging, Docker, deploy, backup, package, or service work, read `docs/agent/server-operations.md`.
+5. For checkpoint, memory, skill, changelog, handoff, or closeout work, read `docs/agent/continuity.md`.
+6. For task-triggered procedures, use the small repo skills under `skills/`; they point back to canonical docs/runbooks.
+7. For project structure, read the focused docs under `docs/architecture/`, `docs/infrastructure/`, `docs/project/`, or `docs/runbooks/` only when they match the task.
+8. Read `handoff_CURRENT.md` only when current project state matters. Read `CHANGELOG.md` only for historical detail or when writing a new entry.
 
 ## Core Priorities
 
@@ -24,6 +25,7 @@ All changes must be lean, reversible where practical, documented, tested, and ju
 
 - Inspect before changing: existing tools, helpers, theme configuration, build steps, enqueue logic, template authority, plugin boundaries, and prior solutions.
 - Do not invent parallel systems when WordPress, Gutenberg, the theme, or an existing plugin already provides the right mechanism.
+- Use `docs/agent/no-parallel-systems.md` before adding a new block, helper, table, CSS primitive, service, route, or runbook.
 - Keep public presentation in the theme unless an existing plugin explicitly owns a renderer. Keep plugins focused on data, contracts, business logic, imports, and dynamic block data.
 - Prefer editor-visible Gutenberg structures, native blocks, reusable patterns, stable semantic classes, and server-rendered output.
 - Do not rely on Gutenberg-generated class chains, fragile DOM structure, selector escalation, inline styles, or hidden shortcode-like workflows.
@@ -32,6 +34,7 @@ All changes must be lean, reversible where practical, documented, tested, and ju
 - Before PHP or JavaScript changes, inspect hooks, helpers, enqueue logic, templates, blocks, and plugin ownership.
 - Use `WP_Query` for normal editorial post loops; use plugin-owned custom tables and prepared `$wpdb` SQL for projection, search, graph, archive, reporting, and other non-post-shaped data.
 - Verify frontend, editor, responsive behavior, template compatibility, and block validation when relevant.
+- Use `docs/agent/verification.md` to choose checks for the task class.
 
 ## Operations Rules
 

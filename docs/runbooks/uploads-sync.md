@@ -1,21 +1,43 @@
 # Uploads Sync Runbook
 
+## Scope
+
 Use this when syncing, restoring, archiving, or debugging WordPress uploads across local, staging, or production.
+
+## Preconditions
+
+- Sync direction is explicit.
+- Source and target paths are known.
+- Backup/rollback expectation is clear.
+
+## Inspect First
+
+- source path
+- target path
+- disk space
+- ownership and permissions
+- current file count/size
 
 ## Procedure
 
-1. Inspect both machines first:
-   - source path
-   - target path
-   - disk space
-   - ownership and permissions
-   - current file count/size
-2. Confirm direction explicitly. Do not infer local -> staging or staging -> local.
-3. Prefer `rsync --dry-run` before a real sync.
-4. Preserve upload tree shape so the root maps to `wp-content/uploads/`.
-5. Preserve timestamps and permissions where appropriate.
-6. Verify with file count/size comparison and a few representative media URLs.
-7. Record only the current sync state in `handoff_CURRENT.md`.
+1. Confirm direction explicitly. Do not infer local -> staging or staging -> local.
+2. Prefer `rsync --dry-run` before a real sync.
+3. Preserve upload tree shape so the root maps to `wp-content/uploads/`.
+4. Preserve timestamps and permissions where appropriate.
+5. Verify with file count/size comparison and a few representative media URLs.
+6. Record only the current sync state in `handoff_CURRENT.md`.
+
+## Verification
+
+Compare counts/sizes and check representative media URLs.
+
+## Rollback
+
+Restore from the previous archive/snapshot or reverse only the known sync delta.
+
+## What To Document
+
+Record current source, target, direction, and verification when sync state affects deployment.
 
 ## Artifact Alternative
 
