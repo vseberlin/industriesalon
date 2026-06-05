@@ -7,10 +7,8 @@ Current checkpoint only. History belongs in `CHANGELOG.md`; active tasks belong 
 ## Current State
 
 - Branch: `main`
-- Latest GitHub checkpoint: `90132e7` (`Add shared agent runbooks`) on `origin/main`.
-- Local `main` also contains:
-  - `1dd6423` (`Document local project paths`)
-  - `35f0548` (`Document server hardening handoff`)
+- Latest GitHub checkpoint: `fa82e88` (`Add git exchange protocol`) on `main` / `origin/main`.
+- Local `main` and `origin/main` are equal at `fa82e88`.
 - Local working clone: `/home/vladimir/projects/industriesalon`.
 - Staging deployment checkout: `/srv/industriesalon/stage/repo`.
 - Staging WordPress app root: `/srv/industriesalon/stage/app`.
@@ -18,15 +16,17 @@ Current checkpoint only. History belongs in `CHANGELOG.md`; active tasks belong 
 - Staging Docker Compose file: `/srv/industriesalon/stage/compose.yml`.
 - Staging nginx vhost: `/srv/industriesalon/shared/nginx/stage.industriesalon.info.conf`.
 - Server action notes: `/home/vladimir/server-actions/`.
-- Agent and continuity docs were restructured for small default context and staging-shareable guidance.
-- The new staged docs split guidance across:
+- Agent, continuity, infrastructure, architecture, verification, and sync rules are now repo-owned and staging-shareable.
+- Shared docs are split across:
   - `docs/agent/`
   - `docs/architecture/`
   - `docs/infrastructure/`
   - `docs/project/`
   - `docs/runbooks/`
   - `skills/*/SKILL.md`
-- Cross-machine runbooks now cover uploads sync, mail, Meilisearch, services, and sync channels.
+- `docs/runbooks/git-exchange.md` is the active local/staging machine sync rule. GitHub `main` is the exchange point; clean behind clones fast-forward only; dirty or diverged clones stop for inspection.
+- The repo remote now uses the SSH alias `github-industriesalon` and the deploy key `/home/vladimir/.ssh/industriesalon_deploy`.
+- Repo-local Git config sets `core.sshCommand=ssh -F /home/vladimir/.ssh/config` because the system SSH include `/etc/ssh/ssh_config.d/20-systemd-ssh-proxy.conf` currently fails default SSH parsing.
 
 ## Current Server State
 
@@ -35,9 +35,11 @@ Current checkpoint only. History belongs in `CHANGELOG.md`; active tasks belong 
 - Hardened SSH with `/etc/ssh/sshd_config.d/20-no-password-auth.conf`; effective setting is `PasswordAuthentication no`, with key auth still enabled.
 - Added nginx default catch-all server at `/etc/nginx/sites-available/00-catch-all.conf`, enabled via `/etc/nginx/sites-enabled/00-catch-all.conf`, returning `444` for unknown/raw-IP HTTP and HTTPS hosts.
 - Blocked `xmlrpc.php` in `/etc/nginx/sites-available/stage.industriesalon.info`; `https://staging.industriesalon.info/xmlrpc.php` returns `403`.
+- Added `/home/vladimir/.ssh/config` with a scoped `github-industriesalon` alias for the Industriesalon deploy key, and switched this repo's `origin` remote to `git@github-industriesalon:vseberlin/industriesalon.git`.
 - Server action notes and rollback commands are recorded in:
   - `/home/vladimir/server-actions/2026-06-04-add-swapfile.md`
   - `/home/vladimir/server-actions/2026-06-04-ssh-nginx-hardening.md`
+- GitHub SSH setup notes are recorded in `/home/vladimir/server-actions/2026-06-05-github-ssh-deploy-key.md`.
 - Last verification: no failed systemd units, staging homepage returned `200 OK`, containers remained up and healthy.
 
 ## Current Risk
@@ -46,15 +48,17 @@ Current checkpoint only. History belongs in `CHANGELOG.md`; active tasks belong 
 - Existing SQL/data artifacts under `ops/sql/` represent local DB transfer state; verify backups before applying them to staging or production.
 - Template output can still be DB-backed; check `wp_template` authority before assuming disk files are live.
 - Uploads, mail, and Meilisearch are cross-machine concerns; use the repo runbooks before changing staging state.
+- Default `ssh` without the repo-local config currently fails on `/etc/ssh/ssh_config.d/20-systemd-ssh-proxy.conf`; inspect that system file before relying on general SSH behavior.
 
 ## Next Action
 
-- After pulling on staging, verify the staging agent sees `AGENTS.md`, `docs/`, and `skills/`.
+- On the other machine, follow `docs/runbooks/git-exchange.md`: inspect, fetch, and fast-forward to `fa82e88` if clean and behind.
 - Keep future handoff entries limited to current state, risk, next action, and verification.
 - Keep root `TODO.md` for immediate executable work only; use `docs/project/backlog.md` and `docs/project/uat.md` for broader work.
 
 ## Verified
 
-- `git diff --check` passed after the final split.
-- `git diff --cached --check` passed after staging the final split.
-- New docs were kept compact and staged deliberately.
+- `git status --short --branch` reports `## main...origin/main`.
+- `git rev-parse --short HEAD` and `git rev-parse --short origin/main` both report `fa82e88`.
+- `git log --oneline --left-right HEAD...origin/main` is empty.
+- `git push origin main` succeeded through `github-industriesalon` after adding the deploy-key alias.
