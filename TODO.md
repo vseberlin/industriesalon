@@ -1,82 +1,31 @@
 # Project TODO
 
+Immediate executable work only. Larger future programs live in `docs/project/backlog.md`; UAT-dependent work lives in `docs/project/uat.md`.
+
 ## Active
-- Review the project dossier v2 authoring pattern after FUTURA editorial testing:
-  - click-test inserting and editing `industriesalon/project-dossier-chapters` in the `projekt` Gutenberg editor
-  - keep the current starter-pattern approach unless another non-publication CPT needs the same chapter contract
-  - if several CPTs need the same model, promote the pattern into a generic `iss/reading-chapters` block instead of duplicating project-only markup
-- Review the `/videos/` embed interaction against the YouTube-hit goal:
-  - avoid losing measurable YouTube views through autoplayed in-page embeds
-  - test whether card selection should only update poster/metadata while playback starts only after an explicit user play click
+
+- Review `/videos/` embed behavior against the YouTube-hit goal:
+  - test whether card selection should update poster/metadata while playback starts only after explicit user play
   - keep a strong `Zum Original` / YouTube handoff path if on-site playback reduces channel traffic
-- Improve the local video transcription fallback before processing remaining non-caption videos:
-  - current local-only Docker/WP-CLI workflow successfully imported caption-based transcripts into existing `video` post content/meta, but CPU-only Whisper fallback is too slow for long videos
-  - keep transcript storage unchanged: write generated text into `video.post_content`, set `iss_video_transcript_status=full`, and record `iss_video_transcript_source`
-  - evaluate a local-only external transcription provider option such as OpenAI, Deepgram, or AssemblyAI behind an environment API key, never committed to Git or exposed on staging
-  - for OpenAI-style file limits, add audio chunking before upload and join returned text before saving through the existing WordPress DB path
+- Improve local video transcription fallback before processing remaining non-caption videos:
+  - keep transcript storage unchanged in `video.post_content` plus existing transcript meta
+  - evaluate a local-only external provider behind an environment API key
+  - add chunking before OpenAI-style uploads if needed
   - preserve backups and explicit per-post runs before writing generated transcripts
-- Resolve the remaining `register_place` coordinate gaps after the first address-based geocoding pass:
+- Resolve remaining `register_place` coordinate gaps:
   - `Innovationspark Wuhlheide`
   - `IRIS GmbH`
   - `ITZ 4.0`
   - `Rahmenplan Oberschöneweide`
-  - `IBA 2034 Berlin – Standort Oberschöneweide`
+  - `IBA 2034 Berlin - Standort Oberschöneweide`
   - `Standortgemeinschaft Oberschöneweide`
   - `Energie-Museum Berlin`
   - `Treptow-Ateliers e.V.`
   - `Spree 27`
-  - for each of these, either improve the stored address or set coordinates manually because the current source text is too vague for reliable geocoding
-- Turn the current Touchtable review/match layer into a real promote workflow for `register_place`:
-  - add deliberate field-level promotion from linked source snapshots into curated public fields instead of stopping at source linking
-  - decide which fields stay source-only vs which can overwrite local editorial fields
-  - keep public rendering theme-owned and local-data-only
-- Clean up Touchtable extraction quality before broad editor rollout:
-  - reduce flattened Elementor/timeline text in long detail-page previews
-  - distinguish narrative pages, empty shell pages, and map-context pages more explicitly in review
-  - improve preview readability for very long source pages
-- Add reviewed Touchtable media workflow:
-  - decide attachment/import path for source media
-  - preserve source/rights metadata
-  - only expose rights-safe reviewed media to the public theme
-- Review the `Führung` single-page booking flow and remove unnecessary template duplication:
-  - collapse `themes/industriesalon/templates/single-tour.html` and `single-tour-on-demand.html` into one template unless editors truly need two different page compositions
-  - keep CTA/mode switching in render logic (`booking_mode`, inquiry fields, booking panel), not in parallel full-page templates
-  - make `iss/tour-calendar` bail out cleanly when a tour has no usable calendar mapping instead of rendering an empty widget shell
-  - audit calendar-mode tours whose content/title implies on-demand behavior but whose effective mode still resolves to `calendar`
-- Review the `industriesalon/timeline-query` block after the preset refactor:
-  - too many overlapping controls still describe similar ideas across base scope, default selection, visible filters, and preset buttons
-  - simplify the editor contract so `allowed*`, `fixed*`, `default*`, and preset state have clearer ownership and fewer ways to express the same query
-  - verify that `Alle`, `Inhaltstyp`, month/calendar bridge, and taxonomy filters always compose predictably on the frontend
-- Add a stronger next-generation timeline/calendar render for program-style pages, especially `Veranstaltungen`, with better date rhythm and a cleaner culture-calendar presentation.
-- Review the footer navigation and column spacing after the current footer refactor:
-  - check whether `Entdecken` / `Service` should stay as two separate menus or move to real footer menu assignments
-  - rebalance spacing between footer columns, section labels, and hours exception rows on wide screens
-
-## After UAT
-- Revamp the editorial creation flow into a local CPT-first path where editors create `Veranstaltung`, `Ausstellung`, or `Führung` once with minimal fields and the item then appears automatically in calendar, timeline, and cards without SaaS dependency in the normal publishing flow.
-- Rework archive media authority so museum/archive imports keep high-resolution masters outside WordPress media-library authority while WordPress stores only screen/previews for runtime use:
-  - importer should download/store the canonical high-resolution file into local archive storage, not as the primary WP attachment
-  - public/archive rendering should prefer canonical preview media (`preview_url` / `preview_attachment_id`) instead of depending on featured-image attachments
-  - existing `archivobjekt` thumbnails need a backfill path before old archive source attachments can be removed safely from Media Library
-- Turn the current archive and graph data flow into an explicit layered pipeline without reintroducing runtime remote-sync coupling:
-  - keep `ISS Archive` (`plugins/iss-wf-import`) as the local archive runtime owner for `archivbeitrag`, `archivsammlung`, and `archivobjekt`
-  - keep `ISS Graph` (`plugins/iss-graph`) as the shared cross-domain entity layer for people, organizations, places, profiles, and public search reuse
-  - formalize the layers as `ingest -> normalize -> project -> enrich -> provenance`
-  - make normalization explicit by defining one canonical normalized-record contract between source adapters and local projectors instead of letting parser output leak directly into runtime tables
-  - let ingest runs stop after source capture and normalization, before projection, so fetch/parse/review can be separated from local apply
-  - keep projection responsibilities narrow and typed:
-    - archive object/media/collection/relation projection stays in archive services
-    - public entity/name/relation/profile projection stays in graph services
-    - register chronology/state projection stays in the register plugin
-  - extend enrichment as an additive layer:
-    - archive-object-specific editorial overlays stay archive-local
-    - shared person/org/place facts and profiles stay graph-backed
-    - source-derived facts must remain traceable to snapshots and editorial overrides
-  - tighten provenance instead of adding ad hoc side tables:
-    - reuse and extend `iss_archive_sources`
-    - reuse and extend `iss_archive_source_records`
-    - reuse and extend `iss_archive_source_snapshots`
-    - reuse and extend `iss_archive_import_runs`
-    - reuse and extend `iss_archive_assertions`
-    - reuse and extend `iss_archive_evidence`
-  - once the contracts are stable, consider whether ingest/provenance should split into a separate plugin such as `iss-ingest`; do not split before the normalized contract is proven across more than one source
+- Review the `Führung` single-page booking flow:
+  - collapse `single-tour.html` and `single-tour-on-demand.html` only if editors do not need distinct compositions
+  - keep CTA/mode switching in render logic, not parallel full-page templates
+  - make `iss/tour-calendar` bail out cleanly when no usable calendar mapping exists
+- Review footer navigation and column spacing after the current footer refactor:
+  - decide whether `Entdecken` / `Service` stay as separate menus or move to real footer menu assignments
+  - rebalance wide-screen spacing between columns, labels, and hours exception rows

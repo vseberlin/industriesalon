@@ -1,5 +1,18 @@
 # Changelog
 
+## 2026-06-05
+- Restructured agent continuity docs so default context stays small and shareable with staging:
+  - replaced the oversized root `AGENTS.md` with a compact load-order and core-rule entrypoint
+  - added `docs/agent/` for durable WordPress engineering, server operations, and continuity rules
+  - added focused `docs/architecture/`, `docs/infrastructure/`, `docs/project/`, and `docs/runbooks/` sections for durable on-demand project knowledge
+  - split root `TODO.md` so immediate work stays in TODO while broad backlog and UAT-dependent work live under `docs/project/`
+  - added infrastructure docs for tooling and data artifacts
+  - added shared cross-machine docs/runbooks for services, sync, uploads sync, mail, and Meilisearch so local and staging agents share deployment and infrastructure context
+  - added minimal repo-owned `skills/*/SKILL.md` wrappers for deployment, template authority, transcripts, WordPress CSS, uploads sync, mail, and Meilisearch
+  - unignored only the intended `docs/*/*.md` and `skills/*/SKILL.md` paths so shareable rules can be tracked without opening broad trees
+  - documented the data/query preference: `WP_Query` for editorial post loops, plugin-owned custom tables plus prepared `$wpdb` SQL for projection/search/graph/archive/reporting data
+  - condensed `handoff_CURRENT.md` back to a current operational checkpoint, leaving history in this changelog and active follow-up in `TODO.md`
+
 ## 2026-06-04
 - Updated `handoff_CURRENT.md` with the current server hardening state, swapfile configuration, outage evidence summary, and rollback-note locations.
 - Documented the local project clone and staging file locations in `handoff_CURRENT.md` so future work starts from the correct repository and deployment paths.
