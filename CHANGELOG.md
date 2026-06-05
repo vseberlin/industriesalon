@@ -1,5 +1,18 @@
 # Changelog
 
+## 2026-06-05
+- Restructured agent continuity docs so default context stays small and shareable with staging:
+  - replaced the oversized root `AGENTS.md` with a compact load-order and core-rule entrypoint
+  - added `docs/agent/` for durable WordPress engineering, server operations, and continuity rules
+  - added focused `docs/architecture/`, `docs/infrastructure/`, `docs/project/`, and `docs/runbooks/` sections for durable on-demand project knowledge
+  - split root `TODO.md` so immediate work stays in TODO while broad backlog and UAT-dependent work live under `docs/project/`
+  - added infrastructure docs for tooling and data artifacts
+  - added shared cross-machine docs/runbooks for services, sync, uploads sync, mail, and Meilisearch so local and staging agents share deployment and infrastructure context
+  - added minimal repo-owned `skills/*/SKILL.md` wrappers for deployment, template authority, transcripts, WordPress CSS, uploads sync, mail, and Meilisearch
+  - unignored only the intended `docs/*/*.md` and `skills/*/SKILL.md` paths so shareable rules can be tracked without opening broad trees
+  - documented the data/query preference: `WP_Query` for editorial post loops, plugin-owned custom tables plus prepared `$wpdb` SQL for projection/search/graph/archive/reporting data
+  - condensed `handoff_CURRENT.md` back to a current operational checkpoint, leaving history in this changelog and active follow-up in `TODO.md`
+
 ## 2026-06-04
 - Added `ops/sql/2026-06-04-staging-content-delta.sql` to transfer publish/inherit DB rows changed since 2026-06-03, their postmeta and term relationships, and targeted template-override cleanup for the file-backed staging deployment.
 - Synced the latest Site Editor `page-ausstellungen` DB template edits back into `themes/industriesalon/templates/page-ausstellungen.html`, normalized local image URLs, and removed the synced DB override so `/ausstellungen/` is file-backed again.
