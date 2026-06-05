@@ -43,6 +43,10 @@ Record current source, target, direction, and verification when sync state affec
 
 For archive transfer, create a tarball whose root is `uploads/`, create a checksum, transfer to the remote home directory, verify the remote hash, then unpack deliberately into `wp-content/`.
 
+When an upload archive is paired with a SQL artifact, use
+`docs/infrastructure/data-artifacts.md#paired-sql-and-upload-artifacts` before
+extracting files or importing SQL.
+
 ## Known Pitfalls
 
 - `scp ... :/~` is not the user home; use `:~/` or an explicit `/home/vladimir/` path.

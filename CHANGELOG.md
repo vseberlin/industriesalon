@@ -1,6 +1,7 @@
 # Changelog
 
 ## 2026-06-05
+- Documented the paired SQL/uploads artifact deployment pattern in the infrastructure docs so future staging transfers preserve the backup, upload rollback, import, and verification sequence without rediscovering it.
 - Reworked the Repair Café page as a file-backed theme surface:
   - switched the hero to the new Repair Café WebP media asset
   - converted the Ablauf section into compact fact steps

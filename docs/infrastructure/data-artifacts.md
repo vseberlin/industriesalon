@@ -16,6 +16,20 @@ Use explicit artifacts for data transfer and review.
 - Preserve `uploads/` as the archive root when creating restore-friendly tarballs.
 - Use `docs/runbooks/uploads-sync.md` for live `rsync` or restore procedures.
 
+## Paired SQL And Upload Artifacts
+
+When a checkpoint contains both `ops/sql/*.sql` and `ops/uploads/*` artifacts,
+treat them as one deployment unit.
+
+- Deploy code first so templates/plugins reference the same contract as the artifacts.
+- Verify the uploads archive checksum before extraction.
+- Create a DB backup before SQL import.
+- Create a targeted rollback archive for any files in the upload manifest that already exist on the target.
+- Restore/extract uploads before or with the SQL import so attachment metadata and files stay aligned.
+- Import SQL only after code and upload prerequisites are present.
+- Verify template authority, expected row counts, manifest files, representative media URLs, changed routes, and container/service health.
+- Record backup paths, artifact names, verification, and rollback notes in `handoff_CURRENT.md` or a machine-local server-action note when the deployment changes staging state.
+
 ## Backups
 
 - Use host-owned backup files for risky DB/content mutations.
