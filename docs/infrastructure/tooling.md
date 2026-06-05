@@ -2,6 +2,8 @@
 
 Use repo-local tooling before adding ad hoc checks.
 
+For task-specific verification, see `docs/agent/verification.md`.
+
 ## JavaScript, CSS, Shell, YAML
 
 - `npm run lint`

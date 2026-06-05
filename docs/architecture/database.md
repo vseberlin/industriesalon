@@ -7,6 +7,8 @@ WordPress posts, post meta, terms, and `WP_Query` are the default model for norm
 - `iss-graph`: entity index, entity names, entity relations, search index, person facts, and organization facts.
 - `iss-wf-import`: archive objects, archive collections, collection members, assertions, evidence, and source snapshots.
 
+See `source-of-truth.md` before deciding which storage layer is canonical for a surface.
+
 ## Rules
 
 - Use `WP_Query` for ordinary public post loops and editor-authored content lists.
