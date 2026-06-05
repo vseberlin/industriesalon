@@ -7,12 +7,12 @@ Current checkpoint only. History belongs in `CHANGELOG.md`; active tasks belong 
 ## Current State
 
 - Branch: `main`
-- Latest GitHub checkpoint before the current local commit: `ba0b0c4` (`Finalize infra sync handoff`) on `origin/main`.
-- Current local checkpoint prepared for GitHub:
+- Latest GitHub checkpoint: `a94d06c` (`Update repair cafe and sammlungen media`) on `main` / `origin/main`.
+- Current checkpoint:
   - Repair Café template/CSS cleanup is file-backed in the theme.
   - Sammlungen template media swaps are synced from the editor DB copy back to disk.
-  - Matching DB template overrides were renamed as backups locally; both routes now resolve from `theme`.
-  - Media transfer artifacts were added under `ops/sql/` and `ops/uploads/`.
+  - Matching DB template overrides were removed on staging; both routes resolve from `theme`.
+  - Media transfer artifacts under `ops/sql/` and `ops/uploads/` were applied to staging.
 - Local working clone: `/home/vladimir/projects/industriesalon`.
 - Staging deployment checkout: `/srv/industriesalon/stage/repo`.
 - Staging WordPress app root: `/srv/industriesalon/stage/app`.
@@ -44,14 +44,16 @@ Current checkpoint only. History belongs in `CHANGELOG.md`; active tasks belong 
   - `/home/vladimir/server-actions/2026-06-04-add-swapfile.md`
   - `/home/vladimir/server-actions/2026-06-04-ssh-nginx-hardening.md`
 - GitHub SSH setup notes are recorded in `/home/vladimir/server-actions/2026-06-05-github-ssh-deploy-key.md`.
-- Last verification: no failed systemd units, staging homepage returned `200 OK`, containers remained up and healthy.
+- Repair Café/Sammlungen staging artifact application is recorded in `/home/vladimir/server-actions/2026-06-05-apply-repair-cafe-sammlungen-stage-artifacts.md`.
+- Last verification: no failed systemd units, `/repair-cafe/` and `/sammlungen/` returned `200 OK`, containers remained up and healthy.
 
 ## Current Risk
 
 - `.gitignore` uses a default-deny model, so new shareable docs/skills need explicit narrow allow rules before staging.
 - Existing SQL/data artifacts under `ops/sql/` represent local DB transfer state; verify backups before applying them to staging or production.
-- Apply `ops/sql/2026-06-05-repair-cafe-sammlungen-media.sql` only after confirming the target has a DB backup; it replaces the referenced attachment rows and removes `page-repair-cafe` / `page-sammlungen` DB template overrides.
-- Restore `ops/uploads/2026-06-05-repair-cafe-sammlungen-uploads-delta.tar.gz` into the target uploads root before or with the matching SQL so attachment metadata and files stay aligned.
+- Before reapplying `ops/sql/2026-06-05-repair-cafe-sammlungen-media.sql` anywhere else, confirm the target has a DB backup; it replaces the referenced attachment rows and removes `page-repair-cafe` / `page-sammlungen` DB template overrides.
+- Restore `ops/uploads/2026-06-05-repair-cafe-sammlungen-uploads-delta.tar.gz` into any target uploads root before or with the matching SQL so attachment metadata and files stay aligned.
+- Staging rollback backups for the 2026-06-05 artifact application are in `/srv/industriesalon/stage/backups/20260605-213910-repair-cafe-sammlungen-stage/`.
 - Template output can still be DB-backed; check `wp_template` authority before assuming disk files are live.
 - Uploads, mail, and Meilisearch are cross-machine concerns; use the repo runbooks before changing staging state.
 - Default `ssh` without the repo-local config currently fails on `/etc/ssh/ssh_config.d/20-systemd-ssh-proxy.conf`; inspect that system file before relying on general SSH behavior.
@@ -59,7 +61,7 @@ Current checkpoint only. History belongs in `CHANGELOG.md`; active tasks belong 
 ## Next Action
 
 - On the other machine, follow `docs/runbooks/git-exchange.md`: inspect, fetch, and fast-forward to latest `origin/main` if clean and behind.
-- After pulling on staging, apply the 2026-06-05 uploads archive and SQL artifact, then verify `/repair-cafe/` and `/sammlungen/` are file-backed and render the new media.
+- Review `/repair-cafe/` and `/sammlungen/` visually in staging/UAT after the artifact application.
 - Keep future handoff entries limited to current state, risk, next action, and verification.
 - Keep root `TODO.md` for immediate executable work only; use `docs/project/backlog.md` and `docs/project/uat.md` for broader work.
 
@@ -71,3 +73,8 @@ Current checkpoint only. History belongs in `CHANGELOG.md`; active tasks belong 
 - `/repair-cafe/` and `/sammlungen/` both returned `200` locally and rendered the new media/copy.
 - `ops/sql/2026-06-05-repair-cafe-sammlungen-media.sql` imported cleanly into a temporary MariaDB schema.
 - `ops/uploads/2026-06-05-repair-cafe-sammlungen-uploads-delta.tar.gz` passed SHA256 verification and contains 61 files.
+- Staging repo fast-forwarded to `a94d06c`.
+- Staging DB backup and targeted existing-upload rollback archive were created under `/srv/industriesalon/stage/backups/20260605-213910-repair-cafe-sammlungen-stage/`.
+- Staging upload manifest verified all 61 files after extraction.
+- Staging SQL import completed; 12 expected attachment rows exist and 0 matching DB template override rows remain.
+- Staging `/repair-cafe/` and `/sammlungen/` returned `200 OK`; representative new media URLs returned `200 OK`.
