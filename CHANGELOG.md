@@ -1,6 +1,7 @@
 # Changelog
 
 ## 2026-06-05
+- Clarified that `docs/architecture/plugin-map.md` is compact boundary documentation, not an exhaustive plugin API reference, and that plugin contract changes should update the affected row.
 - Hardened the shared documentation model after staging-agent feedback:
   - added `docs/README.md` as the repo-level documentation index and task-routing map
   - added task classification, verification, and no-parallel-systems agent checklists

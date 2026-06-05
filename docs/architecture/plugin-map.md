@@ -2,6 +2,11 @@
 
 Compact ownership map for first-party plugins.
 
+This file is boundary documentation, not an exhaustive API reference. It may
+become stale in small details as plugins evolve; when a plugin contract changes,
+update the affected row instead of expanding this into broad implementation
+documentation.
+
 | Plugin | Owns | Depends on | Exposes | Must not own | Important files |
 | --- | --- | --- | --- | --- | --- |
 | `iss-content-model` | shared CPT/editor/data contracts, Video CPT block data | WordPress CPT/block APIs | dynamic blocks and editor support | public page skins owned by theme | `includes/`, `blocks/`, `assets/` |
