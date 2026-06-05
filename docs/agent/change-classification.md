@@ -12,3 +12,4 @@ Classify every task before changing files or infrastructure. If a task spans cla
 | Uploads/media | `docs/runbooks/uploads-sync.md`, `docs/infrastructure/sync.md` | dry-run/counts/sizes/sample URLs | record current sync state if relevant |
 | Search/mail/service | `docs/infrastructure/services.md`, relevant runbook | service status/logs/fallback behavior | record service state and rollback |
 | Documentation/continuity | `docs/agent/continuity.md`, `docs/README.md` | `git diff --check`, structure remains compact | changelog when model changes |
+| Git exchange | `docs/runbooks/git-exchange.md` | status, fetch, HEAD/origin comparison, ahead/behind log | report refs and clean/dirty state |

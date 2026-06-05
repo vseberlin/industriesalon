@@ -43,5 +43,6 @@ Record current deploy state, risk, next action, and verification in `handoff_CUR
 ## Known Pitfalls
 
 For server inspection rules, read `docs/agent/server-operations.md`.
+For local/staging Git coordination, read `docs/runbooks/git-exchange.md`.
 For uploads, read `docs/runbooks/uploads-sync.md`.
 For optional services, read `docs/infrastructure/services.md`.

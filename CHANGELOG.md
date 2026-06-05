@@ -1,6 +1,10 @@
 # Changelog
 
 ## 2026-06-05
+- Added a Git exchange protocol for local/staging coordination:
+  - `docs/runbooks/git-exchange.md` defines start, exit, on-demand sync, verification, and conflict behavior around GitHub `main`
+  - `skills/git-exchange/SKILL.md` exposes the protocol as a task trigger for agents
+  - `AGENTS.md`, the docs index, deployment runbook, change classification, and decisions now point to the shared exchange rule
 - Clarified that `docs/architecture/plugin-map.md` is compact boundary documentation, not an exhaustive plugin API reference, and that plugin contract changes should update the affected row.
 - Hardened the shared documentation model after staging-agent feedback:
   - added `docs/README.md` as the repo-level documentation index and task-routing map

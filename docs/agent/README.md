@@ -28,4 +28,5 @@ This directory is the repo-owned, shareable agent guidance for the local checkou
 - Load deeper `docs/` files only when the task needs that surface.
 - Keep repo skills small; avoid duplicating full runbook text inside `SKILL.md`.
 - Put cross-machine procedures in repo docs so local and staging agents share the same deployment, sync, mail, and search expectations.
+- Use `../runbooks/git-exchange.md` for start, exit, sync, staging feedback, and shared `main` coordination.
 - Current docs model established on 2026-06-05: root docs stay small, deeper docs are task-loaded, runbooks are canonical procedures, and repo skills are triggers only.

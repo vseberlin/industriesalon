@@ -9,9 +9,10 @@ This is the compact entrypoint for agents working in this repository. Keep it sm
 3. For code, design, Gutenberg, CSS, PHP, JavaScript, or template work, read `docs/agent/wordpress-engineering.md`.
 4. For VPS, staging, Docker, deploy, backup, package, or service work, read `docs/agent/server-operations.md`.
 5. For checkpoint, memory, skill, changelog, handoff, or closeout work, read `docs/agent/continuity.md`.
-6. For task-triggered procedures, use the small repo skills under `skills/`; they point back to canonical docs/runbooks.
-7. For project structure, read the focused docs under `docs/architecture/`, `docs/infrastructure/`, `docs/project/`, or `docs/runbooks/` only when they match the task.
-8. Read `handoff_CURRENT.md` only when current project state matters. Read `CHANGELOG.md` only for historical detail or when writing a new entry.
+6. For start, exit, sync, staging feedback, or deploy coordination, read `docs/runbooks/git-exchange.md`.
+7. For task-triggered procedures, use the small repo skills under `skills/`; they point back to canonical docs/runbooks.
+8. For project structure, read the focused docs under `docs/architecture/`, `docs/infrastructure/`, `docs/project/`, or `docs/runbooks/` only when they match the task.
+9. Read `handoff_CURRENT.md` only when current project state matters. Read `CHANGELOG.md` only for historical detail or when writing a new entry.
 
 ## Core Priorities
 
@@ -55,4 +56,5 @@ All changes must be lean, reversible where practical, documented, tested, and ju
 - Repo-owned architecture, infrastructure, project, and runbook docs under `docs/` are loaded on demand, not by default.
 - Repo-owned `skills/*/SKILL.md` files are tiny task triggers that point to canonical docs; do not put session history there.
 - Cross-machine facts that must be shared between local and staging belong in `docs/infrastructure/`, `docs/runbooks/`, and `handoff_CURRENT.md`; secrets and volatile runtime status stay machine-local.
+- GitHub `main` is the exchange point between local and staging agents; follow `docs/runbooks/git-exchange.md` before pulling, pushing, or ending shared work.
 - When asked to commit, exit, or write handoff/changelog, update the relevant root docs before stopping.

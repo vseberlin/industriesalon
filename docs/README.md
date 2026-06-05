@@ -31,6 +31,7 @@ This directory is the repo-owned source for durable project, agent, architecture
 - Uploads/media: `docs/runbooks/uploads-sync.md`, `docs/infrastructure/sync.md`
 - Search/mail/service: `docs/infrastructure/services.md`, relevant runbook
 - Continuity/docs: `docs/agent/continuity.md`
+- Git exchange/start/exit: `docs/runbooks/git-exchange.md`
 
 ## Change Discipline
 
