@@ -3106,6 +3106,7 @@ iss-info-panel--brown
 
 .iss-method-item {
   min-height: 15rem;
+  margin-block-start: 0;
   padding: clamp(1.25rem, 2vw, 2rem);
   background: var(--iss-black);
 }
@@ -4883,42 +4884,43 @@ iss-info-panel--brown
 
 
 /* =========================================================
+   REPAIR CAFE PAGE
+   ========================================================= */
 .iss-repair-facts .iss-info-panel,
 .iss-repair-contact .iss-info-panel {
   max-width: none;
 }
 
-.iss-repair-limits__grid,
-.iss-repair-bring__grid,
-.iss-repair-frank__grid {
+.iss-repair-limits__grid {
   gap: clamp(2rem, 4vw, 4rem);
 }
 
+.iss-repair-limits .wp-block-columns.iss-repair-limits__grid {
+  display: grid;
+  grid-template-columns: minmax(38rem, 1.28fr) minmax(20rem, 0.72fr);
+  gap: clamp(1.5rem, 3vw, 3rem);
+  align-items: start;
+}
+
 .iss-repair-limits__intro-col,
-.iss-repair-limits__cards-col,
-.iss-repair-bring__intro-col,
-.iss-repair-bring__cards-col,
-.iss-repair-frank__media-col,
-.iss-repair-frank__content-col {
+.iss-repair-limits__media-col,
+.iss-repair-limits__cards-col {
   min-width: 0;
 }
 
 .iss-repair-limits__intro-col {
-  flex-basis: 38%;
+  grid-column: 2;
+  flex-basis: 28%;
+}
+
+.iss-repair-limits__media-col {
+  flex-basis: 18%;
 }
 
 .iss-repair-limits__cards-col {
-  flex-basis: 62%;
-}
-
-.iss-repair-bring__intro-col,
-.iss-repair-frank__media-col {
-  flex-basis: 40%;
-}
-
-.iss-repair-bring__cards-col,
-.iss-repair-frank__content-col {
-  flex-basis: 60%;
+  grid-column: 1;
+  grid-row: 1;
+  flex-basis: 72%;
 }
 
 .iss-repair-limits__lead {
@@ -4933,15 +4935,19 @@ iss-info-panel--brown
 
 .iss-repair-limits-grid {
   display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: 1.25rem;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: clamp(1.25rem, 2.4vw, 2rem);
+  align-items: start;
 }
 
 .iss-repair-limits-card {
+  display: grid;
+  gap: clamp(0.9rem, 1.8vw, 1.25rem);
   height: 100%;
-  padding: 1.5rem;
-  border: 1px solid color-mix(in srgb, var(--iss-black) 10%, white 90%);
-  background: var(--iss-white);
+  margin-block-start: 0;
+  padding-left: 0.85rem;
+  border-left: 1px solid color-mix(in srgb, var(--iss-green) 52%, transparent);
+  background: transparent;
 }
 
 .iss-repair-limits-card--warning {
@@ -4953,109 +4959,74 @@ iss-info-panel--brown
 }
 
 .iss-repair-limits-card__title {
-  margin: 0 0 1rem;
-  font-size: clamp(1.08rem, 0.96rem + 0.4vw, 1.3rem);
-  line-height: 1.15;
+  margin: 0 0 0.82rem;
+  font-size: clamp(1rem, 0.94rem + 0.2vw, 1.12rem);
+  line-height: 1.2;
 }
 
 .iss-repair-limits-card__list {
-  margin: 0;
-  padding-left: 1.15rem;
-  color: var(--iss-grey);
-  line-height: 1.65;
+  --iss-list-accent: var(--iss-green);
+
+  margin-block: 0;
+  font-size: 0.9rem;
+  line-height: 1.48;
 }
 
-.iss-repair-limits-card__list li + li {
-  margin-top: 0.45rem;
+.iss-repair-limits-card__image {
+  width: min(100%, 24rem);
+  margin: 0;
+}
+
+.iss-repair-limits-card__image {
+  width: 100%;
+  align-self: end;
+}
+
+.iss-repair-limits-card__image img {
+  width: 100%;
+  aspect-ratio: 3 / 2;
+  object-fit: cover;
 }
 
 .iss-repair-steps {
   display: grid;
   grid-template-columns: repeat(4, minmax(0, 1fr));
-  gap: 1px;
+  gap: clamp(1rem, 2vw, 1.4rem);
   margin-top: 2.5rem;
-  background: color-mix(in srgb, var(--iss-black) 12%, white 88%);
-  border: 1px solid color-mix(in srgb, var(--iss-black) 12%, white 88%);
+  padding-block: clamp(1rem, 2vw, 1.35rem);
+  border-block: 1px solid color-mix(in srgb, var(--iss-black) 14%, white 86%);
 }
 
 .iss-repair-step {
-  min-height: 14rem;
-  padding: 1.4rem;
-  background: var(--iss-white);
+  min-height: 0;
+  padding-left: 0.85rem;
+  border-left: 1px solid color-mix(in srgb, var(--iss-green) 52%, transparent);
+  background: transparent;
 }
 
 .iss-repair-step__number {
-  display: inline-block;
-  margin-bottom: 1.05rem;
-  color: var(--iss-red);
-  font-size: 0.82rem;
+  display: block;
+  margin: 0 0 0.55rem;
+  color: var(--iss-green);
+  font-size: 0.68rem;
   font-weight: 700;
-  letter-spacing: 0.14em;
+  line-height: 1.2;
+  letter-spacing: 0.12em;
 }
 
 .iss-repair-step__title {
   margin: 0;
-  font-size: clamp(1.08rem, 0.98rem + 0.45vw, 1.35rem);
-  line-height: 1.14;
+  font-size: clamp(0.98rem, 0.94rem + 0.16vw, 1.08rem);
+  line-height: 1.22;
 }
 
 .iss-repair-step__text {
-  margin: 0.8rem 0 0;
-  color: var(--iss-grey);
-  line-height: 1.6;
+  margin: 0.48rem 0 0;
+  color: rgba(30, 30, 30, 0.72);
+  font-size: 0.88rem;
+  line-height: 1.48;
 }
 
-.iss-repair-prep-grid {
-  display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 1.25rem;
-}
-
-.iss-repair-prep-card {
-  height: 100%;
-  padding: 1.5rem;
-  border: 1px solid color-mix(in srgb, var(--iss-black) 10%, white 90%);
-  background: var(--iss-white);
-}
-
-.iss-repair-prep-card__title {
-  margin: 0 0 1rem;
-  font-size: clamp(1.08rem, 0.96rem + 0.4vw, 1.3rem);
-  line-height: 1.15;
-}
-
-.iss-repair-prep-list {
-  margin: 0;
-  padding-left: 1.15rem;
-  color: var(--iss-grey);
-  line-height: 1.65;
-}
-
-.iss-repair-prep-list li + li {
-  margin-top: 0.45rem;
-}
-
-.iss-repair-bring__note {
-  margin: 1.25rem 0 0;
-  max-width: 56rem;
-  color: var(--iss-grey);
-}
-
-.iss-repair-frank__image {
-  height: 100%;
-}
-
-.iss-repair-frank__image img {
-  width: 100%;
-  aspect-ratio: 4 / 3;
-  object-fit: cover;
-}
-
-.iss-repair-frank__contact {
-  margin-top: 1.2rem;
-}
-
-.iss-repair-frank__contact a,
 .iss-repair-contact .iss-info-row__text a {
   color: inherit;
 }
@@ -5071,6 +5042,35 @@ iss-info-panel--brown
 }
 
 @media (max-width: 1080px) {
+  .iss-repair-limits .wp-block-columns.iss-repair-limits__grid,
+  .iss-repair-limits__grid {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(14rem, 0.64fr);
+  }
+
+  .iss-repair-limits__intro-col {
+    grid-column: 1 / 2;
+  }
+
+  .iss-repair-limits__media-col {
+    grid-column: 2 / 3;
+    grid-row: 1 / 3;
+  }
+
+  .iss-repair-limits__cards-col {
+    grid-column: 1 / 2;
+  }
+
+  .iss-repair-limits .wp-block-columns.iss-repair-limits__grid {
+    grid-template-columns: 1fr;
+  }
+
+  .iss-repair-limits__intro-col,
+  .iss-repair-limits__cards-col {
+    grid-column: auto;
+    grid-row: auto;
+  }
+
   .iss-repair-limits-grid,
   .iss-repair-steps {
     grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -5078,12 +5078,26 @@ iss-info-panel--brown
 }
 
 @media (max-width: 781px) {
+  .iss-repair-limits .wp-block-columns.iss-repair-limits__grid,
+  .iss-repair-limits__grid {
+    display: flex;
+    grid-template-columns: none;
+  }
+
+  .iss-repair-limits__media-col {
+    order: 2;
+  }
+
+  .iss-repair-limits__cards-col {
+    order: 3;
+  }
+
   .iss-method-grid,
   .iss-repair-limits-grid,
-  .iss-repair-prep-grid,
   .iss-repair-steps {
     grid-template-columns: 1fr;
   }
+
 }
 
 /* =========================================================

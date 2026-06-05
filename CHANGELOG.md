@@ -1,6 +1,18 @@
 # Changelog
 
 ## 2026-06-05
+- Reworked the Repair Café page as a file-backed theme surface:
+  - switched the hero to the new Repair Café WebP media asset
+  - converted the Ablauf section into compact fact steps
+  - replaced the suitability lists with paired image/list cards using the shared fact-list style
+  - removed the redundant Vorbereitung section
+  - aligned the dark method cards and kept the page template source as `theme`
+- Synced editor-saved DB template changes back to disk for `page-repair-cafe` and `page-sammlungen`, normalized local media URLs to root-relative paths, and renamed the DB overrides as recoverable backups so both routes are file-backed again.
+- Updated the Sammlungen page media selections in `themes/industriesalon/templates/page-sammlungen.html` using media-library assets while preserving the existing template structure.
+- Added deployment artifacts for the Repair Café and Sammlungen media/template checkpoint:
+  - `ops/sql/2026-06-05-repair-cafe-sammlungen-media.sql` transfers the referenced attachment rows and removes matching DB template overrides
+  - `ops/uploads/2026-06-05-repair-cafe-sammlungen-uploads-delta.tar.gz` contains the referenced upload binaries and generated sizes
+  - the matching manifest and SHA256 files document and verify the upload archive
 - Removed the unused `Vorschau` preset from the `/ausstellungen/` quick-entry timeline query because the site has no separate preview status; future Sonderausstellungen can already appear through the existing upcoming/date contract when real dated content exists.
 - Added a Git exchange protocol for local/staging coordination:
   - `docs/runbooks/git-exchange.md` defines start, exit, on-demand sync, verification, and conflict behavior around GitHub `main`

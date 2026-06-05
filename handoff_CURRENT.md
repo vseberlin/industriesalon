@@ -7,8 +7,12 @@ Current checkpoint only. History belongs in `CHANGELOG.md`; active tasks belong 
 ## Current State
 
 - Branch: `main`
-- Latest GitHub checkpoint before closeout: `a961ed9` (`Remove exhibition preview preset`) on `origin/main`.
-- This handoff is being pushed on top of `a961ed9`; after push, local `main` and `origin/main` should be equal at the final handoff commit.
+- Latest GitHub checkpoint before the current local commit: `ba0b0c4` (`Finalize infra sync handoff`) on `origin/main`.
+- Current local checkpoint prepared for GitHub:
+  - Repair Café template/CSS cleanup is file-backed in the theme.
+  - Sammlungen template media swaps are synced from the editor DB copy back to disk.
+  - Matching DB template overrides were renamed as backups locally; both routes now resolve from `theme`.
+  - Media transfer artifacts were added under `ops/sql/` and `ops/uploads/`.
 - Local working clone: `/home/vladimir/projects/industriesalon`.
 - Staging deployment checkout: `/srv/industriesalon/stage/repo`.
 - Staging WordPress app root: `/srv/industriesalon/stage/app`.
@@ -46,6 +50,8 @@ Current checkpoint only. History belongs in `CHANGELOG.md`; active tasks belong 
 
 - `.gitignore` uses a default-deny model, so new shareable docs/skills need explicit narrow allow rules before staging.
 - Existing SQL/data artifacts under `ops/sql/` represent local DB transfer state; verify backups before applying them to staging or production.
+- Apply `ops/sql/2026-06-05-repair-cafe-sammlungen-media.sql` only after confirming the target has a DB backup; it replaces the referenced attachment rows and removes `page-repair-cafe` / `page-sammlungen` DB template overrides.
+- Restore `ops/uploads/2026-06-05-repair-cafe-sammlungen-uploads-delta.tar.gz` into the target uploads root before or with the matching SQL so attachment metadata and files stay aligned.
 - Template output can still be DB-backed; check `wp_template` authority before assuming disk files are live.
 - Uploads, mail, and Meilisearch are cross-machine concerns; use the repo runbooks before changing staging state.
 - Default `ssh` without the repo-local config currently fails on `/etc/ssh/ssh_config.d/20-systemd-ssh-proxy.conf`; inspect that system file before relying on general SSH behavior.
@@ -53,11 +59,15 @@ Current checkpoint only. History belongs in `CHANGELOG.md`; active tasks belong 
 ## Next Action
 
 - On the other machine, follow `docs/runbooks/git-exchange.md`: inspect, fetch, and fast-forward to latest `origin/main` if clean and behind.
+- After pulling on staging, apply the 2026-06-05 uploads archive and SQL artifact, then verify `/repair-cafe/` and `/sammlungen/` are file-backed and render the new media.
 - Keep future handoff entries limited to current state, risk, next action, and verification.
 - Keep root `TODO.md` for immediate executable work only; use `docs/project/backlog.md` and `docs/project/uat.md` for broader work.
 
 ## Verified
 
-- `git status --short --branch` was clean before closeout; a remote checkpoint arrived during push and was merged intentionally after inspection.
-- `a961ed9` changed only `CHANGELOG.md` and `themes/industriesalon/templates/page-ausstellungen.html`, unrelated to the infra handoff.
 - `git push origin main` succeeded through `github-industriesalon` after adding the deploy-key alias.
+- CSS parse passed for `patterns.css`, `primitives.css`, and `page-sammlungen.css`.
+- `page-repair-cafe` and `page-sammlungen` both resolve as `source=theme`, `id=none`.
+- `/repair-cafe/` and `/sammlungen/` both returned `200` locally and rendered the new media/copy.
+- `ops/sql/2026-06-05-repair-cafe-sammlungen-media.sql` imported cleanly into a temporary MariaDB schema.
+- `ops/uploads/2026-06-05-repair-cafe-sammlungen-uploads-delta.tar.gz` passed SHA256 verification and contains 61 files.
