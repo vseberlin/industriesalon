@@ -1,6 +1,7 @@
 # Changelog
 
 ## 2026-06-05
+- Removed the unused `Vorschau` preset from the `/ausstellungen/` quick-entry timeline query because the site has no separate preview status; future Sonderausstellungen can already appear through the existing upcoming/date contract when real dated content exists.
 - Added a Git exchange protocol for local/staging coordination:
   - `docs/runbooks/git-exchange.md` defines start, exit, on-demand sync, verification, and conflict behavior around GitHub `main`
   - `skills/git-exchange/SKILL.md` exposes the protocol as a task trigger for agents
