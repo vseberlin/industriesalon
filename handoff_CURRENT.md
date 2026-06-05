@@ -7,8 +7,8 @@ Current checkpoint only. History belongs in `CHANGELOG.md`; active tasks belong 
 ## Current State
 
 - Branch: `main`
-- Latest GitHub checkpoint: `fa82e88` (`Add git exchange protocol`) on `main` / `origin/main`.
-- Local `main` and `origin/main` are equal at `fa82e88`.
+- Latest GitHub checkpoint before closeout: `a961ed9` (`Remove exhibition preview preset`) on `origin/main`.
+- This handoff is being pushed on top of `a961ed9`; after push, local `main` and `origin/main` should be equal at the final handoff commit.
 - Local working clone: `/home/vladimir/projects/industriesalon`.
 - Staging deployment checkout: `/srv/industriesalon/stage/repo`.
 - Staging WordPress app root: `/srv/industriesalon/stage/app`.
@@ -52,13 +52,12 @@ Current checkpoint only. History belongs in `CHANGELOG.md`; active tasks belong 
 
 ## Next Action
 
-- On the other machine, follow `docs/runbooks/git-exchange.md`: inspect, fetch, and fast-forward to `fa82e88` if clean and behind.
+- On the other machine, follow `docs/runbooks/git-exchange.md`: inspect, fetch, and fast-forward to latest `origin/main` if clean and behind.
 - Keep future handoff entries limited to current state, risk, next action, and verification.
 - Keep root `TODO.md` for immediate executable work only; use `docs/project/backlog.md` and `docs/project/uat.md` for broader work.
 
 ## Verified
 
-- `git status --short --branch` reports `## main...origin/main`.
-- `git rev-parse --short HEAD` and `git rev-parse --short origin/main` both report `fa82e88`.
-- `git log --oneline --left-right HEAD...origin/main` is empty.
+- `git status --short --branch` was clean before closeout; a remote checkpoint arrived during push and was merged intentionally after inspection.
+- `a961ed9` changed only `CHANGELOG.md` and `themes/industriesalon/templates/page-ausstellungen.html`, unrelated to the infra handoff.
 - `git push origin main` succeeded through `github-industriesalon` after adding the deploy-key alias.
