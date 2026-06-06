@@ -7,9 +7,9 @@ Current checkpoint only. History belongs in `CHANGELOG.md`; active tasks belong 
 ## Current State
 
 - Branch: `main`.
-- Latest GitHub code checkpoint: `9813fa3` (`Consolidate graph entities and exhibition surfaces`) on `origin/main`.
+- Current GitHub code checkpoint covered by this handoff: `9813fa3` (`Consolidate graph entities and exhibition surfaces`).
 - Staging already applied the 2026-06-05 Repair Cafe/Sammlungen SQL/uploads artifacts; rollback backups are under `/srv/industriesalon/stage/backups/20260605-213910-repair-cafe-sammlungen-stage/`.
-- Current local checkpoint to push:
+- Current code checkpoint:
   - `iss-graph` Phase 1 adds entity identifiers, evidence refs, resolver wrappers, drift checks, alias backfill, identifier-aware search projection, and resolver-before-create paths for register, archive, content, and enrichment labels.
   - Video transcripts now bridge into pending `video_transcript` evidence refs; Video CPT editors can accept person/organization hints into graph relations, accept place hints through `iss-relations`, or dismiss hints.
   - Manual `entity_profile` aliases and generated alias backfill are separated by source system.
@@ -93,4 +93,4 @@ Current checkpoint only. History belongs in `CHANGELOG.md`; active tasks belong 
   - Docker PHP `-l`, PHPCS, and PHPStan passed for changed PHP files.
   - `parse_blocks()` passed for changed theme templates.
   - `wp iss-graph verify` and `wp iss-graph drift-check` passed.
-- `git push origin main` advanced GitHub from `d25efbf` to `9813fa3`.
+- `git push origin main` advanced GitHub from `d25efbf` to `9813fa3`; follow-up handoff-only commits record the post-push state.
