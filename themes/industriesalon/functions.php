@@ -1622,10 +1622,7 @@ function industriesalon_enqueue_assets(): void
         array(
             'handle' => 'industriesalon-page-archive',
             'path' => '/assets/css/page-archive.css',
-            'condition' => is_page('archiv')
-                || (is_singular('ausstellung')
-                    && function_exists('industriesalon_get_ausstellung_surface_mode')
-                    && industriesalon_get_ausstellung_surface_mode((int) get_queried_object_id()) === 'archive_browser'),
+            'condition' => is_page('archiv'),
         ),
         array(
             'handle' => 'industriesalon-page-kalender',
@@ -1729,8 +1726,8 @@ function industriesalon_enqueue_assets(): void
             'handle' => 'industriesalon-digital-exhibition',
             'path' => '/assets/css/digital-exhibition.css',
             'condition' => is_singular('ausstellung')
-                && function_exists('industriesalon_get_ausstellung_surface_mode')
-                && industriesalon_get_ausstellung_surface_mode((int) get_queried_object_id()) === 'archive_exhibition',
+                && function_exists('industriesalon_get_ausstellung_source')
+                && industriesalon_get_ausstellung_source((int) get_queried_object_id()) === 'archive_category',
         ),
     );
 
@@ -1777,6 +1774,10 @@ function industriesalon_enqueue_assets(): void
             (string) filemtime($single_video_script_abs),
             true
         );
+    }
+
+    if (is_page('sammlungen') && function_exists('iss_relations_enqueue_related_strip_script')) {
+        iss_relations_enqueue_related_strip_script();
     }
 
 }

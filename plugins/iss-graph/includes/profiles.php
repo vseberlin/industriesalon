@@ -4,6 +4,8 @@ if (!defined('ABSPATH')) {
     exit;
 }
 
+// phpcs:disable WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching, WordPress.DB.PreparedSQL.NotPrepared -- Profile bridge reads plugin-owned graph tables through prepared dynamic table queries.
+
 function iss_graph_get_entity_profile_post_type(): string
 {
     if (defined('ISS_CONTENT_MODEL_ENTITY_PROFILE_POST_TYPE')) {
@@ -490,6 +492,24 @@ function iss_graph_add_profile_facts_meta_box(): void
 }
 add_action('add_meta_boxes', 'iss_graph_add_profile_facts_meta_box');
 
+function iss_graph_add_profile_aliases_meta_box(): void
+{
+    $post_type = iss_graph_get_entity_profile_post_type();
+    if (!post_type_exists($post_type)) {
+        return;
+    }
+
+    add_meta_box(
+        'iss-graph-entity-profile-aliases',
+        __('Weitere Namen / Aliase', 'iss-graph'),
+        'iss_graph_render_profile_aliases_meta_box',
+        $post_type,
+        'normal',
+        'default'
+    );
+}
+add_action('add_meta_boxes', 'iss_graph_add_profile_aliases_meta_box');
+
 function iss_graph_render_profile_facts_meta_box(WP_Post $post): void
 {
     $entity = iss_graph_get_profile_linked_entity((int) $post->ID);
@@ -567,6 +587,62 @@ function iss_graph_render_profile_facts_meta_box(WP_Post $post): void
     echo '</tbody></table>';
 }
 
+function iss_graph_render_profile_aliases_meta_box(WP_Post $post): void
+{
+    $entity = iss_graph_get_profile_linked_entity((int) $post->ID);
+
+    wp_nonce_field('iss_graph_profile_aliases', 'iss_graph_profile_aliases_nonce');
+
+    if (!$entity || empty($entity['id'])) {
+        echo '<p>' . esc_html__('Zuerst einen Personen- oder Organisationseintrag im Feld „Graph-Verknüpfung“ auswählen und speichern. Danach können hier alternative Namen und Schreibweisen gepflegt werden.', 'iss-graph') . '</p>';
+        return;
+    }
+
+    $entity_id = (int) $entity['id'];
+    $service = iss_graph_get_service();
+    $source_system = function_exists('iss_graph_get_profile_alias_source_system')
+        ? iss_graph_get_profile_alias_source_system()
+        : 'entity_profile_admin';
+    $names = array_map('iss_graph_map_name_row_for_editor', $service->get_names_for_entity($entity_id, [
+        'source_system' => $source_system,
+    ]));
+    $generated = function_exists('iss_graph_get_alias_backfill_source_system')
+        ? $service->get_names_for_entity($entity_id, [
+            'source_system' => iss_graph_get_alias_backfill_source_system(),
+            'limit' => 20,
+        ])
+        : [];
+
+    $name_rows = wp_json_encode($names, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
+    if (!is_string($name_rows) || $name_rows === '') {
+        $name_rows = '[]';
+    }
+
+    echo '<p class="description">' . esc_html__('Diese Namen werden direkt am verknüpften Graph-Eintrag gespeichert. Automatisch erzeugte Schreibvarianten bleiben getrennt und werden hier nur als Hinweis angezeigt.', 'iss-graph') . '</p>';
+
+    if ($generated) {
+        $labels = array_values(array_filter(array_map(static function (array $row): string {
+            return trim((string) ($row['name'] ?? ''));
+        }, $generated)));
+
+        if ($labels) {
+            echo '<p class="description"><strong>' . esc_html__('Automatisch:', 'iss-graph') . '</strong> ' . esc_html(implode(', ', $labels)) . '</p>';
+        }
+    }
+
+    echo '<div class="iss-graph-editor"';
+    echo ' data-name-types="' . esc_attr(wp_json_encode(iss_graph_get_entity_name_type_options(), JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES)) . '">';
+
+    echo '<section class="iss-graph-editor__group" data-group="names" data-input-id="iss-graph-profile-name-rows">';
+    echo '<div class="iss-graph-editor__header"><h4>' . esc_html__('Namen', 'iss-graph') . '</h4><p class="description">' . esc_html__('Historische Namen, Abkürzungen, Schreibvarianten und bekannte Quellenformen.', 'iss-graph') . '</p></div>';
+    echo '<div class="iss-graph-editor__rows"></div>';
+    echo '<p><button type="button" class="button button-secondary iss-graph-editor__add">' . esc_html__('Namen hinzufügen', 'iss-graph') . '</button></p>';
+    echo '<textarea id="iss-graph-profile-name-rows" name="iss_graph_profile_name_rows" rows="6" style="display:none;">' . esc_textarea($name_rows) . '</textarea>';
+    echo '</section>';
+
+    echo '</div>';
+}
+
 function iss_graph_clear_profile_binding_for_entity_id(int $entity_id): void
 {
     if ($entity_id <= 0) {
@@ -633,11 +709,62 @@ function iss_graph_sync_profile_binding_for_post(int $post_id, int $previous_ent
         'search_visibility' => $is_public ? 'public' : 'hidden',
     ]));
 
+    iss_graph_sync_wp_post_identifiers((int) $entity_id, $post, 'entity_profile');
+
+    if (function_exists('iss_graph_sync_entity_alias_backfill')) {
+        iss_graph_sync_entity_alias_backfill((int) $entity_id);
+    }
+
     if (function_exists('iss_graph_sync_public_search_post')) {
         iss_graph_sync_public_search_post($post_id);
     }
 
     iss_graph_maybe_clear_register_places_cache();
+}
+
+function iss_graph_maybe_backfill_entity_profile_bindings(): void
+{
+    if (!post_type_exists(iss_graph_get_entity_profile_post_type())) {
+        return;
+    }
+
+    $stored = (string) get_option(ISS_GRAPH_PROFILE_BACKFILL_OPTION, '');
+    if ($stored === ISS_GRAPH_PROFILE_BACKFILL_VERSION) {
+        return;
+    }
+
+    iss_graph_backfill_entity_profile_bindings();
+    update_option(ISS_GRAPH_PROFILE_BACKFILL_OPTION, ISS_GRAPH_PROFILE_BACKFILL_VERSION, false);
+}
+
+function iss_graph_backfill_entity_profile_bindings(): int
+{
+    if (!post_type_exists(iss_graph_get_entity_profile_post_type())) {
+        return 0;
+    }
+
+    $post_ids = get_posts([
+        'post_type' => iss_graph_get_entity_profile_post_type(),
+        'post_status' => 'any',
+        'numberposts' => -1,
+        'fields' => 'ids',
+        'orderby' => 'ID',
+        'order' => 'ASC',
+        'suppress_filters' => true,
+    ]);
+
+    $count = 0;
+    foreach ($post_ids as $post_id) {
+        $entity_id = iss_graph_get_profile_linked_entity_id((int) $post_id);
+        if ($entity_id <= 0) {
+            continue;
+        }
+
+        iss_graph_sync_profile_binding_for_post((int) $post_id);
+        $count++;
+    }
+
+    return $count;
 }
 
 function iss_graph_save_entity_profile_link(int $post_id, WP_Post $post): void
@@ -732,6 +859,77 @@ function iss_graph_save_entity_profile_facts(int $post_id, WP_Post $post): void
     }
 }
 add_action('save_post', 'iss_graph_save_entity_profile_facts', 55, 2);
+
+function iss_graph_save_entity_profile_aliases(int $post_id, WP_Post $post): void
+{
+    if ($post->post_type !== iss_graph_get_entity_profile_post_type()) {
+        return;
+    }
+
+    if (wp_is_post_revision($post_id) || wp_is_post_autosave($post_id)) {
+        return;
+    }
+
+    if (!current_user_can('edit_post', $post_id)) {
+        return;
+    }
+
+    if (!isset($_POST['iss_graph_profile_aliases_nonce']) || !wp_verify_nonce(sanitize_text_field(wp_unslash($_POST['iss_graph_profile_aliases_nonce'])), 'iss_graph_profile_aliases')) {
+        return;
+    }
+
+    $entity = iss_graph_get_profile_linked_entity($post_id);
+    if (!$entity || empty($entity['id'])) {
+        return;
+    }
+
+    $source_system = function_exists('iss_graph_get_profile_alias_source_system')
+        ? iss_graph_get_profile_alias_source_system()
+        : 'entity_profile_admin';
+
+    iss_graph_get_service()->replace_entity_names_for_source(
+        (int) $entity['id'],
+        $source_system,
+        iss_graph_sanitize_entity_name_rows(iss_graph_decode_posted_rows('iss_graph_profile_name_rows'), iss_graph_get_entity_name_type_options()),
+        'profile:' . $post_id
+    );
+
+    if (function_exists('iss_graph_sync_entity_alias_backfill')) {
+        iss_graph_sync_entity_alias_backfill((int) $entity['id']);
+    }
+
+    if (function_exists('iss_graph_sync_public_search_post')) {
+        iss_graph_sync_public_search_post($post_id);
+    }
+}
+add_action('save_post', 'iss_graph_save_entity_profile_aliases', 58, 2);
+
+function iss_graph_admin_enqueue_profile_assets(string $hook): void
+{
+    if (!in_array($hook, ['post.php', 'post-new.php'], true)) {
+        return;
+    }
+
+    $screen = get_current_screen();
+    if (!$screen || $screen->post_type !== iss_graph_get_entity_profile_post_type()) {
+        return;
+    }
+
+    wp_enqueue_script(
+        'iss-graph-profile-admin',
+        ISS_GRAPH_URL . 'assets/js/register-place-graph-admin.js',
+        [],
+        ISS_GRAPH_VERSION,
+        true
+    );
+    wp_enqueue_style(
+        'iss-graph-profile-admin',
+        ISS_GRAPH_URL . 'assets/css/register-place-graph-admin.css',
+        [],
+        ISS_GRAPH_VERSION
+    );
+}
+add_action('admin_enqueue_scripts', 'iss_graph_admin_enqueue_profile_assets');
 
 function iss_graph_handle_profile_post_status_change(int $post_id): void
 {

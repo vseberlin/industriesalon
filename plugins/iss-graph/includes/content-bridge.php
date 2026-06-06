@@ -34,6 +34,49 @@ function iss_graph_add_content_relation_post_types(array $post_types): array
 }
 add_filter('iss_relations_candidate_post_types', 'iss_graph_add_content_relation_post_types');
 
+function iss_graph_maybe_backfill_public_content_entities(): void
+{
+    $post_types = iss_graph_get_content_relation_post_types();
+    if (!$post_types) {
+        return;
+    }
+
+    $stored = (string) get_option(ISS_GRAPH_CONTENT_BACKFILL_OPTION, '');
+    if ($stored === ISS_GRAPH_CONTENT_BACKFILL_VERSION) {
+        return;
+    }
+
+    iss_graph_backfill_public_content_entities();
+    update_option(ISS_GRAPH_CONTENT_BACKFILL_OPTION, ISS_GRAPH_CONTENT_BACKFILL_VERSION, false);
+}
+
+function iss_graph_backfill_public_content_entities(): int
+{
+    $post_types = iss_graph_get_content_relation_post_types();
+    if (!$post_types) {
+        return 0;
+    }
+
+    $post_ids = get_posts([
+        'post_type' => $post_types,
+        'post_status' => 'any',
+        'numberposts' => -1,
+        'fields' => 'ids',
+        'orderby' => 'ID',
+        'order' => 'ASC',
+        'suppress_filters' => true,
+    ]);
+
+    $count = 0;
+    foreach ($post_ids as $post_id) {
+        if (iss_graph_sync_public_content_entity((int) $post_id)) {
+            $count++;
+        }
+    }
+
+    return $count;
+}
+
 function iss_graph_get_content_organization_relation_options(): array
 {
     return [
@@ -121,6 +164,12 @@ function iss_graph_sync_public_content_entity(int $post_id): ?array
         'is_primary' => true,
         'position' => 0,
     ]], 'post:' . (int) $post->ID);
+
+    iss_graph_sync_wp_post_identifiers((int) $entity['id'], $post, 'wp_post');
+
+    if (function_exists('iss_graph_sync_entity_alias_backfill')) {
+        iss_graph_sync_entity_alias_backfill((int) $entity['id']);
+    }
 
     return $service->get_entity_by_id((int) $entity['id']);
 }
@@ -257,6 +306,20 @@ function iss_graph_save_public_content_relations(int $post_id, WP_Post $post): v
         iss_graph_sync_public_search_post($post_id);
     }
 }
+
+function iss_graph_refresh_public_content_entity_on_save(int $post_id, WP_Post $post): void
+{
+    if (!iss_graph_is_content_relation_post_type((string) $post->post_type)) {
+        return;
+    }
+
+    if (wp_is_post_revision($post_id) || wp_is_post_autosave($post_id)) {
+        return;
+    }
+
+    iss_graph_sync_public_content_entity($post_id);
+}
+add_action('save_post', 'iss_graph_refresh_public_content_entity_on_save', 35, 2);
 
 function iss_graph_get_content_entity_relations(int $post_id, string $target_kind, array $args = []): array
 {

@@ -238,54 +238,6 @@ function iss_content_model_get_archive_term_choices(string $taxonomy): array
     return $choices;
 }
 
-function iss_content_model_parse_id_list($value): array
-{
-    if (is_array($value)) {
-        $items = $value;
-    } else {
-        $items = preg_split('/[\s,]+/', (string) $value);
-    }
-
-    $ids = [];
-    foreach ((array) $items as $item) {
-        $id = absint($item);
-        if ($id > 0) {
-            $ids[] = $id;
-        }
-    }
-
-    return array_values(array_unique($ids));
-}
-
-function iss_content_model_get_ausstellung_corpus_chapter_ids(int $post_id): array
-{
-    return iss_content_model_parse_id_list((string) get_post_meta($post_id, 'iss_corpus_chapter_ids', true));
-}
-
-function iss_content_model_get_ausstellung_surface_mode(int $post_id): string
-{
-    return iss_content_model_normalize_ausstellung_surface_mode((string) get_post_meta($post_id, 'iss_surface_mode', true));
-}
-
-function iss_content_model_get_ausstellung_archive_term_slug(int $post_id): string
-{
-    return sanitize_title((string) get_post_meta($post_id, 'iss_archive_term_slug', true));
-}
-
-function iss_content_model_get_ausstellung_archive_browser_config(int $post_id): array
-{
-    return [
-        'default_source' => sanitize_title((string) get_post_meta($post_id, 'iss_archive_browser_default_source', true)),
-        'lock_source' => (bool) get_post_meta($post_id, 'iss_archive_browser_lock_source', true),
-        'default_field' => sanitize_title((string) get_post_meta($post_id, 'iss_archive_browser_default_field', true)),
-        'lock_field' => (bool) get_post_meta($post_id, 'iss_archive_browser_lock_field', true),
-        'quick_kicker' => trim((string) get_post_meta($post_id, 'iss_archive_browser_quick_kicker', true)),
-        'quick_title' => trim((string) get_post_meta($post_id, 'iss_archive_browser_quick_title', true)),
-        'quick_family_slugs' => iss_content_model_parse_slug_list((string) get_post_meta($post_id, 'iss_archive_browser_quick_family_slugs', true)),
-        'show_source_cards' => (bool) get_post_meta($post_id, 'iss_archive_browser_show_source_cards', true),
-    ];
-}
-
 function iss_content_model_get_veranstaltung_primary_place_id(int $post_id): int
 {
     if (!function_exists('iss_relations_get_post_relations')) {
@@ -566,9 +518,11 @@ function iss_content_model_render_ausstellung_box($post) {
     $end = (string) get_post_meta($post->ID, 'iss_end_date', true);
     $timeline_enabled = get_post_meta($post->ID, 'iss_timeline_enabled', true);
     $timeline_enabled = $timeline_enabled === '' ? true : (bool) $timeline_enabled;
+    $exhibition_type = iss_content_model_get_ausstellung_type((int) $post->ID);
+    $exhibition_source = iss_content_model_get_ausstellung_source((int) $post->ID);
+    $type_options = iss_content_model_get_ausstellung_type_options();
+    $source_options = iss_content_model_get_ausstellung_source_options();
     $chapter_ids = iss_content_model_get_ausstellung_corpus_chapter_ids((int) $post->ID);
-    $surface_mode = iss_content_model_get_ausstellung_surface_mode((int) $post->ID);
-    $surface_mode_options = iss_content_model_get_ausstellung_surface_mode_options();
     $archive_term_slug = iss_content_model_get_ausstellung_archive_term_slug((int) $post->ID);
     $archive_browser = iss_content_model_get_ausstellung_archive_browser_config((int) $post->ID);
     $chapter_choices = iss_content_model_get_archivbeitrag_choices();
@@ -587,6 +541,7 @@ function iss_content_model_render_ausstellung_box($post) {
         $chapter_lookup[(int) $chapter_choice['id']] = $chapter_choice;
     }
 
+    echo '<h3>' . esc_html__('Basis', 'iss-content-model') . '</h3>';
     echo '<p><label for="iss_start_date"><strong>' . esc_html__('Startdatum', 'iss-content-model') . '</strong></label>';
     echo '<input class="widefat" type="date" id="iss_start_date" name="iss_content_model[iss_start_date]" value="' . esc_attr($start) . '"></p>';
 
@@ -597,13 +552,36 @@ function iss_content_model_render_ausstellung_box($post) {
     echo '<p><label><input type="checkbox" name="iss_content_model[iss_timeline_enabled]" value="1" ' . checked($timeline_enabled, true, false) . '> ' . esc_html__('In Timeline zeigen', 'iss-content-model') . '</label></p>';
 
     echo '<hr style="margin:1rem 0;">';
-    echo '<p><label for="iss_surface_mode"><strong>' . esc_html__('Ausstellungsmodus', 'iss-content-model') . '</strong></label>';
-    echo '<select class="widefat" id="iss_surface_mode" name="iss_content_model[iss_surface_mode]">';
-    foreach ($surface_mode_options as $value => $label) {
-        echo '<option value="' . esc_attr($value) . '"' . selected($surface_mode, $value, false) . '>' . esc_html($label) . '</option>';
+    echo '<h3>' . esc_html__('Ausstellung', 'iss-content-model') . '</h3>';
+    echo '<p><label for="iss_exhibition_type"><strong>' . esc_html__('Ausstellungstyp', 'iss-content-model') . '</strong></label>';
+    echo '<select class="widefat" id="iss_exhibition_type" name="iss_content_model[iss_exhibition_type]">';
+    foreach ($type_options as $value => $option) {
+        echo '<option value="' . esc_attr($value) . '"' . selected($exhibition_type, $value, false) . '>' . esc_html((string) $option['label']) . '</option>';
     }
     echo '</select></p>';
-    echo '<p class="description">' . esc_html__('Der Modus steuert, ob die Ausstellung normalen Inhalt, eine archivgestützte Kapitelreihe oder einen archivgestützten Objektbrowser über die gemeinsame Einzelansicht rendert.', 'iss-content-model') . '</p>';
+    if (isset($type_options[$exhibition_type]['description'])) {
+        echo '<p class="description">' . esc_html((string) $type_options[$exhibition_type]['description']) . '</p>';
+    }
+
+    echo '<p><label for="iss_exhibition_source"><strong>' . esc_html__('Materialquelle', 'iss-content-model') . '</strong></label>';
+    echo '<select class="widefat" id="iss_exhibition_source" name="iss_content_model[iss_exhibition_source]" data-iss-exhibition-source-select>';
+    foreach ($source_options as $value => $option) {
+        echo '<option value="' . esc_attr($value) . '"' . selected($exhibition_source, $value, false) . '>' . esc_html((string) $option['label']) . '</option>';
+    }
+    echo '</select></p>';
+    if (isset($source_options[$exhibition_source]['description'])) {
+        echo '<p class="description">' . esc_html((string) $source_options[$exhibition_source]['description']) . '</p>';
+    }
+    echo '<p class="description">' . esc_html__('Der Ausstellungstyp beschreibt die öffentliche Erzählform. Die Materialquelle beschreibt, woher die Inhalte kommen. Die Theme-Ausgabe kombiniert beides.', 'iss-content-model') . '</p>';
+
+    echo '<hr style="margin:1rem 0;">';
+    echo '<div data-iss-exhibition-source-panel="manual"' . ($exhibition_source === 'manual' ? '' : ' hidden') . '>';
+    echo '<h3>' . esc_html__('Materialquelle: Manueller Inhalt', 'iss-content-model') . '</h3>';
+    echo '<p class="description">' . esc_html__('Diese Ausstellung nutzt den normalen Gutenberg-Inhalt. Zusätzliche Korpus- oder Archivbrowser-Felder sind für diese Quelle nicht nötig.', 'iss-content-model') . '</p>';
+    echo '</div>';
+
+    echo '<div data-iss-exhibition-source-panel="archive_category"' . ($exhibition_source === 'archive_category' ? '' : ' hidden') . '>';
+    echo '<h3>' . esc_html__('Materialquelle: Archivkategorie', 'iss-content-model') . '</h3>';
 
     echo '<p><label for="iss_archive_term_slug"><strong>' . esc_html__('Archivkategorie für Kapitelreihe', 'iss-content-model') . '</strong></label>';
     echo '<select class="widefat" id="iss_archive_term_slug" name="iss_content_model[iss_archive_term_slug]">';
@@ -617,59 +595,11 @@ function iss_content_model_render_ausstellung_box($post) {
         echo '<option value="' . esc_attr((string) $term['slug']) . '"' . selected($archive_term_slug, (string) $term['slug'], false) . '>' . esc_html($label) . '</option>';
     }
     echo '</select></p>';
-    echo '<p class="description">' . esc_html__('Nur für den Modus „Archivreihe / Kapitelpfad“. Die Kapitel werden direkt aus dieser Archivkategorie gelesen; Block-Einbettungen im Inhalt sind nicht nötig.', 'iss-content-model') . '</p>';
+    echo '<p class="description">' . esc_html__('Die Kapitel werden direkt aus dieser Archivkategorie gelesen.', 'iss-content-model') . '</p>';
+    echo '</div>';
 
-    echo '<p><label for="iss_archive_browser_default_source"><strong>' . esc_html__('Archivbrowser: Standardquelle', 'iss-content-model') . '</strong></label>';
-    echo '<select class="widefat" id="iss_archive_browser_default_source" name="iss_content_model[iss_archive_browser_default_source]">';
-    echo '<option value="">' . esc_html__('Keine Quelle vorbelegen', 'iss-content-model') . '</option>';
-    foreach ($archive_source_choices as $term) {
-        $label = (string) $term['name'];
-        if ((int) $term['count'] > 0) {
-            $label .= ' (' . (int) $term['count'] . ')';
-        }
-
-        echo '<option value="' . esc_attr((string) $term['slug']) . '"' . selected($archive_browser['default_source'], (string) $term['slug'], false) . '>' . esc_html($label) . '</option>';
-    }
-    echo '</select></p>';
-    echo '<p><label><input type="checkbox" name="iss_content_model[iss_archive_browser_lock_source]" value="1" ' . checked($archive_browser['lock_source'], true, false) . '> ' . esc_html__('Quelle im Archivbrowser sperren', 'iss-content-model') . '</label></p>';
-
-    echo '<p><label for="iss_archive_browser_default_field"><strong>' . esc_html__('Archivbrowser: Standard-Themenfeld', 'iss-content-model') . '</strong></label>';
-    echo '<select class="widefat" id="iss_archive_browser_default_field" name="iss_content_model[iss_archive_browser_default_field]">';
-    echo '<option value="">' . esc_html__('Kein Themenfeld vorbelegen', 'iss-content-model') . '</option>';
-    foreach ($archive_field_choices as $term) {
-        $label = (string) $term['name'];
-        if ((int) $term['count'] > 0) {
-            $label .= ' (' . (int) $term['count'] . ')';
-        }
-
-        echo '<option value="' . esc_attr((string) $term['slug']) . '"' . selected($archive_browser['default_field'], (string) $term['slug'], false) . '>' . esc_html($label) . '</option>';
-    }
-    echo '</select></p>';
-    echo '<p><label><input type="checkbox" name="iss_content_model[iss_archive_browser_lock_field]" value="1" ' . checked($archive_browser['lock_field'], true, false) . '> ' . esc_html__('Themenfeld im Archivbrowser sperren', 'iss-content-model') . '</label></p>';
-
-    echo '<p><label for="iss_archive_browser_quick_kicker"><strong>' . esc_html__('Archivbrowser: Kicker für Einstiege', 'iss-content-model') . '</strong></label>';
-    echo '<input class="widefat" type="text" id="iss_archive_browser_quick_kicker" name="iss_content_model[iss_archive_browser_quick_kicker]" value="' . esc_attr($archive_browser['quick_kicker']) . '" placeholder="' . esc_attr__('Objektfamilien', 'iss-content-model') . '"></p>';
-
-    echo '<p><label for="iss_archive_browser_quick_title"><strong>' . esc_html__('Archivbrowser: Titel für Einstiege', 'iss-content-model') . '</strong></label>';
-    echo '<input class="widefat" type="text" id="iss_archive_browser_quick_title" name="iss_content_model[iss_archive_browser_quick_title]" value="' . esc_attr($archive_browser['quick_title']) . '" placeholder="' . esc_attr__('Einstiege in den Bestand', 'iss-content-model') . '"></p>';
-
-    echo '<p><label for="iss_archive_browser_quick_family_slugs"><strong>' . esc_html__('Archivbrowser: Objektfamilien (Slugs)', 'iss-content-model') . '</strong></label>';
-    echo '<input class="widefat" type="text" id="iss_archive_browser_quick_family_slugs" name="iss_content_model[iss_archive_browser_quick_family_slugs]" value="' . esc_attr(implode(', ', $archive_browser['quick_family_slugs'])) . '" placeholder="' . esc_attr__('geraet, messgeraet, einschub', 'iss-content-model') . '"></p>';
-    echo '<p class="description">' . esc_html__('Kommagetrennte Slugs aus den Objektfamilien. Leer lassen, dann werden die ersten verfügbaren Familien verwendet.', 'iss-content-model') . '</p>';
-    echo '<p><label><input type="checkbox" name="iss_content_model[iss_archive_browser_show_source_cards]" value="1" ' . checked($archive_browser['show_source_cards'], true, false) . '> ' . esc_html__('Quellenkarten im Archivbrowser zeigen', 'iss-content-model') . '</label></p>';
-    echo '<p class="description">' . esc_html__('Nur für den Modus „Archivbrowser / Objektkorpus“. Der eigentliche Archivbrowser wird direkt aus diesen Einstellungen aufgebaut, nicht aus eingebetteten Blöcken im Inhalt.', 'iss-content-model') . '</p>';
-
-    if ($surface_mode === 'archive_browser') {
-        echo '<p class="description">' . esc_html__('Für Archivbrowser-Ausstellungen ist kein eigener Kapitelkorpus nötig. Einleitung, Auszug und Beitragsbild bleiben normale Ausstellungsfelder.', 'iss-content-model') . '</p>';
-        return;
-    }
-
-    if ($surface_mode === 'archive_exhibition') {
-        echo '<p class="description">' . esc_html__('Für Archiv-Kapitelreihen wird der Ausstellungspfad aus der ausgewählten Archivkategorie gelesen. Eine separate Kapitel-Liste ist hier nicht nötig.', 'iss-content-model') . '</p>';
-        return;
-    }
-
-    echo '<p><label for="iss_corpus_chapter_picker"><strong>' . esc_html__('Korpus-Kapitel', 'iss-content-model') . '</strong></label></p>';
+    echo '<div data-iss-exhibition-source-panel="curated_chapters"' . ($exhibition_source === 'curated_chapters' ? '' : ' hidden') . '>';
+    echo '<p><label for="iss_corpus_chapter_picker"><strong>' . esc_html__('Kuratierte Kapitel', 'iss-content-model') . '</strong></label></p>';
     echo '<div class="iss-content-model-corpus" data-iss-corpus-builder>';
     echo '<div class="iss-content-model-corpus__picker">';
     echo '<select class="widefat" id="iss_corpus_chapter_picker" data-iss-corpus-picker>';
@@ -710,7 +640,58 @@ function iss_content_model_render_ausstellung_box($post) {
     }
     echo '</ol>';
     echo '</div>';
-    echo '<p class="description">' . esc_html__('Die Liste hier definiert die Reihenfolge der Ausstellung und zugleich den linearen Lesepfad der verknüpften Publikation.', 'iss-content-model') . '</p>';
+    echo '<p class="description">' . esc_html__('Diese Liste definiert Reihenfolge und öffentliche Stationen.', 'iss-content-model') . '</p>';
+    echo '</div>';
+
+    echo '<div data-iss-exhibition-source-panel="archive_browser"' . ($exhibition_source === 'archive_browser' ? '' : ' hidden') . '>';
+    echo '<hr style="margin:1rem 0;">';
+    echo '<h3>' . esc_html__('Materialquelle: Archivbrowser', 'iss-content-model') . '</h3>';
+
+    echo '<p><label for="iss_archive_browser_default_source"><strong>' . esc_html__('Archivbrowser: Standardquelle', 'iss-content-model') . '</strong></label>';
+    echo '<select class="widefat" id="iss_archive_browser_default_source" name="iss_content_model[iss_archive_browser_default_source]">';
+    echo '<option value="">' . esc_html__('Keine Quelle vorbelegen', 'iss-content-model') . '</option>';
+    foreach ($archive_source_choices as $term) {
+        $label = (string) $term['name'];
+        if ((int) $term['count'] > 0) {
+            $label .= ' (' . (int) $term['count'] . ')';
+        }
+
+        echo '<option value="' . esc_attr((string) $term['slug']) . '"' . selected($archive_browser['default_source'], (string) $term['slug'], false) . '>' . esc_html($label) . '</option>';
+    }
+    echo '</select></p>';
+    echo '<p><label><input type="checkbox" name="iss_content_model[iss_archive_browser_lock_source]" value="1" ' . checked($archive_browser['lock_source'], true, false) . '> ' . esc_html__('Quelle im Archivbrowser sperren', 'iss-content-model') . '</label></p>';
+
+    echo '<p><label for="iss_archive_browser_default_field"><strong>' . esc_html__('Archivbrowser: Standard-Themenfeld', 'iss-content-model') . '</strong></label>';
+    echo '<select class="widefat" id="iss_archive_browser_default_field" name="iss_content_model[iss_archive_browser_default_field]">';
+    echo '<option value="">' . esc_html__('Kein Themenfeld vorbelegen', 'iss-content-model') . '</option>';
+    foreach ($archive_field_choices as $term) {
+        $label = (string) $term['name'];
+        if ((int) $term['count'] > 0) {
+            $label .= ' (' . (int) $term['count'] . ')';
+        }
+
+        echo '<option value="' . esc_attr((string) $term['slug']) . '"' . selected($archive_browser['default_field'], (string) $term['slug'], false) . '>' . esc_html($label) . '</option>';
+    }
+    echo '</select></p>';
+    echo '<p><label><input type="checkbox" name="iss_content_model[iss_archive_browser_lock_field]" value="1" ' . checked($archive_browser['lock_field'], true, false) . '> ' . esc_html__('Themenfeld im Archivbrowser sperren', 'iss-content-model') . '</label></p>';
+
+    echo '<p><label for="iss_archive_browser_quick_kicker"><strong>' . esc_html__('Archivbrowser: Kicker für Einstiege', 'iss-content-model') . '</strong></label>';
+    echo '<input class="widefat" type="text" id="iss_archive_browser_quick_kicker" name="iss_content_model[iss_archive_browser_quick_kicker]" value="' . esc_attr($archive_browser['quick_kicker']) . '" placeholder="' . esc_attr__('Objektfamilien', 'iss-content-model') . '"></p>';
+
+    echo '<p><label for="iss_archive_browser_quick_title"><strong>' . esc_html__('Archivbrowser: Titel für Einstiege', 'iss-content-model') . '</strong></label>';
+    echo '<input class="widefat" type="text" id="iss_archive_browser_quick_title" name="iss_content_model[iss_archive_browser_quick_title]" value="' . esc_attr($archive_browser['quick_title']) . '" placeholder="' . esc_attr__('Einstiege in den Bestand', 'iss-content-model') . '"></p>';
+
+    echo '<p><label for="iss_archive_browser_quick_family_slugs"><strong>' . esc_html__('Archivbrowser: Objektfamilien (Slugs)', 'iss-content-model') . '</strong></label>';
+    echo '<input class="widefat" type="text" id="iss_archive_browser_quick_family_slugs" name="iss_content_model[iss_archive_browser_quick_family_slugs]" value="' . esc_attr(implode(', ', $archive_browser['quick_family_slugs'])) . '" placeholder="' . esc_attr__('geraet, messgeraet, einschub', 'iss-content-model') . '"></p>';
+    echo '<p class="description">' . esc_html__('Kommagetrennte Slugs aus den Objektfamilien. Leer lassen, dann werden die ersten verfügbaren Familien verwendet.', 'iss-content-model') . '</p>';
+    echo '<p><label><input type="checkbox" name="iss_content_model[iss_archive_browser_show_source_cards]" value="1" ' . checked($archive_browser['show_source_cards'], true, false) . '> ' . esc_html__('Quellenkarten im Archivbrowser zeigen', 'iss-content-model') . '</label></p>';
+    echo '<p class="description">' . esc_html__('Der Browser ist Materialquelle für Collection Exhibitions, nicht selbst ein Ausstellungstyp.', 'iss-content-model') . '</p>';
+    echo '</div>';
+
+    echo '<div data-iss-exhibition-source-panel="atlas_places"' . ($exhibition_source === 'atlas_places' ? '' : ' hidden') . '>';
+    echo '<h3>' . esc_html__('Materialquelle: Atlas-Orte', 'iss-content-model') . '</h3>';
+    echo '<p class="description">' . esc_html__('Die Atlas-Sequenz wird aus verknüpften Orten gelesen. Die Relations-Box bleibt die Quelle für diese Verknüpfungen.', 'iss-content-model') . '</p>';
+    echo '</div>';
 }
 
 function iss_content_model_render_projekt_box($post) {

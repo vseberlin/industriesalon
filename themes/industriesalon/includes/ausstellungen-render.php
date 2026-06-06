@@ -4,13 +4,22 @@ if (!defined('ABSPATH')) {
     exit;
 }
 
-function industriesalon_get_ausstellung_surface_mode(int $post_id): string
+function industriesalon_get_ausstellung_type(int $post_id): string
 {
-    if ($post_id <= 0 || !function_exists('iss_content_model_get_ausstellung_surface_mode')) {
-        return 'standard';
+    if ($post_id <= 0 || !function_exists('iss_content_model_get_ausstellung_type')) {
+        return 'story';
     }
 
-    return iss_content_model_get_ausstellung_surface_mode($post_id);
+    return iss_content_model_get_ausstellung_type($post_id);
+}
+
+function industriesalon_get_ausstellung_source(int $post_id): string
+{
+    if ($post_id <= 0 || !function_exists('iss_content_model_get_ausstellung_source')) {
+        return 'manual';
+    }
+
+    return iss_content_model_get_ausstellung_source($post_id);
 }
 
 function industriesalon_is_retired_wf_legacy_path(): bool
@@ -56,7 +65,7 @@ function industriesalon_render_ausstellung_surface_heading(string $kicker, strin
     return $html;
 }
 
-function industriesalon_render_standard_ausstellung_surface(array $context): string
+function industriesalon_render_manual_ausstellung_surface(array $context, string $variant): string
 {
     $body_html = trim((string) ($context['body_html'] ?? ''));
     $chapters = is_array($context['chapters'] ?? null) ? $context['chapters'] : [];
@@ -68,7 +77,12 @@ function industriesalon_render_standard_ausstellung_surface(array $context): str
         return '';
     }
 
-    $html = '<div class="iss-ausstellung-surface iss-ausstellung-surface--standard">';
+    $classes = [
+        'iss-ausstellung-surface',
+        'iss-ausstellung-surface--' . sanitize_html_class($variant),
+    ];
+
+    $html = '<div class="' . esc_attr(implode(' ', $classes)) . '">';
     if ($body_html !== '') {
         $html .= industriesalon_render_ausstellung_surface_heading(
             __('Im Detail', 'industriesalon'),
@@ -80,15 +94,9 @@ function industriesalon_render_standard_ausstellung_surface(array $context): str
     if ($corpus_html !== '') {
         $html .= '<div class="iss-ausstellung-corpus">';
         $html .= '<div class="iss-heading iss-ausstellung-corpus__head">';
-        if ($chapters) {
-            $html .= '<p class="iss-kicker iss-kicker--compact">' . esc_html__('Ausstellungspfad', 'industriesalon') . '</p>';
-            $html .= '<h2 class="iss-heading__title">' . esc_html__('Die Ausstellung ordnet den Korpus als gefuehrten Rundgang.', 'industriesalon') . '</h2>';
-            $html .= '<p class="iss-heading__text">' . esc_html__('Ausgewaehlte Stationen fuehren in das Thema ein. Darunter bleibt der vollstaendige Korpus als lesbarer Ausstellungspfad zugaenglich.', 'industriesalon') . '</p>';
-        } else {
-            $html .= '<p class="iss-kicker iss-kicker--compact">' . esc_html__('Lesepfad', 'industriesalon') . '</p>';
-            $html .= '<h2 class="iss-heading__title">' . esc_html__('Die Ausstellung bleibt der lineare Lesepfad dieses Korpus.', 'industriesalon') . '</h2>';
-            $html .= '<p class="iss-heading__text">' . esc_html__('Einstieg, Reihenfolge und Kapitelpflege liegen an einem Ort: in der Ausstellung selbst.', 'industriesalon') . '</p>';
-        }
+        $html .= '<p class="iss-kicker iss-kicker--compact">' . esc_html__('Ausstellungspfad', 'industriesalon') . '</p>';
+        $html .= '<h2 class="iss-heading__title">' . esc_html__('Die Ausstellung ordnet den Korpus als geführten Rundgang.', 'industriesalon') . '</h2>';
+        $html .= '<p class="iss-heading__text">' . esc_html__('Ausgewählte Stationen führen in das Thema ein. Darunter bleibt der vollständige Korpus als lesbarer Ausstellungspfad zugänglich.', 'industriesalon') . '</p>';
         $html .= '</div>';
         $html .= $corpus_html;
         $html .= '</div>';
@@ -99,7 +107,7 @@ function industriesalon_render_standard_ausstellung_surface(array $context): str
     return $html;
 }
 
-function industriesalon_render_archive_exhibition_surface(array $context): string
+function industriesalon_render_archive_category_ausstellung_surface(array $context): string
 {
     $term_slug = sanitize_title((string) ($context['archive_term_slug'] ?? ''));
     if ($term_slug === '' || !function_exists('iss_wf_import_render_archive_exhibition_toc') || !function_exists('iss_wf_import_render_archive_exhibition_stream')) {
@@ -114,10 +122,10 @@ function industriesalon_render_archive_exhibition_surface(array $context): strin
         return '';
     }
 
-    $html = '<div class="iss-ausstellung-surface iss-ausstellung-surface--archive-exhibition">';
+    $html = '<div class="iss-ausstellung-surface iss-ausstellung-surface--archive-category">';
     $html .= industriesalon_render_ausstellung_surface_heading(
         __('Kapitelpfad', 'industriesalon'),
-        __('Die Ausstellung im Ueberblick', 'industriesalon')
+        __('Die Ausstellung im Überblick', 'industriesalon')
     );
 
     if ($body_html !== '') {
@@ -128,7 +136,7 @@ function industriesalon_render_archive_exhibition_surface(array $context): strin
         $html .= '<div class="iss-digital-exhibition__nav-band iss-ausstellung-surface__band">';
         $html .= '<div class="iss-heading iss-heading--uncaged iss-digital-exhibition__nav-intro">';
         $html .= '<p class="iss-kicker iss-kicker--compact">' . esc_html__('Kapitel', 'industriesalon') . '</p>';
-        $html .= '<h2 class="iss-heading__title">' . esc_html__('Die Ausstellung im Ueberblick', 'industriesalon') . '</h2>';
+        $html .= '<h2 class="iss-heading__title">' . esc_html__('Die Ausstellung im Überblick', 'industriesalon') . '</h2>';
         $html .= '</div>';
         $html .= $toc_html;
         $html .= '</div>';
@@ -137,7 +145,7 @@ function industriesalon_render_archive_exhibition_surface(array $context): strin
     $html .= '<div class="iss-digital-exhibition__chapters iss-ausstellung-surface__chapters">';
     $html .= '<div class="iss-heading iss-heading--uncaged iss-digital-exhibition__chapters-intro">';
     $html .= '<p class="iss-kicker iss-kicker--compact">' . esc_html__('Kapitel lesen', 'industriesalon') . '</p>';
-    $html .= '<h2 class="iss-heading__title">' . esc_html__('Die vollstaendige Reihe', 'industriesalon') . '</h2>';
+    $html .= '<h2 class="iss-heading__title">' . esc_html__('Die vollständige Reihe', 'industriesalon') . '</h2>';
     $html .= '</div>';
     $html .= $stream_html;
     $html .= '</div>';
@@ -146,7 +154,7 @@ function industriesalon_render_archive_exhibition_surface(array $context): strin
     return $html;
 }
 
-function industriesalon_render_archive_browser_surface(array $context): string
+function industriesalon_render_archive_browser_ausstellung_surface(array $context): string
 {
     $browser_attributes = is_array($context['archive_browser'] ?? null) ? $context['archive_browser'] : [];
     if (!function_exists('iss_wf_import_get_archive_object_browser_payload') || !function_exists('iss_wf_import_render_archive_object_browser_markup')) {
@@ -164,10 +172,11 @@ function industriesalon_render_archive_browser_surface(array $context): string
     $payload = iss_wf_import_get_archive_object_browser_payload($browser_attributes);
     $body_html = trim((string) ($context['body_html'] ?? ''));
 
-    $html = '<div class="iss-ausstellung-surface iss-ausstellung-surface--archive-browser">';
+    $html = '<div class="iss-ausstellung-surface iss-ausstellung-surface--collection iss-ausstellung-surface--source-archive-browser">';
     $html .= industriesalon_render_ausstellung_surface_heading(
-        __('Archivbestand', 'industriesalon'),
-        __('Objekte, Familien und Filter', 'industriesalon')
+        __('Sammlungsbestand', 'industriesalon'),
+        __('Objekte, Gruppen und Filter', 'industriesalon'),
+        __('Der Archivbrowser ist hier Materialquelle für eine Collection Exhibition.', 'industriesalon')
     );
     if ($body_html !== '') {
         $html .= '<div class="iss-ausstellung-story__content">' . $body_html . '</div>';
@@ -187,17 +196,23 @@ function industriesalon_render_archive_browser_surface(array $context): string
 }
 
 add_filter('iss_content_model_render_ausstellung_surface', function ($rendered, $post_id, $context, $attributes) {
-    $mode = industriesalon_get_ausstellung_surface_mode((int) $post_id);
+    $context = is_array($context) ? $context : [];
+    $source = sanitize_key((string) ($context['source'] ?? industriesalon_get_ausstellung_source((int) $post_id)));
+    $type = sanitize_key((string) ($context['type'] ?? industriesalon_get_ausstellung_type((int) $post_id)));
 
-    if ($mode === 'archive_exhibition') {
-        return industriesalon_render_archive_exhibition_surface(is_array($context) ? $context : []);
+    if ($source === 'archive_category') {
+        return industriesalon_render_archive_category_ausstellung_surface($context);
     }
 
-    if ($mode === 'archive_browser') {
-        return industriesalon_render_archive_browser_surface(is_array($context) ? $context : []);
+    if ($source === 'archive_browser') {
+        return industriesalon_render_archive_browser_ausstellung_surface($context);
     }
 
-    return industriesalon_render_standard_ausstellung_surface(is_array($context) ? $context : []);
+    if (!in_array($type, ['story', 'collection', 'visual_essay', 'timeline', 'map'], true)) {
+        $type = 'story';
+    }
+
+    return industriesalon_render_manual_ausstellung_surface($context, $type);
 }, 10, 4);
 
 add_filter('body_class', function (array $classes): array {
@@ -210,7 +225,8 @@ add_filter('body_class', function (array $classes): array {
         return $classes;
     }
 
-    $classes[] = 'iss-ausstellung-mode-' . industriesalon_get_ausstellung_surface_mode((int) $post_id);
+    $classes[] = 'iss-ausstellung-type-' . industriesalon_get_ausstellung_type((int) $post_id);
+    $classes[] = 'iss-ausstellung-source-' . industriesalon_get_ausstellung_source((int) $post_id);
     $classes[] = has_post_thumbnail($post_id) ? 'iss-ausstellung-has-thumb' : 'iss-ausstellung-no-thumb';
 
     return array_values(array_unique($classes));

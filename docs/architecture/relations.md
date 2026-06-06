@@ -2,6 +2,9 @@
 
 Relation logic should be shared instead of rebuilt per route.
 
+For the broader identity, alias, evidence, and indexing direction, see
+`docs/architecture/entity-model.md`.
+
 ## Owners
 
 - `iss-relations` owns relation queries and relation-aware blocks.

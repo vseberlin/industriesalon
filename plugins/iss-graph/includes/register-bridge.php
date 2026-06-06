@@ -11,13 +11,19 @@ function iss_graph_get_register_post_type(): string
 
 function iss_graph_get_register_place_name_type_options(): array
 {
-    return [
-        'historical' => 'Historischer Name',
-        'alternative' => 'Alternativer Name',
-        'official' => 'Offizieller Name',
-        'short' => 'Kurzname',
-        'alias' => 'Alias',
-    ];
+    $options = function_exists('iss_graph_get_entity_name_type_options')
+        ? iss_graph_get_entity_name_type_options()
+        : [
+            'alternative' => 'Alternativer Name',
+            'alias' => 'Alias',
+            'historical' => 'Historischer Name',
+            'official' => 'Offizieller Name',
+        ];
+
+    return array_merge(
+        array_intersect_key($options, array_flip(['historical', 'alternative', 'official', 'abbreviation', 'alias', 'source_label', 'transliteration', 'typo'])),
+        ['short' => 'Kurzname']
+    );
 }
 
 function iss_graph_get_register_place_organization_relation_options(): array
@@ -129,6 +135,25 @@ function iss_graph_sync_register_place_entity(int $post_id): ?array
         'position' => 0,
     ]], 'post:' . $post_id);
 
+    $identifier_rows = [];
+    $register_id = iss_graph_get_register_meta_value($post_id, 'register_id', '');
+    if ($register_id !== '') {
+        $identifier_rows[] = [
+            'namespace' => 'register_id',
+            'value' => $register_id,
+            'label' => 'Register ID',
+            'trust_level' => 'trusted_auto_link',
+            'confidence' => 100,
+            'is_primary' => true,
+            'status' => 'accepted',
+        ];
+    }
+    iss_graph_sync_wp_post_identifiers((int) $entity['id'], $post, 'register_post', $identifier_rows);
+
+    if (function_exists('iss_graph_sync_entity_alias_backfill')) {
+        iss_graph_sync_entity_alias_backfill((int) $entity['id']);
+    }
+
     $organization_rows = [];
     foreach (['owner', 'operator', 'developer', 'tenant'] as $index => $relation_type) {
         $name = iss_graph_get_register_meta_value($post_id, $relation_type, '');
@@ -136,10 +161,12 @@ function iss_graph_sync_register_place_entity(int $post_id): ?array
             continue;
         }
 
-        $organization = $service->find_or_create_named_entity('organization', $name, [
+        $organization = iss_graph_resolve_or_create_named_entity('organization', $name, [
             'source_system' => 'manual_slug',
             'search_visibility' => 'hidden',
             'is_public' => false,
+        ], [
+            'source_ref' => 'post:' . $post_id,
         ]);
 
         if (!$organization) {
@@ -333,6 +360,7 @@ function iss_graph_render_register_place_meta_box(WP_Post $post): void
 
 function iss_graph_decode_posted_rows(string $field_name): array
 {
+    // phpcs:ignore WordPress.Security.NonceVerification.Missing -- Callers verify the owning metabox nonce before decoding graph editor rows.
     $raw = $_POST[$field_name] ?? '[]';
     if (!is_string($raw)) {
         return [];
@@ -345,35 +373,11 @@ function iss_graph_decode_posted_rows(string $field_name): array
 
 function iss_graph_sanitize_register_name_rows(array $rows): array
 {
-    $service = iss_graph_get_service();
-    $allowed_types = array_fill_keys(array_keys(iss_graph_get_register_place_name_type_options()), true);
-    $sanitized = [];
-
-    foreach (array_values($rows) as $index => $row) {
-        if (!is_array($row)) {
-            continue;
-        }
-
-        $name = sanitize_text_field((string) ($row['name'] ?? ''));
-        if ($name === '') {
-            continue;
-        }
-
-        $name_type = sanitize_key((string) ($row['name_type'] ?? 'historical'));
-        if (!isset($allowed_types[$name_type])) {
-            $name_type = 'historical';
-        }
-
-        $sanitized[] = [
-            'name' => $name,
-            'name_type' => $name_type,
-            'valid_from_year' => $service->normalize_year($row['valid_from_year'] ?? null),
-            'valid_to_year' => $service->normalize_year($row['valid_to_year'] ?? null),
-            'position' => $index,
-        ];
+    if (function_exists('iss_graph_sanitize_entity_name_rows')) {
+        return iss_graph_sanitize_entity_name_rows($rows, iss_graph_get_register_place_name_type_options());
     }
 
-    return $sanitized;
+    return [];
 }
 
 function iss_graph_sanitize_register_relation_rows(array $rows, string $target_kind): array
@@ -400,10 +404,12 @@ function iss_graph_sanitize_register_relation_rows(array $rows, string $target_k
             $relation_type = 'related';
         }
 
-        $target_entity = $service->find_or_create_named_entity($target_kind, $name, [
+        $target_entity = iss_graph_resolve_or_create_named_entity($target_kind, $name, [
             'source_system' => 'manual_slug',
             'search_visibility' => 'hidden',
             'is_public' => false,
+        ], [
+            'source_ref' => 'register_relation_editor',
         ]);
 
         if (!$target_entity) {

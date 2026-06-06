@@ -33,14 +33,15 @@ function iss_content_model_has_managed_corpus($post_id) {
         return false;
     }
 
-    $chapter_ids = function_exists('iss_content_model_get_ausstellung_corpus_chapter_ids')
-        ? iss_content_model_get_ausstellung_corpus_chapter_ids($post_id)
-        : [];
-    if (!empty($chapter_ids)) {
-        return true;
+    $source = function_exists('iss_content_model_get_ausstellung_source')
+        ? iss_content_model_get_ausstellung_source($post_id)
+        : 'manual';
+
+    if ($source === 'curated_chapters' && function_exists('iss_content_model_get_ausstellung_corpus_chapter_ids')) {
+        return !empty(iss_content_model_get_ausstellung_corpus_chapter_ids($post_id));
     }
 
-    if (function_exists('iss_content_model_get_ausstellung_archive_term_slug')) {
+    if ($source === 'archive_category' && function_exists('iss_content_model_get_ausstellung_archive_term_slug')) {
         return iss_content_model_get_ausstellung_archive_term_slug($post_id) !== '';
     }
 
@@ -183,6 +184,7 @@ function iss_content_model_find_timeline_item_id($post_id) {
         'posts_per_page' => 1,
         'fields' => 'ids',
         'no_found_rows' => true,
+        // phpcs:ignore WordPress.DB.SlowDBQuery.slow_db_query_meta_query -- Scoped lookup for one linked timeline item.
         'meta_query' => [
             [
                 'key' => 'source_post_id',

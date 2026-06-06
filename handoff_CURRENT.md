@@ -1,80 +1,96 @@
 # Current Handoff
 
-Updated: 2026-06-05
+Updated: 2026-06-06
 
 Current checkpoint only. History belongs in `CHANGELOG.md`; active tasks belong in `TODO.md`; durable rules live under `AGENTS.md` and `docs/`.
 
 ## Current State
 
-- Branch: `main`
-- Latest GitHub checkpoint: `a94d06c` (`Update repair cafe and sammlungen media`) on `main` / `origin/main`.
-- Current checkpoint:
-  - Repair Café template/CSS cleanup is file-backed in the theme.
-  - Sammlungen template media swaps are synced from the editor DB copy back to disk.
-  - Matching DB template overrides were removed on staging; both routes resolve from `theme`.
-  - Media transfer artifacts under `ops/sql/` and `ops/uploads/` were applied to staging.
+- Branch: `main`.
+- Latest GitHub checkpoint before this local push: `d25efbf` (`Document paired SQL uploads deployment`) on `origin/main`.
+- Staging already applied the 2026-06-05 Repair Cafe/Sammlungen SQL/uploads artifacts; rollback backups are under `/srv/industriesalon/stage/backups/20260605-213910-repair-cafe-sammlungen-stage/`.
+- Current local checkpoint to push:
+  - `iss-graph` Phase 1 adds entity identifiers, evidence refs, resolver wrappers, drift checks, alias backfill, identifier-aware search projection, and resolver-before-create paths for register, archive, content, and enrichment labels.
+  - Video transcripts now bridge into pending `video_transcript` evidence refs; Video CPT editors can accept person/organization hints into graph relations, accept place hints through `iss-relations`, or dismiss hints.
+  - Manual `entity_profile` aliases and generated alias backfill are separated by source system.
+  - `iss/related-content` and `iss/related-cards` can pull graph-related CPTs and archive objects via entity, place, person, and organization sources.
+  - Ausstellung backend meta is now `iss_exhibition_type` plus `iss_exhibition_source`; the retired `iss_surface_mode` path and manually insertable `ausstellung-corpus` block were removed.
+  - Sammlungen is synced back from the editor DB copy to the theme template, with the stronger `Wege hinein` / `Jetzt stark` / image-carousel composition and fixed Gutenberg grid margins.
+  - The active Front Page DB override was purged without syncing its DB-only souvenir image to disk.
+  - All active block templates now resolve from theme files; remaining `wp_template` rows are backup/nonmatching slugs only, and there are no `wp_template_part` rows.
 - Local working clone: `/home/vladimir/projects/industriesalon`.
 - Staging deployment checkout: `/srv/industriesalon/stage/repo`.
 - Staging WordPress app root: `/srv/industriesalon/stage/app`.
 - Staging shared uploads root: `/srv/industriesalon/stage/shared/uploads` (`app/wp-content/uploads` symlinks here and the WordPress container mounts it at `/var/www/html/wp-content/uploads`).
 - Staging Docker Compose file: `/srv/industriesalon/stage/compose.yml`.
 - Staging nginx vhost: `/srv/industriesalon/shared/nginx/stage.industriesalon.info.conf`.
-- Server action notes: `/home/vladimir/server-actions/`.
-- Agent, continuity, infrastructure, architecture, verification, and sync rules are now repo-owned and staging-shareable.
-- Shared docs are split across:
-  - `docs/agent/`
-  - `docs/architecture/`
-  - `docs/infrastructure/`
-  - `docs/project/`
-  - `docs/runbooks/`
-  - `skills/*/SKILL.md`
 - `docs/runbooks/git-exchange.md` is the active local/staging machine sync rule. GitHub `main` is the exchange point; clean behind clones fast-forward only; dirty or diverged clones stop for inspection.
-- The repo remote now uses the SSH alias `github-industriesalon` and the deploy key `/home/vladimir/.ssh/industriesalon_deploy`.
-- Repo-local Git config sets `core.sshCommand=ssh -F /home/vladimir/.ssh/config` because the system SSH include `/etc/ssh/ssh_config.d/20-systemd-ssh-proxy.conf` currently fails default SSH parsing.
+- The repo remote uses the SSH alias `github-industriesalon` and the deploy key `/home/vladimir/.ssh/industriesalon_deploy`.
 
 ## Current Server State
 
-- Provider reported shutdowns after the fact; local evidence shows unclean host stops around 2026-06-01 02:28-02:43 UTC and 2026-06-03 00:00-00:08 UTC. MariaDB recovered cleanly after the 2026-06-03 restart.
+- Provider reported shutdowns after the fact; local evidence showed unclean host stops around 2026-06-01 02:28-02:43 UTC and 2026-06-03 00:00-00:08 UTC. MariaDB recovered cleanly after the 2026-06-03 restart.
 - Added a 2 GiB `/swapfile`, persisted in `/etc/fstab`, with `vm.swappiness=10` in `/etc/sysctl.d/99-industriesalon-swap.conf`.
 - Hardened SSH with `/etc/ssh/sshd_config.d/20-no-password-auth.conf`; effective setting is `PasswordAuthentication no`, with key auth still enabled.
 - Added nginx default catch-all server at `/etc/nginx/sites-available/00-catch-all.conf`, enabled via `/etc/nginx/sites-enabled/00-catch-all.conf`, returning `444` for unknown/raw-IP HTTP and HTTPS hosts.
 - Blocked `xmlrpc.php` in `/etc/nginx/sites-available/stage.industriesalon.info`; `https://staging.industriesalon.info/xmlrpc.php` returns `403`.
-- Added `/home/vladimir/.ssh/config` with a scoped `github-industriesalon` alias for the Industriesalon deploy key, and switched this repo's `origin` remote to `git@github-industriesalon:vseberlin/industriesalon.git`.
-- Server action notes and rollback commands are recorded in:
-  - `/home/vladimir/server-actions/2026-06-04-add-swapfile.md`
-  - `/home/vladimir/server-actions/2026-06-04-ssh-nginx-hardening.md`
-- GitHub SSH setup notes are recorded in `/home/vladimir/server-actions/2026-06-05-github-ssh-deploy-key.md`.
-- Repair Café/Sammlungen staging artifact application is recorded in `/home/vladimir/server-actions/2026-06-05-apply-repair-cafe-sammlungen-stage-artifacts.md`.
-- Last verification: no failed systemd units, `/repair-cafe/` and `/sammlungen/` returned `200 OK`, containers remained up and healthy.
+- Server action notes and rollback commands are recorded in `/home/vladimir/server-actions/`.
+- Repair Cafe/Sammlungen staging artifact application is recorded in `/home/vladimir/server-actions/2026-06-05-apply-repair-cafe-sammlungen-stage-artifacts.md`.
 
 ## Current Risk
 
-- `.gitignore` uses a default-deny model, so new shareable docs/skills need explicit narrow allow rules before staging.
-- Existing SQL/data artifacts under `ops/sql/` represent local DB transfer state; verify backups before applying them to staging or production.
-- Before reapplying `ops/sql/2026-06-05-repair-cafe-sammlungen-media.sql` anywhere else, confirm the target has a DB backup; it replaces the referenced attachment rows and removes `page-repair-cafe` / `page-sammlungen` DB template overrides.
-- Restore `ops/uploads/2026-06-05-repair-cafe-sammlungen-uploads-delta.tar.gz` into any target uploads root before or with the matching SQL so attachment metadata and files stay aligned.
-- Staging rollback backups for the 2026-06-05 artifact application are in `/srv/industriesalon/stage/backups/20260605-213910-repair-cafe-sammlungen-stage/`.
-- Template output can still be DB-backed; check `wp_template` authority before assuming disk files are live.
-- Uploads, mail, and Meilisearch are cross-machine concerns; use the repo runbooks before changing staging state.
-- Default `ssh` without the repo-local config currently fails on `/etc/ssh/ssh_config.d/20-systemd-ssh-proxy.conf`; inspect that system file before relying on general SSH behavior.
+- Pulling on staging must follow `docs/runbooks/git-exchange.md`; do not merge into a dirty or diverged staging clone.
+- `ops/sql/2026-06-06-ausstellung-backend-meta-migration.sql` is a data migration artifact. Apply it on another environment only after a DB backup and only when that environment should migrate old `iss_surface_mode` rows.
+- Graph alias, resolver/source-label, search, and video transcript evidence rows are derived DB state. After deploying graph code elsewhere, run the graph sync/verify commands before relying on related-content or search output.
+- Template output can still become DB-backed after Site Editor saves; check `wp_template` authority before assuming disk files are live.
+- Uploads, mail, Meilisearch, and SQL artifacts are cross-machine concerns; use the repo runbooks before changing staging state.
 
 ## Next Action
 
-- On the other machine, follow `docs/runbooks/git-exchange.md`: inspect, fetch, and fast-forward to latest `origin/main` if clean and behind.
-- Review `/repair-cafe/` and `/sammlungen/` visually in staging/UAT after the artifact application.
-- Keep future handoff entries limited to current state, risk, next action, and verification.
-- Keep root `TODO.md` for immediate executable work only; use `docs/project/backlog.md` and `docs/project/uat.md` for broader work.
+- Push the local commit to GitHub `main`.
+- On staging, inspect/fetch/fast-forward from `origin/main` only if the checkout is clean and behind.
+- After staging pulls this commit, run:
+  - `wp iss-graph verify`
+  - `wp iss-graph sync-register`
+  - `wp iss-graph sync-archive`
+  - `wp iss-graph sync-aliases`
+  - `wp iss-graph sync-search`
+  - `wp iss-graph sync-video-transcripts`
+  - `wp iss-graph drift-check`
+- If staging has Ausstellung rows still using `iss_surface_mode`, apply `ops/sql/2026-06-06-ausstellung-backend-meta-migration.sql` after backup.
+- Review `/sammlungen/`, `/ausstellungen/`, representative single Ausstellung pages, graph search, related-content previews, and Video CPT transcript-review metaboxes on staging.
+- Keep root `TODO.md` for immediate executable work only; broader backlog stays under `docs/project/`.
 
 ## Verified
 
-- `git push origin main` succeeded through `github-industriesalon` after adding the deploy-key alias.
-- CSS parse passed for `patterns.css`, `primitives.css`, and `page-sammlungen.css`.
-- `page-repair-cafe` and `page-sammlungen` both resolve as `source=theme`, `id=none`.
-- `/repair-cafe/` and `/sammlungen/` both returned `200` locally and rendered the new media/copy.
-- `ops/sql/2026-06-05-repair-cafe-sammlungen-media.sql` imported cleanly into a temporary MariaDB schema.
-- `ops/uploads/2026-06-05-repair-cafe-sammlungen-uploads-delta.tar.gz` passed SHA256 verification and contains 61 files.
-- Staging repo fast-forwarded to `a94d06c`.
-- Staging DB backup and targeted existing-upload rollback archive were created under `/srv/industriesalon/stage/backups/20260605-213910-repair-cafe-sammlungen-stage/`.
-- Staging upload manifest verified all 61 files after extraction.
-- Staging SQL import completed; 12 expected attachment rows exist and 0 matching DB template override rows remain.
-- Staging `/repair-cafe/` and `/sammlungen/` returned `200 OK`; representative new media URLs returned `200 OK`.
+- 2026-06-05 staging artifact application: staging repo fast-forwarded to `a94d06c`; staging DB backup and upload rollback archive were created; upload manifest verified 61 files; SQL import completed; `/repair-cafe/` and `/sammlungen/` returned `200 OK`.
+- Local graph alias verification on 2026-06-06:
+  - `wp iss-graph sync-register`: synced 84 register places.
+  - `wp iss-graph sync-archive`: synced 3,048 archive objects.
+  - `wp iss-graph sync-aliases`: entities=3545, with_aliases=1824, names=4428.
+  - `wp iss-graph sync-search`: search rows=3315.
+  - `wp iss-graph verify`: passed with entities=3545, names=8094, identifiers=12934, relations=4764, search=3315.
+  - `wp iss-graph drift-check`: passed.
+- Video transcript bridge verification on 2026-06-06:
+  - Video inventory: 30 videos (`full=27`, `excerpt=3`).
+  - `wp iss-graph sync-video-transcripts`: videos=30, synced=30, mentions=3.
+  - `wp_iss_entity_evidence_refs.source_system = video_transcript`: pending entity refs=3.
+  - Video CPT edit metabox `iss-graph-video-transcript-review` registered.
+- Related-content graph-source verification on 2026-06-06:
+  - Führung `12183` with source `entity_place` and target `archivobjekt` returned archive-object material.
+  - Profile `24965` with source `entity_person` returned mixed posts/publications/videos.
+  - Project `24815` with source `entity` returned mixed project and Führung results.
+  - REST preview with JSON body returned `200` and four archive-object preview items.
+- Template authority verification on 2026-06-06:
+  - `page-sammlungen` resolves as `source=theme`, `id=none`.
+  - `front-page` resolves as `source=theme`, `id=none`.
+  - All `themes/industriesalon/templates/*.html` files resolve as `source=theme`.
+  - No `wp_template_part` rows exist.
+  - `/sammlungen/` and `/` returned `200` locally.
+- Closeout verification before commit:
+  - `git diff --check` passed.
+  - Targeted ESLint and `node --check` passed for changed JavaScript.
+  - Targeted Stylelint passed for changed Sammlungen and Ausstellung CSS.
+  - Docker PHP `-l`, PHPCS, and PHPStan passed for changed PHP files.
+  - `parse_blocks()` passed for changed theme templates.
+  - `wp iss-graph verify` and `wp iss-graph drift-check` passed.

@@ -26,6 +26,7 @@
   const POST_TYPE_OPTIONS_BASE = [
     { label: 'Orte', value: PLACE_POST_TYPE },
     { label: 'Archivbeiträge', value: 'archivbeitrag' },
+    { label: 'Archivobjekte', value: 'archivobjekt' },
     { label: 'Beiträge', value: 'post' },
     { label: 'Führungen', value: 'fuehrung' },
     { label: 'Veranstaltungen', value: 'veranstaltung' },
@@ -33,11 +34,15 @@
     { label: 'Videos', value: 'video' },
     { label: 'Ausstellungen', value: 'ausstellung' },
     { label: 'Projekte', value: 'projekt' },
+    { label: 'Profile', value: 'entity_profile' },
     { label: 'Seiten', value: 'page' },
   ];
   const POST_TYPE_OPTIONS = (function () {
-    var supported = Array.isArray(settings.supportedPostTypes) && settings.supportedPostTypes.length
-      ? settings.supportedPostTypes.map(function (value) {
+    var sourceTypes = Array.isArray(settings.relatedPostTypes) && settings.relatedPostTypes.length
+      ? settings.relatedPostTypes
+      : settings.supportedPostTypes;
+    var supported = Array.isArray(sourceTypes) && sourceTypes.length
+      ? sourceTypes.map(function (value) {
           return String(value || '');
         })
       : POST_TYPE_OPTIONS_BASE.map(function (option) {
@@ -70,6 +75,12 @@
     { label: 'Aktuelle Route', value: 'route' },
     { label: 'Manuelle Ortsauswahl', value: 'manual' },
   ];
+  const RELATED_SOURCE_OPTIONS = SOURCE_OPTIONS.concat([
+    { label: 'Graph: alle Bezüge', value: 'entity' },
+    { label: 'Graph: Orte', value: 'entity_place' },
+    { label: 'Graph: Personen', value: 'entity_person' },
+    { label: 'Graph: Organisationen', value: 'entity_organization' },
+  ]);
   const PANEL_MODE_OPTIONS = [
     { label: 'Mit Infopanel', value: 'show' },
     { label: 'Nur Karte', value: 'hide' },
@@ -185,6 +196,16 @@
     return match ? match.label : String(value || 'default');
   }
 
+  function getSourceLabel(value) {
+    var normalized = String(value || 'current');
+    var options = SOURCE_OPTIONS.concat(RELATED_SOURCE_OPTIONS);
+    var match = options.find(function (option) {
+      return option.value === normalized;
+    });
+
+    return match ? match.label : normalized;
+  }
+
   function getSelectedRelatedPostTypes(attrs, config) {
     if (config.fixedPostType) {
       return [config.fixedPostType];
@@ -238,6 +259,10 @@
 
   function shouldShowRelatedCardColumns(attrs) {
     return ['strip', 'rail'].indexOf(attrs.layoutVariant || 'grid') === -1;
+  }
+
+  function isManualPlaceSource(value) {
+    return String(value || '') === 'manual';
   }
 
   function renderRelatedPostTypeControl(attrs, setAttributes, config) {
@@ -308,7 +333,7 @@
     var parts = [
       String(perPage) + ' Einträge',
       'Typen: ' + postTypes.map(getPostTypeLabel).join(', '),
-      'Quelle: ' + source,
+      'Quelle: ' + getSourceLabel(source),
       shouldShowRelatedCardColumns(attrs)
         ? 'Layout: ' + layout + ' / ' + String(columns) + ' Sp.'
         : 'Layout: ' + layout,
@@ -1566,7 +1591,7 @@
   }
 
   function renderManualPlaceControl(attrs, setAttributes, placeOptions, selectedIds) {
-    if (attrs.source !== 'manual') return null;
+    if (!isManualPlaceSource(attrs.source)) return null;
 
     if (!SelectControl) {
       return TextControl
@@ -1727,9 +1752,9 @@
               { title: config.panelTitle, initialOpen: true },
               renderRelatedPostTypeControl(attrs, setAttributes, config),
               el(SelectControl, {
-                label: 'Ortsquelle',
+                label: config.showCardLayoutFields ? 'Quelle' : 'Ortsquelle',
                 value: attrs.source || 'current',
-                options: SOURCE_OPTIONS,
+                options: config.showCardLayoutFields ? RELATED_SOURCE_OPTIONS : SOURCE_OPTIONS,
                 onChange: function (value) {
                   setAttributes({ source: value });
                 },

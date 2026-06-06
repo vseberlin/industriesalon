@@ -16,13 +16,6 @@ function iss_content_model_register_blocks() {
         ]);
     }
 
-    $corpus_dir = ISS_CONTENT_MODEL_PATH . 'blocks/ausstellung-corpus';
-    if (file_exists($corpus_dir . '/block.json')) {
-        register_block_type($corpus_dir, [
-            'render_callback' => 'iss_content_model_render_ausstellung_corpus_block',
-        ]);
-    }
-
     register_block_type('iss-content-model/ausstellung-surface', [
         'api_version' => 2,
         'render_callback' => 'iss_content_model_render_ausstellung_surface_block',
@@ -32,12 +25,17 @@ add_action('init', 'iss_content_model_register_blocks');
 
 function iss_content_model_get_ausstellung_corpus_chapters(int $post_id): array
 {
-    $ids = function_exists('iss_content_model_get_ausstellung_corpus_chapter_ids')
-        ? iss_content_model_get_ausstellung_corpus_chapter_ids($post_id)
-        : [];
+    $source = function_exists('iss_content_model_get_ausstellung_source')
+        ? iss_content_model_get_ausstellung_source($post_id)
+        : 'manual';
 
     $posts = [];
-    if ($ids) {
+    if ($source === 'curated_chapters' && function_exists('iss_content_model_get_ausstellung_corpus_chapter_ids')) {
+        $ids = iss_content_model_get_ausstellung_corpus_chapter_ids($post_id);
+        if (!$ids) {
+            return [];
+        }
+
         $posts = get_posts([
             'post_type' => 'archivbeitrag',
             'post_status' => 'publish',
@@ -47,10 +45,9 @@ function iss_content_model_get_ausstellung_corpus_chapters(int $post_id): array
             'suppress_filters' => true,
         ]);
     } elseif (
-        function_exists('iss_content_model_get_ausstellung_surface_mode')
+        $source === 'archive_category'
         && function_exists('iss_content_model_get_ausstellung_archive_term_slug')
         && function_exists('iss_wf_import_get_archive_exhibition_posts')
-        && iss_content_model_get_ausstellung_surface_mode($post_id) === 'archive_exhibition'
     ) {
         $term_slug = iss_content_model_get_ausstellung_archive_term_slug($post_id);
         if ($term_slug !== '') {
@@ -70,9 +67,12 @@ function iss_content_model_get_ausstellung_surface_context(int $post_id): array
         return [];
     }
 
-    $mode = function_exists('iss_content_model_get_ausstellung_surface_mode')
-        ? iss_content_model_get_ausstellung_surface_mode($post_id)
-        : 'standard';
+    $type = function_exists('iss_content_model_get_ausstellung_type')
+        ? iss_content_model_get_ausstellung_type($post_id)
+        : 'story';
+    $source = function_exists('iss_content_model_get_ausstellung_source')
+        ? iss_content_model_get_ausstellung_source($post_id)
+        : 'manual';
     $body_html = trim((string) apply_filters('the_content', (string) $post->post_content));
     $chapters = iss_content_model_get_ausstellung_corpus_chapters($post_id);
     $archive_term_slug = function_exists('iss_content_model_get_ausstellung_archive_term_slug')
@@ -85,7 +85,8 @@ function iss_content_model_get_ausstellung_surface_context(int $post_id): array
     return [
         'post_id' => $post_id,
         'post' => $post,
-        'mode' => $mode,
+        'type' => $type,
+        'source' => $source,
         'body_html' => $body_html,
         'chapters' => $chapters,
         'archive_term_slug' => $archive_term_slug,
@@ -366,17 +367,17 @@ function iss_content_model_render_ausstellung_corpus_stations(array $chapters): 
         echo '<p class="iss-kicker iss-kicker--compact">' . esc_html__('Station', 'iss-content-model') . ' ' . esc_html(str_pad((string) ($station['index'] + 1), 2, '0', STR_PAD_LEFT)) . '</p>';
         echo '<h3 class="iss-ausstellung-corpus__station-title"><a href="' . esc_url((string) get_permalink($chapter)) . '">' . esc_html(get_the_title($chapter)) . '</a></h3>';
         if ($station['intro_html'] !== '') {
-            echo '<div class="iss-ausstellung-corpus__station-intro">' . $station['intro_html'] . '</div>';
+            echo '<div class="iss-ausstellung-corpus__station-intro">' . $station['intro_html'] . '</div>'; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- Rendered chapter content from the_content.
         }
         if ($station['lead_body_html'] !== '') {
-            echo '<div class="iss-post-body__content iss-ausstellung-corpus__station-body-lead">' . $station['lead_body_html'] . '</div>';
+            echo '<div class="iss-post-body__content iss-ausstellung-corpus__station-body-lead">' . $station['lead_body_html'] . '</div>'; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- Rendered chapter content from the_content.
         }
         echo '</div>';
 
         echo '<div class="iss-ausstellung-corpus__station-media">';
         if ($station['image_html'] !== '') {
             echo '<figure class="iss-ausstellung-corpus__station-figure">';
-            echo '<a href="' . esc_url((string) get_permalink($chapter)) . '">' . $station['image_html'] . '</a>';
+            echo '<a href="' . esc_url((string) get_permalink($chapter)) . '">' . $station['image_html'] . '</a>'; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- get_the_post_thumbnail() returns WordPress-rendered image markup.
             if ($station['image_caption'] !== '') {
                 echo '<figcaption>' . esc_html($station['image_caption']) . '</figcaption>';
             }
@@ -432,118 +433,30 @@ function iss_content_model_render_ausstellung_corpus_body(array $chapters): stri
 
     ob_start();
     if ($chapters) {
-        echo iss_content_model_render_ausstellung_corpus_stations($chapters);
+        echo iss_content_model_render_ausstellung_corpus_stations($chapters); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- Local renderer returns escaped corpus station markup.
     }
 
     if ($chapters) {
-        echo iss_content_model_render_ausstellung_corpus_toc($chapters);
+        echo iss_content_model_render_ausstellung_corpus_toc($chapters); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- Local renderer returns escaped corpus TOC markup.
     }
-
-    return (string) ob_get_clean();
-}
-
-function iss_content_model_render_ausstellung_corpus_block($attributes = [], $content = '', $block = null) {
-    $post_id = (int) get_the_ID();
-    if ($post_id <= 0 || get_post_type($post_id) !== ISS_CONTENT_MODEL_AUSSTELLUNG_POST_TYPE) {
-        return '';
-    }
-
-    $chapters = iss_content_model_get_ausstellung_corpus_chapters($post_id);
-    if (!$chapters) {
-        return '';
-    }
-
-    $shell_mode = sanitize_key((string) ($attributes['shellMode'] ?? 'section'));
-    $body_html = iss_content_model_render_ausstellung_corpus_body($chapters);
-    if ($body_html === '') {
-        return '';
-    }
-
-    if ($shell_mode === 'body') {
-        return $body_html;
-    }
-
-    $wrapper = (function_exists('get_block_wrapper_attributes') && $block instanceof WP_Block)
-        ? get_block_wrapper_attributes(['class' => 'wp-block-iss-ausstellung-corpus'])
-        : 'class="wp-block-iss-ausstellung-corpus"';
-
-    ob_start();
-    echo '<div ' . $wrapper . '>';
-    echo '<section class="iss-ausstellung-corpus">';
-    echo '<div class="iss-heading iss-ausstellung-corpus__head">';
-    echo '<p class="iss-kicker iss-kicker--compact">' . esc_html__('Ausstellungspfad', 'iss-content-model') . '</p>';
-    echo '<h2 class="iss-heading__title">' . esc_html__('Die Ausstellung ordnet den Korpus als geführten Rundgang.', 'iss-content-model') . '</h2>';
-    echo '<p class="iss-heading__text">' . esc_html__('Ausgewählte Stationen führen in das Thema ein. Darunter bleibt der vollständige Korpus als lesbarer Ausstellungspfad zugänglich.', 'iss-content-model') . '</p>';
-    echo '</div>';
-
-    echo $body_html;
-
-    echo '</section>';
-    echo '</div>';
 
     return (string) ob_get_clean();
 }
 
 function iss_content_model_render_ausstellung_surface_fallback(array $context): string
 {
-    $mode = (string) ($context['mode'] ?? 'standard');
     $body_html = trim((string) ($context['body_html'] ?? ''));
-    if ($mode === 'archive_exhibition') {
-        $term_slug = sanitize_title((string) ($context['archive_term_slug'] ?? ''));
-        if ($term_slug === '' || !function_exists('iss_wf_import_render_archive_exhibition_toc') || !function_exists('iss_wf_import_render_archive_exhibition_stream')) {
-            return '';
-        }
-
-        $toc_html = trim((string) iss_wf_import_render_archive_exhibition_toc($term_slug));
-        $stream_html = trim((string) iss_wf_import_render_archive_exhibition_stream($term_slug));
-        if ($toc_html === '' && $stream_html === '') {
-            return '';
-        }
-
-        ob_start();
-        echo '<div class="iss-ausstellung-surface iss-ausstellung-surface--archive-exhibition">';
-        if ($body_html !== '') {
-            echo '<div class="iss-ausstellung-story__content">' . $body_html . '</div>';
-        }
-        if ($toc_html !== '') {
-            echo '<div class="iss-digital-exhibition__toc">' . $toc_html . '</div>';
-        }
-        if ($stream_html !== '') {
-            echo '<div class="iss-digital-exhibition__stream">' . $stream_html . '</div>';
-        }
-        echo '</div>';
-
-        return (string) ob_get_clean();
-    }
-
-    if ($mode === 'archive_browser') {
-        $browser_attributes = is_array($context['archive_browser'] ?? null) ? $context['archive_browser'] : [];
-        if (!function_exists('iss_wf_import_render_archive_object_browser_block')) {
-            return '';
-        }
-
-        ob_start();
-        echo '<div class="iss-ausstellung-surface iss-ausstellung-surface--archive-browser">';
-        if ($body_html !== '') {
-            echo '<div class="iss-ausstellung-story__content">' . $body_html . '</div>';
-        }
-        echo iss_wf_import_render_archive_object_browser_block($browser_attributes, '', null);
-        echo '</div>';
-
-        return (string) ob_get_clean();
-    }
-
     $chapters = is_array($context['chapters'] ?? null) ? $context['chapters'] : [];
     $corpus_html = iss_content_model_render_ausstellung_corpus_body($chapters);
 
     ob_start();
-    echo '<div class="iss-ausstellung-surface iss-ausstellung-surface--standard">';
+    echo '<div class="iss-ausstellung-surface">';
     if ($body_html !== '') {
         echo '<div class="iss-heading iss-ausstellung-story__heading">';
         echo '<p class="iss-kicker iss-kicker--compact">' . esc_html__('Im Detail', 'iss-content-model') . '</p>';
         echo '<h2 class="iss-heading__title">' . esc_html__('Rundgang durch die Ausstellung', 'iss-content-model') . '</h2>';
         echo '</div>';
-        echo '<div class="iss-ausstellung-story__content">' . $body_html . '</div>';
+        echo '<div class="iss-ausstellung-story__content">' . $body_html . '</div>'; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- Rendered post content from the_content.
     }
     if ($corpus_html !== '') {
         echo '<div class="iss-ausstellung-corpus">';
@@ -552,7 +465,7 @@ function iss_content_model_render_ausstellung_surface_fallback(array $context): 
         echo '<h2 class="iss-heading__title">' . esc_html__('Die Ausstellung ordnet den Korpus als geführten Rundgang.', 'iss-content-model') . '</h2>';
         echo '<p class="iss-heading__text">' . esc_html__('Ausgewählte Stationen führen in das Thema ein. Darunter bleibt der vollständige Korpus als lesbarer Ausstellungspfad zugänglich.', 'iss-content-model') . '</p>';
         echo '</div>';
-        echo $corpus_html;
+        echo $corpus_html; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- Local renderer returns escaped corpus markup.
         echo '</div>';
     }
     echo '</div>';

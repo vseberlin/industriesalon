@@ -742,6 +742,7 @@ function iss_relations_enqueue_block_editor_script(): void
             'placePostType' => iss_relations_get_place_post_type(),
             'taxonomy' => ISS_RELATIONS_TAXONOMY,
             'supportedPostTypes' => iss_relations_get_supported_post_types(),
+            'relatedPostTypes' => iss_relations_get_related_query_post_types(),
             'mapPresets' => iss_relations_get_place_map_editor_presets(),
         ]) . ';',
         'before'
@@ -797,6 +798,18 @@ function iss_relations_get_related_content_defaults(string $post_type): array
                 'title' => __('Videos mit Ortsbezug', 'iss-relations'),
                 'link_text' => __('Weiter', 'iss-relations'),
             ];
+        case 'archivobjekt':
+            return [
+                'kicker' => __('Archivobjekt', 'iss-relations'),
+                'title' => __('Material aus dem Archiv', 'iss-relations'),
+                'link_text' => __('Ansehen', 'iss-relations'),
+            ];
+        case 'entity_profile':
+            return [
+                'kicker' => __('Profil', 'iss-relations'),
+                'title' => __('Personen und Organisationen', 'iss-relations'),
+                'link_text' => __('Zum Profil', 'iss-relations'),
+            ];
         case 'post':
             return [
                 'kicker' => __('Archiv', 'iss-relations'),
@@ -827,6 +840,35 @@ function iss_relations_get_related_content_defaults_for_post_types(array $post_t
     ];
 }
 
+function iss_relations_get_related_query_post_types(): array
+{
+    $post_types = iss_relations_get_supported_post_types();
+    $archive_object_post_type = function_exists('iss_graph_get_archive_object_post_type')
+        ? iss_graph_get_archive_object_post_type()
+        : (defined('ISS_WF_IMPORT_OBJECT_POST_TYPE') ? (string) ISS_WF_IMPORT_OBJECT_POST_TYPE : 'archivobjekt');
+
+    if ($archive_object_post_type !== '' && post_type_exists($archive_object_post_type)) {
+        $post_types[] = $archive_object_post_type;
+    }
+
+    $profile_post_type = function_exists('iss_graph_get_entity_profile_post_type')
+        ? iss_graph_get_entity_profile_post_type()
+        : 'entity_profile';
+
+    if ($profile_post_type !== '' && post_type_exists($profile_post_type)) {
+        $post_types[] = $profile_post_type;
+    }
+
+    $post_types = array_values(array_unique(array_filter(array_map('sanitize_key', $post_types), 'post_type_exists')));
+
+    return (array) apply_filters('iss_relations_related_query_post_types', $post_types);
+}
+
+function iss_relations_is_related_query_post_type(string $post_type): bool
+{
+    return in_array(sanitize_key($post_type), iss_relations_get_related_query_post_types(), true);
+}
+
 function iss_relations_get_related_cards_post_types(array $attributes = [], string $fallback = 'post'): array
 {
     $requested = [];
@@ -844,7 +886,7 @@ function iss_relations_get_related_cards_post_types(array $attributes = [], stri
     foreach ($requested as $post_type) {
         $post_type = sanitize_key((string) $post_type);
 
-        if ($post_type === '' || !iss_relations_is_supported_post_type($post_type)) {
+        if ($post_type === '' || !iss_relations_is_related_query_post_type($post_type)) {
             continue;
         }
 
@@ -854,7 +896,7 @@ function iss_relations_get_related_cards_post_types(array $attributes = [], stri
     if (!$post_types) {
         $fallback = sanitize_key($fallback);
 
-        if ($fallback !== '' && iss_relations_is_supported_post_type($fallback)) {
+        if ($fallback !== '' && iss_relations_is_related_query_post_type($fallback)) {
             $post_types[] = $fallback;
         }
     }
@@ -934,6 +976,256 @@ function iss_relations_normalize_related_cards_columns(array $attributes = []): 
     }
 
     return 3;
+}
+
+function iss_relations_is_entity_related_source(string $source): bool
+{
+    return in_array(sanitize_key($source), ['entity', 'entity_place', 'entity_person', 'entity_organization'], true);
+}
+
+function iss_relations_get_entity_related_source_families(string $source): array
+{
+    switch (sanitize_key($source)) {
+        case 'entity_place':
+            return ['place'];
+        case 'entity_person':
+            return ['person'];
+        case 'entity_organization':
+            return ['organization'];
+        case 'entity':
+        default:
+            return ['place', 'person', 'organization'];
+    }
+}
+
+function iss_relations_get_graph_entity_for_related_post(int $post_id): ?array
+{
+    if ($post_id <= 0 || !iss_relations_graph_is_available()) {
+        return null;
+    }
+
+    if (function_exists('iss_graph_get_entity_for_post')) {
+        $entity = iss_graph_get_entity_for_post($post_id);
+        if (is_array($entity) && !empty($entity['id'])) {
+            return $entity;
+        }
+    }
+
+    $post = get_post($post_id);
+    if (!$post instanceof WP_Post) {
+        return null;
+    }
+
+    if ($post->post_type === (function_exists('iss_graph_get_archive_object_post_type') ? iss_graph_get_archive_object_post_type() : 'archivobjekt') && function_exists('iss_graph_sync_archive_object_entity')) {
+        $entity = iss_graph_sync_archive_object_entity($post_id);
+        return is_array($entity) && !empty($entity['id']) ? $entity : null;
+    }
+
+    if (iss_relations_is_supported_post_type((string) $post->post_type)) {
+        $entity = iss_relations_sync_post_graph($post_id);
+        return is_array($entity) && !empty($entity['id']) ? $entity : null;
+    }
+
+    return null;
+}
+
+function iss_relations_collect_entity_related_seed_ids(array $entity, array $relation_families): array
+{
+    $entity_id = (int) ($entity['id'] ?? 0);
+    if ($entity_id <= 0 || !$relation_families) {
+        return [];
+    }
+
+    $relation_families = array_values(array_unique(array_filter(array_map('sanitize_key', $relation_families))));
+    if (!$relation_families) {
+        return [];
+    }
+
+    $seed_ids = [];
+    $entity_kind = sanitize_key((string) ($entity['entity_kind'] ?? ''));
+    if (in_array($entity_kind, $relation_families, true)) {
+        $seed_ids[] = $entity_id;
+    }
+
+    $service = iss_graph_get_service();
+    foreach ($relation_families as $relation_family) {
+        foreach ($service->get_relations_for_entity($entity_id, $relation_family, [
+            'public_only' => true,
+            'limit' => 500,
+        ]) as $row) {
+            if (!is_array($row)) {
+                continue;
+            }
+
+            $related_entity_id = (int) ($row['entity_id'] ?? 0);
+            if ($related_entity_id > 0) {
+                $seed_ids[] = $related_entity_id;
+            }
+        }
+    }
+
+    return array_values(array_unique(array_filter(array_map('intval', $seed_ids))));
+}
+
+function iss_relations_query_direct_seed_posts(array $seed_entity_ids, array $post_types, int $per_page, int $exclude_post_id = 0): array
+{
+    if (!$seed_entity_ids || !$post_types || !iss_relations_graph_is_available()) {
+        return [];
+    }
+
+    global $wpdb;
+
+    $service = iss_graph_get_service();
+    $entity_table = $service->get_entity_table_name();
+    $entity_placeholders = implode(', ', array_fill(0, count($seed_entity_ids), '%d'));
+    $type_placeholders = implode(', ', array_fill(0, count($post_types), '%s'));
+    $params = array_merge($seed_entity_ids, $post_types);
+    $post_id_sql = 'COALESCE(e.post_id, e.profile_post_id)';
+
+    $sql = "SELECT DISTINCT {$post_id_sql} AS post_id
+        FROM {$entity_table} e
+        INNER JOIN {$wpdb->posts} p
+            ON p.ID = {$post_id_sql}
+        WHERE e.id IN ({$entity_placeholders})
+          AND {$post_id_sql} IS NOT NULL
+          AND p.post_type IN ({$type_placeholders})
+          AND p.post_status = 'publish'";
+
+    if ($exclude_post_id > 0) {
+        $sql .= " AND {$post_id_sql} <> %d";
+        $params[] = $exclude_post_id;
+    }
+
+    $sql .= ' ORDER BY p.menu_order ASC, p.post_date_gmt DESC, p.ID DESC LIMIT %d';
+    $params[] = max(1, min(24, $per_page));
+
+    // phpcs:ignore WordPress.DB.PreparedSQL.NotPrepared, WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching -- Related blocks query plugin-owned graph tables through a prepared dynamic table query and cache the final post list per request.
+    $post_ids = $wpdb->get_col($wpdb->prepare($sql, $params));
+
+    return array_values(array_unique(array_filter(array_map('intval', is_array($post_ids) ? $post_ids : []))));
+}
+
+function iss_relations_query_entity_related_post_ids(array $seed_entity_ids, array $relation_families, array $post_types, int $per_page, int $exclude_post_id = 0, array $attributes = []): array
+{
+    if (!$seed_entity_ids || !$relation_families || !$post_types || !iss_relations_graph_is_available()) {
+        return [];
+    }
+
+    global $wpdb;
+
+    $sort_mode = iss_relations_normalize_related_cards_sort_mode($attributes, $post_types);
+    $service = iss_graph_get_service();
+    $relation_table = $service->get_relation_table_name();
+    $entity_table = $service->get_entity_table_name();
+    $family_placeholders = implode(', ', array_fill(0, count($relation_families), '%s'));
+    $seed_placeholders = implode(', ', array_fill(0, count($seed_entity_ids), '%d'));
+    $type_placeholders = implode(', ', array_fill(0, count($post_types), '%s'));
+    $post_id_sql = 'COALESCE(e.post_id, e.profile_post_id)';
+    $rank_sql = iss_relations_graph_relation_rank_sql('r');
+    $params = array_merge($relation_families, $seed_entity_ids, $post_types);
+
+    $sql = "SELECT
+            {$post_id_sql} AS post_id,
+            MAX({$rank_sql}) AS relation_rank,
+            MAX(p.post_date_gmt) AS latest_post_date,
+            MAX(p.post_title) AS post_title
+        FROM {$relation_table} r
+        INNER JOIN {$entity_table} e
+            ON e.id = r.from_entity_id
+        INNER JOIN {$wpdb->posts} p
+            ON p.ID = {$post_id_sql}
+        WHERE r.relation_family IN ({$family_placeholders})
+          AND r.to_entity_id IN ({$seed_placeholders})
+          AND r.is_public = 1
+          AND {$post_id_sql} IS NOT NULL
+          AND p.post_type IN ({$type_placeholders})
+          AND p.post_status = 'publish'";
+
+    if ($exclude_post_id > 0) {
+        $sql .= " AND {$post_id_sql} <> %d";
+        $params[] = $exclude_post_id;
+    }
+
+    $sql .= ' GROUP BY post_id ORDER BY relation_rank DESC';
+
+    if ($sort_mode === 'relevance_title') {
+        $sql .= ' , post_title ASC, post_id DESC';
+    } elseif ($sort_mode === 'relevance_date' || $sort_mode === 'auto') {
+        $sql .= ' , latest_post_date DESC, post_id DESC';
+    } else {
+        $sql .= ' , post_id DESC';
+    }
+
+    $sql .= ' LIMIT %d';
+    $params[] = max(1, min(24, $per_page));
+
+    // phpcs:ignore WordPress.DB.PreparedSQL.NotPrepared, WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching -- Related blocks query plugin-owned graph tables through a prepared dynamic table query and cache the final post list per request.
+    $post_ids = $wpdb->get_col($wpdb->prepare($sql, $params));
+
+    return array_values(array_unique(array_filter(array_map('intval', is_array($post_ids) ? $post_ids : []))));
+}
+
+function iss_relations_query_entity_related_posts(int $current_post_id, array $post_types, int $per_page, array $attributes = []): array
+{
+    static $cache = [];
+
+    $source = sanitize_key((string) ($attributes['source'] ?? 'entity'));
+    if (!iss_relations_is_entity_related_source($source) || $current_post_id <= 0 || !$post_types) {
+        return [];
+    }
+
+    $relation_families = iss_relations_get_entity_related_source_families($source);
+    $post_types = array_values(array_unique(array_filter(array_map('sanitize_key', $post_types), 'iss_relations_is_related_query_post_type')));
+    if (!$relation_families || !$post_types) {
+        return [];
+    }
+
+    $cache_key = md5(wp_json_encode([
+        'current_post_id' => $current_post_id,
+        'post_types' => $post_types,
+        'per_page' => $per_page,
+        'source' => $source,
+        'sort_mode' => $attributes['sortMode'] ?? 'auto',
+    ]));
+
+    if (isset($cache[$cache_key])) {
+        return $cache[$cache_key];
+    }
+
+    $entity = iss_relations_get_graph_entity_for_related_post($current_post_id);
+    if (!$entity || empty($entity['id'])) {
+        $cache[$cache_key] = [];
+        return [];
+    }
+
+    $seed_entity_ids = iss_relations_collect_entity_related_seed_ids($entity, $relation_families);
+    if (!$seed_entity_ids) {
+        $cache[$cache_key] = [];
+        return [];
+    }
+
+    $limit = max(1, min(24, $per_page));
+    $direct_post_ids = iss_relations_query_direct_seed_posts($seed_entity_ids, $post_types, $limit, $current_post_id);
+    $related_post_ids = iss_relations_query_entity_related_post_ids($seed_entity_ids, $relation_families, $post_types, $limit, $current_post_id, $attributes);
+    $post_ids = array_values(array_unique(array_merge($direct_post_ids, $related_post_ids)));
+    $post_ids = array_slice($post_ids, 0, $limit);
+
+    if (!$post_ids) {
+        $cache[$cache_key] = [];
+        return [];
+    }
+
+    $cache[$cache_key] = get_posts([
+        'post_type' => $post_types,
+        'post_status' => 'publish',
+        'posts_per_page' => $limit,
+        'orderby' => 'post__in',
+        'post__in' => $post_ids,
+        'suppress_filters' => true,
+        'ignore_sticky_posts' => true,
+    ]);
+
+    return $cache[$cache_key];
 }
 
 function iss_relations_build_place_item(int $place_id, array $overrides = []): ?array
@@ -1093,6 +1385,7 @@ function iss_relations_query_related_posts(array $place_ids, $post_types, int $p
             $sql .= ' LIMIT %d';
             $params[] = $limit;
 
+            // phpcs:ignore WordPress.DB.PreparedSQL.NotPrepared, WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching -- Existing related blocks query plugin-owned graph tables through a prepared dynamic table query and cache the final post list per request.
             $post_ids = $wpdb->get_col($wpdb->prepare($sql, $params));
             $post_ids = array_values(array_unique(array_filter(array_map('intval', is_array($post_ids) ? $post_ids : []))));
 
@@ -1153,6 +1446,7 @@ function iss_relations_query_related_posts(array $place_ids, $post_types, int $p
         'order' => $sort_mode === 'relevance_title' ? 'ASC' : 'DESC',
         'suppress_filters' => true,
         'ignore_sticky_posts' => true,
+        // phpcs:ignore WordPress.DB.SlowDBQuery.slow_db_query_tax_query -- Legacy taxonomy read is the fallback when graph relations are unavailable.
         'tax_query' => [
             [
                 'taxonomy' => ISS_RELATIONS_TAXONOMY,
@@ -1174,6 +1468,11 @@ function iss_relations_query_related_posts(array $place_ids, $post_types, int $p
 
 function iss_relations_resolve_block_posts(array $attributes, int $current_post_id, array $post_types, int $per_page): array
 {
+    $source = sanitize_key((string) ($attributes['source'] ?? 'current'));
+    if (iss_relations_is_entity_related_source($source)) {
+        return iss_relations_query_entity_related_posts($current_post_id, $post_types, $per_page, $attributes);
+    }
+
     $place_items = iss_relations_resolve_block_place_items($attributes, $current_post_id);
     if (!$place_items) {
         return [];
@@ -1311,8 +1610,16 @@ function iss_relations_get_card_kicker(WP_Post $post, array $defaults = []): str
         return __('Video', 'iss-relations');
     }
 
+    if ($post->post_type === 'archivobjekt') {
+        return __('Archivobjekt', 'iss-relations');
+    }
+
     if ($post->post_type === 'projekt') {
         return __('Projekt', 'iss-relations');
+    }
+
+    if ($post->post_type === (function_exists('iss_graph_get_entity_profile_post_type') ? iss_graph_get_entity_profile_post_type() : 'entity_profile')) {
+        return __('Profil', 'iss-relations');
     }
 
     if ($post->post_type === 'post') {

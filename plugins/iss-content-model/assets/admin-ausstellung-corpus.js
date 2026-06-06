@@ -48,6 +48,25 @@
   }
 
   document.addEventListener('DOMContentLoaded', function () {
+    var sourceSelect = document.querySelector('[data-iss-exhibition-source-select]');
+    var sourcePanels = Array.prototype.slice.call(document.querySelectorAll('[data-iss-exhibition-source-panel]'));
+
+    function updateSourcePanels() {
+      if (!sourceSelect || !sourcePanels.length) {
+        return;
+      }
+
+      var activeSource = sourceSelect.value || 'manual';
+      sourcePanels.forEach(function (panel) {
+        panel.hidden = panel.getAttribute('data-iss-exhibition-source-panel') !== activeSource;
+      });
+    }
+
+    if (sourceSelect) {
+      sourceSelect.addEventListener('change', updateSourcePanels);
+      updateSourcePanels();
+    }
+
     document.querySelectorAll('[data-iss-corpus-builder]').forEach(function (builder) {
       var picker = builder.querySelector('[data-iss-corpus-picker]');
       var list = builder.querySelector('[data-iss-corpus-list]');

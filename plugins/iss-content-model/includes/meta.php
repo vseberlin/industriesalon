@@ -56,21 +56,72 @@ function iss_content_model_get_video_transcript_link_label(string $status, bool 
     return __('Zum Beitrag', 'iss-content-model');
 }
 
-function iss_content_model_get_ausstellung_surface_mode_options(): array
+function iss_content_model_get_ausstellung_type_options(): array
 {
     return [
-        'standard' => __('Normale Ausstellung', 'iss-content-model'),
-        'archive_exhibition' => __('Archivreihe / Kapitelpfad', 'iss-content-model'),
-        'archive_browser' => __('Archivbrowser / Objektkorpus', 'iss-content-model'),
+        'story' => [
+            'label' => __('Story Exhibition', 'iss-content-model'),
+            'description' => __('Erzählende Ausstellung mit Kapiteln, Bildern, Quellen und weiterführendem Material.', 'iss-content-model'),
+        ],
+        'collection' => [
+            'label' => __('Collection Exhibition', 'iss-content-model'),
+            'description' => __('Kuratierter Bestand aus Objekten oder Archivgruppen, gedacht zum Stöbern und Vergleichen.', 'iss-content-model'),
+        ],
+        'visual_essay' => [
+            'label' => __('Visual Essay', 'iss-content-model'),
+            'description' => __('Große Bilder mit knappen Bildtexten und wenig zusätzlicher Erklärung.', 'iss-content-model'),
+        ],
+        'timeline' => [
+            'label' => __('Timeline Exhibition', 'iss-content-model'),
+            'description' => __('Chronologische Erzählung mit Daten, Bildern und kurzen Deutungstexten.', 'iss-content-model'),
+        ],
+        'map' => [
+            'label' => __('Map Exhibition', 'iss-content-model'),
+            'description' => __('Atlasgeführte Ausstellung, in der Orte die öffentliche Reihenfolge bilden.', 'iss-content-model'),
+        ],
     ];
 }
 
-function iss_content_model_normalize_ausstellung_surface_mode(string $mode): string
+function iss_content_model_normalize_ausstellung_type(string $type): string
 {
-    $mode = sanitize_key($mode);
-    $options = iss_content_model_get_ausstellung_surface_mode_options();
+    $type = sanitize_key($type);
+    $options = iss_content_model_get_ausstellung_type_options();
 
-    return array_key_exists($mode, $options) ? $mode : 'standard';
+    return array_key_exists($type, $options) ? $type : 'story';
+}
+
+function iss_content_model_get_ausstellung_source_options(): array
+{
+    return [
+        'manual' => [
+            'label' => __('Manueller Inhalt', 'iss-content-model'),
+            'description' => __('Der normale Beitragsinhalt bildet den Ausstellungskörper.', 'iss-content-model'),
+        ],
+        'curated_chapters' => [
+            'label' => __('Kuratierte Kapitel', 'iss-content-model'),
+            'description' => __('Eine sortierte Auswahl von Archivbeiträgen bildet die Stationen.', 'iss-content-model'),
+        ],
+        'archive_category' => [
+            'label' => __('Archivkategorie als Kapitelpfad', 'iss-content-model'),
+            'description' => __('Eine Archivkategorie erzeugt automatisch den Kapitelpfad.', 'iss-content-model'),
+        ],
+        'archive_browser' => [
+            'label' => __('Archivbrowser als Objektbestand', 'iss-content-model'),
+            'description' => __('Ein gefilterter Archivbrowser liefert das Material für eine Collection Exhibition.', 'iss-content-model'),
+        ],
+        'atlas_places' => [
+            'label' => __('Atlas-Orte', 'iss-content-model'),
+            'description' => __('Verknüpfte Atlas-Orte bilden die Stationen der Ausstellung.', 'iss-content-model'),
+        ],
+    ];
+}
+
+function iss_content_model_normalize_ausstellung_source(string $source): string
+{
+    $source = sanitize_key($source);
+    $options = iss_content_model_get_ausstellung_source_options();
+
+    return array_key_exists($source, $options) ? $source : 'manual';
 }
 
 function iss_content_model_parse_slug_list($value): array
@@ -90,6 +141,30 @@ function iss_content_model_parse_slug_list($value): array
     }
 
     return array_values(array_unique($slugs));
+}
+
+function iss_content_model_parse_id_list($value): array
+{
+    if (is_array($value)) {
+        $items = $value;
+    } else {
+        $items = preg_split('/[\s,]+/', (string) $value);
+    }
+
+    $ids = [];
+    foreach ((array) $items as $item) {
+        $id = absint($item);
+        if ($id > 0) {
+            $ids[] = $id;
+        }
+    }
+
+    return array_values(array_unique($ids));
+}
+
+function iss_content_model_sanitize_id_list($value): string
+{
+    return implode(',', iss_content_model_parse_id_list($value));
 }
 
 function iss_content_model_sanitize_slug_list($value): string
@@ -138,6 +213,40 @@ function iss_content_model_get_video_year_label(string $year, string $original_d
     return substr($original_date, 0, 4);
 }
 
+function iss_content_model_get_ausstellung_type(int $post_id): string
+{
+    return iss_content_model_normalize_ausstellung_type((string) get_post_meta($post_id, 'iss_exhibition_type', true));
+}
+
+function iss_content_model_get_ausstellung_source(int $post_id): string
+{
+    return iss_content_model_normalize_ausstellung_source((string) get_post_meta($post_id, 'iss_exhibition_source', true));
+}
+
+function iss_content_model_get_ausstellung_corpus_chapter_ids(int $post_id): array
+{
+    return iss_content_model_parse_id_list((string) get_post_meta($post_id, 'iss_corpus_chapter_ids', true));
+}
+
+function iss_content_model_get_ausstellung_archive_term_slug(int $post_id): string
+{
+    return sanitize_title((string) get_post_meta($post_id, 'iss_archive_term_slug', true));
+}
+
+function iss_content_model_get_ausstellung_archive_browser_config(int $post_id): array
+{
+    return [
+        'default_source' => sanitize_title((string) get_post_meta($post_id, 'iss_archive_browser_default_source', true)),
+        'lock_source' => (bool) get_post_meta($post_id, 'iss_archive_browser_lock_source', true),
+        'default_field' => sanitize_title((string) get_post_meta($post_id, 'iss_archive_browser_default_field', true)),
+        'lock_field' => (bool) get_post_meta($post_id, 'iss_archive_browser_lock_field', true),
+        'quick_kicker' => trim((string) get_post_meta($post_id, 'iss_archive_browser_quick_kicker', true)),
+        'quick_title' => trim((string) get_post_meta($post_id, 'iss_archive_browser_quick_title', true)),
+        'quick_family_slugs' => iss_content_model_parse_slug_list((string) get_post_meta($post_id, 'iss_archive_browser_quick_family_slugs', true)),
+        'show_source_cards' => (bool) get_post_meta($post_id, 'iss_archive_browser_show_source_cards', true),
+    ];
+}
+
 function iss_content_model_meta_definitions() {
     return [
         ISS_CONTENT_MODEL_VERANSTALTUNG_POST_TYPE => [
@@ -153,7 +262,8 @@ function iss_content_model_meta_definitions() {
             'iss_is_permanent' => ['type' => 'boolean', 'sanitize' => 'rest_sanitize_boolean', 'default' => false],
             'iss_timeline_enabled' => ['type' => 'boolean', 'sanitize' => 'rest_sanitize_boolean', 'default' => true],
             'iss_timeline_item_id' => ['type' => 'integer', 'sanitize' => 'absint', 'default' => 0],
-            'iss_surface_mode' => ['type' => 'string', 'sanitize' => 'iss_content_model_normalize_ausstellung_surface_mode', 'default' => 'standard'],
+            'iss_exhibition_type' => ['type' => 'string', 'sanitize' => 'iss_content_model_normalize_ausstellung_type', 'default' => 'story'],
+            'iss_exhibition_source' => ['type' => 'string', 'sanitize' => 'iss_content_model_normalize_ausstellung_source', 'default' => 'manual'],
             'iss_archive_term_slug' => ['type' => 'string', 'sanitize' => 'sanitize_title', 'default' => ''],
             'iss_archive_browser_default_source' => ['type' => 'string', 'sanitize' => 'sanitize_title', 'default' => ''],
             'iss_archive_browser_lock_source' => ['type' => 'boolean', 'sanitize' => 'rest_sanitize_boolean', 'default' => false],
@@ -163,7 +273,7 @@ function iss_content_model_meta_definitions() {
             'iss_archive_browser_quick_title' => ['type' => 'string', 'sanitize' => 'sanitize_text_field', 'default' => ''],
             'iss_archive_browser_quick_family_slugs' => ['type' => 'string', 'sanitize' => 'iss_content_model_sanitize_slug_list', 'default' => ''],
             'iss_archive_browser_show_source_cards' => ['type' => 'boolean', 'sanitize' => 'rest_sanitize_boolean', 'default' => false],
-            'iss_corpus_chapter_ids' => ['type' => 'string', 'sanitize' => 'sanitize_text_field', 'default' => ''],
+            'iss_corpus_chapter_ids' => ['type' => 'string', 'sanitize' => 'iss_content_model_sanitize_id_list', 'default' => ''],
         ],
         ISS_CONTENT_MODEL_PROJEKT_POST_TYPE => [
             'iss_period_label' => ['type' => 'string', 'sanitize' => 'sanitize_text_field', 'default' => ''],

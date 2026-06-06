@@ -4,6 +4,8 @@ if (!defined('ABSPATH')) {
     exit;
 }
 
+// phpcs:disable WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching, WordPress.DB.PreparedSQL.InterpolatedNotPrepared -- Archive graph bridge reads plugin-owned graph tables for projection lookups.
+
 function iss_graph_get_archive_object_post_type(): string
 {
     return defined('ISS_WF_IMPORT_OBJECT_POST_TYPE') ? ISS_WF_IMPORT_OBJECT_POST_TYPE : 'archivobjekt';
@@ -138,7 +140,7 @@ function iss_graph_ensure_archive_named_entity(
         return null;
     }
 
-    $entity = $service->upsert_entity(array_merge([
+    $entity = iss_graph_resolve_or_create_named_entity($entity_kind, $display_title, array_merge([
         'entity_kind' => $entity_kind,
         'source_system' => $source_system,
         'source_id' => $source_id,
@@ -148,7 +150,9 @@ function iss_graph_ensure_archive_named_entity(
         'status' => 'publish',
         'is_public' => false,
         'search_visibility' => 'hidden',
-    ], $extra_entity_data));
+    ], $extra_entity_data), [
+        'source_ref' => $source_system . ':' . $source_id,
+    ]);
 
     if (!$entity) {
         return null;
@@ -156,9 +160,19 @@ function iss_graph_ensure_archive_named_entity(
 
     $service->replace_entity_names_for_source((int) $entity['id'], 'archive_title', [[
         'name' => $display_title,
-        'name_type' => 'primary',
-        'is_primary' => true,
+        'name_type' => 'source_label',
+        'is_primary' => false,
         'position' => 0,
+    ]], 'entity:' . (int) $entity['id']);
+
+    $service->replace_entity_identifiers_for_source((int) $entity['id'], $source_system, [[
+        'namespace' => $source_system,
+        'value' => $source_id,
+        'label' => 'Archive source ID',
+        'trust_level' => 'trusted_review',
+        'confidence' => 80,
+        'is_primary' => true,
+        'status' => 'accepted',
     ]], 'entity:' . (int) $entity['id']);
 
     return $service->get_entity_by_id((int) $entity['id']);
@@ -380,6 +394,32 @@ function iss_graph_sync_archive_object_entity(int $post_id): ?array
         'is_primary' => true,
         'position' => 0,
     ]], 'post:' . $post_id);
+
+    $identifier_rows = [[
+        'namespace' => 'archive_object_id',
+        'value' => $object_key,
+        'label' => 'Archive object ID',
+        'trust_level' => 'trusted_auto_link',
+        'confidence' => 100,
+        'is_primary' => true,
+        'status' => 'accepted',
+    ]];
+    $source_id = trim((string) ($projection['source_id'] ?? ''));
+    if ($source_id !== '') {
+        $identifier_rows[] = [
+            'namespace' => 'archive_source_id',
+            'value' => $source_id,
+            'label' => 'Archive source ID',
+            'trust_level' => 'trusted_review',
+            'confidence' => 80,
+            'status' => 'accepted',
+        ];
+    }
+    iss_graph_sync_wp_post_identifiers($entity_id, $post, 'archive_object', $identifier_rows);
+
+    if (function_exists('iss_graph_sync_entity_alias_backfill')) {
+        iss_graph_sync_entity_alias_backfill($entity_id);
+    }
 
     $relation_rows = iss_graph_build_archive_object_relation_rows($post_id);
     $service->replace_entity_relations_for_source(

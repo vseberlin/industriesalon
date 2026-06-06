@@ -469,6 +469,14 @@ function iss_relations_graph_upsert_generic_post_entity(WP_Post $post, array $st
         'position' => 0,
     ]], 'post:' . (int) $post->ID);
 
+    if (function_exists('iss_graph_sync_wp_post_identifiers')) {
+        iss_graph_sync_wp_post_identifiers((int) $entity['id'], $post, 'iss_relations_post');
+    }
+
+    if (function_exists('iss_graph_sync_entity_alias_backfill')) {
+        iss_graph_sync_entity_alias_backfill((int) $entity['id']);
+    }
+
     return $service->get_entity_by_id((int) $entity['id']);
 }
 
@@ -1030,6 +1038,7 @@ function iss_relations_backfill_index(array $post_types = []): array
             'suppress_filters' => true,
             'update_post_term_cache' => false,
             'update_post_meta_cache' => false,
+            // phpcs:ignore WordPress.DB.SlowDBQuery.slow_db_query_meta_query -- Relation backfill intentionally discovers posts that have relation source meta.
             'meta_query' => [
                 [
                     'key' => ISS_RELATIONS_META_KEY,
@@ -1113,3 +1122,19 @@ function iss_relations_maybe_run_backfill(): void
     iss_relations_backfill_index();
 }
 add_action('admin_init', 'iss_relations_maybe_run_backfill');
+
+function iss_relations_maybe_backfill_graph_identifiers(): void
+{
+    if (!function_exists('iss_graph_sync_wp_post_identifiers')) {
+        return;
+    }
+
+    $stored = (string) get_option(ISS_RELATIONS_GRAPH_IDENTIFIER_BACKFILL_OPTION, '');
+    if ($stored === ISS_RELATIONS_GRAPH_IDENTIFIER_BACKFILL_VERSION) {
+        return;
+    }
+
+    iss_relations_backfill_index();
+    update_option(ISS_RELATIONS_GRAPH_IDENTIFIER_BACKFILL_OPTION, ISS_RELATIONS_GRAPH_IDENTIFIER_BACKFILL_VERSION, false);
+}
+add_action('init', 'iss_relations_maybe_backfill_graph_identifiers', 60);

@@ -281,6 +281,13 @@ function iss_graph_collect_public_search_text_parts(WP_Post $post): array
             }
         }
 
+        foreach ($service->get_identifiers_for_entity($entity_id, ['status' => 'accepted']) as $row) {
+            if (is_array($row)) {
+                $parts[] = (string) ($row['value'] ?? '');
+                $parts[] = (string) ($row['label'] ?? '');
+            }
+        }
+
         foreach (['organization', 'person'] as $relation_family) {
             foreach ($service->get_relations_for_entity($entity_id, $relation_family, ['public_only' => true]) as $row) {
                 if (!is_array($row)) {
@@ -304,6 +311,13 @@ function iss_graph_collect_public_search_text_parts(WP_Post $post): array
             foreach ($service->get_names_for_entity((int) $linked_entity['id']) as $row) {
                 if (is_array($row)) {
                     $parts[] = (string) ($row['name'] ?? '');
+                }
+            }
+
+            foreach ($service->get_identifiers_for_entity((int) $linked_entity['id'], ['status' => 'accepted']) as $row) {
+                if (is_array($row)) {
+                    $parts[] = (string) ($row['value'] ?? '');
+                    $parts[] = (string) ($row['label'] ?? '');
                 }
             }
 

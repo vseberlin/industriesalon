@@ -1,5 +1,23 @@
 # Changelog
 
+## 2026-06-06
+- Reworked the Sammlungen page as a stronger file-backed composition: the `Wege hinein` image rail now aligns with the panel stack, `Jetzt stark` uses a stable equal-card image grid with linked materials, and `Mehr aus dem Bildbestand` uses the shared related carousel behavior.
+- Synced the latest editor-saved `page-sammlungen` DB template back to `themes/industriesalon/templates/page-sammlungen.html`, normalized local media URLs, removed the active Sammlungen DB override, removed the stray Front Page DB override without preserving its DB-only souvenir image, and verified that no active `wp_template` or `wp_template_part` rows shadow disk templates.
+- Updated remaining Atlas links in Sammlungen and tour templates to point directly at `/schoneweide/#atlas-buehne`.
+- Added an `iss-graph` video transcript bridge that parses Video CPT body transcripts, detects exact stable entity-name mentions, and stores them as pending `video_transcript` evidence refs with timecode/snippet notes; editors can now review those hints on Video CPT screens, promote people/organizations to `content_admin` graph relations, promote places through `iss-relations`, or dismiss hints without recreating them on the next transcript sync.
+- Made resolver-before-create mandatory for label-based graph entity creation: register organization/person labels, archive institution/person/place labels, and enrichment imports now call `iss_graph_resolve_or_create_named_entity()`, while the legacy `find_or_create_named_entity()` method delegates to the same resolver path.
+- Tightened imported archive labels so they attach as `source_label` names on resolved entities instead of becoming accepted primary names, and documented source-scoped hidden placeholders as the fallback for unresolved labels.
+- Added graph-aware source modes to `iss/related-content` and `iss/related-cards`, allowing shared related feeds to pull selected CPTs and archive objects by current entity relations to places, people, and organizations instead of only by place-source blocks.
+- Backfilled generated graph aliases into `wp_iss_entity_names` under `entity_alias_backfill`, added `wp iss-graph sync-aliases`, and exposed manual aliases on `entity_profile` edit screens under the separate `entity_profile_admin` source.
+- Added `wp iss-graph drift-check` to compare entity identifiers, register/content/archive entity projections, place taxonomy indexes, graph place relations, and search-index rows against their source data; rebuilt local derived graph projections and removed one stale graph entity that pointed at an attachment instead of its former Ausstellung source.
+- Started Phase 1 of the entity model in `iss-graph`: schema v4 adds entity identifiers and lightweight evidence references, public resolver/API wrappers, identifier-aware search projection, WP-CLI verification, and backfills for register, content, archive, and search projections.
+- Added a draft entity-centered architecture note defining `iss-graph` as the identity, alias, identifier, evidence-reference, relation, and indexing layer while keeping CPTs and source plugins as their existing editorial/data owners.
+- Rebuilt the Ausstellung backend contract around `iss_exhibition_type` and `iss_exhibition_source`, replacing the retired `iss_surface_mode` switch with separate editorial choices for Story, Collection, Visual Essay, Timeline, and Map exhibitions plus their material source.
+- Simplified the Ausstellung metabox so editors choose one material source and only see the relevant controls for manual content, curated chapters, archive category streams, archive object browsers, or Atlas places.
+- Removed the unused manually insertable `iss-content-model/ausstellung-corpus` block while keeping the shared corpus renderer for the file-template-owned `iss-content-model/ausstellung-surface` block.
+- Updated the theme Ausstellung dispatcher and body classes to use the new type/source contract, preserving manual stories, curated chapter paths, archive category streams, and embedded archive browsers.
+- Added and applied `ops/sql/2026-06-06-ausstellung-backend-meta-migration.sql` to migrate all local Ausstellung posts to the new type/source meta and delete old `iss_surface_mode` rows.
+
 ## 2026-06-05
 - Documented the paired SQL/uploads artifact deployment pattern in the infrastructure docs so future staging transfers preserve the backup, upload rollback, import, and verification sequence without rediscovering it.
 - Reworked the Repair Café page as a file-backed theme surface:

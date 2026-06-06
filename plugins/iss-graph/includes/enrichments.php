@@ -118,13 +118,15 @@ function iss_graph_import_enrichment_dataset(array $dataset, array $args = []): 
             continue;
         }
 
-        $entity = $service->find_or_create_named_entity($entity_kind, $name, [
+        $entity = iss_graph_resolve_or_create_named_entity($entity_kind, $name, [
             'source_system' => 'enrichment_' . $source_slug,
             'source_id' => sanitize_title((string) ($entry['source_id'] ?? $name)),
             'display_title' => sanitize_text_field((string) ($entry['display_title'] ?? $name)),
             'status' => $profile_status === 'publish' ? 'publish' : 'draft',
             'is_public' => false,
             'search_visibility' => 'hidden',
+        ], [
+            'source_ref' => 'dataset:' . $source_slug,
         ]);
 
         if (!$entity || empty($entity['id'])) {
@@ -170,6 +172,10 @@ function iss_graph_import_enrichment_dataset(array $dataset, array $args = []): 
             $names,
             'dataset:' . $source_slug
         );
+
+        if (function_exists('iss_graph_sync_entity_alias_backfill')) {
+            iss_graph_sync_entity_alias_backfill($entity_id);
+        }
 
         if (!empty($entry['facts']) && is_array($entry['facts'])) {
             $facts = $service->upsert_entity_facts($entity_kind, $entity_id, $entry['facts']);
