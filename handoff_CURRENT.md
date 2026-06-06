@@ -7,8 +7,9 @@ Current checkpoint only. History belongs in `CHANGELOG.md`; active tasks belong 
 ## Current State
 
 - Branch: `main`.
-- Current GitHub checkpoint covered by this handoff: latest `origin/main`; graph/entity code checkpoint is `9813fa3` (`Consolidate graph entities and exhibition surfaces`) plus the Sammlungen media transfer/rules closeout.
+- Current GitHub/staging checkpoint covered by this handoff: `d367739` (`Add Sammlungen media transfer artifacts`).
 - Staging already applied the 2026-06-05 Repair Cafe/Sammlungen SQL/uploads artifacts; rollback backups are under `/srv/industriesalon/stage/backups/20260605-213910-repair-cafe-sammlungen-stage/`.
+- Staging applied the 2026-06-06 graph/entity code checkpoint plus the paired Sammlungen SQL/uploads artifacts. Rollback backups are under `/srv/industriesalon/stage/backups/20260606-2104-graph-sammlungen-deploy/`.
 - New paired Sammlungen transfer artifacts are tracked for the latest local media/template state:
   - `ops/sql/2026-06-06-sammlungen-media.sql`
   - `ops/uploads/2026-06-06-sammlungen-media.tar.gz`
@@ -42,40 +43,41 @@ Current checkpoint only. History belongs in `CHANGELOG.md`; active tasks belong 
 - Blocked `xmlrpc.php` in `/etc/nginx/sites-available/stage.industriesalon.info`; `https://staging.industriesalon.info/xmlrpc.php` returns `403`.
 - Server action notes and rollback commands are recorded in `/home/vladimir/server-actions/`.
 - Repair Cafe/Sammlungen staging artifact application is recorded in `/home/vladimir/server-actions/2026-06-05-apply-repair-cafe-sammlungen-stage-artifacts.md`.
+- Graph/Sammlungen staging deployment is recorded in `/home/vladimir/server-actions/2026-06-06-deploy-graph-sammlungen-stage.md`.
 
 ## Current Risk
 
 - Pulling on staging must follow `docs/runbooks/git-exchange.md`; do not merge into a dirty or diverged staging clone.
-- `ops/sql/2026-06-06-ausstellung-backend-meta-migration.sql` is a data migration artifact. Apply it on another environment only after a DB backup and only when that environment should migrate old `iss_surface_mode` rows.
-- `ops/sql/2026-06-06-sammlungen-media.sql` and `ops/uploads/2026-06-06-sammlungen-media.*` are one deployment unit. Apply only after DB backup, upload rollback preparation for manifest files that already exist on target, checksum verification, and code pull.
-- Graph alias, resolver/source-label, search, and video transcript evidence rows are derived DB state. After deploying graph code elsewhere, run the graph sync/verify commands before relying on related-content or search output.
+- `ops/sql/2026-06-06-ausstellung-backend-meta-migration.sql` is applied on staging. Apply it on another environment only after a DB backup and only when that environment should migrate old `iss_surface_mode` rows.
+- `ops/sql/2026-06-06-sammlungen-media.sql` and `ops/uploads/2026-06-06-sammlungen-media.*` are applied on staging. Treat them as one deployment unit on any other environment.
+- Graph alias, resolver/source-label, search, and video transcript evidence rows are derived DB state. Staging was resynced after deploy; rerun graph sync/verify commands after future graph-affecting imports.
 - Template output can still become DB-backed after Site Editor saves; check `wp_template` authority before assuming disk files are live.
 - Uploads, mail, Meilisearch, and SQL artifacts are cross-machine concerns; use the repo runbooks before changing staging state.
 
 ## Next Action
 
-- On staging, inspect/fetch/fast-forward from `origin/main` only if the checkout is clean and behind.
-- After staging pulls this commit, verify and apply the paired Sammlungen media artifacts:
-  - `sha256sum -c ops/uploads/2026-06-06-sammlungen-media.tar.gz.sha256`
-  - create DB backup and upload rollback archive for files listed in `ops/uploads/2026-06-06-sammlungen-media.manifest`
-  - extract `ops/uploads/2026-06-06-sammlungen-media.tar.gz` into `/srv/industriesalon/stage/shared/uploads`
-  - import `ops/sql/2026-06-06-sammlungen-media.sql`
-  - verify 16 target attachment rows, 0 active `front-page` / `page-sammlungen` template overrides, `/sammlungen/`, and representative media URLs
-- After staging pulls this commit, run:
-  - `wp iss-graph verify`
-  - `wp iss-graph sync-register`
-  - `wp iss-graph sync-archive`
-  - `wp iss-graph sync-aliases`
-  - `wp iss-graph sync-search`
-  - `wp iss-graph sync-video-transcripts`
-  - `wp iss-graph drift-check`
-- If staging has Ausstellung rows still using `iss_surface_mode`, apply `ops/sql/2026-06-06-ausstellung-backend-meta-migration.sql` after backup.
 - Review `/sammlungen/`, `/ausstellungen/`, representative single Ausstellung pages, graph search, related-content previews, and Video CPT transcript-review metaboxes on staging.
 - Keep root `TODO.md` for immediate executable work only; broader backlog stays under `docs/project/`.
 
 ## Verified
 
 - 2026-06-05 staging artifact application: staging repo fast-forwarded to `a94d06c`; staging DB backup and upload rollback archive were created; upload manifest verified 61 files; SQL import completed; `/repair-cafe/` and `/sammlungen/` returned `200 OK`.
+- 2026-06-06 staging deployment: staging repo fast-forwarded to `d367739`; DB backup and upload rollback archive were created under `/srv/industriesalon/stage/backups/20260606-2104-graph-sammlungen-deploy/`; Sammlungen upload artifact checksum passed; 81 manifest files were extracted and verified; Ausstellung migration SQL and Sammlungen media SQL imported successfully.
+- 2026-06-06 staging data verification:
+  - Old `iss_surface_mode` rows: `0`.
+  - Sammlungen attachment rows: `16`; attachment postmeta rows: `32`.
+  - Active `front-page` / `page-sammlungen` DB template overrides: `0`.
+  - Video transcript evidence refs: `3`.
+- 2026-06-06 staging graph verification:
+  - `wp iss-graph sync-register`: synced 84 register places.
+  - `wp iss-graph sync-archive`: synced 3,048 archive objects.
+  - `wp iss-graph sync-aliases`: entities=3547, with_aliases=1824, names=4428.
+  - `wp iss-graph sync-search`: search rows=3316.
+  - `wp iss-graph sync-video-transcripts`: videos=30, synced=30, mentions=3.
+  - Removed stale derived graph entity `3349`, which still pointed at attachment `8654`; valid Ausstellung entity `3367` points at post `25772`.
+  - `wp iss-graph verify`: passed with entities=3546, names=8096, identifiers=12936, relations=4764, search=3316, evidence_refs=3.
+  - `wp iss-graph drift-check`: passed.
+- 2026-06-06 staging frontend verification: `/`, `/sammlungen/`, `/ausstellungen/`, `/wp-content/uploads/2026/06/Uli-Berger.webp`, and `/wp-content/uploads/2026/06/1_TRO-1949-008.webp` returned `200`.
 - Local graph alias verification on 2026-06-06:
   - `wp iss-graph sync-register`: synced 84 register places.
   - `wp iss-graph sync-archive`: synced 3,048 archive objects.
