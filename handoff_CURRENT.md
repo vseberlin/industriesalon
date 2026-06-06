@@ -7,7 +7,7 @@ Current checkpoint only. History belongs in `CHANGELOG.md`; active tasks belong 
 ## Current State
 
 - Branch: `main`.
-- Latest GitHub checkpoint before this local push: `d25efbf` (`Document paired SQL uploads deployment`) on `origin/main`.
+- Latest GitHub code checkpoint: `9813fa3` (`Consolidate graph entities and exhibition surfaces`) on `origin/main`.
 - Staging already applied the 2026-06-05 Repair Cafe/Sammlungen SQL/uploads artifacts; rollback backups are under `/srv/industriesalon/stage/backups/20260605-213910-repair-cafe-sammlungen-stage/`.
 - Current local checkpoint to push:
   - `iss-graph` Phase 1 adds entity identifiers, evidence refs, resolver wrappers, drift checks, alias backfill, identifier-aware search projection, and resolver-before-create paths for register, archive, content, and enrichment labels.
@@ -47,7 +47,6 @@ Current checkpoint only. History belongs in `CHANGELOG.md`; active tasks belong 
 
 ## Next Action
 
-- Push the local commit to GitHub `main`.
 - On staging, inspect/fetch/fast-forward from `origin/main` only if the checkout is clean and behind.
 - After staging pulls this commit, run:
   - `wp iss-graph verify`
@@ -94,3 +93,4 @@ Current checkpoint only. History belongs in `CHANGELOG.md`; active tasks belong 
   - Docker PHP `-l`, PHPCS, and PHPStan passed for changed PHP files.
   - `parse_blocks()` passed for changed theme templates.
   - `wp iss-graph verify` and `wp iss-graph drift-check` passed.
+- `git push origin main` advanced GitHub from `d25efbf` to `9813fa3`.
