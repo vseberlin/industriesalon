@@ -7,8 +7,14 @@ Current checkpoint only. History belongs in `CHANGELOG.md`; active tasks belong 
 ## Current State
 
 - Branch: `main`.
-- Current GitHub code checkpoint covered by this handoff: `9813fa3` (`Consolidate graph entities and exhibition surfaces`).
+- Current GitHub checkpoint covered by this handoff: latest `origin/main`; graph/entity code checkpoint is `9813fa3` (`Consolidate graph entities and exhibition surfaces`) plus the Sammlungen media transfer/rules closeout.
 - Staging already applied the 2026-06-05 Repair Cafe/Sammlungen SQL/uploads artifacts; rollback backups are under `/srv/industriesalon/stage/backups/20260605-213910-repair-cafe-sammlungen-stage/`.
+- New paired Sammlungen transfer artifacts are tracked for the latest local media/template state:
+  - `ops/sql/2026-06-06-sammlungen-media.sql`
+  - `ops/uploads/2026-06-06-sammlungen-media.tar.gz`
+  - `ops/uploads/2026-06-06-sammlungen-media.manifest`
+  - `ops/uploads/2026-06-06-sammlungen-media.tar.gz.sha256`
+  - Coverage: 16 attachment rows and 81 upload files. The SQL also removes active `front-page` and `page-sammlungen` DB template overrides so those templates remain file-backed after import.
 - Current code checkpoint:
   - `iss-graph` Phase 1 adds entity identifiers, evidence refs, resolver wrappers, drift checks, alias backfill, identifier-aware search projection, and resolver-before-create paths for register, archive, content, and enrichment labels.
   - Video transcripts now bridge into pending `video_transcript` evidence refs; Video CPT editors can accept person/organization hints into graph relations, accept place hints through `iss-relations`, or dismiss hints.
@@ -41,6 +47,7 @@ Current checkpoint only. History belongs in `CHANGELOG.md`; active tasks belong 
 
 - Pulling on staging must follow `docs/runbooks/git-exchange.md`; do not merge into a dirty or diverged staging clone.
 - `ops/sql/2026-06-06-ausstellung-backend-meta-migration.sql` is a data migration artifact. Apply it on another environment only after a DB backup and only when that environment should migrate old `iss_surface_mode` rows.
+- `ops/sql/2026-06-06-sammlungen-media.sql` and `ops/uploads/2026-06-06-sammlungen-media.*` are one deployment unit. Apply only after DB backup, upload rollback preparation for manifest files that already exist on target, checksum verification, and code pull.
 - Graph alias, resolver/source-label, search, and video transcript evidence rows are derived DB state. After deploying graph code elsewhere, run the graph sync/verify commands before relying on related-content or search output.
 - Template output can still become DB-backed after Site Editor saves; check `wp_template` authority before assuming disk files are live.
 - Uploads, mail, Meilisearch, and SQL artifacts are cross-machine concerns; use the repo runbooks before changing staging state.
@@ -48,6 +55,12 @@ Current checkpoint only. History belongs in `CHANGELOG.md`; active tasks belong 
 ## Next Action
 
 - On staging, inspect/fetch/fast-forward from `origin/main` only if the checkout is clean and behind.
+- After staging pulls this commit, verify and apply the paired Sammlungen media artifacts:
+  - `sha256sum -c ops/uploads/2026-06-06-sammlungen-media.tar.gz.sha256`
+  - create DB backup and upload rollback archive for files listed in `ops/uploads/2026-06-06-sammlungen-media.manifest`
+  - extract `ops/uploads/2026-06-06-sammlungen-media.tar.gz` into `/srv/industriesalon/stage/shared/uploads`
+  - import `ops/sql/2026-06-06-sammlungen-media.sql`
+  - verify 16 target attachment rows, 0 active `front-page` / `page-sammlungen` template overrides, `/sammlungen/`, and representative media URLs
 - After staging pulls this commit, run:
   - `wp iss-graph verify`
   - `wp iss-graph sync-register`
@@ -86,6 +99,12 @@ Current checkpoint only. History belongs in `CHANGELOG.md`; active tasks belong 
   - All `themes/industriesalon/templates/*.html` files resolve as `source=theme`.
   - No `wp_template_part` rows exist.
   - `/sammlungen/` and `/` returned `200` locally.
+- Sammlungen media artifact verification on 2026-06-06:
+  - `ops/uploads/2026-06-06-sammlungen-media.tar.gz.sha256` verified locally.
+  - Upload archive contains 81 files and matches the 81-line manifest.
+  - `ops/sql/2026-06-06-sammlungen-media.sql` passed isolated MariaDB import verification.
+  - Import verification returned 16 attachment rows, 32 attachment postmeta rows, and 0 active `front-page` / `page-sammlungen` DB template overrides.
+  - SQL artifact contains no local `192.168.2.31` or `localhost` URLs.
 - Closeout verification before commit:
   - `git diff --check` passed.
   - Targeted ESLint and `node --check` passed for changed JavaScript.

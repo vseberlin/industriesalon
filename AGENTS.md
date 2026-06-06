@@ -36,6 +36,7 @@ All changes must be lean, reversible where practical, documented, tested, and ju
 - Use `WP_Query` for normal editorial post loops; use plugin-owned custom tables and prepared `$wpdb` SQL for projection, search, graph, archive, reporting, and other non-post-shaped data.
 - Verify frontend, editor, responsive behavior, template compatibility, and block validation when relevant.
 - Use `docs/agent/verification.md` to choose checks for the task class.
+- Before commit, push, or deploy, always check whether changed templates, content, media references, or DB-backed state require paired SQL and uploads artifacts; create/sync them together or record why no artifact is needed.
 
 ## Operations Rules
 

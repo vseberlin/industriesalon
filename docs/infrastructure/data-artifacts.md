@@ -2,6 +2,15 @@
 
 Use explicit artifacts for data transfer and review.
 
+## Mandatory Check
+
+Every commit, push, deploy, and handoff must check whether local DB state or
+upload files are required for the changed code/templates/content to work on the
+target. When both are required, create and verify paired artifacts under
+`ops/sql/` and `ops/uploads/`; do not treat code, SQL, and media as independent
+closeout items. When no SQL or upload artifact is needed, record the no-op
+decision in the closeout context.
+
 ## SQL
 
 - Store deliberate transfer SQL under `ops/sql/`.
@@ -13,7 +22,7 @@ Use explicit artifacts for data transfer and review.
 
 - Store upload transfer manifests or archives under `ops/uploads/` when they are part of deployment.
 - Verify hashes locally and remotely after transfer.
-- Preserve `uploads/` as the archive root when creating restore-friendly tarballs.
+- Preserve uploads-relative archive paths so entries map cleanly into `wp-content/uploads/`.
 - Use `docs/runbooks/uploads-sync.md` for live `rsync` or restore procedures.
 
 ## Paired SQL And Upload Artifacts

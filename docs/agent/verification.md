@@ -8,8 +8,8 @@ Use this as the default verification map. Add task-specific checks when risk war
 | PHP plugin/theme | `php -l` or Docker PHP lint, `tools/phpcs-target.sh`, `tools/phpstan-target.sh`, WP-CLI plugin/theme load when runtime-facing |
 | JavaScript | `npm run lint:js` or `node --check`, browser behavior check when user-facing |
 | Block template | `parse_blocks()`, `wp_template` authority, frontend route render |
-| SQL import/artifact | backup, syntax/import test where possible, row counts, target dependency check |
+| SQL import/artifact | backup, syntax/import test where possible, row counts, target dependency check, paired upload dependency check |
 | Deploy | repo state, containers/services, logs, homepage, changed routes |
-| Upload sync | source/target inspection, dry-run, counts, sizes, hashes or representative media URLs |
+| Upload sync | source/target inspection, referenced-media coverage, matching SQL dependency check, dry-run, counts, sizes, hashes or representative media URLs |
 | Search/mail/service | service status, logs, configured provider, frontend behavior, fallback behavior |
 | Documentation | `git diff --check`, no broad duplicate policy, docs remain task-loaded |

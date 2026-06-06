@@ -13,3 +13,12 @@ Classify every task before changing files or infrastructure. If a task spans cla
 | Search/mail/service | `docs/infrastructure/services.md`, relevant runbook | service status/logs/fallback behavior | record service state and rollback |
 | Documentation/continuity | `docs/agent/continuity.md`, `docs/README.md` | `git diff --check`, structure remains compact | changelog when model changes |
 | Git exchange | `docs/runbooks/git-exchange.md` | status, fetch, HEAD/origin comparison, ahead/behind log | report refs and clean/dirty state |
+
+## Mandatory Artifact Check
+
+Before any commit, push, deploy, or handoff, check whether the change depends on
+local upload files, attachment rows, DB-backed templates, options, custom-table
+rows, or imported content state. If it does, also classify the task as
+`Database transfer` and/or `Uploads/media`, create paired artifacts when both
+SQL and files are required, and record the artifact names plus verification. If
+no artifact is needed, record that decision in the closeout context.

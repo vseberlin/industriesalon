@@ -1,6 +1,10 @@
 # Changelog
 
 ## 2026-06-06
+- Added paired Sammlungen media transfer artifacts for the latest local media/template state:
+  - `ops/sql/2026-06-06-sammlungen-media.sql` transfers 16 attachment rows and removes active `front-page` / `page-sammlungen` DB template overrides
+  - `ops/uploads/2026-06-06-sammlungen-media.tar.gz` contains 81 upload files, with matching manifest and SHA256 verification files
+- Tightened repo rules so commits, pushes, deploys, and handoffs must always check whether SQL and uploads artifacts are required, keep paired artifacts synced, or record why no artifact is needed.
 - Reworked the Sammlungen page as a stronger file-backed composition: the `Wege hinein` image rail now aligns with the panel stack, `Jetzt stark` uses a stable equal-card image grid with linked materials, and `Mehr aus dem Bildbestand` uses the shared related carousel behavior.
 - Synced the latest editor-saved `page-sammlungen` DB template back to `themes/industriesalon/templates/page-sammlungen.html`, normalized local media URLs, removed the active Sammlungen DB override, removed the stray Front Page DB override without preserving its DB-only souvenir image, and verified that no active `wp_template` or `wp_template_part` rows shadow disk templates.
 - Updated remaining Atlas links in Sammlungen and tour templates to point directly at `/schoneweide/#atlas-buehne`.
