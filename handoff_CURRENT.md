@@ -34,6 +34,7 @@ Current checkpoint only. History belongs in `CHANGELOG.md`; active tasks belong 
   `ops/sql/2026-06-10-kinder-im-werk-care-skin.sql`,
   `ops/sql/2026-06-07-kinder-im-wf-salvage.sql`, and
   `ops/uploads/2026-06-10-ausstellungen-media.tar.gz` with its manifest/checksum.
+- `ops/sql/2026-06-10-frauen-in-werk-redesign.sql` is now a create-or-update artifact for the new `Frauen im Werk für Fernmeldewesen` post `26287`, including current WebP attachment rows/meta and attached Archivset `27`; it is no longer update-only.
 
 ## Current Server State
 
@@ -43,13 +44,13 @@ Current checkpoint only. History belongs in `CHANGELOG.md`; active tasks belong 
 - Staging nginx hardening pass 2 was applied on 2026-06-10: standard response headers were added, PHP `X-Powered-By` is hidden, `/wp-admin/install.php`, `/wp-admin/setup-config.php`, and `/wp-admin/maint/repair.php` return `404`, `wp-config.php` is mode `0640`, and `compose.yml` is mode `0600`. Backup: `/etc/nginx/sites-available/stage.industriesalon.info.backup-20260610-hardening-pass-2`; server action note: `/home/vladimir/server-actions/2026-06-10-wordpress-nginx-hardening-pass-2.md`.
 - Staging applied the pulled Ausstellung SQL/uploads artifacts on 2026-06-10. Backup/rollback directory: `/srv/industriesalon/stage/backups/20260610-apply-ausstellungen-artifacts/`; server action note: `/home/vladimir/server-actions/2026-06-10-apply-ausstellungen-artifacts.md`.
 - Applied content now live on staging: `/ausstellungen/kinder-im-wf/` and `/ausstellungen/kinder-im-werk/`. The upload artifact was extracted into the shared uploads bind mount and all 53 manifest files were verified.
-- `Frauen im Werk` is not live on staging. The pulled `ops/sql/2026-06-10-frauen-in-werk-redesign.sql` is only an UPDATE for post `26287`; staging does not have that post, so `/ausstellungen/frauen-in-werk/` still returns `404`. A complete transfer needs the base post plus Archivset rows/members/links.
+- `Frauen im Werk` is not live on staging yet. The artifact that staging pulled earlier was update-only and matched no row; the repository artifact has since been corrected to create/update post `26287`, its current WebP attachments, and Archivset `27`, but that corrected artifact has not yet been applied on staging.
 - Staging nginx was hardened on 2026-06-10 by adding exact-match denies for `/wp-config.php`, `/readme.html`, and `/license.txt` in `/etc/nginx/sites-available/stage.industriesalon.info`. Backup: `/etc/nginx/sites-available/stage.industriesalon.info.backup-20260610-hardening`; rollback: restore that file over the active vhost, run `sudo nginx -t`, then `sudo systemctl reload nginx`.
 - Server action note: `/home/vladimir/server-actions/2026-06-10-nginx-wordpress-path-hardening.md`.
 
 ## Current Risk
 
-- The Ausstellung SQL artifacts are narrow content/custom-table transfer files. On staging, the `Kinder im WF` and `Kinder im Werk` artifacts have been applied with the upload archive; `Frauen im Werk` remains incomplete because the available SQL does not create missing post `26287`.
+- The Ausstellung SQL artifacts are narrow content/custom-table transfer files. On staging, the `Kinder im WF` and `Kinder im Werk` artifacts have been applied with the older upload archive; `Frauen im Werk` remains incomplete until staging pulls and applies the corrected SQL plus refreshed upload archive.
 - Older local DB/custom-table state around DB template sync, Archivset `27`, attachment link, and member title/caption edits still needs separate transfer coverage if that exact earlier state must be reproduced on staging.
 - Stale post meta rows from old experiments may still exist in the database, but the active code no longer registers or reads the removed source/layout/corpus/browser fields.
 - Public post body text is rendered by the single-Ausstellung template through normal `post-content`; keep exhibition prose, announcement copy, and station text editor-owned.
@@ -60,7 +61,7 @@ Current checkpoint only. History belongs in `CHANGELOG.md`; active tasks belong 
 - If workbench testing needs the Archivsets admin page directly, use `wp-admin/edit.php?post_type=archivbeitrag&page=iss-archive-sets`; the submenu is not registered under `post_type=archivobjekt`.
 - Do not reintroduce core archive-list blocks (`core/archives`, `core/categories`, `core/tag-cloud`, `core/query-title`) as normal post-editor choices; the theme hides them in post editors only, not in the Site Editor.
 - Template output can still become DB-backed after Site Editor saves; check `wp_template` authority before assuming disk files are live.
-- The Frauen exhibition content and Archivset attachment are local database/custom-table state. A staging transfer would need a SQL artifact for post `26287` plus Archivset rows/members/links.
+- The Frauen exhibition content and Archivset attachment are represented in `ops/sql/2026-06-10-frauen-in-werk-redesign.sql`; apply it together with the refreshed `ops/uploads/2026-06-10-ausstellungen-media.tar.gz` so the WebP attachment rows resolve to real files.
 - The local graph DB now includes `wp_iss_graph_editorial_signals` plus synced public content graph entities for five previously drifting `fuehrung` posts (`12027`, `12028`, `12034`, `12186`, `12188`). Staging needs `wp iss-graph migrate` or equivalent graph-table sync before relying on editorial-signal controls there.
 
 ## Next Action
@@ -124,3 +125,6 @@ Current checkpoint only. History belongs in `CHANGELOG.md`; active tasks belong 
 - 2026-06-10 staging nginx hardening pass 2 verification: `sudo nginx -t` passed; `sudo systemctl reload nginx` completed successfully; `/` and `/wp-login.php` returned `200`; `/wp-admin/install.php`, `/wp-admin/setup-config.php`, and `/wp-admin/maint/repair.php` returned `404`; `/wp-admin/upgrade.php` was intentionally left reachable and returned `200`; homepage responses included `X-Content-Type-Options`, `Referrer-Policy`, and `X-Frame-Options`; PHP responses no longer exposed `X-Powered-By`; `docker compose -f /srv/industriesalon/stage/compose.yml config --services` passed; WordPress could still read `wp-config.php`; containers remained healthy.
 - 2026-06-10 targeted SSH/OpenSSL and WordPress plugin update verification: `openssh-server`/`openssh-client` were already current at the stable candidate; OpenSSL packages were upgraded to `3.5.6-1~deb13u2`; `sshd -t` passed and `ssh.service` restarted active; WP-CLI updated `webp-converter-for-media`, `media-library-assistant`, and `newsletter`; WP-CLI plugin list showed no remaining plugin updates; `.maintenance` was absent; updated plugin files were owned by `vladimir:vladimir`; PHP lint passed for the updated plugin PHP files; `CHECK TABLE` passed for `wp_options`, `wp_posts`, and `wp_postmeta`; `/`, `/wp-login.php`, and `/ausstellungen/kinder-im-werk/` returned `200`; containers remained healthy. `git diff --check` reports upstream trailing whitespace in the updated Media Library Assistant vendor release; it was not reformatted.
 - 2026-06-10 Docker package update verification: Docker Engine reports `29.5.3`, Compose reports `v5.1.4`, containerd remains `v2.2.4`, and runc remains `1.3.5`; all staging containers returned healthy/running after Docker restarted; `/`, `/wp-login.php`, and `/ausstellungen/kinder-im-werk/` returned `200`; Compose still reports the expected services and Docker volumes `industriesalon-stage_db` and `industriesalon-stage_redis`; `apt list --upgradable` returned no remaining packages.
+- `ops/sql/2026-06-10-frauen-in-werk-redesign.sql` imported cleanly against the local DB after regeneration; post `26287` remained published at `frauen-in-werk` and contains current WebP image IDs.
+- `ops/uploads/2026-06-10-ausstellungen-media.tar.gz` was rebuilt to 91 manifest entries and passed `sha256sum -c`.
+- `curl -I http://192.168.2.31:8082/ausstellungen/frauen-in-werk/` returned `200` after re-importing the corrected artifact locally.

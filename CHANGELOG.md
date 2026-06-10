@@ -28,6 +28,9 @@
 - Hardened `saas-api` admin bootstrap behavior so CLI/admin hooks can safely fire `admin_init` or `admin_menu` outside a full wp-admin settings screen:
   - loads the required WordPress admin Settings/Menu API includes before registering SuperSaaS settings or options pages
   - fixed the existing admin-notice URL escaping issue caught by PHPCS
+- Corrected the `Frauen im Werk für Fernmeldewesen` transfer artifacts so staging can create the Ausstellung from scratch:
+  - replaced the update-only SQL with an idempotent full transfer for post `26287`, its WebP attachment rows/meta, selected Ausstellung meta, and attached Archivset `27`
+  - rebuilt `ops/uploads/2026-06-10-ausstellungen-media.tar.gz` and manifest to include the current `2026/06` WebP files and generated sizes used by the Frauen post body
 - Hardened the restored `iss-graph` / `iss-relations` graph-editorial signal checkpoint for production use:
   - added the `edit_graph_editorial_signals` capability and wired admin metaboxes, REST writes, and Gutenberg editorial-signal controls through the same capability instead of mixed `manage_options` / `edit_post` checks
   - kept `Vorne zeigen` as a graph-owned editorial signal, but restricted its global related-content promotion controls to graph editorial users and validated context/target post types before server-side writes
