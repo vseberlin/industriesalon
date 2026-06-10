@@ -38,6 +38,7 @@ Current checkpoint only. History belongs in `CHANGELOG.md`; active tasks belong 
 
 ## Current Server State
 
+- Staging `iss-graph` migration/backfill was applied on 2026-06-10. Backup/rollback directory: `/srv/industriesalon/stage/backups/20260610-graph-migration/`; server action note: `/home/vladimir/server-actions/2026-06-10-graph-migration.md`. Final `wp iss-graph verify` passed with 3,557 entities, 8,136 names, 12,969 identifiers, 4,764 relations, 3,323 search rows, 31 person facts, 3 evidence refs, and 1 editorial signal; full `wp iss-graph drift-check` passed after reconciling post `17980` through `wp iss-relations sync --post_id=17980`.
 - Staging now has the corrected `Frauen im Werk für Fernmeldewesen` transfer applied. `/ausstellungen/frauen-in-werk/` returns `200`; post `26287`, WebP attachment rows `26365/26366/26368/26370/26372/26375/26378`, Archivset `27`, six set members, and the `archive_material` link are present. Backup/rollback directory: `/srv/industriesalon/stage/backups/20260610-frauen-in-werk-transfer/`; server action note: `/home/vladimir/server-actions/2026-06-10-apply-frauen-in-werk-transfer.md`.
 - Docker Engine patch packages were applied on 2026-06-10: `docker-ce`, `docker-ce-cli`, and `docker-ce-rootless-extras` are now `5:29.5.3-1~debian.13~trixie`; Docker Engine reports `29.5.3`. Docker restarted during package setup and staging containers restarted automatically. State record directory: `/srv/industriesalon/stage/backups/20260610-docker-package-update/`; server action note: `/home/vladimir/server-actions/2026-06-10-docker-package-update.md`.
 - Targeted staging updates were applied on 2026-06-10: OpenSSL security packages are at `3.5.6-1~deb13u2`, `ssh.service` was restarted after `sshd -t`, and public plugins are current (`webp-converter-for-media` `6.6.1`, `media-library-assistant` `3.38`, `newsletter` `9.2.7`). Backup/rollback directory: `/srv/industriesalon/stage/backups/20260610-ssh-wp-plugin-updates/`; server action note: `/home/vladimir/server-actions/2026-06-10-ssh-openssl-wp-plugin-updates.md`.
@@ -62,7 +63,7 @@ Current checkpoint only. History belongs in `CHANGELOG.md`; active tasks belong 
 - Do not reintroduce core archive-list blocks (`core/archives`, `core/categories`, `core/tag-cloud`, `core/query-title`) as normal post-editor choices; the theme hides them in post editors only, not in the Site Editor.
 - Template output can still become DB-backed after Site Editor saves; check `wp_template` authority before assuming disk files are live.
 - The Frauen exhibition content and Archivset attachment are represented in `ops/sql/2026-06-10-frauen-in-werk-redesign.sql`; staging has applied it together with the refreshed `ops/uploads/2026-06-10-ausstellungen-media.tar.gz`.
-- The local graph DB now includes `wp_iss_graph_editorial_signals` plus synced public content graph entities for five previously drifting `fuehrung` posts (`12027`, `12028`, `12034`, `12186`, `12188`). Staging needs `wp iss-graph migrate` or equivalent graph-table sync before relying on editorial-signal controls there.
+- Staging graph tables are now migrated and drift-clean; rerun `wp iss-graph migrate` plus `wp iss-graph drift-check` after future content artifact imports that create or change graph-backed posts.
 
 ## Next Action
 

@@ -1,6 +1,12 @@
 # Changelog
 
 ## 2026-06-10
+- Migrated and verified the staging `iss-graph` read models:
+  - created `/srv/industriesalon/stage/backups/20260610-graph-migration/` with a full MariaDB dump, checksum, Compose config, and pre-action Compose state
+  - ran the safer `wp iss-graph migrate --skip-sync --checks=editorial-signals` pass first, then `wp iss-graph verify` and full `wp iss-graph drift-check`
+  - ran full `wp iss-graph migrate` after the skipped-sync pass exposed expected stale graph/search rows, reducing drift to one stale relation taxonomy read model
+  - reconciled post `17980` through the existing `wp iss-relations sync --post_id=17980` command instead of manual taxonomy edits
+  - final `wp iss-graph verify` and full `wp iss-graph drift-check` passed; staging containers remained healthy and `/` plus `/ausstellungen/frauen-in-werk/` returned `200`
 - Applied the corrected full `Frauen im Werk für Fernmeldewesen` transfer artifact on staging:
   - pulled commit `9c89121`, verified the refreshed upload artifact checksum, and confirmed the manifest contains 91 files
   - created `/srv/industriesalon/stage/backups/20260610-frauen-in-werk-transfer/` with a full MariaDB dump, checksums, upload rollback archive, and a normalized applied SQL copy
