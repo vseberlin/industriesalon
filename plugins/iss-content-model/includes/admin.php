@@ -23,14 +23,16 @@ add_action('add_meta_boxes', function () {
         'high'
     );
 
-    add_meta_box(
-        'iss-content-model-ausstellung',
-        __('Ausstellungsdaten', 'iss-content-model'),
-        'iss_content_model_render_ausstellung_box',
-        ISS_CONTENT_MODEL_AUSSTELLUNG_POST_TYPE,
-        'side',
-        'high'
-    );
+    if (!iss_content_model_acf_handles_ausstellung_meta()) {
+        add_meta_box(
+            'iss-content-model-ausstellung',
+            __('Ausstellungsdaten', 'iss-content-model'),
+            'iss_content_model_render_ausstellung_box',
+            ISS_CONTENT_MODEL_AUSSTELLUNG_POST_TYPE,
+            'side',
+            'high'
+        );
+    }
 
     add_meta_box(
         'iss-content-model-projekt',
@@ -60,8 +62,113 @@ add_action('add_meta_boxes', function () {
     );
 });
 
-add_action('admin_enqueue_scripts', function ($hook) {
-    if (!in_array($hook, ['post.php', 'post-new.php'], true)) {
+function iss_content_model_acf_handles_ausstellung_meta(): bool
+{
+    return function_exists('acf_add_local_field_group');
+}
+
+function iss_content_model_use_simplified_ausstellung_admin(): bool
+{
+    return !current_user_can('manage_options');
+}
+
+function iss_content_model_get_editor_modal_targets(string $post_type): array
+{
+    $post_type = sanitize_key($post_type);
+    $targets = [];
+
+    if (function_exists('iss_wf_import_is_archivset_supported_post_type') && iss_wf_import_is_archivset_supported_post_type($post_type)) {
+        $targets['iss-wf-import-archive-picker'] = __('Archivmaterial hinzufügen', 'iss-content-model');
+    }
+
+    if (function_exists('iss_graph_is_content_relation_post_type') && iss_graph_is_content_relation_post_type($post_type)) {
+        $targets['iss-graph-public-content-relations'] = __('Person hinzufügen', 'iss-content-model');
+    }
+
+    if (function_exists('iss_relations_is_supported_post_type') && iss_relations_is_supported_post_type($post_type)) {
+        $targets['iss-relations-places'] = __('Ort hinzufügen', 'iss-content-model');
+    }
+
+    return (array) apply_filters('iss_content_model_editor_modal_targets', $targets, $post_type);
+}
+
+function iss_content_model_use_editor_modal_controls(string $post_type): bool
+{
+    return iss_content_model_get_editor_modal_targets($post_type) !== [];
+}
+
+function iss_content_model_should_hide_editor_modal_metaboxes(): bool
+{
+    if (current_user_can('manage_options')) {
+        return false;
+    }
+
+    $screen = function_exists('get_current_screen') ? get_current_screen() : null;
+    if ($screen && $screen->base === 'post' && isset($screen->post_type) && use_block_editor_for_post_type((string) $screen->post_type)) {
+        return false;
+    }
+
+    return true;
+}
+
+function iss_content_model_get_editor_dashboard_post_types(): array
+{
+    $post_types = function_exists('iss_graph_get_related_promotion_post_types')
+        ? iss_graph_get_related_promotion_post_types()
+        : [
+            ISS_CONTENT_MODEL_AUSSTELLUNG_POST_TYPE,
+            'publication',
+            'fuehrung',
+            ISS_CONTENT_MODEL_VERANSTALTUNG_POST_TYPE,
+            ISS_CONTENT_MODEL_PROJEKT_POST_TYPE,
+            ISS_CONTENT_MODEL_VIDEO_POST_TYPE,
+            'page',
+            'post',
+        ];
+
+    return array_values(array_unique(array_filter(array_map('sanitize_key', (array) $post_types), 'post_type_exists')));
+}
+
+function iss_content_model_use_editor_dashboard(string $post_type): bool
+{
+    return !current_user_can('manage_options')
+        && in_array(sanitize_key($post_type), iss_content_model_get_editor_dashboard_post_types(), true);
+}
+
+function iss_content_model_get_editor_dashboard_box_ids(string $post_type): array
+{
+    $post_type = sanitize_key($post_type);
+    $box_ids = [
+        'postexcerpt',
+        'postimagediv',
+        'iss-graph-related-promotion',
+    ];
+
+    if ($post_type === ISS_CONTENT_MODEL_AUSSTELLUNG_POST_TYPE) {
+        $box_ids[] = iss_content_model_acf_handles_ausstellung_meta()
+            ? 'acf-group_iss_ausstellung_controls'
+            : 'iss-content-model-ausstellung';
+    } elseif ($post_type === ISS_CONTENT_MODEL_VERANSTALTUNG_POST_TYPE) {
+        $box_ids[] = 'iss-content-model-veranstaltung';
+        $box_ids[] = 'iss-content-model-veranstaltung-status';
+    } elseif ($post_type === ISS_CONTENT_MODEL_PROJEKT_POST_TYPE) {
+        $box_ids[] = 'iss-content-model-projekt';
+    } elseif ($post_type === ISS_CONTENT_MODEL_VIDEO_POST_TYPE) {
+        $box_ids[] = 'iss-content-model-video';
+    } elseif ($post_type === 'publication') {
+        $box_ids[] = 'iss-publication-bibliography';
+        $box_ids[] = 'iss-publication-display';
+        $box_ids[] = 'iss-publication-sale';
+    } elseif ($post_type === 'fuehrung') {
+        $box_ids[] = 'iss-fuehrung-data';
+    }
+
+    return (array) apply_filters('iss_content_model_editor_dashboard_box_ids', array_values(array_unique($box_ids)), $post_type);
+}
+
+function iss_content_model_restore_admin_ausstellung_metabox_visibility(): void
+{
+    if (iss_content_model_use_simplified_ausstellung_admin()) {
         return;
     }
 
@@ -70,13 +177,145 @@ add_action('admin_enqueue_scripts', function ($hook) {
         return;
     }
 
+    $user_id = get_current_user_id();
+    if ($user_id <= 0) {
+        return;
+    }
+
+    $managed_boxes = [
+        'iss-graph-public-content-relations',
+        'iss-relations-places',
+        'iss-wf-import-archive-picker',
+    ];
+
+    foreach (['metaboxhidden_ausstellung', 'closedpostboxes_ausstellung'] as $option) {
+        $current = get_user_option($option, $user_id);
+        if (!is_array($current)) {
+            continue;
+        }
+
+        $next = array_values(array_diff($current, $managed_boxes));
+        if ($next !== $current) {
+            update_user_option($user_id, $option, $next, true);
+        }
+    }
+}
+
+add_action('media_buttons', function (string $editor_id): void {
+    if ($editor_id !== 'content') {
+        return;
+    }
+
+    $screen = function_exists('get_current_screen') ? get_current_screen() : null;
+    if (!$screen || $screen->base !== 'post' || !isset($screen->post_type) || !iss_content_model_use_editor_modal_controls((string) $screen->post_type)) {
+        return;
+    }
+
+    $buttons = iss_content_model_get_editor_modal_targets((string) $screen->post_type);
+
+    foreach ($buttons as $target => $label) {
+        printf(
+            ' <button type="button" class="button iss-editor-open" data-iss-editor-modal-target="%s">%s</button>',
+            esc_attr($target),
+            esc_html($label)
+        );
+    }
+});
+
+add_action('admin_enqueue_scripts', function ($hook): void {
+    if (!in_array($hook, ['post.php', 'post-new.php'], true)) {
+        return;
+    }
+
+    $screen = function_exists('get_current_screen') ? get_current_screen() : null;
+    if (!$screen || $screen->base !== 'post' || !isset($screen->post_type)) {
+        return;
+    }
+
+    if ($screen->post_type === ISS_CONTENT_MODEL_AUSSTELLUNG_POST_TYPE) {
+        iss_content_model_restore_admin_ausstellung_metabox_visibility();
+    }
+
+    $uses_modal_controls = iss_content_model_use_editor_modal_controls((string) $screen->post_type);
+    $uses_editor_dashboard = iss_content_model_use_editor_dashboard((string) $screen->post_type);
+
+    if (!$uses_modal_controls && !$uses_editor_dashboard) {
+        return;
+    }
+
+    $style_path = ISS_CONTENT_MODEL_PATH . 'assets/admin-editor-modal-controls.css';
+    if (file_exists($style_path)) {
+        wp_enqueue_style(
+            'iss-content-model-editor-modal-controls',
+            plugins_url('../assets/admin-editor-modal-controls.css', __FILE__),
+            [],
+            (string) filemtime($style_path)
+        );
+    }
+
+    $script_path = ISS_CONTENT_MODEL_PATH . 'assets/admin-editor-modal-controls.js';
+    if (file_exists($script_path)) {
+        wp_enqueue_script(
+            'iss-content-model-editor-modal-controls',
+            plugins_url('../assets/admin-editor-modal-controls.js', __FILE__),
+            [],
+            (string) filemtime($script_path),
+            true
+        );
+
+        wp_localize_script(
+            'iss-content-model-editor-modal-controls',
+            'issContentEditorModalControls',
+            [
+                'hideManagedBoxes' => iss_content_model_should_hide_editor_modal_metaboxes(),
+                'moveAusstellungTopGroups' => false,
+                'moveEditorTopGroups' => $uses_editor_dashboard,
+                'editorTopGroupIds' => $uses_editor_dashboard
+                    ? iss_content_model_get_editor_dashboard_box_ids((string) $screen->post_type)
+                    : [],
+            ]
+        );
+    }
+}, 20);
+
+add_action('enqueue_block_editor_assets', function (): void {
+    $screen = function_exists('get_current_screen') ? get_current_screen() : null;
+    if (!$screen || $screen->base !== 'post' || !isset($screen->post_type) || $screen->post_type !== ISS_CONTENT_MODEL_AUSSTELLUNG_POST_TYPE) {
+        return;
+    }
+
+    $script_path = ISS_CONTENT_MODEL_PATH . 'assets/admin-ausstellung-timeline-panel.js';
+    if (!file_exists($script_path)) {
+        return;
+    }
+
     wp_enqueue_script(
-        'iss-content-model-ausstellung-corpus',
-        plugins_url('../assets/admin-ausstellung-corpus.js', __FILE__),
-        [],
-        ISS_CONTENT_MODEL_VERSION,
+        'iss-content-model-ausstellung-timeline-panel',
+        plugins_url('../assets/admin-ausstellung-timeline-panel.js', __FILE__),
+        ['wp-plugins', 'wp-edit-post', 'wp-element', 'wp-components', 'wp-data', 'wp-core-data'],
+        (string) filemtime($script_path),
         true
     );
+});
+
+add_action('add_meta_boxes', function (string $post_type): void {
+    if (!iss_content_model_use_editor_dashboard($post_type)) {
+        return;
+    }
+
+    remove_meta_box('slugdiv', $post_type, 'normal');
+    remove_meta_box('revisionsdiv', $post_type, 'normal');
+    remove_meta_box('postcustom', $post_type, 'normal');
+}, 99);
+
+add_action('add_meta_boxes_' . ISS_CONTENT_MODEL_AUSSTELLUNG_POST_TYPE, function (): void {
+    if (!iss_content_model_use_simplified_ausstellung_admin()) {
+        return;
+    }
+
+    remove_meta_box('categorydiv', ISS_CONTENT_MODEL_AUSSTELLUNG_POST_TYPE, 'side');
+    remove_meta_box('tagsdiv-post_tag', ISS_CONTENT_MODEL_AUSSTELLUNG_POST_TYPE, 'side');
+    remove_meta_box('pageparentdiv', ISS_CONTENT_MODEL_AUSSTELLUNG_POST_TYPE, 'side');
 });
 
 add_action('admin_enqueue_scripts', function ($hook) {
@@ -144,37 +383,6 @@ function iss_content_model_get_veranstaltung_place_choices(): array
     return $choices;
 }
 
-function iss_content_model_get_archivbeitrag_choices(): array
-{
-    if (!post_type_exists('archivbeitrag')) {
-        return [];
-    }
-
-    $choices = [];
-    $posts = get_posts([
-        'post_type' => 'archivbeitrag',
-        'post_status' => ['publish', 'future', 'draft', 'pending', 'private'],
-        'posts_per_page' => -1,
-        'orderby' => 'date',
-        'order' => 'DESC',
-        'suppress_filters' => true,
-    ]);
-
-    foreach ($posts as $post) {
-        if (!$post instanceof WP_Post) {
-            continue;
-        }
-
-        $choices[] = [
-            'id' => (int) $post->ID,
-            'title' => get_the_title($post),
-            'status' => (string) $post->post_status,
-        ];
-    }
-
-    return $choices;
-}
-
 function iss_content_model_get_publication_choices(): array
 {
     if (!post_type_exists('publication')) {
@@ -199,39 +407,6 @@ function iss_content_model_get_publication_choices(): array
         $choices[] = [
             'id' => (int) $post->ID,
             'title' => get_the_title($post),
-        ];
-    }
-
-    return $choices;
-}
-
-function iss_content_model_get_archive_term_choices(string $taxonomy): array
-{
-    if (!taxonomy_exists($taxonomy)) {
-        return [];
-    }
-
-    $choices = [];
-    $terms = get_terms([
-        'taxonomy' => $taxonomy,
-        'hide_empty' => false,
-        'orderby' => 'name',
-        'order' => 'ASC',
-    ]);
-
-    if (is_wp_error($terms)) {
-        return [];
-    }
-
-    foreach ($terms as $term) {
-        if (!$term instanceof WP_Term) {
-            continue;
-        }
-
-        $choices[] = [
-            'slug' => (string) $term->slug,
-            'name' => (string) $term->name,
-            'count' => (int) $term->count,
         ];
     }
 
@@ -516,30 +691,9 @@ function iss_content_model_render_ausstellung_box($post) {
 
     $start = (string) get_post_meta($post->ID, 'iss_start_date', true);
     $end = (string) get_post_meta($post->ID, 'iss_end_date', true);
+    $is_permanent = (bool) get_post_meta($post->ID, 'iss_is_permanent', true);
     $timeline_enabled = get_post_meta($post->ID, 'iss_timeline_enabled', true);
     $timeline_enabled = $timeline_enabled === '' ? true : (bool) $timeline_enabled;
-    $exhibition_type = iss_content_model_get_ausstellung_type((int) $post->ID);
-    $exhibition_source = iss_content_model_get_ausstellung_source((int) $post->ID);
-    $type_options = iss_content_model_get_ausstellung_type_options();
-    $source_options = iss_content_model_get_ausstellung_source_options();
-    $chapter_ids = iss_content_model_get_ausstellung_corpus_chapter_ids((int) $post->ID);
-    $archive_term_slug = iss_content_model_get_ausstellung_archive_term_slug((int) $post->ID);
-    $archive_browser = iss_content_model_get_ausstellung_archive_browser_config((int) $post->ID);
-    $chapter_choices = iss_content_model_get_archivbeitrag_choices();
-    $archive_category_choices = defined('ISS_WF_IMPORT_CATEGORY_TAXONOMY')
-        ? iss_content_model_get_archive_term_choices(ISS_WF_IMPORT_CATEGORY_TAXONOMY)
-        : [];
-    $archive_source_choices = defined('ISS_WF_IMPORT_SOURCE_TAXONOMY')
-        ? iss_content_model_get_archive_term_choices(ISS_WF_IMPORT_SOURCE_TAXONOMY)
-        : [];
-    $archive_field_choices = defined('ISS_WF_IMPORT_FIELD_TAXONOMY')
-        ? iss_content_model_get_archive_term_choices(ISS_WF_IMPORT_FIELD_TAXONOMY)
-        : [];
-    $chapter_lookup = [];
-
-    foreach ($chapter_choices as $chapter_choice) {
-        $chapter_lookup[(int) $chapter_choice['id']] = $chapter_choice;
-    }
 
     echo '<h3>' . esc_html__('Basis', 'iss-content-model') . '</h3>';
     echo '<p><label for="iss_start_date"><strong>' . esc_html__('Startdatum', 'iss-content-model') . '</strong></label>';
@@ -548,150 +702,9 @@ function iss_content_model_render_ausstellung_box($post) {
     echo '<p><label for="iss_end_date"><strong>' . esc_html__('Enddatum', 'iss-content-model') . '</strong></label>';
     echo '<input class="widefat" type="date" id="iss_end_date" name="iss_content_model[iss_end_date]" value="' . esc_attr($end) . '"></p>';
 
-    echo '<p class="description">' . esc_html__('Typ, Sammlungsbereich und Industrieort werden in den Taxonomie-Boxen verwaltet.', 'iss-content-model') . '</p>';
+    echo '<p class="description">' . esc_html__('Sammlungsbereich und Themen werden in den Taxonomie-Boxen verwaltet. Orte werden ueber "Ort hinzufuegen" verbunden.', 'iss-content-model') . '</p>';
+    echo '<p><label><input type="checkbox" name="iss_content_model[iss_is_permanent]" value="1" ' . checked($is_permanent, true, false) . '> ' . esc_html__('Dauerausstellung', 'iss-content-model') . '</label></p>';
     echo '<p><label><input type="checkbox" name="iss_content_model[iss_timeline_enabled]" value="1" ' . checked($timeline_enabled, true, false) . '> ' . esc_html__('In Timeline zeigen', 'iss-content-model') . '</label></p>';
-
-    echo '<hr style="margin:1rem 0;">';
-    echo '<h3>' . esc_html__('Ausstellung', 'iss-content-model') . '</h3>';
-    echo '<p><label for="iss_exhibition_type"><strong>' . esc_html__('Ausstellungstyp', 'iss-content-model') . '</strong></label>';
-    echo '<select class="widefat" id="iss_exhibition_type" name="iss_content_model[iss_exhibition_type]">';
-    foreach ($type_options as $value => $option) {
-        echo '<option value="' . esc_attr($value) . '"' . selected($exhibition_type, $value, false) . '>' . esc_html((string) $option['label']) . '</option>';
-    }
-    echo '</select></p>';
-    if (isset($type_options[$exhibition_type]['description'])) {
-        echo '<p class="description">' . esc_html((string) $type_options[$exhibition_type]['description']) . '</p>';
-    }
-
-    echo '<p><label for="iss_exhibition_source"><strong>' . esc_html__('Materialquelle', 'iss-content-model') . '</strong></label>';
-    echo '<select class="widefat" id="iss_exhibition_source" name="iss_content_model[iss_exhibition_source]" data-iss-exhibition-source-select>';
-    foreach ($source_options as $value => $option) {
-        echo '<option value="' . esc_attr($value) . '"' . selected($exhibition_source, $value, false) . '>' . esc_html((string) $option['label']) . '</option>';
-    }
-    echo '</select></p>';
-    if (isset($source_options[$exhibition_source]['description'])) {
-        echo '<p class="description">' . esc_html((string) $source_options[$exhibition_source]['description']) . '</p>';
-    }
-    echo '<p class="description">' . esc_html__('Der Ausstellungstyp beschreibt die öffentliche Erzählform. Die Materialquelle beschreibt, woher die Inhalte kommen. Die Theme-Ausgabe kombiniert beides.', 'iss-content-model') . '</p>';
-
-    echo '<hr style="margin:1rem 0;">';
-    echo '<div data-iss-exhibition-source-panel="manual"' . ($exhibition_source === 'manual' ? '' : ' hidden') . '>';
-    echo '<h3>' . esc_html__('Materialquelle: Manueller Inhalt', 'iss-content-model') . '</h3>';
-    echo '<p class="description">' . esc_html__('Diese Ausstellung nutzt den normalen Gutenberg-Inhalt. Zusätzliche Korpus- oder Archivbrowser-Felder sind für diese Quelle nicht nötig.', 'iss-content-model') . '</p>';
-    echo '</div>';
-
-    echo '<div data-iss-exhibition-source-panel="archive_category"' . ($exhibition_source === 'archive_category' ? '' : ' hidden') . '>';
-    echo '<h3>' . esc_html__('Materialquelle: Archivkategorie', 'iss-content-model') . '</h3>';
-
-    echo '<p><label for="iss_archive_term_slug"><strong>' . esc_html__('Archivkategorie für Kapitelreihe', 'iss-content-model') . '</strong></label>';
-    echo '<select class="widefat" id="iss_archive_term_slug" name="iss_content_model[iss_archive_term_slug]">';
-    echo '<option value="">' . esc_html__('Keine Archivkategorie auswählen', 'iss-content-model') . '</option>';
-    foreach ($archive_category_choices as $term) {
-        $label = (string) $term['name'];
-        if ((int) $term['count'] > 0) {
-            $label .= ' (' . (int) $term['count'] . ')';
-        }
-
-        echo '<option value="' . esc_attr((string) $term['slug']) . '"' . selected($archive_term_slug, (string) $term['slug'], false) . '>' . esc_html($label) . '</option>';
-    }
-    echo '</select></p>';
-    echo '<p class="description">' . esc_html__('Die Kapitel werden direkt aus dieser Archivkategorie gelesen.', 'iss-content-model') . '</p>';
-    echo '</div>';
-
-    echo '<div data-iss-exhibition-source-panel="curated_chapters"' . ($exhibition_source === 'curated_chapters' ? '' : ' hidden') . '>';
-    echo '<p><label for="iss_corpus_chapter_picker"><strong>' . esc_html__('Kuratierte Kapitel', 'iss-content-model') . '</strong></label></p>';
-    echo '<div class="iss-content-model-corpus" data-iss-corpus-builder>';
-    echo '<div class="iss-content-model-corpus__picker">';
-    echo '<select class="widefat" id="iss_corpus_chapter_picker" data-iss-corpus-picker>';
-    echo '<option value="">' . esc_html__('Kapitel auswählen', 'iss-content-model') . '</option>';
-    foreach ($chapter_choices as $chapter) {
-        $label = (string) $chapter['title'];
-        if ((string) $chapter['status'] !== 'publish') {
-            $label .= ' [' . (string) $chapter['status'] . ']';
-        }
-
-        echo '<option value="' . esc_attr((string) $chapter['id']) . '">' . esc_html($label) . '</option>';
-    }
-    echo '</select>';
-    echo '<p><button type="button" class="button" data-iss-corpus-add>' . esc_html__('Kapitel hinzufügen', 'iss-content-model') . '</button></p>';
-    echo '</div>';
-
-    echo '<ol class="iss-content-model-corpus__list" data-iss-corpus-list>';
-    foreach ($chapter_ids as $chapter_id) {
-        if (!isset($chapter_lookup[$chapter_id])) {
-            continue;
-        }
-
-        $chapter = $chapter_lookup[$chapter_id];
-        $label = (string) $chapter['title'];
-        if ((string) $chapter['status'] !== 'publish') {
-            $label .= ' [' . (string) $chapter['status'] . ']';
-        }
-
-        echo '<li class="iss-content-model-corpus__item" data-iss-corpus-item data-id="' . esc_attr((string) $chapter_id) . '">';
-        echo '<span class="iss-content-model-corpus__label">' . esc_html($label) . '</span>';
-        echo '<span class="iss-content-model-corpus__actions">';
-        echo '<button type="button" class="button-link" data-iss-corpus-up>' . esc_html__('Nach oben', 'iss-content-model') . '</button> ';
-        echo '<button type="button" class="button-link" data-iss-corpus-down>' . esc_html__('Nach unten', 'iss-content-model') . '</button> ';
-        echo '<button type="button" class="button-link-delete" data-iss-corpus-remove>' . esc_html__('Entfernen', 'iss-content-model') . '</button>';
-        echo '</span>';
-        echo '<input type="hidden" name="iss_content_model[iss_corpus_chapter_ids][]" value="' . esc_attr((string) $chapter_id) . '">';
-        echo '</li>';
-    }
-    echo '</ol>';
-    echo '</div>';
-    echo '<p class="description">' . esc_html__('Diese Liste definiert Reihenfolge und öffentliche Stationen.', 'iss-content-model') . '</p>';
-    echo '</div>';
-
-    echo '<div data-iss-exhibition-source-panel="archive_browser"' . ($exhibition_source === 'archive_browser' ? '' : ' hidden') . '>';
-    echo '<hr style="margin:1rem 0;">';
-    echo '<h3>' . esc_html__('Materialquelle: Archivbrowser', 'iss-content-model') . '</h3>';
-
-    echo '<p><label for="iss_archive_browser_default_source"><strong>' . esc_html__('Archivbrowser: Standardquelle', 'iss-content-model') . '</strong></label>';
-    echo '<select class="widefat" id="iss_archive_browser_default_source" name="iss_content_model[iss_archive_browser_default_source]">';
-    echo '<option value="">' . esc_html__('Keine Quelle vorbelegen', 'iss-content-model') . '</option>';
-    foreach ($archive_source_choices as $term) {
-        $label = (string) $term['name'];
-        if ((int) $term['count'] > 0) {
-            $label .= ' (' . (int) $term['count'] . ')';
-        }
-
-        echo '<option value="' . esc_attr((string) $term['slug']) . '"' . selected($archive_browser['default_source'], (string) $term['slug'], false) . '>' . esc_html($label) . '</option>';
-    }
-    echo '</select></p>';
-    echo '<p><label><input type="checkbox" name="iss_content_model[iss_archive_browser_lock_source]" value="1" ' . checked($archive_browser['lock_source'], true, false) . '> ' . esc_html__('Quelle im Archivbrowser sperren', 'iss-content-model') . '</label></p>';
-
-    echo '<p><label for="iss_archive_browser_default_field"><strong>' . esc_html__('Archivbrowser: Standard-Themenfeld', 'iss-content-model') . '</strong></label>';
-    echo '<select class="widefat" id="iss_archive_browser_default_field" name="iss_content_model[iss_archive_browser_default_field]">';
-    echo '<option value="">' . esc_html__('Kein Themenfeld vorbelegen', 'iss-content-model') . '</option>';
-    foreach ($archive_field_choices as $term) {
-        $label = (string) $term['name'];
-        if ((int) $term['count'] > 0) {
-            $label .= ' (' . (int) $term['count'] . ')';
-        }
-
-        echo '<option value="' . esc_attr((string) $term['slug']) . '"' . selected($archive_browser['default_field'], (string) $term['slug'], false) . '>' . esc_html($label) . '</option>';
-    }
-    echo '</select></p>';
-    echo '<p><label><input type="checkbox" name="iss_content_model[iss_archive_browser_lock_field]" value="1" ' . checked($archive_browser['lock_field'], true, false) . '> ' . esc_html__('Themenfeld im Archivbrowser sperren', 'iss-content-model') . '</label></p>';
-
-    echo '<p><label for="iss_archive_browser_quick_kicker"><strong>' . esc_html__('Archivbrowser: Kicker für Einstiege', 'iss-content-model') . '</strong></label>';
-    echo '<input class="widefat" type="text" id="iss_archive_browser_quick_kicker" name="iss_content_model[iss_archive_browser_quick_kicker]" value="' . esc_attr($archive_browser['quick_kicker']) . '" placeholder="' . esc_attr__('Objektfamilien', 'iss-content-model') . '"></p>';
-
-    echo '<p><label for="iss_archive_browser_quick_title"><strong>' . esc_html__('Archivbrowser: Titel für Einstiege', 'iss-content-model') . '</strong></label>';
-    echo '<input class="widefat" type="text" id="iss_archive_browser_quick_title" name="iss_content_model[iss_archive_browser_quick_title]" value="' . esc_attr($archive_browser['quick_title']) . '" placeholder="' . esc_attr__('Einstiege in den Bestand', 'iss-content-model') . '"></p>';
-
-    echo '<p><label for="iss_archive_browser_quick_family_slugs"><strong>' . esc_html__('Archivbrowser: Objektfamilien (Slugs)', 'iss-content-model') . '</strong></label>';
-    echo '<input class="widefat" type="text" id="iss_archive_browser_quick_family_slugs" name="iss_content_model[iss_archive_browser_quick_family_slugs]" value="' . esc_attr(implode(', ', $archive_browser['quick_family_slugs'])) . '" placeholder="' . esc_attr__('geraet, messgeraet, einschub', 'iss-content-model') . '"></p>';
-    echo '<p class="description">' . esc_html__('Kommagetrennte Slugs aus den Objektfamilien. Leer lassen, dann werden die ersten verfügbaren Familien verwendet.', 'iss-content-model') . '</p>';
-    echo '<p><label><input type="checkbox" name="iss_content_model[iss_archive_browser_show_source_cards]" value="1" ' . checked($archive_browser['show_source_cards'], true, false) . '> ' . esc_html__('Quellenkarten im Archivbrowser zeigen', 'iss-content-model') . '</label></p>';
-    echo '<p class="description">' . esc_html__('Der Browser ist Materialquelle für Collection Exhibitions, nicht selbst ein Ausstellungstyp.', 'iss-content-model') . '</p>';
-    echo '</div>';
-
-    echo '<div data-iss-exhibition-source-panel="atlas_places"' . ($exhibition_source === 'atlas_places' ? '' : ' hidden') . '>';
-    echo '<h3>' . esc_html__('Materialquelle: Atlas-Orte', 'iss-content-model') . '</h3>';
-    echo '<p class="description">' . esc_html__('Die Atlas-Sequenz wird aus verknüpften Orten gelesen. Die Relations-Box bleibt die Quelle für diese Verknüpfungen.', 'iss-content-model') . '</p>';
-    echo '</div>';
 }
 
 function iss_content_model_render_projekt_box($post) {
@@ -913,8 +926,6 @@ function iss_content_model_save_meta_box(int $post_id): void
         if ($selected_place_id > 0 && $manual_location === '') {
             $raw['iss_location'] = iss_content_model_get_veranstaltung_place_title($selected_place_id);
         }
-    } elseif ($post_type === ISS_CONTENT_MODEL_AUSSTELLUNG_POST_TYPE) {
-        $raw['iss_corpus_chapter_ids'] = implode(',', iss_content_model_parse_id_list($raw['iss_corpus_chapter_ids'] ?? []));
     }
 
     foreach ($definitions[$post_type] as $key => $config) {

@@ -4,6 +4,8 @@ if (!defined('ABSPATH')) {
     exit;
 }
 
+// phpcs:disable WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching, WordPress.DB.DirectDatabaseQuery.SchemaChange, WordPress.DB.PreparedSQL.InterpolatedNotPrepared -- This service owns and queries iss-wf-import custom archive collection tables.
+
 class ISS_WF_Import_Collection_Service
 {
     /** @var array<int, array<string, mixed>|null> */
@@ -581,7 +583,6 @@ function iss_wf_import_maybe_backfill_collection_tables(): void
 {
     iss_wf_import_get_collection_service()->maybe_backfill();
 }
-add_action('init', 'iss_wf_import_maybe_backfill_collection_tables', 26);
 
 function iss_wf_import_sync_collection_post_on_save(int $post_id, WP_Post $post): void
 {
@@ -613,6 +614,14 @@ if (defined('WP_CLI') && WP_CLI) {
      */
     class ISS_WF_Import_Collection_CLI_Command
     {
+        public function sync(): void
+        {
+            iss_wf_import_get_collection_service()->backfill_all_collections();
+            update_option(ISS_WF_IMPORT_COLLECTION_BACKFILL_OPTION, ISS_WF_IMPORT_COLLECTION_BACKFILL_VERSION, false);
+
+            \WP_CLI::success('Synced archive collection projection tables.');
+        }
+
         public function verify(): void
         {
             $service = iss_wf_import_get_collection_service();
@@ -672,5 +681,6 @@ if (defined('WP_CLI') && WP_CLI) {
         }
     }
 
+    \WP_CLI::add_command('iss-archive collections-sync', ['ISS_WF_Import_Collection_CLI_Command', 'sync']);
     \WP_CLI::add_command('iss-archive collections-verify', ['ISS_WF_Import_Collection_CLI_Command', 'verify']);
 }

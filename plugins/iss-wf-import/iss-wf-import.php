@@ -2,7 +2,7 @@
 /**
  * Plugin Name: ISS Archive
  * Description: Owns the local archive content model for archive posts, collections, and objects.
- * Version: 0.4.0
+ * Version: 0.5.0
  * Author: Industriesalon
  */
 
@@ -15,7 +15,7 @@ if (!defined('ABSPATH')) {
  * the plugin directory and PHP prefixes stay `iss_wf_import` for now so the
  * existing runtime and stored references remain stable.
  */
-define('ISS_WF_IMPORT_VERSION', '0.4.0');
+define('ISS_WF_IMPORT_VERSION', '0.5.0');
 define('ISS_WF_IMPORT_PATH', plugin_dir_path(__FILE__));
 define('ISS_WF_IMPORT_URL', plugin_dir_url(__FILE__));
 define('ISS_WF_IMPORT_REWRITE_VERSION', '2026-05-05-archive-routing-2');
@@ -51,6 +51,9 @@ define('ISS_WF_IMPORT_COLLECTION_SCHEMA_OPTION', 'iss_wf_import_collection_schem
 define('ISS_WF_IMPORT_COLLECTION_SCHEMA_VERSION', '2026-05-12-collection-schema-3');
 define('ISS_WF_IMPORT_COLLECTION_BACKFILL_OPTION', 'iss_wf_import_collection_backfill_version');
 define('ISS_WF_IMPORT_COLLECTION_BACKFILL_VERSION', '2026-05-12-collection-backfill-3');
+define('ISS_WF_IMPORT_ARCHIVSET_SCHEMA_OPTION', 'iss_wf_import_archivset_schema_version');
+define('ISS_WF_IMPORT_ARCHIVSET_SCHEMA_VERSION', '2026-06-07-archivset-schema-1');
+define('ISS_WF_IMPORT_ARCHIVSET_CAPABILITY', 'edit_archive_sets');
 define('ISS_WF_IMPORT_OBJECT_SCHEMA_OPTION', 'iss_wf_import_object_schema_version');
 define('ISS_WF_IMPORT_OBJECT_SCHEMA_VERSION', '2026-05-12-object-schema-1');
 define('ISS_WF_IMPORT_OBJECT_BACKFILL_OPTION', 'iss_wf_import_object_backfill_version');
@@ -116,45 +119,51 @@ define('ISS_WF_IMPORT_MD_PARSER_VERSION', 'museum-digital-importer-2026-05-12');
 require_once ISS_WF_IMPORT_PATH . 'includes/post-type.php';
 require_once ISS_WF_IMPORT_PATH . 'includes/meta.php';
 require_once ISS_WF_IMPORT_PATH . 'includes/collection-service.php';
+require_once ISS_WF_IMPORT_PATH . 'includes/archivset-service.php';
 require_once ISS_WF_IMPORT_PATH . 'includes/object-service.php';
 require_once ISS_WF_IMPORT_PATH . 'includes/media-service.php';
 require_once ISS_WF_IMPORT_PATH . 'includes/relation-service.php';
 require_once ISS_WF_IMPORT_PATH . 'includes/import-service.php';
 require_once ISS_WF_IMPORT_PATH . 'includes/assertion-service.php';
 require_once ISS_WF_IMPORT_PATH . 'includes/archive-browser-service.php';
+require_once ISS_WF_IMPORT_PATH . 'includes/archivset-rest.php';
 require_once ISS_WF_IMPORT_PATH . 'includes/suggestions.php';
 require_once ISS_WF_IMPORT_PATH . 'includes/blocks.php';
+require_once ISS_WF_IMPORT_PATH . 'includes/shortcodes.php';
 require_once ISS_WF_IMPORT_PATH . 'includes/admin.php';
 require_once ISS_WF_IMPORT_PATH . 'includes/collection-editor.php';
+require_once ISS_WF_IMPORT_PATH . 'includes/archivset-admin.php';
 require_once ISS_WF_IMPORT_PATH . 'includes/museum-digital-importer.php';
 
 register_activation_hook(__FILE__, function () {
     iss_wf_import_register_post_type_and_taxonomies();
     iss_wf_import_ensure_source_term();
     iss_wf_import_get_collection_service()->install_schema();
-    iss_wf_import_get_collection_service()->backfill_all_collections();
-    update_option(ISS_WF_IMPORT_COLLECTION_BACKFILL_OPTION, ISS_WF_IMPORT_COLLECTION_BACKFILL_VERSION, false);
+    iss_wf_import_get_archivset_service()->install_schema();
     iss_wf_import_get_object_service()->install_schema();
-    iss_wf_import_get_object_service()->backfill_all_objects();
-    update_option(ISS_WF_IMPORT_OBJECT_BACKFILL_OPTION, ISS_WF_IMPORT_OBJECT_BACKFILL_VERSION, false);
     iss_wf_import_get_media_service()->install_schema();
-    iss_wf_import_get_media_service()->backfill_all_media();
-    update_option(ISS_WF_IMPORT_MEDIA_BACKFILL_OPTION, ISS_WF_IMPORT_MEDIA_BACKFILL_VERSION, false);
     iss_wf_import_get_relation_service()->install_schema();
-    iss_wf_import_get_relation_service()->backfill_all_relations();
-    update_option(ISS_WF_IMPORT_RELATION_BACKFILL_OPTION, ISS_WF_IMPORT_RELATION_BACKFILL_VERSION, false);
     iss_wf_import_get_import_service()->install_schema();
-    iss_wf_import_get_import_service()->backfill_all_source_records();
-    update_option(ISS_WF_IMPORT_IMPORT_BACKFILL_OPTION, ISS_WF_IMPORT_IMPORT_BACKFILL_VERSION, false);
     iss_wf_import_get_assertion_service()->install_schema();
-    iss_wf_import_get_assertion_service()->backfill_all_object_assertions();
-    update_option(ISS_WF_IMPORT_ASSERTION_BACKFILL_OPTION, ISS_WF_IMPORT_ASSERTION_BACKFILL_VERSION, false);
+    $administrator = get_role('administrator');
+    if ($administrator instanceof WP_Role) {
+        $administrator->add_cap(ISS_WF_IMPORT_ARCHIVSET_CAPABILITY);
+    }
     flush_rewrite_rules();
 });
 
 register_deactivation_hook(__FILE__, function () {
     flush_rewrite_rules();
 });
+
+function iss_wf_import_ensure_archivset_capability(): void
+{
+    $administrator = get_role('administrator');
+    if ($administrator instanceof WP_Role && !$administrator->has_cap(ISS_WF_IMPORT_ARCHIVSET_CAPABILITY)) {
+        $administrator->add_cap(ISS_WF_IMPORT_ARCHIVSET_CAPABILITY);
+    }
+}
+add_action('admin_init', 'iss_wf_import_ensure_archivset_capability', 5);
 
 function iss_wf_import_maybe_flush_rewrite_rules(): void
 {
@@ -211,16 +220,17 @@ function iss_wf_import_mark_attachment_as_archive_owned(int $attachment_id, int 
     }
 }
 
-function iss_wf_import_backfill_archive_attachment_flags(): void
+function iss_wf_import_backfill_archive_attachment_flags(bool $force = false): void
 {
     $version = '2026-05-10-archive-attachment-protection-1';
     $stored = (string) get_option('iss_wf_import_archive_attachment_backfill_version', '');
-    if ($stored === $version) {
+    if (!$force && $stored === $version) {
         return;
     }
 
     global $wpdb;
 
+    // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching -- One-time archive attachment backfill scans core post tables.
     $attachment_ids = $wpdb->get_col($wpdb->prepare(
         "SELECT a.ID
         FROM {$wpdb->posts} a
@@ -240,6 +250,7 @@ function iss_wf_import_backfill_archive_attachment_flags(): void
         'post_status' => 'publish',
         'posts_per_page' => -1,
         'fields' => 'ids',
+        // phpcs:ignore WordPress.DB.SlowDBQuery.slow_db_query_meta_query -- One-time archive attachment backfill finds objects with primary media.
         'meta_query' => [
             [
                 'key' => ISS_WF_IMPORT_OBJECT_PRIMARY_ATTACHMENT_META,
@@ -258,7 +269,6 @@ function iss_wf_import_backfill_archive_attachment_flags(): void
 
     update_option('iss_wf_import_archive_attachment_backfill_version', $version, false);
 }
-add_action('init', 'iss_wf_import_backfill_archive_attachment_flags', 100);
 
 function iss_wf_import_skip_archive_owned_webp_attachment_paths(array $paths, int $attachment_id): array
 {
@@ -269,3 +279,17 @@ function iss_wf_import_skip_archive_owned_webp_attachment_paths(array $paths, in
     return $paths;
 }
 add_filter('webpc_attachment_paths', 'iss_wf_import_skip_archive_owned_webp_attachment_paths', 10, 2);
+
+if (defined('WP_CLI') && WP_CLI) {
+    class ISS_WF_Import_Attachment_CLI_Command
+    {
+        public function sync_flags(): void
+        {
+            iss_wf_import_backfill_archive_attachment_flags(true);
+
+            \WP_CLI::success('Synced archive-owned attachment flags.');
+        }
+    }
+
+    \WP_CLI::add_command('iss-archive attachments-sync-flags', ['ISS_WF_Import_Attachment_CLI_Command', 'sync_flags']);
+}

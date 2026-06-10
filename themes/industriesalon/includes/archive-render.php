@@ -15,9 +15,13 @@ function industriesalon_archive_render_featured_object(array $context): string
     }
 
     $permalink = (string) ($context['permalink'] ?? '');
+    $title = trim((string) ($context['title'] ?? ''));
     $kicker = trim((string) ($context['kicker'] ?? ''));
     $excerpt = trim((string) ($context['excerpt'] ?? ''));
     $summary_meta = is_array($context['summary_meta'] ?? null) ? $context['summary_meta'] : [];
+    if ($title === '') {
+        $title = get_the_title($post_id);
+    }
 
     $html = '<article class="iss-archive-featured-object">';
     $html .= '<a class="iss-media-card iss-media-card--cover iss-media-card--flat iss-archive-featured-object__media" href="' . esc_url($permalink) . '">';
@@ -28,7 +32,7 @@ function industriesalon_archive_render_featured_object(array $context): string
 
     $html .= '<div class="iss-archive-featured-object__body">';
     $html .= '<p class="iss-kicker iss-kicker--compact">' . esc_html__('Ausgewähltes Archivobjekt', 'industriesalon') . '</p>';
-    $html .= '<h2 class="iss-archive-featured-object__title">' . esc_html(get_the_title($post_id)) . '</h2>';
+    $html .= '<h2 class="iss-archive-featured-object__title">' . esc_html($title) . '</h2>';
     if ($kicker !== '') {
         $html .= '<p class="iss-archive-featured-object__type">' . esc_html($kicker) . '</p>';
     }

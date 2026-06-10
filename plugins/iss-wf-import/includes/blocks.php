@@ -10,33 +10,54 @@ function iss_wf_import_register_blocks(): void
         return;
     }
 
-    $featured_archive_object_dir = ISS_WF_IMPORT_PATH . 'blocks/featured-archive-object';
-    if (file_exists($featured_archive_object_dir . '/block.json')) {
-        register_block_type($featured_archive_object_dir, [
-            'render_callback' => 'iss_wf_import_render_featured_archive_object_block',
+    $archive_set_selector_path = ISS_WF_IMPORT_PATH . 'assets/js/archive-set-selector.js';
+    if (file_exists($archive_set_selector_path)) {
+        wp_register_script(
+            'iss-wf-import-archive-set-selector',
+            ISS_WF_IMPORT_URL . 'assets/js/archive-set-selector.js',
+            ['wp-api-fetch'],
+            (string) filemtime($archive_set_selector_path),
+            true
+        );
+    }
+
+    $archive_object_dir = ISS_WF_IMPORT_PATH . 'blocks/archive-object';
+    if (file_exists($archive_object_dir . '/block.json')) {
+        register_block_type($archive_object_dir, [
+            'render_callback' => 'iss_wf_import_render_archive_object_block',
         ]);
     }
 
-    $archive_exhibition_dir = ISS_WF_IMPORT_PATH . 'blocks/archive-exhibition';
-    if (file_exists($archive_exhibition_dir . '/block.json')) {
-        register_block_type($archive_exhibition_dir, [
-            'render_callback' => 'iss_wf_import_render_archive_exhibition_block',
-        ]);
-    }
+    register_block_type('iss-wf-import/featured-archive-object', [
+        'api_version' => 2,
+        'render_callback' => 'iss_wf_import_render_featured_archive_object_block',
+        'supports' => [
+            'inserter' => false,
+        ],
+    ]);
 
     register_block_type('iss-wf-import/archive-collection', [
         'api_version' => 2,
         'render_callback' => 'iss_wf_import_render_archive_collection_block',
+        'supports' => [
+            'inserter' => false,
+        ],
     ]);
 
     register_block_type('iss-wf-import/archive-album', [
         'api_version' => 2,
         'render_callback' => 'iss_wf_import_render_archive_album_block',
+        'supports' => [
+            'inserter' => false,
+        ],
     ]);
 
     register_block_type('iss-wf-import/archive-object-media', [
         'api_version' => 2,
         'render_callback' => 'iss_wf_import_render_archive_object_media_block',
+        'supports' => [
+            'inserter' => false,
+        ],
     ]);
 
     $archive_object_browser_dir = ISS_WF_IMPORT_PATH . 'blocks/archive-object-browser';
@@ -50,297 +71,9 @@ function iss_wf_import_register_blocks(): void
             'render_callback' => 'iss_wf_import_render_archive_object_browser_block',
         ]);
     }
+
 }
 add_action('init', 'iss_wf_import_register_blocks', 20);
-
-function iss_wf_import_get_archive_exhibition_posts(string $term_slug): array
-{
-    $term_slug = sanitize_title($term_slug);
-    if ($term_slug === '') {
-        return [];
-    }
-
-    return get_posts([
-        'post_type' => ISS_WF_IMPORT_POST_TYPE,
-        'post_status' => 'publish',
-        'posts_per_page' => -1,
-        'orderby' => 'date',
-        'order' => 'ASC',
-        // phpcs:ignore WordPress.DB.SlowDBQuery.slow_db_query_tax_query -- Exhibition chapters are intentionally selected by the archive category taxonomy.
-        'tax_query' => [
-            [
-                'taxonomy' => ISS_WF_IMPORT_CATEGORY_TAXONOMY,
-                'field' => 'slug',
-                'terms' => [$term_slug],
-            ],
-        ],
-        'suppress_filters' => true,
-    ]);
-}
-
-function iss_wf_import_get_archive_exhibition_anchor(WP_Post $post, int $index): string
-{
-    $slug = sanitize_title($post->post_name ?: $post->post_title);
-
-    if ($slug === '') {
-        $slug = 'kapitel-' . max(1, $index + 1);
-    }
-
-    return 'kapitel-' . $slug;
-}
-
-function iss_wf_import_split_archive_exhibition_body(string $html, int $target_chars = 700, int $max_blocks = 2, int $max_single_block_chars = 650): array
-{
-    $html = trim($html);
-    if ($html === '' || !class_exists('DOMDocument')) {
-        return [
-            'lead' => '',
-            'rest' => $html,
-        ];
-    }
-
-    $document = new DOMDocument('1.0', 'UTF-8');
-    $wrapped = '<!DOCTYPE html><html><body><div id="iss-archive-exhibition-body-root">' . $html . '</div></body></html>';
-    libxml_use_internal_errors(true);
-    $loaded = $document->loadHTML('<?xml encoding="utf-8" ?>' . $wrapped, LIBXML_HTML_NOIMPLIED | LIBXML_HTML_NODEFDTD);
-    libxml_clear_errors();
-
-    if (!$loaded) {
-        return [
-            'lead' => '',
-            'rest' => $html,
-        ];
-    }
-
-    $root = $document->getElementById('iss-archive-exhibition-body-root');
-    if (!$root instanceof DOMElement) {
-        return [
-            'lead' => '',
-            'rest' => $html,
-        ];
-    }
-
-    $lead_parts = [];
-    $rest_parts = [];
-    $lead_chars = 0;
-    $lead_blocks = 0;
-    $collect_lead = true;
-
-    foreach ($root->childNodes as $node) {
-        $node_html = trim($document->saveHTML($node));
-
-        if ($node_html === '') {
-            continue;
-        }
-
-        if ($collect_lead && $node instanceof DOMElement) {
-            $node_chars = mb_strlen(trim(wp_strip_all_tags($node->textContent)));
-
-            if (!$lead_parts && $node_chars > $max_single_block_chars) {
-                $collect_lead = false;
-                $rest_parts[] = $node_html;
-                continue;
-            }
-
-            if ($lead_parts && ($lead_blocks >= $max_blocks || ($lead_chars + $node_chars) > $target_chars)) {
-                $collect_lead = false;
-                $rest_parts[] = $node_html;
-                continue;
-            }
-
-            $lead_parts[] = $node_html;
-            $lead_blocks++;
-            $lead_chars += $node_chars;
-
-            if ($lead_blocks >= $max_blocks || $lead_chars >= $target_chars) {
-                $collect_lead = false;
-            }
-
-            continue;
-        }
-
-        $rest_parts[] = $node_html;
-    }
-
-    if (!$lead_parts || !$rest_parts) {
-        return [
-            'lead' => '',
-            'rest' => $html,
-        ];
-    }
-
-    return [
-        'lead' => implode('', $lead_parts),
-        'rest' => implode('', $rest_parts),
-    ];
-}
-
-function iss_wf_import_render_archive_exhibition_toc(string $term_slug): string
-{
-    $posts = iss_wf_import_get_archive_exhibition_posts($term_slug);
-    if (!$posts) {
-        return '';
-    }
-
-    ob_start();
-    echo '<nav id="kapitelverzeichnis" class="iss-digital-exhibition__toc" aria-label="' . esc_attr__('Kapitelverzeichnis', 'iss-wf-import') . '">';
-    echo '<ol class="iss-digital-exhibition__toc-list">';
-
-    foreach ($posts as $index => $post) {
-        $anchor = iss_wf_import_get_archive_exhibition_anchor($post, $index);
-        echo '<li class="iss-digital-exhibition__toc-item">';
-        echo '<a class="iss-digital-exhibition__toc-link" href="#' . esc_attr($anchor) . '">';
-        echo '<span class="iss-digital-exhibition__toc-number">' . esc_html(str_pad((string) ($index + 1), 2, '0', STR_PAD_LEFT)) . '</span>';
-        echo '<span class="iss-digital-exhibition__toc-copy">';
-        echo '<span class="iss-digital-exhibition__toc-title">' . esc_html(get_the_title($post)) . '</span>';
-        echo '<span class="iss-digital-exhibition__toc-date">' . esc_html(get_the_date('j. F Y', $post)) . '</span>';
-        echo '</span>';
-        echo '</a>';
-        echo '</li>';
-    }
-
-    echo '</ol>';
-    echo '</nav>';
-
-    return (string) ob_get_clean();
-}
-
-function iss_wf_import_render_archive_exhibition_cards(string $term_slug): string
-{
-    $posts = iss_wf_import_get_archive_exhibition_posts($term_slug);
-    if (!$posts) {
-        return '';
-    }
-
-    ob_start();
-    echo '<div class="iss-digital-exhibition__chapter-query">';
-    echo '<div class="wp-block-post-template is-layout-grid columns-3 iss-digital-exhibition__cards-grid">';
-
-    foreach ($posts as $post) {
-        $excerpt = trim((string) get_the_excerpt($post));
-        echo '<article class="iss-digital-exhibition__chapter-card">';
-        echo '<p class="iss-digital-exhibition__chapter-kicker">Kapitel</p>';
-        echo '<h3 class="iss-digital-exhibition__chapter-title"><a href="' . esc_url((string) get_permalink($post)) . '">' . esc_html(get_the_title($post)) . '</a></h3>';
-        echo '<p class="iss-digital-exhibition__chapter-text">' . esc_html(wp_trim_words(wp_strip_all_tags($excerpt), 24, '...')) . '</p>';
-        echo '</article>';
-    }
-
-    echo '</div>';
-    echo '</div>';
-
-    return (string) ob_get_clean();
-}
-
-function iss_wf_import_render_archive_exhibition_stream(string $term_slug): string
-{
-    $posts = iss_wf_import_get_archive_exhibition_posts($term_slug);
-    if (!$posts) {
-        return '';
-    }
-
-    ob_start();
-    echo '<div class="iss-digital-exhibition__stream">';
-    foreach ($posts as $index => $post) {
-        $anchor = iss_wf_import_get_archive_exhibition_anchor($post, $index);
-        $content = apply_filters('the_content', (string) $post->post_content);
-        $intro_html = '';
-        $body_html = $content;
-        $image_html = has_post_thumbnail($post) ? (string) get_the_post_thumbnail($post, 'large') : '';
-        $image_caption = '';
-        $thumbnail_id = (int) get_post_thumbnail_id($post);
-
-        if ($thumbnail_id > 0) {
-            $image_caption = trim((string) wp_get_attachment_caption($thumbnail_id));
-        }
-
-        if (preg_match('/<p\b[^>]*>.*?<\/p>/is', $content, $matches, PREG_OFFSET_CAPTURE)) {
-            $intro_html = trim((string) $matches[0][0]);
-            $start = (int) $matches[0][1];
-            $length = strlen((string) $matches[0][0]);
-            $body_html = trim(substr($content, 0, $start) . substr($content, $start + $length));
-        }
-
-        if ($intro_html === '') {
-            $intro_text = trim((string) get_the_excerpt($post));
-            if ($intro_text !== '') {
-                $intro_html = '<p>' . esc_html(wp_strip_all_tags($intro_text)) . '</p>';
-            }
-        }
-
-        $body_parts = iss_wf_import_split_archive_exhibition_body($body_html);
-        $lead_body_html = $body_parts['lead'];
-        $rest_body_html = $body_parts['rest'];
-
-        $entry_classes = 'iss-digital-exhibition__chapter-entry';
-        if ($index % 2 === 1) {
-            $entry_classes .= ' iss-digital-exhibition__chapter-entry--reverse';
-        }
-
-        echo '<article id="' . esc_attr($anchor) . '" class="' . esc_attr($entry_classes) . '">';
-        echo '<div class="iss-digital-exhibition__chapter-top">';
-        echo '<div class="iss-digital-exhibition__chapter-copy">';
-        echo '<p class="iss-kicker iss-kicker--compact">Kapitel ' . esc_html((string) ($index + 1)) . '</p>';
-        echo '<h2 class="iss-digital-exhibition__entry-title"><a href="' . esc_url((string) get_permalink($post)) . '">' . esc_html(get_the_title($post)) . '</a></h2>';
-        echo '<p class="iss-digital-exhibition__entry-date">' . esc_html(get_the_date('j. F Y', $post)) . '</p>';
-        if ($intro_html !== '') {
-            echo '<div class="iss-digital-exhibition__entry-intro">' . wp_kses_post($intro_html) . '</div>';
-        }
-        if ($lead_body_html !== '') {
-            echo '<div class="iss-post-body__content iss-digital-exhibition__entry-body-lead">';
-            echo wp_kses_post($lead_body_html);
-            echo '</div>';
-        }
-        echo '</div>';
-
-        echo '<div class="iss-digital-exhibition__chapter-media">';
-        if ($image_html !== '') {
-            echo '<figure class="iss-digital-exhibition__chapter-figure">';
-            echo '<a href="' . esc_url((string) get_permalink($post)) . '">' . wp_kses_post($image_html) . '</a>';
-            if ($image_caption !== '') {
-                echo '<figcaption>' . esc_html($image_caption) . '</figcaption>';
-            }
-            echo '</figure>';
-        }
-        echo '</div>';
-        echo '</div>';
-
-        if ($rest_body_html !== '') {
-            echo '<div class="iss-post-body__content iss-digital-exhibition__entry-body">';
-            echo wp_kses_post($rest_body_html);
-            echo '</div>';
-        } elseif ($lead_body_html === '') {
-            echo '<div class="iss-post-body__content iss-digital-exhibition__entry-body">';
-            echo wp_kses_post($body_html);
-            echo '</div>';
-        }
-
-        echo '<p class="iss-digital-exhibition__chapter-return"><a class="iss-action-link" href="#kapitelverzeichnis">' . esc_html__('Zurück zum Kapitelverzeichnis', 'iss-wf-import') . '</a></p>';
-        echo '</article>';
-    }
-    echo '</div>';
-
-    return (string) ob_get_clean();
-}
-
-function iss_wf_import_render_archive_exhibition_block($attributes = [], $content = '', $block = null): string
-{
-    $term_slug = sanitize_title((string) ($attributes['termSlug'] ?? ''));
-    $layout = sanitize_key((string) ($attributes['layout'] ?? 'cards'));
-
-    if ($term_slug === '') {
-        return '';
-    }
-
-    if ($layout === 'toc') {
-        return iss_wf_import_render_archive_exhibition_toc($term_slug);
-    }
-
-    if ($layout === 'stream') {
-        return iss_wf_import_render_archive_exhibition_stream($term_slug);
-    }
-
-    return iss_wf_import_render_archive_exhibition_cards($term_slug);
-}
 
 function iss_wf_import_get_archive_image_meta_line(array $image): string
 {
@@ -386,7 +119,7 @@ function iss_wf_import_get_archive_image_display(array $image, string $size = 'l
     ];
 }
 
-function iss_wf_import_render_archive_object_card(array $item): string
+function iss_wf_import_normalize_archive_object_member_for_render(array $item): array
 {
     $post_id = absint($item['object_id'] ?? 0);
     $post = $post_id > 0 ? get_post($post_id) : null;
@@ -427,6 +160,47 @@ function iss_wf_import_render_archive_object_card(array $item): string
 
     $caption = trim((string) preg_replace('/\s+/u', ' ', $caption));
 
+    return [
+        'object_id' => $post_id,
+        'post' => $post,
+        'title' => $title,
+        'caption' => $caption,
+        'page_label' => $page_label,
+        'link_url' => $link_url,
+        'image_html' => $image_html,
+        'source_url' => esc_url_raw((string) ($item['source_url'] ?? '')),
+        'set_id' => absint($item['set_id'] ?? 0),
+        'member_id' => absint($item['member_id'] ?? 0),
+        'position' => max(0, absint($item['position'] ?? 0)),
+    ];
+}
+
+function iss_wf_import_render_archive_object_member(array $item, string $variant = 'grid-card'): string
+{
+    $member = iss_wf_import_normalize_archive_object_member_for_render($item);
+    $post_id = absint($member['object_id'] ?? 0);
+    $post = $member['post'] ?? null;
+
+    if ($post_id <= 0 || (!$post instanceof WP_Post && empty($member['source_url']))) {
+        return '';
+    }
+
+    if ($variant === 'featured') {
+        return iss_wf_import_render_featured_archive_object($post_id, [
+            'title' => (string) $member['title'],
+            'excerpt' => (string) $member['caption'],
+            'set_id' => absint($member['set_id'] ?? 0),
+            'member_id' => absint($member['member_id'] ?? 0),
+            'position' => max(0, absint($member['position'] ?? 0)),
+        ]);
+    }
+
+    $title = (string) $member['title'];
+    $caption = (string) $member['caption'];
+    $page_label = (string) $member['page_label'];
+    $link_url = (string) $member['link_url'];
+    $image_html = (string) $member['image_html'];
+
     ob_start();
     ?>
     <article class="iss-archive-card iss-archive-card--mediathek iss-archive-records__card">
@@ -453,6 +227,91 @@ function iss_wf_import_render_archive_object_card(array $item): string
     <?php
 
     return trim((string) ob_get_clean());
+}
+
+function iss_wf_import_render_archive_object_card(array $item): string
+{
+    return iss_wf_import_render_archive_object_member($item, 'grid-card');
+}
+
+function iss_wf_import_get_archivset_object_items_for_render(int $set_id, int $max_items = 0): array
+{
+    if ($set_id <= 0 || !function_exists('iss_wf_import_get_archivset_service')) {
+        return [];
+    }
+
+    $items = [];
+    foreach (iss_wf_import_get_archivset_service()->get_members($set_id) as $member) {
+        if (!is_array($member) || (string) ($member['member_kind'] ?? '') !== 'object') {
+            continue;
+        }
+
+        $object_id = absint($member['object_post_id'] ?? 0);
+        if ($object_id <= 0) {
+            continue;
+        }
+
+        $post = get_post($object_id);
+        if (!$post instanceof WP_Post || $post->post_type !== ISS_WF_IMPORT_OBJECT_POST_TYPE || $post->post_status !== 'publish') {
+            continue;
+        }
+
+        $items[] = [
+            'object_id' => $object_id,
+            'set_id' => $set_id,
+            'member_id' => absint($member['id'] ?? 0),
+            'position' => max(0, absint($member['position'] ?? 0)),
+            'title' => trim((string) ($member['display_title'] ?? '')),
+            'caption_override' => trim((string) ($member['caption'] ?? '')),
+            'page_label' => trim((string) ($member['page_label'] ?? '')),
+            'source_url' => esc_url_raw((string) ($member['member_source_url'] ?? '')),
+        ];
+
+        if ($max_items > 0 && count($items) >= $max_items) {
+            break;
+        }
+    }
+
+    return $items;
+}
+
+function iss_wf_import_get_archivset_object_item_for_render(int $set_id, int $member_position): array
+{
+    if ($set_id <= 0 || $member_position < 0) {
+        return [];
+    }
+
+    foreach (iss_wf_import_get_archivset_object_items_for_render($set_id) as $item) {
+        if (max(0, absint($item['position'] ?? 0)) === $member_position) {
+            return $item;
+        }
+    }
+
+    return [];
+}
+
+function iss_wf_import_get_attached_archivset_object_item_for_render(int $post_id, int $member_position): array
+{
+    if ($post_id <= 0 || $member_position < 0) {
+        return [];
+    }
+
+    if (!function_exists('iss_wf_import_get_archivset_service')) {
+        return [];
+    }
+
+    foreach (iss_wf_import_get_archivset_service()->get_sets_for_post($post_id) as $set) {
+        if (!is_array($set)) {
+            continue;
+        }
+
+        $item = iss_wf_import_get_archivset_object_item_for_render(absint($set['id'] ?? 0), $member_position);
+        if ($item) {
+            return $item;
+        }
+    }
+
+    return [];
 }
 
 function iss_wf_import_get_public_source_label(string $slug, string $name = ''): string
@@ -1272,11 +1131,17 @@ function iss_wf_import_get_featured_archive_object_context(int $post_id): array
     ];
 }
 
-function iss_wf_import_render_featured_archive_object(int $post_id): string
+function iss_wf_import_render_featured_archive_object(int $post_id, array $overrides = []): string
 {
     $context = iss_wf_import_get_featured_archive_object_context($post_id);
     if ($context === []) {
         return '';
+    }
+
+    foreach ($overrides as $key => $value) {
+        if (in_array($key, ['title', 'excerpt', 'set_id', 'member_id', 'position'], true)) {
+            $context[$key] = $value;
+        }
     }
 
     $theme_render = apply_filters('iss_wf_import_render_featured_archive_object', '', $post_id, $context);
@@ -1286,6 +1151,10 @@ function iss_wf_import_render_featured_archive_object(int $post_id): string
 
     $permalink = (string) ($context['permalink'] ?? '');
     $excerpt = trim((string) ($context['excerpt'] ?? ''));
+    $title = trim((string) ($context['title'] ?? ''));
+    if ($title === '') {
+        $title = get_the_title($post_id);
+    }
 
     ob_start();
     ?>
@@ -1297,7 +1166,7 @@ function iss_wf_import_render_featured_archive_object(int $post_id): string
         </a>
         <div class="iss-archive-featured-object__body">
             <p class="iss-kicker iss-kicker--compact"><?php esc_html_e('Ausgewähltes Archivobjekt', 'iss-wf-import'); ?></p>
-            <h2 class="iss-archive-featured-object__title"><?php echo esc_html(get_the_title($post_id)); ?></h2>
+            <h2 class="iss-archive-featured-object__title"><?php echo esc_html($title); ?></h2>
             <?php if ($excerpt !== '') : ?>
                 <p class="iss-archive-featured-object__text"><?php echo esc_html($excerpt); ?></p>
             <?php endif; ?>
@@ -1309,24 +1178,92 @@ function iss_wf_import_render_featured_archive_object(int $post_id): string
     return trim((string) ob_get_clean());
 }
 
-function iss_wf_import_render_featured_archive_object_block($attributes = [], $content = ''): string
+function iss_wf_import_render_archive_object_placement_block($attributes = [], $block = null, string $wrapper_class = 'wp-block-iss-archive-object'): string
 {
     $attributes = is_array($attributes) ? $attributes : [];
     $post_id = isset($attributes['postId']) ? (int) $attributes['postId'] : 0;
+    $set_id = absint($attributes['setId'] ?? 0);
+    $member_position = array_key_exists('memberPosition', $attributes) ? (int) $attributes['memberPosition'] : -1;
+    $variant = sanitize_key((string) ($attributes['variant'] ?? 'featured'));
+    if ($variant === '') {
+        $variant = 'featured';
+    }
+    if (!in_array($variant, ['featured'], true)) {
+        $variant = 'featured';
+    }
+    $context_post_id = absint($attributes['contextPostId'] ?? 0);
+    if ($context_post_id <= 0 && $block instanceof WP_Block) {
+        $context_post_id = absint($block->context['postId'] ?? 0);
+    }
+    if ($context_post_id <= 0) {
+        $context_post_id = (int) get_the_ID();
+    }
+    if ($context_post_id <= 0) {
+        $context_post_id = (int) get_queried_object_id();
+    }
+    $member_item = [];
+
+    if ($set_id > 0 && $member_position >= 0) {
+        if ($context_post_id > 0 && !iss_wf_import_get_archivset_service()->set_is_attached_to_post($set_id, $context_post_id)) {
+            return '';
+        }
+        $member_item = iss_wf_import_get_archivset_object_item_for_render($set_id, $member_position);
+    } elseif ($member_position >= 0) {
+        $member_item = iss_wf_import_get_attached_archivset_object_item_for_render($context_post_id, $member_position);
+    }
+
+    if ($member_item) {
+        $html = iss_wf_import_render_archive_object_member($member_item, $variant);
+    } else {
+        $html = '';
+    }
+
+    if ($html === '' && ($set_id > 0 || $member_position >= 0)) {
+        return '';
+    }
+
     if ($post_id <= 0 || iss_wf_import_get_featured_archive_object_context($post_id) === []) {
         $post_id = iss_wf_import_get_featured_archive_object_id();
     }
 
-    $html = $post_id > 0 ? iss_wf_import_render_featured_archive_object($post_id) : '';
+    if ($html === '') {
+        $html = $post_id > 0 ? iss_wf_import_render_featured_archive_object($post_id) : '';
+    }
     if ($html === '') {
         return '';
     }
 
     $wrapper = function_exists('get_block_wrapper_attributes')
-        ? get_block_wrapper_attributes(['class' => 'wp-block-iss-featured-archive-object'])
-        : 'class="wp-block-iss-featured-archive-object"';
+        ? get_block_wrapper_attributes(['class' => $wrapper_class])
+        : 'class="' . esc_attr($wrapper_class) . '"';
 
     return '<div ' . $wrapper . '>' . $html . '</div>';
+}
+
+function iss_wf_import_render_archive_object_block($attributes = [], $content = '', $block = null): string
+{
+    $attributes = is_array($attributes) ? $attributes : [];
+    if (!isset($attributes['variant'])) {
+        $attributes['variant'] = 'featured';
+    }
+
+    return iss_wf_import_render_archive_object_placement_block(
+        $attributes,
+        $block,
+        'wp-block-iss-archive-object wp-block-iss-archive-object--featured wp-block-iss-featured-archive-object'
+    );
+}
+
+function iss_wf_import_render_featured_archive_object_block($attributes = [], $content = '', $block = null): string
+{
+    $attributes = is_array($attributes) ? $attributes : [];
+    $attributes['variant'] = 'featured';
+
+    return iss_wf_import_render_archive_object_placement_block(
+        $attributes,
+        $block,
+        'wp-block-iss-featured-archive-object'
+    );
 }
 
 function iss_wf_import_normalize_archive_object_browser_discovery_links($links): array

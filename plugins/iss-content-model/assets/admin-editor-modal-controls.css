@@ -1,0 +1,158 @@
+#wp-content-media-buttons .iss-editor-open {
+  margin-left: 6px;
+}
+
+body.iss-editor-dashboard-ready #edit-slug-box,
+body.iss-editor-dashboard-ready #slugdiv,
+body.iss-editor-dashboard-ready #revisionsdiv,
+body.iss-editor-dashboard-ready #postcustom {
+  display: none;
+}
+
+body.iss-editor-dashboard-ready .iss-editor-top-dashboard {
+  display: grid;
+  gap: 14px;
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+  margin: 14px 0 18px;
+}
+
+/* stylelint-disable selector-id-pattern -- ACF and metabox IDs are WordPress-owned. */
+body.iss-editor-dashboard-ready .iss-editor-top-dashboard #acf-group_iss_ausstellung_controls,
+body.iss-editor-dashboard-ready .iss-editor-top-dashboard #iss-content-model-ausstellung,
+body.iss-editor-dashboard-ready .iss-editor-top-dashboard #iss-content-model-veranstaltung,
+body.iss-editor-dashboard-ready .iss-editor-top-dashboard #iss-publication-bibliography {
+  grid-column: 1 / -1;
+}
+
+body.iss-editor-dashboard-ready .iss-editor-top-dashboard #postexcerpt {
+  min-width: 0;
+}
+
+body.iss-editor-dashboard-ready .iss-editor-top-dashboard > .postbox {
+  margin-bottom: 0;
+}
+/* stylelint-enable selector-id-pattern */
+
+body.iss-editor-dashboard-ready .iss-editor-top-dashboard > .postbox .inside {
+  margin: 0;
+}
+
+body.iss-editor-dashboard-ready .iss-editor-top-dashboard #postexcerpt textarea {
+  min-height: 116px;
+}
+
+body.iss-editor-modal-controls-ready #iss-graph-public-content-relations,
+body.iss-editor-modal-controls-ready #iss-graph-editorial-signals,
+body.iss-editor-modal-controls-ready #iss-relations-places,
+body.iss-editor-modal-controls-ready #iss-wf-import-archive-picker,
+body.iss-editor-modal-controls-ready #iss-publication-related-publications {
+  display: none;
+}
+
+.iss-editor-modal {
+  display: none;
+}
+
+.iss-editor-modal.is-open {
+  display: block;
+}
+
+.iss-editor-modal__backdrop {
+  background: rgba(30, 30, 30, 0.55);
+  bottom: 0;
+  left: 0;
+  position: fixed;
+  right: 0;
+  top: 0;
+  z-index: 100100;
+}
+
+.iss-editor-modal__dialog {
+  background: #fff;
+  bottom: 32px;
+  box-shadow: 0 5px 15px rgba(0, 0, 0, 0.7);
+  display: grid;
+  grid-template-rows: auto minmax(0, 1fr) auto;
+  left: 50%;
+  max-width: 1100px;
+  position: fixed;
+  top: 32px;
+  transform: translateX(-50%);
+  width: calc(100vw - 64px);
+  z-index: 100101;
+}
+
+.iss-editor-modal__header,
+.iss-editor-modal__footer {
+  align-items: center;
+  background: #f6f7f7;
+  border-color: #dcdcde;
+  display: flex;
+  gap: 12px;
+  justify-content: space-between;
+  padding: 12px 16px;
+}
+
+.iss-editor-modal__header {
+  border-bottom-style: solid;
+  border-bottom-width: 1px;
+}
+
+.iss-editor-modal__footer {
+  border-top-style: solid;
+  border-top-width: 1px;
+}
+
+.iss-editor-modal__title {
+  font-size: 18px;
+  font-weight: 600;
+  line-height: 1.3;
+  margin: 0;
+}
+
+.iss-editor-modal__close {
+  background: transparent;
+  border: 0;
+  color: #646970;
+  cursor: pointer;
+  font-size: 26px;
+  height: 32px;
+  line-height: 1;
+  padding: 0;
+  width: 32px;
+}
+
+.iss-editor-modal__close:hover,
+.iss-editor-modal__close:focus {
+  color: #1d2327;
+}
+
+.iss-editor-modal__body {
+  min-height: 0;
+  overflow: auto;
+  padding: 16px;
+}
+
+.iss-editor-modal__body > .inside {
+  margin: 0;
+  padding: 0;
+}
+
+.iss-editor-modal__body .iss-graph-editor {
+  max-width: none;
+}
+
+@media (max-width: 782px) {
+  #wp-content-media-buttons .iss-editor-open {
+    margin-bottom: 6px;
+    margin-left: 0;
+  }
+
+  .iss-editor-modal__dialog {
+    bottom: 0;
+    left: 0;
+    top: 0;
+    transform: none;
+    width: 100vw;
+  }
+}

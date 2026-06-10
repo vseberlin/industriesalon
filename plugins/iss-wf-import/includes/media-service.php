@@ -4,6 +4,8 @@ if (!defined('ABSPATH')) {
     exit;
 }
 
+// phpcs:disable WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching, WordPress.DB.PreparedSQL.InterpolatedNotPrepared -- This service owns and queries iss-wf-import custom archive media tables.
+
 class ISS_WF_Import_Media_Service
 {
     /** @var array<int, array<string, mixed>|null> */
@@ -342,7 +344,6 @@ function iss_wf_import_maybe_backfill_media_tables(): void
 {
     iss_wf_import_get_media_service()->maybe_backfill();
 }
-add_action('init', 'iss_wf_import_maybe_backfill_media_tables', 30);
 
 function iss_wf_import_sync_object_media_on_save(int $post_id, WP_Post $post): void
 {
@@ -371,6 +372,14 @@ add_action('before_delete_post', 'iss_wf_import_delete_object_media_on_before_de
 if (defined('WP_CLI') && WP_CLI) {
     class ISS_WF_Import_Media_CLI_Command
     {
+        public function sync(): void
+        {
+            iss_wf_import_get_media_service()->backfill_all_media();
+            update_option(ISS_WF_IMPORT_MEDIA_BACKFILL_OPTION, ISS_WF_IMPORT_MEDIA_BACKFILL_VERSION, false);
+
+            \WP_CLI::success('Synced archive media projection table.');
+        }
+
         public function verify(): void
         {
             $service = iss_wf_import_get_media_service();
@@ -433,5 +442,6 @@ if (defined('WP_CLI') && WP_CLI) {
         }
     }
 
+    \WP_CLI::add_command('iss-archive media-sync', ['ISS_WF_Import_Media_CLI_Command', 'sync']);
     \WP_CLI::add_command('iss-archive media-verify', ['ISS_WF_Import_Media_CLI_Command', 'verify']);
 }

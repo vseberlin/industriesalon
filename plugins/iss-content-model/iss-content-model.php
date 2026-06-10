@@ -2,7 +2,7 @@
 /**
  * Plugin Name: ISS Content Model
  * Description: Shared CPTs and structured fields for Veranstaltungen, Ausstellungen, Projekte, and Team, with minimal timeline wiring.
- * Version: 0.1.0
+ * Version: 0.2.0
  * Author: Industriesalon
  */
 
@@ -24,7 +24,6 @@ define('ISS_CONTENT_MODEL_TEAM_ROLE_TAXONOMY', 'team_role');
 define('ISS_CONTENT_MODEL_PROJECT_STATUS_TAXONOMY', 'project_status');
 define('ISS_CONTENT_MODEL_AUSSTELLUNG_TYPE_TAXONOMY', 'ausstellung_typ');
 define('ISS_CONTENT_MODEL_COLLECTION_AREA_TAXONOMY', 'sammlungsbereich');
-define('ISS_CONTENT_MODEL_INDUSTRY_SITE_TAXONOMY', 'industrieort');
 define('ISS_CONTENT_MODEL_TOPIC_TAXONOMY', 'iss_topic');
 define('ISS_CONTENT_MODEL_VIDEO_CATEGORY_TAXONOMY', 'video_kategorie');
 
@@ -100,6 +99,7 @@ add_action('before_delete_post', 'iss_content_model_maybe_flush_landing_routes')
 require_once ISS_CONTENT_MODEL_PATH . 'includes/post-types.php';
 require_once ISS_CONTENT_MODEL_PATH . 'includes/meta.php';
 require_once ISS_CONTENT_MODEL_PATH . 'includes/admin.php';
+require_once ISS_CONTENT_MODEL_PATH . 'includes/acf.php';
 require_once ISS_CONTENT_MODEL_PATH . 'includes/blocks.php';
 require_once ISS_CONTENT_MODEL_PATH . 'includes/timeline-sync.php';
 require_once ISS_CONTENT_MODEL_PATH . 'includes/videos.php';

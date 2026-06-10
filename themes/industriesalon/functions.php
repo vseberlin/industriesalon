@@ -48,7 +48,6 @@ add_action('after_setup_theme', function () {
             'assets/css/page-ausstellungen.css',
             'assets/css/page-verein.css',
             'assets/css/publications.css',
-            'assets/css/digital-exhibition.css',
             'assets/css/single-tour.css',
             'assets/css/single-ausstellung.css',
             'assets/css/single-event.css',
@@ -75,6 +74,26 @@ add_action('init', function (): void {
             ]
         );
     }
+});
+
+add_action('enqueue_block_editor_assets', function (): void {
+    $screen = function_exists('get_current_screen') ? get_current_screen() : null;
+    if (!$screen || $screen->base !== 'post') {
+        return;
+    }
+
+    $path = get_stylesheet_directory() . '/assets/js/editor-block-cleanup.js';
+    if (!file_exists($path)) {
+        return;
+    }
+
+    wp_enqueue_script(
+        'industriesalon-editor-block-cleanup',
+        get_stylesheet_directory_uri() . '/assets/js/editor-block-cleanup.js',
+        ['wp-blocks', 'wp-dom-ready'],
+        (string) filemtime($path),
+        true
+    );
 });
 
 add_filter('get_site_icon_url', function ($url, $size, $blog_id) {
@@ -1721,13 +1740,6 @@ function industriesalon_enqueue_assets(): void
             'handle' => 'industriesalon-search',
             'path' => '/assets/css/search.css',
             'condition' => is_search(),
-        ),
-        array(
-            'handle' => 'industriesalon-digital-exhibition',
-            'path' => '/assets/css/digital-exhibition.css',
-            'condition' => is_singular('ausstellung')
-                && function_exists('industriesalon_get_ausstellung_source')
-                && industriesalon_get_ausstellung_source((int) get_queried_object_id()) === 'archive_category',
         ),
     );
 

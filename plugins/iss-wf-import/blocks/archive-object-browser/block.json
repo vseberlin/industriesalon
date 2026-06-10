@@ -85,6 +85,7 @@
     }
   },
   "supports": {
+    "inserter": false,
     "html": false
   }
 }

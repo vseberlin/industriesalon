@@ -56,6 +56,114 @@
   gap: clamp(0.95rem, 1.7vw, 1.35rem);
 }
 
+.iss-ausstellungen-page .iss-card-skin--exhibition {
+  --iss-card-accent: var(--iss-brown);
+  --iss-card-title-size: clamp(1.08rem, 1rem + 0.28vw, 1.24rem);
+  --iss-card-title-line: 1.12;
+  --iss-card-title-track: 0;
+  --iss-card-title-clamp: 3;
+  --iss-tl-primary: var(--iss-brown);
+  --iss-tl-primary-rgb: 117, 58, 24;
+  --iss-tl-accent-soft: rgba(117, 58, 24, 0.1);
+  --iss-tl-accent-border: rgba(117, 58, 24, 0.24);
+}
+
+.iss-ausstellungen-page .iss-card-skin--exhibition .iss-timeline__presets {
+  gap: 0.5rem;
+  margin-bottom: 1rem;
+}
+
+.iss-ausstellungen-page .iss-card-skin--exhibition .iss-timeline__preset {
+  min-height: 2.4rem;
+  border-color: var(--iss-ausstellungen-line);
+  border-left-color: transparent;
+  background: var(--iss-ausstellungen-surface);
+}
+
+.iss-ausstellungen-page .iss-card-skin--exhibition .iss-timeline__preset.is-active,
+.iss-ausstellungen-page .iss-card-skin--exhibition .iss-timeline__preset[aria-pressed="true"] {
+  border-color: rgba(117, 58, 24, 0.32);
+  border-left-color: var(--iss-brown);
+  background: rgba(117, 58, 24, 0.1);
+}
+
+.iss-ausstellungen-page .iss-card-skin--exhibition .iss-timeline-card {
+  border-color: rgba(117, 58, 24, 0.16);
+  background: var(--iss-ausstellungen-surface);
+}
+
+.iss-ausstellungen-page .iss-card-skin--exhibition .iss-timeline-card:hover,
+.iss-ausstellungen-page .iss-card-skin--exhibition .iss-timeline-card:focus-within {
+  border-color: rgba(117, 58, 24, 0.32);
+  background: #fff;
+}
+
+.iss-ausstellungen-page .iss-card-skin--exhibition .iss-timeline-card::before {
+  background: var(--iss-brown);
+}
+
+.iss-ausstellungen-page .iss-card-skin--exhibition .iss-timeline-card__media {
+  aspect-ratio: 16 / 11;
+  background: var(--iss-ausstellungen-surface-tint);
+}
+
+.iss-ausstellungen-page .iss-card-skin--exhibition .iss-timeline-card__media img {
+  filter: saturate(0.96) contrast(1.03);
+}
+
+.iss-ausstellungen-page .iss-card-skin--exhibition .iss-timeline-card__text {
+  color: var(--iss-ausstellungen-muted);
+  font-size: 0.9rem;
+  line-height: 1.48;
+}
+
+.iss-ausstellungen-page .iss-card-skin--exhibition .iss-card__link {
+  color: var(--iss-brown);
+}
+
+.iss-ausstellungen-page .iss-card-skin--exhibition .iss-card__link:hover,
+.iss-ausstellungen-page .iss-card-skin--exhibition .iss-card__link:focus-visible {
+  color: var(--iss-red);
+}
+
+.iss-ausstellungen-page .iss-card-skin--exhibition .iss-timeline__item {
+  grid-template-columns: minmax(5.25rem, 6.5rem) minmax(0, 1fr) minmax(13rem, 21rem);
+  gap: clamp(0.9rem, 2vw, 1.4rem);
+  margin-bottom: 0.85rem;
+  padding: 1rem;
+  border: 1px solid rgba(117, 58, 24, 0.14);
+  background: rgba(255, 255, 255, 0.82);
+}
+
+.iss-ausstellungen-page .iss-card-skin--exhibition .iss-timeline__item:last-child {
+  border-bottom: 1px solid rgba(117, 58, 24, 0.14);
+}
+
+.iss-ausstellungen-page .iss-card-skin--exhibition .iss-timeline__day {
+  color: var(--iss-brown);
+  font-size: clamp(1rem, 0.94rem + 0.22vw, 1.16rem);
+}
+
+.iss-ausstellungen-page .iss-card-skin--exhibition .iss-timeline__title {
+  font-size: clamp(1.22rem, 1.08rem + 0.5vw, 1.55rem);
+  letter-spacing: 0;
+}
+
+.iss-ausstellungen-page .iss-card-skin--exhibition .iss-timeline__summary {
+  max-width: 48rem;
+}
+
+.iss-ausstellungen-page .iss-card-skin--exhibition .iss-timeline__media {
+  align-self: stretch;
+  min-height: 9rem;
+  background: var(--iss-ausstellungen-surface-tint);
+}
+
+.iss-ausstellungen-page .iss-card-skin--exhibition .iss-timeline__media img {
+  height: 100%;
+  object-fit: cover;
+}
+
 .iss-ausstellungen-start .iss-card {
   box-shadow: none;
 }
@@ -298,6 +406,15 @@
 @media (max-width: 781px) {
   .iss-ausstellungen-material__wall {
     grid-auto-rows: clamp(6rem, 24vw, 8rem);
+  }
+
+  .iss-ausstellungen-page .iss-card-skin--exhibition .iss-timeline__item {
+    grid-template-columns: 1fr;
+    padding: 0.95rem;
+  }
+
+  .iss-ausstellungen-page .iss-card-skin--exhibition .iss-timeline__media img {
+    height: auto;
   }
 
   .iss-ausstellungen-topography__plates {

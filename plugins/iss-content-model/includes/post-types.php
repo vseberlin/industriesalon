@@ -43,7 +43,6 @@ function iss_content_model_register_post_types() {
             'post_tag',
             ISS_CONTENT_MODEL_AUSSTELLUNG_TYPE_TAXONOMY,
             ISS_CONTENT_MODEL_COLLECTION_AREA_TAXONOMY,
-            ISS_CONTENT_MODEL_INDUSTRY_SITE_TAXONOMY,
         ],
     ]);
 
@@ -153,8 +152,9 @@ function iss_content_model_register_post_types() {
         ],
         'public' => true,
         'hierarchical' => true,
-        'show_admin_column' => true,
-        'show_in_rest' => true,
+        'show_ui' => false,
+        'show_admin_column' => false,
+        'show_in_rest' => false,
         'rewrite' => ['slug' => 'ausstellungstyp', 'with_front' => false],
     ]);
 
@@ -169,19 +169,6 @@ function iss_content_model_register_post_types() {
         'show_admin_column' => true,
         'show_in_rest' => true,
         'rewrite' => ['slug' => 'sammlungsbereich', 'with_front' => false],
-    ]);
-
-    register_taxonomy(ISS_CONTENT_MODEL_INDUSTRY_SITE_TAXONOMY, [ISS_CONTENT_MODEL_AUSSTELLUNG_POST_TYPE], [
-        'labels' => [
-            'name' => __('Industrieorte', 'iss-content-model'),
-            'singular_name' => __('Industrieort', 'iss-content-model'),
-            'menu_name' => __('Industrieorte', 'iss-content-model'),
-        ],
-        'public' => true,
-        'hierarchical' => true,
-        'show_admin_column' => true,
-        'show_in_rest' => true,
-        'rewrite' => ['slug' => 'industrieort', 'with_front' => false],
     ]);
 
     register_taxonomy(ISS_CONTENT_MODEL_TOPIC_TAXONOMY, [
@@ -226,6 +213,7 @@ function iss_content_model_block_editor_post_types(): array
 {
     return [
         ISS_CONTENT_MODEL_VERANSTALTUNG_POST_TYPE,
+        ISS_CONTENT_MODEL_AUSSTELLUNG_POST_TYPE,
         ISS_CONTENT_MODEL_PROJEKT_POST_TYPE,
         ISS_CONTENT_MODEL_VIDEO_POST_TYPE,
     ];
@@ -298,14 +286,6 @@ function iss_content_model_get_default_taxonomy_terms() {
             ['name' => __('Rundfunk, Ton & Bild', 'iss-content-model'), 'slug' => 'rundfunk-ton-bild'],
             ['name' => __('Lampen & Lichttechnik', 'iss-content-model'), 'slug' => 'lampen-lichttechnik'],
             ['name' => __('Archivmaterial / Fotos / Dokumente', 'iss-content-model'), 'slug' => 'archivmaterial-fotos-dokumente'],
-        ],
-        ISS_CONTENT_MODEL_INDUSTRY_SITE_TAXONOMY => [
-            ['name' => __('Industriesalon Schöneweide', 'iss-content-model'), 'slug' => 'industriesalon-schoeneweide'],
-            ['name' => __('Wilhelminenhofstraße', 'iss-content-model'), 'slug' => 'wilhelminenhofstrasse'],
-            ['name' => __('Peter-Behrens-Bau', 'iss-content-model'), 'slug' => 'peter-behrens-bau'],
-            ['name' => __('Kabelwerk Oberspree', 'iss-content-model'), 'slug' => 'kabelwerk-oberspree'],
-            ['name' => __('Transformatorenwerk Oberschöneweide', 'iss-content-model'), 'slug' => 'transformatorenwerk-oberschoeneweide'],
-            ['name' => __('Werk für Fernsehelektronik', 'iss-content-model'), 'slug' => 'werk-fuer-fernsehelektronik'],
         ],
         ISS_CONTENT_MODEL_VIDEO_CATEGORY_TAXONOMY => [
             ['name' => __('Zeitzeugen', 'iss-content-model'), 'slug' => 'zeitzeugen'],

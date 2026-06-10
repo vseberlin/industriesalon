@@ -1,0 +1,38 @@
+{
+  "apiVersion": 3,
+  "name": "iss-wf-import/archive-object",
+  "title": "ISS Archivobjekt",
+  "category": "widgets",
+  "icon": "format-image",
+  "description": "Server-gerendertes Archivobjekt aus einer mit dem Beitrag verbundenen Archivauswahl.",
+  "editorScript": "file:./index.js",
+  "usesContext": [
+    "postId"
+  ],
+  "attributes": {
+    "postId": {
+      "type": "number",
+      "default": 0
+    },
+    "setId": {
+      "type": "number",
+      "default": 0
+    },
+    "memberPosition": {
+      "type": "number",
+      "default": -1
+    },
+    "contextPostId": {
+      "type": "number",
+      "default": 0
+    },
+    "variant": {
+      "type": "string",
+      "default": "featured"
+    }
+  },
+  "supports": {
+    "inserter": false,
+    "html": false
+  }
+}

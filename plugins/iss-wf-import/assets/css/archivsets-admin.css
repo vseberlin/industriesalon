@@ -1,0 +1,387 @@
+.iss-archivsets-panel,
+.iss-archivsets-workbench {
+  max-width: 1400px;
+}
+
+.iss-archivsets-notice {
+  border-left: 4px solid #2271b1;
+  background: #f0f6fc;
+  margin: 0 0 12px;
+  padding: 8px 12px;
+}
+
+.iss-archivsets-notice--error {
+  border-left-color: #b32d2e;
+  background: #fcf0f1;
+}
+
+.iss-archivsets-inline-form {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin: 12px 0;
+}
+
+.iss-archivsets-inline-form input {
+  min-width: 220px;
+}
+
+.iss-archivsets-advanced {
+  margin-top: 14px;
+}
+
+.iss-archivsets-advanced summary {
+  cursor: pointer;
+  font-weight: 600;
+}
+
+.iss-archivsets-set-card {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+  border: 1px solid #dcdcde;
+  border-radius: 4px;
+  background: #fff;
+  margin: 0 0 10px;
+  padding: 12px;
+}
+
+.iss-archivsets-set-card h4 {
+  margin: 0 0 4px;
+}
+
+.iss-archivsets-set-card__summary {
+  margin: 8px 0 0;
+}
+
+.iss-archivsets-set-card__actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.iss-archivsets-workbench__layout {
+  display: grid;
+  grid-template-columns: minmax(260px, 360px) minmax(0, 1fr);
+  gap: 18px;
+}
+
+.iss-archivsets-workbench__sidebar,
+.iss-archivsets-workbench__main {
+  min-width: 0;
+}
+
+.iss-archivsets-sidebar-actions {
+  display: grid;
+  gap: 8px;
+  margin-bottom: 12px;
+}
+
+.iss-archivsets-sidebar-actions input {
+  width: 100%;
+}
+
+.iss-archivsets-list {
+  display: grid;
+  gap: 6px;
+}
+
+.iss-archivsets-list__item {
+  width: 100%;
+  border: 1px solid #dcdcde;
+  border-radius: 4px;
+  background: #fff;
+  color: #1d2327;
+  cursor: pointer;
+  padding: 10px;
+  text-align: left;
+}
+
+.iss-archivsets-list__item.is-active {
+  border-color: #2271b1;
+  box-shadow: inset 3px 0 0 #2271b1;
+}
+
+.iss-archivsets-list__item span {
+  display: block;
+  color: #646970;
+  font-size: 12px;
+  margin-top: 4px;
+}
+
+.iss-archivsets-editor {
+  display: grid;
+  gap: 14px;
+}
+
+.iss-archivsets-editor__header {
+  background: #fff;
+  border: 1px solid #dcdcde;
+  border-radius: 4px;
+  padding: 14px;
+}
+
+.iss-archivsets-editor__header h2 {
+  margin: 0 0 4px;
+}
+
+.iss-archivsets-section {
+  background: #fff;
+  border: 1px solid #dcdcde;
+  border-radius: 4px;
+  padding: 14px;
+}
+
+.iss-archivsets-section__head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 12px;
+}
+
+.iss-archivsets-section__head h3,
+.iss-archivsets-section__head h4 {
+  margin: 0;
+}
+
+.iss-archivsets-field {
+  display: grid;
+  gap: 5px;
+  margin-bottom: 12px;
+}
+
+.iss-archivsets-field span {
+  font-weight: 600;
+}
+
+.iss-archivsets-form-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(160px, 1fr));
+  gap: 12px;
+}
+
+.iss-archivsets-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.iss-archivsets-members__list {
+  display: grid;
+  gap: 10px;
+}
+
+.iss-archivsets-member {
+  border: 1px solid #dcdcde;
+  border-radius: 4px;
+  padding: 12px;
+}
+
+.iss-archivsets-member__top {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.iss-archivsets-member__controls {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  justify-content: flex-end;
+}
+
+.iss-archivsets-member-insert {
+  min-width: 150px;
+}
+
+.iss-archivsets-member__fields {
+  display: grid;
+  grid-template-columns: minmax(100px, 0.5fr) minmax(180px, 1fr) minmax(240px, 1.5fr);
+  gap: 12px;
+  margin-top: 10px;
+}
+
+.iss-archive-object-picker {
+  display: grid;
+  gap: 12px;
+}
+
+.iss-archive-object-picker__filters {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(160px, 1fr));
+  gap: 8px;
+}
+
+.iss-archive-object-picker__filters input,
+.iss-archive-object-picker__filters select {
+  width: 100%;
+}
+
+.iss-archive-object-picker__results {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(220px, 1fr));
+  gap: 10px;
+}
+
+.iss-archive-object-picker__item {
+  background: #fff;
+  border: 1px solid #dcdcde;
+  border-radius: 4px;
+  display: grid;
+  gap: 10px;
+  grid-template-columns: 84px minmax(0, 1fr) auto;
+  min-height: 84px;
+  padding: 10px;
+}
+
+.iss-archive-object-picker__item.is-selected {
+  border-color: #2271b1;
+  box-shadow: inset 3px 0 0 #2271b1;
+}
+
+.iss-archive-object-picker__thumb {
+  align-items: center;
+  background: #f6f7f7;
+  display: flex;
+  height: 84px;
+  justify-content: center;
+  overflow: hidden;
+  width: 84px;
+}
+
+.iss-archive-object-picker__thumb img {
+  display: block;
+  height: 100%;
+  object-fit: cover;
+  width: 100%;
+}
+
+.iss-archive-object-picker__title {
+  display: block;
+  margin-bottom: 4px;
+}
+
+.iss-archive-object-picker__body .description {
+  margin: 0 0 6px;
+}
+
+.iss-archive-object-picker__select {
+  align-self: start;
+}
+
+.iss-archive-object-picker__pager {
+  text-align: center;
+}
+
+.iss-archive-object-picker__tray {
+  align-items: center;
+  background: #f6f7f7;
+  border: 1px solid #dcdcde;
+  border-radius: 4px;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  padding: 10px;
+}
+
+.iss-archive-object-picker__tray[hidden] {
+  display: none;
+}
+
+.iss-archive-object-picker__tray-items {
+  display: flex;
+  flex: 1 1 auto;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.iss-archive-object-picker__tray-item {
+  max-width: 220px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.iss-editor-modal__body .iss-archivsets-panel,
+.iss-archive-editor-insert {
+  max-width: none;
+}
+
+.iss-archive-editor-insert {
+  display: grid;
+  gap: 14px;
+}
+
+.iss-archive-editor-insert__active {
+  align-items: center;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.iss-archive-editor-insert__active[hidden],
+.iss-archive-editor-insert__bucket[hidden] {
+  display: none;
+}
+
+.iss-archive-editor-insert__bucket {
+  border: 1px solid #dcdcde;
+  border-radius: 4px;
+  display: grid;
+  gap: 10px;
+  padding: 12px;
+}
+
+.iss-archive-editor-insert__bucket-actions {
+  display: grid;
+  gap: 8px;
+  grid-template-columns: auto minmax(180px, 1fr) auto;
+}
+
+.iss-archive-editor-insert__bucket-actions input {
+  width: 100%;
+}
+
+.iss-archive-editor-insert__set-results {
+  display: grid;
+  gap: 8px;
+}
+
+.iss-archive-editor-insert__set {
+  align-items: center;
+  border: 1px solid #dcdcde;
+  border-radius: 4px;
+  display: flex;
+  gap: 12px;
+  justify-content: space-between;
+  padding: 10px;
+}
+
+.iss-archive-editor-insert__set .description {
+  margin: 3px 0 0;
+}
+
+.iss-archive-editor-insert__empty {
+  border: 1px dashed #c3c4c7;
+  color: #646970;
+  padding: 16px;
+}
+
+@media (max-width: 960px) {
+  .iss-archivsets-workbench__layout,
+  .iss-archivsets-form-grid,
+  .iss-archivsets-member__fields,
+  .iss-archive-object-picker__filters,
+  .iss-archive-object-picker__results,
+  .iss-archive-editor-insert__bucket-actions,
+  .iss-archive-object-picker__item {
+    grid-template-columns: 1fr;
+  }
+
+  .iss-archive-editor-insert__set {
+    align-items: stretch;
+    flex-direction: column;
+  }
+}

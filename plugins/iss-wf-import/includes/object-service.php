@@ -4,6 +4,8 @@ if (!defined('ABSPATH')) {
     exit;
 }
 
+// phpcs:disable WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching, WordPress.DB.PreparedSQL.InterpolatedNotPrepared -- This service owns and queries iss-wf-import custom archive object tables.
+
 class ISS_WF_Import_Object_Service
 {
     /** @var array<int, array<string, mixed>|null> */
@@ -466,7 +468,6 @@ function iss_wf_import_maybe_backfill_object_tables(): void
 {
     iss_wf_import_get_object_service()->maybe_backfill();
 }
-add_action('init', 'iss_wf_import_maybe_backfill_object_tables', 28);
 
 function iss_wf_import_sync_object_post_on_save(int $post_id, WP_Post $post): void
 {
@@ -495,6 +496,14 @@ add_action('before_delete_post', 'iss_wf_import_delete_object_rows_on_before_del
 if (defined('WP_CLI') && WP_CLI) {
     class ISS_WF_Import_Object_CLI_Command
     {
+        public function sync(): void
+        {
+            iss_wf_import_get_object_service()->backfill_all_objects();
+            update_option(ISS_WF_IMPORT_OBJECT_BACKFILL_OPTION, ISS_WF_IMPORT_OBJECT_BACKFILL_VERSION, false);
+
+            \WP_CLI::success('Synced archive object projection table.');
+        }
+
         public function verify(): void
         {
             $service = iss_wf_import_get_object_service();
@@ -602,5 +611,6 @@ if (defined('WP_CLI') && WP_CLI) {
         }
     }
 
+    \WP_CLI::add_command('iss-archive objects-sync', ['ISS_WF_Import_Object_CLI_Command', 'sync']);
     \WP_CLI::add_command('iss-archive objects-verify', ['ISS_WF_Import_Object_CLI_Command', 'verify']);
 }

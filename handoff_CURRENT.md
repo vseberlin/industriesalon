@@ -1,117 +1,93 @@
 # Current Handoff
 
-Updated: 2026-06-06
+Updated: 2026-06-10
 
 Current checkpoint only. History belongs in `CHANGELOG.md`; active tasks belong in `TODO.md`; durable rules live under `AGENTS.md` and `docs/`.
 
 ## Current State
 
 - Branch: `main`.
-- Current GitHub/staging checkpoint covered by this handoff: `d367739` (`Add Sammlungen media transfer artifacts`).
-- Staging already applied the 2026-06-05 Repair Cafe/Sammlungen SQL/uploads artifacts; rollback backups are under `/srv/industriesalon/stage/backups/20260605-213910-repair-cafe-sammlungen-stage/`.
-- Staging applied the 2026-06-06 graph/entity code checkpoint plus the paired Sammlungen SQL/uploads artifacts. Rollback backups are under `/srv/industriesalon/stage/backups/20260606-2104-graph-sammlungen-deploy/`.
-- New paired Sammlungen transfer artifacts are tracked for the latest local media/template state:
-  - `ops/sql/2026-06-06-sammlungen-media.sql`
-  - `ops/uploads/2026-06-06-sammlungen-media.tar.gz`
-  - `ops/uploads/2026-06-06-sammlungen-media.manifest`
-  - `ops/uploads/2026-06-06-sammlungen-media.tar.gz.sha256`
-  - Coverage: 16 attachment rows and 81 upload files. The SQL also removes active `front-page` and `page-sammlungen` DB template overrides so those templates remain file-backed after import.
-- Current code checkpoint:
-  - `iss-graph` Phase 1 adds entity identifiers, evidence refs, resolver wrappers, drift checks, alias backfill, identifier-aware search projection, and resolver-before-create paths for register, archive, content, and enrichment labels.
-  - Video transcripts now bridge into pending `video_transcript` evidence refs; Video CPT editors can accept person/organization hints into graph relations, accept place hints through `iss-relations`, or dismiss hints.
-  - Manual `entity_profile` aliases and generated alias backfill are separated by source system.
-  - `iss/related-content` and `iss/related-cards` can pull graph-related CPTs and archive objects via entity, place, person, and organization sources.
-  - Ausstellung backend meta is now `iss_exhibition_type` plus `iss_exhibition_source`; the retired `iss_surface_mode` path and manually insertable `ausstellung-corpus` block were removed.
-  - Sammlungen is synced back from the editor DB copy to the theme template, with the stronger `Wege hinein` / `Jetzt stark` / image-carousel composition and fixed Gutenberg grid margins.
-  - The active Front Page DB override was purged without syncing its DB-only souvenir image to disk.
-  - All active block templates now resolve from theme files; remaining `wp_template` rows are backup/nonmatching slugs only, and there are no `wp_template_part` rows.
-- Local working clone: `/home/vladimir/projects/industriesalon`.
-- Staging deployment checkout: `/srv/industriesalon/stage/repo`.
-- Staging WordPress app root: `/srv/industriesalon/stage/app`.
-- Staging shared uploads root: `/srv/industriesalon/stage/shared/uploads` (`app/wp-content/uploads` symlinks here and the WordPress container mounts it at `/var/www/html/wp-content/uploads`).
-- Staging Docker Compose file: `/srv/industriesalon/stage/compose.yml`.
-- Staging nginx vhost: `/srv/industriesalon/shared/nginx/stage.industriesalon.info.conf`.
-- `docs/runbooks/git-exchange.md` is the active local/staging machine sync rule. GitHub `main` is the exchange point; clean behind clones fast-forward only; dirty or diverged clones stop for inspection.
-- The repo remote uses the SSH alias `github-industriesalon` and the deploy key `/home/vladimir/.ssh/industriesalon_deploy`.
-
-## Current Server State
-
-- Provider reported shutdowns after the fact; local evidence showed unclean host stops around 2026-06-01 02:28-02:43 UTC and 2026-06-03 00:00-00:08 UTC. MariaDB recovered cleanly after the 2026-06-03 restart.
-- Added a 2 GiB `/swapfile`, persisted in `/etc/fstab`, with `vm.swappiness=10` in `/etc/sysctl.d/99-industriesalon-swap.conf`.
-- Hardened SSH with `/etc/ssh/sshd_config.d/20-no-password-auth.conf`; effective setting is `PasswordAuthentication no`, with key auth still enabled.
-- Added nginx default catch-all server at `/etc/nginx/sites-available/00-catch-all.conf`, enabled via `/etc/nginx/sites-enabled/00-catch-all.conf`, returning `444` for unknown/raw-IP HTTP and HTTPS hosts.
-- Blocked `xmlrpc.php` in `/etc/nginx/sites-available/stage.industriesalon.info`; `https://staging.industriesalon.info/xmlrpc.php` returns `403`.
-- Server action notes and rollback commands are recorded in `/home/vladimir/server-actions/`.
-- Repair Cafe/Sammlungen staging artifact application is recorded in `/home/vladimir/server-actions/2026-06-05-apply-repair-cafe-sammlungen-stage-artifacts.md`.
-- Graph/Sammlungen staging deployment is recorded in `/home/vladimir/server-actions/2026-06-06-deploy-graph-sammlungen-stage.md`.
+- Current shareable checkpoint: `Frauen im Werk für Fernmeldewesen` visual-essay redesign, `Kinder im Werk` care-skin Ausstellung, Ausstellung editor cleanup, Archivset workbench/linking cleanup, and generic archive-object placement block normalization.
+- The old local seven-commit experiment chain was not shipped as-is; it is preserved on local branch `local/pre-cleanup-20260610-211940`.
+- `iss-content-model` keeps only structural Ausstellung data plus a generic editor modal bridge: CPT/editor support, dates, permanent flag, timeline flags, taxonomy support, and shared editor modal controls.
+- `iss-wf-import` owns archive editor behavior: Archivset attachment, archive picker REST/helper code, archive object insertion adapter, and the archive-material modal handler.
+- `iss-wf-import/assets/js/archive-object-picker.js` is the shared archive object picker for the Archivset metabox, Archivsets workbench, and editor archive insert modal; confirmation now waits for the add-member promise and refreshes member lists after successful insertion.
+- Archive render blocks are deliberately not normal inserter choices. `/archiv/` and archive templates may still render `archive-object`, `archive-object-browser`, `archive-album`, `archive-collection`, and `archive-object-media`; the old `featured-archive-object` name is a hidden render-only compatibility alias and the generic attached-Archivset grid block has been retired.
+- The Archivsets workbench remains the global admin surface. The contextual post editor Archivauswahl attaches/searches sets by title, links to the workbench, and inserts explicit `archive-object` blocks with `variant:"featured"` from set members. Shared editor set plumbing now lives in `iss-wf-import/assets/js/archive-set-selector.js`.
+- `iss-newsletter` and its `newsletter` dependency are active locally; the front page renders the real `iss/newsletter-form` again.
+- The obsolete saved `iss-register/register-app` block was purged from the local `Register Schöneweide` page and matched revisions. The active register/atlas block is `iss-register/schoneweide-atlas`.
+- The retired `iss-wf-import/archive-exhibition` block was removed; it was the old archive-category chapter/exhibition stream path.
+- Plugin-owned Ausstellung text/material/source/layout/corpus surfaces have been removed from the active contract.
+- The theme-owned `industriesalon/ausstellung-announcement` block was removed; the active template no longer duplicates post body text into an automatic announcement band.
+- The single-Ausstellung theme skin now has a full-viewport cover hero, a theme-owned visit/facts intro band, normal editor-owned `post-content`, and a related-card tail only.
+- Station layout is CSS-only for authored Gutenberg groups: standard intro/text stations, full-viewport image stations, object-focus stations, quote pauses, and explicit object grids. Existing archive-object blocks remain the insertion path.
+- The featured archive object station is the accepted dark object-focus pattern. The experimental split-picture `iss-ausstellung-station--picture` treatment for Folge 9 was reverted and its CSS removed.
+- The active DB-backed `single-ausstellung` template override is post `26309` and was synced from disk after the skin reset.
+- Local `Frauen im Werk für Fernmeldewesen` now has an editor-owned station body condensed from `Frauen im WF` Folgen 7-11 and uses the attached Archivset `Frauen im Werk - Bildauswahl` (`wp_iss_archive_sets` id `27`) instead of the accidental Kinder set. Its exhibition-facing Archivset member titles/captions were shortened in the Archivset member rows; source archive object titles were not changed.
+- Local `Frauen im Werk für Fernmeldewesen` post `26287` was rewritten again into the current visual-essay flow based on `/home/vladimir/Downloads/frauen1.html`: split image/text sections, full-bleed/portrait caption panels, a flush red Fazit separator, and normalized hero-scale headings.
+- Transfer artifacts for the current Ausstellung content/media state:
+  `ops/sql/2026-06-10-frauen-in-werk-redesign.sql`,
+  `ops/sql/2026-06-10-kinder-im-werk-care-skin.sql`,
+  `ops/sql/2026-06-07-kinder-im-wf-salvage.sql`, and
+  `ops/uploads/2026-06-10-ausstellungen-media.tar.gz` with its manifest/checksum.
 
 ## Current Risk
 
-- Pulling on staging must follow `docs/runbooks/git-exchange.md`; do not merge into a dirty or diverged staging clone.
-- `ops/sql/2026-06-06-ausstellung-backend-meta-migration.sql` is applied on staging. Apply it on another environment only after a DB backup and only when that environment should migrate old `iss_surface_mode` rows.
-- `ops/sql/2026-06-06-sammlungen-media.sql` and `ops/uploads/2026-06-06-sammlungen-media.*` are applied on staging. Treat them as one deployment unit on any other environment.
-- Graph alias, resolver/source-label, search, and video transcript evidence rows are derived DB state. Staging was resynced after deploy; rerun graph sync/verify commands after future graph-affecting imports.
+- The Ausstellung SQL artifacts are narrow content/custom-table transfer files. Apply them together with `ops/uploads/2026-06-10-ausstellungen-media.tar.gz` when staging needs the same media references.
+- Older local DB/custom-table state around DB template sync, Archivset `27`, attachment link, and member title/caption edits still needs separate transfer coverage if that exact earlier state must be reproduced on staging.
+- Stale post meta rows from old experiments may still exist in the database, but the active code no longer registers or reads the removed source/layout/corpus/browser fields.
+- Public post body text is rendered by the single-Ausstellung template through normal `post-content`; keep exhibition prose, announcement copy, and station text editor-owned.
+- Editors need a quick Gutenberg UAT pass for the new classed group conventions before deciding whether any station structures should become theme patterns.
+- `admin-editor-modal-controls.js` and `.css` remain active shared editor helpers; they should stay generic and avoid archive-specific behavior.
+- `archive-editor-modal.js` is the archive-specific editor modal handler and should move together with archive picker/Archivset changes.
+- Object search/filter/grid/pagination UI should reuse `archive-object-picker.js`; avoid reintroducing separate archive object picker markup in other plugins or theme code.
+- If workbench testing needs the Archivsets admin page directly, use `wp-admin/edit.php?post_type=archivbeitrag&page=iss-archive-sets`; the submenu is not registered under `post_type=archivobjekt`.
+- Do not reintroduce core archive-list blocks (`core/archives`, `core/categories`, `core/tag-cloud`, `core/query-title`) as normal post-editor choices; the theme hides them in post editors only, not in the Site Editor.
 - Template output can still become DB-backed after Site Editor saves; check `wp_template` authority before assuming disk files are live.
-- Uploads, mail, Meilisearch, and SQL artifacts are cross-machine concerns; use the repo runbooks before changing staging state.
+- The Frauen exhibition content and Archivset attachment are local database/custom-table state. A staging transfer would need a SQL artifact for post `26287` plus Archivset rows/members/links.
 
 ## Next Action
 
-- Review `/sammlungen/`, `/ausstellungen/`, representative single Ausstellung pages, graph search, related-content previews, and Video CPT transcript-review metaboxes on staging.
-- Keep root `TODO.md` for immediate executable work only; broader backlog stays under `docs/project/`.
+- Review a representative Ausstellung in Gutenberg/Classic editor after the cleanup and confirm editors can see the real content source.
+- Review the new `Frauen im Werk für Fernmeldewesen` visual-essay body in the Gutenberg editor and confirm the classed group flow is comfortable for editors before converting any station structures into reusable theme patterns.
+- Review the reset Ausstellung skin in Gutenberg and decide whether the five station structures should become reusable theme patterns.
+- Review `admin-editor-modal-controls.js` / `.css` on a real editor screen and confirm no deleted `ausstellung-template-blocks.js` dependency remains.
+- Review `archive-editor-modal.js` together with Archivset picker behavior on at least one supported non-Ausstellung post type.
+- Manually test the shared archive object picker in the Archivset metabox, Archivsets workbench, and editor archive insert modal with real thumbnail/filter data.
+- Open a representative Gutenberg post editor and confirm the archive block inserter is decluttered while existing archive object/selection blocks still render in saved content.
 
 ## Verified
 
-- 2026-06-05 staging artifact application: staging repo fast-forwarded to `a94d06c`; staging DB backup and upload rollback archive were created; upload manifest verified 61 files; SQL import completed; `/repair-cafe/` and `/sammlungen/` returned `200 OK`.
-- 2026-06-06 staging deployment: staging repo fast-forwarded to `d367739`; DB backup and upload rollback archive were created under `/srv/industriesalon/stage/backups/20260606-2104-graph-sammlungen-deploy/`; Sammlungen upload artifact checksum passed; 81 manifest files were extracted and verified; Ausstellung migration SQL and Sammlungen media SQL imported successfully.
-- 2026-06-06 staging data verification:
-  - Old `iss_surface_mode` rows: `0`.
-  - Sammlungen attachment rows: `16`; attachment postmeta rows: `32`.
-  - Active `front-page` / `page-sammlungen` DB template overrides: `0`.
-  - Video transcript evidence refs: `3`.
-- 2026-06-06 staging graph verification:
-  - `wp iss-graph sync-register`: synced 84 register places.
-  - `wp iss-graph sync-archive`: synced 3,048 archive objects.
-  - `wp iss-graph sync-aliases`: entities=3547, with_aliases=1824, names=4428.
-  - `wp iss-graph sync-search`: search rows=3316.
-  - `wp iss-graph sync-video-transcripts`: videos=30, synced=30, mentions=3.
-  - Removed stale derived graph entity `3349`, which still pointed at attachment `8654`; valid Ausstellung entity `3367` points at post `25772`.
-  - `wp iss-graph verify`: passed with entities=3546, names=8096, identifiers=12936, relations=4764, search=3316, evidence_refs=3.
-  - `wp iss-graph drift-check`: passed.
-- 2026-06-06 staging frontend verification: `/`, `/sammlungen/`, `/ausstellungen/`, `/wp-content/uploads/2026/06/Uli-Berger.webp`, and `/wp-content/uploads/2026/06/1_TRO-1949-008.webp` returned `200`.
-- Local graph alias verification on 2026-06-06:
-  - `wp iss-graph sync-register`: synced 84 register places.
-  - `wp iss-graph sync-archive`: synced 3,048 archive objects.
-  - `wp iss-graph sync-aliases`: entities=3545, with_aliases=1824, names=4428.
-  - `wp iss-graph sync-search`: search rows=3315.
-  - `wp iss-graph verify`: passed with entities=3545, names=8094, identifiers=12934, relations=4764, search=3315.
-  - `wp iss-graph drift-check`: passed.
-- Video transcript bridge verification on 2026-06-06:
-  - Video inventory: 30 videos (`full=27`, `excerpt=3`).
-  - `wp iss-graph sync-video-transcripts`: videos=30, synced=30, mentions=3.
-  - `wp_iss_entity_evidence_refs.source_system = video_transcript`: pending entity refs=3.
-  - Video CPT edit metabox `iss-graph-video-transcript-review` registered.
-- Related-content graph-source verification on 2026-06-06:
-  - Führung `12183` with source `entity_place` and target `archivobjekt` returned archive-object material.
-  - Profile `24965` with source `entity_person` returned mixed posts/publications/videos.
-  - Project `24815` with source `entity` returned mixed project and Führung results.
-  - REST preview with JSON body returned `200` and four archive-object preview items.
-- Template authority verification on 2026-06-06:
-  - `page-sammlungen` resolves as `source=theme`, `id=none`.
-  - `front-page` resolves as `source=theme`, `id=none`.
-  - All `themes/industriesalon/templates/*.html` files resolve as `source=theme`.
-  - No `wp_template_part` rows exist.
-  - `/sammlungen/` and `/` returned `200` locally.
-- Sammlungen media artifact verification on 2026-06-06:
-  - `ops/uploads/2026-06-06-sammlungen-media.tar.gz.sha256` verified locally.
-  - Upload archive contains 81 files and matches the 81-line manifest.
-  - `ops/sql/2026-06-06-sammlungen-media.sql` passed isolated MariaDB import verification.
-  - Import verification returned 16 attachment rows, 32 attachment postmeta rows, and 0 active `front-page` / `page-sammlungen` DB template overrides.
-  - SQL artifact contains no local `192.168.2.31` or `localhost` URLs.
-- Closeout verification before commit:
-  - `git diff --check` passed.
-  - Targeted ESLint and `node --check` passed for changed JavaScript.
-  - Targeted Stylelint passed for changed Sammlungen and Ausstellung CSS.
-  - Docker PHP `-l`, PHPCS, and PHPStan passed for changed PHP files.
-  - `parse_blocks()` passed for changed theme templates.
-  - `wp iss-graph verify` and `wp iss-graph drift-check` passed.
-- `git push origin main` advanced GitHub from `d25efbf` to `9813fa3`; follow-up handoff-only commits record the post-push state.
+- `php -l` passed for the edited plugin/theme PHP files.
+- `npm run lint:css` passed.
+- `node --check plugins/iss-content-model/assets/admin-editor-modal-controls.js` passed.
+- `node --check plugins/iss-wf-import/assets/js/archive-editor-modal.js` passed.
+- `node --check plugins/iss-wf-import/assets/js/archive-object-picker.js` passed.
+- `node --check plugins/iss-wf-import/assets/js/archivsets-admin.js` passed.
+- `git diff --check` passed.
+- WP-CLI confirmed the archive object picker REST endpoint returns paginated items for an admin request.
+- WP-CLI confirmed Archivset service add-member creates a member for a real `archivobjekt` in a temporary set.
+- Playwright verified the Archivsets workbench can select an archive object, confirm the shared picker tray, add the object as a set member, and show the success notice; the temporary test user and set were deleted afterward.
+- WP-CLI confirmed `iss-wf-import-archive-object-picker` enqueues on both `publication` and `ausstellung` edit screens with the archive helper, adapter, modal, and Archivset admin script.
+- WP-CLI confirmed `iss-wf-import/archive-exhibition` is no longer registered.
+- WP-CLI confirmed surviving archive render blocks register with `inserter=false`.
+- Runtime PHP confirmed `iss-wf-import/archive-object` is registered as the canonical render block, `iss-wf-import/featured-archive-object` is registered only as a hidden compatibility alias, and retired `iss-wf-import/archive-selection` is not registered.
+- MariaDB confirmed active non-revision post content contains zero `iss-wf-import/featured-archive-object` blocks and two `iss-wf-import/archive-object` blocks; remaining old-name occurrences are revisions only.
+- WP-CLI confirmed the editor cleanup script enqueues on normal post editors and not on the Site Editor.
+- `curl http://192.168.2.31:8082/archiv/` returned `200` and still rendered the archive browser plus featured archive object.
+- `curl http://192.168.2.31:8082/ausstellungen/kinder-im-werk/` returned `200`; rendered HTML contains canonical archive-object wrappers and no old block comments.
+- `ops/uploads/2026-06-10-ausstellungen-media.tar.gz` contains 53 files and passed `sha256sum -c`.
+- The cleaned Git checkpoint excludes the accidentally tracked `plugins/advanced-custom-fields` vendor tree and separate graph/relation experiment files.
+- WP-CLI confirmed `industriesalon/ausstellung-announcement`, `industriesalon/ausstellung-material`, and `iss-content-model/ausstellung-surface` are not registered.
+- WP-CLI confirmed DB template `26309` no longer contains announcement or material blocks.
+- `curl http://192.168.2.31:8082/ausstellungen/frauen-in-werk/` returned `200`; rendered HTML contains none of the removed automatic section strings.
+- `curl http://192.168.2.31:8082/ausstellungen/kinder-im-wf/` returned `200`; rendered HTML includes the authored station content and featured archive-object blocks.
+- `curl http://192.168.2.31:8082/ausstellungen/frauen-in-werk/` returned `200`; rendered HTML includes the condensed Frauen source stations and seven archive-object cards from `Frauen im Werk - Bildauswahl`.
+- `curl http://192.168.2.31:8082/ausstellungen/frauen-in-werk/` returned `200`; rendered HTML includes `Presstellerfertigung im Fotoalbum` in the accepted featured object station and no longer contains `iss-ausstellung-station--picture`.
+- WP-CLI confirmed the active `single-ausstellung` template source is still `custom` after syncing DB template `26309` from disk.
+- Playwright viewport checks for `/ausstellungen/kinder-im-wf/` showed no horizontal overflow at 1440px desktop or 390px mobile; the hero fills the first viewport and the post body starts after the visit/facts intro band.
+- Playwright screenshot checks verified the `/ausstellungen/frauen-in-werk/` featured object station on desktop/mobile after the dark object-focus styling and confirmed Folge 9 is back to a normal station.
+- `npx stylelint themes/industriesalon/assets/css/single-ausstellung.css` passed after the visual-essay CSS changes.
+- `git diff --check` passed after the visual-essay CSS/content artifact changes.
+- WP-CLI confirmed post `26287` content matches the local redesign block artifact before commit.
+- Playwright desktop/mobile checks for `/ausstellungen/frauen-in-werk/` confirmed zero section gaps, normalized hero-scale headings, loaded image-backed sections, and no horizontal page overflow.

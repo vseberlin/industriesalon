@@ -4,6 +4,8 @@ if (!defined('ABSPATH')) {
     exit;
 }
 
+// phpcs:disable WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching, WordPress.DB.PreparedSQL.InterpolatedNotPrepared -- This service owns and queries iss-wf-import custom archive source/import tables.
+
 class ISS_WF_Import_Import_Service
 {
     /** @var array<string, array<string, string|int>> */
@@ -632,13 +634,13 @@ class ISS_WF_Import_Import_Service
             ];
         } else {
             $updates = [];
-            if ((string) ($row['label'] ?? '') === '' && $definition['label'] !== '') {
+            if ($definition['label'] !== '' && (string) ($row['label'] ?? '') !== (string) $definition['label']) {
                 $updates['label'] = (string) $definition['label'];
             }
-            if ((string) ($row['source_kind'] ?? '') === '' && $definition['source_kind'] !== '') {
+            if ($definition['source_kind'] !== '' && (string) ($row['source_kind'] ?? '') !== (string) $definition['source_kind']) {
                 $updates['source_kind'] = (string) $definition['source_kind'];
             }
-            if ((string) ($row['base_url'] ?? '') === '' && $definition['base_url'] !== '') {
+            if ($definition['base_url'] !== '' && (string) ($row['base_url'] ?? '') !== (string) $definition['base_url']) {
                 $updates['base_url'] = (string) $definition['base_url'];
             }
 
@@ -1085,7 +1087,6 @@ function iss_wf_import_maybe_backfill_import_tables(): void
 {
     iss_wf_import_get_import_service()->maybe_backfill();
 }
-add_action('init', 'iss_wf_import_maybe_backfill_import_tables', 34);
 
 function iss_wf_import_sync_object_source_record_on_save(int $post_id, WP_Post $post): void
 {
@@ -1114,6 +1115,14 @@ add_action('before_delete_post', 'iss_wf_import_detach_object_source_records_on_
 if (defined('WP_CLI') && WP_CLI) {
     class ISS_WF_Import_Import_CLI_Command
     {
+        public function sync(): void
+        {
+            iss_wf_import_get_import_service()->backfill_all_source_records();
+            update_option(ISS_WF_IMPORT_IMPORT_BACKFILL_OPTION, ISS_WF_IMPORT_IMPORT_BACKFILL_VERSION, false);
+
+            \WP_CLI::success('Synced archive source-record projection tables.');
+        }
+
         public function verify(): void
         {
             $service = iss_wf_import_get_import_service();
@@ -1210,5 +1219,6 @@ if (defined('WP_CLI') && WP_CLI) {
         }
     }
 
+    \WP_CLI::add_command('iss-archive sources-sync', ['ISS_WF_Import_Import_CLI_Command', 'sync']);
     \WP_CLI::add_command('iss-archive sources-verify', ['ISS_WF_Import_Import_CLI_Command', 'verify']);
 }

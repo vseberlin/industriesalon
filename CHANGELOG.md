@@ -1,5 +1,134 @@
 # Changelog
 
+## 2026-06-10
+- Turned the local `Kinder im Wek` shell into the corrected `Kinder im Werk` Ausstellung using `/home/vladimir/Downloads/kinder1.html` as the text/design source:
+  - renamed post `26381` to `Kinder im Werk`, changed the slug to `kinder-im-werk`, and kept WordPress' old-slug redirect from `kinder-im-wek`
+  - replaced the empty body with an editor-owned Gutenberg longread using the mockup text, real local media, and existing `iss-wf-import/featured-archive-object` blocks for the evidence cards
+  - added the reusable theme-owned `iss-ausstellung-skin-care` layer for a sand-paper, care/social-infrastructure exhibition skin without adding a new block or renderer
+  - attached the existing `Kinder im WF - Bildauswahl` Archivset (`13`) to the post and changed the Objektfokus cards to consume Archivset member positions instead of fixed archive-object post IDs
+  - kept the archive picker metabox visible in Gutenberg editor screens for non-admin editors instead of hiding it for the Classic Editor modal workflow
+  - exposed Ausstellung timeline controls in the Gutenberg document sidebar for the existing `iss_timeline_enabled`, `iss_start_date`, and `iss_end_date` meta keys, with status feedback for whether the post will sync
+  - removed the unusable generic attached-Archivset grid block from Gutenberg/code and from the `Kinder im Werk` post body; Archivset attachment, REST/admin workflows, and explicit featured archive object blocks remain active
+  - tightened the post editor Archivauswahl workflow so attached sets are title/search driven, link back to the global Archivsets workbench, and insert explicit featured-object blocks from set members using `setId` plus `memberPosition`
+  - added title-search attachment controls directly to the `iss-wf-import/featured-archive-object` editor sidebar so the block can connect an existing Archivset to the current post before choosing a set member
+  - extracted Archivset search/attach/load/notify editor plumbing into `iss-wf-import/assets/js/archive-set-selector.js` so the metabox, modal, and featured-object block share the same low-level set connector
+  - replaced the editor-facing `iss-wf-import/featured-archive-object` block with the generic `iss-wf-import/archive-object` placement block using `variant:"featured"`; the old block name remains as a hidden render-only compatibility alias
+  - reactivated the `iss-newsletter` integration and its `newsletter` dependency so the front-page `iss/newsletter-form` block renders the real form again instead of a fallback link
+  - purged the obsolete saved `iss-register/register-app` block from the published `Register Schöneweide` page and matched revisions; the current atlas block remains `iss-register/schoneweide-atlas`
+  - fixed mobile grid shrink/overflow behavior in the shared Ausstellung split/caption primitives while preserving the existing `iss-ausstellung-*` contract
+  - recorded transfer SQL in `ops/sql/2026-06-10-kinder-im-werk-care-skin.sql`; local content backups live under ignored `ops/content-backups/`
+- Reworked the local `Frauen im Werk für Fernmeldewesen` Ausstellung into a visual-essay flow based on `/home/vladimir/Downloads/frauen1.html`:
+  - replaced the active post body for `ausstellung` post `26287` with concise Gutenberg-authored sections for Arbeit, Werkhalle, Qualifizierung, Biografie, Brigade, Anerkennung, and Fazit
+  - updated the post excerpt to `Arbeit. Qualifizierung. Öffentlichkeit. Anerkennung.`
+  - added theme-owned CSS variants for split image/text stations, full-bleed caption stations, portrait stations, conclusion/research links, and mobile-safe stacking inside the existing `iss-ausstellung-*` contract
+  - fixed the prior small mobile horizontal overflow in this Ausstellung route and kept the layout Gutenberg-editable instead of adding a new renderer/block system
+  - recorded rollback/source artifacts in `ops/content-backups/2026-06-10-frauen-in-werk-before-redesign.block.html` and `ops/content-backups/2026-06-10-frauen-in-werk-redesign.block.html`, plus transfer SQL in `ops/sql/2026-06-10-frauen-in-werk-redesign.sql`
+- Prepared the Ausstellung/archive cleanup as a clean shareable Git checkpoint:
+  - preserved the old local seven-commit experiment chain on `local/pre-cleanup-20260610-211940` instead of pushing it as-is
+  - packaged referenced Ausstellung upload files and generated derivatives in `ops/uploads/2026-06-10-ausstellungen-media.tar.gz` with manifest and SHA-256 checksum
+  - excluded the accidentally tracked `plugins/advanced-custom-fields` vendor tree and the separate graph/relation experiment files from the cleaned checkpoint
+
+## 2026-06-09
+- Tightened the Ausstellung plugin/theme contract so public exhibition text is no longer owned by `iss-content-model`:
+  - removed the plugin-owned `iss-content-model/ausstellung-surface` block registration, public fallback renderer, corpus copy renderer, station text parser, station metabox, station assets enqueue, station save hook, and ACF/REST exposure for subtitle/station/quick-title text fields
+  - removed the remaining layout/source enums, archive category slug, archive browser filter fields, curated chapter IDs, corpus helpers, ACF source tabs, classic source panels, and default type inference from the active Ausstellung contract
+  - kept structural Ausstellung data in the plugin: CPT/editor support, dates, permanent flag, timeline flags, taxonomy support, archive set attachment workflow, and shared editor modal controls
+  - removed the theme-owned `industriesalon/ausstellung-announcement` block and its editor script so post-body text is no longer duplicated into an automatic announcement band
+  - removed the experimental `industriesalon/ausstellung-material` block and its automatic attached-Archivset rendering; public archive material should use explicit archive object blocks or template-owned archive surfaces
+  - reduced the active single-Ausstellung skin to the full-viewport cover hero, facts, relations, and related-card shell; deleted the guided/surface/corpus CSS and the conditional `digital-exhibition.css` enqueue
+  - removed the active `single-ausstellung` template sections that referenced automatic announcement/material rendering and synced DB template `26309` from the cleaned disk template because the live template source was `custom`
+- Consolidated archive editor ownership around `iss-wf-import`:
+  - renamed the shared content-model modal bridge to `admin-editor-modal-controls.js` / `.css` and limited it to generic modal dispatch, hidden metabox targets, and top-dashboard movement
+  - moved the archive-material modal behavior into `iss-wf-import/assets/js/archive-editor-modal.js`, where it uses the existing archive picker helper, editor adapter, Archivset attachment REST flow, and archive object search
+  - moved archive insert modal styles into `iss-wf-import/assets/css/archivsets-admin.css`
+  - documented the architecture rule that archive storage, picker, REST, Archivset selection, archive-object insertion, and archive editor modal behavior live with `iss-wf-import`
+- Normalized Archivset object picking into a reusable archive-owned component:
+  - added `iss-wf-import/assets/js/archive-object-picker.js` as the shared admin object picker for archive object search, facets, thumbnails, pagination, multi/single selection, and selected-object confirmation
+  - switched the Archivset metabox, Archivsets workbench, and editor archive insert modal to mount the shared picker instead of duplicating filter/result markup and object-card behavior
+  - made picker confirmation wait for the Archivset member-add promise, disabled duplicate confirmation clicks during save, surfaced empty/error states, and refreshed the workbench/metabox member list after successful insertion
+  - kept post attachment, set membership, ordering, captions, and editor insertion as Archivset/archive workflows in `iss-wf-import`
+- Reduced archive block clutter in Gutenberg:
+  - removed the retired `iss-wf-import/archive-exhibition` block and its old archive-category chapter renderer
+  - marked archive infrastructure blocks as non-inserter blocks while keeping them registered for existing content and file templates: archive browser, archive selection, featured archive object, archive album, archive collection, and archive object media
+  - added a normal post-editor cleanup script that hides core archive-list blocks (`Archives`, `Categories`, `Tag Cloud`, and `Archive Title`) without loading in the Site Editor
+- Reset the new single-Ausstellung theme skin around editor-authored Gutenberg content:
+  - kept a full-viewport cover hero and moved visit/facts metadata into a theme-owned intro band before normal `post-content`
+  - removed default entity-relation sections from the `single-ausstellung` template tail; the default ending is now related cards only
+  - added a CSS-only station contract for authored groups: intro/text stations, full-viewport image stations, object-focus stations, quote pauses, and explicit object grids
+  - styled existing inserted archive-object blocks inside the Ausstellung body without adding new one-off dynamic station blocks or plugin-owned public text
+  - synced active DB template `26309` from the updated disk template because `single-ausstellung` was still served from a custom DB template
+- Rebuilt the local `Frauen im Werk für Fernmeldewesen` exhibition body from the `archivbeitrag` source series `Frauen im WF`, Folgen 7-11:
+  - compressed the source articles into editor-owned Gutenberg stations covering Presstellerfertigung, qualification, Anni Gent, the Gent-Mädels brigade, Anni Ortmann's later Meisterin path, and the Frauentag 1972 source
+  - created and attached the Archivset `Frauen im Werk - Bildauswahl` for the exhibition, added matching archive objects for Pressteller work and women-related WF sources, and detached the accidental `Kinder im WF - Bildauswahl` set
+  - kept the station layout inside the CSS skin contract: full-viewport image stations, text stations, object focus, quote pause, and explicit object grid
+  - styled the featured archive object as the stable dark object-focus station and shortened the exhibition-facing Archivset member titles/captions through existing `display_title` / `caption` fields rather than changing archive object source records
+  - reverted the experimental split-picture treatment for Folge 9 back to a normal station and removed the unused `iss-ausstellung-station--picture` CSS
+
+## 2026-06-08
+- Added a structured guided Ausstellung story editor and theme renderer:
+  - added `Klassisch` / `Geführter Rundgang`, `Untertitel`, and JSON-normalized station meta to `iss-content-model`, with ACF fields for the compact settings and a first-party repeatable Classic Editor metabox for stations because the active ACF runtime has no repeater field type
+  - added station row types for text stations, full-viewport large-image splits, object focus rows, quote/hint pauses, and object grids; archive-object selection reuses the existing `iss-wf-import` archive picker helper and attaches selected objects to the Ausstellung Archivset where possible
+  - extended the Ausstellung surface context so the theme can render guided station data without knowing storage details, while `Klassisch` and empty guided pages keep the existing manual/archive/category/browser output
+  - added a scoped guided viewport story layer to the theme, preserving classic Ausstellung CSS and avoiding the deleted `iss_exhibition_skin` / scroll-story experiment
+  - documented the legacy Ausstellung story-construction retirement path in `TODO.md`; no existing body content, shortcode inserts, curated chapter paths, archive-category output, or meta rows are deleted by this checkpoint
+- Reworked the Ausstellung editing workflow around Classic Editor plus ACF:
+  - installed Advanced Custom Fields as a tracked plugin dependency and added an Ausstellung ACF group with tabs for basic data, material source, archive browser, and recommendations
+  - switched `ausstellung` back to Classic Editor, moved the useful top controls above the editor for non-admin users, and kept administrator metabox access available for technical review
+  - removed the confusing Ausstellung type selector and hid the legacy `ausstellung_typ` UI/REST surface while keeping stored compatibility data intact
+  - removed the duplicate `Industrieorte` taxonomy path from Ausstellung code/admin UX; places now belong to the existing related-place workflow
+- Added a non-admin Classic Editor modal workflow for Ausstellung editing:
+  - added media-row buttons for `Archivmaterial hinzufuegen`, `Person hinzufuegen`, and `Ort hinzufuegen`
+  - moved person and place relation controls into focused modals with plainer editor copy
+  - rebuilt the archive modal around the attached Archivset bucket: editors can connect, switch, detach, create, extend, or fall back to global archive search before inserting an object
+  - added `[iss_archive_object id="..."]` so selected archive objects insert directly into the Classic Editor body and render through the existing archive-object card renderer
+- Generalized the editor workflow beyond Ausstellung:
+  - exposed archive/person/place modal buttons on supported editorial public post types, including publications, Führungen, Veranstaltungen, projects, videos, pages, and posts where available
+  - added a TinyMCE/Classic Editor archive-object adapter so inserted archive objects are represented by a visual shortcode view instead of raw shortcode text in visual editing
+  - moved featured image, excerpt, relevant content-model fields, and `Vorne zeigen` into a compact post-title dashboard for non-admin editors while admins keep normal metabox access
+- Replaced the abandoned global recommendation boost path with graph-owned post-level `Vorne zeigen` signals:
+  - stores active self-targeted editorial signals in the existing graph signal table with optional `Gilt bis`, with no temporal decay and no editor-facing weight/rank/score controls
+  - adds list-table filtering for currently shown-front content across editorial public post types
+  - makes related-card rendering consume active post-level signals ahead of automatic results while keeping canonical graph relations unchanged
+  - keeps the legacy context-target related picker admin-only during rollout and records its retirement path in `TODO.md`
+- Tightened Ausstellung frontend/archive rendering:
+  - normalized manual Ausstellung rendering to a single manual surface instead of type-specific layout classes
+  - excluded legacy Archivsets from automatic attached-set rendering in Ausstellung templates so old NEF-style album links do not leak into new manual pages
+  - kept the explicit archive material renderer compatible with requests that still need legacy sets
+
+## 2026-06-07
+- Salvaged `Kinder im WF` from the legacy `archivbeitrag` category stream into the intended exhibition/archive-object model:
+  - rewrote Ausstellung `17980` as a manual nine-station exhibition with concise editorial text and nine station object blocks that resolve through Archivset member positions; the nine imported `archivbeitrag` chapter texts stay in private source records and are not the public exhibition body
+  - normalized duplicate Ausstellung source/type meta so `Kinder im WF` resolves as `iss_exhibition_source=manual` and `iss_exhibition_type=story`
+  - removed public WF-Museum/source-note/provenance paragraphs from the exhibition and attached selection summary; retired-site URLs are retained only as private import/source refs
+  - opted `ausstellung` back into Gutenberg so editors can see and edit the station groups and selected archive-object blocks directly
+  - created the attached Archivset `Kinder im WF - Bildauswahl` with 11 ordered object members and concise captions, reusing matching museum-digital `archivobjekt` records and promoting five loose WF chapter images/doc scans into lightweight `archivobjekt` records
+  - added a dynamic attached-Archivset grid block/helper so attached Archivsets could render real object members, and had the theme append attached Archivsets after manual Ausstellung story content; this generic grid block was retired on 2026-06-10 in favor of explicit object blocks/editor attachment
+  - routed archive object cards and featured object rendering through a shared Archivset-member render payload so collections, selections, station highlights, and direct-object fallback blocks reuse the same object/caption/page-label contract
+  - made the selected archive-object block editor-facing: normal controls now use attached Archivset and readable object dropdowns, while raw context IDs and direct object fallback stay out of the normal block UI
+  - rebuilt the Archive Picker metabox around the real editor workflow: create or attach an Archivauswahl bucket first, choose the active bucket, then add/order/caption objects inside that bucket
+  - tightened Archive Picker/block consistency so bucket attach/detach changes refresh block choices, stale saved bucket IDs are cleared in the editor, and server rendering refuses Archivsets that are no longer attached to the current content item
+  - tightened the single Ausstellung story surface and closed menu drawer CSS so the migrated long-form legacy HTML and attached archive selection do not create mobile horizontal overflow
+  - added row-only `ops/sql/2026-06-07-kinder-im-wf-salvage.sql` as the idempotent after-state transfer artifact; no upload artifact is required because promoted objects reuse existing media files
+  - fixed post-backed graph entity slug seeds in the content, generic graph, and relations sync paths so duplicate editor slugs do not collapse distinct posts into one graph entity
+- Added Archivset Workbench V1 in `iss-wf-import`:
+  - added plugin-owned custom tables for Archivsets, ordered members, and links from sets to editorial content; existing `archivsammlung` posts, URLs, and public templates remain unchanged
+  - added an advanced `Archivsets` workbench behind the dedicated `edit_archive_sets` capability plus a normal `Archive Picker` metabox for public editorial post types; the metabox is object-first, creates/attaches a saved selection silently, and lets editors search, add, reorder, remove, and caption archive objects without managing graph data
+  - added `iss-archive/v1` admin REST endpoints for set search/create/update/delete, content attach/detach, member add/remove/reorder, and archive-object picker results using the existing archive browser query service; global set edit/delete requires `edit_archive_sets`, while content picker/member work requires `edit_post` on the attached context post
+  - added idempotent `wp iss-archive sets-import-legacy` and `wp iss-archive sets-verify` commands to import one Archivset per legacy `archivsammlung` while preserving object order, captions, source refs, and child collection references
+  - moved archive and graph projection backfills out of normal request lifecycle and into explicit WP-CLI sync commands; schema installs remain versioned and lightweight
+  - removed the placeholder `.codex-plugin/plugin.json` from `iss-wf-import`; public naming now presents as `ISS Archive` while the directory and PHP prefixes stay compatible
+  - no parallel public archive system was added: `archivsammlung` remains the legacy public/source model, while Archivsets are custom-table saved selections owned by `iss-wf-import` for later template/block consumption
+- Added Human Graph Intervention V1 for related-content blocks:
+  - `iss-graph` schema v2 adds `wp_iss_graph_editorial_signals` for page-level `feature` / `hide` instructions on the `related` surface without mutating entity relations, names, identifiers, archive projections, or search rows
+  - added graph REST endpoints for listing, saving, and removing editorial related signals with `edit_post` permission checks on the context post
+  - `iss-relations` now applies active non-expired signals after automatic related results are calculated: `feature` targets are prepended when their post type is allowed, `hide` targets are removed, block limits remain intact, and manual sources are unchanged
+  - related-content editor previews now expose `Vorne zeigen`, `Nicht automatisch zeigen`, `Auswahl entfernen`, optional `Notiz`, optional `Gilt bis`, and a `Redaktionelle Auswahl` summary
+  - Classic Editor screens still expose the same controls in a graph-owned `Verwandte Inhalte steuern` metabox with active selections, automatic suggestions, and manual target selection; Gutenberg-opted CPTs keep their block/editor workflows
+- Tightened `iss-graph` archive projection hygiene before adding curator influence controls:
+  - archive relation labels that clearly name organizations or works, such as `Werk für Fernsehelektronik (WF)` and `Werk für Fernmeldewesen (WF/HF)`, now project as organization relations instead of hidden person entities
+  - archive institution rows with missing/zero source IDs now resolve to an existing non-placeholder archive institution entity when the normalized name is otherwise unambiguous
+  - rebuilt the local archive graph projection, moved the affected WF/HF relations to organization entities, and removed stale zero-relation hidden graph entities created by the old projection path
+
 ## 2026-06-06
 - Added paired Sammlungen media transfer artifacts for the latest local media/template state:
   - `ops/sql/2026-06-06-sammlungen-media.sql` transfers 16 attachment rows and removes active `front-page` / `page-sammlungen` DB template overrides

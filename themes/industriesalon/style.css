@@ -692,6 +692,14 @@ body.iss-search-modal-open {
   pointer-events: auto;
 }
 
+.iss-menu-shell:not(.is-open) {
+  width: 0;
+}
+
+.iss-menu-shell:not(.is-open) .iss-menu-shell__inner {
+  display: none;
+}
+
 .iss-menu-shell__inner {
   position: relative;
   display: flex;
