@@ -1,5 +1,10 @@
 == Changelog ==
 
+= 6.6.1 (2026-06-03) =
+* `[Added]` Blocking of automatic image conversion when uploading images to Media Library during some server configuration errors
+* `[Added]` Blocking of automatic image conversion via WP-Cron during some server configuration errors
+* `[Added]` Blocking of `regenerate` command in WP-CLI during some server configuration errors
+
 = 6.6.0 (2026-05-19) =
 * `[Changed]` Minimum required PHP version from 7.1 to 7.4
 * `[Added]` Compatibility with PHP 8.5

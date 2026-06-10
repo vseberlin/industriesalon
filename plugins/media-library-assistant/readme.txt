@@ -3,7 +3,7 @@ Contributors: dglingren
 Donate link: http://davidlingren.com/#donate
 Tags: categories, images, media, media library, tags
 Tested up to: 7.0
-Stable tag: 3.37
+Stable tag: 3.38
 Requires at least: 5.3.0
 Requires PHP: 7.4
 License: GPLv2 or later
@@ -197,6 +197,10 @@ Please report security bugs found in the source code of the Media LIbrary Assist
 
 == Changelog ==
 
+= 3.38 =
+* New: For the `[mla_custom_list]` shortcode, new output formats and pagination options have been added.
+* Fix: IMPORTANT: For WP 7.0, Media Library Grid mode and MMMW popup window toolbar formatting defects have been corrected.
+
 = 3.37 =
 * Fix: IMPORTANT: For pagination shortcodes, a URL formatting defect introduced in MLA v3.36 has been corrected.
 * Fix: IMPORTANT: For the Media/Assistant submenu table, an SQL Injection security risk has been mitigated.
@@ -213,32 +217,15 @@ Please report security bugs found in the source code of the Media LIbrary Assist
 * Fix: For the Media/Assistant "Thumbnail" (generation) Bulk action, WordPress thumbnail generation has been updated to match WP 6+ results.
 * Fix: For the Media/Assistant "Thumbnail" (generation) Bulk action, failure to assign JPG and PNG images as the "Featured Image" has been corrected.
 
-= 3.35 =
-* New: Several enhancements to the Media/Assistant "Thumbnail" (generation) Bulk action. More information in the "Thumbnail Generation" tab of the pulldown Help menu and the new Settings/Media Library Assistant "Thumbnail Generation Support" Documentation section.
-* Fix: IMPORTANT: For all five MLA shortcodes, a Stored Cross-Site Scripting (XSS) security risk has been mitigated.
-* Fix: IMPORTANT: For the `[mla_custom_list]` shortcode, an SQL Injection security risk has been mitigated.
-* Fix: IMPORTANT: For WP 7.0, several updates to the MLA enhancements for the Media Manager Modal (popup) Window and Media/Library Grid view have been made.
-* Fix: A defect handling REGEX named subpatterns in mapping rule templates has been corrected.
-* Fix: For MP3 files, XMP metadata is now extracted from XML and PRIV frames, bypassing embedded image files.
-* Fix: For shortcodes that generate pagination links, a defect in handling URL fragments has been corrected.
-
-= 3.34 =
-* New: For the Media/Assistant submenu page, **custom table views** can be composed with all of the data selection parameters of the `[mla_gallery]` shortcode. More information in the "Library Views/Post MIME Type Processing" section of the Settings/Media Library Assistant Documentation tab.
-* Fix: IMPORTANT: For the Media Manager Modal (popup) Window, a Missing Authorization security risk has been mitigated.
-* Fix: A defect in parsing metadata arrays for mapping rules has been corrected.
-* Fix: A defect in handling PDF metadata parsing of documents with corrupted cross-reference streams has been corrected.
-* Fix: A PHP Warning message in the "execute" rollover action on the Settings/Media Library Assistant IPTC/EXIF/WP tab has been eliminated.
-
-= 3.33 =
-* Fix: IMPORTANT: For the `[mla_tag_cloud]` and `[mla_term_list]` shortcodes, an SQL injection security risk has been mitigated.
-* Fix: A  WPML support defect causing a critical site error when duplicating an attachment in a new language has been corrected.
-* Fix: For all of the shortcodes, a defect in handling relative paths in pagination output formats has been corrected.
-* Fix: The priority of the hooks MLA adds to the "init" action has been adjusted to avoid a taxonomy registration conflict with the "Breadcrumb NavXT" plugin.
-
-= 3.00 - 3.32 =
+= 3.30 - 3.35 =
+* 3.35 - IMPORTANT: Two security fixes and WP 7.0 updates. Media/Assistant "Thumbnail" (generation) Bulk action enhancements. MP3 metadata extraction fixes. One enhancement and six fixes in all.
+* 3.34 - IMPORTANT:  Security fix for the Media Manager Modal (popup) Window. New custom table views for the Media/Assistant admin page. Metadata parsing fixes. One enhancement and four fixes in all.
+* 3.33 - IMPORTANT: Security fix for [mla_tag_cloud] and [mla_term_list], relative path fix for pagination controls and WPML fix. Four fixes in all.
 * 3.32 - IMPORTANT: A defect with taxonomy labels in the MMMW ATTACHMENT DETAILS pane causing a PHP "Undefined variable $label" message has been corrected.
 * 3.31 - New [mla_archive_list] shortcode provides date-based lists and dropdown controls for filtering [mla_gallery] displays. More reliable pagination links in all shortcodes. BIG Image threshold control. Four enhancements, six fixes in all.
 * 3.30 - IMPORTANT: Security mitigations in [mla_gallery] shortcode. PDF metadata extraction from documents with compressed object streams. One enhancement, three fixes in all.
+
+= 3.00 - 3.29 =
 * 3.29 - IMPORTANT: Security mitigation in all four shortcodes. Media Manager Modal (popup) and Media/Assistant submenu table fixes. Four fixes in all.
 * 3.28 - IMPORTANT: Security mitigation and [mla_term_list] critical error fix. WPML Media/Assistant fix. Five fixes in all.
 * 3.27 - IMPORTANT: Security fixes. Shortcode enhancements for term list checklists and custom field date queries, AVIF metadata support. Three enhancements and five fixes in all.
@@ -392,8 +379,8 @@ Please report security bugs found in the source code of the Media LIbrary Assist
 
 == Upgrade Notice ==
 
-= 3.37 =
-IMPORTANT: One security fix, pagination shortcode fix and a simple date query fix. Three fixes in all.
+= 3.38 =
+IMPORTANT: WP 7.0, Media Library Grid mode and MMMW popup window toolbar formatting fixes. [mla_custom_list] shortcode new output formats and pagination options. One enhancement, one  fix in all.
 
 == Acknowledgements ==
 

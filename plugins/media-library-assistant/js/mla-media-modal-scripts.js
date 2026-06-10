@@ -905,6 +905,7 @@ var wp, wpAjax, ajaxurl, jQuery, _,
 					return;
 				}
 
+				toolbar.secondary.$el.css( {'display': 'flex', 'flex-wrap': 'wrap'} );
 				totalWidth = toolbar.$el.width();
 				if ( totalWidth > 0 ) {
 					primaryWidth = toolbar.primary.$el.width();
@@ -925,7 +926,8 @@ var wp, wpAjax, ajaxurl, jQuery, _,
 				}
 
 				if ( ( 0 < toolbarHeight ) && ( toolbarHeight !== mlaModal.settings.oldHeight ) ) {
-					wrapper.$el.css( 'top', toolbarHeight + 10 + 'px' );
+					// 26 = toolbar padding plus 2px for good measure
+					wrapper.$el.css( 'top', toolbarHeight + 26 + 'px' );
 					mlaModal.settings.oldHeight = toolbarHeight;
 				}
 			},
@@ -1057,20 +1059,16 @@ console.log( 'listening to controller events' );
 				mlaAttachmentsBrowser.prototype.createToolbar.apply( this, arguments );
 				mlaModal.utility.mlaAttachmentsBrowser = this;
 
-/*	for debug : trace every event triggered in the this.controller * /
-this.controller.off( null, this.toolbarEvent );
-this.controller.on( 'all', this.toolbarEvent );
-console.log( 'listening to controller events' );
-// */
-
 				if ( showFilterByType && mlaModal.settings.enableMimeTypes ) {
 					this.toolbar.unset( 'filters', { silent: true } );
+					this.toolbar.unset( 'filtersLabel', { silent: true } );
 
 					// "Filters" is a <select>, a visually hidden label element needs to be rendered before.
 					filtersLabel = new wp.media.view.Label({
 						value: wp.media.view.l10n.filterByType,
 						attributes: {
-							'for':  'media-attachment-filters'
+							'for':  'media-attachment-filters',
+							'class':  'screen-reader-text'
 						},
 						priority:   -80
 					});
@@ -1104,13 +1102,15 @@ console.log( 'listening to controller events' );
 				}
 
 				if ( this.options.search && mlaModal.settings.enableMonthsDropdown ) {
-					this.toolbar.unset( 'dateFilters', { silent: true } );
+					this.toolbar.unset( 'dateFilter', { silent: true } );
+					this.toolbar.unset( 'dateFilterLabel', { silent: true } );
 
 					// DateFilter is a <select>, a visually hidden label element needs to be rendered before.
 					dateFilterLabel = new wp.media.view.Label({
 						value: wp.media.view.l10n.filterByDate,
 						attributes: {
-							'for': 'media-attachment-date-filters'
+							'for': 'media-attachment-date-filters',
+							'class':  'screen-reader-text'
 						},
 					});
 
@@ -1128,7 +1128,7 @@ console.log( 'listening to controller events' );
 						}
 					});
 
-					this.toolbar.set( 'dateFilters', new dateFilterContainer({
+					this.toolbar.set( 'dateFilter', new dateFilterContainer({
 						controller: this.controller,
 						model:      this.collection.props,
 						priority:   -75
@@ -1140,7 +1140,8 @@ console.log( 'listening to controller events' );
 					termFilterLabel = new wp.media.view.Label({
 						value: mlaModal.strings.filterByTermLabel,
 						attributes: {
-							'for': 'media-attachment-term-filters'
+							'for': 'media-attachment-term-filters',
+							'class':  'screen-reader-text'
 						},
 					});
 
@@ -1170,7 +1171,8 @@ console.log( 'listening to controller events' );
 					termSearchLabel = new wp.media.view.Label({
 						value: '&nbsp;',
 						attributes: {
-							'for': 'mla-terms-search'
+							'for': 'mla-terms-search',
+							'class':  'screen-reader-text'
 						},
 					});
 

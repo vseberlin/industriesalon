@@ -1,6 +1,13 @@
 # Changelog
 
 ## 2026-06-10
+- Applied targeted staging SSH/OpenSSL and WordPress plugin updates:
+  - confirmed `openssh-server` and `openssh-client` were already at the current stable candidate `1:10.0p1-7+deb13u4`
+  - upgraded OpenSSL security packages `openssl`, `libssl3t64`, `openssl-provider-legacy`, and `libssl-dev` from `3.5.6-1~deb13u1` to `3.5.6-1~deb13u2`, validated `sshd -t`, and restarted `ssh.service`
+  - backed up the staging database and the three public plugin directories under `/srv/industriesalon/stage/backups/20260610-ssh-wp-plugin-updates/`
+  - updated `webp-converter-for-media` from `6.6.0` to `6.6.1`, `media-library-assistant` from `3.37` to `3.38`, and `newsletter` from `9.2.5` to `9.2.7`
+  - verified no WordPress plugin updates remained, plugin ownership was restored to `vladimir:vladimir`, `.maintenance` was absent, updated plugin PHP files passed syntax checks, representative frontend/login routes returned `200`, and staging containers remained healthy
+  - left Docker package updates unapplied because they were outside the SSH/plugin scope and can affect running containers
 - Continued staging WordPress/nginx hardening without changing WordPress code, database, uploads, OS packages, or containers:
   - backed up `/etc/nginx/sites-available/stage.industriesalon.info` to `/etc/nginx/sites-available/stage.industriesalon.info.backup-20260610-hardening-pass-2`
   - added `X-Content-Type-Options`, `Referrer-Policy`, and `X-Frame-Options` headers at the staging vhost

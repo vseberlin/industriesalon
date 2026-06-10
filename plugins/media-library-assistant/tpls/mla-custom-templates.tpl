@@ -241,6 +241,7 @@ mla_shortcode_slug="term-list"
 
 <!-- template="custom-list-style" -->
 <!-- mla_shortcode_slug="custom-list" -->
+<!-- mla_description="CSS Styles for the u/o/d list output formats" -->
 <style type='text/css'>
 	#[+selector+] {
 		margin: auto;
@@ -256,18 +257,50 @@ mla_shortcode_slug="term-list"
 		margin-left: 0;
 		vertical-align: top;
 	}
+	#[+selector+].custom-list-checklist {
+		list-style: none;
+	}
+
 </style>
 
 <!-- template="custom-list-flat-div-style" -->
 <!-- mla_shortcode_slug="custom-list" -->
 <!-- mla_description="CSS Styles for the 'flat,div' output format" -->
 <style type='text/css'>
-	#[+selector+] a.mla_current_item,
-	#[+selector+] a.mla_current_item:visited {
+	#[+selector+] a.[+current_item_class+],
+	#[+selector+] a.[+current_item_class+]:visited {
 		color:#FF0000;
 		font-weight:bold
 	}
 </style>
+
+<!-- template="custom-list-ul-div-style" -->
+<!-- mla_shortcode_slug="custom-list" -->
+<!-- mla_description="CSS Styles for the u/o/d list ',div' output formats" -->
+<style type='text/css'>
+	#[+selector+] {
+		height: 14em;
+		border: 1px solid #ddd;
+		overflow-y: scroll;
+		list-style: none
+		margin: auto;
+		width: 100%;
+	}
+	#[+selector+] .custom-list-item {
+		float: [+float+];
+		margin: [+margin+];
+		text-align: center;
+		width: [+itemwidth+];
+	}
+	#[+selector+] .custom-list-caption {
+		margin-left: 0;
+		vertical-align: top;
+	}
+	#[+selector+] [+valuetag+] a.[+current_item_class+],
+	#[+selector+] [+valuetag+] a.[+current_item_class+]:visited {
+		color:#FF0000;
+		font-weight:bold
+	}</style>
 
 <!-- template="custom-list-checklist-div-style" -->
 <!-- mla_description="CSS Styles for the 'checklist,div' output format" -->
@@ -341,6 +374,21 @@ mla_shortcode_slug="custom-list"
 <!-- template="custom-list-ul-close-markup" -->
 </[+itemtag+]>
 
+<!-- template="custom-list-ul-div-description-markup" -->
+For the "ulist,div" and "olist,div" output formats, this template generates the "ul/ol" and "li" elements.
+<!-- template="custom-list-ul-div-arguments-markup" -->
+mla_shortcode_slug="custom-list"
+<!-- template="custom-list-ul-div-open-markup" -->
+<div id="[+itemtag_id+]" class="[+itemtag_class+]" [+itemtag_attributes+]>
+<[+itemtag+] [+itemtag_attributes+] class="[+itemtag_class+]" id="[+itemtag_id+]-[+itemtag+]">
+
+<!-- template="custom-list-ul-div-item-markup" -->
+	<[+valuetag+] class='custom-list-value'>[+thelink+]</[+valuetag+]>
+
+<!-- template="custom-list-ul-div-close-markup" -->
+</[+itemtag+]>
+</div>
+
 <!-- template="custom-list-dl-description-markup" -->
 For the "dlist" output format, this template wraps "dt" and "dd" elements in a "dl" list.
 <!-- template="custom-list-dl-arguments-markup" -->
@@ -354,6 +402,22 @@ mla_shortcode_slug="custom-list"
 
 <!-- template="custom-list-dl-close-markup" -->
 </[+itemtag+]>
+
+<!-- template="custom-list-dl-div-description-markup" -->
+For the "dlist,div" output format, this template wraps "dt" and "dd" elements in a "dl" list.
+<!-- template="custom-list-dl-div-arguments-markup" -->
+mla_shortcode_slug="custom-list"
+<!-- template="custom-list-dl-div-open-markup" -->
+<div id="[+itemtag_id+]" class="[+itemtag_class+]" [+itemtag_attributes+]>
+<[+itemtag+] [+itemtag_attributes+] class="[+itemtag_class+]" id="[+itemtag_id+]-[+itemtag+]">
+
+<!-- template="custom-list-dl-div-item-markup" -->
+	<[+valuetag+] class='custom-list-value'>[+thelink+]</[+valuetag+]>
+	<[+captiontag+] class='wp-caption-text custom-list-caption'>[+caption+]</[+captiontag+]>
+
+<!-- template="custom-list-dl-div-close-markup" -->
+</[+itemtag+]>
+</div>
 
 <!-- template="custom-list-dropdown-description-markup" -->
 For the "dropdown" output format, this template generates the "select" and "option" elements.

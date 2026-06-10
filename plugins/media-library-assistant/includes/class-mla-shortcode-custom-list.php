@@ -496,7 +496,7 @@ class MLACustomList {
 			return ''; // unknown output type
 		}
 
-		$is_wrap = 'wrap' === $arguments['mla_output_qualifier'];
+		$is_wrap = in_array( $arguments['mla_output_qualifier'], array( 'wrap', 'always_wrap' ) );
 		if ( empty( $arguments['current_item'] ) ) {
 			$target_index = -2; // won't match anything
 		} else {
@@ -527,7 +527,7 @@ class MLACustomList {
 		$target = NULL;
 		if ( isset( $values[ $target_index ] ) ) {
 			$target = $values[ $target_index ];
-		} elseif ( $is_wrap ) {
+		} elseif ( $is_wrap && ( ! empty( $target_value ) || ( 'always_wrap' === $arguments['mla_output_qualifier'] ) ) ) {
 			switch ( $link_type ) {
 				case 'previous_link':
 					$target = array_pop( $values );
@@ -702,6 +702,7 @@ class MLACustomList {
 		$is_flat = 'flat' === $arguments['mla_output'];
 		$is_flat_div = $is_flat && ( 'div' === $arguments['mla_output_qualifier'] );
 		$is_list = in_array( $arguments['mla_output'], array( 'ulist', 'olist', 'dlist' ) );
+		$is_list_div = $is_list && ( 'div' === $arguments['mla_output_qualifier'] );
 		$is_dropdown = 'dropdown' === $arguments['mla_output'];
 		$is_checklist = 'checklist' === $arguments['mla_output'];
 		$is_checklist_div = $is_checklist && ( 'div' === $arguments['mla_output_qualifier'] );
@@ -1139,9 +1140,16 @@ class MLACustomList {
 		$is_pagination = in_array( $arguments['mla_output'], self::$valid_mla_output_pagination_values );
 		$is_flat = 'flat' === $arguments['mla_output'];
 		$is_flat_div = $is_flat && ( 'div' === $arguments['mla_output_qualifier'] );
+		$is_list = in_array( $arguments['mla_output'], array( 'dlist', 'olist', 'ulist' ) );
+		$is_list_div = $is_list && ( 'div' === $arguments['mla_output_qualifier'] );
 
-		$default_style = 'custom-list';
-		$default_markup = 'custom-list-ul';
+		if ( $is_list_div ) {
+			$default_style = 'custom-list-ul-div';
+			$default_markup = 'custom-list-ul-div';
+		} else {
+			$default_style = 'custom-list';
+			$default_markup = 'custom-list-ul';
+		}
 
 		if ( $is_pagination ) {
 			$default_style = 'none';
@@ -1176,10 +1184,16 @@ class MLACustomList {
 			}
 		}
 
-		if ( $is_list = in_array( $arguments['mla_output'], array( 'dlist', 'olist', 'ulist' ) ) ) {
+		if ( $is_list ) {
 			switch ( $arguments['mla_output'] ) {
 				case 'dlist':
-					$default_markup = 'custom-list-dl';
+					if ( $is_list_div ) {
+//						$default_style = 'custom-list-dl-div';
+						$default_markup = 'custom-list-dl-div';
+					} else {
+						$default_markup = 'custom-list-dl';
+					}
+
 					$arguments['itemtag'] = $default_itemtag;
 					$arguments['valuetag'] = $default_valuetag;
 					$arguments['captiontag'] = $default_captiontag;
@@ -1210,7 +1224,7 @@ class MLACustomList {
 		}
 
 		// Set default "cloud" arguments for non-flat output formats
-		if ( !$is_flat ) {
+		if ( ! $is_flat ) {
 			if ( empty( $attr['smallest'] ) ) {
 				$arguments['smallest'] = $arguments['default_size'];
 			}
@@ -1496,6 +1510,7 @@ class MLACustomList {
 			'mla_markup' => $arguments['mla_markup'],
 			'meta_key' => $arguments['meta_key'],
 			'current_item' => $arguments['current_item'],
+			'current_item_class' => $arguments['current_item_class'],
 			'itemtag' => MLAShortcode_Support::mla_esc_tag( $arguments['itemtag'], $default_itemtag ),
 			'itemtag_attributes' => '',
 			'itemtag_class' => 'custom-list custom-list-key-' . sanitize_title( $arguments['meta_key'] ), 
@@ -1743,9 +1758,9 @@ class MLACustomList {
 	 *
 	 * @since 3.13
 	 *
-	 * @param	array	taxonomies to search and query parameters
+	 * @param	array	meta_key and query parameters
 	 *
-	 * @return	array	array of term objects, empty if none found
+	 * @return	array	array of custom field objects, empty if none found
 	 */	
 	public static function mla_get_custom_values( $attr ) {
 		global $wpdb;
@@ -1761,6 +1776,11 @@ class MLACustomList {
 		$attr = apply_filters( 'mla_get_custom_values_query_attributes', $attr );
 		$arguments = shortcode_atts( self::$mla_get_custom_values_parameters, $attr );
 		$arguments = apply_filters( 'mla_get_custom_values_query_arguments', $arguments );
+
+		// Wthout a meta_key there's no point in going on
+		if ( empty( $arguments['meta_key'] ) ) {
+			return array();
+		}
 
 		// Build an array of individual clauses that can be filtered
 		$clauses = array( 'fields' => '', 'join' => '', 'where' => '', 'orderby' => '', 'limits' => '', );

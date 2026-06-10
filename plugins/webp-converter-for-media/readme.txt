@@ -5,7 +5,7 @@ Tags: convert webp, webp, optimize images, image optimization, compress images
 Requires at least: 4.9
 Tested up to: 7.0
 Requires PHP: 7.4
-Stable tag: 6.6.0
+Stable tag: 6.6.1
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -309,6 +309,11 @@ Current list of supported CDN servers:
 
 == Changelog ==
 
+= 6.6.1 (2026-06-03) =
+* `[Added]` Blocking of automatic image conversion when uploading images to Media Library during some server configuration errors
+* `[Added]` Blocking of automatic image conversion via WP-Cron during some server configuration errors
+* `[Added]` Blocking of `regenerate` command in WP-CLI during some server configuration errors
+
 = 6.6.0 (2026-05-19) =
 * `[Changed]` Minimum required PHP version from 7.1 to 7.4
 * `[Added]` Compatibility with PHP 8.5
@@ -342,61 +347,6 @@ Current list of supported CDN servers:
 * `[Fixed]` Rewrite rules to handle environments where RewriteRule may receive an absolute filesystem path
 * `[Changed]` Field to select the format to which the images should be converted
 * `[Added]` Settings field to modify the prefix used in RewriteRule to fix the absolute filesystem path issue
-
-= 6.4.0 (2025-12-08) =
-* `[Security]` Added permission check to ensure the user can edit the post before manually converting an image in the Media Library (CVE-2025-13750)
-* `[Security]` Added stricter permission checks to REST API endpoints for authenticated users
-
-= 6.3.2 (2025-11-24) =
-* `[Added]` Support for WordPress 6.9
-
-= 6.3.1 (2025-11-09) =
-* `[Fixed]` Support for Bunny CDN and BunnyCDN plugin
-* `[Fixed]` Support for QUIC.cloud CDN
-
-= 6.3.0 (2025-10-28) =
-* `[Changed]` Message about rewrites_uploads_blocked server configuration error
-
-= 6.2.4 (2025-09-09) =
-* `[Fixed]` Deprecated notice for implicitly nullable parameter when converting images
-
-= 6.2.3 (2025-09-02) =
-* `[Fixed]` Unknown error when converting images when file is unavailable or file size verification failed
-
-= 6.2.2 (2025-04-29) =
-* `[Security]` Update of Axios HTTP client
-
-= 6.2.1 (2025-04-01) =
-* `[Fixed]` Handling of excluded directories when uploading new images
-* `[Added]` Error detection of required functions in disable_functions list in PHP configuration
-* `[Added]` Support for WordPress 6.8
-
-= 6.2.0 (2024-12-18) =
-* `[Changed]` Minimum required PHP version from 7.0 to 7.1
-* `[Added]` Compatibility with PHP 8.4
-
-= 6.1.3 (2024-11-19) =
-* `[Fixed]` Translations in command registration for WP-CLI
-* `[Added]` Support for WordPress 6.7
-
-= 6.1.2 (2024-10-26) =
-* `[Fixed]` Removing converted files after uninstalling plugin
-
-= 6.1.1 (2024-10-02) =
-* `[Changed]` Bulk Optimization of Images section
-
-= 6.1.0 (2024-09-13) =
-* `[Removed]` Filter `webpc_supported_source_directory`
-* `[Fixed]` Handling of excluded directories when uploading new images
-* `[Fixed]` Handling of excluded filenames when uploading new images
-* `[Fixed]` Adding support for custom directories using webpc_source_directories filter
-* `[Fixed]` Verification of rewrites_not_working server configuration error when HTTP referer is required
-
-= 6.0.0 (2024-08-28) =
-* `[Fixed]` Generating statistics on plugin settings page when WebP format is unchecked
-* `[Fixed]` Restoring original images in Media Library
-* `[Changed]` Optimization statistics in Media Library
-* `[Added]` Warnings with explanations in plugin settings field: Image loading mode
 
 See [changelog.txt](https://url.mattplugins.com/converter-readme-changelog) for previous versions.
 

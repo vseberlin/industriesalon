@@ -730,6 +730,8 @@ class NewsletterComposer extends NewsletterModule {
     static function hook_safe_style_css($rules) {
         $rules[] = 'display';
         $rules[] = 'mso-*';
+        $rules[] = 'background';
+        $rules[] = 'background-*';
         return $rules;
     }
 
@@ -936,6 +938,7 @@ class NewsletterComposer extends NewsletterModule {
 
             // Extra data used when testing
             $controls->data['track'] = $email->track;
+            $controls->data['email_id'] = $email->id;
 
         }
 

@@ -30,15 +30,15 @@ class MethodIntegrator {
 	/**
 	 * Initializes converting source images using active and set conversion method.
 	 *
-	 * @param string[] $paths              Server paths for source images.
-	 * @param bool     $regenerate_force   .
-	 * @param bool     $skip_server_errors .
-	 * @param int|null $quality_level      .
+	 * @param string[] $paths                     Server paths for source images.
+	 * @param bool     $regenerate_force          .
+	 * @param int|null $quality_level             .
+	 * @param bool     $refresh_conversion_errors .
 	 *
 	 * @return mixed[]|null Results data of conversion.
 	 */
-	public function init_conversion( array $paths, bool $regenerate_force, bool $skip_server_errors = false, ?int $quality_level = null ): ?array {
-		if ( ! $skip_server_errors && apply_filters( 'webpc_server_errors', [], true ) ) {
+	public function init_conversion( array $paths, bool $regenerate_force, ?int $quality_level = null, bool $refresh_conversion_errors = false ): ?array {
+		if ( apply_filters( 'webpc_server_errors', [], true, $refresh_conversion_errors ) ) {
 			return null;
 		}
 

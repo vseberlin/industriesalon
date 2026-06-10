@@ -38,7 +38,12 @@ class ConvertPathsAction implements HookableInterface {
 	 */
 	public function convert_files_by_paths( array $paths, bool $regenerate_force = false, ?int $quality_level = null ): void {
 		( new MethodIntegrator( $this->plugin_data, $this->method_factory ) )
-			->init_conversion( $this->remove_paths_from_excluded_paths( $paths ), $regenerate_force, false, $quality_level );
+			->init_conversion(
+				$this->remove_paths_from_excluded_paths( $paths ),
+				$regenerate_force,
+				$quality_level,
+				true
+			);
 	}
 
 	/**
