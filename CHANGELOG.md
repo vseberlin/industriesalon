@@ -1,6 +1,12 @@
 # Changelog
 
 ## 2026-06-10
+- Applied the corrected full `Frauen im Werk für Fernmeldewesen` transfer artifact on staging:
+  - pulled commit `9c89121`, verified the refreshed upload artifact checksum, and confirmed the manifest contains 91 files
+  - created `/srv/industriesalon/stage/backups/20260610-frauen-in-werk-transfer/` with a full MariaDB dump, checksums, upload rollback archive, and a normalized applied SQL copy
+  - extracted the refreshed media archive into the shared uploads bind mount and verified all 91 manifest files
+  - imported a staging-normalized SQL copy that creates/updates post `26287`, its WebP attachment rows/meta, selected Ausstellung meta, attached Archivset `27`, six Archivset members, and the archive-material link
+  - verified `/ausstellungen/frauen-in-werk/` now returns `200`, three sampled WebP files return `200 image/webp`, imported rows contain no `192.168.2.31` URLs, affected DB tables pass `CHECK TABLE`, and staging containers remain healthy
 - Applied the remaining Docker Engine patch packages on staging:
   - upgraded `docker-ce`, `docker-ce-cli`, and `docker-ce-rootless-extras` from `5:29.5.2-1~debian.13~trixie` to `5:29.5.3-1~debian.13~trixie`
   - recorded pre-update Docker/package/Compose/volume state under `/srv/industriesalon/stage/backups/20260610-docker-package-update/`
