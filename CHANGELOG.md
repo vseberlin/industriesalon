@@ -1,6 +1,12 @@
 # Changelog
 
 ## 2026-06-10
+- Continued staging WordPress/nginx hardening without changing WordPress code, database, uploads, OS packages, or containers:
+  - backed up `/etc/nginx/sites-available/stage.industriesalon.info` to `/etc/nginx/sites-available/stage.industriesalon.info.backup-20260610-hardening-pass-2`
+  - added `X-Content-Type-Options`, `Referrer-Policy`, and `X-Frame-Options` headers at the staging vhost
+  - hid the PHP `X-Powered-By` FastCGI response header
+  - returned `404` for `/wp-admin/install.php`, `/wp-admin/setup-config.php`, and `/wp-admin/maint/repair.php`
+  - tightened `/srv/industriesalon/stage/app/wp-config.php` to `0640` and `/srv/industriesalon/stage/compose.yml` to `0600`, then verified WordPress and `docker compose config` still work
 - Applied the pulled staging Ausstellung transfer artifacts after rollback backups:
   - created `/srv/industriesalon/stage/backups/20260610-apply-ausstellungen-artifacts/` with a full MariaDB dump, checksums, upload rollback archive, and normalized applied SQL copies
   - extracted `ops/uploads/2026-06-10-ausstellungen-media.tar.gz` into the shared uploads bind mount and verified all 53 manifest files
