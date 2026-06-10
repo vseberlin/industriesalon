@@ -37,12 +37,15 @@ Current checkpoint only. History belongs in `CHANGELOG.md`; active tasks belong 
 
 ## Current Server State
 
+- Staging applied the pulled Ausstellung SQL/uploads artifacts on 2026-06-10. Backup/rollback directory: `/srv/industriesalon/stage/backups/20260610-apply-ausstellungen-artifacts/`; server action note: `/home/vladimir/server-actions/2026-06-10-apply-ausstellungen-artifacts.md`.
+- Applied content now live on staging: `/ausstellungen/kinder-im-wf/` and `/ausstellungen/kinder-im-werk/`. The upload artifact was extracted into the shared uploads bind mount and all 53 manifest files were verified.
+- `Frauen im Werk` is not live on staging. The pulled `ops/sql/2026-06-10-frauen-in-werk-redesign.sql` is only an UPDATE for post `26287`; staging does not have that post, so `/ausstellungen/frauen-in-werk/` still returns `404`. A complete transfer needs the base post plus Archivset rows/members/links.
 - Staging nginx was hardened on 2026-06-10 by adding exact-match denies for `/wp-config.php`, `/readme.html`, and `/license.txt` in `/etc/nginx/sites-available/stage.industriesalon.info`. Backup: `/etc/nginx/sites-available/stage.industriesalon.info.backup-20260610-hardening`; rollback: restore that file over the active vhost, run `sudo nginx -t`, then `sudo systemctl reload nginx`.
 - Server action note: `/home/vladimir/server-actions/2026-06-10-nginx-wordpress-path-hardening.md`.
 
 ## Current Risk
 
-- The Ausstellung SQL artifacts are narrow content/custom-table transfer files. Apply them together with `ops/uploads/2026-06-10-ausstellungen-media.tar.gz` when staging needs the same media references.
+- The Ausstellung SQL artifacts are narrow content/custom-table transfer files. On staging, the `Kinder im WF` and `Kinder im Werk` artifacts have been applied with the upload archive; `Frauen im Werk` remains incomplete because the available SQL does not create missing post `26287`.
 - Older local DB/custom-table state around DB template sync, Archivset `27`, attachment link, and member title/caption edits still needs separate transfer coverage if that exact earlier state must be reproduced on staging.
 - Stale post meta rows from old experiments may still exist in the database, but the active code no longer registers or reads the removed source/layout/corpus/browser fields.
 - Public post body text is rendered by the single-Ausstellung template through normal `post-content`; keep exhibition prose, announcement copy, and station text editor-owned.
@@ -113,3 +116,4 @@ Current checkpoint only. History belongs in `CHANGELOG.md`; active tasks belong 
 - `php -l` and `bash tools/phpcs-target.sh` passed for `plugins/saas-api/saas-api.php`.
 - Runtime PHP confirmed `do_action('admin_init')` and `do_action('admin_menu')` complete with `saas-api` active.
 - 2026-06-10 staging nginx hardening verification: `sudo nginx -t` passed; `sudo systemctl reload nginx` completed successfully; `/` and `/wp-content/uploads/woocommerce-placeholder.webp` returned `200`; `/wp-config.php` returned `403`; `/readme.html` and `/license.txt` returned `404`; `/xmlrpc.php`, `/.env`, and `/.git/config` returned `403`; staging containers remained running with Docker restart counts at `0`.
+- 2026-06-10 staging Ausstellung artifact application verification: upload checksum passed; rollback DB and upload archives were created with SHA-256 checksums; normalized applied SQL copies contained no `192.168.2.31` URLs; all 53 upload manifest files existed after extraction; affected DB tables passed `CHECK TABLE`; `/`, `/ausstellungen/kinder-im-wf/`, and `/ausstellungen/kinder-im-werk/` returned `200`; three sampled uploaded JPEGs returned `200 image/jpeg`; `/ausstellungen/frauen-in-werk/` returned `404` because post `26287` is absent from staging and the pulled SQL only updates that ID.
