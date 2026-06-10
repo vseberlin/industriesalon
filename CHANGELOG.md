@@ -1,6 +1,11 @@
 # Changelog
 
 ## 2026-06-10
+- Applied the remaining Docker Engine patch packages on staging:
+  - upgraded `docker-ce`, `docker-ce-cli`, and `docker-ce-rootless-extras` from `5:29.5.2-1~debian.13~trixie` to `5:29.5.3-1~debian.13~trixie`
+  - recorded pre-update Docker/package/Compose/volume state under `/srv/industriesalon/stage/backups/20260610-docker-package-update/`
+  - Docker restarted during package setup and the staging containers restarted automatically from existing restart policies
+  - verified Docker Engine `29.5.3`, Compose `v5.1.4`, all staging containers healthy/running, `/`, `/wp-login.php`, and `/ausstellungen/kinder-im-werk/` returning `200`, and no remaining apt upgrades
 - Applied targeted staging SSH/OpenSSL and WordPress plugin updates:
   - confirmed `openssh-server` and `openssh-client` were already at the current stable candidate `1:10.0p1-7+deb13u4`
   - upgraded OpenSSL security packages `openssl`, `libssl3t64`, `openssl-provider-legacy`, and `libssl-dev` from `3.5.6-1~deb13u1` to `3.5.6-1~deb13u2`, validated `sshd -t`, and restarted `ssh.service`
