@@ -53,19 +53,33 @@ function is_saas_normalize_schedule_path($schedule_path) {
     return str_replace('%2F', '/', rawurlencode(rawurldecode($schedule_path)));
 }
 
+function is_saas_load_admin_settings_api() {
+    if (!function_exists('add_settings_section') && defined('ABSPATH')) {
+        require_once ABSPATH . 'wp-admin/includes/template.php';
+    }
+}
+
+function is_saas_load_admin_menu_api() {
+    if (!function_exists('add_options_page') && defined('ABSPATH')) {
+        require_once ABSPATH . 'wp-admin/includes/plugin.php';
+    }
+}
+
 add_action('admin_notices', function () {
     $settings = is_saas_get_settings();
     if (empty($settings['schedule_id']) || empty($settings['api_key'])) {
-        $settings_url = esc_url(admin_url('options-general.php?page=' . IS_SAAS_OPTION_GROUP));
+        $settings_url = admin_url('options-general.php?page=' . IS_SAAS_OPTION_GROUP);
         echo '<div class="notice notice-warning is-dismissible"><p>'
             . '<strong>SuperSaaS API:</strong> '
             . 'API-Zugangsdaten fehlen. Das Buchungssystem ist nicht aktiv. '
-            . '<a href="' . $settings_url . '">Jetzt einrichten →</a>'
+            . '<a href="' . esc_url($settings_url) . '">Jetzt einrichten →</a>'
             . '</p></div>';
     }
 });
 
 function is_saas_register_settings() {
+    is_saas_load_admin_settings_api();
+
     register_setting(
         IS_SAAS_OPTION_GROUP,
         IS_SAAS_OPTION_NAME,
@@ -101,6 +115,8 @@ function is_saas_sanitize_settings($input) {
 }
 
 function is_saas_add_admin_menu() {
+    is_saas_load_admin_menu_api();
+
     add_options_page(
         'SuperSaaS API',
         'SuperSaaS API',
@@ -112,6 +128,9 @@ function is_saas_add_admin_menu() {
 add_action('admin_menu', 'is_saas_add_admin_menu');
 
 function is_saas_render_settings_page() {
+    is_saas_load_admin_settings_api();
+    is_saas_load_admin_menu_api();
+
     ?>
     <div class="wrap">
         <h1>SuperSaaS API</h1>

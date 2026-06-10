@@ -20,6 +20,7 @@ Current checkpoint only. History belongs in `CHANGELOG.md`; active tasks belong 
 - `iss-graph` now owns editor-facing relation signals in `wp_iss_graph_editorial_signals`: context-target related picks, self-targeted `Vorne zeigen` promotion signals, the `iss-graph/v1/editorial-signals` REST route, and the `edit_graph_editorial_signals` capability granted to administrators.
 - `iss-relations` consumes active graph editorial signals in automatic related-content blocks only; manual related blocks remain manual. Canonical graph relations are not mutated by editorial picks.
 - Graph migration/backfill operation is explicit through `wp iss-graph migrate`; video transcript mention sync is intentionally opt-in with `--with-video-transcripts`.
+- `saas-api` now loads the required WordPress admin includes before registering Settings API sections/options pages, so CLI/admin hook smoke tests can fire `admin_init` and `admin_menu` without the previous `add_settings_section()` fatal.
 - Plugin-owned Ausstellung text/material/source/layout/corpus surfaces have been removed from the active contract.
 - The theme-owned `industriesalon/ausstellung-announcement` block was removed; the active template no longer duplicates post body text into an automatic announcement band.
 - The single-Ausstellung theme skin now has a full-viewport cover hero, a theme-owned visit/facts intro band, normal editor-owned `post-content`, and a related-card tail only.
@@ -104,3 +105,5 @@ Current checkpoint only. History belongs in `CHANGELOG.md`; active tasks belong 
 - `wp iss-graph drift-check --checks=editorial-signals` passed over 3 current rows.
 - `wp iss-graph migrate --skip-sync --checks=editorial-signals` passed.
 - `wp iss-graph sync-content` synced 225 public content posts; a following full `wp iss-graph drift-check` passed.
+- `php -l` and `bash tools/phpcs-target.sh` passed for `plugins/saas-api/saas-api.php`.
+- Runtime PHP confirmed `do_action('admin_init')` and `do_action('admin_menu')` complete with `saas-api` active.

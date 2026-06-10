@@ -1,6 +1,9 @@
 # Changelog
 
 ## 2026-06-10
+- Hardened `saas-api` admin bootstrap behavior so CLI/admin hooks can safely fire `admin_init` or `admin_menu` outside a full wp-admin settings screen:
+  - loads the required WordPress admin Settings/Menu API includes before registering SuperSaaS settings or options pages
+  - fixed the existing admin-notice URL escaping issue caught by PHPCS
 - Hardened the restored `iss-graph` / `iss-relations` graph-editorial signal checkpoint for production use:
   - added the `edit_graph_editorial_signals` capability and wired admin metaboxes, REST writes, and Gutenberg editorial-signal controls through the same capability instead of mixed `manage_options` / `edit_post` checks
   - kept `Vorne zeigen` as a graph-owned editorial signal, but restricted its global related-content promotion controls to graph editorial users and validated context/target post types before server-side writes
