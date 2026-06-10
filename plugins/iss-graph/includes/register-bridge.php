@@ -243,6 +243,7 @@ function iss_graph_map_relation_row_for_editor(array $row): array
 {
     return [
         'id' => (int) ($row['id'] ?? 0),
+        'entity_id' => (int) ($row['entity_id'] ?? 0),
         'name' => (string) ($row['name'] ?? ''),
         'relation_type' => (string) ($row['relation_type'] ?? ''),
         'valid_from_year' => $row['valid_from_year'] ?? null,

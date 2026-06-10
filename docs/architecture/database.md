@@ -4,7 +4,7 @@ WordPress posts, post meta, terms, and `WP_Query` are the default model for norm
 
 ## Existing Custom Table Owners
 
-- `iss-graph`: entity index, entity names, entity identifiers, entity evidence references, entity relations, search index, person facts, and organization facts.
+- `iss-graph`: entity index, entity names, entity identifiers, entity evidence references, entity relations, editorial relation signals, search index, person facts, and organization facts.
 - `iss-wf-import`: archive objects, archive collections, collection members, assertions, evidence, and source snapshots.
 
 See `source-of-truth.md` before deciding which storage layer is canonical for a surface.

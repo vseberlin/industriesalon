@@ -1,6 +1,12 @@
 # Changelog
 
 ## 2026-06-10
+- Hardened the restored `iss-graph` / `iss-relations` graph-editorial signal checkpoint for production use:
+  - added the `edit_graph_editorial_signals` capability and wired admin metaboxes, REST writes, and Gutenberg editorial-signal controls through the same capability instead of mixed `manage_options` / `edit_post` checks
+  - kept `Vorne zeigen` as a graph-owned editorial signal, but restricted its global related-content promotion controls to graph editorial users and validated context/target post types before server-side writes
+  - added explicit `wp iss-graph migrate` and `wp iss-graph drift-check --checks=editorial-signals` operational paths so schema/capability/backfill state is verifiable instead of request-lifecycle implicit
+  - documented `iss_graph_editorial_signals` ownership in the compact plugin/database architecture docs
+  - installed the local `wp_iss_graph_editorial_signals` table, verified the REST route/block handoff, inserted/removed a temporary editorial signal, and ran `wp iss-graph sync-content` to clear five pre-existing `fuehrung` content-entity drift rows before full graph drift passed
 - Turned the local `Kinder im Wek` shell into the corrected `Kinder im Werk` Ausstellung using `/home/vladimir/Downloads/kinder1.html` as the text/design source:
   - renamed post `26381` to `Kinder im Werk`, changed the slug to `kinder-im-werk`, and kept WordPress' old-slug redirect from `kinder-im-wek`
   - replaced the empty body with an editor-owned Gutenberg longread using the mockup text, real local media, and existing `iss-wf-import/featured-archive-object` blocks for the evidence cards

@@ -10,6 +10,8 @@ function iss_graph_get_content_relation_post_types(): array
         'video',
         'publication',
         'ausstellung',
+        'fuehrung',
+        'projekt',
         'veranstaltung',
         'post',
     ]);
@@ -106,20 +108,31 @@ function iss_graph_get_content_relation_options(string $target_kind): array
         : iss_graph_get_content_person_relation_options();
 }
 
-function iss_graph_get_content_person_profile_choices(): array
+function iss_graph_get_content_profile_choices(string $entity_kind): array
 {
     if (!function_exists('iss_graph_get_profile_entity_choices_grouped')) {
         return [];
     }
 
+    $entity_kind = sanitize_key($entity_kind);
     $grouped = iss_graph_get_profile_entity_choices_grouped();
-    $people = is_array($grouped['person'] ?? null) ? $grouped['person'] : [];
+    $choices = is_array($grouped[$entity_kind] ?? null) ? $grouped[$entity_kind] : [];
 
-    return array_values(array_filter($people, static function ($row): bool {
+    return array_values(array_filter($choices, static function ($row): bool {
         return is_array($row)
             && (int) ($row['id'] ?? 0) > 0
             && (int) ($row['profile_post_id'] ?? 0) > 0;
     }));
+}
+
+function iss_graph_get_content_person_profile_choices(): array
+{
+    return iss_graph_get_content_profile_choices('person');
+}
+
+function iss_graph_get_content_organization_profile_choices(): array
+{
+    return iss_graph_get_content_profile_choices('organization');
 }
 
 function iss_graph_sync_public_content_entity(int $post_id): ?array
@@ -146,7 +159,7 @@ function iss_graph_sync_public_content_entity(int $post_id): ?array
         'post_id' => (int) $post->ID,
         'source_system' => 'wp_post',
         'source_id' => (string) $post->ID,
-        'canonical_slug' => trim((string) $post->post_name) !== '' ? (string) $post->post_name : ($post->post_type . '-' . (int) $post->ID),
+        'canonical_slug' => $post->post_type . '-' . (int) $post->ID . '-' . (trim((string) $post->post_name) !== '' ? (string) $post->post_name : sanitize_title((string) get_the_title($post))),
         'display_title' => get_the_title($post),
         'summary' => (string) get_post_field('post_excerpt', $post->ID),
         'status' => sanitize_key((string) $post->post_status),
@@ -185,22 +198,42 @@ function iss_graph_render_public_content_relations_meta_box(WP_Post $post): void
     $people = $entity_id > 0 ? array_map('iss_graph_map_relation_row_for_editor', $service->get_relations_for_entity($entity_id, 'person', [
         'source_system' => 'content_admin',
     ])) : [];
+    $organizations = $entity_id > 0 ? array_map('iss_graph_map_relation_row_for_editor', $service->get_relations_for_entity($entity_id, 'organization', [
+        'source_system' => 'content_admin',
+    ])) : [];
 
     $person_rows = wp_json_encode($people, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
+    $organization_rows = wp_json_encode($organizations, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
     $person_choices = wp_json_encode(iss_graph_get_content_person_profile_choices(), JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
+    $organization_choices = wp_json_encode(iss_graph_get_content_organization_profile_choices(), JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
 
     if (!is_string($person_rows) || $person_rows === '') {
         $person_rows = '[]';
     }
+    if (!is_string($organization_rows) || $organization_rows === '') {
+        $organization_rows = '[]';
+    }
     if (!is_string($person_choices) || $person_choices === '') {
         $person_choices = '[]';
     }
+    if (!is_string($organization_choices) || $organization_choices === '') {
+        $organization_choices = '[]';
+    }
 
-    echo '<p>Diese Verknuepfungen ergaenzen direkte Personenbezuge unabhaengig von Orten. Personen werden aus oeffentlichen Profilen gewaehlt und im gemeinsamen Graphen gespeichert.</p>';
-    echo '<div class="iss-graph-editor">';
+    echo '<p>' . esc_html__('Hier legst du fest, welche Personen und Organisationen zu diesem Beitrag gehoeren. Waehle vorhandene Profile, damit sie auf der Seite erscheinen koennen.', 'iss-graph') . '</p>';
+    echo '<div class="iss-graph-editor iss-graph-editor--content-relations">';
+
+    echo '<section class="iss-graph-editor__group" data-group="organizations" data-input-id="iss-graph-content-organization-rows" data-relation-types="' . esc_attr(wp_json_encode(iss_graph_get_content_organization_relation_options(), JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES)) . '" data-entity-choices="' . esc_attr($organization_choices) . '" data-row-title="Organisation">';
+    echo '<div class="iss-graph-editor__tabs" aria-hidden="true"><span class="iss-graph-editor__tab is-active">' . esc_html__('Organisationen', 'iss-graph') . '</span></div>';
+    echo '<div class="iss-graph-editor__header"><h4>' . esc_html__('Organisationen auswählen', 'iss-graph') . '</h4><p class="description">' . esc_html__('Institutionen, Partner, Veranstalter, Herausgeber oder andere Organisationen, die für diesen Beitrag wichtig sind.', 'iss-graph') . '</p></div>';
+    echo '<div class="iss-graph-editor__rows"></div>';
+    echo '<p><button type="button" class="button button-secondary iss-graph-editor__add">Organisation hinzufuegen</button></p>';
+    echo '<textarea id="iss-graph-content-organization-rows" name="iss_graph_content_organization_rows" rows="6" style="display:none;">' . esc_textarea($organization_rows) . '</textarea>';
+    echo '</section>';
 
     echo '<section class="iss-graph-editor__group" data-group="people" data-input-id="iss-graph-content-person-rows" data-relation-types="' . esc_attr(wp_json_encode(iss_graph_get_content_person_relation_options(), JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES)) . '" data-entity-choices="' . esc_attr($person_choices) . '" data-row-title="Person">';
-    echo '<div class="iss-graph-editor__header"><h4>Personen</h4><p class="description">Autor:innen, Mitwirkende, Interviewpartner oder zentrale Personen im Zusammenhang.</p></div>';
+    echo '<div class="iss-graph-editor__tabs" aria-hidden="true"><span class="iss-graph-editor__tab is-active">' . esc_html__('Personen', 'iss-graph') . '</span></div>';
+    echo '<div class="iss-graph-editor__header"><h4>' . esc_html__('Personen auswählen', 'iss-graph') . '</h4><p class="description">' . esc_html__('Autor:innen, Mitwirkende, Interviewpartner oder andere Personen, die für diesen Beitrag wichtig sind.', 'iss-graph') . '</p></div>';
     echo '<div class="iss-graph-editor__rows"></div>';
     echo '<p><button type="button" class="button button-secondary iss-graph-editor__add">Person hinzufuegen</button></p>';
     echo '<textarea id="iss-graph-content-person-rows" name="iss_graph_content_person_rows" rows="6" style="display:none;">' . esc_textarea($person_rows) . '</textarea>';
@@ -233,7 +266,7 @@ function iss_graph_sanitize_content_relation_rows(array $rows, string $target_ki
             continue;
         }
 
-        if ($target_kind === 'person' && (int) ($target_entity['profile_post_id'] ?? 0) <= 0) {
+        if (in_array($target_kind, ['organization', 'person'], true) && (int) ($target_entity['profile_post_id'] ?? 0) <= 0) {
             continue;
         }
 
@@ -279,8 +312,9 @@ function iss_graph_save_public_content_relations(int $post_id, WP_Post $post): v
     $service = iss_graph_get_service();
     $entity = $service->find_entity_by_post(sanitize_key((string) $post->post_type), $post_id);
     $person_rows = iss_graph_sanitize_content_relation_rows(iss_graph_decode_posted_rows('iss_graph_content_person_rows'), 'person');
+    $organization_rows = iss_graph_sanitize_content_relation_rows(iss_graph_decode_posted_rows('iss_graph_content_organization_rows'), 'organization');
 
-    if ((!$entity || empty($entity['id'])) && $person_rows) {
+    if ((!$entity || empty($entity['id'])) && ($person_rows || $organization_rows)) {
         $entity = iss_graph_sync_public_content_entity($post_id);
     }
 
@@ -292,6 +326,13 @@ function iss_graph_save_public_content_relations(int $post_id, WP_Post $post): v
             'person',
             'content_admin',
             $person_rows,
+            $source_ref
+        );
+        $service->replace_entity_relations_for_source(
+            $entity_id,
+            'organization',
+            'content_admin',
+            $organization_rows,
             $source_ref
         );
     }
@@ -320,6 +361,17 @@ function iss_graph_refresh_public_content_entity_on_save(int $post_id, WP_Post $
     iss_graph_sync_public_content_entity($post_id);
 }
 add_action('save_post', 'iss_graph_refresh_public_content_entity_on_save', 35, 2);
+
+function iss_graph_delete_public_content_entity_on_before_delete(int $post_id): void
+{
+    $post = get_post($post_id);
+    if (!$post instanceof WP_Post || !iss_graph_is_content_relation_post_type((string) $post->post_type)) {
+        return;
+    }
+
+    iss_graph_get_service()->delete_entity_by_post(sanitize_key((string) $post->post_type), $post_id);
+}
+add_action('before_delete_post', 'iss_graph_delete_public_content_entity_on_before_delete', 5);
 
 function iss_graph_get_content_entity_relations(int $post_id, string $target_kind, array $args = []): array
 {
@@ -375,6 +427,18 @@ function iss_graph_register_content_relation_blocks(): void
         return;
     }
 
+    $editor_script = 'iss-graph-entity-relations-editor';
+    $editor_asset = ISS_GRAPH_PATH . 'assets/js/entity-relations-block.js';
+    if (file_exists($editor_asset)) {
+        wp_register_script(
+            $editor_script,
+            ISS_GRAPH_URL . 'assets/js/entity-relations-block.js',
+            ['wp-blocks', 'wp-block-editor', 'wp-components', 'wp-element', 'wp-server-side-render'],
+            (string) filemtime($editor_asset),
+            true
+        );
+    }
+
     register_block_type('iss-graph/entity-relations', [
         'api_version' => 3,
         'title' => __('Entity Relations', 'iss-graph'),
@@ -406,6 +470,7 @@ function iss_graph_register_content_relation_blocks(): void
         'supports' => [
             'html' => false,
         ],
+        'editor_script' => wp_script_is($editor_script, 'registered') ? $editor_script : null,
         'render_callback' => 'iss_graph_render_entity_relations_block',
     ]);
 }
@@ -510,7 +575,7 @@ function iss_graph_add_public_content_relation_meta_boxes(): void
     foreach (iss_graph_get_content_relation_post_types() as $post_type) {
         add_meta_box(
             'iss-graph-public-content-relations',
-            __('Personen', 'iss-graph'),
+            __('Personen und Organisationen', 'iss-graph'),
             'iss_graph_render_public_content_relations_meta_box',
             $post_type,
             'normal',

@@ -384,6 +384,13 @@ function iss_relations_graph_find_place_entity(int $place_id): ?array
     return null;
 }
 
+function iss_relations_graph_content_bridge_owns_post(WP_Post $post): bool
+{
+    return function_exists('iss_graph_is_content_relation_post_type')
+        && function_exists('iss_graph_sync_public_content_entity')
+        && iss_graph_is_content_relation_post_type((string) $post->post_type);
+}
+
 function iss_relations_graph_build_place_relation_rows(array $relations): array
 {
     $rows = [];
@@ -429,6 +436,10 @@ function iss_relations_graph_upsert_generic_post_entity(WP_Post $post, array $st
         return null;
     }
 
+    if (iss_relations_graph_content_bridge_owns_post($post)) {
+        return null;
+    }
+
     $service = iss_graph_get_service();
     $entity_kind = iss_relations_graph_entity_kind_for_post($post);
     $existing = $service->find_entity_by_post($entity_kind, (int) $post->ID);
@@ -450,7 +461,7 @@ function iss_relations_graph_upsert_generic_post_entity(WP_Post $post, array $st
         'post_id' => (int) $post->ID,
         'source_system' => 'wp_post',
         'source_id' => (string) $post->ID,
-        'canonical_slug' => trim((string) $post->post_name) !== '' ? (string) $post->post_name : ($post->post_type . '-' . (int) $post->ID),
+        'canonical_slug' => $post->post_type . '-' . (int) $post->ID . '-' . (trim((string) $post->post_name) !== '' ? (string) $post->post_name : sanitize_title((string) get_the_title($post))),
         'display_title' => get_the_title($post),
         'summary' => (string) get_post_field('post_excerpt', $post->ID),
         'status' => sanitize_key((string) $post->post_status),
@@ -499,6 +510,8 @@ function iss_relations_sync_post_graph(int $post_id): ?array
 
     if ($post->post_type === iss_relations_get_place_post_type() && function_exists('iss_graph_sync_register_place_entity')) {
         $entity = iss_graph_sync_register_place_entity($post_id);
+    } elseif (iss_relations_graph_content_bridge_owns_post($post)) {
+        $entity = iss_graph_sync_public_content_entity($post_id);
     } else {
         $entity = iss_relations_graph_upsert_generic_post_entity($post, $stored_relations);
     }
@@ -1104,6 +1117,14 @@ function iss_relations_delete_supported_post_graph_on_before_delete(int $post_id
         return;
     }
 
+    if (
+        (function_exists('iss_graph_get_register_post_type') && $post->post_type === iss_graph_get_register_post_type())
+        || (function_exists('iss_graph_get_archive_object_post_type') && $post->post_type === iss_graph_get_archive_object_post_type())
+        || iss_relations_graph_content_bridge_owns_post($post)
+    ) {
+        return;
+    }
+
     iss_graph_get_service()->delete_entity_by_post(iss_relations_graph_entity_kind_for_post($post), $post_id);
 }
 add_action('before_delete_post', 'iss_relations_delete_supported_post_graph_on_before_delete', 7);
@@ -1121,7 +1142,6 @@ function iss_relations_maybe_run_backfill(): void
     delete_option('iss_relations_needs_backfill');
     iss_relations_backfill_index();
 }
-add_action('admin_init', 'iss_relations_maybe_run_backfill');
 
 function iss_relations_maybe_backfill_graph_identifiers(): void
 {
@@ -1137,4 +1157,3 @@ function iss_relations_maybe_backfill_graph_identifiers(): void
     iss_relations_backfill_index();
     update_option(ISS_RELATIONS_GRAPH_IDENTIFIER_BACKFILL_OPTION, ISS_RELATIONS_GRAPH_IDENTIFIER_BACKFILL_VERSION, false);
 }
-add_action('init', 'iss_relations_maybe_backfill_graph_identifiers', 60);

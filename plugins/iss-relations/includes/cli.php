@@ -27,6 +27,7 @@ function iss_relations_wpcli_sync_command(array $args, array $assoc_args): void
 
     $result = iss_relations_backfill_index($post_types);
     delete_option('iss_relations_needs_backfill');
+    update_option(ISS_RELATIONS_GRAPH_IDENTIFIER_BACKFILL_OPTION, ISS_RELATIONS_GRAPH_IDENTIFIER_BACKFILL_VERSION, false);
 
     WP_CLI::success(sprintf(
         'Synced %d posts across: %s',

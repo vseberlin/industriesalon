@@ -9,8 +9,10 @@ if (!defined('ABSPATH')) {
 if (defined('WP_CLI') && WP_CLI) {
     WP_CLI::add_command('iss-graph verify', 'iss_graph_wpcli_verify_command');
     WP_CLI::add_command('iss-graph drift-check', 'iss_graph_wpcli_drift_check_command');
+    WP_CLI::add_command('iss-graph migrate', 'iss_graph_wpcli_migrate_command');
     WP_CLI::add_command('iss-graph sync-register', 'iss_graph_wpcli_sync_register_command');
     WP_CLI::add_command('iss-graph sync-content', 'iss_graph_wpcli_sync_content_command');
+    WP_CLI::add_command('iss-graph sync-profiles', 'iss_graph_wpcli_sync_profiles_command');
     WP_CLI::add_command('iss-graph sync-video-transcripts', 'iss_graph_wpcli_sync_video_transcripts_command');
     WP_CLI::add_command('iss-graph sync-archive', 'iss_graph_wpcli_sync_archive_command');
     WP_CLI::add_command('iss-graph sync-aliases', 'iss_graph_wpcli_sync_aliases_command');
@@ -32,6 +34,7 @@ function iss_graph_wpcli_verify_command(array $args, array $assoc_args): void
         'person_facts' => $service->get_person_facts_table_name(),
         'organization_facts' => $service->get_organization_facts_table_name(),
         'entity_evidence_refs' => $service->get_evidence_table_name(),
+        'editorial_signals' => $service->get_editorial_signal_table_name(),
     ];
 
     $failed = false;
@@ -70,9 +73,12 @@ function iss_graph_wpcli_verify_command(array $args, array $assoc_args): void
     $evidence_count = $service->table_exists($service->get_evidence_table_name())
         ? (int) $wpdb->get_var("SELECT COUNT(*) FROM {$service->get_evidence_table_name()}")
         : 0;
+    $editorial_signal_count = $service->table_exists($service->get_editorial_signal_table_name())
+        ? (int) $wpdb->get_var("SELECT COUNT(*) FROM {$service->get_editorial_signal_table_name()}")
+        : 0;
 
     WP_CLI::log(sprintf(
-        'entities=%d names=%d identifiers=%d relations=%d search=%d person_facts=%d organization_facts=%d evidence_refs=%d',
+        'entities=%d names=%d identifiers=%d relations=%d search=%d person_facts=%d organization_facts=%d evidence_refs=%d editorial_signals=%d',
         $entity_count,
         $name_count,
         $identifier_count,
@@ -80,7 +86,8 @@ function iss_graph_wpcli_verify_command(array $args, array $assoc_args): void
         $search_count,
         $person_facts_count,
         $organization_facts_count,
-        $evidence_count
+        $evidence_count,
+        $editorial_signal_count
     ));
 
     if ($failed) {
@@ -133,6 +140,7 @@ function iss_graph_wpcli_parse_drift_checks(string $value): array
         'place-taxonomy',
         'place-graph',
         'search-index',
+        'editorial-signals',
     ];
 
     $value = trim($value);
@@ -162,6 +170,8 @@ function iss_graph_wpcli_run_drift_check(string $check, int $limit): array
             return iss_graph_wpcli_check_place_graph($limit);
         case 'search-index':
             return iss_graph_wpcli_check_search_index($limit);
+        case 'editorial-signals':
+            return iss_graph_wpcli_check_editorial_signals($limit);
         default:
             return [
                 'checked' => 0,
@@ -603,6 +613,155 @@ function iss_graph_wpcli_check_search_index(int $limit): array
     ];
 }
 
+function iss_graph_wpcli_check_editorial_signals(int $limit): array
+{
+    global $wpdb;
+
+    $service = iss_graph_get_service();
+    $signal_table = $service->get_editorial_signal_table_name();
+    if (!$service->table_exists($signal_table)) {
+        return [
+            'checked' => 0,
+            'errors' => [sprintf('Editorial signal table missing: %s.', $signal_table)],
+        ];
+    }
+
+    $rows = $wpdb->get_results(
+        "SELECT s.id, s.context_post_id, s.target_post_id, s.surface, s.signal_type, s.status,
+            cp.post_status AS context_status,
+            tp.post_status AS target_status
+        FROM {$signal_table} s
+        LEFT JOIN {$wpdb->posts} cp ON cp.ID = s.context_post_id
+        LEFT JOIN {$wpdb->posts} tp ON tp.ID = s.target_post_id
+        ORDER BY s.id ASC",
+        ARRAY_A
+    );
+
+    $errors = [];
+    foreach (is_array($rows) ? $rows : [] as $row) {
+        $id = (int) ($row['id'] ?? 0);
+        $context_post_id = absint($row['context_post_id'] ?? 0);
+        $target_post_id = absint($row['target_post_id'] ?? 0);
+        $context_status = (string) ($row['context_status'] ?? '');
+        $target_status = (string) ($row['target_status'] ?? '');
+
+        if ($context_post_id <= 0 || $context_status === '') {
+            $errors[] = sprintf('Editorial signal %d has a missing context post %d.', $id, $context_post_id);
+        } elseif (in_array($context_status, ['auto-draft', 'trash'], true)) {
+            $errors[] = sprintf('Editorial signal %d has invalid context post status %s for post %d.', $id, $context_status, $context_post_id);
+        }
+
+        if ($target_post_id <= 0 || $target_status === '') {
+            $errors[] = sprintf('Editorial signal %d has a missing target post %d.', $id, $target_post_id);
+        } elseif (in_array($target_status, ['auto-draft', 'trash'], true)) {
+            $errors[] = sprintf('Editorial signal %d has invalid target post status %s for post %d.', $id, $target_status, $target_post_id);
+        }
+
+        $surface = $service->normalize_editorial_signal_surface((string) ($row['surface'] ?? ''));
+        if ($surface !== (string) ($row['surface'] ?? '')) {
+            $errors[] = sprintf('Editorial signal %d has invalid surface %s.', $id, (string) ($row['surface'] ?? ''));
+        }
+
+        $signal = $service->normalize_editorial_signal_type((string) ($row['signal_type'] ?? ''));
+        if ($signal === '') {
+            $errors[] = sprintf('Editorial signal %d has invalid signal type %s.', $id, (string) ($row['signal_type'] ?? ''));
+        }
+
+        $status = $service->normalize_editorial_signal_status((string) ($row['status'] ?? ''));
+        if ($status !== (string) ($row['status'] ?? '')) {
+            $errors[] = sprintf('Editorial signal %d has invalid status %s.', $id, (string) ($row['status'] ?? ''));
+        }
+
+        if (
+            $context_post_id > 0
+            && $target_post_id > 0
+            && $context_post_id !== $target_post_id
+            && function_exists('iss_graph_editorial_signal_target_is_allowed')
+            && !iss_graph_editorial_signal_target_is_allowed($context_post_id, $target_post_id)
+        ) {
+            $errors[] = sprintf('Editorial signal %d targets post %d outside the allowed target types for context post %d.', $id, $target_post_id, $context_post_id);
+        }
+
+        if ($context_post_id > 0 && $target_post_id > 0 && $context_post_id === $target_post_id) {
+            $post_type = get_post_type($target_post_id);
+            if (!is_string($post_type) || !function_exists('iss_graph_is_related_promotion_post_type') || !iss_graph_is_related_promotion_post_type($post_type)) {
+                $errors[] = sprintf('Editorial signal %d is a self-promotion on unsupported post %d.', $id, $target_post_id);
+            }
+        }
+
+        if (count($errors) >= $limit) {
+            break;
+        }
+    }
+
+    return [
+        'checked' => is_array($rows) ? count($rows) : 0,
+        'errors' => $errors,
+    ];
+}
+
+function iss_graph_wpcli_log_migration_step(string $label, callable $callback, string $option = '', string $version = ''): void
+{
+    WP_CLI::log(sprintf('[migrate] %s', $label));
+    $result = $callback();
+    if ($option !== '' && $version !== '') {
+        update_option($option, $version, false);
+    }
+
+    if (is_array($result)) {
+        WP_CLI::log(sprintf('[migrate] %s result=%s', $label, wp_json_encode($result)));
+        return;
+    }
+
+    WP_CLI::log(sprintf('[migrate] %s count=%d', $label, (int) $result));
+}
+
+function iss_graph_wpcli_migrate_command(array $args, array $assoc_args): void
+{
+    WP_CLI::log('[migrate] installing graph schema');
+    iss_graph_get_service()->install_schema();
+    iss_graph_ensure_editorial_signals_capability();
+
+    if (!isset($assoc_args['skip-sync'])) {
+        if (function_exists('iss_graph_backfill_register_places')) {
+            iss_graph_wpcli_log_migration_step('register places', 'iss_graph_backfill_register_places', ISS_GRAPH_REGISTER_BACKFILL_OPTION, ISS_GRAPH_REGISTER_BACKFILL_VERSION);
+        }
+
+        if (function_exists('iss_graph_backfill_public_content_entities')) {
+            iss_graph_wpcli_log_migration_step('public content entities', 'iss_graph_backfill_public_content_entities', ISS_GRAPH_CONTENT_BACKFILL_OPTION, ISS_GRAPH_CONTENT_BACKFILL_VERSION);
+        }
+
+        if (function_exists('iss_graph_backfill_archive_objects')) {
+            iss_graph_wpcli_log_migration_step('archive objects', 'iss_graph_backfill_archive_objects', ISS_GRAPH_ARCHIVE_BACKFILL_OPTION, ISS_GRAPH_ARCHIVE_BACKFILL_VERSION);
+        }
+
+        if (function_exists('iss_graph_backfill_entity_profile_bindings')) {
+            iss_graph_wpcli_log_migration_step('profile bindings', 'iss_graph_backfill_entity_profile_bindings', ISS_GRAPH_PROFILE_BACKFILL_OPTION, ISS_GRAPH_PROFILE_BACKFILL_VERSION);
+        }
+
+        if (function_exists('iss_graph_backfill_entity_aliases')) {
+            iss_graph_wpcli_log_migration_step('entity aliases', 'iss_graph_backfill_entity_aliases', ISS_GRAPH_ALIAS_BACKFILL_OPTION, ISS_GRAPH_ALIAS_BACKFILL_VERSION);
+        }
+
+        if (function_exists('iss_graph_backfill_public_search_index')) {
+            iss_graph_wpcli_log_migration_step('public search index', 'iss_graph_backfill_public_search_index', ISS_GRAPH_SEARCH_BACKFILL_OPTION, ISS_GRAPH_SEARCH_BACKFILL_VERSION);
+        }
+
+        if (isset($assoc_args['with-video-transcripts']) && function_exists('iss_graph_backfill_video_transcript_mentions')) {
+            iss_graph_wpcli_log_migration_step('video transcript mentions', 'iss_graph_backfill_video_transcript_mentions');
+        }
+    }
+
+    if (!isset($assoc_args['skip-drift'])) {
+        iss_graph_wpcli_drift_check_command([], [
+            'checks' => (string) ($assoc_args['checks'] ?? ''),
+            'limit' => (int) ($assoc_args['limit'] ?? 50),
+        ]);
+    }
+
+    WP_CLI::success('ISS graph migration completed.');
+}
+
 function iss_graph_wpcli_sync_register_command(array $args, array $assoc_args): void
 {
     $post_id = absint($assoc_args['post_id'] ?? 0);
@@ -641,6 +800,18 @@ function iss_graph_wpcli_sync_content_command(array $args, array $assoc_args): v
     $count = iss_graph_backfill_public_content_entities();
     update_option(ISS_GRAPH_CONTENT_BACKFILL_OPTION, ISS_GRAPH_CONTENT_BACKFILL_VERSION, false);
     WP_CLI::success(sprintf('Synced %d public content posts into the graph.', $count));
+}
+
+function iss_graph_wpcli_sync_profiles_command(array $args, array $assoc_args): void
+{
+    if (!function_exists('iss_graph_backfill_entity_profile_bindings')) {
+        WP_CLI::error('Entity profile bindings are not available.');
+    }
+
+    $count = iss_graph_backfill_entity_profile_bindings();
+    update_option(ISS_GRAPH_PROFILE_BACKFILL_OPTION, ISS_GRAPH_PROFILE_BACKFILL_VERSION, false);
+
+    WP_CLI::success(sprintf('Synced %d entity profile bindings.', $count));
 }
 
 function iss_graph_wpcli_sync_video_transcripts_command(array $args, array $assoc_args): void

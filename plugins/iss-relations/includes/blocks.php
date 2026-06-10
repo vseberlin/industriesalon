@@ -744,6 +744,9 @@ function iss_relations_enqueue_block_editor_script(): void
             'supportedPostTypes' => iss_relations_get_supported_post_types(),
             'relatedPostTypes' => iss_relations_get_related_query_post_types(),
             'mapPresets' => iss_relations_get_place_map_editor_presets(),
+            'canManageEditorialSignals' => function_exists('iss_graph_current_user_can_edit_editorial_signals')
+                ? iss_graph_current_user_can_edit_editorial_signals()
+                : current_user_can('manage_options'),
         ]) . ';',
         'before'
     );
@@ -1531,6 +1534,196 @@ function iss_relations_resolve_block_posts(array $attributes, int $current_post_
     return array_slice($merged, 0, $per_page);
 }
 
+function iss_relations_should_apply_related_editorial_signals(array $attributes, int $current_post_id): bool
+{
+    if ($current_post_id <= 0 || !function_exists('iss_graph_get_active_editorial_signals_for_post')) {
+        return false;
+    }
+
+    $source = sanitize_key((string) ($attributes['source'] ?? 'current'));
+
+    return $source !== 'manual';
+}
+
+function iss_relations_get_related_editorial_signals(int $current_post_id): array
+{
+    if ($current_post_id <= 0 || !function_exists('iss_graph_get_active_editorial_signals_for_post')) {
+        return [];
+    }
+
+    return iss_graph_get_active_editorial_signals_for_post($current_post_id, 'related');
+}
+
+function iss_relations_get_related_editorial_signals_by_target(int $current_post_id): array
+{
+    $by_target = [];
+
+    foreach (iss_relations_get_related_editorial_signals($current_post_id) as $signal) {
+        if (!is_array($signal)) {
+            continue;
+        }
+
+        $target_post_id = absint($signal['target_post_id'] ?? 0);
+        if ($target_post_id <= 0 || $target_post_id === $current_post_id) {
+            continue;
+        }
+
+        $by_target[$target_post_id] = $signal;
+    }
+
+    return $by_target;
+}
+
+function iss_relations_get_promoted_related_posts(array $post_types, int $per_page, int $exclude_post_id = 0): array
+{
+    if (!function_exists('iss_graph_get_active_related_promotion_post_ids')) {
+        return [];
+    }
+
+    $post_types = array_values(array_unique(array_filter(array_map('sanitize_key', $post_types), 'iss_relations_is_related_query_post_type')));
+    if (!$post_types) {
+        return [];
+    }
+
+    $limit = max(1, min(24, $per_page));
+    $post_ids = iss_graph_get_active_related_promotion_post_ids($post_types, [
+        'exclude_post_id' => $exclude_post_id,
+        'post_status' => 'publish',
+        'limit' => $limit,
+    ]);
+
+    if (!$post_ids) {
+        return [];
+    }
+
+    return get_posts([
+        'post_type' => count($post_types) === 1 ? $post_types[0] : $post_types,
+        'post_status' => 'publish',
+        'posts_per_page' => $limit,
+        'orderby' => 'post__in',
+        'post__in' => $post_ids,
+        'suppress_filters' => true,
+        'ignore_sticky_posts' => true,
+    ]);
+}
+
+function iss_relations_apply_editorial_signals_to_related_posts(array $posts, int $current_post_id, array $post_types, int $per_page, array $attributes = []): array
+{
+    $limit = max(1, min(24, $per_page));
+    if (!iss_relations_should_apply_related_editorial_signals($attributes, $current_post_id)) {
+        return array_slice($posts, 0, $limit);
+    }
+
+    $post_types = array_values(array_unique(array_filter(array_map('sanitize_key', $post_types), 'iss_relations_is_related_query_post_type')));
+    if (!$post_types) {
+        return [];
+    }
+
+    $signals = iss_relations_get_related_editorial_signals($current_post_id);
+    $promoted_posts = iss_relations_get_promoted_related_posts($post_types, $limit, $current_post_id);
+    if (!$signals && !$promoted_posts) {
+        return array_slice($posts, 0, $limit);
+    }
+
+    $allowed_post_types = array_fill_keys($post_types, true);
+    $feature_ids = [];
+    $hide_ids = [];
+
+    foreach ($signals as $signal) {
+        if (!is_array($signal)) {
+            continue;
+        }
+
+        $target_post_id = absint($signal['target_post_id'] ?? 0);
+        if ($target_post_id <= 0 || $target_post_id === $current_post_id) {
+            continue;
+        }
+
+        $signal_type = sanitize_key((string) ($signal['signal'] ?? ''));
+        if ($signal_type === 'feature') {
+            $feature_ids[] = $target_post_id;
+        } elseif ($signal_type === 'hide') {
+            $hide_ids[$target_post_id] = true;
+        }
+    }
+
+    foreach ($promoted_posts as $post) {
+        if (!$post instanceof WP_Post) {
+            continue;
+        }
+
+        $feature_ids[] = (int) $post->ID;
+    }
+
+    $feature_ids = array_values(array_unique(array_filter($feature_ids)));
+    $feature_lookup = array_fill_keys($feature_ids, true);
+    $featured_posts = [];
+    $seen = [];
+
+    foreach ($feature_ids as $target_post_id) {
+        if (isset($hide_ids[$target_post_id])) {
+            continue;
+        }
+
+        $post = get_post($target_post_id);
+        if (
+            !$post instanceof WP_Post
+            || $post->post_status !== 'publish'
+            || empty($allowed_post_types[(string) $post->post_type])
+        ) {
+            continue;
+        }
+
+        $seen[$post->ID] = true;
+        $featured_posts[] = $post;
+    }
+
+    $automatic_posts = [];
+    foreach ($posts as $post) {
+        if (!$post instanceof WP_Post || isset($hide_ids[$post->ID]) || isset($feature_lookup[$post->ID]) || isset($seen[$post->ID])) {
+            continue;
+        }
+
+        $seen[$post->ID] = true;
+        $automatic_posts[] = $post;
+    }
+
+    return array_slice(array_merge($featured_posts, $automatic_posts), 0, $limit);
+}
+
+function iss_relations_prepare_editorial_signal_preview_items(int $current_post_id): array
+{
+    $items = [];
+
+    foreach (iss_relations_get_related_editorial_signals($current_post_id) as $signal) {
+        if (!is_array($signal)) {
+            continue;
+        }
+
+        $target_post_id = absint($signal['target_post_id'] ?? 0);
+        $post = $target_post_id > 0 ? get_post($target_post_id) : null;
+        if (!$post instanceof WP_Post || $target_post_id === $current_post_id) {
+            continue;
+        }
+
+        $items[] = [
+            'targetPostId' => $target_post_id,
+            'signal' => sanitize_key((string) ($signal['signal'] ?? '')),
+            'reason' => (string) ($signal['reason'] ?? ''),
+            'expiresAt' => isset($signal['expires_at']) && $signal['expires_at'] !== null ? substr((string) $signal['expires_at'], 0, 10) : '',
+            'target' => [
+                'id' => $target_post_id,
+                'title' => (string) get_the_title($post),
+                'postType' => (string) $post->post_type,
+                'permalink' => (string) get_permalink($post),
+                'kicker' => iss_relations_get_card_kicker($post),
+            ],
+        ];
+    }
+
+    return $items;
+}
+
 function iss_relations_get_card_meta_line(WP_Post $post): string
 {
     if ($post->post_type === 'publication' && function_exists('iss_publications_get_card_meta_items')) {
@@ -2220,6 +2413,7 @@ function iss_relations_collect_related_cards_data(array $attributes = [], int $c
     }
 
     $related_posts = iss_relations_resolve_block_posts($attributes, $current_post_id, $post_types, $per_page);
+    $related_posts = iss_relations_apply_editorial_signals_to_related_posts($related_posts, $current_post_id, $post_types, $per_page, $attributes);
     if (!$related_posts) {
         return [];
     }
@@ -2261,6 +2455,7 @@ function iss_relations_collect_related_cards_data(array $attributes = [], int $c
 function iss_relations_build_related_cards_preview_payload(array $attributes = [], int $current_post_id = 0): array
 {
     $data = iss_relations_collect_related_cards_data($attributes, $current_post_id);
+    $editorial_signals = iss_relations_prepare_editorial_signal_preview_items($current_post_id);
     if (!$data) {
         $post_types = iss_relations_get_related_cards_post_types(
             $attributes,
@@ -2277,10 +2472,12 @@ function iss_relations_build_related_cards_preview_payload(array $attributes = [
             'sortMode' => iss_relations_normalize_related_cards_sort_mode($attributes, $post_types),
             'columns' => iss_relations_normalize_related_cards_columns($attributes),
             'skin' => iss_relations_normalize_related_cards_skin($attributes),
+            'editorialSignals' => $editorial_signals,
         ];
     }
 
     $items = [];
+    $signals_by_target = iss_relations_get_related_editorial_signals_by_target($current_post_id);
     $show_image = !isset($data['card_options']['show_image']) || !empty($data['card_options']['show_image']);
     $show_excerpt = !isset($data['card_options']['show_excerpt']) || !empty($data['card_options']['show_excerpt']);
 
@@ -2308,6 +2505,9 @@ function iss_relations_build_related_cards_preview_payload(array $attributes = [
             'excerpt' => $show_excerpt ? iss_relations_get_card_excerpt($post) : '',
             'thumbnail' => $thumb,
             'postType' => (string) $post->post_type,
+            'editorialSignal' => isset($signals_by_target[$post->ID]) ? sanitize_key((string) ($signals_by_target[$post->ID]['signal'] ?? '')) : '',
+            'editorialReason' => isset($signals_by_target[$post->ID]) ? (string) ($signals_by_target[$post->ID]['reason'] ?? '') : '',
+            'editorialExpiresAt' => isset($signals_by_target[$post->ID]['expires_at']) && $signals_by_target[$post->ID]['expires_at'] !== null ? substr((string) $signals_by_target[$post->ID]['expires_at'], 0, 10) : '',
         ];
     }
 
@@ -2323,6 +2523,7 @@ function iss_relations_build_related_cards_preview_payload(array $attributes = [
         'showImage' => $show_image,
         'showExcerpt' => $show_excerpt,
         'skin' => (string) ($data['card_options']['skin'] ?? 'default'),
+        'editorialSignals' => $editorial_signals,
     ];
 }
 

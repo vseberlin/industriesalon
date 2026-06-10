@@ -17,6 +17,37 @@
   margin-top: 0;
 }
 
+.iss-graph-editor--content-people .iss-graph-editor__group {
+  padding-top: 0;
+}
+
+.iss-graph-editor__tabs {
+  display: flex;
+  gap: 0.25rem;
+  margin: 0 -1rem 1rem;
+  padding: 0.5rem 1rem 0;
+  border-bottom: 1px solid #dcdcde;
+  background: #f6f7f7;
+}
+
+.iss-graph-editor__tab {
+  display: inline-flex;
+  align-items: center;
+  min-height: 2rem;
+  padding: 0 0.75rem;
+  border: 1px solid transparent;
+  border-bottom: 0;
+  color: #50575e;
+}
+
+.iss-graph-editor__tab.is-active {
+  margin-bottom: -1px;
+  border-color: #dcdcde;
+  background: #fff;
+  color: #1d2327;
+  font-weight: 600;
+}
+
 .iss-graph-editor__rows {
   display: grid;
   gap: 0.75rem;
@@ -54,6 +85,15 @@
   grid-template-columns: minmax(240px, 2fr) minmax(180px, 1fr) minmax(100px, 1fr) minmax(100px, 1fr) minmax(180px, 1fr);
 }
 
+.iss-graph-editor__grid--editorial-signal {
+  grid-template-columns: minmax(160px, 0.7fr) minmax(220px, 1.4fr) minmax(140px, 0.6fr);
+}
+
+.iss-graph-editor__grid--editorial-add {
+  grid-template-columns: minmax(260px, 1fr);
+  margin-bottom: 0.75rem;
+}
+
 .iss-graph-editor__grid label {
   display: grid;
   gap: 0.35rem;
@@ -65,7 +105,8 @@
 
 @media (max-width: 960px) {
   .iss-graph-editor__grid--name,
-  .iss-graph-editor__grid--relation {
+  .iss-graph-editor__grid--relation,
+  .iss-graph-editor__grid--editorial-signal {
     grid-template-columns: 1fr 1fr;
   }
 }
@@ -77,7 +118,8 @@
   }
 
   .iss-graph-editor__grid--name,
-  .iss-graph-editor__grid--relation {
+  .iss-graph-editor__grid--relation,
+  .iss-graph-editor__grid--editorial-signal {
     grid-template-columns: 1fr;
   }
 }

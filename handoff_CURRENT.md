@@ -7,7 +7,7 @@ Current checkpoint only. History belongs in `CHANGELOG.md`; active tasks belong 
 ## Current State
 
 - Branch: `main`.
-- Current shareable checkpoint: `Frauen im Werk für Fernmeldewesen` visual-essay redesign, `Kinder im Werk` care-skin Ausstellung, Ausstellung editor cleanup, Archivset workbench/linking cleanup, and generic archive-object placement block normalization.
+- Current shareable checkpoint: `Frauen im Werk für Fernmeldewesen` visual-essay redesign, `Kinder im Werk` care-skin Ausstellung, Ausstellung editor cleanup, Archivset workbench/linking cleanup, generic archive-object placement block normalization, and hardened graph editorial-signal controls.
 - The old local seven-commit experiment chain was not shipped as-is; it is preserved on local branch `local/pre-cleanup-20260610-211940`.
 - `iss-content-model` keeps only structural Ausstellung data plus a generic editor modal bridge: CPT/editor support, dates, permanent flag, timeline flags, taxonomy support, and shared editor modal controls.
 - `iss-wf-import` owns archive editor behavior: Archivset attachment, archive picker REST/helper code, archive object insertion adapter, and the archive-material modal handler.
@@ -17,6 +17,9 @@ Current checkpoint only. History belongs in `CHANGELOG.md`; active tasks belong 
 - `iss-newsletter` and its `newsletter` dependency are active locally; the front page renders the real `iss/newsletter-form` again.
 - The obsolete saved `iss-register/register-app` block was purged from the local `Register Schöneweide` page and matched revisions. The active register/atlas block is `iss-register/schoneweide-atlas`.
 - The retired `iss-wf-import/archive-exhibition` block was removed; it was the old archive-category chapter/exhibition stream path.
+- `iss-graph` now owns editor-facing relation signals in `wp_iss_graph_editorial_signals`: context-target related picks, self-targeted `Vorne zeigen` promotion signals, the `iss-graph/v1/editorial-signals` REST route, and the `edit_graph_editorial_signals` capability granted to administrators.
+- `iss-relations` consumes active graph editorial signals in automatic related-content blocks only; manual related blocks remain manual. Canonical graph relations are not mutated by editorial picks.
+- Graph migration/backfill operation is explicit through `wp iss-graph migrate`; video transcript mention sync is intentionally opt-in with `--with-video-transcripts`.
 - Plugin-owned Ausstellung text/material/source/layout/corpus surfaces have been removed from the active contract.
 - The theme-owned `industriesalon/ausstellung-announcement` block was removed; the active template no longer duplicates post body text into an automatic announcement band.
 - The single-Ausstellung theme skin now has a full-viewport cover hero, a theme-owned visit/facts intro band, normal editor-owned `post-content`, and a related-card tail only.
@@ -45,6 +48,7 @@ Current checkpoint only. History belongs in `CHANGELOG.md`; active tasks belong 
 - Do not reintroduce core archive-list blocks (`core/archives`, `core/categories`, `core/tag-cloud`, `core/query-title`) as normal post-editor choices; the theme hides them in post editors only, not in the Site Editor.
 - Template output can still become DB-backed after Site Editor saves; check `wp_template` authority before assuming disk files are live.
 - The Frauen exhibition content and Archivset attachment are local database/custom-table state. A staging transfer would need a SQL artifact for post `26287` plus Archivset rows/members/links.
+- The local graph DB now includes `wp_iss_graph_editorial_signals` plus synced public content graph entities for five previously drifting `fuehrung` posts (`12027`, `12028`, `12034`, `12186`, `12188`). Staging needs `wp iss-graph migrate` or equivalent graph-table sync before relying on editorial-signal controls there.
 
 ## Next Action
 
@@ -55,6 +59,7 @@ Current checkpoint only. History belongs in `CHANGELOG.md`; active tasks belong 
 - Review `archive-editor-modal.js` together with Archivset picker behavior on at least one supported non-Ausstellung post type.
 - Manually test the shared archive object picker in the Archivset metabox, Archivsets workbench, and editor archive insert modal with real thumbnail/filter data.
 - Open a representative Gutenberg post editor and confirm the archive block inserter is decluttered while existing archive object/selection blocks still render in saved content.
+- Run a real editor UAT pass for `Vorne zeigen` and context-target related-content picks before giving non-admin roles the `edit_graph_editorial_signals` capability.
 
 ## Verified
 
@@ -91,3 +96,11 @@ Current checkpoint only. History belongs in `CHANGELOG.md`; active tasks belong 
 - `git diff --check` passed after the visual-essay CSS/content artifact changes.
 - WP-CLI confirmed post `26287` content matches the local redesign block artifact before commit.
 - Playwright desktop/mobile checks for `/ausstellungen/frauen-in-werk/` confirmed zero section gaps, normalized hero-scale headings, loaded image-backed sections, and no horizontal page overflow.
+- `php -l` passed for `plugins/iss-graph/iss-graph.php`, `includes/editorial-signals-admin.php`, `includes/editorial-signals-rest.php`, `includes/cli.php`, and `plugins/iss-relations/includes/blocks.php`.
+- `node --check` passed for `plugins/iss-relations/blocks/related-content/index.js` and `plugins/iss-graph/assets/js/entity-relations-block.js`.
+- `bash tools/phpcs-target.sh` passed for the edited graph/relation PHP files.
+- Runtime PHP confirmed `wp_iss_graph_editorial_signals` exists, the administrator role has `edit_graph_editorial_signals`, `/iss-graph/v1/editorial-signals` is registered, `iss/related-content` is registered, and a temporary editorial signal can be inserted then removed.
+- `wp iss-graph verify` passed with all graph/search/editorial-signal tables present.
+- `wp iss-graph drift-check --checks=editorial-signals` passed over 3 current rows.
+- `wp iss-graph migrate --skip-sync --checks=editorial-signals` passed.
+- `wp iss-graph sync-content` synced 225 public content posts; a following full `wp iss-graph drift-check` passed.

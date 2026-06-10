@@ -69,6 +69,8 @@ function iss_graph_backfill_archive_objects(): int
         }
     }
 
+    iss_graph_cleanup_archive_projection_orphan_entities();
+
     return $count;
 }
 
@@ -114,11 +116,142 @@ function iss_graph_get_archive_object_relation_projection(int $post_id): array
 function iss_graph_build_archive_entity_source_id(string $prefix, $value, string $fallback): string
 {
     $value = is_scalar($value) ? trim((string) $value) : '';
-    if ($value !== '') {
+    if ($value !== '' && $value !== '0') {
         return $prefix . ':' . sanitize_title($value);
     }
 
     return $prefix . ':' . sanitize_title($fallback);
+}
+
+function iss_graph_archive_source_id_is_placeholder(string $source_id, string $display_title = ''): bool
+{
+    $source_id = trim($source_id);
+    $fallback_slug = $display_title !== '' ? sanitize_title($display_title) : '';
+
+    return $source_id === ''
+        || preg_match('/:[0]+$/', $source_id) === 1
+        || ($fallback_slug !== '' && preg_match('/:' . preg_quote($fallback_slug, '/') . '$/', $source_id) === 1);
+}
+
+function iss_graph_find_archive_named_entity_for_placeholder_source(
+    string $entity_kind,
+    string $source_system,
+    string $display_title
+): ?array {
+    $service = iss_graph_get_service();
+    $matches = $service->find_entities_by_normalized_name($display_title, [
+        'entity_kind' => $entity_kind,
+        'limit' => 20,
+    ]);
+
+    $source_system = sanitize_key($source_system);
+    $preferred = [];
+    foreach ($matches as $match) {
+        if ((string) ($match['source_system'] ?? '') !== $source_system) {
+            continue;
+        }
+
+        if (!iss_graph_archive_source_id_is_placeholder((string) ($match['source_id'] ?? ''), $display_title)) {
+            $preferred[(int) ($match['id'] ?? 0)] = $match;
+        }
+    }
+
+    if (count($preferred) === 1) {
+        $match = reset($preferred);
+
+        return is_array($match) ? $service->get_entity_by_id((int) ($match['id'] ?? 0)) : null;
+    }
+
+    return null;
+}
+
+function iss_graph_archive_label_looks_like_organization(string $name): bool
+{
+    $name = trim($name);
+    if ($name === '') {
+        return false;
+    }
+
+    if (preg_match('/^(?:VEB\s+)?Werk\s+f[üu]r\s+/iu', $name) === 1) {
+        return true;
+    }
+
+    if (preg_match('/^(?:VEB\s+)?(?:Kabelwerk|Transformatorenwerk)\b/iu', $name) === 1) {
+        return true;
+    }
+
+    if (preg_match('/\b(?:AG|GmbH|e\.?\s?V\.?|Kombinat|Betrieb|Fabrik)\b/u', $name) === 1) {
+        return true;
+    }
+
+    return in_array($name, ['AEG', 'KWO', 'TRO', 'WF'], true);
+}
+
+function iss_graph_archive_projection_entity_is_cleanup_orphan(array $entity): bool
+{
+    $source_system = sanitize_key((string) ($entity['source_system'] ?? ''));
+    $entity_kind = sanitize_key((string) ($entity['entity_kind'] ?? ''));
+    $display_title = (string) ($entity['display_title'] ?? '');
+    $source_id = (string) ($entity['source_id'] ?? '');
+
+    if ($source_system === 'archive_person' && $entity_kind === 'person') {
+        return iss_graph_archive_label_looks_like_organization($display_title);
+    }
+
+    if ($source_system === 'archive_institution' && $entity_kind === 'organization') {
+        return iss_graph_archive_source_id_is_placeholder($source_id, $display_title);
+    }
+
+    return false;
+}
+
+function iss_graph_cleanup_archive_projection_orphan_entities(): int
+{
+    global $wpdb;
+
+    $service = iss_graph_get_service();
+    $entity_table = $service->get_entity_table_name();
+    $relation_table = $service->get_relation_table_name();
+
+    $rows = $wpdb->get_results(
+        "SELECT
+            e.*
+        FROM {$entity_table} e
+        LEFT JOIN {$relation_table} outgoing
+            ON outgoing.from_entity_id = e.id
+        LEFT JOIN {$relation_table} incoming
+            ON incoming.to_entity_id = e.id
+        WHERE e.post_id IS NULL
+          AND e.profile_post_id IS NULL
+          AND e.is_public = 0
+          AND e.search_visibility = 'hidden'
+          AND e.source_system IN ('archive_person', 'archive_institution')
+        GROUP BY e.id
+        HAVING COUNT(outgoing.id) = 0
+           AND COUNT(incoming.id) = 0",
+        ARRAY_A
+    );
+
+    if (!is_array($rows) || !$rows) {
+        return 0;
+    }
+
+    $deleted = 0;
+    foreach ($rows as $row) {
+        if (!is_array($row) || !iss_graph_archive_projection_entity_is_cleanup_orphan($row)) {
+            continue;
+        }
+
+        $entity_id = (int) ($row['id'] ?? 0);
+        if ($entity_id <= 0) {
+            continue;
+        }
+
+        $service->delete_entity($entity_id);
+        $deleted++;
+    }
+
+    return $deleted;
 }
 
 function iss_graph_ensure_archive_named_entity(
@@ -138,6 +271,17 @@ function iss_graph_ensure_archive_named_entity(
     $source_id = sanitize_text_field($source_id);
     if ($source_system === '' || $source_id === '') {
         return null;
+    }
+
+    if (iss_graph_archive_source_id_is_placeholder($source_id, $display_title)) {
+        $placeholder_match = iss_graph_find_archive_named_entity_for_placeholder_source(
+            $entity_kind,
+            $source_system,
+            $display_title
+        );
+        if ($placeholder_match) {
+            return $placeholder_match;
+        }
     }
 
     $entity = iss_graph_resolve_or_create_named_entity($entity_kind, $display_title, array_merge([
@@ -181,10 +325,14 @@ function iss_graph_ensure_archive_named_entity(
 function iss_graph_build_archive_object_relation_rows(int $object_post_id): array
 {
     $projection = iss_graph_get_archive_object_relation_projection($object_post_id);
+    $people_rows = iss_graph_build_archive_object_people_rows($projection);
 
     return [
-        'organization_rows' => iss_graph_build_archive_object_organization_rows($object_post_id),
-        'person_rows' => iss_graph_build_archive_object_person_rows($projection),
+        'organization_rows' => array_merge(
+            iss_graph_build_archive_object_organization_rows($object_post_id),
+            (array) ($people_rows['organization_rows'] ?? [])
+        ),
+        'person_rows' => (array) ($people_rows['person_rows'] ?? []),
         'place_rows' => iss_graph_build_archive_object_place_rows($projection),
     ];
 }
@@ -227,10 +375,12 @@ function iss_graph_build_archive_object_organization_rows(int $object_post_id): 
     ]];
 }
 
-function iss_graph_build_archive_object_person_rows(array $projection): array
+function iss_graph_build_archive_object_people_rows(array $projection): array
 {
-    $rows = [];
-    $position = 0;
+    $person_rows = [];
+    $organization_rows = [];
+    $person_position = 0;
+    $organization_position = 0;
 
     foreach ((array) ($projection['people'] ?? []) as $item) {
         if (!is_array($item)) {
@@ -239,6 +389,41 @@ function iss_graph_build_archive_object_person_rows(array $projection): array
 
         $name = sanitize_text_field((string) ($item['name'] ?? ''));
         if ($name === '') {
+            continue;
+        }
+
+        if (iss_graph_archive_label_looks_like_organization($name)) {
+            $source_id = iss_graph_build_archive_entity_source_id(
+                'person-label',
+                (string) ($item['source_id'] ?? ''),
+                $name
+            );
+
+            $organization = iss_graph_ensure_archive_named_entity(
+                'organization',
+                'archive_person_organization_label',
+                $source_id,
+                $name
+            );
+
+            if (!$organization) {
+                continue;
+            }
+
+            $relation_type = sanitize_key((string) ($item['type'] ?? 'mentioned')) ?: 'mentioned';
+            if ($relation_type === 'person') {
+                $relation_type = 'mentioned';
+            }
+
+            $organization_rows[] = [
+                'to_entity_id' => (int) ($organization['id'] ?? 0),
+                'relation_type' => $relation_type,
+                'relation_label' => sanitize_text_field((string) ($item['type'] ?? 'Organization')),
+                'note' => sanitize_textarea_field((string) ($item['note'] ?? '')),
+                'position' => $organization_position++,
+                'is_public' => true,
+            ];
+
             continue;
         }
 
@@ -259,17 +444,27 @@ function iss_graph_build_archive_object_person_rows(array $projection): array
             continue;
         }
 
-        $rows[] = [
+        $person_rows[] = [
             'to_entity_id' => (int) ($person['id'] ?? 0),
             'relation_type' => sanitize_key((string) ($item['type'] ?? 'related')) ?: 'related',
             'relation_label' => sanitize_text_field((string) ($item['type'] ?? 'Person')),
             'note' => sanitize_textarea_field((string) ($item['note'] ?? '')),
-            'position' => $position++,
+            'position' => $person_position++,
             'is_public' => true,
         ];
     }
 
-    return $rows;
+    return [
+        'person_rows' => $person_rows,
+        'organization_rows' => $organization_rows,
+    ];
+}
+
+function iss_graph_build_archive_object_person_rows(array $projection): array
+{
+    $rows = iss_graph_build_archive_object_people_rows($projection);
+
+    return (array) ($rows['person_rows'] ?? []);
 }
 
 function iss_graph_build_archive_object_place_rows(array $projection): array
