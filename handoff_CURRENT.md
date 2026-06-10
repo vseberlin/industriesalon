@@ -35,6 +35,11 @@ Current checkpoint only. History belongs in `CHANGELOG.md`; active tasks belong 
   `ops/sql/2026-06-07-kinder-im-wf-salvage.sql`, and
   `ops/uploads/2026-06-10-ausstellungen-media.tar.gz` with its manifest/checksum.
 
+## Current Server State
+
+- Staging nginx was hardened on 2026-06-10 by adding exact-match denies for `/wp-config.php`, `/readme.html`, and `/license.txt` in `/etc/nginx/sites-available/stage.industriesalon.info`. Backup: `/etc/nginx/sites-available/stage.industriesalon.info.backup-20260610-hardening`; rollback: restore that file over the active vhost, run `sudo nginx -t`, then `sudo systemctl reload nginx`.
+- Server action note: `/home/vladimir/server-actions/2026-06-10-nginx-wordpress-path-hardening.md`.
+
 ## Current Risk
 
 - The Ausstellung SQL artifacts are narrow content/custom-table transfer files. Apply them together with `ops/uploads/2026-06-10-ausstellungen-media.tar.gz` when staging needs the same media references.
@@ -107,3 +112,4 @@ Current checkpoint only. History belongs in `CHANGELOG.md`; active tasks belong 
 - `wp iss-graph sync-content` synced 225 public content posts; a following full `wp iss-graph drift-check` passed.
 - `php -l` and `bash tools/phpcs-target.sh` passed for `plugins/saas-api/saas-api.php`.
 - Runtime PHP confirmed `do_action('admin_init')` and `do_action('admin_menu')` complete with `saas-api` active.
+- 2026-06-10 staging nginx hardening verification: `sudo nginx -t` passed; `sudo systemctl reload nginx` completed successfully; `/` and `/wp-content/uploads/woocommerce-placeholder.webp` returned `200`; `/wp-config.php` returned `403`; `/readme.html` and `/license.txt` returned `404`; `/xmlrpc.php`, `/.env`, and `/.git/config` returned `403`; staging containers remained running with Docker restart counts at `0`.

@@ -1,6 +1,7 @@
 # Changelog
 
 ## 2026-06-10
+- Hardened the staging nginx WordPress vhost by adding exact-match denies for `/wp-config.php`, `/readme.html`, and `/license.txt` in `/etc/nginx/sites-available/stage.industriesalon.info`; created rollback backup `/etc/nginx/sites-available/stage.industriesalon.info.backup-20260610-hardening`, validated with `nginx -t`, reloaded nginx, and verified the homepage/uploads still return `200` while the hardened paths return `403`/`404`.
 - Hardened `saas-api` admin bootstrap behavior so CLI/admin hooks can safely fire `admin_init` or `admin_menu` outside a full wp-admin settings screen:
   - loads the required WordPress admin Settings/Menu API includes before registering SuperSaaS settings or options pages
   - fixed the existing admin-notice URL escaping issue caught by PHPCS
