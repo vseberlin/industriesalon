@@ -47,6 +47,18 @@
   - verified locally that occurrence schema v3 is installed, SuperSaaS sync reports `created=0 updated=9 unlinked=1 inactivated=26 backfilled=4 errors=0`, occurrence verify/drift checks pass, `/kalender/`, `/veranstaltungen/`, and `/fuehrungen/` return `200`, and the tour-slot REST endpoint returns `source:"occurrences"`
 
 ## 2026-06-10
+- Migrated and verified the staging `iss-graph` read models:
+  - created `/srv/industriesalon/stage/backups/20260610-graph-migration/` with a full MariaDB dump, checksum, Compose config, and pre-action Compose state
+  - ran the safer `wp iss-graph migrate --skip-sync --checks=editorial-signals` pass first, then `wp iss-graph verify` and full `wp iss-graph drift-check`
+  - ran full `wp iss-graph migrate` after the skipped-sync pass exposed expected stale graph/search rows, reducing drift to one stale relation taxonomy read model
+  - reconciled post `17980` through the existing `wp iss-relations sync --post_id=17980` command instead of manual taxonomy edits
+  - final `wp iss-graph verify` and full `wp iss-graph drift-check` passed; staging containers remained healthy and `/` plus `/ausstellungen/frauen-in-werk/` returned `200`
+- Applied the corrected full `Frauen im Werk für Fernmeldewesen` transfer artifact on staging:
+  - pulled commit `9c89121`, verified the refreshed upload artifact checksum, and confirmed the manifest contains 91 files
+  - created `/srv/industriesalon/stage/backups/20260610-frauen-in-werk-transfer/` with a full MariaDB dump, checksums, upload rollback archive, and a normalized applied SQL copy
+  - extracted the refreshed media archive into the shared uploads bind mount and verified all 91 manifest files
+  - imported a staging-normalized SQL copy that creates/updates post `26287`, its WebP attachment rows/meta, selected Ausstellung meta, attached Archivset `27`, six Archivset members, and the archive-material link
+  - verified `/ausstellungen/frauen-in-werk/` now returns `200`, three sampled WebP files return `200 image/webp`, imported rows contain no `192.168.2.31` URLs, affected DB tables pass `CHECK TABLE`, and staging containers remain healthy
 - Applied the remaining Docker Engine patch packages on staging:
   - upgraded `docker-ce`, `docker-ce-cli`, and `docker-ce-rootless-extras` from `5:29.5.2-1~debian.13~trixie` to `5:29.5.3-1~debian.13~trixie`
   - recorded pre-update Docker/package/Compose/volume state under `/srv/industriesalon/stage/backups/20260610-docker-package-update/`
