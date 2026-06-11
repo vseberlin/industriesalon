@@ -1,5 +1,40 @@
 # Changelog
 
+## 2026-06-11
+- Fixed the first occurrence-projection calendar regression found on `/kalender/` and `/ausstellungen/`:
+  - tightened programme exposure to strict opt-in semantics: Veranstaltungen, Ausstellungen, and Projekte now require explicit `iss_timeline_enabled=1`; missing toggle meta means hidden
+  - backfilled the old implicit public state for 24 published Veranstaltungen/Ausstellungen after creating local rollback dump `ops/content-backups/2026-06-11-before-strict-programme-toggle-backfill.sql`, and added `ops/sql/2026-06-11-strict-programme-toggle-backfill.sql` for repeatable environment migration
+  - changed the public calendar template default from `Führungen` to `Alle` so the calendar starts as the complete public programme view
+  - treats only `ausstellung_typ=dauerausstellung` Ausstellungen as open-ended public ranges when the end date is blank; normal/digital exhibitions with a blank end date no longer become `laufend` by accident
+  - keeps the long open-ended storage sentinel out of public labels by rendering active open-ended rows as `Laufend seit …`
+  - changed the public calendar template to start in real `Monat` mode for the visible month selector, so `/kalender/` no longer shows a June selector backed by an unbounded `Kommend` query
+  - adjusted ordering for upcoming/month queries so finite dated ranges keep their chronological place, while open-ended Dauer rows follow as ongoing entries and fallback-date Dauer rows remain lower-confidence
+  - fixed `/kalender/` load-more initialization so the first click starts after the server-rendered batch, then merges appended rows with the existing visible year group instead of repeating the same year heading as a separate continuation block
+  - enabled grouped Führungen on `/kalender/`: recurring SuperSaaS rows now paginate as one programme entry with a `Termine anzeigen` disclosure and per-date booking actions
+  - passes occurrence end times from timeline booking triggers into the shared booking modal, so grouped Führung bookings show the full time range
+  - restored the calendar timeline's one-column mobile layout after the page skin had overridden the shared timeline breakpoint
+  - upgraded the occurrence schema to v3 with `entity_id` and `location_entity_id`, backfilled public rows from `iss-graph`, and made occurrence drift checks verify graph identity without moving calendar rendering into graph queries
+  - resynced WordPress source occurrences and verified that `Kinder im Werk` and `Frauen im Werk für Fernmeldewesen` now appear in the calendar and Ausstellung `Aktuell`/REST filter path
+- Tightened the programme/calendar migration boundary after the occurrence rebuild:
+  - removed the retired `[is_tour_calendar]` shortcode entrypoint and stale SuperSaaS admin shortcode help; the active public contract is the `iss/tour-calendar` and `iss/tour-dates` blocks
+  - removed runtime imports from old `iss_calendar_*` mapping options; occurrence-owned `iss_occurrences_*` mapping options are now the only active mapping source
+  - reduced the programme helper facade to the small `iss-fuehrungen` date contract still in use, and moved admin mapping writes to occurrence functions directly
+  - purged inactive local legacy programme meta after rollback dump `ops/content-backups/2026-06-11-before-programme-legacy-meta-purge-wp_postmeta.sql`, with replayable SQL in `ops/sql/2026-06-11-programme-legacy-meta-purge.sql`
+  - extended `wp iss-occurrences drift-check` so legacy hidden calendar posts/options/meta and public WP occurrences without the explicit calendar toggle fail verification
+- Completed the greenfield programme occurrence rebuild:
+  - added the first-party `iss-occurrences` plugin with owned `wp_iss_occurrences` and `wp_iss_occurrence_series` tables, schema versioning, source/SuperSaaS providers, public query API, and WP-CLI verify/sync/drift commands
+  - switched `iss-programm` timeline queries, programme cards, tour date blocks, calendar rendering, and REST cache invalidation to consume occurrence rows only
+  - removed the legacy hidden-calendar runtime: no active `iss_calendar_item` post type registration/query path, no `saas-api/iss-calendar` implementation, no standalone `iss-calendar` shim, and no WP_Query fallback in programme/timeline code
+  - moved SuperSaaS into a direct occurrence sync adapter under `saas-api/includes/supersaas-sync.php`, with `/is-tours/v1/slots` now reading from `iss_occurrences_query()`
+  - kept SuperSaaS `fuehrung` exposure source-linked: unlinked or unpublished tour slots are deleted from the public occurrence projection instead of leaking into the timeline
+  - added occurrence-owned source/series mapping options after migrating the old calendar mapping state out of the hidden-calendar layer
+  - expanded the occurrence schema with denormalized public title, source calendar, tag, availability, and capacity fields; the SuperSaaS sync now backfills old projected rows and inactivates future rows missing from the current API window
+  - made recurring tour rows continue to compact through the existing timeline grouping contract, now fed by occurrence rows rather than calendar CPT posts
+  - added explicit project start/end date fields while keeping projects opt-in for calendar/timeline inclusion
+  - purged the local legacy DB residue after an ignored rollback dump: old `iss_calendar_item` posts/postmeta/term links, old calendar mapping options, old timeline REST transients, and the stale `iss_calendar_cron_sync` cron event are gone; the new hourly `iss_supersaas_occurrence_sync` cron is scheduled
+  - documented `iss-occurrences` as the owner for programme projection tables because the existing calendar CPT/meta query path is insufficient for long-term indexed schedule reads
+  - verified locally that occurrence schema v3 is installed, SuperSaaS sync reports `created=0 updated=9 unlinked=1 inactivated=26 backfilled=4 errors=0`, occurrence verify/drift checks pass, `/kalender/`, `/veranstaltungen/`, and `/fuehrungen/` return `200`, and the tour-slot REST endpoint returns `source:"occurrences"`
+
 ## 2026-06-10
 - Applied the remaining Docker Engine patch packages on staging:
   - upgraded `docker-ce`, `docker-ce-cli`, and `docker-ce-rootless-extras` from `5:29.5.2-1~debian.13~trixie` to `5:29.5.3-1~debian.13~trixie`
