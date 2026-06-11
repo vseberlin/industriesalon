@@ -94,9 +94,9 @@ function iss_payments_lite_create_tour_booking(WP_REST_Request $request) {
 
     $tag = $payload_tag;
     if ($source_post_id > 0) {
-        $resolved = strtoupper(sanitize_text_field((string) get_post_meta($source_post_id, 'calendar_tag', true)));
-        if ($resolved === '' && function_exists('iss_calendar_resolve_tag_for_source_post_id')) {
-            $resolved = iss_calendar_resolve_tag_for_source_post_id($source_post_id);
+        $resolved = '';
+        if (function_exists('iss_occurrences_resolve_tag_for_source_post_id')) {
+            $resolved = iss_occurrences_resolve_tag_for_source_post_id($source_post_id);
         }
 
         if ($tag === '' && $resolved !== '') {
@@ -131,11 +131,11 @@ function iss_payments_lite_create_tour_booking(WP_REST_Request $request) {
         if ($tag !== '' && function_exists('is_tours_get_cached_slots_by_tag')) {
             $slots = is_tours_get_cached_slots_by_tag($tag);
         }
-        if (empty($slots) && function_exists('is_tours_get_cpt_slots')) {
-            $slots = is_tours_get_cpt_slots($tag, $source_post_id);
+        if (empty($slots) && function_exists('is_tours_get_occurrence_slots')) {
+            $slots = is_tours_get_occurrence_slots($tag, $source_post_id);
             if ($tag !== '' && !empty($slots) && function_exists('is_tours_set_cached_slots_by_tag') && function_exists('is_tours_set_cached_source_by_tag')) {
                 is_tours_set_cached_slots_by_tag($tag, $slots, 60 * 10);
-                is_tours_set_cached_source_by_tag($tag, 'cpt', 60 * 10);
+                is_tours_set_cached_source_by_tag($tag, 'occurrences', 60 * 10);
             }
         }
 

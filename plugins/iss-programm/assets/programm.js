@@ -55,7 +55,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
       const payload = (data && typeof data === 'object' && !Array.isArray(data))
         ? data
-        : { source: 'legacy', slots: Array.isArray(data) ? data : [] };
+        : { source: '', slots: Array.isArray(data) ? data : [] };
 
       const source = payload && typeof payload.source === 'string' ? payload.source : '';
       const slotRows = Array.isArray(payload.slots) ? payload.slots : [];
@@ -654,6 +654,7 @@ function initExternalBookingTriggers() {
 
     const slotId = String(trigger.dataset.slotId || '').trim();
     const start = String(trigger.dataset.start || '').trim();
+    const end = String(trigger.dataset.end || '').trim();
     if (!slotId || !start) {
       return;
     }
@@ -677,6 +678,7 @@ function initExternalBookingTriggers() {
     const slot = {
       id: slotId,
       start,
+      end,
       title: String(trigger.dataset.title || ''),
       available: null,
       capacity: null

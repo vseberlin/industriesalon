@@ -19,7 +19,7 @@
 
   function metaEnabled(meta) {
     if (meta.iss_timeline_enabled === undefined || meta.iss_timeline_enabled === null || meta.iss_timeline_enabled === '') {
-      return true;
+      return false;
     }
 
     return !!meta.iss_timeline_enabled;
@@ -78,7 +78,7 @@
         null,
         ToggleControl
           ? createElement(ToggleControl, {
-              label: 'In Timeline zeigen',
+              label: 'Öffentlich in Ausstellungsübersichten zeigen',
               checked: enabled,
               onChange: function (value) {
                 updateMeta({ iss_timeline_enabled: !!value });
@@ -110,8 +110,8 @@
               Notice,
               { status: willSync ? 'success' : 'warning', isDismissible: false },
               willSync
-                ? 'Diese Ausstellung wird beim Speichern in die Timeline synchronisiert.'
-                : 'Für die Timeline braucht die Ausstellung ein Startdatum oder den Ausstellungstyp Dauerausstellung.'
+                ? 'Diese Ausstellung erscheint in den öffentlichen Ausstellungsübersichten.'
+                : 'Für öffentliche Ausstellungsübersichten muss die Ausstellung aktiviert sein und Datums- oder Typangaben haben.'
             )
           : null
       )

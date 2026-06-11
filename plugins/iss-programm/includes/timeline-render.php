@@ -82,103 +82,6 @@ function iss_timeline_extract_teaser_text($post_id, $word_limit = 28) {
     return wp_trim_words($plain, $word_limit);
 }
 
-function iss_timeline_prepare_item($item_id) {
-    $item_id = (int) $item_id;
-    if ($item_id <= 0) return [];
-
-    $sort_date = (string) get_post_meta($item_id, 'sort_date', true);
-    $event_end = (string) get_post_meta($item_id, 'event_end', true);
-
-    $public_title = (string) get_post_meta($item_id, 'public_title', true);
-    $public_summary = (string) get_post_meta($item_id, 'public_summary', true);
-    $item_type = (string) get_post_meta($item_id, 'item_type', true);
-    $series_key = (string) get_post_meta($item_id, 'series_key', true);
-
-    $cta_mode = (string) get_post_meta($item_id, 'cta_mode', true);
-    $cta_url = (string) get_post_meta($item_id, 'cta_url', true);
-    $cta_label = (string) get_post_meta($item_id, 'cta_label', true);
-    $booking_url = (string) get_post_meta($item_id, 'booking_url', true);
-    $slot_id = (string) get_post_meta($item_id, 'external_id', true);
-    $slot_start = (string) get_post_meta($item_id, 'event_start', true);
-
-    $source_post_id = (int) get_post_meta($item_id, 'source_post_id', true);
-    $source_post_type = $source_post_id > 0 ? (string) get_post_type($source_post_id) : '';
-
-    $ts = null;
-    $end_ts = null;
-    try {
-        if ($sort_date !== '') {
-            $ts = (new DateTimeImmutable($sort_date, wp_timezone()))->getTimestamp();
-        }
-    } catch (Throwable $e) {
-        $ts = null;
-    }
-    try {
-        if ($event_end !== '') {
-            $end_ts = (new DateTimeImmutable($event_end, wp_timezone()))->getTimestamp();
-        }
-    } catch (Throwable $e) {
-        $end_ts = null;
-    }
-
-    $date_label = $ts ? iss_programm_format_date_long_de($ts, wp_timezone()) : $sort_date;
-    $day_label = $ts ? iss_programm_format_day_short_de($ts, wp_timezone()) : $date_label;
-
-    $time_label = '';
-    if ($ts) {
-        $start_date_key = wp_date('Y-m-d', $ts, wp_timezone());
-        $start_time_key = wp_date('H:i', $ts, wp_timezone());
-        $end_date_key = $end_ts ? wp_date('Y-m-d', $end_ts, wp_timezone()) : '';
-        $end_time_key = $end_ts ? wp_date('H:i', $end_ts, wp_timezone()) : '';
-
-        if ($end_ts && $start_date_key !== $end_date_key) {
-            $time_label = sprintf(__('bis %s', 'iss-timeline'), iss_programm_format_date_long_de($end_ts, wp_timezone()));
-        } elseif ($start_time_key === '00:00' && ($end_time_key === '' || $end_time_key === '23:59' || $end_time_key === '00:00')) {
-            $time_label = '';
-        } else {
-            $time_label = $start_time_key;
-            if ($end_ts) {
-                $time_label .= ' – ' . $end_time_key;
-            }
-            $time_label .= ' Uhr';
-        }
-    }
-
-    $title = trim($public_title);
-    if ($title === '' && $source_post_id > 0) {
-        $t = get_the_title($source_post_id);
-        if (is_string($t) && trim($t) !== '') $title = $t;
-    }
-    if ($title === '') $title = get_the_title($item_id);
-
-    $summary = trim($public_summary);
-    if ($summary === '' && $source_post_id > 0) {
-        $summary = iss_timeline_extract_teaser_text($source_post_id, 30);
-    }
-
-    return [
-        'id' => $item_id,
-        'title' => $title,
-        'date_raw' => $sort_date,
-        'date_label' => $date_label,
-        'day_label' => $day_label,
-        'time_label' => $time_label,
-        'end_raw' => $event_end,
-        'type' => $item_type,
-        'series_key' => trim($series_key),
-        'summary' => $summary,
-        'cta_mode' => $cta_mode,
-        'cta_url' => $cta_url,
-        'cta_label' => $cta_label !== '' ? $cta_label : __('Mehr erfahren', 'iss-timeline'),
-        'booking_url' => $booking_url,
-        'slot_id' => trim($slot_id),
-        'slot_start' => trim($slot_start),
-        'source_post_id' => $source_post_id,
-        'source_post_type' => $source_post_type,
-        'year' => $ts ? (int) wp_date('Y', $ts) : null,
-    ];
-}
-
 function iss_timeline_prepare_rows($items) {
     $items = is_array($items) ? $items : [];
     $rows = [];
@@ -186,17 +89,6 @@ function iss_timeline_prepare_rows($items) {
     foreach ($items as $item) {
         if (is_array($item)) {
             $rows[] = $item;
-            continue;
-        }
-
-        $id = ($item instanceof WP_Post) ? (int) $item->ID : (int) $item;
-        if ($id <= 0) {
-            continue;
-        }
-
-        $row = iss_timeline_prepare_item($id);
-        if (!empty($row) && is_array($row)) {
-            $rows[] = $row;
         }
     }
 
@@ -233,6 +125,11 @@ function iss_timeline_get_row_group_key($row) {
 function iss_timeline_get_occurrence_label($row) {
     if (!is_array($row)) {
         return '';
+    }
+
+    $datetime_label = trim((string) ($row['datetime_label'] ?? ''));
+    if ($datetime_label !== '') {
+        return $datetime_label;
     }
 
     $label = trim((string) ($row['date_label'] ?? ''));
@@ -317,6 +214,14 @@ function iss_timeline_get_recurring_note($row, $visible_limit = 2) {
     return $note;
 }
 
+function iss_timeline_has_grouped_occurrences($row) {
+    if (!is_array($row) || empty($row['grouped']) || empty($row['occurrences']) || !is_array($row['occurrences'])) {
+        return false;
+    }
+
+    return count(array_filter($row['occurrences'], 'is_array')) > 1;
+}
+
 function iss_timeline_group_recurring_tour_rows($items) {
     $rows = iss_timeline_prepare_rows($items);
     if (empty($rows)) {
@@ -371,6 +276,113 @@ function iss_timeline_group_recurring_tour_rows($items) {
     return $grouped_rows;
 }
 
+function iss_timeline_should_render_grouped_occurrences($row, $opts = []) {
+    return iss_timeline_has_grouped_occurrences($row);
+}
+
+function iss_timeline_get_ticket_action_for_occurrence($row, $opts = []) {
+    if (!is_array($row)) {
+        return [];
+    }
+
+    $opts = is_array($opts) ? $opts : [];
+    if (array_key_exists('showTicketsButton', $opts) && !(bool) $opts['showTicketsButton']) {
+        return [];
+    }
+
+    $booking_url = isset($row['booking_url']) ? trim((string) $row['booking_url']) : '';
+    $tickets_override = isset($opts['ticketsButtonUrl']) ? esc_url_raw((string) $opts['ticketsButtonUrl']) : '';
+    if ($tickets_override !== '') {
+        $booking_url = $tickets_override;
+    }
+    if ($booking_url === '') {
+        return [];
+    }
+
+    $tickets_label = isset($opts['ticketsButtonText']) ? trim(sanitize_text_field((string) $opts['ticketsButtonText'])) : '';
+    if ($tickets_label === '') {
+        $tickets_label = __('Buchen', 'iss-timeline');
+    }
+
+    $source_post_id = isset($row['source_post_id']) ? (int) $row['source_post_id'] : 0;
+    $source_post_type = trim((string) ($row['source_post_type'] ?? ''));
+    $slot_id = trim((string) ($row['slot_id'] ?? ''));
+    $slot_start = trim((string) ($row['slot_start'] ?? ''));
+    $slot_end = trim((string) ($row['end_raw'] ?? ''));
+
+    $action = [
+        'url' => $booking_url,
+        'label' => $tickets_label,
+        'variant' => 'primary',
+    ];
+
+    if ($slot_id !== '' && $slot_start !== '') {
+        $action['classes'] = ['js-is-tour-slot-trigger'];
+        $action['attrs'] = [
+            'data-slot-id' => $slot_id,
+            'data-start' => $slot_start,
+            'data-title' => trim((string) ($row['title'] ?? '')),
+        ];
+        if ($slot_end !== '') {
+            $action['attrs']['data-end'] = $slot_end;
+        }
+        if ($source_post_id > 0) {
+            $action['attrs']['data-source-post-id'] = (string) $source_post_id;
+        }
+        if ($source_post_type !== '') {
+            $action['attrs']['data-source-post-type'] = $source_post_type;
+        }
+    }
+
+    return $action;
+}
+
+function iss_timeline_render_grouped_occurrences($row, $opts = []) {
+    if (!iss_timeline_should_render_grouped_occurrences($row, $opts)) {
+        return '';
+    }
+
+    $occurrences = array_values(array_filter((array) ($row['occurrences'] ?? []), 'is_array'));
+    if (count($occurrences) <= 1) {
+        return '';
+    }
+
+    $summary_label = sprintf(
+        /* translators: %d number of visible dates in grouped tour row */
+        _n('Termine anzeigen (%d)', 'Termine anzeigen (%d)', count($occurrences), 'iss-timeline'),
+        count($occurrences)
+    );
+
+    $out = '<details class="iss-timeline__occurrences">';
+    $out .= '<summary class="iss-timeline__btn iss-timeline__btn--secondary iss-timeline__occurrences-summary">'
+        . esc_html($summary_label) . '</summary>';
+    $out .= '<ul class="iss-timeline__occurrence-list">';
+
+    foreach ($occurrences as $occurrence) {
+        $label = iss_timeline_get_occurrence_label($occurrence);
+        if ($label === '') {
+            continue;
+        }
+
+        $out .= '<li class="iss-timeline__occurrence">';
+        $out .= '<span class="iss-timeline__occurrence-date">' . esc_html($label) . '</span>';
+        $ticket_action = iss_timeline_get_ticket_action_for_occurrence($occurrence, $opts);
+        if (!empty($ticket_action)) {
+            $ticket_action['classes'] = array_merge(
+                isset($ticket_action['classes']) && is_array($ticket_action['classes']) ? $ticket_action['classes'] : [],
+                ['iss-timeline__occurrence-ticket']
+            );
+            $out .= iss_timeline_render_action_link($ticket_action);
+        }
+        $out .= '</li>';
+    }
+
+    $out .= '</ul>';
+    $out .= '</details>';
+
+    return $out;
+}
+
 function iss_timeline_build_render_options($attributes = []) {
     $attributes = is_array($attributes) ? $attributes : [];
 
@@ -417,6 +429,9 @@ function iss_timeline_build_actions($row, $opts = []) {
     $show_details = !array_key_exists('showDetailsButton', $opts) || (bool) $opts['showDetailsButton'];
     $show_recommend = !array_key_exists('showRecommendButton', $opts) || (bool) $opts['showRecommendButton'];
     $show_tickets = !array_key_exists('showTicketsButton', $opts) || (bool) $opts['showTicketsButton'];
+    if (iss_timeline_should_render_grouped_occurrences($row, $opts)) {
+        $show_tickets = false;
+    }
 
     $details_override = isset($opts['detailsButtonUrl']) ? esc_url_raw((string) $opts['detailsButtonUrl']) : '';
     $recommend_override = isset($opts['recommendButtonUrl']) ? esc_url_raw((string) $opts['recommendButtonUrl']) : '';
@@ -437,12 +452,6 @@ function iss_timeline_build_actions($row, $opts = []) {
     }
 
     $booking_url = isset($row['booking_url']) ? trim((string) $row['booking_url']) : '';
-    if ($booking_url === '' && $mode === 'booking' && $source_post_id > 0 && function_exists('iss_calendar_get_next_item_for_post')) {
-        $next = iss_calendar_get_next_item_for_post($source_post_id);
-        if ($next instanceof WP_Post) {
-            $booking_url = trim((string) get_post_meta($next->ID, 'booking_url', true));
-        }
-    }
 
     $fallback_url = trim((string) ($row['cta_url'] ?? ''));
     if ($mode === 'external' && $fallback_url !== '') {
@@ -492,6 +501,7 @@ function iss_timeline_build_actions($row, $opts = []) {
         ];
         $slot_id = trim((string) ($row['slot_id'] ?? ''));
         $slot_start = trim((string) ($row['slot_start'] ?? ''));
+        $slot_end = trim((string) ($row['end_raw'] ?? ''));
         $source_post_type = trim((string) ($row['source_post_type'] ?? ''));
         if ($slot_id !== '' && $slot_start !== '') {
             $ticket_action['classes'] = ['js-is-tour-slot-trigger'];
@@ -500,6 +510,9 @@ function iss_timeline_build_actions($row, $opts = []) {
                 'data-start' => $slot_start,
                 'data-title' => trim((string) ($row['title'] ?? '')),
             ];
+            if ($slot_end !== '') {
+                $ticket_action['attrs']['data-end'] = $slot_end;
+            }
             if ($source_post_id > 0) {
                 $ticket_action['attrs']['data-source-post-id'] = (string) $source_post_id;
             }
@@ -566,6 +579,10 @@ function iss_timeline_get_type_label($item_type) {
 
     if (in_array($item_type, ['ausstellung', 'ausstellungen', 'exhibition'], true)) {
         return __('Ausstellung', 'iss-timeline');
+    }
+
+    if (in_array($item_type, ['project', 'projekt', 'projekte'], true)) {
+        return __('Projekt', 'iss-timeline');
     }
 
     return $item_type !== '' ? ucfirst($item_type) : '';
@@ -673,7 +690,8 @@ function iss_timeline_render_items_cards($items, $opts = []) {
         if (($show_meta || !empty($row['grouped'])) && !empty($row['date_label'])) {
             $meta_lines[] = iss_timeline_get_occurrence_label($row);
         }
-        $recurring_note = !array_key_exists('showRecurringNote', $opts) || !empty($opts['showRecurringNote'])
+        $grouped_occurrences = iss_timeline_render_grouped_occurrences($row, $opts);
+        $recurring_note = $grouped_occurrences === '' && (!array_key_exists('showRecurringNote', $opts) || !empty($opts['showRecurringNote']))
             ? iss_timeline_get_recurring_note($row)
             : '';
         if ($recurring_note !== '') {
@@ -685,6 +703,10 @@ function iss_timeline_render_items_cards($items, $opts = []) {
 
         if ($show_card_summary && $summary !== '') {
             $out .= '<p class="iss-card__text iss-timeline-card__text">' . esc_html($summary) . '</p>';
+        }
+
+        if ($grouped_occurrences !== '') {
+            $out .= $grouped_occurrences;
         }
 
         if ($card_footer !== '') {
@@ -775,11 +797,15 @@ function iss_timeline_render_items_list($items, $opts = []) {
             } elseif (!empty($row['type'])) {
                 $out .= '<div class="iss-timeline__summary">' . esc_html((string) $row['type']) . '</div>';
             }
-            $recurring_note = !array_key_exists('showRecurringNote', $opts) || !empty($opts['showRecurringNote'])
+            $grouped_occurrences = iss_timeline_render_grouped_occurrences($row, $opts);
+            $recurring_note = $grouped_occurrences === '' && (!array_key_exists('showRecurringNote', $opts) || !empty($opts['showRecurringNote']))
                 ? iss_timeline_get_recurring_note($row)
                 : '';
             if ($recurring_note !== '') {
                 $out .= '<div class="iss-timeline__summary">' . esc_html($recurring_note) . '</div>';
+            }
+            if ($grouped_occurrences !== '') {
+                $out .= $grouped_occurrences;
             }
 
             $actions = iss_timeline_build_actions($row, $opts);
@@ -1040,6 +1066,9 @@ function iss_timeline_get_type_options_from_attributes($attributes = []) {
         'tour' => __('Führungen', 'iss-timeline'),
         'ausstellungen' => __('Ausstellungen', 'iss-timeline'),
         'ausstellung' => __('Ausstellungen', 'iss-timeline'),
+        'projekte' => __('Projekte', 'iss-timeline'),
+        'projekt' => __('Projekte', 'iss-timeline'),
+        'project' => __('Projekte', 'iss-timeline'),
     ];
 
     $options = [['value' => 'all', 'label' => $labels['all']]];
@@ -1386,6 +1415,7 @@ function iss_timeline_render_query_block($attributes = [], $content = '', $block
         iss_programm_enqueue_calendar_assets();
     }
     $listing = iss_timeline_get_listing_response($listing_config, $listing_config['render']);
+    $config['initialNextOffset'] = (int) ($listing['nextOffset'] ?? 0);
 
     $title = trim((string) ($attributes['title'] ?? ''));
     $intro = trim((string) ($attributes['intro'] ?? ''));

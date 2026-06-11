@@ -53,11 +53,11 @@ function iss_content_model_register_acf_ausstellung_fields(): void
             ],
             [
                 'key' => 'field_iss_timeline_enabled',
-                'label' => __('In Timeline zeigen', 'iss-content-model'),
+                'label' => __('Öffentlich in Ausstellungsübersichten zeigen', 'iss-content-model'),
                 'name' => 'iss_timeline_enabled',
                 'type' => 'true_false',
                 'ui' => 1,
-                'default_value' => 1,
+                'default_value' => 0,
                 'wrapper' => ['width' => '50'],
             ],
         ],

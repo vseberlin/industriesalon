@@ -264,6 +264,13 @@
   }
 }
 
+@media (max-width: 900px) {
+  .iss-calendar-page .iss-timeline__item {
+    grid-template-columns: 1fr;
+    row-gap: 0.7rem;
+  }
+}
+
 @media (max-width: 781px) {
   .iss-calendar-intro {
     padding-top: 1.75rem;

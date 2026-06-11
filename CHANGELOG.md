@@ -1,6 +1,13 @@
 # Changelog
 
 ## 2026-06-11
+- Started the greenfield refactor path as a local checkpoint:
+  - added `refactor.md` with the agreed `Entity / Relation / Occurrence / View` direction, occurrence-only calendar boundary, Ausstellung availability split, and phased `iss-core` / `iss-frontend` path
+  - added the dedicated `industriesalon/ausstellungen-browser` block and WP_Query-based availability path so `/ausstellungen/` no longer depends on occurrence/timeline data for Dauer, Digital, Aktuell, or Archiv filters
+  - kept `iss_timeline_enabled` as the existing public visibility storage for exhibitions, but relabeled Ausstellung editor controls to public Ausstellung overview wording instead of calendar/timeline wording
+  - changed occurrence source projection so Dauer and Digital Ausstellungen are availability-only and no longer sync as fake running calendar rows; temporary exhibition dates remain eligible for occurrence/calendar rows when explicitly enabled
+  - added minimal `iss-core` and `iss-frontend` scaffold plugins for shared infrastructure/runtime helper conventions only; existing CPTs, REST routes, renderers, assets, CSS, and domain scripts remain with their current owners
+  - documented why the new systems are not parallel replacements: occurrence tables remain in `iss-occurrences`, public skins stay in the theme, `iss-programm` owns only dynamic browser/render data, and the new scaffold plugins expose no domain surface yet
 - Fixed the first occurrence-projection calendar regression found on `/kalender/` and `/ausstellungen/`:
   - tightened programme exposure to strict opt-in semantics: Veranstaltungen, Ausstellungen, and Projekte now require explicit `iss_timeline_enabled=1`; missing toggle meta means hidden
   - backfilled the old implicit public state for 24 published Veranstaltungen/Ausstellungen after creating local rollback dump `ops/content-backups/2026-06-11-before-strict-programme-toggle-backfill.sql`, and added `ops/sql/2026-06-11-strict-programme-toggle-backfill.sql` for repeatable environment migration
@@ -18,6 +25,10 @@
 - Tightened the programme/calendar migration boundary after the occurrence rebuild:
   - removed the retired `[is_tour_calendar]` shortcode entrypoint and stale SuperSaaS admin shortcode help; the active public contract is the `iss/tour-calendar` and `iss/tour-dates` blocks
   - removed runtime imports from old `iss_calendar_*` mapping options; occurrence-owned `iss_occurrences_*` mapping options are now the only active mapping source
+  - removed the last public `calendar_tag` meta lookups from tour slot reads and booking validation; tour calendars now resolve by explicit block tag, source post id, or occurrence-owned source/series mappings only
+  - renamed the active tour block render callbacks away from legacy calendar callback names and changed the current tour-calendar block attribute from `fallbackUrl` to `bookingUrl`
+  - switched tour booking validation in `iss-payments-lite` from the dead CPT slot helper to occurrence-backed `is_tours_get_occurrence_slots()`
+  - renamed editor/admin mapping labels from generic calendar/fallback wording to SuperSaaS-Terminreihe and Buchungslink terminology while keeping existing admin slugs stable
   - reduced the programme helper facade to the small `iss-fuehrungen` date contract still in use, and moved admin mapping writes to occurrence functions directly
   - purged inactive local legacy programme meta after rollback dump `ops/content-backups/2026-06-11-before-programme-legacy-meta-purge-wp_postmeta.sql`, with replayable SQL in `ops/sql/2026-06-11-programme-legacy-meta-purge.sql`
   - extended `wp iss-occurrences drift-check` so legacy hidden calendar posts/options/meta and public WP occurrences without the explicit calendar toggle fail verification

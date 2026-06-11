@@ -1,7 +1,7 @@
 <?php
 /**
  * Plugin Name: SuperSaaS API
- * Description: SuperSaaS data adapter: settings, sync, local slot storage, mapping, and slot read REST endpoints.
+ * Description: SuperSaaS data adapter: settings, occurrence sync, mapping, and slot read REST endpoints.
  * Version: 1.2.0
  */
 
@@ -10,10 +10,10 @@ if (!defined('ABSPATH')) exit;
 define('IS_SAAS_OPTION_GROUP', 'is_saas_options');
 define('IS_SAAS_OPTION_NAME', 'is_saas_settings');
 
-require_once __DIR__ . '/iss-calendar/iss-calendar.php';
+require_once __DIR__ . '/includes/supersaas-sync.php';
 
-register_activation_hook(__FILE__, 'iss_calendar_activate_sync');
-register_deactivation_hook(__FILE__, 'iss_calendar_deactivate_sync');
+register_activation_hook(__FILE__, 'iss_supersaas_activate_sync');
+register_deactivation_hook(__FILE__, 'iss_supersaas_deactivate_sync');
 
 function is_saas_get_settings() {
     $defaults = [
@@ -141,7 +141,7 @@ function is_saas_render_settings_page() {
             submit_button();
             ?>
         </form>
-        <p><strong>Shortcode:</strong> <code>[is_tour_calendar tag="ELEKTRO" title="Termine wählen" fallback_url="https://example.com"]</code></p>
+        <p><strong>Frontend:</strong> Tour calendars are rendered by the <code>iss/tour-calendar</code> and <code>iss/tour-dates</code> blocks in <code>iss-programm</code>.</p>
     </div>
     <?php
 }
@@ -165,49 +165,6 @@ function is_saas_build_slot_response($slot, $title, $start) {
         'available' => $available,
         'booking_url' => null,
     ];
-}
-
-function is_saas_resolve_calendar_item_title($item_id) {
-    $item_id = (int) $item_id;
-    if ($item_id <= 0) {
-        return '';
-    }
-
-    $source_post_id = (int) get_post_meta($item_id, 'source_post_id', true);
-    if ($source_post_id > 0) {
-        $linked_title = trim((string) get_the_title($source_post_id));
-        if ($linked_title !== '') {
-            return $linked_title;
-        }
-    }
-
-    return (string) get_the_title($item_id);
-}
-
-function is_saas_resolve_calendar_item_content_url($item_id) {
-    $item_id = (int) $item_id;
-    if ($item_id <= 0) {
-        return null;
-    }
-
-    if (function_exists('iss_calendar_get_item_source_permalink')) {
-        $source_link = (string) iss_calendar_get_item_source_permalink($item_id);
-        if ($source_link !== '') {
-            return $source_link;
-        }
-    }
-
-    $source_post_id = (int) get_post_meta($item_id, 'source_post_id', true);
-    if ($source_post_id <= 0) {
-        return null;
-    }
-
-    $source_link = get_permalink($source_post_id);
-    if (!is_string($source_link) || trim($source_link) === '') {
-        return null;
-    }
-
-    return $source_link;
 }
 
 function is_saas_field_schedule_id() {
@@ -273,14 +230,13 @@ function is_tours_get_slots(WP_REST_Request $request) {
     $source_post_id = (int) $request->get_param('post_id');
 
     if (!$tag && $source_post_id > 0) {
-        $tag = strtoupper(sanitize_text_field((string) get_post_meta($source_post_id, 'calendar_tag', true)));
-        if (!$tag && function_exists('iss_calendar_resolve_tag_for_source_post_id')) {
-            $tag = iss_calendar_resolve_tag_for_source_post_id($source_post_id);
+        if (function_exists('iss_occurrences_resolve_tag_for_source_post_id')) {
+            $tag = iss_occurrences_resolve_tag_for_source_post_id($source_post_id);
         }
     }
 
     if (!$tag && $source_post_id <= 0) {
-        // Return empty array (UI will show fallback link). Also signals the reason via header.
+        // Return an explicit no-mapping response; public slots require a tag or source post.
         $res = new WP_REST_Response(['source' => 'nomap', 'slots' => []], 200);
         $res->header('X-IS-Tours-Source', 'nomap');
         $res->header('X-IS-Tours-Error', 'missing-tag');
@@ -299,7 +255,7 @@ function is_tours_get_slots(WP_REST_Request $request) {
         $cached_at = is_tours_get_cached_at_by_tag($tag);
         $source = is_tours_get_cached_source_by_tag($tag);
         if ($source === '' || $source === 'cache') {
-            $source = 'cpt';
+            $source = 'occurrences';
             is_tours_set_cached_source_by_tag($tag, $source, 60 * 10);
         }
         $payload = ['source' => $source, 'slots' => is_array($cached) ? $cached : []];
@@ -320,17 +276,14 @@ function is_tours_get_slots(WP_REST_Request $request) {
         return $res;
 	    }
 
-    if (
-        !function_exists('iss_calendar_get_slots_fallback_for_tag')
-        && !function_exists('iss_calendar_get_items_for_post')
-    ) {
+    if (!function_exists('iss_occurrences_query')) {
         return new WP_REST_Response([
-            'error' => 'Calendar module missing',
+            'error' => 'Occurrence module missing',
         ], 500);
     }
 
-    $slots = is_tours_get_cpt_slots($tag, $source_post_id);
-    $source = 'cpt';
+    $slots = is_tours_get_occurrence_slots($tag, $source_post_id);
+    $source = 'occurrences';
 
     if (!empty($slots)) {
         if ($tag !== '') {
@@ -346,17 +299,11 @@ function is_tours_get_slots(WP_REST_Request $request) {
         $maybe = is_tours_maybe_304($request, $etag, $cached_at, $max_age);
         if ($maybe) {
             $maybe->header('X-IS-Tours-Source', $source);
-            if ($source === 'cpt') {
-                $maybe->header('X-IS-Tours-Fallback', 'cpt');
-            }
             return $maybe;
         }
 
         $res = new WP_REST_Response($payload, 200);
         $res->header('X-IS-Tours-Source', $source);
-        if ($source === 'cpt') {
-            $res->header('X-IS-Tours-Fallback', 'cpt');
-        }
         if ($etag !== '') $res->header('ETag', $etag);
         $res->header('Cache-Control', 'public, max-age=' . $max_age);
         if ($cached_at > 0) {
@@ -532,58 +479,54 @@ function is_tours_get_next_slot($tag) {
     return null;
 }
 
-function is_tours_get_cpt_slots($tag, $source_post_id = 0) {
+function is_tours_get_occurrence_slots($tag, $source_post_id = 0) {
     $tag = strtoupper(sanitize_text_field((string) $tag));
     $source_post_id = (int) $source_post_id;
 
-    if ($source_post_id > 0 && function_exists('iss_calendar_get_items_for_post')) {
-        $items = iss_calendar_get_items_for_post($source_post_id, [
-            'public_only' => true,
-            'future_only' => true,
-            'limit' => 250,
-        ]);
+    if (!function_exists('iss_occurrences_query')) {
+        return [];
+    }
 
-        $slots = [];
-        foreach ($items as $item) {
-            if (!($item instanceof WP_Post)) {
-                continue;
-            }
+    $query = [
+        'limit' => 250,
+        'order' => 'ASC',
+        'time_mode' => 'upcoming',
+        'item_type' => 'tour',
+        'origin' => 'supersaas',
+    ];
+    if ($source_post_id > 0) {
+        $query['source_post_ids'] = [$source_post_id];
+    } elseif ($tag !== '') {
+        $query['tag'] = $tag;
+    } else {
+        return [];
+    }
 
-            $item_id = (int) $item->ID;
-            $external_id = trim((string) get_post_meta($item_id, 'external_id', true));
-            $start = trim((string) get_post_meta($item_id, 'event_start', true));
-            if ($external_id === '' || $start === '') {
-                continue;
-            }
-
-            $end = trim((string) get_post_meta($item_id, 'event_end', true));
-            $end = $end !== '' ? $end : null;
-            $cap_raw = get_post_meta($item_id, 'capacity_total', true);
-            $avail_raw = get_post_meta($item_id, 'capacity_available', true);
-
-            $capacity = ($cap_raw === '' || $cap_raw === null) ? null : (int) $cap_raw;
-            $available = ($avail_raw === '' || $avail_raw === null) ? null : (int) $avail_raw;
-            $booking_url = trim((string) get_post_meta($item_id, 'booking_url', true));
-
-            $slots[] = [
-                'id' => (string) $external_id,
-                'title' => is_saas_resolve_calendar_item_title($item_id),
-                'start' => $start,
-                'end' => $end,
-                'capacity' => $capacity,
-                'available' => $available,
-                'booking_url' => $booking_url !== '' ? $booking_url : null,
-                'content_url' => is_saas_resolve_calendar_item_content_url($item_id),
-            ];
+    $items = iss_occurrences_query($query);
+    $slots = [];
+    foreach ($items as $item) {
+        if (!is_array($item)) {
+            continue;
         }
 
-        return $slots;
+        $external_id = trim((string) ($item['slot_id'] ?? ''));
+        $start = trim((string) ($item['slot_start'] ?? $item['start_raw'] ?? ''));
+        if ($external_id === '' || $start === '') {
+            continue;
+        }
+
+        $booking_url = trim((string) ($item['booking_url'] ?? ''));
+        $slots[] = [
+            'id' => $external_id,
+            'title' => trim((string) ($item['title'] ?? '')),
+            'start' => $start,
+            'end' => !empty($item['end_raw']) ? (string) $item['end_raw'] : null,
+            'capacity' => array_key_exists('capacity', $item) ? $item['capacity'] : null,
+            'available' => array_key_exists('available', $item) ? $item['available'] : null,
+            'booking_url' => $booking_url !== '' ? $booking_url : null,
+            'content_url' => !empty($item['content_url']) ? (string) $item['content_url'] : null,
+        ];
     }
 
-    if ($tag !== '' && function_exists('iss_calendar_get_slots_fallback_for_tag')) {
-        $fallback = iss_calendar_get_slots_fallback_for_tag($tag);
-        return is_array($fallback) ? $fallback : [];
-    }
-
-    return [];
+    return $slots;
 }

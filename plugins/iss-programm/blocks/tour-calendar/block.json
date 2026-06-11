@@ -19,10 +19,9 @@
       "type": "string",
       "default": "Termine wählen"
     },
-    "fallbackUrl": {
+    "bookingUrl": {
       "type": "string",
       "default": ""
     }
   }
 }
-

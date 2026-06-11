@@ -23,8 +23,41 @@ function iss_occurrences_source_is_calendar_enabled(int $post_id): bool
 {
     $post_type = (string) get_post_type($post_id);
 
+    if ($post_type === 'ausstellung' && iss_occurrences_ausstellung_is_availability_only($post_id)) {
+        return false;
+    }
+
     if ($post_type === 'veranstaltung' || $post_type === 'ausstellung' || $post_type === 'projekt') {
         return iss_occurrences_get_bool_meta($post_id, 'iss_timeline_enabled', false);
+    }
+
+    return false;
+}
+
+function iss_occurrences_ausstellung_is_availability_only(int $post_id): bool
+{
+    if ($post_id <= 0 || (string) get_post_type($post_id) !== 'ausstellung') {
+        return false;
+    }
+
+    if ((bool) get_post_meta($post_id, 'iss_is_permanent', true)) {
+        return true;
+    }
+
+    if (!taxonomy_exists('ausstellung_typ')) {
+        return false;
+    }
+
+    $type_slugs = wp_get_post_terms($post_id, 'ausstellung_typ', ['fields' => 'slugs']);
+    if (is_wp_error($type_slugs) || empty($type_slugs)) {
+        return false;
+    }
+
+    $availability_slugs = ['dauerausstellung', 'digitaleausstellungen'];
+    foreach ((array) $type_slugs as $slug) {
+        if (in_array(sanitize_title((string) $slug), $availability_slugs, true)) {
+            return true;
+        }
     }
 
     return false;

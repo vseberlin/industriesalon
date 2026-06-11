@@ -5,7 +5,7 @@
   "title": "Tour Dates (List)",
   "category": "widgets",
   "icon": "calendar",
-  "description": "SEO-friendly list of upcoming dates (CPT fallback).",
+  "description": "SEO-friendly list of upcoming occurrence dates.",
   "editorScript": "file:./index.js",
   "editorStyle": "file:./editor.css",
   "attributes": {

@@ -578,7 +578,7 @@ function iss_content_model_render_veranstaltung_box($post) {
     $selected_place_title = iss_content_model_get_veranstaltung_place_title($selected_place_id);
     $location_override = $selected_place_title !== '' && $location === $selected_place_title ? '' : $location;
     $timeline_enabled = get_post_meta($post->ID, 'iss_timeline_enabled', true);
-    $timeline_enabled = $timeline_enabled === '' ? true : (bool) $timeline_enabled;
+    $timeline_enabled = $timeline_enabled === '' ? false : (bool) $timeline_enabled;
     $layout = iss_content_model_normalize_veranstaltung_layout((string) get_post_meta($post->ID, '_iss_event_layout', true));
     $format = iss_content_model_normalize_veranstaltung_format((string) get_post_meta($post->ID, '_iss_event_format', true));
     $scheme = iss_content_model_normalize_veranstaltung_scheme((string) get_post_meta($post->ID, '_iss_event_scheme', true));
@@ -643,7 +643,7 @@ function iss_content_model_render_veranstaltung_box($post) {
     echo '<h3>' . esc_html__('Redaktion', 'iss-content-model') . '</h3>';
     echo '<p>' . esc_html__('Kurzbeschreibung im Auszug pflegen, Beitragsbild setzen und Beziehungen unten ergänzen.', 'iss-content-model') . '</p>';
     echo '</div>';
-    echo '<p><label><input type="checkbox" name="iss_content_model[iss_timeline_enabled]" value="1" ' . checked($timeline_enabled, true, false) . '> ' . esc_html__('In Kalender und Timeline zeigen', 'iss-content-model') . '</label></p>';
+    echo '<p><label><input type="checkbox" name="iss_content_model[iss_timeline_enabled]" value="1" ' . checked($timeline_enabled, true, false) . '> ' . esc_html__('Öffentlich in Ausstellungsübersichten zeigen', 'iss-content-model') . '</label></p>';
     echo '<p class="description">' . esc_html__('Weitere Ortsbezüge bleiben in „Verknüpfte Orte“. Personenbezüge bleiben in „Personen“. Diese V1 bündelt nur die Kernfelder.', 'iss-content-model') . '</p>';
     echo '</section>';
 
@@ -693,7 +693,7 @@ function iss_content_model_render_ausstellung_box($post) {
     $end = (string) get_post_meta($post->ID, 'iss_end_date', true);
     $is_permanent = (bool) get_post_meta($post->ID, 'iss_is_permanent', true);
     $timeline_enabled = get_post_meta($post->ID, 'iss_timeline_enabled', true);
-    $timeline_enabled = $timeline_enabled === '' ? true : (bool) $timeline_enabled;
+    $timeline_enabled = $timeline_enabled === '' ? false : (bool) $timeline_enabled;
 
     echo '<h3>' . esc_html__('Basis', 'iss-content-model') . '</h3>';
     echo '<p><label for="iss_start_date"><strong>' . esc_html__('Startdatum', 'iss-content-model') . '</strong></label>';
@@ -704,17 +704,30 @@ function iss_content_model_render_ausstellung_box($post) {
 
     echo '<p class="description">' . esc_html__('Sammlungsbereich und Themen werden in den Taxonomie-Boxen verwaltet. Orte werden ueber "Ort hinzufuegen" verbunden.', 'iss-content-model') . '</p>';
     echo '<p><label><input type="checkbox" name="iss_content_model[iss_is_permanent]" value="1" ' . checked($is_permanent, true, false) . '> ' . esc_html__('Dauerausstellung', 'iss-content-model') . '</label></p>';
-    echo '<p><label><input type="checkbox" name="iss_content_model[iss_timeline_enabled]" value="1" ' . checked($timeline_enabled, true, false) . '> ' . esc_html__('In Timeline zeigen', 'iss-content-model') . '</label></p>';
+    echo '<p><label><input type="checkbox" name="iss_content_model[iss_timeline_enabled]" value="1" ' . checked($timeline_enabled, true, false) . '> ' . esc_html__('In Kalender und Timeline zeigen', 'iss-content-model') . '</label></p>';
 }
 
 function iss_content_model_render_projekt_box($post) {
     wp_nonce_field('iss_content_model_save_meta', 'iss_content_model_meta_nonce');
 
+    $start = (string) get_post_meta($post->ID, 'iss_start_date', true);
+    $end = (string) get_post_meta($post->ID, 'iss_end_date', true);
     $period_label = (string) get_post_meta($post->ID, 'iss_period_label', true);
+    $timeline_enabled = get_post_meta($post->ID, 'iss_timeline_enabled', true);
+    $timeline_enabled = $timeline_enabled === '' ? false : (bool) $timeline_enabled;
     $front_page_order = (int) $post->menu_order;
+
+    echo '<p><label for="iss_start_date"><strong>' . esc_html__('Startdatum', 'iss-content-model') . '</strong></label>';
+    echo '<input class="widefat" type="date" id="iss_start_date" name="iss_content_model[iss_start_date]" value="' . esc_attr($start) . '"></p>';
+
+    echo '<p><label for="iss_end_date"><strong>' . esc_html__('Enddatum', 'iss-content-model') . '</strong></label>';
+    echo '<input class="widefat" type="date" id="iss_end_date" name="iss_content_model[iss_end_date]" value="' . esc_attr($end) . '"></p>';
 
     echo '<p><label for="iss_period_label"><strong>' . esc_html__('Zeitraum-Label', 'iss-content-model') . '</strong></label>';
     echo '<input class="widefat" type="text" id="iss_period_label" name="iss_content_model[iss_period_label]" value="' . esc_attr($period_label) . '" placeholder="' . esc_attr__('seit 2023 / laufend / 2024', 'iss-content-model') . '"></p>';
+    echo '<p class="description">' . esc_html__('Das Label ist nur Anzeigetext. Fuer Kalender und Timeline zaehlen Start-/Enddatum oder ersatzweise das Erstellungsdatum.', 'iss-content-model') . '</p>';
+
+    echo '<p><label><input type="checkbox" name="iss_content_model[iss_timeline_enabled]" value="1" ' . checked($timeline_enabled, true, false) . '> ' . esc_html__('In Kalender und Timeline zeigen', 'iss-content-model') . '</label></p>';
 
     echo '<p><label for="iss_project_front_page_order"><strong>' . esc_html__('Startseiten-Reihenfolge', 'iss-content-model') . '</strong></label>';
     echo '<input class="widefat" type="number" step="1" id="iss_project_front_page_order" name="iss_content_model[menu_order]" value="' . esc_attr((string) $front_page_order) . '"></p>';
@@ -929,10 +942,6 @@ function iss_content_model_save_meta_box(int $post_id): void
     }
 
     foreach ($definitions[$post_type] as $key => $config) {
-        if ($key === 'iss_timeline_item_id') {
-            continue;
-        }
-
         $value = $raw[$key] ?? ($config['type'] === 'boolean' ? '' : $config['default']);
 
         if (in_array($key, ['iss_start_datetime', 'iss_end_datetime'], true)) {

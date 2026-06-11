@@ -114,14 +114,22 @@ function iss_fuehrung_render_booking_box($post_id) {
             echo '<a class="iss-fuehrung-booking__secondary" href="' . esc_url($archive_link) . '">' . esc_html__('Alle Führungen', 'iss-fuehrungen') . '</a>';
         }
         echo '</div>';
-    } elseif ($next_event instanceof WP_Post) {
-        $date_label = iss_fuehrung_get_event_start_label($next_event->ID);
-        $availability = trim((string) get_post_meta($next_event->ID, 'availability_state', true));
+    } elseif ($next_event instanceof WP_Post || is_array($next_event)) {
+        $date_label = iss_fuehrung_get_event_start_label($next_event);
+        $availability = $next_event instanceof WP_Post
+            ? trim((string) get_post_meta($next_event->ID, 'availability_state', true))
+            : trim((string) ($next_event['availability_state'] ?? ''));
         $availability_label = iss_fuehrung_get_availability_label($availability);
-        $booking_url = iss_fuehrung_get_event_booking_url($next_event->ID, $post_id);
-        $slot_id = trim((string) get_post_meta($next_event->ID, 'external_id', true));
-        $slot_start = trim((string) get_post_meta($next_event->ID, 'event_start', true));
-        $slot_title = trim((string) get_the_title($next_event->ID));
+        $booking_url = iss_fuehrung_get_event_booking_url($next_event, $post_id);
+        if ($next_event instanceof WP_Post) {
+            $slot_id = trim((string) get_post_meta($next_event->ID, 'external_id', true));
+            $slot_start = trim((string) get_post_meta($next_event->ID, 'event_start', true));
+            $slot_title = trim((string) get_the_title($next_event->ID));
+        } else {
+            $slot_id = trim((string) ($next_event['slot_id'] ?? ''));
+            $slot_start = trim((string) ($next_event['slot_start'] ?? $next_event['date_raw'] ?? ''));
+            $slot_title = trim((string) ($next_event['title'] ?? get_the_title($post_id)));
+        }
         $is_slot_trigger = ($slot_id !== '' && $slot_start !== '');
 
         echo '<h2 class="iss-fuehrung-booking__title">Nächster Termin</h2>';
@@ -151,6 +159,7 @@ function iss_fuehrung_render_booking_box($post_id) {
                 $button_attrs .= ' data-source-post-type="' . esc_attr(ISS_FUEHRUNGEN_POST_TYPE) . '"';
             }
 
+            // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- Attribute string is built from escaped values above.
             echo '<a class="' . esc_attr($button_classes) . '" href="' . esc_url($booking_url) . '"' . $button_attrs . '>Buchen</a>';
         }
         echo '<a class="iss-fuehrung-booking__secondary" href="#termine">Alle Termine</a>';
@@ -302,7 +311,7 @@ function iss_fuehrung_get_offer_catalog_group_keys($post_id) {
     ]))));
     $groups = [];
 
-    if ($next_event instanceof WP_Post || in_array($stored_mode, ['calendar', 'hybrid'], true)) {
+    if ((function_exists('iss_fuehrung_is_calendar_event') && iss_fuehrung_is_calendar_event($next_event)) || in_array($stored_mode, ['calendar', 'hybrid'], true)) {
         $groups['oeffentlich'] = true;
     }
 
@@ -345,7 +354,7 @@ function iss_fuehrung_get_offer_catalog_group_keys($post_id) {
     }
 
     if (!$groups) {
-        $groups[$next_event instanceof WP_Post ? 'oeffentlich' : 'individuell'] = true;
+        $groups[(function_exists('iss_fuehrung_is_calendar_event') && iss_fuehrung_is_calendar_event($next_event)) ? 'oeffentlich' : 'individuell'] = true;
     }
 
     return array_keys($groups);
@@ -388,9 +397,11 @@ function iss_fuehrung_get_offer_catalog_item_state($post_id) {
         'label' => __('Mehr', 'iss-fuehrungen'),
     ];
 
-    if ($next_event instanceof WP_Post) {
-        $booking_url = iss_fuehrung_get_event_booking_url($next_event->ID, $post_id);
-        $availability = trim((string) get_post_meta($next_event->ID, 'availability_state', true));
+    if (function_exists('iss_fuehrung_is_calendar_event') && iss_fuehrung_is_calendar_event($next_event)) {
+        $booking_url = iss_fuehrung_get_event_booking_url($next_event, $post_id);
+        $availability = $next_event instanceof WP_Post
+            ? trim((string) get_post_meta($next_event->ID, 'availability_state', true))
+            : trim((string) ($next_event['availability_state'] ?? ''));
         $availability_label = iss_fuehrung_get_availability_label($availability);
         $note_parts = [];
 
@@ -414,7 +425,7 @@ function iss_fuehrung_get_offer_catalog_item_state($post_id) {
         return [
             'mode' => $mode,
             'label' => __('Nächster Termin', 'iss-fuehrungen'),
-            'value' => iss_fuehrung_get_event_start_label($next_event->ID),
+            'value' => iss_fuehrung_get_event_start_label($next_event),
             'note' => implode(' · ', array_filter($note_parts)),
             'primary_action' => $primary_action,
             'secondary_action' => $secondary_action,
@@ -594,6 +605,7 @@ function iss_fuehrung_render_offer_catalog_block($attributes = [], $content = ''
         : (string) reset($available_groups);
 
     ob_start();
+    // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- Wrapper attributes come from get_block_wrapper_attributes() or a static fallback.
     echo '<div ' . $wrapper . '>';
     echo '<div class="iss-tour-offer-catalog" data-filterable="1">';
     echo '<div class="iss-tour-offer-catalog__nav" role="tablist" aria-label="' . esc_attr__('Führungskategorien', 'iss-fuehrungen') . '">';
@@ -623,6 +635,7 @@ function iss_fuehrung_render_offer_catalog_block($attributes = [], $content = ''
         echo '<div class="iss-tour-offer-catalog__track" role="list">';
 
         foreach ($grouped_posts[$group_key] as $post) {
+            // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- Renderer returns escaped card markup.
             echo iss_fuehrung_render_offer_catalog_item($post->ID);
         }
 
@@ -814,6 +827,7 @@ function iss_fuehrung_render_hero_gallery_block($attributes = [], $content = '')
         : 'class="wp-block-iss-tour-hero-gallery iss-tour-hero-gallery"';
 
     ob_start();
+    // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- Wrapper attributes come from get_block_wrapper_attributes() or a static fallback.
     echo '<div ' . $wrapper . '>';
 
     foreach ($ids as $index => $attachment_id) {
@@ -839,6 +853,7 @@ function iss_fuehrung_render_hero_gallery_block($attributes = [], $content = '')
         }
         echo ' data-hero-alt="' . esc_attr($alt) . '"';
         echo ' aria-label="' . esc_attr__('Hero-Bild anzeigen', 'iss-fuehrungen') . '">';
+        // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- wp_get_attachment_image() returns escaped image markup.
         echo $thumb;
         echo '</button>';
     }
@@ -955,6 +970,7 @@ function iss_fuehrung_render_route_station_detail_card(WP_Post $post): string
 
     if ($image !== '') {
         echo '<a class="iss-tour-route__detail-card-image" href="' . esc_url($permalink) . '">';
+        // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- get_the_post_thumbnail() returns escaped image markup.
         echo $image;
         echo '</a>';
     }
@@ -1036,10 +1052,12 @@ function iss_fuehrung_render_station_media_figure(array $entry, string $label, s
     echo '<div class="iss-tour-route__figure-kicker">' . esc_html($label) . '</div>';
     if ($permalink !== '') {
         echo '<a class="iss-tour-route__station-image" href="' . esc_url($permalink) . '">';
+        // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- Image markup is built by WordPress image helpers.
         echo $image_html;
         echo '</a>';
     } else {
         echo '<div class="iss-tour-route__station-image">';
+        // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- Image markup is built by WordPress image helpers.
         echo $image_html;
         echo '</div>';
     }
@@ -1125,6 +1143,7 @@ function iss_fuehrung_render_route_block($attributes = [], $content = '')
         : 'class="wp-block-iss-tour-route section section--plain iss-tour-route"';
 
     ob_start();
+    // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- Wrapper attributes come from get_block_wrapper_attributes() or a static fallback.
     echo '<section ' . $wrapper . '>';
     echo '<div class="iss-container">';
     echo '<div class="iss-tour-route__overview">';
@@ -1224,6 +1243,7 @@ function iss_fuehrung_render_route_block($attributes = [], $content = '')
 
             if ($media_html !== '') {
                 echo '<div class="iss-tour-route__station-pair">';
+                // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- Station media renderer returns escaped figure markup.
                 echo $media_html;
                 echo '</div>';
             } elseif (has_post_thumbnail($place)) {
@@ -1241,6 +1261,7 @@ function iss_fuehrung_render_route_block($attributes = [], $content = '')
             }
 
             if ($detail_card_html !== '') {
+                // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- Detail-card renderer returns escaped article markup.
                 echo $detail_card_html;
             }
 

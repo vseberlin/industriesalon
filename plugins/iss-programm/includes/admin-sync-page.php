@@ -52,39 +52,40 @@ if (!function_exists('iss_programm_get_fuehrung_ids_for_select')) {
 
 add_action('admin_menu', function () {
     add_management_page(
-        'Kalender-Sync',
-        'Kalender-Sync',
+        'SuperSaaS-Termin-Sync',
+        'SuperSaaS-Termin-Sync',
         'manage_options',
-        'iss-calendar-sync',
+        'iss-programm-sync',
         'iss_programm_render_sync_page'
     );
 });
 
-add_action('admin_post_iss_calendar_sync', function () {
+add_action('admin_post_iss_programm_sync', function () {
     if (!current_user_can('manage_options')) {
         wp_die('Not allowed.');
     }
 
-    check_admin_referer('iss_calendar_sync');
+    check_admin_referer('iss_programm_sync');
 
-    if (!function_exists('iss_calendar_sync_supersaas_to_cpt')) {
-        set_transient('iss_calendar_sync_result', [
+    if (!function_exists('iss_supersaas_sync_occurrences')) {
+        set_transient('iss_programm_sync_result', [
             'created' => 0,
             'updated' => 0,
             'errors' => 1,
             'imported_unmapped' => 0,
-            'preserved_title' => 0,
-            'preserved_description' => 0,
-            'error_message' => 'Sync module is unavailable.',
+            'skipped_unlinked' => 0,
+            'inactivated' => 0,
+            'metadata_backfilled' => 0,
+            'error_message' => 'SuperSaaS sync module is unavailable.',
         ], 60);
-        wp_safe_redirect(admin_url('tools.php?page=iss-calendar-sync'));
+        wp_safe_redirect(admin_url('tools.php?page=iss-programm-sync'));
         exit;
     }
 
-    $result = iss_calendar_sync_supersaas_to_cpt();
-    set_transient('iss_calendar_sync_result', $result, 60);
+    $result = iss_supersaas_sync_occurrences();
+    set_transient('iss_programm_sync_result', $result, 60);
 
-    wp_safe_redirect(admin_url('tools.php?page=iss-calendar-sync'));
+    wp_safe_redirect(admin_url('tools.php?page=iss-programm-sync'));
     exit;
 });
 
@@ -98,26 +99,26 @@ add_action('admin_post_iss_programm_clear_series_mapping', function () {
     $series_key = isset($_POST['series_key']) ? iss_programm_normalize_series_key(wp_unslash($_POST['series_key'])) : '';
     if ($series_key === '') {
         iss_programm_set_sync_notice('error', 'Zuordnung konnte nicht gelöst werden: ungültige Reihe.');
-        wp_safe_redirect(admin_url('tools.php?page=iss-calendar-sync'));
+        wp_safe_redirect(admin_url('tools.php?page=iss-programm-sync'));
         exit;
     }
 
-    $entry = function_exists('iss_programm_get_series_map_entry')
-        ? iss_programm_get_series_map_entry($series_key)
+    $entry = function_exists('iss_occurrences_get_series_map_entry')
+        ? iss_occurrences_get_series_map_entry($series_key)
         : null;
     $source_post_id = is_array($entry) ? (int) ($entry['source_post_id'] ?? 0) : 0;
     $tag = is_array($entry) ? strtoupper(sanitize_text_field((string) ($entry['tag'] ?? ''))) : '';
     $tag = preg_replace('/[^A-Z0-9_-]+/', '', $tag);
     $tag = trim((string) $tag);
 
-    $cleared = function_exists('iss_programm_clear_series_mapping_for_key')
-        ? iss_programm_clear_series_mapping_for_key($series_key)
+    $cleared = function_exists('iss_occurrences_clear_series_mapping_for_key')
+        ? iss_occurrences_clear_series_mapping_for_key($series_key)
         : false;
 
-    if ($cleared && $tag !== '' && $source_post_id > 0 && function_exists('iss_programm_get_source_map_entry') && function_exists('iss_programm_clear_mapping_for_tag')) {
-        $tag_entry = iss_programm_get_source_map_entry($tag);
+    if ($cleared && $tag !== '' && $source_post_id > 0 && function_exists('iss_occurrences_get_source_map_entry') && function_exists('iss_occurrences_clear_source_mapping_for_tag')) {
+        $tag_entry = iss_occurrences_get_source_map_entry($tag);
         if (is_array($tag_entry) && (int) ($tag_entry['source_post_id'] ?? 0) === $source_post_id) {
-            iss_programm_clear_mapping_for_tag($tag);
+            iss_occurrences_clear_source_mapping_for_tag($tag);
         }
     }
 
@@ -127,7 +128,7 @@ add_action('admin_post_iss_programm_clear_series_mapping', function () {
         iss_programm_set_sync_notice('warning', sprintf('Keine Änderung für Reihe %s durchgeführt.', $series_key));
     }
 
-    wp_safe_redirect(admin_url('tools.php?page=iss-calendar-sync'));
+    wp_safe_redirect(admin_url('tools.php?page=iss-programm-sync'));
     exit;
 });
 
@@ -143,37 +144,37 @@ add_action('admin_post_iss_programm_set_series_mapping', function () {
 
     if ($series_key === '') {
         iss_programm_set_sync_notice('error', 'Neu-Zuordnung fehlgeschlagen: ungültige Reihe.');
-        wp_safe_redirect(admin_url('tools.php?page=iss-calendar-sync'));
+        wp_safe_redirect(admin_url('tools.php?page=iss-programm-sync'));
         exit;
     }
 
     if ($post_id <= 0) {
         iss_programm_set_sync_notice('error', 'Neu-Zuordnung fehlgeschlagen: bitte eine Führung auswählen.');
-        wp_safe_redirect(admin_url('tools.php?page=iss-calendar-sync'));
+        wp_safe_redirect(admin_url('tools.php?page=iss-programm-sync'));
         exit;
     }
 
     $post = get_post($post_id);
     if (!($post instanceof WP_Post) || $post->post_type !== 'fuehrung') {
         iss_programm_set_sync_notice('error', 'Neu-Zuordnung fehlgeschlagen: Zielobjekt ist keine Führung.');
-        wp_safe_redirect(admin_url('tools.php?page=iss-calendar-sync'));
+        wp_safe_redirect(admin_url('tools.php?page=iss-programm-sync'));
         exit;
     }
 
-    $entry = function_exists('iss_programm_get_series_map_entry')
-        ? iss_programm_get_series_map_entry($series_key)
+    $entry = function_exists('iss_occurrences_get_series_map_entry')
+        ? iss_occurrences_get_series_map_entry($series_key)
         : null;
     if (!is_array($entry)) {
         iss_programm_set_sync_notice('error', sprintf('Neu-Zuordnung fehlgeschlagen: Reihe %s wurde nicht gefunden.', $series_key));
-        wp_safe_redirect(admin_url('tools.php?page=iss-calendar-sync'));
+        wp_safe_redirect(admin_url('tools.php?page=iss-programm-sync'));
         exit;
     }
 
-    if (function_exists('iss_programm_clear_series_mapping_for_post')) {
-        iss_programm_clear_series_mapping_for_post($post_id);
+    if (function_exists('iss_occurrences_clear_series_mapping_for_post')) {
+        iss_occurrences_clear_series_mapping_for_post($post_id);
     }
-    if (function_exists('iss_programm_clear_mapping_for_post')) {
-        iss_programm_clear_mapping_for_post($post_id);
+    if (function_exists('iss_occurrences_clear_source_mapping_for_post')) {
+        iss_occurrences_clear_source_mapping_for_post($post_id);
     }
 
     $title = isset($entry['supersaas_title']) ? trim((string) $entry['supersaas_title']) : '';
@@ -182,20 +183,20 @@ add_action('admin_post_iss_programm_set_series_mapping', function () {
     $tag = trim((string) $tag);
     $fallback_url = isset($entry['fallback_url']) ? esc_url_raw((string) $entry['fallback_url']) : '';
 
-    if (function_exists('iss_programm_remember_series_mapping')) {
-        iss_programm_remember_series_mapping($series_key, $post_id, 'fuehrung', $title, $tag, $fallback_url);
+    if (function_exists('iss_occurrences_remember_series_mapping')) {
+        iss_occurrences_remember_series_mapping($series_key, $post_id, 'fuehrung', $title, $tag, $fallback_url);
     }
-    if ($tag !== '' && function_exists('iss_programm_remember_source_mapping')) {
-        iss_programm_remember_source_mapping($tag, $fallback_url, $post_id, 'fuehrung');
+    if ($tag !== '' && function_exists('iss_occurrences_remember_source_mapping')) {
+        iss_occurrences_remember_source_mapping($tag, $fallback_url, $post_id, 'fuehrung');
     }
 
-    if (function_exists('iss_programm_relink_series_to_post')) {
-        iss_programm_relink_series_to_post($post_id, [$series_key], 'fuehrung');
+    if (function_exists('iss_supersaas_sync_occurrences')) {
+        iss_supersaas_sync_occurrences();
     }
 
     iss_programm_set_sync_notice('success', sprintf('Reihe %s wurde auf Führung #%d gesetzt.', $series_key, $post_id));
 
-    wp_safe_redirect(admin_url('tools.php?page=iss-calendar-sync'));
+    wp_safe_redirect(admin_url('tools.php?page=iss-programm-sync'));
     exit;
 });
 
@@ -204,39 +205,42 @@ function iss_programm_render_sync_page() {
         return;
     }
 
-    $result = get_transient('iss_calendar_sync_result');
+    $result = get_transient('iss_programm_sync_result');
     if ($result !== false) {
-        delete_transient('iss_calendar_sync_result');
+        delete_transient('iss_programm_sync_result');
     }
     $notice = get_transient('iss_programm_sync_notice');
     if ($notice !== false) {
         delete_transient('iss_programm_sync_notice');
     }
 
-    $series_map = function_exists('iss_programm_get_series_map') ? iss_programm_get_series_map() : [];
+    $series_map = function_exists('iss_occurrences_get_series_map') ? iss_occurrences_get_series_map() : [];
     $fuehrungen = iss_programm_get_fuehrung_ids_for_select();
 
     echo '<div class="wrap">';
-    echo '<h1>Kalender-Sync</h1>';
+    echo '<h1>SuperSaaS-Termin-Sync</h1>';
 
     if (is_array($result)) {
         $created = (int) ($result['created'] ?? 0);
         $updated = (int) ($result['updated'] ?? 0);
         $errors = (int) ($result['errors'] ?? 0);
         $imported_unmapped = (int) ($result['imported_unmapped'] ?? 0);
-        $preserved_title = (int) ($result['preserved_title'] ?? 0);
-        $preserved_description = (int) ($result['preserved_description'] ?? 0);
+        $skipped_unlinked = (int) ($result['skipped_unlinked'] ?? 0);
+        $inactivated = (int) ($result['inactivated'] ?? 0);
+        $metadata_backfilled = (int) ($result['metadata_backfilled'] ?? 0);
         $error_message = isset($result['error_message']) ? trim((string) $result['error_message']) : '';
 
-        printf(
-            '<div class="notice notice-success"><p>Sync abgeschlossen. Neu: %d, Aktualisiert: %d, Fehler: %d, Importiert (ohne Zuordnung): %d, Titel beibehalten: %d, Beschreibung beibehalten: %d.</p></div>',
+        $sync_message = sprintf(
+            'SuperSaaS-Sync abgeschlossen. Neu: %d, Aktualisiert: %d, Fehler: %d, Unverknüpfte Slots: %d, Nicht öffentlich: %d, Inaktiviert: %d, Metadaten ergänzt: %d.',
             $created,
             $updated,
             $errors,
             $imported_unmapped,
-            $preserved_title,
-            $preserved_description
+            $skipped_unlinked,
+            $inactivated,
+            $metadata_backfilled
         );
+        echo '<div class="notice notice-success"><p>' . esc_html($sync_message) . '</p></div>';
         if ($error_message !== '') {
             echo '<div class="notice notice-error"><p>' . esc_html($error_message) . '</p></div>';
         }
@@ -254,16 +258,48 @@ function iss_programm_render_sync_page() {
     }
 
     echo '<form method="post" action="' . esc_url(admin_url('admin-post.php')) . '">';
-    echo '<input type="hidden" name="action" value="iss_calendar_sync" />';
-    wp_nonce_field('iss_calendar_sync');
+    echo '<input type="hidden" name="action" value="iss_programm_sync" />';
+    wp_nonce_field('iss_programm_sync');
     submit_button('Jetzt synchronisieren');
     echo '</form>';
 
-    echo '<h2>Reihen-Zuordnungen</h2>';
+    echo '<h2>Führungs-Terminreihen</h2>';
     if (empty($series_map)) {
         echo '<p>Noch keine Reihen erkannt. Bitte zuerst synchronisieren.</p>';
     } else {
-        echo '<table class="widefat striped"><thead><tr><th>Reihe</th><th>Schlüssel</th><th>Tag</th><th>Quelle</th><th>Fallback-URL</th><th>Zuletzt gesehen</th><th>Aktionen</th></tr></thead><tbody>';
+        echo '<table class="widefat striped"><thead><tr><th>Reihe</th><th>Schlüssel</th><th>Tag</th><th>Quelle</th><th>Buchungslink</th><th>Zuletzt gesehen</th><th>Aktionen</th></tr></thead><tbody>';
+        $allowed_admin_html = [
+            'a' => [
+                'href' => true,
+                'rel' => true,
+                'target' => true,
+            ],
+            'br' => [],
+            'button' => [
+                'class' => true,
+                'type' => true,
+            ],
+            'code' => [],
+            'form' => [
+                'action' => true,
+                'method' => true,
+                'style' => true,
+            ],
+            'input' => [
+                'id' => true,
+                'name' => true,
+                'type' => true,
+                'value' => true,
+            ],
+            'option' => [
+                'selected' => true,
+                'value' => true,
+            ],
+            'select' => [
+                'name' => true,
+            ],
+        ];
+
         foreach ($series_map as $series_key => $entry) {
             if (!is_array($entry)) {
                 continue;
@@ -291,6 +327,10 @@ function iss_programm_render_sync_page() {
             if ($post_type !== '') {
                 $post_label .= '<br><code>' . esc_html($post_type) . '</code>';
             }
+
+            $fallback_label = $fallback_url
+                ? sprintf('<a href="%s" target="_blank" rel="noopener">%s</a>', esc_url($fallback_url), esc_html__('link', 'iss-programm'))
+                : esc_html('—');
 
             $assign_form = '<form method="post" action="' . esc_url(admin_url('admin-post.php')) . '" style="display:flex;gap:6px;align-items:center;">'
                 . '<input type="hidden" name="action" value="iss_programm_set_series_mapping" />'
@@ -335,11 +375,11 @@ function iss_programm_render_sync_page() {
                 esc_html($title),
                 esc_html((string) $series_key),
                 $tag !== '' ? esc_html($tag) : '—',
-                $post_label,
-                $fallback_url ? ('<a href="' . esc_url($fallback_url) . '" target="_blank" rel="noopener">link</a>') : '—',
+                wp_kses($post_label, $allowed_admin_html),
+                wp_kses($fallback_label, $allowed_admin_html),
                 esc_html($last_seen_at),
-                $assign_form,
-                $clear_form
+                wp_kses($assign_form, $allowed_admin_html),
+                wp_kses($clear_form, $allowed_admin_html)
             );
         }
         echo '</tbody></table>';

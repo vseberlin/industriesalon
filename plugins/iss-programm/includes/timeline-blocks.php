@@ -18,4 +18,11 @@ add_action('init', function () {
         ]);
     }
 
+    $dir_ausstellungen = __DIR__ . '/../blocks/ausstellungen-browser';
+    if (file_exists($dir_ausstellungen . '/block.json')) {
+        register_block_type($dir_ausstellungen, [
+            'render_callback' => 'iss_programm_render_ausstellungen_browser_block',
+        ]);
+    }
+
 });

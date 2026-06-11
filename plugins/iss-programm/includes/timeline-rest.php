@@ -173,18 +173,6 @@ function iss_timeline_rest_bump_cache_version() {
     update_option(ISS_TIMELINE_REST_CACHE_VERSION_OPTION, iss_timeline_rest_get_cache_version() + 1, false);
 }
 
-function iss_timeline_rest_maybe_bump_cache_version_for_calendar_item($post_id) {
-    if (get_post_type($post_id) !== 'iss_calendar_item') {
-        return;
-    }
-
-    iss_timeline_rest_bump_cache_version();
-}
-
-function iss_timeline_rest_maybe_bump_cache_version_on_post_meta($meta_id, $post_id) {
-    iss_timeline_rest_maybe_bump_cache_version_for_calendar_item((int) $post_id);
-}
-
 function iss_timeline_rest_render_collection(WP_REST_Request $request) {
     $params = iss_timeline_rest_collect_request_data($request);
     $query_args = iss_timeline_rest_prepare_query_args($params);
@@ -216,8 +204,4 @@ add_action('rest_api_init', function () {
     ]);
 });
 
-add_action('save_post_iss_calendar_item', 'iss_timeline_rest_bump_cache_version');
-add_action('before_delete_post', 'iss_timeline_rest_maybe_bump_cache_version_for_calendar_item');
-add_action('added_post_meta', 'iss_timeline_rest_maybe_bump_cache_version_on_post_meta', 10, 2);
-add_action('updated_post_meta', 'iss_timeline_rest_maybe_bump_cache_version_on_post_meta', 10, 2);
-add_action('deleted_post_meta', 'iss_timeline_rest_maybe_bump_cache_version_on_post_meta', 10, 2);
+add_action('iss_occurrences_changed', 'iss_timeline_rest_bump_cache_version');

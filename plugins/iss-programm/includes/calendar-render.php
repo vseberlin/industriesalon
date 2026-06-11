@@ -102,113 +102,10 @@ if (!function_exists('iss_programm_format_datetime_de')) {
     }
 }
 
-function iss_programm_calendar_item_display_title($item_id) {
-    $item_id = (int) $item_id;
-    if ($item_id <= 0) {
-        return '';
-    }
-
-    $source_post_id = (int) get_post_meta($item_id, 'source_post_id', true);
-    if ($source_post_id > 0) {
-        $linked_title = trim((string) get_the_title($source_post_id));
-        if ($linked_title !== '') {
-            return $linked_title;
-        }
-    }
-
-    return (string) get_the_title($item_id);
-}
-
-function iss_programm_calendar_item_content_url($item_id) {
-    $item_id = (int) $item_id;
-    if ($item_id <= 0) {
-        return '';
-    }
-
-    if (function_exists('iss_calendar_get_item_source_permalink')) {
-        $source_link = (string) iss_calendar_get_item_source_permalink($item_id);
-        if ($source_link !== '') {
-            return $source_link;
-        }
-    }
-
-    $source_post_id = (int) get_post_meta($item_id, 'source_post_id', true);
-    if ($source_post_id <= 0) {
-        return '';
-    }
-
-    $source_link = get_permalink($source_post_id);
-    if (!is_string($source_link) || trim($source_link) === '') {
-        return '';
-    }
-
-    return $source_link;
-}
-
-/**
- * Normalize one event into readable frontend data.
- *
- * @param int $item_id
- * @return array<string,mixed>
- */
-function iss_calendar_prepare_item($item_id) {
-    $item_id = (int) $item_id;
-    if ($item_id <= 0) {
-        return [];
-    }
-
-    $start = (string) get_post_meta($item_id, 'event_start', true);
-    $end = (string) get_post_meta($item_id, 'event_end', true);
-
-    $start_ts = null;
-    $end_ts = null;
-
-    try {
-        if ($start !== '') {
-            $start_dt = new DateTimeImmutable($start, wp_timezone());
-            $start_ts = $start_dt->getTimestamp();
-        }
-    } catch (Throwable $e) {
-        $start_ts = null;
-    }
-
-    try {
-        if ($end !== '') {
-            $end_dt = new DateTimeImmutable($end, wp_timezone());
-            $end_ts = $end_dt->getTimestamp();
-        }
-    } catch (Throwable $e) {
-        $end_ts = null;
-    }
-
-    $availability = (string) get_post_meta($item_id, 'availability_state', true);
-    $available_raw = get_post_meta($item_id, 'capacity_available', true);
-    $available = ($available_raw === '' || $available_raw === null) ? null : (int) $available_raw;
-    $booking_url = (string) get_post_meta($item_id, 'booking_url', true);
-    $note = (string) get_post_meta($item_id, 'public_note', true);
-
-    return [
-        'id' => $item_id,
-        'title' => iss_programm_calendar_item_display_title($item_id),
-        'start_raw' => $start,
-        'end_raw' => $end,
-        'date_label' => $start_ts ? iss_programm_format_date_long_de($start_ts) : '',
-        'time_label' => $start_ts ? wp_date('G:i', $start_ts) . ' Uhr' : '',
-        'datetime_label' => $start_ts ? iss_programm_format_datetime_de($start_ts) : '',
-        'availability' => $availability,
-        'available' => $available,
-        'booking_url' => $booking_url,
-        'content_url' => iss_programm_calendar_item_content_url($item_id),
-        'note' => $note,
-        'start_ts' => $start_ts,
-        'end_ts' => $end_ts,
-    ];
-}
-
-function iss_calendar_render_shell($title, $fallback_url, $post_id = 0, $post_type = '', $wrapper_attributes = '', $tag = '') {
+function iss_programm_render_tour_calendar_shell($title, $booking_url, $post_id = 0, $post_type = '', $wrapper_attributes = '', $tag = '') {
     $title = trim((string) $title);
     if ($title === '') {
-        $title = __('Termine wählen', 'iss-calendar');
+        $title = __('Termine wählen', 'iss-programm');
     }
 
     $post_id = (int) $post_id;
@@ -226,25 +123,27 @@ function iss_calendar_render_shell($title, $fallback_url, $post_id = 0, $post_ty
 
     $slot_select_id = sanitize_html_class($slot_select_id) . '-time';
 
-    $fallback_label = iss_calendar_is_fallback_anchor($fallback_url, $post_id)
-        ? esc_html__('Alle Termine anzeigen', 'iss-calendar')
-        : esc_html__('Direkt buchen', 'iss-calendar');
+    $booking_url = esc_url_raw((string) $booking_url);
 
-    $fallback_html = '';
-    if ($fallback_url) {
-        $fallback_html = '<p class="is-tour-calendar__fallback has-small-font-size">'
-            . '<a class="is-tour-calendar__fallback-link" href="' . esc_url($fallback_url) . '">' . $fallback_label . '</a>'
+    $booking_link_label = iss_programm_tour_url_is_same_page_anchor($booking_url, $post_id)
+        ? esc_html__('Alle Termine anzeigen', 'iss-programm')
+        : esc_html__('Direkt buchen', 'iss-programm');
+
+    $booking_link_html = '';
+    if ($booking_url) {
+        $booking_link_html = '<p class="is-tour-calendar__fallback has-small-font-size">'
+            . '<a class="is-tour-calendar__fallback-link" href="' . esc_url($booking_url) . '">' . $booking_link_label . '</a>'
             . '</p>';
     }
 
     $noscript = '<noscript><p class="is-tour-calendar__status has-small-font-size">'
-        . esc_html__('Bitte JavaScript aktivieren, um den Kalender zu nutzen.', 'iss-calendar')
+        . esc_html__('Bitte JavaScript aktivieren, um den Kalender zu nutzen.', 'iss-programm')
         . '</p>'
-        . $fallback_html
+        . $booking_link_html
         . '</noscript>';
 
     return sprintf(
-        '<div %1$s data-tag="%2$s" data-fallback="%3$s" data-title="%4$s" data-source-post-id="%5$s" data-source-post-type="%6$s">'
+        '<div %1$s data-tag="%2$s" data-booking-url="%3$s" data-title="%4$s" data-source-post-id="%5$s" data-source-post-type="%6$s">'
         . '<div class="is-tour-calendar__inner wp-block-group is-layout-constrained">'
         . '<div class="is-tour-calendar__header wp-block-group is-layout-constrained">'
         . '<p class="is-tour-calendar__eyebrow has-small-font-size">%7$s</p>'
@@ -280,20 +179,20 @@ function iss_calendar_render_shell($title, $fallback_url, $post_id = 0, $post_ty
         . '</div>',
         $wrapper_attributes,
         esc_attr($tag),
-        esc_url($fallback_url),
+        esc_url($booking_url),
         esc_attr($title),
         esc_attr($post_id > 0 ? (string) $post_id : ''),
         esc_attr($post_type),
-        esc_html__('Kalender', 'iss-calendar'),
+        esc_html__('Kalender', 'iss-programm'),
         esc_html($title),
-        esc_html__('Termine werden geladen …', 'iss-calendar'),
-        $fallback_html,
-        esc_attr__('Datum auswählen', 'iss-calendar'),
-        esc_html__('Bitte wählen Sie einen Tag.', 'iss-calendar'),
-        esc_html__('Verfügbare Termine am', 'iss-calendar'),
+        esc_html__('Termine werden geladen …', 'iss-programm'),
+        $booking_link_html,
+        esc_attr__('Datum auswählen', 'iss-programm'),
+        esc_html__('Bitte wählen Sie einen Tag.', 'iss-programm'),
+        esc_html__('Verfügbare Termine am', 'iss-programm'),
         esc_attr($slot_select_id),
-        esc_html__('Uhrzeit', 'iss-calendar'),
-        esc_html__('Bitte zuerst ein Datum wählen', 'iss-calendar'),
+        esc_html__('Uhrzeit', 'iss-programm'),
+        esc_html__('Bitte zuerst ein Datum wählen', 'iss-programm'),
         $noscript
     );
 }
@@ -301,14 +200,13 @@ function iss_calendar_render_shell($title, $fallback_url, $post_id = 0, $post_ty
 /**
  * Dynamic block renderer: iss/tour-dates.
  *
- * Renders upcoming `iss_calendar_item` entries linked to the current post
- * (via `source_post_id`), or a specific post id when passed via attributes.
+ * Renders upcoming occurrence rows linked to the current post.
  *
  * @param array<string,mixed> $attributes
  * @param string $content
  * @return string
  */
-function iss_calendar_render_dates($attributes = [], $content = '') {
+function iss_programm_render_tour_dates($attributes = [], $content = '') {
     $attributes = is_array($attributes) ? $attributes : [];
 
     $limit = isset($attributes['limit']) ? (int) $attributes['limit'] : 12;
@@ -322,7 +220,7 @@ function iss_calendar_render_dates($attributes = [], $content = '') {
         $title = 'Termine';
     }
 
-    if (!function_exists('iss_calendar_get_items_for_post')) {
+    if (!function_exists('iss_programm_get_item_dates')) {
         return '';
     }
 
@@ -332,11 +230,7 @@ function iss_calendar_render_dates($attributes = [], $content = '') {
     }
     $post_type = (string) get_post_type($post_id);
 
-    $items = iss_calendar_get_items_for_post($post_id, [
-        'public_only' => true,
-        'future_only' => true,
-        'limit' => $limit,
-    ]);
+    $items = array_slice(iss_programm_get_item_dates($post_id), 0, $limit);
 
     $attrs = function_exists('get_block_wrapper_attributes')
         ? get_block_wrapper_attributes(['class' => 'wp-block-iss-tour-dates'])
@@ -345,7 +239,7 @@ function iss_calendar_render_dates($attributes = [], $content = '') {
     if (empty($items)) {
         $out = '<div ' . $attrs . '>';
         $out .= '<h3 class="iss-tour-dates__title">' . esc_html($title) . '</h3>';
-        $out .= '<p>' . esc_html__('Aktuell sind keine Termine verfügbar.', 'iss-calendar') . '</p>';
+        $out .= '<p>' . esc_html__('Aktuell sind keine Termine verfügbar.', 'iss-programm') . '</p>';
         $out .= '</div>';
         return $out;
     }
@@ -355,11 +249,11 @@ function iss_calendar_render_dates($attributes = [], $content = '') {
     $out .= '<ul class="iss-tour-dates">';
 
     foreach ($items as $item) {
-        if (!($item instanceof WP_Post)) {
+        if (!is_array($item)) {
             continue;
         }
+        $data = $item;
 
-        $data = iss_calendar_prepare_item($item->ID);
         $date_label = isset($data['date_label']) ? trim((string) $data['date_label']) : '';
         $time_label = isset($data['time_label']) ? trim((string) $data['time_label']) : '';
         $fallback_label = isset($data['datetime_label']) ? trim((string) $data['datetime_label']) : '';
@@ -380,7 +274,7 @@ function iss_calendar_render_dates($attributes = [], $content = '') {
 
         $booking_url = isset($data['booking_url']) ? (string) $data['booking_url'] : '';
         $is_sold_out = isset($data['availability']) && (string) $data['availability'] === 'sold_out';
-        $slot_id = trim((string) get_post_meta($item->ID, 'external_id', true));
+        $slot_id = trim((string) ($data['slot_id'] ?? ''));
         $slot_start = isset($data['start_raw']) ? trim((string) $data['start_raw']) : '';
         $slot_title = isset($data['title']) ? trim((string) $data['title']) : '';
 
@@ -405,7 +299,7 @@ function iss_calendar_render_dates($attributes = [], $content = '') {
             }
 
             $out .= ' <a class="' . esc_attr($link_classes) . '" href="' . esc_url($booking_url) . '"' . $link_attrs . '>';
-            $out .= $is_sold_out ? esc_html__('Ausgebucht', 'iss-calendar') : esc_html__('Buchen', 'iss-calendar');
+            $out .= $is_sold_out ? esc_html__('Ausgebucht', 'iss-programm') : esc_html__('Buchen', 'iss-programm');
             $out .= '</a>';
         }
 
@@ -419,13 +313,13 @@ function iss_calendar_render_dates($attributes = [], $content = '') {
 /**
  * Dynamic block renderer: iss/tour-calendar.
  *
- * Uses the existing shortcode markup so the front-end JS can attach reliably.
+ * Renders the interactive Fuehrung booking calendar mount from occurrence rows.
  *
  * @param array<string,mixed> $attributes
  * @param string $content
  * @return string
  */
-function iss_render_tour_calendar($attributes = [], $content = '') {
+function iss_programm_render_tour_calendar($attributes = [], $content = '') {
     $attributes = is_array($attributes) ? $attributes : [];
 
     if (function_exists('iss_programm_enqueue_calendar_assets')) {
@@ -433,21 +327,18 @@ function iss_render_tour_calendar($attributes = [], $content = '') {
     }
 
     $title = isset($attributes['title']) ? sanitize_text_field((string) $attributes['title']) : 'Termine wählen';
-    $fallback_url = isset($attributes['fallbackUrl']) ? esc_url_raw((string) $attributes['fallbackUrl']) : '';
+    $booking_url = isset($attributes['bookingUrl']) ? esc_url_raw((string) $attributes['bookingUrl']) : '';
 
     $post_id = (int) get_the_ID();
     $post_type = $post_id ? get_post_type($post_id) : '';
 
     $tag = isset($attributes['tag']) ? strtoupper(sanitize_text_field((string) $attributes['tag'])) : '';
-    if ($tag === '' && $post_id) {
-        $tag = strtoupper(sanitize_text_field((string) get_post_meta($post_id, 'calendar_tag', true)));
-    }
-    if ($tag === '' && $post_id && function_exists('iss_calendar_resolve_tag_for_source_post_id')) {
-        $tag = iss_calendar_resolve_tag_for_source_post_id($post_id);
-        if ($tag !== '' && $fallback_url === '' && function_exists('iss_calendar_get_source_map_entry')) {
-            $entry = iss_calendar_get_source_map_entry($tag);
+    if ($tag === '' && $post_id && function_exists('iss_occurrences_resolve_tag_for_source_post_id')) {
+        $tag = iss_occurrences_resolve_tag_for_source_post_id($post_id);
+        if ($tag !== '' && $booking_url === '' && function_exists('iss_occurrences_get_source_map_entry')) {
+            $entry = iss_occurrences_get_source_map_entry($tag);
             if (is_array($entry) && !empty($entry['fallback_url'])) {
-                $fallback_url = esc_url_raw((string) $entry['fallback_url']);
+                $booking_url = esc_url_raw((string) $entry['fallback_url']);
             }
         }
     }
@@ -460,16 +351,12 @@ function iss_render_tour_calendar($attributes = [], $content = '') {
             ])
             : 'class="is-tour-calendar wp-block-group alignwide has-global-padding is-layout-constrained"';
 
-        $msg = esc_html__('Kalender ist nicht konfiguriert (Tag fehlt).', 'iss-calendar');
-        $link_text = iss_calendar_is_fallback_anchor($fallback_url, $post_id)
-            ? esc_html__('Alle Termine anzeigen', 'iss-calendar')
-            : esc_html__('Direkt buchen', 'iss-calendar');
-        $link = $fallback_url ? ' <a href="' . esc_url($fallback_url) . '">' . $link_text . '</a>' : '';
-        return '<div ' . $attrs . '><p class="is-tour-calendar__status has-small-font-size">' . $msg . $link . '</p></div>';
+        $msg = esc_html__('Kalender ist nicht konfiguriert (Tag fehlt).', 'iss-programm');
+        return '<div ' . $attrs . '><p class="is-tour-calendar__status has-small-font-size">' . $msg . '</p></div>';
     }
 
-    if ($tag !== '' && function_exists('iss_calendar_remember_source_mapping')) {
-        iss_calendar_remember_source_mapping($tag, $fallback_url, $post_id, $post_type);
+    if ($tag !== '' && function_exists('iss_occurrences_remember_source_mapping')) {
+        iss_occurrences_remember_source_mapping($tag, $booking_url, $post_id, $post_type);
     }
 
     // Render only a lightweight mount node; front-end JS builds the UI.
@@ -479,26 +366,26 @@ function iss_render_tour_calendar($attributes = [], $content = '') {
         ])
         : 'class="is-tour-calendar wp-block-group alignwide has-global-padding is-layout-constrained"';
 
-    return iss_calendar_render_shell($title, $fallback_url, $post_id, (string) $post_type, $attrs, $tag);
+    return iss_programm_render_tour_calendar_shell($title, $booking_url, $post_id, (string) $post_type, $attrs, $tag);
 }
 
 /**
- * Decide whether a fallback URL should be presented as a same-page list anchor.
+ * Decide whether a booking URL should be presented as a same-page list anchor.
  *
- * @param string $fallback_url
+ * @param string $booking_url
  * @param int $post_id
  * @return bool
  */
-function iss_calendar_is_fallback_anchor($fallback_url, $post_id) {
-    $fallback_url = trim((string) $fallback_url);
-    if ($fallback_url === '') return false;
+function iss_programm_tour_url_is_same_page_anchor($booking_url, $post_id) {
+    $booking_url = trim((string) $booking_url);
+    if ($booking_url === '') return false;
 
-    if (str_starts_with($fallback_url, '#')) return true;
+    if (str_starts_with($booking_url, '#')) return true;
 
     $post_id = (int) $post_id;
     if ($post_id <= 0) return false;
 
-    $parsed = wp_parse_url($fallback_url);
+    $parsed = wp_parse_url($booking_url);
     if (empty($parsed['fragment'])) return false;
 
     $permalink = get_permalink($post_id);

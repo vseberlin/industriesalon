@@ -33,7 +33,6 @@ Immediate executable work only. Larger future programs live in `docs/project/bac
 - Review the `Führung` single-page booking flow:
   - collapse `single-tour.html` and `single-tour-on-demand.html` only if editors do not need distinct compositions
   - keep CTA/mode switching in render logic, not parallel full-page templates
-  - make `iss/tour-calendar` bail out cleanly when no usable calendar mapping exists
 - Review footer navigation and column spacing after the current footer refactor:
   - decide whether `Entdecken` / `Service` stay as separate menus or move to real footer menu assignments
   - rebalance wide-screen spacing between columns, labels, and hours exception rows

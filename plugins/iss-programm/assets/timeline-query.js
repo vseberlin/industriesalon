@@ -90,7 +90,7 @@ document.addEventListener('DOMContentLoaded', function () {
     }
 
     var requestInFlight = null;
-    var nextOffset = 0;
+    var nextOffset = config && typeof config.initialNextOffset === 'number' ? config.initialNextOffset : 0;
     var calendarBridgeMode = '';
     var activePreset = null;
 
@@ -538,6 +538,44 @@ document.addEventListener('DOMContentLoaded', function () {
       }
     }
 
+    function getYearLabel(group) {
+      var label = group ? group.querySelector('.iss-timeline__year-label') : null;
+      return label ? String(label.textContent || '').trim() : '';
+    }
+
+    function appendYearGroupContents(existingGroup, incomingGroup) {
+      Array.prototype.slice.call(incomingGroup.childNodes).forEach(function (node) {
+        if (node.nodeType === 1 && node.classList.contains('iss-timeline__year-label')) {
+          return;
+        }
+        existingGroup.appendChild(node);
+      });
+    }
+
+    function appendTimelineHtml(html) {
+      var template = document.createElement('template');
+      template.innerHTML = html;
+
+      Array.prototype.slice.call(template.content.childNodes).forEach(function (node) {
+        if (node.nodeType !== 1 || !node.classList.contains('iss-timeline__year')) {
+          results.appendChild(node);
+          return;
+        }
+
+        var incomingLabel = getYearLabel(node);
+        var lastGroup = results.lastElementChild && results.lastElementChild.classList.contains('iss-timeline__year')
+          ? results.lastElementChild
+          : null;
+
+        if (lastGroup && incomingLabel !== '' && getYearLabel(lastGroup) === incomingLabel) {
+          appendYearGroupContents(lastGroup, node);
+          return;
+        }
+
+        results.appendChild(node);
+      });
+    }
+
     function refresh(options) {
       options = options || {};
       var append = !!options.append;
@@ -559,7 +597,7 @@ document.addEventListener('DOMContentLoaded', function () {
         .then(function (data) {
           if (data && typeof data.html === 'string') {
             if (append) {
-              results.insertAdjacentHTML('beforeend', data.html);
+              appendTimelineHtml(data.html);
             } else {
               results.innerHTML = data.html;
             }

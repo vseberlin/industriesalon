@@ -97,6 +97,44 @@
   margin-top: 1rem;
 }
 
+.iss-timeline__occurrences {
+  margin-top: 0.85rem;
+}
+
+.iss-timeline__occurrences-summary {
+  width: fit-content;
+  cursor: pointer;
+  list-style: none;
+}
+
+.iss-timeline__occurrences-summary::-webkit-details-marker {
+  display: none;
+}
+
+.iss-timeline__occurrence-list {
+  display: grid;
+  gap: 0.5rem;
+  margin: 0.75rem 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+.iss-timeline__occurrence {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem 0.75rem;
+  align-items: center;
+}
+
+.iss-timeline__occurrence-date {
+  min-width: min(100%, 14rem);
+}
+
+.iss-timeline__occurrence-ticket {
+  min-height: 2.35rem;
+  padding-block: 0.45rem;
+}
+
 .iss-timeline__btn {
   display: inline-flex;
   align-items: center;

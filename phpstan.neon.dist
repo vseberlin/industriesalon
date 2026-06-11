@@ -10,31 +10,37 @@ parameters:
     - plugins/industriesalon-notices
     - plugins/industriesalon-schoeneweide-register
     - plugins/industriesalon-steuerung
-    - plugins/iss-calendar
     - plugins/iss-content-model
+    - plugins/iss-core
+    - plugins/iss-frontend
     - plugins/iss-fuehrungen
     - plugins/iss-graph
     - plugins/iss-media-control
+    - plugins/iss-occurrences
     - plugins/iss-payments-lite
     - plugins/iss-programm
     - plugins/iss-publications
     - plugins/iss-relations
     - plugins/iss-wf-import
+    - plugins/saas-api
   scanFiles:
     - themes/industriesalon/functions.php
     - plugins/industriesalon-notices/industriesalon-notices.php
     - plugins/industriesalon-schoeneweide-register/industriesalon-schoeneweide-register.php
     - plugins/industriesalon-steuerung/industriesalon-steuerung.php
-    - plugins/iss-calendar/iss-calendar.php
     - plugins/iss-content-model/iss-content-model.php
+    - plugins/iss-core/iss-core.php
+    - plugins/iss-frontend/iss-frontend.php
     - plugins/iss-fuehrungen/iss-fuehrungen.php
     - plugins/iss-graph/iss-graph.php
     - plugins/iss-media-control/iss-media-control.php
+    - plugins/iss-occurrences/iss-occurrences.php
     - plugins/iss-payments-lite/iss-payments-lite.php
     - plugins/iss-programm/iss-programm.php
     - plugins/iss-publications/iss-publications.php
     - plugins/iss-relations/iss-relations.php
     - plugins/iss-wf-import/iss-wf-import.php
+    - plugins/saas-api/saas-api.php
   excludePaths:
     analyse:
       - */vendor/*

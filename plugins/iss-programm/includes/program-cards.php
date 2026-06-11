@@ -16,6 +16,10 @@ function iss_programm_cards_get_type_label($item_type) {
         return __('Ausstellung', 'iss-programm');
     }
 
+    if (in_array($item_type, ['project', 'projekt', 'projekte'], true)) {
+        return __('Projekt', 'iss-programm');
+    }
+
     return $item_type !== '' ? ucfirst($item_type) : '';
 }
 
@@ -78,13 +82,13 @@ function iss_programm_cards_build_block_config($attributes = []) {
 }
 
 function iss_programm_cards_render_item($timeline_item, $display = []) {
-    if (!($timeline_item instanceof WP_Post) || !function_exists('iss_timeline_prepare_item')) {
+    if (!is_array($timeline_item)) {
         return '';
     }
 
     $display = is_array($display) ? $display : [];
-    $row = iss_timeline_prepare_item($timeline_item->ID);
-    if (empty($row) || !is_array($row)) {
+    $row = $timeline_item;
+    if (empty($row)) {
         return '';
     }
 

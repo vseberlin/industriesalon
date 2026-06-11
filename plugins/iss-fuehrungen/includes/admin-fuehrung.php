@@ -159,7 +159,8 @@ add_action('admin_notices', function () {
         return;
     }
 
-    $post_id = isset($_GET['post']) ? (int) $_GET['post'] : 0;
+    $current_post = get_post();
+    $post_id = $current_post instanceof WP_Post ? (int) $current_post->ID : 0;
     if ($post_id <= 0) {
         return;
     }
@@ -170,9 +171,9 @@ add_action('admin_notices', function () {
 
     $edit_url = admin_url('post.php?post=' . $post_id . '&action=edit');
     echo '<div class="notice notice-warning"><p>';
-    echo esc_html__('Für diese Führung sind keine zukünftigen Kalender-Termine verknüpft, obwohl der Buchungsmodus einen Kalender erwartet.', 'iss-fuehrungen');
+    echo esc_html__('Für diese Führung sind keine zukünftigen öffentlichen Termine verknüpft, obwohl der Buchungsmodus den Termin-Kalender erwartet.', 'iss-fuehrungen');
     echo ' ';
-    echo '<a href="' . esc_url($edit_url) . '#iss-programm-calendar-mapping">' . esc_html__('Kalender-Zuordnung prüfen', 'iss-fuehrungen') . '</a>';
+    echo '<a href="' . esc_url($edit_url) . '#iss-programm-calendar-mapping">' . esc_html__('SuperSaaS-Reihe prüfen', 'iss-fuehrungen') . '</a>';
     echo '</p></div>';
 });
 

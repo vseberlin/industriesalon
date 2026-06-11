@@ -26,8 +26,23 @@ function iss_fuehrung_get_next_event($post_id) {
     return !empty($events) ? $events[0] : null;
 }
 
-function iss_fuehrung_get_event_start_label($event_id) {
-    $start = get_post_meta($event_id, 'event_start', true);
+function iss_fuehrung_is_calendar_event($event) {
+    return ($event instanceof WP_Post) || (is_array($event) && !empty($event));
+}
+
+function iss_fuehrung_get_event_start_label($event) {
+    if (is_array($event)) {
+        $label = trim((string) ($event['date_label'] ?? ''));
+        $time = trim((string) ($event['time_label'] ?? ''));
+        if ($label !== '') {
+            return $time !== '' ? $label . ', ' . $time : $label;
+        }
+        $start = trim((string) ($event['date_raw'] ?? $event['starts_at'] ?? ''));
+    } else {
+        $event_id = ($event instanceof WP_Post) ? (int) $event->ID : (int) $event;
+        $start = get_post_meta($event_id, 'event_start', true);
+    }
+
     if (!$start) {
         return '';
     }
@@ -50,8 +65,14 @@ function iss_fuehrung_get_event_start_label($event_id) {
     return wp_date('d.m.Y, H:i', $timestamp, wp_timezone());
 }
 
-function iss_fuehrung_get_event_booking_url($event_id, $post_id = 0) {
-    $url = (string) get_post_meta($event_id, 'booking_url', true);
+function iss_fuehrung_get_event_booking_url($event, $post_id = 0) {
+    if (is_array($event)) {
+        $url = trim((string) ($event['booking_url'] ?? ''));
+    } else {
+        $event_id = ($event instanceof WP_Post) ? (int) $event->ID : (int) $event;
+        $url = (string) get_post_meta($event_id, 'booking_url', true);
+    }
+
     if ($url !== '') {
         return $url;
     }
@@ -96,6 +117,7 @@ function iss_fuehrung_get_related($post_id, $limit = 3) {
         'posts_per_page' => max(1, (int) $limit),
         'post__not_in'   => [$post_id],
         'orderby'        => ['menu_order' => 'ASC', 'date' => 'DESC'],
+        // phpcs:ignore WordPress.DB.SlowDBQuery.slow_db_query_tax_query -- Related tour cards intentionally match shared tour taxonomy terms.
         'tax_query'      => $tax_query,
     ]);
 }
@@ -134,7 +156,7 @@ function iss_fuehrung_get_effective_booking_mode($post_id) {
     }
 
     $next_event = iss_fuehrung_get_next_event($post_id);
-    $has_calendar = ($next_event instanceof WP_Post);
+    $has_calendar = iss_fuehrung_is_calendar_event($next_event);
 
     $inquiry = iss_fuehrung_get_inquiry_data($post_id);
     $has_on_demand = ($inquiry['url'] !== '' || $inquiry['note'] !== '');
