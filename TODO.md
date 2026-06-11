@@ -2,6 +2,24 @@
 
 Immediate executable work only. Larger future programs live in `docs/project/backlog.md`; UAT-dependent work lives in `docs/project/uat.md`.
 
+## Tomorrow: Finish Greenfield Refactor Checkpoint
+
+- Decide whether local `main` should be pushed for staging review; it is currently ahead of `origin/main` and intentionally not pushed.
+- Run a final public-consumer audit for legacy read URLs:
+  - expected converted reads: header search, timeline query, tour-slot reads
+  - expected survivors: legacy compatibility reads, admin/editor REST, archive admin helpers, and `/is-tours/v1/book`
+- Re-run the local transfer gate:
+  - PHP lint / JS syntax / targeted PHPCS / targeted PHPStan
+  - all facade comparators: search, occurrences, entities, timeline, tour-slots
+  - `wp iss-graph verify`, `wp iss-graph drift-check`, `wp iss-occurrences verify`, `wp iss-occurrences drift-check`
+  - public HTTP checks for `/`, `/kalender/`, `/ausstellungen/`, `/fuehrungen/`, `/veranstaltungen/`
+- Prepare staging transfer with paired data:
+  - backup target DB first
+  - apply `ops/sql/2026-06-11-strict-programme-toggle-backfill.sql`
+  - apply `ops/sql/2026-06-11-ausstellung-availability-cleanup.sql`
+  - run target occurrence schema/sync/backfill commands as needed, then graph and occurrence drift checks
+- After staging passes, mark the checkpoint complete in `refactor.md` and `handoff_CURRENT.md`; leave old read routes in place until a separate removal checkpoint.
+
 ## Active
 
 - 2026-06-07: Run the editorial entity-hygiene pass needed for transcript relation building:
