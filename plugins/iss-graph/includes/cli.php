@@ -11,6 +11,7 @@ if (defined('WP_CLI') && WP_CLI) {
     WP_CLI::add_command('iss-graph drift-check', 'iss_graph_wpcli_drift_check_command');
     WP_CLI::add_command('iss-graph facade-check', 'iss_graph_wpcli_facade_check_command');
     WP_CLI::add_command('iss-graph facade-search-compare', 'iss_graph_wpcli_facade_search_compare_command');
+    WP_CLI::add_command('iss-graph facade-occurrences-compare', 'iss_graph_wpcli_facade_occurrences_compare_command');
     WP_CLI::add_command('iss-graph migrate', 'iss_graph_wpcli_migrate_command');
     WP_CLI::add_command('iss-graph sync-register', 'iss_graph_wpcli_sync_register_command');
     WP_CLI::add_command('iss-graph sync-content', 'iss_graph_wpcli_sync_content_command');
@@ -335,6 +336,179 @@ function iss_graph_wpcli_facade_search_compare_command(array $args, array $assoc
     }
 
     WP_CLI::success(sprintf('ISS graph facade search comparison passed for %d querie(s).', count($queries)));
+}
+
+function iss_graph_wpcli_facade_parse_occurrence_scenarios($value): array
+{
+    $raw_scenarios = is_string($value) && trim($value) !== ''
+        ? preg_split('/\s*,\s*/', trim($value))
+        : ['upcoming', 'all', 'event'];
+
+    $scenarios = [];
+    foreach ((array) $raw_scenarios as $scenario) {
+        $scenario = sanitize_key((string) $scenario);
+        if ($scenario !== '') {
+            $scenarios[] = $scenario;
+        }
+    }
+
+    return array_values(array_unique($scenarios));
+}
+
+function iss_graph_wpcli_facade_occurrence_params_for_scenario(string $scenario, int $limit): array
+{
+    $params = [
+        'limit' => $limit,
+    ];
+
+    switch ($scenario) {
+        case 'all':
+            $params['time_mode'] = 'all';
+            break;
+        case 'event':
+        case 'events':
+        case 'veranstaltung':
+        case 'veranstaltungen':
+            $params['time_mode'] = 'all';
+            $params['kind'] = 'event';
+            break;
+        case 'tour':
+        case 'tours':
+        case 'fuehrung':
+        case 'fuehrungen':
+            $params['time_mode'] = 'upcoming';
+            $params['kind'] = 'tour';
+            break;
+        case 'exhibition':
+        case 'exhibitions':
+        case 'ausstellung':
+        case 'ausstellungen':
+            $params['time_mode'] = 'all';
+            $params['kind'] = 'exhibition';
+            break;
+        case 'project':
+        case 'projects':
+        case 'projekt':
+        case 'projekte':
+            $params['time_mode'] = 'all';
+            $params['kind'] = 'project';
+            break;
+        case 'upcoming':
+        default:
+            $params['time_mode'] = 'upcoming';
+            break;
+    }
+
+    return $params;
+}
+
+function iss_graph_wpcli_facade_occurrence_direct_response(array $params): array
+{
+    if (!function_exists('iss_occurrences_query') || !function_exists('iss_facade_rest_occurrence_filters_from_request')) {
+        return [];
+    }
+
+    $request = new WP_REST_Request('GET', '/iss/v1/occurrences');
+    foreach ($params as $key => $value) {
+        $request->set_param((string) $key, $value);
+    }
+
+    $filters = iss_facade_rest_occurrence_filters_from_request($request);
+    $rows = iss_occurrences_query($filters);
+    $items = array_values(array_map('iss_facade_rest_prepare_occurrence', is_array($rows) ? $rows : []));
+
+    return [
+        'filters' => [
+            'limit' => (int) $filters['limit'],
+            'offset' => (int) $filters['offset'],
+            'order' => (string) $filters['order'],
+            'time_mode' => (string) $filters['time_mode'],
+        ],
+        'count' => count($items),
+        'items' => $items,
+    ];
+}
+
+function iss_graph_wpcli_facade_occurrence_signature(array $data): array
+{
+    $items = isset($data['items']) && is_array($data['items']) ? $data['items'] : [];
+    $filters = isset($data['filters']) && is_array($data['filters']) ? $data['filters'] : [];
+
+    return [
+        'filters' => [
+            'limit' => (int) ($filters['limit'] ?? 0),
+            'offset' => (int) ($filters['offset'] ?? 0),
+            'order' => (string) ($filters['order'] ?? ''),
+            'time_mode' => (string) ($filters['time_mode'] ?? ''),
+        ],
+        'count' => (int) ($data['count'] ?? 0),
+        'items' => array_values(array_map(static function (array $item): array {
+            $source = isset($item['source']) && is_array($item['source']) ? $item['source'] : [];
+            $location = isset($item['location']) && is_array($item['location']) ? $item['location'] : [];
+
+            return [
+                'id' => (int) ($item['id'] ?? 0),
+                'entity_id' => (int) ($item['entity_id'] ?? 0),
+                'kind' => (string) ($item['kind'] ?? ''),
+                'title' => (string) ($item['title'] ?? ''),
+                'starts_at' => (string) ($item['starts_at'] ?? ''),
+                'ends_at' => (string) ($item['ends_at'] ?? ''),
+                'date_source' => (string) ($item['date_source'] ?? ''),
+                'series_key' => (string) ($item['series_key'] ?? ''),
+                'booking_url' => (string) ($item['booking_url'] ?? ''),
+                'availability_state' => (string) ($item['availability_state'] ?? ''),
+                'capacity_available' => $item['capacity_available'] ?? null,
+                'capacity_total' => $item['capacity_total'] ?? null,
+                'tag' => (string) ($item['tag'] ?? ''),
+                'source_post_id' => (int) ($source['post_id'] ?? 0),
+                'source_post_type' => (string) ($source['post_type'] ?? ''),
+                'source_url' => (string) ($source['url'] ?? ''),
+                'location_entity_id' => (int) ($location['entity_id'] ?? 0),
+                'location_label' => (string) ($location['label'] ?? ''),
+            ];
+        }, array_filter($items, 'is_array'))),
+    ];
+}
+
+function iss_graph_wpcli_facade_occurrences_compare_command(array $args, array $assoc_args): void
+{
+    if (!function_exists('iss_occurrences_query')) {
+        WP_CLI::error('Occurrence query service is unavailable.');
+    }
+
+    $limit = max(1, min(25, absint($assoc_args['limit'] ?? 5)));
+    $scenarios = iss_graph_wpcli_facade_parse_occurrence_scenarios($assoc_args['scenarios'] ?? '');
+    if (!$scenarios) {
+        WP_CLI::error('Provide at least one occurrence comparison scenario through --scenarios or use the defaults.');
+    }
+
+    $errors = [];
+    foreach ($scenarios as $scenario) {
+        $params = iss_graph_wpcli_facade_occurrence_params_for_scenario($scenario, $limit);
+        $direct = iss_graph_wpcli_facade_occurrence_direct_response($params);
+        $facade = iss_graph_wpcli_facade_request('/iss/v1/occurrences', $params, $errors, 'facade');
+        $direct_signature = iss_graph_wpcli_facade_occurrence_signature($direct);
+        $facade_signature = iss_graph_wpcli_facade_occurrence_signature($facade);
+
+        if ($direct_signature !== $facade_signature) {
+            $errors[] = sprintf('Occurrence facade mismatch for scenario "%s".', $scenario);
+            continue;
+        }
+
+        WP_CLI::log(sprintf(
+            '[compare] occurrences scenario="%s" time_mode=%s count=%d matched',
+            $scenario,
+            (string) ($facade_signature['filters']['time_mode'] ?? ''),
+            (int) ($facade_signature['count'] ?? 0)
+        ));
+    }
+
+    if ($errors) {
+        WP_CLI::error_multi_line($errors);
+        WP_CLI::error(sprintf('ISS graph facade occurrence comparison failed with %d issue(s).', count($errors)));
+    }
+
+    WP_CLI::success(sprintf('ISS graph facade occurrence comparison passed for %d scenario(s).', count($scenarios)));
 }
 
 function iss_graph_wpcli_parse_drift_checks(string $value): array

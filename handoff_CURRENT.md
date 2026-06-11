@@ -20,6 +20,7 @@ Current checkpoint only. History belongs in `CHANGELOG.md`; active follow-up bel
 - `iss-graph` now has a central entity-kind registry for current storage kinds, canonical target aliases, owner plugins, post-type mappings, and legacy aliases. Current stored values such as `ausstellung`, `veranstaltung`, `fuehrung`, `projekt`, `page`, and `archivbeitrag` remain stable; canonical aliases include `exhibition`, `event`, `tour`, and `project`.
 - `iss-graph` exposes the first read-only `/wp-json/iss/v1` facade for contract, entities, entity detail, occurrences, and search. It delegates to existing graph, occurrence, and search services; older plugin routes remain active.
 - Search is the first old-vs-new facade audit surface. `wp iss-graph facade-search-compare` compares `/iss-search/v1/search` and `/iss/v1/search` result signatures before any search consumer switches route.
+- Occurrences are now covered by the same old-vs-new audit pattern. `wp iss-graph facade-occurrences-compare` compares direct `iss_occurrences_query()` output against `/iss/v1/occurrences` result signatures before programme consumers switch routes.
 - `iss-core` and `iss-frontend` exist as active local scaffold plugins only. They expose helper conventions and do not own CPTs, REST routes, renderers, CSS, or domain scripts yet.
 - Legacy hidden-calendar code has been removed from active runtime paths; the old `iss_calendar_item` CPT/query layer is not active storage or query code.
 
@@ -45,6 +46,7 @@ Current checkpoint only. History belongs in `CHANGELOG.md`; active follow-up bel
 - Next local refactor work should use `iss-core` or `iss-frontend` only for helpers with proven reuse; keep domain code in the current owning plugins until extraction has a stable contract.
 - Run `wp iss-graph facade-check` before wiring any consumer to the `/iss/v1` facade.
 - Run `wp iss-graph facade-search-compare` before switching any search UI, block, or API consumer from `/iss-search/v1/search` to `/iss/v1/search`.
+- Run `wp iss-graph facade-occurrences-compare` before switching programme/calendar UI, blocks, or API consumers to `/iss/v1/occurrences`.
 - Before deploy or staging transfer, run `wp iss-occurrences verify`, `wp iss-occurrences drift-check`, and `wp iss-graph drift-check` on the target.
 - Apply programme SQL/data artifacts only with the matching code checkpoint and after a database backup.
 
@@ -65,3 +67,4 @@ Current checkpoint only. History belongs in `CHANGELOG.md`; active follow-up bel
 - `/wp-json/iss/v1/contract`, `/entities`, `/entities/{id}`, `/occurrences`, and `/search` returned `200` in WP-CLI REST smoke checks and HTTP curl checks on local port `8082`.
 - `wp iss-graph facade-check --limit=2` passes and checks `/iss/v1/contract`, `/entities`, `/entities/{id}`, `/occurrences`, and `/search` through WordPress.
 - `wp iss-graph facade-search-compare --limit=5` passes for default queries `salon`, `schoeneweide`, and `ausstellung`; each matched provider, count, and result signatures between legacy search and the facade.
+- `wp iss-graph facade-occurrences-compare --limit=5` passes for default scenarios `upcoming`, `all`, and `event`; each matched direct occurrence service output against the `/iss/v1/occurrences` facade.

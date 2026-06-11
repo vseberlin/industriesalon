@@ -39,3 +39,4 @@ This is the repo-owned plan for the gradual Industriesalon refactor. It records 
 - `/wp-json/iss/v1` is a facade boundary for the greenfield contract, not a new storage owner.
 - `wp iss-graph facade-check` verifies the `/iss/v1` route contract before any consumer is switched to the facade.
 - `wp iss-graph facade-search-compare` compares legacy `/iss-search/v1/search` results with `/iss/v1/search` as the first old-vs-new consumer audit.
+- `wp iss-graph facade-occurrences-compare` compares direct `iss_occurrences_query()` output with `/iss/v1/occurrences` before any programme consumer switches routes.
