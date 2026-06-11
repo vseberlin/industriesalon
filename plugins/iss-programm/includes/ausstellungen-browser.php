@@ -369,3 +369,148 @@ function iss_programm_render_ausstellungen_browser_block($attributes = []): stri
 
     return $out;
 }
+
+function iss_programm_ausstellungen_audit_findings(): array
+{
+    $findings = [];
+    $visible_ids = get_posts([
+        'post_type' => 'ausstellung',
+        'post_status' => 'publish',
+        'posts_per_page' => -1,
+        'fields' => 'ids',
+        'no_found_rows' => true,
+        // phpcs:ignore WordPress.DB.SlowDBQuery.slow_db_query_meta_query -- CLI audit over small editorial Ausstellung CPT.
+        'meta_query' => [
+            iss_programm_ausstellungen_visibility_meta_query(),
+        ],
+    ]);
+
+    foreach ((array) $visible_ids as $post_id) {
+        $post_id = (int) $post_id;
+        if ($post_id <= 0) {
+            continue;
+        }
+
+        $title = get_the_title($post_id);
+        $has_type = taxonomy_exists('ausstellung_typ') && has_term('', 'ausstellung_typ', $post_id);
+        if (!$has_type) {
+            $findings[] = [
+                'severity' => 'warning',
+                'code' => 'visible_without_type',
+                'post_id' => $post_id,
+                'title' => $title,
+                'message' => 'Visible Ausstellung has no ausstellung_typ term.',
+            ];
+        }
+
+        $is_availability_only = iss_programm_ausstellung_has_type($post_id, ['dauerausstellung', 'digitaleausstellungen']);
+        $start = trim((string) get_post_meta($post_id, 'iss_start_date', true));
+        $end = trim((string) get_post_meta($post_id, 'iss_end_date', true));
+        if (!$is_availability_only && $start !== '' && $end === '') {
+            $findings[] = [
+                'severity' => 'warning',
+                'code' => 'temporary_without_end_date',
+                'post_id' => $post_id,
+                'title' => $title,
+                'message' => 'Temporary Ausstellung has a start date but no end date; it will remain current, not archived.',
+            ];
+        }
+    }
+
+    return array_merge($findings, iss_programm_ausstellungen_audit_occurrence_findings());
+}
+
+function iss_programm_ausstellungen_audit_occurrence_findings(): array
+{
+    global $wpdb;
+
+    if (!function_exists('iss_occurrences_get_service')) {
+        return [];
+    }
+
+    $service = iss_occurrences_get_service();
+    if (!method_exists($service, 'tables_exist') || !$service->tables_exist()) {
+        return [];
+    }
+
+    $table = $service->get_occurrences_table_name();
+    // phpcs:disable WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching, WordPress.DB.PreparedSQL.InterpolatedNotPrepared -- Read-only CLI audit over service-owned occurrence table and WordPress taxonomy tables.
+    $rows = $wpdb->get_results(
+        "SELECT o.id, o.source_post_id, p.post_title, t.slug
+        FROM {$table} o
+        INNER JOIN {$wpdb->posts} p ON p.ID = o.source_post_id
+        INNER JOIN {$wpdb->term_relationships} tr ON tr.object_id = p.ID
+        INNER JOIN {$wpdb->term_taxonomy} tt ON tt.term_taxonomy_id = tr.term_taxonomy_id
+        INNER JOIN {$wpdb->terms} t ON t.term_id = tt.term_id
+        WHERE o.origin = 'wp'
+          AND o.source_post_type = 'ausstellung'
+          AND tt.taxonomy = 'ausstellung_typ'
+          AND t.slug IN ('dauerausstellung', 'digitaleausstellungen')
+        ORDER BY o.id ASC",
+        ARRAY_A
+    );
+    // phpcs:enable WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching, WordPress.DB.PreparedSQL.InterpolatedNotPrepared
+
+    $findings = [];
+    foreach (is_array($rows) ? $rows : [] as $row) {
+        $findings[] = [
+            'severity' => 'error',
+            'code' => 'availability_type_has_occurrence',
+            'post_id' => (int) ($row['source_post_id'] ?? 0),
+            'title' => (string) ($row['post_title'] ?? ''),
+            'message' => sprintf(
+                'Availability-only Ausstellung type %s has occurrence row #%d.',
+                (string) ($row['slug'] ?? ''),
+                (int) ($row['id'] ?? 0)
+            ),
+        ];
+    }
+
+    return $findings;
+}
+
+if (defined('WP_CLI') && WP_CLI) {
+    final class ISS_Programm_CLI_Command
+    {
+        public function ausstellungen_audit(array $args, array $assoc_args): void
+        {
+            $strict = !empty($assoc_args['strict']);
+            $format = isset($assoc_args['format']) ? sanitize_key((string) $assoc_args['format']) : 'table';
+            $findings = iss_programm_ausstellungen_audit_findings();
+
+            if ($format === 'json') {
+                \WP_CLI::log((string) wp_json_encode($findings));
+            } elseif (!empty($findings)) {
+                \WP_CLI::log('severity	code	post_id	title	message');
+                foreach ($findings as $finding) {
+                    \WP_CLI::log(implode("\t", [
+                        (string) ($finding['severity'] ?? ''),
+                        (string) ($finding['code'] ?? ''),
+                        (string) ($finding['post_id'] ?? ''),
+                        (string) ($finding['title'] ?? ''),
+                        (string) ($finding['message'] ?? ''),
+                    ]));
+                }
+            }
+
+            $errors = array_values(array_filter($findings, static function (array $finding) use ($strict): bool {
+                if (($finding['severity'] ?? '') === 'error') {
+                    return true;
+                }
+
+                return $strict && ($finding['severity'] ?? '') === 'warning';
+            }));
+
+            if (!empty($errors)) {
+                \WP_CLI::error(sprintf('Ausstellung availability audit found %d blocking issue(s).', count($errors)));
+            }
+
+            \WP_CLI::success(sprintf(
+                'Ausstellung availability audit passed with %d warning(s).',
+                count($findings)
+            ));
+        }
+    }
+
+    \WP_CLI::add_command('iss-programm ausstellungen-audit', ['ISS_Programm_CLI_Command', 'ausstellungen_audit']);
+}

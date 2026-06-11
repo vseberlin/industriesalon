@@ -6,8 +6,8 @@ Current checkpoint only. History belongs in `CHANGELOG.md`; active follow-up bel
 
 ## Current State
 
-- Branch: `reconcile/programme-origin-docs`, a temporary local reconciliation branch. Do not push unless explicitly requested.
-- This branch merges local programme occurrence commits `48e7595` and `a1b6504` with origin staging documentation commits `76257e7` and `8c58801`.
+- Branch: `main`. Do not push unless explicitly requested.
+- Local `main` contains the programme occurrence/refactor commits, origin staging documentation commits, and the local Ausstellung availability hardening follow-up.
 - Programme/calendar is on the first-party `iss-occurrences` projection. `iss-occurrences` owns `wp_iss_occurrences` and `wp_iss_occurrence_series`; `iss-programm` renders calendar/timeline/browser blocks; theme owns public skins/templates.
 - `/kalender/` starts in month mode, defaults to `Alle`, uses explicit opt-in semantics, and groups recurring Führungen with `Termine anzeigen`.
 - `/ausstellungen/` uses `industriesalon/ausstellungen-browser`, a WP_Query-based availability browser separate from occurrence/timeline data. Filters are `Aktuell`, `Dauer`, `Digital`, and `Archiv`; public visibility still uses `iss_timeline_enabled`.
@@ -28,7 +28,7 @@ Current checkpoint only. History belongs in `CHANGELOG.md`; active follow-up bel
 
 - This reconciliation branch is local and temporary. If it becomes the exchange branch, rerun checks after the merge commit and decide explicitly whether to push.
 - Staging does not automatically have the new programme occurrence/refactor checkpoint. It will need code merge plus target-side occurrence schema/backfill/sync checks before relying on it.
-- Some older temporary Ausstellungen have start dates but no end dates, so they still appear under `Aktuell` until editors add end dates or change their type. This is now recorded in `TODO.md`.
+- `wp iss-programm ausstellungen-audit` currently reports 13 warnings: visible Ausstellungen without `ausstellung_typ` terms and temporary Ausstellungen with start dates but no end dates. These are data/editorial cleanup items recorded in `TODO.md`.
 - Database state changed locally during programme verification: occurrence schema v3 installed, graph backfill applied, `iss-core` and `iss-frontend` activated, and `wp iss-occurrences sync` resynced source rows under the Ausstellung availability boundary.
 - Occurrence drift depends on graph entity health. If graph entities drift, `wp iss-occurrences drift-check` should fail even if the calendar visually renders.
 - Template output can still become DB-backed after Site Editor saves; check `wp_template` authority before assuming disk files are live.
@@ -36,8 +36,7 @@ Current checkpoint only. History belongs in `CHANGELOG.md`; active follow-up bel
 
 ## Next Action
 
-- If this reconciliation branch is kept, run the final verification set on it and commit the merge.
-- If the programme checkpoint must remain strictly local and unmerged, abandon this branch and return to `main`.
+- Review and resolve the 13 Ausstellung availability audit warnings, or accept them as editorial state.
 - Before deploy or staging transfer, run `wp iss-occurrences verify`, `wp iss-occurrences drift-check`, and `wp iss-graph drift-check` on the target.
 - Apply programme SQL/data artifacts only with the matching code checkpoint and after a database backup.
 
@@ -49,4 +48,5 @@ Current checkpoint only. History belongs in `CHANGELOG.md`; active follow-up bel
 - Pre-merge local programme checkpoint: template authority for `page-ausstellungen` and `page-kalender` was `source=theme`; direct DB check found no `dauerausstellung` or `digitaleausstellungen` rows in `wp_iss_occurrences`.
 - Pre-merge local programme checkpoint: Playwright desktop/mobile checks on the configured local host had no console errors and no mobile horizontal overflow on changed pages.
 - Reconciliation branch follow-up: Ausstellung browser filters return `aktuell=18`, `dauer=14`, `digital=1`, and `archiv=6`; `Archiv` no longer includes `Frauen im Werk für Fernmeldewesen`.
+- `wp iss-programm ausstellungen-audit` default mode passes with 13 warnings; `--strict` fails with the same warnings as blocking issues; PHP lint, PHPCS, PHPStan, and `git diff --check` passed for the audit command.
 - Origin staging commits verified Frauen transfer and graph migration on staging; details are preserved in `CHANGELOG.md`.

@@ -4,8 +4,9 @@ Immediate executable work only. Larger future programs live in `docs/project/bac
 
 ## Active
 
-- Review old open-ended temporary Ausstellungen in the availability browser:
-  - decide whether `Ostberliner Zeitreisen - Fotografien von Kurt Schwarz` and `Die laufende Produktion` need explicit end dates or a different type before treating them as current
+- Review Ausstellung availability audit warnings from `wp iss-programm ausstellungen-audit`:
+  - add `ausstellung_typ` terms or intentionally hide visible no-type posts: `Kinder im Werk`, `Frauen im Werk für Fernmeldewesen`, `Wir ham den Kanal noch lange nicht voll...`, `Wandel mit Wirkung`, `15 Jahre Industriesalon`, `Das Archiv von Fräulein Krause`, `Faszination Modellbahn in 1:120`, `Futura - Zukünfte erleben`, `Betriebsfotoalben im WF`
+  - decide whether `Kinder im Werk`, `Frauen im Werk für Fernmeldewesen`, `Ostberliner Zeitreisen - Fotografien von Kurt Schwarz`, and `Die laufende Produktion` need explicit end dates or a different type before treating them as current
   - keep the code rule strict: `Archiv` requires an explicit past `iss_end_date`; missing end dates are data to review, not automatic archive state
 - 2026-06-07: Run the editorial entity-hygiene pass needed for transcript relation building:
   - inventory duplicate normalized names, wrong-kind entities, and ambiguous aliases around `Industriesalon Schöneweide`, `WF`, `KWO`, `TRO`, and `AEG`

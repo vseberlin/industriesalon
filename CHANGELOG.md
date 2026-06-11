@@ -5,6 +5,7 @@
   - added `refactor.md` with the agreed `Entity / Relation / Occurrence / View` direction, occurrence-only calendar boundary, Ausstellung availability split, and phased `iss-core` / `iss-frontend` path
   - added the dedicated `industriesalon/ausstellungen-browser` block and WP_Query-based availability path so `/ausstellungen/` no longer depends on occurrence/timeline data for Dauer, Digital, Aktuell, or Archiv filters
   - tightened the Ausstellung `Archiv` filter to require an explicit past `iss_end_date`, so open-ended current/temporary exhibitions are not classified as archive entries
+  - added `wp iss-programm ausstellungen-audit` as a read-only guardrail for visible Ausstellungen without type terms, temporary Ausstellungen without end dates, and Dauer/Digital occurrence projection leaks
   - kept `iss_timeline_enabled` as the existing public visibility storage for exhibitions, but relabeled Ausstellung editor controls to public Ausstellung overview wording instead of calendar/timeline wording
   - changed occurrence source projection so Dauer and Digital Ausstellungen are availability-only and no longer sync as fake running calendar rows; temporary exhibition dates remain eligible for occurrence/calendar rows when explicitly enabled
   - added minimal `iss-core` and `iss-frontend` scaffold plugins for shared infrastructure/runtime helper conventions only; existing CPTs, REST routes, renderers, assets, CSS, and domain scripts remain with their current owners
