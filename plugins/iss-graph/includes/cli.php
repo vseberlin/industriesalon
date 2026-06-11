@@ -9,6 +9,7 @@ if (!defined('ABSPATH')) {
 if (defined('WP_CLI') && WP_CLI) {
     WP_CLI::add_command('iss-graph verify', 'iss_graph_wpcli_verify_command');
     WP_CLI::add_command('iss-graph drift-check', 'iss_graph_wpcli_drift_check_command');
+    WP_CLI::add_command('iss-graph facade-check', 'iss_graph_wpcli_facade_check_command');
     WP_CLI::add_command('iss-graph migrate', 'iss_graph_wpcli_migrate_command');
     WP_CLI::add_command('iss-graph sync-register', 'iss_graph_wpcli_sync_register_command');
     WP_CLI::add_command('iss-graph sync-content', 'iss_graph_wpcli_sync_content_command');
@@ -128,6 +129,133 @@ function iss_graph_wpcli_drift_check_command(array $args, array $assoc_args): vo
     }
 
     WP_CLI::success('ISS graph drift check passed.');
+}
+
+function iss_graph_wpcli_facade_response_count(array $data): string
+{
+    if (isset($data['count'])) {
+        return (string) (int) $data['count'];
+    }
+
+    if (isset($data['entity_kinds']) && is_array($data['entity_kinds'])) {
+        return (string) count($data['entity_kinds']);
+    }
+
+    if (isset($data['item']) && is_array($data['item'])) {
+        return '1';
+    }
+
+    return 'n/a';
+}
+
+function iss_graph_wpcli_facade_request(string $path, array $params, array &$errors): array
+{
+    $request = new WP_REST_Request('GET', $path);
+    foreach ($params as $key => $value) {
+        $request->set_param((string) $key, $value);
+    }
+
+    $response = rest_do_request($request);
+    if ($response->is_error()) {
+        $error = $response->as_error();
+        $errors[] = sprintf('%s returned REST error: %s', $path, $error ? $error->get_error_message() : 'unknown error');
+        WP_CLI::log(sprintf('[facade] %s status=error count=n/a', $path));
+
+        return [];
+    }
+
+    $status = (int) $response->get_status();
+    $data = $response->get_data();
+    if ($status !== 200) {
+        $errors[] = sprintf('%s returned status %d, expected 200.', $path, $status);
+    }
+    if (!is_array($data)) {
+        $errors[] = sprintf('%s returned a non-object response.', $path);
+        $data = [];
+    }
+
+    WP_CLI::log(sprintf('[facade] %s status=%d count=%s', $path, $status, iss_graph_wpcli_facade_response_count($data)));
+
+    return $data;
+}
+
+function iss_graph_wpcli_facade_require_keys(string $context, array $data, array $keys, array &$errors): void
+{
+    foreach ($keys as $key) {
+        if (!array_key_exists($key, $data)) {
+            $errors[] = sprintf('%s is missing key: %s.', $context, (string) $key);
+        }
+    }
+}
+
+function iss_graph_wpcli_facade_check_command(array $args, array $assoc_args): void
+{
+    $limit = max(1, min(10, absint($assoc_args['limit'] ?? 2)));
+    $search = iss_graph_normalize_public_search_query((string) ($assoc_args['search'] ?? 'salon'));
+    if ($search === '') {
+        $search = 'salon';
+    }
+
+    $errors = [];
+    $contract = iss_graph_wpcli_facade_request('/iss/v1/contract', [], $errors);
+    iss_graph_wpcli_facade_require_keys('/iss/v1/contract', $contract, ['namespace', 'version', 'read_only', 'providers', 'routes', 'entity_kinds'], $errors);
+    if (($contract['namespace'] ?? '') !== 'iss/v1') {
+        $errors[] = '/iss/v1/contract namespace is not iss/v1.';
+    }
+    if (empty($contract['read_only'])) {
+        $errors[] = '/iss/v1/contract does not report read_only=true.';
+    }
+    if (empty($contract['entity_kinds']) || !is_array($contract['entity_kinds'])) {
+        $errors[] = '/iss/v1/contract has no entity_kinds list.';
+    }
+
+    $entities = iss_graph_wpcli_facade_request('/iss/v1/entities', ['limit' => $limit], $errors);
+    iss_graph_wpcli_facade_require_keys('/iss/v1/entities', $entities, ['count', 'items'], $errors);
+    $entity_items = isset($entities['items']) && is_array($entities['items']) ? $entities['items'] : [];
+    if (!$entity_items) {
+        $errors[] = '/iss/v1/entities returned no public entity items to detail-check.';
+    }
+
+    $entity_id = 0;
+    $first_entity = $entity_items[0] ?? null;
+    if (is_array($first_entity)) {
+        iss_graph_wpcli_facade_require_keys('/iss/v1/entities item', $first_entity, ['id', 'kind', 'storage_kind', 'title', 'url'], $errors);
+        $entity_id = absint($first_entity['id'] ?? 0);
+    }
+
+    if ($entity_id > 0) {
+        $detail_path = sprintf('/iss/v1/entities/%d', $entity_id);
+        $detail = iss_graph_wpcli_facade_request($detail_path, [], $errors);
+        iss_graph_wpcli_facade_require_keys($detail_path, $detail, ['item'], $errors);
+        $item = isset($detail['item']) && is_array($detail['item']) ? $detail['item'] : [];
+        iss_graph_wpcli_facade_require_keys($detail_path . ' item', $item, ['id', 'kind', 'names', 'identifiers', 'relations'], $errors);
+        foreach (['names', 'identifiers', 'relations'] as $list_key) {
+            if (isset($item[$list_key]) && !is_array($item[$list_key])) {
+                $errors[] = sprintf('%s item key %s is not a list.', $detail_path, $list_key);
+            }
+        }
+    }
+
+    $occurrences = iss_graph_wpcli_facade_request('/iss/v1/occurrences', ['limit' => $limit], $errors);
+    iss_graph_wpcli_facade_require_keys('/iss/v1/occurrences', $occurrences, ['count', 'items'], $errors);
+    $occurrence_items = isset($occurrences['items']) && is_array($occurrences['items']) ? $occurrences['items'] : [];
+    if (isset($occurrence_items[0]) && is_array($occurrence_items[0])) {
+        iss_graph_wpcli_facade_require_keys('/iss/v1/occurrences item', $occurrence_items[0], ['id', 'entity_id', 'kind', 'title', 'starts_at', 'source', 'location'], $errors);
+    }
+
+    $search_results = iss_graph_wpcli_facade_request('/iss/v1/search', ['q' => $search, 'limit' => $limit], $errors);
+    iss_graph_wpcli_facade_require_keys('/iss/v1/search', $search_results, ['query', 'provider', 'count', 'items'], $errors);
+    $search_items = isset($search_results['items']) && is_array($search_results['items']) ? $search_results['items'] : [];
+    if (isset($search_items[0]) && is_array($search_items[0])) {
+        iss_graph_wpcli_facade_require_keys('/iss/v1/search item', $search_items[0], ['id', 'type', 'title', 'url'], $errors);
+    }
+
+    if ($errors) {
+        WP_CLI::error_multi_line($errors);
+        WP_CLI::error(sprintf('ISS graph facade check failed with %d issue(s).', count($errors)));
+    }
+
+    WP_CLI::success('ISS graph facade check passed.');
 }
 
 function iss_graph_wpcli_parse_drift_checks(string $value): array

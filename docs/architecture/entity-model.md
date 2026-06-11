@@ -459,7 +459,8 @@ GET /wp-json/iss/v1/search
 The facade is public-read only. Entity responses expose public entities and
 public relations; occurrence responses are served from `iss-occurrences` when
 that plugin is active; search responses delegate to the existing
-`iss-search/v1` provider.
+`iss-search/v1` provider. Run `wp iss-graph facade-check` before switching any
+consumer to `/iss/v1`.
 
 The resolver should classify match type:
 

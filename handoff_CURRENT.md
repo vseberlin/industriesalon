@@ -42,7 +42,7 @@ Current checkpoint only. History belongs in `CHANGELOG.md`; active follow-up bel
 
 - Keep the local Ausstellung availability SQL artifact paired with this code checkpoint if transferring to staging/production.
 - Next local refactor work should use `iss-core` or `iss-frontend` only for helpers with proven reuse; keep domain code in the current owning plugins until extraction has a stable contract.
-- Add a reusable `/iss/v1` route-contract verifier before wiring any consumer to the facade.
+- Run `wp iss-graph facade-check` before wiring any consumer to the `/iss/v1` facade.
 - Before deploy or staging transfer, run `wp iss-occurrences verify`, `wp iss-occurrences drift-check`, and `wp iss-graph drift-check` on the target.
 - Apply programme SQL/data artifacts only with the matching code checkpoint and after a database backup.
 
@@ -61,3 +61,4 @@ Current checkpoint only. History belongs in `CHANGELOG.md`; active follow-up bel
 - Origin staging commits verified Frauen transfer and graph migration on staging; details are preserved in `CHANGELOG.md`.
 - Graph entity-kind registry and `/iss/v1` facade pass PHP lint, targeted PHPCS, targeted PHPStan, `git diff --check`, `wp iss-graph verify`, full `wp iss-graph drift-check --limit=25`, and `wp iss-occurrences drift-check --limit=25`.
 - `/wp-json/iss/v1/contract`, `/entities`, `/entities/{id}`, `/occurrences`, and `/search` returned `200` in WP-CLI REST smoke checks and HTTP curl checks on local port `8082`.
+- `wp iss-graph facade-check --limit=2` passes and checks `/iss/v1/contract`, `/entities`, `/entities/{id}`, `/occurrences`, and `/search` through WordPress.
