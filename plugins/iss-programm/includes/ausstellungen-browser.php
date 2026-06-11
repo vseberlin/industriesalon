@@ -52,40 +52,10 @@ function iss_programm_ausstellungen_period_meta_query(string $filter): array
 
     if ($filter === 'archiv') {
         return [
-            'relation' => 'OR',
-            [
-                'key' => 'iss_end_date',
-                'value' => $today,
-                'compare' => '<',
-                'type' => 'DATE',
-            ],
-            [
-                'relation' => 'AND',
-                [
-                    'key' => 'iss_end_date',
-                    'compare' => 'NOT EXISTS',
-                ],
-                [
-                    'key' => 'iss_start_date',
-                    'value' => $today,
-                    'compare' => '<',
-                    'type' => 'DATE',
-                ],
-            ],
-            [
-                'relation' => 'AND',
-                [
-                    'key' => 'iss_end_date',
-                    'value' => '',
-                    'compare' => '=',
-                ],
-                [
-                    'key' => 'iss_start_date',
-                    'value' => $today,
-                    'compare' => '<',
-                    'type' => 'DATE',
-                ],
-            ],
+            'key' => 'iss_end_date',
+            'value' => $today,
+            'compare' => '<',
+            'type' => 'DATE',
         ];
     }
 
