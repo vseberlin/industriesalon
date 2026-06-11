@@ -38,3 +38,4 @@ This is the repo-owned plan for the gradual Industriesalon refactor. It records 
 - `wp iss-graph drift-check --checks=entity-kind-contract` verifies stored entity kinds and post-backed entity mappings against the registry.
 - `/wp-json/iss/v1` is a facade boundary for the greenfield contract, not a new storage owner.
 - `wp iss-graph facade-check` verifies the `/iss/v1` route contract before any consumer is switched to the facade.
+- `wp iss-graph facade-search-compare` compares legacy `/iss-search/v1/search` results with `/iss/v1/search` as the first old-vs-new consumer audit.

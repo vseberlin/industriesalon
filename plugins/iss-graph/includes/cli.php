@@ -10,6 +10,7 @@ if (defined('WP_CLI') && WP_CLI) {
     WP_CLI::add_command('iss-graph verify', 'iss_graph_wpcli_verify_command');
     WP_CLI::add_command('iss-graph drift-check', 'iss_graph_wpcli_drift_check_command');
     WP_CLI::add_command('iss-graph facade-check', 'iss_graph_wpcli_facade_check_command');
+    WP_CLI::add_command('iss-graph facade-search-compare', 'iss_graph_wpcli_facade_search_compare_command');
     WP_CLI::add_command('iss-graph migrate', 'iss_graph_wpcli_migrate_command');
     WP_CLI::add_command('iss-graph sync-register', 'iss_graph_wpcli_sync_register_command');
     WP_CLI::add_command('iss-graph sync-content', 'iss_graph_wpcli_sync_content_command');
@@ -148,7 +149,7 @@ function iss_graph_wpcli_facade_response_count(array $data): string
     return 'n/a';
 }
 
-function iss_graph_wpcli_facade_request(string $path, array $params, array &$errors): array
+function iss_graph_wpcli_facade_request(string $path, array $params, array &$errors, string $label = 'facade'): array
 {
     $request = new WP_REST_Request('GET', $path);
     foreach ($params as $key => $value) {
@@ -159,7 +160,7 @@ function iss_graph_wpcli_facade_request(string $path, array $params, array &$err
     if ($response->is_error()) {
         $error = $response->as_error();
         $errors[] = sprintf('%s returned REST error: %s', $path, $error ? $error->get_error_message() : 'unknown error');
-        WP_CLI::log(sprintf('[facade] %s status=error count=n/a', $path));
+        WP_CLI::log(sprintf('[%s] %s status=error count=n/a', $label, $path));
 
         return [];
     }
@@ -174,7 +175,7 @@ function iss_graph_wpcli_facade_request(string $path, array $params, array &$err
         $data = [];
     }
 
-    WP_CLI::log(sprintf('[facade] %s status=%d count=%s', $path, $status, iss_graph_wpcli_facade_response_count($data)));
+    WP_CLI::log(sprintf('[%s] %s status=%d count=%s', $label, $path, $status, iss_graph_wpcli_facade_response_count($data)));
 
     return $data;
 }
@@ -256,6 +257,84 @@ function iss_graph_wpcli_facade_check_command(array $args, array $assoc_args): v
     }
 
     WP_CLI::success('ISS graph facade check passed.');
+}
+
+function iss_graph_wpcli_facade_parse_search_queries($value): array
+{
+    $raw_queries = is_string($value) && trim($value) !== ''
+        ? preg_split('/\s*,\s*/', trim($value))
+        : ['salon', 'schoeneweide', 'ausstellung'];
+
+    $queries = [];
+    foreach ((array) $raw_queries as $query) {
+        $query = iss_graph_normalize_public_search_query((string) $query);
+        if ($query !== '') {
+            $queries[] = $query;
+        }
+    }
+
+    return array_values(array_unique($queries));
+}
+
+function iss_graph_wpcli_facade_search_signature(array $data): array
+{
+    $items = isset($data['items']) && is_array($data['items']) ? $data['items'] : [];
+
+    return [
+        'query' => (string) ($data['query'] ?? ''),
+        'provider' => (string) ($data['provider'] ?? ''),
+        'count' => (int) ($data['count'] ?? 0),
+        'items' => array_values(array_map(static function (array $item): array {
+            return [
+                'id' => (int) ($item['id'] ?? 0),
+                'type' => (string) ($item['type'] ?? ''),
+                'post_type' => (string) ($item['post_type'] ?? ''),
+                'title' => (string) ($item['title'] ?? ''),
+                'url' => (string) ($item['url'] ?? ''),
+                'relevance' => (int) ($item['relevance'] ?? 0),
+            ];
+        }, array_filter($items, 'is_array'))),
+    ];
+}
+
+function iss_graph_wpcli_facade_search_compare_command(array $args, array $assoc_args): void
+{
+    $limit = max(1, min(25, absint($assoc_args['limit'] ?? 5)));
+    $queries = iss_graph_wpcli_facade_parse_search_queries($assoc_args['queries'] ?? '');
+    if (!$queries) {
+        WP_CLI::error('Provide at least one search query through --queries or use the defaults.');
+    }
+
+    $errors = [];
+    foreach ($queries as $query) {
+        $params = [
+            'q' => $query,
+            'limit' => $limit,
+        ];
+        $legacy = iss_graph_wpcli_facade_request('/iss-search/v1/search', $params, $errors, 'legacy');
+        $facade = iss_graph_wpcli_facade_request('/iss/v1/search', $params, $errors, 'facade');
+        $legacy_signature = iss_graph_wpcli_facade_search_signature($legacy);
+        $facade_signature = iss_graph_wpcli_facade_search_signature($facade);
+
+        if ($legacy_signature !== $facade_signature) {
+            $errors[] = sprintf('Search facade mismatch for query "%s".', $query);
+            continue;
+        }
+
+        WP_CLI::log(sprintf(
+            '[compare] search q="%s" provider=%s count=%d matched',
+            $query,
+            (string) ($facade_signature['provider'] ?? ''),
+            (int) ($facade_signature['count'] ?? 0)
+        ));
+    }
+
+    if ($errors) {
+        WP_CLI::error_multi_line($errors);
+        WP_CLI::error(sprintf('ISS graph facade search comparison failed with %d issue(s).', count($errors)));
+    }
+
+    WP_CLI::success(sprintf('ISS graph facade search comparison passed for %d querie(s).', count($queries)));
 }
 
 function iss_graph_wpcli_parse_drift_checks(string $value): array
