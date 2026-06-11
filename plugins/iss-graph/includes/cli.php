@@ -141,6 +141,7 @@ function iss_graph_wpcli_parse_drift_checks(string $value): array
         'place-graph',
         'search-index',
         'editorial-signals',
+        'entity-kind-contract',
     ];
 
     $value = trim($value);
@@ -172,6 +173,8 @@ function iss_graph_wpcli_run_drift_check(string $check, int $limit): array
             return iss_graph_wpcli_check_search_index($limit);
         case 'editorial-signals':
             return iss_graph_wpcli_check_editorial_signals($limit);
+        case 'entity-kind-contract':
+            return iss_graph_wpcli_check_entity_kind_contract($limit);
         default:
             return [
                 'checked' => 0,
@@ -324,13 +327,98 @@ function iss_graph_wpcli_check_content_identifiers(int $limit): array
         }
 
         $checked++;
-        $entity_kind = sanitize_key((string) $post->post_type);
+        $entity_kind = function_exists('iss_graph_get_entity_kind_for_post_type')
+            ? iss_graph_get_entity_kind_for_post_type((string) $post->post_type)
+            : sanitize_key((string) $post->post_type);
         $entity = $service->find_entity_by_post($entity_kind, $post_id);
         $entity_id = (int) ($entity['id'] ?? 0);
         if ($entity_id <= 0) {
             $errors[] = sprintf('Content post %d [%s] has no graph entity.', $post_id, $entity_kind);
         } elseif (!iss_graph_wpcli_entity_has_identifier($entity_id, 'wp_post', (string) $post_id)) {
             $errors[] = sprintf('Content post %d [%s] entity %d is missing wp_post identifier.', $post_id, $entity_kind, $entity_id);
+        }
+
+        if (count($errors) >= $limit) {
+            break;
+        }
+    }
+
+    return [
+        'checked' => $checked,
+        'errors' => $errors,
+    ];
+}
+
+function iss_graph_wpcli_check_entity_kind_contract(int $limit): array
+{
+    global $wpdb;
+
+    if (!function_exists('iss_graph_get_entity_kind_definition')) {
+        return ['checked' => 0, 'errors' => ['Entity-kind registry is unavailable.']];
+    }
+
+    $service = iss_graph_get_service();
+    $entity_table = $service->get_entity_table_name();
+    $errors = [];
+    $checked = 0;
+
+    $kind_rows = $wpdb->get_results(
+        "SELECT entity_kind, COUNT(*) AS row_count
+        FROM {$entity_table}
+        GROUP BY entity_kind
+        ORDER BY entity_kind ASC",
+        ARRAY_A
+    );
+
+    foreach (is_array($kind_rows) ? $kind_rows : [] as $row) {
+        $checked++;
+        $entity_kind = sanitize_key((string) ($row['entity_kind'] ?? ''));
+        if ($entity_kind === '' || !iss_graph_get_entity_kind_definition($entity_kind)) {
+            $errors[] = sprintf(
+                'Entity kind %s is not registered in the iss-graph entity-kind contract.',
+                $entity_kind !== '' ? $entity_kind : '(empty)'
+            );
+        }
+
+        if (count($errors) >= $limit) {
+            return ['checked' => $checked, 'errors' => $errors];
+        }
+    }
+
+    $rows = $wpdb->get_results(
+        "SELECT id, entity_kind, post_id, display_title
+        FROM {$entity_table}
+        WHERE post_id IS NOT NULL
+        ORDER BY id ASC",
+        ARRAY_A
+    );
+
+    foreach (is_array($rows) ? $rows : [] as $row) {
+        $entity_id = (int) ($row['id'] ?? 0);
+        $post_id = (int) ($row['post_id'] ?? 0);
+        $stored_kind = sanitize_key((string) ($row['entity_kind'] ?? ''));
+        $post = $post_id > 0 ? get_post($post_id) : null;
+        if (!$post instanceof WP_Post) {
+            continue;
+        }
+
+        $checked++;
+        $expected_kind = function_exists('iss_graph_get_entity_kind_for_post_type')
+            ? iss_graph_get_entity_kind_for_post_type((string) $post->post_type)
+            : sanitize_key((string) $post->post_type);
+        $candidates = function_exists('iss_graph_get_entity_kind_storage_candidates')
+            ? iss_graph_get_entity_kind_storage_candidates($expected_kind)
+            : [$expected_kind];
+
+        if (!in_array($stored_kind, $candidates, true)) {
+            $errors[] = sprintf(
+                'Entity %d post %d [%s] stores kind=%s but expected one of: %s.',
+                $entity_id,
+                $post_id,
+                (string) $post->post_type,
+                $stored_kind,
+                implode(', ', $candidates)
+            );
         }
 
         if (count($errors) >= $limit) {

@@ -29,6 +29,7 @@ define('ISS_GRAPH_SEARCH_BACKFILL_VERSION', '2026-06-06-search-v3');
 define('ISS_GRAPH_SEARCH_BACKFILL_OPTION', 'iss_graph_search_backfill_version');
 define('ISS_GRAPH_EDITORIAL_SIGNALS_CAPABILITY', 'edit_graph_editorial_signals');
 
+require_once ISS_GRAPH_PATH . 'includes/entity-kinds.php';
 require_once ISS_GRAPH_PATH . 'includes/core.php';
 require_once ISS_GRAPH_PATH . 'includes/aliases.php';
 require_once ISS_GRAPH_PATH . 'includes/register-bridge.php';
@@ -39,6 +40,7 @@ require_once ISS_GRAPH_PATH . 'includes/profiles.php';
 require_once ISS_GRAPH_PATH . 'includes/search-index.php';
 require_once ISS_GRAPH_PATH . 'includes/search-service.php';
 require_once ISS_GRAPH_PATH . 'includes/search-rest.php';
+require_once ISS_GRAPH_PATH . 'includes/facade-rest.php';
 require_once ISS_GRAPH_PATH . 'includes/editorial-signals-rest.php';
 require_once ISS_GRAPH_PATH . 'includes/editorial-signals-admin.php';
 require_once ISS_GRAPH_PATH . 'includes/enrichments.php';

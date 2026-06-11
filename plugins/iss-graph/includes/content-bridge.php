@@ -143,7 +143,9 @@ function iss_graph_sync_public_content_entity(int $post_id): ?array
     }
 
     $service = iss_graph_get_service();
-    $entity_kind = sanitize_key((string) $post->post_type);
+    $entity_kind = function_exists('iss_graph_get_entity_kind_for_post_type')
+        ? iss_graph_get_entity_kind_for_post_type((string) $post->post_type)
+        : sanitize_key((string) $post->post_type);
     $existing = $service->find_entity_by_post($entity_kind, (int) $post->ID);
 
     if (in_array($post->post_status, ['auto-draft', 'trash'], true)) {
@@ -192,7 +194,10 @@ function iss_graph_render_public_content_relations_meta_box(WP_Post $post): void
     wp_nonce_field('iss_graph_save_content_relations', 'iss_graph_content_relations_nonce');
 
     $service = iss_graph_get_service();
-    $entity = $service->find_entity_by_post(sanitize_key((string) $post->post_type), (int) $post->ID);
+    $entity_kind = function_exists('iss_graph_get_entity_kind_for_post_type')
+        ? iss_graph_get_entity_kind_for_post_type((string) $post->post_type)
+        : sanitize_key((string) $post->post_type);
+    $entity = $service->find_entity_by_post($entity_kind, (int) $post->ID);
     $entity_id = (int) ($entity['id'] ?? 0);
 
     $people = $entity_id > 0 ? array_map('iss_graph_map_relation_row_for_editor', $service->get_relations_for_entity($entity_id, 'person', [
@@ -310,7 +315,10 @@ function iss_graph_save_public_content_relations(int $post_id, WP_Post $post): v
     }
 
     $service = iss_graph_get_service();
-    $entity = $service->find_entity_by_post(sanitize_key((string) $post->post_type), $post_id);
+    $entity_kind = function_exists('iss_graph_get_entity_kind_for_post_type')
+        ? iss_graph_get_entity_kind_for_post_type((string) $post->post_type)
+        : sanitize_key((string) $post->post_type);
+    $entity = $service->find_entity_by_post($entity_kind, $post_id);
     $person_rows = iss_graph_sanitize_content_relation_rows(iss_graph_decode_posted_rows('iss_graph_content_person_rows'), 'person');
     $organization_rows = iss_graph_sanitize_content_relation_rows(iss_graph_decode_posted_rows('iss_graph_content_organization_rows'), 'organization');
 
@@ -369,7 +377,10 @@ function iss_graph_delete_public_content_entity_on_before_delete(int $post_id): 
         return;
     }
 
-    iss_graph_get_service()->delete_entity_by_post(sanitize_key((string) $post->post_type), $post_id);
+    $entity_kind = function_exists('iss_graph_get_entity_kind_for_post_type')
+        ? iss_graph_get_entity_kind_for_post_type((string) $post->post_type)
+        : sanitize_key((string) $post->post_type);
+    iss_graph_get_service()->delete_entity_by_post($entity_kind, $post_id);
 }
 add_action('before_delete_post', 'iss_graph_delete_public_content_entity_on_before_delete', 5);
 
@@ -386,7 +397,10 @@ function iss_graph_get_content_entity_relations(int $post_id, string $target_kin
     }
 
     $service = iss_graph_get_service();
-    $entity = $service->find_entity_by_post(sanitize_key((string) $post->post_type), $post_id);
+    $entity_kind = function_exists('iss_graph_get_entity_kind_for_post_type')
+        ? iss_graph_get_entity_kind_for_post_type((string) $post->post_type)
+        : sanitize_key((string) $post->post_type);
+    $entity = $service->find_entity_by_post($entity_kind, $post_id);
     if (!$entity) {
         $entity = iss_graph_sync_public_content_entity($post_id);
     }

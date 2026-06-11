@@ -17,6 +17,7 @@ This is the repo-owned plan for the gradual Industriesalon refactor. It records 
 3. Add `iss-core` for infrastructure conventions only.
 4. Add `iss-frontend` for shared frontend runtime helpers only.
 5. Defer domain plugin extraction until the boundaries are proven by reused services and stable contracts.
+6. Harden shared contracts in place before migrations: start with the `iss-graph` entity-kind registry, then use drift checks to prove current rows match the contract.
 
 ## Current Checkpoint
 
@@ -24,6 +25,8 @@ This is the repo-owned plan for the gradual Industriesalon refactor. It records 
 - Ausstellung availability classification remains the `ausstellung_typ` taxonomy, now exposed through editor-owned controls in `iss-content-model`.
 - `iss_timeline_enabled` remains the public visibility switch for Ausstellung overview browsers.
 - The next refactor move should be driven by proven reuse: place shared infrastructure in `iss-core`, shared runtime helpers in `iss-frontend`, and leave domain code in place until extraction has a stable contract.
+- `iss-graph` now has a central entity-kind registry for canonical kinds, current storage kinds, owner plugins, post-type mappings, and legacy aliases. It keeps current rows such as `ausstellung`, `veranstaltung`, `fuehrung`, `projekt`, `page`, and `archivbeitrag` stable while exposing the canonical target names `exhibition`, `event`, `tour`, and `project`.
+- `iss-graph` now exposes the first read-only `/wp-json/iss/v1` facade: contract, entities, entity detail, occurrences, and search. It delegates to existing graph, occurrence, and search services and does not remove or rename older plugin routes.
 
 ## Current Boundary Notes
 
@@ -32,3 +35,5 @@ This is the repo-owned plan for the gradual Industriesalon refactor. It records 
 - `iss-content-model` owns CPT/editor meta contracts.
 - `saas-api` owns SuperSaaS settings, sync, and `/is-tours/v1/slots`.
 - The theme owns templates, public composition, visual skin, and route-level page structure.
+- `wp iss-graph drift-check --checks=entity-kind-contract` verifies stored entity kinds and post-backed entity mappings against the registry.
+- `/wp-json/iss/v1` is a facade boundary for the greenfield contract, not a new storage owner.

@@ -69,6 +69,14 @@ post type has a stable editorial model. Source plugins should not introduce
 arbitrary entity kinds without registering the kind, owner, identifier rules,
 and projection behavior in `iss-graph`.
 
+Current implementation note: `iss-graph` owns the entity-kind registry in
+`includes/entity-kinds.php`. The registry records canonical target kinds,
+storage kinds, owner plugins, post-type mappings, and legacy aliases. Existing
+storage values such as `ausstellung`, `veranstaltung`, `fuehrung`, `projekt`,
+`page`, and `archivbeitrag` remain valid until a separate migration explicitly
+renames rows; the canonical layer exposes the programme-facing aliases
+`exhibition`, `event`, `tour`, and `project`.
+
 ## Existing Canonical Base
 
 `iss-graph` should remain the canonical entity service. It already owns:
@@ -417,6 +425,10 @@ wp iss-graph sync-video-transcripts
 Add or formalize APIs around the graph service:
 
 ```php
+iss_graph_get_entity_kind_registry(): array
+iss_graph_get_canonical_entity_kind(string $entity_kind): string
+iss_graph_get_entity_kind_for_post_type(string $post_type): string
+iss_graph_get_canonical_entity_kind_for_post_type(string $post_type): string
 iss_graph_get_entity_for_post(int $post_id): ?array
 iss_graph_get_or_create_entity_for_post(int $post_id, string $kind = ''): ?array
 iss_graph_get_entity_by_identifier(string $namespace, string $value): ?array
@@ -431,6 +443,23 @@ iss_graph_replace_entity_projection(string $source_system, int $entity_id, array
 
 Source plugins should call graph APIs. Theme templates should not query graph
 tables directly.
+
+`iss-graph` also exposes a read-only facade under `/wp-json/iss/v1` for the
+greenfield contract shape. The facade does not replace existing plugin routes
+yet; it delegates to current graph, search, and occurrence services:
+
+```text
+GET /wp-json/iss/v1/contract
+GET /wp-json/iss/v1/entities
+GET /wp-json/iss/v1/entities/{id}
+GET /wp-json/iss/v1/occurrences
+GET /wp-json/iss/v1/search
+```
+
+The facade is public-read only. Entity responses expose public entities and
+public relations; occurrence responses are served from `iss-occurrences` when
+that plugin is active; search responses delegate to the existing
+`iss-search/v1` provider.
 
 The resolver should classify match type:
 

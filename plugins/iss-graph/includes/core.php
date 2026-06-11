@@ -339,7 +339,9 @@ final class ISS_Graph_Service
 
     public function normalize_entity_kind(string $entity_kind): string
     {
-        return sanitize_key($entity_kind);
+        return function_exists('iss_graph_normalize_entity_kind_key')
+            ? iss_graph_normalize_entity_kind_key($entity_kind)
+            : sanitize_key($entity_kind);
     }
 
     public function build_canonical_slug(string $value, string $fallback = 'entity'): string
@@ -2381,24 +2383,9 @@ function iss_graph_get_service(): ISS_Graph_Service
 
 function iss_graph_get_entity_kind_for_post_type(string $post_type): string
 {
-    $post_type = sanitize_key($post_type);
-    if ($post_type === '') {
-        return '';
-    }
-
-    $register_post_type = defined('ISS_REGISTER_POST_TYPE') ? sanitize_key((string) ISS_REGISTER_POST_TYPE) : 'register_place';
-    $archive_object_post_type = defined('ISS_WF_IMPORT_OBJECT_POST_TYPE') ? sanitize_key((string) ISS_WF_IMPORT_OBJECT_POST_TYPE) : 'archivobjekt';
-    $archive_collection_post_type = defined('ISS_WF_IMPORT_COLLECTION_POST_TYPE') ? sanitize_key((string) ISS_WF_IMPORT_COLLECTION_POST_TYPE) : 'archivsammlung';
-
-    $map = [
-        $register_post_type => 'place',
-        $archive_object_post_type => 'archive_object',
-        $archive_collection_post_type => 'archive_collection',
-    ];
-
-    $map = (array) apply_filters('iss_graph_entity_kind_for_post_type_map', $map);
-
-    return sanitize_key((string) ($map[$post_type] ?? $post_type));
+    return function_exists('iss_graph_get_storage_entity_kind_for_post_type')
+        ? iss_graph_get_storage_entity_kind_for_post_type($post_type)
+        : sanitize_key($post_type);
 }
 
 function iss_graph_build_wp_post_identifier_rows(WP_Post $post): array

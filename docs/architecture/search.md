@@ -5,6 +5,8 @@ Public search should degrade gracefully and avoid external-service dependence fo
 ## Current Direction
 
 - `iss-graph` owns the SQL search provider and denormalized search projection.
+- `/wp-json/iss/v1/search` is a read-only facade over the same provider, not a
+  second index or route migration.
 - The Meili provider is reserved but not required in the current runtime.
 - Native WordPress search remains the full-search fallback route unless deliberately redesigned.
 - Meilisearch may be deployed as optional infrastructure, but it must not become the canonical content store.

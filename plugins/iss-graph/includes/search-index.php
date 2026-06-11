@@ -74,15 +74,9 @@ function iss_graph_maybe_backfill_public_search_index(): void
 
 function iss_graph_get_entity_kind_for_search_post(WP_Post $post): string
 {
-    if ($post->post_type === (function_exists('iss_graph_get_register_post_type') ? iss_graph_get_register_post_type() : 'register_place')) {
-        return 'place';
-    }
-
-    if ($post->post_type === (function_exists('iss_graph_get_archive_object_post_type') ? iss_graph_get_archive_object_post_type() : 'archivobjekt')) {
-        return 'archive_object';
-    }
-
-    return sanitize_key((string) $post->post_type);
+    return function_exists('iss_graph_get_entity_kind_for_post_type')
+        ? iss_graph_get_entity_kind_for_post_type((string) $post->post_type)
+        : sanitize_key((string) $post->post_type);
 }
 
 function iss_graph_normalize_search_text_part($value): string

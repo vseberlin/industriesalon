@@ -1,6 +1,14 @@
 # Changelog
 
 ## 2026-06-11
+- Hardened the greenfield entity contract inside `iss-graph` without renaming existing rows:
+  - added a central entity-kind registry for canonical target kinds, current storage kinds, owner plugins, post-type mappings, and legacy aliases
+  - kept existing storage values such as `ausstellung`, `veranstaltung`, `fuehrung`, `projekt`, `page`, and `archivbeitrag` stable while exposing canonical names `exhibition`, `event`, `tour`, and `project` for later migration work
+  - routed content-entity sync, search indexing, profile labels, and content-identifier drift checks through the shared mapping contract
+  - added `wp iss-graph drift-check --checks=entity-kind-contract` to prove stored graph rows match the registry before future API, occurrence, or admin-surface refactors
+- Added the first read-only greenfield facade under `/wp-json/iss/v1`:
+  - exposed contract, entity list/detail, occurrence list, and search endpoints without removing the existing `iss-search/v1`, `iss-programm/v1`, `iss-graph/v1`, or plugin-owned query APIs
+  - kept the facade as a formatter/delegator over the existing graph, search, and occurrence services so it introduces no new storage owner
 - Started the greenfield refactor path as a local checkpoint:
   - added `refactor.md` with the agreed `Entity / Relation / Occurrence / View` direction, occurrence-only calendar boundary, Ausstellung availability split, and phased `iss-core` / `iss-frontend` path
   - added the dedicated `industriesalon/ausstellungen-browser` block and WP_Query-based availability path so `/ausstellungen/` no longer depends on occurrence/timeline data for Dauer, Digital, Aktuell, or Archiv filters

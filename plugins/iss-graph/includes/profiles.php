@@ -27,6 +27,10 @@ function iss_graph_get_profile_entity_kinds(): array
 
 function iss_graph_get_entity_kind_label(string $entity_kind): string
 {
+    if (function_exists('iss_graph_get_entity_kind_label_from_registry')) {
+        return iss_graph_get_entity_kind_label_from_registry($entity_kind);
+    }
+
     switch (sanitize_key($entity_kind)) {
         case 'organization':
             return __('Organisation', 'iss-graph');

@@ -17,6 +17,8 @@ Current checkpoint only. History belongs in `CHANGELOG.md`; active follow-up bel
 - Local Ausstellung availability data is audit-clean: `Kinder im Werk` and `Frauen im Werk für Fernmeldewesen` are `digitaleausstellungen` through `2026-12-31`; `Ostberliner Zeitreisen - Fotografien von Kurt Schwarz` and `Die laufende Produktion` are drafts pending later review.
 - Local backup before the data cleanup: `ops/content-backups/2026-06-11-before-ausstellung-availability-cleanup.sql`; replay artifact: `ops/sql/2026-06-11-ausstellung-availability-cleanup.sql`.
 - `refactor.md` records the gradual `Entity / Relation / Occurrence / View` refactor direction and the phased path through `iss-core` and `iss-frontend`.
+- `iss-graph` now has a central entity-kind registry for current storage kinds, canonical target aliases, owner plugins, post-type mappings, and legacy aliases. Current stored values such as `ausstellung`, `veranstaltung`, `fuehrung`, `projekt`, `page`, and `archivbeitrag` remain stable; canonical aliases include `exhibition`, `event`, `tour`, and `project`.
+- `iss-graph` exposes the first read-only `/wp-json/iss/v1` facade for contract, entities, entity detail, occurrences, and search. It delegates to existing graph, occurrence, and search services; older plugin routes remain active.
 - `iss-core` and `iss-frontend` exist as active local scaffold plugins only. They expose helper conventions and do not own CPTs, REST routes, renderers, CSS, or domain scripts yet.
 - Legacy hidden-calendar code has been removed from active runtime paths; the old `iss_calendar_item` CPT/query layer is not active storage or query code.
 
@@ -32,6 +34,7 @@ Current checkpoint only. History belongs in `CHANGELOG.md`; active follow-up bel
 - Staging does not automatically have the new programme occurrence/refactor checkpoint. It will need code merge plus target-side occurrence schema/backfill/sync checks before relying on it.
 - Database state changed locally during programme verification: occurrence schema v3 installed, graph backfill applied, `iss-core` and `iss-frontend` activated, and `wp iss-occurrences sync` resynced source rows under the Ausstellung availability boundary.
 - Occurrence drift depends on graph entity health. If graph entities drift, `wp iss-occurrences drift-check` should fail even if the calendar visually renders.
+- `/wp-json/iss/v1` is currently a facade boundary, not a storage owner or route migration. Keep future consumers behind old-vs-new comparisons until the route contract is covered by a reusable verifier.
 - Template output can still become DB-backed after Site Editor saves; check `wp_template` authority before assuming disk files are live.
 - Staging graph tables are migrated and drift-clean; rerun `wp iss-graph migrate` plus `wp iss-graph drift-check` after future content artifact imports that create or change graph-backed posts.
 
@@ -39,6 +42,7 @@ Current checkpoint only. History belongs in `CHANGELOG.md`; active follow-up bel
 
 - Keep the local Ausstellung availability SQL artifact paired with this code checkpoint if transferring to staging/production.
 - Next local refactor work should use `iss-core` or `iss-frontend` only for helpers with proven reuse; keep domain code in the current owning plugins until extraction has a stable contract.
+- Add a reusable `/iss/v1` route-contract verifier before wiring any consumer to the facade.
 - Before deploy or staging transfer, run `wp iss-occurrences verify`, `wp iss-occurrences drift-check`, and `wp iss-graph drift-check` on the target.
 - Apply programme SQL/data artifacts only with the matching code checkpoint and after a database backup.
 
@@ -55,3 +59,5 @@ Current checkpoint only. History belongs in `CHANGELOG.md`; active follow-up bel
 - `wp iss-occurrences verify` reports `public_occurrences=52` and `public_graph_occurrences=52`; `wp iss-occurrences drift-check` and `wp iss-graph drift-check` passed.
 - Ausstellung editor classification pass: PHP lint, targeted ESLint, PHPCS, PHPStan, and `git diff --check` passed; REST exposes `ausstellung_typ` on Ausstellung posts; `/ausstellungen/?ausstellung_filter=digital` returns the three digital Ausstellungen.
 - Origin staging commits verified Frauen transfer and graph migration on staging; details are preserved in `CHANGELOG.md`.
+- Graph entity-kind registry and `/iss/v1` facade pass PHP lint, targeted PHPCS, targeted PHPStan, `git diff --check`, `wp iss-graph verify`, full `wp iss-graph drift-check --limit=25`, and `wp iss-occurrences drift-check --limit=25`.
+- `/wp-json/iss/v1/contract`, `/entities`, `/entities/{id}`, `/occurrences`, and `/search` returned `200` in WP-CLI REST smoke checks and HTTP curl checks on local port `8082`.
