@@ -10,6 +10,8 @@ Public search should degrade gracefully and avoid external-service dependence fo
 - `wp iss-graph facade-search-compare` verifies that the legacy
   `/iss-search/v1/search` response and the facade response stay aligned for
   representative queries before any consumer changes route.
+- The public header search modal now uses `/wp-json/iss/v1/search`; the legacy
+  `/iss-search/v1/search` route remains active for compatibility.
 - The Meili provider is reserved but not required in the current runtime.
 - Native WordPress search remains the full-search fallback route unless deliberately redesigned.
 - Meilisearch may be deployed as optional infrastructure, but it must not become the canonical content store.

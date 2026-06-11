@@ -1999,7 +1999,7 @@ function industriesalon_render_search_modal(): void
     }
 
     ?>
-    <div class="iss-search-modal" data-iss-search-modal data-endpoint="<?php echo esc_url(rest_url('iss-search/v1/search')); ?>" data-search-url="<?php echo esc_url(home_url('/')); ?>" role="dialog" aria-modal="true" aria-hidden="true" aria-labelledby="iss-search-modal-title">
+    <div class="iss-search-modal" data-iss-search-modal data-endpoint="<?php echo esc_url(rest_url('iss/v1/search')); ?>" data-search-url="<?php echo esc_url(home_url('/')); ?>" role="dialog" aria-modal="true" aria-hidden="true" aria-labelledby="iss-search-modal-title">
         <div class="iss-search-modal__overlay" data-iss-search-close></div>
         <div class="iss-search-modal__panel">
             <div class="iss-search-modal__header">

@@ -13,6 +13,7 @@
   - added `wp iss-graph facade-search-compare` to compare legacy `/iss-search/v1/search` results with `/iss/v1/search` before any search consumer switches routes
   - added `wp iss-graph facade-occurrences-compare` to compare direct `iss_occurrences_query()` output with `/iss/v1/occurrences` before programme consumers switch routes
   - added `wp iss-graph facade-entities-compare` to compare direct graph service output with `/iss/v1/entities` list/detail responses before entity consumers switch routes
+  - switched the public header search modal from legacy `/iss-search/v1/search` to the verified `/iss/v1/search` facade while leaving the full WordPress search page and legacy route active
 - Started the greenfield refactor path as a local checkpoint:
   - added `refactor.md` with the agreed `Entity / Relation / Occurrence / View` direction, occurrence-only calendar boundary, Ausstellung availability split, and phased `iss-core` / `iss-frontend` path
   - added the dedicated `industriesalon/ausstellungen-browser` block and WP_Query-based availability path so `/ausstellungen/` no longer depends on occurrence/timeline data for Dauer, Digital, Aktuell, or Archiv filters

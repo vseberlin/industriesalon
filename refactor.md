@@ -41,3 +41,4 @@ This is the repo-owned plan for the gradual Industriesalon refactor. It records 
 - `wp iss-graph facade-search-compare` compares legacy `/iss-search/v1/search` results with `/iss/v1/search` as the first old-vs-new consumer audit.
 - `wp iss-graph facade-occurrences-compare` compares direct `iss_occurrences_query()` output with `/iss/v1/occurrences` before any programme consumer switches routes.
 - `wp iss-graph facade-entities-compare` compares direct graph service output with `/iss/v1/entities` list/detail responses before any entity consumer switches routes.
+- The public header search modal is the first consumer switched to the facade; it now reads from `/wp-json/iss/v1/search` while legacy search routes stay active.
