@@ -12,6 +12,7 @@ if (defined('WP_CLI') && WP_CLI) {
     WP_CLI::add_command('iss-graph facade-check', 'iss_graph_wpcli_facade_check_command');
     WP_CLI::add_command('iss-graph facade-search-compare', 'iss_graph_wpcli_facade_search_compare_command');
     WP_CLI::add_command('iss-graph facade-occurrences-compare', 'iss_graph_wpcli_facade_occurrences_compare_command');
+    WP_CLI::add_command('iss-graph facade-entities-compare', 'iss_graph_wpcli_facade_entities_compare_command');
     WP_CLI::add_command('iss-graph migrate', 'iss_graph_wpcli_migrate_command');
     WP_CLI::add_command('iss-graph sync-register', 'iss_graph_wpcli_sync_register_command');
     WP_CLI::add_command('iss-graph sync-content', 'iss_graph_wpcli_sync_content_command');
@@ -509,6 +510,239 @@ function iss_graph_wpcli_facade_occurrences_compare_command(array $args, array $
     }
 
     WP_CLI::success(sprintf('ISS graph facade occurrence comparison passed for %d scenario(s).', count($scenarios)));
+}
+
+function iss_graph_wpcli_facade_parse_entity_scenarios($value): array
+{
+    $raw_scenarios = is_string($value) && trim($value) !== ''
+        ? preg_split('/\s*,\s*/', trim($value))
+        : ['list', 'archive_object', 'search'];
+
+    $scenarios = [];
+    foreach ((array) $raw_scenarios as $scenario) {
+        $scenario = sanitize_key((string) $scenario);
+        if ($scenario !== '') {
+            $scenarios[] = $scenario;
+        }
+    }
+
+    return array_values(array_unique($scenarios));
+}
+
+function iss_graph_wpcli_facade_entity_params_for_scenario(string $scenario, int $limit, string $search): array
+{
+    $params = [
+        'limit' => $limit,
+    ];
+
+    switch ($scenario) {
+        case 'place':
+        case 'places':
+            $params['kind'] = 'place';
+            break;
+        case 'archive':
+        case 'archive_object':
+        case 'archive_objects':
+            $params['kind'] = 'archive_object';
+            break;
+        case 'event':
+        case 'events':
+            $params['kind'] = 'event';
+            break;
+        case 'tour':
+        case 'tours':
+            $params['kind'] = 'tour';
+            break;
+        case 'exhibition':
+        case 'exhibitions':
+            $params['kind'] = 'exhibition';
+            break;
+        case 'project':
+        case 'projects':
+            $params['kind'] = 'project';
+            break;
+        case 'search':
+            $params['q'] = $search;
+            break;
+        case 'list':
+        default:
+            break;
+    }
+
+    return $params;
+}
+
+function iss_graph_wpcli_facade_entity_storage_kinds_from_params(array $params): array
+{
+    $storage_kinds = [];
+    $kind = sanitize_key((string) ($params['kind'] ?? $params['entity_kind'] ?? $params['canonical_kind'] ?? ''));
+    if ($kind !== '') {
+        $storage_kind = function_exists('iss_graph_get_storage_entity_kind') ? iss_graph_get_storage_entity_kind($kind) : $kind;
+        if ($storage_kind !== '') {
+            $storage_kinds[] = $storage_kind;
+        }
+    }
+
+    foreach (iss_facade_rest_scalar_list($params['kinds'] ?? '') as $raw_kind) {
+        $storage_kind = function_exists('iss_graph_get_storage_entity_kind') ? iss_graph_get_storage_entity_kind($raw_kind) : $raw_kind;
+        if ($storage_kind !== '') {
+            $storage_kinds[] = $storage_kind;
+        }
+    }
+
+    return array_values(array_unique($storage_kinds));
+}
+
+function iss_graph_wpcli_facade_entity_direct_list_response(array $params): array
+{
+    $limit = iss_facade_rest_limit($params['limit'] ?? 24, 24, 100);
+    $offset = iss_facade_rest_offset($params['offset'] ?? 0);
+    $query = iss_graph_normalize_public_search_query((string) ($params['q'] ?? $params['search'] ?? ''));
+    $storage_kinds = iss_graph_wpcli_facade_entity_storage_kinds_from_params($params);
+
+    $args = [
+        'limit' => $limit,
+        'public_only' => true,
+    ];
+    if (count($storage_kinds) === 1) {
+        $args['entity_kind'] = $storage_kinds[0];
+    } elseif ($storage_kinds) {
+        $args['entity_kinds'] = $storage_kinds;
+    }
+
+    if ($query !== '') {
+        $rows = iss_graph_search_entities(array_merge($args, ['query' => $query]));
+    } else {
+        $args['offset'] = $offset;
+        $args['orderby'] = sanitize_key((string) ($params['orderby'] ?? 'display_title'));
+        $args['order'] = strtoupper((string) ($params['order'] ?? 'ASC')) === 'DESC' ? 'DESC' : 'ASC';
+        $rows = iss_graph_get_service()->get_entities($args);
+    }
+
+    $items = array_values(array_filter(array_map(static function (array $entity): ?array {
+        return iss_facade_rest_prepare_entity($entity, false);
+    }, is_array($rows) ? $rows : [])));
+
+    return [
+        'query' => $query,
+        'kind' => $storage_kinds[0] ?? '',
+        'limit' => $limit,
+        'offset' => $offset,
+        'count' => count($items),
+        'items' => $items,
+    ];
+}
+
+function iss_graph_wpcli_facade_entity_direct_detail_response(int $entity_id): array
+{
+    $entity = iss_graph_get_service()->get_entity_by_id($entity_id);
+    if (!$entity || !iss_facade_rest_entity_is_public($entity)) {
+        return [];
+    }
+
+    return [
+        'item' => iss_facade_rest_prepare_entity($entity, true),
+    ];
+}
+
+function iss_graph_wpcli_facade_entity_list_signature(array $data): array
+{
+    $items = isset($data['items']) && is_array($data['items']) ? $data['items'] : [];
+
+    return [
+        'query' => (string) ($data['query'] ?? ''),
+        'kind' => (string) ($data['kind'] ?? ''),
+        'limit' => (int) ($data['limit'] ?? 0),
+        'offset' => (int) ($data['offset'] ?? 0),
+        'count' => (int) ($data['count'] ?? 0),
+        'items' => array_values(array_map(static function (array $item): array {
+            return [
+                'id' => (int) ($item['id'] ?? 0),
+                'kind' => (string) ($item['kind'] ?? ''),
+                'storage_kind' => (string) ($item['storage_kind'] ?? ''),
+                'title' => (string) ($item['title'] ?? ''),
+                'slug' => (string) ($item['slug'] ?? ''),
+                'url' => (string) ($item['url'] ?? ''),
+                'post_id' => (int) ($item['post_id'] ?? 0),
+                'post_type' => (string) ($item['post_type'] ?? ''),
+                'profile_post_id' => (int) ($item['profile_post_id'] ?? 0),
+            ];
+        }, array_filter($items, 'is_array'))),
+    ];
+}
+
+function iss_graph_wpcli_facade_entity_detail_signature(array $data): array
+{
+    $item = isset($data['item']) && is_array($data['item']) ? $data['item'] : [];
+
+    return [
+        'item' => [
+            'id' => (int) ($item['id'] ?? 0),
+            'kind' => (string) ($item['kind'] ?? ''),
+            'storage_kind' => (string) ($item['storage_kind'] ?? ''),
+            'title' => (string) ($item['title'] ?? ''),
+            'slug' => (string) ($item['slug'] ?? ''),
+            'url' => (string) ($item['url'] ?? ''),
+            'post_id' => (int) ($item['post_id'] ?? 0),
+            'post_type' => (string) ($item['post_type'] ?? ''),
+            'names' => isset($item['names']) && is_array($item['names']) ? $item['names'] : [],
+            'identifiers' => isset($item['identifiers']) && is_array($item['identifiers']) ? $item['identifiers'] : [],
+            'relations' => isset($item['relations']) && is_array($item['relations']) ? $item['relations'] : [],
+        ],
+    ];
+}
+
+function iss_graph_wpcli_facade_entities_compare_command(array $args, array $assoc_args): void
+{
+    $limit = max(1, min(25, absint($assoc_args['limit'] ?? 5)));
+    $search = iss_graph_normalize_public_search_query((string) ($assoc_args['search'] ?? 'salon'));
+    if ($search === '') {
+        $search = 'salon';
+    }
+
+    $scenarios = iss_graph_wpcli_facade_parse_entity_scenarios($assoc_args['scenarios'] ?? '');
+    if (!$scenarios) {
+        WP_CLI::error('Provide at least one entity comparison scenario through --scenarios or use the defaults.');
+    }
+
+    $errors = [];
+    foreach ($scenarios as $scenario) {
+        $params = iss_graph_wpcli_facade_entity_params_for_scenario($scenario, $limit, $search);
+        $direct = iss_graph_wpcli_facade_entity_direct_list_response($params);
+        $facade = iss_graph_wpcli_facade_request('/iss/v1/entities', $params, $errors, 'facade');
+        $direct_signature = iss_graph_wpcli_facade_entity_list_signature($direct);
+        $facade_signature = iss_graph_wpcli_facade_entity_list_signature($facade);
+
+        if ($direct_signature !== $facade_signature) {
+            $errors[] = sprintf('Entity facade list mismatch for scenario "%s".', $scenario);
+            continue;
+        }
+
+        $entity_id = absint($facade_signature['items'][0]['id'] ?? 0);
+        if ($entity_id > 0) {
+            $detail_path = sprintf('/iss/v1/entities/%d', $entity_id);
+            $direct_detail = iss_graph_wpcli_facade_entity_direct_detail_response($entity_id);
+            $facade_detail = iss_graph_wpcli_facade_request($detail_path, [], $errors, 'facade');
+            if (iss_graph_wpcli_facade_entity_detail_signature($direct_detail) !== iss_graph_wpcli_facade_entity_detail_signature($facade_detail)) {
+                $errors[] = sprintf('Entity facade detail mismatch for scenario "%s" entity %d.', $scenario, $entity_id);
+                continue;
+            }
+        }
+
+        WP_CLI::log(sprintf(
+            '[compare] entities scenario="%s" count=%d detail_entity=%d matched',
+            $scenario,
+            (int) ($facade_signature['count'] ?? 0),
+            $entity_id
+        ));
+    }
+
+    if ($errors) {
+        WP_CLI::error_multi_line($errors);
+        WP_CLI::error(sprintf('ISS graph facade entity comparison failed with %d issue(s).', count($errors)));
+    }
+
+    WP_CLI::success(sprintf('ISS graph facade entity comparison passed for %d scenario(s).', count($scenarios)));
 }
 
 function iss_graph_wpcli_parse_drift_checks(string $value): array

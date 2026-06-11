@@ -461,7 +461,9 @@ public relations; occurrence responses are served from `iss-occurrences` when
 that plugin is active; search responses delegate to the existing
 `iss-search/v1` provider. Run `wp iss-graph facade-check` before switching any
 consumer to `/iss/v1`. Run `wp iss-graph facade-occurrences-compare` before
-switching programme/calendar consumers to `/iss/v1/occurrences`.
+switching programme/calendar consumers to `/iss/v1/occurrences`. Run
+`wp iss-graph facade-entities-compare` before switching entity/profile consumers
+to `/iss/v1/entities`.
 
 The resolver should classify match type:
 
