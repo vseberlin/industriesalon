@@ -196,12 +196,16 @@ function iss_timeline_rest_render_collection(WP_REST_Request $request) {
     ]);
 }
 
-add_action('rest_api_init', function () {
-    register_rest_route('iss-programm/v1', '/timeline', [
+function iss_timeline_rest_register_routes() {
+    $route_args = [
         'methods' => [WP_REST_Server::READABLE, WP_REST_Server::CREATABLE],
         'callback' => 'iss_timeline_rest_render_collection',
         'permission_callback' => '__return_true',
-    ]);
-});
+    ];
+
+    register_rest_route('iss-programm/v1', '/timeline', $route_args);
+    register_rest_route('iss/v1', '/timeline', $route_args);
+}
+add_action('rest_api_init', 'iss_timeline_rest_register_routes');
 
 add_action('iss_occurrences_changed', 'iss_timeline_rest_bump_cache_version');

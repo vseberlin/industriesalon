@@ -26,7 +26,7 @@ This is the repo-owned plan for the gradual Industriesalon refactor. It records 
 - `iss_timeline_enabled` remains the public visibility switch for Ausstellung overview browsers.
 - The next refactor move should be driven by proven reuse: place shared infrastructure in `iss-core`, shared runtime helpers in `iss-frontend`, and leave domain code in place until extraction has a stable contract.
 - `iss-graph` now has a central entity-kind registry for canonical kinds, current storage kinds, owner plugins, post-type mappings, and legacy aliases. It keeps current rows such as `ausstellung`, `veranstaltung`, `fuehrung`, `projekt`, `page`, and `archivbeitrag` stable while exposing the canonical target names `exhibition`, `event`, `tour`, and `project`.
-- `iss-graph` now exposes the first read-only `/wp-json/iss/v1` facade: contract, entities, entity detail, occurrences, and search. It delegates to existing graph, occurrence, and search services and does not remove or rename older plugin routes.
+- `iss-graph` now exposes the first read-only `/wp-json/iss/v1` facade: contract, entities, entity detail, occurrences, search, and the programme timeline compatibility view. It delegates to existing graph, occurrence, search, and programme timeline services and does not remove or rename older plugin routes.
 
 ## Current Boundary Notes
 
@@ -42,3 +42,4 @@ This is the repo-owned plan for the gradual Industriesalon refactor. It records 
 - `wp iss-graph facade-occurrences-compare` compares direct `iss_occurrences_query()` output with `/iss/v1/occurrences` before any programme consumer switches routes.
 - `wp iss-graph facade-entities-compare` compares direct graph service output with `/iss/v1/entities` list/detail responses before any entity consumer switches routes.
 - The public header search modal is the first consumer switched to the facade; it now reads from `/wp-json/iss/v1/search` while legacy search routes stay active.
+- `wp iss-graph facade-timeline-compare` compares legacy `/iss-programm/v1/timeline` output with `/iss/v1/timeline`, and the public timeline query frontend now reads from that facade view while the legacy programme route stays active.

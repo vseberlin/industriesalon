@@ -99,7 +99,7 @@ function iss_programm_register_frontend_assets() {
     wp_add_inline_script(
         'iss-timeline-query',
         'window.ISS_TIMELINE = ' . wp_json_encode([
-            'restUrl' => rest_url('iss-programm/v1/timeline'),
+            'restUrl' => rest_url('iss/v1/timeline'),
         ]) . ';',
         'before'
     );

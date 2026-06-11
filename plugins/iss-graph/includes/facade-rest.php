@@ -439,6 +439,17 @@ function iss_facade_rest_contract(WP_REST_Request $request): WP_REST_Response
 {
     $registry = function_exists('iss_graph_get_entity_kind_registry') ? iss_graph_get_entity_kind_registry() : [];
     $entity_kinds = array_values(array_map('iss_facade_rest_prepare_entity_kind_definition', $registry));
+    $routes = [
+        '/iss/v1/contract',
+        '/iss/v1/entities',
+        '/iss/v1/entities/{id}',
+        '/iss/v1/occurrences',
+        '/iss/v1/search',
+    ];
+
+    if (function_exists('iss_timeline_rest_render_collection')) {
+        $routes[] = '/iss/v1/timeline';
+    }
 
     return new WP_REST_Response([
         'namespace' => 'iss/v1',
@@ -448,14 +459,9 @@ function iss_facade_rest_contract(WP_REST_Request $request): WP_REST_Response
             'graph' => function_exists('iss_graph_get_service'),
             'search' => function_exists('iss_search_public_posts'),
             'occurrences' => function_exists('iss_occurrences_query'),
+            'timeline' => function_exists('iss_timeline_rest_render_collection'),
         ],
-        'routes' => [
-            '/iss/v1/contract',
-            '/iss/v1/entities',
-            '/iss/v1/entities/{id}',
-            '/iss/v1/occurrences',
-            '/iss/v1/search',
-        ],
+        'routes' => $routes,
         'entity_kinds' => $entity_kinds,
     ]);
 }

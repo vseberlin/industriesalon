@@ -13,6 +13,7 @@ if (defined('WP_CLI') && WP_CLI) {
     WP_CLI::add_command('iss-graph facade-search-compare', 'iss_graph_wpcli_facade_search_compare_command');
     WP_CLI::add_command('iss-graph facade-occurrences-compare', 'iss_graph_wpcli_facade_occurrences_compare_command');
     WP_CLI::add_command('iss-graph facade-entities-compare', 'iss_graph_wpcli_facade_entities_compare_command');
+    WP_CLI::add_command('iss-graph facade-timeline-compare', 'iss_graph_wpcli_facade_timeline_compare_command');
     WP_CLI::add_command('iss-graph migrate', 'iss_graph_wpcli_migrate_command');
     WP_CLI::add_command('iss-graph sync-register', 'iss_graph_wpcli_sync_register_command');
     WP_CLI::add_command('iss-graph sync-content', 'iss_graph_wpcli_sync_content_command');
@@ -211,6 +212,12 @@ function iss_graph_wpcli_facade_check_command(array $args, array $assoc_args): v
     if (empty($contract['entity_kinds']) || !is_array($contract['entity_kinds'])) {
         $errors[] = '/iss/v1/contract has no entity_kinds list.';
     }
+    if (function_exists('iss_timeline_rest_render_collection')) {
+        $routes = isset($contract['routes']) && is_array($contract['routes']) ? $contract['routes'] : [];
+        if (!in_array('/iss/v1/timeline', $routes, true)) {
+            $errors[] = '/iss/v1/contract does not advertise the timeline facade route.';
+        }
+    }
 
     $entities = iss_graph_wpcli_facade_request('/iss/v1/entities', ['limit' => $limit], $errors);
     iss_graph_wpcli_facade_require_keys('/iss/v1/entities', $entities, ['count', 'items'], $errors);
@@ -251,6 +258,16 @@ function iss_graph_wpcli_facade_check_command(array $args, array $assoc_args): v
     $search_items = isset($search_results['items']) && is_array($search_results['items']) ? $search_results['items'] : [];
     if (isset($search_items[0]) && is_array($search_items[0])) {
         iss_graph_wpcli_facade_require_keys('/iss/v1/search item', $search_items[0], ['id', 'type', 'title', 'url'], $errors);
+    }
+
+    if (function_exists('iss_timeline_rest_render_collection')) {
+        $timeline = iss_graph_wpcli_facade_request('/iss/v1/timeline', [
+            'limit' => $limit,
+            'filters' => [
+                'time_mode' => 'upcoming',
+            ],
+        ], $errors);
+        iss_graph_wpcli_facade_require_keys('/iss/v1/timeline', $timeline, ['html', 'count', 'batchCount', 'isEmpty', 'offset', 'nextOffset', 'hasMore'], $errors);
     }
 
     if ($errors) {
@@ -510,6 +527,132 @@ function iss_graph_wpcli_facade_occurrences_compare_command(array $args, array $
     }
 
     WP_CLI::success(sprintf('ISS graph facade occurrence comparison passed for %d scenario(s).', count($scenarios)));
+}
+
+function iss_graph_wpcli_facade_parse_timeline_scenarios($value): array
+{
+    $raw_scenarios = is_string($value) && trim($value) !== ''
+        ? preg_split('/\s*,\s*/', trim($value))
+        : ['upcoming', 'month', 'event'];
+
+    $scenarios = [];
+    foreach ((array) $raw_scenarios as $scenario) {
+        $scenario = sanitize_key((string) $scenario);
+        if ($scenario !== '') {
+            $scenarios[] = $scenario;
+        }
+    }
+
+    return array_values(array_unique($scenarios));
+}
+
+function iss_graph_wpcli_facade_timeline_params_for_scenario(string $scenario, int $limit): array
+{
+    $params = [
+        'limit' => $limit,
+        'order' => 'ASC',
+        'render' => [
+            'renderMode' => 'timeline',
+            'yearGrouping' => true,
+            'groupRecurringTours' => true,
+        ],
+        'filters' => [
+            'time_mode' => 'upcoming',
+        ],
+    ];
+
+    switch ($scenario) {
+        case 'all':
+            $params['filters']['time_mode'] = 'all';
+            break;
+        case 'month':
+            $params['filters']['time_mode'] = 'month';
+            $params['filters']['month'] = current_time('Y-m');
+            break;
+        case 'event':
+        case 'events':
+        case 'veranstaltung':
+        case 'veranstaltungen':
+            $params['filters']['time_mode'] = 'all';
+            $params['filters']['item_type'] = 'event';
+            break;
+        case 'tour':
+        case 'tours':
+        case 'fuehrung':
+        case 'fuehrungen':
+            $params['filters']['time_mode'] = 'upcoming';
+            $params['filters']['item_type'] = 'tour';
+            break;
+        case 'cards':
+            $params['render']['renderMode'] = 'cards';
+            $params['render']['yearGrouping'] = false;
+            break;
+        case 'upcoming':
+        default:
+            break;
+    }
+
+    return $params;
+}
+
+function iss_graph_wpcli_facade_timeline_signature(array $data): array
+{
+    $html = (string) ($data['html'] ?? '');
+
+    return [
+        'html_hash' => md5($html),
+        'html_length' => strlen($html),
+        'count' => (int) ($data['count'] ?? 0),
+        'batchCount' => (int) ($data['batchCount'] ?? 0),
+        'isEmpty' => (bool) ($data['isEmpty'] ?? false),
+        'offset' => (int) ($data['offset'] ?? 0),
+        'nextOffset' => (int) ($data['nextOffset'] ?? 0),
+        'hasMore' => (bool) ($data['hasMore'] ?? false),
+    ];
+}
+
+function iss_graph_wpcli_facade_timeline_compare_command(array $args, array $assoc_args): void
+{
+    if (!function_exists('iss_timeline_rest_render_collection')) {
+        WP_CLI::error('Programme timeline REST service is unavailable.');
+    }
+
+    $limit = max(1, min(25, absint($assoc_args['limit'] ?? 5)));
+    $scenarios = iss_graph_wpcli_facade_parse_timeline_scenarios($assoc_args['scenarios'] ?? '');
+    if (!$scenarios) {
+        WP_CLI::error('Provide at least one timeline comparison scenario through --scenarios or use the defaults.');
+    }
+
+    $errors = [];
+    foreach ($scenarios as $scenario) {
+        $params = iss_graph_wpcli_facade_timeline_params_for_scenario($scenario, $limit);
+        $legacy = iss_graph_wpcli_facade_request('/iss-programm/v1/timeline', $params, $errors, 'legacy');
+        $facade = iss_graph_wpcli_facade_request('/iss/v1/timeline', $params, $errors, 'facade');
+        iss_graph_wpcli_facade_require_keys('/iss-programm/v1/timeline', $legacy, ['html', 'count', 'batchCount', 'isEmpty', 'offset', 'nextOffset', 'hasMore'], $errors);
+        iss_graph_wpcli_facade_require_keys('/iss/v1/timeline', $facade, ['html', 'count', 'batchCount', 'isEmpty', 'offset', 'nextOffset', 'hasMore'], $errors);
+
+        $legacy_signature = iss_graph_wpcli_facade_timeline_signature($legacy);
+        $facade_signature = iss_graph_wpcli_facade_timeline_signature($facade);
+
+        if ($legacy_signature !== $facade_signature) {
+            $errors[] = sprintf('Timeline facade mismatch for scenario "%s".', $scenario);
+            continue;
+        }
+
+        WP_CLI::log(sprintf(
+            '[compare] timeline scenario="%s" count=%d html=%s matched',
+            $scenario,
+            (int) ($facade_signature['count'] ?? 0),
+            (string) ($facade_signature['html_hash'] ?? '')
+        ));
+    }
+
+    if ($errors) {
+        WP_CLI::error_multi_line($errors);
+        WP_CLI::error(sprintf('ISS graph facade timeline comparison failed with %d issue(s).', count($errors)));
+    }
+
+    WP_CLI::success(sprintf('ISS graph facade timeline comparison passed for %d scenario(s).', count($scenarios)));
 }
 
 function iss_graph_wpcli_facade_parse_entity_scenarios($value): array
