@@ -44,14 +44,6 @@ function iss_content_model_register_acf_ausstellung_fields(): void
                 'wrapper' => ['width' => '50'],
             ],
             [
-                'key' => 'field_iss_is_permanent',
-                'label' => __('Dauerausstellung', 'iss-content-model'),
-                'name' => 'iss_is_permanent',
-                'type' => 'true_false',
-                'ui' => 1,
-                'wrapper' => ['width' => '50'],
-            ],
-            [
                 'key' => 'field_iss_timeline_enabled',
                 'label' => __('Öffentlich in Ausstellungsübersichten zeigen', 'iss-content-model'),
                 'name' => 'iss_timeline_enabled',

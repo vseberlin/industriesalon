@@ -13,6 +13,7 @@ Current checkpoint only. History belongs in `CHANGELOG.md`; active follow-up bel
 - `/ausstellungen/` uses `industriesalon/ausstellungen-browser`, a WP_Query-based availability browser separate from occurrence/timeline data. Filters are `Aktuell`, `Dauer`, `Digital`, and `Archiv`; public visibility still uses `iss_timeline_enabled`.
 - `Archiv` requires an explicit past `iss_end_date`; open-ended exhibitions stay out of archive until editors add an end date.
 - Dauer and Digital Ausstellungen are availability-only and no longer sync into `iss_occurrences`; temporary exhibition run dates remain eligible for calendar rows when explicitly enabled.
+- Ausstellung editors can now classify `Sonderausstellung`, `Dauerausstellung`, or `Digitale Ausstellung` in the existing `iss-content-model` editor panel. The native `ausstellung_typ` taxonomy UI stays hidden, but the taxonomy is exposed to REST so the editor panel can save the existing term contract.
 - Local Ausstellung availability data is audit-clean: `Kinder im Werk` and `Frauen im Werk für Fernmeldewesen` are `digitaleausstellungen` through `2026-12-31`; `Ostberliner Zeitreisen - Fotografien von Kurt Schwarz` and `Die laufende Produktion` are drafts pending later review.
 - Local backup before the data cleanup: `ops/content-backups/2026-06-11-before-ausstellung-availability-cleanup.sql`; replay artifact: `ops/sql/2026-06-11-ausstellung-availability-cleanup.sql`.
 - `refactor.md` records the gradual `Entity / Relation / Occurrence / View` refactor direction and the phased path through `iss-core` and `iss-frontend`.
@@ -37,6 +38,7 @@ Current checkpoint only. History belongs in `CHANGELOG.md`; active follow-up bel
 ## Next Action
 
 - Keep the local Ausstellung availability SQL artifact paired with this code checkpoint if transferring to staging/production.
+- Next local refactor work should use `iss-core` or `iss-frontend` only for helpers with proven reuse; keep domain code in the current owning plugins until extraction has a stable contract.
 - Before deploy or staging transfer, run `wp iss-occurrences verify`, `wp iss-occurrences drift-check`, and `wp iss-graph drift-check` on the target.
 - Apply programme SQL/data artifacts only with the matching code checkpoint and after a database backup.
 
@@ -51,4 +53,5 @@ Current checkpoint only. History belongs in `CHANGELOG.md`; active follow-up bel
 - `wp iss-programm ausstellungen-audit --strict` passes with 0 warnings after the local data cleanup.
 - Ausstellung browser filters after cleanup: `aktuell=17`, `dauer=14`, `digital=3`, `archiv=6`.
 - `wp iss-occurrences verify` reports `public_occurrences=52` and `public_graph_occurrences=52`; `wp iss-occurrences drift-check` and `wp iss-graph drift-check` passed.
+- Ausstellung editor classification pass: PHP lint, targeted ESLint, PHPCS, PHPStan, and `git diff --check` passed; REST exposes `ausstellung_typ` on Ausstellung posts; `/ausstellungen/?ausstellung_filter=digital` returns the three digital Ausstellungen.
 - Origin staging commits verified Frauen transfer and graph migration on staging; details are preserved in `CHANGELOG.md`.

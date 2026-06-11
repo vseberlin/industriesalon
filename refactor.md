@@ -18,6 +18,13 @@ This is the repo-owned plan for the gradual Industriesalon refactor. It records 
 4. Add `iss-frontend` for shared frontend runtime helpers only.
 5. Defer domain plugin extraction until the boundaries are proven by reused services and stable contracts.
 
+## Current Checkpoint
+
+- Phases 1-4 exist locally as scoped checkpoints or scaffolds; they are not pushed.
+- Ausstellung availability classification remains the `ausstellung_typ` taxonomy, now exposed through editor-owned controls in `iss-content-model`.
+- `iss_timeline_enabled` remains the public visibility switch for Ausstellung overview browsers.
+- The next refactor move should be driven by proven reuse: place shared infrastructure in `iss-core`, shared runtime helpers in `iss-frontend`, and leave domain code in place until extraction has a stable contract.
+
 ## Current Boundary Notes
 
 - `iss-occurrences` owns occurrence projection and programme/calendar query readiness.

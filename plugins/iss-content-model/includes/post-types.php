@@ -154,7 +154,8 @@ function iss_content_model_register_post_types() {
         'hierarchical' => true,
         'show_ui' => false,
         'show_admin_column' => false,
-        'show_in_rest' => false,
+        'show_in_rest' => true,
+        'rest_base' => ISS_CONTENT_MODEL_AUSSTELLUNG_TYPE_TAXONOMY,
         'rewrite' => ['slug' => 'ausstellungstyp', 'with_front' => false],
     ]);
 
@@ -264,6 +265,7 @@ function iss_content_model_get_default_taxonomy_terms() {
         ISS_CONTENT_MODEL_AUSSTELLUNG_TYPE_TAXONOMY => [
             ['name' => __('Dauerausstellung', 'iss-content-model'), 'slug' => 'dauerausstellung'],
             ['name' => __('Sonderausstellung', 'iss-content-model'), 'slug' => 'sonderausstellung'],
+            ['name' => __('Digitale Ausstellung', 'iss-content-model'), 'slug' => 'digitaleausstellungen'],
         ],
         ISS_CONTENT_MODEL_TOPIC_TAXONOMY => [
             ['name' => __('Elektropolis', 'iss-content-model'), 'slug' => 'elektropolis'],

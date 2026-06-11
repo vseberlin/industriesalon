@@ -201,6 +201,55 @@ function iss_content_model_restore_admin_ausstellung_metabox_visibility(): void
     }
 }
 
+function iss_content_model_get_ausstellung_type_options(): array
+{
+    return [
+        'sonderausstellung' => __('Sonderausstellung', 'iss-content-model'),
+        'dauerausstellung' => __('Dauerausstellung', 'iss-content-model'),
+        'digitaleausstellungen' => __('Digitale Ausstellung', 'iss-content-model'),
+    ];
+}
+
+function iss_content_model_get_selected_ausstellung_type(int $post_id): string
+{
+    if ($post_id <= 0 || !taxonomy_exists(ISS_CONTENT_MODEL_AUSSTELLUNG_TYPE_TAXONOMY)) {
+        return '';
+    }
+
+    $terms = wp_get_post_terms($post_id, ISS_CONTENT_MODEL_AUSSTELLUNG_TYPE_TAXONOMY, ['fields' => 'slugs']);
+    if (is_wp_error($terms)) {
+        return '';
+    }
+
+    $slugs = array_map('sanitize_title', (array) $terms);
+    foreach (array_keys(iss_content_model_get_ausstellung_type_options()) as $slug) {
+        if (in_array($slug, $slugs, true)) {
+            return $slug;
+        }
+    }
+
+    return '';
+}
+
+function iss_content_model_save_ausstellung_type(int $post_id, string $type_slug): void
+{
+    if ($post_id <= 0 || !taxonomy_exists(ISS_CONTENT_MODEL_AUSSTELLUNG_TYPE_TAXONOMY)) {
+        return;
+    }
+
+    $type_slug = sanitize_title($type_slug);
+    $options = iss_content_model_get_ausstellung_type_options();
+    if (!array_key_exists($type_slug, $options)) {
+        return;
+    }
+
+    if (!term_exists($type_slug, ISS_CONTENT_MODEL_AUSSTELLUNG_TYPE_TAXONOMY)) {
+        wp_insert_term((string) $options[$type_slug], ISS_CONTENT_MODEL_AUSSTELLUNG_TYPE_TAXONOMY, ['slug' => $type_slug]);
+    }
+
+    wp_set_object_terms($post_id, $type_slug, ISS_CONTENT_MODEL_AUSSTELLUNG_TYPE_TAXONOMY, false);
+}
+
 add_action('media_buttons', function (string $editor_id): void {
     if ($editor_id !== 'content') {
         return;
@@ -691,7 +740,7 @@ function iss_content_model_render_ausstellung_box($post) {
 
     $start = (string) get_post_meta($post->ID, 'iss_start_date', true);
     $end = (string) get_post_meta($post->ID, 'iss_end_date', true);
-    $is_permanent = (bool) get_post_meta($post->ID, 'iss_is_permanent', true);
+    $selected_type = iss_content_model_get_selected_ausstellung_type((int) $post->ID);
     $timeline_enabled = get_post_meta($post->ID, 'iss_timeline_enabled', true);
     $timeline_enabled = $timeline_enabled === '' ? false : (bool) $timeline_enabled;
 
@@ -703,8 +752,14 @@ function iss_content_model_render_ausstellung_box($post) {
     echo '<input class="widefat" type="date" id="iss_end_date" name="iss_content_model[iss_end_date]" value="' . esc_attr($end) . '"></p>';
 
     echo '<p class="description">' . esc_html__('Sammlungsbereich und Themen werden in den Taxonomie-Boxen verwaltet. Orte werden ueber "Ort hinzufuegen" verbunden.', 'iss-content-model') . '</p>';
-    echo '<p><label><input type="checkbox" name="iss_content_model[iss_is_permanent]" value="1" ' . checked($is_permanent, true, false) . '> ' . esc_html__('Dauerausstellung', 'iss-content-model') . '</label></p>';
-    echo '<p><label><input type="checkbox" name="iss_content_model[iss_timeline_enabled]" value="1" ' . checked($timeline_enabled, true, false) . '> ' . esc_html__('In Kalender und Timeline zeigen', 'iss-content-model') . '</label></p>';
+
+    echo '<fieldset><legend><strong>' . esc_html__('Ausstellungsart', 'iss-content-model') . '</strong></legend>';
+    foreach (iss_content_model_get_ausstellung_type_options() as $slug => $label) {
+        echo '<p><label><input type="radio" name="iss_content_model[ausstellung_typ]" value="' . esc_attr($slug) . '" ' . checked($selected_type, (string) $slug, false) . '> ' . esc_html((string) $label) . '</label></p>';
+    }
+    echo '</fieldset>';
+
+    echo '<p><label><input type="checkbox" name="iss_content_model[iss_timeline_enabled]" value="1" ' . checked($timeline_enabled, true, false) . '> ' . esc_html__('Öffentlich in Ausstellungsübersichten zeigen', 'iss-content-model') . '</label></p>';
 }
 
 function iss_content_model_render_projekt_box($post) {
@@ -939,6 +994,11 @@ function iss_content_model_save_meta_box(int $post_id): void
         if ($selected_place_id > 0 && $manual_location === '') {
             $raw['iss_location'] = iss_content_model_get_veranstaltung_place_title($selected_place_id);
         }
+    }
+
+    if ($post_type === ISS_CONTENT_MODEL_AUSSTELLUNG_POST_TYPE && array_key_exists('ausstellung_typ', $raw)) {
+        iss_content_model_save_ausstellung_type($post_id, (string) $raw['ausstellung_typ']);
+        unset($raw['ausstellung_typ']);
     }
 
     foreach ($definitions[$post_type] as $key => $config) {

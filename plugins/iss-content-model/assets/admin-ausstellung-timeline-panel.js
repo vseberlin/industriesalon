@@ -8,10 +8,17 @@
   var registerPlugin = wp.plugins.registerPlugin;
   var PluginDocumentSettingPanel = wp.editPost.PluginDocumentSettingPanel;
   var ToggleControl = wp.components.ToggleControl;
+  var RadioControl = wp.components.RadioControl;
   var TextControl = wp.components.TextControl;
   var Notice = wp.components.Notice;
   var useSelect = wp.data.useSelect;
   var useDispatch = wp.data.useDispatch;
+
+  var typeOptions = [
+    { label: 'Sonderausstellung', value: 'sonderausstellung' },
+    { label: 'Dauerausstellung', value: 'dauerausstellung' },
+    { label: 'Digitale Ausstellung', value: 'digitaleausstellungen' },
+  ];
 
   function normalizeMeta(meta) {
     return meta && typeof meta === 'object' ? meta : {};
@@ -23,6 +30,39 @@
     }
 
     return !!meta.iss_timeline_enabled;
+  }
+
+  function getTermBySlug(typeTerms, slug) {
+    if (!Array.isArray(typeTerms)) {
+      return null;
+    }
+
+    for (var i = 0; i < typeTerms.length; i += 1) {
+      if (typeTerms[i] && typeTerms[i].slug === slug) {
+        return typeTerms[i];
+      }
+    }
+
+    return null;
+  }
+
+  function getSelectedTypeSlug(terms, typeTerms) {
+    if (!Array.isArray(terms) || !Array.isArray(typeTerms)) {
+      return '';
+    }
+
+    var selectedTermIds = terms.map(function (termId) {
+      return String(termId);
+    });
+
+    for (var i = 0; i < typeOptions.length; i += 1) {
+      var term = getTermBySlug(typeTerms, typeOptions[i].value);
+      if (term && selectedTermIds.indexOf(String(term.id)) !== -1) {
+        return typeOptions[i].value;
+      }
+    }
+
+    return '';
   }
 
   function AusstellungTimelinePanel() {
@@ -44,7 +84,7 @@
         return [];
       }
 
-      return core.getEntityRecords('taxonomy', 'ausstellung_typ', { per_page: -1 }) || [];
+      return core.getEntityRecords('taxonomy', 'ausstellung_typ', { per_page: 100 }) || [];
     }, []);
 
     var editPost = useDispatch('core/editor').editPost;
@@ -57,25 +97,49 @@
     var startDate = String(meta.iss_start_date || '');
     var endDate = String(meta.iss_end_date || '');
     var hasStartDate = startDate !== '';
-    var isPermanent = Array.isArray(terms) && Array.isArray(typeTerms) && typeTerms.some(function (term) {
-      return term && term.slug === 'dauerausstellung' && terms.indexOf(term.id) !== -1;
-    });
-    var willSync = enabled && (hasStartDate || isPermanent);
+    var selectedType = getSelectedTypeSlug(terms, typeTerms);
+    var isPermanent = selectedType === 'dauerausstellung';
+    var isDigital = selectedType === 'digitaleausstellungen';
+    var isAvailabilityOnly = isPermanent || isDigital;
+    var isCurrentTemporary = selectedType === 'sonderausstellung' && hasStartDate;
+    var willShow = enabled && (isAvailabilityOnly || isCurrentTemporary);
 
     function updateMeta(next) {
       editPost({ meta: Object.assign({}, meta, next) });
+    }
+
+    function updateType(slug) {
+      var term = getTermBySlug(typeTerms, slug);
+      if (!term) {
+        return;
+      }
+
+      editPost({
+        ausstellung_typ: [term.id],
+        meta: Object.assign({}, meta, {
+          iss_is_permanent: slug === 'dauerausstellung',
+        }),
+      });
     }
 
     return createElement(
       PluginDocumentSettingPanel,
       {
         name: 'iss-ausstellung-timeline',
-        title: 'Timeline',
+        title: 'Ausstellung',
         className: 'iss-ausstellung-timeline-panel',
       },
       createElement(
         Fragment,
         null,
+        RadioControl
+          ? createElement(RadioControl, {
+              label: 'Ausstellungsart',
+              selected: selectedType,
+              options: typeOptions,
+              onChange: updateType,
+            })
+          : null,
         ToggleControl
           ? createElement(ToggleControl, {
               label: 'Öffentlich in Ausstellungsübersichten zeigen',
@@ -108,10 +172,12 @@
         Notice
           ? createElement(
               Notice,
-              { status: willSync ? 'success' : 'warning', isDismissible: false },
-              willSync
-                ? 'Diese Ausstellung erscheint in den öffentlichen Ausstellungsübersichten.'
-                : 'Für öffentliche Ausstellungsübersichten muss die Ausstellung aktiviert sein und Datums- oder Typangaben haben.'
+              { status: willShow ? 'success' : 'warning', isDismissible: false },
+              willShow
+                ? (isAvailabilityOnly
+                  ? 'Diese Ausstellung erscheint in den Ausstellungsübersichten und wird nicht als Kalendertermin geführt.'
+                  : 'Diese Sonderausstellung erscheint mit ihren Laufdaten in den Ausstellungsübersichten.')
+                : 'Für öffentliche Ausstellungsübersichten braucht die Ausstellung eine Ausstellungsart, die Sichtbarkeit und bei Sonderausstellungen ein Startdatum.'
             )
           : null
       )
