@@ -215,14 +215,18 @@ function is_saas_field_schedule_path() {
     echo '<p class="description">Required for booking links. Example: Fuehrungen_%28oeffentlich%29</p>';
 }
 
-add_action('rest_api_init', function () {
+function is_tours_register_public_slot_routes() {
     // Public intentionally: frontend tour calendar reads slot availability without authentication.
-    register_rest_route('is-tours/v1', '/slots', [
+    $route_args = [
         'methods'  => 'GET',
         'callback' => 'is_tours_get_slots',
         'permission_callback' => '__return_true',
-    ]);
-});
+    ];
+
+    register_rest_route('is-tours/v1', '/slots', $route_args);
+    register_rest_route('iss/v1', '/tour-slots', $route_args);
+}
+add_action('rest_api_init', 'is_tours_register_public_slot_routes');
 
 
 function is_tours_get_slots(WP_REST_Request $request) {

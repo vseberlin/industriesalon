@@ -18,11 +18,12 @@ Current checkpoint only. History belongs in `CHANGELOG.md`; active follow-up bel
 - Local backup before the data cleanup: `ops/content-backups/2026-06-11-before-ausstellung-availability-cleanup.sql`; replay artifact: `ops/sql/2026-06-11-ausstellung-availability-cleanup.sql`.
 - `refactor.md` records the gradual `Entity / Relation / Occurrence / View` refactor direction and the phased path through `iss-core` and `iss-frontend`.
 - `iss-graph` now has a central entity-kind registry for current storage kinds, canonical target aliases, owner plugins, post-type mappings, and legacy aliases. Current stored values such as `ausstellung`, `veranstaltung`, `fuehrung`, `projekt`, `page`, and `archivbeitrag` remain stable; canonical aliases include `exhibition`, `event`, `tour`, and `project`.
-- `iss-graph` exposes the first read-only `/wp-json/iss/v1` facade for contract, entities, entity detail, occurrences, search, and the programme timeline compatibility view. It delegates to existing graph, occurrence, search, and programme timeline services; older plugin routes remain active.
+- `iss-graph` exposes the first read-only `/wp-json/iss/v1` facade for contract, entities, entity detail, occurrences, search, the programme timeline compatibility view, and the tour-slot read view. It delegates to existing graph, occurrence, search, programme timeline, and tour-slot services; older plugin routes remain active.
 - Search is the first old-vs-new facade audit surface. `wp iss-graph facade-search-compare` compares `/iss-search/v1/search` and `/iss/v1/search` result signatures before search consumers switch route.
 - The public header search modal is now the first actual facade consumer and reads from `/wp-json/iss/v1/search`. The full search page and legacy `/iss-search/v1/search` route remain active.
 - Occurrences are now covered by the same old-vs-new audit pattern. `wp iss-graph facade-occurrences-compare` compares direct `iss_occurrences_query()` output against `/iss/v1/occurrences` result signatures before programme consumers switch routes.
 - The public timeline query frontend is now the first occurrence-facing view consumer on the facade and reads from `/wp-json/iss/v1/timeline`. The legacy `/iss-programm/v1/timeline` route remains active and delegates to the same renderer.
+- The public tour calendar slot reader now reads from `/wp-json/iss/v1/tour-slots`. The legacy `/is-tours/v1/slots` read route remains active; booking submissions remain on `/is-tours/v1/book`.
 - Entities are now covered by the same old-vs-new audit pattern. `wp iss-graph facade-entities-compare` compares direct graph service output against `/iss/v1/entities` list/detail responses before entity/profile consumers switch routes.
 - `iss-core` and `iss-frontend` exist as active local scaffold plugins only. They expose helper conventions and do not own CPTs, REST routes, renderers, CSS, or domain scripts yet.
 - Legacy hidden-calendar code has been removed from active runtime paths; the old `iss_calendar_item` CPT/query layer is not active storage or query code.
@@ -51,6 +52,7 @@ Current checkpoint only. History belongs in `CHANGELOG.md`; active follow-up bel
 - Run `wp iss-graph facade-search-compare` before switching any additional search UI, block, or API consumer from `/iss-search/v1/search` to `/iss/v1/search`.
 - Run `wp iss-graph facade-occurrences-compare` before switching programme/calendar UI, blocks, or API consumers to `/iss/v1/occurrences`.
 - Run `wp iss-graph facade-timeline-compare` before switching any additional rendered timeline consumer from `/iss-programm/v1/timeline` to `/iss/v1/timeline`.
+- Run `wp iss-graph facade-tour-slots-compare` before switching any additional tour-slot reader from `/is-tours/v1/slots` to `/iss/v1/tour-slots`.
 - Run `wp iss-graph facade-entities-compare` before switching entity/profile UI, blocks, or API consumers to `/iss/v1/entities`.
 - Before deploy or staging transfer, run `wp iss-occurrences verify`, `wp iss-occurrences drift-check`, and `wp iss-graph drift-check` on the target.
 - Apply programme SQL/data artifacts only with the matching code checkpoint and after a database backup.
@@ -69,11 +71,13 @@ Current checkpoint only. History belongs in `CHANGELOG.md`; active follow-up bel
 - Ausstellung editor classification pass: PHP lint, targeted ESLint, PHPCS, PHPStan, and `git diff --check` passed; REST exposes `ausstellung_typ` on Ausstellung posts; `/ausstellungen/?ausstellung_filter=digital` returns the three digital Ausstellungen.
 - Origin staging commits verified Frauen transfer and graph migration on staging; details are preserved in `CHANGELOG.md`.
 - Graph entity-kind registry and `/iss/v1` facade pass PHP lint, targeted PHPCS, targeted PHPStan, `git diff --check`, `wp iss-graph verify`, full `wp iss-graph drift-check --limit=25`, and `wp iss-occurrences drift-check --limit=25`.
-- `/wp-json/iss/v1/contract`, `/entities`, `/entities/{id}`, `/occurrences`, `/search`, and `/timeline` returned `200` in WP-CLI REST smoke checks and HTTP curl checks on local port `8082`.
-- `wp iss-graph facade-check --limit=2` passes and checks `/iss/v1/contract`, `/entities`, `/entities/{id}`, `/occurrences`, `/search`, and `/timeline` through WordPress.
+- `/wp-json/iss/v1/contract`, `/entities`, `/entities/{id}`, `/occurrences`, `/search`, `/timeline`, and `/tour-slots` returned `200` in WP-CLI REST smoke checks and HTTP curl checks on local port `8082`.
+- `wp iss-graph facade-check --limit=2` passes and checks `/iss/v1/contract`, `/entities`, `/entities/{id}`, `/occurrences`, `/search`, `/timeline`, and `/tour-slots` through WordPress.
 - `wp iss-graph facade-search-compare --limit=5` passes for default queries `salon`, `schoeneweide`, and `ausstellung`; each matched provider, count, and result signatures between legacy search and the facade.
 - Homepage markup on the configured local site host renders the header search modal with `data-endpoint` pointing to `/wp-json/iss/v1/search`; `/kalender/` renders the same endpoint.
 - `wp iss-graph facade-occurrences-compare --limit=5` passes for default scenarios `upcoming`, `all`, and `event`; each matched direct occurrence service output against the `/iss/v1/occurrences` facade.
 - `wp iss-graph facade-timeline-compare --limit=5` passes for default scenarios `upcoming`, `month`, and `event`; each matched legacy `/iss-programm/v1/timeline` metadata and rendered HTML hash against `/iss/v1/timeline`.
 - `/kalender/` inline frontend config now points `window.ISS_TIMELINE.restUrl` to `/wp-json/iss/v1/timeline`; a JSON POST to that facade returns timeline HTML and pagination metadata.
+- `wp iss-graph facade-tour-slots-compare --tag=ELEKTRO` passes for default scenarios `tag` and `nomap`; `ELEKTRO` matched legacy `/is-tours/v1/slots` against `/iss/v1/tour-slots` with `source=occurrences` and 3 slots.
+- `/fuehrungen/` inline frontend config now points `window.IS_TOUR_CALENDAR.restUrl` to `/wp-json/iss/v1/tour-slots`; `window.IS_TOUR_CALENDAR.bookUrl` still points to `/wp-json/is-tours/v1/book`.
 - `wp iss-graph facade-entities-compare --limit=5` passes for default scenarios `list`, `archive_object`, and `search`; each matched graph service output against `/iss/v1/entities` and detail output for the first returned entity.

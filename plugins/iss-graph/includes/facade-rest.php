@@ -450,6 +450,9 @@ function iss_facade_rest_contract(WP_REST_Request $request): WP_REST_Response
     if (function_exists('iss_timeline_rest_render_collection')) {
         $routes[] = '/iss/v1/timeline';
     }
+    if (function_exists('is_tours_get_slots')) {
+        $routes[] = '/iss/v1/tour-slots';
+    }
 
     return new WP_REST_Response([
         'namespace' => 'iss/v1',
@@ -460,6 +463,7 @@ function iss_facade_rest_contract(WP_REST_Request $request): WP_REST_Response
             'search' => function_exists('iss_search_public_posts'),
             'occurrences' => function_exists('iss_occurrences_query'),
             'timeline' => function_exists('iss_timeline_rest_render_collection'),
+            'tour_slots' => function_exists('is_tours_get_slots'),
         ],
         'routes' => $routes,
         'entity_kinds' => $entity_kinds,

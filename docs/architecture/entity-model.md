@@ -455,6 +455,7 @@ GET /wp-json/iss/v1/entities/{id}
 GET /wp-json/iss/v1/occurrences
 GET /wp-json/iss/v1/search
 GET|POST /wp-json/iss/v1/timeline
+GET /wp-json/iss/v1/tour-slots
 ```
 
 The facade is public-read only. Entity responses expose public entities and
@@ -462,14 +463,24 @@ public relations; occurrence responses are served from `iss-occurrences` when
 that plugin is active; search responses delegate to the existing
 `iss-search/v1` provider. The timeline route is a read-only compatibility view
 registered by `iss-programm`; it delegates to the existing rendered timeline
-REST callback and keeps `/iss-programm/v1/timeline` active.
+REST callback and keeps `/iss-programm/v1/timeline` active. The tour-slots
+route is a read-only compatibility view registered by `saas-api`; it delegates
+to the existing occurrence-backed slot adapter and keeps `/is-tours/v1/slots`
+active. Booking submissions stay outside the read-only facade.
 
 Run `wp iss-graph facade-check` before switching any consumer to `/iss/v1`.
 Run `wp iss-graph facade-occurrences-compare` before switching raw
 programme/calendar consumers to `/iss/v1/occurrences`. Run
 `wp iss-graph facade-timeline-compare` before switching rendered timeline
-consumers to `/iss/v1/timeline`. Run `wp iss-graph facade-entities-compare`
-before switching entity/profile consumers to `/iss/v1/entities`.
+consumers to `/iss/v1/timeline`. Run the tour-slot comparator before switching
+tour-slot readers to `/iss/v1/tour-slots`:
+
+```bash
+wp iss-graph facade-tour-slots-compare
+```
+
+Run `wp iss-graph facade-entities-compare` before switching entity/profile
+consumers to `/iss/v1/entities`.
 
 The resolver should classify match type:
 

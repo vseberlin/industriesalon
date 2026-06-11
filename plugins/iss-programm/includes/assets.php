@@ -83,7 +83,7 @@ function iss_programm_register_frontend_assets() {
     wp_add_inline_script(
         'is-tour-calendar',
         'window.IS_TOUR_CALENDAR = ' . wp_json_encode([
-            'restUrl' => rest_url('is-tours/v1/slots'),
+            'restUrl' => rest_url('iss/v1/tour-slots'),
         ]) . ';',
         'before'
     );

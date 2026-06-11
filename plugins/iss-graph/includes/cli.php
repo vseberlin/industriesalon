@@ -14,6 +14,7 @@ if (defined('WP_CLI') && WP_CLI) {
     WP_CLI::add_command('iss-graph facade-occurrences-compare', 'iss_graph_wpcli_facade_occurrences_compare_command');
     WP_CLI::add_command('iss-graph facade-entities-compare', 'iss_graph_wpcli_facade_entities_compare_command');
     WP_CLI::add_command('iss-graph facade-timeline-compare', 'iss_graph_wpcli_facade_timeline_compare_command');
+    WP_CLI::add_command('iss-graph facade-tour-slots-compare', 'iss_graph_wpcli_facade_tour_slots_compare_command');
     WP_CLI::add_command('iss-graph migrate', 'iss_graph_wpcli_migrate_command');
     WP_CLI::add_command('iss-graph sync-register', 'iss_graph_wpcli_sync_register_command');
     WP_CLI::add_command('iss-graph sync-content', 'iss_graph_wpcli_sync_content_command');
@@ -218,6 +219,12 @@ function iss_graph_wpcli_facade_check_command(array $args, array $assoc_args): v
             $errors[] = '/iss/v1/contract does not advertise the timeline facade route.';
         }
     }
+    if (function_exists('is_tours_get_slots')) {
+        $routes = isset($contract['routes']) && is_array($contract['routes']) ? $contract['routes'] : [];
+        if (!in_array('/iss/v1/tour-slots', $routes, true)) {
+            $errors[] = '/iss/v1/contract does not advertise the tour slots facade route.';
+        }
+    }
 
     $entities = iss_graph_wpcli_facade_request('/iss/v1/entities', ['limit' => $limit], $errors);
     iss_graph_wpcli_facade_require_keys('/iss/v1/entities', $entities, ['count', 'items'], $errors);
@@ -268,6 +275,14 @@ function iss_graph_wpcli_facade_check_command(array $args, array $assoc_args): v
             ],
         ], $errors);
         iss_graph_wpcli_facade_require_keys('/iss/v1/timeline', $timeline, ['html', 'count', 'batchCount', 'isEmpty', 'offset', 'nextOffset', 'hasMore'], $errors);
+    }
+
+    if (function_exists('is_tours_get_slots')) {
+        $tour_slots = iss_graph_wpcli_facade_request('/iss/v1/tour-slots', [], $errors);
+        iss_graph_wpcli_facade_require_keys('/iss/v1/tour-slots', $tour_slots, ['source', 'slots'], $errors);
+        if (isset($tour_slots['slots']) && !is_array($tour_slots['slots'])) {
+            $errors[] = '/iss/v1/tour-slots slots is not a list.';
+        }
     }
 
     if ($errors) {
@@ -653,6 +668,118 @@ function iss_graph_wpcli_facade_timeline_compare_command(array $args, array $ass
     }
 
     WP_CLI::success(sprintf('ISS graph facade timeline comparison passed for %d scenario(s).', count($scenarios)));
+}
+
+function iss_graph_wpcli_facade_parse_tour_slot_scenarios($value): array
+{
+    $raw_scenarios = is_string($value) && trim($value) !== ''
+        ? preg_split('/\s*,\s*/', trim($value))
+        : ['tag', 'nomap'];
+
+    $scenarios = [];
+    foreach ((array) $raw_scenarios as $scenario) {
+        $scenario = sanitize_key((string) $scenario);
+        if ($scenario !== '') {
+            $scenarios[] = $scenario;
+        }
+    }
+
+    return array_values(array_unique($scenarios));
+}
+
+function iss_graph_wpcli_facade_tour_slot_params_for_scenario(string $scenario, string $tag, int $post_id): array
+{
+    switch ($scenario) {
+        case 'post':
+        case 'post_id':
+            return $post_id > 0 ? ['post_id' => $post_id] : [];
+        case 'nomap':
+        case 'missing':
+            return [];
+        case 'tag':
+        default:
+            return $tag !== '' ? ['tag' => $tag] : [];
+    }
+}
+
+function iss_graph_wpcli_facade_tour_slots_signature(array $data): array
+{
+    $slots = isset($data['slots']) && is_array($data['slots']) ? $data['slots'] : [];
+
+    return [
+        'source' => (string) ($data['source'] ?? ''),
+        'slots' => array_values(array_map(static function (array $slot): array {
+            return [
+                'id' => (string) ($slot['id'] ?? ''),
+                'title' => (string) ($slot['title'] ?? ''),
+                'start' => (string) ($slot['start'] ?? ''),
+                'end' => $slot['end'] ?? null,
+                'capacity' => $slot['capacity'] ?? null,
+                'available' => $slot['available'] ?? null,
+                'booking_url' => $slot['booking_url'] ?? null,
+                'content_url' => $slot['content_url'] ?? null,
+            ];
+        }, array_filter($slots, 'is_array'))),
+    ];
+}
+
+function iss_graph_wpcli_facade_tour_slots_compare_command(array $args, array $assoc_args): void
+{
+    if (!function_exists('is_tours_get_slots')) {
+        WP_CLI::error('Tour slots REST service is unavailable.');
+    }
+
+    $tag = strtoupper(sanitize_text_field((string) ($assoc_args['tag'] ?? 'ELEKTRO')));
+    $post_id = absint($assoc_args['post_id'] ?? 0);
+    $scenarios = iss_graph_wpcli_facade_parse_tour_slot_scenarios($assoc_args['scenarios'] ?? '');
+    if (!$scenarios) {
+        WP_CLI::error('Provide at least one tour-slot comparison scenario through --scenarios or use the defaults.');
+    }
+
+    $errors = [];
+    $compared = 0;
+    foreach ($scenarios as $scenario) {
+        $params = iss_graph_wpcli_facade_tour_slot_params_for_scenario($scenario, $tag, $post_id);
+        if (in_array($scenario, ['post', 'post_id'], true) && $post_id <= 0) {
+            WP_CLI::warning(sprintf('Skipping tour-slot scenario "%s"; provide --post_id to compare it.', $scenario));
+            continue;
+        }
+        if ($scenario === 'tag' && $tag === '') {
+            $errors[] = 'Tour-slot scenario "tag" requires a non-empty --tag value.';
+            continue;
+        }
+
+        $legacy = iss_graph_wpcli_facade_request('/is-tours/v1/slots', $params, $errors, 'legacy');
+        $facade = iss_graph_wpcli_facade_request('/iss/v1/tour-slots', $params, $errors, 'facade');
+        iss_graph_wpcli_facade_require_keys('/is-tours/v1/slots', $legacy, ['source', 'slots'], $errors);
+        iss_graph_wpcli_facade_require_keys('/iss/v1/tour-slots', $facade, ['source', 'slots'], $errors);
+
+        $legacy_signature = iss_graph_wpcli_facade_tour_slots_signature($legacy);
+        $facade_signature = iss_graph_wpcli_facade_tour_slots_signature($facade);
+
+        if ($legacy_signature !== $facade_signature) {
+            $errors[] = sprintf('Tour slots facade mismatch for scenario "%s".', $scenario);
+            continue;
+        }
+
+        WP_CLI::log(sprintf(
+            '[compare] tour-slots scenario="%s" source=%s slots=%d matched',
+            $scenario,
+            (string) ($facade_signature['source'] ?? ''),
+            count($facade_signature['slots'] ?? [])
+        ));
+        $compared++;
+    }
+
+    if ($compared <= 0 && !$errors) {
+        WP_CLI::error('No tour-slot comparison scenarios were run.');
+    }
+    if ($errors) {
+        WP_CLI::error_multi_line($errors);
+        WP_CLI::error(sprintf('ISS graph facade tour-slot comparison failed with %d issue(s).', count($errors)));
+    }
+
+    WP_CLI::success(sprintf('ISS graph facade tour-slot comparison passed for %d scenario(s).', $compared));
 }
 
 function iss_graph_wpcli_facade_parse_entity_scenarios($value): array
