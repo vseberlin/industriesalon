@@ -25,6 +25,7 @@ Immediate executable work only. Larger future programs live in `docs/project/bac
   - apply `ops/sql/2026-06-11-strict-programme-toggle-backfill.sql`
   - apply `ops/sql/2026-06-11-ausstellung-availability-cleanup.sql`
   - apply `ops/sql/2026-06-12-legacy-occurrence-origin-purge.sql`
+  - apply `ops/sql/2026-06-12-supersaas-past-occurrence-reactivation.sql`
   - run target occurrence schema/sync/backfill commands as needed, then graph and occurrence drift checks
 - Verify production public consumers:
   - `/`, `/kalender/`, `/ausstellungen/`, `/fuehrungen/`, `/veranstaltungen/`

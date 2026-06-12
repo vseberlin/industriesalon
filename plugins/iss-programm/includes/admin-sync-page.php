@@ -81,6 +81,7 @@ add_action('admin_post_iss_programm_sync', function () {
             'imported_unmapped' => 0,
             'skipped_unlinked' => 0,
             'inactivated' => 0,
+            'past_reactivated' => 0,
             'metadata_backfilled' => 0,
             'error_message' => 'SuperSaaS sync module is unavailable.',
         ], 60);
@@ -233,17 +234,19 @@ function iss_programm_render_sync_page() {
         $imported_unmapped = (int) ($result['imported_unmapped'] ?? 0);
         $skipped_unlinked = (int) ($result['skipped_unlinked'] ?? 0);
         $inactivated = (int) ($result['inactivated'] ?? 0);
+        $past_reactivated = (int) ($result['past_reactivated'] ?? 0);
         $metadata_backfilled = (int) ($result['metadata_backfilled'] ?? 0);
         $error_message = isset($result['error_message']) ? trim((string) $result['error_message']) : '';
 
         $sync_message = sprintf(
-            'SuperSaaS-Sync abgeschlossen. Neu: %d, Aktualisiert: %d, Fehler: %d, Unverknüpfte Slots: %d, Nicht öffentlich: %d, Inaktiviert: %d, Metadaten ergänzt: %d.',
+            'SuperSaaS-Sync abgeschlossen. Neu: %d, Aktualisiert: %d, Fehler: %d, Unverknüpfte Slots: %d, Nicht öffentlich: %d, Inaktiviert: %d, Vergangene reaktiviert: %d, Metadaten ergänzt: %d.',
             $created,
             $updated,
             $errors,
             $imported_unmapped,
             $skipped_unlinked,
             $inactivated,
+            $past_reactivated,
             $metadata_backfilled
         );
         echo '<div class="notice notice-success"><p>' . esc_html($sync_message) . '</p></div>';

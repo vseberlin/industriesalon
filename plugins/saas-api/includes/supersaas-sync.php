@@ -493,7 +493,7 @@ function iss_supersaas_find_linked_source_by_series_key($series_key) {
 /**
  * Sync SuperSaaS slots into the occurrence projection.
  *
- * @return array{created:int,updated:int,errors:int,imported_unmapped:int,skipped_unlinked:int,inactivated:int,metadata_backfilled:int,error_message:string}
+ * @return array{created:int,updated:int,errors:int,imported_unmapped:int,skipped_unlinked:int,inactivated:int,past_reactivated:int,metadata_backfilled:int,error_message:string}
  */
 function iss_supersaas_sync_occurrences() {
     if (!function_exists('iss_occurrences_get_service')) {
@@ -504,6 +504,7 @@ function iss_supersaas_sync_occurrences() {
             'imported_unmapped' => 0,
             'skipped_unlinked' => 0,
             'inactivated' => 0,
+            'past_reactivated' => 0,
             'metadata_backfilled' => 0,
             'error_message' => 'ISS Occurrences is unavailable.',
         ];
@@ -522,6 +523,7 @@ function iss_supersaas_sync_occurrences() {
             'imported_unmapped' => 0,
             'skipped_unlinked' => 0,
             'inactivated' => 0,
+            'past_reactivated' => 0,
             'metadata_backfilled' => 0,
             'error_message' => (string) $slot_items->get_error_message(),
         ];
@@ -768,6 +770,9 @@ function iss_supersaas_sync_occurrences() {
     }
 
     $inactivated = $service->mark_missing_origin_future_inactive('supersaas', $source_calendar, $seen_external_ids);
+    $past_reactivated = method_exists($service, 'mark_origin_past_active')
+        ? $service->mark_origin_past_active('supersaas', $source_calendar)
+        : 0;
 
     // Keep the REST endpoint cache and the occurrence table in sync.
     foreach ($slots_by_tag as $tag => $slots) {
@@ -797,6 +802,7 @@ function iss_supersaas_sync_occurrences() {
         'imported_unmapped' => $imported_unmapped,
         'skipped_unlinked' => $skipped_unlinked,
         'inactivated' => $inactivated,
+        'past_reactivated' => $past_reactivated,
         'metadata_backfilled' => $metadata_backfilled,
         'error_message' => '',
     ];

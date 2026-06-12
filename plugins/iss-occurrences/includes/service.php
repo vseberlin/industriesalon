@@ -522,6 +522,40 @@ final class ISS_Occurrences_Service
         return $updated;
     }
 
+    public function mark_origin_past_active(string $origin, string $source_calendar): int
+    {
+        global $wpdb;
+
+        $origin = sanitize_key($origin);
+        $source_calendar = sanitize_text_field($source_calendar);
+        if ($origin === '' || $source_calendar === '' || !$this->tables_exist()) {
+            return 0;
+        }
+
+        $table = $this->get_occurrences_table_name();
+        $updated = (int) $wpdb->query(
+            $wpdb->prepare(
+                "UPDATE {$table} o INNER JOIN {$wpdb->posts} p ON p.ID = o.source_post_id SET o.status = %s, o.updated_at = %s WHERE o.origin = %s AND o.source_calendar = %s AND o.visibility = %s AND o.source_post_type = %s AND o.starts_at < %s AND o.status <> %s AND p.post_type = %s AND p.post_status = %s",
+                'active',
+                current_time('mysql'),
+                $origin,
+                $source_calendar,
+                'public',
+                'fuehrung',
+                current_time('mysql'),
+                'active',
+                'fuehrung',
+                'publish'
+            )
+        );
+
+        if ($updated > 0) {
+            do_action('iss_occurrences_changed', ['origin' => $origin, 'source_calendar' => $source_calendar]);
+        }
+
+        return $updated;
+    }
+
     public function backfill_supersaas_metadata(string $source_calendar): int
     {
         global $wpdb;

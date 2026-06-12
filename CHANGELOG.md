@@ -1,6 +1,9 @@
 # Changelog
 
 ## 2026-06-12
+- Preserved past SuperSaaS occurrence rows as historical calendar records:
+  - sync now reactivates already-past public SuperSaaS rows for the source calendar after future missing-slot inactivation
+  - added `ops/sql/2026-06-12-supersaas-past-occurrence-reactivation.sql` for staging rows that the API can no longer re-fetch
 - Started `iss-core` helper adoption by routing programme sync and SuperSaaS admin capability checks through `iss_core_capability()` with existing `manage_options` fallback behavior.
 - Routed `iss-programm` frontend asset setup through the shared `iss-frontend` helper layer and made programme asset registration idempotent, removing duplicate inline REST config output while preserving facade endpoints.
 - Added a final occurrence legacy-origin cleanup guard:
