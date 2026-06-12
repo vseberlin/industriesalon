@@ -1,6 +1,7 @@
 # Changelog
 
 ## 2026-06-12
+- Normalized `/kalender/` Führung booking calls to action to `Buchen` for both grouped and single tour rows.
 - Added month-bounded recurring Führung groups for `/kalender/`:
   - recurring tour rows can now group by source/series plus month instead of one all-time group
   - the calendar template uses expanded grouped date lists so repeated Elektropolis dates are visible directly inside their monthly group
