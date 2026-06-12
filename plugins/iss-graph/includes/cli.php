@@ -1814,7 +1814,7 @@ function iss_graph_wpcli_facade_entities_compare_command(array $args, array $ass
 
 function iss_graph_wpcli_parse_drift_checks(string $value): array
 {
-    $available = [
+    $default_checks = [
         'post-identifiers',
         'register-identifiers',
         'content-identifiers',
@@ -1826,10 +1826,14 @@ function iss_graph_wpcli_parse_drift_checks(string $value): array
         'entity-kind-contract',
         'facade-route-contract',
     ];
+    $available = array_merge($default_checks, [
+        'alias-backfill-replay',
+        'canonical-organization-seeds',
+    ]);
 
     $value = trim($value);
     if ($value === '') {
-        return $available;
+        return $default_checks;
     }
 
     $requested = array_values(array_filter(array_map('sanitize_key', preg_split('/[\s,]+/', $value) ?: [])));
@@ -1860,12 +1864,202 @@ function iss_graph_wpcli_run_drift_check(string $check, int $limit): array
             return iss_graph_wpcli_check_entity_kind_contract($limit);
         case 'facade-route-contract':
             return iss_graph_wpcli_check_facade_route_contract($limit);
+        case 'alias-backfill-replay':
+            return iss_graph_wpcli_check_alias_backfill_replay($limit);
+        case 'canonical-organization-seeds':
+            return iss_graph_wpcli_check_canonical_organization_seeds($limit);
         default:
             return [
                 'checked' => 0,
                 'errors' => [sprintf('Unknown drift check: %s', $check)],
             ];
     }
+}
+
+function iss_graph_wpcli_check_alias_backfill_replay(int $limit): array
+{
+    if (!function_exists('iss_graph_audit_entity_alias_backfill')) {
+        return [
+            'checked' => 0,
+            'errors' => ['Alias backfill audit is unavailable.'],
+        ];
+    }
+
+    $stats = iss_graph_audit_entity_alias_backfill(['sample_limit' => min(25, $limit)]);
+    $changed = (int) ($stats['changed_entities'] ?? 0);
+    $removed = (int) ($stats['removed_names'] ?? 0);
+    $added = (int) ($stats['added_names'] ?? 0);
+    if ($changed <= 0 && $removed <= 0 && $added <= 0) {
+        return [
+            'checked' => (int) ($stats['entities'] ?? 0),
+            'errors' => [],
+        ];
+    }
+
+    $errors = [
+        sprintf(
+            'Alias backfill replay pending: changed_entities=%d current_names=%d proposed_names=%d removed_names=%d added_names=%d.',
+            $changed,
+            (int) ($stats['current_names'] ?? 0),
+            (int) ($stats['proposed_names'] ?? 0),
+            $removed,
+            $added
+        ),
+    ];
+
+    foreach ((array) ($stats['samples'] ?? []) as $preview) {
+        if (!is_array($preview) || count($errors) >= $limit) {
+            break;
+        }
+
+        $errors[] = sprintf(
+            'Alias backfill pending for entity %d [%s] "%s": removed=%d added=%d.',
+            (int) ($preview['entity_id'] ?? 0),
+            (string) ($preview['entity_kind'] ?? ''),
+            iss_graph_wpcli_entity_hygiene_clip((string) ($preview['title'] ?? ''), 80),
+            (int) ($preview['removed_count'] ?? 0),
+            (int) ($preview['added_count'] ?? 0)
+        );
+    }
+
+    return [
+        'checked' => (int) ($stats['entities'] ?? 0),
+        'errors' => $errors,
+    ];
+}
+
+function iss_graph_wpcli_canonical_organization_seed_contract(): array
+{
+    return [
+        [
+            'label' => 'KWO',
+            'source_id' => 'kabelwerk-oberspree',
+            'canonical_slug' => 'kabelwerk-oberspree',
+            'display_title' => 'Kabelwerk Oberspree',
+            'names' => [
+                ['source_system' => 'entity_title', 'normalized_name' => 'kabelwerk-oberspree', 'name_type' => 'primary', 'is_primary' => 1],
+                ['source_system' => 'manual_alias', 'normalized_name' => 'kwo', 'name_type' => 'abbreviation', 'is_primary' => 0],
+                ['source_system' => 'manual_alias', 'normalized_name' => 'veb-kabelwerk-oberspree', 'name_type' => 'official', 'is_primary' => 0],
+            ],
+        ],
+        [
+            'label' => 'AEG',
+            'source_id' => 'allgemeine-elektricitats-gesellschaft',
+            'canonical_slug' => 'allgemeine-elektricitats-gesellschaft',
+            'display_title' => 'Allgemeine Elektricitäts-Gesellschaft',
+            'names' => [
+                ['source_system' => 'entity_title', 'normalized_name' => 'allgemeine-elektricitats-gesellschaft', 'name_type' => 'primary', 'is_primary' => 1],
+                ['source_system' => 'manual_alias', 'normalized_name' => 'aeg', 'name_type' => 'abbreviation', 'is_primary' => 0],
+                ['source_system' => 'manual_alias', 'normalized_name' => 'allgemeine-elektricitaets-gesellschaft', 'name_type' => 'transliteration', 'is_primary' => 0],
+            ],
+        ],
+    ];
+}
+
+function iss_graph_wpcli_check_canonical_organization_seeds(int $limit): array
+{
+    global $wpdb;
+
+    $service = iss_graph_get_service();
+    $entity_table = $service->get_entity_table_name();
+    $name_table = $service->get_name_table_name();
+    if (!$service->table_exists($entity_table) || !$service->table_exists($name_table)) {
+        return [
+            'checked' => 0,
+            'errors' => ['Graph entity or name table is unavailable.'],
+        ];
+    }
+
+    $errors = [];
+    $checked = 0;
+    foreach (iss_graph_wpcli_canonical_organization_seed_contract() as $seed) {
+        $checked++;
+        $rows = $wpdb->get_results(
+            $wpdb->prepare(
+                "SELECT id, canonical_slug, display_title, status, is_public, search_visibility
+                FROM {$entity_table}
+                WHERE entity_kind = 'organization'
+                  AND source_system = 'manual_slug'
+                  AND source_id = %s
+                ORDER BY id ASC",
+                (string) ($seed['source_id'] ?? '')
+            ),
+            ARRAY_A
+        );
+        $rows = is_array($rows) ? $rows : [];
+        if (count($rows) !== 1) {
+            $errors[] = sprintf(
+                'Canonical organization seed %s expected exactly 1 manual_slug row for source_id=%s, found %d.',
+                (string) ($seed['label'] ?? ''),
+                (string) ($seed['source_id'] ?? ''),
+                count($rows)
+            );
+            if (count($errors) >= $limit) {
+                break;
+            }
+            continue;
+        }
+
+        $entity = $rows[0];
+        $entity_id = (int) ($entity['id'] ?? 0);
+        foreach (['canonical_slug', 'display_title', 'status', 'search_visibility'] as $field) {
+            $expected = $field === 'status' ? 'publish' : (string) ($seed[$field] ?? '');
+            if ($field === 'search_visibility') {
+                $expected = 'hidden';
+            }
+            $actual = (string) ($entity[$field] ?? '');
+            if ($actual !== $expected) {
+                $errors[] = sprintf('Canonical organization seed %s entity %d has %s=%s, expected %s.', (string) ($seed['label'] ?? ''), $entity_id, $field, $actual, $expected);
+            }
+        }
+
+        if ((int) ($entity['is_public'] ?? 0) !== 0) {
+            $errors[] = sprintf('Canonical organization seed %s entity %d must remain hidden, found is_public=%d.', (string) ($seed['label'] ?? ''), $entity_id, (int) ($entity['is_public'] ?? 0));
+        }
+
+        foreach ((array) ($seed['names'] ?? []) as $name) {
+            $checked++;
+            $exists = (int) $wpdb->get_var(
+                $wpdb->prepare(
+                    "SELECT COUNT(*)
+                    FROM {$name_table}
+                    WHERE entity_id = %d
+                      AND source_system = %s
+                      AND normalized_name = %s
+                      AND name_type = %s
+                      AND is_primary = %d",
+                    $entity_id,
+                    (string) ($name['source_system'] ?? ''),
+                    (string) ($name['normalized_name'] ?? ''),
+                    (string) ($name['name_type'] ?? ''),
+                    (int) ($name['is_primary'] ?? 0)
+                )
+            );
+            if ($exists <= 0) {
+                $errors[] = sprintf(
+                    'Canonical organization seed %s entity %d is missing %s %s:%s.',
+                    (string) ($seed['label'] ?? ''),
+                    $entity_id,
+                    (string) ($name['source_system'] ?? ''),
+                    (string) ($name['name_type'] ?? ''),
+                    (string) ($name['normalized_name'] ?? '')
+                );
+            }
+
+            if (count($errors) >= $limit) {
+                break 2;
+            }
+        }
+
+        if (count($errors) >= $limit) {
+            break;
+        }
+    }
+
+    return [
+        'checked' => $checked,
+        'errors' => $errors,
+    ];
 }
 
 function iss_graph_wpcli_check_facade_route_contract(int $limit): array

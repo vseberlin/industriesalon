@@ -15,8 +15,8 @@ Immediate executable work only. Larger future programs live in `docs/project/bac
 - Replay generated aliases on staging after dry-run comparison:
   - import `ops/sql/2026-06-12-graph-alias-backfill-replay.sql` after a target DB backup to create the rollback snapshot
   - run `wp iss-graph sync-aliases`, then re-run `wp iss-graph sync-aliases --dry-run --limit=25`
-  - expected clean post-replay dry-run is `changed_entities=0`, `removed_names=0`, and `added_names=0`
-- After generated alias leakage is reduced, apply `ops/sql/2026-06-12-graph-canonical-kwo-aeg-organizations.sql` to create the curated canonical organization rows for `KWO` and `AEG`.
+  - run `wp iss-graph drift-check --checks=alias-backfill-replay --limit=25`
+- After generated alias leakage is reduced, apply `ops/sql/2026-06-12-graph-canonical-kwo-aeg-organizations.sql` to create the curated canonical organization rows for `KWO` and `AEG`, then run `wp iss-graph drift-check --checks=canonical-organization-seeds --limit=25`.
 - Keep merge/reassign behavior deferred. Do not auto-merge graph entities.
 
 ## Production: Transfer Greenfield Refactor Checkpoint

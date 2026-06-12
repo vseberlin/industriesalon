@@ -1,6 +1,10 @@
 # Changelog
 
 ## 2026-06-12
+- Added opt-in graph hygiene migration drift checks:
+  - `wp iss-graph drift-check --checks=alias-backfill-replay` fails while generated `entity_alias_backfill` rows still differ from the current alias generator output
+  - `wp iss-graph drift-check --checks=canonical-organization-seeds` verifies the post-replay hidden canonical organization rows and curated aliases for `KWO` / `Kabelwerk Oberspree` and `AEG` / `Allgemeine Elektricitäts-Gesellschaft`
+  - these checks are not part of the default drift set yet, so local/default graph drift remains green until the prepared data artifacts are applied on each target
 - Prepared the post-replay canonical organization data step for `KWO` and `AEG`:
   - added `ops/sql/2026-06-12-graph-canonical-kwo-aeg-organizations.sql` to create hidden curated organization rows for `Kabelwerk Oberspree` and `Allgemeine Elektricitäts-Gesellschaft`
   - stores the canonical primary names plus curated `KWO`, `VEB Kabelwerk Oberspree`, `AEG`, and `Allgemeine Elektricitaets-Gesellschaft` aliases on organization entities only

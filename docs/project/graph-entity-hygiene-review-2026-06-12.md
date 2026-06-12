@@ -15,6 +15,10 @@ prepared in `ops/sql/2026-06-12-graph-alias-backfill-replay.sql`.
 The post-replay curated organization seed for `KWO` and `AEG` is prepared in
 `ops/sql/2026-06-12-graph-canonical-kwo-aeg-organizations.sql` and should be
 applied only after the generated alias replay is clean.
+Verification follow-up: the migration-specific drift checks are opt-in until
+the data artifacts are applied. Use the `alias-backfill-replay` drift check
+after alias replay and the `canonical-organization-seeds` drift check after the
+`KWO` / `AEG` seed import.
 
 ## Commands
 
@@ -146,10 +150,11 @@ but not these generated organization aliases.
 3. After staging dry-run comparison, apply
    `ops/sql/2026-06-12-graph-alias-backfill-replay.sql` to create a rollback
    snapshot, then replay alias backfill with `wp iss-graph sync-aliases`.
+   Verify with `wp iss-graph drift-check --checks=alias-backfill-replay --limit=25`.
 4. Add missing canonical organization rows for `KWO` and `AEG` through a
    reviewed graph data step, not as automatic resolver output. Prepared as
    `ops/sql/2026-06-12-graph-canonical-kwo-aeg-organizations.sql`; apply after
-   the generated alias replay reports no remaining changes.
+   the generated alias replay reports no remaining changes. Verify with `wp iss-graph drift-check --checks=canonical-organization-seeds --limit=25`.
 5. Revisit `Industriesalon Schöneweide` organization variants after generated
    alias leakage is reduced.
 
