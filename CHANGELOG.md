@@ -1,6 +1,7 @@
 # Changelog
 
 ## 2026-06-12
+- Added `Buchen` booking calls to action to Führung rows in the front-page programme teaser.
 - Synced the DB-backed front-page template override back to the theme file and removed the local override:
   - preserved the live editorial heading `Aktuelle Projekte` in `themes/industriesalon/templates/front-page.html`
   - changed the front-page programme teaser to link `Alle Termine ansehen` to `/kalender/` and group recurring tour dates by month
