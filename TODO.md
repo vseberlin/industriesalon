@@ -2,6 +2,13 @@
 
 Immediate executable work only. Larger future programs live in `docs/project/backlog.md`; UAT-dependent work lives in `docs/project/uat.md`.
 
+## Security: Post Git-History Purge
+
+- Re-clone or deliberately reset `/home/vladimir/industriesalon-export` before using it again; current local `main` is stale/diverged from rewritten `origin/main`.
+- Check any staging/server clone before deploy. Because `main` was rewritten, prefer fresh clone or explicit reset to rewritten `origin/main` after preserving any local-only state.
+- Consider GitHub Support cache/unreachable-object purge for the removed Newsletter SQL artifact if strict privacy cleanup is required.
+- Review Newsletter subscriber tokens and decide whether token regeneration is required after the prior public exposure.
+
 ## Staging: Validate Greenfield Refactor Checkpoint
 
 - Pull the pushed `origin/main` checkpoint on staging after confirming the staging worktree is clean.

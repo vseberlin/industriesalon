@@ -1,6 +1,10 @@
 # Changelog
 
 ## 2026-06-12
+- Documented the post-purge local clone audit:
+  - verified the purged Newsletter SQL path/blob is absent from the current `/home/vladimir/wp` object graph
+  - found one additional local clone of the GitHub repo at `/home/vladimir/industriesalon-export`; it does not contain the purged blob but is stale/diverged from rewritten `origin/main`
+  - confirmed `/home/vladimir/ISS-mirror` and `/home/vladimir/strato` do not contain the purged Newsletter blob
 - Removed the old production Newsletter SQL transfer artifact from the current branch and rewrote Git history with `git-filter-repo` so the artifact path is absent from reachable refs in a fresh mirror clone.
 - Prepared the greenfield refactor checkpoint for GitHub exchange:
   - refreshed `handoff_CURRENT.md` and `TODO.md` so the checkpoint no longer points to a local-only push decision
