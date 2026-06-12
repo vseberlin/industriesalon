@@ -184,6 +184,37 @@ function iss_graph_wpcli_facade_request(string $path, array $params, array &$err
     return $data;
 }
 
+function iss_graph_wpcli_direct_rest_callback(string $context, callable $callback, string $path, array $params, array &$errors, string $label = 'direct'): array
+{
+    $request = new WP_REST_Request('GET', $path);
+    foreach ($params as $key => $value) {
+        $request->set_param((string) $key, $value);
+    }
+
+    $raw_response = call_user_func($callback, $request);
+    if (is_wp_error($raw_response)) {
+        $errors[] = sprintf('%s returned error: %s', $context, $raw_response->get_error_message());
+        WP_CLI::log(sprintf('[%s] %s status=error count=n/a', $label, $context));
+
+        return [];
+    }
+
+    $response = rest_ensure_response($raw_response);
+    $status = (int) $response->get_status();
+    $data = $response->get_data();
+    if ($status !== 200) {
+        $errors[] = sprintf('%s returned status %d, expected 200.', $context, $status);
+    }
+    if (!is_array($data)) {
+        $errors[] = sprintf('%s returned a non-object response.', $context);
+        $data = [];
+    }
+
+    WP_CLI::log(sprintf('[%s] %s status=%d count=%s', $label, $context, $status, iss_graph_wpcli_facade_response_count($data)));
+
+    return $data;
+}
+
 function iss_graph_wpcli_facade_require_keys(string $context, array $data, array $keys, array &$errors): void
 {
     foreach ($keys as $key) {
@@ -333,6 +364,10 @@ function iss_graph_wpcli_facade_search_signature(array $data): array
 
 function iss_graph_wpcli_facade_search_compare_command(array $args, array $assoc_args): void
 {
+    if (!function_exists('iss_search_rest_search')) {
+        WP_CLI::error('Search REST service is unavailable.');
+    }
+
     $limit = max(1, min(25, absint($assoc_args['limit'] ?? 5)));
     $queries = iss_graph_wpcli_facade_parse_search_queries($assoc_args['queries'] ?? '');
     if (!$queries) {
@@ -345,7 +380,7 @@ function iss_graph_wpcli_facade_search_compare_command(array $args, array $assoc
             'q' => $query,
             'limit' => $limit,
         ];
-        $legacy = iss_graph_wpcli_facade_request('/iss-search/v1/search', $params, $errors, 'legacy');
+        $legacy = iss_graph_wpcli_direct_rest_callback('search service', 'iss_search_rest_search', '/iss/v1/search', $params, $errors);
         $facade = iss_graph_wpcli_facade_request('/iss/v1/search', $params, $errors, 'facade');
         $legacy_signature = iss_graph_wpcli_facade_search_signature($legacy);
         $facade_signature = iss_graph_wpcli_facade_search_signature($facade);
@@ -641,9 +676,9 @@ function iss_graph_wpcli_facade_timeline_compare_command(array $args, array $ass
     $errors = [];
     foreach ($scenarios as $scenario) {
         $params = iss_graph_wpcli_facade_timeline_params_for_scenario($scenario, $limit);
-        $legacy = iss_graph_wpcli_facade_request('/iss-programm/v1/timeline', $params, $errors, 'legacy');
+        $legacy = iss_graph_wpcli_direct_rest_callback('timeline service', 'iss_timeline_rest_render_collection', '/iss/v1/timeline', $params, $errors);
         $facade = iss_graph_wpcli_facade_request('/iss/v1/timeline', $params, $errors, 'facade');
-        iss_graph_wpcli_facade_require_keys('/iss-programm/v1/timeline', $legacy, ['html', 'count', 'batchCount', 'isEmpty', 'offset', 'nextOffset', 'hasMore'], $errors);
+        iss_graph_wpcli_facade_require_keys('timeline service', $legacy, ['html', 'count', 'batchCount', 'isEmpty', 'offset', 'nextOffset', 'hasMore'], $errors);
         iss_graph_wpcli_facade_require_keys('/iss/v1/timeline', $facade, ['html', 'count', 'batchCount', 'isEmpty', 'offset', 'nextOffset', 'hasMore'], $errors);
 
         $legacy_signature = iss_graph_wpcli_facade_timeline_signature($legacy);
@@ -749,9 +784,9 @@ function iss_graph_wpcli_facade_tour_slots_compare_command(array $args, array $a
             continue;
         }
 
-        $legacy = iss_graph_wpcli_facade_request('/is-tours/v1/slots', $params, $errors, 'legacy');
+        $legacy = iss_graph_wpcli_direct_rest_callback('tour-slot service', 'is_tours_get_slots', '/iss/v1/tour-slots', $params, $errors);
         $facade = iss_graph_wpcli_facade_request('/iss/v1/tour-slots', $params, $errors, 'facade');
-        iss_graph_wpcli_facade_require_keys('/is-tours/v1/slots', $legacy, ['source', 'slots'], $errors);
+        iss_graph_wpcli_facade_require_keys('tour-slot service', $legacy, ['source', 'slots'], $errors);
         iss_graph_wpcli_facade_require_keys('/iss/v1/tour-slots', $facade, ['source', 'slots'], $errors);
 
         $legacy_signature = iss_graph_wpcli_facade_tour_slots_signature($legacy);

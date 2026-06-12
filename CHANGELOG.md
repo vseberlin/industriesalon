@@ -1,6 +1,12 @@
 # Changelog
 
 ## 2026-06-12
+- Retired the old public read routes after the first public consumers had moved to `/wp-json/iss/v1`:
+  - stopped registering `/iss-search/v1/search`, `/iss-programm/v1/timeline`, and `/is-tours/v1/slots`
+  - kept `/iss/v1/search`, `/iss/v1/timeline`, and `/iss/v1/tour-slots` active by delegating to the existing search, timeline, and tour-slot callbacks
+  - kept `/is-tours/v1/book` as the booking write route
+  - changed the facade comparison commands to compare facade responses against the underlying service callbacks rather than retired REST paths
+  - updated architecture, handoff, and TODO docs to reflect the route-retirement checkpoint
 - Marked the greenfield refactor checkpoint complete after the first staging validation pass was reported passed:
   - updated `refactor.md` so phases 1-4 are no longer described as local-only/unpushed
   - updated `handoff_CURRENT.md` to treat staging validation as passed while keeping production transfer and target verification as the next deployment risk

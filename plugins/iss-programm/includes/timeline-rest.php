@@ -203,7 +203,6 @@ function iss_timeline_rest_register_routes() {
         'permission_callback' => '__return_true',
     ];
 
-    register_rest_route('iss-programm/v1', '/timeline', $route_args);
     register_rest_route('iss/v1', '/timeline', $route_args);
 }
 add_action('rest_api_init', 'iss_timeline_rest_register_routes');

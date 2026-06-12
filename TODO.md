@@ -9,15 +9,14 @@ Immediate executable work only. Larger future programs live in `docs/project/bac
 - Consider GitHub Support cache/unreachable-object purge for the removed Newsletter SQL artifact if strict privacy cleanup is required.
 - Review Newsletter subscriber tokens and decide whether token regeneration is required after the prior public exposure.
 
-## Refactor: Retire Legacy Read Routes
+## Refactor: Deploy Legacy Read-Route Retirement
 
-- Keep the staging-passed greenfield checkpoint stable; do not combine route removal with production transfer.
-- Before removing any legacy read route, audit static and runtime consumers for:
+- Transfer and verify the separate route-retirement checkpoint on staging/production only after confirming no target-side consumer still calls:
   - `/iss-search/v1/search`
   - `/iss-programm/v1/timeline`
   - `/is-tours/v1/slots`
 - Preserve `/is-tours/v1/book` for booking writes.
-- Remove only routes with proven-unused consumers and rerun facade checks, old-path absence checks, public route checks, and production/staging smoke checks as a separate checkpoint.
+- Rerun facade checks, retired-route absence checks, public route checks, and smoke checks after deploy.
 
 ## Production: Transfer Greenfield Refactor Checkpoint
 

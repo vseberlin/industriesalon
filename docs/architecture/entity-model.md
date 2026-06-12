@@ -444,9 +444,9 @@ iss_graph_replace_entity_projection(string $source_system, int $entity_id, array
 Source plugins should call graph APIs. Theme templates should not query graph
 tables directly.
 
-`iss-graph` also exposes a read-only facade under `/wp-json/iss/v1` for the
-greenfield contract shape. The facade does not replace existing plugin routes
-yet; it delegates to current graph, search, and occurrence services:
+`iss-graph` exposes a read-only facade under `/wp-json/iss/v1` for the
+greenfield contract shape. It delegates to current graph, search, occurrence,
+programme timeline, and tour-slot services:
 
 ```text
 GET /wp-json/iss/v1/contract
@@ -461,19 +461,20 @@ GET /wp-json/iss/v1/tour-slots
 The facade is public-read only. Entity responses expose public entities and
 public relations; occurrence responses are served from `iss-occurrences` when
 that plugin is active; search responses delegate to the existing
-`iss-search/v1` provider. The timeline route is a read-only compatibility view
-registered by `iss-programm`; it delegates to the existing rendered timeline
-REST callback and keeps `/iss-programm/v1/timeline` active. The tour-slots
-route is a read-only compatibility view registered by `saas-api`; it delegates
-to the existing occurrence-backed slot adapter and keeps `/is-tours/v1/slots`
-active. Booking submissions stay outside the read-only facade.
+search service. The timeline route is registered by `iss-programm` and delegates
+to the existing rendered timeline REST callback. The tour-slots route is
+registered by `saas-api` and delegates to the occurrence-backed slot adapter.
+The retired read routes `/iss-search/v1/search`, `/iss-programm/v1/timeline`,
+and `/is-tours/v1/slots` are no longer registered. Booking submissions stay
+outside the read-only facade on `/is-tours/v1/book`.
 
 Run `wp iss-graph facade-check` before switching any consumer to `/iss/v1`.
 Run `wp iss-graph facade-occurrences-compare` before switching raw
 programme/calendar consumers to `/iss/v1/occurrences`. Run
 `wp iss-graph facade-timeline-compare` before switching rendered timeline
 consumers to `/iss/v1/timeline`. Run the tour-slot comparator before switching
-tour-slot readers to `/iss/v1/tour-slots`:
+tour-slot readers to `/iss/v1/tour-slots`. These comparators now compare the
+facade response against the underlying services, not retired legacy routes:
 
 ```bash
 wp iss-graph facade-tour-slots-compare

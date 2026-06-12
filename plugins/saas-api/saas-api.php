@@ -223,7 +223,6 @@ function is_tours_register_public_slot_routes() {
         'permission_callback' => '__return_true',
     ];
 
-    register_rest_route('is-tours/v1', '/slots', $route_args);
     register_rest_route('iss/v1', '/tour-slots', $route_args);
 }
 add_action('rest_api_init', 'is_tours_register_public_slot_routes');

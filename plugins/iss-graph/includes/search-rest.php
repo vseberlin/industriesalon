@@ -66,15 +66,3 @@ function iss_search_rest_search(WP_REST_Request $request)
         'available_types' => array_values(iss_search_get_public_type_options()),
     ]);
 }
-
-function iss_search_register_rest_routes(): void
-{
-    register_rest_route('iss-search/v1', '/search', [
-        'methods' => WP_REST_Server::READABLE,
-        'callback' => 'iss_search_rest_search',
-        'permission_callback' => '__return_true',
-        'args' => iss_search_rest_get_route_args(),
-    ]);
-}
-
-add_action('rest_api_init', 'iss_search_register_rest_routes');
