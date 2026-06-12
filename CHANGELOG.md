@@ -1,6 +1,7 @@
 # Changelog
 
 ## 2026-06-12
+- Removed the old production Newsletter SQL transfer artifact from the current branch and rewrote Git history with `git-filter-repo` so the artifact path is absent from reachable refs in a fresh mirror clone.
 - Prepared the greenfield refactor checkpoint for GitHub exchange:
   - refreshed `handoff_CURRENT.md` and `TODO.md` so the checkpoint no longer points to a local-only push decision
   - recorded the paired staging data artifacts that must travel with the code: `ops/sql/2026-06-11-strict-programme-toggle-backfill.sql` and `ops/sql/2026-06-11-ausstellung-availability-cleanup.sql`

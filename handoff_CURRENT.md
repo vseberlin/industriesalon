@@ -6,7 +6,7 @@ Current checkpoint only. History belongs in `CHANGELOG.md`; active follow-up bel
 
 ## Current State
 
-- Branch: `main`; this handoff is the GitHub exchange closeout for the greenfield refactor checkpoint. Last runtime implementation checkpoint is `8563410 Switch tour slots to facade`; the final push also includes closeout documentation.
+- Branch: `main`; this handoff is the GitHub exchange closeout for the greenfield refactor checkpoint. Last runtime implementation checkpoint is `081f529 Switch tour slots to facade`; the final push also includes closeout documentation.
 - The greenfield refactor checkpoint is ready for staging review: occurrence projection, Ausstellung availability browser/editor hardening, entity-kind registry, `/wp-json/iss/v1` facade, and the first public facade consumers are committed for `origin/main`.
 - `iss-occurrences` owns `wp_iss_occurrences` and `wp_iss_occurrence_series`; `iss-programm` renders calendar/timeline/browser blocks; `saas-api` owns SuperSaaS sync and tour-slot reads; the theme owns public templates/skins.
 - `/ausstellungen/` uses the dedicated `industriesalon/ausstellungen-browser` and WP_Query availability filters. Dauer/Digital Ausstellungen are availability-only and do not sync into occurrence rows.
@@ -34,6 +34,7 @@ Current checkpoint only. History belongs in `CHANGELOG.md`; active follow-up bel
 - `git fetch origin --prune` on 2026-06-12 showed local `main` was 0 behind / 16 ahead of `origin/main` before the final closeout documentation commit.
 - `git diff --check origin/main..HEAD`, PHP syntax over all changed PHP files, `npm run lint:js`, PHPCS over all 41 changed PHP files, and PHPStan over all 41 changed PHP files passed.
 - Public-consumer audit found converted reads on facade endpoints. Static remaining old-path consumer is the expected booking write route `/is-tours/v1/book`; legacy read routes remain active for compatibility and comparator rollback.
+- The old production Newsletter SQL transfer artifact was removed from current `main`, then purged from reachable Git history with `git-filter-repo`; a fresh mirror clone no longer exposes that path.
 - `wp iss-graph facade-check --limit=2` passes and checks `/iss/v1/contract`, `/entities`, `/entities/{id}`, `/occurrences`, `/search`, `/timeline`, and `/tour-slots`.
 - Facade comparators pass: search, occurrences, entities, timeline, and tour-slots. `ELEKTRO` tour slots matched legacy `/is-tours/v1/slots` with `source=occurrences` and 3 slots.
 - `wp iss-graph verify`, `wp iss-graph drift-check --limit=25`, `wp iss-occurrences verify`, and `wp iss-occurrences drift-check --limit=25` passed.
