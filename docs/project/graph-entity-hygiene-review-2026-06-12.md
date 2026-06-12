@@ -12,6 +12,9 @@ entities. `wp iss-graph sync-aliases --dry-run --limit=25` reports 30 changed
 entities, 64 generated aliases removed, and 0 generated aliases added. The
 persisted alias replay is still pending; the reviewed target data step is
 prepared in `ops/sql/2026-06-12-graph-alias-backfill-replay.sql`.
+The post-replay curated organization seed for `KWO` and `AEG` is prepared in
+`ops/sql/2026-06-12-graph-canonical-kwo-aeg-organizations.sql` and should be
+applied only after the generated alias replay is clean.
 
 ## Commands
 
@@ -144,7 +147,9 @@ but not these generated organization aliases.
    `ops/sql/2026-06-12-graph-alias-backfill-replay.sql` to create a rollback
    snapshot, then replay alias backfill with `wp iss-graph sync-aliases`.
 4. Add missing canonical organization rows for `KWO` and `AEG` through a
-   reviewed graph data step, not as automatic resolver output.
+   reviewed graph data step, not as automatic resolver output. Prepared as
+   `ops/sql/2026-06-12-graph-canonical-kwo-aeg-organizations.sql`; apply after
+   the generated alias replay reports no remaining changes.
 5. Revisit `Industriesalon Schöneweide` organization variants after generated
    alias leakage is reduced.
 

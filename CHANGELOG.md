@@ -1,6 +1,10 @@
 # Changelog
 
 ## 2026-06-12
+- Prepared the post-replay canonical organization data step for `KWO` and `AEG`:
+  - added `ops/sql/2026-06-12-graph-canonical-kwo-aeg-organizations.sql` to create hidden curated organization rows for `Kabelwerk Oberspree` and `Allgemeine Elektricitäts-Gesellschaft`
+  - stores the canonical primary names plus curated `KWO`, `VEB Kabelwerk Oberspree`, `AEG`, and `Allgemeine Elektricitaets-Gesellschaft` aliases on organization entities only
+  - the artifact is additive and does not merge, reassign, or delete existing non-organization graph entities; local syntax testing used a rollback transaction and left local graph rows unchanged
 - Prepared the generated graph alias replay data step:
   - added `ops/sql/2026-06-12-graph-alias-backfill-replay.sql` to create a targeted rollback snapshot before running `wp iss-graph sync-aliases`
   - recorded the target procedure: compare dry-run output, import the snapshot SQL after a DB backup, run the WP-CLI replay, then verify a clean post-replay dry-run plus graph verify/drift checks
