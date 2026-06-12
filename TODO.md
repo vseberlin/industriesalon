@@ -30,6 +30,13 @@ Immediate executable work only. Larger future programs live in `docs/project/bac
 
 ## Active
 
+- 2026-06-13: Tomorrow knowledge-graph alignment slice:
+  - pull/confirm `bea9c5e` on staging and smoke-test the new graph editorial signal controls in wp-admin plus `/iss/v1/search`
+  - audit entity coverage for public objects: archive objects, places, exhibitions, publications, videos, projects, `fuehrung`, and `veranstaltung`
+  - add a drift/audit check for published public objects that have no canonical graph entity, missing subtype, or ambiguous legacy kind mapping
+  - define the first canonical subtype bridge without renaming CPTs: map `fuehrung` and `veranstaltung` into an `offer` concept with subtypes such as `tour`, `lecture`, `discussion`, and `special_opening`
+  - keep WordPress CPTs as the editor shell for now; the slice should change graph contracts/API shape first, not editor URLs or public templates
+  - only after the audit is green, choose the next facade endpoint candidate: entity relations or availability
 - 2026-06-07: Review the 3 pending `video_transcript` evidence refs in Video CPT editors and accept/dismiss them after the graph entity hygiene audit exists.
 - 2026-06-12: Follow up the human graph-influence layer after staging/editor validation:
   - review the 5 legacy related `feature` signal rows and either add reason/expiry or retire expired rows deliberately

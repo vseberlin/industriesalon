@@ -45,7 +45,7 @@ Current checkpoint only. History belongs in `CHANGELOG.md`; active follow-up bel
 ## Next Action
 
 - For production transfer, take a target DB backup, apply the current programme/template SQL artifacts, apply `ops/sql/2026-06-12-graph-alias-backfill-replay.sql`, run `wp iss-graph sync-aliases`, verify `wp iss-graph drift-check --checks=alias-backfill-replay --limit=25`, apply `ops/sql/2026-06-12-graph-canonical-kwo-aeg-organizations.sql`, verify `wp iss-graph drift-check --checks=canonical-organization-seeds --limit=25`, then apply `ops/sql/2026-06-12-graph-canonical-wf-industriesalon.sql`, run the alias replay once more, and verify `wp iss-graph drift-check --checks=canonical-wf-industriesalon --limit=25`.
-- Next local refactor candidate: after staging validates the signal controls, review legacy editorial-signal rows and then continue with the next non-public-consumer refactor slice.
+- Next local refactor candidate for 2026-06-13: after staging validates `bea9c5e`, audit canonical entity coverage for all public objects and add a drift/audit guard for missing entity/subtype mappings. Start the `Offer` bridge conceptually by mapping legacy `fuehrung` and `veranstaltung` into offer subtypes without renaming CPTs or changing public templates yet.
 - When production exists, apply the current programme/template SQL artifacts with the matching code and run graph/occurrence/Führung drift checks.
 - Verify production public consumers after the data step: `/`, `/kalender/`, `/ausstellungen/`, `/fuehrungen/`, `/veranstaltungen/`, and inline REST config for search/timeline/tour-slot reads.
 
