@@ -217,6 +217,13 @@ Alias matches must not auto-merge entities by themselves. Deterministic external
 identifier matches may auto-link. Fuzzy alias matches should create candidate
 matches for review.
 
+Known organization abbreviations and official names are organization identity
+aliases, not generic content aliases. Backfill may use them on `organization`
+entities, but archive objects, posts, publications, videos, places, events,
+exhibitions, projects, and tours that merely mention `WF`, `KWO`, `TRO`,
+`AEG`, or similar organization names should keep those terms in titles/search
+text or source evidence rather than gaining identity aliases to themselves.
+
 ## Resolver Contract
 
 Source plugins must not create public entities directly from raw labels.

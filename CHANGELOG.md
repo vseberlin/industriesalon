@@ -1,6 +1,12 @@
 # Changelog
 
 ## 2026-06-12
+- Added the first graph entity hygiene review report:
+  - recorded local `wp iss-graph entity-hygiene-audit --limit=50 --format=json` findings in `docs/project/graph-entity-hygiene-review-2026-06-12.md`
+  - classified high-count duplicate normalized names as mostly generated `entity_alias_backfill` title fragments rather than immediate merge targets
+  - identified focused next actions: tighten known organization alias generation, review `Industriesalon Schöneweide` organization variants, add or resolve canonical organization rows for `KWO` and `AEG`, and keep `WF` ambiguous until curator review
+  - documented the architecture rule that known organization abbreviations and official names should not be generated as identity aliases on non-organization entities
+  - no SQL or uploads artifact is required because this slice is read-only documentation and does not change graph rows
 - Added the read-only graph entity hygiene audit to the existing `iss-graph` WP-CLI surface:
   - `wp iss-graph entity-hygiene-audit` inventories duplicate normalized names, focus-term matches, and review flags without changing graph rows
   - the default focus terms are `Industriesalon Schöneweide`, `WF`, `KWO`, `TRO`, and `AEG`, treated as expected organization identity terms for ambiguity/wrong-kind review
