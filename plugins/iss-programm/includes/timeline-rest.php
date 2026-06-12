@@ -96,6 +96,8 @@ function iss_timeline_rest_prepare_render_opts($params) {
         'renderMode' => (($render['renderMode'] ?? 'timeline') === 'cards') ? 'cards' : 'timeline',
         'yearGrouping' => iss_timeline_rest_to_bool($render['yearGrouping'] ?? true, true),
         'groupRecurringTours' => iss_timeline_rest_to_bool($render['groupRecurringTours'] ?? false, false),
+        'groupRecurringToursByMonth' => iss_timeline_rest_to_bool($render['groupRecurringToursByMonth'] ?? false, false),
+        'expandGroupedOccurrences' => iss_timeline_rest_to_bool($render['expandGroupedOccurrences'] ?? false, false),
         'order' => strtoupper(sanitize_text_field((string) ($params['order'] ?? 'ASC'))),
         'showMeta' => iss_timeline_rest_to_bool($render['showMeta'] ?? true, true),
         'showDetailsButton' => iss_timeline_rest_to_bool($render['showDetailsButton'] ?? true, true),

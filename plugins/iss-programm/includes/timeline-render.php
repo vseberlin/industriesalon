@@ -103,23 +103,35 @@ function iss_timeline_is_groupable_tour_row($row) {
     return iss_timeline_resolve_item_type_value($row['type'] ?? '') === 'tour';
 }
 
-function iss_timeline_get_row_group_key($row) {
+function iss_timeline_get_row_group_key($row, $opts = []) {
     if (!is_array($row)) {
         return '';
     }
 
+    $opts = is_array($opts) ? $opts : [];
     $series_key = trim((string) ($row['series_key'] ?? ''));
-    if ($series_key !== '') {
-        return 'series:' . $series_key;
-    }
-
     $source_post_id = (int) ($row['source_post_id'] ?? 0);
-    if ($source_post_id > 0) {
-        return 'source:' . $source_post_id;
+    $base_key = '';
+
+    if ($series_key !== '') {
+        $base_key = 'series:' . $series_key;
+    } elseif ($source_post_id > 0) {
+        $base_key = 'source:' . $source_post_id;
+    } else {
+        $item_id = (int) ($row['id'] ?? 0);
+        $base_key = $item_id > 0 ? 'item:' . $item_id : '';
     }
 
-    $item_id = (int) ($row['id'] ?? 0);
-    return $item_id > 0 ? 'item:' . $item_id : '';
+    if ($base_key === '' || empty($opts['groupRecurringToursByMonth'])) {
+        return $base_key;
+    }
+
+    $start_raw = trim((string) ($row['start_raw'] ?? ''));
+    if (!preg_match('/^\d{4}-\d{2}/', $start_raw, $matches)) {
+        return $base_key;
+    }
+
+    return $base_key . '|month:' . $matches[0];
 }
 
 function iss_timeline_get_occurrence_label($row) {
@@ -222,8 +234,9 @@ function iss_timeline_has_grouped_occurrences($row) {
     return count(array_filter($row['occurrences'], 'is_array')) > 1;
 }
 
-function iss_timeline_group_recurring_tour_rows($items) {
+function iss_timeline_group_recurring_tour_rows($items, $opts = []) {
     $rows = iss_timeline_prepare_rows($items);
+    $opts = is_array($opts) ? $opts : [];
     if (empty($rows)) {
         return [];
     }
@@ -241,7 +254,7 @@ function iss_timeline_group_recurring_tour_rows($items) {
             continue;
         }
 
-        $group_key = iss_timeline_get_row_group_key($row);
+        $group_key = iss_timeline_get_row_group_key($row, $opts);
         if ($group_key === '' || !isset($group_indexes[$group_key])) {
             $row['occurrences'] = [$row];
             $group_indexes[$group_key] = count($grouped_rows);
@@ -353,9 +366,19 @@ function iss_timeline_render_grouped_occurrences($row, $opts = []) {
         count($occurrences)
     );
 
-    $out = '<details class="iss-timeline__occurrences">';
-    $out .= '<summary class="iss-timeline__btn iss-timeline__btn--secondary iss-timeline__occurrences-summary">'
-        . esc_html($summary_label) . '</summary>';
+    if (!empty($opts['expandGroupedOccurrences'])) {
+        $summary_label = sprintf(
+            /* translators: %d number of visible dates in grouped tour row */
+            _n('%d Termin', '%d Termine', count($occurrences), 'iss-timeline'),
+            count($occurrences)
+        );
+        $out = '<div class="iss-timeline__occurrences iss-timeline__occurrences--expanded">';
+        $out .= '<p class="iss-timeline__occurrences-summary">' . esc_html($summary_label) . '</p>';
+    } else {
+        $out = '<details class="iss-timeline__occurrences">';
+        $out .= '<summary class="iss-timeline__btn iss-timeline__btn--secondary iss-timeline__occurrences-summary">'
+            . esc_html($summary_label) . '</summary>';
+    }
     $out .= '<ul class="iss-timeline__occurrence-list">';
 
     foreach ($occurrences as $occurrence) {
@@ -378,7 +401,7 @@ function iss_timeline_render_grouped_occurrences($row, $opts = []) {
     }
 
     $out .= '</ul>';
-    $out .= '</details>';
+    $out .= !empty($opts['expandGroupedOccurrences']) ? '</div>' : '</details>';
 
     return $out;
 }
@@ -394,6 +417,8 @@ function iss_timeline_build_render_options($attributes = []) {
         'recommendButtonUrl' => isset($attributes['recommendButtonUrl']) ? (string) $attributes['recommendButtonUrl'] : '',
         'ticketsButtonUrl' => isset($attributes['ticketsButtonUrl']) ? (string) $attributes['ticketsButtonUrl'] : '',
         'groupRecurringTours' => !empty($attributes['groupRecurringTours']) && (bool) $attributes['groupRecurringTours'],
+        'groupRecurringToursByMonth' => !empty($attributes['groupRecurringToursByMonth']) && (bool) $attributes['groupRecurringToursByMonth'],
+        'expandGroupedOccurrences' => !empty($attributes['expandGroupedOccurrences']) && (bool) $attributes['expandGroupedOccurrences'],
         'showRecurringNote' => !array_key_exists('showRecurringNote', $attributes) || (bool) $attributes['showRecurringNote'],
         'showNextOccurrenceLabel' => !empty($attributes['showNextOccurrenceLabel']) && (bool) $attributes['showNextOccurrenceLabel'],
         'detailsButtonText' => isset($attributes['detailsButtonText']) ? (string) $attributes['detailsButtonText'] : '',
@@ -855,7 +880,7 @@ function iss_timeline_get_listing_response($query_args = [], $render_opts = []) 
         $items = function_exists('iss_timeline_get_items_advanced')
             ? iss_timeline_get_items_advanced($fetch_args)
             : [];
-        $grouped_rows = iss_timeline_group_recurring_tour_rows($items);
+        $grouped_rows = iss_timeline_group_recurring_tour_rows($items, $render_opts);
         $total_count = count($grouped_rows);
 
         if ($limit > 0) {
@@ -1452,6 +1477,8 @@ function iss_timeline_build_query_block_config($attributes = []) {
             'showCardSummary' => !array_key_exists('showCardSummary', $attributes) || (bool) $attributes['showCardSummary'],
             'yearGrouping' => !empty($attributes['yearGrouping']),
             'groupRecurringTours' => !empty($attributes['groupRecurringTours']),
+            'groupRecurringToursByMonth' => !empty($attributes['groupRecurringToursByMonth']),
+            'expandGroupedOccurrences' => !empty($attributes['expandGroupedOccurrences']),
             'showRecurringNote' => !array_key_exists('showRecurringNote', $attributes) || (bool) $attributes['showRecurringNote'],
             'showNextOccurrenceLabel' => !empty($attributes['showNextOccurrenceLabel']),
             'showMeta' => !array_key_exists('showMeta', $attributes) || (bool) $attributes['showMeta'],

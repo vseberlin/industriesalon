@@ -1,6 +1,9 @@
 # Changelog
 
 ## 2026-06-12
+- Added month-bounded recurring Führung groups for `/kalender/`:
+  - recurring tour rows can now group by source/series plus month instead of one all-time group
+  - the calendar template uses expanded grouped date lists so repeated Elektropolis dates are visible directly inside their monthly group
 - Changed `/kalender/` recurrence display after the expanded SuperSaaS sync:
   - disabled grouped Führung cards on the calendar page so `Alle kommenden` + `Alle` renders each dated occurrence as a visible calendar record instead of collapsing later dates behind six top-level cards
 - Fixed the SuperSaaS occurrence sync horizon after the calendar filter review:

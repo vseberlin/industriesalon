@@ -42,6 +42,8 @@
     "showCardSummary": { "type": "boolean", "default": true },
     "yearGrouping": { "type": "boolean", "default": false },
     "groupRecurringTours": { "type": "boolean", "default": false },
+    "groupRecurringToursByMonth": { "type": "boolean", "default": false },
+    "expandGroupedOccurrences": { "type": "boolean", "default": false },
     "showRecurringNote": { "type": "boolean", "default": true },
     "showNextOccurrenceLabel": { "type": "boolean", "default": false },
     "showDetailsButton": { "type": "boolean", "default": true },

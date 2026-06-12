@@ -111,6 +111,13 @@
   display: none;
 }
 
+.iss-timeline__occurrences--expanded .iss-timeline__occurrences-summary {
+  width: auto;
+  margin: 0;
+  cursor: default;
+  font-weight: 600;
+}
+
 .iss-timeline__occurrence-list {
   display: grid;
   gap: 0.5rem;
