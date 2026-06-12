@@ -23,6 +23,12 @@ if (!function_exists('iss_programm_set_sync_notice')) {
     }
 }
 
+if (!function_exists('iss_programm_sync_capability')) {
+    function iss_programm_sync_capability() {
+        return function_exists('iss_core_capability') ? iss_core_capability('sync') : 'manage_options';
+    }
+}
+
 if (!function_exists('iss_programm_normalize_series_key')) {
     function iss_programm_normalize_series_key($series_key) {
         $series_key = strtolower(trim(sanitize_text_field((string) $series_key)));
@@ -54,14 +60,14 @@ add_action('admin_menu', function () {
     add_management_page(
         'SuperSaaS-Termin-Sync',
         'SuperSaaS-Termin-Sync',
-        'manage_options',
+        iss_programm_sync_capability(),
         'iss-programm-sync',
         'iss_programm_render_sync_page'
     );
 });
 
 add_action('admin_post_iss_programm_sync', function () {
-    if (!current_user_can('manage_options')) {
+    if (!current_user_can(iss_programm_sync_capability())) {
         wp_die('Not allowed.');
     }
 
@@ -90,7 +96,7 @@ add_action('admin_post_iss_programm_sync', function () {
 });
 
 add_action('admin_post_iss_programm_clear_series_mapping', function () {
-    if (!current_user_can('manage_options')) {
+    if (!current_user_can(iss_programm_sync_capability())) {
         wp_die('Not allowed.');
     }
 
@@ -133,7 +139,7 @@ add_action('admin_post_iss_programm_clear_series_mapping', function () {
 });
 
 add_action('admin_post_iss_programm_set_series_mapping', function () {
-    if (!current_user_can('manage_options')) {
+    if (!current_user_can(iss_programm_sync_capability())) {
         wp_die('Not allowed.');
     }
 
@@ -201,7 +207,7 @@ add_action('admin_post_iss_programm_set_series_mapping', function () {
 });
 
 function iss_programm_render_sync_page() {
-    if (!current_user_can('manage_options')) {
+    if (!current_user_can(iss_programm_sync_capability())) {
         return;
     }
 

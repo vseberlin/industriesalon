@@ -117,10 +117,12 @@ function is_saas_sanitize_settings($input) {
 function is_saas_add_admin_menu() {
     is_saas_load_admin_menu_api();
 
+    $capability = function_exists('iss_core_capability') ? iss_core_capability('manage') : 'manage_options';
+
     add_options_page(
         'SuperSaaS API',
         'SuperSaaS API',
-        'manage_options',
+        $capability,
         'is-saas-api',
         'is_saas_render_settings_page'
     );
