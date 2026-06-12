@@ -11,9 +11,9 @@ Immediate executable work only. Larger future programs live in `docs/project/bac
 
 ## Refactor: Graph Entity Hygiene
 
-- Keep merge/reassign behavior deferred. Do not auto-merge graph entities.
-- Revisit `Industriesalon Schöneweide` organization variants only after curatorial decision on the canonical association/institution identity and whether archive institution identifier `institution:29` belongs there.
-- Keep `WF` canonicalization deferred until curator review, because `WF` currently refers to at least `Werk für Fernmeldewesen` and `Werk für Fernsehelektronik`.
+- Do not auto-merge graph entities outside reviewed SQL artifacts and curator decisions.
+- Apply `ops/sql/2026-06-12-graph-canonical-wf-industriesalon.sql` after the alias replay and KWO/AEG canonical seed artifacts, then run `wp iss-graph drift-check --checks=canonical-wf-industriesalon --limit=25`.
+- Keep remaining role/context organization labels separate unless a later curator pass explicitly reassigns or retires them.
 
 ## Production: Transfer Greenfield Refactor Checkpoint
 
@@ -25,6 +25,9 @@ Immediate executable work only. Larger future programs live in `docs/project/bac
   - apply `ops/sql/2026-06-12-supersaas-past-occurrence-reactivation.sql`
   - apply `ops/sql/2026-06-12-tour-template-collapse.sql`
   - apply `ops/sql/2026-06-12-fuehrung-template-hierarchy-cleanup.sql`
+  - apply `ops/sql/2026-06-12-graph-alias-backfill-replay.sql`, run `wp iss-graph sync-aliases`, and verify `--checks=alias-backfill-replay`
+  - apply `ops/sql/2026-06-12-graph-canonical-kwo-aeg-organizations.sql` and verify `--checks=canonical-organization-seeds`
+  - apply `ops/sql/2026-06-12-graph-canonical-wf-industriesalon.sql`, run `wp iss-graph sync-aliases`, and verify `--checks=canonical-wf-industriesalon`
   - run target occurrence schema/sync/backfill commands as needed, then graph and occurrence drift checks
 - Verify production public consumers:
   - `/`, `/kalender/`, `/ausstellungen/`, `/fuehrungen/`, `/veranstaltungen/`

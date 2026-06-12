@@ -1,6 +1,11 @@
 # Changelog
 
 ## 2026-06-12
+- Prepared the curator-approved `Industriesalon Schöneweide e.V.` / `ISS` and `WF` graph identity data step:
+  - added `ops/sql/2026-06-12-graph-canonical-wf-industriesalon.sql` for the post-replay target move
+  - the artifact assigns `archive_institution:institution:29` to canonical `Industriesalon Schöneweide e.V.`, reassigns archive institution relations, retires the duplicate archive-institution source row, and adds curated `ISS` / Industriesalon aliases
+  - it also makes `WF` a curated alias for `Werk für Fernsehelektronik`, normalizes `Werk für Fernmeldewesen` as a separate organization without `WF`, and removes noncanonical `WF` name rows so a later alias replay stays clean
+  - added opt-in drift check `wp iss-graph drift-check --checks=canonical-wf-industriesalon` for target verification after the SQL artifact and alias replay are applied
 - Recorded staging completion of the graph hygiene data slice:
   - staging applied the generated alias replay and curated `KWO` / `AEG` canonical organization artifacts
   - operator-reported staging checks passed: `alias-backfill-replay`, `canonical-organization-seeds`, `wp iss-graph verify`, full graph drift, and KWO/AEG audit with `term_matches=2`, `review_flags=0`

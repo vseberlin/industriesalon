@@ -1829,6 +1829,7 @@ function iss_graph_wpcli_parse_drift_checks(string $value): array
     $available = array_merge($default_checks, [
         'alias-backfill-replay',
         'canonical-organization-seeds',
+        'canonical-wf-industriesalon',
     ]);
 
     $value = trim($value);
@@ -1868,6 +1869,8 @@ function iss_graph_wpcli_run_drift_check(string $check, int $limit): array
             return iss_graph_wpcli_check_alias_backfill_replay($limit);
         case 'canonical-organization-seeds':
             return iss_graph_wpcli_check_canonical_organization_seeds($limit);
+        case 'canonical-wf-industriesalon':
+            return iss_graph_wpcli_check_canonical_wf_industriesalon($limit);
         default:
             return [
                 'checked' => 0,
@@ -2059,6 +2062,237 @@ function iss_graph_wpcli_check_canonical_organization_seeds(int $limit): array
     return [
         'checked' => $checked,
         'errors' => $errors,
+    ];
+}
+
+function iss_graph_wpcli_canonical_wf_industriesalon_contract(): array
+{
+    return [
+        [
+            'label' => 'Industriesalon',
+            'source_system' => 'manual_slug',
+            'source_id' => 'industriesalon-schoneweide-e-v',
+            'canonical_slug' => 'industriesalon-schoneweide-e-v',
+            'display_title' => 'Industriesalon Schöneweide e.V.',
+            'names' => [
+                ['source_system' => 'entity_title', 'normalized_name' => 'industriesalon-schoneweide-e-v', 'name_type' => 'primary', 'is_primary' => 1],
+                ['source_system' => 'manual_alias', 'normalized_name' => 'iss', 'name_type' => 'abbreviation', 'is_primary' => 0],
+                ['source_system' => 'manual_alias', 'normalized_name' => 'industriesalon', 'name_type' => 'alternative', 'is_primary' => 0],
+                ['source_system' => 'manual_alias', 'normalized_name' => 'industriesalon-schoneweide', 'name_type' => 'alternative', 'is_primary' => 0],
+                ['source_system' => 'manual_alias', 'normalized_name' => 'industriesalon-schoeneweide', 'name_type' => 'transliteration', 'is_primary' => 0],
+            ],
+            'identifiers' => [
+                ['namespace' => 'archive_institution', 'normalized_value' => 'institution:29', 'status' => 'accepted'],
+            ],
+        ],
+        [
+            'label' => 'WF',
+            'source_system' => 'archive_person_organization_label',
+            'source_id' => 'person-label:63251',
+            'canonical_slug' => 'archive_person_organization_label-person-label63251',
+            'display_title' => 'Werk für Fernsehelektronik',
+            'names' => [
+                ['source_system' => 'entity_title', 'normalized_name' => 'werk-fur-fernsehelektronik', 'name_type' => 'primary', 'is_primary' => 1],
+                ['source_system' => 'manual_alias', 'normalized_name' => 'wf', 'name_type' => 'abbreviation', 'is_primary' => 0],
+                ['source_system' => 'manual_alias', 'normalized_name' => 'veb-werk-fur-fernsehelektronik', 'name_type' => 'official', 'is_primary' => 0],
+                ['source_system' => 'manual_alias', 'normalized_name' => 'werk-fuer-fernsehelektronik', 'name_type' => 'transliteration', 'is_primary' => 0],
+            ],
+        ],
+        [
+            'label' => 'Werk für Fernmeldewesen',
+            'source_system' => 'archive_person_organization_label',
+            'source_id' => 'person-label:63659',
+            'canonical_slug' => 'archive_person_organization_label-person-label63659',
+            'display_title' => 'Werk für Fernmeldewesen',
+            'names' => [
+                ['source_system' => 'entity_title', 'normalized_name' => 'werk-fur-fernmeldewesen', 'name_type' => 'primary', 'is_primary' => 1],
+                ['source_system' => 'archive_title', 'normalized_name' => 'werk-fur-fernmeldewesen', 'name_type' => 'source_label', 'is_primary' => 0],
+            ],
+        ],
+    ];
+}
+
+function iss_graph_wpcli_check_canonical_wf_industriesalon(int $limit): array
+{
+    global $wpdb;
+
+    $service = iss_graph_get_service();
+    $entity_table = $service->get_entity_table_name();
+    $name_table = $service->get_name_table_name();
+    $identifier_table = $service->get_identifier_table_name();
+    $relation_table = $service->get_relation_table_name();
+    foreach ([$entity_table, $name_table, $identifier_table, $relation_table] as $table_name) {
+        if (!$service->table_exists($table_name)) {
+            return [
+                'checked' => 0,
+                'errors' => ['Graph entity, name, identifier, or relation table is unavailable.'],
+            ];
+        }
+    }
+
+    $errors = [];
+    $checked = 0;
+    $entity_ids = [];
+    foreach (iss_graph_wpcli_canonical_wf_industriesalon_contract() as $seed) {
+        $checked++;
+        $rows = $wpdb->get_results(
+            $wpdb->prepare(
+                "SELECT id, canonical_slug, display_title, status, is_public, search_visibility
+                FROM {$entity_table}
+                WHERE entity_kind = 'organization'
+                  AND source_system = %s
+                  AND source_id = %s
+                ORDER BY id ASC",
+                (string) ($seed['source_system'] ?? ''),
+                (string) ($seed['source_id'] ?? '')
+            ),
+            ARRAY_A
+        );
+        $rows = is_array($rows) ? $rows : [];
+        if (count($rows) !== 1) {
+            $errors[] = sprintf(
+                'Canonical identity %s expected exactly 1 row for %s:%s, found %d.',
+                (string) ($seed['label'] ?? ''),
+                (string) ($seed['source_system'] ?? ''),
+                (string) ($seed['source_id'] ?? ''),
+                count($rows)
+            );
+            if (count($errors) >= $limit) {
+                break;
+            }
+            continue;
+        }
+
+        $entity = $rows[0];
+        $entity_id = (int) ($entity['id'] ?? 0);
+        $entity_ids[(string) ($seed['label'] ?? '')] = $entity_id;
+        foreach (['canonical_slug', 'display_title', 'status', 'search_visibility'] as $field) {
+            $expected = $field === 'status' ? 'publish' : (string) ($seed[$field] ?? '');
+            if ($field === 'search_visibility') {
+                $expected = 'hidden';
+            }
+            $actual = (string) ($entity[$field] ?? '');
+            if ($actual !== $expected) {
+                $errors[] = sprintf('Canonical identity %s entity %d has %s=%s, expected %s.', (string) ($seed['label'] ?? ''), $entity_id, $field, $actual, $expected);
+            }
+        }
+
+        if ((int) ($entity['is_public'] ?? 0) !== 0) {
+            $errors[] = sprintf('Canonical identity %s entity %d must remain hidden, found is_public=%d.', (string) ($seed['label'] ?? ''), $entity_id, (int) ($entity['is_public'] ?? 0));
+        }
+
+        foreach ((array) ($seed['names'] ?? []) as $name) {
+            $checked++;
+            $exists = (int) $wpdb->get_var(
+                $wpdb->prepare(
+                    "SELECT COUNT(*)
+                    FROM {$name_table}
+                    WHERE entity_id = %d
+                      AND source_system = %s
+                      AND normalized_name = %s
+                      AND name_type = %s
+                      AND is_primary = %d",
+                    $entity_id,
+                    (string) ($name['source_system'] ?? ''),
+                    (string) ($name['normalized_name'] ?? ''),
+                    (string) ($name['name_type'] ?? ''),
+                    (int) ($name['is_primary'] ?? 0)
+                )
+            );
+            if ($exists <= 0) {
+                $errors[] = sprintf(
+                    'Canonical identity %s entity %d is missing %s %s:%s.',
+                    (string) ($seed['label'] ?? ''),
+                    $entity_id,
+                    (string) ($name['source_system'] ?? ''),
+                    (string) ($name['name_type'] ?? ''),
+                    (string) ($name['normalized_name'] ?? '')
+                );
+            }
+
+            if (count($errors) >= $limit) {
+                break 2;
+            }
+        }
+
+        foreach ((array) ($seed['identifiers'] ?? []) as $identifier) {
+            $checked++;
+            $exists = (int) $wpdb->get_var(
+                $wpdb->prepare(
+                    "SELECT COUNT(*)
+                    FROM {$identifier_table}
+                    WHERE entity_id = %d
+                      AND namespace = %s
+                      AND normalized_value = %s
+                      AND status = %s",
+                    $entity_id,
+                    (string) ($identifier['namespace'] ?? ''),
+                    (string) ($identifier['normalized_value'] ?? ''),
+                    (string) ($identifier['status'] ?? '')
+                )
+            );
+            if ($exists <= 0) {
+                $errors[] = sprintf(
+                    'Canonical identity %s entity %d is missing identifier %s:%s.',
+                    (string) ($seed['label'] ?? ''),
+                    $entity_id,
+                    (string) ($identifier['namespace'] ?? ''),
+                    (string) ($identifier['normalized_value'] ?? '')
+                );
+            }
+
+            if (count($errors) >= $limit) {
+                break 2;
+            }
+        }
+    }
+
+    $checked++;
+    $archive_institution_rows = (int) $wpdb->get_var(
+        "SELECT COUNT(*)
+        FROM {$entity_table}
+        WHERE entity_kind = 'organization'
+          AND source_system = 'archive_institution'
+          AND source_id = 'institution:29'"
+    );
+    if ($archive_institution_rows > 0) {
+        $errors[] = sprintf('Archive institution institution:29 must resolve by identifier only; found %d active source row(s).', $archive_institution_rows);
+    }
+
+    if (!empty($entity_ids['Industriesalon'])) {
+        $checked++;
+        $old_institution_relations = (int) $wpdb->get_var(
+            "SELECT COUNT(*)
+            FROM {$relation_table} r
+            INNER JOIN {$entity_table} e ON e.id = r.to_entity_id
+            WHERE e.entity_kind = 'organization'
+              AND e.source_system = 'archive_institution'
+              AND e.source_id = 'institution:29'"
+        );
+        if ($old_institution_relations > 0) {
+            $errors[] = sprintf('Archive institution institution:29 still has %d relation(s) pointing at the retired source row.', $old_institution_relations);
+        }
+    }
+
+    if (!empty($entity_ids['WF'])) {
+        $checked++;
+        $noncanonical_wf_names = (int) $wpdb->get_var(
+            $wpdb->prepare(
+                "SELECT COUNT(*)
+                FROM {$name_table}
+                WHERE normalized_name = 'wf'
+                  AND entity_id <> %d",
+                (int) $entity_ids['WF']
+            )
+        );
+        if ($noncanonical_wf_names > 0) {
+            $errors[] = sprintf('WF must be a canonical alias only for Werk für Fernsehelektronik; found %d noncanonical WF name row(s).', $noncanonical_wf_names);
+        }
+    }
+
+    return [
+        'checked' => $checked,
+        'errors' => array_slice($errors, 0, $limit),
     ];
 }
 
