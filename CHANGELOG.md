@@ -1,6 +1,10 @@
 # Changelog
 
 ## 2026-06-12
+- Simplified the `/kalender/` timeline controls after the occurrence/facade refactor:
+  - removed the accidental visible item-type chooser from the calendar page by explicitly disabling the block's type filter
+  - removed `ausstellungen` from the calendar block's allowed type list because Dauer/Digital exhibitions are handled by the dedicated Ausstellung browser and no dated Sonderausstellung overlaps the current local month
+  - verified the file-backed `page-kalender` template renders from the theme and keeps timeline reads on `/wp-json/iss/v1/timeline`
 - Retired the old public read routes after the first public consumers had moved to `/wp-json/iss/v1`:
   - stopped registering `/iss-search/v1/search`, `/iss-programm/v1/timeline`, and `/is-tours/v1/slots`
   - kept `/iss/v1/search`, `/iss/v1/timeline`, and `/iss/v1/tour-slots` active by delegating to the existing search, timeline, and tour-slot callbacks
