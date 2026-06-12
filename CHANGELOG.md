@@ -1,6 +1,11 @@
 # Changelog
 
 ## 2026-06-12
+- Marked the greenfield refactor checkpoint complete after the first staging validation pass was reported passed:
+  - updated `refactor.md` so phases 1-4 are no longer described as local-only/unpushed
+  - updated `handoff_CURRENT.md` to treat staging validation as passed while keeping production transfer and target verification as the next deployment risk
+  - moved active follow-up in `TODO.md` from staging validation to production transfer plus a separate legacy-read-route retirement checkpoint
+  - kept legacy read routes in place for now; `/is-tours/v1/book` remains the booking write route
 - Documented the post-purge local clone audit:
   - verified the purged Newsletter SQL path/blob is absent from the current `/home/vladimir/wp` object graph
   - found one additional local clone of the GitHub repo at `/home/vladimir/industriesalon-export`; it does not contain the purged blob but is stale/diverged from rewritten `origin/main`

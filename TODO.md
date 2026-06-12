@@ -9,19 +9,27 @@ Immediate executable work only. Larger future programs live in `docs/project/bac
 - Consider GitHub Support cache/unreachable-object purge for the removed Newsletter SQL artifact if strict privacy cleanup is required.
 - Review Newsletter subscriber tokens and decide whether token regeneration is required after the prior public exposure.
 
-## Staging: Validate Greenfield Refactor Checkpoint
+## Refactor: Retire Legacy Read Routes
 
-- Pull the pushed `origin/main` checkpoint on staging after confirming the staging worktree is clean.
-- Prepare staging transfer with paired data:
+- Keep the staging-passed greenfield checkpoint stable; do not combine route removal with production transfer.
+- Before removing any legacy read route, audit static and runtime consumers for:
+  - `/iss-search/v1/search`
+  - `/iss-programm/v1/timeline`
+  - `/is-tours/v1/slots`
+- Preserve `/is-tours/v1/book` for booking writes.
+- Remove only routes with proven-unused consumers and rerun facade checks, old-path absence checks, public route checks, and production/staging smoke checks as a separate checkpoint.
+
+## Production: Transfer Greenfield Refactor Checkpoint
+
+- Prepare production transfer with paired data:
   - backup target DB first
   - apply `ops/sql/2026-06-11-strict-programme-toggle-backfill.sql`
   - apply `ops/sql/2026-06-11-ausstellung-availability-cleanup.sql`
   - run target occurrence schema/sync/backfill commands as needed, then graph and occurrence drift checks
-- Verify staging public consumers:
+- Verify production public consumers:
   - `/`, `/kalender/`, `/ausstellungen/`, `/fuehrungen/`, `/veranstaltungen/`
   - header search, timeline query, and tour-slot reads use `/wp-json/iss/v1`
-  - expected old-path survivors are legacy compatibility reads, admin/editor REST, archive admin helpers, and `/is-tours/v1/book`
-- After staging passes, mark the checkpoint complete in `refactor.md` and `handoff_CURRENT.md`; leave old read routes in place until a separate removal checkpoint.
+  - expected old-path survivor is `/is-tours/v1/book`
 
 ## Active
 

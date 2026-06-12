@@ -6,9 +6,9 @@ Current checkpoint only. History belongs in `CHANGELOG.md`; active follow-up bel
 
 ## Current State
 
-- Branch: `main`; this handoff is the GitHub exchange closeout for the greenfield refactor checkpoint. Last runtime implementation checkpoint is `081f529 Switch tour slots to facade`; the final push also includes closeout documentation.
+- Branch: `main`; local `HEAD` and `origin/main` are aligned at `3dcbf5b` after the greenfield refactor checkpoint and post-purge documentation.
 - GitHub repo `vseberlin/industriesalon` is private. The old production Newsletter SQL artifact was removed from current `main` and purged from reachable Git history.
-- The greenfield refactor checkpoint is ready for staging review: occurrence projection, Ausstellung availability browser/editor hardening, entity-kind registry, `/wp-json/iss/v1` facade, and the first public facade consumers are committed for `origin/main`.
+- The greenfield refactor checkpoint has passed its first staging validation pass per operator report on 2026-06-12: occurrence projection, Ausstellung availability browser/editor hardening, entity-kind registry, `/wp-json/iss/v1` facade, and the first public facade consumers are committed on `origin/main`.
 - `iss-occurrences` owns `wp_iss_occurrences` and `wp_iss_occurrence_series`; `iss-programm` renders calendar/timeline/browser blocks; `saas-api` owns SuperSaaS sync and tour-slot reads; the theme owns public templates/skins.
 - `/ausstellungen/` uses the dedicated `industriesalon/ausstellungen-browser` and WP_Query availability filters. Dauer/Digital Ausstellungen are availability-only and do not sync into occurrence rows.
 - Local Ausstellung cleanup artifacts exist and must travel with the matching code if deployed: `ops/sql/2026-06-11-ausstellung-availability-cleanup.sql` and `ops/sql/2026-06-11-strict-programme-toggle-backfill.sql`.
@@ -18,20 +18,19 @@ Current checkpoint only. History belongs in `CHANGELOG.md`; active follow-up bel
 
 ## Current Risk
 
-- Staging/production do not automatically have this local checkpoint. Transfer needs code plus the paired SQL/data steps and target-side verification.
-- Local DB state changed during the refactor: occurrence schema/backfill/sync, graph backfill, scaffold plugin activation, and Ausstellung availability cleanup.
-- Do not remove legacy read routes yet. Keep old-vs-new comparators until staging has run the same checks and public UI is stable.
+- Production does not automatically have this checkpoint. Transfer needs code plus the paired SQL/data steps and target-side verification.
+- Local and staging DB state changed during the refactor: occurrence schema/backfill/sync, graph backfill, scaffold plugin activation, and Ausstellung availability cleanup.
+- Do not remove legacy read routes in the same checkpoint that proved staging. Keep old-vs-new comparators until the separate route-retirement pass has its own verification.
 - Template output can still become DB-backed after Site Editor saves; check `wp_template` authority before assuming disk files are live.
 - History was rewritten on 2026-06-12. Existing staging/secondary clones must not normal-pull blindly; re-clone or reset only after checking local state.
 - `/home/vladimir/industriesalon-export` is a stale local clone of the GitHub repo: its local `main` is behind rewritten `origin/main` and has one old local export commit. It does not contain the purged Newsletter blob, but it should not be used for deploy/push as-is.
 
 ## Next Action
 
-- On staging, pull `origin/main` only after confirming the staging tree is clean and `origin/main` is the expected exchange point.
-- Because history was rewritten, prefer a fresh staging clone or a deliberate reset to rewritten `origin/main`; do not merge the old history.
-- Prepare staging transfer as code plus data: take a target DB backup, apply the two SQL artifacts, run occurrence migrate/sync if needed, then run graph/occurrence verify and drift checks on the target.
-- Verify staging public consumers after the data step: `/`, `/kalender/`, `/ausstellungen/`, `/fuehrungen/`, `/veranstaltungen/`, and inline REST config for search/timeline/tour-slot reads.
-- After staging passes, mark the refactor checkpoint complete in `refactor.md`/`handoff_CURRENT.md`; only then consider retiring old read routes in a separate cleanup commit.
+- Keep the refactor checkpoint complete and stable through production planning; do not bundle more architecture movement into the same pass.
+- Plan the next code slice as a separate route-retirement checkpoint: audit remaining static/runtime consumers, remove only proven-unused legacy read routes, keep `/is-tours/v1/book`, and preserve comparator coverage until after removal verification.
+- For production transfer, take a target DB backup, apply the two SQL artifacts, run occurrence migrate/sync if needed, then run graph/occurrence verify and drift checks on the target.
+- Verify production public consumers after the data step: `/`, `/kalender/`, `/ausstellungen/`, `/fuehrungen/`, `/veranstaltungen/`, and inline REST config for search/timeline/tour-slot reads.
 
 ## Verified Locally
 
@@ -42,6 +41,7 @@ Current checkpoint only. History belongs in `CHANGELOG.md`; active follow-up bel
 - Local clone audit found only one additional GitHub clone on this machine, `/home/vladimir/industriesalon-export`; the purged Newsletter SQL path/blob is absent from `/home/vladimir/wp`, `/home/vladimir/industriesalon-export`, `/home/vladimir/ISS-mirror`, and `/home/vladimir/strato`.
 - `wp iss-graph facade-check --limit=2` passes and checks `/iss/v1/contract`, `/entities`, `/entities/{id}`, `/occurrences`, `/search`, `/timeline`, and `/tour-slots`.
 - Facade comparators pass: search, occurrences, entities, timeline, and tour-slots. `ELEKTRO` tour slots matched legacy `/is-tours/v1/slots` with `source=occurrences` and 3 slots.
+- First staging validation pass was reported passed by the operator on 2026-06-12; local shell verification was not rerun against staging in this update.
 - `wp iss-graph verify`, `wp iss-graph drift-check --limit=25`, `wp iss-occurrences verify`, and `wp iss-occurrences drift-check --limit=25` passed.
 - HTTP checks returned `200` for `/`, `/kalender/`, `/fuehrungen/`, and `/veranstaltungen/`.
 - `/kalender/` inline config points timeline reads to `/wp-json/iss/v1/timeline`; `/fuehrungen/` points tour-slot reads to `/wp-json/iss/v1/tour-slots` and booking to `/wp-json/is-tours/v1/book`.

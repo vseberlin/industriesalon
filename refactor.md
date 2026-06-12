@@ -21,12 +21,13 @@ This is the repo-owned plan for the gradual Industriesalon refactor. It records 
 
 ## Current Checkpoint
 
-- Phases 1-4 exist locally as scoped checkpoints or scaffolds; they are not pushed.
+- Phases 1-4 are committed on `origin/main` and have passed the first staging validation pass as of 2026-06-12.
 - Ausstellung availability classification remains the `ausstellung_typ` taxonomy, now exposed through editor-owned controls in `iss-content-model`.
 - `iss_timeline_enabled` remains the public visibility switch for Ausstellung overview browsers.
-- The next refactor move should be driven by proven reuse: place shared infrastructure in `iss-core`, shared runtime helpers in `iss-frontend`, and leave domain code in place until extraction has a stable contract.
+- The next refactor move should stay narrow: keep legacy read routes active until a separate removal checkpoint proves no remaining public consumer depends on them, and leave domain code in place until extraction has a stable contract.
 - `iss-graph` now has a central entity-kind registry for canonical kinds, current storage kinds, owner plugins, post-type mappings, and legacy aliases. It keeps current rows such as `ausstellung`, `veranstaltung`, `fuehrung`, `projekt`, `page`, and `archivbeitrag` stable while exposing the canonical target names `exhibition`, `event`, `tour`, and `project`.
 - `iss-graph` now exposes the first read-only `/wp-json/iss/v1` facade: contract, entities, entity detail, occurrences, search, the programme timeline compatibility view, and the tour-slot read view. It delegates to existing graph, occurrence, search, programme timeline, and tour-slot services and does not remove or rename older plugin routes.
+- The first public consumers are switched to `/iss/v1`: header search, timeline query reads, and tour-slot reads. Booking writes remain on `/is-tours/v1/book`.
 
 ## Current Boundary Notes
 
