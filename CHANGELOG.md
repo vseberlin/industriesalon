@@ -1,6 +1,9 @@
 # Changelog
 
 ## 2026-06-12
+- Fixed the `/kalender/` load-more empty-batch behavior after the new preset controls:
+  - ignored stale load-more clicks once the wrapper is hidden
+  - stopped append requests with zero rows from injecting the generic `Keine Einträge gefunden` message into an already populated timeline
 - Reworked the `/kalender/` timeline controls around editor/user perception instead of raw filter fields:
   - added dynamic preset support to the existing timeline query block for `Heute`, `Diese Woche`, `Diesen Monat`, `Alle kommenden`, and `Archiv`
   - changed the calendar template to hide the old `Zeitraum` select and calendar bridge while keeping a second-row content chooser for `Alle`, `Führungen`, and `Veranstaltungen`

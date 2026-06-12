@@ -606,15 +606,18 @@ document.addEventListener('DOMContentLoaded', function () {
       return previousPreset;
     }
 
-    function updateMeta(data) {
+    function updateMeta(data, options) {
+      options = options || {};
+      var appendEmpty = !!options.append && !!(data && data.isEmpty);
+
       if (countNode && data && typeof data.count === 'number') {
         countNode.textContent = data.count + ' ' + (data.count === 1 ? 'Eintrag' : 'Einträge');
       }
       if (emptyNoteNode) {
-        emptyNoteNode.textContent = data && data.isEmpty ? 'Keine Einträge für die aktuelle Auswahl.' : '';
+        emptyNoteNode.textContent = data && data.isEmpty && !appendEmpty ? 'Keine Einträge für die aktuelle Auswahl.' : '';
       }
       if (meta) {
-        meta.classList.toggle('is-empty', !!(data && data.isEmpty));
+        meta.classList.toggle('is-empty', !!(data && data.isEmpty && !appendEmpty));
       }
       nextOffset = data && typeof data.nextOffset === 'number' ? data.nextOffset : 0;
       if (loadMoreWrap) {
@@ -680,9 +683,9 @@ document.addEventListener('DOMContentLoaded', function () {
         })
         .then(function (data) {
           if (data && typeof data.html === 'string') {
-            if (append) {
+            if (append && !data.isEmpty) {
               appendTimelineHtml(data.html);
-            } else {
+            } else if (!append) {
               results.innerHTML = data.html;
             }
           }
@@ -696,7 +699,7 @@ document.addEventListener('DOMContentLoaded', function () {
               calendarBridgeMode = '';
             }
           }
-          updateMeta(data);
+          updateMeta(data, { append: append });
           syncCalendarBridge();
         })
         .catch(function () {
@@ -774,6 +777,7 @@ document.addEventListener('DOMContentLoaded', function () {
     if (loadMoreButton) {
       loadMoreButton.addEventListener('click', function () {
         if (requestInFlight) return;
+        if (loadMoreWrap && loadMoreWrap.hidden) return;
         refresh({ append: true });
       });
     }
