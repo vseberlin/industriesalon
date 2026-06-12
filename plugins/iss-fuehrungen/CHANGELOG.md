@@ -36,6 +36,7 @@ All notable changes for `iss-fuehrungen` are documented here.
 - Removed shortcode/ACF placeholders from those two HTML templates and replaced them with dynamic blocks.
 
 ### Changed
+- Moved public Führung rendering to the active theme/template hierarchy and removed the plugin public template loader, including the singular selector, single PHP fallback, and archive/taxonomy fallback template.
 - Reworked the single-tour render path to use explicit layout blocks instead of context-sensitive output hacks:
   - scheduled and on-demand templates now consume `iss/tour-description` instead of raw `post_content` in controlled description slots,
   - the old single-tour suppression hook for related-place block output was removed,

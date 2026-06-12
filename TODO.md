@@ -27,6 +27,7 @@ Immediate executable work only. Larger future programs live in `docs/project/bac
   - apply `ops/sql/2026-06-12-legacy-occurrence-origin-purge.sql`
   - apply `ops/sql/2026-06-12-supersaas-past-occurrence-reactivation.sql`
   - apply `ops/sql/2026-06-12-tour-template-collapse.sql`
+  - apply `ops/sql/2026-06-12-fuehrung-template-hierarchy-cleanup.sql`
   - run target occurrence schema/sync/backfill commands as needed, then graph and occurrence drift checks
 - Verify production public consumers:
   - `/`, `/kalender/`, `/ausstellungen/`, `/fuehrungen/`, `/veranstaltungen/`

@@ -13,8 +13,8 @@ function iss_publications_is_disallowed_page_template(string $template_slug): bo
 function iss_publications_disallowed_page_templates(): array
 {
     return [
+        // Retired Führung template slugs kept here only to clean stale publication meta.
         'single-tour',
-        // Retired Führung template slug kept here only to clean stale publication meta.
         'single-tour-on-demand',
     ];
 }

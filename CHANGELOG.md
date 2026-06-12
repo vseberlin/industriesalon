@@ -1,6 +1,11 @@
 # Changelog
 
 ## 2026-06-12
+- Moved Führung public-template ownership fully to the theme/block-template hierarchy:
+  - renamed the active file-backed template from `single-tour.html` to `single-fuehrung.html`
+  - removed the plugin public template loader, archive/taxonomy fallback template, singular template selector, block-template shim, and PHP single fallback templates
+  - extended `wp iss-fuehrungen drift-check` to fail on retired `single-tour` / `single-tour-on-demand` block-template sources or published Führung custom-template meta
+  - added `ops/sql/2026-06-12-fuehrung-template-hierarchy-cleanup.sql` to delete old Führung `_wp_page_template` assignments so routes use hierarchy instead of per-post template meta
 - Added `wp iss-fuehrungen drift-check` to catch retired `single-tour-on-demand` block-template sources and published Führung posts still assigned to that template, and made the remaining publication cleanup reference explicit.
 - Collapsed Führung single pages onto the canonical `single-tour` block template:
   - removed the parallel `single-tour-on-demand` theme template and kept booking-mode behavior in dynamic blocks/render logic

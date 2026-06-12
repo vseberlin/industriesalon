@@ -13,26 +13,33 @@ if (defined('WP_CLI') && WP_CLI) {
 
             $errors = [];
             $limit = isset($assoc_args['limit']) ? max(1, (int) $assoc_args['limit']) : 25;
+            $retired_template_slugs = [
+                'single-tour',
+                'single-tour-on-demand',
+            ];
 
-            $retired_template = function_exists('get_block_template')
-                ? get_block_template(get_stylesheet() . '//single-tour-on-demand', 'wp_template')
-                : null;
-            if ($retired_template instanceof WP_Block_Template && !empty($retired_template->source)) {
-                $errors[] = sprintf('Retired Führung block template remains: single-tour-on-demand source=%s.', (string) $retired_template->source);
+            foreach ($retired_template_slugs as $template_slug) {
+                $retired_template = function_exists('get_block_template')
+                    ? get_block_template(get_stylesheet() . '//' . $template_slug, 'wp_template')
+                    : null;
+                if ($retired_template instanceof WP_Block_Template && !empty($retired_template->source)) {
+                    $errors[] = sprintf('Retired Führung block template remains: %s source=%s.', $template_slug, (string) $retired_template->source);
+                }
             }
 
             // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching -- WP-CLI drift check must inspect current stored template assignments.
             $stale_template_posts = (int) $wpdb->get_var(
                 $wpdb->prepare(
-                    "SELECT COUNT(*) FROM {$wpdb->posts} p INNER JOIN {$wpdb->postmeta} pm ON pm.post_id = p.ID WHERE p.post_type = %s AND p.post_status = %s AND pm.meta_key = %s AND pm.meta_value = %s",
+                    "SELECT COUNT(*) FROM {$wpdb->posts} p INNER JOIN {$wpdb->postmeta} pm ON pm.post_id = p.ID WHERE p.post_type = %s AND p.post_status = %s AND pm.meta_key = %s AND pm.meta_value IN (%s, %s)",
                     ISS_FUEHRUNGEN_POST_TYPE,
                     'publish',
                     '_wp_page_template',
+                    'single-tour',
                     'single-tour-on-demand'
                 )
             );
             if ($stale_template_posts > 0) {
-                $errors[] = sprintf('Published Führung posts still use retired template single-tour-on-demand: %d.', $stale_template_posts);
+                $errors[] = sprintf('Published Führung posts still use retired custom template meta: %d.', $stale_template_posts);
             }
 
             if (!empty($errors)) {

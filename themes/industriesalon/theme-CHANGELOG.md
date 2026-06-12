@@ -1,5 +1,8 @@
 # Industriesalon Theme Changelog
 
+## 2026-06-12
+- Moved the active Führung single block template from the legacy custom-template slug `single-tour` to WordPress' native CPT hierarchy slug `single-fuehrung`, keeping the existing `iss-tour-*` layout classes and dynamic block composition intact.
+
 ## 2026-05-30
 - Added a reusable Terminblatt format layer for Veranstaltungen: `_iss_event_format` editor choices for Allgemein, Vortrag, Gespräch, Lesung, and Präsentation, stable `iss-event-format-*` body classes, and four matching editor patterns for chaptered event content.
 - Refined the standard Terminblatt skin with a stricter paper hero and dark facts rail while keeping the existing `iss/content-meta` facts block and color scheme tokens as the source of public presentation.
