@@ -50,7 +50,12 @@ function iss_supersaas_fetch_free_slots($settings = null) {
         $future_months = 1;
     }
 
-    $cache_key = 'iss_supersaas_free_' . md5($base_url . '|' . $account_name . '|' . $schedule_id . '|m:' . $future_months);
+    $max_results = (int) apply_filters('iss_supersaas_sync_max_results', 200);
+    if ($max_results < 10) {
+        $max_results = 10;
+    }
+
+    $cache_key = 'iss_supersaas_free_' . md5($base_url . '|' . $account_name . '|' . $schedule_id . '|m:' . $future_months . '|n:' . $max_results);
     $cached = get_transient($cache_key);
     if (is_array($cached)) {
         return $cached;
@@ -62,7 +67,7 @@ function iss_supersaas_fetch_free_slots($settings = null) {
     $to_dt = $from_dt->modify('+' . $future_months . ' months');
     $from = rawurlencode($from_dt->format('Y-m-d H:i:s'));
     $to = rawurlencode($to_dt->format('Y-m-d H:i:s'));
-    $url = $base_url . '/api/free/' . rawurlencode($schedule_id) . '.json?from=' . $from . '&to=' . $to;
+    $url = $base_url . '/api/free/' . rawurlencode($schedule_id) . '.json?from=' . $from . '&to=' . $to . '&maxresults=' . rawurlencode((string) $max_results);
 
     $response = wp_remote_get($url, [
         'timeout' => 20,

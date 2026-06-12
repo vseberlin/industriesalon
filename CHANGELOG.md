@@ -1,6 +1,10 @@
 # Changelog
 
 ## 2026-06-12
+- Fixed the SuperSaaS occurrence sync horizon after the calendar filter review:
+  - reverted the frontend suppression of `Keine Einträge gefunden` for empty append responses because the empty batch message is valid when no further grouped rows exist
+  - added an explicit `maxresults` parameter to the SuperSaaS `/api/free` fetch, whose documented default is 10 and had truncated the six-month sync window at August
+  - verified the widened fetch returns 27 local slots through October and republishes grouped calendar dates beyond August
 - Reworked the `/kalender/` timeline controls around editor/user perception instead of raw filter fields:
   - added dynamic preset support to the existing timeline query block for `Heute`, `Diese Woche`, `Diesen Monat`, `Alle kommenden`, and `Archiv`
   - changed the calendar template to hide the old `Zeitraum` select and calendar bridge while keeping a second-row content chooser for `Alle`, `Führungen`, and `Veranstaltungen`
