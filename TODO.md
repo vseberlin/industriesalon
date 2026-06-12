@@ -9,12 +9,6 @@ Immediate executable work only. Larger future programs live in `docs/project/bac
 - Consider GitHub Support cache/unreachable-object purge for the removed Newsletter SQL artifact if strict privacy cleanup is required.
 - Review Newsletter subscriber tokens and decide whether token regeneration is required after the prior public exposure.
 
-## Refactor: Graph Entity Hygiene
-
-- Do not auto-merge graph entities outside reviewed SQL artifacts and curator decisions.
-- Apply `ops/sql/2026-06-12-graph-canonical-wf-industriesalon.sql` after the alias replay and KWO/AEG canonical seed artifacts, then run `wp iss-graph drift-check --checks=canonical-wf-industriesalon --limit=25`.
-- Keep remaining role/context organization labels separate unless a later curator pass explicitly reassigns or retires them.
-
 ## Production: Transfer Greenfield Refactor Checkpoint
 
 - Prepare production transfer with paired data:

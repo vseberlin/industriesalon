@@ -1,6 +1,7 @@
 # Changelog
 
 ## 2026-06-12
+- Recorded operator confirmation that the `Industriesalon Schöneweide e.V.` / `ISS` and `WF` graph identity artifact has already been applied on staging; production transfer still needs the full ordered graph data sequence after backup.
 - Prepared the curator-approved `Industriesalon Schöneweide e.V.` / `ISS` and `WF` graph identity data step:
   - added `ops/sql/2026-06-12-graph-canonical-wf-industriesalon.sql` for the post-replay target move
   - the artifact assigns `archive_institution:institution:29` to canonical `Industriesalon Schöneweide e.V.`, reassigns archive institution relations, retires the duplicate archive-institution source row, and adds curated `ISS` / Industriesalon aliases
