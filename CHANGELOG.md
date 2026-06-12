@@ -1,6 +1,8 @@
 # Changelog
 
 ## 2026-06-12
+- Changed `/kalender/` recurrence display after the expanded SuperSaaS sync:
+  - disabled grouped Führung cards on the calendar page so `Alle kommenden` + `Alle` renders each dated occurrence as a visible calendar record instead of collapsing later dates behind six top-level cards
 - Fixed the SuperSaaS occurrence sync horizon after the calendar filter review:
   - reverted the frontend suppression of `Keine Einträge gefunden` for empty append responses because the empty batch message is valid when no further grouped rows exist
   - added an explicit `maxresults` parameter to the SuperSaaS `/api/free` fetch, whose documented default is 10 and had truncated the six-month sync window at August
