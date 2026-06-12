@@ -1358,6 +1358,7 @@ final class ISS_Graph_Service
         $surface = sanitize_key((string) $value);
         $allowed = [
             'related' => true,
+            'search' => true,
         ];
 
         return isset($allowed[$surface]) ? $surface : 'related';
@@ -1366,12 +1367,26 @@ final class ISS_Graph_Service
     public function normalize_editorial_signal_type($value): string
     {
         $signal = sanitize_key((string) $value);
+        if ($signal === 'hide') {
+            return 'suppress';
+        }
+
         $allowed = [
+            'boost' => true,
+            'pin' => true,
+            'suppress' => true,
             'feature' => true,
-            'hide' => true,
         ];
 
         return isset($allowed[$signal]) ? $signal : '';
+    }
+
+    public function editorial_signal_requires_metadata(string $surface, string $signal): bool
+    {
+        $surface = $this->normalize_editorial_signal_surface($surface);
+        $signal = $this->normalize_editorial_signal_type($signal);
+
+        return $surface !== '' && $signal !== '';
     }
 
     public function normalize_editorial_signal_status($value): string
@@ -1426,8 +1441,8 @@ final class ISS_Graph_Service
             'context_post_id' => (int) ($row['context_post_id'] ?? 0),
             'target_entity_id' => !empty($row['target_entity_id']) ? (int) $row['target_entity_id'] : null,
             'target_post_id' => (int) ($row['target_post_id'] ?? 0),
-            'surface' => (string) ($row['surface'] ?? 'related'),
-            'signal' => (string) ($row['signal_type'] ?? ''),
+            'surface' => $this->normalize_editorial_signal_surface($row['surface'] ?? 'related'),
+            'signal' => $this->normalize_editorial_signal_type($row['signal_type'] ?? ''),
             'reason' => (string) ($row['reason'] ?? ''),
             'expires_at' => isset($row['expires_at']) && $row['expires_at'] !== null ? (string) $row['expires_at'] : null,
             'author_user_id' => !empty($row['author_user_id']) ? (int) $row['author_user_id'] : null,
@@ -1508,7 +1523,14 @@ final class ISS_Graph_Service
         $sql = "SELECT *
             FROM {$this->get_editorial_signal_table_name()}
             WHERE " . implode(' AND ', $where) . "
-            ORDER BY CASE signal_type WHEN 'feature' THEN 0 WHEN 'hide' THEN 1 ELSE 2 END ASC, created_at ASC, id ASC
+            ORDER BY CASE signal_type
+                WHEN 'pin' THEN 0
+                WHEN 'feature' THEN 1
+                WHEN 'boost' THEN 2
+                WHEN 'suppress' THEN 3
+                WHEN 'hide' THEN 3
+                ELSE 4
+            END ASC, created_at ASC, id ASC
             LIMIT %d";
 
         $rows = $wpdb->get_results($wpdb->prepare($sql, $values), ARRAY_A);
@@ -1644,6 +1666,16 @@ final class ISS_Graph_Service
         }
 
         $author_user_id = absint($data['author_user_id'] ?? get_current_user_id());
+        $reason = sanitize_textarea_field((string) ($data['reason'] ?? ''));
+        $expires_at = $this->normalize_editorial_signal_expiry($data['expires_at'] ?? null);
+        if (
+            !empty($data['require_metadata'])
+            && $this->editorial_signal_requires_metadata($surface, $signal)
+            && ($reason === '' || $expires_at === null || $author_user_id <= 0)
+        ) {
+            return null;
+        }
+
         $timestamp = current_time('mysql', true);
         $existing = $this->get_editorial_signal_by_post_target($context_post_id, $target_post_id, $surface);
         $db_data = [
@@ -1653,8 +1685,8 @@ final class ISS_Graph_Service
             'target_post_id' => $target_post_id,
             'surface' => $surface,
             'signal_type' => $signal,
-            'reason' => sanitize_textarea_field((string) ($data['reason'] ?? '')),
-            'expires_at' => $this->normalize_editorial_signal_expiry($data['expires_at'] ?? null),
+            'reason' => $reason,
+            'expires_at' => $expires_at,
             'author_user_id' => $author_user_id > 0 ? $author_user_id : null,
             'status' => $this->normalize_editorial_signal_status($data['status'] ?? 'active'),
             'updated_at' => $timestamp,

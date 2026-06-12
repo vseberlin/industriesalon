@@ -1,6 +1,13 @@
 # Changelog
 
 ## 2026-06-12
+- Implemented the first human graph-influence layer:
+  - generalized `iss-graph` editorial signals from legacy `feature` / `hide` to canonical `pin`, `feature`, `boost`, and `suppress`, with legacy `hide` normalized to `suppress`
+  - added `search` as a graph editorial-signal surface alongside `related`; search signals are self-scoped to the target post and do not edit canonical relations, aliases, or graph identity data
+  - added editor controls for public search steering and tightened REST/admin writes so new temporary signals require context, reason, author, and expiry
+  - wired public SQL search to consume active search signals at query time: `pin` ranks first, `feature` and `boost` increase relevance, and `suppress` removes a result
+  - updated related-content blocks to consume the same signal names while keeping existing related promotions compatible
+  - tightened the default graph drift check for editorial-signal authors, allowed surfaces/targets, and metadata on new-contract signals while grandfathering legacy related `feature` rows for a later explicit data cleanup
 - Recorded operator confirmation that the `Industriesalon Schöneweide e.V.` / `ISS` and `WF` graph identity artifact has already been applied and verified on staging:
   - `archive_institution:institution:29` moved to canonical entity `123` (`Industriesalon Schöneweide e.V.`), `2,700` archive institution relations now point there, and duplicate entity `150` is retired
   - `WF` is now only on staging entity `3561` (`Werk für Fernsehelektronik`); `Werk für Fernmeldewesen` remains separate as entity `3562` without `WF`

@@ -31,10 +31,9 @@ Immediate executable work only. Larger future programs live in `docs/project/bac
 ## Active
 
 - 2026-06-07: Review the 3 pending `video_transcript` evidence refs in Video CPT editors and accept/dismiss them after the graph entity hygiene audit exists.
-- 2026-06-07: Design the human graph-influence layer:
-  - define temporary curatorial signals for boost, pin, suppress, and feature without editing canonical relations or aliases
-  - require context, reason, author, and expiry for temporary signals
-  - decide the first consuming surfaces: graph search, related-content blocks, exhibitions, projects, events, and tours
+- 2026-06-12: Follow up the human graph-influence layer after staging/editor validation:
+  - review the 5 legacy related `feature` signal rows and either add reason/expiry or retire expired rows deliberately
+  - decide whether exhibitions, projects, events, and tours need additional signal consumers beyond graph search and related-content blocks
 - Review `/videos/` embed behavior against the YouTube-hit goal:
   - test whether card selection should update poster/metadata while playback starts only after explicit user play
   - keep a strong `Zum Original` / YouTube handoff path if on-site playback reduces channel traffic

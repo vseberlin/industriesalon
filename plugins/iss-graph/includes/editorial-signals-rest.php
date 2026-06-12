@@ -71,6 +71,9 @@ function iss_graph_rest_save_editorial_signal(WP_REST_Request $request)
     $context_post_id = iss_graph_rest_get_editorial_signal_context_post_id($request);
     $target_post_id = iss_graph_rest_get_editorial_signal_target_post_id($request);
     $signal = iss_graph_get_service()->normalize_editorial_signal_type((string) $request->get_param('signal'));
+    $surface = iss_graph_get_service()->normalize_editorial_signal_surface((string) ($request->get_param('surface') ?: 'related'));
+    $reason = sanitize_textarea_field((string) ($request->get_param('reason') ?: ''));
+    $expires_at = iss_graph_get_service()->normalize_editorial_signal_expiry($request->get_param('expiresAt') ?: $request->get_param('expires_at'));
 
     if ($context_post_id <= 0 || $target_post_id <= 0 || $signal === '') {
         return new WP_Error(
@@ -80,7 +83,7 @@ function iss_graph_rest_save_editorial_signal(WP_REST_Request $request)
         );
     }
 
-    if (!iss_graph_editorial_signal_target_is_allowed($context_post_id, $target_post_id)) {
+    if (!iss_graph_editorial_signal_target_is_allowed_for_surface($context_post_id, $target_post_id, $surface)) {
         return new WP_Error(
             'iss_graph_invalid_editorial_signal_target',
             __('The selected target is not available for this editorial signal context.', 'iss-graph'),
@@ -88,12 +91,21 @@ function iss_graph_rest_save_editorial_signal(WP_REST_Request $request)
         );
     }
 
+    if ($reason === '' || $expires_at === null || get_current_user_id() <= 0) {
+        return new WP_Error(
+            'iss_graph_editorial_signal_metadata_required',
+            __('Provide a reason and expiry date for this editorial signal.', 'iss-graph'),
+            ['status' => 400]
+        );
+    }
+
     $row = iss_graph_upsert_editorial_signal_for_post($context_post_id, $target_post_id, $signal, [
-        'surface' => (string) ($request->get_param('surface') ?: 'related'),
-        'reason' => (string) ($request->get_param('reason') ?: ''),
-        'expires_at' => $request->get_param('expiresAt') ?: $request->get_param('expires_at'),
+        'surface' => $surface,
+        'reason' => $reason,
+        'expires_at' => $expires_at,
         'author_user_id' => get_current_user_id(),
         'status' => 'active',
+        'require_metadata' => true,
     ]);
 
     if (!$row) {

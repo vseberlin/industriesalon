@@ -516,7 +516,9 @@ function iss_graph_search_public_posts(string $search, array $args = []): array
     }
 
     $limit = isset($args['limit']) ? max(1, min(1000, (int) $args['limit'])) : 1000;
-    $table = iss_graph_get_service()->get_search_table_name();
+    $service = iss_graph_get_service();
+    $table = $service->get_search_table_name();
+    $signal_table = $service->get_editorial_signal_table_name();
     $type_placeholders = implode(', ', array_fill(0, count($post_types), '%s'));
 
     $select_values = [$search];
@@ -529,7 +531,13 @@ function iss_graph_search_public_posts(string $search, array $args = []): array
         + CASE WHEN i.title = %s THEN 5000 ELSE 0 END
         + CASE WHEN i.title LIKE %s THEN 1800 ELSE 0 END
         + CASE WHEN i.excerpt LIKE %s THEN 700 ELSE 0 END
-        + CASE WHEN i.search_text LIKE %s THEN 500 ELSE 0 END";
+        + CASE WHEN i.search_text LIKE %s THEN 500 ELSE 0 END
+        + CASE sig.signal_type
+            WHEN 'pin' THEN 50000
+            WHEN 'feature' THEN 12000
+            WHEN 'boost' THEN 4000
+            ELSE 0
+        END";
 
     $token_where = [];
     $where_values = $post_types;
@@ -557,18 +565,26 @@ function iss_graph_search_public_posts(string $search, array $args = []): array
             i.search_bucket,
             i.title,
             i.excerpt,
+            CASE WHEN sig.signal_type = 'hide' THEN 'suppress' ELSE COALESCE(sig.signal_type, '') END AS editorial_signal,
             ({$score_sql}) AS relevance
         FROM {$table} i
         INNER JOIN {$wpdb->posts} p
             ON p.ID = i.target_post_id
+        LEFT JOIN {$signal_table} sig
+            ON sig.context_post_id = i.target_post_id
+            AND sig.target_post_id = i.target_post_id
+            AND sig.surface = 'search'
+            AND sig.status = 'active'
+            AND (sig.expires_at IS NULL OR sig.expires_at >= %s)
         WHERE i.is_public = 1
           AND p.post_status = 'publish'
           AND p.post_type IN ({$type_placeholders})
+          AND (sig.id IS NULL OR sig.signal_type NOT IN ('suppress', 'hide'))
           AND " . implode(' AND ', $token_where) . "
-        ORDER BY relevance DESC, p.post_date_gmt DESC, i.target_post_id DESC
+        ORDER BY CASE sig.signal_type WHEN 'pin' THEN 1 ELSE 0 END DESC, relevance DESC, p.post_date_gmt DESC, i.target_post_id DESC
         LIMIT %d";
 
-    $params = array_merge($select_values, $where_values, [$limit]);
+    $params = array_merge($select_values, [current_time('mysql', true)], $where_values, [$limit]);
     // phpcs:ignore WordPress.DB.PreparedSQL.NotPrepared, WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching -- Central search reads the denormalized graph search projection.
     $rows = $wpdb->get_results($wpdb->prepare($sql, $params), ARRAY_A);
 
@@ -584,6 +600,7 @@ function iss_graph_search_public_posts(string $search, array $args = []): array
             'title' => (string) ($row['title'] ?? ''),
             'excerpt' => (string) ($row['excerpt'] ?? ''),
             'relevance' => isset($row['relevance']) ? (int) $row['relevance'] : 0,
+            'editorial_signal' => sanitize_key((string) ($row['editorial_signal'] ?? '')),
         ];
     }, $rows));
 }

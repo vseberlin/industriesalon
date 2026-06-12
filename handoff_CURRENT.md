@@ -6,7 +6,7 @@ Current checkpoint only. History belongs in `CHANGELOG.md`; active follow-up bel
 
 ## Current State
 
-- Branch: `main`; current checkpoint includes the programme frontend-helper refactor, legacy occurrence cleanup guard, first `iss-core` capability-helper adoption, and the staging-applied `Industriesalon` / `WF` graph hygiene artifact.
+- Branch: `main`; current checkpoint includes the programme frontend-helper refactor, legacy occurrence cleanup guard, first `iss-core` capability-helper adoption, the staging-applied `Industriesalon` / `WF` graph hygiene artifact, and the first human graph-influence layer.
 - GitHub repo `vseberlin/industriesalon` is private. The old production Newsletter SQL artifact was removed from current `main` and purged from reachable Git history.
 - The greenfield refactor checkpoint has passed its first staging validation pass per operator report on 2026-06-12: occurrence projection, Ausstellung availability browser/editor hardening, entity-kind registry, `/wp-json/iss/v1` facade, and the first public facade consumers are committed on `origin/main`.
 - `iss-occurrences` owns `wp_iss_occurrences` and `wp_iss_occurrence_series`; `iss-programm` renders calendar/timeline/browser blocks; `saas-api` owns SuperSaaS sync and tour-slot reads; the theme owns public templates/skins.
@@ -23,6 +23,7 @@ Current checkpoint only. History belongs in `CHANGELOG.md`; active follow-up bel
 - Curator decisions are now recorded and applied on staging for the Industriesalon/WF graph hygiene data artifact: `Industriesalon Schöneweide e.V.` is the canonical association identity for Industriesalon variants including `ISS`; `archive_institution:institution:29` belongs to that canonical identity; `WF` means `Werk für Fernsehelektronik`; `Werk für Fernmeldewesen` remains separate without the `WF` abbreviation.
 - `ops/sql/2026-06-12-graph-canonical-wf-industriesalon.sql` prepares that data move. It reassigns archive institution relations to the canonical Industriesalon row, moves the `institution:29` identifier, retires the duplicate archive-institution source row, and normalizes the conflicting `WF` / Fernmeldewesen labels. Operator reported this artifact was applied and verified on staging on 2026-06-12.
 - Opt-in graph hygiene migration checks are available: `wp iss-graph drift-check --checks=alias-backfill-replay` verifies generated alias replay is clean, `wp iss-graph drift-check --checks=canonical-organization-seeds` verifies the curated `KWO` / `AEG` organization rows after their SQL artifact is applied, and `wp iss-graph drift-check --checks=canonical-wf-industriesalon` verifies the curated Industriesalon/WF artifact after it is applied. They are not part of the default drift set yet.
+- `iss-graph` now owns temporary human influence signals for `pin`, `feature`, `boost`, and `suppress` on `related` and `search` surfaces. New admin/REST writes require context, reason, author, and expiry. Search consumes self-scoped `search` signals at query time; related-content blocks consume the same signal names. These signals do not change canonical relations, aliases, or graph identity data.
 - `iss-core` remains a scaffold/helper-convention plugin only. `iss-frontend` now provides shared frontend helper functions consumed by `iss-programm` for REST URL generation, dialog attributes, and datepicker registration. Neither plugin owns CPTs, REST routes, renderers, CSS, or domain scripts.
 
 ## Current Risk
@@ -37,13 +38,14 @@ Current checkpoint only. History belongs in `CHANGELOG.md`; active follow-up bel
 - The new migration drift checks intentionally fail on local until the graph data artifacts are applied locally. Default `wp iss-graph drift-check` remains the stable pre-migration guard.
 - Template output can still become DB-backed after Site Editor saves; check `wp_template` authority before assuming disk files are live.
 - Führung singles now depend on the native `single-fuehrung.html` block-theme hierarchy. Targets must apply `ops/sql/2026-06-12-fuehrung-template-hierarchy-cleanup.sql` so published Führung posts are not pinned to retired `single-tour` / `single-tour-on-demand` custom-template meta.
+- Local still has 5 legacy related `feature` editorial-signal rows. Default drift intentionally grandfathered those rows for this slice; after staging/editor validation, review them and add reason/expiry or retire expired rows deliberately.
 - History was rewritten on 2026-06-12. Existing staging/secondary clones must not normal-pull blindly; re-clone or reset only after checking local state.
 - `/home/vladimir/industriesalon-export` is a stale local clone of the GitHub repo: its local `main` is behind rewritten `origin/main` and has one old local export commit. It does not contain the purged Newsletter blob, but it should not be used for deploy/push as-is.
 
 ## Next Action
 
 - For production transfer, take a target DB backup, apply the current programme/template SQL artifacts, apply `ops/sql/2026-06-12-graph-alias-backfill-replay.sql`, run `wp iss-graph sync-aliases`, verify `wp iss-graph drift-check --checks=alias-backfill-replay --limit=25`, apply `ops/sql/2026-06-12-graph-canonical-kwo-aeg-organizations.sql`, verify `wp iss-graph drift-check --checks=canonical-organization-seeds --limit=25`, then apply `ops/sql/2026-06-12-graph-canonical-wf-industriesalon.sql`, run the alias replay once more, and verify `wp iss-graph drift-check --checks=canonical-wf-industriesalon --limit=25`.
-- Next local refactor candidate: design the human graph-influence layer from `TODO.md` as editor-owned boost/pin/suppress/feature signals over existing graph/search surfaces, without changing canonical aliases or relations.
+- Next local refactor candidate: after staging validates the signal controls, review legacy editorial-signal rows and then continue with the next non-public-consumer refactor slice.
 - When production exists, apply the current programme/template SQL artifacts with the matching code and run graph/occurrence/Führung drift checks.
 - Verify production public consumers after the data step: `/`, `/kalender/`, `/ausstellungen/`, `/fuehrungen/`, `/veranstaltungen/`, and inline REST config for search/timeline/tour-slot reads.
 
@@ -58,6 +60,7 @@ Current checkpoint only. History belongs in `CHANGELOG.md`; active follow-up bel
 - Facade comparators pass: search, occurrences, entities, timeline, and tour-slots. Tour-slot comparison now checks the service callback against `/iss/v1/tour-slots`.
 - First staging validation pass was reported passed by the operator on 2026-06-12; local shell verification was not rerun against staging in this update.
 - `wp iss-graph verify`, `wp iss-graph drift-check --limit=25`, `wp iss-occurrences verify`, and `wp iss-occurrences drift-check --limit=25` passed.
+- Human graph-influence layer checks passed locally: PHP syntax for touched files, PHPCS target, PHPStan target, `git diff --check`, `wp iss-graph drift-check --limit=25`, direct `iss_graph_search_public_posts("Industriesalon")`, rollback search-signal test proving `pin` ranks first and `suppress` removes a result, and service metadata-gate check for incomplete temporary signals.
 - HTTP checks returned `200` for `/`, `/kalender/`, `/fuehrungen/`, and `/veranstaltungen/`.
 - `/kalender/` inline config points timeline reads to `/wp-json/iss/v1/timeline`; `/fuehrungen/` points tour-slot reads to `/wp-json/iss/v1/tour-slots` and booking to `/wp-json/is-tours/v1/book`.
 - Route-retirement verification on 2026-06-12: `wp iss-graph drift-check --checks=facade-route-contract --limit=25` passed and checked runtime route registration plus active first-party source references; REST registry reports retired read routes missing and `/iss/v1/search`, `/iss/v1/timeline`, `/iss/v1/tour-slots`, and `/is-tours/v1/book` registered.

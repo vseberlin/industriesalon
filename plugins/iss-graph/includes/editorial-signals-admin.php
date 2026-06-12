@@ -7,8 +7,10 @@ if (!defined('ABSPATH')) {
 function iss_graph_get_editorial_signal_labels(): array
 {
     return [
-        'feature' => __('Vorne zeigen', 'iss-graph'),
-        'hide' => __('Nicht automatisch zeigen', 'iss-graph'),
+        'pin' => __('Fest oben halten', 'iss-graph'),
+        'feature' => __('Hervorheben', 'iss-graph'),
+        'boost' => __('Hoeher gewichten', 'iss-graph'),
+        'suppress' => __('Nicht automatisch zeigen', 'iss-graph'),
     ];
 }
 
@@ -31,6 +33,20 @@ function iss_graph_get_related_promotion_post_types(): array
 function iss_graph_is_related_promotion_post_type(string $post_type): bool
 {
     return in_array(sanitize_key($post_type), iss_graph_get_related_promotion_post_types(), true);
+}
+
+function iss_graph_get_search_signal_post_types(): array
+{
+    $post_types = function_exists('iss_graph_get_public_search_post_types')
+        ? iss_graph_get_public_search_post_types()
+        : [];
+
+    return array_values(array_unique(array_filter(array_map('sanitize_key', $post_types), 'post_type_exists')));
+}
+
+function iss_graph_is_search_signal_post_type(string $post_type): bool
+{
+    return in_array(sanitize_key($post_type), iss_graph_get_search_signal_post_types(), true);
 }
 
 function iss_graph_related_promotion_signal_is_active(?array $signal): bool
@@ -102,6 +118,11 @@ function iss_graph_is_editorial_signal_context_post_type(string $post_type): boo
 
 function iss_graph_editorial_signal_target_is_allowed(int $context_post_id, int $target_post_id): bool
 {
+    return iss_graph_editorial_signal_target_is_allowed_for_surface($context_post_id, $target_post_id, 'related');
+}
+
+function iss_graph_editorial_signal_target_is_allowed_for_surface(int $context_post_id, int $target_post_id, string $surface = 'related'): bool
+{
     $context_post = get_post($context_post_id);
     $target_post = get_post($target_post_id);
     if (!$context_post instanceof WP_Post || !$target_post instanceof WP_Post) {
@@ -110,6 +131,13 @@ function iss_graph_editorial_signal_target_is_allowed(int $context_post_id, int 
 
     if (in_array((string) $target_post->post_status, ['auto-draft', 'trash'], true)) {
         return false;
+    }
+
+    $surface = iss_graph_get_service()->normalize_editorial_signal_surface($surface);
+    if ($surface === 'search') {
+        return $context_post_id === $target_post_id
+            && (string) $target_post->post_status === 'publish'
+            && iss_graph_is_search_signal_post_type((string) $target_post->post_type);
     }
 
     $allowed_post_types = iss_graph_get_editorial_signal_target_post_types($context_post);
@@ -192,8 +220,8 @@ function iss_graph_render_editorial_signal_fields(string $prefix, string $signal
     iss_graph_render_editorial_signal_select($prefix . '[signal]', $signal, $include_empty_signal);
     echo '</label>';
 
-    echo '<label><span>' . esc_html__('Notiz', 'iss-graph') . '</span>';
-    echo '<input type="text" class="widefat" name="' . esc_attr($prefix . '[reason]') . '" value="' . esc_attr($reason) . '">';
+    echo '<label><span>' . esc_html__('Grund', 'iss-graph') . '</span>';
+    echo '<input type="text" class="widefat" name="' . esc_attr($prefix . '[reason]') . '" value="' . esc_attr($reason) . '" placeholder="' . esc_attr__('Warum ist diese Steuerung noetig?', 'iss-graph') . '">';
     echo '</label>';
 
     echo '<label><span>' . esc_html__('Gilt bis', 'iss-graph') . '</span>';
@@ -201,6 +229,7 @@ function iss_graph_render_editorial_signal_fields(string $prefix, string $signal
     echo '</label>';
 
     echo '</div>';
+    echo '<p class="description">' . esc_html__('Grund und Ablaufdatum sind fuer neue Signale erforderlich.', 'iss-graph') . '</p>';
 }
 
 function iss_graph_render_editorial_signal_target_option_label(array $option): string
@@ -344,11 +373,22 @@ function iss_graph_add_editorial_signal_meta_boxes(): void
     foreach (iss_graph_get_related_promotion_post_types() as $post_type) {
         add_meta_box(
             'iss-graph-related-promotion',
-            __('Vorne zeigen', 'iss-graph'),
+            __('Verwandte Inhalte hervorheben', 'iss-graph'),
             'iss_graph_render_related_promotion_meta_box',
             $post_type,
             'side',
             'high'
+        );
+    }
+
+    foreach (iss_graph_get_search_signal_post_types() as $post_type) {
+        add_meta_box(
+            'iss-graph-search-signal',
+            __('Suche steuern', 'iss-graph'),
+            'iss_graph_render_search_signal_meta_box',
+            $post_type,
+            'side',
+            'default'
         );
     }
 
@@ -371,17 +411,42 @@ function iss_graph_render_related_promotion_meta_box(WP_Post $post): void
     $signal = iss_graph_get_related_promotion_signal($post_id, false);
     $is_active = iss_graph_related_promotion_signal_is_active($signal);
     $expires_at = '';
+    $reason = '';
 
     if ($is_active && isset($signal['expires_at']) && $signal['expires_at'] !== null) {
         $expires_at = substr((string) $signal['expires_at'], 0, 10);
     }
+    if ($is_active) {
+        $reason = (string) ($signal['reason'] ?? '');
+    }
 
     wp_nonce_field('iss_graph_save_related_promotion', 'iss_graph_related_promotion_nonce');
 
-    echo '<p><label><input type="checkbox" name="iss_graph_related_promotion[enabled]" value="1" ' . checked($is_active, true, false) . '> ' . esc_html__('Vorne zeigen', 'iss-graph') . '</label></p>';
+    echo '<p><label><input type="checkbox" name="iss_graph_related_promotion[enabled]" value="1" ' . checked($is_active, true, false) . '> ' . esc_html__('In verwandten Inhalten hervorheben', 'iss-graph') . '</label></p>';
+    echo '<p><label for="iss_graph_related_promotion_reason"><strong>' . esc_html__('Grund', 'iss-graph') . '</strong></label>';
+    echo '<input class="widefat" type="text" id="iss_graph_related_promotion_reason" name="iss_graph_related_promotion[reason]" value="' . esc_attr($reason) . '" placeholder="' . esc_attr__('Warum ist diese Steuerung noetig?', 'iss-graph') . '"></p>';
     echo '<p><label for="iss_graph_related_promotion_expires_at"><strong>' . esc_html__('Gilt bis', 'iss-graph') . '</strong></label>';
     echo '<input class="widefat" type="date" id="iss_graph_related_promotion_expires_at" name="iss_graph_related_promotion[expires_at]" value="' . esc_attr($expires_at) . '"></p>';
-    echo '<p class="description">' . esc_html__('Bevorzugt diesen Inhalt in automatischen Verwandte-Inhalte-Bloecken desselben Typs. Ohne Datum bleibt die Auswahl aktiv, bis sie entfernt wird.', 'iss-graph') . '</p>';
+    echo '<p class="description">' . esc_html__('Bevorzugt diesen Inhalt in automatischen Verwandte-Inhalte-Bloecken desselben Typs. Neue Signale brauchen Grund und Ablaufdatum.', 'iss-graph') . '</p>';
+}
+
+function iss_graph_render_search_signal_meta_box(WP_Post $post): void
+{
+    $post_id = (int) $post->ID;
+    $signal = iss_graph_get_service()->get_editorial_signal_by_post_target($post_id, $post_id, 'search');
+    $is_active = $signal
+        && sanitize_key((string) ($signal['status'] ?? 'active')) === 'active'
+        && (empty($signal['expires_at']) || strtotime((string) $signal['expires_at'] . ' UTC') >= strtotime(current_time('mysql', true) . ' UTC'));
+    $selected = $is_active ? sanitize_key((string) ($signal['signal'] ?? '')) : '';
+    $reason = $is_active ? (string) ($signal['reason'] ?? '') : '';
+    $expires_at = $is_active && isset($signal['expires_at']) && $signal['expires_at'] !== null
+        ? substr((string) $signal['expires_at'], 0, 10)
+        : '';
+
+    wp_nonce_field('iss_graph_save_search_signal', 'iss_graph_search_signal_nonce');
+
+    iss_graph_render_editorial_signal_fields('iss_graph_search_signal', $selected, $reason, $expires_at, true);
+    echo '<p class="description">' . esc_html__('Steuert nur die oeffentliche Suche fuer diesen Eintrag. Beziehungen, Aliase und kanonische Graphdaten bleiben unveraendert.', 'iss-graph') . '</p>';
 }
 
 function iss_graph_sanitize_posted_editorial_signal_row($row): array
@@ -422,6 +487,7 @@ function iss_graph_save_posted_editorial_signal_row(int $context_post_id, int $t
         'expires_at' => (string) ($row['expires_at'] ?? ''),
         'author_user_id' => get_current_user_id(),
         'status' => 'active',
+        'require_metadata' => true,
     ]);
 }
 
@@ -512,13 +578,64 @@ function iss_graph_save_related_promotion_meta_box(int $post_id, WP_Post $post):
 
     iss_graph_upsert_editorial_signal_for_post($post_id, $post_id, 'feature', [
         'surface' => 'related',
-        'reason' => '',
+        'reason' => sanitize_textarea_field((string) ($raw['reason'] ?? '')),
         'expires_at' => sanitize_text_field((string) ($raw['expires_at'] ?? '')),
         'author_user_id' => get_current_user_id(),
         'status' => 'active',
+        'require_metadata' => true,
     ]);
 }
 add_action('save_post', 'iss_graph_save_related_promotion_meta_box', 57, 2);
+
+function iss_graph_save_search_signal_meta_box(int $post_id, WP_Post $post): void
+{
+    if (!iss_graph_is_search_signal_post_type((string) $post->post_type)) {
+        return;
+    }
+
+    if (defined('DOING_AUTOSAVE') && DOING_AUTOSAVE) {
+        return;
+    }
+
+    if (wp_is_post_revision($post_id) || wp_is_post_autosave($post_id)) {
+        return;
+    }
+
+    if (!iss_graph_current_user_can_edit_editorial_signals($post_id)) {
+        return;
+    }
+
+    if (
+        !isset($_POST['iss_graph_search_signal_nonce'])
+        || !wp_verify_nonce(sanitize_text_field(wp_unslash($_POST['iss_graph_search_signal_nonce'])), 'iss_graph_save_search_signal')
+    ) {
+        return;
+    }
+
+    $raw = isset($_POST['iss_graph_search_signal']) && is_array($_POST['iss_graph_search_signal'])
+        ? (array) wp_unslash($_POST['iss_graph_search_signal'])
+        : [];
+    $signal = iss_graph_get_service()->normalize_editorial_signal_type((string) ($raw['signal'] ?? ''));
+
+    if ($signal === '') {
+        iss_graph_remove_editorial_signal_for_post($post_id, $post_id, 'search');
+        return;
+    }
+
+    if (!iss_graph_editorial_signal_target_is_allowed_for_surface($post_id, $post_id, 'search')) {
+        return;
+    }
+
+    iss_graph_upsert_editorial_signal_for_post($post_id, $post_id, $signal, [
+        'surface' => 'search',
+        'reason' => sanitize_textarea_field((string) ($raw['reason'] ?? '')),
+        'expires_at' => sanitize_text_field((string) ($raw['expires_at'] ?? '')),
+        'author_user_id' => get_current_user_id(),
+        'status' => 'active',
+        'require_metadata' => true,
+    ]);
+}
+add_action('save_post', 'iss_graph_save_search_signal_meta_box', 56, 2);
 
 function iss_graph_get_selected_related_promotion_admin_filter(): string
 {
@@ -601,7 +718,13 @@ function iss_graph_admin_enqueue_editorial_signal_assets(string $hook): void
     }
 
     $screen = get_current_screen();
-    if (!$screen || !iss_graph_is_editorial_signal_context_post_type((string) $screen->post_type)) {
+    if (
+        !$screen
+        || (
+            !iss_graph_is_editorial_signal_context_post_type((string) $screen->post_type)
+            && !iss_graph_is_search_signal_post_type((string) $screen->post_type)
+        )
+    ) {
         return;
     }
 

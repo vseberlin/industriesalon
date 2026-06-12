@@ -2885,7 +2885,7 @@ function iss_graph_wpcli_check_editorial_signals(int $limit): array
     }
 
     $rows = $wpdb->get_results(
-        "SELECT s.id, s.context_post_id, s.target_post_id, s.surface, s.signal_type, s.status,
+        "SELECT s.id, s.context_post_id, s.target_post_id, s.surface, s.signal_type, s.reason, s.expires_at, s.author_user_id, s.status,
             cp.post_status AS context_status,
             tp.post_status AS target_status
         FROM {$signal_table} s
@@ -2902,6 +2902,9 @@ function iss_graph_wpcli_check_editorial_signals(int $limit): array
         $target_post_id = absint($row['target_post_id'] ?? 0);
         $context_status = (string) ($row['context_status'] ?? '');
         $target_status = (string) ($row['target_status'] ?? '');
+        $reason = trim((string) ($row['reason'] ?? ''));
+        $expires_at = isset($row['expires_at']) ? (string) $row['expires_at'] : '';
+        $author_user_id = absint($row['author_user_id'] ?? 0);
 
         if ($context_post_id <= 0 || $context_status === '') {
             $errors[] = sprintf('Editorial signal %d has a missing context post %d.', $id, $context_post_id);
@@ -2930,20 +2933,55 @@ function iss_graph_wpcli_check_editorial_signals(int $limit): array
             $errors[] = sprintf('Editorial signal %d has invalid status %s.', $id, (string) ($row['status'] ?? ''));
         }
 
+        if ($status === 'active') {
+            if ($author_user_id <= 0) {
+                $errors[] = sprintf('Editorial signal %d has no author user.', $id);
+            } elseif (!get_userdata($author_user_id)) {
+                $errors[] = sprintf('Editorial signal %d references missing author user %d.', $id, $author_user_id);
+            }
+        }
+
+        $legacy_related_feature = $surface === 'related'
+            && $signal === 'feature'
+            && ($reason === '' || $expires_at === '' || $expires_at === '0000-00-00 00:00:00');
+        if (
+            $status === 'active'
+            && $signal !== ''
+            && $service->editorial_signal_requires_metadata($surface, $signal)
+            && !$legacy_related_feature
+        ) {
+            if ($reason === '') {
+                $errors[] = sprintf('Editorial signal %d has no reason.', $id);
+            }
+
+            if ($expires_at === '' || $expires_at === '0000-00-00 00:00:00' || $service->normalize_editorial_signal_expiry($expires_at) === null) {
+                $errors[] = sprintf('Editorial signal %d has no valid expiry.', $id);
+            }
+        }
+
         if (
             $context_post_id > 0
             && $target_post_id > 0
-            && $context_post_id !== $target_post_id
-            && function_exists('iss_graph_editorial_signal_target_is_allowed')
-            && !iss_graph_editorial_signal_target_is_allowed($context_post_id, $target_post_id)
+            && function_exists('iss_graph_editorial_signal_target_is_allowed_for_surface')
+            && !iss_graph_editorial_signal_target_is_allowed_for_surface($context_post_id, $target_post_id, $surface)
         ) {
             $errors[] = sprintf('Editorial signal %d targets post %d outside the allowed target types for context post %d.', $id, $target_post_id, $context_post_id);
         }
 
         if ($context_post_id > 0 && $target_post_id > 0 && $context_post_id === $target_post_id) {
             $post_type = get_post_type($target_post_id);
-            if (!is_string($post_type) || !function_exists('iss_graph_is_related_promotion_post_type') || !iss_graph_is_related_promotion_post_type($post_type)) {
+            if (
+                $surface === 'related'
+                && (!is_string($post_type) || !function_exists('iss_graph_is_related_promotion_post_type') || !iss_graph_is_related_promotion_post_type($post_type))
+            ) {
                 $errors[] = sprintf('Editorial signal %d is a self-promotion on unsupported post %d.', $id, $target_post_id);
+            }
+
+            if (
+                $surface === 'search'
+                && (!is_string($post_type) || !function_exists('iss_graph_is_search_signal_post_type') || !iss_graph_is_search_signal_post_type($post_type))
+            ) {
+                $errors[] = sprintf('Editorial signal %d is a search signal on unsupported post %d.', $id, $target_post_id);
             }
         }
 

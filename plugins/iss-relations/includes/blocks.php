@@ -1626,8 +1626,10 @@ function iss_relations_apply_editorial_signals_to_related_posts(array $posts, in
     }
 
     $allowed_post_types = array_fill_keys($post_types, true);
+    $pin_ids = [];
     $feature_ids = [];
-    $hide_ids = [];
+    $boost_ids = [];
+    $suppress_ids = [];
 
     foreach ($signals as $signal) {
         if (!is_array($signal)) {
@@ -1640,10 +1642,14 @@ function iss_relations_apply_editorial_signals_to_related_posts(array $posts, in
         }
 
         $signal_type = sanitize_key((string) ($signal['signal'] ?? ''));
-        if ($signal_type === 'feature') {
+        if ($signal_type === 'pin') {
+            $pin_ids[] = $target_post_id;
+        } elseif ($signal_type === 'feature') {
             $feature_ids[] = $target_post_id;
-        } elseif ($signal_type === 'hide') {
-            $hide_ids[$target_post_id] = true;
+        } elseif ($signal_type === 'boost') {
+            $boost_ids[] = $target_post_id;
+        } elseif ($signal_type === 'suppress' || $signal_type === 'hide') {
+            $suppress_ids[$target_post_id] = true;
         }
     }
 
@@ -1655,13 +1661,13 @@ function iss_relations_apply_editorial_signals_to_related_posts(array $posts, in
         $feature_ids[] = (int) $post->ID;
     }
 
-    $feature_ids = array_values(array_unique(array_filter($feature_ids)));
-    $feature_lookup = array_fill_keys($feature_ids, true);
+    $priority_ids = array_values(array_unique(array_filter(array_merge($pin_ids, $feature_ids, $boost_ids))));
+    $priority_lookup = array_fill_keys($priority_ids, true);
     $featured_posts = [];
     $seen = [];
 
-    foreach ($feature_ids as $target_post_id) {
-        if (isset($hide_ids[$target_post_id])) {
+    foreach ($priority_ids as $target_post_id) {
+        if (isset($suppress_ids[$target_post_id])) {
             continue;
         }
 
@@ -1680,7 +1686,7 @@ function iss_relations_apply_editorial_signals_to_related_posts(array $posts, in
 
     $automatic_posts = [];
     foreach ($posts as $post) {
-        if (!$post instanceof WP_Post || isset($hide_ids[$post->ID]) || isset($feature_lookup[$post->ID]) || isset($seen[$post->ID])) {
+        if (!$post instanceof WP_Post || isset($suppress_ids[$post->ID]) || isset($priority_lookup[$post->ID]) || isset($seen[$post->ID])) {
             continue;
         }
 
