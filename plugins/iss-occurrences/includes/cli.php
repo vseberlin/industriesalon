@@ -244,6 +244,22 @@ if (defined('WP_CLI') && WP_CLI) {
                 $errors[] = sprintf('Legacy occurrence origin rows remain: %d.', $legacy_occurrence_rows);
             }
 
+            $inactive_past_supersaas_rows = (int) $wpdb->get_var(
+                $wpdb->prepare(
+                    "SELECT COUNT(*) FROM {$table} o INNER JOIN {$wpdb->posts} p ON p.ID = o.source_post_id WHERE o.origin = %s AND o.visibility = %s AND o.status = %s AND o.source_post_type = %s AND o.starts_at < %s AND p.post_type = %s AND p.post_status = %s",
+                    'supersaas',
+                    'public',
+                    'inactive',
+                    'fuehrung',
+                    current_time('mysql'),
+                    'fuehrung',
+                    'publish'
+                )
+            );
+            if ($inactive_past_supersaas_rows > 0) {
+                $errors[] = sprintf('Inactive past public SuperSaaS Führung occurrence rows remain: %d.', $inactive_past_supersaas_rows);
+            }
+
             $legacy_meta_rows = $wpdb->get_results(
                 "SELECT meta_key, COUNT(*) AS row_count FROM {$wpdb->postmeta} WHERE meta_key IN ('iss_timeline_item_id', '_iss_legacy_archive_term_slug', 'iss_archive_term_slug', 'iss_exhibition_source', 'iss_exhibition_type') GROUP BY meta_key ORDER BY meta_key ASC",
                 ARRAY_A

@@ -1,6 +1,7 @@
 # Changelog
 
 ## 2026-06-12
+- Added a SuperSaaS history drift guard so `wp iss-occurrences drift-check` fails when inactive, already-past, public SuperSaaS Führung rows remain for published source posts.
 - Preserved past SuperSaaS occurrence rows as historical calendar records:
   - sync now reactivates already-past public SuperSaaS rows for the source calendar after future missing-slot inactivation
   - added `ops/sql/2026-06-12-supersaas-past-occurrence-reactivation.sql` for staging rows that the API can no longer re-fetch
