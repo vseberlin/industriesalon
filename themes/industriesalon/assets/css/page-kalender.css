@@ -146,11 +146,24 @@
   padding-inline: 0;
 }
 
+.iss-calendar-page .iss-timeline__presets {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.6rem;
+  margin: 0 0 0.8rem;
+}
+
+.iss-calendar-page .iss-timeline__preset {
+  min-height: 2.65rem;
+  padding: 0.7rem 1rem;
+  cursor: pointer;
+}
+
 .iss-calendar-page .iss-timeline__filters {
-  display: grid;
-  grid-template-columns: minmax(0, 1.05fr) minmax(0, 1.6fr) auto;
-  gap: 1rem;
-  align-items: end;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.7rem 1rem;
+  align-items: center;
   margin: 0 0 1rem;
   padding: 0 0 1rem;
   border-bottom: 1px solid rgba(134, 159, 186, 0.18);
@@ -164,12 +177,22 @@
 }
 
 .iss-calendar-page .iss-timeline__filter--type {
-  align-self: start;
+  flex: 1 1 auto;
+  min-width: min(100%, 28rem);
 }
 
 .iss-calendar-page .iss-timeline__filter select,
 .iss-calendar-page .iss-timeline__filter input {
   width: 100%;
+}
+
+.iss-calendar-page .iss-timeline__filter--type .iss-timeline__filter-label {
+  position: absolute;
+  overflow: hidden;
+  width: 1px;
+  height: 1px;
+  clip-path: inset(50%);
+  white-space: nowrap;
 }
 
 .iss-calendar-page .iss-timeline__choice-list {
@@ -181,7 +204,19 @@
   padding-inline: 1rem;
 }
 
+.iss-calendar-page .iss-timeline__choice--link {
+  color: inherit;
+  text-decoration: none;
+}
+
+.iss-calendar-page .iss-timeline__choice--link .iss-timeline__choice-label {
+  display: inline-flex;
+  align-items: center;
+  min-height: 2.65rem;
+}
+
 .iss-calendar-page .iss-timeline__filter-actions {
+  flex: 0 0 auto;
   justify-content: flex-end;
 }
 
@@ -252,7 +287,8 @@
   }
 
   .iss-calendar-page .iss-timeline__filters {
-    grid-template-columns: 1fr;
+    align-items: flex-start;
+    flex-direction: column;
   }
 
   .iss-calendar-page .iss-timeline__calendar-bridge {
@@ -292,5 +328,15 @@
   .iss-calendar-page .iss-timeline__choice-list {
     display: grid;
     grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .iss-calendar-page .iss-timeline__presets {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .iss-calendar-page .iss-timeline__preset,
+  .iss-calendar-page .iss-timeline__choice-label {
+    width: 100%;
   }
 }

@@ -30,6 +30,7 @@
     "taxonomyPresetRules": { "type": "array", "default": [] },
     "taxonomyUiRules": { "type": "array", "default": [] },
     "presetButtons": { "type": "array", "default": [] },
+    "externalTypeLinks": { "type": "array", "default": [] },
     "showTimeModeFilter": { "type": "boolean", "default": false },
     "showItemTypeFilter": { "type": "boolean", "default": true },
     "showTypeFilter": { "type": "boolean", "default": true },

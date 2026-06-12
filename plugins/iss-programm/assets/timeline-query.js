@@ -53,6 +53,67 @@ document.addEventListener('DOMContentLoaded', function () {
     return true;
   }
 
+  function padDatePart(value) {
+    return String(value).padStart(2, '0');
+  }
+
+  function formatLocalDate(date) {
+    return [
+      date.getFullYear(),
+      padDatePart(date.getMonth() + 1),
+      padDatePart(date.getDate()),
+    ].join('-');
+  }
+
+  function getRangePresetFilters(rangePreset, fallbackMonth) {
+    var today = new Date();
+    today.setHours(0, 0, 0, 0);
+
+    if (rangePreset === 'today') {
+      var todayValue = formatLocalDate(today);
+      return {
+        time_mode: 'range',
+        date_start: todayValue + ' 00:00:00',
+        date_end: todayValue + ' 23:59:59',
+      };
+    }
+
+    if (rangePreset === 'week') {
+      var start = new Date(today.getTime());
+      var day = start.getDay() || 7;
+      start.setDate(start.getDate() - day + 1);
+      var end = new Date(start.getTime());
+      end.setDate(start.getDate() + 6);
+
+      return {
+        time_mode: 'range',
+        date_start: formatLocalDate(start) + ' 00:00:00',
+        date_end: formatLocalDate(end) + ' 23:59:59',
+      };
+    }
+
+    if (rangePreset === 'month') {
+      return {
+        time_mode: 'month',
+        month: fallbackMonth || formatLocalDate(today).slice(0, 7),
+      };
+    }
+
+    if (rangePreset === 'upcoming') {
+      return {
+        time_mode: 'upcoming',
+      };
+    }
+
+    if (rangePreset === 'past') {
+      return {
+        time_mode: 'past',
+      };
+    }
+
+    return {};
+  }
+
   rootNodes.forEach(function (root) {
     var configRaw = root.getAttribute('data-config') || '';
     var config = {};
@@ -277,6 +338,7 @@ document.addEventListener('DOMContentLoaded', function () {
 
       return {
         timeMode: button.getAttribute('data-preset-time-mode') || '',
+        rangePreset: button.getAttribute('data-preset-range') || '',
         taxonomy: button.getAttribute('data-preset-taxonomy') || '',
         terms: (button.getAttribute('data-preset-terms') || '')
           .split(',')
@@ -293,6 +355,20 @@ document.addEventListener('DOMContentLoaded', function () {
 
       if (preset.timeMode) {
         nextFilters.time_mode = preset.timeMode;
+      }
+
+      if (preset.rangePreset) {
+        var rangeFilters = getRangePresetFilters(preset.rangePreset, baseFilters && baseFilters.month ? String(baseFilters.month) : '');
+        Object.keys(rangeFilters).forEach(function (key) {
+          nextFilters[key] = rangeFilters[key];
+        });
+        if (rangeFilters.time_mode !== 'range') {
+          delete nextFilters.date_start;
+          delete nextFilters.date_end;
+        }
+        if (rangeFilters.time_mode !== 'month') {
+          delete nextFilters.month;
+        }
       }
 
       var taxonomyFilters = normalizeTaxonomyFilters(nextFilters.taxonomy_filters || []);
@@ -316,22 +392,28 @@ document.addEventListener('DOMContentLoaded', function () {
     }
 
     function applyActivePresetToControls(previousPreset) {
-      var nextTimeMode = activePreset && activePreset.timeMode
-        ? activePreset.timeMode
-        : (initialFilters && initialFilters.time_mode ? String(initialFilters.time_mode) : 'upcoming');
       var nextMonth = initialFilters && initialFilters.month
         ? String(initialFilters.month)
         : (baseFilters && baseFilters.month ? String(baseFilters.month) : '');
+      var presetRangeFilters = activePreset && activePreset.rangePreset
+        ? getRangePresetFilters(activePreset.rangePreset, nextMonth)
+        : {};
+      var nextTimeMode = presetRangeFilters.time_mode
+        ? presetRangeFilters.time_mode
+        : (activePreset && activePreset.timeMode
+          ? activePreset.timeMode
+          : (initialFilters && initialFilters.time_mode ? String(initialFilters.time_mode) : 'upcoming'));
+      var nextPresetMonth = presetRangeFilters.month ? String(presetRangeFilters.month) : nextMonth;
 
       setCalendarDayValue('');
 
       setControlValue('time_mode', nextTimeMode);
 
-      if (nextMonth !== '') {
+      if (nextPresetMonth !== '') {
         if (calendarMonthInput) {
-          calendarMonthInput.value = nextMonth;
+          calendarMonthInput.value = nextPresetMonth;
         }
-        setControlValue('month', nextMonth);
+        setControlValue('month', nextPresetMonth);
       }
 
       if (previousPreset && previousPreset.taxonomy && (!activePreset || activePreset.taxonomy !== previousPreset.taxonomy)) {
@@ -342,7 +424,7 @@ document.addEventListener('DOMContentLoaded', function () {
         setTaxonomyControlValue(activePreset.taxonomy, activePreset.terms);
       }
 
-      calendarBridgeMode = nextTimeMode === 'month' ? 'month' : '';
+      calendarBridgeMode = nextTimeMode === 'range' || nextTimeMode === 'month' ? nextTimeMode : '';
       syncMonthVisibility();
       syncCalendarBridge();
     }
@@ -435,6 +517,8 @@ document.addEventListener('DOMContentLoaded', function () {
         payload.filters.time_mode = 'range';
         payload.filters.date_start = calendarDayValue + ' 00:00:00';
         payload.filters.date_end = calendarDayValue + ' 23:59:59';
+      } else if (payload.filters.time_mode === 'range' && payload.filters.date_start && payload.filters.date_end) {
+        delete payload.filters.month;
       } else {
         delete payload.filters.date_start;
         delete payload.filters.date_end;

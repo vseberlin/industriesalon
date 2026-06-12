@@ -1,6 +1,11 @@
 # Changelog
 
 ## 2026-06-12
+- Reworked the `/kalender/` timeline controls around editor/user perception instead of raw filter fields:
+  - added dynamic preset support to the existing timeline query block for `Heute`, `Diese Woche`, `Diesen Monat`, `Alle kommenden`, and `Archiv`
+  - changed the calendar template to hide the old `Zeitraum` select and calendar bridge while keeping a second-row content chooser for `Alle`, `Führungen`, and `Veranstaltungen`
+  - rendered `Ausstellungen` as a link to `/ausstellungen/` because Dauer/Digital exhibitions are browser availability content, not calendar occurrence rows
+  - verified file-backed template authority, server-side date preset filters, HTTP rendering, and desktop/mobile browser interaction
 - Simplified the `/kalender/` timeline controls after the occurrence/facade refactor:
   - removed the accidental visible item-type chooser from the calendar page by explicitly disabling the block's type filter
   - removed `ausstellungen` from the calendar block's allowed type list because Dauer/Digital exhibitions are handled by the dedicated Ausstellung browser and no dated Sonderausstellung overlaps the current local month

@@ -1145,6 +1145,7 @@ function iss_timeline_normalize_preset_button_list($buttons = []) {
     $normalized = [];
     $default_index = -1;
     $allowed_time_modes = ['upcoming', 'month', 'past', 'all'];
+    $allowed_range_presets = ['today', 'week', 'month', 'upcoming', 'past'];
 
     foreach ($buttons as $button) {
         if (!is_array($button)) {
@@ -1159,6 +1160,11 @@ function iss_timeline_normalize_preset_button_list($buttons = []) {
         $time_mode = sanitize_key((string) ($button['timeMode'] ?? ''));
         if (!in_array($time_mode, $allowed_time_modes, true)) {
             $time_mode = '';
+        }
+
+        $range_preset = sanitize_key((string) ($button['rangePreset'] ?? ''));
+        if (!in_array($range_preset, $allowed_range_presets, true)) {
+            $range_preset = '';
         }
 
         $taxonomy = sanitize_key((string) ($button['taxonomy'] ?? ''));
@@ -1183,6 +1189,7 @@ function iss_timeline_normalize_preset_button_list($buttons = []) {
         $normalized[] = [
             'label' => $label,
             'timeMode' => $time_mode,
+            'rangePreset' => $range_preset,
             'taxonomy' => $taxonomy,
             'terms' => $terms,
             'isDefault' => false,
@@ -1222,12 +1229,72 @@ function iss_timeline_get_default_preset_button($attributes = []) {
     return [];
 }
 
+function iss_timeline_get_range_preset_filters($range_preset = '') {
+    $range_preset = sanitize_key((string) $range_preset);
+    $timezone = wp_timezone();
+    $today = new DateTimeImmutable('today', $timezone);
+
+    if ($range_preset === 'today') {
+        return [
+            'time_mode' => 'range',
+            'date_start' => $today->format('Y-m-d') . ' 00:00:00',
+            'date_end' => $today->format('Y-m-d') . ' 23:59:59',
+        ];
+    }
+
+    if ($range_preset === 'week') {
+        $weekday = (int) $today->format('N');
+        $start = $today->modify('-' . max(0, $weekday - 1) . ' days');
+        $end = $start->modify('+6 days');
+
+        return [
+            'time_mode' => 'range',
+            'date_start' => $start->format('Y-m-d') . ' 00:00:00',
+            'date_end' => $end->format('Y-m-d') . ' 23:59:59',
+        ];
+    }
+
+    if ($range_preset === 'month') {
+        return [
+            'time_mode' => 'month',
+            'month' => wp_date('Y-m', null, $timezone),
+        ];
+    }
+
+    if ($range_preset === 'upcoming') {
+        return [
+            'time_mode' => 'upcoming',
+        ];
+    }
+
+    if ($range_preset === 'past') {
+        return [
+            'time_mode' => 'past',
+        ];
+    }
+
+    return [];
+}
+
 function iss_timeline_merge_preset_filters($filters = [], $preset = []) {
     $filters = is_array($filters) ? $filters : [];
     $preset = is_array($preset) ? $preset : [];
 
     if (!empty($preset['timeMode'])) {
         $filters['time_mode'] = sanitize_key((string) $preset['timeMode']);
+    }
+
+    if (!empty($preset['rangePreset'])) {
+        $range_filters = iss_timeline_get_range_preset_filters((string) $preset['rangePreset']);
+        if (!empty($range_filters)) {
+            $filters = array_merge($filters, $range_filters);
+            if (($range_filters['time_mode'] ?? '') !== 'range') {
+                unset($filters['date_start'], $filters['date_end']);
+            }
+            if (($range_filters['time_mode'] ?? '') !== 'month') {
+                unset($filters['month']);
+            }
+        }
     }
 
     if (!isset($filters['taxonomy_filters']) || !is_array($filters['taxonomy_filters'])) {
@@ -1256,6 +1323,7 @@ function iss_timeline_render_preset_buttons($attributes = []) {
     foreach ($buttons as $button) {
         $label = $button['label'];
         $time_mode = $button['timeMode'] ?? '';
+        $range_preset = $button['rangePreset'] ?? '';
         $taxonomy = $button['taxonomy'] ?? '';
         $terms = !empty($button['terms']) && is_array($button['terms']) ? implode(',', $button['terms']) : '';
         $is_default = !empty($button['isDefault']);
@@ -1265,6 +1333,9 @@ function iss_timeline_render_preset_buttons($attributes = []) {
         $out .= ' aria-pressed="' . ($is_default ? 'true' : 'false') . '"';
         if ($time_mode !== '') {
             $out .= ' data-preset-time-mode="' . esc_attr($time_mode) . '"';
+        }
+        if ($range_preset !== '') {
+            $out .= ' data-preset-range="' . esc_attr($range_preset) . '"';
         }
         if ($taxonomy !== '') {
             $out .= ' data-preset-taxonomy="' . esc_attr($taxonomy) . '"';
@@ -1287,9 +1358,10 @@ function iss_timeline_render_choice_filter($args = []) {
     $label = (string) ($args['label'] ?? '');
     $selected = sanitize_key((string) ($args['selected'] ?? ''));
     $options = isset($args['options']) && is_array($args['options']) ? $args['options'] : [];
+    $links = isset($args['links']) && is_array($args['links']) ? $args['links'] : [];
     $class_name = trim((string) ($args['className'] ?? ''));
 
-    if ($name === '' || $filter_key === '' || empty($options)) {
+    if ($name === '' || $filter_key === '' || (empty($options) && empty($links))) {
         return '';
     }
 
@@ -1320,6 +1392,22 @@ function iss_timeline_render_choice_filter($args = []) {
         $out .= '<input class="iss-timeline__choice-input" type="radio" id="' . esc_attr($id) . '" name="' . esc_attr($name) . '" value="' . esc_attr($value) . '" data-filter-key="' . esc_attr($filter_key) . '"' . checked($selected, $value, false) . ' />';
         $out .= '<span class="iss-timeline__choice-label">' . esc_html($option_label) . '</span>';
         $out .= '</label>';
+    }
+
+    foreach ($links as $link) {
+        if (!is_array($link)) {
+            continue;
+        }
+
+        $link_label = trim(sanitize_text_field((string) ($link['label'] ?? '')));
+        $link_url = trim((string) ($link['url'] ?? ''));
+        if ($link_label === '' || $link_url === '') {
+            continue;
+        }
+
+        $out .= '<a class="iss-timeline__choice iss-timeline__choice--link" href="' . esc_url($link_url) . '">';
+        $out .= '<span class="iss-timeline__choice-label">' . esc_html($link_label) . '</span>';
+        $out .= '</a>';
     }
     $out .= '</div>';
     $out .= '</fieldset>';
@@ -1504,6 +1592,7 @@ function iss_timeline_render_query_block($attributes = [], $content = '', $block
                 'label' => __('Inhaltstyp', 'iss-timeline'),
                 'selected' => (string) ($config['filters']['item_type'] ?? 'all'),
                 'options' => is_array($config['ui']['typeOptions']) ? $config['ui']['typeOptions'] : [],
+                'links' => is_array($attributes['externalTypeLinks'] ?? null) ? $attributes['externalTypeLinks'] : [],
                 'className' => 'iss-timeline__filter--type',
             ]);
         }
