@@ -1,6 +1,11 @@
 # Changelog
 
 ## 2026-06-12
+- Tightened generated graph alias backfill:
+  - known organization abbreviations and official names from `entity_alias_backfill` are now proposed only for `organization` entities
+  - non-organization entities keep spelling/title variants but no longer receive generated identity aliases such as `WF`, `KWO`, `AEG`, `TRO`, or related official organization names from the known-pattern rules
+  - `wp iss-graph sync-aliases --dry-run` previews current/proposed generated aliases, removals, additions, and sample rows before any persisted replay
+  - local dry-run reported 30 changed entities, 64 generated aliases removed, 0 aliases added, and no database writes; persisted alias replay is deferred to a reviewed data step
 - Added the first graph entity hygiene review report:
   - recorded local `wp iss-graph entity-hygiene-audit --limit=50 --format=json` findings in `docs/project/graph-entity-hygiene-review-2026-06-12.md`
   - classified high-count duplicate normalized names as mostly generated `entity_alias_backfill` title fragments rather than immediate merge targets

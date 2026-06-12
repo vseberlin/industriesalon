@@ -258,6 +258,10 @@ function iss_graph_alias_known_patterns(): array
 
 function iss_graph_alias_add_known_variants(array &$rows, array &$seen, array $seed_names, array $entity): void
 {
+    if ((string) ($entity['entity_kind'] ?? '') !== 'organization') {
+        return;
+    }
+
     $source = implode(' ', array_merge($seed_names, [
         (string) ($entity['display_title'] ?? ''),
         (string) ($entity['canonical_slug'] ?? ''),
@@ -291,6 +295,54 @@ function iss_graph_alias_add_known_variants(array &$rows, array &$seen, array $s
             );
         }
     }
+}
+
+function iss_graph_alias_known_organization_alias_keys(): array
+{
+    static $keys = null;
+
+    if (is_array($keys)) {
+        return $keys;
+    }
+
+    $keys = [];
+    foreach (iss_graph_alias_known_patterns() as $rule) {
+        foreach ((array) ($rule['names'] ?? []) as $name_row) {
+            if (!is_array($name_row)) {
+                continue;
+            }
+
+            $name = iss_graph_alias_normalize_text((string) ($name_row[0] ?? ''));
+            $key = sanitize_title($name);
+            if ($key !== '') {
+                $keys[$key] = true;
+            }
+        }
+    }
+
+    return $keys;
+}
+
+function iss_graph_alias_row_is_known_organization_alias(array $row): bool
+{
+    $name = iss_graph_alias_normalize_text((string) ($row['name'] ?? ''));
+    $key = sanitize_title($name);
+    if ($key === '') {
+        return false;
+    }
+
+    return isset(iss_graph_alias_known_organization_alias_keys()[$key]);
+}
+
+function iss_graph_filter_entity_alias_rows(array $rows, array $entity): array
+{
+    if ((string) ($entity['entity_kind'] ?? '') === 'organization') {
+        return array_values($rows);
+    }
+
+    return array_values(array_filter($rows, static function (array $row): bool {
+        return !iss_graph_alias_row_is_known_organization_alias($row);
+    }));
 }
 
 function iss_graph_build_entity_alias_rows(array $entity): array
@@ -332,6 +384,7 @@ function iss_graph_build_entity_alias_rows(array $entity): array
     }
 
     iss_graph_alias_add_known_variants($rows, $seen, $seed_names, $entity);
+    $rows = iss_graph_filter_entity_alias_rows($rows, $entity);
 
     foreach ($rows as $index => &$row) {
         $row['position'] = $index;
@@ -363,6 +416,131 @@ function iss_graph_sync_entity_alias_backfill(int $entity_id): int
     );
 
     return count($rows);
+}
+
+function iss_graph_alias_compare_key(array $row): string
+{
+    $name = iss_graph_alias_normalize_text((string) ($row['name'] ?? ''));
+    $normalized_name = sanitize_title($name);
+    $name_type = sanitize_key((string) ($row['name_type'] ?? 'alternative'));
+
+    return $normalized_name . '|' . $name_type;
+}
+
+function iss_graph_alias_compare_label(array $row): string
+{
+    $name = iss_graph_alias_normalize_text((string) ($row['name'] ?? ''));
+    $name_type = sanitize_key((string) ($row['name_type'] ?? 'alternative'));
+
+    return $name_type . ':' . $name;
+}
+
+function iss_graph_get_current_alias_backfill_rows(int $entity_id): array
+{
+    if ($entity_id <= 0) {
+        return [];
+    }
+
+    return iss_graph_get_service()->get_names_for_entity($entity_id, [
+        'source_system' => iss_graph_get_alias_backfill_source_system(),
+        'limit' => 500,
+    ]);
+}
+
+function iss_graph_preview_entity_alias_backfill(int $entity_id): array
+{
+    $entity_id = absint($entity_id);
+    if ($entity_id <= 0) {
+        return [];
+    }
+
+    $service = iss_graph_get_service();
+    $entity = $service->get_entity_by_id($entity_id);
+    if (!$entity) {
+        return [];
+    }
+
+    $current_rows = iss_graph_get_current_alias_backfill_rows($entity_id);
+    $proposed_rows = iss_graph_build_entity_alias_rows($entity);
+    $current = [];
+    $proposed = [];
+
+    foreach ($current_rows as $row) {
+        $key = iss_graph_alias_compare_key($row);
+        if ($key !== '|') {
+            $current[$key] = iss_graph_alias_compare_label($row);
+        }
+    }
+
+    foreach ($proposed_rows as $row) {
+        $key = iss_graph_alias_compare_key($row);
+        if ($key !== '|') {
+            $proposed[$key] = iss_graph_alias_compare_label($row);
+        }
+    }
+
+    $removed = array_values(array_diff_key($current, $proposed));
+    $added = array_values(array_diff_key($proposed, $current));
+
+    return [
+        'entity_id' => $entity_id,
+        'entity_kind' => (string) ($entity['entity_kind'] ?? ''),
+        'title' => (string) ($entity['display_title'] ?? ''),
+        'current_count' => count($current),
+        'proposed_count' => count($proposed),
+        'removed_count' => count($removed),
+        'added_count' => count($added),
+        'removed' => $removed,
+        'added' => $added,
+    ];
+}
+
+function iss_graph_audit_entity_alias_backfill(array $args = []): array
+{
+    $sample_limit = isset($args['sample_limit']) ? max(1, min(500, (int) $args['sample_limit'])) : 25;
+    $entities = iss_graph_get_service()->get_entities([
+        'limit' => 50000,
+        'orderby' => 'id',
+        'order' => 'ASC',
+    ]);
+
+    $stats = [
+        'entities' => 0,
+        'changed_entities' => 0,
+        'current_names' => 0,
+        'proposed_names' => 0,
+        'removed_names' => 0,
+        'added_names' => 0,
+        'samples' => [],
+    ];
+
+    foreach ($entities as $entity) {
+        if (!is_array($entity) || empty($entity['id'])) {
+            continue;
+        }
+
+        $stats['entities']++;
+        $preview = iss_graph_preview_entity_alias_backfill((int) $entity['id']);
+        if (!$preview) {
+            continue;
+        }
+
+        $stats['current_names'] += (int) ($preview['current_count'] ?? 0);
+        $stats['proposed_names'] += (int) ($preview['proposed_count'] ?? 0);
+        $stats['removed_names'] += (int) ($preview['removed_count'] ?? 0);
+        $stats['added_names'] += (int) ($preview['added_count'] ?? 0);
+
+        if ((int) ($preview['removed_count'] ?? 0) <= 0 && (int) ($preview['added_count'] ?? 0) <= 0) {
+            continue;
+        }
+
+        $stats['changed_entities']++;
+        if (count($stats['samples']) < $sample_limit) {
+            $stats['samples'][] = $preview;
+        }
+    }
+
+    return $stats;
 }
 
 function iss_graph_backfill_entity_aliases(): array

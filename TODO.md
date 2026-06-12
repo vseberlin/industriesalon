@@ -11,11 +11,12 @@ Immediate executable work only. Larger future programs live in `docs/project/bac
 
 ## Refactor: Graph Entity Hygiene
 
-- Implement the first code-only alias hygiene guard from `docs/project/graph-entity-hygiene-review-2026-06-12.md`:
-  - keep known organization abbreviations/official names as generated aliases only on `organization` entities
-  - prevent `WF`, `KWO`, `TRO`, `AEG`, and related official names from being generated as identity aliases on archive objects, posts, publications, videos, places, events, exhibitions, projects, or tours
-  - add dry-run/audit visibility before any persisted alias replay
-- After the code guard is reviewed, decide whether alias replay needs a repeatable SQL/data artifact.
+- Compare `wp iss-graph sync-aliases --dry-run --limit=25` locally and on staging before any persisted alias replay.
+- Prepare the repeatable alias replay/data step:
+  - decide whether replay is a WP-CLI maintenance step, SQL artifact, or both
+  - capture before/after counts for generated aliases removed by the guard
+  - do not run non-dry-run `wp iss-graph sync-aliases` on shared targets without an artifact/rollback note
+- After generated alias leakage is reduced, create or resolve canonical organization rows for `KWO` and `AEG`.
 - Keep merge/reassign behavior deferred. Do not auto-merge graph entities.
 
 ## Production: Transfer Greenfield Refactor Checkpoint

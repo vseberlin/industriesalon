@@ -6,6 +6,13 @@ This review uses the committed `wp iss-graph entity-hygiene-audit` command and
 read-only SQL summaries against the local graph tables. It does not change graph
 rows, aliases, identifiers, posts, uploads, or templates.
 
+Implementation follow-up: the code guard now prevents known organization
+abbreviations and official names from being proposed on non-organization
+entities. `wp iss-graph sync-aliases --dry-run --limit=12` reports 30 changed
+entities, 64 generated aliases removed, and 0 generated aliases added. The
+persisted alias replay is still pending and needs a reviewed repeatable data
+step.
+
 ## Commands
 
 ```bash
@@ -122,7 +129,8 @@ but not these generated organization aliases.
 
 ## Recommended Implementation Order
 
-1. Tighten `entity_alias_backfill` known-pattern behavior:
+1. Tighten `entity_alias_backfill` known-pattern behavior. Implemented in code;
+   persisted replay is still pending.
    - keep title spelling variants for the owning entity
    - generate known organization abbreviations and official names only for
      `organization` entities
@@ -131,6 +139,7 @@ but not these generated organization aliases.
      places
 2. Add a focused dry-run or audit mode around alias backfill changes so the
    number of removed generated aliases is visible before write replay.
+   Implemented as `wp iss-graph sync-aliases --dry-run`.
 3. After the code is reviewed, replay alias backfill locally and create a
    repeatable SQL/data artifact only if the replay changes persisted rows.
 4. Add missing canonical organization rows for `KWO` and `AEG` through a

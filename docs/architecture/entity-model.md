@@ -223,6 +223,11 @@ entities, but archive objects, posts, publications, videos, places, events,
 exhibitions, projects, and tours that merely mention `WF`, `KWO`, `TRO`,
 `AEG`, or similar organization names should keep those terms in titles/search
 text or source evidence rather than gaining identity aliases to themselves.
+Run the dry-run before replaying generated aliases:
+
+```bash
+wp iss-graph sync-aliases --dry-run --limit=25
+```
 
 ## Resolver Contract
 

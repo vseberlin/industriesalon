@@ -17,6 +17,7 @@ Current checkpoint only. History belongs in `CHANGELOG.md`; active follow-up bel
 - Retired read routes are not registered locally: `/iss-search/v1/search`, `/iss-programm/v1/timeline`, and `/is-tours/v1/slots`. `wp iss-graph drift-check --checks=facade-route-contract` now guards runtime route registration and active first-party source references.
 - `wp iss-graph entity-hygiene-audit` is available as a read-only graph review aid. It inventories duplicate normalized names and flags ambiguity/wrong-kind candidates around `Industriesalon Schöneweide`, `WF`, `KWO`, `TRO`, and `AEG` with entity IDs, source labels, accepted identifiers, and stored names.
 - The local graph hygiene review is documented in `docs/project/graph-entity-hygiene-review-2026-06-12.md`. It found that most high-count duplicates are generated `entity_alias_backfill` fragments, while the focused next code boundary is to stop known organization abbreviations/official names from being generated as identity aliases on non-organization entities.
+- The alias backfill code guard is implemented. `entity_alias_backfill` now proposes known organization abbreviations/official names only on `organization` entities, and `wp iss-graph sync-aliases --dry-run` previews generated alias changes before any replay.
 - `iss-core` remains a scaffold/helper-convention plugin only. `iss-frontend` now provides shared frontend helper functions consumed by `iss-programm` for REST URL generation, dialog attributes, and datepicker registration. Neither plugin owns CPTs, REST routes, renderers, CSS, or domain scripts.
 
 ## Current Risk
@@ -25,7 +26,7 @@ Current checkpoint only. History belongs in `CHANGELOG.md`; active follow-up bel
 - Local and staging DB state changed during the refactor: occurrence schema/backfill/sync, graph backfill, scaffold plugin activation, and Ausstellung availability cleanup.
 - Facade route retirement has no SQL or uploads artifact. Targets should still run `wp iss-graph drift-check --checks=facade-route-contract --limit=25` after pulling code.
 - The graph entity hygiene audit has no SQL or uploads artifact and performs no DB writes. Its output is expected to include review candidates; those candidates are not runtime drift by themselves.
-- The graph hygiene review report has no SQL or uploads artifact. Alias replay is intentionally deferred until the code guard is implemented and a repeatable data step is chosen.
+- The alias backfill code guard has no SQL or uploads artifact by itself. Persisted alias replay is intentionally deferred until a repeatable data step and rollback/count evidence are chosen.
 - Template output can still become DB-backed after Site Editor saves; check `wp_template` authority before assuming disk files are live.
 - Führung singles now depend on the native `single-fuehrung.html` block-theme hierarchy. Targets must apply `ops/sql/2026-06-12-fuehrung-template-hierarchy-cleanup.sql` so published Führung posts are not pinned to retired `single-tour` / `single-tour-on-demand` custom-template meta.
 - History was rewritten on 2026-06-12. Existing staging/secondary clones must not normal-pull blindly; re-clone or reset only after checking local state.
@@ -33,7 +34,7 @@ Current checkpoint only. History belongs in `CHANGELOG.md`; active follow-up bel
 
 ## Next Action
 
-- Implement the code-only alias hygiene guard from `docs/project/graph-entity-hygiene-review-2026-06-12.md`: known organization abbreviations/official names should be generated only on `organization` entities, with dry-run/audit visibility before persisted alias replay.
+- Compare `wp iss-graph sync-aliases --dry-run --limit=25` locally and on staging, then prepare a reviewed alias replay/data artifact before running non-dry-run alias sync on shared targets.
 - When production exists, apply the current programme/template SQL artifacts with the matching code and run graph/occurrence/Führung drift checks.
 - For production transfer, take a target DB backup, apply the programme SQL artifacts, run occurrence migrate/sync if needed, then run graph/occurrence verify and drift checks on the target.
 - Verify production public consumers after the data step: `/`, `/kalender/`, `/ausstellungen/`, `/fuehrungen/`, `/veranstaltungen/`, and inline REST config for search/timeline/tour-slot reads.
@@ -55,5 +56,6 @@ Current checkpoint only. History belongs in `CHANGELOG.md`; active follow-up bel
 - Route-retirement guard PHP checks passed: syntax on touched PHP files, PHPCS target, PHPStan target, and `git diff --check`.
 - Graph entity hygiene audit checks passed locally: PHP syntax, PHPCS target, PHPStan target, `git diff --check`, `wp iss-graph verify`, `wp iss-graph drift-check --limit=25`, `wp iss-graph entity-hygiene-audit --limit=5`, and JSON mode for `WF,KWO,TRO,AEG`. The audit reported expected candidate rows and made no changes.
 - Graph hygiene review verification on 2026-06-12: `wp iss-graph entity-hygiene-audit --limit=50 --format=json` ran locally without writes; read-only SQL summaries confirmed exact alias counts for `Industriesalon Schöneweide`, `WF`, `KWO`, `TRO`, and `AEG`; `git diff --check` passed after documentation updates.
+- Alias backfill guard verification on 2026-06-12: PHP syntax, PHPCS target, PHPStan target, `wp iss-graph verify`, `wp iss-graph drift-check --limit=25`, and `wp iss-graph sync-aliases --dry-run --limit=12` passed. Dry-run reported 30 changed entities, 64 generated aliases removed, 0 added, and no DB writes; the exact focus generated-alias count remained 45 before and after dry-run.
 - Legacy occurrence cleanup guard and programme frontend-helper refactor checks passed locally: PHP syntax, PHPCS target, PHPStan target, `git diff --check`, `wp iss-occurrences drift-check`, and HTTP spot checks for `/kalender/` and `/fuehrungen/` inline REST config.
 - Führung template hierarchy checks passed locally: `single-fuehrung` is theme-backed, `single-tour` and `single-tour-on-demand` are no longer block-template sources, published Führung custom-template assignments were deleted, `wp iss-fuehrungen drift-check --limit=25` passes, and representative public/on-demand Führung URLs render through the hierarchy template without empty public-date panels.

@@ -2702,10 +2702,45 @@ function iss_graph_wpcli_sync_archive_command(array $args, array $assoc_args): v
 function iss_graph_wpcli_sync_aliases_command(array $args, array $assoc_args): void
 {
     $entity_id = absint($assoc_args['entity_id'] ?? 0);
+    $dry_run = !empty($assoc_args['dry-run']);
+    $sample_limit = max(1, min(500, absint($assoc_args['limit'] ?? 25)));
 
     if ($entity_id > 0) {
+        if ($dry_run) {
+            $preview = iss_graph_preview_entity_alias_backfill($entity_id);
+            if (!$preview) {
+                WP_CLI::error(sprintf('Graph entity %d could not be previewed.', $entity_id));
+            }
+
+            iss_graph_wpcli_log_alias_backfill_preview($preview);
+            WP_CLI::success(sprintf('Alias backfill dry-run completed for graph entity %d. No changes made.', $entity_id));
+            return;
+        }
+
         $count = iss_graph_sync_entity_alias_backfill($entity_id);
         WP_CLI::success(sprintf('Synced %d generated alias name(s) for graph entity %d.', $count, $entity_id));
+        return;
+    }
+
+    if ($dry_run) {
+        $stats = iss_graph_audit_entity_alias_backfill(['sample_limit' => $sample_limit]);
+        WP_CLI::log(sprintf(
+            'Alias backfill dry-run: entities=%d changed_entities=%d current_names=%d proposed_names=%d removed_names=%d added_names=%d.',
+            (int) ($stats['entities'] ?? 0),
+            (int) ($stats['changed_entities'] ?? 0),
+            (int) ($stats['current_names'] ?? 0),
+            (int) ($stats['proposed_names'] ?? 0),
+            (int) ($stats['removed_names'] ?? 0),
+            (int) ($stats['added_names'] ?? 0)
+        ));
+
+        foreach ((array) ($stats['samples'] ?? []) as $preview) {
+            if (is_array($preview)) {
+                iss_graph_wpcli_log_alias_backfill_preview($preview);
+            }
+        }
+
+        WP_CLI::success('Alias backfill dry-run completed. No changes made.');
         return;
     }
 
@@ -2717,6 +2752,30 @@ function iss_graph_wpcli_sync_aliases_command(array $args, array $assoc_args): v
         (int) ($stats['with_aliases'] ?? 0),
         (int) ($stats['names'] ?? 0)
     ));
+}
+
+function iss_graph_wpcli_log_alias_backfill_preview(array $preview): void
+{
+    WP_CLI::log(sprintf(
+        '[alias-preview] entity=%d kind=%s current=%d proposed=%d removed=%d added=%d title="%s"',
+        (int) ($preview['entity_id'] ?? 0),
+        (string) ($preview['entity_kind'] ?? ''),
+        (int) ($preview['current_count'] ?? 0),
+        (int) ($preview['proposed_count'] ?? 0),
+        (int) ($preview['removed_count'] ?? 0),
+        (int) ($preview['added_count'] ?? 0),
+        iss_graph_wpcli_entity_hygiene_clip((string) ($preview['title'] ?? ''), 120)
+    ));
+
+    $removed = array_slice((array) ($preview['removed'] ?? []), 0, 8);
+    if ($removed) {
+        WP_CLI::log('  removed: ' . iss_graph_wpcli_entity_hygiene_clip(implode(' | ', array_map('strval', $removed)), 220));
+    }
+
+    $added = array_slice((array) ($preview['added'] ?? []), 0, 8);
+    if ($added) {
+        WP_CLI::log('  added: ' . iss_graph_wpcli_entity_hygiene_clip(implode(' | ', array_map('strval', $added)), 220));
+    }
 }
 
 function iss_graph_wpcli_sync_search_command(array $args, array $assoc_args): void
