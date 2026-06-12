@@ -1,6 +1,9 @@
 # Changelog
 
 ## 2026-06-12
+- Added a final occurrence legacy-origin cleanup guard:
+  - `wp iss-occurrences drift-check` now fails when `wp_iss_occurrences.origin = legacy` rows remain
+  - added `ops/sql/2026-06-12-legacy-occurrence-origin-purge.sql` to remove retired legacy-origin occurrence rows on staging/production
 - Added `Buchen` booking calls to action to Führung rows in the front-page programme teaser.
 - Synced the DB-backed front-page template override back to the theme file and removed the local override:
   - preserved the live editorial heading `Aktuelle Projekte` in `themes/industriesalon/templates/front-page.html`

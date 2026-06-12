@@ -234,6 +234,16 @@ if (defined('WP_CLI') && WP_CLI) {
                 $errors[] = sprintf('Legacy calendar option(s) remain: %s.', implode(', ', $legacy_options));
             }
 
+            $legacy_occurrence_rows = (int) $wpdb->get_var(
+                $wpdb->prepare(
+                    "SELECT COUNT(*) FROM {$table} WHERE origin = %s",
+                    'legacy'
+                )
+            );
+            if ($legacy_occurrence_rows > 0) {
+                $errors[] = sprintf('Legacy occurrence origin rows remain: %d.', $legacy_occurrence_rows);
+            }
+
             $legacy_meta_rows = $wpdb->get_results(
                 "SELECT meta_key, COUNT(*) AS row_count FROM {$wpdb->postmeta} WHERE meta_key IN ('iss_timeline_item_id', '_iss_legacy_archive_term_slug', 'iss_archive_term_slug', 'iss_exhibition_source', 'iss_exhibition_type') GROUP BY meta_key ORDER BY meta_key ASC",
                 ARRAY_A
