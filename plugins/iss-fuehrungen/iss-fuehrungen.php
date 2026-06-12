@@ -22,6 +22,7 @@ require_once ISS_FUEHRUNGEN_PATH . 'includes/query-fuehrung.php';
 require_once ISS_FUEHRUNGEN_PATH . 'includes/template-tags.php';
 require_once ISS_FUEHRUNGEN_PATH . 'includes/blocks.php';
 require_once ISS_FUEHRUNGEN_PATH . 'includes/templates.php';
+require_once ISS_FUEHRUNGEN_PATH . 'includes/cli.php';
 
 function iss_fuehrungen_enqueue_assets() {
     if (!is_singular(ISS_FUEHRUNGEN_POST_TYPE) && !is_post_type_archive(ISS_FUEHRUNGEN_POST_TYPE) && !is_tax('fuehrung_typ')) {

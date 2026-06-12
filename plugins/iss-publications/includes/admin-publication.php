@@ -7,7 +7,16 @@ if (!defined('ABSPATH')) {
 function iss_publications_is_disallowed_page_template(string $template_slug): bool
 {
     $template_slug = preg_replace('/\.html$/', '', trim($template_slug));
-    return in_array($template_slug, ['single-tour', 'single-tour-on-demand'], true);
+    return in_array($template_slug, iss_publications_disallowed_page_templates(), true);
+}
+
+function iss_publications_disallowed_page_templates(): array
+{
+    return [
+        'single-tour',
+        // Retired Führung template slug kept here only to clean stale publication meta.
+        'single-tour-on-demand',
+    ];
 }
 
 function iss_publications_clear_disallowed_page_template(int $post_id): bool
@@ -272,7 +281,7 @@ add_action('init', function () {
         return;
     }
 
-    $invalid_templates = ['single-tour', 'single-tour-on-demand'];
+    $invalid_templates = iss_publications_disallowed_page_templates();
     $posts = get_posts([
         'post_type' => ISS_PUBLICATIONS_POST_TYPE,
         'post_status' => ['publish', 'future', 'draft', 'pending', 'private'],

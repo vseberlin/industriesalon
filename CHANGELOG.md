@@ -1,6 +1,7 @@
 # Changelog
 
 ## 2026-06-12
+- Added `wp iss-fuehrungen drift-check` to catch retired `single-tour-on-demand` block-template sources and published Führung posts still assigned to that template, and made the remaining publication cleanup reference explicit.
 - Collapsed Führung single pages onto the canonical `single-tour` block template:
   - removed the parallel `single-tour-on-demand` theme template and kept booking-mode behavior in dynamic blocks/render logic
   - added `hideWhenEmpty` support to `iss/tour-dates` so on-demand pages do not render an empty public dates panel
