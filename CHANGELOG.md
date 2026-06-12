@@ -1,6 +1,9 @@
 # Changelog
 
 ## 2026-06-12
+- Restored individual Führung occurrence rendering on `/kalender/` after staging showed the monthly grouping still collapsed the refreshed SuperSaaS horizon:
+  - changed the calendar timeline block back to `groupRecurringTours:false`
+  - kept the occurrence projection as the source of truth; this only changes how the theme asks the existing renderer to present rows
 - Added `Buchen` booking calls to action to Führung rows in the front-page programme teaser.
 - Synced the DB-backed front-page template override back to the theme file and removed the local override:
   - preserved the live editorial heading `Aktuelle Projekte` in `themes/industriesalon/templates/front-page.html`
