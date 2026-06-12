@@ -18,7 +18,21 @@ function iss_programm_render_calendar_modal_host() {
 
     echo '<div class="is-tour-calendar-modal" data-shared-tour-calendar-modal="1" hidden>';
     echo '<div class="is-tour-calendar-modal__overlay" data-close="1" tabindex="-1"></div>';
-    echo '<div class="is-tour-calendar-modal__panel" role="dialog" aria-modal="true" aria-label="' . esc_attr__('Buchung', 'iss-programm') . '">';
+    $dialog_attrs = function_exists('iss_frontend_dialog_attributes')
+        ? iss_frontend_dialog_attributes(__('Buchung', 'iss-programm'))
+        : [
+            'role' => 'dialog',
+            'aria-modal' => 'true',
+            'aria-label' => __('Buchung', 'iss-programm'),
+        ];
+
+    $dialog_attr_html = '';
+    foreach ($dialog_attrs as $name => $value) {
+        $dialog_attr_html .= ' ' . sanitize_key($name) . '="' . esc_attr((string) $value) . '"';
+    }
+
+    // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- Attribute names and values are escaped above.
+    echo '<div class="is-tour-calendar-modal__panel"' . $dialog_attr_html . '>';
     echo '<button type="button" class="is-tour-calendar-modal__close" data-close="1" aria-label="' . esc_attr__('Schließen', 'iss-programm') . '">×</button>';
     echo '<div class="is-tour-calendar-modal__content"></div>';
     echo '</div>';
@@ -27,24 +41,42 @@ function iss_programm_render_calendar_modal_host() {
 add_action('wp_footer', 'iss_programm_render_calendar_modal_host', 20);
 
 function iss_programm_register_frontend_assets() {
-    wp_register_style(
-        'is-tour-calendar-flatpickr',
-        plugin_dir_url(ISS_PROGRAMM_FILE) . 'assets/vendor/flatpickr/flatpickr.min.css',
-        [],
-        '4.6.13'
-    );
+    static $registered = false;
+    if ($registered) {
+        return;
+    }
+    $registered = true;
 
-    wp_register_script(
-        'is-tour-calendar-flatpickr',
-        plugin_dir_url(ISS_PROGRAMM_FILE) . 'assets/vendor/flatpickr/flatpickr.min.js',
-        [],
-        '4.6.13',
-        true
-    );
+    $programm_url = plugin_dir_url(ISS_PROGRAMM_FILE);
+
+    if (function_exists('iss_frontend_register_datepicker_assets')) {
+        iss_frontend_register_datepicker_assets(
+            'is-tour-calendar-flatpickr',
+            $programm_url . 'assets/vendor/flatpickr/flatpickr.min.js',
+            $programm_url . 'assets/vendor/flatpickr/flatpickr.min.css',
+            [],
+            '4.6.13'
+        );
+    } else {
+        wp_register_style(
+            'is-tour-calendar-flatpickr',
+            $programm_url . 'assets/vendor/flatpickr/flatpickr.min.css',
+            [],
+            '4.6.13'
+        );
+
+        wp_register_script(
+            'is-tour-calendar-flatpickr',
+            $programm_url . 'assets/vendor/flatpickr/flatpickr.min.js',
+            [],
+            '4.6.13',
+            true
+        );
+    }
 
     wp_register_script(
         'is-tour-calendar-flatpickr-l10n-de',
-        plugin_dir_url(ISS_PROGRAMM_FILE) . 'assets/vendor/flatpickr/l10n/de.js',
+        $programm_url . 'assets/vendor/flatpickr/l10n/de.js',
         ['is-tour-calendar-flatpickr'],
         '4.6.13',
         true
@@ -52,7 +84,7 @@ function iss_programm_register_frontend_assets() {
 
     wp_register_script(
         'is-tour-calendar',
-        plugin_dir_url(ISS_PROGRAMM_FILE) . 'assets/programm.js',
+        $programm_url . 'assets/programm.js',
         ['is-tour-calendar-flatpickr', 'is-tour-calendar-flatpickr-l10n-de'],
         filemtime(plugin_dir_path(ISS_PROGRAMM_FILE) . 'assets/programm.js'),
         true
@@ -60,21 +92,21 @@ function iss_programm_register_frontend_assets() {
 
     wp_register_style(
         'is-tour-calendar',
-        plugin_dir_url(ISS_PROGRAMM_FILE) . 'assets/programm.css',
+        $programm_url . 'assets/programm.css',
         [],
         filemtime(plugin_dir_path(ISS_PROGRAMM_FILE) . 'assets/programm.css')
     );
 
     wp_register_style(
         'iss-timeline',
-        plugin_dir_url(ISS_PROGRAMM_FILE) . 'assets/timeline.css',
+        $programm_url . 'assets/timeline.css',
         [],
         filemtime(plugin_dir_path(ISS_PROGRAMM_FILE) . 'assets/timeline.css')
     );
 
     wp_register_script(
         'iss-timeline-query',
-        plugin_dir_url(ISS_PROGRAMM_FILE) . 'assets/timeline-query.js',
+        $programm_url . 'assets/timeline-query.js',
         ['is-tour-calendar-flatpickr', 'is-tour-calendar-flatpickr-l10n-de'],
         filemtime(plugin_dir_path(ISS_PROGRAMM_FILE) . 'assets/timeline-query.js'),
         true
@@ -83,7 +115,7 @@ function iss_programm_register_frontend_assets() {
     wp_add_inline_script(
         'is-tour-calendar',
         'window.IS_TOUR_CALENDAR = ' . wp_json_encode([
-            'restUrl' => rest_url('iss/v1/tour-slots'),
+            'restUrl' => function_exists('iss_frontend_rest_url') ? iss_frontend_rest_url('iss/v1/tour-slots') : rest_url('iss/v1/tour-slots'),
         ]) . ';',
         'before'
     );
@@ -91,7 +123,7 @@ function iss_programm_register_frontend_assets() {
     wp_add_inline_script(
         'is-tour-calendar',
         'window.IS_TOUR_CALENDAR = Object.assign({}, window.IS_TOUR_CALENDAR, {' .
-        '"bookUrl": ' . wp_json_encode(rest_url('is-tours/v1/book')) .
+        '"bookUrl": ' . wp_json_encode(function_exists('iss_frontend_rest_url') ? iss_frontend_rest_url('is-tours/v1/book') : rest_url('is-tours/v1/book')) .
         '});',
         'after'
     );
@@ -99,7 +131,7 @@ function iss_programm_register_frontend_assets() {
     wp_add_inline_script(
         'iss-timeline-query',
         'window.ISS_TIMELINE = ' . wp_json_encode([
-            'restUrl' => rest_url('iss/v1/timeline'),
+            'restUrl' => function_exists('iss_frontend_rest_url') ? iss_frontend_rest_url('iss/v1/timeline') : rest_url('iss/v1/timeline'),
         ]) . ';',
         'before'
     );
