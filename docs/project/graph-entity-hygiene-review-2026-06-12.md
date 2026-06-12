@@ -8,10 +8,10 @@ rows, aliases, identifiers, posts, uploads, or templates.
 
 Implementation follow-up: the code guard now prevents known organization
 abbreviations and official names from being proposed on non-organization
-entities. `wp iss-graph sync-aliases --dry-run --limit=12` reports 30 changed
+entities. `wp iss-graph sync-aliases --dry-run --limit=25` reports 30 changed
 entities, 64 generated aliases removed, and 0 generated aliases added. The
-persisted alias replay is still pending and needs a reviewed repeatable data
-step.
+persisted alias replay is still pending; the reviewed target data step is
+prepared in `ops/sql/2026-06-12-graph-alias-backfill-replay.sql`.
 
 ## Commands
 
@@ -140,8 +140,9 @@ but not these generated organization aliases.
 2. Add a focused dry-run or audit mode around alias backfill changes so the
    number of removed generated aliases is visible before write replay.
    Implemented as `wp iss-graph sync-aliases --dry-run`.
-3. After the code is reviewed, replay alias backfill locally and create a
-   repeatable SQL/data artifact only if the replay changes persisted rows.
+3. After staging dry-run comparison, apply
+   `ops/sql/2026-06-12-graph-alias-backfill-replay.sql` to create a rollback
+   snapshot, then replay alias backfill with `wp iss-graph sync-aliases`.
 4. Add missing canonical organization rows for `KWO` and `AEG` through a
    reviewed graph data step, not as automatic resolver output.
 5. Revisit `Industriesalon Schöneweide` organization variants after generated

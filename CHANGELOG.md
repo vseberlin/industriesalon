@@ -1,6 +1,10 @@
 # Changelog
 
 ## 2026-06-12
+- Prepared the generated graph alias replay data step:
+  - added `ops/sql/2026-06-12-graph-alias-backfill-replay.sql` to create a targeted rollback snapshot before running `wp iss-graph sync-aliases`
+  - recorded the target procedure: compare dry-run output, import the snapshot SQL after a DB backup, run the WP-CLI replay, then verify a clean post-replay dry-run plus graph verify/drift checks
+  - local dry-run with `--limit=25` reported 30 changed entities, 64 generated aliases removed, 0 aliases added, and the generated alias row count remained 4438 before and after dry-run; no persisted replay was run
 - Tightened generated graph alias backfill:
   - known organization abbreviations and official names from `entity_alias_backfill` are now proposed only for `organization` entities
   - non-organization entities keep spelling/title variants but no longer receive generated identity aliases such as `WF`, `KWO`, `AEG`, `TRO`, or related official organization names from the known-pattern rules

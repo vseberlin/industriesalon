@@ -12,10 +12,10 @@ Immediate executable work only. Larger future programs live in `docs/project/bac
 ## Refactor: Graph Entity Hygiene
 
 - Compare `wp iss-graph sync-aliases --dry-run --limit=25` locally and on staging before any persisted alias replay.
-- Prepare the repeatable alias replay/data step:
-  - decide whether replay is a WP-CLI maintenance step, SQL artifact, or both
-  - capture before/after counts for generated aliases removed by the guard
-  - do not run non-dry-run `wp iss-graph sync-aliases` on shared targets without an artifact/rollback note
+- Replay generated aliases on staging after dry-run comparison:
+  - import `ops/sql/2026-06-12-graph-alias-backfill-replay.sql` after a target DB backup to create the rollback snapshot
+  - run `wp iss-graph sync-aliases`, then re-run `wp iss-graph sync-aliases --dry-run --limit=25`
+  - expected clean post-replay dry-run is `changed_entities=0`, `removed_names=0`, and `added_names=0`
 - After generated alias leakage is reduced, create or resolve canonical organization rows for `KWO` and `AEG`.
 - Keep merge/reassign behavior deferred. Do not auto-merge graph entities.
 
