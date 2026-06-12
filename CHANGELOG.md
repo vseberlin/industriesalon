@@ -1,6 +1,10 @@
 # Changelog
 
 ## 2026-06-12
+- Recorded staging completion of the graph hygiene data slice:
+  - staging applied the generated alias replay and curated `KWO` / `AEG` canonical organization artifacts
+  - operator-reported staging checks passed: `alias-backfill-replay`, `canonical-organization-seeds`, `wp iss-graph verify`, full graph drift, and KWO/AEG audit with `term_matches=2`, `review_flags=0`
+  - local TODO/handoff now treat KWO/AEG data cleanup as complete on staging while keeping production transfer and non-automatic `Industriesalon Schöneweide` / `WF` review separate
 - Added opt-in graph hygiene migration drift checks:
   - `wp iss-graph drift-check --checks=alias-backfill-replay` fails while generated `entity_alias_backfill` rows still differ from the current alias generator output
   - `wp iss-graph drift-check --checks=canonical-organization-seeds` verifies the post-replay hidden canonical organization rows and curated aliases for `KWO` / `Kabelwerk Oberspree` and `AEG` / `Allgemeine Elektricitäts-Gesellschaft`

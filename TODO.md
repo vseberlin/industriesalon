@@ -11,13 +11,9 @@ Immediate executable work only. Larger future programs live in `docs/project/bac
 
 ## Refactor: Graph Entity Hygiene
 
-- Compare `wp iss-graph sync-aliases --dry-run --limit=25` locally and on staging before any persisted alias replay.
-- Replay generated aliases on staging after dry-run comparison:
-  - import `ops/sql/2026-06-12-graph-alias-backfill-replay.sql` after a target DB backup to create the rollback snapshot
-  - run `wp iss-graph sync-aliases`, then re-run `wp iss-graph sync-aliases --dry-run --limit=25`
-  - run `wp iss-graph drift-check --checks=alias-backfill-replay --limit=25`
-- After generated alias leakage is reduced, apply `ops/sql/2026-06-12-graph-canonical-kwo-aeg-organizations.sql` to create the curated canonical organization rows for `KWO` and `AEG`, then run `wp iss-graph drift-check --checks=canonical-organization-seeds --limit=25`.
 - Keep merge/reassign behavior deferred. Do not auto-merge graph entities.
+- Revisit `Industriesalon Schöneweide` organization variants only after curatorial decision on the canonical association/institution identity and whether archive institution identifier `institution:29` belongs there.
+- Keep `WF` canonicalization deferred until curator review, because `WF` currently refers to at least `Werk für Fernmeldewesen` and `Werk für Fernsehelektronik`.
 
 ## Production: Transfer Greenfield Refactor Checkpoint
 
