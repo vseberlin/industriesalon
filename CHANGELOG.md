@@ -1,6 +1,10 @@
 # Changelog
 
 ## 2026-06-12
+- Synced the DB-backed front-page template override back to the theme file and removed the local override:
+  - preserved the live editorial heading `Aktuelle Projekte` in `themes/industriesalon/templates/front-page.html`
+  - changed the front-page programme teaser to link `Alle Termine ansehen` to `/kalender/` and group recurring tour dates by month
+  - added `ops/sql/2026-06-12-front-page-template-override-removal.sql` for replaying the override cleanup on other environments
 - Normalized `/kalender/` Führung booking calls to action to `Buchen` for both grouped and single tour rows.
 - Added month-bounded recurring Führung groups for `/kalender/`:
   - recurring tour rows can now group by source/series plus month instead of one all-time group
