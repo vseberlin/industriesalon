@@ -224,6 +224,109 @@ function iss_graph_wpcli_facade_require_keys(string $context, array $data, array
     }
 }
 
+function iss_graph_wpcli_facade_route_contract(): array
+{
+    return [
+        'required_read' => [
+            '/iss/v1/contract',
+            '/iss/v1/entities',
+            '/iss/v1/occurrences',
+            '/iss/v1/search',
+        ],
+        'provider_read' => [
+            '/iss/v1/timeline' => 'iss_timeline_rest_render_collection',
+            '/iss/v1/tour-slots' => 'is_tours_get_slots',
+        ],
+        'allowed_write' => [
+            '/is-tours/v1/book' => 'iss_payments_lite_create_tour_booking',
+        ],
+        'retired_read' => [
+            '/iss-search/v1/search',
+            '/iss-programm/v1/timeline',
+            '/is-tours/v1/slots',
+        ],
+    ];
+}
+
+function iss_graph_wpcli_facade_route_scan_roots(): array
+{
+    $roots = [];
+    $theme_root = get_stylesheet_directory();
+    if (is_dir($theme_root)) {
+        $roots[] = $theme_root;
+    }
+
+    $plugin_root = defined('WP_PLUGIN_DIR') ? WP_PLUGIN_DIR : trailingslashit(WP_CONTENT_DIR) . 'plugins';
+    foreach (glob(trailingslashit($plugin_root) . '*', GLOB_ONLYDIR) ?: [] as $plugin_dir) {
+        $plugin_name = basename((string) $plugin_dir);
+        if (
+            str_starts_with($plugin_name, 'iss-')
+            || str_starts_with($plugin_name, 'industriesalon-')
+            || $plugin_name === 'saas-api'
+        ) {
+            $roots[] = (string) $plugin_dir;
+        }
+    }
+
+    return array_values(array_unique($roots));
+}
+
+function iss_graph_wpcli_facade_route_scan_sources(array $retired_routes, int $limit): array
+{
+    $errors = [];
+    $checked = 0;
+    $allowed_extensions = ['php', 'js', 'html', 'json'];
+    $skip_directories = ['.git', 'node_modules', 'vendor'];
+    $self = realpath(__FILE__);
+
+    foreach (iss_graph_wpcli_facade_route_scan_roots() as $root) {
+        $iterator = new RecursiveIteratorIterator(
+            new RecursiveCallbackFilterIterator(
+                new RecursiveDirectoryIterator($root, FilesystemIterator::SKIP_DOTS),
+                static function (SplFileInfo $current) use ($skip_directories): bool {
+                    return !$current->isDir() || !in_array($current->getFilename(), $skip_directories, true);
+                }
+            )
+        );
+
+        foreach ($iterator as $file_info) {
+            if (!$file_info instanceof SplFileInfo || !$file_info->isFile()) {
+                continue;
+            }
+
+            $extension = strtolower($file_info->getExtension());
+            if (!in_array($extension, $allowed_extensions, true)) {
+                continue;
+            }
+
+            $path = $file_info->getPathname();
+            if ($self !== false && realpath($path) === $self) {
+                continue;
+            }
+
+            $checked++;
+            $contents = file_get_contents($path);
+            if (!is_string($contents)) {
+                continue;
+            }
+
+            foreach ($retired_routes as $route) {
+                if (str_contains($contents, (string) $route)) {
+                    $errors[] = sprintf('Retired read route consumer remains in %s: %s.', str_replace(ABSPATH, '', $path), (string) $route);
+                    if (count($errors) >= $limit) {
+                        break 3;
+                    }
+                }
+            }
+        }
+    }
+
+    return [
+        'checked' => $checked,
+        'errors' => $errors,
+    ];
+}
+
 function iss_graph_wpcli_facade_check_command(array $args, array $assoc_args): void
 {
     $limit = max(1, min(10, absint($assoc_args['limit'] ?? 2)));
@@ -1062,6 +1165,7 @@ function iss_graph_wpcli_parse_drift_checks(string $value): array
         'search-index',
         'editorial-signals',
         'entity-kind-contract',
+        'facade-route-contract',
     ];
 
     $value = trim($value);
@@ -1095,12 +1199,71 @@ function iss_graph_wpcli_run_drift_check(string $check, int $limit): array
             return iss_graph_wpcli_check_editorial_signals($limit);
         case 'entity-kind-contract':
             return iss_graph_wpcli_check_entity_kind_contract($limit);
+        case 'facade-route-contract':
+            return iss_graph_wpcli_check_facade_route_contract($limit);
         default:
             return [
                 'checked' => 0,
                 'errors' => [sprintf('Unknown drift check: %s', $check)],
             ];
     }
+}
+
+function iss_graph_wpcli_check_facade_route_contract(int $limit): array
+{
+    $contract = iss_graph_wpcli_facade_route_contract();
+    $routes = array_keys(rest_get_server()->get_routes());
+    $errors = [];
+    $checked = 0;
+
+    foreach ((array) $contract['required_read'] as $route) {
+        $checked++;
+        if (!in_array($route, $routes, true)) {
+            $errors[] = sprintf('Required facade read route is not registered: %s.', (string) $route);
+        }
+    }
+
+    foreach ((array) $contract['provider_read'] as $route => $provider_function) {
+        if (!function_exists((string) $provider_function)) {
+            continue;
+        }
+
+        $checked++;
+        if (!in_array((string) $route, $routes, true)) {
+            $errors[] = sprintf('Provider facade read route is not registered: %s.', (string) $route);
+        }
+    }
+
+    foreach ((array) $contract['allowed_write'] as $route => $provider_function) {
+        if (!function_exists((string) $provider_function)) {
+            continue;
+        }
+
+        $checked++;
+        if (!in_array((string) $route, $routes, true)) {
+            $errors[] = sprintf('Expected booking write route is not registered: %s.', (string) $route);
+        }
+    }
+
+    foreach ((array) $contract['retired_read'] as $route) {
+        $checked++;
+        if (in_array($route, $routes, true)) {
+            $errors[] = sprintf('Retired read route is still registered: %s.', (string) $route);
+        }
+    }
+
+    $scan = iss_graph_wpcli_facade_route_scan_sources((array) $contract['retired_read'], $limit);
+    $checked += (int) ($scan['checked'] ?? 0);
+    foreach ((array) ($scan['errors'] ?? []) as $error) {
+        if (is_string($error) && $error !== '') {
+            $errors[] = $error;
+        }
+    }
+
+    return [
+        'checked' => $checked,
+        'errors' => array_slice($errors, 0, $limit),
+    ];
 }
 
 function iss_graph_wpcli_collect_post_ids(array $post_types, bool $require_relation_meta = false): array

@@ -12,6 +12,9 @@ Public search should degrade gracefully and avoid external-service dependence fo
   queries.
 - The public header search modal now uses `/wp-json/iss/v1/search`; the retired
   `/iss-search/v1/search` route is no longer registered.
+- `wp iss-graph drift-check --checks=facade-route-contract --limit=25` guards
+  against re-registering retired read routes or reintroducing old route literals
+  in active first-party source.
 - The Meili provider is reserved but not required in the current runtime.
 - Native WordPress search remains the full-search fallback route unless deliberately redesigned.
 - Meilisearch may be deployed as optional infrastructure, but it must not become the canonical content store.

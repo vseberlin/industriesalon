@@ -9,14 +9,13 @@ Immediate executable work only. Larger future programs live in `docs/project/bac
 - Consider GitHub Support cache/unreachable-object purge for the removed Newsletter SQL artifact if strict privacy cleanup is required.
 - Review Newsletter subscriber tokens and decide whether token regeneration is required after the prior public exposure.
 
-## Refactor: Deploy Legacy Read-Route Retirement
+## Refactor: Graph Entity Hygiene Guardrails
 
-- Transfer and verify the separate route-retirement checkpoint on staging/production only after confirming no target-side consumer still calls:
-  - `/iss-search/v1/search`
-  - `/iss-programm/v1/timeline`
-  - `/is-tours/v1/slots`
-- Preserve `/is-tours/v1/book` for booking writes.
-- Rerun facade checks, retired-route absence checks, public route checks, and smoke checks after deploy.
+- Add a read-only graph entity hygiene audit before any merge/reassign UI:
+  - inventory duplicate normalized names
+  - report wrong-kind entities and ambiguous aliases around `Industriesalon Schöneweide`, `WF`, `KWO`, `TRO`, and `AEG`
+  - include enough IDs/source labels for a curator to decide merge, alias, suppress, or leave separate
+- Keep the first pass audit-only. Do not auto-merge graph entities.
 
 ## Production: Transfer Greenfield Refactor Checkpoint
 
@@ -36,10 +35,7 @@ Immediate executable work only. Larger future programs live in `docs/project/bac
 
 ## Active
 
-- 2026-06-07: Run the editorial entity-hygiene pass needed for transcript relation building:
-  - inventory duplicate normalized names, wrong-kind entities, and ambiguous aliases around `Industriesalon Schöneweide`, `WF`, `KWO`, `TRO`, and `AEG`
-  - review the 3 pending `video_transcript` evidence refs in Video CPT editors and accept/dismiss them
-  - define the smallest safe merge/reassign workflow before loosening transcript matching beyond curated names
+- 2026-06-07: Review the 3 pending `video_transcript` evidence refs in Video CPT editors and accept/dismiss them after the graph entity hygiene audit exists.
 - 2026-06-07: Design the human graph-influence layer:
   - define temporary curatorial signals for boost, pin, suppress, and feature without editing canonical relations or aliases
   - require context, reason, author, and expiry for temporary signals

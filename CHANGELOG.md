@@ -1,6 +1,9 @@
 # Changelog
 
 ## 2026-06-12
+- Hardened the final facade route boundary:
+  - added `facade-route-contract` to `wp iss-graph drift-check`
+  - the check asserts required `/iss/v1` read routes, the expected `/is-tours/v1/book` booking write route, absence of retired read routes, and absence of retired read-route literals in active first-party theme/plugin source
 - Moved Führung public-template ownership fully to the theme/block-template hierarchy:
   - renamed the active file-backed template from `single-tour.html` to `single-fuehrung.html`
   - removed the plugin public template loader, archive/taxonomy fallback template, singular template selector, block-template shim, and PHP single fallback templates

@@ -468,6 +468,10 @@ The retired read routes `/iss-search/v1/search`, `/iss-programm/v1/timeline`,
 and `/is-tours/v1/slots` are no longer registered. Booking submissions stay
 outside the read-only facade on `/is-tours/v1/book`.
 
+Run `wp iss-graph drift-check --checks=facade-route-contract --limit=25` to
+verify the final facade boundary: required read routes, the booking write route,
+retired read-route absence, and active first-party source references.
+
 Run `wp iss-graph facade-check` before switching any consumer to `/iss/v1`.
 Run `wp iss-graph facade-occurrences-compare` before switching raw
 programme/calendar consumers to `/iss/v1/occurrences`. Run
