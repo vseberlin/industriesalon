@@ -219,6 +219,7 @@ function iss_programm_render_tour_dates($attributes = [], $content = '') {
     if ($title === '') {
         $title = 'Termine';
     }
+    $hide_when_empty = !empty($attributes['hideWhenEmpty']);
 
     if (!function_exists('iss_programm_get_item_dates')) {
         return '';
@@ -237,6 +238,10 @@ function iss_programm_render_tour_dates($attributes = [], $content = '') {
         : 'class="wp-block-iss-tour-dates"';
 
     if (empty($items)) {
+        if ($hide_when_empty) {
+            return '';
+        }
+
         $out = '<div ' . $attrs . '>';
         $out .= '<h3 class="iss-tour-dates__title">' . esc_html($title) . '</h3>';
         $out .= '<p>' . esc_html__('Aktuell sind keine Termine verfügbar.', 'iss-programm') . '</p>';

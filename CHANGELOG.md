@@ -1,6 +1,10 @@
 # Changelog
 
 ## 2026-06-12
+- Collapsed Führung single pages onto the canonical `single-tour` block template:
+  - removed the parallel `single-tour-on-demand` theme template and kept booking-mode behavior in dynamic blocks/render logic
+  - added `hideWhenEmpty` support to `iss/tour-dates` so on-demand pages do not render an empty public dates panel
+  - added `ops/sql/2026-06-12-tour-template-collapse.sql` to rewrite legacy on-demand template assignments
 - Added a SuperSaaS history drift guard so `wp iss-occurrences drift-check` fails when inactive, already-past, public SuperSaaS Führung rows remain for published source posts.
 - Preserved past SuperSaaS occurrence rows as historical calendar records:
   - sync now reactivates already-past public SuperSaaS rows for the source calendar after future missing-slot inactivation

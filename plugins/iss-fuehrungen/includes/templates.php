@@ -7,8 +7,7 @@ if (!defined('ABSPATH')) {
 add_filter('theme_' . ISS_FUEHRUNGEN_POST_TYPE . '_templates', function ($templates) {
     $templates = is_array($templates) ? $templates : [];
 
-    $templates['single-tour'] = __('Tour (buchbar / hybrid)', 'iss-fuehrungen');
-    $templates['single-tour-on-demand'] = __('Tour (auf Anfrage)', 'iss-fuehrungen');
+    $templates['single-tour'] = __('Tour', 'iss-fuehrungen');
 
     return $templates;
 }, 20);
@@ -16,7 +15,6 @@ add_filter('theme_' . ISS_FUEHRUNGEN_POST_TYPE . '_templates', function ($templa
 function iss_fuehrungen_resolve_single_template_slug($post_id, $effective_mode) {
     $supported_templates = [
         'single-tour',
-        'single-tour-on-demand',
     ];
 
     $selected_template = '';
@@ -27,10 +25,6 @@ function iss_fuehrungen_resolve_single_template_slug($post_id, $effective_mode) 
 
     if (in_array($selected_template, $supported_templates, true)) {
         return $selected_template;
-    }
-
-    if ($effective_mode === 'on_demand') {
-        return 'single-tour-on-demand';
     }
 
     return 'single-tour';

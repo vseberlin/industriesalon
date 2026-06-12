@@ -26,6 +26,7 @@ Immediate executable work only. Larger future programs live in `docs/project/bac
   - apply `ops/sql/2026-06-11-ausstellung-availability-cleanup.sql`
   - apply `ops/sql/2026-06-12-legacy-occurrence-origin-purge.sql`
   - apply `ops/sql/2026-06-12-supersaas-past-occurrence-reactivation.sql`
+  - apply `ops/sql/2026-06-12-tour-template-collapse.sql`
   - run target occurrence schema/sync/backfill commands as needed, then graph and occurrence drift checks
 - Verify production public consumers:
   - `/`, `/kalender/`, `/ausstellungen/`, `/fuehrungen/`, `/veranstaltungen/`
@@ -60,9 +61,6 @@ Immediate executable work only. Larger future programs live in `docs/project/bac
   - `Energie-Museum Berlin`
   - `Treptow-Ateliers e.V.`
   - `Spree 27`
-- Review the `Führung` single-page booking flow:
-  - collapse `single-tour.html` and `single-tour-on-demand.html` only if editors do not need distinct compositions
-  - keep CTA/mode switching in render logic, not parallel full-page templates
 - Review footer navigation and column spacing after the current footer refactor:
   - decide whether `Entdecken` / `Service` stay as separate menus or move to real footer menu assignments
   - rebalance wide-screen spacing between columns, labels, and hours exception rows

@@ -16,6 +16,10 @@
     "title": {
       "type": "string",
       "default": "Termine"
+    },
+    "hideWhenEmpty": {
+      "type": "boolean",
+      "default": false
     }
   },
   "supports": {
