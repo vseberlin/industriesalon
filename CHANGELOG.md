@@ -1,7 +1,11 @@
 # Changelog
 
 ## 2026-06-12
-- Recorded operator confirmation that the `Industriesalon Schöneweide e.V.` / `ISS` and `WF` graph identity artifact has already been applied on staging; production transfer still needs the full ordered graph data sequence after backup.
+- Recorded operator confirmation that the `Industriesalon Schöneweide e.V.` / `ISS` and `WF` graph identity artifact has already been applied and verified on staging:
+  - `archive_institution:institution:29` moved to canonical entity `123` (`Industriesalon Schöneweide e.V.`), `2,700` archive institution relations now point there, and duplicate entity `150` is retired
+  - `WF` is now only on staging entity `3561` (`Werk für Fernsehelektronik`); `Werk für Fernmeldewesen` remains separate as entity `3562` without `WF`
+  - target checks passed: `alias-backfill-replay`, `canonical-organization-seeds`, `canonical-wf-industriesalon`, `wp iss-graph verify`, default `wp iss-graph drift-check --limit=25`, alias dry-run clean with `changed_entities=0`, `removed_names=0`, `added_names=0`, and HTTP `200` for `/`, `/kalender/`, and `/fuehrungen/`
+  - focused audit still reports broader Industriesalon content/place/context inventory, but targeted identities are clean and `ISS` resolves to entity `123`
 - Prepared the curator-approved `Industriesalon Schöneweide e.V.` / `ISS` and `WF` graph identity data step:
   - added `ops/sql/2026-06-12-graph-canonical-wf-industriesalon.sql` for the post-replay target move
   - the artifact assigns `archive_institution:institution:29` to canonical `Industriesalon Schöneweide e.V.`, reassigns archive institution relations, retires the duplicate archive-institution source row, and adds curated `ISS` / Industriesalon aliases
