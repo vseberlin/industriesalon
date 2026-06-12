@@ -1,6 +1,12 @@
 # Changelog
 
 ## 2026-06-12
+- Added the read-only graph entity hygiene audit to the existing `iss-graph` WP-CLI surface:
+  - `wp iss-graph entity-hygiene-audit` inventories duplicate normalized names, focus-term matches, and review flags without changing graph rows
+  - the default focus terms are `Industriesalon Schöneweide`, `WF`, `KWO`, `TRO`, and `AEG`, treated as expected organization identity terms for ambiguity/wrong-kind review
+  - output includes entity IDs, kinds, titles, visibility, source labels, accepted identifiers, and stored names so curator review can decide merge, alias rewrite, suppress, or leave separate
+  - this stays in `iss-graph` rather than a parallel tool because `iss-graph` owns entity/name/identifier tables; `drift-check` remains pass/fail contract verification, while this audit is curator inventory before any merge/reassign behavior
+  - no SQL or uploads artifact is required because the command is code-only and read-only
 - Hardened the final facade route boundary:
   - added `facade-route-contract` to `wp iss-graph drift-check`
   - the check asserts required `/iss/v1` read routes, the expected `/is-tours/v1/book` booking write route, absence of retired read routes, and absence of retired read-route literals in active first-party theme/plugin source

@@ -9,13 +9,13 @@ Immediate executable work only. Larger future programs live in `docs/project/bac
 - Consider GitHub Support cache/unreachable-object purge for the removed Newsletter SQL artifact if strict privacy cleanup is required.
 - Review Newsletter subscriber tokens and decide whether token regeneration is required after the prior public exposure.
 
-## Refactor: Graph Entity Hygiene Guardrails
+## Refactor: Graph Entity Hygiene Review
 
-- Add a read-only graph entity hygiene audit before any merge/reassign UI:
-  - inventory duplicate normalized names
-  - report wrong-kind entities and ambiguous aliases around `Industriesalon Schöneweide`, `WF`, `KWO`, `TRO`, and `AEG`
-  - include enough IDs/source labels for a curator to decide merge, alias, suppress, or leave separate
-- Keep the first pass audit-only. Do not auto-merge graph entities.
+- Review `wp iss-graph entity-hygiene-audit --limit=50` output locally and on staging:
+  - separate true duplicate entities from repeated source labels that should stay as evidence
+  - decide what `Industriesalon Schöneweide`, `WF`, `KWO`, `TRO`, and `AEG` should canonicalize to
+  - record the rows that need merge, alias rewrite, suppress, or leave-separate decisions
+- Keep the next pass review-led. Do not auto-merge graph entities.
 
 ## Production: Transfer Greenfield Refactor Checkpoint
 

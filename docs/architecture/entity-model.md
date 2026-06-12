@@ -487,6 +487,23 @@ wp iss-graph facade-tour-slots-compare
 Run `wp iss-graph facade-entities-compare` before switching entity/profile
 consumers to `/iss/v1/entities`.
 
+Run `wp iss-graph entity-hygiene-audit` before adding entity merge, split, or
+reassignment tooling. It is a read-only curator preflight on the existing graph
+tables: it inventories duplicate normalized names, reports focus-term matches,
+and flags ambiguous aliases or likely wrong-kind records around the default
+organization terms `Industriesalon Schöneweide`, `WF`, `KWO`, `TRO`, and
+`AEG`. The output includes entity IDs, kinds, titles, source labels, accepted
+identifiers, and stored names so a curator can decide merge, alias, suppress,
+or leave separate. It must not merge entities, rewrite aliases, suppress rows,
+or change identifiers.
+
+Useful options:
+
+```bash
+wp iss-graph entity-hygiene-audit --limit=50
+wp iss-graph entity-hygiene-audit --terms="WF,KWO,TRO,AEG" --format=json
+```
+
 The resolver should classify match type:
 
 - exact trusted identifier match
