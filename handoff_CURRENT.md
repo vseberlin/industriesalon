@@ -1,13 +1,13 @@
 # Current Handoff
 
-Updated: 2026-06-11
+Updated: 2026-06-12
 
 Current checkpoint only. History belongs in `CHANGELOG.md`; active follow-up belongs in `TODO.md`.
 
 ## Current State
 
-- Branch: `main`; local branch is ahead of `origin/main` and has not been pushed. Last runtime implementation checkpoint is `8563410 Switch tour slots to facade`.
-- The local greenfield refactor checkpoint is active but local-only: occurrence projection, Ausstellung availability browser/editor hardening, entity-kind registry, `/wp-json/iss/v1` facade, and the first public facade consumers are committed locally.
+- Branch: `main`; this handoff is the GitHub exchange closeout for the greenfield refactor checkpoint. Last runtime implementation checkpoint is `8563410 Switch tour slots to facade`; the final push also includes closeout documentation.
+- The greenfield refactor checkpoint is ready for staging review: occurrence projection, Ausstellung availability browser/editor hardening, entity-kind registry, `/wp-json/iss/v1` facade, and the first public facade consumers are committed for `origin/main`.
 - `iss-occurrences` owns `wp_iss_occurrences` and `wp_iss_occurrence_series`; `iss-programm` renders calendar/timeline/browser blocks; `saas-api` owns SuperSaaS sync and tour-slot reads; the theme owns public templates/skins.
 - `/ausstellungen/` uses the dedicated `industriesalon/ausstellungen-browser` and WP_Query availability filters. Dauer/Digital Ausstellungen are availability-only and do not sync into occurrence rows.
 - Local Ausstellung cleanup artifacts exist and must travel with the matching code if deployed: `ops/sql/2026-06-11-ausstellung-availability-cleanup.sql` and `ops/sql/2026-06-11-strict-programme-toggle-backfill.sql`.
@@ -22,17 +22,18 @@ Current checkpoint only. History belongs in `CHANGELOG.md`; active follow-up bel
 - Do not remove legacy read routes yet. Keep old-vs-new comparators until staging has run the same checks and public UI is stable.
 - Template output can still become DB-backed after Site Editor saves; check `wp_template` authority before assuming disk files are live.
 
-## Tomorrow
+## Next Action
 
-- Start by confirming the local baseline: `git status --short --branch`, latest commit, and whether to push the local checkpoint for staging review.
-- Run one final consumer audit for old public read URLs. Expected survivors are compatibility routes and write/admin routes: `/is-tours/v1/book`, editorial/admin REST, archive admin helpers, and legacy read routes kept for rollback.
-- Re-run the full local gate before transfer: PHP lint, JS syntax, PHPCS/PHPStan for changed plugin files, `git diff --check`, all facade comparators, `wp iss-graph verify`, `wp iss-graph drift-check`, `wp iss-occurrences verify`, and `wp iss-occurrences drift-check`.
-- Prepare staging transfer as code plus data: push only after review, apply the two SQL artifacts after a DB backup, run occurrence migrate/sync if needed, then run graph/occurrence verify and drift checks on the target.
+- On staging, pull `origin/main` only after confirming the staging tree is clean and `origin/main` is the expected exchange point.
+- Prepare staging transfer as code plus data: take a target DB backup, apply the two SQL artifacts, run occurrence migrate/sync if needed, then run graph/occurrence verify and drift checks on the target.
+- Verify staging public consumers after the data step: `/`, `/kalender/`, `/ausstellungen/`, `/fuehrungen/`, `/veranstaltungen/`, and inline REST config for search/timeline/tour-slot reads.
 - After staging passes, mark the refactor checkpoint complete in `refactor.md`/`handoff_CURRENT.md`; only then consider retiring old read routes in a separate cleanup commit.
 
 ## Verified Locally
 
-- PHP lint, JS syntax, targeted PHPCS, targeted PHPStan, and `git diff --check` passed for the latest facade route switches.
+- `git fetch origin --prune` on 2026-06-12 showed local `main` was 0 behind / 16 ahead of `origin/main` before the final closeout documentation commit.
+- `git diff --check origin/main..HEAD`, PHP syntax over all changed PHP files, `npm run lint:js`, PHPCS over all 41 changed PHP files, and PHPStan over all 41 changed PHP files passed.
+- Public-consumer audit found converted reads on facade endpoints. Static remaining old-path consumer is the expected booking write route `/is-tours/v1/book`; legacy read routes remain active for compatibility and comparator rollback.
 - `wp iss-graph facade-check --limit=2` passes and checks `/iss/v1/contract`, `/entities`, `/entities/{id}`, `/occurrences`, `/search`, `/timeline`, and `/tour-slots`.
 - Facade comparators pass: search, occurrences, entities, timeline, and tour-slots. `ELEKTRO` tour slots matched legacy `/is-tours/v1/slots` with `source=occurrences` and 3 slots.
 - `wp iss-graph verify`, `wp iss-graph drift-check --limit=25`, `wp iss-occurrences verify`, and `wp iss-occurrences drift-check --limit=25` passed.

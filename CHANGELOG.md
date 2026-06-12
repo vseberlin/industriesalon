@@ -1,5 +1,11 @@
 # Changelog
 
+## 2026-06-12
+- Prepared the greenfield refactor checkpoint for GitHub exchange:
+  - refreshed `handoff_CURRENT.md` and `TODO.md` so the checkpoint no longer points to a local-only push decision
+  - recorded the paired staging data artifacts that must travel with the code: `ops/sql/2026-06-11-strict-programme-toggle-backfill.sql` and `ops/sql/2026-06-11-ausstellung-availability-cleanup.sql`
+  - re-ran the local pre-push gate: branch diff whitespace, PHP syntax, JS lint, PHPCS, PHPStan, facade comparators, graph/occurrence verify and drift checks, Ausstellung availability audit, public HTTP checks, and public REST consumer audit
+
 ## 2026-06-11
 - Hardened the greenfield entity contract inside `iss-graph` without renaming existing rows:
   - added a central entity-kind registry for canonical target kinds, current storage kinds, owner plugins, post-type mappings, and legacy aliases
