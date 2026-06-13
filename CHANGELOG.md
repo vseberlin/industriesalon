@@ -25,6 +25,7 @@
   - wired public SQL search to consume active search signals at query time: `pin` ranks first, `feature` and `boost` increase relevance, and `suppress` removes a result
   - updated related-content blocks to consume the same signal names while keeping existing related promotions compatible
   - tightened the default graph drift check for editorial-signal authors, allowed surfaces/targets, and metadata on new-contract signals while grandfathering legacy related `feature` rows for a later explicit data cleanup
+  - staging smoke verification reported by the operator on 2026-06-13: wp-admin search-signal controls plus `/iss/v1/search` behaved as expected, `wp iss-graph drift-check --checks=editorial-signals --limit=25` passed, and default `wp iss-graph drift-check --limit=25` passed
 - Recorded operator confirmation that the `Industriesalon Schöneweide e.V.` / `ISS` and `WF` graph identity artifact has already been applied and verified on staging:
   - `archive_institution:institution:29` moved to canonical entity `123` (`Industriesalon Schöneweide e.V.`), `2,700` archive institution relations now point there, and duplicate entity `150` is retired
   - `WF` is now only on staging entity `3561` (`Werk für Fernsehelektronik`); `Werk für Fernmeldewesen` remains separate as entity `3562` without `WF`
