@@ -1,6 +1,13 @@
 # Changelog
 
 ## 2026-06-13
+- Wired the Ausstellung availability browser as the first rendered availability facade consumer:
+  - extended `GET /wp-json/iss/v1/availability` with `search` / `q`, `html`, and `is_empty` while preserving the existing structured item payload
+  - kept rendering server-side through the existing Ausstellung card helper, so the frontend does not own a duplicate card template or new availability storage
+  - enhanced the `industriesalon/ausstellungen-browser` block with an optional search control, no-JS filter/search fallbacks, and a small progressive script that swaps results through `/iss/v1/availability`
+  - tightened `facade-check`, `facade-availability-compare`, and `availability-contract` around the rendered response and an `aktuell` search scenario
+  - local verification: JS syntax, `npm run lint:js -- --quiet`, `npm run lint:css`, PHP syntax for touched files, PHPCS target, PHPStan target, `wp iss-graph facade-check --limit=2`, `wp iss-graph facade-availability-compare --limit=5`, `wp iss-graph drift-check --checks=availability-contract --limit=25`, `wp iss-programm ausstellungen-audit --strict`, direct REST/render probes, `/ausstellungen/` HTTP probe, Playwright in-place filter/search smoke, and `git diff --check` passed
+  - no SQL or uploads artifact is required because the slice changes code/read contracts only
 - Cleaned up the legacy graph editorial-signal rows after staging/editor smoke validation:
   - added and locally applied `ops/sql/2026-06-13-editorial-signal-contract-cleanup.sql`
   - retired two expired tour recommendations and one placeholder/test Veranstaltung self-promotion

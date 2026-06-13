@@ -67,6 +67,15 @@
                   : null,
                 ToggleControl
                   ? el(ToggleControl, {
+                      label: 'Suche anzeigen',
+                      checked: attrs.showSearch !== false,
+                      onChange: function (value) {
+                        setAttributes({ showSearch: !!value });
+                      },
+                    })
+                  : null,
+                ToggleControl
+                  ? el(ToggleControl, {
                       label: 'Meta anzeigen',
                       checked: attrs.showMeta !== false,
                       onChange: function (value) {
@@ -93,7 +102,7 @@
         controls,
         el('p', { className: 'iss-kicker iss-kicker--compact' }, 'Ausstellungen'),
         el('h3', {}, attrs.title || 'Ausstellungen im Überblick'),
-        el('p', {}, 'Filter: Aktuell, Dauer, Digital, Archiv')
+        el('p', {}, attrs.showSearch === false ? 'Filter: Aktuell, Dauer, Digital, Archiv' : 'Filter und Suche')
       );
     },
     save: function () {

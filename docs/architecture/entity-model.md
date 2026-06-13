@@ -486,6 +486,9 @@ active; search responses delegate to the existing search service. The timeline
 route is registered by `iss-programm` and delegates to the existing rendered
 timeline REST callback. The availability route is registered by `iss-programm`
 and delegates to the existing Ausstellung availability browser query helpers.
+It supports the browser filters plus search and returns both structured items
+and server-rendered `html` / `is_empty` fields so public clients do not duplicate
+card markup.
 The tour-slots route is registered by `saas-api` and delegates to the
 occurrence-backed slot adapter. The retired read routes `/iss-search/v1/search`,
 `/iss-programm/v1/timeline`, and `/is-tours/v1/slots` are no longer registered.
@@ -511,7 +514,8 @@ relations with the expected response shape.
 
 Run `wp iss-graph drift-check --checks=availability-contract --limit=25` to
 verify the Ausstellung availability facade can return the four existing browser
-filters with the expected response shape.
+filters plus a search scenario with the expected structured and rendered
+response shape.
 
 Run `wp iss-graph facade-check` before switching any consumer to `/iss/v1`.
 Run `wp iss-graph facade-occurrences-compare` before switching raw
@@ -529,8 +533,9 @@ Run `wp iss-graph facade-entities-compare` before switching entity/profile
 consumers to `/iss/v1/entities`.
 Run `wp iss-graph facade-entity-relations-compare` before switching relation
 consumers to `/iss/v1/entities/{id}/relations`.
-Run `wp iss-graph facade-availability-compare` before switching availability
-consumers to `/iss/v1/availability`.
+Run `wp iss-graph facade-availability-compare` before extending availability
+consumers on `/iss/v1/availability`; `/ausstellungen/` is the first progressive
+browser consumer.
 
 Run `wp iss-graph entity-hygiene-audit` before adding entity merge, split, or
 reassignment tooling. It is a read-only curator preflight on the existing graph

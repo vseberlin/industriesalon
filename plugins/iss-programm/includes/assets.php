@@ -112,6 +112,14 @@ function iss_programm_register_frontend_assets() {
         true
     );
 
+    wp_register_script(
+        'iss-ausstellungen-browser',
+        $programm_url . 'assets/ausstellungen-browser.js',
+        [],
+        filemtime(plugin_dir_path(ISS_PROGRAMM_FILE) . 'assets/ausstellungen-browser.js'),
+        true
+    );
+
     wp_add_inline_script(
         'is-tour-calendar',
         'window.IS_TOUR_CALENDAR = ' . wp_json_encode([
@@ -132,6 +140,14 @@ function iss_programm_register_frontend_assets() {
         'iss-timeline-query',
         'window.ISS_TIMELINE = ' . wp_json_encode([
             'restUrl' => function_exists('iss_frontend_rest_url') ? iss_frontend_rest_url('iss/v1/timeline') : rest_url('iss/v1/timeline'),
+        ]) . ';',
+        'before'
+    );
+
+    wp_add_inline_script(
+        'iss-ausstellungen-browser',
+        'window.ISS_AUSSTELLUNGEN = ' . wp_json_encode([
+            'restUrl' => function_exists('iss_frontend_rest_url') ? iss_frontend_rest_url('iss/v1/availability') : rest_url('iss/v1/availability'),
         ]) . ';',
         'before'
     );
@@ -171,4 +187,14 @@ function iss_programm_enqueue_timeline_query_assets() {
     wp_enqueue_script('is-tour-calendar-flatpickr');
     wp_enqueue_script('is-tour-calendar-flatpickr-l10n-de');
     wp_enqueue_script('iss-timeline-query');
+}
+
+function iss_programm_enqueue_ausstellungen_browser_assets() {
+    iss_programm_enqueue_timeline_assets();
+
+    if (!wp_script_is('iss-ausstellungen-browser', 'registered')) {
+        iss_programm_register_frontend_assets();
+    }
+
+    wp_enqueue_script('iss-ausstellungen-browser');
 }

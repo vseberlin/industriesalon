@@ -15,6 +15,7 @@
     "limit": { "type": "number", "default": 6 },
     "defaultFilter": { "type": "string", "default": "aktuell" },
     "showFilters": { "type": "boolean", "default": true },
+    "showSearch": { "type": "boolean", "default": true },
     "showMeta": { "type": "boolean", "default": true },
     "showSummary": { "type": "boolean", "default": true },
     "detailsButtonText": { "type": "string", "default": "Mehr" }

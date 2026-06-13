@@ -1110,12 +1110,15 @@ function iss_graph_wpcli_facade_check_command(array $args, array $assoc_args): v
             'filter' => 'aktuell',
             'limit' => $limit,
         ], $errors);
-        iss_graph_wpcli_facade_require_keys('/iss/v1/availability', $availability, ['provider', 'kind', 'storage_kind', 'filters', 'count', 'items'], $errors);
+        iss_graph_wpcli_facade_require_keys('/iss/v1/availability', $availability, ['provider', 'kind', 'storage_kind', 'filters', 'count', 'items', 'html', 'is_empty'], $errors);
         if (isset($availability['filters']) && !is_array($availability['filters'])) {
             $errors[] = '/iss/v1/availability filters is not an object.';
         }
         if (isset($availability['items']) && !is_array($availability['items'])) {
             $errors[] = '/iss/v1/availability items is not a list.';
+        }
+        if (isset($availability['html']) && !is_string($availability['html'])) {
+            $errors[] = '/iss/v1/availability html is not a string.';
         }
         $availability_items = isset($availability['items']) && is_array($availability['items']) ? $availability['items'] : [];
         if (isset($availability_items[0]) && is_array($availability_items[0])) {
@@ -1403,7 +1406,7 @@ function iss_graph_wpcli_facade_parse_availability_scenarios($value): array
 {
     $raw_scenarios = is_string($value) && trim($value) !== ''
         ? preg_split('/\s*,\s*/', trim($value))
-        : ['aktuell', 'dauer', 'digital', 'archiv'];
+        : ['aktuell', 'dauer', 'digital', 'archiv', 'aktuell-search'];
 
     $scenarios = [];
     foreach ((array) $raw_scenarios as $scenario) {
@@ -1418,15 +1421,29 @@ function iss_graph_wpcli_facade_parse_availability_scenarios($value): array
 
 function iss_graph_wpcli_facade_availability_params_for_scenario(string $scenario, int $limit): array
 {
+    $search = '';
+    if (substr($scenario, -7) === '-search') {
+        $scenario = substr($scenario, 0, -7);
+        $search = 'Werk';
+    }
+
     $filter = function_exists('iss_programm_ausstellungen_normalize_filter')
         ? iss_programm_ausstellungen_normalize_filter($scenario)
         : sanitize_key($scenario);
 
-    return [
+    $params = [
         'kind' => 'exhibition',
         'filter' => $filter,
         'limit' => $limit,
+        'show_meta' => '1',
+        'show_summary' => '1',
     ];
+
+    if ($search !== '') {
+        $params['search'] = $search;
+    }
+
+    return $params;
 }
 
 function iss_graph_wpcli_facade_availability_signature(array $data): array
@@ -1442,9 +1459,12 @@ function iss_graph_wpcli_facade_availability_signature(array $data): array
             'kind' => (string) ($filters['kind'] ?? ''),
             'filter' => (string) ($filters['filter'] ?? ''),
             'limit' => (int) ($filters['limit'] ?? 0),
+            'search' => (string) ($filters['search'] ?? ''),
             'today' => (string) ($filters['today'] ?? ''),
         ],
         'count' => (int) ($data['count'] ?? 0),
+        'html_hash' => md5((string) ($data['html'] ?? '')),
+        'is_empty' => (bool) ($data['is_empty'] ?? false),
         'items' => array_values(array_map(static function (array $item): array {
             $type = isset($item['type']) && is_array($item['type']) ? $item['type'] : [];
             $availability = isset($item['availability']) && is_array($item['availability']) ? $item['availability'] : [];
@@ -1488,8 +1508,8 @@ function iss_graph_wpcli_facade_availability_compare_command(array $args, array 
         $params = iss_graph_wpcli_facade_availability_params_for_scenario($scenario, $limit);
         $direct = iss_graph_wpcli_direct_rest_callback('availability service', 'iss_programm_rest_list_availability', '/iss/v1/availability', $params, $errors);
         $facade = iss_graph_wpcli_facade_request('/iss/v1/availability', $params, $errors, 'facade');
-        iss_graph_wpcli_facade_require_keys('availability service', $direct, ['provider', 'kind', 'storage_kind', 'filters', 'count', 'items'], $errors);
-        iss_graph_wpcli_facade_require_keys('/iss/v1/availability', $facade, ['provider', 'kind', 'storage_kind', 'filters', 'count', 'items'], $errors);
+        iss_graph_wpcli_facade_require_keys('availability service', $direct, ['provider', 'kind', 'storage_kind', 'filters', 'count', 'items', 'html', 'is_empty'], $errors);
+        iss_graph_wpcli_facade_require_keys('/iss/v1/availability', $facade, ['provider', 'kind', 'storage_kind', 'filters', 'count', 'items', 'html', 'is_empty'], $errors);
 
         $direct_signature = iss_graph_wpcli_facade_availability_signature($direct);
         $facade_signature = iss_graph_wpcli_facade_availability_signature($facade);
@@ -1500,9 +1520,10 @@ function iss_graph_wpcli_facade_availability_compare_command(array $args, array 
         }
 
         WP_CLI::log(sprintf(
-            '[compare] availability scenario="%s" filter=%s count=%d matched',
+            '[compare] availability scenario="%s" filter=%s search="%s" count=%d matched',
             $scenario,
             (string) ($facade_signature['filters']['filter'] ?? ''),
+            (string) ($facade_signature['filters']['search'] ?? ''),
             (int) ($facade_signature['count'] ?? 0)
         ));
     }
@@ -2423,14 +2444,25 @@ function iss_graph_wpcli_check_availability_contract(int $limit): array
     $errors = [];
     $checked = 0;
     $request_limit = max(1, min(5, $limit));
-    $scenarios = ['aktuell', 'dauer', 'digital', 'archiv'];
+    $scenarios = [
+        ['filter' => 'aktuell', 'search' => ''],
+        ['filter' => 'dauer', 'search' => ''],
+        ['filter' => 'digital', 'search' => ''],
+        ['filter' => 'archiv', 'search' => ''],
+        ['filter' => 'aktuell', 'search' => 'Werk'],
+    ];
 
-    foreach ($scenarios as $filter) {
+    foreach ($scenarios as $scenario) {
+        $filter = (string) ($scenario['filter'] ?? 'aktuell');
+        $search = (string) ($scenario['search'] ?? '');
         $checked++;
         $request = new WP_REST_Request('GET', '/iss/v1/availability');
         $request->set_param('kind', 'exhibition');
         $request->set_param('filter', $filter);
         $request->set_param('limit', $request_limit);
+        if ($search !== '') {
+            $request->set_param('search', $search);
+        }
         $response = rest_do_request($request);
         if ($response->is_error()) {
             $error = $response->as_error();
@@ -2454,10 +2486,17 @@ function iss_graph_wpcli_check_availability_contract(int $limit): array
             continue;
         }
 
-        foreach (['provider', 'kind', 'storage_kind', 'filters', 'count', 'items'] as $key) {
+        foreach (['provider', 'kind', 'storage_kind', 'filters', 'count', 'items', 'html', 'is_empty'] as $key) {
             if (!array_key_exists($key, $data)) {
                 $errors[] = sprintf('/iss/v1/availability filter=%s is missing key: %s.', $filter, $key);
             }
+        }
+
+        if (isset($data['html']) && !is_string($data['html'])) {
+            $errors[] = sprintf('/iss/v1/availability filter=%s html is not a string.', $filter);
+        }
+        if (isset($data['is_empty']) && !is_bool($data['is_empty'])) {
+            $errors[] = sprintf('/iss/v1/availability filter=%s is_empty is not a boolean.', $filter);
         }
 
         if (($data['provider'] ?? '') !== 'iss-programm') {
@@ -2465,6 +2504,16 @@ function iss_graph_wpcli_check_availability_contract(int $limit): array
         }
         if (($data['kind'] ?? '') !== 'exhibition' || ($data['storage_kind'] ?? '') !== 'ausstellung') {
             $errors[] = sprintf('/iss/v1/availability filter=%s does not expose exhibition/ausstellung kind fields.', $filter);
+        }
+
+        $filters = isset($data['filters']) && is_array($data['filters']) ? $data['filters'] : [];
+        foreach (['kind', 'filter', 'limit', 'search', 'today'] as $key) {
+            if (!array_key_exists($key, $filters)) {
+                $errors[] = sprintf('/iss/v1/availability filter=%s response filters is missing key: %s.', $filter, $key);
+            }
+        }
+        if ($search !== '' && (string) ($filters['search'] ?? '') !== $search) {
+            $errors[] = sprintf('/iss/v1/availability filter=%s did not preserve search filter %s.', $filter, $search);
         }
 
         $items = isset($data['items']) && is_array($data['items']) ? $data['items'] : [];

@@ -26,7 +26,7 @@ Immediate executable work only. Larger future programs live in `docs/project/bac
   - run target occurrence schema/sync/backfill commands as needed, then graph and occurrence drift checks
 - Verify production public consumers:
   - `/`, `/kalender/`, `/ausstellungen/`, `/fuehrungen/`, `/veranstaltungen/`
-  - header search, timeline query, and tour-slot reads use `/wp-json/iss/v1`
+  - header search, timeline query, tour-slot reads, and Ausstellung filter/search reads use `/wp-json/iss/v1`
   - expected old-path survivor is `/is-tours/v1/book`
 
 ## Active
@@ -36,8 +36,9 @@ Immediate executable work only. Larger future programs live in `docs/project/bac
   - entity-relations facade staging validation is green: `entity-relations-contract`, `facade-check`, and `facade-entity-relations-compare` passed per operator report
   - graph editorial signal controls and `/iss/v1/search` smoke test are green on staging; `editorial-signals` drift and default graph drift passed per operator report
   - availability facade and related data cleanup staging validation is green: `availability-contract`, `facade-check`, `facade-availability-compare`, `wp iss-programm ausstellungen-audit --strict`, `editorial-signals`, and full graph drift passed per operator report
+  - availability browser local consumer is implemented: `/ausstellungen/` now progressively filters/searches through `/iss/v1/availability` while keeping no-JS links/forms
   - keep WordPress CPTs as the editor shell; do not rename `fuehrung` / `veranstaltung` or change public templates for the bridge
-  - no availability consumer has been switched yet; treat `/iss/v1/availability` as a staged read contract until validated
+  - after pulling the browser-consumer commit to staging, run the availability comparator/drift checks plus a public `/ausstellungen/` browser smoke
 - 2026-06-07: Review the 3 pending `video_transcript` evidence refs in Video CPT editors and accept/dismiss them after the graph entity hygiene audit exists.
 - 2026-06-12: Follow up the human graph-influence layer after staging/editor validation:
   - decide whether exhibitions, projects, events, and tours need additional signal consumers beyond graph search and related-content blocks

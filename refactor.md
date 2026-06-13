@@ -28,7 +28,7 @@ This is the repo-owned plan for the gradual Industriesalon refactor. It records 
 - `iss-graph` now has a central entity-kind registry for canonical kinds, current storage kinds, owner plugins, post-type mappings, and legacy aliases. It keeps current rows such as `ausstellung`, `veranstaltung`, `fuehrung`, `projekt`, `page`, and `archivbeitrag` stable while exposing the canonical target names `exhibition`, `event`, `tour`, and `project`.
 - `iss-graph` now exposes the first contract-only `offer` bridge without renaming CPTs or storage rows: `fuehrung` maps to `offer/tour`, while `veranstaltung` maps to `offer` subtypes from existing `_iss_event_format` and `_iss_event_layout` editor meta.
 - `iss-graph` now exposes the first read-only `/wp-json/iss/v1` facade: contract, entities, entity detail, entity relations, occurrences, search, the programme timeline compatibility view, the Ausstellung availability read view, and the tour-slot read view. It delegates to existing graph, occurrence, search, programme timeline, Ausstellung availability, and tour-slot services and does not remove or rename older plugin routes.
-- The first public consumers are switched to `/iss/v1`: header search, timeline query reads, and tour-slot reads. Booking writes remain on `/is-tours/v1/book`.
+- The first public consumers are switched to `/iss/v1`: header search, timeline query reads, tour-slot reads, and the progressively enhanced Ausstellung availability browser. Booking writes remain on `/is-tours/v1/book`.
 
 ## Current Boundary Notes
 
@@ -40,18 +40,18 @@ This is the repo-owned plan for the gradual Industriesalon refactor. It records 
 - `wp iss-graph drift-check --checks=entity-kind-contract` verifies stored entity kinds and post-backed entity mappings against the registry.
 - `wp iss-graph drift-check --checks=public-object-contract` verifies published public object entity coverage, legacy storage-kind mapping, accepted `wp_post` identifiers, and required offer subtypes for `fuehrung` / `veranstaltung`.
 - `wp iss-graph drift-check --checks=entity-relations-contract` verifies the nested relation facade can return outgoing/incoming public graph relations with the expected response shape.
-- `wp iss-graph drift-check --checks=availability-contract` verifies the Ausstellung availability facade can return the four existing browser filters with the expected response shape.
+- `wp iss-graph drift-check --checks=availability-contract` verifies the Ausstellung availability facade can return the four existing browser filters plus a search scenario with the expected structured and rendered response shape.
 - `wp iss-graph drift-check --checks=editorial-signals` now requires reason, author, and valid expiry metadata for every active editorial signal; the old active `related/feature` grandfather exception is removed after the explicit cleanup artifact.
 - `/wp-json/iss/v1` is a facade boundary for the greenfield contract, not a new storage owner.
 - `/wp-json/iss/v1` entity responses now expose additive `contract_kind`, `subtype`, and `contract` fields; old `kind`, `canonical_kind`, and `storage_kind` remain stable for existing consumers.
 - `/wp-json/iss/v1/entities/{id}/relations` exposes existing graph relations with outgoing, incoming, both, family, source-system, and limit filters; it does not create relation storage.
-- `/wp-json/iss/v1/availability` exposes existing `iss-programm` Ausstellung availability-browser data as structured JSON over the editor-owned `ausstellung_typ` and `iss_timeline_enabled` contracts; it does not create availability storage or render public cards.
+- `/wp-json/iss/v1/availability` exposes existing `iss-programm` Ausstellung availability-browser data as structured JSON and server-rendered card HTML over the editor-owned `ausstellung_typ` and `iss_timeline_enabled` contracts; it does not create availability storage or duplicate card rendering in JavaScript.
 - `wp iss-graph facade-check` verifies the `/iss/v1` route contract before any consumer is switched to the facade.
 - `wp iss-graph facade-search-compare` compares the search service callback with `/iss/v1/search`.
 - `wp iss-graph facade-occurrences-compare` compares direct `iss_occurrences_query()` output with `/iss/v1/occurrences` before any programme consumer switches routes.
 - `wp iss-graph facade-entities-compare` compares direct graph service output with `/iss/v1/entities` list/detail responses before any entity consumer switches routes.
 - `wp iss-graph facade-entity-relations-compare` compares direct graph relation service output with `/iss/v1/entities/{id}/relations` before any relation consumer switches routes.
-- `wp iss-graph facade-availability-compare` compares the `iss-programm` availability provider callback with `/iss/v1/availability` before any availability consumer switches routes.
+- `wp iss-graph facade-availability-compare` compares the `iss-programm` availability provider callback with `/iss/v1/availability`, including the rendered HTML hash, before extending availability consumers.
 - The public header search modal is the first consumer switched to the facade; it now reads from `/wp-json/iss/v1/search`.
 - `wp iss-graph facade-timeline-compare` compares the timeline service callback with `/iss/v1/timeline`, and the public timeline query frontend now reads from that facade view.
 - `wp iss-graph facade-tour-slots-compare` compares the tour-slot service callback with `/iss/v1/tour-slots`, and the public tour calendar slot reader now reads from that facade view while booking submissions stay on `/is-tours/v1/book`.

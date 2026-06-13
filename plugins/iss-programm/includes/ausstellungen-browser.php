@@ -17,6 +17,48 @@ function iss_programm_ausstellungen_normalize_filter(string $filter): string
     return array_key_exists($filter, iss_programm_ausstellungen_filter_options()) ? $filter : 'aktuell';
 }
 
+function iss_programm_ausstellungen_normalize_search($search): string
+{
+    if (!is_scalar($search)) {
+        return '';
+    }
+
+    $search = sanitize_text_field(wp_strip_all_tags((string) $search));
+    $search = trim((string) preg_replace('/\s+/', ' ', $search));
+    if ($search === '') {
+        return '';
+    }
+
+    if (function_exists('mb_substr')) {
+        return mb_substr($search, 0, 120);
+    }
+
+    return substr($search, 0, 120);
+}
+
+function iss_programm_ausstellungen_bool_value($value, bool $default): bool
+{
+    if (is_bool($value)) {
+        return $value;
+    }
+
+    if (is_numeric($value)) {
+        return (int) $value === 1;
+    }
+
+    if (is_string($value)) {
+        $value = strtolower(trim($value));
+        if (in_array($value, ['1', 'true', 'yes', 'on'], true)) {
+            return true;
+        }
+        if (in_array($value, ['0', 'false', 'no', 'off'], true)) {
+            return false;
+        }
+    }
+
+    return $default;
+}
+
 function iss_programm_ausstellungen_today(): string
 {
     return wp_date('Y-m-d');
@@ -88,10 +130,11 @@ function iss_programm_ausstellungen_period_meta_query(string $filter): array
     ];
 }
 
-function iss_programm_ausstellungen_query_args(string $filter, int $limit): array
+function iss_programm_ausstellungen_query_args(string $filter, int $limit, string $search = ''): array
 {
     $filter = iss_programm_ausstellungen_normalize_filter($filter);
     $limit = $limit > 0 ? min($limit, 24) : 6;
+    $search = iss_programm_ausstellungen_normalize_search($search);
     $date_order = $filter === 'archiv' ? 'DESC' : 'ASC';
 
     $args = [
@@ -107,6 +150,10 @@ function iss_programm_ausstellungen_query_args(string $filter, int $limit): arra
             iss_programm_ausstellungen_visibility_meta_query(),
         ],
     ];
+
+    if ($search !== '') {
+        $args['s'] = $search;
+    }
 
     $dauer_slug = 'dauerausstellung';
     $digital_slug = 'digitaleausstellungen';
@@ -142,11 +189,12 @@ function iss_programm_ausstellungen_query_args(string $filter, int $limit): arra
     return $args;
 }
 
-function iss_programm_get_ausstellungen_for_filter(string $filter, int $limit): array
+function iss_programm_get_ausstellungen_for_filter(string $filter, int $limit, string $search = ''): array
 {
     $filter = iss_programm_ausstellungen_normalize_filter($filter);
     $limit = $limit > 0 ? min($limit, 24) : 6;
-    $query = new WP_Query(iss_programm_ausstellungen_query_args($filter, $limit));
+    $search = iss_programm_ausstellungen_normalize_search($search);
+    $query = new WP_Query(iss_programm_ausstellungen_query_args($filter, $limit, $search));
     $posts = array_values(array_filter($query->posts, static function ($post): bool {
         return $post instanceof WP_Post;
     }));
@@ -351,19 +399,49 @@ function iss_programm_availability_filters_from_request(WP_REST_Request $request
     $filter = iss_programm_ausstellungen_normalize_filter((string) ($request->get_param('filter') ?: $request->get_param('availability') ?: 'aktuell'));
     $limit = (int) $request->get_param('limit');
     $limit = $limit > 0 ? min($limit, 24) : 6;
+    $search_param = $request->get_param('search');
+    if ($search_param === null) {
+        $search_param = $request->get_param('q');
+    }
+    $search = iss_programm_ausstellungen_normalize_search($search_param ?? '');
 
     return [
         'kind' => $kind,
         'filter' => $filter,
         'limit' => $limit,
+        'search' => $search,
     ];
 }
 
-function iss_programm_get_availability_response(array $filters): array
+function iss_programm_ausstellungen_render_options(array $opts = []): array
+{
+    $details_label = isset($opts['detailsButtonText'])
+        ? sanitize_text_field((string) $opts['detailsButtonText'])
+        : (isset($opts['details_button_text']) ? sanitize_text_field((string) $opts['details_button_text']) : '');
+
+    return [
+        'showMeta' => iss_programm_ausstellungen_bool_value($opts['showMeta'] ?? $opts['show_meta'] ?? true, true),
+        'showSummary' => iss_programm_ausstellungen_bool_value($opts['showSummary'] ?? $opts['show_summary'] ?? true, true),
+        'detailsButtonText' => $details_label,
+    ];
+}
+
+function iss_programm_availability_render_options_from_request(WP_REST_Request $request): array
+{
+    return iss_programm_ausstellungen_render_options([
+        'show_meta' => $request->get_param('show_meta'),
+        'show_summary' => $request->get_param('show_summary'),
+        'details_button_text' => $request->get_param('details_button_text'),
+    ]);
+}
+
+function iss_programm_get_availability_response(array $filters, array $render_opts = []): array
 {
     $kind = iss_programm_availability_normalize_kind((string) ($filters['kind'] ?? 'exhibition'));
     $filter = iss_programm_ausstellungen_normalize_filter((string) ($filters['filter'] ?? 'aktuell'));
     $limit = isset($filters['limit']) ? min(24, max(1, (int) $filters['limit'])) : 6;
+    $search = iss_programm_ausstellungen_normalize_search($filters['search'] ?? $filters['q'] ?? '');
+    $render_opts = iss_programm_ausstellungen_render_options($render_opts);
 
     if ($kind !== 'exhibition') {
         return [
@@ -374,14 +452,17 @@ function iss_programm_get_availability_response(array $filters): array
                 'kind' => $kind,
                 'filter' => $filter,
                 'limit' => $limit,
+                'search' => $search,
                 'today' => iss_programm_ausstellungen_today(),
             ],
             'count' => 0,
             'items' => [],
+            'html' => iss_programm_render_ausstellungen_cards([], $render_opts),
+            'is_empty' => true,
         ];
     }
 
-    $posts = iss_programm_get_ausstellungen_for_filter($filter, $limit);
+    $posts = iss_programm_get_ausstellungen_for_filter($filter, $limit, $search);
     $items = array_values(array_map('iss_programm_prepare_ausstellung_availability_item', array_filter($posts, static function ($post): bool {
         return $post instanceof WP_Post;
     })));
@@ -394,10 +475,13 @@ function iss_programm_get_availability_response(array $filters): array
             'kind' => 'exhibition',
             'filter' => $filter,
             'limit' => $limit,
+            'search' => $search,
             'today' => iss_programm_ausstellungen_today(),
         ],
         'count' => count($items),
         'items' => $items,
+        'html' => iss_programm_render_ausstellungen_cards($posts, $render_opts),
+        'is_empty' => empty($items),
     ];
 }
 
@@ -412,7 +496,7 @@ function iss_programm_rest_list_availability(WP_REST_Request $request)
         );
     }
 
-    return rest_ensure_response(iss_programm_get_availability_response($filters));
+    return rest_ensure_response(iss_programm_get_availability_response($filters, iss_programm_availability_render_options_from_request($request)));
 }
 
 function iss_programm_rest_register_availability_route(): void
@@ -448,6 +532,29 @@ function iss_programm_rest_register_availability_route(): void
                 'validate_callback' => static function ($value): bool {
                     return $value === null || ((int) $value >= 1 && (int) $value <= 24);
                 },
+            ],
+            'search' => [
+                'type' => 'string',
+                'required' => false,
+                'sanitize_callback' => 'sanitize_text_field',
+            ],
+            'q' => [
+                'type' => 'string',
+                'required' => false,
+                'sanitize_callback' => 'sanitize_text_field',
+            ],
+            'show_meta' => [
+                'type' => 'boolean',
+                'required' => false,
+            ],
+            'show_summary' => [
+                'type' => 'boolean',
+                'required' => false,
+            ],
+            'details_button_text' => [
+                'type' => 'string',
+                'required' => false,
+                'sanitize_callback' => 'sanitize_text_field',
             ],
         ],
     ]);
@@ -525,20 +632,36 @@ function iss_programm_render_ausstellungen_cards(array $posts, array $opts): str
     return $out;
 }
 
-function iss_programm_render_ausstellungen_filter_nav(string $active_filter): string
+function iss_programm_render_ausstellungen_filter_nav(string $active_filter, string $search = ''): string
 {
     $options = iss_programm_ausstellungen_filter_options();
     $out = '<nav class="iss-timeline__presets iss-ausstellungen-browser__filters" aria-label="' . esc_attr__('Ausstellungen filtern', 'iss-programm') . '">';
     foreach ($options as $filter => $label) {
-        $url = add_query_arg('ausstellung_filter', $filter);
+        $url_args = ['ausstellung_filter' => $filter];
+        if ($search !== '') {
+            $url_args['ausstellung_search'] = $search;
+        }
+        $url = add_query_arg($url_args);
         $url = strtok($url, '#') . '#aktuell-archiv';
         $classes = 'iss-timeline__preset';
         if ($filter === $active_filter) {
             $classes .= ' is-active';
         }
-        $out .= '<a class="' . esc_attr($classes) . '" href="' . esc_url($url) . '" aria-pressed="' . esc_attr($filter === $active_filter ? 'true' : 'false') . '">' . esc_html($label) . '</a>';
+        $out .= '<a class="' . esc_attr($classes) . '" href="' . esc_url($url) . '" aria-pressed="' . esc_attr($filter === $active_filter ? 'true' : 'false') . '" data-ausstellungen-filter="' . esc_attr($filter) . '">' . esc_html($label) . '</a>';
     }
     $out .= '</nav>';
+
+    return $out;
+}
+
+function iss_programm_render_ausstellungen_search_form(string $active_filter, string $search, string $input_id): string
+{
+    $out = '<form class="iss-ausstellungen-browser__search" method="get" data-ausstellungen-search-form>';
+    $out .= '<input type="hidden" name="ausstellung_filter" value="' . esc_attr($active_filter) . '" data-ausstellungen-filter-input>';
+    $out .= '<label class="screen-reader-text" for="' . esc_attr($input_id) . '">' . esc_html__('Ausstellungen suchen', 'iss-programm') . '</label>';
+    $out .= '<input id="' . esc_attr($input_id) . '" class="iss-ausstellungen-browser__search-input" type="search" name="ausstellung_search" value="' . esc_attr($search) . '" placeholder="' . esc_attr__('Suchen', 'iss-programm') . '" data-ausstellungen-search-input>';
+    $out .= '<button class="iss-timeline__preset iss-ausstellungen-browser__search-submit" type="submit">' . esc_html__('Suchen', 'iss-programm') . '</button>';
+    $out .= '</form>';
 
     return $out;
 }
@@ -546,7 +669,9 @@ function iss_programm_render_ausstellungen_filter_nav(string $active_filter): st
 function iss_programm_render_ausstellungen_browser_block($attributes = []): string
 {
     $attributes = is_array($attributes) ? $attributes : [];
-    if (function_exists('iss_programm_enqueue_timeline_assets')) {
+    if (function_exists('iss_programm_enqueue_ausstellungen_browser_assets')) {
+        iss_programm_enqueue_ausstellungen_browser_assets();
+    } elseif (function_exists('iss_programm_enqueue_timeline_assets')) {
         iss_programm_enqueue_timeline_assets();
     }
 
@@ -554,27 +679,60 @@ function iss_programm_render_ausstellungen_browser_block($attributes = []): stri
     // phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Public read-only browser filter.
     $request_filter = isset($_GET['ausstellung_filter']) ? sanitize_key((string) wp_unslash($_GET['ausstellung_filter'])) : '';
     $active_filter = $request_filter !== '' ? iss_programm_ausstellungen_normalize_filter($request_filter) : $default_filter;
+    // phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Public read-only browser search.
+    $search = isset($_GET['ausstellung_search']) ? iss_programm_ausstellungen_normalize_search(wp_unslash($_GET['ausstellung_search'])) : '';
     $limit = isset($attributes['limit']) ? (int) $attributes['limit'] : 6;
     $title = trim((string) ($attributes['title'] ?? ''));
-    $posts = iss_programm_get_ausstellungen_for_filter($active_filter, $limit);
+    $posts = iss_programm_get_ausstellungen_for_filter($active_filter, $limit, $search);
+    $show_filters = !array_key_exists('showFilters', $attributes) || (bool) $attributes['showFilters'];
+    $show_search = !array_key_exists('showSearch', $attributes) || (bool) $attributes['showSearch'];
+    $render_opts = [
+        'showMeta' => !array_key_exists('showMeta', $attributes) || (bool) $attributes['showMeta'],
+        'showSummary' => !array_key_exists('showSummary', $attributes) || (bool) $attributes['showSummary'],
+        'detailsButtonText' => (string) ($attributes['detailsButtonText'] ?? ''),
+    ];
 
     $classes = 'iss-timeline-query iss-ausstellungen-browser';
+    static $browser_index = 0;
+    $browser_index++;
+    $browser_id = 'iss-ausstellungen-browser-' . $browser_index;
+    $config = [
+        'restUrl' => function_exists('iss_frontend_rest_url') ? iss_frontend_rest_url('iss/v1/availability') : rest_url('iss/v1/availability'),
+        'filter' => $active_filter,
+        'defaultFilter' => $default_filter,
+        'limit' => max(1, min(24, (int) $limit)),
+        'search' => $search,
+        'showMeta' => (bool) $render_opts['showMeta'],
+        'showSummary' => (bool) $render_opts['showSummary'],
+        'detailsButtonText' => (string) $render_opts['detailsButtonText'],
+    ];
     $attrs = function_exists('get_block_wrapper_attributes')
-        ? get_block_wrapper_attributes(['class' => $classes])
-        : 'class="' . esc_attr($classes) . '"';
+        ? get_block_wrapper_attributes([
+            'class' => $classes,
+            'id' => $browser_id,
+            'data-ausstellungen-browser' => '1',
+            'data-config' => (string) wp_json_encode($config),
+        ])
+        : 'class="' . esc_attr($classes) . '" id="' . esc_attr($browser_id) . '" data-ausstellungen-browser="1" data-config="' . esc_attr((string) wp_json_encode($config)) . '"';
 
     $out = '<div ' . $attrs . '>';
     if ($title !== '') {
         $out .= '<h3 class="iss-timeline__section-title iss-ausstellungen-browser__title">' . esc_html($title) . '</h3>';
     }
-    if (!array_key_exists('showFilters', $attributes) || (bool) $attributes['showFilters']) {
-        $out .= iss_programm_render_ausstellungen_filter_nav($active_filter);
+    if ($show_filters || $show_search) {
+        $out .= '<div class="iss-ausstellungen-browser__controls" data-ausstellungen-controls>';
+        if ($show_search) {
+            $out .= iss_programm_render_ausstellungen_search_form($active_filter, $search, $browser_id . '-search');
+        }
+        if ($show_filters) {
+            $out .= iss_programm_render_ausstellungen_filter_nav($active_filter, $search);
+        }
+        $out .= '</div>';
     }
-    $out .= iss_programm_render_ausstellungen_cards($posts, [
-        'showMeta' => !array_key_exists('showMeta', $attributes) || (bool) $attributes['showMeta'],
-        'showSummary' => !array_key_exists('showSummary', $attributes) || (bool) $attributes['showSummary'],
-        'detailsButtonText' => (string) ($attributes['detailsButtonText'] ?? ''),
-    ]);
+    $out .= '<p class="screen-reader-text" role="status" aria-live="polite" data-ausstellungen-status></p>';
+    $out .= '<div class="iss-ausstellungen-browser__results" data-ausstellungen-results>';
+    $out .= iss_programm_render_ausstellungen_cards($posts, $render_opts);
+    $out .= '</div>';
     $out .= '</div>';
 
     return $out;
