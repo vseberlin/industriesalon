@@ -540,6 +540,26 @@ function iss_content_model_get_veranstaltung_format_options(): array
             'label' => __('Präsentation', 'iss-content-model'),
             'description' => __('Projekt, Material oder Ergebnisvorstellung.', 'iss-content-model'),
         ],
+        'repair_cafe' => [
+            'label' => __('Repair Café', 'iss-content-model'),
+            'description' => __('Offene Hilfe, Annahme, Reparaturplätze und Laufkundschaft.', 'iss-content-model'),
+        ],
+        'concert' => [
+            'label' => __('Konzert', 'iss-content-model'),
+            'description' => __('Musikprogramm, Beginn, Besetzung und Rahmen.', 'iss-content-model'),
+        ],
+        'festival' => [
+            'label' => __('Festival', 'iss-content-model'),
+            'description' => __('Mehrtägiges oder programmorientiertes öffentliches Format.', 'iss-content-model'),
+        ],
+        'workshop' => [
+            'label' => __('Workshop', 'iss-content-model'),
+            'description' => __('Mitmachformat mit Ablauf, Zielgruppe und Voraussetzungen.', 'iss-content-model'),
+        ],
+        'school_program' => [
+            'label' => __('Schulprogramm', 'iss-content-model'),
+            'description' => __('Angebot für Schulklassen, Kurse oder Bildungsgruppen.', 'iss-content-model'),
+        ],
     ];
 }
 
@@ -579,6 +599,10 @@ function iss_content_model_normalize_veranstaltung_format(string $value): string
         $value = 'gespraech';
     } elseif ($value === 'prasentation' || $value === 'presentation') {
         $value = 'praesentation';
+    } elseif (in_array($value, ['repair-cafe', 'repaircafe', 'reparaturcafe', 'reparatur-cafe'], true)) {
+        $value = 'repair_cafe';
+    } elseif (in_array($value, ['school', 'school-program', 'schoolprogram', 'schulprogramm'], true)) {
+        $value = 'school_program';
     }
 
     return array_key_exists($value, iss_content_model_get_veranstaltung_format_options()) ? $value : 'general';

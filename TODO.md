@@ -2,46 +2,34 @@
 
 Immediate executable work only. Larger future programs live in `docs/project/backlog.md`; UAT-dependent work lives in `docs/project/uat.md`.
 
-## Security: Post Git-History Purge
+## Active Today
 
-- Re-clone or deliberately reset `/home/vladimir/industriesalon-export` before using it again; current local `main` is stale/diverged from rewritten `origin/main`.
-- Check any staging/server clone before deploy. Because `main` was rewritten, prefer fresh clone or explicit reset to rewritten `origin/main` after preserving any local-only state.
-- Consider GitHub Support cache/unreachable-object purge for the removed Newsletter SQL artifact if strict privacy cleanup is required.
-- Review Newsletter subscriber tokens and decide whether token regeneration is required after the prior public exposure.
+- Backend knowledge-graph refactor closeout is complete locally; do not reopen backend slices unless final review exposes a real contract gap.
+- Push the local closeout commit only when explicitly requested.
+- Next active slice: UI polish, especially clean Ausstellung search/filter interaction and public view polish.
+- Treat staging as the current live working target, not a production-grade release gate. If staging breaks, rebuild/reapply from Git and known data artifacts.
 
-## Production: Transfer Greenfield Refactor Checkpoint
+## Active Refactor Notes
 
-- Prepare production transfer with paired data:
-  - backup target DB first
-  - apply `ops/sql/2026-06-11-strict-programme-toggle-backfill.sql`
-  - apply `ops/sql/2026-06-11-ausstellung-availability-cleanup.sql`
-  - apply `ops/sql/2026-06-12-legacy-occurrence-origin-purge.sql`
-  - apply `ops/sql/2026-06-12-supersaas-past-occurrence-reactivation.sql`
-  - apply `ops/sql/2026-06-12-tour-template-collapse.sql`
-  - apply `ops/sql/2026-06-12-fuehrung-template-hierarchy-cleanup.sql`
-  - apply `ops/sql/2026-06-12-graph-alias-backfill-replay.sql`, run `wp iss-graph sync-aliases`, and verify `--checks=alias-backfill-replay`
-  - apply `ops/sql/2026-06-12-graph-canonical-kwo-aeg-organizations.sql` and verify `--checks=canonical-organization-seeds`
-  - apply `ops/sql/2026-06-12-graph-canonical-wf-industriesalon.sql`, run `wp iss-graph sync-aliases`, and verify `--checks=canonical-wf-industriesalon`
-  - apply `ops/sql/2026-06-13-editorial-signal-contract-cleanup.sql` and verify `--checks=editorial-signals`
-  - run target occurrence schema/sync/backfill commands as needed, then graph and occurrence drift checks
-- Verify production public consumers:
-  - `/`, `/kalender/`, `/ausstellungen/`, `/fuehrungen/`, `/veranstaltungen/`
-  - header search, timeline query, tour-slot reads, and Ausstellung filter/search reads use `/wp-json/iss/v1`
-  - expected old-path survivor is `/is-tours/v1/book`
+- Keep WordPress CPTs as the editor shell; do not rename `fuehrung` / `veranstaltung` or change public templates for the offer bridge.
+- `/ausstellungen/` now progressively filters/searches through `/iss/v1/availability` while keeping no-JS links/forms.
+- Header search, timeline reads, tour-slot reads, and Ausstellung availability reads are on `/wp-json/iss/v1`; booking writes stay on `/is-tours/v1/book`.
+- `/iss/v1/entities/{id}/occurrences` is now the entity-scoped occurrence read surface; it does not create occurrence storage or an editor-visible occurrence CPT.
+- Offer subtype public labels are centralized in `iss-graph`; header search, related cards, and timeline cards consume those labels without exposing contract internals.
+- `wp iss-fuehrungen drift-check` now guards the public tour Offer catalog against missing published tours, invalid `offer/tour` contracts, unknown catalog groups, and missing renderer shell fragments.
+- `wp iss-graph facade-consumer-audit` guards the known public facade consumers and the one allowed booking write route.
+- `wp iss-graph view-contract-audit` guards the main file-backed public views against mixing occurrence, availability, and offer projection layers.
+- `wp iss-occurrences drift-check` now guards active SuperSaaS generated occurrences against the service-owned series table, so recurrence rows stay linked to their parent `fuehrung`.
+- SuperSaaS series and tag source resolution now live in the service-owned series table; the retired `iss_occurrences_series_map` and `iss_occurrences_source_map` options are deleted after migration and guarded by drift.
+- Local graph data is aligned with the reviewed alias replay, KWO/AEG, and Industriesalon/WF curation artifacts.
+- Ausstellung availability now consumes self-scoped `availability` editorial signals from `iss-graph`; search and related signals remain separate surfaces.
+- Editor UX audit for this checkpoint is recorded in `docs/project/kg-editor-ux-audit-2026-06-13.md`.
+- Offer consumer audit for this checkpoint is recorded in `docs/project/kg-offer-consumer-audit-2026-06-13.md`.
+- No SQL/uploads transfer artifact is required for the backend closeout; the SuperSaaS source/series option migration runs through the `iss-occurrences` schema installer.
 
-## Active
+## Other Active Work
 
-- 2026-06-13: Continue knowledge-graph alignment after the local offer-bridge slice:
-  - offer bridge staging validation is green: additive `/iss/v1` `contract_kind` / `subtype`, `public-object-contract`, `facade-check`, and `facade-entities-compare` passed per operator report
-  - entity-relations facade staging validation is green: `entity-relations-contract`, `facade-check`, and `facade-entity-relations-compare` passed per operator report
-  - graph editorial signal controls and `/iss/v1/search` smoke test are green on staging; `editorial-signals` drift and default graph drift passed per operator report
-  - availability facade and related data cleanup staging validation is green: `availability-contract`, `facade-check`, `facade-availability-compare`, `wp iss-programm ausstellungen-audit --strict`, `editorial-signals`, and full graph drift passed per operator report
-  - availability browser local consumer is implemented: `/ausstellungen/` now progressively filters/searches through `/iss/v1/availability` while keeping no-JS links/forms
-  - keep WordPress CPTs as the editor shell; do not rename `fuehrung` / `veranstaltung` or change public templates for the bridge
-  - after pulling the browser-consumer commit to staging, run the availability comparator/drift checks plus a public `/ausstellungen/` browser smoke
 - 2026-06-07: Review the 3 pending `video_transcript` evidence refs in Video CPT editors and accept/dismiss them after the graph entity hygiene audit exists.
-- 2026-06-12: Follow up the human graph-influence layer after staging/editor validation:
-  - decide whether exhibitions, projects, events, and tours need additional signal consumers beyond graph search and related-content blocks
 - Review `/videos/` embed behavior against the YouTube-hit goal:
   - test whether card selection should update poster/metadata while playback starts only after explicit user play
   - keep a strong `Zum Original` / YouTube handoff path if on-site playback reduces channel traffic

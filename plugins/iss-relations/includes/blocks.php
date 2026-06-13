@@ -1783,11 +1783,13 @@ function iss_relations_get_card_kicker(WP_Post $post, array $defaults = []): str
             return $badge;
         }
 
-        return __('Führung', 'iss-relations');
+        $contract_label = iss_relations_get_offer_contract_card_kicker($post);
+        return $contract_label !== '' ? $contract_label : __('Führung', 'iss-relations');
     }
 
     if ($post->post_type === 'veranstaltung') {
-        return __('Veranstaltung', 'iss-relations');
+        $contract_label = iss_relations_get_offer_contract_card_kicker($post);
+        return $contract_label !== '' ? $contract_label : __('Veranstaltung', 'iss-relations');
     }
 
     if ($post->post_type === 'ausstellung') {
@@ -1834,6 +1836,20 @@ function iss_relations_get_card_kicker(WP_Post $post, array $defaults = []): str
     }
 
     return trim((string) ($defaults['kicker'] ?? ''));
+}
+
+function iss_relations_get_offer_contract_card_kicker(WP_Post $post): string
+{
+    if (!function_exists('iss_graph_get_contract_payload_for_post') || !function_exists('iss_graph_get_contract_public_label')) {
+        return '';
+    }
+
+    $contract = iss_graph_get_contract_payload_for_post($post);
+    if (!is_array($contract) || sanitize_key((string) ($contract['kind'] ?? '')) !== 'offer') {
+        return '';
+    }
+
+    return trim((string) iss_graph_get_contract_public_label($contract));
 }
 
 function iss_relations_get_card_detail_line(WP_Post $post): string

@@ -895,7 +895,7 @@ function industriesalon_event_scheme_choices(): array
 
 function industriesalon_event_format_choices(): array
 {
-    return array('general', 'vortrag', 'gespraech', 'lesung', 'praesentation');
+    return array('general', 'vortrag', 'gespraech', 'lesung', 'praesentation', 'repair_cafe', 'concert', 'festival', 'workshop', 'school_program');
 }
 
 function industriesalon_sanitize_event_layout($value): string
@@ -920,6 +920,10 @@ function industriesalon_sanitize_event_format($value): string
         $value = 'gespraech';
     } elseif ($value === 'prasentation' || $value === 'presentation') {
         $value = 'praesentation';
+    } elseif (in_array($value, array('repair-cafe', 'repaircafe', 'reparaturcafe', 'reparatur-cafe'), true)) {
+        $value = 'repair_cafe';
+    } elseif (in_array($value, array('school', 'school-program', 'schoolprogram', 'schulprogramm'), true)) {
+        $value = 'school_program';
     }
 
     return in_array($value, industriesalon_event_format_choices(), true) ? $value : 'general';
@@ -1338,7 +1342,12 @@ function industriesalon_enqueue_event_layout_editor_assets(): void
     { label: 'Vortrag', value: 'vortrag' },
     { label: 'Gespräch', value: 'gespraech' },
     { label: 'Lesung', value: 'lesung' },
-    { label: 'Präsentation', value: 'praesentation' }
+    { label: 'Präsentation', value: 'praesentation' },
+    { label: 'Repair Café', value: 'repair_cafe' },
+    { label: 'Konzert', value: 'concert' },
+    { label: 'Festival', value: 'festival' },
+    { label: 'Workshop', value: 'workshop' },
+    { label: 'Schulprogramm', value: 'school_program' }
   ];
 
   function normalizeLayout(value) {
@@ -1365,7 +1374,13 @@ function industriesalon_enqueue_event_layout_editor_assets(): void
     if (value === 'prasentation' || value === 'presentation') {
       return 'praesentation';
     }
-    if (value === 'general' || value === 'vortrag' || value === 'gespraech' || value === 'lesung' || value === 'praesentation') {
+    if (value === 'repair-cafe' || value === 'repaircafe' || value === 'reparaturcafe' || value === 'reparatur-cafe') {
+      return 'repair_cafe';
+    }
+    if (value === 'school' || value === 'school-program' || value === 'schoolprogram' || value === 'schulprogramm') {
+      return 'school_program';
+    }
+    if (value === 'general' || value === 'vortrag' || value === 'gespraech' || value === 'lesung' || value === 'praesentation' || value === 'repair_cafe' || value === 'concert' || value === 'festival' || value === 'workshop' || value === 'school_program') {
       return value;
     }
     return 'general';

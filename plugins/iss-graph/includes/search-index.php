@@ -560,6 +560,7 @@ function iss_graph_search_public_posts(string $search, array $args = []): array
     }
 
     $sql = "SELECT
+            i.entity_id,
             i.target_post_id AS post_id,
             i.target_post_type,
             i.search_bucket,
@@ -594,6 +595,7 @@ function iss_graph_search_public_posts(string $search, array $args = []): array
 
     return array_values(array_map(static function (array $row): array {
         return [
+            'entity_id' => (int) ($row['entity_id'] ?? 0),
             'post_id' => (int) ($row['post_id'] ?? 0),
             'post_type' => (string) ($row['target_post_type'] ?? ''),
             'search_bucket' => (string) ($row['search_bucket'] ?? ''),

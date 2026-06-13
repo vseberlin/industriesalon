@@ -101,6 +101,16 @@ function iss_facade_rest_prepare_entity_kind_definition(array $definition): arra
     ];
 }
 
+function iss_facade_rest_prepare_offer_subtype_definition(string $subtype, array $definition): array
+{
+    return [
+        'subtype' => sanitize_key($subtype),
+        'label' => isset($definition['label']) && is_scalar($definition['label']) ? (string) $definition['label'] : $subtype,
+        'public_label' => isset($definition['public_label']) && is_scalar($definition['public_label']) ? (string) $definition['public_label'] : '',
+        'source' => isset($definition['source']) && is_scalar($definition['source']) ? (string) $definition['source'] : '',
+    ];
+}
+
 function iss_facade_rest_normalize_relation_direction($value): string
 {
     $direction = sanitize_key((string) $value);
@@ -438,15 +448,39 @@ function iss_facade_rest_list_entity_relations(WP_REST_Request $request)
     ));
 }
 
+function iss_facade_rest_get_public_contract_payload_for_post(int $post_id): array
+{
+    if ($post_id <= 0 || !function_exists('iss_graph_get_contract_payload_for_post')) {
+        return [];
+    }
+
+    $contract = iss_graph_get_contract_payload_for_post($post_id);
+    if (!is_array($contract) || empty($contract['kind'])) {
+        return [];
+    }
+
+    return [
+        'kind' => sanitize_key((string) ($contract['kind'] ?? '')),
+        'subtype' => sanitize_key((string) ($contract['subtype'] ?? '')),
+        'subtype_source' => sanitize_text_field((string) ($contract['subtype_source'] ?? '')),
+        'canonical_kind' => sanitize_key((string) ($contract['canonical_kind'] ?? '')),
+        'storage_kind' => sanitize_key((string) ($contract['storage_kind'] ?? '')),
+    ];
+}
+
 function iss_facade_rest_prepare_occurrence(array $occurrence): array
 {
     $source_post_id = absint($occurrence['source_post_id'] ?? 0);
     $source_post_type = sanitize_key((string) ($occurrence['source_post_type'] ?? ''));
+    $contract = iss_facade_rest_get_public_contract_payload_for_post($source_post_id);
 
     return [
         'id' => (int) ($occurrence['id'] ?? 0),
         'entity_id' => (int) ($occurrence['entity_id'] ?? 0),
         'kind' => sanitize_key((string) ($occurrence['type'] ?? $occurrence['kind'] ?? '')),
+        'contract_kind' => sanitize_key((string) ($contract['kind'] ?? 'occurrence')),
+        'subtype' => sanitize_key((string) ($contract['subtype'] ?? '')),
+        'contract' => $contract,
         'title' => (string) ($occurrence['title'] ?? ''),
         'summary' => (string) ($occurrence['summary'] ?? ''),
         'starts_at' => (string) ($occurrence['start_raw'] ?? $occurrence['date_raw'] ?? ''),
@@ -470,6 +504,11 @@ function iss_facade_rest_prepare_occurrence(array $occurrence): array
         'location' => [
             'entity_id' => (int) ($occurrence['location_entity_id'] ?? 0),
             'label' => (string) ($occurrence['location_label'] ?? ''),
+        ],
+        'schema' => [
+            'kind' => 'occurrence',
+            'type' => 'Event',
+            'emits_event_schema' => true,
         ],
     ];
 }
@@ -538,6 +577,31 @@ function iss_facade_rest_occurrence_filters_from_request(WP_REST_Request $reques
     return $filters;
 }
 
+function iss_facade_rest_get_occurrences_response(array $filters, int $entity_id = 0): array
+{
+    $rows = iss_occurrences_query($filters);
+    $items = array_values(array_map('iss_facade_rest_prepare_occurrence', is_array($rows) ? $rows : []));
+    $payload = [
+        'filters' => [
+            'limit' => (int) $filters['limit'],
+            'offset' => (int) $filters['offset'],
+            'order' => (string) $filters['order'],
+            'time_mode' => (string) $filters['time_mode'],
+        ],
+        'count' => count($items),
+        'items' => $items,
+    ];
+
+    if ($entity_id > 0) {
+        $payload = array_merge([
+            'entity_id' => $entity_id,
+        ], $payload);
+        $payload['filters']['entity_id'] = $entity_id;
+    }
+
+    return $payload;
+}
+
 function iss_facade_rest_list_occurrences(WP_REST_Request $request)
 {
     if (!function_exists('iss_occurrences_query')) {
@@ -549,19 +613,42 @@ function iss_facade_rest_list_occurrences(WP_REST_Request $request)
     }
 
     $filters = iss_facade_rest_occurrence_filters_from_request($request);
-    $rows = iss_occurrences_query($filters);
-    $items = array_values(array_map('iss_facade_rest_prepare_occurrence', is_array($rows) ? $rows : []));
 
-    return rest_ensure_response([
-        'filters' => [
-            'limit' => (int) $filters['limit'],
-            'offset' => (int) $filters['offset'],
-            'order' => (string) $filters['order'],
-            'time_mode' => (string) $filters['time_mode'],
-        ],
-        'count' => count($items),
-        'items' => $items,
-    ]);
+    return rest_ensure_response(iss_facade_rest_get_occurrences_response($filters));
+}
+
+function iss_facade_rest_list_entity_occurrences(WP_REST_Request $request)
+{
+    if (!function_exists('iss_occurrences_query')) {
+        return new WP_Error(
+            'iss_facade_occurrences_unavailable',
+            __('The occurrence query service is unavailable.', 'iss-graph'),
+            ['status' => 501]
+        );
+    }
+
+    $entity_id = absint($request->get_param('id'));
+    if ($entity_id <= 0) {
+        return new WP_Error(
+            'iss_facade_invalid_entity_id',
+            __('Provide a valid entity id.', 'iss-graph'),
+            ['status' => 400]
+        );
+    }
+
+    $entity = iss_graph_get_service()->get_entity_by_id($entity_id);
+    if (!$entity || !iss_facade_rest_entity_is_public($entity)) {
+        return new WP_Error(
+            'iss_facade_entity_not_found',
+            __('Entity not found.', 'iss-graph'),
+            ['status' => 404]
+        );
+    }
+
+    $filters = iss_facade_rest_occurrence_filters_from_request($request);
+    $filters['entity_ids'] = [$entity_id];
+
+    return rest_ensure_response(iss_facade_rest_get_occurrences_response($filters, $entity_id));
 }
 
 function iss_facade_rest_search(WP_REST_Request $request)
@@ -581,11 +668,22 @@ function iss_facade_rest_contract(WP_REST_Request $request): WP_REST_Response
 {
     $registry = function_exists('iss_graph_get_entity_kind_registry') ? iss_graph_get_entity_kind_registry() : [];
     $entity_kinds = array_values(array_map('iss_facade_rest_prepare_entity_kind_definition', $registry));
+    $offer_subtypes = [];
+    $offer_registry = function_exists('iss_graph_get_offer_subtype_registry') ? iss_graph_get_offer_subtype_registry() : [];
+    foreach ($offer_registry as $subtype => $definition) {
+        if (!is_array($definition)) {
+            continue;
+        }
+
+        $offer_subtypes[] = iss_facade_rest_prepare_offer_subtype_definition((string) $subtype, $definition);
+    }
+
     $routes = [
         '/iss/v1/contract',
         '/iss/v1/entities',
         '/iss/v1/entities/{id}',
         '/iss/v1/entities/{id}/relations',
+        '/iss/v1/entities/{id}/occurrences',
         '/iss/v1/occurrences',
         '/iss/v1/search',
     ];
@@ -614,6 +712,7 @@ function iss_facade_rest_contract(WP_REST_Request $request): WP_REST_Response
         ],
         'routes' => $routes,
         'entity_kinds' => $entity_kinds,
+        'offer_subtypes' => $offer_subtypes,
     ]);
 }
 
@@ -667,6 +766,16 @@ function iss_facade_rest_get_entity_relations_route_args(): array
     ]);
 }
 
+function iss_facade_rest_get_entity_occurrences_route_args(): array
+{
+    return array_merge(iss_facade_rest_get_public_route_args(), [
+        'id' => [
+            'type' => 'integer',
+            'required' => true,
+        ],
+    ]);
+}
+
 function iss_facade_rest_register_routes(): void
 {
     register_rest_route('iss/v1', '/contract', [
@@ -699,6 +808,13 @@ function iss_facade_rest_register_routes(): void
         'callback' => 'iss_facade_rest_list_entity_relations',
         'permission_callback' => '__return_true',
         'args' => iss_facade_rest_get_entity_relations_route_args(),
+    ]);
+
+    register_rest_route('iss/v1', '/entities/(?P<id>\d+)/occurrences', [
+        'methods' => WP_REST_Server::READABLE,
+        'callback' => 'iss_facade_rest_list_entity_occurrences',
+        'permission_callback' => '__return_true',
+        'args' => iss_facade_rest_get_entity_occurrences_route_args(),
     ]);
 
     register_rest_route('iss/v1', '/occurrences', [

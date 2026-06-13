@@ -80,8 +80,22 @@ renames rows; the canonical layer exposes the programme-facing aliases
 The first `offer` bridge is contract-only. It does not add an offer post type,
 table, route, or storage kind. `fuehrung` maps to `offer/tour`; `veranstaltung`
 maps to `offer` subtypes through existing editor-owned meta:
-`_iss_event_format` maps to `event`, `lecture`, `discussion`, `reading`, or
+`_iss_event_format` maps to `event`, `lecture`, `discussion`, `reading`,
+`repair_cafe`, `concert`, `festival`, `workshop`, `school_program`, or
 `presentation`, and `_iss_event_layout=fest` maps to `special_opening`.
+The public tour catalog remains an `iss-fuehrungen` renderer over `fuehrung`
+posts, guarded by `wp iss-fuehrungen drift-check` against missing published
+tours, invalid `offer/tour` contracts, and unknown catalog groups.
+Facade occurrences scoped to an entity are exposed through the graph facade over
+the existing occurrence service; no occurrence CPT or storage owner is added.
+Generated recurring tour dates stay internal to `iss-occurrences`: active
+SuperSaaS occurrence rows store a `series_id` and `series_key`, and the
+service-owned series table links those generated rows back to their parent
+`fuehrung`. Runtime series/tag source resolution and imported title/tag/fallback
+metadata read from that table. The retired `iss_occurrences_series_map` and
+`iss_occurrences_source_map` options are copied into table columns during schema
+migration, deleted, and guarded against returning by
+`wp iss-occurrences drift-check`.
 
 ## Existing Canonical Base
 
@@ -258,9 +272,9 @@ iss_graph_resolve_or_create_named_entity(string $kind, string $label, array $ove
 ```
 
 Existing `ISS_Graph_Service::find_or_create_named_entity()` delegates to this
-resolver path for backward compatibility. Direct `upsert_entity()` remains
-valid for deterministic post/profile projections where the owning CPT supplies
-the identity.
+resolver path so label entry points share one identity contract. Direct
+`upsert_entity()` remains valid for deterministic post/profile projections
+where the owning CPT supplies the identity.
 
 ## Identifiers
 
@@ -493,6 +507,11 @@ The tour-slots route is registered by `saas-api` and delegates to the
 occurrence-backed slot adapter. The retired read routes `/iss-search/v1/search`,
 `/iss-programm/v1/timeline`, and `/is-tours/v1/slots` are no longer registered.
 Booking submissions stay outside the read-only facade on `/is-tours/v1/book`.
+
+Graph editorial signals are separate by surface. The `related` surface affects
+related-content blocks, the `search` surface affects public search, and the
+`availability` surface is self-scoped to Ausstellung posts for automatic
+Ausstellung browser ordering/visibility only.
 
 Entity list and detail responses include additive contract fields:
 `contract_kind`, `subtype`, and `contract`. Existing `kind`, `canonical_kind`,

@@ -4,15 +4,15 @@ if (!defined('ABSPATH')) {
     exit;
 }
 
-function iss_programm_get_mapping_series_options() {
+function iss_programm_get_series_source_options() {
     $options = [];
-    $map = function_exists('iss_occurrences_get_series_map') ? iss_occurrences_get_series_map() : [];
+    $series_sources = function_exists('iss_occurrences_get_series_sources') ? iss_occurrences_get_series_sources() : [];
 
-    if (!is_array($map) || empty($map)) {
+    if (!is_array($series_sources) || empty($series_sources)) {
         return $options;
     }
 
-    foreach ($map as $series_key => $entry) {
+    foreach ($series_sources as $series_key => $entry) {
         $series_key = trim((string) $series_key);
         if ($series_key === '' || !is_array($entry)) {
             continue;
@@ -82,9 +82,9 @@ function iss_programm_render_fuehrung_mapping_metabox($post) {
 
     $post_id = (int) $post->ID;
     $current_series_key = iss_programm_get_current_series_key_for_post($post_id);
-    $options = iss_programm_get_mapping_series_options();
+    $options = iss_programm_get_series_source_options();
 
-    wp_nonce_field('iss_programm_save_fuehrung_mapping', 'iss_programm_mapping_nonce');
+    wp_nonce_field('iss_programm_save_fuehrung_series_source', 'iss_programm_series_source_nonce');
 
     echo '<p><label for="iss_programm_series_key"><strong>' . esc_html__('Terminreihe', 'iss-programm') . '</strong></label></p>';
     echo '<select class="widefat" id="iss_programm_series_key" name="iss_programm_series_key">';
@@ -115,7 +115,7 @@ add_action('save_post_fuehrung', function ($post_id) {
         return;
     }
 
-    if (!isset($_POST['iss_programm_mapping_nonce']) || !wp_verify_nonce((string) $_POST['iss_programm_mapping_nonce'], 'iss_programm_save_fuehrung_mapping')) {
+    if (!isset($_POST['iss_programm_series_source_nonce']) || !wp_verify_nonce((string) $_POST['iss_programm_series_source_nonce'], 'iss_programm_save_fuehrung_series_source')) {
         return;
     }
 
@@ -132,19 +132,16 @@ add_action('save_post_fuehrung', function ($post_id) {
     $series_key = preg_replace('/[^a-z0-9:_-]+/', '', $series_key);
     $series_key = trim((string) $series_key);
 
-    if (function_exists('iss_occurrences_clear_series_mapping_for_post')) {
-        iss_occurrences_clear_series_mapping_for_post($post_id);
-    }
-    if (function_exists('iss_occurrences_clear_source_mapping_for_post')) {
-        iss_occurrences_clear_source_mapping_for_post($post_id);
+    if (function_exists('iss_occurrences_clear_series_source_for_post')) {
+        iss_occurrences_clear_series_source_for_post($post_id);
     }
 
     if ($series_key === '') {
         return;
     }
 
-    $entry = function_exists('iss_occurrences_get_series_map_entry')
-        ? iss_occurrences_get_series_map_entry($series_key)
+    $entry = function_exists('iss_occurrences_get_series_source')
+        ? iss_occurrences_get_series_source($series_key)
         : null;
     if (!is_array($entry)) {
         return;
@@ -156,12 +153,8 @@ add_action('save_post_fuehrung', function ($post_id) {
     $tag = trim((string) $tag);
     $fallback_url = isset($entry['fallback_url']) ? esc_url_raw((string) $entry['fallback_url']) : '';
 
-    if (function_exists('iss_occurrences_remember_series_mapping')) {
-        iss_occurrences_remember_series_mapping($series_key, $post_id, 'fuehrung', $title, $tag, $fallback_url);
-    }
-
-    if ($tag !== '' && function_exists('iss_occurrences_remember_source_mapping')) {
-        iss_occurrences_remember_source_mapping($tag, $fallback_url, $post_id, 'fuehrung');
+    if (function_exists('iss_occurrences_remember_series_source')) {
+        iss_occurrences_remember_series_source($series_key, $post_id, 'fuehrung', $title, $tag, $fallback_url);
     }
 
     if (function_exists('iss_supersaas_sync_occurrences')) {

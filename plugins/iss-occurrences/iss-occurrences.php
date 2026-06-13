@@ -12,10 +12,10 @@ if (!defined('ABSPATH')) {
 
 define('ISS_OCCURRENCES_VERSION', '0.1.0');
 define('ISS_OCCURRENCES_PATH', plugin_dir_path(__FILE__));
-define('ISS_OCCURRENCES_SCHEMA_VERSION', '2026-06-11-occurrences-v3');
+define('ISS_OCCURRENCES_SCHEMA_VERSION', '2026-06-13-occurrences-v5');
 define('ISS_OCCURRENCES_SCHEMA_OPTION', 'iss_occurrences_schema_version');
-define('ISS_OCCURRENCES_SOURCE_MAP_OPTION', 'iss_occurrences_source_map');
-define('ISS_OCCURRENCES_SERIES_MAP_OPTION', 'iss_occurrences_series_map');
+define('ISS_OCCURRENCES_RETIRED_SOURCE_MAP_OPTION', 'iss_occurrences_source_map');
+define('ISS_OCCURRENCES_RETIRED_SERIES_MAP_OPTION', 'iss_occurrences_series_map');
 
 require_once ISS_OCCURRENCES_PATH . 'includes/service.php';
 require_once ISS_OCCURRENCES_PATH . 'includes/mapping.php';

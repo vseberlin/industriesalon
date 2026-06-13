@@ -133,14 +133,13 @@ function iss_programm_ausstellungen_period_meta_query(string $filter): array
 function iss_programm_ausstellungen_query_args(string $filter, int $limit, string $search = ''): array
 {
     $filter = iss_programm_ausstellungen_normalize_filter($filter);
-    $limit = $limit > 0 ? min($limit, 24) : 6;
     $search = iss_programm_ausstellungen_normalize_search($search);
     $date_order = $filter === 'archiv' ? 'DESC' : 'ASC';
 
     $args = [
         'post_type' => 'ausstellung',
         'post_status' => 'publish',
-        'posts_per_page' => $filter === 'aktuell' ? 100 : $limit,
+        'posts_per_page' => 100,
         'no_found_rows' => true,
         'orderby' => 'date',
         'order' => $date_order,
@@ -199,12 +198,59 @@ function iss_programm_get_ausstellungen_for_filter(string $filter, int $limit, s
         return $post instanceof WP_Post;
     }));
 
-    if ($filter !== 'aktuell') {
+    if ($filter === 'aktuell') {
+        $posts = array_values(array_filter($posts, 'iss_programm_ausstellung_is_currently_available'));
+    }
+
+    $posts = iss_programm_ausstellungen_apply_availability_editorial_signals($posts);
+    return array_slice($posts, 0, $limit);
+}
+
+function iss_programm_ausstellungen_get_availability_editorial_signal(WP_Post $post): string
+{
+    if (!function_exists('iss_graph_get_availability_signal')) {
+        return '';
+    }
+
+    $signal = iss_graph_get_availability_signal((int) $post->ID, true);
+    if (!is_array($signal)) {
+        return '';
+    }
+
+    return sanitize_key((string) ($signal['signal'] ?? ''));
+}
+
+function iss_programm_ausstellungen_apply_availability_editorial_signals(array $posts): array
+{
+    if (!function_exists('iss_graph_get_availability_signal')) {
         return $posts;
     }
 
-    $posts = array_values(array_filter($posts, 'iss_programm_ausstellung_is_currently_available'));
-    return array_slice($posts, 0, $limit);
+    $buckets = [
+        'pin' => [],
+        'feature' => [],
+        'boost' => [],
+        'none' => [],
+    ];
+
+    foreach ($posts as $post) {
+        if (!$post instanceof WP_Post) {
+            continue;
+        }
+
+        $signal = iss_programm_ausstellungen_get_availability_editorial_signal($post);
+        if ($signal === 'suppress' || $signal === 'hide') {
+            continue;
+        }
+
+        if (!isset($buckets[$signal])) {
+            $signal = 'none';
+        }
+
+        $buckets[$signal][] = $post;
+    }
+
+    return array_values(array_merge($buckets['pin'], $buckets['feature'], $buckets['boost'], $buckets['none']));
 }
 
 function iss_programm_ausstellung_has_type(int $post_id, array $slugs): bool
@@ -375,6 +421,14 @@ function iss_programm_prepare_ausstellung_availability_item(WP_Post $post): arra
             'starts_at' => $start,
             'ends_at' => $end,
             'period_label' => iss_programm_ausstellungen_get_period_label($post_id),
+        ],
+        'editorial' => [
+            'signal' => iss_programm_ausstellungen_get_availability_editorial_signal($post),
+        ],
+        'schema' => [
+            'kind' => 'availability',
+            'type' => 'CreativeWork',
+            'emits_event_schema' => false,
         ],
         'source' => [
             'post_id' => $post_id,

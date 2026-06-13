@@ -33,6 +33,39 @@ final class ISS_Occurrences_Service
         return $wpdb->prefix . 'iss_occurrence_series';
     }
 
+    private function normalize_series_key(string $series_key): string
+    {
+        if (function_exists('iss_occurrences_normalize_series_key')) {
+            return iss_occurrences_normalize_series_key($series_key);
+        }
+
+        $series_key = strtolower(trim(sanitize_text_field($series_key)));
+        $series_key = preg_replace('/[^a-z0-9:_-]+/', '', $series_key);
+        return trim((string) $series_key);
+    }
+
+    private function normalize_series_tag(string $tag): string
+    {
+        if (function_exists('iss_occurrences_normalize_tag')) {
+            return iss_occurrences_normalize_tag($tag);
+        }
+
+        $tag = strtoupper(sanitize_text_field($tag));
+        $tag = preg_replace('/[^A-Z0-9_-]+/', '', $tag);
+        return trim((string) $tag);
+    }
+
+    private function build_series_key(string $title, string $kind = 'tour'): string
+    {
+        if (function_exists('iss_occurrences_build_series_key')) {
+            return iss_occurrences_build_series_key($title, $kind);
+        }
+
+        $slug = sanitize_title($title);
+        $kind = sanitize_key($kind);
+        return $kind !== '' ? $kind . ':' . $slug : $slug;
+    }
+
     public function maybe_install_schema(): void
     {
         $installed = (string) get_option(ISS_OCCURRENCES_SCHEMA_OPTION, '');
@@ -99,6 +132,9 @@ final class ISS_Occurrences_Service
             origin varchar(50) NOT NULL DEFAULT 'supersaas',
             external_id varchar(191) NOT NULL DEFAULT '',
             series_key varchar(191) NOT NULL DEFAULT '',
+            supersaas_title varchar(255) NOT NULL DEFAULT '',
+            tag varchar(100) NOT NULL DEFAULT '',
+            fallback_url varchar(255) NOT NULL DEFAULT '',
             rule text NOT NULL,
             timezone varchar(100) NOT NULL DEFAULT '',
             exceptions longtext NOT NULL,
@@ -112,7 +148,110 @@ final class ISS_Occurrences_Service
 
         dbDelta($occurrences_sql);
         dbDelta($series_sql);
+        $this->migrate_series_option_metadata();
+        $this->migrate_source_option_metadata();
         update_option(ISS_OCCURRENCES_SCHEMA_OPTION, ISS_OCCURRENCES_SCHEMA_VERSION, false);
+    }
+
+    private function migrate_series_option_metadata(): void
+    {
+        $retired_option_rows = get_option(ISS_OCCURRENCES_RETIRED_SERIES_MAP_OPTION, []);
+        if (!is_array($retired_option_rows)) {
+            return;
+        }
+
+        foreach ($retired_option_rows as $series_key => $entry) {
+            $series_key = $this->normalize_series_key((string) $series_key);
+            if ($series_key === '' || !is_array($entry)) {
+                continue;
+            }
+
+            $existing = $this->get_series_by_key($series_key);
+            $source_post_id = (int) ($existing['source_post_id'] ?? 0);
+            if ($source_post_id <= 0) {
+                $source_post_id = (int) ($entry['source_post_id'] ?? 0);
+            }
+
+            $source_post_type = sanitize_key((string) ($existing['source_post_type'] ?? ''));
+            if ($source_post_type === '') {
+                $source_post_type = sanitize_key((string) ($entry['source_post_type'] ?? ''));
+            }
+
+            $this->upsert_series([
+                'series_key' => $series_key,
+                'source_post_id' => $source_post_id,
+                'source_post_type' => $source_post_type,
+                'origin' => sanitize_key((string) ($existing['origin'] ?? 'supersaas')),
+                'external_id' => sanitize_text_field((string) ($existing['external_id'] ?? '')),
+                'rule' => sanitize_textarea_field((string) ($existing['rule'] ?? '')),
+                'timezone' => sanitize_text_field((string) ($existing['timezone'] ?? '')),
+                'exceptions' => (string) ($existing['exceptions'] ?? ''),
+                'supersaas_title' => trim((string) ($entry['supersaas_title'] ?? '')),
+                'tag' => $this->normalize_series_tag((string) ($entry['tag'] ?? '')),
+                'fallback_url' => esc_url_raw((string) ($entry['fallback_url'] ?? '')),
+            ]);
+        }
+
+        delete_option(ISS_OCCURRENCES_RETIRED_SERIES_MAP_OPTION);
+    }
+
+    private function migrate_source_option_metadata(): void
+    {
+        $retired_option_rows = get_option(ISS_OCCURRENCES_RETIRED_SOURCE_MAP_OPTION, []);
+        if (!is_array($retired_option_rows)) {
+            return;
+        }
+
+        foreach ($retired_option_rows as $tag => $entry) {
+            $tag = $this->normalize_series_tag((string) $tag);
+            if ($tag === '' || !is_array($entry)) {
+                continue;
+            }
+
+            $existing = $this->get_series_by_tag($tag);
+            $source_post_id = (int) ($existing['source_post_id'] ?? 0);
+            if ($source_post_id <= 0) {
+                $source_post_id = (int) ($entry['source_post_id'] ?? 0);
+            }
+
+            $source_post_type = sanitize_key((string) ($existing['source_post_type'] ?? ''));
+            if ($source_post_type === '') {
+                $source_post_type = sanitize_key((string) ($entry['source_post_type'] ?? ''));
+            }
+
+            $supersaas_title = trim((string) ($entry['supersaas_title'] ?? ''));
+            if ($supersaas_title === '' && $source_post_id > 0) {
+                $supersaas_title = trim((string) get_the_title($source_post_id));
+                $supersaas_title = preg_replace('/(?:\s|-)*(tour|fuehrung|führung)$/iu', '', $supersaas_title);
+                $supersaas_title = trim((string) $supersaas_title);
+            }
+            if ($supersaas_title === '') {
+                $supersaas_title = $tag;
+            }
+
+            $series_key = isset($existing['series_key'])
+                ? $this->normalize_series_key((string) $existing['series_key'])
+                : '';
+            if ($series_key === '') {
+                $series_key = $this->build_series_key($supersaas_title, 'tour');
+            }
+
+            $this->upsert_series([
+                'series_key' => $series_key,
+                'source_post_id' => $source_post_id,
+                'source_post_type' => $source_post_type,
+                'origin' => sanitize_key((string) ($existing['origin'] ?? 'supersaas')),
+                'external_id' => sanitize_text_field((string) ($existing['external_id'] ?? '')),
+                'rule' => sanitize_textarea_field((string) ($existing['rule'] ?? '')),
+                'timezone' => sanitize_text_field((string) ($existing['timezone'] ?? '')),
+                'exceptions' => (string) ($existing['exceptions'] ?? ''),
+                'supersaas_title' => $supersaas_title,
+                'tag' => $tag,
+                'fallback_url' => esc_url_raw((string) ($entry['fallback_url'] ?? ($existing['fallback_url'] ?? ''))),
+            ]);
+        }
+
+        delete_option(ISS_OCCURRENCES_RETIRED_SOURCE_MAP_OPTION);
     }
 
     public function tables_exist(): bool
@@ -261,32 +400,82 @@ final class ISS_Occurrences_Service
     {
         global $wpdb;
 
-        $series_key = isset($row['series_key']) ? sanitize_text_field((string) $row['series_key']) : '';
+        $series_key = isset($row['series_key']) ? $this->normalize_series_key((string) $row['series_key']) : '';
         if ($series_key === '') {
             return 0;
         }
 
         $table = $this->get_series_table_name();
         $now = current_time('mysql');
+        $existing = $this->get_series_by_key($series_key);
         $source_post_id = isset($row['source_post_id']) ? max(0, (int) $row['source_post_id']) : 0;
         $source_post_type = isset($row['source_post_type']) ? sanitize_key((string) $row['source_post_type']) : '';
         $origin = isset($row['origin']) ? sanitize_key((string) $row['origin']) : 'supersaas';
         $external_id = isset($row['external_id']) ? sanitize_text_field((string) $row['external_id']) : '';
         $timezone = isset($row['timezone']) ? sanitize_text_field((string) $row['timezone']) : wp_timezone_string();
         $rule = isset($row['rule']) ? sanitize_textarea_field((string) $row['rule']) : '';
-        $exceptions = isset($row['exceptions']) ? wp_json_encode($row['exceptions']) : '';
-        $exceptions = is_string($exceptions) ? $exceptions : '';
+        if (isset($row['exceptions']) && is_array($row['exceptions'])) {
+            $exceptions_json = wp_json_encode($row['exceptions']);
+            $exceptions = is_string($exceptions_json) ? $exceptions_json : '';
+        } elseif (isset($row['exceptions'])) {
+            $exceptions = (string) $row['exceptions'];
+        } else {
+            $exceptions = '';
+        }
+        $supersaas_title = isset($row['supersaas_title']) ? trim((string) $row['supersaas_title']) : '';
+        $tag = isset($row['tag']) ? $this->normalize_series_tag((string) $row['tag']) : '';
+        $fallback_url = isset($row['fallback_url']) ? esc_url_raw((string) $row['fallback_url']) : '';
+
+        if ($supersaas_title === '' && isset($row['title'])) {
+            $supersaas_title = sanitize_text_field((string) $row['title']);
+        }
+        if ($fallback_url === '' && isset($row['booking_url'])) {
+            $fallback_url = esc_url_raw((string) $row['booking_url']);
+        }
+        if ($source_post_id <= 0 && !empty($existing['source_post_id'])) {
+            $source_post_id = (int) $existing['source_post_id'];
+        }
+        if ($source_post_type === '' && !empty($existing['source_post_type'])) {
+            $source_post_type = sanitize_key((string) $existing['source_post_type']);
+        }
+        if ($origin === '' && !empty($existing['origin'])) {
+            $origin = sanitize_key((string) $existing['origin']);
+        }
+        if ($external_id === '' && !empty($existing['external_id'])) {
+            $external_id = sanitize_text_field((string) $existing['external_id']);
+        }
+        if ($rule === '' && !empty($existing['rule'])) {
+            $rule = sanitize_textarea_field((string) $existing['rule']);
+        }
+        if ($timezone === '' && !empty($existing['timezone'])) {
+            $timezone = sanitize_text_field((string) $existing['timezone']);
+        }
+        if ($exceptions === '' && !empty($existing['exceptions'])) {
+            $exceptions = (string) $existing['exceptions'];
+        }
+        if ($supersaas_title === '' && !empty($existing['supersaas_title'])) {
+            $supersaas_title = trim((string) $existing['supersaas_title']);
+        }
+        if ($tag === '' && !empty($existing['tag'])) {
+            $tag = $this->normalize_series_tag((string) $existing['tag']);
+        }
+        if ($fallback_url === '' && !empty($existing['fallback_url'])) {
+            $fallback_url = esc_url_raw((string) $existing['fallback_url']);
+        }
 
         $wpdb->query(
             $wpdb->prepare(
                 "INSERT INTO {$table}
-                    (source_post_id, source_post_type, origin, external_id, series_key, rule, timezone, exceptions, created_at, updated_at)
-                 VALUES (%d, %s, %s, %s, %s, %s, %s, %s, %s, %s)
+                    (source_post_id, source_post_type, origin, external_id, series_key, supersaas_title, tag, fallback_url, rule, timezone, exceptions, created_at, updated_at)
+                 VALUES (%d, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
                  ON DUPLICATE KEY UPDATE
                     source_post_id = VALUES(source_post_id),
                     source_post_type = VALUES(source_post_type),
                     origin = VALUES(origin),
                     external_id = VALUES(external_id),
+                    supersaas_title = VALUES(supersaas_title),
+                    tag = VALUES(tag),
+                    fallback_url = VALUES(fallback_url),
                     rule = VALUES(rule),
                     timezone = VALUES(timezone),
                     exceptions = VALUES(exceptions),
@@ -296,6 +485,9 @@ final class ISS_Occurrences_Service
                 $origin,
                 $external_id,
                 $series_key,
+                $supersaas_title,
+                $tag,
+                $fallback_url,
                 $rule,
                 $timezone,
                 $exceptions,
@@ -305,6 +497,115 @@ final class ISS_Occurrences_Service
         );
 
         return (int) $wpdb->get_var($wpdb->prepare("SELECT id FROM {$table} WHERE series_key = %s LIMIT 1", $series_key));
+    }
+
+    public function clear_series_source_for_post(int $source_post_id): int
+    {
+        global $wpdb;
+
+        $source_post_id = max(0, $source_post_id);
+        if ($source_post_id <= 0 || !$this->tables_exist()) {
+            return 0;
+        }
+
+        $table = $this->get_series_table_name();
+        return (int) $wpdb->query(
+            $wpdb->prepare(
+                "UPDATE {$table} SET source_post_id = 0, source_post_type = '', updated_at = %s WHERE source_post_id = %d",
+                current_time('mysql'),
+                $source_post_id
+            )
+        );
+    }
+
+    public function clear_series_source_for_key(string $series_key): bool
+    {
+        global $wpdb;
+
+        $series_key = $this->normalize_series_key($series_key);
+        if ($series_key === '' || !$this->tables_exist()) {
+            return false;
+        }
+
+        $table = $this->get_series_table_name();
+        return (bool) $wpdb->query(
+            $wpdb->prepare(
+                "UPDATE {$table} SET source_post_id = 0, source_post_type = '', updated_at = %s WHERE series_key = %s",
+                current_time('mysql'),
+                $series_key
+            )
+        );
+    }
+
+    public function clear_series_source_for_tag(string $tag): bool
+    {
+        global $wpdb;
+
+        $tag = $this->normalize_series_tag($tag);
+        if ($tag === '' || !$this->tables_exist()) {
+            return false;
+        }
+
+        $table = $this->get_series_table_name();
+        return (bool) $wpdb->query(
+            $wpdb->prepare(
+                "UPDATE {$table} SET source_post_id = 0, source_post_type = '', updated_at = %s WHERE tag = %s",
+                current_time('mysql'),
+                $tag
+            )
+        );
+    }
+
+    public function get_series_rows(): array
+    {
+        global $wpdb;
+
+        if (!$this->tables_exist()) {
+            return [];
+        }
+
+        $table = $this->get_series_table_name();
+        $rows = $wpdb->get_results("SELECT * FROM {$table} ORDER BY series_key ASC", ARRAY_A);
+        return is_array($rows) ? $rows : [];
+    }
+
+    public function get_series_by_key(string $series_key): array
+    {
+        global $wpdb;
+
+        $series_key = $this->normalize_series_key($series_key);
+        if ($series_key === '' || !$this->tables_exist()) {
+            return [];
+        }
+
+        $table = $this->get_series_table_name();
+        $row = $wpdb->get_row(
+            $wpdb->prepare("SELECT * FROM {$table} WHERE series_key = %s LIMIT 1", $series_key),
+            ARRAY_A
+        );
+
+        return is_array($row) ? $row : [];
+    }
+
+    public function get_series_by_tag(string $tag): array
+    {
+        global $wpdb;
+
+        $tag = $this->normalize_series_tag($tag);
+        if ($tag === '' || !$this->tables_exist()) {
+            return [];
+        }
+
+        $table = $this->get_series_table_name();
+        $row = $wpdb->get_row(
+            $wpdb->prepare(
+                "SELECT * FROM {$table} WHERE tag = %s ORDER BY source_post_id DESC, updated_at DESC, id ASC LIMIT 1",
+                $tag
+            ),
+            ARRAY_A
+        );
+
+        return is_array($row) ? $row : [];
     }
 
     public function upsert_occurrence(array $row): int
@@ -329,7 +630,7 @@ final class ISS_Occurrences_Service
             return 0;
         }
 
-        $series_key = isset($row['series_key']) ? sanitize_text_field((string) $row['series_key']) : '';
+        $series_key = isset($row['series_key']) ? $this->normalize_series_key((string) $row['series_key']) : '';
         $series_id = $series_key !== '' ? $this->upsert_series($row) : 0;
         $ends_at = isset($row['ends_at']) ? $this->normalize_datetime((string) $row['ends_at'], true) : null;
         $ends_at = $ends_at !== '' ? $ends_at : null;
@@ -607,8 +908,8 @@ final class ISS_Occurrences_Service
             if (trim((string) ($row['tag'] ?? '')) === '') {
                 $tag = '';
                 $series_key = isset($row['series_key']) ? (string) $row['series_key'] : '';
-                $series_entry = function_exists('iss_occurrences_get_series_map_entry')
-                    ? iss_occurrences_get_series_map_entry($series_key)
+                $series_entry = function_exists('iss_occurrences_get_series_source')
+                    ? iss_occurrences_get_series_source($series_key)
                     : null;
                 if (is_array($series_entry) && !empty($series_entry['tag'])) {
                     $tag = (string) $series_entry['tag'];

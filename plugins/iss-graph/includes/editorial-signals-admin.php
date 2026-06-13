@@ -49,17 +49,27 @@ function iss_graph_is_search_signal_post_type(string $post_type): bool
     return in_array(sanitize_key($post_type), iss_graph_get_search_signal_post_types(), true);
 }
 
-function iss_graph_related_promotion_signal_is_active(?array $signal): bool
+function iss_graph_get_availability_signal_post_types(): array
+{
+    $post_types = (array) apply_filters('iss_graph_availability_signal_post_types', [
+        'ausstellung',
+    ]);
+
+    return array_values(array_unique(array_filter(array_map('sanitize_key', $post_types), 'post_type_exists')));
+}
+
+function iss_graph_is_availability_signal_post_type(string $post_type): bool
+{
+    return in_array(sanitize_key($post_type), iss_graph_get_availability_signal_post_types(), true);
+}
+
+function iss_graph_editorial_signal_is_active(?array $signal, string $surface = ''): bool
 {
     if (!$signal) {
         return false;
     }
 
-    if (sanitize_key((string) ($signal['surface'] ?? 'related')) !== 'related') {
-        return false;
-    }
-
-    if (sanitize_key((string) ($signal['signal'] ?? '')) !== 'feature') {
+    if ($surface !== '' && sanitize_key((string) ($signal['surface'] ?? 'related')) !== sanitize_key($surface)) {
         return false;
     }
 
@@ -75,6 +85,12 @@ function iss_graph_related_promotion_signal_is_active(?array $signal): bool
     return true;
 }
 
+function iss_graph_related_promotion_signal_is_active(?array $signal): bool
+{
+    return iss_graph_editorial_signal_is_active($signal, 'related')
+        && sanitize_key((string) ($signal['signal'] ?? '')) === 'feature';
+}
+
 function iss_graph_get_related_promotion_signal(int $post_id, bool $active_only = false): ?array
 {
     $post_id = absint($post_id);
@@ -88,6 +104,25 @@ function iss_graph_get_related_promotion_signal(int $post_id, bool $active_only 
     }
 
     if ($active_only && !iss_graph_related_promotion_signal_is_active($signal)) {
+        return null;
+    }
+
+    return $signal;
+}
+
+function iss_graph_get_availability_signal(int $post_id, bool $active_only = false): ?array
+{
+    $post_id = absint($post_id);
+    if ($post_id <= 0) {
+        return null;
+    }
+
+    $signal = iss_graph_get_service()->get_editorial_signal_by_post_target($post_id, $post_id, 'availability');
+    if (!$signal) {
+        return null;
+    }
+
+    if ($active_only && !iss_graph_editorial_signal_is_active($signal, 'availability')) {
         return null;
     }
 
@@ -138,6 +173,12 @@ function iss_graph_editorial_signal_target_is_allowed_for_surface(int $context_p
         return $context_post_id === $target_post_id
             && (string) $target_post->post_status === 'publish'
             && iss_graph_is_search_signal_post_type((string) $target_post->post_type);
+    }
+
+    if ($surface === 'availability') {
+        return $context_post_id === $target_post_id
+            && (string) $target_post->post_status === 'publish'
+            && iss_graph_is_availability_signal_post_type((string) $target_post->post_type);
     }
 
     $allowed_post_types = iss_graph_get_editorial_signal_target_post_types($context_post);
@@ -392,6 +433,17 @@ function iss_graph_add_editorial_signal_meta_boxes(): void
         );
     }
 
+    foreach (iss_graph_get_availability_signal_post_types() as $post_type) {
+        add_meta_box(
+            'iss-graph-availability-signal',
+            __('Ausstellungsbrowser steuern', 'iss-graph'),
+            'iss_graph_render_availability_signal_meta_box',
+            $post_type,
+            'side',
+            'default'
+        );
+    }
+
     foreach (iss_graph_get_editorial_signal_context_post_types() as $post_type) {
         add_meta_box(
             'iss-graph-editorial-signals',
@@ -447,6 +499,23 @@ function iss_graph_render_search_signal_meta_box(WP_Post $post): void
 
     iss_graph_render_editorial_signal_fields('iss_graph_search_signal', $selected, $reason, $expires_at, true);
     echo '<p class="description">' . esc_html__('Steuert nur die oeffentliche Suche fuer diesen Eintrag. Beziehungen, Aliase und kanonische Graphdaten bleiben unveraendert.', 'iss-graph') . '</p>';
+}
+
+function iss_graph_render_availability_signal_meta_box(WP_Post $post): void
+{
+    $post_id = (int) $post->ID;
+    $signal = iss_graph_get_availability_signal($post_id, false);
+    $is_active = iss_graph_editorial_signal_is_active($signal, 'availability');
+    $selected = $is_active ? sanitize_key((string) ($signal['signal'] ?? '')) : '';
+    $reason = $is_active ? (string) ($signal['reason'] ?? '') : '';
+    $expires_at = $is_active && isset($signal['expires_at']) && $signal['expires_at'] !== null
+        ? substr((string) $signal['expires_at'], 0, 10)
+        : '';
+
+    wp_nonce_field('iss_graph_save_availability_signal', 'iss_graph_availability_signal_nonce');
+
+    iss_graph_render_editorial_signal_fields('iss_graph_availability_signal', $selected, $reason, $expires_at, true);
+    echo '<p class="description">' . esc_html__('Steuert nur automatische Anzeige und Reihenfolge im Ausstellungsbrowser. Beziehungen, Aliase, Suche und kanonische Graphdaten bleiben unveraendert.', 'iss-graph') . '</p>';
 }
 
 function iss_graph_sanitize_posted_editorial_signal_row($row): array
@@ -637,6 +706,56 @@ function iss_graph_save_search_signal_meta_box(int $post_id, WP_Post $post): voi
 }
 add_action('save_post', 'iss_graph_save_search_signal_meta_box', 56, 2);
 
+function iss_graph_save_availability_signal_meta_box(int $post_id, WP_Post $post): void
+{
+    if (!iss_graph_is_availability_signal_post_type((string) $post->post_type)) {
+        return;
+    }
+
+    if (defined('DOING_AUTOSAVE') && DOING_AUTOSAVE) {
+        return;
+    }
+
+    if (wp_is_post_revision($post_id) || wp_is_post_autosave($post_id)) {
+        return;
+    }
+
+    if (!iss_graph_current_user_can_edit_editorial_signals($post_id)) {
+        return;
+    }
+
+    if (
+        !isset($_POST['iss_graph_availability_signal_nonce'])
+        || !wp_verify_nonce(sanitize_text_field(wp_unslash($_POST['iss_graph_availability_signal_nonce'])), 'iss_graph_save_availability_signal')
+    ) {
+        return;
+    }
+
+    $raw = isset($_POST['iss_graph_availability_signal']) && is_array($_POST['iss_graph_availability_signal'])
+        ? (array) wp_unslash($_POST['iss_graph_availability_signal'])
+        : [];
+    $signal = iss_graph_get_service()->normalize_editorial_signal_type((string) ($raw['signal'] ?? ''));
+
+    if ($signal === '') {
+        iss_graph_remove_editorial_signal_for_post($post_id, $post_id, 'availability');
+        return;
+    }
+
+    if (!iss_graph_editorial_signal_target_is_allowed_for_surface($post_id, $post_id, 'availability')) {
+        return;
+    }
+
+    iss_graph_upsert_editorial_signal_for_post($post_id, $post_id, $signal, [
+        'surface' => 'availability',
+        'reason' => sanitize_textarea_field((string) ($raw['reason'] ?? '')),
+        'expires_at' => sanitize_text_field((string) ($raw['expires_at'] ?? '')),
+        'author_user_id' => get_current_user_id(),
+        'status' => 'active',
+        'require_metadata' => true,
+    ]);
+}
+add_action('save_post', 'iss_graph_save_availability_signal_meta_box', 55, 2);
+
 function iss_graph_get_selected_related_promotion_admin_filter(): string
 {
     // phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Read-only admin list-table filter value.
@@ -723,6 +842,7 @@ function iss_graph_admin_enqueue_editorial_signal_assets(string $hook): void
         || (
             !iss_graph_is_editorial_signal_context_post_type((string) $screen->post_type)
             && !iss_graph_is_search_signal_post_type((string) $screen->post_type)
+            && !iss_graph_is_availability_signal_post_type((string) $screen->post_type)
         )
     ) {
         return;

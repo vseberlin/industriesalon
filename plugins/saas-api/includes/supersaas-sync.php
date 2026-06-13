@@ -341,7 +341,7 @@ function iss_supersaas_get_slots_for_tag($tag, $settings = null) {
     return $slots;
 }
 
-function iss_supersaas_map_entry_title_candidates($entry) {
+function iss_supersaas_source_entry_title_candidates($entry) {
     if (!is_array($entry)) {
         return [];
     }
@@ -449,7 +449,7 @@ function iss_supersaas_match_fuehrung_by_title_candidates($candidates) {
     return (int) $matches[0];
 }
 
-function iss_supersaas_try_resolve_source_post_from_map_entry($entry) {
+function iss_supersaas_try_resolve_source_post_from_source_entry($entry) {
     if (!is_array($entry)) {
         return 0;
     }
@@ -467,7 +467,7 @@ function iss_supersaas_try_resolve_source_post_from_map_entry($entry) {
         }
     }
 
-    $candidates = iss_supersaas_map_entry_title_candidates($entry);
+    $candidates = iss_supersaas_source_entry_title_candidates($entry);
     return iss_supersaas_match_fuehrung_by_title_candidates($candidates);
 }
 
@@ -538,18 +538,18 @@ function iss_supersaas_sync_occurrences() {
         : 0;
 
     $schedule_url = iss_supersaas_build_schedule_url($settings);
-    $map = function_exists('iss_occurrences_get_source_map') ? iss_occurrences_get_source_map() : [];
-    $series_map = function_exists('iss_occurrences_get_series_map') ? iss_occurrences_get_series_map() : [];
-    $mapped_tags = array_keys($map);
-    $mapped_tags = array_filter(array_map(function ($t) { return strtoupper(sanitize_text_field((string) $t)); }, $mapped_tags));
+    $tag_sources = function_exists('iss_occurrences_get_tag_sources') ? iss_occurrences_get_tag_sources() : [];
+    $series_sources = function_exists('iss_occurrences_get_series_sources') ? iss_occurrences_get_series_sources() : [];
+    $known_tags = array_keys($tag_sources);
+    $known_tags = array_filter(array_map(function ($t) { return strtoupper(sanitize_text_field((string) $t)); }, $known_tags));
 
     $title_index = [];
-    foreach ($map as $map_tag => $entry) {
+    foreach ($tag_sources as $source_tag => $entry) {
         if (!is_array($entry)) continue;
-        $map_tag_norm = strtoupper(sanitize_text_field((string) $map_tag));
-        $candidates = iss_supersaas_map_entry_title_candidates($entry);
+        $source_tag_norm = strtoupper(sanitize_text_field((string) $source_tag));
+        $candidates = iss_supersaas_source_entry_title_candidates($entry);
         foreach ($candidates as $candidate) {
-            $title_index[$candidate] = $map_tag_norm;
+            $title_index[$candidate] = $source_tag_norm;
         }
     }
 
@@ -579,7 +579,7 @@ function iss_supersaas_sync_occurrences() {
             }
         }
 
-        $is_mapped_tag = ($tag !== '' && in_array($tag, $mapped_tags, true));
+        $is_known_tag = ($tag !== '' && in_array($tag, $known_tags, true));
 
         $clean_title = isset($parsed['title']) ? (string) $parsed['title'] : '';
         if ($clean_title === '') {
@@ -612,17 +612,17 @@ function iss_supersaas_sync_occurrences() {
             $availability_state = $available > 0 ? 'available' : 'sold_out';
         }
 
-        if (!$is_mapped_tag) {
+        if (!$is_known_tag) {
             $imported_unmapped++;
         }
 
-        $map_entry = ($is_mapped_tag && isset($map[$tag]) && is_array($map[$tag])) ? $map[$tag] : [];
-        $source_post_id = isset($map_entry['source_post_id']) ? (int) $map_entry['source_post_id'] : 0;
-        $source_post_type = isset($map_entry['source_post_type']) ? sanitize_key((string) $map_entry['source_post_type']) : '';
-        $fallback_url = isset($map_entry['fallback_url']) ? esc_url_raw((string) $map_entry['fallback_url']) : '';
+        $tag_source = ($is_known_tag && isset($tag_sources[$tag]) && is_array($tag_sources[$tag])) ? $tag_sources[$tag] : [];
+        $source_post_id = isset($tag_source['source_post_id']) ? (int) $tag_source['source_post_id'] : 0;
+        $source_post_type = isset($tag_source['source_post_type']) ? sanitize_key((string) $tag_source['source_post_type']) : '';
+        $fallback_url = isset($tag_source['fallback_url']) ? esc_url_raw((string) $tag_source['fallback_url']) : '';
 
-        $series_entry = ($series_key !== '' && isset($series_map[$series_key]) && is_array($series_map[$series_key]))
-            ? $series_map[$series_key]
+        $series_entry = ($series_key !== '' && isset($series_sources[$series_key]) && is_array($series_sources[$series_key]))
+            ? $series_sources[$series_key]
             : [];
         if ($source_post_id <= 0 && !empty($series_entry['source_post_id'])) {
             $resolved_series_post_id = (int) $series_entry['source_post_id'];
@@ -635,10 +635,10 @@ function iss_supersaas_sync_occurrences() {
             $fallback_url = esc_url_raw((string) $series_entry['fallback_url']);
         }
 
-        if ($source_post_id <= 0 && $is_mapped_tag) {
-            $resolved_from_map = iss_supersaas_try_resolve_source_post_from_map_entry($map_entry);
-            if ($resolved_from_map > 0) {
-                $source_post_id = $resolved_from_map;
+        if ($source_post_id <= 0 && $is_known_tag) {
+            $resolved_from_source = iss_supersaas_try_resolve_source_post_from_source_entry($tag_source);
+            if ($resolved_from_source > 0) {
+                $source_post_id = $resolved_from_source;
                 $source_post_type = sanitize_key((string) get_post_type($source_post_id));
             }
         }
@@ -665,42 +665,42 @@ function iss_supersaas_sync_occurrences() {
             $source_post_type = sanitize_key((string) get_post_type($source_post_id));
         }
 
-        if ($source_post_id > 0 && $is_mapped_tag && function_exists('iss_occurrences_remember_source_mapping')) {
-            iss_occurrences_remember_source_mapping($tag, $fallback_url, $source_post_id, $source_post_type, $clean_title);
+        if ($source_post_id > 0 && $is_known_tag && function_exists('iss_occurrences_remember_tag_source')) {
+            iss_occurrences_remember_tag_source($tag, $fallback_url, $source_post_id, $source_post_type, $clean_title);
 
-            $map[$tag] = isset($map[$tag]) && is_array($map[$tag]) ? $map[$tag] : [];
-            $map[$tag]['source_post_id'] = $source_post_id;
-            $map[$tag]['source_post_type'] = $source_post_type;
-            if (!isset($map[$tag]['fallback_url'])) {
-                $map[$tag]['fallback_url'] = $fallback_url;
+            $tag_sources[$tag] = isset($tag_sources[$tag]) && is_array($tag_sources[$tag]) ? $tag_sources[$tag] : [];
+            $tag_sources[$tag]['source_post_id'] = $source_post_id;
+            $tag_sources[$tag]['source_post_type'] = $source_post_type;
+            if (!isset($tag_sources[$tag]['fallback_url'])) {
+                $tag_sources[$tag]['fallback_url'] = $fallback_url;
             }
         }
 
-        if ($series_key !== '' && function_exists('iss_occurrences_remember_series_mapping')) {
-            iss_occurrences_remember_series_mapping($series_key, $source_post_id, $source_post_type, $clean_title, $tag, $fallback_url);
+        if ($series_key !== '' && function_exists('iss_occurrences_remember_series_source')) {
+            iss_occurrences_remember_series_source($series_key, $source_post_id, $source_post_type, $clean_title, $tag, $fallback_url);
 
-            $series_map[$series_key] = isset($series_map[$series_key]) && is_array($series_map[$series_key]) ? $series_map[$series_key] : [];
-            if (!isset($series_map[$series_key]['source_post_id']) || (int) $series_map[$series_key]['source_post_id'] <= 0) {
-                $series_map[$series_key]['source_post_id'] = $source_post_id;
+            $series_sources[$series_key] = isset($series_sources[$series_key]) && is_array($series_sources[$series_key]) ? $series_sources[$series_key] : [];
+            if (!isset($series_sources[$series_key]['source_post_id']) || (int) $series_sources[$series_key]['source_post_id'] <= 0) {
+                $series_sources[$series_key]['source_post_id'] = $source_post_id;
             } elseif ($source_post_id > 0) {
-                $series_map[$series_key]['source_post_id'] = $source_post_id;
+                $series_sources[$series_key]['source_post_id'] = $source_post_id;
             }
-            if (!isset($series_map[$series_key]['source_post_type']) || trim((string) $series_map[$series_key]['source_post_type']) === '') {
-                $series_map[$series_key]['source_post_type'] = $source_post_type;
+            if (!isset($series_sources[$series_key]['source_post_type']) || trim((string) $series_sources[$series_key]['source_post_type']) === '') {
+                $series_sources[$series_key]['source_post_type'] = $source_post_type;
             } elseif ($source_post_type !== '') {
-                $series_map[$series_key]['source_post_type'] = $source_post_type;
+                $series_sources[$series_key]['source_post_type'] = $source_post_type;
             }
-            if (trim((string) ($series_map[$series_key]['supersaas_title'] ?? '')) === '' && $clean_title !== '') {
-                $series_map[$series_key]['supersaas_title'] = $clean_title;
+            if (trim((string) ($series_sources[$series_key]['supersaas_title'] ?? '')) === '' && $clean_title !== '') {
+                $series_sources[$series_key]['supersaas_title'] = $clean_title;
             }
-            if (trim((string) ($series_map[$series_key]['tag'] ?? '')) === '' && $tag !== '') {
-                $series_map[$series_key]['tag'] = $tag;
+            if (trim((string) ($series_sources[$series_key]['tag'] ?? '')) === '' && $tag !== '') {
+                $series_sources[$series_key]['tag'] = $tag;
             }
-            if (trim((string) ($series_map[$series_key]['fallback_url'] ?? '')) === '' && $fallback_url !== '') {
-                $series_map[$series_key]['fallback_url'] = $fallback_url;
+            if (trim((string) ($series_sources[$series_key]['fallback_url'] ?? '')) === '' && $fallback_url !== '') {
+                $series_sources[$series_key]['fallback_url'] = $fallback_url;
             }
-            $series_map[$series_key]['version'] = 1;
-            $series_map[$series_key]['last_seen_at'] = $now;
+            $series_sources[$series_key]['version'] = 1;
+            $series_sources[$series_key]['last_seen_at'] = $now;
         }
 
         $booking_url = $fallback_url ?: $schedule_url;

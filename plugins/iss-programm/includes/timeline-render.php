@@ -628,6 +628,16 @@ function iss_timeline_get_card_badge_label($row) {
         }
     }
 
+    if ($source_post_id > 0 && function_exists('iss_graph_get_contract_payload_for_post') && function_exists('iss_graph_get_contract_public_label')) {
+        $contract = iss_graph_get_contract_payload_for_post($source_post_id);
+        if (is_array($contract) && sanitize_key((string) ($contract['kind'] ?? '')) === 'offer') {
+            $contract_label = trim((string) iss_graph_get_contract_public_label($contract));
+            if ($contract_label !== '') {
+                return $contract_label;
+            }
+        }
+    }
+
     return iss_timeline_get_type_label($item_type);
 }
 

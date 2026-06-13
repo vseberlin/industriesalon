@@ -119,6 +119,7 @@ if (defined('WP_CLI') && WP_CLI) {
             $service = iss_occurrences_get_service();
             $service->maybe_install_schema();
             $table = $service->get_occurrences_table_name();
+            $series_table = $service->get_series_table_name();
             $limit = isset($assoc_args['limit']) ? max(1, (int) $assoc_args['limit']) : 50;
             $errors = [];
             $graph_available = function_exists('iss_graph_get_entity_for_post') || function_exists('iss_graph_get_or_create_entity_for_post');
@@ -135,6 +136,22 @@ if (defined('WP_CLI') && WP_CLI) {
                 ARRAY_A
             );
             $rows = is_array($rows) ? $rows : [];
+
+            $series_rows = $wpdb->get_results("SELECT * FROM {$series_table}", ARRAY_A);
+            $series_rows = is_array($series_rows) ? $series_rows : [];
+            $series_by_id = [];
+            $series_by_key = [];
+            $active_series_ids = [];
+            foreach ($series_rows as $series_row) {
+                $series_id = (int) ($series_row['id'] ?? 0);
+                $series_key = isset($series_row['series_key']) ? iss_occurrences_normalize_series_key((string) $series_row['series_key']) : '';
+                if ($series_id > 0) {
+                    $series_by_id[$series_id] = $series_row;
+                }
+                if ($series_key !== '') {
+                    $series_by_key[$series_key] = $series_row;
+                }
+            }
 
             foreach ($rows as $row) {
                 $occurrence_id = (int) ($row['id'] ?? 0);
@@ -192,6 +209,67 @@ if (defined('WP_CLI') && WP_CLI) {
                 ) {
                     $errors[] = sprintf('#%d points to source #%d without explicit calendar toggle.', $occurrence_id, $source_post_id);
                 }
+
+                if ($origin === 'supersaas') {
+                    $series_key = isset($row['series_key']) ? iss_occurrences_normalize_series_key((string) $row['series_key']) : '';
+                    $series_id = (int) ($row['series_id'] ?? 0);
+                    if ($series_id > 0) {
+                        $active_series_ids[$series_id] = true;
+                    }
+                    if ($series_key === '') {
+                        $errors[] = sprintf('#%d SuperSaaS occurrence has no series key.', $occurrence_id);
+                    } elseif ($series_id <= 0) {
+                        $errors[] = sprintf('#%d SuperSaaS occurrence series %s has no series_id.', $occurrence_id, $series_key);
+                    } else {
+                        $series_entry = $series_by_id[$series_id] ?? null;
+                        if (!is_array($series_entry)) {
+                            $errors[] = sprintf('#%d SuperSaaS occurrence has no series row #%d for %s.', $occurrence_id, $series_id, $series_key);
+                        } else {
+                            $series_row_key = isset($series_entry['series_key']) ? iss_occurrences_normalize_series_key((string) $series_entry['series_key']) : '';
+                            $series_source_post_id = (int) ($series_entry['source_post_id'] ?? 0);
+                            $series_source_post_type = sanitize_key((string) ($series_entry['source_post_type'] ?? ''));
+
+                            if ($series_row_key !== $series_key) {
+                                $errors[] = sprintf('#%d SuperSaaS occurrence series_id=%d key mismatch stored=%s series=%s.', $occurrence_id, $series_id, $series_key, $series_row_key);
+                            } elseif ($series_source_post_id <= 0) {
+                                $errors[] = sprintf('#%d SuperSaaS occurrence series %s is not linked to a parent post.', $occurrence_id, $series_key);
+                            } elseif ($series_source_post_id !== $source_post_id) {
+                                $errors[] = sprintf('#%d SuperSaaS occurrence series %s source mismatch stored=%d mapped=%d.', $occurrence_id, $series_key, $source_post_id, $series_source_post_id);
+                            } elseif ($series_source_post_type !== '' && $series_source_post_type !== $source_post_type) {
+                                $errors[] = sprintf('#%d SuperSaaS occurrence series %s source type mismatch stored=%s mapped=%s.', $occurrence_id, $series_key, $source_post_type, $series_source_post_type);
+                            }
+                        }
+                    }
+                }
+            }
+
+            foreach ($series_rows as $series_row) {
+                $series_key = isset($series_row['series_key']) ? iss_occurrences_normalize_series_key((string) $series_row['series_key']) : '';
+                $source_post_id = (int) ($series_row['source_post_id'] ?? 0);
+                if ($series_key === '') {
+                    $errors[] = sprintf('Occurrence series row #%d has no series key.', (int) ($series_row['id'] ?? 0));
+                    continue;
+                }
+                if ($source_post_id <= 0) {
+                    if (!empty($active_series_ids[(int) ($series_row['id'] ?? 0)])) {
+                        $errors[] = sprintf('Occurrence series %s is not linked to a source post.', $series_key);
+                    }
+                    continue;
+                }
+
+                $source_post_type = sanitize_key((string) ($series_row['source_post_type'] ?? ''));
+                $post = get_post($source_post_id);
+                if (!$post instanceof WP_Post) {
+                    $errors[] = sprintf('Occurrence series %s points to missing source post #%d.', $series_key, $source_post_id);
+                } elseif ($post->post_status === 'trash' || $post->post_status === 'auto-draft') {
+                    $errors[] = sprintf('Occurrence series %s points to non-editorial source post #%d status=%s.', $series_key, $source_post_id, $post->post_status);
+                } elseif ($source_post_type !== '' && $source_post_type !== $post->post_type) {
+                    $errors[] = sprintf('Occurrence series %s source type mismatch stored=%s actual=%s.', $series_key, $source_post_type, $post->post_type);
+                }
+
+                if (!isset($series_by_key[$series_key])) {
+                    $errors[] = sprintf('Occurrence series %s was not indexed by key.', $series_key);
+                }
             }
 
             $eligible_ids = get_posts([
@@ -232,6 +310,17 @@ if (defined('WP_CLI') && WP_CLI) {
             );
             if (is_array($legacy_options) && !empty($legacy_options)) {
                 $errors[] = sprintf('Legacy calendar option(s) remain: %s.', implode(', ', $legacy_options));
+            }
+
+            $retired_options = $wpdb->get_col(
+                $wpdb->prepare(
+                    "SELECT option_name FROM {$wpdb->options} WHERE option_name IN (%s, %s) ORDER BY option_name ASC",
+                    ISS_OCCURRENCES_RETIRED_SOURCE_MAP_OPTION,
+                    ISS_OCCURRENCES_RETIRED_SERIES_MAP_OPTION
+                )
+            );
+            if (is_array($retired_options) && !empty($retired_options)) {
+                $errors[] = sprintf('Retired occurrence option(s) remain after table migration: %s.', implode(', ', $retired_options));
             }
 
             $legacy_occurrence_rows = (int) $wpdb->get_var(

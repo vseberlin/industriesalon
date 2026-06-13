@@ -96,7 +96,7 @@ function iss_search_get_public_type_label(string $type, array $post_types = []):
 {
     $labels = [
         'place' => __('Ort', 'iss-graph'),
-        'tour' => __('Fuehrung', 'iss-graph'),
+        'tour' => __('Führung', 'iss-graph'),
         'event' => __('Veranstaltung', 'iss-graph'),
         'exhibition' => __('Ausstellung', 'iss-graph'),
         'project' => __('Projekt', 'iss-graph'),
@@ -117,6 +117,18 @@ function iss_search_get_public_type_label(string $type, array $post_types = []):
     return $object && isset($object->labels->singular_name)
         ? (string) $object->labels->singular_name
         : $type;
+}
+
+function iss_search_get_result_type_label(string $type, array $post_types, array $contract): string
+{
+    if (function_exists('iss_graph_get_contract_public_label')) {
+        $contract_label = trim((string) iss_graph_get_contract_public_label($contract));
+        if ($contract_label !== '') {
+            return $contract_label;
+        }
+    }
+
+    return iss_search_get_public_type_label($type, $post_types);
 }
 
 function iss_search_get_public_type_options(): array
@@ -281,6 +293,38 @@ function iss_search_get_result_image(WP_Post $post): ?array
     return null;
 }
 
+function iss_search_get_result_contract(WP_Post $post, int $entity_id): array
+{
+    if ($entity_id > 0 && function_exists('iss_graph_get_entity_contract_payload') && function_exists('iss_graph_get_service')) {
+        $entity = iss_graph_get_service()->get_entity_by_id($entity_id);
+        if (is_array($entity)) {
+            return iss_graph_get_entity_contract_payload($entity);
+        }
+    }
+
+    if (function_exists('iss_graph_get_contract_payload_for_post')) {
+        $contract = iss_graph_get_contract_payload_for_post($post);
+        if (is_array($contract)) {
+            return $contract;
+        }
+    }
+
+    $storage_kind = function_exists('iss_graph_get_storage_entity_kind_for_post_type')
+        ? iss_graph_get_storage_entity_kind_for_post_type((string) $post->post_type)
+        : sanitize_key((string) $post->post_type);
+    $canonical_kind = function_exists('iss_graph_get_canonical_entity_kind')
+        ? iss_graph_get_canonical_entity_kind($storage_kind)
+        : $storage_kind;
+
+    return [
+        'kind' => $canonical_kind,
+        'subtype' => '',
+        'subtype_source' => '',
+        'canonical_kind' => $canonical_kind,
+        'storage_kind' => $storage_kind,
+    ];
+}
+
 function iss_search_prepare_result(array $hit): ?array
 {
     $post_id = (int) ($hit['post_id'] ?? 0);
@@ -291,6 +335,8 @@ function iss_search_prepare_result(array $hit): ?array
 
     $config = iss_graph_get_public_search_post_type_config((string) $post->post_type);
     $type = sanitize_key((string) ($hit['search_bucket'] ?? ($config['bucket'] ?? $post->post_type)));
+    $entity_id = absint($hit['entity_id'] ?? 0);
+    $contract = iss_search_get_result_contract($post, $entity_id);
     $excerpt = trim((string) ($hit['excerpt'] ?? ''));
     if ($excerpt === '') {
         $excerpt = trim((string) get_the_excerpt($post));
@@ -301,8 +347,19 @@ function iss_search_prepare_result(array $hit): ?array
 
     return [
         'id' => $post_id,
+        'result_kind' => $entity_id > 0 ? 'entity' : 'post',
+        'entity_id' => $entity_id,
         'type' => $type,
-        'type_label' => iss_search_get_public_type_label($type, [(string) $post->post_type]),
+        'type_label' => iss_search_get_result_type_label($type, [(string) $post->post_type], $contract),
+        'contract_kind' => sanitize_key((string) ($contract['kind'] ?? '')),
+        'subtype' => sanitize_key((string) ($contract['subtype'] ?? '')),
+        'contract' => [
+            'kind' => sanitize_key((string) ($contract['kind'] ?? '')),
+            'subtype' => sanitize_key((string) ($contract['subtype'] ?? '')),
+            'subtype_source' => sanitize_text_field((string) ($contract['subtype_source'] ?? '')),
+            'canonical_kind' => sanitize_key((string) ($contract['canonical_kind'] ?? '')),
+            'storage_kind' => sanitize_key((string) ($contract['storage_kind'] ?? '')),
+        ],
         'post_type' => (string) $post->post_type,
         'title' => trim((string) ($hit['title'] ?? '')) ?: get_the_title($post),
         'excerpt' => $excerpt,

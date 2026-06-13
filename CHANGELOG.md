@@ -1,6 +1,65 @@
 # Changelog
 
 ## 2026-06-13
+- Closed the backend knowledge-graph architecture checkpoint locally:
+  - the implemented model now follows the target split: entities for stable cultural objects, relations for connections, occurrences for dated public activities, and guarded views/facade consumers for website pages
+  - UI polish is deferred to a later slice; no additional backend refactor slice is planned unless final review exposes a real contract gap
+  - no SQL/uploads transfer artifact is required for this closeout because the remaining SuperSaaS option migration is handled by the `iss-occurrences` schema installer
+- Added a tour Offer catalog contract guard:
+  - extended `wp iss-fuehrungen drift-check` so published `fuehrung` catalog items must remain in the catalog query, resolve through the graph contract as `offer/tour`, and map only to known catalog groups
+  - verifies the catalog has renderable groups and that the renderer still exposes the expected catalog shell/script fragments
+  - this is a guard for the existing tour page projection; it does not redesign the tour UI or move booking writes
+  - local verification: PHP syntax, PHPCS target, PHPStan target, `wp iss-fuehrungen drift-check --limit=25`, `wp iss-graph facade-check --limit=2`, default graph drift, and `git diff --check` passed
+- Made the occurrence series table the runtime source for SuperSaaS series/tag resolution:
+  - added service read helpers for persisted series rows plus table-backed series and tag source helpers
+  - added table-backed `supersaas_title`, `tag`, and `fallback_url` metadata columns to `wp_iss_occurrence_series`
+  - migrated the old `iss_occurrences_series_map` and `iss_occurrences_source_map` options into the series table and deleted the retired options after migration
+  - made series/tag reads, writes, clears, and source resolution use the service-owned table directly
+  - local verification: PHP syntax, PHPCS target, PHPStan target, schema migration probe, focused runtime resolver/tag probe, `wp iss-occurrences drift-check --limit=25`, `wp iss-fuehrungen drift-check --limit=25`, `wp iss-graph facade-check --limit=2`, `wp iss-graph facade-tour-slots-compare --limit=5`, default graph drift, and `git diff --check` passed
+- Added a recurrence/series integrity guard to the occurrence drift check:
+  - active public SuperSaaS occurrence rows must carry a series key and `series_id`
+  - each occurrence `series_id` must resolve to the service-owned `wp_iss_occurrence_series` row with the same key, source post id, and source post type
+  - linked series rows must point to real non-trash source posts, keeping generated tour dates tied to their parent `fuehrung`
+  - the guard validates the current projection table rather than retired mapping helpers
+  - local verification: PHP syntax, PHPCS target, PHPStan target, `wp iss-occurrences drift-check --limit=25`, default graph drift, and `git diff --check` passed
+- Added a frontend view contract guard for the DOCX `View` layer:
+  - added `wp iss-graph view-contract-audit` to verify the main file-backed public views stay mapped to the intended projection layer
+  - guards `/kalender/` and the front-page programme teaser as occurrence/timeline views, `/ausstellungen/` as Ausstellung availability views, `/fuehrungen/` as tour Offer plus tour-occurrence surfaces, and `/veranstaltungen/` as occurrence-backed Veranstaltung views
+  - added `frontend-view-contract` to the default graph drift checks
+  - this is a source contract only; it does not rewrite templates, add UI, or change editor workflows
+  - local verification: PHP syntax, PHPCS target, PHPStan target, `wp iss-graph view-contract-audit --limit=25`, `wp iss-graph facade-consumer-audit --limit=25`, focused view/consumer drift, default graph drift, and `git diff --check` passed
+- Added a local facade consumer boundary guard:
+  - added `wp iss-graph facade-consumer-audit` to verify known public consumers still point at the facade read routes: header search, timeline query, tour-slot reads, Ausstellung availability browser script/config, plus the explicitly allowed tour booking write
+  - added `facade-consumer-contract` to the default graph drift checks so route registration and consumer wiring are guarded together
+  - this is a local contract guard only; it does not add routes, storage, UI, or staging release steps
+  - local verification: PHP syntax, PHPCS target, PHPStan target, `wp iss-graph facade-consumer-audit --limit=25`, `wp iss-graph facade-check --limit=2`, `wp iss-graph facade-search-compare --limit=5`, default graph drift, and `git diff --check` passed
+- Wired the first public Offer consumer pass without redesigning the UI:
+  - added public labels to the `iss-graph` Offer subtype registry and exposed them through `/wp-json/iss/v1/contract` as `offer_subtypes`
+  - made `/wp-json/iss/v1/search` derive `type_label` from the Offer contract when a result is an Offer-backed tour/event, so the existing header search modal consumes the contract label without new markup
+  - made shared related-card kickers and timeline-card badges use the Offer contract label for `veranstaltung` / fallback `fuehrung` cards while preserving editor tour badges and tour taxonomy labels
+  - documented the surface audit in `docs/project/kg-offer-consumer-audit-2026-06-13.md`; UI polish and clean search interaction remain separate later work
+  - local verification: PHP syntax, PHPCS target, PHPStan target, runtime probes for `/iss/v1/contract`, `/iss/v1/search`, related-card kicker labels, and timeline badge labels, `facade-check`, `facade-search-compare`, focused graph drift, default graph drift, and `git diff --check` passed
+- Extended the local graph facade contract through the editor UX audit checkpoint:
+  - added entity-scoped occurrence reads at `/wp-json/iss/v1/entities/{id}/occurrences` over the existing occurrence query service, with `wp iss-graph facade-entity-occurrences-compare` and `entity-occurrences-contract` drift coverage
+  - expanded the contract-only Offer subtype registry for Veranstaltung formats while keeping `fuehrung` / `veranstaltung` CPT storage unchanged
+  - enriched facade search results with result kind, entity id, and public contract fields so search consumers can distinguish entity-backed results from plain post results
+  - added explicit schema intent fields: occurrence payloads carry Event schema intent, while Ausstellung availability payloads are marked as non-Event CreativeWork availability records
+  - documented the editor UX audit in `docs/project/kg-editor-ux-audit-2026-06-13.md`; no occurrence/calendar/programme CPT is editor-visible and no editor menu removal is needed in this slice
+  - local verification: PHP syntax for touched files, PHPCS target, PHPStan target, direct REST probes for contract/occurrence/search/availability/entity-occurrences, `facade-check`, facade search/occurrence/entity-occurrence/availability/entity/entity-relation compares, default graph drift, strict Ausstellung availability audit, runtime post-type audit, source Schema.org/admin-surface audit, and `git diff --check` passed
+- Added Ausstellung availability as a real editorial-signal consumer:
+  - added `availability` as an `iss-graph` editorial-signal surface for self-scoped Ausstellung signals
+  - added the Ausstellung editor meta box for pin/feature/boost/suppress choices with required reason/expiry metadata
+  - made the Ausstellung availability provider consume active availability signals: `pin`, `feature`, and `boost` move items up; `suppress` removes them from automatic browser results
+  - exposed each item's availability editorial signal in `/iss/v1/availability` while keeping canonical graph data, search signals, related signals, and card rendering separate
+  - local verification: PHP syntax, PHPCS target, PHPStan target, temporary pin/suppress runtime probe with cleanup, `editorial-signals`, `facade-availability-compare`, `availability-contract`, default graph drift, and `git diff --check` passed
+- Aligned the local graph data with the reviewed staging graph hygiene checkpoint:
+  - applied the alias replay snapshot, ran non-dry-run alias sync, and confirmed alias replay dry-run clean
+  - applied the curated KWO/AEG organization seed artifact and the Industriesalon/WF canonical identity artifact locally
+  - local verification: `alias-backfill-replay`, `canonical-organization-seeds`, `canonical-wf-industriesalon`, `wp iss-graph verify`, focused entity-hygiene audit, and default graph drift passed
+- Cleaned the active continuity docs for the current staging-as-live workflow:
+  - removed production-transfer and staging-validation checklists from the active plan
+  - kept staging as a disposable live working target that can be rebuilt from Git plus known data artifacts
+  - recorded that local refactor work should be batched into one end-of-day commit/push only when explicitly requested
 - Wired the Ausstellung availability browser as the first rendered availability facade consumer:
   - extended `GET /wp-json/iss/v1/availability` with `search` / `q`, `html`, and `is_empty` while preserving the existing structured item payload
   - kept rendering server-side through the existing Ausstellung card helper, so the frontend does not own a duplicate card template or new availability storage

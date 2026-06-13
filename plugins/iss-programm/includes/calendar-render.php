@@ -340,8 +340,8 @@ function iss_programm_render_tour_calendar($attributes = [], $content = '') {
     $tag = isset($attributes['tag']) ? strtoupper(sanitize_text_field((string) $attributes['tag'])) : '';
     if ($tag === '' && $post_id && function_exists('iss_occurrences_resolve_tag_for_source_post_id')) {
         $tag = iss_occurrences_resolve_tag_for_source_post_id($post_id);
-        if ($tag !== '' && $booking_url === '' && function_exists('iss_occurrences_get_source_map_entry')) {
-            $entry = iss_occurrences_get_source_map_entry($tag);
+        if ($tag !== '' && $booking_url === '' && function_exists('iss_occurrences_get_tag_source')) {
+            $entry = iss_occurrences_get_tag_source($tag);
             if (is_array($entry) && !empty($entry['fallback_url'])) {
                 $booking_url = esc_url_raw((string) $entry['fallback_url']);
             }
@@ -360,8 +360,8 @@ function iss_programm_render_tour_calendar($attributes = [], $content = '') {
         return '<div ' . $attrs . '><p class="is-tour-calendar__status has-small-font-size">' . $msg . '</p></div>';
     }
 
-    if ($tag !== '' && function_exists('iss_occurrences_remember_source_mapping')) {
-        iss_occurrences_remember_source_mapping($tag, $booking_url, $post_id, $post_type);
+    if ($tag !== '' && function_exists('iss_occurrences_remember_tag_source')) {
+        iss_occurrences_remember_tag_source($tag, $booking_url, $post_id, $post_type);
     }
 
     // Render only a lightweight mount node; front-end JS builds the UI.

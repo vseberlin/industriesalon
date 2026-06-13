@@ -1359,6 +1359,7 @@ final class ISS_Graph_Service
         $allowed = [
             'related' => true,
             'search' => true,
+            'availability' => true,
         ];
 
         return isset($allowed[$surface]) ? $surface : 'related';

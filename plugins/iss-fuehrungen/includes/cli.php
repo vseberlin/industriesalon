@@ -42,6 +42,90 @@ if (defined('WP_CLI') && WP_CLI) {
                 $errors[] = sprintf('Published Führung posts still use retired custom template meta: %d.', $stale_template_posts);
             }
 
+            if (!function_exists('iss_fuehrung_get_catalog_posts')) {
+                $errors[] = 'Tour catalog query helper is unavailable.';
+            } else {
+                $catalog_posts = iss_fuehrung_get_catalog_posts();
+                $catalog_ids = [];
+                foreach ((array) $catalog_posts as $post) {
+                    if ($post instanceof WP_Post) {
+                        $catalog_ids[] = (int) $post->ID;
+                    }
+                }
+                $catalog_ids = array_values(array_unique(array_filter($catalog_ids)));
+
+                $published_ids = get_posts([
+                    'post_type' => ISS_FUEHRUNGEN_POST_TYPE,
+                    'post_status' => 'publish',
+                    'posts_per_page' => -1,
+                    'fields' => 'ids',
+                    'no_found_rows' => true,
+                ]);
+                $published_ids = array_values(array_unique(array_filter(array_map('intval', (array) $published_ids))));
+
+                $missing_catalog_ids = array_diff($published_ids, $catalog_ids);
+                if (!empty($missing_catalog_ids)) {
+                    $errors[] = sprintf('Published Führung posts missing from offer catalog query: %s.', implode(', ', array_slice($missing_catalog_ids, 0, $limit)));
+                }
+
+                $known_group_keys = function_exists('iss_fuehrung_get_offer_catalog_groups')
+                    ? array_keys(iss_fuehrung_get_offer_catalog_groups())
+                    : [];
+                foreach ($catalog_ids as $post_id) {
+                    $contract = function_exists('iss_graph_get_contract_payload_for_post')
+                        ? iss_graph_get_contract_payload_for_post($post_id)
+                        : [];
+                    if (sanitize_key((string) ($contract['kind'] ?? '')) !== 'offer'
+                        || sanitize_key((string) ($contract['subtype'] ?? '')) !== 'tour'
+                        || sanitize_key((string) ($contract['storage_kind'] ?? '')) !== ISS_FUEHRUNGEN_POST_TYPE
+                    ) {
+                        $errors[] = sprintf(
+                            'Führung #%d has invalid offer contract kind=%s subtype=%s storage=%s.',
+                            $post_id,
+                            (string) ($contract['kind'] ?? ''),
+                            (string) ($contract['subtype'] ?? ''),
+                            (string) ($contract['storage_kind'] ?? '')
+                        );
+                    }
+
+                    $group_keys = function_exists('iss_fuehrung_get_offer_catalog_group_keys')
+                        ? iss_fuehrung_get_offer_catalog_group_keys($post_id)
+                        : [];
+                    $group_keys = array_values(array_filter(array_map('sanitize_key', (array) $group_keys)));
+                    if (empty($group_keys)) {
+                        $errors[] = sprintf('Führung #%d has no offer catalog group.', $post_id);
+                    }
+                    foreach ($group_keys as $group_key) {
+                        if (!in_array($group_key, $known_group_keys, true)) {
+                            $errors[] = sprintf('Führung #%d has unknown offer catalog group %s.', $post_id, $group_key);
+                        }
+                    }
+                }
+
+                if (!empty($catalog_posts) && function_exists('iss_fuehrung_group_offer_catalog_posts')) {
+                    $grouped_posts = iss_fuehrung_group_offer_catalog_posts((array) $catalog_posts);
+                    $has_available_group = false;
+                    foreach ($known_group_keys as $group_key) {
+                        if (!empty($grouped_posts[$group_key])) {
+                            $has_available_group = true;
+                            break;
+                        }
+                    }
+                    if (!$has_available_group) {
+                        $errors[] = 'Tour offer catalog has no renderable group with posts.';
+                    }
+                }
+
+                $template_tags_source = file_exists(ISS_FUEHRUNGEN_PATH . 'includes/template-tags.php')
+                    ? (string) file_get_contents(ISS_FUEHRUNGEN_PATH . 'includes/template-tags.php')
+                    : '';
+                foreach (['iss-tour-offer-catalog', 'data-filterable="1"', 'iss-fuehrungen-offer-catalog'] as $required_fragment) {
+                    if (strpos($template_tags_source, $required_fragment) === false) {
+                        $errors[] = sprintf('Tour offer catalog renderer is missing required fragment: %s.', $required_fragment);
+                    }
+                }
+            }
+
             if (!empty($errors)) {
                 WP_CLI::error_multi_line(array_slice($errors, 0, $limit));
                 if (count($errors) > $limit) {

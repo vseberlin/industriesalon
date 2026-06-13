@@ -83,7 +83,7 @@ function iss_graph_get_entity_kind_registry(): array
             'aliases' => ['veranstaltung'],
             'contract_kind' => 'offer',
             'default_subtype' => 'event',
-            'subtypes' => ['event', 'lecture', 'discussion', 'reading', 'presentation', 'special_opening'],
+            'subtypes' => ['event', 'lecture', 'reading', 'discussion', 'repair_cafe', 'concert', 'festival', 'workshop', 'school_program', 'presentation', 'special_opening'],
             'public' => true,
         ],
         'project' => [
@@ -359,30 +359,62 @@ function iss_graph_get_offer_subtype_registry(): array
     return (array) apply_filters('iss_graph_offer_subtype_registry', [
         'tour' => [
             'label' => 'Tour',
+            'public_label' => __('Führung', 'iss-graph'),
             'source' => 'post_type:fuehrung',
         ],
         'event' => [
             'label' => 'Event',
+            'public_label' => __('Veranstaltung', 'iss-graph'),
             'source' => '_iss_event_format:general',
         ],
         'lecture' => [
             'label' => 'Lecture',
+            'public_label' => __('Vortrag', 'iss-graph'),
             'source' => '_iss_event_format:vortrag',
         ],
         'discussion' => [
             'label' => 'Discussion',
+            'public_label' => __('Gespräch', 'iss-graph'),
             'source' => '_iss_event_format:gespraech',
+        ],
+        'repair_cafe' => [
+            'label' => 'Repair cafe',
+            'public_label' => __('Repair Café', 'iss-graph'),
+            'source' => '_iss_event_format:repair_cafe',
+        ],
+        'concert' => [
+            'label' => 'Concert',
+            'public_label' => __('Konzert', 'iss-graph'),
+            'source' => '_iss_event_format:concert',
+        ],
+        'festival' => [
+            'label' => 'Festival',
+            'public_label' => __('Festival', 'iss-graph'),
+            'source' => '_iss_event_format:festival',
+        ],
+        'workshop' => [
+            'label' => 'Workshop',
+            'public_label' => __('Workshop', 'iss-graph'),
+            'source' => '_iss_event_format:workshop',
+        ],
+        'school_program' => [
+            'label' => 'School program',
+            'public_label' => __('Schulprogramm', 'iss-graph'),
+            'source' => '_iss_event_format:school_program',
         ],
         'reading' => [
             'label' => 'Reading',
+            'public_label' => __('Lesung', 'iss-graph'),
             'source' => '_iss_event_format:lesung',
         ],
         'presentation' => [
             'label' => 'Presentation',
+            'public_label' => __('Präsentation', 'iss-graph'),
             'source' => '_iss_event_format:praesentation',
         ],
         'special_opening' => [
             'label' => 'Special opening',
+            'public_label' => __('Sonderöffnung', 'iss-graph'),
             'source' => '_iss_event_layout:fest',
         ],
     ]);
@@ -401,6 +433,33 @@ function iss_graph_get_offer_subtype_definition(string $subtype): ?array
     return is_array($definition) ? array_merge($definition, ['subtype' => $subtype]) : null;
 }
 
+function iss_graph_get_offer_subtype_public_label(string $subtype): string
+{
+    $definition = iss_graph_get_offer_subtype_definition($subtype);
+    if (!$definition) {
+        return '';
+    }
+
+    $public_label = trim((string) ($definition['public_label'] ?? ''));
+    if ($public_label !== '') {
+        return $public_label;
+    }
+
+    return trim((string) ($definition['label'] ?? ''));
+}
+
+function iss_graph_get_contract_public_label(array $contract): string
+{
+    $kind = iss_graph_normalize_entity_kind_key((string) ($contract['kind'] ?? ''));
+    $subtype = iss_graph_normalize_entity_kind_key((string) ($contract['subtype'] ?? ''));
+
+    if ($kind === 'offer' && $subtype !== '') {
+        return iss_graph_get_offer_subtype_public_label($subtype);
+    }
+
+    return '';
+}
+
 function iss_graph_normalize_veranstaltung_format_for_offer($value): string
 {
     if (function_exists('iss_content_model_normalize_veranstaltung_format')) {
@@ -416,9 +475,13 @@ function iss_graph_normalize_veranstaltung_format_for_offer($value): string
         $value = 'gespraech';
     } elseif ($value === 'prasentation' || $value === 'presentation') {
         $value = 'praesentation';
+    } elseif (in_array($value, ['repair-cafe', 'repaircafe', 'reparaturcafe', 'reparatur-cafe'], true)) {
+        $value = 'repair_cafe';
+    } elseif (in_array($value, ['school', 'school-program', 'schoolprogram', 'schulprogramm'], true)) {
+        $value = 'school_program';
     }
 
-    return in_array($value, ['general', 'vortrag', 'gespraech', 'lesung', 'praesentation'], true) ? $value : 'general';
+    return in_array($value, ['general', 'vortrag', 'gespraech', 'lesung', 'praesentation', 'repair_cafe', 'concert', 'festival', 'workshop', 'school_program'], true) ? $value : 'general';
 }
 
 function iss_graph_normalize_veranstaltung_layout_for_offer($value): string
@@ -474,6 +537,11 @@ function iss_graph_get_offer_contract_for_post($post): array
         'gespraech' => 'discussion',
         'lesung' => 'reading',
         'praesentation' => 'presentation',
+        'repair_cafe' => 'repair_cafe',
+        'concert' => 'concert',
+        'festival' => 'festival',
+        'workshop' => 'workshop',
+        'school_program' => 'school_program',
         'general' => 'event',
     ];
     $subtype = (string) ($format_map[$format] ?? 'event');
@@ -482,6 +550,38 @@ function iss_graph_get_offer_contract_for_post($post): array
         'kind' => 'offer',
         'subtype' => $subtype,
         'subtype_source' => '_iss_event_format:' . $format,
+    ];
+}
+
+function iss_graph_get_contract_payload_for_post($post): array
+{
+    $post = $post instanceof WP_Post ? $post : get_post(absint($post));
+    if (!$post instanceof WP_Post) {
+        return [];
+    }
+
+    $storage_kind = function_exists('iss_graph_get_storage_entity_kind_for_post_type')
+        ? iss_graph_get_storage_entity_kind_for_post_type((string) $post->post_type)
+        : sanitize_key((string) $post->post_type);
+    $canonical_kind = iss_graph_get_canonical_entity_kind($storage_kind);
+    $contract_kind = iss_graph_get_entity_contract_kind($storage_kind);
+    $subtype = iss_graph_get_entity_default_subtype($storage_kind);
+    $subtype_source = $subtype !== '' ? 'entity_kind:' . $canonical_kind : '';
+
+    if ($contract_kind === 'offer') {
+        $offer_contract = iss_graph_get_offer_contract_for_post($post);
+        if ($offer_contract) {
+            $subtype = iss_graph_normalize_entity_kind_key((string) ($offer_contract['subtype'] ?? $subtype));
+            $subtype_source = sanitize_text_field((string) ($offer_contract['subtype_source'] ?? $subtype_source));
+        }
+    }
+
+    return [
+        'kind' => $contract_kind,
+        'subtype' => $subtype,
+        'subtype_source' => $subtype_source,
+        'canonical_kind' => $canonical_kind,
+        'storage_kind' => $storage_kind,
     ];
 }
 
@@ -495,10 +595,10 @@ function iss_graph_get_entity_contract_payload(array $entity): array
 
     $post_id = absint($entity['post_id'] ?? 0);
     if ($contract_kind === 'offer' && $post_id > 0) {
-        $offer_contract = iss_graph_get_offer_contract_for_post($post_id);
-        if ($offer_contract) {
-            $subtype = iss_graph_normalize_entity_kind_key((string) ($offer_contract['subtype'] ?? $subtype));
-            $subtype_source = sanitize_text_field((string) ($offer_contract['subtype_source'] ?? $subtype_source));
+        $post_contract = iss_graph_get_contract_payload_for_post($post_id);
+        if ($post_contract) {
+            $subtype = iss_graph_normalize_entity_kind_key((string) ($post_contract['subtype'] ?? $subtype));
+            $subtype_source = sanitize_text_field((string) ($post_contract['subtype_source'] ?? $subtype_source));
         }
     }
 

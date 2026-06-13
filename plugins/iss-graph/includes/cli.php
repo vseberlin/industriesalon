@@ -11,8 +11,11 @@ if (defined('WP_CLI') && WP_CLI) {
     WP_CLI::add_command('iss-graph entity-hygiene-audit', 'iss_graph_wpcli_entity_hygiene_audit_command');
     WP_CLI::add_command('iss-graph drift-check', 'iss_graph_wpcli_drift_check_command');
     WP_CLI::add_command('iss-graph facade-check', 'iss_graph_wpcli_facade_check_command');
+    WP_CLI::add_command('iss-graph facade-consumer-audit', 'iss_graph_wpcli_facade_consumer_audit_command');
+    WP_CLI::add_command('iss-graph view-contract-audit', 'iss_graph_wpcli_view_contract_audit_command');
     WP_CLI::add_command('iss-graph facade-search-compare', 'iss_graph_wpcli_facade_search_compare_command');
     WP_CLI::add_command('iss-graph facade-occurrences-compare', 'iss_graph_wpcli_facade_occurrences_compare_command');
+    WP_CLI::add_command('iss-graph facade-entity-occurrences-compare', 'iss_graph_wpcli_facade_entity_occurrences_compare_command');
     WP_CLI::add_command('iss-graph facade-entities-compare', 'iss_graph_wpcli_facade_entities_compare_command');
     WP_CLI::add_command('iss-graph facade-entity-relations-compare', 'iss_graph_wpcli_facade_entity_relations_compare_command');
     WP_CLI::add_command('iss-graph facade-availability-compare', 'iss_graph_wpcli_facade_availability_compare_command');
@@ -892,6 +895,7 @@ function iss_graph_wpcli_facade_route_contract(): array
             '/iss/v1/contract',
             '/iss/v1/entities',
             '/iss/v1/entities/(?P<id>\d+)/relations',
+            '/iss/v1/entities/(?P<id>\d+)/occurrences',
             '/iss/v1/occurrences',
             '/iss/v1/search',
         ],
@@ -990,6 +994,314 @@ function iss_graph_wpcli_facade_route_scan_sources(array $retired_routes, int $l
     ];
 }
 
+function iss_graph_wpcli_normalize_route_haystack($value): string
+{
+    if (is_array($value)) {
+        $parts = [];
+        foreach ($value as $item) {
+            $parts[] = iss_graph_wpcli_normalize_route_haystack($item);
+        }
+
+        return implode("\n", array_filter($parts, static function (string $part): bool {
+            return $part !== '';
+        }));
+    }
+
+    if (!is_scalar($value)) {
+        return '';
+    }
+
+    $haystack = html_entity_decode((string) $value, ENT_QUOTES | ENT_HTML5, 'UTF-8');
+    $haystack = str_replace('\/', '/', $haystack);
+
+    return $haystack;
+}
+
+function iss_graph_wpcli_route_haystack_contains($value, string $route_fragment): bool
+{
+    $route_fragment = trim($route_fragment, '/');
+    if ($route_fragment === '') {
+        return false;
+    }
+
+    return str_contains(iss_graph_wpcli_normalize_route_haystack($value), $route_fragment);
+}
+
+function iss_graph_wpcli_get_inline_script_haystack(string $handle)
+{
+    $scripts = wp_scripts();
+    if (!$scripts instanceof WP_Scripts || empty($scripts->registered[$handle])) {
+        return '';
+    }
+
+    return [
+        $scripts->get_data($handle, 'data'),
+        $scripts->get_data($handle, 'before'),
+        $scripts->get_data($handle, 'after'),
+    ];
+}
+
+function iss_graph_wpcli_facade_consumer_contract(): array
+{
+    return [
+        'header-search' => [
+            'kind' => 'rendered_search_modal',
+            'function' => 'industriesalon_render_search_modal',
+            'route' => 'iss/v1/search',
+        ],
+        'timeline-query' => [
+            'kind' => 'inline_script',
+            'setup_function' => 'iss_programm_register_frontend_assets',
+            'handle' => 'iss-timeline-query',
+            'route' => 'iss/v1/timeline',
+        ],
+        'tour-slot-read' => [
+            'kind' => 'inline_script',
+            'setup_function' => 'iss_programm_register_frontend_assets',
+            'handle' => 'is-tour-calendar',
+            'route' => 'iss/v1/tour-slots',
+        ],
+        'tour-booking-write' => [
+            'kind' => 'inline_script',
+            'setup_function' => 'iss_programm_register_frontend_assets',
+            'handle' => 'is-tour-calendar',
+            'route' => 'is-tours/v1/book',
+            'write' => true,
+        ],
+        'availability-browser-script' => [
+            'kind' => 'inline_script',
+            'setup_function' => 'iss_programm_register_frontend_assets',
+            'handle' => 'iss-ausstellungen-browser',
+            'route' => 'iss/v1/availability',
+        ],
+        'availability-browser-block' => [
+            'kind' => 'source_literal',
+            'file' => trailingslashit(defined('WP_PLUGIN_DIR') ? WP_PLUGIN_DIR : trailingslashit(WP_CONTENT_DIR) . 'plugins') . 'iss-programm/includes/ausstellungen-browser.php',
+            'route' => 'iss/v1/availability',
+        ],
+    ];
+}
+
+function iss_graph_wpcli_check_facade_consumer_contract(int $limit): array
+{
+    $errors = [];
+    $checked = 0;
+    $setup_functions = [];
+
+    foreach (iss_graph_wpcli_facade_consumer_contract() as $consumer => $contract) {
+        $consumer = (string) $consumer;
+        $kind = sanitize_key((string) ($contract['kind'] ?? ''));
+        $route = trim((string) ($contract['route'] ?? ''));
+        if ($kind === '' || $route === '') {
+            continue;
+        }
+
+        $setup_function = (string) ($contract['setup_function'] ?? '');
+        if ($setup_function !== '' && function_exists($setup_function) && !isset($setup_functions[$setup_function])) {
+            call_user_func($setup_function);
+            $setup_functions[$setup_function] = true;
+        }
+
+        $haystack = '';
+        if ($kind === 'rendered_search_modal') {
+            $function = (string) ($contract['function'] ?? '');
+            if ($function === '' || !function_exists($function)) {
+                $errors[] = sprintf('Facade consumer %s render function is unavailable.', $consumer);
+                continue;
+            }
+
+            ob_start();
+            call_user_func($function);
+            $haystack = ob_get_clean();
+        } elseif ($kind === 'inline_script') {
+            $handle = sanitize_key((string) ($contract['handle'] ?? ''));
+            if ($handle === '') {
+                $errors[] = sprintf('Facade consumer %s has no script handle.', $consumer);
+                continue;
+            }
+
+            $haystack = iss_graph_wpcli_get_inline_script_haystack($handle);
+        } elseif ($kind === 'source_literal') {
+            $file = (string) ($contract['file'] ?? '');
+            if ($file === '' || !is_readable($file)) {
+                $errors[] = sprintf('Facade consumer %s source file is unavailable.', $consumer);
+                continue;
+            }
+
+            $haystack = file_get_contents($file);
+        } else {
+            $errors[] = sprintf('Facade consumer %s has unknown check kind %s.', $consumer, $kind);
+            continue;
+        }
+
+        $checked++;
+        if (!iss_graph_wpcli_route_haystack_contains($haystack, $route)) {
+            $errors[] = sprintf('Facade consumer %s does not expose expected route fragment %s.', $consumer, $route);
+        }
+
+        if (count($errors) >= $limit) {
+            break;
+        }
+    }
+
+    return [
+        'checked' => $checked,
+        'errors' => array_slice($errors, 0, $limit),
+    ];
+}
+
+function iss_graph_wpcli_facade_consumer_audit_command(array $args, array $assoc_args): void
+{
+    $limit = max(1, min(100, absint($assoc_args['limit'] ?? 25)));
+    $result = iss_graph_wpcli_check_facade_consumer_contract($limit);
+    $errors = (array) ($result['errors'] ?? []);
+
+    WP_CLI::log(sprintf('[facade-consumer] checked=%d', (int) ($result['checked'] ?? 0)));
+    if ($errors) {
+        WP_CLI::error_multi_line($errors);
+        WP_CLI::error(sprintf('ISS graph facade consumer audit failed with %d issue(s).', count($errors)));
+    }
+
+    WP_CLI::success('ISS graph facade consumer audit passed.');
+}
+
+function iss_graph_wpcli_frontend_view_contract(): array
+{
+    $theme_root = get_stylesheet_directory();
+
+    return [
+        'calendar' => [
+            'file' => trailingslashit($theme_root) . 'templates/page-kalender.html',
+            'requires' => [
+                'wp:industriesalon/timeline-query',
+                '"allowedTypesList":["fuehrungen","veranstaltungen"]',
+                '"externalTypeLinks":[{"label":"Ausstellungen","url":"/ausstellungen/"}]',
+            ],
+            'forbids' => [
+                'wp:industriesalon/ausstellungen-browser',
+            ],
+        ],
+        'front-page-programme' => [
+            'file' => trailingslashit($theme_root) . 'templates/front-page.html',
+            'requires' => [
+                'wp:industriesalon/timeline-query',
+                '"fixedItemTypesList":["fuehrungen","veranstaltungen"]',
+            ],
+            'forbids' => [
+                'wp:industriesalon/ausstellungen-browser',
+            ],
+        ],
+        'exhibitions' => [
+            'file' => trailingslashit($theme_root) . 'templates/page-ausstellungen.html',
+            'requires' => [
+                'wp:industriesalon/ausstellungen-browser',
+                '"defaultFilter":"aktuell"',
+                '"defaultFilter":"archiv"',
+            ],
+            'forbids' => [
+                'wp:industriesalon/timeline-query',
+            ],
+        ],
+        'tours' => [
+            'file' => trailingslashit($theme_root) . 'templates/page-fuehrungen.html',
+            'requires' => [
+                'wp:industriesalon/timeline-query',
+                '"fixedItemTypesList":["fuehrungen"]',
+                'wp:iss/tour-offer-catalog',
+            ],
+            'forbids' => [
+                'wp:industriesalon/ausstellungen-browser',
+            ],
+        ],
+        'events' => [
+            'file' => trailingslashit($theme_root) . 'templates/page-veranstaltungen.html',
+            'requires' => [
+                'wp:industriesalon/timeline-query',
+                '"defaultType":"veranstaltungen"',
+                '"postTypesList":["veranstaltung"]',
+            ],
+            'forbids' => [
+                'wp:industriesalon/ausstellungen-browser',
+                '"postTypesList":["ausstellung"]',
+            ],
+        ],
+    ];
+}
+
+function iss_graph_wpcli_check_frontend_view_contract(int $limit): array
+{
+    $errors = [];
+    $checked = 0;
+
+    foreach (iss_graph_wpcli_frontend_view_contract() as $view => $contract) {
+        $view = (string) $view;
+        $file = (string) ($contract['file'] ?? '');
+        if ($file === '' || !is_readable($file)) {
+            $errors[] = sprintf('Frontend view %s source file is unavailable.', $view);
+            continue;
+        }
+
+        $contents = file_get_contents($file);
+        if (!is_string($contents)) {
+            $errors[] = sprintf('Frontend view %s source file could not be read.', $view);
+            continue;
+        }
+
+        $contents = iss_graph_wpcli_normalize_route_haystack($contents);
+        foreach ((array) ($contract['requires'] ?? []) as $needle) {
+            $needle = (string) $needle;
+            if ($needle === '') {
+                continue;
+            }
+
+            $checked++;
+            if (!str_contains($contents, $needle)) {
+                $errors[] = sprintf('Frontend view %s is missing required source fragment: %s.', $view, $needle);
+            }
+
+            if (count($errors) >= $limit) {
+                break 2;
+            }
+        }
+
+        foreach ((array) ($contract['forbids'] ?? []) as $needle) {
+            $needle = (string) $needle;
+            if ($needle === '') {
+                continue;
+            }
+
+            $checked++;
+            if (str_contains($contents, $needle)) {
+                $errors[] = sprintf('Frontend view %s contains forbidden source fragment: %s.', $view, $needle);
+            }
+
+            if (count($errors) >= $limit) {
+                break 2;
+            }
+        }
+    }
+
+    return [
+        'checked' => $checked,
+        'errors' => array_slice($errors, 0, $limit),
+    ];
+}
+
+function iss_graph_wpcli_view_contract_audit_command(array $args, array $assoc_args): void
+{
+    $limit = max(1, min(100, absint($assoc_args['limit'] ?? 25)));
+    $result = iss_graph_wpcli_check_frontend_view_contract($limit);
+    $errors = (array) ($result['errors'] ?? []);
+
+    WP_CLI::log(sprintf('[view-contract] checked=%d', (int) ($result['checked'] ?? 0)));
+    if ($errors) {
+        WP_CLI::error_multi_line($errors);
+        WP_CLI::error(sprintf('ISS graph view contract audit failed with %d issue(s).', count($errors)));
+    }
+
+    WP_CLI::success('ISS graph view contract audit passed.');
+}
+
 function iss_graph_wpcli_facade_check_command(array $args, array $assoc_args): void
 {
     $limit = max(1, min(10, absint($assoc_args['limit'] ?? 2)));
@@ -1000,7 +1312,7 @@ function iss_graph_wpcli_facade_check_command(array $args, array $assoc_args): v
 
     $errors = [];
     $contract = iss_graph_wpcli_facade_request('/iss/v1/contract', [], $errors);
-    iss_graph_wpcli_facade_require_keys('/iss/v1/contract', $contract, ['namespace', 'version', 'read_only', 'providers', 'routes', 'entity_kinds'], $errors);
+    iss_graph_wpcli_facade_require_keys('/iss/v1/contract', $contract, ['namespace', 'version', 'read_only', 'providers', 'routes', 'entity_kinds', 'offer_subtypes'], $errors);
     if (($contract['namespace'] ?? '') !== 'iss/v1') {
         $errors[] = '/iss/v1/contract namespace is not iss/v1.';
     }
@@ -1009,6 +1321,9 @@ function iss_graph_wpcli_facade_check_command(array $args, array $assoc_args): v
     }
     if (empty($contract['entity_kinds']) || !is_array($contract['entity_kinds'])) {
         $errors[] = '/iss/v1/contract has no entity_kinds list.';
+    }
+    if (empty($contract['offer_subtypes']) || !is_array($contract['offer_subtypes'])) {
+        $errors[] = '/iss/v1/contract has no offer_subtypes list.';
     }
     if (function_exists('iss_timeline_rest_render_collection')) {
         $routes = isset($contract['routes']) && is_array($contract['routes']) ? $contract['routes'] : [];
@@ -1079,20 +1394,42 @@ function iss_graph_wpcli_facade_check_command(array $args, array $assoc_args): v
                 $errors
             );
         }
+
+        $entity_occurrences_path = sprintf('/iss/v1/entities/%d/occurrences', $entity_id);
+        $entity_occurrences = iss_graph_wpcli_facade_request($entity_occurrences_path, ['limit' => $limit], $errors);
+        iss_graph_wpcli_facade_require_keys($entity_occurrences_path, $entity_occurrences, ['entity_id', 'filters', 'count', 'items'], $errors);
+        if ((int) ($entity_occurrences['entity_id'] ?? 0) !== $entity_id) {
+            $errors[] = sprintf('%s entity_id does not match the route id.', $entity_occurrences_path);
+        }
+        if (isset($entity_occurrences['filters']) && !is_array($entity_occurrences['filters'])) {
+            $errors[] = sprintf('%s filters is not an object.', $entity_occurrences_path);
+        }
+        if (isset($entity_occurrences['items']) && !is_array($entity_occurrences['items'])) {
+            $errors[] = sprintf('%s items is not a list.', $entity_occurrences_path);
+        }
     }
 
     $occurrences = iss_graph_wpcli_facade_request('/iss/v1/occurrences', ['limit' => $limit], $errors);
     iss_graph_wpcli_facade_require_keys('/iss/v1/occurrences', $occurrences, ['count', 'items'], $errors);
     $occurrence_items = isset($occurrences['items']) && is_array($occurrences['items']) ? $occurrences['items'] : [];
     if (isset($occurrence_items[0]) && is_array($occurrence_items[0])) {
-        iss_graph_wpcli_facade_require_keys('/iss/v1/occurrences item', $occurrence_items[0], ['id', 'entity_id', 'kind', 'title', 'starts_at', 'source', 'location'], $errors);
+        iss_graph_wpcli_facade_require_keys('/iss/v1/occurrences item', $occurrence_items[0], ['id', 'entity_id', 'kind', 'contract_kind', 'subtype', 'contract', 'title', 'starts_at', 'source', 'location', 'schema'], $errors);
+        if (isset($occurrence_items[0]['contract']) && !is_array($occurrence_items[0]['contract'])) {
+            $errors[] = '/iss/v1/occurrences item contract is not an object.';
+        }
+        if (isset($occurrence_items[0]['schema']) && !is_array($occurrence_items[0]['schema'])) {
+            $errors[] = '/iss/v1/occurrences item schema is not an object.';
+        }
     }
 
     $search_results = iss_graph_wpcli_facade_request('/iss/v1/search', ['q' => $search, 'limit' => $limit], $errors);
     iss_graph_wpcli_facade_require_keys('/iss/v1/search', $search_results, ['query', 'provider', 'count', 'items'], $errors);
     $search_items = isset($search_results['items']) && is_array($search_results['items']) ? $search_results['items'] : [];
     if (isset($search_items[0]) && is_array($search_items[0])) {
-        iss_graph_wpcli_facade_require_keys('/iss/v1/search item', $search_items[0], ['id', 'type', 'title', 'url'], $errors);
+        iss_graph_wpcli_facade_require_keys('/iss/v1/search item', $search_items[0], ['id', 'result_kind', 'entity_id', 'type', 'contract_kind', 'subtype', 'contract', 'title', 'url'], $errors);
+        if (isset($search_items[0]['contract']) && !is_array($search_items[0]['contract'])) {
+            $errors[] = '/iss/v1/search item contract is not an object.';
+        }
     }
 
     if (function_exists('iss_timeline_rest_render_collection')) {
@@ -1125,9 +1462,12 @@ function iss_graph_wpcli_facade_check_command(array $args, array $assoc_args): v
             iss_graph_wpcli_facade_require_keys(
                 '/iss/v1/availability item',
                 $availability_items[0],
-                ['id', 'entity_id', 'kind', 'storage_kind', 'title', 'url', 'type', 'availability', 'source'],
+                ['id', 'entity_id', 'kind', 'storage_kind', 'title', 'url', 'type', 'availability', 'editorial', 'schema', 'source'],
                 $errors
             );
+            if (isset($availability_items[0]['schema']) && !is_array($availability_items[0]['schema'])) {
+                $errors[] = '/iss/v1/availability item schema is not an object.';
+            }
         }
     }
 
@@ -1175,7 +1515,12 @@ function iss_graph_wpcli_facade_search_signature(array $data): array
         'items' => array_values(array_map(static function (array $item): array {
             return [
                 'id' => (int) ($item['id'] ?? 0),
+                'result_kind' => (string) ($item['result_kind'] ?? ''),
+                'entity_id' => (int) ($item['entity_id'] ?? 0),
                 'type' => (string) ($item['type'] ?? ''),
+                'type_label' => (string) ($item['type_label'] ?? ''),
+                'contract_kind' => (string) ($item['contract_kind'] ?? ''),
+                'subtype' => (string) ($item['subtype'] ?? ''),
                 'post_type' => (string) ($item['post_type'] ?? ''),
                 'title' => (string) ($item['title'] ?? ''),
                 'url' => (string) ($item['url'] ?? ''),
@@ -1305,19 +1650,8 @@ function iss_graph_wpcli_facade_occurrence_direct_response(array $params): array
     }
 
     $filters = iss_facade_rest_occurrence_filters_from_request($request);
-    $rows = iss_occurrences_query($filters);
-    $items = array_values(array_map('iss_facade_rest_prepare_occurrence', is_array($rows) ? $rows : []));
 
-    return [
-        'filters' => [
-            'limit' => (int) $filters['limit'],
-            'offset' => (int) $filters['offset'],
-            'order' => (string) $filters['order'],
-            'time_mode' => (string) $filters['time_mode'],
-        ],
-        'count' => count($items),
-        'items' => $items,
-    ];
+    return iss_facade_rest_get_occurrences_response($filters);
 }
 
 function iss_graph_wpcli_facade_occurrence_signature(array $data): array
@@ -1336,11 +1670,14 @@ function iss_graph_wpcli_facade_occurrence_signature(array $data): array
         'items' => array_values(array_map(static function (array $item): array {
             $source = isset($item['source']) && is_array($item['source']) ? $item['source'] : [];
             $location = isset($item['location']) && is_array($item['location']) ? $item['location'] : [];
+            $schema = isset($item['schema']) && is_array($item['schema']) ? $item['schema'] : [];
 
             return [
                 'id' => (int) ($item['id'] ?? 0),
                 'entity_id' => (int) ($item['entity_id'] ?? 0),
                 'kind' => (string) ($item['kind'] ?? ''),
+                'contract_kind' => (string) ($item['contract_kind'] ?? ''),
+                'subtype' => (string) ($item['subtype'] ?? ''),
                 'title' => (string) ($item['title'] ?? ''),
                 'starts_at' => (string) ($item['starts_at'] ?? ''),
                 'ends_at' => (string) ($item['ends_at'] ?? ''),
@@ -1356,6 +1693,9 @@ function iss_graph_wpcli_facade_occurrence_signature(array $data): array
                 'source_url' => (string) ($source['url'] ?? ''),
                 'location_entity_id' => (int) ($location['entity_id'] ?? 0),
                 'location_label' => (string) ($location['label'] ?? ''),
+                'schema_kind' => (string) ($schema['kind'] ?? ''),
+                'schema_type' => (string) ($schema['type'] ?? ''),
+                'emits_event_schema' => (bool) ($schema['emits_event_schema'] ?? false),
             ];
         }, array_filter($items, 'is_array'))),
     ];
@@ -1400,6 +1740,121 @@ function iss_graph_wpcli_facade_occurrences_compare_command(array $args, array $
     }
 
     WP_CLI::success(sprintf('ISS graph facade occurrence comparison passed for %d scenario(s).', count($scenarios)));
+}
+
+function iss_graph_wpcli_facade_find_occurrence_entity_id(array $params): int
+{
+    $params['limit'] = 100;
+    $direct = iss_graph_wpcli_facade_occurrence_direct_response($params);
+    $items = isset($direct['items']) && is_array($direct['items']) ? $direct['items'] : [];
+
+    foreach ($items as $item) {
+        if (!is_array($item)) {
+            continue;
+        }
+
+        $entity_id = absint($item['entity_id'] ?? 0);
+        if ($entity_id <= 0) {
+            continue;
+        }
+
+        $entity = iss_graph_get_service()->get_entity_by_id($entity_id);
+        if ($entity && iss_facade_rest_entity_is_public($entity)) {
+            return $entity_id;
+        }
+    }
+
+    return 0;
+}
+
+function iss_graph_wpcli_facade_entity_occurrence_direct_response(int $entity_id, array $params): array
+{
+    if (!function_exists('iss_occurrences_query') || !function_exists('iss_facade_rest_occurrence_filters_from_request')) {
+        return [];
+    }
+
+    $entity = iss_graph_get_service()->get_entity_by_id($entity_id);
+    if (!$entity || !iss_facade_rest_entity_is_public($entity)) {
+        return [];
+    }
+
+    $request = new WP_REST_Request('GET', sprintf('/iss/v1/entities/%d/occurrences', $entity_id));
+    foreach ($params as $key => $value) {
+        $request->set_param((string) $key, $value);
+    }
+
+    $filters = iss_facade_rest_occurrence_filters_from_request($request);
+    $filters['entity_ids'] = [$entity_id];
+
+    return iss_facade_rest_get_occurrences_response($filters, $entity_id);
+}
+
+function iss_graph_wpcli_facade_entity_occurrence_signature(array $data): array
+{
+    $signature = iss_graph_wpcli_facade_occurrence_signature($data);
+    $filters = isset($data['filters']) && is_array($data['filters']) ? $data['filters'] : [];
+    $signature['entity_id'] = (int) ($data['entity_id'] ?? 0);
+    $signature['filters']['entity_id'] = (int) ($filters['entity_id'] ?? 0);
+
+    return $signature;
+}
+
+function iss_graph_wpcli_facade_entity_occurrences_compare_command(array $args, array $assoc_args): void
+{
+    if (!function_exists('iss_occurrences_query')) {
+        WP_CLI::error('Occurrence query service is unavailable.');
+    }
+
+    $limit = max(1, min(25, absint($assoc_args['limit'] ?? 5)));
+    $requested_entity_id = absint($assoc_args['entity_id'] ?? 0);
+    $scenarios = iss_graph_wpcli_facade_parse_occurrence_scenarios($assoc_args['scenarios'] ?? '');
+    if (!$scenarios) {
+        WP_CLI::error('Provide at least one entity-occurrence comparison scenario through --scenarios or use the defaults.');
+    }
+
+    $errors = [];
+    $compared = 0;
+    foreach ($scenarios as $scenario) {
+        $params = iss_graph_wpcli_facade_occurrence_params_for_scenario($scenario, $limit);
+        $entity_id = $requested_entity_id > 0
+            ? $requested_entity_id
+            : iss_graph_wpcli_facade_find_occurrence_entity_id($params);
+
+        if ($entity_id <= 0) {
+            WP_CLI::warning(sprintf('Skipping entity-occurrences scenario "%s"; no public occurrence-backed entity found.', $scenario));
+            continue;
+        }
+
+        $path = sprintf('/iss/v1/entities/%d/occurrences', $entity_id);
+        $direct = iss_graph_wpcli_facade_entity_occurrence_direct_response($entity_id, $params);
+        $facade = iss_graph_wpcli_facade_request($path, $params, $errors, 'facade');
+        $direct_signature = iss_graph_wpcli_facade_entity_occurrence_signature($direct);
+        $facade_signature = iss_graph_wpcli_facade_entity_occurrence_signature($facade);
+
+        if ($direct_signature !== $facade_signature) {
+            $errors[] = sprintf('Entity-occurrences facade mismatch for scenario "%s" entity %d.', $scenario, $entity_id);
+            continue;
+        }
+
+        WP_CLI::log(sprintf(
+            '[compare] entity-occurrences scenario="%s" entity=%d time_mode=%s count=%d matched',
+            $scenario,
+            $entity_id,
+            (string) ($facade_signature['filters']['time_mode'] ?? ''),
+            (int) ($facade_signature['count'] ?? 0)
+        ));
+        $compared++;
+    }
+
+    if ($compared <= 0 && !$errors) {
+        WP_CLI::error('No entity-occurrence comparison scenarios were run.');
+    }
+    if ($errors) {
+        WP_CLI::error_multi_line($errors);
+        WP_CLI::error(sprintf('ISS graph facade entity-occurrence comparison failed with %d issue(s).', count($errors)));
+    }
+
+    WP_CLI::success(sprintf('ISS graph facade entity-occurrence comparison passed for %d scenario(s).', $compared));
 }
 
 function iss_graph_wpcli_facade_parse_availability_scenarios($value): array
@@ -1468,6 +1923,8 @@ function iss_graph_wpcli_facade_availability_signature(array $data): array
         'items' => array_values(array_map(static function (array $item): array {
             $type = isset($item['type']) && is_array($item['type']) ? $item['type'] : [];
             $availability = isset($item['availability']) && is_array($item['availability']) ? $item['availability'] : [];
+            $editorial = isset($item['editorial']) && is_array($item['editorial']) ? $item['editorial'] : [];
+            $schema = isset($item['schema']) && is_array($item['schema']) ? $item['schema'] : [];
             $source = isset($item['source']) && is_array($item['source']) ? $item['source'] : [];
 
             return [
@@ -1484,6 +1941,10 @@ function iss_graph_wpcli_facade_availability_signature(array $data): array
                 'starts_at' => (string) ($availability['starts_at'] ?? ''),
                 'ends_at' => (string) ($availability['ends_at'] ?? ''),
                 'period_label' => (string) ($availability['period_label'] ?? ''),
+                'editorial_signal' => (string) ($editorial['signal'] ?? ''),
+                'schema_kind' => (string) ($schema['kind'] ?? ''),
+                'schema_type' => (string) ($schema['type'] ?? ''),
+                'emits_event_schema' => (bool) ($schema['emits_event_schema'] ?? true),
                 'source_post_id' => (int) ($source['post_id'] ?? 0),
                 'source_post_type' => (string) ($source['post_type'] ?? ''),
             ];
@@ -2237,8 +2698,11 @@ function iss_graph_wpcli_parse_drift_checks(string $value): array
         'entity-kind-contract',
         'public-object-contract',
         'entity-relations-contract',
+        'entity-occurrences-contract',
         'availability-contract',
         'facade-route-contract',
+        'facade-consumer-contract',
+        'frontend-view-contract',
     ];
     $available = array_merge($default_checks, [
         'alias-backfill-replay',
@@ -2281,10 +2745,16 @@ function iss_graph_wpcli_run_drift_check(string $check, int $limit): array
             return iss_graph_wpcli_check_public_object_contract($limit);
         case 'entity-relations-contract':
             return iss_graph_wpcli_check_entity_relations_contract($limit);
+        case 'entity-occurrences-contract':
+            return iss_graph_wpcli_check_entity_occurrences_contract($limit);
         case 'availability-contract':
             return iss_graph_wpcli_check_availability_contract($limit);
         case 'facade-route-contract':
             return iss_graph_wpcli_check_facade_route_contract($limit);
+        case 'facade-consumer-contract':
+            return iss_graph_wpcli_check_facade_consumer_contract($limit);
+        case 'frontend-view-contract':
+            return iss_graph_wpcli_check_frontend_view_contract($limit);
         case 'alias-backfill-replay':
             return iss_graph_wpcli_check_alias_backfill_replay($limit);
         case 'canonical-organization-seeds':
@@ -2432,6 +2902,104 @@ function iss_graph_wpcli_check_entity_relations_contract(int $limit): array
     ];
 }
 
+function iss_graph_wpcli_check_entity_occurrences_contract(int $limit): array
+{
+    if (!function_exists('iss_occurrences_query')) {
+        return [
+            'checked' => 0,
+            'errors' => [],
+        ];
+    }
+
+    $errors = [];
+    $checked = 0;
+    $request_limit = max(1, min(5, $limit));
+    $scenarios = [
+        'upcoming' => iss_graph_wpcli_facade_occurrence_params_for_scenario('upcoming', $request_limit),
+        'event' => iss_graph_wpcli_facade_occurrence_params_for_scenario('event', $request_limit),
+        'tour' => iss_graph_wpcli_facade_occurrence_params_for_scenario('tour', $request_limit),
+    ];
+
+    foreach ($scenarios as $scenario => $params) {
+        $entity_id = iss_graph_wpcli_facade_find_occurrence_entity_id($params);
+        if ($entity_id <= 0) {
+            continue;
+        }
+
+        $checked++;
+        $path = sprintf('/iss/v1/entities/%d/occurrences', $entity_id);
+        $request = new WP_REST_Request('GET', $path);
+        foreach ($params as $key => $value) {
+            $request->set_param((string) $key, $value);
+        }
+
+        $response = rest_do_request($request);
+        if ($response->is_error()) {
+            $error = $response->as_error();
+            $errors[] = sprintf(
+                '%s scenario=%s returned REST error: %s.',
+                $path,
+                $scenario,
+                $error ? $error->get_error_message() : 'unknown error'
+            );
+            continue;
+        }
+
+        $status = (int) $response->get_status();
+        if ($status !== 200) {
+            $errors[] = sprintf('%s scenario=%s returned status %d, expected 200.', $path, $scenario, $status);
+            continue;
+        }
+
+        $data = $response->get_data();
+        if (!is_array($data)) {
+            $errors[] = sprintf('%s scenario=%s returned a non-object response.', $path, $scenario);
+            continue;
+        }
+
+        foreach (['entity_id', 'filters', 'count', 'items'] as $key) {
+            if (!array_key_exists($key, $data)) {
+                $errors[] = sprintf('%s scenario=%s is missing key: %s.', $path, $scenario, $key);
+            }
+        }
+        if ((int) ($data['entity_id'] ?? 0) !== $entity_id) {
+            $errors[] = sprintf('%s scenario=%s entity_id does not match route id.', $path, $scenario);
+        }
+
+        $items = isset($data['items']) && is_array($data['items']) ? $data['items'] : [];
+        if ((int) ($data['count'] ?? -1) !== count($items)) {
+            $errors[] = sprintf('%s scenario=%s count does not match item list length.', $path, $scenario);
+        }
+
+        if (isset($items[0]) && is_array($items[0])) {
+            $checked++;
+            foreach (['id', 'entity_id', 'kind', 'contract_kind', 'subtype', 'contract', 'title', 'starts_at', 'source', 'location', 'schema'] as $key) {
+                if (!array_key_exists($key, $items[0])) {
+                    $errors[] = sprintf('%s scenario=%s first occurrence item is missing key: %s.', $path, $scenario, $key);
+                }
+            }
+            if ((int) ($items[0]['entity_id'] ?? 0) !== $entity_id) {
+                $errors[] = sprintf('%s scenario=%s first occurrence entity_id does not match route id.', $path, $scenario);
+            }
+            if (isset($items[0]['schema']) && is_array($items[0]['schema'])) {
+                $schema = $items[0]['schema'];
+                if (($schema['type'] ?? '') !== 'Event' || empty($schema['emits_event_schema'])) {
+                    $errors[] = sprintf('%s scenario=%s occurrence schema is not Event-emitting.', $path, $scenario);
+                }
+            }
+        }
+
+        if (count($errors) >= $limit) {
+            break;
+        }
+    }
+
+    return [
+        'checked' => $checked,
+        'errors' => array_slice($errors, 0, $limit),
+    ];
+}
+
 function iss_graph_wpcli_check_availability_contract(int $limit): array
 {
     if (!function_exists('iss_programm_rest_list_availability')) {
@@ -2523,7 +3091,7 @@ function iss_graph_wpcli_check_availability_contract(int $limit): array
 
         if (isset($items[0]) && is_array($items[0])) {
             $checked++;
-            foreach (['id', 'entity_id', 'kind', 'storage_kind', 'title', 'url', 'type', 'availability', 'source'] as $key) {
+            foreach (['id', 'entity_id', 'kind', 'storage_kind', 'title', 'url', 'type', 'availability', 'editorial', 'schema', 'source'] as $key) {
                 if (!array_key_exists($key, $items[0])) {
                     $errors[] = sprintf('/iss/v1/availability filter=%s first item is missing key: %s.', $filter, $key);
                 }
@@ -2533,6 +3101,20 @@ function iss_graph_wpcli_check_availability_contract(int $limit): array
             }
             if (isset($items[0]['availability']) && !is_array($items[0]['availability'])) {
                 $errors[] = sprintf('/iss/v1/availability filter=%s first item availability is not an object.', $filter);
+            }
+            if (isset($items[0]['editorial']) && !is_array($items[0]['editorial'])) {
+                $errors[] = sprintf('/iss/v1/availability filter=%s first item editorial is not an object.', $filter);
+            }
+            if (isset($items[0]['schema']) && !is_array($items[0]['schema'])) {
+                $errors[] = sprintf('/iss/v1/availability filter=%s first item schema is not an object.', $filter);
+            }
+            if (isset($items[0]['schema']) && is_array($items[0]['schema'])) {
+                $schema = $items[0]['schema'];
+                if (!array_key_exists('emits_event_schema', $schema) || !array_key_exists('type', $schema)) {
+                    $errors[] = sprintf('/iss/v1/availability filter=%s first item schema is missing event-split keys.', $filter);
+                } elseif (!empty($schema['emits_event_schema']) || (string) ($schema['type'] ?? '') === 'Event') {
+                    $errors[] = sprintf('/iss/v1/availability filter=%s first item must not emit Event schema.', $filter);
+                }
             }
             if (isset($items[0]['source']) && !is_array($items[0]['source'])) {
                 $errors[] = sprintf('/iss/v1/availability filter=%s first item source is not an object.', $filter);
@@ -3808,6 +4390,13 @@ function iss_graph_wpcli_check_editorial_signals(int $limit): array
                 && (!is_string($post_type) || !function_exists('iss_graph_is_search_signal_post_type') || !iss_graph_is_search_signal_post_type($post_type))
             ) {
                 $errors[] = sprintf('Editorial signal %d is a search signal on unsupported post %d.', $id, $target_post_id);
+            }
+
+            if (
+                $surface === 'availability'
+                && (!is_string($post_type) || !function_exists('iss_graph_is_availability_signal_post_type') || !iss_graph_is_availability_signal_post_type($post_type))
+            ) {
+                $errors[] = sprintf('Editorial signal %d is an availability signal on unsupported post %d.', $id, $target_post_id);
             }
         }
 
