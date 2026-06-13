@@ -77,6 +77,12 @@ storage values such as `ausstellung`, `veranstaltung`, `fuehrung`, `projekt`,
 renames rows; the canonical layer exposes the programme-facing aliases
 `exhibition`, `event`, `tour`, and `project`.
 
+The first `offer` bridge is contract-only. It does not add an offer post type,
+table, route, or storage kind. `fuehrung` maps to `offer/tour`; `veranstaltung`
+maps to `offer` subtypes through existing editor-owned meta:
+`_iss_event_format` maps to `event`, `lecture`, `discussion`, `reading`, or
+`presentation`, and `_iss_event_layout=fest` maps to `special_opening`.
+
 ## Existing Canonical Base
 
 `iss-graph` should remain the canonical entity service. It already owns:
@@ -480,9 +486,19 @@ The retired read routes `/iss-search/v1/search`, `/iss-programm/v1/timeline`,
 and `/is-tours/v1/slots` are no longer registered. Booking submissions stay
 outside the read-only facade on `/is-tours/v1/book`.
 
+Entity list and detail responses include additive contract fields:
+`contract_kind`, `subtype`, and `contract`. Existing `kind`, `canonical_kind`,
+and `storage_kind` fields remain the stable identity/storage boundary for
+current consumers.
+
 Run `wp iss-graph drift-check --checks=facade-route-contract --limit=25` to
 verify the final facade boundary: required read routes, the booking write route,
 retired read-route absence, and active first-party source references.
+
+Run `wp iss-graph drift-check --checks=public-object-contract --limit=25` to
+verify published public object coverage before relying on the contract bridge.
+It checks expected graph entity coverage, legacy storage-kind mapping,
+accepted `wp_post` identifiers, and required offer subtypes.
 
 Run `wp iss-graph facade-check` before switching any consumer to `/iss/v1`.
 Run `wp iss-graph facade-occurrences-compare` before switching raw

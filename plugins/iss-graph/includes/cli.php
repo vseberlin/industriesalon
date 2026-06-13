@@ -1029,7 +1029,10 @@ function iss_graph_wpcli_facade_check_command(array $args, array $assoc_args): v
     $entity_id = 0;
     $first_entity = $entity_items[0] ?? null;
     if (is_array($first_entity)) {
-        iss_graph_wpcli_facade_require_keys('/iss/v1/entities item', $first_entity, ['id', 'kind', 'storage_kind', 'title', 'url'], $errors);
+        iss_graph_wpcli_facade_require_keys('/iss/v1/entities item', $first_entity, ['id', 'kind', 'storage_kind', 'contract_kind', 'subtype', 'contract', 'title', 'url'], $errors);
+        if (isset($first_entity['contract']) && !is_array($first_entity['contract'])) {
+            $errors[] = '/iss/v1/entities item contract is not an object.';
+        }
         $entity_id = absint($first_entity['id'] ?? 0);
     }
 
@@ -1038,7 +1041,10 @@ function iss_graph_wpcli_facade_check_command(array $args, array $assoc_args): v
         $detail = iss_graph_wpcli_facade_request($detail_path, [], $errors);
         iss_graph_wpcli_facade_require_keys($detail_path, $detail, ['item'], $errors);
         $item = isset($detail['item']) && is_array($detail['item']) ? $detail['item'] : [];
-        iss_graph_wpcli_facade_require_keys($detail_path . ' item', $item, ['id', 'kind', 'names', 'identifiers', 'relations'], $errors);
+        iss_graph_wpcli_facade_require_keys($detail_path . ' item', $item, ['id', 'kind', 'contract_kind', 'subtype', 'contract', 'names', 'identifiers', 'relations'], $errors);
+        if (isset($item['contract']) && !is_array($item['contract'])) {
+            $errors[] = sprintf('%s item contract is not an object.', $detail_path);
+        }
         foreach (['names', 'identifiers', 'relations'] as $list_key) {
             if (isset($item[$list_key]) && !is_array($item[$list_key])) {
                 $errors[] = sprintf('%s item key %s is not a list.', $detail_path, $list_key);
@@ -1824,6 +1830,7 @@ function iss_graph_wpcli_parse_drift_checks(string $value): array
         'search-index',
         'editorial-signals',
         'entity-kind-contract',
+        'public-object-contract',
         'facade-route-contract',
     ];
     $available = array_merge($default_checks, [
@@ -1863,6 +1870,8 @@ function iss_graph_wpcli_run_drift_check(string $check, int $limit): array
             return iss_graph_wpcli_check_editorial_signals($limit);
         case 'entity-kind-contract':
             return iss_graph_wpcli_check_entity_kind_contract($limit);
+        case 'public-object-contract':
+            return iss_graph_wpcli_check_public_object_contract($limit);
         case 'facade-route-contract':
             return iss_graph_wpcli_check_facade_route_contract($limit);
         case 'alias-backfill-replay':
@@ -2599,6 +2608,217 @@ function iss_graph_wpcli_check_entity_kind_contract(int $limit): array
     return [
         'checked' => $checked,
         'errors' => $errors,
+    ];
+}
+
+function iss_graph_wpcli_get_entity_rows_for_post(int $post_id): array
+{
+    global $wpdb;
+
+    $post_id = absint($post_id);
+    if ($post_id <= 0) {
+        return [];
+    }
+
+    $service = iss_graph_get_service();
+    $entity_table = $service->get_entity_table_name();
+    $rows = $wpdb->get_results(
+        $wpdb->prepare(
+            "SELECT id, entity_kind, display_title
+            FROM {$entity_table}
+            WHERE post_id = %d
+            ORDER BY entity_kind ASC, id ASC",
+            $post_id
+        ),
+        ARRAY_A
+    );
+
+    return is_array($rows) ? $rows : [];
+}
+
+function iss_graph_wpcli_format_entity_row_summary(array $rows): string
+{
+    $items = [];
+    foreach ($rows as $row) {
+        if (!is_array($row)) {
+            continue;
+        }
+
+        $items[] = sprintf(
+            '#%d:%s',
+            (int) ($row['id'] ?? 0),
+            sanitize_key((string) ($row['entity_kind'] ?? ''))
+        );
+    }
+
+    return implode(',', $items);
+}
+
+function iss_graph_wpcli_check_public_object_contract(int $limit): array
+{
+    if (!function_exists('iss_graph_get_public_object_post_type_contracts')) {
+        return [
+            'checked' => 0,
+            'errors' => ['Public object contract registry is unavailable.'],
+        ];
+    }
+
+    $contracts = iss_graph_get_public_object_post_type_contracts();
+    $contracts = array_filter($contracts, static function ($contract): bool {
+        return is_array($contract)
+            && !empty($contract['post_type'])
+            && post_type_exists((string) $contract['post_type']);
+    });
+
+    if (!$contracts) {
+        return [
+            'checked' => 0,
+            'errors' => [],
+        ];
+    }
+
+    $service = iss_graph_get_service();
+    $errors = [];
+    $checked = 0;
+    $post_type_owners = [];
+
+    foreach (iss_graph_get_entity_kind_registry() as $definition) {
+        $canonical_kind = sanitize_key((string) ($definition['canonical_kind'] ?? ''));
+        foreach ((array) ($definition['post_types'] ?? []) as $post_type) {
+            $post_type = sanitize_key((string) $post_type);
+            if ($post_type !== '') {
+                $post_type_owners[$post_type][] = $canonical_kind;
+            }
+        }
+    }
+
+    foreach ($contracts as $contract) {
+        $post_type = sanitize_key((string) ($contract['post_type'] ?? ''));
+        $storage_kind = sanitize_key((string) ($contract['storage_kind'] ?? ''));
+        $canonical_kind = sanitize_key((string) ($contract['canonical_kind'] ?? ''));
+        $contract_kind = sanitize_key((string) ($contract['contract_kind'] ?? $canonical_kind));
+        $owners = array_values(array_unique(array_filter($post_type_owners[$post_type] ?? [])));
+
+        $checked++;
+        if (count($owners) !== 1 || $owners[0] !== $canonical_kind) {
+            $errors[] = sprintf(
+                'Public object post type %s has ambiguous entity-kind registry owners: expected %s, found [%s].',
+                $post_type,
+                $canonical_kind,
+                implode(',', $owners)
+            );
+            if (count($errors) >= $limit) {
+                break;
+            }
+        }
+
+        $post_ids = get_posts([
+            'post_type' => $post_type,
+            'post_status' => 'publish',
+            'numberposts' => -1,
+            'fields' => 'ids',
+            'orderby' => 'ID',
+            'order' => 'ASC',
+            'suppress_filters' => true,
+            'update_post_term_cache' => false,
+            'update_post_meta_cache' => false,
+        ]);
+
+        foreach (array_map('absint', is_array($post_ids) ? $post_ids : []) as $post_id) {
+            if ($post_id <= 0) {
+                continue;
+            }
+
+            $checked++;
+            $rows = iss_graph_wpcli_get_entity_rows_for_post($post_id);
+            if (count($rows) > 1) {
+                $errors[] = sprintf(
+                    'Public object %d [%s] has multiple post-backed graph entities: %s.',
+                    $post_id,
+                    $post_type,
+                    iss_graph_wpcli_format_entity_row_summary($rows)
+                );
+                if (count($errors) >= $limit) {
+                    break 2;
+                }
+            }
+
+            $entity = $storage_kind !== '' ? $service->find_entity_by_post($storage_kind, $post_id) : null;
+            if (!$entity) {
+                $detail = $rows ? ' found ' . iss_graph_wpcli_format_entity_row_summary($rows) . ' instead.' : '';
+                $errors[] = sprintf(
+                    'Public object %d [%s] has no canonical graph entity for storage kind %s.%s',
+                    $post_id,
+                    $post_type,
+                    $storage_kind,
+                    $detail
+                );
+                if (count($errors) >= $limit) {
+                    break 2;
+                }
+                continue;
+            }
+
+            $entity_id = (int) ($entity['id'] ?? 0);
+            $actual_storage_kind = sanitize_key((string) ($entity['entity_kind'] ?? ''));
+            $actual_canonical_kind = function_exists('iss_graph_get_canonical_entity_kind')
+                ? iss_graph_get_canonical_entity_kind($actual_storage_kind)
+                : $actual_storage_kind;
+
+            if ($actual_storage_kind !== $storage_kind || $actual_canonical_kind !== $canonical_kind) {
+                $errors[] = sprintf(
+                    'Public object %d [%s] entity %d maps to %s/%s, expected %s/%s.',
+                    $post_id,
+                    $post_type,
+                    $entity_id,
+                    $actual_canonical_kind,
+                    $actual_storage_kind,
+                    $canonical_kind,
+                    $storage_kind
+                );
+            }
+
+            if ($entity_id > 0 && !iss_graph_wpcli_entity_has_identifier($entity_id, 'wp_post', (string) $post_id)) {
+                $errors[] = sprintf('Public object %d [%s] entity %d is missing wp_post identifier.', $post_id, $post_type, $entity_id);
+            }
+
+            $payload = function_exists('iss_graph_get_entity_contract_payload')
+                ? iss_graph_get_entity_contract_payload($entity)
+                : [];
+            $actual_contract_kind = sanitize_key((string) ($payload['kind'] ?? $actual_canonical_kind));
+            if ($actual_contract_kind !== $contract_kind) {
+                $errors[] = sprintf(
+                    'Public object %d [%s] entity %d has contract kind %s, expected %s.',
+                    $post_id,
+                    $post_type,
+                    $entity_id,
+                    $actual_contract_kind,
+                    $contract_kind
+                );
+            }
+
+            if (!empty($contract['requires_subtype'])) {
+                $subtype = sanitize_key((string) ($payload['subtype'] ?? ''));
+                if ($subtype === '' || !iss_graph_get_offer_subtype_definition($subtype)) {
+                    $errors[] = sprintf(
+                        'Public object %d [%s] entity %d has missing or unknown offer subtype %s.',
+                        $post_id,
+                        $post_type,
+                        $entity_id,
+                        $subtype !== '' ? $subtype : '(empty)'
+                    );
+                }
+            }
+
+            if (count($errors) >= $limit) {
+                break 2;
+            }
+        }
+    }
+
+    return [
+        'checked' => $checked,
+        'errors' => array_slice($errors, 0, $limit),
     ];
 }
 

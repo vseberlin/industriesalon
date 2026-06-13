@@ -70,6 +70,9 @@ function iss_graph_get_entity_kind_registry(): array
             'post_types' => ['fuehrung'],
             'storage_kind' => 'fuehrung',
             'aliases' => ['fuehrung'],
+            'contract_kind' => 'offer',
+            'default_subtype' => 'tour',
+            'subtypes' => ['tour'],
             'public' => true,
         ],
         'event' => [
@@ -78,6 +81,9 @@ function iss_graph_get_entity_kind_registry(): array
             'post_types' => ['veranstaltung'],
             'storage_kind' => 'veranstaltung',
             'aliases' => ['veranstaltung'],
+            'contract_kind' => 'offer',
+            'default_subtype' => 'event',
+            'subtypes' => ['event', 'lecture', 'discussion', 'reading', 'presentation', 'special_opening'],
             'public' => true,
         ],
         'project' => [
@@ -160,11 +166,31 @@ function iss_graph_get_entity_kind_registry(): array
             }
         }
 
+        $contract_kind = iss_graph_normalize_entity_kind_key((string) ($definition['contract_kind'] ?? $canonical_kind));
+        if ($contract_kind === '') {
+            $contract_kind = $canonical_kind;
+        }
+
+        $default_subtype = iss_graph_normalize_entity_kind_key((string) ($definition['default_subtype'] ?? ''));
+        $subtypes = [];
+        foreach ((array) ($definition['subtypes'] ?? []) as $subtype) {
+            $subtype = iss_graph_normalize_entity_kind_key((string) $subtype);
+            if ($subtype !== '') {
+                $subtypes[] = $subtype;
+            }
+        }
+        if ($default_subtype !== '') {
+            $subtypes[] = $default_subtype;
+        }
+
         $normalized[$canonical_kind] = array_merge($definition, [
             'canonical_kind' => $canonical_kind,
             'storage_kind' => $storage_kind,
             'post_types' => array_values(array_unique($post_types)),
             'aliases' => array_values(array_unique($aliases)),
+            'contract_kind' => $contract_kind,
+            'default_subtype' => $default_subtype,
+            'subtypes' => array_values(array_unique($subtypes)),
             'owner' => sanitize_key((string) ($definition['owner'] ?? 'iss-graph')),
             'public' => !array_key_exists('public', $definition) || (bool) $definition['public'],
         ]);
@@ -304,4 +330,244 @@ function iss_graph_get_canonical_entity_kind_for_post_type(string $post_type): s
     }
 
     return iss_graph_get_canonical_entity_kind($post_type);
+}
+
+function iss_graph_get_entity_contract_kind(string $entity_kind): string
+{
+    $definition = iss_graph_get_entity_kind_definition($entity_kind);
+    if (!$definition) {
+        return iss_graph_get_canonical_entity_kind($entity_kind);
+    }
+
+    $contract_kind = iss_graph_normalize_entity_kind_key((string) ($definition['contract_kind'] ?? ''));
+
+    return $contract_kind !== '' ? $contract_kind : (string) $definition['canonical_kind'];
+}
+
+function iss_graph_get_entity_default_subtype(string $entity_kind): string
+{
+    $definition = iss_graph_get_entity_kind_definition($entity_kind);
+    if (!$definition) {
+        return '';
+    }
+
+    return iss_graph_normalize_entity_kind_key((string) ($definition['default_subtype'] ?? ''));
+}
+
+function iss_graph_get_offer_subtype_registry(): array
+{
+    return (array) apply_filters('iss_graph_offer_subtype_registry', [
+        'tour' => [
+            'label' => 'Tour',
+            'source' => 'post_type:fuehrung',
+        ],
+        'event' => [
+            'label' => 'Event',
+            'source' => '_iss_event_format:general',
+        ],
+        'lecture' => [
+            'label' => 'Lecture',
+            'source' => '_iss_event_format:vortrag',
+        ],
+        'discussion' => [
+            'label' => 'Discussion',
+            'source' => '_iss_event_format:gespraech',
+        ],
+        'reading' => [
+            'label' => 'Reading',
+            'source' => '_iss_event_format:lesung',
+        ],
+        'presentation' => [
+            'label' => 'Presentation',
+            'source' => '_iss_event_format:praesentation',
+        ],
+        'special_opening' => [
+            'label' => 'Special opening',
+            'source' => '_iss_event_layout:fest',
+        ],
+    ]);
+}
+
+function iss_graph_get_offer_subtype_definition(string $subtype): ?array
+{
+    $subtype = iss_graph_normalize_entity_kind_key($subtype);
+    if ($subtype === '') {
+        return null;
+    }
+
+    $registry = iss_graph_get_offer_subtype_registry();
+    $definition = $registry[$subtype] ?? null;
+
+    return is_array($definition) ? array_merge($definition, ['subtype' => $subtype]) : null;
+}
+
+function iss_graph_normalize_veranstaltung_format_for_offer($value): string
+{
+    if (function_exists('iss_content_model_normalize_veranstaltung_format')) {
+        return iss_content_model_normalize_veranstaltung_format((string) $value);
+    }
+
+    if (function_exists('industriesalon_sanitize_event_format')) {
+        return industriesalon_sanitize_event_format($value);
+    }
+
+    $value = sanitize_key(remove_accents((string) $value));
+    if ($value === 'gesprach') {
+        $value = 'gespraech';
+    } elseif ($value === 'prasentation' || $value === 'presentation') {
+        $value = 'praesentation';
+    }
+
+    return in_array($value, ['general', 'vortrag', 'gespraech', 'lesung', 'praesentation'], true) ? $value : 'general';
+}
+
+function iss_graph_normalize_veranstaltung_layout_for_offer($value): string
+{
+    if (function_exists('iss_content_model_normalize_veranstaltung_layout')) {
+        return iss_content_model_normalize_veranstaltung_layout((string) $value);
+    }
+
+    if (function_exists('industriesalon_sanitize_event_layout')) {
+        return industriesalon_sanitize_event_layout($value);
+    }
+
+    $value = sanitize_key((string) $value);
+    if ($value === 'feature') {
+        $value = 'fest';
+    }
+
+    return in_array($value, ['standard', 'compact', 'fest', 'long'], true) ? $value : 'standard';
+}
+
+function iss_graph_get_offer_contract_for_post($post): array
+{
+    $post = $post instanceof WP_Post ? $post : get_post(absint($post));
+    if (!$post instanceof WP_Post) {
+        return [];
+    }
+
+    $post_type = sanitize_key((string) $post->post_type);
+    if ($post_type === 'fuehrung') {
+        return [
+            'kind' => 'offer',
+            'subtype' => 'tour',
+            'subtype_source' => 'post_type:fuehrung',
+        ];
+    }
+
+    if ($post_type !== 'veranstaltung') {
+        return [];
+    }
+
+    $layout = iss_graph_normalize_veranstaltung_layout_for_offer(get_post_meta((int) $post->ID, '_iss_event_layout', true));
+    if ($layout === 'fest') {
+        return [
+            'kind' => 'offer',
+            'subtype' => 'special_opening',
+            'subtype_source' => '_iss_event_layout:fest',
+        ];
+    }
+
+    $format = iss_graph_normalize_veranstaltung_format_for_offer(get_post_meta((int) $post->ID, '_iss_event_format', true));
+    $format_map = [
+        'vortrag' => 'lecture',
+        'gespraech' => 'discussion',
+        'lesung' => 'reading',
+        'praesentation' => 'presentation',
+        'general' => 'event',
+    ];
+    $subtype = (string) ($format_map[$format] ?? 'event');
+
+    return [
+        'kind' => 'offer',
+        'subtype' => $subtype,
+        'subtype_source' => '_iss_event_format:' . $format,
+    ];
+}
+
+function iss_graph_get_entity_contract_payload(array $entity): array
+{
+    $storage_kind = iss_graph_normalize_entity_kind_key((string) ($entity['entity_kind'] ?? ''));
+    $canonical_kind = iss_graph_get_canonical_entity_kind($storage_kind);
+    $contract_kind = iss_graph_get_entity_contract_kind($storage_kind);
+    $subtype = iss_graph_get_entity_default_subtype($storage_kind);
+    $subtype_source = $subtype !== '' ? 'entity_kind:' . $canonical_kind : '';
+
+    $post_id = absint($entity['post_id'] ?? 0);
+    if ($contract_kind === 'offer' && $post_id > 0) {
+        $offer_contract = iss_graph_get_offer_contract_for_post($post_id);
+        if ($offer_contract) {
+            $subtype = iss_graph_normalize_entity_kind_key((string) ($offer_contract['subtype'] ?? $subtype));
+            $subtype_source = sanitize_text_field((string) ($offer_contract['subtype_source'] ?? $subtype_source));
+        }
+    }
+
+    return [
+        'kind' => $contract_kind,
+        'subtype' => $subtype,
+        'subtype_source' => $subtype_source,
+        'canonical_kind' => $canonical_kind,
+        'storage_kind' => $storage_kind,
+    ];
+}
+
+function iss_graph_get_public_object_post_type_contracts(): array
+{
+    $register_post_type = defined('ISS_REGISTER_POST_TYPE') ? sanitize_key((string) ISS_REGISTER_POST_TYPE) : 'register_place';
+    $archive_object_post_type = defined('ISS_WF_IMPORT_OBJECT_POST_TYPE') ? sanitize_key((string) ISS_WF_IMPORT_OBJECT_POST_TYPE) : 'archivobjekt';
+    $contracts = [
+        $register_post_type => [
+            'canonical_kind' => 'place',
+            'requires_subtype' => false,
+        ],
+        $archive_object_post_type => [
+            'canonical_kind' => 'archive_object',
+            'requires_subtype' => false,
+        ],
+        'ausstellung' => [
+            'canonical_kind' => 'exhibition',
+            'requires_subtype' => false,
+        ],
+        'publication' => [
+            'canonical_kind' => 'publication',
+            'requires_subtype' => false,
+        ],
+        'video' => [
+            'canonical_kind' => 'video',
+            'requires_subtype' => false,
+        ],
+        'projekt' => [
+            'canonical_kind' => 'project',
+            'requires_subtype' => false,
+        ],
+        'fuehrung' => [
+            'canonical_kind' => 'tour',
+            'requires_subtype' => true,
+        ],
+        'veranstaltung' => [
+            'canonical_kind' => 'event',
+            'requires_subtype' => true,
+        ],
+    ];
+
+    $normalized = [];
+    foreach ($contracts as $post_type => $contract) {
+        $post_type = sanitize_key((string) $post_type);
+        $canonical_kind = iss_graph_normalize_entity_kind_key((string) ($contract['canonical_kind'] ?? ''));
+        $definition = $canonical_kind !== '' ? iss_graph_get_entity_kind_definition($canonical_kind) : null;
+        if ($post_type === '' || !$definition) {
+            continue;
+        }
+
+        $storage_kind = iss_graph_normalize_entity_kind_key((string) ($definition['storage_kind'] ?? $canonical_kind));
+        $normalized[$post_type] = [
+            'post_type' => $post_type,
+            'canonical_kind' => $canonical_kind,
+            'storage_kind' => $storage_kind,
+            'contract_kind' => iss_graph_get_entity_contract_kind($storage_kind),
+            'requires_subtype' => !empty($contract['requires_subtype']),
+        ];
+    }
+
+    return (array) apply_filters('iss_graph_public_object_post_type_contracts', $normalized);
 }

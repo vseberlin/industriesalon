@@ -1,5 +1,14 @@
 # Changelog
 
+## 2026-06-13
+- Added the first contract-only `offer` bridge in `iss-graph`:
+  - kept existing entity storage and CPTs unchanged: `fuehrung` remains the tour storage kind and `veranstaltung` remains the event storage kind
+  - added additive `contract_kind`, `subtype`, and nested `contract` fields to `/wp-json/iss/v1` entity list/detail responses, plus offer subtype metadata in `/wp-json/iss/v1/contract`
+  - maps `fuehrung` to `offer/tour`; maps `veranstaltung` through existing editor-owned meta, with `_iss_event_format` producing `event`, `lecture`, `discussion`, `reading`, or `presentation`, and `_iss_event_layout=fest` producing `special_opening`
+  - added default drift check `public-object-contract` to verify published public objects have the expected graph entity, canonical/storage kind mapping, accepted `wp_post` identifier, and required offer subtype
+  - local verification: PHP syntax for touched files, PHPCS target, PHPStan target, `wp iss-graph drift-check --checks=public-object-contract --limit=25`, default `wp iss-graph drift-check --limit=25`, `wp iss-graph facade-check --limit=2`, and `wp iss-graph facade-entities-compare --limit=5` passed
+  - no SQL or uploads artifact is required because the slice changes code/read contracts only
+
 ## 2026-06-12
 - Implemented the first human graph-influence layer:
   - generalized `iss-graph` editorial signals from legacy `feature` / `hide` to canonical `pin`, `feature`, `boost`, and `suppress`, with legacy `hide` normalized to `suppress`

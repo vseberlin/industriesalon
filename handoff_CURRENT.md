@@ -1,6 +1,6 @@
 # Current Handoff
 
-Updated: 2026-06-12
+Updated: 2026-06-13
 
 Current checkpoint only. History belongs in `CHANGELOG.md`; active follow-up belongs in `TODO.md`.
 
@@ -13,6 +13,7 @@ Current checkpoint only. History belongs in `CHANGELOG.md`; active follow-up bel
 - `/ausstellungen/` uses the dedicated `industriesalon/ausstellungen-browser` and WP_Query availability filters. Dauer/Digital Ausstellungen are availability-only and do not sync into occurrence rows.
 - Local programme/template cleanup artifacts exist and must travel with the matching code if deployed: `ops/sql/2026-06-11-ausstellung-availability-cleanup.sql`, `ops/sql/2026-06-11-strict-programme-toggle-backfill.sql`, `ops/sql/2026-06-12-legacy-occurrence-origin-purge.sql`, `ops/sql/2026-06-12-supersaas-past-occurrence-reactivation.sql`, `ops/sql/2026-06-12-tour-template-collapse.sql`, and `ops/sql/2026-06-12-fuehrung-template-hierarchy-cleanup.sql`.
 - `/wp-json/iss/v1` is a read-only facade, not a new storage owner. Active facade routes are contract, entities, entity detail, occurrences, search, timeline, and tour-slots.
+- The first contract-only `offer` bridge is implemented in `iss-graph` without CPT or storage renames. `fuehrung` maps to `offer/tour`; `veranstaltung` maps to `offer` subtypes from existing `_iss_event_format` and `_iss_event_layout` editor meta. `/iss/v1` entity responses now expose additive `contract_kind`, `subtype`, and nested `contract` fields.
 - Public consumers already switched to the facade: header search uses `/iss/v1/search`, timeline query uses `/iss/v1/timeline`, and tour slot reads use `/iss/v1/tour-slots`. The old public read routes are retired; booking submissions still use `/is-tours/v1/book`.
 - Retired read routes are not registered locally: `/iss-search/v1/search`, `/iss-programm/v1/timeline`, and `/is-tours/v1/slots`. `wp iss-graph drift-check --checks=facade-route-contract` now guards runtime route registration and active first-party source references.
 - `wp iss-graph entity-hygiene-audit` is available as a read-only graph review aid. It inventories duplicate normalized names and flags ambiguity/wrong-kind candidates around `Industriesalon Schöneweide`, `WF`, `KWO`, `TRO`, and `AEG` with entity IDs, source labels, accepted identifiers, and stored names.
@@ -31,6 +32,7 @@ Current checkpoint only. History belongs in `CHANGELOG.md`; active follow-up bel
 - Production does not automatically have this checkpoint. Transfer needs code plus the paired SQL/data steps and target-side verification.
 - Local and staging DB state changed during the refactor: occurrence schema/backfill/sync, graph backfill, scaffold plugin activation, and Ausstellung availability cleanup.
 - Facade route retirement has no SQL or uploads artifact. Targets should still run `wp iss-graph drift-check --checks=facade-route-contract --limit=25` after pulling code.
+- The offer bridge has no SQL or uploads artifact. It is additive facade/registry code only; targets should run `wp iss-graph drift-check --checks=public-object-contract --limit=25` after pulling code.
 - The graph entity hygiene audit has no SQL or uploads artifact and performs no DB writes. Its output is expected to include review candidates; those candidates are not runtime drift by themselves.
 - The alias replay, KWO/AEG canonical organization artifact, and Industriesalon/WF canonical identity artifact are now applied on staging, but not production. Production must still apply them in order after a DB backup.
 - The KWO/AEG canonical organization artifact should be applied only after alias replay is clean. Applying it before alias replay would mix two graph data migrations and change the reviewed replay counts.
@@ -45,7 +47,7 @@ Current checkpoint only. History belongs in `CHANGELOG.md`; active follow-up bel
 ## Next Action
 
 - For production transfer, take a target DB backup, apply the current programme/template SQL artifacts, apply `ops/sql/2026-06-12-graph-alias-backfill-replay.sql`, run `wp iss-graph sync-aliases`, verify `wp iss-graph drift-check --checks=alias-backfill-replay --limit=25`, apply `ops/sql/2026-06-12-graph-canonical-kwo-aeg-organizations.sql`, verify `wp iss-graph drift-check --checks=canonical-organization-seeds --limit=25`, then apply `ops/sql/2026-06-12-graph-canonical-wf-industriesalon.sql`, run the alias replay once more, and verify `wp iss-graph drift-check --checks=canonical-wf-industriesalon --limit=25`.
-- Next local refactor candidate for 2026-06-13: after staging validates `bea9c5e`, audit canonical entity coverage for all public objects and add a drift/audit guard for missing entity/subtype mappings. Start the `Offer` bridge conceptually by mapping legacy `fuehrung` and `veranstaltung` into offer subtypes without renaming CPTs or changing public templates yet.
+- Next local refactor candidate after this offer-bridge slice: validate the additive `/iss/v1` contract fields on staging, smoke-test graph editorial signal controls in wp-admin plus `/iss/v1/search`, then choose the next facade endpoint candidate: entity relations or availability.
 - When production exists, apply the current programme/template SQL artifacts with the matching code and run graph/occurrence/Führung drift checks.
 - Verify production public consumers after the data step: `/`, `/kalender/`, `/ausstellungen/`, `/fuehrungen/`, `/veranstaltungen/`, and inline REST config for search/timeline/tour-slot reads.
 
@@ -77,3 +79,4 @@ Current checkpoint only. History belongs in `CHANGELOG.md`; active follow-up bel
 - Staging Industriesalon/WF verification reported by the operator on 2026-06-12: `alias-backfill-replay`, `canonical-organization-seeds`, `canonical-wf-industriesalon`, `wp iss-graph verify`, and default `wp iss-graph drift-check --limit=25` passed; alias dry-run was clean with `changed_entities=0`, `removed_names=0`, `added_names=0`; HTTP checks returned `200` for `/`, `/kalender/`, and `/fuehrungen/`. Focused audit for `Industriesalon Schöneweide,ISS,WF` still reports broader Industriesalon content/place/context inventory, but targeted identities are clean and `ISS` resolves to entity `123`.
 - Legacy occurrence cleanup guard and programme frontend-helper refactor checks passed locally: PHP syntax, PHPCS target, PHPStan target, `git diff --check`, `wp iss-occurrences drift-check`, and HTTP spot checks for `/kalender/` and `/fuehrungen/` inline REST config.
 - Führung template hierarchy checks passed locally: `single-fuehrung` is theme-backed, `single-tour` and `single-tour-on-demand` are no longer block-template sources, published Führung custom-template assignments were deleted, `wp iss-fuehrungen drift-check --limit=25` passes, and representative public/on-demand Führung URLs render through the hierarchy template without empty public-date panels.
+- Offer bridge verification on 2026-06-13: PHP syntax for touched `iss-graph` files, PHPCS target, PHPStan target, `wp iss-graph drift-check --checks=public-object-contract --limit=25`, default `wp iss-graph drift-check --limit=25`, `wp iss-graph facade-check --limit=2`, and `wp iss-graph facade-entities-compare --limit=5` passed.

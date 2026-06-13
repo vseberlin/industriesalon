@@ -84,11 +84,15 @@ function iss_facade_rest_prepare_entity_kind_definition(array $definition): arra
 {
     $canonical_kind = (string) ($definition['canonical_kind'] ?? '');
     $storage_kind = (string) ($definition['storage_kind'] ?? $canonical_kind);
+    $contract_kind = sanitize_key((string) ($definition['contract_kind'] ?? $canonical_kind));
 
     return [
         'kind' => $canonical_kind,
         'canonical_kind' => $canonical_kind,
         'storage_kind' => $storage_kind,
+        'contract_kind' => $contract_kind !== '' ? $contract_kind : $canonical_kind,
+        'default_subtype' => sanitize_key((string) ($definition['default_subtype'] ?? '')),
+        'subtypes' => array_values(array_map('sanitize_key', (array) ($definition['subtypes'] ?? []))),
         'label' => isset($definition['label']) && is_scalar($definition['label']) ? (string) $definition['label'] : $canonical_kind,
         'owner' => (string) ($definition['owner'] ?? ''),
         'post_types' => array_values(array_map('sanitize_key', (array) ($definition['post_types'] ?? []))),
@@ -108,6 +112,15 @@ function iss_facade_rest_prepare_entity(array $entity, bool $include_details = f
     $canonical_kind = function_exists('iss_graph_get_canonical_entity_kind')
         ? iss_graph_get_canonical_entity_kind($storage_kind)
         : $storage_kind;
+    $contract = function_exists('iss_graph_get_entity_contract_payload')
+        ? iss_graph_get_entity_contract_payload($entity)
+        : [
+            'kind' => $canonical_kind,
+            'subtype' => '',
+            'subtype_source' => '',
+            'canonical_kind' => $canonical_kind,
+            'storage_kind' => $storage_kind,
+        ];
     $post_id = absint($entity['post_id'] ?? 0);
     $profile_post_id = absint($entity['profile_post_id'] ?? 0);
     $url = iss_facade_rest_get_post_url($post_id);
@@ -119,6 +132,15 @@ function iss_facade_rest_prepare_entity(array $entity, bool $include_details = f
         'kind' => $canonical_kind,
         'canonical_kind' => $canonical_kind,
         'storage_kind' => $storage_kind,
+        'contract_kind' => sanitize_key((string) ($contract['kind'] ?? $canonical_kind)),
+        'subtype' => sanitize_key((string) ($contract['subtype'] ?? '')),
+        'contract' => [
+            'kind' => sanitize_key((string) ($contract['kind'] ?? $canonical_kind)),
+            'subtype' => sanitize_key((string) ($contract['subtype'] ?? '')),
+            'subtype_source' => sanitize_text_field((string) ($contract['subtype_source'] ?? '')),
+            'canonical_kind' => sanitize_key((string) ($contract['canonical_kind'] ?? $canonical_kind)),
+            'storage_kind' => sanitize_key((string) ($contract['storage_kind'] ?? $storage_kind)),
+        ],
         'title' => (string) ($entity['display_title'] ?? ''),
         'summary' => (string) ($entity['summary'] ?? ''),
         'slug' => (string) ($entity['canonical_slug'] ?? ''),

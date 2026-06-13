@@ -26,6 +26,7 @@ This is the repo-owned plan for the gradual Industriesalon refactor. It records 
 - `iss_timeline_enabled` remains the public visibility switch for Ausstellung overview browsers.
 - The graph entity hygiene guardrail now exists as the read-only `wp iss-graph entity-hygiene-audit` command, and the first local review is recorded in `docs/project/graph-entity-hygiene-review-2026-06-12.md`. The code-only alias backfill boundary is implemented: generated organization abbreviations/official names stay on organization entities, with persisted replay deferred.
 - `iss-graph` now has a central entity-kind registry for canonical kinds, current storage kinds, owner plugins, post-type mappings, and legacy aliases. It keeps current rows such as `ausstellung`, `veranstaltung`, `fuehrung`, `projekt`, `page`, and `archivbeitrag` stable while exposing the canonical target names `exhibition`, `event`, `tour`, and `project`.
+- `iss-graph` now exposes the first contract-only `offer` bridge without renaming CPTs or storage rows: `fuehrung` maps to `offer/tour`, while `veranstaltung` maps to `offer` subtypes from existing `_iss_event_format` and `_iss_event_layout` editor meta.
 - `iss-graph` now exposes the first read-only `/wp-json/iss/v1` facade: contract, entities, entity detail, occurrences, search, the programme timeline compatibility view, and the tour-slot read view. It delegates to existing graph, occurrence, search, programme timeline, and tour-slot services and does not remove or rename older plugin routes.
 - The first public consumers are switched to `/iss/v1`: header search, timeline query reads, and tour-slot reads. Booking writes remain on `/is-tours/v1/book`.
 
@@ -37,7 +38,9 @@ This is the repo-owned plan for the gradual Industriesalon refactor. It records 
 - `saas-api` owns SuperSaaS settings, sync, and the read-only `/iss/v1/tour-slots` facade view. Booking writes stay with `/is-tours/v1/book`.
 - The theme owns templates, public composition, visual skin, and route-level page structure.
 - `wp iss-graph drift-check --checks=entity-kind-contract` verifies stored entity kinds and post-backed entity mappings against the registry.
+- `wp iss-graph drift-check --checks=public-object-contract` verifies published public object entity coverage, legacy storage-kind mapping, accepted `wp_post` identifiers, and required offer subtypes for `fuehrung` / `veranstaltung`.
 - `/wp-json/iss/v1` is a facade boundary for the greenfield contract, not a new storage owner.
+- `/wp-json/iss/v1` entity responses now expose additive `contract_kind`, `subtype`, and `contract` fields; old `kind`, `canonical_kind`, and `storage_kind` remain stable for existing consumers.
 - `wp iss-graph facade-check` verifies the `/iss/v1` route contract before any consumer is switched to the facade.
 - `wp iss-graph facade-search-compare` compares the search service callback with `/iss/v1/search`.
 - `wp iss-graph facade-occurrences-compare` compares direct `iss_occurrences_query()` output with `/iss/v1/occurrences` before any programme consumer switches routes.
