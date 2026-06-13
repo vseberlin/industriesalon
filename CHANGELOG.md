@@ -8,6 +8,7 @@
   - removed the `editorial-signals` drift-check grandfather exception for active legacy `related/feature` rows without metadata
   - local backup: `ops/content-backups/2026-06-13-before-editorial-signal-contract-cleanup.sql`
   - local verification: SQL rollback syntax check, PHP syntax for `plugins/iss-graph/includes/cli.php`, row inspection, `wp iss-graph drift-check --checks=editorial-signals --limit=25`, and default `wp iss-graph drift-check --limit=25` passed
+  - staging verification reported by the operator: SQL import passed, `wp iss-graph drift-check --checks=editorial-signals --limit=25` passed, and full `wp iss-graph drift-check --limit=25` passed
 - Added the first read-only Ausstellung availability facade slice:
   - added `GET /wp-json/iss/v1/availability` in `iss-programm`, backed by the existing `industriesalon/ausstellungen-browser` availability query helpers and the editor-owned `ausstellung_typ` / `iss_timeline_enabled` contracts
   - the route exposes structured exhibition availability items with post id, optional graph entity id, title, URL, type, state, period dates, period label, and source post metadata; it does not render cards or create availability storage
@@ -19,6 +20,7 @@
 - Added `ops/sql/2026-06-13-staging-untyped-ausstellungen-cleanup.sql` for the staging-only Ausstellung audit blocker:
   - aligns the seven untyped staging-published Ausstellung posts with the local non-public checkpoint state, removes any stale occurrence rows for those IDs, and recalculates `ausstellung_typ` counts
   - this is target content cleanup, not availability-facade storage
+  - staging verification reported by the operator: SQL import passed and `wp iss-programm ausstellungen-audit --strict` passed with 0 warnings
 - Added the first read-only entity-relations facade slice in `iss-graph`:
   - added `GET /wp-json/iss/v1/entities/{id}/relations` over existing graph entity-relation APIs with outgoing, incoming, both, family, source-system, and limit filters
   - relation payloads expose the related entity kind/storage kind, relation family/type/role/label, public URL when available, valid-year fields, and source provenance without creating new relation storage
