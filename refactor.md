@@ -41,6 +41,7 @@ This is the repo-owned plan for the gradual Industriesalon refactor. It records 
 - `wp iss-graph drift-check --checks=public-object-contract` verifies published public object entity coverage, legacy storage-kind mapping, accepted `wp_post` identifiers, and required offer subtypes for `fuehrung` / `veranstaltung`.
 - `wp iss-graph drift-check --checks=entity-relations-contract` verifies the nested relation facade can return outgoing/incoming public graph relations with the expected response shape.
 - `wp iss-graph drift-check --checks=availability-contract` verifies the Ausstellung availability facade can return the four existing browser filters with the expected response shape.
+- `wp iss-graph drift-check --checks=editorial-signals` now requires reason, author, and valid expiry metadata for every active editorial signal; the old active `related/feature` grandfather exception is removed after the explicit cleanup artifact.
 - `/wp-json/iss/v1` is a facade boundary for the greenfield contract, not a new storage owner.
 - `/wp-json/iss/v1` entity responses now expose additive `contract_kind`, `subtype`, and `contract` fields; old `kind`, `canonical_kind`, and `storage_kind` remain stable for existing consumers.
 - `/wp-json/iss/v1/entities/{id}/relations` exposes existing graph relations with outgoing, incoming, both, family, source-system, and limit filters; it does not create relation storage.

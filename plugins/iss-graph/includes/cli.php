@@ -3722,14 +3722,10 @@ function iss_graph_wpcli_check_editorial_signals(int $limit): array
             }
         }
 
-        $legacy_related_feature = $surface === 'related'
-            && $signal === 'feature'
-            && ($reason === '' || $expires_at === '' || $expires_at === '0000-00-00 00:00:00');
         if (
             $status === 'active'
             && $signal !== ''
             && $service->editorial_signal_requires_metadata($surface, $signal)
-            && !$legacy_related_feature
         ) {
             if ($reason === '') {
                 $errors[] = sprintf('Editorial signal %d has no reason.', $id);

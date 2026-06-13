@@ -1,6 +1,13 @@
 # Changelog
 
 ## 2026-06-13
+- Cleaned up the legacy graph editorial-signal rows after staging/editor smoke validation:
+  - added and locally applied `ops/sql/2026-06-13-editorial-signal-contract-cleanup.sql`
+  - retired two expired tour recommendations and one placeholder/test Veranstaltung self-promotion
+  - kept the two digital Ausstellung self-promotions active with explicit reason, author, and expiry metadata
+  - removed the `editorial-signals` drift-check grandfather exception for active legacy `related/feature` rows without metadata
+  - local backup: `ops/content-backups/2026-06-13-before-editorial-signal-contract-cleanup.sql`
+  - local verification: SQL rollback syntax check, PHP syntax for `plugins/iss-graph/includes/cli.php`, row inspection, `wp iss-graph drift-check --checks=editorial-signals --limit=25`, and default `wp iss-graph drift-check --limit=25` passed
 - Added the first read-only Ausstellung availability facade slice:
   - added `GET /wp-json/iss/v1/availability` in `iss-programm`, backed by the existing `industriesalon/ausstellungen-browser` availability query helpers and the editor-owned `ausstellung_typ` / `iss_timeline_enabled` contracts
   - the route exposes structured exhibition availability items with post id, optional graph entity id, title, URL, type, state, period dates, period label, and source post metadata; it does not render cards or create availability storage

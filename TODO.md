@@ -22,6 +22,7 @@ Immediate executable work only. Larger future programs live in `docs/project/bac
   - apply `ops/sql/2026-06-12-graph-alias-backfill-replay.sql`, run `wp iss-graph sync-aliases`, and verify `--checks=alias-backfill-replay`
   - apply `ops/sql/2026-06-12-graph-canonical-kwo-aeg-organizations.sql` and verify `--checks=canonical-organization-seeds`
   - apply `ops/sql/2026-06-12-graph-canonical-wf-industriesalon.sql`, run `wp iss-graph sync-aliases`, and verify `--checks=canonical-wf-industriesalon`
+  - apply `ops/sql/2026-06-13-editorial-signal-contract-cleanup.sql` and verify `--checks=editorial-signals`
   - run target occurrence schema/sync/backfill commands as needed, then graph and occurrence drift checks
 - Verify production public consumers:
   - `/`, `/kalender/`, `/ausstellungen/`, `/fuehrungen/`, `/veranstaltungen/`
@@ -34,6 +35,7 @@ Immediate executable work only. Larger future programs live in `docs/project/bac
   - offer bridge staging validation is green: additive `/iss/v1` `contract_kind` / `subtype`, `public-object-contract`, `facade-check`, and `facade-entities-compare` passed per operator report
   - entity-relations facade staging validation is green: `entity-relations-contract`, `facade-check`, and `facade-entity-relations-compare` passed per operator report
   - graph editorial signal controls and `/iss/v1/search` smoke test are green on staging; `editorial-signals` drift and default graph drift passed per operator report
+  - local graph editorial-signal cleanup is done; apply `ops/sql/2026-06-13-editorial-signal-contract-cleanup.sql` on staging/production targets and rerun `wp iss-graph drift-check --checks=editorial-signals --limit=25`
   - availability facade staging validation is partly green: `availability-contract`, `facade-check`, and `facade-availability-compare` passed per operator report
   - resolve the remaining staging data blocker by applying `ops/sql/2026-06-13-staging-untyped-ausstellungen-cleanup.sql`, then rerun `wp iss-programm ausstellungen-audit --strict`
   - if editors intentionally want those seven Ausstellung posts public, do not apply the cleanup artifact; assign real `ausstellung_typ` terms and dates first, then rerun the strict audit
@@ -41,7 +43,6 @@ Immediate executable work only. Larger future programs live in `docs/project/bac
   - no availability consumer has been switched yet; treat `/iss/v1/availability` as a staged read contract until validated
 - 2026-06-07: Review the 3 pending `video_transcript` evidence refs in Video CPT editors and accept/dismiss them after the graph entity hygiene audit exists.
 - 2026-06-12: Follow up the human graph-influence layer after staging/editor validation:
-  - review the 5 legacy related `feature` signal rows and either add reason/expiry or retire expired rows deliberately
   - decide whether exhibitions, projects, events, and tours need additional signal consumers beyond graph search and related-content blocks
 - Review `/videos/` embed behavior against the YouTube-hit goal:
   - test whether card selection should update poster/metadata while playback starts only after explicit user play
