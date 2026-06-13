@@ -1,6 +1,13 @@
 # Changelog
 
 ## 2026-06-13
+- Added the first read-only Ausstellung availability facade slice:
+  - added `GET /wp-json/iss/v1/availability` in `iss-programm`, backed by the existing `industriesalon/ausstellungen-browser` availability query helpers and the editor-owned `ausstellung_typ` / `iss_timeline_enabled` contracts
+  - the route exposes structured exhibition availability items with post id, optional graph entity id, title, URL, type, state, period dates, period label, and source post metadata; it does not render cards or create availability storage
+  - added `wp iss-graph facade-availability-compare` and default drift check `availability-contract`
+  - extended `/iss/v1/contract`, `wp iss-graph facade-check`, and `facade-route-contract` to advertise and guard the provider-owned availability route
+  - local verification: PHP syntax for touched files, PHPCS target, PHPStan target, `wp iss-graph facade-check --limit=2`, `wp iss-graph facade-availability-compare --limit=5`, `wp iss-graph drift-check --checks=availability-contract --limit=25`, `wp iss-graph drift-check --checks=facade-route-contract --limit=25`, default `wp iss-graph drift-check --limit=25`, `wp iss-programm ausstellungen-audit --strict`, direct REST probe for `/iss/v1/availability?filter=aktuell&limit=3`, and `git diff --check` passed
+  - no SQL or uploads artifact is required because the slice changes code/read contracts only
 - Added the first read-only entity-relations facade slice in `iss-graph`:
   - added `GET /wp-json/iss/v1/entities/{id}/relations` over existing graph entity-relation APIs with outgoing, incoming, both, family, source-system, and limit filters
   - relation payloads expose the related entity kind/storage kind, relation family/type/role/label, public URL when available, valid-year fields, and source provenance without creating new relation storage
