@@ -173,7 +173,7 @@ add_action('admin_notices', function () {
     echo '<div class="notice notice-warning"><p>';
     echo esc_html__('Für diese Führung sind keine zukünftigen öffentlichen Termine verknüpft, obwohl der Buchungsmodus den Termin-Kalender erwartet.', 'iss-fuehrungen');
     echo ' ';
-    echo '<a href="' . esc_url($edit_url) . '#iss-programm-calendar-mapping">' . esc_html__('SuperSaaS-Reihe prüfen', 'iss-fuehrungen') . '</a>';
+    echo '<a href="' . esc_url($edit_url) . '#iss-occurrences-calendar-mapping">' . esc_html__('SuperSaaS-Reihe prüfen', 'iss-fuehrungen') . '</a>';
     echo '</p></div>';
 });
 

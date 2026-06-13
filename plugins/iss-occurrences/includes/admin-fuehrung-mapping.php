@@ -4,7 +4,7 @@ if (!defined('ABSPATH')) {
     exit;
 }
 
-function iss_programm_get_series_source_options() {
+function iss_occurrences_get_series_source_options() {
     $options = [];
     $series_sources = function_exists('iss_occurrences_get_series_sources') ? iss_occurrences_get_series_sources() : [];
 
@@ -31,7 +31,7 @@ function iss_programm_get_series_source_options() {
         if ($source_post_id > 0) {
             $label .= ' — #' . $source_post_id . ' ' . get_the_title($source_post_id);
         } else {
-            $label .= ' — ' . __('nicht zugeordnet', 'iss-programm');
+            $label .= ' — ' . __('nicht zugeordnet', 'iss-occurrences');
         }
 
         $options[$series_key] = $label;
@@ -41,7 +41,7 @@ function iss_programm_get_series_source_options() {
     return $options;
 }
 
-function iss_programm_get_current_series_key_for_post($post_id) {
+function iss_occurrences_get_current_series_key_for_post($post_id) {
     $post_id = (int) $post_id;
     if ($post_id <= 0) {
         return '';
@@ -66,29 +66,29 @@ add_action('add_meta_boxes', function ($post_type, $post) {
     }
 
     add_meta_box(
-        'iss-programm-calendar-mapping',
-        __('SuperSaaS-Reihe', 'iss-programm'),
-        'iss_programm_render_fuehrung_mapping_metabox',
+        'iss-occurrences-calendar-mapping',
+        __('SuperSaaS-Reihe', 'iss-occurrences'),
+        'iss_occurrences_render_fuehrung_mapping_metabox',
         'fuehrung',
         'side',
         'high'
     );
 }, 20, 2);
 
-function iss_programm_render_fuehrung_mapping_metabox($post) {
+function iss_occurrences_render_fuehrung_mapping_metabox($post) {
     if (!($post instanceof WP_Post)) {
         return;
     }
 
     $post_id = (int) $post->ID;
-    $current_series_key = iss_programm_get_current_series_key_for_post($post_id);
-    $options = iss_programm_get_series_source_options();
+    $current_series_key = iss_occurrences_get_current_series_key_for_post($post_id);
+    $options = iss_occurrences_get_series_source_options();
 
-    wp_nonce_field('iss_programm_save_fuehrung_series_source', 'iss_programm_series_source_nonce');
+    wp_nonce_field('iss_occurrences_save_fuehrung_series_source', 'iss_occurrences_series_source_nonce');
 
-    echo '<p><label for="iss_programm_series_key"><strong>' . esc_html__('Terminreihe', 'iss-programm') . '</strong></label></p>';
-    echo '<select class="widefat" id="iss_programm_series_key" name="iss_programm_series_key">';
-    echo '<option value="">' . esc_html__('— Keine Terminreihe —', 'iss-programm') . '</option>';
+    echo '<p><label for="iss_occurrences_series_key"><strong>' . esc_html__('Terminreihe', 'iss-occurrences') . '</strong></label></p>';
+    echo '<select class="widefat" id="iss_occurrences_series_key" name="iss_occurrences_series_key">';
+    echo '<option value="">' . esc_html__('— Keine Terminreihe —', 'iss-occurrences') . '</option>';
     foreach ($options as $series_key => $label) {
         printf(
             '<option value="%s" %s>%s</option>',
@@ -100,7 +100,7 @@ function iss_programm_render_fuehrung_mapping_metabox($post) {
     echo '</select>';
 
     echo '<p class="description" style="margin-top:8px;">'
-        . esc_html__('Die Führung wird über eine SuperSaaS-Terminreihe mit der öffentlichen Occurrence-Projektion verbunden.', 'iss-programm')
+        . esc_html__('Die Führung wird über eine SuperSaaS-Terminreihe mit der öffentlichen Occurrence-Projektion verbunden.', 'iss-occurrences')
         . '</p>';
 }
 
@@ -115,11 +115,11 @@ add_action('save_post_fuehrung', function ($post_id) {
         return;
     }
 
-    if (!isset($_POST['iss_programm_series_source_nonce']) || !wp_verify_nonce((string) $_POST['iss_programm_series_source_nonce'], 'iss_programm_save_fuehrung_series_source')) {
+    if (!isset($_POST['iss_occurrences_series_source_nonce']) || !wp_verify_nonce((string) $_POST['iss_occurrences_series_source_nonce'], 'iss_occurrences_save_fuehrung_series_source')) {
         return;
     }
 
-    if (!array_key_exists('iss_programm_series_key', $_POST)) {
+    if (!array_key_exists('iss_occurrences_series_key', $_POST)) {
         return;
     }
 
@@ -128,7 +128,7 @@ add_action('save_post_fuehrung', function ($post_id) {
         return;
     }
 
-    $series_key = strtolower(sanitize_text_field((string) wp_unslash($_POST['iss_programm_series_key'])));
+    $series_key = strtolower(sanitize_text_field((string) wp_unslash($_POST['iss_occurrences_series_key'])));
     $series_key = preg_replace('/[^a-z0-9:_-]+/', '', $series_key);
     $series_key = trim((string) $series_key);
 

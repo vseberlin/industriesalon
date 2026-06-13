@@ -1,7 +1,7 @@
 <?php
 /**
  * Plugin Name: ISS Commerce Lite
- * Description: Lightweight SuperSaaS slot sync, booking request, and publication order intake for Industriesalon.
+ * Description: Lightweight booking request and publication order intake for Industriesalon.
  * Version: 0.3.0
  */
 
@@ -746,17 +746,7 @@ add_filter('iss_publications_order_button_html', function ($html, $post_id, $con
 
 require_once ISS_PAYMENTS_LITE_PATH . 'includes/admin.php';
 require_once ISS_PAYMENTS_LITE_PATH . 'includes/cli.php';
-require_once ISS_PAYMENTS_LITE_PATH . 'modules/supersaas/bootstrap.php';
 
 register_activation_hook(__FILE__, function () {
     iss_payments_lite_install_schema();
-    if (function_exists('iss_supersaas_activate_sync')) {
-        iss_supersaas_activate_sync();
-    }
-});
-
-register_deactivation_hook(__FILE__, function () {
-    if (function_exists('iss_supersaas_deactivate_sync')) {
-        iss_supersaas_deactivate_sync();
-    }
 });

@@ -1,10 +1,24 @@
 # Changelog
 
 ## 2026-06-13
+- Cleaned the remaining occurrence ownership review items:
+  - changed `iss_occurrences_public_query_ready()` to check occurrence table readiness instead of requiring at least one public row, so valid empty tables no longer disable frontend queries
+  - moved occurrence horizon and German date-label formatting into `iss-occurrences`, removing reverse calls into `iss-frontend` helpers from the domain query service
+  - moved the SuperSaaS settings, public tour-slot route, slot cache helpers, and occurrence sync cron from `iss-commerce-lite` into `iss-occurrences`; commerce now stays focused on booking/order request writes
+  - renamed the SuperSaaS settings option/function prefix from legacy `is_saas_*` to `iss_supersaas_*`, with runtime migration from `is_saas_settings` to `iss_supersaas_settings` and drift guard coverage for the retired option
+  - moved SuperSaaS series mapping and sync admin out of `iss-frontend/modules/programme` into `iss-occurrences`, with the operational Tools page now at `tools.php?page=iss-occurrences-sync`
+  - replaced the `iss-occurrences` provider switchboard with explicit `Veranstaltung`, `Ausstellung`, `Projekt`, and `Fuehrung` provider classes while keeping the existing public helper functions stable
+  - documented the editorial source split: `veranstaltung`, `ausstellung`, and opt-in `projekt` are WordPress source providers; `fuehrung` rows are external SuperSaaS slot projections linked back to Führung posts
+  - added `is_open_ended` to the occurrence table, migrated old `2099-12-31` sentinel rows to `ends_at = NULL`, and updated time-window queries plus drift checks to treat sentinel dates as invalid drift
+  - renamed programme projection meta from `iss_timeline_enabled` to `iss_programme_enabled`, added a migration that copies old values and retires the old key, and made occurrence drift checks reject leftover `iss_timeline_enabled` rows
+  - split Ausstellung overview visibility into `iss_public_overview_enabled`, so `/ausstellungen/` can stay separate from programme/calendar projection
+  - changed Dauer/Digital Ausstellungen from hard-excluded availability types to explicit programme opt-in sources; if opted in with no end date, their occurrence rows use `is_open_ended`
+  - confirmed no active `iss_calendar_item` registration or sync path remains in plugin/theme code; the CLI keeps the legacy CPT/options/meta checks as drift guards
+  - local verification: PHP syntax, JS syntax, JS lint, PHPCS target, PHPStan target, occurrence schema/provider/admin probes, readiness/table probe, programme visibility migration probe (`iss_timeline_enabled=0`, Dauer/Digital overview preserved, programme opt-in zero), SuperSaaS settings migration/route/function/cron probes, `wp iss-occurrences verify`, `wp iss-occurrences sync --source=wp`, `wp iss-occurrences drift-check --limit=25`, sentinel-row probe, grouped occurrence query smoke, `wp iss-content tours-drift-check --limit=25`, `wp iss-frontend ausstellungen-audit --strict`, graph occurrence/entity-occurrence/tour-slot/availability facade compares, default graph drift, `wp iss-commerce-lite verify`, active plugin list, and `git diff --check` passed
 - Reorganized the first-party plugin stack around domain basenames:
   - moved `iss-content-model` plus the former `iss-fuehrungen` plugin into `iss-content`, with the Führung CPT/module loaded from `modules/tours`
   - moved the former `iss-programm` renderer into `iss-frontend/modules/programme`, keeping public block names, REST routes, script handles, and compatibility WP-CLI aliases stable
-  - merged the former `saas-api` SuperSaaS adapter and `iss-payments-lite` request intake into `iss-commerce-lite`
+  - merged the former `saas-api` SuperSaaS adapter and `iss-payments-lite` request intake during the transition; follow-up cleanup moved SuperSaaS ingestion into `iss-occurrences`
   - renamed `iss-wf-import` to `iss-archive` while preserving existing archive PHP prefixes, stored option keys, block names, handles, CPTs, and meta keys
   - added preferred WP-CLI aliases: `wp iss-content videos`, `wp iss-content tours-drift-check`, `wp iss-frontend ausstellungen-audit`, and `wp iss-commerce-lite verify`; old aliases remain for existing checks
   - added an `iss-core` active-plugin basename migrator so deployed databases with old `active_plugins` entries self-migrate to the new domain basenames without a fragile serialized SQL artifact

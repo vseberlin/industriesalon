@@ -14,15 +14,24 @@ See `source-of-truth.md` before deciding which storage layer is canonical for a 
 Programme calendar/timeline queries are served from `iss-occurrences`. The old
 hidden `iss_calendar_item` post type is not an active storage or query layer.
 WordPress source posts enter the occurrence projection only through explicit
-`iss_timeline_enabled` opt-in meta; missing toggle meta means hidden.
+`iss_programme_enabled` opt-in meta; missing toggle meta means hidden.
+Ausstellung overview/browser visibility is separate and uses
+`iss_public_overview_enabled`, so Dauer/Digital exhibitions can remain visible
+in Ausstellung overviews without becoming programme occurrences unless editors
+also opt them into the programme.
 Public occurrence rows depend on `source_post_id` and `source_post_type` for
 calendar identity, sync, delete, and editor routing. Occurrence rows must not
 store graph IDs; graph-facing routes translate entity requests to source post
 filters at the facade boundary.
+Open-ended occurrence ranges use `ends_at = NULL` plus `is_open_ended = 1`; far
+future sentinel dates such as `2099-12-31` are invalid drift.
+Editorial WordPress source providers are `veranstaltung`, `ausstellung`, and
+opt-in `projekt`. `fuehrung` occurrence rows are external SuperSaaS slot
+projections linked back to parent Führung posts, not editorial date rows.
 Legacy programme meta/options such as `iss_timeline_item_id`,
 `iss_exhibition_source`, `iss_exhibition_type`, `_iss_legacy_archive_term_slug`,
-`iss_is_permanent`, and `iss_calendar_*` mapping options are invalid drift, not
-compatibility inputs.
+`iss_is_permanent`, retired `iss_timeline_enabled`, and `iss_calendar_*`
+mapping options are invalid drift, not compatibility inputs.
 
 Commerce-lite request rows are stored in the existing `wp_iss_payments_lite_requests`.
 The old capped `is_tours_booking_requests` and `iss_publication_order_requests`

@@ -6,7 +6,7 @@ All notable changes for `iss-commerce-lite` are documented here.
 
 ### Changed
 - Renamed the owning plugin to `iss-commerce-lite`.
-- Absorbed the SuperSaaS adapter that previously lived in `saas-api`.
+- SuperSaaS adapter ownership moved to `iss-occurrences`; this plugin now owns request/order intake only.
 - Added `wp iss-commerce-lite verify` as the preferred command alias while keeping the old `wp iss-payments-lite verify` alias for existing checks.
 
 ## [0.2.0] - 2026-06-13

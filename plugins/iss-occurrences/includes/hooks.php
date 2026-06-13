@@ -24,7 +24,7 @@ add_action('save_post', function (int $post_id, WP_Post $post): void {
         return;
     }
 
-    if (!in_array($post->post_type, iss_occurrences_supported_source_post_types(), true)) {
+    if (!in_array($post->post_type, iss_occurrences_supported_editorial_source_post_types(), true)) {
         return;
     }
 
@@ -33,7 +33,7 @@ add_action('save_post', function (int $post_id, WP_Post $post): void {
 
 add_action('trashed_post', function (int $post_id): void {
     $post_type = (string) get_post_type($post_id);
-    if (!in_array($post_type, iss_occurrences_supported_source_post_types(), true)) {
+    if (!in_array($post_type, iss_occurrences_supported_editorial_source_post_types(), true)) {
         return;
     }
 
@@ -42,7 +42,7 @@ add_action('trashed_post', function (int $post_id): void {
 
 add_action('before_delete_post', function (int $post_id): void {
     $post_type = (string) get_post_type($post_id);
-    if (!in_array($post_type, iss_occurrences_supported_source_post_types(), true)) {
+    if (!in_array($post_type, iss_occurrences_supported_editorial_source_post_types(), true)) {
         return;
     }
 
@@ -52,7 +52,7 @@ add_action('before_delete_post', function (int $post_id): void {
 add_action('set_object_terms', function ($object_id): void {
     $post_id = (int) $object_id;
     $post_type = (string) get_post_type($post_id);
-    if (!in_array($post_type, iss_occurrences_supported_source_post_types(), true)) {
+    if (!in_array($post_type, iss_occurrences_supported_editorial_source_post_types(), true)) {
         return;
     }
 

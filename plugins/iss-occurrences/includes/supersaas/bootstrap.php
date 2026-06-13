@@ -1,12 +1,30 @@
 <?php
 if (!defined('ABSPATH')) exit;
 
-define('IS_SAAS_OPTION_GROUP', 'is_saas_options');
-define('IS_SAAS_OPTION_NAME', 'is_saas_settings');
+define('ISS_SUPERSAAS_OPTION_GROUP', 'iss_supersaas_options');
+define('ISS_SUPERSAAS_SETTINGS_OPTION', 'iss_supersaas_settings');
+define('ISS_SUPERSAAS_LEGACY_SETTINGS_OPTION', 'is_saas_settings');
+define('ISS_SUPERSAAS_SETTINGS_PAGE', 'iss-supersaas-api');
 
 require_once __DIR__ . '/includes/supersaas-sync.php';
 
-function is_saas_get_settings() {
+function iss_supersaas_migrate_legacy_settings_option(): void {
+    $legacy = get_option(ISS_SUPERSAAS_LEGACY_SETTINGS_OPTION, null);
+    if ($legacy === null) {
+        return;
+    }
+
+    if (get_option(ISS_SUPERSAAS_SETTINGS_OPTION, null) === null) {
+        update_option(ISS_SUPERSAAS_SETTINGS_OPTION, is_array($legacy) ? $legacy : [], false);
+    }
+
+    delete_option(ISS_SUPERSAAS_LEGACY_SETTINGS_OPTION);
+}
+add_action('init', 'iss_supersaas_migrate_legacy_settings_option', 3);
+
+function iss_supersaas_get_settings() {
+    iss_supersaas_migrate_legacy_settings_option();
+
     $defaults = [
         'schedule_id'   => '',
         'api_key'       => '',
@@ -15,7 +33,7 @@ function is_saas_get_settings() {
         'schedule_path' => '',
     ];
 
-    $settings = get_option(IS_SAAS_OPTION_NAME, []);
+    $settings = get_option(ISS_SUPERSAAS_SETTINGS_OPTION, []);
     if (!is_array($settings)) {
         $settings = [];
     }
@@ -23,9 +41,9 @@ function is_saas_get_settings() {
     return array_merge($defaults, $settings);
 }
 
-function is_saas_get_schedule_path($settings = null) {
+function iss_supersaas_get_schedule_path($settings = null) {
     if ($settings === null) {
-        $settings = is_saas_get_settings();
+        $settings = iss_supersaas_get_settings();
     }
 
     if (!empty($settings['schedule_path'])) {
@@ -35,7 +53,7 @@ function is_saas_get_schedule_path($settings = null) {
     return '';
 }
 
-function is_saas_normalize_schedule_path($schedule_path) {
+function iss_supersaas_normalize_schedule_path($schedule_path) {
     $schedule_path = trim((string) $schedule_path);
     if ($schedule_path === '') {
         return '';
@@ -44,22 +62,22 @@ function is_saas_normalize_schedule_path($schedule_path) {
     return str_replace('%2F', '/', rawurlencode(rawurldecode($schedule_path)));
 }
 
-function is_saas_load_admin_settings_api() {
+function iss_supersaas_load_admin_settings_api() {
     if (!function_exists('add_settings_section') && defined('ABSPATH')) {
         require_once ABSPATH . 'wp-admin/includes/template.php';
     }
 }
 
-function is_saas_load_admin_menu_api() {
+function iss_supersaas_load_admin_menu_api() {
     if (!function_exists('add_options_page') && defined('ABSPATH')) {
         require_once ABSPATH . 'wp-admin/includes/plugin.php';
     }
 }
 
 add_action('admin_notices', function () {
-    $settings = is_saas_get_settings();
+    $settings = iss_supersaas_get_settings();
     if (empty($settings['schedule_id']) || empty($settings['api_key'])) {
-        $settings_url = admin_url('options-general.php?page=' . IS_SAAS_OPTION_GROUP);
+        $settings_url = admin_url('options-general.php?page=' . ISS_SUPERSAAS_SETTINGS_PAGE);
         echo '<div class="notice notice-warning is-dismissible"><p>'
             . '<strong>SuperSaaS API:</strong> '
             . 'API-Zugangsdaten fehlen. Das Buchungssystem ist nicht aktiv. '
@@ -68,34 +86,34 @@ add_action('admin_notices', function () {
     }
 });
 
-function is_saas_register_settings() {
-    is_saas_load_admin_settings_api();
+function iss_supersaas_register_settings() {
+    iss_supersaas_load_admin_settings_api();
 
     register_setting(
-        IS_SAAS_OPTION_GROUP,
-        IS_SAAS_OPTION_NAME,
+        ISS_SUPERSAAS_OPTION_GROUP,
+        ISS_SUPERSAAS_SETTINGS_OPTION,
         [
-            'sanitize_callback' => 'is_saas_sanitize_settings',
+            'sanitize_callback' => 'iss_supersaas_sanitize_settings',
             'default' => [],
         ]
     );
 
     add_settings_section(
-        'is_saas_main',
+        'iss_supersaas_main',
         'SuperSaaS Configuration',
         '__return_false',
-        IS_SAAS_OPTION_GROUP
+        ISS_SUPERSAAS_OPTION_GROUP
     );
 
-    add_settings_field('schedule_id', 'Schedule ID', 'is_saas_field_schedule_id', IS_SAAS_OPTION_GROUP, 'is_saas_main');
-    add_settings_field('api_key', 'API Key', 'is_saas_field_api_key', IS_SAAS_OPTION_GROUP, 'is_saas_main');
-    add_settings_field('base_url', 'API Base URL', 'is_saas_field_base_url', IS_SAAS_OPTION_GROUP, 'is_saas_main');
-    add_settings_field('account_name', 'Account Name', 'is_saas_field_account_name', IS_SAAS_OPTION_GROUP, 'is_saas_main');
-    add_settings_field('schedule_path', 'Schedule Path', 'is_saas_field_schedule_path', IS_SAAS_OPTION_GROUP, 'is_saas_main');
+    add_settings_field('schedule_id', 'Schedule ID', 'iss_supersaas_field_schedule_id', ISS_SUPERSAAS_OPTION_GROUP, 'iss_supersaas_main');
+    add_settings_field('api_key', 'API Key', 'iss_supersaas_field_api_key', ISS_SUPERSAAS_OPTION_GROUP, 'iss_supersaas_main');
+    add_settings_field('base_url', 'API Base URL', 'iss_supersaas_field_base_url', ISS_SUPERSAAS_OPTION_GROUP, 'iss_supersaas_main');
+    add_settings_field('account_name', 'Account Name', 'iss_supersaas_field_account_name', ISS_SUPERSAAS_OPTION_GROUP, 'iss_supersaas_main');
+    add_settings_field('schedule_path', 'Schedule Path', 'iss_supersaas_field_schedule_path', ISS_SUPERSAAS_OPTION_GROUP, 'iss_supersaas_main');
 }
-add_action('admin_init', 'is_saas_register_settings');
+add_action('admin_init', 'iss_supersaas_register_settings');
 
-function is_saas_sanitize_settings($input) {
+function iss_supersaas_sanitize_settings($input) {
     $out = [];
     $out['schedule_id']   = isset($input['schedule_id']) ? preg_replace('/[^0-9]/', '', $input['schedule_id']) : '';
     $out['api_key']       = isset($input['api_key']) ? sanitize_text_field($input['api_key']) : '';
@@ -105,8 +123,8 @@ function is_saas_sanitize_settings($input) {
     return $out;
 }
 
-function is_saas_add_admin_menu() {
-    is_saas_load_admin_menu_api();
+function iss_supersaas_add_admin_menu() {
+    iss_supersaas_load_admin_menu_api();
 
     $capability = function_exists('iss_core_capability') ? iss_core_capability('manage') : 'manage_options';
 
@@ -114,23 +132,23 @@ function is_saas_add_admin_menu() {
         'SuperSaaS API',
         'SuperSaaS API',
         $capability,
-        'is-saas-api',
-        'is_saas_render_settings_page'
+        ISS_SUPERSAAS_SETTINGS_PAGE,
+        'iss_supersaas_render_settings_page'
     );
 }
-add_action('admin_menu', 'is_saas_add_admin_menu');
+add_action('admin_menu', 'iss_supersaas_add_admin_menu');
 
-function is_saas_render_settings_page() {
-    is_saas_load_admin_settings_api();
-    is_saas_load_admin_menu_api();
+function iss_supersaas_render_settings_page() {
+    iss_supersaas_load_admin_settings_api();
+    iss_supersaas_load_admin_menu_api();
 
     ?>
     <div class="wrap">
         <h1>SuperSaaS API</h1>
         <form method="post" action="options.php">
             <?php
-            settings_fields(IS_SAAS_OPTION_GROUP);
-            do_settings_sections(IS_SAAS_OPTION_GROUP);
+            settings_fields(ISS_SUPERSAAS_OPTION_GROUP);
+            do_settings_sections(ISS_SUPERSAAS_OPTION_GROUP);
             submit_button();
             ?>
         </form>
@@ -139,7 +157,7 @@ function is_saas_render_settings_page() {
     <?php
 }
 
-function is_saas_build_slot_response($slot, $title, $start) {
+function iss_supersaas_build_slot_response($slot, $title, $start) {
     $available = null;
     if (isset($slot['available'])) {
         $available = (int) $slot['available'];
@@ -160,49 +178,49 @@ function is_saas_build_slot_response($slot, $title, $start) {
     ];
 }
 
-function is_saas_field_schedule_id() {
-    $settings = is_saas_get_settings();
+function iss_supersaas_field_schedule_id() {
+    $settings = iss_supersaas_get_settings();
     printf(
         '<input type="text" name="%s[schedule_id]" value="%s" class="regular-text" />',
-        esc_attr(IS_SAAS_OPTION_NAME),
+        esc_attr(ISS_SUPERSAAS_SETTINGS_OPTION),
         esc_attr($settings['schedule_id'])
     );
 }
 
-function is_saas_field_api_key() {
-    $settings = is_saas_get_settings();
+function iss_supersaas_field_api_key() {
+    $settings = iss_supersaas_get_settings();
     printf(
         '<input type="password" name="%s[api_key]" value="%s" class="regular-text" autocomplete="new-password" />',
-        esc_attr(IS_SAAS_OPTION_NAME),
+        esc_attr(ISS_SUPERSAAS_SETTINGS_OPTION),
         esc_attr($settings['api_key'])
     );
 }
 
-function is_saas_field_base_url() {
-    $settings = is_saas_get_settings();
+function iss_supersaas_field_base_url() {
+    $settings = iss_supersaas_get_settings();
     printf(
         '<input type="text" name="%s[base_url]" value="%s" class="regular-text" />',
-        esc_attr(IS_SAAS_OPTION_NAME),
+        esc_attr(ISS_SUPERSAAS_SETTINGS_OPTION),
         esc_attr($settings['base_url'])
     );
     echo '<p class="description">Example: https://www.supersaas.de</p>';
 }
 
-function is_saas_field_account_name() {
-    $settings = is_saas_get_settings();
+function iss_supersaas_field_account_name() {
+    $settings = iss_supersaas_get_settings();
     printf(
         '<input type="text" name="%s[account_name]" value="%s" class="regular-text" />',
-        esc_attr(IS_SAAS_OPTION_NAME),
+        esc_attr(ISS_SUPERSAAS_SETTINGS_OPTION),
         esc_attr($settings['account_name'])
     );
     echo '<p class="description">Used for booking links.</p>';
 }
 
-function is_saas_field_schedule_path() {
-    $settings = is_saas_get_settings();
+function iss_supersaas_field_schedule_path() {
+    $settings = iss_supersaas_get_settings();
     printf(
         '<input type="text" name="%s[schedule_path]" value="%s" class="regular-text" />',
-        esc_attr(IS_SAAS_OPTION_NAME),
+        esc_attr(ISS_SUPERSAAS_SETTINGS_OPTION),
         esc_attr($settings['schedule_path'])
     );
     echo '<p class="description">Required for booking links. Example: Fuehrungen_%28oeffentlich%29</p>';

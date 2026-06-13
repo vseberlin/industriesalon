@@ -75,7 +75,7 @@ if (defined('WP_CLI') && WP_CLI) {
                 return;
             }
 
-            if (in_array($source, iss_occurrences_supported_source_post_types(), true)) {
+            if (in_array($source, iss_occurrences_supported_editorial_source_post_types(), true)) {
                 $ids = get_posts([
                     'post_type' => $source,
                     'post_status' => ['publish', 'draft', 'private', 'pending', 'future'],
@@ -93,7 +93,7 @@ if (defined('WP_CLI') && WP_CLI) {
                 return;
             }
 
-            \WP_CLI::error('Invalid --source. Use all, wp, supersaas, veranstaltung, ausstellung, or projekt.');
+            \WP_CLI::error('Invalid --source. Use all, wp, supersaas, veranstaltung, ausstellung, or projekt. Führung rows are synced through --source=supersaas.');
         }
 
         public function backfill_occurrences(array $args, array $assoc_args): void
@@ -168,7 +168,7 @@ if (defined('WP_CLI') && WP_CLI) {
                 }
 
                 if ($origin === 'wp'
-                    && in_array($source_post_type, iss_occurrences_supported_source_post_types(), true)
+                    && in_array($source_post_type, iss_occurrences_supported_editorial_source_post_types(), true)
                     && !iss_occurrences_source_is_calendar_enabled($source_post_id)
                 ) {
                     $errors[] = sprintf('#%d points to source #%d without explicit calendar toggle.', $occurrence_id, $source_post_id);
@@ -237,7 +237,7 @@ if (defined('WP_CLI') && WP_CLI) {
             }
 
             $eligible_ids = get_posts([
-                'post_type' => iss_occurrences_supported_source_post_types(),
+                'post_type' => iss_occurrences_supported_editorial_source_post_types(),
                 'post_status' => 'publish',
                 'posts_per_page' => -1,
                 'fields' => 'ids',
@@ -278,9 +278,10 @@ if (defined('WP_CLI') && WP_CLI) {
 
             $retired_options = $wpdb->get_col(
                 $wpdb->prepare(
-                    "SELECT option_name FROM {$wpdb->options} WHERE option_name IN (%s, %s) ORDER BY option_name ASC",
+                    "SELECT option_name FROM {$wpdb->options} WHERE option_name IN (%s, %s, %s) ORDER BY option_name ASC",
                     ISS_OCCURRENCES_RETIRED_SOURCE_MAP_OPTION,
-                    ISS_OCCURRENCES_RETIRED_SERIES_MAP_OPTION
+                    ISS_OCCURRENCES_RETIRED_SERIES_MAP_OPTION,
+                    'is_saas_settings'
                 )
             );
             if (is_array($retired_options) && !empty($retired_options)) {
@@ -295,6 +296,13 @@ if (defined('WP_CLI') && WP_CLI) {
             );
             if ($legacy_occurrence_rows > 0) {
                 $errors[] = sprintf('Legacy occurrence origin rows remain: %d.', $legacy_occurrence_rows);
+            }
+
+            $sentinel_open_ended_rows = (int) $wpdb->get_var(
+                "SELECT COUNT(*) FROM {$table} WHERE ends_at IS NOT NULL AND ends_at >= '2099-12-31 00:00:00'"
+            );
+            if ($sentinel_open_ended_rows > 0) {
+                $errors[] = sprintf('Retired open-ended sentinel rows remain: %d.', $sentinel_open_ended_rows);
             }
 
             $inactive_past_supersaas_rows = (int) $wpdb->get_var(
@@ -314,7 +322,7 @@ if (defined('WP_CLI') && WP_CLI) {
             }
 
             $legacy_meta_rows = $wpdb->get_results(
-                "SELECT meta_key, COUNT(*) AS row_count FROM {$wpdb->postmeta} WHERE meta_key IN ('iss_timeline_item_id', '_iss_legacy_archive_term_slug', 'iss_archive_term_slug', 'iss_exhibition_source', 'iss_exhibition_type', 'iss_is_permanent') GROUP BY meta_key ORDER BY meta_key ASC",
+                "SELECT meta_key, COUNT(*) AS row_count FROM {$wpdb->postmeta} WHERE meta_key IN ('iss_timeline_enabled', 'iss_timeline_item_id', '_iss_legacy_archive_term_slug', 'iss_archive_term_slug', 'iss_exhibition_source', 'iss_exhibition_type', 'iss_is_permanent') GROUP BY meta_key ORDER BY meta_key ASC",
                 ARRAY_A
             );
             foreach ((array) $legacy_meta_rows as $meta_row) {

@@ -103,18 +103,19 @@ function iss_content_model_meta_definitions() {
             'iss_start_datetime' => ['type' => 'string', 'sanitize' => 'sanitize_text_field', 'default' => ''],
             'iss_end_datetime' => ['type' => 'string', 'sanitize' => 'sanitize_text_field', 'default' => ''],
             'iss_location' => ['type' => 'string', 'sanitize' => 'sanitize_text_field', 'default' => ''],
-            'iss_timeline_enabled' => ['type' => 'boolean', 'sanitize' => 'rest_sanitize_boolean', 'default' => false],
+            'iss_programme_enabled' => ['type' => 'boolean', 'sanitize' => 'rest_sanitize_boolean', 'default' => false],
         ],
         ISS_CONTENT_MODEL_AUSSTELLUNG_POST_TYPE => [
             'iss_start_date' => ['type' => 'string', 'sanitize' => 'sanitize_text_field', 'default' => ''],
             'iss_end_date' => ['type' => 'string', 'sanitize' => 'sanitize_text_field', 'default' => ''],
-            'iss_timeline_enabled' => ['type' => 'boolean', 'sanitize' => 'rest_sanitize_boolean', 'default' => false],
+            'iss_public_overview_enabled' => ['type' => 'boolean', 'sanitize' => 'rest_sanitize_boolean', 'default' => false],
+            'iss_programme_enabled' => ['type' => 'boolean', 'sanitize' => 'rest_sanitize_boolean', 'default' => false],
         ],
         ISS_CONTENT_MODEL_PROJEKT_POST_TYPE => [
             'iss_start_date' => ['type' => 'string', 'sanitize' => 'sanitize_text_field', 'default' => ''],
             'iss_end_date' => ['type' => 'string', 'sanitize' => 'sanitize_text_field', 'default' => ''],
             'iss_period_label' => ['type' => 'string', 'sanitize' => 'sanitize_text_field', 'default' => ''],
-            'iss_timeline_enabled' => ['type' => 'boolean', 'sanitize' => 'rest_sanitize_boolean', 'default' => false],
+            'iss_programme_enabled' => ['type' => 'boolean', 'sanitize' => 'rest_sanitize_boolean', 'default' => false],
         ],
         ISS_CONTENT_MODEL_TEAM_POST_TYPE => [
             'iss_role_label' => ['type' => 'string', 'sanitize' => 'sanitize_text_field', 'default' => ''],
@@ -155,6 +156,120 @@ function iss_content_model_register_meta() {
     }
 }
 add_action('init', 'iss_content_model_register_meta', 20);
+
+function iss_content_model_migrate_programme_visibility_meta(): void
+{
+    $version = '20260613-programme-visibility-v2';
+    $previous_version = (string) get_option('iss_content_model_programme_visibility_meta_version', '');
+    if ($previous_version === $version) {
+        return;
+    }
+
+    global $wpdb;
+
+    $old_key = 'iss_timeline_enabled';
+    $programme_key = 'iss_programme_enabled';
+    $overview_key = 'iss_public_overview_enabled';
+    $editorial_programme_post_types = [
+        ISS_CONTENT_MODEL_VERANSTALTUNG_POST_TYPE,
+        ISS_CONTENT_MODEL_PROJEKT_POST_TYPE,
+    ];
+
+    // phpcs:disable WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching, WordPress.DB.PreparedSQL.InterpolatedNotPrepared -- One-time meta-key rename for plugin-owned editorial visibility flags.
+    foreach ($editorial_programme_post_types as $post_type) {
+        $wpdb->query($wpdb->prepare(
+            "INSERT INTO {$wpdb->postmeta} (post_id, meta_key, meta_value)
+            SELECT old_meta.post_id, %s, old_meta.meta_value
+            FROM {$wpdb->postmeta} old_meta
+            INNER JOIN {$wpdb->posts} p ON p.ID = old_meta.post_id
+            LEFT JOIN {$wpdb->postmeta} existing_meta
+                ON existing_meta.post_id = old_meta.post_id
+                AND existing_meta.meta_key = %s
+            WHERE old_meta.meta_key = %s
+              AND p.post_type = %s
+              AND existing_meta.meta_id IS NULL",
+            $programme_key,
+            $programme_key,
+            $old_key,
+            $post_type
+        ));
+    }
+
+    $wpdb->query($wpdb->prepare(
+        "INSERT INTO {$wpdb->postmeta} (post_id, meta_key, meta_value)
+        SELECT old_meta.post_id, %s, old_meta.meta_value
+        FROM {$wpdb->postmeta} old_meta
+        INNER JOIN {$wpdb->posts} p ON p.ID = old_meta.post_id
+        LEFT JOIN {$wpdb->postmeta} existing_meta
+            ON existing_meta.post_id = old_meta.post_id
+            AND existing_meta.meta_key = %s
+        WHERE old_meta.meta_key = %s
+          AND p.post_type = %s
+          AND existing_meta.meta_id IS NULL
+          AND NOT EXISTS (
+            SELECT 1
+            FROM {$wpdb->term_relationships} tr
+            INNER JOIN {$wpdb->term_taxonomy} tt ON tt.term_taxonomy_id = tr.term_taxonomy_id
+            INNER JOIN {$wpdb->terms} t ON t.term_id = tt.term_id
+            WHERE tr.object_id = old_meta.post_id
+              AND tt.taxonomy = %s
+              AND t.slug IN (%s, %s)
+          )",
+        $programme_key,
+        $programme_key,
+        $old_key,
+        ISS_CONTENT_MODEL_AUSSTELLUNG_POST_TYPE,
+        ISS_CONTENT_MODEL_AUSSTELLUNG_TYPE_TAXONOMY,
+        'dauerausstellung',
+        'digitaleausstellungen'
+    ));
+
+    if ($previous_version === '20260613-programme-visibility-v1') {
+        $wpdb->query($wpdb->prepare(
+            "DELETE programme_meta
+            FROM {$wpdb->postmeta} programme_meta
+            INNER JOIN {$wpdb->posts} p ON p.ID = programme_meta.post_id
+            INNER JOIN {$wpdb->term_relationships} tr ON tr.object_id = p.ID
+            INNER JOIN {$wpdb->term_taxonomy} tt ON tt.term_taxonomy_id = tr.term_taxonomy_id
+            INNER JOIN {$wpdb->terms} t ON t.term_id = tt.term_id
+            WHERE programme_meta.meta_key = %s
+              AND p.post_type = %s
+              AND tt.taxonomy = %s
+              AND t.slug IN (%s, %s)",
+            $programme_key,
+            ISS_CONTENT_MODEL_AUSSTELLUNG_POST_TYPE,
+            ISS_CONTENT_MODEL_AUSSTELLUNG_TYPE_TAXONOMY,
+            'dauerausstellung',
+            'digitaleausstellungen'
+        ));
+    }
+
+    $wpdb->query($wpdb->prepare(
+        "INSERT INTO {$wpdb->postmeta} (post_id, meta_key, meta_value)
+        SELECT old_meta.post_id, %s, old_meta.meta_value
+        FROM {$wpdb->postmeta} old_meta
+        INNER JOIN {$wpdb->posts} p ON p.ID = old_meta.post_id
+        LEFT JOIN {$wpdb->postmeta} existing_meta
+            ON existing_meta.post_id = old_meta.post_id
+            AND existing_meta.meta_key = %s
+        WHERE old_meta.meta_key = %s
+          AND p.post_type = %s
+          AND existing_meta.meta_id IS NULL",
+        $overview_key,
+        $overview_key,
+        $old_key,
+        ISS_CONTENT_MODEL_AUSSTELLUNG_POST_TYPE
+    ));
+
+    $wpdb->query($wpdb->prepare(
+        "DELETE FROM {$wpdb->postmeta} WHERE meta_key = %s",
+        $old_key
+    ));
+    // phpcs:enable WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching, WordPress.DB.PreparedSQL.InterpolatedNotPrepared
+
+    update_option('iss_content_model_programme_visibility_meta_version', $version, false);
+}
+add_action('init', 'iss_content_model_migrate_programme_visibility_meta', 30);
 
 function iss_content_model_sanitize_meta_value($value, $meta_key, $meta_type) {
     foreach (iss_content_model_meta_definitions() as $post_type => $fields) {

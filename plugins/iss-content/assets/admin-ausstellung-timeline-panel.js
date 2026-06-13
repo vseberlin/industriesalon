@@ -24,12 +24,12 @@
     return meta && typeof meta === 'object' ? meta : {};
   }
 
-  function metaEnabled(meta) {
-    if (meta.iss_timeline_enabled === undefined || meta.iss_timeline_enabled === null || meta.iss_timeline_enabled === '') {
+  function boolMeta(meta, key) {
+    if (meta[key] === undefined || meta[key] === null || meta[key] === '') {
       return false;
     }
 
-    return !!meta.iss_timeline_enabled;
+    return !!meta[key];
   }
 
   function getTermBySlug(typeTerms, slug) {
@@ -93,7 +93,8 @@
       return null;
     }
 
-    var enabled = metaEnabled(meta);
+    var overviewEnabled = boolMeta(meta, 'iss_public_overview_enabled');
+    var programmeEnabled = boolMeta(meta, 'iss_programme_enabled');
     var startDate = String(meta.iss_start_date || '');
     var endDate = String(meta.iss_end_date || '');
     var hasStartDate = startDate !== '';
@@ -102,7 +103,8 @@
     var isDigital = selectedType === 'digitaleausstellungen';
     var isAvailabilityOnly = isPermanent || isDigital;
     var isCurrentTemporary = selectedType === 'sonderausstellung' && hasStartDate;
-    var willShow = enabled && (isAvailabilityOnly || isCurrentTemporary);
+    var willShowInOverview = overviewEnabled && (isAvailabilityOnly || isCurrentTemporary);
+    var willShowInProgramme = programmeEnabled && hasStartDate;
 
     function updateMeta(next) {
       editPost({ meta: Object.assign({}, meta, next) });
@@ -139,10 +141,19 @@
           : null,
         ToggleControl
           ? createElement(ToggleControl, {
-              label: 'Öffentlich in Ausstellungsübersichten zeigen',
-              checked: enabled,
+              label: 'In Ausstellungsübersichten anzeigen',
+              checked: overviewEnabled,
               onChange: function (value) {
-                updateMeta({ iss_timeline_enabled: !!value });
+                updateMeta({ iss_public_overview_enabled: !!value });
+              },
+            })
+          : null,
+        ToggleControl
+          ? createElement(ToggleControl, {
+              label: 'Im Kalender / Programm anzeigen',
+              checked: programmeEnabled,
+              onChange: function (value) {
+                updateMeta({ iss_programme_enabled: !!value });
               },
             })
           : null,
@@ -169,12 +180,21 @@
         Notice
           ? createElement(
               Notice,
-              { status: willShow ? 'success' : 'warning', isDismissible: false },
-              willShow
+              { status: willShowInOverview ? 'success' : 'warning', isDismissible: false },
+              willShowInOverview
+                ? 'Diese Ausstellung erscheint in den Ausstellungsübersichten.'
+                : 'Für die Ausstellungsübersichten braucht die Ausstellung eine Ausstellungsart, diese Freigabe und bei Sonderausstellungen ein Startdatum.'
+            )
+          : null,
+        Notice
+          ? createElement(
+              Notice,
+              { status: willShowInProgramme ? 'success' : 'warning', isDismissible: false },
+              willShowInProgramme
                 ? (isAvailabilityOnly
-                  ? 'Diese Ausstellung erscheint in den Ausstellungsübersichten und wird nicht als Kalendertermin geführt.'
-                  : 'Diese Sonderausstellung erscheint mit ihren Laufdaten in den Ausstellungsübersichten.')
-                : 'Für öffentliche Ausstellungsübersichten braucht die Ausstellung eine Ausstellungsart, die Sichtbarkeit und bei Sonderausstellungen ein Startdatum.'
+                  ? 'Diese Dauer- oder Digitalausstellung ist zusätzlich für Kalender / Programm freigegeben.'
+                  : 'Diese Sonderausstellung erscheint mit ihren Laufdaten im Programm.')
+                : 'Für die Programmausgabe braucht die Ausstellung ein Startdatum und die separate Programmfreigabe.'
             )
           : null
       )

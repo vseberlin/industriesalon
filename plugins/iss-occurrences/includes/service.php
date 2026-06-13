@@ -94,6 +94,7 @@ final class ISS_Occurrences_Service
             title varchar(255) NOT NULL DEFAULT '',
             starts_at datetime NOT NULL,
             ends_at datetime DEFAULT NULL,
+            is_open_ended tinyint(1) unsigned NOT NULL DEFAULT 0,
             date_source varchar(50) NOT NULL DEFAULT 'explicit',
             status varchar(50) NOT NULL DEFAULT 'active',
             visibility varchar(50) NOT NULL DEFAULT 'public',
@@ -117,6 +118,7 @@ final class ISS_Occurrences_Service
             KEY source_lookup (source_post_type, source_post_id),
             KEY location_post_date (location_post_id, starts_at),
             KEY kind_date (kind, starts_at),
+            KEY open_ended_date (is_open_ended, starts_at),
             KEY series_date (series_key, starts_at),
             KEY tag_date (tag, starts_at),
             KEY external_lookup (external_id, origin)
@@ -146,6 +148,7 @@ final class ISS_Occurrences_Service
         dbDelta($occurrences_sql);
         dbDelta($series_sql);
         $this->drop_legacy_graph_columns();
+        $this->migrate_open_ended_sentinel();
         delete_option(ISS_OCCURRENCES_RETIRED_SERIES_MAP_OPTION);
         delete_option(ISS_OCCURRENCES_RETIRED_SOURCE_MAP_OPTION);
         delete_option('iss_calendar_source_map');
@@ -183,6 +186,29 @@ final class ISS_Occurrences_Service
                 $wpdb->query("ALTER TABLE {$table} DROP COLUMN {$column_name}");
             }
         }
+    }
+
+    private function migrate_open_ended_sentinel(): void
+    {
+        global $wpdb;
+
+        $table = $this->get_occurrences_table_name();
+        $found = (string) $wpdb->get_var($wpdb->prepare('SHOW TABLES LIKE %s', $table));
+        if ($found !== $table) {
+            return;
+        }
+
+        $column_exists = (string) $wpdb->get_var(
+            $wpdb->prepare("SHOW COLUMNS FROM {$table} LIKE %s", 'is_open_ended')
+        );
+        if ($column_exists === '') {
+            return;
+        }
+
+        // phpcs:ignore WordPress.DB.DirectDatabaseQuery.SchemaChange -- Service-owned migration from retired sentinel dates.
+        $wpdb->query(
+            "UPDATE {$table} SET is_open_ended = 1, ends_at = NULL WHERE ends_at IS NOT NULL AND ends_at >= '2099-12-31 00:00:00'"
+        );
     }
 
     public function tables_exist(): bool
@@ -454,6 +480,13 @@ final class ISS_Occurrences_Service
         $series_id = $series_key !== '' ? $this->upsert_series($row) : 0;
         $ends_at = isset($row['ends_at']) ? $this->normalize_datetime((string) $row['ends_at'], true) : null;
         $ends_at = $ends_at !== '' ? $ends_at : null;
+        $is_open_ended = !empty($row['is_open_ended']) ? 1 : 0;
+        if (!$is_open_ended && is_string($ends_at) && strpos($ends_at, '2099-12-31') === 0) {
+            $is_open_ended = 1;
+        }
+        if ($is_open_ended) {
+            $ends_at = null;
+        }
         $location_post_id = isset($row['location_post_id']) ? max(0, (int) $row['location_post_id']) : 0;
         $now = current_time('mysql');
         $table = $this->get_occurrences_table_name();
@@ -461,8 +494,8 @@ final class ISS_Occurrences_Service
         $wpdb->query(
             $wpdb->prepare(
                 "INSERT INTO {$table}
-                    (source_post_id, source_post_type, kind, title, starts_at, ends_at, date_source, status, visibility, origin, source_calendar, external_id, tag, series_key, series_id, booking_url, location_post_id, location_label, availability_state, capacity_total, capacity_available, created_at, updated_at)
-                 VALUES (%d, %s, %s, %s, %s, NULLIF(%s, ''), %s, %s, %s, %s, %s, %s, %s, %s, %d, %s, %d, %s, %s, %d, %d, %s, %s)
+                    (source_post_id, source_post_type, kind, title, starts_at, ends_at, is_open_ended, date_source, status, visibility, origin, source_calendar, external_id, tag, series_key, series_id, booking_url, location_post_id, location_label, availability_state, capacity_total, capacity_available, created_at, updated_at)
+                 VALUES (%d, %s, %s, %s, %s, NULLIF(%s, ''), %d, %s, %s, %s, %s, %s, %s, %s, %s, %d, %s, %d, %s, %s, %d, %d, %s, %s)
                  ON DUPLICATE KEY UPDATE
                     source_post_id = VALUES(source_post_id),
                     source_post_type = VALUES(source_post_type),
@@ -470,6 +503,7 @@ final class ISS_Occurrences_Service
                     title = VALUES(title),
                     starts_at = VALUES(starts_at),
                     ends_at = VALUES(ends_at),
+                    is_open_ended = VALUES(is_open_ended),
                     date_source = VALUES(date_source),
                     status = VALUES(status),
                     visibility = VALUES(visibility),
@@ -490,6 +524,7 @@ final class ISS_Occurrences_Service
                 isset($row['title']) ? sanitize_text_field((string) $row['title']) : '',
                 $starts_at,
                 $ends_at ?? '',
+                $is_open_ended,
                 isset($row['date_source']) ? sanitize_key((string) $row['date_source']) : 'explicit',
                 isset($row['status']) ? sanitize_key((string) $row['status']) : 'active',
                 isset($row['visibility']) ? sanitize_key((string) $row['visibility']) : 'public',
@@ -1130,7 +1165,7 @@ final class ISS_Occurrences_Service
     {
         if ($order === 'ASC' && $filters['time_mode'] === 'upcoming' && !empty($filters['include_running_ranges'])) {
             $now = current_time('mysql');
-            $deferred_condition = "(o.ends_at IS NOT NULL AND o.ends_at >= '2099-12-31 00:00:00' AND o.starts_at < %s)";
+            $deferred_condition = "(o.is_open_ended = 1 AND o.starts_at < %s)";
             $fallback_condition = "({$deferred_condition} AND o.date_source = 'fallback_post_date')";
             $values[] = $now;
             $values[] = $now;
@@ -1148,7 +1183,7 @@ final class ISS_Occurrences_Service
             $range = $this->get_period_range_for_filters($filters);
             if (is_array($range)) {
                 $start = (string) $range['start'];
-                $deferred_condition = "(o.starts_at < %s AND o.ends_at IS NOT NULL AND o.ends_at >= '2099-12-31 00:00:00')";
+                $deferred_condition = "(o.starts_at < %s AND o.is_open_ended = 1)";
                 $fallback_condition = "({$deferred_condition} AND o.date_source = 'fallback_post_date')";
                 $values[] = $start;
                 $values[] = $start;
@@ -1287,16 +1322,14 @@ final class ISS_Occurrences_Service
         $now = current_time('mysql');
 
         if ($mode === 'upcoming') {
-            $end = function_exists('iss_timeline_get_future_horizon_end_mysql')
-                ? iss_timeline_get_future_horizon_end_mysql()
-                : (new DateTimeImmutable('now', wp_timezone()))->modify('+6 months')->format('Y-m-d H:i:s');
+            $end = $this->get_future_horizon_end_mysql();
 
             if (!empty($filters['include_running_ranges'])) {
                 $values[] = $now;
                 $values[] = $end;
                 $values[] = $now;
                 $values[] = $end;
-                return '((o.starts_at >= %s AND o.starts_at <= %s) OR (o.ends_at IS NOT NULL AND o.ends_at >= %s AND o.starts_at <= %s))';
+                return '((o.starts_at >= %s AND o.starts_at <= %s) OR ((o.is_open_ended = 1 OR (o.ends_at IS NOT NULL AND o.ends_at >= %s)) AND o.starts_at <= %s))';
             }
 
             $values[] = $now;
@@ -1307,7 +1340,7 @@ final class ISS_Occurrences_Service
         if ($mode === 'past') {
             $values[] = $now;
             $values[] = $now;
-            return '((o.ends_at IS NOT NULL AND o.ends_at < %s) OR (o.ends_at IS NULL AND o.starts_at < %s))';
+            return '(o.is_open_ended = 0 AND ((o.ends_at IS NOT NULL AND o.ends_at < %s) OR (o.ends_at IS NULL AND o.starts_at < %s)))';
         }
 
         if ($mode === 'month') {
@@ -1321,7 +1354,7 @@ final class ISS_Occurrences_Service
                 $values[] = $range['end'];
                 $values[] = $range['start'];
                 $values[] = $range['end'];
-                return '((o.starts_at >= %s AND o.starts_at <= %s) OR (o.ends_at IS NOT NULL AND o.ends_at >= %s AND o.starts_at <= %s))';
+                return '((o.starts_at >= %s AND o.starts_at <= %s) OR ((o.is_open_ended = 1 OR (o.ends_at IS NOT NULL AND o.ends_at >= %s)) AND o.starts_at <= %s))';
             }
 
             $values[] = $range['start'];
@@ -1339,7 +1372,7 @@ final class ISS_Occurrences_Service
                     $values[] = $end;
                     $values[] = $start;
                     $values[] = $end;
-                    return '((o.starts_at >= %s AND o.starts_at <= %s) OR (o.ends_at IS NOT NULL AND o.ends_at >= %s AND o.starts_at <= %s))';
+                    return '((o.starts_at >= %s AND o.starts_at <= %s) OR ((o.is_open_ended = 1 OR (o.ends_at IS NOT NULL AND o.ends_at >= %s)) AND o.starts_at <= %s))';
                 }
 
                 $values[] = $start;
@@ -1350,7 +1383,8 @@ final class ISS_Occurrences_Service
             if ($start !== '') {
                 $values[] = $start;
                 $values[] = $start;
-                return '((o.starts_at >= %s) OR (o.ends_at IS NOT NULL AND o.ends_at >= %s))';
+                $values[] = $start;
+                return '((o.starts_at >= %s) OR (o.is_open_ended = 1 AND o.starts_at <= %s) OR (o.ends_at IS NOT NULL AND o.ends_at >= %s))';
             }
 
             if ($end !== '') {
@@ -1390,7 +1424,10 @@ final class ISS_Occurrences_Service
         if ($ends_at === '0000-00-00 00:00:00') {
             $ends_at = '';
         }
-        $is_open_ended = strpos($ends_at, '2099-12-31') === 0;
+        $is_open_ended = !empty($row['is_open_ended']) || strpos($ends_at, '2099-12-31') === 0;
+        if ($is_open_ended) {
+            $ends_at = '';
+        }
         $start_ts = null;
         $end_ts = null;
 
@@ -1411,12 +1448,8 @@ final class ISS_Occurrences_Service
         }
 
         $is_running_open_ended = $is_open_ended && $starts_at !== '' && $starts_at <= current_time('mysql');
-        $date_label = $start_ts && function_exists('iss_programm_format_date_long_de')
-            ? iss_programm_format_date_long_de($start_ts, wp_timezone())
-            : $starts_at;
-        $day_label = $start_ts && function_exists('iss_programm_format_day_short_de')
-            ? iss_programm_format_day_short_de($start_ts, wp_timezone())
-            : $date_label;
+        $date_label = $start_ts ? $this->format_date_long_de($start_ts, wp_timezone()) : $starts_at;
+        $day_label = $start_ts ? $this->format_day_short_de($start_ts, wp_timezone()) : $date_label;
 
         $time_label = '';
         if ($is_running_open_ended && $date_label !== '') {
@@ -1438,9 +1471,7 @@ final class ISS_Occurrences_Service
             $end_time_key = $end_ts ? wp_date('H:i', $end_ts, wp_timezone()) : '';
 
             if ($end_ts && $start_date_key !== $end_date_key) {
-                $time_label = function_exists('iss_programm_format_date_long_de')
-                    ? sprintf(__('bis %s', 'iss-occurrences'), iss_programm_format_date_long_de($end_ts, wp_timezone()))
-                    : '';
+                $time_label = sprintf(__('bis %s', 'iss-occurrences'), $this->format_date_long_de($end_ts, wp_timezone()));
             } elseif ($start_time_key === '00:00' && ($end_time_key === '' || $end_time_key === '23:59' || $end_time_key === '00:00')) {
                 $time_label = '';
             } else {
@@ -1504,6 +1535,86 @@ final class ISS_Occurrences_Service
             'year' => $is_running_open_ended ? (int) wp_date('Y', null, wp_timezone()) : ($start_ts ? (int) wp_date('Y', $start_ts, wp_timezone()) : null),
         ];
     }
+
+    private function get_future_horizon_months(): int
+    {
+        $months = (int) apply_filters('iss_occurrences_future_horizon_months', 6);
+        return $months > 0 ? $months : 1;
+    }
+
+    private function get_future_horizon_end_mysql(): string
+    {
+        try {
+            $tz = wp_timezone();
+            $now = new DateTimeImmutable('now', $tz);
+            $end = $now->modify('+' . $this->get_future_horizon_months() . ' months');
+            return $end->format('Y-m-d H:i:s');
+        } catch (Throwable $e) {
+            return current_time('mysql');
+        }
+    }
+
+    private function month_name_de(int $month): string
+    {
+        $names = [
+            1 => 'Januar',
+            2 => 'Februar',
+            3 => 'März',
+            4 => 'April',
+            5 => 'Mai',
+            6 => 'Juni',
+            7 => 'Juli',
+            8 => 'August',
+            9 => 'September',
+            10 => 'Oktober',
+            11 => 'November',
+            12 => 'Dezember',
+        ];
+
+        return $names[$month] ?? '';
+    }
+
+    private function weekday_short_de(int $weekday): string
+    {
+        $names = [
+            1 => 'Mo.',
+            2 => 'Di.',
+            3 => 'Mi.',
+            4 => 'Do.',
+            5 => 'Fr.',
+            6 => 'Sa.',
+            7 => 'So.',
+        ];
+
+        return $names[$weekday] ?? '';
+    }
+
+    private function format_date_long_de(int $timestamp, ?DateTimeZone $timezone = null): string
+    {
+        if ($timestamp <= 0) {
+            return '';
+        }
+
+        $timezone = $timezone instanceof DateTimeZone ? $timezone : wp_timezone();
+        $day = wp_date('j', $timestamp, $timezone);
+        $month_name = $this->month_name_de((int) wp_date('n', $timestamp, $timezone));
+        $year = wp_date('Y', $timestamp, $timezone);
+
+        return sprintf('%s. %s %s', $day, $month_name, $year);
+    }
+
+    private function format_day_short_de(int $timestamp, ?DateTimeZone $timezone = null): string
+    {
+        if ($timestamp <= 0) {
+            return '';
+        }
+
+        $timezone = $timezone instanceof DateTimeZone ? $timezone : wp_timezone();
+        $weekday = $this->weekday_short_de((int) wp_date('N', $timestamp, $timezone));
+        $date_part = wp_date('d.m.', $timestamp, $timezone);
+
+        return trim($weekday . ' ' . $date_part);
+    }
 }
 
 function iss_occurrences_get_service(): ISS_Occurrences_Service
@@ -1516,7 +1627,7 @@ function iss_occurrences_public_query_ready(): bool
     static $ready = null;
 
     if ($ready === null) {
-        $ready = iss_occurrences_get_service()->public_row_count() > 0;
+        $ready = iss_occurrences_get_service()->tables_exist();
     }
 
     return (bool) apply_filters('iss_occurrences_public_query_ready', $ready);

@@ -504,7 +504,7 @@ and delegates to the existing Ausstellung availability browser query helpers.
 It supports the browser filters plus search and returns both structured items
 and server-rendered `html` / `is_empty` fields so public clients do not duplicate
 card markup.
-The tour-slots route is registered by `iss-commerce-lite` and delegates to the
+The tour-slots route is registered by `iss-occurrences` and delegates to the
 occurrence-backed slot adapter. The retired read routes `/iss-search/v1/search`,
 `/iss-programm/v1/timeline`, and `/is-tours/v1/slots` are no longer registered.
 Booking submissions stay outside the read-only facade on `/is-tours/v1/book`.

@@ -4,9 +4,63 @@ if (!defined('ABSPATH')) {
     exit;
 }
 
+require_once __DIR__ . '/providers/provider-interface.php';
+require_once __DIR__ . '/providers/abstract-editorial-provider.php';
+require_once __DIR__ . '/providers/veranstaltung-provider.php';
+require_once __DIR__ . '/providers/ausstellung-provider.php';
+require_once __DIR__ . '/providers/projekt-provider.php';
+require_once __DIR__ . '/providers/fuehrung-provider.php';
+
+/**
+ * Editorial sources are WordPress posts that opt into occurrence projection.
+ *
+ * Führung occurrences are deliberately not listed here: their occurrence rows
+ * are external SuperSaaS slot projections linked back to `fuehrung` posts.
+ */
+function iss_occurrences_supported_editorial_source_post_types(): array
+{
+    return array_keys(iss_occurrences_get_editorial_source_providers());
+}
+
 function iss_occurrences_supported_source_post_types(): array
 {
-    return ['veranstaltung', 'ausstellung', 'projekt'];
+    return iss_occurrences_supported_editorial_source_post_types();
+}
+
+function iss_occurrences_get_editorial_source_providers(): array
+{
+    static $providers = null;
+
+    if ($providers === null) {
+        $providers = [
+            'veranstaltung' => new ISS_Occurrences_VeranstaltungProvider(),
+            'ausstellung' => new ISS_Occurrences_AusstellungProvider(),
+            'projekt' => new ISS_Occurrences_ProjektProvider(),
+        ];
+    }
+
+    return $providers;
+}
+
+function iss_occurrences_get_editorial_source_provider(string $post_type): ?ISS_Occurrences_Source_Provider
+{
+    $post_type = sanitize_key($post_type);
+    $providers = iss_occurrences_get_editorial_source_providers();
+
+    return isset($providers[$post_type]) && $providers[$post_type] instanceof ISS_Occurrences_Source_Provider
+        ? $providers[$post_type]
+        : null;
+}
+
+function iss_occurrences_get_fuehrung_provider(): ISS_Occurrences_FuehrungProvider
+{
+    static $provider = null;
+
+    if (!$provider instanceof ISS_Occurrences_FuehrungProvider) {
+        $provider = new ISS_Occurrences_FuehrungProvider();
+    }
+
+    return $provider;
 }
 
 function iss_occurrences_get_bool_meta(int $post_id, string $key, bool $default): bool
@@ -21,49 +75,31 @@ function iss_occurrences_get_bool_meta(int $post_id, string $key, bool $default)
 
 function iss_occurrences_source_is_calendar_enabled(int $post_id): bool
 {
-    $post_type = (string) get_post_type($post_id);
-
-    if ($post_type === 'ausstellung' && iss_occurrences_ausstellung_is_availability_only($post_id)) {
+    $post = get_post($post_id);
+    if (!$post instanceof WP_Post) {
         return false;
     }
 
-    if ($post_type === 'veranstaltung' || $post_type === 'ausstellung' || $post_type === 'projekt') {
-        return iss_occurrences_get_bool_meta($post_id, 'iss_timeline_enabled', false);
-    }
-
-    return false;
+    $provider = iss_occurrences_get_editorial_source_provider((string) $post->post_type);
+    return $provider instanceof ISS_Occurrences_Source_Provider
+        ? $provider->is_calendar_enabled($post)
+        : false;
 }
 
-function iss_occurrences_ausstellung_is_availability_only(int $post_id): bool
+function iss_occurrences_ausstellung_is_availability_type(int $post_id): bool
 {
-    if ($post_id <= 0 || (string) get_post_type($post_id) !== 'ausstellung') {
-        return false;
-    }
-
-    return iss_occurrences_ausstellung_has_type($post_id, ['dauerausstellung', 'digitaleausstellungen']);
+    $provider = iss_occurrences_get_editorial_source_provider('ausstellung');
+    return $provider instanceof ISS_Occurrences_AusstellungProvider
+        ? $provider->is_availability_type($post_id)
+        : false;
 }
 
 function iss_occurrences_ausstellung_has_type(int $post_id, array $target_slugs): bool
 {
-    if (!taxonomy_exists('ausstellung_typ')) {
-        return false;
-    }
-
-    $type_slugs = wp_get_post_terms($post_id, 'ausstellung_typ', ['fields' => 'slugs']);
-    if (is_wp_error($type_slugs) || empty($type_slugs)) {
-        return false;
-    }
-
-    $availability_slugs = array_values(array_unique(array_filter(array_map(static function ($slug): string {
-        return sanitize_title((string) $slug);
-    }, $target_slugs))));
-    foreach ((array) $type_slugs as $slug) {
-        if (in_array(sanitize_title((string) $slug), $availability_slugs, true)) {
-            return true;
-        }
-    }
-
-    return false;
+    $provider = iss_occurrences_get_editorial_source_provider('ausstellung');
+    return $provider instanceof ISS_Occurrences_AusstellungProvider
+        ? $provider->has_type($post_id, $target_slugs)
+        : false;
 }
 
 function iss_occurrences_post_date_fallback(WP_Post $post): string
@@ -78,80 +114,24 @@ function iss_occurrences_post_date_fallback(WP_Post $post): string
 
 function iss_occurrences_source_start_end_for_post(WP_Post $post): array
 {
-    $service = iss_occurrences_get_service();
-    $post_id = (int) $post->ID;
-
-    if ($post->post_type === 'veranstaltung') {
-        $start_raw = trim((string) get_post_meta($post_id, 'iss_start_datetime', true));
-        $end_raw = trim((string) get_post_meta($post_id, 'iss_end_datetime', true));
-        $start = $service->normalize_datetime($start_raw);
-        $date_source = $start !== '' ? 'explicit' : 'fallback_post_date';
-
-        if ($start === '') {
-            $start = $service->normalize_datetime(iss_occurrences_post_date_fallback($post));
-        }
-
-        return [
-            'starts_at' => $start,
-            'ends_at' => $service->normalize_datetime($end_raw, true),
-            'date_source' => $date_source,
-        ];
+    $provider = iss_occurrences_get_editorial_source_provider((string) $post->post_type);
+    if (!$provider instanceof ISS_Occurrences_Source_Provider) {
+        return ['starts_at' => '', 'ends_at' => '', 'is_open_ended' => false, 'date_source' => ''];
     }
 
-    if ($post->post_type === 'ausstellung') {
-        $start_raw = trim((string) get_post_meta($post_id, 'iss_start_date', true));
-        $end_raw = trim((string) get_post_meta($post_id, 'iss_end_date', true));
-        $is_permanent = function_exists('iss_content_model_ausstellung_is_permanent')
-            ? iss_content_model_ausstellung_is_permanent($post_id)
-            : iss_occurrences_ausstellung_has_type($post_id, ['dauerausstellung']);
-        $start = $service->normalize_datetime($start_raw);
-        $date_source = $start !== '' ? 'explicit' : 'fallback_post_date';
-
-        if ($start === '') {
-            $start = $service->normalize_datetime(iss_occurrences_post_date_fallback($post));
-        }
-
-        if ($end_raw === '' && $is_permanent) {
-            $end_raw = '2099-12-31';
-        }
-
-        return [
-            'starts_at' => $start,
-            'ends_at' => $service->normalize_datetime($end_raw, true),
-            'date_source' => $date_source,
-        ];
-    }
-
-    if ($post->post_type === 'projekt') {
-        $start_raw = trim((string) get_post_meta($post_id, 'iss_start_date', true));
-        $end_raw = trim((string) get_post_meta($post_id, 'iss_end_date', true));
-        $start = $service->normalize_datetime($start_raw);
-        $date_source = $start !== '' ? 'explicit' : 'fallback_post_date';
-
-        if ($start === '') {
-            $start = $service->normalize_datetime(iss_occurrences_post_date_fallback($post));
-        }
-
-        return [
-            'starts_at' => $start,
-            'ends_at' => $service->normalize_datetime($end_raw, true),
-            'date_source' => $date_source,
-        ];
-    }
-
-    return ['starts_at' => '', 'ends_at' => '', 'date_source' => ''];
+    return $provider->get_start_end_for_post($post);
 }
 
 function iss_occurrences_kind_for_source_post_type(string $post_type): string
 {
-    if ($post_type === 'veranstaltung') {
-        return 'event';
+    $provider = iss_occurrences_get_editorial_source_provider($post_type);
+    if ($provider instanceof ISS_Occurrences_Source_Provider) {
+        return $provider->get_kind();
     }
-    if ($post_type === 'ausstellung') {
-        return 'ausstellung';
-    }
-    if ($post_type === 'projekt') {
-        return 'project';
+
+    $fuehrung_provider = iss_occurrences_get_fuehrung_provider();
+    if (sanitize_key($post_type) === $fuehrung_provider->get_post_type()) {
+        return $fuehrung_provider->get_kind();
     }
 
     return '';
@@ -184,45 +164,12 @@ function iss_occurrences_get_occurrences_for_post(int $post_id): array
         return [];
     }
 
-    if (!in_array($post->post_type, iss_occurrences_supported_source_post_types(), true)) {
+    $provider = iss_occurrences_get_editorial_source_provider((string) $post->post_type);
+    if (!$provider instanceof ISS_Occurrences_Source_Provider) {
         return [];
     }
 
-    if (!iss_occurrences_source_is_calendar_enabled($post_id)) {
-        return [];
-    }
-
-    $dates = iss_occurrences_source_start_end_for_post($post);
-    if (empty($dates['starts_at'])) {
-        return [];
-    }
-
-    $kind = iss_occurrences_kind_for_source_post_type($post->post_type);
-    if ($kind === '') {
-        return [];
-    }
-
-    $location = iss_occurrences_get_location_data($post_id);
-
-    return [[
-        'source_post_id' => $post_id,
-        'source_post_type' => $post->post_type,
-        'kind' => $kind,
-        'title' => get_the_title($post_id),
-        'starts_at' => $dates['starts_at'],
-        'ends_at' => $dates['ends_at'],
-        'date_source' => $dates['date_source'],
-        'status' => 'active',
-        'visibility' => 'public',
-        'origin' => 'wp',
-        'external_id' => 'wp:' . $post->post_type . ':' . $post_id,
-        'tag' => '',
-        'source_calendar' => '',
-        'series_key' => '',
-        'booking_url' => '',
-        'location_post_id' => (int) $location['location_post_id'],
-        'location_label' => (string) $location['location_label'],
-    ]];
+    return $provider->get_occurrences_for_post($post);
 }
 
 function iss_occurrences_sync_source(int $post_id): int
@@ -233,7 +180,7 @@ function iss_occurrences_sync_source(int $post_id): int
     }
 
     $post_type = (string) get_post_type($post_id);
-    if (!in_array($post_type, iss_occurrences_supported_source_post_types(), true)) {
+    if (!in_array($post_type, iss_occurrences_supported_editorial_source_post_types(), true)) {
         return 0;
     }
 
@@ -253,7 +200,7 @@ function iss_occurrences_sync_source(int $post_id): int
 function iss_occurrences_sync_all_sources(): int
 {
     $ids = get_posts([
-        'post_type' => iss_occurrences_supported_source_post_types(),
+        'post_type' => iss_occurrences_supported_editorial_source_post_types(),
         'post_status' => ['publish', 'draft', 'private', 'pending', 'future'],
         'posts_per_page' => -1,
         'fields' => 'ids',
@@ -270,56 +217,7 @@ function iss_occurrences_sync_all_sources(): int
 
 function iss_occurrences_sync_supersaas(array $slot): int
 {
-    if (empty($slot['external_id']) && !empty($slot['id'])) {
-        $slot['external_id'] = $slot['id'];
-    }
-
-    $source_post_id = isset($slot['source_post_id']) ? (int) $slot['source_post_id'] : 0;
-    $source_post_type = isset($slot['source_post_type']) ? sanitize_key((string) $slot['source_post_type']) : '';
-    $external_id = isset($slot['external_id']) ? sanitize_text_field((string) $slot['external_id']) : '';
-    $origin = isset($slot['origin']) ? sanitize_key((string) $slot['origin']) : 'supersaas';
-
-    if ($external_id === '' || $source_post_id <= 0 || $source_post_type !== 'fuehrung') {
-        if ($external_id !== '') {
-            iss_occurrences_get_service()->delete_occurrence_by_external($origin, $external_id);
-        }
-        return 0;
-    }
-
-    $source = get_post($source_post_id);
-    if (!$source instanceof WP_Post || $source->post_status !== 'publish' || $source->post_type !== 'fuehrung') {
-        iss_occurrences_get_service()->delete_occurrence_by_external($origin, $external_id);
-        return 0;
-    }
-
-    $service = iss_occurrences_get_service();
-    $start = $service->normalize_datetime((string) ($slot['start'] ?? $slot['starts_at'] ?? ''));
-    if ($start === '') {
-        iss_occurrences_get_service()->delete_occurrence_by_external($origin, $external_id);
-        return 0;
-    }
-
-    return $service->upsert_occurrence([
-        'source_post_id' => $source_post_id,
-        'source_post_type' => 'fuehrung',
-        'kind' => 'tour',
-        'title' => isset($slot['title']) ? sanitize_text_field((string) $slot['title']) : get_the_title($source_post_id),
-        'starts_at' => $start,
-        'ends_at' => $service->normalize_datetime((string) ($slot['end'] ?? $slot['ends_at'] ?? ''), true),
-        'date_source' => 'supersaas',
-        'status' => 'active',
-        'visibility' => 'public',
-        'origin' => $origin,
-        'source_calendar' => isset($slot['source_calendar']) ? sanitize_text_field((string) $slot['source_calendar']) : '',
-        'external_id' => $external_id,
-        'tag' => isset($slot['tag']) ? strtoupper(sanitize_text_field((string) $slot['tag'])) : '',
-        'series_key' => isset($slot['series_key']) ? sanitize_text_field((string) $slot['series_key']) : '',
-        'booking_url' => isset($slot['booking_url']) ? esc_url_raw((string) $slot['booking_url']) : '',
-        'location_label' => isset($slot['location']) ? sanitize_text_field((string) $slot['location']) : '',
-        'availability_state' => isset($slot['availability_state']) ? sanitize_key((string) $slot['availability_state']) : '',
-        'capacity_total' => array_key_exists('capacity', $slot) && $slot['capacity'] !== null ? (int) $slot['capacity'] : null,
-        'capacity_available' => array_key_exists('available', $slot) && $slot['available'] !== null ? (int) $slot['available'] : null,
-    ]) > 0 ? 1 : 0;
+    return iss_occurrences_get_fuehrung_provider()->sync_slot($slot);
 }
 
 function iss_occurrences_sync_all(): array

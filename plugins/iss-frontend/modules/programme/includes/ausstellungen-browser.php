@@ -67,7 +67,7 @@ function iss_programm_ausstellungen_today(): string
 function iss_programm_ausstellungen_visibility_meta_query(): array
 {
     return [
-        'key' => 'iss_timeline_enabled',
+        'key' => 'iss_public_overview_enabled',
         'value' => '1',
         'compare' => '=',
     ];
@@ -179,7 +179,7 @@ function iss_programm_ausstellungen_query_args(string $filter, int $limit, strin
         $args['meta_query'][] = iss_programm_ausstellungen_period_meta_query('archiv');
         $tax = iss_programm_ausstellungen_type_tax_query([$dauer_slug, $digital_slug], 'NOT IN');
         if (!empty($tax)) {
-            // phpcs:ignore WordPress.DB.SlowDBQuery.slow_db_query_tax_query -- Archive excludes availability-only Ausstellung types on the editor-owned taxonomy.
+            // phpcs:ignore WordPress.DB.SlowDBQuery.slow_db_query_tax_query -- Archive excludes availability-oriented Ausstellung types on the editor-owned taxonomy.
             $args['tax_query'] = [$tax];
         }
         return $args;
@@ -825,10 +825,10 @@ function iss_programm_ausstellungen_audit_findings(): array
             ];
         }
 
-        $is_availability_only = iss_programm_ausstellung_has_type($post_id, ['dauerausstellung', 'digitaleausstellungen']);
+        $is_availability_type = iss_programm_ausstellung_has_type($post_id, ['dauerausstellung', 'digitaleausstellungen']);
         $start = trim((string) get_post_meta($post_id, 'iss_start_date', true));
         $end = trim((string) get_post_meta($post_id, 'iss_end_date', true));
-        if (!$is_availability_only && $start !== '' && $end === '') {
+        if (!$is_availability_type && $start !== '' && $end === '') {
             $findings[] = [
                 'severity' => 'warning',
                 'code' => 'temporary_without_end_date',
@@ -856,7 +856,7 @@ function iss_programm_ausstellungen_audit_occurrence_findings(): array
     }
 
     $table = $service->get_occurrences_table_name();
-    // phpcs:disable WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching, WordPress.DB.PreparedSQL.InterpolatedNotPrepared -- Read-only CLI audit over service-owned occurrence table and WordPress taxonomy tables.
+    // phpcs:disable WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching, WordPress.DB.PreparedSQL.InterpolatedNotPrepared -- Read-only CLI audit over service-owned occurrence table and WordPress taxonomy/meta tables.
     $rows = $wpdb->get_results(
         "SELECT o.id, o.source_post_id, p.post_title, t.slug
         FROM {$table} o
@@ -864,10 +864,14 @@ function iss_programm_ausstellungen_audit_occurrence_findings(): array
         INNER JOIN {$wpdb->term_relationships} tr ON tr.object_id = p.ID
         INNER JOIN {$wpdb->term_taxonomy} tt ON tt.term_taxonomy_id = tr.term_taxonomy_id
         INNER JOIN {$wpdb->terms} t ON t.term_id = tt.term_id
+        LEFT JOIN {$wpdb->postmeta} programme_meta
+            ON programme_meta.post_id = p.ID
+            AND programme_meta.meta_key = 'iss_programme_enabled'
         WHERE o.origin = 'wp'
           AND o.source_post_type = 'ausstellung'
           AND tt.taxonomy = 'ausstellung_typ'
           AND t.slug IN ('dauerausstellung', 'digitaleausstellungen')
+          AND COALESCE(programme_meta.meta_value, '') <> '1'
         ORDER BY o.id ASC",
         ARRAY_A
     );
@@ -877,11 +881,11 @@ function iss_programm_ausstellungen_audit_occurrence_findings(): array
     foreach (is_array($rows) ? $rows : [] as $row) {
         $findings[] = [
             'severity' => 'error',
-            'code' => 'availability_type_has_occurrence',
+            'code' => 'availability_type_occurrence_without_programme_opt_in',
             'post_id' => (int) ($row['source_post_id'] ?? 0),
             'title' => (string) ($row['post_title'] ?? ''),
             'message' => sprintf(
-                'Availability-only Ausstellung type %s has occurrence row #%d.',
+                'Ausstellung type %s has occurrence row #%d without explicit programme opt-in.',
                 (string) ($row['slug'] ?? ''),
                 (int) ($row['id'] ?? 0)
             ),

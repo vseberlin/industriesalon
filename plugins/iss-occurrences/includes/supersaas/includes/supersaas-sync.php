@@ -14,6 +14,7 @@ function iss_supersaas_activate_sync() {
         wp_schedule_event(time() + 60, 'hourly', ISS_SUPERSAAS_SYNC_HOOK);
     }
 }
+add_action('init', 'iss_supersaas_activate_sync', 20);
 
 function iss_supersaas_deactivate_sync() {
     $ts = wp_next_scheduled(ISS_SUPERSAAS_SYNC_HOOK);
@@ -29,7 +30,7 @@ function iss_supersaas_deactivate_sync() {
  */
 function iss_supersaas_fetch_free_slots($settings = null) {
     if ($settings === null) {
-        $settings = function_exists('is_saas_get_settings') ? is_saas_get_settings() : [];
+        $settings = function_exists('iss_supersaas_get_settings') ? iss_supersaas_get_settings() : [];
     }
 
     if (!is_array($settings)) {
@@ -303,8 +304,8 @@ function iss_supersaas_get_slots_for_tag($tag, $settings = null) {
             continue;
         }
 
-        if (function_exists('is_saas_build_slot_response')) {
-            $built = is_saas_build_slot_response($slot, $clean_title, $start);
+        if (function_exists('iss_supersaas_build_slot_response')) {
+            $built = iss_supersaas_build_slot_response($slot, $clean_title, $start);
             if (is_array($built)) {
                 $built['id'] = isset($built['id']) ? (string) $built['id'] : '';
                 $built['booking_url'] = null;
@@ -513,7 +514,7 @@ function iss_supersaas_sync_occurrences() {
     $service = iss_occurrences_get_service();
     $service->maybe_install_schema();
 
-    $settings = function_exists('is_saas_get_settings') ? is_saas_get_settings() : [];
+    $settings = function_exists('iss_supersaas_get_settings') ? iss_supersaas_get_settings() : [];
     $slot_items = iss_supersaas_fetch_free_slots($settings);
     if (is_wp_error($slot_items)) {
         return [
@@ -529,8 +530,8 @@ function iss_supersaas_sync_occurrences() {
         ];
     }
 
-    $source_calendar = function_exists('is_saas_get_schedule_path')
-        ? (is_saas_get_schedule_path($settings) ?: (string) ($settings['schedule_id'] ?? ''))
+    $source_calendar = function_exists('iss_supersaas_get_schedule_path')
+        ? (iss_supersaas_get_schedule_path($settings) ?: (string) ($settings['schedule_id'] ?? ''))
         : (string) ($settings['schedule_id'] ?? '');
     $source_calendar = sanitize_text_field((string) $source_calendar);
     $metadata_backfilled = method_exists($service, 'backfill_supersaas_metadata')
@@ -808,8 +809,8 @@ function iss_supersaas_build_schedule_url($settings) {
 
     $base_url = isset($settings['base_url']) ? untrailingslashit((string) $settings['base_url']) : '';
     $account_name = isset($settings['account_name']) ? (string) $settings['account_name'] : '';
-    $schedule_path = function_exists('is_saas_get_schedule_path') ? is_saas_get_schedule_path($settings) : '';
-    $schedule_path = function_exists('is_saas_normalize_schedule_path') ? is_saas_normalize_schedule_path($schedule_path) : '';
+    $schedule_path = function_exists('iss_supersaas_get_schedule_path') ? iss_supersaas_get_schedule_path($settings) : '';
+    $schedule_path = function_exists('iss_supersaas_normalize_schedule_path') ? iss_supersaas_normalize_schedule_path($schedule_path) : '';
 
     if ($base_url === '' || $account_name === '' || $schedule_path === '') {
         return '';

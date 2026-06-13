@@ -4,8 +4,8 @@ if (!defined('ABSPATH')) {
     exit;
 }
 
-if (!function_exists('iss_programm_set_sync_notice')) {
-    function iss_programm_set_sync_notice($type, $message) {
+if (!function_exists('iss_occurrences_set_sync_notice')) {
+    function iss_occurrences_set_sync_notice($type, $message) {
         $type = sanitize_key((string) $type);
         if (!in_array($type, ['success', 'warning', 'error'], true)) {
             $type = 'success';
@@ -16,21 +16,21 @@ if (!function_exists('iss_programm_set_sync_notice')) {
             return;
         }
 
-        set_transient('iss_programm_sync_notice', [
+        set_transient('iss_occurrences_sync_notice', [
             'type' => $type,
             'message' => $message,
         ], 60);
     }
 }
 
-if (!function_exists('iss_programm_sync_capability')) {
-    function iss_programm_sync_capability() {
+if (!function_exists('iss_occurrences_sync_capability')) {
+    function iss_occurrences_sync_capability() {
         return function_exists('iss_core_capability') ? iss_core_capability('sync') : 'manage_options';
     }
 }
 
-if (!function_exists('iss_programm_normalize_series_key')) {
-    function iss_programm_normalize_series_key($series_key) {
+if (!function_exists('iss_occurrences_normalize_series_key')) {
+    function iss_occurrences_normalize_series_key($series_key) {
         $series_key = strtolower(trim(sanitize_text_field((string) $series_key)));
         if ($series_key === '') {
             return '';
@@ -42,8 +42,8 @@ if (!function_exists('iss_programm_normalize_series_key')) {
     }
 }
 
-if (!function_exists('iss_programm_get_fuehrung_ids_for_select')) {
-    function iss_programm_get_fuehrung_ids_for_select() {
+if (!function_exists('iss_occurrences_get_fuehrung_ids_for_select')) {
+    function iss_occurrences_get_fuehrung_ids_for_select() {
         return get_posts([
             'post_type' => 'fuehrung',
             'post_status' => ['publish', 'draft', 'private', 'pending'],
@@ -60,21 +60,21 @@ add_action('admin_menu', function () {
     add_management_page(
         'SuperSaaS-Termin-Sync',
         'SuperSaaS-Termin-Sync',
-        iss_programm_sync_capability(),
-        'iss-programm-sync',
-        'iss_programm_render_sync_page'
+        iss_occurrences_sync_capability(),
+        'iss-occurrences-sync',
+        'iss_occurrences_render_sync_page'
     );
 });
 
-add_action('admin_post_iss_programm_sync', function () {
-    if (!current_user_can(iss_programm_sync_capability())) {
+add_action('admin_post_iss_occurrences_sync', function () {
+    if (!current_user_can(iss_occurrences_sync_capability())) {
         wp_die('Not allowed.');
     }
 
-    check_admin_referer('iss_programm_sync');
+    check_admin_referer('iss_occurrences_sync');
 
     if (!function_exists('iss_supersaas_sync_occurrences')) {
-        set_transient('iss_programm_sync_result', [
+        set_transient('iss_occurrences_sync_result', [
             'created' => 0,
             'updated' => 0,
             'errors' => 1,
@@ -85,28 +85,28 @@ add_action('admin_post_iss_programm_sync', function () {
             'metadata_backfilled' => 0,
             'error_message' => 'SuperSaaS sync module is unavailable.',
         ], 60);
-        wp_safe_redirect(admin_url('tools.php?page=iss-programm-sync'));
+        wp_safe_redirect(admin_url('tools.php?page=iss-occurrences-sync'));
         exit;
     }
 
     $result = iss_supersaas_sync_occurrences();
-    set_transient('iss_programm_sync_result', $result, 60);
+    set_transient('iss_occurrences_sync_result', $result, 60);
 
-    wp_safe_redirect(admin_url('tools.php?page=iss-programm-sync'));
+    wp_safe_redirect(admin_url('tools.php?page=iss-occurrences-sync'));
     exit;
 });
 
-add_action('admin_post_iss_programm_clear_series_source', function () {
-    if (!current_user_can(iss_programm_sync_capability())) {
+add_action('admin_post_iss_occurrences_clear_series_source', function () {
+    if (!current_user_can(iss_occurrences_sync_capability())) {
         wp_die('Not allowed.');
     }
 
-    check_admin_referer('iss_programm_sync_series_source_action');
+    check_admin_referer('iss_occurrences_sync_series_source_action');
 
-    $series_key = isset($_POST['series_key']) ? iss_programm_normalize_series_key(wp_unslash($_POST['series_key'])) : '';
+    $series_key = isset($_POST['series_key']) ? iss_occurrences_normalize_series_key(wp_unslash($_POST['series_key'])) : '';
     if ($series_key === '') {
-        iss_programm_set_sync_notice('error', 'Zuordnung konnte nicht gelöst werden: ungültige Reihe.');
-        wp_safe_redirect(admin_url('tools.php?page=iss-programm-sync'));
+        iss_occurrences_set_sync_notice('error', 'Zuordnung konnte nicht gelöst werden: ungültige Reihe.');
+        wp_safe_redirect(admin_url('tools.php?page=iss-occurrences-sync'));
         exit;
     }
 
@@ -115,41 +115,41 @@ add_action('admin_post_iss_programm_clear_series_source', function () {
         : false;
 
     if ($cleared) {
-        iss_programm_set_sync_notice('success', sprintf('Zuordnung für Reihe %s wurde gelöst.', $series_key));
+        iss_occurrences_set_sync_notice('success', sprintf('Zuordnung für Reihe %s wurde gelöst.', $series_key));
     } else {
-        iss_programm_set_sync_notice('warning', sprintf('Keine Änderung für Reihe %s durchgeführt.', $series_key));
+        iss_occurrences_set_sync_notice('warning', sprintf('Keine Änderung für Reihe %s durchgeführt.', $series_key));
     }
 
-    wp_safe_redirect(admin_url('tools.php?page=iss-programm-sync'));
+    wp_safe_redirect(admin_url('tools.php?page=iss-occurrences-sync'));
     exit;
 });
 
-add_action('admin_post_iss_programm_set_series_source', function () {
-    if (!current_user_can(iss_programm_sync_capability())) {
+add_action('admin_post_iss_occurrences_set_series_source', function () {
+    if (!current_user_can(iss_occurrences_sync_capability())) {
         wp_die('Not allowed.');
     }
 
-    check_admin_referer('iss_programm_sync_series_source_action');
+    check_admin_referer('iss_occurrences_sync_series_source_action');
 
-    $series_key = isset($_POST['series_key']) ? iss_programm_normalize_series_key(wp_unslash($_POST['series_key'])) : '';
+    $series_key = isset($_POST['series_key']) ? iss_occurrences_normalize_series_key(wp_unslash($_POST['series_key'])) : '';
     $post_id = isset($_POST['source_post_id']) ? (int) $_POST['source_post_id'] : 0;
 
     if ($series_key === '') {
-        iss_programm_set_sync_notice('error', 'Neu-Zuordnung fehlgeschlagen: ungültige Reihe.');
-        wp_safe_redirect(admin_url('tools.php?page=iss-programm-sync'));
+        iss_occurrences_set_sync_notice('error', 'Neu-Zuordnung fehlgeschlagen: ungültige Reihe.');
+        wp_safe_redirect(admin_url('tools.php?page=iss-occurrences-sync'));
         exit;
     }
 
     if ($post_id <= 0) {
-        iss_programm_set_sync_notice('error', 'Neu-Zuordnung fehlgeschlagen: bitte eine Führung auswählen.');
-        wp_safe_redirect(admin_url('tools.php?page=iss-programm-sync'));
+        iss_occurrences_set_sync_notice('error', 'Neu-Zuordnung fehlgeschlagen: bitte eine Führung auswählen.');
+        wp_safe_redirect(admin_url('tools.php?page=iss-occurrences-sync'));
         exit;
     }
 
     $post = get_post($post_id);
     if (!($post instanceof WP_Post) || $post->post_type !== 'fuehrung') {
-        iss_programm_set_sync_notice('error', 'Neu-Zuordnung fehlgeschlagen: Zielobjekt ist keine Führung.');
-        wp_safe_redirect(admin_url('tools.php?page=iss-programm-sync'));
+        iss_occurrences_set_sync_notice('error', 'Neu-Zuordnung fehlgeschlagen: Zielobjekt ist keine Führung.');
+        wp_safe_redirect(admin_url('tools.php?page=iss-occurrences-sync'));
         exit;
     }
 
@@ -157,8 +157,8 @@ add_action('admin_post_iss_programm_set_series_source', function () {
         ? iss_occurrences_get_series_source($series_key)
         : null;
     if (!is_array($entry)) {
-        iss_programm_set_sync_notice('error', sprintf('Neu-Zuordnung fehlgeschlagen: Reihe %s wurde nicht gefunden.', $series_key));
-        wp_safe_redirect(admin_url('tools.php?page=iss-programm-sync'));
+        iss_occurrences_set_sync_notice('error', sprintf('Neu-Zuordnung fehlgeschlagen: Reihe %s wurde nicht gefunden.', $series_key));
+        wp_safe_redirect(admin_url('tools.php?page=iss-occurrences-sync'));
         exit;
     }
 
@@ -179,28 +179,28 @@ add_action('admin_post_iss_programm_set_series_source', function () {
         iss_supersaas_sync_occurrences();
     }
 
-    iss_programm_set_sync_notice('success', sprintf('Reihe %s wurde auf Führung #%d gesetzt.', $series_key, $post_id));
+    iss_occurrences_set_sync_notice('success', sprintf('Reihe %s wurde auf Führung #%d gesetzt.', $series_key, $post_id));
 
-    wp_safe_redirect(admin_url('tools.php?page=iss-programm-sync'));
+    wp_safe_redirect(admin_url('tools.php?page=iss-occurrences-sync'));
     exit;
 });
 
-function iss_programm_render_sync_page() {
-    if (!current_user_can(iss_programm_sync_capability())) {
+function iss_occurrences_render_sync_page() {
+    if (!current_user_can(iss_occurrences_sync_capability())) {
         return;
     }
 
-    $result = get_transient('iss_programm_sync_result');
+    $result = get_transient('iss_occurrences_sync_result');
     if ($result !== false) {
-        delete_transient('iss_programm_sync_result');
+        delete_transient('iss_occurrences_sync_result');
     }
-    $notice = get_transient('iss_programm_sync_notice');
+    $notice = get_transient('iss_occurrences_sync_notice');
     if ($notice !== false) {
-        delete_transient('iss_programm_sync_notice');
+        delete_transient('iss_occurrences_sync_notice');
     }
 
     $series_sources = function_exists('iss_occurrences_get_series_sources') ? iss_occurrences_get_series_sources() : [];
-    $fuehrungen = iss_programm_get_fuehrung_ids_for_select();
+    $fuehrungen = iss_occurrences_get_fuehrung_ids_for_select();
 
     echo '<div class="wrap">';
     echo '<h1>SuperSaaS-Termin-Sync</h1>';
@@ -245,8 +245,8 @@ function iss_programm_render_sync_page() {
     }
 
     echo '<form method="post" action="' . esc_url(admin_url('admin-post.php')) . '">';
-    echo '<input type="hidden" name="action" value="iss_programm_sync" />';
-    wp_nonce_field('iss_programm_sync');
+    echo '<input type="hidden" name="action" value="iss_occurrences_sync" />';
+    wp_nonce_field('iss_occurrences_sync');
     submit_button('Jetzt synchronisieren');
     echo '</form>';
 
@@ -316,17 +316,17 @@ function iss_programm_render_sync_page() {
             }
 
             $fallback_label = $fallback_url
-                ? sprintf('<a href="%s" target="_blank" rel="noopener">%s</a>', esc_url($fallback_url), esc_html__('link', 'iss-programm'))
+                ? sprintf('<a href="%s" target="_blank" rel="noopener">%s</a>', esc_url($fallback_url), esc_html__('link', 'iss-occurrences'))
                 : esc_html('—');
 
             $assign_form = '<form method="post" action="' . esc_url(admin_url('admin-post.php')) . '" style="display:flex;gap:6px;align-items:center;">'
-                . '<input type="hidden" name="action" value="iss_programm_set_series_source" />'
+                . '<input type="hidden" name="action" value="iss_occurrences_set_series_source" />'
                 . '<input type="hidden" name="series_key" value="' . esc_attr((string) $series_key) . '" />';
             ob_start();
-            wp_nonce_field('iss_programm_sync_series_source_action');
+            wp_nonce_field('iss_occurrences_sync_series_source_action');
             $assign_form .= (string) ob_get_clean();
             $assign_form .= '<select name="source_post_id">';
-            $assign_form .= '<option value="">' . esc_html__('Führung wählen', 'iss-programm') . '</option>';
+            $assign_form .= '<option value="">' . esc_html__('Führung wählen', 'iss-occurrences') . '</option>';
             foreach ($fuehrungen as $fuehrung_id) {
                 $fuehrung_id = (int) $fuehrung_id;
                 if ($fuehrung_id <= 0) {
@@ -349,10 +349,10 @@ function iss_programm_render_sync_page() {
             $assign_form .= '</form>';
 
             $clear_form = '<form method="post" action="' . esc_url(admin_url('admin-post.php')) . '" style="margin-top:6px;">'
-                . '<input type="hidden" name="action" value="iss_programm_clear_series_source" />'
+                . '<input type="hidden" name="action" value="iss_occurrences_clear_series_source" />'
                 . '<input type="hidden" name="series_key" value="' . esc_attr((string) $series_key) . '" />';
             ob_start();
-            wp_nonce_field('iss_programm_sync_series_source_action');
+            wp_nonce_field('iss_occurrences_sync_series_source_action');
             $clear_form .= (string) ob_get_clean();
             $clear_form .= '<button type="submit" class="button">Zuordnung lösen</button>';
             $clear_form .= '</form>';

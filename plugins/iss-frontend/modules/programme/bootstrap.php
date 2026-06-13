@@ -17,8 +17,6 @@ require_once __DIR__ . '/includes/ausstellungen-browser.php';
 require_once __DIR__ . '/includes/timeline-rest.php';
 require_once __DIR__ . '/includes/timeline-blocks.php';
 require_once __DIR__ . '/includes/programme-helpers.php';
-require_once __DIR__ . '/includes/admin-fuehrung-mapping.php';
-require_once __DIR__ . '/includes/admin-sync-page.php';
 
 add_action('admin_notices', function () {
     if (!function_exists('iss_occurrences_query')) {
