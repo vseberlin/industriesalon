@@ -929,7 +929,6 @@ function iss_graph_wpcli_facade_route_scan_roots(): array
         if (
             str_starts_with($plugin_name, 'iss-')
             || str_starts_with($plugin_name, 'industriesalon-')
-            || $plugin_name === 'saas-api'
         ) {
             $roots[] = (string) $plugin_dir;
         }
@@ -1076,7 +1075,7 @@ function iss_graph_wpcli_facade_consumer_contract(): array
         ],
         'availability-browser-block' => [
             'kind' => 'source_literal',
-            'file' => trailingslashit(defined('WP_PLUGIN_DIR') ? WP_PLUGIN_DIR : trailingslashit(WP_CONTENT_DIR) . 'plugins') . 'iss-programm/includes/ausstellungen-browser.php',
+            'file' => trailingslashit(defined('WP_PLUGIN_DIR') ? WP_PLUGIN_DIR : trailingslashit(WP_CONTENT_DIR) . 'plugins') . 'iss-frontend/modules/programme/includes/ausstellungen-browser.php',
             'route' => 'iss/v1/availability',
         ],
     ];
@@ -3069,8 +3068,8 @@ function iss_graph_wpcli_check_availability_contract(int $limit): array
             $errors[] = sprintf('/iss/v1/availability filter=%s is_empty is not a boolean.', $filter);
         }
 
-        if (($data['provider'] ?? '') !== 'iss-programm') {
-            $errors[] = sprintf('/iss/v1/availability filter=%s provider is %s, expected iss-programm.', $filter, (string) ($data['provider'] ?? ''));
+        if (($data['provider'] ?? '') !== 'iss-frontend') {
+            $errors[] = sprintf('/iss/v1/availability filter=%s provider is %s, expected iss-frontend.', $filter, (string) ($data['provider'] ?? ''));
         }
         if (($data['kind'] ?? '') !== 'exhibition' || ($data['storage_kind'] ?? '') !== 'ausstellung') {
             $errors[] = sprintf('/iss/v1/availability filter=%s does not expose exhibition/ausstellung kind fields.', $filter);

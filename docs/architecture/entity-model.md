@@ -13,10 +13,10 @@ The project currently has useful but overlapping relation systems:
 
 - editorial post-to-place links in `iss-relations`
 - graph entities, names, relations, profiles, and search in `iss-graph`
-- archive object/source/provenance projections in `iss-wf-import`
+- archive object/source/provenance projections in `iss-archive`
 - register place facts, epochs, states, and actor facets in
   `industriesalon-schoeneweide-register`
-- exhibition and timeline composition in `iss-content-model`
+- exhibition and timeline composition in `iss-content`
 
 The missing contract is not another relation table. The missing contract is a
 stable entity identity model that every plugin can project into and every
@@ -83,8 +83,8 @@ maps to `offer` subtypes through existing editor-owned meta:
 `_iss_event_format` maps to `event`, `lecture`, `discussion`, `reading`,
 `repair_cafe`, `concert`, `festival`, `workshop`, `school_program`, or
 `presentation`, and `_iss_event_layout=fest` maps to `special_opening`.
-The public tour catalog remains an `iss-fuehrungen` renderer over `fuehrung`
-posts, guarded by `wp iss-fuehrungen drift-check` against missing published
+The public tour catalog remains an `iss-content` tour renderer over `fuehrung`
+posts, guarded by `wp iss-content tours-drift-check` against missing published
 tours, invalid `offer/tour` contracts, and unknown catalog groups.
 Facade occurrences scoped to an entity are exposed through the graph facade over
 the existing occurrence service; no occurrence CPT or storage owner is added.
@@ -341,9 +341,9 @@ Each accepted claim should be able to answer:
 | --- | --- |
 | `iss-graph` | Canonical entity index, names, identifiers, entity relations, evidence references, graph search projection, resolver APIs. |
 | `iss-relations` | Editor-facing post-to-place relation source. Projects accepted place links into graph and taxonomy indexes. |
-| `iss-wf-import` | Archive object/source/collection/assertion authority. Creates or updates archive entities, source-label aliases, identifiers, and graph projections. |
+| `iss-archive` | Archive object/source/collection/assertion authority. Creates or updates archive entities, source-label aliases, identifiers, and graph projections. |
 | `industriesalon-schoeneweide-register` | Place fact authority: geo, address, status, epochs, states, source links, register tools. Creates or updates place entities. |
-| `iss-content-model` | Public CPT contracts and exhibition/timeline composition. Creates content entities but does not own graph-wide identity rules. |
+| `iss-content` | Public CPT contracts and exhibition/timeline composition. Creates content entities but does not own graph-wide identity rules. |
 | Theme | Presentation only. Reads entity-aware block output; does not write entity storage. |
 
 ## Relation Ownership
@@ -356,9 +356,9 @@ Relation source and relation index are different things.
 | place to organization/person | `iss-graph`, with register bridge inputs | search projection, profile blocks |
 | content to person/organization | `iss-graph` content admin | search projection, entity relation blocks |
 | video transcript mentions | `iss-graph` transcript bridge, derived from `video.post_content` | pending entity evidence refs for curator review |
-| archive object to imported place/person/object/event/collection | `iss-wf-import` | archive relation table, graph projection, search projection |
+| archive object to imported place/person/object/event/collection | `iss-archive` | archive relation table, graph projection, search projection |
 | archive object to local register place | `iss-relations` source | archive `local_place`, graph `place`, taxonomy index |
-| exhibition to chapters/archive browser/timeline | `iss-content-model` | theme/block rendering only |
+| exhibition to chapters/archive browser/timeline | `iss-content` | theme/block rendering only |
 | place to industry actor | `iss-graph` organization relation, recommended | register actor table or Atlas facet should be derived unless explicitly retained as source |
 
 Industry actors should become organization entities resolved through the graph
@@ -419,7 +419,7 @@ post list.
 ## Video Transcript Bridge
 
 Video transcripts remain normal `video` CPT body content owned by
-`iss-content-model`. They are already useful for full-text search, but relation
+`iss-content`. They are already useful for full-text search, but relation
 building needs a graph projection.
 
 The transcript bridge in `iss-graph` derives reviewable evidence only:
@@ -498,13 +498,13 @@ public relations; the nested entity-relations route exposes existing graph
 relations with outgoing, incoming, family, source-system, and limit filters.
 Occurrence responses are served from `iss-occurrences` when that plugin is
 active; search responses delegate to the existing search service. The timeline
-route is registered by `iss-programm` and delegates to the existing rendered
-timeline REST callback. The availability route is registered by `iss-programm`
+route is registered by `iss-frontend` and delegates to the existing rendered
+timeline REST callback. The availability route is registered by `iss-frontend`
 and delegates to the existing Ausstellung availability browser query helpers.
 It supports the browser filters plus search and returns both structured items
 and server-rendered `html` / `is_empty` fields so public clients do not duplicate
 card markup.
-The tour-slots route is registered by `saas-api` and delegates to the
+The tour-slots route is registered by `iss-commerce-lite` and delegates to the
 occurrence-backed slot adapter. The retired read routes `/iss-search/v1/search`,
 `/iss-programm/v1/timeline`, and `/is-tours/v1/slots` are no longer registered.
 Booking submissions stay outside the read-only facade on `/is-tours/v1/book`.

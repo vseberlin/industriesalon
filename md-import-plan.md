@@ -263,7 +263,7 @@ Cleanup should be:
 
 Likely work area:
 
-- `plugins/iss-wf-import/includes/museum-digital-importer.php`
+- `plugins/iss-archive/includes/museum-digital-importer.php`
 
 Tasks:
 
@@ -276,7 +276,7 @@ Tasks:
 
 Likely work area:
 
-- `plugins/iss-wf-import/includes/media-service.php`
+- `plugins/iss-archive/includes/media-service.php`
 
 Tasks:
 
@@ -288,7 +288,7 @@ Tasks:
 
 Likely work area:
 
-- `plugins/iss-wf-import/includes/blocks.php`
+- `plugins/iss-archive/includes/blocks.php`
 - any archive single template helpers that still use featured-image functions directly
 
 Tasks:

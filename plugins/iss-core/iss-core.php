@@ -13,6 +13,72 @@ define('ISS_CORE_VERSION', '0.1.0');
 define('ISS_CORE_FILE', __FILE__);
 define('ISS_CORE_PATH', plugin_dir_path(__FILE__));
 
+function iss_core_migrate_domain_plugin_basenames(): void
+{
+    $active = get_option('active_plugins', []);
+    if (!is_array($active) || empty($active)) {
+        return;
+    }
+
+    $current_lookup = array_fill_keys(array_map('strval', $active), true);
+    $replacements = [
+        'iss-content-model/iss-content-model.php' => 'iss-content/iss-content.php',
+        'iss-payments-lite/iss-payments-lite.php' => 'iss-commerce-lite/iss-commerce-lite.php',
+        'iss-wf-import/iss-wf-import.php' => 'iss-archive/iss-archive.php',
+    ];
+    $retired = [
+        'iss-fuehrungen/iss-fuehrungen.php' => true,
+        'iss-programm/iss-programm.php' => true,
+        'saas-api/saas-api.php' => true,
+    ];
+
+    $next = [];
+    $saw_retired_domain_plugin = false;
+    foreach ($active as $plugin) {
+        $plugin = (string) $plugin;
+        if (isset($retired[$plugin])) {
+            $saw_retired_domain_plugin = true;
+            continue;
+        }
+        if (isset($replacements[$plugin])) {
+            $plugin = $replacements[$plugin];
+            $saw_retired_domain_plugin = true;
+        }
+        if ($plugin !== '' && !in_array($plugin, $next, true)) {
+            $next[] = $plugin;
+        }
+    }
+
+    if ($saw_retired_domain_plugin) {
+        foreach (array_values($replacements) as $plugin) {
+            if (!in_array($plugin, $next, true)) {
+                $next[] = $plugin;
+            }
+        }
+        if (!in_array('iss-frontend/iss-frontend.php', $next, true)) {
+            $next[] = 'iss-frontend/iss-frontend.php';
+        }
+    }
+
+    if ($next === $active) {
+        return;
+    }
+
+    update_option('active_plugins', array_values($next));
+
+    $plugin_root = defined('WP_PLUGIN_DIR') ? WP_PLUGIN_DIR : trailingslashit(WP_CONTENT_DIR) . 'plugins';
+    foreach ($next as $plugin) {
+        if (isset($current_lookup[$plugin])) {
+            continue;
+        }
+        $path = trailingslashit($plugin_root) . $plugin;
+        if (is_readable($path)) {
+            require_once $path;
+        }
+    }
+}
+iss_core_migrate_domain_plugin_basenames();
+
 function iss_core_capability(string $area = 'manage'): string
 {
     $area = sanitize_key($area);

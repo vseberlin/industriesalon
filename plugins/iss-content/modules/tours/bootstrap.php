@@ -1,11 +1,4 @@
 <?php
-/**
- * Plugin Name: Industriesalon Führungen
- * Description: Führung CPT, structured fields, dynamic blocks, and SuperSaaS-aware helpers for Industriesalon.
- * Version: 1.0.0
- * Author: Industriesalon
- */
-
 if (!defined('ABSPATH')) {
     exit;
 }
@@ -60,12 +53,3 @@ function iss_fuehrungen_enqueue_assets() {
     }
 }
 add_action('wp_enqueue_scripts', 'iss_fuehrungen_enqueue_assets');
-
-register_activation_hook(__FILE__, function () {
-    iss_fuehrungen_register_post_type();
-    flush_rewrite_rules();
-});
-
-register_deactivation_hook(__FILE__, function () {
-    flush_rewrite_rules();
-});

@@ -8,7 +8,7 @@ legacy `fuehrung` and `veranstaltung` objects.
 - Header search modal reads `/wp-json/iss/v1/search` and renders the existing
   `type_label` field.
 - Related content/cards render through the shared `iss-relations` card helpers.
-- Timeline and programme cards render through `iss-programm` occurrence-backed
+- Timeline and programme cards render through `iss-frontend` occurrence-backed
   rows.
 - Tour booking reads stay on `/wp-json/iss/v1/tour-slots`; booking writes stay
   on `/wp-json/is-tours/v1/book`.

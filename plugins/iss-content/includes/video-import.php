@@ -706,6 +706,7 @@ function iss_content_model_find_video_post_by_url($video_url) {
         return 0;
     }
 
+    // phpcs:disable WordPress.DB.SlowDBQuery.slow_db_query_meta_key, WordPress.DB.SlowDBQuery.slow_db_query_meta_value -- Bounded duplicate lookup for explicit video import runs.
     $query = new WP_Query([
         'post_type' => ISS_CONTENT_MODEL_VIDEO_POST_TYPE,
         'post_status' => ['publish', 'draft', 'pending', 'future', 'private'],
@@ -715,6 +716,7 @@ function iss_content_model_find_video_post_by_url($video_url) {
         'meta_value' => $video_url,
         'no_found_rows' => true,
     ]);
+    // phpcs:enable WordPress.DB.SlowDBQuery.slow_db_query_meta_key, WordPress.DB.SlowDBQuery.slow_db_query_meta_value
 
     if (!$query->have_posts()) {
         return 0;
@@ -890,8 +892,8 @@ if (defined('WP_CLI') && WP_CLI) {
          *
          * ## EXAMPLES
          *
-         *     wp iss-content-model videos backfill
-         *     wp iss-content-model videos backfill --limit=5 --overwrite
+         *     wp iss-content videos backfill
+         *     wp iss-content videos backfill --limit=5 --overwrite
          */
         public function backfill($args, $assoc_args) {
             $results = iss_content_model_backfill_all_video_metadata([
@@ -926,5 +928,6 @@ if (defined('WP_CLI') && WP_CLI) {
         }
     }
 
+    WP_CLI::add_command('iss-content videos', 'ISS_Content_Model_Video_CLI_Command');
     WP_CLI::add_command('iss-content-model videos', 'ISS_Content_Model_Video_CLI_Command');
 }

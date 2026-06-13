@@ -5,9 +5,9 @@ if (!defined('ABSPATH')) {
 }
 
 $constants = [
-    'ISS_CONTENT_MODEL_PATH' => __DIR__ . '/../plugins/iss-content-model/',
-    'ISS_FUEHRUNGEN_PATH' => __DIR__ . '/../plugins/iss-fuehrungen/',
-    'ISS_FUEHRUNGEN_URL' => 'https://example.test/wp-content/plugins/iss-fuehrungen/',
+    'ISS_CONTENT_MODEL_PATH' => __DIR__ . '/../plugins/iss-content/',
+    'ISS_FUEHRUNGEN_PATH' => __DIR__ . '/../plugins/iss-content/modules/tours/',
+    'ISS_FUEHRUNGEN_URL' => 'https://example.test/wp-content/plugins/iss-content/modules/tours/',
     'ISS_GRAPH_PATH' => __DIR__ . '/../plugins/iss-graph/',
     'ISS_GRAPH_URL' => 'https://example.test/wp-content/plugins/iss-graph/',
     'ISS_PROGRAMM_VERSION' => '0.1.0',
@@ -19,8 +19,8 @@ $constants = [
     'ISS_RELATIONS_PATH' => __DIR__ . '/../plugins/iss-relations/',
     'ISS_RELATIONS_TAXONOMY' => 'iss_place_ref',
     'ISS_RELATIONS_URL' => 'https://example.test/wp-content/plugins/iss-relations/',
-    'ISS_WF_IMPORT_PATH' => __DIR__ . '/../plugins/iss-wf-import/',
-    'ISS_WF_IMPORT_URL' => 'https://example.test/wp-content/plugins/iss-wf-import/',
+    'ISS_WF_IMPORT_PATH' => __DIR__ . '/../plugins/iss-archive/',
+    'ISS_WF_IMPORT_URL' => 'https://example.test/wp-content/plugins/iss-archive/',
 ];
 
 foreach ($constants as $name => $value) {

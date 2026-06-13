@@ -11,16 +11,16 @@
   <file>plugins/industriesalon-notices</file>
   <file>plugins/industriesalon-schoeneweide-register</file>
   <file>plugins/industriesalon-steuerung</file>
-  <file>plugins/iss-calendar</file>
-  <file>plugins/iss-content-model</file>
-  <file>plugins/iss-fuehrungen</file>
+  <file>plugins/iss-content</file>
+  <file>plugins/iss-core</file>
+  <file>plugins/iss-frontend</file>
   <file>plugins/iss-graph</file>
   <file>plugins/iss-media-control</file>
-  <file>plugins/iss-payments-lite</file>
-  <file>plugins/iss-programm</file>
+  <file>plugins/iss-commerce-lite</file>
+  <file>plugins/iss-occurrences</file>
   <file>plugins/iss-publications</file>
   <file>plugins/iss-relations</file>
-  <file>plugins/iss-wf-import</file>
+  <file>plugins/iss-archive</file>
 
   <exclude-pattern>*/vendor/*</exclude-pattern>
   <exclude-pattern>*/node_modules/*</exclude-pattern>

@@ -55,9 +55,9 @@ These responsibilities are no longer part of the plugin contract:
 
 ## Compatibility
 
-- plugin directory remains `iss-wf-import`
+- plugin directory is `iss-archive`
 - PHP prefixes remain `iss_wf_import`
-- existing CPT names and meta keys remain unchanged
+- existing CPT names, meta keys, block names, and script handles remain unchanged
 
 This preserves stored data, templates, and references while the semantic role
 shifts from "import plugin" to "archive owner".

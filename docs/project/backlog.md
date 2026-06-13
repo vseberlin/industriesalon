@@ -5,7 +5,7 @@ Large future work that should not live in root `TODO.md`.
 ## Archive And Graph Pipeline
 
 - Formalize archive/graph flow as `ingest -> normalize -> project -> enrich -> provenance`.
-- Keep `iss-wf-import` as the local archive runtime owner for archive posts, objects, collections, assertions, evidence, and source snapshots.
+- Keep `iss-archive` as the local archive runtime owner for archive posts, objects, collections, assertions, evidence, and source snapshots.
 - Keep `iss-graph` as the shared cross-domain entity layer for people, organizations, places, profiles, relations, and public search.
 - Define one canonical normalized-record contract between source adapters and projectors.
 - Let ingest runs stop after source capture and normalization before projection.

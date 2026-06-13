@@ -1,6 +1,7 @@
-# ISS Payments Lite
+# ISS Commerce Lite
 
-Thin booking and payment entry layer for Industriesalon domain plugins.
+Lightweight SuperSaaS slot sync plus booking and publication-order request
+capture for Industriesalon domain plugins.
 
 ## Scope
 
@@ -12,10 +13,10 @@ Owns:
 - opt-in request notification emails
 - public write endpoint spam/rate-limit guards
 - compatibility hooks for downstream handling
+- SuperSaaS settings, occurrence sync, and public tour-slot reads
 
 Does not own:
 
-- SuperSaaS sync
 - calendar CPT storage
 - slot mapping/cache
 - timeline rendering
@@ -29,11 +30,12 @@ Right now this plugin owns:
 ```txt
 POST /wp-json/is-tours/v1/book
 POST /wp-json/iss-payments/v1/publication-order
+GET /wp-json/iss/v1/tour-slots
 Tools > ISS Anfragen
-wp iss-payments-lite verify
+wp iss-commerce-lite verify
 ```
 
-It exists to keep write-side booking/payment logic out of `saas-api`.
+It keeps booking/order logic and the SuperSaaS adapter in one commerce boundary.
 
 Requests are stored in `wp_iss_payments_lite_requests`. The old capped
 `is_tours_booking_requests` and `iss_publication_order_requests` options are

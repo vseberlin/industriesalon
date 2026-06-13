@@ -138,5 +138,6 @@ if (defined('WP_CLI') && WP_CLI) {
         }
     }
 
+    WP_CLI::add_command('iss-content tours-drift-check', ['ISS_Fuehrungen_CLI_Command', 'drift_check']);
     WP_CLI::add_command('iss-fuehrungen drift-check', ['ISS_Fuehrungen_CLI_Command', 'drift_check']);
 }

@@ -12,8 +12,8 @@ if (!defined('ABSPATH')) {
 
 /**
  * Internal compatibility note:
- * the plugin directory and PHP prefixes stay `iss_wf_import` for now so the
- * existing runtime and stored references remain stable.
+ * PHP prefixes, option keys, and stored references stay `iss_wf_import` for now
+ * while the owning plugin basename is `iss-archive`.
  */
 define('ISS_WF_IMPORT_VERSION', '0.5.0');
 define('ISS_WF_IMPORT_PATH', plugin_dir_path(__FILE__));

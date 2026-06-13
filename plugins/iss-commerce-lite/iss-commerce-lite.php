@@ -1,8 +1,8 @@
 <?php
 /**
- * Plugin Name: ISS Payments Lite
- * Description: Thin booking and payment entry layer for Industriesalon domain plugins.
- * Version: 0.1.0
+ * Plugin Name: ISS Commerce Lite
+ * Description: Lightweight SuperSaaS slot sync, booking request, and publication order intake for Industriesalon.
+ * Version: 0.3.0
  */
 
 if (!defined('ABSPATH')) {
@@ -15,6 +15,8 @@ define('ISS_PAYMENTS_LITE_SCHEMA_VERSION', '2026-06-13-requests-v2');
 define('ISS_PAYMENTS_LITE_SCHEMA_OPTION', 'iss_payments_lite_schema_version');
 define('ISS_PAYMENTS_LITE_SETTINGS_OPTION', 'iss_payments_lite_settings');
 define('ISS_PAYMENTS_LITE_PATH', plugin_dir_path(__FILE__));
+define('ISS_COMMERCE_LITE_VERSION', '0.3.0');
+define('ISS_COMMERCE_LITE_PATH', ISS_PAYMENTS_LITE_PATH);
 
 function iss_payments_lite_requests_table_name(): string {
     global $wpdb;
@@ -203,7 +205,6 @@ function iss_payments_lite_insert_request(string $request_kind, array $entry): i
     return $inserted ? (int) $wpdb->insert_id : 0;
 }
 
-register_activation_hook(__FILE__, 'iss_payments_lite_install_schema');
 add_action('init', 'iss_payments_lite_maybe_install_schema', 4);
 
 add_action('wp_enqueue_scripts', function () {
@@ -745,3 +746,17 @@ add_filter('iss_publications_order_button_html', function ($html, $post_id, $con
 
 require_once ISS_PAYMENTS_LITE_PATH . 'includes/admin.php';
 require_once ISS_PAYMENTS_LITE_PATH . 'includes/cli.php';
+require_once ISS_PAYMENTS_LITE_PATH . 'modules/supersaas/bootstrap.php';
+
+register_activation_hook(__FILE__, function () {
+    iss_payments_lite_install_schema();
+    if (function_exists('iss_supersaas_activate_sync')) {
+        iss_supersaas_activate_sync();
+    }
+});
+
+register_deactivation_hook(__FILE__, function () {
+    if (function_exists('iss_supersaas_deactivate_sync')) {
+        iss_supersaas_deactivate_sync();
+    }
+});

@@ -1,7 +1,7 @@
 <?php
 /**
- * Plugin Name: ISS Content Model
- * Description: Shared CPTs and structured fields for Veranstaltungen, Ausstellungen, Projekte, and Team, with minimal timeline wiring.
+ * Plugin Name: ISS Content
+ * Description: Shared editorial content contracts for Veranstaltungen, Ausstellungen, Projekte, Videos, Team, and Führungen.
  * Version: 0.2.0
  * Author: Industriesalon
  */
@@ -12,6 +12,8 @@ if (!defined('ABSPATH')) {
 
 define('ISS_CONTENT_MODEL_VERSION', '0.2.0');
 define('ISS_CONTENT_MODEL_PATH', plugin_dir_path(__FILE__));
+define('ISS_CONTENT_VERSION', ISS_CONTENT_MODEL_VERSION);
+define('ISS_CONTENT_PATH', ISS_CONTENT_MODEL_PATH);
 
 define('ISS_CONTENT_MODEL_VERANSTALTUNG_POST_TYPE', 'veranstaltung');
 define('ISS_CONTENT_MODEL_AUSSTELLUNG_POST_TYPE', 'ausstellung');
@@ -104,9 +106,13 @@ require_once ISS_CONTENT_MODEL_PATH . 'includes/blocks.php';
 require_once ISS_CONTENT_MODEL_PATH . 'includes/ausstellung-type-sync.php';
 require_once ISS_CONTENT_MODEL_PATH . 'includes/videos.php';
 require_once ISS_CONTENT_MODEL_PATH . 'includes/video-import.php';
+require_once ISS_CONTENT_MODEL_PATH . 'modules/tours/bootstrap.php';
 
 register_activation_hook(__FILE__, function () {
     iss_content_model_register_post_types();
+    if (function_exists('iss_fuehrungen_register_post_type')) {
+        iss_fuehrungen_register_post_type();
+    }
     flush_rewrite_rules();
 });
 

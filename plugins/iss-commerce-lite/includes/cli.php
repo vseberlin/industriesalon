@@ -64,9 +64,10 @@ if (defined('WP_CLI') && WP_CLI) {
             }
 
             \WP_CLI::log('request_status_counts=' . ($counts ? implode(' ', $counts) : 'none'));
-            \WP_CLI::success('ISS payments-lite verification passed.');
+            \WP_CLI::success('ISS commerce-lite verification passed.');
         }
     }
 
+    \WP_CLI::add_command('iss-commerce-lite', 'ISS_Payments_Lite_CLI_Command');
     \WP_CLI::add_command('iss-payments-lite', 'ISS_Payments_Lite_CLI_Command');
 }

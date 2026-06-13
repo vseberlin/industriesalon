@@ -5,7 +5,7 @@ Immediate executable work only. Larger future programs live in `docs/project/bac
 ## Active Today
 
 - Backend knowledge-graph refactor closeout is complete locally; do not reopen backend slices unless final review exposes a real contract gap.
-- Push the local closeout commit only when explicitly requested.
+- Plugin domain rename is complete locally. Push the local cleanup/rename commits only when explicitly requested.
 - Before production deploy, verify target mail mode and enable `Tools > ISS Anfragen` notification email only for an approved recipient if request emails should leave the server.
 - Next active slice: UI polish, especially clean Ausstellung search/filter interaction and public view polish.
 - Treat staging as the current live working target, not a production-grade release gate. If staging breaks, rebuild/reapply from Git and known data artifacts.
@@ -17,7 +17,7 @@ Immediate executable work only. Larger future programs live in `docs/project/bac
 - Header search, timeline reads, tour-slot reads, and Ausstellung availability reads are on `/wp-json/iss/v1`; booking writes stay on `/is-tours/v1/book`.
 - `/iss/v1/entities/{id}/occurrences` is now the entity-scoped occurrence read surface; it does not create occurrence storage or an editor-visible occurrence CPT.
 - Offer subtype public labels are centralized in `iss-graph`; header search, related cards, and timeline cards consume those labels without exposing contract internals.
-- `wp iss-fuehrungen drift-check` now guards the public tour Offer catalog against missing published tours, invalid `offer/tour` contracts, unknown catalog groups, and missing renderer shell fragments.
+- `wp iss-content tours-drift-check` now guards the public tour Offer catalog against missing published tours, invalid `offer/tour` contracts, unknown catalog groups, and missing renderer shell fragments.
 - `wp iss-graph facade-consumer-audit` guards the known public facade consumers and the one allowed booking write route.
 - `wp iss-graph view-contract-audit` guards the main file-backed public views against mixing occurrence, availability, and offer projection layers.
 - `wp iss-occurrences drift-check` now guards active SuperSaaS generated occurrences against the service-owned series table, so recurrence rows stay linked to their parent `fuehrung`.
@@ -26,7 +26,7 @@ Immediate executable work only. Larger future programs live in `docs/project/bac
 - Ausstellung availability now consumes self-scoped `availability` editorial signals from `iss-graph`; search and related signals remain separate surfaces.
 - Editor UX audit for this checkpoint is recorded in `docs/project/kg-editor-ux-audit-2026-06-13.md`.
 - Offer consumer audit for this checkpoint is recorded in `docs/project/kg-offer-consumer-audit-2026-06-13.md`.
-- No SQL/uploads transfer artifact is required for the backend closeout; the SuperSaaS source/series option migration runs through the `iss-occurrences` schema installer.
+- No SQL/uploads transfer artifact is required for the backend closeout or plugin domain rename. The SuperSaaS source/series option migration runs through the `iss-occurrences` schema installer, and old active plugin basenames self-migrate through `iss-core`.
 
 ## Other Active Work
 

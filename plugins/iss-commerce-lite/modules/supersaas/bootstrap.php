@@ -1,19 +1,10 @@
 <?php
-/**
- * Plugin Name: SuperSaaS API
- * Description: SuperSaaS data adapter: settings, occurrence sync, mapping, and slot read REST endpoints.
- * Version: 1.2.0
- */
-
 if (!defined('ABSPATH')) exit;
 
 define('IS_SAAS_OPTION_GROUP', 'is_saas_options');
 define('IS_SAAS_OPTION_NAME', 'is_saas_settings');
 
 require_once __DIR__ . '/includes/supersaas-sync.php';
-
-register_activation_hook(__FILE__, 'iss_supersaas_activate_sync');
-register_deactivation_hook(__FILE__, 'iss_supersaas_deactivate_sync');
 
 function is_saas_get_settings() {
     $defaults = [
@@ -143,7 +134,7 @@ function is_saas_render_settings_page() {
             submit_button();
             ?>
         </form>
-        <p><strong>Frontend:</strong> Tour calendars are rendered by the <code>iss/tour-calendar</code> and <code>iss/tour-dates</code> blocks in <code>iss-programm</code>.</p>
+        <p><strong>Frontend:</strong> Tour calendars are rendered by the <code>iss/tour-calendar</code> and <code>iss/tour-dates</code> blocks in <code>iss-frontend</code>.</p>
     </div>
     <?php
 }

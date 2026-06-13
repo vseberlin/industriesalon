@@ -1,10 +1,4 @@
 <?php
-/**
- * Plugin Name: ISS Programm
- * Description: Shared programme rendering (calendar, timeline, lists) based on the occurrence projection.
- * Version: 0.1.0
- */
-
 if (!defined('ABSPATH')) {
     exit;
 }
@@ -29,7 +23,7 @@ require_once __DIR__ . '/includes/admin-sync-page.php';
 add_action('admin_notices', function () {
     if (!function_exists('iss_occurrences_query')) {
         echo '<div class="notice notice-error"><p>'
-            . '<strong>ISS Programm:</strong> '
+            . '<strong>ISS Frontend:</strong> '
             . 'Das Plugin <em>ISS Occurrences</em> muss aktiviert sein. '
             . 'Kalender- und Termindarstellung lesen ausschließlich aus der Occurrence-Projektion.'
             . '</p></div>';

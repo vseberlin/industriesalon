@@ -1,6 +1,13 @@
 # Changelog
 
-All notable changes for `iss-payments-lite` are documented here.
+All notable changes for `iss-commerce-lite` are documented here.
+
+## [0.3.0] - 2026-06-13
+
+### Changed
+- Renamed the owning plugin to `iss-commerce-lite`.
+- Absorbed the SuperSaaS adapter that previously lived in `saas-api`.
+- Added `wp iss-commerce-lite verify` as the preferred command alias while keeping the old `wp iss-payments-lite verify` alias for existing checks.
 
 ## [0.2.0] - 2026-06-13
 
@@ -17,7 +24,7 @@ All notable changes for `iss-payments-lite` are documented here.
 ## [0.1.0] - 2026-04-26
 
 ### Added
-- Added thin booking entry plugin to own public booking submit flow outside `saas-api`.
+- Added thin booking entry plugin to own public booking submit flow outside the SuperSaaS API adapter.
 - Registered `POST /is-tours/v1/book` in `iss-payments-lite`.
 - Preserved compatibility hook `is_tours_booking_created`.
 - Added new hook `iss_payments_lite_booking_created` for future payment flow work.

@@ -1,6 +1,15 @@
 # Changelog
 
 ## 2026-06-13
+- Reorganized the first-party plugin stack around domain basenames:
+  - moved `iss-content-model` plus the former `iss-fuehrungen` plugin into `iss-content`, with the Führung CPT/module loaded from `modules/tours`
+  - moved the former `iss-programm` renderer into `iss-frontend/modules/programme`, keeping public block names, REST routes, script handles, and compatibility WP-CLI aliases stable
+  - merged the former `saas-api` SuperSaaS adapter and `iss-payments-lite` request intake into `iss-commerce-lite`
+  - renamed `iss-wf-import` to `iss-archive` while preserving existing archive PHP prefixes, stored option keys, block names, handles, CPTs, and meta keys
+  - added preferred WP-CLI aliases: `wp iss-content videos`, `wp iss-content tours-drift-check`, `wp iss-frontend ausstellungen-audit`, and `wp iss-commerce-lite verify`; old aliases remain for existing checks
+  - added an `iss-core` active-plugin basename migrator so deployed databases with old `active_plugins` entries self-migrate to the new domain basenames without a fragile serialized SQL artifact
+  - updated plugin-map/database/content/entity docs plus PHPCS, PHPStan, and wp-env tooling paths
+  - local verification: PHP syntax for renamed domain plugins and changed graph/core files, JS lint, PHPCS target, PHPStan target, active-plugin basename migration probe, `wp plugin list`, `wp iss-content tours-drift-check --limit=25`, `wp iss-frontend ausstellungen-audit --strict`, `wp iss-commerce-lite verify`, `wp iss-occurrences verify`, `wp iss-occurrences drift-check --limit=25`, `wp iss-graph facade-check --limit=2`, `wp iss-graph facade-consumer-audit --limit=25`, `wp iss-graph facade-tour-slots-compare --limit=5`, `wp iss-graph facade-availability-compare --limit=5`, default graph drift, and `git diff --check` passed
 - Hardened `iss-payments-lite` toward production-ready request intake:
   - added `Tools > ISS Anfragen` for request filtering, CSV export, status updates, notification settings, and public-write security settings
   - added `wp iss-payments-lite verify` to assert request table/schema state and retired option cleanup during deploy checks

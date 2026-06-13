@@ -1,7 +1,7 @@
 <?php
 /**
  * Plugin Name: ISS Frontend
- * Description: Shared frontend runtime helpers for first-party Industriesalon surfaces.
+ * Description: Shared frontend runtime helpers plus programme, timeline, availability, and tour calendar renderers.
  * Version: 0.1.0
  */
 
@@ -63,3 +63,5 @@ function iss_frontend_register_datepicker_assets(
 
     wp_register_script($handle, $script_url, $deps, $version, true);
 }
+
+require_once ISS_FRONTEND_PATH . 'modules/programme/bootstrap.php';

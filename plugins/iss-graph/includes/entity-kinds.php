@@ -42,7 +42,7 @@ function iss_graph_get_entity_kind_registry(): array
         ],
         'archive_object' => [
             'label' => __('Archivobjekt', 'iss-graph'),
-            'owner' => 'iss-wf-import',
+            'owner' => 'iss-archive',
             'post_types' => [$archive_object_post_type],
             'storage_kind' => 'archive_object',
             'aliases' => [],
@@ -50,7 +50,7 @@ function iss_graph_get_entity_kind_registry(): array
         ],
         'archive_collection' => [
             'label' => __('Archivsammlung', 'iss-graph'),
-            'owner' => 'iss-wf-import',
+            'owner' => 'iss-archive',
             'post_types' => [$archive_collection_post_type],
             'storage_kind' => 'archive_collection',
             'aliases' => ['archivsammlung'],
@@ -58,7 +58,7 @@ function iss_graph_get_entity_kind_registry(): array
         ],
         'exhibition' => [
             'label' => __('Ausstellung', 'iss-graph'),
-            'owner' => 'iss-content-model',
+            'owner' => 'iss-content',
             'post_types' => ['ausstellung'],
             'storage_kind' => 'ausstellung',
             'aliases' => ['ausstellung'],
@@ -66,7 +66,7 @@ function iss_graph_get_entity_kind_registry(): array
         ],
         'tour' => [
             'label' => __('Fuehrung', 'iss-graph'),
-            'owner' => 'iss-fuehrungen',
+            'owner' => 'iss-content',
             'post_types' => ['fuehrung'],
             'storage_kind' => 'fuehrung',
             'aliases' => ['fuehrung'],
@@ -77,7 +77,7 @@ function iss_graph_get_entity_kind_registry(): array
         ],
         'event' => [
             'label' => __('Veranstaltung', 'iss-graph'),
-            'owner' => 'iss-content-model',
+            'owner' => 'iss-content',
             'post_types' => ['veranstaltung'],
             'storage_kind' => 'veranstaltung',
             'aliases' => ['veranstaltung'],
@@ -88,7 +88,7 @@ function iss_graph_get_entity_kind_registry(): array
         ],
         'project' => [
             'label' => __('Projekt', 'iss-graph'),
-            'owner' => 'iss-content-model',
+            'owner' => 'iss-content',
             'post_types' => ['projekt'],
             'storage_kind' => 'projekt',
             'aliases' => ['projekt'],
@@ -104,7 +104,7 @@ function iss_graph_get_entity_kind_registry(): array
         ],
         'video' => [
             'label' => __('Video', 'iss-graph'),
-            'owner' => 'iss-content-model',
+            'owner' => 'iss-content',
             'post_types' => ['video'],
             'storage_kind' => 'video',
             'aliases' => [],
@@ -128,7 +128,7 @@ function iss_graph_get_entity_kind_registry(): array
         ],
         'archive_story' => [
             'label' => __('Archivbeitrag', 'iss-graph'),
-            'owner' => 'iss-wf-import',
+            'owner' => 'iss-archive',
             'post_types' => ['archivbeitrag'],
             'storage_kind' => 'archivbeitrag',
             'aliases' => ['archivbeitrag'],

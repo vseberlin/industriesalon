@@ -499,7 +499,7 @@ function iss_programm_get_availability_response(array $filters, array $render_op
 
     if ($kind !== 'exhibition') {
         return [
-            'provider' => 'iss-programm',
+            'provider' => 'iss-frontend',
             'kind' => $kind,
             'storage_kind' => '',
             'filters' => [
@@ -522,7 +522,7 @@ function iss_programm_get_availability_response(array $filters, array $render_op
     })));
 
     return [
-        'provider' => 'iss-programm',
+        'provider' => 'iss-frontend',
         'kind' => 'exhibition',
         'storage_kind' => 'ausstellung',
         'filters' => [
@@ -934,5 +934,6 @@ if (defined('WP_CLI') && WP_CLI) {
         }
     }
 
+    \WP_CLI::add_command('iss-frontend ausstellungen-audit', ['ISS_Programm_CLI_Command', 'ausstellungen_audit']);
     \WP_CLI::add_command('iss-programm ausstellungen-audit', ['ISS_Programm_CLI_Command', 'ausstellungen_audit']);
 }
