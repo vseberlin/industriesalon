@@ -6,6 +6,7 @@ Immediate executable work only. Larger future programs live in `docs/project/bac
 
 - Backend knowledge-graph refactor closeout is complete locally; do not reopen backend slices unless final review exposes a real contract gap.
 - Push the local closeout commit only when explicitly requested.
+- Before production deploy, verify target mail mode and enable `Tools > ISS Anfragen` notification email only for an approved recipient if request emails should leave the server.
 - Next active slice: UI polish, especially clean Ausstellung search/filter interaction and public view polish.
 - Treat staging as the current live working target, not a production-grade release gate. If staging breaks, rebuild/reapply from Git and known data artifacts.
 

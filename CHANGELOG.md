@@ -1,6 +1,12 @@
 # Changelog
 
 ## 2026-06-13
+- Hardened `iss-payments-lite` toward production-ready request intake:
+  - added `Tools > ISS Anfragen` for request filtering, CSV export, status updates, notification settings, and public-write security settings
+  - added `wp iss-payments-lite verify` to assert request table/schema state and retired option cleanup during deploy checks
+  - added request notification state columns and opt-in `wp_mail()` notifications while keeping staging-safe delivery disabled by default
+  - made public write endpoints require REST nonce by default, enforce request-size and submit-timing checks, keep honeypot/rate-limit protection, and check duplicates persistently against `wp_iss_payments_lite_requests`
+  - restricted accepted payment methods to `onsite` by default; online settlement methods now require an explicit provider integration before the server accepts them
 - Cleaned the programme occurrence/payment stack against the remaining architecture findings:
   - removed `entity_id` and `location_entity_id` from the `iss-occurrences` schema, sync payloads, query filters, and CLI reporting; schema v7 drops the retired graph indexes/columns from existing tables
   - kept graph compatibility at the `iss-graph` facade boundary by translating entity filters to source post filters and computing response entity IDs from graph on read

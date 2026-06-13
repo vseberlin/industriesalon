@@ -523,6 +523,7 @@ function createBookingForm(widget, slot) {
         </div>
         <form class="is-tour-calendar__form" novalidate>
           <input type="text" name="website" value="" tabindex="-1" autocomplete="off" hidden>
+          <input type="hidden" name="loaded_at" value="${Math.floor(Date.now() / 1000)}">
           <input type="hidden" name="slot_id" value="${escapeHtml(slot.id ?? '')}">
           <input type="hidden" name="start" value="${escapeHtml(startISO)}">
           <input type="hidden" name="title" value="${escapeHtml(slot.title || '')}">

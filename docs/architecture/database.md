@@ -6,7 +6,7 @@ WordPress posts, post meta, terms, and `WP_Query` are the default model for norm
 
 - `iss-graph`: entity index, entity names, entity identifiers, entity evidence references, entity relations, editorial relation signals, search index, person facts, and organization facts.
 - `iss-occurrences`: public programme occurrence projection and recurrence series for indexed calendar/timeline queries.
-- `iss-payments-lite`: lightweight public booking/order request intake for dev and low-volume operational handling.
+- `iss-payments-lite`: lightweight public booking/order request intake, review/export/status handling, and notification state for low-volume operational handling.
 - `iss-wf-import`: archive objects, archive collections, collection members, assertions, evidence, and source snapshots.
 
 See `source-of-truth.md` before deciding which storage layer is canonical for a surface.
@@ -27,6 +27,9 @@ compatibility inputs.
 Payments-lite request rows are stored in `wp_iss_payments_lite_requests`.
 The old capped `is_tours_booking_requests` and `iss_publication_order_requests`
 options are migration inputs only and are deleted after schema install.
+Online settlement is not implied by a stored request row; supported payment
+methods default to onsite/request capture until a provider integration is
+explicitly added.
 
 ## Rules
 

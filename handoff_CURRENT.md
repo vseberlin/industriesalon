@@ -6,7 +6,7 @@ Current checkpoint only. History belongs in `CHANGELOG.md`; active follow-up bel
 
 ## Current State
 
-- Branch: `main`; backend knowledge-graph refactor checkpoint is closed locally. The occurrence/payment cleanup checkpoint is local-only until explicitly pushed.
+- Branch: `main`; backend knowledge-graph refactor checkpoint is closed locally. The occurrence/payment cleanup and payments-lite production-hardening checkpoints are local-only until explicitly pushed.
 - GitHub repo `vseberlin/industriesalon` is private. `origin/main` currently includes the greenfield refactor slices through the rendered Ausstellung availability browser consumer; this backend closeout checkpoint remains local until pushed.
 - Staging is the current live working target, not a production release gate. If it breaks, it can be rebuilt from Git plus the known SQL/data artifacts.
 - `iss-occurrences` owns occurrence projection; `iss-programm` owns programme/timeline/browser blocks; `saas-api` owns SuperSaaS sync and tour-slot reads; `iss-graph` owns graph/search/contracts; `iss-payments-lite` owns lightweight booking/order request intake; the theme owns public templates/skins.
@@ -14,6 +14,8 @@ Current checkpoint only. History belongs in `CHANGELOG.md`; active follow-up bel
 - Recurring tour grouping now runs inside the `iss-occurrences` query service with paged grouped SQL. `iss-programm` remains a renderer/query consumer and no longer fetches all occurrence rows to group recurring tours in PHP.
 - `iss-content-model/includes/timeline-sync.php` is retired. Ausstellung permanence is read from the editor-owned `ausstellung_typ` taxonomy helper, and retired `iss_is_permanent` meta is cleaned/guarded as drift.
 - `iss-payments-lite` now stores public booking/order requests in `wp_iss_payments_lite_requests`; the old capped `is_tours_booking_requests` and `iss_publication_order_requests` options are migration inputs only.
+- `iss-payments-lite` production request intake is now operationally visible through `Tools > ISS Anfragen` and `wp iss-payments-lite verify`. Public writes require REST nonce by default, enforce honeypot/rate-limit/body-size/submit-timing checks, and reject duplicate request hashes persistently.
+- Payments-lite accepts `onsite` request capture by default. Online settlement methods such as Mollie must be added by an explicit provider integration before the server accepts them.
 - `/wp-json/iss/v1` is the read-only facade boundary. Active public reads are contract, entities, entity detail, entity relations, entity-scoped occurrences, occurrences, search, timeline, availability, and tour-slots.
 - Public consumers already on the facade: header search, timeline query reads, tour-slot reads, and the progressively enhanced Ausstellung availability browser. Booking writes stay on `/is-tours/v1/book`.
 - `/ausstellungen/` uses the dedicated `industriesalon/ausstellungen-browser` and WP_Query availability filters. Dauer/Digital Ausstellungen are availability-only and do not sync into occurrence rows.
@@ -34,6 +36,7 @@ Current checkpoint only. History belongs in `CHANGELOG.md`; active follow-up bel
 ## Current Risk
 
 - No production target is in scope for the current workflow.
+- Request notification mail is implemented but disabled by default for staging safety. Enable it per environment only after the approved mail mode and recipient are verified.
 - Staging/live state is allowed to be disposable. Keep source truth in Git plus explicit SQL/data artifacts, then rebuild/reapply if needed.
 - Staging/live remains disposable, but the reviewed graph hygiene artifacts are now applied locally too.
 - Template output can still become DB-backed after Site Editor saves; check `wp_template` authority before assuming disk files are live.
@@ -44,6 +47,7 @@ Current checkpoint only. History belongs in `CHANGELOG.md`; active follow-up bel
 
 - UI polish later, especially clean Ausstellung search/filter interaction and public view polish.
 - Push the local cleanup/closeout commit only when explicitly requested.
+- Before any production deployment, verify the target mail mode and enable `Tools > ISS Anfragen` notifications only for an approved recipient if operational email is desired.
 
 ## Verified
 
@@ -60,3 +64,4 @@ Current checkpoint only. History belongs in `CHANGELOG.md`; active follow-up bel
 - Current local SuperSaaS series/tag source table migration verification passed: PHP syntax, PHPCS target, PHPStan target, schema migration probe, focused runtime resolver/tag probe, `wp iss-occurrences drift-check --limit=25`, `wp iss-fuehrungen drift-check --limit=25`, `wp iss-graph facade-check --limit=2`, `wp iss-graph facade-tour-slots-compare --limit=5`, default graph drift, and `git diff --check`.
 - Current local tour Offer catalog guard verification passed: PHP syntax, PHPCS target, PHPStan target, `wp iss-fuehrungen drift-check --limit=25`, `wp iss-graph facade-check --limit=2`, default graph drift, and `git diff --check`.
 - Current local occurrence/payment cleanup verification passed: PHP syntax, JS syntax, PHPCS target, PHPStan target, `npm run lint:js -- --quiet`, occurrence schema/option/meta/table probes, `wp iss-occurrences verify`, `wp iss-occurrences sync --source=wp`, `wp iss-occurrences drift-check --limit=25`, grouped occurrence query smoke, payments insert/cleanup probe, REST route registration probe, `wp iss-graph facade-check --limit=2`, `wp iss-graph facade-occurrences-compare --limit=5`, `wp iss-graph facade-entity-occurrences-compare --limit=5`, and `git diff --check`.
+- Current local payments-lite production-hardening verification passed: PHP syntax, JS syntax, PHPCS target, PHPStan target, `npm run lint:js -- --quiet`, `wp iss-payments-lite verify`, v2 schema column probe, settings probe, REST route registration probe, missing-nonce guard probe, submit-timing guard probe, unsupported `mollie` rejection probe, onsite publication request insert/cleanup probe, and admin request query probe.

@@ -60,6 +60,7 @@
     wrap.innerHTML = `
       <form class="iss-publication-order-form" novalidate>
         <input type="hidden" name="publication_id" value="${escapeHtml(payload.publicationId)}">
+        <input type="hidden" name="loaded_at" value="${Math.floor(Date.now() / 1000)}">
         <input type="text" name="website" value="" tabindex="-1" autocomplete="off" hidden>
         <div class="iss-publication-order-form__intro">
           <p class="iss-kicker iss-kicker--compact">Bestellung</p>
