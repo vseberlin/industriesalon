@@ -10,3 +10,8 @@ Record durable architectural decisions here when they should outlive a single ha
 - Use `WP_Query` for editorial post loops, and plugin-owned custom tables plus prepared SQL for projection/search/graph/archive/reporting data.
 - Keep public UI in the theme and data/contracts in plugins unless an existing plugin explicitly owns a renderer.
 - Use GitHub `main` as the exchange point between local and staging agents; prefer fast-forward-only pulls on clean trees.
+- Model the public refactor around `Entity / Relation / Occurrence / View`: entities identify things, relations connect them, occurrences carry dated programme rows, and views render public/editor surfaces.
+- Keep calendar/programme projection occurrence-only. Exhibition overview visibility is separate from programme projection.
+- Keep editors in parent WordPress objects. Do not add an editor-visible occurrence/calendar/programme CPT.
+- Keep the first Offer bridge contract-only: `fuehrung` maps to `offer/tour`; `veranstaltung` maps to Offer subtypes from existing event meta. Public consumers should use graph-owned subtype labels instead of duplicating maps.
+- Keep SuperSaaS ingestion in `iss-occurrences`; `iss-commerce-lite` owns booking/order request writes only.

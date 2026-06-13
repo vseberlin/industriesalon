@@ -22,6 +22,9 @@ Large future work that should not live in root `TODO.md`.
 - Store WordPress attachments as runtime previews/screens, not canonical masters.
 - Prefer canonical preview media in public/archive rendering.
 - Add a backfill path before removing legacy archive source attachments from Media Library.
+- Preserve legacy WordPress archive attachments as fallback until preview-first rendering is proven.
+- Track archive media provenance separately: source/master location, preview URL or attachment, rights metadata, and storage kind.
+- Package archive media migrations as paired SQL/uploads artifacts only after representative archive objects render from the preview-first contract.
 
 ## Touchtable And Register Workflows
 
@@ -33,3 +36,9 @@ Large future work that should not live in root `TODO.md`.
 
 - Add a stronger next-generation timeline/calendar render for program-style pages, especially `Veranstaltungen`.
 - Simplify the `industriesalon/timeline-query` editor contract so base scope, defaults, visible filters, and preset state have clearer ownership.
+
+## Search And Public Facade
+
+- Keep `/wp-json/iss/v1` as the public read facade for graph/search/occurrence/timeline/availability/tour-slot consumers.
+- Keep booking writes outside the read facade on `/is-tours/v1/book`.
+- If another public consumer needs Offer labels, read them from the graph contract helper or `/iss/v1/contract`.
