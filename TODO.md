@@ -32,7 +32,7 @@ Immediate executable work only. Larger future programs live in `docs/project/bac
 
 - 2026-06-13: Continue knowledge-graph alignment after the local offer-bridge slice:
   - offer bridge staging validation is green: additive `/iss/v1` `contract_kind` / `subtype`, `public-object-contract`, `facade-check`, and `facade-entities-compare` passed per operator report
-  - after the entity-relations facade slice is pulled on staging, run `wp iss-graph drift-check --checks=entity-relations-contract --limit=25`, `wp iss-graph facade-check --limit=2`, and `wp iss-graph facade-entity-relations-compare --limit=5`
+  - entity-relations facade staging validation is green: `entity-relations-contract`, `facade-check`, and `facade-entity-relations-compare` passed per operator report
   - smoke-test the graph editorial signal controls in wp-admin plus `/iss/v1/search`
   - keep WordPress CPTs as the editor shell; do not rename `fuehrung` / `veranstaltung` or change public templates for the bridge
   - choose the next facade endpoint candidate after staged relation validation: availability
