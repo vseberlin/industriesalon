@@ -31,10 +31,11 @@ Immediate executable work only. Larger future programs live in `docs/project/bac
 ## Active
 
 - 2026-06-13: Continue knowledge-graph alignment after the local offer-bridge slice:
-  - validate the additive `/iss/v1` `contract_kind` / `subtype` fields on staging and run `wp iss-graph drift-check --checks=public-object-contract --limit=25`
+  - offer bridge staging validation is green: additive `/iss/v1` `contract_kind` / `subtype`, `public-object-contract`, `facade-check`, and `facade-entities-compare` passed per operator report
+  - after the entity-relations facade slice is pulled on staging, run `wp iss-graph drift-check --checks=entity-relations-contract --limit=25`, `wp iss-graph facade-check --limit=2`, and `wp iss-graph facade-entity-relations-compare --limit=5`
   - smoke-test the graph editorial signal controls in wp-admin plus `/iss/v1/search`
   - keep WordPress CPTs as the editor shell; do not rename `fuehrung` / `veranstaltung` or change public templates for the bridge
-  - choose the next facade endpoint candidate only after the staged contract is green: entity relations or availability
+  - choose the next facade endpoint candidate after staged relation validation: availability
 - 2026-06-07: Review the 3 pending `video_transcript` evidence refs in Video CPT editors and accept/dismiss them after the graph entity hygiene audit exists.
 - 2026-06-12: Follow up the human graph-influence layer after staging/editor validation:
   - review the 5 legacy related `feature` signal rows and either add reason/expiry or retire expired rows deliberately

@@ -101,6 +101,131 @@ function iss_facade_rest_prepare_entity_kind_definition(array $definition): arra
     ];
 }
 
+function iss_facade_rest_normalize_relation_direction($value): string
+{
+    $direction = sanitize_key((string) $value);
+
+    return in_array($direction, ['outgoing', 'incoming', 'both'], true) ? $direction : 'outgoing';
+}
+
+function iss_facade_rest_entity_relation_filters_from_request(WP_REST_Request $request): array
+{
+    $family = sanitize_key((string) (
+        $request->get_param('family')
+        ?: $request->get_param('relation_family')
+        ?: ''
+    ));
+
+    return [
+        'direction' => iss_facade_rest_normalize_relation_direction($request->get_param('direction') ?: 'outgoing'),
+        'family' => $family,
+        'source_system' => sanitize_key((string) $request->get_param('source_system')),
+        'limit' => iss_facade_rest_limit($request->get_param('limit'), 24, 100),
+    ];
+}
+
+function iss_facade_rest_prepare_entity_relation(array $relation, string $direction = 'outgoing'): ?array
+{
+    $related_post_id = absint($relation['post_id'] ?? 0);
+    $related_profile_post_id = absint($relation['profile_post_id'] ?? 0);
+    $permalink = '';
+    if ($related_post_id > 0) {
+        $permalink = iss_facade_rest_get_post_url($related_post_id);
+    } elseif ($related_profile_post_id > 0) {
+        $permalink = iss_facade_rest_get_post_url($related_profile_post_id);
+    }
+
+    if (($related_post_id > 0 || $related_profile_post_id > 0) && $permalink === '') {
+        return null;
+    }
+
+    $storage_kind = sanitize_key((string) ($relation['entity_kind'] ?? ''));
+    $canonical_kind = function_exists('iss_graph_get_canonical_entity_kind')
+        ? iss_graph_get_canonical_entity_kind($storage_kind)
+        : $storage_kind;
+    $source_system = sanitize_key((string) ($relation['source_system'] ?? ''));
+    $source_ref = sanitize_text_field((string) ($relation['source_ref'] ?? ''));
+
+    return [
+        'relation_id' => (int) ($relation['id'] ?? 0),
+        'direction' => iss_facade_rest_normalize_relation_direction($direction),
+        'entity_id' => (int) ($relation['entity_id'] ?? 0),
+        'kind' => $canonical_kind,
+        'canonical_kind' => $canonical_kind,
+        'storage_kind' => $storage_kind,
+        'name' => (string) ($relation['name'] ?? ''),
+        'slug' => (string) ($relation['slug'] ?? ''),
+        'url' => $permalink !== '' ? $permalink : esc_url_raw((string) ($relation['permalink'] ?? '')),
+        'family' => (string) ($relation['relation_family'] ?? ''),
+        'type' => (string) ($relation['relation_type'] ?? ''),
+        'role' => (string) ($relation['relation_role'] ?? ''),
+        'label' => (string) ($relation['relation_label'] ?? ''),
+        'primary' => !empty($relation['is_primary']),
+        'valid_from_year' => $relation['valid_from_year'] ?? null,
+        'valid_to_year' => $relation['valid_to_year'] ?? null,
+        'source' => [
+            'system' => $source_system,
+            'ref' => $source_ref,
+        ],
+    ];
+}
+
+function iss_facade_rest_get_entity_relations_response(int $entity_id, array $filters): array
+{
+    $entity_id = absint($entity_id);
+    $direction = iss_facade_rest_normalize_relation_direction($filters['direction'] ?? 'outgoing');
+    $family = sanitize_key((string) ($filters['family'] ?? ''));
+    $source_system = sanitize_key((string) ($filters['source_system'] ?? ''));
+    $limit = iss_facade_rest_limit($filters['limit'] ?? 24, 24, 100);
+    $query_args = [
+        'public_only' => true,
+        'limit' => $limit,
+    ];
+    if ($source_system !== '') {
+        $query_args['source_system'] = $source_system;
+    }
+
+    $items = [];
+    $service = iss_graph_get_service();
+
+    if ($direction === 'outgoing' || $direction === 'both') {
+        $rows = $service->get_relations_for_entity($entity_id, $family, $query_args);
+        foreach (is_array($rows) ? $rows : [] as $row) {
+            $item = iss_facade_rest_prepare_entity_relation($row, 'outgoing');
+            if ($item !== null) {
+                $items[] = $item;
+            }
+        }
+    }
+
+    if ($direction === 'incoming' || $direction === 'both') {
+        $incoming_args = $query_args;
+        if ($family !== '') {
+            $incoming_args['relation_family'] = $family;
+        }
+
+        $rows = $service->get_incoming_relations_for_entity($entity_id, '', $incoming_args);
+        foreach (is_array($rows) ? $rows : [] as $row) {
+            $item = iss_facade_rest_prepare_entity_relation($row, 'incoming');
+            if ($item !== null) {
+                $items[] = $item;
+            }
+        }
+    }
+
+    return [
+        'entity_id' => $entity_id,
+        'filters' => [
+            'direction' => $direction,
+            'family' => $family,
+            'source_system' => $source_system,
+            'limit' => $limit,
+        ],
+        'count' => count($items),
+        'items' => $items,
+    ];
+}
+
 function iss_facade_rest_prepare_entity(array $entity, bool $include_details = false): ?array
 {
     if (!iss_facade_rest_entity_is_public($entity)) {
@@ -180,38 +305,7 @@ function iss_facade_rest_prepare_entity(array $entity, bool $include_details = f
     ]) : []);
 
     $relations = array_values(array_filter(array_map(static function (array $relation): ?array {
-        $target_post_id = absint($relation['post_id'] ?? 0);
-        $target_profile_post_id = absint($relation['profile_post_id'] ?? 0);
-        $permalink = '';
-        if ($target_post_id > 0) {
-            $permalink = iss_facade_rest_get_post_url($target_post_id);
-        } elseif ($target_profile_post_id > 0) {
-            $permalink = iss_facade_rest_get_post_url($target_profile_post_id);
-        }
-
-        if (($target_post_id > 0 || $target_profile_post_id > 0) && $permalink === '') {
-            return null;
-        }
-
-        $storage_kind = sanitize_key((string) ($relation['entity_kind'] ?? ''));
-        $canonical_kind = function_exists('iss_graph_get_canonical_entity_kind')
-            ? iss_graph_get_canonical_entity_kind($storage_kind)
-            : $storage_kind;
-
-        return [
-            'entity_id' => (int) ($relation['entity_id'] ?? 0),
-            'kind' => $canonical_kind,
-            'storage_kind' => $storage_kind,
-            'name' => (string) ($relation['name'] ?? ''),
-            'url' => $permalink !== '' ? $permalink : (string) ($relation['permalink'] ?? ''),
-            'family' => (string) ($relation['relation_family'] ?? ''),
-            'type' => (string) ($relation['relation_type'] ?? ''),
-            'role' => (string) ($relation['relation_role'] ?? ''),
-            'label' => (string) ($relation['relation_label'] ?? ''),
-            'primary' => !empty($relation['is_primary']),
-            'valid_from_year' => $relation['valid_from_year'] ?? null,
-            'valid_to_year' => $relation['valid_to_year'] ?? null,
-        ];
+        return iss_facade_rest_prepare_entity_relation($relation, 'outgoing');
     }, function_exists('iss_graph_get_entity_relations') ? iss_graph_get_entity_relations($entity_id, [
         'public_only' => true,
         'limit' => 100,
@@ -316,6 +410,32 @@ function iss_facade_rest_get_entity(WP_REST_Request $request)
     return rest_ensure_response([
         'item' => iss_facade_rest_prepare_entity($entity, true),
     ]);
+}
+
+function iss_facade_rest_list_entity_relations(WP_REST_Request $request)
+{
+    $entity_id = absint($request->get_param('id'));
+    if ($entity_id <= 0) {
+        return new WP_Error(
+            'iss_facade_invalid_entity_id',
+            __('Provide a valid entity id.', 'iss-graph'),
+            ['status' => 400]
+        );
+    }
+
+    $entity = iss_graph_get_service()->get_entity_by_id($entity_id);
+    if (!$entity || !iss_facade_rest_entity_is_public($entity)) {
+        return new WP_Error(
+            'iss_facade_entity_not_found',
+            __('Entity not found.', 'iss-graph'),
+            ['status' => 404]
+        );
+    }
+
+    return rest_ensure_response(iss_facade_rest_get_entity_relations_response(
+        $entity_id,
+        iss_facade_rest_entity_relation_filters_from_request($request)
+    ));
 }
 
 function iss_facade_rest_prepare_occurrence(array $occurrence): array
@@ -465,6 +585,7 @@ function iss_facade_rest_contract(WP_REST_Request $request): WP_REST_Response
         '/iss/v1/contract',
         '/iss/v1/entities',
         '/iss/v1/entities/{id}',
+        '/iss/v1/entities/{id}/relations',
         '/iss/v1/occurrences',
         '/iss/v1/search',
     ];
@@ -512,6 +633,36 @@ function iss_facade_rest_get_public_route_args(): array
     ];
 }
 
+function iss_facade_rest_get_entity_relations_route_args(): array
+{
+    return array_merge(iss_facade_rest_get_public_route_args(), [
+        'id' => [
+            'type' => 'integer',
+            'required' => true,
+        ],
+        'direction' => [
+            'type' => 'string',
+            'required' => false,
+            'enum' => ['outgoing', 'incoming', 'both'],
+        ],
+        'family' => [
+            'type' => 'string',
+            'required' => false,
+            'sanitize_callback' => 'sanitize_key',
+        ],
+        'relation_family' => [
+            'type' => 'string',
+            'required' => false,
+            'sanitize_callback' => 'sanitize_key',
+        ],
+        'source_system' => [
+            'type' => 'string',
+            'required' => false,
+            'sanitize_callback' => 'sanitize_key',
+        ],
+    ]);
+}
+
 function iss_facade_rest_register_routes(): void
 {
     register_rest_route('iss/v1', '/contract', [
@@ -537,6 +688,13 @@ function iss_facade_rest_register_routes(): void
                 'required' => true,
             ],
         ],
+    ]);
+
+    register_rest_route('iss/v1', '/entities/(?P<id>\d+)/relations', [
+        'methods' => WP_REST_Server::READABLE,
+        'callback' => 'iss_facade_rest_list_entity_relations',
+        'permission_callback' => '__return_true',
+        'args' => iss_facade_rest_get_entity_relations_route_args(),
     ]);
 
     register_rest_route('iss/v1', '/occurrences', [

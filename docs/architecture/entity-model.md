@@ -470,6 +470,7 @@ programme timeline, and tour-slot services:
 GET /wp-json/iss/v1/contract
 GET /wp-json/iss/v1/entities
 GET /wp-json/iss/v1/entities/{id}
+GET /wp-json/iss/v1/entities/{id}/relations
 GET /wp-json/iss/v1/occurrences
 GET /wp-json/iss/v1/search
 GET|POST /wp-json/iss/v1/timeline
@@ -477,14 +478,16 @@ GET /wp-json/iss/v1/tour-slots
 ```
 
 The facade is public-read only. Entity responses expose public entities and
-public relations; occurrence responses are served from `iss-occurrences` when
-that plugin is active; search responses delegate to the existing
-search service. The timeline route is registered by `iss-programm` and delegates
-to the existing rendered timeline REST callback. The tour-slots route is
-registered by `saas-api` and delegates to the occurrence-backed slot adapter.
-The retired read routes `/iss-search/v1/search`, `/iss-programm/v1/timeline`,
-and `/is-tours/v1/slots` are no longer registered. Booking submissions stay
-outside the read-only facade on `/is-tours/v1/book`.
+public relations; the nested entity-relations route exposes existing graph
+relations with outgoing, incoming, family, source-system, and limit filters.
+Occurrence responses are served from `iss-occurrences` when that plugin is
+active; search responses delegate to the existing search service. The timeline
+route is registered by `iss-programm` and delegates to the existing rendered
+timeline REST callback. The tour-slots route is registered by `saas-api` and
+delegates to the occurrence-backed slot adapter. The retired read routes
+`/iss-search/v1/search`, `/iss-programm/v1/timeline`, and `/is-tours/v1/slots`
+are no longer registered. Booking submissions stay outside the read-only facade
+on `/is-tours/v1/book`.
 
 Entity list and detail responses include additive contract fields:
 `contract_kind`, `subtype`, and `contract`. Existing `kind`, `canonical_kind`,
@@ -500,6 +503,10 @@ verify published public object coverage before relying on the contract bridge.
 It checks expected graph entity coverage, legacy storage-kind mapping,
 accepted `wp_post` identifiers, and required offer subtypes.
 
+Run `wp iss-graph drift-check --checks=entity-relations-contract --limit=25`
+to verify the nested relation facade can return outgoing/incoming public graph
+relations with the expected response shape.
+
 Run `wp iss-graph facade-check` before switching any consumer to `/iss/v1`.
 Run `wp iss-graph facade-occurrences-compare` before switching raw
 programme/calendar consumers to `/iss/v1/occurrences`. Run
@@ -514,6 +521,8 @@ wp iss-graph facade-tour-slots-compare
 
 Run `wp iss-graph facade-entities-compare` before switching entity/profile
 consumers to `/iss/v1/entities`.
+Run `wp iss-graph facade-entity-relations-compare` before switching relation
+consumers to `/iss/v1/entities/{id}/relations`.
 
 Run `wp iss-graph entity-hygiene-audit` before adding entity merge, split, or
 reassignment tooling. It is a read-only curator preflight on the existing graph

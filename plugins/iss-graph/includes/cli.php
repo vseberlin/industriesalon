@@ -14,6 +14,7 @@ if (defined('WP_CLI') && WP_CLI) {
     WP_CLI::add_command('iss-graph facade-search-compare', 'iss_graph_wpcli_facade_search_compare_command');
     WP_CLI::add_command('iss-graph facade-occurrences-compare', 'iss_graph_wpcli_facade_occurrences_compare_command');
     WP_CLI::add_command('iss-graph facade-entities-compare', 'iss_graph_wpcli_facade_entities_compare_command');
+    WP_CLI::add_command('iss-graph facade-entity-relations-compare', 'iss_graph_wpcli_facade_entity_relations_compare_command');
     WP_CLI::add_command('iss-graph facade-timeline-compare', 'iss_graph_wpcli_facade_timeline_compare_command');
     WP_CLI::add_command('iss-graph facade-tour-slots-compare', 'iss_graph_wpcli_facade_tour_slots_compare_command');
     WP_CLI::add_command('iss-graph migrate', 'iss_graph_wpcli_migrate_command');
@@ -889,6 +890,7 @@ function iss_graph_wpcli_facade_route_contract(): array
         'required_read' => [
             '/iss/v1/contract',
             '/iss/v1/entities',
+            '/iss/v1/entities/(?P<id>\d+)/relations',
             '/iss/v1/occurrences',
             '/iss/v1/search',
         ],
@@ -1049,6 +1051,25 @@ function iss_graph_wpcli_facade_check_command(array $args, array $assoc_args): v
             if (isset($item[$list_key]) && !is_array($item[$list_key])) {
                 $errors[] = sprintf('%s item key %s is not a list.', $detail_path, $list_key);
             }
+        }
+
+        $relations_path = sprintf('/iss/v1/entities/%d/relations', $entity_id);
+        $relations = iss_graph_wpcli_facade_request($relations_path, ['limit' => $limit], $errors);
+        iss_graph_wpcli_facade_require_keys($relations_path, $relations, ['entity_id', 'filters', 'count', 'items'], $errors);
+        if (isset($relations['filters']) && !is_array($relations['filters'])) {
+            $errors[] = sprintf('%s filters is not an object.', $relations_path);
+        }
+        if (isset($relations['items']) && !is_array($relations['items'])) {
+            $errors[] = sprintf('%s items is not a list.', $relations_path);
+        }
+        $relation_items = isset($relations['items']) && is_array($relations['items']) ? $relations['items'] : [];
+        if (isset($relation_items[0]) && is_array($relation_items[0])) {
+            iss_graph_wpcli_facade_require_keys(
+                $relations_path . ' item',
+                $relation_items[0],
+                ['relation_id', 'direction', 'entity_id', 'kind', 'storage_kind', 'name', 'family', 'type', 'label', 'source'],
+                $errors
+            );
         }
     }
 
@@ -1818,6 +1839,222 @@ function iss_graph_wpcli_facade_entities_compare_command(array $args, array $ass
     WP_CLI::success(sprintf('ISS graph facade entity comparison passed for %d scenario(s).', count($scenarios)));
 }
 
+function iss_graph_wpcli_facade_parse_entity_relation_scenarios($value): array
+{
+    $raw_scenarios = is_string($value) && trim($value) !== ''
+        ? preg_split('/\s*,\s*/', trim($value))
+        : ['outgoing', 'incoming', 'organization'];
+
+    $scenarios = [];
+    foreach ((array) $raw_scenarios as $scenario) {
+        $scenario = sanitize_key((string) $scenario);
+        if ($scenario !== '') {
+            $scenarios[] = $scenario;
+        }
+    }
+
+    return array_values(array_unique($scenarios));
+}
+
+function iss_graph_wpcli_facade_entity_relation_params_for_scenario(string $scenario, int $limit): array
+{
+    $params = [
+        'limit' => $limit,
+        'direction' => 'outgoing',
+    ];
+
+    switch ($scenario) {
+        case 'incoming':
+            $params['direction'] = 'incoming';
+            break;
+        case 'both':
+            $params['direction'] = 'both';
+            break;
+        case 'place':
+        case 'places':
+            $params['family'] = 'place';
+            break;
+        case 'person':
+        case 'people':
+        case 'persons':
+            $params['family'] = 'person';
+            break;
+        case 'organization':
+        case 'organizations':
+        case 'organisation':
+        case 'organisations':
+            $params['family'] = 'organization';
+            break;
+        case 'outgoing':
+        default:
+            break;
+    }
+
+    return $params;
+}
+
+function iss_graph_wpcli_facade_find_relation_entity_id(string $direction = 'outgoing', string $family = ''): int
+{
+    global $wpdb;
+
+    $service = iss_graph_get_service();
+    $relation_table = $service->get_relation_table_name();
+    $entity_table = $service->get_entity_table_name();
+    $direction = iss_facade_rest_normalize_relation_direction($direction);
+    $family = sanitize_key($family);
+    $entity_column = $direction === 'incoming' ? 'r.to_entity_id' : 'r.from_entity_id';
+    $where = ['r.is_public = 1', 'e.is_public = 1'];
+    $values = [];
+    if ($family !== '') {
+        $where[] = 'r.relation_family = %s';
+        $values[] = $family;
+    }
+
+    $values[] = 200;
+    $sql = "SELECT {$entity_column} AS entity_id,
+            MIN(r.id) AS relation_id
+        FROM {$relation_table} r
+        INNER JOIN {$entity_table} e
+            ON e.id = {$entity_column}
+        WHERE " . implode(' AND ', $where) . "
+        GROUP BY {$entity_column}
+        ORDER BY relation_id ASC
+        LIMIT %d";
+
+    // phpcs:ignore WordPress.DB.PreparedSQL.NotPrepared -- Table names and the selected id column are fixed by this command; values are prepared above.
+    $rows = $wpdb->get_results($wpdb->prepare($sql, $values), ARRAY_A);
+    foreach (is_array($rows) ? $rows : [] as $row) {
+        $entity_id = absint($row['entity_id'] ?? 0);
+        if ($entity_id <= 0) {
+            continue;
+        }
+
+        $entity = $service->get_entity_by_id($entity_id);
+        if ($entity && iss_facade_rest_entity_is_public($entity)) {
+            return $entity_id;
+        }
+    }
+
+    return 0;
+}
+
+function iss_graph_wpcli_facade_entity_relations_direct_response(int $entity_id, array $params): array
+{
+    $entity = iss_graph_get_service()->get_entity_by_id($entity_id);
+    if (!$entity || !iss_facade_rest_entity_is_public($entity)) {
+        return [];
+    }
+
+    $request = new WP_REST_Request('GET', sprintf('/iss/v1/entities/%d/relations', $entity_id));
+    foreach ($params as $key => $value) {
+        $request->set_param((string) $key, $value);
+    }
+
+    return iss_facade_rest_get_entity_relations_response(
+        $entity_id,
+        iss_facade_rest_entity_relation_filters_from_request($request)
+    );
+}
+
+function iss_graph_wpcli_facade_entity_relations_signature(array $data): array
+{
+    $items = isset($data['items']) && is_array($data['items']) ? $data['items'] : [];
+    $filters = isset($data['filters']) && is_array($data['filters']) ? $data['filters'] : [];
+
+    return [
+        'entity_id' => (int) ($data['entity_id'] ?? 0),
+        'filters' => [
+            'direction' => (string) ($filters['direction'] ?? ''),
+            'family' => (string) ($filters['family'] ?? ''),
+            'source_system' => (string) ($filters['source_system'] ?? ''),
+            'limit' => (int) ($filters['limit'] ?? 0),
+        ],
+        'count' => (int) ($data['count'] ?? 0),
+        'items' => array_values(array_map(static function (array $item): array {
+            $source = isset($item['source']) && is_array($item['source']) ? $item['source'] : [];
+
+            return [
+                'relation_id' => (int) ($item['relation_id'] ?? 0),
+                'direction' => (string) ($item['direction'] ?? ''),
+                'entity_id' => (int) ($item['entity_id'] ?? 0),
+                'kind' => (string) ($item['kind'] ?? ''),
+                'canonical_kind' => (string) ($item['canonical_kind'] ?? ''),
+                'storage_kind' => (string) ($item['storage_kind'] ?? ''),
+                'name' => (string) ($item['name'] ?? ''),
+                'slug' => (string) ($item['slug'] ?? ''),
+                'url' => (string) ($item['url'] ?? ''),
+                'family' => (string) ($item['family'] ?? ''),
+                'type' => (string) ($item['type'] ?? ''),
+                'role' => (string) ($item['role'] ?? ''),
+                'label' => (string) ($item['label'] ?? ''),
+                'primary' => (bool) ($item['primary'] ?? false),
+                'valid_from_year' => $item['valid_from_year'] ?? null,
+                'valid_to_year' => $item['valid_to_year'] ?? null,
+                'source_system' => (string) ($source['system'] ?? ''),
+                'source_ref' => (string) ($source['ref'] ?? ''),
+            ];
+        }, array_filter($items, 'is_array'))),
+    ];
+}
+
+function iss_graph_wpcli_facade_entity_relations_compare_command(array $args, array $assoc_args): void
+{
+    $limit = max(1, min(25, absint($assoc_args['limit'] ?? 5)));
+    $requested_entity_id = absint($assoc_args['entity_id'] ?? 0);
+    $scenarios = iss_graph_wpcli_facade_parse_entity_relation_scenarios($assoc_args['scenarios'] ?? '');
+    if (!$scenarios) {
+        WP_CLI::error('Provide at least one entity-relation comparison scenario through --scenarios or use the defaults.');
+    }
+
+    $errors = [];
+    $compared = 0;
+    foreach ($scenarios as $scenario) {
+        $params = iss_graph_wpcli_facade_entity_relation_params_for_scenario($scenario, $limit);
+        $direction = (string) ($params['direction'] ?? 'outgoing');
+        $family = (string) ($params['family'] ?? '');
+        $lookup_direction = $direction === 'incoming' ? 'incoming' : 'outgoing';
+        $entity_id = $requested_entity_id > 0
+            ? $requested_entity_id
+            : iss_graph_wpcli_facade_find_relation_entity_id($lookup_direction, $family);
+
+        if ($entity_id <= 0) {
+            WP_CLI::warning(sprintf('Skipping entity-relations scenario "%s"; no public relation-backed entity found.', $scenario));
+            continue;
+        }
+
+        $path = sprintf('/iss/v1/entities/%d/relations', $entity_id);
+        $direct = iss_graph_wpcli_facade_entity_relations_direct_response($entity_id, $params);
+        $facade = iss_graph_wpcli_facade_request($path, $params, $errors, 'facade');
+        $direct_signature = iss_graph_wpcli_facade_entity_relations_signature($direct);
+        $facade_signature = iss_graph_wpcli_facade_entity_relations_signature($facade);
+
+        if ($direct_signature !== $facade_signature) {
+            $errors[] = sprintf('Entity-relations facade mismatch for scenario "%s" entity %d.', $scenario, $entity_id);
+            continue;
+        }
+
+        WP_CLI::log(sprintf(
+            '[compare] entity-relations scenario="%s" entity=%d direction=%s family=%s count=%d matched',
+            $scenario,
+            $entity_id,
+            (string) ($facade_signature['filters']['direction'] ?? ''),
+            (string) ($facade_signature['filters']['family'] ?? ''),
+            (int) ($facade_signature['count'] ?? 0)
+        ));
+        $compared++;
+    }
+
+    if ($compared <= 0 && !$errors) {
+        WP_CLI::error('No entity-relation comparison scenarios were run.');
+    }
+    if ($errors) {
+        WP_CLI::error_multi_line($errors);
+        WP_CLI::error(sprintf('ISS graph facade entity-relation comparison failed with %d issue(s).', count($errors)));
+    }
+
+    WP_CLI::success(sprintf('ISS graph facade entity-relation comparison passed for %d scenario(s).', $compared));
+}
+
 function iss_graph_wpcli_parse_drift_checks(string $value): array
 {
     $default_checks = [
@@ -1831,6 +2068,7 @@ function iss_graph_wpcli_parse_drift_checks(string $value): array
         'editorial-signals',
         'entity-kind-contract',
         'public-object-contract',
+        'entity-relations-contract',
         'facade-route-contract',
     ];
     $available = array_merge($default_checks, [
@@ -1872,6 +2110,8 @@ function iss_graph_wpcli_run_drift_check(string $check, int $limit): array
             return iss_graph_wpcli_check_entity_kind_contract($limit);
         case 'public-object-contract':
             return iss_graph_wpcli_check_public_object_contract($limit);
+        case 'entity-relations-contract':
+            return iss_graph_wpcli_check_entity_relations_contract($limit);
         case 'facade-route-contract':
             return iss_graph_wpcli_check_facade_route_contract($limit);
         case 'alias-backfill-replay':
@@ -1937,6 +2177,87 @@ function iss_graph_wpcli_check_alias_backfill_replay(int $limit): array
     return [
         'checked' => (int) ($stats['entities'] ?? 0),
         'errors' => $errors,
+    ];
+}
+
+function iss_graph_wpcli_check_entity_relations_contract(int $limit): array
+{
+    $errors = [];
+    $checked = 0;
+    $request_limit = max(1, min(5, $limit));
+    $scenarios = [
+        'outgoing' => iss_graph_wpcli_facade_find_relation_entity_id('outgoing', ''),
+        'incoming' => iss_graph_wpcli_facade_find_relation_entity_id('incoming', ''),
+    ];
+
+    foreach ($scenarios as $direction => $entity_id) {
+        $entity_id = absint($entity_id);
+        if ($entity_id <= 0) {
+            continue;
+        }
+
+        $checked++;
+        $path = sprintf('/iss/v1/entities/%d/relations', $entity_id);
+        $request = new WP_REST_Request('GET', $path);
+        $request->set_param('direction', $direction);
+        $request->set_param('limit', $request_limit);
+        $response = rest_do_request($request);
+        if ($response->is_error()) {
+            $error = $response->as_error();
+            $errors[] = sprintf(
+                '%s returned REST error: %s.',
+                $path,
+                $error ? $error->get_error_message() : 'unknown error'
+            );
+            continue;
+        }
+
+        $status = (int) $response->get_status();
+        if ($status !== 200) {
+            $errors[] = sprintf('%s returned status %d for direction=%s, expected 200.', $path, $status, $direction);
+            continue;
+        }
+
+        $data = $response->get_data();
+        if (!is_array($data)) {
+            $errors[] = sprintf('%s returned a non-object response for direction=%s.', $path, $direction);
+            continue;
+        }
+
+        foreach (['entity_id', 'filters', 'count', 'items'] as $key) {
+            if (!array_key_exists($key, $data)) {
+                $errors[] = sprintf('%s direction=%s is missing key: %s.', $path, $direction, $key);
+            }
+        }
+
+        $items = isset($data['items']) && is_array($data['items']) ? $data['items'] : [];
+        if ((int) ($data['count'] ?? -1) !== count($items)) {
+            $errors[] = sprintf('%s direction=%s count does not match item list length.', $path, $direction);
+        }
+
+        if (isset($items[0]) && is_array($items[0])) {
+            $checked++;
+            foreach (['relation_id', 'direction', 'entity_id', 'kind', 'storage_kind', 'name', 'family', 'type', 'label', 'source'] as $key) {
+                if (!array_key_exists($key, $items[0])) {
+                    $errors[] = sprintf('%s direction=%s first relation item is missing key: %s.', $path, $direction, $key);
+                }
+            }
+            if (($items[0]['direction'] ?? '') !== $direction) {
+                $errors[] = sprintf('%s first relation item direction is %s, expected %s.', $path, (string) ($items[0]['direction'] ?? ''), $direction);
+            }
+            if (isset($items[0]['source']) && !is_array($items[0]['source'])) {
+                $errors[] = sprintf('%s first relation item source is not an object.', $path);
+            }
+        }
+
+        if (count($errors) >= $limit) {
+            break;
+        }
+    }
+
+    return [
+        'checked' => $checked,
+        'errors' => array_slice($errors, 0, $limit),
     ];
 }
 

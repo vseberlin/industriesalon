@@ -1,6 +1,13 @@
 # Changelog
 
 ## 2026-06-13
+- Added the first read-only entity-relations facade slice in `iss-graph`:
+  - added `GET /wp-json/iss/v1/entities/{id}/relations` over existing graph entity-relation APIs with outgoing, incoming, both, family, source-system, and limit filters
+  - relation payloads expose the related entity kind/storage kind, relation family/type/role/label, public URL when available, valid-year fields, and source provenance without creating new relation storage
+  - added `wp iss-graph facade-entity-relations-compare` and default drift check `entity-relations-contract`
+  - extended `wp iss-graph facade-check` and `facade-route-contract` to guard the nested relation route
+  - local verification: PHP syntax for touched files, PHPCS target, PHPStan target, `wp iss-graph facade-check --limit=2`, `wp iss-graph facade-entities-compare --limit=5`, `wp iss-graph facade-entity-relations-compare --limit=5`, `wp iss-graph drift-check --checks=entity-relations-contract --limit=25`, `wp iss-graph drift-check --checks=facade-route-contract --limit=25`, default `wp iss-graph drift-check --limit=25`, and `git diff --check` passed
+  - no SQL or uploads artifact is required because the slice changes code/read contracts only
 - Added the first contract-only `offer` bridge in `iss-graph`:
   - kept existing entity storage and CPTs unchanged: `fuehrung` remains the tour storage kind and `veranstaltung` remains the event storage kind
   - added additive `contract_kind`, `subtype`, and nested `contract` fields to `/wp-json/iss/v1` entity list/detail responses, plus offer subtype metadata in `/wp-json/iss/v1/contract`
