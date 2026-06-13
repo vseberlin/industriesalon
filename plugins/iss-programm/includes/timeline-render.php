@@ -95,45 +95,6 @@ function iss_timeline_prepare_rows($items) {
     return $rows;
 }
 
-function iss_timeline_is_groupable_tour_row($row) {
-    if (!is_array($row)) {
-        return false;
-    }
-
-    return iss_timeline_resolve_item_type_value($row['type'] ?? '') === 'tour';
-}
-
-function iss_timeline_get_row_group_key($row, $opts = []) {
-    if (!is_array($row)) {
-        return '';
-    }
-
-    $opts = is_array($opts) ? $opts : [];
-    $series_key = trim((string) ($row['series_key'] ?? ''));
-    $source_post_id = (int) ($row['source_post_id'] ?? 0);
-    $base_key = '';
-
-    if ($series_key !== '') {
-        $base_key = 'series:' . $series_key;
-    } elseif ($source_post_id > 0) {
-        $base_key = 'source:' . $source_post_id;
-    } else {
-        $item_id = (int) ($row['id'] ?? 0);
-        $base_key = $item_id > 0 ? 'item:' . $item_id : '';
-    }
-
-    if ($base_key === '' || empty($opts['groupRecurringToursByMonth'])) {
-        return $base_key;
-    }
-
-    $start_raw = trim((string) ($row['start_raw'] ?? ''));
-    if (!preg_match('/^\d{4}-\d{2}/', $start_raw, $matches)) {
-        return $base_key;
-    }
-
-    return $base_key . '|month:' . $matches[0];
-}
-
 function iss_timeline_get_occurrence_label($row) {
     if (!is_array($row)) {
         return '';
@@ -232,61 +193,6 @@ function iss_timeline_has_grouped_occurrences($row) {
     }
 
     return count(array_filter($row['occurrences'], 'is_array')) > 1;
-}
-
-function iss_timeline_group_recurring_tour_rows($items, $opts = []) {
-    $rows = iss_timeline_prepare_rows($items);
-    $opts = is_array($opts) ? $opts : [];
-    if (empty($rows)) {
-        return [];
-    }
-
-    $grouped_rows = [];
-    $group_indexes = [];
-
-    foreach ($rows as $row) {
-        if (!is_array($row)) {
-            continue;
-        }
-
-        if (!iss_timeline_is_groupable_tour_row($row)) {
-            $grouped_rows[] = $row;
-            continue;
-        }
-
-        $group_key = iss_timeline_get_row_group_key($row, $opts);
-        if ($group_key === '' || !isset($group_indexes[$group_key])) {
-            $row['occurrences'] = [$row];
-            $group_indexes[$group_key] = count($grouped_rows);
-            $grouped_rows[] = $row;
-            continue;
-        }
-
-        $target_index = $group_indexes[$group_key];
-        if (empty($grouped_rows[$target_index]['occurrences']) || !is_array($grouped_rows[$target_index]['occurrences'])) {
-            $grouped_rows[$target_index]['occurrences'] = [$grouped_rows[$target_index]];
-        }
-        $grouped_rows[$target_index]['occurrences'][] = $row;
-    }
-
-    foreach ($grouped_rows as &$row) {
-        if (!is_array($row) || empty($row['occurrences']) || !is_array($row['occurrences'])) {
-            continue;
-        }
-
-        $occurrences = array_values(array_filter($row['occurrences'], 'is_array'));
-        if (count($occurrences) <= 1) {
-            unset($row['occurrences']);
-            continue;
-        }
-
-        $row['grouped'] = true;
-        $row['occurrences'] = $occurrences;
-        $row['occurrence_count'] = count($occurrences);
-    }
-    unset($row);
-
-    return $grouped_rows;
 }
 
 function iss_timeline_should_render_grouped_occurrences($row, $opts = []) {
@@ -882,43 +788,12 @@ function iss_timeline_get_listing_response($query_args = [], $render_opts = []) 
     $limit = isset($query_args['limit']) ? (int) $query_args['limit'] : 0;
     $group_recurring_tours = !empty($render_opts['groupRecurringTours']);
 
+    $fetch_args = $query_args;
     if ($group_recurring_tours) {
-        $fetch_args = $query_args;
-        $fetch_args['offset'] = 0;
-        $fetch_args['limit'] = -1;
-
-        $items = function_exists('iss_timeline_get_items_advanced')
-            ? iss_timeline_get_items_advanced($fetch_args)
-            : [];
-        $grouped_rows = iss_timeline_group_recurring_tour_rows($items, $render_opts);
-        $total_count = count($grouped_rows);
-
-        if ($limit > 0) {
-            $visible_rows = array_slice($grouped_rows, $offset, $limit);
-        } elseif ($offset > 0) {
-            $visible_rows = array_slice($grouped_rows, $offset);
-        } else {
-            $visible_rows = $grouped_rows;
-        }
-
-        $visible_count = $offset + count($visible_rows);
-        $has_more = $visible_count < $total_count;
-
-        return [
-            'items' => $visible_rows,
-            'count' => $visible_count,
-            'batchCount' => count($visible_rows),
-            'isEmpty' => empty($visible_rows),
-            'offset' => $offset,
-            'nextOffset' => $visible_count,
-            'hasMore' => $has_more,
-            'html' => (isset($render_opts['renderMode']) && $render_opts['renderMode'] === 'cards')
-                ? iss_timeline_render_items_cards($visible_rows, $render_opts)
-                : iss_timeline_render_items_list($visible_rows, $render_opts),
-        ];
+        $fetch_args['group_recurring'] = true;
+        $fetch_args['group_recurring_by_month'] = !empty($render_opts['groupRecurringToursByMonth']);
     }
 
-    $fetch_args = $query_args;
     $use_overscan = $limit > 0;
     if ($use_overscan) {
         $fetch_args['limit'] = $limit + 1;

@@ -88,14 +88,15 @@ posts, guarded by `wp iss-fuehrungen drift-check` against missing published
 tours, invalid `offer/tour` contracts, and unknown catalog groups.
 Facade occurrences scoped to an entity are exposed through the graph facade over
 the existing occurrence service; no occurrence CPT or storage owner is added.
+Entity-scoped occurrence routes translate graph entities to source post filters
+at the facade boundary, so occurrence rows do not store graph entity IDs.
 Generated recurring tour dates stay internal to `iss-occurrences`: active
 SuperSaaS occurrence rows store a `series_id` and `series_key`, and the
 service-owned series table links those generated rows back to their parent
 `fuehrung`. Runtime series/tag source resolution and imported title/tag/fallback
 metadata read from that table. The retired `iss_occurrences_series_map` and
-`iss_occurrences_source_map` options are copied into table columns during schema
-migration, deleted, and guarded against returning by
-`wp iss-occurrences drift-check`.
+`iss_occurrences_source_map` options are deleted during schema install and
+guarded against returning by `wp iss-occurrences drift-check`.
 
 ## Existing Canonical Base
 

@@ -522,6 +522,7 @@ function createBookingForm(widget, slot) {
           </p>
         </div>
         <form class="is-tour-calendar__form" novalidate>
+          <input type="text" name="website" value="" tabindex="-1" autocomplete="off" hidden>
           <input type="hidden" name="slot_id" value="${escapeHtml(slot.id ?? '')}">
           <input type="hidden" name="start" value="${escapeHtml(startISO)}">
           <input type="hidden" name="title" value="${escapeHtml(slot.title || '')}">
@@ -614,7 +615,10 @@ function createBookingForm(widget, slot) {
       status.textContent = 'Sende ...';
       const res = await fetch(postUrl, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: {
+          'Content-Type': 'application/json',
+          ...(window.IS_TOUR_CALENDAR && window.IS_TOUR_CALENDAR.nonce ? { 'X-WP-Nonce': window.IS_TOUR_CALENDAR.nonce } : {})
+        },
         credentials: 'same-origin',
         body: JSON.stringify(payload)
       });

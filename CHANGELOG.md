@@ -1,6 +1,13 @@
 # Changelog
 
 ## 2026-06-13
+- Cleaned the programme occurrence/payment stack against the remaining architecture findings:
+  - removed `entity_id` and `location_entity_id` from the `iss-occurrences` schema, sync payloads, query filters, and CLI reporting; schema v7 drops the retired graph indexes/columns from existing tables
+  - kept graph compatibility at the `iss-graph` facade boundary by translating entity filters to source post filters and computing response entity IDs from graph on read
+  - moved recurring tour grouping fully into the `iss-occurrences` query service with paged group-key SQL, leaving `iss-programm` as a renderer/query consumer rather than a fetch-all grouper
+  - removed the old `iss-content-model/includes/timeline-sync.php` path and retired derived `iss_is_permanent` meta; Ausstellung permanence now reads from the editor-owned `ausstellung_typ` taxonomy helper
+  - added the plugin-owned `wp_iss_payments_lite_requests` table for lightweight booking/order intake, because the existing capped `is_tours_booking_requests` and `iss_publication_order_requests` options were not durable or indexed enough for public write endpoints; the old options are migration inputs only, existing hooks still fire, and failed inserts return an error instead of silently dropping requests
+  - local verification: PHP syntax, JS syntax, PHPCS target, PHPStan target, occurrence schema/option/meta/table probes, `wp iss-occurrences verify`, `wp iss-occurrences drift-check --limit=25`, grouped occurrence query smoke, payments insert/cleanup probe, REST route registration probe, `wp iss-graph facade-check --limit=2`, `wp iss-graph facade-occurrences-compare --limit=5`, and `wp iss-graph facade-entity-occurrences-compare --limit=5` passed
 - Closed the backend knowledge-graph architecture checkpoint locally:
   - the implemented model now follows the target split: entities for stable cultural objects, relations for connections, occurrences for dated public activities, and guarded views/facade consumers for website pages
   - UI polish is deferred to a later slice; no additional backend refactor slice is planned unless final review exposes a real contract gap

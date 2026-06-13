@@ -40,10 +40,11 @@ function iss_occurrences_ausstellung_is_availability_only(int $post_id): bool
         return false;
     }
 
-    if ((bool) get_post_meta($post_id, 'iss_is_permanent', true)) {
-        return true;
-    }
+    return iss_occurrences_ausstellung_has_type($post_id, ['dauerausstellung', 'digitaleausstellungen']);
+}
 
+function iss_occurrences_ausstellung_has_type(int $post_id, array $target_slugs): bool
+{
     if (!taxonomy_exists('ausstellung_typ')) {
         return false;
     }
@@ -53,7 +54,9 @@ function iss_occurrences_ausstellung_is_availability_only(int $post_id): bool
         return false;
     }
 
-    $availability_slugs = ['dauerausstellung', 'digitaleausstellungen'];
+    $availability_slugs = array_values(array_unique(array_filter(array_map(static function ($slug): string {
+        return sanitize_title((string) $slug);
+    }, $target_slugs))));
     foreach ((array) $type_slugs as $slug) {
         if (in_array(sanitize_title((string) $slug), $availability_slugs, true)) {
             return true;
@@ -100,7 +103,7 @@ function iss_occurrences_source_start_end_for_post(WP_Post $post): array
         $end_raw = trim((string) get_post_meta($post_id, 'iss_end_date', true));
         $is_permanent = function_exists('iss_content_model_ausstellung_is_permanent')
             ? iss_content_model_ausstellung_is_permanent($post_id)
-            : (bool) get_post_meta($post_id, 'iss_is_permanent', true);
+            : iss_occurrences_ausstellung_has_type($post_id, ['dauerausstellung']);
         $start = $service->normalize_datetime($start_raw);
         $date_source = $start !== '' ? 'explicit' : 'fallback_post_date';
 
@@ -158,9 +161,6 @@ function iss_occurrences_get_location_data(int $post_id): array
 {
     $location_post_id = (int) get_post_meta($post_id, 'iss_primary_place_id', true);
     $location_label = trim((string) get_post_meta($post_id, 'iss_location', true));
-    $location_entity_id = $location_post_id > 0
-        ? iss_occurrences_get_service()->resolve_graph_entity_id_for_post($location_post_id, true)
-        : 0;
 
     if ($location_label === '' && $location_post_id > 0) {
         $location_label = trim((string) get_the_title($location_post_id));
@@ -168,7 +168,6 @@ function iss_occurrences_get_location_data(int $post_id): array
 
     return [
         'location_post_id' => $location_post_id,
-        'location_entity_id' => $location_entity_id,
         'location_label' => $location_label,
     ];
 }
@@ -206,7 +205,6 @@ function iss_occurrences_get_occurrences_for_post(int $post_id): array
     $location = iss_occurrences_get_location_data($post_id);
 
     return [[
-        'entity_id' => iss_occurrences_get_service()->resolve_graph_entity_id_for_post($post_id, true),
         'source_post_id' => $post_id,
         'source_post_type' => $post->post_type,
         'kind' => $kind,
@@ -223,7 +221,6 @@ function iss_occurrences_get_occurrences_for_post(int $post_id): array
         'series_key' => '',
         'booking_url' => '',
         'location_post_id' => (int) $location['location_post_id'],
-        'location_entity_id' => (int) $location['location_entity_id'],
         'location_label' => (string) $location['location_label'],
     ]];
 }
@@ -303,7 +300,6 @@ function iss_occurrences_sync_supersaas(array $slot): int
     }
 
     return $service->upsert_occurrence([
-        'entity_id' => $service->resolve_graph_entity_id_for_post($source_post_id, true),
         'source_post_id' => $source_post_id,
         'source_post_type' => 'fuehrung',
         'kind' => 'tour',
@@ -334,6 +330,5 @@ function iss_occurrences_sync_all(): array
     return [
         'sources' => $sources,
         'supersaas' => $supersaas,
-        'graph_backfilled' => iss_occurrences_get_service()->backfill_graph_entities(),
     ];
 }

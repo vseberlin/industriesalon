@@ -60,6 +60,7 @@
     wrap.innerHTML = `
       <form class="iss-publication-order-form" novalidate>
         <input type="hidden" name="publication_id" value="${escapeHtml(payload.publicationId)}">
+        <input type="text" name="website" value="" tabindex="-1" autocomplete="off" hidden>
         <div class="iss-publication-order-form__intro">
           <p class="iss-kicker iss-kicker--compact">Bestellung</p>
           <h2 class="iss-publication-order-form__title">${escapeHtml(payload.title || 'Publikation bestellen')}</h2>
@@ -100,7 +101,10 @@
         status.textContent = 'Sende ...';
         const res = await fetch(orderUrl, {
           method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
+          headers: {
+            'Content-Type': 'application/json',
+            ...(cfg.nonce ? { 'X-WP-Nonce': cfg.nonce } : {})
+          },
           credentials: 'same-origin',
           body: JSON.stringify(body)
         });

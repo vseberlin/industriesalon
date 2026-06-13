@@ -48,3 +48,13 @@ add_action('before_delete_post', function (int $post_id): void {
 
     iss_occurrences_get_service()->delete_source_occurrences($post_id, $post_type);
 });
+
+add_action('set_object_terms', function ($object_id): void {
+    $post_id = (int) $object_id;
+    $post_type = (string) get_post_type($post_id);
+    if (!in_array($post_type, iss_occurrences_supported_source_post_types(), true)) {
+        return;
+    }
+
+    iss_occurrences_sync_source($post_id);
+}, 20, 1);

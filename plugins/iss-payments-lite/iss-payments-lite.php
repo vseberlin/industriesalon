@@ -9,6 +9,160 @@ if (!defined('ABSPATH')) {
     exit;
 }
 
+// phpcs:disable WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching, WordPress.DB.PreparedSQL.InterpolatedNotPrepared -- This plugin owns the lightweight booking/order request table.
+
+define('ISS_PAYMENTS_LITE_SCHEMA_VERSION', '2026-06-13-requests-v1');
+define('ISS_PAYMENTS_LITE_SCHEMA_OPTION', 'iss_payments_lite_schema_version');
+
+function iss_payments_lite_requests_table_name(): string {
+    global $wpdb;
+
+    return $wpdb->prefix . 'iss_payments_lite_requests';
+}
+
+function iss_payments_lite_table_exists(): bool {
+    global $wpdb;
+
+    $table = iss_payments_lite_requests_table_name();
+    return (string) $wpdb->get_var($wpdb->prepare('SHOW TABLES LIKE %s', $table)) === $table;
+}
+
+function iss_payments_lite_maybe_install_schema(): void {
+    if ((string) get_option(ISS_PAYMENTS_LITE_SCHEMA_OPTION, '') === ISS_PAYMENTS_LITE_SCHEMA_VERSION) {
+        return;
+    }
+
+    iss_payments_lite_install_schema();
+}
+
+function iss_payments_lite_install_schema(): void {
+    global $wpdb;
+
+    require_once ABSPATH . 'wp-admin/includes/upgrade.php';
+
+    $table = iss_payments_lite_requests_table_name();
+    $charset_collate = $wpdb->get_charset_collate();
+    $sql = "CREATE TABLE {$table} (
+        id bigint(20) unsigned NOT NULL AUTO_INCREMENT,
+        request_kind varchar(50) NOT NULL DEFAULT '',
+        status varchar(50) NOT NULL DEFAULT 'new',
+        source_post_id bigint(20) unsigned NOT NULL DEFAULT 0,
+        source_post_type varchar(100) NOT NULL DEFAULT '',
+        customer_name varchar(191) NOT NULL DEFAULT '',
+        customer_email varchar(191) NOT NULL DEFAULT '',
+        item_label varchar(255) NOT NULL DEFAULT '',
+        quantity int(11) NOT NULL DEFAULT 0,
+        amount_cents int(11) NOT NULL DEFAULT 0,
+        payment_method varchar(50) NOT NULL DEFAULT '',
+        slot_id varchar(191) NOT NULL DEFAULT '',
+        tag varchar(100) NOT NULL DEFAULT '',
+        payload longtext NOT NULL,
+        duplicate_hash varchar(64) NOT NULL DEFAULT '',
+        ip_address varchar(100) NOT NULL DEFAULT '',
+        user_agent varchar(255) NOT NULL DEFAULT '',
+        created_at datetime NOT NULL,
+        updated_at datetime NOT NULL,
+        PRIMARY KEY  (id),
+        KEY kind_status_created (request_kind, status, created_at),
+        KEY source_lookup (source_post_type, source_post_id),
+        KEY email_lookup (customer_email),
+        KEY duplicate_lookup (duplicate_hash)
+    ) {$charset_collate};";
+
+    dbDelta($sql);
+    iss_payments_lite_migrate_legacy_option_requests();
+    update_option(ISS_PAYMENTS_LITE_SCHEMA_OPTION, ISS_PAYMENTS_LITE_SCHEMA_VERSION, false);
+}
+
+function iss_payments_lite_migrate_legacy_option_requests(): void {
+    $legacy_options = [
+        'is_tours_booking_requests' => 'tour_booking',
+        'iss_publication_order_requests' => 'publication_order',
+    ];
+
+    foreach ($legacy_options as $option_name => $request_kind) {
+        $rows = get_option($option_name, []);
+        if (is_array($rows)) {
+            foreach ($rows as $row) {
+                if (is_array($row)) {
+                    iss_payments_lite_insert_request($request_kind, $row);
+                }
+            }
+        }
+        delete_option($option_name);
+    }
+}
+
+function iss_payments_lite_insert_request(string $request_kind, array $entry): int {
+    global $wpdb;
+
+    if (!iss_payments_lite_table_exists()) {
+        return 0;
+    }
+
+    $request_kind = sanitize_key($request_kind);
+    if ($request_kind === '') {
+        return 0;
+    }
+
+    $source_post_id = isset($entry['source_post_id']) ? (int) $entry['source_post_id'] : (int) ($entry['publication_id'] ?? 0);
+    $source_post_type = sanitize_key((string) ($entry['source_post_type'] ?? ''));
+    if ($source_post_type === '' && $request_kind === 'publication_order') {
+        $source_post_type = 'publication';
+    }
+
+    $payload = wp_json_encode($entry);
+    $now = current_time('mysql');
+    $inserted = $wpdb->insert(
+        iss_payments_lite_requests_table_name(),
+        [
+            'request_kind' => $request_kind,
+            'status' => sanitize_key((string) ($entry['status'] ?? 'new')),
+            'source_post_id' => max(0, $source_post_id),
+            'source_post_type' => $source_post_type,
+            'customer_name' => sanitize_text_field((string) ($entry['name'] ?? '')),
+            'customer_email' => sanitize_email((string) ($entry['email'] ?? '')),
+            'item_label' => sanitize_text_field((string) ($entry['title'] ?? '')),
+            'quantity' => isset($entry['tickets']) ? (int) $entry['tickets'] : (int) ($entry['quantity'] ?? 0),
+            'amount_cents' => (int) ($entry['amount_cents'] ?? 0),
+            'payment_method' => sanitize_key((string) ($entry['payment'] ?? '')),
+            'slot_id' => sanitize_text_field((string) ($entry['slot_id'] ?? '')),
+            'tag' => strtoupper(sanitize_text_field((string) ($entry['tag'] ?? ''))),
+            'payload' => is_string($payload) ? $payload : '{}',
+            'duplicate_hash' => sanitize_text_field((string) ($entry['duplicate_hash'] ?? '')),
+            'ip_address' => sanitize_text_field((string) ($entry['ip'] ?? '')),
+            'user_agent' => substr(sanitize_text_field((string) ($entry['ua'] ?? '')), 0, 255),
+            'created_at' => sanitize_text_field((string) ($entry['time'] ?? $now)),
+            'updated_at' => $now,
+        ],
+        [
+            '%s',
+            '%s',
+            '%d',
+            '%s',
+            '%s',
+            '%s',
+            '%s',
+            '%d',
+            '%d',
+            '%s',
+            '%s',
+            '%s',
+            '%s',
+            '%s',
+            '%s',
+            '%s',
+            '%s',
+            '%s',
+        ]
+    );
+
+    return $inserted ? (int) $wpdb->insert_id : 0;
+}
+
+register_activation_hook(__FILE__, 'iss_payments_lite_install_schema');
+add_action('init', 'iss_payments_lite_maybe_install_schema', 4);
+
 add_action('wp_enqueue_scripts', function () {
     if (!is_singular('publication')) {
         return;
@@ -35,6 +189,7 @@ add_action('wp_enqueue_scripts', function () {
 
     wp_localize_script('iss-payments-lite-publications', 'ISS_PUBLICATION_ORDER', [
         'orderUrl' => esc_url_raw(rest_url('iss-payments/v1/publication-order')),
+        'nonce' => wp_create_nonce('wp_rest'),
     ]);
 });
 
@@ -74,10 +229,76 @@ add_action('rest_api_init', function () {
     ]);
 });
 
+function iss_payments_lite_request_ip(): string {
+    return isset($_SERVER['REMOTE_ADDR']) ? sanitize_text_field((string) $_SERVER['REMOTE_ADDR']) : '';
+}
+
+function iss_payments_lite_rate_limit_key(string $scope): string {
+    return 'iss_payments_lite_rate_' . md5($scope . '|' . iss_payments_lite_request_ip());
+}
+
+function iss_payments_lite_check_rate_limit(string $scope, int $limit = 5, int $window = 10 * MINUTE_IN_SECONDS): ?WP_REST_Response {
+    $key = iss_payments_lite_rate_limit_key($scope);
+    $count = (int) get_transient($key);
+    if ($count >= $limit) {
+        return new WP_REST_Response(['ok' => false, 'error' => 'Zu viele Anfragen. Bitte später erneut versuchen.'], 429);
+    }
+
+    set_transient($key, $count + 1, $window);
+    return null;
+}
+
+function iss_payments_lite_request_has_valid_nonce(WP_REST_Request $request): bool {
+    $nonce = (string) $request->get_header('X-WP-Nonce');
+    if ($nonce === '') {
+        return false;
+    }
+
+    return (bool) wp_verify_nonce($nonce, 'wp_rest');
+}
+
+function iss_payments_lite_reject_honeypot(array $payload): ?WP_REST_Response {
+    $honeypot = trim((string) ($payload['website'] ?? $payload['url'] ?? ''));
+    if ($honeypot !== '') {
+        return new WP_REST_Response(['ok' => false, 'error' => 'Ungültige Anfrage.'], 400);
+    }
+
+    return null;
+}
+
+function iss_payments_lite_duplicate_hash(string $scope, array $parts): string {
+    return hash('sha256', $scope . '|' . implode('|', array_map('strval', $parts)));
+}
+
+function iss_payments_lite_check_duplicate(string $scope, array $parts, int $window = 10 * MINUTE_IN_SECONDS): ?WP_REST_Response {
+    $fingerprint = iss_payments_lite_duplicate_hash($scope, $parts);
+    $key = 'iss_payments_lite_dupe_' . md5($fingerprint);
+    if (get_transient($key)) {
+        return new WP_REST_Response(['ok' => false, 'error' => 'Diese Anfrage wurde bereits gesendet.'], 409);
+    }
+
+    set_transient($key, 1, $window);
+    return null;
+}
+
 function iss_payments_lite_create_tour_booking(WP_REST_Request $request) {
+    $rate_limited = iss_payments_lite_check_rate_limit('tour-booking');
+    if ($rate_limited instanceof WP_REST_Response) {
+        return $rate_limited;
+    }
+
     $payload = json_decode($request->get_body(), true);
     if (!is_array($payload)) {
         return new WP_REST_Response(['ok' => false, 'error' => 'Invalid payload'], 400);
+    }
+
+    if ((string) $request->get_header('X-WP-Nonce') !== '' && !iss_payments_lite_request_has_valid_nonce($request)) {
+        return new WP_REST_Response(['ok' => false, 'error' => 'Ungültige Anfrage.'], 403);
+    }
+
+    $honeypot = iss_payments_lite_reject_honeypot($payload);
+    if ($honeypot instanceof WP_REST_Response) {
+        return $honeypot;
     }
 
     $name = sanitize_text_field($payload['name'] ?? '');
@@ -160,6 +381,17 @@ function iss_payments_lite_create_tour_booking(WP_REST_Request $request) {
         return new WP_REST_Response(['ok' => false, 'error' => implode(' ', $errors)], 400);
     }
 
+    $duplicate_parts = [
+        strtolower($email),
+        $slot_id,
+        $tag,
+        $source_post_id,
+    ];
+    $duplicate = iss_payments_lite_check_duplicate('tour-booking', $duplicate_parts);
+    if ($duplicate instanceof WP_REST_Response) {
+        return $duplicate;
+    }
+
     $entry = [
         'time' => current_time('mysql'),
         'name' => $name,
@@ -172,19 +404,16 @@ function iss_payments_lite_create_tour_booking(WP_REST_Request $request) {
         'title' => $title,
         'source_post_id' => $source_post_id,
         'source_post_type' => $source_post_type,
+        'duplicate_hash' => iss_payments_lite_duplicate_hash('tour-booking', $duplicate_parts),
         'ip' => isset($_SERVER['REMOTE_ADDR']) ? sanitize_text_field((string) $_SERVER['REMOTE_ADDR']) : '',
         'ua' => isset($_SERVER['HTTP_USER_AGENT']) ? sanitize_text_field((string) $_SERVER['HTTP_USER_AGENT']) : '',
     ];
 
-    $requests = get_option('is_tours_booking_requests', []);
-    if (!is_array($requests)) {
-        $requests = [];
+    $request_id = iss_payments_lite_insert_request('tour_booking', $entry);
+    if ($request_id <= 0) {
+        return new WP_REST_Response(['ok' => false, 'error' => 'Anfrage konnte nicht gespeichert werden.'], 500);
     }
-    $requests[] = $entry;
-    if (count($requests) > 200) {
-        $requests = array_slice($requests, -200);
-    }
-    update_option('is_tours_booking_requests', $requests, false);
+    $entry['request_id'] = $request_id;
 
     /**
      * Compatibility hook for existing booking consumers.
@@ -206,9 +435,23 @@ function iss_payments_lite_create_tour_booking(WP_REST_Request $request) {
 }
 
 function iss_payments_lite_create_publication_order(WP_REST_Request $request) {
+    $rate_limited = iss_payments_lite_check_rate_limit('publication-order');
+    if ($rate_limited instanceof WP_REST_Response) {
+        return $rate_limited;
+    }
+
     $payload = json_decode($request->get_body(), true);
     if (!is_array($payload)) {
         return new WP_REST_Response(['ok' => false, 'error' => 'Invalid payload'], 400);
+    }
+
+    if ((string) $request->get_header('X-WP-Nonce') !== '' && !iss_payments_lite_request_has_valid_nonce($request)) {
+        return new WP_REST_Response(['ok' => false, 'error' => 'Ungültige Anfrage.'], 403);
+    }
+
+    $honeypot = iss_payments_lite_reject_honeypot($payload);
+    if ($honeypot instanceof WP_REST_Response) {
+        return $honeypot;
     }
 
     $publication_id = isset($payload['publication_id']) ? (int) $payload['publication_id'] : 0;
@@ -249,6 +492,16 @@ function iss_payments_lite_create_publication_order(WP_REST_Request $request) {
         return new WP_REST_Response(['ok' => false, 'error' => implode(' ', $errors)], 400);
     }
 
+    $duplicate_parts = [
+        strtolower($email),
+        $publication_id,
+        $quantity,
+    ];
+    $duplicate = iss_payments_lite_check_duplicate('publication-order', $duplicate_parts);
+    if ($duplicate instanceof WP_REST_Response) {
+        return $duplicate;
+    }
+
     $entry = [
         'time' => current_time('mysql'),
         'publication_id' => $publication_id,
@@ -259,19 +512,16 @@ function iss_payments_lite_create_publication_order(WP_REST_Request $request) {
         'payment' => $payment,
         'price_cents' => $price_cents,
         'amount_cents' => $price_cents * $quantity,
+        'duplicate_hash' => iss_payments_lite_duplicate_hash('publication-order', $duplicate_parts),
         'ip' => isset($_SERVER['REMOTE_ADDR']) ? sanitize_text_field((string) $_SERVER['REMOTE_ADDR']) : '',
         'ua' => isset($_SERVER['HTTP_USER_AGENT']) ? sanitize_text_field((string) $_SERVER['HTTP_USER_AGENT']) : '',
     ];
 
-    $orders = get_option('iss_publication_order_requests', []);
-    if (!is_array($orders)) {
-        $orders = [];
+    $request_id = iss_payments_lite_insert_request('publication_order', $entry);
+    if ($request_id <= 0) {
+        return new WP_REST_Response(['ok' => false, 'error' => 'Anfrage konnte nicht gespeichert werden.'], 500);
     }
-    $orders[] = $entry;
-    if (count($orders) > 200) {
-        $orders = array_slice($orders, -200);
-    }
-    update_option('iss_publication_order_requests', $orders, false);
+    $entry['request_id'] = $request_id;
 
     do_action('iss_payments_lite_publication_order_created', $entry, $request);
     do_action('iss_payments_lite_order_created', 'publication', $entry, $request);

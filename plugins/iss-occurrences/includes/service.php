@@ -88,7 +88,6 @@ final class ISS_Occurrences_Service
 
         $occurrences_sql = "CREATE TABLE {$occurrences_table} (
             id bigint(20) unsigned NOT NULL AUTO_INCREMENT,
-            entity_id bigint(20) unsigned NOT NULL DEFAULT 0,
             source_post_id bigint(20) unsigned NOT NULL DEFAULT 0,
             source_post_type varchar(100) NOT NULL DEFAULT '',
             kind varchar(50) NOT NULL DEFAULT '',
@@ -106,7 +105,6 @@ final class ISS_Occurrences_Service
             series_id bigint(20) unsigned NOT NULL DEFAULT 0,
             booking_url varchar(255) NOT NULL DEFAULT '',
             location_post_id bigint(20) unsigned NOT NULL DEFAULT 0,
-            location_entity_id bigint(20) unsigned NOT NULL DEFAULT 0,
             location_label varchar(255) NOT NULL DEFAULT '',
             availability_state varchar(50) NOT NULL DEFAULT '',
             capacity_total int(11) NOT NULL DEFAULT -1,
@@ -116,9 +114,8 @@ final class ISS_Occurrences_Service
             PRIMARY KEY  (id),
             UNIQUE KEY origin_external (origin, external_id),
             KEY public_date (visibility, status, starts_at),
-            KEY entity_date (entity_id, starts_at),
             KEY source_lookup (source_post_type, source_post_id),
-            KEY location_entity_date (location_entity_id, starts_at),
+            KEY location_post_date (location_post_id, starts_at),
             KEY kind_date (kind, starts_at),
             KEY series_date (series_key, starts_at),
             KEY tag_date (tag, starts_at),
@@ -148,110 +145,44 @@ final class ISS_Occurrences_Service
 
         dbDelta($occurrences_sql);
         dbDelta($series_sql);
-        $this->migrate_series_option_metadata();
-        $this->migrate_source_option_metadata();
+        $this->drop_legacy_graph_columns();
+        delete_option(ISS_OCCURRENCES_RETIRED_SERIES_MAP_OPTION);
+        delete_option(ISS_OCCURRENCES_RETIRED_SOURCE_MAP_OPTION);
+        delete_option('iss_calendar_source_map');
+        delete_option('iss_calendar_series_map');
+        delete_option('iss_calendar_cron_sync');
         update_option(ISS_OCCURRENCES_SCHEMA_OPTION, ISS_OCCURRENCES_SCHEMA_VERSION, false);
     }
 
-    private function migrate_series_option_metadata(): void
+    private function drop_legacy_graph_columns(): void
     {
-        $retired_option_rows = get_option(ISS_OCCURRENCES_RETIRED_SERIES_MAP_OPTION, []);
-        if (!is_array($retired_option_rows)) {
+        global $wpdb;
+
+        $table = $this->get_occurrences_table_name();
+        $found = (string) $wpdb->get_var($wpdb->prepare('SHOW TABLES LIKE %s', $table));
+        if ($found !== $table) {
             return;
         }
 
-        foreach ($retired_option_rows as $series_key => $entry) {
-            $series_key = $this->normalize_series_key((string) $series_key);
-            if ($series_key === '' || !is_array($entry)) {
-                continue;
+        foreach (['entity_date', 'location_entity_date'] as $index_name) {
+            $index_exists = (string) $wpdb->get_var(
+                $wpdb->prepare("SHOW INDEX FROM {$table} WHERE Key_name = %s", $index_name)
+            );
+            if ($index_exists !== '') {
+                // phpcs:ignore WordPress.DB.DirectDatabaseQuery.SchemaChange -- Dropping retired service-owned graph indexes.
+                $wpdb->query("ALTER TABLE {$table} DROP INDEX {$index_name}");
             }
-
-            $existing = $this->get_series_by_key($series_key);
-            $source_post_id = (int) ($existing['source_post_id'] ?? 0);
-            if ($source_post_id <= 0) {
-                $source_post_id = (int) ($entry['source_post_id'] ?? 0);
-            }
-
-            $source_post_type = sanitize_key((string) ($existing['source_post_type'] ?? ''));
-            if ($source_post_type === '') {
-                $source_post_type = sanitize_key((string) ($entry['source_post_type'] ?? ''));
-            }
-
-            $this->upsert_series([
-                'series_key' => $series_key,
-                'source_post_id' => $source_post_id,
-                'source_post_type' => $source_post_type,
-                'origin' => sanitize_key((string) ($existing['origin'] ?? 'supersaas')),
-                'external_id' => sanitize_text_field((string) ($existing['external_id'] ?? '')),
-                'rule' => sanitize_textarea_field((string) ($existing['rule'] ?? '')),
-                'timezone' => sanitize_text_field((string) ($existing['timezone'] ?? '')),
-                'exceptions' => (string) ($existing['exceptions'] ?? ''),
-                'supersaas_title' => trim((string) ($entry['supersaas_title'] ?? '')),
-                'tag' => $this->normalize_series_tag((string) ($entry['tag'] ?? '')),
-                'fallback_url' => esc_url_raw((string) ($entry['fallback_url'] ?? '')),
-            ]);
         }
 
-        delete_option(ISS_OCCURRENCES_RETIRED_SERIES_MAP_OPTION);
-    }
-
-    private function migrate_source_option_metadata(): void
-    {
-        $retired_option_rows = get_option(ISS_OCCURRENCES_RETIRED_SOURCE_MAP_OPTION, []);
-        if (!is_array($retired_option_rows)) {
-            return;
+        foreach (['entity_id', 'location_entity_id'] as $column_name) {
+            $column_exists = (string) $wpdb->get_var(
+                $wpdb->prepare("SHOW COLUMNS FROM {$table} LIKE %s", $column_name)
+            );
+            if ($column_exists !== '') {
+                // phpcs:ignore WordPress.DB.DirectDatabaseQuery.SchemaChange -- Dropping retired service-owned graph columns.
+                $wpdb->query("ALTER TABLE {$table} DROP COLUMN {$column_name}");
+            }
         }
-
-        foreach ($retired_option_rows as $tag => $entry) {
-            $tag = $this->normalize_series_tag((string) $tag);
-            if ($tag === '' || !is_array($entry)) {
-                continue;
-            }
-
-            $existing = $this->get_series_by_tag($tag);
-            $source_post_id = (int) ($existing['source_post_id'] ?? 0);
-            if ($source_post_id <= 0) {
-                $source_post_id = (int) ($entry['source_post_id'] ?? 0);
-            }
-
-            $source_post_type = sanitize_key((string) ($existing['source_post_type'] ?? ''));
-            if ($source_post_type === '') {
-                $source_post_type = sanitize_key((string) ($entry['source_post_type'] ?? ''));
-            }
-
-            $supersaas_title = trim((string) ($entry['supersaas_title'] ?? ''));
-            if ($supersaas_title === '' && $source_post_id > 0) {
-                $supersaas_title = trim((string) get_the_title($source_post_id));
-                $supersaas_title = preg_replace('/(?:\s|-)*(tour|fuehrung|führung)$/iu', '', $supersaas_title);
-                $supersaas_title = trim((string) $supersaas_title);
-            }
-            if ($supersaas_title === '') {
-                $supersaas_title = $tag;
-            }
-
-            $series_key = isset($existing['series_key'])
-                ? $this->normalize_series_key((string) $existing['series_key'])
-                : '';
-            if ($series_key === '') {
-                $series_key = $this->build_series_key($supersaas_title, 'tour');
-            }
-
-            $this->upsert_series([
-                'series_key' => $series_key,
-                'source_post_id' => $source_post_id,
-                'source_post_type' => $source_post_type,
-                'origin' => sanitize_key((string) ($existing['origin'] ?? 'supersaas')),
-                'external_id' => sanitize_text_field((string) ($existing['external_id'] ?? '')),
-                'rule' => sanitize_textarea_field((string) ($existing['rule'] ?? '')),
-                'timezone' => sanitize_text_field((string) ($existing['timezone'] ?? '')),
-                'exceptions' => (string) ($existing['exceptions'] ?? ''),
-                'supersaas_title' => $supersaas_title,
-                'tag' => $tag,
-                'fallback_url' => esc_url_raw((string) ($entry['fallback_url'] ?? ($existing['fallback_url'] ?? ''))),
-            ]);
-        }
-
-        delete_option(ISS_OCCURRENCES_RETIRED_SOURCE_MAP_OPTION);
     }
 
     public function tables_exist(): bool
@@ -284,116 +215,6 @@ final class ISS_Occurrences_Service
                 'active'
             )
         );
-    }
-
-    public function public_graph_link_count(): int
-    {
-        global $wpdb;
-
-        if (!$this->tables_exist()) {
-            return 0;
-        }
-
-        $table = $this->get_occurrences_table_name();
-
-        return (int) $wpdb->get_var(
-            $wpdb->prepare(
-                "SELECT COUNT(*) FROM {$table} WHERE visibility = %s AND status = %s AND entity_id > 0",
-                'public',
-                'active'
-            )
-        );
-    }
-
-    public function resolve_graph_entity_id_for_post(int $post_id, bool $create = false): int
-    {
-        $post_id = max(0, $post_id);
-        if ($post_id <= 0) {
-            return 0;
-        }
-
-        if ($create && function_exists('iss_graph_get_or_create_entity_for_post')) {
-            $entity = iss_graph_get_or_create_entity_for_post($post_id);
-            if (is_array($entity) && (int) ($entity['id'] ?? 0) > 0) {
-                return (int) $entity['id'];
-            }
-        }
-
-        if (function_exists('iss_graph_get_entity_for_post')) {
-            $entity = iss_graph_get_entity_for_post($post_id);
-            if (is_array($entity) && (int) ($entity['id'] ?? 0) > 0) {
-                return (int) $entity['id'];
-            }
-        }
-
-        return 0;
-    }
-
-    public function backfill_graph_entities(): int
-    {
-        global $wpdb;
-
-        if (!$this->tables_exist()) {
-            return 0;
-        }
-
-        $table = $this->get_occurrences_table_name();
-        $rows = $wpdb->get_results(
-            "SELECT id, entity_id, source_post_id, location_entity_id, location_post_id
-            FROM {$table}
-            WHERE source_post_id > 0
-               OR location_post_id > 0",
-            ARRAY_A
-        );
-
-        $updated = 0;
-        foreach (is_array($rows) ? $rows : [] as $row) {
-            $occurrence_id = (int) ($row['id'] ?? 0);
-            if ($occurrence_id <= 0) {
-                continue;
-            }
-
-            $fields = [];
-            $formats = [];
-            $source_post_id = (int) ($row['source_post_id'] ?? 0);
-            $entity_id = $source_post_id > 0 ? $this->resolve_graph_entity_id_for_post($source_post_id, true) : 0;
-            if ($entity_id > 0 && $entity_id !== (int) ($row['entity_id'] ?? 0)) {
-                $fields['entity_id'] = $entity_id;
-                $formats[] = '%d';
-            }
-
-            $location_post_id = (int) ($row['location_post_id'] ?? 0);
-            $location_entity_id = $location_post_id > 0 ? $this->resolve_graph_entity_id_for_post($location_post_id, true) : 0;
-            if ($location_entity_id > 0 && $location_entity_id !== (int) ($row['location_entity_id'] ?? 0)) {
-                $fields['location_entity_id'] = $location_entity_id;
-                $formats[] = '%d';
-            }
-
-            if (empty($fields)) {
-                continue;
-            }
-
-            $fields['updated_at'] = current_time('mysql');
-            $formats[] = '%s';
-
-            $result = $wpdb->update(
-                $table,
-                $fields,
-                ['id' => $occurrence_id],
-                $formats,
-                ['%d']
-            );
-
-            if ($result !== false && $result > 0) {
-                $updated++;
-            }
-        }
-
-        if ($updated > 0) {
-            do_action('iss_occurrences_changed', ['origin' => 'graph_backfill']);
-        }
-
-        return $updated;
     }
 
     public function upsert_series(array $row): int
@@ -619,7 +440,6 @@ final class ISS_Occurrences_Service
 
         $source_post_id = isset($row['source_post_id']) ? max(0, (int) $row['source_post_id']) : 0;
         $source_post_type = isset($row['source_post_type']) ? sanitize_key((string) $row['source_post_type']) : '';
-        $entity_id = isset($row['entity_id']) ? max(0, (int) $row['entity_id']) : 0;
         $kind = isset($row['kind']) ? sanitize_key((string) $row['kind']) : '';
         $origin = isset($row['origin']) ? sanitize_key((string) $row['origin']) : 'wp';
         $external_id = isset($row['external_id']) ? sanitize_text_field((string) $row['external_id']) : '';
@@ -635,17 +455,15 @@ final class ISS_Occurrences_Service
         $ends_at = isset($row['ends_at']) ? $this->normalize_datetime((string) $row['ends_at'], true) : null;
         $ends_at = $ends_at !== '' ? $ends_at : null;
         $location_post_id = isset($row['location_post_id']) ? max(0, (int) $row['location_post_id']) : 0;
-        $location_entity_id = isset($row['location_entity_id']) ? max(0, (int) $row['location_entity_id']) : 0;
         $now = current_time('mysql');
         $table = $this->get_occurrences_table_name();
 
         $wpdb->query(
             $wpdb->prepare(
                 "INSERT INTO {$table}
-                    (entity_id, source_post_id, source_post_type, kind, title, starts_at, ends_at, date_source, status, visibility, origin, source_calendar, external_id, tag, series_key, series_id, booking_url, location_post_id, location_entity_id, location_label, availability_state, capacity_total, capacity_available, created_at, updated_at)
-                 VALUES (%d, %d, %s, %s, %s, %s, NULLIF(%s, ''), %s, %s, %s, %s, %s, %s, %s, %s, %d, %s, %d, %d, %s, %s, %d, %d, %s, %s)
+                    (source_post_id, source_post_type, kind, title, starts_at, ends_at, date_source, status, visibility, origin, source_calendar, external_id, tag, series_key, series_id, booking_url, location_post_id, location_label, availability_state, capacity_total, capacity_available, created_at, updated_at)
+                 VALUES (%d, %s, %s, %s, %s, NULLIF(%s, ''), %s, %s, %s, %s, %s, %s, %s, %s, %d, %s, %d, %s, %s, %d, %d, %s, %s)
                  ON DUPLICATE KEY UPDATE
-                    entity_id = VALUES(entity_id),
                     source_post_id = VALUES(source_post_id),
                     source_post_type = VALUES(source_post_type),
                     kind = VALUES(kind),
@@ -661,13 +479,11 @@ final class ISS_Occurrences_Service
                     series_id = VALUES(series_id),
                     booking_url = VALUES(booking_url),
                     location_post_id = VALUES(location_post_id),
-                    location_entity_id = VALUES(location_entity_id),
                     location_label = VALUES(location_label),
                     availability_state = VALUES(availability_state),
                     capacity_total = VALUES(capacity_total),
                     capacity_available = VALUES(capacity_available),
                     updated_at = VALUES(updated_at)",
-                $entity_id,
                 $source_post_id,
                 $source_post_type,
                 $kind,
@@ -685,7 +501,6 @@ final class ISS_Occurrences_Service
                 $series_id,
                 isset($row['booking_url']) ? esc_url_raw((string) $row['booking_url']) : '',
                 $location_post_id,
-                $location_entity_id,
                 isset($row['location_label']) ? sanitize_text_field((string) $row['location_label']) : '',
                 isset($row['availability_state']) ? sanitize_key((string) $row['availability_state']) : '',
                 array_key_exists('capacity_total', $row) && $row['capacity_total'] !== null ? (int) $row['capacity_total'] : -1,
@@ -1000,19 +815,11 @@ final class ISS_Occurrences_Service
             }
         }
 
-        if (!empty($filters['entity_ids'])) {
-            $placeholders = implode(', ', array_fill(0, count($filters['entity_ids']), '%d'));
-            $where[] = "o.entity_id IN ({$placeholders})";
-            foreach ($filters['entity_ids'] as $entity_id) {
-                $values[] = (int) $entity_id;
-            }
-        }
-
-        if (!empty($filters['location_entity_ids'])) {
-            $placeholders = implode(', ', array_fill(0, count($filters['location_entity_ids']), '%d'));
-            $where[] = "o.location_entity_id IN ({$placeholders})";
-            foreach ($filters['location_entity_ids'] as $location_entity_id) {
-                $values[] = (int) $location_entity_id;
+        if (!empty($filters['location_post_ids'])) {
+            $placeholders = implode(', ', array_fill(0, count($filters['location_post_ids']), '%d'));
+            $where[] = "o.location_post_id IN ({$placeholders})";
+            foreach ($filters['location_post_ids'] as $location_post_id) {
+                $values[] = (int) $location_post_id;
             }
         }
 
@@ -1024,10 +831,16 @@ final class ISS_Occurrences_Service
         $order = $filters['order'] === 'DESC' ? 'DESC' : 'ASC';
         $limit = (int) $filters['limit'];
         $offset = max(0, (int) $filters['offset']);
+        $where_sql = implode(' AND ', $where);
+
+        if ($filters['group_recurring']) {
+            return $this->query_grouped($filters, $where_sql, $values, $order);
+        }
+
         $order_values = [];
         $order_sql = $this->build_order_by($filters, $order, $order_values);
 
-        $sql = "SELECT o.* FROM {$table} o WHERE " . implode(' AND ', $where) . " ORDER BY {$order_sql}";
+        $sql = "SELECT o.* FROM {$table} o WHERE {$where_sql} ORDER BY {$order_sql}";
         foreach ($order_values as $order_value) {
             $values[] = $order_value;
         }
@@ -1044,6 +857,79 @@ final class ISS_Occurrences_Service
         $rows = is_array($rows) ? $rows : [];
 
         return array_values(array_map([$this, 'format_timeline_row'], $rows));
+    }
+
+    private function query_grouped(array $filters, string $where_sql, array $values, string $order): array
+    {
+        global $wpdb;
+
+        $table = $this->get_occurrences_table_name();
+        $limit = (int) $filters['limit'];
+        $offset = max(0, (int) $filters['offset']);
+        $group_key_sql = $this->build_group_key_sql($filters);
+        $group_values = $values;
+        $group_sql = "SELECT {$group_key_sql} AS group_key, MIN(o.starts_at) AS group_start, MIN(o.id) AS first_id, COUNT(*) AS row_count
+            FROM {$table} o
+            WHERE {$where_sql}
+            GROUP BY group_key
+            ORDER BY group_start {$order}, first_id {$order}";
+
+        if ($limit > 0) {
+            $group_sql .= ' LIMIT %d OFFSET %d';
+            $group_values[] = $limit;
+            $group_values[] = $offset;
+        } elseif ($offset > 0) {
+            $group_sql .= ' LIMIT 18446744073709551615 OFFSET %d';
+            $group_values[] = $offset;
+        }
+
+        $group_rows = $wpdb->get_results($wpdb->prepare($group_sql, $group_values), ARRAY_A);
+        $group_rows = is_array($group_rows) ? $group_rows : [];
+        $group_keys = array_values(array_filter(array_map(static function (array $row): string {
+            return trim((string) ($row['group_key'] ?? ''));
+        }, $group_rows)));
+
+        if (empty($group_keys)) {
+            return [];
+        }
+
+        $row_values = $values;
+        $key_placeholders = implode(', ', array_fill(0, count($group_keys), '%s'));
+        foreach ($group_keys as $group_key) {
+            $row_values[] = $group_key;
+        }
+
+        $row_sql = "SELECT o.*, {$group_key_sql} AS _occurrence_group_key
+            FROM {$table} o
+            WHERE {$where_sql}
+              AND {$group_key_sql} IN ({$key_placeholders})
+            ORDER BY o.starts_at {$order}, o.id {$order}";
+        $rows = $wpdb->get_results($wpdb->prepare($row_sql, $row_values), ARRAY_A);
+        $rows = is_array($rows) ? $rows : [];
+
+        $rows_by_group = [];
+        foreach ($rows as $row) {
+            $group_key = trim((string) ($row['_occurrence_group_key'] ?? ''));
+            if ($group_key === '') {
+                continue;
+            }
+            $formatted = $this->format_timeline_row($row);
+            $formatted['_occurrence_group_key'] = $group_key;
+            $rows_by_group[$group_key][] = $formatted;
+        }
+
+        $results = [];
+        foreach ($group_keys as $group_key) {
+            $rows_for_group = $rows_by_group[$group_key] ?? [];
+            if (empty($rows_for_group)) {
+                continue;
+            }
+            foreach ($this->group_recurring_tour_rows($rows_for_group, $filters) as $row) {
+                $results[] = $this->strip_internal_group_key($row);
+            }
+        }
+
+        return $results;
     }
 
     public function normalize_datetime(string $value, bool $date_end = false): string
@@ -1092,11 +978,8 @@ final class ISS_Occurrences_Service
         $source_post_ids = isset($filters['source_post_ids']) && is_array($filters['source_post_ids'])
             ? array_values(array_unique(array_filter(array_map('intval', $filters['source_post_ids']))))
             : [];
-        $entity_ids = isset($filters['entity_ids']) && is_array($filters['entity_ids'])
-            ? array_values(array_unique(array_filter(array_map('intval', $filters['entity_ids']))))
-            : [];
-        $location_entity_ids = isset($filters['location_entity_ids']) && is_array($filters['location_entity_ids'])
-            ? array_values(array_unique(array_filter(array_map('intval', $filters['location_entity_ids']))))
+        $location_post_ids = isset($filters['location_post_ids']) && is_array($filters['location_post_ids'])
+            ? array_values(array_unique(array_filter(array_map('intval', $filters['location_post_ids']))))
             : [];
 
         $taxonomy_ids = $this->resolve_source_ids_for_taxonomy_filters($filters);
@@ -1122,11 +1005,125 @@ final class ISS_Occurrences_Service
                 ? array_values(array_unique(array_filter(array_map('sanitize_key', $filters['post_types']))))
                 : [],
             'source_post_ids' => $source_post_ids,
-            'entity_ids' => $entity_ids,
-            'location_entity_ids' => $location_entity_ids,
+            'location_post_ids' => $location_post_ids,
             'origin' => isset($filters['origin']) ? sanitize_key((string) $filters['origin']) : '',
             'tag' => isset($filters['tag']) ? strtoupper(sanitize_text_field((string) $filters['tag'])) : '',
+            'group_recurring' => !empty($filters['group_recurring']),
+            'group_recurring_by_month' => !empty($filters['group_recurring_by_month']),
         ];
+    }
+
+    private function build_group_key_sql(array $filters): string
+    {
+        $base = "CASE
+            WHEN o.kind = 'tour' AND o.series_id > 0 THEN CONCAT('series-id:', o.series_id)
+            WHEN o.kind = 'tour' AND o.series_key <> '' THEN CONCAT('series:', o.series_key)
+            WHEN o.kind = 'tour' AND o.source_post_id > 0 THEN CONCAT('source:', o.source_post_id)
+            ELSE CONCAT('item:', o.id)
+        END";
+
+        if (!empty($filters['group_recurring_by_month'])) {
+            return "CONCAT(({$base}), '|month:', DATE_FORMAT(o.starts_at, '%Y-%m'))";
+        }
+
+        return $base;
+    }
+
+    private function group_recurring_tour_rows(array $rows, array $filters): array
+    {
+        if (empty($rows)) {
+            return [];
+        }
+
+        $grouped_rows = [];
+        $group_indexes = [];
+
+        foreach ($rows as $row) {
+            if (!is_array($row) || !$this->is_groupable_tour_row($row)) {
+                $grouped_rows[] = $row;
+                continue;
+            }
+
+            $group_key = $this->get_row_group_key($row, $filters);
+            if ($group_key === '' || !isset($group_indexes[$group_key])) {
+                $row['occurrences'] = [$row];
+                $group_indexes[$group_key] = count($grouped_rows);
+                $grouped_rows[] = $row;
+                continue;
+            }
+
+            $target_index = $group_indexes[$group_key];
+            if (empty($grouped_rows[$target_index]['occurrences']) || !is_array($grouped_rows[$target_index]['occurrences'])) {
+                $grouped_rows[$target_index]['occurrences'] = [$grouped_rows[$target_index]];
+            }
+            $grouped_rows[$target_index]['occurrences'][] = $row;
+        }
+
+        foreach ($grouped_rows as &$row) {
+            if (!is_array($row) || empty($row['occurrences']) || !is_array($row['occurrences'])) {
+                continue;
+            }
+
+            $occurrences = array_values(array_filter($row['occurrences'], 'is_array'));
+            if (count($occurrences) <= 1) {
+                unset($row['occurrences']);
+                continue;
+            }
+
+            $row['grouped'] = true;
+            $row['occurrences'] = $occurrences;
+            $row['occurrence_count'] = count($occurrences);
+        }
+        unset($row);
+
+        return $grouped_rows;
+    }
+
+    private function strip_internal_group_key(array $row): array
+    {
+        unset($row['_occurrence_group_key']);
+
+        if (!empty($row['occurrences']) && is_array($row['occurrences'])) {
+            $row['occurrences'] = array_values(array_map(function ($occurrence): array {
+                return is_array($occurrence) ? $this->strip_internal_group_key($occurrence) : [];
+            }, $row['occurrences']));
+        }
+
+        return $row;
+    }
+
+    private function is_groupable_tour_row(array $row): bool
+    {
+        return $this->normalize_kind((string) ($row['type'] ?? '')) === 'tour';
+    }
+
+    private function get_row_group_key(array $row, array $filters): string
+    {
+        $series_id = (int) ($row['series_id'] ?? 0);
+        $series_key = trim((string) ($row['series_key'] ?? ''));
+        $source_post_id = (int) ($row['source_post_id'] ?? 0);
+
+        if ($series_id > 0) {
+            $base_key = 'series-id:' . $series_id;
+        } elseif ($series_key !== '') {
+            $base_key = 'series:' . $series_key;
+        } elseif ($source_post_id > 0) {
+            $base_key = 'source:' . $source_post_id;
+        } else {
+            $item_id = (int) ($row['id'] ?? 0);
+            $base_key = $item_id > 0 ? 'item:' . $item_id : '';
+        }
+
+        if ($base_key === '' || empty($filters['group_recurring_by_month'])) {
+            return $base_key;
+        }
+
+        $start_raw = trim((string) ($row['start_raw'] ?? ''));
+        if (!preg_match('/^\d{4}-\d{2}/', $start_raw, $matches)) {
+            return $base_key;
+        }
+
+        return $base_key . '|month:' . $matches[0];
     }
 
     private function build_order_by(array $filters, string $order, array &$values): string
@@ -1475,7 +1472,6 @@ final class ISS_Occurrences_Service
 
         return [
             'id' => isset($row['id']) ? (int) $row['id'] : 0,
-            'entity_id' => isset($row['entity_id']) ? (int) $row['entity_id'] : 0,
             'title' => $title,
             'start_raw' => $starts_at,
             'date_raw' => $starts_at,
@@ -1485,6 +1481,7 @@ final class ISS_Occurrences_Service
             'datetime_label' => $datetime_label,
             'end_raw' => $ends_at,
             'type' => isset($row['kind']) ? sanitize_key((string) $row['kind']) : '',
+            'series_id' => isset($row['series_id']) ? (int) $row['series_id'] : 0,
             'series_key' => trim((string) ($row['series_key'] ?? '')),
             'summary' => $summary,
             'cta_mode' => 'details',
@@ -1495,7 +1492,7 @@ final class ISS_Occurrences_Service
             'slot_start' => $starts_at,
             'source_post_id' => $source_post_id,
             'source_post_type' => $source_post_type,
-            'location_entity_id' => isset($row['location_entity_id']) ? (int) $row['location_entity_id'] : 0,
+            'location_post_id' => isset($row['location_post_id']) ? (int) $row['location_post_id'] : 0,
             'location_label' => isset($row['location_label']) ? (string) $row['location_label'] : '',
             'date_source' => isset($row['date_source']) ? sanitize_key((string) $row['date_source']) : '',
             'availability' => isset($row['availability_state']) ? sanitize_key((string) $row['availability_state']) : '',

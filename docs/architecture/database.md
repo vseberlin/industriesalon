@@ -6,6 +6,7 @@ WordPress posts, post meta, terms, and `WP_Query` are the default model for norm
 
 - `iss-graph`: entity index, entity names, entity identifiers, entity evidence references, entity relations, editorial relation signals, search index, person facts, and organization facts.
 - `iss-occurrences`: public programme occurrence projection and recurrence series for indexed calendar/timeline queries.
+- `iss-payments-lite`: lightweight public booking/order request intake for dev and low-volume operational handling.
 - `iss-wf-import`: archive objects, archive collections, collection members, assertions, evidence, and source snapshots.
 
 See `source-of-truth.md` before deciding which storage layer is canonical for a surface.
@@ -14,13 +15,18 @@ Programme calendar/timeline queries are served from `iss-occurrences`. The old
 hidden `iss_calendar_item` post type is not an active storage or query layer.
 WordPress source posts enter the occurrence projection only through explicit
 `iss_timeline_enabled` opt-in meta; missing toggle meta means hidden.
-Public occurrence rows store `entity_id` and `location_entity_id` when a graph
-entity exists, so graph/search/relation features can join on stable identity
-without making the calendar renderer query graph tables. `source_post_id` and
-`source_post_type` remain the sync, delete, and editor-routing source metadata.
+Public occurrence rows depend on `source_post_id` and `source_post_type` for
+calendar identity, sync, delete, and editor routing. Occurrence rows must not
+store graph IDs; graph-facing routes translate entity requests to source post
+filters at the facade boundary.
 Legacy programme meta/options such as `iss_timeline_item_id`,
 `iss_exhibition_source`, `iss_exhibition_type`, `_iss_legacy_archive_term_slug`,
-and `iss_calendar_*` mapping options are invalid drift, not compatibility inputs.
+`iss_is_permanent`, and `iss_calendar_*` mapping options are invalid drift, not
+compatibility inputs.
+
+Payments-lite request rows are stored in `wp_iss_payments_lite_requests`.
+The old capped `is_tours_booking_requests` and `iss_publication_order_requests`
+options are migration inputs only and are deleted after schema install.
 
 ## Rules
 

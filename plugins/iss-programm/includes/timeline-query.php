@@ -191,6 +191,8 @@ function iss_timeline_normalize_filter_payload($args = []) {
         'source_post_ids' => $source_post_ids,
         'source_taxonomy_filters' => iss_timeline_normalize_source_taxonomy_filters($filters['taxonomy_filters'] ?? []),
         'include_running_ranges' => !array_key_exists('include_running_ranges', $filters) || (bool) $filters['include_running_ranges'],
+        'group_recurring' => !empty($args['group_recurring']),
+        'group_recurring_by_month' => !empty($args['group_recurring_by_month']),
     ];
 }
 

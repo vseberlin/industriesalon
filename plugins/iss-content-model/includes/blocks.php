@@ -161,7 +161,9 @@ function iss_content_model_get_meta_rows_for_post($post_id, array $options = [])
         $end = iss_content_model_format_date(get_post_meta($post_id, 'iss_end_date', true));
         $type_terms = iss_content_model_get_term_name_list($post_id, ISS_CONTENT_MODEL_AUSSTELLUNG_TYPE_TAXONOMY);
         $collection_terms = iss_content_model_get_term_name_list($post_id, ISS_CONTENT_MODEL_COLLECTION_AREA_TAXONOMY);
-        $is_permanent = !empty(get_post_meta($post_id, 'iss_is_permanent', true));
+        $is_permanent = function_exists('iss_content_model_ausstellung_is_permanent')
+            ? iss_content_model_ausstellung_is_permanent($post_id)
+            : false;
 
         if (!empty($type_terms)) {
             $rows[] = ['label' => __('Typ', 'iss-content-model'), 'value' => implode(', ', $type_terms)];

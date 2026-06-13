@@ -712,12 +712,7 @@ function iss_supersaas_sync_occurrences() {
             continue;
         }
 
-        $entity_id = method_exists($service, 'resolve_graph_entity_id_for_post')
-            ? $service->resolve_graph_entity_id_for_post($source_post_id, true)
-            : 0;
-
         $occurrence_id = $service->upsert_occurrence([
-            'entity_id' => $entity_id,
             'source_post_id' => $source_post_id,
             'source_post_type' => 'fuehrung',
             'kind' => 'tour',

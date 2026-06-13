@@ -1784,7 +1784,9 @@ function iss_graph_wpcli_facade_entity_occurrence_direct_response(int $entity_id
     }
 
     $filters = iss_facade_rest_occurrence_filters_from_request($request);
-    $filters['entity_ids'] = [$entity_id];
+    $filters['source_post_ids'] = function_exists('iss_facade_rest_entity_source_post_ids')
+        ? (iss_facade_rest_entity_source_post_ids($entity_id) ?: [-1])
+        : [-1];
 
     return iss_facade_rest_get_occurrences_response($filters, $entity_id);
 }

@@ -229,8 +229,26 @@ function is_tours_register_public_slot_routes() {
 }
 add_action('rest_api_init', 'is_tours_register_public_slot_routes');
 
+function is_tours_public_rate_limit_response(string $scope, int $limit = 60, int $window = 10 * MINUTE_IN_SECONDS): ?WP_REST_Response {
+    $ip = isset($_SERVER['REMOTE_ADDR']) ? sanitize_text_field((string) $_SERVER['REMOTE_ADDR']) : '';
+    $key = 'is_tours_rate_' . md5($scope . '|' . $ip);
+    $count = (int) get_transient($key);
+    if ($count >= $limit) {
+        $res = new WP_REST_Response(['source' => 'rate_limited', 'slots' => []], 429);
+        $res->header('Cache-Control', 'no-store');
+        return $res;
+    }
+
+    set_transient($key, $count + 1, $window);
+    return null;
+}
 
 function is_tours_get_slots(WP_REST_Request $request) {
+    $rate_limited = is_tours_public_rate_limit_response('tour-slots');
+    if ($rate_limited instanceof WP_REST_Response) {
+        return $rate_limited;
+    }
+
     $tag = strtoupper(sanitize_text_field($request->get_param('tag')));
     $source_post_id = (int) $request->get_param('post_id');
 

@@ -21,7 +21,6 @@ if (defined('WP_CLI') && WP_CLI) {
 
             $public_rows = $service->public_row_count();
             \WP_CLI::log(sprintf('public_occurrences=%d', $public_rows));
-            \WP_CLI::log(sprintf('public_graph_occurrences=%d', $service->public_graph_link_count()));
 
             if (!empty($errors)) {
                 \WP_CLI::error_multi_line($errors);
@@ -41,15 +40,14 @@ if (defined('WP_CLI') && WP_CLI) {
                 $result = iss_occurrences_sync_all();
                 $supersaas = is_array($result['supersaas'] ?? null) ? $result['supersaas'] : [];
                 \WP_CLI::success(sprintf(
-                    'Synced occurrences: sources=%d supersaas_created=%d supersaas_updated=%d supersaas_unlinked=%d supersaas_inactivated=%d supersaas_backfilled=%d supersaas_errors=%d graph_backfilled=%d.',
+                    'Synced occurrences: sources=%d supersaas_created=%d supersaas_updated=%d supersaas_unlinked=%d supersaas_inactivated=%d supersaas_backfilled=%d supersaas_errors=%d.',
                     (int) $result['sources'],
                     (int) ($supersaas['created'] ?? 0),
                     (int) ($supersaas['updated'] ?? 0),
                     (int) ($supersaas['skipped_unlinked'] ?? 0),
                     (int) ($supersaas['inactivated'] ?? 0),
                     (int) ($supersaas['metadata_backfilled'] ?? 0),
-                    (int) ($supersaas['errors'] ?? 0),
-                    (int) ($result['graph_backfilled'] ?? 0)
+                    (int) ($supersaas['errors'] ?? 0)
                 ));
                 return;
             }
@@ -103,15 +101,6 @@ if (defined('WP_CLI') && WP_CLI) {
             $this->sync($args, ['source' => 'all']);
         }
 
-        public function backfill_graph(array $args, array $assoc_args): void
-        {
-            $service = iss_occurrences_get_service();
-            $service->maybe_install_schema();
-            $updated = $service->backfill_graph_entities();
-
-            \WP_CLI::success(sprintf('Backfilled graph identity for %d occurrence row(s).', $updated));
-        }
-
         public function drift_check(array $args, array $assoc_args): void
         {
             global $wpdb;
@@ -122,11 +111,6 @@ if (defined('WP_CLI') && WP_CLI) {
             $series_table = $service->get_series_table_name();
             $limit = isset($assoc_args['limit']) ? max(1, (int) $assoc_args['limit']) : 50;
             $errors = [];
-            $graph_available = function_exists('iss_graph_get_entity_for_post') || function_exists('iss_graph_get_or_create_entity_for_post');
-            if (!$graph_available) {
-                $errors[] = 'Graph entity resolver is unavailable for occurrence identity checks.';
-            }
-
             $rows = $wpdb->get_results(
                 $wpdb->prepare(
                     "SELECT * FROM {$table} WHERE visibility = %s AND status = %s ORDER BY starts_at ASC, id ASC",
@@ -159,9 +143,7 @@ if (defined('WP_CLI') && WP_CLI) {
                 $source_post_type = sanitize_key((string) ($row['source_post_type'] ?? ''));
                 $origin = sanitize_key((string) ($row['origin'] ?? ''));
                 $kind = sanitize_key((string) ($row['kind'] ?? ''));
-                $entity_id = (int) ($row['entity_id'] ?? 0);
                 $location_post_id = (int) ($row['location_post_id'] ?? 0);
-                $location_entity_id = (int) ($row['location_entity_id'] ?? 0);
 
                 $post = $source_post_id > 0 ? get_post($source_post_id) : null;
                 if (!$post instanceof WP_Post) {
@@ -181,26 +163,8 @@ if (defined('WP_CLI') && WP_CLI) {
                     $errors[] = sprintf('#%d tour source is not fuehrung.', $occurrence_id);
                 }
 
-                if ($graph_available) {
-                    $expected_entity_id = $service->resolve_graph_entity_id_for_post($source_post_id, false);
-                    if ($expected_entity_id <= 0) {
-                        $errors[] = sprintf('#%d source #%d has no graph entity.', $occurrence_id, $source_post_id);
-                    } elseif ($entity_id <= 0) {
-                        $errors[] = sprintf('#%d is missing entity_id for source #%d graph entity #%d.', $occurrence_id, $source_post_id, $expected_entity_id);
-                    } elseif ($entity_id !== $expected_entity_id) {
-                        $errors[] = sprintf('#%d entity_id mismatch stored=%d expected=%d.', $occurrence_id, $entity_id, $expected_entity_id);
-                    }
-
-                    if ($location_post_id > 0) {
-                        $expected_location_entity_id = $service->resolve_graph_entity_id_for_post($location_post_id, false);
-                        if ($expected_location_entity_id <= 0) {
-                            $errors[] = sprintf('#%d location post #%d has no graph entity.', $occurrence_id, $location_post_id);
-                        } elseif ($location_entity_id <= 0) {
-                            $errors[] = sprintf('#%d is missing location_entity_id for location post #%d graph entity #%d.', $occurrence_id, $location_post_id, $expected_location_entity_id);
-                        } elseif ($location_entity_id !== $expected_location_entity_id) {
-                            $errors[] = sprintf('#%d location_entity_id mismatch stored=%d expected=%d.', $occurrence_id, $location_entity_id, $expected_location_entity_id);
-                        }
-                    }
+                if ($location_post_id > 0 && !(get_post($location_post_id) instanceof WP_Post)) {
+                    $errors[] = sprintf('#%d points to missing location_post_id=%d.', $occurrence_id, $location_post_id);
                 }
 
                 if ($origin === 'wp'
@@ -350,7 +314,7 @@ if (defined('WP_CLI') && WP_CLI) {
             }
 
             $legacy_meta_rows = $wpdb->get_results(
-                "SELECT meta_key, COUNT(*) AS row_count FROM {$wpdb->postmeta} WHERE meta_key IN ('iss_timeline_item_id', '_iss_legacy_archive_term_slug', 'iss_archive_term_slug', 'iss_exhibition_source', 'iss_exhibition_type') GROUP BY meta_key ORDER BY meta_key ASC",
+                "SELECT meta_key, COUNT(*) AS row_count FROM {$wpdb->postmeta} WHERE meta_key IN ('iss_timeline_item_id', '_iss_legacy_archive_term_slug', 'iss_archive_term_slug', 'iss_exhibition_source', 'iss_exhibition_type', 'iss_is_permanent') GROUP BY meta_key ORDER BY meta_key ASC",
                 ARRAY_A
             );
             foreach ((array) $legacy_meta_rows as $meta_row) {
@@ -376,5 +340,4 @@ if (defined('WP_CLI') && WP_CLI) {
     \WP_CLI::add_command('iss-occurrences', 'ISS_Occurrences_CLI_Command');
     \WP_CLI::add_command('iss-occurrences drift-check', ['ISS_Occurrences_CLI_Command', 'drift_check']);
     \WP_CLI::add_command('iss-occurrences backfill-occurrences', ['ISS_Occurrences_CLI_Command', 'backfill_occurrences']);
-    \WP_CLI::add_command('iss-occurrences backfill-graph', ['ISS_Occurrences_CLI_Command', 'backfill_graph']);
 }

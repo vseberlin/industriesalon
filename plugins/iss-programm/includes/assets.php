@@ -131,7 +131,8 @@ function iss_programm_register_frontend_assets() {
     wp_add_inline_script(
         'is-tour-calendar',
         'window.IS_TOUR_CALENDAR = Object.assign({}, window.IS_TOUR_CALENDAR, {' .
-        '"bookUrl": ' . wp_json_encode(function_exists('iss_frontend_rest_url') ? iss_frontend_rest_url('is-tours/v1/book') : rest_url('is-tours/v1/book')) .
+        '"bookUrl": ' . wp_json_encode(function_exists('iss_frontend_rest_url') ? iss_frontend_rest_url('is-tours/v1/book') : rest_url('is-tours/v1/book')) . ',' .
+        '"nonce": ' . wp_json_encode(wp_create_nonce('wp_rest')) .
         '});',
         'after'
     );

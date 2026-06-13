@@ -61,6 +61,59 @@ function iss_facade_rest_get_post_url(int $post_id): string
     return (string) get_permalink($post);
 }
 
+function iss_facade_rest_entity_source_post_ids(int $entity_id): array
+{
+    $entity_id = absint($entity_id);
+    if ($entity_id <= 0 || !function_exists('iss_graph_get_service')) {
+        return [];
+    }
+
+    $entity = iss_graph_get_service()->get_entity_by_id($entity_id);
+    if (!$entity || !iss_facade_rest_entity_is_public($entity)) {
+        return [];
+    }
+
+    $post_ids = [];
+    foreach (['post_id', 'profile_post_id'] as $field) {
+        $post_id = absint($entity[$field] ?? 0);
+        if ($post_id > 0 && iss_facade_rest_get_post_url($post_id) !== '') {
+            $post_ids[] = $post_id;
+        }
+    }
+
+    return array_values(array_unique($post_ids));
+}
+
+function iss_facade_rest_public_entity_id_for_post(int $post_id): int
+{
+    $post_id = absint($post_id);
+    if ($post_id <= 0 || !function_exists('iss_graph_get_entity_for_post')) {
+        return 0;
+    }
+
+    $entity = iss_graph_get_entity_for_post($post_id);
+    if (!is_array($entity) || !iss_facade_rest_entity_is_public($entity)) {
+        return 0;
+    }
+
+    return absint($entity['id'] ?? 0);
+}
+
+function iss_facade_rest_merge_id_filter(array $existing_ids, array $incoming_ids): array
+{
+    $incoming_ids = array_values(array_unique(array_filter(array_map('absint', $incoming_ids))));
+    if (empty($incoming_ids)) {
+        return array_values(array_unique(array_filter(array_map('absint', $existing_ids))));
+    }
+
+    $existing_ids = array_values(array_unique(array_filter(array_map('absint', $existing_ids))));
+    if (empty($existing_ids)) {
+        return $incoming_ids;
+    }
+
+    return array_values(array_intersect($existing_ids, $incoming_ids));
+}
+
 function iss_facade_rest_entity_is_public(array $entity): bool
 {
     if (empty($entity['is_public'])) {
@@ -472,11 +525,12 @@ function iss_facade_rest_prepare_occurrence(array $occurrence): array
 {
     $source_post_id = absint($occurrence['source_post_id'] ?? 0);
     $source_post_type = sanitize_key((string) ($occurrence['source_post_type'] ?? ''));
+    $location_post_id = absint($occurrence['location_post_id'] ?? 0);
     $contract = iss_facade_rest_get_public_contract_payload_for_post($source_post_id);
 
     return [
         'id' => (int) ($occurrence['id'] ?? 0),
-        'entity_id' => (int) ($occurrence['entity_id'] ?? 0),
+        'entity_id' => iss_facade_rest_public_entity_id_for_post($source_post_id),
         'kind' => sanitize_key((string) ($occurrence['type'] ?? $occurrence['kind'] ?? '')),
         'contract_kind' => sanitize_key((string) ($contract['kind'] ?? 'occurrence')),
         'subtype' => sanitize_key((string) ($contract['subtype'] ?? '')),
@@ -502,7 +556,8 @@ function iss_facade_rest_prepare_occurrence(array $occurrence): array
             'url' => iss_facade_rest_get_post_url($source_post_id),
         ],
         'location' => [
-            'entity_id' => (int) ($occurrence['location_entity_id'] ?? 0),
+            'post_id' => $location_post_id,
+            'entity_id' => iss_facade_rest_public_entity_id_for_post($location_post_id),
             'label' => (string) ($occurrence['location_label'] ?? ''),
         ],
         'schema' => [
@@ -535,19 +590,38 @@ function iss_facade_rest_occurrence_filters_from_request(WP_REST_Request $reques
         $filters['post_types'] = $post_types;
     }
 
+    $source_post_ids = iss_facade_rest_int_list($request->get_param('source_post_id') ?: $request->get_param('source_post_ids') ?: '');
+    if ($source_post_ids) {
+        $filters['source_post_ids'] = $source_post_ids;
+    }
+
     $entity_ids = iss_facade_rest_int_list($request->get_param('entity_id') ?: $request->get_param('entity_ids') ?: '');
     if ($entity_ids) {
-        $filters['entity_ids'] = $entity_ids;
+        $entity_source_post_ids = [];
+        foreach ($entity_ids as $entity_id) {
+            $entity_source_post_ids = array_merge($entity_source_post_ids, iss_facade_rest_entity_source_post_ids($entity_id));
+        }
+        $filters['source_post_ids'] = iss_facade_rest_merge_id_filter(
+            isset($filters['source_post_ids']) && is_array($filters['source_post_ids']) ? $filters['source_post_ids'] : [],
+            $entity_source_post_ids ?: [-1]
+        );
+    }
+
+    $location_post_ids = iss_facade_rest_int_list($request->get_param('location_post_id') ?: $request->get_param('location_post_ids') ?: '');
+    if ($location_post_ids) {
+        $filters['location_post_ids'] = $location_post_ids;
     }
 
     $location_entity_ids = iss_facade_rest_int_list($request->get_param('location_entity_id') ?: $request->get_param('location_entity_ids') ?: '');
     if ($location_entity_ids) {
-        $filters['location_entity_ids'] = $location_entity_ids;
-    }
-
-    $source_post_ids = iss_facade_rest_int_list($request->get_param('source_post_id') ?: $request->get_param('source_post_ids') ?: '');
-    if ($source_post_ids) {
-        $filters['source_post_ids'] = $source_post_ids;
+        $location_source_post_ids = [];
+        foreach ($location_entity_ids as $location_entity_id) {
+            $location_source_post_ids = array_merge($location_source_post_ids, iss_facade_rest_entity_source_post_ids($location_entity_id));
+        }
+        $filters['location_post_ids'] = iss_facade_rest_merge_id_filter(
+            isset($filters['location_post_ids']) && is_array($filters['location_post_ids']) ? $filters['location_post_ids'] : [],
+            $location_source_post_ids ?: [-1]
+        );
     }
 
     $month = preg_replace('/[^0-9\-]/', '', (string) $request->get_param('month'));
@@ -646,7 +720,7 @@ function iss_facade_rest_list_entity_occurrences(WP_REST_Request $request)
     }
 
     $filters = iss_facade_rest_occurrence_filters_from_request($request);
-    $filters['entity_ids'] = [$entity_id];
+    $filters['source_post_ids'] = iss_facade_rest_entity_source_post_ids($entity_id) ?: [-1];
 
     return rest_ensure_response(iss_facade_rest_get_occurrences_response($filters, $entity_id));
 }

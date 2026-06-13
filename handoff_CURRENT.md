@@ -6,10 +6,14 @@ Current checkpoint only. History belongs in `CHANGELOG.md`; active follow-up bel
 
 ## Current State
 
-- Branch: `main`; backend knowledge-graph refactor checkpoint is closed locally. Push the closeout commit only when explicitly requested.
+- Branch: `main`; backend knowledge-graph refactor checkpoint is closed locally. The occurrence/payment cleanup checkpoint is local-only until explicitly pushed.
 - GitHub repo `vseberlin/industriesalon` is private. `origin/main` currently includes the greenfield refactor slices through the rendered Ausstellung availability browser consumer; this backend closeout checkpoint remains local until pushed.
 - Staging is the current live working target, not a production release gate. If it breaks, it can be rebuilt from Git plus the known SQL/data artifacts.
-- `iss-occurrences` owns occurrence projection; `iss-programm` owns programme/timeline/browser blocks; `saas-api` owns SuperSaaS sync and tour-slot reads; `iss-graph` owns graph/search/contracts; the theme owns public templates/skins.
+- `iss-occurrences` owns occurrence projection; `iss-programm` owns programme/timeline/browser blocks; `saas-api` owns SuperSaaS sync and tour-slot reads; `iss-graph` owns graph/search/contracts; `iss-payments-lite` owns lightweight booking/order request intake; the theme owns public templates/skins.
+- Occurrence rows are source-post keyed only. Schema v7 removes retired `entity_id` and `location_entity_id` columns/indexes; graph-facing occurrence reads translate entity filters to source post filters at the `iss-graph` facade boundary and compute entity IDs on read.
+- Recurring tour grouping now runs inside the `iss-occurrences` query service with paged grouped SQL. `iss-programm` remains a renderer/query consumer and no longer fetches all occurrence rows to group recurring tours in PHP.
+- `iss-content-model/includes/timeline-sync.php` is retired. Ausstellung permanence is read from the editor-owned `ausstellung_typ` taxonomy helper, and retired `iss_is_permanent` meta is cleaned/guarded as drift.
+- `iss-payments-lite` now stores public booking/order requests in `wp_iss_payments_lite_requests`; the old capped `is_tours_booking_requests` and `iss_publication_order_requests` options are migration inputs only.
 - `/wp-json/iss/v1` is the read-only facade boundary. Active public reads are contract, entities, entity detail, entity relations, entity-scoped occurrences, occurrences, search, timeline, availability, and tour-slots.
 - Public consumers already on the facade: header search, timeline query reads, tour-slot reads, and the progressively enhanced Ausstellung availability browser. Booking writes stay on `/is-tours/v1/book`.
 - `/ausstellungen/` uses the dedicated `industriesalon/ausstellungen-browser` and WP_Query availability filters. Dauer/Digital Ausstellungen are availability-only and do not sync into occurrence rows.
@@ -25,7 +29,7 @@ Current checkpoint only. History belongs in `CHANGELOG.md`; active follow-up bel
 - Facade payloads now carry schema intent: occurrence payloads are Event-emitting records, while Ausstellung availability payloads are non-Event CreativeWork availability records.
 - The graph hygiene data artifacts for alias replay, KWO/AEG, and Industriesalon/WF are reviewed and applied locally/staging-side. Local alias replay is clean after sync.
 - `iss-core` remains helper conventions only. `iss-frontend` provides shared frontend helpers consumed by `iss-programm`.
-- No SQL/uploads transfer artifact is required for this checkpoint. SuperSaaS source/series option migration is handled by the `iss-occurrences` schema installer.
+- No SQL/uploads transfer artifact is required for this checkpoint. Occurrence graph-column cleanup, retired occurrence/options cleanup, retired Ausstellung permanent meta cleanup, and payments request-option migration are handled by plugin schema/runtime installers.
 
 ## Current Risk
 
@@ -39,7 +43,7 @@ Current checkpoint only. History belongs in `CHANGELOG.md`; active follow-up bel
 ## Next Action
 
 - UI polish later, especially clean Ausstellung search/filter interaction and public view polish.
-- Push the local closeout commit only when explicitly requested.
+- Push the local cleanup/closeout commit only when explicitly requested.
 
 ## Verified
 
@@ -55,3 +59,4 @@ Current checkpoint only. History belongs in `CHANGELOG.md`; active follow-up bel
 - Current local service-table recurrence resolution verification passed before the metadata-table migration: PHP syntax, PHPCS target, PHPStan target, focused runtime resolver probe, `wp iss-occurrences drift-check --limit=25`, default graph drift, and `git diff --check`.
 - Current local SuperSaaS series/tag source table migration verification passed: PHP syntax, PHPCS target, PHPStan target, schema migration probe, focused runtime resolver/tag probe, `wp iss-occurrences drift-check --limit=25`, `wp iss-fuehrungen drift-check --limit=25`, `wp iss-graph facade-check --limit=2`, `wp iss-graph facade-tour-slots-compare --limit=5`, default graph drift, and `git diff --check`.
 - Current local tour Offer catalog guard verification passed: PHP syntax, PHPCS target, PHPStan target, `wp iss-fuehrungen drift-check --limit=25`, `wp iss-graph facade-check --limit=2`, default graph drift, and `git diff --check`.
+- Current local occurrence/payment cleanup verification passed: PHP syntax, JS syntax, PHPCS target, PHPStan target, `npm run lint:js -- --quiet`, occurrence schema/option/meta/table probes, `wp iss-occurrences verify`, `wp iss-occurrences sync --source=wp`, `wp iss-occurrences drift-check --limit=25`, grouped occurrence query smoke, payments insert/cleanup probe, REST route registration probe, `wp iss-graph facade-check --limit=2`, `wp iss-graph facade-occurrences-compare --limit=5`, `wp iss-graph facade-entity-occurrences-compare --limit=5`, and `git diff --check`.

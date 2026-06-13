@@ -116,9 +116,6 @@
 
       editPost({
         ausstellung_typ: [term.id],
-        meta: Object.assign({}, meta, {
-          iss_is_permanent: slug === 'dauerausstellung',
-        }),
       });
     }
 
