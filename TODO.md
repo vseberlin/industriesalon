@@ -34,7 +34,9 @@ Immediate executable work only. Larger future programs live in `docs/project/bac
   - offer bridge staging validation is green: additive `/iss/v1` `contract_kind` / `subtype`, `public-object-contract`, `facade-check`, and `facade-entities-compare` passed per operator report
   - entity-relations facade staging validation is green: `entity-relations-contract`, `facade-check`, and `facade-entity-relations-compare` passed per operator report
   - graph editorial signal controls and `/iss/v1/search` smoke test are green on staging; `editorial-signals` drift and default graph drift passed per operator report
-  - after the availability facade slice is pulled on staging, run `wp iss-graph drift-check --checks=availability-contract --limit=25`, `wp iss-graph facade-check --limit=2`, `wp iss-graph facade-availability-compare --limit=5`, and `wp iss-programm ausstellungen-audit --strict`
+  - availability facade staging validation is partly green: `availability-contract`, `facade-check`, and `facade-availability-compare` passed per operator report
+  - resolve the remaining staging data blocker by applying `ops/sql/2026-06-13-staging-untyped-ausstellungen-cleanup.sql`, then rerun `wp iss-programm ausstellungen-audit --strict`
+  - if editors intentionally want those seven Ausstellung posts public, do not apply the cleanup artifact; assign real `ausstellung_typ` terms and dates first, then rerun the strict audit
   - keep WordPress CPTs as the editor shell; do not rename `fuehrung` / `veranstaltung` or change public templates for the bridge
   - no availability consumer has been switched yet; treat `/iss/v1/availability` as a staged read contract until validated
 - 2026-06-07: Review the 3 pending `video_transcript` evidence refs in Video CPT editors and accept/dismiss them after the graph entity hygiene audit exists.
