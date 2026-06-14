@@ -65,3 +65,4 @@ function iss_frontend_register_datepicker_assets(
 }
 
 require_once ISS_FRONTEND_PATH . 'modules/programme/bootstrap.php';
+require_once ISS_FRONTEND_PATH . 'modules/editorial/bootstrap.php';

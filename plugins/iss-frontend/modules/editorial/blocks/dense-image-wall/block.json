@@ -1,0 +1,32 @@
+{
+  "$schema": "https://schemas.wp.org/trunk/block.json",
+  "apiVersion": 3,
+  "name": "iss/dense-image-wall",
+  "title": "Dense Image Wall",
+  "category": "widgets",
+  "icon": "grid-view",
+  "description": "Editorial image wall with free-form composition and locked annotation editing.",
+  "supports": {
+    "html": false,
+    "align": ["wide", "full"]
+  },
+  "attributes": {
+    "columns": {
+      "type": "number",
+      "default": 4
+    },
+    "rowHeight": {
+      "type": "number",
+      "default": 118
+    },
+    "editMode": {
+      "type": "string",
+      "default": "compose"
+    },
+    "items": {
+      "type": "array",
+      "default": []
+    }
+  }
+}
+

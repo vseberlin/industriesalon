@@ -717,5 +717,10 @@ function resolveBookingWidget(trigger) {
     }
   }
 
+  const sharedModal = document.querySelector('[data-shared-tour-calendar-modal="1"]');
+  if (sharedModal) {
+    return sharedModal;
+  }
+
   return document.querySelector('.is-tour-calendar');
 }

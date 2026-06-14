@@ -131,6 +131,7 @@ function iss_fuehrung_render_booking_box($post_id) {
             $slot_title = trim((string) ($next_event['title'] ?? get_the_title($post_id)));
         }
         $is_slot_trigger = ($slot_id !== '' && $slot_start !== '');
+        $should_enqueue_calendar_assets = false;
 
         echo '<h2 class="iss-fuehrung-booking__title">Nächster Termin</h2>';
         echo '<p class="iss-fuehrung-next-date">' . esc_html($date_label) . '</p>';
@@ -148,6 +149,7 @@ function iss_fuehrung_render_booking_box($post_id) {
             $button_classes = 'wp-element-button';
             if ($is_slot_trigger) {
                 $button_classes .= ' js-is-tour-slot-trigger';
+                $should_enqueue_calendar_assets = true;
             }
 
             $button_attrs = '';
@@ -170,6 +172,10 @@ function iss_fuehrung_render_booking_box($post_id) {
 
         if ($mode === 'hybrid' && $inquiry_note !== '') {
             echo '<p class="iss-fuehrung-booking__note">' . esc_html($inquiry_note) . '</p>';
+        }
+
+        if ($should_enqueue_calendar_assets && function_exists('iss_programm_enqueue_calendar_assets')) {
+            iss_programm_enqueue_calendar_assets();
         }
     } else {
         if ($mode === 'hybrid') {

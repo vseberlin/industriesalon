@@ -252,6 +252,7 @@ function iss_programm_render_tour_dates($attributes = [], $content = '') {
     $out = '<div ' . $attrs . '>';
     $out .= '<h3 class="iss-tour-dates__title">' . esc_html($title) . '</h3>';
     $out .= '<ul class="iss-tour-dates">';
+    $has_slot_trigger = false;
 
     foreach ($items as $item) {
         if (!is_array($item)) {
@@ -301,6 +302,7 @@ function iss_programm_render_tour_dates($attributes = [], $content = '') {
                 $link_attrs .= ' data-title="' . esc_attr($slot_title) . '"';
                 $link_attrs .= ' data-source-post-id="' . esc_attr((string) $post_id) . '"';
                 $link_attrs .= ' data-source-post-type="' . esc_attr($post_type) . '"';
+                $has_slot_trigger = true;
             }
 
             $out .= ' <a class="' . esc_attr($link_classes) . '" href="' . esc_url($booking_url) . '"' . $link_attrs . '>';
@@ -309,6 +311,10 @@ function iss_programm_render_tour_dates($attributes = [], $content = '') {
         }
 
         $out .= '</li>';
+    }
+
+    if ($has_slot_trigger && function_exists('iss_programm_enqueue_calendar_assets')) {
+        iss_programm_enqueue_calendar_assets();
     }
 
     $out .= '</ul></div>';

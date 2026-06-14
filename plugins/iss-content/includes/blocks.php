@@ -15,6 +15,13 @@ function iss_content_model_register_blocks() {
             'render_callback' => 'iss_content_model_render_meta_block',
         ]);
     }
+
+    $project_status_dir = ISS_CONTENT_MODEL_PATH . 'blocks/project-status';
+    if (file_exists($project_status_dir . '/block.json')) {
+        register_block_type($project_status_dir, [
+            'render_callback' => 'iss_content_model_render_project_status_block',
+        ]);
+    }
 }
 add_action('init', 'iss_content_model_register_blocks');
 
@@ -82,6 +89,86 @@ function iss_content_model_format_date($value) {
     } catch (Throwable $e) {
         return $value;
     }
+}
+
+function iss_content_model_parse_iso_date($value): ?DateTimeImmutable
+{
+    $value = trim((string) $value);
+    if ($value === '') {
+        return null;
+    }
+
+    $dt = DateTimeImmutable::createFromFormat('!Y-m-d', $value, wp_timezone());
+    if (!$dt instanceof DateTimeImmutable || $dt->format('Y-m-d') !== $value) {
+        return null;
+    }
+
+    return $dt;
+}
+
+function iss_content_model_get_project_status_display(int $post_id): array
+{
+    if ($post_id <= 0 || get_post_type($post_id) !== ISS_CONTENT_MODEL_PROJEKT_POST_TYPE) {
+        return [];
+    }
+
+    $start = iss_content_model_parse_iso_date(get_post_meta($post_id, 'iss_start_date', true));
+    $end = iss_content_model_parse_iso_date(get_post_meta($post_id, 'iss_end_date', true));
+    $today = new DateTimeImmutable('today', wp_timezone());
+
+    if ($end instanceof DateTimeImmutable && $end < $today) {
+        return [
+            'label' => __('Status', 'iss-content-model'),
+            'value' => __('Abgeschlossen', 'iss-content-model'),
+            'state' => 'completed',
+        ];
+    }
+
+    if ($start instanceof DateTimeImmutable && $end instanceof DateTimeImmutable) {
+        return [
+            'label' => __('Zeitraum', 'iss-content-model'),
+            'value' => iss_content_model_format_date_long_de($start) . ' – ' . iss_content_model_format_date_long_de($end),
+            'state' => 'date-range',
+        ];
+    }
+
+    if ($start instanceof DateTimeImmutable) {
+        $prefix = $start > $today ? __('Ab', 'iss-content-model') : __('Seit', 'iss-content-model');
+
+        return [
+            'label' => __('Zeitraum', 'iss-content-model'),
+            'value' => $prefix . ' ' . iss_content_model_format_date_long_de($start),
+            'state' => $start > $today ? 'upcoming' : 'running',
+        ];
+    }
+
+    if ($end instanceof DateTimeImmutable) {
+        return [
+            'label' => __('Zeitraum', 'iss-content-model'),
+            'value' => __('Bis', 'iss-content-model') . ' ' . iss_content_model_format_date_long_de($end),
+            'state' => 'until',
+        ];
+    }
+
+    $status_terms = get_the_terms($post_id, ISS_CONTENT_MODEL_PROJECT_STATUS_TAXONOMY);
+    if (is_array($status_terms) && !empty($status_terms)) {
+        return [
+            'label' => __('Status', 'iss-content-model'),
+            'value' => implode(', ', wp_list_pluck($status_terms, 'name')),
+            'state' => 'taxonomy',
+        ];
+    }
+
+    $period = trim((string) get_post_meta($post_id, 'iss_period_label', true));
+    if ($period !== '') {
+        return [
+            'label' => __('Zeitraum', 'iss-content-model'),
+            'value' => $period,
+            'state' => 'period',
+        ];
+    }
+
+    return [];
 }
 
 function iss_content_model_get_default_meta_panel_copy($post_type) {
@@ -189,15 +276,27 @@ function iss_content_model_get_meta_rows_for_post($post_id, array $options = [])
     } elseif ($post_type === ISS_CONTENT_MODEL_PROJEKT_POST_TYPE) {
         $period = trim((string) get_post_meta($post_id, 'iss_period_label', true));
         $status_terms = get_the_terms($post_id, ISS_CONTENT_MODEL_PROJECT_STATUS_TAXONOMY);
+        $project_status = iss_content_model_get_project_status_display($post_id);
+        $project_status_state = sanitize_key((string) ($project_status['state'] ?? ''));
 
-        if ($period !== '') {
-            $rows[] = ['label' => __('Zeitraum', 'iss-content-model'), 'value' => $period];
-        }
-        if (is_array($status_terms) && !empty($status_terms)) {
+        if (
+            !empty($project_status['value'])
+            && in_array($project_status_state, ['completed', 'date-range', 'running', 'upcoming', 'until'], true)
+        ) {
             $rows[] = [
-                'label' => __('Status', 'iss-content-model'),
-                'value' => implode(', ', wp_list_pluck($status_terms, 'name')),
+                'label' => (string) ($project_status['label'] ?? __('Status', 'iss-content-model')),
+                'value' => (string) $project_status['value'],
             ];
+        } else {
+            if ($period !== '') {
+                $rows[] = ['label' => __('Zeitraum', 'iss-content-model'), 'value' => $period];
+            }
+            if (is_array($status_terms) && !empty($status_terms)) {
+                $rows[] = [
+                    'label' => __('Status', 'iss-content-model'),
+                    'value' => implode(', ', wp_list_pluck($status_terms, 'name')),
+                ];
+            }
         }
         if (!empty($topic_terms)) {
             $rows[] = ['label' => __('Thema', 'iss-content-model'), 'value' => implode(', ', $topic_terms)];
@@ -335,6 +434,44 @@ function iss_content_model_render_meta_block($attributes = [], $content = '', $b
         $out .= '</p></div></div>';
     }
     $out .= '</div></aside></div>';
+
+    return $out;
+}
+
+function iss_content_model_render_project_status_block($attributes = [], $content = '', $block = null): string
+{
+    $post_id = 0;
+    if ($block instanceof WP_Block && !empty($block->context['postId'])) {
+        $post_id = absint($block->context['postId']);
+    }
+    if ($post_id <= 0) {
+        $post_id = (int) get_the_ID();
+    }
+
+    if ($post_id <= 0 || get_post_type($post_id) !== ISS_CONTENT_MODEL_PROJEKT_POST_TYPE) {
+        return '';
+    }
+
+    $status = iss_content_model_get_project_status_display((int) $post_id);
+    $value = trim((string) ($status['value'] ?? ''));
+    if ($value === '') {
+        return '';
+    }
+
+    $show_label = !empty($attributes['showLabel']);
+    $state = sanitize_html_class((string) ($status['state'] ?? 'default'));
+    $classes = trim('wp-block-iss-project-status iss-project-status iss-project-status--' . $state);
+    $wrapper_attrs = (function_exists('get_block_wrapper_attributes') && ($block instanceof WP_Block))
+        ? get_block_wrapper_attributes(['class' => $classes])
+        : 'class="' . esc_attr($classes) . '"';
+
+    $label = trim((string) ($status['label'] ?? ''));
+    $out = '<div ' . $wrapper_attrs . '>';
+    if ($show_label && $label !== '') {
+        $out .= '<span class="iss-project-status__label">' . esc_html($label) . '</span> ';
+    }
+    $out .= '<span class="iss-project-status__value">' . esc_html($value) . '</span>';
+    $out .= '</div>';
 
     return $out;
 }

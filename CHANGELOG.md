@@ -4,6 +4,26 @@ This file records durable project changes. Keep it compact: current state belong
 `handoff_CURRENT.md`, active follow-up in `TODO.md`, and detailed investigation can
 be recovered from Git history.
 
+## 2026-06-14
+
+- Added conditional project status rendering:
+  - introduced `iss/project-status` for project lists;
+  - renders date ranges from project start/end meta when present;
+  - falls back to completed state after end date, taxonomy status, then period label.
+- Reconciled current editor/template drift:
+  - copied current front-page text edits into the file template and removed its DB override;
+  - flushed the current `page-projekte` DB template body to disk while leaving the DB override in place for later deletion.
+- Moved `iss/dense-image-wall` to `iss-frontend`:
+  - kept the block name stable for existing content;
+  - split editor workflow into composition and text/link modes;
+  - moved baseline block CSS out of the theme;
+  - hardened render output for class and URL handling.
+- Fixed booking CTA modal loading for tour/calendar surfaces by enqueueing the shared programme script where slot triggers render.
+- Added transfer artifacts for the Walk of Fame dense wall content:
+  - `ops/sql/2026-06-14-walk-of-fame-dense-wall.sql`;
+  - `ops/uploads/2026-06-14-walk-of-fame-dense-wall-media.tar.gz`;
+  - matching manifest and SHA256 files.
+
 ## 2026-06-13
 
 - Compacted repository documentation:
