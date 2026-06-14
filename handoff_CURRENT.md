@@ -6,7 +6,7 @@ Current checkpoint only. History belongs in `CHANGELOG.md`; active follow-up bel
 
 ## Current State
 
-- This checkpoint follows `335657d` and adds the all-project content transfer artifact for the edited `projekt` single pages.
+- Local `main` matches `origin/main` at `537a6b7`, which adds the all-project content transfer artifact for the edited `projekt` single pages.
 - Staging is the current live working target, not a production release gate. Rebuild from Git plus explicit SQL/upload artifacts if it breaks.
 - Domain ownership is current: `iss-content` owns CPT/editor contracts and tour data; `iss-occurrences` owns occurrence projection, SuperSaaS ingestion, tour-slot reads, and sync admin; `iss-frontend` owns programme/timeline/browser rendering plus reusable frontend editorial blocks such as `iss/dense-image-wall`; `iss-commerce-lite` owns booking/order request intake; `iss-archive` owns archive runtime; `iss-graph` owns graph/search/facade contracts; the theme owns public templates and skins.
 - Occurrence rows are source-post keyed only. Open-ended rows use `ends_at = NULL` plus `is_open_ended = 1`; graph IDs and `2099-12-31` sentinels are invalid drift.
