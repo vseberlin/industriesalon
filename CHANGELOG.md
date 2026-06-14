@@ -23,6 +23,10 @@ be recovered from Git history.
   - `ops/sql/2026-06-14-walk-of-fame-dense-wall.sql`;
   - `ops/uploads/2026-06-14-walk-of-fame-dense-wall-media.tar.gz`;
   - matching manifest and SHA256 files.
+- Added transfer artifacts for the current `projekt` single-page content edits:
+  - exports all seven published `projekt` posts plus their postmeta and term relationships;
+  - normalizes local dev URLs in project content to root-relative paths;
+  - pairs the SQL with a 28-file upload archive for directly referenced project media.
 
 ## 2026-06-13
 
