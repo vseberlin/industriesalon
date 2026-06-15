@@ -15,6 +15,7 @@ Current checkpoint only. History belongs in `CHANGELOG.md`; active follow-up bel
 - Programme projection uses `iss_programme_enabled`; Ausstellung overview visibility uses `iss_public_overview_enabled`. Dauer/Digital Ausstellungen can remain in overviews without programme occurrences unless editors explicitly opt them in.
 - `/wp-json/iss/v1` is the read-only facade boundary for contract, entities, relations, occurrence reads, search, timeline, availability, and tour slots. Booking writes stay on `/is-tours/v1/book`.
 - Commerce-lite request rows remain in `wp_iss_payments_lite_requests` for compatibility. SuperSaaS settings use `iss_supersaas_*`; retired `is_saas_settings` is migrated and drift-guarded.
+- `/ausstellungen/` browser polish is committed locally: result summaries, debounced live search, clear-search fallback link, search-preserving filter URLs, and responsive page-skin controls stay within the existing `industriesalon/ausstellungen-browser` block and `/iss/v1/availability` route.
 - Walk of Fame dense-wall content needs paired transfer artifacts if applied elsewhere: `ops/sql/2026-06-14-walk-of-fame-dense-wall.sql` plus `ops/uploads/2026-06-14-walk-of-fame-dense-wall-media.tar.gz`.
 - Current published `projekt` single-page content edits need the all-project transfer unit if applied elsewhere: `ops/sql/2026-06-14-project-content-sync.sql` plus `ops/uploads/2026-06-14-project-content-media.tar.gz`, manifest, and SHA256. The SQL covers all seven published project posts, postmeta, and term relationships; directly referenced media files are packaged in the paired archive.
 
@@ -32,7 +33,6 @@ Current checkpoint only. History belongs in `CHANGELOG.md`; active follow-up bel
 ## Next Action
 
 - Delete the `page-projekte` DB template override after verifying the flushed disk template on the target.
-- UI polish later, especially Ausstellung search/filter interaction and public view polish.
 - Before production deploy, verify target mail mode and decide whether request notification email should be enabled.
 
 ## Last Verified
@@ -50,4 +50,5 @@ Current checkpoint only. History belongs in `CHANGELOG.md`; active follow-up bel
 - Atlas/static-map contract-schema slice passed `wp iss-register contract-check`, `wp iss-relations static-map-contract-check`, PHP syntax for `plugins/industriesalon-schoeneweide-register/includes/register-data/guardrails.php` and `plugins/iss-relations/includes/cli.php`, targeted PHPCS, targeted PHPStan, and `git diff --check`.
 - Atlas fullscreen/kiosk layout slice passed PHP syntax for `plugins/industriesalon-schoeneweide-register/includes/atlas-render.php`, JS syntax checks for the edited Atlas scripts, targeted ESLint, targeted Stylelint, targeted PHPCS/PHPStan, WP-CLI block render/script registration checks, `git diff --check`, and Playwright desktop/mobile smokes on `/schoneweide/` showing embedded/fullscreen/kiosk modes, 74 markers, loaded tiles, and no console errors.
 - Atlas public-surface closeout passed file-template and DB-backed content scans, block registration/inserter visibility checks, `wp iss-relations map-block-audit`, `wp iss-relations static-map-contract-check`, `wp iss-register contract-check`, and `git diff --check`.
+- `/ausstellungen/` browser polish passed PHP syntax for `plugins/iss-frontend/modules/programme/includes/ausstellungen-browser.php`, JS syntax/ESLint for `plugins/iss-frontend/modules/programme/assets/ausstellungen-browser.js`, Stylelint for timeline and page-Ausstellungen CSS, targeted PHPCS/PHPStan, `wp iss-frontend ausstellungen-audit --strict`, block-render checks, `git diff --check`, and Playwright desktop/mobile smokes on `/ausstellungen/` covering live search, clear, filter switching, URL state, mobile control widths, and no console errors.
 - Project content artifact verification: imported `ops/sql/2026-06-14-project-content-sync.sql` locally; confirmed zero dev-host references in published project rows; verified seven project routes return `200`; verified `ops/uploads/2026-06-14-project-content-media.tar.gz` contains 28 files and matches its SHA256.

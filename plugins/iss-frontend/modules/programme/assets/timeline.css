@@ -200,6 +200,7 @@
 .iss-ausstellungen-browser__search {
   display: flex;
   flex: 1 1 17rem;
+  flex-wrap: wrap;
   gap: 0.6rem;
   max-width: 30rem;
 }
@@ -213,6 +214,14 @@
 
 .iss-ausstellungen-browser__search-submit {
   flex: 0 0 auto;
+}
+
+.iss-ausstellungen-browser__search-clear {
+  flex: 0 0 auto;
+}
+
+.iss-ausstellungen-browser__summary {
+  margin: 0 0 1rem;
 }
 
 .iss-ausstellungen-browser__results {

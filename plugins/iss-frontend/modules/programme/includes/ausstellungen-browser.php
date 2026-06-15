@@ -713,8 +713,10 @@ function iss_programm_render_ausstellungen_search_form(string $active_filter, st
     $out = '<form class="iss-ausstellungen-browser__search" method="get" data-ausstellungen-search-form>';
     $out .= '<input type="hidden" name="ausstellung_filter" value="' . esc_attr($active_filter) . '" data-ausstellungen-filter-input>';
     $out .= '<label class="screen-reader-text" for="' . esc_attr($input_id) . '">' . esc_html__('Ausstellungen suchen', 'iss-programm') . '</label>';
-    $out .= '<input id="' . esc_attr($input_id) . '" class="iss-ausstellungen-browser__search-input" type="search" name="ausstellung_search" value="' . esc_attr($search) . '" placeholder="' . esc_attr__('Suchen', 'iss-programm') . '" data-ausstellungen-search-input>';
+    $out .= '<input id="' . esc_attr($input_id) . '" class="iss-ausstellungen-browser__search-input" type="search" name="ausstellung_search" value="' . esc_attr($search) . '" placeholder="' . esc_attr__('Titel, Thema, Ort suchen', 'iss-programm') . '" data-ausstellungen-search-input>';
     $out .= '<button class="iss-timeline__preset iss-ausstellungen-browser__search-submit" type="submit">' . esc_html__('Suchen', 'iss-programm') . '</button>';
+    $clear_url = add_query_arg(['ausstellung_filter' => $active_filter], remove_query_arg('ausstellung_search'));
+    $out .= '<a class="iss-timeline__preset iss-ausstellungen-browser__search-clear" href="' . esc_url($clear_url) . '" data-ausstellungen-search-clear' . ($search === '' ? ' hidden' : '') . '>' . esc_html__('Zurücksetzen', 'iss-programm') . '</a>';
     $out .= '</form>';
 
     return $out;
@@ -783,6 +785,13 @@ function iss_programm_render_ausstellungen_browser_block($attributes = []): stri
         }
         $out .= '</div>';
     }
+    $out .= '<p class="iss-ausstellungen-browser__summary" data-ausstellungen-summary data-ausstellungen-result-count="' . esc_attr((string) count($posts)) . '">';
+    $out .= esc_html(sprintf(
+        /* translators: %s: number of displayed exhibitions. */
+        _n('%s Ausstellung angezeigt.', '%s Ausstellungen angezeigt.', count($posts), 'iss-programm'),
+        number_format_i18n(count($posts))
+    ));
+    $out .= '</p>';
     $out .= '<p class="screen-reader-text" role="status" aria-live="polite" data-ausstellungen-status></p>';
     $out .= '<div class="iss-ausstellungen-browser__results" data-ausstellungen-results>';
     $out .= iss_programm_render_ausstellungen_cards($posts, $render_opts);

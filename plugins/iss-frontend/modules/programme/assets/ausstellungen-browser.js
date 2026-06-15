@@ -41,16 +41,46 @@
       return url;
     }
 
+    function getFilterLabel(filterLinks, filter) {
+      var label = '';
+
+      filterLinks.forEach(function (link) {
+        if (String(link.getAttribute('data-ausstellungen-filter') || '') === filter) {
+          label = String(link.textContent || '').trim();
+        }
+      });
+
+      return label || filter;
+    }
+
+    function countLabel(count) {
+      return count === 1 ? '1 Ausstellung angezeigt.' : count + ' Ausstellungen angezeigt.';
+    }
+
+    function buildSummaryText(filterLinks, filter, search, count) {
+      var pieces = [getFilterLabel(filterLinks, filter)];
+      var normalizedSearch = String(search || '').trim();
+
+      if (normalizedSearch) {
+        pieces.push('Suche "' + normalizedSearch + '"');
+      }
+
+      return pieces.join(' · ') + ': ' + countLabel(count);
+    }
+
     roots.forEach(function (root) {
       var config = parseConfig(root);
       var restUrl = config.restUrl ? String(config.restUrl) : globalRestUrl;
       var results = root.querySelector('[data-ausstellungen-results]');
       var form = root.querySelector('[data-ausstellungen-search-form]');
       var searchInput = root.querySelector('[data-ausstellungen-search-input]');
+      var searchClear = root.querySelector('[data-ausstellungen-search-clear]');
       var filterInput = root.querySelector('[data-ausstellungen-filter-input]');
       var status = root.querySelector('[data-ausstellungen-status]');
+      var summary = root.querySelector('[data-ausstellungen-summary]');
       var filterLinks = root.querySelectorAll('[data-ausstellungen-filter]');
       var requestInFlight = null;
+      var searchTimer = 0;
       var activeFilter = normalizeFilter(config.filter, config.defaultFilter || 'aktuell');
       var activeSearch = String(config.search || '').trim();
 
@@ -77,12 +107,26 @@
         if (searchInput && searchInput.value !== activeSearch) {
           searchInput.value = activeSearch;
         }
+        if (searchClear) {
+          searchClear.hidden = activeSearch === '';
+        }
 
         filterLinks.forEach(function (link) {
-          var isActive = String(link.getAttribute('data-ausstellungen-filter') || '') === activeFilter;
+          var linkFilter = String(link.getAttribute('data-ausstellungen-filter') || '');
+          var isActive = linkFilter === activeFilter;
           link.classList.toggle('is-active', isActive);
           link.setAttribute('aria-pressed', isActive ? 'true' : 'false');
+          link.href = buildStateUrl(normalizeFilter(linkFilter, activeFilter), activeSearch, root).toString();
         });
+      }
+
+      function syncSummary(filter, search, count) {
+        if (!summary) {
+          return;
+        }
+
+        summary.textContent = buildSummaryText(filterLinks, filter, search, count);
+        summary.setAttribute('data-ausstellungen-result-count', String(count));
       }
 
       function requestAvailability(filter, search, updateHistory) {
@@ -142,7 +186,8 @@
             }
 
             var count = typeof data.count === 'number' ? data.count : 0;
-            setStatus(count === 1 ? '1 Ausstellung geladen.' : count + ' Ausstellungen geladen.');
+            syncSummary(nextFilter, nextSearch, count);
+            setStatus(countLabel(count));
           })
           .catch(function (err) {
             if (err && err.name === 'AbortError') {
@@ -169,7 +214,28 @@
       if (form) {
         form.addEventListener('submit', function (event) {
           event.preventDefault();
+          window.clearTimeout(searchTimer);
           requestAvailability(activeFilter, searchInput ? searchInput.value : '', true);
+        });
+      }
+
+      if (searchInput) {
+        searchInput.addEventListener('input', function () {
+          window.clearTimeout(searchTimer);
+          searchTimer = window.setTimeout(function () {
+            requestAvailability(activeFilter, searchInput.value, true);
+          }, 350);
+        });
+      }
+
+      if (searchClear) {
+        searchClear.addEventListener('click', function (event) {
+          event.preventDefault();
+          window.clearTimeout(searchTimer);
+          requestAvailability(activeFilter, '', true);
+          if (searchInput) {
+            searchInput.focus();
+          }
         });
       }
 
@@ -181,6 +247,7 @@
       });
 
       syncControls(activeFilter, activeSearch);
+      syncSummary(activeFilter, activeSearch, Number(summary ? summary.getAttribute('data-ausstellungen-result-count') : 0) || 0);
     });
   });
 })();
