@@ -274,6 +274,13 @@ The graph should support editorial/manual relations first, inferred relations
 second, and algorithmic recommendations only later if needed. Editorial trust is
 more important than automatic abundance.
 
+Current decision after the public-surface audit: do not start a broader
+archive/graph API consolidation as part of this Atlas cleanup. The static-map
+and interactive Atlas consumers now have explicit contracts and passing audits.
+Broader archive/graph consolidation needs a concrete next public consumer, such
+as an archive-object Atlas layer, publication dossier relation view, or kiosk
+story mode, before it becomes executable work.
+
 ## Editor Experience
 
 The architecture should hide complexity from editors.
@@ -367,14 +374,53 @@ prefer a clean internal rewrite over temporary delegation layers.
     validates first-class map-block contracts plus static-map relation
     result/DTO shape.
 12. Only after this, consider broader archive/graph API consolidation.
+    Closed for now: the current public-surface audit found no concrete
+    Atlas/static-map consumer that requires broader archive/graph API
+    consolidation.
+
+## Public Surface Closeout
+
+Audited on 2026-06-15.
+
+Current first-class public static map surfaces:
+
+- `iss/related-place-map`
+- `iss/atlas-slice`
+- `iss/spine-strip`
+
+Current first-class interactive Atlas surface:
+
+- `iss-register/schoneweide-atlas`
+
+Experimental compatibility surfaces:
+
+- `iss/atlas-strip`
+- `iss/asymmetric-split-field`
+
+The experimental surfaces remain registered for render compatibility but hidden
+from the inserter. They have no current file-template usage and no non-revision
+DB usage in the local audit. Reopen them only when there is a named public
+consumer; otherwise keep new static-map work on the first-class surfaces above.
+
+Audit evidence:
+
+- file templates use `iss/related-place-map` twice, `iss/atlas-slice` twice,
+  `iss/spine-strip` twice, and `iss-register/schoneweide-atlas` once;
+- DB-backed non-revision content only adds the front-page `iss/spine-strip` and
+  a local published `test1` page with `iss/spine-strip`;
+- `iss/atlas-strip` and `iss/asymmetric-split-field` are hidden from the
+  inserter;
+- `wp iss-relations map-block-audit`, `wp iss-relations
+  static-map-contract-check`, and `wp iss-register contract-check` pass.
 
 ## Final Recommendation
 
-Proceed with a boundary-clean internal rewrite.
+The boundary-clean internal rewrite is complete enough for the current public
+Atlas/static-map surfaces.
 
 Do not create a second Atlas app. Do not duplicate place data. Do not move map
-logic into the theme. Do not let `iss-relations` remain a mixed rendering and
-resolver plugin.
+logic into the theme. Continue shrinking `iss-relations` toward relation/source
+resolution when a focused renderer cleanup has a concrete public consumer.
 
 The stable long-term architecture is:
 

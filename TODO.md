@@ -4,7 +4,6 @@ Immediate executable work only. Larger future programs live in `docs/project/bac
 
 ## Active Today
 
-- Close the Atlas cleanup from `docs/architecture/atlas-static-map-implementation-plan.md`: run a final public-surface audit and decide whether broader archive/graph API consolidation has a concrete next consumer.
 - Preserve the current ownership split: `iss-relations` resolves place/source contracts, `iss-frontend` owns frontend map rendering, `industriesalon-schoeneweide-register` owns register/interactive Atlas data, and the theme owns map assets/presets/skins.
 - Polish `/ausstellungen/` search/filter interaction and public view behavior.
 - Before production deploy, verify target mail mode and enable `Tools > ISS Anfragen` notification email only for an approved recipient if request emails should leave the server.
