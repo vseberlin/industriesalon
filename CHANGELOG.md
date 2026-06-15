@@ -6,6 +6,10 @@ be recovered from Git history.
 
 ## 2026-06-15
 
+- Continued modularizing the interactive Schöneweide Atlas runtime:
+  - extracted payload normalization, derived era/actor maps, filter/selection state, selected story resolution, and relation scoring into `themes/industriesalon/assets/js/atlas/store.js`;
+  - wired the new `iss-register-schoneweide-atlas-store` script before the existing public Atlas view handle;
+  - kept the visible block, REST payloads, map adapter, and DOM rendering behavior unchanged while leaving place/filter UI and detail/story/relation rendering as the next split.
 - Began modularizing the interactive Schöneweide Atlas runtime without changing the public block or REST payload:
   - extracted shared Atlas runtime core utilities, provider selection, payload/config loading, resize/layout sync, and the Leaflet map adapter into ordered theme JS modules;
   - kept the existing `iss-register-schoneweide-atlas-view` handle as the public view entrypoint with the new modules as dependencies;

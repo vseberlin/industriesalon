@@ -347,8 +347,10 @@ prefer a clean internal rewrite over temporary delegation layers.
 9. Modularize the interactive Atlas app around config, store, map adapter, place
    UI, detail UI, layout, and provider modules. First slice is done: provider,
    config/payload loading, layout resize sync, and the Leaflet map adapter are
-   separate runtime modules behind the existing public view handle. Store/state,
-   place/filter UI, and detail/story/relation rendering remain in the main
+   separate runtime modules behind the existing public view handle. Second slice
+   is done: payload normalization, selected place/story state, filter state,
+   derived era/actor maps, and relation scoring live in `atlas/store.js`.
+   Place/filter UI and detail/story/relation DOM rendering remain in the main
    runtime for the next split.
 10. Add fullscreen and kiosk modes as layout states, not as separate apps.
 11. Add contract/schema tests for Atlas REST payloads and static map inputs.

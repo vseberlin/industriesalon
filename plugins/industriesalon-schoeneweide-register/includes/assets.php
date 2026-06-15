@@ -76,6 +76,10 @@ add_action('init', function () {
             'path' => '/assets/js/atlas/config.js',
             'deps' => ['iss-register-schoneweide-atlas-core'],
         ],
+        'iss-register-schoneweide-atlas-store' => [
+            'path' => '/assets/js/atlas/store.js',
+            'deps' => ['iss-register-schoneweide-atlas-core'],
+        ],
         'iss-register-schoneweide-atlas-map' => [
             'path' => '/assets/js/atlas/map.js',
             'deps' => ['iss-register-schoneweide-atlas-core', 'iss-register-schoneweide-atlas-provider'],
