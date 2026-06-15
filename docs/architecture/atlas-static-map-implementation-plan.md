@@ -350,8 +350,10 @@ prefer a clean internal rewrite over temporary delegation layers.
    separate runtime modules behind the existing public view handle. Second slice
    is done: payload normalization, selected place/story state, filter state,
    derived era/actor maps, and relation scoring live in `atlas/store.js`.
-   Place/filter UI and detail/story/relation DOM rendering remain in the main
-   runtime for the next split.
+   Third slice is done: filter controls, search/reset bindings, selected-place
+   render context, root filter attributes, and count/summary rendering live in
+   `atlas/places.js`. Marker/detail, story, and relation DOM rendering remain in
+   the main runtime for the next split.
 10. Add fullscreen and kiosk modes as layout states, not as separate apps.
 11. Add contract/schema tests for Atlas REST payloads and static map inputs.
 12. Only after this, consider broader archive/graph API consolidation.

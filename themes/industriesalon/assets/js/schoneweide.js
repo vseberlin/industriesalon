@@ -6,9 +6,9 @@
   var AtlasMap = Atlas.map || {};
   var AtlasProvider = Atlas.provider || {};
   var AtlasStore = Atlas.store || {};
+  var AtlasPlaces = Atlas.places || {};
   var AtlasStoreLabels = AtlasStore.labels || {};
   var EMPTY = AtlasCore.EMPTY || '';
-  var DEFAULT_ERA_LABEL = AtlasStoreLabels.DEFAULT_ERA_LABEL || 'Alle Zeiten';
   var DEFAULT_STATUS_LABEL = AtlasStoreLabels.DEFAULT_STATUS_LABEL || 'Alle Situationen';
   var DEFAULT_USE_TYPE_LABEL = AtlasStoreLabels.DEFAULT_USE_TYPE_LABEL || 'Alle Nutzungen';
   var CURRENT_STATUS_LABELS = AtlasStoreLabels.CURRENT_STATUS_LABELS || {
@@ -32,24 +32,7 @@
     community: 'Gemeinwohl / Soziales',
     mixed: 'Mischnutzung'
   };
-  var HISTORICAL_FUNCTION_LABELS = AtlasStoreLabels.HISTORICAL_FUNCTION_LABELS || {
-    '': 'Alle Funktionen',
-    industrial: 'Industrie / Produktion',
-    commercial: 'Gewerbe / Handel',
-    culture: 'Kultur',
-    education: 'Bildung / Forschung',
-    community: 'Gemeinwohl / Soziales',
-    residential: 'Wohnen',
-    mixed: 'Mischnutzung',
-    vacant: 'Leerstand',
-    infrastructure: 'Infrastruktur',
-    no_data: 'Keine Angabe'
-  };
   var HISTORICAL_NO_DATA_KEY = AtlasStoreLabels.HISTORICAL_NO_DATA_KEY || 'no_data';
-  var ERA_FILTER_CONTEXT_ONLY = AtlasStoreLabels.ERA_FILTER_CONTEXT_ONLY !== undefined
-    ? AtlasStoreLabels.ERA_FILTER_CONTEXT_ONLY
-    : true;
-  var DEFAULT_ACTOR_LABEL = AtlasStoreLabels.DEFAULT_ACTOR_LABEL || 'Alle Akteure';
   var UNKNOWN_EPOCH_SUMMARY = AtlasStoreLabels.UNKNOWN_EPOCH_SUMMARY ||
     'Für diesen Ort liegen im gewählten Zeitfenster bisher keine gesicherten historischen Nachweise vor. Wenn Sie historische Dokumente, Fotos oder andere Objekte haben, freuen wir uns über Ihre Kontaktaufnahme.';
   var MAP_BOUNDS = AtlasCore.MAP_BOUNDS;
@@ -397,26 +380,6 @@
     return AtlasStore.sortPlaces(left, right);
   }
 
-  function deriveFallbackActors(places) {
-    return AtlasStore.deriveFallbackActors(places);
-  }
-
-  function deriveFallbackEras(places) {
-    return AtlasStore.deriveFallbackEras(places);
-  }
-
-  function matchesEra(place, eraSlug) {
-    return AtlasStore.matchesEra(place, eraSlug);
-  }
-
-  function getEraScopedPlaces(places, eraSlug) {
-    return AtlasStore.getEraScopedPlaces(places, eraSlug);
-  }
-
-  function getEpochFunctionKeysForEra(place, eraSlug) {
-    return AtlasStore.getEpochFunctionKeysForEra(place, eraSlug);
-  }
-
   function getActorKeysForEra(place, eraSlug) {
     return AtlasStore.getActorKeysForEra(place, eraSlug);
   }
@@ -425,301 +388,12 @@
     return AtlasStore.placeMatchesActor(place, actorKey, eraSlug);
   }
 
-  function actorFilterLabel(state, key) {
-    return AtlasStore.actorFilterLabel(state, key);
-  }
-
   function useTypeFilterLabel(state, key) {
     return AtlasStore.useTypeFilterLabel(state, key);
   }
 
   function isUnknownEpochFunction(place, state) {
     return AtlasStore.isUnknownEpochFunction(place, state);
-  }
-
-  function filterPlaces(places, state) {
-    return AtlasStore.filterPlaces(places, state);
-  }
-
-  function getSelectedPlace(state, filteredPlaces) {
-    return AtlasStore.getSelectedPlace(state, filteredPlaces);
-  }
-
-  function buildFilterButton(options) {
-    var button = createElement(
-      'button',
-      'iss-atlas-app__filter-button' +
-        (options.className ? ' ' + options.className : EMPTY) +
-        (options.active ? ' is-active' : EMPTY)
-    );
-
-    button.type = 'button';
-    button.setAttribute('aria-pressed', options.active ? 'true' : 'false');
-    if (options.attributes && typeof options.attributes === 'object') {
-      Object.keys(options.attributes).forEach(function (key) {
-        if (options.attributes[key] !== undefined && options.attributes[key] !== null) {
-          button.setAttribute(key, String(options.attributes[key]));
-        }
-      });
-    }
-    button.appendChild(createElement('span', 'iss-atlas-app__filter-text', options.label));
-
-    if (typeof options.count === 'number') {
-      button.appendChild(
-        createElement('span', 'iss-atlas-app__filter-count', String(options.count))
-      );
-    }
-
-    button.addEventListener('click', options.onClick);
-
-    return button;
-  }
-
-  function renderEraFilters(container, state) {
-    var eraCounts = {};
-    var eras = state.eras.length ? state.eras : deriveFallbackEras(state.places);
-
-    if (ERA_FILTER_CONTEXT_ONLY) {
-      eras.forEach(function (era) {
-        eraCounts[era.slug] = state.places.length;
-      });
-    } else {
-      state.places.forEach(function (place) {
-        eras.forEach(function (era) {
-          if (matchesEra(place, era.slug)) {
-            eraCounts[era.slug] = (eraCounts[era.slug] || 0) + 1;
-          }
-        });
-      });
-    }
-
-    container.innerHTML = EMPTY;
-    container.appendChild(buildFilterButton({
-      label: DEFAULT_ERA_LABEL,
-      count: state.places.length,
-      active: state.era === EMPTY,
-      className: 'iss-atlas-app__filter-button--era',
-      attributes: {
-        'data-era-slug': 'all'
-      },
-      onClick: function () {
-        state.era = EMPTY;
-        state.currentUseType = EMPTY;
-        state.shouldPan = false;
-        state.render();
-      }
-    }));
-
-    eras.forEach(function (era) {
-      var label = era.name || era.legacyLabel || era.slug;
-
-      container.appendChild(buildFilterButton({
-        label: label,
-        count: eraCounts[era.slug] || 0,
-        active: state.era === era.slug,
-        className: 'iss-atlas-app__filter-button--era',
-        attributes: {
-          'data-era-slug': era.slug
-        },
-        onClick: function () {
-          state.era = era.slug;
-          state.currentUseType = EMPTY;
-          state.shouldPan = false;
-          state.render();
-        }
-      }));
-    });
-  }
-
-  function renderCurrentStatusFilters(container, state, eraScopedPlaces) {
-    var counts = { '': eraScopedPlaces.length };
-    var statuses = [EMPTY].concat(Object.keys(CURRENT_STATUS_LABELS).filter(Boolean));
-
-    eraScopedPlaces.forEach(function (place) {
-      counts[place.current_status] = (counts[place.current_status] || 0) + 1;
-    });
-
-    container.innerHTML = EMPTY;
-
-    statuses.forEach(function (status) {
-      container.appendChild(buildFilterButton({
-        label: CURRENT_STATUS_LABELS[status] || status,
-        count: counts[status] || 0,
-        active: state.currentStatus === status,
-        onClick: function () {
-          state.currentStatus = status;
-          if (status && state.currentUseType) {
-            var useTypeStillExists = eraScopedPlaces.some(function (place) {
-              return place.current_status === status && place.current_use_type === state.currentUseType;
-            });
-            if (!useTypeStillExists) {
-              state.currentUseType = EMPTY;
-            }
-          }
-          state.selectedPostId = 0;
-          state.shouldPan = false;
-          state.render();
-        }
-      }));
-    });
-  }
-
-  function renderActorFilters(container, state, eraScopedPlaces) {
-    var counts = { '': eraScopedPlaces.length };
-    var actors = state.actors.length ? state.actors : deriveFallbackActors(state.places);
-    var activeKeys = [];
-
-    eraScopedPlaces.forEach(function (place) {
-      getActorKeysForEra(place, state.era).forEach(function (key) {
-        counts[key] = (counts[key] || 0) + 1;
-      });
-    });
-
-    actors.forEach(function (actor) {
-      if (actor.key && counts[actor.key]) {
-        activeKeys.push(actor.key);
-      }
-    });
-
-    if (state.actorKey && activeKeys.indexOf(state.actorKey) === -1) {
-      state.actorKey = EMPTY;
-    }
-
-    container.innerHTML = EMPTY;
-    container.appendChild(buildFilterButton({
-      label: DEFAULT_ACTOR_LABEL,
-      count: counts[''] || 0,
-      active: state.actorKey === EMPTY,
-      className: 'iss-atlas-app__filter-button--actor',
-      attributes: {
-        'data-actor-key': 'all'
-      },
-      onClick: function () {
-        state.actorKey = EMPTY;
-        state.selectedPostId = 0;
-        state.shouldPan = false;
-        state.render();
-      }
-    }));
-
-    activeKeys.forEach(function (key) {
-      container.appendChild(buildFilterButton({
-        label: actorFilterLabel(state, key),
-        count: counts[key] || 0,
-        active: state.actorKey === key,
-        className: 'iss-atlas-app__filter-button--actor',
-        attributes: {
-          'data-actor-key': key
-        },
-        onClick: function () {
-          state.actorKey = key;
-          state.selectedPostId = 0;
-          state.shouldPan = false;
-          state.render();
-        }
-      }));
-    });
-  }
-
-  function renderCurrentUseTypeFilters(container, state, statusScopedPlaces) {
-    var counts = { '': statusScopedPlaces.length };
-    var types = state.activeEra
-      ? Object.keys(HISTORICAL_FUNCTION_LABELS).filter(Boolean)
-      : Object.keys(CURRENT_USE_TYPE_LABELS).filter(Boolean);
-    var activeTypes = [];
-
-    statusScopedPlaces.forEach(function (place) {
-      if (state.activeEra) {
-        var epochKeys = getEpochFunctionKeysForEra(place, state.era);
-        if (!epochKeys.length) {
-          counts[HISTORICAL_NO_DATA_KEY] = (counts[HISTORICAL_NO_DATA_KEY] || 0) + 1;
-          return;
-        }
-
-        epochKeys.forEach(function (key) {
-          counts[key] = (counts[key] || 0) + 1;
-        });
-        return;
-      }
-
-      if (place.current_use_type) {
-        counts[place.current_use_type] = (counts[place.current_use_type] || 0) + 1;
-      }
-    });
-
-    types.forEach(function (type) {
-      if (counts[type]) {
-        activeTypes.push(type);
-      }
-    });
-
-    container.innerHTML = EMPTY;
-    container.parentElement.hidden = activeTypes.length === 0;
-
-    if (!activeTypes.length) {
-      state.currentUseType = EMPTY;
-      return;
-    }
-
-    if (state.currentUseType && state.currentUseType !== HISTORICAL_NO_DATA_KEY && activeTypes.indexOf(state.currentUseType) === -1) {
-      state.currentUseType = EMPTY;
-    }
-
-    if (state.currentUseType === HISTORICAL_NO_DATA_KEY && !counts[HISTORICAL_NO_DATA_KEY]) {
-      state.currentUseType = EMPTY;
-    }
-
-    [EMPTY].concat(activeTypes).forEach(function (type) {
-      container.appendChild(buildFilterButton({
-        label: useTypeFilterLabel(state, type),
-        count: counts[type] || 0,
-        active: state.currentUseType === type,
-        onClick: function () {
-          state.currentUseType = type;
-          state.selectedPostId = 0;
-          state.shouldPan = false;
-          state.render();
-        }
-      }));
-    });
-  }
-
-  function buildScopeLabel(state) {
-    return AtlasStore.buildScopeLabel(state);
-  }
-
-  function renderCount(container, filteredPlaces, state) {
-    if (!filteredPlaces.length) {
-      container.textContent = 'Keine Orte in dieser Auswahl.';
-      return;
-    }
-
-    var label = buildScopeLabel(state);
-    container.textContent = label
-      ? String(filteredPlaces.length) + ' Orte in ' + label
-      : String(filteredPlaces.length) + ' Orte in der aktuellen Auswahl';
-  }
-
-  function renderSummary(container, filteredPlaces, selectedPlace, state) {
-    container.innerHTML = EMPTY;
-
-    if (!filteredPlaces.length) {
-      return;
-    }
-
-    var headline = DEFAULT_ERA_LABEL;
-    if (selectedPlace && text(selectedPlace.area)) {
-      headline = selectedPlace.area;
-    } else if (state.activeEra) {
-      headline = state.activeEra.name || state.activeEra.legacyLabel || DEFAULT_ERA_LABEL;
-    } else if (state.currentStatus) {
-      headline = CURRENT_STATUS_LABELS[state.currentStatus] || DEFAULT_STATUS_LABEL;
-    }
-
-    container.appendChild(createElement('strong', EMPTY, headline));
-    container.appendChild(
-      createElement('span', EMPTY, String(filteredPlaces.length) + ' Orte in der aktuellen Auswahl')
-    );
   }
 
   function setMapStatus(container, message) {
@@ -1143,61 +817,13 @@
   }
 
   function render(elements, state) {
-    if (!elements.statusFilters && state.currentStatus) {
-      state.currentStatus = EMPTY;
-    }
+    var placeContext = AtlasPlaces.render(elements, state);
 
-    var eraScopedPlaces = getEraScopedPlaces(state.places, state.era).sort(sortPlaces);
-    var statusScopedPlaces = state.currentStatus
-      ? eraScopedPlaces.filter(function (place) {
-          return place.current_status === state.currentStatus;
-        })
-      : eraScopedPlaces.slice();
-    var filteredPlaces = filterPlaces(eraScopedPlaces, state).sort(sortPlaces);
-    var selectedPlace = getSelectedPlace(state, filteredPlaces);
-    var selectedStories = getSelectedStories(state);
-
-    state.activeEra = state.era ? (state.eraMap[state.era] || null) : null;
-    if (state.root) {
-      if (state.era) {
-        state.root.setAttribute('data-active-era', state.era);
-      } else {
-        state.root.removeAttribute('data-active-era');
-      }
-      if (state.actorKey) {
-        state.root.setAttribute('data-active-actor', state.actorKey);
-      } else {
-        state.root.removeAttribute('data-active-actor');
-      }
-    }
-
-    if (selectedPlace) {
-      state.selectedPostId = selectedPlace.post_id;
-    }
-
-    renderEraFilters(elements.eraFilters, state);
-    if (elements.actorFilters) {
-      renderActorFilters(elements.actorFilters, state, eraScopedPlaces);
-    }
-    if (elements.actorLabel) {
-      elements.actorLabel.textContent = 'Industrieakteure';
-    }
-    if (elements.useTypeLabel) {
-      elements.useTypeLabel.textContent = state.activeEra ? 'Funktion im Zeitfenster' : 'Nutzung heute';
-    }
-    if (elements.statusFilters) {
-      renderCurrentStatusFilters(elements.statusFilters, state, eraScopedPlaces);
-    } else {
-      state.currentStatus = EMPTY;
-    }
-    renderCurrentUseTypeFilters(elements.useTypeFilters, state, statusScopedPlaces);
-    renderStoryIntro(elements.storyIntro, state, selectedStories, filteredPlaces);
-    renderCount(elements.count, filteredPlaces, state);
-    renderRelations(elements.relations, state, selectedPlace, eraScopedPlaces);
-    renderSummary(elements.summary, filteredPlaces, selectedPlace, state);
-    renderMap(state, filteredPlaces, selectedPlace);
-    renderPopup(elements.popup, selectedPlace, state);
-    renderStories(elements.stories, state, filteredPlaces);
+    renderStoryIntro(elements.storyIntro, state, placeContext.selectedStories, placeContext.filteredPlaces);
+    renderRelations(elements.relations, state, placeContext.selectedPlace, placeContext.eraScopedPlaces);
+    renderMap(state, placeContext.filteredPlaces, placeContext.selectedPlace);
+    renderPopup(elements.popup, placeContext.selectedPlace, state);
+    renderStories(elements.stories, state, placeContext.filteredPlaces);
     setMapStatus(elements.mapStatus, EMPTY);
   }
 
@@ -1362,24 +988,7 @@
           }
         });
 
-        elements.search.addEventListener('input', function (event) {
-          state.search = event.target.value || EMPTY;
-          state.selectedPostId = 0;
-          state.shouldPan = false;
-          state.render();
-        });
-
-        elements.reset.addEventListener('click', function () {
-          state.era = EMPTY;
-          state.actorKey = EMPTY;
-          state.currentStatus = EMPTY;
-          state.currentUseType = EMPTY;
-          state.search = EMPTY;
-          state.selectedPostId = 0;
-          state.shouldPan = false;
-          elements.search.value = EMPTY;
-          state.render();
-        });
+        AtlasPlaces.bindInputs(elements, state);
 
         elements.popup.addEventListener('iss-close-selection', function () {
           state.selectedPostId = -1;

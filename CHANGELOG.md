@@ -6,6 +6,10 @@ be recovered from Git history.
 
 ## 2026-06-15
 
+- Split the interactive Schöneweide Atlas place/filter UI out of the main runtime:
+  - added `themes/industriesalon/assets/js/atlas/places.js` for filter buttons, filter labels/counts, search/reset bindings, root filter attributes, summary/count rendering, and selected-place render context;
+  - wired the new `iss-register-schoneweide-atlas-places` script between the store module and the existing public Atlas view handle;
+  - left marker rendering, popup/detail UI, story cards, and relation rails in `schoneweide.js` for the next focused split.
 - Continued modularizing the interactive Schöneweide Atlas runtime:
   - extracted payload normalization, derived era/actor maps, filter/selection state, selected story resolution, and relation scoring into `themes/industriesalon/assets/js/atlas/store.js`;
   - wired the new `iss-register-schoneweide-atlas-store` script before the existing public Atlas view handle;
