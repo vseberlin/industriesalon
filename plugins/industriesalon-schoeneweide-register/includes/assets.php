@@ -59,12 +59,55 @@ add_action('init', function () {
         );
     }
 
+    $atlas_runtime_scripts = [
+        'iss-register-schoneweide-atlas-core' => [
+            'path' => '/assets/js/atlas/core.js',
+            'deps' => [],
+        ],
+        'iss-register-schoneweide-atlas-provider' => [
+            'path' => '/assets/js/atlas/provider.js',
+            'deps' => ['iss-register-schoneweide-atlas-core'],
+        ],
+        'iss-register-schoneweide-atlas-layout' => [
+            'path' => '/assets/js/atlas/layout.js',
+            'deps' => ['iss-register-schoneweide-atlas-core'],
+        ],
+        'iss-register-schoneweide-atlas-config' => [
+            'path' => '/assets/js/atlas/config.js',
+            'deps' => ['iss-register-schoneweide-atlas-core'],
+        ],
+        'iss-register-schoneweide-atlas-map' => [
+            'path' => '/assets/js/atlas/map.js',
+            'deps' => ['iss-register-schoneweide-atlas-core', 'iss-register-schoneweide-atlas-provider'],
+        ],
+    ];
+
+    foreach ($atlas_runtime_scripts as $handle => $script) {
+        $script_abs = $theme_dir . $script['path'];
+        if (!file_exists($script_abs)) {
+            continue;
+        }
+
+        wp_register_script(
+            $handle,
+            iss_register_get_theme_asset_url($script['path']),
+            $script['deps'],
+            (string) filemtime($script_abs),
+            true
+        );
+    }
+
     $atlas_script_rel = '/assets/js/schoneweide.js';
     $atlas_script_abs = $theme_dir . $atlas_script_rel;
     if (file_exists($atlas_script_abs)) {
         $atlas_script_deps = wp_script_is('iss-register-schoneweide-atlas-leaflet', 'registered')
             ? ['iss-register-schoneweide-atlas-leaflet']
             : [];
+        foreach (array_keys($atlas_runtime_scripts) as $runtime_handle) {
+            if (wp_script_is($runtime_handle, 'registered')) {
+                $atlas_script_deps[] = $runtime_handle;
+            }
+        }
 
         wp_register_script(
             'iss-register-schoneweide-atlas-view',

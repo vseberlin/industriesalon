@@ -6,6 +6,10 @@ be recovered from Git history.
 
 ## 2026-06-15
 
+- Began modularizing the interactive Schöneweide Atlas runtime without changing the public block or REST payload:
+  - extracted shared Atlas runtime core utilities, provider selection, payload/config loading, resize/layout sync, and the Leaflet map adapter into ordered theme JS modules;
+  - kept the existing `iss-register-schoneweide-atlas-view` handle as the public view entrypoint with the new modules as dependencies;
+  - left place filtering/list UI, detail/popup rendering, and story/relation panels in the main runtime for the next split.
 - Defined the static-map DTO boundary between `iss-relations` and `iss-frontend`: block place selection now normalizes into a relation result with ordered static-map place DTOs, and `docs/architecture/static-map-rendering.md` records the contract keys.
 - Split the `iss-relations` related-content block editor script into focused modules for editor context, place-source controls, related-card controls, static-map controls, spine-strip controls, and editorial-signal controls while keeping the existing block names, render callbacks, and `iss-relations-related-blocks` editor handle stable.
 - Froze the first-class static map block surface:

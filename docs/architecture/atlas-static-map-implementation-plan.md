@@ -345,7 +345,11 @@ prefer a clean internal rewrite over temporary delegation layers.
 8. Extend `map-block-audit` to verify real marker resolution for actual block
    usage.
 9. Modularize the interactive Atlas app around config, store, map adapter, place
-   UI, detail UI, layout, and provider modules.
+   UI, detail UI, layout, and provider modules. First slice is done: provider,
+   config/payload loading, layout resize sync, and the Leaflet map adapter are
+   separate runtime modules behind the existing public view handle. Store/state,
+   place/filter UI, and detail/story/relation rendering remain in the main
+   runtime for the next split.
 10. Add fullscreen and kiosk modes as layout states, not as separate apps.
 11. Add contract/schema tests for Atlas REST payloads and static map inputs.
 12. Only after this, consider broader archive/graph API consolidation.

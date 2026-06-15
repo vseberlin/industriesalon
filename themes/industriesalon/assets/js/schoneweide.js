@@ -1,5 +1,11 @@
 (function () {
-  var EMPTY = '';
+  var Atlas = window.issSchoneweideAtlas || {};
+  var AtlasCore = Atlas.core || {};
+  var AtlasConfig = Atlas.config || {};
+  var AtlasLayout = Atlas.layout || {};
+  var AtlasMap = Atlas.map || {};
+  var AtlasProvider = Atlas.provider || {};
+  var EMPTY = AtlasCore.EMPTY || '';
   var DEFAULT_ERA_LABEL = 'Alle Zeiten';
   var DEFAULT_STATUS_LABEL = 'Alle Situationen';
   var DEFAULT_USE_TYPE_LABEL = 'Alle Nutzungen';
@@ -40,7 +46,6 @@
   var HISTORICAL_NO_DATA_KEY = 'no_data';
   var ERA_FILTER_CONTEXT_ONLY = true;
   var DEFAULT_ACTOR_LABEL = 'Alle Akteure';
-  var DEFAULT_RELATION_MAP_URL = '/wp-content/themes/industriesalon/assets/maps/schoneweide-map-canonical.png';
   var UNKNOWN_EPOCH_SUMMARY =
     'Für diesen Ort liegen im gewählten Zeitfenster bisher keine gesicherten historischen Nachweise vor. Wenn Sie historische Dokumente, Fotos oder andere Objekte haben, freuen wir uns über Ihre Kontaktaufnahme.';
   var ATLAS_AREAS = {
@@ -50,45 +55,7 @@
     Schöneweide: true,
     Wuhlheide: true
   };
-  var MAP_BOUNDS = {
-    minLat: 52.4448,
-    maxLat: 52.4724,
-    minLng: 13.4988,
-    maxLng: 13.5405
-  };
-  var CARTO_BASEMAP = {
-    tileUrl: 'https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png',
-    options: {
-      attribution:
-        '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>, ' +
-        '&copy; <a href="https://carto.com/attributions">CARTO</a>',
-      maxZoom: 20,
-      subdomains: 'abcd'
-    }
-  };
-  var OVERLAY_FAMILY_STYLES = {
-    company: {
-      color: '#8f1e14',
-      weight: 1,
-      opacity: 0.72,
-      fillColor: '#d33a2c',
-      fillOpacity: 0.12
-    },
-    infrastructure: {
-      color: '#183949',
-      weight: 1,
-      opacity: 0.7,
-      fillColor: '#2f5f7a',
-      fillOpacity: 0.1
-    },
-    default: {
-      color: '#574d44',
-      weight: 1,
-      opacity: 0.66,
-      fillColor: '#8b7f76',
-      fillOpacity: 0.08
-    }
-  };
+  var MAP_BOUNDS = AtlasCore.MAP_BOUNDS;
 
   function text(value) {
     return typeof value === 'string' ? value.trim() : EMPTY;
@@ -133,35 +100,8 @@
       .replace(/'/g, '&#039;');
   }
 
-  function getBasemapConfig(config) {
-    config = config && typeof config === 'object' ? config : {};
-    var provider = text(config.basemapProvider).toLowerCase();
-    var maptilerKey = text(config.maptilerKey);
-    var maptilerStyle = text(config.maptilerStyle) || 'streets-v2';
-
-    if (provider === 'maptiler' && maptilerKey) {
-      return {
-        tileUrl: 'https://api.maptiler.com/maps/' + encodeURIComponent(maptilerStyle) + '/{z}/{x}/{y}.png?key=' + encodeURIComponent(maptilerKey),
-        options: {
-          attribution:
-            '<a href="https://www.maptiler.com/copyright/" target="_blank">&copy; MapTiler</a> ' +
-            '<a href="https://www.openstreetmap.org/copyright" target="_blank">&copy; OpenStreetMap contributors</a>',
-          tileSize: 512,
-          zoomOffset: -1,
-          minZoom: 1,
-          maxZoom: 20,
-          crossOrigin: true
-        }
-      };
-    }
-
-    return CARTO_BASEMAP;
-  }
-
   function getStaticRelationMapUrl(config) {
-    config = config && typeof config === 'object' ? config : {};
-    var configured = text(config.relationStaticMapUrl);
-    return configured ? relativeUrl(configured) : DEFAULT_RELATION_MAP_URL;
+    return AtlasProvider.getStaticRelationMapUrl(config);
   }
 
   function createElement(tagName, className, textValue) {
@@ -1546,173 +1486,21 @@
   }
 
   function createLeafletState(container, config) {
-    if (!window.L) {
-      return null;
-    }
-
-    var atlasBounds = window.L.latLngBounds(
-      [MAP_BOUNDS.minLat, MAP_BOUNDS.minLng],
-      [MAP_BOUNDS.maxLat, MAP_BOUNDS.maxLng]
-    );
-    var map = window.L.map(container, {
-      attributionControl: true,
-      maxBounds: atlasBounds.pad(0.16),
-      maxBoundsViscosity: 1,
-      scrollWheelZoom: false,
-      tap: false,
-      zoomControl: false,
-      zoomSnap: 0.25,
-      zoomDelta: 0.5
-    });
-
-    window.L.control.zoom({ position: 'bottomright' }).addTo(map);
-    var basemap = getBasemapConfig(config);
-    window.L.tileLayer(basemap.tileUrl, basemap.options).addTo(map);
-
-    map.createPane('issAtlasOverlays');
-    map.getPane('issAtlasOverlays').style.zIndex = 350;
-
-    map.fitBounds(atlasBounds, { padding: [24, 24] });
-    map.setMinZoom(map.getZoom() - 0.25);
-
-    return {
-      map: map,
-      markerLayer: window.L.layerGroup().addTo(map),
-      overlayLayer: null
-    };
-  }
-
-  function getOverlayStyle(feature) {
-    var properties = feature && feature.properties ? feature.properties : {};
-    var family = text(properties.overlay_family).toLowerCase();
-    return OVERLAY_FAMILY_STYLES[family] || OVERLAY_FAMILY_STYLES.default;
-  }
-
-  function normalizeOverlayFeature(feature) {
-    if (!feature || typeof feature !== 'object' || !feature.geometry || !feature.properties) {
-      return null;
-    }
-
-    var properties = feature.properties;
-    var status = text(properties.status).toLowerCase();
-    var family = text(properties.overlay_family).toLowerCase();
-    var visibility = properties.default_visibility;
-
-    if (status === 'hidden' || status === 'deprecated') {
-      return null;
-    }
-
-    if (visibility === false) {
-      return null;
-    }
-
-    return {
-      type: 'Feature',
-      geometry: feature.geometry,
-      properties: {
-        overlay_slug: text(properties.overlay_slug),
-        label: text(properties.label),
-        overlay_family: family || 'default',
-        overlay_kind: text(properties.overlay_kind),
-        status: status || 'active',
-        priority: Number.isFinite(Number(properties.priority)) ? Number(properties.priority) : 0,
-        color_token: text(properties.color_token),
-        panel_theme: text(properties.panel_theme),
-        source_type: text(properties.source_type),
-        source_confidence: text(properties.source_confidence),
-        notes: text(properties.notes),
-        era_slugs: Array.isArray(properties.era_slugs) ? properties.era_slugs.map(text).filter(Boolean) : [],
-        function_keys: Array.isArray(properties.function_keys) ? properties.function_keys.map(text).filter(Boolean) : [],
-        current_statuses: Array.isArray(properties.current_statuses) ? properties.current_statuses.map(text).filter(Boolean) : [],
-        current_use_types: Array.isArray(properties.current_use_types) ? properties.current_use_types.map(text).filter(Boolean) : [],
-        risk_flags: Array.isArray(properties.risk_flags) ? properties.risk_flags.map(text).filter(Boolean) : [],
-        problem_flags: Array.isArray(properties.problem_flags) ? properties.problem_flags.map(text).filter(Boolean) : [],
-        future_flags: Array.isArray(properties.future_flags) ? properties.future_flags.map(text).filter(Boolean) : [],
-        topic_tags: Array.isArray(properties.topic_tags) ? properties.topic_tags.map(text).filter(Boolean) : [],
-        relation_slugs: Array.isArray(properties.relation_slugs) ? properties.relation_slugs.map(text).filter(Boolean) : []
-      }
-    };
-  }
-
-  function addOverlayLayer(state, geojson) {
-    if (!state || !state.map || !window.L || !geojson || !Array.isArray(geojson.features) || !geojson.features.length) {
-      return;
-    }
-
-    if (state.overlayLayer) {
-      state.map.removeLayer(state.overlayLayer);
-      state.overlayLayer = null;
-    }
-
-    var features = geojson.features
-      .map(normalizeOverlayFeature)
-      .filter(Boolean);
-
-    if (!features.length) {
-      return;
-    }
-
-    state.overlayLayer = window.L.geoJSON(null, {
-      pane: 'issAtlasOverlays',
-      interactive: false,
-      filter: function (feature) {
-        return !!normalizeOverlayFeature(feature);
-      },
-      style: function (feature) {
-        var normalized = normalizeOverlayFeature(feature);
-        var style = getOverlayStyle(normalized || feature);
-        style.lineJoin = 'round';
-        style.lineCap = 'round';
-        style.smoothFactor = 1.2;
-        return style;
-      }
-    });
-
-    state.overlayLayer.addData({
-      type: 'FeatureCollection',
-      features: features
-    });
-    state.overlayLayer.addTo(state.map);
+    return AtlasMap.createLeafletState(container, config);
   }
 
   function renderMap(state, filteredPlaces, selectedPlace) {
-    state.leaflet.markerLayer.clearLayers();
-
-    filteredPlaces
-      .slice()
-      .sort(function (left, right) {
-        if (selectedPlace && left.post_id === selectedPlace.post_id) {
-          return 1;
-        }
-
-        if (selectedPlace && right.post_id === selectedPlace.post_id) {
-          return -1;
-        }
-
-        return left.storyScore - right.storyScore;
-      })
-      .forEach(function (place) {
-        var active = selectedPlace && selectedPlace.post_id === place.post_id;
-        var marker = window.L.marker([place.lat, place.lng], {
-          icon: createMarkerIcon(place, active, state),
-          keyboard: true,
-          riseOnHover: true,
-          zIndexOffset: active ? 2400 : 0
-        });
-
-        marker.on('click', function () {
+    AtlasMap.renderMarkers(state.leaflet, filteredPlaces, selectedPlace, {
+      createMarkerIcon: function (place, active) {
+        return createMarkerIcon(place, active, state);
+      },
+      onSelect: function (place) {
           state.selectedPostId = place.post_id;
           state.shouldPan = true;
           state.render();
-        });
-
-        state.leaflet.markerLayer.addLayer(marker);
-      });
-
-    if (state.shouldPan && selectedPlace) {
-      state.leaflet.map.panTo([selectedPlace.lat, selectedPlace.lng], { animate: true });
-    }
-
+      },
+      shouldPan: state.shouldPan
+    });
     state.shouldPan = false;
   }
 
@@ -2190,93 +1978,23 @@
   }
 
   function bindMapSizeSync(map, surface) {
-    var frameId = 0;
-
-    function sync() {
-      if (frameId) {
-        return;
-      }
-
-      frameId = window.requestAnimationFrame(function () {
-        frameId = 0;
-        map.invalidateSize({ pan: false });
-      });
-    }
-
-    window.addEventListener('resize', sync);
-
-    if (window.ResizeObserver && surface) {
-      var observer = new window.ResizeObserver(sync);
-      observer.observe(surface);
-    }
-
-    sync();
+    AtlasLayout.bindMapSizeSync(map, surface);
   }
-
-  function fetchJson(url) {
-    return fetch(url, { credentials: 'same-origin' }).then(function (response) {
-      if (!response.ok) {
-        throw new Error('Request failed');
-      }
-
-      return response.json();
-    });
-  }
-
-  var atlasPayloadCache = {};
 
   function getAtlasPayload(config) {
-    var contextUrl = text(config.contextUrl);
-    var overlaysUrl = text(config.overlaysUrl);
-    var cacheKey = [
-      text(config.placesUrl),
-      contextUrl,
-      overlaysUrl
-    ].join('|');
-
-    if (!atlasPayloadCache[cacheKey]) {
-      atlasPayloadCache[cacheKey] = Promise.all([
-        fetchJson(config.placesUrl),
-        contextUrl
-          ? fetchJson(contextUrl).catch(function () {
-              return { eras: [], stories: [] };
-            })
-          : Promise.resolve({ eras: [], stories: [] }),
-        overlaysUrl
-          ? fetchJson(overlaysUrl).catch(function () {
-              return { type: 'FeatureCollection', features: [] };
-            })
-          : Promise.resolve({ type: 'FeatureCollection', features: [] })
-      ]);
-    }
-
-    return atlasPayloadCache[cacheKey];
+    return AtlasConfig.getAtlasPayload(config);
   }
 
   function reportInitError(root, message, detail) {
-    if (window.console && typeof window.console.error === 'function') {
-      window.console.error('Schoneweide Atlas:', message, detail || root);
-    }
+    AtlasConfig.reportInitError(root, message, detail);
   }
 
   function readAtlasConfig(root) {
-    var node = root ? root.querySelector('[data-iss-schoneweide-atlas-config]') : null;
-
-    if (!node) {
-      return {};
-    }
-
-    try {
-      var parsed = JSON.parse(node.textContent || '{}');
-      return parsed && typeof parsed === 'object' ? parsed : {};
-    } catch (error) {
-      reportInitError(root, 'Atlas config JSON could not be parsed.', error);
-      return {};
-    }
+    return AtlasConfig.readAtlasConfig(root);
   }
 
   function collectRoots() {
-    return Array.prototype.slice.call(document.querySelectorAll('[data-iss-schoneweide-atlas]'));
+    return AtlasConfig.collectRoots();
   }
 
   function initRoot(root) {
@@ -2361,7 +2079,7 @@
           return;
         }
 
-        addOverlayLayer(leafletState, overlayPayload);
+        AtlasMap.addOverlayLayer(leafletState, overlayPayload);
 
         var state = {
           root: root,
