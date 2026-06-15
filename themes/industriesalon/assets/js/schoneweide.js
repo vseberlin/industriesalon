@@ -10,31 +10,11 @@
   var AtlasDetail = Atlas.detail || {};
   var AtlasStories = Atlas.stories || {};
   var AtlasRelations = Atlas.relations || {};
-  var AtlasStoreLabels = AtlasStore.labels || {};
+  var AtlasMarkers = Atlas.markers || {};
   var EMPTY = AtlasCore.EMPTY || '';
-  var HISTORICAL_NO_DATA_KEY = AtlasStoreLabels.HISTORICAL_NO_DATA_KEY || 'no_data';
 
   function text(value) {
     return typeof value === 'string' ? value.trim() : EMPTY;
-  }
-
-  function compact(value, maxLength) {
-    var normalized = text(value).replace(/\s+/g, ' ');
-
-    if (!normalized || normalized.length <= maxLength) {
-      return normalized;
-    }
-
-    return normalized.slice(0, maxLength - 1).trim() + '…';
-  }
-
-  function escapeHtml(value) {
-    return String(value)
-      .replace(/&/g, '&amp;')
-      .replace(/</g, '&lt;')
-      .replace(/>/g, '&gt;')
-      .replace(/"/g, '&quot;')
-      .replace(/'/g, '&#039;');
   }
 
   function getStaticRelationMapUrl(config) {
@@ -79,14 +59,6 @@
     return AtlasStore.sortPlaces(left, right);
   }
 
-  function placeMatchesActor(place, actorKey, eraSlug) {
-    return AtlasStore.placeMatchesActor(place, actorKey, eraSlug);
-  }
-
-  function isUnknownEpochFunction(place, state) {
-    return AtlasStore.isUnknownEpochFunction(place, state);
-  }
-
   function setMapStatus(container, message) {
     container.innerHTML = EMPTY;
 
@@ -99,52 +71,8 @@
     container.appendChild(createElement('p', 'iss-atlas-loading', message));
   }
 
-  function createMarkerIcon(place, active, state) {
-    var statusClass = text(place.current_status)
-      ? ' is-status-' + text(place.current_status).replace(/[^a-z0-9_-]+/g, '-')
-      : EMPTY;
-    var actorClass = EMPTY;
-    var unknownFunctionClass = EMPTY;
-    var highlightUnknowns = state && state.activeEra &&
-      (state.currentUseType === HISTORICAL_NO_DATA_KEY || state.currentUseType === EMPTY);
-
-    if (state && state.actorKey && placeMatchesActor(place, state.actorKey, state.era)) {
-      actorClass = ' is-actor-focus is-actor-' + state.actorKey.replace(/[^a-z0-9_-]+/g, '-');
-    }
-
-    if (highlightUnknowns && isUnknownEpochFunction(place, state)) {
-      unknownFunctionClass = ' is-function-unknown';
-    }
-
-    return window.L.divIcon({
-      className: 'iss-atlas-marker' + statusClass + actorClass + unknownFunctionClass + (active ? ' is-active' : EMPTY),
-      html:
-        '<span class="iss-atlas-marker__dot"></span>' +
-        '<span class="iss-atlas-marker__label">' +
-        escapeHtml(compact(place.name, 42)) +
-        '</span>',
-      iconSize: [16, 16],
-      iconAnchor: [8, 8]
-    });
-  }
-
   function createLeafletState(container, config) {
     return AtlasMap.createLeafletState(container, config);
-  }
-
-  function renderMap(state, filteredPlaces, selectedPlace) {
-    AtlasMap.renderMarkers(state.leaflet, filteredPlaces, selectedPlace, {
-      createMarkerIcon: function (place, active) {
-        return createMarkerIcon(place, active, state);
-      },
-      onSelect: function (place) {
-          state.selectedPostId = place.post_id;
-          state.shouldPan = true;
-          state.render();
-      },
-      shouldPan: state.shouldPan
-    });
-    state.shouldPan = false;
   }
 
   function render(elements, state) {
@@ -152,7 +80,7 @@
 
     AtlasStories.renderStoryIntro(elements.storyIntro, state, placeContext.selectedStories, placeContext.filteredPlaces);
     AtlasRelations.renderRelations(elements.relations, state, placeContext.selectedPlace, placeContext.eraScopedPlaces);
-    renderMap(state, placeContext.filteredPlaces, placeContext.selectedPlace);
+    AtlasMarkers.renderMap(state, placeContext.filteredPlaces, placeContext.selectedPlace);
     AtlasDetail.renderPopup(elements.popup, placeContext.selectedPlace, state);
     AtlasStories.renderStories(elements.stories, state, placeContext.filteredPlaces);
     setMapStatus(elements.mapStatus, EMPTY);

@@ -354,8 +354,9 @@ prefer a clean internal rewrite over temporary delegation layers.
    render context, root filter attributes, and count/summary rendering live in
    `atlas/places.js`. Fourth slice is done: popup/detail rendering lives in
    `atlas/detail.js`, story intro/cards live in `atlas/stories.js`, and relation
-   rails live in `atlas/relations.js`. Marker icon/map orchestration remains in
-   the main runtime for the next split.
+   rails live in `atlas/relations.js`. Fifth slice is done: marker icon creation
+   and marker render orchestration live in `atlas/markers.js`, leaving
+   `schoneweide.js` as the bootstrap coordinator.
 10. Add fullscreen and kiosk modes as layout states, not as separate apps.
 11. Add contract/schema tests for Atlas REST payloads and static map inputs.
 12. Only after this, consider broader archive/graph API consolidation.

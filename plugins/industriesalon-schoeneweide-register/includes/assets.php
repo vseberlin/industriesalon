@@ -100,6 +100,10 @@ add_action('init', function () {
             'path' => '/assets/js/atlas/map.js',
             'deps' => ['iss-register-schoneweide-atlas-core', 'iss-register-schoneweide-atlas-provider'],
         ],
+        'iss-register-schoneweide-atlas-markers' => [
+            'path' => '/assets/js/atlas/markers.js',
+            'deps' => ['iss-register-schoneweide-atlas-core', 'iss-register-schoneweide-atlas-store', 'iss-register-schoneweide-atlas-map'],
+        ],
     ];
 
     foreach ($atlas_runtime_scripts as $handle => $script) {
