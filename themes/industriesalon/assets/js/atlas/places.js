@@ -431,6 +431,20 @@
     return context;
   }
 
+  function resetState(elements, state) {
+    state.era = EMPTY;
+    state.actorKey = EMPTY;
+    state.currentStatus = EMPTY;
+    state.currentUseType = EMPTY;
+    state.search = EMPTY;
+    state.selectedPostId = 0;
+    state.shouldPan = false;
+    if (elements.search) {
+      elements.search.value = EMPTY;
+    }
+    state.render();
+  }
+
   function bindInputs(elements, state) {
     elements.search.addEventListener('input', function (event) {
       state.search = event.target.value || EMPTY;
@@ -440,15 +454,7 @@
     });
 
     elements.reset.addEventListener('click', function () {
-      state.era = EMPTY;
-      state.actorKey = EMPTY;
-      state.currentStatus = EMPTY;
-      state.currentUseType = EMPTY;
-      state.search = EMPTY;
-      state.selectedPostId = 0;
-      state.shouldPan = false;
-      elements.search.value = EMPTY;
-      state.render();
+      resetState(elements, state);
     });
   }
 
@@ -456,7 +462,8 @@
     bindInputs: bindInputs,
     buildRenderContext: buildRenderContext,
     render: render,
-    renderFilters: renderFilters
+    renderFilters: renderFilters,
+    resetState: resetState
   };
 
   window.issSchoneweideAtlas = Atlas;

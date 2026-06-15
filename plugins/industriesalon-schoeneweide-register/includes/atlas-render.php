@@ -63,6 +63,11 @@ function iss_register_render_schoneweide_atlas(array $attributes = []): string
     $html .= '<h2 class="iss-heading__title">Orte</h2>';
     $html .= '<p class="iss-heading__text">Heutige Nutzung filtern, Zeitfenster wechseln und im Korridor suchen.</p>';
     $html .= '</div>';
+    $html .= '<div class="iss-atlas-app__layout-controls" data-iss-schoneweide-layout-controls>';
+    $html .= '<button class="iss-atlas-app__layout-mode is-active" type="button" data-iss-atlas-layout-mode="embedded" aria-pressed="true">Karte</button>';
+    $html .= '<button class="iss-atlas-app__layout-mode" type="button" data-iss-atlas-layout-mode="fullscreen" aria-pressed="false">Vollbild</button>';
+    $html .= '<button class="iss-atlas-app__layout-mode" type="button" data-iss-atlas-layout-mode="kiosk" aria-pressed="false">Kiosk</button>';
+    $html .= '</div>';
     $html .= '<p class="iss-atlas-app__scope-note">Ausschnitt: Schöneweide beidseits der Spree mit Nalepastraßen-Korridor.</p>';
     $html .= '<div class="iss-atlas-app__search">';
     $html .= '<label class="screen-reader-text" for="' . esc_attr($search_id) . '">Ort suchen</label>';

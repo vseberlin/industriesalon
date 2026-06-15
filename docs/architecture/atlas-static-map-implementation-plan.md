@@ -358,6 +358,9 @@ prefer a clean internal rewrite over temporary delegation layers.
    and marker render orchestration live in `atlas/markers.js`, leaving
    `schoneweide.js` as the bootstrap coordinator.
 10. Add fullscreen and kiosk modes as layout states, not as separate apps.
+    Done for the current public block: embedded, fullscreen, and kiosk are
+    modes on the existing Schöneweide Atlas block, with Leaflet resize sync,
+    fullscreen fallback behavior, and kiosk idle reset.
 11. Add contract/schema tests for Atlas REST payloads and static map inputs.
     Done for the current boundary: `iss-register contract-check` validates
     Atlas REST place/context schema, and `iss-relations static-map-contract-check`

@@ -18,6 +18,10 @@
   --iss-atlas-marker-ring: rgba(var(--iss-accent-rgb), 0.18);
 }
 
+body.iss-atlas-layout-open {
+  overflow: hidden;
+}
+
 .iss-atlas-app {
   --iss-atlas-panel-bg: var(--iss-atlas-surface, #f3f1eb);
   --iss-atlas-panel-bg-strong: var(--iss-atlas-surface-strong, rgba(245, 243, 238, 0.96));
@@ -41,6 +45,47 @@
   grid-template-columns: minmax(14.5rem, 17rem) minmax(0, 1fr);
   gap: 1rem;
   align-items: stretch;
+}
+
+.iss-atlas-app[data-atlas-layout-mode="fullscreen"],
+.iss-atlas-app[data-atlas-layout-mode="kiosk"] {
+  --iss-atlas-stage-height: calc(100dvh - 2rem);
+  position: fixed;
+  inset: 0;
+  z-index: 99990;
+  width: 100vw;
+  height: 100dvh;
+  padding: 1rem;
+  background: color-mix(in srgb, var(--iss-atlas-panel-bg) 94%, var(--iss-black) 6%);
+  grid-template-columns: minmax(15rem, 19rem) minmax(0, 1fr);
+  overflow: auto;
+}
+
+.iss-atlas-app[data-atlas-layout-mode="fullscreen"] .iss-atlas-app__main,
+.iss-atlas-app[data-atlas-layout-mode="fullscreen"] .iss-atlas-app__map-stage,
+.iss-atlas-app[data-atlas-layout-mode="kiosk"] .iss-atlas-app__main,
+.iss-atlas-app[data-atlas-layout-mode="kiosk"] .iss-atlas-app__map-stage {
+  min-height: calc(100dvh - 2rem);
+}
+
+.iss-atlas-app[data-atlas-layout-mode="fullscreen"] .iss-atlas-app__sidebar,
+.iss-atlas-app[data-atlas-layout-mode="fullscreen"] .iss-atlas-app__map-surface,
+.iss-atlas-app[data-atlas-layout-mode="kiosk"] .iss-atlas-app__sidebar,
+.iss-atlas-app[data-atlas-layout-mode="kiosk"] .iss-atlas-app__map-surface {
+  min-height: calc(100dvh - 2rem);
+}
+
+.iss-atlas-app[data-atlas-layout-mode="kiosk"] {
+  grid-template-columns: minmax(16rem, 20rem) minmax(0, 1fr);
+}
+
+.iss-atlas-app[data-atlas-layout-mode="kiosk"] .iss-atlas-app__scope-note,
+.iss-atlas-app[data-atlas-layout-mode="kiosk"] .iss-atlas-app__story-note {
+  display: none;
+}
+
+.iss-atlas-app[data-atlas-layout-mode="kiosk"] .iss-atlas-app__filter-button {
+  min-height: 2.72rem;
 }
 
 [data-iss-schoneweide-atlas][data-active-era="kaiserzeit"] {
@@ -157,6 +202,46 @@
   font-size: 0.81rem;
   font-weight: 600;
   line-height: 1.45;
+}
+
+.iss-atlas-app__layout-controls {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 0.28rem;
+}
+
+.iss-atlas-app__layout-mode {
+  min-width: 0;
+  min-height: 2.18rem;
+  padding: 0.42rem 0.48rem;
+  border: 1px solid var(--iss-atlas-panel-border);
+  border-radius: 0;
+  background: rgba(247, 245, 240, 0.95);
+  color: rgba(20, 18, 16, 0.78);
+  font: inherit;
+  font-size: 0.78rem;
+  font-weight: 800;
+  line-height: 1.2;
+  text-align: center;
+  cursor: pointer;
+  transition:
+    border-color var(--iss-transition),
+    background-color var(--iss-transition),
+    color var(--iss-transition);
+}
+
+.iss-atlas-app__layout-mode:hover,
+.iss-atlas-app__layout-mode:focus-visible {
+  border-color: rgba(20, 18, 16, 0.46);
+  background: rgba(239, 236, 229, 0.98);
+  color: var(--iss-black);
+  outline: none;
+}
+
+.iss-atlas-app__layout-mode.is-active {
+  border-color: color-mix(in srgb, var(--iss-accent) 70%, rgba(18, 16, 15, 0.2));
+  background: var(--iss-accent);
+  color: var(--iss-white);
 }
 
 .iss-atlas-app__story-note {
@@ -1162,6 +1247,11 @@
     align-items: start;
   }
 
+  .iss-atlas-app[data-atlas-layout-mode="fullscreen"],
+  .iss-atlas-app[data-atlas-layout-mode="kiosk"] {
+    grid-template-columns: 1fr;
+  }
+
   .iss-atlas-app__sidebar,
   .iss-atlas-app__main,
   .iss-atlas-app__map-stage {
@@ -1187,6 +1277,25 @@
 @media (max-width: 781px) {
   .iss-atlas-app {
     --iss-atlas-stage-height: 28rem;
+  }
+
+  .iss-atlas-app[data-atlas-layout-mode="fullscreen"],
+  .iss-atlas-app[data-atlas-layout-mode="kiosk"] {
+    --iss-atlas-stage-height: 64dvh;
+    padding: 0.75rem;
+  }
+
+  .iss-atlas-app[data-atlas-layout-mode="fullscreen"] .iss-atlas-app__main,
+  .iss-atlas-app[data-atlas-layout-mode="fullscreen"] .iss-atlas-app__map-stage,
+  .iss-atlas-app[data-atlas-layout-mode="kiosk"] .iss-atlas-app__main,
+  .iss-atlas-app[data-atlas-layout-mode="kiosk"] .iss-atlas-app__map-stage {
+    min-height: 0;
+  }
+
+  .iss-atlas-app[data-atlas-layout-mode="fullscreen"] .iss-atlas-app__map-surface,
+  .iss-atlas-app[data-atlas-layout-mode="kiosk"] .iss-atlas-app__map-surface {
+    min-height: var(--iss-atlas-stage-height);
+    height: var(--iss-atlas-stage-height);
   }
 
   .iss-atlas-app__sidebar {

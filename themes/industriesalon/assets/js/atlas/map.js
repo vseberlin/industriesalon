@@ -67,6 +67,7 @@
 
     return {
       map: map,
+      atlasBounds: atlasBounds,
       markerLayer: window.L.layerGroup().addTo(map),
       overlayLayer: null
     };

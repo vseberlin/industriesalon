@@ -6,6 +6,7 @@ be recovered from Git history.
 
 ## 2026-06-15
 
+- Added fullscreen and kiosk layout states to the existing Schöneweide Atlas block: the Atlas now exposes embedded/fullscreen/kiosk controls, keeps the same REST/render path, invalidates Leaflet sizing on mode changes, and resets filters/map view after kiosk idle.
 - Added focused contract/schema checks for Atlas REST payloads and static-map inputs: `iss-register contract-check` now validates Atlas place/context schema, and new `wp iss-relations static-map-contract-check` validates first-class map-block contracts plus static-map relation result/DTO shape.
 - Finished the interactive Atlas runtime module split by extracting marker icon and map-marker orchestration into `atlas/markers.js`, leaving `schoneweide.js` as the bootstrap coordinator for config, payload loading, state creation, and module calls.
 - Split the remaining interactive Atlas DOM-heavy renderers into focused modules:

@@ -126,7 +126,8 @@
       stories: root.querySelector('[data-iss-schoneweide-stories]'),
       count: root.querySelector('[data-iss-schoneweide-count]'),
       search: root.querySelector('[data-iss-schoneweide-search]'),
-      reset: root.querySelector('[data-iss-schoneweide-reset]')
+      reset: root.querySelector('[data-iss-schoneweide-reset]'),
+      layoutControls: root.querySelector('[data-iss-schoneweide-layout-controls]')
     };
   }
 
@@ -256,6 +257,15 @@
         });
 
         bindMapSizeSync(state.leaflet.map, elements.mapSurface);
+        if (typeof AtlasLayout.bindLayoutModes === 'function') {
+          AtlasLayout.bindLayoutModes(root, {
+            controls: elements.layoutControls,
+            leaflet: state.leaflet,
+            reset: function () {
+              AtlasPlaces.resetState(elements, state);
+            }
+          });
+        }
         state.render();
         root.setAttribute('data-iss-schoneweide-atlas-ready', 'true');
       })
