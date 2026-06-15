@@ -84,6 +84,18 @@ add_action('init', function () {
             'path' => '/assets/js/atlas/places.js',
             'deps' => ['iss-register-schoneweide-atlas-core', 'iss-register-schoneweide-atlas-store'],
         ],
+        'iss-register-schoneweide-atlas-detail' => [
+            'path' => '/assets/js/atlas/detail.js',
+            'deps' => ['iss-register-schoneweide-atlas-core', 'iss-register-schoneweide-atlas-store'],
+        ],
+        'iss-register-schoneweide-atlas-stories' => [
+            'path' => '/assets/js/atlas/stories.js',
+            'deps' => ['iss-register-schoneweide-atlas-core', 'iss-register-schoneweide-atlas-store', 'iss-register-schoneweide-atlas-detail'],
+        ],
+        'iss-register-schoneweide-atlas-relations' => [
+            'path' => '/assets/js/atlas/relations.js',
+            'deps' => ['iss-register-schoneweide-atlas-core', 'iss-register-schoneweide-atlas-store'],
+        ],
         'iss-register-schoneweide-atlas-map' => [
             'path' => '/assets/js/atlas/map.js',
             'deps' => ['iss-register-schoneweide-atlas-core', 'iss-register-schoneweide-atlas-provider'],

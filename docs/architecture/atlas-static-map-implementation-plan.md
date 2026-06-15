@@ -352,7 +352,9 @@ prefer a clean internal rewrite over temporary delegation layers.
    derived era/actor maps, and relation scoring live in `atlas/store.js`.
    Third slice is done: filter controls, search/reset bindings, selected-place
    render context, root filter attributes, and count/summary rendering live in
-   `atlas/places.js`. Marker/detail, story, and relation DOM rendering remain in
+   `atlas/places.js`. Fourth slice is done: popup/detail rendering lives in
+   `atlas/detail.js`, story intro/cards live in `atlas/stories.js`, and relation
+   rails live in `atlas/relations.js`. Marker icon/map orchestration remains in
    the main runtime for the next split.
 10. Add fullscreen and kiosk modes as layout states, not as separate apps.
 11. Add contract/schema tests for Atlas REST payloads and static map inputs.

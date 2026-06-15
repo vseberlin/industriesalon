@@ -6,6 +6,11 @@ be recovered from Git history.
 
 ## 2026-06-15
 
+- Split the remaining interactive Atlas DOM-heavy renderers into focused modules:
+  - added `atlas/detail.js` for popup/detail rendering and place media figures;
+  - added `atlas/stories.js` for story intro, story cards, and fallback place cards;
+  - added `atlas/relations.js` for relation rail rendering and mini-map projection;
+  - wired the new detail/story/relation script handles before the existing public Atlas view handle, leaving the main runtime focused on bootstrap and marker/map orchestration.
 - Split the interactive Schöneweide Atlas place/filter UI out of the main runtime:
   - added `themes/industriesalon/assets/js/atlas/places.js` for filter buttons, filter labels/counts, search/reset bindings, root filter attributes, summary/count rendering, and selected-place render context;
   - wired the new `iss-register-schoneweide-atlas-places` script between the store module and the existing public Atlas view handle;

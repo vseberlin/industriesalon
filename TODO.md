@@ -4,7 +4,7 @@ Immediate executable work only. Larger future programs live in `docs/project/bac
 
 ## Active Today
 
-- Continue Atlas cleanup from `docs/architecture/atlas-static-map-implementation-plan.md`: split the remaining interactive Atlas marker/detail, story, and relation rendering into focused modules.
+- Continue Atlas cleanup from `docs/architecture/atlas-static-map-implementation-plan.md`: move the remaining interactive Atlas marker icon/map orchestration out of the main runtime, then keep `schoneweide.js` as bootstrap only.
 - Preserve the current ownership split: `iss-relations` resolves place/source contracts, `iss-frontend` owns frontend map rendering, `industriesalon-schoeneweide-register` owns register/interactive Atlas data, and the theme owns map assets/presets/skins.
 - Polish `/ausstellungen/` search/filter interaction and public view behavior.
 - Before production deploy, verify target mail mode and enable `Tools > ISS Anfragen` notification email only for an approved recipient if request emails should leave the server.
