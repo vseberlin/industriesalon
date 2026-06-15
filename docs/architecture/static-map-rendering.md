@@ -87,15 +87,18 @@ For future map cleanups:
 
 ## Drift Check
 
-Use the contract-driven CLI check after editor/template changes that touch
+Use the contract-driven CLI checks after editor/template changes that touch
 static map blocks:
 
 ```bash
 docker compose run --rm wpcli iss-relations map-block-audit --allow-root
+docker compose run --rm wpcli iss-relations static-map-contract-check --allow-root
 ```
 
 The audit scans DB content plus theme templates for static map blocks with
 ambiguous source settings, unknown presets, or unreadable marker JSON.
+The contract check validates public map-block defaults/source behavior and the
+static-map relation result/DTO shape for first-class static map surfaces.
 
 ## Marker Provenance
 

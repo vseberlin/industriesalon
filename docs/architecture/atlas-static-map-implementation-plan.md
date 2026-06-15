@@ -359,6 +359,10 @@ prefer a clean internal rewrite over temporary delegation layers.
    `schoneweide.js` as the bootstrap coordinator.
 10. Add fullscreen and kiosk modes as layout states, not as separate apps.
 11. Add contract/schema tests for Atlas REST payloads and static map inputs.
+    Done for the current boundary: `iss-register contract-check` validates
+    Atlas REST place/context schema, and `iss-relations static-map-contract-check`
+    validates first-class map-block contracts plus static-map relation
+    result/DTO shape.
 12. Only after this, consider broader archive/graph API consolidation.
 
 ## Final Recommendation
