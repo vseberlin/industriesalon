@@ -690,5 +690,126 @@
     "y": 1964,
     "xNorm": 0.458455,
     "yNorm": 0.420832
+  },
+  {
+    "id": "24814",
+    "post_id": "24814",
+    "name": "Waldfriedhof: Waldrand und Naturraum",
+    "lng": 13.5306677,
+    "lat": 52.465285,
+    "x": 5096,
+    "y": 1242,
+    "xNorm": 0.637036,
+    "yNorm": 0.26614
+  },
+  {
+    "id": "24813",
+    "post_id": "24813",
+    "name": "Waldfriedhof: Kriegsgräber und Gedenkbereich",
+    "lng": 13.5319834,
+    "lat": 52.464199,
+    "x": 5227,
+    "y": 1420,
+    "xNorm": 0.653401,
+    "yNorm": 0.304143
+  },
+  {
+    "id": "24812",
+    "post_id": "24812",
+    "name": "Waldfriedhof: Gräber der Industriegeschichte",
+    "lng": 13.5325188,
+    "lat": 52.4642742,
+    "x": 5280,
+    "y": 1407,
+    "xNorm": 0.66006,
+    "yNorm": 0.301512
+  },
+  {
+    "id": "24811",
+    "post_id": "24811",
+    "name": "Waldfriedhof: Familiengrab Rathenau",
+    "lng": 13.533354,
+    "lat": 52.4633663,
+    "x": 5364,
+    "y": 1556,
+    "xNorm": 0.670448,
+    "yNorm": 0.333282
+  },
+  {
+    "id": "24810",
+    "post_id": "24810",
+    "name": "Waldfriedhof: Feierhalle",
+    "lng": 13.5332972,
+    "lat": 52.4638296,
+    "x": 5358,
+    "y": 1480,
+    "xNorm": 0.669742,
+    "yNorm": 0.31707
+  },
+  {
+    "id": "24809",
+    "post_id": "24809",
+    "name": "Waldfriedhof: Treffpunkt und Hauptachse",
+    "lng": 13.532922,
+    "lat": 52.4639462,
+    "x": 5321,
+    "y": 1461,
+    "xNorm": 0.665075,
+    "yNorm": 0.31299
+  },
+  {
+    "id": "24808",
+    "post_id": "24808",
+    "name": "Waldfriedhof Oberschöneweide",
+    "lng": 13.5320126,
+    "lat": 52.4640509,
+    "x": 5230,
+    "y": 1444,
+    "xNorm": 0.653764,
+    "yNorm": 0.309326
+  },
+  {
+    "id": "60",
+    "post_id": "12923",
+    "name": "IRIS GmbH (infrared & intelligent sensors)",
+    "lng": 13.5308014,
+    "lat": 52.4569886,
+    "x": 5110,
+    "y": 2598,
+    "xNorm": 0.638699,
+    "yNorm": 0.556458
+  },
+  {
+    "id": "56",
+    "post_id": "12919",
+    "name": "Innovationspark Wuhlheide",
+    "lng": 13.5667758,
+    "lat": 52.4681285,
+    "x": 8689,
+    "y": 778,
+    "xNorm": 1.086143,
+    "yNorm": 0.166641
+  },
+  {
+    "id": "30",
+    "post_id": "12894",
+    "name": "Energie-Museum Berlin",
+    "lng": 13.3299736,
+    "lat": 52.4434373,
+    "x": -14873,
+    "y": 4811,
+    "xNorm": -1.859162,
+    "yNorm": 1.030643
+  },
+  {
+    "id": "26",
+    "post_id": "12890",
+    "name": "Spree 27",
+    "lng": 13.5047905,
+    "lat": 52.4657542,
+    "x": 2521,
+    "y": 1166,
+    "xNorm": 0.31518,
+    "yNorm": 0.249719
   }
 ]

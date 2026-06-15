@@ -530,6 +530,32 @@
     return String(value || '') === 'manual';
   }
 
+  function getMapBlockContract(config) {
+    var contracts = settings.mapBlockContracts || {};
+    var name = config && config.name ? String(config.name) : '';
+
+    return name && contracts[name] && typeof contracts[name] === 'object' ? contracts[name] : {};
+  }
+
+  function getRelatedBlockDefaultSource(config) {
+    var contract = getMapBlockContract(config);
+    return String(contract.defaultSource || config.defaultSource || 'current');
+  }
+
+  function getRelatedBlockSource(attrs, config) {
+    var source = attrs && attrs.source ? String(attrs.source) : '';
+    if (source) {
+      return source;
+    }
+
+    var contract = getMapBlockContract(config);
+    if (contract.manualIdsImplyManualSource && attrs && String(attrs.placeIds || '').trim()) {
+      return 'manual';
+    }
+
+    return getRelatedBlockDefaultSource(config);
+  }
+
   function renderRelatedPostTypeControl(attrs, setAttributes, config) {
     if (config.showPostTypeField === false) {
       return null;
@@ -1043,7 +1069,10 @@
   }
 
   function updateSelectedPlaceIds(setAttributes, selectedIds) {
-    setAttributes({ placeIds: stringifyPlaceIds(selectedIds) });
+    setAttributes({
+      source: 'manual',
+      placeIds: stringifyPlaceIds(selectedIds),
+    });
   }
 
   function renderManualPlaceRow(placeOptions, selectedIds, setAttributes, placeId, index) {
@@ -1130,8 +1159,8 @@
     );
   }
 
-  function renderManualPlaceControl(attrs, setAttributes, placeOptions, selectedIds) {
-    if (!isManualPlaceSource(attrs.source)) return null;
+  function renderManualPlaceControl(attrs, setAttributes, placeOptions, selectedIds, config) {
+    if (!isManualPlaceSource(getRelatedBlockSource(attrs, config || {}))) return null;
 
     if (!SelectControl) {
       return TextControl
@@ -1140,7 +1169,7 @@
             help: 'Kommagetrennte register_place IDs, z.B. 12921,12865',
             value: attrs.placeIds || '',
             onChange: function (value) {
-              setAttributes({ placeIds: value });
+              setAttributes({ source: 'manual', placeIds: value });
             },
           })
         : null;
@@ -1209,6 +1238,7 @@
   }
 
   function registerRelatedBlock(name, config) {
+    config = Object.assign({}, config || {}, { name: name });
     var blockSettings = {
       edit: function (props) {
         var attrs = props.attributes || {};
@@ -1340,7 +1370,7 @@
           }, [JSON.stringify({
             postTypes: getSelectedRelatedPostTypes(attrs, config),
             perPage: attrs.perPage || 3,
-            source: attrs.source || 'current',
+            source: getRelatedBlockSource(attrs, config),
             placeIds: attrs.placeIds || '',
             layoutVariant: attrs.layoutVariant || 'grid',
             sortMode: attrs.sortMode || 'auto',
@@ -1362,13 +1392,13 @@
               renderRelatedPostTypeControl(attrs, setAttributes, config),
               el(SelectControl, {
                 label: config.showCardLayoutFields ? 'Quelle' : 'Ortsquelle',
-                value: attrs.source || 'current',
+                value: getRelatedBlockSource(attrs, config),
                 options: config.showCardLayoutFields ? RELATED_SOURCE_OPTIONS : SOURCE_OPTIONS,
                 onChange: function (value) {
-                  setAttributes({ source: value });
+                  setAttributes({ source: value || getRelatedBlockDefaultSource(config) });
                 },
               }),
-              renderManualPlaceControl(attrs, setAttributes, placeOptions, selectedIds),
+              renderManualPlaceControl(attrs, setAttributes, placeOptions, selectedIds, config),
               config.showHeadingFields && TextControl
                 ? el(TextControl, {
                     label: 'Kicker',
@@ -1891,6 +1921,7 @@
   });
 
   registerRelatedBlock('iss/related-place-map', {
+    defaultSource: 'current',
     panelTitle: 'Related Place Map',
     placeholderClassName: 'wp-block-iss-related-place-map-editor',
     placeholderTitle: 'Related Place Map',
@@ -1907,6 +1938,7 @@
   });
 
   registerRelatedBlock('iss/atlas-slice', {
+    defaultSource: 'current',
     panelTitle: 'Atlas Slice',
     placeholderClassName: 'wp-block-iss-atlas-slice-editor',
     placeholderTitle: 'Atlas Slice',
@@ -1924,6 +1956,7 @@
   });
 
   registerRelatedBlock('iss/atlas-strip', {
+    defaultSource: 'current',
     panelTitle: 'Atlas Strip',
     placeholderClassName: 'wp-block-iss-atlas-strip-editor',
     placeholderTitle: 'Atlas Strip',
@@ -1941,6 +1974,7 @@
   });
 
   registerRelatedBlock('iss/spine-strip', {
+    defaultSource: 'manual',
     panelTitle: 'Spine Strip',
     placeholderClassName: 'wp-block-iss-spine-strip-editor',
     placeholderTitle: 'Spine Strip',

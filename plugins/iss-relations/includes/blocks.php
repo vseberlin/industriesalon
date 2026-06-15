@@ -4,6 +4,107 @@ if (!defined('ABSPATH')) {
     exit;
 }
 
+function iss_relations_get_map_block_contracts(): array
+{
+    $contracts = [
+        'iss/related-place-map' => [
+            'default_source' => 'current',
+            'default_preset' => 'default',
+            'manual_ids_imply_manual_source' => true,
+            'frontend_renderer' => 'iss_frontend_render_related_place_map_body',
+        ],
+        'iss/atlas-slice' => [
+            'default_source' => 'current',
+            'default_preset' => 'atlas-slice',
+            'manual_ids_imply_manual_source' => true,
+            'frontend_renderer' => 'iss_frontend_render_atlas_slice_block',
+        ],
+        'iss/atlas-strip' => [
+            'default_source' => 'current',
+            'default_preset' => 'default',
+            'manual_ids_imply_manual_source' => true,
+            'frontend_renderer' => 'iss_frontend_render_atlas_strip_block',
+        ],
+        'iss/spine-strip' => [
+            'default_source' => 'manual',
+            'default_preset' => 'viewport-industrial-spine-strip',
+            'manual_ids_imply_manual_source' => true,
+            'frontend_renderer' => 'iss_frontend_render_spine_strip_block',
+        ],
+        'iss/asymmetric-split-field' => [
+            'default_source' => 'current',
+            'default_preset' => 'default',
+            'manual_ids_imply_manual_source' => true,
+            'frontend_renderer' => 'iss_frontend_render_asymmetric_split_field_block',
+        ],
+    ];
+
+    return apply_filters('iss_relations_map_block_contracts', $contracts);
+}
+
+function iss_relations_get_map_block_contract(string $block_name): array
+{
+    $contracts = iss_relations_get_map_block_contracts();
+
+    return isset($contracts[$block_name]) && is_array($contracts[$block_name])
+        ? $contracts[$block_name]
+        : [];
+}
+
+function iss_relations_get_map_block_default(string $block_name, string $key, $fallback = '')
+{
+    $contract = iss_relations_get_map_block_contract($block_name);
+
+    return array_key_exists($key, $contract) ? $contract[$key] : $fallback;
+}
+
+function iss_relations_get_map_block_public_contracts(): array
+{
+    $public = [];
+
+    foreach (iss_relations_get_map_block_contracts() as $block_name => $contract) {
+        if (!is_array($contract)) {
+            continue;
+        }
+
+        $public[$block_name] = [
+            'defaultSource' => sanitize_key((string) ($contract['default_source'] ?? 'current')),
+            'defaultPreset' => sanitize_key((string) ($contract['default_preset'] ?? 'default')),
+            'manualIdsImplyManualSource' => !empty($contract['manual_ids_imply_manual_source']),
+        ];
+    }
+
+    return $public;
+}
+
+function iss_relations_get_rendered_block_name($block): string
+{
+    if (is_object($block) && isset($block->name)) {
+        return (string) $block->name;
+    }
+
+    if (is_array($block) && isset($block['blockName'])) {
+        return (string) $block['blockName'];
+    }
+
+    return '';
+}
+
+function iss_relations_resolve_map_block_source(array $attributes, string $block_name = ''): string
+{
+    $source = sanitize_key((string) ($attributes['source'] ?? ''));
+    if ($source !== '') {
+        return $source;
+    }
+
+    $contract = iss_relations_get_map_block_contract($block_name);
+    if (!empty($contract['manual_ids_imply_manual_source']) && trim((string) ($attributes['placeIds'] ?? '')) !== '') {
+        return 'manual';
+    }
+
+    return sanitize_key((string) ($contract['default_source'] ?? 'current')) ?: 'current';
+}
+
 function iss_relations_register_blocks(): void
 {
     if (!function_exists('register_block_type')) {
@@ -44,7 +145,7 @@ function iss_relations_register_blocks(): void
             ],
             'source' => [
                 'type' => 'string',
-                'default' => 'current',
+                'default' => iss_relations_get_map_block_default('iss/related-place-map', 'default_source', 'current'),
             ],
             'placeIds' => [
                 'type' => 'string',
@@ -211,7 +312,7 @@ function iss_relations_register_blocks(): void
             ],
             'mapPreset' => [
                 'type' => 'string',
-                'default' => 'default',
+                'default' => iss_relations_get_map_block_default('iss/related-place-map', 'default_preset', 'default'),
             ],
             'rotationDeg' => [
                 'type' => 'number',
@@ -275,7 +376,7 @@ function iss_relations_register_blocks(): void
             ],
             'source' => [
                 'type' => 'string',
-                'default' => 'current',
+                'default' => iss_relations_get_map_block_default('iss/atlas-slice', 'default_source', 'current'),
             ],
             'placeIds' => [
                 'type' => 'string',
@@ -283,7 +384,7 @@ function iss_relations_register_blocks(): void
             ],
             'mapPreset' => [
                 'type' => 'string',
-                'default' => 'atlas-slice',
+                'default' => iss_relations_get_map_block_default('iss/atlas-slice', 'default_preset', 'atlas-slice'),
             ],
             'framingMode' => [
                 'type' => 'string',
@@ -371,7 +472,7 @@ function iss_relations_register_blocks(): void
             ],
             'source' => [
                 'type' => 'string',
-                'default' => 'current',
+                'default' => iss_relations_get_map_block_default('iss/atlas-strip', 'default_source', 'current'),
             ],
             'placeIds' => [
                 'type' => 'string',
@@ -379,7 +480,7 @@ function iss_relations_register_blocks(): void
             ],
             'mapPreset' => [
                 'type' => 'string',
-                'default' => 'default',
+                'default' => iss_relations_get_map_block_default('iss/atlas-strip', 'default_preset', 'default'),
             ],
             'framingMode' => [
                 'type' => 'string',
@@ -515,7 +616,7 @@ function iss_relations_register_blocks(): void
             ],
             'source' => [
                 'type' => 'string',
-                'default' => 'manual',
+                'default' => iss_relations_get_map_block_default('iss/spine-strip', 'default_source', 'manual'),
             ],
             'placeIds' => [
                 'type' => 'string',
@@ -523,7 +624,7 @@ function iss_relations_register_blocks(): void
             ],
             'mapPreset' => [
                 'type' => 'string',
-                'default' => 'default',
+                'default' => iss_relations_get_map_block_default('iss/spine-strip', 'default_preset', 'viewport-industrial-spine-strip'),
             ],
             'rotationDeg' => [
                 'type' => 'number',
@@ -595,7 +696,7 @@ function iss_relations_register_blocks(): void
             ],
             'source' => [
                 'type' => 'string',
-                'default' => 'current',
+                'default' => iss_relations_get_map_block_default('iss/asymmetric-split-field', 'default_source', 'current'),
             ],
             'placeIds' => [
                 'type' => 'string',
@@ -716,6 +817,7 @@ function iss_relations_enqueue_block_editor_script(): void
             'supportedPostTypes' => iss_relations_get_supported_post_types(),
             'relatedPostTypes' => iss_relations_get_related_query_post_types(),
             'mapPresets' => iss_relations_get_place_map_editor_presets(),
+            'mapBlockContracts' => iss_relations_get_map_block_public_contracts(),
             'canManageEditorialSignals' => function_exists('iss_graph_current_user_can_edit_editorial_signals')
                 ? iss_graph_current_user_can_edit_editorial_signals()
                 : current_user_can('manage_options'),
@@ -1247,9 +1349,9 @@ function iss_relations_build_place_items_from_ids(array $place_ids): array
     return $items;
 }
 
-function iss_relations_resolve_block_place_items(array $attributes, int $current_post_id): array
+function iss_relations_resolve_block_place_items(array $attributes, int $current_post_id, string $block_name = ''): array
 {
-    $source = sanitize_key((string) ($attributes['source'] ?? 'current'));
+    $source = iss_relations_resolve_map_block_source($attributes, $block_name);
 
     if ($source === 'manual') {
         return iss_relations_build_place_items_from_ids(
@@ -1441,14 +1543,14 @@ function iss_relations_query_related_posts(array $place_ids, $post_types, int $p
     return $cache[$cache_key];
 }
 
-function iss_relations_resolve_block_posts(array $attributes, int $current_post_id, array $post_types, int $per_page): array
+function iss_relations_resolve_block_posts(array $attributes, int $current_post_id, array $post_types, int $per_page, string $block_name = ''): array
 {
     $source = sanitize_key((string) ($attributes['source'] ?? 'current'));
     if (iss_relations_is_entity_related_source($source)) {
         return iss_relations_query_entity_related_posts($current_post_id, $post_types, $per_page, $attributes);
     }
 
-    $place_items = iss_relations_resolve_block_place_items($attributes, $current_post_id);
+    $place_items = iss_relations_resolve_block_place_items($attributes, $current_post_id, $block_name);
     if (!$place_items) {
         return [];
     }
@@ -2040,6 +2142,19 @@ function iss_relations_resolve_spine_strip_preset(array $attributes = []): strin
 {
     $presets = iss_relations_get_place_map_presets();
     $preferred = 'viewport-industrial-spine-strip';
+    $requested = sanitize_key((string) ($attributes['mapPreset'] ?? ''));
+    $station_mode = iss_relations_normalize_atlas_strip_station_mode($attributes);
+
+    if (
+        $requested !== ''
+        && isset($presets[$requested])
+        && (
+            !empty((array) (($presets[$requested]['rail']['stations'] ?? [])))
+            || $station_mode !== 'preset'
+        )
+    ) {
+        return $requested;
+    }
 
     if (isset($presets[$preferred]) && !empty((array) (($presets[$preferred]['rail']['stations'] ?? [])))) {
         return $preferred;
@@ -2129,112 +2244,16 @@ function iss_relations_normalize_place_map_panel_position(array $attributes = []
 
 function iss_relations_get_place_map_marker_lookup(string $markers_path): array
 {
-    static $cache = [];
-
-    $markers_path = wp_normalize_path($markers_path);
-
-    if ($markers_path === '') {
-        return [];
-    }
-
-    if (array_key_exists($markers_path, $cache)) {
-        return $cache[$markers_path];
-    }
-
-    if (!is_readable($markers_path)) {
-        $cache[$markers_path] = [];
-        return $cache[$markers_path];
-    }
-
-    $contents = file_get_contents($markers_path);
-    if (!is_string($contents) || $contents === '') {
-        $cache[$markers_path] = [];
-        return $cache[$markers_path];
-    }
-
-    $decoded = json_decode($contents, true);
-    if (!is_array($decoded)) {
-        $cache[$markers_path] = [];
-        return $cache[$markers_path];
-    }
-
-    $lookup = [
-        'by_id' => [],
-        'by_name' => [],
-        'by_coords' => [],
-    ];
-
-    foreach ($decoded as $item) {
-        if (!is_array($item)) {
-            continue;
-        }
-
-        $place_id = isset($item['id']) ? (string) $item['id'] : '';
-        $post_id = isset($item['post_id']) ? (string) $item['post_id'] : '';
-        $name = sanitize_title((string) ($item['name'] ?? ''));
-        $lat = isset($item['lat']) && is_numeric($item['lat']) ? (float) $item['lat'] : null;
-        $lng = isset($item['lng']) && is_numeric($item['lng']) ? (float) $item['lng'] : null;
-        $x = isset($item['xNorm']) && is_numeric($item['xNorm']) ? (float) $item['xNorm'] : null;
-        $y = isset($item['yNorm']) && is_numeric($item['yNorm']) ? (float) $item['yNorm'] : null;
-
-        if ($x === null || $y === null) {
-            continue;
-        }
-
-        $position = [
-            'x' => max(0, min(100, $x * 100)),
-            'y' => max(0, min(100, $y * 100)),
-        ];
-
-        if ($place_id !== '') {
-            $lookup['by_id'][$place_id] = $position;
-        }
-
-        if ($post_id !== '') {
-            $lookup['by_id'][$post_id] = $position;
-        }
-
-        if ($name !== '') {
-            $lookup['by_name'][$name] = $position;
-        }
-
-        if ($lat !== null && $lng !== null) {
-            $lookup['by_coords'][iss_relations_get_place_map_coord_key($lat, $lng)] = $position;
-        }
-    }
-
-    if (!$lookup['by_id'] && !$lookup['by_name'] && !$lookup['by_coords']) {
-        $cache[$markers_path] = [];
-        return $cache[$markers_path];
-    }
-
-    $cache[$markers_path] = $lookup;
-
-    return $cache[$markers_path];
+    return function_exists('iss_frontend_static_maps_get_marker_lookup')
+        ? iss_frontend_static_maps_get_marker_lookup($markers_path)
+        : [];
 }
 
 function iss_relations_get_place_map_marker_position(array $place, array $marker_lookup): ?array
 {
-    $place_id = isset($place['place_id']) ? (string) $place['place_id'] : '';
-    if ($place_id !== '' && isset($marker_lookup['by_id'][$place_id])) {
-        return $marker_lookup['by_id'][$place_id];
-    }
-
-    $lat = isset($place['lat']) && is_numeric($place['lat']) ? (float) $place['lat'] : null;
-    $lng = isset($place['lng']) && is_numeric($place['lng']) ? (float) $place['lng'] : null;
-    if ($lat !== null && $lng !== null) {
-        $coord_key = iss_relations_get_place_map_coord_key($lat, $lng);
-        if (isset($marker_lookup['by_coords'][$coord_key])) {
-            return $marker_lookup['by_coords'][$coord_key];
-        }
-    }
-
-    $title = sanitize_title((string) ($place['title'] ?? ''));
-    if ($title !== '' && isset($marker_lookup['by_name'][$title])) {
-        return $marker_lookup['by_name'][$title];
-    }
-
-    return null;
+    return function_exists('iss_frontend_static_maps_get_marker_position')
+        ? iss_frontend_static_maps_get_marker_position($place, $marker_lookup)
+        : null;
 }
 
 function iss_relations_collect_map_places(array $attributes = [], $block = null): array
@@ -2242,7 +2261,7 @@ function iss_relations_collect_map_places(array $attributes = [], $block = null)
     $attributes = is_array($attributes) ? $attributes : [];
     $current_post_id = isset($block->context['postId']) ? (int) $block->context['postId'] : (int) get_the_ID();
     $per_page = max(1, min(12, absint($attributes['perPage'] ?? 5)));
-    $place_items = iss_relations_resolve_block_place_items($attributes, $current_post_id);
+    $place_items = iss_relations_resolve_block_place_items($attributes, $current_post_id, iss_relations_get_rendered_block_name($block));
 
     if (!$place_items) {
         return [];
@@ -2253,49 +2272,23 @@ function iss_relations_collect_map_places(array $attributes = [], $block = null)
 
 function iss_relations_get_map_stage_rotation_class(): string
 {
-    return 'is-map-rotation';
+    return function_exists('iss_frontend_static_maps_get_stage_rotation_class')
+        ? iss_frontend_static_maps_get_stage_rotation_class()
+        : 'is-map-rotation';
 }
 
 function iss_relations_get_map_rotation_fit_scale(float $rotation_deg, int $ratio_width, int $ratio_height): float
 {
-    if (abs($rotation_deg) < 0.001) {
-        return 1.0;
-    }
-
-    // For free-angle editorial strips we want the map to fill the stage and be
-    // clipped by the frame, not shrink into a floating rotated rectangle.
-    if (abs(fmod(abs($rotation_deg), 90.0)) > 0.001) {
-        return 1.0;
-    }
-
-    $width = max(1.0, (float) $ratio_width);
-    $height = max(1.0, (float) $ratio_height);
-    $theta = deg2rad($rotation_deg);
-    $cos = abs(cos($theta));
-    $sin = abs(sin($theta));
-    $bbox_width = ($width * $cos) + ($height * $sin);
-    $bbox_height = ($width * $sin) + ($height * $cos);
-
-    if ($bbox_width <= 0.0 || $bbox_height <= 0.0) {
-        return 1.0;
-    }
-
-    return min($width / $bbox_width, $height / $bbox_height);
+    return function_exists('iss_frontend_static_maps_get_rotation_fit_scale')
+        ? iss_frontend_static_maps_get_rotation_fit_scale($rotation_deg, $ratio_width, $ratio_height)
+        : 1.0;
 }
 
 function iss_relations_project_map_plane_point(float $x, float $y, float $rotation_deg, float $rotation_scale, float $bias_x = 0.0, float $bias_y = 0.0): array
 {
-    $theta = deg2rad($rotation_deg);
-    $dx = ($x - 50.0) * $rotation_scale;
-    $dy = ($y - 50.0) * $rotation_scale;
-
-    $projected_x = 50.0 + (($dx * cos($theta)) - ($dy * sin($theta))) + $bias_x;
-    $projected_y = 50.0 + (($dx * sin($theta)) + ($dy * cos($theta))) + $bias_y;
-
-    return [
-        'x' => $projected_x,
-        'y' => $projected_y,
-    ];
+    return function_exists('iss_frontend_static_maps_project_plane_point')
+        ? iss_frontend_static_maps_project_plane_point($x, $y, $rotation_deg, $rotation_scale, $bias_x, $bias_y)
+        : ['x' => $x, 'y' => $y];
 }
 
 function iss_relations_render_generic_card(WP_Post $post, array $copy, array $options = []): string
@@ -2594,139 +2587,16 @@ function iss_relations_render_cards_grid(array $cards, string $post_type, array 
 
 function iss_relations_render_place_map_stage(array $places, array $config, array $options = []): string
 {
-    $image_url = $config['image_url'] ?? '';
-    $image_alt = $config['image_alt'] ?? '';
-    $marker_lookup = iss_relations_get_place_map_marker_lookup((string) ($config['markers_path'] ?? ''));
-    $rotation_deg = iss_relations_normalize_map_rotation_degrees($options['rotation_deg'] ?? ($config['rotation_deg'] ?? 0));
-
-    if ($image_url === '' || !$marker_lookup) {
-        return '<div class="iss-related-place-map__empty">' . esc_html__('Für diese Auswahl ist noch keine Atlaskarte hinterlegt.', 'iss-relations') . '</div>';
-    }
-
-    $mapped_places = [];
-
-    foreach ($places as $index => $place) {
-        $position = iss_relations_get_place_map_marker_position($place, $marker_lookup);
-        if ($position === null) {
-            continue;
-        }
-
-        $mapped_places[] = [
-            'index' => $index,
-            'place' => $place,
-            'position' => $position,
-        ];
-    }
-
-    if (!$mapped_places) {
-        return '<div class="iss-related-place-map__empty">' . esc_html__('Für diese Auswahl sind noch keine Koordinaten hinterlegt.', 'iss-relations') . '</div>';
-    }
-
-    $markers = '';
-    $stage_styles = [];
-
-    $ratio_width = max(1, absint($options['ratio_width'] ?? ($config['width'] ?? 0)));
-    $ratio_height = max(1, absint($options['ratio_height'] ?? ($config['height'] ?? 0)));
-    $plane_bias = [
-        'x' => is_numeric($options['bias_x'] ?? null) ? (float) $options['bias_x'] : 0.0,
-        'y' => is_numeric($options['bias_y'] ?? null) ? (float) $options['bias_y'] : 0.0,
-    ];
-
-    if ($ratio_width > 0 && $ratio_height > 0) {
-        $stage_styles[] = '--iss-related-place-map-ratio:' . $ratio_width . ' / ' . $ratio_height;
-    }
-
-    $viewport = is_array($config['viewport'] ?? null) ? $config['viewport'] : [];
-    $scale = isset($viewport['scale']) && is_numeric($viewport['scale']) ? (float) $viewport['scale'] : 1.0;
-    $scale_x = isset($viewport['scale_x']) && is_numeric($viewport['scale_x']) ? (float) $viewport['scale_x'] : $scale;
-    $scale_y = isset($viewport['scale_y']) && is_numeric($viewport['scale_y']) ? (float) $viewport['scale_y'] : $scale;
-    $offset_x = isset($viewport['offset_x']) && is_numeric($viewport['offset_x']) ? (float) $viewport['offset_x'] : 0.0;
-    $offset_y = isset($viewport['offset_y']) && is_numeric($viewport['offset_y']) ? (float) $viewport['offset_y'] : 0.0;
-
-    $stage_styles[] = '--iss-related-place-map-scale-x:' . number_format($scale_x > 0 ? $scale_x : 1.0, 4, '.', '');
-    $stage_styles[] = '--iss-related-place-map-scale-y:' . number_format($scale_y > 0 ? $scale_y : 1.0, 4, '.', '');
-    $stage_styles[] = '--iss-related-place-map-offset-x:' . number_format($offset_x, 3, '.', '') . '%';
-    $stage_styles[] = '--iss-related-place-map-offset-y:' . number_format($offset_y, 3, '.', '') . '%';
-
-    $stage_attr = '';
-    if ($stage_styles) {
-        $stage_attr = ' style="' . esc_attr(implode(';', $stage_styles)) . '"';
-    }
-
-    foreach ($mapped_places as $item) {
-        $index = (int) $item['index'];
-        $place = $item['place'];
-        $position = $item['position'];
-        $marker_x = ((float) $position['x'] * ($scale_x > 0 ? $scale_x : 1.0)) + $offset_x;
-        $marker_y = ((float) $position['y'] * ($scale_y > 0 ? $scale_y : 1.0)) + $offset_y;
-        $label = trim((string) ($place['label'] ?? ''));
-        $marker_label = $label !== '' ? ($label . ': ' . $place['title']) : $place['title'];
-
-        $markers .= sprintf(
-            '<a class="iss-related-place-map__marker" href="%1$s" style="--x:%2$s%%;--y:%3$s%%" aria-label="%4$s"><span class="iss-related-place-map__marker-dot" aria-hidden="true"></span><span class="iss-related-place-map__marker-label">%5$s</span></a>',
-            esc_url((string) ($place['permalink'] ?? '')),
-            esc_attr(number_format($marker_x, 3, '.', '')),
-            esc_attr(number_format($marker_y, 3, '.', '')),
-            esc_attr($marker_label),
-            esc_html((string) ($index + 1))
-        );
-    }
-
-    $stage_classes = ['iss-related-place-map__stage'];
-    $extra_class = trim((string) ($options['class_name'] ?? ''));
-    if ($extra_class !== '') {
-        foreach (preg_split('/\s+/', $extra_class) as $class_name) {
-            $class_name = sanitize_html_class($class_name);
-            if ($class_name !== '') {
-                $stage_classes[] = $class_name;
-            }
-        }
-    }
-
-    $plane_scale = iss_relations_normalize_map_plane_scale($options['map_scale'] ?? 1.0);
-    $rotation_scale = iss_relations_get_map_rotation_fit_scale($rotation_deg, $ratio_width, $ratio_height) * $plane_scale;
-    $plane_classes = [
-        'iss-related-place-map__plane',
-        iss_relations_get_map_stage_rotation_class(),
-    ];
-    $plane_attr = ' style="' . esc_attr(implode(';', [
-        '--iss-map-rotation-deg:' . number_format($rotation_deg, 3, '.', '') . 'deg',
-        '--iss-map-rotation-scale:' . number_format($rotation_scale, 6, '.', ''),
-        '--iss-map-bias-x:' . number_format($plane_bias['x'], 3, '.', '') . '%',
-        '--iss-map-bias-y:' . number_format($plane_bias['y'], 3, '.', '') . '%',
-    ])) . '"';
-
-    return '<div class="' . esc_attr(implode(' ', $stage_classes)) . '"' . $stage_attr . '><div class="' . esc_attr(implode(' ', $plane_classes)) . '"' . $plane_attr . '><div class="iss-related-place-map__viewport"><img class="iss-related-place-map__image" src="' . esc_url($image_url) . '" alt="' . esc_attr($image_alt) . '" loading="lazy" decoding="async"></div><div class="iss-related-place-map__markers">' . $markers . '</div></div></div>';
+    return function_exists('iss_frontend_static_maps_render_place_map_stage')
+        ? iss_frontend_static_maps_render_place_map_stage($places, $config, $options)
+        : '';
 }
 
 function iss_relations_render_place_map_panel(array $places): string
 {
-    $out = '<div class="iss-related-place-map__panel">';
-
-    foreach ($places as $index => $place) {
-        $permalink = (string) ($place['permalink'] ?? '');
-        $title = trim((string) ($place['title'] ?? ''));
-        $label = trim((string) ($place['label'] ?? ''));
-        $excerpt = trim((string) ($place['excerpt'] ?? ''));
-
-        $out .= '<article class="iss-related-place-map__entry">';
-        $out .= '<div class="iss-related-place-map__entry-index">' . esc_html((string) ($index + 1)) . '</div>';
-        $out .= '<div class="iss-related-place-map__entry-body">';
-        if ($label !== '') {
-            $out .= '<p class="iss-related-place-map__entry-kicker">' . esc_html($label) . '</p>';
-        }
-        $out .= '<h3 class="iss-related-place-map__entry-title"><a href="' . esc_url($permalink) . '">' . esc_html($title) . '</a></h3>';
-        if ($excerpt !== '') {
-            $out .= '<p class="iss-related-place-map__entry-text">' . esc_html($excerpt) . '</p>';
-        }
-        $out .= '<p class="iss-related-place-map__entry-link"><a class="iss-action-link" href="' . esc_url($permalink) . '">' . esc_html__('Zum Ort', 'iss-relations') . '</a></p>';
-        $out .= '</div>';
-        $out .= '</article>';
-    }
-
-    $out .= '</div>';
-
-    return $out;
+    return function_exists('iss_frontend_static_maps_render_place_map_panel')
+        ? iss_frontend_static_maps_render_place_map_panel($places)
+        : '';
 }
 
 function iss_relations_render_related_place_map_body(array $attributes, $block = null): string
@@ -2738,6 +2608,11 @@ function iss_relations_render_related_place_map_body(array $attributes, $block =
 
     $preset = iss_relations_resolve_place_map_preset($attributes);
     $config = iss_relations_get_place_map_config($preset);
+
+    if (function_exists('iss_frontend_render_related_place_map_body')) {
+        return iss_frontend_render_related_place_map_body($attributes, $places, $config);
+    }
+
     $panel_mode = iss_relations_normalize_place_map_panel_mode($attributes);
     $panel_position = iss_relations_normalize_place_map_panel_position($attributes);
     $rotation_deg = iss_relations_get_map_rotation_degrees($attributes, $config);
@@ -2766,211 +2641,30 @@ function iss_relations_render_related_place_map_body(array $attributes, $block =
 
 function iss_relations_clamp_float(float $value, float $min, float $max): float
 {
-    if ($value < $min) {
-        return $min;
-    }
-
-    if ($value > $max) {
-        return $max;
-    }
-
-    return $value;
+    return function_exists('iss_frontend_static_maps_clamp_float')
+        ? iss_frontend_static_maps_clamp_float($value, $min, $max)
+        : max($min, min($max, $value));
 }
 
 function iss_relations_collect_mapped_places(array $places, array $config): array
 {
-    $marker_lookup = iss_relations_get_place_map_marker_lookup((string) ($config['markers_path'] ?? ''));
-    if (!$marker_lookup) {
-        return [];
-    }
-
-    $mapped_places = [];
-
-    foreach ($places as $index => $place) {
-        $position = iss_relations_get_place_map_marker_position($place, $marker_lookup);
-        if ($position === null) {
-            continue;
-        }
-
-        $mapped_places[] = [
-            'index' => (int) $index,
-            'place' => $place,
-            'position' => [
-                'x' => (float) $position['x'],
-                'y' => (float) $position['y'],
-            ],
-        ];
-    }
-
-    return $mapped_places;
+    return function_exists('iss_frontend_static_maps_collect_mapped_places')
+        ? iss_frontend_static_maps_collect_mapped_places($places, $config)
+        : [];
 }
 
 function iss_relations_get_atlas_slice_focus_window(array $mapped_places, array $config, int $ratio_width, int $ratio_height): array
 {
-    $source_width = max(1, absint($config['width'] ?? 4096));
-    $source_height = max(1, absint($config['height'] ?? 2389));
-    $stage_ratio = $ratio_width / max(1, $ratio_height);
-    $source_ratio = $source_width / $source_height;
-    $source_target_ratio = $stage_ratio / max(0.0001, $source_ratio);
-
-    $xs = [];
-    $ys = [];
-
-    foreach ($mapped_places as $item) {
-        $xs[] = (float) ($item['position']['x'] ?? 0.0);
-        $ys[] = (float) ($item['position']['y'] ?? 0.0);
-    }
-
-    $x_min = min($xs);
-    $x_max = max($xs);
-    $y_min = min($ys);
-    $y_max = max($ys);
-
-    $bbox_width = max(2.0, $x_max - $x_min);
-    $bbox_height = max(2.0, $y_max - $y_min);
-    $margin_x = 7.5;
-    $margin_y = 9.5;
-    $window_width = $bbox_width + ($margin_x * 2);
-    $window_height = $bbox_height + ($margin_y * 2);
-    $min_window_height = count($mapped_places) === 1 ? 34.0 : 28.0;
-    $min_window_width = $min_window_height * $source_target_ratio;
-
-    if (($window_width / $window_height) < $source_target_ratio) {
-        $window_width = $window_height * $source_target_ratio;
-    } else {
-        $window_height = $window_width / max(0.0001, $source_target_ratio);
-    }
-
-    $window_width = max($window_width, $min_window_width);
-    $window_height = max($window_height, $min_window_height);
-
-    if ($window_width > 100.0) {
-        $window_width = 100.0;
-        $window_height = $window_width / max(0.0001, $source_target_ratio);
-    }
-
-    if ($window_height > 100.0) {
-        $window_height = 100.0;
-        $window_width = min(100.0, $window_height * $source_target_ratio);
-    }
-
-    $center_x = ($x_min + $x_max) / 2;
-    $center_y = ($y_min + $y_max) / 2;
-    $start_x = iss_relations_clamp_float($center_x - ($window_width / 2), 0.0, 100.0 - $window_width);
-    $start_y = iss_relations_clamp_float($center_y - ($window_height / 2), 0.0, 100.0 - $window_height);
-
-    return [
-        'x' => $start_x,
-        'y' => $start_y,
-        'width' => $window_width,
-        'height' => $window_height,
-    ];
+    return function_exists('iss_frontend_static_maps_get_focus_window')
+        ? iss_frontend_static_maps_get_focus_window($mapped_places, $config, $ratio_width, $ratio_height)
+        : ['x' => 0.0, 'y' => 0.0, 'width' => 100.0, 'height' => 100.0];
 }
 
 function iss_relations_render_atlas_slice_stage(array $places, array $config, array $options = []): string
 {
-    $mapped_places = iss_relations_collect_mapped_places($places, $config);
-    $rotation_deg = iss_relations_normalize_map_rotation_degrees($options['rotation_deg'] ?? ($config['rotation_deg'] ?? 0));
-    if (!$mapped_places) {
-        return '<div class="iss-related-place-map__empty">' . esc_html__('Für diese Auswahl sind noch keine Koordinaten hinterlegt.', 'iss-relations') . '</div>';
-    }
-
-    $image_url = (string) ($config['image_url'] ?? '');
-    if ($image_url === '') {
-        return '<div class="iss-related-place-map__empty">' . esc_html__('Für diese Auswahl ist noch keine Atlaskarte hinterlegt.', 'iss-relations') . '</div>';
-    }
-
-    $image_alt = (string) ($config['image_alt'] ?? '');
-    $ratio_width = max(1, absint($options['ratio_width'] ?? 1600));
-    $ratio_height = max(1, absint($options['ratio_height'] ?? 720));
-    $plane_bias = [
-        'x' => is_numeric($options['bias_x'] ?? null) ? (float) $options['bias_x'] : 0.0,
-        'y' => is_numeric($options['bias_y'] ?? null) ? (float) $options['bias_y'] : 0.0,
-    ];
-    $crop_mode = sanitize_key((string) ($config['crop_mode'] ?? 'dynamic'));
-    $show_markers = !array_key_exists('show_markers', $options) || !empty($options['show_markers']);
-
-    if ($crop_mode === 'fixed') {
-        $window = [
-            'x' => 0.0,
-            'y' => 0.0,
-            'width' => 100.0,
-            'height' => 100.0,
-        ];
-        $image_width = 100.0;
-        $image_height = 100.0;
-        $image_left = 0.0;
-        $image_top = 0.0;
-    } else {
-        $window = iss_relations_get_atlas_slice_focus_window($mapped_places, $config, $ratio_width, $ratio_height);
-        $image_width = 10000 / max(0.001, $window['width']);
-        $image_height = 10000 / max(0.001, $window['height']);
-        $image_left = -($window['x'] / max(0.001, $window['width'])) * 100;
-        $image_top = -($window['y'] / max(0.001, $window['height'])) * 100;
-    }
-    $stage_classes = ['iss-atlas-slice__stage'];
-    $extra_class = trim((string) ($options['class_name'] ?? ''));
-
-    if ($extra_class !== '') {
-        foreach (preg_split('/\s+/', $extra_class) as $class_name) {
-            $class_name = sanitize_html_class($class_name);
-            if ($class_name !== '') {
-                $stage_classes[] = $class_name;
-            }
-        }
-    }
-
-    $stage_attr = ' style="' . esc_attr(implode(';', [
-        '--iss-atlas-slice-ratio:' . $ratio_width . ' / ' . $ratio_height,
-        '--iss-atlas-slice-image-width:' . number_format($image_width, 4, '.', '') . '%',
-        '--iss-atlas-slice-image-height:' . number_format($image_height, 4, '.', '') . '%',
-        '--iss-atlas-slice-image-left:' . number_format($image_left, 4, '.', '') . '%',
-        '--iss-atlas-slice-image-top:' . number_format($image_top, 4, '.', '') . '%',
-    ])) . '"';
-
-    $markers = '';
-
-    if ($show_markers) {
-        foreach ($mapped_places as $item) {
-            $raw_x = (float) ($item['position']['x'] ?? 0.0);
-            $raw_y = (float) ($item['position']['y'] ?? 0.0);
-            if ($crop_mode === 'fixed') {
-                $marker_x = $raw_x;
-                $marker_y = $raw_y;
-            } else {
-                $marker_x = (($raw_x - $window['x']) / max(0.001, $window['width'])) * 100;
-                $marker_y = (($raw_y - $window['y']) / max(0.001, $window['height'])) * 100;
-            }
-            $place = $item['place'];
-            $index = (int) $item['index'];
-            $label = trim((string) ($place['label'] ?? ''));
-            $marker_label = $label !== '' ? ($label . ': ' . $place['title']) : $place['title'];
-
-            $markers .= sprintf(
-                '<a class="iss-related-place-map__marker" href="%1$s" style="--x:%2$s%%;--y:%3$s%%" aria-label="%4$s"><span class="iss-related-place-map__marker-dot" aria-hidden="true"></span><span class="iss-related-place-map__marker-label">%5$s</span></a>',
-                esc_url((string) ($place['permalink'] ?? '')),
-                esc_attr(number_format($marker_x, 3, '.', '')),
-                esc_attr(number_format($marker_y, 3, '.', '')),
-                esc_attr($marker_label),
-                esc_html((string) ($index + 1))
-            );
-        }
-    }
-
-    $plane_scale = iss_relations_normalize_map_plane_scale($options['map_scale'] ?? 1.0);
-    $rotation_scale = iss_relations_get_map_rotation_fit_scale($rotation_deg, $ratio_width, $ratio_height) * $plane_scale;
-    $plane_classes = [
-        'iss-atlas-slice__plane',
-        iss_relations_get_map_stage_rotation_class(),
-    ];
-    $plane_attr = ' style="' . esc_attr(implode(';', [
-        '--iss-map-rotation-deg:' . number_format($rotation_deg, 3, '.', '') . 'deg',
-        '--iss-map-rotation-scale:' . number_format($rotation_scale, 6, '.', ''),
-        '--iss-map-bias-x:' . number_format($plane_bias['x'], 3, '.', '') . '%',
-        '--iss-map-bias-y:' . number_format($plane_bias['y'], 3, '.', '') . '%',
-    ])) . '"';
-
-    return '<div class="' . esc_attr(implode(' ', $stage_classes)) . '"' . $stage_attr . '><div class="' . esc_attr(implode(' ', $plane_classes)) . '"' . $plane_attr . '><div class="iss-atlas-slice__viewport"><img class="iss-atlas-slice__image" src="' . esc_url($image_url) . '" alt="' . esc_attr($image_alt) . '" loading="lazy" decoding="async"><div class="iss-atlas-slice__markers">' . $markers . '</div></div></div></div>';
+    return function_exists('iss_frontend_static_maps_render_atlas_slice_stage')
+        ? iss_frontend_static_maps_render_atlas_slice_stage($places, $config, $options)
+        : '';
 }
 
 function iss_relations_normalize_atlas_slice_body_mode(array $attributes): string
@@ -3531,6 +3225,10 @@ function iss_relations_render_spine_strip_block($attributes = [], $content = '',
     $preset = iss_relations_resolve_spine_strip_preset($attributes);
     $config = iss_relations_get_place_map_config($preset);
 
+    if (function_exists('iss_frontend_render_spine_strip_block')) {
+        return iss_frontend_render_spine_strip_block($attributes, $places, $config);
+    }
+
     return iss_relations_render_spine_strip_core($attributes, $places, $config);
 }
 
@@ -3649,6 +3347,11 @@ function iss_relations_render_atlas_slice_block($attributes = [], $content = '',
 
     $preset = iss_relations_resolve_place_map_preset($attributes);
     $config = iss_relations_get_place_map_config($preset);
+
+    if (function_exists('iss_frontend_render_atlas_slice_block')) {
+        return iss_frontend_render_atlas_slice_block($attributes, $places, $config);
+    }
+
     $body_mode = iss_relations_normalize_atlas_slice_body_mode($attributes);
     $body_position = iss_relations_normalize_atlas_slice_body_position($attributes);
     $layout_mode = iss_relations_normalize_atlas_slice_layout_mode($attributes);
@@ -3720,6 +3423,11 @@ function iss_relations_render_atlas_strip_block($attributes = [], $content = '',
 
     $preset = iss_relations_resolve_place_map_preset($attributes);
     $config = iss_relations_get_place_map_config($preset);
+
+    if (function_exists('iss_frontend_render_atlas_strip_block')) {
+        return iss_frontend_render_atlas_strip_block($attributes, $places, $config);
+    }
+
     $variant = iss_relations_normalize_atlas_strip_variant($attributes);
     $framing_mode = iss_relations_normalize_map_framing_mode($attributes);
     $rotation_deg = iss_relations_get_map_rotation_degrees($attributes, $config);
@@ -3892,6 +3600,10 @@ function iss_relations_render_asymmetric_split_field_block($attributes = [], $co
 
     if (!$places) {
         $map_enabled = false;
+    }
+
+    if (function_exists('iss_frontend_render_asymmetric_split_field_block')) {
+        return iss_frontend_render_asymmetric_split_field_block($attributes, $places);
     }
 
     $map_zone = '';

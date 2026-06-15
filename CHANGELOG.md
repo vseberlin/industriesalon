@@ -4,6 +4,19 @@ This file records durable project changes. Keep it compact: current state belong
 `handoff_CURRENT.md`, active follow-up in `TODO.md`, and detailed investigation can
 be recovered from Git history.
 
+## 2026-06-15
+
+- Split static map block responsibilities:
+  - added a shared `iss-relations` map-block source contract used by PHP defaults, render resolution, and editor settings;
+  - moved static marker lookup, projection math, focus-window calculation, stage rendering, panel rendering, and static map frontend rendering entry points into `iss-frontend/modules/static-maps`;
+  - kept thin compatibility wrappers in `iss-relations` while block callbacks delegate to the frontend renderer;
+  - fixed map-block source resolution so implicit manual `placeIds` no longer depend on an out-of-scope rendered block object;
+  - added `wp iss-relations map-block-audit` to check DB and file-backed static map blocks, selected-place marker resolution, and public coordinate-bearing `register_place` marker coverage against the same contract;
+  - added missing derived static markers for published coordinate-bearing places that were absent from `schoneweide-static-markers-new.json`;
+  - kept `industriesalon-schoeneweide-register` as the `register_place` and interactive Atlas data/cache owner;
+  - documented the cleanup pattern in `docs/architecture/static-map-rendering.md`.
+- Added the Atlas/static-map implementation plan in `docs/architecture/atlas-static-map-implementation-plan.md`, merging the local audit and peer review into one durable architecture plan.
+
 ## 2026-06-14
 
 - Added conditional project status rendering:
