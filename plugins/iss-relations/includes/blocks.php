@@ -586,6 +586,7 @@ function iss_relations_register_blocks(): void
         'supports' => [
             'html' => false,
             'align' => ['wide', 'full'],
+            'inserter' => false,
         ],
         'render_callback' => 'iss_relations_render_atlas_strip_block',
     ]);
@@ -754,6 +755,7 @@ function iss_relations_register_blocks(): void
         'supports' => [
             'html' => false,
             'align' => ['wide', 'full'],
+            'inserter' => false,
         ],
         'render_callback' => 'iss_relations_render_asymmetric_split_field_block',
     ]);

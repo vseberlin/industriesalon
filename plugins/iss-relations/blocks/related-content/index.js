@@ -1969,6 +1969,7 @@
     showMapFields: true,
     showAtlasStripFields: true,
     supports: {
+      inserter: false,
       align: ['wide', 'full'],
     },
   });
@@ -1995,6 +1996,7 @@
   window.wp.blocks.registerBlockType('iss/asymmetric-split-field', {
     supports: {
       html: false,
+      inserter: false,
       align: ['wide', 'full'],
     },
     attributes: {

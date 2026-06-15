@@ -6,6 +6,9 @@ be recovered from Git history.
 
 ## 2026-06-15
 
+- Froze the first-class static map block surface:
+  - kept `iss/related-place-map`, `iss/atlas-slice`, and `iss/spine-strip` as normal inserter-visible map blocks;
+  - kept `iss/atlas-strip` and `iss/asymmetric-split-field` render-compatible but hidden from the inserter as experimental/non-current public surfaces.
 - Split static map block responsibilities:
   - added a shared `iss-relations` map-block source contract used by PHP defaults, render resolution, and editor settings;
   - moved static marker lookup, projection math, focus-window calculation, stage rendering, panel rendering, and static map frontend rendering entry points into `iss-frontend/modules/static-maps`;
