@@ -764,26 +764,71 @@ add_action('init', 'iss_relations_register_blocks', 20);
 
 function iss_relations_register_block_editor_script(): void
 {
-    $script_path = ISS_RELATIONS_PATH . 'blocks/related-content/index.js';
-    if (!file_exists($script_path)) {
-        return;
+    $base_path = ISS_RELATIONS_PATH . 'blocks/related-content/';
+    $base_url = ISS_RELATIONS_URL . 'blocks/related-content/';
+    $scripts = [
+        'iss-relations-related-editor-context' => [
+            'file' => 'editor-context.js',
+            'deps' => [
+                'wp-api-fetch',
+                'wp-block-editor',
+                'wp-blocks',
+                'wp-components',
+                'wp-core-data',
+                'wp-data',
+                'wp-element',
+            ],
+        ],
+        'iss-relations-related-source-controls' => [
+            'file' => 'source-controls.js',
+            'deps' => ['iss-relations-related-editor-context'],
+        ],
+        'iss-relations-related-editorial-signals' => [
+            'file' => 'editorial-signal-controls.js',
+            'deps' => ['iss-relations-related-editor-context'],
+        ],
+        'iss-relations-related-card-controls' => [
+            'file' => 'related-cards-controls.js',
+            'deps' => ['iss-relations-related-editor-context', 'iss-relations-related-editorial-signals'],
+        ],
+        'iss-relations-related-static-map-controls' => [
+            'file' => 'static-map-controls.js',
+            'deps' => ['iss-relations-related-editor-context'],
+        ],
+        'iss-relations-related-spine-strip-controls' => [
+            'file' => 'spine-strip-controls.js',
+            'deps' => ['iss-relations-related-editor-context'],
+        ],
+        'iss-relations-related-blocks' => [
+            'file' => 'index.js',
+            'deps' => [
+                'iss-relations-related-card-controls',
+                'iss-relations-related-source-controls',
+                'iss-relations-related-static-map-controls',
+                'iss-relations-related-spine-strip-controls',
+                'iss-relations-related-editorial-signals',
+            ],
+        ],
+    ];
+
+    foreach ($scripts as $handle => $script) {
+        $script_path = $base_path . $script['file'];
+        if (!file_exists($script_path)) {
+            return;
+        }
+
+        wp_register_script(
+            $handle,
+            $base_url . $script['file'],
+            $script['deps'],
+            (string) filemtime($script_path),
+            true
+        );
     }
 
-    wp_register_script(
-        'iss-relations-related-blocks',
-        ISS_RELATIONS_URL . 'blocks/related-content/index.js',
-        [
-            'wp-api-fetch',
-            'wp-block-editor',
-            'wp-blocks',
-            'wp-components',
-            'wp-core-data',
-            'wp-data',
-            'wp-element',
-        ],
-        (string) filemtime($script_path),
-        true
-    );
+    if (!wp_script_is('iss-relations-related-editor-context', 'registered')) {
+        return;
+    }
 }
 add_action('init', 'iss_relations_register_block_editor_script', 19);
 
@@ -810,9 +855,8 @@ function iss_relations_enqueue_block_editor_script(): void
         return;
     }
 
-    wp_enqueue_script('iss-relations-related-blocks');
     wp_add_inline_script(
-        'iss-relations-related-blocks',
+        'iss-relations-related-editor-context',
         'window.issRelationsSettings = ' . wp_json_encode([
             'placePostType' => iss_relations_get_place_post_type(),
             'taxonomy' => ISS_RELATIONS_TAXONOMY,
@@ -826,6 +870,7 @@ function iss_relations_enqueue_block_editor_script(): void
         ]) . ';',
         'before'
     );
+    wp_enqueue_script('iss-relations-related-blocks');
 }
 add_action('enqueue_block_editor_assets', 'iss_relations_enqueue_block_editor_script');
 

@@ -6,11 +6,11 @@ Current checkpoint only. History belongs in `CHANGELOG.md`; active follow-up bel
 
 ## Current State
 
-- Local `main` is based on `origin/main` at `537a6b7`; the working tree is intentionally dirty with the static-map implementation slice and earlier static-map planning/doc changes.
+- Local `main` is based on `origin/main` at `98c4aa2`; the working tree contains the focused related-content editor JS split pending commit.
 - Staging is the current live working target, not a production release gate. Rebuild from Git plus explicit SQL/upload artifacts if it breaks.
 - Domain ownership is current: `iss-content` owns CPT/editor contracts and tour data; `iss-occurrences` owns occurrence projection, SuperSaaS ingestion, tour-slot reads, and sync admin; `iss-frontend` owns programme/timeline/browser rendering plus reusable frontend editorial blocks such as `iss/dense-image-wall`; `iss-commerce-lite` owns booking/order request intake; `iss-archive` owns archive runtime; `iss-graph` owns graph/search/facade contracts; the theme owns public templates and skins.
 - Static map ownership is now explicit and partly implemented: `iss-relations` owns map-block source/place-selection contracts, `iss-frontend/modules/static-maps` owns marker lookup, projection/focus math, static stage/panel rendering, and static atlas/map frontend renderers, `industriesalon-schoeneweide-register` owns `register_place` and interactive Atlas data/cache contracts, and the theme owns map assets/presets/skins. First-class inserter-visible map surfaces are `iss/related-place-map`, `iss/atlas-slice`, and `iss/spine-strip`; `iss/atlas-strip` and `iss/asymmetric-split-field` remain render-compatible but hidden as experimental.
-- The merged Atlas/static-map rewrite plan is in `docs/architecture/atlas-static-map-implementation-plan.md`; use it as the source for the next implementation slice.
+- The merged Atlas/static-map rewrite plan is in `docs/architecture/atlas-static-map-implementation-plan.md`; the related-content editor JS split slice is implemented, and the next slice is stable place/relation DTO contracts for Atlas/static-map boundaries.
 - Occurrence rows are source-post keyed only. Open-ended rows use `ends_at = NULL` plus `is_open_ended = 1`; graph IDs and `2099-12-31` sentinels are invalid drift.
 - Programme projection uses `iss_programme_enabled`; Ausstellung overview visibility uses `iss_public_overview_enabled`. Dauer/Digital Ausstellungen can remain in overviews without programme occurrences unless editors explicitly opt them in.
 - `/wp-json/iss/v1` is the read-only facade boundary for contract, entities, relations, occurrence reads, search, timeline, availability, and tour slots. Booking writes stay on `/is-tours/v1/book`.
@@ -32,7 +32,7 @@ Current checkpoint only. History belongs in `CHANGELOG.md`; active follow-up bel
 ## Next Action
 
 - Delete the `page-projekte` DB template override after verifying the flushed disk template on the target.
-- Continue static-map cleanup from `docs/architecture/atlas-static-map-implementation-plan.md`: split focused editor JS controls.
+- Continue static-map cleanup from `docs/architecture/atlas-static-map-implementation-plan.md`: define stable place and relation DTO contracts for Atlas/static-map boundaries.
 - UI polish later, especially Ausstellung search/filter interaction and public view polish.
 - Before production deploy, verify target mail mode and decide whether request notification email should be enabled.
 
@@ -41,4 +41,5 @@ Current checkpoint only. History belongs in `CHANGELOG.md`; active follow-up bel
 - Latest local checkpoint passed focused JS/PHP syntax, PHPCS target, `git diff --check`, WP-CLI block registry/render checks for `iss/dense-image-wall`, route checks for `/projekte/`, front page, and Walk of Fame, plus SQL/upload artifact inspection.
 - Static-map implementation slice passed PHP syntax, targeted PHPCS, targeted PHPStan, `node --check` for the related-content block editor script, `wp iss-relations map-block-audit` in table and JSON modes, WP-CLI block registration checks, direct `do_blocks()` render checks for `iss/atlas-slice` and `iss/spine-strip`, route smoke checks for `/`, `/fuehrungen/`, and `/schoneweide/`, marker JSON validation, experimental block inserter visibility checks, and `git diff --check`.
 - Atlas plan closeout: merged the audit and peer review into `docs/architecture/atlas-static-map-implementation-plan.md`; `git diff --check` passed for the new document.
+- Related-content editor JS split passed targeted related-content ESLint, full `npm run lint:js`, PHP syntax for `plugins/iss-relations/includes/blocks.php`, WP-CLI script-handle/block-registration checks, and `git diff --check`.
 - Project content artifact verification: imported `ops/sql/2026-06-14-project-content-sync.sql` locally; confirmed zero dev-host references in published project rows; verified seven project routes return `200`; verified `ops/uploads/2026-06-14-project-content-media.tar.gz` contains 28 files and matches its SHA256.
