@@ -6,6 +6,8 @@ be recovered from Git history.
 
 ## 2026-06-15
 
+- Made `register_place` public editor image groups authoritative for frontend featured-image rendering: public featured/fallback image-group selections now win through the WordPress thumbnail filter and save-time sync updates `_thumbnail_id` when the selected public image changes.
+- Audited `/fuehrungen/elektropolis-tour/` route media behavior: the `iss/tour-route` block renders place-level public `archive_images`/`current_images` as station figures and keeps `station_object_id` as a separate detail card, so missing “Damals” images on that route are currently caused by private/missing place image-group data rather than a PHP render failure.
 - Polished the `/ausstellungen/` browser interaction: added visible result summaries, debounced live search, a no-JS-capable clear-search link, filter URLs that preserve the current search term, and responsive control styling for the exhibition page skin.
 - Closed the Atlas/static-map cleanup with a public-surface audit: first-class surfaces remain `iss/related-place-map`, `iss/atlas-slice`, `iss/spine-strip`, and `iss-register/schoneweide-atlas`; experimental static surfaces stay inserter-hidden; broader archive/graph API consolidation is deferred until a concrete consumer exists.
 - Added fullscreen and kiosk layout states to the existing Schöneweide Atlas block: the Atlas now exposes embedded/fullscreen/kiosk controls, keeps the same REST/render path, invalidates Leaflet sizing on mode changes, and resets filters/map view after kiosk idle.

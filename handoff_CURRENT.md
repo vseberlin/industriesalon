@@ -16,6 +16,7 @@ Current checkpoint only. History belongs in `CHANGELOG.md`; active follow-up bel
 - `/wp-json/iss/v1` is the read-only facade boundary for contract, entities, relations, occurrence reads, search, timeline, availability, and tour slots. Booking writes stay on `/is-tours/v1/book`.
 - Commerce-lite request rows remain in `wp_iss_payments_lite_requests` for compatibility. SuperSaaS settings use `iss_supersaas_*`; retired `is_saas_settings` is migrated and drift-guarded.
 - `/ausstellungen/` browser polish is committed locally: result summaries, debounced live search, clear-search fallback link, search-preserving filter URLs, and responsive page-skin controls stay within the existing `industriesalon/ausstellungen-browser` block and `/iss/v1/availability` route.
+- `register_place` public image groups now bridge into WordPress featured-image rendering: public featured/fallback image-group selections override stale `_thumbnail_id` at render time and save-time sync rewrites `_thumbnail_id` when the selected public image changes. Local post `17960` was resynced from thumbnail `18852` to public current image `18856`; no SQL/upload artifact is required for the code path because the runtime filter corrects stale stored thumbnails.
 - Walk of Fame dense-wall content needs paired transfer artifacts if applied elsewhere: `ops/sql/2026-06-14-walk-of-fame-dense-wall.sql` plus `ops/uploads/2026-06-14-walk-of-fame-dense-wall-media.tar.gz`.
 - Current published `projekt` single-page content edits need the all-project transfer unit if applied elsewhere: `ops/sql/2026-06-14-project-content-sync.sql` plus `ops/uploads/2026-06-14-project-content-media.tar.gz`, manifest, and SHA256. The SQL covers all seven published project posts, postmeta, and term relationships; directly referenced media files are packaged in the paired archive.
 
@@ -29,10 +30,12 @@ Current checkpoint only. History belongs in `CHANGELOG.md`; active follow-up bel
 - `page-projekte` currently remains DB-backed (`custom`) after being flushed to `themes/industriesalon/templates/page-projekte.html`; delete that override only after the disk template is verified in the target flow.
 - History was rewritten on 2026-06-12. Existing secondary clones should be re-cloned or reset deliberately.
 - `/home/vladimir/industriesalon-export` is stale and should not be used for deploy/push.
+- `iss/tour-route` currently treats place image groups and station archive objects as separate media channels. `/fuehrungen/elektropolis-tour/` station 1 suppresses its historical place image because `archive_images` is private, while the linked archive object still renders as a detail card; decide deliberately before merging those concepts.
 
 ## Next Action
 
 - Delete the `page-projekte` DB template override after verifying the flushed disk template on the target.
+- Decide whether Führung station archive objects should remain separate detail cards or also populate the station “Damals” image slot when place-level public `archive_images` are missing.
 - Before production deploy, verify target mail mode and decide whether request notification email should be enabled.
 
 ## Last Verified
@@ -52,3 +55,5 @@ Current checkpoint only. History belongs in `CHANGELOG.md`; active follow-up bel
 - Atlas public-surface closeout passed file-template and DB-backed content scans, block registration/inserter visibility checks, `wp iss-relations map-block-audit`, `wp iss-relations static-map-contract-check`, `wp iss-register contract-check`, and `git diff --check`.
 - `/ausstellungen/` browser polish passed PHP syntax for `plugins/iss-frontend/modules/programme/includes/ausstellungen-browser.php`, JS syntax/ESLint for `plugins/iss-frontend/modules/programme/assets/ausstellungen-browser.js`, Stylelint for timeline and page-Ausstellungen CSS, targeted PHPCS/PHPStan, `wp iss-frontend ausstellungen-audit --strict`, block-render checks, `git diff --check`, and Playwright desktop/mobile smokes on `/ausstellungen/` covering live search, clear, filter switching, URL state, mobile control widths, and no console errors.
 - Project content artifact verification: imported `ops/sql/2026-06-14-project-content-sync.sql` locally; confirmed zero dev-host references in published project rows; verified seven project routes return `200`; verified `ops/uploads/2026-06-14-project-content-media.tar.gz` contains 28 files and matches its SHA256.
+- Register-place image bridge passed PHP syntax, targeted PHPCS/PHPStan, `git diff --check`, WP-CLI candidate-vs-thumbnail checks (`candidate_diffs=0`), related-card/static-map DTO render checks, and frontend spot checks for the Industriesalon place route and search result.
+- Elektropolis route media audit verified `/fuehrungen/elektropolis-tour/` returns `200`, `single-fuehrung` is file-backed, no PHP route errors appear in container logs, station 1 has private `archive_images` plus public `current_images`, and station 2 renders public “Damals”/“Heute” image groups correctly.

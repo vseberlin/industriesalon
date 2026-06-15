@@ -58,6 +58,23 @@ function iss_register_get_public_image_candidate_id(int $post_id): int
     return $featured_candidate > 0 ? $featured_candidate : $fallback_candidate;
 }
 
+function iss_register_get_public_render_image_id(int $post_id, int $fallback_id = 0): int
+{
+    $candidate_id = iss_register_get_public_image_candidate_id($post_id);
+
+    return $candidate_id > 0 ? $candidate_id : max(0, $fallback_id);
+}
+
+function iss_register_filter_post_thumbnail_id($thumbnail_id, $post = null): int
+{
+    $post_id = $post instanceof WP_Post ? (int) $post->ID : absint($post);
+    if ($post_id <= 0 || get_post_type($post_id) !== ISS_REGISTER_POST_TYPE) {
+        return absint($thumbnail_id);
+    }
+
+    return iss_register_get_public_render_image_id($post_id, absint($thumbnail_id));
+}
+
 function iss_register_sync_public_fields_for_post(int $post_id): void
 {
     static $syncing = [];
@@ -87,11 +104,10 @@ function iss_register_sync_public_fields_for_post(int $post_id): void
         unset($syncing[$post_id]);
     }
 
-    if (!has_post_thumbnail($post_id)) {
-        $thumbnail_candidate = iss_register_get_public_image_candidate_id($post_id);
-        if ($thumbnail_candidate > 0) {
-            set_post_thumbnail($post_id, $thumbnail_candidate);
-        }
+    $thumbnail_candidate = iss_register_get_public_image_candidate_id($post_id);
+    $stored_thumbnail_id = absint(get_post_meta($post_id, '_thumbnail_id', true));
+    if ($thumbnail_candidate > 0 && $stored_thumbnail_id !== $thumbnail_candidate) {
+        set_post_thumbnail($post_id, $thumbnail_candidate);
     }
 }
 
@@ -105,3 +121,4 @@ function iss_register_sync_public_fields_on_save(int $post_id): void
 }
 
 add_action('save_post_' . ISS_REGISTER_POST_TYPE, 'iss_register_sync_public_fields_on_save', 30);
+add_filter('post_thumbnail_id', 'iss_register_filter_post_thumbnail_id', 10, 2);
