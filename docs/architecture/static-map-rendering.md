@@ -66,3 +66,38 @@ docker compose run --rm wpcli iss-relations map-block-audit --allow-root
 
 The audit scans DB content plus theme templates for static map blocks with
 ambiguous source settings, unknown presets, or unreadable marker JSON.
+
+## Marker Provenance
+
+`themes/industriesalon/assets/maps/schoneweide-static-markers-new.json` is a
+derived projection file for the theme-owned canonical static map image. It is not
+canonical place data. Canonical place identity, coordinates, and visibility stay
+in `register_place` posts owned by `industriesalon-schoeneweide-register`.
+
+Marker entries should include:
+
+- `id`: legacy register ID when available, otherwise the WordPress post ID.
+- `post_id`: WordPress `register_place` post ID when it differs from `id` or
+  when the place has no legacy register ID.
+- `name`, `lat`, and `lng`: copied from the published `register_place` record.
+- `x`, `y`, `xNorm`, and `yNorm`: projected static-map position for the current
+  canonical map image.
+
+The current manual projection uses the existing marker set as the reference
+basis. Fit an affine transform from known `lng`/`lat` values to existing
+`xNorm`/`yNorm`, calculate the missing place positions, then add the resulting
+entries by hand to the marker JSON. Some outlying places can legitimately have
+`xNorm`/`yNorm` outside the `0..1` image frame because the canonical static map
+crop does not include the full coordinate extent. Keep those entries so the
+audit can distinguish "known but outside crop" from "missing marker".
+
+After changing marker JSON, always run:
+
+```bash
+jq empty themes/industriesalon/assets/maps/schoneweide-static-markers-new.json
+docker compose run --rm wpcli iss-relations map-block-audit --allow-root
+```
+
+If marker updates become frequent, replace this manual process with a tracked
+generator that reads published `register_place` coordinates and the existing
+projection reference markers.

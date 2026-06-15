@@ -24,7 +24,7 @@ Current checkpoint only. History belongs in `CHANGELOG.md`; active follow-up bel
 - First deploy to a database with old plugin basenames relies on the `iss-core` active-plugin migrator; verify `wp plugin list`.
 - Template output can still become DB-backed after Site Editor saves; check `wp_template` authority before assuming disk templates are live.
 - Front-page remains DB-backed in local state, but `iss/spine-strip` no longer depends on saved `source` when `placeIds` are present because the map-block contract resolves that as `manual`.
-- Static marker JSON now covers published coordinate-bearing `register_place` posts in the local audit, including derived markers added for Waldfriedhof entries, IRIS, Innovationspark Wuhlheide, Energie-Museum Berlin, and Spree 27. The marker file still needs provenance: generator or manual update runbook.
+- Static marker JSON now covers published coordinate-bearing `register_place` posts in the local audit, including derived markers added for Waldfriedhof entries, IRIS, Innovationspark Wuhlheide, Energie-Museum Berlin, and Spree 27. Marker provenance and the manual update verification path are documented in `docs/architecture/static-map-rendering.md`.
 - `page-projekte` currently remains DB-backed (`custom`) after being flushed to `themes/industriesalon/templates/page-projekte.html`; delete that override only after the disk template is verified in the target flow.
 - History was rewritten on 2026-06-12. Existing secondary clones should be re-cloned or reset deliberately.
 - `/home/vladimir/industriesalon-export` is stale and should not be used for deploy/push.
@@ -32,7 +32,7 @@ Current checkpoint only. History belongs in `CHANGELOG.md`; active follow-up bel
 ## Next Action
 
 - Delete the `page-projekte` DB template override after verifying the flushed disk template on the target.
-- Continue static-map cleanup from `docs/architecture/atlas-static-map-implementation-plan.md`: split focused editor JS controls, then add marker provenance.
+- Continue static-map cleanup from `docs/architecture/atlas-static-map-implementation-plan.md`: split focused editor JS controls.
 - UI polish later, especially Ausstellung search/filter interaction and public view polish.
 - Before production deploy, verify target mail mode and decide whether request notification email should be enabled.
 

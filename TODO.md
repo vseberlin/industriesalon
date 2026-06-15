@@ -5,7 +5,6 @@ Immediate executable work only. Larger future programs live in `docs/project/bac
 ## Active Today
 
 - Continue static map cleanup from `docs/architecture/atlas-static-map-implementation-plan.md`: split the oversized related-content editor script into focused controls for related cards, place source, static maps, spine strips, and editorial signals.
-- Add marker provenance for `themes/industriesalon/assets/maps/schoneweide-static-markers-new.json`: either create a tracked generator or document the manual projection/update runbook.
 - Preserve the current ownership split: `iss-relations` resolves place/source contracts, `iss-frontend` owns frontend map rendering, `industriesalon-schoeneweide-register` owns register/interactive Atlas data, and the theme owns map assets/presets/skins.
 - Polish `/ausstellungen/` search/filter interaction and public view behavior.
 - Before production deploy, verify target mail mode and enable `Tools > ISS Anfragen` notification email only for an approved recipient if request emails should leave the server.
