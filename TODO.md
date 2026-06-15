@@ -4,7 +4,7 @@ Immediate executable work only. Larger future programs live in `docs/project/bac
 
 ## Active Today
 
-- Continue static map cleanup from `docs/architecture/atlas-static-map-implementation-plan.md`: define stable place and relation DTO contracts for Atlas/static-map boundaries.
+- Continue Atlas cleanup from `docs/architecture/atlas-static-map-implementation-plan.md`: modularize the interactive Atlas app around config, store, map adapter, place UI, detail UI, layout, and provider modules.
 - Preserve the current ownership split: `iss-relations` resolves place/source contracts, `iss-frontend` owns frontend map rendering, `industriesalon-schoeneweide-register` owns register/interactive Atlas data, and the theme owns map assets/presets/skins.
 - Polish `/ausstellungen/` search/filter interaction and public view behavior.
 - Before production deploy, verify target mail mode and enable `Tools > ISS Anfragen` notification email only for an approved recipient if request emails should leave the server.

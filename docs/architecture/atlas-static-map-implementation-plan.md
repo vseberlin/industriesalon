@@ -337,7 +337,9 @@ prefer a clean internal rewrite over temporary delegation layers.
    - spine-strip controls
    - editorial signal controls
 6. Define stable place and relation DTO contracts for Atlas/static map
-   boundaries.
+   boundaries. Done for static-map block inputs: `iss-relations` now normalizes
+   block selection into a relation result with ordered static-map place DTOs
+   before passing data to `iss-frontend`.
 7. Add marker provenance through either a generator or a documented manual
    runbook.
 8. Extend `map-block-audit` to verify real marker resolution for actual block

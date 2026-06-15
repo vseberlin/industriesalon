@@ -29,6 +29,36 @@ Rendering must flow in one direction:
 Do not make `iss-frontend` query related places directly, and do not make
 `industriesalon-schoeneweide-register` render static editorial strips.
 
+## Static Map DTOs
+
+`iss-relations` normalizes static-map block selection into an explicit relation
+result before handing data to `iss-frontend`:
+
+- `source`: resolved source contract, for example `current`, `manual`,
+  `related`, or `route`;
+- `block_name`: resolved block name when available;
+- `context_post_id`: editor/frontend context post;
+- `selected_place_ids`: ordered `register_place` post IDs;
+- `places`: ordered static-map place DTOs;
+- `count`: number of returned place DTOs.
+
+Each static-map place DTO is a presentation input, not canonical place storage.
+It keeps compatibility keys used by existing renderers while making the boundary
+explicit:
+
+- identity: `canonical_id`, `post_id`, `place_id`, `slug`;
+- display: `title`, `short_label`, `label`, `permalink`, `excerpt`;
+- location: `address`, `area`, `location_label`, `coordinates`, `lat`, `lng`;
+- classification: `type`, `state`;
+- media: `thumbnail_id`, `thumbnail_url`;
+- relation context: `source`, `role`, `weight`, route/station fields, and nested
+  `relation`;
+- projection placeholder: `map_marker`, which remains `null` until the frontend
+  renderer resolves the theme-owned marker JSON for a specific map preset.
+
+Renderer code should consume these DTO keys and should not depend on raw
+`WP_Post` objects at the static-map boundary.
+
 ## Map Block Contracts
 
 `iss_relations_get_map_block_contracts()` is the single source for map block

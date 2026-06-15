@@ -1379,6 +1379,136 @@ function iss_relations_build_place_item(int $place_id, array $overrides = []): ?
     ], $overrides);
 }
 
+function iss_relations_build_static_map_place_dto(array $item, string $source = ''): ?array
+{
+    $place_id = absint($item['place_id'] ?? 0);
+    if (!iss_relations_is_usable_place($place_id)) {
+        return null;
+    }
+
+    $place = get_post($place_id);
+    if (!$place instanceof WP_Post) {
+        return null;
+    }
+
+    $role = sanitize_key((string) ($item['role'] ?? 'related'));
+    if (!isset(iss_relations_get_role_options()[$role])) {
+        $role = 'related';
+    }
+
+    $title = trim((string) ($item['title'] ?? ''));
+    if ($title === '') {
+        $title = get_the_title($place);
+    }
+
+    $label = trim((string) ($item['label'] ?? ''));
+    $address = trim((string) ($item['address'] ?? get_post_meta($place_id, 'address', true)));
+    $area = trim((string) ($item['area'] ?? get_post_meta($place_id, 'area', true)));
+    $lat_value = $item['lat'] ?? get_post_meta($place_id, 'lat', true);
+    $lng_value = $item['lng'] ?? get_post_meta($place_id, 'lng', true);
+    $lat = is_numeric($lat_value) ? (float) $lat_value : null;
+    $lng = is_numeric($lng_value) ? (float) $lng_value : null;
+    $thumbnail_id = get_post_thumbnail_id($place);
+    $thumbnail_url = $thumbnail_id ? (string) wp_get_attachment_image_url($thumbnail_id, 'medium') : '';
+    $type = trim((string) get_post_meta($place_id, 'place_type', true));
+    $state = trim((string) get_post_meta($place_id, 'state', true));
+    $excerpt = trim((string) ($item['excerpt'] ?? ''));
+
+    if ($excerpt === '') {
+        $excerpt = iss_relations_get_card_excerpt($place, 18);
+    }
+
+    return [
+        'canonical_id' => 'register_place:' . $place_id,
+        'post_id' => $place_id,
+        'place_id' => $place_id,
+        'slug' => (string) $place->post_name,
+        'title' => $title,
+        'short_label' => $label !== '' ? $label : $title,
+        'label' => $label,
+        'permalink' => (string) get_permalink($place),
+        'excerpt' => $excerpt,
+        'address' => $address,
+        'area' => $area,
+        'location_label' => implode(' · ', array_values(array_filter([$address, $area]))),
+        'type' => $type,
+        'state' => $state,
+        'coordinates' => ($lat !== null && $lng !== null)
+            ? [
+                'lat' => $lat,
+                'lng' => $lng,
+            ]
+            : null,
+        'lat' => $lat,
+        'lng' => $lng,
+        'map_marker' => null,
+        'thumbnail_id' => $thumbnail_id ? (int) $thumbnail_id : 0,
+        'thumbnail_url' => $thumbnail_url,
+        'source' => sanitize_key($source) ?: 'related',
+        'relation' => [
+            'source' => sanitize_key($source) ?: 'related',
+            'role' => $role,
+            'label' => $label,
+            'weight' => (int) ($item['weight'] ?? 0),
+            'route_title' => trim((string) ($item['route_title'] ?? '')),
+            'route_teaser' => trim((string) ($item['route_teaser'] ?? '')),
+            'station_object_id' => absint($item['station_object_id'] ?? 0),
+            'station_story_id' => absint($item['station_story_id'] ?? 0),
+        ],
+        'role' => $role,
+        'weight' => (int) ($item['weight'] ?? 0),
+        'route_title' => trim((string) ($item['route_title'] ?? '')),
+        'route_teaser' => trim((string) ($item['route_teaser'] ?? '')),
+        'station_object_id' => absint($item['station_object_id'] ?? 0),
+        'station_story_id' => absint($item['station_story_id'] ?? 0),
+    ];
+}
+
+function iss_relations_build_static_map_place_dtos(array $items, string $source = ''): array
+{
+    $dtos = [];
+    $seen = [];
+
+    foreach ($items as $item) {
+        if (!is_array($item)) {
+            continue;
+        }
+
+        $dto = iss_relations_build_static_map_place_dto($item, $source);
+        if (!$dto) {
+            continue;
+        }
+
+        $place_id = (int) $dto['place_id'];
+        if (isset($seen[$place_id])) {
+            continue;
+        }
+
+        $seen[$place_id] = true;
+        $dtos[] = $dto;
+    }
+
+    return $dtos;
+}
+
+function iss_relations_resolve_static_map_relation_result(array $attributes, int $current_post_id, string $block_name = ''): array
+{
+    $source = iss_relations_resolve_map_block_source($attributes, $block_name);
+    $items = iss_relations_resolve_block_place_items($attributes, $current_post_id, $block_name);
+    $places = iss_relations_build_static_map_place_dtos($items, $source);
+
+    return [
+        'source' => $source,
+        'block_name' => $block_name,
+        'context_post_id' => $current_post_id,
+        'selected_place_ids' => array_values(array_map(static function (array $place): int {
+            return (int) ($place['place_id'] ?? 0);
+        }, $places)),
+        'places' => $places,
+        'count' => count($places),
+    ];
+}
+
 function iss_relations_build_place_items_from_ids(array $place_ids): array
 {
     $items = [];
@@ -2308,7 +2438,12 @@ function iss_relations_collect_map_places(array $attributes = [], $block = null)
     $attributes = is_array($attributes) ? $attributes : [];
     $current_post_id = isset($block->context['postId']) ? (int) $block->context['postId'] : (int) get_the_ID();
     $per_page = max(1, min(12, absint($attributes['perPage'] ?? 5)));
-    $place_items = iss_relations_resolve_block_place_items($attributes, $current_post_id, iss_relations_get_rendered_block_name($block));
+    $relation_result = iss_relations_resolve_static_map_relation_result(
+        $attributes,
+        $current_post_id,
+        iss_relations_get_rendered_block_name($block)
+    );
+    $place_items = (array) ($relation_result['places'] ?? []);
 
     if (!$place_items) {
         return [];
