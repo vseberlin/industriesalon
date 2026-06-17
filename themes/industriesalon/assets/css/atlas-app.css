@@ -949,6 +949,22 @@ body.iss-atlas-layout-open {
     0 0 0 0.18rem rgba(18, 16, 15, 0.34),
     0 0 0 0.72rem var(--iss-atlas-marker-local-ring),
     0 0.58rem 1rem rgba(18, 16, 15, 0.24);
+  animation: iss-atlas-marker-pulse 2.4s ease-in-out infinite;
+}
+
+@keyframes iss-atlas-marker-pulse {
+  0%, 100% {
+    box-shadow:
+      0 0 0 0.18rem rgba(18, 16, 15, 0.34),
+      0 0 0 0.72rem var(--iss-atlas-marker-local-ring),
+      0 0.58rem 1rem rgba(18, 16, 15, 0.24);
+  }
+  55% {
+    box-shadow:
+      0 0 0 0.18rem rgba(18, 16, 15, 0.26),
+      0 0 0 1.05rem var(--iss-atlas-marker-local-ring),
+      0 0.58rem 1rem rgba(18, 16, 15, 0.18);
+  }
 }
 
 .iss-atlas-marker.is-status-in_use {
@@ -969,11 +985,20 @@ body.iss-atlas-layout-open {
   --iss-atlas-marker-local-ring: rgba(55, 119, 159, 0.26);
 }
 
-.iss-atlas-marker.is-status-vacant,
+.iss-atlas-marker.is-status-vacant {
+  --iss-atlas-marker-fill: #7d6d5e;
+  --iss-atlas-marker-active-fill: #9a887a;
+  --iss-atlas-marker-local-ring: rgba(125, 109, 94, 0.22);
+}
+
 .iss-atlas-marker.is-status-unclear {
-  --iss-atlas-marker-fill: #685a4d;
-  --iss-atlas-marker-active-fill: #86735f;
-  --iss-atlas-marker-local-ring: rgba(134, 115, 95, 0.24);
+  --iss-atlas-marker-fill: rgba(100, 90, 82, 0.42);
+  --iss-atlas-marker-active-fill: rgba(100, 90, 82, 0.66);
+  --iss-atlas-marker-local-ring: rgba(100, 90, 82, 0.16);
+}
+
+.iss-atlas-marker.is-status-unclear .iss-atlas-marker__dot {
+  border-color: rgba(255, 255, 255, 0.52);
 }
 
 .iss-atlas-marker.is-status-temporary_use {
@@ -1000,10 +1025,21 @@ body.iss-atlas-layout-open {
   --iss-atlas-marker-local-ring: rgba(var(--iss-atlas-actor-rgb), 0.28);
 }
 
+[data-iss-schoneweide-atlas][data-active-actor] .iss-atlas-marker:not(.is-actor-focus) {
+  --iss-atlas-marker-fill: color-mix(in srgb, var(--iss-atlas-marker-idle) 28%, transparent);
+  --iss-atlas-marker-active-fill: color-mix(in srgb, var(--iss-atlas-marker-idle) 46%, transparent);
+  --iss-atlas-marker-local-ring: transparent;
+}
+
 [data-iss-schoneweide-atlas][data-active-era] .iss-atlas-marker.is-function-unknown {
   --iss-atlas-marker-fill: rgba(20, 20, 20, 0.92);
   --iss-atlas-marker-active-fill: rgba(10, 10, 10, 0.98);
   --iss-atlas-marker-local-ring: rgba(20, 20, 20, 0.28);
+}
+
+[data-iss-schoneweide-atlas][data-active-era] .iss-atlas-marker.is-function-unknown .iss-atlas-marker__dot {
+  border-color: rgba(255, 255, 255, 0.36);
+  border-width: 2px;
 }
 
 .iss-atlas-marker__label {
@@ -1039,8 +1075,8 @@ body.iss-atlas-layout-open {
 }
 
 .iss-atlas-marker.is-active .iss-atlas-marker__label {
-  border-color: color-mix(in srgb, var(--iss-accent) 74%, rgba(18, 16, 15, 0.2));
-  background: color-mix(in srgb, var(--iss-accent) 90%, rgba(255, 255, 255, 0.12));
+  border-color: color-mix(in srgb, var(--iss-atlas-era-accent) 74%, rgba(18, 16, 15, 0.2));
+  background: color-mix(in srgb, var(--iss-atlas-era-accent) 90%, rgba(255, 255, 255, 0.12));
   color: var(--iss-white);
 }
 

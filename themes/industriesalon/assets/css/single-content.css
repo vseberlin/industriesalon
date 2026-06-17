@@ -50,7 +50,7 @@
 .iss-post-intro__media {
   margin: 0;
   border-radius: 2px;
-  border-left: 4px solid var(--iss-single-accent);
+  border-left: 4px solid var(--iss-accent);
   box-shadow: 0 14px 28px rgba(68, 22, 24, 0.09);
   background: rgba(30, 30, 30, 0.04);
 }
@@ -175,8 +175,7 @@
   letter-spacing: -0.03em;
 }
 
-.iss-post-body__content > h3,
-.iss-post-body__content > .wp-block-heading:nth-of-type(n+2) {
+.iss-post-body__content > h3 {
   font-size: var(--iss-single-h3);
 }
 
@@ -508,7 +507,9 @@
 
 .single-projekt .iss-project-rail-nav .iss-reading-nav__inner > a:hover,
 .single-projekt .iss-project-rail-nav .iss-reading-nav__inner > a:focus-visible {
+  border-color: var(--iss-project-link-accent);
   border-color: color-mix(in srgb, var(--iss-project-link-accent) 52%, transparent);
+  color: var(--iss-project-link-accent);
   color: color-mix(in srgb, var(--iss-project-link-accent) 68%, var(--iss-white));
 }
 
@@ -580,6 +581,7 @@
 
 .single-projekt .iss-related-place-links__link:hover,
 .single-projekt .iss-related-place-links__link:focus-visible {
+  color: var(--iss-accent);
   color: color-mix(in srgb, var(--iss-accent) 68%, var(--iss-white));
 }
 
@@ -684,6 +686,7 @@
   gap: 0.9rem;
   margin-top: clamp(1.4rem, 2.8vw, 2.5rem);
   padding-top: clamp(1.2rem, 2.6vw, 2rem);
+  border-top: 2px solid var(--iss-project-chapter-accent);
   border-top: 2px solid color-mix(in srgb, var(--iss-project-chapter-accent) 54%, rgba(30, 30, 30, 0.12));
 }
 
@@ -1123,5 +1126,125 @@
     display: block;
     max-width: 100%;
     margin: 1rem 0;
+  }
+}
+
+/* =====================================================================
+   FILE: single-entity-profile.css (merged)
+   ROLE: Curated graph-backed profile pages.
+   LOAD: entity_profile singles only.
+   ===================================================================== */
+
+.single-entity_profile .iss-entity-profile-single {
+  background:
+    radial-gradient(circle at top center, rgba(var(--iss-accent-rgb), 0.12), transparent 30%),
+    linear-gradient(180deg, #faf8f4 0, #faf8f4 22rem, #fff 22rem, #fff 100%);
+}
+
+.single-entity_profile .iss-entity-profile-single__hero,
+.single-entity_profile .iss-entity-profile-single__map-section,
+.single-entity_profile .iss-entity-profile-single__related {
+  padding-top: clamp(2rem, 4vw, 3rem);
+}
+
+.single-entity_profile .iss-entity-profile-single__intro {
+  gap: clamp(1.4rem, 3vw, 2.5rem);
+  align-items: start;
+}
+
+.single-entity_profile .iss-entity-profile-single__content .iss-heading__title {
+  font-size: clamp(2.8rem, 2.15rem + 2vw, 5rem);
+  line-height: 0.94;
+  letter-spacing: -0.055em;
+  text-wrap: balance;
+}
+
+.single-entity_profile .iss-entity-profile-single__content .iss-heading__text {
+  max-width: 46rem;
+  color: rgba(30, 30, 30, 0.74);
+  font-size: 1.06rem;
+  line-height: 1.58;
+}
+
+.single-entity_profile .iss-entity-profile-single__media {
+  position: sticky;
+  top: calc(var(--iss-header-height) + 1.5rem);
+}
+
+.single-entity_profile .iss-entity-profile-single__media .iss-media-card {
+  min-height: clamp(20rem, 48vw, 34rem);
+  border: 1px solid rgba(var(--iss-accent-rgb), 0.14);
+  border-radius: var(--iss-radius-lg);
+  background:
+    linear-gradient(180deg, rgba(var(--iss-accent-rgb), 0.08), rgba(255, 255, 255, 0.94)),
+    #fff;
+  box-shadow: 0 18px 48px rgba(24, 18, 18, 0.06);
+}
+
+.single-entity_profile .iss-entity-profile-single__media .wp-block-post-featured-image,
+.single-entity_profile .iss-entity-profile-single__media .wp-block-post-featured-image img {
+  height: 100%;
+}
+
+.single-entity_profile .iss-entity-profile-single__media .wp-block-post-featured-image img {
+  width: 100%;
+  object-fit: cover;
+}
+
+.single-entity_profile .wp-block-iss-graph-profile-facts .iss-info-panel {
+  background: var(--iss-white);
+}
+
+.single-entity_profile .wp-block-iss-graph-profile-facts .iss-info-panel__grid {
+  gap: clamp(1.2rem, 2.2vw, 2rem);
+}
+
+.single-entity_profile .wp-block-iss-graph-profile-facts .iss-info-panel__title-col {
+  flex-basis: 34%;
+}
+
+.single-entity_profile .wp-block-iss-graph-profile-facts .iss-info-panel__rows-col {
+  flex-basis: 66%;
+}
+
+.single-entity_profile .wp-block-iss-graph-profile-facts .iss-info-row {
+  padding-block: 0.8rem;
+  border-top-color: rgba(var(--iss-accent-rgb), 0.2);
+}
+
+.single-entity_profile .iss-entity-profile-single__narrative {
+  max-width: 46rem;
+}
+
+.single-entity_profile .iss-entity-profile-single__narrative > * + * {
+  margin-top: 1.2rem;
+}
+
+.single-entity_profile .iss-entity-profile-single__narrative p {
+  color: rgba(30, 30, 30, 0.82);
+  font-size: 1.04rem;
+  line-height: 1.72;
+}
+
+.single-entity_profile .iss-entity-profile-single__map-section .iss-related-place-map__body {
+  padding: clamp(1rem, 2vw, 1.4rem);
+  border: 1px solid rgba(var(--iss-accent-rgb), 0.14);
+  border-radius: var(--iss-radius-lg);
+  background: rgba(255, 255, 255, 0.92);
+  box-shadow: 0 18px 42px rgba(24, 18, 18, 0.05);
+}
+
+.single-entity_profile .iss-entity-profile-single__map-section .iss-related-place-map__panel {
+  border-radius: calc(var(--iss-radius-md) - 2px);
+  overflow: hidden;
+}
+
+@media (max-width: 900px) {
+  .single-entity_profile .iss-entity-profile-single__media {
+    position: static;
+  }
+
+  .single-entity_profile .iss-entity-profile-single__media .iss-media-card {
+    min-height: 0;
   }
 }

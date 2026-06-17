@@ -34,8 +34,6 @@ add_action('after_setup_theme', function () {
             'assets/css/front-page.css',
             'assets/css/cards.css',
             'assets/css/patterns.css',
-            'assets/css/overrides.css',
-            'assets/css/iss-flex-split.css',
             'assets/css/ueber-uns.css',
             'assets/css/page-archive.css',
             'assets/css/page-kalender.css',
@@ -1610,36 +1608,13 @@ function industriesalon_enqueue_assets(): void
         $patterns_dependencies
     );
 
-    $overrides_dependencies = $patterns_loaded
+    $page_dependencies = $patterns_loaded
         ? array('industriesalon-patterns')
         : ($primitives_loaded
             ? array('industriesalon-primitives')
             : ($cards_loaded
                 ? array('industriesalon-cards')
                 : array('industriesalon-base')));
-    $overrides_loaded = $enqueue_theme_style(
-        'industriesalon-overrides',
-        '/assets/css/overrides.css',
-        $overrides_dependencies
-    );
-
-    $page_dependencies = $overrides_loaded
-        ? array('industriesalon-overrides')
-        : ($patterns_loaded
-            ? array('industriesalon-patterns')
-            : ($primitives_loaded
-                ? array('industriesalon-primitives')
-                : ($cards_loaded
-                    ? array('industriesalon-cards')
-                    : array('industriesalon-base'))));
-
-    if (!$is_schoneweide_page) {
-        $enqueue_theme_style(
-            'industriesalon-flex-split',
-            '/assets/css/iss-flex-split.css',
-            $page_dependencies
-        );
-    }
 
     $conditional_styles = array(
         array(
@@ -1727,11 +1702,6 @@ function industriesalon_enqueue_assets(): void
             'condition' => is_singular('fuehrung'),
         ),
         array(
-            'handle' => 'industriesalon-single-tour-route',
-            'path' => '/assets/css/single-tour-route.css',
-            'condition' => is_singular('fuehrung'),
-        ),
-        array(
             'handle' => 'industriesalon-single-ausstellung',
             'path' => '/assets/css/single-ausstellung.css',
             'condition' => is_singular('ausstellung'),
@@ -1744,12 +1714,7 @@ function industriesalon_enqueue_assets(): void
         array(
             'handle' => 'industriesalon-single-content',
             'path' => '/assets/css/single-content.css',
-            'condition' => is_singular(array('post', 'archivsammlung', 'archivobjekt', 'register_place', 'team_member', 'projekt')),
-        ),
-        array(
-            'handle' => 'industriesalon-single-entity-profile',
-            'path' => '/assets/css/single-entity-profile.css',
-            'condition' => is_singular('entity_profile'),
+            'condition' => is_singular(array('post', 'archivsammlung', 'archivobjekt', 'register_place', 'team_member', 'projekt', 'entity_profile')),
         ),
         array(
             'handle' => 'industriesalon-search',
@@ -1824,10 +1789,6 @@ function industriesalon_collect_skin_style_dependencies(string $primary_handle):
 
     if (wp_style_is('industriesalon-patterns', 'enqueued')) {
         $dependencies[] = 'industriesalon-patterns';
-    }
-
-    if (wp_style_is('industriesalon-overrides', 'enqueued')) {
-        $dependencies[] = 'industriesalon-overrides';
     }
 
     return array_values(array_unique($dependencies));

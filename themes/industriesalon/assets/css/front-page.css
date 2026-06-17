@@ -456,7 +456,7 @@
 }
 
 .home .iss-front-project-card__excerpt .wp-block-post-excerpt__more-link::after {
-  content: " ->";
+  content: " →";
 }
 
 .home .iss-front-projects__empty {
@@ -646,7 +646,7 @@
 }
 
 .home .iss-media-text.iss-media-text--overlay-heading .iss-media-text__link::after {
-  content: "->";
+  content: "→";
   font-size: 1rem;
   line-height: 1;
   transition: transform var(--iss-transition);

@@ -133,7 +133,7 @@ Tags: block-theme, full-site-editing, custom-colors, custom-spacing, editor-styl
 :root {
   /* Core Colors - Mapped to theme.json presets */
   --iss-red: #e81d25;
-  --iss-white: #ffffff;
+  --iss-white: #f9f9fa;
   --iss-black: #1e1e1e;
   --iss-grey: #c0b8b5;
   --iss-green: #579e7d;
@@ -172,6 +172,7 @@ Tags: block-theme, full-site-editing, custom-colors, custom-spacing, editor-styl
   --iss-surface-base: #ffffff;
   --iss-surface-paper: #ffffff;
   --iss-surface-panel: #f6f6f7;
+  --iss-surface-inset: #f4f4f5;
   --iss-surface-archive: #f1f1f2;
   --iss-surface-dark: #201d1b;
   --iss-surface-map: #efefee;
@@ -261,7 +262,7 @@ body {
   background: var(--iss-surface-base);
   color: var(--iss-black);
   font-family: "IBM Plex Sans", system-ui, sans-serif;
-  font-size: 16px;
+  font-size: 1rem;
   line-height: 1.58;
 }
 
@@ -497,13 +498,7 @@ body {
   text-overflow: ellipsis;
 }
 
-body.iss-header-mode-compact {
-  --iss-site-header-pad-top: 0.45rem;
-  --iss-site-header-pad-bottom: 0.45rem;
-  --iss-header-height: 4.5rem;
-  --iss-site-logo-size: 4.2rem;
-}
-
+body.iss-header-mode-compact,
 body.iss-header-mode-offset {
   --iss-site-header-pad-top: 0.45rem;
   --iss-site-header-pad-bottom: 0.45rem;
@@ -511,13 +506,7 @@ body.iss-header-mode-offset {
   --iss-site-logo-size: 4.2rem;
 }
 
-body.iss-header-mode-compact .iss-site-header {
-  background: rgba(18, 15, 13, 0.94);
-  border-bottom: 1px solid rgba(249, 249, 250, 0.12);
-  backdrop-filter: blur(14px);
-  -webkit-backdrop-filter: blur(14px);
-}
-
+body.iss-header-mode-compact .iss-site-header,
 body.iss-header-mode-offset .iss-site-header {
   background: rgba(18, 15, 13, 0.94);
   border-bottom: 1px solid rgba(249, 249, 250, 0.12);
@@ -525,42 +514,26 @@ body.iss-header-mode-offset .iss-site-header {
   -webkit-backdrop-filter: blur(14px);
 }
 
-body.iss-header-mode-compact .iss-site-header__inner {
-  gap: 1rem;
-  align-items: center;
-}
-
+body.iss-header-mode-compact .iss-site-header__inner,
 body.iss-header-mode-offset .iss-site-header__inner {
   gap: 1rem;
   align-items: center;
 }
 
-body.iss-header-mode-compact .iss-site-brand {
-  display: inline-flex;
-  flex: 0 0 auto;
-}
-
+body.iss-header-mode-compact .iss-site-brand,
 body.iss-header-mode-offset .iss-site-brand {
   display: inline-flex;
   flex: 0 0 auto;
 }
 
-body.iss-header-mode-compact .iss-header-context {
-  display: block;
-  flex: 1 1 auto;
-  min-width: 0;
-}
-
+body.iss-header-mode-compact .iss-header-context,
 body.iss-header-mode-offset .iss-header-context {
   display: block;
   flex: 1 1 auto;
   min-width: 0;
 }
 
-body.iss-header-mode-compact .iss-header-actions {
-  flex: 0 0 auto;
-}
-
+body.iss-header-mode-compact .iss-header-actions,
 body.iss-header-mode-offset .iss-header-actions {
   flex: 0 0 auto;
 }
@@ -586,20 +559,13 @@ body.iss-header-mode-offset .iss-header-context__title {
     --iss-site-logo-size: 3.2rem;
   }
 
-  body.iss-header-mode-compact .iss-header-context__breadcrumbs {
-    font-size: 0.72rem;
-    letter-spacing: 0.06em;
-  }
-
+  body.iss-header-mode-compact .iss-header-context__breadcrumbs,
   body.iss-header-mode-offset .iss-header-context__breadcrumbs {
     font-size: 0.72rem;
     letter-spacing: 0.06em;
   }
 
-  body.iss-header-mode-compact .iss-header-context__title {
-    font-size: 0.92rem;
-  }
-
+  body.iss-header-mode-compact .iss-header-context__title,
   body.iss-header-mode-offset .iss-header-context__title {
     font-size: 0.92rem;
   }
@@ -1433,7 +1399,7 @@ nav.iss-menu-shell__quick-grid > .wp-block-navigation__container {
 }
 
 .section--soft {
-  background: #f6f6f7;
+  background: var(--iss-surface-panel);
 }
 
 /* Inset panel on full-width section; keeps content cage unchanged. */
@@ -1448,7 +1414,7 @@ nav.iss-menu-shell__quick-grid > .wp-block-navigation__container {
   inset: 1.25rem 0;
   max-width: var(--iss-content-width);
   margin: 0 auto;
-  background: #f4f4f5;
+  background: var(--iss-surface-inset);
   border: 1px solid rgba(30, 30, 30, 0.06);
   border-radius: var(--iss-radius-lg);
   z-index: -1;
@@ -1489,6 +1455,7 @@ nav.iss-menu-shell__quick-grid > .wp-block-navigation__container {
   --iss-button-hover-border: rgba(249, 249, 250, 0.72);
   --iss-button-hover-fg: var(--iss-white);
 
+  background: var(--iss-black);
   background: color-mix(in srgb, var(--iss-black) 88%, var(--iss-accent) 12%);
   color: var(--iss-white);
 }
@@ -1682,12 +1649,12 @@ nav.iss-menu-shell__quick-grid > .wp-block-navigation__container {
 
 /* .iss-heading--pad-right: Modifier class for `iss-heading`; combine for `pad-right` variant. */
 .iss-heading--pad-right {
-  --iss-heading-pad-right: var(--wp--preset--spacing--l, 1.5rem);
+  --iss-heading-pad-right: var(--wp--preset--spacing--l, 1rem);
 }
 
 /* .iss-heading--margin-right: Modifier class for `iss-heading`; combine for `margin-right` variant. */
 .iss-heading--margin-right {
-  --iss-heading-margin-right: var(--wp--preset--spacing--l, 1.5rem);
+  --iss-heading-margin-right: var(--wp--preset--spacing--l, 1rem);
 }
 
 /* .iss-heading--light: Modifier class for `iss-heading`; combine for `light` variant. */
@@ -1810,12 +1777,12 @@ nav.iss-menu-shell__quick-grid > .wp-block-navigation__container {
 
 /* .iss-indent--pad-right: Modifier class for `iss-indent`; combine for `pad-right` variant. */
 .iss-indent--pad-right {
-  --iss-indent-pad-right: var(--wp--preset--spacing--l, 1.5rem);
+  --iss-indent-pad-right: var(--wp--preset--spacing--l, 1rem);
 }
 
 /* .iss-indent--margin-right: Modifier class for `iss-indent`; combine for `margin-right` variant. */
 .iss-indent--margin-right {
-  --iss-indent-margin-right: var(--wp--preset--spacing--l, 1.5rem);
+  --iss-indent-margin-right: var(--wp--preset--spacing--l, 1rem);
 }
 
 /* .iss-indent--light: Modifier class for `iss-indent`; combine for `light` variant. */

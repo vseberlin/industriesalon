@@ -224,7 +224,7 @@
 }
 
 .iss-plate__excerpt .wp-block-post-excerpt__more-link::after {
-  content: " ->";
+  content: " →";
   color: var(--iss-plate-accent);
 }
 
@@ -650,7 +650,7 @@
 }
 
 .iss-atlas-fragment__link::after {
-  content: " ->";
+  content: " →";
   color: var(--iss-accent);
 }
 
@@ -999,7 +999,7 @@
 
 .iss-quote {
   --iss-quote-accent: var(--iss-accent, var(--iss-red));
-  --iss-quote-accent-rgb: var(--iss-accent-rgb, 205, 34, 24);
+  --iss-quote-accent-rgb: var(--iss-accent-rgb, 232, 29, 37);
   --iss-quote-text: rgba(30, 30, 30, 0.84);
   --iss-quote-muted: rgba(30, 30, 30, 0.62);
   --iss-quote-rule: rgba(var(--iss-quote-accent-rgb), 0.72);
@@ -1067,7 +1067,7 @@
 
 .iss-program-spine-row--theme-red {
   --iss-program-spine-accent: var(--iss-red);
-  --iss-program-spine-accent-rgb: 205, 34, 24;
+  --iss-program-spine-accent-rgb: 232, 29, 37;
 }
 
 .iss-program-spine-row--theme-ochre {

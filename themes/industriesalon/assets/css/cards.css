@@ -1042,7 +1042,7 @@
 }
 
 .iss-small-card__link::after {
-  content: " ->";
+  content: " →";
   color: var(--iss-accent);
 }
 
