@@ -38,7 +38,84 @@ Current checkpoint only. History belongs in `CHANGELOG.md`; active follow-up bel
 - Decide whether Führung station archive objects should remain separate detail cards or also populate the station “Damals” image slot when place-level public `archive_images` are missing.
 - Before production deploy, verify target mail mode and decide whether request notification email should be enabled.
 
-## Last Verified
+## Agent-start checks (security posture)
+
+- Run this at each new agent session before touching staging:
+  - `uptime`
+  - `free -h`
+  - `df -h /`
+  - `systemctl --failed`
+  - `docker ps`
+- Verify service logs for abuse signals:
+  - `journalctl -xe --no-pager | tail -n 200`
+  - `journalctl -u nginx --no-pager --since "1 hour ago"`
+  - `journalctl -u fail2ban --no-pager --since "1 hour ago"`
+  - `journalctl -u ssh --no-pager --since "1 hour ago" -o short-iso`
+- Probe / attack pattern scan (high-signal quick check):
+  - `tail -n 200 /var/log/nginx/access.log`
+  - `grep -Ei "(wp-login|xmlrpc.php|/wp-json/|/wp-admin|/wp-content/uploads/.+\\.php|/\\.git|/\\.env|\\.php\\?| 40[13])" /var/log/nginx/access.log | tail -n 200`
+  - `grep -Ei "malformed|bot|curl|sqlmap|nmap|nikto|wpscan|scanner|probe|attack" /var/log/nginx/error.log /var/log/nginx/access.log | tail -n 200`
+- Confirm fail2ban enforcement state:
+  - `fail2ban-client status`
+  - `fail2ban-client status nginx-bad-request`
+  - `fail2ban-client status nginx-forbidden`
+  - `fail2ban-client status nginx-limit-req`
+  - `fail2ban-client status nginx-botsearch`
+  - `fail2ban-client status recidive`
+  - Note: `sshd` jail remains intentionally disabled (`enabled = false`) because admin SSH source is rotating; monitor auth logs but do not rely on automated bans for SSH.
+- Check firewall rule presence (pick whichever is active on host):
+  - `systemctl status ufw nftables iptables --no-pager`
+  - `ufw status verbose`
+  - `nft list ruleset`
+- Optional SSH abuse smoke checks (daily pass):
+  - `grep -iE "Failed password|Invalid user|authentication failure|Did not receive identification string|Connection closed by authenticating user" /var/log/auth.log /var/log/secure 2>/dev/null | tail -n 200`
+  - `grep -iE "Accepted password|Accepted publickey" /var/log/auth.log /var/log/secure 2>/dev/null | tail -n 50`
+- Unauthorized `/etc` change monitoring (host integrity):
+  - `sudo find /etc -type f -mmin -240 -print`  # files changed in last 4 hours
+  - `sudo find /etc -type f -cmin -240 -print`  # inode metadata changed in last 4 hours
+  - `sudo grep -Ei "install|upgrade|remove" /var/log/dpkg.log /var/log/apt/history.log 2>/dev/null | tail -n 200`
+  - If auditd is enabled: `sudo ausearch -k etc-watch --raw -i` and `sudo aureport --file --summary | tail -n 50`
+  - If audit tools are unavailable, note that `sudo find /etc -type f -mmin -240 -print` and package logs remain the fallback.
+- If we cannot prove root of change, escalate these `/etc` alerts immediately:
+  - any `/etc` binary or service drop-in changed outside maintenance windows
+  - unexpected auth/SSH/SSL config edits (`sshd_config`, `sudoers`, `nginx`, `php-fpm`, `fail2ban`, `crontab` files in `/etc`)
+  - more than 5 unexpected `/etc` file changes in 15 minutes (single window) with matching service restarts
+
+### Incident thresholds (what triggers escalation)
+
+- Any SSH abuse signal over baseline in one hour:
+  - >20 failed auth lines in 60 minutes
+  - any "Invalid user" burst from same source / same hour
+- Nginx probe burst:
+  - >100 4xx/5xx requests in 5 minutes from one source, or repeated `/.git|/xmlrpc.php|/wp-login|/wp-admin` patterns
+- Fail2Ban drift:
+  - any active jail suddenly disabled in `fail2ban-client status`
+  - repeated unbans/resets outside change window
+- Firewall anomalies:
+  - firewall service down or no rule set printed
+- `/etc` integrity:
+  - any unexpected config-file edit outside approved maintenance window
+  - package install/removal activity not matched to known maintenance ticket/cron
+
+### Incident severity map (quick triage)
+
+- Critical:
+  - sustained SSH abuse + signs of successful unauthorized auth
+  - active `/etc` compromise indicators (auth/SSH/DB/firewall config changed unexpectedly)
+  - confirmed data exfiltration or confirmed website write compromise
+- High:
+  - repeated Nginx probing with brute-force pattern and escalating blocklist activity
+  - recidive/limited jails repeatedly cycling from the same /24 with service impact
+  - firewall service loss or dropped rules unexpectedly
+- Medium:
+  - small spike in 4xx/5xx from one source
+  - unauthorized package change outside schedule without privilege escalation
+  - fail2ban jail unexpectedly disabled but no confirmed intrusion evidence
+- Low:
+  - isolated spikes with no persistence and no sensitive files touched
+  - temporary service noise where baseline returns within 30 minutes
+
+## Verified Locally
 
 - Latest local checkpoint passed focused JS/PHP syntax, PHPCS target, `git diff --check`, WP-CLI block registry/render checks for `iss/dense-image-wall`, route checks for `/projekte/`, front page, and Walk of Fame, plus SQL/upload artifact inspection.
 - Static-map implementation slice passed PHP syntax, targeted PHPCS, targeted PHPStan, `node --check` for the related-content block editor script, `wp iss-relations map-block-audit` in table and JSON modes, WP-CLI block registration checks, direct `do_blocks()` render checks for `iss/atlas-slice` and `iss/spine-strip`, route smoke checks for `/`, `/fuehrungen/`, and `/schoneweide/`, marker JSON validation, experimental block inserter visibility checks, and `git diff --check`.
@@ -57,3 +134,4 @@ Current checkpoint only. History belongs in `CHANGELOG.md`; active follow-up bel
 - Project content artifact verification: imported `ops/sql/2026-06-14-project-content-sync.sql` locally; confirmed zero dev-host references in published project rows; verified seven project routes return `200`; verified `ops/uploads/2026-06-14-project-content-media.tar.gz` contains 28 files and matches its SHA256.
 - Register-place image bridge passed PHP syntax, targeted PHPCS/PHPStan, `git diff --check`, WP-CLI candidate-vs-thumbnail checks (`candidate_diffs=0`), related-card/static-map DTO render checks, and frontend spot checks for the Industriesalon place route and search result.
 - Elektropolis route media audit verified `/fuehrungen/elektropolis-tour/` returns `200`, `single-fuehrung` is file-backed, no PHP route errors appear in container logs, station 1 has private `archive_images` plus public `current_images`, and station 2 renders public “Damals”/“Heute” image groups correctly.
+- 2026-06-17 staging health check (`19:40 UTC`): staging DNS resolves to `142.132.191.224`; `curl -I https://staging.industriesalon.info/`, `/wp-login.php`, and `/wp-json/` all returned `200 OK`. `systemctl is-active nginx fail2ban docker` reported nginx and fail2ban active; local WP stacks are healthy in Docker list (`Up` states, one healthy `php8.3-fpm` stack). `free -h`/`df -h /` showed low memory pressure and 25% root usage. `fail2ban-client status` shows no active bans for `nginx-forbidden`, `nginx-bad-request`, `nginx-limit-req`, `nginx-wordpress-probe-stage`, `nginx-wordpress-probe-touchtable`; `findtime` currently `30m`, `bantime` `30m`, elevated retry caps loaded on the key jails.
