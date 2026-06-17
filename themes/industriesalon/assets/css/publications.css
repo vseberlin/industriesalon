@@ -1046,6 +1046,35 @@ body.iss-publication-layout-photoalbum .entry-content {
   max-width: none;
 }
 
+body.iss-publication-layout-photoalbum .iss-publication-reading-main {
+  background: #15181d;
+  padding: clamp(2rem, 4vw, 3rem);
+}
+
+body.iss-publication-layout-photoalbum .iss-publication-photoalbum__item {
+  border-top-color: rgba(255, 255, 255, 0.07);
+}
+
+body.iss-publication-layout-photoalbum .iss-publication-photoalbum__copy {
+  border-top-color: rgba(255, 255, 255, 0.1);
+}
+
+body.iss-publication-layout-photoalbum .iss-publication-photoalbum__item-page {
+  color: rgba(255, 255, 255, 0.38);
+}
+
+body.iss-publication-layout-photoalbum .iss-publication-photoalbum__item-title {
+  color: rgba(255, 255, 255, 0.86);
+}
+
+body.iss-publication-layout-photoalbum .iss-publication-photoalbum__item-text p {
+  color: rgba(255, 255, 255, 0.52);
+}
+
+body.iss-publication-layout-photoalbum .iss-publication-photoalbum__item-actions a {
+  color: rgba(255, 255, 255, 0.52);
+}
+
 .iss-publication-photoalbum {
   display: grid;
   gap: clamp(1.5rem, 3vw, 2rem);
@@ -1064,8 +1093,8 @@ body.iss-publication-layout-photoalbum .entry-content {
   display: grid;
   gap: 1rem;
   margin: 0;
-  padding-top: clamp(1.75rem, 3vw, 2.5rem);
-  border-top: 1px solid rgba(var(--iss-accent-rgb), 0.14);
+  padding-top: clamp(3rem, 6vw, 5rem);
+  border-top: 1px solid rgba(30, 30, 30, 0.1);
   scroll-margin-top: calc(var(--iss-header-height) + 1rem);
 }
 
@@ -1082,24 +1111,27 @@ body.iss-publication-layout-photoalbum .entry-content {
 
 .iss-publication-photoalbum__figure .wp-block-image {
   margin: 0;
+  line-height: 0;
 }
 
 .iss-publication-photoalbum__figure img {
   display: block;
   width: 100%;
   height: auto;
-  max-height: min(78vh, 72rem);
+  max-height: min(88vh, 84rem);
   object-fit: contain;
-  background: rgba(30, 30, 30, 0.03);
-  border: 1px solid rgba(30, 30, 30, 0.08);
-  box-shadow: 0 14px 34px rgba(0, 0, 0, 0.08);
+  background: transparent;
+  border: none;
+  box-shadow: none;
 }
 
 .iss-publication-photoalbum__copy {
   display: grid;
-  gap: 0.65rem;
+  gap: 0.5rem;
   align-content: start;
-  max-width: min(44rem, 100%);
+  max-width: min(52rem, 100%);
+  padding-top: 0.85rem;
+  border-top: 1px solid rgba(30, 30, 30, 0.08);
 }
 
 .iss-publication-photoalbum__copy > * {
@@ -1107,18 +1139,21 @@ body.iss-publication-layout-photoalbum .entry-content {
 }
 
 .iss-publication-photoalbum__item-page {
-  color: var(--iss-accent);
+  color: rgba(30, 30, 30, 0.44);
 }
 
 .iss-publication-photoalbum__item-title {
-  font-size: var(--iss-single-h3);
-  line-height: 1.2;
+  font-size: clamp(1rem, 0.96rem + 0.12vw, 1.08rem);
+  font-weight: 600;
+  line-height: 1.3;
+  letter-spacing: 0;
 }
 
 .iss-publication-photoalbum__item-text p {
   margin: 0;
-  color: rgba(30, 30, 30, 0.82);
-  line-height: 1.68;
+  color: rgba(30, 30, 30, 0.58);
+  font-size: 0.92rem;
+  line-height: 1.62;
 }
 
 .iss-publication-photoalbum__nav-page,
@@ -2170,9 +2205,10 @@ body.iss-publication-layout-timeline .iss-publication-order-panel {
 
   body.iss-publication-photoalbum-ready .iss-publication-single__body {
     display: grid;
-    grid-template-columns: minmax(15.5rem, 18rem) minmax(0, 1fr);
-    gap: clamp(1.5rem, 3vw, 3rem);
-    max-width: 84rem;
+    grid-template-columns: 250px 1fr;
+    column-gap: 20px;
+    width: 100%;
+    max-width: none;
     margin-left: 0;
     margin-right: 0;
     align-items: start;
@@ -2188,6 +2224,7 @@ body.iss-publication-layout-timeline .iss-publication-order-panel {
 
   body.iss-publication-photoalbum-ready .iss-publication-reading-rail {
     grid-column: 1;
+    width: 100%;
     position: sticky;
     top: calc(var(--iss-header-height) + 1rem);
     align-self: start;
@@ -2200,7 +2237,10 @@ body.iss-publication-layout-timeline .iss-publication-order-panel {
   }
 
   body.iss-publication-photoalbum-ready .iss-publication-reading-main {
+    position: static;
+    z-index: auto;
     grid-column: 2;
+    width: 100%;
   }
 
   body.iss-publication-longread-chaptered .iss-publication-reading-rail {
@@ -2422,9 +2462,20 @@ body.iss-publication-layout-timeline .iss-publication-order-panel {
 
   body.iss-publication-layout-photoalbum .iss-publication-reading-rail .iss-publication-photoalbum__nav-page {
     color: var(--iss-publication-rail-soft);
+    font-size: 0.6rem;
+    letter-spacing: 0.14em;
   }
 
-  body.iss-publication-layout-photoalbum .iss-publication-reading-rail .iss-publication-photoalbum__nav-title,
+  body.iss-publication-layout-photoalbum .iss-publication-reading-rail .iss-publication-photoalbum__nav-title {
+    color: inherit;
+    font-size: 0.72rem;
+    letter-spacing: 0;
+    text-transform: none;
+    overflow: hidden;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+  }
+
   body.iss-publication-layout-photoalbum .iss-publication-reading-rail .iss-reading-nav__inner > a:hover .iss-publication-photoalbum__nav-page,
   body.iss-publication-layout-photoalbum .iss-publication-reading-rail .iss-reading-nav__inner > a:focus-visible .iss-publication-photoalbum__nav-page {
     color: inherit;
