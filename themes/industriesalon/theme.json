@@ -9,7 +9,7 @@
       "wideSize": "1720px"
     },
     "spacing": {
-      "blockGap": "1.35rem",
+      "blockGap": "clamp(1.1rem, 1.8vw, 1.8rem)",
       "units": [
         "px",
         "rem",
@@ -57,6 +57,16 @@
           "name": "4XL",
           "slug": "4xl",
           "size": "5rem"
+        },
+        {
+          "name": "Section",
+          "slug": "section",
+          "size": "clamp(2.5rem, 5vw, 4.5rem)"
+        },
+        {
+          "name": "Heading Gap",
+          "slug": "heading-gap",
+          "size": "clamp(0.6rem, 1.2vw, 1rem)"
         }
       ]
     },
@@ -169,7 +179,7 @@
       "text": "var(--wp--preset--color--eerie-black)"
     },
     "spacing": {
-      "blockGap": "1.35rem"
+      "blockGap": "clamp(1.1rem, 1.8vw, 1.8rem)"
     },
     "typography": {
       "fontFamily": "var(--wp--preset--font-family--plex)",
@@ -192,21 +202,36 @@
         "typography": {
           "fontSize": "clamp(2.2rem, 4vw, 3.9rem)",
           "fontWeight": "700",
-          "lineHeight": "1.03"
+          "lineHeight": "1.14"
+        },
+        "spacing": {
+          "margin": {
+            "bottom": "var(--wp--preset--spacing--heading-gap)"
+          }
         }
       },
       "h2": {
         "typography": {
           "fontSize": "clamp(1.75rem, 3vw, 2.7rem)",
           "fontWeight": "700",
-          "lineHeight": "1.06"
+          "lineHeight": "1.13"
+        },
+        "spacing": {
+          "margin": {
+            "bottom": "var(--wp--preset--spacing--heading-gap)"
+          }
         }
       },
       "h3": {
         "typography": {
           "fontSize": "clamp(1.35rem, 2vw, 1.85rem)",
           "fontWeight": "600",
-          "lineHeight": "1.1"
+          "lineHeight": "1.16"
+        },
+        "spacing": {
+          "margin": {
+            "bottom": "var(--wp--preset--spacing--heading-gap)"
+          }
         }
       },
       "h4": {
@@ -214,6 +239,11 @@
           "fontSize": "clamp(1.12rem, 1.5vw, 1.45rem)",
           "fontWeight": "600",
           "lineHeight": "1.16"
+        },
+        "spacing": {
+          "margin": {
+            "bottom": "var(--wp--preset--spacing--heading-gap)"
+          }
         }
       },
       "h5": {
@@ -307,12 +337,12 @@
       },
       "core/group": {
         "spacing": {
-          "blockGap": "1.35rem"
+          "blockGap": "var(--wp--preset--spacing--section)"
         }
       },
       "core/columns": {
         "spacing": {
-          "blockGap": "1.35rem"
+          "blockGap": "clamp(1.1rem, 1.8vw, 1.8rem)"
         }
       },
       "core/buttons": {
