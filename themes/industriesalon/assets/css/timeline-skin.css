@@ -20,6 +20,17 @@
   --iss-tl-hover-bg: var(--iss-button-hover-bg, var(--iss-tl-accent-soft));
   --iss-tl-btn-fg: var(--iss-button-fg, var(--iss-tl-text));
   --iss-tl-btn-hover-fg: var(--iss-button-hover-fg, var(--iss-tl-text));
+
+  /* Solid-fill tokens for the primary action tier (e.g. Buchen),
+     kept distinct from the tonal --iss-tl-accent-soft tier above so
+     primary and secondary/filter states no longer collapse into the
+     same visual weight. */
+  --iss-tl-btn-primary-bg: var(--iss-button-primary-bg, var(--iss-tl-primary));
+  --iss-tl-btn-primary-fg: var(--iss-button-primary-fg, var(--iss-white, #fff));
+  --iss-tl-btn-primary-border: var(--iss-button-primary-border, var(--iss-tl-primary));
+  --iss-tl-btn-primary-hover-bg: var(--iss-button-primary-hover-bg, var(--iss-tl-text));
+  --iss-tl-btn-primary-hover-border: var(--iss-button-primary-hover-border, var(--iss-tl-text));
+  --iss-tl-btn-primary-hover-fg: var(--iss-button-primary-hover-fg, var(--iss-white, #fff));
   color: var(--iss-tl-text);
 }
 
@@ -112,18 +123,32 @@
   background: transparent;
 }
 
+/* Primary (e.g. Buchen): solid accent fill, white text, no left
+   accent bar (the bar is a "tonal" affordance, redundant once the
+   whole button is already accent-colored). This is the one action
+   per card meant to read as heavier than everything around it. */
 .iss-timeline__btn--primary {
-  border-color: var(--iss-tl-accent-border);
-  background: var(--iss-tl-accent-soft);
+  border: 1px solid var(--iss-tl-btn-primary-border);
+  background: var(--iss-tl-btn-primary-bg);
+  color: var(--iss-tl-btn-primary-fg);
+  font-weight: 700;
 }
 
 .iss-timeline__btn--secondary:hover,
-.iss-timeline__btn--secondary:focus,
-.iss-timeline__btn--primary:hover,
-.iss-timeline__btn--primary:focus {
+.iss-timeline__btn--secondary:focus-visible,
+.iss-timeline__btn:not(.iss-timeline__btn--primary, .iss-timeline__btn--secondary):hover,
+.iss-timeline__btn:not(.iss-timeline__btn--primary, .iss-timeline__btn--secondary):focus-visible {
   background: var(--iss-tl-hover-bg);
   border-color: var(--iss-tl-border-hover);
   color: var(--iss-tl-btn-hover-fg);
+}
+
+.iss-timeline__btn--primary:hover,
+.iss-timeline__btn--primary:focus-visible {
+  background: var(--iss-tl-btn-primary-hover-bg);
+  border-color: var(--iss-tl-btn-primary-hover-border);
+  color: var(--iss-tl-btn-primary-hover-fg);
+  outline: none;
 }
 
 .iss-timeline__empty,

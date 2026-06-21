@@ -210,6 +210,17 @@ Tags: block-theme, full-site-editing, custom-colors, custom-spacing, editor-styl
   --iss-button-hover-border: var(--iss-accent);
   --iss-button-hover-fg: var(--iss-black);
 
+  /* Primary button tier - solid fill, used for the single most important
+     action in a given context (Buchen, Anmelden, Senden). Distinct from
+     the tonal --iss-button-fill-bg tier used for secondary actions and
+     filter/toggle states, so primary actions read as genuinely heavier. */
+  --iss-button-primary-bg: var(--iss-accent);
+  --iss-button-primary-fg: var(--iss-white);
+  --iss-button-primary-border: var(--iss-accent);
+  --iss-button-primary-hover-bg: var(--iss-black);
+  --iss-button-primary-hover-border: var(--iss-black);
+  --iss-button-primary-hover-fg: var(--iss-white);
+
   --iss-site-header-pad-top: 0.1rem;
   --iss-site-header-pad-bottom: 1rem;
   --iss-site-logo-size: 120px;
@@ -281,6 +292,13 @@ body {
   --iss-button-hover-bg: rgba(249, 249, 250, 0.12);
   --iss-button-hover-border: rgba(249, 249, 250, 0.72);
   --iss-button-hover-fg: var(--iss-white);
+
+  /* Primary stays solid-accent (still pops against a dark surface), but
+     hover lightens toward white instead of going to black, which would
+     disappear into the dark background. */
+  --iss-button-primary-hover-bg: var(--iss-white);
+  --iss-button-primary-hover-border: var(--iss-white);
+  --iss-button-primary-hover-fg: var(--iss-black);
 }
 
 .iss-action-link,
@@ -322,6 +340,97 @@ body {
   --iss-link-hover-fg: var(--iss-white);
 }
 
+/* =========================================================
+   BUTTON PRIMITIVE
+   Shared three-tier action hierarchy. Reads --iss-accent (and
+   therefore the active .iss-scheme-* page color) automatically,
+   so no component needs to hardcode a color.
+
+   .iss-button            -> primary (default tier). Solid fill.
+                              One per context: the action that
+                              actually converts (Buchen, Anmelden,
+                              Senden). Never pair two primaries
+                              side by side.
+   .iss-button--secondary -> supporting action. Outlined, no fill.
+                              (Details anschauen, Mehr erfahren)
+   .iss-button--tertiary  -> low-stakes action. No border, no fill,
+                              text-weight only. (Empfehlen, Abbrechen)
+
+   Filters/toggles (.iss-timeline__preset, .iss-atlas-app__filter-
+   button, etc.) intentionally do NOT use this primitive - they
+   represent state, not action, and keep their own chip styling.
+   ========================================================= */
+
+.iss-button,
+.iss-button--secondary,
+.iss-button--tertiary {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  min-height: 44px;
+  padding: 0.7rem 1.25rem;
+  border-radius: var(--iss-radius-sm);
+  font-size: 0.95rem;
+  font-weight: 700;
+  line-height: 1.1;
+  text-decoration: none;
+  cursor: pointer;
+  transition:
+    background-color var(--iss-transition),
+    color var(--iss-transition),
+    border-color var(--iss-transition);
+}
+
+.iss-button {
+  border: 1px solid var(--iss-button-primary-border);
+  background: var(--iss-button-primary-bg);
+  color: var(--iss-button-primary-fg);
+}
+
+.iss-button:hover,
+.iss-button:focus-visible {
+  background: var(--iss-button-primary-hover-bg);
+  border-color: var(--iss-button-primary-hover-border);
+  color: var(--iss-button-primary-hover-fg);
+  outline: none;
+}
+
+.iss-button--secondary {
+  border: 1px solid var(--iss-button-border);
+  background: transparent;
+  color: var(--iss-button-fg);
+}
+
+.iss-button--secondary:hover,
+.iss-button--secondary:focus-visible {
+  background: var(--iss-button-hover-bg);
+  border-color: var(--iss-button-hover-border);
+  color: var(--iss-button-hover-fg);
+  outline: none;
+}
+
+.iss-button--tertiary {
+  padding: 0.7rem 0.4rem;
+  border: 1px solid transparent;
+  background: transparent;
+  color: var(--iss-button-fg);
+}
+
+.iss-button--tertiary:hover,
+.iss-button--tertiary:focus-visible {
+  color: var(--iss-link-fg);
+  outline: none;
+}
+
+.iss-button:disabled,
+.iss-button--secondary:disabled,
+.iss-button--tertiary:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+  pointer-events: none;
+}
+
 .wp-block-button > .wp-block-button__link {
   display: inline-flex;
   align-items: center;
@@ -348,6 +457,23 @@ body {
 .wp-block-button.is-style-outline > .wp-block-button__link {
   background: var(--iss-button-bg);
   border-color: var(--iss-button-border);
+}
+
+/* Editor-facing primary option: in the block editor, choose the
+   "Fill" style variation to get the same solid-accent primary tier
+   as .iss-button, without hand-editing markup. */
+.wp-block-button.is-style-fill > .wp-block-button__link {
+  border: 1px solid var(--iss-button-primary-border);
+  border-left: 1px solid var(--iss-button-primary-border);
+  background: var(--iss-button-primary-bg);
+  color: var(--iss-button-primary-fg);
+}
+
+.wp-block-button.is-style-fill > .wp-block-button__link:hover,
+.wp-block-button.is-style-fill > .wp-block-button__link:focus-visible {
+  background: var(--iss-button-primary-hover-bg);
+  border-color: var(--iss-button-primary-hover-border);
+  color: var(--iss-button-primary-hover-fg);
 }
 
 .wp-block-button > .wp-block-button__link:hover,
