@@ -4,6 +4,15 @@ This file records durable project changes. Keep it compact: current state belong
 `handoff_CURRENT.md`, active follow-up in `TODO.md`, and detailed investigation can
 be recovered from Git history.
 
+## 2026-06-21
+
+- Reworked static map framing for front-page and Führungen landing surfaces:
+  - added a full-size baked `-17deg` Spree-horizontal derived map plus matching marker projection JSON;
+  - registered `spree-horizontal-17` as a reusable theme map preset while keeping the unrotated canonical map as the source reference;
+  - switched front page and `/fuehrungen/` spine strips to the baked preset with page-specific vertical crop and 1.14 cover zoom;
+  - simplified spine-strip overlays so map markers carry the spatial meaning and the direction rail stays decorative;
+  - hid raw rotation/horizontal-bias controls from the editor, kept zoom up to 200%, and exposed vertical crop as the author-facing framing control.
+
 ## 2026-06-15
 
 - Made `register_place` public editor image groups authoritative for frontend featured-image rendering: public featured/fallback image-group selections now win through the WordPress thumbnail filter and save-time sync updates `_thumbnail_id` when the selected public image changes.

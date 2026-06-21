@@ -1,15 +1,16 @@
 # Current Handoff
 
-Updated: 2026-06-15
+Updated: 2026-06-21
 
 Current checkpoint only. History belongs in `CHANGELOG.md`; active follow-up belongs in `TODO.md`.
 
 ## Current State
 
-- Local `main` is ahead of `origin/main` with local-only Atlas/static-map cleanup commits; do not push until the end-of-day batch push.
+- Local `main` has reconciled the staging/GitHub CSS and publication updates from `origin/main`; the static-map framing checkpoint is ready to push.
 - Staging is the current live working target, not a production release gate. Rebuild from Git plus explicit SQL/upload artifacts if it breaks.
 - Domain ownership is current: `iss-content` owns CPT/editor contracts and tour data; `iss-occurrences` owns occurrence projection, SuperSaaS ingestion, tour-slot reads, and sync admin; `iss-frontend` owns programme/timeline/browser rendering plus reusable frontend editorial blocks such as `iss/dense-image-wall`; `iss-commerce-lite` owns booking/order request intake; `iss-archive` owns archive runtime; `iss-graph` owns graph/search/facade contracts; the theme owns public templates and skins.
 - Static map ownership is now explicit and partly implemented: `iss-relations` owns map-block source/place-selection contracts and has a focused static-map contract check, `iss-frontend/modules/static-maps` owns marker lookup, projection/focus math, static stage/panel rendering, and static atlas/map frontend renderers, `industriesalon-schoeneweide-register` owns `register_place`, interactive Atlas data/cache contracts, Atlas REST schema checks, and the existing Schöneweide Atlas block, and the theme owns map assets/presets/skins. First-class inserter-visible map surfaces are `iss/related-place-map`, `iss/atlas-slice`, and `iss/spine-strip`; `iss/atlas-strip` and `iss/asymmetric-split-field` remain render-compatible but hidden as experimental.
+- Static map framing has a new baked full-size derived canonical: `themes/industriesalon/assets/maps/schoneweide-map-spree-horizontal-17.webp` plus `schoneweide-map-spree-horizontal-17-markers.json`. The `spree-horizontal-17` preset is used by the front page and `/fuehrungen/` spine strips with page-specific vertical crop and 1.14 cover zoom; runtime rotation and horizontal-bias controls are hidden from the editor.
 - The merged Atlas/static-map rewrite plan is in `docs/architecture/atlas-static-map-implementation-plan.md`; the related-content editor JS split, static-map DTO boundary, interactive Atlas runtime module split, Atlas/static-map contract-schema checks, fullscreen/kiosk Atlas layout states, and final public-surface audit are in local commits. Broader archive/graph API consolidation is deferred until there is a concrete public consumer.
 - Occurrence rows are source-post keyed only. Open-ended rows use `ends_at = NULL` plus `is_open_ended = 1`; graph IDs and `2099-12-31` sentinels are invalid drift.
 - Programme projection uses `iss_programme_enabled`; Ausstellung overview visibility uses `iss_public_overview_enabled`. Dauer/Digital Ausstellungen can remain in overviews without programme occurrences unless editors explicitly opt them in.
@@ -27,6 +28,7 @@ Current checkpoint only. History belongs in `CHANGELOG.md`; active follow-up bel
 - Template output can still become DB-backed after Site Editor saves; check `wp_template` authority before assuming disk templates are live.
 - Front-page remains DB-backed in local state, but `iss/spine-strip` no longer depends on saved `source` when `placeIds` are present because the map-block contract resolves that as `manual`.
 - Static marker JSON now covers published coordinate-bearing `register_place` posts in the local audit, including derived markers added for Waldfriedhof entries, IRIS, Innovationspark Wuhlheide, Energie-Museum Berlin, and Spree 27. Marker provenance and the manual update verification path are documented in `docs/architecture/static-map-rendering.md`.
+- The new `spree-horizontal-17` marker JSON is a derived projection from `schoneweide-static-markers-new.json`; regenerate it from the unrotated canonical map if the baked `-17deg` projection changes.
 - `page-projekte` currently remains DB-backed (`custom`) after being flushed to `themes/industriesalon/templates/page-projekte.html`; delete that override only after the disk template is verified in the target flow.
 - History was rewritten on 2026-06-12. Existing secondary clones should be re-cloned or reset deliberately.
 - `/home/vladimir/industriesalon-export` is stale and should not be used for deploy/push.
@@ -37,6 +39,7 @@ Current checkpoint only. History belongs in `CHANGELOG.md`; active follow-up bel
 - Delete the `page-projekte` DB template override after verifying the flushed disk template on the target.
 - Decide whether Führung station archive objects should remain separate detail cards or also populate the station “Damals” image slot when place-level public `archive_images` are missing.
 - Before production deploy, verify target mail mode and decide whether request notification email should be enabled.
+- If the front-page or Führungen map crop needs further tuning, adjust `biasY` on the block or promote page-specific crop defaults into named presets; no SQL/upload artifact is required for the current code/assets-only checkpoint.
 
 ## Agent-start checks (security posture)
 
@@ -135,3 +138,4 @@ Current checkpoint only. History belongs in `CHANGELOG.md`; active follow-up bel
 - Register-place image bridge passed PHP syntax, targeted PHPCS/PHPStan, `git diff --check`, WP-CLI candidate-vs-thumbnail checks (`candidate_diffs=0`), related-card/static-map DTO render checks, and frontend spot checks for the Industriesalon place route and search result.
 - Elektropolis route media audit verified `/fuehrungen/elektropolis-tour/` returns `200`, `single-fuehrung` is file-backed, no PHP route errors appear in container logs, station 1 has private `archive_images` plus public `current_images`, and station 2 renders public “Damals”/“Heute” image groups correctly.
 - 2026-06-17 staging health check (`19:40 UTC`): staging DNS resolves to `142.132.191.224`; `curl -I https://staging.industriesalon.info/`, `/wp-login.php`, and `/wp-json/` all returned `200 OK`. `systemctl is-active nginx fail2ban docker` reported nginx and fail2ban active; local WP stacks are healthy in Docker list (`Up` states, one healthy `php8.3-fpm` stack). `free -h`/`df -h /` showed low memory pressure and 25% root usage. `fail2ban-client status` shows no active bans for `nginx-forbidden`, `nginx-bad-request`, `nginx-limit-req`, `nginx-wordpress-probe-stage`, `nginx-wordpress-probe-touchtable`; `findtime` currently `30m`, `bantime` `30m`, elevated retry caps loaded on the key jails.
+- Static-map framing checkpoint was not run through automated validation in this session; implementation was iterated from local visual feedback and screenshot review. Code/assets only, no database or upload transfer artifact required.
