@@ -3,6 +3,7 @@
 ## 2026-06-21
 - Added a shared primary button tier in `style.css` with `.iss-button` variants, Gutenberg `is-style-fill` mapping, and matching solid booking-button tokens in `assets/css/timeline-skin.css`.
 - Reworked `templates/page-kalender.html` and `assets/css/page-kalender.css` into a wide-viewport calendar workbench: existing timeline-query controls become a left rail, results are capped into a compact occurrence list, recurring tour groups start collapsed, calendar listing media is hidden, and a theme-owned aside links visitors toward the separate exhibitions browser.
+- Adjusted timeline kicker accent/color variables so kicker text, rule, and dot use the active timeline scheme consistently.
 
 ## 2026-06-12
 - Moved the active Führung single block template from the legacy custom-template slug `single-tour` to WordPress' native CPT hierarchy slug `single-fuehrung`, keeping the existing `iss-tour-*` layout classes and dynamic block composition intact.

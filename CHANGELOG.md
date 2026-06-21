@@ -8,6 +8,7 @@ be recovered from Git history.
 
 - Added a shared theme button primary tier: `style.css` now exposes solid primary button tokens plus `.iss-button` variants and maps Gutenberg `is-style-fill` buttons to the solid tier, while the programme timeline skin uses the same primary tokens for booking actions.
 - Reworked the public `/kalender/` wide-viewport skin: the file-backed calendar template now wraps the existing occurrence-backed `industriesalon/timeline-query` block in a theme-owned workbench, moves the block's existing filters into a left rail on wide screens, caps the result column, collapses recurring tour groups by default, hides oversized listing media on the calendar surface, and adds a right rail linking exhibitions back to the separate availability browser.
+- Adjusted programme timeline kickers to set the shared kicker accent/color variables so the text, left rule, and dot follow the active timeline scheme together.
 - Added the first `iss-editorial` vertical slice for the finalized editorial-platform SOW:
   - introduced an engine-only plugin for versioned editorial JSON documents, autosave, format/section registration, typed references, and normalized read models;
   - wired `iss-content` to opt `ausstellung` into the initial `OrderedFormat` pilot while preserving existing Gutenberg/meta content as the default fallback;
