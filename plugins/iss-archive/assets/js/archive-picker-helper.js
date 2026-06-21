@@ -197,7 +197,7 @@
       return;
     }
 
-    var existing = currentValue || select.value || '';
+    var existing = typeof currentValue === 'string' ? currentValue : select.value || '';
     clear(select);
     select.appendChild(new Option(select.getAttribute('data-empty-label') || 'Alle', ''));
     (items || []).forEach(function (item) {

@@ -12,6 +12,7 @@ parameters:
     - plugins/industriesalon-steuerung
     - plugins/iss-core
     - plugins/iss-content
+    - plugins/iss-editorial
     - plugins/iss-frontend
     - plugins/iss-graph
     - plugins/iss-media-control
@@ -27,6 +28,7 @@ parameters:
     - plugins/industriesalon-steuerung/industriesalon-steuerung.php
     - plugins/iss-core/iss-core.php
     - plugins/iss-content/iss-content.php
+    - plugins/iss-editorial/iss-editorial.php
     - plugins/iss-frontend/iss-frontend.php
     - plugins/iss-graph/iss-graph.php
     - plugins/iss-media-control/iss-media-control.php

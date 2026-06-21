@@ -184,6 +184,125 @@
   gap: 0;
 }
 
+.iss-ausstellung-editorial {
+  display: grid;
+  gap: 0;
+}
+
+.iss-ausstellung-editorial__section {
+  padding: clamp(3.5rem, 7vw, 7rem) 0;
+  border-top: 1px solid rgba(30, 30, 30, 0.1);
+}
+
+.iss-ausstellung-editorial__section > .iss-container {
+  display: grid;
+  gap: clamp(1rem, 2vw, 1.75rem);
+  width: min(100% - (2 * var(--iss-ausstellung-pad-x)), 64rem);
+}
+
+.iss-ausstellung-editorial__section h2 {
+  max-width: 18ch;
+  color: var(--iss-ausstellung-dark);
+  font-size: clamp(2rem, 3vw, 3.75rem);
+  line-height: 1;
+}
+
+.iss-ausstellung-editorial__body {
+  max-width: 52rem;
+  color: rgba(30, 30, 30, 0.82);
+  font-size: clamp(1.05rem, 0.5vw + 0.95rem, 1.25rem);
+  line-height: 1.72;
+}
+
+.iss-ausstellung-editorial__body > :last-child {
+  margin-bottom: 0;
+}
+
+.iss-ausstellung-editorial__section--leitfrage {
+  background: #fff;
+}
+
+.iss-ausstellung-editorial__section--leitfrage h2 {
+  color: var(--iss-ausstellung-accent);
+}
+
+.iss-ausstellung-editorial__quote {
+  display: grid;
+  gap: 0.75rem;
+  max-width: 52rem;
+  padding: clamp(1.25rem, 2.5vw, 2rem);
+  border-left: 4px solid var(--iss-ausstellung-accent);
+  background: #fff;
+  color: var(--iss-ausstellung-dark);
+  font-size: clamp(1.25rem, 1vw + 1rem, 1.75rem);
+  line-height: 1.45;
+}
+
+.iss-ausstellung-editorial__quote cite {
+  color: rgba(30, 30, 30, 0.64);
+  font-size: 0.95rem;
+  font-style: normal;
+}
+
+.iss-ausstellung-editorial__refs {
+  display: grid;
+  gap: 1rem;
+  margin-top: 0.5rem;
+}
+
+.iss-ausstellung-editorial__media-strip {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 1rem;
+  margin-top: 0.5rem;
+}
+
+.iss-ausstellung-editorial__media-item {
+  margin: 0;
+}
+
+.iss-ausstellung-editorial__media-item img {
+  display: block;
+  width: 100%;
+  height: auto;
+}
+
+.iss-ausstellung-editorial__media-item figcaption {
+  margin-top: 0.45rem;
+  color: rgba(30, 30, 30, 0.64);
+  font-size: 0.92rem;
+  line-height: 1.45;
+}
+
+.iss-ausstellung-editorial__archive-card,
+.iss-ausstellung-editorial__placeholder {
+  display: grid;
+  gap: 1rem;
+  padding: 1rem;
+  border: 1px solid rgba(30, 30, 30, 0.12);
+  background: #fff;
+}
+
+.iss-ausstellung-editorial__archive-media {
+  margin: 0;
+}
+
+.iss-ausstellung-editorial__archive-media img {
+  display: block;
+  width: 100%;
+  height: auto;
+}
+
+.iss-ausstellung-editorial__archive-body h3 {
+  margin-bottom: 0.35rem;
+  font-size: clamp(1.25rem, 1vw + 1rem, 1.8rem);
+}
+
+.iss-ausstellung-editorial__placeholder {
+  border-color: rgba(232, 29, 37, 0.38);
+  color: var(--iss-ausstellung-accent);
+}
+
 .iss-ausstellung-content > .wp-block-post-content > :where(p, ul, ol, h2, h3, h4, blockquote, figure, .wp-block-group, .wp-block-columns, .wp-block-image, .wp-block-quote, .wp-block-iss-featured-archive-object) {
   width: min(100% - (2 * var(--iss-ausstellung-pad-x)), 58rem);
   min-width: 0;

@@ -6,6 +6,21 @@ be recovered from Git history.
 
 ## 2026-06-21
 
+- Added the first `iss-editorial` vertical slice for the finalized editorial-platform SOW:
+  - introduced an engine-only plugin for versioned editorial JSON documents, autosave, format/section registration, typed references, and normalized read models;
+  - wired `iss-content` to opt `ausstellung` into the initial `OrderedFormat` pilot while preserving existing Gutenberg/meta content as the default fallback;
+  - added archive-object picker integration for object-reference sections without exposing raw IDs to editors;
+  - added theme-owned Ausstellung JSON rendering behind a per-post feature flag, with unresolved references omitted publicly and shown as preview/editor placeholders;
+  - replaced the temporary Gutenberg sidebar/meta-box editorial UI with a custom main-canvas composition editor for `ausstellung`, using palette gestures, ordered section cards, and modal section editing;
+  - added media selection to the composition modal via the WordPress media library, imported legacy exhibition images as `bildstrecke` media refs, added editable captions/removal controls, and rendered resolved media refs in the theme-owned JSON output;
+  - normalized the archive-object picker toward the media-picker workflow: it now opens as a modal, starts from attached/context Archivset buckets, shows bucket members as thumbnail cards, keeps faceted object search as the secondary fallback, and preserves selected bucket/member provenance in editorial references;
+  - stabilized the archive picker modal for editor use with inline/modal mode separation, bucket-first search guards, readable global-search result cards, fixed result scrolling, and theme-red selected-object accents;
+  - added a REST save route for reviewed editorial JSON documents and their per-post enabled flag;
+  - added a read-only `wp iss-editorial ausstellung-dry-run` report for `Kinder im Werk` and `Frauen im Werk` before any permanent JSON-rendering switch;
+  - added `wp iss-editorial ausstellung-import-candidate --post=<slug-or-id>` and imported a disabled local JSON candidate for `Frauen im Werk für Fernmeldewesen` with 7 sections and 6 media refs while leaving public Gutenberg rendering active;
+  - fixed editorial JSON meta writes to slash encoded JSON before `update_post_meta()`, preserving paragraph breaks and other escaped content through WordPress meta storage;
+  - added `iss-editorial` to PHPStan paths/scanFiles so the repo's per-file target runner can see the new plugin symbols without include-file workarounds;
+  - documented the boundary in `docs/architecture/editorial-platform.md` and added `iss-editorial` to the plugin map.
 - Reworked static map framing for front-page and Führungen landing surfaces:
   - added a full-size baked `-17deg` Spree-horizontal derived map plus matching marker projection JSON;
   - registered `spree-horizontal-17` as a reusable theme map preset while keeping the unrotated canonical map as the source reference;

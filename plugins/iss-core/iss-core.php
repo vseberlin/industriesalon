@@ -60,6 +60,13 @@ function iss_core_migrate_domain_plugin_basenames(): void
         }
     }
 
+    if (in_array('iss-content/iss-content.php', $next, true) && !in_array('iss-editorial/iss-editorial.php', $next, true)) {
+        $plugin_root = defined('WP_PLUGIN_DIR') ? WP_PLUGIN_DIR : trailingslashit(WP_CONTENT_DIR) . 'plugins';
+        if (is_readable(trailingslashit($plugin_root) . 'iss-editorial/iss-editorial.php')) {
+            $next[] = 'iss-editorial/iss-editorial.php';
+        }
+    }
+
     if ($next === $active) {
         return;
     }
