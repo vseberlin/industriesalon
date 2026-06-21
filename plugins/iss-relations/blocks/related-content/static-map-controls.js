@@ -80,37 +80,13 @@
 
     return controls.concat([
       el(RangeControl, {
-        key: 'rotationDeg',
-        label: 'Rotation',
-        value: Number(attrs.rotationDeg || 0),
-        min: -180,
-        max: 180,
-        step: 1,
-        help: 'Für eine horizontale Spree sind auch freie Winkel wie -30° möglich. Marker und Karte rotieren gemeinsam.',
-        onChange: function (value) {
-          setAttributes({ rotationDeg: Number(value || 0) });
-        },
-      }),
-      el(RangeControl, {
-        key: 'biasX',
-        label: 'Bias X',
-        value: Number(attrs.biasX || 0),
-        min: -25,
-        max: 25,
-        step: 0.5,
-        help: 'Verschiebt die Kartenebene horizontal innerhalb des Ausschnitts.',
-        onChange: function (value) {
-          setAttributes({ biasX: Number(value || 0) });
-        },
-      }),
-      el(RangeControl, {
         key: 'biasY',
-        label: 'Bias Y',
+        label: 'Vertikaler Zuschnitt',
         value: Number(attrs.biasY || 0),
-        min: -25,
-        max: 25,
+        min: -60,
+        max: 60,
         step: 0.5,
-        help: 'Verschiebt die Kartenebene vertikal innerhalb des Ausschnitts.',
+        help: 'Schiebt den sichtbaren Kartenausschnitt nach oben oder unten. Rotation ist im Kartenpreset gebacken.',
         onChange: function (value) {
           setAttributes({ biasY: Number(value || 0) });
         },
@@ -120,9 +96,9 @@
         label: 'Zoom',
         value: Number(attrs.mapScale || 1),
         min: 0.9,
-        max: 1.25,
-        step: 0.01,
-        help: 'Skaliert die Kartenebene um die Mitte. Marker und Spine-Projektion folgen derselben Skalierung.',
+        max: 2,
+        step: 0.05,
+        help: 'Skaliert den Kartenviewport. Route-Fokus kann bis 200% gehen.',
         onChange: function (value) {
           setAttributes({ mapScale: Number(value || 1) });
         },

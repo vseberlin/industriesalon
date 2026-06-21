@@ -241,6 +241,19 @@ add_filter('iss_relations_place_map_presets', function (array $presets): array {
                 'offset_y' => -77.398,
             ],
         ],
+        'spree-horizontal-17' => [
+            'label' => __('Spree Horizontal 17 Grad', 'industriesalon'),
+            'map' => '/assets/maps/schoneweide-map-spree-horizontal-17.webp',
+            'markers' => '/assets/maps/schoneweide-map-spree-horizontal-17-markers.json',
+            'width' => 4618,
+            'height' => 3485,
+            'viewport' => [
+                'scale_x' => 1,
+                'scale_y' => 1,
+                'offset_x' => 0,
+                'offset_y' => 0,
+            ],
+        ],
         'atlas-slice' => [
             'label' => __('Atlas Slice Fokus', 'industriesalon'),
             'map' => '/assets/maps/schoneweide-map-canonical.webp',

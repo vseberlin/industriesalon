@@ -7252,7 +7252,7 @@ iss-info-panel--brown
   justify-content: center;
   width: 2rem;
   height: 2rem;
-  transform: translate(-50%, -50%);
+  transform: translate(-50%, -50%) rotate(calc(var(--iss-map-rotation-deg, 0deg) * -1));
   pointer-events: auto;
   text-decoration: none;
 }

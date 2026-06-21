@@ -1279,6 +1279,13 @@
   transform: translateY(-50%);
 }
 
+.iss-program-spine-row__direction--start {
+  right: auto;
+  left: 0.4rem;
+  padding-right: 1.05rem;
+  padding-left: 0.28rem;
+}
+
 .iss-program-spine-row__direction::before {
   content: "";
   position: absolute;
@@ -1288,6 +1295,11 @@
   height: 1px;
   background: currentColor;
   transform: translateY(-50%);
+}
+
+.iss-program-spine-row__direction--start::before {
+  right: 0.28rem;
+  left: auto;
 }
 
 .iss-program-spine-row__payload {
@@ -1364,7 +1376,7 @@
 }
 
 .iss-thin-spine-strip.iss-program-spine-row {
-  --iss-program-spine-axis-y: 5.5rem;
+  --iss-program-spine-axis-y: 50%;
   --iss-program-spine-dot-size: 0.95rem;
   --iss-program-spine-label-gap: 0.45rem;
   --iss-program-spine-label-max: 6.4rem;
@@ -1407,7 +1419,7 @@
 }
 
 .iss-thin-spine-strip .iss-program-spine-row__stage {
-  min-height: 6.25rem;
+  min-height: clamp(12rem, 18vw, 16rem);
   border: 0;
   border-radius: 0;
   background: #f4f1ec;
@@ -1443,6 +1455,11 @@
   top: var(--iss-program-spine-axis-y);
   right: 0.75rem;
   font-size: 0.72rem;
+}
+
+.iss-thin-spine-strip .iss-program-spine-row__direction--start {
+  right: auto;
+  left: 0.75rem;
 }
 
 .iss-thin-spine-strip .iss-program-spine-row__payload {
@@ -1514,6 +1531,7 @@
 
   .iss-thin-spine-strip.iss-program-spine-row {
     grid-template-columns: 1fr;
+    gap: 1rem;
   }
 }
 
@@ -1557,7 +1575,7 @@
   }
 
   .iss-thin-spine-strip .iss-program-spine-row__stage {
-    min-height: 10rem;
+    min-height: clamp(15rem, 78vw, 23rem);
   }
 
   .iss-program-spine-row__payload {

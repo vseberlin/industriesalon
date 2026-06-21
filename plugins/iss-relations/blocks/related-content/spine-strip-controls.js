@@ -89,10 +89,21 @@
       }),
       TextControl
         ? el(TextControl, {
+            key: 'directionLabelStart',
+            label: 'Richtungslabel links',
+            value: attrs.directionLabelStart || '',
+            help: 'Optional. Erscheint links an der Orientierungslinie.',
+            onChange: function (value) {
+              setAttributes({ directionLabelStart: value });
+            },
+          })
+        : null,
+      TextControl
+        ? el(TextControl, {
             key: 'directionLabel',
-            label: 'Richtungslabel',
+            label: 'Richtungslabel rechts',
             value: attrs.directionLabel || '',
-            help: 'Optional. Leer lassen, um kein Richtunglabel zu zeigen.',
+            help: 'Optional. Erscheint rechts an der Orientierungslinie.',
             onChange: function (value) {
               setAttributes({ directionLabel: value });
             },

@@ -45,7 +45,7 @@ function iss_frontend_static_maps_normalize_plane_scale($value): float
 {
     $scale = is_numeric($value) ? (float) $value : 1.0;
 
-    return max(0.9, min(1.25, round($scale, 3)));
+    return max(0.9, min(2.0, round($scale, 3)));
 }
 
 function iss_frontend_static_maps_get_stage_rotation_class(): string

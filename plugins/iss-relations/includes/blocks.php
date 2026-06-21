@@ -526,6 +526,10 @@ function iss_relations_register_blocks(): void
                 'type' => 'string',
                 'default' => '',
             ],
+            'directionLabelStart' => [
+                'type' => 'string',
+                'default' => '',
+            ],
             'textMode' => [
                 'type' => 'string',
                 'default' => 'text',
@@ -656,6 +660,10 @@ function iss_relations_register_blocks(): void
                 'default' => 'none',
             ],
             'directionLabel' => [
+                'type' => 'string',
+                'default' => '',
+            ],
+            'directionLabelStart' => [
                 'type' => 'string',
                 'default' => '',
             ],
@@ -2389,7 +2397,7 @@ function iss_relations_get_map_plane_bias(array $attributes = []): array
 
     return [
         'x' => max(-25.0, min(25.0, round($bias_x, 3))),
-        'y' => max(-25.0, min(25.0, round($bias_y, 3))),
+        'y' => max(-60.0, min(60.0, round($bias_y, 3))),
     ];
 }
 
@@ -2397,7 +2405,7 @@ function iss_relations_normalize_map_plane_scale($value): float
 {
     $scale = is_numeric($value) ? (float) $value : 1.0;
 
-    return max(0.9, min(1.25, round($scale, 3)));
+    return max(0.9, min(2.0, round($scale, 3)));
 }
 
 function iss_relations_get_map_plane_scale(array $attributes = []): float
@@ -3281,33 +3289,13 @@ function iss_relations_render_spine_strip_core(array $attributes, array $places,
         }
     }
 
-    $segment = null;
-
-    if ($line_mode === 'corridor' && count($station_items) >= 2) {
-        $first_station = $stations_by_id[$station_items[0]['id']] ?? null;
-        $last_station = $stations_by_id[$station_items[count($station_items) - 1]['id']] ?? null;
-        if ($first_station && $last_station) {
-            $segment = [
-                'start' => min($first_station['x'], $last_station['x']),
-                'end' => max($first_station['x'], $last_station['x']),
-            ];
-        }
-    } elseif ($line_mode === 'route' && count($route_ids) >= 2) {
-        $first_route = $stations_by_id[$route_ids[0]] ?? null;
-        $last_route = $stations_by_id[$route_ids[count($route_ids) - 1]] ?? null;
-        if ($first_route && $last_route) {
-            $segment = [
-                'start' => min($first_route['x'], $last_route['x']),
-                'end' => max($first_route['x'], $last_route['x']),
-            ];
-        }
-    }
+    $show_map_markers = !array_key_exists('showMapMarkers', $attributes) || !empty($attributes['showMapMarkers']);
 
     $stage_html = iss_relations_render_atlas_slice_stage($stage_places, $stage_config, [
         'class_name' => 'iss-program-spine-row__stage',
         'ratio_width' => $ratio_width,
         'ratio_height' => $ratio_height,
-        'show_markers' => !empty($attributes['showMapMarkers']),
+        'show_markers' => $show_map_markers,
         'rotation_deg' => $rotation_deg,
         'bias_x' => $plane_bias['x'],
         'bias_y' => $plane_bias['y'],
@@ -3317,6 +3305,7 @@ function iss_relations_render_spine_strip_core(array $attributes, array $places,
         ? ''
         : iss_relations_render_atlas_spine_payload($attributes, $places);
     $direction_label = trim(sanitize_text_field((string) ($attributes['directionLabel'] ?? '')));
+    $direction_label_start = trim(sanitize_text_field((string) ($attributes['directionLabelStart'] ?? '')));
     $kicker = trim(sanitize_text_field((string) ($attributes['kicker'] ?? '')));
     $title = trim(sanitize_text_field((string) ($attributes['title'] ?? '')));
     $text = trim((string) ($attributes['text'] ?? ''));
@@ -3350,33 +3339,11 @@ function iss_relations_render_spine_strip_core(array $attributes, array $places,
     $out .= '<div class="iss-program-spine-row__stage-shell">';
     $out .= $stage_html;
     $out .= '<div class="iss-program-spine-row__overlay">';
-    $out .= '<span class="iss-program-spine-row__baseline" aria-hidden="true"></span>';
-    if ($segment && $segment['end'] > $segment['start']) {
-        $out .= '<span class="iss-program-spine-row__segment" style="left:' . esc_attr(number_format($segment['start'], 3, '.', '')) . '%;width:' . esc_attr(number_format($segment['end'] - $segment['start'], 3, '.', '')) . '%" aria-hidden="true"></span>';
+    if ($line_mode !== 'none' || $direction_label !== '' || $direction_label_start !== '') {
+        $out .= '<span class="iss-program-spine-row__baseline" aria-hidden="true"></span>';
     }
-    foreach ($station_items as $station) {
-        $station_render = $stations_by_id[$station['id']] ?? null;
-        if (!$station_render) {
-            continue;
-        }
-
-        $station_classes = ['iss-program-spine-row__station'];
-        if ($station_render['is_active']) {
-            $station_classes[] = 'is-active';
-        }
-        $station_classes[] = 'is-label-' . sanitize_html_class((string) ($station_render['label_position'] ?? 'below'));
-        if ((float) ($station_render['x'] ?? 0.0) <= 16.0) {
-            $station_classes[] = 'is-label-edge-start';
-        } elseif ((float) ($station_render['x'] ?? 0.0) >= 84.0) {
-            $station_classes[] = 'is-label-edge-end';
-        }
-
-        $station_style = '--x:' . esc_attr(number_format($station_render['x'], 3, '.', '')) . '%';
-
-        $out .= '<span class="' . esc_attr(implode(' ', $station_classes)) . '" style="' . $station_style . '">';
-        $out .= '<span class="iss-program-spine-row__station-dot" aria-hidden="true"></span>';
-        $out .= '<span class="iss-program-spine-row__station-label">' . esc_html($station_render['label']) . '</span>';
-        $out .= '</span>';
+    if ($direction_label_start !== '') {
+        $out .= '<span class="iss-program-spine-row__direction iss-program-spine-row__direction--start">' . esc_html($direction_label_start) . '</span>';
     }
     if ($direction_label !== '') {
         $out .= '<span class="iss-program-spine-row__direction">' . esc_html($direction_label) . '</span>';
