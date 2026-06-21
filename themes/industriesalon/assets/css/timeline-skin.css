@@ -64,7 +64,8 @@
 }
 
 .iss-timeline__kicker {
-  color: var(--iss-tl-primary);
+  --iss-kicker-accent: var(--iss-tl-primary);
+  --iss-kicker-color: var(--iss-tl-primary);
   letter-spacing: 0.06em;
 }
 
