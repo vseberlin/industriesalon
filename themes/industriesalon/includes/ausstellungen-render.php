@@ -64,6 +64,9 @@ function industriesalon_get_editorial_ausstellung_skins(): array
     return [
         'standard',
         'frauen-im-werk',
+        'typografisch',
+        'chronik',
+        'industrieakte',
     ];
 }
 
@@ -187,7 +190,7 @@ function industriesalon_get_editorial_ausstellung_section_context(array $section
     $layout = 'standard';
     unset($rendered_index);
 
-    if ($skin === 'frauen-im-werk') {
+    if ($skin !== 'standard') {
         $layouts = [
             'leitfrage' => 'thesis',
             'objektfokus' => 'object-grid',

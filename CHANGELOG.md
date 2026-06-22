@@ -6,6 +6,10 @@ be recovered from Git history.
 
 ## 2026-06-22
 
+- Added phone/camera capture to the one-off Event Drop Uppy intake snapshot:
+  - wired Uppy `Webcam` into the existing inline Dashboard/XHRUpload flow;
+  - enabled native mobile/tablet camera capture for photo/video uploads;
+  - kept the same `/event-drop/` upload endpoint, `media` field, moderation storage, CSV manifest, and WordPress bridge contract.
 - Fixed the theme off-canvas menu shell after broad CSS changes:
   - capped the fixed shell to the visible viewport with safer viewport-unit fallbacks;
   - reset WordPress block-gap margins inside the shell so the menu no longer renders at roughly 1.5 viewport heights in Firefox;
@@ -35,6 +39,10 @@ be recovered from Git history.
   - changed the default JSON renderer to emit universal section slots for media, copy, kicker, body, quote, and refs so skins can express live station-like treatments without one partial per gesture;
   - made `kicker` a first-class JSON section field in storage, editor UI, migration import, and theme rendering;
   - corrected the first `frauen-im-werk` source-station treatment to belong to the `quellenauszug` gesture, while `objektfokus` stays reserved for archive-object grids;
+  - styled the `objektfokus` gesture as a dedicated dark archive-object grid for the `frauen-im-werk` skin, using the existing archive-card renderer with responsive two-column/one-column behavior;
+  - adapted `bildstrecke` and `massstab` for the `frauen-im-werk` skin from the existing `Kinder im Werk` album/stat patterns, keeping the shared JSON renderer slots and avoiding new editor controls;
+  - added two additional theme-owned editorial JSON skins, `typografisch` and `chronik`, as conditional Ausstellung stylesheets over the same universal gesture/layout classes for later real-content testing;
+  - added the `industrieakte` editorial JSON skin for technical/industrial Ausstellung series, translating the WF/Röhren dossier mockup into theme-owned gesture treatments without copying its inline dashboard markup;
   - added a scoped `quellenauszug` text-position flip so source stations can render with text left or text right in the `frauen-im-werk` skin;
   - added quiet typographic treatments for existing `kapitel`, `leitfrage`, `zitat`, and `fliesstext` gestures using the generic renderer slots and CSS-derived chapter numbering, without adding parallel JSON fields or per-gesture partials;
   - made `vollbild` a generic one-image full-viewport treatment with a 16:9 editor hint, media-dimension refs, first-image renderer fallback, and dark ink-panel overlay;

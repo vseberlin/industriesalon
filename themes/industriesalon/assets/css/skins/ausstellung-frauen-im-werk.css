@@ -379,6 +379,137 @@
   padding: 0 var(--iss-ausstellung-pad-x) clamp(2.5rem, 5vw, 5rem);
 }
 
+.iss-ausstellung-editorial__section--layout-object-grid {
+  display: grid;
+  align-items: center;
+  padding: clamp(3rem, 6vw, 6rem) 0;
+  border-top: 0;
+  background: var(--iss-ausstellung-dark);
+  color: var(--iss-ausstellung-light);
+}
+
+.iss-ausstellung-editorial--skin-frauen-im-werk .iss-ausstellung-editorial__section--layout-object-grid > .iss-container {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: clamp(1rem, 2vw, 1.5rem);
+  width: min(100% - (2 * var(--iss-ausstellung-pad-x)), 88rem);
+}
+
+.iss-ausstellung-editorial__section--layout-object-grid .iss-ausstellung-section__copy {
+  grid-column: 1 / -1;
+  max-width: 64ch;
+  color: inherit;
+}
+
+.iss-ausstellung-editorial__section--layout-object-grid .iss-ausstellung-section__kicker {
+  color: #ff5a60;
+}
+
+.iss-ausstellung-editorial--skin-frauen-im-werk .iss-ausstellung-editorial__section--layout-object-grid h2 {
+  max-width: 22ch;
+  color: inherit;
+  font-size: clamp(1.45rem, 2.2vw, 2.15rem);
+  line-height: 1.08;
+}
+
+.iss-ausstellung-editorial__section--layout-object-grid .iss-ausstellung-editorial__body {
+  max-width: 36ch;
+  color: rgba(249, 249, 250, 0.72);
+  font-size: clamp(1rem, 0.35vw + 0.94rem, 1.14rem);
+  line-height: 1.62;
+}
+
+.iss-ausstellung-editorial__section--layout-object-grid .iss-ausstellung-section__refs {
+  display: grid;
+  grid-column: 1 / -1;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: clamp(1rem, 2vw, 1.5rem);
+  margin: 0;
+}
+
+.iss-ausstellung-editorial__section--layout-object-grid .iss-archive-featured-object,
+.iss-ausstellung-editorial__section--layout-object-grid .iss-ausstellung-editorial__archive-card,
+.iss-ausstellung-editorial__section--layout-object-grid .iss-ausstellung-editorial__placeholder {
+  display: grid;
+  grid-template-rows: auto 1fr;
+  grid-template-columns: 1fr;
+  height: 100%;
+  min-width: 0;
+  overflow: hidden;
+  border-color: rgba(249, 249, 250, 0.16);
+  background: rgba(249, 249, 250, 0.06);
+  color: inherit;
+}
+
+.iss-ausstellung-editorial__section--layout-object-grid .iss-archive-featured-object {
+  padding: 0;
+}
+
+.iss-ausstellung-editorial__section--layout-object-grid .iss-archive-featured-object__media,
+.iss-ausstellung-editorial__section--layout-object-grid .iss-ausstellung-editorial__archive-media {
+  min-height: 0;
+  aspect-ratio: 4 / 3;
+  background: rgba(249, 249, 250, 0.08);
+}
+
+.iss-ausstellung-editorial__section--layout-object-grid .iss-archive-featured-object__media {
+  border-radius: 0;
+}
+
+.iss-ausstellung-editorial__section--layout-object-grid .iss-archive-featured-object__media img,
+.iss-ausstellung-editorial__section--layout-object-grid .iss-ausstellung-editorial__archive-media img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.iss-ausstellung-editorial__section--layout-object-grid .iss-archive-featured-object__body,
+.iss-ausstellung-editorial__section--layout-object-grid .iss-ausstellung-editorial__archive-body {
+  align-content: start;
+  display: grid;
+  gap: 0.55rem;
+  padding: clamp(0.9rem, 1.5vw, 1.15rem);
+}
+
+.iss-ausstellung-editorial__section--layout-object-grid .iss-archive-featured-object__body .iss-kicker,
+.iss-ausstellung-editorial__section--layout-object-grid .iss-archive-featured-object__type,
+.iss-ausstellung-editorial__section--layout-object-grid .iss-archive-featured-object__text,
+.iss-ausstellung-editorial__section--layout-object-grid .iss-archive-featured-object__meta {
+  color: rgba(249, 249, 250, 0.64);
+}
+
+.iss-ausstellung-editorial__section--layout-object-grid .iss-archive-featured-object__body .iss-kicker {
+  --iss-kicker-color: #ff5a60;
+  --iss-kicker-accent: #ff5a60;
+}
+
+.iss-ausstellung-editorial--skin-frauen-im-werk .iss-ausstellung-editorial__section--layout-object-grid .iss-archive-featured-object__title,
+.iss-ausstellung-editorial--skin-frauen-im-werk .iss-ausstellung-editorial__section--layout-object-grid .iss-ausstellung-editorial__archive-body h3 {
+  display: -webkit-box;
+  max-width: none;
+  overflow: hidden;
+  color: inherit;
+  font-size: clamp(1rem, 0.45vw + 0.92rem, 1.22rem);
+  line-height: 1.16;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 3;
+}
+
+.iss-ausstellung-editorial__section--layout-object-grid .iss-archive-featured-object__text {
+  display: none;
+}
+
+.iss-ausstellung-editorial__section--layout-object-grid .iss-archive-featured-object__action {
+  margin-top: 0.35rem;
+}
+
+.iss-ausstellung-editorial__section--layout-object-grid .iss-card__link,
+.iss-ausstellung-editorial__section--layout-object-grid .iss-ausstellung-editorial__archive-body a {
+  color: inherit;
+  text-decoration-color: rgba(255, 90, 96, 0.55);
+}
+
 .iss-ausstellung-editorial__section--layout-viewport-image {
   position: relative;
   display: grid;
@@ -604,8 +735,7 @@
   margin-top: 1rem;
 }
 
-.iss-ausstellung-editorial__section--layout-quote,
-.iss-ausstellung-editorial__section--layout-stat {
+.iss-ausstellung-editorial__section--layout-quote {
   display: grid;
   align-items: center;
   min-height: 72vh;
@@ -615,10 +745,7 @@
 
 .iss-ausstellung-editorial__section--layout-quote h2,
 .iss-ausstellung-editorial__section--layout-quote .iss-ausstellung-editorial__quote,
-.iss-ausstellung-editorial__section--layout-stat h2,
-.iss-ausstellung-editorial__section--layout-stat .iss-ausstellung-editorial__body,
-.iss-ausstellung-editorial__section--layout-quote .iss-ausstellung-section__copy,
-.iss-ausstellung-editorial__section--layout-stat .iss-ausstellung-section__copy {
+.iss-ausstellung-editorial__section--layout-quote .iss-ausstellung-section__copy {
   color: inherit;
 }
 
@@ -649,12 +776,78 @@
   line-height: 1.45;
 }
 
+.iss-ausstellung-editorial__section--layout-stat {
+  display: grid;
+  align-content: center;
+  width: 100%;
+  min-height: 70vh;
+  padding: var(--iss-ausstellung-pad-y) 0;
+  background: var(--iss-ausstellung-dark);
+  color: var(--iss-ausstellung-light);
+}
+
+.iss-ausstellung-editorial__section--layout-stat > .iss-container {
+  width: min(100% - (2 * var(--iss-ausstellung-pad-x)), 76rem);
+}
+
+.iss-ausstellung-editorial__section--layout-stat h2,
+.iss-ausstellung-editorial__section--layout-stat .iss-ausstellung-section__copy {
+  color: inherit;
+}
+
+.iss-ausstellung-editorial--skin-frauen-im-werk .iss-ausstellung-editorial__section--layout-stat h2 {
+  max-width: 18ch;
+  padding-top: 1rem;
+  border-top: 4px solid var(--iss-ausstellung-accent);
+  color: inherit;
+  font-size: clamp(1.9rem, 4.2vw, 3.25rem);
+  line-height: 0.98;
+}
+
+.iss-ausstellung-editorial__section--layout-stat .iss-ausstellung-editorial__body {
+  max-width: 58rem;
+  color: rgba(249, 249, 250, 0.72);
+  font-size: clamp(1rem, 0.35vw + 0.95rem, 1.16rem);
+  line-height: 1.64;
+}
+
+.iss-ausstellung-editorial__section--layout-stat .iss-ausstellung-editorial__body p {
+  margin: 0;
+}
+
+.iss-ausstellung-editorial__section--layout-stat .iss-ausstellung-editorial__body p + p {
+  margin-top: 0.85rem;
+}
+
+.iss-ausstellung-editorial__section--layout-stat .iss-ausstellung-editorial__body strong {
+  display: block;
+  margin-bottom: 0.25rem;
+  color: var(--iss-ausstellung-light);
+  font-size: clamp(1.6rem, 3vw, 2.6rem);
+  line-height: 1;
+}
+
+.iss-ausstellung-editorial__section--layout-stat .iss-ausstellung-section__copy {
+  gap: clamp(1rem, 2vw, 1.6rem);
+}
+
+.iss-ausstellung-editorial__section--layout-stat .iss-ausstellung-section__kicker {
+  color: #ff5a60;
+}
+
+.iss-ausstellung-editorial__section--layout-stat .iss-ausstellung-section__links {
+  margin-top: 0.5rem;
+}
+
 .iss-ausstellung-editorial__section--layout-album > .iss-container {
   width: min(100% - (2 * var(--iss-ausstellung-pad-x)), 88rem);
 }
 
 .iss-ausstellung-editorial__section--layout-album .iss-ausstellung-editorial__media-strip {
+  order: 2;
   grid-template-columns: repeat(12, minmax(0, 1fr));
+  gap: clamp(0.85rem, 1.5vw, 1.25rem);
+  margin: 0;
 }
 
 .iss-ausstellung-editorial__section--layout-album .iss-ausstellung-section__copy,
@@ -663,11 +856,53 @@
   grid-column: 1 / -1;
 }
 
+.iss-ausstellung-editorial__section--layout-album .iss-ausstellung-section__copy {
+  order: 1;
+  box-sizing: border-box;
+  width: min(100%, 38rem);
+  padding: clamp(1.25rem, 3vw, 2rem);
+  border-top: 4px solid var(--iss-ausstellung-accent);
+  background: var(--iss-ausstellung-fiw-panel);
+}
+
+.iss-ausstellung-editorial--skin-frauen-im-werk .iss-ausstellung-editorial__section--layout-album h2 {
+  max-width: 18ch;
+  font-size: clamp(1.45rem, 2.5vw, 2.4rem);
+  line-height: 1.08;
+}
+
+.iss-ausstellung-editorial__section--layout-album .iss-ausstellung-editorial__body {
+  color: var(--iss-ausstellung-fiw-ink-muted);
+  font-size: clamp(0.98rem, 0.25vw + 0.94rem, 1.08rem);
+  line-height: 1.62;
+}
+
 .iss-ausstellung-editorial__section--layout-album .iss-ausstellung-editorial__media-item {
   grid-column: span 4;
   padding: 0.55rem;
   border: 1px solid var(--iss-ausstellung-fiw-line);
   background: var(--iss-ausstellung-fiw-panel);
+}
+
+.iss-ausstellung-editorial__section--layout-album .iss-ausstellung-editorial__media-item:nth-child(4) {
+  grid-column: span 5;
+}
+
+.iss-ausstellung-editorial__section--layout-album .iss-ausstellung-editorial__media-item:nth-child(5) {
+  grid-column: span 3;
+}
+
+.iss-ausstellung-editorial__section--layout-album .iss-ausstellung-editorial__media-item img {
+  display: block;
+  width: 100%;
+  aspect-ratio: 4 / 3;
+  object-fit: cover;
+}
+
+.iss-ausstellung-editorial__section--layout-album .iss-ausstellung-editorial__media-item figcaption {
+  color: var(--iss-ausstellung-fiw-ink-muted);
+  font-size: 0.84rem;
+  line-height: 1.35;
 }
 
 .iss-ausstellung-editorial__section--layout-aside {
@@ -758,6 +993,25 @@
     width: min(100%, 34rem);
   }
 
+  .iss-ausstellung-editorial--skin-frauen-im-werk .iss-ausstellung-editorial__section--layout-object-grid > .iss-container {
+    grid-template-columns: 1fr;
+    gap: clamp(1.25rem, 6vw, 2rem);
+  }
+
+  .iss-ausstellung-editorial__section--layout-object-grid .iss-ausstellung-section__refs {
+    grid-template-columns: 1fr;
+  }
+
+  .iss-ausstellung-editorial__section--layout-object-grid {
+    min-height: auto;
+  }
+
+  .iss-ausstellung-editorial__section--layout-stat {
+    min-height: auto;
+    padding-top: clamp(3rem, 12vw, 5rem);
+    padding-bottom: clamp(3rem, 12vw, 5rem);
+  }
+
   .iss-ausstellung-editorial__section--layout-chapter > .iss-container {
     grid-template-columns: 1fr;
   }
@@ -775,7 +1029,12 @@
     grid-template-columns: 1fr;
   }
 
-  .iss-ausstellung-editorial__section--layout-album .iss-ausstellung-editorial__media-item {
+  .iss-ausstellung-editorial__section--layout-album .iss-ausstellung-section__copy {
+    width: 100%;
+  }
+
+  .iss-ausstellung-editorial__section--layout-album .iss-ausstellung-editorial__media-item,
+  .iss-ausstellung-editorial__section--layout-album .iss-ausstellung-editorial__media-item:nth-child(n) {
     grid-column: auto;
   }
 }

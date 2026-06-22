@@ -1751,6 +1751,18 @@ function industriesalon_enqueue_assets(): void
                 'handle' => 'industriesalon-ausstellung-skin-frauen-im-werk',
                 'path' => '/assets/css/skins/ausstellung-frauen-im-werk.css',
             ),
+            'typografisch' => array(
+                'handle' => 'industriesalon-ausstellung-skin-typografisch',
+                'path' => '/assets/css/skins/ausstellung-typografisch.css',
+            ),
+            'chronik' => array(
+                'handle' => 'industriesalon-ausstellung-skin-chronik',
+                'path' => '/assets/css/skins/ausstellung-chronik.css',
+            ),
+            'industrieakte' => array(
+                'handle' => 'industriesalon-ausstellung-skin-industrieakte',
+                'path' => '/assets/css/skins/ausstellung-industrieakte.css',
+            ),
         );
 
         if (isset($ausstellung_skin_styles[$ausstellung_skin])) {
