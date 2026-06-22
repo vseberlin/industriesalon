@@ -763,11 +763,16 @@ body.iss-search-modal-open {
   position: fixed;
   top: 0;
   right: 0;
-  bottom: 0;
+  bottom: auto;
   left: auto;
   z-index: 2999;
   width: min(100vw, 560px);
+  height: 100vh;
+  height: 100svh;
   height: 100dvh;
+  max-height: 100vh;
+  max-height: 100svh;
+  max-height: 100dvh;
   overflow: hidden;
   overflow-x: hidden;
   background: var(--iss-black, #1e1e1e);
@@ -796,9 +801,10 @@ body.iss-search-modal-open {
   position: relative;
   display: flex;
   flex-direction: column;
+  gap: 0;
   box-sizing: border-box;
-  min-height: 100dvh;
-  height: 100dvh;
+  min-height: 0;
+  height: 100%;
   overflow-y: auto;
   padding: clamp(1rem, 1.9vh, 1.38rem) clamp(1.05rem, 2.6vw, 1.75rem);
 }
@@ -809,6 +815,14 @@ body.iss-search-modal-open {
 .iss-menu-shell__utility > * {
   margin-block-start: 0;
   margin-block-end: 0;
+}
+
+.iss-menu-shell .iss-menu-shell__inner > * + *:not(.iss-menu-shell__status) {
+  margin-block-start: 0;
+}
+
+.iss-menu-shell .iss-menu-shell__nav-section > * + * {
+  margin-block-start: 0;
 }
 
 .iss-menu-shell__top {
@@ -1048,10 +1062,16 @@ nav.iss-menu-shell__quick-grid > .wp-block-navigation__container {
 
 .iss-menu-shell__nav-section--identity {
   --iss-menu-link-size: clamp(1rem, 0.86rem + 0.34vw, 1.14rem);
+
+  flex: 1 1 0;
+  justify-content: center;
 }
 
 .iss-menu-shell__nav-section--content {
   --iss-menu-link-size: clamp(0.94rem, 0.84rem + 0.24vw, 1.04rem);
+
+  flex: 1 1 0;
+  justify-content: center;
 }
 
 .iss-menu-shell__nav-section--utility {
@@ -1061,6 +1081,8 @@ nav.iss-menu-shell__quick-grid > .wp-block-navigation__container {
 .iss-menu-shell__nav-section--archive {
   --iss-menu-link-size: clamp(0.94rem, 0.84rem + 0.24vw, 1.04rem);
 
+  flex: 1 1 0;
+  justify-content: center;
   padding-bottom: clamp(1rem, 2.2vh, 1.45rem);
   margin-bottom: 0;
 }
@@ -1130,10 +1152,15 @@ nav.iss-menu-shell__quick-grid > .wp-block-navigation__container {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: clamp(0.7rem, 1.7vw, 1rem);
+  flex: 0 0 auto;
   width: 100%;
-  margin-top: auto;
+  margin-block-start: 0;
   padding-top: clamp(0.72rem, 1.5vh, 0.95rem);
   border-top: 1px solid rgba(249, 249, 250, 0.16);
+}
+
+.iss-menu-shell .iss-menu-shell__status {
+  margin-block-start: 0;
 }
 
 .iss-menu-shell__status-item {

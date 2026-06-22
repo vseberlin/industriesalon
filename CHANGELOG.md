@@ -6,6 +6,11 @@ be recovered from Git history.
 
 ## 2026-06-22
 
+- Fixed the theme off-canvas menu shell after broad CSS changes:
+  - capped the fixed shell to the visible viewport with safer viewport-unit fallbacks;
+  - reset WordPress block-gap margins inside the shell so the menu no longer renders at roughly 1.5 viewport heights in Firefox;
+  - distributed the Institution/Entdecken/Archiv sections evenly through the available menu height;
+  - pinned the Heute/next-event status strip to the bottom of the menu viewport.
 - Signed off Phase 1 of the Ausstellung editorial-platform SOW for authoring/save/reload after editor roundtrip proof:
   - kept autosave recovery deferred by decision;
   - renamed the explicit structure action from `JSON speichern` to `Speichern`;
