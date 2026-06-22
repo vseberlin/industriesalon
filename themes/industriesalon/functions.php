@@ -1744,6 +1744,25 @@ function industriesalon_enqueue_assets(): void
         $enqueue_theme_style($style['handle'], $style['path'], $page_dependencies);
     }
 
+    if (is_singular('ausstellung') && function_exists('industriesalon_get_editorial_ausstellung_post_skin')) {
+        $ausstellung_skin = industriesalon_get_editorial_ausstellung_post_skin((int) get_queried_object_id());
+        $ausstellung_skin_styles = array(
+            'frauen-im-werk' => array(
+                'handle' => 'industriesalon-ausstellung-skin-frauen-im-werk',
+                'path' => '/assets/css/skins/ausstellung-frauen-im-werk.css',
+            ),
+        );
+
+        if (isset($ausstellung_skin_styles[$ausstellung_skin])) {
+            $skin_style = $ausstellung_skin_styles[$ausstellung_skin];
+            $enqueue_theme_style(
+                $skin_style['handle'],
+                $skin_style['path'],
+                array('industriesalon-single-ausstellung')
+            );
+        }
+    }
+
     // Header JS
     $script_rel_path = '/assets/js/header.js';
     $script_abs_path = get_stylesheet_directory() . $script_rel_path;

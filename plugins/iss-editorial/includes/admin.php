@@ -68,8 +68,7 @@ function iss_editorial_render_meta_box(WP_Post $post, array $box): void
     wp_nonce_field('iss_editorial_save_document', 'iss_editorial_nonce');
 
     echo '<div class="iss-editorial-admin" data-format="' . esc_attr($format_slug) . '" data-post-id="' . esc_attr((string) $post->ID) . '">';
-    echo '<p class="description">' . esc_html__('Pilot-Modus: Die JSON-Komposition wird erst öffentlich gerendert, wenn die Ausgabe unten aktiviert ist. Der bestehende Inhalt bleibt erhalten.', 'iss-editorial') . '</p>';
-    echo '<p><label><input type="checkbox" class="iss-editorial-enabled-field" name="iss_editorial[' . esc_attr($format_slug) . '][enabled]" value="1" ' . checked($enabled, true, false) . '> ' . esc_html__('JSON-Komposition für diese Ausstellung verwenden', 'iss-editorial') . '</label></p>';
+    echo '<input type="hidden" name="iss_editorial[' . esc_attr($format_slug) . '][enabled]" value="' . esc_attr($enabled ? '1' : '0') . '">';
     echo '<input type="hidden" class="iss-editorial-document-field" name="iss_editorial[' . esc_attr($format_slug) . '][document]" value="' . esc_attr(iss_editorial_encode_document($document)) . '">';
     echo '<div class="iss-editorial-root" data-document="' . esc_attr(iss_editorial_encode_document($document)) . '" data-sections="' . esc_attr(iss_editorial_encode_document((array) $format['sections'])) . '"></div>';
     echo '<p class="description iss-editorial-autosave-status" aria-live="polite"></p>';
@@ -91,10 +90,11 @@ function iss_editorial_render_main_canvas(WP_Post $post): void
 
     echo '<div class="iss-editorial-shell">';
     echo '<div class="iss-editorial-admin iss-editorial-admin--canvas" data-format="' . esc_attr($format_slug) . '" data-post-id="' . esc_attr((string) $post->ID) . '">';
+    echo '<input type="hidden" name="iss_editorial[' . esc_attr($format_slug) . '][enabled]" value="' . esc_attr($enabled ? '1' : '0') . '">';
     echo '<input type="hidden" class="iss-editorial-document-field" name="iss_editorial[' . esc_attr($format_slug) . '][document]" value="' . esc_attr(iss_editorial_encode_document($document)) . '">';
     echo '<div class="iss-editorial-canvas-toolbar">';
     echo '<p class="iss-editorial-mode">' . esc_html__('Redaktionelle Komposition', 'iss-editorial') . '</p>';
-    echo '<label class="iss-editorial-enable"><input type="checkbox" class="iss-editorial-enabled-field" name="iss_editorial[' . esc_attr($format_slug) . '][enabled]" value="1" ' . checked($enabled, true, false) . '> ' . esc_html__('JSON-Ausgabe verwenden', 'iss-editorial') . '</label>';
+    echo '<p class="iss-editorial-mode">' . esc_html__('Abschnitte erstellen, bearbeiten und ordnen.', 'iss-editorial') . '</p>';
     echo '</div>';
     echo '<div class="iss-editorial-root" data-document="' . esc_attr(iss_editorial_encode_document($document)) . '" data-sections="' . esc_attr(iss_editorial_encode_document((array) $format['sections'])) . '"></div>';
     echo '<p class="description iss-editorial-autosave-status" aria-live="polite"></p>';
@@ -243,7 +243,9 @@ function iss_editorial_save_meta_box(int $post_id): void
         return;
     }
 
-    iss_editorial_set_document_enabled($post_id, $format_slug, !empty($format_payload['enabled']));
+    if (array_key_exists('enabled', $format_payload)) {
+        iss_editorial_set_document_enabled($post_id, $format_slug, !empty($format_payload['enabled']));
+    }
     iss_editorial_save_document($post_id, $format_slug, (string) ($format_payload['document'] ?? ''), false);
     delete_post_meta($post_id, iss_editorial_get_autosave_meta_key($format_slug));
 }

@@ -35,6 +35,9 @@ function iss_editorial_resolve_reference(array $reference): array
         if (!$post instanceof WP_Post || $post->post_type !== 'attachment') {
             return [];
         }
+        $metadata = wp_get_attachment_metadata($attachment_id);
+        $width = is_array($metadata) ? absint($metadata['width'] ?? 0) : 0;
+        $height = is_array($metadata) ? absint($metadata['height'] ?? 0) : 0;
 
         return [
             'kind' => 'media',
@@ -43,6 +46,8 @@ function iss_editorial_resolve_reference(array $reference): array
             'title' => (string) get_the_title($post),
             'url' => (string) wp_get_attachment_url($attachment_id),
             'thumbnail' => (string) wp_get_attachment_image_url($attachment_id, 'medium'),
+            'width' => (string) $width,
+            'height' => (string) $height,
             'post' => $post,
         ];
     }

@@ -84,6 +84,9 @@ function iss_editorial_cli_media_reference_from_attachment(int $attachment_id, s
     }
 
     $label = trim($label) !== '' ? trim($label) : (string) get_the_title($post);
+    $metadata = wp_get_attachment_metadata($attachment_id);
+    $width = is_array($metadata) ? absint($metadata['width'] ?? 0) : 0;
+    $height = is_array($metadata) ? absint($metadata['height'] ?? 0) : 0;
 
     return [
         'kind' => 'media',
@@ -91,6 +94,8 @@ function iss_editorial_cli_media_reference_from_attachment(int $attachment_id, s
         'id' => (string) $attachment_id,
         'label' => $label,
         'thumbnail' => (string) wp_get_attachment_image_url($attachment_id, 'medium'),
+        'width' => (string) $width,
+        'height' => (string) $height,
     ];
 }
 
@@ -168,7 +173,9 @@ function iss_editorial_cli_collect_text_parts(array $block, array &$parts): void
         $parts['title'] = $parts['title'] === '' ? $text : $parts['title'];
     } elseif (in_array($block_name, ['core/paragraph', 'core/list'], true) && $text !== '') {
         $class_name = (string) ($attrs['className'] ?? '');
-        if (!str_contains($class_name, 'iss-kicker')) {
+        if (str_contains($class_name, 'iss-kicker')) {
+            $parts['kicker'] = $parts['kicker'] === '' ? $text : $parts['kicker'];
+        } else {
             $parts['body'][] = $text;
         }
     } elseif ($block_name === 'core/quote' && $text !== '') {
@@ -187,6 +194,7 @@ function iss_editorial_cli_collect_text_parts(array $block, array &$parts): void
 function iss_editorial_cli_build_media_section(array $block, array $media_refs): array
 {
     $parts = [
+        'kicker' => '',
         'title' => '',
         'body' => [],
     ];
@@ -194,6 +202,7 @@ function iss_editorial_cli_build_media_section(array $block, array $media_refs):
 
     return [
         'type' => 'bildstrecke',
+        'kicker' => $parts['kicker'],
         'title' => $parts['title'] !== '' ? $parts['title'] : __('Dokumentarische Strecke', 'iss-editorial'),
         'body' => implode("\n\n", array_filter(array_map('trim', $parts['body']))),
         'media_refs' => $media_refs,
@@ -209,6 +218,7 @@ function iss_editorial_cli_append_body(array &$sections, string $body): void
     if (!$sections) {
         $sections[] = [
             'type' => 'kapitel',
+            'kicker' => '',
             'title' => __('Einleitung', 'iss-editorial'),
             'body' => '',
         ];
@@ -243,6 +253,7 @@ function iss_editorial_cli_process_ausstellung_block(array $block, array &$secti
     if ($kind === 'heading') {
         $sections[] = [
             'type' => 'kapitel',
+            'kicker' => '',
             'title' => $text !== '' ? $text : __('Ohne Titel', 'iss-editorial'),
             'body' => '',
         ];

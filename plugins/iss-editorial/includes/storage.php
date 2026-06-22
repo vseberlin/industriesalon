@@ -53,6 +53,12 @@ function iss_editorial_sanitize_reference($reference): array
     if (isset($reference['member_caption'])) {
         $sanitized['member_caption'] = sanitize_textarea_field((string) $reference['member_caption']);
     }
+    if (isset($reference['width'])) {
+        $sanitized['width'] = (string) absint($reference['width']);
+    }
+    if (isset($reference['height'])) {
+        $sanitized['height'] = (string) absint($reference['height']);
+    }
 
     return $sanitized;
 }
@@ -79,6 +85,7 @@ function iss_editorial_sanitize_section(array $section, array $format): array
 
     $sanitized = [
         'type' => $type,
+        'kicker' => sanitize_text_field((string) ($section['kicker'] ?? '')),
         'title' => sanitize_text_field((string) ($section['title'] ?? '')),
         'body' => wp_kses_post((string) ($section['body'] ?? '')),
     ];

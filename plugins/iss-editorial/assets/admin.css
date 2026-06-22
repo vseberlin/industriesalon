@@ -189,6 +189,11 @@
   margin-top: 10px;
 }
 
+.iss-editorial-media-rule {
+  flex-basis: 100%;
+  margin: 0;
+}
+
 .iss-editorial-media-thumb {
   display: inline-flex;
   align-items: center;
@@ -244,6 +249,15 @@
   display: grid;
   gap: 8px;
   align-content: start;
+}
+
+.iss-editorial-media-ratio {
+  margin: 0;
+}
+
+.iss-editorial-media-ratio.is-warning {
+  color: #b32d2e;
+  font-weight: 600;
 }
 
 .iss-editorial-picker {

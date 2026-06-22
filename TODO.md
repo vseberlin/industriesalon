@@ -4,9 +4,11 @@ Immediate executable work only. Larger future programs live in `docs/project/bac
 
 ## Active Today
 
-- Editorial platform next slice: define Ausstellung skins and skin-control decisions against SOW Phase 3. Decide the first skin names, whether editors choose only semantic skins or also variants, how skin controls appear in the main canvas, and how theme partial overrides are resolved.
-- After skin decisions, choose the first curator-reviewed Ausstellung pilot, create/review its versioned JSON document through the new editor UI, verify preview/frontend output, and leave legacy fallback available until curator signoff.
-- Review the disabled local JSON candidate on `Frauen im Werk für Fernmeldewesen`, clean up section types, image captions, archive-object choices, source links, and navigation/research links in the editor UI, then decide whether to enable JSON rendering for that one pilot.
+- Editorial platform next slice: curator-review `Frauen im Werk für Fernmeldewesen` in the custom editor with the `frauen-im-werk` JSON skin enabled locally. Clean up gesture choices, kickers, section text, captions, archive-object choices, source links, and research/navigation links, then verify preview/frontend output.
+- Define the `objektfokus` treatment separately as an archive-object grid; do not reuse the `quellenauszug` image/text/quote station treatment for it.
+- Review `vollbild` images in the pilot for true 16:9 crops; the editor now warns from stored media dimensions, but final image choice is still curator work.
+- Keep Ausstellung skin/layout decisions out of editor controls: editors add, edit, save, and reorder gesture sections; the theme renders each `gesture x skin` treatment through the universal section slots and dedicated skin CSS such as `themes/industriesalon/assets/css/skins/ausstellung-frauen-im-werk.css`.
+- Before transferring the `Frauen im Werk` JSON pilot elsewhere, apply/review `ops/sql/2026-06-22-frauen-im-werk-editorial-json.sql`; the current skin assignment and section document are DB-backed local state.
 - Keep `Kinder im Werk` on pure Gutenberg until archive-object/html mapping is deliberately handled.
 - Preserve the current ownership split: `iss-relations` resolves place/source contracts, `iss-frontend` owns frontend map rendering, `industriesalon-schoeneweide-register` owns register/interactive Atlas data, and the theme owns map assets/presets/skins.
 - Before production deploy, verify target mail mode and enable `Tools > ISS Anfragen` notification email only for an approved recipient if request emails should leave the server.

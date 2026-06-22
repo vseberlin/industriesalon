@@ -32,9 +32,13 @@
       quellenauszug: '#d85a30',
       objektfokus: '#1d9e75',
       bildstrecke: '#888780',
+      vollbild: '#185fa5',
       massstab: '#ba7517',
+      fliesstext: '#5f5e5a',
       kapitel: '#1a1a2e',
-      zitat: '#d4537e'
+      zitat: '#d4537e',
+      aside: '#3c3489',
+      schluss: '#a32d2d'
     };
 
     return tones[type] || '#1a1a2e';
@@ -62,7 +66,9 @@
       source: 'wp-media',
       id: String(attachment.id || ''),
       label: attachment.title || attachment.caption || '',
-      thumbnail: thumbnail
+      thumbnail: thumbnail,
+      width: attachment.width ? String(attachment.width) : '',
+      height: attachment.height ? String(attachment.height) : ''
     };
   }
 
@@ -108,11 +114,18 @@
     }
 
     function currentEnabled() {
-      return enabledField ? !!enabledField.checked : false;
+      if (enabledField) {
+        return !!enabledField.checked;
+      }
+
+      return !!config.enabled;
     }
 
     function sectionSummary(section) {
       var parts = [];
+      if (section.kicker) {
+        parts.push(String(section.kicker).replace(/\s+/g, ' ').slice(0, 60));
+      }
       if (section.body) {
         parts.push(String(section.body).replace(/\s+/g, ' ').slice(0, 140));
       }
@@ -191,6 +204,7 @@
     function addSection(type) {
       documentState.sections.push({
         type: type,
+        kicker: '',
         title: '',
         body: '',
         object_refs: [],
@@ -332,13 +346,41 @@
       target.appendChild(strip);
     }
 
+    function mediaRatioText(reference) {
+      var width = parseInt(reference.width || '0', 10);
+      var height = parseInt(reference.height || '0', 10);
+      if (!width || !height) {
+        return '';
+      }
+
+      return String(width) + ' x ' + String(height);
+    }
+
+    function mediaIsNearSixteenNine(reference) {
+      var width = parseInt(reference.width || '0', 10);
+      var height = parseInt(reference.height || '0', 10);
+      var ratio = height ? width / height : 0;
+
+      return ratio > 1.7 && ratio < 1.85;
+    }
+
     function renderMediaTray(section, target, rerender) {
+      var isFullViewport = (section.type || '') === 'vollbild';
       clear(target);
+      if (isFullViewport) {
+        target.appendChild(createElement(
+          'p',
+          'description iss-editorial-media-rule',
+          'Vollbild verwendet genau ein 16:9-Bild. Andere Formate werden vollflächig beschnitten.'
+        ));
+      }
       (section.media_refs || []).forEach(function (reference, index) {
         var item = createElement('article', 'iss-editorial-media-item');
         var preview = createElement('div', 'iss-editorial-media-item__preview');
         var controls = createElement('div', 'iss-editorial-media-item__controls');
         var remove = createElement('button', 'button button-link-delete', 'Entfernen');
+        var ratioText = mediaRatioText(reference);
+        var ratioWarning = isFullViewport && !mediaIsNearSixteenNine(reference);
         if (reference.thumbnail) {
           var image = document.createElement('img');
           image.src = reference.thumbnail;
@@ -353,6 +395,13 @@
           render();
           scheduleAutosave();
         }));
+        if (ratioText) {
+          controls.appendChild(createElement(
+            'p',
+            'description iss-editorial-media-ratio' + (ratioWarning ? ' is-warning' : ''),
+            ratioWarning ? ratioText + ' - kein 16:9, wird beschnitten.' : ratioText
+          ));
+        }
 
         remove.type = 'button';
         remove.addEventListener('click', function () {
@@ -432,6 +481,11 @@
 
     function renderSectionFields(section, body) {
       var type = section.type || 'kapitel';
+      var kickerField = createTextInput('Kicker', section.kicker || '', function (value) {
+        section.kicker = value;
+        render();
+        scheduleAutosave();
+      });
       var titleField = createTextInput('Titel', section.title || '', function (value) {
         section.title = value;
         render();
@@ -442,6 +496,7 @@
         render();
         scheduleAutosave();
       });
+      body.appendChild(kickerField);
       body.appendChild(titleField);
       body.appendChild(bodyField);
 
@@ -512,7 +567,8 @@
     function renderMediaPicker(section, body) {
       var refs = createElement('div', 'iss-editorial-field iss-editorial-field--media');
       var tray = createElement('div', 'iss-editorial-media-tray');
-      var pickerButton = createElement('button', 'button', 'Bilder auswählen');
+      var isFullViewport = (section.type || '') === 'vollbild';
+      var pickerButton = createElement('button', 'button', isFullViewport ? 'Bild auswählen' : 'Bilder auswählen');
 
       function rerenderTray() {
         renderMediaTray(section, tray, rerenderTray);
@@ -533,9 +589,9 @@
         });
 
         var frame = wp.media({
-          title: 'Bilder auswählen',
-          button: { text: 'Bilder übernehmen' },
-          multiple: true,
+          title: isFullViewport ? 'Bild auswählen' : 'Bilder auswählen',
+          button: { text: isFullViewport ? 'Bild übernehmen' : 'Bilder übernehmen' },
+          multiple: !isFullViewport,
           library: { type: 'image' }
         });
 
@@ -561,6 +617,9 @@
           }).filter(function (reference) {
             return reference.id;
           });
+          if (isFullViewport) {
+            section.media_refs = section.media_refs.slice(0, 1);
+          }
           rerenderTray();
           render();
           scheduleAutosave();

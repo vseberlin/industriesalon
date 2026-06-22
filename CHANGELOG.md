@@ -4,6 +4,21 @@ This file records durable project changes. Keep it compact: current state belong
 `handoff_CURRENT.md`, active follow-up in `TODO.md`, and detailed investigation can
 be recovered from Git history.
 
+## 2026-06-22
+
+- Advanced the editorial-platform SOW Phase 3 skin decision for the Ausstellung pilot:
+  - kept skin, variant, layout, and section-role choices out of the main editor canvas so editors only add, edit, save, and reorder content sections;
+  - changed the editor save path to preserve the internal JSON-rendering rollout flag without exposing it as a normal authoring control;
+  - added theme-owned JSON skin resolution for `frauen-im-werk`, with reusable layout classes and the first `gesture x skin` treatments;
+  - extracted the first `frauen-im-werk` treatment CSS into a dedicated theme skin stylesheet that loads only when the enabled editorial document resolves to that skin;
+  - changed the default JSON renderer to emit universal section slots for media, copy, kicker, body, quote, and refs so skins can express live station-like treatments without one partial per gesture;
+  - made `kicker` a first-class JSON section field in storage, editor UI, migration import, and theme rendering;
+  - corrected the first `frauen-im-werk` source-station treatment to belong to the `quellenauszug` gesture, while `objektfokus` stays reserved for archive-object grids;
+  - made `vollbild` a generic one-image full-viewport treatment with a 16:9 editor hint, media-dimension refs, first-image renderer fallback, and dark ink-panel overlay;
+  - added `ops/sql/2026-06-22-frauen-im-werk-editorial-json.sql` as the narrow transfer artifact for the local JSON pilot document and enabled flag;
+  - added the SOW partial lookup path for future theme overrides before falling back to generic section rendering;
+  - promoted the Ausstellung vocabulary with `vollbild`, `fliesstext`, and `schluss`, then migrated the local `Frauen im Werk für Fernmeldewesen` JSON pilot from generic `bildstrecke` sections to concrete poster-essay gestures while keeping its local JSON rendering enabled for review.
+
 ## 2026-06-21
 
 - Added a shared theme button primary tier: `style.css` now exposes solid primary button tokens plus `.iss-button` variants and maps Gutenberg `is-style-fill` buttons to the solid tier, while the programme timeline skin uses the same primary tokens for booking actions.

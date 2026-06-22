@@ -33,6 +33,28 @@ legacy `post_content` path.
 Unresolved references are omitted from public output and shown as placeholders
 in previews for editors.
 
+Skin and layout decisions are not editor controls. A document stores a known
+skin slug, but the main canvas does not expose skin, variant, layout, or section
+role fields. For `ausstellung` Phase 3, the durable surface is
+`gesture x skin = treatment`: section `type` carries editorial intent, while the
+theme chooses the visual treatment for that gesture inside the active skin. The
+first named skin is `frauen-im-werk`. Optional theme partials resolve by
+`sections/{skin}/part-{type}.php`, then `sections/part-{type}.php` before
+falling back to the generic renderer. The generic Ausstellung shell stays in
+`themes/industriesalon/assets/css/single-ausstellung.css`; per-skin gesture
+treatments live under `themes/industriesalon/assets/css/skins/` and are
+enqueued only when the enabled editorial document resolves to that skin. The
+default theme renderer emits a universal section anatomy with stable `inner`,
+`media`, `copy`, `kicker`, `body`, `quote`, and `refs` slots; skins map gestures
+onto those slots in CSS. `kicker` is a first-class JSON section field because it
+is shared site language, not a skin decoration. In the first `frauen-im-werk`
+treatment, `quellenauszug` owns the image/text/quote station treatment and
+`objektfokus` remains reserved for archive-object grid treatments. `vollbild`
+is a one-image, full-viewport gesture; editors are guided toward 16:9 media and
+the theme uses a generic `viewport-image` treatment with cover-cropped imagery
+and an ink-panel text overlay. Theme partials are reserved for true structural
+exceptions, not for normal gesture rendering.
+
 ## Migration Audit
 
 `wp iss-editorial ausstellung-dry-run` reports read-only migration candidates

@@ -31,7 +31,7 @@ function iss_content_model_register_editorial_formats(array $formats): array
             'quellenauszug' => [
                 'label' => __('Quellenauszug', 'iss-content-model'),
                 'description' => __('Source quote and citation', 'iss-content-model'),
-                'supports' => ['quote', 'object_refs'],
+                'supports' => ['quote', 'object_refs', 'media_refs'],
             ],
             'massstab' => [
                 'label' => __('Massstab', 'iss-content-model'),
@@ -47,6 +47,21 @@ function iss_content_model_register_editorial_formats(array $formats): array
                 'label' => __('Dokumentarische Strecke', 'iss-content-model'),
                 'description' => __('Photo sequence with captions', 'iss-content-model'),
                 'supports' => ['object_refs', 'media_refs'],
+            ],
+            'vollbild' => [
+                'label' => __('Vollbild', 'iss-content-model'),
+                'description' => __('One image, full viewport, short panel', 'iss-content-model'),
+                'supports' => ['media_refs'],
+            ],
+            'fliesstext' => [
+                'label' => __('Fliesstext', 'iss-content-model'),
+                'description' => __('Essay paragraph or connective text', 'iss-content-model'),
+                'supports' => [],
+            ],
+            'schluss' => [
+                'label' => __('Schluss', 'iss-content-model'),
+                'description' => __('Closing statement and onward direction', 'iss-content-model'),
+                'supports' => [],
             ],
             'aside' => [
                 'label' => __('Ausstellungsentscheidung', 'iss-content-model'),
