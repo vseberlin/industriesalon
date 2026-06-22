@@ -11,6 +11,11 @@ be recovered from Git history.
   - renamed the explicit structure action from `JSON speichern` to `Speichern`;
   - styled the explicit structure save as a red editor-canvas button;
   - added a post-save reminder that JSON section content is updated by that button, while WordPress `Aktualisieren` is only needed for WordPress-owned fields such as title, slug, status, taxonomies, or other metabox data.
+- Finalized Phase 2 for the current Ausstellung pilot boundary:
+  - kept archive-object selection on the existing bucket-first archive picker and media selection on WordPress `wp.media`;
+  - changed selected archive-object chips to show human labels with explicit remove buttons instead of clickable raw/fallback identifiers;
+  - made archive-object selection refresh the canvas and schedule persistence immediately after picker confirmation;
+  - recorded the SOW-wide Relation Picker as deferred until entity-editor work needs it.
 - Advanced the editorial-platform SOW Phase 3 skin decision for the Ausstellung pilot:
   - kept skin, variant, layout, and section-role choices out of the main editor canvas so editors only add, edit, save, and reorder content sections;
   - changed the editor save path to preserve the internal JSON-rendering rollout flag without exposing it as a normal authoring control;

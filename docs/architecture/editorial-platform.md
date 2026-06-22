@@ -84,8 +84,16 @@ Archive-object references may carry bucket provenance (`set_id`, `set_title`,
 still resolve by object ID, but the provenance stays available for future
 captions and source context.
 
-Editors save reviewed JSON changes through the canvas' explicit JSON save
-action. That route writes the permanent document and the enabled flag together.
+Editors save reviewed structure changes through the canvas' explicit `Speichern`
+action. That route writes the permanent JSON document and the enabled flag
+together. WordPress' default update action is only needed for WordPress-owned
+post fields such as title, slug, status, taxonomies, or other metabox data.
+
+For the current Ausstellung pilot, Phase 2 covers archive-object and media
+selection only. Archive-object selection uses the existing bucket-first archive
+picker and stores typed references with optional bucket provenance. Media
+selection uses WordPress `wp.media`. The SOW-wide Relation Picker is deferred
+until entity-editor work needs relationship editing.
 
 ## Static Analysis
 

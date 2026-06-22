@@ -195,6 +195,24 @@
   gap: 6px;
 }
 
+.iss-editorial-ref {
+  display: inline-flex;
+  gap: 8px;
+  align-items: center;
+  max-width: 100%;
+  padding: 6px 8px;
+  border: 1px solid #dcdcde;
+  border-radius: 4px;
+  background: #fff;
+}
+
+.iss-editorial-ref span {
+  overflow: hidden;
+  max-width: min(34rem, 100%);
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
 .iss-editorial-media-strip,
 .iss-editorial-media-tray {
   display: flex;

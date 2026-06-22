@@ -315,13 +315,18 @@
     function renderReferenceTray(section, target, rerender) {
       clear(target);
       (section.object_refs || []).forEach(function (reference, index) {
-        var item = createElement('button', 'button iss-editorial-ref', reference.label || 'Archivobjekt #' + String(reference.id || ''));
-        item.type = 'button';
-        item.addEventListener('click', function () {
+        var item = createElement('div', 'iss-editorial-ref');
+        var label = createElement('span', '', reference.label || 'Ausgewähltes Archivobjekt');
+        var remove = createElement('button', 'button button-link-delete', 'Entfernen');
+        remove.type = 'button';
+        remove.addEventListener('click', function () {
           section.object_refs.splice(index, 1);
           rerender();
+          render();
           scheduleAutosave();
         });
+        item.appendChild(label);
+        item.appendChild(remove);
         target.appendChild(item);
       });
 
@@ -552,7 +557,8 @@
               return reference.id;
             });
             rerenderTray();
-            updateField();
+            render();
+            scheduleAutosave();
           }
         });
       });
