@@ -6,6 +6,11 @@ be recovered from Git history.
 
 ## 2026-06-22
 
+- Signed off Phase 1 of the Ausstellung editorial-platform SOW for authoring/save/reload after editor roundtrip proof:
+  - kept autosave recovery deferred by decision;
+  - renamed the explicit structure action from `JSON speichern` to `Speichern`;
+  - styled the explicit structure save as a red editor-canvas button;
+  - added a post-save reminder that JSON section content is updated by that button, while WordPress `Aktualisieren` is only needed for WordPress-owned fields such as title, slug, status, taxonomies, or other metabox data.
 - Advanced the editorial-platform SOW Phase 3 skin decision for the Ausstellung pilot:
   - kept skin, variant, layout, and section-role choices out of the main editor canvas so editors only add, edit, save, and reorder content sections;
   - changed the editor save path to preserve the internal JSON-rendering rollout flag without exposing it as a normal authoring control;

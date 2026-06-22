@@ -167,7 +167,8 @@
           documentState = response.document;
           render();
         }
-        setStatus((config.strings && config.strings.savedPermanent) || 'JSON-Komposition gespeichert.');
+        setStatus((config.strings && config.strings.savedPermanent) || 'Struktur gespeichert.');
+        window.alert((config.strings && config.strings.savedPermanentNotice) || 'Struktur gespeichert. Die sichtbaren Ausstellungsabschnitte sind damit aktualisiert. Den WordPress-Button "Aktualisieren" nur verwenden, wenn Titel, Status, Slug oder andere WordPress-Felder geändert wurden.');
       }).catch(function () {
         setStatus((config.strings && config.strings.error) || 'Speichern fehlgeschlagen.');
       });
@@ -293,7 +294,7 @@
     function renderStage(target) {
       var stage = createElement('div', 'iss-editorial-stage');
       var head = createElement('div', 'iss-editorial-stage__head');
-      var save = createElement('button', 'button button-primary', (config.strings && config.strings.savePermanent) || 'JSON speichern');
+      var save = createElement('button', 'button iss-editorial-save', (config.strings && config.strings.savePermanent) || 'Speichern');
       save.type = 'button';
       save.addEventListener('click', saveDocument);
       head.appendChild(createElement('div', '', 'Komposition'));

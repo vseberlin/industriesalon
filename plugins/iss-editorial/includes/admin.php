@@ -205,9 +205,10 @@ function iss_editorial_enqueue_admin_assets(string $hook): void
                     'saved' => __('Automatisch gesichert.', 'iss-editorial'),
                     'saving' => __('Automatische Sicherung...', 'iss-editorial'),
                     'error' => __('Automatische Sicherung fehlgeschlagen.', 'iss-editorial'),
-                    'savedPermanent' => __('JSON-Komposition gespeichert.', 'iss-editorial'),
-                    'savingPermanent' => __('JSON-Komposition wird gespeichert...', 'iss-editorial'),
-                    'savePermanent' => __('JSON speichern', 'iss-editorial'),
+                    'savedPermanent' => __('Struktur gespeichert.', 'iss-editorial'),
+                    'savingPermanent' => __('Struktur wird gespeichert...', 'iss-editorial'),
+                    'savePermanent' => __('Speichern', 'iss-editorial'),
+                    'savedPermanentNotice' => __('Struktur gespeichert. Die sichtbaren Ausstellungsabschnitte sind damit aktualisiert. Den WordPress-Button "Aktualisieren" nur verwenden, wenn Titel, Status, Slug oder andere WordPress-Felder geändert wurden.', 'iss-editorial'),
                 ],
             ]
         );
