@@ -48,12 +48,17 @@ default theme renderer emits a universal section anatomy with stable `inner`,
 `media`, `copy`, `kicker`, `body`, `quote`, and `refs` slots; skins map gestures
 onto those slots in CSS. `kicker` is a first-class JSON section field because it
 is shared site language, not a skin decoration. In the first `frauen-im-werk`
-treatment, `quellenauszug` owns the image/text/quote station treatment and
-`objektfokus` remains reserved for archive-object grid treatments. `vollbild`
-is a one-image, full-viewport gesture; editors are guided toward 16:9 media and
-the theme uses a generic `viewport-image` treatment with cover-cropped imagery
-and an ink-panel text overlay. Theme partials are reserved for true structural
-exceptions, not for normal gesture rendering.
+treatment, `quellenauszug` owns the image/text/quote station treatment and has
+a scoped text-position flip for left/right source stations. `kapitel`,
+`leitfrage`, `zitat`, and `fliesstext` stay on the generic renderer anatomy and
+receive quiet typographic treatments in skin CSS; their content uses the common
+`kicker`, `title`, `body`, `quote`, and `attribution` fields rather than
+parallel gesture-specific keys. `objektfokus` remains reserved for
+archive-object grid treatments. `vollbild` is a one-image, full-viewport
+gesture; editors are guided toward 16:9 media and the theme uses a generic
+`viewport-image` treatment with cover-cropped imagery and an ink-panel text
+overlay. Theme partials are reserved for true structural exceptions, not for
+normal gesture rendering.
 
 ## Migration Audit
 
