@@ -4,9 +4,8 @@ Immediate executable work only. Larger future programs live in `docs/project/bac
 
 ## Active Today
 
-- Editorial platform next slice: curator-review `Frauen im Werk für Fernmeldewesen` in the custom editor with the `frauen-im-werk` JSON skin enabled locally. Clean up gesture choices, kickers, section text, captions, archive-object choices, source links, and research/navigation links, then verify preview/frontend output.
+- Editorial platform next slice: curator-review `Frauen im Werk für Fernmeldewesen` in the custom editor with the `frauen-im-werk` JSON skin enabled locally. Clean up gesture choices, kickers, section text, captions, archive-object choices, and source/source-link details, then verify preview/frontend output.
 - Define the `objektfokus` treatment separately as an archive-object grid; do not reuse the `quellenauszug` image/text/quote station treatment for it.
-- Review `vollbild` images in the pilot for true 16:9 crops; the editor now warns from stored media dimensions, but final image choice is still curator work.
 - Keep Ausstellung skin/layout decisions out of editor controls: editors add, edit, save, and reorder gesture sections; the theme renders each `gesture x skin` treatment through the universal section slots and dedicated skin CSS such as `themes/industriesalon/assets/css/skins/ausstellung-frauen-im-werk.css`.
 - Before transferring the `Frauen im Werk` JSON pilot elsewhere, apply/review `ops/sql/2026-06-22-frauen-im-werk-editorial-json.sql`; the current skin assignment and section document are DB-backed local state.
 - Keep `Kinder im Werk` on pure Gutenberg until archive-object/html mapping is deliberately handled.

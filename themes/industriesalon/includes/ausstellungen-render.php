@@ -205,6 +205,9 @@ function industriesalon_get_editorial_ausstellung_section_context(array $section
         if (isset($layouts[$type])) {
             $layout = $layouts[$type];
         }
+        if ($type === 'quellenauszug' && sanitize_key((string) ($section['orientation'] ?? '')) === 'media-right') {
+            $layout = 'source-focus-reverse';
+        }
     }
 
     return [

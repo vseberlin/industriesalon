@@ -31,7 +31,7 @@ function iss_content_model_register_editorial_formats(array $formats): array
             'quellenauszug' => [
                 'label' => __('Quellenauszug', 'iss-content-model'),
                 'description' => __('Source quote and citation', 'iss-content-model'),
-                'supports' => ['quote', 'object_refs', 'media_refs'],
+                'supports' => ['quote', 'object_refs', 'media_refs', 'orientation'],
             ],
             'massstab' => [
                 'label' => __('Massstab', 'iss-content-model'),

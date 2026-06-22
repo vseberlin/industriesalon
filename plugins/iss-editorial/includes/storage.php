@@ -138,6 +138,11 @@ function iss_editorial_sanitize_section(array $section, array $format): array
         $sanitized['links'] = iss_editorial_sanitize_link_list($section['links'] ?? []);
     }
 
+    if (iss_editorial_format_supports_section_field($format, $type, 'orientation')) {
+        $orientation = sanitize_key((string) ($section['orientation'] ?? ''));
+        $sanitized['orientation'] = in_array($orientation, ['media-left', 'media-right'], true) ? $orientation : 'media-left';
+    }
+
     return $sanitized;
 }
 

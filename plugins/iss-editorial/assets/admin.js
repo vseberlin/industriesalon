@@ -531,6 +531,10 @@
         renderMediaPicker(section, body);
       }
 
+      if (supports(type, 'orientation')) {
+        renderOrientationControl(section, body);
+      }
+
       if (supports(type, 'links')) {
         renderLinkEditor(section, body);
       }
@@ -577,6 +581,40 @@
       refs.appendChild(pickerMount);
       body.appendChild(refs);
       rerenderTray();
+    }
+
+    function renderOrientationControl(section, body) {
+      var wrapper = createElement('div', 'iss-editorial-field iss-editorial-field--orientation');
+      var options = createElement('div', 'iss-editorial-segmented');
+      var choices = [
+        { value: 'media-left', label: 'Text rechts' },
+        { value: 'media-right', label: 'Text links' }
+      ];
+      var current = section.orientation === 'media-right' ? 'media-right' : 'media-left';
+
+      choices.forEach(function (choice) {
+        var label = createElement('label', 'iss-editorial-segmented__option');
+        var input = document.createElement('input');
+        var text = createElement('span', '', choice.label);
+        input.type = 'radio';
+        input.name = 'iss-editorial-orientation-' + String(documentState.sections.indexOf(section));
+        input.value = choice.value;
+        input.checked = current === choice.value;
+        input.addEventListener('change', function () {
+          if (input.checked) {
+            section.orientation = choice.value;
+            render();
+            scheduleAutosave();
+          }
+        });
+        label.appendChild(input);
+        label.appendChild(text);
+        options.appendChild(label);
+      });
+
+      wrapper.appendChild(createElement('span', '', 'Textposition'));
+      wrapper.appendChild(options);
+      body.appendChild(wrapper);
     }
 
     function renderLinkEditor(section, body) {

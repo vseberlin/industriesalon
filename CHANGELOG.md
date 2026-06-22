@@ -30,6 +30,7 @@ be recovered from Git history.
   - changed the default JSON renderer to emit universal section slots for media, copy, kicker, body, quote, and refs so skins can express live station-like treatments without one partial per gesture;
   - made `kicker` a first-class JSON section field in storage, editor UI, migration import, and theme rendering;
   - corrected the first `frauen-im-werk` source-station treatment to belong to the `quellenauszug` gesture, while `objektfokus` stays reserved for archive-object grids;
+  - added a scoped `quellenauszug` text-position flip so source stations can render with text left or text right in the `frauen-im-werk` skin;
   - made `vollbild` a generic one-image full-viewport treatment with a 16:9 editor hint, media-dimension refs, first-image renderer fallback, and dark ink-panel overlay;
   - added `ops/sql/2026-06-22-frauen-im-werk-editorial-json.sql` as the narrow transfer artifact for the local JSON pilot document and enabled flag;
   - added the SOW partial lookup path for future theme overrides before falling back to generic section rendering;
