@@ -76,6 +76,37 @@ function iss_editorial_sanitize_reference_list($references): array
     return $items;
 }
 
+function iss_editorial_sanitize_link($link): array
+{
+    if (!is_array($link)) {
+        return [];
+    }
+
+    $label = sanitize_text_field((string) ($link['label'] ?? ''));
+    $url = esc_url_raw((string) ($link['url'] ?? ''));
+    if ($label === '' || $url === '') {
+        return [];
+    }
+
+    return [
+        'label' => $label,
+        'url' => $url,
+    ];
+}
+
+function iss_editorial_sanitize_link_list($links): array
+{
+    $items = [];
+    foreach ((array) $links as $link) {
+        $link = iss_editorial_sanitize_link($link);
+        if ($link) {
+            $items[] = $link;
+        }
+    }
+
+    return $items;
+}
+
 function iss_editorial_sanitize_section(array $section, array $format): array
 {
     $type = sanitize_key((string) ($section['type'] ?? ''));
@@ -101,6 +132,10 @@ function iss_editorial_sanitize_section(array $section, array $format): array
 
     if (iss_editorial_format_supports_section_field($format, $type, 'media_refs')) {
         $sanitized['media_refs'] = iss_editorial_sanitize_reference_list($section['media_refs'] ?? []);
+    }
+
+    if (iss_editorial_format_supports_section_field($format, $type, 'links')) {
+        $sanitized['links'] = iss_editorial_sanitize_link_list($section['links'] ?? []);
     }
 
     return $sanitized;

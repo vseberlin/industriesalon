@@ -221,6 +221,22 @@
   margin-top: 10px;
 }
 
+.iss-editorial-link-rows {
+  display: grid;
+  gap: 10px;
+}
+
+.iss-editorial-link-row {
+  display: grid;
+  grid-template-columns: minmax(10rem, 0.8fr) minmax(12rem, 1fr) auto;
+  gap: 10px;
+  align-items: end;
+  padding: 10px;
+  border: 1px solid #dcdcde;
+  border-radius: 4px;
+  background: #fff;
+}
+
 .iss-editorial-media-rule {
   flex-basis: 100%;
   margin: 0;
@@ -362,6 +378,10 @@
   }
 
   .iss-editorial-media-item {
+    grid-template-columns: 1fr;
+  }
+
+  .iss-editorial-link-row {
     grid-template-columns: 1fr;
   }
 

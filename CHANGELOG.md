@@ -16,6 +16,12 @@ be recovered from Git history.
   - changed selected archive-object chips to show human labels with explicit remove buttons instead of clickable raw/fallback identifiers;
   - made archive-object selection refresh the canvas and schedule persistence immediately after picker confirmation;
   - recorded the SOW-wide Relation Picker as deferred until entity-editor work needs it.
+- Restored Ausstellung decision/research links in the JSON editor path:
+  - added a supported `links` field for `schluss` and `aside` gestures;
+  - exposed repeatable link editing in the composition modal;
+  - rendered section links as a theme-owned button rail;
+  - taught the migration helper to preserve legacy Gutenberg navigation links;
+  - updated the `Frauen im Werk` local JSON candidate and transfer SQL with the five legacy links.
 - Advanced the editorial-platform SOW Phase 3 skin decision for the Ausstellung pilot:
   - kept skin, variant, layout, and section-role choices out of the main editor canvas so editors only add, edit, save, and reorder content sections;
   - changed the editor save path to preserve the internal JSON-rendering rollout flag without exposing it as a normal authoring control;

@@ -61,12 +61,12 @@ function iss_content_model_register_editorial_formats(array $formats): array
             'schluss' => [
                 'label' => __('Schluss', 'iss-content-model'),
                 'description' => __('Closing statement and onward direction', 'iss-content-model'),
-                'supports' => [],
+                'supports' => ['links'],
             ],
             'aside' => [
                 'label' => __('Ausstellungsentscheidung', 'iss-content-model'),
                 'description' => __('Curator speaks directly', 'iss-content-model'),
-                'supports' => [],
+                'supports' => ['links'],
             ],
         ],
     ];

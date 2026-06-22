@@ -31,7 +31,7 @@ Current checkpoint only. History belongs in `CHANGELOG.md`; active follow-up bel
 ## Current Risk
 
 - The `Frauen im Werk` editorial candidate and its `frauen-im-werk` skin assignment are DB-backed local state. Use `ops/sql/2026-06-22-frauen-im-werk-editorial-json.sql` for the editorial JSON and enabled flag before transferring that candidate document to another environment.
-- The composition canvas is still v1: basic WordPress media refs are imported/editable/renderable with caption fields and explicit removal controls, and archive-object selection is now bucket-first through attached Archivsets with explicit selected-object removal. Source links, object/source section semantics, and research navigation links still need curator cleanup before the `Frauen im Werk` candidate is ready.
+- The composition canvas is still v1: basic WordPress media refs are imported/editable/renderable with caption fields and explicit removal controls, archive-object selection is now bucket-first through attached Archivsets with explicit selected-object removal, and conclusion/decision links are editable and render as a theme-owned button rail. Source links and object/source section semantics still need curator cleanup before the `Frauen im Werk` candidate is ready.
 - Request notification mail is implemented but disabled by default. Enable only after target mail mode and recipient are approved.
 - First deploy to a database with old plugin basenames or without `iss-editorial` active relies on the `iss-core` active-plugin migrator; verify `wp plugin list`.
 - Template output can still become DB-backed after Site Editor saves; check `wp_template` authority before assuming disk templates are live.
@@ -46,7 +46,7 @@ Current checkpoint only. History belongs in `CHANGELOG.md`; active follow-up bel
 ## Next Action
 
 - Delete the `page-projekte` DB template override after verifying the flushed disk template on the target.
-- Complete source/object/research-link editing in the composition canvas, then review and clean up the `Frauen im Werk` JSON candidate in the editor UI, verify preview/frontend output for the `frauen-im-werk` skin, and keep legacy fallback available until curator signoff.
+- Complete source/object editing in the composition canvas, then review and clean up the `Frauen im Werk` JSON candidate in the editor UI, verify preview/frontend output for the `frauen-im-werk` skin, and keep legacy fallback available until curator signoff.
 - Keep `Kinder im Werk` pure Gutenberg until archive-object/html mapping is deliberately handled.
 - Decide whether Führung station archive objects should remain separate detail cards or also populate the station “Damals” image slot when place-level public `archive_images` are missing.
 - Before production deploy, verify target mail mode and decide whether request notification email should be enabled.

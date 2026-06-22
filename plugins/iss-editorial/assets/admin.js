@@ -138,6 +138,9 @@
       if ((section.media_refs || []).length) {
         parts.push(String((section.media_refs || []).length) + ' Medien');
       }
+      if ((section.links || []).length) {
+        parts.push(String((section.links || []).length) + ' Link(s)');
+      }
 
       return parts.join(' · ');
     }
@@ -209,7 +212,8 @@
         title: '',
         body: '',
         object_refs: [],
-        media_refs: []
+        media_refs: [],
+        links: []
       });
       render();
       openEditor(documentState.sections.length - 1);
@@ -526,6 +530,10 @@
       if (supports(type, 'media_refs')) {
         renderMediaPicker(section, body);
       }
+
+      if (supports(type, 'links')) {
+        renderLinkEditor(section, body);
+      }
     }
 
     function renderObjectPicker(section, body) {
@@ -569,6 +577,60 @@
       refs.appendChild(pickerMount);
       body.appendChild(refs);
       rerenderTray();
+    }
+
+    function renderLinkEditor(section, body) {
+      var wrapper = createElement('div', 'iss-editorial-field iss-editorial-field--links');
+      var rows = createElement('div', 'iss-editorial-link-rows');
+      var add = createElement('button', 'button', 'Link hinzufügen');
+
+      function rerenderRows() {
+        clear(rows);
+        section.links = Array.isArray(section.links) ? section.links : [];
+        section.links.forEach(function (link, index) {
+          var row = createElement('div', 'iss-editorial-link-row');
+          var label = createTextInput('Beschriftung', link.label || '', function (value) {
+            link.label = value;
+            render();
+            scheduleAutosave();
+          });
+          var url = createTextInput('URL', link.url || '', function (value) {
+            link.url = value;
+            render();
+            scheduleAutosave();
+          });
+          var remove = createElement('button', 'button button-link-delete', 'Entfernen');
+          remove.type = 'button';
+          remove.addEventListener('click', function () {
+            section.links.splice(index, 1);
+            rerenderRows();
+            render();
+            scheduleAutosave();
+          });
+          row.appendChild(label);
+          row.appendChild(url);
+          row.appendChild(remove);
+          rows.appendChild(row);
+        });
+        if (!section.links.length) {
+          rows.appendChild(createElement('p', 'description', 'Noch keine Links hinzugefügt.'));
+        }
+      }
+
+      add.type = 'button';
+      add.addEventListener('click', function () {
+        section.links = Array.isArray(section.links) ? section.links : [];
+        section.links.push({ label: '', url: '' });
+        rerenderRows();
+        render();
+        scheduleAutosave();
+      });
+
+      wrapper.appendChild(createElement('span', '', 'Links'));
+      wrapper.appendChild(rows);
+      wrapper.appendChild(add);
+      body.appendChild(wrapper);
+      rerenderRows();
     }
 
     function renderMediaPicker(section, body) {

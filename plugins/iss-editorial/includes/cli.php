@@ -159,6 +159,34 @@ function iss_editorial_cli_count_media_blocks(array $block): int
     return $count;
 }
 
+function iss_editorial_cli_collect_links(array $block): array
+{
+    $links = [];
+    $block_name = (string) ($block['blockName'] ?? '');
+    $attrs = is_array($block['attrs'] ?? null) ? $block['attrs'] : [];
+
+    if ($block_name === 'core/navigation-link') {
+        $label = trim((string) ($attrs['label'] ?? ''));
+        $url = trim((string) ($attrs['url'] ?? ''));
+        if ($label !== '' && $url !== '') {
+            $links[] = [
+                'label' => $label,
+                'url' => $url,
+            ];
+        }
+    }
+
+    foreach ((array) ($block['innerBlocks'] ?? []) as $inner_block) {
+        if (!is_array($inner_block)) {
+            continue;
+        }
+
+        $links = array_merge($links, iss_editorial_cli_collect_links($inner_block));
+    }
+
+    return $links;
+}
+
 function iss_editorial_cli_collect_text_parts(array $block, array &$parts): void
 {
     $block_name = (string) ($block['blockName'] ?? '');
@@ -229,10 +257,36 @@ function iss_editorial_cli_append_body(array &$sections, string $body): void
     $sections[$last_index]['body'] .= $separator . $body;
 }
 
+function iss_editorial_cli_append_links(array &$sections, array $links): void
+{
+    if (!$links) {
+        return;
+    }
+
+    if (!$sections) {
+        $sections[] = [
+            'type' => 'schluss',
+            'kicker' => '',
+            'title' => '',
+            'body' => '',
+            'links' => [],
+        ];
+    }
+
+    $last_index = count($sections) - 1;
+    $sections[$last_index]['links'] = array_values(array_merge((array) ($sections[$last_index]['links'] ?? []), $links));
+}
+
 function iss_editorial_cli_process_ausstellung_block(array $block, array &$sections, array &$unsupported_blocks, int &$media_blocks): void
 {
     $kind = iss_editorial_cli_classify_block($block);
     $text = iss_editorial_cli_block_text($block);
+    $links = iss_editorial_cli_collect_links($block);
+
+    if ($links && in_array((string) ($block['blockName'] ?? ''), ['core/navigation', 'core/navigation-link'], true)) {
+        iss_editorial_cli_append_links($sections, $links);
+        return;
+    }
 
     if ($kind === 'container') {
         $media_refs = iss_editorial_cli_collect_media_refs($block);
