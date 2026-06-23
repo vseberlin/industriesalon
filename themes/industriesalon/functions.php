@@ -1751,6 +1751,10 @@ function industriesalon_enqueue_assets(): void
                 'handle' => 'industriesalon-ausstellung-skin-frauen-im-werk',
                 'path' => '/assets/css/skins/ausstellung-frauen-im-werk.css',
             ),
+            'kinder-im-werk' => array(
+                'handle' => 'industriesalon-ausstellung-skin-kinder-im-werk',
+                'path' => '/assets/css/skins/ausstellung-kinder-im-werk.css',
+            ),
             'typografisch' => array(
                 'handle' => 'industriesalon-ausstellung-skin-typografisch',
                 'path' => '/assets/css/skins/ausstellung-typografisch.css',

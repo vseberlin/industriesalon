@@ -6,6 +6,11 @@ be recovered from Git history.
 
 ## 2026-06-23
 
+- Converted local `Kinder im Werk` to a curated Ausstellung JSON document:
+  - registered the `kinder-im-werk` JSON skin and added its theme-owned stylesheet;
+  - saved and enabled the local `_iss_editorial_ausstellung` document for post `26381`;
+  - styled the skin's hero suppression, source excerpts, typographic quote, object-focus cards, album copy order, and stat gesture with existing shared/typographic treatments;
+  - wrote paired transfer SQL at `ops/sql/2026-06-23-kinder-im-werk-editorial-json.sql`.
 - Added a footer-oriented `register` layout variant for graph related-content rails and switched the single-Ausstellung tail to it.
 - Replaced the single-Ausstellung tail from Ausstellung-only `iss/related-cards` to graph-backed mixed `iss/related-content`, and synced the local DB-backed template override.
 - Moved Ausstellung practical metadata into the single-Ausstellung hero:

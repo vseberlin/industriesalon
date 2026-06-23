@@ -64,6 +64,7 @@ function industriesalon_get_editorial_ausstellung_skins(): array
     return [
         'standard',
         'frauen-im-werk',
+        'kinder-im-werk',
         'typografisch',
         'chronik',
         'industrieakte',
@@ -83,6 +84,10 @@ add_filter('iss_editorial_format_skins', function (array $skins, string $format_
         'frauen-im-werk' => [
             'slug' => 'frauen-im-werk',
             'label' => __('Frauen im Werk', 'industriesalon'),
+        ],
+        'kinder-im-werk' => [
+            'slug' => 'kinder-im-werk',
+            'label' => __('Kinder im Werk', 'industriesalon'),
         ],
         'typografisch' => [
             'slug' => 'typografisch',
