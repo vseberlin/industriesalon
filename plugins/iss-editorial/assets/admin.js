@@ -90,6 +90,9 @@
       variant: 'standard',
       sections: []
     });
+    var skins = Array.isArray(config.skins) ? config.skins.filter(function (skin) {
+      return skin && skin.slug;
+    }) : [];
     var autosaveTimer = null;
     var activeType = Object.keys(sections)[0] || 'kapitel';
     var modal = null;
@@ -105,6 +108,15 @@
 
     function updateField() {
       field.value = JSON.stringify(documentState);
+    }
+
+    function currentSkin() {
+      var skin = String(documentState.skin || 'standard');
+      var exists = skins.some(function (item) {
+        return item.slug === skin;
+      });
+
+      return exists ? skin : 'standard';
     }
 
     function setStatus(message) {
@@ -298,11 +310,17 @@
     function renderStage(target) {
       var stage = createElement('div', 'iss-editorial-stage');
       var head = createElement('div', 'iss-editorial-stage__head');
+      var heading = createElement('div', 'iss-editorial-stage__title', 'Komposition');
+      var tools = createElement('div', 'iss-editorial-stage__tools');
       var save = createElement('button', 'button iss-editorial-save', (config.strings && config.strings.savePermanent) || 'Speichern');
       save.type = 'button';
       save.addEventListener('click', saveDocument);
-      head.appendChild(createElement('div', '', 'Komposition'));
-      head.appendChild(save);
+      head.appendChild(heading);
+      if (skins.length > 1) {
+        tools.appendChild(renderSkinControl());
+      }
+      tools.appendChild(save);
+      head.appendChild(tools);
       stage.appendChild(head);
 
       if (!documentState.sections.length) {
@@ -314,6 +332,33 @@
       }
 
       target.appendChild(stage);
+    }
+
+    function renderSkinControl() {
+      var wrapper = createElement('label', 'iss-editorial-skin-control');
+      var label = createElement('span', '', 'Darstellung');
+      var select = document.createElement('select');
+      select.value = currentSkin();
+
+      skins.forEach(function (skin) {
+        var option = document.createElement('option');
+        option.value = skin.slug;
+        option.textContent = skin.label || skin.slug;
+        option.selected = skin.slug === currentSkin();
+        select.appendChild(option);
+      });
+
+      select.addEventListener('change', function () {
+        documentState.skin = select.value || 'standard';
+        updateField();
+        render();
+        scheduleAutosave();
+      });
+
+      wrapper.appendChild(label);
+      wrapper.appendChild(select);
+
+      return wrapper;
     }
 
     function renderReferenceTray(section, target, rerender) {

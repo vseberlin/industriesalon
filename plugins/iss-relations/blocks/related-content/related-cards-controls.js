@@ -62,7 +62,7 @@
   }
 
   function shouldShowColumns(attrs) {
-    return ['strip', 'rail'].indexOf(attrs.layoutVariant || 'grid') === -1;
+    return ['strip', 'rail', 'register'].indexOf(attrs.layoutVariant || 'grid') === -1;
   }
 
   function renderPostTypeControl(attrs, setAttributes, config) {
@@ -155,7 +155,7 @@
     options = options || {};
     var items = preview && Array.isArray(preview.items) ? preview.items : [];
     var isStrip = preview && preview.layoutVariant === 'strip';
-    var isSingleColumn = preview && (preview.layoutVariant === 'stack' || preview.layoutVariant === 'compact');
+    var isSingleColumn = preview && (preview.layoutVariant === 'stack' || preview.layoutVariant === 'compact' || preview.layoutVariant === 'register');
 
     if (!items.length) {
       return el('p', { className: 'components-base-control__help' }, 'Keine passenden Einträge für diese Auswahl gefunden.');

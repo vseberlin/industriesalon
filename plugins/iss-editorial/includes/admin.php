@@ -201,6 +201,7 @@ function iss_editorial_enqueue_admin_assets(string $hook): void
                 'document' => iss_editorial_get_document($post_id, (string) $format['slug'], false),
                 'enabled' => iss_editorial_document_is_enabled($post_id, (string) $format['slug']),
                 'sections' => (array) $format['sections'],
+                'skins' => iss_editorial_get_format_skins((string) $format['slug']),
                 'strings' => [
                     'saved' => __('Automatisch gesichert.', 'iss-editorial'),
                     'saving' => __('Automatische Sicherung...', 'iss-editorial'),

@@ -70,6 +70,35 @@ function industriesalon_get_editorial_ausstellung_skins(): array
     ];
 }
 
+add_filter('iss_editorial_format_skins', function (array $skins, string $format_slug): array {
+    if ($format_slug !== 'ausstellung') {
+        return $skins;
+    }
+
+    return [
+        'standard' => [
+            'slug' => 'standard',
+            'label' => __('Standard', 'industriesalon'),
+        ],
+        'frauen-im-werk' => [
+            'slug' => 'frauen-im-werk',
+            'label' => __('Frauen im Werk', 'industriesalon'),
+        ],
+        'typografisch' => [
+            'slug' => 'typografisch',
+            'label' => __('Typografisch', 'industriesalon'),
+        ],
+        'chronik' => [
+            'slug' => 'chronik',
+            'label' => __('Chronik', 'industriesalon'),
+        ],
+        'industrieakte' => [
+            'slug' => 'industrieakte',
+            'label' => __('Industrieakte', 'industriesalon'),
+        ],
+    ];
+}, 10, 2);
+
 function industriesalon_resolve_editorial_ausstellung_skin(array $document): string
 {
     $skin = sanitize_key((string) ($document['skin'] ?? 'standard'));
@@ -372,4 +401,4 @@ function industriesalon_render_editorial_ausstellung_content(string $content): s
 
     return trim($html) !== '' ? '<div class="' . esc_attr(implode(' ', $classes)) . '">' . $html . '</div>' : $content;
 }
-add_filter('the_content', 'industriesalon_render_editorial_ausstellung_content', 8);
+add_filter('the_content', 'industriesalon_render_editorial_ausstellung_content', 12);

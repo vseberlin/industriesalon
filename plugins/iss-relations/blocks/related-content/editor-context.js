@@ -155,6 +155,7 @@
       { label: 'Gestapelt', value: 'stack' },
       { label: 'Kompakt', value: 'compact' },
       { label: 'Rail', value: 'rail' },
+      { label: 'Register', value: 'register' },
     ],
     RELATED_CARDS_SORT_OPTIONS: [
       { label: 'Automatisch', value: 'auto' },

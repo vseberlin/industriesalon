@@ -113,6 +113,32 @@
   font-weight: 600;
 }
 
+.iss-editorial-stage__title {
+  min-width: 0;
+}
+
+.iss-editorial-stage__tools {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  align-items: end;
+  justify-content: flex-end;
+}
+
+.iss-editorial-skin-control {
+  display: grid;
+  gap: 4px;
+  margin: 0;
+  color: #1d2327;
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.iss-editorial-skin-control select {
+  min-width: 180px;
+  font-weight: 400;
+}
+
 .wp-core-ui .button.iss-editorial-save {
   border-color: #8f1919;
   background: #b32d2e;
@@ -419,6 +445,19 @@
   }
 
   .iss-editorial-card__actions {
+    justify-content: flex-start;
+  }
+
+  .iss-editorial-stage__head,
+  .iss-editorial-stage__tools {
+    align-items: stretch;
+  }
+
+  .iss-editorial-stage__head {
+    flex-direction: column;
+  }
+
+  .iss-editorial-stage__tools {
     justify-content: flex-start;
   }
 

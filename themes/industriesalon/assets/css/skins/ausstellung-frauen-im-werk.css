@@ -200,7 +200,7 @@
 
 .iss-ausstellung-editorial--skin-frauen-im-werk .iss-ausstellung-section--layout-source-focus-reverse .iss-ausstellung-section__media {
   position: relative;
-  grid-row: auto;
+  grid-row: 1;
   grid-column: 2;
   height: 100vh;
   height: 100svh;
@@ -284,6 +284,7 @@
 .iss-ausstellung-editorial--skin-frauen-im-werk .iss-ausstellung-section--layout-source-focus-reverse .iss-ausstellung-section__copy {
   box-sizing: border-box;
   align-self: center;
+  grid-row: 1;
   grid-column: 1;
   gap: 1rem;
   width: 100%;
@@ -299,6 +300,12 @@
 .iss-ausstellung-editorial--skin-frauen-im-werk .iss-ausstellung-section--layout-source-focus-reverse .iss-ausstellung-section__copy :where(h2, p, blockquote) {
   grid-column: auto;
   max-width: 62ch;
+}
+
+.iss-ausstellung-editorial--skin-frauen-im-werk .iss-ausstellung-section--layout-source-focus .iss-ausstellung-section__title,
+.iss-ausstellung-editorial--skin-frauen-im-werk .iss-ausstellung-section--layout-source-focus-reverse .iss-ausstellung-section__title {
+  font-size: clamp(1.35rem, 2.5vw, 2.85rem);
+  line-height: 1;
 }
 
 .iss-ausstellung-editorial--skin-frauen-im-werk .iss-ausstellung-section--layout-source-focus .iss-ausstellung-section__copy > * {
@@ -928,6 +935,7 @@
 
   .iss-ausstellung-editorial--skin-frauen-im-werk .iss-ausstellung-section--layout-source-focus .iss-ausstellung-section__media,
   .iss-ausstellung-editorial--skin-frauen-im-werk .iss-ausstellung-section--layout-source-focus-reverse .iss-ausstellung-section__media {
+    grid-row: auto;
     grid-column: auto;
     height: 60vh;
     height: 60svh;
@@ -937,6 +945,7 @@
 
   .iss-ausstellung-editorial--skin-frauen-im-werk .iss-ausstellung-section--layout-source-focus .iss-ausstellung-section__copy,
   .iss-ausstellung-editorial--skin-frauen-im-werk .iss-ausstellung-section--layout-source-focus-reverse .iss-ausstellung-section__copy {
+    grid-row: auto;
     grid-column: auto;
     padding: clamp(1.5rem, 8vw, 3rem) 1.25rem;
   }
@@ -971,12 +980,15 @@
   .iss-ausstellung-editorial__section--layout-image-text-reverse h2,
   .iss-ausstellung-editorial__section--layout-image-text-reverse .iss-ausstellung-editorial__body,
   .iss-ausstellung-editorial__section--layout-source-focus .iss-ausstellung-editorial__media-strip,
+  .iss-ausstellung-editorial__section--layout-source-focus-reverse .iss-ausstellung-editorial__media-strip,
   .iss-ausstellung-editorial__section--layout-image-text .iss-ausstellung-editorial__media-strip,
   .iss-ausstellung-editorial__section--layout-image-text-reverse .iss-ausstellung-editorial__media-strip,
   .iss-ausstellung-editorial__section--layout-source-focus .iss-ausstellung-section__copy,
+  .iss-ausstellung-editorial__section--layout-source-focus-reverse .iss-ausstellung-section__copy,
   .iss-ausstellung-editorial__section--layout-image-text .iss-ausstellung-section__copy,
   .iss-ausstellung-editorial__section--layout-image-text-reverse .iss-ausstellung-section__copy,
   .iss-ausstellung-editorial__section--layout-source-focus .iss-ausstellung-section__media,
+  .iss-ausstellung-editorial__section--layout-source-focus-reverse .iss-ausstellung-section__media,
   .iss-ausstellung-editorial__section--layout-image-text .iss-ausstellung-section__media,
   .iss-ausstellung-editorial__section--layout-image-text-reverse .iss-ausstellung-section__media {
     grid-row: auto;

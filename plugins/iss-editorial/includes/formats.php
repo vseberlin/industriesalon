@@ -76,6 +76,72 @@ function iss_editorial_get_format_for_post_type(string $post_type): array
     return [];
 }
 
+function iss_editorial_normalize_format_skins(array $skins, array $format = []): array
+{
+    $normalized = [];
+
+    foreach ($skins as $slug => $skin) {
+        if (is_array($skin)) {
+            $slug = sanitize_key(is_string($slug) ? $slug : (string) ($skin['slug'] ?? ''));
+            $label = sanitize_text_field((string) ($skin['label'] ?? $slug));
+        } else {
+            $slug = sanitize_key(is_string($slug) ? $slug : (string) $skin);
+            $label = sanitize_text_field((string) $skin);
+        }
+
+        if ($slug === '') {
+            continue;
+        }
+
+        $normalized[$slug] = [
+            'slug' => $slug,
+            'label' => $label !== '' ? $label : $slug,
+        ];
+    }
+
+    $default_skin = sanitize_key((string) ($format['default_skin'] ?? 'standard'));
+    if ($default_skin !== '' && !isset($normalized[$default_skin])) {
+        $normalized[$default_skin] = [
+            'slug' => $default_skin,
+            'label' => ucfirst(str_replace('-', ' ', $default_skin)),
+        ];
+    }
+
+    if (!isset($normalized['standard'])) {
+        $normalized = array_merge(
+            [
+                'standard' => [
+                    'slug' => 'standard',
+                    'label' => __('Standard', 'iss-editorial'),
+                ],
+            ],
+            $normalized
+        );
+    }
+
+    return array_values($normalized);
+}
+
+function iss_editorial_get_format_skins(string $format_slug): array
+{
+    $format = iss_editorial_get_format($format_slug);
+    if (!$format) {
+        return [];
+    }
+
+    $skins = iss_editorial_normalize_format_skins((array) ($format['skins'] ?? []), $format);
+
+    /**
+     * Allows the presentation owner to expose the allowed assignment skins for a format.
+     *
+     * The editor stores the chosen skin slug in the document; renderers still own
+     * all layout and visual interpretation for that slug.
+     */
+    $skins = apply_filters('iss_editorial_format_skins', $skins, $format_slug, $format);
+
+    return iss_editorial_normalize_format_skins((array) $skins, $format);
+}
+
 function iss_editorial_post_type_supports_format(string $post_type, string $format_slug): bool
 {
     $format = iss_editorial_get_format($format_slug);

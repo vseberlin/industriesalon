@@ -6602,6 +6602,121 @@ iss-info-panel--brown
   line-height: 1.35;
 }
 
+.iss-related-network-group--layout-register {
+  gap: clamp(1rem, 2vw, 1.35rem);
+  width: min(100%, 42rem);
+  margin-top: clamp(2.5rem, 5vw, 4.5rem);
+  padding-top: 0;
+  border-top: 0;
+}
+
+.iss-related-network-group--layout-register .iss-related-network-group__head {
+  gap: clamp(0.45rem, 1vw, 0.7rem);
+}
+
+.iss-related-network-group--layout-register .iss-related-network-group__kicker {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  color: var(--iss-accent);
+  font-size: 0.75rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+}
+
+.iss-related-network-group--layout-register .iss-related-network-group__kicker::before {
+  content: "";
+  display: block;
+  width: 0.44rem;
+  height: 0.44rem;
+  border-radius: 999px;
+  background: currentcolor;
+}
+
+.iss-related-network-group--layout-register .iss-related-network-group__title {
+  font-size: clamp(1.55rem, 2.8vw, 1.9rem);
+  font-weight: 520;
+  line-height: 1.04;
+}
+
+.iss-related-network-group--layout-register .iss-related-network-group__list {
+  border-top: 2px solid var(--iss-black);
+}
+
+.iss-related-network-group--layout-register .iss-related-network-group__item {
+  position: relative;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 0.22rem clamp(1rem, 2vw, 1.35rem);
+  align-items: center;
+  padding: clamp(0.95rem, 1.8vw, 1.1rem) 0;
+  border-top: 1px solid rgba(30, 30, 30, 0.16);
+}
+
+.iss-related-network-group--layout-register .iss-related-network-group__item:first-child {
+  border-top: 0;
+}
+
+.iss-related-network-group--layout-register .iss-related-network-group__item:last-child {
+  border-bottom: 1px solid rgba(30, 30, 30, 0.16);
+}
+
+.iss-related-network-group--layout-register .iss-related-network-group__type {
+  display: block;
+  grid-column: 1;
+  color: var(--iss-accent);
+  font-size: 0.68rem;
+  font-weight: 760;
+  letter-spacing: 0.08em;
+  line-height: 1.2;
+  text-transform: uppercase;
+}
+
+.iss-related-network-group--layout-register .iss-related-network-group__link {
+  grid-column: 1;
+  color: var(--iss-black);
+  font-size: clamp(1.08rem, 1.8vw, 1.32rem);
+  font-weight: 560;
+  line-height: 1.15;
+}
+
+.iss-related-network-group--layout-register .iss-related-network-group__link::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+}
+
+.iss-related-network-group--layout-register .iss-related-network-group__item::after {
+  content: "\2192";
+  grid-row: 1 / span 3;
+  grid-column: 2;
+  color: var(--iss-black);
+  font-size: 1.15rem;
+  line-height: 1;
+  transition:
+    color var(--iss-transition),
+    transform var(--iss-transition);
+}
+
+.iss-related-network-group--layout-register .iss-related-network-group__meta {
+  grid-column: 1;
+  color: rgba(30, 30, 30, 0.62);
+  font-size: 0.82rem;
+  line-height: 1.35;
+}
+
+.iss-related-network-group--layout-register .iss-related-network-group__item:hover .iss-related-network-group__link,
+.iss-related-network-group--layout-register .iss-related-network-group__item:focus-within .iss-related-network-group__link,
+.iss-related-network-group--layout-register .iss-related-network-group__item:hover::after,
+.iss-related-network-group--layout-register .iss-related-network-group__item:focus-within::after {
+  color: var(--iss-accent);
+}
+
+.iss-related-network-group--layout-register .iss-related-network-group__item:hover::after,
+.iss-related-network-group--layout-register .iss-related-network-group__item:focus-within::after {
+  transform: translateX(0.25rem);
+}
+
 .iss-register-place__epoch-rail {
   border-top: 2px solid var(--iss-black);
 }

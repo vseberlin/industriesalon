@@ -1050,7 +1050,7 @@ function iss_relations_get_related_cards_scope_key(array $post_types): string
 function iss_relations_normalize_related_cards_layout_variant(array $attributes = []): string
 {
     $variant = sanitize_key((string) ($attributes['layoutVariant'] ?? 'grid'));
-    $allowed = ['grid', 'stack', 'compact', 'strip', 'rail'];
+    $allowed = ['grid', 'stack', 'compact', 'strip', 'rail', 'register'];
 
     return in_array($variant, $allowed, true) ? $variant : 'grid';
 }
@@ -3891,10 +3891,12 @@ function iss_relations_render_related_content_rail(array $data, array $attribute
     $kicker = trim(sanitize_text_field((string) ($attributes['kicker'] ?? ($defaults['kicker'] ?? ''))));
     $title = trim(sanitize_text_field((string) ($attributes['title'] ?? ($defaults['title'] ?? ''))));
     $text = trim(sanitize_textarea_field((string) ($attributes['text'] ?? '')));
+    $layout_variant = iss_relations_normalize_related_cards_layout_variant($attributes);
     $title_id = $title !== '' ? wp_unique_id('iss-related-network-title-') : '';
     $wrapper_classes = [
         'iss-related-network-group',
         'iss-related-network-group--' . sanitize_html_class($scope_key),
+        'iss-related-network-group--layout-' . sanitize_html_class($layout_variant),
     ];
     $wrapper_attrs = [
         'class' => implode(' ', $wrapper_classes),
@@ -3935,16 +3937,27 @@ function iss_relations_render_related_content_rail(array $data, array $attribute
             continue;
         }
 
+        $type_label = iss_relations_get_card_kicker($post, $defaults);
         $meta = array_values(array_filter([
-            iss_relations_get_card_kicker($post, $defaults),
             iss_relations_get_card_meta_line($post),
             iss_relations_get_card_detail_line($post),
         ]));
 
         $out .= '<li class="iss-related-network-group__item">';
-        $out .= '<a class="iss-related-network-group__link" href="' . esc_url($permalink) . '">' . esc_html($title_text) . '</a>';
-        if ($meta) {
-            $out .= '<span class="iss-related-network-group__meta">' . esc_html(implode(' · ', array_slice($meta, 0, 2))) . '</span>';
+        if ($layout_variant === 'register') {
+            if ($type_label !== '') {
+                $out .= '<span class="iss-related-network-group__type">' . esc_html($type_label) . '</span>';
+            }
+            $out .= '<a class="iss-related-network-group__link" href="' . esc_url($permalink) . '">' . esc_html($title_text) . '</a>';
+            if ($meta) {
+                $out .= '<span class="iss-related-network-group__meta">' . esc_html(implode(' · ', array_slice($meta, 0, 2))) . '</span>';
+            }
+        } else {
+            $compact_meta = array_values(array_filter(array_merge([$type_label], $meta)));
+            $out .= '<a class="iss-related-network-group__link" href="' . esc_url($permalink) . '">' . esc_html($title_text) . '</a>';
+            if ($compact_meta) {
+                $out .= '<span class="iss-related-network-group__meta">' . esc_html(implode(' · ', array_slice($compact_meta, 0, 2))) . '</span>';
+            }
         }
         $out .= '</li>';
     }
@@ -3971,7 +3984,7 @@ function iss_relations_render_related_content_block($attributes = [], $content =
     $text = trim(sanitize_textarea_field((string) ($attributes['text'] ?? '')));
     $layout_variant = iss_relations_normalize_related_cards_layout_variant($attributes);
 
-    if ($layout_variant === 'rail') {
+    if (in_array($layout_variant, ['rail', 'register'], true)) {
         return iss_relations_render_related_content_rail($data, $attributes);
     }
 

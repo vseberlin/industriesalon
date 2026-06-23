@@ -67,14 +67,18 @@
 }
 
 .iss-ausstellung-hero > .iss-container {
-  position: static;
+  position: relative;
+  z-index: 2;
+  width: min(100% - (2 * var(--iss-ausstellung-pad-x)), var(--wp--style--global--wide-size, 1180px));
 }
 
-.iss-ausstellung-hero__grid {
-  display: block;
+.iss-ausstellung-hero__row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(17rem, 24rem);
+  gap: clamp(1.5rem, 4vw, 4rem);
+  align-items: end;
 }
 
-.iss-ausstellung-hero__media-col,
 .iss-ausstellung-hero__media {
   position: absolute;
   inset: 0;
@@ -98,10 +102,15 @@
   object-fit: cover;
 }
 
-.iss-ausstellung-hero__copy-col {
-  position: relative;
-  z-index: 2;
+.iss-ausstellung-hero__shell {
   width: min(100%, 64rem);
+  min-width: 0;
+}
+
+.iss-ausstellung-hero__meta-col {
+  align-self: end;
+  width: 100%;
+  min-width: 0;
 }
 
 .iss-ausstellung-hero__copy {
@@ -132,7 +141,51 @@
   margin: 0;
 }
 
-.iss-ausstellung-no-thumb .iss-ausstellung-hero__media-col {
+.iss-ausstellung-hero__meta-col .wp-block-iss-content-meta {
+  margin: 0;
+}
+
+.iss-ausstellung-hero__meta-col .iss-info-panel {
+  --iss-info-accent: var(--iss-ausstellung-accent);
+  --iss-info-panel-shell-pad: clamp(1rem, 1.8vw, 1.35rem);
+  --iss-info-panel-shell-bg: rgba(14, 16, 17, 0.62);
+  --iss-info-panel-shell-border-left: 3px solid var(--iss-ausstellung-accent);
+  --iss-info-panel-title-size: clamp(1.2rem, 1rem + 0.65vw, 1.75rem);
+  --iss-info-panel-row-gap: 0.7rem;
+  --iss-info-panel-heading-gap: 0.3rem;
+  --iss-info-panel-stack-gap: 0.65rem;
+  --iss-info-rule: rgba(249, 249, 250, 0.22);
+
+  max-width: none;
+  color: var(--iss-ausstellung-light);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+}
+
+.iss-ausstellung-hero__meta-col .iss-info-panel__title {
+  color: var(--iss-ausstellung-light);
+}
+
+.iss-ausstellung-hero__meta-col .iss-info-row {
+  padding: 0.65rem 0;
+}
+
+.iss-ausstellung-hero__meta-col .iss-info-row__text,
+.iss-ausstellung-hero__meta-col .iss-info-row__text strong {
+  color: rgba(249, 249, 250, 0.88);
+}
+
+.iss-ausstellung-hero__meta-col .iss-info-row__text {
+  font-size: clamp(0.92rem, 0.86rem + 0.22vw, 1.02rem);
+  line-height: 1.22;
+}
+
+.iss-ausstellung-hero__meta-col .iss-info-row__text strong {
+  display: block;
+  margin-bottom: 0.15rem;
+}
+
+.iss-ausstellung-no-thumb .iss-ausstellung-hero__media {
   display: none;
 }
 
@@ -859,6 +912,11 @@
 }
 
 /* Related tail */
+.iss-ausstellung-page > .iss-ausstellung-more.iss-related-network-group--layout-register {
+  width: min(100% - (2 * var(--iss-ausstellung-pad-x)), 42rem);
+  margin: clamp(4rem, 8vw, 7rem) auto;
+}
+
 .iss-ausstellung-more .iss-heading {
   margin-bottom: clamp(1.4rem, 2.5vw, 2rem);
 }
@@ -916,16 +974,15 @@
   margin: 0;
 }
 
-.iss-ausstellung-skin-care .iss-ausstellung-hero__grid {
+.iss-ausstellung-skin-care .iss-ausstellung-hero__row {
   display: grid;
-  grid-template-columns: minmax(0, 1.18fr) minmax(20rem, 0.82fr);
+  grid-template-columns: minmax(0, 1fr);
   min-height: 100vh;
   min-height: 100svh;
   margin: 0;
   gap: 0;
 }
 
-.iss-ausstellung-skin-care .iss-ausstellung-hero__media-col,
 .iss-ausstellung-skin-care .iss-ausstellung-hero__media {
   position: relative;
   inset: auto;
@@ -933,9 +990,6 @@
   width: 100%;
   height: 100%;
   margin: 0;
-}
-
-.iss-ausstellung-skin-care .iss-ausstellung-hero__media {
   background: var(--iss-ausstellung-blue);
 }
 
@@ -947,7 +1001,7 @@
   pointer-events: none;
 }
 
-.iss-ausstellung-skin-care .iss-ausstellung-hero__copy-col {
+.iss-ausstellung-skin-care .iss-ausstellung-hero__shell {
   z-index: 1;
   display: grid;
   align-content: center;
@@ -1282,8 +1336,18 @@
     padding-bottom: clamp(2.4rem, 6vw, 3rem);
   }
 
-  .iss-ausstellung-story__intro {
-    padding-top: 2rem;
+  .iss-ausstellung-hero__row {
+    grid-template-columns: 1fr;
+    gap: 1.35rem;
+  }
+
+  .iss-ausstellung-hero__shell {
+    width: 100%;
+  }
+
+  .iss-ausstellung-hero__meta-col .iss-info-panel {
+    --iss-info-panel-shell-pad: 1rem;
+    --iss-info-panel-title-size: clamp(1.05rem, 4.8vw, 1.35rem);
   }
 
   .iss-ausstellung-station,
@@ -1335,18 +1399,18 @@
     padding: clamp(5rem, 9vw, 9rem) 0 clamp(4rem, 7vw, 7rem);
   }
 
-  .iss-ausstellung-skin-care .iss-ausstellung-hero__grid,
+  .iss-ausstellung-skin-care .iss-ausstellung-hero__row,
   .iss-ausstellung-care-object-grid,
   .iss-ausstellung-care-object-grid > .wp-block-group__inner-container,
   .iss-ausstellung-care-stat__grid {
     grid-template-columns: 1fr;
   }
 
-  .iss-ausstellung-skin-care .iss-ausstellung-hero__media-col {
+  .iss-ausstellung-skin-care .iss-ausstellung-hero__media {
     min-height: 58vh;
   }
 
-  .iss-ausstellung-skin-care .iss-ausstellung-hero__copy-col {
+  .iss-ausstellung-skin-care .iss-ausstellung-hero__shell {
     padding-top: 5.5rem;
   }
 

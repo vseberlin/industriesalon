@@ -4,6 +4,19 @@ This file records durable project changes. Keep it compact: current state belong
 `handoff_CURRENT.md`, active follow-up in `TODO.md`, and detailed investigation can
 be recovered from Git history.
 
+## 2026-06-23
+
+- Added a footer-oriented `register` layout variant for graph related-content rails and switched the single-Ausstellung tail to it.
+- Replaced the single-Ausstellung tail from Ausstellung-only `iss/related-cards` to graph-backed mixed `iss/related-content`, and synced the local DB-backed template override.
+- Moved Ausstellung practical metadata into the single-Ausstellung hero:
+  - relocated the existing `iss/content-meta` block from the post-content intro slot into the hero overlay;
+  - styled the existing `iss-info-panel--skin-aside` output as a compact dark hero facts rail without duplicating metadata markup;
+  - synced the local DB-backed `single-ausstellung` template override to match the file template for immediate local review.
+- Exposed Ausstellung editorial skin assignment in the custom composition editor:
+  - added an `iss_editorial_format_skins` hook so the theme can provide allowed skins for a format;
+  - registered the current Ausstellung skins from the theme owner;
+  - added a single `Darstellung` selector that writes the document `skin` while keeping layout, variant, and section-role controls out of the editor.
+
 ## 2026-06-22
 
 - Added phone/camera capture to the one-off Event Drop Uppy intake snapshot:

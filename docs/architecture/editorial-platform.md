@@ -33,11 +33,12 @@ legacy `post_content` path.
 Unresolved references are omitted from public output and shown as placeholders
 in previews for editors.
 
-Skin and layout decisions are not editor controls. A document stores a known
-skin slug, but the main canvas does not expose skin, variant, layout, or section
-role fields. For `ausstellung` Phase 3, the durable surface is
-`gesture x skin = treatment`: section `type` carries editorial intent, while the
-theme chooses the visual treatment for that gesture inside the active skin. The
+Skin assignment is an editor-visible format-level control because the document
+must declare which theme-owned treatment it is using. Layout, variant, and
+section-role decisions are not editor controls. For `ausstellung` Phase 3, the
+durable surface is `gesture x skin = treatment`: section `type` carries
+editorial intent, while the theme chooses the visual treatment for that gesture
+inside the active skin. The
 first named skin is `frauen-im-werk`. Optional theme partials resolve by
 `sections/{skin}/part-{type}.php`, then `sections/part-{type}.php` before
 falling back to the generic renderer. The generic Ausstellung shell stays in
