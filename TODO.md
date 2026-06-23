@@ -5,7 +5,8 @@ Immediate executable work only. Larger future programs live in `docs/project/bac
 ## Active Today
 
 - Editorial platform next slice: curator-review `Frauen im Werk für Fernmeldewesen` in the custom editor with the `frauen-im-werk` JSON skin enabled locally. Clean up gesture choices, kickers, section text, captions, archive-object choices, and source/source-link details, then verify preview/frontend output.
-- Live-test the new `typografisch`, `chronik`, and `industrieakte` Ausstellung JSON skins against real archival-source exhibition candidates before treating them as production-ready; `industrieakte` should be tested with a technical/industrial series such as the WF/Röhren material.
+- Apply/review `ops/sql/2026-06-23-roehren-republik-editorial-json.sql` on staging and curator-check the `Röhren für die Republik` facts, especially the derived Leningrad T2 tube totals, before production use.
+- Continue live-testing `typografisch` and `chronik` Ausstellung JSON skins against real archival-source exhibition candidates before treating them as production-ready.
 - Keep Ausstellung layout/gesture decisions out of editor controls while exposing only document skin assignment through `Darstellung`: editors add, edit, save, and reorder gesture sections; the theme renders each `gesture x skin` treatment through the universal section slots and dedicated skin CSS such as `themes/industriesalon/assets/css/skins/ausstellung-frauen-im-werk.css`.
 - Before transferring the `Frauen im Werk` JSON pilot elsewhere, apply/review `ops/sql/2026-06-22-frauen-im-werk-editorial-json.sql`; the current skin assignment and section document are DB-backed local state.
 - Review the `Kinder im Werk` JSON conversion before transfer; use `ops/sql/2026-06-23-kinder-im-werk-editorial-json.sql` for the DB-backed local document and enabled flag.

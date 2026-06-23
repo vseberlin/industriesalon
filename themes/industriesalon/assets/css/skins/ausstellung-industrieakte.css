@@ -320,8 +320,13 @@
 }
 
 .iss-ausstellung-editorial--skin-industrieakte .iss-ausstellung-editorial__section--layout-stat > .iss-container {
+  width: min(100% - (2 * var(--iss-ausstellung-pad-x)), 88rem);
   padding: clamp(1.25rem, 3vw, 2rem);
   border: 1px solid var(--iss-ausstellung-industrie-line-light);
+}
+
+.iss-ausstellung-editorial--skin-industrieakte .iss-ausstellung-editorial__section--layout-stat .iss-ausstellung-section__copy {
+  grid-template-columns: minmax(0, 1fr);
 }
 
 .iss-ausstellung-editorial--skin-industrieakte .iss-ausstellung-editorial__section--layout-stat .iss-ausstellung-section__title,
@@ -336,18 +341,18 @@
 }
 
 .iss-ausstellung-editorial--skin-industrieakte .iss-ausstellung-editorial__section--layout-stat .iss-ausstellung-editorial__body {
-  display: flex;
-  flex-wrap: wrap;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 15rem), 1fr));
+  max-width: none;
   gap: 0;
   color: rgba(242, 237, 223, 0.72);
 }
 
 .iss-ausstellung-editorial--skin-industrieakte .iss-ausstellung-editorial__section--layout-stat .iss-ausstellung-editorial__body p {
-  max-width: 18ch;
-  min-width: min(100%, 13rem);
   margin: 0;
   padding: 1rem;
   border: 1px solid var(--iss-ausstellung-industrie-line-light);
+  min-width: 0;
 }
 
 .iss-ausstellung-editorial--skin-industrieakte .iss-ausstellung-editorial__section--layout-stat .iss-ausstellung-editorial__body strong {

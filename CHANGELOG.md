@@ -6,6 +6,11 @@ be recovered from Git history.
 
 ## 2026-06-23
 
+- Added the compressed `Röhren für die Republik` Ausstellung JSON candidate:
+  - saved and enabled the local `_iss_editorial_ausstellung` document for post `21108` with the `industrieakte` skin and 16 sections;
+  - added source-backed fact-scale sections for Leningrad T2, research-file gaps, and the tube-to-semiconductor transition;
+  - wrote paired transfer SQL at `ops/sql/2026-06-23-roehren-republik-editorial-json.sql`;
+  - widened `industrieakte` `massstab` facts into a responsive grid for desktop/mobile review.
 - Converted local `Kinder im Werk` to a curated Ausstellung JSON document:
   - registered the `kinder-im-werk` JSON skin and added its theme-owned stylesheet;
   - saved and enabled the local `_iss_editorial_ausstellung` document for post `26381`;
