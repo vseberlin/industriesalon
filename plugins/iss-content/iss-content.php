@@ -99,6 +99,10 @@ add_action('untrashed_post', 'iss_content_model_maybe_flush_landing_routes');
 add_action('before_delete_post', 'iss_content_model_maybe_flush_landing_routes');
 
 require_once ISS_CONTENT_MODEL_PATH . 'includes/post-types.php';
+require_once ISS_CONTENT_MODEL_PATH . 'includes/veranstaltungen-registry.php';
+require_once ISS_CONTENT_MODEL_PATH . 'includes/veranstaltungen-facts.php';
+require_once ISS_CONTENT_MODEL_PATH . 'includes/veranstaltungen-repository.php';
+require_once ISS_CONTENT_MODEL_PATH . 'includes/veranstaltungen-content.php';
 require_once ISS_CONTENT_MODEL_PATH . 'includes/meta.php';
 require_once ISS_CONTENT_MODEL_PATH . 'includes/admin.php';
 require_once ISS_CONTENT_MODEL_PATH . 'includes/acf.php';
@@ -108,6 +112,10 @@ require_once ISS_CONTENT_MODEL_PATH . 'includes/ausstellung-type-sync.php';
 require_once ISS_CONTENT_MODEL_PATH . 'includes/videos.php';
 require_once ISS_CONTENT_MODEL_PATH . 'includes/video-import.php';
 require_once ISS_CONTENT_MODEL_PATH . 'modules/tours/bootstrap.php';
+
+if (defined('WP_CLI') && WP_CLI) {
+    require_once ISS_CONTENT_MODEL_PATH . 'includes/veranstaltungen-cli.php';
+}
 
 register_activation_hook(__FILE__, function () {
     iss_content_model_register_post_types();

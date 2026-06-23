@@ -6,6 +6,76 @@ be recovered from Git history.
 
 ## 2026-06-23
 
+- Completed the local Veranstaltung entity migration checkpoint:
+  - curated all remaining Veranstaltung posts so `wp iss-content veranstaltungen-dry-run` now reports `25 safe`, `0 review`, `0 blocked`, and `25 converted`;
+  - normalized missing or partial date facts using explicit curator input where needed and recorded inference notes on fallback dates;
+  - moved post `25763` from `veranstaltung` to `fuehrung` as `Sonderführung` with on-demand Führung meta;
+  - added the transfer artifact `ops/sql/2026-06-23-veranstaltungen-entity-migration.sql` for the source-state post/postmeta/taxonomy changes, with occurrence and graph/search projections regenerated after import.
+- Added the seventeenth Veranstaltung entity-registry slice:
+  - registered the `_iss_content_json` structured-content shell and hidden `_iss_skin_override` meta for Veranstaltungen;
+  - added `wp iss-content veranstaltungen-content-audit` / `wp iss-content-model veranstaltungen-content-audit`;
+  - kept stored documents optional and read-only for now, with no content import or renderer switch.
+- Added the sixteenth Veranstaltung entity-registry slice:
+  - added `wp iss-content veranstaltungen-query-audit` / `wp iss-content-model veranstaltungen-query-audit`;
+  - moved the theme menu's next-event data lookup behind the `iss-content` Veranstaltung repository;
+  - made raw Veranstaltung post queries fail the audit outside the approved repository and curation tooling.
+- Added the fifteenth Veranstaltung entity-registry slice:
+  - registered normalized query fact meta for `_iss_datetime_start`, `_iss_datetime_end`, and `_iss_published_at`;
+  - added save/set-entity synchronization from existing Veranstaltung date facts;
+  - made required-fact validation prefer normalized facts while preserving legacy fallbacks.
+- Added the fourteenth Veranstaltung entity-registry slice:
+  - added a shape-aware Veranstaltung repository facade for upcoming, archive, reports, homepage teasers, related, and menu-event lookups;
+  - filtered converted posts by `_iss_entity_key` through registry-derived primary surfaces;
+  - kept unconverted legacy posts on the existing menu fallback only, so public behavior remains stable until curation.
+- Added the thirteenth Veranstaltung entity-registry slice:
+  - expanded the Veranstaltung registry with per-entity domain, post type, icon, and field contracts;
+  - validated field names, field types, relation targets, and required shape facts in `veranstaltungen-registry-check`;
+  - kept the new contract read-only for future generated authoring, with no renderer or content migration change.
+- Added the twelfth Veranstaltung entity-registry slice:
+  - taught the graph offer contract to prefer `_iss_entity_key` when set on Veranstaltungen;
+  - added an `event_report` offer subtype for `report.rueckblick`;
+  - kept unset legacy Veranstaltungen on the existing `_iss_event_layout` / `_iss_event_format` subtype fallback.
+- Added the eleventh Veranstaltung entity-registry slice:
+  - added `wp iss-content veranstaltungen-registry-check` / `wp iss-content-model veranstaltungen-registry-check`;
+  - exposed a standalone schema/entity/shape validation command for CI, staging, and pre-renderer checks.
+- Added the tenth Veranstaltung entity-registry slice:
+  - added `--status`, `--entity`, and `--missing-facts` filters to `veranstaltungen-dry-run`;
+  - made review, blocked, converted, and entity-specific curation queues available without exporting the full audit table.
+- Added the ninth Veranstaltung entity-registry slice:
+  - extended `veranstaltungen-dry-run` table and JSON output with a guarded `set_command` recommendation per candidate;
+  - kept generated commands dry-run by default by omitting `--yes`, so copied recommendations still validate before writing.
+- Added the eighth Veranstaltung entity-registry slice:
+  - exposed selected Veranstaltung `Typ` on singular event pages as stable theme body classes;
+  - added `iss-event-entity-*`, `iss-event-shape-*`, and `iss-event-surface-*` only when `_iss_entity_key` is set;
+  - left unset legacy posts on the existing layout/scheme/format body-class contract with no CSS or renderer changes.
+- Added the seventh Veranstaltung entity-registry slice:
+  - added a read-only legacy-derived Typ suggestion inside the Veranstaltung metabox;
+  - centralized the suggestion helper so the editor hint and `veranstaltungen-dry-run` share the same confidence and conflict logic;
+  - kept suggestions non-authoritative: editors still choose and save `_iss_entity_key` deliberately.
+- Added the sixth Veranstaltung entity-registry slice:
+  - added a `Typ` column to the Veranstaltung admin list table;
+  - added a list-table filter for concrete Veranstaltung entity keys and unset posts;
+  - kept the filter read-only over `_iss_entity_key`, giving editors a curation dashboard without changing public rendering.
+- Added the fifth Veranstaltung entity-registry slice:
+  - centralized Veranstaltung required-fact checks in the registry helpers;
+  - made the Veranstaltung status box shape-aware once `Typ` is set, so event types check their date facts while `report.rueckblick` checks publication instead of event start;
+  - switched the curation CLI to the same required-fact helper used by the editor status.
+- Added the fourth Veranstaltung entity-registry slice:
+  - added `wp iss-content veranstaltungen-set-entity` / `wp iss-content-model veranstaltungen-set-entity` as the controlled write path for curated `_iss_entity_key` assignment;
+  - kept the command dry-run by default, requiring `--yes` to write and warning/blocking on missing required facts unless `--force` is explicit;
+  - wired successful writes to `iss_occurrences_sync_source()` when available, so setting `report.rueckblick` clears event occurrence rows through the normal provider path.
+- Added the third Veranstaltung entity-registry slice:
+  - taught the Veranstaltung occurrence provider to honor `_iss_entity_key` once set;
+  - kept unset legacy Veranstaltungen on the existing `iss_programme_enabled` occurrence path;
+  - made `report.rueckblick` produce no event occurrence, so saving a converted Rueckblick clears it from upcoming timeline surfaces without changing the single-page renderer.
+- Added the second Veranstaltung entity-registry slice:
+  - exposed `_iss_entity_key` as an editor-visible `Typ` radio group in the existing Veranstaltung metabox;
+  - saved the semantic type independently from legacy `_iss_event_layout`, `_iss_event_format`, and `_iss_event_scheme`;
+  - added the type to the Veranstaltung status box while leaving current rendering, occurrence sync, and timeline behavior unchanged.
+- Added the first Veranstaltung entity-registry slice:
+  - registered a read-only Phase 1 entity/shape contract in `iss-content` with `_iss_entity_key` validation but no content migration;
+  - added `wp iss-content veranstaltungen-dry-run` / `wp iss-content-model veranstaltungen-dry-run` to map legacy layout/format metadata to candidate event/report entities;
+  - verified the local dry-run result: 26 Veranstaltungen, 0 safe auto-conversions, 15 review candidates, 11 blocked by missing `iss_start_datetime`.
 - Added the compressed `Röhren für die Republik` Ausstellung JSON candidate:
   - saved and enabled the local `_iss_editorial_ausstellung` document for post `21108` with the `industrieakte` skin and 16 sections;
   - added source-backed fact-scale sections for Leningrad T2, research-file gaps, and the tube-to-semiconductor transition;

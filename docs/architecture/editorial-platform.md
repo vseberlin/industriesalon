@@ -78,6 +78,120 @@ OrderedFormat candidate:
 Use `--posts=<slug-or-id,slug-or-id>` to target a different Ausstellung list and
 `--format=json` when the output should be machine-readable.
 
+For Veranstaltungen, the first Phase 1 slice lives in `iss-content`, not in a
+new parallel event plugin. `plugins/iss-content/includes/veranstaltungen-registry.php`
+defines the initial entity/shape contract for `_iss_entity_key`, and
+`wp iss-content veranstaltungen-dry-run` audits existing posts without writing
+content or switching renderers. The dry-run maps current `_iss_event_layout` and
+`_iss_event_format` values to candidate entities, validates required query facts
+such as `iss_start_datetime`, and marks rows as `safe`, `review`, or `blocked`.
+This slice deliberately leaves the current editor, occurrence sync, timeline
+rendering, and legacy single-template rendering unchanged.
+
+The second Veranstaltung slice exposes `_iss_entity_key` in the existing
+Veranstaltung metabox as the editor-visible `Typ` choice. It is saved
+independently from the old `_iss_event_layout`, `_iss_event_format`, and
+`_iss_event_scheme` fields, which remain in place only to keep the current
+theme renderer stable during migration. A set `Typ` is therefore the semantic
+future contract, not yet the rendering switch.
+
+The third Veranstaltung slice makes the occurrence provider shape-aware for
+posts that already have `_iss_entity_key`. Unset legacy Veranstaltungen continue
+to project through `iss_programme_enabled` and the existing date facts. Once a
+post is explicitly set to `report.rueckblick`, the provider returns no event
+occurrence, so a normal save/sync removes that post from upcoming timeline
+queries while preserving the legacy single-page renderer.
+
+The fourth Veranstaltung slice adds the controlled curation write path:
+`wp iss-content veranstaltungen-set-entity --post=<id-or-slug> --entity=<key>`.
+It is dry-run by default and requires `--yes` to write `_iss_entity_key`. The
+command validates required query facts, blocks unsafe writes unless `--force` is
+explicit, and calls `iss_occurrences_sync_source()` after a successful write when
+the occurrence plugin is active. This is the preferred path for scripted/manual
+conversion instead of ad hoc postmeta edits.
+
+The fifth Veranstaltung slice centralizes required-fact checks in the registry.
+The existing Veranstaltung status box now reads the selected `Typ`: unset legacy
+posts still show the old start-date expectation, event entities check their
+timeline facts, and `report.rueckblick` checks publication state instead of
+requiring an event start. The CLI uses the same helper so editor feedback and
+scripted curation fail for the same reasons.
+
+The sixth Veranstaltung slice adds a curation dashboard to the WordPress admin
+list table: a `Typ` column plus filters for each concrete `_iss_entity_key` and
+for unset posts. This remains a read-only admin affordance over the semantic
+type field; it does not change rendering, occurrence rules, or migration state.
+
+The seventh Veranstaltung slice surfaces the legacy-derived suggestion directly
+in the Veranstaltung metabox. The suggestion helper is shared with
+`veranstaltungen-dry-run`, including review downgrades such as `layout=fest`
+conflicting with a non-festival candidate. The hint is read-only; editors still
+choose and save `_iss_entity_key` deliberately.
+
+The eighth Veranstaltung slice exposes the selected semantic `Typ` to the theme
+as stable body classes on singular Veranstaltung pages:
+`iss-event-entity-*`, `iss-event-shape-*`, and `iss-event-surface-*`. These
+classes appear only when `_iss_entity_key` is set. Unset legacy posts continue
+to emit only the existing layout/scheme/format classes. No CSS or renderer
+branch is introduced in this slice.
+
+The ninth Veranstaltung slice makes the dry-run report directly actionable by
+adding a `set_command` field to table and JSON output. The generated command
+omits `--yes`, so copied recommendations still run through the guarded dry-run
+path before a curator intentionally applies them.
+
+The tenth Veranstaltung slice turns the dry-run report into a queue tool:
+`--status=<safe|review|blocked|converted>`, `--entity=<entity-key>`, and
+`--missing-facts` filter the computed audit rows after validation. This keeps
+batch review focused while preserving the same read-only audit logic.
+
+The eleventh Veranstaltung slice adds the standalone registry guard
+`wp iss-content veranstaltungen-registry-check`, with the same
+`iss-content-model` alias. It validates the entity registry without scanning
+posts and is the cheap precondition check before staging, CI, or renderer work
+depends on `_iss_entity_key`.
+
+The twelfth Veranstaltung slice connects the curated `Typ` to the graph/search
+contract. For Veranstaltungen with `_iss_entity_key`, `iss-graph` now derives
+the public offer subtype from that semantic key instead of the legacy
+layout/format fields. `report.rueckblick` maps to a dedicated `event_report`
+offer subtype, while unset legacy posts keep the existing
+`_iss_event_layout` / `_iss_event_format` fallback.
+
+The thirteenth Veranstaltung slice fills in the authoring-facing part of the
+registry contract without exposing a new editor. Every entity now declares its
+domain, post type, icon, and query/editor field list. The registry check
+validates field types, relation targets, and that shape-required facts are
+present and marked required on each entity. This is the future generated-form
+contract; current legacy rendering and content storage remain unchanged.
+
+The fourteenth through seventeenth Veranstaltung slices complete the mechanical
+pre-editor layer. `iss-content` now exposes a shape-aware read repository for
+upcoming events, archives, reports, homepage teasers, related items, and the
+menu next-event lookup. Normalized query facts are registered as
+`_iss_datetime_start`, `_iss_datetime_end`, and `_iss_published_at`, with
+save/set-entity synchronization from the existing legacy date fields. A raw
+query audit prevents new direct `veranstaltung` post queries outside the
+approved repository/curation tooling. `_iss_content_json` and hidden
+`_iss_skin_override` are registered as the future structured document shell,
+guarded by `veranstaltungen-content-audit`, but no real content document is
+generated yet.
+
+The local curation pass has now assigned `_iss_entity_key` to every remaining
+Veranstaltung and moved post `25763` to `fuehrung` as `Sonderführung`.
+`wp iss-content veranstaltungen-dry-run` reports `25 safe`, `0 review`,
+`0 blocked`, and `25 converted`. The portable source-state artifact is
+`ops/sql/2026-06-23-veranstaltungen-entity-migration.sql`; occurrence rows and
+graph/search rows remain projections and should be regenerated on the target
+after SQL import.
+
+The next Veranstaltung slice is the structured JSON editor. Start from the
+registered `_iss_content_json` shell and registry-declared entity fields rather
+than adding a parallel event editor. The first version should be entity-aware
+for required/optional sections, keep the legacy body as the migration source,
+store reviewed structure in `_iss_content_json`, and avoid switching the public
+renderer until a real post proves save/reload, audit, and fallback behavior.
+
 `wp iss-editorial ausstellung-import-candidate --post=<slug-or-id>` writes the
 same conservative candidate into `_iss_editorial_ausstellung`, clears the
 autosave meta, and forces `_iss_editorial_enabled_ausstellung` to `0`. It

@@ -4,6 +4,17 @@ Immediate executable work only. Larger future programs live in `docs/project/bac
 
 ## Active Today
 
+- Veranstaltung JSON editor next slice: build the first `_iss_content_json`
+  authoring pass on top of the completed entity migration. Use the existing
+  `iss-content` registry/field contract, keep legacy `post_content` as the
+  source/fallback, prove save/reload and `veranstaltungen-content-audit`, and do
+  not switch public rendering until one real event document is curator-reviewed.
+- Before transferring the local Veranstaltung entity migration elsewhere, apply
+  `ops/sql/2026-06-23-veranstaltungen-entity-migration.sql`, then run
+  `wp iss-occurrences sync`, `wp iss-graph sync-content`,
+  `wp iss-graph sync-search`, `wp iss-content veranstaltungen-dry-run`,
+  `wp iss-content veranstaltungen-repository-check`, and
+  `wp iss-content tours-drift-check`.
 - Editorial platform next slice: curator-review `Frauen im Werk für Fernmeldewesen` in the custom editor with the `frauen-im-werk` JSON skin enabled locally. Clean up gesture choices, kickers, section text, captions, archive-object choices, and source/source-link details, then verify preview/frontend output.
 - Apply/review `ops/sql/2026-06-23-roehren-republik-editorial-json.sql` on staging and curator-check the `Röhren für die Republik` facts, especially the derived Leningrad T2 tube totals, before production use.
 - Continue live-testing `typografisch` and `chronik` Ausstellung JSON skins against real archival-source exhibition candidates before treating them as production-ready.

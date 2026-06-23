@@ -1096,6 +1096,29 @@ function industriesalon_add_event_layout_body_class(array $classes): array
     $classes[] = 'iss-event-scheme-' . $scheme;
     $classes[] = 'iss-event-format-' . $format;
 
+    $entity_key = '';
+    if (function_exists('iss_content_model_sanitize_veranstaltung_entity_key')) {
+        $entity_key = iss_content_model_sanitize_veranstaltung_entity_key((string) get_post_meta($post_id, '_iss_entity_key', true));
+    }
+
+    if ($entity_key !== '') {
+        $classes[] = 'iss-event-entity-' . sanitize_html_class(str_replace('.', '-', $entity_key));
+
+        if (function_exists('iss_content_model_veranstaltung_entity_shape')) {
+            $shape = iss_content_model_veranstaltung_entity_shape($entity_key);
+            if ($shape !== '') {
+                $classes[] = 'iss-event-shape-' . sanitize_html_class($shape);
+            }
+        }
+
+        if (function_exists('iss_content_model_veranstaltung_entity_primary_surface')) {
+            $surface = iss_content_model_veranstaltung_entity_primary_surface($entity_key);
+            if ($surface !== '') {
+                $classes[] = 'iss-event-surface-' . sanitize_html_class($surface);
+            }
+        }
+    }
+
     return $classes;
 }
 add_filter('body_class', 'industriesalon_add_event_layout_body_class');
@@ -1898,26 +1921,11 @@ add_action('iss_fuehrungen_assets_enqueued', 'industriesalon_enqueue_fuehrungen_
 
 function industriesalon_get_next_menu_event(): ?WP_Post
 {
-    $events = get_posts([
-        'post_type' => 'veranstaltung',
-        'post_status' => 'publish',
-        'posts_per_page' => 1,
-        'meta_key' => 'iss_start_datetime', // phpcs:ignore WordPress.DB.SlowDBQuery.slow_db_query_meta_key -- Menu status reads one upcoming event from the existing event date contract.
-        'orderby' => 'meta_value',
-        'order' => 'ASC',
-        'meta_query' => [ // phpcs:ignore WordPress.DB.SlowDBQuery.slow_db_query_meta_query -- Menu status reads one upcoming event from the existing event date contract.
-            [
-                'key' => 'iss_start_datetime',
-                'value' => current_time('mysql'),
-                'compare' => '>=',
-                'type' => 'DATETIME',
-            ],
-        ],
-        'no_found_rows' => true,
-        'ignore_sticky_posts' => true,
-    ]);
+    if (!function_exists('iss_content_model_veranstaltungen_next_menu_event')) {
+        return null;
+    }
 
-    return $events[0] ?? null;
+    return iss_content_model_veranstaltungen_next_menu_event();
 }
 
 function industriesalon_format_menu_event_datetime(WP_Post $event): string

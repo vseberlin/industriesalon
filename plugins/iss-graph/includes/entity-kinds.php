@@ -83,7 +83,7 @@ function iss_graph_get_entity_kind_registry(): array
             'aliases' => ['veranstaltung'],
             'contract_kind' => 'offer',
             'default_subtype' => 'event',
-            'subtypes' => ['event', 'lecture', 'reading', 'discussion', 'repair_cafe', 'concert', 'festival', 'workshop', 'school_program', 'presentation', 'special_opening'],
+            'subtypes' => ['event', 'event_report', 'lecture', 'reading', 'discussion', 'repair_cafe', 'concert', 'festival', 'workshop', 'school_program', 'presentation', 'special_opening'],
             'public' => true,
         ],
         'project' => [
@@ -367,6 +367,11 @@ function iss_graph_get_offer_subtype_registry(): array
             'public_label' => __('Veranstaltung', 'iss-graph'),
             'source' => '_iss_event_format:general',
         ],
+        'event_report' => [
+            'label' => 'Event report',
+            'public_label' => __('Rückblick', 'iss-graph'),
+            'source' => '_iss_entity_key:report.rueckblick',
+        ],
         'lecture' => [
             'label' => 'Lecture',
             'public_label' => __('Vortrag', 'iss-graph'),
@@ -502,6 +507,47 @@ function iss_graph_normalize_veranstaltung_layout_for_offer($value): string
     return in_array($value, ['standard', 'compact', 'fest', 'long'], true) ? $value : 'standard';
 }
 
+function iss_graph_normalize_veranstaltung_entity_key_for_offer($value): string
+{
+    if (function_exists('iss_content_model_sanitize_veranstaltung_entity_key')) {
+        return iss_content_model_sanitize_veranstaltung_entity_key((string) $value);
+    }
+
+    $value = sanitize_key(str_replace('.', '-', (string) $value));
+    $value = str_replace('-', '.', $value);
+
+    return in_array($value, array_keys(iss_graph_get_veranstaltung_entity_offer_subtype_map()), true) ? $value : '';
+}
+
+function iss_graph_get_veranstaltung_entity_offer_subtype_map(): array
+{
+    return [
+        'event.general' => 'event',
+        'event.vortrag' => 'lecture',
+        'event.gespraech' => 'discussion',
+        'event.lesung' => 'reading',
+        'event.praesentation' => 'presentation',
+        'event.workshop' => 'workshop',
+        'event.konzert' => 'concert',
+        'event.school_program' => 'school_program',
+        'event.festival' => 'festival',
+        'event.repair_cafe' => 'repair_cafe',
+        'report.rueckblick' => 'event_report',
+    ];
+}
+
+function iss_graph_get_offer_subtype_for_veranstaltung_entity_key(string $entity_key): string
+{
+    $entity_key = iss_graph_normalize_veranstaltung_entity_key_for_offer($entity_key);
+    if ($entity_key === '') {
+        return '';
+    }
+
+    $map = iss_graph_get_veranstaltung_entity_offer_subtype_map();
+
+    return sanitize_key((string) ($map[$entity_key] ?? ''));
+}
+
 function iss_graph_get_offer_contract_for_post($post): array
 {
     $post = $post instanceof WP_Post ? $post : get_post(absint($post));
@@ -520,6 +566,16 @@ function iss_graph_get_offer_contract_for_post($post): array
 
     if ($post_type !== 'veranstaltung') {
         return [];
+    }
+
+    $entity_key = iss_graph_normalize_veranstaltung_entity_key_for_offer(get_post_meta((int) $post->ID, '_iss_entity_key', true));
+    $entity_subtype = $entity_key !== '' ? iss_graph_get_offer_subtype_for_veranstaltung_entity_key($entity_key) : '';
+    if ($entity_subtype !== '') {
+        return [
+            'kind' => 'offer',
+            'subtype' => $entity_subtype,
+            'subtype_source' => '_iss_entity_key:' . $entity_key,
+        ];
     }
 
     $layout = iss_graph_normalize_veranstaltung_layout_for_offer(get_post_meta((int) $post->ID, '_iss_event_layout', true));

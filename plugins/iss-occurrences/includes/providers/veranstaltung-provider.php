@@ -16,6 +16,11 @@ final class ISS_Occurrences_VeranstaltungProvider extends ISS_Occurrences_Abstra
         return 'event';
     }
 
+    public function is_calendar_enabled(WP_Post $post): bool
+    {
+        return parent::is_calendar_enabled($post) && $this->entity_allows_calendar($post);
+    }
+
     public function get_start_end_for_post(WP_Post $post): array
     {
         $post_id = (int) $post->ID;
@@ -29,5 +34,27 @@ final class ISS_Occurrences_VeranstaltungProvider extends ISS_Occurrences_Abstra
             'is_open_ended' => false,
             'date_source' => $start['date_source'],
         ];
+    }
+
+    private function entity_allows_calendar(WP_Post $post): bool
+    {
+        $entity_key = trim((string) get_post_meta((int) $post->ID, '_iss_entity_key', true));
+        if ($entity_key === '') {
+            return true;
+        }
+
+        if (function_exists('iss_content_model_sanitize_veranstaltung_entity_key')) {
+            $entity_key = iss_content_model_sanitize_veranstaltung_entity_key($entity_key);
+        }
+
+        if ($entity_key === '') {
+            return true;
+        }
+
+        if (function_exists('iss_content_model_veranstaltung_entity_primary_surface')) {
+            return iss_content_model_veranstaltung_entity_primary_surface($entity_key) === 'timeline';
+        }
+
+        return $entity_key !== 'report.rueckblick';
     }
 }
