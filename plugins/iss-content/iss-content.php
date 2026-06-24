@@ -18,9 +18,13 @@ define('ISS_CONTENT_PATH', ISS_CONTENT_MODEL_PATH);
 define('ISS_CONTENT_MODEL_VERANSTALTUNG_POST_TYPE', 'veranstaltung');
 define('ISS_CONTENT_MODEL_AUSSTELLUNG_POST_TYPE', 'ausstellung');
 define('ISS_CONTENT_MODEL_PROJEKT_POST_TYPE', 'projekt');
+define('ISS_CONTENT_MODEL_RUECKBLICK_POST_TYPE', 'rueckblick');
 define('ISS_CONTENT_MODEL_TEAM_POST_TYPE', 'team_member');
 define('ISS_CONTENT_MODEL_VIDEO_POST_TYPE', 'video');
 define('ISS_CONTENT_MODEL_ENTITY_PROFILE_POST_TYPE', 'entity_profile');
+define('ISS_CONTENT_EDITORIAL_SETS_SCHEMA_OPTION', 'iss_content_editorial_sets_schema_version');
+define('ISS_CONTENT_EDITORIAL_SETS_SCHEMA_VERSION', '2026-06-24-editorial-sets-1');
+define('ISS_CONTENT_EDITORIAL_SETS_CAPABILITY', 'edit_editorial_sets');
 
 define('ISS_CONTENT_MODEL_TEAM_ROLE_TAXONOMY', 'team_role');
 define('ISS_CONTENT_MODEL_PROJECT_STATUS_TAXONOMY', 'project_status');
@@ -34,6 +38,7 @@ function iss_content_model_landing_route_map() {
         ISS_CONTENT_MODEL_VERANSTALTUNG_POST_TYPE => 'veranstaltungen',
         ISS_CONTENT_MODEL_AUSSTELLUNG_POST_TYPE   => 'ausstellungen',
         ISS_CONTENT_MODEL_PROJEKT_POST_TYPE       => 'projekte',
+        ISS_CONTENT_MODEL_RUECKBLICK_POST_TYPE    => 'rueckblick',
         'fuehrung'                                => 'fuehrungen',
         'publication'                             => 'publikationen',
     ];
@@ -111,7 +116,27 @@ require_once ISS_CONTENT_MODEL_PATH . 'includes/blocks.php';
 require_once ISS_CONTENT_MODEL_PATH . 'includes/ausstellung-type-sync.php';
 require_once ISS_CONTENT_MODEL_PATH . 'includes/videos.php';
 require_once ISS_CONTENT_MODEL_PATH . 'includes/video-import.php';
+require_once ISS_CONTENT_MODEL_PATH . 'includes/editorial-sets-service.php';
+require_once ISS_CONTENT_MODEL_PATH . 'includes/editorial-sets-promotion.php';
+require_once ISS_CONTENT_MODEL_PATH . 'includes/editorial-sets-rest.php';
+require_once ISS_CONTENT_MODEL_PATH . 'includes/editorial-sets-admin.php';
+require_once ISS_CONTENT_MODEL_PATH . 'includes/editorial-sets-integrations.php';
 require_once ISS_CONTENT_MODEL_PATH . 'modules/tours/bootstrap.php';
+
+function iss_content_editorial_sets_ensure_runtime_state(): void
+{
+    if (function_exists('iss_content_editorial_sets_service')) {
+        iss_content_editorial_sets_service()->maybe_install_schema();
+    }
+
+    foreach (['administrator', 'editor'] as $role_name) {
+        $role = get_role($role_name);
+        if ($role instanceof WP_Role && !$role->has_cap(ISS_CONTENT_EDITORIAL_SETS_CAPABILITY)) {
+            $role->add_cap(ISS_CONTENT_EDITORIAL_SETS_CAPABILITY);
+        }
+    }
+}
+add_action('admin_init', 'iss_content_editorial_sets_ensure_runtime_state', 5);
 
 if (defined('WP_CLI') && WP_CLI) {
     require_once ISS_CONTENT_MODEL_PATH . 'includes/veranstaltungen-cli.php';
@@ -121,6 +146,15 @@ register_activation_hook(__FILE__, function () {
     iss_content_model_register_post_types();
     if (function_exists('iss_fuehrungen_register_post_type')) {
         iss_fuehrungen_register_post_type();
+    }
+    if (function_exists('iss_content_editorial_sets_service')) {
+        iss_content_editorial_sets_service()->install_schema();
+    }
+    foreach (['administrator', 'editor'] as $role_name) {
+        $role = get_role($role_name);
+        if ($role instanceof WP_Role) {
+            $role->add_cap(ISS_CONTENT_EDITORIAL_SETS_CAPABILITY);
+        }
     }
     flush_rewrite_rules();
 });

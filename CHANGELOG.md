@@ -6,6 +6,21 @@ be recovered from Git history.
 
 ## 2026-06-24
 
+- Implemented the editorial media Sets workflow foundation from `docs/architecture/editorial-media-buckets.md`:
+  - added `iss-content` owned Set, item, context-link, and audit tables because the full SOW requires indexed queues, cross-context filters, batch review, decay sweeps, and promotion history that post meta would make fragile;
+  - added the private Intake Workbench admin surface with Set creation, media attachment, thumbnail grid, modal facts, filters, status/batch actions, context attachment, promotion, and archive-candidate marking;
+  - added explicit REST/service APIs for Set CRUD, item movement/review, context links, promotion, decay, and Event Drop attachment intake without making public renderers read raw Set state;
+  - added Event Drop incoming-file sync so successful public uploads appear as pending private Workbench items before WordPress attachment promotion, with authenticated admin previews, promotion-time Media Library import, reject quarantine/restore handling, German Workbench labels, and filename/file-metadata recovery when manifest rows are missing;
+  - added `rueckblick` as a first-class CPT with an `iss-editorial` document format, while keeping promotion into public pages limited to approved `media_refs` / `object_refs`.
+- Added a test `upload_intake` Veranstaltung gesture:
+  - exposes an editor-visible Upload-Aufruf section that renders a public CTA to `/event-drop/?event=<veranstaltung-slug>`;
+  - keeps uploaded material in the moderated intake/Set path and does not render raw uploads on public pages.
+- Normalized the local Event Drop upload frontend:
+  - mounted the committed intake interface at `/event-drop/` in Docker and added local ignored `.env` upload-code support;
+  - made the intake form honor the `event` query parameter so Veranstaltung upload CTAs prefill the target event.
+- Raised local Event Drop upload runtime limits:
+  - mounted `docker/php/uploads.ini` into the WordPress and WP-CLI containers;
+  - increased PHP upload/post limits for large moderated intake files and verified an upload above the old 2 MB default succeeds.
 - Implemented the Veranstaltung Shape + Skin cleanup:
   - added registry-derived `iss-event-shape-*`, `iss-event-skin-*`, and normalized `iss-event-entity-*` body classes for singular Veranstaltungen;
   - added concrete Vortrag, Lesung, Gespraech, Repair, and Festival skins from the shape/skin mockup, with scoped typography, sidebar, color, layout, and programme treatments while leaving undesigned event entities on the baseline treatment;

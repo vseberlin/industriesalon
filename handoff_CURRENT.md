@@ -24,24 +24,27 @@ Current checkpoint only. History belongs in `CHANGELOG.md`; active follow-up bel
 - Veranstaltung archive/homepage/calendar projections are already occurrence-backed through `industriesalon/timeline-query`; the Veranstaltung occurrence provider gates synced rows to timeline-shaped entities, so no parallel repository bridge was added for those block surfaces.
 - Normal Veranstaltung types now allow `galerie`; `galerie` is approved presentation, not raw intake. Public `galerie` sections render as a framed carousel strip using the shared neutral strip-carousel hooks in `iss-relations`.
 - `material` sections no longer render image refs. Use `material` for documents, flyers, downloads, links, archive objects, and dynamic refs; use `galerie` for promoted image refs. Post `24988` was split accordingly; replay artifact: `ops/sql/2026-06-24-veranstaltung-24988-material-gallery-split.sql`.
-- Editorial media bucket contract stub is documented in `docs/architecture/editorial-media-buckets.md`; buckets are private intake/review state and public renderers consume only promoted refs.
+- Editorial media Sets foundation is active in `iss-content`: plugin-owned Set/item/context/audit tables, private admin Workbench, REST/service APIs, status/batch actions, context links, promotion, and decay fields. Public renderers consume only promoted refs.
+- Event Drop is wired as the first Sets test path for Veranstaltungen. Local `/event-drop/` stores raw uploads under `var/event-drop-storage`, syncs raw files into the Fête Set, previews private images through authenticated admin URLs, imports approved raw uploads into the Media Library at promotion time, promotes them into Veranstaltung `galerie` media refs, and quarantines rejected raw files in `rejected/` with restore support.
+- Current local Fête Event Drop test state: Set `event-drop-fete-de-la-musique-berlin-2026` has 24 raw uploads quarantined/rejected after user testing, 4 imported WP media rows marked rejected, and 4 WordPress attachments from promotion/import testing (`26656`-`26659`) still present under `wp-content/uploads/event-drop-storage/accepted/`.
 - Existing Ausstellung JSON candidates remain DB-backed local review state; use their SQL artifacts from `TODO.md` before expecting target parity.
-- Local dirty work also includes Event Drop snapshot files plus untracked `themes/industriesalon/theme2.json` and `iss-exhibition-composition-add.md`; do not stage them unless intentionally checkpointing that work.
+- Local dirty work still includes untracked `themes/industriesalon/theme2.json` and `iss-exhibition-composition-add.md`; do not stage them unless intentionally checkpointing that unrelated work.
 
 ## Current Risk
 
 - Do not treat every `_iss_content_json` meta row as render-ready; the theme gate depends on the sanitized `iss-content` document and requires real sections.
 - Do not copy Steuerung address/opening-hours/link values into event JSON; keep central facts as dynamic refs.
-- Do not use `galerie` as unapproved dump storage; future bucket UI must stay private until items are promoted into a deliberate public gallery section.
+- Do not use `galerie` as unapproved dump storage; raw uploads must stay in private Sets until approved and promoted into a deliberate public gallery section.
+- Rejected Event Drop files are quarantined, not deleted. Automatic deletion after `decay_at` is not implemented yet; keep that as a separate follow-up after quarantine behavior is trusted.
 - Do not reintroduce Veranstaltung block-editor panels, Terminblatt block insertion, or legacy `_iss_event_layout` / `_iss_event_format` / `_iss_event_scheme` switches. Future visual variation belongs in explicit skin/template design.
 - SQL artifacts are required to move local DB-backed candidates; create a target DB backup before import and replay code before content SQL.
 
 ## Next Action
 
 - Add more Veranstaltung skins only from a concrete design. Remaining current types without distinct skins are `workshop` and `praesentation`; `rueckblick` is not currently present in the migrated set.
-- Later intake slice: implement private editorial media bucket UI from `docs/architecture/editorial-media-buckets.md`.
+- Later intake cleanup slice: add a cautious cleanup job for rejected/stale Event Drop raw files whose `decay_at` has passed, skipping retained items and logging before deletion.
 - For staging transfer, follow `ops/sql/2026-06-24-veranstaltungen-transfer-instructions.md`: deploy code first, import the full JSON artifact plus `ops/sql/2026-06-24-veranstaltungen-remove-legacy-presentation-meta.sql` and `ops/sql/2026-06-24-veranstaltung-24988-material-gallery-split.sql`, refresh occurrence/graph/search projections, then run the listed checks.
-- If Event Drop work resumes, sync `ops/event-drop/interface/index.php` to the target host snapshot intentionally.
+- If Event Drop work resumes on staging/live, sync `ops/event-drop/interface/index.php` to the active host snapshot intentionally and ensure the storage root permissions allow the web/PHP user to append the manifest.
 
 ## Verified Locally
 
@@ -58,3 +61,4 @@ Current checkpoint only. History belongs in `CHANGELOG.md`; active follow-up bel
 - `24988` hidden JSON is about 2.5 KB; `13349` media preview resolves from attachment `11408`.
 - Editorial media bucket contract stub is documentation-only and passed `git diff --check`.
 - Veranstaltung skins/gallery slice passed Docker PHP lint, targeted PHPCS/PHPStan, `wp iss-content veranstaltungen-registry-check` (`schema=1 entities=11 shapes=4 fields=47`), `wp iss-content veranstaltungen-content-audit` (`stored=25 valid=25 invalid=0`), Stylelint for `single-event.css`, `node --check` for `related-strip.js`, SQL replay for the `24988` material/gallery split (`sections=7 material_media=0 gallery=1 newline=yes`), targeted Playwright checks for Vortrag flow-media and gallery carousel behavior, and a 25-route / 50-viewport browser sweep confirming expected skin classes with no horizontal overflow.
+- Editorial Sets/Event Drop slice passed Docker PHP lint, targeted PHPCS/PHPStan, ESLint for the Workbench JS, REST readbacks for Sets/items/promote targets, authenticated preview URL checks, local upload smokes above the old 2 MB cap, reject/restore file-move tests (`incoming` -> `rejected` -> `incoming`), and final Fête storage readback (`24` raw files in `rejected`, `0` in `incoming`).

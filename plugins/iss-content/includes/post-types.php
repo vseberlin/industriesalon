@@ -64,6 +64,24 @@ function iss_content_model_register_post_types() {
         'taxonomies' => ['category', 'post_tag', ISS_CONTENT_MODEL_PROJECT_STATUS_TAXONOMY],
     ]);
 
+    register_post_type(ISS_CONTENT_MODEL_RUECKBLICK_POST_TYPE, [
+        'labels' => [
+            'name' => __('Rueckblicke', 'iss-content-model'),
+            'singular_name' => __('Rueckblick', 'iss-content-model'),
+            'menu_name' => __('Rueckblicke', 'iss-content-model'),
+            'add_new_item' => __('Neuen Rueckblick anlegen', 'iss-content-model'),
+            'edit_item' => __('Rueckblick bearbeiten', 'iss-content-model'),
+        ],
+        'public' => true,
+        'show_in_rest' => true,
+        'has_archive' => true,
+        'rewrite' => ['slug' => 'rueckblick', 'with_front' => false],
+        'menu_position' => 24,
+        'menu_icon' => 'dashicons-format-gallery',
+        'supports' => ['title', 'excerpt', 'thumbnail', 'revisions', 'page-attributes', 'custom-fields'],
+        'taxonomies' => ['category', 'post_tag', ISS_CONTENT_MODEL_TOPIC_TAXONOMY],
+    ]);
+
     register_post_type(ISS_CONTENT_MODEL_TEAM_POST_TYPE, [
         'labels' => [
             'name' => __('Team', 'iss-content-model'),
@@ -177,6 +195,7 @@ function iss_content_model_register_post_types() {
         ISS_CONTENT_MODEL_VERANSTALTUNG_POST_TYPE,
         ISS_CONTENT_MODEL_AUSSTELLUNG_POST_TYPE,
         ISS_CONTENT_MODEL_PROJEKT_POST_TYPE,
+        ISS_CONTENT_MODEL_RUECKBLICK_POST_TYPE,
     ], [
         'labels' => [
             'name' => __('Themen', 'iss-content-model'),

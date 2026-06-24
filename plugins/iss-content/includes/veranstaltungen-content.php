@@ -60,6 +60,11 @@ function iss_content_model_veranstaltung_content_gestures(): array
             'description' => __('Hinweise auf Quellen, Downloads, Links oder Begleitangebote.', 'iss-content-model'),
             'supports' => ['kicker', 'title', 'body', 'items', 'object_refs', 'dynamic_refs'],
         ],
+        'upload_intake' => [
+            'label' => __('Upload-Aufruf', 'iss-content-model'),
+            'description' => __('Oeffentlicher Aufruf zum Hochladen von Material in den moderierten Intake.', 'iss-content-model'),
+            'supports' => ['kicker', 'title', 'body', 'items'],
+        ],
         'galerie' => [
             'label' => __('Galerie', 'iss-content-model'),
             'description' => __('Bildstrecke aus Medienbibliothek oder spaeterem Upload-Intake.', 'iss-content-model'),

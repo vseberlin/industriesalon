@@ -71,6 +71,36 @@ function iss_content_model_register_editorial_formats(array $formats): array
         ],
     ];
 
+    $formats['rueckblick'] = [
+        'label' => __('Rueckblick', 'iss-content-model'),
+        'base' => 'ordered',
+        'post_types' => [ISS_CONTENT_MODEL_RUECKBLICK_POST_TYPE],
+        'default_skin' => 'standard',
+        'default_variant' => 'standard',
+        'sections' => [
+            'intro' => [
+                'label' => __('Intro', 'iss-content-model'),
+                'description' => __('Post-event opening and summary.', 'iss-content-model'),
+                'supports' => ['media_refs'],
+            ],
+            'bericht' => [
+                'label' => __('Bericht', 'iss-content-model'),
+                'description' => __('Curated report text.', 'iss-content-model'),
+                'supports' => ['media_refs', 'object_refs'],
+            ],
+            'bildstrecke' => [
+                'label' => __('Bildstrecke', 'iss-content-model'),
+                'description' => __('Approved gallery material promoted from a Set.', 'iss-content-model'),
+                'supports' => ['media_refs', 'object_refs'],
+            ],
+            'quellen' => [
+                'label' => __('Quellen', 'iss-content-model'),
+                'description' => __('Source material that supports the report.', 'iss-content-model'),
+                'supports' => ['object_refs', 'links'],
+            ],
+        ],
+    ];
+
     return $formats;
 }
 add_filter('iss_editorial_formats', 'iss_content_model_register_editorial_formats');

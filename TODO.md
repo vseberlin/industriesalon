@@ -41,15 +41,11 @@ Immediate executable work only. Larger future programs live in `docs/project/bac
   candidate elsewhere, apply/review
   `ops/sql/2026-06-24-veranstaltung-25808-content-json.sql`; its `Ort` section
   stores only `dynamic_refs` for the centralized Steuerung address field.
-- Future media intake slice: implement the shared intake/workbench SOW in
-  `docs/architecture/editorial-media-buckets.md` as a private review and
-  promotion workflow. Use editor-facing named Sets, allow uncategorized intake
-  and context-free preparation Sets, support moving items between Sets and
-  attaching/promoting whole Sets to multiple CPT targets, keep raw uploads
-  temporary/decaying unless retained or promoted, make Rueckblick a first-class
-  promotion target, and hand archive candidates to `iss-archive` for stricter
-  curation. Do not make `galerie` an unapproved photo dump; promote only
-  approved Set items into `media_refs` / `object_refs`.
+- Future media intake cleanup slice: add a cautious cleanup job for rejected or
+  stale Event Drop raw files whose `decay_at` has passed, skipping retained
+  items. First run should log/report candidates before deleting files. The
+  current Fete test Set intentionally has all 24 raw uploads quarantined in
+  `var/event-drop-storage/rejected`.
 - Editorial platform next slice: curator-review `Frauen im Werk für Fernmeldewesen` in the custom editor with the `frauen-im-werk` JSON skin enabled locally. Clean up gesture choices, kickers, section text, captions, archive-object choices, and source/source-link details, then verify preview/frontend output.
 - Apply/review `ops/sql/2026-06-23-roehren-republik-editorial-json.sql` on staging and curator-check the `Röhren für die Republik` facts, especially the derived Leningrad T2 tube totals, before production use.
 - Continue live-testing `typografisch` and `chronik` Ausstellung JSON skins against real archival-source exhibition candidates before treating them as production-ready.

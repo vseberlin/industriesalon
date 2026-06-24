@@ -177,6 +177,46 @@ function industriesalon_render_structured_veranstaltung_dynamic_reference(array 
     return $html;
 }
 
+function industriesalon_structured_veranstaltung_upload_intake_url(int $post_id): string
+{
+    $post = $post_id > 0 ? get_post($post_id) : null;
+    if (!$post instanceof WP_Post) {
+        return '';
+    }
+
+    $args = ['event' => $post->post_name];
+    $upload_code = trim((string) getenv('EVENT_DROP_UPLOAD_CODE'));
+    if ($upload_code !== '') {
+        $args['code'] = $upload_code;
+    }
+
+    $url = add_query_arg($args, home_url('/event-drop/'));
+
+    return (string) apply_filters('industriesalon_event_upload_intake_url', $url, $post_id);
+}
+
+function industriesalon_render_structured_veranstaltung_upload_intake(array $section): string
+{
+    $post_id = (int) get_the_ID();
+    $url = industriesalon_structured_veranstaltung_upload_intake_url($post_id);
+    if ($url === '') {
+        return '';
+    }
+
+    $items = array_values(array_filter(array_map('trim', (array) ($section['items'] ?? []))));
+    $label = $items[0] ?? __('Material hochladen', 'industriesalon');
+    $note = $items[1] ?? __('Uploads werden vor der Veröffentlichung redaktionell geprüft.', 'industriesalon');
+
+    $html = '<div class="iss-event-upload-intake">';
+    $html .= '<a class="iss-event-upload-intake__button" href="' . esc_url($url) . '">' . esc_html($label) . '</a>';
+    if ($note !== '') {
+        $html .= '<p class="iss-event-upload-intake__note">' . esc_html($note) . '</p>';
+    }
+    $html .= '</div>';
+
+    return $html;
+}
+
 function industriesalon_render_structured_veranstaltung_section(array $section, string $skin = ''): string
 {
     $type = sanitize_html_class((string) ($section['type'] ?? 'kapitel'));
@@ -186,6 +226,11 @@ function industriesalon_render_structured_veranstaltung_section(array $section, 
     $quote = trim((string) ($section['quote'] ?? ''));
     $attribution = trim((string) ($section['attribution'] ?? ''));
     $items = array_values(array_filter(array_map('trim', (array) ($section['items'] ?? []))));
+    $upload_intake_html = '';
+    if ($type === 'upload_intake') {
+        $upload_intake_html = industriesalon_render_structured_veranstaltung_upload_intake($section);
+        $items = [];
+    }
 
     $media_html = '';
     foreach ((array) ($section['media_refs'] ?? []) as $reference) {
@@ -208,7 +253,7 @@ function industriesalon_render_structured_veranstaltung_section(array $section, 
         }
     }
 
-    if ($kicker === '' && $title === '' && $body === '' && $quote === '' && !$items && $media_html === '' && $refs_html === '' && $dynamic_html === '') {
+    if ($kicker === '' && $title === '' && $body === '' && $quote === '' && !$items && $media_html === '' && $refs_html === '' && $dynamic_html === '' && $upload_intake_html === '') {
         return '';
     }
 
@@ -233,6 +278,9 @@ function industriesalon_render_structured_veranstaltung_section(array $section, 
     }
     if ($type === 'galerie') {
         $section_classes[] = 'iss-event-gallery';
+    }
+    if ($type === 'upload_intake') {
+        $section_classes[] = 'iss-event-upload';
     }
 
     ob_start();
@@ -269,6 +317,9 @@ function industriesalon_render_structured_veranstaltung_section(array $section, 
         <?php endif; ?>
         <?php if ($dynamic_html !== '') : ?>
             <div class="iss-event-structured__dynamic-refs"><?php echo $dynamic_html; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- Dynamic references are escaped in the helper. ?></div>
+        <?php endif; ?>
+        <?php if ($upload_intake_html !== '') : ?>
+            <?php echo $upload_intake_html; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- Upload intake CTA is escaped in the helper. ?>
         <?php endif; ?>
         <?php if ($media_html !== '' && !$uses_flow_media && $type === 'galerie') : ?>
             <?php echo industriesalon_render_structured_veranstaltung_gallery($media_html); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- Gallery media renders through WordPress attachment helpers. ?>

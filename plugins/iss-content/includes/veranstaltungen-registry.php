@@ -63,7 +63,7 @@ function iss_content_model_veranstaltung_registry(): array
                 'shape' => 'moment',
                 'icon' => 'calendar',
                 'default_skin' => 'typografisch',
-                'allowed_gestures' => ['intro', 'kapitel', 'zitat', 'material', 'galerie'],
+                'allowed_gestures' => ['intro', 'kapitel', 'zitat', 'material', 'upload_intake', 'galerie'],
                 'fields' => $moment_fields,
             ],
             'event.vortrag' => [
@@ -73,7 +73,7 @@ function iss_content_model_veranstaltung_registry(): array
                 'shape' => 'moment',
                 'icon' => 'mic',
                 'default_skin' => 'vortrag',
-                'allowed_gestures' => ['intro', 'kapitel', 'zitat', 'material', 'galerie'],
+                'allowed_gestures' => ['intro', 'kapitel', 'zitat', 'material', 'upload_intake', 'galerie'],
                 'fields' => $moment_fields,
             ],
             'event.gespraech' => [
@@ -83,7 +83,7 @@ function iss_content_model_veranstaltung_registry(): array
                 'shape' => 'moment',
                 'icon' => 'chat',
                 'default_skin' => 'gespraech',
-                'allowed_gestures' => ['intro', 'kapitel', 'zitat', 'material', 'galerie'],
+                'allowed_gestures' => ['intro', 'kapitel', 'zitat', 'material', 'upload_intake', 'galerie'],
                 'fields' => $moment_fields,
             ],
             'event.lesung' => [
@@ -93,7 +93,7 @@ function iss_content_model_veranstaltung_registry(): array
                 'shape' => 'moment',
                 'icon' => 'book',
                 'default_skin' => 'lesung',
-                'allowed_gestures' => ['intro', 'kapitel', 'zitat', 'material', 'galerie'],
+                'allowed_gestures' => ['intro', 'kapitel', 'zitat', 'material', 'upload_intake', 'galerie'],
                 'fields' => $moment_fields,
             ],
             'event.praesentation' => [
@@ -103,7 +103,7 @@ function iss_content_model_veranstaltung_registry(): array
                 'shape' => 'moment',
                 'icon' => 'presentation',
                 'default_skin' => 'typografisch',
-                'allowed_gestures' => ['intro', 'kapitel', 'zitat', 'material', 'galerie'],
+                'allowed_gestures' => ['intro', 'kapitel', 'zitat', 'material', 'upload_intake', 'galerie'],
                 'fields' => $moment_fields,
             ],
             'event.workshop' => [
@@ -113,7 +113,7 @@ function iss_content_model_veranstaltung_registry(): array
                 'shape' => 'moment',
                 'icon' => 'tools',
                 'default_skin' => 'typografisch',
-                'allowed_gestures' => ['intro', 'kapitel', 'zitat', 'material', 'galerie'],
+                'allowed_gestures' => ['intro', 'kapitel', 'zitat', 'material', 'upload_intake', 'galerie'],
                 'fields' => $moment_fields,
             ],
             'event.konzert' => [
@@ -123,7 +123,7 @@ function iss_content_model_veranstaltung_registry(): array
                 'shape' => 'moment',
                 'icon' => 'note',
                 'default_skin' => 'typografisch',
-                'allowed_gestures' => ['intro', 'kapitel', 'zitat', 'material', 'galerie'],
+                'allowed_gestures' => ['intro', 'kapitel', 'zitat', 'material', 'upload_intake', 'galerie'],
                 'fields' => $moment_fields,
             ],
             'event.school_program' => [
@@ -133,7 +133,7 @@ function iss_content_model_veranstaltung_registry(): array
                 'shape' => 'moment',
                 'icon' => 'school',
                 'default_skin' => 'typografisch',
-                'allowed_gestures' => ['intro', 'kapitel', 'material', 'galerie'],
+                'allowed_gestures' => ['intro', 'kapitel', 'material', 'upload_intake', 'galerie'],
                 'fields' => $moment_fields,
             ],
             'event.festival' => [
@@ -143,7 +143,7 @@ function iss_content_model_veranstaltung_registry(): array
                 'shape' => 'span',
                 'icon' => 'calendar-star',
                 'default_skin' => 'festival',
-                'allowed_gestures' => ['intro', 'programm', 'kapitel', 'material', 'galerie'],
+                'allowed_gestures' => ['intro', 'programm', 'kapitel', 'material', 'upload_intake', 'galerie'],
                 'fields' => $span_fields,
             ],
             'event.repair_cafe' => [
@@ -153,7 +153,7 @@ function iss_content_model_veranstaltung_registry(): array
                 'shape' => 'manual_recurring',
                 'icon' => 'wrench',
                 'default_skin' => 'repair',
-                'allowed_gestures' => ['intro', 'kapitel', 'material', 'galerie'],
+                'allowed_gestures' => ['intro', 'kapitel', 'material', 'upload_intake', 'galerie'],
                 'fields' => $repair_cafe_fields,
             ],
             'report.rueckblick' => [
@@ -163,7 +163,7 @@ function iss_content_model_veranstaltung_registry(): array
                 'shape' => 'backward',
                 'icon' => 'archive',
                 'default_skin' => 'dokumentarisch',
-                'allowed_gestures' => ['intro', 'kapitel', 'leitfrage', 'zitat', 'chronik', 'galerie', 'material'],
+                'allowed_gestures' => ['intro', 'kapitel', 'leitfrage', 'zitat', 'chronik', 'upload_intake', 'galerie', 'material'],
                 'fields' => $report_fields,
             ],
         ],

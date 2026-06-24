@@ -7,7 +7,8 @@
 
 ## What is implemented now
 - Intake endpoint and storage:
-  - Public intake endpoint uses Uppy Dashboard + XHRUpload and stores uploads for moderation under `shared/event-drop/storage/incoming`.
+  - Public intake endpoint uses Uppy Dashboard + Webcam + XHRUpload and stores uploads for moderation under `shared/event-drop/storage/incoming`.
+  - The checked-in snapshot now enables direct camera capture, including native phone/tablet photo/video capture through Uppy Webcam; captured files still post to the same `media` field and moderation flow.
   - Accept/reject workflow moves files into `accepted`/`rejected` and records upload metadata in `shared/event-drop/storage/manifests/upload-manifest.csv`.
   - Friendly short-code URLs are used for submitter/admin/shared actions (current one-off: codes in query params).
 - Bridge pipeline:
@@ -51,3 +52,5 @@
 ## Notes for next person
 - If intake files or manifest are moved, keep original file path in WP attachment meta for reproducibility.
 - Keep one-off fixes isolated; avoid broad plugin replacements unless explicitly requested.
+- Camera access requires a secure browser context in normal Chrome use; HTTPS staging/production should work, while local non-HTTPS testing is limited to `localhost` behavior.
+- Current repo change is in `ops/event-drop/interface/index.php`; deploy/sync the snapshot to the active `shared/event-drop/interface/index.php` path on the target host before expecting the live intake page to expose the camera tab.

@@ -4,7 +4,10 @@
  */
 declare(strict_types=1);
 
-$eventSlug = $_ENV['EVENT_SLUG'] ?? 'event';
+$eventSlug = preg_replace('/[^a-zA-Z0-9._-]/', '-', (string)($_GET['event'] ?? ($_ENV['EVENT_SLUG'] ?? 'event')));
+if ($eventSlug === '') {
+    $eventSlug = 'event';
+}
 $storageRoot = '/event-drop-storage';
 $incomingDir = $storageRoot . '/incoming';
 $acceptedDir = $storageRoot . '/accepted';
@@ -433,7 +436,7 @@ if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
         .uppy-Dashboard-inner { border-radius: 6px !important; }
         @media (max-width: 680px) { main { width: min(100% - 20px, 980px); padding-top: 20px; } .drop-fields { grid-template-columns: 1fr; padding: 14px; } }
     </style></head><body><main><section class="drop-shell">';
-    echo '<div class="drop-head"><h1>Event media upload</h1><p class="drop-note">' . h($tokenHint) . ' Add photos or videos, check the consent box, then start the upload. Files go to moderation before they appear in the event gallery.</p></div>';
+    echo '<div class="drop-head"><h1>Event media upload</h1><p class="drop-note">' . h($tokenHint) . ' Add photos, videos, or capture directly from your camera, check the consent box, then start the upload. Files go to moderation before they appear in the event gallery.</p></div>';
     echo '<div class="drop-fields" id="event-drop-fields">';
     echo '<label class="drop-field">Participant name or initials<input id="participant_id" name="participant_id" autocomplete="name" required></label>';
     if (!$uploadCodeHint) {
@@ -454,7 +457,7 @@ if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
     }
     echo '</div></section></main>';
     echo '<script type="module">
-        import { Uppy, Dashboard, XHRUpload } from "https://releases.transloadit.com/uppy/v5.2.1/uppy.min.mjs";
+        import { Uppy, Dashboard, Webcam, XHRUpload } from "https://releases.transloadit.com/uppy/v5.2.1/uppy.min.mjs";
 
         const allowedFileTypes = ' . $allowedJson . ';
         const maxFileSize = Number("' . $maxUploadJson . '");
@@ -521,7 +524,16 @@ if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
             proudlyDisplayPoweredByUppy: false,
             showProgressDetails: true,
             hideCancelButton: false,
-            note: "Photos, videos, or ZIP archives. Each file is uploaded separately and reviewed before publishing.",
+            plugins: ["Webcam"],
+            note: "Photos, videos, ZIP archives, or direct camera capture. Each file is uploaded separately and reviewed before publishing.",
+        });
+
+        uppy.use(Webcam, {
+            modes: ["picture", "video-audio"],
+            mobileNativeCamera: true,
+            showVideoSourceDropdown: true,
+            preferredImageMimeType: "image/jpeg",
+            preferredVideoMimeType: "video/webm",
         });
 
         uppy.use(XHRUpload, {
