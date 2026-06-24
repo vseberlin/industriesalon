@@ -6,6 +6,11 @@ be recovered from Git history.
 
 ## 2026-06-24
 
+- Added `docs/runbooks/event-drop-staging.md` for the current Sets-backed
+  Event Drop staging setup: deploy from GitHub instead of untarring, create the
+  writable `/event-drop-storage` mount tree, verify the mounted intake
+  interface and `docker/php/uploads.ini`, keep upload secrets out of Git, and
+  treat ZIP files as raw intake rather than a staging extraction step.
 - Added `docs/project/operations-admin-permissions-sow.md` to define the
   code-owned Operations admin capability model before more custom admin screens
   are built; documented cross-plugin capability assembly, fail-closed

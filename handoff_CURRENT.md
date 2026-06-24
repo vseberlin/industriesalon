@@ -63,7 +63,12 @@ Current checkpoint only. History belongs in `CHANGELOG.md`; active follow-up bel
 - Add more Veranstaltung skins only from a concrete design. Remaining current types without distinct skins are `workshop` and `praesentation`; `rueckblick` is not currently present in the migrated set.
 - Later intake cleanup slice: add a cautious cleanup job for rejected/stale Event Drop raw files whose `decay_at` has passed, skipping retained items and logging before deletion.
 - For staging transfer, follow `ops/sql/2026-06-24-veranstaltungen-transfer-instructions.md`: deploy code first, import the full JSON artifact plus `ops/sql/2026-06-24-veranstaltungen-remove-legacy-presentation-meta.sql` and `ops/sql/2026-06-24-veranstaltung-24988-material-gallery-split.sql`, refresh occurrence/graph/search projections, then run the listed checks.
-- If Event Drop work resumes on staging/live, sync `ops/event-drop/interface/index.php` to the active host snapshot intentionally and ensure the storage root permissions allow the web/PHP user to append the manifest.
+- If Event Drop work resumes on staging/live, follow
+  `docs/runbooks/event-drop-staging.md`: deploy from GitHub, mount
+  `ops/event-drop/interface` at `/event-drop/`, mount writable
+  `var/event-drop-storage` at `/event-drop-storage`, verify
+  `docker/php/uploads.ini`, and do not untar either the repo or participant ZIP
+  uploads as part of setup.
 
 ## Verified Locally
 

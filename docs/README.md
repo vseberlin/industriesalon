@@ -29,6 +29,7 @@ This directory is the repo-owned source for durable project, agent, architecture
 - Infrastructure/deploy: `docs/agent/server-operations.md`, `docs/runbooks/deployment.md`
 - Database transfer: `docs/infrastructure/data-artifacts.md`
 - Uploads/media: `docs/runbooks/uploads-sync.md`, `docs/infrastructure/sync.md`
+- Event Drop staging intake: `docs/runbooks/event-drop-staging.md`
 - Search/mail/service: `docs/infrastructure/services.md`, relevant runbook
 - Continuity/docs: `docs/agent/continuity.md`
 - Git exchange/start/exit: `docs/runbooks/git-exchange.md`
