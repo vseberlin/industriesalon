@@ -54,6 +54,11 @@ be recovered from Git history.
   - documented one shared private intake/review/promotion model for Veranstaltung, Ausstellung, Projekt, Publication, pages, and archive contexts;
   - kept `galerie` as an approved presentation section, not an editor dump area;
   - deferred UI/storage implementation and explicitly avoided separate `eventset`, `projectset`, or `publicationset` systems.
+- Expanded the media intake/bucket contract into an implementation SOW:
+  - defined one shared thumbnail-grid intake workbench instead of separate editor-facing buckets per event/content type;
+  - made named Sets the editor-facing model, including uncategorized intake, context-free preparation Sets, item movement between Sets, and whole-Set attachment/promotion to multiple CPT targets;
+  - added temporary decay/retention rules for raw uploads;
+  - made Rueckblick a first-class promotion target and archive promotion a stricter `iss-archive` curation handoff.
 
 ## 2026-06-23
 
