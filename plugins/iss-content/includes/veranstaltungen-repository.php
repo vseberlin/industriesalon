@@ -169,6 +169,34 @@ function iss_content_model_veranstaltungen_reports(int $page = 1, int $per_page 
     ]);
 }
 
+function iss_content_model_filter_veranstaltung_repository_posts(array $posts, int $limit = 0): array
+{
+    $valid_entity_keys = array_keys(iss_content_model_veranstaltung_entities());
+    $valid_entity_keys = array_fill_keys(array_filter(array_map('iss_content_model_sanitize_veranstaltung_entity_key', $valid_entity_keys)), true);
+    $filtered = [];
+    $seen = [];
+
+    foreach ($posts as $post) {
+        if (!$post instanceof WP_Post || $post->post_type !== ISS_CONTENT_MODEL_VERANSTALTUNG_POST_TYPE || isset($seen[$post->ID])) {
+            continue;
+        }
+
+        $entity_key = iss_content_model_sanitize_veranstaltung_entity_key((string) get_post_meta((int) $post->ID, '_iss_entity_key', true));
+        if ($entity_key === '' || !isset($valid_entity_keys[$entity_key])) {
+            continue;
+        }
+
+        $seen[$post->ID] = true;
+        $filtered[] = $post;
+
+        if ($limit > 0 && count($filtered) >= $limit) {
+            break;
+        }
+    }
+
+    return $filtered;
+}
+
 function iss_content_model_veranstaltungen_related(int $post_id, int $limit = 4): array
 {
     $post_id = max(0, $post_id);
@@ -178,13 +206,13 @@ function iss_content_model_veranstaltungen_related(int $post_id, int $limit = 4)
     }
 
     if (function_exists('iss_relations_query_entity_related_posts')) {
-        return iss_relations_query_entity_related_posts(
+        return iss_content_model_filter_veranstaltung_repository_posts(iss_relations_query_entity_related_posts(
             $post_id,
             [ISS_CONTENT_MODEL_VERANSTALTUNG_POST_TYPE],
             $limit,
-            ['source' => 'graph']
-        );
+            ['source' => 'entity']
+        ), $limit);
     }
 
-    return (array) apply_filters('iss_content_model_veranstaltungen_related_posts', [], $post_id, $limit);
+    return iss_content_model_filter_veranstaltung_repository_posts((array) apply_filters('iss_content_model_veranstaltungen_related_posts', [], $post_id, $limit), $limit);
 }

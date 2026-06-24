@@ -153,21 +153,13 @@ final class ISS_Content_Model_Veranstaltungen_CLI_Command
     private function audit_post(\WP_Post $post): array
     {
         $post_id = (int) $post->ID;
-        $layout = function_exists('iss_content_model_normalize_veranstaltung_layout')
-            ? iss_content_model_normalize_veranstaltung_layout((string) get_post_meta($post_id, '_iss_event_layout', true))
-            : sanitize_key((string) get_post_meta($post_id, '_iss_event_layout', true));
-        $format = function_exists('iss_content_model_normalize_veranstaltung_format')
-            ? iss_content_model_normalize_veranstaltung_format((string) get_post_meta($post_id, '_iss_event_format', true))
-            : sanitize_key((string) get_post_meta($post_id, '_iss_event_format', true));
         $current_entity = iss_content_model_sanitize_veranstaltung_entity_key((string) get_post_meta($post_id, '_iss_entity_key', true));
         $stored_entity = trim((string) get_post_meta($post_id, '_iss_entity_key', true));
-        $candidate = $current_entity !== ''
-            ? [
-                'entity_key' => $current_entity,
-                'confidence' => 'converted',
-                'reason' => 'stored entity key is valid',
-            ]
-            : iss_content_model_veranstaltung_entity_suggestion_for_post($post);
+        $candidate = [
+            'entity_key' => $current_entity,
+            'confidence' => $current_entity !== '' ? 'converted' : 'blocked',
+            'reason' => $current_entity !== '' ? 'stored entity key is valid' : 'no valid entity key stored',
+        ];
 
         $entity_key = (string) ($candidate['entity_key'] ?? '');
         $notes = [];
@@ -196,8 +188,6 @@ final class ISS_Content_Model_Veranstaltungen_CLI_Command
             'current_entity' => $current_entity,
             'candidate_entity' => $entity_key,
             'confidence' => $confidence,
-            'layout' => $layout,
-            'format' => $format,
             'start' => trim((string) get_post_meta($post_id, 'iss_start_datetime', true)),
             'end' => trim((string) get_post_meta($post_id, 'iss_end_datetime', true)),
             'programme' => $programme_enabled,
@@ -228,7 +218,7 @@ final class ISS_Content_Model_Veranstaltungen_CLI_Command
 
     private function render_table(array $rows): void
     {
-        $columns = ['id', 'title', 'status', 'candidate_entity', 'confidence', 'layout', 'format', 'start', 'end', 'programme', 'notes', 'set_command'];
+        $columns = ['id', 'title', 'status', 'candidate_entity', 'confidence', 'start', 'end', 'programme', 'notes', 'set_command'];
         $widths = array_fill_keys($columns, 0);
 
         foreach ($columns as $column) {
@@ -607,6 +597,7 @@ final class ISS_Content_Model_Veranstaltungen_Content_Audit_CLI_Command
         ]);
         $invalid = [];
         $valid = 0;
+        $stored_count = 0;
 
         foreach ((array) $posts as $post_id) {
             $post_id = (int) $post_id;
@@ -614,6 +605,7 @@ final class ISS_Content_Model_Veranstaltungen_Content_Audit_CLI_Command
             if ($stored === '') {
                 continue;
             }
+            ++$stored_count;
 
             $sanitized = function_exists('iss_content_model_sanitize_veranstaltung_content_json')
                 ? iss_content_model_sanitize_veranstaltung_content_json($stored)
@@ -636,9 +628,251 @@ final class ISS_Content_Model_Veranstaltungen_Content_Audit_CLI_Command
 
         \WP_CLI::success(sprintf(
             'Veranstaltung content audit passed: stored=%d valid=%d invalid=0.',
-            count((array) $posts),
+            $stored_count,
             $valid
         ));
+    }
+}
+
+final class ISS_Content_Model_Veranstaltungen_Content_Dry_Run_CLI_Command
+{
+    /**
+     * Reports structured-content import candidates from legacy Veranstaltung bodies.
+     *
+     * ## OPTIONS
+     *
+     * [--post=<id-or-slug>]
+     * : Limit the report to one Veranstaltung.
+     *
+     * [--format=<format>]
+     * : Output format: table or json. Default: table.
+     *
+     * ## EXAMPLES
+     *
+     *     wp iss-content veranstaltungen-content-dry-run
+     *     wp iss-content veranstaltungen-content-dry-run --post=24988
+     */
+    public function __invoke(array $args, array $assoc_args): void
+    {
+        unset($args);
+
+        $format = sanitize_key((string) ($assoc_args['format'] ?? 'table'));
+        if (!in_array($format, ['table', 'json'], true)) {
+            $format = 'table';
+        }
+
+        $posts = $this->get_posts($assoc_args);
+        if (!$posts) {
+            \WP_CLI::error('No Veranstaltung posts resolved.');
+        }
+
+        $rows = [];
+        foreach ($posts as $post) {
+            if (!$post instanceof \WP_Post) {
+                continue;
+            }
+
+            $candidate = iss_content_model_veranstaltung_content_candidate_for_post($post);
+            $document = is_array($candidate['document'] ?? null) ? $candidate['document'] : [];
+            $sections = is_array($document['sections'] ?? null) ? $document['sections'] : [];
+            $section_types = array_values(array_unique(array_filter(array_map(static function (array $section): string {
+                return sanitize_key((string) ($section['type'] ?? ''));
+            }, $sections))));
+            $media_refs = 0;
+            $dynamic_refs = 0;
+            foreach ($sections as $section) {
+                $media_refs += count((array) ($section['media_refs'] ?? []));
+                $dynamic_refs += count((array) ($section['dynamic_refs'] ?? []));
+            }
+            $stored = trim((string) get_post_meta((int) $post->ID, iss_content_model_veranstaltung_content_meta_key(), true));
+            $notes = ['read_only', (int) ($candidate['format_sheet_blocks'] ?? 0) > 0 ? 'format_sheet' : 'legacy_fallback'];
+            if ($stored !== '') {
+                $notes[] = 'existing_json_document';
+            }
+            if (!empty($candidate['unsupported_blocks'])) {
+                $notes[] = 'manual_review_required';
+            }
+
+            $rows[] = [
+                'id' => (int) $post->ID,
+                'title' => get_the_title($post),
+                'entity' => (string) ($candidate['entity_key'] ?? ''),
+                'stored_json' => $stored !== '' ? 'yes' : 'no',
+                'legacy_blocks' => (int) ($candidate['legacy_blocks'] ?? 0),
+                'legacy_chars' => (int) ($candidate['legacy_chars'] ?? 0),
+                'format_sheet_blocks' => (int) ($candidate['format_sheet_blocks'] ?? 0),
+                'candidate_sections' => count($sections),
+                'section_types' => implode(',', $section_types),
+                'media_blocks' => (int) ($candidate['media_blocks'] ?? 0),
+                'media_refs' => $media_refs,
+                'dynamic_refs' => $dynamic_refs,
+                'unsupported_blocks' => implode(',', (array) ($candidate['unsupported_blocks'] ?? [])),
+                'notes' => implode(',', $notes),
+            ];
+        }
+
+        if ($format === 'json') {
+            \WP_CLI::log((string) wp_json_encode([
+                'schema_version' => 1,
+                'items' => $rows,
+            ], JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE));
+            return;
+        }
+
+        $this->render_table($rows);
+    }
+
+    private function get_posts(array $assoc_args): array
+    {
+        $post_token = trim((string) ($assoc_args['post'] ?? ''));
+        if ($post_token !== '') {
+            $post = is_numeric($post_token)
+                ? get_post(absint($post_token))
+                : get_page_by_path(sanitize_title($post_token), OBJECT, ISS_CONTENT_MODEL_VERANSTALTUNG_POST_TYPE);
+
+            return $post instanceof \WP_Post && $post->post_type === ISS_CONTENT_MODEL_VERANSTALTUNG_POST_TYPE ? [$post] : [];
+        }
+
+        return get_posts([
+            'post_type' => ISS_CONTENT_MODEL_VERANSTALTUNG_POST_TYPE,
+            'post_status' => ['publish', 'future', 'draft', 'pending', 'private'],
+            'posts_per_page' => -1,
+            'orderby' => 'date',
+            'order' => 'DESC',
+            'suppress_filters' => true,
+        ]);
+    }
+
+    private function render_table(array $rows): void
+    {
+        $columns = ['id', 'title', 'entity', 'stored_json', 'legacy_blocks', 'legacy_chars', 'format_sheet_blocks', 'candidate_sections', 'section_types', 'media_blocks', 'media_refs', 'dynamic_refs', 'unsupported_blocks', 'notes'];
+        $widths = array_fill_keys($columns, 0);
+        foreach ($columns as $column) {
+            $widths[$column] = strlen($column);
+        }
+        foreach ($rows as $row) {
+            foreach ($columns as $column) {
+                $widths[$column] = max($widths[$column], strlen((string) ($row[$column] ?? '')));
+            }
+        }
+        \WP_CLI::log(implode('  ', array_map(static function (string $column) use ($widths): string {
+            return str_pad($column, $widths[$column]);
+        }, $columns)));
+        foreach ($rows as $row) {
+            $line = [];
+            foreach ($columns as $column) {
+                $line[] = str_pad((string) ($row[$column] ?? ''), $widths[$column]);
+            }
+            \WP_CLI::log(implode('  ', $line));
+        }
+    }
+}
+
+final class ISS_Content_Model_Veranstaltungen_Import_Candidate_CLI_Command
+{
+    /**
+     * Imports one structured-content candidate from the legacy Veranstaltung body.
+     *
+     * The command is dry-run by default. Pass --yes to write `_iss_content_json`.
+     *
+     * ## OPTIONS
+     *
+     * --post=<id-or-slug>
+     * : Veranstaltung post ID or slug.
+     *
+     * [--yes]
+     * : Apply the import. Without this flag the command only reports.
+     *
+     * [--force]
+     * : Replace an existing non-empty `_iss_content_json` document.
+     *
+     * ## EXAMPLES
+     *
+     *     wp iss-content veranstaltungen-import-candidate --post=24988
+     *     wp iss-content veranstaltungen-import-candidate --post=24988 --yes
+     */
+    public function __invoke(array $args, array $assoc_args): void
+    {
+        unset($args);
+
+        $post_token = trim((string) ($assoc_args['post'] ?? ''));
+        $apply = !empty($assoc_args['yes']);
+        $force = !empty($assoc_args['force']);
+        if ($post_token === '') {
+            \WP_CLI::error('Provide --post=<id-or-slug>.');
+        }
+
+        $post = $this->get_post($post_token);
+        if (!$post instanceof \WP_Post) {
+            \WP_CLI::error('Veranstaltung post not found.');
+        }
+
+        $post_id = (int) $post->ID;
+        $meta_key = iss_content_model_veranstaltung_content_meta_key();
+        $stored = trim((string) get_post_meta($post_id, $meta_key, true));
+        if ($stored !== '' && !$force) {
+            \WP_CLI::error(sprintf('Post %d already has _iss_content_json. Use --force to replace it.', $post_id));
+        }
+
+        $candidate = iss_content_model_veranstaltung_content_candidate_for_post($post);
+        $document = is_array($candidate['document'] ?? null) ? $candidate['document'] : [];
+        $sections = is_array($document['sections'] ?? null) ? $document['sections'] : [];
+        if (!$sections) {
+            \WP_CLI::error(sprintf('No importable sections found for post %d.', $post_id));
+        }
+        $media_refs = 0;
+        $dynamic_refs = 0;
+        foreach ($sections as $section) {
+            $media_refs += count((array) ($section['media_refs'] ?? []));
+            $dynamic_refs += count((array) ($section['dynamic_refs'] ?? []));
+        }
+
+        $encoded = (string) wp_json_encode($document, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE);
+        $sanitized = iss_content_model_sanitize_veranstaltung_content_json($encoded);
+        if ($sanitized === '') {
+            \WP_CLI::error(sprintf('Generated document failed sanitization for post %d.', $post_id));
+        }
+
+        $notes = [$apply ? 'imported' : 'dry_run', (int) ($candidate['format_sheet_blocks'] ?? 0) > 0 ? 'format_sheet' : 'legacy_fallback'];
+        if (!empty($candidate['unsupported_blocks'])) {
+            $notes[] = 'manual_review_required';
+        }
+
+        if ($apply) {
+            update_post_meta($post_id, $meta_key, wp_slash($sanitized));
+        }
+
+        $row = [
+            'id' => $post_id,
+            'title' => get_the_title($post),
+            'entity' => (string) ($candidate['entity_key'] ?? ''),
+            'document_meta' => $meta_key,
+            'candidate_sections' => count($sections),
+            'format_sheet_blocks' => (int) ($candidate['format_sheet_blocks'] ?? 0),
+            'media_blocks' => (int) ($candidate['media_blocks'] ?? 0),
+            'media_refs' => $media_refs,
+            'dynamic_refs' => $dynamic_refs,
+            'unsupported_blocks' => implode(',', (array) ($candidate['unsupported_blocks'] ?? [])),
+            'notes' => implode(',', $notes),
+        ];
+        $columns = ['id', 'title', 'entity', 'document_meta', 'candidate_sections', 'format_sheet_blocks', 'media_blocks', 'media_refs', 'dynamic_refs', 'unsupported_blocks', 'notes'];
+
+        \WP_CLI::log(implode("\t", $columns));
+        \WP_CLI::log(implode("\t", array_map(static function (string $column) use ($row): string {
+            return (string) ($row[$column] ?? '');
+        }, $columns)));
+        if (!$apply) {
+            \WP_CLI::log('Dry-run only. Re-run with --yes to write _iss_content_json.');
+        }
+    }
+
+    private function get_post(string $post_token): ?\WP_Post
+    {
+        $post = is_numeric($post_token)
+            ? get_post(absint($post_token))
+            : get_page_by_path(sanitize_title($post_token), OBJECT, ISS_CONTENT_MODEL_VERANSTALTUNG_POST_TYPE);
+
+        return $post instanceof \WP_Post && $post->post_type === ISS_CONTENT_MODEL_VERANSTALTUNG_POST_TYPE ? $post : null;
     }
 }
 
@@ -654,3 +888,7 @@ final class ISS_Content_Model_Veranstaltungen_Content_Audit_CLI_Command
 \WP_CLI::add_command('iss-content-model veranstaltungen-query-audit', 'ISS_Content_Model_Veranstaltungen_Query_Audit_CLI_Command');
 \WP_CLI::add_command('iss-content veranstaltungen-content-audit', 'ISS_Content_Model_Veranstaltungen_Content_Audit_CLI_Command');
 \WP_CLI::add_command('iss-content-model veranstaltungen-content-audit', 'ISS_Content_Model_Veranstaltungen_Content_Audit_CLI_Command');
+\WP_CLI::add_command('iss-content veranstaltungen-content-dry-run', 'ISS_Content_Model_Veranstaltungen_Content_Dry_Run_CLI_Command');
+\WP_CLI::add_command('iss-content-model veranstaltungen-content-dry-run', 'ISS_Content_Model_Veranstaltungen_Content_Dry_Run_CLI_Command');
+\WP_CLI::add_command('iss-content veranstaltungen-import-candidate', 'ISS_Content_Model_Veranstaltungen_Import_Candidate_CLI_Command');
+\WP_CLI::add_command('iss-content-model veranstaltungen-import-candidate', 'ISS_Content_Model_Veranstaltungen_Import_Candidate_CLI_Command');

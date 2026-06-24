@@ -63,9 +63,8 @@ function iss_content_model_veranstaltung_registry(): array
                 'shape' => 'moment',
                 'icon' => 'calendar',
                 'default_skin' => 'typografisch',
-                'allowed_gestures' => ['intro', 'kapitel', 'zitat', 'material'],
+                'allowed_gestures' => ['intro', 'kapitel', 'zitat', 'material', 'galerie'],
                 'fields' => $moment_fields,
-                'legacy_formats' => ['general'],
             ],
             'event.vortrag' => [
                 'label' => __('Vortrag', 'iss-content-model'),
@@ -74,9 +73,8 @@ function iss_content_model_veranstaltung_registry(): array
                 'shape' => 'moment',
                 'icon' => 'mic',
                 'default_skin' => 'typografisch',
-                'allowed_gestures' => ['intro', 'kapitel', 'zitat', 'material'],
+                'allowed_gestures' => ['intro', 'kapitel', 'zitat', 'material', 'galerie'],
                 'fields' => $moment_fields,
-                'legacy_formats' => ['vortrag'],
             ],
             'event.gespraech' => [
                 'label' => __('Gespraech', 'iss-content-model'),
@@ -85,9 +83,8 @@ function iss_content_model_veranstaltung_registry(): array
                 'shape' => 'moment',
                 'icon' => 'chat',
                 'default_skin' => 'typografisch',
-                'allowed_gestures' => ['intro', 'kapitel', 'zitat', 'material'],
+                'allowed_gestures' => ['intro', 'kapitel', 'zitat', 'material', 'galerie'],
                 'fields' => $moment_fields,
-                'legacy_formats' => ['gespraech'],
             ],
             'event.lesung' => [
                 'label' => __('Lesung', 'iss-content-model'),
@@ -96,9 +93,8 @@ function iss_content_model_veranstaltung_registry(): array
                 'shape' => 'moment',
                 'icon' => 'book',
                 'default_skin' => 'typografisch',
-                'allowed_gestures' => ['intro', 'kapitel', 'zitat', 'material'],
+                'allowed_gestures' => ['intro', 'kapitel', 'zitat', 'material', 'galerie'],
                 'fields' => $moment_fields,
-                'legacy_formats' => ['lesung'],
             ],
             'event.praesentation' => [
                 'label' => __('Praesentation', 'iss-content-model'),
@@ -107,9 +103,8 @@ function iss_content_model_veranstaltung_registry(): array
                 'shape' => 'moment',
                 'icon' => 'presentation',
                 'default_skin' => 'typografisch',
-                'allowed_gestures' => ['intro', 'kapitel', 'zitat', 'material'],
+                'allowed_gestures' => ['intro', 'kapitel', 'zitat', 'material', 'galerie'],
                 'fields' => $moment_fields,
-                'legacy_formats' => ['praesentation'],
             ],
             'event.workshop' => [
                 'label' => __('Workshop', 'iss-content-model'),
@@ -118,9 +113,8 @@ function iss_content_model_veranstaltung_registry(): array
                 'shape' => 'moment',
                 'icon' => 'tools',
                 'default_skin' => 'typografisch',
-                'allowed_gestures' => ['intro', 'kapitel', 'zitat', 'material'],
+                'allowed_gestures' => ['intro', 'kapitel', 'zitat', 'material', 'galerie'],
                 'fields' => $moment_fields,
-                'legacy_formats' => ['workshop'],
             ],
             'event.konzert' => [
                 'label' => __('Konzert', 'iss-content-model'),
@@ -129,9 +123,8 @@ function iss_content_model_veranstaltung_registry(): array
                 'shape' => 'moment',
                 'icon' => 'note',
                 'default_skin' => 'typografisch',
-                'allowed_gestures' => ['intro', 'kapitel', 'zitat', 'material'],
+                'allowed_gestures' => ['intro', 'kapitel', 'zitat', 'material', 'galerie'],
                 'fields' => $moment_fields,
-                'legacy_formats' => ['concert'],
             ],
             'event.school_program' => [
                 'label' => __('Schulprogramm', 'iss-content-model'),
@@ -140,9 +133,8 @@ function iss_content_model_veranstaltung_registry(): array
                 'shape' => 'moment',
                 'icon' => 'school',
                 'default_skin' => 'typografisch',
-                'allowed_gestures' => ['intro', 'kapitel', 'material'],
+                'allowed_gestures' => ['intro', 'kapitel', 'material', 'galerie'],
                 'fields' => $moment_fields,
-                'legacy_formats' => ['school_program'],
             ],
             'event.festival' => [
                 'label' => __('Festival / Programm', 'iss-content-model'),
@@ -153,8 +145,6 @@ function iss_content_model_veranstaltung_registry(): array
                 'default_skin' => 'programmatisch',
                 'allowed_gestures' => ['intro', 'programm', 'kapitel', 'material', 'galerie'],
                 'fields' => $span_fields,
-                'legacy_formats' => ['festival'],
-                'legacy_layouts' => ['fest'],
             ],
             'event.repair_cafe' => [
                 'label' => __('Repair Cafe', 'iss-content-model'),
@@ -163,9 +153,8 @@ function iss_content_model_veranstaltung_registry(): array
                 'shape' => 'manual_recurring',
                 'icon' => 'wrench',
                 'default_skin' => 'typografisch',
-                'allowed_gestures' => ['intro', 'kapitel', 'material'],
+                'allowed_gestures' => ['intro', 'kapitel', 'material', 'galerie'],
                 'fields' => $repair_cafe_fields,
-                'legacy_formats' => ['repair_cafe'],
             ],
             'report.rueckblick' => [
                 'label' => __('Rueckblick', 'iss-content-model'),
@@ -176,7 +165,6 @@ function iss_content_model_veranstaltung_registry(): array
                 'default_skin' => 'dokumentarisch',
                 'allowed_gestures' => ['intro', 'kapitel', 'leitfrage', 'zitat', 'chronik', 'galerie', 'material'],
                 'fields' => $report_fields,
-                'legacy_layouts' => ['long'],
             ],
         ],
     ];
@@ -262,7 +250,7 @@ function iss_content_model_veranstaltung_entity_options(): array
     $options = [
         '' => [
             'label' => __('Noch nicht festgelegt', 'iss-content-model'),
-            'description' => __('Legacy-Darstellung bleibt aktiv, bis der Typ bewusst gesetzt wird.', 'iss-content-model'),
+            'description' => __('Bitte einen semantischen Veranstaltungstyp setzen.', 'iss-content-model'),
         ],
     ];
 
@@ -378,85 +366,6 @@ function iss_content_model_validate_veranstaltung_registry(): array
     }
 
     return $errors;
-}
-
-function iss_content_model_veranstaltung_entity_key_from_legacy(string $layout, string $format): array
-{
-    $layout = function_exists('iss_content_model_normalize_veranstaltung_layout')
-        ? iss_content_model_normalize_veranstaltung_layout($layout)
-        : sanitize_key($layout);
-    $format = function_exists('iss_content_model_normalize_veranstaltung_format')
-        ? iss_content_model_normalize_veranstaltung_format($format)
-        : sanitize_key($format);
-
-    if ($layout === 'long') {
-        return [
-            'entity_key' => 'report.rueckblick',
-            'confidence' => 'review',
-            'reason' => 'legacy layout long maps to Rueckblick but needs editorial confirmation',
-        ];
-    }
-
-    $entities = iss_content_model_veranstaltung_entities();
-    foreach ($entities as $entity_key => $entity) {
-        if (in_array($format, (array) ($entity['legacy_formats'] ?? []), true)) {
-            $confidence = $format === 'general' ? 'review' : 'safe';
-            $reason = $format === 'general'
-                ? 'legacy format general is not semantically specific'
-                : 'legacy format maps directly';
-
-            return [
-                'entity_key' => (string) $entity_key,
-                'confidence' => $confidence,
-                'reason' => $reason,
-            ];
-        }
-    }
-
-    foreach ($entities as $entity_key => $entity) {
-        if (in_array($layout, (array) ($entity['legacy_layouts'] ?? []), true)) {
-            return [
-                'entity_key' => (string) $entity_key,
-                'confidence' => 'review',
-                'reason' => 'legacy layout maps to entity but needs editorial confirmation',
-            ];
-        }
-    }
-
-    return [
-        'entity_key' => '',
-        'confidence' => 'blocked',
-        'reason' => 'no legacy layout or format mapping found',
-    ];
-}
-
-function iss_content_model_veranstaltung_entity_suggestion_for_post(WP_Post $post): array
-{
-    $post_id = (int) $post->ID;
-    $layout = function_exists('iss_content_model_normalize_veranstaltung_layout')
-        ? iss_content_model_normalize_veranstaltung_layout((string) get_post_meta($post_id, '_iss_event_layout', true))
-        : sanitize_key((string) get_post_meta($post_id, '_iss_event_layout', true));
-    $format = function_exists('iss_content_model_normalize_veranstaltung_format')
-        ? iss_content_model_normalize_veranstaltung_format((string) get_post_meta($post_id, '_iss_event_format', true))
-        : sanitize_key((string) get_post_meta($post_id, '_iss_event_format', true));
-    $suggestion = iss_content_model_veranstaltung_entity_key_from_legacy($layout, $format);
-    $entity_key = (string) ($suggestion['entity_key'] ?? '');
-    $confidence = (string) ($suggestion['confidence'] ?? 'blocked');
-    $reason = (string) ($suggestion['reason'] ?? '');
-    if ($layout === 'fest' && $entity_key !== '' && $entity_key !== 'event.festival') {
-        $confidence = 'review';
-        $reason = trim($reason . '; legacy layout fest conflicts with candidate entity');
-    }
-    $label = $entity_key !== '' ? iss_content_model_veranstaltung_entity_label($entity_key) : '';
-
-    return [
-        'entity_key' => $entity_key,
-        'label' => $label,
-        'confidence' => $confidence,
-        'reason' => $reason,
-        'layout' => $layout,
-        'format' => $format,
-    ];
 }
 
 function iss_content_model_veranstaltung_required_facts_for_entity(string $entity_key): array

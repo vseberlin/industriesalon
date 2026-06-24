@@ -1731,6 +1731,17 @@ function iss_relations_query_related_posts(array $place_ids, $post_types, int $p
 function iss_relations_resolve_block_posts(array $attributes, int $current_post_id, array $post_types, int $per_page, string $block_name = ''): array
 {
     $source = sanitize_key((string) ($attributes['source'] ?? 'current'));
+    if (
+        $current_post_id > 0
+        && $source !== 'manual'
+        && count($post_types) === 1
+        && $post_types[0] === 'veranstaltung'
+        && get_post_type($current_post_id) === 'veranstaltung'
+        && function_exists('iss_content_model_veranstaltungen_related')
+    ) {
+        return iss_content_model_veranstaltungen_related($current_post_id, $per_page);
+    }
+
     if (iss_relations_is_entity_related_source($source)) {
         return iss_relations_query_entity_related_posts($current_post_id, $post_types, $per_page, $attributes);
     }

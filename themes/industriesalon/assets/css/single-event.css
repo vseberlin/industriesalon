@@ -12,70 +12,9 @@
   --iss-event-h3-size: 1.4rem;
   --iss-event-text-size: 1.05rem;
   --iss-event-measure: 60rem;
-  --iss-event-fest-bg: var(--iss-accent);
-  --iss-event-fest-fg: var(--iss-white);
-  --iss-event-fest-muted: rgba(255, 255, 255, 0.78);
-  --iss-event-fest-soft: rgba(255, 255, 255, 0.9);
-  --iss-event-fest-rule: rgba(255, 255, 255, 0.32);
-  --iss-event-fest-rule-strong: rgba(255, 255, 255, 0.86);
-  --iss-event-fest-highlight: var(--iss-yellow);
-  --iss-event-fest-strip-a: var(--iss-blue);
-  --iss-event-fest-strip-b: var(--iss-yellow);
-  --iss-event-fest-strip-c: var(--iss-green);
 
-  background: var(--iss-white);
+  background: var(--iss-surface-paper);
   color: var(--iss-black);
-}
-
-.single-veranstaltung.iss-event-scheme-blue .iss-event-page {
-  --iss-accent: var(--iss-blue);
-  --iss-accent-rgb: 134, 159, 186;
-  --iss-event-fest-bg: color-mix(in srgb, var(--iss-blue) 62%, var(--iss-black) 38%);
-  --iss-event-fest-strip-a: var(--iss-red);
-  --iss-event-fest-strip-b: var(--iss-yellow);
-  --iss-event-fest-strip-c: var(--iss-green);
-}
-
-.single-veranstaltung.iss-event-scheme-red .iss-event-page {
-  --iss-accent: var(--iss-red);
-  --iss-accent-rgb: 232, 29, 37;
-  --iss-event-fest-bg: var(--iss-red);
-  --iss-event-fest-strip-a: var(--iss-blue);
-  --iss-event-fest-strip-b: var(--iss-yellow);
-  --iss-event-fest-strip-c: var(--iss-green);
-}
-
-.single-veranstaltung.iss-event-scheme-green .iss-event-page {
-  --iss-accent: var(--iss-green);
-  --iss-accent-rgb: 87, 158, 125;
-  --iss-event-fest-bg: color-mix(in srgb, var(--iss-green) 72%, var(--iss-black) 28%);
-  --iss-event-fest-strip-a: var(--iss-blue);
-  --iss-event-fest-strip-b: var(--iss-yellow);
-  --iss-event-fest-strip-c: var(--iss-red);
-}
-
-.single-veranstaltung.iss-event-scheme-yellow .iss-event-page {
-  --iss-accent: var(--iss-yellow);
-  --iss-accent-rgb: 235, 188, 30;
-  --iss-event-fest-bg: var(--iss-yellow);
-  --iss-event-fest-fg: var(--iss-black);
-  --iss-event-fest-muted: rgba(30, 30, 30, 0.68);
-  --iss-event-fest-soft: rgba(30, 30, 30, 0.84);
-  --iss-event-fest-rule: rgba(30, 30, 30, 0.24);
-  --iss-event-fest-rule-strong: rgba(30, 30, 30, 0.72);
-  --iss-event-fest-highlight: var(--iss-red);
-  --iss-event-fest-strip-a: var(--iss-red);
-  --iss-event-fest-strip-b: var(--iss-blue);
-  --iss-event-fest-strip-c: var(--iss-green);
-}
-
-.single-veranstaltung.iss-event-scheme-brown .iss-event-page {
-  --iss-accent: var(--iss-brown);
-  --iss-accent-rgb: 117, 58, 24;
-  --iss-event-fest-bg: var(--iss-brown);
-  --iss-event-fest-strip-a: var(--iss-red);
-  --iss-event-fest-strip-b: var(--iss-yellow);
-  --iss-event-fest-strip-c: var(--iss-blue);
 }
 
 .iss-event-page > .section:not(.iss-event-hero) {
@@ -85,8 +24,8 @@
 .iss-event-hero {
   padding-top: clamp(6.25rem, 9vw, 8rem);
   padding-bottom: clamp(2rem, 4vw, 3.5rem);
-  border-bottom: 2px solid var(--iss-event-rule-strong);
-  background: var(--iss-white);
+  border-bottom: 1px solid var(--iss-event-rule-strong);
+  background: var(--iss-surface-paper);
 }
 
 .iss-event-hero__grid,
@@ -154,14 +93,17 @@
   --iss-info-panel-heading-gap: 0.28rem;
 
   display: grid;
-  gap: 0.85rem;
-  border-top: 2px solid var(--iss-event-rule-strong);
+  gap: 0;
+  padding: 1.25rem;
+  border-top: 0;
+  background: var(--iss-black);
+  color: var(--iss-white);
 }
 
 .iss-event-hero__meta .iss-info-panel__heading {
   padding-top: 0.9rem;
   padding-bottom: 0.75rem;
-  border-bottom: 1px solid var(--iss-event-rule);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.22);
 }
 
 .iss-event-hero__meta .iss-info-panel__title {
@@ -172,7 +114,7 @@
 
 .iss-event-hero__meta .iss-info-panel__intro {
   margin: 0;
-  color: var(--iss-event-muted);
+  color: inherit;
   font-size: 0.95rem;
   line-height: 1.45;
 }
@@ -185,7 +127,7 @@
 .iss-event-hero__meta .iss-info-row {
   display: block;
   padding: 0.72rem 0;
-  border-top: 1px solid var(--iss-event-rule);
+  border-top: 1px solid rgba(255, 255, 255, 0.2);
 }
 
 .iss-event-hero__meta .iss-info-row:first-child {
@@ -195,13 +137,13 @@
 
 .iss-event-hero__meta .iss-info-row__text {
   margin: 0;
-  color: rgba(30, 30, 30, 0.84);
+  color: inherit;
   font-size: 0.96rem;
   line-height: 1.42;
 }
 
 .iss-event-hero__meta .iss-info-row:first-child .iss-info-row__text {
-  color: var(--iss-black);
+  color: inherit;
   font-size: 1.28rem;
   font-weight: 800;
   line-height: 1.18;
@@ -210,12 +152,16 @@
 .iss-event-hero__meta .iss-info-row__text strong {
   display: block;
   margin-bottom: 0.14rem;
-  color: var(--iss-accent);
+  color: rgba(255, 255, 255, 0.62);
   font-size: 0.72rem;
   font-weight: 850;
   letter-spacing: 0.08em;
   line-height: 1.2;
   text-transform: uppercase;
+}
+
+.iss-event-hero__meta .iss-info-row:first-child .iss-info-row__text strong {
+  color: var(--iss-accent);
 }
 
 .iss-event-hero__meta .iss-info-row__text a {
@@ -225,6 +171,7 @@
 
 .iss-event-main {
   padding-top: clamp(2rem, 4vw, 3.75rem);
+  background: var(--iss-white);
 }
 
 .iss-event-main__grid {
@@ -611,6 +558,125 @@
   color: rgba(30, 30, 30, 0.74);
 }
 
+.iss-event-structured {
+  grid-template-columns: minmax(0, 1fr);
+}
+
+.iss-event-structured__section {
+  scroll-margin-top: calc(var(--iss-header-height, 5rem) + 1.5rem);
+}
+
+.iss-event-structured__section.iss-event-program {
+  margin-top: 0;
+}
+
+.iss-event-structured__body {
+  display: grid;
+  gap: 0.8rem;
+}
+
+.iss-event-structured__body > * {
+  margin: 0;
+}
+
+.iss-event-structured__quote {
+  max-width: 48rem;
+}
+
+.iss-event-structured__quote cite {
+  display: block;
+  margin-top: 0.75rem;
+  color: var(--iss-event-muted);
+  font-size: 0.92rem;
+  font-style: normal;
+}
+
+.iss-event-structured__dynamic-refs,
+.iss-event-structured__media,
+.iss-event-structured__refs {
+  display: grid;
+  gap: 1rem;
+}
+
+.iss-event-structured__dynamic-ref {
+  display: grid;
+  gap: 0.3rem;
+  margin: 0;
+  padding: 1rem 0;
+  border-top: 1px solid var(--iss-event-rule-strong);
+}
+
+.iss-event-structured__dynamic-label {
+  color: var(--iss-accent);
+  font-size: 0.78rem;
+  font-weight: 850;
+  letter-spacing: 0.08em;
+  line-height: 1.2;
+  text-transform: uppercase;
+}
+
+.iss-event-structured__dynamic-value {
+  font-size: 1rem;
+  font-weight: 700;
+  line-height: 1.45;
+}
+
+.iss-event-structured__media {
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 13rem), 1fr));
+}
+
+.iss-event-structured__media-item {
+  margin: 0;
+}
+
+.iss-event-structured__media-item img {
+  display: block;
+  width: 100%;
+  height: auto;
+}
+
+.iss-event-structured__refs {
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 15rem), 1fr));
+}
+
+.iss-event-structured__object-card {
+  display: grid;
+  grid-template-columns: minmax(5.5rem, 0.34fr) minmax(0, 0.66fr);
+  gap: 1rem;
+  align-items: start;
+  padding-top: 1rem;
+  border-top: 1px solid var(--iss-event-rule-strong);
+}
+
+.iss-event-structured__object-media {
+  display: block;
+  background: rgba(30, 30, 30, 0.05);
+}
+
+.iss-event-structured__object-media img {
+  display: block;
+  width: 100%;
+  height: auto;
+}
+
+.iss-event-structured__object-body {
+  display: grid;
+  gap: 0.45rem;
+}
+
+.iss-event-structured__object-body > * {
+  margin: 0;
+}
+
+.iss-event-structured__object-title {
+  font-size: 1rem;
+  line-height: 1.25;
+}
+
+.iss-event-structured__object-title a {
+  color: inherit;
+}
+
 .iss-event-network {
   border-top: 1px solid var(--iss-event-rule);
 }
@@ -639,279 +705,6 @@
 
 .iss-event-network__rail .iss-related-network-group__title {
   font-size: 1rem;
-}
-
-.single-veranstaltung.iss-event-layout-standard .iss-event-page {
-  background: var(--iss-surface-paper);
-}
-
-.single-veranstaltung.iss-event-layout-standard .iss-event-hero {
-  border-bottom-width: 1px;
-  background: var(--iss-surface-paper);
-}
-
-.single-veranstaltung.iss-event-layout-standard .iss-event-main {
-  background: var(--iss-white);
-}
-
-.single-veranstaltung.iss-event-layout-standard .iss-event-hero__meta .iss-info-panel--skin-aside {
-  gap: 0;
-  padding: 1.25rem;
-  border-top: 0;
-  background: var(--iss-black);
-  color: var(--iss-white);
-}
-
-.single-veranstaltung.iss-event-layout-standard .iss-event-hero__meta .iss-info-panel__heading {
-  border-bottom-color: rgba(255, 255, 255, 0.22);
-}
-
-.single-veranstaltung.iss-event-layout-standard .iss-event-hero__meta .iss-info-panel__intro,
-.single-veranstaltung.iss-event-layout-standard .iss-event-hero__meta .iss-info-row__text,
-.single-veranstaltung.iss-event-layout-standard .iss-event-hero__meta .iss-info-row:first-child .iss-info-row__text {
-  color: inherit;
-}
-
-.single-veranstaltung.iss-event-layout-standard .iss-event-hero__meta .iss-info-row {
-  border-top-color: rgba(255, 255, 255, 0.2);
-}
-
-.single-veranstaltung.iss-event-layout-standard .iss-event-hero__meta .iss-info-row__text strong {
-  color: rgba(255, 255, 255, 0.62);
-}
-
-.single-veranstaltung.iss-event-layout-standard .iss-event-hero__meta .iss-info-row:first-child .iss-info-row__text strong {
-  color: var(--iss-accent);
-}
-
-.single-veranstaltung.iss-event-layout-compact .iss-event-page {
-  --iss-event-title-size: 3.25rem;
-  --iss-event-h2-size: 1.9rem;
-}
-
-.single-veranstaltung.iss-event-layout-compact .iss-event-hero__grid,
-.single-veranstaltung.iss-event-layout-long .iss-event-hero__grid {
-  grid-template-columns: minmax(0, var(--iss-event-measure));
-}
-
-.single-veranstaltung.iss-event-layout-compact .iss-event-main__grid,
-.single-veranstaltung.iss-event-layout-long .iss-event-main__grid {
-  grid-template-columns: minmax(0, var(--iss-event-measure));
-}
-
-.single-veranstaltung.iss-event-layout-compact .iss-event-main__media-col,
-.single-veranstaltung.iss-event-layout-long .iss-event-main__media-col {
-  display: none;
-}
-
-.single-veranstaltung.iss-event-layout-fest .iss-event-page {
-  --iss-event-title-size: 8.6rem;
-  --iss-event-h2-size: 4rem;
-  --iss-event-text-size: 1.12rem;
-
-  background: var(--iss-surface-paper);
-}
-
-.single-veranstaltung.iss-event-layout-fest .iss-event-hero {
-  position: relative;
-  display: grid;
-  align-items: end;
-  min-height: clamp(34rem, 76vh, 48rem);
-  padding-top: clamp(7.25rem, 9vw, 9rem);
-  padding-bottom: clamp(3rem, 6vw, 5rem);
-  overflow: hidden;
-  border-bottom: 0;
-  background: var(--iss-event-fest-bg);
-  color: var(--iss-event-fest-fg);
-}
-
-.single-veranstaltung.iss-event-layout-fest .iss-event-hero::after {
-  content: "";
-  position: absolute;
-  right: 0;
-  bottom: 0;
-  left: 0;
-  height: clamp(0.65rem, 1.2vw, 0.95rem);
-  background: linear-gradient(90deg, var(--iss-event-fest-strip-a) 0 34%, var(--iss-event-fest-strip-b) 34% 66%, var(--iss-event-fest-strip-c) 66% 100%);
-}
-
-.single-veranstaltung.iss-event-layout-fest .iss-event-hero .iss-container {
-  position: relative;
-  z-index: 1;
-}
-
-.single-veranstaltung.iss-event-layout-fest .iss-event-hero__grid {
-  grid-template-columns: minmax(0, 1fr) minmax(12rem, 17rem);
-  gap: clamp(1.8rem, 5vw, 5rem);
-  align-items: end;
-}
-
-.single-veranstaltung.iss-event-layout-fest .iss-event-hero__copy {
-  max-width: none;
-  gap: 1.15rem;
-}
-
-.single-veranstaltung.iss-event-layout-fest .iss-event-hero__copy .iss-kicker {
-  color: var(--iss-event-fest-muted);
-}
-
-.single-veranstaltung.iss-event-layout-fest .iss-event-hero__title {
-  max-width: 10.5ch;
-  color: inherit;
-  font-size: var(--iss-event-title-size);
-  font-weight: 900;
-  line-height: 0.83;
-  text-transform: uppercase;
-}
-
-.single-veranstaltung.iss-event-layout-fest .iss-event-hero__lede,
-.single-veranstaltung.iss-event-layout-fest .iss-event-hero__lede .wp-block-post-excerpt__excerpt {
-  max-width: 58rem;
-  color: var(--iss-event-fest-soft);
-  font-size: 2rem;
-  font-weight: 650;
-  line-height: 1.16;
-}
-
-.single-veranstaltung.iss-event-layout-fest .iss-event-hero__meta .iss-info-panel--skin-aside {
-  gap: 0;
-  border-top: 0;
-  color: var(--iss-event-fest-fg);
-}
-
-.single-veranstaltung.iss-event-layout-fest .iss-event-hero__meta .iss-info-panel__heading {
-  display: none;
-}
-
-.single-veranstaltung.iss-event-layout-fest .iss-event-hero__meta .iss-info-panel__rows {
-  display: grid;
-  gap: 0;
-  border-top: 2px solid var(--iss-event-fest-rule-strong);
-}
-
-.single-veranstaltung.iss-event-layout-fest .iss-event-hero__meta .iss-info-row {
-  padding: 0.85rem 0;
-  border-top: 1px solid var(--iss-event-fest-rule);
-}
-
-.single-veranstaltung.iss-event-layout-fest .iss-event-hero__meta .iss-info-row:first-child {
-  padding-top: 0;
-  padding-bottom: 1.05rem;
-  border-top: 0;
-}
-
-.single-veranstaltung.iss-event-layout-fest .iss-event-hero__meta .iss-info-row__text,
-.single-veranstaltung.iss-event-layout-fest .iss-event-hero__meta .iss-info-row:first-child .iss-info-row__text {
-  color: inherit;
-}
-
-.single-veranstaltung.iss-event-layout-fest .iss-event-hero__meta .iss-info-row:first-child .iss-info-row__text {
-  font-size: 2.45rem;
-  font-weight: 900;
-  line-height: 0.98;
-  text-transform: uppercase;
-}
-
-.single-veranstaltung.iss-event-layout-fest .iss-event-hero__meta .iss-info-row__text strong {
-  color: var(--iss-event-fest-muted);
-}
-
-.single-veranstaltung.iss-event-layout-fest .iss-event-hero__meta .iss-info-row:first-child .iss-info-row__text strong {
-  color: var(--iss-event-fest-highlight);
-}
-
-.single-veranstaltung.iss-event-layout-fest .iss-event-main {
-  padding-top: clamp(3rem, 5vw, 5rem);
-  background: var(--iss-white);
-}
-
-.single-veranstaltung.iss-event-layout-fest .iss-event-main__grid {
-  grid-template-columns: minmax(15rem, 0.28fr) minmax(0, 0.72fr);
-}
-
-.single-veranstaltung.iss-event-layout-fest .iss-event-main__media {
-  min-height: 0;
-  border-top: 2px solid var(--iss-event-rule-strong);
-  background: var(--iss-white);
-}
-
-.single-veranstaltung.iss-event-layout-fest .iss-event-main__media .wp-block-post-featured-image {
-  aspect-ratio: 3 / 4;
-}
-
-.single-veranstaltung.iss-event-layout-fest .iss-event-program {
-  gap: 1.15rem;
-  margin-top: 0;
-  padding-top: 0;
-  border-top: 0;
-}
-
-.single-veranstaltung.iss-event-layout-fest .iss-event-program__kicker {
-  color: var(--iss-accent);
-}
-
-.single-veranstaltung.iss-event-layout-fest .iss-event-program__title {
-  max-width: 12ch;
-  color: var(--iss-black);
-  font-size: var(--iss-event-h2-size);
-  font-weight: 900;
-  line-height: 0.95;
-  text-transform: uppercase;
-}
-
-.single-veranstaltung.iss-event-layout-fest .iss-event-program__intro {
-  max-width: 62rem;
-  color: rgba(30, 30, 30, 0.78);
-  font-size: 1.2rem;
-  font-weight: 600;
-  line-height: 1.42;
-}
-
-.single-veranstaltung.iss-event-layout-fest .iss-event-program__table {
-  margin-top: 0.4rem;
-}
-
-.single-veranstaltung.iss-event-layout-fest .iss-event-program__table tr {
-  display: grid;
-  grid-template-columns: minmax(5.5rem, 0.3fr) minmax(12rem, 1.1fr) minmax(10rem, 0.85fr);
-  gap: clamp(0.85rem, 2vw, 1.6rem);
-  border-top: 1px solid var(--iss-event-rule);
-}
-
-.single-veranstaltung.iss-event-layout-fest .iss-event-program__table tr:first-child {
-  border-top-color: var(--iss-event-rule-strong);
-}
-
-.single-veranstaltung.iss-event-layout-fest .iss-event-program__table th,
-.single-veranstaltung.iss-event-layout-fest .iss-event-program__table td,
-.single-veranstaltung.iss-event-layout-fest .iss-event-program__table tr:first-child th,
-.single-veranstaltung.iss-event-layout-fest .iss-event-program__table tr:first-child td {
-  display: block;
-  padding: 1.08rem 0;
-  border-top: 0;
-}
-
-.single-veranstaltung.iss-event-layout-fest .iss-event-program__table th:first-child,
-.single-veranstaltung.iss-event-layout-fest .iss-event-program__table td:first-child {
-  width: auto;
-  color: var(--iss-accent);
-  font-size: 1rem;
-  font-weight: 900;
-  text-transform: uppercase;
-}
-
-.single-veranstaltung.iss-event-layout-fest .iss-event-program__table th:nth-child(2),
-.single-veranstaltung.iss-event-layout-fest .iss-event-program__table td:nth-child(2) {
-  font-size: 1.42rem;
-  line-height: 1.12;
-}
-
-.single-veranstaltung.iss-event-layout-fest .iss-event-program__table th:last-child,
-.single-veranstaltung.iss-event-layout-fest .iss-event-program__table td:last-child {
-  color: rgba(30, 30, 30, 0.76);
-  font-size: 1.12rem;
-  font-style: italic;
-  line-height: 1.32;
 }
 
 .iss-event-fest-info {
@@ -946,16 +739,6 @@
   line-height: 1.5;
 }
 
-.single-veranstaltung.iss-event-layout-long .iss-event-page {
-  --iss-event-title-size: 3.85rem;
-  --iss-event-h2-size: 2.05rem;
-}
-
-.single-veranstaltung.iss-event-layout-long .iss-event-hero__grid,
-.single-veranstaltung.iss-event-layout-long .iss-event-main__grid {
-  justify-content: center;
-}
-
 @media (max-width: 900px) {
   .iss-event-page {
     --iss-event-title-size: 3.35rem;
@@ -963,15 +746,8 @@
     --iss-event-h3-size: 1.28rem;
   }
 
-  .single-veranstaltung.iss-event-layout-fest .iss-event-page {
-    --iss-event-title-size: 5.3rem;
-    --iss-event-h2-size: 2rem;
-  }
-
   .iss-event-hero__grid,
-  .iss-event-main__grid,
-  .single-veranstaltung.iss-event-layout-fest .iss-event-hero__grid,
-  .single-veranstaltung.iss-event-layout-fest .iss-event-main__grid {
+  .iss-event-main__grid {
     grid-template-columns: 1fr;
   }
 
@@ -992,41 +768,8 @@
     position: static;
   }
 
-  .iss-event-main__media .wp-block-post-featured-image,
-  .single-veranstaltung.iss-event-layout-fest .iss-event-main__media .wp-block-post-featured-image {
+  .iss-event-main__media .wp-block-post-featured-image {
     aspect-ratio: 16 / 10;
-  }
-
-  .single-veranstaltung.iss-event-layout-fest .iss-event-hero {
-    min-height: auto;
-  }
-
-  .single-veranstaltung.iss-event-layout-fest .iss-event-hero__lede,
-  .single-veranstaltung.iss-event-layout-fest .iss-event-hero__lede .wp-block-post-excerpt__excerpt {
-    font-size: 1.45rem;
-  }
-
-  .single-veranstaltung.iss-event-layout-fest .iss-event-hero__meta {
-    max-width: 36rem;
-  }
-
-  .single-veranstaltung.iss-event-layout-fest .iss-event-hero__meta .iss-info-panel__rows {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-    column-gap: 1.3rem;
-  }
-
-  .single-veranstaltung.iss-event-layout-fest .iss-event-hero__meta .iss-info-row:first-child {
-    grid-column: 1 / -1;
-  }
-
-  .single-veranstaltung.iss-event-layout-fest .iss-event-program__table tr {
-    grid-template-columns: minmax(5.5rem, 0.35fr) minmax(0, 1fr);
-  }
-
-  .single-veranstaltung.iss-event-layout-fest .iss-event-program__table th:last-child,
-  .single-veranstaltung.iss-event-layout-fest .iss-event-program__table td:last-child {
-    grid-column: 2;
-    padding-top: 0;
   }
 
   .iss-event-fest-info {
@@ -1039,11 +782,6 @@
     --iss-event-title-size: 2.12rem;
     --iss-event-h2-size: 1.65rem;
     --iss-event-text-size: 1rem;
-  }
-
-  .single-veranstaltung.iss-event-layout-fest .iss-event-page {
-    --iss-event-title-size: 3rem;
-    --iss-event-h2-size: 1.65rem;
   }
 
   .iss-event-hero {
@@ -1073,25 +811,6 @@
   .iss-event-material-row {
     grid-template-columns: 1fr;
     gap: 0.35rem;
-  }
-
-  .single-veranstaltung.iss-event-layout-fest .iss-event-hero__lede,
-  .single-veranstaltung.iss-event-layout-fest .iss-event-hero__lede .wp-block-post-excerpt__excerpt {
-    font-size: 1.12rem;
-  }
-
-  .single-veranstaltung.iss-event-layout-fest .iss-event-hero__meta .iss-info-panel__rows,
-  .single-veranstaltung.iss-event-layout-fest .iss-event-program__table tr {
-    grid-template-columns: 1fr;
-  }
-
-  .single-veranstaltung.iss-event-layout-fest .iss-event-hero__meta .iss-info-row:first-child .iss-info-row__text {
-    font-size: 1.85rem;
-  }
-
-  .single-veranstaltung.iss-event-layout-fest .iss-event-program__table th:last-child,
-  .single-veranstaltung.iss-event-layout-fest .iss-event-program__table td:last-child {
-    grid-column: auto;
   }
 
   .iss-event-program__table {
@@ -1124,15 +843,6 @@
     white-space: normal;
   }
 
-  .single-veranstaltung.iss-event-layout-fest .iss-event-program__table tr {
-    display: grid;
-    width: 100%;
-  }
-
-  .single-veranstaltung.iss-event-layout-fest .iss-event-program__table th,
-  .single-veranstaltung.iss-event-layout-fest .iss-event-program__table td {
-    width: auto;
-  }
 }
 
 @media (max-width: 420px) {
@@ -1140,9 +850,6 @@
     --iss-event-title-size: 2.04rem;
   }
 
-  .single-veranstaltung.iss-event-layout-fest .iss-event-page {
-    --iss-event-title-size: 2.55rem;
-  }
 }
 
 @media (max-width: 360px) {
@@ -1150,7 +857,4 @@
     --iss-event-title-size: 1.72rem;
   }
 
-  .single-veranstaltung.iss-event-layout-fest .iss-event-page {
-    --iss-event-title-size: 2.25rem;
-  }
 }

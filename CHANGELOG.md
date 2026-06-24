@@ -4,8 +4,73 @@ This file records durable project changes. Keep it compact: current state belong
 `handoff_CURRENT.md`, active follow-up in `TODO.md`, and detailed investigation can
 be recovered from Git history.
 
+## 2026-06-24
+
+- Added the guarded Veranstaltung single-renderer slice:
+  - marked the editorial review for `24988`, `13349`, and `25808` as passed in the active checkpoint;
+  - added a theme-owned `_iss_content_json` renderer for those reviewed posts only, with legacy `post_content` fallback for every other Veranstaltung;
+  - reused the existing `iss-content` structured document contract and central `industriesalon-steuerung` field API instead of adding a parallel route, template, or data layer.
+- Widened the Veranstaltung structured renderer from a hard-coded reviewed-post list to every Veranstaltung with a valid sanitized `_iss_content_json` document, while preserving legacy `post_content` fallback for empty or invalid rows.
+- Migrated the remaining Veranstaltung legacy bodies into structured JSON:
+  - imported 22 additional `_iss_content_json` documents through the existing `iss-content` importer without overwriting the three reviewed documents;
+  - brought the local Veranstaltung structured-content state to `25` stored, `25` valid, `0` invalid documents;
+  - added `ops/sql/2026-06-24-veranstaltungen-content-json-full.sql` as the full transfer artifact for all current Veranstaltung structured-content JSON;
+  - marked editorial review as passed for all 25 migrated Veranstaltung JSON documents.
+- Moved Veranstaltung authoring off Gutenberg:
+  - removed `veranstaltung` from the block-editor opt-in list and removed default editor support for the CPT;
+  - promoted the existing `Struktur` JSON editor to the first high-priority normal editor surface while keeping title, publish/status, taxonomy/meta, and relation boxes available;
+  - removed the obsolete theme-owned Veranstaltung Gutenberg panel for inserting Terminblatt block patterns.
+- Removed the legacy Veranstaltung presentation switches:
+  - removed active `_iss_event_layout`, `_iss_event_format`, and `_iss_event_scheme` registration/save/UI/body-class/template decisions;
+  - deleted the remaining local `wp_postmeta` rows for those legacy keys and added `ops/sql/2026-06-24-veranstaltungen-remove-legacy-presentation-meta.sql` for transfer;
+  - removed migration-only legacy layout/format inference from the registry and dry-run command now that all current Veranstaltungen have curated `_iss_entity_key` values;
+  - removed the old Terminblatt/Fest Gutenberg event patterns and kept a single baseline single-event CSS treatment until explicit skins/template work replaces it.
+- Routed Veranstaltung related rails through the shape-aware repository:
+  - fixed `iss_content_model_veranstaltungen_related()` to use the existing entity-related source contract and filter returned posts through registry-valid `_iss_entity_key` values;
+  - delegated Veranstaltung-only related-content rails on Veranstaltung pages to that repository method while preserving manual related blocks;
+  - kept the raw Veranstaltung query audit passing with only the approved repository/CLI query paths.
+- Audited Veranstaltung archive/homepage/calendar projections:
+  - confirmed the public block surfaces use the existing occurrence-backed `industriesalon/timeline-query` route rather than raw Veranstaltung post loops;
+  - confirmed the Veranstaltung occurrence provider already gates synced rows to timeline-shaped entity keys;
+  - left the existing projection owner in place instead of adding a parallel repository bridge.
+- Added the sixth Veranstaltung JSON editor slice:
+  - added `dynamic_refs` to the structured Veranstaltung section contract for centralized `industriesalon-steuerung` field references;
+  - taught legacy import to preserve `industriesalon/field` blocks as references such as `address.full` instead of flattening address/opening-hours/link values into `_iss_content_json`;
+  - added editor preview support that resolves current Steuerung values read-only while saving only the reference metadata;
+  - imported post `25808` into `_iss_content_json` as a five-section `event.festival` candidate and added `ops/sql/2026-06-24-veranstaltung-25808-content-json.sql`.
+- Tightened Veranstaltung archive-object refs:
+  - stopped storing long Archivset member captions in `_iss_content_json`;
+  - capped archive-object labels and rendered selected objects as thumbnail cards in the `Struktur` tray and preview;
+  - refreshed post `24988` and `ops/sql/2026-06-23-veranstaltung-24988-content-json.sql` with the lean object-ref payload.
+- Added `galerie` to the normal Veranstaltung gesture set so editors can collect image-heavy event posts in a dedicated gallery section instead of overloading prose or material sections.
+- Added the editorial media bucket contract stub:
+  - documented one shared private intake/review/promotion model for Veranstaltung, Ausstellung, Projekt, Publication, pages, and archive contexts;
+  - kept `galerie` as an approved presentation section, not an editor dump area;
+  - deferred UI/storage implementation and explicitly avoided separate `eventset`, `projectset`, or `publicationset` systems.
+
 ## 2026-06-23
 
+- Added the first Veranstaltung JSON editor slice:
+  - added an `iss-content` admin structure box for `_iss_content_json` on Veranstaltung edit screens without disabling the normal editor or changing public rendering;
+  - limited available gestures by the selected `_iss_entity_key` registry contract and saved normalized section cards through the existing nonce-protected post save path;
+  - tightened `veranstaltungen-content-audit` so empty meta rows are not counted as stored JSON documents.
+- Added the second Veranstaltung JSON editor slice:
+  - added `wp iss-content veranstaltungen-content-dry-run` to report legacy-body import candidates for all converted Veranstaltungen;
+  - added guarded `wp iss-content veranstaltungen-import-candidate --post=<id-or-slug>` with dry-run default and `--yes` writes to `_iss_content_json`;
+  - kept generated documents editor-only and reported media/unsupported blocks for curator review.
+- Added the third Veranstaltung JSON editor slice:
+  - taught the import candidate builder to recognize the Gutenberg event format sheet, skip its navigation block, and preserve sheet chapters as structured sections with kicker/title/body/material items;
+  - imported post `24988` into `_iss_content_json` as a six-section `event.vortrag` document from the saved format sheet;
+  - added the transfer artifact `ops/sql/2026-06-23-veranstaltung-24988-content-json.sql` for that reviewed local document while keeping public rendering on legacy `post_content`.
+- Added the fourth Veranstaltung JSON editor slice:
+  - added a read-only preview column to the existing `Struktur` box so editors can inspect the compacted `_iss_content_json` sections before saving;
+  - kept the preview entirely in the `iss-content` admin editor script, with no public renderer switch and no new endpoint;
+  - verified post `24988` still stores a valid six-section `event.vortrag` document.
+- Added the fifth Veranstaltung JSON editor slice:
+  - added media and archive-object reference support to the existing `Struktur` box, reusing WordPress media selection and the existing archive-object picker when available;
+  - taught legacy content import to preserve WordPress image/media blocks as `media_refs` without storing local dev-host thumbnail URLs;
+  - imported post `13349` into `_iss_content_json` as a one-section `event.vortrag` document with one media ref and added `ops/sql/2026-06-24-veranstaltung-13349-content-json.sql`;
+  - left public rendering on legacy `post_content` and left the remaining `25808` dynamic `industriesalon/field` block for editor review.
 - Completed the local Veranstaltung entity migration checkpoint:
   - curated all remaining Veranstaltung posts so `wp iss-content veranstaltungen-dry-run` now reports `25 safe`, `0 review`, `0 blocked`, and `25 converted`;
   - normalized missing or partial date facts using explicit curator input where needed and recorded inference notes on fallback dates;

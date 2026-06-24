@@ -22,6 +22,9 @@ This is the implementation checkpoint for the SOW in
   object selection uses the archive picker modal: attached/context buckets first,
   object thumbnails after bucket choice, and faceted object search as the
   secondary fallback.
+- Media/object intake buckets are a separate future workflow documented in
+  `docs/architecture/editorial-media-buckets.md`. Buckets are private review
+  state; public renderers consume only promoted `media_refs` / `object_refs`.
 
 ## Rollout
 
@@ -192,6 +195,70 @@ for required/optional sections, keep the legacy body as the migration source,
 store reviewed structure in `_iss_content_json`, and avoid switching the public
 renderer until a real post proves save/reload, audit, and fallback behavior.
 
+The first JSON editor slice is implemented as an `iss-content` admin structure
+box, not as a new `iss-editorial` format. This keeps the normal Veranstaltung
+editor and current public rendering intact while editors can create optional
+section cards in `_iss_content_json`. The card palette is filtered by the
+current `_iss_entity_key` `allowed_gestures`; sections currently store text,
+quote/attribution, and line-based item lists only. Media, archive-object refs,
+generated legacy-content import, autosave, and public rendering are deferred to
+later slices.
+
+The second JSON editor slice adds guarded legacy-body import tooling. `wp
+iss-content veranstaltungen-content-dry-run` reports candidate section counts,
+section types, existing JSON state, media blocks, unsupported blocks, and review
+notes. `wp iss-content veranstaltungen-import-candidate --post=<id-or-slug>` is
+dry-run by default and writes `_iss_content_json` only with `--yes`; it refuses
+to replace existing non-empty JSON unless `--force` is explicit. Generated
+documents stay behind the current legacy public renderer until curator review.
+
+The third JSON editor slice bridges the saved Gutenberg event format sheet into
+the same `_iss_content_json` document instead of requiring classic editor
+fallback. The importer recognizes `.iss-event-format-sheet`, skips the sheet
+navigation, maps anchored chapters to allowed content gestures, preserves
+kickers/titles/body text, normalizes programme tables into readable body lines
+when the entity does not allow `programm`, and imports material rows as
+`material` items. Local post `24988` now has a six-section `event.vortrag`
+document generated from that sheet; transfer it with
+`ops/sql/2026-06-23-veranstaltung-24988-content-json.sql` if the local reviewed
+state is needed elsewhere.
+
+The fourth JSON editor slice adds a read-only preview column inside the same
+`Struktur` box. It renders the compacted section data that will be written to
+`_iss_content_json`, omits empty draft cards, and remains editor-only. Public
+Veranstaltung rendering still uses the legacy body until a curator-reviewed
+document has an explicit renderer decision.
+
+The fifth JSON editor slice adds media and archive-object references to the same
+Veranstaltung section schema. `intro` and `kapitel` can carry media refs;
+`material` and `galerie` can carry both media refs and archive-object refs.
+`galerie` is part of the normal event gesture set because editors frequently
+need a dedicated place for image-heavy event documentation. `galerie` means an
+approved presentation section, not an editor dump; raw media dumps belong in the
+future editorial media bucket workflow before promotion.
+The admin editor reuses WordPress media selection plus the existing archive
+object picker when loaded. Legacy import preserves WordPress image/media blocks
+as `media_refs` by attachment ID and avoids persisting local dev-host thumbnail
+URLs. Local post `13349` now has a one-section `event.vortrag` candidate with
+one media ref; transfer it with
+`ops/sql/2026-06-24-veranstaltung-13349-content-json.sql` if that local review
+state is needed elsewhere. Archive-object refs in the Veranstaltung path stay
+lightweight: selected objects save ID, compact label, thumbnail, and bucket
+provenance only, not long Archivset member captions. The `Struktur` tray and
+preview render those refs as image cards so editors can verify the selected
+object visually without inflating `_iss_content_json`.
+
+The sixth JSON editor slice preserves centralized Steuerung facts as references
+instead of copied text. Sections may carry `dynamic_refs` with
+`kind=control_field`, `source=industriesalon-steuerung`, and the Steuerung field
+`key` plus original block display attributes. The admin preview resolves current
+values through `Industriesalon_Steuerung::get_field_value()` for review, but the
+saved `_iss_content_json` stores only the reference metadata. Local post `25808`
+now has a five-section `event.festival` candidate whose `Ort` section references
+`address.full`; transfer it with
+`ops/sql/2026-06-24-veranstaltung-25808-content-json.sql` if that local review
+state is needed elsewhere.
+
 `wp iss-editorial ausstellung-import-candidate --post=<slug-or-id>` writes the
 same conservative candidate into `_iss_editorial_ausstellung`, clears the
 autosave meta, and forces `_iss_editorial_enabled_ausstellung` to `0`. It
@@ -199,10 +266,11 @@ refuses to replace an existing JSON document unless `--force` is passed.
 Legacy image/media blocks are imported as `bildstrecke` sections with
 `media_refs` where attachment IDs are available.
 
-Archive-object references may carry bucket provenance (`set_id`, `set_title`,
-`member_id`, `member_caption`) when selected through an Archivset. Rendering can
-still resolve by object ID, but the provenance stays available for future
-captions and source context.
+Ausstellung archive-object references may carry fuller bucket provenance
+(`set_id`, `set_title`, `member_id`, `member_caption`) when selected through an
+Archivset. Rendering can still resolve by object ID, but the provenance stays
+available for future captions and source context. Veranstaltung references use
+the leaner event path above.
 
 Editors save reviewed structure changes through the canvas' explicit `Speichern`
 action. That route writes the permanent JSON document and the enabled flag

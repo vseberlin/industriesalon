@@ -2,19 +2,45 @@
 
 Immediate executable work only. Larger future programs live in `docs/project/backlog.md`; UAT-dependent work lives in `docs/project/uat.md`.
 
-## Active Today
+## Next
 
-- Veranstaltung JSON editor next slice: build the first `_iss_content_json`
-  authoring pass on top of the completed entity migration. Use the existing
-  `iss-content` registry/field contract, keep legacy `post_content` as the
-  source/fallback, prove save/reload and `veranstaltungen-content-audit`, and do
-  not switch public rendering until one real event document is curator-reviewed.
+- Veranstaltung JSON single-renderer slice: editorial review for `24988`,
+  `13349`, `25808`, and the 22 legacy-fallback imports passed. All 25
+  Veranstaltung posts now have valid `_iss_content_json`; the public renderer
+  applies to every valid document. Veranstaltung authoring now avoids Gutenberg:
+  the default editor is disabled and `Struktur` is the primary editor surface.
+  Legacy Veranstaltung presentation switches are removed from active UI/meta
+  registration/body classes; future visual variation should be designed as
+  explicit skins/template work. For transfer, follow
+  `ops/sql/2026-06-24-veranstaltungen-transfer-instructions.md` and replay the
+  full JSON artifact plus
+  `ops/sql/2026-06-24-veranstaltungen-remove-legacy-presentation-meta.sql`.
+  Gallery-specific markup remains deferred.
+
+## Active Work
+
 - Before transferring the local Veranstaltung entity migration elsewhere, apply
   `ops/sql/2026-06-23-veranstaltungen-entity-migration.sql`, then run
   `wp iss-occurrences sync`, `wp iss-graph sync-content`,
   `wp iss-graph sync-search`, `wp iss-content veranstaltungen-dry-run`,
   `wp iss-content veranstaltungen-repository-check`, and
   `wp iss-content tours-drift-check`.
+- Before transferring the full local Veranstaltung structured-content migration
+  elsewhere, apply/review `ops/sql/2026-06-24-veranstaltungen-content-json-full.sql`;
+  it contains all 25 valid `_iss_content_json` documents and supersedes the
+  smaller per-post content JSON artifacts for full-state transfer.
+- Before transferring the `Zukunft im Gespräch` structured-content candidate
+  elsewhere, apply/review
+  `ops/sql/2026-06-24-veranstaltung-13349-content-json.sql`; the current
+  `_iss_content_json` candidate is DB-backed local review state.
+- Before transferring the `Fête de la Musique Berlin 2026` structured-content
+  candidate elsewhere, apply/review
+  `ops/sql/2026-06-24-veranstaltung-25808-content-json.sql`; its `Ort` section
+  stores only `dynamic_refs` for the centralized Steuerung address field.
+- Future media intake slice: implement the documented editorial media bucket
+  stub from `docs/architecture/editorial-media-buckets.md` as a private
+  review/promotion workflow. Do not make `galerie` an unapproved photo dump;
+  promote only approved bucket items into `media_refs` / `object_refs`.
 - Editorial platform next slice: curator-review `Frauen im Werk für Fernmeldewesen` in the custom editor with the `frauen-im-werk` JSON skin enabled locally. Clean up gesture choices, kickers, section text, captions, archive-object choices, and source/source-link details, then verify preview/frontend output.
 - Apply/review `ops/sql/2026-06-23-roehren-republik-editorial-json.sql` on staging and curator-check the `Röhren für die Republik` facts, especially the derived Leningrad T2 tube totals, before production use.
 - Continue live-testing `typografisch` and `chronik` Ausstellung JSON skins against real archival-source exhibition candidates before treating them as production-ready.

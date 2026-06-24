@@ -18,6 +18,11 @@ if (file_exists($industriesalon_ausstellungen_render_helper)) {
     require_once $industriesalon_ausstellungen_render_helper;
 }
 
+$industriesalon_veranstaltungen_render_helper = get_stylesheet_directory() . '/includes/veranstaltungen-render.php';
+if (file_exists($industriesalon_veranstaltungen_render_helper)) {
+    require_once $industriesalon_veranstaltungen_render_helper;
+}
+
 $industriesalon_archive_render_helper = get_stylesheet_directory() . '/includes/archive-render.php';
 if (file_exists($industriesalon_archive_render_helper)) {
     require_once $industriesalon_archive_render_helper;
@@ -453,48 +458,6 @@ function industriesalon_register_block_patterns(): void
             'file' => '/patterns/iss-project-dossier-chapters.html',
         ),
         array(
-            'name' => 'industriesalon/event-program-spine',
-            'title' => 'ISS Veranstaltungsprogramm',
-            'description' => 'Rule-based program table for larger Veranstaltung pages without adding a separate event data model.',
-            'categories' => array('industriesalon', 'text'),
-            'file' => '/patterns/iss-event-program-spine.html',
-        ),
-        array(
-            'name' => 'industriesalon/event-fest-program',
-            'title' => 'ISS Festprogramm',
-            'description' => 'Festival-oriented program and info cells for repeatable Fest / Programm Veranstaltung pages.',
-            'categories' => array('industriesalon', 'text'),
-            'file' => '/patterns/iss-event-fest-program.html',
-        ),
-        array(
-            'name' => 'industriesalon/event-format-vortrag',
-            'title' => 'ISS Terminblatt Vortrag',
-            'description' => 'Speaker-first Terminblatt chapters for talks and lectures.',
-            'categories' => array('industriesalon', 'text'),
-            'file' => '/patterns/iss-event-format-vortrag.html',
-        ),
-        array(
-            'name' => 'industriesalon/event-format-gespraech',
-            'title' => 'ISS Terminblatt Gespräch',
-            'description' => 'Participants-first Terminblatt chapters for talks, panels, and discussions.',
-            'categories' => array('industriesalon', 'text'),
-            'file' => '/patterns/iss-event-format-gespraech.html',
-        ),
-        array(
-            'name' => 'industriesalon/event-format-lesung',
-            'title' => 'ISS Terminblatt Lesung',
-            'description' => 'Publication-first Terminblatt chapters for readings and book events.',
-            'categories' => array('industriesalon', 'text'),
-            'file' => '/patterns/iss-event-format-lesung.html',
-        ),
-        array(
-            'name' => 'industriesalon/event-format-praesentation',
-            'title' => 'ISS Terminblatt Präsentation',
-            'description' => 'Material-first Terminblatt chapters for presentations, outputs, and launches.',
-            'categories' => array('industriesalon', 'text'),
-            'file' => '/patterns/iss-event-format-praesentation.html',
-        ),
-        array(
             'name' => 'industriesalon/recognition-split',
             'title' => 'ISS Recognition Split',
             'description' => 'Editorial recognition section with a tall media column, trio intro, and two supporting award cards. Remove iss-flex-split--reverse to move the media left.',
@@ -891,55 +854,6 @@ function industriesalon_filter_short_post_excerpt($excerpt, $post): string
 }
 add_filter('get_the_excerpt', 'industriesalon_filter_short_post_excerpt', 20, 2);
 
-/**
- * Veranstaltung layout variants (Terminblatt / Kurzmeldung / Fest / Bericht).
- */
-function industriesalon_event_layout_choices(): array
-{
-    return array('standard', 'compact', 'fest', 'long');
-}
-
-function industriesalon_event_scheme_choices(): array
-{
-    return array('blue', 'red', 'green', 'yellow', 'brown');
-}
-
-function industriesalon_event_format_choices(): array
-{
-    return array('general', 'vortrag', 'gespraech', 'lesung', 'praesentation', 'repair_cafe', 'concert', 'festival', 'workshop', 'school_program');
-}
-
-function industriesalon_sanitize_event_layout($value): string
-{
-    $value = sanitize_key((string) $value);
-    if ($value === 'feature') {
-        $value = 'fest';
-    }
-    return in_array($value, industriesalon_event_layout_choices(), true) ? $value : 'standard';
-}
-
-function industriesalon_sanitize_event_scheme($value): string
-{
-    $value = sanitize_key((string) $value);
-    return in_array($value, industriesalon_event_scheme_choices(), true) ? $value : 'blue';
-}
-
-function industriesalon_sanitize_event_format($value): string
-{
-    $value = sanitize_key(remove_accents((string) $value));
-    if ($value === 'gesprach') {
-        $value = 'gespraech';
-    } elseif ($value === 'prasentation' || $value === 'presentation') {
-        $value = 'praesentation';
-    } elseif (in_array($value, array('repair-cafe', 'repaircafe', 'reparaturcafe', 'reparatur-cafe'), true)) {
-        $value = 'repair_cafe';
-    } elseif (in_array($value, array('school', 'school-program', 'schoolprogram', 'schulprogramm'), true)) {
-        $value = 'school_program';
-    }
-
-    return in_array($value, industriesalon_event_format_choices(), true) ? $value : 'general';
-}
-
 function industriesalon_get_placeholder_asset_url(string $filename): string
 {
     $filename = sanitize_file_name($filename);
@@ -959,20 +873,20 @@ function industriesalon_get_placeholder_asset_url(string $filename): string
 function industriesalon_get_related_card_placeholder_filename(WP_Post $post): string
 {
     if ($post->post_type === 'veranstaltung') {
-        $layout = industriesalon_sanitize_event_layout(get_post_meta($post->ID, '_iss_event_layout', true));
-        if ($layout === 'fest') {
-            return 'fest.webp';
-        }
-
-        $format = industriesalon_sanitize_event_format(get_post_meta($post->ID, '_iss_event_format', true));
-        $event_format_placeholders = [
-            'vortrag' => 'vortrag.webp',
-            'gespraech' => 'gespach.webp',
-            'lesung' => 'lesung.webp',
-            'praesentation' => 'versanstaltung.webp',
+        $entity_key = function_exists('iss_content_model_sanitize_veranstaltung_entity_key')
+            ? iss_content_model_sanitize_veranstaltung_entity_key((string) get_post_meta((int) $post->ID, '_iss_entity_key', true))
+            : '';
+        $entity_placeholders = [
+            'event.vortrag' => 'vortrag.webp',
+            'event.gespraech' => 'gespach.webp',
+            'event.lesung' => 'lesung.webp',
+            'event.festival' => 'fest.webp',
+            'event.praesentation' => 'versanstaltung.webp',
+            'event.workshop' => 'versanstaltung.webp',
+            'event.konzert' => 'fest.webp',
         ];
 
-        return $event_format_placeholders[$format] ?? 'versanstaltung.webp';
+        return $entity_placeholders[$entity_key] ?? 'versanstaltung.webp';
     }
 
     $post_type_placeholders = [
@@ -1042,46 +956,6 @@ function industriesalon_render_featured_image_placeholder_block(string $block_co
 }
 add_filter('render_block_core/post-featured-image', 'industriesalon_render_featured_image_placeholder_block', 9, 3);
 
-function industriesalon_can_edit_event_meta($allowed = null, $meta_key = '', $post_id = 0): bool
-{
-    $post_id = (int) $post_id;
-    if ($post_id > 0) {
-        return current_user_can('edit_post', $post_id);
-    }
-    return current_user_can('edit_posts');
-}
-
-function industriesalon_register_event_layout_meta(): void
-{
-    register_post_meta('veranstaltung', '_iss_event_layout', array(
-        'single' => true,
-        'type' => 'string',
-        'default' => 'standard',
-        'show_in_rest' => true,
-        'sanitize_callback' => 'industriesalon_sanitize_event_layout',
-        'auth_callback' => 'industriesalon_can_edit_event_meta',
-    ));
-
-    register_post_meta('veranstaltung', '_iss_event_scheme', array(
-        'single' => true,
-        'type' => 'string',
-        'default' => 'blue',
-        'show_in_rest' => true,
-        'sanitize_callback' => 'industriesalon_sanitize_event_scheme',
-        'auth_callback' => 'industriesalon_can_edit_event_meta',
-    ));
-
-    register_post_meta('veranstaltung', '_iss_event_format', array(
-        'single' => true,
-        'type' => 'string',
-        'default' => 'general',
-        'show_in_rest' => true,
-        'sanitize_callback' => 'industriesalon_sanitize_event_format',
-        'auth_callback' => 'industriesalon_can_edit_event_meta',
-    ));
-}
-add_action('init', 'industriesalon_register_event_layout_meta');
-
 function industriesalon_add_event_layout_body_class(array $classes): array
 {
     if (!is_singular('veranstaltung')) {
@@ -1089,13 +963,6 @@ function industriesalon_add_event_layout_body_class(array $classes): array
     }
 
     $post_id = get_queried_object_id();
-    $layout = industriesalon_sanitize_event_layout(get_post_meta($post_id, '_iss_event_layout', true));
-    $scheme = industriesalon_sanitize_event_scheme(get_post_meta($post_id, '_iss_event_scheme', true));
-    $format = industriesalon_sanitize_event_format(get_post_meta($post_id, '_iss_event_format', true));
-    $classes[] = 'iss-event-layout-' . $layout;
-    $classes[] = 'iss-event-scheme-' . $scheme;
-    $classes[] = 'iss-event-format-' . $format;
-
     $entity_key = '';
     if (function_exists('iss_content_model_sanitize_veranstaltung_entity_key')) {
         $entity_key = iss_content_model_sanitize_veranstaltung_entity_key((string) get_post_meta($post_id, '_iss_entity_key', true));
@@ -1136,11 +1003,6 @@ function industriesalon_is_compact_header_context(): bool
     if (is_singular('post')) {
         $post_id = get_queried_object_id();
         return industriesalon_sanitize_post_layout(get_post_meta($post_id, '_iss_post_layout', true)) === 'long';
-    }
-
-    if (is_singular('veranstaltung')) {
-        $post_id = get_queried_object_id();
-        return industriesalon_sanitize_event_layout(get_post_meta($post_id, '_iss_event_layout', true)) === 'long';
     }
 
     return false;
@@ -1272,313 +1134,6 @@ function industriesalon_render_compact_header_context(): string
     return trim((string) ob_get_clean());
 }
 add_shortcode('iss_compact_header_context', 'industriesalon_render_compact_header_context');
-
-function industriesalon_get_event_format_pattern_content(string $format): string
-{
-    $files = array(
-        'vortrag' => '/patterns/iss-event-format-vortrag.html',
-        'gespraech' => '/patterns/iss-event-format-gespraech.html',
-        'lesung' => '/patterns/iss-event-format-lesung.html',
-        'praesentation' => '/patterns/iss-event-format-praesentation.html',
-    );
-
-    if (empty($files[$format])) {
-        return '';
-    }
-
-    $file_path = get_stylesheet_directory() . $files[$format];
-    if (!file_exists($file_path)) {
-        return '';
-    }
-
-    $content = file_get_contents($file_path);
-    if ($content === false) {
-        return '';
-    }
-
-    return (string) preg_replace('/^<!--[\s\S]*?-->\s*/', '', $content, 1);
-}
-
-function industriesalon_get_event_format_pattern_payload(): array
-{
-    $payload = array();
-
-    foreach (array('vortrag', 'gespraech', 'lesung', 'praesentation') as $format) {
-        $content = industriesalon_get_event_format_pattern_content($format);
-        if ($content === '') {
-            continue;
-        }
-
-        $payload[$format] = $content;
-    }
-
-    return $payload;
-}
-
-function industriesalon_enqueue_event_layout_editor_assets(): void
-{
-    if (!function_exists('get_current_screen')) {
-        return;
-    }
-
-    $screen = get_current_screen();
-    if (!$screen || $screen->base !== 'post' || $screen->post_type !== 'veranstaltung') {
-        return;
-    }
-
-    wp_register_script(
-        'industriesalon-event-layout-editor',
-        false,
-        array('wp-plugins', 'wp-edit-post', 'wp-element', 'wp-components', 'wp-data', 'wp-blocks', 'wp-block-editor', 'wp-notices'),
-        wp_get_theme()->get('Version'),
-        true
-    );
-    wp_enqueue_script('industriesalon-event-layout-editor');
-    wp_add_inline_script(
-        'industriesalon-event-layout-editor',
-        'window.industriesalonEventFormatPatterns = ' . wp_json_encode(industriesalon_get_event_format_pattern_payload()) . ';',
-        'before'
-    );
-
-    $script = <<<'JS'
-(function (wp) {
-  if (!wp || !wp.plugins || !wp.editPost || !wp.element || !wp.components || !wp.data || !wp.blocks) {
-    return;
-  }
-
-  var registerPlugin = wp.plugins.registerPlugin;
-  var PluginDocumentSettingPanel = wp.editPost.PluginDocumentSettingPanel;
-  var Button = wp.components.Button;
-  var SelectControl = wp.components.SelectControl;
-  var Notice = wp.components.Notice;
-  var createElement = wp.element.createElement;
-  var useSelect = wp.data.useSelect;
-  var useDispatch = wp.data.useDispatch;
-  var formatPatterns = window.industriesalonEventFormatPatterns || {};
-
-  var layoutOptions = [
-    { label: 'Terminblatt', value: 'standard' },
-    { label: 'Kurzmeldung', value: 'compact' },
-    { label: 'Fest / Programm', value: 'fest' },
-    { label: 'Bericht / Longread', value: 'long' }
-  ];
-
-  var schemeOptions = [
-    { label: 'Blau', value: 'blue' },
-    { label: 'Rot', value: 'red' },
-    { label: 'Grün', value: 'green' },
-    { label: 'Gelb', value: 'yellow' },
-    { label: 'Braun', value: 'brown' }
-  ];
-
-  var formatOptions = [
-    { label: 'Allgemein', value: 'general' },
-    { label: 'Vortrag', value: 'vortrag' },
-    { label: 'Gespräch', value: 'gespraech' },
-    { label: 'Lesung', value: 'lesung' },
-    { label: 'Präsentation', value: 'praesentation' },
-    { label: 'Repair Café', value: 'repair_cafe' },
-    { label: 'Konzert', value: 'concert' },
-    { label: 'Festival', value: 'festival' },
-    { label: 'Workshop', value: 'workshop' },
-    { label: 'Schulprogramm', value: 'school_program' }
-  ];
-
-  function normalizeLayout(value) {
-    if (value === 'feature') {
-      return 'fest';
-    }
-    if (value === 'standard' || value === 'compact' || value === 'fest' || value === 'long') {
-      return value;
-    }
-    return 'standard';
-  }
-
-  function normalizeScheme(value) {
-    if (value === 'blue' || value === 'red' || value === 'green' || value === 'yellow' || value === 'brown') {
-      return value;
-    }
-    return 'blue';
-  }
-
-  function normalizeFormat(value) {
-    if (value === 'gesprach') {
-      return 'gespraech';
-    }
-    if (value === 'prasentation' || value === 'presentation') {
-      return 'praesentation';
-    }
-    if (value === 'repair-cafe' || value === 'repaircafe' || value === 'reparaturcafe' || value === 'reparatur-cafe') {
-      return 'repair_cafe';
-    }
-    if (value === 'school' || value === 'school-program' || value === 'schoolprogram' || value === 'schulprogramm') {
-      return 'school_program';
-    }
-    if (value === 'general' || value === 'vortrag' || value === 'gespraech' || value === 'lesung' || value === 'praesentation' || value === 'repair_cafe' || value === 'concert' || value === 'festival' || value === 'workshop' || value === 'school_program') {
-      return value;
-    }
-    return 'general';
-  }
-
-  function blockHasContent(block) {
-    var attrs = block.attributes || {};
-    var innerBlocks = block.innerBlocks || [];
-
-    if (attrs.content && String(attrs.content).trim() !== '') {
-      return true;
-    }
-    if (attrs.value && String(attrs.value).trim() !== '') {
-      return true;
-    }
-    if (attrs.url && String(attrs.url).trim() !== '') {
-      return true;
-    }
-
-    return innerBlocks.some(blockHasContent);
-  }
-
-  function isEmptyPostContent(blocks) {
-    return !blocks.length || !blocks.some(blockHasContent);
-  }
-
-  function hasEventFormatSheet(blocks) {
-    return blocks.some(function (block) {
-      var className = block.attributes && block.attributes.className ? String(block.attributes.className) : '';
-
-      return className.indexOf('iss-event-format-sheet') !== -1 || hasEventFormatSheet(block.innerBlocks || []);
-    });
-  }
-
-  function parseFormatPattern(format) {
-    var content = formatPatterns[format] || '';
-    if (!content) {
-      return [];
-    }
-
-    return wp.blocks.parse(content);
-  }
-
-  function insertFormatPattern(format, shouldReset) {
-    var blocks = parseFormatPattern(format);
-    if (!blocks.length) {
-      return false;
-    }
-
-    if (shouldReset) {
-      wp.data.dispatch('core/block-editor').resetBlocks(blocks);
-    } else {
-      wp.data.dispatch('core/block-editor').insertBlocks(blocks);
-    }
-
-    return true;
-  }
-
-  function EventLayoutPanel() {
-    var postType = useSelect(function (select) {
-      return select('core/editor').getCurrentPostType();
-    }, []);
-
-    var meta = useSelect(function (select) {
-      return select('core/editor').getEditedPostAttribute('meta') || {};
-    }, []);
-
-    var blocks = useSelect(function (select) {
-      return select('core/block-editor').getBlocks();
-    }, []);
-
-    var editPost = useDispatch('core/editor').editPost;
-    var createNotice = useDispatch('core/notices').createNotice;
-
-    if (postType !== 'veranstaltung') {
-      return null;
-    }
-
-    var layoutValue = normalizeLayout(meta._iss_event_layout);
-    var schemeValue = normalizeScheme(meta._iss_event_scheme);
-    var formatValue = normalizeFormat(meta._iss_event_format);
-    var emptyPostContent = isEmptyPostContent(blocks);
-    var hasFormatContent = hasEventFormatSheet(blocks);
-    var canInsertFormatPattern = formatValue !== 'general' && !!formatPatterns[formatValue] && !hasFormatContent;
-
-    function handleFormatChange(nextValue) {
-      var nextMeta;
-
-      nextValue = normalizeFormat(nextValue);
-      nextMeta = Object.assign({}, meta, { _iss_event_format: nextValue });
-
-      if (nextValue !== 'general' && emptyPostContent && !hasFormatContent && formatPatterns[nextValue]) {
-        nextMeta._iss_event_layout = 'standard';
-        insertFormatPattern(nextValue, true);
-      }
-
-      editPost({ meta: nextMeta });
-    }
-
-    function handleInsertPattern() {
-      if (!canInsertFormatPattern) {
-        return;
-      }
-
-      if (insertFormatPattern(formatValue, false)) {
-        editPost({ meta: Object.assign({}, meta, { _iss_event_layout: 'standard', _iss_event_format: formatValue }) });
-        createNotice('success', 'Terminblatt-Struktur eingefügt.', { type: 'snackbar' });
-      }
-    }
-
-    return createElement(
-      PluginDocumentSettingPanel,
-      { name: 'iss-event-layout', title: 'Veranstaltungslayout', className: 'iss-event-layout-panel' },
-      createElement(
-        'div',
-        null,
-        createElement(SelectControl, {
-          label: 'Layout',
-          value: layoutValue,
-          options: layoutOptions,
-          help: 'Wählt die editoriale Einzelseite; Fest / Programm ist für wiederholbare offene Programme gedacht.',
-          onChange: function (nextValue) {
-            nextValue = normalizeLayout(nextValue);
-            editPost({ meta: Object.assign({}, meta, { _iss_event_layout: nextValue }) });
-          }
-        }),
-        createElement(SelectControl, {
-          label: 'Farbschema',
-          value: schemeValue,
-          options: schemeOptions,
-          help: 'Steuert Akzentfarbe und Fest-Hero, ohne den Inhalt oder das Layout zu ändern.',
-          onChange: function (nextValue) {
-            nextValue = normalizeScheme(nextValue);
-            editPost({ meta: Object.assign({}, meta, { _iss_event_scheme: nextValue }) });
-          }
-        }),
-        createElement(SelectControl, {
-          label: 'Format',
-          value: formatValue,
-          options: formatOptions,
-          help: 'Bei leerem Inhalt wird die passende Terminblatt-Struktur eingefügt. Bestehender Inhalt bleibt unverändert.',
-          onChange: handleFormatChange
-        }),
-        canInsertFormatPattern && createElement(Button, {
-          variant: 'secondary',
-          onClick: handleInsertPattern
-        }, 'Terminblatt-Struktur einfügen'),
-        hasFormatContent && createElement(Notice, {
-          status: 'info',
-          isDismissible: false
-        }, 'Diese Veranstaltung enthält bereits eine Terminblatt-Struktur.')
-      )
-    );
-  }
-
-  registerPlugin('iss-event-layout-panel', {
-    render: EventLayoutPanel
-  });
-})(window.wp);
-JS;
-
-    wp_add_inline_script('industriesalon-event-layout-editor', $script);
-}
-add_action('enqueue_block_editor_assets', 'industriesalon_enqueue_event_layout_editor_assets');
 
 function industriesalon_enqueue_assets(): void
 {

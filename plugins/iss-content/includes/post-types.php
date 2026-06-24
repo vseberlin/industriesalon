@@ -208,12 +208,12 @@ add_action('init', 'iss_content_model_register_post_types');
 /**
  * These CPTs rely on theme-owned block patterns or document panels in their
  * single-entry editorial workflow, so they opt back into Gutenberg after the
- * global structured-content Classic Editor policy has run.
+ * global structured-content Classic Editor policy has run. Veranstaltung uses
+ * its structured-content canvas instead of the block editor.
  */
 function iss_content_model_block_editor_post_types(): array
 {
     return [
-        ISS_CONTENT_MODEL_VERANSTALTUNG_POST_TYPE,
         ISS_CONTENT_MODEL_AUSSTELLUNG_POST_TYPE,
         ISS_CONTENT_MODEL_PROJEKT_POST_TYPE,
         ISS_CONTENT_MODEL_VIDEO_POST_TYPE,
@@ -243,6 +243,12 @@ function iss_content_model_use_block_editor_for_selected_posts(bool $use_block_e
     return $use_block_editor;
 }
 add_filter('use_block_editor_for_post', 'iss_content_model_use_block_editor_for_selected_posts', 1000, 2);
+
+function iss_content_model_remove_veranstaltung_default_editor_support(): void
+{
+    remove_post_type_support(ISS_CONTENT_MODEL_VERANSTALTUNG_POST_TYPE, 'editor');
+}
+add_action('init', 'iss_content_model_remove_veranstaltung_default_editor_support', 100);
 
 function iss_content_model_attach_shared_topic_taxonomy(): void
 {
