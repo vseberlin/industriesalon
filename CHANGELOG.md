@@ -6,6 +6,13 @@ be recovered from Git history.
 
 ## 2026-06-24
 
+- Implemented the Veranstaltung Shape + Skin cleanup:
+  - added registry-derived `iss-event-shape-*`, `iss-event-skin-*`, and normalized `iss-event-entity-*` body classes for singular Veranstaltungen;
+  - added concrete Vortrag, Lesung, Gespraech, Repair, and Festival skins from the shape/skin mockup, with scoped typography, sidebar, color, layout, and programme treatments while leaving undesigned event entities on the baseline treatment;
+  - made `galerie` the explicit image-gallery gesture with a framed carousel strip, removed image refs from `material`, and added `ops/sql/2026-06-24-veranstaltung-24988-material-gallery-split.sql` for the one existing material-image row;
+  - replaced old `iss-event-format-*` renderer markup/CSS with the structured JSON class surface and removed stale festival-info styling;
+  - removed completed legacy body import commands/helpers and the unused skin-override meta shell after all current Veranstaltung JSON documents passed review;
+  - moved graph offer subtype sources to `_iss_entity_key` only, removing the remaining layout/format fallback path.
 - Added the guarded Veranstaltung single-renderer slice:
   - marked the editorial review for `24988`, `13349`, and `25808` as passed in the active checkpoint;
   - added a theme-owned `_iss_content_json` renderer for those reviewed posts only, with legacy `post_content` fallback for every other Veranstaltung;

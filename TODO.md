@@ -10,12 +10,16 @@ Immediate executable work only. Larger future programs live in `docs/project/bac
   applies to every valid document. Veranstaltung authoring now avoids Gutenberg:
   the default editor is disabled and `Struktur` is the primary editor surface.
   Legacy Veranstaltung presentation switches are removed from active UI/meta
-  registration/body classes; future visual variation should be designed as
-  explicit skins/template work. For transfer, follow
+  registration/body classes. Theme-owned skins are active for `vortrag`,
+  `lesung`, `gespraech`, and `festival`; `repair` is prepared for future
+  `event.repair_cafe`; `workshop` and `praesentation` stay on the baseline
+  `typografisch` skin until designed. `galerie` now renders as a public carousel
+  strip, and `material` is reserved for documents/downloads/links/object refs.
+  For transfer, follow
   `ops/sql/2026-06-24-veranstaltungen-transfer-instructions.md` and replay the
   full JSON artifact plus
-  `ops/sql/2026-06-24-veranstaltungen-remove-legacy-presentation-meta.sql`.
-  Gallery-specific markup remains deferred.
+  `ops/sql/2026-06-24-veranstaltungen-remove-legacy-presentation-meta.sql` and
+  `ops/sql/2026-06-24-veranstaltung-24988-material-gallery-split.sql`.
 
 ## Active Work
 

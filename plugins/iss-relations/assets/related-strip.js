@@ -16,13 +16,13 @@
   }
 
   function updateCarouselState(strip) {
-    var carousel = strip.closest('[data-related-carousel]');
+    var carousel = strip.closest('[data-related-carousel], [data-iss-strip-carousel]');
     if (!carousel) {
       return;
     }
 
-    var prevButton = carousel.querySelector('[data-related-carousel-prev]');
-    var nextButton = carousel.querySelector('[data-related-carousel-next]');
+    var prevButton = carousel.querySelector('[data-related-carousel-prev], [data-iss-strip-carousel-prev]');
+    var nextButton = carousel.querySelector('[data-related-carousel-next], [data-iss-strip-carousel-next]');
     var maxScroll = getScrollMax(strip);
     var canScroll = maxScroll > 1;
     var scrollLeft = strip.scrollLeft;
@@ -63,9 +63,9 @@
 
     strip.dataset.issRelatedStripBound = '1';
 
-    var carousel = strip.closest('[data-related-carousel]');
-    var prevButton = carousel ? carousel.querySelector('[data-related-carousel-prev]') : null;
-    var nextButton = carousel ? carousel.querySelector('[data-related-carousel-next]') : null;
+    var carousel = strip.closest('[data-related-carousel], [data-iss-strip-carousel]');
+    var prevButton = carousel ? carousel.querySelector('[data-related-carousel-prev], [data-iss-strip-carousel-prev]') : null;
+    var nextButton = carousel ? carousel.querySelector('[data-related-carousel-next], [data-iss-strip-carousel-next]') : null;
     var resizeObserver = null;
     var dragState = {
       active: false,
@@ -228,7 +228,7 @@
 
   function initRelatedStrips(root) {
     var scope = root && root.querySelectorAll ? root : document;
-    var strips = scope.querySelectorAll('.iss-related-feed__grid--layout-strip');
+    var strips = scope.querySelectorAll('.iss-related-feed__grid--layout-strip, [data-iss-strip-carousel-track]');
 
     strips.forEach(bindRelatedStrip);
   }

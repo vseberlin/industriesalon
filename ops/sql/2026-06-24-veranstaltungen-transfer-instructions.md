@@ -17,6 +17,8 @@ This transfer moves the local Veranstaltung structured-content checkpoint:
 - `ops/sql/2026-06-24-veranstaltungen-content-json-full.sql`
   - Full `_iss_content_json` state for all 25 current Veranstaltung posts.
   - Supersedes the three per-post JSON artifacts for full-state transfer.
+- `ops/sql/2026-06-24-veranstaltung-24988-material-gallery-split.sql`
+  - Applies the later split that moves the one existing material image into a `galerie` section.
 - `ops/sql/2026-06-24-veranstaltungen-remove-legacy-presentation-meta.sql`
   - Deletes inert legacy `_iss_event_layout`, `_iss_event_format`, and `_iss_event_scheme` rows.
 - Optional narrow review artifacts:
@@ -32,8 +34,9 @@ No uploads artifact is required for this checkpoint. The JSON stores existing at
 2. Deploy code first.
 3. If needed, apply `ops/sql/2026-06-23-veranstaltungen-entity-migration.sql`.
 4. Apply `ops/sql/2026-06-24-veranstaltungen-content-json-full.sql`.
-5. Apply `ops/sql/2026-06-24-veranstaltungen-remove-legacy-presentation-meta.sql`.
-6. Refresh projections:
+5. Apply `ops/sql/2026-06-24-veranstaltung-24988-material-gallery-split.sql`.
+6. Apply `ops/sql/2026-06-24-veranstaltungen-remove-legacy-presentation-meta.sql`.
+7. Refresh projections:
 
 ```bash
 wp iss-occurrences sync
@@ -41,7 +44,7 @@ wp iss-graph sync-content
 wp iss-graph sync-search
 ```
 
-7. Verify:
+8. Verify:
 
 ```bash
 wp iss-content veranstaltungen-dry-run --format=json

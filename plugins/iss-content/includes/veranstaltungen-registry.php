@@ -72,7 +72,7 @@ function iss_content_model_veranstaltung_registry(): array
                 'post_type' => ISS_CONTENT_MODEL_VERANSTALTUNG_POST_TYPE,
                 'shape' => 'moment',
                 'icon' => 'mic',
-                'default_skin' => 'typografisch',
+                'default_skin' => 'vortrag',
                 'allowed_gestures' => ['intro', 'kapitel', 'zitat', 'material', 'galerie'],
                 'fields' => $moment_fields,
             ],
@@ -82,7 +82,7 @@ function iss_content_model_veranstaltung_registry(): array
                 'post_type' => ISS_CONTENT_MODEL_VERANSTALTUNG_POST_TYPE,
                 'shape' => 'moment',
                 'icon' => 'chat',
-                'default_skin' => 'typografisch',
+                'default_skin' => 'gespraech',
                 'allowed_gestures' => ['intro', 'kapitel', 'zitat', 'material', 'galerie'],
                 'fields' => $moment_fields,
             ],
@@ -92,7 +92,7 @@ function iss_content_model_veranstaltung_registry(): array
                 'post_type' => ISS_CONTENT_MODEL_VERANSTALTUNG_POST_TYPE,
                 'shape' => 'moment',
                 'icon' => 'book',
-                'default_skin' => 'typografisch',
+                'default_skin' => 'lesung',
                 'allowed_gestures' => ['intro', 'kapitel', 'zitat', 'material', 'galerie'],
                 'fields' => $moment_fields,
             ],
@@ -142,7 +142,7 @@ function iss_content_model_veranstaltung_registry(): array
                 'post_type' => ISS_CONTENT_MODEL_VERANSTALTUNG_POST_TYPE,
                 'shape' => 'span',
                 'icon' => 'calendar-star',
-                'default_skin' => 'programmatisch',
+                'default_skin' => 'festival',
                 'allowed_gestures' => ['intro', 'programm', 'kapitel', 'material', 'galerie'],
                 'fields' => $span_fields,
             ],
@@ -152,7 +152,7 @@ function iss_content_model_veranstaltung_registry(): array
                 'post_type' => ISS_CONTENT_MODEL_VERANSTALTUNG_POST_TYPE,
                 'shape' => 'manual_recurring',
                 'icon' => 'wrench',
-                'default_skin' => 'typografisch',
+                'default_skin' => 'repair',
                 'allowed_gestures' => ['intro', 'kapitel', 'material', 'galerie'],
                 'fields' => $repair_cafe_fields,
             ],
@@ -205,6 +205,13 @@ function iss_content_model_veranstaltung_entity_primary_surface(string $entity_k
     $shape_config = is_array($registry['shapes'][$shape] ?? null) ? $registry['shapes'][$shape] : [];
 
     return sanitize_key((string) ($shape_config['primary_surface'] ?? ''));
+}
+
+function iss_content_model_veranstaltung_entity_default_skin(string $entity_key): string
+{
+    $entity = iss_content_model_veranstaltung_entity($entity_key);
+
+    return sanitize_key((string) ($entity['default_skin'] ?? ''));
 }
 
 function iss_content_model_veranstaltung_entity_icon(string $entity_key): string

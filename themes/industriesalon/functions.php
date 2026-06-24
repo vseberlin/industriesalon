@@ -956,7 +956,7 @@ function industriesalon_render_featured_image_placeholder_block(string $block_co
 }
 add_filter('render_block_core/post-featured-image', 'industriesalon_render_featured_image_placeholder_block', 9, 3);
 
-function industriesalon_add_event_layout_body_class(array $classes): array
+function industriesalon_add_event_registry_body_classes(array $classes): array
 {
     if (!is_singular('veranstaltung')) {
         return $classes;
@@ -969,12 +969,12 @@ function industriesalon_add_event_layout_body_class(array $classes): array
     }
 
     if ($entity_key !== '') {
-        $classes[] = 'iss-event-entity-' . sanitize_html_class(str_replace('.', '-', $entity_key));
+        $classes[] = 'iss-event-entity-' . sanitize_html_class(str_replace(['.', '_'], '-', $entity_key));
 
         if (function_exists('iss_content_model_veranstaltung_entity_shape')) {
             $shape = iss_content_model_veranstaltung_entity_shape($entity_key);
             if ($shape !== '') {
-                $classes[] = 'iss-event-shape-' . sanitize_html_class($shape);
+                $classes[] = 'iss-event-shape-' . sanitize_html_class(str_replace('_', '-', $shape));
             }
         }
 
@@ -984,11 +984,18 @@ function industriesalon_add_event_layout_body_class(array $classes): array
                 $classes[] = 'iss-event-surface-' . sanitize_html_class($surface);
             }
         }
+
+        if (function_exists('iss_content_model_veranstaltung_entity_default_skin')) {
+            $skin = iss_content_model_veranstaltung_entity_default_skin($entity_key);
+            if ($skin !== '') {
+                $classes[] = 'iss-event-skin-' . sanitize_html_class($skin);
+            }
+        }
     }
 
     return $classes;
 }
-add_filter('body_class', 'industriesalon_add_event_layout_body_class');
+add_filter('body_class', 'industriesalon_add_event_registry_body_classes');
 
 function industriesalon_is_compact_header_context(): bool
 {

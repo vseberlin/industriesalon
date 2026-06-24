@@ -365,7 +365,7 @@ function iss_graph_get_offer_subtype_registry(): array
         'event' => [
             'label' => 'Event',
             'public_label' => __('Veranstaltung', 'iss-graph'),
-            'source' => '_iss_event_format:general',
+            'source' => '_iss_entity_key:event.general',
         ],
         'event_report' => [
             'label' => 'Event report',
@@ -375,52 +375,47 @@ function iss_graph_get_offer_subtype_registry(): array
         'lecture' => [
             'label' => 'Lecture',
             'public_label' => __('Vortrag', 'iss-graph'),
-            'source' => '_iss_event_format:vortrag',
+            'source' => '_iss_entity_key:event.vortrag',
         ],
         'discussion' => [
             'label' => 'Discussion',
             'public_label' => __('Gespräch', 'iss-graph'),
-            'source' => '_iss_event_format:gespraech',
+            'source' => '_iss_entity_key:event.gespraech',
         ],
         'repair_cafe' => [
             'label' => 'Repair cafe',
             'public_label' => __('Repair Café', 'iss-graph'),
-            'source' => '_iss_event_format:repair_cafe',
+            'source' => '_iss_entity_key:event.repair_cafe',
         ],
         'concert' => [
             'label' => 'Concert',
             'public_label' => __('Konzert', 'iss-graph'),
-            'source' => '_iss_event_format:concert',
+            'source' => '_iss_entity_key:event.konzert',
         ],
         'festival' => [
             'label' => 'Festival',
             'public_label' => __('Festival', 'iss-graph'),
-            'source' => '_iss_event_format:festival',
+            'source' => '_iss_entity_key:event.festival',
         ],
         'workshop' => [
             'label' => 'Workshop',
             'public_label' => __('Workshop', 'iss-graph'),
-            'source' => '_iss_event_format:workshop',
+            'source' => '_iss_entity_key:event.workshop',
         ],
         'school_program' => [
             'label' => 'School program',
             'public_label' => __('Schulprogramm', 'iss-graph'),
-            'source' => '_iss_event_format:school_program',
+            'source' => '_iss_entity_key:event.school_program',
         ],
         'reading' => [
             'label' => 'Reading',
             'public_label' => __('Lesung', 'iss-graph'),
-            'source' => '_iss_event_format:lesung',
+            'source' => '_iss_entity_key:event.lesung',
         ],
         'presentation' => [
             'label' => 'Presentation',
             'public_label' => __('Präsentation', 'iss-graph'),
-            'source' => '_iss_event_format:praesentation',
-        ],
-        'special_opening' => [
-            'label' => 'Special opening',
-            'public_label' => __('Sonderöffnung', 'iss-graph'),
-            'source' => '_iss_event_layout:fest',
+            'source' => '_iss_entity_key:event.praesentation',
         ],
     ]);
 }
@@ -463,48 +458,6 @@ function iss_graph_get_contract_public_label(array $contract): string
     }
 
     return '';
-}
-
-function iss_graph_normalize_veranstaltung_format_for_offer($value): string
-{
-    if (function_exists('iss_content_model_normalize_veranstaltung_format')) {
-        return iss_content_model_normalize_veranstaltung_format((string) $value);
-    }
-
-    if (function_exists('industriesalon_sanitize_event_format')) {
-        return industriesalon_sanitize_event_format($value);
-    }
-
-    $value = sanitize_key(remove_accents((string) $value));
-    if ($value === 'gesprach') {
-        $value = 'gespraech';
-    } elseif ($value === 'prasentation' || $value === 'presentation') {
-        $value = 'praesentation';
-    } elseif (in_array($value, ['repair-cafe', 'repaircafe', 'reparaturcafe', 'reparatur-cafe'], true)) {
-        $value = 'repair_cafe';
-    } elseif (in_array($value, ['school', 'school-program', 'schoolprogram', 'schulprogramm'], true)) {
-        $value = 'school_program';
-    }
-
-    return in_array($value, ['general', 'vortrag', 'gespraech', 'lesung', 'praesentation', 'repair_cafe', 'concert', 'festival', 'workshop', 'school_program'], true) ? $value : 'general';
-}
-
-function iss_graph_normalize_veranstaltung_layout_for_offer($value): string
-{
-    if (function_exists('iss_content_model_normalize_veranstaltung_layout')) {
-        return iss_content_model_normalize_veranstaltung_layout((string) $value);
-    }
-
-    if (function_exists('industriesalon_sanitize_event_layout')) {
-        return industriesalon_sanitize_event_layout($value);
-    }
-
-    $value = sanitize_key((string) $value);
-    if ($value === 'feature') {
-        $value = 'fest';
-    }
-
-    return in_array($value, ['standard', 'compact', 'fest', 'long'], true) ? $value : 'standard';
 }
 
 function iss_graph_normalize_veranstaltung_entity_key_for_offer($value): string
@@ -578,34 +531,10 @@ function iss_graph_get_offer_contract_for_post($post): array
         ];
     }
 
-    $layout = iss_graph_normalize_veranstaltung_layout_for_offer(get_post_meta((int) $post->ID, '_iss_event_layout', true));
-    if ($layout === 'fest') {
-        return [
-            'kind' => 'offer',
-            'subtype' => 'special_opening',
-            'subtype_source' => '_iss_event_layout:fest',
-        ];
-    }
-
-    $format = iss_graph_normalize_veranstaltung_format_for_offer(get_post_meta((int) $post->ID, '_iss_event_format', true));
-    $format_map = [
-        'vortrag' => 'lecture',
-        'gespraech' => 'discussion',
-        'lesung' => 'reading',
-        'praesentation' => 'presentation',
-        'repair_cafe' => 'repair_cafe',
-        'concert' => 'concert',
-        'festival' => 'festival',
-        'workshop' => 'workshop',
-        'school_program' => 'school_program',
-        'general' => 'event',
-    ];
-    $subtype = (string) ($format_map[$format] ?? 'event');
-
     return [
         'kind' => 'offer',
-        'subtype' => $subtype,
-        'subtype_source' => '_iss_event_format:' . $format,
+        'subtype' => 'event',
+        'subtype_source' => '_iss_entity_key:missing',
     ];
 }
 
