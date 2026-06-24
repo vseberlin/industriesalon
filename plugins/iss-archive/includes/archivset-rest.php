@@ -11,7 +11,7 @@ function iss_wf_import_archivset_rest_namespace(): string
 
 function iss_wf_import_archivset_rest_can_edit_sets(): bool
 {
-    return current_user_can(ISS_WF_IMPORT_ARCHIVSET_CAPABILITY) || current_user_can('manage_options');
+    return current_user_can(ISS_WF_IMPORT_ARCHIVSET_CAPABILITY);
 }
 
 function iss_wf_import_archivset_rest_can_list_or_create_sets(WP_REST_Request $request): bool
@@ -245,6 +245,14 @@ function iss_wf_import_archivset_rest_create_set(WP_REST_Request $request)
         iss_wf_import_get_archivset_service()->attach_set($set_id, $context_post_id);
     }
 
+    if (function_exists('iss_core_audit_log')) {
+        iss_core_audit_log('archive_set_create', [
+            'capability' => ISS_WF_IMPORT_ARCHIVSET_CAPABILITY,
+            'object_ids' => [$set_id, $context_post_id],
+            'result' => 'completed',
+        ]);
+    }
+
     $set = iss_wf_import_get_archivset_service()->get_set($set_id);
 
     return rest_ensure_response([
@@ -280,6 +288,14 @@ function iss_wf_import_archivset_rest_update_set(WP_REST_Request $request)
         return new WP_Error('iss_archive_set_update_failed', __('Archivset could not be updated.', 'iss-wf-import'), ['status' => 400]);
     }
 
+    if (function_exists('iss_core_audit_log')) {
+        iss_core_audit_log('archive_set_update', [
+            'capability' => ISS_WF_IMPORT_ARCHIVSET_CAPABILITY,
+            'object_ids' => [$set_id],
+            'result' => 'completed',
+        ]);
+    }
+
     $set = iss_wf_import_get_archivset_service()->get_set($set_id);
 
     return rest_ensure_response([
@@ -289,7 +305,16 @@ function iss_wf_import_archivset_rest_update_set(WP_REST_Request $request)
 
 function iss_wf_import_archivset_rest_delete_set(WP_REST_Request $request)
 {
-    $deleted = iss_wf_import_get_archivset_service()->delete_set(absint($request->get_param('id')));
+    $set_id = absint($request->get_param('id'));
+    $deleted = iss_wf_import_get_archivset_service()->delete_set($set_id);
+
+    if (function_exists('iss_core_audit_log')) {
+        iss_core_audit_log('archive_set_delete', [
+            'capability' => ISS_WF_IMPORT_ARCHIVSET_CAPABILITY,
+            'object_ids' => [$set_id],
+            'result' => $deleted ? 'completed' : 'failed',
+        ]);
+    }
 
     return rest_ensure_response(['deleted' => $deleted]);
 }
@@ -306,6 +331,14 @@ function iss_wf_import_archivset_rest_add_member(WP_REST_Request $request)
 
     if ($member_id <= 0) {
         return new WP_Error('iss_archive_set_member_failed', __('Archive object could not be added.', 'iss-wf-import'), ['status' => 400]);
+    }
+
+    if (function_exists('iss_core_audit_log')) {
+        iss_core_audit_log('archive_set_member_add', [
+            'capability' => ISS_WF_IMPORT_ARCHIVSET_CAPABILITY,
+            'object_ids' => [$set_id, $member_id],
+            'result' => 'completed',
+        ]);
     }
 
     $set = iss_wf_import_get_archivset_service()->get_set($set_id);
@@ -331,6 +364,14 @@ function iss_wf_import_archivset_rest_update_member(WP_REST_Request $request)
         return new WP_Error('iss_archive_set_member_update_failed', __('Archivset member could not be updated.', 'iss-wf-import'), ['status' => 400]);
     }
 
+    if (function_exists('iss_core_audit_log')) {
+        iss_core_audit_log('archive_set_member_update', [
+            'capability' => ISS_WF_IMPORT_ARCHIVSET_CAPABILITY,
+            'object_ids' => [$set_id, $member_id],
+            'result' => 'completed',
+        ]);
+    }
+
     $set = iss_wf_import_get_archivset_service()->get_set($set_id);
 
     return rest_ensure_response([
@@ -340,10 +381,20 @@ function iss_wf_import_archivset_rest_update_member(WP_REST_Request $request)
 
 function iss_wf_import_archivset_rest_remove_member(WP_REST_Request $request): WP_REST_Response
 {
+    $set_id = absint($request->get_param('id'));
+    $member_id = absint($request->get_param('member_id'));
     $removed = iss_wf_import_get_archivset_service()->remove_member(
-        absint($request->get_param('id')),
-        absint($request->get_param('member_id'))
+        $set_id,
+        $member_id
     );
+
+    if (function_exists('iss_core_audit_log')) {
+        iss_core_audit_log('archive_set_member_remove', [
+            'capability' => ISS_WF_IMPORT_ARCHIVSET_CAPABILITY,
+            'object_ids' => [$set_id, $member_id],
+            'result' => $removed ? 'completed' : 'failed',
+        ]);
+    }
 
     return rest_ensure_response(['removed' => $removed]);
 }
@@ -387,15 +438,33 @@ function iss_wf_import_archivset_rest_attach_set(WP_REST_Request $request)
         return new WP_Error('iss_archive_set_attach_failed', __('Archivset could not be attached.', 'iss-wf-import'), ['status' => 400]);
     }
 
+    if (function_exists('iss_core_audit_log')) {
+        iss_core_audit_log('archive_set_attach_content', [
+            'capability' => ISS_WF_IMPORT_ARCHIVSET_CAPABILITY,
+            'object_ids' => [$set_id, $post_id],
+            'result' => 'completed',
+        ]);
+    }
+
     return iss_wf_import_archivset_rest_get_content_sets($request);
 }
 
 function iss_wf_import_archivset_rest_detach_set(WP_REST_Request $request): WP_REST_Response
 {
+    $set_id = absint($request->get_param('set_id'));
+    $post_id = absint($request->get_param('post_id'));
     $detached = iss_wf_import_get_archivset_service()->detach_set(
-        absint($request->get_param('set_id')),
-        absint($request->get_param('post_id'))
+        $set_id,
+        $post_id
     );
+
+    if (function_exists('iss_core_audit_log')) {
+        iss_core_audit_log('archive_set_detach_content', [
+            'capability' => ISS_WF_IMPORT_ARCHIVSET_CAPABILITY,
+            'object_ids' => [$set_id, $post_id],
+            'result' => $detached ? 'completed' : 'failed',
+        ]);
+    }
 
     return rest_ensure_response(['detached' => $detached]);
 }

@@ -6,6 +6,7 @@ if (!defined('ABSPATH')) {
 
 function iss_register_get_public_taxonomy_map(): array
 {
+    // phpcs:disable WordPress.DB.SlowDBQuery.slow_db_query_meta_key -- These are configuration keys for post-meta-to-taxonomy projection, not query args.
     return [
         'register_area' => [
             'meta_key' => 'area',
@@ -33,10 +34,18 @@ function iss_register_get_public_taxonomy_map(): array
             'plural_label' => 'Nutzungstypen',
         ],
     ];
+    // phpcs:enable WordPress.DB.SlowDBQuery.slow_db_query_meta_key
 }
 
 function iss_register_register_taxonomies(): void
 {
+    $capabilities = [
+        'manage_terms' => 'iss_manage_register',
+        'edit_terms' => 'iss_manage_register',
+        'delete_terms' => 'iss_manage_register',
+        'assign_terms' => 'edit_register_places',
+    ];
+
     foreach (iss_register_get_public_taxonomy_map() as $taxonomy => $config) {
         register_taxonomy($taxonomy, ISS_REGISTER_POST_TYPE, [
             'labels' => [
@@ -59,6 +68,7 @@ function iss_register_register_taxonomies(): void
             'hierarchical' => false,
             'rewrite' => false,
             'query_var' => false,
+            'capabilities' => $capabilities,
         ]);
     }
 }

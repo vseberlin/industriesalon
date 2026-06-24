@@ -72,8 +72,11 @@ function iss_register_render_touchtable_snapshot_table(): void
 
 function iss_register_render_touchtable_import_page(): void
 {
-    if (!current_user_can('manage_options')) {
-        wp_die('Insufficient permissions.');
+    $capability = function_exists('iss_core_capability') ? iss_core_capability('register') : 'manage_options';
+    if (function_exists('iss_require_cap')) {
+        iss_require_cap($capability);
+    } elseif (!current_user_can($capability)) {
+        wp_die('Insufficient permissions.', 403);
     }
 
     $result = null;
@@ -86,6 +89,13 @@ function iss_register_render_touchtable_import_page(): void
         check_admin_referer('iss_register_touchtable_pull', 'iss_register_touchtable_nonce');
         $dry_run = isset($_POST['dry_run']) ? (bool) rest_sanitize_boolean(wp_unslash($_POST['dry_run'])) : false;
         $result = iss_register_touchtable_pull_snapshots(['dry_run' => $dry_run]);
+        if (function_exists('iss_core_audit_log')) {
+            iss_core_audit_log('register_touchtable_pull', [
+                'capability' => $capability,
+                'result' => 'completed',
+                'dry_run' => $dry_run,
+            ]);
+        }
     }
 
     $page_count = iss_register_count_source_snapshots_by_type('page');
@@ -114,10 +124,11 @@ function iss_register_render_touchtable_import_page(): void
 }
 
 add_action('admin_menu', function () {
-    add_management_page(
+    add_submenu_page(
+        defined('ISS_CORE_OPERATIONS_MENU_SLUG') ? ISS_CORE_OPERATIONS_MENU_SLUG : 'tools.php',
         'Touchtable Pull',
         'Touchtable Pull',
-        'manage_options',
+        function_exists('iss_core_capability') ? iss_core_capability('register') : 'manage_options',
         ISS_REGISTER_TOUCHTABLE_PAGE_SLUG,
         'iss_register_render_touchtable_import_page'
     );

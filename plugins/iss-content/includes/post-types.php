@@ -78,8 +78,14 @@ function iss_content_model_register_post_types() {
         'rewrite' => ['slug' => 'rueckblick', 'with_front' => false],
         'menu_position' => 24,
         'menu_icon' => 'dashicons-format-gallery',
+        'show_in_menu' => defined('ISS_CORE_OPERATIONS_MENU_SLUG') ? ISS_CORE_OPERATIONS_MENU_SLUG : true,
         'supports' => ['title', 'excerpt', 'thumbnail', 'revisions', 'page-attributes', 'custom-fields'],
         'taxonomies' => ['category', 'post_tag', ISS_CONTENT_MODEL_TOPIC_TAXONOMY],
+        'capability_type' => ['rueckblick', 'rueckblicke'],
+        'capabilities' => function_exists('iss_core_post_type_capabilities')
+            ? iss_core_post_type_capabilities('rueckblick', 'rueckblicke', 'create_rueckblicke')
+            : [],
+        'map_meta_cap' => true,
     ]);
 
     register_post_type(ISS_CONTENT_MODEL_TEAM_POST_TYPE, [

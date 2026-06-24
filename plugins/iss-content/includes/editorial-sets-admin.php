@@ -25,20 +25,25 @@ function iss_content_editorial_sets_admin_url(array $args = []): string
 
 function iss_content_editorial_sets_register_admin_page(): void
 {
-    add_menu_page(
+    add_submenu_page(
+        defined('ISS_CORE_OPERATIONS_MENU_SLUG') ? ISS_CORE_OPERATIONS_MENU_SLUG : 'tools.php',
         __('Intake Workbench', 'iss-content-model'),
         __('Sets', 'iss-content-model'),
         ISS_CONTENT_EDITORIAL_SETS_CAPABILITY,
         'iss-editorial-sets',
-        'iss_content_editorial_sets_render_admin_page',
-        'dashicons-images-alt2',
-        28
+        'iss_content_editorial_sets_render_admin_page'
     );
 }
 add_action('admin_menu', 'iss_content_editorial_sets_register_admin_page');
 
 function iss_content_editorial_sets_render_admin_page(): void
 {
+    if (function_exists('iss_require_cap')) {
+        iss_require_cap(ISS_CONTENT_EDITORIAL_SETS_CAPABILITY);
+    } elseif (!current_user_can(ISS_CONTENT_EDITORIAL_SETS_CAPABILITY)) {
+        wp_die(esc_html__('Keine Berechtigung.', 'iss-content-model'), 403);
+    }
+
     echo '<div class="wrap iss-editorial-sets-page">';
     echo '<h1>' . esc_html__('Intake Workbench', 'iss-content-model') . '</h1>';
     echo '<div id="iss-editorial-sets-workbench" class="iss-editorial-sets-workbench"></div>';
@@ -47,7 +52,7 @@ function iss_content_editorial_sets_render_admin_page(): void
 
 function iss_content_editorial_sets_enqueue_admin_assets(string $hook): void
 {
-    if ($hook !== 'toplevel_page_iss-editorial-sets') {
+    if (strpos($hook, 'iss-editorial-sets') === false) {
         return;
     }
 
@@ -200,7 +205,7 @@ function iss_content_editorial_sets_stream_file_preview(): void
         wp_die('', 403);
     }
 
-    if (!iss_content_editorial_sets_can_manage()) {
+    if (!iss_content_editorial_sets_current_user_can_any(['iss_edit_sets', 'iss_review_sets'])) {
         wp_die('', 403);
     }
 

@@ -13,7 +13,7 @@ if (! defined('ABSPATH')) {
 
 final class Industriesalon_Steuerung {
     private const VERSION = '0.3.0';
-    private const CAPABILITY = 'manage_iss_controls';
+    private const CAPABILITY = 'iss_manage_steuerung';
 
     private const OPTION_GENERAL = 'iss_control_general';
     private const OPTION_CONTACT = 'iss_control_contact';
@@ -44,12 +44,6 @@ final class Industriesalon_Steuerung {
     }
 
     public static function deactivate(): void {
-        foreach (['administrator', 'editor'] as $role_name) {
-            $role = get_role($role_name);
-            if ($role instanceof WP_Role) {
-                $role->remove_cap(self::CAPABILITY);
-            }
-        }
     }
 
     private function __construct() {
@@ -59,6 +53,8 @@ final class Industriesalon_Steuerung {
         add_action('admin_enqueue_scripts', [$this, 'enqueue_admin_assets']);
         add_action('admin_post_iss_control_export', [$this, 'handle_export']);
         add_action('admin_post_iss_control_import', [$this, 'handle_import']);
+        add_filter('option_page_capability_iss_control_group', [$this, 'capability']);
+        add_action('updated_option', [$this, 'audit_option_update'], 10, 3);
         add_filter('use_block_editor_for_post_type', [$this, 'apply_structured_content_editor_policy'], 20, 2);
 
         add_action('init', [$this, 'register_blocks']);
@@ -119,14 +115,14 @@ final class Industriesalon_Steuerung {
     }
 
     public function register_admin_menu(): void {
-        $hook = add_menu_page(
+        $parent = defined('ISS_CORE_OPERATIONS_MENU_SLUG') ? ISS_CORE_OPERATIONS_MENU_SLUG : 'options-general.php';
+        $hook = add_submenu_page(
+            $parent,
             __('Industriesalon Steuerung', 'industriesalon-steuerung'),
             __('Industriesalon Steuerung', 'industriesalon-steuerung'),
             $this->capability(),
             'industriesalon-steuerung',
-            [$this, 'render_admin_page'],
-            'dashicons-admin-generic',
-            58
+            [$this, 'render_admin_page']
         );
 
         if (is_string($hook) && $hook !== '') {
@@ -140,7 +136,7 @@ final class Industriesalon_Steuerung {
             return;
         }
 
-        if ($screen->id !== 'toplevel_page_industriesalon-steuerung') {
+        if (strpos((string) $screen->id, 'industriesalon-steuerung') === false) {
             return;
         }
 
@@ -174,7 +170,7 @@ final class Industriesalon_Steuerung {
     }
 
     public function enqueue_admin_assets(string $hook): void {
-        if ($hook === 'toplevel_page_industriesalon-steuerung') {
+        if (strpos($hook, 'industriesalon-steuerung') !== false) {
             wp_enqueue_style(
                 'iss-control-admin',
                 plugins_url('assets/admin.css', __FILE__),
@@ -255,8 +251,10 @@ final class Industriesalon_Steuerung {
     }
 
     public function render_admin_page(): void {
-        if (! current_user_can($this->capability())) {
-            return;
+        if (function_exists('iss_require_cap')) {
+            iss_require_cap($this->capability());
+        } elseif (! current_user_can($this->capability())) {
+            wp_die(esc_html__('Keine Berechtigung.', 'industriesalon-steuerung'), 403);
         }
 
         $general = get_option(self::OPTION_GENERAL, $this->default_general());
@@ -498,11 +496,19 @@ final class Industriesalon_Steuerung {
     }
 
     public function handle_export(): void {
-        if (! current_user_can($this->capability())) {
-            wp_die(esc_html__('Keine Berechtigung.', 'industriesalon-steuerung'));
+        if (function_exists('iss_require_cap')) {
+            iss_require_cap($this->capability());
+        } elseif (! current_user_can($this->capability())) {
+            wp_die(esc_html__('Keine Berechtigung.', 'industriesalon-steuerung'), 403);
         }
 
         check_admin_referer('iss_control_export');
+        if (function_exists('iss_core_audit_log')) {
+            iss_core_audit_log('steuerung_export', [
+                'capability' => $this->capability(),
+                'result' => 'completed',
+            ]);
+        }
 
         $payload = [
             'plugin'       => 'Industriesalon Steuerung',
@@ -521,8 +527,10 @@ final class Industriesalon_Steuerung {
     }
 
     public function handle_import(): void {
-        if (! current_user_can($this->capability())) {
-            wp_die(esc_html__('Keine Berechtigung.', 'industriesalon-steuerung'));
+        if (function_exists('iss_require_cap')) {
+            iss_require_cap($this->capability());
+        } elseif (! current_user_can($this->capability())) {
+            wp_die(esc_html__('Keine Berechtigung.', 'industriesalon-steuerung'), 403);
         }
 
         check_admin_referer('iss_control_import');
@@ -582,7 +590,33 @@ final class Industriesalon_Steuerung {
             }
         }
 
+        if (function_exists('iss_core_audit_log')) {
+            iss_core_audit_log('steuerung_import', [
+                'capability' => $this->capability(),
+                'result' => 'completed',
+                'sections' => array_keys($map),
+            ]);
+        }
+
         $this->redirect_with_notice('import_success');
+    }
+
+    public function audit_option_update(string $option, $old_value, $value): void {
+        unset($old_value, $value);
+
+        if (!function_exists('iss_core_audit_log')) {
+            return;
+        }
+
+        if (!in_array($option, $this->get_option_keys(), true)) {
+            return;
+        }
+
+        iss_core_audit_log('steuerung_option_update', [
+            'capability' => $this->capability(),
+            'result' => current_user_can($this->capability()) ? 'completed' : 'failed',
+            'option' => $option,
+        ]);
     }
 
     private function redirect_with_notice(string $notice): void {

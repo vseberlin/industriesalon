@@ -77,7 +77,7 @@ function iss_supersaas_load_admin_menu_api() {
 add_action('admin_notices', function () {
     $settings = iss_supersaas_get_settings();
     if (empty($settings['schedule_id']) || empty($settings['api_key'])) {
-        $settings_url = admin_url('options-general.php?page=' . ISS_SUPERSAAS_SETTINGS_PAGE);
+        $settings_url = admin_url((defined('ISS_CORE_OPERATIONS_MENU_SLUG') ? 'admin.php' : 'options-general.php') . '?page=' . ISS_SUPERSAAS_SETTINGS_PAGE);
         echo '<div class="notice notice-warning is-dismissible"><p>'
             . '<strong>SuperSaaS API:</strong> '
             . 'API-Zugangsdaten fehlen. Das Buchungssystem ist nicht aktiv. '
@@ -112,6 +112,9 @@ function iss_supersaas_register_settings() {
     add_settings_field('schedule_path', 'Schedule Path', 'iss_supersaas_field_schedule_path', ISS_SUPERSAAS_OPTION_GROUP, 'iss_supersaas_main');
 }
 add_action('admin_init', 'iss_supersaas_register_settings');
+add_filter('option_page_capability_' . ISS_SUPERSAAS_OPTION_GROUP, function () {
+    return function_exists('iss_core_capability') ? iss_core_capability('sync') : 'manage_options';
+});
 
 function iss_supersaas_sanitize_settings($input) {
     $out = [];
@@ -126,9 +129,10 @@ function iss_supersaas_sanitize_settings($input) {
 function iss_supersaas_add_admin_menu() {
     iss_supersaas_load_admin_menu_api();
 
-    $capability = function_exists('iss_core_capability') ? iss_core_capability('manage') : 'manage_options';
+    $capability = function_exists('iss_core_capability') ? iss_core_capability('sync') : 'manage_options';
 
-    add_options_page(
+    add_submenu_page(
+        defined('ISS_CORE_OPERATIONS_MENU_SLUG') ? ISS_CORE_OPERATIONS_MENU_SLUG : 'options-general.php',
         'SuperSaaS API',
         'SuperSaaS API',
         $capability,
@@ -141,6 +145,9 @@ add_action('admin_menu', 'iss_supersaas_add_admin_menu');
 function iss_supersaas_render_settings_page() {
     iss_supersaas_load_admin_settings_api();
     iss_supersaas_load_admin_menu_api();
+    if (function_exists('iss_require_cap')) {
+        iss_require_cap(function_exists('iss_core_capability') ? iss_core_capability('sync') : 'manage_options');
+    }
 
     ?>
     <div class="wrap">

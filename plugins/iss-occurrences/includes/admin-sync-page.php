@@ -29,6 +29,14 @@ if (!function_exists('iss_occurrences_sync_capability')) {
     }
 }
 
+if (!function_exists('iss_occurrences_sync_admin_url')) {
+    function iss_occurrences_sync_admin_url(): string {
+        $parent = defined('ISS_CORE_OPERATIONS_MENU_SLUG') ? 'admin.php' : 'tools.php';
+
+        return admin_url($parent . '?page=iss-occurrences-sync');
+    }
+}
+
 if (!function_exists('iss_occurrences_normalize_series_key')) {
     function iss_occurrences_normalize_series_key($series_key) {
         $series_key = strtolower(trim(sanitize_text_field((string) $series_key)));
@@ -57,7 +65,8 @@ if (!function_exists('iss_occurrences_get_fuehrung_ids_for_select')) {
 }
 
 add_action('admin_menu', function () {
-    add_management_page(
+    add_submenu_page(
+        defined('ISS_CORE_OPERATIONS_MENU_SLUG') ? ISS_CORE_OPERATIONS_MENU_SLUG : 'tools.php',
         'SuperSaaS-Termin-Sync',
         'SuperSaaS-Termin-Sync',
         iss_occurrences_sync_capability(),
@@ -85,14 +94,22 @@ add_action('admin_post_iss_occurrences_sync', function () {
             'metadata_backfilled' => 0,
             'error_message' => 'SuperSaaS sync module is unavailable.',
         ], 60);
-        wp_safe_redirect(admin_url('tools.php?page=iss-occurrences-sync'));
+        wp_safe_redirect(iss_occurrences_sync_admin_url());
         exit;
     }
 
     $result = iss_supersaas_sync_occurrences();
     set_transient('iss_occurrences_sync_result', $result, 60);
+    if (function_exists('iss_core_audit_log')) {
+        iss_core_audit_log('occurrences_sync', [
+            'capability' => iss_occurrences_sync_capability(),
+            'result' => ((int) ($result['errors'] ?? 0)) > 0 ? 'failed' : 'completed',
+            'created' => (int) ($result['created'] ?? 0),
+            'updated' => (int) ($result['updated'] ?? 0),
+        ]);
+    }
 
-    wp_safe_redirect(admin_url('tools.php?page=iss-occurrences-sync'));
+    wp_safe_redirect(iss_occurrences_sync_admin_url());
     exit;
 });
 
@@ -106,7 +123,7 @@ add_action('admin_post_iss_occurrences_clear_series_source', function () {
     $series_key = isset($_POST['series_key']) ? iss_occurrences_normalize_series_key(wp_unslash($_POST['series_key'])) : '';
     if ($series_key === '') {
         iss_occurrences_set_sync_notice('error', 'Zuordnung konnte nicht gelöst werden: ungültige Reihe.');
-        wp_safe_redirect(admin_url('tools.php?page=iss-occurrences-sync'));
+        wp_safe_redirect(iss_occurrences_sync_admin_url());
         exit;
     }
 
@@ -120,7 +137,15 @@ add_action('admin_post_iss_occurrences_clear_series_source', function () {
         iss_occurrences_set_sync_notice('warning', sprintf('Keine Änderung für Reihe %s durchgeführt.', $series_key));
     }
 
-    wp_safe_redirect(admin_url('tools.php?page=iss-occurrences-sync'));
+    if (function_exists('iss_core_audit_log')) {
+        iss_core_audit_log('occurrences_clear_series_source', [
+            'capability' => iss_occurrences_sync_capability(),
+            'job_id' => $series_key,
+            'result' => $cleared ? 'completed' : 'failed',
+        ]);
+    }
+
+    wp_safe_redirect(iss_occurrences_sync_admin_url());
     exit;
 });
 
@@ -136,20 +161,20 @@ add_action('admin_post_iss_occurrences_set_series_source', function () {
 
     if ($series_key === '') {
         iss_occurrences_set_sync_notice('error', 'Neu-Zuordnung fehlgeschlagen: ungültige Reihe.');
-        wp_safe_redirect(admin_url('tools.php?page=iss-occurrences-sync'));
+        wp_safe_redirect(iss_occurrences_sync_admin_url());
         exit;
     }
 
     if ($post_id <= 0) {
         iss_occurrences_set_sync_notice('error', 'Neu-Zuordnung fehlgeschlagen: bitte eine Führung auswählen.');
-        wp_safe_redirect(admin_url('tools.php?page=iss-occurrences-sync'));
+        wp_safe_redirect(iss_occurrences_sync_admin_url());
         exit;
     }
 
     $post = get_post($post_id);
     if (!($post instanceof WP_Post) || $post->post_type !== 'fuehrung') {
         iss_occurrences_set_sync_notice('error', 'Neu-Zuordnung fehlgeschlagen: Zielobjekt ist keine Führung.');
-        wp_safe_redirect(admin_url('tools.php?page=iss-occurrences-sync'));
+        wp_safe_redirect(iss_occurrences_sync_admin_url());
         exit;
     }
 
@@ -158,7 +183,7 @@ add_action('admin_post_iss_occurrences_set_series_source', function () {
         : null;
     if (!is_array($entry)) {
         iss_occurrences_set_sync_notice('error', sprintf('Neu-Zuordnung fehlgeschlagen: Reihe %s wurde nicht gefunden.', $series_key));
-        wp_safe_redirect(admin_url('tools.php?page=iss-occurrences-sync'));
+        wp_safe_redirect(iss_occurrences_sync_admin_url());
         exit;
     }
 
@@ -181,13 +206,24 @@ add_action('admin_post_iss_occurrences_set_series_source', function () {
 
     iss_occurrences_set_sync_notice('success', sprintf('Reihe %s wurde auf Führung #%d gesetzt.', $series_key, $post_id));
 
-    wp_safe_redirect(admin_url('tools.php?page=iss-occurrences-sync'));
+    if (function_exists('iss_core_audit_log')) {
+        iss_core_audit_log('occurrences_set_series_source', [
+            'capability' => iss_occurrences_sync_capability(),
+            'object_ids' => [$post_id],
+            'job_id' => $series_key,
+            'result' => 'completed',
+        ]);
+    }
+
+    wp_safe_redirect(iss_occurrences_sync_admin_url());
     exit;
 });
 
 function iss_occurrences_render_sync_page() {
-    if (!current_user_can(iss_occurrences_sync_capability())) {
-        return;
+    if (function_exists('iss_require_cap')) {
+        iss_require_cap(iss_occurrences_sync_capability());
+    } elseif (!current_user_can(iss_occurrences_sync_capability())) {
+        wp_die('Not allowed.', 403);
     }
 
     $result = get_transient('iss_occurrences_sync_result');

@@ -41,6 +41,12 @@ add_action('admin_menu', 'iss_wf_import_register_archivset_admin_page');
 
 function iss_wf_import_render_archivset_admin_page(): void
 {
+    if (function_exists('iss_require_cap')) {
+        iss_require_cap(ISS_WF_IMPORT_ARCHIVSET_CAPABILITY);
+    } elseif (!current_user_can(ISS_WF_IMPORT_ARCHIVSET_CAPABILITY)) {
+        wp_die(esc_html__('Keine Berechtigung.', 'iss-wf-import'), 403);
+    }
+
     echo '<div class="wrap iss-archivsets-page">';
     echo '<h1>' . esc_html__('Archivsets', 'iss-wf-import') . '</h1>';
     echo '<div id="iss-archivsets-workbench" class="iss-archivsets-workbench" data-mode="workbench"></div>';

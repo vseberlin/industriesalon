@@ -23,6 +23,15 @@ Immediate executable work only. Larger future programs live in `docs/project/bac
 
 ## Active Work
 
+- After deploying the Operations capability foundation, run
+  `wp iss-core caps report` and confirm `Unknown role grants: 0` and
+  `Missing role caps: 0` on the target. The role/capability DB state is applied
+  by the versioned migration, not by a SQL artifact.
+- To remove legacy commerce role state on a target, replay
+  `ops/sql/2026-06-24-remove-shop-surecart-roles.sql` after deploying the
+  Operations capability foundation. The artifact replaces `wp_user_roles` with
+  the verified core plus ISS role set and creates
+  `wp_user_roles_backup_20260624_shop_surecart_cleanup` first.
 - Before transferring the local Veranstaltung entity migration elsewhere, apply
   `ops/sql/2026-06-23-veranstaltungen-entity-migration.sql`, then run
   `wp iss-occurrences sync`, `wp iss-graph sync-content`,

@@ -23,6 +23,6 @@ foreach ([
 foreach (['administrator', 'editor'] as $role_name) {
     $role = get_role($role_name);
     if ($role instanceof WP_Role) {
-        $role->remove_cap('manage_iss_controls');
+        $role->remove_cap('iss_manage_steuerung');
     }
 }

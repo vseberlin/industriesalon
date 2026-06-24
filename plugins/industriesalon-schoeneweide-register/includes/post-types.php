@@ -27,6 +27,7 @@ function iss_register_register_post_types(): void
         'public' => true,
         'publicly_queryable' => true,
         'show_ui' => true,
+        'show_in_menu' => defined('ISS_CORE_OPERATIONS_MENU_SLUG') ? ISS_CORE_OPERATIONS_MENU_SLUG : true,
         'show_in_rest' => true,
         'menu_icon' => 'dashicons-location-alt',
         'has_archive' => false,
@@ -37,6 +38,11 @@ function iss_register_register_post_types(): void
             'pages' => false,
         ],
         'supports' => ['title', 'editor', 'excerpt', 'thumbnail', 'revisions'],
+        'capability_type' => ['register_place', 'register_places'],
+        'capabilities' => function_exists('iss_core_post_type_capabilities')
+            ? iss_core_post_type_capabilities('register_place', 'register_places', 'create_register_places')
+            : [],
+        'map_meta_cap' => true,
     ]);
 }
 
@@ -115,6 +121,7 @@ function iss_register_exclude_tour_only_places_from_sitemaps(array $args, string
         : [];
 
     $meta_query[] = iss_register_build_public_place_visibility_meta_query_clause();
+    // phpcs:ignore WordPress.DB.SlowDBQuery.slow_db_query_meta_query -- Sitemap visibility uses the same public place meta contract as frontend search.
     $args['meta_query'] = $meta_query;
 
     return $args;

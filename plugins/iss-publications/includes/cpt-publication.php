@@ -30,6 +30,7 @@ function iss_publications_register_post_type() {
         'labels'             => $labels,
         'public'             => true,
         'show_ui'            => true,
+        'show_in_menu'       => defined('ISS_CORE_OPERATIONS_MENU_SLUG') ? ISS_CORE_OPERATIONS_MENU_SLUG : true,
         'show_in_rest'       => true,
         'has_archive'        => false,
         'rewrite'            => ['slug' => 'publikationen', 'with_front' => false],
@@ -42,6 +43,11 @@ function iss_publications_register_post_type() {
         'delete_with_user'   => false,
         'hierarchical'       => false,
         'taxonomies'         => ['publication_type', 'publication_topic'],
+        'capability_type'    => ['publication', 'publications'],
+        'capabilities'       => function_exists('iss_core_post_type_capabilities')
+            ? iss_core_post_type_capabilities('publication', 'publications', 'create_publications')
+            : [],
+        'map_meta_cap'       => true,
     ]);
 
     register_taxonomy('publication_type', [ISS_PUBLICATIONS_POST_TYPE], [
@@ -62,6 +68,12 @@ function iss_publications_register_post_type() {
         'show_admin_column' => true,
         'show_in_rest'      => true,
         'rewrite'           => ['slug' => 'publikationstyp', 'with_front' => false],
+        'capabilities'      => [
+            'manage_terms' => 'iss_manage_publications',
+            'edit_terms' => 'iss_manage_publications',
+            'delete_terms' => 'iss_manage_publications',
+            'assign_terms' => 'edit_publications',
+        ],
     ]);
 
     register_taxonomy('publication_topic', [ISS_PUBLICATIONS_POST_TYPE], [
@@ -82,6 +94,12 @@ function iss_publications_register_post_type() {
         'show_admin_column' => true,
         'show_in_rest'      => true,
         'rewrite'           => ['slug' => 'publikationsthema', 'with_front' => false],
+        'capabilities'      => [
+            'manage_terms' => 'iss_manage_publications',
+            'edit_terms' => 'iss_manage_publications',
+            'delete_terms' => 'iss_manage_publications',
+            'assign_terms' => 'edit_publications',
+        ],
     ]);
 }
 add_action('init', 'iss_publications_register_post_type');

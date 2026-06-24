@@ -30,8 +30,11 @@ function iss_register_render_coordinate_backfill_result(array $result): void
 
 function iss_register_render_tools_page(): void
 {
-    if (!current_user_can('manage_options')) {
-        wp_die('Insufficient permissions.');
+    $capability = function_exists('iss_core_capability') ? iss_core_capability('register') : 'manage_options';
+    if (function_exists('iss_require_cap')) {
+        iss_require_cap($capability);
+    } elseif (!current_user_can($capability)) {
+        wp_die('Insufficient permissions.', 403);
     }
 
     $geocode_result = null;
@@ -52,6 +55,14 @@ function iss_register_render_tools_page(): void
                 'force' => $force,
                 'limit' => $limit,
             ]);
+            if (function_exists('iss_core_audit_log')) {
+                iss_core_audit_log('register_geocode', [
+                    'capability' => $capability,
+                    'result' => 'completed',
+                    'dry_run' => $dry_run,
+                    'limit' => $limit,
+                ]);
+            }
 
             if (($geocode_result['stats']['selected'] ?? 0) === 0) {
                 $geocode_error = 'Keine passenden Register-Orte für diesen Koordinatenlauf gefunden.';
@@ -65,6 +76,12 @@ function iss_register_render_tools_page(): void
                 $epoch_migration_error = 'Vor der Epochensaat bitte Datenbank-Backup und Exportbestaetigung setzen.';
             } else {
                 $epoch_migration_result = iss_register_get_epoch_service()->run_seed_migration();
+                if (function_exists('iss_core_audit_log')) {
+                    iss_core_audit_log('register_epoch_seed_migration', [
+                        'capability' => $capability,
+                        'result' => 'completed',
+                    ]);
+                }
             }
         }
     }
@@ -131,10 +148,11 @@ function iss_register_render_tools_page(): void
 }
 
 add_action('admin_menu', function () {
-    add_management_page(
+    add_submenu_page(
+        defined('ISS_CORE_OPERATIONS_MENU_SLUG') ? ISS_CORE_OPERATIONS_MENU_SLUG : 'tools.php',
         'Schöneweide Register Werkzeuge',
         'Schöneweide Register Werkzeuge',
-        'manage_options',
+        function_exists('iss_core_capability') ? iss_core_capability('register') : 'manage_options',
         ISS_REGISTER_TOOLS_PAGE_SLUG,
         'iss_register_render_tools_page'
     );

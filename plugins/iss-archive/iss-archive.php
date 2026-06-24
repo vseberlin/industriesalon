@@ -53,7 +53,7 @@ define('ISS_WF_IMPORT_COLLECTION_BACKFILL_OPTION', 'iss_wf_import_collection_bac
 define('ISS_WF_IMPORT_COLLECTION_BACKFILL_VERSION', '2026-05-12-collection-backfill-3');
 define('ISS_WF_IMPORT_ARCHIVSET_SCHEMA_OPTION', 'iss_wf_import_archivset_schema_version');
 define('ISS_WF_IMPORT_ARCHIVSET_SCHEMA_VERSION', '2026-06-07-archivset-schema-1');
-define('ISS_WF_IMPORT_ARCHIVSET_CAPABILITY', 'edit_archive_sets');
+define('ISS_WF_IMPORT_ARCHIVSET_CAPABILITY', 'iss_manage_archive');
 define('ISS_WF_IMPORT_OBJECT_SCHEMA_OPTION', 'iss_wf_import_object_schema_version');
 define('ISS_WF_IMPORT_OBJECT_SCHEMA_VERSION', '2026-05-12-object-schema-1');
 define('ISS_WF_IMPORT_OBJECT_BACKFILL_OPTION', 'iss_wf_import_object_backfill_version');
@@ -145,9 +145,8 @@ register_activation_hook(__FILE__, function () {
     iss_wf_import_get_relation_service()->install_schema();
     iss_wf_import_get_import_service()->install_schema();
     iss_wf_import_get_assertion_service()->install_schema();
-    $administrator = get_role('administrator');
-    if ($administrator instanceof WP_Role) {
-        $administrator->add_cap(ISS_WF_IMPORT_ARCHIVSET_CAPABILITY);
+    if (function_exists('iss_core_apply_capability_migration')) {
+        iss_core_apply_capability_migration(false);
     }
     flush_rewrite_rules();
 });
@@ -158,9 +157,8 @@ register_deactivation_hook(__FILE__, function () {
 
 function iss_wf_import_ensure_archivset_capability(): void
 {
-    $administrator = get_role('administrator');
-    if ($administrator instanceof WP_Role && !$administrator->has_cap(ISS_WF_IMPORT_ARCHIVSET_CAPABILITY)) {
-        $administrator->add_cap(ISS_WF_IMPORT_ARCHIVSET_CAPABILITY);
+    if (function_exists('iss_core_apply_capability_migration') && (string) get_option(ISS_CORE_CAPS_OPTION, '') !== ISS_CORE_CAPS_VERSION) {
+        iss_core_apply_capability_migration(false);
     }
 }
 add_action('admin_init', 'iss_wf_import_ensure_archivset_capability', 5);

@@ -101,8 +101,9 @@ add_action('init', function () {
             'default'           => $config['default'],
             'show_in_rest'      => true,
             'sanitize_callback' => $config['sanitize'],
-            'auth_callback'     => static function () {
-                return current_user_can('edit_posts');
+            'auth_callback'     => static function (...$args) {
+                $post_id = isset($args[2]) ? absint($args[2]) : 0;
+                return $post_id > 0 ? current_user_can('edit_post', $post_id) : current_user_can('edit_publications');
             },
         ]);
     }
@@ -120,8 +121,9 @@ add_action('init', function () {
             ],
         ],
         'sanitize_callback' => 'iss_publications_sanitize_related_publication_ids',
-        'auth_callback' => static function () {
-            return current_user_can('edit_posts');
+        'auth_callback' => static function (...$args) {
+            $post_id = isset($args[2]) ? absint($args[2]) : 0;
+            return $post_id > 0 ? current_user_can('edit_post', $post_id) : current_user_can('edit_publications');
         },
     ]);
 });

@@ -24,7 +24,7 @@ define('ISS_CONTENT_MODEL_VIDEO_POST_TYPE', 'video');
 define('ISS_CONTENT_MODEL_ENTITY_PROFILE_POST_TYPE', 'entity_profile');
 define('ISS_CONTENT_EDITORIAL_SETS_SCHEMA_OPTION', 'iss_content_editorial_sets_schema_version');
 define('ISS_CONTENT_EDITORIAL_SETS_SCHEMA_VERSION', '2026-06-24-editorial-sets-1');
-define('ISS_CONTENT_EDITORIAL_SETS_CAPABILITY', 'edit_editorial_sets');
+define('ISS_CONTENT_EDITORIAL_SETS_CAPABILITY', 'iss_edit_sets');
 
 define('ISS_CONTENT_MODEL_TEAM_ROLE_TAXONOMY', 'team_role');
 define('ISS_CONTENT_MODEL_PROJECT_STATUS_TAXONOMY', 'project_status');
@@ -129,12 +129,6 @@ function iss_content_editorial_sets_ensure_runtime_state(): void
         iss_content_editorial_sets_service()->maybe_install_schema();
     }
 
-    foreach (['administrator', 'editor'] as $role_name) {
-        $role = get_role($role_name);
-        if ($role instanceof WP_Role && !$role->has_cap(ISS_CONTENT_EDITORIAL_SETS_CAPABILITY)) {
-            $role->add_cap(ISS_CONTENT_EDITORIAL_SETS_CAPABILITY);
-        }
-    }
 }
 add_action('admin_init', 'iss_content_editorial_sets_ensure_runtime_state', 5);
 
@@ -150,11 +144,8 @@ register_activation_hook(__FILE__, function () {
     if (function_exists('iss_content_editorial_sets_service')) {
         iss_content_editorial_sets_service()->install_schema();
     }
-    foreach (['administrator', 'editor'] as $role_name) {
-        $role = get_role($role_name);
-        if ($role instanceof WP_Role) {
-            $role->add_cap(ISS_CONTENT_EDITORIAL_SETS_CAPABILITY);
-        }
+    if (function_exists('iss_core_apply_capability_migration')) {
+        iss_core_apply_capability_migration(false);
     }
     flush_rewrite_rules();
 });

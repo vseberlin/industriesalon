@@ -4,9 +4,14 @@ if (!defined('ABSPATH')) {
     exit;
 }
 
-function iss_wf_import_meta_auth_callback(): bool
+function iss_wf_import_meta_auth_callback(...$args): bool
 {
-    return current_user_can('edit_posts');
+    $post_id = isset($args[2]) ? absint($args[2]) : 0;
+    if ($post_id > 0) {
+        return current_user_can('edit_post', $post_id);
+    }
+
+    return current_user_can('edit_archive_items');
 }
 
 function iss_wf_import_register_string_meta(string $post_type, string $meta_key, bool $show_in_rest = true): void

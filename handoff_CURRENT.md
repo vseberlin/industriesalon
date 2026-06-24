@@ -27,6 +27,18 @@ Current checkpoint only. History belongs in `CHANGELOG.md`; active follow-up bel
 - Editorial media Sets foundation is active in `iss-content`: plugin-owned Set/item/context/audit tables, private admin Workbench, REST/service APIs, status/batch actions, context links, promotion, and decay fields. Public renderers consume only promoted refs.
 - Event Drop is wired as the first Sets test path for Veranstaltungen. Local `/event-drop/` stores raw uploads under `var/event-drop-storage`, syncs raw files into the Fête Set, previews private images through authenticated admin URLs, imports approved raw uploads into the Media Library at promotion time, promotes them into Veranstaltung `galerie` media refs, and quarantines rejected raw files in `rejected/` with restore support.
 - Current local Fête Event Drop test state: Set `event-drop-fete-de-la-musique-berlin-2026` has 24 raw uploads quarantined/rejected after user testing, 4 imported WP media rows marked rejected, and 4 WordPress attachments from promotion/import testing (`26656`-`26659`) still present under `wp-content/uploads/event-drop-storage/accepted/`.
+- Operations capability foundation is active locally. `iss-core` owns the
+  `iss_*` capability registry, Operations root menu, helper guards, versioned
+  `iss_caps_version` migration, WP-CLI diagnostics, project roles, and
+  lightweight operations audit logging. Steuerung, Sets, Register tools,
+  SuperSaaS sync/settings, ISS requests, and operational CPT menus now sit
+  under Operations where available; Rueckblick, Publications, Register places,
+  Hinweise, and Archive CPTs use explicit mapped capabilities.
+- Local legacy commerce role state is cleaned up. The `customer`,
+  `shop_manager`, `sc_shop_manager`, `sc_shop_accountant`, `sc_shop_worker`,
+  and `sc_customer` roles are gone, and residual Woo/SureCart capabilities were
+  removed from `administrator`. Replay artifact:
+  `ops/sql/2026-06-24-remove-shop-surecart-roles.sql`.
 - Existing Ausstellung JSON candidates remain DB-backed local review state; use their SQL artifacts from `TODO.md` before expecting target parity.
 - Local dirty work still includes untracked `themes/industriesalon/theme2.json` and `iss-exhibition-composition-add.md`; do not stage them unless intentionally checkpointing that unrelated work.
 
@@ -41,6 +53,13 @@ Current checkpoint only. History belongs in `CHANGELOG.md`; active follow-up bel
 
 ## Next Action
 
+- On staging/production after deploying this code, run `wp iss-core caps report`
+  and confirm no missing or unknown grants. Capabilities live in
+  `wp_user_roles`; the code migration applies them on target boot, no standalone
+  SQL artifact is required.
+- If the target still has shop/SureCart legacy roles or caps, replay
+  `ops/sql/2026-06-24-remove-shop-surecart-roles.sql` after the capability
+  migration. It creates a backup option before replacing `wp_user_roles`.
 - Add more Veranstaltung skins only from a concrete design. Remaining current types without distinct skins are `workshop` and `praesentation`; `rueckblick` is not currently present in the migrated set.
 - Later intake cleanup slice: add a cautious cleanup job for rejected/stale Event Drop raw files whose `decay_at` has passed, skipping retained items and logging before deletion.
 - For staging transfer, follow `ops/sql/2026-06-24-veranstaltungen-transfer-instructions.md`: deploy code first, import the full JSON artifact plus `ops/sql/2026-06-24-veranstaltungen-remove-legacy-presentation-meta.sql` and `ops/sql/2026-06-24-veranstaltung-24988-material-gallery-split.sql`, refresh occurrence/graph/search projections, then run the listed checks.
@@ -62,3 +81,15 @@ Current checkpoint only. History belongs in `CHANGELOG.md`; active follow-up bel
 - Editorial media bucket contract stub is documentation-only and passed `git diff --check`.
 - Veranstaltung skins/gallery slice passed Docker PHP lint, targeted PHPCS/PHPStan, `wp iss-content veranstaltungen-registry-check` (`schema=1 entities=11 shapes=4 fields=47`), `wp iss-content veranstaltungen-content-audit` (`stored=25 valid=25 invalid=0`), Stylelint for `single-event.css`, `node --check` for `related-strip.js`, SQL replay for the `24988` material/gallery split (`sections=7 material_media=0 gallery=1 newline=yes`), targeted Playwright checks for Vortrag flow-media and gallery carousel behavior, and a 25-route / 50-viewport browser sweep confirming expected skin classes with no horizontal overflow.
 - Editorial Sets/Event Drop slice passed Docker PHP lint, targeted PHPCS/PHPStan, ESLint for the Workbench JS, REST readbacks for Sets/items/promote targets, authenticated preview URL checks, local upload smokes above the old 2 MB cap, reject/restore file-move tests (`incoming` -> `rejected` -> `incoming`), and final Fête storage readback (`24` raw files in `rejected`, `0` in `incoming`).
+- Operations capability foundation passed PHP lint for touched files, targeted
+  PHPCS and PHPStan, `git diff --check`, WP-CLI boot,
+  `wp iss-core caps report` (`Declared capabilities: 91`,
+  `Unknown role grants: 0`, `Missing role caps: 0`), idempotent migration
+  dry-run (`changes: []`), mapped-CPT readback for
+  Rueckblick/Publications/Register/Hinweise/Archive, and temporary-user
+  restricted-role checks for operations manager, curator/editor, reviewer,
+  intake helper, and technical maintainer.
+- Legacy commerce role cleanup passed SQL artifact replay, `wp role list`
+  readback showing only WordPress core plus ISS roles, administrator cap scan
+  with no Woo/SureCart matches, backup option existence check, and
+  `wp iss-core caps report` with no missing or unknown grants.

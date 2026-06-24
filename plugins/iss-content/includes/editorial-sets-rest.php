@@ -11,23 +11,92 @@ function iss_content_editorial_sets_rest_namespace(): string
 
 function iss_content_editorial_sets_can_manage(): bool
 {
-    return current_user_can(ISS_CONTENT_EDITORIAL_SETS_CAPABILITY) || current_user_can('manage_options');
+    return current_user_can(ISS_CONTENT_EDITORIAL_SETS_CAPABILITY);
 }
 
-function iss_content_editorial_sets_can_use_context(WP_REST_Request $request): bool
+function iss_content_editorial_sets_current_user_can_any(array $capabilities): bool
 {
-    if (iss_content_editorial_sets_can_manage()) {
-        return true;
+    foreach ($capabilities as $capability) {
+        if (current_user_can(sanitize_key((string) $capability))) {
+            return true;
+        }
     }
 
-    $context_id = absint(
+    return false;
+}
+
+function iss_content_editorial_sets_can_access(): bool
+{
+    return iss_content_editorial_sets_current_user_can_any([
+        'iss_create_sets',
+        'iss_edit_sets',
+        'iss_review_sets',
+        'iss_promote_media',
+        'iss_delete_sets',
+        'iss_cleanup_sets',
+    ]);
+}
+
+function iss_content_editorial_sets_request_context_id(WP_REST_Request $request): int
+{
+    return absint(
         $request->get_param('contextId')
         ?: $request->get_param('context_id')
         ?: $request->get_param('targetId')
         ?: $request->get_param('target_id')
     );
+}
+
+function iss_content_editorial_sets_can_use_context(WP_REST_Request $request, string $capability = ''): bool
+{
+    $capability = sanitize_key($capability);
+    if ($capability !== '' && !current_user_can($capability)) {
+        return false;
+    }
+
+    if ($capability === '' && !iss_content_editorial_sets_can_access()) {
+        return false;
+    }
+
+    $context_id = iss_content_editorial_sets_request_context_id($request);
+    if ($context_id <= 0) {
+        return true;
+    }
 
     return $context_id > 0 && current_user_can('edit_post', $context_id);
+}
+
+function iss_content_editorial_sets_can_create(WP_REST_Request $request): bool
+{
+    return iss_content_editorial_sets_can_use_context($request, 'iss_create_sets');
+}
+
+function iss_content_editorial_sets_can_edit(WP_REST_Request $request): bool
+{
+    return iss_content_editorial_sets_can_use_context($request, 'iss_edit_sets');
+}
+
+function iss_content_editorial_sets_can_review(WP_REST_Request $request): bool
+{
+    return iss_content_editorial_sets_can_use_context($request, 'iss_review_sets');
+}
+
+function iss_content_editorial_sets_can_promote(WP_REST_Request $request): bool
+{
+    return iss_content_editorial_sets_can_use_context($request, 'iss_promote_media');
+}
+
+function iss_content_editorial_sets_can_batch(WP_REST_Request $request): bool
+{
+    $action = sanitize_key((string) $request->get_param('action'));
+    if ($action === 'move') {
+        return iss_content_editorial_sets_can_edit($request);
+    }
+    if ($action === 'archive_candidate') {
+        return iss_content_editorial_sets_can_review($request);
+    }
+
+    return iss_content_editorial_sets_can_review($request);
 }
 
 function iss_content_editorial_sets_rest_list_sets(WP_REST_Request $request): WP_REST_Response
@@ -66,6 +135,14 @@ function iss_content_editorial_sets_rest_create_set(WP_REST_Request $request)
         return new WP_Error('iss_content_set_create_failed', __('Set could not be created.', 'iss-content-model'), ['status' => 400]);
     }
 
+    if (function_exists('iss_core_audit_log')) {
+        iss_core_audit_log('set_create', [
+            'capability' => 'iss_create_sets',
+            'object_ids' => [$set_id],
+            'result' => 'completed',
+        ]);
+    }
+
     $context_type = (string) ($request->get_param('contextType') ?: $request->get_param('context_type'));
     $context_id = absint($request->get_param('contextId') ?: $request->get_param('context_id'));
     if ($context_type !== '' && $context_id > 0) {
@@ -101,6 +178,14 @@ function iss_content_editorial_sets_rest_update_set(WP_REST_Request $request)
 
     if (!$ok) {
         return new WP_Error('iss_content_set_update_failed', __('Set could not be updated.', 'iss-content-model'), ['status' => 400]);
+    }
+
+    if (function_exists('iss_core_audit_log')) {
+        iss_core_audit_log('set_update', [
+            'capability' => 'iss_edit_sets',
+            'object_ids' => [$set_id],
+            'result' => 'completed',
+        ]);
     }
 
     return iss_content_editorial_sets_rest_get_set($request);
@@ -149,6 +234,14 @@ function iss_content_editorial_sets_rest_add_item(WP_REST_Request $request)
         return new WP_Error('iss_content_set_item_add_failed', __('Item could not be added.', 'iss-content-model'), ['status' => 400]);
     }
 
+    if (function_exists('iss_core_audit_log')) {
+        iss_core_audit_log('set_item_add', [
+            'capability' => 'iss_create_sets',
+            'object_ids' => [$item_id],
+            'result' => 'completed',
+        ]);
+    }
+
     $item = $service->get_item($item_id);
     return rest_ensure_response(['item' => $item ? $service->prepare_item($item) : null]);
 }
@@ -170,6 +263,14 @@ function iss_content_editorial_sets_rest_update_item(WP_REST_Request $request)
 
     if (!$ok) {
         return new WP_Error('iss_content_set_item_update_failed', __('Item could not be updated.', 'iss-content-model'), ['status' => 400]);
+    }
+
+    if (function_exists('iss_core_audit_log')) {
+        iss_core_audit_log('set_item_update', [
+            'capability' => 'iss_review_sets',
+            'object_ids' => [$item_id],
+            'result' => 'completed',
+        ]);
     }
 
     $item = $service->get_item($item_id);
@@ -198,11 +299,27 @@ function iss_content_editorial_sets_rest_batch(WP_REST_Request $request)
         $updated = function_exists('iss_content_editorial_sets_event_drop_moderate_items')
             ? iss_content_editorial_sets_event_drop_moderate_items($item_ids, $action)
             : $service->batch_update_status($item_ids, $status_map[$action]);
+        if (function_exists('iss_core_audit_log')) {
+            iss_core_audit_log('set_items_' . $action, [
+                'capability' => 'iss_review_sets',
+                'object_ids' => $item_ids,
+                'result' => 'completed',
+                'updated' => $updated,
+            ]);
+        }
         return rest_ensure_response(['updated' => $updated]);
     }
 
     if ($action === 'move') {
         $moved = $service->move_items($item_ids, absint($request->get_param('setId') ?: $request->get_param('set_id')));
+        if (function_exists('iss_core_audit_log')) {
+            iss_core_audit_log('set_items_move', [
+                'capability' => 'iss_edit_sets',
+                'object_ids' => $item_ids,
+                'result' => 'completed',
+                'updated' => $moved,
+            ]);
+        }
         return rest_ensure_response(['updated' => $moved]);
     }
 
@@ -212,6 +329,14 @@ function iss_content_editorial_sets_rest_batch(WP_REST_Request $request)
             if ($service->mark_archive_candidate($item_id, (array) $request->get_param('metadata'))) {
                 $updated++;
             }
+        }
+        if (function_exists('iss_core_audit_log')) {
+            iss_core_audit_log('set_items_archive_candidate', [
+                'capability' => 'iss_review_sets',
+                'object_ids' => $item_ids,
+                'result' => 'completed',
+                'updated' => $updated,
+            ]);
         }
         return rest_ensure_response(['updated' => $updated]);
     }
@@ -233,6 +358,14 @@ function iss_content_editorial_sets_rest_attach(WP_REST_Request $request)
         return new WP_Error('iss_content_set_attach_failed', __('Set could not be attached.', 'iss-content-model'), ['status' => 400]);
     }
 
+    if (function_exists('iss_core_audit_log')) {
+        iss_core_audit_log('set_attach_context', [
+            'capability' => 'iss_edit_sets',
+            'object_ids' => [absint($request->get_param('id')), absint($request->get_param('contextId') ?: $request->get_param('context_id'))],
+            'result' => 'completed',
+        ]);
+    }
+
     return rest_ensure_response(['id' => $link_id]);
 }
 
@@ -248,6 +381,14 @@ function iss_content_editorial_sets_rest_promote(WP_REST_Request $request)
             'sectionType' => (string) $request->get_param('sectionType'),
         ]
     );
+
+    if (function_exists('iss_core_audit_log')) {
+        iss_core_audit_log('media_promotion', [
+            'capability' => 'iss_promote_media',
+            'object_ids' => array_merge([absint($request->get_param('targetId') ?: $request->get_param('target_id'))], $item_ids),
+            'result' => 'completed',
+        ]);
+    }
 
     return rest_ensure_response($result);
 }
@@ -265,7 +406,7 @@ function iss_content_editorial_sets_register_rest_routes(): void
         [
             'methods' => WP_REST_Server::CREATABLE,
             'callback' => 'iss_content_editorial_sets_rest_create_set',
-            'permission_callback' => 'iss_content_editorial_sets_can_use_context',
+            'permission_callback' => 'iss_content_editorial_sets_can_create',
         ],
     ]);
 
@@ -278,7 +419,7 @@ function iss_content_editorial_sets_register_rest_routes(): void
         [
             'methods' => WP_REST_Server::EDITABLE,
             'callback' => 'iss_content_editorial_sets_rest_update_set',
-            'permission_callback' => 'iss_content_editorial_sets_can_manage',
+            'permission_callback' => 'iss_content_editorial_sets_can_edit',
         ],
     ]);
 
@@ -291,7 +432,7 @@ function iss_content_editorial_sets_register_rest_routes(): void
         [
             'methods' => WP_REST_Server::CREATABLE,
             'callback' => 'iss_content_editorial_sets_rest_add_item',
-            'permission_callback' => 'iss_content_editorial_sets_can_use_context',
+            'permission_callback' => 'iss_content_editorial_sets_can_create',
         ],
     ]);
 
@@ -299,7 +440,7 @@ function iss_content_editorial_sets_register_rest_routes(): void
         [
             'methods' => WP_REST_Server::EDITABLE,
             'callback' => 'iss_content_editorial_sets_rest_update_item',
-            'permission_callback' => 'iss_content_editorial_sets_can_use_context',
+            'permission_callback' => 'iss_content_editorial_sets_can_review',
         ],
     ]);
 
@@ -307,7 +448,7 @@ function iss_content_editorial_sets_register_rest_routes(): void
         [
             'methods' => WP_REST_Server::CREATABLE,
             'callback' => 'iss_content_editorial_sets_rest_batch',
-            'permission_callback' => 'iss_content_editorial_sets_can_use_context',
+            'permission_callback' => 'iss_content_editorial_sets_can_batch',
         ],
     ]);
 
@@ -315,7 +456,7 @@ function iss_content_editorial_sets_register_rest_routes(): void
         [
             'methods' => WP_REST_Server::CREATABLE,
             'callback' => 'iss_content_editorial_sets_rest_attach',
-            'permission_callback' => 'iss_content_editorial_sets_can_use_context',
+            'permission_callback' => 'iss_content_editorial_sets_can_edit',
         ],
     ]);
 
@@ -323,7 +464,7 @@ function iss_content_editorial_sets_register_rest_routes(): void
         [
             'methods' => WP_REST_Server::CREATABLE,
             'callback' => 'iss_content_editorial_sets_rest_promote',
-            'permission_callback' => 'iss_content_editorial_sets_can_use_context',
+            'permission_callback' => 'iss_content_editorial_sets_can_promote',
         ],
     ]);
 }

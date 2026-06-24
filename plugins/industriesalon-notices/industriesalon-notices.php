@@ -50,17 +50,21 @@ final class Industriesalon_Notices {
     }
 
     public function capability(): string {
-        return (string) apply_filters('iss_notices_capability', 'edit_pages');
+        return (string) apply_filters('iss_notices_capability', 'iss_manage_hinweise');
     }
 
     public function register_fallback_submenu(): void {
+        if (defined('ISS_CORE_OPERATIONS_MENU_SLUG')) {
+            return;
+        }
+
         $page_title = __('Hinweise', 'industriesalon-notices');
         $menu_title = __('Hinweise', 'industriesalon-notices');
         $capability = $this->capability();
         $slug = 'edit.php?post_type=' . self::POST_TYPE;
 
         add_submenu_page(
-            'options-general.php',
+            defined('ISS_CORE_OPERATIONS_MENU_SLUG') ? ISS_CORE_OPERATIONS_MENU_SLUG : 'options-general.php',
             $page_title,
             $menu_title,
             $capability,
@@ -89,7 +93,7 @@ final class Industriesalon_Notices {
             'labels'             => $labels,
             'public'             => false,
             'show_ui'            => true,
-            'show_in_menu'       => true,
+            'show_in_menu'       => defined('ISS_CORE_OPERATIONS_MENU_SLUG') ? ISS_CORE_OPERATIONS_MENU_SLUG : true,
             'show_in_admin_bar'  => true,
             'show_in_nav_menus'  => false,
             'show_in_rest'       => false,
@@ -98,7 +102,10 @@ final class Industriesalon_Notices {
             'query_var'          => false,
             'menu_icon'          => 'dashicons-megaphone',
             'supports'           => ['title', 'editor', 'page-attributes'],
-            'capability_type'    => 'post',
+            'capability_type'    => ['iss_notice', 'iss_notices'],
+            'capabilities'       => function_exists('iss_core_post_type_capabilities')
+                ? iss_core_post_type_capabilities('iss_notice', 'iss_notices', 'create_iss_notices')
+                : [],
             'map_meta_cap'       => true,
         ]);
     }
@@ -378,7 +385,7 @@ final class Industriesalon_Notices {
             return;
         }
 
-        if (! current_user_can('edit_post', $post_id)) {
+        if (! current_user_can('edit_post', $post_id) || ! current_user_can($this->capability())) {
             return;
         }
 
@@ -524,7 +531,9 @@ final class Industriesalon_Notices {
         return $this->render_front_notice($notice);
     }
 
-    public function render_notice_block(array $attributes = [], string $content = '', \WP_Block $block = null): string {
+    public function render_notice_block(array $attributes = [], string $content = '', ?\WP_Block $block = null): string {
+        unset($content, $block);
+
         $area = isset($attributes['area']) ? sanitize_key((string) $attributes['area']) : 'front_page_banner';
         if ($area === '') {
             $area = 'front_page_banner';
@@ -575,6 +584,7 @@ final class Industriesalon_Notices {
                 'menu_order' => 'ASC',
                 'date'       => 'DESC',
             ],
+            // phpcs:ignore WordPress.DB.SlowDBQuery.slow_db_query_meta_query -- Notice lookup is intentionally driven by small indexed admin-controlled meta flags.
             'meta_query'     => [
                 [
                     'key'   => 'iss_is_active',
@@ -646,7 +656,7 @@ final class Industriesalon_Notices {
             <div class="iss-hero-note__text"><?php echo wp_kses_post(wpautop($notice->post_content)); ?></div>
             <?php if ($link_url !== '') : ?>
             <p class="iss-hero-note__link">
-                <a href="<?php echo esc_url($link_url); ?>"<?php echo $this->link_target_attributes($notice->ID); ?>>
+                <a href="<?php echo esc_url($link_url); ?>"<?php echo $this->link_target_attributes($notice->ID); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- Helper returns a fixed escaped target/rel attribute string or an empty string. ?>>
                     <span class="iss-hero-note__link-icon" aria-hidden="true">→</span>
                     <span class="iss-hero-note__link-text"><?php echo esc_html($cta_text); ?></span>
                 </a>
@@ -671,7 +681,7 @@ final class Industriesalon_Notices {
         $class_attr = implode(' ', array_unique($classes));
 
         return sprintf(
-            "<!-- wp:paragraph {\"className\":\"%1$s\"} -->\n<p class=\"%1$s\">%2$s</p>\n<!-- /wp:paragraph -->",
+            '<!-- wp:paragraph {"className":"%1$s"} -->' . "\n" . '<p class="%1$s">%2$s</p>' . "\n" . '<!-- /wp:paragraph -->',
             esc_attr($class_attr),
             esc_html($text)
         );
@@ -723,6 +733,7 @@ final class Industriesalon_Notices {
         }
 
         $request_uri = isset($_SERVER['REQUEST_URI']) ? (string) wp_unslash($_SERVER['REQUEST_URI']) : '';
+        // phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Read-only REST route detection for editor preview rendering.
         $rest_route  = isset($_GET['rest_route']) ? (string) wp_unslash($_GET['rest_route']) : '';
 
         if (strpos($request_uri, '/wp-json/wp/v2/block-renderer/industriesalon/notice-banner') !== false) {

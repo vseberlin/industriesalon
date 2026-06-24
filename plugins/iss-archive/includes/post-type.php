@@ -63,6 +63,12 @@ function iss_wf_import_register_post_type_and_taxonomies(): void
         ISS_WF_IMPORT_COLLECTION_POST_TYPE,
         ISS_WF_IMPORT_OBJECT_POST_TYPE,
     ];
+    $archive_taxonomy_capabilities = [
+        'manage_terms' => 'iss_manage_archive',
+        'edit_terms' => 'iss_manage_archive',
+        'delete_terms' => 'iss_manage_archive',
+        'assign_terms' => 'edit_archive_items',
+    ];
 
     register_taxonomy(ISS_WF_IMPORT_SOURCE_TAXONOMY, $archive_post_types, [
         'labels' => iss_wf_import_build_taxonomy_labels('Archivquellen', 'Archivquelle'),
@@ -71,6 +77,7 @@ function iss_wf_import_register_post_type_and_taxonomies(): void
         'show_in_rest' => true,
         'hierarchical' => false,
         'rewrite' => false,
+        'capabilities' => $archive_taxonomy_capabilities,
     ]);
 
     register_taxonomy(ISS_WF_IMPORT_CATEGORY_TAXONOMY, [ISS_WF_IMPORT_POST_TYPE], [
@@ -80,6 +87,7 @@ function iss_wf_import_register_post_type_and_taxonomies(): void
         'show_in_rest' => true,
         'hierarchical' => true,
         'rewrite' => false,
+        'capabilities' => $archive_taxonomy_capabilities,
     ]);
 
     register_taxonomy(ISS_WF_IMPORT_TAG_TAXONOMY, [ISS_WF_IMPORT_POST_TYPE], [
@@ -89,6 +97,7 @@ function iss_wf_import_register_post_type_and_taxonomies(): void
         'show_in_rest' => true,
         'hierarchical' => false,
         'rewrite' => false,
+        'capabilities' => $archive_taxonomy_capabilities,
     ]);
 
     register_taxonomy(ISS_WF_IMPORT_FIELD_TAXONOMY, [ISS_WF_IMPORT_OBJECT_POST_TYPE], [
@@ -98,6 +107,7 @@ function iss_wf_import_register_post_type_and_taxonomies(): void
         'show_in_rest' => true,
         'hierarchical' => true,
         'rewrite' => false,
+        'capabilities' => $archive_taxonomy_capabilities,
     ]);
 
     register_taxonomy(ISS_WF_IMPORT_FAMILY_TAXONOMY, [ISS_WF_IMPORT_OBJECT_POST_TYPE], [
@@ -107,6 +117,7 @@ function iss_wf_import_register_post_type_and_taxonomies(): void
         'show_in_rest' => true,
         'hierarchical' => true,
         'rewrite' => false,
+        'capabilities' => $archive_taxonomy_capabilities,
     ]);
 
     register_taxonomy(ISS_WF_IMPORT_CONTEXT_TAXONOMY, [ISS_WF_IMPORT_OBJECT_POST_TYPE], [
@@ -116,6 +127,7 @@ function iss_wf_import_register_post_type_and_taxonomies(): void
         'show_in_rest' => true,
         'hierarchical' => true,
         'rewrite' => false,
+        'capabilities' => $archive_taxonomy_capabilities,
     ]);
 
     register_taxonomy(ISS_WF_IMPORT_DECADE_TAXONOMY, [ISS_WF_IMPORT_OBJECT_POST_TYPE], [
@@ -125,6 +137,7 @@ function iss_wf_import_register_post_type_and_taxonomies(): void
         'show_in_rest' => true,
         'hierarchical' => true,
         'rewrite' => false,
+        'capabilities' => $archive_taxonomy_capabilities,
     ]);
 
     register_post_type(ISS_WF_IMPORT_POST_TYPE, [
@@ -137,7 +150,7 @@ function iss_wf_import_register_post_type_and_taxonomies(): void
         'public' => true,
         'publicly_queryable' => true,
         'show_ui' => true,
-        'show_in_menu' => true,
+        'show_in_menu' => defined('ISS_CORE_OPERATIONS_MENU_SLUG') ? ISS_CORE_OPERATIONS_MENU_SLUG : true,
         'show_in_rest' => true,
         'has_archive' => false,
         'rewrite' => [
@@ -146,6 +159,11 @@ function iss_wf_import_register_post_type_and_taxonomies(): void
         ],
         'menu_icon' => 'dashicons-archive',
         'supports' => ['title', 'editor', 'excerpt', 'thumbnail', 'revisions', 'page-attributes', 'custom-fields'],
+        'capability_type' => ['archive_item', 'archive_items'],
+        'capabilities' => function_exists('iss_core_post_type_capabilities')
+            ? iss_core_post_type_capabilities('archive_item', 'archive_items', 'create_archive_items')
+            : [],
+        'map_meta_cap' => true,
         'taxonomies' => [
             ISS_WF_IMPORT_SOURCE_TAXONOMY,
             ISS_WF_IMPORT_CATEGORY_TAXONOMY,
@@ -172,6 +190,11 @@ function iss_wf_import_register_post_type_and_taxonomies(): void
         ],
         'menu_icon' => 'dashicons-portfolio',
         'supports' => ['title', 'editor', 'excerpt', 'thumbnail', 'revisions', 'page-attributes', 'custom-fields'],
+        'capability_type' => ['archive_item', 'archive_items'],
+        'capabilities' => function_exists('iss_core_post_type_capabilities')
+            ? iss_core_post_type_capabilities('archive_item', 'archive_items', 'create_archive_items')
+            : [],
+        'map_meta_cap' => true,
         'taxonomies' => [
             ISS_WF_IMPORT_SOURCE_TAXONOMY,
         ],
@@ -197,6 +220,11 @@ function iss_wf_import_register_post_type_and_taxonomies(): void
         ],
         'menu_icon' => 'dashicons-format-image',
         'supports' => ['title', 'editor', 'excerpt', 'thumbnail', 'revisions', 'page-attributes', 'custom-fields'],
+        'capability_type' => ['archive_item', 'archive_items'],
+        'capabilities' => function_exists('iss_core_post_type_capabilities')
+            ? iss_core_post_type_capabilities('archive_item', 'archive_items', 'create_archive_items')
+            : [],
+        'map_meta_cap' => true,
         'taxonomies' => [
             ISS_WF_IMPORT_SOURCE_TAXONOMY,
         ],

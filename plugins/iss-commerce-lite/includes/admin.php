@@ -8,7 +8,7 @@ if (!defined('ABSPATH')) {
 
 function iss_payments_lite_admin_capability(): string
 {
-    return function_exists('iss_core_capability') ? iss_core_capability('manage') : 'manage_options';
+    return function_exists('iss_core_capability') ? iss_core_capability('requests') : 'manage_options';
 }
 
 function iss_payments_lite_status_labels(): array
@@ -33,7 +33,8 @@ function iss_payments_lite_kind_labels(): array
 
 function iss_payments_lite_admin_add_menu(): void
 {
-    add_management_page(
+    add_submenu_page(
+        defined('ISS_CORE_OPERATIONS_MENU_SLUG') ? ISS_CORE_OPERATIONS_MENU_SLUG : 'tools.php',
         __('ISS Anfragen', 'iss-payments-lite'),
         __('ISS Anfragen', 'iss-payments-lite'),
         iss_payments_lite_admin_capability(),
@@ -131,13 +132,21 @@ function iss_payments_lite_admin_handle_actions(): void
         return;
     }
 
-    if (!current_user_can(iss_payments_lite_admin_capability())) {
-        wp_die(esc_html__('Keine Berechtigung.', 'iss-payments-lite'));
+    if (function_exists('iss_require_cap')) {
+        iss_require_cap(iss_payments_lite_admin_capability());
+    } elseif (!current_user_can(iss_payments_lite_admin_capability())) {
+        wp_die(esc_html__('Keine Berechtigung.', 'iss-payments-lite'), 403);
     }
 
     // phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Export has its own nonce below.
     if (!empty($_GET['iss_payments_lite_export'])) {
         check_admin_referer('iss_payments_lite_export');
+        if (function_exists('iss_core_audit_log')) {
+            iss_core_audit_log('requests_export', [
+                'capability' => iss_payments_lite_admin_capability(),
+                'result' => 'completed',
+            ]);
+        }
         iss_payments_lite_admin_export_csv();
     }
 
@@ -155,14 +164,20 @@ function iss_payments_lite_admin_handle_actions(): void
             'min_submit_seconds' => isset($_POST['min_submit_seconds']) ? (int) $_POST['min_submit_seconds'] : 3,
             'max_body_bytes' => isset($_POST['max_body_bytes']) ? (int) $_POST['max_body_bytes'] : 8192,
         ]);
-        wp_safe_redirect(add_query_arg(['page' => 'iss-payments-lite-requests', 'updated' => 'settings'], admin_url('tools.php')));
+        if (function_exists('iss_core_audit_log')) {
+            iss_core_audit_log('requests_settings_update', [
+                'capability' => iss_payments_lite_admin_capability(),
+                'result' => 'completed',
+            ]);
+        }
+        wp_safe_redirect(add_query_arg(['page' => 'iss-payments-lite-requests', 'updated' => 'settings'], admin_url(defined('ISS_CORE_OPERATIONS_MENU_SLUG') ? 'admin.php' : 'tools.php')));
         exit;
     }
 
     if ($action === 'update_status') {
         check_admin_referer('iss_payments_lite_status');
         iss_payments_lite_admin_update_status();
-        wp_safe_redirect(add_query_arg(['page' => 'iss-payments-lite-requests', 'updated' => 'status'], admin_url('tools.php')));
+        wp_safe_redirect(add_query_arg(['page' => 'iss-payments-lite-requests', 'updated' => 'status'], admin_url(defined('ISS_CORE_OPERATIONS_MENU_SLUG') ? 'admin.php' : 'tools.php')));
         exit;
     }
 }
@@ -199,6 +214,15 @@ function iss_payments_lite_admin_update_status(): void
             $values
         )
     );
+
+    if (function_exists('iss_core_audit_log')) {
+        iss_core_audit_log('requests_status_update', [
+            'capability' => iss_payments_lite_admin_capability(),
+            'object_ids' => $ids,
+            'result' => 'completed',
+            'status' => $status,
+        ]);
+    }
 }
 
 function iss_payments_lite_admin_export_csv(): void
@@ -244,8 +268,10 @@ function iss_payments_lite_admin_export_csv(): void
 
 function iss_payments_lite_render_requests_page(): void
 {
-    if (!current_user_can(iss_payments_lite_admin_capability())) {
-        wp_die(esc_html__('Keine Berechtigung.', 'iss-payments-lite'));
+    if (function_exists('iss_require_cap')) {
+        iss_require_cap(iss_payments_lite_admin_capability());
+    } elseif (!current_user_can(iss_payments_lite_admin_capability())) {
+        wp_die(esc_html__('Keine Berechtigung.', 'iss-payments-lite'), 403);
     }
 
     iss_payments_lite_maybe_install_schema();
@@ -266,7 +292,7 @@ function iss_payments_lite_render_requests_page(): void
             'request_status' => $filters['status'] ?: null,
             'request_kind' => $filters['kind'] ?: null,
             's' => $filters['search'] ?: null,
-        ], static fn($value): bool => $value !== null), admin_url('tools.php')),
+        ], static fn($value): bool => $value !== null), admin_url(defined('ISS_CORE_OPERATIONS_MENU_SLUG') ? 'admin.php' : 'tools.php')),
         'iss_payments_lite_export'
     );
 
@@ -279,7 +305,7 @@ function iss_payments_lite_render_requests_page(): void
         <?php endif; ?>
 
         <h2><?php esc_html_e('Einstellungen', 'iss-payments-lite'); ?></h2>
-        <form method="post" action="<?php echo esc_url(admin_url('tools.php?page=iss-payments-lite-requests')); ?>">
+        <form method="post" action="<?php echo esc_url(admin_url((defined('ISS_CORE_OPERATIONS_MENU_SLUG') ? 'admin.php' : 'tools.php') . '?page=iss-payments-lite-requests')); ?>">
             <?php wp_nonce_field('iss_payments_lite_settings'); ?>
             <input type="hidden" name="iss_payments_lite_action" value="update_settings">
             <table class="form-table" role="presentation">

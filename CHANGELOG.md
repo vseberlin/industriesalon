@@ -6,6 +6,29 @@ be recovered from Git history.
 
 ## 2026-06-24
 
+- Added `docs/project/operations-admin-permissions-sow.md` to define the
+  code-owned Operations admin capability model before more custom admin screens
+  are built; documented cross-plugin capability assembly, fail-closed
+  screen/action authorization, version-gated role migrations, audit logging,
+  rollout slices, and that third-party role plugins may only be assignment UI,
+  not permission authority.
+- Implemented the Operations admin capability foundation:
+  - added the `iss-core` capability registry, mapped capability helper,
+    Operations root menu, `iss_require_cap()` / `iss_cap_check()` helpers,
+    version-gated `iss_caps_version` role migration, WP-CLI diagnostics, and
+    lightweight operations audit logging;
+  - created project roles for operations manager, curator/editor, reviewer,
+    intake helper, and technical maintainer while preserving administrator and
+    editor compatibility grants;
+  - moved Steuerung, Sets, Register tools, SuperSaaS sync/settings, ISS
+    requests, and operational CPT menus under Operations where available;
+  - mapped Rueckblick, Publications, Register places, Hinweise, and Archive
+    CPTs to explicit primitive/meta caps and tightened Set/Archivset REST
+    permissions for create, edit, review, promote, and delete paths.
+- Added `ops/sql/2026-06-24-remove-shop-surecart-roles.sql` as the transfer
+  artifact for removing legacy shop/SureCart roles and residual Woo/SureCart
+  capabilities from `wp_user_roles`; the artifact backs up the prior option
+  value before replacing it with the verified core plus ISS role set.
 - Implemented the editorial media Sets workflow foundation from `docs/architecture/editorial-media-buckets.md`:
   - added `iss-content` owned Set, item, context-link, and audit tables because the full SOW requires indexed queues, cross-context filters, batch review, decay sweeps, and promotion history that post meta would make fragile;
   - added the private Intake Workbench admin surface with Set creation, media attachment, thumbnail grid, modal facts, filters, status/batch actions, context attachment, promotion, and archive-candidate marking;

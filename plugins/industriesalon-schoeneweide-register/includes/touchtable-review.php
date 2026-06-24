@@ -125,8 +125,11 @@ function iss_register_render_touchtable_review_notice(): void
 
 function iss_register_handle_touchtable_review_action(): void
 {
-    if (!current_user_can('edit_posts')) {
-        wp_die('Insufficient permissions.');
+    $capability = function_exists('iss_core_capability') ? iss_core_capability('register') : 'edit_posts';
+    if (function_exists('iss_require_cap')) {
+        iss_require_cap($capability);
+    } elseif (!current_user_can($capability)) {
+        wp_die('Insufficient permissions.', 403);
     }
 
     check_admin_referer('iss_register_touchtable_review_action', 'iss_register_touchtable_review_nonce');
@@ -208,6 +211,14 @@ function iss_register_handle_touchtable_review_action(): void
             $redirect_args['iss_register_notice'] = 'error';
             $redirect_args['iss_register_message'] = 'Unbekannte Aktion.';
             break;
+    }
+
+    if (function_exists('iss_core_audit_log')) {
+        iss_core_audit_log('register_touchtable_review_' . $action_name, [
+            'capability' => $capability,
+            'object_ids' => array_values(array_filter([$snapshot_post_id, $place_id])),
+            'result' => (($redirect_args['iss_register_notice'] ?? '') === 'error') ? 'failed' : 'completed',
+        ]);
     }
 
     wp_safe_redirect(iss_register_touchtable_review_page_url($redirect_args));
@@ -410,8 +421,11 @@ function iss_register_render_touchtable_review_pagination(array $result, array $
 
 function iss_register_render_touchtable_review_page(): void
 {
-    if (!current_user_can('edit_posts')) {
-        wp_die('Insufficient permissions.');
+    $capability = function_exists('iss_core_capability') ? iss_core_capability('register') : 'edit_posts';
+    if (function_exists('iss_require_cap')) {
+        iss_require_cap($capability);
+    } elseif (!current_user_can($capability)) {
+        wp_die('Insufficient permissions.', 403);
     }
 
     $filters = [
@@ -448,7 +462,7 @@ add_action('admin_menu', function () {
         'edit.php?post_type=' . ISS_REGISTER_POST_TYPE,
         'Touchtable Review',
         'Touchtable Review',
-        'edit_posts',
+        function_exists('iss_core_capability') ? iss_core_capability('register') : 'edit_posts',
         ISS_REGISTER_TOUCHTABLE_REVIEW_PAGE_SLUG,
         'iss_register_render_touchtable_review_page'
     );
