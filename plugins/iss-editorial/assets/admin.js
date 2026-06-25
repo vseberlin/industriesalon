@@ -32,8 +32,10 @@
       quellenauszug: '#d85a30',
       objektfokus: '#1d9e75',
       bildstrecke: '#888780',
+      image_wall: '#b98250',
       vollbild: '#185fa5',
       massstab: '#ba7517',
+      projekt_rail: '#255f63',
       fliesstext: '#5f5e5a',
       kapitel: '#1a1a2e',
       zitat: '#d4537e',
@@ -220,6 +222,7 @@
     function addSection(type) {
       documentState.sections.push({
         type: type,
+        anchor: '',
         kicker: '',
         title: '',
         body: '',
@@ -553,7 +556,16 @@
       });
       body.appendChild(kickerField);
       body.appendChild(titleField);
-      body.appendChild(bodyField);
+      if (supports(type, 'anchor')) {
+        body.appendChild(createTextInput('Anker', section.anchor || '', function (value) {
+          section.anchor = value;
+          render();
+          scheduleAutosave();
+        }));
+      }
+      if (!supports(type, 'no_body')) {
+        body.appendChild(bodyField);
+      }
 
       if (supports(type, 'quote')) {
         body.appendChild(createTextarea('Zitat', section.quote || '', function (value) {

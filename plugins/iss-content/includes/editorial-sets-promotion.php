@@ -380,7 +380,10 @@ function iss_content_editorial_sets_promote_to_editorial_document(int $post_id, 
 
     $section_type = sanitize_key($section_type);
     if ($section_type === '' || !isset($format['sections'][$section_type])) {
-        foreach (['bildstrecke', 'galerie', 'kapitel'] as $candidate) {
+        $preferred_sections = get_post_type($post_id) === ISS_CONTENT_MODEL_PROJEKT_POST_TYPE
+            ? ['galerie', 'material', 'image_wall', 'kapitel']
+            : ['bildstrecke', 'galerie', 'kapitel'];
+        foreach ($preferred_sections as $candidate) {
             if (isset($format['sections'][$candidate])) {
                 $section_type = $candidate;
                 break;

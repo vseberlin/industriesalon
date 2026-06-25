@@ -121,6 +121,13 @@ function iss_editorial_sanitize_section(array $section, array $format): array
         'body' => wp_kses_post((string) ($section['body'] ?? '')),
     ];
 
+    if (isset($section['anchor'])) {
+        $anchor = sanitize_title((string) $section['anchor']);
+        if ($anchor !== '') {
+            $sanitized['anchor'] = $anchor;
+        }
+    }
+
     if (iss_editorial_format_supports_section_field($format, $type, 'quote')) {
         $sanitized['quote'] = wp_kses_post((string) ($section['quote'] ?? ''));
         $sanitized['attribution'] = sanitize_text_field((string) ($section['attribution'] ?? ''));

@@ -4,6 +4,44 @@ This file records durable project changes. Keep it compact: current state belong
 `handoff_CURRENT.md`, active follow-up in `TODO.md`, and detailed investigation can
 be recovered from Git history.
 
+## 2026-06-25
+
+- Added the first `projekt` registry/gesture migration slice:
+  - registered the `projekt` editorial format in `iss-content` with `kapitel`,
+    `fliesstext`, `massstab`, `projekt_rail`, `galerie`, `image_wall`,
+    `material`, and `schluss` gestures;
+  - made `projekt_rail` an optional navigation gesture: when present, the theme
+    appends it below the project meta panel and derives links from `kapitel`
+    and `schluss` section anchors; when absent, short projects stay in a
+    single-column flow;
+  - moved JSON-backed project context out of manual Gutenberg rail markup: the
+    theme now appends generated related places plus a compact related-content
+    group below the meta/rail stack from the existing relations layer;
+  - kept project media intake Set-first: Sets remain private growing
+    collections, while promotion writes approved `media_refs` / `object_refs`
+    into the project document only;
+  - added a theme-owned project editorial renderer with legacy `post_content`
+    fallback unless `_iss_editorial_enabled_projekt` is enabled per post;
+  - added `wp iss-editorial projekt-dry-run` and
+    `wp iss-editorial projekt-import-candidate` for disabled migration
+    candidates;
+  - created `ops/sql/2026-06-25-project-editorial-json-candidates.sql` for the
+    seven current published project candidates, all with frontend rendering
+    disabled.
+- Added the reusable `image_wall` / `Bilderwand` editorial gesture for
+  Ausstellung JSON documents:
+  - registered the gesture in the existing `iss-content` editorial format
+    registry with `media_refs` only, instead of adding a parallel Gutenberg or
+    shortcode path;
+  - mapped it through the theme-owned Ausstellung renderer as
+    `layout-image-wall`;
+  - added a framed, uncropped image-wall treatment in
+    `single-ausstellung.css`, with horizontal scrolling on narrow screens so
+    dense media does not turn into a long vertical stack;
+  - kept `iss/dense-image-wall` as the heavier asymmetric Gutenberg composer
+    because its per-item layout controls are useful but outside the custom
+    editor gesture model.
+
 ## 2026-06-24
 
 - Added `docs/runbooks/event-drop-staging.md` for the current Sets-backed

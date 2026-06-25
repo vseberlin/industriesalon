@@ -4,8 +4,39 @@ if (!defined('ABSPATH')) {
     exit;
 }
 
+function iss_content_model_editorial_image_wall_section(): array
+{
+    return [
+        'label' => __('Bilderwand', 'iss-content-model'),
+        'description' => __('Ordered image wall with framed, uncropped media', 'iss-content-model'),
+        'supports' => ['media_refs'],
+    ];
+}
+
+function iss_content_model_editorial_gallery_section(): array
+{
+    return [
+        'label' => __('Galerie', 'iss-content-model'),
+        'description' => __('Approved media promoted from a Set or selected from the media library', 'iss-content-model'),
+        'supports' => ['media_refs', 'object_refs'],
+    ];
+}
+
+function iss_content_model_editorial_material_section(): array
+{
+    return [
+        'label' => __('Material', 'iss-content-model'),
+        'description' => __('Documents, links, archive references, and supporting project material', 'iss-content-model'),
+        'supports' => ['anchor', 'media_refs', 'object_refs', 'links'],
+    ];
+}
+
 function iss_content_model_register_editorial_formats(array $formats): array
 {
+    $gallery_section = iss_content_model_editorial_gallery_section();
+    $image_wall_section = iss_content_model_editorial_image_wall_section();
+    $material_section = iss_content_model_editorial_material_section();
+
     $formats['ausstellung'] = [
         'label' => __('Ausstellung', 'iss-content-model'),
         'base' => 'ordered',
@@ -48,6 +79,7 @@ function iss_content_model_register_editorial_formats(array $formats): array
                 'description' => __('Photo sequence with captions', 'iss-content-model'),
                 'supports' => ['object_refs', 'media_refs'],
             ],
+            'image_wall' => $image_wall_section,
             'vollbild' => [
                 'label' => __('Vollbild', 'iss-content-model'),
                 'description' => __('One image, full viewport, short panel', 'iss-content-model'),
@@ -67,6 +99,44 @@ function iss_content_model_register_editorial_formats(array $formats): array
                 'label' => __('Ausstellungsentscheidung', 'iss-content-model'),
                 'description' => __('Curator speaks directly', 'iss-content-model'),
                 'supports' => ['links'],
+            ],
+        ],
+    ];
+
+    $formats['projekt'] = [
+        'label' => __('Projekt', 'iss-content-model'),
+        'base' => 'ordered',
+        'post_types' => [ISS_CONTENT_MODEL_PROJEKT_POST_TYPE],
+        'default_skin' => 'dossier',
+        'default_variant' => 'standard',
+        'sections' => [
+            'kapitel' => [
+                'label' => __('Kapitel', 'iss-content-model'),
+                'description' => __('Project chapter with title and narrative body', 'iss-content-model'),
+                'supports' => ['anchor', 'links'],
+            ],
+            'fliesstext' => [
+                'label' => __('Fliesstext', 'iss-content-model'),
+                'description' => __('Essay paragraph or connective text', 'iss-content-model'),
+                'supports' => ['anchor', 'links'],
+            ],
+            'massstab' => [
+                'label' => __('Merkpunkte', 'iss-content-model'),
+                'description' => __('Compact key points, facts, or context cards', 'iss-content-model'),
+                'supports' => ['anchor'],
+            ],
+            'projekt_rail' => [
+                'label' => __('Navigation', 'iss-content-model'),
+                'description' => __('Optional project rail generated from chapter and contact sections', 'iss-content-model'),
+                'supports' => ['no_body'],
+            ],
+            'galerie' => array_merge($gallery_section, ['supports' => ['anchor', 'media_refs', 'object_refs']]),
+            'image_wall' => array_merge($image_wall_section, ['supports' => ['anchor', 'media_refs']]),
+            'material' => $material_section,
+            'schluss' => [
+                'label' => __('Kontakt / Schluss', 'iss-content-model'),
+                'description' => __('Closing note, contact, and onward links', 'iss-content-model'),
+                'supports' => ['anchor', 'links'],
             ],
         ],
     ];

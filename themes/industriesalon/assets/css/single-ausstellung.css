@@ -353,6 +353,58 @@
   line-height: 1.45;
 }
 
+.iss-ausstellung-editorial .iss-ausstellung-editorial__section--layout-image-wall > .iss-container {
+  width: min(100% - (2 * var(--iss-ausstellung-pad-x)), 92rem);
+}
+
+.iss-ausstellung-editorial .iss-ausstellung-editorial__section--layout-image-wall .iss-ausstellung-section__copy,
+.iss-ausstellung-editorial .iss-ausstellung-editorial__section--layout-image-wall .iss-ausstellung-section__media {
+  grid-column: 1 / -1;
+}
+
+.iss-ausstellung-editorial .iss-ausstellung-editorial__section--layout-image-wall .iss-ausstellung-section__copy {
+  width: min(100%, 42rem);
+}
+
+.iss-ausstellung-editorial .iss-ausstellung-editorial__section--layout-image-wall .iss-ausstellung-editorial__media-strip {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: clamp(0.85rem, 1.4vw, 1.25rem);
+  margin: 0;
+}
+
+.iss-ausstellung-editorial .iss-ausstellung-editorial__section--layout-image-wall .iss-ausstellung-editorial__media-item {
+  display: grid;
+  align-items: center;
+  min-width: 0;
+  margin: 0;
+  padding: clamp(0.55rem, 1vw, 0.85rem);
+  border: 1px solid rgba(30, 30, 30, 0.16);
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.72), rgba(244, 242, 238, 0.74)),
+    var(--iss-white, #fff);
+  box-shadow: 0 0.45rem 1.2rem rgba(30, 30, 30, 0.08);
+}
+
+.iss-ausstellung-editorial .iss-ausstellung-editorial__section--layout-image-wall .iss-ausstellung-editorial__media-item img {
+  display: block;
+  width: auto;
+  max-width: 100%;
+  height: auto;
+  max-height: clamp(13rem, 24vw, 21rem);
+  margin-inline: auto;
+  aspect-ratio: auto;
+  object-fit: contain;
+}
+
+.iss-ausstellung-editorial .iss-ausstellung-editorial__section--layout-image-wall .iss-ausstellung-editorial__media-item figcaption {
+  width: 100%;
+  margin-top: 0.55rem;
+  color: rgba(30, 30, 30, 0.68);
+  font-size: 0.86rem;
+  line-height: 1.35;
+}
+
 .iss-ausstellung-editorial__archive-card,
 .iss-ausstellung-editorial__placeholder {
   display: grid;
@@ -360,6 +412,28 @@
   padding: 1rem;
   border: 1px solid rgba(30, 30, 30, 0.12);
   background: #fff;
+}
+
+@media (max-width: 760px) {
+  .iss-ausstellung-editorial .iss-ausstellung-editorial__section--layout-image-wall .iss-ausstellung-editorial__media-strip {
+    display: flex;
+    gap: 0.85rem;
+    width: calc(100% + var(--iss-ausstellung-pad-x));
+    max-width: none;
+    padding: 0 0 0.85rem;
+    overflow-x: auto;
+    scroll-padding-inline: var(--iss-ausstellung-pad-x);
+    scroll-snap-type: x proximity;
+  }
+
+  .iss-ausstellung-editorial .iss-ausstellung-editorial__section--layout-image-wall .iss-ausstellung-editorial__media-item {
+    flex: 0 0 min(78vw, 22rem);
+    scroll-snap-align: start;
+  }
+
+  .iss-ausstellung-editorial .iss-ausstellung-editorial__section--layout-image-wall .iss-ausstellung-editorial__media-item img {
+    max-height: 18rem;
+  }
 }
 
 .iss-ausstellung-editorial__archive-media {

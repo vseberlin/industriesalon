@@ -18,6 +18,11 @@ if (file_exists($industriesalon_ausstellungen_render_helper)) {
     require_once $industriesalon_ausstellungen_render_helper;
 }
 
+$industriesalon_projects_render_helper = get_stylesheet_directory() . '/includes/projects-render.php';
+if (file_exists($industriesalon_projects_render_helper)) {
+    require_once $industriesalon_projects_render_helper;
+}
+
 $industriesalon_veranstaltungen_render_helper = get_stylesheet_directory() . '/includes/veranstaltungen-render.php';
 if (file_exists($industriesalon_veranstaltungen_render_helper)) {
     require_once $industriesalon_veranstaltungen_render_helper;

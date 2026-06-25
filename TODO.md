@@ -4,6 +4,21 @@ Immediate executable work only. Larger future programs live in `docs/project/bac
 
 ## Next
 
+- Project registry migration: visually review the enabled JSON-backed project
+  pages locally, starting with `futura-biennale-2027`. Check the optional
+  `projekt_rail` under the meta panel, derived `kapitel` / `schluss`
+  navigation, generated places/context, mobile stacking, and whether short
+  projects should remove the rail gesture. Then test Set promotion into its
+  `galerie`. Transfer order is
+  `ops/sql/2026-06-25-project-editorial-json-candidates.sql` first, then
+  `ops/sql/2026-06-25-project-editorial-enable-json-review.sql` when the target
+  should render JSON for review.
+- Replace the vanilla WordPress Dashboard with an ISS editorial/operations
+  overview. Start read-only: inspect current Dashboard widgets and dashboard
+  hooks, then hide the generic core widgets and add practical boxes for next
+  Veranstaltungen, drafts needing review, Sets/uploads awaiting approval,
+  missing featured images/excerpts, structured-content warnings, and quick
+  links to Veranstaltungen, Sets, Medien, Ausstellungen, and Kalender.
 - Veranstaltung JSON single-renderer slice: editorial review for `24988`,
   `13349`, `25808`, and the 22 legacy-fallback imports passed. All 25
   Veranstaltung posts now have valid `_iss_content_json`; the public renderer

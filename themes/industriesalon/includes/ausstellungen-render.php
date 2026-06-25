@@ -234,6 +234,7 @@ function industriesalon_get_editorial_ausstellung_section_context(array $section
             'massstab' => 'stat',
             'fliesstext' => 'essay',
             'bildstrecke' => 'album',
+            'image_wall' => 'image-wall',
             'aside' => 'aside',
             'schluss' => 'conclusion',
             'kapitel' => 'chapter',
