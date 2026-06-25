@@ -35,6 +35,59 @@ be recovered from Git history.
   - made the project renderer prefer structured facts while preserving optional
     body fallback text;
   - added a scoped `layout-key-points` project treatment in `single-content.css`.
+- Added the first theme-owned project skin review pass:
+  - exposed `brief`, `dossier`, `field`, and `standard` as allowed `projekt`
+    skins through the existing editor-visible skin path;
+  - kept the JSON gesture contract unchanged while allowing skin-specific theme
+    markup for project navigation and `massstab` fact sections;
+  - made `dossier` render project navigation as a horizontal chapter strip in
+    the content flow, pair `kapitel` plus following `massstab` sections into a
+    chapter/fact spread, center the dossier story flow in a 75rem section
+    container, promote the horizontal rail into a dark primary CTA band, and
+    move generated places/context into a footer grid;
+  - made `brief` a compact project-sheet treatment without the heavy chapter
+    rail, and `field` a darker spatial/index treatment that reuses generated
+    context and related-place output instead of adding a map schema;
+  - added `ops/sql/2026-06-25-project-skin-review-assignments.sql` for the
+    three local review assignments: Walk of Fame as `brief`, Stadtlabor as
+    `field`, and Futura as `dossier`.
+- Strengthened project media/material handling:
+  - made project `galerie` render through project-owned carousel markup while
+    reusing the shared strip-carousel JavaScript hooks already used by
+    Veranstaltungen;
+  - gave project galleries a stronger dark section treatment and kept mobile as
+    a horizontal strip rather than a long image stack;
+  - allowed `material` sections in the editorial JSON UI to pick files and
+    documents, not only images, and added a project file-card fallback for
+    non-image media refs.
+- Reconciled project media Sets with the admin workflow:
+  - made the Sets Workbench context-aware so project-scoped Workbench views show
+    only Sets attached to that project;
+  - kept Sets reachable under Operations when the user has Operations access,
+    with a Tools fallback when that parent menu is unavailable;
+  - added project edit-screen actions to create the attached project Set, open
+    it, or open it directly for upload;
+  - added a Set-scoped raw upload endpoint and Workbench file picker so project
+    files enter the private `external_upload` intake/review path before Media
+    Library import;
+  - changed default project Set promotion to split approved items by type:
+    images/videos append to `galerie`, while PDFs/documents/archive objects
+    append to `material`.
+- Added project Set lifecycle rules:
+  - new real `projekt` saves now ensure a source-material project Set unless
+    the post is an autosave, revision, auto-draft, or trash;
+  - deleting or trashing a project may quarantine disposable raw
+    `external_upload` intake with decay, but it does not delete promoted,
+    retained, archive-candidate, Media Library, or shared Set material;
+  - project-only Sets are marked `stale` after disposable raw intake is
+    quarantined, while Sets attached to other live contexts are left active.
+- Extended public contribution intake to projects:
+  - added a project `upload_intake` gesture that renders a theme-owned CTA to
+    the existing `/event-drop/` interface instead of adding a parallel uploader;
+  - routes project Event Drop targets with the preserved `projekt__<slug>`
+    marker into the attached source-material project Set;
+  - records project target provenance on incoming `external_upload` items and
+    keeps public pages rendering only promoted editorial references.
 - Added constrained rich-text editing for project chapter prose:
   - replaced the project `kapitel`, `fliesstext`, and `schluss` body textarea
     with a small custom editor for paragraphs, emphasis, links, and lists;

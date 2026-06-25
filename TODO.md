@@ -4,17 +4,29 @@ Immediate executable work only. Larger future programs live in `docs/project/bac
 
 ## Next
 
-- Project registry migration: visually review the enabled JSON-backed project
-  pages locally, starting with `futura-biennale-2027`. Check the new
-  `massstab` fact sections, especially whether Futura's second phase-facts
-  section is too dense and should be manually shortened or merged back into
-  prose. Also check the sticky generated side stack under the meta panel,
-  derived `kapitel` / `schluss` navigation, generated places/context, mobile
-  stacking, and whether short projects should remove the rail gesture. Then
-  test Set promotion into its `galerie`. Transfer order is
-  `ops/sql/2026-06-25-project-editorial-json-candidates.sql` first, then
-  `ops/sql/2026-06-25-project-editorial-enable-json-review.sql` when the target
-  should render JSON for review.
+- Project skin review: visually compare the three enabled local examples:
+  `futura-biennale-2027` uses `dossier` with publication-style horizontal
+  primary chapter navigation, centered 75rem chapter/fact spreads, and footer context,
+  `walk-of-fame-schoeneweide` uses compact `brief`, and
+  `stadtlabor-wilhelminenhofstrasse` uses `field` with the side index/context
+  treatment. Also review project `galerie` and `material` on pages with
+  multiple images/documents, then decide whether to assign `brief` or `field`
+  to additional projects, continue the seven-page project review, and test the
+  admin project Set flow: create/open/upload from the project edit screen,
+  approve items in the Workbench, then promote mixed image/PDF selections into
+  `galerie` plus `material`. Transfer order is
+  `ops/sql/2026-06-25-project-editorial-json-candidates.sql` first,
+  `ops/sql/2026-06-25-project-editorial-enable-json-review.sql` second, and
+  `ops/sql/2026-06-25-project-skin-review-assignments.sql` only when the target
+  should get the representative skin assignments.
+- Project media intake browser review: confirm the project edit-screen
+  `Projekt-Set anlegen und hochladen` path in the browser, including raw image
+  and PDF upload, approval, promotion, resulting public `galerie` / `material`
+  output, and the lifecycle rule that new real projects get a Set while project
+  deletion only quarantines disposable raw intake. Also add/review a project
+  `Upload-Aufruf` section and confirm its public CTA opens `/event-drop/` with
+  `event=projekt__<project-slug>` and that third-party uploads appear as
+  pending `external_upload` items in the project source Set.
 - Replace the vanilla WordPress Dashboard with an ISS editorial/operations
   overview. Start read-only: inspect current Dashboard widgets and dashboard
   hooks, then hide the generic core widgets and add practical boxes for next

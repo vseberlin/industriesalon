@@ -911,7 +911,9 @@
       var refs = createElement('div', 'iss-editorial-field iss-editorial-field--media');
       var tray = createElement('div', 'iss-editorial-media-tray');
       var isFullViewport = (section.type || '') === 'vollbild';
-      var pickerButton = createElement('button', 'button', isFullViewport ? 'Bild auswählen' : 'Bilder auswählen');
+      var isMaterial = (section.type || '') === 'material';
+      var noun = isMaterial ? 'Medien/Dateien' : (isFullViewport ? 'Bild' : 'Bilder');
+      var pickerButton = createElement('button', 'button', noun + ' auswählen');
 
       function rerenderTray() {
         renderMediaTray(section, tray, rerenderTray);
@@ -932,10 +934,10 @@
         });
 
         var frame = wp.media({
-          title: isFullViewport ? 'Bild auswählen' : 'Bilder auswählen',
-          button: { text: isFullViewport ? 'Bild übernehmen' : 'Bilder übernehmen' },
+          title: noun + ' auswählen',
+          button: { text: noun + ' übernehmen' },
           multiple: !isFullViewport,
-          library: { type: 'image' }
+          library: isMaterial ? {} : { type: 'image' }
         });
 
         frame.on('open', function () {
@@ -971,7 +973,7 @@
         frame.open();
       });
 
-      refs.appendChild(createElement('span', '', 'Bilder'));
+      refs.appendChild(createElement('span', '', isMaterial ? 'Medien/Dateien' : 'Bilder'));
       refs.appendChild(tray);
       refs.appendChild(pickerButton);
       body.appendChild(refs);

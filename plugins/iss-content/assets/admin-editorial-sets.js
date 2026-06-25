@@ -12,12 +12,13 @@
   var state = {
     sets: [],
     items: [],
-    selectedSetId: 0,
+    selectedSetId: parseInt(config.setId, 10) || 0,
     selectedItems: {},
     status: '',
     modalItem: null,
     busy: false,
-    notice: ''
+    notice: '',
+    uploadOpened: false
   };
 
   function el(tag, className, text) {
@@ -125,6 +126,11 @@
 
     return request({ path: path('/editorial-sets' + query) }).then(function (response) {
       state.sets = response.items || [];
+      if (state.selectedSetId && !state.sets.some(function (set) {
+        return set.id === state.selectedSetId;
+      })) {
+        state.selectedSetId = 0;
+      }
       if (!state.selectedSetId && state.sets.length) {
         state.selectedSetId = state.sets[0].id;
       }
@@ -191,10 +197,13 @@
     if (!window.wp || !window.wp.media) {
       return;
     }
+    if (!state.selectedSetId) {
+      setNotice(t('setMissingForUpload', 'Create or select a Set before uploading.'));
+      return;
+    }
     var frame = window.wp.media({
       title: t('addMedia', 'Add media to Set'),
       multiple: true,
-      library: { type: ['image', 'video', 'application/pdf'] },
       button: { text: t('addToSet', 'Add to Set') }
     });
     frame.on('select', function () {
@@ -220,6 +229,44 @@
       chain.then(loadItems);
     });
     frame.open();
+  }
+
+  function uploadRawFiles() {
+    if (!state.selectedSetId) {
+      setNotice(t('setMissingForUpload', 'Create or select a Set before uploading.'));
+      return;
+    }
+
+    var input = el('input');
+    input.type = 'file';
+    input.multiple = true;
+    input.hidden = true;
+    input.addEventListener('change', function () {
+      if (!input.files || !input.files.length) {
+        input.remove();
+        return;
+      }
+
+      var form = new window.FormData();
+      Array.prototype.forEach.call(input.files, function (file) {
+        form.append('files[]', file);
+      });
+      form.append('setId', String(state.selectedSetId));
+      if (config.contextType && config.contextId) {
+        form.append('contextType', config.contextType);
+        form.append('contextId', String(config.contextId));
+      }
+
+      input.remove();
+      request({
+        path: path('/editorial-set-items/upload'),
+        method: 'POST',
+        body: form
+      }).then(loadItems);
+    });
+
+    root.appendChild(input);
+    input.click();
   }
 
   function batch(action) {
@@ -331,9 +378,15 @@
     create.addEventListener('click', createSet);
     toolbar.appendChild(create);
 
+    var upload = el('button', 'button button-primary', t('uploadFiles', 'Upload files to Set'));
+    upload.type = 'button';
+    upload.disabled = !state.selectedSetId || state.busy;
+    upload.addEventListener('click', uploadRawFiles);
+    toolbar.appendChild(upload);
+
     var add = el('button', 'button', t('addMedia', 'Add media'));
     add.type = 'button';
-    add.disabled = state.busy;
+    add.disabled = !state.selectedSetId || state.busy;
     add.addEventListener('click', addMedia);
     toolbar.appendChild(add);
 
@@ -605,5 +658,10 @@
   }
 
   render();
-  loadSets();
+  loadSets().then(function () {
+    if (config.upload && !state.uploadOpened && state.selectedSetId) {
+      state.uploadOpened = true;
+      uploadRawFiles();
+    }
+  });
 }());

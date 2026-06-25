@@ -110,6 +110,8 @@ function iss_content_editorial_sets_rest_list_sets(WP_REST_Request $request): WP
         'search' => (string) $request->get_param('search'),
         'status' => (string) $request->get_param('status'),
         'set_role' => (string) ($request->get_param('setRole') ?: $request->get_param('set_role')),
+        'context_type' => (string) ($request->get_param('contextType') ?: $request->get_param('context_type')),
+        'context_id' => absint($request->get_param('contextId') ?: $request->get_param('context_id')),
         'page' => (int) $request->get_param('page'),
         'per_page' => (int) ($request->get_param('perPage') ?: $request->get_param('per_page') ?: 30),
     ]);
@@ -244,6 +246,152 @@ function iss_content_editorial_sets_rest_add_item(WP_REST_Request $request)
 
     $item = $service->get_item($item_id);
     return rest_ensure_response(['item' => $item ? $service->prepare_item($item) : null]);
+}
+
+function iss_content_editorial_sets_rest_upload_files(WP_REST_Request $request)
+{
+    $service = iss_content_editorial_sets_service();
+    $set_id = absint($request->get_param('setId') ?: $request->get_param('set_id'));
+    $set = $service->get_set($set_id);
+    if (!$set) {
+        return new WP_Error('iss_content_set_missing', __('Select a Set before uploading.', 'iss-content-model'), ['status' => 400]);
+    }
+
+    $root = function_exists('iss_content_editorial_sets_event_drop_storage_root')
+        ? iss_content_editorial_sets_event_drop_storage_root()
+        : '/event-drop-storage';
+    $incoming_dir = rtrim($root, '/\\') . '/incoming';
+    if (!wp_mkdir_p($incoming_dir) || !is_dir($incoming_dir) || !is_writable($incoming_dir)) {
+        return new WP_Error('iss_content_set_upload_storage_unavailable', __('Raw upload storage is unavailable.', 'iss-content-model'), ['status' => 500]);
+    }
+
+    $files = iss_content_editorial_sets_rest_uploaded_files($request);
+    if (!$files) {
+        return new WP_Error('iss_content_set_upload_missing', __('No files were uploaded.', 'iss-content-model'), ['status' => 400]);
+    }
+
+    $created = [];
+    foreach ($files as $file) {
+        $item = iss_content_editorial_sets_store_raw_upload_file($file, $set_id, $request);
+        if (is_wp_error($item)) {
+            return $item;
+        }
+        if (is_array($item)) {
+            $created[] = $item;
+        }
+    }
+
+    if (function_exists('iss_core_audit_log')) {
+        iss_core_audit_log('set_raw_upload', [
+            'capability' => 'iss_create_sets',
+            'object_ids' => array_map(static function (array $item): int {
+                return (int) ($item['id'] ?? 0);
+            }, $created),
+            'result' => 'completed',
+        ]);
+    }
+
+    return rest_ensure_response(['items' => array_map([$service, 'prepare_item'], $created)]);
+}
+
+function iss_content_editorial_sets_rest_uploaded_files(WP_REST_Request $request): array
+{
+    $params = $request->get_file_params();
+    $input = $params['files'] ?? $params['file'] ?? [];
+    if (!$input) {
+        return [];
+    }
+
+    if (isset($input['name']) && is_array($input['name'])) {
+        $files = [];
+        foreach ($input['name'] as $index => $name) {
+            $files[] = [
+                'name' => (string) $name,
+                'type' => (string) ($input['type'][$index] ?? ''),
+                'tmp_name' => (string) ($input['tmp_name'][$index] ?? ''),
+                'error' => (int) ($input['error'][$index] ?? UPLOAD_ERR_NO_FILE),
+                'size' => (int) ($input['size'][$index] ?? 0),
+            ];
+        }
+
+        return $files;
+    }
+
+    return isset($input['name']) ? [$input] : [];
+}
+
+function iss_content_editorial_sets_store_raw_upload_file(array $file, int $set_id, WP_REST_Request $request)
+{
+    $error = (int) ($file['error'] ?? UPLOAD_ERR_NO_FILE);
+    if ($error !== UPLOAD_ERR_OK) {
+        return new WP_Error('iss_content_set_upload_failed', __('File upload failed.', 'iss-content-model'), ['status' => 400]);
+    }
+
+    $tmp_name = (string) ($file['tmp_name'] ?? '');
+    $original_name = sanitize_file_name((string) ($file['name'] ?? ''));
+    if ($tmp_name === '' || !is_readable($tmp_name) || $original_name === '') {
+        return new WP_Error('iss_content_set_upload_invalid', __('Uploaded file is invalid.', 'iss-content-model'), ['status' => 400]);
+    }
+
+    $file_type = wp_check_filetype_and_ext($tmp_name, $original_name);
+    if (!is_array($file_type) || empty($file_type['type'])) {
+        return new WP_Error('iss_content_set_upload_type_invalid', __('Uploaded file type is not allowed.', 'iss-content-model'), ['status' => 400]);
+    }
+
+    $root = function_exists('iss_content_editorial_sets_event_drop_storage_root')
+        ? iss_content_editorial_sets_event_drop_storage_root()
+        : '/event-drop-storage';
+    $incoming_dir = rtrim($root, '/\\') . '/incoming';
+    $stored_name = wp_unique_filename(
+        $incoming_dir,
+        sanitize_file_name($set_id . '-' . gmdate('Ymd-His') . '-' . $original_name)
+    );
+    $target_path = rtrim($incoming_dir, '/\\') . '/' . $stored_name;
+
+    if (!move_uploaded_file($tmp_name, $target_path) && !rename($tmp_name, $target_path)) {
+        return new WP_Error('iss_content_set_upload_store_failed', __('Uploaded file could not be stored.', 'iss-content-model'), ['status' => 500]);
+    }
+
+    $context_type = sanitize_key((string) ($request->get_param('contextType') ?: $request->get_param('context_type')));
+    $context_id = absint($request->get_param('contextId') ?: $request->get_param('context_id'));
+    $sha256 = is_readable($target_path) ? (string) hash_file('sha256', $target_path) : '';
+    $now = gmdate('c');
+
+    $service = iss_content_editorial_sets_service();
+    $item_id = $service->add_item([
+        'set_id' => $set_id,
+        'kind' => 'external_upload',
+        'source' => 'event-drop',
+        'source_id' => $stored_name,
+        'status' => 'pending',
+        'label' => $original_name,
+        'origin' => 'workbench_upload',
+        'provenance' => [
+            'storage_state' => 'incoming',
+            'stored_name' => $stored_name,
+            'original_name' => $original_name,
+            'path' => $target_path,
+            'context_type' => $context_type,
+            'context_id' => $context_id > 0 ? (string) $context_id : '',
+            'set_id' => (string) $set_id,
+            'size_bytes' => (string) filesize($target_path),
+            'sha256' => $sha256,
+            'mime_type' => (string) $file_type['type'],
+            'uploaded_at' => $now,
+        ],
+        'rights' => [
+            'license' => 'all-rights-reserved',
+            'consent' => '',
+            'uploader_id' => (string) get_current_user_id(),
+        ],
+    ]);
+
+    if ($item_id <= 0) {
+        return new WP_Error('iss_content_set_item_add_failed', __('Item could not be added.', 'iss-content-model'), ['status' => 400]);
+    }
+
+    $item = $service->get_item($item_id);
+    return $item ?: [];
 }
 
 function iss_content_editorial_sets_rest_update_item(WP_REST_Request $request)
@@ -432,6 +580,14 @@ function iss_content_editorial_sets_register_rest_routes(): void
         [
             'methods' => WP_REST_Server::CREATABLE,
             'callback' => 'iss_content_editorial_sets_rest_add_item',
+            'permission_callback' => 'iss_content_editorial_sets_can_create',
+        ],
+    ]);
+
+    register_rest_route($namespace, '/editorial-set-items/upload', [
+        [
+            'methods' => WP_REST_Server::CREATABLE,
+            'callback' => 'iss_content_editorial_sets_rest_upload_files',
             'permission_callback' => 'iss_content_editorial_sets_can_create',
         ],
     ]);

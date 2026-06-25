@@ -133,6 +133,11 @@ function iss_content_model_register_editorial_formats(array $formats): array
             'galerie' => array_merge($gallery_section, ['supports' => ['anchor', 'media_refs', 'object_refs']]),
             'image_wall' => array_merge($image_wall_section, ['supports' => ['anchor', 'media_refs']]),
             'material' => $material_section,
+            'upload_intake' => [
+                'label' => __('Upload-Aufruf', 'iss-content-model'),
+                'description' => __('Public contribution call that sends uploads into the moderated project Set.', 'iss-content-model'),
+                'supports' => ['anchor', 'links'],
+            ],
             'schluss' => [
                 'label' => __('Kontakt / Schluss', 'iss-content-model'),
                 'description' => __('Closing note, contact, and onward links', 'iss-content-model'),

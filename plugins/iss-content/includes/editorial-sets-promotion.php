@@ -25,7 +25,6 @@ function iss_content_editorial_sets_find_event_drop_attachment(string $stored_na
     $existing = get_posts([
         'post_type' => 'attachment',
         'post_status' => 'inherit',
-        'post_mime_type' => 'image',
         'fields' => 'ids',
         'numberposts' => 1,
         // phpcs:ignore WordPress.DB.SlowDBQuery.slow_db_query_meta_query -- Attachment provenance lookup keeps Event Drop imports idempotent.
@@ -85,7 +84,7 @@ function iss_content_editorial_sets_import_external_upload_item(array $item, int
     }
 
     $file_type = wp_check_filetype_and_ext($source_file, $stored_name);
-    if (!is_array($file_type) || empty($file_type['type']) || strpos((string) $file_type['type'], 'image/') !== 0) {
+    if (!is_array($file_type) || empty($file_type['type'])) {
         return 0;
     }
 
@@ -156,7 +155,7 @@ function iss_content_editorial_sets_import_external_upload_item(array $item, int
     update_post_meta((int) $attachment_id, '_event_drop_mime_type', (string) $file_type['type']);
     update_post_meta((int) $attachment_id, '_event_drop_synced_at', gmdate('c'));
 
-    if (function_exists('iss_content_editorial_sets_event_drop_set_for_attachment')) {
+    if (get_post_type($target_id) === ISS_CONTENT_MODEL_VERANSTALTUNG_POST_TYPE && (string) ($meta['event_slug'] ?? '') !== '' && function_exists('iss_content_editorial_sets_event_drop_set_for_attachment')) {
         iss_content_editorial_sets_event_drop_set_for_attachment((int) $attachment_id);
     }
 
@@ -222,6 +221,34 @@ function iss_content_editorial_sets_reference_from_item(array $item, int $target
 function iss_content_editorial_sets_reference_field_for_item(array $item): string
 {
     return (string) ($item['kind'] ?? '') === 'archive_object' ? 'object_refs' : 'media_refs';
+}
+
+function iss_content_editorial_sets_reference_mime(array $reference): string
+{
+    if ((string) ($reference['kind'] ?? '') === 'archive_object') {
+        return 'archive/object';
+    }
+
+    if ((string) ($reference['source'] ?? '') !== 'wp-media') {
+        return '';
+    }
+
+    $attachment_id = absint($reference['id'] ?? 0);
+    return $attachment_id > 0 ? (string) get_post_mime_type($attachment_id) : '';
+}
+
+function iss_content_editorial_sets_project_section_type_for_entry(array $entry): string
+{
+    if ((string) ($entry['field'] ?? '') === 'object_refs') {
+        return 'material';
+    }
+
+    $mime = iss_content_editorial_sets_reference_mime((array) ($entry['reference'] ?? []));
+    if (strpos($mime, 'image/') === 0 || strpos($mime, 'video/') === 0) {
+        return 'galerie';
+    }
+
+    return 'material';
 }
 
 function iss_content_editorial_sets_mark_external_upload_imported(array $item, array $reference): bool
@@ -427,6 +454,98 @@ function iss_content_editorial_sets_promote_to_editorial_document(int $post_id, 
     return ['promoted' => $promoted, 'message' => __('Items promoted to editorial document.', 'iss-content-model')];
 }
 
+function iss_content_editorial_sets_find_or_append_section(array &$document, string $section_type, string $title): int
+{
+    if (!isset($document['sections']) || !is_array($document['sections'])) {
+        $document['sections'] = [];
+    }
+
+    foreach ($document['sections'] as $index => $section) {
+        if (is_array($section) && (string) ($section['type'] ?? '') === $section_type) {
+            return (int) $index;
+        }
+    }
+
+    $document['sections'][] = [
+        'type' => $section_type,
+        'title' => $title,
+        'body' => '',
+        'media_refs' => [],
+        'object_refs' => [],
+        'links' => [],
+    ];
+
+    return count($document['sections']) - 1;
+}
+
+function iss_content_editorial_sets_promote_to_project(int $post_id, string $format_slug, array $item_ids): array
+{
+    if (!function_exists('iss_editorial_get_format') || !function_exists('iss_editorial_save_document')) {
+        return ['promoted' => 0, 'message' => __('Editorial document engine is unavailable.', 'iss-content-model')];
+    }
+
+    if ($post_id <= 0 || get_post_type($post_id) !== ISS_CONTENT_MODEL_PROJEKT_POST_TYPE) {
+        return ['promoted' => 0, 'message' => __('Target is not a project.', 'iss-content-model')];
+    }
+
+    $format_slug = sanitize_key($format_slug);
+    $format = iss_editorial_get_format($format_slug);
+    if (!$format || !isset($format['sections']['galerie'], $format['sections']['material'])) {
+        return iss_content_editorial_sets_promote_to_editorial_document($post_id, $format_slug, $item_ids);
+    }
+
+    $items = iss_content_editorial_sets_collect_approved_items($item_ids, $post_id);
+    if (!$items) {
+        return ['promoted' => 0, 'message' => __('No approved promotable items selected.', 'iss-content-model')];
+    }
+
+    $document = iss_editorial_get_document($post_id, $format_slug, false);
+    if (!isset($document['sections']) || !is_array($document['sections'])) {
+        $document = iss_editorial_get_empty_document($format_slug);
+    }
+
+    $section_titles = [
+        'galerie' => __('Galerie', 'iss-content-model'),
+        'material' => __('Material', 'iss-content-model'),
+    ];
+    $pending_marks = [];
+
+    foreach ($items as $entry) {
+        $target_section = iss_content_editorial_sets_project_section_type_for_entry($entry);
+        $section_index = iss_content_editorial_sets_find_or_append_section(
+            $document,
+            $target_section,
+            (string) ($section_titles[$target_section] ?? __('Aus Set promoviert', 'iss-content-model'))
+        );
+        $field = (string) $entry['field'];
+        if (!isset($document['sections'][$section_index][$field]) || !is_array($document['sections'][$section_index][$field])) {
+            $document['sections'][$section_index][$field] = [];
+        }
+        if (!iss_content_editorial_sets_reference_exists($document['sections'][$section_index][$field], $entry['reference'])) {
+            $document['sections'][$section_index][$field][] = $entry['reference'];
+        }
+        $pending_marks[] = $entry;
+    }
+
+    if (!iss_editorial_save_document($post_id, $format_slug, $document, false)) {
+        return ['promoted' => 0, 'message' => __('Editorial document save failed.', 'iss-content-model')];
+    }
+
+    $service = iss_content_editorial_sets_service();
+    $promoted = 0;
+    foreach ($pending_marks as $entry) {
+        if ($service->mark_promoted((int) $entry['item']['id'], ISS_CONTENT_MODEL_PROJEKT_POST_TYPE, $post_id)) {
+            iss_content_editorial_sets_mark_external_upload_imported($entry['item'], $entry['reference']);
+            $promoted++;
+        }
+    }
+
+    return [
+        'promoted' => $promoted,
+        'message' => __('Project items promoted to gallery and material sections.', 'iss-content-model'),
+    ];
+}
+
 function iss_content_editorial_sets_promote(int $target_id, string $target_type, array $item_ids, array $args = []): array
 {
     $target_type = sanitize_key($target_type);
@@ -447,6 +566,10 @@ function iss_content_editorial_sets_promote(int $target_id, string $target_type,
     if (function_exists('iss_editorial_get_format_for_post_type')) {
         $format = iss_editorial_get_format_for_post_type($target_type);
         if ($format) {
+            if ($target_type === ISS_CONTENT_MODEL_PROJEKT_POST_TYPE && (string) ($args['sectionType'] ?? '') === '') {
+                return iss_content_editorial_sets_promote_to_project($target_id, (string) $format['slug'], $item_ids);
+            }
+
             return iss_content_editorial_sets_promote_to_editorial_document(
                 $target_id,
                 (string) $format['slug'],

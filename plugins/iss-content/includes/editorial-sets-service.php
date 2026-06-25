@@ -365,6 +365,9 @@ class ISS_Content_Editorial_Sets_Service
         $search = trim((string) ($args['search'] ?? ''));
         $status = sanitize_key((string) ($args['status'] ?? ''));
         $role = sanitize_key((string) ($args['set_role'] ?? ''));
+        $context_type = $this->sanitize_context_type((string) ($args['context_type'] ?? ''));
+        $context_id = absint($args['context_id'] ?? 0);
+        $joins = [];
 
         if ($search !== '') {
             $where[] = '(s.title LIKE %s OR s.set_key LIKE %s)';
@@ -380,16 +383,24 @@ class ISS_Content_Editorial_Sets_Service
             $where[] = 's.set_role = %s';
             $values[] = $role;
         }
+        if ($context_type !== '' && $context_id > 0) {
+            $joins[] = "INNER JOIN {$this->get_links_table_name()} context_link ON context_link.set_id = s.id";
+            $where[] = 'context_link.context_type = %s AND context_link.context_id = %d';
+            $values[] = $context_type;
+            $values[] = $context_id;
+        }
 
         $page = max(1, (int) ($args['page'] ?? 1));
         $per_page = min(100, max(1, (int) ($args['per_page'] ?? 30)));
         $offset = ($page - 1) * $per_page;
         $where_sql = implode(' AND ', $where);
 
-        $sql = "SELECT s.*,
+        $join_sql = implode(' ', $joins);
+        $sql = "SELECT DISTINCT s.*,
             (SELECT COUNT(1) FROM {$this->get_items_table_name()} i WHERE i.set_id = s.id) AS item_count,
             (SELECT COUNT(1) FROM {$this->get_links_table_name()} l WHERE l.set_id = s.id) AS link_count
             FROM {$this->get_sets_table_name()} s
+            {$join_sql}
             WHERE {$where_sql}
             ORDER BY s.updated_at DESC, s.id DESC
             LIMIT %d OFFSET %d";

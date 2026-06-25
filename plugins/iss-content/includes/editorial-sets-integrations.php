@@ -41,6 +41,134 @@ function iss_content_editorial_sets_run_decay(): void
 }
 add_action('iss_content_editorial_sets_decay', 'iss_content_editorial_sets_run_decay');
 
+function iss_content_editorial_sets_ensure_project_source_set(int $post_id, ?WP_Post $post = null): int
+{
+    $post = $post instanceof WP_Post ? $post : get_post($post_id);
+    if (!$post instanceof WP_Post || $post->post_type !== ISS_CONTENT_MODEL_PROJEKT_POST_TYPE) {
+        return 0;
+    }
+
+    if (wp_is_post_revision($post_id) || wp_is_post_autosave($post_id) || in_array((string) $post->post_status, ['auto-draft', 'trash'], true)) {
+        return 0;
+    }
+
+    $service = iss_content_editorial_sets_service();
+    $links = $service->get_links_for_context(ISS_CONTENT_MODEL_PROJEKT_POST_TYPE, $post_id);
+    foreach ($links as $link) {
+        if ((string) ($link['link_role'] ?? '') === 'source_material') {
+            return (int) ($link['set_id'] ?? 0);
+        }
+    }
+    if ($links) {
+        $set_id = (int) ($links[0]['set_id'] ?? 0);
+        if ($set_id > 0) {
+            $service->attach_context($set_id, ISS_CONTENT_MODEL_PROJEKT_POST_TYPE, $post_id, 'source_material');
+        }
+
+        return $set_id;
+    }
+
+    $set_id = $service->create_set([
+        'title' => function_exists('iss_content_editorial_sets_context_set_title')
+            ? iss_content_editorial_sets_context_set_title($post)
+            : sprintf('%s Set', (string) get_the_title($post)),
+        'set_role' => 'source_material',
+        'status' => 'working',
+    ]);
+
+    if ($set_id > 0) {
+        $service->attach_context($set_id, ISS_CONTENT_MODEL_PROJEKT_POST_TYPE, $post_id, 'source_material');
+    }
+
+    return $set_id;
+}
+
+function iss_content_editorial_sets_ensure_project_source_set_on_save(int $post_id, WP_Post $post, bool $update): void
+{
+    unset($update);
+    iss_content_editorial_sets_ensure_project_source_set($post_id, $post);
+}
+add_action('save_post_' . ISS_CONTENT_MODEL_PROJEKT_POST_TYPE, 'iss_content_editorial_sets_ensure_project_source_set_on_save', 20, 3);
+
+function iss_content_editorial_sets_set_has_live_context(int $set_id, string $deleted_context_type, int $deleted_context_id): bool
+{
+    $links = iss_content_editorial_sets_service()->get_links_for_set($set_id);
+    foreach ($links as $link) {
+        $context_type = (string) ($link['context_type'] ?? '');
+        $context_id = (int) ($link['context_id'] ?? 0);
+        if ($context_type === $deleted_context_type && $context_id === $deleted_context_id) {
+            continue;
+        }
+
+        $context_post = $context_id > 0 ? get_post($context_id) : null;
+        if (!$context_post instanceof WP_Post) {
+            return true;
+        }
+        if (!in_array((string) $context_post->post_status, ['trash', 'auto-draft'], true)) {
+            return true;
+        }
+    }
+
+    return false;
+}
+
+function iss_content_editorial_sets_project_item_is_disposable_raw(array $item): bool
+{
+    if ((string) ($item['kind'] ?? '') !== 'external_upload' || (string) ($item['source'] ?? '') !== 'event-drop') {
+        return false;
+    }
+    if (!empty($item['retain']) || (string) ($item['archive_candidate_status'] ?? '') !== '') {
+        return false;
+    }
+
+    return in_array((string) ($item['status'] ?? ''), ['pending', 'reviewing', 'approved', 'stale'], true);
+}
+
+function iss_content_editorial_sets_quarantine_project_raw_intake(int $post_id): void
+{
+    $post = get_post($post_id);
+    if (!$post instanceof WP_Post || $post->post_type !== ISS_CONTENT_MODEL_PROJEKT_POST_TYPE) {
+        return;
+    }
+
+    $service = iss_content_editorial_sets_service();
+    $links = $service->get_links_for_context(ISS_CONTENT_MODEL_PROJEKT_POST_TYPE, $post_id);
+    foreach ($links as $link) {
+        $set_id = (int) ($link['set_id'] ?? 0);
+        if ($set_id <= 0 || iss_content_editorial_sets_set_has_live_context($set_id, ISS_CONTENT_MODEL_PROJEKT_POST_TYPE, $post_id)) {
+            continue;
+        }
+
+        $items = $service->list_items(['set_id' => $set_id, 'per_page' => 120]);
+        $quarantined = 0;
+        foreach ((array) ($items['items'] ?? []) as $item) {
+            if (!iss_content_editorial_sets_project_item_is_disposable_raw($item)) {
+                continue;
+            }
+            if (iss_content_editorial_sets_event_drop_moderate_item((int) ($item['id'] ?? 0), 'reject')) {
+                $quarantined++;
+            }
+        }
+
+        $set = $service->get_set($set_id);
+        if ($set) {
+            $service->update_set($set_id, [
+                'title' => (string) ($set['title'] ?? ''),
+                'summary' => (string) ($set['summary'] ?? ''),
+                'set_role' => (string) ($set['set_role'] ?? 'source_material'),
+                'status' => 'stale',
+            ]);
+            $service->record_audit($set_id, 0, 'project_deleted_raw_intake_quarantined', __('Project raw intake quarantined after project deletion.', 'iss-content-model'), [
+                'context_type' => ISS_CONTENT_MODEL_PROJEKT_POST_TYPE,
+                'context_id' => $post_id,
+                'quarantined' => $quarantined,
+            ]);
+        }
+    }
+}
+add_action('trashed_post', 'iss_content_editorial_sets_quarantine_project_raw_intake', 20);
+add_action('before_delete_post', 'iss_content_editorial_sets_quarantine_project_raw_intake', 20);
+
 function iss_content_editorial_sets_event_drop_storage_root(): string
 {
     return (string) apply_filters('iss_content_editorial_sets_event_drop_storage_root', '/event-drop-storage');
@@ -118,6 +246,61 @@ function iss_content_editorial_sets_event_drop_context_post(string $event_slug):
     }
 
     return null;
+}
+
+function iss_content_editorial_sets_event_drop_target_context(string $target_key): array
+{
+    $target_key = sanitize_title($target_key);
+    if ($target_key === '') {
+        return [];
+    }
+
+    $project_prefix = 'projekt__';
+    if (strpos($target_key, $project_prefix) === 0) {
+        $project_slug = sanitize_title(substr($target_key, strlen($project_prefix)));
+        $project = $project_slug !== '' ? get_page_by_path($project_slug, OBJECT, ISS_CONTENT_MODEL_PROJEKT_POST_TYPE) : null;
+        if ($project instanceof WP_Post) {
+            $set_id = iss_content_editorial_sets_ensure_project_source_set((int) $project->ID, $project);
+
+            return [
+                'post' => $project,
+                'context_type' => ISS_CONTENT_MODEL_PROJEKT_POST_TYPE,
+                'context_id' => (int) $project->ID,
+                'set_id' => $set_id,
+                'set_key' => 'project-set-' . $project->post_name,
+                'set_title' => function_exists('iss_content_editorial_sets_context_set_title')
+                    ? iss_content_editorial_sets_context_set_title($project)
+                    : sprintf('%s Set', (string) get_the_title($project)),
+                'set_role' => 'source_material',
+                'link_role' => 'source_material',
+            ];
+        }
+    }
+
+    $event = iss_content_editorial_sets_event_drop_context_post($target_key);
+    if ($event instanceof WP_Post) {
+        return [
+            'post' => $event,
+            'context_type' => ISS_CONTENT_MODEL_VERANSTALTUNG_POST_TYPE,
+            'context_id' => (int) $event->ID,
+            'set_id' => 0,
+            'set_key' => 'event-drop-' . $target_key,
+            'set_title' => sprintf(__('Event Drop: %s', 'iss-content-model'), get_the_title($event)),
+            'set_role' => 'intake',
+            'link_role' => 'gallery_candidate',
+        ];
+    }
+
+    return [
+        'post' => null,
+        'context_type' => '',
+        'context_id' => 0,
+        'set_id' => 0,
+        'set_key' => 'event-drop-' . $target_key,
+        'set_title' => __('Event Drop intake', 'iss-content-model'),
+        'set_role' => 'intake',
+        'link_role' => '',
+    ];
 }
 
 function iss_content_editorial_sets_event_drop_item_provenance(array $item): array
@@ -320,18 +503,17 @@ function iss_content_editorial_sets_sync_event_drop_incoming(): int
 
         $stored_name = basename($path);
         $meta = $manifest_rows[$stored_name] ?? iss_content_editorial_sets_event_drop_meta_from_filename($stored_name, $path);
-        $event_slug = sanitize_title((string) ($meta['event_slug'] ?? ''));
-        $event = iss_content_editorial_sets_event_drop_context_post($event_slug);
-        $set_key = $service->normalize_key('event-drop-' . ($event_slug !== '' ? $event_slug : 'uncategorized'));
-        $set = $service->get_set_by_key($set_key);
+        $target_key = sanitize_title((string) ($meta['event_slug'] ?? ''));
+        $target = iss_content_editorial_sets_event_drop_target_context($target_key);
+        $set_id = (int) ($target['set_id'] ?? 0);
+        $set_key = $service->normalize_key((string) (($target['set_key'] ?? '') ?: 'event-drop-uncategorized'));
+        $set = $set_id > 0 ? $service->get_set($set_id) : $service->get_set_by_key($set_key);
 
         if (!$set) {
             $set_id = $service->create_set([
                 'set_key' => $set_key,
-                'title' => $event instanceof WP_Post
-                    ? sprintf(__('Event Drop: %s', 'iss-content-model'), get_the_title($event))
-                    : __('Event Drop intake', 'iss-content-model'),
-                'set_role' => 'intake',
+                'title' => (string) ($target['set_title'] ?? __('Event Drop intake', 'iss-content-model')),
+                'set_role' => (string) (($target['set_role'] ?? '') ?: 'intake'),
                 'status' => 'working',
             ]);
             $set = $set_id > 0 ? $service->get_set($set_id) : null;
@@ -342,8 +524,11 @@ function iss_content_editorial_sets_sync_event_drop_incoming(): int
             continue;
         }
 
-        if ($event instanceof WP_Post) {
-            $service->attach_context($set_id, ISS_CONTENT_MODEL_VERANSTALTUNG_POST_TYPE, (int) $event->ID, 'gallery_candidate');
+        $context_type = (string) ($target['context_type'] ?? '');
+        $context_id = (int) ($target['context_id'] ?? 0);
+        $link_role = (string) ($target['link_role'] ?? '');
+        if ($context_type !== '' && $context_id > 0 && $link_role !== '') {
+            $service->attach_context($set_id, $context_type, $context_id, $link_role);
         }
 
         $item_id = $service->add_item([
@@ -358,7 +543,9 @@ function iss_content_editorial_sets_sync_event_drop_incoming(): int
                 'storage_state' => 'incoming',
                 'stored_name' => $stored_name,
                 'path' => $path,
-                'event_slug' => $event_slug,
+                'event_slug' => $target_key,
+                'target_type' => $context_type,
+                'target_id' => $context_id > 0 ? (string) $context_id : '',
                 'participant_id' => (string) ($meta['participant_id'] ?? ''),
                 'size_bytes' => (string) ($meta['size_bytes'] ?? ''),
                 'sha256' => (string) ($meta['sha256'] ?? ''),

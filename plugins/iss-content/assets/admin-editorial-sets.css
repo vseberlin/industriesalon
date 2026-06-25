@@ -185,3 +185,9 @@
 .iss-editorial-sets-context ul {
   margin-left: 0;
 }
+
+.iss-editorial-sets-context__actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
