@@ -258,6 +258,109 @@ function iss_editorial_cli_collect_text_parts(array $block, array &$parts): void
     }
 }
 
+function iss_editorial_cli_project_is_context_panel(array $block): bool
+{
+    $attrs = is_array($block['attrs'] ?? null) ? $block['attrs'] : [];
+    $class_name = (string) ($attrs['className'] ?? '');
+
+    return str_contains($class_name, 'iss-context-panel');
+}
+
+function iss_editorial_cli_project_fact_from_context_panel(array $block): array
+{
+    $value = '';
+    $labels = [];
+
+    foreach ((array) ($block['innerBlocks'] ?? []) as $inner_block) {
+        if (!is_array($inner_block)) {
+            continue;
+        }
+
+        $attrs = is_array($inner_block['attrs'] ?? null) ? $inner_block['attrs'] : [];
+        $class_name = (string) ($attrs['className'] ?? '');
+        $text = iss_editorial_cli_block_text($inner_block);
+        if ($text === '') {
+            continue;
+        }
+
+        if (str_contains($class_name, 'iss-context-panel__label') && $value === '') {
+            $value = $text;
+            continue;
+        }
+
+        $labels[] = $text;
+    }
+
+    if ($value === '' && $labels) {
+        $value = array_shift($labels);
+    }
+
+    if ($value === '') {
+        $value = iss_editorial_cli_block_text($block);
+    }
+
+    return [
+        'value' => $value,
+        'label' => implode(' ', array_filter(array_map('trim', $labels))),
+    ];
+}
+
+function iss_editorial_cli_collect_project_facts(array $block): array
+{
+    if (iss_editorial_cli_project_is_context_panel($block)) {
+        $fact = iss_editorial_cli_project_fact_from_context_panel($block);
+
+        return trim((string) ($fact['value'] ?? '')) !== '' || trim((string) ($fact['label'] ?? '')) !== '' ? [$fact] : [];
+    }
+
+    $facts = [];
+    foreach ((array) ($block['innerBlocks'] ?? []) as $inner_block) {
+        if (!is_array($inner_block)) {
+            continue;
+        }
+
+        $facts = array_merge($facts, iss_editorial_cli_collect_project_facts($inner_block));
+    }
+
+    return $facts;
+}
+
+function iss_editorial_cli_collect_project_text_parts(array $block, array &$parts): void
+{
+    if (iss_editorial_cli_project_is_context_panel($block)) {
+        return;
+    }
+
+    $block_name = (string) ($block['blockName'] ?? '');
+    $attrs = is_array($block['attrs'] ?? null) ? $block['attrs'] : [];
+
+    if (iss_editorial_cli_classify_block($block) === 'media' || $block_name === 'core/navigation' || $block_name === 'core/navigation-link') {
+        return;
+    }
+
+    $text = iss_editorial_cli_strip_html((string) ($block['innerHTML'] ?? ''));
+    if ($block_name === 'core/heading' && $text !== '') {
+        $parts['title'] = $parts['title'] === '' ? $text : $parts['title'];
+    } elseif (in_array($block_name, ['core/paragraph', 'core/list'], true) && $text !== '') {
+        $class_name = (string) ($attrs['className'] ?? '');
+        if (str_contains($class_name, 'iss-kicker')) {
+            $parts['kicker'] = $parts['kicker'] === '' ? $text : $parts['kicker'];
+        } else {
+            $parts['body'][] = $text;
+        }
+    } elseif ($block_name === 'core/quote' && $text !== '') {
+        $parts['body'][] = $text;
+    } elseif ($block_name === '' && $text !== '') {
+        $parts['body'][] = $text;
+    }
+
+    foreach ((array) ($block['innerBlocks'] ?? []) as $inner_block) {
+        if (is_array($inner_block)) {
+            iss_editorial_cli_collect_project_text_parts($inner_block, $parts);
+        }
+    }
+}
+
 function iss_editorial_cli_build_media_section(array $block, array $media_refs): array
 {
     $parts = [
@@ -431,18 +534,19 @@ function iss_editorial_cli_project_section_type(string $anchor, array $block, ar
     return 'kapitel';
 }
 
-function iss_editorial_cli_build_project_section(array $block): array
+function iss_editorial_cli_build_project_sections(array $block): array
 {
     $attrs = is_array($block['attrs'] ?? null) ? $block['attrs'] : [];
     $anchor = sanitize_key((string) ($attrs['anchor'] ?? ''));
     $media_refs = iss_editorial_cli_collect_media_refs($block);
     $links = iss_editorial_cli_collect_links($block);
+    $facts = iss_editorial_cli_collect_project_facts($block);
     $parts = [
         'kicker' => '',
         'title' => '',
         'body' => [],
     ];
-    iss_editorial_cli_collect_text_parts($block, $parts);
+    iss_editorial_cli_collect_project_text_parts($block, $parts);
 
     $type = iss_editorial_cli_project_section_type($anchor, $block, $media_refs);
     $section = [
@@ -461,7 +565,19 @@ function iss_editorial_cli_build_project_section(array $block): array
         $section['links'] = $links;
     }
 
-    return $section;
+    $sections = [$section];
+    if ($type === 'kapitel' && $facts) {
+        $sections[] = [
+            'type' => 'massstab',
+            'anchor' => $anchor !== '' ? $anchor . '-fakten' : '',
+            'kicker' => __('Fakten', 'iss-editorial'),
+            'title' => __('Eckdaten', 'iss-editorial'),
+            'body' => '',
+            'facts' => $facts,
+        ];
+    }
+
+    return $sections;
 }
 
 function iss_editorial_cli_build_project_gallery_section(array $block): array
@@ -477,6 +593,38 @@ function iss_editorial_cli_build_project_gallery_section(array $block): array
         'media_refs' => $media_refs,
         'object_refs' => [],
     ];
+}
+
+function iss_editorial_cli_project_rail_section(): array
+{
+    return [
+        'type' => 'projekt_rail',
+        'kicker' => __('Projektstimme', 'iss-editorial'),
+        'title' => __('Kapitel', 'iss-editorial'),
+        'body' => '',
+    ];
+}
+
+function iss_editorial_cli_insert_project_rail_section(array $sections): array
+{
+    foreach ($sections as $section) {
+        if (is_array($section) && (string) ($section['type'] ?? '') === 'projekt_rail') {
+            return $sections;
+        }
+    }
+
+    if (!$sections) {
+        return [iss_editorial_cli_project_rail_section()];
+    }
+
+    $insert_at = 0;
+    if ((string) ($sections[0]['type'] ?? '') === 'fliesstext') {
+        $insert_at = 1;
+    }
+
+    array_splice($sections, $insert_at, 0, [iss_editorial_cli_project_rail_section()]);
+
+    return $sections;
 }
 
 function iss_editorial_cli_process_project_block(array $block, array &$sections, array &$unsupported_blocks, int &$media_blocks): void
@@ -496,7 +644,9 @@ function iss_editorial_cli_process_project_block(array $block, array &$sections,
 
     if ($block_name === 'core/group' && str_contains($class_name, 'iss-project-chapter')) {
         $media_blocks += iss_editorial_cli_count_media_blocks($block);
-        $sections[] = iss_editorial_cli_build_project_section($block);
+        foreach (iss_editorial_cli_build_project_sections($block) as $section) {
+            $sections[] = $section;
+        }
         return;
     }
 
@@ -554,8 +704,10 @@ function iss_editorial_cli_build_project_candidate(WP_Post $post): array
             || trim((string) ($section['body'] ?? '')) !== ''
             || !empty($section['media_refs'])
             || !empty($section['object_refs'])
+            || !empty($section['facts'])
             || !empty($section['links']);
     }));
+    $sections = iss_editorial_cli_insert_project_rail_section($sections);
 
     return [
         'document' => [

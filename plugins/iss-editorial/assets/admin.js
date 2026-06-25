@@ -26,6 +26,108 @@
     }
   }
 
+  function isSafeRichTextHref(href) {
+    var value = String(href || '').trim();
+    if (!value) {
+      return false;
+    }
+    if (/^(#|\/|\?|\.{1,2}\/)/.test(value)) {
+      return true;
+    }
+    if (/^[a-z][a-z0-9+.-]*:/i.test(value)) {
+      return /^(https?:|mailto:|tel:)/i.test(value);
+    }
+
+    return true;
+  }
+
+  function appendSanitizedRichNode(node, target) {
+    var element;
+    var tag;
+    var href;
+
+    if (node.nodeType === Node.TEXT_NODE) {
+      target.appendChild(document.createTextNode(node.textContent || ''));
+      return;
+    }
+    if (node.nodeType !== Node.ELEMENT_NODE) {
+      return;
+    }
+
+    tag = String(node.nodeName || '').toLowerCase();
+    if (tag === 'b') {
+      tag = 'strong';
+    } else if (tag === 'i') {
+      tag = 'em';
+    } else if (tag === 'div') {
+      tag = 'p';
+    }
+
+    if (['p', 'br', 'strong', 'em', 'a', 'ul', 'ol', 'li'].indexOf(tag) === -1) {
+      Array.prototype.forEach.call(node.childNodes, function (child) {
+        appendSanitizedRichNode(child, target);
+      });
+      return;
+    }
+
+    element = document.createElement(tag);
+    if (tag === 'a') {
+      href = node.getAttribute('href') || '';
+      if (!isSafeRichTextHref(href)) {
+        Array.prototype.forEach.call(node.childNodes, function (child) {
+          appendSanitizedRichNode(child, target);
+        });
+        return;
+      }
+      element.setAttribute('href', href.trim());
+    }
+
+    if (tag !== 'br') {
+      Array.prototype.forEach.call(node.childNodes, function (child) {
+        appendSanitizedRichNode(child, element);
+      });
+    }
+    target.appendChild(element);
+  }
+
+  function sanitizeRichHtml(value) {
+    var template = document.createElement('template');
+    var target = document.createElement('div');
+    template.innerHTML = String(value || '');
+    Array.prototype.forEach.call(template.content.childNodes, function (child) {
+      appendSanitizedRichNode(child, target);
+    });
+    if (!(target.textContent || '').trim()) {
+      return '';
+    }
+
+    return target.innerHTML;
+  }
+
+  function escapeText(value) {
+    var element = document.createElement('span');
+    element.textContent = String(value || '');
+
+    return element.innerHTML;
+  }
+
+  function plainTextToRichHtml(value) {
+    if (!String(value || '').trim()) {
+      return '';
+    }
+
+    return String(value || '').split(/\n{2,}/).map(function (paragraph) {
+      return '<p>' + paragraph.split(/\n/).map(escapeText).join('<br>') + '</p>';
+    }).join('');
+  }
+
+  function richTextSummary(value) {
+    var element = document.createElement('div');
+    element.innerHTML = sanitizeRichHtml(value);
+
+    return (element.textContent || '').replace(/\s+/g, ' ').trim();
+  }
+
   function sectionTone(type) {
     var tones = {
       leitfrage: '#7f77dd',
@@ -108,6 +210,18 @@
       return supported.indexOf(fieldName) !== -1;
     }
 
+    function isEditorFieldVisible(type, fieldName) {
+      if (fieldName === 'anchor') {
+        return false;
+      }
+
+      return supports(type, fieldName);
+    }
+
+    function usesRichBodyEditor(type) {
+      return format === 'projekt' && ['kapitel', 'fliesstext', 'schluss'].indexOf(type) !== -1;
+    }
+
     function updateField() {
       field.value = JSON.stringify(documentState);
     }
@@ -141,7 +255,10 @@
         parts.push(String(section.kicker).replace(/\s+/g, ' ').slice(0, 60));
       }
       if (section.body) {
-        parts.push(String(section.body).replace(/\s+/g, ' ').slice(0, 140));
+        parts.push(richTextSummary(section.body).slice(0, 140));
+      }
+      if ((section.facts || []).length) {
+        parts.push(String((section.facts || []).length) + ' Fakt(en)');
       }
       if (section.quote) {
         parts.push('Zitat: ' + String(section.quote).replace(/\s+/g, ' ').slice(0, 110));
@@ -549,14 +666,18 @@
         render();
         scheduleAutosave();
       });
-      var bodyField = createTextarea('Text', section.body || '', function (value) {
+      var bodyField = usesRichBodyEditor(type) ? createRichTextInput('Text', section.body || '', function (value) {
+        section.body = value;
+        render();
+        scheduleAutosave();
+      }) : createTextarea('Text', section.body || '', function (value) {
         section.body = value;
         render();
         scheduleAutosave();
       });
       body.appendChild(kickerField);
       body.appendChild(titleField);
-      if (supports(type, 'anchor')) {
+      if (isEditorFieldVisible(type, 'anchor')) {
         body.appendChild(createTextInput('Anker', section.anchor || '', function (value) {
           section.anchor = value;
           render();
@@ -565,6 +686,10 @@
       }
       if (!supports(type, 'no_body')) {
         body.appendChild(bodyField);
+      }
+
+      if (supports(type, 'facts')) {
+        renderFactEditor(section, body);
       }
 
       if (supports(type, 'quote')) {
@@ -728,6 +853,60 @@
       rerenderRows();
     }
 
+    function renderFactEditor(section, body) {
+      var wrapper = createElement('div', 'iss-editorial-field iss-editorial-field--facts');
+      var rows = createElement('div', 'iss-editorial-fact-rows');
+      var add = createElement('button', 'button', 'Fakt hinzufügen');
+
+      function rerenderRows() {
+        clear(rows);
+        section.facts = Array.isArray(section.facts) ? section.facts : [];
+        section.facts.forEach(function (fact, index) {
+          var row = createElement('div', 'iss-editorial-fact-row');
+          var value = createTextInput('Wert', fact.value || '', function (nextValue) {
+            fact.value = nextValue;
+            render();
+            scheduleAutosave();
+          });
+          var label = createTextarea('Beschreibung', fact.label || '', function (nextValue) {
+            fact.label = nextValue;
+            render();
+            scheduleAutosave();
+          }, 3);
+          var remove = createElement('button', 'button button-link-delete', 'Entfernen');
+          remove.type = 'button';
+          remove.addEventListener('click', function () {
+            section.facts.splice(index, 1);
+            rerenderRows();
+            render();
+            scheduleAutosave();
+          });
+          row.appendChild(value);
+          row.appendChild(label);
+          row.appendChild(remove);
+          rows.appendChild(row);
+        });
+        if (!section.facts.length) {
+          rows.appendChild(createElement('p', 'description', 'Noch keine Fakten hinzugefügt.'));
+        }
+      }
+
+      add.type = 'button';
+      add.addEventListener('click', function () {
+        section.facts = Array.isArray(section.facts) ? section.facts : [];
+        section.facts.push({ value: '', label: '' });
+        rerenderRows();
+        render();
+        scheduleAutosave();
+      });
+
+      wrapper.appendChild(createElement('span', '', 'Fakten'));
+      wrapper.appendChild(rows);
+      wrapper.appendChild(add);
+      body.appendChild(wrapper);
+      rerenderRows();
+    }
+
     function renderMediaPicker(section, body) {
       var refs = createElement('div', 'iss-editorial-field iss-editorial-field--media');
       var tray = createElement('div', 'iss-editorial-media-tray');
@@ -811,15 +990,96 @@
       return wrapper;
     }
 
-    function createTextarea(label, value, onChange) {
+    function createTextarea(label, value, onChange, rows) {
       var wrapper = createElement('label', 'iss-editorial-field');
       var input = document.createElement('textarea');
       input.className = 'widefat';
-      input.rows = 7;
+      input.rows = rows || 7;
       input.value = value;
       input.addEventListener('input', function () { onChange(input.value); });
       wrapper.appendChild(createElement('span', '', label));
       wrapper.appendChild(input);
+      return wrapper;
+    }
+
+    function createRichTextInput(label, value, onChange) {
+      var wrapper = createElement('div', 'iss-editorial-field iss-editorial-field--rich-text');
+      var toolbar = createElement('div', 'iss-editorial-rich-toolbar');
+      var editor = createElement('div', 'iss-editorial-rich-editor');
+      var commands = [
+        { label: 'P', command: 'formatBlock', value: 'p' },
+        { label: 'B', command: 'bold' },
+        { label: 'I', command: 'italic' },
+        { label: 'Link', command: 'createLink' },
+        { label: 'Liste', command: 'insertUnorderedList' },
+        { label: '1.', command: 'insertOrderedList' }
+      ];
+
+      function commit() {
+        var nextValue = sanitizeRichHtml(editor.innerHTML);
+        onChange(nextValue);
+      }
+
+      function replaceEditorHtml() {
+        var cleaned = sanitizeRichHtml(editor.innerHTML);
+        if (editor.innerHTML !== cleaned) {
+          editor.innerHTML = cleaned;
+        }
+        onChange(cleaned);
+      }
+
+      commands.forEach(function (item) {
+        var button = createElement('button', 'button iss-editorial-rich-toolbar__button', item.label);
+        button.type = 'button';
+        button.addEventListener('click', function (event) {
+          var href;
+          event.preventDefault();
+          editor.focus();
+          if (item.command === 'createLink') {
+            href = window.prompt('Link URL');
+            if (href === null) {
+              return;
+            }
+            if (!isSafeRichTextHref(href)) {
+              return;
+            }
+            document.execCommand('createLink', false, href.trim());
+          } else {
+            document.execCommand(item.command, false, item.value || null);
+          }
+          commit();
+        });
+        toolbar.appendChild(button);
+      });
+
+      editor.contentEditable = 'true';
+      editor.setAttribute('role', 'textbox');
+      editor.setAttribute('aria-label', label);
+      editor.setAttribute('data-placeholder', 'Text eingeben');
+      editor.innerHTML = /<[a-z][\s\S]*>/i.test(String(value || ''))
+        ? sanitizeRichHtml(value)
+        : plainTextToRichHtml(value);
+      editor.addEventListener('input', commit);
+      editor.addEventListener('blur', replaceEditorHtml);
+      editor.addEventListener('paste', function (event) {
+        var clipboard = event.clipboardData || window.clipboardData;
+        var html;
+        if (!clipboard) {
+          return;
+        }
+        event.preventDefault();
+        html = clipboard.getData('text/html');
+        if (html) {
+          document.execCommand('insertHTML', false, sanitizeRichHtml(html));
+        } else {
+          document.execCommand('insertHTML', false, plainTextToRichHtml(clipboard.getData('text/plain')));
+        }
+        commit();
+      });
+
+      wrapper.appendChild(createElement('span', '', label));
+      wrapper.appendChild(toolbar);
+      wrapper.appendChild(editor);
       return wrapper;
     }
 

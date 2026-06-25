@@ -5,11 +5,13 @@ Immediate executable work only. Larger future programs live in `docs/project/bac
 ## Next
 
 - Project registry migration: visually review the enabled JSON-backed project
-  pages locally, starting with `futura-biennale-2027`. Check the optional
-  `projekt_rail` under the meta panel, derived `kapitel` / `schluss`
-  navigation, generated places/context, mobile stacking, and whether short
-  projects should remove the rail gesture. Then test Set promotion into its
-  `galerie`. Transfer order is
+  pages locally, starting with `futura-biennale-2027`. Check the new
+  `massstab` fact sections, especially whether Futura's second phase-facts
+  section is too dense and should be manually shortened or merged back into
+  prose. Also check the sticky generated side stack under the meta panel,
+  derived `kapitel` / `schluss` navigation, generated places/context, mobile
+  stacking, and whether short projects should remove the rail gesture. Then
+  test Set promotion into its `galerie`. Transfer order is
   `ops/sql/2026-06-25-project-editorial-json-candidates.sql` first, then
   `ops/sql/2026-06-25-project-editorial-enable-json-review.sql` when the target
   should render JSON for review.

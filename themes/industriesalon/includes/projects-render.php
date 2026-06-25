@@ -125,6 +125,33 @@ function industriesalon_render_editorial_project_links(array $links): string
     return '';
 }
 
+function industriesalon_render_editorial_project_facts(array $facts): string
+{
+    $items = [];
+    foreach ($facts as $fact) {
+        if (!is_array($fact)) {
+            continue;
+        }
+
+        $value = trim((string) ($fact['value'] ?? ''));
+        $label = trim((string) ($fact['label'] ?? ''));
+        if ($value === '' && $label === '') {
+            continue;
+        }
+
+        $items[] = '<div class="iss-project-section__fact">'
+            . ($value !== '' ? '<dt class="iss-project-section__fact-value">' . esc_html($value) . '</dt>' : '')
+            . ($label !== '' ? '<dd class="iss-project-section__fact-label">' . esc_html($label) . '</dd>' : '')
+            . '</div>';
+    }
+
+    if (!$items) {
+        return '';
+    }
+
+    return '<dl class="iss-project-section__facts">' . implode('', $items) . '</dl>';
+}
+
 function industriesalon_editorial_project_section_anchor(array $section, int $index, array $used = []): string
 {
     $anchor = sanitize_title((string) ($section['anchor'] ?? ''));
@@ -369,7 +396,11 @@ function industriesalon_append_editorial_project_rail_to_meta(string $block_cont
 
     $rendered = true;
 
-    return $block_content . $rail_html . $context_html;
+    return $block_content
+        . '<div class="iss-project-editorial__side-stack">'
+        . $rail_html
+        . $context_html
+        . '</div>';
 }
 add_filter('render_block', 'industriesalon_append_editorial_project_rail_to_meta', 20, 2);
 
@@ -404,6 +435,7 @@ function industriesalon_render_editorial_project_section(array $section, bool $s
     $kicker = trim((string) ($section['kicker'] ?? ''));
     $title = trim((string) ($section['title'] ?? ''));
     $body = trim((string) ($section['body'] ?? ''));
+    $facts = is_array($section['facts'] ?? null) ? $section['facts'] : [];
     $refs = is_array($section['object_refs_resolved'] ?? null) ? $section['object_refs_resolved'] : [];
     $media_refs = is_array($section['media_refs_resolved'] ?? null) ? $section['media_refs_resolved'] : [];
     $links = is_array($section['links'] ?? null) ? $section['links'] : [];
@@ -414,6 +446,7 @@ function industriesalon_render_editorial_project_section(array $section, bool $s
     $ref_html = '';
     $media_html = '';
     $links_html = industriesalon_render_editorial_project_links($links);
+    $facts_html = industriesalon_render_editorial_project_facts($facts);
 
     foreach ($refs as $ref) {
         $ref_html .= industriesalon_render_editorial_project_archive_reference((array) $ref, $show_placeholders);
@@ -423,7 +456,7 @@ function industriesalon_render_editorial_project_section(array $section, bool $s
         $media_html .= industriesalon_render_editorial_project_media_reference((array) $ref, $show_placeholders);
     }
 
-    if ($kicker === '' && $title === '' && $body === '' && $ref_html === '' && $media_html === '' && $links_html === '') {
+    if ($kicker === '' && $title === '' && $body === '' && $facts_html === '' && $ref_html === '' && $media_html === '' && $links_html === '') {
         return '';
     }
 
@@ -444,7 +477,7 @@ function industriesalon_render_editorial_project_section(array $section, bool $s
             <?php if ($media_html !== '') : ?>
                 <div class="iss-project-section__media iss-project-editorial__media-strip"><?php echo $media_html; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- Media render through WordPress attachment helpers above. ?></div>
             <?php endif; ?>
-            <?php if ($kicker !== '' || $title !== '' || $body !== '' || $links_html !== '') : ?>
+            <?php if ($kicker !== '' || $title !== '' || $facts_html !== '' || $body !== '' || $links_html !== '') : ?>
                 <div class="iss-project-section__copy">
                     <?php if ($kicker !== '') : ?>
                         <p class="iss-kicker iss-kicker--compact iss-project-section__kicker"><?php echo esc_html($kicker); ?></p>
@@ -452,6 +485,7 @@ function industriesalon_render_editorial_project_section(array $section, bool $s
                     <?php if ($title !== '') : ?>
                         <h2 class="iss-project-section__title"><?php echo esc_html($title); ?></h2>
                     <?php endif; ?>
+                    <?php echo $facts_html; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- Facts are escaped in industriesalon_render_editorial_project_facts(). ?>
                     <?php if ($body !== '') : ?>
                         <div class="iss-project-section__body iss-project-editorial__body"><?php echo wp_kses_post(wpautop($body)); ?></div>
                     <?php endif; ?>

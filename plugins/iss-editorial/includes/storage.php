@@ -107,6 +107,92 @@ function iss_editorial_sanitize_link_list($links): array
     return $items;
 }
 
+function iss_editorial_sanitize_fact($fact): array
+{
+    if (!is_array($fact)) {
+        return [];
+    }
+
+    $value = sanitize_text_field((string) ($fact['value'] ?? ''));
+    $label = sanitize_textarea_field((string) ($fact['label'] ?? ''));
+    if ($value === '' && $label === '') {
+        return [];
+    }
+
+    return [
+        'value' => $value,
+        'label' => $label,
+    ];
+}
+
+function iss_editorial_sanitize_fact_list($facts): array
+{
+    $items = [];
+    foreach ((array) $facts as $fact) {
+        $fact = iss_editorial_sanitize_fact($fact);
+        if ($fact) {
+            $items[] = $fact;
+        }
+    }
+
+    return $items;
+}
+
+function iss_editorial_body_href_is_safe(string $href): bool
+{
+    $href = trim(html_entity_decode($href, ENT_QUOTES | ENT_HTML5, get_bloginfo('charset') ?: 'UTF-8'));
+    if ($href === '') {
+        return false;
+    }
+    if (preg_match('/^(#|\/|\?|\.{1,2}\/)/', $href)) {
+        return true;
+    }
+    if (preg_match('/^[a-z][a-z0-9+.-]*:/i', $href)) {
+        return preg_match('/^(https?:|mailto:|tel:)/i', $href) === 1;
+    }
+
+    return true;
+}
+
+function iss_editorial_strip_unsafe_body_hrefs(string $body): string
+{
+    return (string) preg_replace_callback('/<a\b[^>]*>/i', static function (array $matches): string {
+        $tag = $matches[0];
+        if (!preg_match('/\s+href\s*=\s*("([^"]*)"|\'([^\']*)\'|([^\s>]+))/i', $tag, $href_matches)) {
+            return $tag;
+        }
+
+        $href = (string) ($href_matches[2] ?? $href_matches[3] ?? $href_matches[4] ?? '');
+        if (iss_editorial_body_href_is_safe($href)) {
+            return $tag;
+        }
+
+        return (string) preg_replace('/\s+href\s*=\s*("([^"]*)"|\'([^\']*)\'|([^\s>]+))/i', '', $tag, 1);
+    }, $body);
+}
+
+function iss_editorial_sanitize_body_html(string $body, array $format, string $type): string
+{
+    if ((string) ($format['slug'] ?? '') !== 'projekt' || !in_array($type, ['kapitel', 'fliesstext', 'schluss'], true)) {
+        return wp_kses_post($body);
+    }
+
+    $body = iss_editorial_strip_unsafe_body_hrefs($body);
+
+    return wp_kses($body, [
+        'p' => [],
+        'br' => [],
+        'strong' => [],
+        'em' => [],
+        'a' => [
+            'href' => true,
+        ],
+        'ul' => [],
+        'ol' => [],
+        'li' => [],
+    ]);
+}
+
 function iss_editorial_sanitize_section(array $section, array $format): array
 {
     $type = sanitize_key((string) ($section['type'] ?? ''));
@@ -118,7 +204,7 @@ function iss_editorial_sanitize_section(array $section, array $format): array
         'type' => $type,
         'kicker' => sanitize_text_field((string) ($section['kicker'] ?? '')),
         'title' => sanitize_text_field((string) ($section['title'] ?? '')),
-        'body' => wp_kses_post((string) ($section['body'] ?? '')),
+        'body' => iss_editorial_sanitize_body_html((string) ($section['body'] ?? ''), $format, $type),
     ];
 
     if (isset($section['anchor'])) {
@@ -143,6 +229,10 @@ function iss_editorial_sanitize_section(array $section, array $format): array
 
     if (iss_editorial_format_supports_section_field($format, $type, 'links')) {
         $sanitized['links'] = iss_editorial_sanitize_link_list($section['links'] ?? []);
+    }
+
+    if (iss_editorial_format_supports_section_field($format, $type, 'facts')) {
+        $sanitized['facts'] = iss_editorial_sanitize_fact_list($section['facts'] ?? []);
     }
 
     if (iss_editorial_format_supports_section_field($format, $type, 'orientation')) {

@@ -48,6 +48,14 @@ project as private working collections. Public project documents store only
 promoted `media_refs` and `object_refs`; the theme never reads raw Set state.
 Set promotion defaults projects into `galerie` so approved intake material can
 become public without collapsing the preserved Set history.
+Project `massstab` sections own structured `facts` rows (`value` plus `label`)
+so editors do not have to encode fact emphasis with inline HTML in body text.
+The body remains available as an optional explanatory paragraph and as a legacy
+fallback.
+Project `kapitel`, `fliesstext`, and `schluss` body fields use a constrained
+inline editor in the custom JSON UI. The stored `body` value may contain only
+`p`, `br`, `strong`, `em`, `a[href]`, `ul`, `ol`, and `li`; server-side storage
+sanitization enforces the same subset and strips layout/style markup.
 
 Project public rendering is enabled per post through
 `_iss_editorial_enabled_projekt`; disabled documents keep the legacy Gutenberg

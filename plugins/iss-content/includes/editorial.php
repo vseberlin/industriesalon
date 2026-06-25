@@ -123,7 +123,7 @@ function iss_content_model_register_editorial_formats(array $formats): array
             'massstab' => [
                 'label' => __('Merkpunkte', 'iss-content-model'),
                 'description' => __('Compact key points, facts, or context cards', 'iss-content-model'),
-                'supports' => ['anchor'],
+                'supports' => ['anchor', 'facts'],
             ],
             'projekt_rail' => [
                 'label' => __('Navigation', 'iss-content-model'),

@@ -28,6 +28,18 @@ be recovered from Git history.
   - created `ops/sql/2026-06-25-project-editorial-json-candidates.sql` for the
     seven current published project candidates, all with frontend rendering
     disabled.
+- Added structured facts to the project `massstab` gesture:
+  - extended the existing project editorial format with repeatable `value` /
+    `label` fact rows so editors do not need inline `<strong>` markup in body
+    text;
+  - made the project renderer prefer structured facts while preserving optional
+    body fallback text;
+  - added a scoped `layout-key-points` project treatment in `single-content.css`.
+- Added constrained rich-text editing for project chapter prose:
+  - replaced the project `kapitel`, `fliesstext`, and `schluss` body textarea
+    with a small custom editor for paragraphs, emphasis, links, and lists;
+  - limited stored project body HTML to `p`, `br`, `strong`, `em`, `a[href]`,
+    `ul`, `ol`, and `li` with server-side sanitization.
 - Added the reusable `image_wall` / `Bilderwand` editorial gesture for
   Ausstellung JSON documents:
   - registered the gesture in the existing `iss-content` editorial format

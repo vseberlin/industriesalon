@@ -526,6 +526,27 @@
   margin-top: 1rem;
 }
 
+.single-projekt .iss-project-editorial__side-stack {
+  --iss-project-rail-bg: #11161c;
+  --iss-project-rail-panel: #171d24;
+  --iss-project-rail-border: rgba(244, 241, 237, 0.14);
+  --iss-project-rail-text: rgba(244, 241, 237, 0.92);
+  --iss-project-rail-soft: rgba(244, 241, 237, 0.56);
+
+  position: sticky;
+  top: calc(var(--iss-header-height) + 1rem);
+  display: grid;
+  gap: 0.85rem;
+  align-self: start;
+  margin-top: 1rem;
+}
+
+.single-projekt .iss-project-editorial__side-stack .iss-project-editorial__context,
+.single-projekt .iss-project-editorial__side-stack .iss-project-editorial__rail {
+  position: static;
+  margin-top: 0;
+}
+
 .single-projekt :is(.iss-project-rail-stack, .iss-project-editorial__context) :is(.iss-related-place-links, .iss-related-network-group) {
   display: grid;
   gap: 0.7rem;
@@ -889,6 +910,16 @@
   --iss-project-section-accent: var(--iss-red);
 }
 
+.single-projekt .iss-project-section--layout-key-points {
+  --iss-project-section-accent: var(--iss-blue);
+
+  width: 100%;
+  padding: clamp(1.35rem, 3vw, 2.4rem);
+  border: 1px solid rgba(30, 30, 30, 0.12);
+  border-top: 4px solid var(--iss-project-section-accent);
+  background: color-mix(in srgb, var(--iss-project-section-accent) 6%, var(--iss-white));
+}
+
 .single-projekt .iss-project-section--layout-conclusion {
   --iss-project-section-accent: var(--iss-blue);
 }
@@ -929,6 +960,41 @@
   color: rgba(30, 30, 30, 0.8);
   font-size: 1.02rem;
   line-height: 1.72;
+}
+
+.single-projekt .iss-project-section__facts {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, clamp(18rem, 42%, 26rem)), 1fr));
+  gap: clamp(1.1rem, 2.4vw, 1.7rem);
+  margin: 0;
+}
+
+.single-projekt .iss-project-section__fact {
+  display: grid;
+  gap: clamp(0.66rem, 1.1vw, 0.88rem);
+  min-width: 0;
+  padding: clamp(1.15rem, 2vw, 1.55rem);
+  border-left: clamp(0.22rem, 0.4vw, 0.3rem) solid var(--iss-project-section-accent);
+  background: var(--iss-white);
+}
+
+.single-projekt .iss-project-section__fact-value,
+.single-projekt .iss-project-section__fact-label {
+  margin: 0;
+}
+
+.single-projekt .iss-project-section__fact-value {
+  color: var(--iss-black);
+  font-family: Georgia, "Times New Roman", serif;
+  font-size: clamp(1.38rem, 1.08rem + 0.9vw, 1.68rem);
+  font-weight: 400;
+  line-height: 1.12;
+}
+
+.single-projekt .iss-project-section__fact-label {
+  color: rgba(30, 30, 30, 0.72);
+  font-size: clamp(0.86rem, 0.8rem + 0.2vw, 0.94rem);
+  line-height: 1.45;
 }
 
 .single-projekt .iss-project-editorial__media-strip {
@@ -999,6 +1065,10 @@
   }
 
   .single-projekt .iss-project-editorial__rail {
+    position: static;
+  }
+
+  .single-projekt .iss-project-editorial__side-stack {
     position: static;
   }
 }
