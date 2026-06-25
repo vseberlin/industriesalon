@@ -260,16 +260,24 @@ function iss_content_model_veranstaltung_entity_options(): array
             'description' => __('Bitte einen semantischen Veranstaltungstyp setzen.', 'iss-content-model'),
         ],
     ];
+    $shape_labels = [
+        'moment' => __('Moment', 'iss-content-model'),
+        'span' => __('Programmspanne', 'iss-content-model'),
+        'manual_recurring' => __('Wiederkehrend', 'iss-content-model'),
+        'backward' => __('Rueckblick', 'iss-content-model'),
+    ];
+    $entity_descriptions = [
+        'event.gespraech' => __('Moment + Personen', 'iss-content-model'),
+        'event.festival' => __('Programmspanne + Programm', 'iss-content-model'),
+        'event.repair_cafe' => __('Wiederkehrend', 'iss-content-model'),
+        'report.rueckblick' => __('Rueckblick', 'iss-content-model'),
+    ];
 
     foreach (iss_content_model_veranstaltung_entities() as $entity_key => $entity) {
         $shape = (string) ($entity['shape'] ?? '');
         $options[(string) $entity_key] = [
             'label' => (string) ($entity['label'] ?? $entity_key),
-            'description' => sprintf(
-                /* translators: %s: technical event shape. */
-                __('Semantischer Typ, Shape: %s.', 'iss-content-model'),
-                $shape !== '' ? $shape : '-'
-            ),
+            'description' => (string) ($entity_descriptions[(string) $entity_key] ?? $shape_labels[$shape] ?? __('Moment', 'iss-content-model')),
         ];
     }
 

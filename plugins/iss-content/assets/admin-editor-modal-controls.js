@@ -3,11 +3,15 @@
   var modalConfig = window.issContentEditorModalControls || {};
   window.issContentEditorModalHandlers = window.issContentEditorModalHandlers || {};
 
+  function isEnabled(value) {
+    return value === true || value === '1' || value === 1;
+  }
+
   if (document.body) {
-    if (modalConfig.hideManagedBoxes !== false) {
+    if (isEnabled(modalConfig.hideManagedBoxes)) {
       document.body.classList.add('iss-editor-modal-controls-ready');
     }
-    if (modalConfig.moveEditorTopGroups === true || modalConfig.moveAusstellungTopGroups === true) {
+    if (isEnabled(modalConfig.moveEditorTopGroups) || isEnabled(modalConfig.moveAusstellungTopGroups)) {
       document.body.classList.add('iss-editor-dashboard-ready');
     }
   }
@@ -20,20 +24,20 @@
   }
 
   function setupEditorTopGroups() {
-    var moveDashboard = modalConfig.moveEditorTopGroups === true || modalConfig.moveAusstellungTopGroups === true;
+    var moveDashboard = isEnabled(modalConfig.moveEditorTopGroups) || isEnabled(modalConfig.moveAusstellungTopGroups);
     if (!moveDashboard) {
       return;
     }
 
-    var editor = document.getElementById('postdivrich');
     var title = document.getElementById('titlediv');
-    if (!editor || !title || document.querySelector('.iss-editor-top-dashboard')) {
+    var editor = document.getElementById('postdivrich');
+    if (!title || document.querySelector('.iss-editor-top-dashboard')) {
       return;
     }
 
     var top = document.createElement('div');
     top.className = 'iss-editor-top-dashboard';
-    title.parentNode.insertBefore(top, editor);
+    title.parentNode.insertBefore(top, editor || title.nextSibling);
 
     var boxIds = Array.isArray(modalConfig.editorTopGroupIds) && modalConfig.editorTopGroupIds.length
       ? modalConfig.editorTopGroupIds

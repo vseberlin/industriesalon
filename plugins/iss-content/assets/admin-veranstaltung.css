@@ -43,13 +43,18 @@
   max-width: 340px;
 }
 
+.iss-veranstaltung-admin__programme {
+  margin: 0;
+  font-weight: 600;
+}
+
 .iss-veranstaltung-admin__label {
   font-weight: 600;
 }
 
 .iss-veranstaltung-admin__options {
   display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(128px, 1fr));
   gap: 10px;
 }
 
@@ -70,8 +75,8 @@
 .iss-veranstaltung-admin__option-body {
   display: grid;
   gap: 4px;
-  min-height: 76px;
-  padding: 12px;
+  min-height: 58px;
+  padding: 9px 10px;
   border: 1px solid #c3c4c7;
   background: #fff;
   cursor: pointer;
@@ -97,9 +102,69 @@
   outline-offset: 2px;
 }
 
+body.post-type-veranstaltung #submitdiv .inside {
+  margin: 0;
+}
+
+body.post-type-veranstaltung #submitdiv .misc-pub-section {
+  padding: 5px 10px;
+}
+
+body.post-type-veranstaltung #minor-publishing {
+  padding: 8px 0 0;
+}
+
+body.post-type-veranstaltung #major-publishing-actions {
+  padding: 8px 10px;
+}
+
 .iss-veranstaltung-status {
   display: grid;
   gap: 12px;
+}
+
+.iss-veranstaltung-status-strip {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(132px, 1fr));
+  gap: 8px;
+}
+
+.iss-veranstaltung-status-strip__chip {
+  display: grid;
+  gap: 3px;
+  min-width: 0;
+  padding: 9px 10px;
+  border: 1px solid #dcdcde;
+  border-left: 4px solid #c3c4c7;
+  background: #f6f7f7;
+}
+
+.iss-veranstaltung-status-strip__chip.is-complete {
+  border-left-color: #008a20;
+  background: #f5fbf6;
+}
+
+.iss-veranstaltung-status-strip__chip.is-missing {
+  border-left-color: #d63638;
+  background: #fcf0f1;
+}
+
+.iss-veranstaltung-status-strip__chip span {
+  color: #646970;
+  font-size: 11px;
+  font-weight: 700;
+  line-height: 1.2;
+  text-transform: uppercase;
+}
+
+.iss-veranstaltung-status-strip__chip strong {
+  min-width: 0;
+  overflow: hidden;
+  color: #1d2327;
+  font-size: 13px;
+  line-height: 1.3;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .iss-veranstaltung-status__facts {
@@ -538,7 +603,6 @@
     grid-template-columns: 1fr;
   }
 
-  .iss-veranstaltung-content-editor__toolbar,
   .iss-veranstaltung-content-editor__card-head {
     align-items: stretch;
   }

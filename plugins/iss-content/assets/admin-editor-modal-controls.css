@@ -4,8 +4,11 @@
 
 body.iss-editor-dashboard-ready #edit-slug-box,
 body.iss-editor-dashboard-ready #slugdiv,
-body.iss-editor-dashboard-ready #revisionsdiv,
 body.iss-editor-dashboard-ready #postcustom {
+  display: none;
+}
+
+body.iss-editor-dashboard-ready:not(.post-type-veranstaltung) #revisionsdiv {
   display: none;
 }
 
@@ -14,6 +17,10 @@ body.iss-editor-dashboard-ready .iss-editor-top-dashboard {
   gap: 14px;
   grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
   margin: 14px 0 18px;
+}
+
+body.post-type-veranstaltung.iss-editor-dashboard-ready .iss-editor-top-dashboard {
+  grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
 }
 
 /* stylelint-disable selector-id-pattern -- ACF and metabox IDs are WordPress-owned. */
@@ -26,6 +33,11 @@ body.iss-editor-dashboard-ready .iss-editor-top-dashboard #iss-publication-bibli
 
 body.iss-editor-dashboard-ready .iss-editor-top-dashboard #postexcerpt {
   min-width: 0;
+}
+
+body.post-type-veranstaltung.iss-editor-dashboard-ready .iss-editor-top-dashboard #postimagediv img {
+  max-width: 100%;
+  height: auto;
 }
 
 body.iss-editor-dashboard-ready .iss-editor-top-dashboard > .postbox {
