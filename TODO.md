@@ -4,11 +4,6 @@ Immediate executable work only. Larger future programs live in `docs/project/bac
 
 ## Next
 
-- Publication single surface pass: audit and correct remaining
-  kicker/title/text/meta rule breaks on publication singles, starting with
-  `/publikationen/nef-album/`. Check whether the issue belongs to
-  `publications.css`, shared card/pattern CSS, or plugin-emitted frontend CSS
-  before adding route-specific rules.
 - Project skin review: visually compare the three enabled local examples:
   `futura-biennale-2027` uses `dossier` with publication-style horizontal
   primary chapter navigation, centered 75rem chapter/fact spreads, and footer context,

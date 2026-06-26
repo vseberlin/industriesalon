@@ -13,6 +13,8 @@ Current work only. Completed checkpoint history belongs in `CHANGELOG.md`; activ
 - A shared surface/color contract is active across the theme:
   - `style.css` defines readable surface foreground, muted/subtle text, rules, heading text, and kicker accent/text tokens;
   - projects, Veranstaltung skins, card families, archive/publication rails, related network/place groups, Kalender timeline labels, primitive meta labels, and Ausstellung editorial skins have been moved away from raw accent-as-text usage;
+  - publication singles now follow the same rule across standard, longread,
+    photoalbum, and timeline layouts;
   - accent color is now intended for rails, dots, markers, links, and hover states, while readable text follows the active light/dark surface.
 - The route `/veranstaltungen/fete-de-la-musique-berlin-2026/` is the real Veranstaltung URL. The singular `/veranstaltung/fete-de-la-musique-berlin-2026/` resolves locally to the flyer attachment because of a slug collision.
 
@@ -26,9 +28,7 @@ Current work only. Completed checkpoint history belongs in `CHANGELOG.md`; activ
 
 ## Next Action
 
-- Start the next surface-system pass on publication singles, beginning with:
-  `http://192.168.2.31:8082/publikationen/nef-album/`
-- Then continue the project media intake browser review:
+- Continue the project media intake browser review:
   - create/open a project Set from the project edit screen;
   - upload raw image/PDF material;
   - approve and promote mixed image/PDF selections;
@@ -51,13 +51,19 @@ Current work only. Completed checkpoint history belongs in `CHANGELOG.md`; activ
   - browser contrast sweeps across representative project, Veranstaltung, Kalender, Ausstellungen, Führungen, Publikationen, Schöneweide, Verein, Archiv, and register-place routes;
   - `/kalender/` year label computes at contrast `5.62` after the final fix.
   - `/videos/` dark-surface labels compute at contrast `16.64` for the page kicker and `4.95` for video accent labels.
+- Publication single pass:
+  - targeted Stylelint for `themes/industriesalon/assets/css/publications.css`;
+  - `/publikationen/nef-album/` reading-main contrast sweep returned `lowCount: 0`;
+  - all 18 published publication singles returned `200` and the publication
+    single contrast sweep returned `totalLow=0`.
 - Final HTTP route smoke returned `200` for the representative home, project,
   Veranstaltung, Kalender, Ausstellung, Sammlung, Führung, Video, Publikation,
   Schöneweide, Verein, Archiv, and register-place routes.
 
 ## Dirty Worktree Notes
 
-- This checkpoint is ready for a local commit after the final route sweep.
+- The project/material/surface checkpoint was committed locally as `ff5de9d`.
+- The publication single surface pass is ready for a local commit.
 - No push has been made.
 - Untracked unrelated/local files remain:
   - `iss-exhibition-composition-add.md`

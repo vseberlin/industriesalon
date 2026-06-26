@@ -153,6 +153,16 @@
   color: rgba(30, 30, 30, 0.86);
 }
 
+.iss-publication-single .section--soft .iss-card__link {
+  --iss-link-fg: rgba(30, 30, 30, 0.86);
+  --iss-link-hover-fg: var(--iss-black);
+}
+
+.iss-publication-single .wp-block-file__button {
+  background: color-mix(in srgb, var(--iss-red) 84%, black);
+  color: var(--iss-white);
+}
+
 .iss-publications-browser-section {
   padding-top: 1rem;
 }
@@ -1047,8 +1057,32 @@ body.iss-publication-layout-photoalbum .entry-content {
 }
 
 body.iss-publication-layout-photoalbum .iss-publication-reading-main {
+  --iss-surface-bg: #15181d;
+  --iss-surface-fg: var(--iss-publication-rail-text);
+  --iss-surface-muted: var(--iss-publication-rail-muted);
+  --iss-surface-subtle: rgba(244, 241, 237, 0.78);
+  --iss-surface-rule: rgba(255, 255, 255, 0.1);
+  --iss-heading-title-color: var(--iss-surface-fg);
+  --iss-heading-text-color: var(--iss-surface-muted);
+  --iss-kicker-accent: var(--iss-red);
+  --iss-kicker-color: var(--iss-surface-fg);
+
   background: #15181d;
+  color: var(--iss-surface-fg);
   padding: clamp(2rem, 4vw, 3rem);
+}
+
+body.iss-publication-layout-photoalbum .iss-publication-reading-main .iss-heading__title {
+  color: var(--iss-heading-title-color);
+}
+
+body.iss-publication-layout-photoalbum .iss-publication-reading-main .iss-heading__text,
+body.iss-publication-layout-photoalbum .iss-publication-source-note {
+  color: var(--iss-heading-text-color);
+}
+
+body.iss-publication-layout-photoalbum .iss-publication-reading-main .iss-kicker {
+  color: var(--iss-kicker-color);
 }
 
 body.iss-publication-layout-photoalbum .iss-publication-photoalbum__item {
@@ -1060,19 +1094,28 @@ body.iss-publication-layout-photoalbum .iss-publication-photoalbum__copy {
 }
 
 body.iss-publication-layout-photoalbum .iss-publication-photoalbum__item-page {
-  color: rgba(255, 255, 255, 0.38);
+  color: var(--iss-surface-subtle);
 }
 
 body.iss-publication-layout-photoalbum .iss-publication-photoalbum__item-title {
-  color: rgba(255, 255, 255, 0.86);
+  color: var(--iss-surface-fg);
 }
 
 body.iss-publication-layout-photoalbum .iss-publication-photoalbum__item-text p {
-  color: rgba(255, 255, 255, 0.52);
+  color: var(--iss-surface-muted);
 }
 
 body.iss-publication-layout-photoalbum .iss-publication-photoalbum__item-actions a {
-  color: rgba(255, 255, 255, 0.52);
+  color: var(--iss-surface-fg);
+}
+
+body.iss-publication-layout-photoalbum .iss-publication-reading-main a:not(.iss-action-link) {
+  color: color-mix(in srgb, var(--iss-red) 68%, white);
+}
+
+body.iss-publication-layout-photoalbum .iss-publication-reading-main a:not(.iss-action-link):hover,
+body.iss-publication-layout-photoalbum .iss-publication-reading-main a:not(.iss-action-link):focus-visible {
+  color: var(--iss-surface-fg);
 }
 
 .iss-publication-photoalbum {
@@ -1314,7 +1357,7 @@ body.iss-publication-layout-photoalbum .iss-publication-photoalbum__item-actions
 
 .iss-publication-chapter__index {
   margin: 0 0 0.7rem;
-  color: rgba(30, 30, 30, 0.56);
+  color: rgba(30, 30, 30, 0.68);
   font-size: 0.78rem;
   font-weight: 700;
   letter-spacing: 0.12em;
@@ -1575,7 +1618,7 @@ body.iss-publication-layout-photoalbum .iss-publication-photoalbum__item-actions
 
 .iss-publication-longread__chapter-index {
   margin: 0 0 0.7rem;
-  color: rgba(30, 30, 30, 0.56);
+  color: rgba(30, 30, 30, 0.68);
   font-size: 0.78rem;
   font-weight: 700;
   letter-spacing: 0.12em;
@@ -1986,7 +2029,7 @@ body.iss-publication-layout-timeline .iss-publication-order-panel {
 
 .iss-publication-epoch__range {
   margin: 0 0 0.75rem;
-  color: var(--iss-publication-epoch-accent, var(--iss-accent));
+  color: rgba(30, 30, 30, 0.86);
   font-size: clamp(1.6rem, 2.6vw, 2.7rem);
   font-weight: 700;
   line-height: 1;
@@ -2044,7 +2087,7 @@ body.iss-publication-layout-timeline .iss-publication-order-panel {
   border: 1px solid var(--iss-publication-epoch-accent, var(--iss-accent));
   border-radius: 999px;
   background: var(--iss-white);
-  color: var(--iss-publication-epoch-accent, var(--iss-accent));
+  color: rgba(30, 30, 30, 0.86);
   font-size: 0.72rem;
   font-weight: 700;
   text-align: center;

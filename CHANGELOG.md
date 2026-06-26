@@ -25,6 +25,10 @@ be recovered from Git history.
     archive/publication rails, Kalender timeline labels, primitive meta labels,
     and Ausstellung editorial skins so small kicker/meta text uses readable
     surface text while accents remain markers, rails, and hover states;
+  - fixed publication single surfaces across standard, longread, photoalbum,
+    and timeline layouts, including dark photoalbum reading panels, longread
+    chapter indexes, timeline year/range labels, related-card links, and file
+    download buttons;
   - audited public plugin renderers: archive/content/graph/relations/video
     blocks mostly emit shared `.iss-kicker` markup for the theme to style; the
     remaining inline atlas-slice caption in `iss-relations` is a later cleanup.
