@@ -35,6 +35,11 @@ be recovered from Git history.
     relations, and
     `ops/sql/2026-06-26-photoalbum-blueprint-other-albums.sql` as the paired
     transfer artifact.
+- Reduced `blueprint-matrix` photoalbum frontend render load after staging
+  feedback: the theme now regenerates blueprint grid cell images from
+  attachment/archive-object IDs as `medium` thumbnails while preserving
+  full-size detail links, and removed the per-cell image filter that made
+  scroll/paint work expensive on large albums.
 - Normalized project media Set ownership:
   - project source Sets now use the canonical `project-set-<project-slug>` key
     when created or reopened;

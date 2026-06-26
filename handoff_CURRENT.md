@@ -19,6 +19,9 @@ Current work only. Completed checkpoint history belongs in `CHANGELOG.md`; activ
     description drawers and footer-style place plus related-content context;
     the footer context renders from relation data in the theme, not by calling
     related-content block callbacks during photoalbum rendering;
+  - blueprint grid cells render cell-sized `medium` thumbnails from
+    attachment/archive-object IDs while preserving full-size detail links, and
+    no longer apply a per-image CSS filter during scrolling;
   - the left reading rail is controlled by a `publication_rail` gesture for
     JSON publications, while legacy non-JSON publications keep the old automatic
     rail behavior.
@@ -89,6 +92,16 @@ Current work only. Completed checkpoint history belongs in `CHANGELOG.md`; activ
     expected sheet counts and footer-context counts;
   - direct PHP render of `nef-album` succeeded with `memory_limit=64M` and no
     WordPress block-support warning from fake block context rendering.
+- Blueprint render-load follow-up:
+  - `/publikationen/nef-album/` returned `200` locally;
+  - rendered markup now has 63 blueprint grid images as
+    `attachment-medium size-medium`, with only the separate featured image
+    still using `attachment-large size-large`;
+  - `php -l themes/industriesalon/includes/publications-render.php`;
+  - `bash tools/phpcs-target.sh themes/industriesalon/includes/publications-render.php`;
+  - `bash tools/phpstan-target.sh themes/industriesalon/includes/publications-render.php`;
+  - `npx stylelint themes/industriesalon/assets/css/publications.css`;
+  - `git diff --check`.
 - WP-CLI confirmed the four local blueprint photoalbum JSON payloads, enabled
   flags, sheet counts (`63`, `52`, `23`, `34`), source labels, rail options,
   and Behrensbau place relations.
@@ -102,7 +115,8 @@ Current work only. Completed checkpoint history belongs in `CHANGELOG.md`; activ
 
 ## Git Notes
 
-- This checkpoint was committed and pushed to `origin/main`.
+- This checkpoint was committed and pushed to `origin/main` at
+  `247651f Reduce blueprint photoalbum render load`.
 - Untracked unrelated/local files remain:
   - `iss-exhibition-composition-add.md`
   - `themes/industriesalon/theme2.json`
