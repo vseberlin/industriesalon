@@ -692,6 +692,10 @@
         renderFactEditor(section, body);
       }
 
+      if (supports(type, 'rail_options')) {
+        renderRailEditor(section, body);
+      }
+
       if (supports(type, 'quote')) {
         body.appendChild(createTextarea('Zitat', section.quote || '', function (value) {
           section.quote = value;
@@ -711,6 +715,10 @@
 
       if (supports(type, 'media_refs')) {
         renderMediaPicker(section, body);
+      }
+
+      if (supports(type, 'album_source') || supports(type, 'sheets')) {
+        renderAlbumEditor(section, body);
       }
 
       if (supports(type, 'orientation')) {
@@ -907,6 +915,379 @@
       rerenderRows();
     }
 
+    function renderRailEditor(section, body) {
+      var wrapper = createElement('div', 'iss-editorial-field iss-editorial-field--rail');
+      var options = section.rail_options && typeof section.rail_options === 'object' ? section.rail_options : {};
+      var variantField = createElement('label', 'iss-editorial-field');
+      var variant = document.createElement('select');
+
+      section.rail_options = {
+        show_nav: Object.prototype.hasOwnProperty.call(options, 'show_nav') ? !!options.show_nav : true,
+        show_summary: Object.prototype.hasOwnProperty.call(options, 'show_summary') ? !!options.show_summary : true,
+        show_related: Object.prototype.hasOwnProperty.call(options, 'show_related') ? !!options.show_related : true,
+        variant: options.variant || 'detailed'
+      };
+
+      [
+        { value: 'detailed', label: 'Detailliert' },
+        { value: 'compact', label: 'Kompakt' }
+      ].forEach(function (item) {
+        var option = document.createElement('option');
+        option.value = item.value;
+        option.textContent = item.label;
+        option.selected = item.value === section.rail_options.variant;
+        variant.appendChild(option);
+      });
+      variant.addEventListener('change', function () {
+        section.rail_options.variant = variant.value || 'detailed';
+        render();
+        scheduleAutosave();
+      });
+
+      variantField.appendChild(createElement('span', '', 'Darstellung'));
+      variantField.appendChild(variant);
+
+      wrapper.appendChild(createElement('span', '', 'Rail-Inhalt'));
+      wrapper.appendChild(createCheckbox('Navigation anzeigen', section.rail_options.show_nav, function (checked) {
+        section.rail_options.show_nav = checked;
+        render();
+        scheduleAutosave();
+      }));
+      wrapper.appendChild(createCheckbox('Rahmendaten anzeigen', section.rail_options.show_summary, function (checked) {
+        section.rail_options.show_summary = checked;
+        render();
+        scheduleAutosave();
+      }));
+      wrapper.appendChild(createCheckbox('Weiterlesen anzeigen', section.rail_options.show_related, function (checked) {
+        section.rail_options.show_related = checked;
+        render();
+        scheduleAutosave();
+      }));
+      wrapper.appendChild(variantField);
+      body.appendChild(wrapper);
+    }
+
+    function albumSheetKey(sheet) {
+      return [
+        sheet.source_kind || '',
+        sheet.source_id || '',
+        sheet.member_id || '',
+        sheet.source_item_id || ''
+      ].join(':');
+    }
+
+    function normalizeAlbumPositions(section) {
+      section.sheets = Array.isArray(section.sheets) ? section.sheets : [];
+      section.sheets.forEach(function (sheet, index) {
+        sheet.position = index + 1;
+      });
+    }
+
+    function mergeAlbumSheets(section, nextSheets) {
+      var existing = {};
+      (section.sheets || []).forEach(function (sheet) {
+        existing[albumSheetKey(sheet)] = sheet;
+      });
+
+      section.sheets = (nextSheets || []).map(function (sheet, index) {
+        var old = existing[albumSheetKey(sheet)] || {};
+        return Object.assign({}, sheet, {
+          visible: Object.prototype.hasOwnProperty.call(old, 'visible') ? old.visible : true,
+          label: old.label || sheet.label || '',
+          nav_title: old.nav_title || sheet.nav_title || '',
+          caption_override: old.caption_override || '',
+          position: index + 1
+        });
+      }).filter(function (sheet) {
+        return sheet.source_kind && sheet.source_id;
+      });
+      normalizeAlbumPositions(section);
+    }
+
+    function albumSheetFromArchiveMember(member, index, source) {
+      var label = member.pageLabel || ('Blatt ' + String(index + 1).padStart(2, '0'));
+      var caption = member.caption || member.displayTitle || member.title || member.memberTitle || member.objectTitle || '';
+      return {
+        source_kind: 'archive_object',
+        source_id: String(member.objectPostId || ''),
+        source_set_id: String((source && source.set_id) || member.setId || ''),
+        member_id: String(member.id || ''),
+        visible: true,
+        label: label,
+        nav_title: member.title || member.objectTitle || label,
+        caption: caption,
+        caption_override: '',
+        thumbnail: member.thumbnail || '',
+        position: index + 1
+      };
+    }
+
+    function albumSheetFromEditorialSetItem(item, index) {
+      var preview = item.preview || {};
+      var sourceId = item.sourceId || '';
+      if (item.kind === 'external_upload' && item.provenance && item.provenance.imported_attachment_id) {
+        sourceId = item.provenance.imported_attachment_id;
+      }
+      return {
+        source_kind: 'wp_media',
+        source_id: String(sourceId || ''),
+        source_set_id: String(item.setId || ''),
+        source_item_id: String(item.id || ''),
+        visible: true,
+        label: 'Bild ' + String(index + 1).padStart(2, '0'),
+        nav_title: item.label || preview.title || 'Bild ' + String(index + 1).padStart(2, '0'),
+        caption: item.label || preview.title || '',
+        caption_override: '',
+        thumbnail: preview.thumbnail || '',
+        position: index + 1
+      };
+    }
+
+    function fetchJson(url) {
+      return window.fetch(url, {
+        credentials: 'same-origin',
+        headers: {
+          'X-WP-Nonce': config.nonce || ''
+        }
+      }).then(function (response) {
+        if (!response.ok) {
+          throw new Error('request failed');
+        }
+        return response.json();
+      });
+    }
+
+    function importAlbumSource(section, status) {
+      var source = section.album_source || {};
+      var kind = source.kind || 'archive_set';
+      var setId = parseInt(source.set_id || '0', 10);
+      var url;
+
+      if (!setId) {
+        status.textContent = 'Set-ID fehlt.';
+        return;
+      }
+
+      status.textContent = 'Quelle wird geladen...';
+
+      if (kind === 'archive_set') {
+        if (!config.archiveRestRoot) {
+          status.textContent = 'Archivset-API ist nicht verfügbar.';
+          return;
+        }
+        url = config.archiveRestRoot.replace(/\/$/, '') + '/sets/' + encodeURIComponent(String(setId));
+        fetchJson(url).then(function (payload) {
+          var item = payload && payload.item ? payload.item : {};
+          var members = Array.isArray(item.members) ? item.members : [];
+          var sheets = members.filter(function (member) {
+            return member && member.memberKind === 'object' && member.objectPostId;
+          }).map(function (member, index) {
+            return albumSheetFromArchiveMember(member, index, source);
+          });
+          section.album_source.set_title = item.title || section.album_source.set_title || '';
+          mergeAlbumSheets(section, sheets);
+          render();
+          scheduleAutosave();
+          status.textContent = String(sheets.length) + ' Blatt/Blätter importiert.';
+        }).catch(function () {
+          status.textContent = 'Archivset konnte nicht geladen werden.';
+        });
+        return;
+      }
+
+      if (kind === 'editorial_set') {
+        if (!config.contentRestRoot) {
+          status.textContent = 'Set-API ist nicht verfügbar.';
+          return;
+        }
+        url = config.contentRestRoot.replace(/\/$/, '') + '/editorial-set-items?setId=' + encodeURIComponent(String(setId)) + '&perPage=120';
+        fetchJson(url).then(function (payload) {
+          var items = Array.isArray(payload && payload.items) ? payload.items : [];
+          var sheets = items.filter(function (item) {
+            var mime = item && item.preview ? String(item.preview.mime || '') : '';
+            return item && ['rejected', 'stale'].indexOf(item.status || '') === -1 && (item.kind === 'wp_media' || item.kind === 'external_upload') && (mime === '' || mime.indexOf('image/') === 0);
+          }).map(albumSheetFromEditorialSetItem).filter(function (sheet) {
+            return sheet.source_id;
+          });
+          mergeAlbumSheets(section, sheets);
+          render();
+          scheduleAutosave();
+          status.textContent = String(sheets.length) + ' Bild(er) importiert.';
+        }).catch(function () {
+          status.textContent = 'Set konnte nicht geladen werden.';
+        });
+      }
+    }
+
+    function renderAlbumSheetList(section, target, rerender) {
+      clear(target);
+      section.sheets = Array.isArray(section.sheets) ? section.sheets : [];
+      normalizeAlbumPositions(section);
+
+      if (!section.sheets.length) {
+        target.appendChild(createElement('p', 'description', 'Noch keine Albumblätter importiert.'));
+        return;
+      }
+
+      section.sheets.forEach(function (sheet, index) {
+        var row = createElement('article', 'iss-editorial-album-sheet');
+        var preview = createElement('div', 'iss-editorial-album-sheet__preview');
+        var fields = createElement('div', 'iss-editorial-album-sheet__fields');
+        var tools = createElement('div', 'iss-editorial-album-sheet__tools');
+        var up = createElement('button', 'button', 'Hoch');
+        var down = createElement('button', 'button', 'Runter');
+        var remove = createElement('button', 'button button-link-delete', 'Entfernen');
+        var visible = document.createElement('input');
+        var visibleLabel = createElement('label', 'iss-editorial-album-sheet__visible');
+
+        if (sheet.thumbnail) {
+          var image = document.createElement('img');
+          image.src = sheet.thumbnail;
+          image.alt = '';
+          preview.appendChild(image);
+        } else {
+          preview.textContent = sheet.source_kind === 'archive_object' ? 'Archiv' : 'Bild';
+        }
+
+        visible.type = 'checkbox';
+        visible.checked = sheet.visible !== false;
+        visible.addEventListener('change', function () {
+          sheet.visible = visible.checked;
+          render();
+          scheduleAutosave();
+        });
+        visibleLabel.appendChild(visible);
+        visibleLabel.appendChild(document.createTextNode(' sichtbar'));
+
+        fields.appendChild(createTextInput('Label', sheet.label || '', function (value) {
+          sheet.label = value;
+          render();
+          scheduleAutosave();
+        }));
+        fields.appendChild(createTextInput('Nav-Titel', sheet.nav_title || '', function (value) {
+          sheet.nav_title = value;
+          render();
+          scheduleAutosave();
+        }));
+        fields.appendChild(createTextarea('Beschreibung', sheet.caption_override || sheet.caption || '', function (value) {
+          sheet.caption_override = value;
+          render();
+          scheduleAutosave();
+        }, 4));
+
+        [up, down, remove].forEach(function (button) {
+          button.type = 'button';
+        });
+        up.disabled = index === 0;
+        down.disabled = index >= section.sheets.length - 1;
+        up.addEventListener('click', function () {
+          var current = section.sheets.splice(index, 1)[0];
+          section.sheets.splice(index - 1, 0, current);
+          normalizeAlbumPositions(section);
+          rerender();
+          render();
+          scheduleAutosave();
+        });
+        down.addEventListener('click', function () {
+          var current = section.sheets.splice(index, 1)[0];
+          section.sheets.splice(index + 1, 0, current);
+          normalizeAlbumPositions(section);
+          rerender();
+          render();
+          scheduleAutosave();
+        });
+        remove.addEventListener('click', function () {
+          section.sheets.splice(index, 1);
+          normalizeAlbumPositions(section);
+          rerender();
+          render();
+          scheduleAutosave();
+        });
+
+        tools.appendChild(createElement('span', 'iss-editorial-album-sheet__position', String(index + 1)));
+        tools.appendChild(visibleLabel);
+        tools.appendChild(up);
+        tools.appendChild(down);
+        tools.appendChild(remove);
+        row.appendChild(preview);
+        row.appendChild(fields);
+        row.appendChild(tools);
+        target.appendChild(row);
+      });
+    }
+
+    function renderAlbumEditor(section, body) {
+      var wrapper = createElement('div', 'iss-editorial-field iss-editorial-field--album');
+      var source = section.album_source && typeof section.album_source === 'object' ? section.album_source : {};
+      var sourceRow = createElement('div', 'iss-editorial-album-source');
+      var kindLabel = createElement('label', 'iss-editorial-field');
+      var kindSelect = document.createElement('select');
+      var idField;
+      var titleField;
+      var importButton = createElement('button', 'button button-primary', 'Aus Quelle importieren / synchronisieren');
+      var status = createElement('p', 'description');
+      var list = createElement('div', 'iss-editorial-album-sheets');
+
+      section.album_source = {
+        kind: source.kind || 'archive_set',
+        set_id: source.set_id || '',
+        set_title: source.set_title || ''
+      };
+      section.sheets = Array.isArray(section.sheets) ? section.sheets : [];
+
+      [
+        { value: 'archive_set', label: 'Archivset' },
+        { value: 'editorial_set', label: 'Set' },
+        { value: 'manual', label: 'Manuell' }
+      ].forEach(function (optionData) {
+        var option = document.createElement('option');
+        option.value = optionData.value;
+        option.textContent = optionData.label;
+        option.selected = optionData.value === section.album_source.kind;
+        kindSelect.appendChild(option);
+      });
+      kindSelect.addEventListener('change', function () {
+        section.album_source.kind = kindSelect.value;
+        render();
+        scheduleAutosave();
+      });
+
+      idField = createTextInput('Set-ID', section.album_source.set_id || '', function (value) {
+        section.album_source.set_id = value.replace(/[^0-9]/g, '');
+        scheduleAutosave();
+      });
+      titleField = createTextInput('Quellentitel', section.album_source.set_title || '', function (value) {
+        section.album_source.set_title = value;
+        render();
+        scheduleAutosave();
+      });
+
+      importButton.type = 'button';
+      importButton.disabled = section.album_source.kind === 'manual';
+      importButton.addEventListener('click', function () {
+        importAlbumSource(section, status);
+      });
+
+      function rerenderSheets() {
+        renderAlbumSheetList(section, list, rerenderSheets);
+      }
+
+      kindLabel.appendChild(createElement('span', '', 'Quelle'));
+      kindLabel.appendChild(kindSelect);
+      sourceRow.appendChild(kindLabel);
+      if (section.album_source.kind !== 'manual') {
+        sourceRow.appendChild(idField);
+        sourceRow.appendChild(titleField);
+        sourceRow.appendChild(importButton);
+      }
+      wrapper.appendChild(createElement('span', '', 'Albumfolge'));
+      wrapper.appendChild(sourceRow);
+      wrapper.appendChild(status);
+      wrapper.appendChild(list);
+      body.appendChild(wrapper);
+      rerenderSheets();
+    }
+
     function renderMediaPicker(section, body) {
       var refs = createElement('div', 'iss-editorial-field iss-editorial-field--media');
       var tray = createElement('div', 'iss-editorial-media-tray');
@@ -1051,6 +1432,17 @@
       input.addEventListener('input', function () { onChange(input.value); });
       wrapper.appendChild(createElement('span', '', label));
       wrapper.appendChild(input);
+      return wrapper;
+    }
+
+    function createCheckbox(label, checked, onChange) {
+      var wrapper = createElement('label', 'iss-editorial-check');
+      var input = document.createElement('input');
+      input.type = 'checkbox';
+      input.checked = !!checked;
+      input.addEventListener('change', function () { onChange(input.checked); });
+      wrapper.appendChild(input);
+      wrapper.appendChild(createElement('span', '', label));
       return wrapper;
     }
 

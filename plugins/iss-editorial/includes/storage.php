@@ -138,6 +138,103 @@ function iss_editorial_sanitize_fact_list($facts): array
     return $items;
 }
 
+function iss_editorial_sanitize_rail_options($options): array
+{
+    $options = is_array($options) ? $options : [];
+    $variant = sanitize_key((string) ($options['variant'] ?? 'detailed'));
+    if (!in_array($variant, ['detailed', 'compact'], true)) {
+        $variant = 'detailed';
+    }
+
+    return [
+        'show_nav' => !array_key_exists('show_nav', $options) || !empty($options['show_nav']),
+        'show_summary' => !array_key_exists('show_summary', $options) || !empty($options['show_summary']),
+        'show_related' => !array_key_exists('show_related', $options) || !empty($options['show_related']),
+        'variant' => $variant,
+    ];
+}
+
+function iss_editorial_sanitize_album_source($source): array
+{
+    if (!is_array($source)) {
+        return [];
+    }
+
+    $kind = sanitize_key((string) ($source['kind'] ?? ''));
+    if (!in_array($kind, ['archive_set', 'editorial_set', 'manual'], true)) {
+        return [];
+    }
+
+    $source_id = absint($source['set_id'] ?? $source['id'] ?? 0);
+    if ($kind !== 'manual' && $source_id <= 0) {
+        return [];
+    }
+
+    return [
+        'kind' => $kind,
+        'set_id' => $source_id > 0 ? (string) $source_id : '',
+        'set_title' => sanitize_text_field((string) ($source['set_title'] ?? $source['title'] ?? '')),
+    ];
+}
+
+function iss_editorial_sanitize_album_sheet($sheet): array
+{
+    if (!is_array($sheet)) {
+        return [];
+    }
+
+    $source_kind = sanitize_key((string) ($sheet['source_kind'] ?? ''));
+    if (!in_array($source_kind, ['archive_object', 'wp_media'], true)) {
+        return [];
+    }
+
+    $source_id = absint($sheet['source_id'] ?? $sheet['object_id'] ?? $sheet['attachment_id'] ?? 0);
+    if ($source_id <= 0) {
+        return [];
+    }
+
+    $sanitized = [
+        'source_kind' => $source_kind,
+        'source_id' => (string) $source_id,
+        'visible' => !array_key_exists('visible', $sheet) || !empty($sheet['visible']),
+        'label' => sanitize_text_field((string) ($sheet['label'] ?? '')),
+        'nav_title' => sanitize_text_field((string) ($sheet['nav_title'] ?? '')),
+        'caption' => sanitize_textarea_field((string) ($sheet['caption'] ?? '')),
+        'caption_override' => sanitize_textarea_field((string) ($sheet['caption_override'] ?? '')),
+        'thumbnail' => esc_url_raw((string) ($sheet['thumbnail'] ?? '')),
+        'position' => absint($sheet['position'] ?? 0),
+    ];
+
+    foreach (['source_set_id', 'source_item_id', 'member_id'] as $key) {
+        if (isset($sheet[$key])) {
+            $sanitized[$key] = (string) absint($sheet[$key]);
+        }
+    }
+
+    return $sanitized;
+}
+
+function iss_editorial_sanitize_album_sheet_list($sheets): array
+{
+    $items = [];
+    foreach ((array) $sheets as $index => $sheet) {
+        $sheet = iss_editorial_sanitize_album_sheet($sheet);
+        if (!$sheet) {
+            continue;
+        }
+        if ((int) ($sheet['position'] ?? 0) <= 0) {
+            $sheet['position'] = count($items) + 1;
+        }
+        $items[] = $sheet;
+    }
+
+    usort($items, static function (array $a, array $b): int {
+        return (int) ($a['position'] ?? 0) <=> (int) ($b['position'] ?? 0);
+    });
+
+    return array_values($items);
+}
+
 function iss_editorial_body_href_is_safe(string $href): bool
 {
     $href = trim(html_entity_decode($href, ENT_QUOTES | ENT_HTML5, get_bloginfo('charset') ?: 'UTF-8'));
@@ -233,6 +330,18 @@ function iss_editorial_sanitize_section(array $section, array $format): array
 
     if (iss_editorial_format_supports_section_field($format, $type, 'facts')) {
         $sanitized['facts'] = iss_editorial_sanitize_fact_list($section['facts'] ?? []);
+    }
+
+    if (iss_editorial_format_supports_section_field($format, $type, 'rail_options')) {
+        $sanitized['rail_options'] = iss_editorial_sanitize_rail_options($section['rail_options'] ?? []);
+    }
+
+    if (iss_editorial_format_supports_section_field($format, $type, 'album_source')) {
+        $sanitized['album_source'] = iss_editorial_sanitize_album_source($section['album_source'] ?? []);
+    }
+
+    if (iss_editorial_format_supports_section_field($format, $type, 'sheets')) {
+        $sanitized['sheets'] = iss_editorial_sanitize_album_sheet_list($section['sheets'] ?? []);
     }
 
     if (iss_editorial_format_supports_section_field($format, $type, 'orientation')) {

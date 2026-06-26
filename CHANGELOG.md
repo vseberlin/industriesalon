@@ -6,6 +6,21 @@ be recovered from Git history.
 
 ## 2026-06-26
 
+- Added the first publication JSON migration slice for photoalbums:
+  - registered a `publication` editorial JSON format with `intro`, `source`,
+    optional `publication_rail`, and editable `photoalbum` gestures;
+  - extended the shared editorial editor/storage layer with constrained
+    photoalbum source/sheet controls and publication rail options instead of
+    relying on Gutenberg image blocks or server-only album magic;
+  - made photoalbums render from explicit JSON sheets first, while preserving
+    legacy Gutenberg/Archivset fallback behavior for unmigrated publications;
+  - allowed album sheets to be imported from an Archivset or editorial Set,
+    then reordered, hidden, captioned, and given nav titles in the JSON editor;
+  - made publication reading rails optional/skinnable through a
+    `publication_rail` gesture while keeping legacy non-JSON rails automatic;
+  - seeded local `nef-album` with a 63-sheet JSON document and added
+    `ops/sql/2026-06-26-nef-album-publication-json.sql` as the narrow transfer
+    artifact for that DB-backed publication state.
 - Normalized project media Set ownership:
   - project source Sets now use the canonical `project-set-<project-slug>` key
     when created or reopened;

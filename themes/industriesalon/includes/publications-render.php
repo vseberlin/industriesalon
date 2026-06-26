@@ -94,13 +94,35 @@ function industriesalon_publications_render_longread_summary(array $summary): st
     return $html;
 }
 
-function industriesalon_publications_render_longread_nav(array $nav_items): string
+function industriesalon_publications_render_publication_rail_head(array $settings): string
+{
+    $kicker = trim((string) ($settings['kicker'] ?? ''));
+    $title = trim((string) ($settings['title'] ?? ''));
+    if ($kicker === '' && $title === '') {
+        return '';
+    }
+
+    $html = '<div class="iss-publication-reading-rail__head">';
+    if ($kicker !== '') {
+        $html .= '<p class="iss-publication-reading-rail__kicker">' . esc_html($kicker) . '</p>';
+    }
+    if ($title !== '') {
+        $html .= '<h2 class="iss-publication-reading-rail__title">' . esc_html($title) . '</h2>';
+    }
+    $html .= '</div>';
+
+    return $html;
+}
+
+function industriesalon_publications_render_longread_nav(array $nav_items, array $rail_settings = []): string
 {
     if (!$nav_items) {
         return '';
     }
 
-    $html = '<nav class="iss-reading-nav iss-publication-longread__nav" data-reading-nav-mode="stack" aria-label="' . esc_attr__('Kapitelnavigation', 'industriesalon') . '"><div class="iss-reading-nav__inner iss-publication-longread__nav-inner">';
+    $html = '<nav class="iss-reading-nav iss-publication-longread__nav" data-reading-nav-mode="stack" aria-label="' . esc_attr__('Kapitelnavigation', 'industriesalon') . '">';
+    $html .= industriesalon_publications_render_publication_rail_head($rail_settings);
+    $html .= '<div class="iss-reading-nav__inner iss-publication-longread__nav-inner">';
     foreach ($nav_items as $item) {
         $href = trim((string) ($item['href'] ?? ''));
         $label = trim((string) ($item['label'] ?? ''));
@@ -514,13 +536,15 @@ function industriesalon_publications_render_brochure_related(int $post_id): stri
         . '</section>';
 }
 
-function industriesalon_publications_render_photoalbum_nav(array $sheets): string
+function industriesalon_publications_render_photoalbum_nav(array $sheets, array $rail_settings = []): string
 {
     if ($sheets === []) {
         return '';
     }
 
-    $html = '<nav class="iss-reading-nav iss-publication-photoalbum__nav" data-reading-nav-mode="stack" aria-label="' . esc_attr__('Albumnavigation', 'industriesalon') . '"><div class="iss-reading-nav__inner iss-publication-photoalbum__nav-inner">';
+    $html = '<nav class="iss-reading-nav iss-publication-photoalbum__nav" data-reading-nav-mode="stack" aria-label="' . esc_attr__('Albumnavigation', 'industriesalon') . '">';
+    $html .= industriesalon_publications_render_publication_rail_head($rail_settings);
+    $html .= '<div class="iss-reading-nav__inner iss-publication-photoalbum__nav-inner">';
 
     foreach ($sheets as $sheet) {
         if (!is_array($sheet)) {
@@ -2143,7 +2167,11 @@ add_filter('iss_publications_render_photoalbum_nav', function ($rendered, $post_
         return '';
     }
 
-    return industriesalon_publications_render_photoalbum_nav($sheets);
+    $rail_settings = function_exists('iss_publications_get_publication_rail_settings')
+        ? iss_publications_get_publication_rail_settings($post_id)
+        : [];
+
+    return industriesalon_publications_render_photoalbum_nav($sheets, $rail_settings);
 }, 10, 4);
 
 add_filter('render_block_iss-graph/entity-relations', function ($block_content) {
@@ -2235,7 +2263,14 @@ add_filter('iss_publications_render_longread_nav', function ($rendered, $post_id
         return $rendered;
     }
 
-    return industriesalon_publications_render_longread_nav(is_array($payload['nav_items'] ?? null) ? $payload['nav_items'] : []);
+    $rail_settings = function_exists('iss_publications_get_publication_rail_settings')
+        ? iss_publications_get_publication_rail_settings($post_id)
+        : [];
+
+    return industriesalon_publications_render_longread_nav(
+        is_array($payload['nav_items'] ?? null) ? $payload['nav_items'] : [],
+        $rail_settings
+    );
 }, 10, 4);
 
 add_filter('iss_publications_render_longread_bridge', function ($rendered, $post_id) {

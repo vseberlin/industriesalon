@@ -225,6 +225,10 @@ function iss_editorial_enqueue_admin_assets(string $hook): void
             'issEditorialAdmin',
             [
                 'restRoot' => esc_url_raw(rest_url('iss-editorial/v1')),
+                'archiveRestRoot' => function_exists('iss_wf_import_archivset_rest_namespace')
+                    ? esc_url_raw(rest_url(iss_wf_import_archivset_rest_namespace()))
+                    : '',
+                'contentRestRoot' => esc_url_raw(rest_url('iss-content/v1')),
                 'nonce' => wp_create_nonce('wp_rest'),
                 'postId' => $post_id,
                 'format' => (string) $format['slug'],

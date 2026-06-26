@@ -4,6 +4,12 @@ Immediate executable work only. Larger future programs live in `docs/project/bac
 
 ## Next
 
+- Publication JSON migration: after deploying the code, review/apply
+  `ops/sql/2026-06-26-nef-album-publication-json.sql` only on a target that
+  already has `nef-album` (`post_id=18973`), Archivset `19`, and the referenced
+  NEF album archive-object/media rows/files. Then continue with chroniken /
+  timelines and longreads using the explicit JSON gesture plus
+  `publication_rail` contract.
 - Project skin review: visually compare the three enabled local examples:
   `futura-biennale-2027` uses `dossier` with publication-style horizontal
   primary chapter navigation, centered 75rem chapter/fact spreads, and footer context,

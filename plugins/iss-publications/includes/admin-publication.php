@@ -131,6 +131,7 @@ function iss_publications_render_sale_box($post) {
 function iss_publications_render_display_box($post) {
     $featured = !empty(get_post_meta($post->ID, '_iss_publication_featured', true));
     $layout = iss_publications_get_layout((int) $post->ID);
+    $photoalbum_archivset_id = (int) get_post_meta((int) $post->ID, ISS_PUBLICATIONS_PHOTOALBUM_ARCHIVSET_META_KEY, true);
     if (!in_array($layout, ['longread', 'timeline', 'photoalbum'], true)) {
         $layout = 'standard';
     }
@@ -144,9 +145,13 @@ function iss_publications_render_display_box($post) {
     echo '<option value="photoalbum"' . selected($layout, 'photoalbum', false) . '>' . esc_html__('Fotoalbum', 'iss-publications') . '</option>';
     echo '</select>';
     echo '</p>';
+    echo '<p>';
+    echo '<label for="' . esc_attr(ISS_PUBLICATIONS_PHOTOALBUM_ARCHIVSET_META_KEY) . '"><strong>' . esc_html__('Fotoalbum-Archivset', 'iss-publications') . '</strong></label>';
+    echo '<input class="widefat" type="number" min="0" step="1" id="' . esc_attr(ISS_PUBLICATIONS_PHOTOALBUM_ARCHIVSET_META_KEY) . '" name="iss_publication[' . esc_attr(ISS_PUBLICATIONS_PHOTOALBUM_ARCHIVSET_META_KEY) . ']" value="' . esc_attr((string) $photoalbum_archivset_id) . '" placeholder="0">';
+    echo '</p>';
     echo '<p><label><input type="checkbox" name="iss_publication[_iss_publication_featured]" value="1" ' . checked($featured, true, false) . '> ' . esc_html__('Als ausgewählte Publikation hervorheben', 'iss-publications') . '</label></p>';
     echo '<p style="margin-top:1rem;color:#666;font-size:12px;line-height:1.5;">';
-    echo esc_html__('Longread ist für kapitelbasierte Lesestücke gedacht. Zeitleiste und Fotoalbum nutzen im Block-Editor eigene Publikationsblöcke oder die Starter-Patterns gleichen Namens. Ein Fotoalbum-Block schaltet das Fotoalbum-Layout automatisch frei; seine Blätter brauchen jeweils ein Bild, sonst entsteht keine Album-Navigation. Verkauf bleibt optional.', 'iss-publications');
+    echo esc_html__('Longread ist für kapitelbasierte Lesestücke gedacht. Zeitleiste und Fotoalbum nutzen im Block-Editor eigene Publikationsblöcke oder die Starter-Patterns gleichen Namens. Ein Fotoalbum-Archivset testet eine schlanke Albumquelle ohne die Gutenberg-Bilder im Inhalt zu löschen. Verkauf bleibt optional.', 'iss-publications');
     echo '</p>';
 }
 

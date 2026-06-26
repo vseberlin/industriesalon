@@ -5,6 +5,7 @@ if (!defined('ABSPATH')) {
 }
 
 const ISS_PUBLICATIONS_RELATED_PUBLICATIONS_META_KEY = '_iss_publication_related_publications';
+const ISS_PUBLICATIONS_PHOTOALBUM_ARCHIVSET_META_KEY = '_iss_publication_photoalbum_archivset_id';
 
 function iss_publications_meta_fields() {
     return [
@@ -89,6 +90,11 @@ function iss_publications_meta_fields() {
                 return !empty($value);
             },
             'default' => false,
+        ],
+        ISS_PUBLICATIONS_PHOTOALBUM_ARCHIVSET_META_KEY => [
+            'type' => 'integer',
+            'sanitize' => 'absint',
+            'default' => 0,
         ],
     ];
 }

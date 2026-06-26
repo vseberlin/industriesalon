@@ -17,6 +17,7 @@ define('ISS_PUBLICATIONS_POST_TYPE', 'publication');
 require_once ISS_PUBLICATIONS_PATH . 'includes/cpt-publication.php';
 require_once ISS_PUBLICATIONS_PATH . 'includes/meta-publication.php';
 require_once ISS_PUBLICATIONS_PATH . 'includes/admin-publication.php';
+require_once ISS_PUBLICATIONS_PATH . 'includes/editorial-publication.php';
 require_once ISS_PUBLICATIONS_PATH . 'includes/render-publication.php';
 require_once ISS_PUBLICATIONS_PATH . 'includes/blocks.php';
 
