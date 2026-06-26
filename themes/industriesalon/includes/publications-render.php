@@ -762,13 +762,47 @@ function industriesalon_publications_render_blueprint_fact_grid(int $post_id, ar
     return $html;
 }
 
+function industriesalon_publications_get_blueprint_sheet_media_html(array $sheet): string
+{
+    $title = trim((string) ($sheet['title'] ?? ''));
+    $sheet_label = trim((string) ($sheet['sheet_label'] ?? ''));
+    $alt_text = $title !== '' ? $title : $sheet_label;
+    $image_attr = [
+        'alt' => $alt_text,
+        'loading' => 'lazy',
+        'decoding' => 'async',
+        'sizes' => '(max-width: 720px) 46vw, (max-width: 1180px) 30vw, 22vw',
+    ];
+
+    $attachment_id = absint($sheet['attachment_id'] ?? 0);
+    if ($attachment_id > 0 && get_post_type($attachment_id) === 'attachment') {
+        $image_html = wp_get_attachment_image($attachment_id, 'medium', false, $image_attr);
+        if (is_string($image_html) && trim($image_html) !== '') {
+            return trim($image_html);
+        }
+    }
+
+    $archive_object_id = absint($sheet['archive_object_id'] ?? 0);
+    if ($archive_object_id > 0) {
+        $thumbnail_id = absint(get_post_thumbnail_id($archive_object_id));
+        if ($thumbnail_id > 0) {
+            $image_html = wp_get_attachment_image($thumbnail_id, 'medium', false, $image_attr);
+            if (is_string($image_html) && trim($image_html) !== '') {
+                return trim($image_html);
+            }
+        }
+    }
+
+    return trim((string) ($sheet['media_html'] ?? ''));
+}
+
 function industriesalon_publications_render_blueprint_sheet(array $sheet, int $index): string
 {
     $anchor = trim((string) ($sheet['anchor'] ?? ''));
     $sheet_label = trim((string) ($sheet['sheet_label'] ?? ''));
     $title = trim((string) ($sheet['title'] ?? ''));
     $caption_text = trim((string) ($sheet['caption_text'] ?? ''));
-    $media_html = trim((string) ($sheet['media_html'] ?? ''));
+    $media_html = industriesalon_publications_get_blueprint_sheet_media_html($sheet);
     $image_url = trim((string) ($sheet['image_url'] ?? ''));
 
     if ($anchor === '' || $media_html === '') {

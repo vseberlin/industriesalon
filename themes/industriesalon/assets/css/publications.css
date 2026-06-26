@@ -1459,7 +1459,6 @@ body.iss-publication-editorial-skin-blueprint-matrix.iss-publication-layout-phot
   max-width: 100%;
   max-height: 100%;
   object-fit: contain;
-  filter: grayscale(18%) saturate(0.82) contrast(1.04);
 }
 
 .iss-publication-photoalbum-blueprint__copy {
