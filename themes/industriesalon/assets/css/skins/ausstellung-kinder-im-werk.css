@@ -25,7 +25,10 @@
 }
 
 .iss-ausstellung-editorial--skin-kinder-im-werk .iss-ausstellung-section__kicker {
-  color: var(--iss-ausstellung-accent);
+  --iss-kicker-accent: var(--iss-ausstellung-accent);
+  --iss-kicker-color: var(--iss-ausstellung-dark);
+
+  color: var(--iss-kicker-color);
 }
 
 .iss-ausstellung-editorial--skin-kinder-im-werk .iss-ausstellung-editorial__body {
@@ -287,6 +290,12 @@
 .iss-ausstellung-editorial--skin-kinder-im-werk .iss-ausstellung-section--layout-stat .iss-ausstellung-section__title,
 .iss-ausstellung-editorial--skin-kinder-im-werk .iss-ausstellung-section--layout-stat .iss-ausstellung-section__copy {
   color: inherit;
+}
+
+.iss-ausstellung-editorial--skin-kinder-im-werk .iss-ausstellung-section--layout-stat .iss-ausstellung-section__kicker {
+  --iss-kicker-color: var(--iss-ausstellung-light);
+
+  color: var(--iss-kicker-color);
 }
 
 .iss-ausstellung-editorial--skin-kinder-im-werk .iss-ausstellung-section--layout-stat .iss-ausstellung-section__copy {

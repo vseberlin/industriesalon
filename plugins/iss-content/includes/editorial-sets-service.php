@@ -876,6 +876,22 @@ class ISS_Content_Editorial_Sets_Service
 
         if ($kind === 'external_upload' && $source === 'event-drop') {
             $provenance = $this->decode_json_field((string) ($item['provenance_json'] ?? ''));
+            $imported_attachment_id = absint($provenance['imported_attachment_id'] ?? 0);
+            $imported_attachment = $imported_attachment_id > 0 ? get_post($imported_attachment_id) : null;
+            if ($imported_attachment instanceof WP_Post && $imported_attachment->post_type === 'attachment') {
+                $metadata = wp_get_attachment_metadata($imported_attachment_id);
+                return [
+                    'title' => (string) get_the_title($imported_attachment),
+                    'thumbnail' => (string) wp_get_attachment_image_url($imported_attachment_id, 'medium'),
+                    'url' => (string) wp_get_attachment_url($imported_attachment_id),
+                    'mime' => (string) get_post_mime_type($imported_attachment_id),
+                    'filename' => basename((string) get_attached_file($imported_attachment_id)),
+                    'width' => is_array($metadata) ? (int) ($metadata['width'] ?? 0) : 0,
+                    'height' => is_array($metadata) ? (int) ($metadata['height'] ?? 0) : 0,
+                    'uploadedAt' => (string) get_post_time('c', true, $imported_attachment),
+                ];
+            }
+
             $path = (string) ($provenance['path'] ?? '');
             $filename = (string) ($provenance['stored_name'] ?? $source_id);
             $mime = $filename !== '' ? (string) wp_check_filetype($filename)['type'] : '';

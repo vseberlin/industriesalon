@@ -187,9 +187,39 @@ function iss_editorial_enqueue_admin_assets(string $hook): void
         wp_enqueue_style('iss-editorial-admin', iss_editorial_admin_url() . 'assets/admin.css', [], (string) filemtime($style_path));
     }
 
+    $set_media_picker_path = iss_editorial_admin_path() . 'assets/set-media-picker.js';
+    if (file_exists($set_media_picker_path)) {
+        wp_enqueue_script(
+            'iss-editorial-set-media-picker',
+            iss_editorial_admin_url() . 'assets/set-media-picker.js',
+            ['wp-api-fetch'],
+            (string) filemtime($set_media_picker_path),
+            true
+        );
+        wp_localize_script(
+            'iss-editorial-set-media-picker',
+            'issEditorialSetMediaPicker',
+            [
+                'namespace' => 'iss-content/v1',
+                'nonce' => wp_create_nonce('wp_rest'),
+                'postId' => $post_id,
+                'contextType' => (string) $screen->post_type,
+                'strings' => [
+                    'error' => __('Die Anfrage konnte nicht abgeschlossen werden.', 'iss-editorial'),
+                ],
+            ]
+        );
+    }
+
     $script_path = iss_editorial_admin_path() . 'assets/admin.js';
     if (file_exists($script_path)) {
-        wp_enqueue_script('iss-editorial-admin', iss_editorial_admin_url() . 'assets/admin.js', [], (string) filemtime($script_path), true);
+        wp_enqueue_script(
+            'iss-editorial-admin',
+            iss_editorial_admin_url() . 'assets/admin.js',
+            array_values(array_filter([file_exists($set_media_picker_path) ? 'iss-editorial-set-media-picker' : ''])),
+            (string) filemtime($script_path),
+            true
+        );
         wp_localize_script(
             'iss-editorial-admin',
             'issEditorialAdmin',

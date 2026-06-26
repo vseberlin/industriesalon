@@ -319,11 +319,17 @@
 }
 
 .iss-ausstellung-editorial--skin-frauen-im-werk .iss-ausstellung-section--layout-source-focus .iss-ausstellung-section__kicker {
-  color: var(--iss-ausstellung-accent);
+  --iss-kicker-accent: var(--iss-ausstellung-accent);
+  --iss-kicker-color: var(--iss-ausstellung-dark);
+
+  color: var(--iss-kicker-color);
 }
 
 .iss-ausstellung-editorial--skin-frauen-im-werk .iss-ausstellung-section--layout-source-focus-reverse .iss-ausstellung-section__kicker {
-  color: var(--iss-ausstellung-accent);
+  --iss-kicker-accent: var(--iss-ausstellung-accent);
+  --iss-kicker-color: var(--iss-ausstellung-dark);
+
+  color: var(--iss-kicker-color);
 }
 
 .iss-ausstellung-editorial--skin-frauen-im-werk .iss-ausstellung-section--layout-source-focus .iss-ausstellung-section__body {
@@ -409,7 +415,10 @@
 }
 
 .iss-ausstellung-editorial__section--layout-object-grid .iss-ausstellung-section__kicker {
-  color: #ff5a60;
+  --iss-kicker-accent: #ff5a60;
+  --iss-kicker-color: currentcolor;
+
+  color: var(--iss-kicker-color);
 }
 
 .iss-ausstellung-editorial--skin-frauen-im-werk .iss-ausstellung-editorial__section--layout-object-grid h2 {
@@ -487,7 +496,7 @@
 }
 
 .iss-ausstellung-editorial__section--layout-object-grid .iss-archive-featured-object__body .iss-kicker {
-  --iss-kicker-color: #ff5a60;
+  --iss-kicker-color: rgba(249, 249, 250, 0.9);
   --iss-kicker-accent: #ff5a60;
 }
 

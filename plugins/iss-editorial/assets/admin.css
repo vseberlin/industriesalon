@@ -247,6 +247,13 @@
   margin-top: 10px;
 }
 
+.iss-editorial-media-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 8px;
+}
+
 .iss-editorial-link-rows,
 .iss-editorial-fact-rows {
   display: grid;

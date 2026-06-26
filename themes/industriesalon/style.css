@@ -177,6 +177,15 @@ Tags: block-theme, full-site-editing, custom-colors, custom-spacing, editor-styl
   --iss-surface-dark: #201d1b;
   --iss-surface-map: #efefee;
   --iss-surface-overlay: rgba(255, 255, 255, 0.94);
+  --iss-surface-bg: var(--iss-surface-base);
+  --iss-surface-fg: var(--iss-black);
+  --iss-surface-muted: rgba(30, 30, 30, 0.72);
+  --iss-surface-subtle: rgba(30, 30, 30, 0.56);
+  --iss-surface-rule: var(--iss-border);
+  --iss-heading-title-color: var(--iss-surface-fg);
+  --iss-heading-text-color: var(--iss-surface-muted);
+  --iss-kicker-accent: var(--iss-accent);
+  --iss-kicker-color: var(--iss-surface-fg);
 
   /* Effects */
   --iss-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.24);
@@ -260,6 +269,34 @@ Tags: block-theme, full-site-editing, custom-colors, custom-spacing, editor-styl
   --iss-accent-rgb: 117, 58, 24;
   --iss-accent-soft: rgba(var(--iss-accent-rgb), 0.16);
   --iss-accent-border: rgba(var(--iss-accent-rgb), 0.28);
+}
+
+.iss-surface-light {
+  --iss-surface-bg: var(--iss-white);
+  --iss-surface-fg: var(--iss-black);
+  --iss-surface-muted: rgba(30, 30, 30, 0.72);
+  --iss-surface-subtle: rgba(30, 30, 30, 0.56);
+  --iss-surface-rule: rgba(30, 30, 30, 0.12);
+  --iss-heading-title-color: var(--iss-surface-fg);
+  --iss-heading-text-color: var(--iss-surface-muted);
+  --iss-kicker-color: var(--iss-surface-fg);
+
+  background: var(--iss-surface-bg);
+  color: var(--iss-surface-fg);
+}
+
+.iss-surface-dark {
+  --iss-surface-bg: var(--iss-black);
+  --iss-surface-fg: var(--iss-white);
+  --iss-surface-muted: rgba(249, 249, 250, 0.78);
+  --iss-surface-subtle: rgba(249, 249, 250, 0.58);
+  --iss-surface-rule: rgba(249, 249, 250, 0.18);
+  --iss-heading-title-color: var(--iss-surface-fg);
+  --iss-heading-text-color: var(--iss-surface-muted);
+  --iss-kicker-color: var(--iss-surface-fg);
+
+  background: var(--iss-surface-bg);
+  color: var(--iss-surface-fg);
 }
 
 *,
@@ -1594,9 +1631,14 @@ nav.iss-menu-shell__quick-grid > .wp-block-navigation__container {
 }
 
 .section--dark {
-  --iss-heading-title-color: var(--iss-white);
-  --iss-heading-text-color: rgba(249, 249, 250, 0.78);
-  --iss-kicker-color: var(--iss-white);
+  --iss-surface-bg: color-mix(in srgb, var(--iss-black) 88%, var(--iss-accent) 12%);
+  --iss-surface-fg: var(--iss-white);
+  --iss-surface-muted: rgba(249, 249, 250, 0.78);
+  --iss-surface-subtle: rgba(249, 249, 250, 0.58);
+  --iss-surface-rule: rgba(249, 249, 250, 0.18);
+  --iss-heading-title-color: var(--iss-surface-fg);
+  --iss-heading-text-color: var(--iss-surface-muted);
+  --iss-kicker-color: var(--iss-surface-fg);
   --iss-link-fg: var(--iss-white);
   --iss-link-hover-fg: var(--iss-white);
   --iss-button-fg: var(--iss-white);
@@ -1608,9 +1650,8 @@ nav.iss-menu-shell__quick-grid > .wp-block-navigation__container {
   --iss-button-hover-border: rgba(249, 249, 250, 0.72);
   --iss-button-hover-fg: var(--iss-white);
 
-  background: var(--iss-black);
-  background: color-mix(in srgb, var(--iss-black) 88%, var(--iss-accent) 12%);
-  color: var(--iss-white);
+  background: var(--iss-surface-bg);
+  color: var(--iss-surface-fg);
 }
 
 
@@ -1692,8 +1733,8 @@ nav.iss-menu-shell__quick-grid > .wp-block-navigation__container {
 /* Muted */
 /* .iss-kicker--muted: Modifier class for `iss-kicker`; combine for `muted` variant. */
 .iss-kicker--muted {
-  --iss-kicker-accent: var(--iss-grey);
-  --iss-kicker-color: var(--iss-grey);
+  --iss-kicker-accent: var(--iss-surface-rule);
+  --iss-kicker-color: var(--iss-surface-subtle);
 }
 
 /* Light (on dark backgrounds) */
@@ -1707,27 +1748,22 @@ nav.iss-menu-shell__quick-grid > .wp-block-navigation__container {
 /* .iss-kicker--red: Modifier class for `iss-kicker`; combine for `red` variant. */
 .iss-kicker--red {
   --iss-kicker-accent: var(--iss-red);
-  --iss-kicker-color: var(--iss-red);
 }
 /* .iss-kicker--green: Modifier class for `iss-kicker`; combine for `green` variant. */
 .iss-kicker--green {
   --iss-kicker-accent: var(--iss-green);
-  --iss-kicker-color: var(--iss-green);
 }
 /* .iss-kicker--blue: Modifier class for `iss-kicker`; combine for `blue` variant. */
 .iss-kicker--blue  {
   --iss-kicker-accent: var(--iss-blue);
-  --iss-kicker-color: var(--iss-blue);
 }
 /* .iss-kicker--yellow: Modifier class for `iss-kicker`; combine for `yellow` variant. */
 .iss-kicker--yellow{
   --iss-kicker-accent: var(--iss-yellow);
-  --iss-kicker-color: var(--iss-yellow);
 }
 /* .iss-kicker--brown: Modifier class for `iss-kicker`; combine for `brown` variant. */
 .iss-kicker--brown {
   --iss-kicker-accent: var(--iss-brown);
-  --iss-kicker-color: var(--iss-brown);
 }
 
 /* .iss-info-panel: Base class for iss info panel; apply on primary wrapper/scope. */
@@ -1765,8 +1801,6 @@ nav.iss-menu-shell__quick-grid > .wp-block-navigation__container {
   --iss-heading-max-width: 46rem;
   --iss-heading-pad-right: 0;
   --iss-heading-margin-right: 0;
-  --iss-heading-title-color: inherit;
-  --iss-heading-text-color: rgba(30, 30, 30, 0.72);
 
   display: flex;
   flex-direction: column;

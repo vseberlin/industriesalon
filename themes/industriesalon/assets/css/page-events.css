@@ -22,7 +22,7 @@
 .iss-events-page .section:not(.iss-section--hero) .iss-heading > .iss-kicker,
 .iss-events-page .section:not(.iss-section--hero) .iss-heading > .iss-kicker--compact {
   --iss-kicker-accent: var(--iss-accent);
-  --iss-kicker-color: var(--iss-accent);
+  --iss-kicker-color: var(--iss-surface-fg);
   padding-left: 0.85rem;
 }
 

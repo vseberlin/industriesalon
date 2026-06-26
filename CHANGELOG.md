@@ -4,6 +4,31 @@ This file records durable project changes. Keep it compact: current state belong
 `handoff_CURRENT.md`, active follow-up in `TODO.md`, and detailed investigation can
 be recovered from Git history.
 
+## 2026-06-26
+
+- Added the first shared surface/color contract slice:
+  - introduced readable surface tokens in `style.css` for foreground, muted
+    text, subtle text, rules, heading text, and kicker text/accent;
+  - kept existing `section--dark`, `iss-heading--light`, and
+    `iss-kicker--light` as compatibility hooks while aligning them with the new
+    contract;
+  - moved project editorial section kicker/title/body text away from raw accent
+    colors and onto surface tokens, including nested project media, download,
+    facts, and archive-reference cards;
+  - switched the obvious page-family heading overrides, archive featured-object
+    cards, and timeline kickers so accent remains the rail/dot color while
+    text uses the readable surface color;
+  - aligned Veranstaltung skins with the same surface contract, including the
+    dark festival skin, event meta panels, generic info panels, and related
+    network/plugin bridge output;
+  - extended the sweep to shared card families, project context sidebars,
+    archive/publication rails, Kalender timeline labels, primitive meta labels,
+    and Ausstellung editorial skins so small kicker/meta text uses readable
+    surface text while accents remain markers, rails, and hover states;
+  - audited public plugin renderers: archive/content/graph/relations/video
+    blocks mostly emit shared `.iss-kicker` markup for the theme to style; the
+    remaining inline atlas-slice caption in `iss-relations` is a later cleanup.
+
 ## 2026-06-25
 
 - Added the first `projekt` registry/gesture migration slice:

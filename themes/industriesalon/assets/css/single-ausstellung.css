@@ -39,7 +39,10 @@
 }
 
 .iss-ausstellung-page .iss-kicker {
-  color: var(--iss-ausstellung-accent);
+  --iss-kicker-accent: var(--iss-ausstellung-accent);
+  --iss-kicker-color: var(--iss-ausstellung-dark);
+
+  color: var(--iss-kicker-color);
 }
 
 /* Hero */
@@ -119,6 +122,8 @@
 }
 
 .iss-ausstellung-hero__copy > .iss-kicker {
+  --iss-kicker-color: var(--iss-ausstellung-light);
+
   padding-left: 0.85rem;
   border-left: 3px solid var(--iss-ausstellung-accent);
 }

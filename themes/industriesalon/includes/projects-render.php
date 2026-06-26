@@ -127,6 +127,11 @@ function industriesalon_render_editorial_project_media_reference(array $item, bo
     }
 
     $caption = trim((string) ($reference['label'] ?? $resolved['title'] ?? ''));
+    $mime = (string) get_post_mime_type($attachment_id);
+    if (strpos($mime, 'image/') !== 0) {
+        return industriesalon_render_editorial_project_file_reference($item, $show_placeholder);
+    }
+
     $image = wp_get_attachment_image($attachment_id, 'large', false, ['loading' => 'lazy']);
     if ($image !== '') {
         ob_start();
@@ -142,26 +147,74 @@ function industriesalon_render_editorial_project_media_reference(array $item, bo
         return trim((string) ob_get_clean());
     }
 
+    return industriesalon_render_editorial_project_file_reference($item, $show_placeholder);
+}
+
+function industriesalon_editorial_project_media_reference_is_download(array $item): bool
+{
+    $resolved = is_array($item['resolved'] ?? null) ? $item['resolved'] : [];
+    $attachment_id = absint($resolved['id'] ?? 0);
+    if ($attachment_id <= 0) {
+        return false;
+    }
+
+    $mime = (string) get_post_mime_type($attachment_id);
+
+    return $mime !== '' && strpos($mime, 'image/') !== 0;
+}
+
+function industriesalon_render_editorial_project_file_reference(array $item, bool $show_placeholder): string
+{
+    unset($show_placeholder);
+
+    $resolved = is_array($item['resolved'] ?? null) ? $item['resolved'] : [];
+    $reference = is_array($item['reference'] ?? null) ? $item['reference'] : [];
+    $attachment_id = absint($resolved['id'] ?? 0);
+    if ($attachment_id <= 0) {
+        return '';
+    }
+
     $url = (string) ($resolved['url'] ?? wp_get_attachment_url($attachment_id));
     if ($url === '') {
         return '';
     }
 
+    $caption = trim((string) ($reference['label'] ?? $resolved['title'] ?? ''));
     $title = $caption !== '' ? $caption : (string) ($resolved['title'] ?? get_the_title($attachment_id));
     $mime = (string) get_post_mime_type($attachment_id);
     $extension = strtoupper((string) pathinfo((string) wp_parse_url($url, PHP_URL_PATH), PATHINFO_EXTENSION));
     $meta = trim($extension . ($mime !== '' ? ' · ' . $mime : ''));
+    $download_name = wp_basename((string) wp_parse_url($url, PHP_URL_PATH));
 
     ob_start();
     ?>
     <article class="iss-project-editorial__file-item">
-        <a class="iss-project-editorial__file-link" href="<?php echo esc_url($url); ?>">
+        <a class="iss-project-editorial__file-link" href="<?php echo esc_url($url); ?>" download="<?php echo esc_attr($download_name); ?>">
             <span class="iss-project-editorial__file-title"><?php echo esc_html($title); ?></span>
             <?php if ($meta !== '') : ?>
                 <span class="iss-project-editorial__file-meta"><?php echo esc_html($meta); ?></span>
             <?php endif; ?>
         </a>
     </article>
+    <?php
+
+    return trim((string) ob_get_clean());
+}
+
+function industriesalon_render_editorial_project_downloads(string $download_html): string
+{
+    if (trim($download_html) === '') {
+        return '';
+    }
+
+    ob_start();
+    ?>
+    <div class="iss-project-downloads">
+        <h3 class="iss-project-downloads__title"><?php echo esc_html__('Herunterladen', 'industriesalon'); ?></h3>
+        <div class="iss-project-downloads__list">
+            <?php echo $download_html; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- File cards are escaped in industriesalon_render_editorial_project_file_reference(). ?>
+        </div>
+    </div>
     <?php
 
     return trim((string) ob_get_clean());
@@ -657,6 +710,7 @@ function industriesalon_render_editorial_project_section(array $section, bool $s
 
     $ref_html = '';
     $media_html = '';
+    $download_html = '';
     $links_html = industriesalon_render_editorial_project_links($links);
     $facts_html = industriesalon_render_editorial_project_facts($facts);
     $upload_intake_html = $type === 'upload_intake' ? industriesalon_render_editorial_project_upload_intake($section) : '';
@@ -666,10 +720,17 @@ function industriesalon_render_editorial_project_section(array $section, bool $s
     }
 
     foreach ($media_refs as $ref) {
+        if ($type === 'material' && industriesalon_editorial_project_media_reference_is_download((array) $ref)) {
+            $download_html .= industriesalon_render_editorial_project_file_reference((array) $ref, $show_placeholders);
+            continue;
+        }
+
         $media_html .= industriesalon_render_editorial_project_media_reference((array) $ref, $show_placeholders);
     }
 
-    if ($kicker === '' && $title === '' && $body === '' && $facts_html === '' && $ref_html === '' && $media_html === '' && $links_html === '' && $upload_intake_html === '') {
+    $downloads_html = $type === 'material' ? industriesalon_render_editorial_project_downloads($download_html) : '';
+
+    if ($kicker === '' && $title === '' && $body === '' && $facts_html === '' && $ref_html === '' && $media_html === '' && $downloads_html === '' && $links_html === '' && $upload_intake_html === '') {
         return '';
     }
 
@@ -730,6 +791,9 @@ function industriesalon_render_editorial_project_section(array $section, bool $s
             <?php endif; ?>
             <?php if ($media_html !== '' && $type === 'galerie') : ?>
                 <div class="iss-project-section__media iss-project-gallery"><?php echo industriesalon_render_editorial_project_gallery($media_html); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- Gallery media render through WordPress attachment helpers above. ?></div>
+            <?php endif; ?>
+            <?php if ($downloads_html !== '') : ?>
+                <div class="iss-project-section__downloads"><?php echo $downloads_html; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- Download cards are escaped in helper functions above. ?></div>
             <?php endif; ?>
             <?php if ($ref_html !== '') : ?>
                 <div class="iss-project-section__refs iss-project-editorial__refs"><?php echo $ref_html; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- References render through escaped helpers or archive-owned renderer. ?></div>

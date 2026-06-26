@@ -33,8 +33,7 @@
 .iss-videos-page .iss-heading > .iss-kicker,
 .iss-videos-page .iss-heading > .iss-kicker--compact {
   --iss-kicker-accent: var(--iss-accent);
-  --iss-kicker-color: var(--iss-accent);
-  color: var(--iss-accent);
+  --iss-kicker-color: var(--iss-videos-text);
 }
 
 .iss-videos-page .iss-heading__title {
@@ -236,7 +235,7 @@
 .iss-video-library__feature-kicker,
 .iss-video-library__playlist-label {
   margin: 0;
-  color: var(--iss-accent);
+  color: var(--iss-videos-accent-strong);
   font-size: 0.78rem;
   font-weight: 600;
   letter-spacing: 0.14em;

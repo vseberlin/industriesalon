@@ -36,7 +36,7 @@
 
 .iss-ausstellung-editorial--skin-chronik .iss-ausstellung-section__kicker,
 .iss-ausstellung-editorial--skin-chronik .iss-kicker {
-  --iss-kicker-color: var(--iss-ausstellung-chronik-accent);
+  --iss-kicker-color: var(--iss-ausstellung-chronik-ink);
   --iss-kicker-accent: var(--iss-ausstellung-chronik-accent);
 
   letter-spacing: 0.12em;

@@ -108,6 +108,9 @@
 .iss-card {
   --iss-card-accent: var(--iss-accent);
   --iss-card-bg: var(--iss-white);
+  --iss-card-fg: var(--iss-black);
+  --iss-card-muted: rgba(30, 30, 30, 0.72);
+  --iss-card-subtle: rgba(30, 30, 30, 0.68);
   --iss-card-border: rgba(30, 30, 30, 0.12);
   --iss-card-border-hover: rgba(30, 30, 30, 0.22);
   --iss-card-radius: var(--iss-radius-sm);
@@ -120,6 +123,8 @@
   --iss-card-title-clamp: 2;
   --iss-card-text-size: 0.88rem;
   --iss-card-text-line: 1.5;
+  --iss-kicker-accent: var(--iss-card-accent);
+  --iss-kicker-color: var(--iss-card-subtle);
   --iss-link-fg: var(--iss-card-accent);
   --iss-link-hover-fg: var(--iss-black);
 
@@ -131,7 +136,7 @@
   overflow: hidden;
 
   background: var(--iss-card-bg);
-  color: var(--iss-black);
+  color: var(--iss-card-fg);
   border: 1px solid var(--iss-card-border);
   border-radius: var(--iss-card-radius);
   box-shadow: none;
@@ -222,7 +227,7 @@
 /* .iss-card__text: Element class for `iss-card`; apply on `text` element. */
 .iss-card__text {
   margin: 0;
-  color: rgba(30, 30, 30, 0.72);
+  color: var(--iss-card-muted);
   font-size: var(--iss-card-text-size);
   line-height: var(--iss-card-text-line);
 }
@@ -238,7 +243,7 @@
   font-size: 0.78rem;
   font-weight: 600;
   line-height: 1.3;
-  color: rgba(30, 30, 30, 0.62);
+  color: var(--iss-card-subtle);
   text-transform: uppercase;
   letter-spacing: 0.05em;
 }
@@ -528,6 +533,9 @@
 
 .iss-quiet-card {
   --iss-quiet-card-radius: var(--iss-radius-sm);
+  --iss-quiet-card-fg: var(--iss-black);
+  --iss-quiet-card-muted: rgba(30, 30, 30, 0.72);
+  --iss-quiet-card-subtle: rgba(30, 30, 30, 0.68);
   --iss-quiet-card-border: rgba(30, 30, 30, 0.12);
   --iss-quiet-card-border-hover: rgba(30, 30, 30, 0.22);
   --iss-quiet-card-rail: rgba(30, 30, 30, 0.18);
@@ -541,7 +549,7 @@
   min-width: 0;
   height: 100%;
   overflow: hidden;
-  color: var(--iss-black);
+  color: var(--iss-quiet-card-fg);
   background: var(--iss-quiet-card-bg);
   border: 1px solid var(--iss-quiet-card-border);
   border-radius: var(--iss-quiet-card-radius);
@@ -611,7 +619,7 @@
 .iss-quiet-card__kicker,
 .iss-quiet-card__meta {
   margin: 0;
-  color: var(--iss-accent);
+  color: var(--iss-quiet-card-subtle);
   font-size: 0.72rem;
   font-weight: 700;
   line-height: 1.25;
@@ -621,7 +629,7 @@
 
 .iss-quiet-card__title {
   margin: 0;
-  color: var(--iss-black);
+  color: var(--iss-quiet-card-fg);
   font-size: var(--iss-quiet-card-title-size);
   font-weight: 620;
   line-height: 1.14;
@@ -635,7 +643,7 @@
 
 .iss-quiet-card__text {
   margin: 0;
-  color: rgba(30, 30, 30, 0.72);
+  color: var(--iss-quiet-card-muted);
   font-size: 0.88rem;
   line-height: 1.48;
 }
@@ -691,6 +699,11 @@
 .iss-quiet-card--overlay .iss-quiet-card__title,
 .iss-quiet-card--overlay .iss-quiet-card__text {
   color: var(--iss-white);
+}
+
+.iss-quiet-card--overlay .iss-quiet-card__kicker,
+.iss-quiet-card--overlay .iss-quiet-card__meta {
+  color: rgba(249, 249, 250, 0.9);
 }
 
 .iss-quiet-card--overlay .iss-quiet-card__text {
@@ -959,6 +972,11 @@
    rows. Keep it flatter and more direct than the main `.iss-card`
    family. */
 .iss-small-card {
+  --iss-small-card-bg: var(--iss-white);
+  --iss-small-card-fg: var(--iss-black);
+  --iss-small-card-muted: rgba(30, 30, 30, 0.72);
+  --iss-small-card-subtle: rgba(30, 30, 30, 0.68);
+
   display: flex;
   min-height: 18rem;
   flex-direction: column;
@@ -966,8 +984,8 @@
   padding: clamp(1.1rem, 1.5vw, 1.45rem);
   border: 1px solid var(--iss-border);
   border-radius: var(--iss-radius-md);
-  background: var(--iss-white);
-  color: inherit;
+  background: var(--iss-small-card-bg);
+  color: var(--iss-small-card-fg);
   text-decoration: none;
   transition: border-color 0.2s ease, transform 0.2s ease;
 }
@@ -982,7 +1000,7 @@
 
 .iss-small-card__kicker {
   margin: 0;
-  color: rgba(30, 30, 30, 0.58);
+  color: var(--iss-small-card-subtle);
   font-size: 0.72rem;
   font-weight: 800;
   letter-spacing: 0.12em;
@@ -998,7 +1016,7 @@
 
 .iss-small-card__text {
   margin: 0;
-  color: rgba(30, 30, 30, 0.72);
+  color: var(--iss-small-card-muted);
   font-size: 0.98rem;
   line-height: 1.55;
 }

@@ -205,8 +205,8 @@
 
 .iss-publications-browser__sidebar-head .iss-kicker {
   --iss-kicker-accent: var(--iss-red);
-  --iss-kicker-color: var(--iss-red);
-  color: var(--iss-red);
+  --iss-kicker-color: var(--iss-publication-rail-text);
+  color: var(--iss-publication-rail-text);
 }
 
 .iss-publications-browser__sidebar-head p,
@@ -281,7 +281,7 @@
 
 .iss-publications-browser__discovery-title {
   margin: 0;
-  color: var(--iss-red);
+  color: var(--iss-publication-rail-text);
   font-size: 0.72rem;
   font-weight: 800;
   letter-spacing: 0.12em;

@@ -913,25 +913,47 @@
       var isFullViewport = (section.type || '') === 'vollbild';
       var isMaterial = (section.type || '') === 'material';
       var noun = isMaterial ? 'Medien/Dateien' : (isFullViewport ? 'Bild' : 'Bilder');
-      var pickerButton = createElement('button', 'button', noun + ' auswählen');
+      var actions = createElement('div', 'iss-editorial-media-actions');
+      var setPickerButton = createElement('button', 'button button-primary', 'Aus Set auswählen');
+      var mediaLibraryButton = createElement('button', 'button', 'Medien suchen');
 
       function rerenderTray() {
         renderMediaTray(section, tray, rerenderTray);
       }
 
-      pickerButton.type = 'button';
-      pickerButton.addEventListener('click', function () {
-        if (!window.wp || !wp.media) {
-          tray.textContent = 'Medienauswahl ist nicht geladen.';
-          return;
-        }
-
+      function existingReferencesById() {
         var existing = {};
         (section.media_refs || []).forEach(function (reference) {
           if (reference.id) {
             existing[String(reference.id)] = reference;
           }
         });
+        return existing;
+      }
+
+      function applyMediaReferences(references) {
+        var existing = existingReferencesById();
+        section.media_refs = (references || []).map(function (reference) {
+          if (existing[reference.id] && existing[reference.id].label) {
+            reference.label = existing[reference.id].label;
+          }
+          return reference;
+        }).filter(function (reference) {
+          return reference.id;
+        });
+        if (isFullViewport) {
+          section.media_refs = section.media_refs.slice(0, 1);
+        }
+        rerenderTray();
+        render();
+        scheduleAutosave();
+      }
+
+      function openMediaLibrary(afterSelect) {
+        if (!window.wp || !wp.media) {
+          tray.textContent = 'Medienauswahl ist nicht geladen.';
+          return;
+        }
 
         var frame = wp.media({
           title: noun + ' auswählen',
@@ -953,29 +975,57 @@
         });
 
         frame.on('select', function () {
-          section.media_refs = frame.state().get('selection').map(function (attachment) {
+          var references = frame.state().get('selection').map(function (attachment) {
             var reference = referenceFromMediaAttachment(attachment.toJSON());
-            if (existing[reference.id] && existing[reference.id].label) {
-              reference.label = existing[reference.id].label;
-            }
             return reference;
           }).filter(function (reference) {
             return reference.id;
           });
-          if (isFullViewport) {
-            section.media_refs = section.media_refs.slice(0, 1);
+          applyMediaReferences(references);
+          if (typeof afterSelect === 'function') {
+            afterSelect();
           }
-          rerenderTray();
-          render();
-          scheduleAutosave();
         });
 
         frame.open();
+      }
+
+      setPickerButton.type = 'button';
+      setPickerButton.addEventListener('click', function () {
+        if (!window.issEditorialSetMediaPicker || !window.issEditorialSetMediaPicker.create) {
+          openMediaLibrary();
+          return;
+        }
+
+        window.issEditorialSetMediaPicker.create(document.createElement('div'), {
+          modal: true,
+          mode: isFullViewport ? 'single' : 'multiple',
+          mediaType: isMaterial ? '' : 'image',
+          contextId: config.postId || 0,
+          initialSelection: section.media_refs || [],
+          onConfirm: function (references) {
+            applyMediaReferences(references);
+          },
+          onMediaSearch: function (api) {
+            openMediaLibrary(function () {
+              if (api && typeof api.close === 'function') {
+                api.close();
+              }
+            });
+          }
+        });
+      });
+
+      mediaLibraryButton.type = 'button';
+      mediaLibraryButton.addEventListener('click', function () {
+        openMediaLibrary();
       });
 
       refs.appendChild(createElement('span', '', isMaterial ? 'Medien/Dateien' : 'Bilder'));
       refs.appendChild(tray);
-      refs.appendChild(pickerButton);
+      actions.appendChild(setPickerButton);
+      actions.appendChild(mediaLibraryButton);
+      refs.appendChild(actions);
       body.appendChild(refs);
       rerenderTray();
     }

@@ -15,7 +15,7 @@
 .iss-calendar-page .iss-heading > .iss-kicker,
 .iss-calendar-page .iss-heading > .iss-kicker--compact {
   --iss-kicker-accent: var(--iss-accent);
-  --iss-kicker-color: var(--iss-accent);
+  --iss-kicker-color: var(--iss-surface-fg);
   padding-left: 0.85rem;
 }
 
@@ -311,6 +311,7 @@
 
 .iss-calendar-page .iss-timeline__year-label {
   margin-bottom: 1rem;
+  color: rgba(30, 30, 30, 0.68);
 }
 
 .iss-calendar-page .iss-timeline__media {
@@ -424,7 +425,7 @@
     height: auto;
     clip-path: none;
     white-space: normal;
-    color: rgba(30, 30, 30, 0.58);
+    color: rgba(30, 30, 30, 0.68);
     font-size: 0.72rem;
     font-weight: 700;
     letter-spacing: 0.08em;
@@ -467,7 +468,7 @@
 
   .iss-calendar-page .iss-timeline__year-label {
     margin: 0 0 0.8rem;
-    color: rgba(30, 30, 30, 0.58);
+    color: rgba(30, 30, 30, 0.68);
     font-size: 0.95rem;
   }
 

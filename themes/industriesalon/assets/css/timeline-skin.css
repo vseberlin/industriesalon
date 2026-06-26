@@ -43,6 +43,10 @@
   font-size: clamp(1.1rem, 1.6vw, 1.35rem);
 }
 
+.iss-timeline__year-label {
+  color: var(--iss-tl-muted);
+}
+
 .iss-timeline__item {
   border-top: 1px solid var(--iss-tl-line);
 }
@@ -65,7 +69,7 @@
 
 .iss-timeline__kicker {
   --iss-kicker-accent: var(--iss-tl-primary);
-  --iss-kicker-color: var(--iss-tl-primary);
+  --iss-kicker-color: var(--iss-tl-text);
   letter-spacing: 0.06em;
 }
 

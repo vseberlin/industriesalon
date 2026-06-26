@@ -322,7 +322,7 @@
   justify-content: space-between;
   gap: 0.8rem;
   margin: 0;
-  color: rgba(30, 30, 30, 0.54);
+  color: rgba(30, 30, 30, 0.68);
   font-size: 0.68rem;
   font-weight: 700;
   letter-spacing: 0.1em;
@@ -454,7 +454,7 @@
 }
 
 .iss-file-insert__meta {
-  color: rgba(30, 30, 30, 0.6);
+  color: rgba(30, 30, 30, 0.68);
   font-size: 0.8rem;
   line-height: 1.45;
 }
@@ -773,7 +773,7 @@
 
 .iss-atlas-slice__meta {
   margin: 0;
-  color: rgba(30, 30, 30, 0.58);
+  color: rgba(30, 30, 30, 0.68);
   font-size: 0.76rem;
   font-weight: 700;
   line-height: 1.42;
