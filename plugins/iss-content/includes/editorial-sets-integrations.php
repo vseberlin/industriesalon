@@ -56,7 +56,7 @@ function iss_content_editorial_sets_ensure_project_source_set(int $post_id, ?WP_
     $links = $service->get_links_for_context(ISS_CONTENT_MODEL_PROJEKT_POST_TYPE, $post_id);
     foreach ($links as $link) {
         if ((string) ($link['link_role'] ?? '') === 'source_material') {
-            return (int) ($link['set_id'] ?? 0);
+            return iss_content_editorial_sets_normalize_project_source_set_key((int) ($link['set_id'] ?? 0), $post);
         }
     }
     if ($links) {
@@ -65,10 +65,11 @@ function iss_content_editorial_sets_ensure_project_source_set(int $post_id, ?WP_
             $service->attach_context($set_id, ISS_CONTENT_MODEL_PROJEKT_POST_TYPE, $post_id, 'source_material');
         }
 
-        return $set_id;
+        return iss_content_editorial_sets_normalize_project_source_set_key($set_id, $post);
     }
 
     $set_id = $service->create_set([
+        'set_key' => iss_content_editorial_sets_project_source_set_key($post),
         'title' => function_exists('iss_content_editorial_sets_context_set_title')
             ? iss_content_editorial_sets_context_set_title($post)
             : sprintf('%s Set', (string) get_the_title($post)),
@@ -78,6 +79,36 @@ function iss_content_editorial_sets_ensure_project_source_set(int $post_id, ?WP_
 
     if ($set_id > 0) {
         $service->attach_context($set_id, ISS_CONTENT_MODEL_PROJEKT_POST_TYPE, $post_id, 'source_material');
+    }
+
+    return $set_id;
+}
+
+function iss_content_editorial_sets_project_source_set_key(WP_Post $post): string
+{
+    if ($post->post_type !== ISS_CONTENT_MODEL_PROJEKT_POST_TYPE || (string) $post->post_name === '') {
+        return '';
+    }
+
+    return iss_content_editorial_sets_service()->normalize_key('project-set-' . $post->post_name);
+}
+
+function iss_content_editorial_sets_normalize_project_source_set_key(int $set_id, WP_Post $post): int
+{
+    if ($set_id <= 0 || $post->post_type !== ISS_CONTENT_MODEL_PROJEKT_POST_TYPE) {
+        return $set_id;
+    }
+
+    $service = iss_content_editorial_sets_service();
+    $set = $service->get_set($set_id);
+    $canonical_key = iss_content_editorial_sets_project_source_set_key($post);
+    if (!$set || $canonical_key === '' || (string) ($set['set_key'] ?? '') === $canonical_key) {
+        return $set_id;
+    }
+
+    $existing = $service->get_set_by_key($canonical_key);
+    if (!$existing) {
+        $service->update_set_key($set_id, $canonical_key);
     }
 
     return $set_id;
@@ -267,7 +298,7 @@ function iss_content_editorial_sets_event_drop_target_context(string $target_key
                 'context_type' => ISS_CONTENT_MODEL_PROJEKT_POST_TYPE,
                 'context_id' => (int) $project->ID,
                 'set_id' => $set_id,
-                'set_key' => 'project-set-' . $project->post_name,
+                'set_key' => iss_content_editorial_sets_project_source_set_key($project),
                 'set_title' => function_exists('iss_content_editorial_sets_context_set_title')
                     ? iss_content_editorial_sets_context_set_title($project)
                     : sprintf('%s Set', (string) get_the_title($project)),
@@ -579,18 +610,26 @@ function iss_content_editorial_sets_event_drop_set_for_attachment(int $attachmen
     }
 
     $event_id = (int) wp_get_post_parent_id($attachment_id);
-    $event = $event_id > 0 ? get_post($event_id) : null;
+    $parent = $event_id > 0 ? get_post($event_id) : null;
     $service = iss_content_editorial_sets_service();
-    $event_key = $event instanceof WP_Post ? $event->post_name : sanitize_title((string) get_post_meta($attachment_id, '_event_drop_event_ref', true));
-    $set_key = $service->normalize_key('event-drop-' . ($event_key !== '' ? $event_key : 'uncategorized'));
-    $set = $service->get_set_by_key($set_key);
+    $target_key = sanitize_title((string) get_post_meta($attachment_id, '_event_drop_event_ref', true));
+    if ($target_key === '' && $parent instanceof WP_Post) {
+        if ($parent->post_type === ISS_CONTENT_MODEL_PROJEKT_POST_TYPE) {
+            $target_key = 'projekt__' . $parent->post_name;
+        } elseif ($parent->post_type === ISS_CONTENT_MODEL_VERANSTALTUNG_POST_TYPE) {
+            $target_key = $parent->post_name;
+        }
+    }
+
+    $target = iss_content_editorial_sets_event_drop_target_context($target_key);
+    $set_id = (int) ($target['set_id'] ?? 0);
+    $set_key = $service->normalize_key((string) (($target['set_key'] ?? '') ?: 'event-drop-uncategorized'));
+    $set = $set_id > 0 ? $service->get_set($set_id) : $service->get_set_by_key($set_key);
     if (!$set) {
         $set_id = $service->create_set([
             'set_key' => $set_key,
-            'title' => $event instanceof WP_Post
-                ? sprintf(__('Event Drop: %s', 'iss-content-model'), get_the_title($event))
-                : __('Event Drop intake', 'iss-content-model'),
-            'set_role' => 'intake',
+            'title' => (string) ($target['set_title'] ?? __('Event Drop intake', 'iss-content-model')),
+            'set_role' => (string) (($target['set_role'] ?? '') ?: 'intake'),
             'status' => 'working',
         ]);
         $set = $set_id > 0 ? $service->get_set($set_id) : null;
@@ -601,8 +640,11 @@ function iss_content_editorial_sets_event_drop_set_for_attachment(int $attachmen
         return 0;
     }
 
-    if ($event instanceof WP_Post && $event->post_type === ISS_CONTENT_MODEL_VERANSTALTUNG_POST_TYPE) {
-        $service->attach_context($set_id, ISS_CONTENT_MODEL_VERANSTALTUNG_POST_TYPE, (int) $event->ID, 'gallery_candidate');
+    $context_type = (string) ($target['context_type'] ?? '');
+    $context_id = (int) ($target['context_id'] ?? 0);
+    $link_role = (string) ($target['link_role'] ?? '');
+    if ($context_type !== '' && $context_id > 0 && $link_role !== '') {
+        $service->attach_context($set_id, $context_type, $context_id, $link_role);
     }
 
     $item_id = $service->add_item([
@@ -619,6 +661,9 @@ function iss_content_editorial_sets_event_drop_set_for_attachment(int $attachmen
             'sha256' => (string) get_post_meta($attachment_id, '_event_drop_sha256', true),
             'uploaded_at' => (string) get_post_meta($attachment_id, '_event_drop_uploaded_at', true),
             'uploader' => (string) get_post_meta($attachment_id, '_event_drop_uploader', true),
+            'event_slug' => $target_key,
+            'target_type' => $context_type,
+            'target_id' => $context_id > 0 ? (string) $context_id : '',
         ],
         'rights' => [
             'attribution' => (string) get_post_meta($attachment_id, '_event_drop_attribution', true),
@@ -628,6 +673,137 @@ function iss_content_editorial_sets_event_drop_set_for_attachment(int $attachmen
     ]);
 
     return $item_id;
+}
+
+function iss_content_editorial_sets_normalize_project_duplicate_sets(int $project_id = 0): array
+{
+    $service = iss_content_editorial_sets_service();
+    $query_args = [
+        'post_type' => ISS_CONTENT_MODEL_PROJEKT_POST_TYPE,
+        'post_status' => 'any',
+        'numberposts' => -1,
+    ];
+    if ($project_id > 0) {
+        $query_args['include'] = [$project_id];
+    }
+
+    $result = [
+        'projects' => 0,
+        'renamed' => 0,
+        'merged_sets' => 0,
+        'moved_items' => 0,
+        'skipped_sets' => 0,
+    ];
+
+    foreach (get_posts($query_args) as $project) {
+        if (!$project instanceof WP_Post) {
+            continue;
+        }
+
+        $duplicate_keys = array_unique(array_filter([
+            $service->normalize_key('event-drop-' . $project->post_name),
+            $service->normalize_key('event-drop-projekt__' . $project->post_name),
+        ]));
+        $links = $service->get_links_for_context(ISS_CONTENT_MODEL_PROJEKT_POST_TYPE, (int) $project->ID);
+        $has_project_duplicate = false;
+        foreach ($duplicate_keys as $duplicate_key) {
+            $duplicate = $service->get_set_by_key($duplicate_key);
+            $duplicate_set_id = is_array($duplicate) ? (int) ($duplicate['id'] ?? 0) : 0;
+            if ($duplicate_set_id <= 0) {
+                continue;
+            }
+
+            $has_foreign_link = false;
+            foreach ($service->get_links_for_set($duplicate_set_id) as $duplicate_link) {
+                $context_type = (string) ($duplicate_link['context_type'] ?? '');
+                $context_id = (int) ($duplicate_link['context_id'] ?? 0);
+                if ($context_type !== ISS_CONTENT_MODEL_PROJEKT_POST_TYPE || $context_id !== (int) $project->ID) {
+                    $has_foreign_link = true;
+                    break;
+                }
+            }
+            if (!$has_foreign_link) {
+                $has_project_duplicate = true;
+                break;
+            }
+        }
+        if (!$has_project_duplicate && $links === []) {
+            continue;
+        }
+
+        $before_set_key = '';
+        foreach ($links as $link) {
+            if ((string) ($link['link_role'] ?? '') === 'source_material') {
+                $before_set_key = (string) ($link['set_key'] ?? '');
+                break;
+            }
+        }
+
+        $target_set_id = iss_content_editorial_sets_ensure_project_source_set((int) $project->ID, $project);
+        if ($target_set_id <= 0) {
+            continue;
+        }
+
+        $result['projects']++;
+        $target_set = $service->get_set($target_set_id);
+        if (
+            $target_set
+            && $before_set_key !== ''
+            && $before_set_key !== (string) ($target_set['set_key'] ?? '')
+            && (string) ($target_set['set_key'] ?? '') === iss_content_editorial_sets_project_source_set_key($project)
+        ) {
+            $result['renamed']++;
+        }
+
+        foreach ($duplicate_keys as $duplicate_key) {
+            $duplicate = $service->get_set_by_key($duplicate_key);
+            $duplicate_set_id = is_array($duplicate) ? (int) ($duplicate['id'] ?? 0) : 0;
+            if ($duplicate_set_id <= 0 || $duplicate_set_id === $target_set_id) {
+                continue;
+            }
+
+            $has_foreign_link = false;
+            foreach ($service->get_links_for_set($duplicate_set_id) as $link) {
+                $context_type = (string) ($link['context_type'] ?? '');
+                $context_id = (int) ($link['context_id'] ?? 0);
+                if ($context_type !== ISS_CONTENT_MODEL_PROJEKT_POST_TYPE || $context_id !== (int) $project->ID) {
+                    $has_foreign_link = true;
+                    break;
+                }
+            }
+
+            if ($has_foreign_link) {
+                $result['skipped_sets']++;
+                continue;
+            }
+
+            $items = $service->list_items(['set_id' => $duplicate_set_id, 'per_page' => 120]);
+            $item_ids = [];
+            foreach ((array) ($items['items'] ?? []) as $item) {
+                if ((string) ($item['status'] ?? '') === 'promoted' || (string) ($item['archive_candidate_status'] ?? '') !== '') {
+                    continue;
+                }
+                $item_ids[] = (int) ($item['id'] ?? 0);
+            }
+
+            $moved = $item_ids ? $service->move_items($item_ids, $target_set_id) : 0;
+            $result['moved_items'] += $moved;
+            $service->record_audit($target_set_id, 0, 'project_duplicate_set_merged', __('Project duplicate Event Drop set merged.', 'iss-content-model'), [
+                'project_id' => (int) $project->ID,
+                'duplicate_set_id' => $duplicate_set_id,
+                'duplicate_set_key' => $duplicate_key,
+                'moved_items' => $moved,
+            ]);
+
+            if ($service->delete_set_if_safe($duplicate_set_id)) {
+                $result['merged_sets']++;
+            } else {
+                $result['skipped_sets']++;
+            }
+        }
+    }
+
+    return $result;
 }
 
 function iss_content_editorial_sets_watch_event_drop_meta($meta_id, int $object_id, string $meta_key): void

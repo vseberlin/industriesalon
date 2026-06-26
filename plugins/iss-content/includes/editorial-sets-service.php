@@ -318,6 +318,48 @@ class ISS_Content_Editorial_Sets_Service
         return true;
     }
 
+    public function update_set_key(int $set_id, string $set_key): bool
+    {
+        $set = $this->get_set($set_id);
+        $set_key = $this->normalize_key($set_key);
+        if (!$set || $set_key === '') {
+            return false;
+        }
+        if ((string) ($set['set_key'] ?? '') === $set_key) {
+            return true;
+        }
+
+        $existing = $this->get_set_by_key($set_key);
+        if ($existing && (int) ($existing['id'] ?? 0) !== $set_id) {
+            return false;
+        }
+
+        global $wpdb;
+
+        $updated = $wpdb->update(
+            $this->get_sets_table_name(),
+            [
+                'set_key' => $set_key,
+                'updated_by' => get_current_user_id(),
+                'updated_at' => current_time('mysql', true),
+            ],
+            ['id' => $set_id],
+            ['%s', '%d', '%s'],
+            ['%d']
+        );
+
+        if ($updated === false) {
+            return false;
+        }
+
+        $this->record_audit($set_id, 0, 'set_key_updated', __('Set key updated.', 'iss-content-model'), [
+            'from' => (string) ($set['set_key'] ?? ''),
+            'to' => $set_key,
+        ]);
+
+        return true;
+    }
+
     public function get_set(int $set_id): ?array
     {
         if ($set_id <= 0) {

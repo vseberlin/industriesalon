@@ -6,6 +6,16 @@ be recovered from Git history.
 
 ## 2026-06-26
 
+- Normalized project media Set ownership:
+  - project source Sets now use the canonical `project-set-<project-slug>` key
+    when created or reopened;
+  - the Event Drop attachment watcher now uses the same target resolver as raw
+    incoming uploads, so project attachments with `projekt__<slug>` or a
+    project parent land in the project source-material Set instead of creating
+    a separate `event-drop-*` Set;
+  - added an idempotent normalization helper for existing project-shaped
+    duplicate Sets and used it locally to merge the Walk of Fame duplicate
+    `event-drop-*` Set into `project-set-walk-of-fame-schoeneweide`.
 - Added the first shared surface/color contract slice:
   - introduced readable surface tokens in `style.css` for foreground, muted
     text, subtle text, rules, heading text, and kicker text/accent;

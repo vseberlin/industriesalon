@@ -19,14 +19,12 @@ Immediate executable work only. Larger future programs live in `docs/project/bac
   `ops/sql/2026-06-25-project-editorial-enable-json-review.sql` second, and
   `ops/sql/2026-06-25-project-skin-review-assignments.sql` only when the target
   should get the representative skin assignments.
-- Project media intake browser review: confirm the project edit-screen
-  `Projekt-Set anlegen und hochladen` path in the browser, including raw image
-  and PDF upload, approval, promotion, resulting public `galerie` / `material`
-  output, and the lifecycle rule that new real projects get a Set while project
-  deletion only quarantines disposable raw intake. Also add/review a project
-  `Upload-Aufruf` section and confirm its public CTA opens `/event-drop/` with
-  `event=projekt__<project-slug>` and that third-party uploads appear as
-  pending `external_upload` items in the project source Set.
+- Project Set normalization transfer check: after deploying the Set resolver
+  fix, inspect target Sets for project-shaped `event-drop-*` duplicates. If
+  duplicates already exist there, run
+  `wp eval 'print_r(iss_content_editorial_sets_normalize_project_duplicate_sets());'`
+  after the code deploy so existing duplicate project Event Drop Sets merge into
+  the canonical `project-set-<project-slug>` source Set.
 - Replace the vanilla WordPress Dashboard with an ISS editorial/operations
   overview. Start read-only: inspect current Dashboard widgets and dashboard
   hooks, then hide the generic core widgets and add practical boxes for next
