@@ -14,31 +14,16 @@ Current work only. Completed checkpoint history belongs in `CHANGELOG.md`; activ
     editor;
   - public photoalbum rendering now prefers explicit JSON sheets and falls back
     to legacy Gutenberg/Archivset behavior for unmigrated publications;
-  - theme-owned publication skins now include `blueprint-matrix`, a
-    viewport-wide technical matrix treatment for photoalbums with per-sheet
-    description drawers and footer-style place plus related-content context;
   - the left reading rail is controlled by a `publication_rail` gesture for
     JSON publications, while legacy non-JSON publications keep the old automatic
     rail behavior.
-- Local photoalbum blueprint set:
-  - `nef-album` (`post_id=18973`, `/publikationen/nef-album/`) has 63 sheets
-    from Archivset `19`;
-  - `fotoalbum-labor-konstruktions-und-versuchswerk-oberspree-1946`
-    (`post_id=18894`) has 52 sheets from resolved Media Library refs;
-  - `fotoalbum-produkte-lkvo-1946` (`post_id=18948`) has 23 sheets from
-    resolved Media Library refs;
-  - `fotoalbum-produktion-im-werk-fuer-fernmeldewesen-hf-1951`
-    (`post_id=19038`) has 34 sheets from resolved Media Library refs.
-  All four documents use skin `blueprint-matrix`, 4 sections (`intro`,
-  `publication_rail`, `source`, `photoalbum`), and a primary relation to
-  `Ostendstraße 1-5 / Behrensbau` (`register_place` `17976`). The three
-  non-NEF albums use manual source metadata with `WF-Museum` as the visible
-  source label.
-- Transfer artifacts:
-  - `ops/sql/2026-06-26-nef-album-publication-json.sql` writes the local
-    `nef-album` JSON state, layout/meta state, and Behrensbau relation.
-  - `ops/sql/2026-06-26-photoalbum-blueprint-other-albums.sql` writes the same
-    DB-backed blueprint state for posts `18894`, `18948`, and `19038`.
+- Local `nef-album` (`post_id=18973`, `/publikationen/nef-album/`) is seeded as
+  JSON with 4 sections: `intro`, `publication_rail`, `source`, `photoalbum`.
+  The photoalbum section has 63 sheets from Archivset `19`.
+- Transfer artifact:
+  `ops/sql/2026-06-26-nef-album-publication-json.sql` writes the local
+  `_iss_editorial_publication`, `_iss_editorial_enabled_publication`, and
+  `_iss_publication_photoalbum_archivset_id` meta for `nef-album`.
 
 ## Preserve
 
@@ -48,21 +33,19 @@ Current work only. Completed checkpoint history belongs in `CHANGELOG.md`; activ
   blocks or hidden server-only render state.
 - Keep legacy publication fallback behavior until each publication is explicitly
   migrated.
-- The SQL artifacts assume the target already has the relevant publication
-  posts, Archivset `19` for `nef-album`, referenced Media Library attachment
-  rows/files for the manual WF albums, and register place `17976`. No new
-  upload artifact was created in this checkpoint.
+- The SQL artifact assumes the target already has publication `18973`,
+  Archivset `19`, the referenced archive objects, and their attachment/media
+  rows/files. No new upload artifact was created in this checkpoint.
 - Do not revert unrelated local files:
   - `iss-exhibition-composition-add.md`
   - `themes/industriesalon/theme2.json`
 
 ## Next Action
 
-- On any target DB that should receive the photoalbum blueprint state, deploy
-  the code first, confirm the target has the required publication/media/place
-  rows, then review/apply
-  `ops/sql/2026-06-26-nef-album-publication-json.sql` and
-  `ops/sql/2026-06-26-photoalbum-blueprint-other-albums.sql`.
+- On any target DB that should receive the `nef-album` JSON state, deploy the
+  code first, confirm the target has Archivset `19` and the existing NEF album
+  media, then review/apply
+  `ops/sql/2026-06-26-nef-album-publication-json.sql`.
 - Continue publication migration with chroniken/timelines and longreads using
   the same explicit JSON gesture/rail contract.
 
@@ -74,20 +57,17 @@ Current work only. Completed checkpoint history belongs in `CHANGELOG.md`; activ
 - `bash tools/phpstan-target.sh` for touched PHP files.
 - `npx stylelint plugins/iss-editorial/assets/admin.css themes/industriesalon/assets/css/publications.css`
 - `git diff --check`
-- WP-CLI confirmed the four local blueprint photoalbum JSON payloads, enabled
-  flags, sheet counts (`63`, `52`, `23`, `34`), source labels, rail options,
-  and Behrensbau place relations.
-- The four photoalbum routes returned `200`, rendered the expected sheet counts,
-  no reading nav, one related place block, and four related-content cards.
+- WP-CLI confirmed `nef-album` JSON sections and 63 sheet payload.
+- `/publikationen/nef-album/` returned `200`, rendered 63 album items, 63 nav
+  links, the JSON rail heading, and no related rail.
 - Playwright desktop/mobile checks at `1440px` and `390px` showed no horizontal
-  overflow, the collapsed rail taking no content space, and the Behrensbau
-  related-place plus related-content footer context rendering inside each album.
+  overflow.
 - SQL artifact decode check confirmed rail options:
   `{"show_nav":true,"show_summary":false,"show_related":false,"variant":"detailed"}`.
 
 ## Dirty Worktree Notes
 
-- This checkpoint has not been committed yet.
+- This checkpoint was committed locally before exit.
 - Untracked unrelated/local files remain:
   - `iss-exhibition-composition-add.md`
   - `themes/industriesalon/theme2.json`
