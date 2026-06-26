@@ -18,9 +18,20 @@ be recovered from Git history.
     then reordered, hidden, captioned, and given nav titles in the JSON editor;
   - made publication reading rails optional/skinnable through a
     `publication_rail` gesture while keeping legacy non-JSON rails automatic;
+  - added a theme-owned `blueprint-matrix` publication skin for photoalbums,
+    with a viewport-wide technical matrix, compact sheet cards, and per-sheet
+    description drawers plus footer-style place and related-content context;
   - seeded local `nef-album` with a 63-sheet JSON document and added
     `ops/sql/2026-06-26-nef-album-publication-json.sql` as the narrow transfer
-    artifact for that DB-backed publication state.
+    artifact for that DB-backed publication state and its Behrensbau place
+    relation;
+  - extended the same `blueprint-matrix` structure to the remaining local WF
+    photoalbums: Labor/LKVO (`18894`, 52 sheets), Produkte LKVO (`18948`, 23
+    sheets), and Produktion HF (`19038`, 34 sheets), using manual `WF-Museum`
+    source metadata, resolved Media Library sheet refs, Behrensbau place
+    relations, and
+    `ops/sql/2026-06-26-photoalbum-blueprint-other-albums.sql` as the paired
+    transfer artifact.
 - Normalized project media Set ownership:
   - project source Sets now use the canonical `project-set-<project-slug>` key
     when created or reopened;

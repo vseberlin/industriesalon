@@ -4,6 +4,52 @@ if (!defined('ABSPATH')) {
     exit;
 }
 
+function industriesalon_get_editorial_publication_skins(): array
+{
+    return [
+        'standard',
+        'blueprint-matrix',
+    ];
+}
+
+add_filter('iss_editorial_format_skins', function (array $skins, string $format_slug): array {
+    if ($format_slug !== 'publication') {
+        return $skins;
+    }
+
+    return [
+        'standard' => [
+            'slug' => 'standard',
+            'label' => __('Standard', 'industriesalon'),
+        ],
+        'blueprint-matrix' => [
+            'slug' => 'blueprint-matrix',
+            'label' => __('Blueprint-Matrix', 'industriesalon'),
+        ],
+    ];
+}, 10, 2);
+
+function industriesalon_resolve_editorial_publication_skin(array $document): string
+{
+    $skin = sanitize_key((string) ($document['skin'] ?? 'standard'));
+
+    return in_array($skin, industriesalon_get_editorial_publication_skins(), true) ? $skin : 'standard';
+}
+
+function industriesalon_get_editorial_publication_post_skin(int $post_id): string
+{
+    if (
+        $post_id <= 0
+        || !function_exists('iss_editorial_document_is_enabled')
+        || !function_exists('iss_editorial_get_read_model')
+        || !iss_editorial_document_is_enabled($post_id, 'publication')
+    ) {
+        return '';
+    }
+
+    return industriesalon_resolve_editorial_publication_skin(iss_editorial_get_read_model($post_id, 'publication', false));
+}
+
 function industriesalon_publications_resolve_longread_payload(int $post_id, ?array $payload = null): array
 {
     if (is_array($payload) && $payload !== []) {
@@ -608,11 +654,254 @@ function industriesalon_publications_render_photoalbum_item(array $sheet): strin
     return $html;
 }
 
+function industriesalon_publications_blueprint_coordinate(int $index): string
+{
+    $columns = ['A', 'B', 'C', 'D'];
+
+    return $columns[$index % 4] . (string) (int) floor($index / 4 + 1);
+}
+
+function industriesalon_publications_blueprint_source_label(array $payload): string
+{
+    $archive_title = trim((string) ($payload['source_archivset_title'] ?? ''));
+    if ($archive_title !== '') {
+        return $archive_title;
+    }
+
+    $editorial_title = trim((string) ($payload['source_editorial_set_title'] ?? ''));
+    if ($editorial_title !== '') {
+        return $editorial_title;
+    }
+
+    $manual_title = trim((string) ($payload['source_manual_title'] ?? ''));
+    if ($manual_title !== '') {
+        return $manual_title;
+    }
+
+    if (!empty($payload['source_archivset_id'])) {
+        return sprintf(
+            /* translators: %d: archive set ID. */
+            __('Archivset %d', 'industriesalon'),
+            absint($payload['source_archivset_id'])
+        );
+    }
+
+    if (!empty($payload['source_editorial_set_id'])) {
+        return sprintf(
+            /* translators: %d: editorial set ID. */
+            __('Set %d', 'industriesalon'),
+            absint($payload['source_editorial_set_id'])
+        );
+    }
+
+    return __('Redaktion', 'industriesalon');
+}
+
+function industriesalon_publications_render_blueprint_fact_grid(int $post_id, array $payload, array $sheets): string
+{
+    $format = function_exists('iss_publications_get_meta')
+        ? trim((string) iss_publications_get_meta($post_id, '_iss_publication_format', ''))
+        : '';
+    $year = function_exists('iss_publications_get_meta')
+        ? trim((string) iss_publications_get_meta($post_id, '_iss_publication_year', ''))
+        : '';
+    $sheet_count = count($sheets);
+
+    $facts = [
+        [
+            'label' => __('Quelle', 'industriesalon'),
+            'value' => industriesalon_publications_blueprint_source_label($payload),
+        ],
+        [
+            'label' => __('Jahr', 'industriesalon'),
+            'value' => $year !== '' ? $year : __('o. J.', 'industriesalon'),
+        ],
+        [
+            'label' => __('Umfang', 'industriesalon'),
+            'value' => sprintf(
+                /* translators: %d: number of album sheets. */
+                _n('%d Blatt', '%d Blaetter', $sheet_count, 'industriesalon'),
+                $sheet_count
+            ),
+        ],
+        [
+            'label' => __('Format', 'industriesalon'),
+            'value' => $format !== '' ? $format : __('Fotoalbum', 'industriesalon'),
+        ],
+    ];
+
+    $html = '<dl class="iss-publication-photoalbum-blueprint__facts" aria-label="' . esc_attr__('Albumdaten', 'industriesalon') . '">';
+    foreach ($facts as $fact) {
+        $html .= '<div class="iss-publication-photoalbum-blueprint__fact">';
+        $html .= '<dt>' . esc_html((string) $fact['label']) . '</dt>';
+        $html .= '<dd>' . esc_html((string) $fact['value']) . '</dd>';
+        $html .= '</div>';
+    }
+    $html .= '</dl>';
+
+    return $html;
+}
+
+function industriesalon_publications_render_blueprint_sheet(array $sheet, int $index): string
+{
+    $anchor = trim((string) ($sheet['anchor'] ?? ''));
+    $sheet_label = trim((string) ($sheet['sheet_label'] ?? ''));
+    $title = trim((string) ($sheet['title'] ?? ''));
+    $caption_text = trim((string) ($sheet['caption_text'] ?? ''));
+    $media_html = trim((string) ($sheet['media_html'] ?? ''));
+    $image_url = trim((string) ($sheet['image_url'] ?? ''));
+
+    if ($anchor === '' || $media_html === '') {
+        return '';
+    }
+
+    $coordinate = industriesalon_publications_blueprint_coordinate($index);
+    $caption_duplicate = $caption_text !== '' && $title !== ''
+        && sanitize_title($caption_text) === sanitize_title($title);
+    $has_details = ($caption_text !== '' && !$caption_duplicate) || $image_url !== '';
+
+    $html = '<article id="' . esc_attr($anchor) . '" class="iss-publication-photoalbum__item iss-publication-photoalbum-blueprint__cell">';
+    $html .= '<div class="iss-publication-photoalbum-blueprint__plate">';
+    $html .= '<span class="iss-publication-photoalbum-blueprint__coord">' . esc_html($coordinate) . '</span>';
+    $html .= '<figure class="iss-publication-photoalbum__figure iss-publication-photoalbum-blueprint__figure">';
+    $html .= wp_kses_post($media_html);
+    $html .= '</figure>';
+    $html .= '</div>';
+    $html .= '<div class="iss-publication-photoalbum__copy iss-publication-photoalbum-blueprint__copy">';
+    $html .= '<p class="iss-publication-photoalbum__item-page iss-publication-photoalbum-blueprint__page">' . esc_html($sheet_label !== '' ? $sheet_label : $coordinate) . '</p>';
+    if ($title !== '') {
+        $html .= '<h3 class="iss-publication-photoalbum__item-title iss-publication-photoalbum-blueprint__title">' . esc_html($title) . '</h3>';
+    }
+    $html .= '</div>';
+
+    if ($has_details) {
+        $html .= '<details class="iss-publication-photoalbum-blueprint__details">';
+        $html .= '<summary>' . esc_html__('Beschreibung', 'industriesalon') . '</summary>';
+        $html .= '<div class="iss-publication-photoalbum-blueprint__details-panel">';
+        if ($caption_text !== '' && !$caption_duplicate) {
+            $html .= '<p>' . esc_html($caption_text) . '</p>';
+        }
+        if ($image_url !== '') {
+            $html .= '<p class="iss-publication-photoalbum-blueprint__detail-action"><a class="iss-action-link" href="' . esc_url($image_url) . '" target="_blank" rel="noopener noreferrer">' . esc_html__('Detailansicht oeffnen', 'industriesalon') . '</a></p>';
+        }
+        $html .= '</div>';
+        $html .= '</details>';
+    }
+
+    $html .= '</article>';
+
+    return $html;
+}
+
+function industriesalon_publications_get_block_context(int $post_id, string $block_name): object
+{
+    return (object) [
+        'name' => $block_name,
+        'blockName' => $block_name,
+        'context' => [
+            'postId' => $post_id,
+        ],
+    ];
+}
+
+function industriesalon_publications_render_blueprint_footer_context(int $post_id): string
+{
+    if ($post_id <= 0) {
+        return '';
+    }
+
+    $places_html = function_exists('iss_relations_render_related_place_links_block')
+        ? trim((string) iss_relations_render_related_place_links_block([
+            'title' => __('Orte im Album', 'industriesalon'),
+            'kicker' => __('Orte', 'industriesalon'),
+            'perPage' => 4,
+            'showRole' => true,
+        ], '', industriesalon_publications_get_block_context($post_id, 'iss/related-place-links')))
+        : '';
+    $content_html = function_exists('iss_relations_render_related_content_block')
+        ? trim((string) iss_relations_render_related_content_block([
+            'title' => __('Verwandte Inhalte', 'industriesalon'),
+            'kicker' => __('Kontext', 'industriesalon'),
+            'postTypes' => ['ausstellung', 'veranstaltung', 'publication', 'fuehrung', 'post', 'archivbeitrag'],
+            'perPage' => 4,
+            'source' => 'entity',
+            'layoutVariant' => 'rail',
+            'showImage' => false,
+            'showExcerpt' => false,
+        ], '', industriesalon_publications_get_block_context($post_id, 'iss/related-content')))
+        : '';
+    $groups = array_values(array_filter([$places_html, $content_html], static function (string $html): bool {
+        return $html !== '';
+    }));
+
+    if (!$groups) {
+        return '';
+    }
+
+    return '<footer class="iss-publication-photoalbum-blueprint__context iss-publication-photoalbum-blueprint__context--footer" aria-label="' . esc_attr__('Albumkontext', 'industriesalon') . '">'
+        . implode('', $groups)
+        . '</footer>';
+}
+
+function industriesalon_publications_render_photoalbum_blueprint_matrix(int $post_id, array $payload): string
+{
+    $sheets = is_array($payload['sheets'] ?? null) ? array_values(array_filter($payload['sheets'], 'is_array')) : [];
+    if ($post_id <= 0 || $sheets === []) {
+        return '';
+    }
+
+    $items_html = '';
+    foreach ($sheets as $index => $sheet) {
+        $items_html .= industriesalon_publications_render_blueprint_sheet($sheet, (int) $index);
+    }
+    if ($items_html === '') {
+        return '';
+    }
+
+    $post_title = get_the_title($post_id);
+    $heading_kicker = trim((string) ($payload['heading_kicker'] ?? ''));
+    $heading_text = trim((string) ($payload['heading_text'] ?? ''));
+    $intro_html = trim((string) ($payload['intro_html'] ?? ''));
+    $source_html = trim((string) ($payload['source_html'] ?? ''));
+
+    $html = '<div class="iss-publication-photoalbum iss-publication-photoalbum--blueprint-matrix">';
+    $html .= '<div class="iss-publication-photoalbum-blueprint__head">';
+    $html .= '<div class="iss-publication-photoalbum-blueprint__title-block">';
+    $html .= '<p class="iss-publication-photoalbum-blueprint__kicker">' . esc_html($heading_kicker !== '' ? $heading_kicker : __('Publikation / Fotobestand', 'industriesalon')) . '</p>';
+    $html .= '<h2 class="iss-publication-photoalbum-blueprint__title-main">' . esc_html($post_title !== '' ? $post_title : __('Fotoalbum', 'industriesalon')) . '</h2>';
+    $html .= '</div>';
+    $html .= industriesalon_publications_render_blueprint_fact_grid($post_id, $payload, $sheets);
+    if ($heading_text !== '' || $intro_html !== '') {
+        $html .= '<div class="iss-publication-photoalbum-blueprint__intro">';
+        if ($heading_text !== '') {
+            $html .= '<p>' . wp_kses_post($heading_text) . '</p>';
+        }
+        if ($intro_html !== '') {
+            $html .= wp_kses_post($intro_html);
+        }
+        $html .= '</div>';
+    }
+    $html .= '</div>';
+    $html .= '<div class="iss-publication-photoalbum-blueprint__axis" aria-hidden="true"><span>A</span><span>B</span><span>C</span><span>D</span></div>';
+    $html .= '<div class="iss-publication-photoalbum-blueprint__matrix">' . $items_html . '</div>';
+    if ($source_html !== '') {
+        $html .= '<div class="iss-publication-source-note iss-publication-photoalbum-blueprint__source">' . wp_kses_post($source_html) . '</div>';
+    }
+    $html .= industriesalon_publications_render_blueprint_footer_context($post_id);
+    $html .= '</div>';
+
+    return $html;
+}
+
 function industriesalon_publications_render_photoalbum_content(int $post_id, array $payload): string
 {
     $sheets = is_array($payload['sheets'] ?? null) ? array_values(array_filter($payload['sheets'], 'is_array')) : [];
     if ($post_id <= 0 || $sheets === []) {
         return '';
+    }
+
+    if (industriesalon_get_editorial_publication_post_skin($post_id) === 'blueprint-matrix') {
+        return industriesalon_publications_render_photoalbum_blueprint_matrix($post_id, $payload);
     }
 
     $items_html = '';
@@ -2132,6 +2421,14 @@ add_filter('iss_publications_render_photoalbum_content', function ($rendered, $p
 add_filter('body_class', function (array $classes): array {
     if (is_singular('publication') || is_page('publikationen')) {
         $classes[] = 'iss-scheme-blue';
+    }
+
+    if (is_singular('publication')) {
+        $post_id = (int) get_queried_object_id();
+        $publication_skin = industriesalon_get_editorial_publication_post_skin($post_id);
+        if ($publication_skin !== '') {
+            $classes[] = 'iss-publication-editorial-skin-' . sanitize_html_class($publication_skin);
+        }
     }
 
     return array_values(array_unique($classes));
