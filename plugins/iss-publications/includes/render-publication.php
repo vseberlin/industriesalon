@@ -1326,7 +1326,8 @@ function iss_publications_parse_editorial_photoalbum_payload(int $post_id): arra
     $topic_names = iss_publications_get_shared_topic_names($post_id);
     $album_source = is_array($album_section['album_source'] ?? null) ? $album_section['album_source'] : [];
     $source_kind = sanitize_key((string) ($album_source['kind'] ?? 'manual'));
-    $source_label = __('Redaktion', 'iss-publications');
+    $manual_source_title = trim((string) ($album_source['set_title'] ?? ''));
+    $source_label = $manual_source_title !== '' ? $manual_source_title : __('Redaktion', 'iss-publications');
     if ($source_kind === 'archive_set') {
         $source_label = __('Archivset', 'iss-publications');
     } elseif ($source_kind === 'editorial_set') {
@@ -1368,6 +1369,8 @@ function iss_publications_parse_editorial_photoalbum_payload(int $post_id): arra
     } elseif ($source_kind === 'editorial_set' && $source_id > 0) {
         $payload['source_editorial_set_id'] = $source_id;
         $payload['source_editorial_set_title'] = trim((string) ($album_source['set_title'] ?? ''));
+    } elseif ($manual_source_title !== '') {
+        $payload['source_manual_title'] = $manual_source_title;
     }
 
     return $payload;

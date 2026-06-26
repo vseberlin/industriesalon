@@ -5,11 +5,15 @@ Immediate executable work only. Larger future programs live in `docs/project/bac
 ## Next
 
 - Publication JSON migration: after deploying the code, review/apply
-  `ops/sql/2026-06-26-nef-album-publication-json.sql` only on a target that
-  already has `nef-album` (`post_id=18973`), Archivset `19`, and the referenced
-  NEF album archive-object/media rows/files. Then continue with chroniken /
-  timelines and longreads using the explicit JSON gesture plus
-  `publication_rail` contract.
+  `ops/sql/2026-06-26-nef-album-publication-json.sql` and
+  `ops/sql/2026-06-26-photoalbum-blueprint-other-albums.sql` only on a target
+  that already has the four publication posts (`18973`, `18894`, `18948`,
+  `19038`), Archivset `19` for `nef-album`, the referenced archive-object/media
+  rows/files and Media Library attachments, plus register place `17976`
+  (`Ostendstraße 1-5 / Behrensbau`). The artifacts include the
+  `blueprint-matrix` skin assignments and `iss_related_places` relations. Then
+  continue with chroniken / timelines and longreads using the explicit JSON
+  gesture plus `publication_rail` contract.
 - Project skin review: visually compare the three enabled local examples:
   `futura-biennale-2027` uses `dossier` with publication-style horizontal
   primary chapter navigation, centered 75rem chapter/fact spreads, and footer context,
