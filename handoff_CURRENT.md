@@ -87,7 +87,7 @@ Current work only. Completed checkpoint history belongs in `CHANGELOG.md`; activ
 
 ## Dirty Worktree Notes
 
-- This checkpoint has not been committed yet.
+- This checkpoint was committed and pushed to `origin/main`.
 - Untracked unrelated/local files remain:
   - `iss-exhibition-composition-add.md`
   - `themes/industriesalon/theme2.json`
