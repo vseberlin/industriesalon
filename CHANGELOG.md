@@ -66,6 +66,9 @@ be recovered from Git history.
   - removed alias-only skin choices from Ausstellung, Projekt, and publication
     editor pickers so new authoring uses `quellenbuehne`, `objektalbum`,
     `dossier`, `typografisch`, and `bildmatrix`.
+- Added `wp iss-editorial normalize-vocabulary` as a dry-run-first maintenance
+  command for stored editorial JSON, with `--write` required to persist legacy
+  gesture and skin rewrites.
 - Added a registry diagnostics and backfill maintenance slice:
   - added `wp iss status` in `iss-core` to report first-party plugin loading,
     key CPT registration, schema/backfill option versions, graph/occurrence/Set

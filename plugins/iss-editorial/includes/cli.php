@@ -1493,3 +1493,236 @@ function iss_editorial_cli_fuehrung_import_candidate(array $args, array $assoc_a
 }
 
 WP_CLI::add_command('iss-editorial fuehrung-import-candidate', 'iss_editorial_cli_fuehrung_import_candidate');
+
+function iss_editorial_cli_normalize_vocabulary_format_slugs(array $assoc_args): array
+{
+    $format_arg = isset($assoc_args['format']) ? trim((string) $assoc_args['format']) : '';
+    $requested = $format_arg !== ''
+        ? array_filter(array_map('sanitize_key', array_map('trim', explode(',', $format_arg))))
+        : ['ausstellung', 'projekt', 'rueckblick', 'publication'];
+
+    $formats = [];
+    foreach ($requested as $format_slug) {
+        if ($format_slug !== '' && iss_editorial_get_format($format_slug)) {
+            $formats[] = $format_slug;
+        }
+    }
+
+    return array_values(array_unique($formats));
+}
+
+function iss_editorial_cli_normalize_vocabulary_posts(string $format_slug, array $assoc_args): array
+{
+    $format = iss_editorial_get_format($format_slug);
+    if (!$format) {
+        return [];
+    }
+
+    $post_arg = isset($assoc_args['post']) ? trim((string) $assoc_args['post']) : '';
+    $post_types = array_values(array_filter(array_map('sanitize_key', (array) ($format['post_types'] ?? []))));
+    if (!$post_types) {
+        return [];
+    }
+
+    if ($post_arg !== '') {
+        $posts = [];
+        foreach ($post_types as $post_type) {
+            $post = iss_editorial_cli_get_post_by_token_for_type($post_arg, $post_type);
+            if ($post instanceof WP_Post) {
+                $posts[] = $post;
+            }
+        }
+
+        return $posts;
+    }
+
+    return get_posts([
+        'post_type' => $post_types,
+        'post_status' => 'any',
+        'posts_per_page' => -1,
+        'meta_key' => iss_editorial_get_document_meta_key($format_slug), // phpcs:ignore WordPress.DB.SlowDBQuery.slow_db_query_meta_key -- Maintenance CLI scans only stored editorial documents.
+        'orderby' => 'ID',
+        'order' => 'ASC',
+    ]);
+}
+
+function iss_editorial_cli_normalize_vocabulary_skin(string $format_slug, string $skin): string
+{
+    $skin = sanitize_key($skin);
+    $maps = [
+        'ausstellung' => [
+            'frauen-im-werk' => 'quellenbuehne',
+            'kinder-im-werk' => 'objektalbum',
+        ],
+        'projekt' => [
+            'brief' => 'dossier',
+            'field' => 'dossier',
+        ],
+        'publication' => [
+            'blueprint-matrix' => 'bildmatrix',
+        ],
+    ];
+
+    return (string) ($maps[$format_slug][$skin] ?? $skin);
+}
+
+function iss_editorial_cli_normalize_vocabulary_section(array $section, string $format_slug, array &$changes): array
+{
+    $type = sanitize_key((string) ($section['type'] ?? ''));
+    if ($type === '') {
+        return $section;
+    }
+
+    if ($type === 'bildstrecke') {
+        $section['type'] = 'galerie';
+        $section['gallery_layout'] = 'sequence';
+        $changes[] = 'section:bildstrecke->galerie';
+        return $section;
+    }
+
+    if ($type === 'image_wall') {
+        $section['type'] = 'galerie';
+        $section['gallery_layout'] = 'wall';
+        $changes[] = 'section:image_wall->galerie';
+        return $section;
+    }
+
+    if ($format_slug === 'ausstellung' && $type === 'quellenauszug') {
+        $section['type'] = 'zitat';
+        $section['quote_treatment'] = 'source';
+        $changes[] = 'section:quellenauszug->zitat';
+        return $section;
+    }
+
+    if ($format_slug === 'ausstellung' && $type === 'aside') {
+        $section['type'] = 'kapitel';
+        $section['section_treatment'] = 'aside';
+        $changes[] = 'section:aside->kapitel';
+        return $section;
+    }
+
+    if ($format_slug === 'rueckblick' && $type === 'bericht') {
+        $section['type'] = 'fliesstext';
+        $changes[] = 'section:bericht->fliesstext';
+        return $section;
+    }
+
+    if ($format_slug === 'rueckblick' && $type === 'quellen') {
+        $has_links = !empty($section['links']) && is_array($section['links']);
+        $has_objects = !empty($section['object_refs']) && is_array($section['object_refs']);
+        $section['type'] = ($has_links || !$has_objects) ? 'material' : 'objektfokus';
+        $changes[] = 'section:quellen->' . $section['type'];
+        return $section;
+    }
+
+    return $section;
+}
+
+function iss_editorial_cli_normalize_vocabulary_document(array $document, string $format_slug, array &$changes): array
+{
+    $skin = sanitize_key((string) ($document['skin'] ?? ''));
+    $canonical_skin = iss_editorial_cli_normalize_vocabulary_skin($format_slug, $skin);
+    if ($canonical_skin !== $skin) {
+        $document['skin'] = $canonical_skin;
+        $changes[] = 'skin:' . $skin . '->' . $canonical_skin;
+    }
+
+    $sections = [];
+    $rail_enabled = false;
+    foreach ((array) ($document['sections'] ?? []) as $section) {
+        if (!is_array($section)) {
+            continue;
+        }
+
+        if ($format_slug === 'projekt' && sanitize_key((string) ($section['type'] ?? '')) === 'projekt_rail') {
+            $rail_enabled = true;
+            $changes[] = 'section:projekt_rail->features.rail';
+            continue;
+        }
+
+        $sections[] = iss_editorial_cli_normalize_vocabulary_section($section, $format_slug, $changes);
+    }
+
+    if ($rail_enabled) {
+        $features = is_array($document['features'] ?? null) ? $document['features'] : [];
+        $rail = is_array($features['rail'] ?? null) ? $features['rail'] : [];
+        $rail['enabled'] = true;
+        $features['rail'] = $rail;
+        $document['features'] = $features;
+    }
+
+    $document['sections'] = $sections;
+
+    return $document;
+}
+
+function iss_editorial_cli_normalize_vocabulary(array $args, array $assoc_args): void
+{
+    unset($args);
+
+    $write = isset($assoc_args['write']);
+    $format = isset($assoc_args['output']) ? (string) $assoc_args['output'] : 'table';
+    $rows = [];
+
+    foreach (iss_editorial_cli_normalize_vocabulary_format_slugs($assoc_args) as $format_slug) {
+        foreach (iss_editorial_cli_normalize_vocabulary_posts($format_slug, $assoc_args) as $post) {
+            if (!$post instanceof WP_Post) {
+                continue;
+            }
+
+            $stored = get_post_meta((int) $post->ID, iss_editorial_get_document_meta_key($format_slug), true);
+            if (!is_string($stored) || trim($stored) === '') {
+                continue;
+            }
+
+            $document = json_decode($stored, true);
+            if (!is_array($document)) {
+                $rows[] = [
+                    'ID' => (int) $post->ID,
+                    'format' => $format_slug,
+                    'title' => get_the_title($post),
+                    'skin' => '',
+                    'changes' => 'invalid_json',
+                    'written' => 'no',
+                ];
+                continue;
+            }
+
+            $changes = [];
+            $normalized = iss_editorial_cli_normalize_vocabulary_document($document, $format_slug, $changes);
+            if (!$changes) {
+                continue;
+            }
+
+            $written = 'dry-run';
+            if ($write) {
+                $written = iss_editorial_save_document((int) $post->ID, $format_slug, $normalized, false) ? 'yes' : 'no';
+            }
+
+            $rows[] = [
+                'ID' => (int) $post->ID,
+                'format' => $format_slug,
+                'title' => get_the_title($post),
+                'skin' => (string) ($document['skin'] ?? ''),
+                'changes' => implode(',', array_values(array_unique($changes))),
+                'written' => $written,
+            ];
+        }
+    }
+
+    if (!$rows) {
+        WP_CLI::success('No vocabulary changes found.');
+        return;
+    }
+
+    iss_editorial_cli_print_rows($format, $rows, [
+        'ID',
+        'format',
+        'title',
+        'skin',
+        'changes',
+        'written',
+    ]);
+}
+
+WP_CLI::add_command('iss-editorial normalize-vocabulary', 'iss_editorial_cli_normalize_vocabulary');

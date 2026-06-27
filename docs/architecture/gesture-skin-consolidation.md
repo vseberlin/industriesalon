@@ -384,7 +384,8 @@ authoring without rewriting stored documents:
 
 Still pending:
 
-- a dry-run WP-CLI migration that rewrites stored section types and skin slugs;
+- running `wp iss-editorial normalize-vocabulary --write` after reviewing the
+  default dry-run output on the target dataset;
 - promotion of `shape` beyond the Veranstaltung registry;
 - a final decision for `industrieakte`;
 - whether `programm` should remain authored prose or become an occurrence
