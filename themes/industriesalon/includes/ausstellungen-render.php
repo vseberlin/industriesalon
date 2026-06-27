@@ -264,6 +264,7 @@ function industriesalon_get_editorial_ausstellung_section_context(array $section
             'massstab' => 'stat',
             'fliesstext' => 'essay',
             'bildstrecke' => 'album',
+            'galerie' => 'album',
             'image_wall' => 'image-wall',
             'aside' => 'aside',
             'schluss' => 'conclusion',
@@ -272,6 +273,12 @@ function industriesalon_get_editorial_ausstellung_section_context(array $section
 
         if (isset($layouts[$type])) {
             $layout = $layouts[$type];
+        }
+        if ($type === 'galerie') {
+            $gallery_layout = sanitize_key((string) ($section['gallery_layout'] ?? 'sequence'));
+            if ($gallery_layout === 'wall') {
+                $layout = 'image-wall';
+            }
         }
         if ($type === 'quellenauszug' && sanitize_key((string) ($section['orientation'] ?? '')) === 'media-right') {
             $layout = 'source-focus-reverse';

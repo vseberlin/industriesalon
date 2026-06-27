@@ -154,6 +154,13 @@ function iss_editorial_sanitize_rail_options($options): array
     ];
 }
 
+function iss_editorial_sanitize_gallery_layout($layout): string
+{
+    $layout = sanitize_key((string) $layout);
+
+    return in_array($layout, ['grid', 'sequence', 'wall'], true) ? $layout : 'grid';
+}
+
 function iss_editorial_sanitize_document_rail_feature($feature): array
 {
     if (!is_array($feature)) {
@@ -390,6 +397,10 @@ function iss_editorial_sanitize_section(array $section, array $format): array
     if (iss_editorial_format_supports_section_field($format, $type, 'media_layout')) {
         $media_layout = sanitize_key((string) ($section['media_layout'] ?? 'inline'));
         $sanitized['media_layout'] = in_array($media_layout, ['inline', 'aside-right'], true) ? $media_layout : 'inline';
+    }
+
+    if (iss_editorial_format_supports_section_field($format, $type, 'gallery_layout')) {
+        $sanitized['gallery_layout'] = iss_editorial_sanitize_gallery_layout($section['gallery_layout'] ?? 'grid');
     }
 
     if (iss_editorial_format_supports_section_field($format, $type, 'rail_options')) {

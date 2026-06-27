@@ -119,6 +119,12 @@ function industriesalon_get_editorial_project_section_context(array $section, st
     if (isset($layouts[$type])) {
         $layout = $layouts[$type];
     }
+    if ($type === 'galerie') {
+        $gallery_layout = sanitize_key((string) ($section['gallery_layout'] ?? 'grid'));
+        if ($gallery_layout === 'wall') {
+            $layout = 'image-wall';
+        }
+    }
 
     return [
         'type' => $type,
@@ -797,12 +803,13 @@ function industriesalon_render_editorial_project_section(array $section, bool $s
     ];
 
     $uses_fact_rail = in_array($skin, ['dossier', 'field'], true) && $context['layout'] === 'key-points' && $facts_html !== '';
+    $uses_gallery_carousel = $type === 'galerie' && $context['layout'] === 'gallery';
 
     ob_start();
     ?>
     <section id="<?php echo esc_attr($anchor); ?>" class="<?php echo esc_attr(implode(' ', array_unique($section_classes))); ?>" data-section-gesture="<?php echo esc_attr($context['gesture']); ?>">
         <div class="iss-project-section__inner">
-            <?php if ($media_html !== '' && $type !== 'galerie') : ?>
+            <?php if ($media_html !== '' && !$uses_gallery_carousel) : ?>
                 <div class="iss-project-section__media iss-project-editorial__media-strip"><?php echo $media_html; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- Media render through WordPress attachment helpers above. ?></div>
             <?php endif; ?>
             <?php if ($kicker !== '' || $title !== '' || $facts_html !== '' || $body !== '' || $links_html !== '' || $upload_intake_html !== '') : ?>
@@ -840,7 +847,7 @@ function industriesalon_render_editorial_project_section(array $section, bool $s
                     <?php endif; ?>
                 </div>
             <?php endif; ?>
-            <?php if ($media_html !== '' && $type === 'galerie') : ?>
+            <?php if ($media_html !== '' && $uses_gallery_carousel) : ?>
                 <div class="iss-project-section__media iss-project-gallery"><?php echo industriesalon_render_editorial_project_gallery($media_html); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- Gallery media render through WordPress attachment helpers above. ?></div>
             <?php endif; ?>
             <?php if ($downloads_html !== '') : ?>

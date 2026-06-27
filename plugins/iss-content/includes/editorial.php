@@ -64,7 +64,7 @@ function iss_content_model_register_editorial_formats(array $formats): array
                 'description' => __('Zitat mit Zuordnung oder Quellenhinweis.', 'iss-content-model'),
                 'supports' => ['quote'],
             ],
-            'galerie' => array_merge($gallery_section, ['supports' => ['anchor', 'media_refs', 'object_refs']]),
+            'galerie' => array_merge($gallery_section, ['supports' => ['anchor', 'media_refs', 'object_refs', 'gallery_layout']]),
             'image_wall' => array_merge($image_wall_section, ['supports' => ['anchor', 'media_refs']]),
             'material' => $material_section,
             'schluss' => [
@@ -115,9 +115,11 @@ function iss_content_model_register_editorial_formats(array $formats): array
             'bildstrecke' => [
                 'label' => __('Dokumentarische Strecke', 'iss-content-model'),
                 'description' => __('Photo sequence with captions', 'iss-content-model'),
-                'supports' => ['object_refs', 'media_refs'],
+                'supports' => ['object_refs', 'media_refs', 'gallery_layout'],
+                'ui_hidden' => true,
             ],
-            'image_wall' => $image_wall_section,
+            'galerie' => array_merge($gallery_section, ['supports' => ['object_refs', 'media_refs', 'gallery_layout']]),
+            'image_wall' => array_merge($image_wall_section, ['ui_hidden' => true]),
             'vollbild' => [
                 'label' => __('Vollbild', 'iss-content-model'),
                 'description' => __('One image, full viewport, short panel', 'iss-content-model'),
@@ -169,8 +171,8 @@ function iss_content_model_register_editorial_formats(array $formats): array
                 'supports' => ['no_body'],
                 'ui_hidden' => true,
             ],
-            'galerie' => array_merge($gallery_section, ['supports' => ['anchor', 'media_refs', 'object_refs']]),
-            'image_wall' => array_merge($image_wall_section, ['supports' => ['anchor', 'media_refs']]),
+            'galerie' => array_merge($gallery_section, ['supports' => ['anchor', 'media_refs', 'object_refs', 'gallery_layout']]),
+            'image_wall' => array_merge($image_wall_section, ['supports' => ['anchor', 'media_refs'], 'ui_hidden' => true]),
             'material' => $material_section,
             'upload_intake' => [
                 'label' => __('Upload-Aufruf', 'iss-content-model'),

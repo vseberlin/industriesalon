@@ -33,6 +33,15 @@ be recovered from Git history.
     feature control instead of adding a fake navigation gesture;
   - kept hidden sections valid in stored documents for backwards-compatible
     rail fallback.
+- Consolidated gallery/image gestures:
+  - added a `gallery_layout` section field with `grid`, `sequence`, and `wall`
+    values;
+  - added canonical `galerie` support to exhibitions and marked legacy
+    `bildstrecke` / `image_wall` sections hidden where replacement authoring is
+    ready;
+  - made project and exhibition renderers treat `galerie` with `wall` layout as
+    the existing image-wall treatment while keeping old stored section types
+    valid.
 - Added a registry diagnostics and backfill maintenance slice:
   - added `wp iss status` in `iss-core` to report first-party plugin loading,
     key CPT registration, schema/backfill option versions, graph/occurrence/Set
