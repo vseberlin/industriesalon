@@ -4,7 +4,7 @@
    Loads after single-ausstellung.css.
    ========================================================= */
 
-.iss-ausstellung-editorial--skin-frauen-im-werk {
+.iss-ausstellung-editorial--skin-quellenbuehne {
   --iss-ausstellung-fiw-paper: #f4f0ea;
   --iss-ausstellung-fiw-panel: #fffaf2;
   --iss-ausstellung-fiw-ink-soft: rgba(30, 30, 30, 0.72);
@@ -17,44 +17,44 @@
   background: var(--iss-ausstellung-fiw-paper);
 }
 
-.iss-ausstellung-editorial--skin-frauen-im-werk .iss-ausstellung-editorial__section {
+.iss-ausstellung-editorial--skin-quellenbuehne .iss-ausstellung-editorial__section {
   border-top-color: var(--iss-ausstellung-fiw-line);
 }
 
-.iss-ausstellung-editorial--skin-frauen-im-werk .iss-ausstellung-editorial__section > .iss-container {
+.iss-ausstellung-editorial--skin-quellenbuehne .iss-ausstellung-editorial__section > .iss-container {
   width: min(100% - (2 * var(--iss-ausstellung-pad-x)), 86rem);
 }
 
-.iss-ausstellung-editorial--skin-frauen-im-werk .iss-ausstellung-editorial__section h2 {
+.iss-ausstellung-editorial--skin-quellenbuehne .iss-ausstellung-editorial__section h2 {
   max-width: 16ch;
   font-size: clamp(2.45rem, 5vw, 5.75rem);
   line-height: 0.95;
 }
 
-.iss-ausstellung-editorial--skin-frauen-im-werk .iss-ausstellung-editorial__body {
+.iss-ausstellung-editorial--skin-quellenbuehne .iss-ausstellung-editorial__body {
   color: var(--iss-ausstellung-fiw-ink-soft);
 }
 
-.iss-ausstellung-editorial--skin-frauen-im-werk .iss-ausstellung-section__inner,
-.iss-ausstellung-editorial--skin-frauen-im-werk .iss-ausstellung-section__copy,
-.iss-ausstellung-editorial--skin-frauen-im-werk .iss-ausstellung-section__media,
-.iss-ausstellung-editorial--skin-frauen-im-werk .iss-ausstellung-section__refs {
+.iss-ausstellung-editorial--skin-quellenbuehne .iss-ausstellung-section__inner,
+.iss-ausstellung-editorial--skin-quellenbuehne .iss-ausstellung-section__copy,
+.iss-ausstellung-editorial--skin-quellenbuehne .iss-ausstellung-section__media,
+.iss-ausstellung-editorial--skin-quellenbuehne .iss-ausstellung-section__refs {
   min-width: 0;
 }
 
-.iss-ausstellung-editorial--skin-frauen-im-werk .iss-ausstellung-section__copy {
+.iss-ausstellung-editorial--skin-quellenbuehne .iss-ausstellung-section__copy {
   display: grid;
   gap: clamp(0.85rem, 1.6vw, 1.4rem);
 }
 
-.iss-ausstellung-editorial--skin-frauen-im-werk .iss-ausstellung-section__title {
+.iss-ausstellung-editorial--skin-quellenbuehne .iss-ausstellung-section__title {
   max-width: min(100%, 16ch);
   margin-bottom: 0;
   overflow-wrap: anywhere;
 }
 
-.iss-ausstellung-editorial--skin-frauen-im-werk .iss-ausstellung-section__body > :last-child,
-.iss-ausstellung-editorial--skin-frauen-im-werk .iss-ausstellung-section__quote > :last-child {
+.iss-ausstellung-editorial--skin-quellenbuehne .iss-ausstellung-section__body > :last-child,
+.iss-ausstellung-editorial--skin-quellenbuehne .iss-ausstellung-section__quote > :last-child {
   margin-bottom: 0;
 }
 
@@ -141,7 +141,7 @@
   object-fit: cover;
 }
 
-.iss-ausstellung-editorial--skin-frauen-im-werk .iss-ausstellung-section--layout-source-focus {
+.iss-ausstellung-editorial--skin-quellenbuehne .iss-ausstellung-section--layout-source-focus {
   display: grid;
   width: 100%;
   max-width: none;
@@ -152,7 +152,7 @@
   background: var(--iss-ausstellung-bg);
 }
 
-.iss-ausstellung-editorial--skin-frauen-im-werk .iss-ausstellung-section--layout-source-focus-reverse {
+.iss-ausstellung-editorial--skin-quellenbuehne .iss-ausstellung-section--layout-source-focus-reverse {
   display: grid;
   width: 100%;
   max-width: none;
@@ -163,7 +163,7 @@
   background: var(--iss-ausstellung-bg);
 }
 
-.iss-ausstellung-editorial--skin-frauen-im-werk .iss-ausstellung-section--layout-source-focus > .iss-ausstellung-section__inner {
+.iss-ausstellung-editorial--skin-quellenbuehne .iss-ausstellung-section--layout-source-focus > .iss-ausstellung-section__inner {
   display: grid;
   grid-template-columns: minmax(0, 58vw) minmax(20rem, 1fr);
   gap: 0;
@@ -175,7 +175,7 @@
   padding: 0;
 }
 
-.iss-ausstellung-editorial--skin-frauen-im-werk .iss-ausstellung-section--layout-source-focus-reverse > .iss-ausstellung-section__inner {
+.iss-ausstellung-editorial--skin-quellenbuehne .iss-ausstellung-section--layout-source-focus-reverse > .iss-ausstellung-section__inner {
   display: grid;
   grid-template-columns: minmax(20rem, 1fr) minmax(0, 58vw);
   gap: 0;
@@ -187,7 +187,7 @@
   padding: 0;
 }
 
-.iss-ausstellung-editorial--skin-frauen-im-werk .iss-ausstellung-section--layout-source-focus .iss-ausstellung-section__media {
+.iss-ausstellung-editorial--skin-quellenbuehne .iss-ausstellung-section--layout-source-focus .iss-ausstellung-section__media {
   position: relative;
   grid-row: auto;
   grid-column: 1;
@@ -198,7 +198,7 @@
   margin: 0;
 }
 
-.iss-ausstellung-editorial--skin-frauen-im-werk .iss-ausstellung-section--layout-source-focus-reverse .iss-ausstellung-section__media {
+.iss-ausstellung-editorial--skin-quellenbuehne .iss-ausstellung-section--layout-source-focus-reverse .iss-ausstellung-section__media {
   position: relative;
   grid-row: 1;
   grid-column: 2;
@@ -209,7 +209,7 @@
   margin: 0;
 }
 
-.iss-ausstellung-editorial--skin-frauen-im-werk .iss-ausstellung-section--layout-source-focus .iss-ausstellung-section__media .iss-ausstellung-editorial__media-item {
+.iss-ausstellung-editorial--skin-quellenbuehne .iss-ausstellung-section--layout-source-focus .iss-ausstellung-section__media .iss-ausstellung-editorial__media-item {
   position: absolute;
   inset: 0;
   width: 100%;
@@ -217,7 +217,7 @@
   margin: 0;
 }
 
-.iss-ausstellung-editorial--skin-frauen-im-werk .iss-ausstellung-section--layout-source-focus-reverse .iss-ausstellung-section__media .iss-ausstellung-editorial__media-item {
+.iss-ausstellung-editorial--skin-quellenbuehne .iss-ausstellung-section--layout-source-focus-reverse .iss-ausstellung-section__media .iss-ausstellung-editorial__media-item {
   position: absolute;
   inset: 0;
   width: 100%;
@@ -225,7 +225,7 @@
   margin: 0;
 }
 
-.iss-ausstellung-editorial--skin-frauen-im-werk .iss-ausstellung-section--layout-source-focus .iss-ausstellung-section__media img {
+.iss-ausstellung-editorial--skin-quellenbuehne .iss-ausstellung-section--layout-source-focus .iss-ausstellung-section__media img {
   display: block;
   width: 100%;
   height: 100%;
@@ -233,7 +233,7 @@
   object-fit: cover;
 }
 
-.iss-ausstellung-editorial--skin-frauen-im-werk .iss-ausstellung-section--layout-source-focus-reverse .iss-ausstellung-section__media img {
+.iss-ausstellung-editorial--skin-quellenbuehne .iss-ausstellung-section--layout-source-focus-reverse .iss-ausstellung-section__media img {
   display: block;
   width: 100%;
   height: 100%;
@@ -241,7 +241,7 @@
   object-fit: cover;
 }
 
-.iss-ausstellung-editorial--skin-frauen-im-werk .iss-ausstellung-section--layout-source-focus .iss-ausstellung-section__media figcaption {
+.iss-ausstellung-editorial--skin-quellenbuehne .iss-ausstellung-section--layout-source-focus .iss-ausstellung-section__media figcaption {
   position: absolute;
   right: 1rem;
   bottom: 1rem;
@@ -256,7 +256,7 @@
   line-height: 1.35;
 }
 
-.iss-ausstellung-editorial--skin-frauen-im-werk .iss-ausstellung-section--layout-source-focus-reverse .iss-ausstellung-section__media figcaption {
+.iss-ausstellung-editorial--skin-quellenbuehne .iss-ausstellung-section--layout-source-focus-reverse .iss-ausstellung-section__media figcaption {
   position: absolute;
   right: 1rem;
   bottom: 1rem;
@@ -271,7 +271,7 @@
   line-height: 1.35;
 }
 
-.iss-ausstellung-editorial--skin-frauen-im-werk .iss-ausstellung-section--layout-source-focus .iss-ausstellung-section__copy {
+.iss-ausstellung-editorial--skin-quellenbuehne .iss-ausstellung-section--layout-source-focus .iss-ausstellung-section__copy {
   box-sizing: border-box;
   align-self: center;
   grid-column: 2;
@@ -281,7 +281,7 @@
   padding: clamp(1.5rem, 5vw, 5rem);
 }
 
-.iss-ausstellung-editorial--skin-frauen-im-werk .iss-ausstellung-section--layout-source-focus-reverse .iss-ausstellung-section__copy {
+.iss-ausstellung-editorial--skin-quellenbuehne .iss-ausstellung-section--layout-source-focus-reverse .iss-ausstellung-section__copy {
   box-sizing: border-box;
   align-self: center;
   grid-row: 1;
@@ -292,59 +292,59 @@
   padding: clamp(1.5rem, 5vw, 5rem);
 }
 
-.iss-ausstellung-editorial--skin-frauen-im-werk .iss-ausstellung-section--layout-source-focus .iss-ausstellung-section__copy :where(h2, p, blockquote) {
+.iss-ausstellung-editorial--skin-quellenbuehne .iss-ausstellung-section--layout-source-focus .iss-ausstellung-section__copy :where(h2, p, blockquote) {
   grid-column: auto;
   max-width: 62ch;
 }
 
-.iss-ausstellung-editorial--skin-frauen-im-werk .iss-ausstellung-section--layout-source-focus-reverse .iss-ausstellung-section__copy :where(h2, p, blockquote) {
+.iss-ausstellung-editorial--skin-quellenbuehne .iss-ausstellung-section--layout-source-focus-reverse .iss-ausstellung-section__copy :where(h2, p, blockquote) {
   grid-column: auto;
   max-width: 62ch;
 }
 
-.iss-ausstellung-editorial--skin-frauen-im-werk .iss-ausstellung-section--layout-source-focus .iss-ausstellung-section__title,
-.iss-ausstellung-editorial--skin-frauen-im-werk .iss-ausstellung-section--layout-source-focus-reverse .iss-ausstellung-section__title {
+.iss-ausstellung-editorial--skin-quellenbuehne .iss-ausstellung-section--layout-source-focus .iss-ausstellung-section__title,
+.iss-ausstellung-editorial--skin-quellenbuehne .iss-ausstellung-section--layout-source-focus-reverse .iss-ausstellung-section__title {
   font-size: clamp(1.35rem, 2.5vw, 2.85rem);
   line-height: 1;
 }
 
-.iss-ausstellung-editorial--skin-frauen-im-werk .iss-ausstellung-section--layout-source-focus .iss-ausstellung-section__copy > * {
+.iss-ausstellung-editorial--skin-quellenbuehne .iss-ausstellung-section--layout-source-focus .iss-ausstellung-section__copy > * {
   grid-column: auto;
   max-width: 62ch;
 }
 
-.iss-ausstellung-editorial--skin-frauen-im-werk .iss-ausstellung-section--layout-source-focus-reverse .iss-ausstellung-section__copy > * {
+.iss-ausstellung-editorial--skin-quellenbuehne .iss-ausstellung-section--layout-source-focus-reverse .iss-ausstellung-section__copy > * {
   grid-column: auto;
   max-width: 62ch;
 }
 
-.iss-ausstellung-editorial--skin-frauen-im-werk .iss-ausstellung-section--layout-source-focus .iss-ausstellung-section__kicker {
+.iss-ausstellung-editorial--skin-quellenbuehne .iss-ausstellung-section--layout-source-focus .iss-ausstellung-section__kicker {
   --iss-kicker-accent: var(--iss-ausstellung-accent);
   --iss-kicker-color: var(--iss-ausstellung-dark);
 
   color: var(--iss-kicker-color);
 }
 
-.iss-ausstellung-editorial--skin-frauen-im-werk .iss-ausstellung-section--layout-source-focus-reverse .iss-ausstellung-section__kicker {
+.iss-ausstellung-editorial--skin-quellenbuehne .iss-ausstellung-section--layout-source-focus-reverse .iss-ausstellung-section__kicker {
   --iss-kicker-accent: var(--iss-ausstellung-accent);
   --iss-kicker-color: var(--iss-ausstellung-dark);
 
   color: var(--iss-kicker-color);
 }
 
-.iss-ausstellung-editorial--skin-frauen-im-werk .iss-ausstellung-section--layout-source-focus .iss-ausstellung-section__body {
+.iss-ausstellung-editorial--skin-quellenbuehne .iss-ausstellung-section--layout-source-focus .iss-ausstellung-section__body {
   color: rgba(30, 30, 30, 0.82);
   font-size: clamp(1.06rem, 0.55vw + 0.96rem, 1.28rem);
   line-height: 1.68;
 }
 
-.iss-ausstellung-editorial--skin-frauen-im-werk .iss-ausstellung-section--layout-source-focus-reverse .iss-ausstellung-section__body {
+.iss-ausstellung-editorial--skin-quellenbuehne .iss-ausstellung-section--layout-source-focus-reverse .iss-ausstellung-section__body {
   color: rgba(30, 30, 30, 0.82);
   font-size: clamp(1.06rem, 0.55vw + 0.96rem, 1.28rem);
   line-height: 1.68;
 }
 
-.iss-ausstellung-editorial--skin-frauen-im-werk .iss-ausstellung-section--layout-source-focus .iss-ausstellung-section__quote {
+.iss-ausstellung-editorial--skin-quellenbuehne .iss-ausstellung-section--layout-source-focus .iss-ausstellung-section__quote {
   margin: 1rem 0 0;
   padding-left: 1rem;
   border-left: 4px solid var(--iss-ausstellung-accent);
@@ -354,7 +354,7 @@
   line-height: 1.18;
 }
 
-.iss-ausstellung-editorial--skin-frauen-im-werk .iss-ausstellung-section--layout-source-focus-reverse .iss-ausstellung-section__quote {
+.iss-ausstellung-editorial--skin-quellenbuehne .iss-ausstellung-section--layout-source-focus-reverse .iss-ausstellung-section__quote {
   margin: 1rem 0 0;
   padding-left: 1rem;
   border-left: 4px solid var(--iss-ausstellung-accent);
@@ -364,28 +364,28 @@
   line-height: 1.18;
 }
 
-.iss-ausstellung-editorial--skin-frauen-im-werk .iss-ausstellung-section--layout-source-focus .iss-ausstellung-section__quote p {
+.iss-ausstellung-editorial--skin-quellenbuehne .iss-ausstellung-section--layout-source-focus .iss-ausstellung-section__quote p {
   color: inherit;
   font-size: inherit;
   line-height: inherit;
   overflow-wrap: anywhere;
 }
 
-.iss-ausstellung-editorial--skin-frauen-im-werk .iss-ausstellung-section--layout-source-focus-reverse .iss-ausstellung-section__quote p {
+.iss-ausstellung-editorial--skin-quellenbuehne .iss-ausstellung-section--layout-source-focus-reverse .iss-ausstellung-section__quote p {
   color: inherit;
   font-size: inherit;
   line-height: inherit;
   overflow-wrap: anywhere;
 }
 
-.iss-ausstellung-editorial--skin-frauen-im-werk .iss-ausstellung-section--layout-source-focus .iss-ausstellung-section__refs {
+.iss-ausstellung-editorial--skin-quellenbuehne .iss-ausstellung-section--layout-source-focus .iss-ausstellung-section__refs {
   box-sizing: border-box;
   grid-column: 1 / -1;
   width: 100%;
   padding: 0 var(--iss-ausstellung-pad-x) clamp(2.5rem, 5vw, 5rem);
 }
 
-.iss-ausstellung-editorial--skin-frauen-im-werk .iss-ausstellung-section--layout-source-focus-reverse .iss-ausstellung-section__refs {
+.iss-ausstellung-editorial--skin-quellenbuehne .iss-ausstellung-section--layout-source-focus-reverse .iss-ausstellung-section__refs {
   box-sizing: border-box;
   grid-column: 1 / -1;
   width: 100%;
@@ -401,7 +401,7 @@
   color: var(--iss-ausstellung-light);
 }
 
-.iss-ausstellung-editorial--skin-frauen-im-werk .iss-ausstellung-editorial__section--layout-object-grid > .iss-container {
+.iss-ausstellung-editorial--skin-quellenbuehne .iss-ausstellung-editorial__section--layout-object-grid > .iss-container {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
   gap: clamp(1rem, 2vw, 1.5rem);
@@ -421,7 +421,7 @@
   color: var(--iss-kicker-color);
 }
 
-.iss-ausstellung-editorial--skin-frauen-im-werk .iss-ausstellung-editorial__section--layout-object-grid h2 {
+.iss-ausstellung-editorial--skin-quellenbuehne .iss-ausstellung-editorial__section--layout-object-grid h2 {
   max-width: 22ch;
   color: inherit;
   font-size: clamp(1.45rem, 2.2vw, 2.15rem);
@@ -500,8 +500,8 @@
   --iss-kicker-accent: #ff5a60;
 }
 
-.iss-ausstellung-editorial--skin-frauen-im-werk .iss-ausstellung-editorial__section--layout-object-grid .iss-archive-featured-object__title,
-.iss-ausstellung-editorial--skin-frauen-im-werk .iss-ausstellung-editorial__section--layout-object-grid .iss-ausstellung-editorial__archive-body h3 {
+.iss-ausstellung-editorial--skin-quellenbuehne .iss-ausstellung-editorial__section--layout-object-grid .iss-archive-featured-object__title,
+.iss-ausstellung-editorial--skin-quellenbuehne .iss-ausstellung-editorial__section--layout-object-grid .iss-ausstellung-editorial__archive-body h3 {
   display: -webkit-box;
   max-width: none;
   overflow: hidden;
@@ -538,7 +538,7 @@
   color: var(--iss-ausstellung-light);
 }
 
-.iss-ausstellung-editorial--skin-frauen-im-werk .iss-ausstellung-editorial__section--layout-viewport-image > .iss-container {
+.iss-ausstellung-editorial--skin-quellenbuehne .iss-ausstellung-editorial__section--layout-viewport-image > .iss-container {
   position: relative;
   display: grid;
   align-content: end;
@@ -601,7 +601,7 @@
   overflow-wrap: anywhere;
 }
 
-.iss-ausstellung-editorial--skin-frauen-im-werk .iss-ausstellung-editorial__section--layout-viewport-image .iss-ausstellung-section__copy > * {
+.iss-ausstellung-editorial--skin-quellenbuehne .iss-ausstellung-editorial__section--layout-viewport-image .iss-ausstellung-section__copy > * {
   max-width: 100%;
   min-width: 0;
 }
@@ -610,7 +610,7 @@
   color: #ff5a60;
 }
 
-.iss-ausstellung-editorial--skin-frauen-im-werk .iss-ausstellung-editorial__section--layout-viewport-image h2 {
+.iss-ausstellung-editorial--skin-quellenbuehne .iss-ausstellung-editorial__section--layout-viewport-image h2 {
   max-width: 24ch;
   font-size: clamp(1.35rem, 2.1vw, 2.35rem);
   line-height: 1.08;
@@ -811,7 +811,7 @@
   color: inherit;
 }
 
-.iss-ausstellung-editorial--skin-frauen-im-werk .iss-ausstellung-editorial__section--layout-stat h2 {
+.iss-ausstellung-editorial--skin-quellenbuehne .iss-ausstellung-editorial__section--layout-stat h2 {
   max-width: 18ch;
   padding-top: 1rem;
   border-top: 4px solid var(--iss-ausstellung-accent);
@@ -881,7 +881,7 @@
   background: var(--iss-ausstellung-fiw-panel);
 }
 
-.iss-ausstellung-editorial--skin-frauen-im-werk .iss-ausstellung-editorial__section--layout-album h2 {
+.iss-ausstellung-editorial--skin-quellenbuehne .iss-ausstellung-editorial__section--layout-album h2 {
   max-width: 18ch;
   font-size: clamp(1.45rem, 2.5vw, 2.4rem);
   line-height: 1.08;
@@ -932,18 +932,18 @@
     grid-template-columns: 1fr;
   }
 
-  .iss-ausstellung-editorial--skin-frauen-im-werk .iss-ausstellung-section--layout-source-focus,
-  .iss-ausstellung-editorial--skin-frauen-im-werk .iss-ausstellung-section--layout-source-focus-reverse {
+  .iss-ausstellung-editorial--skin-quellenbuehne .iss-ausstellung-section--layout-source-focus,
+  .iss-ausstellung-editorial--skin-quellenbuehne .iss-ausstellung-section--layout-source-focus-reverse {
     min-height: auto;
   }
 
-  .iss-ausstellung-editorial--skin-frauen-im-werk .iss-ausstellung-section--layout-source-focus > .iss-ausstellung-section__inner,
-  .iss-ausstellung-editorial--skin-frauen-im-werk .iss-ausstellung-section--layout-source-focus-reverse > .iss-ausstellung-section__inner {
+  .iss-ausstellung-editorial--skin-quellenbuehne .iss-ausstellung-section--layout-source-focus > .iss-ausstellung-section__inner,
+  .iss-ausstellung-editorial--skin-quellenbuehne .iss-ausstellung-section--layout-source-focus-reverse > .iss-ausstellung-section__inner {
     grid-template-columns: 1fr;
   }
 
-  .iss-ausstellung-editorial--skin-frauen-im-werk .iss-ausstellung-section--layout-source-focus .iss-ausstellung-section__media,
-  .iss-ausstellung-editorial--skin-frauen-im-werk .iss-ausstellung-section--layout-source-focus-reverse .iss-ausstellung-section__media {
+  .iss-ausstellung-editorial--skin-quellenbuehne .iss-ausstellung-section--layout-source-focus .iss-ausstellung-section__media,
+  .iss-ausstellung-editorial--skin-quellenbuehne .iss-ausstellung-section--layout-source-focus-reverse .iss-ausstellung-section__media {
     grid-row: auto;
     grid-column: auto;
     height: 60vh;
@@ -952,29 +952,29 @@
     min-height: 60svh;
   }
 
-  .iss-ausstellung-editorial--skin-frauen-im-werk .iss-ausstellung-section--layout-source-focus .iss-ausstellung-section__copy,
-  .iss-ausstellung-editorial--skin-frauen-im-werk .iss-ausstellung-section--layout-source-focus-reverse .iss-ausstellung-section__copy {
+  .iss-ausstellung-editorial--skin-quellenbuehne .iss-ausstellung-section--layout-source-focus .iss-ausstellung-section__copy,
+  .iss-ausstellung-editorial--skin-quellenbuehne .iss-ausstellung-section--layout-source-focus-reverse .iss-ausstellung-section__copy {
     grid-row: auto;
     grid-column: auto;
     padding: clamp(1.5rem, 8vw, 3rem) 1.25rem;
   }
 
-  .iss-ausstellung-editorial--skin-frauen-im-werk .iss-ausstellung-section--layout-source-focus .iss-ausstellung-section__refs,
-  .iss-ausstellung-editorial--skin-frauen-im-werk .iss-ausstellung-section--layout-source-focus-reverse .iss-ausstellung-section__refs {
+  .iss-ausstellung-editorial--skin-quellenbuehne .iss-ausstellung-section--layout-source-focus .iss-ausstellung-section__refs,
+  .iss-ausstellung-editorial--skin-quellenbuehne .iss-ausstellung-section--layout-source-focus-reverse .iss-ausstellung-section__refs {
     grid-column: auto;
     padding-right: 1.25rem;
     padding-left: 1.25rem;
   }
 
-  .iss-ausstellung-editorial--skin-frauen-im-werk,
-  .iss-ausstellung-editorial--skin-frauen-im-werk .iss-ausstellung-editorial__section {
+  .iss-ausstellung-editorial--skin-quellenbuehne,
+  .iss-ausstellung-editorial--skin-quellenbuehne .iss-ausstellung-editorial__section {
     width: 100%;
     max-width: 100%;
     min-width: 0;
     overflow-x: clip;
   }
 
-  .iss-ausstellung-editorial--skin-frauen-im-werk .iss-ausstellung-editorial__section > .iss-container {
+  .iss-ausstellung-editorial--skin-quellenbuehne .iss-ausstellung-editorial__section > .iss-container {
     width: 100%;
     margin-right: 0;
     margin-left: 0;
@@ -1014,7 +1014,7 @@
     width: min(100%, 34rem);
   }
 
-  .iss-ausstellung-editorial--skin-frauen-im-werk .iss-ausstellung-editorial__section--layout-object-grid > .iss-container {
+  .iss-ausstellung-editorial--skin-quellenbuehne .iss-ausstellung-editorial__section--layout-object-grid > .iss-container {
     grid-template-columns: 1fr;
     gap: clamp(1.25rem, 6vw, 2rem);
   }

@@ -79,7 +79,7 @@ function iss_content_model_register_editorial_formats(array $formats): array
         'label' => __('Ausstellung', 'iss-content-model'),
         'base' => 'ordered',
         'post_types' => [ISS_CONTENT_MODEL_AUSSTELLUNG_POST_TYPE],
-        'default_skin' => 'standard',
+        'default_skin' => 'typografisch',
         'default_variant' => 'standard',
         'sections' => [
             'kapitel' => [
@@ -97,12 +97,6 @@ function iss_content_model_register_editorial_formats(array $formats): array
                 'description' => __('1-3 archive objects inline', 'iss-content-model'),
                 'supports' => ['object_refs'],
             ],
-            'quellenauszug' => [
-                'label' => __('Quellenauszug', 'iss-content-model'),
-                'description' => __('Source quote and citation', 'iss-content-model'),
-                'supports' => ['quote', 'object_refs', 'media_refs', 'orientation'],
-                'ui_hidden' => true,
-            ],
             'massstab' => [
                 'label' => __('Massstab', 'iss-content-model'),
                 'description' => __('Stats and context paragraph', 'iss-content-model'),
@@ -113,14 +107,7 @@ function iss_content_model_register_editorial_formats(array $formats): array
                 'description' => __('Direct quote with attribution', 'iss-content-model'),
                 'supports' => ['quote', 'object_refs', 'media_refs', 'orientation', 'quote_treatment'],
             ],
-            'bildstrecke' => [
-                'label' => __('Dokumentarische Strecke', 'iss-content-model'),
-                'description' => __('Photo sequence with captions', 'iss-content-model'),
-                'supports' => ['object_refs', 'media_refs', 'gallery_layout'],
-                'ui_hidden' => true,
-            ],
             'galerie' => array_merge($gallery_section, ['supports' => ['object_refs', 'media_refs', 'gallery_layout']]),
-            'image_wall' => array_merge($image_wall_section, ['ui_hidden' => true]),
             'vollbild' => [
                 'label' => __('Vollbild', 'iss-content-model'),
                 'description' => __('One image, full viewport, short panel', 'iss-content-model'),
@@ -135,12 +122,6 @@ function iss_content_model_register_editorial_formats(array $formats): array
                 'label' => __('Schluss', 'iss-content-model'),
                 'description' => __('Closing statement and onward direction', 'iss-content-model'),
                 'supports' => ['links'],
-            ],
-            'aside' => [
-                'label' => __('Ausstellungsentscheidung', 'iss-content-model'),
-                'description' => __('Curator speaks directly', 'iss-content-model'),
-                'supports' => ['links'],
-                'ui_hidden' => true,
             ],
         ],
     ];
@@ -167,14 +148,7 @@ function iss_content_model_register_editorial_formats(array $formats): array
                 'description' => __('Compact key points, facts, or context cards', 'iss-content-model'),
                 'supports' => ['anchor', 'facts'],
             ],
-            'projekt_rail' => [
-                'label' => __('Navigation', 'iss-content-model'),
-                'description' => __('Optional project rail generated from chapter and contact sections', 'iss-content-model'),
-                'supports' => ['no_body'],
-                'ui_hidden' => true,
-            ],
             'galerie' => array_merge($gallery_section, ['supports' => ['anchor', 'media_refs', 'object_refs', 'gallery_layout']]),
-            'image_wall' => array_merge($image_wall_section, ['supports' => ['anchor', 'media_refs'], 'ui_hidden' => true]),
             'material' => $material_section,
             'upload_intake' => [
                 'label' => __('Upload-Aufruf', 'iss-content-model'),
@@ -193,7 +167,7 @@ function iss_content_model_register_editorial_formats(array $formats): array
         'label' => __('Rueckblick', 'iss-content-model'),
         'base' => 'ordered',
         'post_types' => [ISS_CONTENT_MODEL_RUECKBLICK_POST_TYPE],
-        'default_skin' => 'standard',
+        'default_skin' => 'chronik',
         'default_variant' => 'standard',
         'sections' => [
             'intro' => [
@@ -201,22 +175,10 @@ function iss_content_model_register_editorial_formats(array $formats): array
                 'description' => __('Post-event opening and summary.', 'iss-content-model'),
                 'supports' => ['media_refs'],
             ],
-            'bericht' => [
-                'label' => __('Bericht', 'iss-content-model'),
-                'description' => __('Curated report text.', 'iss-content-model'),
-                'supports' => ['media_refs', 'object_refs'],
-                'ui_hidden' => true,
-            ],
             'fliesstext' => [
                 'label' => __('Fliesstext', 'iss-content-model'),
                 'description' => __('Curated report text.', 'iss-content-model'),
                 'supports' => ['media_refs', 'object_refs'],
-            ],
-            'bildstrecke' => [
-                'label' => __('Bildstrecke', 'iss-content-model'),
-                'description' => __('Approved gallery material promoted from a Set.', 'iss-content-model'),
-                'supports' => ['media_refs', 'object_refs', 'gallery_layout'],
-                'ui_hidden' => true,
             ],
             'galerie' => array_merge($gallery_section, ['supports' => ['media_refs', 'object_refs', 'gallery_layout']]),
             'objektfokus' => [
@@ -229,12 +191,6 @@ function iss_content_model_register_editorial_formats(array $formats): array
                 'label' => __('Schluss', 'iss-content-model'),
                 'description' => __('Closing note and onward links.', 'iss-content-model'),
                 'supports' => ['links'],
-            ],
-            'quellen' => [
-                'label' => __('Quellen', 'iss-content-model'),
-                'description' => __('Source material that supports the report.', 'iss-content-model'),
-                'supports' => ['object_refs', 'links'],
-                'ui_hidden' => true,
             ],
         ],
     ];

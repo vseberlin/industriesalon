@@ -13,11 +13,11 @@ function iss_content_model_editorial_gesture_registry(): array
         ],
         'kapitel' => [
             'label' => __('Kapitel', 'iss-content-model'),
-            'absorbs' => ['kapitel', 'aside'],
+            'absorbs' => ['kapitel'],
         ],
         'fliesstext' => [
             'label' => __('Fliesstext', 'iss-content-model'),
-            'absorbs' => ['fliesstext', 'bericht'],
+            'absorbs' => ['fliesstext'],
         ],
         'leitfrage' => [
             'label' => __('Leitfrage', 'iss-content-model'),
@@ -25,7 +25,7 @@ function iss_content_model_editorial_gesture_registry(): array
         ],
         'zitat' => [
             'label' => __('Zitat', 'iss-content-model'),
-            'absorbs' => ['zitat', 'quellenauszug'],
+            'absorbs' => ['zitat'],
         ],
         'schluss' => [
             'label' => __('Schluss', 'iss-content-model'),
@@ -33,7 +33,7 @@ function iss_content_model_editorial_gesture_registry(): array
         ],
         'galerie' => [
             'label' => __('Galerie', 'iss-content-model'),
-            'absorbs' => ['galerie', 'bildstrecke', 'image_wall', 'autoalbum', 'photoalbum'],
+            'absorbs' => ['galerie', 'photoalbum'],
         ],
         'vollbild' => [
             'label' => __('Vollbild', 'iss-content-model'),
@@ -41,7 +41,7 @@ function iss_content_model_editorial_gesture_registry(): array
         ],
         'objektfokus' => [
             'label' => __('Objektfokus', 'iss-content-model'),
-            'absorbs' => ['objektfokus', 'quellen'],
+            'absorbs' => ['objektfokus'],
         ],
         'material' => [
             'label' => __('Material', 'iss-content-model'),
@@ -67,14 +67,12 @@ function iss_content_model_editorial_skin_registry(): array
     return [
         'typografisch' => [
             'label' => __('Typografisch', 'iss-content-model'),
-            'aliases' => ['standard', 'vortrag', 'lesung', 'gespraech', 'praesentation', 'workshop', 'konzert', 'repair'],
             'features' => [
                 'rail' => ['enabled' => false],
             ],
         ],
         'dossier' => [
             'label' => __('Dossier', 'iss-content-model'),
-            'aliases' => ['brief', 'field'],
             'features' => [
                 'rail' => [
                     'enabled' => true,
@@ -86,21 +84,18 @@ function iss_content_model_editorial_skin_registry(): array
         ],
         'quellenbuehne' => [
             'label' => __('Quellenbuehne', 'iss-content-model'),
-            'aliases' => ['frauen-im-werk'],
             'features' => [
                 'rail' => ['enabled' => false],
             ],
         ],
         'objektalbum' => [
             'label' => __('Objektalbum', 'iss-content-model'),
-            'aliases' => ['kinder-im-werk'],
             'features' => [
                 'rail' => ['enabled' => false],
             ],
         ],
         'bildmatrix' => [
             'label' => __('Bildmatrix', 'iss-content-model'),
-            'aliases' => ['blueprint-matrix'],
             'features' => [
                 'rail' => [
                     'enabled' => true,
@@ -112,14 +107,12 @@ function iss_content_model_editorial_skin_registry(): array
         ],
         'buehne' => [
             'label' => __('Buehne', 'iss-content-model'),
-            'aliases' => ['festival'],
             'features' => [
                 'rail' => ['enabled' => false],
             ],
         ],
         'chronik' => [
             'label' => __('Chronik', 'iss-content-model'),
-            'aliases' => ['dokumentarisch'],
             'features' => [
                 'rail' => [
                     'enabled' => true,
@@ -132,47 +125,10 @@ function iss_content_model_editorial_skin_registry(): array
     ];
 }
 
-function iss_content_model_editorial_skin_aliases(): array
-{
-    $aliases = [];
-    foreach (iss_content_model_editorial_skin_registry() as $canonical => $skin) {
-        $canonical = sanitize_key((string) $canonical);
-        if ($canonical === '') {
-            continue;
-        }
-        $aliases[$canonical] = $canonical;
-        foreach ((array) ($skin['aliases'] ?? []) as $alias) {
-            $alias = sanitize_key((string) $alias);
-            if ($alias !== '') {
-                $aliases[$alias] = $canonical;
-            }
-        }
-    }
-
-    return $aliases;
-}
-
-function iss_content_model_editorial_canonical_skin(string $skin): string
-{
-    $skin = sanitize_key($skin);
-    if ($skin === '') {
-        return '';
-    }
-
-    $aliases = iss_content_model_editorial_skin_aliases();
-
-    return (string) ($aliases[$skin] ?? $skin);
-}
-
-function iss_content_model_editorial_skin_is(string $skin, string $canonical): bool
-{
-    return iss_content_model_editorial_canonical_skin($skin) === sanitize_key($canonical);
-}
-
 function iss_content_model_editorial_resolve_rail_feature(string $skin, array $overrides = []): array
 {
     $registry = iss_content_model_editorial_skin_registry();
-    $canonical = iss_content_model_editorial_canonical_skin($skin);
+    $canonical = sanitize_key($skin);
     $defaults = is_array($registry[$canonical]['features']['rail'] ?? null)
         ? $registry[$canonical]['features']['rail']
         : ['enabled' => false];

@@ -1018,13 +1018,6 @@ function industriesalon_add_event_registry_body_classes(array $classes): array
             $skin = iss_content_model_veranstaltung_entity_default_skin($entity_key);
             if ($skin !== '') {
                 $classes[] = 'iss-event-skin-' . sanitize_html_class($skin);
-                if (function_exists('iss_content_model_editorial_canonical_skin')) {
-                    $canonical_skin = iss_content_model_editorial_canonical_skin($skin);
-                    if ($canonical_skin !== '' && $canonical_skin !== $skin) {
-                        $classes[] = 'iss-event-skin-' . sanitize_html_class($canonical_skin);
-                        $classes[] = 'iss-event-canonical-skin-' . sanitize_html_class($canonical_skin);
-                    }
-                }
             }
         }
     }
@@ -1368,21 +1361,13 @@ function industriesalon_enqueue_assets(): void
     if (is_singular('ausstellung') && function_exists('industriesalon_get_editorial_ausstellung_post_skin')) {
         $ausstellung_skin = industriesalon_get_editorial_ausstellung_post_skin((int) get_queried_object_id());
         $ausstellung_skin_styles = array(
-            'frauen-im-werk' => array(
-                'handle' => 'industriesalon-ausstellung-skin-frauen-im-werk',
-                'path' => '/assets/css/skins/ausstellung-frauen-im-werk.css',
-            ),
-            'kinder-im-werk' => array(
-                'handle' => 'industriesalon-ausstellung-skin-kinder-im-werk',
-                'path' => '/assets/css/skins/ausstellung-kinder-im-werk.css',
-            ),
             'quellenbuehne' => array(
-                'handle' => 'industriesalon-ausstellung-skin-frauen-im-werk',
-                'path' => '/assets/css/skins/ausstellung-frauen-im-werk.css',
+                'handle' => 'industriesalon-ausstellung-skin-quellenbuehne',
+                'path' => '/assets/css/skins/ausstellung-quellenbuehne.css',
             ),
             'objektalbum' => array(
-                'handle' => 'industriesalon-ausstellung-skin-kinder-im-werk',
-                'path' => '/assets/css/skins/ausstellung-kinder-im-werk.css',
+                'handle' => 'industriesalon-ausstellung-skin-objektalbum',
+                'path' => '/assets/css/skins/ausstellung-objektalbum.css',
             ),
             'typografisch' => array(
                 'handle' => 'industriesalon-ausstellung-skin-typografisch',
@@ -1391,10 +1376,6 @@ function industriesalon_enqueue_assets(): void
             'chronik' => array(
                 'handle' => 'industriesalon-ausstellung-skin-chronik',
                 'path' => '/assets/css/skins/ausstellung-chronik.css',
-            ),
-            'industrieakte' => array(
-                'handle' => 'industriesalon-ausstellung-skin-industrieakte',
-                'path' => '/assets/css/skins/ausstellung-industrieakte.css',
             ),
         );
 

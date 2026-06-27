@@ -45,11 +45,6 @@ function iss_content_model_veranstaltung_content_gestures(): array
             'description' => __('Zitat mit Zuordnung oder Quellenhinweis.', 'iss-content-model'),
             'supports' => ['kicker', 'title', 'body', 'quote', 'attribution'],
         ],
-        'chronik' => [
-            'label' => __('Chronik', 'iss-content-model'),
-            'description' => __('Zeitliche Folge oder Rueckblickabschnitt.', 'iss-content-model'),
-            'supports' => ['kicker', 'title', 'body', 'items'],
-        ],
         'programm' => [
             'label' => __('Programm', 'iss-content-model'),
             'description' => __('Lineare Programmpunkte fuer Feste und Reihen.', 'iss-content-model'),

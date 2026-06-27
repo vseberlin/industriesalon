@@ -6,6 +6,18 @@ be recovered from Git history.
 
 ## 2026-06-27
 
+- Completed the hard editorial vocabulary cleanup after the compatibility pass:
+  - migrated local stored editorial JSON to canonical gestures, skins, and
+    `features.rail`;
+  - added rollback and deploy SQL artifacts at
+    `ops/sql/2026-06-27-editorial-vocabulary-pre-migration.sql` and
+    `ops/sql/2026-06-27-editorial-vocabulary-normalized-json.sql`;
+  - removed hidden legacy section definitions, legacy skin aliases, legacy
+    renderer branches, and the one-off `normalize-vocabulary` CLI command;
+  - renamed Ausstellung skin CSS assets to `quellenbuehne` and `objektalbum`,
+    removed the `industrieakte` stylesheet, and collapsed Veranstaltung skin
+    defaults to canonical `typografisch`, `buehne`, and `chronik`;
+  - left Führungen out of this cleanup pass per the architecture boundary.
 - Started the shared gesture/skin/feature implementation from the audit answer:
   - added an `iss-content` editorial vocabulary helper for canonical gestures,
     canonical skins, skin aliases, and rail feature defaults;

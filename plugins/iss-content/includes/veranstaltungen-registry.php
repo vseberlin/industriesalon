@@ -72,7 +72,7 @@ function iss_content_model_veranstaltung_registry(): array
                 'post_type' => ISS_CONTENT_MODEL_VERANSTALTUNG_POST_TYPE,
                 'shape' => 'moment',
                 'icon' => 'mic',
-                'default_skin' => 'vortrag',
+                'default_skin' => 'typografisch',
                 'allowed_gestures' => ['intro', 'kapitel', 'leitfrage', 'zitat', 'material', 'upload_intake', 'galerie', 'schluss'],
                 'fields' => $moment_fields,
             ],
@@ -82,7 +82,7 @@ function iss_content_model_veranstaltung_registry(): array
                 'post_type' => ISS_CONTENT_MODEL_VERANSTALTUNG_POST_TYPE,
                 'shape' => 'moment',
                 'icon' => 'chat',
-                'default_skin' => 'gespraech',
+                'default_skin' => 'typografisch',
                 'allowed_gestures' => ['intro', 'kapitel', 'leitfrage', 'zitat', 'material', 'upload_intake', 'galerie', 'schluss'],
                 'fields' => $moment_fields,
             ],
@@ -92,7 +92,7 @@ function iss_content_model_veranstaltung_registry(): array
                 'post_type' => ISS_CONTENT_MODEL_VERANSTALTUNG_POST_TYPE,
                 'shape' => 'moment',
                 'icon' => 'book',
-                'default_skin' => 'lesung',
+                'default_skin' => 'typografisch',
                 'allowed_gestures' => ['intro', 'kapitel', 'leitfrage', 'zitat', 'material', 'upload_intake', 'galerie', 'schluss'],
                 'fields' => $moment_fields,
             ],
@@ -142,7 +142,7 @@ function iss_content_model_veranstaltung_registry(): array
                 'post_type' => ISS_CONTENT_MODEL_VERANSTALTUNG_POST_TYPE,
                 'shape' => 'span',
                 'icon' => 'calendar-star',
-                'default_skin' => 'festival',
+                'default_skin' => 'buehne',
                 'allowed_gestures' => ['intro', 'programm', 'kapitel', 'material', 'upload_intake', 'galerie', 'schluss'],
                 'fields' => $span_fields,
             ],
@@ -152,7 +152,7 @@ function iss_content_model_veranstaltung_registry(): array
                 'post_type' => ISS_CONTENT_MODEL_VERANSTALTUNG_POST_TYPE,
                 'shape' => 'manual_recurring',
                 'icon' => 'wrench',
-                'default_skin' => 'repair',
+                'default_skin' => 'typografisch',
                 'allowed_gestures' => ['intro', 'kapitel', 'material', 'upload_intake', 'galerie', 'schluss'],
                 'fields' => $repair_cafe_fields,
             ],
@@ -162,8 +162,8 @@ function iss_content_model_veranstaltung_registry(): array
                 'post_type' => ISS_CONTENT_MODEL_VERANSTALTUNG_POST_TYPE,
                 'shape' => 'backward',
                 'icon' => 'archive',
-                'default_skin' => 'dokumentarisch',
-                'allowed_gestures' => ['intro', 'kapitel', 'leitfrage', 'zitat', 'chronik', 'upload_intake', 'galerie', 'material', 'schluss'],
+                'default_skin' => 'chronik',
+                'allowed_gestures' => ['intro', 'kapitel', 'leitfrage', 'zitat', 'upload_intake', 'galerie', 'material', 'schluss'],
                 'fields' => $report_fields,
             ],
         ],
@@ -212,15 +212,6 @@ function iss_content_model_veranstaltung_entity_default_skin(string $entity_key)
     $entity = iss_content_model_veranstaltung_entity($entity_key);
 
     return sanitize_key((string) ($entity['default_skin'] ?? ''));
-}
-
-function iss_content_model_veranstaltung_entity_canonical_skin(string $entity_key): string
-{
-    $skin = iss_content_model_veranstaltung_entity_default_skin($entity_key);
-
-    return function_exists('iss_content_model_editorial_canonical_skin')
-        ? iss_content_model_editorial_canonical_skin($skin)
-        : $skin;
 }
 
 function iss_content_model_veranstaltung_entity_icon(string $entity_key): string

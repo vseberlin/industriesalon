@@ -122,11 +122,9 @@ icon, the display label, and timeline grouping — but render with
 A lecture does not need a different layout than a reading; it needs a different
 word on the page.
 
-`standard` and `industrieakte` are not final skin language. Treat them as
-temporary implementation names or migration aliases until they are mapped to a
-real posture. `industrieakte` may become a `dossier` or `quellenbuehne`
-variant, but should not be promoted as a standalone canonical skin unless a
-second real rollout proves it.
+`standard` remains only the generic base fallback where the editor framework
+requires one. `industrieakte` was mapped to `quellenbuehne` during the hard
+cleanup and is not a canonical skin.
 
 `blueprint-matrix` is a real skin behavior. The current publication renderer
 switches photoalbum output into a separate coordinate/matrix treatment, so the
@@ -325,8 +323,8 @@ or matrix.
 
 ## Migration mapping (old → new)
 
-Document migration runs against `_iss_content_json` block `type` values and the
-post `_iss_skin` / `default_skin` assignments.
+Document migration runs against the format-specific `_iss_editorial_*` JSON
+documents and Veranstaltung registry `default_skin` assignments.
 
 Gestures:
 
@@ -358,66 +356,56 @@ field           → dossier          (variant/feature preset)
 frauen-im-werk  → quellenbuehne
 kinder-im-werk  → objektalbum
 blueprint-matrix → bildmatrix
-industrieakte   → temporary alias; map after review
+industrieakte   → quellenbuehne
 ```
 
 ## Implementation status
 
-As of 2026-06-27, the compatibility implementation is in place for new
-authoring without rewriting stored documents:
+As of 2026-06-27, the local hard migration has been applied for the included
+domains:
 
 - `iss-content` owns the shared gesture, skin, and rail feature vocabulary.
-- Legacy skin aliases resolve to canonical skins at render time.
-- Project rail authoring moved to `features.rail`; legacy `projekt_rail`
-  sections remain valid but hidden from the authoring palette.
-- `galerie` now covers sequence, grid, and wall layouts; legacy
-  `bildstrecke` and `image_wall` remain valid but hidden where replaced.
+- Project rail authoring moved to `features.rail`; `projekt_rail` is no longer
+  a valid project gesture.
+- `galerie` now covers sequence, grid, and wall layouts for the included
+  domains.
 - Ausstellung `zitat` now covers pull quotes and source-focused excerpts via
-  `quote_treatment`; legacy `quellenauszug` remains valid but hidden.
+  `quote_treatment`.
 - Ausstellung `kapitel` now covers the curator aside treatment via
-  `section_treatment`; legacy `aside` remains valid but hidden.
+  `section_treatment`.
 - Rückblick authoring now exposes `fliesstext`, `galerie`, `objektfokus`,
-  `material`, and `schluss`; legacy `bericht`, `bildstrecke`, and `quellen`
-  remain valid but hidden.
-- Ausstellung, Projekt, and publication skin pickers expose canonical authoring
-  names while keeping legacy stored skin slugs renderable.
+  `material`, and `schluss`.
+- Stored local Ausstellung, Projekt, and publication JSON was migrated to
+  canonical section types and skins; the deployable SQL artifact is
+  `ops/sql/2026-06-27-editorial-vocabulary-normalized-json.sql`.
+- Legacy skin aliases, hidden compatibility sections, old renderer branches,
+  the one-off migration CLI command, and the `industrieakte` stylesheet have
+  been removed from runtime code.
 
 Still pending:
 
-- running `wp iss-editorial normalize-vocabulary --write` after reviewing the
-  default dry-run output on the target dataset;
 - promotion of `shape` beyond the Veranstaltung registry;
-- a final decision for `industrieakte`;
 - whether `programm` should remain authored prose or become an occurrence
   projection;
 - whether `bildmatrix` becomes a public skin for non-publication gallery-led
   pages, beyond the current reusable gallery layout options.
 
-## Suggested sequencing
+## Applied cleanup sequence
 
-1. Introduce `GestureRegistry`, `SkinRegistry`, and a small feature resolver as
-   the single source of truth; have existing per-domain config read from them
-   (no behavior change yet).
-2. Add a `_version` field to `_iss_content_json` documents so the migration is
-   idempotent and resumable.
-3. Add compatibility aliases for old skin names before changing stored
-   documents.
-4. Write a WP-CLI migration that rewrites block `type`, skin values, and
-   feature values per the mapping above, dry-run first.
-5. Replace authored `projekt_rail` with feature metadata while preserving
-   current rail on/off behavior and placement.
-6. Promote `shape` to Ausstellung / Projekt / Rückblick / Publication.
-7. Leave Führung untouched in this pass.
-8. Remove retired gestures and skins from authoring UI and theme branches once
-   no documents reference them.
+1. Introduced the shared gesture, skin, and rail feature vocabulary.
+2. Migrated local stored Ausstellung, Projekt, Rückblick, and publication JSON
+   to canonical block `type`, `skin`, and `features.rail` values.
+3. Wrote paired SQL artifacts for rollback/reference and deployment:
+   `ops/sql/2026-06-27-editorial-vocabulary-pre-migration.sql` and
+   `ops/sql/2026-06-27-editorial-vocabulary-normalized-json.sql`.
+4. Replaced authored `projekt_rail` with `features.rail` metadata.
+5. Removed retired gestures, skins, alias helpers, hidden compatibility
+   sections, renderer fallback branches, the one-off migration CLI, and the
+   `industrieakte` stylesheet from runtime code.
+6. Left Führungen untouched in this pass.
 
 ## Open questions
 
-- What are the final public names for `quellenbuehne` and `objektalbum`?
-  These are working names for the current `frauen-im-werk` and
-  `kinder-im-werk` treatments.
-- Should `industrieakte` collapse into `dossier`, become a `quellenbuehne`
-  variant, or remain a one-off until another technical dossier proves it?
 - Should `programm` remain a gesture, or become a projection rendered from
   child occurrences? (Festival programmes may be data, not prose.)
 - Should `bildmatrix` support non-publication galleries immediately, or first

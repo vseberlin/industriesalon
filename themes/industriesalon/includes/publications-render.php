@@ -9,7 +9,6 @@ function industriesalon_get_editorial_publication_skins(): array
     return [
         'standard',
         'bildmatrix',
-        'blueprint-matrix',
         'longread-poster',
     ];
 }
@@ -967,7 +966,7 @@ function industriesalon_publications_render_blueprint_footer_context(int $post_i
         . '</footer>';
 }
 
-function industriesalon_publications_render_photoalbum_blueprint_matrix(int $post_id, array $payload): string
+function industriesalon_publications_render_photoalbum_bildmatrix(int $post_id, array $payload): string
 {
     $sheets = is_array($payload['sheets'] ?? null) ? array_values(array_filter($payload['sheets'], 'is_array')) : [];
     if ($post_id <= 0 || $sheets === []) {
@@ -988,7 +987,7 @@ function industriesalon_publications_render_photoalbum_blueprint_matrix(int $pos
     $intro_html = trim((string) ($payload['intro_html'] ?? ''));
     $source_html = trim((string) ($payload['source_html'] ?? ''));
 
-    $html = '<div class="iss-publication-photoalbum iss-publication-photoalbum--blueprint-matrix">';
+    $html = '<div class="iss-publication-photoalbum iss-publication-photoalbum--bildmatrix">';
     $html .= '<div class="iss-publication-photoalbum-blueprint__head">';
     $html .= '<div class="iss-publication-photoalbum-blueprint__title-block">';
     $html .= '<p class="iss-publication-photoalbum-blueprint__kicker">' . esc_html($heading_kicker !== '' ? $heading_kicker : __('Publikation / Fotobestand', 'industriesalon')) . '</p>';
@@ -1025,12 +1024,9 @@ function industriesalon_publications_render_photoalbum_content(int $post_id, arr
     }
 
     $publication_skin = industriesalon_get_editorial_publication_post_skin($post_id);
-    $is_bildmatrix = function_exists('iss_content_model_editorial_skin_is')
-        ? iss_content_model_editorial_skin_is($publication_skin, 'bildmatrix')
-        : in_array($publication_skin, ['bildmatrix', 'blueprint-matrix'], true);
 
-    if ($is_bildmatrix) {
-        return industriesalon_publications_render_photoalbum_blueprint_matrix($post_id, $payload);
+    if ($publication_skin === 'bildmatrix') {
+        return industriesalon_publications_render_photoalbum_bildmatrix($post_id, $payload);
     }
 
     $items_html = '';
@@ -2651,15 +2647,6 @@ add_filter('body_class', function (array $classes): array {
         $publication_skin = industriesalon_get_editorial_publication_post_skin($post_id);
         if ($publication_skin !== '') {
             $classes[] = 'iss-publication-editorial-skin-' . sanitize_html_class($publication_skin);
-            if (function_exists('iss_content_model_editorial_canonical_skin')) {
-                $canonical_skin = iss_content_model_editorial_canonical_skin($publication_skin);
-                if ($canonical_skin !== '' && $canonical_skin !== $publication_skin) {
-                    $classes[] = 'iss-publication-editorial-skin-' . sanitize_html_class($canonical_skin);
-                }
-                if ($canonical_skin === 'bildmatrix') {
-                    $classes[] = 'iss-publication-editorial-skin-blueprint-matrix';
-                }
-            }
         }
     }
 

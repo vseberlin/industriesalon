@@ -90,7 +90,7 @@ function industriesalon_structured_veranstaltung_skin(array $document): string
 
 function industriesalon_structured_veranstaltung_section_uses_flow_media(array $section, string $skin): bool
 {
-    if ($skin !== 'vortrag') {
+    if ($skin !== 'typografisch') {
         return false;
     }
 

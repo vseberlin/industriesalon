@@ -128,17 +128,13 @@
     return (element.textContent || '').replace(/\s+/g, ' ').trim();
   }
 
-  function sectionTone(type) {
-    var tones = {
-      leitfrage: '#7f77dd',
-      quellenauszug: '#d85a30',
-      objektfokus: '#1d9e75',
-      bildstrecke: '#888780',
-      image_wall: '#b98250',
-      vollbild: '#185fa5',
-      massstab: '#ba7517',
-      projekt_rail: '#255f63',
-      publication_rail: '#255f63',
+    function sectionTone(type) {
+      var tones = {
+        leitfrage: '#7f77dd',
+        objektfokus: '#1d9e75',
+        vollbild: '#185fa5',
+        massstab: '#ba7517',
+        publication_rail: '#255f63',
       intro: '#b94436',
       longread_chapter: '#1a1a2e',
       longread_quote: '#8a3b59',
@@ -146,12 +142,11 @@
       photoalbum: '#426d54',
       galerie: '#426d54',
       fliesstext: '#5f5e5a',
-      kapitel: '#1a1a2e',
-      zitat: '#d4537e',
-      material: '#6b5b35',
-      aside: '#3c3489',
-      schluss: '#a32d2d'
-    };
+        kapitel: '#1a1a2e',
+        zitat: '#d4537e',
+        material: '#6b5b35',
+        schluss: '#a32d2d'
+      };
 
     return tones[type] || '#1a1a2e';
   }
@@ -341,22 +336,16 @@
       return exists ? skin : 'standard';
     }
 
-    function projectHasLegacyRailSection() {
-      return format === 'projekt' && Array.isArray(documentState.sections) && documentState.sections.some(function (section) {
-        return section && section.type === 'projekt_rail';
-      });
-    }
-
     function currentRailFeature() {
       var features = documentState.features && typeof documentState.features === 'object' ? documentState.features : {};
       var rail = features.rail && typeof features.rail === 'object' ? features.rail : {};
       var hasEnabled = Object.prototype.hasOwnProperty.call(rail, 'enabled');
 
       return {
-        enabled: hasEnabled ? !!rail.enabled : projectHasLegacyRailSection(),
+        enabled: hasEnabled ? !!rail.enabled : false,
         placement: rail.placement || (currentSkin() === 'dossier' ? 'horizontal' : 'right'),
-        mode: rail.mode || (currentSkin() === 'field' ? 'anchor-nav' : 'contextual'),
-        treatment: rail.treatment || (currentSkin() === 'field' ? 'sticky' : 'quiet')
+        mode: rail.mode || 'contextual',
+        treatment: rail.treatment || 'quiet'
       };
     }
 

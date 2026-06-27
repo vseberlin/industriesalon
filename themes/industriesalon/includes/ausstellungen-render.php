@@ -54,12 +54,6 @@ add_filter('body_class', function (array $classes): array {
     $editorial_skin = industriesalon_get_editorial_ausstellung_post_skin($post_id);
     if ($editorial_skin !== '') {
         $classes[] = 'iss-ausstellung-editorial-skin-' . sanitize_html_class($editorial_skin);
-        if (function_exists('iss_content_model_editorial_canonical_skin')) {
-            $canonical_skin = iss_content_model_editorial_canonical_skin($editorial_skin);
-            if ($canonical_skin !== '' && $canonical_skin !== $editorial_skin) {
-                $classes[] = 'iss-ausstellung-editorial-skin-' . sanitize_html_class($canonical_skin);
-            }
-        }
     }
 
     return array_values(array_unique($classes));
@@ -69,13 +63,10 @@ function industriesalon_get_editorial_ausstellung_skins(): array
 {
     return [
         'standard',
-        'frauen-im-werk',
-        'kinder-im-werk',
         'quellenbuehne',
         'objektalbum',
         'typografisch',
         'chronik',
-        'industrieakte',
     ];
 }
 
@@ -113,19 +104,6 @@ function industriesalon_resolve_editorial_ausstellung_skin(array $document): str
     $skin = sanitize_key((string) ($document['skin'] ?? 'standard'));
 
     return in_array($skin, industriesalon_get_editorial_ausstellung_skins(), true) ? $skin : 'standard';
-}
-
-function industriesalon_get_editorial_ausstellung_legacy_skin(string $skin): string
-{
-    $skin = sanitize_key($skin);
-    if ($skin === 'quellenbuehne') {
-        return 'frauen-im-werk';
-    }
-    if ($skin === 'objektalbum') {
-        return 'kinder-im-werk';
-    }
-
-    return $skin;
 }
 
 function industriesalon_get_editorial_ausstellung_post_skin(int $post_id): string
@@ -239,22 +217,18 @@ function industriesalon_get_editorial_ausstellung_section_context(array $section
 {
     $type = sanitize_html_class((string) ($section['type'] ?? 'kapitel'));
     $layout = 'standard';
-    $skin = industriesalon_get_editorial_ausstellung_legacy_skin($skin);
+    $skin = sanitize_key($skin);
     unset($rendered_index);
 
     if ($skin !== 'standard') {
         $layouts = [
             'leitfrage' => 'thesis',
             'objektfokus' => 'object-grid',
-            'quellenauszug' => 'source-focus',
             'zitat' => 'quote',
             'vollbild' => 'viewport-image',
             'massstab' => 'stat',
             'fliesstext' => 'essay',
-            'bildstrecke' => 'album',
             'galerie' => 'album',
-            'image_wall' => 'image-wall',
-            'aside' => 'aside',
             'schluss' => 'conclusion',
             'kapitel' => 'chapter',
         ];
@@ -274,7 +248,7 @@ function industriesalon_get_editorial_ausstellung_section_context(array $section
                 $layout = 'image-wall';
             }
         }
-        if (in_array($type, ['quellenauszug', 'zitat'], true) && $layout === 'source-focus' && sanitize_key((string) ($section['orientation'] ?? '')) === 'media-right') {
+        if ($type === 'zitat' && $layout === 'source-focus' && sanitize_key((string) ($section['orientation'] ?? '')) === 'media-right') {
             $layout = 'source-focus-reverse';
         }
     }
@@ -288,7 +262,7 @@ function industriesalon_get_editorial_ausstellung_section_context(array $section
 
 function industriesalon_locate_editorial_ausstellung_section_partial(string $skin, array $context): string
 {
-    $skin = sanitize_key(industriesalon_get_editorial_ausstellung_legacy_skin($skin));
+    $skin = sanitize_key($skin);
     $type = sanitize_file_name((string) ($context['type'] ?? ''));
     $candidates = [];
 
@@ -435,10 +409,6 @@ function industriesalon_render_editorial_ausstellung_content(string $content): s
         'iss-ausstellung-editorial',
         'iss-ausstellung-editorial--skin-' . sanitize_html_class($skin),
     ];
-    $legacy_skin = industriesalon_get_editorial_ausstellung_legacy_skin($skin);
-    if ($legacy_skin !== '' && $legacy_skin !== $skin) {
-        $classes[] = 'iss-ausstellung-editorial--skin-' . sanitize_html_class($legacy_skin);
-    }
 
     return trim($html) !== '' ? '<div class="' . esc_attr(implode(' ', $classes)) . '">' . $html . '</div>' : $content;
 }
