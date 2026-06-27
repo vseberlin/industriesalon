@@ -54,6 +54,13 @@ be recovered from Git history.
     choose the existing Ausstellungsentscheidung layout without changing
     gesture type;
   - kept the old `layout-aside` theme treatment as the rendering target.
+- Consolidated Rückblick registry gestures:
+  - added canonical `fliesstext`, `galerie`, `objektfokus`, `material`, and
+    `schluss` sections;
+  - marked legacy `bericht`, `bildstrecke`, and `quellen` hidden while keeping
+    them valid for imported or old documents;
+  - made editorial Set promotion prefer canonical `galerie` before legacy
+    `bildstrecke`.
 - Added a registry diagnostics and backfill maintenance slice:
   - added `wp iss status` in `iss-core` to report first-party plugin loading,
     key CPT registration, schema/backfill option versions, graph/occurrence/Set

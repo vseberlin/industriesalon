@@ -409,7 +409,7 @@ function iss_content_editorial_sets_promote_to_editorial_document(int $post_id, 
     if ($section_type === '' || !isset($format['sections'][$section_type])) {
         $preferred_sections = get_post_type($post_id) === ISS_CONTENT_MODEL_PROJEKT_POST_TYPE
             ? ['galerie', 'material', 'image_wall', 'kapitel']
-            : ['bildstrecke', 'galerie', 'kapitel'];
+            : ['galerie', 'bildstrecke', 'kapitel'];
         foreach ($preferred_sections as $candidate) {
             if (isset($format['sections'][$candidate])) {
                 $section_type = $candidate;

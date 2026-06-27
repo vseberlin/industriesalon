@@ -205,16 +205,36 @@ function iss_content_model_register_editorial_formats(array $formats): array
                 'label' => __('Bericht', 'iss-content-model'),
                 'description' => __('Curated report text.', 'iss-content-model'),
                 'supports' => ['media_refs', 'object_refs'],
+                'ui_hidden' => true,
+            ],
+            'fliesstext' => [
+                'label' => __('Fliesstext', 'iss-content-model'),
+                'description' => __('Curated report text.', 'iss-content-model'),
+                'supports' => ['media_refs', 'object_refs'],
             ],
             'bildstrecke' => [
                 'label' => __('Bildstrecke', 'iss-content-model'),
                 'description' => __('Approved gallery material promoted from a Set.', 'iss-content-model'),
-                'supports' => ['media_refs', 'object_refs'],
+                'supports' => ['media_refs', 'object_refs', 'gallery_layout'],
+                'ui_hidden' => true,
+            ],
+            'galerie' => array_merge($gallery_section, ['supports' => ['media_refs', 'object_refs', 'gallery_layout']]),
+            'objektfokus' => [
+                'label' => __('Objektfokus', 'iss-content-model'),
+                'description' => __('Archive objects that support the report.', 'iss-content-model'),
+                'supports' => ['object_refs'],
+            ],
+            'material' => array_merge($material_section, ['supports' => ['media_refs', 'object_refs', 'links']]),
+            'schluss' => [
+                'label' => __('Schluss', 'iss-content-model'),
+                'description' => __('Closing note and onward links.', 'iss-content-model'),
+                'supports' => ['links'],
             ],
             'quellen' => [
                 'label' => __('Quellen', 'iss-content-model'),
                 'description' => __('Source material that supports the report.', 'iss-content-model'),
                 'supports' => ['object_refs', 'links'],
+                'ui_hidden' => true,
             ],
         ],
     ];
