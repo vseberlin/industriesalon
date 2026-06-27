@@ -399,6 +399,9 @@
       if (section.gallery_layout) {
         parts.push('Galerie: ' + galleryLayoutLabel(section.gallery_layout));
       }
+      if (section.quote_treatment) {
+        parts.push(section.quote_treatment === 'source' ? 'Quellenauszug' : 'Zitat');
+      }
       if ((section.facts || []).length) {
         parts.push(String((section.facts || []).length) + ' Fakt(en)');
       }
@@ -1209,6 +1212,10 @@
         }));
       }
 
+      if (supports(type, 'quote_treatment')) {
+        renderQuoteTreatmentControl(section, body);
+      }
+
       if (supports(type, 'object_refs')) {
         renderObjectPicker(section, body);
       }
@@ -1383,6 +1390,40 @@
       });
 
       wrapper.appendChild(createElement('span', '', 'Galerie-Layout'));
+      wrapper.appendChild(options);
+      body.appendChild(wrapper);
+    }
+
+    function renderQuoteTreatmentControl(section, body) {
+      var wrapper = createElement('div', 'iss-editorial-field iss-editorial-field--quote-treatment');
+      var options = createElement('div', 'iss-editorial-segmented');
+      var choices = [
+        { value: 'pull', label: 'Zitat' },
+        { value: 'source', label: 'Quellenauszug' }
+      ];
+      var current = section.quote_treatment === 'source' ? 'source' : 'pull';
+
+      choices.forEach(function (choice) {
+        var label = createElement('label', 'iss-editorial-segmented__option');
+        var input = document.createElement('input');
+        var text = createElement('span', '', choice.label);
+        input.type = 'radio';
+        input.name = 'iss-editorial-quote-treatment-' + String(documentState.sections.indexOf(section));
+        input.value = choice.value;
+        input.checked = current === choice.value;
+        input.addEventListener('change', function () {
+          if (input.checked) {
+            section.quote_treatment = choice.value;
+            render();
+            scheduleAutosave();
+          }
+        });
+        label.appendChild(input);
+        label.appendChild(text);
+        options.appendChild(label);
+      });
+
+      wrapper.appendChild(createElement('span', '', 'Zitat-Typ'));
       wrapper.appendChild(options);
       body.appendChild(wrapper);
     }

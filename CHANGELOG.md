@@ -42,6 +42,12 @@ be recovered from Git history.
   - made project and exhibition renderers treat `galerie` with `wall` layout as
     the existing image-wall treatment while keeping old stored section types
     valid.
+- Consolidated exhibition quote/source gestures:
+  - marked legacy `quellenauszug` hidden while keeping stored sections valid;
+  - added `quote_treatment` to canonical `zitat` sections so editors can choose
+    normal quote or source-focused excerpt treatment;
+  - made source-treated `zitat` sections reuse the existing source-focus
+    exhibition layouts, including media orientation.
 - Added a registry diagnostics and backfill maintenance slice:
   - added `wp iss status` in `iss-core` to report first-party plugin loading,
     key CPT registration, schema/backfill option versions, graph/occurrence/Set

@@ -274,13 +274,16 @@ function industriesalon_get_editorial_ausstellung_section_context(array $section
         if (isset($layouts[$type])) {
             $layout = $layouts[$type];
         }
+        if ($type === 'zitat' && sanitize_key((string) ($section['quote_treatment'] ?? 'pull')) === 'source') {
+            $layout = 'source-focus';
+        }
         if ($type === 'galerie') {
             $gallery_layout = sanitize_key((string) ($section['gallery_layout'] ?? 'sequence'));
             if ($gallery_layout === 'wall') {
                 $layout = 'image-wall';
             }
         }
-        if ($type === 'quellenauszug' && sanitize_key((string) ($section['orientation'] ?? '')) === 'media-right') {
+        if (in_array($type, ['quellenauszug', 'zitat'], true) && $layout === 'source-focus' && sanitize_key((string) ($section['orientation'] ?? '')) === 'media-right') {
             $layout = 'source-focus-reverse';
         }
     }

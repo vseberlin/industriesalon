@@ -101,6 +101,7 @@ function iss_content_model_register_editorial_formats(array $formats): array
                 'label' => __('Quellenauszug', 'iss-content-model'),
                 'description' => __('Source quote and citation', 'iss-content-model'),
                 'supports' => ['quote', 'object_refs', 'media_refs', 'orientation'],
+                'ui_hidden' => true,
             ],
             'massstab' => [
                 'label' => __('Massstab', 'iss-content-model'),
@@ -110,7 +111,7 @@ function iss_content_model_register_editorial_formats(array $formats): array
             'zitat' => [
                 'label' => __('Zitat', 'iss-content-model'),
                 'description' => __('Direct quote with attribution', 'iss-content-model'),
-                'supports' => ['quote', 'object_refs'],
+                'supports' => ['quote', 'object_refs', 'media_refs', 'orientation', 'quote_treatment'],
             ],
             'bildstrecke' => [
                 'label' => __('Dokumentarische Strecke', 'iss-content-model'),
