@@ -89,14 +89,6 @@ add_filter('iss_editorial_format_skins', function (array $skins, string $format_
             'slug' => 'standard',
             'label' => __('Standard', 'industriesalon'),
         ],
-        'frauen-im-werk' => [
-            'slug' => 'frauen-im-werk',
-            'label' => __('Frauen im Werk', 'industriesalon'),
-        ],
-        'kinder-im-werk' => [
-            'slug' => 'kinder-im-werk',
-            'label' => __('Kinder im Werk', 'industriesalon'),
-        ],
         'quellenbuehne' => [
             'slug' => 'quellenbuehne',
             'label' => __('Quellenbühne', 'industriesalon'),
@@ -112,10 +104,6 @@ add_filter('iss_editorial_format_skins', function (array $skins, string $format_
         'chronik' => [
             'slug' => 'chronik',
             'label' => __('Chronik', 'industriesalon'),
-        ],
-        'industrieakte' => [
-            'slug' => 'industrieakte',
-            'label' => __('Industrieakte', 'industriesalon'),
         ],
     ];
 }, 10, 2);

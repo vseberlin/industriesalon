@@ -61,6 +61,11 @@ be recovered from Git history.
     them valid for imported or old documents;
   - made editorial Set promotion prefer canonical `galerie` before legacy
     `bildstrecke`.
+- Consolidated skin picker vocabularies:
+  - kept legacy skins renderable for stored documents;
+  - removed alias-only skin choices from Ausstellung, Projekt, and publication
+    editor pickers so new authoring uses `quellenbuehne`, `objektalbum`,
+    `dossier`, `typografisch`, and `bildmatrix`.
 - Added a registry diagnostics and backfill maintenance slice:
   - added `wp iss status` in `iss-core` to report first-party plugin loading,
     key CPT registration, schema/backfill option versions, graph/occurrence/Set

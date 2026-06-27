@@ -21,17 +21,9 @@ add_filter('iss_editorial_format_skins', function (array $skins, string $format_
     }
 
     return [
-        'brief' => [
-            'slug' => 'brief',
-            'label' => __('Brief', 'industriesalon'),
-        ],
         'dossier' => [
             'slug' => 'dossier',
             'label' => __('Dossier', 'industriesalon'),
-        ],
-        'field' => [
-            'slug' => 'field',
-            'label' => __('Field', 'industriesalon'),
         ],
         'standard' => [
             'slug' => 'standard',

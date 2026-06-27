@@ -24,10 +24,6 @@ add_filter('iss_editorial_format_skins', function (array $skins, string $format_
             'slug' => 'standard',
             'label' => __('Standard', 'industriesalon'),
         ],
-        'blueprint-matrix' => [
-            'slug' => 'blueprint-matrix',
-            'label' => __('Blueprint-Matrix', 'industriesalon'),
-        ],
         'bildmatrix' => [
             'slug' => 'bildmatrix',
             'label' => __('Bildmatrix', 'industriesalon'),
