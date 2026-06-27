@@ -168,6 +168,13 @@ function iss_editorial_sanitize_quote_treatment($treatment): string
     return in_array($treatment, ['pull', 'source'], true) ? $treatment : 'pull';
 }
 
+function iss_editorial_sanitize_section_treatment($treatment): string
+{
+    $treatment = sanitize_key((string) $treatment);
+
+    return in_array($treatment, ['standard', 'aside'], true) ? $treatment : 'standard';
+}
+
 function iss_editorial_sanitize_document_rail_feature($feature): array
 {
     if (!is_array($feature)) {
@@ -412,6 +419,10 @@ function iss_editorial_sanitize_section(array $section, array $format): array
 
     if (iss_editorial_format_supports_section_field($format, $type, 'quote_treatment')) {
         $sanitized['quote_treatment'] = iss_editorial_sanitize_quote_treatment($section['quote_treatment'] ?? 'pull');
+    }
+
+    if (iss_editorial_format_supports_section_field($format, $type, 'section_treatment')) {
+        $sanitized['section_treatment'] = iss_editorial_sanitize_section_treatment($section['section_treatment'] ?? 'standard');
     }
 
     if (iss_editorial_format_supports_section_field($format, $type, 'rail_options')) {

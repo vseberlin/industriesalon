@@ -85,7 +85,7 @@ function iss_content_model_register_editorial_formats(array $formats): array
             'kapitel' => [
                 'label' => __('Kapitel', 'iss-content-model'),
                 'description' => __('Numbered chapter break', 'iss-content-model'),
-                'supports' => [],
+                'supports' => ['links', 'section_treatment'],
             ],
             'leitfrage' => [
                 'label' => __('Leitfrage', 'iss-content-model'),
@@ -140,6 +140,7 @@ function iss_content_model_register_editorial_formats(array $formats): array
                 'label' => __('Ausstellungsentscheidung', 'iss-content-model'),
                 'description' => __('Curator speaks directly', 'iss-content-model'),
                 'supports' => ['links'],
+                'ui_hidden' => true,
             ],
         ],
     ];

@@ -402,6 +402,9 @@
       if (section.quote_treatment) {
         parts.push(section.quote_treatment === 'source' ? 'Quellenauszug' : 'Zitat');
       }
+      if (section.section_treatment) {
+        parts.push(section.section_treatment === 'aside' ? 'Ausstellungsentscheidung' : 'Kapitel');
+      }
       if ((section.facts || []).length) {
         parts.push(String((section.facts || []).length) + ' Fakt(en)');
       }
@@ -1216,6 +1219,10 @@
         renderQuoteTreatmentControl(section, body);
       }
 
+      if (supports(type, 'section_treatment')) {
+        renderSectionTreatmentControl(section, body);
+      }
+
       if (supports(type, 'object_refs')) {
         renderObjectPicker(section, body);
       }
@@ -1424,6 +1431,40 @@
       });
 
       wrapper.appendChild(createElement('span', '', 'Zitat-Typ'));
+      wrapper.appendChild(options);
+      body.appendChild(wrapper);
+    }
+
+    function renderSectionTreatmentControl(section, body) {
+      var wrapper = createElement('div', 'iss-editorial-field iss-editorial-field--section-treatment');
+      var options = createElement('div', 'iss-editorial-segmented');
+      var choices = [
+        { value: 'standard', label: 'Kapitel' },
+        { value: 'aside', label: 'Ausstellungsentscheidung' }
+      ];
+      var current = section.section_treatment === 'aside' ? 'aside' : 'standard';
+
+      choices.forEach(function (choice) {
+        var label = createElement('label', 'iss-editorial-segmented__option');
+        var input = document.createElement('input');
+        var text = createElement('span', '', choice.label);
+        input.type = 'radio';
+        input.name = 'iss-editorial-section-treatment-' + String(documentState.sections.indexOf(section));
+        input.value = choice.value;
+        input.checked = current === choice.value;
+        input.addEventListener('change', function () {
+          if (input.checked) {
+            section.section_treatment = choice.value;
+            render();
+            scheduleAutosave();
+          }
+        });
+        label.appendChild(input);
+        label.appendChild(text);
+        options.appendChild(label);
+      });
+
+      wrapper.appendChild(createElement('span', '', 'Kapitel-Typ'));
       wrapper.appendChild(options);
       body.appendChild(wrapper);
     }

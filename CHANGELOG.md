@@ -48,6 +48,12 @@ be recovered from Git history.
     normal quote or source-focused excerpt treatment;
   - made source-treated `zitat` sections reuse the existing source-focus
     exhibition layouts, including media orientation.
+- Consolidated exhibition aside gestures:
+  - marked legacy `aside` hidden while keeping stored sections valid;
+  - added `section_treatment` to canonical `kapitel` sections so editors can
+    choose the existing Ausstellungsentscheidung layout without changing
+    gesture type;
+  - kept the old `layout-aside` theme treatment as the rendering target.
 - Added a registry diagnostics and backfill maintenance slice:
   - added `wp iss status` in `iss-core` to report first-party plugin loading,
     key CPT registration, schema/backfill option versions, graph/occurrence/Set

@@ -274,6 +274,9 @@ function industriesalon_get_editorial_ausstellung_section_context(array $section
         if (isset($layouts[$type])) {
             $layout = $layouts[$type];
         }
+        if ($type === 'kapitel' && sanitize_key((string) ($section['section_treatment'] ?? 'standard')) === 'aside') {
+            $layout = 'aside';
+        }
         if ($type === 'zitat' && sanitize_key((string) ($section['quote_treatment'] ?? 'pull')) === 'source') {
             $layout = 'source-focus';
         }
