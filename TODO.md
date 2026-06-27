@@ -17,8 +17,10 @@ Immediate executable work only. Larger future programs live in `docs/project/bac
   that already has the four publication posts (`18973`, `18894`, `18948`,
   `19038`), Archivset `19` for `nef-album`, the referenced archive-object/media
   rows/files and Media Library attachments, plus register place `17976`
-  (`Ostendstraße 1-5 / Behrensbau`). The artifacts include the
-  `blueprint-matrix` skin assignments and `iss_related_places` relations. For
+  (`Ostendstraße 1-5 / Behrensbau`). The current vocabulary-normalized transfer
+  state is captured in
+  `ops/sql/2026-06-27-editorial-vocabulary-normalized-json.sql`; use canonical
+  `bildmatrix` skin assignments, not the old `blueprint-matrix` slug. For
   existing chroniken / timelines and longreads, review/apply
   `ops/sql/2026-06-27-publication-longread-timeline-json.sql` only after the
   code deploy on a target that already has the 12 publication posts and
@@ -28,14 +30,12 @@ Immediate executable work only. Larger future programs live in `docs/project/bac
   because the local source content has no dated timeline stations; for
   longreads, add/reorder `longread_quote` moments and chapter `media_refs`
   where the story needs poster imagery.
-- Project skin review: visually compare the three enabled local examples:
-  `futura-biennale-2027` uses `dossier` with publication-style horizontal
-  primary chapter navigation, centered 75rem chapter/fact spreads, and footer context,
-  `walk-of-fame-schoeneweide` uses compact `brief`, and
-  `stadtlabor-wilhelminenhofstrasse` uses `field` with the side index/context
-  treatment. Also review project `galerie` and `material` on pages with
-  multiple images/documents, then decide whether to assign `brief` or `field`
-  to additional projects, continue the seven-page project review, and test the
+- Project skin review: visually compare enabled local `dossier` examples,
+  including `futura-biennale-2027`, `walk-of-fame-schoeneweide`, and
+  `stadtlabor-wilhelminenhofstrasse`, with their rail feature settings instead
+  of the retired `brief` / `field` skin slugs. Also review project `galerie`
+  and `material` on pages with multiple images/documents, continue the
+  seven-page project review, and test the
   admin project Set flow: create/open/upload from the project edit screen,
   approve items in the Workbench, then promote mixed image/PDF selections into
   `galerie` plus `material`. Transfer order is
@@ -61,11 +61,10 @@ Immediate executable work only. Larger future programs live in `docs/project/bac
   applies to every valid document. Veranstaltung authoring now avoids Gutenberg:
   the default editor is disabled and `Struktur` is the primary editor surface.
   Legacy Veranstaltung presentation switches are removed from active UI/meta
-  registration/body classes. Theme-owned skins are active for `vortrag`,
-  `lesung`, `gespraech`, and `festival`; `repair` is prepared for future
-  `event.repair_cafe`; `workshop` and `praesentation` stay on the baseline
-  `typografisch` skin until designed. `galerie` now renders as a public carousel
-  strip, and `material` is reserved for documents/downloads/links/object refs.
+  registration/body classes. Theme-owned Veranstaltung defaults now collapse to
+  canonical `typografisch`, `buehne`, and `chronik`; event taxonomy remains the
+  semantic type, not the skin. `galerie` now renders as a public carousel strip,
+  and `material` is reserved for documents/downloads/links/object refs.
   For transfer, follow
   `ops/sql/2026-06-24-veranstaltungen-transfer-instructions.md` and replay the
   full JSON artifact plus
@@ -106,12 +105,11 @@ Immediate executable work only. Larger future programs live in `docs/project/bac
   items. First run should log/report candidates before deleting files. The
   current Fete test Set intentionally has all 24 raw uploads quarantined in
   `var/event-drop-storage/rejected`.
-- Editorial platform next slice: curator-review `Frauen im Werk für Fernmeldewesen` in the custom editor with the `frauen-im-werk` JSON skin enabled locally. Clean up gesture choices, kickers, section text, captions, archive-object choices, and source/source-link details, then verify preview/frontend output.
+- Editorial platform next slice: curator-review `Frauen im Werk für Fernmeldewesen` in the custom editor with the canonical `objektalbum` JSON skin enabled locally. Clean up gesture choices, kickers, section text, captions, archive-object choices, and source/source-link details, then verify preview/frontend output.
 - Apply/review `ops/sql/2026-06-23-roehren-republik-editorial-json.sql` on staging and curator-check the `Röhren für die Republik` facts, especially the derived Leningrad T2 tube totals, before production use.
 - Continue live-testing `typografisch` and `chronik` Ausstellung JSON skins against real archival-source exhibition candidates before treating them as production-ready.
-- Keep Ausstellung layout/gesture decisions out of editor controls while exposing only document skin assignment through `Darstellung`: editors add, edit, save, and reorder gesture sections; the theme renders each `gesture x skin` treatment through the universal section slots and dedicated skin CSS such as `themes/industriesalon/assets/css/skins/ausstellung-frauen-im-werk.css`.
-- Before transferring the `Frauen im Werk` JSON pilot elsewhere, apply/review `ops/sql/2026-06-22-frauen-im-werk-editorial-json.sql`; the current skin assignment and section document are DB-backed local state.
-- Review the `Kinder im Werk` JSON conversion before transfer; use `ops/sql/2026-06-23-kinder-im-werk-editorial-json.sql` for the DB-backed local document and enabled flag.
+- Keep Ausstellung layout/gesture decisions out of editor controls while exposing only document skin assignment through `Darstellung`: editors add, edit, save, and reorder gesture sections; the theme renders each `gesture x skin` treatment through the universal section slots and dedicated skin CSS such as `themes/industriesalon/assets/css/skins/ausstellung-quellenbuehne.css` and `themes/industriesalon/assets/css/skins/ausstellung-objektalbum.css`.
+- Before transferring the `Frauen im Werk` / `Kinder im Werk` JSON state elsewhere, prefer the normalized artifact `ops/sql/2026-06-27-editorial-vocabulary-normalized-json.sql`; it contains the canonical `objektalbum` / `quellenbuehne` skin assignments and canonical gesture names.
 - Preserve the current ownership split: `iss-relations` resolves place/source contracts, `iss-frontend` owns frontend map rendering, `industriesalon-schoeneweide-register` owns register/interactive Atlas data, and the theme owns map assets/presets/skins.
 - Before production deploy, verify target mail mode and enable `Tools > ISS Anfragen` notification email only for an approved recipient if request emails should leave the server.
 - Before production deploy, reduce first-party dynamic block clutter: reconcile DB template overrides, move theme render-filter dependencies into plugin defaults where needed, hide unused legacy blocks from the inserter, migrate `industriesalon/program-cards` to `industriesalon/timeline-query`, and collapse related-content wrappers around one shared card renderer before deleting registrations.
