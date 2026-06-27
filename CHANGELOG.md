@@ -6,6 +6,12 @@ be recovered from Git history.
 
 ## 2026-06-27
 
+- Added `docs/project/editorial-admin-simplification-sow.md` to define the
+  shared ISS editorial admin direction: no global admin reskin, classify each
+  CPT field/block/metabox as must-show, integrated, hidden, migrated, or purged,
+  and converge JSON composition, facts, relations, media/Sets, archive refs, and
+  list-table status into one dashboard model with one editing authority per
+  concept.
 - Completed the hard editorial vocabulary cleanup after the compatibility pass:
   - migrated local stored editorial JSON to canonical gestures, skins, and
     `features.rail`;

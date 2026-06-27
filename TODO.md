@@ -4,6 +4,13 @@ Immediate executable work only. Larger future programs live in `docs/project/bac
 
 ## Next
 
+- Editorial admin simplification: start from
+  `docs/project/editorial-admin-simplification-sow.md`. First executable slice
+  is a CPT-by-CPT inventory/classification of edit-screen surfaces, then convert
+  either Projekt as the JSON-first reference dashboard or Ausstellung as the
+  Gutenberg/metabox cleanup reference. Do not ship a global admin reskin; hide
+  duplicate boxes only after the integrated control saves to the same storage
+  and browser edit/save/reload parity is verified.
 - Führung JSON migration: after deploying the code, review/apply
   `ops/sql/2026-06-27-fuehrung-editorial-json.sql` only on a target that
   already has the 15 published Führung posts listed in the artifact. The SQL

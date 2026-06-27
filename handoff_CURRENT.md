@@ -6,6 +6,10 @@ Current work only. Completed checkpoint history belongs in `CHANGELOG.md`; activ
 
 ## Current Work
 
+- Editorial admin simplification SOW is now the durable planning artifact at
+  `docs/project/editorial-admin-simplification-sow.md`; it rejects a global
+  admin reskin and defines one shared ISS editorial dashboard model with one
+  normal editing authority per concept.
 - Editorial gesture/skin cleanup is locally complete and committed at
   `0b6c45b Normalize editorial gestures and skins`.
 - Local DB-backed editorial JSON was migrated for the included domains:
@@ -51,7 +55,11 @@ Current work only. Completed checkpoint history belongs in `CHANGELOG.md`; activ
 
 ## Next Action
 
-- Push or otherwise exchange the 11 local commits when the local checkpoint
+- First executable editorial-admin slice: inventory/classify current
+  edit-screen fields, blocks, panels, metaboxes, save paths, and list-table
+  columns by the SOW states, then choose Projekt or Ausstellung as the first
+  reference dashboard conversion.
+- Push or otherwise exchange the local commits when the local checkpoint
   should become shared through GitHub `main`.
 - On any target DB that should receive this vocabulary migration, deploy code
   first, review/apply
@@ -64,8 +72,10 @@ Current work only. Completed checkpoint history belongs in `CHANGELOG.md`; activ
 
 ## Verified
 
-- `git fetch origin --prune`; local `HEAD=0b6c45b`,
-  `origin/main=053ac70`, branch is ahead by 11 and not pushed.
+- For the editorial-admin SOW slice: `git diff --check` passed.
+- `git fetch origin --prune`; before this SOW exit commit, local
+  `HEAD=3c46a55`, `origin/main=053ac70`, branch was ahead by 12 and not
+  pushed.
 - DB legacy stored-slug check returned `0` after migration.
 - Representative local routes returned `200` and rendered new skin classes:
   - `/ausstellungen/rohren-fur-die-republik/` -> `quellenbuehne`
