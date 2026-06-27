@@ -21,6 +21,7 @@ define('ISS_RELATIONS_GRAPH_IDENTIFIER_BACKFILL_OPTION', 'iss_relations_graph_id
 require_once ISS_RELATIONS_PATH . 'includes/core.php';
 require_once ISS_RELATIONS_PATH . 'includes/meta.php';
 require_once ISS_RELATIONS_PATH . 'includes/admin.php';
+require_once ISS_RELATIONS_PATH . 'includes/rest.php';
 require_once ISS_RELATIONS_PATH . 'includes/blocks.php';
 require_once ISS_RELATIONS_PATH . 'includes/query-loop.php';
 require_once ISS_RELATIONS_PATH . 'includes/cli.php';

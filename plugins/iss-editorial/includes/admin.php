@@ -75,6 +75,47 @@ function iss_editorial_render_meta_box(WP_Post $post, array $box): void
     echo '</div>';
 }
 
+function iss_editorial_uses_integrated_route_stations(string $format_slug, string $post_type): bool
+{
+    return $format_slug === 'fuehrung'
+        && $post_type === 'fuehrung'
+        && defined('ISS_RELATIONS_META_KEY')
+        && function_exists('iss_relations_normalize_relations')
+        && function_exists('iss_relations_get_place_choices');
+}
+
+function iss_editorial_get_route_station_editor_config(int $post_id, string $format_slug, string $post_type): array
+{
+    if (!iss_editorial_uses_integrated_route_stations($format_slug, $post_type)) {
+        return [
+            'enabled' => false,
+        ];
+    }
+
+    $stored = get_post_meta($post_id, ISS_RELATIONS_META_KEY, true);
+
+    return [
+        'enabled' => true,
+        'relations' => iss_relations_normalize_relations(is_array($stored) ? $stored : [], $post_id),
+        'places' => iss_relations_get_place_choices(),
+        'restRoot' => esc_url_raw(rest_url('iss-relations/v1')),
+    ];
+}
+
+function iss_editorial_render_route_relation_hidden_fields(array $relations): void
+{
+    echo '<div class="iss-editorial-route-fields" hidden aria-hidden="true">';
+
+    foreach (array_values($relations) as $index => $relation) {
+        foreach (['place_id', 'role', 'weight', 'label', 'route_title', 'route_teaser', 'station_object_id', 'station_story_id'] as $key) {
+            $value = $relation[$key] ?? '';
+            echo '<input type="hidden" name="iss_relations[' . esc_attr((string) $index) . '][' . esc_attr($key) . ']" value="' . esc_attr((string) $value) . '">';
+        }
+    }
+
+    echo '</div>';
+}
+
 function iss_editorial_render_main_canvas(WP_Post $post): void
 {
     $format = iss_editorial_get_format_for_post_type((string) $post->post_type);
@@ -85,13 +126,20 @@ function iss_editorial_render_main_canvas(WP_Post $post): void
     $format_slug = (string) $format['slug'];
     $document = iss_editorial_get_document((int) $post->ID, $format_slug, false);
     $enabled = iss_editorial_document_is_enabled((int) $post->ID, $format_slug);
+    $route_config = iss_editorial_get_route_station_editor_config((int) $post->ID, $format_slug, (string) $post->post_type);
 
     wp_nonce_field('iss_editorial_save_document', 'iss_editorial_nonce');
+    if (!empty($route_config['enabled'])) {
+        wp_nonce_field('iss_relations_save_meta', 'iss_relations_meta_nonce');
+    }
 
     echo '<div class="iss-editorial-shell">';
     echo '<div class="iss-editorial-admin iss-editorial-admin--canvas" data-format="' . esc_attr($format_slug) . '" data-post-id="' . esc_attr((string) $post->ID) . '">';
     echo '<input type="hidden" name="iss_editorial[' . esc_attr($format_slug) . '][enabled]" value="' . esc_attr($enabled ? '1' : '0') . '">';
     echo '<input type="hidden" class="iss-editorial-document-field" name="iss_editorial[' . esc_attr($format_slug) . '][document]" value="' . esc_attr(iss_editorial_encode_document($document)) . '">';
+    if (!empty($route_config['enabled'])) {
+        iss_editorial_render_route_relation_hidden_fields((array) ($route_config['relations'] ?? []));
+    }
     echo '<div class="iss-editorial-canvas-toolbar">';
     echo '<p class="iss-editorial-mode">' . esc_html__('Redaktionelle Komposition', 'iss-editorial') . '</p>';
     echo '<p class="iss-editorial-mode">' . esc_html__('Abschnitte erstellen, bearbeiten und ordnen.', 'iss-editorial') . '</p>';
@@ -102,6 +150,17 @@ function iss_editorial_render_main_canvas(WP_Post $post): void
     echo '</div>';
 }
 add_action('edit_form_after_title', 'iss_editorial_render_main_canvas', 20);
+
+function iss_editorial_remove_integrated_relation_meta_boxes(string $post_type): void
+{
+    $format = iss_editorial_get_format_for_post_type($post_type);
+    if (!$format || !iss_editorial_uses_integrated_route_stations((string) $format['slug'], $post_type)) {
+        return;
+    }
+
+    remove_meta_box('iss-relations-places', $post_type, 'normal');
+}
+add_action('add_meta_boxes', 'iss_editorial_remove_integrated_relation_meta_boxes', 100, 1);
 
 function iss_editorial_enqueue_archive_picker_assets(int $post_id): void
 {
@@ -213,6 +272,7 @@ function iss_editorial_enqueue_admin_assets(string $hook): void
 
     $script_path = iss_editorial_admin_path() . 'assets/admin.js';
     if (file_exists($script_path)) {
+        $route_config = iss_editorial_get_route_station_editor_config($post_id, (string) $format['slug'], (string) $screen->post_type);
         wp_enqueue_script(
             'iss-editorial-admin',
             iss_editorial_admin_url() . 'assets/admin.js',
@@ -236,6 +296,7 @@ function iss_editorial_enqueue_admin_assets(string $hook): void
                 'enabled' => iss_editorial_document_is_enabled($post_id, (string) $format['slug']),
                 'sections' => (array) $format['sections'],
                 'skins' => iss_editorial_get_format_skins((string) $format['slug']),
+                'routeStations' => $route_config,
                 'strings' => [
                     'saved' => __('Automatisch gesichert.', 'iss-editorial'),
                     'saving' => __('Automatische Sicherung...', 'iss-editorial'),

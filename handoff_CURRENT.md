@@ -6,6 +6,20 @@ Current work only. Completed checkpoint history belongs in `CHANGELOG.md`; activ
 
 ## Current Work
 
+- Führung narrative JSON migration is local:
+  - `fuehrung` is registered as an `iss-editorial` format with gestures for
+    intro, chapters, thesis/quote moments, galleries, image walls, material,
+    and conclusion links;
+  - the theme owns the JSON renderer in
+    `themes/industriesalon/includes/tours-render.php`, replaces only the hero
+    description from the first `intro` section, and renders later narrative
+    sections before the existing route block;
+  - all 15 published local Führung posts have valid `_iss_editorial_fuehrung`
+    JSON documents and `_iss_editorial_enabled_fuehrung=1`;
+  - route station editing is now integrated into the Führung composition editor
+    as `Route / Stationen`, but it still writes `iss_related_places` through
+    `iss-relations`; the generic `Verknüpfte Orte` metabox is hidden only for
+    Führung edit screens.
 - Publication JSON editing now covers the first photoalbum slice:
   - `publication` has JSON gestures for `intro`, `source`, optional
     `publication_rail`, `longread_chapter`, `longread_quote`,
@@ -52,6 +66,10 @@ Current work only. Completed checkpoint history belongs in `CHANGELOG.md`; activ
   non-NEF albums use manual source metadata with `WF-Museum` as the visible
   source label.
 - Transfer artifacts:
+  - `ops/sql/2026-06-27-fuehrung-editorial-json.sql` writes the local
+    DB-backed Führung JSON documents and enabled flags for the 15 published
+    Führung posts. No uploads artifact is required. The later integrated route
+    station editor is code-only and needs no new SQL/upload artifact.
   - `ops/sql/2026-06-26-nef-album-publication-json.sql` writes the local
     `nef-album` JSON state, layout/meta state, and Behrensbau relation.
   - `ops/sql/2026-06-26-photoalbum-blueprint-other-albums.sql` writes the same
@@ -71,6 +89,10 @@ Current work only. Completed checkpoint history belongs in `CHANGELOG.md`; activ
   blocks or hidden server-only render state.
 - Keep legacy publication fallback behavior until each publication is explicitly
   migrated.
+- Führung route stations, booking, dates, facts, hero-gallery meta, Atlas map,
+  and related-content output remain outside the JSON document.
+- The integrated Führung station panel is a UI bridge only. Do not duplicate
+  route stations into `_iss_editorial_fuehrung`.
 - The SQL artifacts assume the target already has the relevant publication
   posts, Archivset `19` for `nef-album`, referenced Media Library attachment
   rows/files for the manual WF albums and timeline station images, and register
@@ -88,6 +110,10 @@ Current work only. Completed checkpoint history belongs in `CHANGELOG.md`; activ
   rows, then review/apply
   `ops/sql/2026-06-26-nef-album-publication-json.sql` and
   `ops/sql/2026-06-26-photoalbum-blueprint-other-albums.sql`.
+- On any target DB that should receive the Führung narrative migration, deploy
+  the code first, confirm the target has the 15 Führung posts listed in
+  `ops/sql/2026-06-27-fuehrung-editorial-json.sql`, then review/apply that SQL
+  artifact and spot-check representative tour routes.
 - On any target DB that should receive the longread/timeline migration, deploy
   the code first, confirm the target has the 12 publication posts and referenced
   timeline image attachment rows/files, then review/apply
@@ -99,6 +125,32 @@ Current work only. Completed checkpoint history belongs in `CHANGELOG.md`; activ
 
 ## Verified
 
+- Führung JSON migration:
+  - `wp iss-editorial fuehrung-dry-run` found 15 importable published Führung
+    candidates; only `elektropolis-tour` skipped existing infrastructure blocks
+    (`iss/tour-calendar`, `iss/related-content`);
+  - `wp iss-editorial fuehrung-import-candidate --post=all --enable` imported
+    and enabled all 15 local documents;
+  - WP-CLI confirmed all 15 migrated tour routes returned `200`, had enabled
+    JSON documents, and rendered the JSON editorial wrapper;
+  - Playwright checked representative migrated routes at `1440px` and `390px`:
+    all returned `200`, rendered the JSON intro/editorial layer, avoided empty
+    legacy wrappers, and had no horizontal overflow;
+  - local DB state check confirmed `posts=15 docs=15 enabled=15`;
+  - `ops/sql/2026-06-27-fuehrung-editorial-json.sql` was generated with a
+    backup table, narrow delete, and 30 insert rows for 15 JSON docs plus 15
+    enabled flags.
+- Führung integrated station editor:
+  - WP-CLI confirmed the route editor config for `12183` exposes relations
+    (`12` stops), `84` place choices, and the `iss-relations` REST root;
+  - server-rendered editor output includes the `iss_relations_meta_nonce`, 96
+    hidden relation inputs for the 12 station rows, and the route hidden-field
+    holder;
+  - the generic `Verknüpfte Orte` metabox is removed on Führung screens
+    (`remove_meta_box` marker is `false`);
+  - temporary REST smoke test against `/iss-relations/v1/posts/{id}/places`
+    saved one `role=stop` row with `route_title=Smoke Station` and deleted the
+    temporary Führung afterward.
 - `node --check plugins/iss-editorial/assets/admin.js`
 - PHP lint for touched plugin/theme PHP files.
 - `bash tools/phpcs-target.sh` for touched PHP files.
@@ -200,7 +252,7 @@ Current work only. Completed checkpoint history belongs in `CHANGELOG.md`; activ
 
 - Last pushed checkpoint: `247651f Reduce blueprint photoalbum render load`.
 - The 2026-06-27 publication JSON gesture/content migration and longread-poster
-  skin work is local and not committed yet.
+  skin work plus the Führung JSON migration are local and not committed yet.
 - Untracked unrelated/local files remain:
   - `iss-exhibition-composition-add.md`
   - `themes/industriesalon/theme2.json`

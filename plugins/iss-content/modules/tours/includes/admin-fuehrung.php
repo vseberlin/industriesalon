@@ -92,7 +92,7 @@ function iss_fuehrungen_render_meta_box($post) {
     echo '<p><label><input type="checkbox" name="iss_fuehrung[is_featured]" value="1" ' . checked($is_featured, true, false) . '> ' . esc_html__('Auf Landingpages hervorheben', 'iss-fuehrungen') . '</label></p>';
 
     echo '<p style="margin-top:1rem;color:#666;font-size:12px;line-height:1.5;">';
-    echo esc_html__('Lange Beschreibung, Absätze und Medien bitte im normalen Editor pflegen. Hier nur strukturierte Fakten eintragen.', 'iss-fuehrungen');
+    echo esc_html__('Tour-Fakten, Buchung und Hero-Galerie bleiben hier. Redaktionelle Beschreibung, Abschnitte und Medien werden in der Komposition unter dem Titel gepflegt.', 'iss-fuehrungen');
     echo '</p>';
 }
 

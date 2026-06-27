@@ -6,6 +6,37 @@ be recovered from Git history.
 
 ## 2026-06-27
 
+- Added the Führung JSON gesture/skin slice:
+  - registered a `fuehrung` editorial format in the shared `iss-editorial`
+    engine with tour gestures for intro, chapters, thesis/quote moments,
+    galleries, image walls, material, and conclusion links;
+  - kept booking, dates, route stations, facts, hero-gallery meta, Atlas map,
+    and related discovery on the existing tour module/template contracts;
+  - added a theme-owned tour renderer and template slot so enabled
+    `_iss_editorial_fuehrung` documents replace only the narrative layer while
+    unmigrated tours keep the legacy `post_content` description fallback.
+- Migrated the existing local Führung narrative layer into JSON:
+  - added `wp iss-editorial fuehrung-dry-run` and
+    `wp iss-editorial fuehrung-import-candidate` for published Führung
+    candidates;
+  - imported and enabled `_iss_editorial_fuehrung` for all 15 published local
+    Führung posts, skipping only template-owned infrastructure blocks such as
+    tour calendar and related-content output;
+  - created `ops/sql/2026-06-27-fuehrung-editorial-json.sql` as the narrow DB
+    transfer artifact for the JSON documents and enabled flags; no uploads
+    artifact is required because this migration does not introduce media refs.
+- Integrated Führung route-station editing into the JSON composition editor:
+  - added a `Route / Stationen` panel for Führungen that edits the existing
+    `iss_related_places` station rows while leaving station storage in
+    `iss-relations`, not in `_iss_editorial_fuehrung`;
+  - hid the older `Verknüpfte Orte` metabox on Führung edit screens to avoid
+    two competing station editors while keeping the shared metabox for other
+    post types;
+  - added a narrow `iss-relations` REST save/read route for post place
+    relations because the existing related-preview endpoint is read-only for
+    card previews and raw post-meta REST saves would skip the established
+    station object/story back-link side effects; the route degrades to normal
+    WordPress form submission through synced hidden `iss_relations` fields.
 - Extended the publication JSON migration beyond photoalbums:
   - added `longread_chapter` and `timeline_item` gestures to the existing
     `publication` editorial format instead of adding new Gutenberg blocks or a

@@ -139,13 +139,16 @@
       massstab: '#ba7517',
       projekt_rail: '#255f63',
       publication_rail: '#255f63',
+      intro: '#b94436',
       longread_chapter: '#1a1a2e',
       longread_quote: '#8a3b59',
       timeline_item: '#3a6c8f',
       photoalbum: '#426d54',
+      galerie: '#426d54',
       fliesstext: '#5f5e5a',
       kapitel: '#1a1a2e',
       zitat: '#d4537e',
+      material: '#6b5b35',
       aside: '#3c3489',
       schluss: '#a32d2d'
     };
@@ -205,6 +208,13 @@
     var autosaveTimer = null;
     var activeType = Object.keys(sections)[0] || 'kapitel';
     var modal = null;
+    var routeConfig = config.routeStations && config.routeStations.enabled && format === 'fuehrung'
+      ? config.routeStations
+      : null;
+    var routeFields = container.querySelector('.iss-editorial-route-fields');
+    var routeRelations = routeConfig && Array.isArray(routeConfig.relations)
+      ? routeConfig.relations.map(normalizeRouteRelation)
+      : [];
 
     function sectionConfig(type) {
       return sections[type] || { label: type, supports: [] };
@@ -228,12 +238,91 @@
         return true;
       }
 
+      if (format === 'fuehrung' && ['intro', 'kapitel', 'leitfrage', 'material', 'schluss'].indexOf(type) !== -1) {
+        return true;
+      }
+
       return format === 'publication'
         && ['intro', 'source', 'longread_chapter', 'longread_quote', 'timeline_item'].indexOf(type) !== -1;
     }
 
     function updateField() {
       field.value = JSON.stringify(documentState);
+    }
+
+    function normalizeRouteRelation(relation) {
+      relation = relation && typeof relation === 'object' ? relation : {};
+
+      return {
+        place_id: parseInt(relation.place_id || '0', 10) || 0,
+        role: relation.role || 'related',
+        weight: parseInt(relation.weight || '0', 10) || 0,
+        label: relation.label || '',
+        route_title: relation.route_title || '',
+        route_teaser: relation.route_teaser || '',
+        station_object_id: parseInt(relation.station_object_id || '0', 10) || 0,
+        station_story_id: parseInt(relation.station_story_id || '0', 10) || 0
+      };
+    }
+
+    function routePlaces() {
+      return routeConfig && Array.isArray(routeConfig.places) ? routeConfig.places : [];
+    }
+
+    function routeStationRows() {
+      return routeRelations.filter(function (relation) {
+        return relation.role === 'stop';
+      }).sort(function (left, right) {
+        if (left.weight === right.weight) {
+          return left.place_id - right.place_id;
+        }
+
+        return left.weight - right.weight;
+      });
+    }
+
+    function routeNonStationRows() {
+      return routeRelations.filter(function (relation) {
+        return relation.role !== 'stop';
+      });
+    }
+
+    function renumberRouteStations(stations) {
+      stations.forEach(function (station, index) {
+        station.role = 'stop';
+        station.weight = index + 1;
+      });
+      routeRelations = routeNonStationRows().concat(stations);
+    }
+
+    function buildRouteRelationsPayload() {
+      var stations = routeStationRows();
+      renumberRouteStations(stations);
+
+      return routeRelations.map(function (relation) {
+        return normalizeRouteRelation(relation);
+      });
+    }
+
+    function appendHiddenRelationField(target, index, key, value) {
+      var input = document.createElement('input');
+      input.type = 'hidden';
+      input.name = 'iss_relations[' + String(index) + '][' + key + ']';
+      input.value = String(value || '');
+      target.appendChild(input);
+    }
+
+    function syncRouteHiddenFields() {
+      if (!routeFields || !routeConfig) {
+        return;
+      }
+
+      clear(routeFields);
+      buildRouteRelationsPayload().forEach(function (relation, index) {
+        ['place_id', 'role', 'weight', 'label', 'route_title', 'route_teaser', 'station_object_id', 'station_story_id'].forEach(function (key) {
+          appendHiddenRelationField(routeFields, index, key, relation[key]);
+        });
+      });
     }
 
     function currentSkin() {
@@ -292,6 +381,37 @@
       return parts.join(' · ');
     }
 
+    function saveRouteStations() {
+      if (!routeConfig) {
+        return Promise.resolve(null);
+      }
+
+      if (!routeConfig.restRoot || !config.nonce || !postId) {
+        return Promise.reject(new Error('route save unavailable'));
+      }
+
+      return window.fetch(routeConfig.restRoot.replace(/\/$/, '') + '/posts/' + encodeURIComponent(String(postId)) + '/places', {
+        method: 'POST',
+        credentials: 'same-origin',
+        headers: {
+          'Content-Type': 'application/json',
+          'X-WP-Nonce': config.nonce
+        },
+        body: JSON.stringify({ relations: buildRouteRelationsPayload() })
+      }).then(function (response) {
+        if (!response.ok) {
+          throw new Error('route save failed');
+        }
+        return response.json();
+      }).then(function (response) {
+        if (response && Array.isArray(response.relations)) {
+          routeRelations = response.relations.map(normalizeRouteRelation);
+          syncRouteHiddenFields();
+        }
+        return response;
+      });
+    }
+
     function saveDocument() {
       updateField();
       if (!config.restRoot || !config.nonce || !postId || !format) {
@@ -299,14 +419,16 @@
       }
 
       setStatus((config.strings && config.strings.savingPermanent) || 'JSON-Komposition wird gespeichert...');
-      window.fetch(config.restRoot.replace(/\/$/, '') + '/document/' + encodeURIComponent(String(postId)) + '/' + encodeURIComponent(format) + '/save', {
-        method: 'POST',
-        credentials: 'same-origin',
-        headers: {
-          'Content-Type': 'application/json',
-          'X-WP-Nonce': config.nonce
-        },
-        body: JSON.stringify({ document: documentState, enabled: currentEnabled() })
+      saveRouteStations().then(function () {
+        return window.fetch(config.restRoot.replace(/\/$/, '') + '/document/' + encodeURIComponent(String(postId)) + '/' + encodeURIComponent(format) + '/save', {
+          method: 'POST',
+          credentials: 'same-origin',
+          headers: {
+            'Content-Type': 'application/json',
+            'X-WP-Nonce': config.nonce
+          },
+          body: JSON.stringify({ document: documentState, enabled: currentEnabled() })
+        });
       }).then(function (response) {
         if (!response.ok) {
           throw new Error('save failed');
@@ -468,6 +590,238 @@
       }
 
       target.appendChild(stage);
+    }
+
+    function relationChoiceStrings() {
+      return (window.issRelationsAdmin && window.issRelationsAdmin.strings) || {};
+    }
+
+    function relationChoiceConfig() {
+      return window.issRelationsAdmin || {};
+    }
+
+    function relationChoiceString(key, fallback) {
+      return relationChoiceStrings()[key] || fallback;
+    }
+
+    function setSelectOptions(select, items, selectedId, emptyLabel) {
+      var placeholder = document.createElement('option');
+      var fragment = document.createDocumentFragment();
+      placeholder.value = '';
+      placeholder.textContent = emptyLabel;
+      fragment.appendChild(placeholder);
+
+      (items || []).forEach(function (item) {
+        var option = document.createElement('option');
+        option.value = String(item.id || '');
+        option.textContent = item.title || '';
+        option.selected = String(item.id || '') === String(selectedId || '');
+        fragment.appendChild(option);
+      });
+
+      select.innerHTML = '';
+      select.appendChild(fragment);
+    }
+
+    function fetchRouteStationChoices(kind, placeId, selectedId) {
+      var relations = relationChoiceConfig();
+      var action = kind === 'object' ? 'iss_relations_station_objects' : 'iss_relations_station_stories';
+      var dataKey = kind === 'object' ? 'objects' : 'stories';
+      var url;
+
+      if (!relations.ajaxUrl || !relations.nonce || !placeId) {
+        return Promise.resolve([]);
+      }
+
+      url = new URL(relations.ajaxUrl, window.location.origin);
+      url.searchParams.set('action', action);
+      url.searchParams.set('nonce', relations.nonce);
+      url.searchParams.set('place_id', String(placeId));
+      if (selectedId) {
+        url.searchParams.set('selected_id', String(selectedId));
+      }
+
+      return window.fetch(url.toString(), {
+        credentials: 'same-origin'
+      }).then(function (response) {
+        if (!response.ok) {
+          throw new Error('choice request failed');
+        }
+        return response.json();
+      }).then(function (payload) {
+        if (!payload || !payload.success || !payload.data) {
+          throw new Error('invalid choice payload');
+        }
+
+        return Array.isArray(payload.data[dataKey]) ? payload.data[dataKey] : [];
+      });
+    }
+
+    function createRoutePlaceSelect(station, rerender) {
+      var field = createElement('label', 'iss-editorial-field');
+      var select = document.createElement('select');
+      var currentPlaceId = station.place_id || 0;
+      var hasCurrent = false;
+
+      select.className = 'widefat';
+      select.appendChild(new Option('Ort wählen', ''));
+      routePlaces().forEach(function (place) {
+        var option = new Option(place.title || ('Ort #' + String(place.id || '')), String(place.id || ''));
+        option.selected = String(place.id || '') === String(currentPlaceId || '');
+        if (option.selected) {
+          hasCurrent = true;
+        }
+        select.appendChild(option);
+      });
+      if (currentPlaceId && !hasCurrent) {
+        select.appendChild(new Option('Ort #' + String(currentPlaceId), String(currentPlaceId), true, true));
+      }
+      select.addEventListener('change', function () {
+        station.place_id = parseInt(select.value || '0', 10) || 0;
+        station.station_object_id = 0;
+        station.station_story_id = 0;
+        syncRouteHiddenFields();
+        rerender();
+      });
+
+      field.appendChild(createElement('span', '', 'Ort'));
+      field.appendChild(select);
+
+      return field;
+    }
+
+    function createRouteChoiceSelect(kind, station) {
+      var field = createElement('label', 'iss-editorial-field');
+      var select = document.createElement('select');
+      var key = kind === 'object' ? 'station_object_id' : 'station_story_id';
+      var selectedId = station[key] || 0;
+      var placeholder = kind === 'object'
+        ? relationChoiceString('objectPlaceholder', 'Objekt wählen')
+        : relationChoiceString('storyPlaceholder', 'Beitrag wählen');
+      var loading = kind === 'object'
+        ? relationChoiceString('objectLoading', 'Objekte werden geladen ...')
+        : relationChoiceString('storyLoading', 'Beiträge werden geladen ...');
+      var none = kind === 'object'
+        ? relationChoiceString('objectNone', 'Keine verknüpften Objekte für diesen Ort')
+        : relationChoiceString('storyNone', 'Keine verknüpften Beiträge für diesen Ort');
+      var error = kind === 'object'
+        ? relationChoiceString('objectError', 'Objekte konnten nicht geladen werden')
+        : relationChoiceString('storyError', 'Beiträge konnten nicht geladen werden');
+
+      select.className = 'widefat';
+      setSelectOptions(select, [], selectedId, station.place_id ? loading : placeholder);
+      select.addEventListener('change', function () {
+        station[key] = parseInt(select.value || '0', 10) || 0;
+        syncRouteHiddenFields();
+      });
+
+      if (station.place_id) {
+        fetchRouteStationChoices(kind, station.place_id, selectedId).then(function (items) {
+          setSelectOptions(select, items, selectedId, items.length ? placeholder : none);
+        }).catch(function () {
+          setSelectOptions(select, [], selectedId, error);
+        });
+      }
+
+      field.appendChild(createElement('span', '', kind === 'object' ? 'Objekt' : 'Beitrag'));
+      field.appendChild(select);
+
+      return field;
+    }
+
+    function renderRouteStationPanel(target) {
+      if (!routeConfig) {
+        return;
+      }
+
+      var panel = createElement('section', 'iss-editorial-route-panel');
+      var head = createElement('div', 'iss-editorial-route-panel__head');
+      var rows = createElement('div', 'iss-editorial-route-rows');
+      var add = createElement('button', 'button', 'Station hinzufügen');
+      var stations = routeStationRows();
+
+      function rerenderPanel() {
+        render();
+      }
+
+      head.appendChild(createElement('div', 'iss-editorial-stage__title', 'Route / Stationen'));
+      head.appendChild(createElement('p', 'description', 'Stationen bleiben als Verknüpfte Orte gespeichert. Die Reihenfolge entspricht der Route.'));
+      panel.appendChild(head);
+
+      if (!stations.length) {
+        rows.appendChild(createElement('p', 'iss-editorial-empty', 'Noch keine Stationen. Eine Station verbindet die Führung mit einem Ort.'));
+      }
+
+      stations.forEach(function (station, index) {
+        var row = createElement('article', 'iss-editorial-route-row');
+        var position = createElement('div', 'iss-editorial-route-row__position', String(index + 1));
+        var fields = createElement('div', 'iss-editorial-route-row__fields');
+        var tools = createElement('div', 'iss-editorial-route-row__tools');
+        var up = createElement('button', 'button', 'Hoch');
+        var down = createElement('button', 'button', 'Runter');
+        var remove = createElement('button', 'button button-link-delete', 'Entfernen');
+
+        fields.appendChild(createRoutePlaceSelect(station, rerenderPanel));
+        fields.appendChild(createTextInput('Stations-Titel', station.route_title || '', function (value) {
+          station.route_title = value;
+          syncRouteHiddenFields();
+        }));
+        fields.appendChild(createTextarea('Stations-Teaser', station.route_teaser || '', function (value) {
+          station.route_teaser = value;
+          syncRouteHiddenFields();
+        }, 3));
+        fields.appendChild(createRouteChoiceSelect('object', station));
+        fields.appendChild(createRouteChoiceSelect('story', station));
+
+        [up, down, remove].forEach(function (button) {
+          button.type = 'button';
+        });
+        up.disabled = index === 0;
+        down.disabled = index >= stations.length - 1;
+        up.addEventListener('click', function () {
+          var current = stations.splice(index, 1)[0];
+          stations.splice(index - 1, 0, current);
+          renumberRouteStations(stations);
+          syncRouteHiddenFields();
+          rerenderPanel();
+        });
+        down.addEventListener('click', function () {
+          var current = stations.splice(index, 1)[0];
+          stations.splice(index + 1, 0, current);
+          renumberRouteStations(stations);
+          syncRouteHiddenFields();
+          rerenderPanel();
+        });
+        remove.addEventListener('click', function () {
+          stations.splice(index, 1);
+          renumberRouteStations(stations);
+          syncRouteHiddenFields();
+          rerenderPanel();
+        });
+
+        tools.appendChild(up);
+        tools.appendChild(down);
+        tools.appendChild(remove);
+        row.appendChild(position);
+        row.appendChild(fields);
+        row.appendChild(tools);
+        rows.appendChild(row);
+      });
+
+      add.type = 'button';
+      add.addEventListener('click', function () {
+        stations.push(normalizeRouteRelation({
+          role: 'stop',
+          weight: stations.length + 1
+        }));
+        renumberRouteStations(stations);
+        syncRouteHiddenFields();
+        rerenderPanel();
+      });
+
+      panel.appendChild(rows);
+      panel.appendChild(add);
+      target.appendChild(panel);
     }
 
     function renderSkinControl() {
@@ -1591,12 +1945,16 @@
 
     function render() {
       var layout = createElement('div', 'iss-editorial-layout');
+      var main = createElement('div', 'iss-editorial-main');
       clear(root);
       documentState.sections = Array.isArray(documentState.sections) ? documentState.sections : [];
       renderPalette(layout);
-      renderStage(layout);
+      renderStage(main);
+      renderRouteStationPanel(main);
+      layout.appendChild(main);
       root.appendChild(layout);
       updateField();
+      syncRouteHiddenFields();
     }
 
     if (enabledField) {

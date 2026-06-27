@@ -4,6 +4,13 @@ Immediate executable work only. Larger future programs live in `docs/project/bac
 
 ## Next
 
+- Führung JSON migration: after deploying the code, review/apply
+  `ops/sql/2026-06-27-fuehrung-editorial-json.sql` only on a target that
+  already has the 15 published Führung posts listed in the artifact. The SQL
+  writes only `_iss_editorial_fuehrung` JSON documents and enabled flags; no
+  upload artifact is required. After applying it, spot-check representative
+  tour routes because route stations, facts, booking, dates, Atlas map, and
+  related content still come from their existing meta/block contracts.
 - Publication JSON migration: after deploying the code, review/apply
   `ops/sql/2026-06-26-nef-album-publication-json.sql` and
   `ops/sql/2026-06-26-photoalbum-blueprint-other-albums.sql` only on a target

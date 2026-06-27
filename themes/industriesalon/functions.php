@@ -23,6 +23,11 @@ if (file_exists($industriesalon_projects_render_helper)) {
     require_once $industriesalon_projects_render_helper;
 }
 
+$industriesalon_tours_render_helper = get_stylesheet_directory() . '/includes/tours-render.php';
+if (file_exists($industriesalon_tours_render_helper)) {
+    require_once $industriesalon_tours_render_helper;
+}
+
 $industriesalon_veranstaltungen_render_helper = get_stylesheet_directory() . '/includes/veranstaltungen-render.php';
 if (file_exists($industriesalon_veranstaltungen_render_helper)) {
     require_once $industriesalon_veranstaltungen_render_helper;

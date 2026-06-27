@@ -754,6 +754,7 @@ function iss_fuehrung_render_description_block($attributes = [], $content = '')
     }
 
     $description_html = iss_fuehrung_render_description_html($post_id);
+    $description_html = (string) apply_filters('iss_fuehrung_description_html', $description_html, $post_id, $attributes);
     if ($description_html === '') {
         return '';
     }

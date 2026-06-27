@@ -922,6 +922,38 @@ function iss_relations_update_post_relations(int $post_id, array $relations): vo
     update_post_meta($post_id, ISS_RELATIONS_META_KEY, $clean);
 }
 
+function iss_relations_save_post_relations(int $post_id, array $relations): array
+{
+    $post = get_post($post_id);
+    if (!$post instanceof WP_Post || !iss_relations_is_supported_post_type((string) $post->post_type)) {
+        return [];
+    }
+
+    $clean = iss_relations_normalize_relations($relations, $post_id);
+    iss_relations_update_post_relations($post_id, $clean);
+
+    if ($post->post_type === 'fuehrung') {
+        foreach ($clean as $relation) {
+            $place_id = (int) ($relation['place_id'] ?? 0);
+            if ($place_id <= 0) {
+                continue;
+            }
+
+            $station_object_id = (int) ($relation['station_object_id'] ?? 0);
+            if ($station_object_id > 0) {
+                iss_relations_ensure_post_has_place_relation($station_object_id, $place_id);
+            }
+
+            $station_story_id = (int) ($relation['station_story_id'] ?? 0);
+            if ($station_story_id > 0) {
+                iss_relations_ensure_post_has_place_relation($station_story_id, $place_id);
+            }
+        }
+    }
+
+    return $clean;
+}
+
 function iss_relations_ensure_post_has_place_relation(int $post_id, int $place_id, array $overrides = []): bool
 {
     if (

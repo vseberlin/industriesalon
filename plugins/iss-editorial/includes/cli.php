@@ -1070,3 +1070,426 @@ function iss_editorial_cli_project_import_candidate(array $args, array $assoc_ar
 }
 
 WP_CLI::add_command('iss-editorial projekt-import-candidate', 'iss_editorial_cli_project_import_candidate');
+
+function iss_editorial_cli_fuehrung_posts_from_args(array $assoc_args): array
+{
+    $posts_arg = isset($assoc_args['posts']) ? trim((string) $assoc_args['posts']) : '';
+    $tokens = $posts_arg !== '' ? array_filter(array_map('trim', explode(',', $posts_arg))) : [];
+    $posts = [];
+
+    if ($tokens) {
+        foreach ($tokens as $token) {
+            $post = iss_editorial_cli_get_post_by_token_for_type($token, 'fuehrung');
+            if (!$post instanceof WP_Post) {
+                WP_CLI::warning(sprintf('Führung not found: %s', $token));
+                continue;
+            }
+            $posts[] = $post;
+        }
+
+        return $posts;
+    }
+
+    return get_posts([
+        'post_type' => 'fuehrung',
+        'post_status' => 'publish',
+        'numberposts' => -1,
+        'orderby' => 'menu_order title',
+        'order' => 'ASC',
+    ]);
+}
+
+function iss_editorial_cli_fuehrung_body_html(array $block): string
+{
+    $html = function_exists('render_block') ? render_block($block) : (string) ($block['innerHTML'] ?? '');
+    $html = trim((string) $html);
+
+    return $html !== '' ? wp_kses_post($html) : '';
+}
+
+function iss_editorial_cli_fuehrung_heading_is_material(string $heading): bool
+{
+    $heading = strtolower(remove_accents($heading));
+
+    return preg_match('/\b(quelle|quellen|material|download|hinweis|achtung|kontakt|anmeldung|buchung)\b/', $heading) === 1;
+}
+
+function iss_editorial_cli_fuehrung_collect_units(array $block, array &$units, array &$unsupported_blocks, int &$media_blocks, int &$skipped_blocks): void
+{
+    $block_name = (string) ($block['blockName'] ?? '');
+    $kind = iss_editorial_cli_classify_block($block);
+    $text = iss_editorial_cli_block_text($block);
+
+    if ($block_name === '' && $text === '') {
+        return;
+    }
+
+    if (in_array($block_name, ['iss/tour-calendar', 'iss/related-content'], true)) {
+        ++$skipped_blocks;
+        return;
+    }
+
+    if ($kind === 'heading') {
+        if ($text !== '') {
+            $units[] = [
+                'kind' => 'heading',
+                'text' => $text,
+            ];
+        }
+        return;
+    }
+
+    if ($block_name === 'core/quote') {
+        $quote = iss_editorial_cli_strip_html((string) ($block['innerHTML'] ?? ''));
+        if ($quote !== '') {
+            $units[] = [
+                'kind' => 'quote',
+                'quote' => $quote,
+            ];
+        }
+        return;
+    }
+
+    if (in_array($block_name, ['core/paragraph', 'core/list'], true) || ($block_name === '' && $text !== '')) {
+        $html = iss_editorial_cli_fuehrung_body_html($block);
+        if ($html !== '') {
+            $units[] = [
+                'kind' => 'body',
+                'html' => $html,
+                'text' => $text,
+            ];
+        }
+        return;
+    }
+
+    if ($kind === 'media') {
+        $media_refs = iss_editorial_cli_collect_media_refs($block);
+        $media_blocks += max(1, iss_editorial_cli_count_media_blocks($block));
+        if ($media_refs) {
+            $units[] = [
+                'kind' => 'media',
+                'media_refs' => $media_refs,
+            ];
+        }
+        return;
+    }
+
+    if ($kind === 'container') {
+        $before = count($units);
+        foreach ((array) ($block['innerBlocks'] ?? []) as $inner_block) {
+            if (is_array($inner_block)) {
+                iss_editorial_cli_fuehrung_collect_units($inner_block, $units, $unsupported_blocks, $media_blocks, $skipped_blocks);
+            }
+        }
+        if ($before === count($units) && $text !== '') {
+            $units[] = [
+                'kind' => 'body',
+                'html' => wpautop(esc_html($text)),
+                'text' => $text,
+            ];
+        }
+        return;
+    }
+
+    if ($text !== '') {
+        $unsupported_blocks[] = $block_name !== '' ? $block_name : 'freeform';
+        $units[] = [
+            'kind' => 'body',
+            'html' => wpautop(esc_html($text)),
+            'text' => $text,
+        ];
+    }
+}
+
+function iss_editorial_cli_fuehrung_flush_section(?array &$section, array &$sections): void
+{
+    if ($section === null) {
+        return;
+    }
+
+    $body = trim((string) ($section['body'] ?? ''));
+    $title = trim((string) ($section['title'] ?? ''));
+    $quote = trim((string) ($section['quote'] ?? ''));
+    $media_refs = is_array($section['media_refs'] ?? null) ? $section['media_refs'] : [];
+    if ($body !== '' || $title !== '' || $quote !== '' || $media_refs) {
+        $sections[] = $section;
+    }
+
+    $section = null;
+}
+
+function iss_editorial_cli_build_fuehrung_candidate(WP_Post $post): array
+{
+    $blocks = function_exists('parse_blocks') ? parse_blocks((string) $post->post_content) : [];
+    $units = [];
+    $unsupported_blocks = [];
+    $media_blocks = 0;
+    $skipped_blocks = 0;
+
+    foreach ($blocks as $block) {
+        if (is_array($block)) {
+            iss_editorial_cli_fuehrung_collect_units($block, $units, $unsupported_blocks, $media_blocks, $skipped_blocks);
+        }
+    }
+
+    $sections = [];
+    $current = null;
+    $intro_done = false;
+
+    foreach ($units as $unit) {
+        $kind = (string) ($unit['kind'] ?? '');
+
+        if ($kind === 'body' && !$intro_done) {
+            $sections[] = [
+                'type' => 'intro',
+                'kicker' => '',
+                'title' => '',
+                'body' => (string) ($unit['html'] ?? ''),
+                'media_refs' => [],
+            ];
+            $intro_done = true;
+            continue;
+        }
+
+        if ($kind === 'heading') {
+            iss_editorial_cli_fuehrung_flush_section($current, $sections);
+            $title = (string) ($unit['text'] ?? '');
+            $current = [
+                'type' => iss_editorial_cli_fuehrung_heading_is_material($title) ? 'material' : 'kapitel',
+                'kicker' => '',
+                'title' => $title,
+                'body' => '',
+            ];
+            continue;
+        }
+
+        if ($kind === 'quote') {
+            iss_editorial_cli_fuehrung_flush_section($current, $sections);
+            $sections[] = [
+                'type' => 'zitat',
+                'kicker' => '',
+                'title' => '',
+                'body' => '',
+                'quote' => (string) ($unit['quote'] ?? ''),
+                'attribution' => '',
+            ];
+            $intro_done = true;
+            continue;
+        }
+
+        if ($kind === 'media') {
+            iss_editorial_cli_fuehrung_flush_section($current, $sections);
+            $sections[] = [
+                'type' => 'galerie',
+                'kicker' => '',
+                'title' => '',
+                'body' => '',
+                'media_refs' => (array) ($unit['media_refs'] ?? []),
+                'object_refs' => [],
+            ];
+            $intro_done = true;
+            continue;
+        }
+
+        if ($kind === 'body') {
+            if ($current === null) {
+                $current = [
+                    'type' => 'kapitel',
+                    'kicker' => '',
+                    'title' => '',
+                    'body' => '',
+                    'media_refs' => [],
+                ];
+            }
+            $current['body'] = trim((string) ($current['body'] ?? '') . "\n\n" . (string) ($unit['html'] ?? ''));
+            $intro_done = true;
+        }
+    }
+
+    iss_editorial_cli_fuehrung_flush_section($current, $sections);
+
+    return [
+        'document' => [
+            'schema_version' => 1,
+            'skin' => 'route-dossier',
+            'variant' => 'standard',
+            'sections' => $sections,
+        ],
+        'legacy_blocks' => count($blocks),
+        'media_blocks' => $media_blocks,
+        'skipped_blocks' => $skipped_blocks,
+        'unsupported_blocks' => array_values(array_unique(array_filter($unsupported_blocks))),
+    ];
+}
+
+function iss_editorial_cli_fuehrung_dry_run(array $args, array $assoc_args): void
+{
+    unset($args);
+
+    $format = isset($assoc_args['format']) ? (string) $assoc_args['format'] : 'table';
+    $rows = [];
+
+    foreach (iss_editorial_cli_fuehrung_posts_from_args($assoc_args) as $post) {
+        if (!$post instanceof WP_Post) {
+            continue;
+        }
+
+        $candidate = iss_editorial_cli_build_fuehrung_candidate($post);
+        $stored = get_post_meta((int) $post->ID, iss_editorial_get_document_meta_key('fuehrung'), true);
+        $enabled = iss_editorial_document_is_enabled((int) $post->ID, 'fuehrung');
+        $section_types = array_unique(array_map(static function (array $section): string {
+            return (string) ($section['type'] ?? '');
+        }, (array) $candidate['document']['sections']));
+
+        $notes = ['read_only'];
+        if (is_string($stored) && trim($stored) !== '') {
+            $notes[] = 'existing_json_document';
+        }
+        if (!empty($candidate['unsupported_blocks'])) {
+            $notes[] = 'manual_review_required';
+        }
+        if (!empty($candidate['skipped_blocks'])) {
+            $notes[] = 'skipped_infrastructure_blocks';
+        }
+
+        $rows[] = [
+            'ID' => (int) $post->ID,
+            'title' => get_the_title($post),
+            'slug' => $post->post_name,
+            'status' => $post->post_status,
+            'editorial_doc' => is_string($stored) && trim($stored) !== '' ? 'yes' : 'no',
+            'enabled' => $enabled ? 'yes' : 'no',
+            'legacy_blocks' => (int) $candidate['legacy_blocks'],
+            'legacy_chars' => strlen(wp_strip_all_tags((string) $post->post_content)),
+            'candidate_sections' => count((array) $candidate['document']['sections']),
+            'section_types' => implode(',', array_filter($section_types)),
+            'media_blocks' => (int) $candidate['media_blocks'],
+            'skipped_blocks' => (int) $candidate['skipped_blocks'],
+            'unsupported_blocks' => implode(',', (array) $candidate['unsupported_blocks']),
+            'notes' => implode(',', $notes),
+        ];
+    }
+
+    if (!$rows) {
+        WP_CLI::error('No Führung posts resolved for dry run.');
+    }
+
+    iss_editorial_cli_print_rows($format, $rows, [
+        'ID',
+        'title',
+        'slug',
+        'status',
+        'editorial_doc',
+        'enabled',
+        'legacy_blocks',
+        'legacy_chars',
+        'candidate_sections',
+        'section_types',
+        'media_blocks',
+        'skipped_blocks',
+        'unsupported_blocks',
+        'notes',
+    ]);
+}
+
+WP_CLI::add_command('iss-editorial fuehrung-dry-run', 'iss_editorial_cli_fuehrung_dry_run');
+
+function iss_editorial_cli_fuehrung_import_candidate(array $args, array $assoc_args): void
+{
+    unset($args);
+
+    $token = isset($assoc_args['post']) ? trim((string) $assoc_args['post']) : '';
+    if ($token === '') {
+        WP_CLI::error('Missing required --post=<fuehrung-id-or-slug|all>.');
+        return;
+    }
+
+    $posts = [];
+    if ($token === 'all') {
+        $posts = iss_editorial_cli_fuehrung_posts_from_args([]);
+    } else {
+        $post = iss_editorial_cli_get_post_by_token_for_type($token, 'fuehrung');
+        if ($post instanceof WP_Post) {
+            $posts[] = $post;
+        }
+    }
+
+    if (!$posts) {
+        WP_CLI::error(sprintf('Führung not found: %s', $token));
+        return;
+    }
+
+    $format_slug = 'fuehrung';
+    $document_key = iss_editorial_get_document_meta_key($format_slug);
+    $autosave_key = iss_editorial_get_autosave_meta_key($format_slug);
+    $force = isset($assoc_args['force']);
+    $enable = isset($assoc_args['enable']);
+    $rows = [];
+
+    foreach ($posts as $post) {
+        if (!$post instanceof WP_Post) {
+            continue;
+        }
+
+        $stored = get_post_meta((int) $post->ID, $document_key, true);
+        if (is_string($stored) && trim($stored) !== '' && !$force) {
+            WP_CLI::warning(sprintf('Post %d already has an editorial document. Use --force to replace it.', (int) $post->ID));
+            continue;
+        }
+
+        $candidate = iss_editorial_cli_build_fuehrung_candidate($post);
+        $sections = is_array($candidate['document']['sections'] ?? null) ? $candidate['document']['sections'] : [];
+        if (!$sections) {
+            WP_CLI::warning(sprintf('No importable sections found for post %d.', (int) $post->ID));
+            continue;
+        }
+
+        if (!iss_editorial_save_document((int) $post->ID, $format_slug, $candidate['document'], false)) {
+            WP_CLI::warning(sprintf('Failed to save editorial document for post %d.', (int) $post->ID));
+            continue;
+        }
+
+        iss_editorial_set_document_enabled((int) $post->ID, $format_slug, $enable);
+        delete_post_meta((int) $post->ID, $autosave_key);
+
+        $notes = ['imported', $enable ? 'enabled_on' : 'enabled_off'];
+        if (!empty($candidate['unsupported_blocks'])) {
+            $notes[] = 'manual_review_required';
+        }
+        if (!empty($candidate['skipped_blocks'])) {
+            $notes[] = 'skipped_infrastructure_blocks';
+        }
+
+        $rows[] = [
+            'ID' => (int) $post->ID,
+            'title' => get_the_title($post),
+            'slug' => $post->post_name,
+            'document_key' => $document_key,
+            'enabled' => iss_editorial_document_is_enabled((int) $post->ID, $format_slug) ? 'yes' : 'no',
+            'candidate_sections' => count($sections),
+            'media_blocks' => (int) $candidate['media_blocks'],
+            'skipped_blocks' => (int) $candidate['skipped_blocks'],
+            'unsupported_blocks' => implode(',', (array) $candidate['unsupported_blocks']),
+            'notes' => implode(',', $notes),
+        ];
+    }
+
+    if (!$rows) {
+        WP_CLI::error('No Führung candidates were imported.');
+    }
+
+    iss_editorial_cli_print_rows('table', $rows, [
+        'ID',
+        'title',
+        'slug',
+        'document_key',
+        'enabled',
+        'candidate_sections',
+        'media_blocks',
+        'skipped_blocks',
+        'unsupported_blocks',
+        'notes',
+    ]);
+}
+
+WP_CLI::add_command('iss-editorial fuehrung-import-candidate', 'iss_editorial_cli_fuehrung_import_candidate');

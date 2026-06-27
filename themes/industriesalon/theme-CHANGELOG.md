@@ -1,5 +1,15 @@
 # Industriesalon Theme Changelog
 
+## 2026-06-27
+- Added the theme-owned Führung JSON renderer in `includes/tours-render.php`:
+  enabled `_iss_editorial_fuehrung` documents now expose tour skin body
+  classes, replace the hero description from the first `intro` gesture, and
+  render later gesture sections in a dedicated single-tour editorial slot before
+  the existing route block.
+- Added `route-dossier`, `compact`, and `standard` Führung skin options and
+  scoped `assets/css/single-tour.css` rules for tour editorial sections,
+  galleries, archive refs, material file cards, quotes, and mobile fallbacks.
+
 ## 2026-06-21
 - Added a shared primary button tier in `style.css` with `.iss-button` variants, Gutenberg `is-style-fill` mapping, and matching solid booking-button tokens in `assets/css/timeline-skin.css`.
 - Reworked `templates/page-kalender.html` and `assets/css/page-kalender.css` into a wide-viewport calendar workbench: existing timeline-query controls become a left rail, results are capped into a compact occurrence list, recurring tour groups start collapsed, calendar listing media is hidden, and a theme-owned aside links visitors toward the separate exhibitions browser.

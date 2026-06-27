@@ -5,6 +5,13 @@ All notable changes for `iss-fuehrungen` are documented here.
 ## [Unreleased]
 
 ### Added
+- Registered `fuehrung` as an `iss-editorial` JSON format so tour narrative
+  content can move to gesture sections while tour meta remains the source for
+  facts, booking, dates, route, and hero-gallery behavior.
+- Added `wp iss-editorial fuehrung-dry-run` and
+  `wp iss-editorial fuehrung-import-candidate` migration helpers for converting
+  published Führung `post_content` narrative into `_iss_editorial_fuehrung`
+  JSON documents.
 - Added `iss/tour-description`, a dynamic block for curated prose-only tour descriptions that can be safely reused inside controlled single-tour layouts.
 - Added tour-level calendar mapping field back to the editor UI:
   - `calendar_tag` meta field in `Führungsdaten`.
@@ -36,6 +43,13 @@ All notable changes for `iss-fuehrungen` are documented here.
 - Removed shortcode/ACF placeholders from those two HTML templates and replaced them with dynamic blocks.
 
 ### Changed
+- Added a filter to `iss/tour-description` so the active theme can replace the
+  legacy `post_content` description with the enabled JSON `intro` gesture.
+- Updated the Führung editor hint to point editors to the structured
+  composition canvas for narrative sections and media.
+- Integrated route station editing into the Führung JSON editor while keeping
+  station rows stored in `iss_related_places`; the generic `Verknüpfte Orte`
+  metabox is no longer shown on Führung edit screens.
 - Moved public Führung rendering to the active theme/template hierarchy and removed the plugin public template loader, including the singular selector, single PHP fallback, and archive/taxonomy fallback template.
 - Reworked the single-tour render path to use explicit layout blocks instead of context-sensitive output hacks:
   - scheduled and on-demand templates now consume `iss/tour-description` instead of raw `post_content` in controlled description slots,

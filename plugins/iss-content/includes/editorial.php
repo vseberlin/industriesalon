@@ -37,6 +37,44 @@ function iss_content_model_register_editorial_formats(array $formats): array
     $image_wall_section = iss_content_model_editorial_image_wall_section();
     $material_section = iss_content_model_editorial_material_section();
 
+    $formats['fuehrung'] = [
+        'label' => __('Führung', 'iss-content-model'),
+        'base' => 'ordered',
+        'post_types' => ['fuehrung'],
+        'default_skin' => 'route-dossier',
+        'default_variant' => 'standard',
+        'sections' => [
+            'intro' => [
+                'label' => __('Einleitung', 'iss-content-model'),
+                'description' => __('Kurzer Einstieg für die Hero-Beschreibung der Führung.', 'iss-content-model'),
+                'supports' => ['media_refs'],
+            ],
+            'kapitel' => [
+                'label' => __('Kapitel', 'iss-content-model'),
+                'description' => __('Tour-Erzählung, Kontext oder thematischer Abschnitt.', 'iss-content-model'),
+                'supports' => ['anchor', 'media_refs', 'media_layout'],
+            ],
+            'leitfrage' => [
+                'label' => __('Leitfrage', 'iss-content-model'),
+                'description' => __('Frage oder These, die die Führung rahmt.', 'iss-content-model'),
+                'supports' => ['anchor'],
+            ],
+            'zitat' => [
+                'label' => __('Zitat', 'iss-content-model'),
+                'description' => __('Zitat mit Zuordnung oder Quellenhinweis.', 'iss-content-model'),
+                'supports' => ['quote'],
+            ],
+            'galerie' => array_merge($gallery_section, ['supports' => ['anchor', 'media_refs', 'object_refs']]),
+            'image_wall' => array_merge($image_wall_section, ['supports' => ['anchor', 'media_refs']]),
+            'material' => $material_section,
+            'schluss' => [
+                'label' => __('Schluss', 'iss-content-model'),
+                'description' => __('Abschluss, Einladung oder weiterführende Links.', 'iss-content-model'),
+                'supports' => ['anchor', 'links'],
+            ],
+        ],
+    ];
+
     $formats['ausstellung'] = [
         'label' => __('Ausstellung', 'iss-content-model'),
         'base' => 'ordered',

@@ -113,6 +113,7 @@ function iss_relations_get_station_object_choices_for_place(int $place_id): arra
         'orderby' => 'title',
         'order' => 'ASC',
         'suppress_filters' => true,
+        // phpcs:ignore WordPress.DB.SlowDBQuery.slow_db_query_tax_query -- Station object choices use the relation taxonomy index scoped to one selected place.
         'tax_query' => [
             [
                 'taxonomy' => ISS_RELATIONS_TAXONOMY,
@@ -164,6 +165,7 @@ function iss_relations_get_station_story_choices_for_place(int $place_id): array
         'orderby' => 'title',
         'order' => 'ASC',
         'suppress_filters' => true,
+        // phpcs:ignore WordPress.DB.SlowDBQuery.slow_db_query_tax_query -- Station story choices use the relation taxonomy index scoped to one selected place.
         'tax_query' => [
             [
                 'taxonomy' => ISS_RELATIONS_TAXONOMY,
@@ -392,6 +394,7 @@ function iss_relations_render_meta_box(WP_Post $post): void
 
     if ($relations) {
         foreach ($relations as $index => $relation) {
+            // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- Row renderer escapes every field before returning markup.
             echo iss_relations_render_row($relation, $places, (int) $index, $post->post_type);
         }
     }
@@ -400,7 +403,9 @@ function iss_relations_render_meta_box(WP_Post $post): void
     echo '</table>';
 
     echo '<p><button type="button" class="button" data-iss-relations-add>' . esc_html__('Ort hinzufügen', 'iss-relations') . '</button></p>';
-    echo '<template data-iss-relations-template>' . iss_relations_render_row([
+    echo '<template data-iss-relations-template>'
+        // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- Row renderer escapes every field before returning markup.
+        . iss_relations_render_row([
         'place_id' => 0,
         'role' => $supports_route_fields ? 'stop' : 'related',
         'weight' => 0,
@@ -433,27 +438,7 @@ function iss_relations_save_meta_box(int $post_id, WP_Post $post): void
     }
 
     $raw_relations = $_POST['iss_relations'] ?? [];
-    $relations = iss_relations_normalize_relations(is_array($raw_relations) ? wp_unslash($raw_relations) : [], $post_id);
-    iss_relations_update_post_relations($post_id, $relations);
-
-    if ($post->post_type === 'fuehrung') {
-        foreach ($relations as $relation) {
-            $place_id = (int) ($relation['place_id'] ?? 0);
-            if ($place_id <= 0) {
-                continue;
-            }
-
-            $station_object_id = (int) ($relation['station_object_id'] ?? 0);
-            if ($station_object_id > 0) {
-                iss_relations_ensure_post_has_place_relation($station_object_id, $place_id);
-            }
-
-            $station_story_id = (int) ($relation['station_story_id'] ?? 0);
-            if ($station_story_id > 0) {
-                iss_relations_ensure_post_has_place_relation($station_story_id, $place_id);
-            }
-        }
-    }
+    iss_relations_save_post_relations($post_id, is_array($raw_relations) ? wp_unslash($raw_relations) : []);
 }
 add_action('save_post', 'iss_relations_save_meta_box', 10, 2);
 

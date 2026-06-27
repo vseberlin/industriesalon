@@ -270,7 +270,13 @@ function iss_editorial_strip_unsafe_body_hrefs(string $body): string
 
 function iss_editorial_sanitize_body_html(string $body, array $format, string $type): string
 {
-    if ((string) ($format['slug'] ?? '') !== 'projekt' || !in_array($type, ['kapitel', 'fliesstext', 'schluss'], true)) {
+    $format_slug = (string) ($format['slug'] ?? '');
+    $safe_rich_text_sections = [
+        'fuehrung' => ['intro', 'kapitel', 'leitfrage', 'material', 'schluss'],
+        'projekt' => ['kapitel', 'fliesstext', 'schluss'],
+    ];
+
+    if (!in_array($type, $safe_rich_text_sections[$format_slug] ?? [], true)) {
         return wp_kses_post($body);
     }
 
