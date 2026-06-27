@@ -11,9 +11,16 @@ Immediate executable work only. Larger future programs live in `docs/project/bac
   `19038`), Archivset `19` for `nef-album`, the referenced archive-object/media
   rows/files and Media Library attachments, plus register place `17976`
   (`Ostendstraße 1-5 / Behrensbau`). The artifacts include the
-  `blueprint-matrix` skin assignments and `iss_related_places` relations. Then
-  continue with chroniken / timelines and longreads using the explicit JSON
-  gesture plus `publication_rail` contract.
+  `blueprint-matrix` skin assignments and `iss_related_places` relations. For
+  existing chroniken / timelines and longreads, review/apply
+  `ops/sql/2026-06-27-publication-longread-timeline-json.sql` only after the
+  code deploy on a target that already has the 12 publication posts and
+  referenced timeline/longread image attachment rows/files. This artifact now
+  assigns `longread-poster` to all nine migrated longreads. Curator-review the
+  migrated drafts/stub in the JSON editor before publishing, especially `18873`
+  because the local source content has no dated timeline stations; for
+  longreads, add/reorder `longread_quote` moments and chapter `media_refs`
+  where the story needs poster imagery.
 - Project skin review: visually compare the three enabled local examples:
   `futura-biennale-2027` uses `dossier` with publication-style horizontal
   primary chapter navigation, centered 75rem chapter/fact spreads, and footer context,

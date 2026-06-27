@@ -332,6 +332,15 @@ function iss_editorial_sanitize_section(array $section, array $format): array
         $sanitized['facts'] = iss_editorial_sanitize_fact_list($section['facts'] ?? []);
     }
 
+    if (iss_editorial_format_supports_section_field($format, $type, 'year')) {
+        $sanitized['year'] = sanitize_text_field((string) ($section['year'] ?? ''));
+    }
+
+    if (iss_editorial_format_supports_section_field($format, $type, 'media_layout')) {
+        $media_layout = sanitize_key((string) ($section['media_layout'] ?? 'inline'));
+        $sanitized['media_layout'] = in_array($media_layout, ['inline', 'aside-right'], true) ? $media_layout : 'inline';
+    }
+
     if (iss_editorial_format_supports_section_field($format, $type, 'rail_options')) {
         $sanitized['rail_options'] = iss_editorial_sanitize_rail_options($section['rail_options'] ?? []);
     }

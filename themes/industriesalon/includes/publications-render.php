@@ -9,6 +9,7 @@ function industriesalon_get_editorial_publication_skins(): array
     return [
         'standard',
         'blueprint-matrix',
+        'longread-poster',
     ];
 }
 
@@ -25,6 +26,10 @@ add_filter('iss_editorial_format_skins', function (array $skins, string $format_
         'blueprint-matrix' => [
             'slug' => 'blueprint-matrix',
             'label' => __('Blueprint-Matrix', 'industriesalon'),
+        ],
+        'longread-poster' => [
+            'slug' => 'longread-poster',
+            'label' => __('Longread Poster', 'industriesalon'),
         ],
     ];
 }, 10, 2);
@@ -1192,6 +1197,83 @@ function industriesalon_publications_render_longread_related_rail(int $post_id, 
         . '</aside>';
 }
 
+function industriesalon_publications_render_longread_quote_section(array $section): string
+{
+    $quote = trim((string) ($section['quote'] ?? ''));
+    if ($quote === '') {
+        return '';
+    }
+
+    $kicker = trim((string) ($section['kicker'] ?? ''));
+    $title = trim((string) ($section['title'] ?? ''));
+    $attribution = trim((string) ($section['attribution'] ?? ''));
+    $html = '<aside class="iss-publication-longread__quote">';
+    if ($kicker !== '') {
+        $html .= '<p class="iss-kicker iss-publication-longread__quote-kicker">' . esc_html($kicker) . '</p>';
+    }
+    if ($title !== '') {
+        $html .= '<h2 class="iss-publication-longread__quote-title">' . esc_html($title) . '</h2>';
+    }
+    $html .= '<blockquote><p>' . wp_kses_post($quote) . '</p>';
+    if ($attribution !== '') {
+        $html .= '<cite>' . esc_html($attribution) . '</cite>';
+    }
+    $html .= '</blockquote></aside>';
+
+    return $html;
+}
+
+function industriesalon_publications_render_longread_chapter_media(array $section): string
+{
+    $image_id = absint($section['image_id'] ?? 0);
+    $image_url = trim((string) ($section['image_url'] ?? ''));
+    if ($image_id <= 0 && $image_url === '') {
+        return '';
+    }
+
+    $layout = sanitize_html_class((string) ($section['layout'] ?? 'inline'));
+    if (!in_array($layout, ['inline', 'aside-right'], true)) {
+        $layout = 'inline';
+    }
+
+    $alt = trim((string) ($section['image_alt'] ?? ''));
+    $kicker = trim((string) ($section['kicker'] ?? ''));
+    $title = trim((string) ($section['title'] ?? ''));
+    $caption = trim((string) ($section['caption'] ?? ''));
+    $image_html = '';
+    if ($image_id > 0) {
+        $image_html = (string) wp_get_attachment_image($image_id, 'large', false, [
+            'alt' => $alt,
+            'loading' => 'lazy',
+        ]);
+    }
+    if ($image_html === '' && $image_url !== '') {
+        $image_html = '<img src="' . esc_url($image_url) . '" alt="' . esc_attr($alt) . '" loading="lazy">';
+    }
+    if ($image_html === '') {
+        return '';
+    }
+
+    $html = '<figure class="iss-publication-longread__media iss-publication-longread__media--' . esc_attr($layout) . '">';
+    $html .= $image_html;
+    if ($kicker !== '' || $title !== '' || $caption !== '') {
+        $html .= '<figcaption>';
+        if ($kicker !== '') {
+            $html .= '<span class="iss-kicker iss-publication-longread__media-kicker">' . esc_html($kicker) . '</span>';
+        }
+        if ($title !== '') {
+            $html .= '<strong class="iss-publication-longread__media-title">' . esc_html($title) . '</strong>';
+        }
+        if ($caption !== '') {
+            $html .= '<span class="iss-publication-longread__media-caption">' . esc_html($caption) . '</span>';
+        }
+        $html .= '</figcaption>';
+    }
+    $html .= '</figure>';
+
+    return $html;
+}
+
 function industriesalon_publications_render_longread_content(int $post_id, array $payload): string
 {
     $sections = is_array($payload['sections'] ?? null) ? $payload['sections'] : [];
@@ -1222,22 +1304,39 @@ function industriesalon_publications_render_longread_content(int $post_id, array
     }
 
     $html .= '<div class="iss-publication-longread__chapters">';
-    foreach ($sections as $index => $section) {
+    $chapter_index = 0;
+    foreach ($sections as $section) {
+        if (!is_array($section)) {
+            continue;
+        }
+
+        $section_type = sanitize_key((string) ($section['type'] ?? 'chapter'));
+        if ($section_type === 'quote') {
+            $html .= industriesalon_publications_render_longread_quote_section($section);
+            continue;
+        }
         $anchor = trim((string) ($section['anchor'] ?? ''));
         $title = trim((string) ($section['title'] ?? ''));
         $body = is_array($section['body'] ?? null) ? $section['body'] : [];
+        $media = is_array($section['media'] ?? null) ? $section['media'] : [];
         if ($anchor === '' || $title === '') {
             continue;
         }
 
         $html .= '<section id="' . esc_attr($anchor) . '" class="iss-publication-longread__chapter">';
         $html .= '<div class="iss-publication-longread__chapter-aside">';
-        $html .= '<p class="iss-publication-longread__chapter-index">' . esc_html(sprintf(__('Kapitel %02d', 'industriesalon'), $index + 1)) . '</p>';
+        $html .= '<p class="iss-publication-longread__chapter-index">' . esc_html(sprintf(__('Kapitel %02d', 'industriesalon'), $chapter_index + 1)) . '</p>';
         $html .= '<h2 class="iss-publication-longread__chapter-title">' . esc_html($title) . '</h2>';
         $html .= '</div>';
         $html .= '<div class="iss-publication-longread__chapter-body">' . implode('', $body);
+        foreach ($media as $media_item) {
+            if (is_array($media_item)) {
+                $html .= industriesalon_publications_render_longread_chapter_media($media_item);
+            }
+        }
         $html .= '</div>';
         $html .= '</section>';
+        $chapter_index++;
     }
     $html .= '</div>';
     $html .= '</div>';

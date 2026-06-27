@@ -28,6 +28,21 @@ function iss_publications_register_editorial_format(array $formats): array
                 'description' => __('Optional reading rail generated from the publication sections.', 'iss-publications'),
                 'supports' => ['rail_options', 'no_body'],
             ],
+            'longread_chapter' => [
+                'label' => __('Longread-Kapitel', 'iss-publications'),
+                'description' => __('One chapter in a JSON-backed longread publication.', 'iss-publications'),
+                'supports' => ['anchor', 'media_refs', 'media_layout'],
+            ],
+            'longread_quote' => [
+                'label' => __('Longread-Zitat', 'iss-publications'),
+                'description' => __('A standalone quote moment in a JSON-backed longread publication.', 'iss-publications'),
+                'supports' => ['quote'],
+            ],
+            'timeline_item' => [
+                'label' => __('Zeitleisten-Station', 'iss-publications'),
+                'description' => __('One dated station in a JSON-backed timeline publication.', 'iss-publications'),
+                'supports' => ['year', 'media_refs'],
+            ],
             'photoalbum' => [
                 'label' => __('Fotoalbum', 'iss-publications'),
                 'description' => __('Editable album sequence imported from an Archivset or editorial Set.', 'iss-publications'),

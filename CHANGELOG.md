@@ -4,6 +4,50 @@ This file records durable project changes. Keep it compact: current state belong
 `handoff_CURRENT.md`, active follow-up in `TODO.md`, and detailed investigation can
 be recovered from Git history.
 
+## 2026-06-27
+
+- Extended the publication JSON migration beyond photoalbums:
+  - added `longread_chapter` and `timeline_item` gestures to the existing
+    `publication` editorial format instead of adding new Gutenberg blocks or a
+    second authoring path;
+  - added a generic `year` field to the shared editorial editor/storage layer
+    for dated timeline stations, with timeline images continuing to use the
+    existing promoted `media_refs` contract;
+  - made JSON-backed longreads and timelines produce the same payload shapes as
+    the legacy publication blocks, so the existing theme-owned longread and
+    timeline renderers remain the public UI owner;
+  - kept legacy Gutenberg/block parsing as the fallback for unmigrated
+    publications.
+- Migrated the existing local publication longreads/timelines into the JSON
+  gesture contract:
+  - enabled `_iss_editorial_publication` for 12 existing posts, covering
+    timelines `18864`, `18865`, `18873` and longreads `18878`, `18881`,
+    `18886`, `21105`, `21109`, `21110`, `21111`, `21114`, `21125`;
+  - converted dated chronik entries into `timeline_item` sections with `year`
+    and promoted `media_refs`, and converted longread body sections into
+    `longread_chapter` sections with anchors;
+  - created `ops/sql/2026-06-27-publication-longread-timeline-json.sql` as the
+    DB transfer artifact for the migrated JSON documents, enabled flags, and
+    layout meta;
+  - recorded that `18873` is currently an intro/rail timeline stub with no
+    dated timeline stations in the local source content, and that no upload
+    artifact was created because timeline images rely on existing Media Library
+    attachment rows/files.
+- Added the first theme-owned longread poster skin:
+  - exposed `longread-poster` as a publication skin and assigned it locally to
+    all nine migrated JSON longreads;
+  - added a reusable `longread_quote` gesture and moved normal longread imagery
+    onto `longread_chapter` through the shared `media_refs` contract, with a
+    constrained inline or right-aside chapter image placement;
+  - kept longread navigation generated from `longread_chapter` sections only,
+    while quote moments render in document order between chapters;
+  - styled the skin in the theme with a restrained typographic longread rhythm,
+    pull quotes, chapter images, mobile fallbacks, and an empty-rail collapse
+    path;
+  - regenerated `ops/sql/2026-06-27-publication-longread-timeline-json.sql` so
+    the transfer artifact now includes the `longread-poster` assignments for
+    migrated longreads.
+
 ## 2026-06-26
 
 - Added the first publication JSON migration slice for photoalbums:

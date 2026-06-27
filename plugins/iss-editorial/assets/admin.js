@@ -138,6 +138,11 @@
       vollbild: '#185fa5',
       massstab: '#ba7517',
       projekt_rail: '#255f63',
+      publication_rail: '#255f63',
+      longread_chapter: '#1a1a2e',
+      longread_quote: '#8a3b59',
+      timeline_item: '#3a6c8f',
+      photoalbum: '#426d54',
       fliesstext: '#5f5e5a',
       kapitel: '#1a1a2e',
       zitat: '#d4537e',
@@ -219,7 +224,12 @@
     }
 
     function usesRichBodyEditor(type) {
-      return format === 'projekt' && ['kapitel', 'fliesstext', 'schluss'].indexOf(type) !== -1;
+      if (format === 'projekt' && ['kapitel', 'fliesstext', 'schluss'].indexOf(type) !== -1) {
+        return true;
+      }
+
+      return format === 'publication'
+        && ['intro', 'source', 'longread_chapter', 'longread_quote', 'timeline_item'].indexOf(type) !== -1;
     }
 
     function updateField() {
@@ -256,6 +266,12 @@
       }
       if (section.body) {
         parts.push(richTextSummary(section.body).slice(0, 140));
+      }
+      if (section.year) {
+        parts.push('Jahr: ' + String(section.year).replace(/\s+/g, ' ').slice(0, 24));
+      }
+      if (section.media_layout) {
+        parts.push(section.media_layout === 'aside-right' ? 'Bild rechts' : 'Bild im Text');
       }
       if ((section.facts || []).length) {
         parts.push(String((section.facts || []).length) + ' Fakt(en)');
@@ -692,6 +708,18 @@
         renderFactEditor(section, body);
       }
 
+      if (supports(type, 'year')) {
+        body.appendChild(createTextInput('Jahr', section.year || '', function (value) {
+          section.year = value;
+          render();
+          scheduleAutosave();
+        }));
+      }
+
+      if (supports(type, 'media_layout')) {
+        renderMediaLayoutControl(section, body);
+      }
+
       if (supports(type, 'rail_options')) {
         renderRailEditor(section, body);
       }
@@ -803,6 +831,40 @@
       });
 
       wrapper.appendChild(createElement('span', '', 'Textposition'));
+      wrapper.appendChild(options);
+      body.appendChild(wrapper);
+    }
+
+    function renderMediaLayoutControl(section, body) {
+      var wrapper = createElement('div', 'iss-editorial-field iss-editorial-field--media-layout');
+      var options = createElement('div', 'iss-editorial-segmented');
+      var choices = [
+        { value: 'inline', label: 'Im Text' },
+        { value: 'aside-right', label: 'Rechts daneben' }
+      ];
+      var current = section.media_layout === 'aside-right' ? 'aside-right' : 'inline';
+
+      choices.forEach(function (choice) {
+        var label = createElement('label', 'iss-editorial-segmented__option');
+        var input = document.createElement('input');
+        var text = createElement('span', '', choice.label);
+        input.type = 'radio';
+        input.name = 'iss-editorial-media-layout-' + String(documentState.sections.indexOf(section));
+        input.value = choice.value;
+        input.checked = current === choice.value;
+        input.addEventListener('change', function () {
+          if (input.checked) {
+            section.media_layout = choice.value;
+            render();
+            scheduleAutosave();
+          }
+        });
+        label.appendChild(input);
+        label.appendChild(text);
+        options.appendChild(label);
+      });
+
+      wrapper.appendChild(createElement('span', '', 'Bildposition'));
       wrapper.appendChild(options);
       body.appendChild(wrapper);
     }

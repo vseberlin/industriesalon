@@ -473,11 +473,7 @@ add_filter('the_content', function ($content) {
     }
 
     if (iss_publications_is_timeline($post_id)) {
-        if (strpos($content, 'iss-publication-chronicle') === false) {
-            return $content;
-        }
-
-        $payload = iss_publications_parse_timeline_payload((string) $content);
+        $payload = iss_publications_get_timeline_payload($post_id);
         if ($payload === []) {
             return $content;
         }
@@ -494,11 +490,19 @@ add_filter('the_content', function ($content) {
         return $content;
     }
 
-    if (strpos((string) $content, 'iss-publication-longread') !== false) {
+    if (
+        strpos((string) $content, 'iss-publication-longread') !== false
+        && !iss_publications_editorial_document_is_enabled($post_id)
+    ) {
         return $content;
     }
 
-    $theme_render = apply_filters('iss_publications_render_longread_content', null, $post_id, (string) $content);
+    $payload = iss_publications_get_longread_payload($post_id);
+    if ($payload === []) {
+        return $content;
+    }
+
+    $theme_render = apply_filters('iss_publications_render_longread_content', null, $post_id, $payload, (string) $content);
     if (is_string($theme_render)) {
         return $theme_render;
     }
@@ -651,6 +655,10 @@ function iss_publications_is_chaptered_longread(int $post_id): bool
 
     $content = (string) $post->post_content;
     if (strpos($content, '<!-- wp:iss/publication-longread') !== false) {
+        return true;
+    }
+
+    if (iss_publications_parse_editorial_longread_payload($post_id) !== []) {
         return true;
     }
 
@@ -1206,6 +1214,283 @@ function iss_publications_parse_editorial_photoalbum_text_payload(int $post_id):
     return array_filter($payload, static function (string $value): bool {
         return trim($value) !== '';
     });
+}
+
+function iss_publications_get_editorial_publication_sections(int $post_id): array
+{
+    if (
+        $post_id <= 0
+        || !function_exists('iss_publications_get_editorial_publication_read_model')
+        || !iss_publications_editorial_document_is_enabled($post_id)
+    ) {
+        return [];
+    }
+
+    $document = iss_publications_get_editorial_publication_read_model($post_id);
+    $sections = is_array($document['sections'] ?? null) ? $document['sections'] : [];
+
+    return array_values(array_filter($sections, 'is_array'));
+}
+
+function iss_publications_get_editorial_publication_source_note(array $sections): string
+{
+    foreach ($sections as $section) {
+        if (!is_array($section) || sanitize_key((string) ($section['type'] ?? '')) !== 'source') {
+            continue;
+        }
+
+        $parts = [];
+        $title = trim((string) ($section['title'] ?? ''));
+        $body = trim(wp_strip_all_tags(iss_publications_publication_section_body_html($section)));
+        if ($title !== '') {
+            $parts[] = $title;
+        }
+        if ($body !== '') {
+            $parts[] = $body;
+        }
+
+        return trim(implode(' ', $parts));
+    }
+
+    return '';
+}
+
+function iss_publications_get_editorial_publication_source_note_html(array $sections): string
+{
+    $note = iss_publications_get_editorial_publication_source_note($sections);
+
+    return $note !== '' ? '<p class="iss-publication-source-note">' . esc_html($note) . '</p>' : '';
+}
+
+function iss_publications_get_editorial_publication_intro_html(array $sections): string
+{
+    $html = '';
+
+    foreach ($sections as $section) {
+        if (!is_array($section) || sanitize_key((string) ($section['type'] ?? '')) !== 'intro') {
+            continue;
+        }
+
+        $body = iss_publications_publication_section_body_html($section);
+        if ($body !== '') {
+            $html .= $body;
+        }
+    }
+
+    return trim($html);
+}
+
+function iss_publications_editorial_longread_chapter_media_payloads(array $section): array
+{
+    $media_refs = is_array($section['media_refs_resolved'] ?? null) ? $section['media_refs_resolved'] : [];
+    if ($media_refs === []) {
+        return [];
+    }
+
+    $media_layout = sanitize_key((string) ($section['media_layout'] ?? 'inline'));
+    if (!in_array($media_layout, ['inline', 'aside-right'], true)) {
+        $media_layout = 'inline';
+    }
+
+    $items = [];
+    foreach ($media_refs as $item) {
+        if (!is_array($item)) {
+            continue;
+        }
+
+        $reference = is_array($item['reference'] ?? null) ? $item['reference'] : [];
+        $resolved = is_array($item['resolved'] ?? null) ? $item['resolved'] : [];
+        $attachment_id = absint($resolved['id'] ?? $reference['id'] ?? 0);
+        if ($attachment_id <= 0) {
+            continue;
+        }
+
+        $metadata = wp_get_attachment_metadata($attachment_id);
+        $caption = trim((string) ($reference['label'] ?? $resolved['title'] ?? ''));
+        $items[] = [
+            'type' => 'media',
+            'layout' => $media_layout,
+            'caption' => $caption,
+            'image_id' => $attachment_id,
+            'image_url' => (string) ($resolved['url'] ?? wp_get_attachment_url($attachment_id)),
+            'image_alt' => $caption,
+            'image_width' => is_array($metadata) ? absint($metadata['width'] ?? 0) : 0,
+            'image_height' => is_array($metadata) ? absint($metadata['height'] ?? 0) : 0,
+        ];
+    }
+
+    return $items;
+}
+
+function iss_publications_parse_editorial_longread_payload(int $post_id): array
+{
+    $sections = iss_publications_get_editorial_publication_sections($post_id);
+    if ($sections === []) {
+        return [];
+    }
+
+    $chapters = [];
+    $flow_sections = [];
+    $subheading_count = 0;
+    foreach ($sections as $section) {
+        if (!is_array($section)) {
+            continue;
+        }
+
+        $type = sanitize_key((string) ($section['type'] ?? ''));
+        if ($type === 'longread_quote') {
+            $quote = trim((string) ($section['quote'] ?? ''));
+            if ($quote === '') {
+                continue;
+            }
+
+            $flow_sections[] = [
+                'type' => 'quote',
+                'kicker' => trim((string) ($section['kicker'] ?? '')),
+                'title' => trim((string) ($section['title'] ?? '')),
+                'quote' => $quote,
+                'attribution' => trim((string) ($section['attribution'] ?? '')),
+            ];
+            continue;
+        }
+
+        if ($type !== 'longread_chapter') {
+            continue;
+        }
+
+        $title = trim((string) ($section['title'] ?? ''));
+        if ($title === '') {
+            continue;
+        }
+
+        $anchor = trim((string) ($section['anchor'] ?? ''));
+        if ($anchor === '') {
+            $anchor = sanitize_title($title);
+        }
+
+        $body_html = iss_publications_publication_section_body_html($section);
+        $subheading_count += iss_publications_count_longread_subheadings($body_html);
+        $chapter = [
+            'type' => 'chapter',
+            'anchor' => $anchor,
+            'title' => $title,
+            'body' => $body_html !== '' ? [$body_html] : [],
+        ];
+        $media = iss_publications_editorial_longread_chapter_media_payloads($section);
+        if ($media !== []) {
+            $chapter['media'] = $media;
+        }
+        $chapters[] = $chapter;
+        $flow_sections[] = $chapter;
+    }
+
+    if ($chapters === []) {
+        return [];
+    }
+
+    $topic_names = iss_publications_get_shared_topic_names($post_id);
+    $intro_html = iss_publications_get_editorial_publication_intro_html($sections);
+    $nav_items = [];
+    foreach ($chapters as $chapter) {
+        $nav_items[] = [
+            'href' => '#' . $chapter['anchor'],
+            'label' => $chapter['title'],
+        ];
+    }
+
+    return [
+        'source_note_html' => iss_publications_get_editorial_publication_source_note_html($sections),
+        'intro_copy_html' => $intro_html,
+        'lead_map_html' => '',
+        'has_atlas_map' => false,
+        'show_atlas_map' => false,
+        'intro_html' => $intro_html !== '' ? '<div class="iss-publication-longread__intro">' . $intro_html . '</div>' : '',
+        'summary' => [
+            [
+                'value' => (string) count($chapters),
+                'label' => __('Kapitel', 'iss-publications'),
+            ],
+            [
+                'value' => (string) $subheading_count,
+                'label' => __('Unterthemen', 'iss-publications'),
+            ],
+            [
+                'value' => (string) max(1, count($topic_names)),
+                'label' => __('Themenfelder', 'iss-publications'),
+            ],
+            [
+                'value' => __('Ort', 'iss-publications'),
+                'label' => __('Kontext', 'iss-publications'),
+            ],
+        ],
+        'nav_items' => $nav_items,
+        'bridge_html' => iss_publications_get_essay_bridge_html($post_id),
+        'sections' => $flow_sections,
+    ];
+}
+
+function iss_publications_editorial_timeline_media_payload(array $section): array
+{
+    $media_refs = is_array($section['media_refs_resolved'] ?? null) ? $section['media_refs_resolved'] : [];
+    if ($media_refs === []) {
+        return [];
+    }
+
+    $item = is_array($media_refs[0] ?? null) ? $media_refs[0] : [];
+    $reference = is_array($item['reference'] ?? null) ? $item['reference'] : [];
+    $resolved = is_array($item['resolved'] ?? null) ? $item['resolved'] : [];
+    $attachment_id = absint($resolved['id'] ?? $reference['id'] ?? 0);
+    if ($attachment_id <= 0) {
+        return [];
+    }
+
+    $metadata = wp_get_attachment_metadata($attachment_id);
+
+    return [
+        'image_id' => $attachment_id,
+        'image_url' => (string) ($resolved['url'] ?? wp_get_attachment_url($attachment_id)),
+        'image_alt' => trim((string) ($reference['label'] ?? $resolved['title'] ?? '')),
+        'image_width' => is_array($metadata) ? absint($metadata['width'] ?? 0) : 0,
+        'image_height' => is_array($metadata) ? absint($metadata['height'] ?? 0) : 0,
+    ];
+}
+
+function iss_publications_parse_editorial_timeline_payload(int $post_id): array
+{
+    $sections = iss_publications_get_editorial_publication_sections($post_id);
+    if ($sections === []) {
+        return [];
+    }
+
+    $items = [];
+    foreach ($sections as $section) {
+        if (!is_array($section) || sanitize_key((string) ($section['type'] ?? '')) !== 'timeline_item') {
+            continue;
+        }
+
+        $year_text = trim((string) ($section['year'] ?? ''));
+        if (!preg_match('/\d{4}/', $year_text, $matches)) {
+            continue;
+        }
+
+        $item = [
+            'year' => (int) $matches[0],
+            'title' => trim((string) ($section['title'] ?? '')),
+            'body_html' => iss_publications_publication_section_body_html($section),
+        ];
+
+        $item = array_merge($item, iss_publications_editorial_timeline_media_payload($section));
+        $items[] = $item;
+    }
+
+    if ($items === []) {
+        return [];
+    }
+
+    return [
+        'source_note' => iss_publications_get_editorial_publication_source_note($sections),
+        'items' => $items,
+    ];
 }
 
 function iss_publications_photoalbum_get_attachment_image_html(int $attachment_id, string $alt_text): array
@@ -1970,9 +2255,18 @@ function iss_publications_get_longread_payload(int $post_id): array
         return [];
     }
 
-    $cache_key = $post_id . ':' . md5((string) $post->post_content);
+    $editorial_document = '';
+    if (function_exists('iss_editorial_get_document_meta_key')) {
+        $stored_document = get_post_meta($post_id, iss_editorial_get_document_meta_key('publication'), true);
+        $editorial_document = is_string($stored_document) ? $stored_document : '';
+    }
+
+    $cache_key = $post_id . ':' . md5((string) $post->post_content) . ':' . md5($editorial_document);
     if (!array_key_exists($cache_key, $cache)) {
-        $cache[$cache_key] = iss_publications_parse_longread_payload($post_id, (string) $post->post_content);
+        $editorial_payload = iss_publications_parse_editorial_longread_payload($post_id);
+        $cache[$cache_key] = $editorial_payload !== []
+            ? $editorial_payload
+            : iss_publications_parse_longread_payload($post_id, (string) $post->post_content);
     }
 
     return is_array($cache[$cache_key]) ? $cache[$cache_key] : [];
@@ -2258,9 +2552,18 @@ function iss_publications_get_timeline_payload(int $post_id): array
         return [];
     }
 
-    $cache_key = $post_id . ':' . md5((string) $post->post_content);
+    $editorial_document = '';
+    if (function_exists('iss_editorial_get_document_meta_key')) {
+        $stored_document = get_post_meta($post_id, iss_editorial_get_document_meta_key('publication'), true);
+        $editorial_document = is_string($stored_document) ? $stored_document : '';
+    }
+
+    $cache_key = $post_id . ':' . md5((string) $post->post_content) . ':' . md5($editorial_document);
     if (!array_key_exists($cache_key, $cache)) {
-        $cache[$cache_key] = iss_publications_parse_timeline_payload((string) $post->post_content);
+        $editorial_payload = iss_publications_parse_editorial_timeline_payload($post_id);
+        $cache[$cache_key] = $editorial_payload !== []
+            ? $editorial_payload
+            : iss_publications_parse_timeline_payload((string) $post->post_content);
     }
 
     return is_array($cache[$cache_key]) ? $cache[$cache_key] : [];
