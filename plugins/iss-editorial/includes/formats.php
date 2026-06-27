@@ -34,6 +34,7 @@ function iss_editorial_get_registered_formats(): array
                 'label' => sanitize_text_field((string) ($section['label'] ?? $type)),
                 'description' => sanitize_text_field((string) ($section['description'] ?? '')),
                 'supports' => array_values(array_filter(array_map('sanitize_key', (array) ($section['supports'] ?? [])))),
+                'ui_hidden' => !empty($section['ui_hidden']),
             ];
         }
 

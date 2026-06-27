@@ -207,7 +207,9 @@
       return skin && skin.slug;
     }) : [];
     var autosaveTimer = null;
-    var activeType = Object.keys(sections)[0] || 'kapitel';
+    var activeType = Object.keys(sections).filter(function (type) {
+      return !isSectionHidden(type);
+    })[0] || 'kapitel';
     var modal = null;
     var routeConfig = config.routeStations && config.routeStations.enabled && format === 'fuehrung'
       ? config.routeStations
@@ -219,6 +221,10 @@
 
     function sectionConfig(type) {
       return sections[type] || { label: type, supports: [] };
+    }
+
+    function isSectionHidden(type) {
+      return !!sectionConfig(type).ui_hidden;
     }
 
     function supports(type, fieldName) {
@@ -503,6 +509,10 @@
     }
 
     function addSection(type) {
+      if (isSectionHidden(type)) {
+        return;
+      }
+
       documentState.sections.push({
         type: type,
         anchor: '',
@@ -539,6 +549,10 @@
     function renderPalette(target) {
       var list = createElement('div', 'iss-editorial-palette');
       Object.keys(sections).forEach(function (type) {
+        if (isSectionHidden(type)) {
+          return;
+        }
+
         var button = createElement('button', 'iss-editorial-gesture' + (type === activeType ? ' active' : ''));
         var dot = createElement('span', 'iss-editorial-gesture__dot');
         var body = createElement('span', 'iss-editorial-gesture__body');
@@ -559,6 +573,10 @@
 
     function renderSectionCard(section, index, target) {
       var type = section.type || 'kapitel';
+      if (isSectionHidden(type)) {
+        return;
+      }
+
       var card = createElement('article', 'iss-editorial-card iss-editorial-card--' + type);
       var marker = createElement('span', 'iss-editorial-card__marker');
       var meta = createElement('div', 'iss-editorial-card__meta');
@@ -612,7 +630,9 @@
       head.appendChild(tools);
       stage.appendChild(head);
 
-      if (!documentState.sections.length) {
+      if (!documentState.sections.some(function (section) {
+        return section && !isSectionHidden(section.type || 'kapitel');
+      })) {
         stage.appendChild(createElement('p', 'iss-editorial-empty', 'Noch keine Abschnitte. Links eine Geste wählen.'));
       } else {
         documentState.sections.forEach(function (section, index) {

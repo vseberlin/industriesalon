@@ -167,6 +167,7 @@ function iss_content_model_register_editorial_formats(array $formats): array
                 'label' => __('Navigation', 'iss-content-model'),
                 'description' => __('Optional project rail generated from chapter and contact sections', 'iss-content-model'),
                 'supports' => ['no_body'],
+                'ui_hidden' => true,
             ],
             'galerie' => array_merge($gallery_section, ['supports' => ['anchor', 'media_refs', 'object_refs']]),
             'image_wall' => array_merge($image_wall_section, ['supports' => ['anchor', 'media_refs']]),

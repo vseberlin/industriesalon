@@ -27,6 +27,12 @@ be recovered from Git history.
     existing `projekt_rail` sections as the legacy default-on signal;
   - supported top/horizontal, side, and bottom rail placements without treating
     the rail as authored content.
+- Hid legacy feature-only sections from editorial composition:
+  - added a `ui_hidden` format-section flag to `iss-editorial`;
+  - marked `projekt_rail` hidden in the project format so editors use the rail
+    feature control instead of adding a fake navigation gesture;
+  - kept hidden sections valid in stored documents for backwards-compatible
+    rail fallback.
 - Added a registry diagnostics and backfill maintenance slice:
   - added `wp iss status` in `iss-core` to report first-party plugin loading,
     key CPT registration, schema/backfill option versions, graph/occurrence/Set
