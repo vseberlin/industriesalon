@@ -11,6 +11,9 @@
     if (isEnabled(modalConfig.hideManagedBoxes)) {
       document.body.classList.add('iss-editor-modal-controls-ready');
     }
+    if (isEnabled(modalConfig.hideDashboardTechnicalBoxes)) {
+      document.body.classList.add('iss-editor-dashboard-simplified');
+    }
     if (isEnabled(modalConfig.moveEditorTopGroups) || isEnabled(modalConfig.moveAusstellungTopGroups)) {
       document.body.classList.add('iss-editor-dashboard-ready');
     }
@@ -19,8 +22,92 @@
   function moveEditorBox(id, target) {
     var box = document.getElementById(id);
     if (box && target) {
+      box.classList.add('iss-editor-dashboard__box');
       target.appendChild(box);
     }
+
+    return box;
+  }
+
+  function moveDashboardSelector(selector, target) {
+    var item = document.querySelector(selector);
+    if (item && target && !item.closest('.iss-editor-dashboard')) {
+      item.classList.add('iss-editor-dashboard__item');
+      target.appendChild(item);
+    }
+
+    return item;
+  }
+
+  function dashboardSections() {
+    return (Array.isArray(modalConfig.dashboardSections) ? modalConfig.dashboardSections : []).filter(function (section) {
+      return section && section.slug && (
+        (Array.isArray(section.boxIds) && section.boxIds.length) ||
+        (Array.isArray(section.selectors) && section.selectors.length)
+      );
+    });
+  }
+
+  function createDashboardSection(section) {
+    var panel = document.createElement('section');
+    var header = document.createElement('div');
+    var title = document.createElement('h2');
+    var body = document.createElement('div');
+
+    panel.className = 'iss-editor-dashboard__section iss-editor-dashboard__section--' + section.slug;
+    header.className = 'iss-editor-dashboard__section-head';
+    body.className = 'iss-editor-dashboard__section-body';
+    title.textContent = section.label || section.slug;
+
+    header.appendChild(title);
+    if (section.description) {
+      var description = document.createElement('p');
+      description.textContent = section.description;
+      header.appendChild(description);
+    }
+
+    panel.appendChild(header);
+    panel.appendChild(body);
+
+    (Array.isArray(section.boxIds) ? section.boxIds : []).forEach(function (id) {
+      moveEditorBox(id, body);
+    });
+    (Array.isArray(section.selectors) ? section.selectors : []).forEach(function (selector) {
+      moveDashboardSelector(selector, body);
+    });
+
+    if (!body.children.length) {
+      return null;
+    }
+
+    return panel;
+  }
+
+  function setupEditorDashboardSections(title, editor) {
+    var sections = dashboardSections();
+    var dashboard;
+
+    if (!sections.length || document.querySelector('.iss-editor-dashboard')) {
+      return false;
+    }
+
+    dashboard = document.createElement('div');
+    dashboard.className = 'iss-editor-dashboard';
+    title.parentNode.insertBefore(dashboard, editor || title.nextSibling);
+
+    sections.forEach(function (section) {
+      var panel = createDashboardSection(section);
+      if (panel) {
+        dashboard.appendChild(panel);
+      }
+    });
+
+    if (!dashboard.children.length) {
+      dashboard.parentNode.removeChild(dashboard);
+      return false;
+    }
+
+    return true;
   }
 
   function setupEditorTopGroups() {
@@ -32,6 +119,10 @@
     var title = document.getElementById('titlediv');
     var editor = document.getElementById('postdivrich');
     if (!title || document.querySelector('.iss-editor-top-dashboard')) {
+      return;
+    }
+
+    if (setupEditorDashboardSections(title, editor)) {
       return;
     }
 

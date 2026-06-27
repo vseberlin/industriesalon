@@ -6,6 +6,18 @@ be recovered from Git history.
 
 ## 2026-06-27
 
+- Implemented the shared editorial admin dashboard shell for compatible
+  classic/editorial edit screens:
+  - added reusable dashboard section registration and DOM assembly in
+    `iss-content` without moving storage or save ownership;
+  - converted `veranstaltung`, `projekt`, `ausstellung`, `publication`,
+    `fuehrung`, and `rueckblick` to the shared section order for identity,
+    composition, facts, relations/references, sale/publish where applicable;
+  - kept `iss-editorial`, `iss-publications`, Führung meta, Sets,
+    `iss-relations`, `iss-graph`, and `iss-archive` as the actual control/save
+    owners;
+  - explicitly left Gutenberg screens `video`, `page`, and `post` out of the
+    classic dashboard mover pending a separate block-editor adapter.
 - Added `docs/project/editorial-admin-simplification-sow.md` to define the
   shared ISS editorial admin direction: no global admin reskin, classify each
   CPT field/block/metabox as must-show, integrated, hidden, migrated, or purged,

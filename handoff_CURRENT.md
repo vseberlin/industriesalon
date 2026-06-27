@@ -6,89 +6,48 @@ Current work only. Completed checkpoint history belongs in `CHANGELOG.md`; activ
 
 ## Current Work
 
-- Editorial admin simplification SOW is now the durable planning artifact at
-  `docs/project/editorial-admin-simplification-sow.md`; it rejects a global
-  admin reskin and defines one shared ISS editorial dashboard model with one
-  normal editing authority per concept.
-- Editorial gesture/skin cleanup is locally complete and committed at
-  `0b6c45b Normalize editorial gestures and skins`.
-- Local DB-backed editorial JSON was migrated for the included domains:
-  Ausstellung, Projekt, Rückblick, and publication/photoalbum.
-- Runtime code no longer carries the removed compatibility layer for the old
-  included-domain gesture/skin names:
-  `quellenauszug`, `bildstrecke`, `projekt_rail`, `aside`,
-  `frauen-im-werk`, `kinder-im-werk`, `industrieakte`, and
-  `blueprint-matrix`.
-- Canonical runtime vocabulary now uses:
-  - gestures such as `kapitel`, `fliesstext`, `zitat`, `galerie`,
-    `objektfokus`, `material`, `massstab`, `programm`, and `upload_intake`;
-  - skins such as `typografisch`, `dossier`, `quellenbuehne`,
-    `objektalbum`, `bildmatrix`, `buehne`, and `chronik`;
-  - `features.rail` for project rail behavior instead of authored
-    `projekt_rail` sections.
-- Veranstaltungen now collapse default skins to `typografisch`, `buehne`, and
-  `chronik`; `chronik` is no longer an authored Veranstaltung gesture.
-- Führungen were explicitly excluded and still keep their existing
-  `fuehrung` JSON/content contracts, including `image_wall` where currently
-  used.
-
-## Transfer Artifacts
-
-- Rollback/reference snapshot before the local migration:
-  `ops/sql/2026-06-27-editorial-vocabulary-pre-migration.sql`.
-- Deployable normalized JSON artifact for the local migration:
-  `ops/sql/2026-06-27-editorial-vocabulary-normalized-json.sql`.
-- Apply the code before applying the normalized SQL artifact on another target.
-  Confirm the target has the referenced posts/media rows before replaying SQL.
+- Editorial admin simplification SOW is implemented for the compatible classic/editorial edit screens using one shared dashboard assembly layer in `iss-content`.
+- Converted screens:
+  - `veranstaltung`: identity, composition, required facts, relations/references, publish;
+  - `projekt`: identity, `iss-editorial` composition, project facts, relations/references;
+  - `ausstellung`: identity, `iss-editorial` composition, Ausstellung facts/ACF fallback, relations/references;
+  - `publication`: identity, `iss-editorial` composition, publication facts, sale controls, relations/references;
+  - `fuehrung`: identity, `iss-editorial` composition, tour facts/calendar mapping, relations/references;
+  - `rueckblick`: identity, `iss-editorial` composition, relations/references.
+- Existing render/save/storage owners are preserved. The dashboard moves existing DOM/metabox controls only:
+  - `iss-editorial` keeps JSON composition;
+  - `iss-content` keeps Veranstaltung, Projekt, Ausstellung, Video, Set, and CPT contracts;
+  - `iss-publications` keeps publication bibliography/display/sale/related controls;
+  - Führung module keeps tour facts and gallery fields;
+  - `iss-relations`, `iss-graph`, and `iss-archive` keep their own relation/reference controls.
+- Gutenberg screens `video`, `page`, and `post` are explicitly outside this classic dashboard path and now report `dashboard=no`.
 
 ## Preserve
 
-- Keep theme-owned public rendering; plugins own data/contracts and editor
-  registry rules.
-- Do not reintroduce skin aliases or hidden legacy section compatibility unless
-  a target migration failure proves a specific rollback need.
-- Keep Führungen out of this cleanup until they get their own renderer/data
-  audit.
+- Do not migrate storage as part of this admin-shell work; `_iss_content_json`, `_iss_editorial_*`, publication meta, tour meta, graph/relation/archive tables all stay authoritative.
+- Do not force the classic `titlediv`/postbox dashboard mover onto Gutenberg screens; they need a separate block-editor adapter if simplification continues there.
+- Administrator technical access remains available during migration; normal editor paths hide technical/duplicate boxes where the dashboard is active.
 - Do not revert unrelated local untracked files:
   - `iss-exhibition-composition-add.md`
   - `themes/industriesalon/theme2.json`
 
 ## Next Action
 
-- First executable editorial-admin slice: inventory/classify current
-  edit-screen fields, blocks, panels, metaboxes, save paths, and list-table
-  columns by the SOW states, then choose Projekt or Ausstellung as the first
-  reference dashboard conversion.
-- Push or otherwise exchange the local commits when the local checkpoint
-  should become shared through GitHub `main`.
-- On any target DB that should receive this vocabulary migration, deploy code
-  first, review/apply
-  `ops/sql/2026-06-27-editorial-vocabulary-normalized-json.sql`, then spot
-  check representative Ausstellung, Projekt, Rückblick, and photoalbum routes.
-- Continue the remaining architecture follow-ups from
-  `docs/architecture/gesture-skin-consolidation.md`: shape promotion beyond
-  Veranstaltungen, `programm` projection decision, and possible wider
-  `bildmatrix` reuse outside publications.
+- If continuing the SOW, design a separate Gutenberg adapter for `video`, `page`, and `post` rather than extending the classic DOM mover.
+- For any converted CPT, next functional work should be edit/save/reload parity checks with a normal editorial role before hiding more legacy boxes or purging anything.
+- Push or otherwise exchange the local commits only when the local checkpoint should become shared through GitHub `main`.
 
 ## Verified
 
-- For the editorial-admin SOW slice: `git diff --check` passed.
-- `git fetch origin --prune`; before this SOW exit commit, local
-  `HEAD=3c46a55`, `origin/main=053ac70`, branch was ahead by 12 and not
-  pushed.
-- DB legacy stored-slug check returned `0` after migration.
-- Representative local routes returned `200` and rendered new skin classes:
-  - `/ausstellungen/rohren-fur-die-republik/` -> `quellenbuehne`
-  - `/ausstellungen/frauen-in-werk/` -> `objektalbum`
-  - `/ausstellungen/kinder-im-werk/` -> `objektalbum`
-  - `/projekte/walk-of-fame-schoeneweide/` -> `dossier`
-  - `/publikationen/fotoalbum-labor-konstruktions-und-versuchswerk-oberspree-1946/` -> `bildmatrix`
-- Passed verification for the cleanup slice:
-  - PHP syntax checks for touched plugin/theme PHP files;
-  - `node --check plugins/iss-editorial/assets/admin.js`;
-  - `git diff --check`;
-  - `bash tools/phpcs-target.sh` for touched PHP files;
-  - `bash tools/phpstan-target.sh` for touched PHP files;
-  - `npx stylelint` for touched CSS files.
-- Full `npm run lint:css` still fails only on an unrelated pre-existing
-  spacing issue in `themes/industriesalon/assets/css/atlas-app.css:962`.
+- PHP: Docker `php -l`, `bash tools/phpcs-target.sh plugins/iss-content/includes/admin.php`, and `bash tools/phpstan-target.sh plugins/iss-content/includes/admin.php`.
+- JavaScript/CSS: `node --check plugins/iss-content/assets/admin-editor-modal-controls.js`, targeted ESLint, targeted Stylelint.
+- Browser sweep passed for representative screens:
+  - Veranstaltung `25808`: 5 sections, no desktop overflow;
+  - Projekt `25720`: 4 sections, `iss-editorial` canvas in composition, no desktop overflow;
+  - Ausstellung `26381`: 4 sections, `iss-editorial` canvas in composition, no desktop overflow;
+  - Publication `25731`: 5 sections, `iss-editorial` canvas in composition, no desktop overflow after graph-control containment;
+  - Führung `12191`: 4 sections, `iss-editorial` canvas in composition, no desktop overflow;
+  - Rückblick new-post screen: 3 sections, `iss-editorial` canvas in composition, no desktop overflow.
+- Mobile publication overflow check passed after constraining dashboard graph controls.
+- `git diff --check` passed.
+- Git exchange before commit: local `HEAD=28d4362`, `origin/main=053ac70`; local branch was ahead by 13 and not pushed.
