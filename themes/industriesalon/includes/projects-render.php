@@ -11,6 +11,7 @@ function industriesalon_get_editorial_project_skins(): array
         'dossier',
         'field',
         'standard',
+        'typografisch',
     ];
 }
 
@@ -35,6 +36,10 @@ add_filter('iss_editorial_format_skins', function (array $skins, string $format_
         'standard' => [
             'slug' => 'standard',
             'label' => __('Standard', 'industriesalon'),
+        ],
+        'typografisch' => [
+            'slug' => 'typografisch',
+            'label' => __('Typografisch', 'industriesalon'),
         ],
     ];
 }, 10, 2);
@@ -75,10 +80,35 @@ add_filter('body_class', function (array $classes): array {
     $editorial_skin = industriesalon_get_editorial_project_post_skin((int) $post_id);
     if ($editorial_skin !== '') {
         $classes[] = 'iss-project-editorial-skin-' . sanitize_html_class($editorial_skin);
+        if (function_exists('iss_content_model_editorial_canonical_skin')) {
+            $canonical_skin = iss_content_model_editorial_canonical_skin($editorial_skin);
+            if ($canonical_skin !== '' && $canonical_skin !== $editorial_skin) {
+                $classes[] = 'iss-project-editorial-skin-' . sanitize_html_class($canonical_skin);
+            }
+        }
     }
 
     return array_values(array_unique($classes));
 });
+
+function industriesalon_resolve_editorial_project_rail_feature(string $skin, bool $has_rail): array
+{
+    $placement = 'right';
+    if ($skin === 'dossier') {
+        $placement = 'horizontal';
+    }
+
+    $overrides = [
+        'enabled' => $has_rail,
+        'placement' => $placement,
+        'mode' => $skin === 'field' ? 'anchor-nav' : 'contextual',
+        'treatment' => $skin === 'field' ? 'sticky' : 'quiet',
+    ];
+
+    return function_exists('iss_content_model_editorial_resolve_rail_feature')
+        ? iss_content_model_editorial_resolve_rail_feature($skin, $overrides)
+        : $overrides;
+}
 
 function industriesalon_get_editorial_project_section_context(array $section, string $skin): array
 {
@@ -873,6 +903,19 @@ function industriesalon_render_editorial_project_content(string $content): strin
         'iss-project-editorial',
         'iss-project-editorial--skin-' . sanitize_html_class($skin),
     ];
+    $rail_feature = industriesalon_resolve_editorial_project_rail_feature(
+        $skin,
+        is_array($rail_context['rail_section'] ?? null) && (array) $rail_context['rail_section'] !== []
+    );
+    $classes[] = !empty($rail_feature['enabled']) ? 'iss-project-editorial--rail-enabled' : 'iss-project-editorial--rail-off';
+    $classes[] = 'iss-project-editorial--rail-placement-' . sanitize_html_class((string) ($rail_feature['placement'] ?? 'right'));
+    $classes[] = 'iss-project-editorial--rail-treatment-' . sanitize_html_class((string) ($rail_feature['treatment'] ?? 'quiet'));
+    if (function_exists('iss_content_model_editorial_canonical_skin')) {
+        $canonical_skin = iss_content_model_editorial_canonical_skin($skin);
+        if ($canonical_skin !== '' && $canonical_skin !== $skin) {
+            $classes[] = 'iss-project-editorial--canonical-skin-' . sanitize_html_class($canonical_skin);
+        }
+    }
 
     if (trim($html) === '') {
         return $content;

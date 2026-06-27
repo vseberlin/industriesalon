@@ -8,6 +8,7 @@ function industriesalon_get_editorial_publication_skins(): array
 {
     return [
         'standard',
+        'bildmatrix',
         'blueprint-matrix',
         'longread-poster',
     ];
@@ -26,6 +27,10 @@ add_filter('iss_editorial_format_skins', function (array $skins, string $format_
         'blueprint-matrix' => [
             'slug' => 'blueprint-matrix',
             'label' => __('Blueprint-Matrix', 'industriesalon'),
+        ],
+        'bildmatrix' => [
+            'slug' => 'bildmatrix',
+            'label' => __('Bildmatrix', 'industriesalon'),
         ],
         'longread-poster' => [
             'slug' => 'longread-poster',
@@ -1023,7 +1028,12 @@ function industriesalon_publications_render_photoalbum_content(int $post_id, arr
         return '';
     }
 
-    if (industriesalon_get_editorial_publication_post_skin($post_id) === 'blueprint-matrix') {
+    $publication_skin = industriesalon_get_editorial_publication_post_skin($post_id);
+    $is_bildmatrix = function_exists('iss_content_model_editorial_skin_is')
+        ? iss_content_model_editorial_skin_is($publication_skin, 'bildmatrix')
+        : in_array($publication_skin, ['bildmatrix', 'blueprint-matrix'], true);
+
+    if ($is_bildmatrix) {
         return industriesalon_publications_render_photoalbum_blueprint_matrix($post_id, $payload);
     }
 
@@ -2645,6 +2655,15 @@ add_filter('body_class', function (array $classes): array {
         $publication_skin = industriesalon_get_editorial_publication_post_skin($post_id);
         if ($publication_skin !== '') {
             $classes[] = 'iss-publication-editorial-skin-' . sanitize_html_class($publication_skin);
+            if (function_exists('iss_content_model_editorial_canonical_skin')) {
+                $canonical_skin = iss_content_model_editorial_canonical_skin($publication_skin);
+                if ($canonical_skin !== '' && $canonical_skin !== $publication_skin) {
+                    $classes[] = 'iss-publication-editorial-skin-' . sanitize_html_class($canonical_skin);
+                }
+                if ($canonical_skin === 'bildmatrix') {
+                    $classes[] = 'iss-publication-editorial-skin-blueprint-matrix';
+                }
+            }
         }
     }
 

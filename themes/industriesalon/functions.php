@@ -8,35 +8,54 @@ if (file_exists($industriesalon_fuehrungen_filters_helper)) {
     require_once $industriesalon_fuehrungen_filters_helper;
 }
 
-$industriesalon_publications_render_helper = get_stylesheet_directory() . '/includes/publications-render.php';
-if (file_exists($industriesalon_publications_render_helper)) {
-    require_once $industriesalon_publications_render_helper;
+function industriesalon_expected_render_helpers(): array
+{
+    return [
+        'publications' => '/includes/publications-render.php',
+        'ausstellungen' => '/includes/ausstellungen-render.php',
+        'projects' => '/includes/projects-render.php',
+        'tours' => '/includes/tours-render.php',
+        'veranstaltungen' => '/includes/veranstaltungen-render.php',
+        'archive' => '/includes/archive-render.php',
+    ];
 }
 
-$industriesalon_ausstellungen_render_helper = get_stylesheet_directory() . '/includes/ausstellungen-render.php';
-if (file_exists($industriesalon_ausstellungen_render_helper)) {
-    require_once $industriesalon_ausstellungen_render_helper;
+$GLOBALS['industriesalon_missing_render_helpers'] = [];
+foreach (industriesalon_expected_render_helpers() as $industriesalon_helper_key => $industriesalon_helper_path) {
+    $industriesalon_helper_file = get_stylesheet_directory() . $industriesalon_helper_path;
+    if (file_exists($industriesalon_helper_file)) {
+        require_once $industriesalon_helper_file;
+        continue;
+    }
+
+    $GLOBALS['industriesalon_missing_render_helpers'][$industriesalon_helper_key] = $industriesalon_helper_path;
 }
 
-$industriesalon_projects_render_helper = get_stylesheet_directory() . '/includes/projects-render.php';
-if (file_exists($industriesalon_projects_render_helper)) {
-    require_once $industriesalon_projects_render_helper;
+function industriesalon_missing_render_helpers(): array
+{
+    $missing = $GLOBALS['industriesalon_missing_render_helpers'] ?? [];
+    return is_array($missing) ? $missing : [];
 }
 
-$industriesalon_tours_render_helper = get_stylesheet_directory() . '/includes/tours-render.php';
-if (file_exists($industriesalon_tours_render_helper)) {
-    require_once $industriesalon_tours_render_helper;
-}
+function industriesalon_render_missing_helper_notice(): void
+{
+    if (!current_user_can('manage_options')) {
+        return;
+    }
 
-$industriesalon_veranstaltungen_render_helper = get_stylesheet_directory() . '/includes/veranstaltungen-render.php';
-if (file_exists($industriesalon_veranstaltungen_render_helper)) {
-    require_once $industriesalon_veranstaltungen_render_helper;
-}
+    $missing = industriesalon_missing_render_helpers();
+    if (!$missing) {
+        return;
+    }
 
-$industriesalon_archive_render_helper = get_stylesheet_directory() . '/includes/archive-render.php';
-if (file_exists($industriesalon_archive_render_helper)) {
-    require_once $industriesalon_archive_render_helper;
+    echo '<div class="notice notice-error"><p>';
+    echo esc_html__('Industriesalon theme render helpers are missing:', 'industriesalon');
+    foreach (array_values($missing) as $relative_path) {
+        echo ' <code>' . esc_html($relative_path) . '</code>';
+    }
+    echo '</p></div>';
 }
+add_action('admin_notices', 'industriesalon_render_missing_helper_notice');
 
 add_action('after_setup_theme', function () {
     add_theme_support('title-tag');
@@ -999,6 +1018,13 @@ function industriesalon_add_event_registry_body_classes(array $classes): array
             $skin = iss_content_model_veranstaltung_entity_default_skin($entity_key);
             if ($skin !== '') {
                 $classes[] = 'iss-event-skin-' . sanitize_html_class($skin);
+                if (function_exists('iss_content_model_editorial_canonical_skin')) {
+                    $canonical_skin = iss_content_model_editorial_canonical_skin($skin);
+                    if ($canonical_skin !== '' && $canonical_skin !== $skin) {
+                        $classes[] = 'iss-event-skin-' . sanitize_html_class($canonical_skin);
+                        $classes[] = 'iss-event-canonical-skin-' . sanitize_html_class($canonical_skin);
+                    }
+                }
             }
         }
     }
@@ -1347,6 +1373,14 @@ function industriesalon_enqueue_assets(): void
                 'path' => '/assets/css/skins/ausstellung-frauen-im-werk.css',
             ),
             'kinder-im-werk' => array(
+                'handle' => 'industriesalon-ausstellung-skin-kinder-im-werk',
+                'path' => '/assets/css/skins/ausstellung-kinder-im-werk.css',
+            ),
+            'quellenbuehne' => array(
+                'handle' => 'industriesalon-ausstellung-skin-frauen-im-werk',
+                'path' => '/assets/css/skins/ausstellung-frauen-im-werk.css',
+            ),
+            'objektalbum' => array(
                 'handle' => 'industriesalon-ausstellung-skin-kinder-im-werk',
                 'path' => '/assets/css/skins/ausstellung-kinder-im-werk.css',
             ),

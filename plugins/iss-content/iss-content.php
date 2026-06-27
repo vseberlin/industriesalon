@@ -104,6 +104,7 @@ add_action('untrashed_post', 'iss_content_model_maybe_flush_landing_routes');
 add_action('before_delete_post', 'iss_content_model_maybe_flush_landing_routes');
 
 require_once ISS_CONTENT_MODEL_PATH . 'includes/post-types.php';
+require_once ISS_CONTENT_MODEL_PATH . 'includes/editorial-vocabulary.php';
 require_once ISS_CONTENT_MODEL_PATH . 'includes/veranstaltungen-registry.php';
 require_once ISS_CONTENT_MODEL_PATH . 'includes/veranstaltungen-facts.php';
 require_once ISS_CONTENT_MODEL_PATH . 'includes/veranstaltungen-repository.php';

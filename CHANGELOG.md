@@ -6,6 +6,32 @@ be recovered from Git history.
 
 ## 2026-06-27
 
+- Started the shared gesture/skin/feature implementation from the audit answer:
+  - added an `iss-content` editorial vocabulary helper for canonical gestures,
+    canonical skins, skin aliases, and rail feature defaults;
+  - kept public presentation in the theme by resolving canonical skin classes
+    and legacy CSS aliases there instead of moving render logic into the
+    plugin;
+  - made `bildmatrix`, `quellenbuehne`, and `objektalbum` valid canonical skin
+    slugs while preserving existing `blueprint-matrix`, `frauen-im-werk`, and
+    `kinder-im-werk` render paths;
+  - added project rail feature classes and resolver defaults while preserving
+    existing `projekt_rail` documents as the current on/off source;
+  - added `leitfrage` and `schluss` to Veranstaltung gesture palettes where
+    the existing event structure can already render them.
+- Added a registry diagnostics and backfill maintenance slice:
+  - added `wp iss status` in `iss-core` to report first-party plugin loading,
+    key CPT registration, schema/backfill option versions, graph/occurrence/Set
+    tables, Event Drop storage isolation, and expected theme render helpers;
+  - added `wp iss backfill-all` as an explicit operator command for graph,
+    relations, WP occurrence-source, and editorial Set schema backfills, with
+    `--dry-run` by default-friendly reporting and external sync excluded unless
+    `--include-external` is passed;
+  - made `iss-relations` consume its activation and graph-identifier backfill
+    flags on admin requests instead of leaving callable backfill functions
+    unhooked;
+  - replaced silent theme render-helper includes with a tracked expected-helper
+    list and an administrator notice when a required render helper is missing.
 - Added the Führung JSON gesture/skin slice:
   - registered a `fuehrung` editorial format in the shared `iss-editorial`
     engine with tour gestures for intro, chapters, thesis/quote moments,

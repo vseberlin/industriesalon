@@ -723,6 +723,290 @@ function iss_core_capability_diagnostic_report(): array
     ];
 }
 
+function iss_core_table_exists(string $table_name): bool
+{
+    global $wpdb;
+
+    $table_name = trim($table_name);
+    if ($table_name === '') {
+        return false;
+    }
+
+    // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching -- Read-only diagnostic for plugin-owned table existence.
+    return (string) $wpdb->get_var($wpdb->prepare('SHOW TABLES LIKE %s', $table_name)) === $table_name;
+}
+
+function iss_core_status_row(string $group, string $name, string $status, string $details = ''): array
+{
+    $status = sanitize_key($status);
+    if (!in_array($status, ['ok', 'warning', 'error', 'skipped'], true)) {
+        $status = 'warning';
+    }
+
+    return [
+        'group' => sanitize_key($group),
+        'name' => $name,
+        'status' => $status,
+        'details' => $details,
+    ];
+}
+
+function iss_core_add_status_option_row(array &$rows, string $name, string $option_name, string $target_version): void
+{
+    $stored = (string) get_option($option_name, '');
+    $rows[] = iss_core_status_row(
+        'options',
+        $name,
+        $stored === $target_version ? 'ok' : 'warning',
+        sprintf('%s=%s target=%s', $option_name, $stored !== '' ? $stored : '(empty)', $target_version)
+    );
+}
+
+function iss_core_status_theme_helper_rows(): array
+{
+    $rows = [];
+    if (!function_exists('industriesalon_expected_render_helpers')) {
+        return [iss_core_status_row('theme', 'render helpers', 'skipped', 'Active theme does not expose industriesalon_expected_render_helpers().')];
+    }
+
+    $theme_dir = get_stylesheet_directory();
+    foreach (industriesalon_expected_render_helpers() as $key => $relative_path) {
+        $path = $theme_dir . $relative_path;
+        $rows[] = iss_core_status_row(
+            'theme',
+            'helper:' . $key,
+            file_exists($path) ? 'ok' : 'error',
+            $relative_path
+        );
+    }
+
+    return $rows;
+}
+
+function iss_core_status_report(): array
+{
+    $rows = [];
+    $plugin_constants = [
+        'iss-core' => 'ISS_CORE_VERSION',
+        'iss-content' => 'ISS_CONTENT_MODEL_VERSION',
+        'iss-editorial' => 'ISS_EDITORIAL_VERSION',
+        'iss-relations' => 'ISS_RELATIONS_VERSION',
+        'iss-graph' => 'ISS_GRAPH_VERSION',
+        'iss-occurrences' => 'ISS_OCCURRENCES_VERSION',
+        'iss-frontend' => 'ISS_FRONTEND_VERSION',
+        'iss-publications' => 'ISS_PUBLICATIONS_VERSION',
+    ];
+
+    foreach ($plugin_constants as $plugin => $constant) {
+        $rows[] = iss_core_status_row(
+            'plugins',
+            $plugin,
+            defined($constant) ? 'ok' : 'error',
+            defined($constant) ? constant($constant) : 'not loaded'
+        );
+    }
+
+    $post_types = ['veranstaltung', 'ausstellung', 'projekt', 'rueckblick', 'fuehrung', 'publication'];
+    foreach ($post_types as $post_type) {
+        $rows[] = iss_core_status_row(
+            'post_types',
+            $post_type,
+            post_type_exists($post_type) ? 'ok' : 'warning',
+            post_type_exists($post_type) ? 'registered' : 'missing'
+        );
+    }
+
+    $rows[] = iss_core_status_row(
+        'options',
+        'iss-core capabilities',
+        (string) get_option(ISS_CORE_CAPS_OPTION, '') === ISS_CORE_CAPS_VERSION ? 'ok' : 'warning',
+        sprintf('%s=%s target=%s', ISS_CORE_CAPS_OPTION, (string) get_option(ISS_CORE_CAPS_OPTION, ''), ISS_CORE_CAPS_VERSION)
+    );
+
+    if (defined('ISS_GRAPH_SCHEMA_OPTION') && defined('ISS_GRAPH_SCHEMA_VERSION')) {
+        iss_core_add_status_option_row($rows, 'iss-graph schema', ISS_GRAPH_SCHEMA_OPTION, ISS_GRAPH_SCHEMA_VERSION);
+    }
+    if (defined('ISS_OCCURRENCES_SCHEMA_OPTION') && defined('ISS_OCCURRENCES_SCHEMA_VERSION')) {
+        iss_core_add_status_option_row($rows, 'iss-occurrences schema', ISS_OCCURRENCES_SCHEMA_OPTION, ISS_OCCURRENCES_SCHEMA_VERSION);
+    }
+    if (defined('ISS_CONTENT_EDITORIAL_SETS_SCHEMA_OPTION') && defined('ISS_CONTENT_EDITORIAL_SETS_SCHEMA_VERSION')) {
+        iss_core_add_status_option_row($rows, 'iss-content editorial sets schema', ISS_CONTENT_EDITORIAL_SETS_SCHEMA_OPTION, ISS_CONTENT_EDITORIAL_SETS_SCHEMA_VERSION);
+    }
+    if (defined('ISS_RELATIONS_GRAPH_IDENTIFIER_BACKFILL_OPTION') && defined('ISS_RELATIONS_GRAPH_IDENTIFIER_BACKFILL_VERSION')) {
+        iss_core_add_status_option_row($rows, 'iss-relations graph identifiers', ISS_RELATIONS_GRAPH_IDENTIFIER_BACKFILL_OPTION, ISS_RELATIONS_GRAPH_IDENTIFIER_BACKFILL_VERSION);
+    }
+
+    if (get_option('iss_relations_needs_backfill') === '1') {
+        $rows[] = iss_core_status_row('options', 'iss-relations activation backfill', 'warning', 'iss_relations_needs_backfill=1');
+    } else {
+        $rows[] = iss_core_status_row('options', 'iss-relations activation backfill', 'ok', 'iss_relations_needs_backfill is clear');
+    }
+
+    if (function_exists('iss_graph_get_service')) {
+        $graph_service = iss_graph_get_service();
+        $graph_tables = [
+            'graph entities' => $graph_service->get_entity_table_name(),
+            'graph names' => $graph_service->get_name_table_name(),
+            'graph identifiers' => $graph_service->get_identifier_table_name(),
+            'graph relations' => $graph_service->get_relation_table_name(),
+            'graph search' => $graph_service->get_search_table_name(),
+            'graph editorial signals' => $graph_service->get_editorial_signal_table_name(),
+        ];
+        foreach ($graph_tables as $label => $table_name) {
+            $rows[] = iss_core_status_row('tables', $label, iss_core_table_exists($table_name) ? 'ok' : 'error', $table_name);
+        }
+    }
+
+    if (function_exists('iss_occurrences_get_service')) {
+        $occurrence_service = iss_occurrences_get_service();
+        $rows[] = iss_core_status_row('tables', 'occurrences', $occurrence_service->tables_exist() ? 'ok' : 'error', $occurrence_service->get_occurrences_table_name());
+    }
+
+    if (function_exists('iss_content_editorial_sets_service')) {
+        $sets_service = iss_content_editorial_sets_service();
+        foreach ([
+            'editorial sets' => $sets_service->get_sets_table_name(),
+            'editorial set items' => $sets_service->get_items_table_name(),
+            'editorial set links' => $sets_service->get_links_table_name(),
+            'editorial set audit' => $sets_service->get_audit_table_name(),
+        ] as $label => $table_name) {
+            $rows[] = iss_core_status_row('tables', $label, iss_core_table_exists($table_name) ? 'ok' : 'error', $table_name);
+        }
+    }
+
+    $event_drop_root = '/event-drop-storage';
+    $rows[] = iss_core_status_row(
+        'storage',
+        'event-drop-storage',
+        is_dir($event_drop_root) ? 'ok' : 'warning',
+        is_dir($event_drop_root) ? $event_drop_root : 'not mounted in this runtime'
+    );
+    if (defined('ABSPATH') && is_dir($event_drop_root)) {
+        $inside_webroot = strpos(realpath($event_drop_root) ?: '', realpath(ABSPATH) ?: '') === 0;
+        $rows[] = iss_core_status_row(
+            'storage',
+            'event-drop webroot isolation',
+            $inside_webroot ? 'error' : 'ok',
+            $inside_webroot ? 'storage resolves inside ABSPATH' : 'storage resolves outside ABSPATH'
+        );
+    }
+
+    $rows = array_merge($rows, iss_core_status_theme_helper_rows());
+    $summary = ['ok' => 0, 'warning' => 0, 'error' => 0, 'skipped' => 0];
+    foreach ($rows as $row) {
+        $status = (string) ($row['status'] ?? 'warning');
+        if (!isset($summary[$status])) {
+            $summary[$status] = 0;
+        }
+        $summary[$status]++;
+    }
+
+    return [
+        'generated_at' => gmdate('c'),
+        'summary' => $summary,
+        'rows' => $rows,
+    ];
+}
+
+function iss_core_backfill_step(string $label, callable $callback, bool $dry_run = false): array
+{
+    if ($dry_run) {
+        return ['label' => $label, 'status' => 'skipped', 'result' => 'dry-run'];
+    }
+
+    $result = $callback();
+    if (is_scalar($result) || $result === null) {
+        $result = $result === null ? '' : (string) $result;
+    } else {
+        $result = wp_json_encode($result, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE);
+    }
+
+    return ['label' => $label, 'status' => 'ok', 'result' => (string) $result];
+}
+
+function iss_core_backfill_all(bool $dry_run = false, bool $include_external = false): array
+{
+    $steps = [];
+
+    if (function_exists('iss_graph_get_service')) {
+        $steps[] = iss_core_backfill_step('iss-graph schema', static function () {
+            iss_graph_get_service()->install_schema();
+            if (function_exists('iss_graph_ensure_editorial_signals_capability')) {
+                iss_graph_ensure_editorial_signals_capability();
+            }
+            return 'installed';
+        }, $dry_run);
+
+        $graph_steps = [
+            ['register places', 'iss_graph_backfill_register_places', defined('ISS_GRAPH_REGISTER_BACKFILL_OPTION') ? ISS_GRAPH_REGISTER_BACKFILL_OPTION : '', defined('ISS_GRAPH_REGISTER_BACKFILL_VERSION') ? ISS_GRAPH_REGISTER_BACKFILL_VERSION : ''],
+            ['public content entities', 'iss_graph_backfill_public_content_entities', defined('ISS_GRAPH_CONTENT_BACKFILL_OPTION') ? ISS_GRAPH_CONTENT_BACKFILL_OPTION : '', defined('ISS_GRAPH_CONTENT_BACKFILL_VERSION') ? ISS_GRAPH_CONTENT_BACKFILL_VERSION : ''],
+            ['archive objects', 'iss_graph_backfill_archive_objects', defined('ISS_GRAPH_ARCHIVE_BACKFILL_OPTION') ? ISS_GRAPH_ARCHIVE_BACKFILL_OPTION : '', defined('ISS_GRAPH_ARCHIVE_BACKFILL_VERSION') ? ISS_GRAPH_ARCHIVE_BACKFILL_VERSION : ''],
+            ['profile bindings', 'iss_graph_backfill_entity_profile_bindings', defined('ISS_GRAPH_PROFILE_BACKFILL_OPTION') ? ISS_GRAPH_PROFILE_BACKFILL_OPTION : '', defined('ISS_GRAPH_PROFILE_BACKFILL_VERSION') ? ISS_GRAPH_PROFILE_BACKFILL_VERSION : ''],
+            ['entity aliases', 'iss_graph_backfill_entity_aliases', defined('ISS_GRAPH_ALIAS_BACKFILL_OPTION') ? ISS_GRAPH_ALIAS_BACKFILL_OPTION : '', defined('ISS_GRAPH_ALIAS_BACKFILL_VERSION') ? ISS_GRAPH_ALIAS_BACKFILL_VERSION : ''],
+            ['public search index', 'iss_graph_backfill_public_search_index', defined('ISS_GRAPH_SEARCH_BACKFILL_OPTION') ? ISS_GRAPH_SEARCH_BACKFILL_OPTION : '', defined('ISS_GRAPH_SEARCH_BACKFILL_VERSION') ? ISS_GRAPH_SEARCH_BACKFILL_VERSION : ''],
+        ];
+        foreach ($graph_steps as [$label, $function_name, $option_name, $version]) {
+            if (!function_exists($function_name)) {
+                $steps[] = ['label' => 'iss-graph ' . $label, 'status' => 'skipped', 'result' => 'function unavailable'];
+                continue;
+            }
+            $steps[] = iss_core_backfill_step('iss-graph ' . $label, static function () use ($function_name, $option_name, $version) {
+                $result = $function_name();
+                if ($option_name !== '' && $version !== '') {
+                    update_option($option_name, $version, false);
+                }
+                return $result;
+            }, $dry_run);
+        }
+    } else {
+        $steps[] = ['label' => 'iss-graph', 'status' => 'skipped', 'result' => 'plugin unavailable'];
+    }
+
+    if (function_exists('iss_relations_backfill_index')) {
+        $steps[] = iss_core_backfill_step('iss-relations index', static function () {
+            $result = iss_relations_backfill_index();
+            delete_option('iss_relations_needs_backfill');
+            if (defined('ISS_RELATIONS_GRAPH_IDENTIFIER_BACKFILL_OPTION') && defined('ISS_RELATIONS_GRAPH_IDENTIFIER_BACKFILL_VERSION')) {
+                update_option(ISS_RELATIONS_GRAPH_IDENTIFIER_BACKFILL_OPTION, ISS_RELATIONS_GRAPH_IDENTIFIER_BACKFILL_VERSION, false);
+            }
+            return $result;
+        }, $dry_run);
+    } else {
+        $steps[] = ['label' => 'iss-relations index', 'status' => 'skipped', 'result' => 'function unavailable'];
+    }
+
+    if (function_exists('iss_occurrences_get_service')) {
+        $steps[] = iss_core_backfill_step('iss-occurrences schema', static function () {
+            iss_occurrences_get_service()->install_schema();
+            return 'installed';
+        }, $dry_run);
+        if ($include_external && function_exists('iss_occurrences_sync_all')) {
+            $steps[] = iss_core_backfill_step('iss-occurrences all sources', 'iss_occurrences_sync_all', $dry_run);
+        } elseif (function_exists('iss_occurrences_sync_all_sources')) {
+            $steps[] = iss_core_backfill_step('iss-occurrences wp sources', 'iss_occurrences_sync_all_sources', $dry_run);
+        } else {
+            $steps[] = ['label' => 'iss-occurrences wp sources', 'status' => 'skipped', 'result' => 'function unavailable'];
+        }
+    } else {
+        $steps[] = ['label' => 'iss-occurrences', 'status' => 'skipped', 'result' => 'plugin unavailable'];
+    }
+
+    if (function_exists('iss_content_editorial_sets_service')) {
+        $steps[] = iss_core_backfill_step('iss-content editorial sets schema', static function () {
+            iss_content_editorial_sets_service()->install_schema();
+            return 'installed';
+        }, $dry_run);
+    } else {
+        $steps[] = ['label' => 'iss-content editorial sets schema', 'status' => 'skipped', 'result' => 'function unavailable'];
+    }
+
+    return [
+        'dry_run' => $dry_run,
+        'include_external' => $include_external,
+        'steps' => $steps,
+    ];
+}
+
 if (defined('WP_CLI') && WP_CLI) {
     final class ISS_Core_Capabilities_CLI_Command
     {
@@ -773,4 +1057,73 @@ if (defined('WP_CLI') && WP_CLI) {
     }
 
     \WP_CLI::add_command('iss-core caps', 'ISS_Core_Capabilities_CLI_Command');
+
+    final class ISS_Core_Status_CLI_Command
+    {
+        /**
+         * Report first-party registry, schema, storage, and theme-helper status.
+         */
+        public function status(array $args, array $assoc_args): void
+        {
+            unset($args);
+            $format = isset($assoc_args['format']) ? sanitize_key((string) $assoc_args['format']) : 'table';
+            $report = iss_core_status_report();
+
+            if ($format === 'json') {
+                \WP_CLI::log((string) wp_json_encode($report, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE));
+                return;
+            }
+
+            \WP_CLI::log(sprintf(
+                'ISS status: ok=%d warning=%d error=%d skipped=%d',
+                (int) ($report['summary']['ok'] ?? 0),
+                (int) ($report['summary']['warning'] ?? 0),
+                (int) ($report['summary']['error'] ?? 0),
+                (int) ($report['summary']['skipped'] ?? 0)
+            ));
+
+            foreach ((array) $report['rows'] as $row) {
+                $line = sprintf(
+                    '[%s] %s/%s %s',
+                    (string) ($row['status'] ?? 'warning'),
+                    (string) ($row['group'] ?? 'unknown'),
+                    (string) ($row['name'] ?? ''),
+                    (string) ($row['details'] ?? '')
+                );
+                if (($row['status'] ?? '') === 'error') {
+                    \WP_CLI::warning($line);
+                    continue;
+                }
+                \WP_CLI::log($line);
+            }
+
+            if ((int) ($report['summary']['error'] ?? 0) > 0) {
+                \WP_CLI::error('ISS status has errors.');
+            }
+
+            \WP_CLI::success('ISS status complete.');
+        }
+
+        /**
+         * Run known registry backfills in dependency order.
+         */
+        public function backfill_all(array $args, array $assoc_args): void
+        {
+            unset($args);
+            $dry_run = !empty($assoc_args['dry-run']);
+            $include_external = !empty($assoc_args['include-external']);
+            $result = iss_core_backfill_all($dry_run, $include_external);
+
+            \WP_CLI::log((string) wp_json_encode($result, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE));
+            if ($dry_run) {
+                \WP_CLI::success('ISS backfill dry run complete.');
+                return;
+            }
+
+            \WP_CLI::success('ISS backfill complete.');
+        }
+    }
+
+    \WP_CLI::add_command('iss', 'ISS_Core_Status_CLI_Command');
+    \WP_CLI::add_command('iss backfill-all', ['ISS_Core_Status_CLI_Command', 'backfill_all']);
 }

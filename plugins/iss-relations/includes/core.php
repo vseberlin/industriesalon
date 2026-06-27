@@ -1177,6 +1177,10 @@ function iss_relations_maybe_run_backfill(): void
 
 function iss_relations_maybe_backfill_graph_identifiers(): void
 {
+    if (!is_admin() || !current_user_can('manage_options')) {
+        return;
+    }
+
     if (!function_exists('iss_graph_sync_wp_post_identifiers')) {
         return;
     }
@@ -1189,3 +1193,5 @@ function iss_relations_maybe_backfill_graph_identifiers(): void
     iss_relations_backfill_index();
     update_option(ISS_RELATIONS_GRAPH_IDENTIFIER_BACKFILL_OPTION, ISS_RELATIONS_GRAPH_IDENTIFIER_BACKFILL_VERSION, false);
 }
+add_action('admin_init', 'iss_relations_maybe_run_backfill', 20);
+add_action('admin_init', 'iss_relations_maybe_backfill_graph_identifiers', 21);

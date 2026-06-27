@@ -70,6 +70,11 @@ function iss_content_model_veranstaltung_content_gestures(): array
             'description' => __('Bildstrecke aus Medienbibliothek oder spaeterem Upload-Intake.', 'iss-content-model'),
             'supports' => ['kicker', 'title', 'body', 'media_refs', 'object_refs'],
         ],
+        'schluss' => [
+            'label' => __('Schluss', 'iss-content-model'),
+            'description' => __('Abschluss, Einladung oder naechster Schritt.', 'iss-content-model'),
+            'supports' => ['kicker', 'title', 'body', 'items'],
+        ],
     ];
 }
 
