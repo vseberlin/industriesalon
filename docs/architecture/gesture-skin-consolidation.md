@@ -361,6 +361,37 @@ blueprint-matrix → bildmatrix
 industrieakte   → temporary alias; map after review
 ```
 
+## Implementation status
+
+As of 2026-06-27, the compatibility implementation is in place for new
+authoring without rewriting stored documents:
+
+- `iss-content` owns the shared gesture, skin, and rail feature vocabulary.
+- Legacy skin aliases resolve to canonical skins at render time.
+- Project rail authoring moved to `features.rail`; legacy `projekt_rail`
+  sections remain valid but hidden from the authoring palette.
+- `galerie` now covers sequence, grid, and wall layouts; legacy
+  `bildstrecke` and `image_wall` remain valid but hidden where replaced.
+- Ausstellung `zitat` now covers pull quotes and source-focused excerpts via
+  `quote_treatment`; legacy `quellenauszug` remains valid but hidden.
+- Ausstellung `kapitel` now covers the curator aside treatment via
+  `section_treatment`; legacy `aside` remains valid but hidden.
+- Rückblick authoring now exposes `fliesstext`, `galerie`, `objektfokus`,
+  `material`, and `schluss`; legacy `bericht`, `bildstrecke`, and `quellen`
+  remain valid but hidden.
+- Ausstellung, Projekt, and publication skin pickers expose canonical authoring
+  names while keeping legacy stored skin slugs renderable.
+
+Still pending:
+
+- a dry-run WP-CLI migration that rewrites stored section types and skin slugs;
+- promotion of `shape` beyond the Veranstaltung registry;
+- a final decision for `industrieakte`;
+- whether `programm` should remain authored prose or become an occurrence
+  projection;
+- whether `bildmatrix` becomes a public skin for non-publication gallery-led
+  pages, beyond the current reusable gallery layout options.
+
 ## Suggested sequencing
 
 1. Introduce `GestureRegistry`, `SkinRegistry`, and a small feature resolver as
