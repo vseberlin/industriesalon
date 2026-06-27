@@ -200,6 +200,7 @@
       schema_version: 1,
       skin: 'standard',
       variant: 'standard',
+      features: {},
       sections: []
     });
     var skins = Array.isArray(config.skins) ? config.skins.filter(function (skin) {
@@ -332,6 +333,33 @@
       });
 
       return exists ? skin : 'standard';
+    }
+
+    function projectHasLegacyRailSection() {
+      return format === 'projekt' && Array.isArray(documentState.sections) && documentState.sections.some(function (section) {
+        return section && section.type === 'projekt_rail';
+      });
+    }
+
+    function currentRailFeature() {
+      var features = documentState.features && typeof documentState.features === 'object' ? documentState.features : {};
+      var rail = features.rail && typeof features.rail === 'object' ? features.rail : {};
+      var hasEnabled = Object.prototype.hasOwnProperty.call(rail, 'enabled');
+
+      return {
+        enabled: hasEnabled ? !!rail.enabled : projectHasLegacyRailSection(),
+        placement: rail.placement || (currentSkin() === 'dossier' ? 'horizontal' : 'right'),
+        mode: rail.mode || (currentSkin() === 'field' ? 'anchor-nav' : 'contextual'),
+        treatment: rail.treatment || (currentSkin() === 'field' ? 'sticky' : 'quiet')
+      };
+    }
+
+    function setRailFeature(nextRail) {
+      documentState.features = documentState.features && typeof documentState.features === 'object' ? documentState.features : {};
+      documentState.features.rail = Object.assign({}, currentRailFeature(), nextRail || {});
+      updateField();
+      render();
+      scheduleAutosave();
     }
 
     function setStatus(message) {
@@ -576,6 +604,9 @@
       head.appendChild(heading);
       if (skins.length > 1) {
         tools.appendChild(renderSkinControl());
+      }
+      if (format === 'projekt') {
+        tools.appendChild(renderRailFeatureControl());
       }
       tools.appendChild(save);
       head.appendChild(tools);
@@ -847,6 +878,66 @@
 
       wrapper.appendChild(label);
       wrapper.appendChild(select);
+
+      return wrapper;
+    }
+
+    function renderRailFeatureControl() {
+      var rail = currentRailFeature();
+      var wrapper = createElement('div', 'iss-editorial-skin-control iss-editorial-rail-feature-control');
+      var enabled = document.createElement('input');
+      var enabledLabel = createElement('label', '');
+      var placement = document.createElement('select');
+      var treatment = document.createElement('select');
+
+      enabled.type = 'checkbox';
+      enabled.checked = !!rail.enabled;
+      enabled.addEventListener('change', function () {
+        setRailFeature({ enabled: !!enabled.checked });
+      });
+
+      enabledLabel.appendChild(enabled);
+      enabledLabel.appendChild(document.createTextNode(' Rail'));
+
+      [
+        { value: 'left', label: 'Links' },
+        { value: 'right', label: 'Rechts' },
+        { value: 'top', label: 'Oben' },
+        { value: 'bottom', label: 'Unten' },
+        { value: 'horizontal', label: 'Horizontal' }
+      ].forEach(function (item) {
+        var option = document.createElement('option');
+        option.value = item.value;
+        option.textContent = item.label;
+        option.selected = item.value === rail.placement;
+        placement.appendChild(option);
+      });
+      placement.disabled = !rail.enabled;
+      placement.addEventListener('change', function () {
+        setRailFeature({ placement: placement.value || 'right', enabled: true });
+      });
+
+      [
+        { value: 'quiet', label: 'Ruhig' },
+        { value: 'card', label: 'Karte' },
+        { value: 'line', label: 'Linie' },
+        { value: 'sticky', label: 'Sticky' },
+        { value: 'overlay', label: 'Overlay' }
+      ].forEach(function (item) {
+        var option = document.createElement('option');
+        option.value = item.value;
+        option.textContent = item.label;
+        option.selected = item.value === rail.treatment;
+        treatment.appendChild(option);
+      });
+      treatment.disabled = !rail.enabled;
+      treatment.addEventListener('change', function () {
+        setRailFeature({ treatment: treatment.value || 'quiet', enabled: true });
+      });
+
+      wrapper.appendChild(enabledLabel);
+      wrapper.appendChild(placement);
+      wrapper.appendChild(treatment);
 
       return wrapper;
     }

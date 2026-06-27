@@ -154,6 +154,51 @@ function iss_editorial_sanitize_rail_options($options): array
     ];
 }
 
+function iss_editorial_sanitize_document_rail_feature($feature): array
+{
+    if (!is_array($feature)) {
+        return [];
+    }
+
+    $sanitized = [];
+
+    if (array_key_exists('enabled', $feature)) {
+        $sanitized['enabled'] = !empty($feature['enabled']);
+    }
+
+    $placement = sanitize_key((string) ($feature['placement'] ?? ''));
+    if (in_array($placement, ['left', 'right', 'top', 'bottom', 'horizontal'], true)) {
+        $sanitized['placement'] = $placement;
+    }
+
+    $mode = sanitize_key((string) ($feature['mode'] ?? ''));
+    if (in_array($mode, ['anchor-nav', 'section-index', 'contextual'], true)) {
+        $sanitized['mode'] = $mode;
+    }
+
+    $treatment = sanitize_key((string) ($feature['treatment'] ?? ''));
+    if (in_array($treatment, ['quiet', 'card', 'line', 'sticky', 'overlay'], true)) {
+        $sanitized['treatment'] = $treatment;
+    }
+
+    return $sanitized;
+}
+
+function iss_editorial_sanitize_document_features($features): array
+{
+    if (!is_array($features)) {
+        return [];
+    }
+
+    $sanitized = [];
+    $rail = iss_editorial_sanitize_document_rail_feature($features['rail'] ?? []);
+    if ($rail) {
+        $sanitized['rail'] = $rail;
+    }
+
+    return $sanitized;
+}
+
 function iss_editorial_sanitize_album_source($source): array
 {
     if (!is_array($source)) {
@@ -380,6 +425,7 @@ function iss_editorial_sanitize_document($document, string $format_slug): array
     $sanitized['schema_version'] = max(1, $schema_version);
     $sanitized['skin'] = sanitize_key((string) ($document['skin'] ?? $sanitized['skin']));
     $sanitized['variant'] = sanitize_key((string) ($document['variant'] ?? $sanitized['variant']));
+    $sanitized['features'] = iss_editorial_sanitize_document_features($document['features'] ?? []);
     $sanitized['sections'] = [];
 
     foreach ((array) ($document['sections'] ?? []) as $section) {

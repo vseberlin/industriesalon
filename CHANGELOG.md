@@ -19,6 +19,14 @@ be recovered from Git history.
     existing `projekt_rail` documents as the current on/off source;
   - added `leitfrage` and `schluss` to Veranstaltung gesture palettes where
     the existing event structure can already render them.
+- Added the first document-level feature slice for project rails:
+  - extended `iss-editorial` documents with sanitized `features.rail` metadata;
+  - added a compact project editor control for rail on/off, placement, and
+    visual treatment;
+  - made project rendering resolve rail from `features.rail` while preserving
+    existing `projekt_rail` sections as the legacy default-on signal;
+  - supported top/horizontal, side, and bottom rail placements without treating
+    the rail as authored content.
 - Added a registry diagnostics and backfill maintenance slice:
   - added `wp iss status` in `iss-core` to report first-party plugin loading,
     key CPT registration, schema/backfill option versions, graph/occurrence/Set

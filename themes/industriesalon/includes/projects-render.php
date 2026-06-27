@@ -91,20 +91,8 @@ add_filter('body_class', function (array $classes): array {
     return array_values(array_unique($classes));
 });
 
-function industriesalon_resolve_editorial_project_rail_feature(string $skin, bool $has_rail): array
+function industriesalon_resolve_editorial_project_rail_feature(string $skin, array $overrides = []): array
 {
-    $placement = 'right';
-    if ($skin === 'dossier') {
-        $placement = 'horizontal';
-    }
-
-    $overrides = [
-        'enabled' => $has_rail,
-        'placement' => $placement,
-        'mode' => $skin === 'field' ? 'anchor-nav' : 'contextual',
-        'treatment' => $skin === 'field' ? 'sticky' : 'quiet',
-    ];
-
     return function_exists('iss_content_model_editorial_resolve_rail_feature')
         ? iss_content_model_editorial_resolve_rail_feature($skin, $overrides)
         : $overrides;
@@ -402,6 +390,35 @@ function industriesalon_editorial_project_rail_section(array $sections): array
     return [];
 }
 
+function industriesalon_editorial_project_document_rail_feature(array $document): array
+{
+    $skin = industriesalon_resolve_editorial_project_skin($document);
+    $features = is_array($document['features'] ?? null) ? $document['features'] : [];
+    $rail = is_array($features['rail'] ?? null) ? $features['rail'] : [];
+    $sections = is_array($document['sections'] ?? null) ? $document['sections'] : [];
+    $has_legacy_rail = industriesalon_editorial_project_rail_section($sections) !== [];
+    $has_explicit_enabled = array_key_exists('enabled', $rail);
+
+    $defaults = [
+        'enabled' => $has_explicit_enabled ? !empty($rail['enabled']) : $has_legacy_rail,
+        'placement' => $skin === 'dossier' ? 'horizontal' : 'right',
+        'mode' => $skin === 'field' ? 'anchor-nav' : 'contextual',
+        'treatment' => $skin === 'field' ? 'sticky' : 'quiet',
+    ];
+
+    return industriesalon_resolve_editorial_project_rail_feature($skin, array_merge($defaults, $rail));
+}
+
+function industriesalon_editorial_project_default_rail_section(): array
+{
+    return [
+        'type' => 'projekt_rail',
+        'kicker' => __('Projekt', 'industriesalon'),
+        'title' => __('Navigation', 'industriesalon'),
+        'body' => '',
+    ];
+}
+
 function industriesalon_editorial_project_sections_without_rail(array $sections): array
 {
     return array_values(array_filter($sections, static function ($section): bool {
@@ -569,9 +586,10 @@ function industriesalon_get_editorial_project_rail_context(int $post_id, bool $p
         return [];
     }
 
-    $rail_section = industriesalon_editorial_project_rail_section($sections);
-    if (!$rail_section) {
-        return [];
+    $rail_feature = industriesalon_editorial_project_document_rail_feature($document);
+    $rail_section = !empty($rail_feature['enabled']) ? industriesalon_editorial_project_rail_section($sections) : [];
+    if (!$rail_section && !empty($rail_feature['enabled'])) {
+        $rail_section = industriesalon_editorial_project_default_rail_section();
     }
 
     $content_sections = industriesalon_editorial_project_sections_without_rail($sections);
@@ -589,6 +607,7 @@ function industriesalon_get_editorial_project_rail_context(int $post_id, bool $p
 
     return [
         'rail_section' => $rail_section,
+        'rail_feature' => $rail_feature,
         'nav_items' => industriesalon_editorial_project_nav_items($content_sections, $anchors),
         'skin' => industriesalon_resolve_editorial_project_skin($document),
     ];
@@ -609,9 +628,11 @@ function industriesalon_append_editorial_project_rail_to_meta(string $block_cont
     $prefer_autosave = is_preview() && current_user_can('edit_post', $post_id);
     $context = industriesalon_get_editorial_project_rail_context($post_id, $prefer_autosave);
     $skin = sanitize_key((string) ($context['skin'] ?? 'dossier'));
+    $rail_feature = is_array($context['rail_feature'] ?? null) ? $context['rail_feature'] : [];
+    $placement = sanitize_key((string) ($rail_feature['placement'] ?? 'right'));
     $rail_html = industriesalon_render_editorial_project_rail(
-        is_array($context['rail_section'] ?? null) ? $context['rail_section'] : [],
-        in_array($skin, ['brief', 'dossier'], true) ? [] : (is_array($context['nav_items'] ?? null) ? $context['nav_items'] : []),
+        !empty($rail_feature['enabled']) && in_array($placement, ['left', 'right'], true) && is_array($context['rail_section'] ?? null) ? $context['rail_section'] : [],
+        !empty($rail_feature['enabled']) && in_array($skin, ['brief', 'dossier'], true) ? [] : (is_array($context['nav_items'] ?? null) ? $context['nav_items'] : []),
         'side'
     );
     $context_html = $skin === 'dossier' ? '' : industriesalon_render_editorial_project_context_stack($post_id, 'side');
@@ -903,10 +924,9 @@ function industriesalon_render_editorial_project_content(string $content): strin
         'iss-project-editorial',
         'iss-project-editorial--skin-' . sanitize_html_class($skin),
     ];
-    $rail_feature = industriesalon_resolve_editorial_project_rail_feature(
-        $skin,
-        is_array($rail_context['rail_section'] ?? null) && (array) $rail_context['rail_section'] !== []
-    );
+    $rail_feature = is_array($rail_context['rail_feature'] ?? null)
+        ? $rail_context['rail_feature']
+        : industriesalon_editorial_project_document_rail_feature($document);
     $classes[] = !empty($rail_feature['enabled']) ? 'iss-project-editorial--rail-enabled' : 'iss-project-editorial--rail-off';
     $classes[] = 'iss-project-editorial--rail-placement-' . sanitize_html_class((string) ($rail_feature['placement'] ?? 'right'));
     $classes[] = 'iss-project-editorial--rail-treatment-' . sanitize_html_class((string) ($rail_feature['treatment'] ?? 'quiet'));
@@ -921,9 +941,18 @@ function industriesalon_render_editorial_project_content(string $content): strin
         return $content;
     }
 
-    $horizontal_rail = '';
-    if ($skin === 'dossier') {
-        $horizontal_rail = industriesalon_render_editorial_project_rail(
+    $top_rail = '';
+    $bottom_rail = '';
+    $rail_placement = sanitize_key((string) ($rail_feature['placement'] ?? ''));
+    if (!empty($rail_feature['enabled']) && in_array($rail_placement, ['horizontal', 'top'], true)) {
+        $top_rail = industriesalon_render_editorial_project_rail(
+            is_array($rail_context['rail_section'] ?? null) ? $rail_context['rail_section'] : [],
+            is_array($rail_context['nav_items'] ?? null) ? $rail_context['nav_items'] : [],
+            'horizontal'
+        );
+    }
+    if (!empty($rail_feature['enabled']) && $rail_placement === 'bottom') {
+        $bottom_rail = industriesalon_render_editorial_project_rail(
             is_array($rail_context['rail_section'] ?? null) ? $rail_context['rail_section'] : [],
             is_array($rail_context['nav_items'] ?? null) ? $rail_context['nav_items'] : [],
             'horizontal'
@@ -932,8 +961,9 @@ function industriesalon_render_editorial_project_content(string $content): strin
     $footer_context = $skin === 'dossier' ? industriesalon_render_editorial_project_context_stack((int) $post_id, 'footer') : '';
 
     return '<div class="' . esc_attr(implode(' ', $classes)) . '">'
-        . $horizontal_rail
+        . $top_rail
         . '<div class="iss-project-editorial__main">' . $html . '</div>'
+        . $bottom_rail
         . $footer_context
         . '</div>';
 }

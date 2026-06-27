@@ -172,6 +172,7 @@ function iss_editorial_get_empty_document(string $format_slug): array
         'schema_version' => 1,
         'skin' => (string) ($format['default_skin'] ?? 'standard'),
         'variant' => (string) ($format['default_variant'] ?? 'standard'),
+        'features' => [],
         'sections' => [],
     ];
 }
