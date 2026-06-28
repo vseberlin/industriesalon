@@ -102,6 +102,7 @@ function iss_content_model_meta_definitions() {
         ISS_CONTENT_MODEL_VERANSTALTUNG_POST_TYPE => [
             'iss_start_datetime' => ['type' => 'string', 'sanitize' => 'sanitize_text_field', 'default' => ''],
             'iss_end_datetime' => ['type' => 'string', 'sanitize' => 'sanitize_text_field', 'default' => ''],
+            'iss_primary_place_id' => ['type' => 'integer', 'sanitize' => 'absint', 'default' => 0],
             'iss_location' => ['type' => 'string', 'sanitize' => 'sanitize_text_field', 'default' => ''],
             'iss_programme_enabled' => ['type' => 'boolean', 'sanitize' => 'rest_sanitize_boolean', 'default' => false],
         ],
@@ -270,6 +271,46 @@ function iss_content_model_migrate_programme_visibility_meta(): void
     update_option('iss_content_model_programme_visibility_meta_version', $version, false);
 }
 add_action('init', 'iss_content_model_migrate_programme_visibility_meta', 30);
+
+function iss_content_model_migrate_veranstaltung_primary_place_meta(): void
+{
+    $version = '20260628-primary-place-meta-v1';
+    if ((string) get_option('iss_content_model_veranstaltung_primary_place_meta_version', '') === $version) {
+        return;
+    }
+
+    if (!post_type_exists(ISS_CONTENT_MODEL_VERANSTALTUNG_POST_TYPE) || !function_exists('iss_relations_get_post_relations')) {
+        return;
+    }
+
+    $post_ids = get_posts([
+        'post_type' => ISS_CONTENT_MODEL_VERANSTALTUNG_POST_TYPE,
+        'post_status' => 'any',
+        'numberposts' => -1,
+        'fields' => 'ids',
+        'orderby' => 'ID',
+        'order' => 'ASC',
+        'suppress_filters' => true,
+    ]);
+
+    foreach ($post_ids as $post_id) {
+        $post_id = (int) $post_id;
+        if (absint(get_post_meta($post_id, 'iss_primary_place_id', true)) > 0) {
+            continue;
+        }
+
+        $place_id = function_exists('iss_content_model_get_veranstaltung_primary_place_id')
+            ? iss_content_model_get_veranstaltung_primary_place_id($post_id)
+            : 0;
+
+        if ($place_id > 0) {
+            update_post_meta($post_id, 'iss_primary_place_id', $place_id);
+        }
+    }
+
+    update_option('iss_content_model_veranstaltung_primary_place_meta_version', $version, false);
+}
+add_action('init', 'iss_content_model_migrate_veranstaltung_primary_place_meta', 40);
 
 function iss_content_model_sanitize_meta_value($value, $meta_key, $meta_type) {
     foreach (iss_content_model_meta_definitions() as $post_type => $fields) {

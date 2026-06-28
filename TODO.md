@@ -4,6 +4,11 @@ Immediate executable work only. Larger future programs live in `docs/project/bac
 
 ## Next
 
+- Graph/native relation coverage: Veranstaltung venue is now harvested from
+  native `iss_primary_place_id` into `content_native` graph edges. Add
+  CPT-specific native person/organization harvesters only where a real
+  intrinsic field exists; keep the content-bridge person/organization box as
+  optional curation, not a required relatedness field.
 - Editorial admin simplification: classic/editorial dashboard assembly is
   implemented for `veranstaltung`, `projekt`, `ausstellung`, `publication`,
   `fuehrung`, and `rueckblick`. Remaining SOW work needs a separate Gutenberg

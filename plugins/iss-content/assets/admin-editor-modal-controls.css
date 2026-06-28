@@ -78,6 +78,32 @@ body.iss-editor-dashboard-ready .iss-editor-dashboard__section-body > .postbox .
   margin: 0;
 }
 
+body.iss-editor-dashboard-ready .iss-editor-dashboard__action {
+  align-items: center;
+  background: #fff;
+  border: 1px solid #dcdcde;
+  display: flex;
+  gap: 16px;
+  justify-content: space-between;
+  min-width: 0;
+  padding: 14px 16px;
+}
+
+body.iss-editor-dashboard-ready .iss-editor-dashboard__action-copy {
+  display: grid;
+  gap: 4px;
+  min-width: 0;
+}
+
+body.iss-editor-dashboard-ready .iss-editor-dashboard__action-copy strong {
+  color: #1d2327;
+}
+
+body.iss-editor-dashboard-ready .iss-editor-dashboard__action-copy p {
+  margin: 0;
+  color: #646970;
+}
+
 body.iss-editor-dashboard-ready .iss-editor-dashboard__section-body > .iss-editorial-shell {
   max-width: none;
 }

@@ -229,6 +229,63 @@ function iss_content_model_get_editor_dashboard_box_ids(string $post_type): arra
     return (array) apply_filters('iss_content_model_editor_dashboard_box_ids', array_values(array_unique($box_ids)), $post_type);
 }
 
+function iss_content_model_use_compact_dashboard_relation_actions(string $post_type): bool
+{
+    return !current_user_can('manage_options') && iss_content_model_use_editor_dashboard($post_type);
+}
+
+function iss_content_model_add_section_modal_target(array $section, array $target): array
+{
+    $modal_targets = is_array($section['modalTargets'] ?? null) ? $section['modalTargets'] : [];
+    $target_id = sanitize_key((string) ($target['target'] ?? ''));
+    if ($target_id === '') {
+        return $section;
+    }
+
+    foreach ($modal_targets as $existing) {
+        if (is_array($existing) && sanitize_key((string) ($existing['target'] ?? '')) === $target_id) {
+            return $section;
+        }
+    }
+
+    $modal_targets[] = [
+        'target' => $target_id,
+        'label' => sanitize_text_field((string) ($target['label'] ?? $target_id)),
+        'description' => sanitize_text_field((string) ($target['description'] ?? '')),
+    ];
+    $section['modalTargets'] = $modal_targets;
+
+    return $section;
+}
+
+function iss_content_model_compact_dashboard_relation_sections(array $sections, string $post_type): array
+{
+    if (!iss_content_model_use_compact_dashboard_relation_actions($post_type)) {
+        return $sections;
+    }
+
+    foreach ($sections as &$section) {
+        if (!is_array($section) || sanitize_key((string) ($section['slug'] ?? '')) !== 'relations') {
+            continue;
+        }
+
+        $box_ids = array_values(array_filter(array_map('sanitize_key', (array) ($section['boxIds'] ?? []))));
+        if (!in_array('iss-relations-places', $box_ids, true)) {
+            continue;
+        }
+
+        $section['boxIds'] = array_values(array_diff($box_ids, ['iss-relations-places']));
+        $section = iss_content_model_add_section_modal_target($section, [
+            'target' => 'iss-relations-places',
+            'label' => __('Orte bearbeiten', 'iss-content-model'),
+            'description' => __('Ortsbezüge und Stationen bleiben im bestehenden Relations-Speicher, werden aber nur bei Bedarf geöffnet.', 'iss-content-model'),
+        ]);
+    }
+    unset($section);
+
+    return $sections;
+}
+
 function iss_content_model_get_editor_dashboard_sections(string $post_type): array
 {
     $post_type = sanitize_key($post_type);
@@ -450,6 +507,7 @@ function iss_content_model_get_editor_dashboard_sections(string $post_type): arr
     }
 
     $sections = (array) apply_filters('iss_content_model_editor_dashboard_sections', $sections, $post_type);
+    $sections = iss_content_model_compact_dashboard_relation_sections($sections, $post_type);
 
     return array_values(array_filter(array_map(static function ($section): array {
         if (!is_array($section)) {
@@ -458,6 +516,22 @@ function iss_content_model_get_editor_dashboard_sections(string $post_type): arr
 
         $slug = sanitize_key((string) ($section['slug'] ?? ''));
         $box_ids = array_values(array_unique(array_filter(array_map('sanitize_key', (array) ($section['boxIds'] ?? [])))));
+        $modal_targets = array_values(array_filter(array_map(static function ($target): array {
+            if (!is_array($target)) {
+                return [];
+            }
+
+            $target_id = sanitize_key((string) ($target['target'] ?? ''));
+            if ($target_id === '') {
+                return [];
+            }
+
+            return [
+                'target' => $target_id,
+                'label' => sanitize_text_field((string) ($target['label'] ?? $target_id)),
+                'description' => sanitize_text_field((string) ($target['description'] ?? '')),
+            ];
+        }, (array) ($section['modalTargets'] ?? []))));
         $selectors = array_values(array_unique(array_filter(array_map(static function ($selector): string {
             $selector = trim(sanitize_text_field((string) $selector));
             if ($selector === '' || !preg_match('/^[#.][A-Za-z0-9_-]+$/', $selector)) {
@@ -466,7 +540,7 @@ function iss_content_model_get_editor_dashboard_sections(string $post_type): arr
 
             return $selector;
         }, (array) ($section['selectors'] ?? [])))));
-        if ($slug === '' || (!$box_ids && !$selectors)) {
+        if ($slug === '' || (!$box_ids && !$modal_targets && !$selectors)) {
             return [];
         }
 
@@ -475,6 +549,7 @@ function iss_content_model_get_editor_dashboard_sections(string $post_type): arr
             'label' => sanitize_text_field((string) ($section['label'] ?? $slug)),
             'description' => sanitize_text_field((string) ($section['description'] ?? '')),
             'boxIds' => $box_ids,
+            'modalTargets' => $modal_targets,
             'selectors' => $selectors,
         ];
     }, $sections)));
@@ -616,6 +691,9 @@ add_action('media_buttons', function (string $editor_id): void {
 
     $screen = function_exists('get_current_screen') ? get_current_screen() : null;
     if (!$screen || $screen->base !== 'post' || !isset($screen->post_type) || !iss_content_model_use_editor_modal_controls((string) $screen->post_type)) {
+        return;
+    }
+    if (iss_content_model_use_editor_dashboard((string) $screen->post_type)) {
         return;
     }
 
@@ -856,6 +934,14 @@ function iss_content_model_get_publication_choices(): array
 
 function iss_content_model_get_veranstaltung_primary_place_id(int $post_id): int
 {
+    $native_place_id = absint(get_post_meta($post_id, 'iss_primary_place_id', true));
+    if (
+        $native_place_id > 0
+        && (!function_exists('iss_relations_is_usable_place') || iss_relations_is_usable_place($native_place_id))
+    ) {
+        return $native_place_id;
+    }
+
     if (!function_exists('iss_relations_get_post_relations')) {
         return 0;
     }
@@ -1541,7 +1627,6 @@ function iss_content_model_save_meta_box(int $post_id): void
         iss_content_model_save_veranstaltung_entity_meta($post_id, $raw);
         iss_content_model_save_veranstaltung_content_meta($post_id, $raw);
 
-        unset($raw['iss_primary_place_id']);
         unset($raw['_iss_entity_key'], $raw['_iss_content_json']);
 
         $manual_location = trim((string) ($raw['iss_location'] ?? ''));

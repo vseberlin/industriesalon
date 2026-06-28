@@ -72,6 +72,78 @@ function iss_relations_compare_place_items(array $left, array $right): int
     return ((int) ($left['place_id'] ?? 0)) <=> ((int) ($right['place_id'] ?? 0));
 }
 
+function iss_relations_target_from_place_id(int $place_id): array
+{
+    return [
+        'entity_id' => 0,
+        'entity_kind' => 'place',
+        'post_id' => $place_id,
+    ];
+}
+
+function iss_relations_normalize_relation_target(array $relation): ?array
+{
+    $target = isset($relation['target']) && is_array($relation['target']) ? $relation['target'] : [];
+    $entity_id = absint($target['entity_id'] ?? ($relation['entity_id'] ?? ($relation['to_entity_id'] ?? 0)));
+    $entity_kind = sanitize_key((string) ($target['entity_kind'] ?? ($relation['entity_kind'] ?? ($relation['relation_family'] ?? ''))));
+    $post_id = absint($target['post_id'] ?? ($relation['post_id'] ?? 0));
+
+    if ($entity_id > 0 && function_exists('iss_graph_get_service')) {
+        $entity = iss_graph_get_service()->get_entity_by_id($entity_id);
+        if (!is_array($entity)) {
+            return null;
+        }
+
+        $entity_post_id = absint($entity['post_id'] ?? ($entity['profile_post_id'] ?? 0));
+        $actual_entity_kind = sanitize_key((string) ($entity['entity_kind'] ?? ''));
+        if ($entity_kind !== '' && $actual_entity_kind !== '' && $entity_kind !== $actual_entity_kind) {
+            return null;
+        }
+
+        if ($post_id <= 0) {
+            $post_id = $entity_post_id;
+        } elseif ($entity_post_id > 0 && $post_id !== $entity_post_id) {
+            return null;
+        }
+
+        if ($entity_kind === '') {
+            $entity_kind = $actual_entity_kind;
+        }
+    }
+
+    if ($post_id <= 0) {
+        $place_id = absint($relation['place_id'] ?? 0);
+        if ($place_id > 0) {
+            $post_id = $place_id;
+            if ($entity_kind === '') {
+                $entity_kind = 'place';
+            }
+        }
+    }
+
+    if ($entity_kind === '' && $post_id > 0 && get_post_type($post_id) === iss_relations_get_place_post_type()) {
+        $entity_kind = 'place';
+    }
+
+    if ($entity_kind === 'register_place') {
+        $entity_kind = 'place';
+    }
+
+    if ($entity_kind === '' || ($post_id <= 0 && $entity_id <= 0)) {
+        return null;
+    }
+
+    if ($entity_kind !== 'place' && $entity_id <= 0) {
+        return null;
+    }
+
+    return [
+        'entity_id' => $entity_id,
+        'entity_kind' => $entity_kind,
+        'post_id' => $post_id,
+    ];
+}
+
 function iss_relations_graph_relation_rank_sql(string $relation_alias = 'r'): string
 {
     $relation_alias = preg_replace('/[^A-Za-z0-9_]/', '', $relation_alias);
@@ -248,12 +320,20 @@ function iss_relations_get_place_term_id(int $place_id): int
 
 function iss_relations_normalize_relation(array $relation, int $context_post_id = 0): ?array
 {
-    $place_id = absint($relation['place_id'] ?? 0);
-    if ($place_id <= 0 || !iss_relations_is_usable_place($place_id)) {
+    $target = iss_relations_normalize_relation_target($relation);
+    if (!$target) {
+        return null;
+    }
+
+    $is_place_target = (string) $target['entity_kind'] === 'place';
+    $place_id = $is_place_target ? absint($target['post_id'] ?? ($relation['place_id'] ?? 0)) : 0;
+    if ($is_place_target && ($place_id <= 0 || !iss_relations_is_usable_place($place_id))) {
         return null;
     }
 
     if (
+        $is_place_target
+        &&
         $context_post_id > 0
         && $place_id === $context_post_id
         && get_post_type($context_post_id) === iss_relations_get_place_post_type()
@@ -261,10 +341,22 @@ function iss_relations_normalize_relation(array $relation, int $context_post_id 
         return null;
     }
 
-    $role = sanitize_key((string) ($relation['role'] ?? 'related'));
+    $role = sanitize_key((string) ($relation['role'] ?? ($relation['relation_role'] ?? ($relation['relation_type'] ?? 'related'))));
     $roles = iss_relations_get_role_options();
-    if (!isset($roles[$role])) {
+    if ($is_place_target && !isset($roles[$role])) {
         $role = 'related';
+    }
+    if (!$is_place_target && $role === '') {
+        $role = 'related';
+    }
+
+    $relation_family = sanitize_key((string) ($relation['relation_family'] ?? $target['entity_kind']));
+    if ($relation_family === '') {
+        $relation_family = $target['entity_kind'];
+    }
+    $relation_type = sanitize_key((string) ($relation['relation_type'] ?? $role));
+    if ($relation_type === '') {
+        $relation_type = $role;
     }
 
     $route_title = sanitize_text_field((string) ($relation['route_title'] ?? ''));
@@ -272,7 +364,11 @@ function iss_relations_normalize_relation(array $relation, int $context_post_id 
     $station_object_id = absint($relation['station_object_id'] ?? 0);
     $station_story_id = absint($relation['station_story_id'] ?? 0);
 
-    return [
+    $clean = [
+        'target' => $target,
+        'relation_family' => $relation_family,
+        'relation_type' => $relation_type,
+        'relation_role' => $role,
         'place_id' => $place_id,
         'role' => $role,
         'weight' => (int) ($relation['weight'] ?? 0),
@@ -282,6 +378,16 @@ function iss_relations_normalize_relation(array $relation, int $context_post_id 
         'station_object_id' => $station_object_id,
         'station_story_id' => $station_story_id,
     ];
+
+    if (!$is_place_target) {
+        $clean['place_id'] = 0;
+        $clean['route_title'] = '';
+        $clean['route_teaser'] = '';
+        $clean['station_object_id'] = 0;
+        $clean['station_story_id'] = 0;
+    }
+
+    return $clean;
 }
 
 function iss_relations_normalize_relations($relations, int $context_post_id = 0): array
@@ -291,7 +397,7 @@ function iss_relations_normalize_relations($relations, int $context_post_id = 0)
     }
 
     $normalized = [];
-    $seen_place_ids = [];
+    $seen_targets = [];
 
     foreach ($relations as $relation) {
         if (!is_array($relation)) {
@@ -303,12 +409,16 @@ function iss_relations_normalize_relations($relations, int $context_post_id = 0)
             continue;
         }
 
-        $place_id = (int) $clean['place_id'];
-        if (isset($seen_place_ids[$place_id])) {
+        $target = isset($clean['target']) && is_array($clean['target']) ? $clean['target'] : [];
+        $target_key = sanitize_key((string) ($target['entity_kind'] ?? '')) . ':';
+        $target_key .= (int) ($target['entity_id'] ?? 0) > 0
+            ? 'entity:' . (int) ($target['entity_id'] ?? 0)
+            : 'post:' . (int) ($target['post_id'] ?? 0);
+        if (isset($seen_targets[$target_key])) {
             continue;
         }
 
-        $seen_place_ids[$place_id] = true;
+        $seen_targets[$target_key] = true;
         $normalized[] = $clean;
     }
 
@@ -400,24 +510,41 @@ function iss_relations_graph_build_place_relation_rows(array $relations): array
             continue;
         }
 
-        $place_id = absint($relation['place_id'] ?? 0);
+        $target = isset($relation['target']) && is_array($relation['target']) ? $relation['target'] : iss_relations_normalize_relation_target($relation);
+        if (!is_array($target) || (string) ($target['entity_kind'] ?? '') !== 'place') {
+            continue;
+        }
+
+        $place_id = absint($target['post_id'] ?? ($relation['place_id'] ?? 0));
         if ($place_id <= 0) {
             continue;
         }
 
-        $place_entity = iss_relations_graph_find_place_entity($place_id);
+        $target_entity_id = absint($target['entity_id'] ?? 0);
+        $place_entity = $target_entity_id > 0 && function_exists('iss_graph_get_service')
+            ? iss_graph_get_service()->get_entity_by_id($target_entity_id)
+            : null;
+
+        if (!is_array($place_entity) || empty($place_entity['id']) || (string) ($place_entity['entity_kind'] ?? '') !== 'place') {
+            $place_entity = iss_relations_graph_find_place_entity($place_id);
+        }
+
         if (!is_array($place_entity) || empty($place_entity['id'])) {
             continue;
         }
 
-        $role = sanitize_key((string) ($relation['role'] ?? 'related'));
+        $role = sanitize_key((string) ($relation['relation_role'] ?? ($relation['role'] ?? 'related')));
         if (!isset(iss_relations_get_role_options()[$role])) {
             $role = 'related';
+        }
+        $relation_type = sanitize_key((string) ($relation['relation_type'] ?? $role));
+        if ($relation_type === '') {
+            $relation_type = $role;
         }
 
         $rows[] = [
             'to_entity_id' => (int) $place_entity['id'],
-            'relation_type' => $role,
+            'relation_type' => $relation_type,
             'relation_role' => $role,
             'relation_label' => sanitize_text_field((string) ($relation['label'] ?? '')),
             'weight' => (int) ($relation['weight'] ?? 0),
@@ -593,6 +720,14 @@ function iss_relations_graph_read_post_relations(int $post_id, array $stored_rel
         }
 
         $mapped[] = [
+            'target' => [
+                'entity_id' => (int) ($row['entity_id'] ?? 0),
+                'entity_kind' => 'place',
+                'post_id' => $place_id,
+            ],
+            'relation_family' => 'place',
+            'relation_type' => sanitize_key((string) ($row['relation_type'] ?? $role)),
+            'relation_role' => $role,
             'place_id' => $place_id,
             'role' => $role,
             'weight' => isset($row['weight']) ? (int) $row['weight'] : (int) ($stored['weight'] ?? 0),

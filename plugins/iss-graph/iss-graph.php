@@ -17,7 +17,7 @@ define('ISS_GRAPH_SCHEMA_VERSION', '2026-06-07-v2');
 define('ISS_GRAPH_SCHEMA_OPTION', 'iss_graph_schema_version');
 define('ISS_GRAPH_REGISTER_BACKFILL_VERSION', '2026-06-06-register-v2');
 define('ISS_GRAPH_REGISTER_BACKFILL_OPTION', 'iss_graph_register_backfill_version');
-define('ISS_GRAPH_CONTENT_BACKFILL_VERSION', '2026-06-06-content-v1');
+define('ISS_GRAPH_CONTENT_BACKFILL_VERSION', '2026-06-28-content-native-v1');
 define('ISS_GRAPH_CONTENT_BACKFILL_OPTION', 'iss_graph_content_backfill_version');
 define('ISS_GRAPH_ARCHIVE_BACKFILL_VERSION', '2026-06-06-archive-v2');
 define('ISS_GRAPH_ARCHIVE_BACKFILL_OPTION', 'iss_graph_archive_backfill_version');

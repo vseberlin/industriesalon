@@ -1746,6 +1746,15 @@ function iss_relations_resolve_block_posts(array $attributes, int $current_post_
         return iss_relations_query_entity_related_posts($current_post_id, $post_types, $per_page, $attributes);
     }
 
+    if ($source === 'current') {
+        $graph_posts = iss_relations_query_entity_related_posts($current_post_id, $post_types, $per_page, array_merge($attributes, [
+            'source' => 'entity',
+        ]));
+        if ($graph_posts) {
+            return $graph_posts;
+        }
+    }
+
     $place_items = iss_relations_resolve_block_place_items($attributes, $current_post_id, $block_name);
     if (!$place_items) {
         return [];

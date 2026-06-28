@@ -43,9 +43,38 @@
     return (Array.isArray(modalConfig.dashboardSections) ? modalConfig.dashboardSections : []).filter(function (section) {
       return section && section.slug && (
         (Array.isArray(section.boxIds) && section.boxIds.length) ||
+        (Array.isArray(section.modalTargets) && section.modalTargets.length) ||
         (Array.isArray(section.selectors) && section.selectors.length)
       );
     });
+  }
+
+  function createDashboardModalTarget(target) {
+    var action = document.createElement('div');
+    var copy = document.createElement('div');
+    var title = document.createElement('strong');
+    var button = document.createElement('button');
+    var description;
+
+    action.className = 'iss-editor-dashboard__action';
+    copy.className = 'iss-editor-dashboard__action-copy';
+    title.textContent = target.label || target.target || 'Bearbeiten';
+    button.type = 'button';
+    button.className = 'button button-secondary';
+    button.textContent = 'Oeffnen';
+    button.setAttribute('data-iss-editor-modal-target', target.target || '');
+
+    copy.appendChild(title);
+    if (target.description) {
+      description = document.createElement('p');
+      description.textContent = target.description;
+      copy.appendChild(description);
+    }
+
+    action.appendChild(copy);
+    action.appendChild(button);
+
+    return action;
   }
 
   function createDashboardSection(section) {
@@ -71,6 +100,11 @@
 
     (Array.isArray(section.boxIds) ? section.boxIds : []).forEach(function (id) {
       moveEditorBox(id, body);
+    });
+    (Array.isArray(section.modalTargets) ? section.modalTargets : []).forEach(function (target) {
+      if (target && target.target) {
+        body.appendChild(createDashboardModalTarget(target));
+      }
     });
     (Array.isArray(section.selectors) ? section.selectors : []).forEach(function (selector) {
       moveDashboardSelector(selector, body);

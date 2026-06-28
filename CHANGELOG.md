@@ -6,6 +6,12 @@ be recovered from Git history.
 
 ## 2026-06-28
 
+- Made related-content resolution graph-first for the default current-post path
+  and loosened the `iss-relations` relation payload contract from place-only
+  `place_id` rows to generic entity targets while preserving legacy place rows.
+  `iss-content` now persists Veranstaltung `iss_primary_place_id` as native
+  meta, and `iss-graph` harvests it as a `content_native` venue edge so the
+  related-places editor box is no longer the only source of relatedness.
 - Added a Video CPT transcript JSON contract in `iss-content`: editors can clean
   timecoded segments in a dedicated metabox, save through the normal WordPress
   Update action, and public video blocks render `_iss_video_transcript_json`

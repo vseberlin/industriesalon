@@ -135,6 +135,100 @@ function iss_graph_get_content_organization_profile_choices(): array
     return iss_graph_get_content_profile_choices('organization');
 }
 
+function iss_graph_get_public_content_native_relation_families(): array
+{
+    $families = (array) apply_filters('iss_graph_public_content_native_relation_families', [
+        'place',
+        'person',
+        'organization',
+    ]);
+
+    return array_values(array_unique(array_filter(array_map('sanitize_key', $families))));
+}
+
+function iss_graph_sync_public_content_native_relations(int $entity_id, WP_Post $post): void
+{
+    if ($entity_id <= 0) {
+        return;
+    }
+
+    $service = iss_graph_get_service();
+    $rows_by_family = iss_graph_collect_public_content_native_relation_rows($post, $entity_id);
+    $source_ref = 'post:' . (int) $post->ID;
+
+    foreach (iss_graph_get_public_content_native_relation_families() as $family) {
+        $rows = isset($rows_by_family[$family]) && is_array($rows_by_family[$family])
+            ? $rows_by_family[$family]
+            : [];
+
+        $service->replace_entity_relations_for_source(
+            $entity_id,
+            $family,
+            'content_native',
+            $rows,
+            $source_ref
+        );
+    }
+}
+
+function iss_graph_collect_public_content_native_relation_rows(WP_Post $post, int $entity_id): array
+{
+    $rows = [
+        'place' => iss_graph_collect_public_content_native_place_rows($post),
+        'person' => [],
+        'organization' => [],
+    ];
+
+    $filtered_rows = apply_filters('iss_graph_public_content_native_relation_rows', $rows, $post, $entity_id);
+
+    return is_array($filtered_rows) ? $filtered_rows : $rows;
+}
+
+function iss_graph_collect_public_content_native_place_rows(WP_Post $post): array
+{
+    if ($post->post_type !== 'veranstaltung') {
+        return [];
+    }
+
+    $place_id = absint(get_post_meta((int) $post->ID, 'iss_primary_place_id', true));
+    if ($place_id <= 0) {
+        return [];
+    }
+
+    $place = get_post($place_id);
+    $register_post_type = function_exists('iss_graph_get_register_post_type')
+        ? iss_graph_get_register_post_type()
+        : 'register_place';
+
+    if (
+        !$place instanceof WP_Post
+        || $place->post_type !== $register_post_type
+        || in_array($place->post_status, ['auto-draft', 'trash'], true)
+    ) {
+        return [];
+    }
+
+    $place_entity = function_exists('iss_graph_sync_register_place_entity')
+        ? iss_graph_sync_register_place_entity($place_id)
+        : iss_graph_get_service()->find_entity_by_post('place', $place_id);
+
+    $place_entity_id = (int) ($place_entity['id'] ?? 0);
+    if ($place_entity_id <= 0) {
+        return [];
+    }
+
+    return [[
+        'to_entity_id' => $place_entity_id,
+        'relation_type' => 'venue',
+        'relation_role' => 'venue',
+        'relation_label' => __('Veranstaltungsort', 'iss-graph'),
+        'weight' => 100,
+        'position' => 0,
+        'is_primary' => true,
+        'is_public' => true,
+    ]];
+}
+
 function iss_graph_sync_public_content_entity(int $post_id): ?array
 {
     $post = get_post($post_id);
@@ -185,6 +279,8 @@ function iss_graph_sync_public_content_entity(int $post_id): ?array
     if (function_exists('iss_graph_sync_entity_alias_backfill')) {
         iss_graph_sync_entity_alias_backfill((int) $entity['id']);
     }
+
+    iss_graph_sync_public_content_native_relations((int) $entity['id'], $post);
 
     return $service->get_entity_by_id((int) $entity['id']);
 }

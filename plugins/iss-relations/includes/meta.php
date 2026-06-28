@@ -11,6 +11,31 @@ function iss_relations_register_meta(): void
         'items' => [
             'type' => 'object',
             'properties' => [
+                'target' => [
+                    'type' => 'object',
+                    'properties' => [
+                        'entity_id' => [
+                            'type' => 'integer',
+                        ],
+                        'entity_kind' => [
+                            'type' => 'string',
+                        ],
+                        'post_id' => [
+                            'type' => 'integer',
+                        ],
+                    ],
+                    'required' => ['entity_id', 'entity_kind', 'post_id'],
+                    'additionalProperties' => false,
+                ],
+                'relation_family' => [
+                    'type' => 'string',
+                ],
+                'relation_type' => [
+                    'type' => 'string',
+                ],
+                'relation_role' => [
+                    'type' => 'string',
+                ],
                 'place_id' => [
                     'type' => 'integer',
                 ],
@@ -36,7 +61,6 @@ function iss_relations_register_meta(): void
                     'type' => 'integer',
                 ],
             ],
-            'required' => ['place_id', 'role', 'weight', 'label', 'route_title', 'route_teaser', 'station_object_id', 'station_story_id'],
             'additionalProperties' => false,
         ],
     ];
