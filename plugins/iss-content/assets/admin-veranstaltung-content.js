@@ -798,10 +798,11 @@
       clear(root);
       var layout = createElement('div', 'iss-veranstaltung-content-editor__layout');
       var body = createElement('div', 'iss-veranstaltung-content-editor__body');
+      var rail = createElement('aside', 'iss-veranstaltung-content-editor__rail');
+      var workspace = createElement('div', 'iss-veranstaltung-content-editor__workspace');
       var editorPane = createElement('div', 'iss-veranstaltung-content-editor__edit');
       previewPane = createElement('div', 'iss-veranstaltung-content-editor__preview-wrap');
       var stage = createElement('div', 'iss-veranstaltung-content-editor__stage');
-      var toolbar = createElement('div', 'iss-veranstaltung-content-editor__toolbar');
       var addDefault = createElement('button', 'button button-primary', 'Abschnitt hinzufuegen');
       var sections = currentSections();
 
@@ -810,9 +811,8 @@
         addSection(firstGesture());
       });
 
-      renderPalette(toolbar);
-      toolbar.appendChild(addDefault);
-      editorPane.appendChild(toolbar);
+      renderPalette(rail);
+      rail.appendChild(addDefault);
 
       if (!state.sections.length) {
         stage.appendChild(createElement('p', 'iss-veranstaltung-content-editor__empty', 'Noch keine Struktur. Eine Geste waehlen oder einen Abschnitt hinzufuegen.'));
@@ -824,8 +824,10 @@
 
       editorPane.appendChild(stage);
       renderPreview(previewPane, sections);
-      body.appendChild(editorPane);
-      body.appendChild(previewPane);
+      workspace.appendChild(editorPane);
+      workspace.appendChild(previewPane);
+      body.appendChild(rail);
+      body.appendChild(workspace);
       layout.appendChild(body);
       root.appendChild(layout);
       updateField();

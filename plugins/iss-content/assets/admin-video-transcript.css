@@ -1,0 +1,119 @@
+.iss-video-transcript-editor {
+  display: grid;
+  gap: 12px;
+}
+
+.iss-video-transcript-editor,
+.iss-video-transcript-editor * {
+  box-sizing: border-box;
+}
+
+.iss-video-transcript-editor__toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px;
+  border: 1px solid #dcdcde;
+  background: #fff;
+}
+
+.iss-video-transcript-editor__toolbar p {
+  margin: 0;
+}
+
+.iss-video-transcript-editor__segments {
+  display: grid;
+  gap: 12px;
+}
+
+.iss-video-transcript-editor__segment {
+  display: grid;
+  gap: 12px;
+  padding: 12px;
+  border: 1px solid #dcdcde;
+  background: #fff;
+}
+
+.iss-video-transcript-editor__segment-head {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  align-items: center;
+  justify-content: space-between;
+  padding-bottom: 8px;
+  border-bottom: 1px solid #dcdcde;
+}
+
+.iss-video-transcript-editor__segment h4 {
+  margin: 0;
+  font-size: 13px;
+}
+
+.iss-video-transcript-editor__actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  align-items: center;
+}
+
+.iss-video-transcript-editor__grid {
+  display: grid;
+  grid-template-columns: minmax(120px, 0.55fr) minmax(140px, 0.7fr) minmax(130px, 0.55fr) minmax(260px, 2fr);
+  gap: 10px;
+  align-items: start;
+}
+
+.iss-video-transcript-editor__field-row {
+  display: grid;
+  gap: 5px;
+  margin: 0;
+}
+
+.iss-video-transcript-editor__field-row > span {
+  font-weight: 600;
+}
+
+.iss-video-transcript-editor__field-row input,
+.iss-video-transcript-editor__field-row select,
+.iss-video-transcript-editor__field-row textarea {
+  width: 100%;
+  max-width: 100%;
+}
+
+.iss-video-transcript-editor__field-row--text {
+  min-width: 0;
+}
+
+.iss-video-transcript-editor__field-row--text textarea {
+  min-height: 92px;
+}
+
+.iss-video-transcript-editor__empty {
+  margin: 0;
+  padding: 22px;
+  border: 1px dashed #c3c4c7;
+  color: #646970;
+  text-align: center;
+}
+
+@media (max-width: 1100px) {
+  .iss-video-transcript-editor__grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+
+  .iss-video-transcript-editor__field-row--text {
+    grid-column: 1 / -1;
+  }
+}
+
+@media (max-width: 782px) {
+  .iss-video-transcript-editor__grid {
+    grid-template-columns: 1fr;
+  }
+
+  .iss-video-transcript-editor__field-row--text {
+    grid-column: auto;
+  }
+}

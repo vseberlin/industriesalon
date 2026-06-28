@@ -4,8 +4,22 @@ This file records durable project changes. Keep it compact: current state belong
 `handoff_CURRENT.md`, active follow-up in `TODO.md`, and detailed investigation can
 be recovered from Git history.
 
+## 2026-06-28
+
+- Added a Video CPT transcript JSON contract in `iss-content`: editors can clean
+  timecoded segments in a dedicated metabox, save through the normal WordPress
+  Update action, and public video blocks render `_iss_video_transcript_json`
+  when present with legacy `post_content` fallback. The Video Gutenberg body
+  canvas is hidden after migration so transcript edits happen in the JSON
+  segment editor, and existing video transcript transfer state is captured as an
+  explicit SQL artifact instead of a hidden runtime migration.
+
 ## 2026-06-27
 
+- Unified editorial composition save behavior so JSON-first composition changes
+  are committed through the normal WordPress Update action instead of a second
+  in-canvas JSON save button, and aligned the Veranstaltung structure editor with
+  the shared left-rail gesture layout.
 - Implemented the shared editorial admin dashboard shell for compatible
   classic/editorial edit screens:
   - added reusable dashboard section registration and DOM assembly in

@@ -115,6 +115,7 @@ require_once ISS_CONTENT_MODEL_PATH . 'includes/acf.php';
 require_once ISS_CONTENT_MODEL_PATH . 'includes/editorial.php';
 require_once ISS_CONTENT_MODEL_PATH . 'includes/blocks.php';
 require_once ISS_CONTENT_MODEL_PATH . 'includes/ausstellung-type-sync.php';
+require_once ISS_CONTENT_MODEL_PATH . 'includes/video-transcripts.php';
 require_once ISS_CONTENT_MODEL_PATH . 'includes/videos.php';
 require_once ISS_CONTENT_MODEL_PATH . 'includes/video-import.php';
 require_once ISS_CONTENT_MODEL_PATH . 'includes/editorial-sets-service.php';

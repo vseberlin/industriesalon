@@ -7,9 +7,13 @@ Immediate executable work only. Larger future programs live in `docs/project/bac
 - Editorial admin simplification: classic/editorial dashboard assembly is
   implemented for `veranstaltung`, `projekt`, `ausstellung`, `publication`,
   `fuehrung`, and `rueckblick`. Remaining SOW work needs a separate Gutenberg
-  adapter for `video`, `page`, and `post`; do not force the classic
-  `titlediv`/postbox mover onto block-editor screens. Before hiding or purging
-  more legacy boxes, run edit/save/reload parity with a normal editorial role.
+  adapter for `page` and `post`; do not force the classic `titlediv`/postbox
+  mover onto block-editor screens. `video` now has a dedicated transcript JSON
+  editor on the normal WordPress Update path and hides the legacy body canvas;
+  transfer its existing structured transcript rows through
+  `ops/sql/2026-06-28-video-transcript-json.sql`.
+  Before hiding or purging more legacy boxes, run edit/save/reload parity with
+  a normal editorial role.
 - Führung JSON migration: after deploying the code, review/apply
   `ops/sql/2026-06-27-fuehrung-editorial-json.sql` only on a target that
   already has the 15 published Führung posts listed in the artifact. The SQL

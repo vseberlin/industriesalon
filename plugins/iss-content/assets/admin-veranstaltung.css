@@ -265,14 +265,29 @@ body.post-type-veranstaltung #major-publishing-actions {
 
 .iss-veranstaltung-content-editor__body {
   display: grid;
-  grid-template-columns: minmax(0, 1.08fr) minmax(280px, 0.92fr);
+  grid-template-columns: 220px minmax(0, 1fr);
   gap: 16px;
   align-items: start;
 }
 
+.iss-veranstaltung-content-editor__rail,
+.iss-veranstaltung-content-editor__workspace,
 .iss-veranstaltung-content-editor__edit,
 .iss-veranstaltung-content-editor__preview-wrap {
   min-width: 0;
+}
+
+.iss-veranstaltung-content-editor__rail {
+  display: grid;
+  gap: 10px;
+  align-content: start;
+}
+
+.iss-veranstaltung-content-editor__workspace {
+  display: grid;
+  grid-template-columns: minmax(0, 1.08fr) minmax(280px, 0.92fr);
+  gap: 16px;
+  align-items: start;
 }
 
 .iss-veranstaltung-content-editor__toolbar,
@@ -282,6 +297,24 @@ body.post-type-veranstaltung #major-publishing-actions {
   flex-wrap: wrap;
   gap: 8px;
   align-items: center;
+}
+
+.iss-veranstaltung-content-editor__palette {
+  display: grid;
+  align-items: stretch;
+  padding: 10px;
+  border: 1px solid #dcdcde;
+  background: #fff;
+}
+
+.iss-veranstaltung-content-editor__palette .button,
+.iss-veranstaltung-content-editor__rail > .button {
+  width: 100%;
+  height: auto;
+  min-height: 34px;
+  padding-block: 6px;
+  text-align: left;
+  white-space: normal;
 }
 
 .iss-veranstaltung-content-editor__toolbar {
@@ -591,6 +624,18 @@ body.post-type-veranstaltung #major-publishing-actions {
   color: #646970;
   font-size: 12px;
   font-weight: 700;
+}
+
+@media (max-width: 1100px) {
+  .iss-veranstaltung-content-editor__workspace {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 900px) {
+  .iss-veranstaltung-content-editor__body {
+    grid-template-columns: 1fr;
+  }
 }
 
 @media (max-width: 782px) {

@@ -146,20 +146,6 @@
   font-weight: 400;
 }
 
-.wp-core-ui .button.iss-editorial-save {
-  border-color: #8f1919;
-  background: #b32d2e;
-  color: #fff;
-  font-weight: 700;
-}
-
-.wp-core-ui .button.iss-editorial-save:hover,
-.wp-core-ui .button.iss-editorial-save:focus {
-  border-color: #691313;
-  background: #8f1919;
-  color: #fff;
-}
-
 .iss-editorial-empty {
   margin: 0;
   padding: 30px;

@@ -19,6 +19,10 @@ Use this for local video transcript work.
 
 - Keep local transcription tooling out of Git unless explicitly approved.
 - Prefer captions-first import before expensive local speech-to-text fallback.
+- For Video CPT posts, `_iss_video_transcript_json` is the structured
+  transcript authority when present; `post_content` remains the fallback during
+  migration and for legacy rows. The Video Gutenberg body canvas is not the
+  editor-facing transcript surface once JSON rows exist.
 - Preserve database state before large transcript rewrites.
 - Transfer transcript data through explicit SQL artifacts, not hidden runtime migration.
 - Stop CPU-only fallback runs when they are clearly impractical and document the remaining path in `TODO.md` or `handoff_CURRENT.md`.

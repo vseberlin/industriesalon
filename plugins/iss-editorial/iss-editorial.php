@@ -18,7 +18,6 @@ require_once ISS_EDITORIAL_PATH . 'includes/formats.php';
 require_once ISS_EDITORIAL_PATH . 'includes/storage.php';
 require_once ISS_EDITORIAL_PATH . 'includes/references.php';
 require_once ISS_EDITORIAL_PATH . 'includes/admin.php';
-require_once ISS_EDITORIAL_PATH . 'includes/rest.php';
 
 if (defined('WP_CLI') && WP_CLI) {
     require_once ISS_EDITORIAL_PATH . 'includes/cli.php';

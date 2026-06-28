@@ -363,14 +363,6 @@
       }
     }
 
-    function currentEnabled() {
-      if (enabledField) {
-        return !!enabledField.checked;
-      }
-
-      return !!config.enabled;
-    }
-
     function sectionSummary(section) {
       var parts = [];
       if (section.kicker) {
@@ -413,96 +405,11 @@
       return parts.join(' · ');
     }
 
-    function saveRouteStations() {
-      if (!routeConfig) {
-        return Promise.resolve(null);
-      }
-
-      if (!routeConfig.restRoot || !config.nonce || !postId) {
-        return Promise.reject(new Error('route save unavailable'));
-      }
-
-      return window.fetch(routeConfig.restRoot.replace(/\/$/, '') + '/posts/' + encodeURIComponent(String(postId)) + '/places', {
-        method: 'POST',
-        credentials: 'same-origin',
-        headers: {
-          'Content-Type': 'application/json',
-          'X-WP-Nonce': config.nonce
-        },
-        body: JSON.stringify({ relations: buildRouteRelationsPayload() })
-      }).then(function (response) {
-        if (!response.ok) {
-          throw new Error('route save failed');
-        }
-        return response.json();
-      }).then(function (response) {
-        if (response && Array.isArray(response.relations)) {
-          routeRelations = response.relations.map(normalizeRouteRelation);
-          syncRouteHiddenFields();
-        }
-        return response;
-      });
-    }
-
-    function saveDocument() {
-      updateField();
-      if (!config.restRoot || !config.nonce || !postId || !format) {
-        return;
-      }
-
-      setStatus((config.strings && config.strings.savingPermanent) || 'JSON-Komposition wird gespeichert...');
-      saveRouteStations().then(function () {
-        return window.fetch(config.restRoot.replace(/\/$/, '') + '/document/' + encodeURIComponent(String(postId)) + '/' + encodeURIComponent(format) + '/save', {
-          method: 'POST',
-          credentials: 'same-origin',
-          headers: {
-            'Content-Type': 'application/json',
-            'X-WP-Nonce': config.nonce
-          },
-          body: JSON.stringify({ document: documentState, enabled: currentEnabled() })
-        });
-      }).then(function (response) {
-        if (!response.ok) {
-          throw new Error('save failed');
-        }
-        return response.json();
-      }).then(function (response) {
-        if (response && response.document) {
-          documentState = response.document;
-          render();
-        }
-        setStatus((config.strings && config.strings.savedPermanent) || 'Struktur gespeichert.');
-        window.alert((config.strings && config.strings.savedPermanentNotice) || 'Struktur gespeichert. Die sichtbaren Ausstellungsabschnitte sind damit aktualisiert. Den WordPress-Button "Aktualisieren" nur verwenden, wenn Titel, Status, Slug oder andere WordPress-Felder geändert wurden.');
-      }).catch(function () {
-        setStatus((config.strings && config.strings.error) || 'Speichern fehlgeschlagen.');
-      });
-    }
-
     function scheduleAutosave() {
       updateField();
       window.clearTimeout(autosaveTimer);
       autosaveTimer = window.setTimeout(function () {
-        if (!config.restRoot || !config.nonce || !postId || !format) {
-          return;
-        }
-
-        setStatus((config.strings && config.strings.saving) || 'Automatische Sicherung...');
-        window.fetch(config.restRoot.replace(/\/$/, '') + '/document/' + encodeURIComponent(String(postId)) + '/' + encodeURIComponent(format) + '/autosave', {
-          method: 'POST',
-          credentials: 'same-origin',
-          headers: {
-            'Content-Type': 'application/json',
-            'X-WP-Nonce': config.nonce
-          },
-          body: JSON.stringify({ document: documentState })
-        }).then(function (response) {
-          if (!response.ok) {
-            throw new Error('autosave failed');
-          }
-          setStatus((config.strings && config.strings.saved) || 'Automatisch gesichert.');
-        }).catch(function () {
-          setStatus((config.strings && config.strings.error) || 'Automatische Sicherung fehlgeschlagen.');
-        });
+        setStatus((config.strings && config.strings.pendingUpdate) || 'Aenderungen werden mit WordPress-Aktualisieren gespeichert.');
       }, 1200);
     }
 
@@ -614,9 +521,6 @@
       var head = createElement('div', 'iss-editorial-stage__head');
       var heading = createElement('div', 'iss-editorial-stage__title', 'Komposition');
       var tools = createElement('div', 'iss-editorial-stage__tools');
-      var save = createElement('button', 'button iss-editorial-save', (config.strings && config.strings.savePermanent) || 'Speichern');
-      save.type = 'button';
-      save.addEventListener('click', saveDocument);
       head.appendChild(heading);
       if (skins.length > 1) {
         tools.appendChild(renderSkinControl());
@@ -624,7 +528,6 @@
       if (format === 'projekt') {
         tools.appendChild(renderRailFeatureControl());
       }
-      tools.appendChild(save);
       head.appendChild(tools);
       stage.appendChild(head);
 

@@ -78,6 +78,15 @@ add_action('add_meta_boxes', function () {
         'side',
         'high'
     );
+
+    add_meta_box(
+        'iss-content-model-video-transcript-json',
+        __('Transkriptstruktur', 'iss-content-model'),
+        'iss_content_model_render_video_transcript_json_box',
+        ISS_CONTENT_MODEL_VIDEO_POST_TYPE,
+        'normal',
+        'high'
+    );
 });
 
 function iss_content_model_acf_handles_ausstellung_meta(): bool

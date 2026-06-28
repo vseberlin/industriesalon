@@ -88,14 +88,50 @@ function iss_content_model_get_video_embed_url(string $url): string
 
 function iss_content_model_get_video_transcript_html(int $post_id): string
 {
+    if (function_exists('iss_content_model_get_video_transcript_document') && function_exists('iss_content_model_render_video_transcript_document_html')) {
+        $document = iss_content_model_get_video_transcript_document($post_id, false);
+        $document_html = iss_content_model_render_video_transcript_document_html($document);
+        if ($document_html !== '') {
+            return $document_html;
+        }
+    }
+
     $content_html = apply_filters('the_content', (string) get_post_field('post_content', $post_id));
     return trim(wp_strip_all_tags($content_html)) === '' ? '' : $content_html;
 }
 
 function iss_content_model_get_video_chapter_rows(string $body_content, string $transcript_html): array
 {
-    if (trim(wp_strip_all_tags($body_content)) === '') {
+    if (trim(wp_strip_all_tags($body_content . ' ' . $transcript_html)) === '') {
         return [];
+    }
+
+    if (preg_match_all('/<p[^>]*>\s*<a class="iss-video-timecode" href="#[^"]+" data-video-seek="\d+">(.*?)<\/a>\s*(.*?)<\/p>/is', $transcript_html, $matches, PREG_SET_ORDER)) {
+        $rows = [];
+        foreach ($matches as $match) {
+            $label = trim(preg_replace('/\s+/', ' ', wp_strip_all_tags((string) $match[1])));
+            if (!preg_match('/(\d{1,2}:\d{2}(?::\d{2})?)/', $label, $label_match)) {
+                continue;
+            }
+
+            $text = trim(preg_replace('/\s+/', ' ', wp_strip_all_tags((string) $match[2])));
+            if ($text === '') {
+                continue;
+            }
+
+            $rows[] = [
+                'label' => (string) $label_match[1],
+                'text' => wp_trim_words($text, 22, ' ...'),
+            ];
+
+            if (count($rows) >= 5) {
+                break;
+            }
+        }
+
+        if ($rows) {
+            return $rows;
+        }
     }
 
     $chapter_source = $transcript_html !== '' ? $transcript_html : wpautop($body_content);
@@ -350,11 +386,11 @@ function iss_content_model_get_video_cards(): array
         $year_label = trim((string) get_post_meta($post->ID, 'iss_video_year', true));
         $original_date = trim((string) get_post_meta($post->ID, 'iss_video_original_date', true));
         $body_content = trim((string) get_post_field('post_content', $post->ID));
-        $has_body_content = $body_content !== '';
         $transcript_html = iss_content_model_get_video_transcript_html((int) $post->ID);
+        $has_transcript_content = trim(wp_strip_all_tags($transcript_html)) !== '';
         $transcript_status = iss_content_model_resolve_video_transcript_status(
             (string) get_post_meta($post->ID, 'iss_video_transcript_status', true),
-            $has_body_content
+            $has_transcript_content
         );
         $excerpt = has_excerpt($post) ? get_the_excerpt($post) : wp_trim_words(wp_strip_all_tags((string) $post->post_content), 28);
         $terms = get_the_terms($post, ISS_CONTENT_MODEL_VIDEO_CATEGORY_TAXONOMY);
@@ -393,11 +429,11 @@ function iss_content_model_get_video_cards(): array
             'language' => trim((string) get_post_meta($post->ID, 'iss_video_language', true)),
             'rights' => trim((string) get_post_meta($post->ID, 'iss_video_rights', true)),
             'featured' => !empty(get_post_meta($post->ID, 'iss_video_featured', true)),
-            'has_transcript' => $has_body_content,
+            'has_transcript' => $has_transcript_content,
             'transcript_status' => $transcript_status,
-            'transcript_status_label' => iss_content_model_get_video_transcript_status_label($transcript_status, $has_body_content),
+            'transcript_status_label' => iss_content_model_get_video_transcript_status_label($transcript_status, $has_transcript_content),
             'transcript_source' => trim((string) get_post_meta($post->ID, 'iss_video_transcript_source', true)),
-            'transcript_link_label' => iss_content_model_get_video_transcript_link_label($transcript_status, $has_body_content),
+            'transcript_link_label' => iss_content_model_get_video_transcript_link_label($transcript_status, $has_transcript_content),
             'transcript_html' => $transcript_html,
             'chapters' => iss_content_model_get_video_chapter_rows($body_content, $transcript_html),
             'embed_url' => esc_url(iss_content_model_get_video_embed_url($video_url)),
@@ -1170,7 +1206,7 @@ function iss_content_model_render_video_transcript_block($attributes = [], $cont
         return '';
     }
 
-    $content_html = apply_filters('the_content', (string) get_post_field('post_content', $post_id));
+    $content_html = iss_content_model_get_video_transcript_html($post_id);
     if (trim(wp_strip_all_tags($content_html)) === '') {
         return '';
     }

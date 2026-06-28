@@ -284,7 +284,6 @@ function iss_editorial_enqueue_admin_assets(string $hook): void
             'iss-editorial-admin',
             'issEditorialAdmin',
             [
-                'restRoot' => esc_url_raw(rest_url('iss-editorial/v1')),
                 'archiveRestRoot' => function_exists('iss_wf_import_archivset_rest_namespace')
                     ? esc_url_raw(rest_url(iss_wf_import_archivset_rest_namespace()))
                     : '',
@@ -298,13 +297,7 @@ function iss_editorial_enqueue_admin_assets(string $hook): void
                 'skins' => iss_editorial_get_format_skins((string) $format['slug']),
                 'routeStations' => $route_config,
                 'strings' => [
-                    'saved' => __('Automatisch gesichert.', 'iss-editorial'),
-                    'saving' => __('Automatische Sicherung...', 'iss-editorial'),
-                    'error' => __('Automatische Sicherung fehlgeschlagen.', 'iss-editorial'),
-                    'savedPermanent' => __('Struktur gespeichert.', 'iss-editorial'),
-                    'savingPermanent' => __('Struktur wird gespeichert...', 'iss-editorial'),
-                    'savePermanent' => __('Speichern', 'iss-editorial'),
-                    'savedPermanentNotice' => __('Struktur gespeichert. Die sichtbaren Ausstellungsabschnitte sind damit aktualisiert. Den WordPress-Button "Aktualisieren" nur verwenden, wenn Titel, Status, Slug oder andere WordPress-Felder geändert wurden.', 'iss-editorial'),
+                    'pendingUpdate' => __('Änderungen werden mit WordPress-Aktualisieren gespeichert.', 'iss-editorial'),
                 ],
             ]
         );
