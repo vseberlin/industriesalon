@@ -550,6 +550,8 @@ function iss_relations_graph_build_place_relation_rows(array $relations): array
             'weight' => (int) ($relation['weight'] ?? 0),
             'position' => $index,
             'is_primary' => $role === 'primary',
+            'source_field' => 'iss_relations',
+            'confidence' => 100,
             'is_public' => true,
         ];
     }
@@ -672,7 +674,8 @@ function iss_relations_graph_read_post_relations(int $post_id, array $stored_rel
     $service = iss_graph_get_service();
     $entity = $service->find_entity_by_post(iss_relations_graph_entity_kind_for_post($post), $post_id);
 
-    if (!$entity && ($stored_relations || $post->post_type === iss_relations_get_place_post_type())) {
+    $can_reconcile = !function_exists('iss_graph_can_reconcile_current_request') || iss_graph_can_reconcile_current_request();
+    if (!$entity && $can_reconcile && ($stored_relations || $post->post_type === iss_relations_get_place_post_type())) {
         $entity = iss_relations_sync_post_graph($post_id);
     }
 
@@ -681,7 +684,7 @@ function iss_relations_graph_read_post_relations(int $post_id, array $stored_rel
     }
 
     $rows = $service->get_relations_for_entity((int) $entity['id'], 'place');
-    if (!$rows && $stored_relations) {
+    if (!$rows && $stored_relations && $can_reconcile) {
         $entity = iss_relations_sync_post_graph($post_id);
         if ($entity) {
             $rows = $service->get_relations_for_entity((int) $entity['id'], 'place');

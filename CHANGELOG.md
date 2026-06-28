@@ -6,6 +6,22 @@ be recovered from Git history.
 
 ## 2026-06-28
 
+- Implemented the first `iss-graph` related-graph autonomy slice: relation
+  provenance/status columns, relation backfill/dedupe/audit CLI commands, dirty
+  queue and bounded reconcile CLI, autonomy health and fixture checks, soft
+  editorial-signal removal plus export/import, no-frontend-repair guards,
+  harvest-critical Veranstaltung venue warnings, and promotion list-table
+  status/filter/disable actions. Local Docker verification backfilled 4,796
+  relation rows and deprecated four duplicate manual edges so relation
+  integrity health reports zero missing provenance, orphan edges, and active
+  duplicate edge keys.
+- Expanded `docs/project/related-graph-autonomy-sow.md` with the editor-facing
+  contract, list-table promotion workflow, audit/reversibility expectations,
+  dirty-queue/cron autonomy gate, observability/health requirements, scheduler
+  independence, harvest-critical validation, relation provenance/status
+  guardrails, dry-run/rollback expectations, fixture coverage, performance
+  limits, acceptance drills, and rebuild/recovery criteria for derived relation
+  state.
 - Added `docs/project/related-graph-autonomy-sow.md` to record the relatedness
   direction: public related places/content must be autonomously derivable
   without admin presence, manual relations are correction/curation rather than

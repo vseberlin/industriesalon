@@ -225,6 +225,8 @@ function iss_graph_collect_public_content_native_place_rows(WP_Post $post): arra
         'weight' => 100,
         'position' => 0,
         'is_primary' => true,
+        'source_field' => 'iss_primary_place_id',
+        'confidence' => 100,
         'is_public' => true,
     ]];
 }
@@ -377,6 +379,8 @@ function iss_graph_sanitize_content_relation_rows(array $rows, string $target_ki
             'relation_label' => (string) ($options[$relation_type] ?? $relation_type),
             'valid_from_year' => $service->normalize_year($row['valid_from_year'] ?? null),
             'valid_to_year' => $service->normalize_year($row['valid_to_year'] ?? null),
+            'source_field' => $target_kind === 'person' ? 'iss_graph_content_person_rows' : 'iss_graph_content_organization_rows',
+            'confidence' => 100,
             'is_public' => !empty($row['is_public']),
             'position' => $index,
         ];
@@ -497,7 +501,7 @@ function iss_graph_get_content_entity_relations(int $post_id, string $target_kin
         ? iss_graph_get_entity_kind_for_post_type((string) $post->post_type)
         : sanitize_key((string) $post->post_type);
     $entity = $service->find_entity_by_post($entity_kind, $post_id);
-    if (!$entity) {
+    if (!$entity && function_exists('iss_graph_can_reconcile_current_request') && iss_graph_can_reconcile_current_request()) {
         $entity = iss_graph_sync_public_content_entity($post_id);
     }
 
@@ -694,6 +698,27 @@ function iss_graph_add_public_content_relation_meta_boxes(): void
     }
 }
 add_action('add_meta_boxes', 'iss_graph_add_public_content_relation_meta_boxes');
+
+function iss_graph_warn_missing_harvest_critical_content_fields(): void
+{
+    $screen = get_current_screen();
+    if (!$screen || (string) $screen->base !== 'post' || (string) $screen->post_type !== 'veranstaltung') {
+        return;
+    }
+
+    $post_id = absint($_GET['post'] ?? 0); // phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Read-only editor notice.
+    if ($post_id <= 0 || !current_user_can('edit_post', $post_id)) {
+        return;
+    }
+
+    $place_id = absint(get_post_meta($post_id, 'iss_primary_place_id', true));
+    if ($place_id > 0) {
+        return;
+    }
+
+    echo '<div class="notice notice-warning"><p>' . esc_html__('Diese Veranstaltung hat keinen Veranstaltungsort. Automatische verwandte Orte koennen dadurch nicht geerntet werden.', 'iss-graph') . '</p></div>';
+}
+add_action('admin_notices', 'iss_graph_warn_missing_harvest_critical_content_fields');
 
 function iss_graph_admin_enqueue_content_relation_assets(string $hook): void
 {

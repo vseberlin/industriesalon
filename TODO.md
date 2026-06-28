@@ -4,6 +4,12 @@ Immediate executable work only. Larger future programs live in `docs/project/bac
 
 ## Next
 
+- Related graph autonomy ops: after deploying the `iss-graph` autonomy slice,
+  run `wp iss-graph migrate --skip-sync`, then configure a monitored external
+  scheduler entry for `wp iss-graph reconcile --batch-size=50 --max-runtime=30`
+  on production. Do not treat page-request WP-Cron as the unattended healing
+  mechanism; verify with `wp iss-graph autonomy-health --format=json` and
+  `wp iss-graph drift-check --checks=relation-integrity --limit=25`.
 - Graph/native relation coverage: Veranstaltung venue is now harvested from
   native `iss_primary_place_id` into `content_native` graph edges. Add
   CPT-specific native person/organization harvesters only where a real

@@ -423,6 +423,8 @@ function iss_graph_sanitize_register_relation_rows(array $rows, string $target_k
             'relation_label' => (string) ($options[$relation_type] ?? $relation_type),
             'valid_from_year' => $service->normalize_year($row['valid_from_year'] ?? null),
             'valid_to_year' => $service->normalize_year($row['valid_to_year'] ?? null),
+            'source_field' => $target_kind === 'person' ? 'iss_graph_register_person_rows' : 'iss_graph_register_organization_rows',
+            'confidence' => 100,
             'is_public' => !empty($row['is_public']),
             'position' => $index,
         ];

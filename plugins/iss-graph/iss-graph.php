@@ -10,10 +10,10 @@ if (!defined('ABSPATH')) {
     exit;
 }
 
-define('ISS_GRAPH_VERSION', '0.1.3');
+define('ISS_GRAPH_VERSION', '0.1.4');
 define('ISS_GRAPH_PATH', plugin_dir_path(__FILE__));
 define('ISS_GRAPH_URL', plugin_dir_url(__FILE__));
-define('ISS_GRAPH_SCHEMA_VERSION', '2026-06-07-v2');
+define('ISS_GRAPH_SCHEMA_VERSION', '2026-06-28-autonomy-v1');
 define('ISS_GRAPH_SCHEMA_OPTION', 'iss_graph_schema_version');
 define('ISS_GRAPH_REGISTER_BACKFILL_VERSION', '2026-06-06-register-v2');
 define('ISS_GRAPH_REGISTER_BACKFILL_OPTION', 'iss_graph_register_backfill_version');
@@ -28,6 +28,7 @@ define('ISS_GRAPH_ALIAS_BACKFILL_OPTION', 'iss_graph_alias_backfill_version');
 define('ISS_GRAPH_SEARCH_BACKFILL_VERSION', '2026-06-06-search-v3');
 define('ISS_GRAPH_SEARCH_BACKFILL_OPTION', 'iss_graph_search_backfill_version');
 define('ISS_GRAPH_EDITORIAL_SIGNALS_CAPABILITY', 'edit_graph_editorial_signals');
+define('ISS_GRAPH_ADVANCED_EDITORIAL_SIGNALS_CAPABILITY', 'manage_graph_editorial_signals');
 
 require_once ISS_GRAPH_PATH . 'includes/entity-kinds.php';
 require_once ISS_GRAPH_PATH . 'includes/core.php';
@@ -59,19 +60,40 @@ add_action('admin_init', 'iss_graph_ensure_editorial_signals_capability', 5);
 
 function iss_graph_ensure_editorial_signals_capability(): void
 {
-    $role = get_role('administrator');
-    if (!$role instanceof WP_Role) {
-        return;
+    $admin_role = get_role('administrator');
+    if ($admin_role instanceof WP_Role) {
+        if (!$admin_role->has_cap(ISS_GRAPH_EDITORIAL_SIGNALS_CAPABILITY)) {
+            $admin_role->add_cap(ISS_GRAPH_EDITORIAL_SIGNALS_CAPABILITY);
+        }
+
+        if (!$admin_role->has_cap(ISS_GRAPH_ADVANCED_EDITORIAL_SIGNALS_CAPABILITY)) {
+            $admin_role->add_cap(ISS_GRAPH_ADVANCED_EDITORIAL_SIGNALS_CAPABILITY);
+        }
     }
 
-    if (!$role->has_cap(ISS_GRAPH_EDITORIAL_SIGNALS_CAPABILITY)) {
-        $role->add_cap(ISS_GRAPH_EDITORIAL_SIGNALS_CAPABILITY);
+    $editor_role = get_role('editor');
+    if ($editor_role instanceof WP_Role && !$editor_role->has_cap(ISS_GRAPH_EDITORIAL_SIGNALS_CAPABILITY)) {
+        $editor_role->add_cap(ISS_GRAPH_EDITORIAL_SIGNALS_CAPABILITY);
     }
 }
 
 function iss_graph_current_user_can_edit_editorial_signals(int $context_post_id = 0): bool
 {
     $can_manage_signals = current_user_can(ISS_GRAPH_EDITORIAL_SIGNALS_CAPABILITY) || current_user_can('manage_options');
+    if (!$can_manage_signals) {
+        return false;
+    }
+
+    if ($context_post_id <= 0) {
+        return true;
+    }
+
+    return current_user_can('edit_post', $context_post_id);
+}
+
+function iss_graph_current_user_can_manage_editorial_signals(int $context_post_id = 0): bool
+{
+    $can_manage_signals = current_user_can(ISS_GRAPH_ADVANCED_EDITORIAL_SIGNALS_CAPABILITY) || current_user_can('manage_options');
     if (!$can_manage_signals) {
         return false;
     }

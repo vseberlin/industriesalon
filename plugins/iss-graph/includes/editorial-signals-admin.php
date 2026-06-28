@@ -422,6 +422,10 @@ function iss_graph_add_editorial_signal_meta_boxes(): void
         );
     }
 
+    if (!function_exists('iss_graph_current_user_can_manage_editorial_signals') || !iss_graph_current_user_can_manage_editorial_signals()) {
+        return;
+    }
+
     foreach (iss_graph_get_search_signal_post_types() as $post_type) {
         add_meta_box(
             'iss-graph-search-signal',
@@ -670,7 +674,7 @@ function iss_graph_save_search_signal_meta_box(int $post_id, WP_Post $post): voi
         return;
     }
 
-    if (!iss_graph_current_user_can_edit_editorial_signals($post_id)) {
+    if (!function_exists('iss_graph_current_user_can_manage_editorial_signals') || !iss_graph_current_user_can_manage_editorial_signals($post_id)) {
         return;
     }
 
@@ -720,7 +724,7 @@ function iss_graph_save_availability_signal_meta_box(int $post_id, WP_Post $post
         return;
     }
 
-    if (!iss_graph_current_user_can_edit_editorial_signals($post_id)) {
+    if (!function_exists('iss_graph_current_user_can_manage_editorial_signals') || !iss_graph_current_user_can_manage_editorial_signals($post_id)) {
         return;
     }
 
@@ -825,6 +829,169 @@ function iss_graph_filter_related_promotion_admin_query(WP_Query $query): void
     $query->set('post__in', $post_ids ?: [0]);
 }
 add_action('pre_get_posts', 'iss_graph_filter_related_promotion_admin_query');
+
+function iss_graph_register_related_promotion_list_table_hooks(): void
+{
+    foreach (iss_graph_get_related_promotion_post_types() as $post_type) {
+        add_filter("manage_{$post_type}_posts_columns", 'iss_graph_add_related_promotion_column');
+        add_action("manage_{$post_type}_posts_custom_column", 'iss_graph_render_related_promotion_column', 10, 2);
+        add_filter("bulk_actions-edit-{$post_type}", 'iss_graph_add_related_promotion_bulk_action');
+        add_filter("handle_bulk_actions-edit-{$post_type}", 'iss_graph_handle_related_promotion_bulk_action', 10, 3);
+    }
+}
+add_action('admin_init', 'iss_graph_register_related_promotion_list_table_hooks');
+
+function iss_graph_add_related_promotion_column(array $columns): array
+{
+    if (!iss_graph_current_user_can_edit_editorial_signals()) {
+        return $columns;
+    }
+
+    $next = [];
+    foreach ($columns as $key => $label) {
+        $next[$key] = $label;
+        if ($key === 'title') {
+            $next['iss_graph_related_promotion'] = __('Vorne', 'iss-graph');
+        }
+    }
+
+    if (!isset($next['iss_graph_related_promotion'])) {
+        $next['iss_graph_related_promotion'] = __('Vorne', 'iss-graph');
+    }
+
+    return $next;
+}
+
+function iss_graph_render_related_promotion_column(string $column, int $post_id): void
+{
+    if ($column !== 'iss_graph_related_promotion') {
+        return;
+    }
+
+    if (!iss_graph_current_user_can_edit_editorial_signals($post_id)) {
+        echo '&mdash;';
+        return;
+    }
+
+    $signal = iss_graph_get_related_promotion_signal($post_id, true);
+    if (!$signal) {
+        echo '<span aria-hidden="true">&mdash;</span><span class="screen-reader-text">' . esc_html__('Nicht vorne gezeigt', 'iss-graph') . '</span>';
+        return;
+    }
+
+    $expires_at = trim((string) ($signal['expires_at'] ?? ''));
+    echo '<strong>' . esc_html__('Vorne gezeigt', 'iss-graph') . '</strong>';
+    if ($expires_at !== '') {
+        echo '<br><span class="description">' . esc_html(sprintf(__('bis %s', 'iss-graph'), mysql2date(get_option('date_format'), $expires_at))) . '</span>';
+    }
+}
+
+function iss_graph_add_related_promotion_bulk_action(array $actions): array
+{
+    if (!iss_graph_current_user_can_edit_editorial_signals()) {
+        return $actions;
+    }
+
+    $actions['iss_graph_disable_related_promotion'] = __('Vorne zeigen ausschalten', 'iss-graph');
+
+    return $actions;
+}
+
+function iss_graph_handle_related_promotion_bulk_action(string $redirect_url, string $action, array $post_ids): string
+{
+    if ($action !== 'iss_graph_disable_related_promotion') {
+        return $redirect_url;
+    }
+
+    $changed = 0;
+    foreach (array_map('absint', $post_ids) as $post_id) {
+        if ($post_id <= 0 || !iss_graph_current_user_can_edit_editorial_signals($post_id)) {
+            continue;
+        }
+
+        if (iss_graph_remove_editorial_signal_for_post($post_id, $post_id, 'related')) {
+            $changed++;
+        }
+    }
+
+    return add_query_arg('iss_graph_related_promotion_disabled', $changed, $redirect_url);
+}
+
+function iss_graph_add_related_promotion_row_action(array $actions, WP_Post $post): array
+{
+    if (!iss_graph_is_related_promotion_post_type((string) $post->post_type)) {
+        return $actions;
+    }
+
+    if (!iss_graph_current_user_can_edit_editorial_signals((int) $post->ID)) {
+        return $actions;
+    }
+
+    if (!iss_graph_get_related_promotion_signal((int) $post->ID, true)) {
+        return $actions;
+    }
+
+    $url = wp_nonce_url(
+        add_query_arg([
+            'action' => 'iss_graph_disable_related_promotion',
+            'post_id' => (int) $post->ID,
+        ], admin_url('admin-post.php')),
+        'iss_graph_disable_related_promotion_' . (int) $post->ID
+    );
+    $actions['iss_graph_disable_related_promotion'] = sprintf(
+        '<a href="%s">%s</a>',
+        esc_url($url),
+        esc_html__('Vorne aus', 'iss-graph')
+    );
+
+    return $actions;
+}
+add_filter('post_row_actions', 'iss_graph_add_related_promotion_row_action', 10, 2);
+add_filter('page_row_actions', 'iss_graph_add_related_promotion_row_action', 10, 2);
+
+function iss_graph_disable_related_promotion_admin_action(): void
+{
+    $post_id = absint($_GET['post_id'] ?? 0); // phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Nonce is checked below before mutation.
+    if ($post_id <= 0) {
+        wp_die(esc_html__('Ungueltiger Beitrag.', 'iss-graph'), '', ['response' => 400]);
+    }
+
+    check_admin_referer('iss_graph_disable_related_promotion_' . $post_id);
+
+    if (!iss_graph_current_user_can_edit_editorial_signals($post_id)) {
+        wp_die(esc_html__('Nicht erlaubt.', 'iss-graph'), '', ['response' => 403]);
+    }
+
+    iss_graph_remove_editorial_signal_for_post($post_id, $post_id, 'related');
+
+    $redirect = wp_get_referer();
+    if (!$redirect) {
+        $redirect = get_edit_post_link($post_id, 'raw');
+    }
+
+    wp_safe_redirect(add_query_arg('iss_graph_related_promotion_disabled', 1, $redirect));
+    exit;
+}
+add_action('admin_post_iss_graph_disable_related_promotion', 'iss_graph_disable_related_promotion_admin_action');
+
+function iss_graph_related_promotion_admin_notice(): void
+{
+    // phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Read-only admin notice value.
+    if (!isset($_GET['iss_graph_related_promotion_disabled'])) {
+        return;
+    }
+
+    $count = absint($_GET['iss_graph_related_promotion_disabled']); // phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Read-only admin notice value.
+    if ($count <= 0) {
+        return;
+    }
+
+    printf(
+        '<div class="notice notice-success is-dismissible"><p>%s</p></div>',
+        esc_html(sprintf(_n('%d Inhalt wird nicht mehr vorne gezeigt.', '%d Inhalte werden nicht mehr vorne gezeigt.', $count, 'iss-graph'), $count))
+    );
+}
+add_action('admin_notices', 'iss_graph_related_promotion_admin_notice');
 
 function iss_graph_admin_enqueue_editorial_signal_assets(string $hook): void
 {

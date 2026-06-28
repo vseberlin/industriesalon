@@ -82,6 +82,13 @@ final class ISS_Graph_Service
         return $wpdb->prefix . 'iss_graph_editorial_signals';
     }
 
+    public function get_dirty_queue_table_name(): string
+    {
+        global $wpdb;
+
+        return $wpdb->prefix . 'iss_graph_dirty_queue';
+    }
+
     public function maybe_install_schema(): void
     {
         $installed = (string) get_option(ISS_GRAPH_SCHEMA_OPTION, '');
@@ -89,7 +96,44 @@ final class ISS_Graph_Service
             return;
         }
 
-        $this->install_schema();
+        if (!$this->acquire_schema_install_lock()) {
+            return;
+        }
+
+        try {
+            $installed = (string) get_option(ISS_GRAPH_SCHEMA_OPTION, '');
+            if ($installed !== ISS_GRAPH_SCHEMA_VERSION) {
+                $this->install_schema();
+            }
+        } finally {
+            $this->release_schema_install_lock();
+        }
+    }
+
+    private function acquire_schema_install_lock(): bool
+    {
+        $now = time();
+        $payload = [
+            'created' => $now,
+            'expires' => $now + 120,
+        ];
+        if (add_option('iss_graph_schema_install_lock', $payload, '', 'no')) {
+            return true;
+        }
+
+        $lock = get_option('iss_graph_schema_install_lock', []);
+        if (is_array($lock) && isset($lock['expires']) && (int) $lock['expires'] > $now) {
+            return false;
+        }
+
+        delete_option('iss_graph_schema_install_lock');
+
+        return add_option('iss_graph_schema_install_lock', $payload, '', 'no');
+    }
+
+    private function release_schema_install_lock(): void
+    {
+        delete_option('iss_graph_schema_install_lock');
     }
 
     public function install_schema(): void
@@ -108,6 +152,7 @@ final class ISS_Graph_Service
         $organization_facts_table = $this->get_organization_facts_table_name();
         $evidence_table = $this->get_evidence_table_name();
         $editorial_signal_table = $this->get_editorial_signal_table_name();
+        $dirty_queue_table = $this->get_dirty_queue_table_name();
 
         $entity_sql = "CREATE TABLE {$entity_table} (
             id bigint(20) unsigned NOT NULL AUTO_INCREMENT,
@@ -193,6 +238,7 @@ final class ISS_Graph_Service
             relation_family varchar(100) NOT NULL DEFAULT '',
             relation_type varchar(100) NOT NULL DEFAULT '',
             relation_role varchar(100) NOT NULL DEFAULT '',
+            edge_key varchar(191) NOT NULL DEFAULT '',
             relation_label varchar(191) NOT NULL DEFAULT '',
             note text NOT NULL,
             weight int(11) NOT NULL DEFAULT 0,
@@ -202,6 +248,9 @@ final class ISS_Graph_Service
             valid_to_year smallint(6) DEFAULT NULL,
             source_system varchar(100) NOT NULL DEFAULT '',
             source_ref varchar(191) NOT NULL DEFAULT '',
+            source_field varchar(191) NOT NULL DEFAULT '',
+            relation_status varchar(50) NOT NULL DEFAULT 'derived',
+            confidence smallint(6) NOT NULL DEFAULT 0,
             is_public tinyint(1) NOT NULL DEFAULT 1,
             created_at datetime NOT NULL,
             updated_at datetime NOT NULL,
@@ -209,8 +258,11 @@ final class ISS_Graph_Service
             KEY from_lookup (from_entity_id),
             KEY to_lookup (to_entity_id),
             KEY family_lookup (from_entity_id, relation_family),
+            KEY edge_lookup (edge_key),
             KEY type_lookup (relation_type, relation_role),
             KEY source_lookup (source_system, source_ref),
+            KEY provenance_lookup (source_system, source_ref, source_field),
+            KEY status_lookup (relation_status),
             KEY public_lookup (from_entity_id, relation_family, is_public),
             KEY chronology (valid_from_year, valid_to_year)
         ) {$charset_collate};";
@@ -316,6 +368,26 @@ final class ISS_Graph_Service
             KEY expiry_lookup (status, expires_at)
         ) {$charset_collate};";
 
+        $dirty_queue_sql = "CREATE TABLE {$dirty_queue_table} (
+            id bigint(20) unsigned NOT NULL AUTO_INCREMENT,
+            target_post_id bigint(20) unsigned NOT NULL,
+            target_post_type varchar(100) NOT NULL DEFAULT '',
+            reason varchar(191) NOT NULL DEFAULT '',
+            source_system varchar(100) NOT NULL DEFAULT '',
+            status varchar(50) NOT NULL DEFAULT 'dirty',
+            attempts int(11) NOT NULL DEFAULT 0,
+            last_error text NOT NULL,
+            locked_at datetime DEFAULT NULL,
+            last_processed_at datetime DEFAULT NULL,
+            created_at datetime NOT NULL,
+            updated_at datetime NOT NULL,
+            PRIMARY KEY  (id),
+            UNIQUE KEY target_post (target_post_id),
+            KEY status_lookup (status),
+            KEY queue_order (status, updated_at),
+            KEY post_type_lookup (target_post_type)
+        ) {$charset_collate};";
+
         dbDelta($entity_sql);
         dbDelta($name_sql);
         dbDelta($identifier_sql);
@@ -325,6 +397,7 @@ final class ISS_Graph_Service
         dbDelta($organization_facts_sql);
         dbDelta($evidence_sql);
         dbDelta($editorial_signal_sql);
+        dbDelta($dirty_queue_sql);
         update_option(ISS_GRAPH_SCHEMA_OPTION, ISS_GRAPH_SCHEMA_VERSION, false);
     }
 
@@ -442,6 +515,60 @@ final class ISS_Graph_Service
         ];
 
         return isset($allowed[$status]) ? $status : 'accepted';
+    }
+
+    public function normalize_relation_status($value, string $source_system = ''): string
+    {
+        $status = str_replace('_', '-', sanitize_key((string) $value));
+        $allowed = [
+            'derived' => true,
+            'suggested' => true,
+            'accepted' => true,
+            'manual-pinned' => true,
+            'suppressed' => true,
+            'deprecated' => true,
+            'rejected' => true,
+        ];
+
+        if (isset($allowed[$status])) {
+            return $status;
+        }
+
+        return $this->default_relation_status($source_system);
+    }
+
+    public function default_relation_status(string $source_system = ''): string
+    {
+        $source_system = sanitize_key($source_system);
+        if ($source_system !== '' && strpos($source_system, 'admin') !== false) {
+            return 'accepted';
+        }
+
+        return 'derived';
+    }
+
+    public function build_relation_edge_key(
+        int $from_entity_id,
+        int $to_entity_id,
+        string $relation_family,
+        string $relation_type,
+        string $relation_role,
+        string $source_system,
+        string $source_ref,
+        string $source_field
+    ): string {
+        $parts = [
+            max(0, $from_entity_id),
+            max(0, $to_entity_id),
+            sanitize_key($relation_family),
+            sanitize_key($relation_type),
+            sanitize_key($relation_role),
+            sanitize_key($source_system),
+            sanitize_text_field($source_ref),
+            sanitize_text_field($source_field),
+        ];
+
+        return 'rel_' . substr(sha1(implode('|', array_map('strval', $parts))), 0, 40);
     }
 
     private function limit_string(string $value, int $limit): string
@@ -1734,17 +1861,22 @@ final class ISS_Graph_Service
 
         global $wpdb;
 
-        $deleted = $wpdb->delete(
+        $updated = $wpdb->update(
             $this->get_editorial_signal_table_name(),
+            [
+                'status' => 'inactive',
+                'updated_at' => current_time('mysql', true),
+            ],
             [
                 'context_post_id' => $context_post_id,
                 'target_post_id' => $target_post_id,
                 'surface' => $surface,
             ],
+            ['%s', '%s'],
             ['%d', '%d', '%s']
         );
 
-        return $deleted !== false;
+        return $updated !== false;
     }
 
     public function replace_entity_relations_for_source(int $from_entity_id, string $relation_family, string $source_system, array $rows, string $source_ref = ''): void
@@ -1785,14 +1917,36 @@ final class ISS_Graph_Service
                 continue;
             }
 
+            $relation_type = sanitize_key((string) ($row['relation_type'] ?? ''));
+            $relation_role = sanitize_key((string) ($row['relation_role'] ?? ''));
+            $source_field = sanitize_text_field((string) ($row['source_field'] ?? ''));
+            if ($source_field === '') {
+                $source_field = $relation_type !== '' ? $relation_type : $relation_family;
+            }
+            $source_field = $this->limit_string($source_field, 191);
+            $edge_key = sanitize_text_field((string) ($row['edge_key'] ?? ''));
+            if ($edge_key === '') {
+                $edge_key = $this->build_relation_edge_key(
+                    $from_entity_id,
+                    $to_entity_id,
+                    $relation_family,
+                    $relation_type,
+                    $relation_role,
+                    $source_system,
+                    $source_ref,
+                    $source_field
+                );
+            }
+
             $wpdb->insert(
                 $this->get_relation_table_name(),
                 [
                     'from_entity_id' => $from_entity_id,
                     'to_entity_id' => $to_entity_id,
                     'relation_family' => $relation_family,
-                    'relation_type' => sanitize_key((string) ($row['relation_type'] ?? '')),
-                    'relation_role' => sanitize_key((string) ($row['relation_role'] ?? '')),
+                    'relation_type' => $relation_type,
+                    'relation_role' => $relation_role,
+                    'edge_key' => $this->limit_string($edge_key, 191),
                     'relation_label' => sanitize_text_field((string) ($row['relation_label'] ?? '')),
                     'note' => sanitize_textarea_field((string) ($row['note'] ?? '')),
                     'weight' => (int) ($row['weight'] ?? 0),
@@ -1802,11 +1956,14 @@ final class ISS_Graph_Service
                     'valid_to_year' => $this->normalize_year($row['valid_to_year'] ?? null),
                     'source_system' => $source_system,
                     'source_ref' => $source_ref,
+                    'source_field' => $source_field,
+                    'relation_status' => $this->normalize_relation_status($row['relation_status'] ?? ($row['status'] ?? ''), $source_system),
+                    'confidence' => $this->normalize_confidence($row['confidence'] ?? 0),
                     'is_public' => $this->normalize_bool($row['is_public'] ?? true),
                     'created_at' => $timestamp,
                     'updated_at' => $timestamp,
                 ],
-                ['%d', '%d', '%s', '%s', '%s', '%s', '%s', '%d', '%d', '%d', '%d', '%d', '%s', '%s', '%d', '%s', '%s']
+                ['%d', '%d', '%s', '%s', '%s', '%s', '%s', '%s', '%d', '%d', '%d', '%d', '%d', '%s', '%s', '%s', '%s', '%d', '%d', '%s', '%s']
             );
         }
     }
@@ -1885,6 +2042,30 @@ final class ISS_Graph_Service
 
         if (!empty($args['public_only'])) {
             $where[] = 'r.is_public = 1';
+            if (empty($args['relation_status']) && empty($args['relation_statuses'])) {
+                $where[] = "r.relation_status IN ('derived', 'accepted', 'manual-pinned')";
+            }
+        }
+
+        $relation_statuses = $args['relation_statuses'] ?? ($args['relation_status'] ?? null);
+        if (is_string($relation_statuses)) {
+            $relation_statuses = array_filter(array_map('trim', explode(',', $relation_statuses)));
+        }
+        if (is_array($relation_statuses) && $relation_statuses) {
+            $normalized_statuses = [];
+            foreach ($relation_statuses as $status) {
+                $normalized = $this->normalize_relation_status($status);
+                if ($normalized !== '') {
+                    $normalized_statuses[] = $normalized;
+                }
+            }
+            $normalized_statuses = array_values(array_unique($normalized_statuses));
+            if ($normalized_statuses) {
+                $where[] = 'r.relation_status IN (' . implode(', ', array_fill(0, count($normalized_statuses), '%s')) . ')';
+                foreach ($normalized_statuses as $status) {
+                    $values[] = $status;
+                }
+            }
         }
 
         $limit = isset($args['limit']) ? max(1, min(500, (int) $args['limit'])) : 500;
@@ -1940,6 +2121,7 @@ final class ISS_Graph_Service
                 'relation_family' => (string) ($row['relation_family'] ?? ''),
                 'relation_type' => (string) ($row['relation_type'] ?? ''),
                 'relation_role' => (string) ($row['relation_role'] ?? ''),
+                'edge_key' => (string) ($row['edge_key'] ?? ''),
                 'relation_label' => (string) ($row['relation_label'] ?? ''),
                 'note' => (string) ($row['note'] ?? ''),
                 'weight' => (int) ($row['weight'] ?? 0),
@@ -1949,6 +2131,9 @@ final class ISS_Graph_Service
                 'valid_to_year' => isset($row['valid_to_year']) && $row['valid_to_year'] !== null ? (int) $row['valid_to_year'] : null,
                 'source_system' => (string) ($row['source_system'] ?? ''),
                 'source_ref' => (string) ($row['source_ref'] ?? ''),
+                'source_field' => (string) ($row['source_field'] ?? ''),
+                'relation_status' => (string) ($row['relation_status'] ?? ''),
+                'confidence' => (int) ($row['confidence'] ?? 0),
                 'is_public' => !empty($row['is_public']),
             ];
         }, $rows));
@@ -1985,6 +2170,30 @@ final class ISS_Graph_Service
 
         if (!empty($args['public_only'])) {
             $where[] = 'r.is_public = 1';
+            if (empty($args['relation_status']) && empty($args['relation_statuses'])) {
+                $where[] = "r.relation_status IN ('derived', 'accepted', 'manual-pinned')";
+            }
+        }
+
+        $relation_statuses = $args['relation_statuses'] ?? ($args['relation_status'] ?? null);
+        if (is_string($relation_statuses)) {
+            $relation_statuses = array_filter(array_map('trim', explode(',', $relation_statuses)));
+        }
+        if (is_array($relation_statuses) && $relation_statuses) {
+            $normalized_statuses = [];
+            foreach ($relation_statuses as $status) {
+                $normalized = $this->normalize_relation_status($status);
+                if ($normalized !== '') {
+                    $normalized_statuses[] = $normalized;
+                }
+            }
+            $normalized_statuses = array_values(array_unique($normalized_statuses));
+            if ($normalized_statuses) {
+                $where[] = 'r.relation_status IN (' . implode(', ', array_fill(0, count($normalized_statuses), '%s')) . ')';
+                foreach ($normalized_statuses as $status) {
+                    $values[] = $status;
+                }
+            }
         }
 
         $limit = isset($args['limit']) ? max(1, min(500, (int) $args['limit'])) : 500;
@@ -2040,6 +2249,7 @@ final class ISS_Graph_Service
                 'relation_family' => (string) ($row['relation_family'] ?? ''),
                 'relation_type' => (string) ($row['relation_type'] ?? ''),
                 'relation_role' => (string) ($row['relation_role'] ?? ''),
+                'edge_key' => (string) ($row['edge_key'] ?? ''),
                 'relation_label' => (string) ($row['relation_label'] ?? ''),
                 'note' => (string) ($row['note'] ?? ''),
                 'weight' => (int) ($row['weight'] ?? 0),
@@ -2049,6 +2259,9 @@ final class ISS_Graph_Service
                 'valid_to_year' => isset($row['valid_to_year']) && $row['valid_to_year'] !== null ? (int) $row['valid_to_year'] : null,
                 'source_system' => (string) ($row['source_system'] ?? ''),
                 'source_ref' => (string) ($row['source_ref'] ?? ''),
+                'source_field' => (string) ($row['source_field'] ?? ''),
+                'relation_status' => (string) ($row['relation_status'] ?? ''),
+                'confidence' => (int) ($row['confidence'] ?? 0),
                 'is_public' => !empty($row['is_public']),
             ];
         }, $rows));
@@ -2379,6 +2592,400 @@ final class ISS_Graph_Service
         $wpdb->delete($this->get_search_table_name(), ['target_post_id' => $post_id], ['%d']);
     }
 
+    public function mark_post_dirty(int $post_id, string $reason = '', string $source_system = 'iss_graph'): bool
+    {
+        $post_id = absint($post_id);
+        if ($post_id <= 0) {
+            return false;
+        }
+
+        if (!$this->table_exists($this->get_dirty_queue_table_name())) {
+            return false;
+        }
+
+        global $wpdb;
+
+        $post_type = sanitize_key((string) get_post_type($post_id));
+        $reason = $this->limit_string(sanitize_text_field($reason), 191);
+        $source_system = sanitize_key($source_system);
+        $timestamp = current_time('mysql', true);
+        $existing_id = (int) $wpdb->get_var(
+            $wpdb->prepare(
+                "SELECT id FROM {$this->get_dirty_queue_table_name()} WHERE target_post_id = %d",
+                $post_id
+            )
+        );
+
+        $data = [
+            'target_post_id' => $post_id,
+            'target_post_type' => $post_type,
+            'reason' => $reason,
+            'source_system' => $source_system,
+            'status' => 'dirty',
+            'last_error' => '',
+            'locked_at' => null,
+            'updated_at' => $timestamp,
+        ];
+        $formats = ['%d', '%s', '%s', '%s', '%s', '%s', '%s', '%s'];
+
+        if ($existing_id > 0) {
+            $updated = $wpdb->update(
+                $this->get_dirty_queue_table_name(),
+                $data,
+                ['id' => $existing_id],
+                $formats,
+                ['%d']
+            );
+
+            return $updated !== false;
+        }
+
+        $data['attempts'] = 0;
+        $data['created_at'] = $timestamp;
+        $data['last_processed_at'] = null;
+        $inserted = $wpdb->insert(
+            $this->get_dirty_queue_table_name(),
+            $data,
+            array_merge($formats, ['%d', '%s', '%s'])
+        );
+
+        return $inserted !== false;
+    }
+
+    public function get_dirty_queue_stats(): array
+    {
+        global $wpdb;
+
+        $table = $this->get_dirty_queue_table_name();
+        if (!$this->table_exists($table)) {
+            return [
+                'exists' => false,
+                'dirty' => 0,
+                'processing' => 0,
+                'dead' => 0,
+                'clean' => 0,
+                'oldest_dirty_at' => '',
+                'oldest_dirty_age_seconds' => 0,
+                'last_run' => get_option('iss_graph_dirty_queue_last_run', []),
+            ];
+        }
+
+        $counts = [
+            'dirty' => 0,
+            'processing' => 0,
+            'dead' => 0,
+            'clean' => 0,
+        ];
+        $rows = $wpdb->get_results("SELECT status, COUNT(*) AS count FROM {$table} GROUP BY status", ARRAY_A);
+        foreach (is_array($rows) ? $rows : [] as $row) {
+            $status = sanitize_key((string) ($row['status'] ?? ''));
+            if (isset($counts[$status])) {
+                $counts[$status] = (int) ($row['count'] ?? 0);
+            }
+        }
+
+        $oldest_dirty_at = (string) $wpdb->get_var("SELECT MIN(updated_at) FROM {$table} WHERE status = 'dirty'");
+        $oldest_age = 0;
+        if ($oldest_dirty_at !== '') {
+            $oldest_age = max(0, strtotime(current_time('mysql', true) . ' UTC') - strtotime($oldest_dirty_at . ' UTC'));
+        }
+
+        return array_merge([
+            'exists' => true,
+            'oldest_dirty_at' => $oldest_dirty_at,
+            'oldest_dirty_age_seconds' => $oldest_age,
+            'last_run' => get_option('iss_graph_dirty_queue_last_run', []),
+        ], $counts);
+    }
+
+    public function drain_dirty_queue(array $args = []): array
+    {
+        global $wpdb;
+
+        $table = $this->get_dirty_queue_table_name();
+        $batch_size = max(1, min(500, absint($args['batch_size'] ?? 50)));
+        $max_runtime = max(1, min(900, absint($args['max_runtime'] ?? 30)));
+        $max_attempts = max(1, min(20, absint($args['max_attempts'] ?? 3)));
+        $dry_run = !empty($args['dry_run']);
+        $started = microtime(true);
+        $deadline = $started + $max_runtime;
+        $timestamp = current_time('mysql', true);
+        $stats = [
+            'dry_run' => $dry_run,
+            'locked' => false,
+            'batch_size' => $batch_size,
+            'max_runtime' => $max_runtime,
+            'max_attempts' => $max_attempts,
+            'selected' => 0,
+            'processed' => 0,
+            'failed' => 0,
+            'dead' => 0,
+            'skipped' => 0,
+            'items' => [],
+            'duration_seconds' => 0.0,
+            'completed_at' => '',
+        ];
+
+        if (!$this->table_exists($table)) {
+            $stats['last_error'] = 'dirty_queue_table_missing';
+            return $stats;
+        }
+
+        $rows = $wpdb->get_results(
+            $wpdb->prepare(
+                "SELECT *
+                FROM {$table}
+                WHERE status = 'dirty'
+                ORDER BY updated_at ASC, id ASC
+                LIMIT %d",
+                $batch_size
+            ),
+            ARRAY_A
+        );
+        $rows = is_array($rows) ? $rows : [];
+        $stats['selected'] = count($rows);
+
+        if ($dry_run) {
+            foreach ($rows as $row) {
+                $stats['items'][] = [
+                    'id' => (int) ($row['id'] ?? 0),
+                    'post_id' => (int) ($row['target_post_id'] ?? 0),
+                    'post_type' => (string) ($row['target_post_type'] ?? ''),
+                    'reason' => (string) ($row['reason'] ?? ''),
+                    'attempts' => (int) ($row['attempts'] ?? 0),
+                    'would_reconcile' => true,
+                ];
+            }
+            $stats['duration_seconds'] = round(microtime(true) - $started, 4);
+            return $stats;
+        }
+
+        if (!$this->acquire_dirty_queue_lock($max_runtime + 60)) {
+            $stats['locked'] = true;
+            return $stats;
+        }
+
+        try {
+            foreach ($rows as $row) {
+                if (microtime(true) >= $deadline) {
+                    $stats['skipped']++;
+                    continue;
+                }
+
+                $queue_id = (int) ($row['id'] ?? 0);
+                $post_id = (int) ($row['target_post_id'] ?? 0);
+                $attempts = (int) ($row['attempts'] ?? 0) + 1;
+                $wpdb->update(
+                    $table,
+                    [
+                        'status' => 'processing',
+                        'attempts' => $attempts,
+                        'locked_at' => current_time('mysql', true),
+                        'updated_at' => current_time('mysql', true),
+                    ],
+                    ['id' => $queue_id],
+                    ['%s', '%d', '%s', '%s'],
+                    ['%d']
+                );
+
+                try {
+                    $result = function_exists('iss_graph_reconcile_post')
+                        ? iss_graph_reconcile_post($post_id)
+                        : ['status' => 'dead', 'message' => 'reconcile_function_missing'];
+                    $status = sanitize_key((string) ($result['status'] ?? ''));
+                    $message = sanitize_textarea_field((string) ($result['message'] ?? ''));
+
+                    if ($status === 'clean') {
+                        $wpdb->update(
+                            $table,
+                            [
+                                'status' => 'clean',
+                                'last_error' => '',
+                                'locked_at' => null,
+                                'last_processed_at' => current_time('mysql', true),
+                                'updated_at' => current_time('mysql', true),
+                            ],
+                            ['id' => $queue_id],
+                            ['%s', '%s', '%s', '%s', '%s'],
+                            ['%d']
+                        );
+                        $stats['processed']++;
+                        $stats['items'][] = ['post_id' => $post_id, 'status' => 'clean'];
+                        continue;
+                    }
+
+                    $next_status = $attempts >= $max_attempts ? 'dead' : 'dirty';
+                    $wpdb->update(
+                        $table,
+                        [
+                            'status' => $next_status,
+                            'last_error' => $message !== '' ? $message : 'reconcile_failed',
+                            'locked_at' => null,
+                            'updated_at' => current_time('mysql', true),
+                        ],
+                        ['id' => $queue_id],
+                        ['%s', '%s', '%s', '%s'],
+                        ['%d']
+                    );
+                    $stats['failed']++;
+                    if ($next_status === 'dead') {
+                        $stats['dead']++;
+                    }
+                    $stats['items'][] = ['post_id' => $post_id, 'status' => $next_status, 'message' => $message];
+                } catch (Throwable $throwable) {
+                    $next_status = $attempts >= $max_attempts ? 'dead' : 'dirty';
+                    $wpdb->update(
+                        $table,
+                        [
+                            'status' => $next_status,
+                            'last_error' => $throwable->getMessage(),
+                            'locked_at' => null,
+                            'updated_at' => current_time('mysql', true),
+                        ],
+                        ['id' => $queue_id],
+                        ['%s', '%s', '%s', '%s'],
+                        ['%d']
+                    );
+                    $stats['failed']++;
+                    if ($next_status === 'dead') {
+                        $stats['dead']++;
+                    }
+                    $stats['items'][] = ['post_id' => $post_id, 'status' => $next_status, 'message' => $throwable->getMessage()];
+                }
+            }
+        } finally {
+            $this->release_dirty_queue_lock();
+        }
+
+        $stats['duration_seconds'] = round(microtime(true) - $started, 4);
+        $stats['completed_at'] = current_time('mysql', true);
+        update_option('iss_graph_dirty_queue_last_run', $stats, false);
+
+        return $stats;
+    }
+
+    public function backfill_relation_autonomy_columns(array $args = []): array
+    {
+        global $wpdb;
+
+        $table = $this->get_relation_table_name();
+        $batch_size = max(1, min(5000, absint($args['batch_size'] ?? 500)));
+        $dry_run = !empty($args['dry_run']);
+        $stats = [
+            'dry_run' => $dry_run,
+            'selected' => 0,
+            'updated' => 0,
+            'items' => [],
+        ];
+
+        if (!$this->table_exists($table)) {
+            $stats['last_error'] = 'relation_table_missing';
+            return $stats;
+        }
+
+        $rows = $wpdb->get_results(
+            $wpdb->prepare(
+                "SELECT *
+                FROM {$table}
+                WHERE edge_key = ''
+                   OR source_field = ''
+                   OR relation_status = ''
+                   OR (source_system LIKE %s AND relation_status = 'derived')
+                ORDER BY id ASC
+                LIMIT %d",
+                '%' . $wpdb->esc_like('admin') . '%',
+                $batch_size
+            ),
+            ARRAY_A
+        );
+        $rows = is_array($rows) ? $rows : [];
+        $stats['selected'] = count($rows);
+
+        foreach ($rows as $row) {
+            $id = (int) ($row['id'] ?? 0);
+            $from_entity_id = (int) ($row['from_entity_id'] ?? 0);
+            $to_entity_id = (int) ($row['to_entity_id'] ?? 0);
+            $relation_family = sanitize_key((string) ($row['relation_family'] ?? ''));
+            $relation_type = sanitize_key((string) ($row['relation_type'] ?? ''));
+            $relation_role = sanitize_key((string) ($row['relation_role'] ?? ''));
+            $source_system = sanitize_key((string) ($row['source_system'] ?? ''));
+            $source_ref = sanitize_text_field((string) ($row['source_ref'] ?? ''));
+            $source_field = sanitize_text_field((string) ($row['source_field'] ?? ''));
+            if ($source_field === '') {
+                $source_field = $relation_type !== '' ? $relation_type : $relation_family;
+            }
+            $source_field = $this->limit_string($source_field, 191);
+            $stored_status = (string) ($row['relation_status'] ?? '');
+            $relation_status = strpos($source_system, 'admin') !== false && ($stored_status === '' || $stored_status === 'derived')
+                ? 'accepted'
+                : $this->normalize_relation_status($stored_status, $source_system);
+            $edge_key = sanitize_text_field((string) ($row['edge_key'] ?? ''));
+            if ($edge_key === '') {
+                $edge_key = $this->build_relation_edge_key(
+                    $from_entity_id,
+                    $to_entity_id,
+                    $relation_family,
+                    $relation_type,
+                    $relation_role,
+                    $source_system,
+                    $source_ref,
+                    $source_field
+                );
+            }
+
+            $item = [
+                'id' => $id,
+                'edge_key' => $edge_key,
+                'source_field' => $source_field,
+                'relation_status' => $relation_status,
+            ];
+            $stats['items'][] = $item;
+
+            if ($dry_run || $id <= 0) {
+                continue;
+            }
+
+            $updated = $wpdb->update(
+                $table,
+                [
+                    'edge_key' => $this->limit_string($edge_key, 191),
+                    'source_field' => $source_field,
+                    'relation_status' => $relation_status,
+                    'updated_at' => current_time('mysql', true),
+                ],
+                ['id' => $id],
+                ['%s', '%s', '%s', '%s'],
+                ['%d']
+            );
+            if ($updated !== false) {
+                $stats['updated']++;
+            }
+        }
+
+        return $stats;
+    }
+
+    private function acquire_dirty_queue_lock(int $ttl): bool
+    {
+        $now = time();
+        $lock = get_option('iss_graph_dirty_queue_lock', []);
+        if (is_array($lock) && isset($lock['expires']) && (int) $lock['expires'] > $now) {
+            return false;
+        }
+
+        update_option('iss_graph_dirty_queue_lock', [
+            'created' => $now,
+            'expires' => $now + max(60, $ttl),
+        ], false);
+
+        return true;
+    }
+
+    private function release_dirty_queue_lock(): void
+    {
+        delete_option('iss_graph_dirty_queue_lock');
+    }
+
     public function delete_entity_by_post(string $entity_kind, int $post_id): void
     {
         $entity = $this->find_entity_by_post($entity_kind, $post_id);
@@ -2484,6 +3091,10 @@ function iss_graph_get_or_create_entity_for_post(int $post_id, string $kind = ''
 
     if ($existing) {
         return $existing;
+    }
+
+    if (function_exists('iss_graph_can_reconcile_current_request') && !iss_graph_can_reconcile_current_request()) {
+        return null;
     }
 
     $post = get_post($post_id);
@@ -2601,6 +3212,136 @@ function iss_graph_remove_editorial_signal_for_post(int $context_post_id, int $t
 {
     return iss_graph_get_service()->remove_editorial_signal_for_post($context_post_id, $target_post_id, $surface);
 }
+
+function iss_graph_mark_post_dirty(int $post_id, string $reason = '', string $source_system = 'iss_graph'): bool
+{
+    return iss_graph_get_service()->mark_post_dirty($post_id, $reason, $source_system);
+}
+
+function iss_graph_get_dirty_queue_stats(): array
+{
+    return iss_graph_get_service()->get_dirty_queue_stats();
+}
+
+function iss_graph_drain_dirty_queue(array $args = []): array
+{
+    return iss_graph_get_service()->drain_dirty_queue($args);
+}
+
+function iss_graph_backfill_relation_autonomy_columns(array $args = []): array
+{
+    return iss_graph_get_service()->backfill_relation_autonomy_columns($args);
+}
+
+function iss_graph_can_reconcile_current_request(): bool
+{
+    if (defined('WP_CLI') && WP_CLI) {
+        return true;
+    }
+
+    if (function_exists('wp_doing_cron') && wp_doing_cron()) {
+        return true;
+    }
+
+    if (is_admin()) {
+        return true;
+    }
+
+    if (defined('REST_REQUEST') && REST_REQUEST) {
+        $method = strtoupper((string) ($_SERVER['REQUEST_METHOD'] ?? ''));
+        return $method !== 'GET' && $method !== 'HEAD';
+    }
+
+    return false;
+}
+
+function iss_graph_reconcile_post(int $post_id): array
+{
+    $post_id = absint($post_id);
+    if ($post_id <= 0) {
+        return ['status' => 'dead', 'message' => 'invalid_post_id'];
+    }
+
+    $post = get_post($post_id);
+    if (!$post instanceof WP_Post) {
+        return ['status' => 'clean', 'message' => 'post_missing'];
+    }
+
+    if (in_array((string) $post->post_status, ['auto-draft', 'trash'], true)) {
+        return ['status' => 'clean', 'message' => 'post_not_publicly_reconcilable'];
+    }
+
+    $post_type = sanitize_key((string) $post->post_type);
+    $register_post_type = function_exists('iss_graph_get_register_post_type')
+        ? iss_graph_get_register_post_type()
+        : (defined('ISS_REGISTER_POST_TYPE') ? sanitize_key((string) ISS_REGISTER_POST_TYPE) : 'register_place');
+    $archive_post_type = defined('ISS_WF_IMPORT_OBJECT_POST_TYPE') ? sanitize_key((string) ISS_WF_IMPORT_OBJECT_POST_TYPE) : 'archivobjekt';
+    $synced = false;
+
+    if ($post_type === $register_post_type && function_exists('iss_graph_sync_register_place_entity')) {
+        $synced = (bool) iss_graph_sync_register_place_entity($post_id);
+    } elseif ($post_type === $archive_post_type && function_exists('iss_graph_sync_archive_object_entity')) {
+        $synced = (bool) iss_graph_sync_archive_object_entity($post_id);
+    } elseif (function_exists('iss_graph_is_content_relation_post_type') && iss_graph_is_content_relation_post_type($post_type)) {
+        $synced = (bool) iss_graph_sync_public_content_entity($post_id);
+    } elseif (function_exists('iss_relations_is_supported_post_type') && iss_relations_is_supported_post_type($post_type) && function_exists('iss_relations_sync_post_graph')) {
+        $synced = (bool) iss_relations_sync_post_graph($post_id);
+    }
+
+    if (function_exists('iss_relations_sync_post_read_models')) {
+        iss_relations_sync_post_read_models($post_id);
+    }
+
+    if (function_exists('iss_graph_sync_public_search_post')) {
+        iss_graph_sync_public_search_post($post_id);
+    }
+
+    return [
+        'status' => 'clean',
+        'message' => $synced ? 'reconciled' : 'no_graph_projection_required',
+    ];
+}
+
+function iss_graph_post_type_affects_relatedness(string $post_type): bool
+{
+    $post_type = sanitize_key($post_type);
+    if ($post_type === '') {
+        return false;
+    }
+
+    $register_post_type = function_exists('iss_graph_get_register_post_type')
+        ? iss_graph_get_register_post_type()
+        : (defined('ISS_REGISTER_POST_TYPE') ? sanitize_key((string) ISS_REGISTER_POST_TYPE) : 'register_place');
+    $archive_post_type = defined('ISS_WF_IMPORT_OBJECT_POST_TYPE') ? sanitize_key((string) ISS_WF_IMPORT_OBJECT_POST_TYPE) : 'archivobjekt';
+
+    if ($post_type === $register_post_type || $post_type === $archive_post_type) {
+        return true;
+    }
+
+    if (function_exists('iss_graph_is_content_relation_post_type') && iss_graph_is_content_relation_post_type($post_type)) {
+        return true;
+    }
+
+    return function_exists('iss_relations_is_supported_post_type') && iss_relations_is_supported_post_type($post_type);
+}
+
+function iss_graph_mark_related_post_dirty_on_save(int $post_id, WP_Post $post): void
+{
+    if (defined('DOING_AUTOSAVE') && DOING_AUTOSAVE) {
+        return;
+    }
+
+    if (wp_is_post_revision($post_id) || wp_is_post_autosave($post_id)) {
+        return;
+    }
+
+    if (!iss_graph_post_type_affects_relatedness((string) $post->post_type)) {
+        return;
+    }
+
+    iss_graph_mark_post_dirty($post_id, 'post_save', 'wp_post');
+}
+add_action('save_post', 'iss_graph_mark_related_post_dirty_on_save', 8, 2);
 
 function iss_graph_replace_entity_projection(string $source_system, int $entity_id, array $payload): void
 {

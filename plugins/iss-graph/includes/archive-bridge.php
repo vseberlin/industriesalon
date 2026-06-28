@@ -370,6 +370,8 @@ function iss_graph_build_archive_object_organization_rows(int $object_post_id): 
         'to_entity_id' => (int) ($organization['id'] ?? 0),
         'relation_type' => 'institution',
         'relation_label' => 'Institution',
+        'source_field' => 'institution_name',
+        'confidence' => 90,
         'position' => 0,
         'is_public' => true,
     ]];
@@ -420,6 +422,8 @@ function iss_graph_build_archive_object_people_rows(array $projection): array
                 'relation_type' => $relation_type,
                 'relation_label' => sanitize_text_field((string) ($item['type'] ?? 'Organization')),
                 'note' => sanitize_textarea_field((string) ($item['note'] ?? '')),
+                'source_field' => 'people',
+                'confidence' => 80,
                 'position' => $organization_position++,
                 'is_public' => true,
             ];
@@ -449,6 +453,8 @@ function iss_graph_build_archive_object_people_rows(array $projection): array
             'relation_type' => sanitize_key((string) ($item['type'] ?? 'related')) ?: 'related',
             'relation_label' => sanitize_text_field((string) ($item['type'] ?? 'Person')),
             'note' => sanitize_textarea_field((string) ($item['note'] ?? '')),
+            'source_field' => 'people',
+            'confidence' => 80,
             'position' => $person_position++,
             'is_public' => true,
         ];
@@ -496,6 +502,8 @@ function iss_graph_build_archive_object_place_rows(array $projection): array
             'relation_type' => sanitize_key((string) ($item['role'] ?? 'related')) ?: 'related',
             'relation_label' => sanitize_text_field((string) ($item['label'] ?? '')),
             'weight' => (int) ($item['weight'] ?? 0),
+            'source_field' => 'local_places',
+            'confidence' => 100,
             'position' => $position++,
             'is_public' => true,
         ];
@@ -533,6 +541,8 @@ function iss_graph_build_archive_object_place_rows(array $projection): array
             'relation_type' => sanitize_key((string) ($item['type'] ?? 'related')) ?: 'related',
             'relation_label' => sanitize_text_field((string) ($item['type'] ?? 'Ort')),
             'note' => sanitize_textarea_field((string) ($item['note'] ?? '')),
+            'source_field' => 'places',
+            'confidence' => 80,
             'position' => $position++,
             'is_public' => true,
         ];
