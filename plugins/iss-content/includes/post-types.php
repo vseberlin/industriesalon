@@ -215,6 +215,21 @@ function iss_content_model_register_post_types() {
         'rewrite' => ['slug' => 'thema', 'with_front' => false],
     ]);
 
+    register_taxonomy(ISS_CONTENT_MODEL_VERANSTALTUNG_SEMANTIC_TAXONOMY, [ISS_CONTENT_MODEL_VERANSTALTUNG_POST_TYPE], [
+        'labels' => [
+            'name' => __('Veranstaltungsarten', 'iss-content-model'),
+            'singular_name' => __('Veranstaltungsart', 'iss-content-model'),
+            'menu_name' => __('Veranstaltungsarten', 'iss-content-model'),
+        ],
+        'public' => true,
+        'hierarchical' => false,
+        'show_ui' => false,
+        'show_admin_column' => false,
+        'show_in_rest' => true,
+        'rest_base' => ISS_CONTENT_MODEL_VERANSTALTUNG_SEMANTIC_TAXONOMY,
+        'rewrite' => ['slug' => 'veranstaltungsart', 'with_front' => false],
+    ]);
+
     register_taxonomy(ISS_CONTENT_MODEL_VIDEO_CATEGORY_TAXONOMY, [ISS_CONTENT_MODEL_VIDEO_POST_TYPE], [
         'labels' => [
             'name' => __('Videokategorien', 'iss-content-model'),
@@ -309,6 +324,16 @@ function iss_content_model_get_default_taxonomy_terms() {
             ['name' => __('Arbeits- und Sozialgeschichte', 'iss-content-model'), 'slug' => 'arbeits-und-sozialgeschichte'],
             ['name' => __('Quellen & Fundstücke', 'iss-content-model'), 'slug' => 'quellen-und-fundstuecke'],
             ['name' => __('Licht & Lampentechnik', 'iss-content-model'), 'slug' => 'licht-und-lampentechnik'],
+        ],
+        ISS_CONTENT_MODEL_VERANSTALTUNG_SEMANTIC_TAXONOMY => [
+            ['name' => __('Vortrag', 'iss-content-model'), 'slug' => 'vortrag'],
+            ['name' => __('Gespraech', 'iss-content-model'), 'slug' => 'gespraech'],
+            ['name' => __('Lesung', 'iss-content-model'), 'slug' => 'lesung'],
+            ['name' => __('Praesentation', 'iss-content-model'), 'slug' => 'praesentation'],
+            ['name' => __('Workshop', 'iss-content-model'), 'slug' => 'workshop'],
+            ['name' => __('Konzert', 'iss-content-model'), 'slug' => 'konzert'],
+            ['name' => __('Film', 'iss-content-model'), 'slug' => 'film'],
+            ['name' => __('Repair Cafe', 'iss-content-model'), 'slug' => 'repair-cafe'],
         ],
         ISS_CONTENT_MODEL_COLLECTION_AREA_TAXONOMY => [
             ['name' => __('WF / Werk für Fernsehelektronik', 'iss-content-model'), 'slug' => 'wf-werk-fuer-fernsehelektronik'],

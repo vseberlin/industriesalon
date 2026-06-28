@@ -255,7 +255,7 @@ final class ISS_Content_Model_Veranstaltungen_CLI_Command
 final class ISS_Content_Model_Veranstaltungen_Set_Entity_CLI_Command
 {
     /**
-     * Sets the semantic Veranstaltung entity key for one post.
+     * Sets the structural Veranstaltung entity key for one post.
      *
      * The command is dry-run by default. Pass --yes to write `_iss_entity_key`
      * and resync occurrences when `iss-occurrences` is available.
@@ -266,7 +266,7 @@ final class ISS_Content_Model_Veranstaltungen_Set_Entity_CLI_Command
      * : Veranstaltung post ID or slug.
      *
      * --entity=<entity-key>
-     * : Entity key from the Veranstaltung registry, for example event.vortrag.
+     * : Entity key from the Veranstaltung registry, for example event.general, event.festival, or event.series.
      *
      * [--yes]
      * : Apply the change. Without this flag the command only reports.
@@ -276,7 +276,7 @@ final class ISS_Content_Model_Veranstaltungen_Set_Entity_CLI_Command
      *
      * ## EXAMPLES
      *
-     *     wp iss-content veranstaltungen-set-entity --post=25808 --entity=event.festival
+     *     wp iss-content veranstaltungen-set-entity --post=25808 --entity=event.series
      *     wp iss-content veranstaltungen-set-entity --post=25808 --entity=event.festival --yes
      */
     public function __invoke(array $args, array $assoc_args): void
@@ -423,10 +423,6 @@ final class ISS_Content_Model_Veranstaltungen_Repository_Check_CLI_Command
         if (!$timeline_keys) {
             \WP_CLI::error('No timeline Veranstaltung entity keys resolved.');
         }
-        if (!$archive_keys) {
-            \WP_CLI::error('No archive Veranstaltung entity keys resolved.');
-        }
-
         $upcoming = iss_content_model_veranstaltungen_upcoming(3);
         $archive = iss_content_model_veranstaltungen_archive(1, 3);
         $reports = iss_content_model_veranstaltungen_reports(1, 3);

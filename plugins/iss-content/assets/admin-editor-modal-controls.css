@@ -8,6 +8,7 @@ body.iss-editor-dashboard-simplified #postcustom,
 body.iss-editor-dashboard-simplified #revisionsdiv,
 body.iss-editor-dashboard-simplified #pageparentdiv,
 body.iss-editor-dashboard-simplified #categorydiv,
+body.iss-editor-dashboard-simplified [id="iss_topicdiv"],
 body.iss-editor-dashboard-simplified [id^="tagsdiv-"],
 body.iss-editor-dashboard-simplified #iss-graph-search-signal,
 body.iss-editor-dashboard-simplified #iss-graph-availability-signal,
@@ -181,6 +182,15 @@ body.iss-editor-dashboard-ready .iss-editor-top-dashboard > .postbox {
 
 body.iss-editor-dashboard-ready .iss-editor-top-dashboard > .postbox .inside {
   margin: 0;
+}
+
+body.iss-editor-dashboard-locked .iss-editor-dashboard .postbox-header .handle-actions,
+body.iss-editor-dashboard-locked .iss-editor-top-dashboard > .postbox .postbox-header .handle-actions,
+body.iss-editor-dashboard-locked .iss-editor-side-rail .postbox-header .handle-actions,
+body.iss-editor-dashboard-locked .iss-editor-dashboard .postbox .handlediv,
+body.iss-editor-dashboard-locked .iss-editor-top-dashboard > .postbox .handlediv,
+body.iss-editor-dashboard-locked .iss-editor-side-rail .handlediv {
+  display: none;
 }
 
 body.iss-editor-dashboard-ready .iss-editor-top-dashboard #postexcerpt textarea {

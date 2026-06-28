@@ -13,5 +13,5 @@ Record durable architectural decisions here when they should outlive a single ha
 - Model the public refactor around `Entity / Relation / Occurrence / View`: entities identify things, relations connect them, occurrences carry dated programme rows, and views render public/editor surfaces.
 - Keep calendar/programme projection occurrence-only. Exhibition overview visibility is separate from programme projection.
 - Keep editors in parent WordPress objects. Do not add an editor-visible occurrence/calendar/programme CPT.
-- Keep the first Offer bridge contract-only: `fuehrung` maps to `offer/tour`; `veranstaltung` maps to Offer subtypes from existing event meta. Public consumers should use graph-owned subtype labels instead of duplicating maps.
+- Keep the Offer bridge contract-only: `fuehrung` maps to `offer/tour`; `veranstaltung` maps to structural `_iss_entity_key` plus semantic `veranstaltung_art` terms. Public consumers should use graph-owned subtype labels instead of duplicating maps.
 - Keep SuperSaaS ingestion in `iss-occurrences`; `iss-commerce-lite` owns booking/order request writes only.

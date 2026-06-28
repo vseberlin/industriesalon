@@ -6,6 +6,21 @@ be recovered from Git history.
 
 ## 2026-06-28
 
+- Polished the Veranstaltung editorial admin workflow: the old type list is now
+  a structural `Struktur` choice (`Veranstaltung`, `Programm / Fest`,
+  `Serientermin`) plus a hidden semantic `veranstaltung_art` taxonomy for
+  `Art` filters such as Vortrag, Gespräch, Lesung, Präsentation, Workshop,
+  Konzert, Film, and Repair Café. Legacy stored event type keys are mapped to
+  the new structure/semantic split for repository queries, graph offer
+  contracts, related-card placeholders, and list-table filtering. The
+  Veranstaltung editor copy now avoids storage/rendering terms, recurring events
+  use `Serientermin`, promotion sits inside `Struktur & Art`, the status panel
+  is compact, linked-content actions explain their purpose, non-admin editors
+  cannot reopen hidden Screen Options or postbox action controls, default Posts
+  and Pages are hidden from editor navigation, and the Veranstaltung list drops
+  the unused WordPress category dropdown while keeping Struktur, Art, and
+  visibility filters. No SQL or upload artifact is required; the semantic
+  taxonomy terms and legacy-term backfill are code-driven.
 - Added a read-only `wp iss-content editor-ui-audit` first slice for the
   editorial admin simplification work. It inventories metaboxes, dashboard
   anchors, registered meta, taxonomies, list-table columns, save hooks, sampled

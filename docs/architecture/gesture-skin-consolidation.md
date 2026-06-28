@@ -245,22 +245,18 @@ Concretely:
 
 ## Veranstaltungen
 
-The current Veranstaltung registry proves the audit point. Most event entities
-share `shape = moment`, the same fields, and nearly the same gestures:
+The Veranstaltung registry now separates structural choices from semantic
+labels. `_iss_entity_key` is structural and intentionally small:
 
 ```
 event.general
-event.vortrag
-event.gespraech
-event.lesung
-event.praesentation
-event.workshop
-event.konzert
-event.school_program
+event.festival
+event.series
 ```
 
-These should keep their semantic labels and icons, but collapse to the
-`typografisch` skin unless the content genuinely needs `buehne`.
+Semantic labels such as Vortrag, Gespräch, Lesung, Präsentation, Workshop,
+Konzert, Film, and Repair Cafe live in the `veranstaltung_art` taxonomy for
+search and filters. They do not create their own skins.
 
 Recommended event gesture palette:
 
@@ -276,8 +272,9 @@ schluss
 ```
 
 `event.festival` keeps `programm` and maps to `buehne`. `report.rueckblick`
-maps to `chronik`. `event.repair_cafe` keeps its recurring shape, but should
-not require a dedicated `repair` skin.
+and `event.school_program` are no longer Veranstaltung structure choices.
+Repair Cafe is a semantic label; weekly evergreen Repair Cafe pages use the
+`event.series` / `Serientermin` structure and the normal `typografisch` skin.
 
 ## Projekte
 

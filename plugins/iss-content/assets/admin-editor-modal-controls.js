@@ -14,6 +14,9 @@
     if (isEnabled(modalConfig.hideDashboardTechnicalBoxes)) {
       document.body.classList.add('iss-editor-dashboard-simplified');
     }
+    if (isEnabled(modalConfig.lockEditorDashboard)) {
+      document.body.classList.add('iss-editor-dashboard-locked');
+    }
     if (isEnabled(modalConfig.moveEditorTopGroups) || isEnabled(modalConfig.moveAusstellungTopGroups)) {
       document.body.classList.add('iss-editor-dashboard-ready');
     }

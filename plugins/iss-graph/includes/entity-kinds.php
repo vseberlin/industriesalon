@@ -83,7 +83,7 @@ function iss_graph_get_entity_kind_registry(): array
             'aliases' => ['veranstaltung'],
             'contract_kind' => 'offer',
             'default_subtype' => 'event',
-            'subtypes' => ['event', 'event_report', 'lecture', 'reading', 'discussion', 'repair_cafe', 'concert', 'festival', 'workshop', 'school_program', 'presentation', 'special_opening'],
+            'subtypes' => ['event', 'lecture', 'reading', 'discussion', 'repair_cafe', 'concert', 'festival', 'workshop', 'presentation', 'film'],
             'public' => true,
         ],
         'project' => [
@@ -367,55 +367,50 @@ function iss_graph_get_offer_subtype_registry(): array
             'public_label' => __('Veranstaltung', 'iss-graph'),
             'source' => '_iss_entity_key:event.general',
         ],
-        'event_report' => [
-            'label' => 'Event report',
-            'public_label' => __('Rückblick', 'iss-graph'),
-            'source' => '_iss_entity_key:report.rueckblick',
-        ],
         'lecture' => [
             'label' => 'Lecture',
             'public_label' => __('Vortrag', 'iss-graph'),
-            'source' => '_iss_entity_key:event.vortrag',
+            'source' => 'taxonomy:veranstaltung_art:vortrag',
         ],
         'discussion' => [
             'label' => 'Discussion',
             'public_label' => __('Gespräch', 'iss-graph'),
-            'source' => '_iss_entity_key:event.gespraech',
+            'source' => 'taxonomy:veranstaltung_art:gespraech',
         ],
         'repair_cafe' => [
             'label' => 'Repair cafe',
             'public_label' => __('Repair Café', 'iss-graph'),
-            'source' => '_iss_entity_key:event.repair_cafe',
+            'source' => 'taxonomy:veranstaltung_art:repair-cafe',
         ],
         'concert' => [
             'label' => 'Concert',
             'public_label' => __('Konzert', 'iss-graph'),
-            'source' => '_iss_entity_key:event.konzert',
+            'source' => 'taxonomy:veranstaltung_art:konzert',
         ],
         'festival' => [
             'label' => 'Festival',
-            'public_label' => __('Festival', 'iss-graph'),
+            'public_label' => __('Programm / Fest', 'iss-graph'),
             'source' => '_iss_entity_key:event.festival',
         ],
         'workshop' => [
             'label' => 'Workshop',
             'public_label' => __('Workshop', 'iss-graph'),
-            'source' => '_iss_entity_key:event.workshop',
-        ],
-        'school_program' => [
-            'label' => 'School program',
-            'public_label' => __('Schulprogramm', 'iss-graph'),
-            'source' => '_iss_entity_key:event.school_program',
+            'source' => 'taxonomy:veranstaltung_art:workshop',
         ],
         'reading' => [
             'label' => 'Reading',
             'public_label' => __('Lesung', 'iss-graph'),
-            'source' => '_iss_entity_key:event.lesung',
+            'source' => 'taxonomy:veranstaltung_art:lesung',
         ],
         'presentation' => [
             'label' => 'Presentation',
             'public_label' => __('Präsentation', 'iss-graph'),
-            'source' => '_iss_entity_key:event.praesentation',
+            'source' => 'taxonomy:veranstaltung_art:praesentation',
+        ],
+        'film' => [
+            'label' => 'Film',
+            'public_label' => __('Film', 'iss-graph'),
+            'source' => 'taxonomy:veranstaltung_art:film',
         ],
     ]);
 }
@@ -476,16 +471,8 @@ function iss_graph_get_veranstaltung_entity_offer_subtype_map(): array
 {
     return [
         'event.general' => 'event',
-        'event.vortrag' => 'lecture',
-        'event.gespraech' => 'discussion',
-        'event.lesung' => 'reading',
-        'event.praesentation' => 'presentation',
-        'event.workshop' => 'workshop',
-        'event.konzert' => 'concert',
-        'event.school_program' => 'school_program',
         'event.festival' => 'festival',
-        'event.repair_cafe' => 'repair_cafe',
-        'report.rueckblick' => 'event_report',
+        'event.series' => 'event',
     ];
 }
 
@@ -499,6 +486,66 @@ function iss_graph_get_offer_subtype_for_veranstaltung_entity_key(string $entity
     $map = iss_graph_get_veranstaltung_entity_offer_subtype_map();
 
     return sanitize_key((string) ($map[$entity_key] ?? ''));
+}
+
+function iss_graph_get_veranstaltung_semantic_offer_subtype_map(): array
+{
+    return [
+        'vortrag' => 'lecture',
+        'gespraech' => 'discussion',
+        'lesung' => 'reading',
+        'praesentation' => 'presentation',
+        'workshop' => 'workshop',
+        'konzert' => 'concert',
+        'film' => 'film',
+        'repair-cafe' => 'repair_cafe',
+    ];
+}
+
+function iss_graph_get_veranstaltung_semantic_taxonomy(): string
+{
+    return defined('ISS_CONTENT_MODEL_VERANSTALTUNG_SEMANTIC_TAXONOMY')
+        ? (string) constant('ISS_CONTENT_MODEL_VERANSTALTUNG_SEMANTIC_TAXONOMY')
+        : 'veranstaltung_art';
+}
+
+function iss_graph_get_veranstaltung_semantic_key_for_offer(WP_Post $post): string
+{
+    $post_id = (int) $post->ID;
+    if ($post_id <= 0) {
+        return '';
+    }
+
+    $taxonomy = iss_graph_get_veranstaltung_semantic_taxonomy();
+    if (taxonomy_exists($taxonomy)) {
+        $terms = wp_get_post_terms($post_id, $taxonomy, ['fields' => 'slugs']);
+        if (is_array($terms) && $terms !== []) {
+            $semantic_key = function_exists('iss_content_model_sanitize_veranstaltung_semantic_key')
+                ? iss_content_model_sanitize_veranstaltung_semantic_key((string) $terms[0])
+                : sanitize_title((string) $terms[0]);
+            if ($semantic_key !== '') {
+                return $semantic_key;
+            }
+        }
+    }
+
+    return function_exists('iss_content_model_veranstaltung_semantic_from_legacy_entity_key')
+        ? iss_content_model_veranstaltung_semantic_from_legacy_entity_key((string) get_post_meta($post_id, '_iss_entity_key', true))
+        : '';
+}
+
+function iss_graph_get_offer_subtype_for_veranstaltung_semantic_key(string $semantic_key): string
+{
+    $semantic_key = function_exists('iss_content_model_sanitize_veranstaltung_semantic_key')
+        ? iss_content_model_sanitize_veranstaltung_semantic_key($semantic_key)
+        : sanitize_title($semantic_key);
+    if ($semantic_key === '') {
+        return '';
+    }
+
+    $map = iss_graph_get_veranstaltung_semantic_offer_subtype_map();
+
+    return sanitize_key((string) ($map[$semantic_key] ?? ''));
 }
 
 function iss_graph_get_offer_contract_for_post($post): array
@@ -522,6 +569,24 @@ function iss_graph_get_offer_contract_for_post($post): array
     }
 
     $entity_key = iss_graph_normalize_veranstaltung_entity_key_for_offer(get_post_meta((int) $post->ID, '_iss_entity_key', true));
+    if ($entity_key === 'event.festival') {
+        return [
+            'kind' => 'offer',
+            'subtype' => 'festival',
+            'subtype_source' => '_iss_entity_key:' . $entity_key,
+        ];
+    }
+
+    $semantic_key = iss_graph_get_veranstaltung_semantic_key_for_offer($post);
+    $semantic_subtype = $semantic_key !== '' ? iss_graph_get_offer_subtype_for_veranstaltung_semantic_key($semantic_key) : '';
+    if ($semantic_subtype !== '') {
+        return [
+            'kind' => 'offer',
+            'subtype' => $semantic_subtype,
+            'subtype_source' => 'taxonomy:' . iss_graph_get_veranstaltung_semantic_taxonomy() . ':' . $semantic_key,
+        ];
+    }
+
     $entity_subtype = $entity_key !== '' ? iss_graph_get_offer_subtype_for_veranstaltung_entity_key($entity_key) : '';
     if ($entity_subtype !== '') {
         return [

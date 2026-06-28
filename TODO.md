@@ -20,12 +20,15 @@ Immediate executable work only. Larger future programs live in `docs/project/bac
   `fuehrung`, and `rueckblick`. Required facts are now first-row
   `Pflichtangaben`, shared linked-content controls live in the right rail where
   their owner metabox exists, and normal editors get only the simple promotion
-  toggle. Remaining work should be content-specific: decide Publication
-  related-publications UX, decide whether Rueckblick needs additional relation
-  owner controls, and design a separate Gutenberg adapter for `page`, `post`,
-  and Video if those screens should enter the shared workflow. Before hiding or
-  purging more legacy boxes, run edit/save/reload parity with a normal
-  editorial role.
+  toggle. Veranstaltung has the current polish slice: structural
+  `Struktur` plus semantic `Art`, compact status, locked Screen Options/postbox
+  controls for editors, no default Posts/Pages editor navigation, and no
+  WordPress category dropdown on the Veranstaltung list. Remaining work should
+  be content-specific: decide Publication related-publications UX, decide
+  whether Rueckblick needs additional relation owner controls, and design a
+  separate Gutenberg adapter for `page`, `post`, and Video if those screens
+  should enter the shared workflow. Before hiding or purging more legacy boxes,
+  run edit/save/reload parity with a normal editorial role.
 - Führung JSON migration: after deploying the code, review/apply
   `ops/sql/2026-06-27-fuehrung-editorial-json.sql` only on a target that
   already has the 15 published Führung posts listed in the artifact. The SQL

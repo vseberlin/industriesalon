@@ -18,46 +18,36 @@ function iss_content_model_veranstaltung_registry(): array
         ['name' => 'datetime_end', 'type' => 'datetime', 'required' => true],
         ['name' => 'ort', 'type' => 'string', 'required' => false],
     ];
-    $repair_cafe_fields = [
+    $series_fields = [
         ['name' => 'datetime_start', 'type' => 'datetime', 'required' => true],
         ['name' => 'rhythmus', 'type' => 'string', 'required' => false],
-    ];
-    $report_fields = [
-        ['name' => 'published_at', 'type' => 'date', 'required' => true],
-        ['name' => 'bezug_termin', 'type' => 'relation', 'target' => 'veranstaltung', 'required' => false],
     ];
 
     return [
         'schema_version' => 1,
         'shapes' => [
             'moment' => [
-                'label' => __('Termin', 'iss-content-model'),
+                'label' => __('Veranstaltung', 'iss-content-model'),
                 'expires' => true,
                 'primary_surface' => 'timeline',
                 'required_facts' => ['datetime_start'],
             ],
             'span' => [
-                'label' => __('Programmspanne', 'iss-content-model'),
+                'label' => __('Programm / Fest', 'iss-content-model'),
                 'expires' => true,
                 'primary_surface' => 'timeline',
                 'required_facts' => ['datetime_start', 'datetime_end'],
             ],
             'manual_recurring' => [
-                'label' => __('Manuell wiederkehrend', 'iss-content-model'),
+                'label' => __('Serientermin', 'iss-content-model'),
                 'expires' => false,
                 'primary_surface' => 'timeline',
                 'required_facts' => ['datetime_start'],
             ],
-            'backward' => [
-                'label' => __('Rueckblick', 'iss-content-model'),
-                'expires' => false,
-                'primary_surface' => 'archive',
-                'required_facts' => ['published_at'],
-            ],
         ],
         'entities' => [
             'event.general' => [
-                'label' => __('Termin', 'iss-content-model'),
+                'label' => __('Veranstaltung', 'iss-content-model'),
                 'domain' => 'veranstaltung',
                 'post_type' => ISS_CONTENT_MODEL_VERANSTALTUNG_POST_TYPE,
                 'shape' => 'moment',
@@ -66,78 +56,8 @@ function iss_content_model_veranstaltung_registry(): array
                 'allowed_gestures' => ['intro', 'kapitel', 'leitfrage', 'zitat', 'material', 'upload_intake', 'galerie', 'schluss'],
                 'fields' => $moment_fields,
             ],
-            'event.vortrag' => [
-                'label' => __('Vortrag', 'iss-content-model'),
-                'domain' => 'veranstaltung',
-                'post_type' => ISS_CONTENT_MODEL_VERANSTALTUNG_POST_TYPE,
-                'shape' => 'moment',
-                'icon' => 'mic',
-                'default_skin' => 'typografisch',
-                'allowed_gestures' => ['intro', 'kapitel', 'leitfrage', 'zitat', 'material', 'upload_intake', 'galerie', 'schluss'],
-                'fields' => $moment_fields,
-            ],
-            'event.gespraech' => [
-                'label' => __('Gespraech', 'iss-content-model'),
-                'domain' => 'veranstaltung',
-                'post_type' => ISS_CONTENT_MODEL_VERANSTALTUNG_POST_TYPE,
-                'shape' => 'moment',
-                'icon' => 'chat',
-                'default_skin' => 'typografisch',
-                'allowed_gestures' => ['intro', 'kapitel', 'leitfrage', 'zitat', 'material', 'upload_intake', 'galerie', 'schluss'],
-                'fields' => $moment_fields,
-            ],
-            'event.lesung' => [
-                'label' => __('Lesung', 'iss-content-model'),
-                'domain' => 'veranstaltung',
-                'post_type' => ISS_CONTENT_MODEL_VERANSTALTUNG_POST_TYPE,
-                'shape' => 'moment',
-                'icon' => 'book',
-                'default_skin' => 'typografisch',
-                'allowed_gestures' => ['intro', 'kapitel', 'leitfrage', 'zitat', 'material', 'upload_intake', 'galerie', 'schluss'],
-                'fields' => $moment_fields,
-            ],
-            'event.praesentation' => [
-                'label' => __('Praesentation', 'iss-content-model'),
-                'domain' => 'veranstaltung',
-                'post_type' => ISS_CONTENT_MODEL_VERANSTALTUNG_POST_TYPE,
-                'shape' => 'moment',
-                'icon' => 'presentation',
-                'default_skin' => 'typografisch',
-                'allowed_gestures' => ['intro', 'kapitel', 'leitfrage', 'zitat', 'material', 'upload_intake', 'galerie', 'schluss'],
-                'fields' => $moment_fields,
-            ],
-            'event.workshop' => [
-                'label' => __('Workshop', 'iss-content-model'),
-                'domain' => 'veranstaltung',
-                'post_type' => ISS_CONTENT_MODEL_VERANSTALTUNG_POST_TYPE,
-                'shape' => 'moment',
-                'icon' => 'tools',
-                'default_skin' => 'typografisch',
-                'allowed_gestures' => ['intro', 'kapitel', 'leitfrage', 'zitat', 'material', 'upload_intake', 'galerie', 'schluss'],
-                'fields' => $moment_fields,
-            ],
-            'event.konzert' => [
-                'label' => __('Konzert', 'iss-content-model'),
-                'domain' => 'veranstaltung',
-                'post_type' => ISS_CONTENT_MODEL_VERANSTALTUNG_POST_TYPE,
-                'shape' => 'moment',
-                'icon' => 'note',
-                'default_skin' => 'typografisch',
-                'allowed_gestures' => ['intro', 'kapitel', 'leitfrage', 'zitat', 'material', 'upload_intake', 'galerie', 'schluss'],
-                'fields' => $moment_fields,
-            ],
-            'event.school_program' => [
-                'label' => __('Schulprogramm', 'iss-content-model'),
-                'domain' => 'veranstaltung',
-                'post_type' => ISS_CONTENT_MODEL_VERANSTALTUNG_POST_TYPE,
-                'shape' => 'moment',
-                'icon' => 'school',
-                'default_skin' => 'typografisch',
-                'allowed_gestures' => ['intro', 'kapitel', 'leitfrage', 'material', 'upload_intake', 'galerie', 'schluss'],
-                'fields' => $moment_fields,
-            ],
             'event.festival' => [
-                'label' => __('Festival / Programm', 'iss-content-model'),
+                'label' => __('Programm / Fest', 'iss-content-model'),
                 'domain' => 'veranstaltung',
                 'post_type' => ISS_CONTENT_MODEL_VERANSTALTUNG_POST_TYPE,
                 'shape' => 'span',
@@ -146,25 +66,15 @@ function iss_content_model_veranstaltung_registry(): array
                 'allowed_gestures' => ['intro', 'programm', 'kapitel', 'material', 'upload_intake', 'galerie', 'schluss'],
                 'fields' => $span_fields,
             ],
-            'event.repair_cafe' => [
-                'label' => __('Repair Cafe', 'iss-content-model'),
+            'event.series' => [
+                'label' => __('Serientermin', 'iss-content-model'),
                 'domain' => 'veranstaltung',
                 'post_type' => ISS_CONTENT_MODEL_VERANSTALTUNG_POST_TYPE,
                 'shape' => 'manual_recurring',
-                'icon' => 'wrench',
+                'icon' => 'calendar',
                 'default_skin' => 'typografisch',
                 'allowed_gestures' => ['intro', 'kapitel', 'material', 'upload_intake', 'galerie', 'schluss'],
-                'fields' => $repair_cafe_fields,
-            ],
-            'report.rueckblick' => [
-                'label' => __('Rueckblick', 'iss-content-model'),
-                'domain' => 'veranstaltung',
-                'post_type' => ISS_CONTENT_MODEL_VERANSTALTUNG_POST_TYPE,
-                'shape' => 'backward',
-                'icon' => 'archive',
-                'default_skin' => 'chronik',
-                'allowed_gestures' => ['intro', 'kapitel', 'leitfrage', 'zitat', 'upload_intake', 'galerie', 'material', 'schluss'],
-                'fields' => $report_fields,
+                'fields' => $series_fields,
             ],
         ],
     ];
@@ -252,32 +162,111 @@ function iss_content_model_veranstaltung_entity_field_names(string $entity_key):
     return array_keys(iss_content_model_veranstaltung_entity_fields($entity_key));
 }
 
+function iss_content_model_veranstaltung_legacy_entity_key_map(): array
+{
+    return [
+        'event.vortrag' => 'event.general',
+        'event.gespraech' => 'event.general',
+        'event.lesung' => 'event.general',
+        'event.praesentation' => 'event.general',
+        'event.workshop' => 'event.general',
+        'event.konzert' => 'event.general',
+        'event.school_program' => 'event.general',
+        'event.repair_cafe' => 'event.series',
+    ];
+}
+
+function iss_content_model_veranstaltung_entity_storage_keys_for_query(array $entity_keys): array
+{
+    $entity_keys = array_values(array_filter(array_map('iss_content_model_sanitize_veranstaltung_entity_key', $entity_keys)));
+    if (!$entity_keys) {
+        return [];
+    }
+
+    $storage_keys = $entity_keys;
+    $lookup = array_fill_keys($entity_keys, true);
+    foreach (iss_content_model_veranstaltung_legacy_entity_key_map() as $legacy_key => $current_key) {
+        if (isset($lookup[$current_key])) {
+            $storage_keys[] = $legacy_key;
+        }
+    }
+
+    return array_values(array_unique($storage_keys));
+}
+
+function iss_content_model_veranstaltung_semantic_options(): array
+{
+    return [
+        '' => [
+            'label' => __('Keine Art gesetzt', 'iss-content-model'),
+            'description' => __('Optionaler semantischer Filter fuer Suche und Listen.', 'iss-content-model'),
+        ],
+        'vortrag' => ['label' => __('Vortrag', 'iss-content-model')],
+        'gespraech' => ['label' => __('Gespraech', 'iss-content-model')],
+        'lesung' => ['label' => __('Lesung', 'iss-content-model')],
+        'praesentation' => ['label' => __('Praesentation', 'iss-content-model')],
+        'workshop' => ['label' => __('Workshop', 'iss-content-model')],
+        'konzert' => ['label' => __('Konzert', 'iss-content-model')],
+        'film' => ['label' => __('Film', 'iss-content-model')],
+        'repair-cafe' => ['label' => __('Repair Cafe', 'iss-content-model')],
+    ];
+}
+
+function iss_content_model_sanitize_veranstaltung_semantic_key($value): string
+{
+    $value = sanitize_title((string) $value);
+    $options = iss_content_model_veranstaltung_semantic_options();
+
+    return isset($options[$value]) && $value !== '' ? $value : '';
+}
+
+function iss_content_model_veranstaltung_semantic_label(string $semantic_key): string
+{
+    $semantic_key = iss_content_model_sanitize_veranstaltung_semantic_key($semantic_key);
+    if ($semantic_key === '') {
+        return '';
+    }
+
+    $options = iss_content_model_veranstaltung_semantic_options();
+
+    return trim((string) ($options[$semantic_key]['label'] ?? ''));
+}
+
+function iss_content_model_veranstaltung_semantic_from_legacy_entity_key(string $entity_key): string
+{
+    $entity_key = sanitize_key(str_replace('.', '-', $entity_key));
+    $entity_key = str_replace('-', '.', $entity_key);
+    $map = [
+        'event.vortrag' => 'vortrag',
+        'event.gespraech' => 'gespraech',
+        'event.lesung' => 'lesung',
+        'event.praesentation' => 'praesentation',
+        'event.workshop' => 'workshop',
+        'event.konzert' => 'konzert',
+        'event.repair_cafe' => 'repair-cafe',
+    ];
+
+    return iss_content_model_sanitize_veranstaltung_semantic_key((string) ($map[$entity_key] ?? ''));
+}
+
 function iss_content_model_veranstaltung_entity_options(): array
 {
     $options = [
         '' => [
             'label' => __('Noch nicht festgelegt', 'iss-content-model'),
-            'description' => __('Bitte einen semantischen Veranstaltungstyp setzen.', 'iss-content-model'),
+            'description' => __('Bitte eine Struktur setzen.', 'iss-content-model'),
         ],
     ];
-    $shape_labels = [
-        'moment' => __('Moment', 'iss-content-model'),
-        'span' => __('Programmspanne', 'iss-content-model'),
-        'manual_recurring' => __('Wiederkehrend', 'iss-content-model'),
-        'backward' => __('Rueckblick', 'iss-content-model'),
-    ];
     $entity_descriptions = [
-        'event.gespraech' => __('Moment + Personen', 'iss-content-model'),
-        'event.festival' => __('Programmspanne + Programm', 'iss-content-model'),
-        'event.repair_cafe' => __('Wiederkehrend', 'iss-content-model'),
-        'report.rueckblick' => __('Rueckblick', 'iss-content-model'),
+        'event.general' => __('Einzelne Veranstaltung mit Beginn, Ort und redaktioneller Seite.', 'iss-content-model'),
+        'event.festival' => __('Programm oder Fest mit Anfang, Ende und Programminhalt.', 'iss-content-model'),
+        'event.series' => __('Nicht ablaufender Serientermin, z.B. woechentliches Repair Cafe.', 'iss-content-model'),
     ];
 
     foreach (iss_content_model_veranstaltung_entities() as $entity_key => $entity) {
-        $shape = (string) ($entity['shape'] ?? '');
         $options[(string) $entity_key] = [
             'label' => (string) ($entity['label'] ?? $entity_key),
-            'description' => (string) ($entity_descriptions[(string) $entity_key] ?? $shape_labels[$shape] ?? __('Moment', 'iss-content-model')),
+            'description' => (string) ($entity_descriptions[(string) $entity_key] ?? ''),
         ];
     }
 
@@ -293,8 +282,13 @@ function iss_content_model_sanitize_veranstaltung_entity_key($value): string
 {
     $value = sanitize_key(str_replace('.', '-', (string) $value));
     $value = str_replace('-', '.', $value);
+    if (iss_content_model_veranstaltung_entity_key_is_valid($value)) {
+        return $value;
+    }
 
-    return iss_content_model_veranstaltung_entity_key_is_valid($value) ? $value : '';
+    $legacy_map = iss_content_model_veranstaltung_legacy_entity_key_map();
+
+    return isset($legacy_map[$value]) ? $legacy_map[$value] : '';
 }
 
 function iss_content_model_register_veranstaltung_entity_meta(): void
@@ -311,6 +305,62 @@ function iss_content_model_register_veranstaltung_entity_meta(): void
     ]);
 }
 add_action('init', 'iss_content_model_register_veranstaltung_entity_meta', 25);
+
+function iss_content_model_maybe_migrate_veranstaltung_semantic_terms(): void
+{
+    $migration_version = '2026-06-28-veranstaltung-semantic-v1';
+    if ((string) get_option('iss_content_model_veranstaltung_semantic_migration_version', '') === $migration_version) {
+        return;
+    }
+    if (!taxonomy_exists(ISS_CONTENT_MODEL_VERANSTALTUNG_SEMANTIC_TAXONOMY)) {
+        return;
+    }
+
+    $legacy_keys = array_keys(array_filter(iss_content_model_veranstaltung_legacy_entity_key_map(), static function (string $current_key): bool {
+        return $current_key !== '';
+    }));
+    if (!$legacy_keys) {
+        update_option('iss_content_model_veranstaltung_semantic_migration_version', $migration_version, false);
+        return;
+    }
+
+    $posts = get_posts([
+        'post_type' => ISS_CONTENT_MODEL_VERANSTALTUNG_POST_TYPE,
+        'post_status' => 'any',
+        'posts_per_page' => -1,
+        'fields' => 'ids',
+        'no_found_rows' => true,
+        'meta_query' => [ // phpcs:ignore WordPress.DB.SlowDBQuery.slow_db_query_meta_query -- One-time compatibility migration from the old semantic entity contract.
+            [
+                'key' => '_iss_entity_key',
+                'value' => $legacy_keys,
+                'compare' => 'IN',
+            ],
+        ],
+    ]);
+
+    foreach ($posts as $post_id) {
+        $post_id = (int) $post_id;
+        if ($post_id <= 0) {
+            continue;
+        }
+
+        $existing = wp_get_post_terms($post_id, ISS_CONTENT_MODEL_VERANSTALTUNG_SEMANTIC_TAXONOMY, ['fields' => 'slugs']);
+        if (is_array($existing) && $existing !== []) {
+            continue;
+        }
+
+        $semantic_key = iss_content_model_veranstaltung_semantic_from_legacy_entity_key((string) get_post_meta($post_id, '_iss_entity_key', true));
+        if ($semantic_key === '') {
+            continue;
+        }
+
+        wp_set_object_terms($post_id, [$semantic_key], ISS_CONTENT_MODEL_VERANSTALTUNG_SEMANTIC_TAXONOMY, false);
+    }
+
+    update_option('iss_content_model_veranstaltung_semantic_migration_version', $migration_version, false);
+}
+add_action('init', 'iss_content_model_maybe_migrate_veranstaltung_semantic_terms', 45);
 
 function iss_content_model_validate_veranstaltung_registry(): array
 {

@@ -41,8 +41,10 @@ function iss_content_model_veranstaltung_entity_keys_for_primary_surface(string 
 
 function iss_content_model_veranstaltung_entity_meta_query(array $entity_keys): array
 {
-    $entity_keys = array_values(array_filter(array_map('iss_content_model_sanitize_veranstaltung_entity_key', $entity_keys)));
-    if (!$entity_keys) {
+    $storage_keys = function_exists('iss_content_model_veranstaltung_entity_storage_keys_for_query')
+        ? iss_content_model_veranstaltung_entity_storage_keys_for_query($entity_keys)
+        : array_values(array_filter(array_map('iss_content_model_sanitize_veranstaltung_entity_key', $entity_keys)));
+    if (!$storage_keys) {
         return [
             [
                 'key' => '_iss_entity_key',
@@ -54,7 +56,7 @@ function iss_content_model_veranstaltung_entity_meta_query(array $entity_keys): 
     return [
         [
             'key' => '_iss_entity_key',
-            'value' => $entity_keys,
+            'value' => $storage_keys,
             'compare' => 'IN',
         ],
     ];

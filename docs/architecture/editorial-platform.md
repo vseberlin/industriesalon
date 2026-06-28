@@ -159,9 +159,12 @@ replacing an existing candidate intentionally.
 
 For Veranstaltungen, Phase 1 now lives in `iss-content` plus the theme-owned
 single template. `plugins/iss-content/includes/veranstaltungen-registry.php`
-defines the entity/shape/default-skin contract for `_iss_entity_key`, and
-`wp iss-content veranstaltungen-dry-run` remains the semantic audit for current
-posts.
+defines the structural entity/shape/default-skin contract for `_iss_entity_key`.
+The public editor now separates structure from semantics: `_iss_entity_key`
+stores `Veranstaltung`, `Programm / Fest`, or `Serientermin`, while the hidden
+`veranstaltung_art` taxonomy stores semantic labels such as Vortrag, Gespräch,
+Lesung, Präsentation, Workshop, Konzert, Film, and Repair Cafe for search and
+filter use.
 
 All current Veranstaltungen have curated `_iss_entity_key` and reviewed
 `_iss_content_json`. The active editor surface is the `Struktur` box, not the
@@ -169,15 +172,14 @@ Gutenberg content canvas. The public single template renders valid JSON through
 the theme helper and falls back to `post_content` only when no valid structured
 document exists.
 
-The theme exposes registry-derived body classes on singular Veranstaltung pages:
+The theme exposes registry-derived structural body classes on singular Veranstaltung pages:
 `iss-event-entity-*`, `iss-event-shape-*`, `iss-event-surface-*`, and
 `iss-event-skin-*`. The template uses shared dynamic blocks only as
 infrastructure: `iss/content-meta` for the facts panel and shared relation rails
 for related content. Veranstaltung-specific color/layout switches are not part
-of the template contract. Public type skins are registry defaults: `vortrag`,
-`lesung`, `gespraech`, `repair`, `festival`, `typografisch`, and
-`dokumentarisch`. The theme owns their public typography, color, sidebar, and
-layout expression; the plugin registry only declares the default skin key.
+of the template contract. Public skins are structural registry defaults:
+`typografisch` for normal and series events and `buehne` for `Programm / Fest`.
+Semantic labels do not create separate skins.
 
 Current operational commands are:
 
@@ -204,8 +206,8 @@ workflow before promotion.
 The admin editor reuses WordPress media selection plus the existing archive
 object picker when loaded. Legacy import preserves WordPress image/media blocks
 as `media_refs` by attachment ID and avoids persisting local dev-host thumbnail
-URLs. Local post `13349` now has a one-section `event.vortrag` candidate with
-one media ref; transfer it with
+URLs. Local post `13349` now has a one-section structured Veranstaltung
+candidate with one media ref; transfer it with
 `ops/sql/2026-06-24-veranstaltung-13349-content-json.sql` if that local review
 state is needed elsewhere. Archive-object refs in the Veranstaltung path stay
 lightweight: selected objects save ID, compact label, thumbnail, and bucket

@@ -29,8 +29,8 @@
 
 .iss-veranstaltung-admin__grid {
   display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 14px 16px;
+  grid-template-columns: 1fr;
+  gap: 12px;
 }
 
 .iss-veranstaltung-admin__field {
@@ -46,60 +46,6 @@
 .iss-veranstaltung-admin__programme {
   margin: 0;
   font-weight: 600;
-}
-
-.iss-veranstaltung-admin__label {
-  font-weight: 600;
-}
-
-.iss-veranstaltung-admin__options {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(128px, 1fr));
-  gap: 10px;
-}
-
-.iss-veranstaltung-admin__option {
-  display: block;
-  min-width: 0;
-}
-
-.iss-veranstaltung-admin__option input {
-  position: absolute;
-  width: 1px;
-  height: 1px;
-  overflow: hidden;
-  clip-path: inset(50%);
-  white-space: nowrap;
-}
-
-.iss-veranstaltung-admin__option-body {
-  display: grid;
-  gap: 4px;
-  min-height: 58px;
-  padding: 9px 10px;
-  border: 1px solid #c3c4c7;
-  background: #fff;
-  cursor: pointer;
-}
-
-.iss-veranstaltung-admin__option-body strong {
-  color: #1d2327;
-}
-
-.iss-veranstaltung-admin__option-body span {
-  color: #646970;
-  font-size: 12px;
-  line-height: 1.45;
-}
-
-.iss-veranstaltung-admin__option input:checked + .iss-veranstaltung-admin__option-body {
-  border-color: #d63638;
-  box-shadow: inset 4px 0 0 #d63638;
-}
-
-.iss-veranstaltung-admin__option input:focus-visible + .iss-veranstaltung-admin__option-body {
-  outline: 2px solid #2271b1;
-  outline-offset: 2px;
 }
 
 body.post-type-veranstaltung #submitdiv .inside {
@@ -120,7 +66,7 @@ body.post-type-veranstaltung #major-publishing-actions {
 
 .iss-veranstaltung-status {
   display: grid;
-  gap: 12px;
+  gap: 8px;
 }
 
 .iss-veranstaltung-status-strip {
@@ -195,6 +141,20 @@ body.post-type-veranstaltung #major-publishing-actions {
   display: grid;
   gap: 6px;
   margin: 0;
+}
+
+.iss-veranstaltung-status__summary,
+.iss-veranstaltung-status__ready {
+  margin: 0;
+  font-weight: 600;
+}
+
+.iss-veranstaltung-status__ready {
+  color: #008a20;
+}
+
+.iss-veranstaltung-status__checks--compact {
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
 }
 
 .iss-veranstaltung-status__checks li {
@@ -639,8 +599,7 @@ body.post-type-veranstaltung #major-publishing-actions {
 }
 
 @media (max-width: 782px) {
-  .iss-veranstaltung-admin__grid,
-  .iss-veranstaltung-admin__options {
+  .iss-veranstaltung-admin__grid {
     grid-template-columns: 1fr;
   }
 

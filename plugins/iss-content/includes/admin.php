@@ -16,7 +16,7 @@ add_action('add_meta_boxes', function () {
 
     add_meta_box(
         'iss-content-model-veranstaltung-type',
-        __('Typ & Ausgabe', 'iss-content-model'),
+        __('Struktur & Art', 'iss-content-model'),
         'iss_content_model_render_veranstaltung_type_box',
         ISS_CONTENT_MODEL_VERANSTALTUNG_POST_TYPE,
         'normal',
@@ -141,6 +141,12 @@ function iss_content_model_should_hide_editor_modal_metaboxes(): bool
 function iss_content_model_should_hide_editor_dashboard_technical_boxes(string $post_type): bool
 {
     return iss_content_model_should_hide_wholesale_editor_surfaces($post_type);
+}
+
+function iss_content_model_should_lock_editor_dashboard(string $post_type): bool
+{
+    return iss_content_model_use_editor_dashboard($post_type)
+        && iss_content_model_should_hide_wholesale_editor_surfaces($post_type);
 }
 
 function iss_content_model_get_wholesale_simplification_post_types(): array
@@ -451,7 +457,7 @@ function iss_content_model_compact_dashboard_relation_sections(array $sections, 
 
         if (in_array('iss-graph-related-promotion', $box_ids, true)) {
             $remove_box_ids[] = 'iss-graph-related-promotion';
-            $move_promotion_box = $post_type !== ISS_CONTENT_MODEL_PROJEKT_POST_TYPE;
+            $move_promotion_box = !in_array($post_type, [ISS_CONTENT_MODEL_PROJEKT_POST_TYPE, ISS_CONTENT_MODEL_VERANSTALTUNG_POST_TYPE], true);
         }
 
         $section['boxIds'] = array_values(array_diff($box_ids, array_values(array_unique($remove_box_ids))));
@@ -526,7 +532,7 @@ function iss_content_model_get_editor_side_rail_sections(string $post_type): arr
         [
             'slug' => 'relations',
             'label' => __('Verknüpfte Inhalte', 'iss-content-model'),
-            'description' => __('Öffnet vorhandene Verknüpfungen in ihren bestehenden Bearbeitungsfenstern.', 'iss-content-model'),
+            'description' => __('Alles Wichtige miteinander vernetzen. Verknüpfen Sie Orte, Personen, Organisationen und Archivmaterial mit Ihrer Veranstaltung. So stellen Sie sicher, dass Ihr Event überall leicht gefunden und automatisch im richtigen Zusammenhang angezeigt wird.', 'iss-content-model'),
             'modalTargets' => iss_content_model_sanitize_editor_modal_targets($targets),
         ],
     ];
@@ -548,7 +554,7 @@ function iss_content_model_get_editor_dashboard_sections(string $post_type): arr
             [
                 'slug' => 'composition',
                 'label' => __('Redaktionelle Komposition', 'iss-content-model'),
-                'description' => __('Strukturierte Abschnitte, Medien, Galerie und Material. Speichert weiterhin in _iss_content_json.', 'iss-content-model'),
+                'description' => '',
                 'boxIds' => ['iss-content-model-veranstaltung-content'],
             ],
             [
@@ -560,7 +566,6 @@ function iss_content_model_get_editor_dashboard_sections(string $post_type): arr
                     'iss-graph-public-content-relations',
                     'iss-wf-import-archive-picker',
                     'iss-content-editorial-sets',
-                    'iss-graph-related-promotion',
                     'iss-graph-editorial-signals',
                 ],
             ],
@@ -758,10 +763,6 @@ function iss_content_model_get_editor_dashboard_sections(string $post_type): arr
 
 function iss_content_model_restore_admin_editor_dashboard_metabox_visibility(string $post_type): void
 {
-    if (!current_user_can('manage_options')) {
-        return;
-    }
-
     $post_type = sanitize_key($post_type);
     if (!in_array($post_type, [
         ISS_CONTENT_MODEL_VERANSTALTUNG_POST_TYPE,
@@ -779,14 +780,28 @@ function iss_content_model_restore_admin_editor_dashboard_metabox_visibility(str
         return;
     }
 
-    $managed_boxes = [
-        'slugdiv',
-        'postcustom',
-        'pageparentdiv',
-        'categorydiv',
-        'tagsdiv-post_tag',
-        'iss-graph-search-signal',
-    ];
+    if (current_user_can('manage_options')) {
+        $managed_boxes = [
+            'slugdiv',
+            'postcustom',
+            'pageparentdiv',
+            'categorydiv',
+            'tagsdiv-post_tag',
+            'iss-graph-search-signal',
+        ];
+    } elseif (iss_content_model_should_lock_editor_dashboard($post_type)) {
+        $managed_boxes = array_merge(
+            iss_content_model_get_editor_dashboard_box_ids($post_type),
+            iss_content_model_get_editor_dashboard_relation_box_ids($post_type)
+        );
+    } else {
+        return;
+    }
+
+    $managed_boxes = array_values(array_unique(array_filter(array_map('sanitize_key', $managed_boxes))));
+    if (!$managed_boxes) {
+        return;
+    }
 
     foreach (['metaboxhidden_' . $post_type, 'closedpostboxes_' . $post_type] as $option) {
         $current = get_user_option($option, $user_id);
@@ -800,6 +815,32 @@ function iss_content_model_restore_admin_editor_dashboard_metabox_visibility(str
         }
     }
 }
+
+add_filter('screen_options_show_screen', function (bool $show): bool {
+    $screen = function_exists('get_current_screen') ? get_current_screen() : null;
+    if (!$screen || $screen->base !== 'post' || !isset($screen->post_type)) {
+        return $show;
+    }
+
+    return iss_content_model_should_lock_editor_dashboard((string) $screen->post_type) ? false : $show;
+});
+
+add_action('admin_menu', function (): void {
+    if (current_user_can('manage_options')) {
+        return;
+    }
+
+    remove_menu_page('edit.php');
+    remove_menu_page('edit.php?post_type=page');
+}, 99);
+
+add_filter('disable_categories_dropdown', function ($disable, string $post_type) {
+    if ($post_type === ISS_CONTENT_MODEL_VERANSTALTUNG_POST_TYPE) {
+        return true;
+    }
+
+    return $disable;
+}, 10, 2);
 
 function iss_content_model_restore_admin_ausstellung_metabox_visibility(): void
 {
@@ -957,6 +998,7 @@ add_action('admin_enqueue_scripts', function ($hook): void {
             [
                 'hideManagedBoxes' => iss_content_model_should_hide_editor_modal_metaboxes(),
                 'hideDashboardTechnicalBoxes' => iss_content_model_should_hide_editor_dashboard_technical_boxes((string) $screen->post_type),
+                'lockEditorDashboard' => iss_content_model_should_lock_editor_dashboard((string) $screen->post_type),
                 'moveAusstellungTopGroups' => false,
                 'moveEditorTopGroups' => $uses_editor_dashboard,
                 'dashboardSections' => $uses_editor_dashboard
@@ -1018,6 +1060,10 @@ function iss_content_model_get_wholesale_simplification_metabox_ids(string $post
         $box_ids[] = 'tagsdiv-' . $taxonomy->name;
     }
 
+    if ($post_type === ISS_CONTENT_MODEL_VERANSTALTUNG_POST_TYPE) {
+        $box_ids[] = ISS_CONTENT_MODEL_TOPIC_TAXONOMY . 'div';
+    }
+
     $box_ids = (array) apply_filters('iss_content_model_wholesale_simplification_metabox_ids', $box_ids, $post_type);
 
     return array_values(array_unique(array_filter(array_map('sanitize_key', $box_ids))));
@@ -1048,6 +1094,18 @@ function iss_content_model_remove_project_editor_promotion_metabox(string $post_
     }
 }
 add_action('add_meta_boxes', 'iss_content_model_remove_project_editor_promotion_metabox', 130);
+
+function iss_content_model_remove_veranstaltung_promotion_metabox(string $post_type): void
+{
+    if ($post_type !== ISS_CONTENT_MODEL_VERANSTALTUNG_POST_TYPE) {
+        return;
+    }
+
+    foreach (['normal', 'side', 'advanced'] as $context) {
+        remove_meta_box('iss-graph-related-promotion', ISS_CONTENT_MODEL_VERANSTALTUNG_POST_TYPE, $context);
+    }
+}
+add_action('add_meta_boxes', 'iss_content_model_remove_veranstaltung_promotion_metabox', 130);
 
 add_action('add_meta_boxes', function (string $post_type): void {
     static $registered = [];
@@ -1216,25 +1274,49 @@ function iss_content_model_get_veranstaltung_place_title(int $place_id): string
     return trim((string) get_the_title($place_id));
 }
 
-function iss_content_model_render_veranstaltung_option_cards(string $name, array $options, string $selected): void
+function iss_content_model_render_veranstaltung_select(string $id, string $name, array $options, string $selected): void
 {
-    echo '<div class="iss-veranstaltung-admin__options">';
+    echo '<select class="widefat" id="' . esc_attr($id) . '" name="iss_content_model[' . esc_attr($name) . ']">';
     foreach ($options as $value => $config) {
         $label = is_array($config) ? (string) ($config['label'] ?? $value) : (string) $config;
-        $description = is_array($config) ? (string) ($config['description'] ?? '') : '';
-        $id = sanitize_html_class($name . '-' . $value);
-
-        echo '<label class="iss-veranstaltung-admin__option" for="' . esc_attr($id) . '">';
-        echo '<input type="radio" id="' . esc_attr($id) . '" name="iss_content_model[' . esc_attr($name) . ']" value="' . esc_attr($value) . '" ' . checked($selected, (string) $value, false) . '>';
-        echo '<span class="iss-veranstaltung-admin__option-body">';
-        echo '<strong>' . esc_html($label) . '</strong>';
-        if ($description !== '') {
-            echo '<span>' . esc_html($description) . '</span>';
-        }
-        echo '</span>';
-        echo '</label>';
+        echo '<option value="' . esc_attr((string) $value) . '" ' . selected($selected, (string) $value, false) . '>' . esc_html($label) . '</option>';
     }
-    echo '</div>';
+    echo '</select>';
+}
+
+function iss_content_model_render_veranstaltung_entity_select(array $options, string $selected): void
+{
+    iss_content_model_render_veranstaltung_select('iss_veranstaltung_entity_key', '_iss_entity_key', $options, $selected);
+}
+
+function iss_content_model_get_veranstaltung_semantic_key(int $post_id): string
+{
+    if ($post_id <= 0 || !taxonomy_exists(ISS_CONTENT_MODEL_VERANSTALTUNG_SEMANTIC_TAXONOMY)) {
+        return '';
+    }
+
+    $terms = wp_get_post_terms($post_id, ISS_CONTENT_MODEL_VERANSTALTUNG_SEMANTIC_TAXONOMY, ['fields' => 'slugs']);
+    if (is_array($terms) && $terms !== []) {
+        $semantic_key = function_exists('iss_content_model_sanitize_veranstaltung_semantic_key')
+            ? iss_content_model_sanitize_veranstaltung_semantic_key((string) $terms[0])
+            : sanitize_title((string) $terms[0]);
+        if ($semantic_key !== '') {
+            return $semantic_key;
+        }
+    }
+
+    return function_exists('iss_content_model_veranstaltung_semantic_from_legacy_entity_key')
+        ? iss_content_model_veranstaltung_semantic_from_legacy_entity_key((string) get_post_meta($post_id, '_iss_entity_key', true))
+        : '';
+}
+
+function iss_content_model_get_veranstaltung_semantic_label(int $post_id): string
+{
+    $semantic_key = iss_content_model_get_veranstaltung_semantic_key($post_id);
+
+    return $semantic_key !== '' && function_exists('iss_content_model_veranstaltung_semantic_label')
+        ? iss_content_model_veranstaltung_semantic_label($semantic_key)
+        : '';
 }
 
 function iss_content_model_count_veranstaltung_document_refs(array $document): array
@@ -1286,6 +1368,10 @@ function iss_content_model_get_veranstaltung_editor_summary(WP_Post $post, ?arra
     $skin = $entity_key !== '' && function_exists('iss_content_model_veranstaltung_entity_default_skin')
         ? iss_content_model_veranstaltung_entity_default_skin($entity_key)
         : '';
+    $semantic_key = iss_content_model_get_veranstaltung_semantic_key($post_id);
+    $semantic_label = $semantic_key !== '' && function_exists('iss_content_model_veranstaltung_semantic_label')
+        ? iss_content_model_veranstaltung_semantic_label($semantic_key)
+        : '';
 
     if ($document === null && function_exists('iss_content_model_veranstaltung_content_document')) {
         $document = iss_content_model_veranstaltung_content_document($post_id);
@@ -1296,6 +1382,8 @@ function iss_content_model_get_veranstaltung_editor_summary(WP_Post $post, ?arra
     return [
         'entity_key' => $entity_key,
         'entity_label' => $entity_label,
+        'semantic_key' => $semantic_key,
+        'semantic_label' => $semantic_label,
         'shape' => $shape,
         'surface' => $surface,
         'skin' => $skin,
@@ -1314,19 +1402,14 @@ function iss_content_model_render_veranstaltung_status_strip(array $summary): vo
 {
     $chips = [
         [
-            'label' => __('Typ', 'iss-content-model'),
+            'label' => __('Struktur', 'iss-content-model'),
             'value' => (string) ($summary['entity_label'] ?: __('Fehlt', 'iss-content-model')),
             'complete' => (string) ($summary['entity_key'] ?? '') !== '',
         ],
         [
-            'label' => __('Shape', 'iss-content-model'),
-            'value' => (string) ($summary['shape'] ?: __('Offen', 'iss-content-model')),
-            'complete' => (string) ($summary['shape'] ?? '') !== '',
-        ],
-        [
-            'label' => __('Ausgabe', 'iss-content-model'),
-            'value' => (string) ($summary['surface'] ?: __('Offen', 'iss-content-model')),
-            'complete' => (string) ($summary['surface'] ?? '') !== '',
+            'label' => __('Art', 'iss-content-model'),
+            'value' => (string) ($summary['semantic_label'] ?: __('Optional', 'iss-content-model')),
+            'complete' => true,
         ],
         [
             'label' => __('Datum', 'iss-content-model'),
@@ -1422,26 +1505,61 @@ function iss_content_model_render_veranstaltung_type_box($post): void
 {
     wp_nonce_field('iss_content_model_save_meta', 'iss_content_model_meta_nonce');
 
+    $post_id = (int) $post->ID;
     $entity_key = function_exists('iss_content_model_sanitize_veranstaltung_entity_key')
-        ? iss_content_model_sanitize_veranstaltung_entity_key((string) get_post_meta($post->ID, '_iss_entity_key', true))
+        ? iss_content_model_sanitize_veranstaltung_entity_key((string) get_post_meta($post_id, '_iss_entity_key', true))
         : '';
+    $semantic_key = iss_content_model_get_veranstaltung_semantic_key($post_id);
 
     echo '<div class="iss-veranstaltung-admin iss-veranstaltung-admin--type">';
     echo '<section class="iss-veranstaltung-admin__section">';
     echo '<div class="iss-veranstaltung-admin__section-head">';
-    echo '<h3>' . esc_html__('Typ & Ausgabe', 'iss-content-model') . '</h3>';
-    echo '<p>' . esc_html__('Der Typ steuert die erlaubten Gesten, die Kalenderlogik und die theme-eigene Frontend-Ausgabe.', 'iss-content-model') . '</p>';
+    echo '<h3>' . esc_html__('Struktur & Art', 'iss-content-model') . '</h3>';
+    echo '<p>' . esc_html__('Über die Struktur legen Sie fest, wie der Kalender rechnet und Daten ausgibt. Die Art nutzen Sie als gezielten Filter, um genau die Inhalte anzuzeigen, die Sie gerade brauchen.', 'iss-content-model') . '</p>';
     echo '</div>';
 
     if (function_exists('iss_content_model_veranstaltung_entity_options')) {
-        echo '<div class="iss-veranstaltung-admin__field">';
-        echo '<span class="iss-veranstaltung-admin__label">' . esc_html__('Veranstaltungstyp', 'iss-content-model') . '</span>';
-        iss_content_model_render_veranstaltung_option_cards('_iss_entity_key', iss_content_model_veranstaltung_entity_options(), $entity_key);
-        echo '</div>';
+        echo '<p class="iss-veranstaltung-admin__field">';
+        echo '<label for="iss_veranstaltung_entity_key"><strong>' . esc_html__('Struktur', 'iss-content-model') . '</strong></label>';
+        iss_content_model_render_veranstaltung_entity_select(iss_content_model_veranstaltung_entity_options(), $entity_key);
+        echo '</p>';
+    }
+
+    if (function_exists('iss_content_model_veranstaltung_semantic_options')) {
+        echo '<p class="iss-veranstaltung-admin__field">';
+        echo '<label for="iss_veranstaltung_semantic_key"><strong>' . esc_html__('Veranstaltungsart', 'iss-content-model') . '</strong></label>';
+        iss_content_model_render_veranstaltung_select(
+            'iss_veranstaltung_semantic_key',
+            'iss_veranstaltung_semantic',
+            iss_content_model_veranstaltung_semantic_options(),
+            $semantic_key
+        );
+        echo '</p>';
     }
 
     echo '</section>';
+
+    iss_content_model_render_veranstaltung_promotion_section($post);
+
     echo '</div>';
+}
+
+function iss_content_model_render_veranstaltung_promotion_section(WP_Post $post): void
+{
+    ob_start();
+    iss_content_model_render_project_promotion_control($post);
+    $control = trim((string) ob_get_clean());
+    if ($control === '') {
+        return;
+    }
+
+    echo '<section class="iss-veranstaltung-admin__section iss-veranstaltung-admin__section--promotion">';
+    echo '<div class="iss-veranstaltung-admin__section-head">';
+    echo '<h3>' . esc_html__('Inhalt promoten', 'iss-content-model') . '</h3>';
+    echo '<p>' . esc_html__('Heben Sie diese Veranstaltung gezielt hervor, wenn sie gerade besonders sichtbar sein soll.', 'iss-content-model') . '</p>';
+    echo '</div>';
+    echo $control; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- Existing metabox renderer escapes its fields.
+    echo '</section>';
 }
 
 function iss_content_model_render_veranstaltung_content_box($post): void
@@ -1472,6 +1590,11 @@ function iss_content_model_render_veranstaltung_content_box($post): void
     $entity_label = $entity_key !== '' && function_exists('iss_content_model_veranstaltung_entity_label')
         ? iss_content_model_veranstaltung_entity_label($entity_key)
         : '';
+    $semantic_label = iss_content_model_get_veranstaltung_semantic_label($post_id);
+    $badge_label = $entity_label !== '' ? $entity_label : __('Struktur nicht gesetzt', 'iss-content-model');
+    if ($semantic_label !== '') {
+        $badge_label .= ' / ' . $semantic_label;
+    }
     $summary = iss_content_model_get_veranstaltung_editor_summary($post, $document);
     $meta_key = function_exists('iss_content_model_veranstaltung_content_meta_key')
         ? iss_content_model_veranstaltung_content_meta_key()
@@ -1531,13 +1654,12 @@ function iss_content_model_render_veranstaltung_content_box($post): void
     echo '<div class="iss-veranstaltung-content-editor__head">';
     echo '<div>';
     echo '<h3>' . esc_html__('Strukturierter Inhalt', 'iss-content-model') . '</h3>';
-    echo '<p>' . esc_html__('Primaere Inhaltsstruktur fuer die oeffentliche Veranstaltungsausgabe. Der alte Blockinhalt bleibt nur noch als Rueckfall erhalten, wenn keine gueltige Struktur gespeichert ist.', 'iss-content-model') . '</p>';
+    echo '<p>' . esc_html__('Ihr Hauptformat für die Anzeige öffentlicher Veranstaltungen.', 'iss-content-model') . '</p>';
     echo '</div>';
-    echo '<span class="iss-veranstaltung-content-editor__badge">' . esc_html($entity_label !== '' ? $entity_label : __('Typ nicht gesetzt', 'iss-content-model')) . '</span>';
+    echo '<span class="iss-veranstaltung-content-editor__badge">' . esc_html($badge_label) . '</span>';
     echo '</div>';
     iss_content_model_render_veranstaltung_status_strip($summary);
     echo '<div class="iss-veranstaltung-content-editor__root"></div>';
-    echo '<p class="description">' . esc_html__('Speichern erfolgt mit dem normalen WordPress-Aktualisieren. Leere Struktur entfernt das JSON-Meta.', 'iss-content-model') . '</p>';
     echo '</div>';
 }
 
@@ -1548,7 +1670,7 @@ function iss_content_model_render_veranstaltung_status_box($post): void
     $entity_key = (string) ($summary['entity_key'] ?? '');
     $checks = [
         __('Titel', 'iss-content-model') => trim((string) get_the_title($post_id)) !== '',
-        __('Typ', 'iss-content-model') => $entity_key !== '',
+        __('Struktur', 'iss-content-model') => $entity_key !== '',
     ];
 
     if ($entity_key !== '' && function_exists('iss_content_model_veranstaltung_required_facts_for_entity') && function_exists('iss_content_model_veranstaltung_required_fact_labels') && function_exists('iss_content_model_veranstaltung_fact_value')) {
@@ -1564,27 +1686,26 @@ function iss_content_model_render_veranstaltung_status_box($post): void
     $checks[__('Kurzbeschreibung', 'iss-content-model')] = !empty($summary['has_excerpt']);
     $checks[__('Struktur', 'iss-content-model')] = !empty($summary['has_structure']);
     $checks[__('Beitragsbild oder Galerie', 'iss-content-model')] = !empty($summary['has_thumbnail']) || (int) ($summary['counts']['media_refs'] ?? 0) > 0;
+    $missing_checks = array_filter($checks, static function ($complete): bool {
+        return !$complete;
+    });
 
     echo '<div class="iss-veranstaltung-status">';
-    echo '<dl class="iss-veranstaltung-status__facts">';
-    echo '<div><dt>' . esc_html__('Typ', 'iss-content-model') . '</dt><dd>' . esc_html((string) ($summary['entity_label'] ?: __('Nicht gesetzt', 'iss-content-model'))) . '</dd></div>';
-    echo '<div><dt>' . esc_html__('Shape', 'iss-content-model') . '</dt><dd>' . esc_html((string) ($summary['shape'] ?: __('Nicht gesetzt', 'iss-content-model'))) . '</dd></div>';
-    echo '<div><dt>' . esc_html__('Ausgabe', 'iss-content-model') . '</dt><dd>' . esc_html((string) ($summary['surface'] ?: __('Nicht gesetzt', 'iss-content-model'))) . '</dd></div>';
-    echo '<div><dt>' . esc_html__('Skin', 'iss-content-model') . '</dt><dd>' . esc_html((string) ($summary['skin'] ?: __('Nicht gesetzt', 'iss-content-model'))) . '</dd></div>';
-    echo '<div><dt>' . esc_html__('Abschnitte', 'iss-content-model') . '</dt><dd>' . esc_html((string) (int) ($summary['counts']['sections'] ?? 0)) . '</dd></div>';
-    echo '<div><dt>' . esc_html__('Bilder', 'iss-content-model') . '</dt><dd>' . esc_html((string) (int) ($summary['counts']['media_refs'] ?? 0)) . '</dd></div>';
-    echo '</dl>';
+    if (!$missing_checks) {
+        echo '<p class="iss-veranstaltung-status__ready">' . esc_html__('Alles bereit für die Veröffentlichung.', 'iss-content-model') . '</p>';
+        echo '</div>';
+        return;
+    }
 
-    echo '<ul class="iss-veranstaltung-status__checks">';
-    foreach ($checks as $label => $complete) {
-        echo '<li class="' . esc_attr($complete ? 'is-complete' : 'is-missing') . '">';
-        echo '<span aria-hidden="true">' . esc_html($complete ? 'OK' : '!') . '</span>';
+    echo '<p class="iss-veranstaltung-status__summary">' . esc_html__('Noch offen:', 'iss-content-model') . '</p>';
+    echo '<ul class="iss-veranstaltung-status__checks iss-veranstaltung-status__checks--compact">';
+    foreach (array_keys($missing_checks) as $label) {
+        echo '<li class="is-missing">';
+        echo '<span aria-hidden="true">' . esc_html('!') . '</span>';
         echo esc_html((string) $label);
         echo '</li>';
     }
     echo '</ul>';
-
-    echo '<p class="description">' . esc_html__('Das Beitragsbild wird als Kartenbild genutzt. Wenn es fehlt, greift die globale Platzhaltergrafik.', 'iss-content-model') . '</p>';
     echo '</div>';
 }
 
@@ -1852,6 +1973,32 @@ function iss_content_model_save_veranstaltung_entity_meta(int $post_id, array $r
     update_post_meta($post_id, '_iss_entity_key', $entity_key);
 }
 
+function iss_content_model_save_veranstaltung_semantic_terms(int $post_id, array $raw): void
+{
+    if (
+        !array_key_exists('iss_veranstaltung_semantic', $raw)
+        || !taxonomy_exists(ISS_CONTENT_MODEL_VERANSTALTUNG_SEMANTIC_TAXONOMY)
+        || !function_exists('iss_content_model_sanitize_veranstaltung_semantic_key')
+    ) {
+        return;
+    }
+
+    $semantic_key = iss_content_model_sanitize_veranstaltung_semantic_key((string) $raw['iss_veranstaltung_semantic']);
+    if ($semantic_key === '') {
+        wp_set_object_terms($post_id, [], ISS_CONTENT_MODEL_VERANSTALTUNG_SEMANTIC_TAXONOMY, false);
+        return;
+    }
+
+    $label = function_exists('iss_content_model_veranstaltung_semantic_label')
+        ? iss_content_model_veranstaltung_semantic_label($semantic_key)
+        : '';
+    if ($label !== '' && !term_exists($semantic_key, ISS_CONTENT_MODEL_VERANSTALTUNG_SEMANTIC_TAXONOMY)) {
+        wp_insert_term($label, ISS_CONTENT_MODEL_VERANSTALTUNG_SEMANTIC_TAXONOMY, ['slug' => $semantic_key]);
+    }
+
+    wp_set_object_terms($post_id, [$semantic_key], ISS_CONTENT_MODEL_VERANSTALTUNG_SEMANTIC_TAXONOMY, false);
+}
+
 function iss_content_model_save_veranstaltung_content_meta(int $post_id, array $raw): void
 {
     if (!function_exists('iss_content_model_veranstaltung_content_meta_key') || !function_exists('iss_content_model_sanitize_veranstaltung_content_json')) {
@@ -1906,9 +2053,10 @@ function iss_content_model_save_meta_box(int $post_id): void
     if ($post_type === ISS_CONTENT_MODEL_VERANSTALTUNG_POST_TYPE) {
         $selected_place_id = absint($raw['iss_primary_place_id'] ?? 0);
         iss_content_model_save_veranstaltung_entity_meta($post_id, $raw);
+        iss_content_model_save_veranstaltung_semantic_terms($post_id, $raw);
         iss_content_model_save_veranstaltung_content_meta($post_id, $raw);
 
-        unset($raw['_iss_entity_key'], $raw['_iss_content_json']);
+        unset($raw['_iss_entity_key'], $raw['_iss_content_json'], $raw['iss_veranstaltung_semantic']);
 
         $manual_location = trim((string) ($raw['iss_location'] ?? ''));
         if ($selected_place_id > 0 && $manual_location === '') {
@@ -2304,7 +2452,8 @@ function iss_content_model_add_veranstaltung_entity_column(array $columns): arra
         $ordered_columns[$key] = $label;
 
         if ($key === 'title') {
-            $ordered_columns['iss_entity_key'] = __('Typ', 'iss-content-model');
+            $ordered_columns['iss_entity_key'] = __('Struktur', 'iss-content-model');
+            $ordered_columns['iss_veranstaltung_semantic'] = __('Art', 'iss-content-model');
         }
     }
 
@@ -2314,23 +2463,32 @@ add_filter('manage_' . ISS_CONTENT_MODEL_VERANSTALTUNG_POST_TYPE . '_posts_colum
 
 function iss_content_model_render_veranstaltung_entity_column(string $column, int $post_id): void
 {
-    if ($column !== 'iss_entity_key') {
+    if ($column === 'iss_entity_key') {
+        $entity_key = function_exists('iss_content_model_sanitize_veranstaltung_entity_key')
+            ? iss_content_model_sanitize_veranstaltung_entity_key((string) get_post_meta($post_id, '_iss_entity_key', true))
+            : '';
+        if ($entity_key === '') {
+            echo '<span aria-hidden="true">-</span><span class="screen-reader-text">' . esc_html__('Nicht gesetzt', 'iss-content-model') . '</span>';
+            return;
+        }
+
+        $label = function_exists('iss_content_model_veranstaltung_entity_label')
+            ? iss_content_model_veranstaltung_entity_label($entity_key)
+            : '';
+
+        echo esc_html($label !== '' ? $label : $entity_key);
         return;
     }
 
-    $entity_key = function_exists('iss_content_model_sanitize_veranstaltung_entity_key')
-        ? iss_content_model_sanitize_veranstaltung_entity_key((string) get_post_meta($post_id, '_iss_entity_key', true))
-        : '';
-    if ($entity_key === '') {
-        echo '<span aria-hidden="true">-</span><span class="screen-reader-text">' . esc_html__('Nicht gesetzt', 'iss-content-model') . '</span>';
-        return;
+    if ($column === 'iss_veranstaltung_semantic') {
+        $label = iss_content_model_get_veranstaltung_semantic_label($post_id);
+        if ($label === '') {
+            echo '<span aria-hidden="true">-</span><span class="screen-reader-text">' . esc_html__('Nicht gesetzt', 'iss-content-model') . '</span>';
+            return;
+        }
+
+        echo esc_html($label);
     }
-
-    $label = function_exists('iss_content_model_veranstaltung_entity_label')
-        ? iss_content_model_veranstaltung_entity_label($entity_key)
-        : '';
-
-    echo esc_html($label !== '' ? $label : $entity_key);
 }
 add_action('manage_' . ISS_CONTENT_MODEL_VERANSTALTUNG_POST_TYPE . '_posts_custom_column', 'iss_content_model_render_veranstaltung_entity_column', 10, 2);
 
@@ -2342,10 +2500,10 @@ function iss_content_model_render_veranstaltung_entity_filter(string $post_type)
 
     // phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Admin list filter reads query state only.
     $selected = sanitize_text_field((string) wp_unslash($_GET['iss_entity_key_filter'] ?? ''));
-    echo '<label class="screen-reader-text" for="iss_entity_key_filter">' . esc_html__('Nach Typ filtern', 'iss-content-model') . '</label>';
+    echo '<label class="screen-reader-text" for="iss_entity_key_filter">' . esc_html__('Nach Struktur filtern', 'iss-content-model') . '</label>';
     echo '<select id="iss_entity_key_filter" name="iss_entity_key_filter">';
-    echo '<option value="">' . esc_html__('Alle Typen', 'iss-content-model') . '</option>';
-    echo '<option value="__unset"' . selected($selected, '__unset', false) . '>' . esc_html__('Typ nicht gesetzt', 'iss-content-model') . '</option>';
+    echo '<option value="">' . esc_html__('Alle Strukturen', 'iss-content-model') . '</option>';
+    echo '<option value="__unset"' . selected($selected, '__unset', false) . '>' . esc_html__('Struktur nicht gesetzt', 'iss-content-model') . '</option>';
 
     foreach (iss_content_model_veranstaltung_entity_options() as $entity_key => $option) {
         if ($entity_key === '') {
@@ -2356,6 +2514,23 @@ function iss_content_model_render_veranstaltung_entity_filter(string $post_type)
     }
 
     echo '</select>';
+
+    if (function_exists('iss_content_model_veranstaltung_semantic_options')) {
+        // phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Admin list filter reads query state only.
+        $semantic_selected = sanitize_text_field((string) wp_unslash($_GET['iss_veranstaltung_semantic_filter'] ?? ''));
+        echo '<label class="screen-reader-text" for="iss_veranstaltung_semantic_filter">' . esc_html__('Nach Art filtern', 'iss-content-model') . '</label>';
+        echo '<select id="iss_veranstaltung_semantic_filter" name="iss_veranstaltung_semantic_filter">';
+        echo '<option value="">' . esc_html__('Alle Arten', 'iss-content-model') . '</option>';
+        echo '<option value="__unset"' . selected($semantic_selected, '__unset', false) . '>' . esc_html__('Art nicht gesetzt', 'iss-content-model') . '</option>';
+        foreach (iss_content_model_veranstaltung_semantic_options() as $semantic_key => $option) {
+            if ($semantic_key === '') {
+                continue;
+            }
+
+            echo '<option value="' . esc_attr((string) $semantic_key) . '"' . selected($semantic_selected, (string) $semantic_key, false) . '>' . esc_html((string) ($option['label'] ?? $semantic_key)) . '</option>';
+        }
+        echo '</select>';
+    }
 }
 add_action('restrict_manage_posts', 'iss_content_model_render_veranstaltung_entity_filter');
 
@@ -2372,11 +2547,9 @@ function iss_content_model_filter_veranstaltung_admin_query(WP_Query $query): vo
 
     // phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Admin list filter reads query state only.
     $selected = sanitize_text_field((string) wp_unslash($_GET['iss_entity_key_filter'] ?? ''));
-    if ($selected === '') {
-        return;
-    }
 
-    $meta_query = (array) $query->get('meta_query');
+    $meta_query = $query->get('meta_query');
+    $meta_query = is_array($meta_query) ? $meta_query : [];
     if ($selected === '__unset') {
         $meta_query[] = [
             'relation' => 'OR',
@@ -2391,21 +2564,52 @@ function iss_content_model_filter_veranstaltung_admin_query(WP_Query $query): vo
             ],
         ];
         $query->set('meta_query', $meta_query);
+    } elseif ($selected !== '') {
+        $entity_key = function_exists('iss_content_model_sanitize_veranstaltung_entity_key')
+            ? iss_content_model_sanitize_veranstaltung_entity_key($selected)
+            : '';
+        if ($entity_key !== '') {
+            $storage_keys = function_exists('iss_content_model_veranstaltung_entity_storage_keys_for_query')
+                ? iss_content_model_veranstaltung_entity_storage_keys_for_query([$entity_key])
+                : [$entity_key];
+            $meta_query[] = [
+                'key' => '_iss_entity_key',
+                'value' => $storage_keys,
+                'compare' => 'IN',
+            ];
+            $query->set('meta_query', $meta_query);
+        }
+    }
+
+    // phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Admin list filter reads query state only.
+    $semantic_selected = sanitize_text_field((string) wp_unslash($_GET['iss_veranstaltung_semantic_filter'] ?? ''));
+    if ($semantic_selected === '') {
         return;
     }
 
-    $entity_key = function_exists('iss_content_model_sanitize_veranstaltung_entity_key')
-        ? iss_content_model_sanitize_veranstaltung_entity_key($selected)
+    $tax_query = $query->get('tax_query');
+    $tax_query = is_array($tax_query) ? $tax_query : [];
+    if ($semantic_selected === '__unset') {
+        $tax_query[] = [
+            'taxonomy' => ISS_CONTENT_MODEL_VERANSTALTUNG_SEMANTIC_TAXONOMY,
+            'operator' => 'NOT EXISTS',
+        ];
+        $query->set('tax_query', $tax_query);
+        return;
+    }
+
+    $semantic_key = function_exists('iss_content_model_sanitize_veranstaltung_semantic_key')
+        ? iss_content_model_sanitize_veranstaltung_semantic_key($semantic_selected)
         : '';
-    if ($entity_key === '') {
+    if ($semantic_key === '') {
         return;
     }
 
-    $meta_query[] = [
-        'key' => '_iss_entity_key',
-        'value' => $entity_key,
-        'compare' => '=',
+    $tax_query[] = [
+        'taxonomy' => ISS_CONTENT_MODEL_VERANSTALTUNG_SEMANTIC_TAXONOMY,
+        'field' => 'slug',
+        'terms' => [$semantic_key],
     ];
-    $query->set('meta_query', $meta_query);
+    $query->set('tax_query', $tax_query);
 }
 add_action('pre_get_posts', 'iss_content_model_filter_veranstaltung_admin_query');

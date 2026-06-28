@@ -725,6 +725,13 @@ final class ISS_Content_Model_Editor_UI_Audit_CLI_Command
             ];
         }
 
+        if ($post_type === ISS_CONTENT_MODEL_VERANSTALTUNG_POST_TYPE && $id === ISS_CONTENT_MODEL_TOPIC_TAXONOMY . 'div') {
+            return [
+                'state' => self::STATE_HIDE_FOR_EDITORS,
+                'reason' => 'Raw event topic taxonomy stays list/data state until a curated Veranstaltung topic control exists.',
+            ];
+        }
+
         $must_show = [
             'submitdiv',
             'postexcerpt',
@@ -825,6 +832,14 @@ final class ISS_Content_Model_Editor_UI_Audit_CLI_Command
             ];
         }
 
+        if ($post_type === ISS_CONTENT_MODEL_VERANSTALTUNG_POST_TYPE && $taxonomy->name === ISS_CONTENT_MODEL_TOPIC_TAXONOMY) {
+            return [
+                'state' => self::STATE_HIDE_FOR_EDITORS,
+                'reason' => 'Raw event topic taxonomy stays list/data state until a curated Veranstaltung topic control exists.',
+                'section' => '',
+            ];
+        }
+
         if (isset($dashboard_index[$box_id])) {
             return [
                 'state' => self::STATE_INTEGRATED,
@@ -919,6 +934,7 @@ final class ISS_Content_Model_Editor_UI_Audit_CLI_Command
         $useful = [
             'iss_project_front_page_order',
             'iss_entity_key',
+            'iss_veranstaltung_semantic',
             'iss_graph_related_promotion',
             'taxonomy-ausstellung_typ',
         ];

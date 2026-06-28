@@ -180,7 +180,7 @@ Needed cleanup:
 ### Veranstaltung structure
 
 Veranstaltung currently has its own `iss-content` Struktur editor using
-`_iss_content_json`, plus separate Basis, Typ & Ausgabe, and Redaktionsstatus
+`_iss_content_json`, plus separate Basis, Struktur & Art, and Redaktionsstatus
 boxes.
 
 Decision: **migrate/integrate**. The storage can remain `_iss_content_json` for

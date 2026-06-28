@@ -902,20 +902,39 @@ function industriesalon_get_placeholder_asset_url(string $filename): string
 function industriesalon_get_related_card_placeholder_filename(WP_Post $post): string
 {
     if ($post->post_type === 'veranstaltung') {
+        $raw_entity_key = (string) get_post_meta((int) $post->ID, '_iss_entity_key', true);
         $entity_key = function_exists('iss_content_model_sanitize_veranstaltung_entity_key')
-            ? iss_content_model_sanitize_veranstaltung_entity_key((string) get_post_meta((int) $post->ID, '_iss_entity_key', true))
+            ? iss_content_model_sanitize_veranstaltung_entity_key($raw_entity_key)
             : '';
-        $entity_placeholders = [
-            'event.vortrag' => 'vortrag.webp',
-            'event.gespraech' => 'gespach.webp',
-            'event.lesung' => 'lesung.webp',
-            'event.festival' => 'fest.webp',
-            'event.praesentation' => 'versanstaltung.webp',
-            'event.workshop' => 'versanstaltung.webp',
-            'event.konzert' => 'fest.webp',
+        if ($entity_key === 'event.festival') {
+            return 'fest.webp';
+        }
+
+        $semantic_key = '';
+        $semantic_taxonomy = defined('ISS_CONTENT_MODEL_VERANSTALTUNG_SEMANTIC_TAXONOMY')
+            ? (string) constant('ISS_CONTENT_MODEL_VERANSTALTUNG_SEMANTIC_TAXONOMY')
+            : 'veranstaltung_art';
+        if (taxonomy_exists($semantic_taxonomy)) {
+            $terms = wp_get_post_terms((int) $post->ID, $semantic_taxonomy, ['fields' => 'slugs']);
+            if (is_array($terms) && $terms !== []) {
+                $semantic_key = function_exists('iss_content_model_sanitize_veranstaltung_semantic_key')
+                    ? iss_content_model_sanitize_veranstaltung_semantic_key((string) $terms[0])
+                    : sanitize_title((string) $terms[0]);
+            }
+        }
+        if ($semantic_key === '' && function_exists('iss_content_model_veranstaltung_semantic_from_legacy_entity_key')) {
+            $semantic_key = iss_content_model_veranstaltung_semantic_from_legacy_entity_key($raw_entity_key);
+        }
+
+        $semantic_placeholders = [
+            'vortrag' => 'vortrag.webp',
+            'gespraech' => 'gespach.webp',
+            'lesung' => 'lesung.webp',
+            'konzert' => 'fest.webp',
+            'film' => 'fest.webp',
         ];
 
-        return $entity_placeholders[$entity_key] ?? 'versanstaltung.webp';
+        return $semantic_placeholders[$semantic_key] ?? 'versanstaltung.webp';
     }
 
     $post_type_placeholders = [
