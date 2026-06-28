@@ -6,6 +6,29 @@ be recovered from Git history.
 
 ## 2026-06-28
 
+- Unified lightweight booking/order intake around `iss-commerce-lite`:
+  `/iss-payments/v1/request` is now the canonical public request endpoint for
+  `tour_booking`, `event_booking`, and `publication_order`, while the old tour
+  and publication endpoints remain compatibility wrappers. Veranstaltung
+  booking now mirrors the publication sale gesture in the native WordPress right
+  rail with a toggle, Euro price, CTA label, and booking hint; occurrence/timeline
+  rendering projects that state into the existing booking modal with the Mollie
+  option still disabled until a real provider integration registers support.
+  This extends the existing request table/admin/export layer instead of
+  introducing a parallel booking store; no SQL or upload artifact is required.
+- Tightened shared JSON editor wording: editors now choose/add visible
+  `Abschnitt` entries rather than seeing the internal architecture term
+  `Geste`, the redundant Veranstaltung per-card type selector is removed, and
+  the stored `kicker` field is labelled as `Vorspann` in the editorial UI
+  without changing the JSON storage contract.
+- Consolidated the first shared composition UX slice across JSON-driven content:
+  the shared `iss-editorial` card list now exposes `Löschen` beside
+  `Bearbeiten`, Veranstaltung composition now uses compact ordered cards plus an
+  edit modal instead of always-open section forms and a separate preview column,
+  the Veranstaltung add-section rail now uses the same colored-dot structure as
+  other JSON editors, and the useful Veranstaltung health/status strip stays
+  inside the composition box with explicit Beitragsbild/Kurzbeschreibung checks
+  while the separate Redaktionsstatus metabox is no longer registered.
 - Polished the Veranstaltung editorial admin workflow: the old type list is now
   a structural `Struktur` choice (`Veranstaltung`, `Programm / Fest`,
   `Serientermin`) plus a hidden semantic `veranstaltung_art` taxonomy for

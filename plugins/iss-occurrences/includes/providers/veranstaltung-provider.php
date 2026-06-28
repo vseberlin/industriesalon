@@ -36,6 +36,41 @@ final class ISS_Occurrences_VeranstaltungProvider extends ISS_Occurrences_Abstra
         ];
     }
 
+    public function get_occurrences_for_post(WP_Post $post): array
+    {
+        $occurrences = parent::get_occurrences_for_post($post);
+        if (!$occurrences) {
+            return [];
+        }
+
+        $booking_url = $this->get_booking_url($post);
+        if ($booking_url === '') {
+            return $occurrences;
+        }
+
+        foreach ($occurrences as &$occurrence) {
+            $occurrence['booking_url'] = $booking_url;
+        }
+        unset($occurrence);
+
+        return $occurrences;
+    }
+
+    private function get_booking_url(WP_Post $post): string
+    {
+        $post_id = (int) $post->ID;
+        if (!$this->get_bool_meta($post_id, 'iss_booking_enabled', false)) {
+            return '';
+        }
+
+        $permalink = get_permalink($post);
+        if (is_string($permalink) && $permalink !== '') {
+            return $permalink . '#buchung';
+        }
+
+        return '#buchung';
+    }
+
     private function entity_allows_calendar(WP_Post $post): bool
     {
         $entity_key = trim((string) get_post_meta((int) $post->ID, '_iss_entity_key', true));

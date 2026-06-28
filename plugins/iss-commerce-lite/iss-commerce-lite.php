@@ -232,7 +232,7 @@ add_action('wp_enqueue_scripts', function () {
     );
 
     wp_localize_script('iss-payments-lite-publications', 'ISS_PUBLICATION_ORDER', [
-        'orderUrl' => esc_url_raw(rest_url('iss-payments/v1/publication-order')),
+        'orderUrl' => esc_url_raw(rest_url('iss-payments/v1/request')),
         'nonce' => wp_create_nonce('wp_rest'),
     ]);
 });
@@ -269,6 +269,12 @@ add_action('rest_api_init', function () {
     register_rest_route('iss-payments/v1', '/publication-order', [
         'methods'  => 'POST',
         'callback' => 'iss_payments_lite_create_publication_order',
+        'permission_callback' => '__return_true',
+    ]);
+
+    register_rest_route('iss-payments/v1', '/request', [
+        'methods'  => 'POST',
+        'callback' => 'iss_payments_lite_create_request',
         'permission_callback' => '__return_true',
     ]);
 });
@@ -429,9 +435,12 @@ function iss_payments_lite_send_request_notification(int $request_id, string $re
         return;
     }
 
-    $label = $request_kind === 'publication_order'
-        ? __('Neue Publikationsbestellung', 'iss-payments-lite')
-        : __('Neue Buchungsanfrage', 'iss-payments-lite');
+    $labels = [
+        'publication_order' => __('Neue Publikationsbestellung', 'iss-payments-lite'),
+        'event_booking' => __('Neue Veranstaltungsbuchung', 'iss-payments-lite'),
+        'tour_booking' => __('Neue Buchungsanfrage', 'iss-payments-lite'),
+    ];
+    $label = $labels[$request_kind] ?? __('Neue Anfrage', 'iss-payments-lite');
     $subject = sprintf('[%s] %s #%d', wp_specialchars_decode(get_bloginfo('name'), ENT_QUOTES), $label, $request_id);
     $lines = [
         $label . ' #' . $request_id,
@@ -450,13 +459,13 @@ function iss_payments_lite_send_request_notification(int $request_id, string $re
     iss_payments_lite_record_notification_result($request_id, (bool) $sent, $sent ? '' : 'wp_mail returned false');
 }
 
-function iss_payments_lite_create_tour_booking(WP_REST_Request $request) {
-    $rate_limited = iss_payments_lite_check_rate_limit('tour-booking');
+function iss_payments_lite_public_payload(WP_REST_Request $request, string $scope) {
+    $rate_limited = iss_payments_lite_check_rate_limit($scope);
     if ($rate_limited instanceof WP_REST_Response) {
         return $rate_limited;
     }
 
-    $guarded = iss_payments_lite_public_request_guard($request, 'tour-booking');
+    $guarded = iss_payments_lite_public_request_guard($request, $scope);
     if ($guarded instanceof WP_REST_Response) {
         return $guarded;
     }
@@ -476,6 +485,57 @@ function iss_payments_lite_create_tour_booking(WP_REST_Request $request) {
         return $timing;
     }
 
+    return $payload;
+}
+
+function iss_payments_lite_create_request(WP_REST_Request $request) {
+    $payload = iss_payments_lite_public_payload($request, 'commerce-request');
+    if ($payload instanceof WP_REST_Response) {
+        return $payload;
+    }
+
+    return iss_payments_lite_process_request_payload($payload, $request);
+}
+
+function iss_payments_lite_create_tour_booking(WP_REST_Request $request) {
+    $payload = iss_payments_lite_public_payload($request, 'tour-booking');
+    if ($payload instanceof WP_REST_Response) {
+        return $payload;
+    }
+
+    $payload['request_kind'] = 'tour_booking';
+    return iss_payments_lite_process_request_payload($payload, $request);
+}
+
+function iss_payments_lite_create_publication_order(WP_REST_Request $request) {
+    $payload = iss_payments_lite_public_payload($request, 'publication-order');
+    if ($payload instanceof WP_REST_Response) {
+        return $payload;
+    }
+
+    $payload['request_kind'] = 'publication_order';
+    if (!isset($payload['source_post_id']) && isset($payload['publication_id'])) {
+        $payload['source_post_id'] = (int) $payload['publication_id'];
+    }
+    $payload['source_post_type'] = 'publication';
+
+    return iss_payments_lite_process_request_payload($payload, $request);
+}
+
+function iss_payments_lite_process_request_payload(array $payload, WP_REST_Request $request): WP_REST_Response {
+    $request_kind = sanitize_key((string) ($payload['request_kind'] ?? ''));
+    if (!in_array($request_kind, ['tour_booking', 'event_booking', 'publication_order'], true)) {
+        return new WP_REST_Response(['ok' => false, 'error' => 'Ungültige Anfrageart.'], 400);
+    }
+
+    if ($request_kind === 'publication_order') {
+        return iss_payments_lite_process_publication_order($payload, $request);
+    }
+
+    return iss_payments_lite_process_booking_request($payload, $request_kind, $request);
+}
+
+function iss_payments_lite_process_booking_request(array $payload, string $request_kind, WP_REST_Request $request): WP_REST_Response {
     $name = sanitize_text_field($payload['name'] ?? '');
     $email = sanitize_email($payload['email'] ?? '');
     $tickets = isset($payload['tickets']) ? (int) $payload['tickets'] : 0;
@@ -487,9 +547,24 @@ function iss_payments_lite_create_tour_booking(WP_REST_Request $request) {
     $title = sanitize_text_field($payload['title'] ?? '');
     $source_post_id = isset($payload['source_post_id']) ? (int) $payload['source_post_id'] : 0;
     $source_post_type = sanitize_key($payload['source_post_type'] ?? '');
+    $price_cents = 0;
 
     $tag = $payload_tag;
-    if ($source_post_id > 0) {
+    if ($request_kind === 'event_booking') {
+        if ($source_post_id <= 0 || get_post_type($source_post_id) !== 'veranstaltung') {
+            return new WP_REST_Response(['ok' => false, 'error' => 'Ungültige Veranstaltung.'], 400);
+        }
+        if (empty(get_post_meta($source_post_id, 'iss_booking_enabled', true))) {
+            return new WP_REST_Response(['ok' => false, 'error' => 'Diese Veranstaltung ist derzeit nicht buchbar.'], 400);
+        }
+        $source_post_type = 'veranstaltung';
+        $price_cents = max(0, (int) get_post_meta($source_post_id, 'iss_booking_price_cents', true));
+        if ($title === '') {
+            $title = get_the_title($source_post_id);
+        }
+    }
+
+    if ($source_post_id > 0 && $request_kind === 'tour_booking') {
         $resolved = '';
         if (function_exists('iss_occurrences_resolve_tag_for_source_post_id')) {
             $resolved = iss_occurrences_resolve_tag_for_source_post_id($source_post_id);
@@ -518,7 +593,7 @@ function iss_payments_lite_create_tour_booking(WP_REST_Request $request) {
     if (!iss_payments_lite_payment_method_is_supported($payment)) {
         $errors[] = 'Ungültige Zahlungsart.';
     }
-    if ($tag === '' && $source_post_id <= 0) {
+    if ($request_kind === 'tour_booking' && $tag === '' && $source_post_id <= 0) {
         $errors[] = 'Keine Zuordnung vorhanden.';
     }
 
@@ -562,12 +637,13 @@ function iss_payments_lite_create_tour_booking(WP_REST_Request $request) {
         $tag,
         $source_post_id,
     ];
-    $duplicate = iss_payments_lite_check_duplicate('tour-booking', $duplicate_parts);
+    $duplicate_scope = $request_kind === 'event_booking' ? 'event-booking' : 'tour-booking';
+    $duplicate = iss_payments_lite_check_duplicate($duplicate_scope, $duplicate_parts);
     if ($duplicate instanceof WP_REST_Response) {
         return $duplicate;
     }
-    $duplicate_hash = iss_payments_lite_duplicate_hash('tour-booking', $duplicate_parts);
-    if (iss_payments_lite_recent_duplicate_exists('tour_booking', $duplicate_hash)) {
+    $duplicate_hash = iss_payments_lite_duplicate_hash($duplicate_scope, $duplicate_parts);
+    if (iss_payments_lite_recent_duplicate_exists($request_kind, $duplicate_hash)) {
         return new WP_REST_Response(['ok' => false, 'error' => 'Diese Anfrage wurde bereits gesendet.'], 409);
     }
 
@@ -583,25 +659,29 @@ function iss_payments_lite_create_tour_booking(WP_REST_Request $request) {
         'title' => $title,
         'source_post_id' => $source_post_id,
         'source_post_type' => $source_post_type,
+        'price_cents' => $price_cents,
+        'amount_cents' => $price_cents * $tickets,
         'duplicate_hash' => $duplicate_hash,
         'ip' => isset($_SERVER['REMOTE_ADDR']) ? sanitize_text_field((string) $_SERVER['REMOTE_ADDR']) : '',
         'ua' => isset($_SERVER['HTTP_USER_AGENT']) ? sanitize_text_field((string) $_SERVER['HTTP_USER_AGENT']) : '',
     ];
 
-    $request_id = iss_payments_lite_insert_request('tour_booking', $entry);
+    $request_id = iss_payments_lite_insert_request($request_kind, $entry);
     if ($request_id <= 0) {
         return new WP_REST_Response(['ok' => false, 'error' => 'Anfrage konnte nicht gespeichert werden.'], 500);
     }
     $entry['request_id'] = $request_id;
-    iss_payments_lite_send_request_notification($request_id, 'tour_booking', $entry);
+    iss_payments_lite_send_request_notification($request_id, $request_kind, $entry);
 
-    /**
-     * Compatibility hook for existing booking consumers.
-     *
-     * @param array $entry Sanitized booking entry.
-     * @param WP_REST_Request $request Original REST request.
-     */
-    do_action('is_tours_booking_created', $entry, $request);
+    if ($request_kind === 'tour_booking') {
+        /**
+         * Compatibility hook for existing booking consumers.
+         *
+         * @param array $entry Sanitized booking entry.
+         * @param WP_REST_Request $request Original REST request.
+         */
+        do_action('is_tours_booking_created', $entry, $request);
+    }
 
     /**
      * New domain-neutral hook for thin booking/payment flows.
@@ -614,33 +694,8 @@ function iss_payments_lite_create_tour_booking(WP_REST_Request $request) {
     return new WP_REST_Response(['ok' => true], 200);
 }
 
-function iss_payments_lite_create_publication_order(WP_REST_Request $request) {
-    $rate_limited = iss_payments_lite_check_rate_limit('publication-order');
-    if ($rate_limited instanceof WP_REST_Response) {
-        return $rate_limited;
-    }
-
-    $guarded = iss_payments_lite_public_request_guard($request, 'publication-order');
-    if ($guarded instanceof WP_REST_Response) {
-        return $guarded;
-    }
-
-    $payload = json_decode($request->get_body(), true);
-    if (!is_array($payload)) {
-        return new WP_REST_Response(['ok' => false, 'error' => 'Invalid payload'], 400);
-    }
-
-    $honeypot = iss_payments_lite_reject_honeypot($payload);
-    if ($honeypot instanceof WP_REST_Response) {
-        return $honeypot;
-    }
-
-    $timing = iss_payments_lite_validate_submit_timing($payload);
-    if ($timing instanceof WP_REST_Response) {
-        return $timing;
-    }
-
-    $publication_id = isset($payload['publication_id']) ? (int) $payload['publication_id'] : 0;
+function iss_payments_lite_process_publication_order(array $payload, WP_REST_Request $request): WP_REST_Response {
+    $publication_id = isset($payload['source_post_id']) ? (int) $payload['source_post_id'] : (int) ($payload['publication_id'] ?? 0);
     $name = sanitize_text_field($payload['name'] ?? '');
     $email = sanitize_email($payload['email'] ?? '');
     $quantity = isset($payload['quantity']) ? (int) $payload['quantity'] : 0;
@@ -695,6 +750,8 @@ function iss_payments_lite_create_publication_order(WP_REST_Request $request) {
     $entry = [
         'time' => current_time('mysql'),
         'publication_id' => $publication_id,
+        'source_post_id' => $publication_id,
+        'source_post_type' => 'publication',
         'title' => get_the_title($publication_id),
         'name' => $name,
         'email' => $email,

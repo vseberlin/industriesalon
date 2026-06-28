@@ -33,9 +33,9 @@ add_action('add_meta_boxes', function () {
     );
 
     add_meta_box(
-        'iss-content-model-veranstaltung-status',
-        __('Redaktionsstatus', 'iss-content-model'),
-        'iss_content_model_render_veranstaltung_status_box',
+        'iss-content-model-veranstaltung-booking',
+        __('Buchung', 'iss-content-model'),
+        'iss_content_model_render_veranstaltung_booking_box',
         ISS_CONTENT_MODEL_VERANSTALTUNG_POST_TYPE,
         'side',
         'high'
@@ -568,12 +568,6 @@ function iss_content_model_get_editor_dashboard_sections(string $post_type): arr
                     'iss-content-editorial-sets',
                     'iss-graph-editorial-signals',
                 ],
-            ],
-            [
-                'slug' => 'publish',
-                'label' => __('Veröffentlichen', 'iss-content-model'),
-                'description' => __('Redaktionsstatus und fehlende Angaben vor der WordPress-Veröffentlichung.', 'iss-content-model'),
-                'boxIds' => ['iss-content-model-veranstaltung-status'],
             ],
         ];
     } elseif ($post_type === ISS_CONTENT_MODEL_PROJEKT_POST_TYPE) {
@@ -1372,6 +1366,9 @@ function iss_content_model_get_veranstaltung_editor_summary(WP_Post $post, ?arra
     $semantic_label = $semantic_key !== '' && function_exists('iss_content_model_veranstaltung_semantic_label')
         ? iss_content_model_veranstaltung_semantic_label($semantic_key)
         : '';
+    $booking_enabled = get_post_meta($post_id, 'iss_booking_enabled', true);
+    $booking_enabled = $booking_enabled === '' ? false : (bool) $booking_enabled;
+    $booking_price_cents = (int) get_post_meta($post_id, 'iss_booking_price_cents', true);
 
     if ($document === null && function_exists('iss_content_model_veranstaltung_content_document')) {
         $document = iss_content_model_veranstaltung_content_document($post_id);
@@ -1391,6 +1388,10 @@ function iss_content_model_get_veranstaltung_editor_summary(WP_Post $post, ?arra
         'end' => $end,
         'has_place' => $selected_place_id > 0 || $location !== '',
         'place_label' => $selected_place_id > 0 ? iss_content_model_get_veranstaltung_place_title($selected_place_id) : $location,
+        'has_booking' => $booking_enabled,
+        'booking_label' => $booking_enabled
+            ? ($booking_price_cents > 0 ? number_format($booking_price_cents / 100, 2, ',', '') . ' EUR' : __('Anfrage aktiv', 'iss-content-model'))
+            : __('Nicht aktiv', 'iss-content-model'),
         'has_excerpt' => has_excerpt($post_id),
         'has_thumbnail' => has_post_thumbnail($post_id),
         'counts' => $counts,
@@ -1422,7 +1423,12 @@ function iss_content_model_render_veranstaltung_status_strip(array $summary): vo
             'complete' => !empty($summary['has_place']),
         ],
         [
-            'label' => __('Struktur', 'iss-content-model'),
+            'label' => __('Buchung', 'iss-content-model'),
+            'value' => (string) ($summary['booking_label'] ?? __('Nicht aktiv', 'iss-content-model')),
+            'complete' => !empty($summary['has_booking']),
+        ],
+        [
+            'label' => __('Inhalt', 'iss-content-model'),
             'value' => sprintf(
                 /* translators: %d: number of structured sections. */
                 _n('%d Abschnitt', '%d Abschnitte', (int) ($summary['counts']['sections'] ?? 0), 'iss-content-model'),
@@ -1431,14 +1437,14 @@ function iss_content_model_render_veranstaltung_status_strip(array $summary): vo
             'complete' => !empty($summary['has_structure']),
         ],
         [
-            'label' => __('Medien', 'iss-content-model'),
-            'value' => sprintf(
-                /* translators: 1: media count, 2: gallery section count. */
-                __('%1$d Bilder / %2$d Galerie', 'iss-content-model'),
-                (int) ($summary['counts']['media_refs'] ?? 0),
-                (int) ($summary['counts']['gallery_sections'] ?? 0)
-            ),
-            'complete' => !empty($summary['has_thumbnail']) || (int) ($summary['counts']['media_refs'] ?? 0) > 0,
+            'label' => __('Beitragsbild', 'iss-content-model'),
+            'value' => !empty($summary['has_thumbnail']) ? __('Gesetzt', 'iss-content-model') : __('Fehlt', 'iss-content-model'),
+            'complete' => !empty($summary['has_thumbnail']),
+        ],
+        [
+            'label' => __('Kurzbeschreibung', 'iss-content-model'),
+            'value' => !empty($summary['has_excerpt']) ? __('Gesetzt', 'iss-content-model') : __('Fehlt', 'iss-content-model'),
+            'complete' => !empty($summary['has_excerpt']),
         ],
     ];
 
@@ -1498,6 +1504,30 @@ function iss_content_model_render_veranstaltung_basis_box($post): void {
     echo '<p class="iss-veranstaltung-admin__programme"><label><input type="checkbox" name="iss_content_model[iss_programme_enabled]" value="1" ' . checked($programme_enabled, true, false) . '> ' . esc_html__('Im Kalender / Programm anzeigen', 'iss-content-model') . '</label></p>';
     echo '</section>';
 
+    echo '</div>';
+}
+
+function iss_content_model_render_veranstaltung_booking_box($post): void
+{
+    wp_nonce_field('iss_content_model_save_meta', 'iss_content_model_meta_nonce');
+
+    $booking_enabled = get_post_meta($post->ID, 'iss_booking_enabled', true);
+    $booking_enabled = $booking_enabled === '' ? false : (bool) $booking_enabled;
+    $booking_price_cents = (int) get_post_meta($post->ID, 'iss_booking_price_cents', true);
+    $booking_price_display = $booking_price_cents > 0 ? number_format($booking_price_cents / 100, 2, ',', '') : '';
+    $booking_cta_label = (string) get_post_meta($post->ID, 'iss_booking_cta_label', true);
+    $booking_gateway_description = (string) get_post_meta($post->ID, 'iss_booking_gateway_description', true);
+
+    echo '<div class="iss-veranstaltung-admin iss-veranstaltung-admin--booking">';
+    echo '<p class="iss-veranstaltung-admin__programme"><label><input type="checkbox" name="iss_content_model[iss_booking_enabled]" value="1" ' . checked($booking_enabled, true, false) . '> ' . esc_html__('Buchung aktivieren', 'iss-content-model') . '</label></p>';
+    echo '<p class="iss-veranstaltung-admin__field"><label for="iss_booking_price_display"><strong>' . esc_html__('Preis in Euro', 'iss-content-model') . '</strong></label>';
+    echo '<input class="widefat" type="text" id="iss_booking_price_display" name="iss_booking_price_display" value="' . esc_attr($booking_price_display) . '" placeholder="12,00">';
+    echo '<span class="description">' . esc_html__('Leer oder 0 für reine Anfrage ohne Betrag.', 'iss-content-model') . '</span></p>';
+    echo '<p class="iss-veranstaltung-admin__field"><label for="iss_booking_cta_label"><strong>' . esc_html__('CTA-Label', 'iss-content-model') . '</strong></label>';
+    echo '<input class="widefat" type="text" id="iss_booking_cta_label" name="iss_content_model[iss_booking_cta_label]" value="' . esc_attr($booking_cta_label) . '" placeholder="' . esc_attr__('Tickets buchen', 'iss-content-model') . '"></p>';
+    echo '<p class="iss-veranstaltung-admin__field"><label for="iss_booking_gateway_description"><strong>' . esc_html__('Buchungshinweis', 'iss-content-model') . '</strong></label>';
+    echo '<textarea class="widefat" rows="3" id="iss_booking_gateway_description" name="iss_content_model[iss_booking_gateway_description]">' . esc_textarea($booking_gateway_description) . '</textarea>';
+    echo '<span class="description">' . esc_html__('Mollie ist vorbereitet, aber bis zur Provider-Anbindung deaktiviert; Anfragen werden lokal gespeichert.', 'iss-content-model') . '</span></p>';
     echo '</div>';
 }
 
@@ -2026,6 +2056,22 @@ function iss_content_model_save_veranstaltung_content_meta(int $post_id, array $
     update_post_meta($post_id, $meta_key, wp_slash($sanitized));
 }
 
+function iss_content_model_parse_price_to_cents($value): int
+{
+    $value = trim((string) $value);
+    if ($value === '') {
+        return 0;
+    }
+
+    $value = str_replace(["\xc2\xa0", ' '], '', $value);
+    $value = str_replace(',', '.', $value);
+    if (!is_numeric($value)) {
+        return 0;
+    }
+
+    return max(0, (int) round(((float) $value) * 100));
+}
+
 function iss_content_model_save_meta_box(int $post_id): void
 {
     if (defined('DOING_AUTOSAVE') && DOING_AUTOSAVE) {
@@ -2062,6 +2108,10 @@ function iss_content_model_save_meta_box(int $post_id): void
         if ($selected_place_id > 0 && $manual_location === '') {
             $raw['iss_location'] = iss_content_model_get_veranstaltung_place_title($selected_place_id);
         }
+
+        $raw['iss_booking_price_cents'] = isset($_POST['iss_booking_price_display'])
+            ? iss_content_model_parse_price_to_cents(wp_unslash((string) $_POST['iss_booking_price_display']))
+            : 0;
     }
 
     if ($post_type === ISS_CONTENT_MODEL_AUSSTELLUNG_POST_TYPE && array_key_exists('ausstellung_typ', $raw)) {

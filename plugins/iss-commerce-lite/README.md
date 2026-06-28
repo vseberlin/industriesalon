@@ -30,9 +30,15 @@ Right now this plugin owns:
 ```txt
 POST /wp-json/is-tours/v1/book
 POST /wp-json/iss-payments/v1/publication-order
+POST /wp-json/iss-payments/v1/request
 Tools > ISS Anfragen
 wp iss-commerce-lite verify
 ```
+
+`/iss-payments/v1/request` is the canonical public intake route for shared
+request/order flows. It accepts `request_kind` values for `tour_booking`,
+`event_booking`, and `publication_order`; the legacy tour and publication
+endpoints remain compatibility wrappers around the same validation/storage path.
 
 SuperSaaS settings, occurrence ingestion, and `GET /wp-json/iss/v1/tour-slots`
 belong to `iss-occurrences`.

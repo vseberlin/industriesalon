@@ -105,6 +105,10 @@ function iss_content_model_meta_definitions() {
             'iss_primary_place_id' => ['type' => 'integer', 'sanitize' => 'absint', 'default' => 0],
             'iss_location' => ['type' => 'string', 'sanitize' => 'sanitize_text_field', 'default' => ''],
             'iss_programme_enabled' => ['type' => 'boolean', 'sanitize' => 'rest_sanitize_boolean', 'default' => false],
+            'iss_booking_enabled' => ['type' => 'boolean', 'sanitize' => 'rest_sanitize_boolean', 'default' => false],
+            'iss_booking_price_cents' => ['type' => 'integer', 'sanitize' => 'absint', 'default' => 0],
+            'iss_booking_cta_label' => ['type' => 'string', 'sanitize' => 'sanitize_text_field', 'default' => ''],
+            'iss_booking_gateway_description' => ['type' => 'string', 'sanitize' => 'sanitize_textarea_field', 'default' => ''],
         ],
         ISS_CONTENT_MODEL_AUSSTELLUNG_POST_TYPE => [
             'iss_start_date' => ['type' => 'string', 'sanitize' => 'sanitize_text_field', 'default' => ''],

@@ -4,6 +4,11 @@ Immediate executable work only. Larger future programs live in `docs/project/bac
 
 ## Next
 
+- Veranstaltung booking public render: the editor meta and
+  `iss-commerce-lite` request endpoint exist, but single Veranstaltung output
+  still needs a visible booking section/block in the theme template or
+  `_iss_content_json` renderer. Add the public CTA/modal trigger so bookable
+  Veranstaltungen are visible outside timeline cards.
 - Related graph autonomy ops: after deploying the `iss-graph` autonomy slice,
   run `wp iss-graph migrate --skip-sync`, then configure a monitored external
   scheduler entry for `wp iss-graph reconcile --batch-size=50 --max-runtime=30`

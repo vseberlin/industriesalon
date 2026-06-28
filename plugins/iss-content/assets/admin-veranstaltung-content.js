@@ -37,6 +37,23 @@
     return text.slice(0, limit - 1).trim() + '…';
   }
 
+  function sectionTone(type) {
+    var tones = {
+      intro: '#b94436',
+      kapitel: '#1a1a2e',
+      fliesstext: '#5f5e5a',
+      leitfrage: '#7f77dd',
+      zitat: '#d4537e',
+      galerie: '#426d54',
+      material: '#6b5b35',
+      ort: '#185fa5',
+      programm: '#ba7517',
+      abschluss: '#a32d2d'
+    };
+
+    return tones[type] || '#1a1a2e';
+  }
+
   function archiveReferenceLabel(item) {
     return compactText(item.memberTitle || item.inventoryNumber || item.objectTypeLabel || item.setTitle || item.title || '', 140);
   }
@@ -210,6 +227,7 @@
     state.entity_key = entityKey || state.entity_key || '';
     state.schema_version = 1;
     var previewPane = null;
+    var activeModal = null;
 
     function firstGesture() {
       return gestureKeys[0] || 'intro';
@@ -355,6 +373,13 @@
       state.sections.splice(next, 0, section);
       updateField();
       render();
+    }
+
+    function closeEditorModal() {
+      if (activeModal) {
+        activeModal.remove();
+        activeModal = null;
+      }
     }
 
     function createField(label, value, onInput, multiline) {
@@ -590,9 +615,18 @@
       var palette = createElement('div', 'iss-veranstaltung-content-editor__palette');
       gestureKeys.forEach(function (type) {
         var config = gestureConfig(type);
-        var button = createElement('button', 'button', config.label || type);
+        var button = createElement('button', 'iss-veranstaltung-content-editor__section-button');
+        var dot = createElement('span', 'iss-veranstaltung-content-editor__section-dot');
+        var body = createElement('span', 'iss-veranstaltung-content-editor__section-body');
         button.type = 'button';
         button.title = config.description || '';
+        dot.style.backgroundColor = sectionTone(type);
+        body.appendChild(createElement('strong', '', config.label || type));
+        if (config.description) {
+          body.appendChild(createElement('span', '', config.description));
+        }
+        button.appendChild(dot);
+        button.appendChild(body);
         button.addEventListener('click', function () {
           addSection(type);
         });
@@ -601,84 +635,179 @@
       target.appendChild(palette);
     }
 
-    function renderTypeSelect(section, index, target) {
-      var label = createElement('label', 'iss-veranstaltung-content-editor__field-row');
-      var labelText = createElement('span', '', 'Geste');
-      var select = document.createElement('select');
-      gestureKeys.forEach(function (type) {
-        var option = document.createElement('option');
-        option.value = type;
-        option.textContent = gestureConfig(type).label || type;
-        option.selected = section.type === type;
-        select.appendChild(option);
+    function sectionSummary(section) {
+      var parts = [];
+      if (section.kicker) {
+        parts.push(String(section.kicker).replace(/\s+/g, ' ').slice(0, 60));
+      }
+      if (section.title) {
+        parts.push(String(section.title).replace(/\s+/g, ' ').slice(0, 80));
+      }
+      if (section.body) {
+        parts.push(String(section.body).replace(/\s+/g, ' ').slice(0, 130));
+      }
+      if (section.quote) {
+        parts.push('Zitat: ' + String(section.quote).replace(/\s+/g, ' ').slice(0, 90));
+      }
+      if (Array.isArray(section.items) && section.items.length) {
+        parts.push(String(section.items.length) + ' Punkt(e)');
+      }
+      if (Array.isArray(section.media_refs) && section.media_refs.length) {
+        parts.push(String(section.media_refs.length) + ' Bild(er)');
+      }
+      if (Array.isArray(section.object_refs) && section.object_refs.length) {
+        parts.push(String(section.object_refs.length) + ' Objekt(e)');
+      }
+      if (Array.isArray(section.dynamic_refs) && section.dynamic_refs.length) {
+        parts.push(String(section.dynamic_refs.length) + ' Zentralfeld(er)');
+      }
+
+      return parts.join(' · ');
+    }
+
+    function renderSectionMediaThumbs(section, target) {
+      var refs = (Array.isArray(section.media_refs) ? section.media_refs : []).slice(0, 4);
+      if (!refs.length) {
+        return;
+      }
+
+      var strip = createElement('div', 'iss-veranstaltung-content-editor__card-media');
+      refs.forEach(function (reference) {
+        hydrateMediaReference(reference, render);
+        var thumbnail = mediaDisplayThumbnail(reference);
+        var item = createElement('span', 'iss-veranstaltung-content-editor__card-thumb');
+        if (thumbnail) {
+          var image = document.createElement('img');
+          image.src = thumbnail;
+          image.alt = '';
+          item.appendChild(image);
+        } else {
+          item.textContent = 'Bild';
+        }
+        strip.appendChild(item);
       });
-      select.addEventListener('change', function () {
-        section.type = select.value || firstGesture();
+      target.appendChild(strip);
+    }
+
+    function renderSectionEditor(section, target) {
+      var type = section.type || firstGesture();
+      var config = gestureConfig(type);
+
+      if (supports(config, 'kicker')) {
+        target.appendChild(createField('Vorspann', section.kicker || '', function (value) { section.kicker = value; }, false));
+      }
+      if (supports(config, 'title')) {
+        target.appendChild(createField('Titel', section.title || '', function (value) { section.title = value; }, false));
+      }
+      if (supports(config, 'body')) {
+        target.appendChild(createField('Text', section.body || '', function (value) { section.body = value; }, true));
+      }
+      if (supports(config, 'quote')) {
+        target.appendChild(createField('Zitat', section.quote || '', function (value) { section.quote = value; }, true));
+      }
+      if (supports(config, 'attribution')) {
+        target.appendChild(createField('Zuordnung', section.attribution || '', function (value) { section.attribution = value; }, false));
+      }
+      if (supports(config, 'items')) {
+        target.appendChild(createField('Punkte, je Zeile ein Eintrag', itemsToText(section.items), function (value) {
+          section.items = textToItems(value);
+        }, true));
+      }
+      if (supports(config, 'media_refs')) {
+        renderMediaPicker(section, target);
+      }
+      if (supports(config, 'object_refs')) {
+        renderObjectPicker(section, target);
+      }
+      if (supports(config, 'dynamic_refs')) {
+        renderDynamicReferenceList(section, target);
+      }
+    }
+
+    function openSectionEditor(index) {
+      var section = state.sections[index];
+      if (!section) {
+        return;
+      }
+
+      var type = section.type || firstGesture();
+      var config = gestureConfig(type);
+      var modal = createElement('div', 'iss-veranstaltung-content-editor__modal');
+      var dialog = createElement('div', 'iss-veranstaltung-content-editor__modal-dialog');
+      var head = createElement('div', 'iss-veranstaltung-content-editor__modal-head');
+      var body = createElement('div', 'iss-veranstaltung-content-editor__modal-body');
+      var foot = createElement('div', 'iss-veranstaltung-content-editor__modal-foot');
+      var title = createElement('h3', '', config.label || type || 'Abschnitt');
+      var close = createElement('button', 'button', 'Schliessen');
+      var done = createElement('button', 'button button-primary', 'Uebernehmen');
+
+      closeEditorModal();
+      close.type = 'button';
+      done.type = 'button';
+      close.addEventListener('click', function () {
+        closeEditorModal();
+      });
+      done.addEventListener('click', function () {
+        closeEditorModal();
         updateField();
         render();
       });
-      label.appendChild(labelText);
-      label.appendChild(select);
-      target.appendChild(label);
+      modal.addEventListener('click', function (event) {
+        if (event.target === modal) {
+          closeEditorModal();
+        }
+      });
+
+      head.appendChild(title);
+      head.appendChild(close);
+      renderSectionEditor(section, body);
+      foot.appendChild(done);
+      dialog.appendChild(head);
+      dialog.appendChild(body);
+      dialog.appendChild(foot);
+      modal.appendChild(dialog);
+      document.body.appendChild(modal);
+      activeModal = modal;
     }
 
     function renderSection(section, index, target) {
       var type = section.type || firstGesture();
       var config = gestureConfig(type);
       var card = createElement('article', 'iss-veranstaltung-content-editor__card');
-      var head = createElement('div', 'iss-veranstaltung-content-editor__card-head');
-      var title = createElement('h4', '', (config.label || type) + ' ' + String(index + 1));
+      var marker = createElement('span', 'iss-veranstaltung-content-editor__card-marker');
+      var meta = createElement('div', 'iss-veranstaltung-content-editor__card-meta');
+      var typeLabel = createElement('span', 'iss-veranstaltung-content-editor__card-type', config.label || type);
+      var title = createElement('h4', '', section.title || 'Ohne Titel');
+      var summary = createElement('p', '', sectionSummary(section) || 'Noch kein Inhalt.');
       var actions = createElement('div', 'iss-veranstaltung-content-editor__actions');
+      var edit = createElement('button', 'button button-primary', 'Bearbeiten');
       var up = createElement('button', 'button', 'Hoch');
       var down = createElement('button', 'button', 'Runter');
-      var remove = createElement('button', 'button button-link-delete', 'Entfernen');
+      var remove = createElement('button', 'button button-link-delete', 'Löschen');
 
-      [up, down, remove].forEach(function (button) {
+      marker.style.backgroundColor = sectionTone(type);
+
+      [edit, up, down, remove].forEach(function (button) {
         button.type = 'button';
       });
+      edit.addEventListener('click', function () { openSectionEditor(index); });
       up.disabled = index === 0;
       down.disabled = index >= state.sections.length - 1;
       up.addEventListener('click', function () { moveSection(index, -1); });
       down.addEventListener('click', function () { moveSection(index, 1); });
       remove.addEventListener('click', function () { removeSection(index); });
 
+      actions.appendChild(edit);
       actions.appendChild(up);
       actions.appendChild(down);
       actions.appendChild(remove);
-      head.appendChild(title);
-      head.appendChild(actions);
-      card.appendChild(head);
-
-      renderTypeSelect(section, index, card);
-      if (supports(config, 'kicker')) {
-        card.appendChild(createField('Kicker', section.kicker || '', function (value) { section.kicker = value; }, false));
-      }
-      if (supports(config, 'title')) {
-        card.appendChild(createField('Titel', section.title || '', function (value) { section.title = value; }, false));
-      }
-      if (supports(config, 'body')) {
-        card.appendChild(createField('Text', section.body || '', function (value) { section.body = value; }, true));
-      }
-      if (supports(config, 'quote')) {
-        card.appendChild(createField('Zitat', section.quote || '', function (value) { section.quote = value; }, true));
-      }
-      if (supports(config, 'attribution')) {
-        card.appendChild(createField('Zuordnung', section.attribution || '', function (value) { section.attribution = value; }, false));
-      }
-      if (supports(config, 'items')) {
-        card.appendChild(createField('Punkte, je Zeile ein Eintrag', itemsToText(section.items), function (value) {
-          section.items = textToItems(value);
-        }, true));
-      }
-      if (supports(config, 'media_refs')) {
-        renderMediaPicker(section, card);
-      }
-      if (supports(config, 'object_refs')) {
-        renderObjectPicker(section, card);
-      }
-      if (supports(config, 'dynamic_refs')) {
-        renderDynamicReferenceList(section, card);
-      }
+      meta.appendChild(typeLabel);
+      meta.appendChild(title);
+      meta.appendChild(summary);
+      renderSectionMediaThumbs(section, meta);
+      card.appendChild(marker);
+      card.appendChild(meta);
+      card.appendChild(actions);
 
       target.appendChild(card);
     }
@@ -800,11 +929,9 @@
       var body = createElement('div', 'iss-veranstaltung-content-editor__body');
       var rail = createElement('aside', 'iss-veranstaltung-content-editor__rail');
       var workspace = createElement('div', 'iss-veranstaltung-content-editor__workspace');
-      var editorPane = createElement('div', 'iss-veranstaltung-content-editor__edit');
-      previewPane = createElement('div', 'iss-veranstaltung-content-editor__preview-wrap');
       var stage = createElement('div', 'iss-veranstaltung-content-editor__stage');
       var addDefault = createElement('button', 'button button-primary', 'Abschnitt hinzufuegen');
-      var sections = currentSections();
+      previewPane = null;
 
       addDefault.type = 'button';
       addDefault.addEventListener('click', function () {
@@ -815,17 +942,14 @@
       rail.appendChild(addDefault);
 
       if (!state.sections.length) {
-        stage.appendChild(createElement('p', 'iss-veranstaltung-content-editor__empty', 'Noch keine Struktur. Eine Geste waehlen oder einen Abschnitt hinzufuegen.'));
+        stage.appendChild(createElement('p', 'iss-veranstaltung-content-editor__empty', 'Noch keine Struktur. Links einen Abschnitt waehlen oder einen Abschnitt hinzufuegen.'));
       } else {
         state.sections.forEach(function (section, index) {
           renderSection(section, index, stage);
         });
       }
 
-      editorPane.appendChild(stage);
-      renderPreview(previewPane, sections);
-      workspace.appendChild(editorPane);
-      workspace.appendChild(previewPane);
+      workspace.appendChild(stage);
       body.appendChild(rail);
       body.appendChild(workspace);
       layout.appendChild(body);

@@ -489,6 +489,7 @@
       var edit = createElement('button', 'button button-primary', 'Bearbeiten');
       var up = createElement('button', 'button', 'Hoch');
       var down = createElement('button', 'button', 'Runter');
+      var remove = createElement('button', 'button button-link-delete', 'Löschen');
 
       marker.style.backgroundColor = sectionTone(type);
       meta.appendChild(createElement('span', 'iss-editorial-card__type', sectionConfig(type).label || type));
@@ -498,7 +499,7 @@
         renderMediaThumbs(section, meta);
       }
 
-      [edit, up, down].forEach(function (button) {
+      [edit, up, down, remove].forEach(function (button) {
         button.type = 'button';
       });
       edit.addEventListener('click', function () { openEditor(index); });
@@ -506,9 +507,11 @@
       down.disabled = index >= documentState.sections.length - 1;
       up.addEventListener('click', function () { moveSection(index, -1); });
       down.addEventListener('click', function () { moveSection(index, 1); });
+      remove.addEventListener('click', function () { removeSection(index); });
       actions.appendChild(edit);
       actions.appendChild(up);
       actions.appendChild(down);
+      actions.appendChild(remove);
 
       card.appendChild(marker);
       card.appendChild(meta);
@@ -534,7 +537,7 @@
       if (!documentState.sections.some(function (section) {
         return section && !isSectionHidden(section.type || 'kapitel');
       })) {
-        stage.appendChild(createElement('p', 'iss-editorial-empty', 'Noch keine Abschnitte. Links eine Geste wählen.'));
+        stage.appendChild(createElement('p', 'iss-editorial-empty', 'Noch keine Abschnitte. Links einen Abschnitt wählen.'));
       } else {
         documentState.sections.forEach(function (section, index) {
           renderSectionCard(section, index, stage);
@@ -1000,7 +1003,6 @@
       var foot = createElement('div', 'iss-editorial-modal__foot');
       var title = createElement('h2', '', sectionConfig(section.type).label || section.type || 'Abschnitt');
       var close = createElement('button', 'button', 'Schließen');
-      var remove = createElement('button', 'button button-link-delete', 'Abschnitt entfernen');
       var done = createElement('button', 'button button-primary', 'Übernehmen');
 
       close.type = 'button';
@@ -1008,12 +1010,6 @@
         event.preventDefault();
         event.stopPropagation();
         closeModal();
-      });
-      remove.type = 'button';
-      remove.addEventListener('click', function (event) {
-        event.preventDefault();
-        event.stopPropagation();
-        removeSection(index);
       });
       done.type = 'button';
       done.addEventListener('click', function (event) {
@@ -1027,7 +1023,6 @@
       head.appendChild(title);
       head.appendChild(close);
       renderSectionFields(section, body);
-      foot.appendChild(remove);
       foot.appendChild(done);
       dialog.appendChild(head);
       dialog.appendChild(body);
@@ -1038,7 +1033,7 @@
 
     function renderSectionFields(section, body) {
       var type = section.type || 'kapitel';
-      var kickerField = createTextInput('Kicker', section.kicker || '', function (value) {
+      var kickerField = createTextInput('Vorspann', section.kicker || '', function (value) {
         section.kicker = value;
         render();
         scheduleAutosave();

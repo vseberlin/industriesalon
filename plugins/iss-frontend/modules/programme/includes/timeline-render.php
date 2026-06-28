@@ -199,6 +199,37 @@ function iss_timeline_should_render_grouped_occurrences($row, $opts = []) {
     return iss_timeline_has_grouped_occurrences($row);
 }
 
+function iss_timeline_get_booking_action_attrs($row): array {
+    if (!is_array($row)) {
+        return [];
+    }
+
+    $source_post_id = isset($row['source_post_id']) ? (int) $row['source_post_id'] : 0;
+    $source_post_type = sanitize_key((string) ($row['source_post_type'] ?? ''));
+    $request_kind = $source_post_type === 'veranstaltung' ? 'event_booking' : 'tour_booking';
+    $attrs = [
+        'data-request-kind' => $request_kind,
+    ];
+
+    if ($source_post_type === 'veranstaltung' && $source_post_id > 0) {
+        $price_cents = max(0, (int) get_post_meta($source_post_id, 'iss_booking_price_cents', true));
+        $cta_label = trim((string) get_post_meta($source_post_id, 'iss_booking_cta_label', true));
+        $description = trim((string) get_post_meta($source_post_id, 'iss_booking_gateway_description', true));
+
+        if ($price_cents > 0) {
+            $attrs['data-amount'] = (string) $price_cents;
+        }
+        if ($cta_label !== '') {
+            $attrs['data-label'] = $cta_label;
+        }
+        if ($description !== '') {
+            $attrs['data-description'] = $description;
+        }
+    }
+
+    return $attrs;
+}
+
 function iss_timeline_get_ticket_action_for_occurrence($row, $opts = []) {
     if (!is_array($row)) {
         return [];
@@ -251,6 +282,7 @@ function iss_timeline_get_ticket_action_for_occurrence($row, $opts = []) {
         if ($source_post_type !== '') {
             $action['attrs']['data-source-post-type'] = $source_post_type;
         }
+        $action['attrs'] = array_merge($action['attrs'], iss_timeline_get_booking_action_attrs($row));
     }
 
     return $action;
@@ -450,6 +482,7 @@ function iss_timeline_build_actions($row, $opts = []) {
             if ($source_post_type !== '') {
                 $ticket_action['attrs']['data-source-post-type'] = $source_post_type;
             }
+            $ticket_action['attrs'] = array_merge($ticket_action['attrs'], iss_timeline_get_booking_action_attrs($row));
         }
         $actions[] = $ticket_action;
     }

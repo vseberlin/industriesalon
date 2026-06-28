@@ -497,14 +497,37 @@ function buildTicketOptions(max = 8, selected = 1) {
   return out;
 }
 
+function formatCents(amount) {
+  const cents = Number(amount || 0);
+  if (!Number.isFinite(cents) || cents <= 0) return '';
+  return `${(cents / 100).toFixed(2).replace('.', ',')} €`;
+}
+
 function createBookingForm(widget, slot) {
   const startISO = slot._date ? slot._date.toISOString() : (slot.start || '');
-  const hasBookUrl = !!(window.IS_TOUR_CALENDAR && window.IS_TOUR_CALENDAR.bookUrl);
+  const postUrl = (window.IS_TOUR_CALENDAR && (window.IS_TOUR_CALENDAR.requestUrl || window.IS_TOUR_CALENDAR.bookUrl)) || '';
+  const hasBookUrl = !!postUrl;
   const sourcePostId = (widget && widget.dataset && widget.dataset.sourcePostId) ? widget.dataset.sourcePostId : '';
   const sourcePostType = (widget && widget.dataset && widget.dataset.sourcePostType) ? widget.dataset.sourcePostType : '';
+  const requestKind = (slot.requestKind || (sourcePostType === 'veranstaltung' ? 'event_booking' : 'tour_booking')).trim() || 'tour_booking';
   const bookingTitle = escapeHtml((slot.title || 'Termin').trim() || 'Termin');
   const bookingDate = escapeHtml(formatBookingDateLabel(slot));
   const ticketOptions = buildTicketOptions(8, 1);
+  const amountCents = Number(slot.amount || 0);
+  const priceLabel = formatCents(amountCents);
+  const summaryPrice = priceLabel
+    ? `<p class="is-tour-calendar__booking-summary-price">${escapeHtml(priceLabel)} pro Ticket</p>`
+    : '';
+  const bookingDescription = String(slot.description || '').trim();
+  const paymentCopy = bookingDescription || (priceLabel ? 'Zahlung derzeit vor Ort. Mollie ist vorbereitet und folgt nach der Provider-Anbindung.' : 'Zahlung derzeit vor Ort. Online-Zahlung folgt später.');
+  const paymentField = priceLabel
+    ? `<fieldset class="is-tour-calendar__field is-tour-calendar__field--full">
+        <legend class="is-tour-calendar__field-label">Zahlung</legend>
+        <label><input type="radio" name="payment" value="onsite" checked> Vor Ort</label>
+        <label><input type="radio" name="payment" value="mollie" disabled aria-disabled="true"> Mollie (bald)</label>
+      </fieldset>`
+    : '<input type="hidden" name="payment" value="onsite">';
+  const submitLabel = escapeHtml(String(slot.label || 'Buchung anfragen').trim() || 'Buchung anfragen');
 
   const wrap = document.createElement('div');
   wrap.innerHTML = `
@@ -520,16 +543,17 @@ function createBookingForm(widget, slot) {
             <span class="iss-icon iss-icon--calendar iss-icon--sm" aria-hidden="true"></span>
             <span>${bookingDate}</span>
           </p>
+          ${summaryPrice}
         </div>
         <form class="is-tour-calendar__form" novalidate>
           <input type="text" name="website" value="" tabindex="-1" autocomplete="off" hidden>
+          <input type="hidden" name="request_kind" value="${escapeHtml(requestKind)}">
           <input type="hidden" name="loaded_at" value="${Math.floor(Date.now() / 1000)}">
           <input type="hidden" name="slot_id" value="${escapeHtml(slot.id ?? '')}">
           <input type="hidden" name="start" value="${escapeHtml(startISO)}">
           <input type="hidden" name="title" value="${escapeHtml(slot.title || '')}">
           <input type="hidden" name="source_post_id" value="${escapeHtml(sourcePostId)}">
           <input type="hidden" name="source_post_type" value="${escapeHtml(sourcePostType)}">
-          <input type="hidden" name="payment" value="onsite">
 
           <div class="is-tour-calendar__form-section">
             <div class="is-tour-calendar__form-heading">
@@ -555,7 +579,7 @@ function createBookingForm(widget, slot) {
           <div class="is-tour-calendar__form-section">
             <div class="is-tour-calendar__form-heading">
               <h3 class="is-tour-calendar__form-title">Tickets</h3>
-              <p class="is-tour-calendar__form-copy">Zahlung derzeit vor Ort. Online-Zahlung folgt später.</p>
+              <p class="is-tour-calendar__form-copy">${escapeHtml(paymentCopy)}</p>
             </div>
             <div class="is-tour-calendar__form-grid is-tour-calendar__form-grid--compact">
               <label class="is-tour-calendar__field">
@@ -564,11 +588,12 @@ function createBookingForm(widget, slot) {
                   ${ticketOptions}
                 </select>
               </label>
+              ${paymentField}
             </div>
           </div>
 
           <div class="is-tour-calendar__form-actions">
-            <button type="submit" class="is-tour-calendar__form-submit" ${hasBookUrl ? '' : 'disabled aria-disabled="true"'}>Buchung anfragen</button>
+            <button type="submit" class="is-tour-calendar__form-submit" ${hasBookUrl ? '' : 'disabled aria-disabled="true"'}>${submitLabel}</button>
             <button type="button" class="is-tour-calendar__form-cancel">Abbrechen</button>
           </div>
           <p class="is-tour-calendar__form-status" aria-live="polite"></p>
@@ -594,7 +619,6 @@ function createBookingForm(widget, slot) {
     if (typeof form.reportValidity === 'function' && !form.reportValidity()) {
       return;
     }
-    const postUrl = (window.IS_TOUR_CALENDAR && window.IS_TOUR_CALENDAR.bookUrl) || '';
     if (!postUrl) { status.textContent = 'Buchung momentan nicht verfügbar.'; return; }
     const fd = new FormData(form);
     const payload = Object.fromEntries(fd.entries());
@@ -685,6 +709,10 @@ function initExternalBookingTriggers() {
       start,
       end,
       title: String(trigger.dataset.title || ''),
+      requestKind: String(trigger.dataset.requestKind || '').trim(),
+      amount: Number(trigger.dataset.amount || 0),
+      label: String(trigger.dataset.label || '').trim(),
+      description: String(trigger.dataset.description || '').trim(),
       available: null,
       capacity: null
     };
