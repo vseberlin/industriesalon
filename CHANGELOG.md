@@ -6,6 +6,11 @@ be recovered from Git history.
 
 ## 2026-06-28
 
+- Added `docs/project/related-graph-autonomy-sow.md` to record the relatedness
+  direction: public related places/content must be autonomously derivable
+  without admin presence, manual relations are correction/curation rather than
+  backbone data, and visible content promotion remains a separate
+  non-graph-specific editorial signal.
 - Made related-content resolution graph-first for the default current-post path
   and loosened the `iss-relations` relation payload contract from place-only
   `place_id` rows to generic entity targets while preserving legacy place rows.
