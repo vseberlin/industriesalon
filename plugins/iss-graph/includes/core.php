@@ -1514,6 +1514,10 @@ final class ISS_Graph_Service
         $surface = $this->normalize_editorial_signal_surface($surface);
         $signal = $this->normalize_editorial_signal_type($signal);
 
+        if ($surface === 'related' && $signal === 'feature') {
+            return false;
+        }
+
         return $surface !== '' && $signal !== '';
     }
 

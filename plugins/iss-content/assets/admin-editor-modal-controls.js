@@ -49,6 +49,12 @@
     });
   }
 
+  function sideRailSections() {
+    return (Array.isArray(modalConfig.sideRailSections) ? modalConfig.sideRailSections : []).filter(function (section) {
+      return section && section.slug && Array.isArray(section.modalTargets) && section.modalTargets.length;
+    });
+  }
+
   function createDashboardModalTarget(target) {
     var action = document.createElement('div');
     var copy = document.createElement('div');
@@ -61,7 +67,7 @@
     title.textContent = target.label || target.target || 'Bearbeiten';
     button.type = 'button';
     button.className = 'button button-secondary';
-    button.textContent = 'Oeffnen';
+    button.textContent = target.buttonLabel || 'Bearbeiten';
     button.setAttribute('data-iss-editor-modal-target', target.target || '');
 
     copy.appendChild(title);
@@ -75,6 +81,82 @@
     action.appendChild(button);
 
     return action;
+  }
+
+  function createSideRailModalTarget(target) {
+    var button = document.createElement('button');
+
+    button.type = 'button';
+    button.className = 'button button-secondary iss-editor-side-rail__action';
+    button.textContent = target.buttonLabel || target.label || 'Bearbeiten';
+    button.setAttribute('data-iss-editor-modal-target', target.target || '');
+
+    return button;
+  }
+
+  function createSideRailSection(section) {
+    var postbox = document.createElement('div');
+    var header = document.createElement('div');
+    var title = document.createElement('h2');
+    var inside = document.createElement('div');
+    var actions = document.createElement('div');
+
+    postbox.className = 'postbox iss-editor-side-rail iss-editor-side-rail--' + section.slug;
+    header.className = 'postbox-header';
+    inside.className = 'inside';
+    actions.className = 'iss-editor-side-rail__actions';
+    title.textContent = section.label || section.slug;
+
+    header.appendChild(title);
+    postbox.appendChild(header);
+
+    if (section.description) {
+      var description = document.createElement('p');
+      description.className = 'description';
+      description.textContent = section.description;
+      inside.appendChild(description);
+    }
+
+    (Array.isArray(section.modalTargets) ? section.modalTargets : []).forEach(function (target) {
+      if (target && target.target) {
+        actions.appendChild(createSideRailModalTarget(target));
+      }
+    });
+
+    if (!actions.children.length) {
+      return null;
+    }
+
+    inside.appendChild(actions);
+    postbox.appendChild(inside);
+
+    return postbox;
+  }
+
+  function setupSideRailSections() {
+    var sections = sideRailSections();
+    var side = document.getElementById('side-sortables');
+
+    if (!sections.length || !side || document.querySelector('.iss-editor-side-rail')) {
+      return;
+    }
+
+    sections.forEach(function (section) {
+      var postbox = createSideRailSection(section);
+      var submitBox;
+      if (!postbox) {
+        return;
+      }
+
+      submitBox = side.querySelector('#submitdiv');
+      if (submitBox && submitBox.nextSibling) {
+        side.insertBefore(postbox, submitBox.nextSibling);
+      } else if (submitBox) {
+        side.appendChild(postbox);
+      } else {
+        side.insertBefore(postbox, side.firstChild);
+      }
+    });
   }
 
   function createDashboardSection(section) {
@@ -322,5 +404,8 @@
     }
   });
 
-  document.addEventListener('DOMContentLoaded', setupEditorTopGroups);
+  document.addEventListener('DOMContentLoaded', function () {
+    setupEditorTopGroups();
+    setupSideRailSections();
+  });
 }());

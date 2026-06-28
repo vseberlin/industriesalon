@@ -7,7 +7,7 @@ if (!defined('ABSPATH')) {
 add_action('add_meta_boxes', function () {
     add_meta_box(
         'iss-fuehrung-data',
-        __('Führungsdaten', 'iss-fuehrungen'),
+        __('Pflichtangaben', 'iss-fuehrungen'),
         'iss_fuehrungen_render_meta_box',
         ISS_FUEHRUNGEN_POST_TYPE,
         'side',

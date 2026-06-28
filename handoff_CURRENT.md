@@ -6,91 +6,49 @@ Current work only. Completed checkpoint history belongs in `CHANGELOG.md`; activ
 
 ## Current Work
 
-- Editorial admin simplification SOW is implemented for compatible classic/editorial edit screens using the shared `iss-content` dashboard assembly layer.
-- Converted classic/editorial screens: `veranstaltung`, `projekt`, `ausstellung`, `publication`, `fuehrung`, and `rueckblick`.
-- Existing storage/render owners are preserved:
-  - `iss-editorial` keeps JSON composition storage;
-  - `iss-content` keeps Veranstaltung, Projekt, Ausstellung, Video, Set, and CPT contracts;
-  - `iss-publications`, Führung module, `iss-relations`, `iss-graph`, and `iss-archive` keep their own controls/storage.
-- JSON composition save behavior now uses the normal WordPress Update action; the separate `iss-editorial` REST save/autosave endpoints were removed.
-- Video now has a structured transcript JSON contract:
-  - `_iss_video_transcript_json` is the active transcript authority when present;
-  - existing local Video CPT body transcripts were parsed into `ops/sql/2026-06-28-video-transcript-json.sql`;
-  - the Video Gutenberg body canvas is hidden, while the title/sidebar/metaboxes and normal Update action remain active;
-  - public video rendering uses JSON first and falls back to legacy `post_content`.
-- Related content now resolves through graph entity relatedness before the old
-  place-branch fallback for default current-post blocks. `iss-relations`
-  accepts generic entity targets while keeping old `place_id` payloads working.
-- Veranstaltung `iss_primary_place_id` is registered and saved as native
-  integer meta. `iss-graph` harvests that field into `content_native` venue
-  edges and leaves admin-curated person/organization rows in `content_admin`.
+- Local checkout contains a local-only checkpoint for related graph autonomy plus editorial admin simplification. It has not been pushed.
+- Related graph autonomy foundation is in local commits ahead of `origin/main`:
+  - relation provenance/status schema, dirty queue, bounded reconcile CLI, health/fixture checks, and editorial-signal export/import;
+  - related self-promotion list-table filter/disable workflow;
+  - graph health currently reports no relation integrity errors.
+- Editorial admin simplification now uses the shared `iss-content` dashboard assembly for compatible classic/editorial screens:
+  - converted screens: `veranstaltung`, `projekt`, `ausstellung`, `publication`, `fuehrung`, and `rueckblick`;
+  - required facts now sit in the first dashboard row with excerpt and featured image, before the composition canvas;
+  - generic basis/data boxes use the editor-facing label `Pflichtangaben`;
+  - shared relation/reference controls open from a right-rail `Verknüpfte Inhalte` launcher where the owner metabox exists;
+  - related-content promotion is a simple `Inhalt promoten` checkbox for normal editors, while admins keep full graph metadata controls.
+- Projekt front-page ordering still uses native `menu_order`; normal editors reorder projects with drag and drop in the unfiltered Projekt list table, while admins keep the raw repair field.
+- Storage/render ownership remains unchanged: `iss-content`, `iss-editorial`, `iss-publications`, Führung, `iss-relations`, `iss-graph`, `iss-archive`, and the theme keep their existing contracts.
 
 ## Preserve
 
-- Do not force the classic `titlediv`/postbox dashboard mover onto Gutenberg screens.
-- `page` and `post` remain outside the SOW for now; `post` is fallback-only and unused.
-- Video transcript transfer is DB postmeta only; no upload artifact is required.
-- Graph/native relation code changes require no SQL or upload artifact, but
-  existing target content needs a graph content sync after deploy.
-- Do not revert unrelated local untracked files:
+- Do not force the classic dashboard mover onto Gutenberg screens. `page`, `post`, and Video block-editor surfaces still need separate adapter decisions.
+- Do not move graph/relation/archive/storage ownership into `iss-content`; the dashboard only rearranges existing owner controls.
+- Do not expose graph diagnostics or repair controls to normal editors by default.
+- No SQL or upload artifact is required for the admin UI simplification itself.
+- When deploying the graph autonomy commits, run the graph migration/reconcile checks from `TODO.md`.
+- Leave unrelated local untracked files out of Git unless the user explicitly asks:
   - `iss-exhibition-composition-add.md`
   - `themes/industriesalon/theme2.json`
 
-## Staging Instructions
+## Next Action
 
-On staging after the push:
-
-```bash
-git fetch origin --prune
-git status --short
-git merge --ff-only origin/main
-```
-
-After the code is deployed/fast-forwarded, apply the video transcript artifact with the staging WP-CLI wrapper, for example:
-
-```bash
-wp db query < ops/sql/2026-06-28-video-transcript-json.sql
-wp db query "SELECT COUNT(*) AS migrated_rows FROM wp_postmeta WHERE meta_key = '_iss_video_transcript_json';"
-```
-
-Expected transcript row count from this artifact: `27`.
-
-Refresh graph content entities so existing Veranstaltung venue fields are
-harvested into `content_native` relations:
-
-```bash
-wp iss-graph sync-content
-```
-
-`wp iss backfill-all` is also valid if the whole shared backfill suite should be
-reconciled on the target.
-
-## Verify On Staging
-
-- Open a Video edit screen, e.g. `21116`: transcript JSON editor should show segment rows; the old Gutenberg body canvas should be hidden.
-- Open the matching frontend video route: transcript timecode anchors and the left rail should render.
-- Spot-check one converted classic/editorial screen such as Veranstaltung and one `iss-editorial` screen to confirm normal WordPress Update still persists JSON changes.
-- Open a Veranstaltung with an Atlas-Ort, save normally, then confirm related
-  content still resolves without editing the related-places box.
-- `videos.php` still has pre-existing PHPCS escaping findings in the renderer; the new helper/admin files pass targeted checks.
+- Push only when explicitly requested.
+- If this local checkpoint is deployed to a target, run the graph autonomy migration/health steps in `TODO.md`.
+- Next editorial admin slice should be content-specific, not another shared layout pass:
+  - decide Publication related-publications UX;
+  - decide whether Rueckblick needs more relation owner controls;
+  - design the separate Gutenberg adapter for `page`, `post`, and Video if those screens should enter the shared workflow.
 
 ## Verified Locally
 
-- PHP: Docker `php -l` for changed plugin PHP files.
-- JS/CSS: `node --check`, targeted ESLint, targeted Stylelint.
-- PHPStan: targeted checks for video transcript helper and video renderer passed.
-- PHPCS: new helper/admin files passed; `videos.php` reports the same 24 pre-existing renderer escaping findings as `HEAD`.
-- WP-CLI: video transcript JSON rows applied locally, count `27`; sample video `21116` renders JSON transcript with timecode anchors.
-- Browser: sample Video edit screen shows 13 JSON segment rows and hides the Gutenberg body canvas; frontend sample renders transcript anchors and rail.
-- Save probe: temporary local video wrote one JSON segment through the normal save handler and was deleted.
-- WP-CLI: temporary local Veranstaltung `11216` with place `17960` produced one
-  `content_native` graph place edge with role `venue`; original meta was
-  restored and the post was resynced.
-- WP-CLI: the one-time Veranstaltung primary-place migration populated
-  `iss_primary_place_id` on 25/25 local Veranstaltungen; serial
-  `wp iss-graph sync-content` produced 25 `content_native` venue edges.
-- Related-content graph smoke: publication `12983` had no place items but
-  resolved graph-related posts `4206`, `13379`, and `12985`.
-- Static map contract check passed.
-- `git diff --check` passed.
-- Git exchange before commit: local `HEAD=890a358`, `origin/main=053ac70`; local branch ahead-only and not pushed.
+- `php -l` on changed PHP files.
+- Targeted PHPCS and PHPStan for changed PHP files.
+- Targeted ESLint and Stylelint for the admin assets.
+- `git diff --check`.
+- WP-CLI dashboard config checks for administrator and editor users across `veranstaltung`, `projekt`, `ausstellung`, `publication`, `fuehrung`, and `rueckblick`.
+- Playwright browser smoke:
+  - rail buttons point to real owner metaboxes;
+  - promotion metadata fields are hidden for normal editors;
+  - required facts are first-row panels and composition is second for the converted CPTs.
+- `wp iss-graph autonomy-health` completed with no relation integrity errors.

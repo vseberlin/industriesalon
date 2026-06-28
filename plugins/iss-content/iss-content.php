@@ -136,6 +136,7 @@ add_action('admin_init', 'iss_content_editorial_sets_ensure_runtime_state', 5);
 
 if (defined('WP_CLI') && WP_CLI) {
     require_once ISS_CONTENT_MODEL_PATH . 'includes/veranstaltungen-cli.php';
+    require_once ISS_CONTENT_MODEL_PATH . 'includes/editor-ui-audit-cli.php';
 }
 
 register_activation_hook(__FILE__, function () {

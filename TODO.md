@@ -15,16 +15,17 @@ Immediate executable work only. Larger future programs live in `docs/project/bac
   CPT-specific native person/organization harvesters only where a real
   intrinsic field exists; keep the content-bridge person/organization box as
   optional curation, not a required relatedness field.
-- Editorial admin simplification: classic/editorial dashboard assembly is
-  implemented for `veranstaltung`, `projekt`, `ausstellung`, `publication`,
-  `fuehrung`, and `rueckblick`. Remaining SOW work needs a separate Gutenberg
-  adapter for `page` and `post`; do not force the classic `titlediv`/postbox
-  mover onto block-editor screens. `video` now has a dedicated transcript JSON
-  editor on the normal WordPress Update path and hides the legacy body canvas;
-  transfer its existing structured transcript rows through
-  `ops/sql/2026-06-28-video-transcript-json.sql`.
-  Before hiding or purging more legacy boxes, run edit/save/reload parity with
-  a normal editorial role.
+- Editorial admin simplification: the shared classic/editorial dashboard layout
+  is implemented for `veranstaltung`, `projekt`, `ausstellung`, `publication`,
+  `fuehrung`, and `rueckblick`. Required facts are now first-row
+  `Pflichtangaben`, shared linked-content controls live in the right rail where
+  their owner metabox exists, and normal editors get only the simple promotion
+  toggle. Remaining work should be content-specific: decide Publication
+  related-publications UX, decide whether Rueckblick needs additional relation
+  owner controls, and design a separate Gutenberg adapter for `page`, `post`,
+  and Video if those screens should enter the shared workflow. Before hiding or
+  purging more legacy boxes, run edit/save/reload parity with a normal
+  editorial role.
 - Führung JSON migration: after deploying the code, review/apply
   `ops/sql/2026-06-27-fuehrung-editorial-json.sql` only on a target that
   already has the 15 published Führung posts listed in the artifact. The SQL

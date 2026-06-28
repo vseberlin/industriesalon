@@ -6,6 +6,44 @@ be recovered from Git history.
 
 ## 2026-06-28
 
+- Added a read-only `wp iss-content editor-ui-audit` first slice for the
+  editorial admin simplification work. It inventories metaboxes, dashboard
+  anchors, registered meta, taxonomies, list-table columns, save hooks, sampled
+  blocks, and user-specific Screen Options by role/post type, classifying
+  surfaces as `must_show`, `integrated`, `hide_for_editors`, or `review` before
+  any editor UI is hidden or moved. The SOW now records raw custom fields, slug,
+  revisions, page attributes, raw taxonomy boxes, and diagnostic graph/search
+  boxes as shared wholesale simplification candidates rather than CPT-specific
+  decisions, and `iss-content` now hides those wholesale metaboxes for
+  non-admin editors across supported ISS content, relation, archive, register,
+  and graph-backed edit screens while preserving administrator visibility.
+  Projekt now acts as the reference integrated-relations slice: promotion stays
+  directly visible, while places, people/organizations, archive material, and
+  Sets/media open from compact dashboard actions into their existing owner
+  controls without changing storage or save paths. The same Projekt slice now
+  puts excerpt, featured image, and required project facts in the top dashboard
+  row, renames project facts to "Pflichtangaben", relabels the section as
+  "Verknüpfte Inhalte", and simplifies promotion wording to "Inhalt promoten".
+  Projekt ordering now keeps native WordPress `menu_order` storage but removes
+  the raw "Startseiten-Reihenfolge" weight from normal editors; editors reorder
+  projects by drag/drop in the unfiltered Projekt list table, while
+  administrators keep the raw field as a repair hatch. This extends the
+  existing `iss-content` admin/list-table layer instead of adding a parallel
+  ordering store. Projekt linked-content controls now collapse into a right-rail
+  "Verknüpfte Inhalte" launcher with Orte, Akteure, Archive, and Media modal
+  buttons, while related-content promotion moves into "Pflichtangaben" as a
+  simple "Inhalt promoten" toggle for normal editors. The graph save path remains
+  the authority; related self-promotion no longer requires fake reason/expiry
+  metadata. The same compact linked-content pattern now covers Veranstaltung,
+  Ausstellung, Publication, Fuehrung, and Rueckblick where the owner controls
+  are available: normal editors get right-rail launchers, promotion moves into
+  facts/identity as a simple toggle, Fuehrung keeps route/place relations inside
+  the route editor, and Publication keeps its publication-specific related
+  publications box in the main dashboard for a later content-specific decision.
+  Veranstaltung, Ausstellung, Publication, and Fuehrung now match the Projekt
+  top-row pattern: excerpt, featured image, and required facts appear before the
+  composition canvas, and generic basis/data panels use the editor-facing
+  "Pflichtangaben" label.
 - Implemented the first `iss-graph` related-graph autonomy slice: relation
   provenance/status columns, relation backfill/dedupe/audit CLI commands, dirty
   queue and bounded reconcile CLI, autonomy health and fixture checks, soft

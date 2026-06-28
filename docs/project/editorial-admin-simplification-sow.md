@@ -73,8 +73,8 @@ appear multiple times with different controls and visual language.
 Every supported ISS edit screen should follow the same editorial order:
 
 1. Identity
-2. Editorial composition
-3. Required facts
+2. Required facts
+3. Editorial composition
 4. Relations and references
 5. Publish
 
@@ -454,6 +454,29 @@ Visibility levels should be explicit:
 
 Technical controls should never appear in the default editorial workflow.
 
+### Wholesale simplification candidates
+
+Some surfaces are not content-type decisions. They should be handled as one
+shared visibility policy before CPT-specific cleanup starts:
+
+- raw custom fields;
+- slug metaboxes;
+- revisions metaboxes;
+- page attribute boxes where hierarchy/order is not the normal editor decision;
+- raw category/tag/taxonomy boxes when a curated field, filter, or projection
+  owns the concept;
+- diagnostic graph/search/availability boxes.
+
+These surfaces should default to hidden for normal editors and remain reachable
+only through administrator/technical visibility or native WordPress flows where
+needed.
+
+The implemented first policy lives in `iss-content`: non-admin editors no longer
+see those wholesale metaboxes on supported ISS content, relation, archive,
+register, and graph-backed edit screens. The policy is intentionally limited to
+native/technical boxes; bespoke owner workbenches such as archive object fields
+and Register Place Atlas panels still require explicit CPT-level review.
+
 ## Implementation Plan
 
 1. Inventory and classify current surfaces.
@@ -497,6 +520,115 @@ Technical controls should never appear in the default editorial workflow.
    - For each purge candidate, record current row counts/usages and replacement
      path.
    - Create SQL artifacts only when DB state changes or transfer needs it.
+
+## First Slice: Surface Audit
+
+The first implementation slice is a read-only WP-CLI inventory in `iss-content`:
+
+```bash
+wp iss-content editor-ui-audit
+```
+
+It audits the configured role's edit-screen contract across ISS public content
+and graph-backbone post types. The command collects:
+
+- metabox registration after current role-aware add/remove hooks;
+- shared dashboard sections and selector anchors;
+- registered post meta;
+- taxonomies and native taxonomy UI state;
+- list-table columns;
+- `save_post` and `save_post_{post_type}` callbacks;
+- sampled Gutenberg/content blocks;
+- user-specific Screen Options that can mask registration state.
+
+Default table output focuses on action candidates:
+`integrated`, `hide_for_editors`, and `review` across editor/list/block
+surfaces. Use `--states=all --kinds=all` for the full display matrix including
+save hooks, `--format=json` for machine-readable comparison, and
+`--role=administrator` or `--user=<id|login|email>` to compare advanced/admin
+visibility against a normal editor.
+
+Examples:
+
+```bash
+wp iss-content editor-ui-audit --post-types=projekt --states=all
+wp iss-content editor-ui-audit --role=administrator --post-types=projekt --format=json
+wp iss-content editor-ui-audit --states=review --kinds=metabox,taxonomy
+wp iss-content editor-ui-audit --states=all --kinds=all --format=json
+```
+
+The command does not hide fields and does not write database state. It produces
+the candidate list for the next pass: confirmed `hide_for_editors` surfaces can
+be moved behind advanced/admin visibility; confirmed `integrated` surfaces can
+be folded into the shared dashboard while preserving their existing storage and
+save paths.
+
+## Reference Slice: Projekt Top Panels And Linked Content
+
+Projekt is the first reference CPT for compact dashboard authoring. For normal
+editors, the top dashboard row contains excerpt, featured image, and the
+required project facts metabox renamed to "Pflichtangaben". The project
+composition canvas follows below that top row.
+
+The project homepage/order weight remains stored in WordPress `menu_order`, but
+normal editors should not edit the raw number. The normal editing authority is
+the Projekt list table: in the unfiltered order view, projects can be dragged
+into the desired order and the system recalculates `menu_order` in the
+background. Administrators keep the raw "Startseiten-Reihenfolge" field in the
+Projekt edit screen as a repair hatch.
+
+The project linked-content surface is labelled "Verknüpfte Inhalte" but does
+not occupy a full main dashboard section for normal editors. The right
+WordPress rail contains four compact launcher buttons: Orte, Akteure, Archive,
+and Media. Each button opens the existing owner metabox in a modal. Storage and
+save paths stay with `iss-relations`, `iss-graph`, `iss-archive`, and
+`iss-content` Sets.
+
+Related-content promotion is no longer part of the linked-content surface for
+normal Projekt editors. It appears inside "Pflichtangaben" as the simple toggle
+"Inhalt promoten" with the helper text "Mit dieser Auswahl rückt der Post nach
+vorne." The normal editor UI does not ask for a manual reason; graph provenance
+comes from the user, timestamp, post, and signal record. Administrators keep the
+full graph promotion metabox as a repair/diagnostic surface.
+
+Administrator screens keep the full underlying boxes visible for inspection and
+technical recovery during the migration window.
+
+## Shared Linked-Content Extension
+
+The compact linked-content pattern now extends from Projekt to the other
+compatible classic/editorial dashboard CPTs where the owner controls already
+fit the shared model: Veranstaltung, Ausstellung, Publication, Fuehrung, and
+Rueckblick.
+
+For normal editors, shared relation/reference owner controls leave the main
+dashboard and appear as right-rail "Verknüpfte Inhalte" launcher buttons. The
+rail only exposes buttons whose owner metabox is actually available on that
+screen:
+
+- Veranstaltung, Projekt, Ausstellung, and Publication expose Orte, Akteure,
+  Archive, and Media.
+- Fuehrung exposes Akteure and Archive; route/place relations are already
+  embedded in the Fuehrung composition/route editor, so there is no standalone
+  Orte button.
+- Rueckblick exposes Media until place, graph, or archive owner controls are
+  explicitly supported for that screen.
+
+Required facts now sit in the first dashboard row with excerpt and featured
+image, before the composition canvas. Generic basis/data boxes use the
+editor-facing label "Pflichtangaben" where they are the required facts authority.
+
+Related-content promotion follows the same simplification for normal editors
+across the compatible dashboard CPTs. The graph promotion control moves into
+the same first-row area as the required facts. The editor-facing form shows only
+the "Inhalt promoten" checkbox and the short helper text. Existing reason/expiry
+values are preserved as hidden fields when present, while administrators keep
+the full graph metabox.
+
+CPT-specific relation concepts remain in their current main-dashboard owner
+surface until a separate decision is made. For example, Publication keeps its
+publication-to-publication selection in the main "Verknüpfte Inhalte" section
+while the shared owner controls move to the rail.
 
 ## Migration Lifecycle
 

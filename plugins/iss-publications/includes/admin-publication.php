@@ -39,7 +39,7 @@ function iss_publications_clear_disallowed_page_template(int $post_id): bool
 add_action('add_meta_boxes', function () {
     add_meta_box(
         'iss-publication-bibliography',
-        __('Bibliografische Angaben', 'iss-publications'),
+        __('Pflichtangaben', 'iss-publications'),
         'iss_publications_render_bibliography_box',
         ISS_PUBLICATIONS_POST_TYPE,
         'normal',

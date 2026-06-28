@@ -16,7 +16,7 @@ function iss_content_model_register_acf_ausstellung_fields(): void
         'fields' => [
             [
                 'key' => 'field_iss_ausstellung_basis_tab',
-                'label' => __('Basis', 'iss-content-model'),
+                'label' => __('Pflichtangaben', 'iss-content-model'),
                 'name' => '',
                 'type' => 'tab',
                 'placement' => 'top',

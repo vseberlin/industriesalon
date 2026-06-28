@@ -1,0 +1,63 @@
+.column-iss_project_front_page_order {
+  width: 7.5rem;
+}
+
+.iss-project-order-handle {
+  align-items: center;
+  cursor: grab;
+  display: inline-flex;
+  min-height: 28px;
+  padding: 0 4px;
+  vertical-align: middle;
+}
+
+.iss-project-order-handle:active {
+  cursor: grabbing;
+}
+
+.iss-project-order-handle .dashicons {
+  color: #50575e;
+  font-size: 20px;
+  height: 20px;
+  width: 20px;
+}
+
+.iss-project-order-handle:hover .dashicons,
+.iss-project-order-handle:focus .dashicons {
+  color: #2271b1;
+}
+
+.iss-project-order-value {
+  color: #646970;
+  margin-left: 6px;
+}
+
+.iss-project-order-saving .iss-project-order-handle {
+  cursor: wait;
+  opacity: 0.55;
+}
+
+.iss-project-order-enabled #the-list tr.type-projekt {
+  transition: background-color 0.12s ease;
+}
+
+.iss-project-order-enabled #the-list tr.type-projekt:hover {
+  background: #f6f7f7;
+}
+
+#the-list tr.iss-project-order-placeholder {
+  background: #f0f6fc;
+  box-shadow: inset 0 0 0 1px #72aee6;
+  height: 48px;
+}
+
+#the-list tr.ui-sortable-helper {
+  background: #fff;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.18);
+}
+
+@media (max-width: 782px) {
+  .column-iss_project_front_page_order {
+    width: 5rem;
+  }
+}

@@ -4,11 +4,16 @@
 
 body.iss-editor-dashboard-simplified #edit-slug-box,
 body.iss-editor-dashboard-simplified #slugdiv,
-body.iss-editor-dashboard-simplified #postcustom {
-  display: none;
-}
-
-body.iss-editor-dashboard-simplified:not(.post-type-veranstaltung) #revisionsdiv {
+body.iss-editor-dashboard-simplified #postcustom,
+body.iss-editor-dashboard-simplified #revisionsdiv,
+body.iss-editor-dashboard-simplified #pageparentdiv,
+body.iss-editor-dashboard-simplified #categorydiv,
+body.iss-editor-dashboard-simplified [id^="tagsdiv-"],
+body.iss-editor-dashboard-simplified #iss-graph-search-signal,
+body.iss-editor-dashboard-simplified #iss-graph-availability-signal,
+body.iss-editor-dashboard-simplified #iss-graph-editorial-signals,
+body.iss-editor-dashboard-simplified #iss-graph-video-transcript-review,
+body.iss-editor-dashboard-simplified #iss-wf-import-suggestions {
   display: none;
 }
 
@@ -87,6 +92,10 @@ body.iss-editor-dashboard-ready .iss-editor-dashboard__action {
   justify-content: space-between;
   min-width: 0;
   padding: 14px 16px;
+}
+
+body.iss-editor-dashboard-ready .iss-editor-dashboard__section--relations .iss-editor-dashboard__action {
+  border-left: 3px solid #2271b1;
 }
 
 body.iss-editor-dashboard-ready .iss-editor-dashboard__action-copy {
@@ -182,8 +191,30 @@ body.iss-editor-modal-controls-ready #iss-graph-public-content-relations:not(.is
 body.iss-editor-modal-controls-ready #iss-graph-editorial-signals:not(.iss-editor-dashboard__box),
 body.iss-editor-modal-controls-ready #iss-relations-places:not(.iss-editor-dashboard__box),
 body.iss-editor-modal-controls-ready #iss-wf-import-archive-picker:not(.iss-editor-dashboard__box),
+body.iss-editor-modal-controls-ready #iss-content-editorial-sets:not(.iss-editor-dashboard__box),
 body.iss-editor-modal-controls-ready #iss-publication-related-publications:not(.iss-editor-dashboard__box) {
   display: none;
+}
+
+.iss-editor-side-rail .inside {
+  margin: 0;
+}
+
+.iss-editor-side-rail .description {
+  margin: 0 0 10px;
+}
+
+.iss-editor-side-rail__actions {
+  display: grid;
+  gap: 8px;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.iss-editor-side-rail__action {
+  justify-content: center;
+  min-width: 0;
+  text-align: center;
+  width: 100%;
 }
 
 .iss-editor-modal {

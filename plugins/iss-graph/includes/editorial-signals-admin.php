@@ -261,16 +261,16 @@ function iss_graph_render_editorial_signal_fields(string $prefix, string $signal
     iss_graph_render_editorial_signal_select($prefix . '[signal]', $signal, $include_empty_signal);
     echo '</label>';
 
-    echo '<label><span>' . esc_html__('Grund', 'iss-graph') . '</span>';
+    echo '<label><span>' . esc_html__('Begründung', 'iss-graph') . '</span>';
     echo '<input type="text" class="widefat" name="' . esc_attr($prefix . '[reason]') . '" value="' . esc_attr($reason) . '" placeholder="' . esc_attr__('Warum ist diese Steuerung noetig?', 'iss-graph') . '">';
     echo '</label>';
 
-    echo '<label><span>' . esc_html__('Gilt bis', 'iss-graph') . '</span>';
+    echo '<label><span>' . esc_html__('Gültig bis', 'iss-graph') . '</span>';
     echo '<input type="date" name="' . esc_attr($prefix . '[expires_at]') . '" value="' . esc_attr($expires_at) . '">';
     echo '</label>';
 
     echo '</div>';
-    echo '<p class="description">' . esc_html__('Grund und Ablaufdatum sind fuer neue Signale erforderlich.', 'iss-graph') . '</p>';
+    echo '<p class="description">' . esc_html__('Begründung und Gültig-bis-Datum sind für neue Signale erforderlich.', 'iss-graph') . '</p>';
 }
 
 function iss_graph_render_editorial_signal_target_option_label(array $option): string
@@ -414,7 +414,7 @@ function iss_graph_add_editorial_signal_meta_boxes(): void
     foreach (iss_graph_get_related_promotion_post_types() as $post_type) {
         add_meta_box(
             'iss-graph-related-promotion',
-            __('Verwandte Inhalte hervorheben', 'iss-graph'),
+            __('Inhalt promoten', 'iss-graph'),
             'iss_graph_render_related_promotion_meta_box',
             $post_type,
             'side',
@@ -478,12 +478,20 @@ function iss_graph_render_related_promotion_meta_box(WP_Post $post): void
 
     wp_nonce_field('iss_graph_save_related_promotion', 'iss_graph_related_promotion_nonce');
 
-    echo '<p><label><input type="checkbox" name="iss_graph_related_promotion[enabled]" value="1" ' . checked($is_active, true, false) . '> ' . esc_html__('In verwandten Inhalten hervorheben', 'iss-graph') . '</label></p>';
-    echo '<p><label for="iss_graph_related_promotion_reason"><strong>' . esc_html__('Grund', 'iss-graph') . '</strong></label>';
+    if (!current_user_can('manage_options')) {
+        echo '<p><label><input type="checkbox" name="iss_graph_related_promotion[enabled]" value="1" ' . checked($is_active, true, false) . '> ' . esc_html__('Inhalt promoten', 'iss-graph') . '</label></p>';
+        echo '<input type="hidden" name="iss_graph_related_promotion[reason]" value="' . esc_attr($reason) . '">';
+        echo '<input type="hidden" name="iss_graph_related_promotion[expires_at]" value="' . esc_attr($expires_at) . '">';
+        echo '<p class="description">' . esc_html__('Mit dieser Auswahl rückt der Post nach vorne.', 'iss-graph') . '</p>';
+        return;
+    }
+
+    echo '<p><label><input type="checkbox" name="iss_graph_related_promotion[enabled]" value="1" ' . checked($is_active, true, false) . '> ' . esc_html__('Inhalt promoten', 'iss-graph') . '</label></p>';
+    echo '<p><label for="iss_graph_related_promotion_reason"><strong>' . esc_html__('Begründung', 'iss-graph') . '</strong></label>';
     echo '<input class="widefat" type="text" id="iss_graph_related_promotion_reason" name="iss_graph_related_promotion[reason]" value="' . esc_attr($reason) . '" placeholder="' . esc_attr__('Warum ist diese Steuerung noetig?', 'iss-graph') . '"></p>';
-    echo '<p><label for="iss_graph_related_promotion_expires_at"><strong>' . esc_html__('Gilt bis', 'iss-graph') . '</strong></label>';
+    echo '<p><label for="iss_graph_related_promotion_expires_at"><strong>' . esc_html__('Gültig bis', 'iss-graph') . '</strong></label>';
     echo '<input class="widefat" type="date" id="iss_graph_related_promotion_expires_at" name="iss_graph_related_promotion[expires_at]" value="' . esc_attr($expires_at) . '"></p>';
-    echo '<p class="description">' . esc_html__('Bevorzugt diesen Inhalt in automatischen Verwandte-Inhalte-Bloecken desselben Typs. Neue Signale brauchen Grund und Ablaufdatum.', 'iss-graph') . '</p>';
+    echo '<p class="description">' . esc_html__('Mit dieser Auswahl rückt der Post nach vorne.', 'iss-graph') . '</p>';
 }
 
 function iss_graph_render_search_signal_meta_box(WP_Post $post): void
@@ -655,7 +663,7 @@ function iss_graph_save_related_promotion_meta_box(int $post_id, WP_Post $post):
         'expires_at' => sanitize_text_field((string) ($raw['expires_at'] ?? '')),
         'author_user_id' => get_current_user_id(),
         'status' => 'active',
-        'require_metadata' => true,
+        'require_metadata' => false,
     ]);
 }
 add_action('save_post', 'iss_graph_save_related_promotion_meta_box', 57, 2);

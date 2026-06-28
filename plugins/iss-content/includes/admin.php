@@ -7,7 +7,7 @@ if (!defined('ABSPATH')) {
 add_action('add_meta_boxes', function () {
     add_meta_box(
         'iss-content-model-veranstaltung',
-        __('Basis', 'iss-content-model'),
+        __('Pflichtangaben', 'iss-content-model'),
         'iss_content_model_render_veranstaltung_basis_box',
         ISS_CONTENT_MODEL_VERANSTALTUNG_POST_TYPE,
         'normal',
@@ -44,7 +44,7 @@ add_action('add_meta_boxes', function () {
     if (!iss_content_model_acf_handles_ausstellung_meta()) {
         add_meta_box(
             'iss-content-model-ausstellung',
-            __('Ausstellungsdaten', 'iss-content-model'),
+            __('Pflichtangaben', 'iss-content-model'),
             'iss_content_model_render_ausstellung_box',
             ISS_CONTENT_MODEL_AUSSTELLUNG_POST_TYPE,
             'side',
@@ -54,7 +54,7 @@ add_action('add_meta_boxes', function () {
 
     add_meta_box(
         'iss-content-model-projekt',
-        __('Projektdaten', 'iss-content-model'),
+        __('Pflichtangaben', 'iss-content-model'),
         'iss_content_model_render_projekt_box',
         ISS_CONTENT_MODEL_PROJEKT_POST_TYPE,
         'side',
@@ -140,7 +140,54 @@ function iss_content_model_should_hide_editor_modal_metaboxes(): bool
 
 function iss_content_model_should_hide_editor_dashboard_technical_boxes(string $post_type): bool
 {
-    return !current_user_can('manage_options') && iss_content_model_use_editor_dashboard($post_type);
+    return iss_content_model_should_hide_wholesale_editor_surfaces($post_type);
+}
+
+function iss_content_model_get_wholesale_simplification_post_types(): array
+{
+    $post_types = [
+        'post',
+        'page',
+        ISS_CONTENT_MODEL_VERANSTALTUNG_POST_TYPE,
+        ISS_CONTENT_MODEL_AUSSTELLUNG_POST_TYPE,
+        ISS_CONTENT_MODEL_PROJEKT_POST_TYPE,
+        ISS_CONTENT_MODEL_RUECKBLICK_POST_TYPE,
+        ISS_CONTENT_MODEL_TEAM_POST_TYPE,
+        ISS_CONTENT_MODEL_VIDEO_POST_TYPE,
+        ISS_CONTENT_MODEL_ENTITY_PROFILE_POST_TYPE,
+        'publication',
+        'fuehrung',
+        'archivbeitrag',
+        'archivsammlung',
+        'archivobjekt',
+        'register_place',
+    ];
+
+    foreach ([
+        'iss_content_model_get_editor_dashboard_post_types',
+        'iss_relations_get_supported_post_types',
+        'iss_graph_get_related_promotion_post_types',
+        'iss_graph_get_content_relation_post_types',
+        'iss_graph_get_search_signal_post_types',
+        'iss_graph_get_availability_signal_post_types',
+        'iss_graph_get_editorial_signal_context_post_types',
+        'iss_wf_import_get_archivset_supported_post_types',
+        'iss_wf_import_get_suggestion_post_types',
+    ] as $provider) {
+        if (function_exists($provider)) {
+            $post_types = array_merge($post_types, (array) $provider());
+        }
+    }
+
+    $post_types = (array) apply_filters('iss_content_model_wholesale_simplification_post_types', $post_types);
+
+    return array_values(array_unique(array_filter(array_map('sanitize_key', $post_types), 'post_type_exists')));
+}
+
+function iss_content_model_should_hide_wholesale_editor_surfaces(string $post_type): bool
+{
+    return !current_user_can('manage_options')
+        && in_array(sanitize_key($post_type), iss_content_model_get_wholesale_simplification_post_types(), true);
 }
 
 function iss_content_model_get_editor_dashboard_post_types(): array
@@ -234,28 +281,152 @@ function iss_content_model_use_compact_dashboard_relation_actions(string $post_t
     return !current_user_can('manage_options') && iss_content_model_use_editor_dashboard($post_type);
 }
 
-function iss_content_model_add_section_modal_target(array $section, array $target): array
+function iss_content_model_get_dashboard_relation_modal_targets(string $post_type): array
 {
-    $modal_targets = is_array($section['modalTargets'] ?? null) ? $section['modalTargets'] : [];
-    $target_id = sanitize_key((string) ($target['target'] ?? ''));
-    if ($target_id === '') {
-        return $section;
+    $post_type = sanitize_key($post_type);
+    $targets = [
+        'iss-relations-places' => [
+            'label' => __('Orte', 'iss-content-model'),
+            'description' => __('Orte und Stationen, die mit diesem Inhalt verbunden sind.', 'iss-content-model'),
+            'buttonLabel' => __('Orte', 'iss-content-model'),
+        ],
+        'iss-graph-public-content-relations' => [
+            'label' => __('Personen und Organisationen', 'iss-content-model'),
+            'description' => __('Personen und Organisationen, die mit diesem Inhalt verbunden sind.', 'iss-content-model'),
+            'buttonLabel' => __('Akteure', 'iss-content-model'),
+        ],
+        'iss-wf-import-archive-picker' => [
+            'label' => __('Archivmaterial', 'iss-content-model'),
+            'description' => __('Archivmaterial, das mit diesem Inhalt verbunden ist.', 'iss-content-model'),
+            'buttonLabel' => __('Archive', 'iss-content-model'),
+        ],
+        'iss-content-editorial-sets' => [
+            'label' => __('Media', 'iss-content-model'),
+            'description' => __('Sets und Media, die mit diesem Inhalt verbunden sind.', 'iss-content-model'),
+            'buttonLabel' => __('Media', 'iss-content-model'),
+        ],
+    ];
+
+    return (array) apply_filters('iss_content_model_dashboard_relation_modal_targets', $targets, $post_type);
+}
+
+function iss_content_model_get_editor_dashboard_relation_box_ids(string $post_type): array
+{
+    $post_type = sanitize_key($post_type);
+    $with_sets = [
+        ISS_CONTENT_MODEL_VERANSTALTUNG_POST_TYPE,
+        ISS_CONTENT_MODEL_PROJEKT_POST_TYPE,
+        ISS_CONTENT_MODEL_AUSSTELLUNG_POST_TYPE,
+        ISS_CONTENT_MODEL_RUECKBLICK_POST_TYPE,
+        'publication',
+    ];
+    if (!in_array($post_type, array_merge($with_sets, ['fuehrung']), true)) {
+        return [];
     }
 
-    foreach ($modal_targets as $existing) {
-        if (is_array($existing) && sanitize_key((string) ($existing['target'] ?? '')) === $target_id) {
-            return $section;
+    $shared_relation_boxes = [
+        'iss-relations-places',
+        'iss-graph-public-content-relations',
+        'iss-wf-import-archive-picker',
+        'iss-content-editorial-sets',
+        'iss-graph-related-promotion',
+        'iss-graph-editorial-signals',
+    ];
+
+    if (!in_array($post_type, $with_sets, true)) {
+        $shared_relation_boxes = array_values(array_diff($shared_relation_boxes, ['iss-content-editorial-sets']));
+    }
+
+    if ($post_type === 'publication') {
+        $shared_relation_boxes[] = 'iss-publication-related-publications';
+    }
+
+    return (array) apply_filters(
+        'iss_content_model_editor_dashboard_relation_box_ids',
+        array_values(array_unique(array_filter(array_map('sanitize_key', $shared_relation_boxes)))),
+        $post_type
+    );
+}
+
+function iss_content_model_get_available_dashboard_relation_modal_targets(string $post_type, array $box_ids): array
+{
+    $targets = iss_content_model_get_dashboard_relation_modal_targets($post_type);
+    $box_ids = array_values(array_filter(array_map('sanitize_key', $box_ids)));
+    $available_targets = [];
+
+    foreach ($targets as $target_id => $target) {
+        $target_id = sanitize_key((string) $target_id);
+        if (
+            $target_id === ''
+            || !in_array($target_id, $box_ids, true)
+            || !is_array($target)
+            || !iss_content_model_dashboard_relation_target_is_available($post_type, $target_id)
+        ) {
+            continue;
+        }
+
+        $available_targets[$target_id] = array_merge(['target' => $target_id], $target);
+    }
+
+    return $available_targets;
+}
+
+function iss_content_model_dashboard_relation_target_is_available(string $post_type, string $target_id): bool
+{
+    $post_type = sanitize_key($post_type);
+    $target_id = sanitize_key($target_id);
+
+    if ($target_id === 'iss-relations-places') {
+        if (!function_exists('iss_relations_is_supported_post_type') || !iss_relations_is_supported_post_type($post_type)) {
+            return false;
+        }
+
+        if (function_exists('iss_editorial_get_format_for_post_type') && function_exists('iss_editorial_uses_integrated_route_stations')) {
+            $format = iss_editorial_get_format_for_post_type($post_type);
+            if (is_array($format) && iss_editorial_uses_integrated_route_stations((string) ($format['slug'] ?? ''), $post_type)) {
+                return false;
+            }
+        }
+
+        return true;
+    }
+
+    if ($target_id === 'iss-graph-public-content-relations') {
+        return function_exists('iss_graph_is_content_relation_post_type') && iss_graph_is_content_relation_post_type($post_type);
+    }
+
+    if ($target_id === 'iss-wf-import-archive-picker') {
+        return function_exists('iss_wf_import_is_archivset_supported_post_type') && iss_wf_import_is_archivset_supported_post_type($post_type);
+    }
+
+    if ($target_id === 'iss-content-editorial-sets') {
+        return function_exists('iss_content_editorial_sets_supported_post_types')
+            && in_array($post_type, array_map('sanitize_key', iss_content_editorial_sets_supported_post_types()), true);
+    }
+
+    return true;
+}
+
+function iss_content_model_get_dashboard_promotion_target_slug(array $sections): string
+{
+    $fallback_slug = '';
+
+    foreach ($sections as $section) {
+        if (!is_array($section)) {
+            continue;
+        }
+
+        $slug = sanitize_key((string) ($section['slug'] ?? ''));
+        if ($slug === 'facts') {
+            return $slug;
+        }
+
+        if ($slug === 'identity') {
+            $fallback_slug = $slug;
         }
     }
 
-    $modal_targets[] = [
-        'target' => $target_id,
-        'label' => sanitize_text_field((string) ($target['label'] ?? $target_id)),
-        'description' => sanitize_text_field((string) ($target['description'] ?? '')),
-    ];
-    $section['modalTargets'] = $modal_targets;
-
-    return $section;
+    return $fallback_slug;
 }
 
 function iss_content_model_compact_dashboard_relation_sections(array $sections, string $post_type): array
@@ -264,26 +435,101 @@ function iss_content_model_compact_dashboard_relation_sections(array $sections, 
         return $sections;
     }
 
+    $move_promotion_box = false;
+
     foreach ($sections as &$section) {
         if (!is_array($section) || sanitize_key((string) ($section['slug'] ?? '')) !== 'relations') {
             continue;
         }
 
         $box_ids = array_values(array_filter(array_map('sanitize_key', (array) ($section['boxIds'] ?? []))));
-        if (!in_array('iss-relations-places', $box_ids, true)) {
-            continue;
+        $relation_target_box_ids = array_values(array_intersect(
+            array_map('sanitize_key', array_keys(iss_content_model_get_dashboard_relation_modal_targets($post_type))),
+            $box_ids
+        ));
+        $remove_box_ids = array_merge($relation_target_box_ids, ['iss-graph-editorial-signals']);
+
+        if (in_array('iss-graph-related-promotion', $box_ids, true)) {
+            $remove_box_ids[] = 'iss-graph-related-promotion';
+            $move_promotion_box = $post_type !== ISS_CONTENT_MODEL_PROJEKT_POST_TYPE;
         }
 
-        $section['boxIds'] = array_values(array_diff($box_ids, ['iss-relations-places']));
-        $section = iss_content_model_add_section_modal_target($section, [
-            'target' => 'iss-relations-places',
-            'label' => __('Orte bearbeiten', 'iss-content-model'),
-            'description' => __('Ortsbezüge und Stationen bleiben im bestehenden Relations-Speicher, werden aber nur bei Bedarf geöffnet.', 'iss-content-model'),
-        ]);
+        $section['boxIds'] = array_values(array_diff($box_ids, array_values(array_unique($remove_box_ids))));
+        $section['modalTargets'] = [];
     }
     unset($section);
 
+    if ($move_promotion_box) {
+        $target_slug = iss_content_model_get_dashboard_promotion_target_slug($sections);
+        if ($target_slug !== '') {
+            foreach ($sections as &$section) {
+                if (!is_array($section) || sanitize_key((string) ($section['slug'] ?? '')) !== $target_slug) {
+                    continue;
+                }
+
+                $section['boxIds'] = array_values(array_unique(array_merge(
+                    (array) ($section['boxIds'] ?? []),
+                    ['iss-graph-related-promotion']
+                )));
+                break;
+            }
+            unset($section);
+        }
+    }
+
     return $sections;
+}
+
+function iss_content_model_sanitize_editor_modal_targets(array $targets): array
+{
+    return array_values(array_filter(array_map(static function ($target): array {
+        if (!is_array($target)) {
+            return [];
+        }
+
+        $target_id = sanitize_key((string) ($target['target'] ?? ''));
+        if ($target_id === '') {
+            return [];
+        }
+
+        return [
+            'target' => $target_id,
+            'label' => sanitize_text_field((string) ($target['label'] ?? $target_id)),
+            'description' => sanitize_text_field((string) ($target['description'] ?? '')),
+            'buttonLabel' => sanitize_text_field((string) ($target['buttonLabel'] ?? __('Bearbeiten', 'iss-content-model'))),
+        ];
+    }, $targets)));
+}
+
+function iss_content_model_get_editor_side_rail_sections(string $post_type): array
+{
+    $post_type = sanitize_key($post_type);
+    if (!iss_content_model_use_compact_dashboard_relation_actions($post_type)) {
+        return [];
+    }
+
+    $targets = [];
+    $available_targets = iss_content_model_get_available_dashboard_relation_modal_targets(
+        $post_type,
+        iss_content_model_get_editor_dashboard_relation_box_ids($post_type)
+    );
+
+    foreach ($available_targets as $target) {
+        $targets[] = $target;
+    }
+
+    if (!$targets) {
+        return [];
+    }
+
+    return [
+        [
+            'slug' => 'relations',
+            'label' => __('Verknüpfte Inhalte', 'iss-content-model'),
+            'description' => __('Öffnet vorhandene Verknüpfungen in ihren bestehenden Bearbeitungsfenstern.', 'iss-content-model'),
+            'modalTargets' => iss_content_model_sanitize_editor_modal_targets($targets),
+        ],
+    ];
 }
 
 function iss_content_model_get_editor_dashboard_sections(string $post_type): array
@@ -296,20 +542,14 @@ function iss_content_model_get_editor_dashboard_sections(string $post_type): arr
             [
                 'slug' => 'identity',
                 'label' => __('Identität', 'iss-content-model'),
-                'description' => __('Kurzbeschreibung und Kartenbild für Listen, Teaser und Vorschauen.', 'iss-content-model'),
-                'boxIds' => ['postexcerpt', 'postimagediv'],
+                'description' => __('Kurzbeschreibung, Kartenbild und Pflichtangaben für Listen, Teaser und Vorschauen.', 'iss-content-model'),
+                'boxIds' => ['postexcerpt', 'postimagediv', 'iss-content-model-veranstaltung-type', 'iss-content-model-veranstaltung'],
             ],
             [
                 'slug' => 'composition',
                 'label' => __('Redaktionelle Komposition', 'iss-content-model'),
                 'description' => __('Strukturierte Abschnitte, Medien, Galerie und Material. Speichert weiterhin in _iss_content_json.', 'iss-content-model'),
                 'boxIds' => ['iss-content-model-veranstaltung-content'],
-            ],
-            [
-                'slug' => 'facts',
-                'label' => __('Pflichtangaben', 'iss-content-model'),
-                'description' => __('Typ, Datum, Ort und Programmfreigabe für Kalender, Einzelansicht und Projektionen.', 'iss-content-model'),
-                'boxIds' => ['iss-content-model-veranstaltung-type', 'iss-content-model-veranstaltung'],
             ],
             [
                 'slug' => 'relations',
@@ -336,8 +576,8 @@ function iss_content_model_get_editor_dashboard_sections(string $post_type): arr
             [
                 'slug' => 'identity',
                 'label' => __('Identität', 'iss-content-model'),
-                'description' => __('Kurzbeschreibung und Kartenbild für Projektlisten, Karten und Vorschauen.', 'iss-content-model'),
-                'boxIds' => ['postexcerpt', 'postimagediv'],
+                'description' => __('Kurzbeschreibung, Kartenbild und Pflichtangaben für Projektlisten, Karten und Vorschauen.', 'iss-content-model'),
+                'boxIds' => ['postexcerpt', 'postimagediv', 'iss-content-model-projekt'],
             ],
             [
                 'slug' => 'composition',
@@ -346,15 +586,9 @@ function iss_content_model_get_editor_dashboard_sections(string $post_type): arr
                 'selectors' => ['.iss-editorial-shell'],
             ],
             [
-                'slug' => 'facts',
-                'label' => __('Projektdaten', 'iss-content-model'),
-                'description' => __('Zeitraum, Programmsichtbarkeit und Startseiten-Reihenfolge aus dem bestehenden Projektvertrag.', 'iss-content-model'),
-                'boxIds' => ['iss-content-model-projekt'],
-            ],
-            [
                 'slug' => 'relations',
-                'label' => __('Beziehungen und Verweise', 'iss-content-model'),
-                'description' => __('Orte, Personen, Organisationen, Archivmaterial, Sets und Hervorhebungen mit ihren bestehenden Speicherpfaden.', 'iss-content-model'),
+                'label' => __('Verknüpfte Inhalte', 'iss-content-model'),
+                'description' => __('Hier finden Sie Verknüpfungen zu Orten, Personen, Organisationen, Archivmaterial und Media.', 'iss-content-model'),
                 'boxIds' => [
                     'iss-relations-places',
                     'iss-graph-public-content-relations',
@@ -373,20 +607,14 @@ function iss_content_model_get_editor_dashboard_sections(string $post_type): arr
             [
                 'slug' => 'identity',
                 'label' => __('Identität', 'iss-content-model'),
-                'description' => __('Kurzbeschreibung und Kartenbild für Ausstellungslisten, Karten und Vorschauen.', 'iss-content-model'),
-                'boxIds' => ['postexcerpt', 'postimagediv'],
+                'description' => __('Kurzbeschreibung, Kartenbild und Pflichtangaben für Ausstellungslisten, Karten und Vorschauen.', 'iss-content-model'),
+                'boxIds' => ['postexcerpt', 'postimagediv', $facts_box_id],
             ],
             [
                 'slug' => 'composition',
                 'label' => __('Redaktionelle Komposition', 'iss-content-model'),
                 'description' => __('Ausstellungserzählung im bestehenden iss-editorial JSON-Canvas.', 'iss-content-model'),
                 'selectors' => ['.iss-editorial-shell'],
-            ],
-            [
-                'slug' => 'facts',
-                'label' => __('Ausstellungsdaten', 'iss-content-model'),
-                'description' => __('Typ, Zeitraum, Übersichts- und Programmfreigabe aus dem bestehenden Ausstellungsvertrag.', 'iss-content-model'),
-                'boxIds' => [$facts_box_id],
             ],
             [
                 'slug' => 'relations',
@@ -407,20 +635,14 @@ function iss_content_model_get_editor_dashboard_sections(string $post_type): arr
             [
                 'slug' => 'identity',
                 'label' => __('Identität', 'iss-content-model'),
-                'description' => __('Kurzbeschreibung und Cover/Kartenbild für Publikationslisten, Karten und Vorschauen.', 'iss-content-model'),
-                'boxIds' => ['postexcerpt', 'postimagediv'],
+                'description' => __('Kurzbeschreibung, Cover/Kartenbild und Pflichtangaben für Publikationslisten, Karten und Vorschauen.', 'iss-content-model'),
+                'boxIds' => ['postexcerpt', 'postimagediv', 'iss-publication-bibliography', 'iss-publication-display'],
             ],
             [
                 'slug' => 'composition',
                 'label' => __('Redaktionelle Komposition', 'iss-content-model'),
                 'description' => __('Publikations-Erzählung im bestehenden iss-editorial JSON-Canvas.', 'iss-content-model'),
                 'selectors' => ['.iss-editorial-shell'],
-            ],
-            [
-                'slug' => 'facts',
-                'label' => __('Publikationsdaten', 'iss-content-model'),
-                'description' => __('Bibliografie, Layout und Fotoalbumquelle aus dem bestehenden Publikationsvertrag.', 'iss-content-model'),
-                'boxIds' => ['iss-publication-bibliography', 'iss-publication-display'],
             ],
             [
                 'slug' => 'commerce',
@@ -448,20 +670,14 @@ function iss_content_model_get_editor_dashboard_sections(string $post_type): arr
             [
                 'slug' => 'identity',
                 'label' => __('Identität', 'iss-content-model'),
-                'description' => __('Kurzbeschreibung und Kartenbild für Führungslisten, Karten und Vorschauen.', 'iss-content-model'),
-                'boxIds' => ['postexcerpt', 'postimagediv'],
+                'description' => __('Kurzbeschreibung, Kartenbild und Pflichtangaben für Führungslisten, Karten und Vorschauen.', 'iss-content-model'),
+                'boxIds' => ['postexcerpt', 'postimagediv', 'iss-fuehrung-data', 'iss-occurrences-calendar-mapping'],
             ],
             [
                 'slug' => 'composition',
                 'label' => __('Redaktionelle Komposition', 'iss-content-model'),
                 'description' => __('Führungserzählung und integrierte Route im bestehenden iss-editorial JSON-Canvas.', 'iss-content-model'),
                 'selectors' => ['.iss-editorial-shell'],
-            ],
-            [
-                'slug' => 'facts',
-                'label' => __('Führungsdaten', 'iss-content-model'),
-                'description' => __('Dauer, Buchung, Hero-Galerie, Kalenderzuordnung und operative Führungsdaten.', 'iss-content-model'),
-                'boxIds' => ['iss-fuehrung-data', 'iss-occurrences-calendar-mapping'],
             ],
             [
                 'slug' => 'relations',
@@ -516,22 +732,7 @@ function iss_content_model_get_editor_dashboard_sections(string $post_type): arr
 
         $slug = sanitize_key((string) ($section['slug'] ?? ''));
         $box_ids = array_values(array_unique(array_filter(array_map('sanitize_key', (array) ($section['boxIds'] ?? [])))));
-        $modal_targets = array_values(array_filter(array_map(static function ($target): array {
-            if (!is_array($target)) {
-                return [];
-            }
-
-            $target_id = sanitize_key((string) ($target['target'] ?? ''));
-            if ($target_id === '') {
-                return [];
-            }
-
-            return [
-                'target' => $target_id,
-                'label' => sanitize_text_field((string) ($target['label'] ?? $target_id)),
-                'description' => sanitize_text_field((string) ($target['description'] ?? '')),
-            ];
-        }, (array) ($section['modalTargets'] ?? []))));
+        $modal_targets = iss_content_model_sanitize_editor_modal_targets((array) ($section['modalTargets'] ?? []));
         $selectors = array_values(array_unique(array_filter(array_map(static function ($selector): string {
             $selector = trim(sanitize_text_field((string) $selector));
             if ($selector === '' || !preg_match('/^[#.][A-Za-z0-9_-]+$/', $selector)) {
@@ -761,6 +962,9 @@ add_action('admin_enqueue_scripts', function ($hook): void {
                 'dashboardSections' => $uses_editor_dashboard
                     ? iss_content_model_get_editor_dashboard_sections((string) $screen->post_type)
                     : [],
+                'sideRailSections' => $uses_editor_dashboard
+                    ? iss_content_model_get_editor_side_rail_sections((string) $screen->post_type)
+                    : [],
                 'editorTopGroupIds' => $uses_editor_dashboard
                     ? iss_content_model_get_editor_dashboard_box_ids((string) $screen->post_type)
                     : [],
@@ -789,27 +993,79 @@ add_action('enqueue_block_editor_assets', function (): void {
     );
 });
 
+function iss_content_model_get_wholesale_simplification_metabox_ids(string $post_type): array
+{
+    $post_type = sanitize_key($post_type);
+    $box_ids = [
+        'slugdiv',
+        'postcustom',
+        'revisionsdiv',
+        'pageparentdiv',
+        'categorydiv',
+        'tagsdiv-post_tag',
+        'iss-graph-search-signal',
+        'iss-graph-availability-signal',
+        'iss-graph-editorial-signals',
+        'iss-graph-video-transcript-review',
+        'iss-wf-import-suggestions',
+    ];
+
+    foreach (get_object_taxonomies($post_type, 'objects') as $taxonomy) {
+        if (!$taxonomy instanceof WP_Taxonomy || !$taxonomy->show_ui || $taxonomy->hierarchical) {
+            continue;
+        }
+
+        $box_ids[] = 'tagsdiv-' . $taxonomy->name;
+    }
+
+    $box_ids = (array) apply_filters('iss_content_model_wholesale_simplification_metabox_ids', $box_ids, $post_type);
+
+    return array_values(array_unique(array_filter(array_map('sanitize_key', $box_ids))));
+}
+
+function iss_content_model_remove_wholesale_simplification_metaboxes(string $post_type): void
+{
+    if (!iss_content_model_should_hide_wholesale_editor_surfaces($post_type)) {
+        return;
+    }
+
+    foreach (iss_content_model_get_wholesale_simplification_metabox_ids($post_type) as $box_id) {
+        foreach (['normal', 'side', 'advanced'] as $context) {
+            remove_meta_box($box_id, $post_type, $context);
+        }
+    }
+}
+add_action('add_meta_boxes', 'iss_content_model_remove_wholesale_simplification_metaboxes', 120);
+
+function iss_content_model_remove_project_editor_promotion_metabox(string $post_type): void
+{
+    if ($post_type !== ISS_CONTENT_MODEL_PROJEKT_POST_TYPE || current_user_can('manage_options')) {
+        return;
+    }
+
+    foreach (['normal', 'side', 'advanced'] as $context) {
+        remove_meta_box('iss-graph-related-promotion', ISS_CONTENT_MODEL_PROJEKT_POST_TYPE, $context);
+    }
+}
+add_action('add_meta_boxes', 'iss_content_model_remove_project_editor_promotion_metabox', 130);
+
 add_action('add_meta_boxes', function (string $post_type): void {
-    if (!iss_content_model_should_hide_editor_dashboard_technical_boxes($post_type)) {
+    static $registered = [];
+
+    $post_type = sanitize_key($post_type);
+    if ($post_type === '' || isset($registered[$post_type])) {
         return;
     }
 
-    remove_meta_box('slugdiv', $post_type, 'normal');
-    remove_meta_box('postcustom', $post_type, 'normal');
-    if ($post_type !== ISS_CONTENT_MODEL_VERANSTALTUNG_POST_TYPE) {
-        remove_meta_box('revisionsdiv', $post_type, 'normal');
-    }
-}, 99);
-
-add_action('add_meta_boxes_' . ISS_CONTENT_MODEL_AUSSTELLUNG_POST_TYPE, function (): void {
-    if (!iss_content_model_use_simplified_ausstellung_admin()) {
-        return;
-    }
-
-    remove_meta_box('categorydiv', ISS_CONTENT_MODEL_AUSSTELLUNG_POST_TYPE, 'side');
-    remove_meta_box('tagsdiv-post_tag', ISS_CONTENT_MODEL_AUSSTELLUNG_POST_TYPE, 'side');
-    remove_meta_box('pageparentdiv', ISS_CONTENT_MODEL_AUSSTELLUNG_POST_TYPE, 'side');
-});
+    $registered[$post_type] = true;
+    add_action(
+        'add_meta_boxes_' . $post_type,
+        static function () use ($post_type): void {
+            iss_content_model_remove_wholesale_simplification_metaboxes($post_type);
+        },
+        120
+    );
+}, 1);
 
 add_action('admin_enqueue_scripts', function ($hook) {
     if (!in_array($hook, ['post.php', 'post-new.php'], true)) {
@@ -853,19 +1109,6 @@ add_action('admin_enqueue_scripts', function ($hook) {
             true
         );
     }
-});
-
-add_action('add_meta_boxes_' . ISS_CONTENT_MODEL_VERANSTALTUNG_POST_TYPE, function (): void {
-    if (!iss_content_model_should_hide_editor_dashboard_technical_boxes(ISS_CONTENT_MODEL_VERANSTALTUNG_POST_TYPE)) {
-        return;
-    }
-
-    remove_meta_box('postcustom', ISS_CONTENT_MODEL_VERANSTALTUNG_POST_TYPE, 'normal');
-    remove_meta_box('slugdiv', ISS_CONTENT_MODEL_VERANSTALTUNG_POST_TYPE, 'normal');
-    remove_meta_box('pageparentdiv', ISS_CONTENT_MODEL_VERANSTALTUNG_POST_TYPE, 'side');
-    remove_meta_box('categorydiv', ISS_CONTENT_MODEL_VERANSTALTUNG_POST_TYPE, 'side');
-    remove_meta_box('tagsdiv-post_tag', ISS_CONTENT_MODEL_VERANSTALTUNG_POST_TYPE, 'side');
-    remove_meta_box('iss-graph-search-signal', ISS_CONTENT_MODEL_VERANSTALTUNG_POST_TYPE, 'side');
 });
 
 function iss_content_model_get_veranstaltung_place_choices(): array
@@ -1143,7 +1386,7 @@ function iss_content_model_render_veranstaltung_basis_box($post): void {
 
     echo '<section class="iss-veranstaltung-admin__section">';
     echo '<div class="iss-veranstaltung-admin__section-head">';
-    echo '<h3>' . esc_html__('Basis', 'iss-content-model') . '</h3>';
+    echo '<h3>' . esc_html__('Pflichtangaben', 'iss-content-model') . '</h3>';
     echo '<p>' . esc_html__('Pflichtnahe Angaben für Kalender, Karten und die Einzelansicht.', 'iss-content-model') . '</p>';
     echo '</div>';
     echo '<div class="iss-veranstaltung-admin__grid">';
@@ -1356,7 +1599,7 @@ function iss_content_model_render_ausstellung_box($post) {
     $programme_enabled = get_post_meta($post->ID, 'iss_programme_enabled', true);
     $programme_enabled = $programme_enabled === '' ? false : (bool) $programme_enabled;
 
-    echo '<h3>' . esc_html__('Basis', 'iss-content-model') . '</h3>';
+    echo '<h3>' . esc_html__('Pflichtangaben', 'iss-content-model') . '</h3>';
     echo '<p><label for="iss_start_date"><strong>' . esc_html__('Startdatum', 'iss-content-model') . '</strong></label>';
     echo '<input class="widefat" type="date" id="iss_start_date" name="iss_content_model[iss_start_date]" value="' . esc_attr($start) . '"></p>';
 
@@ -1376,6 +1619,39 @@ function iss_content_model_render_ausstellung_box($post) {
     echo '<p class="description">' . esc_html__('Dauer- und digitale Ausstellungen erscheinen nur dann im Kalender / Programm, wenn diese Programmfreigabe aktiv ist.', 'iss-content-model') . '</p>';
 }
 
+function iss_content_model_render_project_promotion_control(WP_Post $post): void
+{
+    if (current_user_can('manage_options')) {
+        return;
+    }
+
+    if (
+        !function_exists('iss_graph_current_user_can_edit_editorial_signals')
+        || !function_exists('iss_graph_get_related_promotion_signal')
+        || !function_exists('iss_graph_related_promotion_signal_is_active')
+        || !function_exists('iss_graph_is_related_promotion_post_type')
+        || !iss_graph_is_related_promotion_post_type((string) $post->post_type)
+        || !iss_graph_current_user_can_edit_editorial_signals((int) $post->ID)
+    ) {
+        return;
+    }
+
+    $signal = iss_graph_get_related_promotion_signal((int) $post->ID, false);
+    $is_active = iss_graph_related_promotion_signal_is_active($signal);
+    $reason = $is_active ? (string) ($signal['reason'] ?? '') : '';
+    $expires_at = $is_active && isset($signal['expires_at']) && $signal['expires_at'] !== null
+        ? substr((string) $signal['expires_at'], 0, 10)
+        : '';
+
+    wp_nonce_field('iss_graph_save_related_promotion', 'iss_graph_related_promotion_nonce');
+
+    echo '<hr>';
+    echo '<p><label><input type="checkbox" name="iss_graph_related_promotion[enabled]" value="1" ' . checked($is_active, true, false) . '> ' . esc_html__('Inhalt promoten', 'iss-content-model') . '</label></p>';
+    echo '<input type="hidden" name="iss_graph_related_promotion[reason]" value="' . esc_attr($reason) . '">';
+    echo '<input type="hidden" name="iss_graph_related_promotion[expires_at]" value="' . esc_attr($expires_at) . '">';
+    echo '<p class="description">' . esc_html__('Mit dieser Auswahl rückt der Post nach vorne.', 'iss-content-model') . '</p>';
+}
+
 function iss_content_model_render_projekt_box($post) {
     wp_nonce_field('iss_content_model_save_meta', 'iss_content_model_meta_nonce');
 
@@ -1384,7 +1660,6 @@ function iss_content_model_render_projekt_box($post) {
     $period_label = (string) get_post_meta($post->ID, 'iss_period_label', true);
     $programme_enabled = get_post_meta($post->ID, 'iss_programme_enabled', true);
     $programme_enabled = $programme_enabled === '' ? false : (bool) $programme_enabled;
-    $front_page_order = (int) $post->menu_order;
 
     echo '<p><label for="iss_start_date"><strong>' . esc_html__('Startdatum', 'iss-content-model') . '</strong></label>';
     echo '<input class="widefat" type="date" id="iss_start_date" name="iss_content_model[iss_start_date]" value="' . esc_attr($start) . '"></p>';
@@ -1398,9 +1673,15 @@ function iss_content_model_render_projekt_box($post) {
 
     echo '<p><label><input type="checkbox" name="iss_content_model[iss_programme_enabled]" value="1" ' . checked($programme_enabled, true, false) . '> ' . esc_html__('Im Kalender / Programm anzeigen', 'iss-content-model') . '</label></p>';
 
-    echo '<p><label for="iss_project_front_page_order"><strong>' . esc_html__('Startseiten-Reihenfolge', 'iss-content-model') . '</strong></label>';
-    echo '<input class="widefat" type="number" step="1" id="iss_project_front_page_order" name="iss_content_model[menu_order]" value="' . esc_attr((string) $front_page_order) . '"></p>';
-    echo '<p class="description">' . esc_html__('Steuert die Reihenfolge im Projekte-Query-Loop der Startseite. Niedrige Werte erscheinen zuerst; Abstände wie 10, 20, 30 lassen Platz für spätere Einfügungen.', 'iss-content-model') . '</p>';
+    iss_content_model_render_project_promotion_control($post);
+
+    if (current_user_can('manage_options')) {
+        $front_page_order = (int) $post->menu_order;
+
+        echo '<p><label for="iss_project_front_page_order"><strong>' . esc_html__('Startseiten-Reihenfolge', 'iss-content-model') . '</strong></label>';
+        echo '<input class="widefat" type="number" step="1" id="iss_project_front_page_order" name="iss_content_model[menu_order]" value="' . esc_attr((string) $front_page_order) . '"></p>';
+        echo '<p class="description">' . esc_html__('Technischer Reparaturwert. Redakteur:innen sortieren Projekte per Drag & Drop in der Projektliste.', 'iss-content-model') . '</p>';
+    }
 }
 
 function iss_content_model_render_team_box($post) {
@@ -1676,7 +1957,7 @@ function iss_content_model_save_meta_box(int $post_id): void
         iss_content_model_sync_veranstaltung_primary_place($post_id, $selected_place_id);
     }
 
-    if ($post_type === ISS_CONTENT_MODEL_PROJEKT_POST_TYPE && array_key_exists('menu_order', $raw)) {
+    if ($post_type === ISS_CONTENT_MODEL_PROJEKT_POST_TYPE && array_key_exists('menu_order', $raw) && current_user_can('manage_options')) {
         $front_page_order = (int) $raw['menu_order'];
 
         remove_action('save_post', 'iss_content_model_save_meta_box', 20);
@@ -1688,6 +1969,160 @@ function iss_content_model_save_meta_box(int $post_id): void
     }
 }
 add_action('save_post', 'iss_content_model_save_meta_box', 20, 1);
+
+function iss_content_model_project_order_query_args(): array
+{
+    // phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Read-only admin list state for enabling the reorder UI.
+    $query_args = wp_unslash($_GET);
+
+    return is_array($query_args) ? $query_args : [];
+}
+
+function iss_content_model_get_ordered_project_ids(): array
+{
+    $project_ids = get_posts([
+        'post_type' => ISS_CONTENT_MODEL_PROJEKT_POST_TYPE,
+        'post_status' => ['publish', 'future', 'draft', 'pending', 'private'],
+        'posts_per_page' => -1,
+        'fields' => 'ids',
+        'orderby' => [
+            'menu_order' => 'ASC',
+            'title' => 'ASC',
+            'ID' => 'ASC',
+        ],
+        'suppress_filters' => true,
+    ]);
+
+    return array_values(array_filter(array_map('absint', $project_ids)));
+}
+
+function iss_content_model_user_can_reorder_projects(): bool
+{
+    static $can_reorder = null;
+
+    if ($can_reorder !== null) {
+        return $can_reorder;
+    }
+
+    $post_type_object = get_post_type_object(ISS_CONTENT_MODEL_PROJEKT_POST_TYPE);
+    $edit_posts_cap = $post_type_object && isset($post_type_object->cap->edit_posts)
+        ? (string) $post_type_object->cap->edit_posts
+        : 'edit_posts';
+
+    if (!current_user_can($edit_posts_cap)) {
+        $can_reorder = false;
+        return $can_reorder;
+    }
+
+    foreach (iss_content_model_get_ordered_project_ids() as $project_id) {
+        if (!current_user_can('edit_post', $project_id)) {
+            $can_reorder = false;
+            return $can_reorder;
+        }
+    }
+
+    $can_reorder = true;
+    return $can_reorder;
+}
+
+function iss_content_model_project_order_request_has_modifiers(): bool
+{
+    $query_args = iss_content_model_project_order_query_args();
+
+    foreach (['s', 'm', 'cat', 'author', 'author_name'] as $key) {
+        if (trim((string) ($query_args[$key] ?? '')) !== '') {
+            return true;
+        }
+    }
+
+    $post_status = sanitize_key((string) ($query_args['post_status'] ?? ''));
+    if ($post_status !== '' && $post_status !== 'all') {
+        return true;
+    }
+
+    $paged = absint($query_args['paged'] ?? 0);
+    if ($paged > 1) {
+        return true;
+    }
+
+    $orderby = sanitize_key((string) ($query_args['orderby'] ?? ''));
+    if ($orderby !== '' && !in_array($orderby, ['menu_order', 'iss_project_front_page_order'], true)) {
+        return true;
+    }
+
+    $order = strtolower(sanitize_key((string) ($query_args['order'] ?? '')));
+    if ($order !== '' && $order !== 'asc') {
+        return true;
+    }
+
+    foreach (get_object_taxonomies(ISS_CONTENT_MODEL_PROJEKT_POST_TYPE, 'objects') as $taxonomy) {
+        if (!$taxonomy instanceof WP_Taxonomy) {
+            continue;
+        }
+
+        $query_var = is_string($taxonomy->query_var) && $taxonomy->query_var !== ''
+            ? $taxonomy->query_var
+            : $taxonomy->name;
+        $value = trim((string) ($query_args[$query_var] ?? ''));
+        if ($value !== '' && $value !== '0') {
+            return true;
+        }
+    }
+
+    return false;
+}
+
+function iss_content_model_project_order_list_is_reorderable_request(): bool
+{
+    $screen = function_exists('get_current_screen') ? get_current_screen() : null;
+    if (!$screen || $screen->base !== 'edit' || $screen->post_type !== ISS_CONTENT_MODEL_PROJEKT_POST_TYPE) {
+        return false;
+    }
+
+    return iss_content_model_user_can_reorder_projects()
+        && !iss_content_model_project_order_request_has_modifiers();
+}
+
+function iss_content_model_update_project_menu_order(array $ordered_post_ids)
+{
+    $ordered_post_ids = array_values(array_unique(array_filter(array_map('absint', $ordered_post_ids))));
+    $expected_post_ids = iss_content_model_get_ordered_project_ids();
+
+    if (count($ordered_post_ids) !== count($expected_post_ids) || array_diff($ordered_post_ids, $expected_post_ids) || array_diff($expected_post_ids, $ordered_post_ids)) {
+        return new WP_Error(
+            'iss_content_project_order_partial_set',
+            __('Bitte laden Sie die ungefilterte Projektliste neu und sortieren Sie dann erneut.', 'iss-content-model')
+        );
+    }
+
+    $orders = [];
+    foreach ($ordered_post_ids as $index => $post_id) {
+        if (get_post_type($post_id) !== ISS_CONTENT_MODEL_PROJEKT_POST_TYPE || !current_user_can('edit_post', $post_id)) {
+            return new WP_Error(
+                'iss_content_project_order_forbidden_post',
+                __('Mindestens ein Projekt darf von diesem Konto nicht sortiert werden.', 'iss-content-model')
+            );
+        }
+
+        $menu_order = ($index + 1) * 10;
+        $orders[$post_id] = $menu_order;
+
+        if ((int) get_post_field('menu_order', $post_id) === $menu_order) {
+            continue;
+        }
+
+        $result = wp_update_post([
+            'ID' => $post_id,
+            'menu_order' => $menu_order,
+        ], true);
+
+        if (is_wp_error($result)) {
+            return $result;
+        }
+    }
+
+    return $orders;
+}
 
 function iss_content_model_add_project_order_column(array $columns): array
 {
@@ -1711,7 +2146,27 @@ function iss_content_model_render_project_order_column(string $column, int $post
         return;
     }
 
-    echo esc_html((string) get_post_field('menu_order', $post_id));
+    $menu_order = (int) get_post_field('menu_order', $post_id);
+    if (iss_content_model_project_order_list_is_reorderable_request() && current_user_can('edit_post', $post_id)) {
+        printf(
+            '<button type="button" class="button-link iss-project-order-handle" data-post-id="%d" aria-label="%s"><span class="dashicons dashicons-menu" aria-hidden="true"></span><span class="screen-reader-text">%s</span></button>',
+            absint($post_id),
+            esc_attr(sprintf(__('Projekt "%s" in der Liste verschieben', 'iss-content-model'), get_the_title($post_id))),
+            esc_html__('Projekt verschieben', 'iss-content-model')
+        );
+
+        if (current_user_can('manage_options')) {
+            echo ' <span class="iss-project-order-value">' . esc_html((string) $menu_order) . '</span>';
+        }
+        return;
+    }
+
+    if (current_user_can('manage_options')) {
+        echo esc_html((string) $menu_order);
+        return;
+    }
+
+    echo '<span aria-hidden="true">-</span><span class="screen-reader-text">' . esc_html__('Reihenfolge in der ungefilterten Projektliste bearbeiten.', 'iss-content-model') . '</span>';
 }
 add_action('manage_' . ISS_CONTENT_MODEL_PROJEKT_POST_TYPE . '_posts_custom_column', 'iss_content_model_render_project_order_column', 10, 2);
 
@@ -1721,6 +2176,125 @@ function iss_content_model_make_project_order_column_sortable(array $columns): a
     return $columns;
 }
 add_filter('manage_edit-' . ISS_CONTENT_MODEL_PROJEKT_POST_TYPE . '_sortable_columns', 'iss_content_model_make_project_order_column_sortable');
+
+function iss_content_model_order_project_admin_query(WP_Query $query): void
+{
+    if (!is_admin() || !$query->is_main_query()) {
+        return;
+    }
+
+    if ($query->get('post_type') !== ISS_CONTENT_MODEL_PROJEKT_POST_TYPE) {
+        return;
+    }
+
+    $orderby = (string) $query->get('orderby');
+    if ($orderby === '' || $orderby === 'menu_order' || $orderby === 'iss_project_front_page_order') {
+        $query->set('orderby', [
+            'menu_order' => 'ASC',
+            'title' => 'ASC',
+            'ID' => 'ASC',
+        ]);
+        $query->set('order', 'ASC');
+    }
+
+    if (iss_content_model_user_can_reorder_projects() && !iss_content_model_project_order_request_has_modifiers()) {
+        $query->set('posts_per_page', -1);
+    }
+}
+add_action('pre_get_posts', 'iss_content_model_order_project_admin_query');
+
+function iss_content_model_render_project_order_admin_notice(): void
+{
+    if (iss_content_model_project_order_list_is_reorderable_request()) {
+        return;
+    }
+
+    $screen = function_exists('get_current_screen') ? get_current_screen() : null;
+    if (!$screen || $screen->base !== 'edit' || $screen->post_type !== ISS_CONTENT_MODEL_PROJEKT_POST_TYPE || !iss_content_model_user_can_reorder_projects()) {
+        return;
+    }
+
+    echo '<div class="notice notice-info"><p>' . esc_html__('Projekt-Reihenfolge per Drag & Drop ist in der ungefilterten Reihenfolge-Ansicht aktiv.', 'iss-content-model') . '</p></div>';
+}
+add_action('admin_notices', 'iss_content_model_render_project_order_admin_notice');
+
+function iss_content_model_enqueue_project_order_assets(string $hook): void
+{
+    if ($hook !== 'edit.php') {
+        return;
+    }
+
+    $screen = function_exists('get_current_screen') ? get_current_screen() : null;
+    if (!$screen || $screen->post_type !== ISS_CONTENT_MODEL_PROJEKT_POST_TYPE) {
+        return;
+    }
+
+    $style_path = ISS_CONTENT_MODEL_PATH . 'assets/admin-project-order.css';
+    if (file_exists($style_path)) {
+        wp_enqueue_style(
+            'iss-content-model-project-order',
+            plugins_url('../assets/admin-project-order.css', __FILE__),
+            [],
+            (string) filemtime($style_path)
+        );
+    }
+
+    $script_path = ISS_CONTENT_MODEL_PATH . 'assets/admin-project-order.js';
+    if (!file_exists($script_path)) {
+        return;
+    }
+
+    wp_enqueue_script(
+        'iss-content-model-project-order',
+        plugins_url('../assets/admin-project-order.js', __FILE__),
+        ['jquery', 'jquery-ui-sortable'],
+        (string) filemtime($script_path),
+        true
+    );
+    wp_localize_script(
+        'iss-content-model-project-order',
+        'issContentProjectOrder',
+        [
+            'ajaxUrl' => admin_url('admin-ajax.php'),
+            'enabled' => iss_content_model_project_order_list_is_reorderable_request(),
+            'nonce' => wp_create_nonce('iss_content_project_order'),
+            'strings' => [
+                'saving' => __('Reihenfolge wird gespeichert ...', 'iss-content-model'),
+                'saved' => __('Projekt-Reihenfolge gespeichert.', 'iss-content-model'),
+                'error' => __('Projekt-Reihenfolge konnte nicht gespeichert werden.', 'iss-content-model'),
+            ],
+        ]
+    );
+}
+add_action('admin_enqueue_scripts', 'iss_content_model_enqueue_project_order_assets');
+
+function iss_content_model_handle_project_order_ajax(): void
+{
+    check_ajax_referer('iss_content_project_order', 'nonce');
+
+    if (!iss_content_model_user_can_reorder_projects()) {
+        wp_send_json_error([
+            'message' => __('Dieses Konto darf die Projekt-Reihenfolge nicht ändern.', 'iss-content-model'),
+        ], 403);
+    }
+
+    $post_ids = isset($_POST['post_ids']) && is_array($_POST['post_ids'])
+        ? wp_unslash($_POST['post_ids'])
+        : [];
+    $orders = iss_content_model_update_project_menu_order((array) $post_ids);
+
+    if (is_wp_error($orders)) {
+        wp_send_json_error([
+            'message' => $orders->get_error_message(),
+        ], 400);
+    }
+
+    wp_send_json_success([
+        'message' => __('Projekt-Reihenfolge gespeichert.', 'iss-content-model'),
+        'orders' => $orders,
+    ]);
+}
+add_action('wp_ajax_iss_content_project_reorder', 'iss_content_model_handle_project_order_ajax');
 
 function iss_content_model_add_veranstaltung_entity_column(array $columns): array
 {
