@@ -6,6 +6,15 @@ be recovered from Git history.
 
 ## 2026-06-29
 
+- Added the client review checkpoint for front-page and Führungen presentation
+  changes. The homepage DB-owned `front-page` template now matches the theme
+  file and carries the one-off hero image/text experiment, removed spine/project
+  rail/banner surfaces, note-style project cards with logos, and a primary
+  projects CTA. The file-backed `/fuehrungen/` template now shows dated
+  upcoming Führung cards first, followed by a non-tabbed `Gruppen & Co.` card
+  grid from Führung posts. Local browser checks covered desktop/mobile ordering,
+  card counts, absence of the removed catalog/banner surfaces, and horizontal
+  overflow.
 - Captured a one-off front-page baseline before client hero image/text
   experiments. The active homepage is a DB-owned `wp_template` override
   (`front-page`, ID `26534`) with static front page ID `12257`; rollback state
