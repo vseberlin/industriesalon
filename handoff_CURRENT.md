@@ -89,8 +89,7 @@ follow-up belongs in `TODO.md`.
 
 ## Commit State
 
-- Final shared checkpoint is `561b41a`
-  (`Document staging front-page hero deploy`), with the upload artifact commit
-  directly before it at `befc31e`.
-- Local repo is at `561b41a`; staging runtime was verified after extracting the
-  `befc31e` upload artifact.
+- Final shared checkpoint is pushed to `origin/main`. The front-page hero
+  upload artifact commit is `befc31e` (`Add front-page hero upload artifact`);
+  this closeout documentation is committed after it.
+- Staging runtime was verified after extracting the `befc31e` upload artifact.
