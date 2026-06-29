@@ -287,14 +287,11 @@ function iss_content_model_migrate_veranstaltung_primary_place_meta(): void
         return;
     }
 
-    $post_ids = get_posts([
-        'post_type' => ISS_CONTENT_MODEL_VERANSTALTUNG_POST_TYPE,
+    $post_ids = iss_content_model_veranstaltungen_maintenance_ids([
         'post_status' => 'any',
-        'numberposts' => -1,
-        'fields' => 'ids',
+        'posts_per_page' => -1,
         'orderby' => 'ID',
         'order' => 'ASC',
-        'suppress_filters' => true,
     ]);
 
     foreach ($post_ids as $post_id) {

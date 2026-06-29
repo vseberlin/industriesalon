@@ -99,6 +99,35 @@ function iss_content_model_veranstaltungen_query_posts(array $args = []): array
     return get_posts($query_args);
 }
 
+function iss_content_model_veranstaltungen_query_maintenance_posts(array $args = []): array
+{
+    $query_args = [
+        'post_type' => ISS_CONTENT_MODEL_VERANSTALTUNG_POST_TYPE,
+        'post_status' => $args['post_status'] ?? 'any',
+        'posts_per_page' => isset($args['posts_per_page']) ? (int) $args['posts_per_page'] : -1,
+        'fields' => $args['fields'] ?? '',
+        'orderby' => $args['orderby'] ?? 'ID',
+        'order' => strtoupper((string) ($args['order'] ?? 'ASC')) === 'DESC' ? 'DESC' : 'ASC',
+        'no_found_rows' => true,
+        'ignore_sticky_posts' => true,
+        'suppress_filters' => true,
+    ];
+
+    if (!empty($args['meta_query']) && is_array($args['meta_query'])) {
+        $query_args['meta_query'] = $args['meta_query']; // phpcs:ignore WordPress.DB.SlowDBQuery.slow_db_query_meta_query -- Repository-owned maintenance queries migrate legacy Veranstaltung metadata.
+    }
+
+    return get_posts($query_args);
+}
+
+function iss_content_model_veranstaltungen_maintenance_ids(array $args = []): array
+{
+    $args['fields'] = 'ids';
+    $posts = iss_content_model_veranstaltungen_query_maintenance_posts($args);
+
+    return array_values(array_filter(array_map('absint', (array) $posts)));
+}
+
 function iss_content_model_veranstaltungen_upcoming(int $limit = 12): array
 {
     return iss_content_model_veranstaltungen_query_posts([

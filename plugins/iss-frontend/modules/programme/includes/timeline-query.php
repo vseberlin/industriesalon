@@ -193,6 +193,7 @@ function iss_timeline_normalize_filter_payload($args = []) {
         'include_running_ranges' => !array_key_exists('include_running_ranges', $filters) || (bool) $filters['include_running_ranges'],
         'group_recurring' => !empty($args['group_recurring']),
         'group_recurring_by_month' => !empty($args['group_recurring_by_month']),
+        'group_recurring_by_source' => !empty($args['group_recurring_by_source']),
     ];
 }
 

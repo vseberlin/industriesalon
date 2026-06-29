@@ -56,7 +56,8 @@ function iss_supersaas_fetch_free_slots($settings = null) {
         $max_results = 10;
     }
 
-    $cache_key = 'iss_supersaas_free_' . md5($base_url . '|' . $account_name . '|' . $schedule_id . '|m:' . $future_months . '|n:' . $max_results);
+    $include_full = (bool) apply_filters('iss_supersaas_sync_include_full_slots', true);
+    $cache_key = 'iss_supersaas_free_' . md5($base_url . '|' . $account_name . '|' . $schedule_id . '|m:' . $future_months . '|n:' . $max_results . '|full:' . ($include_full ? '1' : '0'));
     $cached = get_transient($cache_key);
     if (is_array($cached)) {
         return $cached;
@@ -66,9 +67,17 @@ function iss_supersaas_fetch_free_slots($settings = null) {
     $tz = wp_timezone();
     $from_dt = new DateTimeImmutable('now', $tz);
     $to_dt = $from_dt->modify('+' . $future_months . ' months');
-    $from = rawurlencode($from_dt->format('Y-m-d H:i:s'));
-    $to = rawurlencode($to_dt->format('Y-m-d H:i:s'));
-    $url = $base_url . '/api/free/' . rawurlencode($schedule_id) . '.json?from=' . $from . '&to=' . $to . '&maxresults=' . rawurlencode((string) $max_results);
+    $from = $from_dt->format('Y-m-d H:i:s');
+    $to = $to_dt->format('Y-m-d H:i:s');
+    $query_args = [
+        'from' => $from,
+        'to' => $to,
+        'maxresults' => (string) $max_results,
+    ];
+    if ($include_full) {
+        $query_args['full'] = 'true';
+    }
+    $url = add_query_arg($query_args, $base_url . '/api/free/' . rawurlencode($schedule_id) . '.json');
 
     $response = wp_remote_get($url, [
         'timeout' => 20,
@@ -197,6 +206,34 @@ function iss_supersaas_extract_slot_tag($slot) {
     if ($tag !== '') return $tag;
 
     return '';
+}
+
+function iss_supersaas_slot_is_cancelled($slot, string $clean_title = ''): bool {
+    if (!is_array($slot)) {
+        return false;
+    }
+
+    $texts = [
+        $clean_title,
+        isset($slot['title']) ? (string) $slot['title'] : '',
+    ];
+    $description = isset($slot['description']) ? trim((string) $slot['description']) : '';
+    if ($description !== '') {
+        $texts[] = strtok($description, "\r\n") ?: $description;
+    }
+
+    foreach ($texts as $text) {
+        $text = trim((string) $text);
+        if ($text === '') {
+            continue;
+        }
+
+        if (preg_match('/^(ausfall|abgesagt|storniert|cancelled|canceled)(\\b|\\s|:|-)/iu', $text)) {
+            return true;
+        }
+    }
+
+    return false;
 }
 
 /**
@@ -381,6 +418,122 @@ function iss_supersaas_source_entry_title_candidates($entry) {
     return array_values(array_unique($cleaned));
 }
 
+function iss_supersaas_normalize_match_text($value): string {
+    $value = html_entity_decode(wp_strip_all_tags((string) $value), ENT_QUOTES | ENT_HTML5, 'UTF-8');
+    $value = function_exists('remove_accents') ? remove_accents($value) : $value;
+    $value = strtolower((string) $value);
+    $value = preg_replace('/[^a-z0-9]+/', ' ', $value);
+    return trim((string) $value);
+}
+
+function iss_supersaas_match_tokens($value): array {
+    $normalized = iss_supersaas_normalize_match_text($value);
+    if ($normalized === '') {
+        return [];
+    }
+
+    $stopwords = [
+        'aber' => true,
+        'alle' => true,
+        'auch' => true,
+        'danach' => true,
+        'dass' => true,
+        'denn' => true,
+        'fuer' => true,
+        'kann' => true,
+        'kaffee' => true,
+        'kekse' => true,
+        'mit' => true,
+        'oder' => true,
+        'salon' => true,
+        'und' => true,
+        'uhr' => true,
+    ];
+
+    $tokens = [];
+    foreach (preg_split('/\s+/', $normalized) as $token) {
+        $token = trim((string) $token);
+        if ($token === '' || strlen($token) < 4 || isset($stopwords[$token])) {
+            continue;
+        }
+        $tokens[$token] = true;
+    }
+
+    return array_keys($tokens);
+}
+
+function iss_supersaas_match_mapped_series_from_slot_text(array $slot, array $series_sources): array {
+    if (empty($series_sources)) {
+        return [];
+    }
+
+    $description = isset($slot['description']) ? (string) $slot['description'] : '';
+    $location = isset($slot['location']) ? (string) $slot['location'] : '';
+    $raw_title = isset($slot['title']) ? (string) $slot['title'] : '';
+    $slot_text = trim($raw_title . "\n" . $description . "\n" . $location);
+    $slot_tokens = iss_supersaas_match_tokens($slot_text);
+    if (empty($slot_tokens)) {
+        return [];
+    }
+
+    $slot_token_lookup = array_fill_keys($slot_tokens, true);
+    $best = [];
+    $best_score = 0;
+    $ambiguous = false;
+
+    foreach ($series_sources as $series_key => $entry) {
+        if (!is_array($entry)) {
+            continue;
+        }
+
+        $source_post_id = isset($entry['source_post_id']) ? (int) $entry['source_post_id'] : 0;
+        $source_post_type = isset($entry['source_post_type']) ? sanitize_key((string) $entry['source_post_type']) : '';
+        if ($source_post_id <= 0 || $source_post_type !== 'fuehrung') {
+            continue;
+        }
+
+        $candidate_tokens = [];
+        foreach (iss_supersaas_source_entry_title_candidates($entry) as $candidate) {
+            foreach (iss_supersaas_match_tokens($candidate) as $token) {
+                $candidate_tokens[$token] = true;
+            }
+        }
+        if (empty($candidate_tokens)) {
+            continue;
+        }
+
+        $common = array_intersect_key($candidate_tokens, $slot_token_lookup);
+        $common_count = count($common);
+        if ($common_count <= 0) {
+            continue;
+        }
+
+        $candidate_count = count($candidate_tokens);
+        $score = ($common_count * 10) + (int) floor(($common_count / max(1, $candidate_count)) * 10);
+        if ($common_count < 2 && $score < 18) {
+            continue;
+        }
+
+        if ($score > $best_score) {
+            $best_score = $score;
+            $best = $entry;
+            $best['series_key'] = (string) $series_key;
+            $ambiguous = false;
+        } elseif ($score === $best_score && $best_score > 0) {
+            $best_source = isset($best['source_post_id']) ? (int) $best['source_post_id'] : 0;
+            if ($best_source !== $source_post_id) {
+                $ambiguous = true;
+            }
+        }
+    }
+
+    if ($ambiguous || $best_score <= 0) {
+        return [];
+    }
+
+    return $best;
+}
+
 function iss_supersaas_match_fuehrung_by_title_candidates($candidates) {
     if (!is_array($candidates) || empty($candidates)) {
         return 0;
@@ -491,10 +644,188 @@ function iss_supersaas_find_linked_source_by_series_key($series_key) {
     return ['source_post_id' => 0, 'source_post_type' => ''];
 }
 
+function iss_supersaas_reconcile_exact_title_series_sources() {
+    if (!function_exists('iss_occurrences_get_service')
+        || !function_exists('iss_occurrences_remember_series_source')
+        || !function_exists('iss_supersaas_match_fuehrung_by_title_candidates')
+    ) {
+        return 0;
+    }
+
+    global $wpdb;
+
+    $service = iss_occurrences_get_service();
+    $service->maybe_install_schema();
+    if (!$service->tables_exist()) {
+        return 0;
+    }
+
+    $series_table = $service->get_series_table_name();
+    $occurrences_table = $service->get_occurrences_table_name();
+    $rows = $wpdb->get_results(
+        $wpdb->prepare(
+            "SELECT series_key, supersaas_title, tag, fallback_url, source_post_id
+            FROM {$series_table}
+            WHERE origin = %s
+              AND supersaas_title <> ''
+              AND tag = ''",
+            'supersaas'
+        ),
+        ARRAY_A
+    );
+
+    $updated = 0;
+    foreach ((array) $rows as $row) {
+        $series_key = trim((string) ($row['series_key'] ?? ''));
+        $title = trim((string) ($row['supersaas_title'] ?? ''));
+        if ($series_key === '' || $title === '') {
+            continue;
+        }
+
+        $matched_post_id = iss_supersaas_match_fuehrung_by_title_candidates([$title]);
+        if ($matched_post_id <= 0 || (int) ($row['source_post_id'] ?? 0) === $matched_post_id) {
+            continue;
+        }
+
+        $matched_post = get_post($matched_post_id);
+        if (!$matched_post instanceof WP_Post || $matched_post->post_type !== 'fuehrung' || $matched_post->post_status !== 'publish') {
+            continue;
+        }
+
+        $fallback_url = isset($row['fallback_url']) ? esc_url_raw((string) $row['fallback_url']) : '';
+        if (!iss_occurrences_remember_series_source($series_key, $matched_post_id, 'fuehrung', $title, '', $fallback_url)) {
+            continue;
+        }
+
+        $wpdb->query(
+            $wpdb->prepare(
+                "UPDATE {$occurrences_table}
+                SET source_post_id = %d, source_post_type = %s, updated_at = %s
+                WHERE origin = %s
+                  AND series_key = %s
+                  AND source_post_id <> %d",
+                $matched_post_id,
+                'fuehrung',
+                current_time('mysql'),
+                'supersaas',
+                $series_key,
+                $matched_post_id
+            )
+        );
+        $updated++;
+    }
+
+    if ($updated > 0) {
+        do_action('iss_occurrences_changed', ['origin' => 'supersaas', 'reconciled_series' => $updated]);
+    }
+
+    return $updated;
+}
+
+function iss_supersaas_clear_non_fuehrung_series_sources() {
+    if (!function_exists('iss_occurrences_get_service')
+        || !function_exists('iss_occurrences_clear_series_source_for_key')
+    ) {
+        return 0;
+    }
+
+    global $wpdb;
+
+    $service = iss_occurrences_get_service();
+    $service->maybe_install_schema();
+    if (!$service->tables_exist()) {
+        return 0;
+    }
+
+    $series_table = $service->get_series_table_name();
+    $occurrences_table = $service->get_occurrences_table_name();
+    $rows = $wpdb->get_results(
+        $wpdb->prepare(
+            "SELECT s.series_key, COUNT(o.id) AS occurrence_rows
+            FROM {$series_table} s
+            LEFT JOIN {$wpdb->posts} p ON p.ID = s.source_post_id
+            LEFT JOIN {$occurrences_table} o ON o.origin = s.origin AND o.series_key = s.series_key
+            WHERE s.origin = %s
+              AND s.source_post_id > 0
+              AND (
+                  p.ID IS NULL
+                  OR p.post_type <> %s
+                  OR (s.source_post_type <> '' AND s.source_post_type <> %s)
+              )
+            GROUP BY s.series_key
+            HAVING occurrence_rows = 0",
+            'supersaas',
+            'fuehrung',
+            'fuehrung'
+        ),
+        ARRAY_A
+    );
+
+    $cleared = 0;
+    foreach ((array) $rows as $row) {
+        $series_key = trim((string) ($row['series_key'] ?? ''));
+        if ($series_key === '') {
+            continue;
+        }
+
+        if (iss_occurrences_clear_series_source_for_key($series_key)) {
+            $cleared++;
+        }
+    }
+
+    if ($cleared > 0) {
+        do_action('iss_occurrences_changed', ['origin' => 'supersaas', 'cleared_non_fuehrung_series' => $cleared]);
+    }
+
+    return $cleared;
+}
+
+function iss_supersaas_prune_empty_unlinked_series(): int {
+    if (!function_exists('iss_occurrences_get_service')) {
+        return 0;
+    }
+
+    global $wpdb;
+
+    $service = iss_occurrences_get_service();
+    if (!method_exists($service, 'tables_exist') || !$service->tables_exist()) {
+        return 0;
+    }
+
+    $series_table = $service->get_series_table_name();
+    $occurrences_table = $service->get_occurrences_table_name();
+    $deleted = (int) $wpdb->query(
+        $wpdb->prepare(
+            "DELETE s
+            FROM {$series_table} s
+            LEFT JOIN {$occurrences_table} o ON o.origin = s.origin AND o.series_key = s.series_key
+            WHERE s.origin = %s
+              AND o.id IS NULL
+              AND (
+                  (
+                      s.source_post_id = 0
+                      AND (
+                          s.series_key IN ('tour:', 'tour')
+                          OR s.supersaas_title = ''
+                      )
+                  )
+                  OR LOWER(s.supersaas_title) REGEXP '^[[:space:]]*(ausfall|abgesagt|storniert|cancelled|canceled)([[:space:]]|:|-|$)'
+              )",
+            'supersaas'
+        )
+    );
+
+    if ($deleted > 0) {
+        do_action('iss_occurrences_changed', ['origin' => 'supersaas', 'pruned_empty_series' => $deleted]);
+    }
+
+    return $deleted;
+}
+
 /**
  * Sync SuperSaaS slots into the occurrence projection.
  *
- * @return array{created:int,updated:int,errors:int,imported_unmapped:int,skipped_unlinked:int,inactivated:int,past_reactivated:int,metadata_backfilled:int,error_message:string}
+ * @return array{created:int,updated:int,errors:int,imported_unmapped:int,skipped_unlinked:int,inactivated:int,purged_inactive:int,past_reactivated:int,metadata_backfilled:int,source_reconciled:int,source_cleared:int,series_pruned:int,error_message:string}
  */
 function iss_supersaas_sync_occurrences() {
     if (!function_exists('iss_occurrences_get_service')) {
@@ -505,8 +836,12 @@ function iss_supersaas_sync_occurrences() {
             'imported_unmapped' => 0,
             'skipped_unlinked' => 0,
             'inactivated' => 0,
+            'purged_inactive' => 0,
             'past_reactivated' => 0,
             'metadata_backfilled' => 0,
+            'source_reconciled' => 0,
+            'source_cleared' => 0,
+            'series_pruned' => 0,
             'error_message' => 'ISS Occurrences is unavailable.',
         ];
     }
@@ -524,8 +859,12 @@ function iss_supersaas_sync_occurrences() {
             'imported_unmapped' => 0,
             'skipped_unlinked' => 0,
             'inactivated' => 0,
+            'purged_inactive' => 0,
             'past_reactivated' => 0,
             'metadata_backfilled' => 0,
+            'source_reconciled' => 0,
+            'source_cleared' => 0,
+            'series_pruned' => 0,
             'error_message' => (string) $slot_items->get_error_message(),
         ];
     }
@@ -537,6 +876,9 @@ function iss_supersaas_sync_occurrences() {
     $metadata_backfilled = method_exists($service, 'backfill_supersaas_metadata')
         ? $service->backfill_supersaas_metadata($source_calendar)
         : 0;
+    $source_reconciled = iss_supersaas_reconcile_exact_title_series_sources();
+    $source_cleared = iss_supersaas_clear_non_fuehrung_series_sources();
+    $series_pruned = iss_supersaas_prune_empty_unlinked_series();
 
     $schedule_url = iss_supersaas_build_schedule_url($settings);
     $tag_sources = function_exists('iss_occurrences_get_tag_sources') ? iss_occurrences_get_tag_sources() : [];
@@ -582,13 +924,57 @@ function iss_supersaas_sync_occurrences() {
 
         $is_known_tag = ($tag !== '' && in_array($tag, $known_tags, true));
 
-        $clean_title = isset($parsed['title']) ? (string) $parsed['title'] : '';
+        $clean_title = isset($parsed['title']) ? trim((string) $parsed['title']) : '';
         if ($clean_title === '') {
             $clean_title = trim((string) $raw_title);
         }
-        $series_key = function_exists('iss_occurrences_build_series_key')
+        $series_key = ($clean_title !== '' && function_exists('iss_occurrences_build_series_key'))
             ? iss_occurrences_build_series_key($clean_title, 'tour')
             : '';
+        $series_entry = ($series_key !== '' && isset($series_sources[$series_key]) && is_array($series_sources[$series_key]))
+            ? $series_sources[$series_key]
+            : [];
+        if ($clean_title === '' || empty($series_entry['source_post_id'])) {
+            $matched_series = iss_supersaas_match_mapped_series_from_slot_text($slot, $series_sources);
+            if (!empty($matched_series)) {
+                $matched_series_key = isset($matched_series['series_key'])
+                    ? (string) $matched_series['series_key']
+                    : (string) array_search($matched_series, $series_sources, true);
+                if ($matched_series_key !== '') {
+                    $series_key = $matched_series_key;
+                }
+                $series_entry = $matched_series;
+                $mapped_title = isset($matched_series['supersaas_title']) ? trim((string) $matched_series['supersaas_title']) : '';
+                if ($mapped_title === '' && !empty($matched_series['source_post_id'])) {
+                    $mapped_title = trim((string) get_the_title((int) $matched_series['source_post_id']));
+                }
+                if ($mapped_title !== '') {
+                    $clean_title = $mapped_title;
+                }
+                if ($tag === '' && !empty($matched_series['tag'])) {
+                    $tag = strtoupper(sanitize_text_field((string) $matched_series['tag']));
+                }
+            }
+        }
+        $is_known_tag = ($tag !== '' && in_array($tag, $known_tags, true));
+        if (iss_supersaas_slot_is_cancelled($slot, $clean_title)) {
+            $service->delete_occurrence_by_external('supersaas', $external_id);
+            $skipped_unlinked++;
+            continue;
+        }
+
+        $exact_title_source_post_id = function_exists('iss_supersaas_match_fuehrung_by_title_candidates')
+            ? iss_supersaas_match_fuehrung_by_title_candidates([$clean_title])
+            : 0;
+        if ($exact_title_source_post_id > 0) {
+            $exact_title_source = get_post($exact_title_source_post_id);
+            if (!$exact_title_source instanceof WP_Post
+                || $exact_title_source->post_type !== 'fuehrung'
+                || $exact_title_source->post_status !== 'publish'
+            ) {
+                $exact_title_source_post_id = 0;
+            }
+        }
 
         $start = isset($slot['start']) ? trim((string) $slot['start']) : '';
         if ($start === '') continue;
@@ -622,9 +1008,9 @@ function iss_supersaas_sync_occurrences() {
         $source_post_type = isset($tag_source['source_post_type']) ? sanitize_key((string) $tag_source['source_post_type']) : '';
         $fallback_url = isset($tag_source['fallback_url']) ? esc_url_raw((string) $tag_source['fallback_url']) : '';
 
-        $series_entry = ($series_key !== '' && isset($series_sources[$series_key]) && is_array($series_sources[$series_key]))
-            ? $series_sources[$series_key]
-            : [];
+        if (empty($series_entry) && $series_key !== '' && isset($series_sources[$series_key]) && is_array($series_sources[$series_key])) {
+            $series_entry = $series_sources[$series_key];
+        }
         if ($source_post_id <= 0 && !empty($series_entry['source_post_id'])) {
             $resolved_series_post_id = (int) $series_entry['source_post_id'];
             if ($resolved_series_post_id > 0 && get_post($resolved_series_post_id) instanceof WP_Post) {
@@ -660,6 +1046,11 @@ function iss_supersaas_sync_occurrences() {
                 $source_post_id = (int) $inferred['source_post_id'];
                 $source_post_type = sanitize_key((string) ($inferred['source_post_type'] ?? ''));
             }
+        }
+
+        if ($exact_title_source_post_id > 0 && (!$is_known_tag || $source_post_id <= 0) && $source_post_id !== $exact_title_source_post_id) {
+            $source_post_id = $exact_title_source_post_id;
+            $source_post_type = 'fuehrung';
         }
 
         if ($source_post_id > 0 && $source_post_type === '') {
@@ -766,6 +1157,13 @@ function iss_supersaas_sync_occurrences() {
     }
 
     $inactivated = $service->mark_missing_origin_future_inactive('supersaas', $source_calendar, $seen_external_ids);
+    $purged_inactive = 0;
+    if ((bool) apply_filters('iss_supersaas_sync_purge_missing_future_rows', true)
+        && method_exists($service, 'delete_inactive_origin_future')
+    ) {
+        $purged_inactive = $service->delete_inactive_origin_future('supersaas', $source_calendar);
+    }
+    $series_pruned += iss_supersaas_prune_empty_unlinked_series();
     $past_reactivated = method_exists($service, 'mark_origin_past_active')
         ? $service->mark_origin_past_active('supersaas', $source_calendar)
         : 0;
@@ -798,8 +1196,12 @@ function iss_supersaas_sync_occurrences() {
         'imported_unmapped' => $imported_unmapped,
         'skipped_unlinked' => $skipped_unlinked,
         'inactivated' => $inactivated,
+        'purged_inactive' => $purged_inactive,
         'past_reactivated' => $past_reactivated,
         'metadata_backfilled' => $metadata_backfilled,
+        'source_reconciled' => $source_reconciled,
+        'source_cleared' => $source_cleared,
+        'series_pruned' => $series_pruned,
         'error_message' => '',
     ];
 }

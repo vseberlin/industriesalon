@@ -6,6 +6,37 @@ be recovered from Git history.
 
 ## 2026-06-29
 
+- Centralized the first programme timeline policy in the existing
+  `industriesalon/timeline-query` renderer instead of adding a parallel block:
+  public programme timelines now default to Führungen, Veranstaltungen, and
+  programme-enabled Ausstellungen, constrain source post types to the same
+  programme set unless a project timeline is explicitly requested, and group
+  recurring Führung rows by month only for month views. The front-page and
+  `/kalender/` templates now both include programme Ausstellungen; the active
+  local DB-owned `front-page` template was resynced from the theme file.
+- Added the next timeline cleanup slice: upcoming/teaser timelines now collapse
+  SuperSaaS Führung occurrences by their linked Führung post while month views
+  keep month-scoped series grouping, the unfinished Veranstaltung
+  `Serientermin` structure is hidden from normal new editor selections, and
+  `wp iss-occurrences supersaas-audit` reports unmapped series, wrong-source
+  links, mapped Führungen without future rows, and future inactive SuperSaaS
+  rows before any importer semantics change. SuperSaaS sync also now self-heals
+  untagged series when the series title has one exact published Führung match;
+  the local sync reconciled `Stadtrallye für Erwachsene` away from the stale
+  Familienrallye source.
+- Finished the first timeline data-fidelity cleanup pass: Veranstaltung
+  migration-only post scans now route through repository-owned maintenance
+  helpers so `wp iss-content veranstaltungen-query-audit` stays green, SuperSaaS
+  sync requests full slots with `full=true`, clears stale non-Führung source
+  mappings, can purge missing future inactive rows, and reports cleanup counts
+  in CLI/admin sync output. The SuperSaaS audit now separates inert unmapped
+  scheduler labels from unmapped labels that actually have occurrence rows.
+- Fixed the SuperSaaS empty-title slot path exposed by the Bustour 05.07 row:
+  title-less slots can now match only against existing mapped Führung series,
+  public output keeps the mapped Führung/series title instead of SuperSaaS
+  description notes, cancellation rows such as `AUSFALL` are removed from the
+  public projection, and the SuperSaaS sync admin table now shows occurrence
+  counts plus the next date per series.
 - Added the client review checkpoint for front-page and Führungen presentation
   changes. The homepage DB-owned `front-page` template now matches the theme
   file and carries the one-off hero image/text experiment, removed spine/project

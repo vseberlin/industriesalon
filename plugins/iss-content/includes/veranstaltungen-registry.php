@@ -273,6 +273,18 @@ function iss_content_model_veranstaltung_entity_options(): array
     return $options;
 }
 
+function iss_content_model_veranstaltung_entity_options_for_editor(string $current_entity_key = ''): array
+{
+    $current_entity_key = iss_content_model_sanitize_veranstaltung_entity_key($current_entity_key);
+    $options = iss_content_model_veranstaltung_entity_options();
+
+    if ($current_entity_key !== 'event.series') {
+        unset($options['event.series']);
+    }
+
+    return $options;
+}
+
 function iss_content_model_veranstaltung_entity_key_is_valid(string $entity_key): bool
 {
     return iss_content_model_veranstaltung_entity($entity_key) !== [];
@@ -324,12 +336,10 @@ function iss_content_model_maybe_migrate_veranstaltung_semantic_terms(): void
         return;
     }
 
-    $posts = get_posts([
-        'post_type' => ISS_CONTENT_MODEL_VERANSTALTUNG_POST_TYPE,
+    $posts = function_exists('iss_content_model_veranstaltungen_maintenance_ids')
+        ? iss_content_model_veranstaltungen_maintenance_ids([
         'post_status' => 'any',
         'posts_per_page' => -1,
-        'fields' => 'ids',
-        'no_found_rows' => true,
         'meta_query' => [ // phpcs:ignore WordPress.DB.SlowDBQuery.slow_db_query_meta_query -- One-time compatibility migration from the old semantic entity contract.
             [
                 'key' => '_iss_entity_key',
@@ -337,7 +347,8 @@ function iss_content_model_maybe_migrate_veranstaltung_semantic_terms(): void
                 'compare' => 'IN',
             ],
         ],
-    ]);
+    ])
+        : [];
 
     foreach ($posts as $post_id) {
         $post_id = (int) $post_id;

@@ -64,6 +64,90 @@ if (!function_exists('iss_occurrences_get_fuehrung_ids_for_select')) {
     }
 }
 
+if (!function_exists('iss_occurrences_get_series_occurrence_summaries')) {
+    function iss_occurrences_get_series_occurrence_summaries(array $series_keys): array {
+        if (!function_exists('iss_occurrences_get_service')) {
+            return [];
+        }
+
+        $series_keys = array_values(array_unique(array_filter(array_map('iss_occurrences_normalize_series_key', $series_keys))));
+        if (empty($series_keys)) {
+            return [];
+        }
+
+        $service = iss_occurrences_get_service();
+        if (!method_exists($service, 'tables_exist') || !$service->tables_exist()) {
+            return [];
+        }
+
+        global $wpdb;
+
+        $table = $service->get_occurrences_table_name();
+        $now = current_time('mysql');
+        $placeholders = implode(',', array_fill(0, count($series_keys), '%s'));
+        $params = array_merge(
+            ['active', 'public', $now, 'active', 'public', $now, 'supersaas'],
+            $series_keys
+        );
+        $rows = $wpdb->get_results(
+            $wpdb->prepare(
+                "SELECT series_key,
+                    COUNT(*) AS total_rows,
+                    SUM(CASE WHEN status = %s AND visibility = %s AND starts_at >= %s THEN 1 ELSE 0 END) AS future_active_rows,
+                    MIN(CASE WHEN status = %s AND visibility = %s AND starts_at >= %s THEN starts_at ELSE NULL END) AS next_start
+                FROM {$table}
+                WHERE origin = %s
+                  AND series_key IN ({$placeholders})
+                GROUP BY series_key",
+                $params
+            ),
+            ARRAY_A
+        );
+
+        $summaries = [];
+        foreach ((array) $rows as $row) {
+            $series_key = isset($row['series_key']) ? iss_occurrences_normalize_series_key((string) $row['series_key']) : '';
+            if ($series_key === '') {
+                continue;
+            }
+
+            $summaries[$series_key] = [
+                'total_rows' => (int) ($row['total_rows'] ?? 0),
+                'future_active_rows' => (int) ($row['future_active_rows'] ?? 0),
+                'next_start' => isset($row['next_start']) ? (string) $row['next_start'] : '',
+            ];
+        }
+
+        return $summaries;
+    }
+}
+
+if (!function_exists('iss_occurrences_format_series_occurrence_summary')) {
+    function iss_occurrences_format_series_occurrence_summary(array $summary): string {
+        $total = (int) ($summary['total_rows'] ?? 0);
+        $future = (int) ($summary['future_active_rows'] ?? 0);
+        $next_start = isset($summary['next_start']) ? trim((string) $summary['next_start']) : '';
+
+        if ($total <= 0) {
+            return esc_html__('0 Termine', 'iss-occurrences');
+        }
+
+        $details = sprintf(_n('%d gesamt', '%d gesamt', $total, 'iss-occurrences'), $total);
+        if ($next_start !== '') {
+            $details .= ' · ' . sprintf(
+                esc_html__('nächster %s', 'iss-occurrences'),
+                mysql2date('d.m.Y H:i', $next_start)
+            );
+        }
+
+        return sprintf(
+            '%s<br><code>%s</code>',
+            esc_html(sprintf(_n('%d kommender', '%d kommende', $future, 'iss-occurrences'), $future)),
+            esc_html($details)
+        );
+    }
+}
+
 add_action('admin_menu', function () {
     add_submenu_page(
         defined('ISS_CORE_OPERATIONS_MENU_SLUG') ? ISS_CORE_OPERATIONS_MENU_SLUG : 'tools.php',
@@ -90,8 +174,12 @@ add_action('admin_post_iss_occurrences_sync', function () {
             'imported_unmapped' => 0,
             'skipped_unlinked' => 0,
             'inactivated' => 0,
+            'purged_inactive' => 0,
             'past_reactivated' => 0,
             'metadata_backfilled' => 0,
+            'source_reconciled' => 0,
+            'source_cleared' => 0,
+            'series_pruned' => 0,
             'error_message' => 'SuperSaaS sync module is unavailable.',
         ], 60);
         wp_safe_redirect(iss_occurrences_sync_admin_url());
@@ -237,6 +325,7 @@ function iss_occurrences_render_sync_page() {
 
     $series_sources = function_exists('iss_occurrences_get_series_sources') ? iss_occurrences_get_series_sources() : [];
     $fuehrungen = iss_occurrences_get_fuehrung_ids_for_select();
+    $series_occurrences = iss_occurrences_get_series_occurrence_summaries(array_keys($series_sources));
 
     echo '<div class="wrap">';
     echo '<h1>SuperSaaS-Termin-Sync</h1>';
@@ -248,20 +337,28 @@ function iss_occurrences_render_sync_page() {
         $imported_unmapped = (int) ($result['imported_unmapped'] ?? 0);
         $skipped_unlinked = (int) ($result['skipped_unlinked'] ?? 0);
         $inactivated = (int) ($result['inactivated'] ?? 0);
+        $purged_inactive = (int) ($result['purged_inactive'] ?? 0);
         $past_reactivated = (int) ($result['past_reactivated'] ?? 0);
         $metadata_backfilled = (int) ($result['metadata_backfilled'] ?? 0);
+        $source_reconciled = (int) ($result['source_reconciled'] ?? 0);
+        $source_cleared = (int) ($result['source_cleared'] ?? 0);
+        $series_pruned = (int) ($result['series_pruned'] ?? 0);
         $error_message = isset($result['error_message']) ? trim((string) $result['error_message']) : '';
 
         $sync_message = sprintf(
-            'SuperSaaS-Sync abgeschlossen. Neu: %d, Aktualisiert: %d, Fehler: %d, Unverknüpfte Slots: %d, Nicht öffentlich: %d, Inaktiviert: %d, Vergangene reaktiviert: %d, Metadaten ergänzt: %d.',
+            'SuperSaaS-Sync abgeschlossen. Neu: %d, Aktualisiert: %d, Fehler: %d, Slots ohne bekannten Tag: %d, Nicht importiert: %d, Inaktiviert: %d, Bereinigt: %d, Vergangene reaktiviert: %d, Metadaten ergänzt: %d, Quellen korrigiert: %d, Quellen geleert: %d, Leere Reihen entfernt: %d.',
             $created,
             $updated,
             $errors,
             $imported_unmapped,
             $skipped_unlinked,
             $inactivated,
+            $purged_inactive,
             $past_reactivated,
-            $metadata_backfilled
+            $metadata_backfilled,
+            $source_reconciled,
+            $source_cleared,
+            $series_pruned
         );
         echo '<div class="notice notice-success"><p>' . esc_html($sync_message) . '</p></div>';
         if ($error_message !== '') {
@@ -290,7 +387,7 @@ function iss_occurrences_render_sync_page() {
     if (empty($series_sources)) {
         echo '<p>Noch keine Reihen erkannt. Bitte zuerst synchronisieren.</p>';
     } else {
-        echo '<table class="widefat striped"><thead><tr><th>Reihe</th><th>Schlüssel</th><th>Tag</th><th>Quelle</th><th>Buchungslink</th><th>Zuletzt gesehen</th><th>Aktionen</th></tr></thead><tbody>';
+        echo '<table class="widefat striped"><thead><tr><th>Reihe</th><th>Schlüssel</th><th>Tag</th><th>Quelle</th><th>Termine</th><th>Buchungslink</th><th>Zuletzt gesehen</th><th>Aktionen</th></tr></thead><tbody>';
         $allowed_admin_html = [
             'a' => [
                 'href' => true,
@@ -339,6 +436,7 @@ function iss_occurrences_render_sync_page() {
             $post_type = isset($entry['source_post_type']) ? sanitize_key((string) $entry['source_post_type']) : '';
             $fallback_url = isset($entry['fallback_url']) ? (string) $entry['fallback_url'] : '';
             $last_seen_at = isset($entry['last_seen_at']) ? (string) $entry['last_seen_at'] : '';
+            $occurrence_label = iss_occurrences_format_series_occurrence_summary($series_occurrences[$series_key] ?? []);
 
             $post_label = $post_id ? ('#' . $post_id . ' ' . get_the_title($post_id)) : '—';
             $post_edit = $post_id ? get_edit_post_link($post_id) : '';
@@ -394,11 +492,12 @@ function iss_occurrences_render_sync_page() {
             $clear_form .= '</form>';
 
             printf(
-                '<tr><td>%s</td><td><code>%s</code></td><td>%s</td><td>%s</td><td>%s</td><td>%s</td><td>%s%s</td></tr>',
+                '<tr><td>%s</td><td><code>%s</code></td><td>%s</td><td>%s</td><td>%s</td><td>%s</td><td>%s</td><td>%s%s</td></tr>',
                 esc_html($title),
                 esc_html((string) $series_key),
                 $tag !== '' ? esc_html($tag) : '—',
                 wp_kses($post_label, $allowed_admin_html),
+                wp_kses($occurrence_label, $allowed_admin_html),
                 wp_kses($fallback_label, $allowed_admin_html),
                 esc_html($last_seen_at),
                 wp_kses($assign_form, $allowed_admin_html),

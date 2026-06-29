@@ -40,13 +40,17 @@ if (defined('WP_CLI') && WP_CLI) {
                 $result = iss_occurrences_sync_all();
                 $supersaas = is_array($result['supersaas'] ?? null) ? $result['supersaas'] : [];
                 \WP_CLI::success(sprintf(
-                    'Synced occurrences: sources=%d supersaas_created=%d supersaas_updated=%d supersaas_unlinked=%d supersaas_inactivated=%d supersaas_backfilled=%d supersaas_errors=%d.',
+                    'Synced occurrences: sources=%d supersaas_created=%d supersaas_updated=%d supersaas_unlinked=%d supersaas_inactivated=%d supersaas_purged=%d supersaas_backfilled=%d supersaas_reconciled=%d supersaas_cleared=%d supersaas_pruned=%d supersaas_errors=%d.',
                     (int) $result['sources'],
                     (int) ($supersaas['created'] ?? 0),
                     (int) ($supersaas['updated'] ?? 0),
                     (int) ($supersaas['skipped_unlinked'] ?? 0),
                     (int) ($supersaas['inactivated'] ?? 0),
+                    (int) ($supersaas['purged_inactive'] ?? 0),
                     (int) ($supersaas['metadata_backfilled'] ?? 0),
+                    (int) ($supersaas['source_reconciled'] ?? 0),
+                    (int) ($supersaas['source_cleared'] ?? 0),
+                    (int) ($supersaas['series_pruned'] ?? 0),
                     (int) ($supersaas['errors'] ?? 0)
                 ));
                 return;
@@ -64,12 +68,16 @@ if (defined('WP_CLI') && WP_CLI) {
                 }
                 $result = iss_supersaas_sync_occurrences();
                 \WP_CLI::success(sprintf(
-                    'Synced SuperSaaS occurrences: created=%d updated=%d unlinked=%d inactivated=%d backfilled=%d errors=%d.',
+                    'Synced SuperSaaS occurrences: created=%d updated=%d unlinked=%d inactivated=%d purged=%d backfilled=%d reconciled=%d cleared=%d pruned=%d errors=%d.',
                     (int) ($result['created'] ?? 0),
                     (int) ($result['updated'] ?? 0),
                     (int) ($result['skipped_unlinked'] ?? 0),
                     (int) ($result['inactivated'] ?? 0),
+                    (int) ($result['purged_inactive'] ?? 0),
                     (int) ($result['metadata_backfilled'] ?? 0),
+                    (int) ($result['source_reconciled'] ?? 0),
+                    (int) ($result['source_cleared'] ?? 0),
+                    (int) ($result['series_pruned'] ?? 0),
                     (int) ($result['errors'] ?? 0)
                 ));
                 return;
@@ -99,6 +107,347 @@ if (defined('WP_CLI') && WP_CLI) {
         public function backfill_occurrences(array $args, array $assoc_args): void
         {
             $this->sync($args, ['source' => 'all']);
+        }
+
+        public function supersaas_audit(array $args, array $assoc_args): void
+        {
+            global $wpdb;
+
+            $service = iss_occurrences_get_service();
+            $service->maybe_install_schema();
+            if (!$service->tables_exist()) {
+                \WP_CLI::error('Occurrence tables are missing.');
+            }
+
+            $table = $service->get_occurrences_table_name();
+            $series_table = $service->get_series_table_name();
+            $limit = isset($assoc_args['limit']) ? max(1, (int) $assoc_args['limit']) : 20;
+            $now = current_time('mysql');
+            $last_sync_option = defined('ISS_SUPERSAAS_LAST_SYNC_OPTION') ? ISS_SUPERSAAS_LAST_SYNC_OPTION : 'iss_supersaas_last_sync_at';
+            $last_sync = trim((string) get_option($last_sync_option, ''));
+
+            $published_fuehrungen = (int) $wpdb->get_var(
+                $wpdb->prepare(
+                    "SELECT COUNT(*) FROM {$wpdb->posts} WHERE post_type = %s AND post_status = %s",
+                    'fuehrung',
+                    'publish'
+                )
+            );
+
+            $mapped_fuehrungen = (int) $wpdb->get_var(
+                $wpdb->prepare(
+                    "SELECT COUNT(DISTINCT s.source_post_id)
+                    FROM {$series_table} s
+                    INNER JOIN {$wpdb->posts} p ON p.ID = s.source_post_id
+                    WHERE s.origin = %s
+                      AND s.source_post_id > 0
+                      AND p.post_type = %s
+                      AND p.post_status = %s",
+                    'supersaas',
+                    'fuehrung',
+                    'publish'
+                )
+            );
+
+            $active_future_occurrences = (int) $wpdb->get_var(
+                $wpdb->prepare(
+                    "SELECT COUNT(*)
+                    FROM {$table}
+                    WHERE origin = %s
+                      AND visibility = %s
+                      AND status = %s
+                      AND source_post_type = %s
+                      AND starts_at >= %s",
+                    'supersaas',
+                    'public',
+                    'active',
+                    'fuehrung',
+                    $now
+                )
+            );
+
+            $active_future_sources = (int) $wpdb->get_var(
+                $wpdb->prepare(
+                    "SELECT COUNT(DISTINCT source_post_id)
+                    FROM {$table}
+                    WHERE origin = %s
+                      AND visibility = %s
+                      AND status = %s
+                      AND source_post_type = %s
+                      AND starts_at >= %s
+                      AND source_post_id > 0",
+                    'supersaas',
+                    'public',
+                    'active',
+                    'fuehrung',
+                    $now
+                )
+            );
+
+            $mapped_without_future = (int) $wpdb->get_var(
+                $wpdb->prepare(
+                    "SELECT COUNT(DISTINCT s.source_post_id)
+                    FROM {$series_table} s
+                    INNER JOIN {$wpdb->posts} p ON p.ID = s.source_post_id
+                    WHERE s.origin = %s
+                      AND s.source_post_id > 0
+                      AND p.post_type = %s
+                      AND p.post_status = %s
+                      AND NOT EXISTS (
+                          SELECT 1
+                          FROM {$table} o
+                          WHERE o.origin = %s
+                            AND o.visibility = %s
+                            AND o.status = %s
+                            AND o.source_post_type = %s
+                            AND o.source_post_id = s.source_post_id
+                            AND o.starts_at >= %s
+                      )",
+                    'supersaas',
+                    'fuehrung',
+                    'publish',
+                    'supersaas',
+                    'public',
+                    'active',
+                    'fuehrung',
+                    $now
+                )
+            );
+
+            $unmapped_series = (int) $wpdb->get_var(
+                $wpdb->prepare(
+                    "SELECT COUNT(*) FROM {$series_table} WHERE origin = %s AND source_post_id = 0",
+                    'supersaas'
+                )
+            );
+
+            $unmapped_with_occurrences = (int) $wpdb->get_var(
+                $wpdb->prepare(
+                    "SELECT COUNT(*)
+                    FROM {$series_table} s
+                    WHERE s.origin = %s
+                      AND s.source_post_id = 0
+                      AND EXISTS (
+                          SELECT 1
+                          FROM {$table} o
+                          WHERE o.origin = s.origin
+                            AND o.series_key = s.series_key
+                      )",
+                    'supersaas'
+                )
+            );
+
+            $wrong_source_series = (int) $wpdb->get_var(
+                $wpdb->prepare(
+                    "SELECT COUNT(*)
+                    FROM {$series_table} s
+                    LEFT JOIN {$wpdb->posts} p ON p.ID = s.source_post_id
+                    WHERE s.origin = %s
+                      AND s.source_post_id > 0
+                      AND (
+                          p.ID IS NULL
+                          OR p.post_type <> %s
+                          OR (s.source_post_type <> '' AND s.source_post_type <> %s)
+                      )",
+                    'supersaas',
+                    'fuehrung',
+                    'fuehrung'
+                )
+            );
+
+            $future_inactive = (int) $wpdb->get_var(
+                $wpdb->prepare(
+                    "SELECT COUNT(*)
+                    FROM {$table}
+                    WHERE origin = %s
+                      AND visibility = %s
+                      AND status = %s
+                      AND starts_at >= %s",
+                    'supersaas',
+                    'public',
+                    'inactive',
+                    $now
+                )
+            );
+
+            $title_conflict_examples = [];
+            if (function_exists('iss_supersaas_match_fuehrung_by_title_candidates')) {
+                $series_rows = $wpdb->get_results(
+                    $wpdb->prepare(
+                        "SELECT series_key, supersaas_title, source_post_id, source_post_type
+                        FROM {$series_table}
+                        WHERE origin = %s
+                          AND source_post_id > 0
+                          AND supersaas_title <> ''
+                        ORDER BY updated_at DESC, id DESC",
+                        'supersaas'
+                    ),
+                    ARRAY_A
+                );
+                foreach ((array) $series_rows as $series_row) {
+                    $matched_post_id = iss_supersaas_match_fuehrung_by_title_candidates([(string) ($series_row['supersaas_title'] ?? '')]);
+                    $source_post_id = (int) ($series_row['source_post_id'] ?? 0);
+                    if ($matched_post_id <= 0 || $matched_post_id === $source_post_id || get_post_status($matched_post_id) !== 'publish') {
+                        continue;
+                    }
+
+                    $title_conflict_examples[] = [
+                        'series_key' => (string) ($series_row['series_key'] ?? ''),
+                        'supersaas_title' => (string) ($series_row['supersaas_title'] ?? ''),
+                        'stored_source' => $source_post_id,
+                        'stored_title' => $source_post_id > 0 ? get_the_title($source_post_id) : '',
+                        'exact_source' => $matched_post_id,
+                        'exact_title' => get_the_title($matched_post_id),
+                    ];
+                }
+            }
+            $title_conflict_series = count($title_conflict_examples);
+
+            $summary = [[
+                'published_fuehrungen' => $published_fuehrungen,
+                'mapped_fuehrungen' => $mapped_fuehrungen,
+                'active_future_occurrences' => $active_future_occurrences,
+                'active_future_sources' => $active_future_sources,
+                'mapped_without_future' => $mapped_without_future,
+                'unmapped_series' => $unmapped_series,
+                'unmapped_with_rows' => $unmapped_with_occurrences,
+                'wrong_source_series' => $wrong_source_series,
+                'title_conflict_series' => $title_conflict_series,
+                'future_inactive_rows' => $future_inactive,
+                'last_sync' => $last_sync !== '' ? $last_sync : '-',
+            ]];
+
+            \WP_CLI::log('SuperSaaS timeline audit reads the local occurrence projection; the importer currently uses the SuperSaaS free-slot endpoint.');
+            \WP_CLI\Utils\format_items('table', $summary, [
+                'published_fuehrungen',
+                'mapped_fuehrungen',
+                'active_future_occurrences',
+                'active_future_sources',
+                'mapped_without_future',
+                'unmapped_series',
+                'unmapped_with_rows',
+                'wrong_source_series',
+                'title_conflict_series',
+                'future_inactive_rows',
+                'last_sync',
+            ]);
+
+            $unmapped_examples = $wpdb->get_results(
+                $wpdb->prepare(
+                    "SELECT s.series_key, s.supersaas_title, s.tag, COUNT(o.id) AS occurrence_rows, s.updated_at
+                    FROM {$series_table} s
+                    LEFT JOIN {$table} o ON o.origin = s.origin AND o.series_key = s.series_key
+                    WHERE s.origin = %s
+                      AND s.source_post_id = 0
+                    GROUP BY s.id, s.series_key, s.supersaas_title, s.tag, s.updated_at
+                    ORDER BY occurrence_rows DESC, s.updated_at DESC, s.id DESC
+                    LIMIT %d",
+                    'supersaas',
+                    $limit
+                ),
+                ARRAY_A
+            );
+            if (is_array($unmapped_examples) && $unmapped_examples !== []) {
+                $unmapped_message = $unmapped_with_occurrences > 0
+                    ? 'Unmapped SuperSaaS series with local occurrence rows remain.'
+                    : 'Unmapped SuperSaaS series remain, but none currently have local occurrence rows.';
+                \WP_CLI::warning($unmapped_message);
+                \WP_CLI\Utils\format_items('table', $unmapped_examples, ['series_key', 'supersaas_title', 'tag', 'occurrence_rows', 'updated_at']);
+            }
+
+            $wrong_source_examples = $wpdb->get_results(
+                $wpdb->prepare(
+                    "SELECT s.series_key, s.supersaas_title, s.source_post_id, s.source_post_type, COALESCE(p.post_type, '') AS actual_post_type, COALESCE(p.post_status, '') AS post_status
+                    FROM {$series_table} s
+                    LEFT JOIN {$wpdb->posts} p ON p.ID = s.source_post_id
+                    WHERE s.origin = %s
+                      AND s.source_post_id > 0
+                      AND (
+                          p.ID IS NULL
+                          OR p.post_type <> %s
+                          OR (s.source_post_type <> '' AND s.source_post_type <> %s)
+                      )
+                    ORDER BY s.updated_at DESC, s.id DESC
+                    LIMIT %d",
+                    'supersaas',
+                    'fuehrung',
+                    'fuehrung',
+                    $limit
+                ),
+                ARRAY_A
+            );
+            if (is_array($wrong_source_examples) && $wrong_source_examples !== []) {
+                \WP_CLI::warning('SuperSaaS series linked to non-Führung sources remain.');
+                \WP_CLI\Utils\format_items('table', $wrong_source_examples, ['series_key', 'supersaas_title', 'source_post_id', 'source_post_type', 'actual_post_type', 'post_status']);
+            }
+
+            if ($title_conflict_examples !== []) {
+                \WP_CLI::warning('SuperSaaS series whose exact Führung title match differs from the stored source remain.');
+                \WP_CLI\Utils\format_items('table', array_slice($title_conflict_examples, 0, $limit), ['series_key', 'supersaas_title', 'stored_source', 'stored_title', 'exact_source', 'exact_title']);
+            }
+
+            $mapped_without_future_examples = $wpdb->get_results(
+                $wpdb->prepare(
+                    "SELECT DISTINCT s.source_post_id, p.post_title
+                    FROM {$series_table} s
+                    INNER JOIN {$wpdb->posts} p ON p.ID = s.source_post_id
+                    WHERE s.origin = %s
+                      AND s.source_post_id > 0
+                      AND p.post_type = %s
+                      AND p.post_status = %s
+                      AND NOT EXISTS (
+                          SELECT 1
+                          FROM {$table} o
+                          WHERE o.origin = %s
+                            AND o.visibility = %s
+                            AND o.status = %s
+                            AND o.source_post_type = %s
+                            AND o.source_post_id = s.source_post_id
+                            AND o.starts_at >= %s
+                      )
+                    ORDER BY p.post_title ASC
+                    LIMIT %d",
+                    'supersaas',
+                    'fuehrung',
+                    'publish',
+                    'supersaas',
+                    'public',
+                    'active',
+                    'fuehrung',
+                    $now,
+                    $limit
+                ),
+                ARRAY_A
+            );
+            if (is_array($mapped_without_future_examples) && $mapped_without_future_examples !== []) {
+                \WP_CLI::warning('Mapped Führung posts without active future SuperSaaS occurrence rows.');
+                \WP_CLI\Utils\format_items('table', $mapped_without_future_examples, ['source_post_id', 'post_title']);
+            }
+
+            $future_inactive_examples = $wpdb->get_results(
+                $wpdb->prepare(
+                    "SELECT external_id, title, starts_at, source_post_id, source_post_type, availability_state
+                    FROM {$table}
+                    WHERE origin = %s
+                      AND visibility = %s
+                      AND status = %s
+                      AND starts_at >= %s
+                    ORDER BY starts_at ASC, id ASC
+                    LIMIT %d",
+                    'supersaas',
+                    'public',
+                    'inactive',
+                    $now,
+                    $limit
+                ),
+                ARRAY_A
+            );
+            if (is_array($future_inactive_examples) && $future_inactive_examples !== []) {
+                \WP_CLI::warning('Future inactive SuperSaaS rows remain in the projection.');
+                \WP_CLI\Utils\format_items('table', $future_inactive_examples, ['external_id', 'title', 'starts_at', 'source_post_id', 'source_post_type', 'availability_state']);
+            }
+
+            \WP_CLI::success('SuperSaaS timeline audit completed.');
         }
 
         public function drift_check(array $args, array $assoc_args): void
@@ -348,4 +697,5 @@ if (defined('WP_CLI') && WP_CLI) {
     \WP_CLI::add_command('iss-occurrences', 'ISS_Occurrences_CLI_Command');
     \WP_CLI::add_command('iss-occurrences drift-check', ['ISS_Occurrences_CLI_Command', 'drift_check']);
     \WP_CLI::add_command('iss-occurrences backfill-occurrences', ['ISS_Occurrences_CLI_Command', 'backfill_occurrences']);
+    \WP_CLI::add_command('iss-occurrences supersaas-audit', ['ISS_Occurrences_CLI_Command', 'supersaas_audit']);
 }

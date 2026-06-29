@@ -344,6 +344,44 @@ function iss_timeline_render_grouped_occurrences($row, $opts = []) {
     return $out;
 }
 
+function iss_timeline_get_programme_item_type_tokens(): array {
+    return ['fuehrungen', 'veranstaltungen', 'ausstellungen'];
+}
+
+function iss_timeline_get_programme_source_post_types(): array {
+    return ['fuehrung', 'veranstaltung', 'ausstellung'];
+}
+
+function iss_timeline_attributes_include_projects($attributes = []): bool {
+    $attributes = is_array($attributes) ? $attributes : [];
+    $tokens = [];
+    foreach (['defaultType', 'fixedItemTypesList', 'presetItemTypesList', 'allowedTypesList'] as $key) {
+        $value = $attributes[$key] ?? [];
+        $values = is_array($value) ? $value : [$value];
+        foreach ($values as $item) {
+            $token = sanitize_key((string) $item);
+            if ($token !== '') {
+                $tokens[] = $token;
+            }
+        }
+    }
+
+    return (bool) array_intersect($tokens, ['projekt', 'projekte', 'project']);
+}
+
+function iss_timeline_should_group_recurring_by_month($query_args = [], $render_opts = []): bool {
+    if (empty($render_opts['groupRecurringToursByMonth'])) {
+        return false;
+    }
+
+    $filters = isset($query_args['filters']) && is_array($query_args['filters'])
+        ? $query_args['filters']
+        : [];
+    $time_mode = sanitize_key((string) ($filters['time_mode'] ?? ''));
+
+    return $time_mode === 'month';
+}
+
 function iss_timeline_build_render_options($attributes = []) {
     $attributes = is_array($attributes) ? $attributes : [];
 
@@ -823,8 +861,10 @@ function iss_timeline_get_listing_response($query_args = [], $render_opts = []) 
 
     $fetch_args = $query_args;
     if ($group_recurring_tours) {
+        $group_recurring_by_month = iss_timeline_should_group_recurring_by_month($query_args, $render_opts);
         $fetch_args['group_recurring'] = true;
-        $fetch_args['group_recurring_by_month'] = !empty($render_opts['groupRecurringToursByMonth']);
+        $fetch_args['group_recurring_by_month'] = $group_recurring_by_month;
+        $fetch_args['group_recurring_by_source'] = !$group_recurring_by_month;
     }
 
     $use_overscan = $limit > 0;
@@ -999,7 +1039,7 @@ function iss_timeline_get_taxonomy_ui_rules_from_attributes($attributes = []) {
 
 function iss_timeline_get_type_options_from_attributes($attributes = []) {
     $attributes = is_array($attributes) ? $attributes : [];
-    $allowed_types = iss_timeline_get_attribute_token_list($attributes['allowedTypesList'] ?? [], ['fuehrungen', 'veranstaltungen']);
+    $allowed_types = iss_timeline_get_attribute_token_list($attributes['allowedTypesList'] ?? [], iss_timeline_get_programme_item_type_tokens());
 
     $labels = [
         'all' => __('Alle', 'iss-timeline'),
@@ -1375,6 +1415,10 @@ function iss_timeline_build_query_block_config($attributes = []) {
     $fixed_item_types = !empty($attributes['fixedItemTypesList']) && is_array($attributes['fixedItemTypesList'])
         ? iss_timeline_get_attribute_token_list($attributes['fixedItemTypesList'], [])
         : iss_timeline_get_attribute_token_list($attributes['presetItemTypesList'] ?? [], []);
+    $post_types = iss_timeline_get_attribute_token_list($attributes['postTypesList'] ?? [], []);
+    if (empty($post_types) && !iss_timeline_attributes_include_projects($attributes)) {
+        $post_types = iss_timeline_get_programme_source_post_types();
+    }
 
     return [
         'limit' => max(1, (int) ($attributes['limit'] ?? 12)),
@@ -1386,7 +1430,7 @@ function iss_timeline_build_query_block_config($attributes = []) {
             'item_type' => $default_type,
             'item_types' => $fixed_item_types,
             'include_running_ranges' => !empty($attributes['includeRunningRanges']),
-            'post_types' => iss_timeline_get_attribute_token_list($attributes['postTypesList'] ?? [], []),
+            'post_types' => $post_types,
             'taxonomy_filters' => iss_timeline_get_fixed_taxonomy_rules_from_attributes($attributes),
         ],
         'render' => [

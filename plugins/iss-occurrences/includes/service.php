@@ -673,6 +673,38 @@ final class ISS_Occurrences_Service
         return $updated;
     }
 
+    public function delete_inactive_origin_future(string $origin, string $source_calendar): int
+    {
+        global $wpdb;
+
+        $origin = sanitize_key($origin);
+        $source_calendar = sanitize_text_field($source_calendar);
+        if ($origin === '' || $source_calendar === '' || !$this->tables_exist()) {
+            return 0;
+        }
+
+        $table = $this->get_occurrences_table_name();
+        $deleted = (int) $wpdb->query(
+            $wpdb->prepare(
+                "DELETE FROM {$table}
+                WHERE origin = %s
+                  AND source_calendar = %s
+                  AND status = %s
+                  AND starts_at >= %s",
+                $origin,
+                $source_calendar,
+                'inactive',
+                current_time('mysql')
+            )
+        );
+
+        if ($deleted > 0) {
+            do_action('iss_occurrences_changed', ['origin' => $origin, 'source_calendar' => $source_calendar]);
+        }
+
+        return $deleted;
+    }
+
     public function mark_origin_past_active(string $origin, string $source_calendar): int
     {
         global $wpdb;
@@ -1045,17 +1077,27 @@ final class ISS_Occurrences_Service
             'tag' => isset($filters['tag']) ? strtoupper(sanitize_text_field((string) $filters['tag'])) : '',
             'group_recurring' => !empty($filters['group_recurring']),
             'group_recurring_by_month' => !empty($filters['group_recurring_by_month']),
+            'group_recurring_by_source' => !empty($filters['group_recurring_by_source']),
         ];
     }
 
     private function build_group_key_sql(array $filters): string
     {
-        $base = "CASE
-            WHEN o.kind = 'tour' AND o.series_id > 0 THEN CONCAT('series-id:', o.series_id)
-            WHEN o.kind = 'tour' AND o.series_key <> '' THEN CONCAT('series:', o.series_key)
-            WHEN o.kind = 'tour' AND o.source_post_id > 0 THEN CONCAT('source:', o.source_post_id)
-            ELSE CONCAT('item:', o.id)
-        END";
+        if (!empty($filters['group_recurring_by_source'])) {
+            $base = "CASE
+                WHEN o.kind = 'tour' AND o.source_post_id > 0 THEN CONCAT('source:', o.source_post_id)
+                WHEN o.kind = 'tour' AND o.series_id > 0 THEN CONCAT('series-id:', o.series_id)
+                WHEN o.kind = 'tour' AND o.series_key <> '' THEN CONCAT('series:', o.series_key)
+                ELSE CONCAT('item:', o.id)
+            END";
+        } else {
+            $base = "CASE
+                WHEN o.kind = 'tour' AND o.series_id > 0 THEN CONCAT('series-id:', o.series_id)
+                WHEN o.kind = 'tour' AND o.series_key <> '' THEN CONCAT('series:', o.series_key)
+                WHEN o.kind = 'tour' AND o.source_post_id > 0 THEN CONCAT('source:', o.source_post_id)
+                ELSE CONCAT('item:', o.id)
+            END";
+        }
 
         if (!empty($filters['group_recurring_by_month'])) {
             return "CONCAT(({$base}), '|month:', DATE_FORMAT(o.starts_at, '%Y-%m'))";
@@ -1138,7 +1180,9 @@ final class ISS_Occurrences_Service
         $series_key = trim((string) ($row['series_key'] ?? ''));
         $source_post_id = (int) ($row['source_post_id'] ?? 0);
 
-        if ($series_id > 0) {
+        if (!empty($filters['group_recurring_by_source']) && $source_post_id > 0) {
+            $base_key = 'source:' . $source_post_id;
+        } elseif ($series_id > 0) {
             $base_key = 'series-id:' . $series_id;
         } elseif ($series_key !== '') {
             $base_key = 'series:' . $series_key;

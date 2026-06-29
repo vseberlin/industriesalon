@@ -1549,9 +1549,12 @@ function iss_content_model_render_veranstaltung_type_box($post): void
     echo '</div>';
 
     if (function_exists('iss_content_model_veranstaltung_entity_options')) {
+        $entity_options = function_exists('iss_content_model_veranstaltung_entity_options_for_editor')
+            ? iss_content_model_veranstaltung_entity_options_for_editor($entity_key)
+            : iss_content_model_veranstaltung_entity_options();
         echo '<p class="iss-veranstaltung-admin__field">';
         echo '<label for="iss_veranstaltung_entity_key"><strong>' . esc_html__('Struktur', 'iss-content-model') . '</strong></label>';
-        iss_content_model_render_veranstaltung_entity_select(iss_content_model_veranstaltung_entity_options(), $entity_key);
+        iss_content_model_render_veranstaltung_entity_select($entity_options, $entity_key);
         echo '</p>';
     }
 

@@ -24,7 +24,7 @@
     "fixedItemTypesList": { "type": "array", "default": [] },
     "presetItemTypesList": { "type": "array", "default": [] },
     "defaultMonth": { "type": "string", "default": "" },
-    "allowedTypesList": { "type": "array", "default": ["fuehrungen", "veranstaltungen"] },
+    "allowedTypesList": { "type": "array", "default": ["fuehrungen", "veranstaltungen", "ausstellungen"] },
     "postTypesList": { "type": "array", "default": [] },
     "fixedTaxonomyRules": { "type": "array", "default": [] },
     "taxonomyPresetRules": { "type": "array", "default": [] },
