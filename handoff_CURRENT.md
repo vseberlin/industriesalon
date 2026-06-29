@@ -6,37 +6,54 @@ Current checkpoint only. Completed history belongs in `CHANGELOG.md`; active fol
 
 ## Current Work
 
-- Veranstaltung and shared editorial JSON body fields use the local lightweight rich-text helper with paragraph, bold, italic, link, unordered-list, and ordered-list controls. Links are visible and removable; body sanitization permits only the matching narrow HTML contract.
-- Veranstaltung media picker feedback updates live inside the edit modal after select/remove/hydration.
-- Veranstaltung `material` now means description plus downloadable media files. The editor exposes media refs, not list/archive/dynamic refs; non-image material attachments render publicly as `Herunterladen` download cards.
-- Veranstaltung `programm`, `upload_intake`, and `schluss` no longer expose the obsolete `Punkte, je Zeile ein Eintrag` item field; rich-text lists cover that workflow. Legacy saved item output remains renderable until edited/saved.
+- Front-page baseline checkpoint is captured for temporary client hero
+  image/text experiments.
+- The active homepage is not file-backed right now: `get_block_template(
+  "industriesalon//front-page", "wp_template" )` reports `source=custom`.
+- Local front-page DB state at capture time:
+  - static front page option points to page ID `12257` (`home`, `home-2`);
+  - active DB template row is `wp_template` ID `26534`, slug `front-page`,
+    modified `2026-06-29 10:52:09`;
+  - hero baseline uses attachment ID `25235` and headline
+    `Industriekultur und Transformation`.
+- Rollback artifact: `ops/sql/2026-06-29-frontpage-baseline.sql`.
 
 ## Preserve
 
+- Treat the client hero/text pass as a one-off DB-template experiment unless a
+  later decision explicitly promotes it into the file-backed theme template.
+- Do not delete the front-page DB override while the client is actively testing
+  variants; it is the current live source for the homepage.
 - Do not enable Mollie as a selectable payment method until a real provider integration creates/settles payment state and registers support through `iss_payments_lite_supported_payment_methods`.
 - Do not add another booking/order storage layer. `iss-commerce-lite` owns request storage, admin review/export/status, public write guards, and notifications.
 - Do not change public Veranstaltung booking visibility silently: `TODO.md` records that single Veranstaltung output still needs a public booking section/block.
 - Keep public rendering theme-owned; plugins own data/contracts and request writes.
-- Keep the editor helper local unless a future pass proves a full external editor dependency is worth the maintenance cost.
 - Leave unrelated local untracked files out of Git unless explicitly requested:
   - `iss-exhibition-composition-add.md`
   - `themes/industriesalon/theme2.json`
 
 ## Next Action
 
-- Add a visible public booking CTA/section for bookable single Veranstaltungen in the theme template or `_iss_content_json` renderer.
-- Continue converging JSON-driven CPTs on the shared compact composition model where remaining screens diverge.
+- Let the client test hero image/text variants in the DB-owned front-page
+  template.
+- When the experiment is done, replay
+  `ops/sql/2026-06-29-frontpage-baseline.sql` to roll back, or sync the accepted
+  DB template content into `themes/industriesalon/templates/front-page.html`
+  and remove the override.
+- Continue the Veranstaltung booking public-render TODO separately.
 
 ## Verified Locally
 
-- PHP syntax checks on touched PHP files.
-- Targeted ESLint on touched JS files.
-- Targeted Stylelint on touched CSS files.
 - `git diff --check`.
-- Browser-loaded Veranstaltung admin config confirmed updated gesture supports.
-- Playwright checks confirmed rich editor/link/media picker behavior during the admin UX pass.
-- PHP render smoke confirmed a real PDF material attachment renders as a `Herunterladen` file card.
+- `git diff --cached --check`.
+- `git fetch origin --prune`; local `HEAD` and `origin/main` were both
+  `f2b85df` before this checkpoint.
+- WP-CLI confirmed `show_on_front=page`, `page_on_front=12257`,
+  `page_for_posts=0`.
+- WP-CLI confirmed active front-page template source is `custom`.
+- SQL artifact syntax was checked with `mariadb` against copied local tables in
+  a temporary database.
 
 ## Commit State
 
-- Commit and push requested for the current editor/material UX checkpoint.
+- Local checkpoint commit only; no push requested.

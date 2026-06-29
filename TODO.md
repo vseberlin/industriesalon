@@ -4,6 +4,11 @@ Immediate executable work only. Larger future programs live in `docs/project/bac
 
 ## Next
 
+- Front-page client experiment rollback: current baseline is captured in
+  `ops/sql/2026-06-29-frontpage-baseline.sql`. After the client finishes
+  playing with the hero image/text, either replay that artifact to restore the
+  baseline or intentionally sync the accepted DB template changes back into the
+  theme/file-backed front-page template.
 - Veranstaltung booking public render: the editor meta and
   `iss-commerce-lite` request endpoint exist, but single Veranstaltung output
   still needs a visible booking section/block in the theme template or

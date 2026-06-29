@@ -6,6 +6,11 @@ be recovered from Git history.
 
 ## 2026-06-29
 
+- Captured a one-off front-page baseline before client hero image/text
+  experiments. The active homepage is a DB-owned `wp_template` override
+  (`front-page`, ID `26534`) with static front page ID `12257`; rollback state
+  is recorded in `ops/sql/2026-06-29-frontpage-baseline.sql`. No code, uploads,
+  or media rows were changed for this checkpoint.
 - Refined the JSON editorial rich-text authoring controls for Veranstaltung and
   shared editorial composition: body fields now use a local contenteditable
   helper with paragraph, bold, italic, link, unordered-list, and ordered-list
