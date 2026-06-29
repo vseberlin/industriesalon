@@ -28,7 +28,7 @@ function iss_supersaas_deactivate_sync() {
  *
  * @return array|WP_Error
  */
-function iss_supersaas_fetch_free_slots($settings = null) {
+function iss_supersaas_fetch_free_slots($settings = null, $schedule = null) {
     if ($settings === null) {
         $settings = function_exists('iss_supersaas_get_settings') ? iss_supersaas_get_settings() : [];
     }
@@ -37,7 +37,38 @@ function iss_supersaas_fetch_free_slots($settings = null) {
         return new WP_Error('iss_supersaas_settings', 'Invalid settings.');
     }
 
-    $schedule_id = isset($settings['schedule_id']) ? (string) $settings['schedule_id'] : '';
+    if ($schedule === null && function_exists('iss_supersaas_get_schedule_configs')) {
+        $schedules = iss_supersaas_get_schedule_configs($settings);
+        if (empty($schedules)) {
+            return new WP_Error('iss_supersaas_config', 'Missing SuperSaaS schedule configuration.');
+        }
+
+        $all_slots = [];
+        foreach ($schedules as $schedule_config) {
+            $source = isset($schedule_config['source']) ? sanitize_key((string) $schedule_config['source']) : 'free';
+            if ($source !== 'free') {
+                continue;
+            }
+            $schedule_slots = iss_supersaas_fetch_free_slots($settings, $schedule_config);
+            if (is_wp_error($schedule_slots)) {
+                return $schedule_slots;
+            }
+            foreach ((array) $schedule_slots as $slot) {
+                if (!is_array($slot)) {
+                    continue;
+                }
+                $slot['__schedule'] = $schedule_config;
+                $all_slots[] = $slot;
+            }
+        }
+
+        return $all_slots;
+    }
+
+    $schedule = is_array($schedule) ? $schedule : [];
+    $schedule_id = isset($schedule['schedule_id']) && (string) $schedule['schedule_id'] !== ''
+        ? (string) $schedule['schedule_id']
+        : (isset($settings['schedule_id']) ? (string) $settings['schedule_id'] : '');
     $api_key = isset($settings['api_key']) ? (string) $settings['api_key'] : '';
     $account_name = isset($settings['account_name']) ? (string) $settings['account_name'] : '';
     $base_url = isset($settings['base_url']) ? (string) $settings['base_url'] : '';
@@ -57,7 +88,8 @@ function iss_supersaas_fetch_free_slots($settings = null) {
     }
 
     $include_full = (bool) apply_filters('iss_supersaas_sync_include_full_slots', true);
-    $cache_key = 'iss_supersaas_free_' . md5($base_url . '|' . $account_name . '|' . $schedule_id . '|m:' . $future_months . '|n:' . $max_results . '|full:' . ($include_full ? '1' : '0'));
+    $schedule_key = isset($schedule['key']) ? sanitize_key((string) $schedule['key']) : '';
+    $cache_key = 'iss_supersaas_free_' . md5($base_url . '|' . $account_name . '|' . $schedule_key . '|' . $schedule_id . '|m:' . $future_months . '|n:' . $max_results . '|full:' . ($include_full ? '1' : '0'));
     $cached = get_transient($cache_key);
     if (is_array($cached)) {
         return $cached;
@@ -105,6 +137,141 @@ function iss_supersaas_fetch_free_slots($settings = null) {
 
     set_transient($cache_key, $slot_items, 60 * 5);
     return $slot_items;
+}
+
+function iss_supersaas_fetch_range_bookings($settings = null, $schedule = null) {
+    if ($settings === null) {
+        $settings = function_exists('iss_supersaas_get_settings') ? iss_supersaas_get_settings() : [];
+    }
+
+    if (!is_array($settings)) {
+        return new WP_Error('iss_supersaas_settings', 'Invalid settings.');
+    }
+
+    if ($schedule === null && function_exists('iss_supersaas_get_schedule_configs')) {
+        $schedules = iss_supersaas_get_schedule_configs($settings);
+        if (empty($schedules)) {
+            return new WP_Error('iss_supersaas_config', 'Missing SuperSaaS schedule configuration.');
+        }
+
+        $all_bookings = [];
+        foreach ($schedules as $schedule_config) {
+            $source = isset($schedule_config['source']) ? sanitize_key((string) $schedule_config['source']) : 'free';
+            if ($source !== 'range') {
+                continue;
+            }
+            $schedule_bookings = iss_supersaas_fetch_range_bookings($settings, $schedule_config);
+            if (is_wp_error($schedule_bookings)) {
+                return $schedule_bookings;
+            }
+            foreach ((array) $schedule_bookings as $booking) {
+                if (!is_array($booking)) {
+                    continue;
+                }
+                $booking['__schedule'] = $schedule_config;
+                $booking['__source_type'] = 'range';
+                $all_bookings[] = $booking;
+            }
+        }
+
+        return $all_bookings;
+    }
+
+    $schedule = is_array($schedule) ? $schedule : [];
+    $schedule_id = isset($schedule['schedule_id']) && (string) $schedule['schedule_id'] !== ''
+        ? (string) $schedule['schedule_id']
+        : (isset($settings['schedule_id']) ? (string) $settings['schedule_id'] : '');
+    $api_key = isset($settings['api_key']) ? (string) $settings['api_key'] : '';
+    $account_name = isset($settings['account_name']) ? (string) $settings['account_name'] : '';
+    $base_url = isset($settings['base_url']) ? (string) $settings['base_url'] : '';
+
+    if ($schedule_id === '' || $api_key === '' || $account_name === '' || $base_url === '') {
+        return new WP_Error('iss_supersaas_config', 'Missing SuperSaaS configuration.');
+    }
+
+    $future_months = (int) apply_filters('iss_supersaas_sync_future_months', 6);
+    if ($future_months < 1) {
+        $future_months = 1;
+    }
+    $page_size = (int) apply_filters('iss_supersaas_range_sync_page_size', 500);
+    if ($page_size < 20) {
+        $page_size = 20;
+    } elseif ($page_size > 1000) {
+        $page_size = 1000;
+    }
+    $max_results = (int) apply_filters('iss_supersaas_range_sync_max_results', 2000);
+    if ($max_results < $page_size) {
+        $max_results = $page_size;
+    }
+
+    $schedule_key = isset($schedule['key']) ? sanitize_key((string) $schedule['key']) : '';
+    $cache_key = 'iss_supersaas_range_' . md5($base_url . '|' . $account_name . '|' . $schedule_key . '|' . $schedule_id . '|m:' . $future_months . '|n:' . $page_size . '|max:' . $max_results);
+    $cached = get_transient($cache_key);
+    if (is_array($cached)) {
+        return $cached;
+    }
+
+    $base_url = untrailingslashit($base_url);
+    $tz = wp_timezone();
+    $from_dt = new DateTimeImmutable('now', $tz);
+    $to_dt = $from_dt->modify('+' . $future_months . ' months');
+    $from = $from_dt->format('Y-m-d H:i:s');
+    $to = $to_dt->format('Y-m-d H:i:s');
+    $bookings = [];
+    $offset = 0;
+
+    while (count($bookings) < $max_results) {
+        $query_args = [
+            'from' => $from,
+            'to' => $to,
+            'limit' => (string) $page_size,
+            'offset' => (string) $offset,
+            'slot' => 'true',
+        ];
+        $url = add_query_arg($query_args, $base_url . '/api/range/' . rawurlencode($schedule_id) . '.json');
+        $response = wp_remote_get($url, [
+            'timeout' => 20,
+            'headers' => [
+                'Authorization' => 'Basic ' . base64_encode($account_name . ':' . $api_key),
+            ],
+        ]);
+
+        if (is_wp_error($response)) {
+            return new WP_Error('iss_supersaas_range_fetch', $response->get_error_message());
+        }
+
+        $code = (int) wp_remote_retrieve_response_code($response);
+        if ($code < 200 || $code >= 300) {
+            return new WP_Error('iss_supersaas_range_upstream', 'Upstream range request failed with status ' . $code . '.');
+        }
+
+        $data = json_decode((string) wp_remote_retrieve_body($response), true);
+        if (!is_array($data)) {
+            return new WP_Error('iss_supersaas_range_parse', 'Invalid range API response.');
+        }
+
+        $page = isset($data['bookings']) && is_array($data['bookings']) ? $data['bookings'] : $data;
+        if (!is_array($page) || empty($page)) {
+            break;
+        }
+
+        foreach ($page as $booking) {
+            if (is_array($booking)) {
+                $bookings[] = $booking;
+            }
+            if (count($bookings) >= $max_results) {
+                break;
+            }
+        }
+
+        if (count($page) < $page_size) {
+            break;
+        }
+        $offset += $page_size;
+    }
+
+    set_transient($cache_key, $bookings, 60 * 5);
+    return $bookings;
 }
 
 /**
@@ -667,9 +834,11 @@ function iss_supersaas_reconcile_exact_title_series_sources() {
             "SELECT series_key, supersaas_title, tag, fallback_url, source_post_id
             FROM {$series_table}
             WHERE origin = %s
+              AND series_key LIKE %s
               AND supersaas_title <> ''
               AND tag = ''",
-            'supersaas'
+            'supersaas',
+            'tour:%'
         ),
         ARRAY_A
     );
@@ -748,13 +917,30 @@ function iss_supersaas_clear_non_fuehrung_series_sources() {
             WHERE s.origin = %s
               AND s.source_post_id > 0
               AND (
-                  p.ID IS NULL
-                  OR p.post_type <> %s
-                  OR (s.source_post_type <> '' AND s.source_post_type <> %s)
+                  (
+                      s.series_key LIKE %s
+                      AND (
+                          p.ID IS NULL
+                          OR p.post_type <> %s
+                          OR (s.source_post_type <> '' AND s.source_post_type <> %s)
+                      )
+                  )
+                  OR (
+                      s.series_key NOT LIKE %s
+                      AND (
+                          p.ID IS NULL
+                          OR p.post_type <> %s
+                          OR (s.source_post_type <> '' AND s.source_post_type <> %s)
+                      )
+                  )
               )
             GROUP BY s.series_key
             HAVING occurrence_rows = 0",
             'supersaas',
+            'event:%',
+            'veranstaltung',
+            'veranstaltung',
+            'event:%',
             'fuehrung',
             'fuehrung'
         ),
@@ -805,7 +991,7 @@ function iss_supersaas_prune_empty_unlinked_series(): int {
                   (
                       s.source_post_id = 0
                       AND (
-                          s.series_key IN ('tour:', 'tour')
+                          s.series_key IN ('tour:', 'tour', 'tour:salonbelegung')
                           OR s.supersaas_title = ''
                       )
                   )
@@ -814,6 +1000,37 @@ function iss_supersaas_prune_empty_unlinked_series(): int {
             'supersaas'
         )
     );
+
+    if (method_exists($service, 'get_supersaas_slots_table_name')
+        && method_exists($service, 'supersaas_slots_table_exists')
+        && $service->supersaas_slots_table_exists()
+    ) {
+        $slots_table = $service->get_supersaas_slots_table_name();
+        $deleted += (int) $wpdb->query(
+            $wpdb->prepare(
+                "DELETE s
+                FROM {$series_table} s
+                INNER JOIN {$slots_table} salon_slot
+                    ON salon_slot.series_key = s.series_key
+                    AND salon_slot.schedule_key = %s
+                LEFT JOIN {$slots_table} public_slot
+                    ON public_slot.series_key = s.series_key
+                    AND public_slot.schedule_key <> %s
+                LEFT JOIN {$occurrences_table} o
+                    ON o.origin = s.origin
+                    AND o.series_key = s.series_key
+                WHERE s.origin = %s
+                  AND s.source_post_id = 0
+                  AND s.series_key NOT LIKE %s
+                  AND o.id IS NULL
+                  AND public_slot.id IS NULL",
+                'salonbelegung',
+                'salonbelegung',
+                'supersaas',
+                'event:%'
+            )
+        );
+    }
 
     if ($deleted > 0) {
         do_action('iss_occurrences_changed', ['origin' => 'supersaas', 'pruned_empty_series' => $deleted]);
@@ -850,8 +1067,8 @@ function iss_supersaas_sync_occurrences() {
     $service->maybe_install_schema();
 
     $settings = function_exists('iss_supersaas_get_settings') ? iss_supersaas_get_settings() : [];
-    $slot_items = iss_supersaas_fetch_free_slots($settings);
-    if (is_wp_error($slot_items)) {
+    $free_slot_items = iss_supersaas_fetch_free_slots($settings);
+    if (is_wp_error($free_slot_items)) {
         return [
             'created' => 0,
             'updated' => 0,
@@ -865,22 +1082,53 @@ function iss_supersaas_sync_occurrences() {
             'source_reconciled' => 0,
             'source_cleared' => 0,
             'series_pruned' => 0,
-            'error_message' => (string) $slot_items->get_error_message(),
+            'error_message' => (string) $free_slot_items->get_error_message(),
         ];
     }
+    $range_slot_items = function_exists('iss_supersaas_fetch_range_bookings') ? iss_supersaas_fetch_range_bookings($settings) : [];
+    if (is_wp_error($range_slot_items)) {
+        return [
+            'created' => 0,
+            'updated' => 0,
+            'errors' => 1,
+            'imported_unmapped' => 0,
+            'skipped_unlinked' => 0,
+            'inactivated' => 0,
+            'purged_inactive' => 0,
+            'past_reactivated' => 0,
+            'metadata_backfilled' => 0,
+            'source_reconciled' => 0,
+            'source_cleared' => 0,
+            'series_pruned' => 0,
+            'error_message' => (string) $range_slot_items->get_error_message(),
+        ];
+    }
+    $slot_items = array_merge((array) $free_slot_items, (array) $range_slot_items);
 
-    $source_calendar = function_exists('iss_supersaas_get_schedule_path')
-        ? (iss_supersaas_get_schedule_path($settings) ?: (string) ($settings['schedule_id'] ?? ''))
-        : (string) ($settings['schedule_id'] ?? '');
-    $source_calendar = sanitize_text_field((string) $source_calendar);
-    $metadata_backfilled = method_exists($service, 'backfill_supersaas_metadata')
-        ? $service->backfill_supersaas_metadata($source_calendar)
-        : 0;
+    $schedules = function_exists('iss_supersaas_get_schedule_configs') ? iss_supersaas_get_schedule_configs($settings) : [];
+    if (empty($schedules) && !empty($settings['schedule_id'])) {
+        $schedules = [[
+            'key' => 'public',
+            'label' => 'public',
+            'schedule_id' => (string) $settings['schedule_id'],
+            'schedule_path' => function_exists('iss_supersaas_get_schedule_path') ? iss_supersaas_get_schedule_path($settings) : '',
+            'enabled' => true,
+        ]];
+    }
+
+    $metadata_backfilled = 0;
+    if (method_exists($service, 'backfill_supersaas_metadata')) {
+        foreach ($schedules as $schedule) {
+            $source_calendar = isset($schedule['key']) ? sanitize_key((string) $schedule['key']) : '';
+            if ($source_calendar !== '') {
+                $metadata_backfilled += $service->backfill_supersaas_metadata($source_calendar);
+            }
+        }
+    }
     $source_reconciled = iss_supersaas_reconcile_exact_title_series_sources();
     $source_cleared = iss_supersaas_clear_non_fuehrung_series_sources();
     $series_pruned = iss_supersaas_prune_empty_unlinked_series();
 
-    $schedule_url = iss_supersaas_build_schedule_url($settings);
     $tag_sources = function_exists('iss_occurrences_get_tag_sources') ? iss_occurrences_get_tag_sources() : [];
     $series_sources = function_exists('iss_occurrences_get_series_sources') ? iss_occurrences_get_series_sources() : [];
     $known_tags = array_keys($tag_sources);
@@ -902,17 +1150,70 @@ function iss_supersaas_sync_occurrences() {
     $errors = 0;
     $imported_unmapped = 0;
     $skipped_unlinked = 0;
-    $seen_external_ids = [];
+    $seen_external_ids_by_calendar = [];
+    $seen_staging_ids_by_schedule = [];
     $slots_by_tag = [];
+    $slot_id_counts_by_schedule = [];
 
     foreach ($slot_items as $slot) {
         if (!is_array($slot)) continue;
 
-        $external_id = isset($slot['id']) ? trim((string) $slot['id']) : '';
-        if ($external_id === '') continue;
-        $seen_external_ids[] = $external_id;
+        $schedule = isset($slot['__schedule']) && is_array($slot['__schedule']) ? $slot['__schedule'] : [];
+        $schedule_key = isset($schedule['key']) ? sanitize_key((string) $schedule['key']) : 'public';
+        if ($schedule_key === '') {
+            $schedule_key = 'public';
+        }
 
-        $raw_title = isset($slot['title']) ? (string) $slot['title'] : '';
+        $raw_slot_id = isset($slot['id']) ? trim((string) $slot['id']) : '';
+        if ($raw_slot_id === '') {
+            continue;
+        }
+
+        if (!isset($slot_id_counts_by_schedule[$schedule_key])) {
+            $slot_id_counts_by_schedule[$schedule_key] = [];
+        }
+        $slot_id_counts_by_schedule[$schedule_key][$raw_slot_id] = isset($slot_id_counts_by_schedule[$schedule_key][$raw_slot_id])
+            ? $slot_id_counts_by_schedule[$schedule_key][$raw_slot_id] + 1
+            : 1;
+    }
+
+    foreach ($slot_items as $slot) {
+        if (!is_array($slot)) continue;
+
+        $schedule = isset($slot['__schedule']) && is_array($slot['__schedule']) ? $slot['__schedule'] : [];
+        $slot_source_type = isset($slot['__source_type']) ? sanitize_key((string) $slot['__source_type']) : 'free';
+        if (!in_array($slot_source_type, ['free', 'range'], true)) {
+            $slot_source_type = 'free';
+        }
+        unset($slot['__schedule']);
+        unset($slot['__source_type']);
+        $schedule_key = isset($schedule['key']) ? sanitize_key((string) $schedule['key']) : 'public';
+        if ($schedule_key === '') {
+            $schedule_key = 'public';
+        }
+        $source_calendar = $schedule_key;
+        $schedule_label = isset($schedule['label']) ? sanitize_text_field((string) $schedule['label']) : $schedule_key;
+        $schedule_id = isset($schedule['schedule_id']) ? sanitize_text_field((string) $schedule['schedule_id']) : (string) ($settings['schedule_id'] ?? '');
+        $raw_slot_id = isset($slot['id']) ? trim((string) $slot['id']) : '';
+        if ($raw_slot_id === '') continue;
+
+        $raw_title = isset($slot['title']) ? trim((string) $slot['title']) : '';
+        $slot_description = isset($slot['description']) ? trim((string) $slot['description']) : '';
+        if ($raw_title === '' && $slot_source_type === 'range' && $slot_description !== '') {
+            $description_lines = preg_split('/\r\n|\r|\n/', $slot_description);
+            $raw_title = trim((string) ($description_lines[0] ?? ''));
+            if (mb_strlen($raw_title) > 100) {
+                $raw_title = mb_substr($raw_title, 0, 97) . '...';
+            }
+        }
+        if ($raw_title === '') {
+            foreach (['name', 'res_name', 'full_name'] as $title_key) {
+                if (!empty($slot[$title_key])) {
+                    $raw_title = trim((string) $slot[$title_key]);
+                    break;
+                }
+            }
+        }
         $parsed = iss_supersaas_parse_title($raw_title);
         $tag = iss_supersaas_extract_slot_tag($slot);
         if ($tag === '' && !empty($title_index)) {
@@ -928,13 +1229,14 @@ function iss_supersaas_sync_occurrences() {
         if ($clean_title === '') {
             $clean_title = trim((string) $raw_title);
         }
+        $series_kind = $slot_source_type === 'range' ? 'event' : 'tour';
         $series_key = ($clean_title !== '' && function_exists('iss_occurrences_build_series_key'))
-            ? iss_occurrences_build_series_key($clean_title, 'tour')
+            ? iss_occurrences_build_series_key($clean_title, $series_kind)
             : '';
         $series_entry = ($series_key !== '' && isset($series_sources[$series_key]) && is_array($series_sources[$series_key]))
             ? $series_sources[$series_key]
             : [];
-        if ($clean_title === '' || empty($series_entry['source_post_id'])) {
+        if ($slot_source_type === 'free' && ($clean_title === '' || empty($series_entry['source_post_id']))) {
             $matched_series = iss_supersaas_match_mapped_series_from_slot_text($slot, $series_sources);
             if (!empty($matched_series)) {
                 $matched_series_key = isset($matched_series['series_key'])
@@ -957,13 +1259,8 @@ function iss_supersaas_sync_occurrences() {
             }
         }
         $is_known_tag = ($tag !== '' && in_array($tag, $known_tags, true));
-        if (iss_supersaas_slot_is_cancelled($slot, $clean_title)) {
-            $service->delete_occurrence_by_external('supersaas', $external_id);
-            $skipped_unlinked++;
-            continue;
-        }
 
-        $exact_title_source_post_id = function_exists('iss_supersaas_match_fuehrung_by_title_candidates')
+        $exact_title_source_post_id = $slot_source_type === 'free' && function_exists('iss_supersaas_match_fuehrung_by_title_candidates')
             ? iss_supersaas_match_fuehrung_by_title_candidates([$clean_title])
             : 0;
         if ($exact_title_source_post_id > 0) {
@@ -982,6 +1279,24 @@ function iss_supersaas_sync_occurrences() {
         $end = isset($slot['end']) ? trim((string) $slot['end']) : (isset($slot['finish']) ? trim((string) $slot['finish']) : '');
         if ($end === '') {
             $end = null;
+        }
+
+        $slot_instance_id = $raw_slot_id;
+        if ((int) ($slot_id_counts_by_schedule[$schedule_key][$raw_slot_id] ?? 0) > 1) {
+            $slot_instance_hash = substr(md5($raw_slot_id . '|' . $start . '|' . (string) $end . '|' . $raw_title . '|' . $slot_description . '|' . (string) ($slot['location'] ?? '')), 0, 12);
+            $slot_instance_id = $raw_slot_id . ':' . $slot_instance_hash;
+        }
+        $external_id = $schedule_key . ':' . $slot_instance_id;
+        $seen_external_ids_by_calendar[$source_calendar] = isset($seen_external_ids_by_calendar[$source_calendar]) ? $seen_external_ids_by_calendar[$source_calendar] : [];
+        $seen_external_ids_by_calendar[$source_calendar][] = $external_id;
+        $seen_staging_ids_by_schedule[$schedule_key] = isset($seen_staging_ids_by_schedule[$schedule_key]) ? $seen_staging_ids_by_schedule[$schedule_key] : [];
+        $seen_staging_ids_by_schedule[$schedule_key][] = $external_id;
+        $existing_staged_slot = method_exists($service, 'get_supersaas_slot_by_external')
+            ? $service->get_supersaas_slot_by_external($external_id)
+            : [];
+        $slot_review_state = isset($existing_staged_slot['review_state']) ? sanitize_key((string) $existing_staged_slot['review_state']) : '';
+        if ($slot_review_state === '' && sanitize_key((string) ($existing_staged_slot['match_state'] ?? '')) === 'ignored') {
+            $slot_review_state = 'ignored';
         }
 
         $capacity_total = isset($slot['capacity']) ? (int) $slot['capacity'] : null;
@@ -1040,11 +1355,19 @@ function iss_supersaas_sync_occurrences() {
             }
         }
 
-        if ($source_post_id <= 0 && $series_key !== '') {
+        if ($source_post_id <= 0 && $series_key !== '' && $slot_source_type === 'free') {
             $inferred = iss_supersaas_find_linked_source_by_series_key($series_key);
             if (!empty($inferred['source_post_id'])) {
                 $source_post_id = (int) $inferred['source_post_id'];
                 $source_post_type = sanitize_key((string) ($inferred['source_post_type'] ?? ''));
+            }
+        }
+
+        if ($source_post_id <= 0 && !empty($existing_staged_slot)) {
+            $existing_slot_source_id = isset($existing_staged_slot['source_post_id']) ? (int) $existing_staged_slot['source_post_id'] : 0;
+            if ($existing_slot_source_id > 0 && get_post($existing_slot_source_id) instanceof WP_Post) {
+                $source_post_id = $existing_slot_source_id;
+                $source_post_type = sanitize_key((string) ($existing_staged_slot['source_post_type'] ?? get_post_type($existing_slot_source_id)));
             }
         }
 
@@ -1055,6 +1378,15 @@ function iss_supersaas_sync_occurrences() {
 
         if ($source_post_id > 0 && $source_post_type === '') {
             $source_post_type = sanitize_key((string) get_post_type($source_post_id));
+        }
+
+        $series_review_state = isset($series_entry['review_state']) ? sanitize_key((string) $series_entry['review_state']) : '';
+        if ($slot_review_state === 'ignored') {
+            $series_review_state = 'ignored';
+        }
+        if ($series_review_state === 'ignored') {
+            $source_post_id = 0;
+            $source_post_type = '';
         }
 
         if ($source_post_id > 0 && $is_known_tag && function_exists('iss_occurrences_remember_tag_source')) {
@@ -1068,7 +1400,7 @@ function iss_supersaas_sync_occurrences() {
             }
         }
 
-        if ($series_key !== '' && function_exists('iss_occurrences_remember_series_source')) {
+        if ($series_key !== '' && $slot_source_type === 'free' && function_exists('iss_occurrences_remember_series_source')) {
             iss_occurrences_remember_series_source($series_key, $source_post_id, $source_post_type, $clean_title, $tag, $fallback_url);
 
             $series_sources[$series_key] = isset($series_sources[$series_key]) && is_array($series_sources[$series_key]) ? $series_sources[$series_key] : [];
@@ -1095,12 +1427,128 @@ function iss_supersaas_sync_occurrences() {
             $series_sources[$series_key]['last_seen_at'] = $now;
         }
 
+        $schedule_url = iss_supersaas_build_schedule_url($settings, $schedule);
         $booking_url = $fallback_url ?: $schedule_url;
-
         $source = $source_post_id > 0 ? get_post($source_post_id) : null;
-        if (!$source instanceof WP_Post || $source->post_status !== 'publish' || $source->post_type !== 'fuehrung') {
+        $source_is_public_fuehrung = $source instanceof WP_Post && $source->post_status === 'publish' && $source->post_type === 'fuehrung';
+        $source_is_public_veranstaltung = $source instanceof WP_Post && $source->post_status === 'publish' && $source->post_type === 'veranstaltung';
+        $source_is_valid_manual_target = $source instanceof WP_Post && in_array($source->post_type, ['fuehrung', 'veranstaltung'], true);
+        $is_cancelled = iss_supersaas_slot_is_cancelled($slot, $clean_title);
+        $event_series_projection_allowed = $slot_source_type === 'range'
+            && $series_key === 'event:repair-cafe'
+            && $source_is_public_veranstaltung;
+        if ($is_cancelled) {
+            $slot_status = 'cancelled';
+            $slot_match_state = 'cancelled';
+            $slot_visibility = 'private';
+        } elseif ($series_review_state === 'ignored') {
+            $slot_status = 'skipped';
+            $slot_match_state = 'ignored';
+            $slot_visibility = 'private';
+        } elseif ($event_series_projection_allowed) {
+            $slot_status = 'projected';
+            $slot_match_state = 'mapped';
+            $slot_visibility = 'public';
+        } elseif ($slot_source_type === 'range') {
+            $slot_status = 'skipped';
+            $slot_match_state = $source_is_valid_manual_target ? 'mapped' : 'unmapped';
+            $slot_visibility = 'private';
+        } elseif ($source_is_public_fuehrung) {
+            $slot_status = 'projected';
+            $slot_match_state = 'mapped';
+            $slot_visibility = 'public';
+        } elseif ($source_post_id > 0) {
+            $slot_status = 'skipped';
+            $slot_match_state = 'invalid_source';
+            $slot_visibility = 'private';
+        } else {
+            $slot_status = 'skipped';
+            $slot_match_state = 'unmapped';
+            $slot_visibility = 'private';
+        }
+        $slot_review_state_for_row = $slot_match_state === 'ignored'
+            ? 'ignored'
+            : ($slot_match_state === 'mapped' ? 'mapped' : 'unreviewed');
+
+        if (method_exists($service, 'upsert_supersaas_slot')) {
+            $service->upsert_supersaas_slot([
+                'schedule_key' => $schedule_key,
+                'schedule_label' => $schedule_label,
+                'schedule_id' => $schedule_id,
+                'source_calendar' => $source_calendar,
+                'slot_id' => $slot_instance_id,
+                'external_id' => $external_id,
+                'raw_title' => $raw_title,
+                'clean_title' => $clean_title,
+                'description' => $slot_description,
+                'series_key' => $series_key,
+                'tag' => $tag,
+                'starts_at' => $start,
+                'ends_at' => $end,
+                'status' => $slot_status,
+                'visibility' => $slot_visibility,
+                'is_cancelled' => $is_cancelled,
+                'availability_state' => $availability_state,
+                'capacity_total' => $capacity_total,
+                'capacity_available' => $available,
+                'location_label' => isset($slot['location']) ? sanitize_text_field((string) $slot['location']) : '',
+                'source_post_id' => $source_post_id,
+                'source_post_type' => $source_post_type,
+                'match_state' => $slot_match_state,
+                'review_state' => $slot_review_state_for_row,
+                'last_seen_at' => $now,
+                'last_synced_at' => $now,
+            ]);
+        }
+
+        $can_project_tour = $slot_source_type === 'free' && $source_is_public_fuehrung;
+        $can_project_event = $event_series_projection_allowed;
+        if ($is_cancelled || $series_review_state === 'ignored' || (!$can_project_tour && !$can_project_event)) {
             $service->delete_occurrence_by_external('supersaas', $external_id);
             $skipped_unlinked++;
+            continue;
+        }
+
+        if ($can_project_event) {
+            $event_title = trim((string) get_the_title($source_post_id));
+            if ($event_title === '') {
+                $event_title = $clean_title !== '' ? wp_strip_all_tags($clean_title) : trim((string) $raw_title);
+            }
+
+            $occurrence_id = $service->upsert_occurrence([
+                'source_post_id' => $source_post_id,
+                'source_post_type' => 'veranstaltung',
+                'kind' => 'event',
+                'title' => $event_title,
+                'starts_at' => $start,
+                'ends_at' => $end,
+                'date_source' => 'supersaas',
+                'status' => 'active',
+                'visibility' => 'public',
+                'origin' => 'supersaas',
+                'source_calendar' => $source_calendar,
+                'external_id' => $external_id,
+                'tag' => '',
+                'series_key' => $series_key,
+                'booking_url' => '',
+                'location_post_id' => 0,
+                'location_label' => isset($slot['location']) ? sanitize_text_field((string) $slot['location']) : '',
+                'availability_state' => $availability_state,
+                'capacity_total' => $capacity_total,
+                'capacity_available' => $available,
+            ]);
+
+            if ($occurrence_id <= 0) {
+                $errors++;
+                continue;
+            }
+
+            if (empty($existing)) {
+                $created++;
+            } else {
+                $updated++;
+            }
+
             continue;
         }
 
@@ -1144,7 +1592,7 @@ function iss_supersaas_sync_occurrences() {
         }
         if ($tag !== '') {
             $slots_by_tag[$tag][] = [
-                'id' => (string) $external_id,
+                'id' => (string) $raw_slot_id,
                 'title' => $clean_title !== '' ? $clean_title : $raw_title,
                 'start' => $start,
                 'end' => $end,
@@ -1156,17 +1604,32 @@ function iss_supersaas_sync_occurrences() {
         }
     }
 
-    $inactivated = $service->mark_missing_origin_future_inactive('supersaas', $source_calendar, $seen_external_ids);
+    $inactivated = 0;
     $purged_inactive = 0;
-    if ((bool) apply_filters('iss_supersaas_sync_purge_missing_future_rows', true)
-        && method_exists($service, 'delete_inactive_origin_future')
-    ) {
-        $purged_inactive = $service->delete_inactive_origin_future('supersaas', $source_calendar);
+    foreach ($seen_external_ids_by_calendar as $source_calendar => $seen_external_ids) {
+        $source_calendar = sanitize_text_field((string) $source_calendar);
+        if ($source_calendar === '') {
+            continue;
+        }
+        $inactivated += $service->mark_missing_origin_future_inactive('supersaas', $source_calendar, $seen_external_ids);
+        if ((bool) apply_filters('iss_supersaas_sync_purge_missing_future_rows', true)
+            && method_exists($service, 'delete_inactive_origin_future')
+        ) {
+            $purged_inactive += $service->delete_inactive_origin_future('supersaas', $source_calendar);
+        }
+    }
+    if (method_exists($service, 'delete_missing_supersaas_slots')) {
+        foreach ($seen_staging_ids_by_schedule as $schedule_key => $seen_external_ids) {
+            $service->delete_missing_supersaas_slots((string) $schedule_key, $seen_external_ids);
+        }
     }
     $series_pruned += iss_supersaas_prune_empty_unlinked_series();
-    $past_reactivated = method_exists($service, 'mark_origin_past_active')
-        ? $service->mark_origin_past_active('supersaas', $source_calendar)
-        : 0;
+    $past_reactivated = 0;
+    if (method_exists($service, 'mark_origin_past_active')) {
+        foreach (array_keys($seen_external_ids_by_calendar) as $source_calendar) {
+            $past_reactivated += $service->mark_origin_past_active('supersaas', (string) $source_calendar);
+        }
+    }
 
     // Keep the REST endpoint cache and the occurrence table in sync.
     foreach ($slots_by_tag as $tag => $slots) {
@@ -1206,12 +1669,15 @@ function iss_supersaas_sync_occurrences() {
     ];
 }
 
-function iss_supersaas_build_schedule_url($settings) {
+function iss_supersaas_build_schedule_url($settings, $schedule = null) {
     if (!is_array($settings)) return '';
 
     $base_url = isset($settings['base_url']) ? untrailingslashit((string) $settings['base_url']) : '';
     $account_name = isset($settings['account_name']) ? (string) $settings['account_name'] : '';
-    $schedule_path = function_exists('iss_supersaas_get_schedule_path') ? iss_supersaas_get_schedule_path($settings) : '';
+    $schedule = is_array($schedule) ? $schedule : [];
+    $schedule_path = !empty($schedule)
+        ? trim((string) ($schedule['schedule_path'] ?? ''))
+        : (function_exists('iss_supersaas_get_schedule_path') ? iss_supersaas_get_schedule_path($settings) : '');
     $schedule_path = function_exists('iss_supersaas_normalize_schedule_path') ? iss_supersaas_normalize_schedule_path($schedule_path) : '';
 
     if ($base_url === '' || $account_name === '' || $schedule_path === '') {

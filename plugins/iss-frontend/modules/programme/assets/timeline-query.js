@@ -154,6 +154,57 @@ document.addEventListener('DOMContentLoaded', function () {
     var nextOffset = config && typeof config.initialNextOffset === 'number' ? config.initialNextOffset : 0;
     var calendarBridgeMode = '';
     var activePreset = null;
+    var activePicker = null;
+    var activePickerTrigger = null;
+
+    function getPickerFocusTarget(picker) {
+      if (!picker || !picker.querySelector) return null;
+      return picker.querySelector(
+        '.iss-timeline-slot-picker__panel a[href], .iss-timeline-slot-picker__panel button:not([disabled]), .iss-timeline-slot-picker__panel [tabindex]:not([tabindex="-1"])'
+      );
+    }
+
+    function closeActivePicker(options) {
+      options = options || {};
+      if (!activePicker) return;
+
+      var picker = activePicker;
+      var trigger = activePickerTrigger;
+      activePicker = null;
+      activePickerTrigger = null;
+
+      picker.hidden = true;
+      picker.classList.remove('is-open');
+      if (trigger) {
+        trigger.setAttribute('aria-expanded', 'false');
+      }
+      if (!document.querySelector('.iss-timeline-slot-picker.is-open')) {
+        document.documentElement.classList.remove('iss-timeline-slot-picker-open');
+      }
+      if (options.returnFocus !== false && trigger && typeof trigger.focus === 'function') {
+        trigger.focus();
+      }
+    }
+
+    function openPicker(trigger) {
+      if (!trigger) return;
+      var pickerId = trigger.getAttribute('aria-controls') || '';
+      var picker = pickerId ? document.getElementById(pickerId) : null;
+      if (!picker || !root.contains(picker)) return;
+
+      closeActivePicker({ returnFocus: false });
+      activePicker = picker;
+      activePickerTrigger = trigger;
+      picker.hidden = false;
+      picker.classList.add('is-open');
+      trigger.setAttribute('aria-expanded', 'true');
+      document.documentElement.classList.add('iss-timeline-slot-picker-open');
+
+      var focusTarget = getPickerFocusTarget(picker);
+      if (focusTarget && typeof focusTarget.focus === 'function') {
+        focusTarget.focus();
+      }
+    }
 
     function getCalendarDayFlatpickr() {
       return calendarDayInput && calendarDayInput._flatpickr ? calendarDayInput._flatpickr : null;
@@ -683,6 +734,7 @@ document.addEventListener('DOMContentLoaded', function () {
             if (append) {
               appendTimelineHtml(data.html);
             } else {
+              closeActivePicker({ returnFocus: false });
               results.innerHTML = data.html;
             }
           }
@@ -707,6 +759,40 @@ document.addEventListener('DOMContentLoaded', function () {
           setBusy(false);
         });
     }
+
+    root.addEventListener('click', function (event) {
+      var pickerTrigger = event.target && event.target.closest
+        ? event.target.closest('[data-timeline-picker-trigger]')
+        : null;
+      if (pickerTrigger && root.contains(pickerTrigger)) {
+        event.preventDefault();
+        openPicker(pickerTrigger);
+        return;
+      }
+
+      var pickerClose = event.target && event.target.closest
+        ? event.target.closest('[data-timeline-picker-close]')
+        : null;
+      if (pickerClose && activePicker && activePicker.contains(pickerClose)) {
+        event.preventDefault();
+        closeActivePicker();
+        return;
+      }
+
+      var slotTrigger = event.target && event.target.closest
+        ? event.target.closest('.js-is-tour-slot-trigger')
+        : null;
+      if (slotTrigger && activePicker && activePicker.contains(slotTrigger)) {
+        closeActivePicker({ returnFocus: false });
+      }
+    });
+
+    document.addEventListener('keydown', function (event) {
+      if (event.key === 'Escape' && activePicker) {
+        event.preventDefault();
+        closeActivePicker();
+      }
+    });
 
     if (form) {
       form.addEventListener('change', function () {

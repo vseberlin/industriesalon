@@ -4,6 +4,14 @@ Immediate executable work only. Larger future programs live in `docs/project/bac
 
 ## Next
 
+- SuperSaaS/timeline follow-up after this checkpoint: deploy the occurrence and
+  timeline code together, replay
+  `ops/sql/2026-06-29-repair-cafe-canonical-event-series.sql` only if the local
+  Repair-Café canonical content state should move to the target, then run
+  `wp iss-occurrences sync`, `verify`, `drift-check`, and `supersaas-audit`.
+  Current audit leftovers are non-blocking: unmapped inert series have zero
+  occurrence rows, and `Stadtrallye für Erwachsene` is mapped but has no future
+  SuperSaaS rows.
 - Front-page client experiment decision: original baseline is captured in
   `ops/sql/2026-06-29-frontpage-baseline.sql`; current DB override content is
   synced to `themes/industriesalon/templates/front-page.html` for review. After

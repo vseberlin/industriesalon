@@ -147,6 +147,7 @@ function iss_occurrences_get_series_sources(): array
                     'supersaas_title' => isset($row['supersaas_title']) ? trim((string) $row['supersaas_title']) : '',
                     'tag' => isset($row['tag']) ? iss_occurrences_normalize_tag($row['tag']) : '',
                     'fallback_url' => isset($row['fallback_url']) ? esc_url_raw((string) $row['fallback_url']) : '',
+                    'review_state' => isset($row['review_state']) ? sanitize_key((string) $row['review_state']) : '',
                     'version' => 1,
                     'last_seen_at' => isset($row['updated_at']) ? (string) $row['updated_at'] : '',
                 ];
@@ -181,6 +182,7 @@ function iss_occurrences_remember_series_source($series_key, $source_post_id, $s
     $supersaas_title = trim((string) $supersaas_title);
     $tag = iss_occurrences_normalize_tag($tag);
     $fallback_url = esc_url_raw((string) $fallback_url);
+    $review_state = $source_post_id > 0 ? 'mapped' : '';
 
     if ($supersaas_title === '' && $source_post_id > 0) {
         $source_title = trim((string) get_the_title($source_post_id));
@@ -199,6 +201,7 @@ function iss_occurrences_remember_series_source($series_key, $source_post_id, $s
         'supersaas_title' => $supersaas_title,
         'tag' => $tag,
         'fallback_url' => $fallback_url,
+        'review_state' => $review_state,
         'origin' => 'supersaas',
     ]);
 

@@ -2,73 +2,78 @@
 
 Updated: 2026-06-29
 
-Current checkpoint only. Completed history belongs in `CHANGELOG.md`; active follow-up belongs in `TODO.md`.
+Current checkpoint only. Completed history belongs in `CHANGELOG.md`; active
+follow-up belongs in `TODO.md`.
 
 ## Current Work
 
-- Front-page client hero/text/project experiment is implemented and synced to
-  disk for review.
-- The active homepage is not file-backed right now: `get_block_template(
-  "industriesalon//front-page", "wp_template" )` reports `source=custom`.
-- Current front-page state:
-  - static front page option points to page ID `12257` (`home`, `home-2`);
-  - active DB template row is `wp_template` ID `26534`, slug `front-page`;
-  - DB template content matches
-    `themes/industriesalon/templates/front-page.html`;
-  - hero uses imported attachment ID `26778` from the local converted image and
-    left-side gradient readability only;
-  - old spine strip, project rails, and notice-banner slots are removed;
-  - two project cards render as pinned-note cards with project logos and primary
-    `Alle Projekte ansehen` CTA.
-- `/fuehrungen/` is file-backed (`page-fuehrungen` source is `theme`): dated
-  Führung cards render first, followed by a non-tabbed `Gruppen & Co.` Führung
-  card grid.
-- Rollback artifact for the original front-page baseline:
+- SuperSaaS timeline sync now uses a staging/workbench layer:
+  `wp_iss_supersaas_slots` stores imported slots from the public schedule and
+  `Salonbelegung`, while `wp_iss_occurrence_series` remains the canonical
+  series mapping table.
+- The sync workbench can search/sort slots, show descriptions, map/remap or
+  ignore Salonbelegung event rows, and map recurring event series to one
+  canonical Veranstaltung source.
+- Repair-Café was collapsed to one canonical Veranstaltung (`26813`): generated
+  duplicate event shells were moved to trash, `event:repair-cafe` maps to that
+  post, and 12 dated SuperSaaS event occurrences now project from it. Replay
+  artifact: `ops/sql/2026-06-29-repair-cafe-canonical-event-series.sql`.
+- Programme timelines use the existing `industriesalon/timeline-query`
+  renderer. Teaser/upcoming grouped Führung rows now group by source post and
+  open a centralized month-grouped slot picker once a group has 2+ dates.
+  Elektropolis therefore renders as one front-page row with `Termin wählen`
+  instead of a long inline occurrence list.
+- The active homepage is still DB-backed: `front-page` is a custom
+  `wp_template` override. The client front-page experiment remains review
+  state; rollback baseline is
   `ops/sql/2026-06-29-frontpage-baseline.sql`.
 
 ## Preserve
 
-- Treat the front-page client pass as one-off review state until accepted or
-  rolled back. Disk and DB are currently synced, but the active source is still
-  the DB override.
-- Do not delete the front-page DB override while the client is actively testing
-  variants; it is the current live source for the homepage.
-- Do not enable Mollie as a selectable payment method until a real provider integration creates/settles payment state and registers support through `iss_payments_lite_supported_payment_methods`.
-- Do not add another booking/order storage layer. `iss-commerce-lite` owns request storage, admin review/export/status, public write guards, and notifications.
-- Do not change public Veranstaltung booking visibility silently: `TODO.md` records that single Veranstaltung output still needs a public booking section/block.
-- Keep public rendering theme-owned; plugins own data/contracts and request writes.
+- Keep the data/presentation boundary: `iss-occurrences` owns occurrence
+  storage/import/mapping, `iss-frontend` owns the timeline and picker renderer,
+  theme CSS owns the visual skin, and `iss-commerce-lite` owns request writes.
+- Do not create another booking/calendar storage layer. The picker reuses
+  existing SuperSaaS occurrence rows and `.js-is-tour-slot-trigger` booking
+  flow.
+- Do not delete the front-page DB override while the client is testing variants.
 - Leave unrelated local untracked files out of Git unless explicitly requested:
   - `iss-exhibition-composition-add.md`
   - `themes/industriesalon/theme2.json`
 
 ## Next Action
 
-- Let the client test the current front-page and `/fuehrungen/` variants.
-- When the front-page experiment is done, replay
-  `ops/sql/2026-06-29-frontpage-baseline.sql` to roll back, or sync the accepted
-  DB template content into `themes/industriesalon/templates/front-page.html`
-  and remove the override.
-- Continue the Veranstaltung booking public-render TODO separately.
+- After deploy or DB transfer, run `wp iss-occurrences sync`,
+  `wp iss-occurrences verify`, `wp iss-occurrences drift-check`, and
+  `wp iss-occurrences supersaas-audit`.
+- If moving the local Repair-Café canonical content state to another target,
+  review and replay
+  `ops/sql/2026-06-29-repair-cafe-canonical-event-series.sql` after code deploy.
+- Remaining SuperSaaS audit warnings are not blockers: unmapped inert series
+  currently have zero occurrence rows, and `Stadtrallye für Erwachsene` is
+  mapped but has no future SuperSaaS rows.
+- Continue the separate Veranstaltung public-booking render TODO when the
+  timeline/SuperSaaS checkpoint is settled.
 
 ## Verified Locally
 
+- `php -l` for edited PHP files in `iss-content`, `iss-frontend`, and
+  `iss-occurrences`.
+- `node --check` for edited timeline JS and block editor JS.
 - `git diff --check`.
-- Targeted stylelint for `themes/industriesalon/assets/css/front-page.css` and
-  `themes/industriesalon/assets/css/page-fuehrungen.css`.
-- Playwright desktop/mobile checks for `/` and `/fuehrungen/`: front-page
-  project cards/logos/CTA, removed banner/rail surfaces, Führungen dated cards
-  before `Gruppen & Co.`, no old catalog, and no horizontal overflow.
-- Front-page DB/file template hash matched after sync; `page-fuehrungen` source
-  is `theme`.
-- `git diff --cached --check`.
-- `git fetch origin --prune`; local `HEAD` and `origin/main` were both
-  `f2b85df` before this checkpoint.
-- WP-CLI confirmed `show_on_front=page`, `page_on_front=12257`,
-  `page_for_posts=0`.
-- WP-CLI confirmed active front-page template source is `custom`.
-- SQL artifact syntax was checked with `mariadb` against copied local tables in
-  a temporary database.
+- SQL artifact replayed locally through the Docker WP-CLI container.
+- `wp iss-occurrences sync`, `verify`, `drift-check`, and `supersaas-audit`.
+- Focused DB checks confirmed Repair-Café: canonical post `26813` published,
+  duplicate posts `26805`, `26808`, `26810`, and `26812` in trash, 12 mapped
+  staged slots, and 12 public SuperSaaS event occurrences.
+- Server-rendered front-page timeline check: 1 picker trigger, 0 inline grouped
+  occurrence details, German month labels.
+- Playwright desktop/mobile checks for `/`: Elektropolis picker opens, shows
+  64 dates with 25 bookable slots and 39 disabled sold-out slots, hands off to
+  the existing booking modal, and has no mobile horizontal overflow.
 
 ## Commit State
 
-- Local checkpoint commit only; no push requested.
+- Shared checkpoint requested for commit and push to `origin/main`.
+- Local branch was ahead of `origin/main` by three commits before this final
+  checkpoint; `origin/main` had not advanced after `git fetch origin --prune`.

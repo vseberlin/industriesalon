@@ -33,6 +33,13 @@ final class ISS_Occurrences_Service
         return $wpdb->prefix . 'iss_occurrence_series';
     }
 
+    public function get_supersaas_slots_table_name(): string
+    {
+        global $wpdb;
+
+        return $wpdb->prefix . 'iss_supersaas_slots';
+    }
+
     private function normalize_series_key(string $series_key): string
     {
         if (function_exists('iss_occurrences_normalize_series_key')) {
@@ -85,6 +92,7 @@ final class ISS_Occurrences_Service
         $charset_collate = $wpdb->get_charset_collate();
         $occurrences_table = $this->get_occurrences_table_name();
         $series_table = $this->get_series_table_name();
+        $supersaas_slots_table = $this->get_supersaas_slots_table_name();
 
         $occurrences_sql = "CREATE TABLE {$occurrences_table} (
             id bigint(20) unsigned NOT NULL AUTO_INCREMENT,
@@ -134,6 +142,7 @@ final class ISS_Occurrences_Service
             supersaas_title varchar(255) NOT NULL DEFAULT '',
             tag varchar(100) NOT NULL DEFAULT '',
             fallback_url varchar(255) NOT NULL DEFAULT '',
+            review_state varchar(50) NOT NULL DEFAULT '',
             rule text NOT NULL,
             timezone varchar(100) NOT NULL DEFAULT '',
             exceptions longtext NOT NULL,
@@ -145,8 +154,51 @@ final class ISS_Occurrences_Service
             KEY external_lookup (origin, external_id)
         ) {$charset_collate};";
 
+        $supersaas_slots_sql = "CREATE TABLE {$supersaas_slots_table} (
+            id bigint(20) unsigned NOT NULL AUTO_INCREMENT,
+            schedule_key varchar(100) NOT NULL DEFAULT '',
+            schedule_label varchar(191) NOT NULL DEFAULT '',
+            schedule_id varchar(100) NOT NULL DEFAULT '',
+            source_calendar varchar(191) NOT NULL DEFAULT '',
+            slot_id varchar(191) NOT NULL DEFAULT '',
+            external_id varchar(191) NOT NULL DEFAULT '',
+            raw_title varchar(255) NOT NULL DEFAULT '',
+            clean_title varchar(255) NOT NULL DEFAULT '',
+            description text NOT NULL,
+            series_key varchar(191) NOT NULL DEFAULT '',
+            tag varchar(100) NOT NULL DEFAULT '',
+            starts_at datetime NOT NULL,
+            ends_at datetime DEFAULT NULL,
+            status varchar(50) NOT NULL DEFAULT 'seen',
+            visibility varchar(50) NOT NULL DEFAULT 'private',
+            is_cancelled tinyint(1) unsigned NOT NULL DEFAULT 0,
+            availability_state varchar(50) NOT NULL DEFAULT '',
+            capacity_total int(11) NOT NULL DEFAULT -1,
+            capacity_available int(11) NOT NULL DEFAULT -1,
+            location_label varchar(255) NOT NULL DEFAULT '',
+            source_post_id bigint(20) unsigned NOT NULL DEFAULT 0,
+            source_post_type varchar(100) NOT NULL DEFAULT '',
+            match_state varchar(50) NOT NULL DEFAULT 'unmapped',
+            review_state varchar(50) NOT NULL DEFAULT '',
+            last_seen_at datetime NOT NULL,
+            last_synced_at datetime NOT NULL,
+            created_at datetime NOT NULL,
+            updated_at datetime NOT NULL,
+            PRIMARY KEY  (id),
+            UNIQUE KEY schedule_slot (schedule_key, slot_id),
+            UNIQUE KEY external_lookup (external_id),
+            KEY schedule_date (schedule_key, starts_at),
+            KEY source_lookup (source_post_type, source_post_id),
+            KEY series_lookup (series_key),
+            KEY match_state_date (match_state, starts_at),
+            KEY review_state_date (review_state, starts_at),
+            KEY status_date (status, starts_at),
+            KEY last_seen (last_seen_at)
+        ) {$charset_collate};";
+
         dbDelta($occurrences_sql);
         dbDelta($series_sql);
+        dbDelta($supersaas_slots_sql);
         $this->drop_legacy_graph_columns();
         $this->migrate_open_ended_sentinel();
         delete_option(ISS_OCCURRENCES_RETIRED_SERIES_MAP_OPTION);
@@ -272,6 +324,10 @@ final class ISS_Occurrences_Service
         $supersaas_title = isset($row['supersaas_title']) ? trim((string) $row['supersaas_title']) : '';
         $tag = isset($row['tag']) ? $this->normalize_series_tag((string) $row['tag']) : '';
         $fallback_url = isset($row['fallback_url']) ? esc_url_raw((string) $row['fallback_url']) : '';
+        $review_state = isset($row['review_state']) ? sanitize_key((string) $row['review_state']) : '';
+        if (!in_array($review_state, ['unreviewed', 'mapped', 'ignored'], true)) {
+            $review_state = '';
+        }
 
         if ($supersaas_title === '' && isset($row['title'])) {
             $supersaas_title = sanitize_text_field((string) $row['title']);
@@ -309,12 +365,21 @@ final class ISS_Occurrences_Service
         if ($fallback_url === '' && !empty($existing['fallback_url'])) {
             $fallback_url = esc_url_raw((string) $existing['fallback_url']);
         }
+        if ($review_state === '' && !empty($existing['review_state'])) {
+            $review_state = sanitize_key((string) $existing['review_state']);
+        }
+        if ($review_state === '' || !in_array($review_state, ['unreviewed', 'mapped', 'ignored'], true)) {
+            $review_state = $source_post_id > 0 ? 'mapped' : 'unreviewed';
+        }
+        if ($source_post_id > 0 && $review_state !== 'ignored') {
+            $review_state = 'mapped';
+        }
 
         $wpdb->query(
             $wpdb->prepare(
                 "INSERT INTO {$table}
-                    (source_post_id, source_post_type, origin, external_id, series_key, supersaas_title, tag, fallback_url, rule, timezone, exceptions, created_at, updated_at)
-                 VALUES (%d, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
+                    (source_post_id, source_post_type, origin, external_id, series_key, supersaas_title, tag, fallback_url, review_state, rule, timezone, exceptions, created_at, updated_at)
+                 VALUES (%d, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
                  ON DUPLICATE KEY UPDATE
                     source_post_id = VALUES(source_post_id),
                     source_post_type = VALUES(source_post_type),
@@ -323,6 +388,7 @@ final class ISS_Occurrences_Service
                     supersaas_title = VALUES(supersaas_title),
                     tag = VALUES(tag),
                     fallback_url = VALUES(fallback_url),
+                    review_state = VALUES(review_state),
                     rule = VALUES(rule),
                     timezone = VALUES(timezone),
                     exceptions = VALUES(exceptions),
@@ -335,6 +401,7 @@ final class ISS_Occurrences_Service
                 $supersaas_title,
                 $tag,
                 $fallback_url,
+                $review_state,
                 $rule,
                 $timezone,
                 $exceptions,
@@ -358,7 +425,8 @@ final class ISS_Occurrences_Service
         $table = $this->get_series_table_name();
         return (int) $wpdb->query(
             $wpdb->prepare(
-                "UPDATE {$table} SET source_post_id = 0, source_post_type = '', updated_at = %s WHERE source_post_id = %d",
+                "UPDATE {$table} SET source_post_id = 0, source_post_type = '', review_state = %s, updated_at = %s WHERE source_post_id = %d",
+                'unreviewed',
                 current_time('mysql'),
                 $source_post_id
             )
@@ -377,7 +445,8 @@ final class ISS_Occurrences_Service
         $table = $this->get_series_table_name();
         return (bool) $wpdb->query(
             $wpdb->prepare(
-                "UPDATE {$table} SET source_post_id = 0, source_post_type = '', updated_at = %s WHERE series_key = %s",
+                "UPDATE {$table} SET source_post_id = 0, source_post_type = '', review_state = %s, updated_at = %s WHERE series_key = %s",
+                'unreviewed',
                 current_time('mysql'),
                 $series_key
             )
@@ -396,11 +465,46 @@ final class ISS_Occurrences_Service
         $table = $this->get_series_table_name();
         return (bool) $wpdb->query(
             $wpdb->prepare(
-                "UPDATE {$table} SET source_post_id = 0, source_post_type = '', updated_at = %s WHERE tag = %s",
+                "UPDATE {$table} SET source_post_id = 0, source_post_type = '', review_state = %s, updated_at = %s WHERE tag = %s",
+                'unreviewed',
                 current_time('mysql'),
                 $tag
             )
         );
+    }
+
+    public function set_series_review_state(string $series_key, string $review_state): bool
+    {
+        global $wpdb;
+
+        $series_key = $this->normalize_series_key($series_key);
+        $review_state = sanitize_key($review_state);
+        if ($series_key === '' || !in_array($review_state, ['unreviewed', 'mapped', 'ignored'], true) || !$this->tables_exist()) {
+            return false;
+        }
+
+        $table = $this->get_series_table_name();
+        $fields = [
+            'review_state' => $review_state,
+            'updated_at' => current_time('mysql'),
+        ];
+        $formats = ['%s', '%s'];
+        if ($review_state === 'ignored') {
+            $fields['source_post_id'] = 0;
+            $fields['source_post_type'] = '';
+            $formats[] = '%d';
+            $formats[] = '%s';
+        }
+
+        $updated = $wpdb->update(
+            $table,
+            $fields,
+            ['series_key' => $series_key],
+            $formats,
+            ['%s']
+        );
+
+        return $updated !== false && $updated > 0;
     }
 
     public function get_series_rows(): array
@@ -833,6 +937,433 @@ final class ISS_Occurrences_Service
         }
 
         return $updated;
+    }
+
+    public function supersaas_slots_table_exists(): bool
+    {
+        global $wpdb;
+
+        $table = $this->get_supersaas_slots_table_name();
+        $found = (string) $wpdb->get_var($wpdb->prepare('SHOW TABLES LIKE %s', $table));
+
+        return $found === $table;
+    }
+
+    public function upsert_supersaas_slot(array $row): int
+    {
+        global $wpdb;
+
+        if (!$this->supersaas_slots_table_exists()) {
+            return 0;
+        }
+
+        $schedule_key = isset($row['schedule_key']) ? sanitize_key((string) $row['schedule_key']) : '';
+        $slot_id = isset($row['slot_id']) ? sanitize_text_field((string) $row['slot_id']) : '';
+        $starts_at = isset($row['starts_at']) ? $this->normalize_datetime((string) $row['starts_at']) : '';
+        if ($schedule_key === '' || $slot_id === '' || $starts_at === '') {
+            return 0;
+        }
+
+        $external_id = isset($row['external_id']) ? sanitize_text_field((string) $row['external_id']) : '';
+        if ($external_id === '') {
+            $external_id = $schedule_key . ':' . $slot_id;
+        }
+
+        $ends_at = isset($row['ends_at']) ? $this->normalize_datetime((string) $row['ends_at'], true) : null;
+        $ends_at = $ends_at !== '' ? $ends_at : null;
+        $capacity_total = array_key_exists('capacity_total', $row) && $row['capacity_total'] !== null ? (int) $row['capacity_total'] : -1;
+        $capacity_available = array_key_exists('capacity_available', $row) && $row['capacity_available'] !== null ? (int) $row['capacity_available'] : -1;
+        $match_state = isset($row['match_state']) ? sanitize_key((string) $row['match_state']) : 'unmapped';
+        $review_state = isset($row['review_state']) ? sanitize_key((string) $row['review_state']) : '';
+        if (!in_array($review_state, ['unreviewed', 'mapped', 'ignored'], true)) {
+            $review_state = $match_state === 'ignored' ? 'ignored' : ($match_state === 'mapped' ? 'mapped' : 'unreviewed');
+        }
+        $now = current_time('mysql');
+        $table = $this->get_supersaas_slots_table_name();
+
+        $wpdb->query(
+            $wpdb->prepare(
+                "INSERT INTO {$table}
+                    (schedule_key, schedule_label, schedule_id, source_calendar, slot_id, external_id, raw_title, clean_title, description, series_key, tag, starts_at, ends_at, status, visibility, is_cancelled, availability_state, capacity_total, capacity_available, location_label, source_post_id, source_post_type, match_state, review_state, last_seen_at, last_synced_at, created_at, updated_at)
+                 VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, NULLIF(%s, ''), %s, %s, %d, %s, %d, %d, %s, %d, %s, %s, %s, %s, %s, %s, %s)
+                 ON DUPLICATE KEY UPDATE
+                    schedule_label = VALUES(schedule_label),
+                    schedule_id = VALUES(schedule_id),
+                    source_calendar = VALUES(source_calendar),
+                    external_id = VALUES(external_id),
+                    raw_title = VALUES(raw_title),
+                    clean_title = VALUES(clean_title),
+                    description = VALUES(description),
+                    series_key = VALUES(series_key),
+                    tag = VALUES(tag),
+                    starts_at = VALUES(starts_at),
+                    ends_at = VALUES(ends_at),
+                    status = VALUES(status),
+                    visibility = VALUES(visibility),
+                    is_cancelled = VALUES(is_cancelled),
+                    availability_state = VALUES(availability_state),
+                    capacity_total = VALUES(capacity_total),
+                    capacity_available = VALUES(capacity_available),
+                    location_label = VALUES(location_label),
+                    source_post_id = VALUES(source_post_id),
+                    source_post_type = VALUES(source_post_type),
+                    match_state = VALUES(match_state),
+                    review_state = VALUES(review_state),
+                    last_seen_at = VALUES(last_seen_at),
+                    last_synced_at = VALUES(last_synced_at),
+                    updated_at = VALUES(updated_at)",
+                $schedule_key,
+                isset($row['schedule_label']) ? sanitize_text_field((string) $row['schedule_label']) : '',
+                isset($row['schedule_id']) ? sanitize_text_field((string) $row['schedule_id']) : '',
+                isset($row['source_calendar']) ? sanitize_text_field((string) $row['source_calendar']) : $schedule_key,
+                $slot_id,
+                $external_id,
+                isset($row['raw_title']) ? sanitize_text_field((string) $row['raw_title']) : '',
+                isset($row['clean_title']) ? sanitize_text_field((string) $row['clean_title']) : '',
+                isset($row['description']) ? sanitize_textarea_field((string) $row['description']) : '',
+                isset($row['series_key']) ? $this->normalize_series_key((string) $row['series_key']) : '',
+                isset($row['tag']) ? $this->normalize_series_tag((string) $row['tag']) : '',
+                $starts_at,
+                $ends_at ?? '',
+                isset($row['status']) ? sanitize_key((string) $row['status']) : 'seen',
+                isset($row['visibility']) ? sanitize_key((string) $row['visibility']) : 'private',
+                !empty($row['is_cancelled']) ? 1 : 0,
+                isset($row['availability_state']) ? sanitize_key((string) $row['availability_state']) : '',
+                $capacity_total,
+                $capacity_available,
+                isset($row['location_label']) ? sanitize_text_field((string) $row['location_label']) : '',
+                isset($row['source_post_id']) ? max(0, (int) $row['source_post_id']) : 0,
+                isset($row['source_post_type']) ? sanitize_key((string) $row['source_post_type']) : '',
+                $match_state,
+                $review_state,
+                isset($row['last_seen_at']) ? $this->normalize_datetime((string) $row['last_seen_at']) : $now,
+                isset($row['last_synced_at']) ? $this->normalize_datetime((string) $row['last_synced_at']) : $now,
+                $now,
+                $now
+            )
+        );
+
+        return (int) $wpdb->get_var(
+            $wpdb->prepare(
+                "SELECT id FROM {$table} WHERE schedule_key = %s AND slot_id = %s LIMIT 1",
+                $schedule_key,
+                $slot_id
+            )
+        );
+    }
+
+    public function delete_missing_supersaas_slots(string $schedule_key, array $seen_external_ids): int
+    {
+        global $wpdb;
+
+        $schedule_key = sanitize_key($schedule_key);
+        if ($schedule_key === '' || !$this->supersaas_slots_table_exists()) {
+            return 0;
+        }
+
+        $seen_external_ids = array_values(array_unique(array_filter(array_map(static function ($value) {
+            return sanitize_text_field((string) $value);
+        }, $seen_external_ids))));
+
+        $table = $this->get_supersaas_slots_table_name();
+        $where = ['schedule_key = %s'];
+        $values = [$schedule_key];
+        if (!empty($seen_external_ids)) {
+            $placeholders = implode(', ', array_fill(0, count($seen_external_ids), '%s'));
+            $where[] = "external_id NOT IN ({$placeholders})";
+            foreach ($seen_external_ids as $external_id) {
+                $values[] = $external_id;
+            }
+        }
+
+        $sql = "DELETE FROM {$table} WHERE " . implode(' AND ', $where);
+        return (int) $wpdb->query($wpdb->prepare($sql, $values));
+    }
+
+    private function build_supersaas_slot_query_parts(array $args): array
+    {
+        global $wpdb;
+
+        $where = ['1=1'];
+        $values = [];
+
+        $search = isset($args['search']) ? trim((string) $args['search']) : '';
+        if ($search !== '') {
+            $like = '%' . $wpdb->esc_like($search) . '%';
+            $where[] = '(s.raw_title LIKE %s OR s.clean_title LIKE %s OR s.description LIKE %s OR s.series_key LIKE %s OR s.tag LIKE %s OR s.slot_id LIKE %s OR s.external_id LIKE %s OR p.post_title LIKE %s)';
+            array_push($values, $like, $like, $like, $like, $like, $like, $like, $like);
+        }
+
+        $schedule_key = isset($args['schedule_key']) ? sanitize_key((string) $args['schedule_key']) : '';
+        if ($schedule_key !== '') {
+            $where[] = 's.schedule_key = %s';
+            $values[] = $schedule_key;
+        }
+
+        $match_state = isset($args['match_state']) ? sanitize_key((string) $args['match_state']) : '';
+        if ($match_state === 'active') {
+            $where[] = 's.match_state <> %s';
+            $values[] = 'ignored';
+        } elseif ($match_state !== '' && $match_state !== 'all') {
+            $where[] = 's.match_state = %s';
+            $values[] = $match_state;
+        }
+
+        $status = isset($args['status']) ? sanitize_key((string) $args['status']) : '';
+        if ($status !== '') {
+            $where[] = 's.status = %s';
+            $values[] = $status;
+        }
+
+        $date_scope = isset($args['date_scope']) ? sanitize_key((string) $args['date_scope']) : '';
+        if ($date_scope === 'future') {
+            $where[] = 's.starts_at >= %s';
+            $values[] = current_time('mysql');
+        } elseif ($date_scope === 'past') {
+            $where[] = 's.starts_at < %s';
+            $values[] = current_time('mysql');
+        }
+
+        return [$where, $values];
+    }
+
+    public function query_supersaas_slots(array $args = []): array
+    {
+        global $wpdb;
+
+        if (!$this->supersaas_slots_table_exists()) {
+            return [];
+        }
+
+        [$where, $values] = $this->build_supersaas_slot_query_parts($args);
+        $orderby = isset($args['orderby']) ? sanitize_key((string) $args['orderby']) : 'starts_at';
+        $allowed_orderby = [
+            'starts_at' => 's.starts_at',
+            'schedule_key' => 's.schedule_key',
+            'clean_title' => 's.clean_title',
+            'match_state' => 's.match_state',
+            'status' => 's.status',
+            'last_seen_at' => 's.last_seen_at',
+            'source_post_id' => 's.source_post_id',
+        ];
+        $orderby_sql = $allowed_orderby[$orderby] ?? 's.starts_at';
+        $order = strtoupper((string) ($args['order'] ?? 'ASC')) === 'DESC' ? 'DESC' : 'ASC';
+        $limit = isset($args['limit']) ? max(1, min(200, (int) $args['limit'])) : 50;
+        $offset = isset($args['offset']) ? max(0, (int) $args['offset']) : 0;
+        $values[] = $limit;
+        $values[] = $offset;
+
+        $table = $this->get_supersaas_slots_table_name();
+        $sql = "SELECT s.*, COALESCE(p.post_title, '') AS source_post_title, COALESCE(p.post_status, '') AS source_post_status
+            FROM {$table} s
+            LEFT JOIN {$wpdb->posts} p ON p.ID = s.source_post_id
+            WHERE " . implode(' AND ', $where) . "
+            ORDER BY {$orderby_sql} {$order}, s.id ASC
+            LIMIT %d OFFSET %d";
+
+        $rows = $wpdb->get_results($wpdb->prepare($sql, $values), ARRAY_A);
+        return is_array($rows) ? $rows : [];
+    }
+
+    public function count_supersaas_slots(array $args = []): int
+    {
+        global $wpdb;
+
+        if (!$this->supersaas_slots_table_exists()) {
+            return 0;
+        }
+
+        [$where, $values] = $this->build_supersaas_slot_query_parts($args);
+        $table = $this->get_supersaas_slots_table_name();
+        $sql = "SELECT COUNT(*) FROM {$table} s
+            LEFT JOIN {$wpdb->posts} p ON p.ID = s.source_post_id
+            WHERE " . implode(' AND ', $where);
+
+        return (int) $wpdb->get_var($values ? $wpdb->prepare($sql, $values) : $sql);
+    }
+
+    public function get_supersaas_slot_schedule_keys(): array
+    {
+        global $wpdb;
+
+        if (!$this->supersaas_slots_table_exists()) {
+            return [];
+        }
+
+        $table = $this->get_supersaas_slots_table_name();
+        $rows = $wpdb->get_results("SELECT DISTINCT schedule_key, schedule_label FROM {$table} ORDER BY schedule_key ASC", ARRAY_A);
+        return is_array($rows) ? $rows : [];
+    }
+
+    public function get_supersaas_slot(int $id): array
+    {
+        global $wpdb;
+
+        if ($id <= 0 || !$this->supersaas_slots_table_exists()) {
+            return [];
+        }
+
+        $table = $this->get_supersaas_slots_table_name();
+        $row = $wpdb->get_row(
+            $wpdb->prepare(
+                "SELECT s.*, COALESCE(p.post_title, '') AS source_post_title, COALESCE(p.post_status, '') AS source_post_status
+                FROM {$table} s
+                LEFT JOIN {$wpdb->posts} p ON p.ID = s.source_post_id
+                WHERE s.id = %d
+                LIMIT 1",
+                $id
+            ),
+            ARRAY_A
+        );
+
+        return is_array($row) ? $row : [];
+    }
+
+    public function get_supersaas_slot_by_external(string $external_id): array
+    {
+        global $wpdb;
+
+        $external_id = sanitize_text_field($external_id);
+        if ($external_id === '' || !$this->supersaas_slots_table_exists()) {
+            return [];
+        }
+
+        $table = $this->get_supersaas_slots_table_name();
+        $row = $wpdb->get_row(
+            $wpdb->prepare(
+                "SELECT s.*, COALESCE(p.post_title, '') AS source_post_title, COALESCE(p.post_status, '') AS source_post_status
+                FROM {$table} s
+                LEFT JOIN {$wpdb->posts} p ON p.ID = s.source_post_id
+                WHERE s.external_id = %s
+                LIMIT 1",
+                $external_id
+            ),
+            ARRAY_A
+        );
+
+        return is_array($row) ? $row : [];
+    }
+
+    public function set_supersaas_slot_source(int $id, int $source_post_id, string $source_post_type, string $match_state = 'mapped'): bool
+    {
+        global $wpdb;
+
+        if ($id <= 0 || $source_post_id <= 0 || !$this->supersaas_slots_table_exists()) {
+            return false;
+        }
+
+        $source_post_type = sanitize_key($source_post_type);
+        if ($source_post_type === '') {
+            $source_post_type = sanitize_key((string) get_post_type($source_post_id));
+        }
+        if ($source_post_type === '') {
+            return false;
+        }
+
+        $match_state = sanitize_key($match_state);
+        if ($match_state === '') {
+            $match_state = 'mapped';
+        }
+
+        $updated = $wpdb->update(
+            $this->get_supersaas_slots_table_name(),
+            [
+                'source_post_id' => $source_post_id,
+                'source_post_type' => $source_post_type,
+                'match_state' => $match_state,
+                'review_state' => $match_state === 'ignored' ? 'ignored' : 'mapped',
+                'updated_at' => current_time('mysql'),
+            ],
+            ['id' => $id],
+            ['%d', '%s', '%s', '%s', '%s'],
+            ['%d']
+        );
+
+        return $updated !== false;
+    }
+
+    public function set_supersaas_slot_review_state(int $id, string $review_state): bool
+    {
+        global $wpdb;
+
+        if ($id <= 0 || !$this->supersaas_slots_table_exists()) {
+            return false;
+        }
+
+        $review_state = sanitize_key($review_state);
+        if (!in_array($review_state, ['unreviewed', 'ignored'], true)) {
+            return false;
+        }
+
+        $fields = [
+            'review_state' => $review_state,
+            'match_state' => $review_state === 'ignored' ? 'ignored' : 'unmapped',
+            'status' => 'skipped',
+            'visibility' => 'private',
+            'updated_at' => current_time('mysql'),
+        ];
+        $formats = ['%s', '%s', '%s', '%s', '%s'];
+
+        if ($review_state === 'ignored') {
+            $fields['source_post_id'] = 0;
+            $fields['source_post_type'] = '';
+            $formats[] = '%d';
+            $formats[] = '%s';
+        }
+
+        $updated = $wpdb->update(
+            $this->get_supersaas_slots_table_name(),
+            $fields,
+            ['id' => $id],
+            $formats,
+            ['%d']
+        );
+
+        return $updated !== false;
+    }
+
+    public function set_supersaas_slots_series_state(string $series_key, int $source_post_id, string $source_post_type, string $match_state, string $review_state): int
+    {
+        global $wpdb;
+
+        $series_key = $this->normalize_series_key($series_key);
+        if ($series_key === '' || !$this->supersaas_slots_table_exists()) {
+            return 0;
+        }
+
+        $source_post_id = max(0, $source_post_id);
+        $source_post_type = $source_post_id > 0 ? sanitize_key($source_post_type) : '';
+        if ($source_post_id > 0 && $source_post_type === '') {
+            $source_post_type = sanitize_key((string) get_post_type($source_post_id));
+        }
+
+        $match_state = sanitize_key($match_state);
+        if (!in_array($match_state, ['mapped', 'unmapped', 'ignored'], true)) {
+            $match_state = $source_post_id > 0 ? 'mapped' : 'unmapped';
+        }
+        $review_state = sanitize_key($review_state);
+        if (!in_array($review_state, ['unreviewed', 'mapped', 'ignored'], true)) {
+            $review_state = $match_state === 'ignored' ? 'ignored' : ($match_state === 'mapped' ? 'mapped' : 'unreviewed');
+        }
+
+        return (int) $wpdb->update(
+            $this->get_supersaas_slots_table_name(),
+            [
+                'source_post_id' => $source_post_id,
+                'source_post_type' => $source_post_type,
+                'match_state' => $match_state,
+                'review_state' => $review_state,
+                'status' => 'skipped',
+                'visibility' => 'private',
+                'updated_at' => current_time('mysql'),
+            ],
+            [
+                'schedule_key' => 'salonbelegung',
+                'series_key' => $series_key,
+            ],
+            ['%d', '%s', '%s', '%s', '%s', '%s', '%s'],
+            ['%s', '%s']
+        );
     }
 
     public function query(array $filters = []): array
@@ -1545,6 +2076,21 @@ final class ISS_Occurrences_Service
             $summary = iss_timeline_extract_teaser_text($source_post_id, 30);
         }
 
+        $slot_id = isset($row['external_id']) ? trim((string) $row['external_id']) : '';
+        if (($row['origin'] ?? '') === 'supersaas' && strpos($slot_id, ':') !== false) {
+            $parts = explode(':', $slot_id);
+            $slot_id = isset($parts[1]) ? (string) $parts[1] : '';
+        }
+
+        $content_url = $source_post_id > 0 ? get_permalink($source_post_id) : '';
+        $target_url = '';
+        if ($source_post_id > 0) {
+            $target_url = esc_url_raw(trim((string) get_post_meta($source_post_id, 'iss_timeline_target_url', true)));
+            if ($target_url !== '') {
+                $content_url = $target_url;
+            }
+        }
+
         return [
             'id' => isset($row['id']) ? (int) $row['id'] : 0,
             'title' => $title,
@@ -1559,11 +2105,11 @@ final class ISS_Occurrences_Service
             'series_id' => isset($row['series_id']) ? (int) $row['series_id'] : 0,
             'series_key' => trim((string) ($row['series_key'] ?? '')),
             'summary' => $summary,
-            'cta_mode' => 'details',
-            'cta_url' => '',
+            'cta_mode' => $target_url !== '' ? 'external' : 'details',
+            'cta_url' => $target_url,
             'cta_label' => __('Mehr erfahren', 'iss-occurrences'),
             'booking_url' => isset($row['booking_url']) ? (string) $row['booking_url'] : '',
-            'slot_id' => isset($row['external_id']) ? trim((string) $row['external_id']) : '',
+            'slot_id' => $slot_id,
             'slot_start' => $starts_at,
             'source_post_id' => $source_post_id,
             'source_post_type' => $source_post_type,
@@ -1575,7 +2121,7 @@ final class ISS_Occurrences_Service
             'available' => array_key_exists('capacity_available', $row) && (int) $row['capacity_available'] >= 0 ? (int) $row['capacity_available'] : null,
             'capacity' => array_key_exists('capacity_total', $row) && (int) $row['capacity_total'] >= 0 ? (int) $row['capacity_total'] : null,
             'tag' => isset($row['tag']) ? strtoupper(sanitize_text_field((string) $row['tag'])) : '',
-            'content_url' => $source_post_id > 0 ? get_permalink($source_post_id) : '',
+            'content_url' => $content_url,
             'year' => $is_running_open_ended ? (int) wp_date('Y', null, wp_timezone()) : ($start_ts ? (int) wp_date('Y', $start_ts, wp_timezone()) : null),
         ];
     }

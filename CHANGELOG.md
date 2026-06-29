@@ -6,14 +6,45 @@ be recovered from Git history.
 
 ## 2026-06-29
 
+- Added the SuperSaaS pipeline staging layer for timeline sync: the occurrence
+  plugin now creates `wp_iss_supersaas_slots`, normalizes one or more enabled
+  SuperSaaS schedules into schedule-keyed slot imports, keeps mapped slots in
+  the public occurrence projection with schedule-prefixed internal external IDs,
+  handles schedules that reuse one raw SuperSaaS slot ID across many dated
+  instances, and preserves raw slot IDs for booking APIs. The sync admin screen
+  now opens with a sortable/filterable slot workbench that shows dates,
+  schedule, cleaned series title, mapping state, source post, availability, and
+  actions to map or ignore a series before the legacy series table. The
+  workbench also stores and displays SuperSaaS descriptions where the API
+  provides them, and falls back to the SuperSaaS `name` field when a schedule
+  row has no title. Schedule configuration now distinguishes free-slot feeds
+  from range/booking feeds so the `Salonbelegung` workbench can read actual
+  booking descriptions instead of blank availability gaps. Salonbelegung rows
+  now use event-series keys, stay out of the Führung series mapping queue, and
+  can create draft Veranstaltung shells from the workbench; Repair-Cafe shells
+  receive a timeline target URL that points timeline clicks at the existing
+  `/repair-cafe/` landing page. The event workbench can also map/remap
+  Salonbelegung rows to existing Veranstaltungen or mark them ignored; ignored
+  slot decisions survive the next sync and are hidden from the default active
+  workbench filter. Recurring Salonbelegung events now have a series-level
+  workbench as well: mapped `event:repair-cafe` rows project as dated event
+  occurrences from one canonical Veranstaltung source instead of creating one
+  Veranstaltung post per booking, while raw Repair-Cafe slots no longer offer
+  the per-instance create action. The local duplicate Repair-Cafe event shells
+  were collapsed to canonical Veranstaltung `26813`; generated duplicates were
+  moved to trash, `event:repair-cafe` was mapped to the canonical source, and
+  the replay artifact is stored in
+  `ops/sql/2026-06-29-repair-cafe-canonical-event-series.sql`.
 - Centralized the first programme timeline policy in the existing
   `industriesalon/timeline-query` renderer instead of adding a parallel block:
   public programme timelines now default to Führungen, Veranstaltungen, and
   programme-enabled Ausstellungen, constrain source post types to the same
   programme set unless a project timeline is explicitly requested, and group
   recurring Führung rows by month only for month views. The front-page and
-  `/kalender/` templates now both include programme Ausstellungen; the active
-  local DB-owned `front-page` template was resynced from the theme file.
+  `/kalender/` templates now both include programme Ausstellungen; grouped
+  Führung rows with two or more dates now open a centralized month-grouped slot
+  picker instead of rendering long inline occurrence lists. The active local
+  DB-owned `front-page` template was resynced from the theme file.
 - Added the next timeline cleanup slice: upcoming/teaser timelines now collapse
   SuperSaaS Führung occurrences by their linked Führung post while month views
   keep month-scoped series grouping, the unfinished Veranstaltung

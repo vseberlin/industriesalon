@@ -31,6 +31,7 @@ function iss_supersaas_get_settings() {
         'base_url'      => 'https://www.supersaas.de',
         'account_name'  => '',
         'schedule_path' => '',
+        'schedules'     => [],
     ];
 
     $settings = get_option(ISS_SUPERSAAS_SETTINGS_OPTION, []);
@@ -41,9 +42,84 @@ function iss_supersaas_get_settings() {
     return array_merge($defaults, $settings);
 }
 
+function iss_supersaas_normalize_schedule_key($value): string {
+    $value = sanitize_key((string) $value);
+    $value = preg_replace('/[^a-z0-9_-]+/', '', $value);
+    return trim((string) $value, '_-');
+}
+
+function iss_supersaas_get_schedule_configs($settings = null): array {
+    if ($settings === null) {
+        $settings = iss_supersaas_get_settings();
+    }
+    if (!is_array($settings)) {
+        return [];
+    }
+
+    $configs = [];
+    $configured = isset($settings['schedules']) && is_array($settings['schedules']) ? $settings['schedules'] : [];
+    foreach ($configured as $index => $schedule) {
+        if (!is_array($schedule)) {
+            continue;
+        }
+
+        $schedule_id = isset($schedule['schedule_id']) ? preg_replace('/[^0-9]/', '', (string) $schedule['schedule_id']) : '';
+        if ($schedule_id === '') {
+            continue;
+        }
+
+        $key = isset($schedule['key']) ? iss_supersaas_normalize_schedule_key((string) $schedule['key']) : '';
+        if ($key === '') {
+            $key = $index === 0 ? 'public' : 'schedule-' . ($index + 1);
+        }
+
+        $enabled = array_key_exists('enabled', $schedule) ? (bool) $schedule['enabled'] : true;
+        $label = isset($schedule['label']) ? sanitize_text_field((string) $schedule['label']) : '';
+        if ($label === '') {
+            $label = $key;
+        }
+        $source = isset($schedule['source']) ? sanitize_key((string) $schedule['source']) : 'free';
+        if (!in_array($source, ['free', 'range'], true)) {
+            $source = 'free';
+        }
+
+        $configs[$key] = [
+            'key' => $key,
+            'label' => $label,
+            'schedule_id' => $schedule_id,
+            'schedule_path' => isset($schedule['schedule_path']) ? trim((string) $schedule['schedule_path']) : '',
+            'source' => $source,
+            'enabled' => $enabled,
+        ];
+    }
+
+    if (empty($configs) && !empty($settings['schedule_id'])) {
+        $schedule_id = preg_replace('/[^0-9]/', '', (string) $settings['schedule_id']);
+        if ($schedule_id !== '') {
+            $configs['public'] = [
+                'key' => 'public',
+                'label' => !empty($settings['schedule_path']) ? sanitize_text_field((string) $settings['schedule_path']) : 'public',
+                'schedule_id' => $schedule_id,
+                'schedule_path' => isset($settings['schedule_path']) ? trim((string) $settings['schedule_path']) : '',
+                'source' => 'free',
+                'enabled' => true,
+            ];
+        }
+    }
+
+    return array_values(array_filter($configs, static function ($schedule) {
+        return is_array($schedule) && !empty($schedule['enabled']) && !empty($schedule['schedule_id']);
+    }));
+}
+
 function iss_supersaas_get_schedule_path($settings = null) {
     if ($settings === null) {
         $settings = iss_supersaas_get_settings();
+    }
+
+    $schedules = iss_supersaas_get_schedule_configs($settings);
+    if (!empty($schedules[0]['schedule_path'])) {
+        return (string) $schedules[0]['schedule_path'];
     }
 
     if (!empty($settings['schedule_path'])) {
@@ -76,7 +152,7 @@ function iss_supersaas_load_admin_menu_api() {
 
 add_action('admin_notices', function () {
     $settings = iss_supersaas_get_settings();
-    if (empty($settings['schedule_id']) || empty($settings['api_key'])) {
+    if (empty($settings['api_key']) || empty(iss_supersaas_get_schedule_configs($settings))) {
         $settings_url = admin_url((defined('ISS_CORE_OPERATIONS_MENU_SLUG') ? 'admin.php' : 'options-general.php') . '?page=' . ISS_SUPERSAAS_SETTINGS_PAGE);
         echo '<div class="notice notice-warning is-dismissible"><p>'
             . '<strong>SuperSaaS API:</strong> '
@@ -105,11 +181,10 @@ function iss_supersaas_register_settings() {
         ISS_SUPERSAAS_OPTION_GROUP
     );
 
-    add_settings_field('schedule_id', 'Schedule ID', 'iss_supersaas_field_schedule_id', ISS_SUPERSAAS_OPTION_GROUP, 'iss_supersaas_main');
     add_settings_field('api_key', 'API Key', 'iss_supersaas_field_api_key', ISS_SUPERSAAS_OPTION_GROUP, 'iss_supersaas_main');
     add_settings_field('base_url', 'API Base URL', 'iss_supersaas_field_base_url', ISS_SUPERSAAS_OPTION_GROUP, 'iss_supersaas_main');
     add_settings_field('account_name', 'Account Name', 'iss_supersaas_field_account_name', ISS_SUPERSAAS_OPTION_GROUP, 'iss_supersaas_main');
-    add_settings_field('schedule_path', 'Schedule Path', 'iss_supersaas_field_schedule_path', ISS_SUPERSAAS_OPTION_GROUP, 'iss_supersaas_main');
+    add_settings_field('schedules', 'Schedules', 'iss_supersaas_field_schedules', ISS_SUPERSAAS_OPTION_GROUP, 'iss_supersaas_main');
 }
 add_action('admin_init', 'iss_supersaas_register_settings');
 add_filter('option_page_capability_' . ISS_SUPERSAAS_OPTION_GROUP, function () {
@@ -123,6 +198,31 @@ function iss_supersaas_sanitize_settings($input) {
     $out['base_url']      = isset($input['base_url']) ? esc_url_raw(trim($input['base_url'])) : '';
     $out['account_name']  = isset($input['account_name']) ? sanitize_text_field($input['account_name']) : '';
     $out['schedule_path'] = isset($input['schedule_path']) ? trim((string) $input['schedule_path']) : '';
+    $out['schedules'] = [];
+    $schedules = isset($input['schedules']) && is_array($input['schedules']) ? $input['schedules'] : [];
+    foreach ($schedules as $index => $schedule) {
+        if (!is_array($schedule)) {
+            continue;
+        }
+        $schedule_id = isset($schedule['schedule_id']) ? preg_replace('/[^0-9]/', '', (string) $schedule['schedule_id']) : '';
+        if ($schedule_id === '') {
+            continue;
+        }
+        $key = isset($schedule['key']) ? iss_supersaas_normalize_schedule_key((string) $schedule['key']) : '';
+        if ($key === '') {
+            $key = $index === 0 ? 'public' : 'schedule-' . ($index + 1);
+        }
+        $out['schedules'][] = [
+            'enabled' => !empty($schedule['enabled']) ? 1 : 0,
+            'key' => $key,
+            'label' => isset($schedule['label']) ? sanitize_text_field((string) $schedule['label']) : $key,
+            'schedule_id' => $schedule_id,
+            'schedule_path' => isset($schedule['schedule_path']) ? trim((string) $schedule['schedule_path']) : '',
+            'source' => isset($schedule['source']) && in_array(sanitize_key((string) $schedule['source']), ['free', 'range'], true)
+                ? sanitize_key((string) $schedule['source'])
+                : 'free',
+        ];
+    }
     return $out;
 }
 
@@ -231,6 +331,75 @@ function iss_supersaas_field_schedule_path() {
         esc_attr($settings['schedule_path'])
     );
     echo '<p class="description">Required for booking links. Example: Fuehrungen_%28oeffentlich%29</p>';
+}
+
+function iss_supersaas_field_schedules() {
+    $settings = iss_supersaas_get_settings();
+    $schedules = isset($settings['schedules']) && is_array($settings['schedules']) && !empty($settings['schedules'])
+        ? $settings['schedules']
+        : iss_supersaas_get_schedule_configs($settings);
+
+    if (empty($schedules)) {
+        $schedules = [[
+            'enabled' => 1,
+            'key' => 'public',
+            'label' => 'public',
+            'schedule_id' => isset($settings['schedule_id']) ? (string) $settings['schedule_id'] : '',
+            'schedule_path' => isset($settings['schedule_path']) ? (string) $settings['schedule_path'] : '',
+            'source' => 'free',
+        ]];
+    }
+    while (count($schedules) < 2) {
+        $schedules[] = [
+            'enabled' => 0,
+            'key' => '',
+            'label' => '',
+            'schedule_id' => '',
+            'schedule_path' => '',
+            'source' => 'free',
+        ];
+    }
+
+    echo '<table class="widefat striped" style="max-width:1080px"><thead><tr><th>Aktiv</th><th>Key</th><th>Label</th><th>Schedule ID</th><th>Schedule Path</th><th>Quelle</th></tr></thead><tbody>';
+    foreach ($schedules as $index => $schedule) {
+        $schedule = is_array($schedule) ? $schedule : [];
+        echo '<tr>';
+        echo '<td><input type="hidden" name="' . esc_attr(ISS_SUPERSAAS_SETTINGS_OPTION) . '[schedules][' . (int) $index . '][enabled]" value="0" />';
+        echo '<input type="checkbox" name="' . esc_attr(ISS_SUPERSAAS_SETTINGS_OPTION) . '[schedules][' . (int) $index . '][enabled]" value="1" ' . checked(!empty($schedule['enabled']), true, false) . ' /></td>';
+        printf(
+            '<td><input type="text" name="%1$s[schedules][%2$d][key]" value="%3$s" class="regular-text" placeholder="public" /></td>',
+            esc_attr(ISS_SUPERSAAS_SETTINGS_OPTION),
+            (int) $index,
+            esc_attr((string) ($schedule['key'] ?? ''))
+        );
+        printf(
+            '<td><input type="text" name="%1$s[schedules][%2$d][label]" value="%3$s" class="regular-text" /></td>',
+            esc_attr(ISS_SUPERSAAS_SETTINGS_OPTION),
+            (int) $index,
+            esc_attr((string) ($schedule['label'] ?? ''))
+        );
+        printf(
+            '<td><input type="text" name="%1$s[schedules][%2$d][schedule_id]" value="%3$s" class="regular-text" /></td>',
+            esc_attr(ISS_SUPERSAAS_SETTINGS_OPTION),
+            (int) $index,
+            esc_attr((string) ($schedule['schedule_id'] ?? ''))
+        );
+        printf(
+            '<td><input type="text" name="%1$s[schedules][%2$d][schedule_path]" value="%3$s" class="regular-text" placeholder="public" /></td>',
+            esc_attr(ISS_SUPERSAAS_SETTINGS_OPTION),
+            (int) $index,
+            esc_attr((string) ($schedule['schedule_path'] ?? ''))
+        );
+        $source = isset($schedule['source']) ? sanitize_key((string) $schedule['source']) : 'free';
+        echo '<td><select name="' . esc_attr(ISS_SUPERSAAS_SETTINGS_OPTION) . '[schedules][' . (int) $index . '][source]">';
+        foreach (['free' => 'Freie Slots', 'range' => 'Termine'] as $value => $label) {
+            echo '<option value="' . esc_attr($value) . '" ' . selected($source, $value, false) . '>' . esc_html($label) . '</option>';
+        }
+        echo '</select></td>';
+        echo '</tr>';
+    }
+    echo '</tbody></table>';
+    echo '<p class="description">Jeder aktive Schedule wird in die SuperSaaS-Staging-Tabelle gezogen. Der Key wird für eindeutige Slot-IDs verwendet.</p>';
 }
 
 function is_tours_register_public_slot_routes() {

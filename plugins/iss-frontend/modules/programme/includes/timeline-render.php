@@ -199,6 +199,39 @@ function iss_timeline_should_render_grouped_occurrences($row, $opts = []) {
     return iss_timeline_has_grouped_occurrences($row);
 }
 
+function iss_timeline_get_grouped_occurrence_display_mode($opts = []): string {
+    $opts = is_array($opts) ? $opts : [];
+    $mode = isset($opts['groupedOccurrenceDisplay']) ? sanitize_key((string) $opts['groupedOccurrenceDisplay']) : 'auto';
+    return in_array($mode, ['auto', 'picker', 'inline'], true) ? $mode : 'auto';
+}
+
+function iss_timeline_get_grouped_occurrence_picker_threshold($opts = []): int {
+    $opts = is_array($opts) ? $opts : [];
+    $threshold = isset($opts['groupedOccurrencePickerThreshold'])
+        ? (int) $opts['groupedOccurrencePickerThreshold']
+        : 2;
+
+    return max(2, $threshold);
+}
+
+function iss_timeline_should_render_grouped_occurrence_picker($occurrences, $opts = []): bool {
+    $opts = is_array($opts) ? $opts : [];
+    $occurrences = array_values(array_filter((array) $occurrences, 'is_array'));
+    if (count($occurrences) < 2 || !empty($opts['expandGroupedOccurrences'])) {
+        return false;
+    }
+
+    $mode = iss_timeline_get_grouped_occurrence_display_mode($opts);
+    if ($mode === 'inline') {
+        return false;
+    }
+    if ($mode === 'picker') {
+        return true;
+    }
+
+    return count($occurrences) >= iss_timeline_get_grouped_occurrence_picker_threshold($opts);
+}
+
 function iss_timeline_get_booking_action_attrs($row): array {
     if (!is_array($row)) {
         return [];
@@ -298,6 +331,10 @@ function iss_timeline_render_grouped_occurrences($row, $opts = []) {
         return '';
     }
 
+    if (iss_timeline_should_render_grouped_occurrence_picker($occurrences, $opts)) {
+        return iss_timeline_render_grouped_occurrence_picker($row, $occurrences, $opts);
+    }
+
     $summary_label = sprintf(
         /* translators: %d number of visible dates in grouped tour row */
         _n('Termine anzeigen (%d)', 'Termine anzeigen (%d)', count($occurrences), 'iss-timeline'),
@@ -340,6 +377,204 @@ function iss_timeline_render_grouped_occurrences($row, $opts = []) {
 
     $out .= '</ul>';
     $out .= !empty($opts['expandGroupedOccurrences']) ? '</div>' : '</details>';
+
+    return $out;
+}
+
+function iss_timeline_group_occurrences_by_month(array $occurrences): array {
+    $groups = [];
+
+    foreach ($occurrences as $occurrence) {
+        if (!is_array($occurrence)) {
+            continue;
+        }
+
+        $start_raw = trim((string) ($occurrence['start_raw'] ?? ''));
+        $month_key = preg_match('/^\d{4}-\d{2}/', $start_raw, $matches) ? $matches[0] : '';
+        if ($month_key === '') {
+            $month_key = 'undated';
+        }
+
+        if (!isset($groups[$month_key])) {
+            $groups[$month_key] = [
+                'label' => $month_key === 'undated'
+                    ? __('Ohne Monat', 'iss-timeline')
+                    : iss_timeline_format_month_label($month_key),
+                'items' => [],
+            ];
+        }
+
+        $groups[$month_key]['items'][] = $occurrence;
+    }
+
+    return $groups;
+}
+
+function iss_timeline_occurrence_is_sold_out(array $occurrence): bool {
+    $availability = isset($occurrence['availability_state'])
+        ? sanitize_key((string) $occurrence['availability_state'])
+        : sanitize_key((string) ($occurrence['availability'] ?? ''));
+    if (in_array($availability, ['sold_out', 'sold-out', 'full', 'unavailable'], true)) {
+        return true;
+    }
+
+    if (array_key_exists('available', $occurrence)
+        && $occurrence['available'] !== null
+        && (int) $occurrence['available'] <= 0
+        && array_key_exists('capacity', $occurrence)
+        && $occurrence['capacity'] !== null
+        && (int) $occurrence['capacity'] >= 0
+    ) {
+        return true;
+    }
+
+    return false;
+}
+
+function iss_timeline_get_occurrence_capacity_label(array $occurrence): string {
+    if (iss_timeline_occurrence_is_sold_out($occurrence)) {
+        return __('Ausgebucht', 'iss-timeline');
+    }
+
+    if (!array_key_exists('available', $occurrence) || $occurrence['available'] === null) {
+        return '';
+    }
+
+    $available = max(0, (int) $occurrence['available']);
+    if (array_key_exists('capacity', $occurrence) && $occurrence['capacity'] !== null && (int) $occurrence['capacity'] > 0) {
+        return sprintf(
+            /* translators: 1: available places, 2: total capacity */
+            __('%1$d von %2$d frei', 'iss-timeline'),
+            $available,
+            (int) $occurrence['capacity']
+        );
+    }
+
+    return sprintf(
+        /* translators: %d available places */
+        _n('%d Platz frei', '%d Plätze frei', $available, 'iss-timeline'),
+        $available
+    );
+}
+
+function iss_timeline_render_attr_list(array $attrs): string {
+    $out = '';
+    foreach ($attrs as $attr_name => $attr_value) {
+        $attr_name = trim((string) $attr_name);
+        if ($attr_name === '' || $attr_value === null || $attr_value === '') {
+            continue;
+        }
+        $out .= ' ' . esc_attr($attr_name) . '="' . esc_attr((string) $attr_value) . '"';
+    }
+
+    return $out;
+}
+
+function iss_timeline_render_grouped_occurrence_picker_slot(array $occurrence, array $opts = []): string {
+    $label = iss_timeline_get_occurrence_label($occurrence);
+    if ($label === '') {
+        return '';
+    }
+
+    $meta = iss_timeline_get_occurrence_capacity_label($occurrence);
+    $sold_out = iss_timeline_occurrence_is_sold_out($occurrence);
+    $ticket_action = $sold_out ? [] : iss_timeline_get_ticket_action_for_occurrence($occurrence, $opts);
+    $inner = '<span class="iss-timeline-slot-picker__slot-date">' . esc_html($label) . '</span>';
+    if ($meta !== '') {
+        $inner .= '<span class="iss-timeline-slot-picker__slot-meta">' . esc_html($meta) . '</span>';
+    }
+
+    if (empty($ticket_action) || empty($ticket_action['url'])) {
+        $classes = ['iss-timeline-slot-picker__slot', 'iss-timeline-slot-picker__slot--disabled'];
+        if ($sold_out) {
+            $classes[] = 'is-sold-out';
+        }
+
+        return '<span class="' . esc_attr(implode(' ', $classes)) . '" aria-disabled="true">' . $inner . '</span>';
+    }
+
+    $classes = ['iss-timeline__btn', 'iss-timeline__btn--secondary', 'iss-timeline-slot-picker__slot'];
+    if (!empty($ticket_action['classes']) && is_array($ticket_action['classes'])) {
+        foreach ($ticket_action['classes'] as $class_name) {
+            $class_name = trim((string) $class_name);
+            if ($class_name !== '') {
+                $classes[] = $class_name;
+            }
+        }
+    }
+
+    $attrs = !empty($ticket_action['attrs']) && is_array($ticket_action['attrs'])
+        ? $ticket_action['attrs']
+        : [];
+
+    return '<a class="' . esc_attr(implode(' ', array_values(array_unique($classes)))) . '" href="'
+        . esc_url((string) $ticket_action['url']) . '"' . iss_timeline_render_attr_list($attrs) . '>'
+        . $inner . '</a>';
+}
+
+function iss_timeline_render_grouped_occurrence_picker($row, array $occurrences, array $opts = []): string {
+    $row = is_array($row) ? $row : [];
+    $occurrences = array_values(array_filter($occurrences, 'is_array'));
+    if (count($occurrences) < 2) {
+        return '';
+    }
+
+    $picker_id = wp_unique_id('iss-timeline-slot-picker-');
+    $title_id = $picker_id . '-title';
+    $count = count($occurrences);
+    $title = trim((string) ($row['title'] ?? ''));
+    if ($title === '') {
+        $title = __('Termine', 'iss-timeline');
+    }
+
+    $trigger_label = __('Termin wählen', 'iss-timeline');
+    $trigger_aria = sprintf(
+        /* translators: 1: timeline item title, 2: number of available dates */
+        __('Termin wählen: %1$s, %2$d Termine', 'iss-timeline'),
+        $title,
+        $count
+    );
+    $count_label = sprintf(
+        /* translators: %d number of grouped dates */
+        _n('%d Termin', '%d Termine', $count, 'iss-timeline'),
+        $count
+    );
+
+    $out = '<div class="iss-timeline-slot-picker-wrap">';
+    $out .= '<button type="button" class="iss-timeline__btn iss-timeline__btn--secondary iss-timeline-slot-picker__trigger"'
+        . ' data-timeline-picker-trigger aria-haspopup="dialog" aria-controls="' . esc_attr($picker_id) . '" aria-expanded="false"'
+        . ' aria-label="' . esc_attr($trigger_aria) . '">'
+        . esc_html($trigger_label) . '</button>';
+    $out .= '<div id="' . esc_attr($picker_id) . '" class="iss-timeline-slot-picker" data-timeline-picker hidden'
+        . ' role="dialog" aria-modal="true" aria-labelledby="' . esc_attr($title_id) . '">';
+    $out .= '<button type="button" class="iss-timeline-slot-picker__backdrop" data-timeline-picker-close aria-label="'
+        . esc_attr__('Schließen', 'iss-timeline') . '"></button>';
+    $out .= '<div class="iss-timeline-slot-picker__panel">';
+    $out .= '<div class="iss-timeline-slot-picker__header">';
+    $out .= '<div class="iss-timeline-slot-picker__heading">';
+    $out .= '<p class="iss-timeline-slot-picker__count">' . esc_html($count_label) . '</p>';
+    $out .= '<h3 id="' . esc_attr($title_id) . '" class="iss-timeline-slot-picker__title">' . esc_html($title) . '</h3>';
+    $out .= '</div>';
+    $out .= '<button type="button" class="iss-timeline-slot-picker__close" data-timeline-picker-close aria-label="'
+        . esc_attr__('Schließen', 'iss-timeline') . '">×</button>';
+    $out .= '</div>';
+    $out .= '<div class="iss-timeline-slot-picker__body">';
+
+    foreach (iss_timeline_group_occurrences_by_month($occurrences) as $month) {
+        if (empty($month['items']) || !is_array($month['items'])) {
+            continue;
+        }
+
+        $out .= '<section class="iss-timeline-slot-picker__month">';
+        $out .= '<h4 class="iss-timeline-slot-picker__month-title">' . esc_html((string) ($month['label'] ?? '')) . '</h4>';
+        $out .= '<div class="iss-timeline-slot-picker__slots">';
+        foreach ($month['items'] as $occurrence) {
+            $out .= iss_timeline_render_grouped_occurrence_picker_slot($occurrence, $opts);
+        }
+        $out .= '</div></section>';
+    }
+
+    $out .= '</div></div></div></div>';
 
     return $out;
 }
@@ -395,6 +630,8 @@ function iss_timeline_build_render_options($attributes = []) {
         'groupRecurringTours' => !empty($attributes['groupRecurringTours']) && (bool) $attributes['groupRecurringTours'],
         'groupRecurringToursByMonth' => !empty($attributes['groupRecurringToursByMonth']) && (bool) $attributes['groupRecurringToursByMonth'],
         'expandGroupedOccurrences' => !empty($attributes['expandGroupedOccurrences']) && (bool) $attributes['expandGroupedOccurrences'],
+        'groupedOccurrenceDisplay' => isset($attributes['groupedOccurrenceDisplay']) ? (string) $attributes['groupedOccurrenceDisplay'] : 'auto',
+        'groupedOccurrencePickerThreshold' => isset($attributes['groupedOccurrencePickerThreshold']) ? (int) $attributes['groupedOccurrencePickerThreshold'] : 2,
         'showRecurringNote' => !array_key_exists('showRecurringNote', $attributes) || (bool) $attributes['showRecurringNote'],
         'showNextOccurrenceLabel' => !empty($attributes['showNextOccurrenceLabel']) && (bool) $attributes['showNextOccurrenceLabel'],
         'detailsButtonText' => isset($attributes['detailsButtonText']) ? (string) $attributes['detailsButtonText'] : '',
@@ -1441,6 +1678,8 @@ function iss_timeline_build_query_block_config($attributes = []) {
             'groupRecurringTours' => !empty($attributes['groupRecurringTours']),
             'groupRecurringToursByMonth' => !empty($attributes['groupRecurringToursByMonth']),
             'expandGroupedOccurrences' => !empty($attributes['expandGroupedOccurrences']),
+            'groupedOccurrenceDisplay' => isset($attributes['groupedOccurrenceDisplay']) ? (string) $attributes['groupedOccurrenceDisplay'] : 'auto',
+            'groupedOccurrencePickerThreshold' => isset($attributes['groupedOccurrencePickerThreshold']) ? (int) $attributes['groupedOccurrencePickerThreshold'] : 2,
             'showRecurringNote' => !array_key_exists('showRecurringNote', $attributes) || (bool) $attributes['showRecurringNote'],
             'showNextOccurrenceLabel' => !empty($attributes['showNextOccurrenceLabel']),
             'showMeta' => !array_key_exists('showMeta', $attributes) || (bool) $attributes['showMeta'],
@@ -1692,12 +1931,18 @@ function iss_timeline_render_query_block($attributes = [], $content = '', $block
 }
 
 function iss_timeline_format_month_label($ym) {
-    if (!function_exists('iss_timeline_month_to_range')) return $ym;
-    $r = iss_timeline_month_to_range($ym);
-    if (!is_array($r)) return $ym;
+    $ym = preg_replace('/[^0-9\-]/', '', (string) $ym);
+    if (!preg_match('/^\d{4}-\d{2}$/', $ym)) {
+        return $ym;
+    }
+
     try {
-        $dt = new DateTimeImmutable($r['start'], wp_timezone());
-        return iss_programm_format_month_year_de($dt->getTimestamp(), wp_timezone());
+        $dt = new DateTimeImmutable($ym . '-01 00:00:00', wp_timezone());
+        if (function_exists('iss_programm_format_month_year_de')) {
+            return iss_programm_format_month_year_de($dt->getTimestamp(), wp_timezone());
+        }
+
+        return wp_date('F Y', $dt->getTimestamp(), wp_timezone());
     } catch (Throwable $e) {
         return $ym;
     }

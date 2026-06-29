@@ -485,6 +485,31 @@
                       },
                     })
                   : null,
+                SelectControl
+                  ? el(SelectControl, {
+                      label: 'Gebündelte Termine',
+                      value: attrs.groupedOccurrenceDisplay || 'auto',
+                      options: [
+                        { label: 'Picker ab Schwelle', value: 'auto' },
+                        { label: 'Immer Picker', value: 'picker' },
+                        { label: 'Inline', value: 'inline' },
+                      ],
+                      onChange: function (value) {
+                        setAttributes({ groupedOccurrenceDisplay: value || 'auto' });
+                      },
+                    })
+                  : null,
+                RangeControl
+                  ? el(RangeControl, {
+                      label: 'Picker-Schwelle',
+                      value: attrs.groupedOccurrencePickerThreshold || 2,
+                      min: 2,
+                      max: 20,
+                      onChange: function (value) {
+                        setAttributes({ groupedOccurrencePickerThreshold: value || 2 });
+                      },
+                    })
+                  : null,
                 ToggleControl
                   ? el(ToggleControl, {
                       label: 'Wiederholungshinweis anzeigen',

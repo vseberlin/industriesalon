@@ -156,6 +156,86 @@
   outline: none;
 }
 
+.iss-timeline-slot-picker__backdrop {
+  background: rgba(0, 0, 0, 0.42);
+}
+
+.iss-timeline-slot-picker__panel {
+  border: 1px solid var(--iss-tl-line);
+  border-left: 4px solid var(--iss-tl-primary);
+  background: var(--iss-tl-surface);
+  color: var(--iss-tl-text);
+  box-shadow: 0 1.5rem 4rem rgba(0, 0, 0, 0.24);
+}
+
+.iss-timeline-slot-picker__header {
+  border-bottom: 1px solid var(--iss-tl-line);
+}
+
+.iss-timeline-slot-picker__count {
+  color: var(--iss-tl-primary);
+  font-size: 0.82rem;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.iss-timeline-slot-picker__title {
+  font-size: clamp(1.35rem, 2vw, 1.8rem);
+  line-height: 1.15;
+}
+
+.iss-timeline-slot-picker__close {
+  border: 1px solid var(--iss-tl-border);
+  background: transparent;
+  color: var(--iss-tl-text);
+  font-size: 1.45rem;
+  transition:
+    background-color var(--iss-transition, 0.2s ease),
+    color var(--iss-transition, 0.2s ease),
+    border-color var(--iss-transition, 0.2s ease);
+}
+
+.iss-timeline-slot-picker__close:hover,
+.iss-timeline-slot-picker__close:focus-visible {
+  border-color: var(--iss-tl-primary);
+  background: var(--iss-tl-hover-bg);
+  color: var(--iss-tl-btn-hover-fg);
+  outline: none;
+}
+
+.iss-timeline-slot-picker__month-title {
+  color: var(--iss-tl-muted);
+  font-size: 0.95rem;
+  font-weight: 800;
+}
+
+.iss-timeline-slot-picker__slot {
+  border-left-width: 3px;
+}
+
+.iss-timeline-slot-picker__slot-date {
+  font-weight: 700;
+}
+
+.iss-timeline-slot-picker__slot-meta {
+  color: var(--iss-tl-muted);
+  font-size: 0.92rem;
+  font-weight: 600;
+}
+
+.iss-timeline-slot-picker__slot--disabled {
+  border: 1px solid var(--iss-tl-border);
+  border-left: 3px solid var(--iss-tl-line);
+  background: rgba(30, 30, 30, 0.04);
+  color: rgba(30, 30, 30, 0.48);
+  cursor: not-allowed;
+}
+
+.iss-timeline-slot-picker__slot--disabled .iss-timeline-slot-picker__slot-meta {
+  color: rgba(30, 30, 30, 0.48);
+}
+
 .iss-timeline__empty,
 .iss-timeline-query__meta,
 .iss-timeline__filter-label,

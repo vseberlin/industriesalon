@@ -121,6 +121,8 @@ if (defined('WP_CLI') && WP_CLI) {
 
             $table = $service->get_occurrences_table_name();
             $series_table = $service->get_series_table_name();
+            $slots_table = method_exists($service, 'get_supersaas_slots_table_name') ? $service->get_supersaas_slots_table_name() : '';
+            $slots_table_exists = method_exists($service, 'supersaas_slots_table_exists') && $service->supersaas_slots_table_exists();
             $limit = isset($assoc_args['limit']) ? max(1, (int) $assoc_args['limit']) : 20;
             $now = current_time('mysql');
             $last_sync_option = defined('ISS_SUPERSAAS_LAST_SYNC_OPTION') ? ISS_SUPERSAAS_LAST_SYNC_OPTION : 'iss_supersaas_last_sync_at';
@@ -245,13 +247,90 @@ if (defined('WP_CLI') && WP_CLI) {
                     WHERE s.origin = %s
                       AND s.source_post_id > 0
                       AND (
-                          p.ID IS NULL
-                          OR p.post_type <> %s
-                          OR (s.source_post_type <> '' AND s.source_post_type <> %s)
+                          (
+                              s.series_key LIKE %s
+                              AND (
+                                  p.ID IS NULL
+                                  OR p.post_type <> %s
+                                  OR (s.source_post_type <> '' AND s.source_post_type <> %s)
+                              )
+                          )
+                          OR (
+                              s.series_key NOT LIKE %s
+                              AND (
+                                  p.ID IS NULL
+                                  OR p.post_type <> %s
+                                  OR (s.source_post_type <> '' AND s.source_post_type <> %s)
+                              )
+                          )
                       )",
                     'supersaas',
+                    'event:%',
+                    'veranstaltung',
+                    'veranstaltung',
+                    'event:%',
                     'fuehrung',
                     'fuehrung'
+                )
+            );
+
+            $event_series_total = 0;
+            $mapped_event_series = 0;
+            $ignored_event_slots = 0;
+            if ($slots_table_exists && $slots_table !== '') {
+                $event_series_total = (int) $wpdb->get_var(
+                    $wpdb->prepare(
+                        "SELECT COUNT(DISTINCT series_key)
+                        FROM {$slots_table}
+                        WHERE schedule_key = %s
+                          AND series_key LIKE %s",
+                        'salonbelegung',
+                        'event:%'
+                    )
+                );
+                $ignored_event_slots = (int) $wpdb->get_var(
+                    $wpdb->prepare(
+                        "SELECT COUNT(*)
+                        FROM {$slots_table}
+                        WHERE schedule_key = %s
+                          AND series_key LIKE %s
+                          AND match_state = %s",
+                        'salonbelegung',
+                        'event:%',
+                        'ignored'
+                    )
+                );
+            }
+            $mapped_event_series = (int) $wpdb->get_var(
+                $wpdb->prepare(
+                    "SELECT COUNT(*)
+                    FROM {$series_table} s
+                    INNER JOIN {$wpdb->posts} p ON p.ID = s.source_post_id
+                    WHERE s.origin = %s
+                      AND s.series_key LIKE %s
+                      AND s.source_post_id > 0
+                      AND p.post_type = %s",
+                    'supersaas',
+                    'event:%',
+                    'veranstaltung'
+                )
+            );
+            $active_future_event_occurrences = (int) $wpdb->get_var(
+                $wpdb->prepare(
+                    "SELECT COUNT(*)
+                    FROM {$table}
+                    WHERE origin = %s
+                      AND visibility = %s
+                      AND status = %s
+                      AND source_post_type = %s
+                      AND kind = %s
+                      AND starts_at >= %s",
+                    'supersaas',
+                    'public',
+                    'active',
+                    'veranstaltung',
+                    'event',
+                    $now
                 )
             );
 
@@ -277,10 +356,12 @@ if (defined('WP_CLI') && WP_CLI) {
                         "SELECT series_key, supersaas_title, source_post_id, source_post_type
                         FROM {$series_table}
                         WHERE origin = %s
+                          AND series_key LIKE %s
                           AND source_post_id > 0
                           AND supersaas_title <> ''
                         ORDER BY updated_at DESC, id DESC",
-                        'supersaas'
+                        'supersaas',
+                        'tour:%'
                     ),
                     ARRAY_A
                 );
@@ -314,10 +395,14 @@ if (defined('WP_CLI') && WP_CLI) {
                 'wrong_source_series' => $wrong_source_series,
                 'title_conflict_series' => $title_conflict_series,
                 'future_inactive_rows' => $future_inactive,
+                'event_series' => $event_series_total,
+                'mapped_event_series' => $mapped_event_series,
+                'future_event_rows' => $active_future_event_occurrences,
+                'ignored_event_slots' => $ignored_event_slots,
                 'last_sync' => $last_sync !== '' ? $last_sync : '-',
             ]];
 
-            \WP_CLI::log('SuperSaaS timeline audit reads the local occurrence projection; the importer currently uses the SuperSaaS free-slot endpoint.');
+            \WP_CLI::log('SuperSaaS timeline audit reads the local occurrence projection; the importer can stage SuperSaaS free-slot and range/booking feeds.');
             \WP_CLI\Utils\format_items('table', $summary, [
                 'published_fuehrungen',
                 'mapped_fuehrungen',
@@ -329,6 +414,10 @@ if (defined('WP_CLI') && WP_CLI) {
                 'wrong_source_series',
                 'title_conflict_series',
                 'future_inactive_rows',
+                'event_series',
+                'mapped_event_series',
+                'future_event_rows',
+                'ignored_event_slots',
                 'last_sync',
             ]);
 
@@ -363,13 +452,30 @@ if (defined('WP_CLI') && WP_CLI) {
                     WHERE s.origin = %s
                       AND s.source_post_id > 0
                       AND (
-                          p.ID IS NULL
-                          OR p.post_type <> %s
-                          OR (s.source_post_type <> '' AND s.source_post_type <> %s)
+                          (
+                              s.series_key LIKE %s
+                              AND (
+                                  p.ID IS NULL
+                                  OR p.post_type <> %s
+                                  OR (s.source_post_type <> '' AND s.source_post_type <> %s)
+                              )
+                          )
+                          OR (
+                              s.series_key NOT LIKE %s
+                              AND (
+                                  p.ID IS NULL
+                                  OR p.post_type <> %s
+                                  OR (s.source_post_type <> '' AND s.source_post_type <> %s)
+                              )
+                          )
                       )
                     ORDER BY s.updated_at DESC, s.id DESC
                     LIMIT %d",
                     'supersaas',
+                    'event:%',
+                    'veranstaltung',
+                    'veranstaltung',
+                    'event:%',
                     'fuehrung',
                     'fuehrung',
                     $limit
@@ -377,7 +483,7 @@ if (defined('WP_CLI') && WP_CLI) {
                 ARRAY_A
             );
             if (is_array($wrong_source_examples) && $wrong_source_examples !== []) {
-                \WP_CLI::warning('SuperSaaS series linked to non-Führung sources remain.');
+                \WP_CLI::warning('SuperSaaS series linked to invalid source types remain.');
                 \WP_CLI\Utils\format_items('table', $wrong_source_examples, ['series_key', 'supersaas_title', 'source_post_id', 'source_post_type', 'actual_post_type', 'post_status']);
             }
 
