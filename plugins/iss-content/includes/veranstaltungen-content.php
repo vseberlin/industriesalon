@@ -48,17 +48,17 @@ function iss_content_model_veranstaltung_content_gestures(): array
         'programm' => [
             'label' => __('Programm', 'iss-content-model'),
             'description' => __('Lineare Programmpunkte fuer Feste und Reihen.', 'iss-content-model'),
-            'supports' => ['kicker', 'title', 'body', 'items'],
+            'supports' => ['kicker', 'title', 'body'],
         ],
         'material' => [
             'label' => __('Material', 'iss-content-model'),
-            'description' => __('Hinweise auf Quellen, Downloads, Links oder Begleitangebote.', 'iss-content-model'),
-            'supports' => ['kicker', 'title', 'body', 'items', 'object_refs', 'dynamic_refs'],
+            'description' => __('Beschreibung und herunterladbare Dateien zum Material.', 'iss-content-model'),
+            'supports' => ['kicker', 'title', 'body', 'media_refs'],
         ],
         'upload_intake' => [
             'label' => __('Upload-Aufruf', 'iss-content-model'),
             'description' => __('Oeffentlicher Aufruf zum Hochladen von Material in den moderierten Intake.', 'iss-content-model'),
-            'supports' => ['kicker', 'title', 'body', 'items'],
+            'supports' => ['kicker', 'title', 'body'],
         ],
         'galerie' => [
             'label' => __('Galerie', 'iss-content-model'),
@@ -68,7 +68,7 @@ function iss_content_model_veranstaltung_content_gestures(): array
         'schluss' => [
             'label' => __('Schluss', 'iss-content-model'),
             'description' => __('Abschluss, Einladung oder naechster Schritt.', 'iss-content-model'),
-            'supports' => ['kicker', 'title', 'body', 'items'],
+            'supports' => ['kicker', 'title', 'body'],
         ],
     ];
 }
@@ -121,6 +121,60 @@ function iss_content_model_sanitize_veranstaltung_content_items($items): array
     }
 
     return $sanitized;
+}
+
+function iss_content_model_veranstaltung_body_href_is_safe(string $href): bool
+{
+    $href = trim($href);
+    if ($href === '') {
+        return false;
+    }
+
+    if (preg_match('/^(#|\/|\?|\.\.?\/)/', $href) === 1) {
+        return true;
+    }
+
+    if (preg_match('/^[a-z][a-z0-9+.-]*:/i', $href) === 1) {
+        return preg_match('/^(https?:|mailto:|tel:)/i', $href) === 1;
+    }
+
+    return true;
+}
+
+function iss_content_model_strip_unsafe_veranstaltung_body_hrefs(string $body): string
+{
+    return (string) preg_replace_callback(
+        '/<a\b([^>]*)\bhref=(["\'])(.*?)\2([^>]*)>/i',
+        static function (array $matches): string {
+            $href = html_entity_decode((string) $matches[3], ENT_QUOTES | ENT_HTML5, get_bloginfo('charset') ?: 'UTF-8');
+            if (iss_content_model_veranstaltung_body_href_is_safe($href)) {
+                return $matches[0];
+            }
+
+            return '<a' . $matches[1] . $matches[4] . '>';
+        },
+        $body
+    );
+}
+
+function iss_content_model_sanitize_veranstaltung_body_html(string $body): string
+{
+    $allowed_html = [
+        'p' => [],
+        'br' => [],
+        'strong' => [],
+        'em' => [],
+        'ul' => [],
+        'ol' => [],
+        'li' => [],
+        'a' => [
+            'href' => true,
+        ],
+    ];
+
+    $body = iss_content_model_strip_unsafe_veranstaltung_body_hrefs($body);
+
+    return trim(wp_kses($body, $allowed_html));
 }
 
 function iss_content_model_sanitize_veranstaltung_content_reference($reference): array
@@ -289,6 +343,9 @@ function iss_content_model_sanitize_veranstaltung_content_json($value): string
             'type' => $type,
         ];
 
+        $gesture = $allowed_lookup[$type] ? iss_content_model_veranstaltung_content_gestures()[$type] ?? [] : [];
+        $supports = (array) ($gesture['supports'] ?? []);
+
         foreach (['kicker', 'title', 'attribution'] as $field) {
             $value = trim(sanitize_text_field((string) ($section[$field] ?? '')));
             if ($value !== '') {
@@ -296,20 +353,23 @@ function iss_content_model_sanitize_veranstaltung_content_json($value): string
             }
         }
 
-        foreach (['body', 'quote'] as $field) {
-            $value = trim(sanitize_textarea_field((string) ($section[$field] ?? '')));
-            if ($value !== '') {
-                $normalized_section[$field] = $value;
+        $body = iss_content_model_sanitize_veranstaltung_body_html((string) ($section['body'] ?? ''));
+        if ($body !== '') {
+            $normalized_section['body'] = $body;
+        }
+
+        $quote = trim(sanitize_textarea_field((string) ($section['quote'] ?? '')));
+        if ($quote !== '') {
+            $normalized_section['quote'] = $quote;
+        }
+
+        if (in_array('items', $supports, true)) {
+            $items = iss_content_model_sanitize_veranstaltung_content_items($section['items'] ?? []);
+            if ($items) {
+                $normalized_section['items'] = $items;
             }
         }
 
-        $items = iss_content_model_sanitize_veranstaltung_content_items($section['items'] ?? []);
-        if ($items) {
-            $normalized_section['items'] = $items;
-        }
-
-        $gesture = $allowed_lookup[$type] ? iss_content_model_veranstaltung_content_gestures()[$type] ?? [] : [];
-        $supports = (array) ($gesture['supports'] ?? []);
         if (in_array('media_refs', $supports, true)) {
             $media_refs = iss_content_model_sanitize_veranstaltung_content_reference_list($section['media_refs'] ?? []);
             if ($media_refs) {

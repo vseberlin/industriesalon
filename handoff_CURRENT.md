@@ -1,17 +1,15 @@
 # Current Handoff
 
-Updated: 2026-06-28
+Updated: 2026-06-29
 
 Current checkpoint only. Completed history belongs in `CHANGELOG.md`; active follow-up belongs in `TODO.md`.
 
 ## Current Work
 
-- Local working checkpoint implements unified lightweight booking/order intake through `iss-commerce-lite`.
-- `POST /wp-json/iss-payments/v1/request` is the canonical public request route for `tour_booking`, `event_booking`, and `publication_order`; the old tour and publication routes remain compatibility wrappers.
-- Veranstaltung editor now has booking controls in the native WordPress right rail: enable booking, Euro price, CTA label, and booking hint. Mollie remains a disabled/stub option until a provider integration registers support.
-- Timeline/programme booking modals post to the generic commerce request endpoint and can render Veranstaltung price/payment data.
-- JSON composition UX was consolidated: editors see `Abschnitt`/`Vorspann`, shared `iss-editorial` cards expose `Löschen`, and Veranstaltung composition uses compact cards plus edit modals instead of always-open forms.
-- Veranstaltung composition includes the health strip directly; the separate `Redaktionsstatus` metabox is no longer registered. The strip now calls out Beitragsbild and Kurzbeschreibung explicitly.
+- Veranstaltung and shared editorial JSON body fields use the local lightweight rich-text helper with paragraph, bold, italic, link, unordered-list, and ordered-list controls. Links are visible and removable; body sanitization permits only the matching narrow HTML contract.
+- Veranstaltung media picker feedback updates live inside the edit modal after select/remove/hydration.
+- Veranstaltung `material` now means description plus downloadable media files. The editor exposes media refs, not list/archive/dynamic refs; non-image material attachments render publicly as `Herunterladen` download cards.
+- Veranstaltung `programm`, `upload_intake`, and `schluss` no longer expose the obsolete `Punkte, je Zeile ein Eintrag` item field; rich-text lists cover that workflow. Legacy saved item output remains renderable until edited/saved.
 
 ## Preserve
 
@@ -19,6 +17,7 @@ Current checkpoint only. Completed history belongs in `CHANGELOG.md`; active fol
 - Do not add another booking/order storage layer. `iss-commerce-lite` owns request storage, admin review/export/status, public write guards, and notifications.
 - Do not change public Veranstaltung booking visibility silently: `TODO.md` records that single Veranstaltung output still needs a public booking section/block.
 - Keep public rendering theme-owned; plugins own data/contracts and request writes.
+- Keep the editor helper local unless a future pass proves a full external editor dependency is worth the maintenance cost.
 - Leave unrelated local untracked files out of Git unless explicitly requested:
   - `iss-exhibition-composition-add.md`
   - `themes/industriesalon/theme2.json`
@@ -31,12 +30,13 @@ Current checkpoint only. Completed history belongs in `CHANGELOG.md`; active fol
 ## Verified Locally
 
 - PHP syntax checks on touched PHP files.
-- Targeted PHPCS and PHPStan on touched PHP files.
-- `node --check` and targeted ESLint on touched JS files.
+- Targeted ESLint on touched JS files.
 - Targeted Stylelint on touched CSS files.
 - `git diff --check`.
-- WP-CLI route smoke: generic commerce request route and legacy compatibility routes are registered.
+- Browser-loaded Veranstaltung admin config confirmed updated gesture supports.
+- Playwright checks confirmed rich editor/link/media picker behavior during the admin UX pass.
+- PHP render smoke confirmed a real PDF material attachment renders as a `Herunterladen` file card.
 
 ## Commit State
 
-- Local commit requested. No push requested.
+- Commit and push requested for the current editor/material UX checkpoint.

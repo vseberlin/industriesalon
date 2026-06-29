@@ -4,6 +4,26 @@ This file records durable project changes. Keep it compact: current state belong
 `handoff_CURRENT.md`, active follow-up in `TODO.md`, and detailed investigation can
 be recovered from Git history.
 
+## 2026-06-29
+
+- Refined the JSON editorial rich-text authoring controls for Veranstaltung and
+  shared editorial composition: body fields now use a local contenteditable
+  helper with paragraph, bold, italic, link, unordered-list, and ordered-list
+  controls, links are visible and removable, and Veranstaltung body sanitization
+  permits only the matching narrow HTML contract. The editor keeps the existing
+  lightweight local implementation rather than adopting Trix, but uses a calmer
+  toolbar/editor skin consistent with the admin cleanup direction.
+- Tightened Veranstaltung material/download authoring. The `material` gesture
+  now offers description plus media references only, material media selection is
+  no longer image-only, non-image material attachments render as theme-owned
+  `Herunterladen` download cards, and obsolete item/object/dynamic controls are
+  removed from the material payload. `programm`, `upload_intake`, and `schluss`
+  also dropped the obsolete "Punkte" item field now that rich-text lists are
+  available. Legacy saved item output remains renderable until edited/saved.
+- Fixed Veranstaltung composition media picker feedback so selecting or removing
+  media updates the modal tray and card preview immediately without requiring a
+  save/reopen cycle.
+
 ## 2026-06-28
 
 - Unified lightweight booking/order intake around `iss-commerce-lite`:

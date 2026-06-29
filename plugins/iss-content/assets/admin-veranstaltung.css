@@ -595,6 +595,109 @@ body.post-type-veranstaltung #major-publishing-actions {
   gap: 8px;
 }
 
+.iss-veranstaltung-content-editor__field-row--rich-text {
+  display: grid;
+  gap: 8px;
+}
+
+.iss-veranstaltung-content-editor__rich-toolbar {
+  display: inline-flex;
+  flex-wrap: wrap;
+  gap: 0;
+  align-items: stretch;
+  justify-self: start;
+  overflow: hidden;
+  border: 1px solid #b8bcc2;
+  border-bottom-color: #8c8f94;
+  border-radius: 3px;
+  background: #fff;
+}
+
+.wp-core-ui .button.iss-veranstaltung-content-editor__rich-button {
+  min-width: 2.4rem;
+  min-height: 1.9rem;
+  margin: 0;
+  padding: 0 0.55rem;
+  border: 0;
+  border-right: 1px solid #c3c4c7;
+  border-radius: 0;
+  background: transparent;
+  box-shadow: none;
+  color: #3c434a;
+  font-size: 12px;
+  font-weight: 600;
+  line-height: 1.9rem;
+}
+
+.wp-core-ui .button.iss-veranstaltung-content-editor__rich-button:last-child {
+  border-right: 0;
+}
+
+.wp-core-ui .button.iss-veranstaltung-content-editor__rich-button:hover,
+.wp-core-ui .button.iss-veranstaltung-content-editor__rich-button:focus {
+  background: #f0f6fc;
+  color: #1d2327;
+  box-shadow: none;
+}
+
+.wp-core-ui .button.iss-veranstaltung-content-editor__rich-button--icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding-right: 0;
+  padding-left: 0;
+}
+
+.wp-core-ui .button.iss-veranstaltung-content-editor__rich-button--icon .dashicons {
+  width: 1.25rem;
+  height: 1.25rem;
+  font-size: 1.25rem;
+  line-height: 1.25rem;
+}
+
+.iss-veranstaltung-content-editor__rich-editor {
+  min-height: 9rem;
+  max-height: min(42vh, 24rem);
+  overflow: auto;
+  padding: 0.75rem 0.85rem;
+  border: 1px solid #b8bcc2;
+  border-radius: 3px;
+  background: #fff;
+  color: #1d2327;
+  line-height: 1.6;
+}
+
+.iss-veranstaltung-content-editor__rich-editor:focus {
+  border-color: #2271b1;
+  box-shadow: 0 0 0 1px #2271b1;
+  outline: 2px solid transparent;
+}
+
+.iss-veranstaltung-content-editor__rich-editor:empty::before {
+  color: #8c8f94;
+  content: attr(data-placeholder);
+  pointer-events: none;
+}
+
+.iss-veranstaltung-content-editor__rich-editor :where(p, ul, ol) {
+  margin: 0 0 0.85rem;
+}
+
+.iss-veranstaltung-content-editor__rich-editor :where(p, ul, ol):last-child {
+  margin-bottom: 0;
+}
+
+.iss-veranstaltung-content-editor__rich-editor :where(ul, ol) {
+  padding-left: 1.35rem;
+}
+
+.iss-veranstaltung-content-editor__rich-editor a {
+  color: #135e96;
+  text-decoration: underline;
+  text-decoration-thickness: 1.5px;
+  text-underline-offset: 0.16em;
+}
+
 .iss-veranstaltung-content-editor__archive-picker {
   min-width: 0;
 }

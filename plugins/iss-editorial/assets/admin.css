@@ -335,29 +335,71 @@
 
 .iss-editorial-field--rich-text {
   display: grid;
-  gap: 7px;
+  gap: 8px;
 }
 
 .iss-editorial-rich-toolbar {
-  display: flex;
+  display: inline-flex;
   flex-wrap: wrap;
-  gap: 5px;
+  gap: 0;
+  align-items: stretch;
+  justify-self: start;
+  overflow: hidden;
+  border: 1px solid #b8bcc2;
+  border-bottom-color: #8c8f94;
+  border-radius: 3px;
+  background: #fff;
 }
 
 .wp-core-ui .button.iss-editorial-rich-toolbar__button {
-  min-width: 2.25rem;
-  padding-right: 0.55rem;
-  padding-left: 0.55rem;
+  min-width: 2.4rem;
+  min-height: 1.9rem;
+  margin: 0;
+  padding: 0 0.55rem;
+  border: 0;
+  border-right: 1px solid #c3c4c7;
+  border-radius: 0;
+  background: transparent;
+  box-shadow: none;
+  color: #3c434a;
+  font-size: 12px;
   font-weight: 600;
+  line-height: 1.9rem;
+}
+
+.wp-core-ui .button.iss-editorial-rich-toolbar__button:last-child {
+  border-right: 0;
+}
+
+.wp-core-ui .button.iss-editorial-rich-toolbar__button:hover,
+.wp-core-ui .button.iss-editorial-rich-toolbar__button:focus {
+  background: #f0f6fc;
+  color: #1d2327;
+  box-shadow: none;
+}
+
+.wp-core-ui .button.iss-editorial-rich-toolbar__button--icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding-right: 0;
+  padding-left: 0;
+}
+
+.wp-core-ui .button.iss-editorial-rich-toolbar__button--icon .dashicons {
+  width: 1.25rem;
+  height: 1.25rem;
+  font-size: 1.25rem;
+  line-height: 1.25rem;
 }
 
 .iss-editorial-rich-editor {
-  min-height: 12rem;
+  min-height: 10rem;
   max-height: min(42vh, 26rem);
   overflow: auto;
-  padding: 12px 14px;
-  border: 1px solid #8c8f94;
-  border-radius: 4px;
+  padding: 0.75rem 0.85rem;
+  border: 1px solid #b8bcc2;
+  border-radius: 3px;
   background: #fff;
   color: #1d2327;
   line-height: 1.6;
@@ -385,6 +427,13 @@
 
 .iss-editorial-rich-editor :where(ul, ol) {
   padding-left: 1.35rem;
+}
+
+.iss-editorial-rich-editor a {
+  color: #135e96;
+  text-decoration: underline;
+  text-decoration-thickness: 1.5px;
+  text-underline-offset: 0.16em;
 }
 
 .iss-editorial-segmented {

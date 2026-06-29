@@ -128,6 +128,24 @@
     return (element.textContent || '').replace(/\s+/g, ' ').trim();
   }
 
+  function currentRichTextLink(editor) {
+    var selection = window.getSelection ? window.getSelection() : null;
+    var node;
+    if (!selection || selection.rangeCount < 1) {
+      return null;
+    }
+
+    node = selection.anchorNode;
+    if (node && node.nodeType === Node.TEXT_NODE) {
+      node = node.parentElement;
+    }
+    if (!node || !editor.contains(node)) {
+      return null;
+    }
+
+    return node.closest ? node.closest('a') : null;
+  }
+
     function sectionTone(type) {
       var tones = {
         leitfrage: '#7f77dd',
@@ -1999,13 +2017,14 @@
       var wrapper = createElement('div', 'iss-editorial-field iss-editorial-field--rich-text');
       var toolbar = createElement('div', 'iss-editorial-rich-toolbar');
       var editor = createElement('div', 'iss-editorial-rich-editor');
+      var activeLink = null;
       var commands = [
         { label: 'P', command: 'formatBlock', value: 'p' },
         { label: 'B', command: 'bold' },
         { label: 'I', command: 'italic' },
         { label: 'Link', command: 'createLink' },
-        { label: 'Liste', command: 'insertUnorderedList' },
-        { label: '1.', command: 'insertOrderedList' }
+        { label: 'Liste', command: 'insertUnorderedList', icon: 'dashicons-editor-ul' },
+        { label: 'Nummerierte Liste', command: 'insertOrderedList', icon: 'dashicons-editor-ol' }
       ];
 
       function commit() {
@@ -2021,22 +2040,56 @@
         onChange(cleaned);
       }
 
+      function unwrapLink(link) {
+        while (link.firstChild) {
+          link.parentNode.insertBefore(link.firstChild, link);
+        }
+        link.remove();
+      }
+
+      function rememberActiveLink() {
+        var link = currentRichTextLink(editor);
+        if (link) {
+          activeLink = link;
+        }
+      }
+
       commands.forEach(function (item) {
-        var button = createElement('button', 'button iss-editorial-rich-toolbar__button', item.label);
+        var button = createElement('button', 'button iss-editorial-rich-toolbar__button', item.icon ? '' : item.label);
         button.type = 'button';
+        button.title = item.label;
+        button.setAttribute('aria-label', item.label);
+        if (item.icon) {
+          button.classList.add('iss-editorial-rich-toolbar__button--icon');
+          button.appendChild(createElement('span', 'dashicons ' + item.icon));
+        }
         button.addEventListener('click', function (event) {
           var href;
           event.preventDefault();
           editor.focus();
           if (item.command === 'createLink') {
-            href = window.prompt('Link URL');
+            var link = currentRichTextLink(editor) || (activeLink && editor.contains(activeLink) ? activeLink : null);
+            href = window.prompt(
+              link ? 'Link URL (leer lassen zum Entfernen)' : 'Link URL',
+              link ? link.getAttribute('href') || '' : ''
+            );
             if (href === null) {
+              return;
+            }
+            if (link && href.trim() === '') {
+              unwrapLink(link);
+              activeLink = null;
+              commit();
               return;
             }
             if (!isSafeRichTextHref(href)) {
               return;
             }
-            document.execCommand('createLink', false, href.trim());
+            if (link) {
+              link.setAttribute('href', href.trim());
+            } else {
+              document.execCommand('createLink', false, href.trim());
+            }
           } else {
             document.execCommand(item.command, false, item.value || null);
           }
@@ -2053,6 +2106,9 @@
         ? sanitizeRichHtml(value)
         : plainTextToRichHtml(value);
       editor.addEventListener('input', commit);
+      editor.addEventListener('click', rememberActiveLink);
+      editor.addEventListener('keyup', rememberActiveLink);
+      editor.addEventListener('mouseup', rememberActiveLink);
       editor.addEventListener('blur', replaceEditorHtml);
       editor.addEventListener('paste', function (event) {
         var clipboard = event.clipboardData || window.clipboardData;

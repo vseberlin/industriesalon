@@ -29,6 +29,11 @@ function industriesalon_render_structured_veranstaltung_media_reference(array $r
         return '';
     }
 
+    $mime = (string) get_post_mime_type($attachment_id);
+    if ($mime !== '' && strpos($mime, 'image/') !== 0) {
+        return industriesalon_render_structured_veranstaltung_file_reference($reference);
+    }
+
     $image = wp_get_attachment_image($attachment_id, 'large', false, ['loading' => 'lazy']);
     if ($image === '') {
         return '';
@@ -42,6 +47,71 @@ function industriesalon_render_structured_veranstaltung_media_reference(array $r
         $html .= '<figcaption>' . esc_html($caption) . '</figcaption>';
     }
     $html .= '</figure>';
+
+    return $html;
+}
+
+function industriesalon_structured_veranstaltung_media_reference_is_download(array $reference): bool
+{
+    if ((string) ($reference['source'] ?? '') !== 'wp-media') {
+        return false;
+    }
+
+    $attachment_id = absint($reference['id'] ?? 0);
+    if ($attachment_id <= 0) {
+        return false;
+    }
+
+    $mime = (string) get_post_mime_type($attachment_id);
+
+    return $mime !== '' && strpos($mime, 'image/') !== 0;
+}
+
+function industriesalon_render_structured_veranstaltung_file_reference(array $reference): string
+{
+    if ((string) ($reference['source'] ?? '') !== 'wp-media') {
+        return '';
+    }
+
+    $attachment_id = absint($reference['id'] ?? 0);
+    if ($attachment_id <= 0) {
+        return '';
+    }
+
+    $url = (string) wp_get_attachment_url($attachment_id);
+    if ($url === '') {
+        return '';
+    }
+
+    $caption = trim((string) ($reference['label'] ?? ''));
+    $title = $caption !== '' ? $caption : (string) get_the_title($attachment_id);
+    $mime = (string) get_post_mime_type($attachment_id);
+    $extension = strtoupper((string) pathinfo((string) wp_parse_url($url, PHP_URL_PATH), PATHINFO_EXTENSION));
+    $meta = trim($extension . ($mime !== '' ? ' · ' . $mime : ''));
+    $download_name = wp_basename((string) wp_parse_url($url, PHP_URL_PATH));
+
+    $html = '<article class="iss-event-file">';
+    $html .= '<a class="iss-event-file__link" href="' . esc_url($url) . '" download="' . esc_attr($download_name) . '">';
+    $html .= '<span class="iss-event-file__title">' . esc_html($title) . '</span>';
+    if ($meta !== '') {
+        $html .= '<span class="iss-event-file__meta">' . esc_html($meta) . '</span>';
+    }
+    $html .= '</a>';
+    $html .= '</article>';
+
+    return $html;
+}
+
+function industriesalon_render_structured_veranstaltung_downloads(string $download_html): string
+{
+    if (trim($download_html) === '') {
+        return '';
+    }
+
+    $html = '<div class="iss-event-downloads">';
+    $html .= '<h3 class="iss-event-downloads__title">' . esc_html__('Herunterladen', 'industriesalon') . '</h3>';
+    $html .= '<div class="iss-event-downloads__list">' . $download_html . '</div>';
+    $html .= '</div>';
 
     return $html;
 }
@@ -233,11 +303,17 @@ function industriesalon_render_structured_veranstaltung_section(array $section, 
     }
 
     $media_html = '';
+    $download_html = '';
     foreach ((array) ($section['media_refs'] ?? []) as $reference) {
         if (is_array($reference)) {
+            if ($type === 'material' && industriesalon_structured_veranstaltung_media_reference_is_download($reference)) {
+                $download_html .= industriesalon_render_structured_veranstaltung_file_reference($reference);
+                continue;
+            }
             $media_html .= industriesalon_render_structured_veranstaltung_media_reference($reference);
         }
     }
+    $downloads_html = $type === 'material' ? industriesalon_render_structured_veranstaltung_downloads($download_html) : '';
 
     $refs_html = '';
     foreach ((array) ($section['object_refs'] ?? []) as $reference) {
@@ -253,7 +329,7 @@ function industriesalon_render_structured_veranstaltung_section(array $section, 
         }
     }
 
-    if ($kicker === '' && $title === '' && $body === '' && $quote === '' && !$items && $media_html === '' && $refs_html === '' && $dynamic_html === '' && $upload_intake_html === '') {
+    if ($kicker === '' && $title === '' && $body === '' && $quote === '' && !$items && $media_html === '' && $downloads_html === '' && $refs_html === '' && $dynamic_html === '' && $upload_intake_html === '') {
         return '';
     }
 
@@ -325,6 +401,9 @@ function industriesalon_render_structured_veranstaltung_section(array $section, 
             <?php echo industriesalon_render_structured_veranstaltung_gallery($media_html); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- Gallery media renders through WordPress attachment helpers. ?>
         <?php elseif ($media_html !== '' && !$uses_flow_media) : ?>
             <div class="iss-event-structured__media"><?php echo $media_html; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- Media references render through WordPress attachment helpers. ?></div>
+        <?php endif; ?>
+        <?php if ($downloads_html !== '') : ?>
+            <div class="iss-event-structured__downloads"><?php echo $downloads_html; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- Download cards are escaped in helper functions above. ?></div>
         <?php endif; ?>
         <?php if ($refs_html !== '') : ?>
             <div class="iss-event-structured__refs"><?php echo $refs_html; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- Object references are escaped in the helper. ?></div>
