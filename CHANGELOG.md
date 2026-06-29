@@ -6,6 +6,13 @@ be recovered from Git history.
 
 ## 2026-06-29
 
+- Added and deployed the missing front-page hero upload artifact:
+  `ops/uploads/2026-06-29-frontpage-hero-media.tar.gz` packages the original
+  and generated WebP sizes for Media Library attachment `26778`. The artifact
+  was pushed to `origin/main`, staging was fast-forwarded to `befc31e`, the
+  archive checksum was verified on staging, and the files were extracted into
+  staging uploads so the DB-backed front page no longer references a missing
+  hero image.
 - Added the SuperSaaS pipeline staging layer for timeline sync: the occurrence
   plugin now creates `wp_iss_supersaas_slots`, normalizes one or more enabled
   SuperSaaS schedules into schedule-keyed slot imports, keeps mapped slots in

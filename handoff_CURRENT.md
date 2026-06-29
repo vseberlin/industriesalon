@@ -27,6 +27,9 @@ follow-up belongs in `TODO.md`.
   `wp_template` override. The client front-page experiment remains review
   state; rollback baseline is
   `ops/sql/2026-06-29-frontpage-baseline.sql`.
+- The front-page hero upload family is packaged as
+  `ops/uploads/2026-06-29-frontpage-hero-media.tar.gz` and was extracted on
+  staging after deployment.
 
 ## Preserve
 
@@ -43,9 +46,6 @@ follow-up belongs in `TODO.md`.
 
 ## Next Action
 
-- After deploy or DB transfer, run `wp iss-occurrences sync`,
-  `wp iss-occurrences verify`, `wp iss-occurrences drift-check`, and
-  `wp iss-occurrences supersaas-audit`.
 - If moving the local Repair-Café canonical content state to another target,
   review and replay
   `ops/sql/2026-06-29-repair-cafe-canonical-event-series.sql` after code deploy.
@@ -72,8 +72,25 @@ follow-up belongs in `TODO.md`.
   64 dates with 25 bookable slots and 39 disabled sold-out slots, hands off to
   the existing booking modal, and has no mobile horizontal overflow.
 
+## Verified On Staging
+
+- Staging repo `/srv/industriesalon/stage/repo` fast-forwarded to `befc31e`.
+- `ops/uploads/2026-06-29-frontpage-hero-media.tar.gz` checksum verified and
+  extracted into staging uploads through the WordPress container.
+- Front-page hero image
+  `/wp-content/uploads/2026/06/2021-04-22-Sven-Bock-Aussen-Industriesalon-05-hero-scaled.webp`
+  returns HTTP 200.
+- `wp iss-occurrences sync`, `verify`, `drift-check`, and `supersaas-audit`
+  completed on staging after deployment. One stale 2022 WP-origin occurrence
+  row with the old `veranstaltung` source type was removed after a staging DB
+  backup; final `verify` and `drift-check` passed.
+- Staging DB backup before occurrence sync:
+  `/srv/industriesalon/stage/backups/stage-db-before-12466ac-occurrence-sync-20260629-204357.sql.gz`.
+
 ## Commit State
 
-- Shared checkpoint requested for commit and push to `origin/main`.
-- Local branch was ahead of `origin/main` by three commits before this final
-  checkpoint; `origin/main` had not advanced after `git fetch origin --prune`.
+- Final shared checkpoint is `561b41a`
+  (`Document staging front-page hero deploy`), with the upload artifact commit
+  directly before it at `befc31e`.
+- Local repo is at `561b41a`; staging runtime was verified after extracting the
+  `befc31e` upload artifact.
