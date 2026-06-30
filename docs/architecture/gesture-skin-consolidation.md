@@ -107,8 +107,9 @@ removes the biggest single source of editor confusion and theme branching.
 `gateway` is added for native landing pages as curated onward navigation. It is
 not a generic layout primitive, and it should not spawn count-specific gestures
 such as `card_row`, `teaser_grid`, `portal_grid`, or `gateway_3_cards`.
-`statement` and `feature` cover text-led and highlighted front-page body
-sections without turning every row shape into a new gesture. `dynamic_slot` is
+`statement`, `fliesstext`, and `feature` cover landing thesis, longer prose,
+and highlighted front-page body sections. The common 50/50 image-text layout is
+a `feature.media-text` treatment, not another gesture. `dynamic_slot` is
 only for mapped renderers owned by the theme; it is not a raw block, shortcode,
 or arbitrary embed primitive.
 
@@ -203,6 +204,7 @@ Landing pages start with these gateway treatments:
 | `statement.lead` | Centered editorial thesis/intro treatment. |
 | `statement.callout` | Compact text callout treatment. |
 | `feature.media-panel` | Copy, facts, links, and a supporting media panel. |
+| `feature.media-text` | Reusable 50/50 image-text section for native pages and CPT-style landing copy. |
 | `feature.microblocks` | Copy plus stacked microblock/fact rows and optional media. |
 | `slot.projects` | Theme-owned front-page project notes slot. |
 | `slot.timeline` | Theme-owned front-page timeline query slot. |
@@ -374,7 +376,11 @@ sections. Each section may store an optional `treatment`.
 
 The `gateway` gesture is the first landing-specific addition to the shared
 vocabulary. It stores `kicker`, `title`, `body`, optional `treatment`, and
-`items[]` entries with `label`, `text`, `url`, and optional `media_refs`.
+`items[]` entries with `label`, `text`, `url`, optional `page_id`, and optional
+`media_refs`. `feature.media-text` reuses the shared 50/50 image-text pattern
+already common on pages and CPT detail views. Native landing pages may also
+reuse canonical `fliesstext` for longer text-only sections so `feature` can
+stay focused on media/facts.
 Theme rendering must emit stable skin, gesture, and treatment classes. Disabled
 or empty JSON falls back to the existing page template and post content.
 

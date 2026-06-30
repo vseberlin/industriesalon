@@ -6,6 +6,25 @@ be recovered from Git history.
 
 ## 2026-06-30
 
+- Added JSON-editor safety guardrails for the shared `iss-editorial` canvas:
+  section deletion now moves gestures into a persisted `deleted_sections`
+  trash that can be restored after `Aktualisieren`, admins can purge deleted
+  sections, and the canvas has a preview action that saves current JSON to the
+  existing autosave meta before opening the WordPress preview URL. This reuses
+  the existing editorial document storage instead of adding a parallel recovery
+  system.
+- Constrained landing JSON navigation links to native page selection in the
+  editor. Landing section links and gateway-card targets now use a published
+  Pages dropdown, store an optional `page_id`, and the theme resolves current
+  permalinks at render time while preserving legacy URL values for existing
+  documents and non-landing formats.
+- Added the canonical `fliesstext` gesture to native landing JSON as the
+  text-first alternative to `feature`: editors can add longer prose with
+  optional page links without carrying Fakten/media fields or expanding the
+  Feature modal.
+- Added `feature.media-text` as the reusable 50/50 image-text landing treatment
+  so native page JSON can use the common page/CPT media-text pattern without
+  adding another gesture.
 - Added a universal occurrence booking calendar/intake plan and began the clean
   refactor: public slot reads now use `/iss/v1/booking-slots`, timeline grouped
   `Termin wählen` opens the shared occurrence calendar, and commerce-lite public

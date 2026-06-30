@@ -249,6 +249,7 @@ function iss_editorial_get_empty_document(string $format_slug): array
         'variant' => (string) ($format['default_variant'] ?? 'standard'),
         'features' => [],
         'sections' => [],
+        'deleted_sections' => [],
     ];
 }
 

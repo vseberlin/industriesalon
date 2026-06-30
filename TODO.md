@@ -16,8 +16,9 @@ Immediate executable work only. Larger future programs live in `docs/project/bac
   `ops/sql/2026-06-30-frontpage-landing-json.sql` only on a target with matching
   front-page content/media IDs. Then browser-check `/`, `/about/`, `/verein/`,
   `/salon-vermietung/`, and `/sammlungen/`; disabled or empty JSON must keep the
-  existing template/post-content output. Before client handover, restrict the
-  section treatment selector to admins without changing the JSON storage key.
+  existing template/post-content output. Continue the editor-safety slice with
+  drag/drop ordering with the current buttons as fallback, and admin-only
+  treatment controls before client handover.
 - SuperSaaS/timeline follow-up after this checkpoint: deploy the occurrence and
   timeline code together, replay
   `ops/sql/2026-06-29-repair-cafe-canonical-event-series.sql` only if the local

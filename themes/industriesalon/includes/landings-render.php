@@ -71,14 +71,16 @@ function industriesalon_editorial_landing_treatment_slug(array $section): string
     $type = sanitize_key((string) ($section['type'] ?? 'gateway'));
     $defaults = [
         'statement' => 'statement.lead',
+        'fliesstext' => 'text.standard',
         'gateway' => 'gateway.cards',
         'feature' => 'feature.media-panel',
         'dynamic_slot' => 'slot.projects',
     ];
     $allowed = [
         'statement' => ['statement.lead', 'statement.callout'],
+        'fliesstext' => ['text.standard'],
         'gateway' => ['gateway.cards', 'gateway.link-list', 'gateway.feature-strip'],
-        'feature' => ['feature.media-panel', 'feature.microblocks'],
+        'feature' => ['feature.media-panel', 'feature.media-text', 'feature.microblocks'],
         'dynamic_slot' => ['slot.projects', 'slot.timeline', 'slot.visit-info', 'slot.newsletter'],
     ];
     $default = $defaults[$type] ?? 'gateway.cards';
@@ -112,6 +114,11 @@ function industriesalon_editorial_landing_section_classes(array $section, string
     }
     if ($type === 'statement') {
         $classes[] = 'iss-front-schoneweide-statement';
+    }
+    if ($type === 'feature' && $treatment === 'feature.media-text') {
+        $classes[] = 'iss-media-text';
+        $classes[] = 'iss-media-text--50-50';
+        $classes[] = 'iss-media-text--gap-l';
     }
     if ($anchor === 'vor-ort') {
         $classes[] = 'iss-front-explore';
@@ -165,7 +172,7 @@ function industriesalon_render_editorial_landing_links(array $links): string
             continue;
         }
         $label = trim((string) ($link['label'] ?? ''));
-        $url = trim((string) ($link['url'] ?? ''));
+        $url = industriesalon_editorial_landing_link_url($link);
         if ($label === '' || $url === '') {
             continue;
         }
@@ -177,6 +184,16 @@ function industriesalon_render_editorial_landing_links(array $links): string
     }
 
     return '<div class="iss-landing-section__actions">' . $html . '</div>';
+}
+
+function industriesalon_editorial_landing_link_url(array $link): string
+{
+    $page_id = absint($link['page_id'] ?? 0);
+    if ($page_id > 0 && get_post_type($page_id) === 'page' && get_post_status($page_id) === 'publish') {
+        return (string) get_permalink($page_id);
+    }
+
+    return trim((string) ($link['url'] ?? ''));
 }
 
 function industriesalon_render_editorial_landing_copy(array $section): string
@@ -235,7 +252,7 @@ function industriesalon_render_editorial_landing_gateway_item(array $item): stri
 {
     $label = trim((string) ($item['label'] ?? ''));
     $text = trim((string) ($item['text'] ?? ''));
-    $url = trim((string) ($item['url'] ?? ''));
+    $url = industriesalon_editorial_landing_link_url($item);
     if ($label === '' || $url === '') {
         return '';
     }
@@ -307,6 +324,25 @@ function industriesalon_render_editorial_landing_statement(array $section, int $
     ?>
     <section <?php echo industriesalon_editorial_landing_section_attrs($section, $skin); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- Attributes are escaped in helper. ?>>
         <div class="iss-container iss-landing-section__inner">
+            <?php echo $copy_html; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- Copy output is escaped in helper. ?>
+        </div>
+    </section>
+    <?php
+    unset($rendered_index);
+    return trim((string) ob_get_clean());
+}
+
+function industriesalon_render_editorial_landing_text(array $section, int $rendered_index, string $skin): string
+{
+    $copy_html = industriesalon_render_editorial_landing_copy($section);
+    if ($copy_html === '') {
+        return '';
+    }
+
+    ob_start();
+    ?>
+    <section <?php echo industriesalon_editorial_landing_section_attrs($section, $skin); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- Attributes are escaped in helper. ?>>
+        <div class="iss-container iss-landing-section__inner iss-landing-text">
             <?php echo $copy_html; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- Copy output is escaped in helper. ?>
         </div>
     </section>
@@ -431,16 +467,79 @@ function industriesalon_render_editorial_landing_media_text_overlay_copy(array $
     return trim((string) ob_get_clean());
 }
 
+function industriesalon_render_editorial_landing_media_text_copy(array $section): string
+{
+    $kicker = trim((string) ($section['kicker'] ?? ''));
+    $title = trim((string) ($section['title'] ?? ''));
+    $body = trim((string) ($section['body'] ?? ''));
+    $links_html = industriesalon_render_editorial_landing_links(is_array($section['links'] ?? null) ? $section['links'] : []);
+    if ($kicker === '' && $title === '' && $body === '' && $links_html === '') {
+        return '';
+    }
+
+    ob_start();
+    ?>
+    <div class="iss-media-text__copy">
+        <?php if ($kicker !== '') : ?>
+            <p class="iss-kicker"><?php echo esc_html($kicker); ?></p>
+        <?php endif; ?>
+        <?php if ($title !== '') : ?>
+            <h2 class="iss-heading__title iss-media-text__title"><?php echo esc_html($title); ?></h2>
+        <?php endif; ?>
+        <?php if ($body !== '') : ?>
+            <div class="iss-heading__text iss-media-text__text"><?php echo wp_kses_post($body); ?></div>
+        <?php endif; ?>
+        <?php echo $links_html; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- Links are escaped in helper. ?>
+    </div>
+    <?php
+    return trim((string) ob_get_clean());
+}
+
 function industriesalon_render_editorial_landing_media_text_actions(array $links): string
 {
     $link = is_array($links[0] ?? null) ? $links[0] : [];
     $label = trim((string) ($link['label'] ?? ''));
-    $url = trim((string) ($link['url'] ?? ''));
+    $url = industriesalon_editorial_landing_link_url($link);
     if ($label === '' || $url === '') {
         return '';
     }
 
     return '<p class="iss-media-text__actions"><a class="iss-media-text__link" href="' . esc_url($url) . '">' . esc_html($label) . '</a></p>';
+}
+
+function industriesalon_render_editorial_landing_feature_media_text(array $section, int $rendered_index, string $skin): string
+{
+    $copy_html = industriesalon_render_editorial_landing_media_text_copy($section);
+    $facts_html = industriesalon_render_editorial_landing_facts(is_array($section['facts'] ?? null) ? $section['facts'] : []);
+    $media_html = industriesalon_render_editorial_landing_media_text_media($section);
+    if ($copy_html === '' && $facts_html === '' && $media_html === '') {
+        return '';
+    }
+
+    ob_start();
+    ?>
+    <section <?php echo industriesalon_editorial_landing_section_attrs($section, $skin); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- Attributes are escaped in helper. ?>>
+        <div class="iss-container">
+            <div class="iss-media-text__layout">
+                <div class="iss-media-text__content">
+                    <div class="iss-media-text__inner iss-landing-surface iss-landing-surface--light">
+                        <?php echo $copy_html; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- Copy is escaped in helper. ?>
+                        <?php echo $facts_html; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- Facts are escaped in helper. ?>
+                    </div>
+                </div>
+                <?php if ($media_html !== '') : ?>
+                    <div class="iss-media-text__media-col">
+                        <div class="iss-media-text__media iss-media-card iss-media-card--cover iss-media-card--flat">
+                            <?php echo $media_html; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- Media output uses wp_get_attachment_image. ?>
+                        </div>
+                    </div>
+                <?php endif; ?>
+            </div>
+        </div>
+    </section>
+    <?php
+    unset($rendered_index);
+    return trim((string) ob_get_clean());
 }
 
 function industriesalon_render_editorial_landing_feature_microblocks(array $section, int $rendered_index, string $skin): string
@@ -480,7 +579,11 @@ function industriesalon_render_editorial_landing_feature_microblocks(array $sect
 
 function industriesalon_render_editorial_landing_feature(array $section, int $rendered_index, string $skin): string
 {
-    if (industriesalon_editorial_landing_treatment_slug($section) === 'feature.microblocks') {
+    $treatment = industriesalon_editorial_landing_treatment_slug($section);
+    if ($treatment === 'feature.media-text') {
+        return industriesalon_render_editorial_landing_feature_media_text($section, $rendered_index, $skin);
+    }
+    if ($treatment === 'feature.microblocks') {
         return industriesalon_render_editorial_landing_feature_microblocks($section, $rendered_index, $skin);
     }
 
@@ -629,6 +732,9 @@ function industriesalon_render_editorial_landing_section(array $section, int $re
     if ($type === 'statement') {
         return industriesalon_render_editorial_landing_statement($section, $rendered_index, $skin);
     }
+    if ($type === 'fliesstext') {
+        return industriesalon_render_editorial_landing_text($section, $rendered_index, $skin);
+    }
     if ($type === 'gateway') {
         return industriesalon_render_editorial_landing_gateway($section, $rendered_index, $skin);
     }
@@ -717,7 +823,7 @@ function industriesalon_front_page_landing_has_sections(): bool
         if (!is_array($section)) {
             continue;
         }
-        if (in_array((string) ($section['type'] ?? ''), ['statement', 'gateway', 'feature', 'dynamic_slot'], true)) {
+        if (in_array((string) ($section['type'] ?? ''), ['statement', 'fliesstext', 'gateway', 'feature', 'dynamic_slot'], true)) {
             $has_sections = true;
             break;
         }

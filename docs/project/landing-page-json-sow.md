@@ -91,12 +91,15 @@ Do not add separate gestures such as `card_row`, `teaser_grid`, `portal_grid`,
 or `gateway_3_cards`. Item count is handled by CSS inside the selected
 treatment.
 
-Front-page reconstruction adds three more constrained landing gestures:
+Front-page reconstruction adds constrained landing gestures:
 
 - `statement`: a text-forward editorial thesis, intro, or callout with
   optional links.
+- `fliesstext`: free landing prose with optional page links, no facts or media
+  fields. Use it when editors need longer text without expanding `feature`.
 - `feature`: a highlighted section with body copy, optional media, links, and
-  fact/microblock rows.
+  fact/microblock rows. Its treatments include the reusable 50/50 image-text
+  pattern used across pages and CPT detail views.
 - `dynamic_slot`: a mapped theme-owned dynamic module. Editors choose from
   approved slot keys; they do not paste raw block markup or shortcode-like
   content.
@@ -112,11 +115,16 @@ These slots preserve existing dynamic render ownership for project notes,
 timeline queries, visit information, and the newsletter form while letting the
 front-page body be ordered from landing JSON.
 
-For front-page parity, `feature.microblocks` renders the old 50/50 media-text
-anatomy: microblocks and the action link live in the text column, while
-`kicker`, `title`, and `body` render as the overlay heading inside the media
-card. `feature.media-panel` remains the simpler copy/facts/media panel used by
-sections such as the rental block.
+`feature.media-text` renders the reusable 50/50 image-text anatomy used across
+pages and CPT detail views. For front-page parity, `feature.microblocks` renders
+the older overlay variant: microblocks and the action link live in the text
+column, while `kicker`, `title`, and `body` render as the overlay heading inside
+the media card. `feature.media-panel` remains the simpler copy/facts/media panel
+used by sections such as the rental block.
+
+Do not add fallback text fields to `feature` just to survive deleted facts.
+Use `fliesstext` for text-led sections and keep `feature` focused on highlighted
+media/fact presentations.
 
 ## Treatments
 
@@ -128,6 +136,7 @@ The first landing treatment registry entries are:
 - `statement.lead`
 - `statement.callout`
 - `feature.media-panel`
+- `feature.media-text`
 - `feature.microblocks`
 - `slot.projects`
 - `slot.timeline`

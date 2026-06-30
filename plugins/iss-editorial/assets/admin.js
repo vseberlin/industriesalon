@@ -205,6 +205,7 @@
     var root = container.querySelector('.iss-editorial-root');
     var field = container.querySelector('.iss-editorial-document-field');
     var enabledField = container.querySelector('.iss-editorial-enabled-field');
+    var previewButton = container.querySelector('.iss-editorial-preview-button');
     var status = container.querySelector('.iss-editorial-autosave-status');
     if (!root || !field) {
       return;
@@ -222,6 +223,9 @@
     });
     var skins = Array.isArray(config.skins) ? config.skins.filter(function (skin) {
       return skin && skin.slug;
+    }) : [];
+    var pageChoices = Array.isArray(config.pageChoices) ? config.pageChoices.filter(function (page) {
+      return page && page.id && page.url;
     }) : [];
     var autosaveTimer = null;
     var activeType = Object.keys(sections).filter(function (type) {
@@ -266,15 +270,101 @@
         return true;
       }
 
-      if (format === 'landing' && type === 'gateway') {
-        return true;
-      }
-      if (format === 'landing' && ['statement', 'feature'].indexOf(type) !== -1) {
+      if (format === 'landing' && ['statement', 'fliesstext', 'gateway', 'feature'].indexOf(type) !== -1) {
         return true;
       }
 
       return format === 'publication'
         && ['intro', 'source', 'longread_chapter', 'longread_quote', 'timeline_item'].indexOf(type) !== -1;
+    }
+
+    function usePageLinkSelector() {
+      return format === 'landing' && pageChoices.length > 0;
+    }
+
+    function normalizedPathFromUrl(url) {
+      var parsed;
+      if (!url) {
+        return '';
+      }
+
+      try {
+        parsed = new URL(String(url), window.location.origin);
+      } catch (error) {
+        return '';
+      }
+
+      return parsed.pathname.replace(/\/?$/, '/');
+    }
+
+    function pageChoiceForLink(link) {
+      var pageId = parseInt(link.page_id || '0', 10) || 0;
+      var path = normalizedPathFromUrl(link.url || '');
+      var match = pageChoices.filter(function (page) {
+        return parseInt(page.id || '0', 10) === pageId;
+      })[0];
+
+      if (match) {
+        return match;
+      }
+
+      return pageChoices.filter(function (page) {
+        return normalizedPathFromUrl(page.url || page.path || '') === path || page.path === path;
+      })[0] || null;
+    }
+
+    function applyPageChoiceToLink(target, page) {
+      if (!page) {
+        target.page_id = '';
+        target.url = '';
+        return;
+      }
+
+      target.page_id = String(page.id || '');
+      target.url = page.url || '';
+      if (!target.label) {
+        target.label = page.title || '';
+      }
+    }
+
+    function createPageLinkSelect(target, afterChange) {
+      var wrapper = createElement('label', 'iss-editorial-field');
+      var select = document.createElement('select');
+      var current = pageChoiceForLink(target);
+      var placeholder = document.createElement('option');
+
+      placeholder.value = '';
+      placeholder.textContent = 'Seite wählen';
+      select.appendChild(placeholder);
+
+      pageChoices.forEach(function (page) {
+        var option = document.createElement('option');
+        option.value = String(page.id || '');
+        option.textContent = page.title || page.path || page.url;
+        option.selected = current && String(current.id) === String(page.id);
+        select.appendChild(option);
+      });
+
+      if (current && !target.page_id) {
+        applyPageChoiceToLink(target, current);
+      }
+
+      select.addEventListener('change', function () {
+        var selected = pageChoices.filter(function (page) {
+          return String(page.id || '') === select.value;
+        })[0] || null;
+        applyPageChoiceToLink(target, selected);
+        if (typeof afterChange === 'function') {
+          afterChange();
+        }
+        render();
+        scheduleAutosave();
+      });
+
+      wrapper.appendChild(createElement('span', '', 'Seite'));
+      wrapper.appendChild(select);
+
+      return wrapper;
     }
 
     function updateField() {
@@ -451,6 +541,12 @@
       }, 1200);
     }
 
+    function deletedSections() {
+      documentState.deleted_sections = Array.isArray(documentState.deleted_sections) ? documentState.deleted_sections : [];
+
+      return documentState.deleted_sections;
+    }
+
     function addSection(type) {
       if (isSectionHidden(type)) {
         return;
@@ -486,8 +582,35 @@
     }
 
     function removeSection(index) {
-      documentState.sections.splice(index, 1);
+      var removed = documentState.sections.splice(index, 1)[0];
+      if (removed && typeof removed === 'object') {
+        removed.deleted_at = new Date().toISOString();
+        removed.original_index = index;
+        deletedSections().unshift(removed);
+      }
       closeModal();
+      render();
+      scheduleAutosave();
+    }
+
+    function restoreDeletedSection(index) {
+      var removed = deletedSections().splice(index, 1)[0];
+      var targetIndex;
+      if (!removed || typeof removed !== 'object') {
+        return;
+      }
+
+      targetIndex = parseInt(removed.original_index || '0', 10);
+      delete removed.deleted_at;
+      delete removed.original_index;
+      targetIndex = Math.max(0, Math.min(documentState.sections.length, targetIndex || 0));
+      documentState.sections.splice(targetIndex, 0, removed);
+      render();
+      scheduleAutosave();
+    }
+
+    function purgeDeletedSection(index) {
+      deletedSections().splice(index, 1);
       render();
       scheduleAutosave();
     }
@@ -530,7 +653,7 @@
       var edit = createElement('button', 'button button-primary', 'Bearbeiten');
       var up = createElement('button', 'button', 'Hoch');
       var down = createElement('button', 'button', 'Runter');
-      var remove = createElement('button', 'button button-link-delete', 'Löschen');
+      var remove = createElement('button', 'button button-link-delete', 'In Papierkorb');
 
       marker.style.backgroundColor = sectionTone(type);
       meta.appendChild(createElement('span', 'iss-editorial-card__type', sectionConfig(type).label || type));
@@ -553,6 +676,42 @@
       actions.appendChild(up);
       actions.appendChild(down);
       actions.appendChild(remove);
+
+      card.appendChild(marker);
+      card.appendChild(meta);
+      card.appendChild(actions);
+      target.appendChild(card);
+    }
+
+    function renderDeletedSectionCard(section, index, target) {
+      var type = section.type || 'kapitel';
+      var card = createElement('article', 'iss-editorial-card iss-editorial-card--deleted iss-editorial-card--' + type);
+      var marker = createElement('span', 'iss-editorial-card__marker');
+      var meta = createElement('div', 'iss-editorial-card__meta');
+      var actions = createElement('div', 'iss-editorial-card__actions');
+      var restore = createElement('button', 'button button-secondary', 'Wiederherstellen');
+      var purge = createElement('button', 'button button-link-delete', 'Endgültig löschen');
+
+      marker.style.backgroundColor = sectionTone(type);
+      meta.appendChild(createElement('span', 'iss-editorial-card__type', 'Papierkorb · ' + (sectionConfig(type).label || type)));
+      meta.appendChild(createElement('h3', '', section.title || 'Ohne Titel'));
+      meta.appendChild(createElement('p', '', sectionSummary(section) || 'Noch kein Inhalt.'));
+      if (section.deleted_at) {
+        meta.appendChild(createElement('p', 'iss-editorial-card__trash-note', 'Gelöscht: ' + String(section.deleted_at).replace('T', ' ').replace(/\..+$/, '')));
+      }
+      if ((section.media_refs || []).length) {
+        renderMediaThumbs(section, meta);
+      }
+
+      restore.type = 'button';
+      restore.addEventListener('click', function () { restoreDeletedSection(index); });
+      actions.appendChild(restore);
+
+      if (config.canPurgeDeletedSections) {
+        purge.type = 'button';
+        purge.addEventListener('click', function () { purgeDeletedSection(index); });
+        actions.appendChild(purge);
+      }
 
       card.appendChild(marker);
       card.appendChild(meta);
@@ -586,6 +745,28 @@
       }
 
       target.appendChild(stage);
+    }
+
+    function renderDeletedSections(target) {
+      var items = deletedSections();
+      var panel;
+      var head;
+
+      if (!items.length) {
+        return;
+      }
+
+      panel = createElement('div', 'iss-editorial-trash-panel');
+      head = createElement('div', 'iss-editorial-trash-panel__head');
+      head.appendChild(createElement('h3', '', 'Gelöschte Abschnitte'));
+      head.appendChild(createElement('p', '', 'Diese Abschnitte werden öffentlich nicht gerendert und bleiben nach Aktualisieren wiederherstellbar.'));
+      panel.appendChild(head);
+
+      items.forEach(function (section, index) {
+        renderDeletedSectionCard(section, index, panel);
+      });
+
+      target.appendChild(panel);
     }
 
     function relationChoiceStrings() {
@@ -1539,11 +1720,13 @@
             render();
             scheduleAutosave();
           });
-          var url = createTextInput('URL', link.url || '', function (value) {
-            link.url = value;
-            render();
-            scheduleAutosave();
-          });
+          var url = usePageLinkSelector()
+            ? createPageLinkSelect(link, rerenderRows)
+            : createTextInput('URL', link.url || '', function (value) {
+              link.url = value;
+              render();
+              scheduleAutosave();
+            });
           var remove = createElement('button', 'button button-link-delete', 'Entfernen');
           remove.type = 'button';
           remove.addEventListener('click', function () {
@@ -1565,7 +1748,7 @@
       add.type = 'button';
       add.addEventListener('click', function () {
         section.links = Array.isArray(section.links) ? section.links : [];
-        section.links.push({ label: '', url: '' });
+        section.links.push({ label: '', url: '', page_id: '' });
         rerenderRows();
         render();
         scheduleAutosave();
@@ -1730,11 +1913,13 @@
             render();
             scheduleAutosave();
           }, 3));
-          fields.appendChild(createTextInput('URL', item.url || '', function (value) {
-            item.url = value;
-            render();
-            scheduleAutosave();
-          }));
+          fields.appendChild(usePageLinkSelector()
+            ? createPageLinkSelect(item, rerenderRows)
+            : createTextInput('URL', item.url || '', function (value) {
+              item.url = value;
+              render();
+              scheduleAutosave();
+            }));
 
           function rerenderMedia() {
             renderGatewayItemMedia(item, tray, rerenderMedia);
@@ -1770,7 +1955,7 @@
       add.type = 'button';
       add.addEventListener('click', function () {
         section.items = Array.isArray(section.items) ? section.items : [];
-        section.items.push({ label: '', text: '', url: '', media_refs: [] });
+        section.items.push({ label: '', text: '', url: '', page_id: '', media_refs: [] });
         rerenderRows();
         render();
         scheduleAutosave();
@@ -2438,8 +2623,10 @@
       var main = createElement('div', 'iss-editorial-main');
       clear(root);
       documentState.sections = Array.isArray(documentState.sections) ? documentState.sections : [];
+      documentState.deleted_sections = deletedSections();
       renderPalette(layout);
       renderStage(main);
+      renderDeletedSections(main);
       renderRouteStationPanel(main);
       layout.appendChild(main);
       root.appendChild(layout);
@@ -2447,10 +2634,60 @@
       syncRouteHiddenFields();
     }
 
+    function savePreviewDocument() {
+      var params = new window.URLSearchParams();
+      var saveUrl = config.ajaxUrl || window.ajaxurl || '';
+
+      if (!saveUrl || !config.previewNonce || !config.postId || !format) {
+        setStatus((config.strings && config.strings.previewError) || 'Die Vorschau konnte nicht vorbereitet werden.');
+        return Promise.reject(new Error('missing preview config'));
+      }
+
+      updateField();
+      params.append('action', 'iss_editorial_save_preview_document');
+      params.append('nonce', config.previewNonce);
+      params.append('post_id', String(config.postId));
+      params.append('format', format);
+      params.append('document', field.value || JSON.stringify(documentState));
+
+      return window.fetch(saveUrl, {
+        method: 'POST',
+        credentials: 'same-origin',
+        headers: {
+          'Content-Type': 'application/x-www-form-urlencoded; charset=UTF-8'
+        },
+        body: params.toString()
+      }).then(function (response) {
+        return response.json().then(function (payload) {
+          if (!response.ok || !payload || !payload.success) {
+            throw new Error(payload && payload.data && payload.data.message ? payload.data.message : 'preview failed');
+          }
+
+          return payload.data && payload.data.previewUrl ? payload.data.previewUrl : config.previewUrl;
+        });
+      });
+    }
+
     if (enabledField) {
       enabledField.addEventListener('change', function () {
         updateField();
         scheduleAutosave();
+      });
+    }
+
+    if (previewButton) {
+      previewButton.addEventListener('click', function (event) {
+        event.preventDefault();
+        previewButton.disabled = true;
+        setStatus((config.strings && config.strings.previewSaving) || 'Vorschau wird vorbereitet ...');
+        savePreviewDocument().then(function (previewUrl) {
+          window.open(previewUrl || config.previewUrl, '_blank', 'noopener');
+          setStatus((config.strings && config.strings.previewReady) || 'Vorschau wurde geoeffnet.');
+        }).catch(function (error) {
+          setStatus(error && error.message ? error.message : ((config.strings && config.strings.previewError) || 'Die Vorschau konnte nicht vorbereitet werden.'));
+        }).finally(function () {
+          previewButton.disabled = false;
+        });
       });
     }
 

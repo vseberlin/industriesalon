@@ -83,15 +83,28 @@ function iss_editorial_sanitize_link($link): array
     }
 
     $label = sanitize_text_field((string) ($link['label'] ?? ''));
+    $page_id = absint($link['page_id'] ?? 0);
     $url = esc_url_raw((string) ($link['url'] ?? ''));
+    if ($page_id > 0 && get_post_type($page_id) === 'page' && get_post_status($page_id) === 'publish') {
+        $url = (string) get_permalink($page_id);
+    } else {
+        $page_id = 0;
+    }
+
     if ($label === '' || $url === '') {
         return [];
     }
 
-    return [
+    $sanitized = [
         'label' => $label,
         'url' => $url,
     ];
+
+    if ($page_id > 0) {
+        $sanitized['page_id'] = (string) $page_id;
+    }
+
+    return $sanitized;
 }
 
 function iss_editorial_sanitize_link_list($links): array
@@ -145,17 +158,30 @@ function iss_editorial_sanitize_gateway_item($item): array
     }
 
     $label = sanitize_text_field((string) ($item['label'] ?? ''));
+    $page_id = absint($item['page_id'] ?? 0);
     $url = esc_url_raw((string) ($item['url'] ?? ''));
+    if ($page_id > 0 && get_post_type($page_id) === 'page' && get_post_status($page_id) === 'publish') {
+        $url = (string) get_permalink($page_id);
+    } else {
+        $page_id = 0;
+    }
+
     if ($label === '' || $url === '') {
         return [];
     }
 
-    return [
+    $sanitized = [
         'label' => $label,
         'text' => sanitize_textarea_field((string) ($item['text'] ?? '')),
         'url' => $url,
         'media_refs' => iss_editorial_sanitize_reference_list($item['media_refs'] ?? []),
     ];
+
+    if ($page_id > 0) {
+        $sanitized['page_id'] = (string) $page_id;
+    }
+
+    return $sanitized;
 }
 
 function iss_editorial_sanitize_gateway_item_list($items): array
@@ -523,6 +549,25 @@ function iss_editorial_sanitize_section(array $section, array $format): array
     return $sanitized;
 }
 
+function iss_editorial_sanitize_deleted_section(array $section, array $format): array
+{
+    $sanitized = iss_editorial_sanitize_section($section, $format);
+    if (!$sanitized) {
+        return [];
+    }
+
+    $deleted_at = sanitize_text_field((string) ($section['deleted_at'] ?? ''));
+    if ($deleted_at !== '') {
+        $sanitized['deleted_at'] = $deleted_at;
+    }
+
+    if (isset($section['original_index'])) {
+        $sanitized['original_index'] = absint($section['original_index']);
+    }
+
+    return $sanitized;
+}
+
 function iss_editorial_sanitize_document($document, string $format_slug): array
 {
     $format = iss_editorial_get_format($format_slug);
@@ -538,6 +583,7 @@ function iss_editorial_sanitize_document($document, string $format_slug): array
     $sanitized['variant'] = sanitize_key((string) ($document['variant'] ?? $sanitized['variant']));
     $sanitized['features'] = iss_editorial_sanitize_document_features($document['features'] ?? []);
     $sanitized['sections'] = [];
+    $sanitized['deleted_sections'] = [];
 
     foreach ((array) ($document['sections'] ?? []) as $section) {
         if (!is_array($section)) {
@@ -547,6 +593,17 @@ function iss_editorial_sanitize_document($document, string $format_slug): array
         $section = iss_editorial_sanitize_section($section, $format);
         if ($section) {
             $sanitized['sections'][] = $section;
+        }
+    }
+
+    foreach ((array) ($document['deleted_sections'] ?? []) as $section) {
+        if (!is_array($section)) {
+            continue;
+        }
+
+        $section = iss_editorial_sanitize_deleted_section($section, $format);
+        if ($section) {
+            $sanitized['deleted_sections'][] = $section;
         }
     }
 

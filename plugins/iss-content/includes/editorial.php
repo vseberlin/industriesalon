@@ -83,6 +83,11 @@ function iss_content_model_register_editorial_formats(array $formats): array
                     'statement.callout' => __('Callout', 'iss-content-model'),
                 ],
             ],
+            'fliesstext' => [
+                'label' => __('Text', 'iss-content-model'),
+                'description' => __('Freier Landing-Text ohne Fakten- oder Medienfelder.', 'iss-content-model'),
+                'supports' => ['links'],
+            ],
             'gateway' => [
                 'label' => __('Gateway', 'iss-content-model'),
                 'description' => __('Kuratiert nächste Wege als Karten oder Linkliste.', 'iss-content-model'),
@@ -99,6 +104,7 @@ function iss_content_model_register_editorial_formats(array $formats): array
                 'supports' => ['treatment', 'facts', 'links', 'media_refs'],
                 'treatments' => [
                     'feature.media-panel' => __('Medienpanel', 'iss-content-model'),
+                    'feature.media-text' => __('Bild/Text 50/50', 'iss-content-model'),
                     'feature.microblocks' => __('Mikroblöcke', 'iss-content-model'),
                 ],
             ],

@@ -100,29 +100,35 @@ function iss_editorial_hydrate_reference_preview_list($references): array
 
 function iss_editorial_hydrate_document_previews(array $document): array
 {
-    if (!is_array($document['sections'] ?? null)) {
+    if (!is_array($document['sections'] ?? null) && !is_array($document['deleted_sections'] ?? null)) {
         return $document;
     }
 
-    foreach ($document['sections'] as &$section) {
-        if (!is_array($section)) {
+    foreach (['sections', 'deleted_sections'] as $section_list_key) {
+        if (!is_array($document[$section_list_key] ?? null)) {
             continue;
         }
-        if (isset($section['media_refs'])) {
-            $section['media_refs'] = iss_editorial_hydrate_reference_preview_list($section['media_refs']);
-        }
-        if (!is_array($section['items'] ?? null)) {
-            continue;
-        }
-        foreach ($section['items'] as &$item) {
-            if (!is_array($item) || !isset($item['media_refs'])) {
+
+        foreach ($document[$section_list_key] as &$section) {
+            if (!is_array($section)) {
                 continue;
             }
-            $item['media_refs'] = iss_editorial_hydrate_reference_preview_list($item['media_refs']);
+            if (isset($section['media_refs'])) {
+                $section['media_refs'] = iss_editorial_hydrate_reference_preview_list($section['media_refs']);
+            }
+            if (!is_array($section['items'] ?? null)) {
+                continue;
+            }
+            foreach ($section['items'] as &$item) {
+                if (!is_array($item) || !isset($item['media_refs'])) {
+                    continue;
+                }
+                $item['media_refs'] = iss_editorial_hydrate_reference_preview_list($item['media_refs']);
+            }
+            unset($item);
         }
-        unset($item);
+        unset($section);
     }
-    unset($section);
 
     return $document;
 }

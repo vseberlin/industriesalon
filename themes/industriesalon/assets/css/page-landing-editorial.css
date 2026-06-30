@@ -137,6 +137,27 @@
   max-width: 54rem;
 }
 
+.iss-landing-text {
+  grid-template-columns: minmax(0, 0.78fr) minmax(0, 1.22fr);
+  align-items: start;
+}
+
+.iss-landing-text .iss-landing-section__copy {
+  display: grid;
+  grid-column: 2;
+  max-width: 48rem;
+}
+
+.iss-landing-text .iss-landing-section__title {
+  max-width: 18ch;
+  font-size: clamp(1.85rem, 2.7vw, 3.1rem);
+  line-height: 1.05;
+}
+
+.iss-landing-text .iss-landing-section__body {
+  max-width: 44rem;
+}
+
 .iss-landing-gateway {
   display: grid;
   gap: 1rem;
@@ -333,6 +354,46 @@
   grid-template-columns: minmax(8rem, 0.34fr) minmax(0, 1fr);
   align-items: baseline;
   background: transparent;
+}
+
+.iss-landing-section--treatment-feature-media-text .iss-media-text__layout {
+  align-items: center;
+}
+
+.iss-landing-section--treatment-feature-media-text .iss-media-text__inner {
+  gap: clamp(1rem, 2vw, 1.5rem);
+}
+
+.iss-landing-section--treatment-feature-media-text .iss-media-text__copy {
+  display: grid;
+  gap: 0.85rem;
+}
+
+.iss-landing-section--treatment-feature-media-text .iss-media-text__text {
+  max-width: 42rem;
+  color: var(--iss-landing-muted);
+  line-height: 1.7;
+}
+
+.iss-landing-section--treatment-feature-media-text .iss-media-text__text > :first-child {
+  margin-top: 0;
+}
+
+.iss-landing-section--treatment-feature-media-text .iss-media-text__text > :last-child {
+  margin-bottom: 0;
+}
+
+.iss-landing-section--treatment-feature-media-text .iss-landing-feature__facts {
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 10rem), 1fr));
+}
+
+.iss-landing-section--treatment-feature-media-text .iss-media-text__media {
+  min-height: clamp(20rem, 34vw, 30rem);
+  background: color-mix(in srgb, var(--iss-landing-ink) 7%, transparent);
+}
+
+.iss-landing-section--treatment-feature-media-text .iss-media-text__image {
+  min-height: 100%;
 }
 
 .iss-landing-dynamic-slot--front-timeline {
@@ -620,7 +681,7 @@
   max-width: 42rem;
 }
 
-.iss-landing-editorial--skin-frontpage .iss-media-text__media {
+.iss-landing-editorial--skin-frontpage .iss-landing-section--treatment-feature-microblocks .iss-media-text__media {
   --iss-hero-overlay: linear-gradient(180deg, rgba(18, 18, 18, 0.72) 0%, rgba(18, 18, 18, 0.46) 46%, rgba(18, 18, 18, 0.1) 100%);
 
   position: relative;
@@ -630,7 +691,7 @@
   overflow: hidden;
 }
 
-.iss-landing-editorial--skin-frontpage .iss-media-text__media::before {
+.iss-landing-editorial--skin-frontpage .iss-landing-section--treatment-feature-microblocks .iss-media-text__media::before {
   content: "";
   position: absolute;
   inset: 0;
@@ -639,7 +700,7 @@
   pointer-events: none;
 }
 
-.iss-landing-editorial--skin-frontpage .iss-media-text__heading {
+.iss-landing-editorial--skin-frontpage .iss-landing-section--treatment-feature-microblocks .iss-media-text__heading {
   position: absolute;
   inset: 0 auto auto 0;
   z-index: 2;
@@ -652,9 +713,9 @@
   pointer-events: none;
 }
 
-.iss-landing-editorial--skin-frontpage .iss-media-text__heading .iss-kicker,
-.iss-landing-editorial--skin-frontpage .iss-media-text__heading .iss-heading__title,
-.iss-landing-editorial--skin-frontpage .iss-media-text__heading .iss-heading__text {
+.iss-landing-editorial--skin-frontpage .iss-landing-section--treatment-feature-microblocks .iss-media-text__heading .iss-kicker,
+.iss-landing-editorial--skin-frontpage .iss-landing-section--treatment-feature-microblocks .iss-media-text__heading .iss-heading__title,
+.iss-landing-editorial--skin-frontpage .iss-landing-section--treatment-feature-microblocks .iss-media-text__heading .iss-heading__text {
   color: inherit;
 }
 
@@ -664,14 +725,14 @@
   line-height: 1.02;
 }
 
-.iss-landing-editorial--skin-frontpage .iss-media-text__image {
+.iss-landing-editorial--skin-frontpage .iss-landing-section--treatment-feature-microblocks .iss-media-text__image {
   position: absolute;
   inset: 0;
   z-index: 0;
   margin: 0;
 }
 
-.iss-landing-editorial--skin-frontpage .iss-media-text__image img {
+.iss-landing-editorial--skin-frontpage .iss-landing-section--treatment-feature-microblocks .iss-media-text__image img {
   display: block;
   width: 100%;
   height: 100%;
@@ -707,6 +768,7 @@
   .iss-landing-section--items-4.iss-landing-section--treatment-gateway-cards .iss-landing-gateway,
   .iss-landing-section--treatment-gateway-link-list .iss-landing-section__inner,
   .iss-landing-feature,
+  .iss-landing-text,
   .iss-landing-section--treatment-feature-microblocks .iss-landing-feature,
   .iss-landing-section--treatment-feature-microblocks .iss-landing-feature__fact,
   .iss-landing-dynamic-slot--front-timeline,
@@ -716,6 +778,10 @@
 
   .iss-landing-section__title {
     max-width: 100%;
+  }
+
+  .iss-landing-text .iss-landing-section__copy {
+    grid-column: auto;
   }
 
   .iss-landing-editorial--skin-frontpage .iss-landing-section__title {
