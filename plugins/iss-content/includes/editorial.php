@@ -31,11 +31,90 @@ function iss_content_model_editorial_material_section(): array
     ];
 }
 
+function iss_content_model_landing_page_allowed_slugs(): array
+{
+    return [
+        'about',
+        'verein',
+        'salon-vermietung',
+        'sammlungen',
+    ];
+}
+
+function iss_content_model_landing_page_is_eligible($post): bool
+{
+    if (is_numeric($post)) {
+        $post = get_post((int) $post);
+    }
+
+    if (!$post instanceof WP_Post || $post->post_type !== 'page') {
+        return false;
+    }
+
+    $front_page_id = absint(get_option('page_on_front'));
+    if ($front_page_id > 0 && (int) $post->ID === $front_page_id) {
+        return true;
+    }
+
+    return in_array((string) $post->post_name, iss_content_model_landing_page_allowed_slugs(), true);
+}
+
 function iss_content_model_register_editorial_formats(array $formats): array
 {
     $gallery_section = iss_content_model_editorial_gallery_section();
     $image_wall_section = iss_content_model_editorial_image_wall_section();
     $material_section = iss_content_model_editorial_material_section();
+
+    $formats['landing'] = [
+        'label' => __('Landing Page', 'iss-content-model'),
+        'base' => 'ordered',
+        'post_types' => ['page'],
+        'post_eligibility_callback' => 'iss_content_model_landing_page_is_eligible',
+        'default_skin' => 'typografisch',
+        'default_variant' => 'standard',
+        'skin_meta_key' => '_iss_editorial_landing_skin',
+        'sections' => [
+            'statement' => [
+                'label' => __('Statement', 'iss-content-model'),
+                'description' => __('Redaktionelle These, Intro oder Callout mit optionalem Link.', 'iss-content-model'),
+                'supports' => ['treatment', 'links'],
+                'treatments' => [
+                    'statement.lead' => __('Leitstatement', 'iss-content-model'),
+                    'statement.callout' => __('Callout', 'iss-content-model'),
+                ],
+            ],
+            'gateway' => [
+                'label' => __('Gateway', 'iss-content-model'),
+                'description' => __('Kuratiert nächste Wege als Karten oder Linkliste.', 'iss-content-model'),
+                'supports' => ['treatment', 'items'],
+                'treatments' => [
+                    'gateway.cards' => __('Karten', 'iss-content-model'),
+                    'gateway.link-list' => __('Linkliste', 'iss-content-model'),
+                    'gateway.feature-strip' => __('Feature-Leiste', 'iss-content-model'),
+                ],
+            ],
+            'feature' => [
+                'label' => __('Feature', 'iss-content-model'),
+                'description' => __('Bild, Fakten oder Mikroblöcke als hervorgehobener Landing-Abschnitt.', 'iss-content-model'),
+                'supports' => ['treatment', 'facts', 'links', 'media_refs'],
+                'treatments' => [
+                    'feature.media-panel' => __('Medienpanel', 'iss-content-model'),
+                    'feature.microblocks' => __('Mikroblöcke', 'iss-content-model'),
+                ],
+            ],
+            'dynamic_slot' => [
+                'label' => __('Dynamischer Slot', 'iss-content-model'),
+                'description' => __('Theme-eigener Slot für bestehende dynamische Frontpage-Module.', 'iss-content-model'),
+                'supports' => ['treatment', 'slot_key', 'no_body'],
+                'treatments' => [
+                    'slot.projects' => __('Projekt-Notizen', 'iss-content-model'),
+                    'slot.timeline' => __('Termine', 'iss-content-model'),
+                    'slot.visit-info' => __('Besuchsinfo', 'iss-content-model'),
+                    'slot.newsletter' => __('Newsletter', 'iss-content-model'),
+                ],
+            ],
+        ],
+    ];
 
     $formats['fuehrung'] = [
         'label' => __('Führung', 'iss-content-model'),

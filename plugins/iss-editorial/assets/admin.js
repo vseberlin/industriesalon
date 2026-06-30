@@ -157,9 +157,13 @@
       longread_chapter: '#1a1a2e',
       longread_quote: '#8a3b59',
       timeline_item: '#3a6c8f',
-      photoalbum: '#426d54',
-      galerie: '#426d54',
-      fliesstext: '#5f5e5a',
+        photoalbum: '#426d54',
+        galerie: '#426d54',
+        statement: '#a32d2d',
+        gateway: '#255f63',
+        feature: '#426d54',
+        dynamic_slot: '#5f5e5a',
+        fliesstext: '#5f5e5a',
         kapitel: '#1a1a2e',
         zitat: '#d4537e',
         material: '#6b5b35',
@@ -259,6 +263,13 @@
       }
 
       if (format === 'fuehrung' && ['intro', 'kapitel', 'leitfrage', 'material', 'schluss'].indexOf(type) !== -1) {
+        return true;
+      }
+
+      if (format === 'landing' && type === 'gateway') {
+        return true;
+      }
+      if (format === 'landing' && ['statement', 'feature'].indexOf(type) !== -1) {
         return true;
       }
 
@@ -404,6 +415,15 @@
       if (section.section_treatment) {
         parts.push(section.section_treatment === 'aside' ? 'Ausstellungsentscheidung' : 'Kapitel');
       }
+      if (section.treatment) {
+        parts.push(treatmentLabel(section.type || '', section.treatment));
+      }
+      if (section.slot_key) {
+        parts.push(slotKeyLabel(section.slot_key));
+      }
+      if ((section.items || []).length) {
+        parts.push(String((section.items || []).length) + ' Ziel(e)');
+      }
       if ((section.facts || []).length) {
         parts.push(String((section.facts || []).length) + ' Fakt(en)');
       }
@@ -444,7 +464,10 @@
         body: '',
         object_refs: [],
         media_refs: [],
-        links: []
+        links: [],
+        items: supports(type, 'items') ? [] : undefined,
+        slot_key: supports(type, 'slot_key') ? defaultSlotKey(type) : undefined,
+        treatment: defaultTreatment(type)
       });
       render();
       openEditor(documentState.sections.length - 1);
@@ -1087,6 +1110,18 @@
         renderFactEditor(section, body);
       }
 
+      if (supports(type, 'treatment')) {
+        renderTreatmentControl(section, body);
+      }
+
+      if (supports(type, 'items')) {
+        renderGatewayItemEditor(section, body);
+      }
+
+      if (supports(type, 'slot_key')) {
+        renderSlotKeyControl(section, body);
+      }
+
       if (supports(type, 'year')) {
         body.appendChild(createTextInput('Jahr', section.year || '', function (value) {
           section.year = value;
@@ -1269,6 +1304,121 @@
       }
 
       return 'Raster';
+    }
+
+    function treatmentChoices(type) {
+      return (sectionConfig(type).treatments || []).filter(function (item) {
+        return item && item.slug;
+      });
+    }
+
+    function defaultTreatment(type) {
+      var choices = treatmentChoices(type);
+
+      return choices.length ? choices[0].slug : '';
+    }
+
+    function treatmentLabel(type, treatment) {
+      var choices = treatmentChoices(type);
+      var match = choices.filter(function (item) {
+        return item.slug === treatment;
+      })[0];
+
+      return match ? match.label : treatment;
+    }
+
+    function renderTreatmentControl(section, body) {
+      var type = section.type || 'kapitel';
+      var choices = treatmentChoices(type);
+      var wrapper = createElement('div', 'iss-editorial-field iss-editorial-field--treatment');
+      var select = document.createElement('select');
+
+      if (!choices.length) {
+        return;
+      }
+
+      if (!section.treatment) {
+        section.treatment = choices[0].slug;
+      }
+
+      choices.forEach(function (choice) {
+        var option = document.createElement('option');
+        option.value = choice.slug;
+        option.textContent = choice.label || choice.slug;
+        option.selected = choice.slug === section.treatment;
+        select.appendChild(option);
+      });
+
+      select.addEventListener('change', function () {
+        section.treatment = select.value || choices[0].slug;
+        render();
+        scheduleAutosave();
+      });
+
+      wrapper.appendChild(createElement('span', '', 'Darstellung'));
+      wrapper.appendChild(select);
+      body.appendChild(wrapper);
+    }
+
+    function slotKeyChoices(type) {
+      if (type !== 'dynamic_slot') {
+        return [];
+      }
+
+      return [
+        { value: 'front-projects', label: 'Projekt-Notizen' },
+        { value: 'front-timeline', label: 'Termine' },
+        { value: 'front-visit-info', label: 'Besuchsinfo' },
+        { value: 'front-newsletter', label: 'Newsletter' }
+      ];
+    }
+
+    function defaultSlotKey(type) {
+      var choices = slotKeyChoices(type);
+
+      return choices.length ? choices[0].value : '';
+    }
+
+    function slotKeyLabel(slotKey) {
+      var choices = slotKeyChoices('dynamic_slot');
+      var match = choices.filter(function (item) {
+        return item.value === slotKey;
+      })[0];
+
+      return match ? match.label : slotKey;
+    }
+
+    function renderSlotKeyControl(section, body) {
+      var type = section.type || '';
+      var choices = slotKeyChoices(type);
+      var wrapper = createElement('div', 'iss-editorial-field iss-editorial-field--slot-key');
+      var select = document.createElement('select');
+
+      if (!choices.length) {
+        return;
+      }
+
+      if (!section.slot_key) {
+        section.slot_key = choices[0].value;
+      }
+
+      choices.forEach(function (choice) {
+        var option = document.createElement('option');
+        option.value = choice.value;
+        option.textContent = choice.label;
+        option.selected = choice.value === section.slot_key;
+        select.appendChild(option);
+      });
+
+      select.addEventListener('change', function () {
+        section.slot_key = select.value || choices[0].value;
+        render();
+        scheduleAutosave();
+      });
+
+      wrapper.appendChild(createElement('span', '', 'Slot'));
+      wrapper.appendChild(select);
+      body.appendChild(wrapper);
     }
 
     function renderGalleryLayoutControl(section, body) {
@@ -1476,6 +1626,157 @@
       });
 
       wrapper.appendChild(createElement('span', '', 'Fakten'));
+      wrapper.appendChild(rows);
+      wrapper.appendChild(add);
+      body.appendChild(wrapper);
+      rerenderRows();
+    }
+
+    function renderGatewayItemMedia(item, target, rerender) {
+      clear(target);
+      item.media_refs = Array.isArray(item.media_refs) ? item.media_refs : [];
+
+      if (!item.media_refs.length) {
+        target.appendChild(createElement('p', 'description', 'Kein Bild ausgewählt.'));
+        return;
+      }
+
+      item.media_refs.slice(0, 1).forEach(function (reference) {
+        var preview = createElement('div', 'iss-editorial-media-thumb');
+        var remove = createElement('button', 'button button-link-delete', 'Bild entfernen');
+        if (reference.thumbnail) {
+          var image = document.createElement('img');
+          image.src = reference.thumbnail;
+          image.alt = '';
+          preview.appendChild(image);
+        } else {
+          preview.textContent = reference.label || 'Bild';
+        }
+        remove.type = 'button';
+        remove.addEventListener('click', function () {
+          item.media_refs = [];
+          rerender();
+          render();
+          scheduleAutosave();
+        });
+        target.appendChild(preview);
+        target.appendChild(remove);
+      });
+    }
+
+    function openGatewayItemMediaLibrary(item, tray, rerender) {
+      if (!window.wp || !wp.media) {
+        tray.textContent = 'Medienauswahl ist nicht geladen.';
+        return;
+      }
+
+      var frame = wp.media({
+        title: 'Bild auswählen',
+        button: { text: 'Bild übernehmen' },
+        multiple: false,
+        library: { type: 'image' }
+      });
+
+      frame.on('open', function () {
+        var selection = frame.state().get('selection');
+        (item.media_refs || []).slice(0, 1).forEach(function (reference) {
+          if (!reference.id) {
+            return;
+          }
+          var attachment = wp.media.attachment(reference.id);
+          attachment.fetch();
+          selection.add(attachment);
+        });
+      });
+
+      frame.on('select', function () {
+        item.media_refs = frame.state().get('selection').map(function (attachment) {
+          return referenceFromMediaAttachment(attachment.toJSON());
+        }).filter(function (reference) {
+          return reference.id;
+        }).slice(0, 1);
+        rerender();
+        render();
+        scheduleAutosave();
+      });
+
+      frame.open();
+    }
+
+    function renderGatewayItemEditor(section, body) {
+      var wrapper = createElement('div', 'iss-editorial-field iss-editorial-field--gateway-items');
+      var rows = createElement('div', 'iss-editorial-gateway-item-rows');
+      var add = createElement('button', 'button', 'Ziel hinzufügen');
+
+      function rerenderRows() {
+        clear(rows);
+        section.items = Array.isArray(section.items) ? section.items : [];
+        section.items.forEach(function (item, index) {
+          var row = createElement('div', 'iss-editorial-gateway-item-row');
+          var fields = createElement('div', 'iss-editorial-gateway-item-row__fields');
+          var media = createElement('div', 'iss-editorial-gateway-item-row__media');
+          var tray = createElement('div', 'iss-editorial-media-tray');
+          var mediaButton = createElement('button', 'button', 'Bild wählen');
+          var remove = createElement('button', 'button button-link-delete', 'Entfernen');
+
+          item.media_refs = Array.isArray(item.media_refs) ? item.media_refs : [];
+          fields.appendChild(createTextInput('Beschriftung', item.label || '', function (value) {
+            item.label = value;
+            render();
+            scheduleAutosave();
+          }));
+          fields.appendChild(createTextarea('Text', item.text || '', function (value) {
+            item.text = value;
+            render();
+            scheduleAutosave();
+          }, 3));
+          fields.appendChild(createTextInput('URL', item.url || '', function (value) {
+            item.url = value;
+            render();
+            scheduleAutosave();
+          }));
+
+          function rerenderMedia() {
+            renderGatewayItemMedia(item, tray, rerenderMedia);
+          }
+
+          mediaButton.type = 'button';
+          mediaButton.addEventListener('click', function () {
+            openGatewayItemMediaLibrary(item, tray, rerenderMedia);
+          });
+
+          remove.type = 'button';
+          remove.addEventListener('click', function () {
+            section.items.splice(index, 1);
+            rerenderRows();
+            render();
+            scheduleAutosave();
+          });
+
+          media.appendChild(createElement('span', '', 'Bild'));
+          media.appendChild(tray);
+          media.appendChild(mediaButton);
+          row.appendChild(fields);
+          row.appendChild(media);
+          row.appendChild(remove);
+          rows.appendChild(row);
+          rerenderMedia();
+        });
+        if (!section.items.length) {
+          rows.appendChild(createElement('p', 'description', 'Noch keine Ziele hinzugefügt.'));
+        }
+      }
+
+      add.type = 'button';
+      add.addEventListener('click', function () {
+        section.items = Array.isArray(section.items) ? section.items : [];
+        section.items.push({ label: '', text: '', url: '', media_refs: [] });
+        rerenderRows();
+        render();
+        scheduleAutosave();
+      });
+
+      wrapper.appendChild(createElement('span', '', 'Ziele'));
       wrapper.appendChild(rows);
       wrapper.appendChild(add);
       body.appendChild(wrapper);

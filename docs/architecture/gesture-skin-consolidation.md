@@ -65,7 +65,7 @@ The `shapes` abstraction in `veranstaltungen-registry.php`
 object's time-behavior. It should be **promoted to all domains** rather than
 living only inside Veranstaltungen.
 
-## Target: 13 Gestures
+## Target: 14 Gestures
 
 One vocabulary, shared by every included domain. The same word means the same
 block across those domains. Per-domain config declares a *recommended subset*,
@@ -86,6 +86,10 @@ not a separate language.
 | 11| `massstab`     | massstab, "Merkpunkte" (unify the label)                          |
 | 12| `programm`     | programm (festival sub-schedule)                                  |
 | 13| `upload_intake`| upload_intake                                                     |
+| 14| `gateway`      | curated next-path cards/links for landing pages                   |
+| 15| `statement`    | landing-page thesis, editorial intro, or callout                  |
+| 16| `feature`      | landing-page highlighted media/facts/microblock section           |
+| 17| `dynamic_slot` | approved theme-owned dynamic modules for native page landings     |
 
 **Retired as gestures:**
 
@@ -100,6 +104,13 @@ not a separate language.
 The two largest wins are #5 and #7: today there are two quote types and four
 image types. Collapsing image handling to one `galerie` with a `layout` option
 removes the biggest single source of editor confusion and theme branching.
+`gateway` is added for native landing pages as curated onward navigation. It is
+not a generic layout primitive, and it should not spawn count-specific gestures
+such as `card_row`, `teaser_grid`, `portal_grid`, or `gateway_3_cards`.
+`statement` and `feature` cover text-led and highlighted front-page body
+sections without turning every row shape into a new gesture. `dynamic_slot` is
+only for mapped renderers owned by the theme; it is not a raw block, shortcode,
+or arbitrary embed primitive.
 
 ## Target: Skins
 
@@ -114,6 +125,7 @@ A skin is the whole-page reading posture, orthogonal to event taxonomy.
 | 5 | `bildmatrix`   | blueprint-matrix                                              | Matrix/grid treatment for photoalbums and gallery-led content |
 | 6 | `buehne`       | festival                                                      | Image/atmosphere-forward events and programmes |
 | 7 | `chronik`      | dokumentarisch                                                | Timeline-driven Rückblicke and historical views |
+| 8 | `frontpage`    | front-page Gutenberg parity                                   | Native page JSON reconstruction of the current homepage body |
 
 **Key move:** `Vortrag`, `Lesung`, `Gespräch`, `Workshop`, `Konzert`,
 `Repair Cafe` stop being skins. They remain the **semantic type** — driving the
@@ -125,6 +137,11 @@ word on the page.
 `standard` remains only the generic base fallback where the editor framework
 requires one. `industrieakte` was mapped to `quellenbuehne` during the hard
 cleanup and is not a canonical skin.
+
+`frontpage` is intentionally narrow. It is a page-level skin used to carry the
+existing hardcoded homepage visual posture into native landing JSON. If its
+rules prove useful elsewhere, they can be promoted later; until then, do not
+turn individual homepage row spacing into new public gesture treatments.
 
 `blueprint-matrix` is a real skin behavior. The current publication renderer
 switches photoalbum output into a separate coordinate/matrix treatment, so the
@@ -169,6 +186,31 @@ Resolution order:
 ```
 document feature override -> skin feature default -> domain feature default -> off
 ```
+
+## Target: Treatments
+
+Treatments are per-gesture rendering choices inside a whole-page skin. They are
+separate from `skin`: the skin is the page reading posture, while the treatment
+is how one gesture renders inside that posture.
+
+Landing pages start with these gateway treatments:
+
+| Treatment | Purpose |
+|-----------|---------|
+| `gateway.cards` | Card grid for two, three, or four next paths; count is handled by CSS only. |
+| `gateway.link-list` | Compact editorial link list for dense onward navigation. |
+| `gateway.feature-strip` | Horizontal feature band for a small set of emphasized next paths. |
+| `statement.lead` | Centered editorial thesis/intro treatment. |
+| `statement.callout` | Compact text callout treatment. |
+| `feature.media-panel` | Copy, facts, links, and a supporting media panel. |
+| `feature.microblocks` | Copy plus stacked microblock/fact rows and optional media. |
+| `slot.projects` | Theme-owned front-page project notes slot. |
+| `slot.timeline` | Theme-owned front-page timeline query slot. |
+| `slot.visit-info` | Theme-owned front-page visit-info slot. |
+| `slot.newsletter` | Theme-owned front-page newsletter slot. |
+
+Treatment names should describe durable visual behavior. Do not add a new
+treatment for every card count or one-off page layout.
 
 Examples:
 
@@ -227,11 +269,12 @@ ausstellung     exhibition        quellenbuehne       [shared subset]      rail 
 projekt         evergreen         dossier             [shared subset]      rail on
 rückblick       backward          chronik             [shared subset]      rail optional
 publication     photoalbum        bildmatrix          galerie/material     rail top
+page            landing           typografisch/dossier/frontpage gateway    rail off
 ```
 
 Concretely:
 
-1. **One `GestureRegistry`** — the 13 gestures, defined once. Replaces both the
+1. **One `GestureRegistry`** — the shared gestures, defined once. Replaces both the
    `allowed_gestures` arrays and the per-format `sections` maps.
 2. **One `SkinRegistry`** — the canonical skins, defined once, each declaring
    template, CSS handle, and which gestures it emphasizes.
@@ -318,6 +361,23 @@ or gallery-led page. Keep `galerie` as the gesture and `photoalbum` as the
 shape/source; the skin decides whether it renders as sequence, wall, carousel,
 or matrix.
 
+## Native Landing Pages
+
+Native landing pages stay WordPress `page` posts and use an eligibility-gated
+`landing` format rather than a `landing_page` CPT. The first allowed pages are
+the front page, `about`, `verein`, `salon-vermietung`, and `sammlungen`.
+
+The landing registry owns allowed gestures, skins, default skin, and treatment
+options. Page meta stores `_iss_editorial_landing`,
+`_iss_editorial_enabled_landing`, `_iss_editorial_landing_skin`, and ordered
+sections. Each section may store an optional `treatment`.
+
+The `gateway` gesture is the first landing-specific addition to the shared
+vocabulary. It stores `kicker`, `title`, `body`, optional `treatment`, and
+`items[]` entries with `label`, `text`, `url`, and optional `media_refs`.
+Theme rendering must emit stable skin, gesture, and treatment classes. Disabled
+or empty JSON falls back to the existing page template and post content.
+
 ## Migration mapping (old → new)
 
 Document migration runs against the format-specific `_iss_editorial_*` JSON
@@ -372,6 +432,9 @@ domains:
   `section_treatment`.
 - Rückblick authoring now exposes `fliesstext`, `galerie`, `objektfokus`,
   `material`, and `schluss`.
+- Native landing pages use an eligibility-gated extension of the same registry
+  model, with `gateway` as the first landing gesture and treatments resolved
+  separately from whole-page skins.
 - Stored local Ausstellung, Projekt, and publication JSON was migrated to
   canonical section types and skins; the deployable SQL artifact is
   `ops/sql/2026-06-27-editorial-vocabulary-normalized-json.sql`.

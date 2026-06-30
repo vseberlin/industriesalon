@@ -29,11 +29,32 @@ function iss_editorial_get_registered_formats(): array
                 continue;
             }
 
+            $treatments = [];
+            foreach ((array) ($section['treatments'] ?? []) as $treatment_slug => $treatment) {
+                if (is_array($treatment)) {
+                    $treatment_slug = iss_editorial_sanitize_treatment_slug(is_string($treatment_slug) ? $treatment_slug : (string) ($treatment['slug'] ?? ''));
+                    $treatment_label = sanitize_text_field((string) ($treatment['label'] ?? $treatment_slug));
+                } else {
+                    $treatment_slug = iss_editorial_sanitize_treatment_slug(is_string($treatment_slug) ? $treatment_slug : (string) $treatment);
+                    $treatment_label = sanitize_text_field((string) $treatment);
+                }
+
+                if ($treatment_slug === '') {
+                    continue;
+                }
+
+                $treatments[$treatment_slug] = [
+                    'slug' => $treatment_slug,
+                    'label' => $treatment_label !== '' ? $treatment_label : $treatment_slug,
+                ];
+            }
+
             $sections[$type] = [
                 'type' => $type,
                 'label' => sanitize_text_field((string) ($section['label'] ?? $type)),
                 'description' => sanitize_text_field((string) ($section['description'] ?? '')),
                 'supports' => array_values(array_filter(array_map('sanitize_key', (array) ($section['supports'] ?? [])))),
+                'treatments' => array_values($treatments),
                 'ui_hidden' => !empty($section['ui_hidden']),
             ];
         }
@@ -51,10 +72,19 @@ function iss_editorial_get_registered_formats(): array
             'sections' => $sections,
             'default_skin' => sanitize_key((string) ($format['default_skin'] ?? 'standard')),
             'default_variant' => sanitize_key((string) ($format['default_variant'] ?? 'standard')),
+            'post_eligibility_callback' => is_callable($format['post_eligibility_callback'] ?? null) ? $format['post_eligibility_callback'] : null,
+            'skin_meta_key' => sanitize_key((string) ($format['skin_meta_key'] ?? '')),
         ];
     }
 
     return $normalized;
+}
+
+function iss_editorial_sanitize_treatment_slug(string $slug): string
+{
+    $slug = strtolower($slug);
+
+    return (string) preg_replace('/[^a-z0-9_.-]/', '', $slug);
 }
 
 function iss_editorial_get_format(string $format_slug): array
@@ -69,7 +99,43 @@ function iss_editorial_get_format_for_post_type(string $post_type): array
 {
     $post_type = sanitize_key($post_type);
     foreach (iss_editorial_get_registered_formats() as $format) {
+        if (is_callable($format['post_eligibility_callback'] ?? null)) {
+            continue;
+        }
         if (in_array($post_type, (array) $format['post_types'], true)) {
+            return $format;
+        }
+    }
+
+    return [];
+}
+
+function iss_editorial_format_is_post_eligible(array $format, WP_Post $post): bool
+{
+    if (!in_array((string) $post->post_type, (array) ($format['post_types'] ?? []), true)) {
+        return false;
+    }
+
+    $callback = $format['post_eligibility_callback'] ?? null;
+    if (!is_callable($callback)) {
+        return true;
+    }
+
+    return (bool) call_user_func($callback, $post, $format);
+}
+
+function iss_editorial_get_format_for_post($post): array
+{
+    if (is_numeric($post)) {
+        $post = get_post((int) $post);
+    }
+
+    if (!$post instanceof WP_Post) {
+        return [];
+    }
+
+    foreach (iss_editorial_get_registered_formats() as $format) {
+        if (iss_editorial_format_is_post_eligible($format, $post)) {
             return $format;
         }
     }
@@ -163,6 +229,14 @@ function iss_editorial_get_autosave_meta_key(string $format_slug): string
 function iss_editorial_get_enabled_meta_key(string $format_slug): string
 {
     return '_iss_editorial_enabled_' . sanitize_key($format_slug);
+}
+
+function iss_editorial_get_skin_meta_key(string $format_slug): string
+{
+    $format = iss_editorial_get_format($format_slug);
+    $meta_key = sanitize_key((string) ($format['skin_meta_key'] ?? ''));
+
+    return $meta_key !== '' ? $meta_key : '';
 }
 
 function iss_editorial_get_empty_document(string $format_slug): array

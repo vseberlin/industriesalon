@@ -36,7 +36,7 @@ function iss_editorial_use_block_editor_for_post(bool $use_block_editor, $post):
         $post = get_post((int) $post);
     }
 
-    if ($post instanceof WP_Post && iss_editorial_get_format_for_post_type((string) $post->post_type)) {
+    if ($post instanceof WP_Post && iss_editorial_get_format_for_post($post)) {
         return false;
     }
 
@@ -47,6 +47,9 @@ add_filter('use_block_editor_for_post', 'iss_editorial_use_block_editor_for_post
 function iss_editorial_remove_default_editor_support(): void
 {
     foreach (iss_editorial_get_registered_formats() as $format) {
+        if (is_callable($format['post_eligibility_callback'] ?? null)) {
+            continue;
+        }
         foreach ((array) $format['post_types'] as $post_type) {
             remove_post_type_support((string) $post_type, 'editor');
         }
@@ -118,7 +121,7 @@ function iss_editorial_render_route_relation_hidden_fields(array $relations): vo
 
 function iss_editorial_render_main_canvas(WP_Post $post): void
 {
-    $format = iss_editorial_get_format_for_post_type((string) $post->post_type);
+    $format = iss_editorial_get_format_for_post($post);
     if (!$format) {
         return;
     }
@@ -226,16 +229,16 @@ function iss_editorial_enqueue_admin_assets(string $hook): void
         return;
     }
 
-    $format = iss_editorial_get_format_for_post_type((string) $screen->post_type);
-    if (!$format) {
-        return;
-    }
-
     $post_id = 0;
     // phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Read-only admin context for asset config.
     if (isset($_GET['post'])) {
         // phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Read-only admin context for asset config.
         $post_id = absint(wp_unslash($_GET['post']));
+    }
+
+    $format = $post_id > 0 ? iss_editorial_get_format_for_post($post_id) : iss_editorial_get_format_for_post_type((string) $screen->post_type);
+    if (!$format) {
+        return;
     }
 
     iss_editorial_enqueue_archive_picker_assets($post_id);
@@ -321,7 +324,7 @@ function iss_editorial_save_meta_box(int $post_id): void
     }
 
     $post_type = (string) get_post_type($post_id);
-    $format = iss_editorial_get_format_for_post_type($post_type);
+    $format = iss_editorial_get_format_for_post($post_id);
     if (!$format) {
         return;
     }

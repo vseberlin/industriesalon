@@ -127,6 +127,49 @@
           "name": "IBM Plex Sans",
           "slug": "plex",
           "fontFamily": "\"IBM Plex Sans\", system-ui, sans-serif"
+        },
+        {
+          "name": "IBM Plex Serif",
+          "slug": "plex-serif",
+          "fontFamily": "\"IBM Plex Serif\", Georgia, \"Times New Roman\", serif",
+          "fontFace": [
+            {
+              "fontFamily": "IBM Plex Serif",
+              "fontStyle": "normal",
+              "fontWeight": "400",
+              "fontDisplay": "swap",
+              "src": [
+                "file:./assets/fonts/ibm-plex-serif/IBMPlexSerif-Regular.woff2"
+              ]
+            },
+            {
+              "fontFamily": "IBM Plex Serif",
+              "fontStyle": "normal",
+              "fontWeight": "500",
+              "fontDisplay": "swap",
+              "src": [
+                "file:./assets/fonts/ibm-plex-serif/IBMPlexSerif-Medium.woff2"
+              ]
+            },
+            {
+              "fontFamily": "IBM Plex Serif",
+              "fontStyle": "normal",
+              "fontWeight": "600",
+              "fontDisplay": "swap",
+              "src": [
+                "file:./assets/fonts/ibm-plex-serif/IBMPlexSerif-SemiBold.woff2"
+              ]
+            },
+            {
+              "fontFamily": "IBM Plex Serif",
+              "fontStyle": "normal",
+              "fontWeight": "700",
+              "fontDisplay": "swap",
+              "src": [
+                "file:./assets/fonts/ibm-plex-serif/IBMPlexSerif-Bold.woff2"
+              ]
+            }
+          ]
         }
       ],
       "fontSizes": [

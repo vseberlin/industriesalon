@@ -89,6 +89,25 @@ contract. The route station fields map to relation keys `place_id`, `role=stop`,
 `weight`, `route_title`, `route_teaser`, `station_object_id`, and
 `station_story_id`.
 
+Native landing pages use the same engine only behind an eligibility gate. The
+`landing` format applies to native WordPress `page` posts, not a new CPT, and
+is limited in V1 to the front page plus `about`, `verein`, `salon-vermietung`,
+and `sammlungen`. WordPress keeps page identity, URLs, menus, hierarchy, and the
+static front-page setting. The front page keeps `front-page.html` as its wrapper.
+Landing JSON is stored in `_iss_editorial_landing`, enabled through
+`_iss_editorial_enabled_landing`, and assigned a page posture through
+`_iss_editorial_landing_skin`. The registry owns allowed landing gestures,
+skins, default skin, and allowed gesture treatments; page meta stores the chosen
+skin and ordered section content. Disabled, invalid, missing, or empty landing
+JSON leaves the existing template and `post_content` output untouched. Static
+page templates host the theme-owned `industriesalon/editorial-landing` dynamic
+slot; it emits nothing until an eligible page has enabled, renderable landing
+JSON.
+The current front-page landing document uses the dedicated `frontpage` skin for
+parity with the hardcoded Gutenberg homepage body. That skin is scoped to the
+homepage migration; reusable visual choices still belong in per-gesture
+treatments.
+
 Unresolved references are omitted from public output and shown as placeholders
 in previews for editors.
 

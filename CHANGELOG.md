@@ -4,6 +4,46 @@ This file records durable project changes. Keep it compact: current state belong
 `handoff_CURRENT.md`, active follow-up in `TODO.md`, and detailed investigation can
 be recovered from Git history.
 
+## 2026-06-30
+
+- Added local IBM Plex Serif font files to the theme, registered the family in
+  `theme.json`, and switched the front-page landing serif headings/facts from
+  the Georgia fallback to IBM Plex Serif. The frontpage landing skin now keeps
+  semantic `h2` section headings but renders them at a smaller visual scale.
+- Switched native landing JSON CTA links to the shared `.iss-button` primary
+  tier so they inherit the active page color scheme, and extended landing dark
+  surfaces with the shared button variables. The front-page rental panel now
+  sizes by content while preserving the media/text visual match.
+- Backfilled native page JSON landing data for the static front page and added
+  `ops/sql/2026-06-30-frontpage-landing-json.sql` as the transfer artifact.
+  Landing support now includes `statement`, `feature`, and mapped
+  `dynamic_slot` gestures so the front-page body can be reconstructed while
+  `front-page.html` keeps the hero/template wrapper. The theme suppresses the
+  hardcoded front-page body fallback only when landing JSON is enabled and
+  populated.
+- Added a dedicated `frontpage` landing skin for homepage parity and switched
+  the front-page JSON seed from `typografisch` to `frontpage`, keeping
+  one-off homepage spacing in skin CSS rather than exposing extra gesture
+  treatments.
+- Adjusted `feature.microblocks` to render the homepage 50/50 media-text
+  structure: microblocks/actions in the text column, with kicker/title/body as
+  the media-card overlay heading.
+- Documented the native page JSON landing SOW: V1 keeps landing surfaces as
+  WordPress `page` posts with existing URLs, menus, front-page settings, and
+  template wrappers, gates the `landing` JSON format to the front page plus
+  `about`, `verein`, `salon-vermietung`, and `sammlungen`, and adds the shared
+  `gateway` gesture with landing treatments while preserving current output
+  whenever JSON is disabled or empty. No SQL, content migration, or upload
+  artifact is required for this docs-only checkpoint.
+- Implemented the first native page JSON landing slice. `iss-editorial` now
+  supports post-aware format eligibility, section treatment registries, and
+  gateway item sanitization without disabling Gutenberg for normal pages.
+  `iss-content` registers the allowlisted `landing` format for native pages,
+  and the theme owns the inert `industriesalon/editorial-landing` template slot,
+  landing renderer, and gateway treatment CSS. Disabled or empty landing JSON
+  renders no new markup and keeps the current page output; no SQL or upload
+  artifact is required.
+
 ## 2026-06-29
 
 - Added and deployed the missing front-page hero upload artifact:

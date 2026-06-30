@@ -138,6 +138,39 @@ function iss_editorial_sanitize_fact_list($facts): array
     return $items;
 }
 
+function iss_editorial_sanitize_gateway_item($item): array
+{
+    if (!is_array($item)) {
+        return [];
+    }
+
+    $label = sanitize_text_field((string) ($item['label'] ?? ''));
+    $url = esc_url_raw((string) ($item['url'] ?? ''));
+    if ($label === '' || $url === '') {
+        return [];
+    }
+
+    return [
+        'label' => $label,
+        'text' => sanitize_textarea_field((string) ($item['text'] ?? '')),
+        'url' => $url,
+        'media_refs' => iss_editorial_sanitize_reference_list($item['media_refs'] ?? []),
+    ];
+}
+
+function iss_editorial_sanitize_gateway_item_list($items): array
+{
+    $sanitized = [];
+    foreach ((array) $items as $item) {
+        $item = iss_editorial_sanitize_gateway_item($item);
+        if ($item) {
+            $sanitized[] = $item;
+        }
+    }
+
+    return $sanitized;
+}
+
 function iss_editorial_sanitize_rail_options($options): array
 {
     $options = is_array($options) ? $options : [];
@@ -173,6 +206,33 @@ function iss_editorial_sanitize_section_treatment($treatment): string
     $treatment = sanitize_key((string) $treatment);
 
     return in_array($treatment, ['standard', 'aside'], true) ? $treatment : 'standard';
+}
+
+function iss_editorial_sanitize_registered_treatment($treatment, array $format, string $type): string
+{
+    $treatment = function_exists('iss_editorial_sanitize_treatment_slug')
+        ? iss_editorial_sanitize_treatment_slug((string) $treatment)
+        : sanitize_key((string) $treatment);
+    $section = is_array($format['sections'][$type] ?? null) ? $format['sections'][$type] : [];
+    $allowed = [];
+
+    foreach ((array) ($section['treatments'] ?? []) as $item) {
+        if (!is_array($item)) {
+            continue;
+        }
+        $slug = function_exists('iss_editorial_sanitize_treatment_slug')
+            ? iss_editorial_sanitize_treatment_slug((string) ($item['slug'] ?? ''))
+            : sanitize_key((string) ($item['slug'] ?? ''));
+        if ($slug !== '') {
+            $allowed[] = $slug;
+        }
+    }
+
+    if ($allowed === []) {
+        return '';
+    }
+
+    return in_array($treatment, $allowed, true) ? $treatment : (string) $allowed[0];
 }
 
 function iss_editorial_sanitize_document_rail_feature($feature): array
@@ -404,6 +464,24 @@ function iss_editorial_sanitize_section(array $section, array $format): array
         $sanitized['facts'] = iss_editorial_sanitize_fact_list($section['facts'] ?? []);
     }
 
+    if (iss_editorial_format_supports_section_field($format, $type, 'items')) {
+        $sanitized['items'] = iss_editorial_sanitize_gateway_item_list($section['items'] ?? []);
+    }
+
+    if (iss_editorial_format_supports_section_field($format, $type, 'slot_key')) {
+        $slot_key = sanitize_key((string) ($section['slot_key'] ?? ''));
+        if ($slot_key !== '') {
+            $sanitized['slot_key'] = $slot_key;
+        }
+    }
+
+    if (iss_editorial_format_supports_section_field($format, $type, 'treatment')) {
+        $treatment = iss_editorial_sanitize_registered_treatment($section['treatment'] ?? '', $format, $type);
+        if ($treatment !== '') {
+            $sanitized['treatment'] = $treatment;
+        }
+    }
+
     if (iss_editorial_format_supports_section_field($format, $type, 'year')) {
         $sanitized['year'] = sanitize_text_field((string) ($section['year'] ?? ''));
     }
@@ -500,12 +578,22 @@ function iss_editorial_get_document(int $post_id, string $format_slug, bool $pre
         return iss_editorial_sanitize_document($stored, $format_slug);
     }
 
-    return iss_editorial_get_empty_document($format_slug);
+    $document = iss_editorial_get_empty_document($format_slug);
+    $skin_meta_key = iss_editorial_get_skin_meta_key($format_slug);
+    if ($skin_meta_key !== '') {
+        $skin = sanitize_key((string) get_post_meta($post_id, $skin_meta_key, true));
+        if ($skin !== '') {
+            $document['skin'] = $skin;
+        }
+    }
+
+    return $document;
 }
 
 function iss_editorial_save_document(int $post_id, string $format_slug, $document, bool $autosave = false): bool
 {
-    if ($post_id <= 0 || !iss_editorial_post_type_supports_format((string) get_post_type($post_id), $format_slug)) {
+    $format = $post_id > 0 ? iss_editorial_get_format_for_post($post_id) : [];
+    if ($post_id <= 0 || !$format || (string) ($format['slug'] ?? '') !== sanitize_key($format_slug)) {
         return false;
     }
 
@@ -516,6 +604,12 @@ function iss_editorial_save_document(int $post_id, string $format_slug, $documen
 
     $meta_key = $autosave ? iss_editorial_get_autosave_meta_key($format_slug) : iss_editorial_get_document_meta_key($format_slug);
     update_post_meta($post_id, $meta_key, wp_slash(iss_editorial_encode_document($document)));
+    if (!$autosave) {
+        $skin_meta_key = iss_editorial_get_skin_meta_key($format_slug);
+        if ($skin_meta_key !== '') {
+            update_post_meta($post_id, $skin_meta_key, sanitize_key((string) ($document['skin'] ?? '')));
+        }
+    }
 
     return true;
 }

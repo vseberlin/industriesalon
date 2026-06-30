@@ -316,13 +316,15 @@
 }
 
 .iss-editorial-link-rows,
-.iss-editorial-fact-rows {
+.iss-editorial-fact-rows,
+.iss-editorial-gateway-item-rows {
   display: grid;
   gap: 10px;
 }
 
 .iss-editorial-link-row,
-.iss-editorial-fact-row {
+.iss-editorial-fact-row,
+.iss-editorial-gateway-item-row {
   display: grid;
   grid-template-columns: minmax(10rem, 0.8fr) minmax(12rem, 1fr) auto;
   gap: 10px;
@@ -331,6 +333,17 @@
   border: 1px solid #dcdcde;
   border-radius: 4px;
   background: #fff;
+}
+
+.iss-editorial-gateway-item-row {
+  grid-template-columns: minmax(14rem, 1fr) minmax(10rem, 14rem) auto;
+  align-items: start;
+}
+
+.iss-editorial-gateway-item-row__fields,
+.iss-editorial-gateway-item-row__media {
+  display: grid;
+  gap: 8px;
 }
 
 .iss-editorial-field--rich-text {
@@ -728,6 +741,10 @@
   }
 
   .iss-editorial-fact-row {
+    grid-template-columns: 1fr;
+  }
+
+  .iss-editorial-gateway-item-row {
     grid-template-columns: 1fr;
   }
 

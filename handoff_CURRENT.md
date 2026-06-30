@@ -1,95 +1,67 @@
 # Current Handoff
 
-Updated: 2026-06-29
+Updated: 2026-06-30
 
 Current checkpoint only. Completed history belongs in `CHANGELOG.md`; active
 follow-up belongs in `TODO.md`.
 
 ## Current Work
 
-- SuperSaaS timeline sync now uses a staging/workbench layer:
-  `wp_iss_supersaas_slots` stores imported slots from the public schedule and
-  `Salonbelegung`, while `wp_iss_occurrence_series` remains the canonical
-  series mapping table.
-- The sync workbench can search/sort slots, show descriptions, map/remap or
-  ignore Salonbelegung event rows, and map recurring event series to one
-  canonical Veranstaltung source.
-- Repair-Café was collapsed to one canonical Veranstaltung (`26813`): generated
-  duplicate event shells were moved to trash, `event:repair-cafe` maps to that
-  post, and 12 dated SuperSaaS event occurrences now project from it. Replay
-  artifact: `ops/sql/2026-06-29-repair-cafe-canonical-event-series.sql`.
-- Programme timelines use the existing `industriesalon/timeline-query`
-  renderer. Teaser/upcoming grouped Führung rows now group by source post and
-  open a centralized month-grouped slot picker once a group has 2+ dates.
-  Elektropolis therefore renders as one front-page row with `Termin wählen`
-  instead of a long inline occurrence list.
-- The active homepage is still DB-backed: `front-page` is a custom
-  `wp_template` override. The client front-page experiment remains review
-  state; rollback baseline is
-  `ops/sql/2026-06-29-frontpage-baseline.sql`.
-- The front-page hero upload family is packaged as
-  `ops/uploads/2026-06-29-frontpage-hero-media.tar.gz` and was extracted on
-  staging after deployment.
+- Native page JSON landing V1 is implemented for allowlisted `page` posts:
+  front page, `about`, `verein`, `salon-vermietung`, and `sammlungen`.
+- V1 keeps native pages, existing URLs, menus, and the front-page template
+  wrapper. JSON rendering is gated by `_iss_editorial_enabled_landing`; disabled
+  or empty JSON falls back to the existing template/post-content path.
+- The front page is enabled locally with the `frontpage` landing skin and JSON
+  sections reconstructed from the previous hardcoded/Gutenberg body. Transfer
+  artifact: `ops/sql/2026-06-30-frontpage-landing-json.sql`.
+- Landing gestures now include `statement`, `gateway`, `feature`, and
+  `dynamic_slot`; `gateway` supports `cards`, `link-list`, and `feature-strip`
+  treatments, while feature supports the front-page media-panel and
+  media/text-microblocks treatments.
+- Theme-owned landing rendering emits stable skin/gesture/treatment classes,
+  local IBM Plex Serif is registered for landing serif headings, and JSON CTA
+  links use the shared `.iss-button` primary tier so they inherit the active
+  page color scheme.
 
 ## Preserve
 
-- Keep the data/presentation boundary: `iss-occurrences` owns occurrence
-  storage/import/mapping, `iss-frontend` owns the timeline and picker renderer,
-  theme CSS owns the visual skin, and `iss-commerce-lite` owns request writes.
-- Do not create another booking/calendar storage layer. The picker reuses
-  existing SuperSaaS occurrence rows and `.js-is-tour-slot-trigger` booking
-  flow.
-- Do not delete the front-page DB override while the client is testing variants.
+- Do not introduce a `landing_page` CPT for V1. Keep native WordPress pages and
+  page templates as the ownership boundary.
+- Keep public presentation in the theme; plugins own editorial JSON storage,
+  eligibility, sanitization, and editor UI.
+- Keep section `treatment` stored in JSON. It remains editor-visible during
+  internal review and can be capability-gated to admins before handover without
+  changing storage.
 - Leave unrelated local untracked files out of Git unless explicitly requested:
   - `iss-exhibition-composition-add.md`
   - `themes/industriesalon/theme2.json`
 
 ## Next Action
 
-- If moving the local Repair-Café canonical content state to another target,
-  review and replay
-  `ops/sql/2026-06-29-repair-cafe-canonical-event-series.sql` after code deploy.
-- Remaining SuperSaaS audit warnings are not blockers: unmapped inert series
-  currently have zero occurrence rows, and `Stadtrallye für Erwachsene` is
-  mapped but has no future SuperSaaS rows.
-- Continue the separate Veranstaltung public-booking render TODO when the
-  timeline/SuperSaaS checkpoint is settled.
+- If moving this checkpoint to staging, deploy the committed code/assets first,
+  then apply/review `ops/sql/2026-06-30-frontpage-landing-json.sql` on a target
+  with matching front-page content/media IDs.
+- Browser-check `/`, `/about/`, `/verein/`, `/salon-vermietung/`, and
+  `/sammlungen/` after deployment. Non-enabled pages should keep current
+  Gutenberg/post-content output.
+- Before client handover, capability-gate the per-section treatment selector to
+  admins while preserving the existing JSON storage key.
 
 ## Verified Locally
 
-- `php -l` for edited PHP files in `iss-content`, `iss-frontend`, and
-  `iss-occurrences`.
-- `node --check` for edited timeline JS and block editor JS.
+- `php -l` for edited PHP files in `iss-content`, `iss-editorial`, and the
+  theme landing renderer.
+- `node --check plugins/iss-editorial/assets/admin.js`.
+- `npx stylelint plugins/iss-editorial/assets/admin.css
+  themes/industriesalon/assets/css/page-landing-editorial.css`.
+- `theme.json` parsed with Node.
 - `git diff --check`.
-- SQL artifact replayed locally through the Docker WP-CLI container.
-- `wp iss-occurrences sync`, `verify`, `drift-check`, and `supersaas-audit`.
-- Focused DB checks confirmed Repair-Café: canonical post `26813` published,
-  duplicate posts `26805`, `26808`, `26810`, and `26812` in trash, 12 mapped
-  staged slots, and 12 public SuperSaaS event occurrences.
-- Server-rendered front-page timeline check: 1 picker trigger, 0 inline grouped
-  occurrence details, German month labels.
-- Playwright desktop/mobile checks for `/`: Elektropolis picker opens, shows
-  64 dates with 25 bookable slots and 39 disabled sold-out slots, hands off to
-  the existing booking modal, and has no mobile horizontal overflow.
-
-## Verified On Staging
-
-- Staging repo `/srv/industriesalon/stage/repo` fast-forwarded to `befc31e`.
-- `ops/uploads/2026-06-29-frontpage-hero-media.tar.gz` checksum verified and
-  extracted into staging uploads through the WordPress container.
-- Front-page hero image
-  `/wp-content/uploads/2026/06/2021-04-22-Sven-Bock-Aussen-Industriesalon-05-hero-scaled.webp`
-  returns HTTP 200.
-- `wp iss-occurrences sync`, `verify`, `drift-check`, and `supersaas-audit`
-  completed on staging after deployment. One stale 2022 WP-origin occurrence
-  row with the old `veranstaltung` source type was removed after a staging DB
-  backup; final `verify` and `drift-check` passed.
-- Staging DB backup before occurrence sync:
-  `/srv/industriesalon/stage/backups/stage-db-before-12466ac-occurrence-sync-20260629-204357.sql.gz`.
+- Browser checks for `/` on desktop/mobile: landing skin renders, IBM Plex Serif
+  loads for landing headings, dark-surface overlay/rental text is visible,
+  first-section and rental CTAs inherit primary red, rental CTA remains inside
+  the panel, and no horizontal overflow was detected.
 
 ## Commit State
 
-- Final shared checkpoint is pushed to `origin/main`. The front-page hero
-  upload artifact commit is `befc31e` (`Add front-page hero upload artifact`);
-  this closeout documentation is committed after it.
-- Staging runtime was verified after extracting the `befc31e` upload artifact.
+- Local commit requested for this checkpoint. No push has been requested.

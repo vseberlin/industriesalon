@@ -17,6 +17,7 @@ function industriesalon_expected_render_helpers(): array
         'tours' => '/includes/tours-render.php',
         'veranstaltungen' => '/includes/veranstaltungen-render.php',
         'archive' => '/includes/archive-render.php',
+        'landings' => '/includes/landings-render.php',
     ];
 }
 
@@ -1331,6 +1332,13 @@ function industriesalon_enqueue_assets(): void
             'handle' => 'industriesalon-page-verein',
             'path' => '/assets/css/page-verein.css',
             'condition' => is_page('verein'),
+        ),
+        array(
+            'handle' => 'industriesalon-page-landing-editorial',
+            'path' => '/assets/css/page-landing-editorial.css',
+            'condition' => is_singular('page')
+                && function_exists('industriesalon_editorial_landing_is_enabled')
+                && industriesalon_editorial_landing_is_enabled((int) get_queried_object_id()),
         ),
         array(
             'handle' => 'industriesalon-publications',
