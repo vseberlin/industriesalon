@@ -6,6 +6,11 @@ be recovered from Git history.
 
 ## 2026-06-30
 
+- Restored the WordPress Pages menu for non-admin editors so eligible native
+  landing pages are reachable from admin, while keeping generic Posts hidden.
+  The shared editorial JSON admin now hydrates missing attachment preview data
+  from stored media IDs, so existing media refs render thumbnails in the
+  composition cards and media trays without requiring a JSON migration.
 - Added local IBM Plex Serif font files to the theme, registered the family in
   `theme.json`, and switched the front-page landing serif headings/facts from
   the Georgia fallback to IBM Plex Serif. The frontpage landing skin now keeps

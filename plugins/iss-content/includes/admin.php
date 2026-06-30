@@ -825,7 +825,6 @@ add_action('admin_menu', function (): void {
     }
 
     remove_menu_page('edit.php');
-    remove_menu_page('edit.php?post_type=page');
 }, 99);
 
 add_filter('disable_categories_dropdown', function ($disable, string $post_type) {

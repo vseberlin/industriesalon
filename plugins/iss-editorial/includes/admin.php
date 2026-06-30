@@ -65,7 +65,7 @@ function iss_editorial_render_meta_box(WP_Post $post, array $box): void
         return;
     }
 
-    $document = iss_editorial_get_document((int) $post->ID, $format_slug, false);
+    $document = iss_editorial_hydrate_document_previews(iss_editorial_get_document((int) $post->ID, $format_slug, false));
     $enabled = iss_editorial_document_is_enabled((int) $post->ID, $format_slug);
 
     wp_nonce_field('iss_editorial_save_document', 'iss_editorial_nonce');
@@ -127,7 +127,7 @@ function iss_editorial_render_main_canvas(WP_Post $post): void
     }
 
     $format_slug = (string) $format['slug'];
-    $document = iss_editorial_get_document((int) $post->ID, $format_slug, false);
+    $document = iss_editorial_hydrate_document_previews(iss_editorial_get_document((int) $post->ID, $format_slug, false));
     $enabled = iss_editorial_document_is_enabled((int) $post->ID, $format_slug);
     $route_config = iss_editorial_get_route_station_editor_config((int) $post->ID, $format_slug, (string) $post->post_type);
 
@@ -276,6 +276,7 @@ function iss_editorial_enqueue_admin_assets(string $hook): void
     $script_path = iss_editorial_admin_path() . 'assets/admin.js';
     if (file_exists($script_path)) {
         $route_config = iss_editorial_get_route_station_editor_config($post_id, (string) $format['slug'], (string) $screen->post_type);
+        $document = iss_editorial_hydrate_document_previews(iss_editorial_get_document($post_id, (string) $format['slug'], false));
         wp_enqueue_script(
             'iss-editorial-admin',
             iss_editorial_admin_url() . 'assets/admin.js',
@@ -294,7 +295,7 @@ function iss_editorial_enqueue_admin_assets(string $hook): void
                 'nonce' => wp_create_nonce('wp_rest'),
                 'postId' => $post_id,
                 'format' => (string) $format['slug'],
-                'document' => iss_editorial_get_document($post_id, (string) $format['slug'], false),
+                'document' => $document,
                 'enabled' => iss_editorial_document_is_enabled($post_id, (string) $format['slug']),
                 'sections' => (array) $format['sections'],
                 'skins' => iss_editorial_get_format_skins((string) $format['slug']),

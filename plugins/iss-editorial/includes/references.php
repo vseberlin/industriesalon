@@ -54,3 +54,75 @@ function iss_editorial_resolve_reference(array $reference): array
 
     return [];
 }
+
+function iss_editorial_hydrate_reference_preview(array $reference): array
+{
+    if (!$reference) {
+        return [];
+    }
+
+    $resolved = iss_editorial_resolve_reference($reference);
+    if (!$resolved) {
+        return $reference;
+    }
+
+    if (empty($reference['label']) && !empty($resolved['title'])) {
+        $reference['label'] = (string) $resolved['title'];
+    }
+    if (empty($reference['thumbnail']) && !empty($resolved['thumbnail'])) {
+        $reference['thumbnail'] = (string) $resolved['thumbnail'];
+    }
+    if (empty($reference['width']) && !empty($resolved['width'])) {
+        $reference['width'] = (string) $resolved['width'];
+    }
+    if (empty($reference['height']) && !empty($resolved['height'])) {
+        $reference['height'] = (string) $resolved['height'];
+    }
+
+    return $reference;
+}
+
+function iss_editorial_hydrate_reference_preview_list($references): array
+{
+    $hydrated = [];
+    foreach ((array) $references as $reference) {
+        if (!is_array($reference)) {
+            continue;
+        }
+        $reference = iss_editorial_hydrate_reference_preview($reference);
+        if ($reference) {
+            $hydrated[] = $reference;
+        }
+    }
+
+    return $hydrated;
+}
+
+function iss_editorial_hydrate_document_previews(array $document): array
+{
+    if (!is_array($document['sections'] ?? null)) {
+        return $document;
+    }
+
+    foreach ($document['sections'] as &$section) {
+        if (!is_array($section)) {
+            continue;
+        }
+        if (isset($section['media_refs'])) {
+            $section['media_refs'] = iss_editorial_hydrate_reference_preview_list($section['media_refs']);
+        }
+        if (!is_array($section['items'] ?? null)) {
+            continue;
+        }
+        foreach ($section['items'] as &$item) {
+            if (!is_array($item) || !isset($item['media_refs'])) {
+                continue;
+            }
+            $item['media_refs'] = iss_editorial_hydrate_reference_preview_list($item['media_refs']);
+        }
+        unset($item);
+    }
+    unset($section);
+
+    return $document;
+}

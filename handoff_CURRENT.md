@@ -23,6 +23,10 @@ follow-up belongs in `TODO.md`.
   local IBM Plex Serif is registered for landing serif headings, and JSON CTA
   links use the shared `.iss-button` primary tier so they inherit the active
   page color scheme.
+- Editor admin polish is in place: non-admin editors can reach native Pages in
+  the WordPress admin menu, while generic Posts remain hidden; existing JSON
+  media references are hydrated from attachment IDs so composition cards and
+  media trays show thumbnails without a data migration.
 
 ## Preserve
 
@@ -42,9 +46,11 @@ follow-up belongs in `TODO.md`.
 - If moving this checkpoint to staging, deploy the committed code/assets first,
   then apply/review `ops/sql/2026-06-30-frontpage-landing-json.sql` on a target
   with matching front-page content/media IDs.
+- After deployment, live-test editor ability to open Pages, edit the eligible
+  landing JSON canvas, see media thumbnails, save/reload, and verify disabled
+  or empty JSON keeps current Gutenberg/post-content output.
 - Browser-check `/`, `/about/`, `/verein/`, `/salon-vermietung/`, and
-  `/sammlungen/` after deployment. Non-enabled pages should keep current
-  Gutenberg/post-content output.
+  `/sammlungen/` after deployment.
 - Before client handover, capability-gate the per-section treatment selector to
   admins while preserving the existing JSON storage key.
 
@@ -61,7 +67,10 @@ follow-up belongs in `TODO.md`.
   loads for landing headings, dark-surface overlay/rental text is visible,
   first-section and rental CTAs inherit primary red, rental CTA remains inside
   the panel, and no horizontal overflow was detected.
+- WP-CLI probes: editor menu simulation keeps Pages visible and Posts hidden;
+  hydrated front-page landing document has 9 media refs and 0 missing
+  thumbnails.
 
 ## Commit State
 
-- Local commit requested for this checkpoint. No push has been requested.
+- Local commits are being pushed to `origin/main` for staging/live editor tests.
