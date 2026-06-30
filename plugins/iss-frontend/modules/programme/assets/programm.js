@@ -1,9 +1,23 @@
 document.addEventListener('DOMContentLoaded', () => {
   initExternalBookingTriggers();
+  initOccurrenceCalendarTriggers();
 
-  document.querySelectorAll('.is-tour-calendar:not([data-booking-host="1"])').forEach(async (widget) => {
+  document.querySelectorAll('.is-tour-calendar:not([data-booking-host="1"])').forEach((widget) => {
+    initCalendarWidget(widget);
+  });
+});
+
+async function initCalendarWidget(widget) {
+  if (!widget || !widget.dataset || widget.dataset.calendarInitialized === '1') {
+    return;
+  }
+
+  widget.dataset.calendarInitialized = '1';
+
     let tag = widget.dataset.tag;
     const sourcePostId = (widget.dataset && (widget.dataset.sourcePostId || widget.dataset.postId)) ? String(widget.dataset.sourcePostId || widget.dataset.postId) : '';
+    const sourcePostType = widget.dataset && widget.dataset.sourcePostType ? String(widget.dataset.sourcePostType) : '';
+    const itemType = widget.dataset && widget.dataset.itemType ? String(widget.dataset.itemType) : '';
 
     const status = widget.querySelector('.is-tour-calendar__status');
     const dateInput = widget.querySelector('.is-tour-calendar__date-input');
@@ -14,7 +28,8 @@ document.addEventListener('DOMContentLoaded', () => {
     const bookingPanel = widget.querySelector('.is-tour-calendar__booking');
     const fallbackLink = widget.querySelector('.is-tour-calendar__fallback-link');
 
-    const restUrl = (window.IS_TOUR_CALENDAR && window.IS_TOUR_CALENDAR.restUrl) || '';
+    const calendarConfig = getOccurrenceCalendarConfig();
+    const restUrl = calendarConfig.slotsUrl || '';
 
     tag = widget.dataset.tag;
     if (!tag && !sourcePostId) {
@@ -43,7 +58,13 @@ document.addEventListener('DOMContentLoaded', () => {
         params.set('tag', tag);
       }
       if (sourcePostId) {
-        params.set('post_id', sourcePostId);
+        params.set('source_post_id', sourcePostId);
+      }
+      if (sourcePostType) {
+        params.set('source_post_type', sourcePostType);
+      }
+      if (itemType) {
+        params.set('item_type', itemType);
       }
       const query = params.toString();
 
@@ -66,9 +87,20 @@ document.addEventListener('DOMContentLoaded', () => {
         return;
       }
 
-      if (!res.ok || slotRows.length === 0) {
+      if (!res.ok) {
         widget.classList.add('is-tour-calendar--no-slots');
-        renderStatus(status, 'Für diese Führung sind aktuell keine Termine verfügbar.');
+        renderStatus(status, 'Kalender momentan nicht verfügbar.');
+        return;
+      }
+
+      if (slotRows.length === 0) {
+        widget.classList.add('is-tour-calendar--no-slots');
+        if (payload && payload.inquiry && payload.inquiry.allowed) {
+          renderStatus(status, 'Aktuell sind keine festen Termine verfügbar.');
+          renderInquiryFallback(widget, payload);
+        } else {
+          renderStatus(status, 'Aktuell sind keine Termine verfügbar.');
+        }
         return;
       }
 
@@ -117,8 +149,9 @@ document.addEventListener('DOMContentLoaded', () => {
 	        }
 
 		        const daySlots = slotsByDay[selectedDayKey];
+		        const bookableDaySlots = daySlots.filter(isSlotBookable);
 		        const date = daySlots[0]._date;
-		        const isSingleSlotDay = daySlots.length === 1;
+		        const isSingleSlotDay = bookableDaySlots.length === 1;
 
 		        const dateStr = date.toLocaleDateString('de-DE', {
 		          weekday: 'long',
@@ -127,16 +160,29 @@ document.addEventListener('DOMContentLoaded', () => {
 	          year: 'numeric'
 	        });
 
-	        selectedDateLabel.textContent = 'Verfügbare Termine am ' + dateStr;
-	        if (appointmentsTitleDate) {
-	          appointmentsTitleDate.textContent = dateStr;
-	        }
+        selectedDateLabel.textContent = formatSelectedDateLabel(widget, date, dateStr);
+        if (appointmentsTitleDate) {
+          appointmentsTitleDate.textContent = dateStr;
+        }
 
 		        const selectedSlotId = widget.dataset.selectedSlotId || '';
-		        const selectedSlotExists = selectedSlotId && daySlots.some((s) => String(s.id ?? '') === selectedSlotId);
+		        const selectedSlotExists = selectedSlotId && bookableDaySlots.some((s) => String(s.id ?? '') === selectedSlotId);
 
 		        widget.classList.toggle('is-tour-calendar--single-slot', isSingleSlotDay);
 		        widget.classList.add('is-details-open');
+
+		        if (bookableDaySlots.length === 0) {
+		          widget.dataset.selectedSlotId = '';
+		          if (slotSelect) {
+		            slotSelect.disabled = true;
+		            slotSelect.innerHTML = '<option value="">Keine Termine verfügbar</option>';
+		          }
+		          if (appointmentsList) {
+		            appointmentsList.innerHTML = '<p class="is-tour-calendar__empty">Keine Termine verfügbar</p>';
+		          }
+		          if (bookingPanel) bookingPanel.innerHTML = '';
+		          return;
+		        }
 
 		        if (slotSelect) {
 		          slotSelect.innerHTML = '';
@@ -147,7 +193,7 @@ document.addEventListener('DOMContentLoaded', () => {
 	          placeholder.textContent = 'Uhrzeit wählen';
 		          slotSelect.appendChild(placeholder);
 
-		          daySlots.forEach((slot) => {
+		          bookableDaySlots.forEach((slot) => {
 		            const opt = document.createElement('option');
 		            opt.value = String(slot.id ?? '');
 
@@ -155,10 +201,6 @@ document.addEventListener('DOMContentLoaded', () => {
 	            const meta = buildSlotMeta(slot);
 
 	            opt.textContent = meta ? `${time} – ${meta}` : time;
-
-	            if (slot.available !== null && slot.available <= 0) {
-	              opt.disabled = true;
-	            }
 
 	            slotSelect.appendChild(opt);
 		          });
@@ -170,17 +212,11 @@ document.addEventListener('DOMContentLoaded', () => {
 		          appointmentsList.innerHTML = '';
 
 		          if (isSingleSlotDay) {
-		            const slot = daySlots[0];
+		            const slot = bookableDaySlots[0];
 		            const btn = document.createElement('button');
 		            btn.type = 'button';
 		            btn.className = 'is-tour-calendar__time-btn';
 		            btn.dataset.slotId = String(slot.id ?? '');
-
-		            const isSoldOut = slot.available !== null && slot.available <= 0;
-		            if (isSoldOut) {
-		              btn.disabled = true;
-		              btn.setAttribute('aria-disabled', 'true');
-		            }
 
 		            if (selectedSlotExists && String(slot.id ?? '') === selectedSlotId) {
 		              btn.classList.add('is-selected');
@@ -188,26 +224,18 @@ document.addEventListener('DOMContentLoaded', () => {
 
 		            btn.textContent = formatSlotTimeRange(slot) || '';
 
-		            if (!isSoldOut) {
-			              btn.addEventListener('click', () => {
-			                widget.dispatchEvent(new CustomEvent('is:slotSelected', { detail: slot }));
-			                openBookingForm(widget, slot, btn);
-			              });
-			            }
+		            btn.addEventListener('click', () => {
+		              widget.dispatchEvent(new CustomEvent('is:slotSelected', { detail: slot }));
+		              openBookingForm(widget, slot, btn);
+		            });
 
 		            appointmentsList.appendChild(btn);
 		          } else {
-		            daySlots.forEach((slot) => {
+		            bookableDaySlots.forEach((slot) => {
 		              const btn = document.createElement('button');
 		              btn.type = 'button';
 		              btn.className = 'is-tour-calendar__time-btn';
 		              btn.dataset.slotId = String(slot.id ?? '');
-
-		              const isSoldOut = slot.available !== null && slot.available <= 0;
-		              if (isSoldOut) {
-		                btn.disabled = true;
-		                btn.setAttribute('aria-disabled', 'true');
-		              }
 
 		              if (selectedSlotExists && String(slot.id ?? '') === selectedSlotId) {
 		                btn.classList.add('is-selected');
@@ -215,12 +243,10 @@ document.addEventListener('DOMContentLoaded', () => {
 
 		              btn.textContent = formatSlotTimeRange(slot) || '';
 
-		              if (!isSoldOut) {
-			                  btn.addEventListener('click', () => {
-			                    widget.dispatchEvent(new CustomEvent('is:slotSelected', { detail: slot }));
-			                    openBookingForm(widget, slot, btn);
-			                  });
-			                }
+		              btn.addEventListener('click', () => {
+		                widget.dispatchEvent(new CustomEvent('is:slotSelected', { detail: slot }));
+		                openBookingForm(widget, slot, btn);
+		              });
 
 		              appointmentsList.appendChild(btn);
 		            });
@@ -242,7 +268,7 @@ document.addEventListener('DOMContentLoaded', () => {
 	            return;
 	          }
 
-	          const daySlots = slotsByDay[selectedDayKey] || [];
+	          const daySlots = (slotsByDay[selectedDayKey] || []).filter(isSlotBookable);
 	          const slot = daySlots.find((s) => String(s.id ?? '') === slotId);
 	          if (!slot) {
 	            widget.dataset.selectedSlotId = '';
@@ -311,12 +337,25 @@ document.addEventListener('DOMContentLoaded', () => {
       widget.classList.add('is-tour-calendar--no-slots');
       renderStatus(status, 'Kalender momentan nicht verfügbar.');
     }
-  });
-});
+}
+
+function getOccurrenceCalendarConfig() {
+  return window.ISS_OCCURRENCE_CALENDAR || {};
+}
 
 function renderStatus(el, msg) {
   if (!el) return;
   el.textContent = msg;
+}
+
+function renderInquiryFallback(widget) {
+  const bookingPanel = widget && widget.querySelector
+    ? widget.querySelector('.is-tour-calendar__booking')
+    : null;
+  if (!bookingPanel) return;
+
+  bookingPanel.innerHTML = '';
+  bookingPanel.appendChild(createInquiryForm(widget));
 }
 
 function parseDate(value) {
@@ -340,6 +379,21 @@ function groupSlotsByDay(slots) {
   return out;
 }
 
+function isSlotBookable(slot) {
+  if (!slot) return false;
+
+  if (slot.available !== null && Number(slot.available) <= 0) {
+    return false;
+  }
+
+  const startDate = slot._date || parseDate(String(slot.start || ''));
+  if (!startDate || Number.isNaN(startDate.getTime())) {
+    return false;
+  }
+
+  return startDate.getTime() > Date.now();
+}
+
 function formatSlotTimeRange(slot) {
   if (!slot || !slot._date) return '';
   const start = slot._date.toLocaleTimeString('de-DE', { hour: '2-digit', minute: '2-digit' });
@@ -352,6 +406,19 @@ function formatSlotTimeRange(slot) {
 
   const end = endDate.toLocaleTimeString('de-DE', { hour: '2-digit', minute: '2-digit' });
   return `${start} – ${end}`;
+}
+
+function formatSelectedDateLabel(widget, date, longDateLabel) {
+  if (widget && widget.classList && widget.classList.contains('is-tour-calendar--modal')) {
+    return date.toLocaleDateString('de-DE', {
+      weekday: 'long',
+      day: 'numeric',
+      month: 'long',
+      year: 'numeric'
+    });
+  }
+
+  return 'Verfügbare Termine am ' + longDateLabel;
 }
 
 function buildSlotMeta(slot) {
@@ -505,11 +572,11 @@ function formatCents(amount) {
 
 function createBookingForm(widget, slot) {
   const startISO = slot._date ? slot._date.toISOString() : (slot.start || '');
-  const postUrl = (window.IS_TOUR_CALENDAR && (window.IS_TOUR_CALENDAR.requestUrl || window.IS_TOUR_CALENDAR.bookUrl)) || '';
+  const calendarConfig = getOccurrenceCalendarConfig();
+  const postUrl = calendarConfig.requestUrl || '';
   const hasBookUrl = !!postUrl;
-  const sourcePostId = (widget && widget.dataset && widget.dataset.sourcePostId) ? widget.dataset.sourcePostId : '';
-  const sourcePostType = (widget && widget.dataset && widget.dataset.sourcePostType) ? widget.dataset.sourcePostType : '';
-  const requestKind = (slot.requestKind || (sourcePostType === 'veranstaltung' ? 'event_booking' : 'tour_booking')).trim() || 'tour_booking';
+  const sourcePostId = (widget && widget.dataset && widget.dataset.sourcePostId) ? widget.dataset.sourcePostId : String(slot.source_post_id || '');
+  const sourcePostType = (widget && widget.dataset && widget.dataset.sourcePostType) ? widget.dataset.sourcePostType : String(slot.source_post_type || '');
   const bookingTitle = escapeHtml((slot.title || 'Termin').trim() || 'Termin');
   const bookingDate = escapeHtml(formatBookingDateLabel(slot));
   const ticketOptions = buildTicketOptions(8, 1);
@@ -547,10 +614,12 @@ function createBookingForm(widget, slot) {
         </div>
         <form class="is-tour-calendar__form" novalidate>
           <input type="text" name="website" value="" tabindex="-1" autocomplete="off" hidden>
-          <input type="hidden" name="request_kind" value="${escapeHtml(requestKind)}">
+          <input type="hidden" name="intent" value="booking">
+          <input type="hidden" name="selection_mode" value="slot">
           <input type="hidden" name="loaded_at" value="${Math.floor(Date.now() / 1000)}">
           <input type="hidden" name="slot_id" value="${escapeHtml(slot.id ?? '')}">
           <input type="hidden" name="start" value="${escapeHtml(startISO)}">
+          <input type="hidden" name="end" value="${escapeHtml(slot.end ?? '')}">
           <input type="hidden" name="title" value="${escapeHtml(slot.title || '')}">
           <input type="hidden" name="source_post_id" value="${escapeHtml(sourcePostId)}">
           <input type="hidden" name="source_post_type" value="${escapeHtml(sourcePostType)}">
@@ -642,7 +711,7 @@ function createBookingForm(widget, slot) {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          ...(window.IS_TOUR_CALENDAR && window.IS_TOUR_CALENDAR.nonce ? { 'X-WP-Nonce': window.IS_TOUR_CALENDAR.nonce } : {})
+          ...(calendarConfig.nonce ? { 'X-WP-Nonce': calendarConfig.nonce } : {})
         },
         credentials: 'same-origin',
         body: JSON.stringify(payload)
@@ -663,6 +732,209 @@ function createBookingForm(widget, slot) {
   });
 
   return wrap;
+}
+
+function createInquiryForm(widget) {
+  const calendarConfig = getOccurrenceCalendarConfig();
+  const postUrl = calendarConfig.requestUrl || '';
+  const sourcePostId = (widget && widget.dataset && widget.dataset.sourcePostId) ? widget.dataset.sourcePostId : '';
+  const sourcePostType = (widget && widget.dataset && widget.dataset.sourcePostType) ? widget.dataset.sourcePostType : '';
+  const title = (widget && widget.dataset && widget.dataset.title) ? widget.dataset.title : 'Terminanfrage';
+  const hasPostUrl = !!postUrl;
+
+  const wrap = document.createElement('div');
+  wrap.innerHTML = `
+    <div class="is-tour-calendar__booking-sheet">
+      <div class="is-tour-calendar__booking-body">
+        <p class="is-tour-calendar__booking-intro">Senden Sie uns eine Anfrage mit Ihrem Wunschtermin.</p>
+        <form class="is-tour-calendar__form" novalidate>
+          <input type="text" name="website" value="" tabindex="-1" autocomplete="off" hidden>
+          <input type="hidden" name="intent" value="inquiry">
+          <input type="hidden" name="selection_mode" value="preferred_date">
+          <input type="hidden" name="loaded_at" value="${Math.floor(Date.now() / 1000)}">
+          <input type="hidden" name="title" value="${escapeHtml(title)}">
+          <input type="hidden" name="source_post_id" value="${escapeHtml(sourcePostId)}">
+          <input type="hidden" name="source_post_type" value="${escapeHtml(sourcePostType)}">
+
+          <div class="is-tour-calendar__form-section">
+            <div class="is-tour-calendar__form-heading">
+              <h3 class="is-tour-calendar__form-title">Wunschtermin</h3>
+              <p class="is-tour-calendar__form-copy">Wir prüfen den Termin und melden uns zurück.</p>
+            </div>
+            <div class="is-tour-calendar__form-grid">
+              <label class="is-tour-calendar__field">
+                <span class="is-tour-calendar__field-label">Datum</span>
+                <input required name="preferred_date" type="date">
+              </label>
+              <label class="is-tour-calendar__field">
+                <span class="is-tour-calendar__field-label">Uhrzeit</span>
+                <input name="preferred_time" type="time">
+              </label>
+              <label class="is-tour-calendar__field">
+                <span class="is-tour-calendar__field-label">Vorname</span>
+                <input required name="first_name" type="text" autocomplete="given-name" placeholder="Vorname">
+              </label>
+              <label class="is-tour-calendar__field">
+                <span class="is-tour-calendar__field-label">Nachname</span>
+                <input required name="last_name" type="text" autocomplete="family-name" placeholder="Nachname">
+              </label>
+              <label class="is-tour-calendar__field is-tour-calendar__field--full">
+                <span class="is-tour-calendar__field-label">E-Mail</span>
+                <input required name="email" type="email" autocomplete="email" placeholder="name@beispiel.de">
+              </label>
+            </div>
+          </div>
+
+          <div class="is-tour-calendar__form-actions">
+            <button type="submit" class="is-tour-calendar__form-submit" ${hasPostUrl ? '' : 'disabled aria-disabled="true"'}>Anfrage senden</button>
+            <button type="button" class="is-tour-calendar__form-cancel">Abbrechen</button>
+          </div>
+          <p class="is-tour-calendar__form-status" aria-live="polite"></p>
+        </form>
+      </div>
+    </div>
+  `;
+
+  const form = wrap.querySelector('form');
+  const status = wrap.querySelector('.is-tour-calendar__form-status');
+  const cancelBtn = wrap.querySelector('.is-tour-calendar__form-cancel');
+  if (!form || !status) return wrap;
+
+  if (cancelBtn) {
+    cancelBtn.addEventListener('click', () => {
+      const modal = getTourCalendarModal();
+      if (modal) modal.close();
+    });
+  }
+
+  form.addEventListener('submit', async (event) => {
+    event.preventDefault();
+    if (typeof form.reportValidity === 'function' && !form.reportValidity()) {
+      return;
+    }
+    if (!postUrl) { status.textContent = 'Anfrage momentan nicht verfügbar.'; return; }
+
+    const fd = new FormData(form);
+    const payload = Object.fromEntries(fd.entries());
+    payload.name = [payload.first_name, payload.last_name]
+      .map((value) => String(value || '').trim())
+      .filter(Boolean)
+      .join(' ')
+      .trim();
+    payload.start = payload.preferred_time
+      ? `${payload.preferred_date}T${payload.preferred_time}:00`
+      : payload.preferred_date;
+    delete payload.first_name;
+    delete payload.last_name;
+
+    if (!payload.name) {
+      status.textContent = 'Bitte Vor- und Nachname eingeben.';
+      return;
+    }
+
+    try {
+      status.textContent = 'Sende ...';
+      const res = await fetch(postUrl, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          ...(calendarConfig.nonce ? { 'X-WP-Nonce': calendarConfig.nonce } : {})
+        },
+        credentials: 'same-origin',
+        body: JSON.stringify(payload)
+      });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok || !data || data.ok !== true) {
+        status.textContent = (data && data.error) ? data.error : 'Fehler bei der Anfrage.';
+        return;
+      }
+      status.textContent = 'Danke! Ihre Anfrage wurde gesendet.';
+      form.reset();
+
+      const modal = getTourCalendarModal();
+      if (modal) modal.close();
+    } catch {
+      status.textContent = 'Netzwerkfehler. Bitte später erneut versuchen.';
+    }
+  });
+
+  return wrap;
+}
+
+function initOccurrenceCalendarTriggers() {
+  const root = document.documentElement;
+  if (root.dataset.issOccurrenceCalendarTriggersBound === '1') {
+    return;
+  }
+  root.dataset.issOccurrenceCalendarTriggersBound = '1';
+
+  document.addEventListener('click', (event) => {
+    const trigger = event.target && event.target.closest
+      ? event.target.closest('.js-iss-occurrence-calendar-trigger')
+      : null;
+
+    if (!trigger) {
+      return;
+    }
+
+    event.preventDefault();
+
+    const widget = createOccurrenceCalendarWidget(trigger.dataset || {});
+    const modal = getTourCalendarModal();
+    if (modal && modal.open(widget)) {
+      initCalendarWidget(widget);
+      return;
+    }
+
+    document.body.appendChild(widget);
+    initCalendarWidget(widget);
+  });
+}
+
+function createOccurrenceCalendarWidget(data) {
+  const title = String(data.title || 'Termine wählen').trim() || 'Termine wählen';
+  const widget = document.createElement('div');
+  widget.className = 'is-tour-calendar is-tour-calendar--modal';
+  widget.dataset.title = title;
+  if (data.tag) widget.dataset.tag = String(data.tag);
+  if (data.sourcePostId) widget.dataset.sourcePostId = String(data.sourcePostId);
+  if (data.sourcePostType) widget.dataset.sourcePostType = String(data.sourcePostType);
+  if (data.itemType) widget.dataset.itemType = String(data.itemType);
+
+  widget.innerHTML = `
+    <div class="is-tour-calendar__inner wp-block-group is-layout-constrained">
+      <div class="is-tour-calendar__header wp-block-group is-layout-constrained">
+        <p class="is-tour-calendar__eyebrow has-small-font-size">Kalender</p>
+        <h3 class="is-tour-calendar__heading wp-block-heading">${escapeHtml(title)}</h3>
+        <p class="is-tour-calendar__status has-small-font-size">Termine werden geladen ...</p>
+      </div>
+      <div class="is-tour-calendar__layout">
+        <div class="is-tour-calendar__calendar">
+          <input type="text" class="is-tour-calendar__date-input" aria-label="Datum auswählen" />
+          <div class="is-tour-calendar__slots-panel">
+            <p class="is-tour-calendar__selected-date has-small-font-size">Bitte wählen Sie einen Tag.</p>
+            <div class="is-tour-calendar__appointments">
+              <p class="is-tour-calendar__appointments-title">
+                <span class="is-tour-calendar__appointments-title-label">Verfügbare Termine am</span>
+                <span class="is-tour-calendar__appointments-title-date"></span>
+              </p>
+              <div class="is-tour-calendar__appointments-divider" aria-hidden="true"></div>
+              <div class="is-tour-calendar__appointments-list"></div>
+            </div>
+            <div class="is-tour-calendar__slot-select-wrap">
+              <label class="is-tour-calendar__slot-label">Uhrzeit</label>
+              <select class="is-tour-calendar__slot-select" disabled>
+                <option value="">Bitte zuerst ein Datum wählen</option>
+              </select>
+            </div>
+            <div class="is-tour-calendar__booking"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  `;
+
+  return widget;
 }
 
 function initExternalBookingTriggers() {

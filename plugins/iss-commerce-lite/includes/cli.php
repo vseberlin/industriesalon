@@ -33,13 +33,6 @@ if (defined('WP_CLI') && WP_CLI) {
                 $errors[] = sprintf('Payments-lite schema version mismatch stored=%s expected=%s.', $schema_version, ISS_PAYMENTS_LITE_SCHEMA_VERSION);
             }
 
-            $legacy_options = $wpdb->get_col(
-                "SELECT option_name FROM {$wpdb->options} WHERE option_name IN ('is_tours_booking_requests', 'iss_publication_order_requests') ORDER BY option_name ASC"
-            );
-            if (is_array($legacy_options) && !empty($legacy_options)) {
-                $errors[] = sprintf('Legacy request option(s) remain: %s.', implode(', ', $legacy_options));
-            }
-
             if (!empty($errors)) {
                 \WP_CLI::error_multi_line($errors);
                 \WP_CLI::error('ISS payments-lite verification failed.');
@@ -69,5 +62,4 @@ if (defined('WP_CLI') && WP_CLI) {
     }
 
     \WP_CLI::add_command('iss-commerce-lite', 'ISS_Payments_Lite_CLI_Command');
-    \WP_CLI::add_command('iss-payments-lite', 'ISS_Payments_Lite_CLI_Command');
 }

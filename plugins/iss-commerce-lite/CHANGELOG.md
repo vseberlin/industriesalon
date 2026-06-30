@@ -2,12 +2,19 @@
 
 All notable changes for `iss-commerce-lite` are documented here.
 
+## [Unreleased]
+
+### Changed
+- Collapsed public intake to `POST /wp-json/iss-payments/v1/request`.
+- Replaced domain-specific request kinds with universal `booking`, `inquiry`, and `order` intents for new writes.
+- Removed legacy public tour-booking and publication-order route registration.
+
 ## [0.3.0] - 2026-06-13
 
 ### Changed
 - Renamed the owning plugin to `iss-commerce-lite`.
 - SuperSaaS adapter ownership moved to `iss-occurrences`; this plugin now owns request/order intake only.
-- Added `wp iss-commerce-lite verify` as the preferred command alias while keeping the old `wp iss-payments-lite verify` alias for existing checks.
+- Added `wp iss-commerce-lite verify` as the production/deploy check command.
 
 ## [0.2.0] - 2026-06-13
 

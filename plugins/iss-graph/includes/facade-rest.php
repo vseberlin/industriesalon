@@ -768,8 +768,8 @@ function iss_facade_rest_contract(WP_REST_Request $request): WP_REST_Response
     if (function_exists('iss_programm_rest_list_availability')) {
         $routes[] = '/iss/v1/availability';
     }
-    if (function_exists('is_tours_get_slots')) {
-        $routes[] = '/iss/v1/tour-slots';
+    if (function_exists('iss_occurrences_get_booking_slots_rest')) {
+        $routes[] = '/iss/v1/booking-slots';
     }
 
     return new WP_REST_Response([
@@ -782,7 +782,7 @@ function iss_facade_rest_contract(WP_REST_Request $request): WP_REST_Response
             'occurrences' => function_exists('iss_occurrences_query'),
             'timeline' => function_exists('iss_timeline_rest_render_collection'),
             'availability' => function_exists('iss_programm_rest_list_availability'),
-            'tour_slots' => function_exists('is_tours_get_slots'),
+            'booking_slots' => function_exists('iss_occurrences_get_booking_slots_rest'),
         ],
         'routes' => $routes,
         'entity_kinds' => $entity_kinds,

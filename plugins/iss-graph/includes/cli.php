@@ -28,7 +28,7 @@ if (defined('WP_CLI') && WP_CLI) {
     WP_CLI::add_command('iss-graph facade-entity-relations-compare', 'iss_graph_wpcli_facade_entity_relations_compare_command');
     WP_CLI::add_command('iss-graph facade-availability-compare', 'iss_graph_wpcli_facade_availability_compare_command');
     WP_CLI::add_command('iss-graph facade-timeline-compare', 'iss_graph_wpcli_facade_timeline_compare_command');
-    WP_CLI::add_command('iss-graph facade-tour-slots-compare', 'iss_graph_wpcli_facade_tour_slots_compare_command');
+    WP_CLI::add_command('iss-graph facade-booking-slots-compare', 'iss_graph_wpcli_facade_tour_slots_compare_command');
     WP_CLI::add_command('iss-graph migrate', 'iss_graph_wpcli_migrate_command');
     WP_CLI::add_command('iss-graph sync-register', 'iss_graph_wpcli_sync_register_command');
     WP_CLI::add_command('iss-graph sync-content', 'iss_graph_wpcli_sync_content_command');
@@ -1564,10 +1564,10 @@ function iss_graph_wpcli_facade_route_contract(): array
         'provider_read' => [
             '/iss/v1/timeline' => 'iss_timeline_rest_render_collection',
             '/iss/v1/availability' => 'iss_programm_rest_list_availability',
-            '/iss/v1/tour-slots' => 'is_tours_get_slots',
+            '/iss/v1/booking-slots' => 'iss_occurrences_get_booking_slots_rest',
         ],
         'allowed_write' => [
-            '/is-tours/v1/book' => 'iss_payments_lite_create_tour_booking',
+            '/iss-payments/v1/request' => 'iss_payments_lite_create_request',
         ],
         'retired_read' => [
             '/iss-search/v1/search',
@@ -1716,17 +1716,17 @@ function iss_graph_wpcli_facade_consumer_contract(): array
             'handle' => 'iss-timeline-query',
             'route' => 'iss/v1/timeline',
         ],
-        'tour-slot-read' => [
+        'booking-slot-read' => [
             'kind' => 'inline_script',
             'setup_function' => 'iss_programm_register_frontend_assets',
             'handle' => 'is-tour-calendar',
-            'route' => 'iss/v1/tour-slots',
+            'route' => 'iss/v1/booking-slots',
         ],
-        'tour-booking-write' => [
+        'request-write' => [
             'kind' => 'inline_script',
             'setup_function' => 'iss_programm_register_frontend_assets',
             'handle' => 'is-tour-calendar',
-            'route' => 'is-tours/v1/book',
+            'route' => 'iss-payments/v1/request',
             'write' => true,
         ],
         'availability-browser-script' => [
@@ -1998,10 +1998,10 @@ function iss_graph_wpcli_facade_check_command(array $args, array $assoc_args): v
             $errors[] = '/iss/v1/contract does not advertise the availability facade route.';
         }
     }
-    if (function_exists('is_tours_get_slots')) {
+    if (function_exists('iss_occurrences_get_booking_slots_rest')) {
         $routes = isset($contract['routes']) && is_array($contract['routes']) ? $contract['routes'] : [];
-        if (!in_array('/iss/v1/tour-slots', $routes, true)) {
-            $errors[] = '/iss/v1/contract does not advertise the tour slots facade route.';
+        if (!in_array('/iss/v1/booking-slots', $routes, true)) {
+            $errors[] = '/iss/v1/contract does not advertise the booking slots facade route.';
         }
     }
 
@@ -2132,11 +2132,11 @@ function iss_graph_wpcli_facade_check_command(array $args, array $assoc_args): v
         }
     }
 
-    if (function_exists('is_tours_get_slots')) {
-        $tour_slots = iss_graph_wpcli_facade_request('/iss/v1/tour-slots', [], $errors);
-        iss_graph_wpcli_facade_require_keys('/iss/v1/tour-slots', $tour_slots, ['source', 'slots'], $errors);
-        if (isset($tour_slots['slots']) && !is_array($tour_slots['slots'])) {
-            $errors[] = '/iss/v1/tour-slots slots is not a list.';
+    if (function_exists('iss_occurrences_get_booking_slots_rest')) {
+        $booking_slots = iss_graph_wpcli_facade_request('/iss/v1/booking-slots', [], $errors);
+        iss_graph_wpcli_facade_require_keys('/iss/v1/booking-slots', $booking_slots, ['source', 'slots'], $errors);
+        if (isset($booking_slots['slots']) && !is_array($booking_slots['slots'])) {
+            $errors[] = '/iss/v1/booking-slots slots is not a list.';
         }
     }
 
@@ -2841,15 +2841,15 @@ function iss_graph_wpcli_facade_tour_slots_signature(array $data): array
 
 function iss_graph_wpcli_facade_tour_slots_compare_command(array $args, array $assoc_args): void
 {
-    if (!function_exists('is_tours_get_slots')) {
-        WP_CLI::error('Tour slots REST service is unavailable.');
+    if (!function_exists('iss_occurrences_get_booking_slots_rest')) {
+        WP_CLI::error('Booking slots REST service is unavailable.');
     }
 
     $tag = strtoupper(sanitize_text_field((string) ($assoc_args['tag'] ?? 'ELEKTRO')));
     $post_id = absint($assoc_args['post_id'] ?? 0);
     $scenarios = iss_graph_wpcli_facade_parse_tour_slot_scenarios($assoc_args['scenarios'] ?? '');
     if (!$scenarios) {
-        WP_CLI::error('Provide at least one tour-slot comparison scenario through --scenarios or use the defaults.');
+            WP_CLI::error('Provide at least one booking-slot comparison scenario through --scenarios or use the defaults.');
     }
 
     $errors = [];
@@ -2857,29 +2857,29 @@ function iss_graph_wpcli_facade_tour_slots_compare_command(array $args, array $a
     foreach ($scenarios as $scenario) {
         $params = iss_graph_wpcli_facade_tour_slot_params_for_scenario($scenario, $tag, $post_id);
         if (in_array($scenario, ['post', 'post_id'], true) && $post_id <= 0) {
-            WP_CLI::warning(sprintf('Skipping tour-slot scenario "%s"; provide --post_id to compare it.', $scenario));
+            WP_CLI::warning(sprintf('Skipping booking-slot scenario "%s"; provide --post_id to compare it.', $scenario));
             continue;
         }
         if ($scenario === 'tag' && $tag === '') {
-            $errors[] = 'Tour-slot scenario "tag" requires a non-empty --tag value.';
+            $errors[] = 'Booking-slot scenario "tag" requires a non-empty --tag value.';
             continue;
         }
 
-        $legacy = iss_graph_wpcli_direct_rest_callback('tour-slot service', 'is_tours_get_slots', '/iss/v1/tour-slots', $params, $errors);
-        $facade = iss_graph_wpcli_facade_request('/iss/v1/tour-slots', $params, $errors, 'facade');
-        iss_graph_wpcli_facade_require_keys('tour-slot service', $legacy, ['source', 'slots'], $errors);
-        iss_graph_wpcli_facade_require_keys('/iss/v1/tour-slots', $facade, ['source', 'slots'], $errors);
+        $legacy = iss_graph_wpcli_direct_rest_callback('booking-slot service', 'iss_occurrences_get_booking_slots_rest', '/iss/v1/booking-slots', $params, $errors);
+        $facade = iss_graph_wpcli_facade_request('/iss/v1/booking-slots', $params, $errors, 'facade');
+        iss_graph_wpcli_facade_require_keys('booking-slot service', $legacy, ['source', 'slots'], $errors);
+        iss_graph_wpcli_facade_require_keys('/iss/v1/booking-slots', $facade, ['source', 'slots'], $errors);
 
         $legacy_signature = iss_graph_wpcli_facade_tour_slots_signature($legacy);
         $facade_signature = iss_graph_wpcli_facade_tour_slots_signature($facade);
 
         if ($legacy_signature !== $facade_signature) {
-            $errors[] = sprintf('Tour slots facade mismatch for scenario "%s".', $scenario);
+            $errors[] = sprintf('Booking slots facade mismatch for scenario "%s".', $scenario);
             continue;
         }
 
         WP_CLI::log(sprintf(
-            '[compare] tour-slots scenario="%s" source=%s slots=%d matched',
+            '[compare] booking-slots scenario="%s" source=%s slots=%d matched',
             $scenario,
             (string) ($facade_signature['source'] ?? ''),
             count($facade_signature['slots'] ?? [])
@@ -2888,14 +2888,14 @@ function iss_graph_wpcli_facade_tour_slots_compare_command(array $args, array $a
     }
 
     if ($compared <= 0 && !$errors) {
-        WP_CLI::error('No tour-slot comparison scenarios were run.');
+        WP_CLI::error('No booking-slot comparison scenarios were run.');
     }
     if ($errors) {
         WP_CLI::error_multi_line($errors);
-        WP_CLI::error(sprintf('ISS graph facade tour-slot comparison failed with %d issue(s).', count($errors)));
+        WP_CLI::error(sprintf('ISS graph facade booking-slot comparison failed with %d issue(s).', count($errors)));
     }
 
-    WP_CLI::success(sprintf('ISS graph facade tour-slot comparison passed for %d scenario(s).', $compared));
+    WP_CLI::success(sprintf('ISS graph facade booking-slot comparison passed for %d scenario(s).', $compared));
 }
 
 function iss_graph_wpcli_facade_parse_entity_scenarios($value): array

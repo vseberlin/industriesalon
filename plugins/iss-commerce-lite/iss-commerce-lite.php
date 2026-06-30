@@ -115,27 +115,7 @@ function iss_payments_lite_install_schema(): void {
     ) {$charset_collate};";
 
     dbDelta($sql);
-    iss_payments_lite_migrate_legacy_option_requests();
     update_option(ISS_PAYMENTS_LITE_SCHEMA_OPTION, ISS_PAYMENTS_LITE_SCHEMA_VERSION, false);
-}
-
-function iss_payments_lite_migrate_legacy_option_requests(): void {
-    $legacy_options = [
-        'is_tours_booking_requests' => 'tour_booking',
-        'iss_publication_order_requests' => 'publication_order',
-    ];
-
-    foreach ($legacy_options as $option_name => $request_kind) {
-        $rows = get_option($option_name, []);
-        if (is_array($rows)) {
-            foreach ($rows as $row) {
-                if (is_array($row)) {
-                    iss_payments_lite_insert_request($request_kind, $row);
-                }
-            }
-        }
-        delete_option($option_name);
-    }
 }
 
 function iss_payments_lite_insert_request(string $request_kind, array $entry): int {
@@ -152,7 +132,7 @@ function iss_payments_lite_insert_request(string $request_kind, array $entry): i
 
     $source_post_id = isset($entry['source_post_id']) ? (int) $entry['source_post_id'] : (int) ($entry['publication_id'] ?? 0);
     $source_post_type = sanitize_key((string) ($entry['source_post_type'] ?? ''));
-    if ($source_post_type === '' && $request_kind === 'publication_order') {
+    if ($source_post_type === '' && $request_kind === 'order') {
         $source_post_type = 'publication';
     }
 
@@ -259,19 +239,7 @@ add_action('wp_footer', function () {
 }, 20);
 
 add_action('rest_api_init', function () {
-    // Public intentionally: visitors submit tour booking requests without a WordPress account.
-    register_rest_route('is-tours/v1', '/book', [
-        'methods'  => 'POST',
-        'callback' => 'iss_payments_lite_create_tour_booking',
-        'permission_callback' => '__return_true',
-    ]);
-
-    register_rest_route('iss-payments/v1', '/publication-order', [
-        'methods'  => 'POST',
-        'callback' => 'iss_payments_lite_create_publication_order',
-        'permission_callback' => '__return_true',
-    ]);
-
+    // Public intentionally: visitors submit booking, inquiry, and order requests.
     register_rest_route('iss-payments/v1', '/request', [
         'methods'  => 'POST',
         'callback' => 'iss_payments_lite_create_request',
@@ -436,9 +404,9 @@ function iss_payments_lite_send_request_notification(int $request_id, string $re
     }
 
     $labels = [
-        'publication_order' => __('Neue Publikationsbestellung', 'iss-payments-lite'),
-        'event_booking' => __('Neue Veranstaltungsbuchung', 'iss-payments-lite'),
-        'tour_booking' => __('Neue Buchungsanfrage', 'iss-payments-lite'),
+        'booking' => __('Neue Buchungsanfrage', 'iss-payments-lite'),
+        'inquiry' => __('Neue Terminanfrage', 'iss-payments-lite'),
+        'order' => __('Neue Bestellung', 'iss-payments-lite'),
     ];
     $label = $labels[$request_kind] ?? __('Neue Anfrage', 'iss-payments-lite');
     $subject = sprintf('[%s] %s #%d', wp_specialchars_decode(get_bloginfo('name'), ENT_QUOTES), $label, $request_id);
@@ -497,45 +465,24 @@ function iss_payments_lite_create_request(WP_REST_Request $request) {
     return iss_payments_lite_process_request_payload($payload, $request);
 }
 
-function iss_payments_lite_create_tour_booking(WP_REST_Request $request) {
-    $payload = iss_payments_lite_public_payload($request, 'tour-booking');
-    if ($payload instanceof WP_REST_Response) {
-        return $payload;
-    }
-
-    $payload['request_kind'] = 'tour_booking';
-    return iss_payments_lite_process_request_payload($payload, $request);
-}
-
-function iss_payments_lite_create_publication_order(WP_REST_Request $request) {
-    $payload = iss_payments_lite_public_payload($request, 'publication-order');
-    if ($payload instanceof WP_REST_Response) {
-        return $payload;
-    }
-
-    $payload['request_kind'] = 'publication_order';
-    if (!isset($payload['source_post_id']) && isset($payload['publication_id'])) {
-        $payload['source_post_id'] = (int) $payload['publication_id'];
-    }
-    $payload['source_post_type'] = 'publication';
-
-    return iss_payments_lite_process_request_payload($payload, $request);
-}
-
 function iss_payments_lite_process_request_payload(array $payload, WP_REST_Request $request): WP_REST_Response {
-    $request_kind = sanitize_key((string) ($payload['request_kind'] ?? ''));
-    if (!in_array($request_kind, ['tour_booking', 'event_booking', 'publication_order'], true)) {
+    $intent = sanitize_key((string) ($payload['intent'] ?? ''));
+    if (!in_array($intent, ['booking', 'inquiry', 'order'], true)) {
         return new WP_REST_Response(['ok' => false, 'error' => 'Ungültige Anfrageart.'], 400);
     }
 
-    if ($request_kind === 'publication_order') {
-        return iss_payments_lite_process_publication_order($payload, $request);
+    if ($intent === 'order') {
+        return iss_payments_lite_process_order_request($payload, $request);
     }
 
-    return iss_payments_lite_process_booking_request($payload, $request_kind, $request);
+    if ($intent === 'inquiry') {
+        return iss_payments_lite_process_inquiry_request($payload, $request);
+    }
+
+    return iss_payments_lite_process_slot_booking_request($payload, $request);
 }
 
-function iss_payments_lite_process_booking_request(array $payload, string $request_kind, WP_REST_Request $request): WP_REST_Response {
+function iss_payments_lite_process_slot_booking_request(array $payload, WP_REST_Request $request): WP_REST_Response {
     $name = sanitize_text_field($payload['name'] ?? '');
     $email = sanitize_email($payload['email'] ?? '');
     $tickets = isset($payload['tickets']) ? (int) $payload['tickets'] : 0;
@@ -550,21 +497,21 @@ function iss_payments_lite_process_booking_request(array $payload, string $reque
     $price_cents = 0;
 
     $tag = $payload_tag;
-    if ($request_kind === 'event_booking') {
-        if ($source_post_id <= 0 || get_post_type($source_post_id) !== 'veranstaltung') {
-            return new WP_REST_Response(['ok' => false, 'error' => 'Ungültige Veranstaltung.'], 400);
-        }
+    if ($source_post_id <= 0 || $source_post_type === '' || get_post_type($source_post_id) !== $source_post_type) {
+        return new WP_REST_Response(['ok' => false, 'error' => 'Ungültige Quelle.'], 400);
+    }
+
+    if ($source_post_type === 'veranstaltung') {
         if (empty(get_post_meta($source_post_id, 'iss_booking_enabled', true))) {
             return new WP_REST_Response(['ok' => false, 'error' => 'Diese Veranstaltung ist derzeit nicht buchbar.'], 400);
         }
-        $source_post_type = 'veranstaltung';
         $price_cents = max(0, (int) get_post_meta($source_post_id, 'iss_booking_price_cents', true));
-        if ($title === '') {
-            $title = get_the_title($source_post_id);
-        }
+    }
+    if ($title === '') {
+        $title = get_the_title($source_post_id);
     }
 
-    if ($source_post_id > 0 && $request_kind === 'tour_booking') {
+    if ($source_post_type === 'fuehrung') {
         $resolved = '';
         if (function_exists('iss_occurrences_resolve_tag_for_source_post_id')) {
             $resolved = iss_occurrences_resolve_tag_for_source_post_id($source_post_id);
@@ -593,21 +540,15 @@ function iss_payments_lite_process_booking_request(array $payload, string $reque
     if (!iss_payments_lite_payment_method_is_supported($payment)) {
         $errors[] = 'Ungültige Zahlungsart.';
     }
-    if ($request_kind === 'tour_booking' && $tag === '' && $source_post_id <= 0) {
-        $errors[] = 'Keine Zuordnung vorhanden.';
-    }
 
-    if ($tag !== '' || $source_post_id > 0) {
+    if ($source_post_id > 0) {
         $slots = [];
-        if ($tag !== '' && function_exists('is_tours_get_cached_slots_by_tag')) {
-            $slots = is_tours_get_cached_slots_by_tag($tag);
-        }
-        if (empty($slots) && function_exists('is_tours_get_occurrence_slots')) {
-            $slots = is_tours_get_occurrence_slots($tag, $source_post_id);
-            if ($tag !== '' && !empty($slots) && function_exists('is_tours_set_cached_slots_by_tag') && function_exists('is_tours_set_cached_source_by_tag')) {
-                is_tours_set_cached_slots_by_tag($tag, $slots, 60 * 10);
-                is_tours_set_cached_source_by_tag($tag, 'occurrences', 60 * 10);
-            }
+        if (function_exists('iss_occurrences_get_booking_slots')) {
+            $slots = iss_occurrences_get_booking_slots([
+                'tag' => $tag,
+                'source_post_id' => $source_post_id,
+                'source_post_type' => $source_post_type,
+            ]);
         }
 
         $found = null;
@@ -634,16 +575,15 @@ function iss_payments_lite_process_booking_request(array $payload, string $reque
     $duplicate_parts = [
         strtolower($email),
         $slot_id,
-        $tag,
         $source_post_id,
     ];
-    $duplicate_scope = $request_kind === 'event_booking' ? 'event-booking' : 'tour-booking';
+    $duplicate_scope = 'booking';
     $duplicate = iss_payments_lite_check_duplicate($duplicate_scope, $duplicate_parts);
     if ($duplicate instanceof WP_REST_Response) {
         return $duplicate;
     }
     $duplicate_hash = iss_payments_lite_duplicate_hash($duplicate_scope, $duplicate_parts);
-    if (iss_payments_lite_recent_duplicate_exists($request_kind, $duplicate_hash)) {
+    if (iss_payments_lite_recent_duplicate_exists('booking', $duplicate_hash)) {
         return new WP_REST_Response(['ok' => false, 'error' => 'Diese Anfrage wurde bereits gesendet.'], 409);
     }
 
@@ -666,35 +606,92 @@ function iss_payments_lite_process_booking_request(array $payload, string $reque
         'ua' => isset($_SERVER['HTTP_USER_AGENT']) ? sanitize_text_field((string) $_SERVER['HTTP_USER_AGENT']) : '',
     ];
 
-    $request_id = iss_payments_lite_insert_request($request_kind, $entry);
+    $request_id = iss_payments_lite_insert_request('booking', $entry);
     if ($request_id <= 0) {
         return new WP_REST_Response(['ok' => false, 'error' => 'Anfrage konnte nicht gespeichert werden.'], 500);
     }
     $entry['request_id'] = $request_id;
-    iss_payments_lite_send_request_notification($request_id, $request_kind, $entry);
+    iss_payments_lite_send_request_notification($request_id, 'booking', $entry);
 
-    if ($request_kind === 'tour_booking') {
-        /**
-         * Compatibility hook for existing booking consumers.
-         *
-         * @param array $entry Sanitized booking entry.
-         * @param WP_REST_Request $request Original REST request.
-         */
-        do_action('is_tours_booking_created', $entry, $request);
-    }
-
-    /**
-     * New domain-neutral hook for thin booking/payment flows.
-     *
-     * @param array $entry Sanitized booking entry.
-     * @param WP_REST_Request $request Original REST request.
-     */
     do_action('iss_payments_lite_booking_created', $entry, $request);
+    do_action('iss_payments_lite_request_created', 'booking', $entry, $request);
 
     return new WP_REST_Response(['ok' => true], 200);
 }
 
-function iss_payments_lite_process_publication_order(array $payload, WP_REST_Request $request): WP_REST_Response {
+function iss_payments_lite_process_inquiry_request(array $payload, WP_REST_Request $request): WP_REST_Response {
+    $source_post_id = isset($payload['source_post_id']) ? (int) $payload['source_post_id'] : 0;
+    $source_post_type = sanitize_key($payload['source_post_type'] ?? '');
+    $name = sanitize_text_field($payload['name'] ?? '');
+    $email = sanitize_email($payload['email'] ?? '');
+    $start = sanitize_text_field($payload['start'] ?? '');
+    $title = sanitize_text_field($payload['title'] ?? '');
+
+    $errors = [];
+    if ($source_post_id <= 0 || $source_post_type === '' || get_post_type($source_post_id) !== $source_post_type) {
+        $errors[] = 'Ungültige Quelle.';
+    }
+    if ($name === '') {
+        $errors[] = 'Name fehlt.';
+    }
+    if (!is_email($email)) {
+        $errors[] = 'Ungültige E-Mail.';
+    }
+    if ($start === '') {
+        $errors[] = 'Bitte einen Wunschtermin angeben.';
+    }
+
+    if (!empty($errors)) {
+        return new WP_REST_Response(['ok' => false, 'error' => implode(' ', $errors)], 400);
+    }
+
+    if ($title === '') {
+        $title = get_the_title($source_post_id);
+    }
+
+    $duplicate_parts = [
+        strtolower($email),
+        $source_post_id,
+        $start,
+    ];
+    $duplicate = iss_payments_lite_check_duplicate('inquiry', $duplicate_parts);
+    if ($duplicate instanceof WP_REST_Response) {
+        return $duplicate;
+    }
+    $duplicate_hash = iss_payments_lite_duplicate_hash('inquiry', $duplicate_parts);
+    if (iss_payments_lite_recent_duplicate_exists('inquiry', $duplicate_hash)) {
+        return new WP_REST_Response(['ok' => false, 'error' => 'Diese Anfrage wurde bereits gesendet.'], 409);
+    }
+
+    $entry = [
+        'time' => current_time('mysql'),
+        'name' => $name,
+        'email' => $email,
+        'tickets' => 1,
+        'payment' => 'onsite',
+        'start' => $start,
+        'title' => $title,
+        'source_post_id' => $source_post_id,
+        'source_post_type' => $source_post_type,
+        'duplicate_hash' => $duplicate_hash,
+        'ip' => isset($_SERVER['REMOTE_ADDR']) ? sanitize_text_field((string) $_SERVER['REMOTE_ADDR']) : '',
+        'ua' => isset($_SERVER['HTTP_USER_AGENT']) ? sanitize_text_field((string) $_SERVER['HTTP_USER_AGENT']) : '',
+    ];
+
+    $request_id = iss_payments_lite_insert_request('inquiry', $entry);
+    if ($request_id <= 0) {
+        return new WP_REST_Response(['ok' => false, 'error' => 'Anfrage konnte nicht gespeichert werden.'], 500);
+    }
+    $entry['request_id'] = $request_id;
+    iss_payments_lite_send_request_notification($request_id, 'inquiry', $entry);
+
+    do_action('iss_payments_lite_inquiry_created', $entry, $request);
+    do_action('iss_payments_lite_request_created', 'inquiry', $entry, $request);
+
+    return new WP_REST_Response(['ok' => true], 200);
+}
+
+function iss_payments_lite_process_order_request(array $payload, WP_REST_Request $request): WP_REST_Response {
     $publication_id = isset($payload['source_post_id']) ? (int) $payload['source_post_id'] : (int) ($payload['publication_id'] ?? 0);
     $name = sanitize_text_field($payload['name'] ?? '');
     $email = sanitize_email($payload['email'] ?? '');
@@ -738,12 +735,12 @@ function iss_payments_lite_process_publication_order(array $payload, WP_REST_Req
         $publication_id,
         $quantity,
     ];
-    $duplicate = iss_payments_lite_check_duplicate('publication-order', $duplicate_parts);
+    $duplicate = iss_payments_lite_check_duplicate('order', $duplicate_parts);
     if ($duplicate instanceof WP_REST_Response) {
         return $duplicate;
     }
-    $duplicate_hash = iss_payments_lite_duplicate_hash('publication-order', $duplicate_parts);
-    if (iss_payments_lite_recent_duplicate_exists('publication_order', $duplicate_hash)) {
+    $duplicate_hash = iss_payments_lite_duplicate_hash('order', $duplicate_parts);
+    if (iss_payments_lite_recent_duplicate_exists('order', $duplicate_hash)) {
         return new WP_REST_Response(['ok' => false, 'error' => 'Diese Anfrage wurde bereits gesendet.'], 409);
     }
 
@@ -764,15 +761,15 @@ function iss_payments_lite_process_publication_order(array $payload, WP_REST_Req
         'ua' => isset($_SERVER['HTTP_USER_AGENT']) ? sanitize_text_field((string) $_SERVER['HTTP_USER_AGENT']) : '',
     ];
 
-    $request_id = iss_payments_lite_insert_request('publication_order', $entry);
+    $request_id = iss_payments_lite_insert_request('order', $entry);
     if ($request_id <= 0) {
         return new WP_REST_Response(['ok' => false, 'error' => 'Anfrage konnte nicht gespeichert werden.'], 500);
     }
     $entry['request_id'] = $request_id;
-    iss_payments_lite_send_request_notification($request_id, 'publication_order', $entry);
+    iss_payments_lite_send_request_notification($request_id, 'order', $entry);
 
-    do_action('iss_payments_lite_publication_order_created', $entry, $request);
     do_action('iss_payments_lite_order_created', 'publication', $entry, $request);
+    do_action('iss_payments_lite_request_created', 'order', $entry, $request);
 
     return new WP_REST_Response(['ok' => true], 200);
 }

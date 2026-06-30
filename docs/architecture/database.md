@@ -34,8 +34,10 @@ Legacy programme meta/options such as `iss_timeline_item_id`,
 mapping options are invalid drift, not compatibility inputs.
 
 Commerce-lite request rows are stored in the existing `wp_iss_payments_lite_requests`.
-The old capped `is_tours_booking_requests` and `iss_publication_order_requests`
-options are migration inputs only and are deleted after schema install.
+New public writes use the universal `/iss-payments/v1/request` intake with
+`booking`, `inquiry`, and `order` intents. The table keeps its existing
+`request_kind` column name until a dedicated schema cleanup is worth doing, but
+new writes store the normalized intent value there.
 Online settlement is not implied by a stored request row; supported payment
 methods default to onsite/request capture until a provider integration is
 explicitly added.

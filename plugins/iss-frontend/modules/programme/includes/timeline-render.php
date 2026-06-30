@@ -239,10 +239,7 @@ function iss_timeline_get_booking_action_attrs($row): array {
 
     $source_post_id = isset($row['source_post_id']) ? (int) $row['source_post_id'] : 0;
     $source_post_type = sanitize_key((string) ($row['source_post_type'] ?? ''));
-    $request_kind = $source_post_type === 'veranstaltung' ? 'event_booking' : 'tour_booking';
-    $attrs = [
-        'data-request-kind' => $request_kind,
-    ];
+    $attrs = [];
 
     if ($source_post_type === 'veranstaltung' && $source_post_id > 0) {
         $price_cents = max(0, (int) get_post_meta($source_post_id, 'iss_booking_price_cents', true));
@@ -263,6 +260,65 @@ function iss_timeline_get_booking_action_attrs($row): array {
     return $attrs;
 }
 
+function iss_timeline_get_calendar_trigger_attrs($row): array {
+    if (!is_array($row)) {
+        return [];
+    }
+
+    $source_post_id = isset($row['source_post_id']) ? (int) $row['source_post_id'] : 0;
+    $source_post_type = sanitize_key((string) ($row['source_post_type'] ?? ''));
+    $item_type = sanitize_key((string) ($row['type'] ?? $row['item_type'] ?? ''));
+    $tag = strtoupper(sanitize_text_field((string) ($row['tag'] ?? '')));
+    $title = trim((string) ($row['title'] ?? ''));
+
+    $attrs = [
+        'data-title' => $title !== '' ? $title : __('Termine wählen', 'iss-timeline'),
+    ];
+
+    if ($source_post_id > 0) {
+        $attrs['data-source-post-id'] = (string) $source_post_id;
+    }
+    if ($source_post_type !== '') {
+        $attrs['data-source-post-type'] = $source_post_type;
+    }
+    if ($item_type !== '') {
+        $attrs['data-item-type'] = $item_type;
+    }
+    if ($tag !== '') {
+        $attrs['data-tag'] = $tag;
+    }
+
+    return $attrs;
+}
+
+function iss_timeline_get_booking_url_for_row($row): string {
+    if (!is_array($row)) {
+        return '';
+    }
+
+    $booking_url = isset($row['booking_url']) ? trim((string) $row['booking_url']) : '';
+    if ($booking_url !== '') {
+        return $booking_url;
+    }
+
+    $source_post_id = isset($row['source_post_id']) ? (int) $row['source_post_id'] : 0;
+    $source_post_type = sanitize_key((string) ($row['source_post_type'] ?? ''));
+    if ($source_post_type !== 'veranstaltung' || $source_post_id <= 0) {
+        return '';
+    }
+
+    if (empty(get_post_meta($source_post_id, 'iss_booking_enabled', true))) {
+        return '';
+    }
+
+    $permalink = get_permalink($source_post_id);
+    if (!is_string($permalink) || $permalink === '') {
+        return '#buchung';
+    }
+
+    return $permalink . '#buchung';
+}
+
 function iss_timeline_get_ticket_action_for_occurrence($row, $opts = []) {
     if (!is_array($row)) {
         return [];
@@ -273,7 +329,7 @@ function iss_timeline_get_ticket_action_for_occurrence($row, $opts = []) {
         return [];
     }
 
-    $booking_url = isset($row['booking_url']) ? trim((string) $row['booking_url']) : '';
+    $booking_url = iss_timeline_get_booking_url_for_row($row);
     $tickets_override = isset($opts['ticketsButtonUrl']) ? esc_url_raw((string) $opts['ticketsButtonUrl']) : '';
     if ($tickets_override !== '') {
         $booking_url = $tickets_override;
@@ -519,8 +575,6 @@ function iss_timeline_render_grouped_occurrence_picker($row, array $occurrences,
         return '';
     }
 
-    $picker_id = wp_unique_id('iss-timeline-slot-picker-');
-    $title_id = $picker_id . '-title';
     $count = count($occurrences);
     $title = trim((string) ($row['title'] ?? ''));
     if ($title === '') {
@@ -540,43 +594,15 @@ function iss_timeline_render_grouped_occurrence_picker($row, array $occurrences,
         $count
     );
 
-    $out = '<div class="iss-timeline-slot-picker-wrap">';
-    $out .= '<button type="button" class="iss-timeline__btn iss-timeline__btn--secondary iss-timeline-slot-picker__trigger"'
-        . ' data-timeline-picker-trigger aria-haspopup="dialog" aria-controls="' . esc_attr($picker_id) . '" aria-expanded="false"'
-        . ' aria-label="' . esc_attr($trigger_aria) . '">'
-        . esc_html($trigger_label) . '</button>';
-    $out .= '<div id="' . esc_attr($picker_id) . '" class="iss-timeline-slot-picker" data-timeline-picker hidden'
-        . ' role="dialog" aria-modal="true" aria-labelledby="' . esc_attr($title_id) . '">';
-    $out .= '<button type="button" class="iss-timeline-slot-picker__backdrop" data-timeline-picker-close aria-label="'
-        . esc_attr__('Schließen', 'iss-timeline') . '"></button>';
-    $out .= '<div class="iss-timeline-slot-picker__panel">';
-    $out .= '<div class="iss-timeline-slot-picker__header">';
-    $out .= '<div class="iss-timeline-slot-picker__heading">';
-    $out .= '<p class="iss-timeline-slot-picker__count">' . esc_html($count_label) . '</p>';
-    $out .= '<h3 id="' . esc_attr($title_id) . '" class="iss-timeline-slot-picker__title">' . esc_html($title) . '</h3>';
-    $out .= '</div>';
-    $out .= '<button type="button" class="iss-timeline-slot-picker__close" data-timeline-picker-close aria-label="'
-        . esc_attr__('Schließen', 'iss-timeline') . '">×</button>';
-    $out .= '</div>';
-    $out .= '<div class="iss-timeline-slot-picker__body">';
+    $attrs = iss_timeline_get_calendar_trigger_attrs($row);
 
-    foreach (iss_timeline_group_occurrences_by_month($occurrences) as $month) {
-        if (empty($month['items']) || !is_array($month['items'])) {
-            continue;
-        }
-
-        $out .= '<section class="iss-timeline-slot-picker__month">';
-        $out .= '<h4 class="iss-timeline-slot-picker__month-title">' . esc_html((string) ($month['label'] ?? '')) . '</h4>';
-        $out .= '<div class="iss-timeline-slot-picker__slots">';
-        foreach ($month['items'] as $occurrence) {
-            $out .= iss_timeline_render_grouped_occurrence_picker_slot($occurrence, $opts);
-        }
-        $out .= '</div></section>';
-    }
-
-    $out .= '</div></div></div></div>';
-
-    return $out;
+    return '<div class="iss-timeline-slot-picker-wrap">'
+        . '<p class="iss-timeline-slot-picker__count">' . esc_html($count_label) . '</p>'
+        . '<button type="button" class="iss-timeline__btn iss-timeline__btn--secondary iss-timeline-slot-picker__trigger js-iss-occurrence-calendar-trigger"'
+        . ' aria-haspopup="dialog" aria-label="' . esc_attr($trigger_aria) . '"'
+        . iss_timeline_render_attr_list($attrs) . '>'
+        . esc_html($trigger_label) . '</button>'
+        . '</div>';
 }
 
 function iss_timeline_get_programme_item_type_tokens(): array {
@@ -689,7 +715,7 @@ function iss_timeline_build_actions($row, $opts = []) {
         }
     }
 
-    $booking_url = isset($row['booking_url']) ? trim((string) $row['booking_url']) : '';
+    $booking_url = iss_timeline_get_booking_url_for_row($row);
 
     $fallback_url = trim((string) ($row['cta_url'] ?? ''));
     if ($mode === 'external' && $fallback_url !== '') {

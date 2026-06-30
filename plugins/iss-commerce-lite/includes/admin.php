@@ -26,9 +26,9 @@ function iss_payments_lite_status_labels(): array
 function iss_payments_lite_kind_labels(): array
 {
     return [
-        'tour_booking' => __('Buchungsanfrage', 'iss-payments-lite'),
-        'event_booking' => __('Veranstaltungsbuchung', 'iss-payments-lite'),
-        'publication_order' => __('Publikationsbestellung', 'iss-payments-lite'),
+        'booking' => __('Buchung', 'iss-payments-lite'),
+        'inquiry' => __('Terminanfrage', 'iss-payments-lite'),
+        'order' => __('Bestellung', 'iss-payments-lite'),
     ];
 }
 

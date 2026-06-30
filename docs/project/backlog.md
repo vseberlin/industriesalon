@@ -39,6 +39,6 @@ Large future work that should not live in root `TODO.md`.
 
 ## Search And Public Facade
 
-- Keep `/wp-json/iss/v1` as the public read facade for graph/search/occurrence/timeline/availability/tour-slot consumers.
-- Keep booking writes outside the read facade on `/is-tours/v1/book`.
+- Keep `/wp-json/iss/v1` as the public read facade for graph/search/occurrence/timeline/availability/booking-slot consumers.
+- Keep booking/order/inquiry writes outside the read facade on `/iss-payments/v1/request`.
 - If another public consumer needs Offer labels, read them from the graph contract helper or `/iss/v1/contract`.

@@ -119,8 +119,8 @@ read surfaces include:
 - tour slots
 
 The facade delegates to existing graph, search, occurrence, frontend timeline,
-Ausstellung availability, and tour-slot services. It does not create storage.
-Booking writes stay outside the read facade on `/is-tours/v1/book`.
+Ausstellung availability, and booking-slot services. It does not create storage.
+Booking writes stay outside the read facade on `/iss-payments/v1/request`.
 
 Facade payloads carry schema intent instead of rendering JSON-LD directly:
 occurrence payloads are Event-emitting records, while overview-only Ausstellung
@@ -149,7 +149,7 @@ wp iss-graph facade-search-compare
 wp iss-graph facade-occurrences-compare
 wp iss-graph facade-entity-occurrences-compare
 wp iss-graph facade-availability-compare
-wp iss-graph facade-tour-slots-compare
+wp iss-graph facade-booking-slots-compare
 wp iss-occurrences drift-check --limit=25
 wp iss-content tours-drift-check --limit=25
 wp iss-frontend ausstellungen-audit --strict

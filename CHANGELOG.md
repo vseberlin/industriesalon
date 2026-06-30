@@ -6,6 +6,20 @@ be recovered from Git history.
 
 ## 2026-06-30
 
+- Added a universal occurrence booking calendar/intake plan and began the clean
+  refactor: public slot reads now use `/iss/v1/booking-slots`, timeline grouped
+  `Termin wählen` opens the shared occurrence calendar, and commerce-lite public
+  writes are collapsed to `/iss-payments/v1/request` with `booking`, `inquiry`,
+  and `order` intents. The old public tour-booking/publication-order route
+  registrations and migration wrappers were removed; request storage keeps the
+  existing table/column names until a schema cleanup is justified.
+- Reused the occurrence-backed timeline calendar path for the public calendar:
+  `/kalender/` now enables the existing timeline month/day calendar bridge
+  instead of embedding the Führung booking calendar. Booking-slot validation
+  now uses a shared occurrence adapter so booking requests validate against
+  Veranstaltung occurrence rows. Timeline booking actions infer the
+  Veranstaltung booking URL from `iss_booking_enabled` when SuperSaaS-projected
+  event rows do not store one directly.
 - Restored the WordPress Pages menu for non-admin editors so eligible native
   landing pages are reachable from admin, while keeping generic Posts hidden.
   The shared editorial JSON admin now hydrates missing attachment preview data

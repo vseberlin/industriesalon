@@ -4,6 +4,13 @@ Immediate executable work only. Larger future programs live in `docs/project/bac
 
 ## Next
 
+- Universal occurrence calendar/intake staging test: after pulling the pushed
+  commit, live-test `/kalender/` grouped recurring `Termin wählen`, month
+  navigation, available slot booking form, sold-out/unavailable date empty
+  state, and publication order `intent=order` submission through
+  `/iss-payments/v1/request`. Before production deploy, verify target mail mode
+  and enable `Tools > ISS Anfragen` notification email only for an approved
+  recipient.
 - Native page JSON landing transfer/review: after deploying the landing code and
   theme assets, apply/review
   `ops/sql/2026-06-30-frontpage-landing-json.sql` only on a target with matching
