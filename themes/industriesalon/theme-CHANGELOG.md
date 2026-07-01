@@ -1,5 +1,14 @@
 # Industriesalon Theme Changelog
 
+## 2026-07-01
+- Reworked `/kalender/` into a booking-style two-panel selector: red scheme,
+  visible month/day grid from the existing timeline bridge, compact result
+  cards, and a lighter programme aside while preserving the occurrence-backed
+  `industriesalon/timeline-query` contract.
+- Reworked the grouped booking popup used by `Termin wählen`: the first
+  bookable day is selected automatically, slots are visible immediately, and
+  the modal uses a two-column desktop layout with a stacked mobile layout.
+
 ## 2026-06-27
 - Added the theme-owned Führung JSON renderer in `includes/tours-render.php`:
   enabled `_iss_editorial_fuehrung` documents now expose tour skin body

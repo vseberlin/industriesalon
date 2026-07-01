@@ -6,6 +6,18 @@ be recovered from Git history.
 
 ## 2026-07-01
 
+- Reworked the public `/kalender/` selection surface toward a crisp
+  booking-style calendar: the existing `timeline-query` month/day bridge now
+  progressively renders month buttons and a visible day grid while keeping the
+  original select/input controls as the source of truth for REST refreshes.
+  The theme calendar page now uses a two-panel booking layout, red accent
+  scheme, compact result cards, and unchanged occurrence reads plus
+  `/iss-payments/v1/request` booking writes.
+- Reworked the grouped `Termin wählen` booking popup into the same booking
+  selector language: opening the popup now preselects the first bookable day,
+  shows the available slot panel immediately, and uses a wider two-column modal
+  on desktop with a stacked mobile fallback. Slot buttons still hand off to the
+  existing booking form and request endpoint.
 - Added the CSS layering skeleton for the JSON migration: `tokens.css` now owns
   the layer-0 `--iss-*` token contract, `style.css` depends on it as the base
   layer, and `docs/architecture/css-layering-adr.md` records the token ->

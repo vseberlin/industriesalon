@@ -118,7 +118,7 @@ async function initCalendarWidget(widget) {
       const slotsByDay = groupSlotsByDay(slots);
 
       const dayKeys = Object.keys(slotsByDay).sort();
-      let selectedDayKey = null;
+      let selectedDayKey = dayKeys.find((key) => (slotsByDay[key] || []).some(isSlotBookable)) || dayKeys[0] || null;
 
       widget.classList.remove('is-details-open');
 
@@ -292,7 +292,7 @@ async function initCalendarWidget(widget) {
           window.flatpickr.localize(window.flatpickr.l10ns.de);
         }
 
-	        window.flatpickr(dateInput, {
+	        const datePicker = window.flatpickr(dateInput, {
           inline: true,
           disableMobile: true,
           minDate: dayKeys[0],
@@ -306,6 +306,10 @@ async function initCalendarWidget(widget) {
 		            renderSlotSelect();
 		          }
 	        });
+
+	        if (selectedDayKey) {
+	          datePicker.setDate(selectedDayKey, false, 'Y-m-d');
+	        }
 
 	        // Toggle: click the already-selected day to close details.
 	        try {
@@ -904,7 +908,7 @@ function createOccurrenceCalendarWidget(data) {
   widget.innerHTML = `
     <div class="is-tour-calendar__inner wp-block-group is-layout-constrained">
       <div class="is-tour-calendar__header wp-block-group is-layout-constrained">
-        <p class="is-tour-calendar__eyebrow has-small-font-size">Kalender</p>
+        <p class="is-tour-calendar__eyebrow has-small-font-size">Termin wählen</p>
         <h3 class="is-tour-calendar__heading wp-block-heading">${escapeHtml(title)}</h3>
         <p class="is-tour-calendar__status has-small-font-size">Termine werden geladen ...</p>
       </div>

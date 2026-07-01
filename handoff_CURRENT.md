@@ -7,6 +7,21 @@ follow-up belongs in `TODO.md`.
 
 ## Current Work
 
+- `/kalender/` calendar-booking polish is implemented locally on the active
+  theme-backed template. The existing `industriesalon/timeline-query` contract
+  remains the owner; occurrence reads still use `/iss/v1/timeline` and booking
+  writes still flow through `/iss-payments/v1/request`.
+- `plugins/iss-frontend/modules/programme/assets/timeline-query.js` now
+  progressively enhances the existing month/day bridge into month buttons plus
+  a visible day grid while keeping the original controls as source of truth.
+- `themes/industriesalon/assets/css/page-kalender.css` owns the booking-style
+  two-panel calendar page skin; `plugins/iss-frontend/modules/programme/assets/timeline.css`
+  only adds structural hooks for the grid.
+- The grouped `Termin wählen` popup now uses the same booking-selector
+  direction: `plugins/iss-frontend/modules/programme/assets/programm.js`
+  preselects the first bookable day, and
+  `themes/industriesalon/assets/css/tour-calendar-skin.css` owns the wider
+  two-column modal/slot-panel skin with stacked mobile fallback.
 - Native landing JSON editor UAT polish is implemented locally for the shared
   `iss-editorial` canvas.
 - Section delete moves gestures into persisted `deleted_sections`; editors can
@@ -60,6 +75,9 @@ follow-up belongs in `TODO.md`.
 
 ## Next Action
 
+- UAT `/kalender/` with real booking paths: month selection, day selection,
+  grouped `Termin wählen`, popup slot selection, direct `Buchen`, empty day
+  state, and form submit.
 - UAT the JSON canvas drag/drop helper and redesigned section modal panels.
 - During JSON gesture polish, migrate landing/front-page CSS gesture by
   gesture toward renderer/treatment/skin selectors. Continue with `gateway`
@@ -75,6 +93,18 @@ follow-up belongs in `TODO.md`.
 
 ## Verified Locally
 
+- `docker compose run --rm wpcli eval 'var_dump(get_block_template("industriesalon//page-kalender", "wp_template")->source ?? null);' --allow-root` -> `theme`
+- `node --check plugins/iss-frontend/modules/programme/assets/timeline-query.js`
+- `node --check plugins/iss-frontend/modules/programme/assets/programm.js`
+- `npx stylelint plugins/iss-frontend/modules/programme/assets/timeline.css themes/industriesalon/assets/css/page-kalender.css themes/industriesalon/assets/css/timeline-skin.css themes/industriesalon/assets/css/tour-calendar-skin.css`
+- Playwright Chromium and Firefox on `http://192.168.2.31:8082/kalender/`:
+  July 2 day-grid click selected the day, updated the count to `2 Einträge`,
+  used the red selected-day accent, and had no horizontal overflow. Chromium
+  mobile 390px also had no horizontal overflow.
+- Playwright Chromium/Firefox grouped `Termin wählen` popup: popup opens with
+  `Elektropolis`, preselects Saturday, 11 July 2026, shows one slot, has no
+  horizontal overflow, and clicking the slot opens the booking form with
+  `intent=booking` and populated `slot_id`.
 - `node --check plugins/iss-editorial/assets/admin.js`
 - `node --check plugins/iss-editorial/assets/dnd.js`
 - `node --check plugins/iss-editorial/assets/ui.js`

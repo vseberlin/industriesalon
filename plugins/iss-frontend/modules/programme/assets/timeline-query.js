@@ -65,6 +65,50 @@ document.addEventListener('DOMContentLoaded', function () {
     ].join('-');
   }
 
+  function parseMonthValue(value) {
+    var match = String(value || '').match(/^(\d{4})-(\d{2})$/);
+    if (!match) return null;
+    var year = Number(match[1]);
+    var month = Number(match[2]);
+    if (!year || month < 1 || month > 12) return null;
+    return new Date(year, month - 1, 1);
+  }
+
+  function getMonthLabel(value) {
+    var date = parseMonthValue(value);
+    if (!date) return String(value || '');
+    return date.toLocaleDateString('de-DE', { month: 'long', year: 'numeric' });
+  }
+
+  function getCompactMonthLabel(value) {
+    var date = parseMonthValue(value);
+    if (!date) return String(value || '');
+    return date.toLocaleDateString('de-DE', { month: 'short' }).replace('.', '');
+  }
+
+  function getMonthDayCount(date) {
+    return new Date(date.getFullYear(), date.getMonth() + 1, 0).getDate();
+  }
+
+  function getMondayFirstOffset(date) {
+    var day = date.getDay();
+    return day === 0 ? 6 : day - 1;
+  }
+
+  function getMonthOptions(select) {
+    if (!select) return [];
+    return Array.prototype.slice.call(select.options || [])
+      .map(function (option) {
+        return {
+          value: String(option.value || ''),
+          label: String(option.textContent || option.value || ''),
+        };
+      })
+      .filter(function (option) {
+        return !!parseMonthValue(option.value);
+      });
+  }
+
   function getRangePresetFilters(rangePreset, fallbackMonth) {
     var today = new Date();
     today.setHours(0, 0, 0, 0);
@@ -156,6 +200,7 @@ document.addEventListener('DOMContentLoaded', function () {
     var activePreset = null;
     var activePicker = null;
     var activePickerTrigger = null;
+    var enhancedCalendarBridge = null;
 
     function getPickerFocusTarget(picker) {
       if (!picker || !picker.querySelector) return null;
@@ -371,10 +416,14 @@ document.addEventListener('DOMContentLoaded', function () {
         calendarMonthInput.value = monthSelect.value || '';
       }
 
-      if (!calendarDayInput) return;
+      if (!calendarDayInput) {
+        renderEnhancedCalendarBridge();
+        return;
+      }
 
       if (activeTimeMode !== 'range') {
         setCalendarDayValue('');
+        renderEnhancedCalendarBridge();
         return;
       }
 
@@ -382,6 +431,98 @@ document.addEventListener('DOMContentLoaded', function () {
       if (/^\d{4}-\d{2}-\d{2}/.test(dateStart)) {
         setCalendarDayValue(dateStart.slice(0, 10));
       }
+
+      renderEnhancedCalendarBridge();
+    }
+
+    function renderEnhancedCalendarBridge() {
+      if (!enhancedCalendarBridge || !calendarMonthInput) return;
+
+      var options = getMonthOptions(calendarMonthInput);
+      var activeMonth = calendarMonthInput.value || (options[0] ? options[0].value : '');
+      var selectedDay = getCalendarDayValue();
+      var selectedMonth = selectedDay && /^\d{4}-\d{2}-\d{2}$/.test(selectedDay)
+        ? selectedDay.slice(0, 7)
+        : activeMonth;
+      var monthDate = parseMonthValue(selectedMonth || activeMonth);
+      var title = enhancedCalendarBridge.querySelector('[data-calendar-grid-title]');
+      var monthGrid = enhancedCalendarBridge.querySelector('[data-calendar-grid-months]');
+      var dayGrid = enhancedCalendarBridge.querySelector('[data-calendar-grid-days]');
+
+      if (title) {
+        title.textContent = getMonthLabel(selectedMonth || activeMonth);
+      }
+
+      if (monthGrid) {
+        monthGrid.innerHTML = '';
+        options.forEach(function (option) {
+          var button = document.createElement('button');
+          button.type = 'button';
+          button.className = 'iss-timeline-calendar-grid__month';
+          button.textContent = getCompactMonthLabel(option.value);
+          button.dataset.calendarGridMonth = option.value;
+          button.setAttribute('aria-pressed', option.value === activeMonth ? 'true' : 'false');
+          monthGrid.appendChild(button);
+        });
+      }
+
+      if (!dayGrid || !monthDate) return;
+      dayGrid.innerHTML = '';
+
+      var dayNames = ['Mo', 'Di', 'Mi', 'Do', 'Fr', 'Sa', 'So'];
+      dayNames.forEach(function (dayName) {
+        var node = document.createElement('span');
+        node.className = 'iss-timeline-calendar-grid__weekday';
+        node.textContent = dayName;
+        dayGrid.appendChild(node);
+      });
+
+      var offset = getMondayFirstOffset(monthDate);
+      for (var blankIndex = 0; blankIndex < offset; blankIndex += 1) {
+        var blank = document.createElement('span');
+        blank.className = 'iss-timeline-calendar-grid__day iss-timeline-calendar-grid__day--empty';
+        dayGrid.appendChild(blank);
+      }
+
+      var count = getMonthDayCount(monthDate);
+      var todayValue = formatLocalDate(new Date());
+      for (var day = 1; day <= count; day += 1) {
+        var value = selectedMonth + '-' + padDatePart(day);
+        var dayButton = document.createElement('button');
+        dayButton.type = 'button';
+        dayButton.className = 'iss-timeline-calendar-grid__day';
+        dayButton.textContent = String(day);
+        dayButton.dataset.calendarGridDay = value;
+        dayButton.setAttribute('aria-pressed', value === selectedDay ? 'true' : 'false');
+        if (value === todayValue) {
+          dayButton.classList.add('is-today');
+        }
+        dayGrid.appendChild(dayButton);
+      }
+    }
+
+    function initEnhancedCalendarBridge() {
+      var bridge = form ? form.querySelector('[data-timeline-calendar-bridge]') : null;
+      if (!bridge || !calendarMonthInput || bridge.querySelector('[data-calendar-grid]')) return;
+
+      enhancedCalendarBridge = document.createElement('div');
+      enhancedCalendarBridge.className = 'iss-timeline-calendar-grid';
+      enhancedCalendarBridge.setAttribute('data-calendar-grid', '');
+      enhancedCalendarBridge.innerHTML = [
+        '<div class="iss-timeline-calendar-grid__header">',
+        '<div>',
+        '<p class="iss-timeline-calendar-grid__kicker">Terminmonat</p>',
+        '<h3 class="iss-timeline-calendar-grid__title" data-calendar-grid-title></h3>',
+        '</div>',
+        '<button type="button" class="iss-timeline-calendar-grid__reset" data-calendar-grid-reset>Zurücksetzen</button>',
+        '</div>',
+        '<div class="iss-timeline-calendar-grid__months" data-calendar-grid-months></div>',
+        '<div class="iss-timeline-calendar-grid__days" data-calendar-grid-days></div>',
+      ].join('');
+
+      bridge.insertBefore(enhancedCalendarBridge, bridge.firstChild);
+      bridge.classList.add('has-calendar-grid');
+      renderEnhancedCalendarBridge();
     }
 
     function getPresetStateFromButton(button) {
@@ -640,6 +781,11 @@ document.addEventListener('DOMContentLoaded', function () {
       if (calendarDayInput) calendarDayInput.disabled = !!isBusy;
       setCalendarDayPickerDisabled(isBusy);
       if (calendarResetButton) calendarResetButton.disabled = !!isBusy;
+      if (enhancedCalendarBridge) {
+        enhancedCalendarBridge.querySelectorAll('button').forEach(function (button) {
+          button.disabled = !!isBusy;
+        });
+      }
     }
 
     function setActivePreset(button) {
@@ -750,6 +896,7 @@ document.addEventListener('DOMContentLoaded', function () {
           }
           updateMeta(data);
           syncCalendarBridge();
+          renderEnhancedCalendarBridge();
         })
         .catch(function () {
           return null;
@@ -797,12 +944,67 @@ document.addEventListener('DOMContentLoaded', function () {
     if (form) {
       form.addEventListener('change', function () {
         syncMonthVisibility();
+        renderEnhancedCalendarBridge();
         if (requestInFlight) return;
         refresh({ append: false });
       });
     }
 
     initCalendarDayPicker();
+    initEnhancedCalendarBridge();
+
+    if (enhancedCalendarBridge) {
+      enhancedCalendarBridge.addEventListener('click', function (event) {
+        var monthButton = event.target && event.target.closest
+          ? event.target.closest('[data-calendar-grid-month]')
+          : null;
+        if (monthButton && enhancedCalendarBridge.contains(monthButton)) {
+          event.preventDefault();
+          var monthValue = monthButton.getAttribute('data-calendar-grid-month') || '';
+          var timeMode = getTimeModeInput();
+          var monthSelect = getMonthSelect();
+          if (calendarMonthInput) {
+            calendarMonthInput.value = monthValue;
+          }
+          if (monthSelect) {
+            monthSelect.value = monthValue || monthSelect.value;
+          }
+          if (timeMode) {
+            timeMode.value = 'month';
+          }
+          setCalendarDayValue('');
+          calendarBridgeMode = 'month';
+          syncMonthVisibility();
+          renderEnhancedCalendarBridge();
+          if (requestInFlight) return;
+          refresh({ append: false });
+          return;
+        }
+
+        var dayButton = event.target && event.target.closest
+          ? event.target.closest('[data-calendar-grid-day]')
+          : null;
+        if (dayButton && enhancedCalendarBridge.contains(dayButton)) {
+          event.preventDefault();
+          var dayValue = dayButton.getAttribute('data-calendar-grid-day') || '';
+          setCalendarDayValue(dayValue);
+          refreshFromCalendarDay();
+          renderEnhancedCalendarBridge();
+          return;
+        }
+
+        var resetButton = event.target && event.target.closest
+          ? event.target.closest('[data-calendar-grid-reset]')
+          : null;
+        if (resetButton && enhancedCalendarBridge.contains(resetButton)) {
+          event.preventDefault();
+          resetToInitialFilters();
+          renderEnhancedCalendarBridge();
+          if (requestInFlight) return;
+          refresh({ append: false });
+        }
+      });
+    }
 
     if (calendarMonthInput) {
       calendarMonthInput.addEventListener('change', function () {
@@ -817,6 +1019,7 @@ document.addEventListener('DOMContentLoaded', function () {
           timeMode.value = 'month';
         }
         syncMonthVisibility();
+        renderEnhancedCalendarBridge();
         if (requestInFlight) return;
         refresh({ append: false });
       });
@@ -836,6 +1039,7 @@ document.addEventListener('DOMContentLoaded', function () {
           timeMode.value = 'range';
         }
         syncMonthVisibility();
+        renderEnhancedCalendarBridge();
         if (requestInFlight) return;
         refresh({ append: false });
       });
@@ -844,6 +1048,7 @@ document.addEventListener('DOMContentLoaded', function () {
     if (calendarResetButton) {
       calendarResetButton.addEventListener('click', function () {
         resetToInitialFilters();
+        renderEnhancedCalendarBridge();
         if (requestInFlight) return;
         refresh({ append: false });
       });
@@ -852,6 +1057,7 @@ document.addEventListener('DOMContentLoaded', function () {
     if (queryResetButton) {
       queryResetButton.addEventListener('click', function () {
         resetToInitialFilters();
+        renderEnhancedCalendarBridge();
         if (requestInFlight) return;
         refresh({ append: false });
       });
@@ -894,5 +1100,6 @@ document.addEventListener('DOMContentLoaded', function () {
       ? 'range'
       : (config && config.filters && config.filters.time_mode === 'month' ? 'month' : '');
     syncCalendarBridge();
+    renderEnhancedCalendarBridge();
   });
 });

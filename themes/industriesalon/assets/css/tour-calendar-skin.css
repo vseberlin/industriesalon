@@ -579,41 +579,44 @@
    ===================================================================== */
 
 .is-tour-calendar-modal__panel:has(.is-tour-calendar--modal) {
-  width: min(30rem, calc(100vw - 2rem));
-  background: #f7f4f0;
-  border: 1px solid #e0dbd4;
-  border-radius: 0;
+  width: min(62rem, calc(100vw - 2rem));
+  background: #fff;
+  border: 1px solid var(--iss-border, rgba(30, 30, 30, 0.12));
+  border-radius: 24px;
   box-shadow: 0 1.6rem 3.5rem rgba(0, 0, 0, 0.24);
 }
 
 .is-tour-calendar-modal__panel:has(.is-tour-calendar--modal) .is-tour-calendar-modal__close {
-  top: 0.65rem;
-  right: 0.75rem;
-  width: 2rem;
-  height: 2rem;
-  min-width: 2rem;
-  min-height: 2rem;
-  color: #aaa;
-  font-family: var(--wp--preset--font-family--ibm-plex-mono, "IBM Plex Mono", monospace);
-  font-size: 1.05rem;
+  top: 1rem;
+  right: 1rem;
+  width: 2.5rem;
+  height: 2.5rem;
+  min-width: 2.5rem;
+  min-height: 2.5rem;
+  border-color: var(--iss-border, rgba(30, 30, 30, 0.12));
+  border-radius: var(--iss-radius-pill, 999px);
+  background: #fff;
+  color: var(--iss-surface-muted, rgba(30, 30, 30, 0.72));
+  font-size: 1.25rem;
 }
 
 .is-tour-calendar-modal__panel:has(.is-tour-calendar--modal) .is-tour-calendar-modal__close:hover,
 .is-tour-calendar-modal__panel:has(.is-tour-calendar--modal) .is-tour-calendar-modal__close:focus-visible {
-  background: transparent;
-  color: #1e1e1e;
+  border-color: var(--iss-cal-accent);
+  background: var(--iss-accent-soft, rgba(232, 29, 37, 0.16));
+  color: var(--iss-cal-accent);
 }
 
 .is-tour-calendar-modal .is-tour-calendar--modal {
-  --iss-cal-bg: #f7f4f0;
-  --iss-cal-surface: #fff;
-  --iss-cal-surface-strong: #efe9e2;
-  --iss-cal-text: #1e1e1e;
-  --iss-cal-muted: #888;
-  --iss-cal-line: #e0dbd4;
-  --iss-cal-line-strong: #d6cec5;
-  --iss-cal-radius: 0;
-  --iss-cal-radius-panel: 0;
+  --iss-cal-bg: #fff;
+  --iss-cal-surface: var(--iss-surface-panel, #f6f6f7);
+  --iss-cal-surface-strong: color-mix(in srgb, var(--iss-cal-accent) 7%, #fff);
+  --iss-cal-text: var(--iss-black, #1e1e1e);
+  --iss-cal-muted: var(--iss-surface-muted, rgba(30, 30, 30, 0.72));
+  --iss-cal-line: var(--iss-border, rgba(30, 30, 30, 0.12));
+  --iss-cal-line-strong: var(--iss-border-strong, rgba(30, 30, 30, 0.2));
+  --iss-cal-radius: var(--iss-radius-lg, 10px);
+  --iss-cal-radius-panel: 24px;
   width: 100%;
   margin: 0;
   color: var(--iss-cal-text);
@@ -624,49 +627,62 @@
 }
 
 .is-tour-calendar-modal .is-tour-calendar--modal .is-tour-calendar__header {
-  display: block;
+  display: grid;
+  gap: 0.25rem;
   max-width: none;
-  padding: 0.9rem 3.2rem 0.8rem 1.25rem;
+  padding: 1.35rem 4.2rem 1.1rem 1.5rem;
   border-bottom: 1px solid var(--iss-cal-line);
 }
 
 .is-tour-calendar-modal .is-tour-calendar--modal .is-tour-calendar__eyebrow {
-  display: none;
-}
-
-.is-tour-calendar-modal .is-tour-calendar--modal .is-tour-calendar__heading {
-  color: #888;
-  font-family: var(--wp--preset--font-family--ibm-plex-sans, "IBM Plex Sans", sans-serif);
-  font-size: 0.62rem;
-  font-weight: 500;
-  letter-spacing: 0.14em;
-  line-height: 1.2;
+  color: var(--iss-cal-accent);
+  font-size: 0.72rem;
+  font-weight: 800;
+  letter-spacing: 0.08em;
   text-transform: uppercase;
 }
 
+.is-tour-calendar-modal .is-tour-calendar--modal .is-tour-calendar__heading {
+  color: var(--iss-cal-text);
+  font-size: clamp(1.45rem, 2vw, 2rem);
+  line-height: 1.1;
+}
+
 .is-tour-calendar-modal .is-tour-calendar--modal .is-tour-calendar__status {
-  margin-top: 0.35rem;
-  color: #aaa;
-  font-family: var(--wp--preset--font-family--ibm-plex-mono, "IBM Plex Mono", monospace);
-  font-size: 0.68rem;
+  color: var(--iss-cal-muted);
+  font-size: 0.9rem;
 }
 
 .is-tour-calendar-modal .is-tour-calendar--modal .is-tour-calendar__layout,
 .is-tour-calendar-modal .is-tour-calendar--modal .is-tour-calendar__calendar {
-  display: block;
   width: 100%;
 }
 
 .is-tour-calendar-modal .is-tour-calendar--modal .is-tour-calendar__calendar {
-  padding: 1rem 1.25rem 1rem;
-  background: var(--iss-cal-bg);
+  display: grid;
+  grid-template-columns: minmax(20rem, 25rem) minmax(0, 1fr);
+  gap: 0;
+  padding: 0;
+  background: #fff;
   border: 0;
   border-radius: 0;
   box-shadow: none;
 }
 
+.is-tour-calendar-modal .is-tour-calendar--modal .flatpickr-calendar,
+.is-tour-calendar-modal .is-tour-calendar--modal .is-tour-calendar__slots-panel {
+  min-width: 0;
+}
+
+.is-tour-calendar-modal .is-tour-calendar--modal .flatpickr-calendar {
+  width: 100%;
+  padding: 1.4rem 1.5rem 1.5rem;
+  box-sizing: border-box;
+  background: #fff;
+}
+
 .is-tour-calendar-modal .is-tour-calendar--modal .flatpickr-months {
-  margin: 0 0 0.75rem;
+  margin: 0 0 0.9rem;
   padding: 0;
   background: transparent;
   border: 0;
@@ -674,22 +690,19 @@
 }
 
 .is-tour-calendar-modal .is-tour-calendar--modal .flatpickr-month {
-  height: 1.25rem;
+  height: 2.4rem;
 }
 
 .is-tour-calendar-modal .is-tour-calendar--modal .flatpickr-current-month {
   left: 0;
   width: 100%;
-  height: 1.25rem;
+  height: 2.4rem;
   padding: 0;
   color: var(--iss-cal-text);
-  font-family: var(--wp--preset--font-family--ibm-plex-mono, "IBM Plex Mono", monospace);
-  font-size: 0.75rem;
-  font-weight: 500;
-  letter-spacing: 0.05em;
-  line-height: 1.25rem;
+  font-size: 1.05rem;
+  font-weight: 800;
+  line-height: 2.4rem;
   text-align: left;
-  text-transform: none;
 }
 
 .is-tour-calendar-modal .is-tour-calendar--modal .flatpickr-current-month .cur-month,
@@ -699,61 +712,67 @@
 }
 
 .is-tour-calendar-modal .is-tour-calendar--modal .flatpickr-current-month input.cur-year {
-  height: 1.25rem;
+  height: 2.4rem;
   padding: 0;
 }
 
 .is-tour-calendar-modal .is-tour-calendar--modal .flatpickr-prev-month,
 .is-tour-calendar-modal .is-tour-calendar--modal .flatpickr-next-month {
   top: 0;
-  width: 1.8rem;
-  height: 1.25rem;
-  padding: 0.05rem 0.45rem;
-  color: #aaa;
+  width: 2.4rem;
+  height: 2.4rem;
+  padding: 0.55rem;
+  border: 1px solid var(--iss-cal-line);
+  border-radius: var(--iss-radius-pill, 999px);
+  background: #fff;
+  color: var(--iss-cal-text);
 }
 
 .is-tour-calendar-modal .is-tour-calendar--modal .flatpickr-prev-month:hover,
 .is-tour-calendar-modal .is-tour-calendar--modal .flatpickr-next-month:hover {
+  border-color: var(--iss-cal-accent);
+  background: var(--iss-accent-soft, rgba(232, 29, 37, 0.16));
   color: var(--iss-cal-accent);
 }
 
 .is-tour-calendar-modal .is-tour-calendar--modal .flatpickr-weekdays {
   height: auto;
-  margin: 0 0 0.2rem;
+  margin: 0 0 0.45rem;
 }
 
 .is-tour-calendar-modal .is-tour-calendar--modal .flatpickr-weekdaycontainer,
 .is-tour-calendar-modal .is-tour-calendar--modal .dayContainer {
-  gap: 1px;
+  gap: 0.35rem;
+  width: 100%;
+  max-width: none;
+  min-width: 0;
 }
 
 .is-tour-calendar-modal .is-tour-calendar--modal .flatpickr-weekday {
-  padding: 0 0 0.25rem;
-  color: #bbb;
-  font-family: var(--wp--preset--font-family--ibm-plex-sans, "IBM Plex Sans", sans-serif);
-  font-size: 0.56rem;
-  font-weight: 500;
-  letter-spacing: 0.08em;
+  padding: 0.15rem 0;
+  color: var(--iss-surface-subtle, rgba(30, 30, 30, 0.56));
+  font-size: 0.72rem;
+  font-weight: 800;
   line-height: 1;
   text-transform: uppercase;
 }
 
 .is-tour-calendar-modal .is-tour-calendar--modal .flatpickr-day {
-  height: 2.125rem;
-  min-height: 2.125rem;
+  height: auto;
+  min-height: 2.85rem;
   padding: 0;
-  background: transparent;
-  border: 1px solid transparent;
-  border-radius: 0;
+  background: #fff;
+  border: 1px solid var(--iss-cal-line);
+  border-radius: var(--iss-radius-md, 6px);
   color: var(--iss-cal-text);
-  font-family: var(--wp--preset--font-family--ibm-plex-mono, "IBM Plex Mono", monospace);
-  font-size: 0.68rem;
+  font-size: 0.92rem;
+  font-weight: 700;
   line-height: 1;
 }
 
 .is-tour-calendar-modal .is-tour-calendar--modal .flatpickr-day:hover,
 .is-tour-calendar-modal .is-tour-calendar--modal .flatpickr-day:focus-visible {
-  background: transparent;
+  background: var(--iss-accent-soft, rgba(232, 29, 37, 0.16));
   border-color: var(--iss-cal-accent);
   color: var(--iss-cal-accent);
 }
@@ -761,13 +780,13 @@
 .is-tour-calendar-modal .is-tour-calendar--modal .flatpickr-day.prevMonthDay,
 .is-tour-calendar-modal .is-tour-calendar--modal .flatpickr-day.nextMonthDay,
 .is-tour-calendar-modal .is-tour-calendar--modal .flatpickr-day.flatpickr-disabled {
-  background: transparent;
-  border-color: transparent;
-  color: #ddd;
+  background: var(--iss-surface-inset, #f4f4f5);
+  border-color: color-mix(in srgb, var(--iss-cal-line) 80%, transparent);
+  color: rgba(30, 30, 30, 0.34);
 }
 
 .is-tour-calendar-modal .is-tour-calendar--modal .flatpickr-day.today {
-  border-color: transparent;
+  border-color: var(--iss-cal-accent);
   border-width: 1px;
   color: var(--iss-cal-accent);
 }
@@ -797,64 +816,90 @@
 }
 
 .is-tour-calendar-modal .is-tour-calendar--modal.is-details-open .is-tour-calendar__slots-panel {
-  border-top: 1px solid var(--iss-cal-line);
-  margin-top: 0.875rem;
-  padding: 0.75rem 0 0;
+  margin-top: 0;
+}
+
+.is-tour-calendar-modal .is-tour-calendar--modal .is-tour-calendar__slots-panel {
+  display: flex;
+  flex-direction: column;
+  min-height: 100%;
   max-height: none;
-  opacity: 1;
+  margin: 0;
+  padding: 1.4rem 1.5rem 1.5rem;
   overflow: visible;
+  background: var(--iss-surface-panel, #f6f6f7);
+  border-left: 1px solid var(--iss-cal-line);
+  opacity: 1;
+  pointer-events: auto;
   transform: none;
   transition: none;
 }
 
 .is-tour-calendar-modal .is-tour-calendar--modal .is-tour-calendar__selected-date,
 .is-tour-calendar-modal .is-tour-calendar--modal .is-tour-calendar__appointments-title-label {
-  color: #aaa;
-  font-family: var(--wp--preset--font-family--ibm-plex-sans, "IBM Plex Sans", sans-serif);
-  font-size: 0.56rem;
-  font-weight: 500;
+  color: var(--iss-surface-subtle, rgba(30, 30, 30, 0.56));
+  font-size: 0.72rem;
+  font-weight: 800;
   letter-spacing: 0.08em;
   line-height: 1.2;
   text-transform: uppercase;
 }
 
+.is-tour-calendar-modal .is-tour-calendar--modal .is-tour-calendar__selected-date {
+  margin-bottom: 0.9rem;
+}
+
 .is-tour-calendar-modal .is-tour-calendar--modal .is-tour-calendar__appointments {
-  margin-top: 0.5rem;
-  padding: 0;
-  background: transparent;
-  border: 0;
-  border-radius: 0;
+  display: grid;
+  gap: 1rem;
+  margin-top: 0;
+  padding: 1rem;
+  background: #fff;
+  border: 1px solid var(--iss-cal-line);
+  border-radius: var(--iss-radius-lg, 10px);
 }
 
 .is-tour-calendar-modal .is-tour-calendar--modal .is-tour-calendar__appointments-title {
-  display: none;
+  display: grid;
+  gap: 0.25rem;
+  text-align: left;
+}
+
+.is-tour-calendar-modal .is-tour-calendar--modal .is-tour-calendar__appointments-title-date {
+  color: var(--iss-cal-text);
+  font-size: 1.05rem;
+  font-weight: 800;
+  line-height: 1.2;
 }
 
 .is-tour-calendar-modal .is-tour-calendar--modal .is-tour-calendar__appointments-divider {
-  display: none;
+  margin: 0;
+  background: var(--iss-cal-line);
 }
 
 .is-tour-calendar-modal .is-tour-calendar--modal .is-tour-calendar__appointments-list {
-  justify-content: flex-start;
-  gap: 0.375rem;
-  margin-top: 0.5rem;
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  justify-content: stretch;
+  gap: 0.55rem;
+  margin-top: 0;
 }
 
 .is-tour-calendar-modal .is-tour-calendar--modal .is-tour-calendar__time-btn {
-  min-height: 0;
-  padding: 0.375rem 0.75rem;
+  min-height: 2.75rem;
+  padding: 0.55rem 0.75rem;
   background: #fff;
-  border: 1px solid #ddd;
-  border-radius: 0;
-  color: #666;
-  font-family: var(--wp--preset--font-family--ibm-plex-mono, "IBM Plex Mono", monospace);
-  font-size: 0.68rem;
+  border: 1px solid var(--iss-cal-line);
+  border-radius: var(--iss-radius-md, 6px);
+  color: var(--iss-cal-text);
+  font-size: 0.88rem;
+  font-weight: 800;
   line-height: 1.2;
 }
 
 .is-tour-calendar-modal .is-tour-calendar--modal .is-tour-calendar__time-btn:hover,
 .is-tour-calendar-modal .is-tour-calendar--modal .is-tour-calendar__time-btn:focus-visible {
-  background: transparent;
+  background: var(--iss-accent-soft, rgba(232, 29, 37, 0.16));
   border-color: var(--iss-cal-accent);
   color: var(--iss-cal-accent);
   transform: none;
@@ -867,13 +912,49 @@
 }
 
 .is-tour-calendar-modal .is-tour-calendar--modal .is-tour-calendar__time-btn:disabled {
-  background: transparent;
-  border-color: #e0dbd4;
-  color: #ccc;
+  background: var(--iss-surface-inset, #f4f4f5);
+  border-color: var(--iss-cal-line);
+  color: rgba(30, 30, 30, 0.38);
 }
 
 .is-tour-calendar-modal .is-tour-calendar--modal .is-tour-calendar__empty {
-  color: #aaa;
-  font-family: var(--wp--preset--font-family--ibm-plex-mono, "IBM Plex Mono", monospace);
-  font-size: 0.68rem;
+  color: var(--iss-cal-muted);
+  font-size: 0.9rem;
+}
+
+.is-tour-calendar-modal .is-tour-calendar--modal .is-tour-calendar__booking {
+  margin-top: 1rem;
+  padding-top: 1rem;
+}
+
+@media (max-width: 760px) {
+  .is-tour-calendar-modal__panel:has(.is-tour-calendar--modal) {
+    width: min(100%, calc(100vw - 1rem));
+    max-height: calc(100vh - 1rem);
+    border-radius: 18px;
+  }
+
+  .is-tour-calendar-modal .is-tour-calendar--modal .is-tour-calendar__calendar {
+    grid-template-columns: 1fr;
+  }
+
+  .is-tour-calendar-modal .is-tour-calendar--modal .is-tour-calendar__slots-panel {
+    border-top: 1px solid var(--iss-cal-line);
+    border-left: 0;
+  }
+
+  .is-tour-calendar-modal .is-tour-calendar--modal .flatpickr-calendar,
+  .is-tour-calendar-modal .is-tour-calendar--modal .is-tour-calendar__slots-panel {
+    padding-inline: 1rem;
+  }
+}
+
+@media (max-width: 460px) {
+  .is-tour-calendar-modal .is-tour-calendar--modal .is-tour-calendar__appointments-list {
+    grid-template-columns: 1fr;
+  }
+
+  .is-tour-calendar-modal .is-tour-calendar--modal .flatpickr-day {
+    min-height: 2.45rem;
+  }
 }

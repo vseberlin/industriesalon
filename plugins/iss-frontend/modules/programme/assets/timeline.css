@@ -435,6 +435,66 @@
   width: 100%;
 }
 
+.iss-timeline__calendar-bridge.has-calendar-grid {
+  display: grid;
+  align-items: stretch;
+}
+
+.iss-timeline-calendar-grid {
+  display: grid;
+  gap: 0.85rem;
+  width: 100%;
+}
+
+.iss-timeline-calendar-grid__header {
+  display: flex;
+  gap: 0.75rem;
+  align-items: flex-start;
+  justify-content: space-between;
+}
+
+.iss-timeline-calendar-grid__kicker,
+.iss-timeline-calendar-grid__title {
+  margin: 0;
+}
+
+.iss-timeline-calendar-grid__months {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 0.45rem;
+}
+
+.iss-timeline-calendar-grid__days {
+  display: grid;
+  grid-template-columns: repeat(7, minmax(0, 1fr));
+  gap: 0.35rem;
+}
+
+.iss-timeline-calendar-grid__weekday,
+.iss-timeline-calendar-grid__day,
+.iss-timeline-calendar-grid__month,
+.iss-timeline-calendar-grid__reset {
+  min-width: 0;
+}
+
+.iss-timeline-calendar-grid__weekday {
+  text-align: center;
+}
+
+.iss-timeline-calendar-grid__day,
+.iss-timeline-calendar-grid__month,
+.iss-timeline-calendar-grid__reset {
+  cursor: pointer;
+}
+
+.iss-timeline-calendar-grid__day {
+  aspect-ratio: 1;
+}
+
+.iss-timeline-calendar-grid__day--empty {
+  visibility: hidden;
+}
+
 .iss-timeline__filter--calendar {
   min-width: min(100%, 13rem);
 }
