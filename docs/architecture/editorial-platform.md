@@ -70,8 +70,9 @@ raw Set intake state.
 
 Führungen now use the same `iss-editorial` engine boundary for narrative
 composition. `iss-content` registers the `fuehrung` format with gestures for
-`intro`, `kapitel`, `leitfrage`, `zitat`, `galerie`, `image_wall`, `material`,
-and `schluss`. Existing Führung meta remains the owner for duration,
+`bildbuehne`, `intro`, `kapitel`, `leitfrage`, `zitat`, `galerie`,
+`image_wall`, `material`, and `schluss`. Existing Führung meta remains the
+owner for duration,
 meeting point, target group, pricing, booking mode, inquiry details, and the
 hero gallery. Existing route, dates, booking, facts, Atlas map, and related
 content blocks stay outside the JSON document. Public JSON rendering is enabled
@@ -82,6 +83,18 @@ The theme consumes `iss_editorial_get_read_model()` in
 `compact`, and `standard` skins, replaces the hero description from the first
 `intro` section, and renders later gesture sections in the dedicated
 single-tour editorial slot before the existing route block.
+The public Führung gesture contract is intentionally narrow:
+`bildbuehne` is the optional first-viewport image stage with overlay title/text
+and a compact gallery; `intro` feeds the fallback hero description only;
+`kapitel` is the tour narrative or context; `leitfrage` is a framed guiding
+question; `zitat` is a source or voice moment; `galerie` and `image_wall` are
+image gestures; `material` is for downloads, archive references, and supporting
+links; `schluss` is the closing invitation. The route, booking panel, dates,
+facts, Atlas map, and related cards are template/module surfaces, not JSON
+gestures. The Führung template remains the scaffold for the left alignment
+grid, right booking rail, route/map/related placement, and fallback hero; the
+theme consumes `bildbuehne` into that scaffold instead of rendering it as a
+normal body section.
 The custom Führung editor also shows a `Route / Stationen` panel, but that panel
 continues to write the existing `iss_related_places` relation rows through
 `iss-relations`. It is a unified authoring surface, not a second route storage

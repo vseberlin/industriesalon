@@ -8,6 +8,14 @@
 - Reworked the grouped booking popup used by `Termin wählen`: the first
   bookable day is selected automatically, slots are visible immediately, and
   the modal uses a two-column desktop layout with a stacked mobile layout.
+- Refined the single Führung layout around the JSON gesture contract:
+  `intro` remains the hero description, `kapitel` becomes readable tour
+  narrative, `leitfrage`, `zitat`, media, material, and closing gestures now
+  have stable public treatments, the hero now behaves as a full-viewport route
+  stage, and the gallery no longer dominates the mobile first screen.
+- Added theme consumption for the new Führung `bildbuehne` gesture: when present,
+  it replaces the template hero title, description, image, and gallery while the
+  booking/date/facts rail stays outside the gesture.
 
 ## 2026-06-27
 - Added the theme-owned Führung JSON renderer in `includes/tours-render.php`:

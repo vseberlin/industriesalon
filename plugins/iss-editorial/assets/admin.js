@@ -149,6 +149,7 @@
 
     function sectionTone(type) {
       var tones = {
+        bildbuehne: '#185fa5',
         leitfrage: '#7f77dd',
         objektfokus: '#1d9e75',
         vollbild: '#185fa5',
@@ -268,7 +269,7 @@
         return true;
       }
 
-      if (format === 'fuehrung' && ['intro', 'kapitel', 'leitfrage', 'material', 'schluss'].indexOf(type) !== -1) {
+      if (format === 'fuehrung' && ['bildbuehne', 'intro', 'kapitel', 'leitfrage', 'material', 'schluss'].indexOf(type) !== -1) {
         return true;
       }
 

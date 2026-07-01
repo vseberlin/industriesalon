@@ -424,7 +424,7 @@ function iss_editorial_sanitize_body_html(string $body, array $format, string $t
 {
     $format_slug = (string) ($format['slug'] ?? '');
     $safe_rich_text_sections = [
-        'fuehrung' => ['intro', 'kapitel', 'leitfrage', 'material', 'schluss'],
+        'fuehrung' => ['bildbuehne', 'intro', 'kapitel', 'leitfrage', 'material', 'schluss'],
         'projekt' => ['kapitel', 'fliesstext', 'schluss'],
     ];
 

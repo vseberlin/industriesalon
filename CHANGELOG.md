@@ -6,6 +6,16 @@ be recovered from Git history.
 
 ## 2026-07-01
 
+- Refined the public single Führung renderer around a stable gesture contract:
+  `intro` feeds the hero description, `kapitel` renders as readable tour
+  narrative, `leitfrage` / `zitat` / media / material / `schluss` have explicit
+  theme treatments, the first screen now uses a full-viewport route stage, and
+  route, booking, facts, Atlas map, and related cards remain outside the JSON
+  gesture layer.
+- Added the `bildbuehne` Führung gesture as the explicit hero-stage contract:
+  the template consumes its title, body, and media into the first viewport while
+  keeping booking, dates, facts, route, Atlas, and related content outside the
+  gesture body.
 - Reworked the public `/kalender/` selection surface toward a crisp
   booking-style calendar: the existing `timeline-query` month/day bridge now
   progressively renders month buttons and a visible day grid while keeping the

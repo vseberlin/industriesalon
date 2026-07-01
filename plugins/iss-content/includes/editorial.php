@@ -129,6 +129,11 @@ function iss_content_model_register_editorial_formats(array $formats): array
         'default_skin' => 'route-dossier',
         'default_variant' => 'standard',
         'sections' => [
+            'bildbuehne' => [
+                'label' => __('Bildbühne', 'iss-content-model'),
+                'description' => __('Viewport-Bühne mit großem Bild, Overlay-Text und optionaler kleiner Galerie.', 'iss-content-model'),
+                'supports' => ['media_refs'],
+            ],
             'intro' => [
                 'label' => __('Einleitung', 'iss-content-model'),
                 'description' => __('Kurzer Einstieg für die Hero-Beschreibung der Führung.', 'iss-content-model'),

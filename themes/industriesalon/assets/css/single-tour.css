@@ -22,12 +22,20 @@
 
 /* .iss-tour-hero: Base class for iss tour hero; apply on primary wrapper/scope. */
 .iss-tour-hero {
+  position: relative;
+  display: grid;
+  align-items: end;
   width: 100%;
-  padding-top: clamp(5rem, 7vw, 6.4rem);
-  padding-bottom: clamp(1.5rem, 2.6vw, 2.2rem);
-  border-bottom: 1px solid rgba(30, 30, 30, 0.12);
+  min-height: 100vh;
+  min-height: 100svh;
+  padding-top: 7.2rem;
+  padding-bottom: 3.5rem;
+  overflow: hidden;
+  border-bottom: 0;
   background:
-    linear-gradient(180deg, rgba(232, 29, 37, 0.05) 0%, rgba(232, 29, 37, 0.02) 34%, rgba(247, 246, 243, 0) 100%);
+    linear-gradient(90deg, rgba(20, 20, 20, 0.98) 0%, rgba(20, 20, 20, 0.88) 42%, rgba(20, 20, 20, 0.72) 100%),
+    var(--iss-black, #1e1e1e);
+  color: var(--iss-white, #f9f9fa);
 }
 
 /* .iss-tour-main: Base class for iss tour main; apply on primary wrapper/scope. */
@@ -67,24 +75,27 @@
 /* .iss-tour-hero__title: Element class for `iss-tour-hero`; apply on `title` element. */
 .iss-tour-hero__title {
   margin: 0;
-  max-width: 10.5ch;
-  font-size: clamp(2.45rem, 4.2vw, 4.1rem);
+  max-width: none;
+  color: var(--iss-white, #f9f9fa);
+  font-size: 4.2rem;
   line-height: 0.96;
-  letter-spacing: -0.045em;
+  letter-spacing: 0;
+  overflow-wrap: normal;
+  word-break: normal;
 }
 
 /* .iss-tour-hero__lede: Element class for `iss-tour-hero`; apply on `lede` element. */
 .iss-tour-hero__lede {
-  max-width: 32rem;
+  max-width: 35rem;
 }
 
 /* .iss-tour-hero__lede: Element class for `iss-tour-hero`; apply on `lede` element. */
 .iss-tour-hero__lede p {
   margin: 0;
-  font-size: 0.96rem;
+  color: rgba(249, 249, 250, 0.8);
+  font-size: 1.1rem;
   font-weight: 500;
   line-height: 1.52;
-  color: rgba(30, 30, 30, 0.78);
 }
 
 /* .iss-tour-hero__media: Element class for `iss-tour-hero`; apply on `media` element. */
@@ -418,9 +429,9 @@
 
 .iss-tour-hero__composition {
   display: grid !important;
-  grid-template-columns: minmax(0, 0.94fr) minmax(0, 1.02fr) minmax(17rem, 0.62fr);
-  gap: clamp(1rem, 1.8vw, 1.5rem);
-  align-items: start;
+  grid-template-columns: minmax(0, 0.88fr) minmax(0, 1.22fr) minmax(15.5rem, 0.52fr);
+  gap: 1.4rem;
+  align-items: end;
 }
 
 .iss-tour-hero__copy-col,
@@ -437,14 +448,22 @@
   gap: 0.95rem;
 }
 
+.iss-tour-hero__visual {
+  position: relative;
+}
+
 .iss-tour-hero__copy {
-  padding-top: 0.1rem;
+  gap: 1.25rem;
+  padding-top: 0;
+  padding-bottom: 0.35rem;
 }
 
 .iss-tour-hero__description {
   display: grid;
-  gap: 0.72rem;
-  padding-top: 0.1rem;
+  gap: 0.75rem;
+  max-width: 38rem;
+  padding-top: 1rem;
+  border-top: 1px solid rgba(249, 249, 250, 0.2);
 }
 
 .iss-tour-hero__description .iss-heading {
@@ -454,16 +473,31 @@
 
 .iss-tour-hero__description .iss-heading__title {
   margin: 0;
-  font-size: clamp(1.1rem, 1.45vw, 1.34rem);
+  color: var(--iss-white, #f9f9fa);
+  font-size: 1.18rem;
   line-height: 1.12;
-  letter-spacing: -0.02em;
+  letter-spacing: 0;
+}
+
+.iss-tour-hero .iss-kicker {
+  --iss-kicker-color: rgba(249, 249, 250, 0.88);
+
+  color: var(--iss-kicker-color);
 }
 
 .iss-tour-hero__description .wp-block-post-content,
 .iss-tour-hero__description .wp-block-iss-tour-description {
-  font-size: 0.9rem;
-  line-height: 1.62;
-  color: rgba(30, 30, 30, 0.82);
+  color: rgba(249, 249, 250, 0.78);
+  font-size: 0.96rem;
+  line-height: 1.66;
+}
+
+.iss-tour-editorial-skin-route-dossier .iss-tour-hero__lede {
+  display: none;
+}
+
+.iss-tour-hero__description .iss-tour-editorial-intro__body {
+  color: rgba(249, 249, 250, 0.78);
 }
 
 .iss-tour-hero__description .wp-block-post-content > *:first-child,
@@ -476,21 +510,110 @@
   margin-top: 0.9rem;
 }
 
+.iss-tour-has-stage-gesture .iss-tour-hero::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  background:
+    linear-gradient(90deg, rgba(14, 14, 14, 0.88) 0%, rgba(14, 14, 14, 0.66) 34%, rgba(14, 14, 14, 0.28) 68%, rgba(14, 14, 14, 0.76) 100%),
+    linear-gradient(180deg, rgba(14, 14, 14, 0.12) 0%, rgba(14, 14, 14, 0.18) 50%, rgba(14, 14, 14, 0.84) 100%);
+  pointer-events: none;
+}
+
+.iss-tour-has-stage-gesture .iss-tour-hero > .iss-container {
+  position: relative;
+  z-index: 2;
+}
+
+.iss-tour-has-stage-gesture .iss-tour-hero__composition {
+  grid-template-columns: minmax(0, 0.9fr) minmax(0, 1fr) minmax(15.5rem, 0.52fr);
+  min-height: calc(100svh - 10.7rem);
+}
+
+.iss-tour-has-stage-gesture .iss-tour-hero__copy-col,
+.iss-tour-has-stage-gesture .iss-tour-hero__aside-col {
+  position: relative;
+  z-index: 2;
+}
+
+.iss-tour-has-stage-gesture .iss-tour-hero__copy-col {
+  grid-column: 1;
+}
+
+.iss-tour-has-stage-gesture .iss-tour-hero__aside-col {
+  grid-column: 3;
+}
+
+.iss-tour-has-stage-gesture .iss-tour-hero__visual-col {
+  position: absolute;
+  top: -7.2rem;
+  bottom: auto;
+  left: 50%;
+  z-index: 0;
+  width: 100vw;
+  height: 100vh;
+  height: 100svh;
+  min-height: calc(100% + 10.7rem);
+  transform: translateX(-50%);
+}
+
+.iss-tour-has-stage-gesture .iss-tour-hero__visual {
+  position: absolute;
+  inset: 0;
+}
+
+.iss-tour-has-stage-gesture .iss-tour-hero__media-card {
+  position: absolute;
+  inset: 0;
+  height: 100%;
+  min-height: 0;
+  border-radius: 0;
+  box-shadow: none;
+}
+
+.iss-tour-has-stage-gesture .iss-tour-hero__media-card::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: rgba(14, 14, 14, 0.08);
+  pointer-events: none;
+}
+
+.iss-tour-has-stage-gesture .iss-tour-hero__description {
+  max-width: 34rem;
+  padding-top: 0;
+  border-top: 0;
+}
+
+.iss-tour-has-stage-gesture .iss-tour-hero__description .iss-heading {
+  display: none;
+}
+
+.iss-tour-has-stage-gesture .iss-tour-hero__gallery-wrap:not(:empty) {
+  right: auto;
+  bottom: 4rem;
+  left: 50%;
+  width: min(38rem, 42vw);
+  transform: translateX(-50%);
+  pointer-events: auto;
+}
+
 .iss-tour-editorial-section {
-  padding-top: clamp(2.4rem, 4vw, 4rem);
-  padding-bottom: clamp(2.4rem, 4vw, 4rem);
+  padding-top: 4rem;
+  padding-bottom: 4.4rem;
   background: #f7f6f3;
 }
 
 .iss-tour-editorial-section__body {
-  max-width: 78rem;
+  max-width: 72rem;
   margin-right: auto;
   margin-left: auto;
 }
 
 .iss-tour-editorial {
   display: grid;
-  gap: clamp(1.6rem, 3vw, 3rem);
+  gap: 2.2rem;
 }
 
 .iss-tour-editorial-intro__title,
@@ -519,15 +642,36 @@
 }
 
 .iss-tour-section {
-  padding-top: clamp(1.6rem, 3vw, 2.5rem);
+  position: relative;
+  padding-top: 2rem;
   border-top: 1px solid rgba(30, 30, 30, 0.12);
+}
+
+.iss-tour-section[data-section-label]:not([data-section-label=""])::before {
+  content: attr(data-section-label);
+  display: block;
+  margin-bottom: 0.8rem;
+  color: var(--iss-scarlet-red, #e81d25);
+  font-size: 0.72rem;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  line-height: 1.3;
+  text-transform: uppercase;
 }
 
 .iss-tour-section__inner {
   display: grid;
-  grid-template-columns: minmax(0, 0.95fr) minmax(0, 1.55fr);
-  gap: clamp(1.2rem, 3vw, 3rem);
+  grid-template-columns: minmax(0, 0.42fr) minmax(0, 1fr);
+  gap: 2rem;
   align-items: start;
+}
+
+.iss-tour-section.is-text-only .iss-tour-section__inner {
+  grid-template-columns: minmax(9rem, 0.32fr) minmax(0, 48rem) minmax(0, 1fr);
+}
+
+.iss-tour-section.is-text-only .iss-tour-section__copy {
+  grid-column: 2;
 }
 
 .iss-tour-section--media-aside .iss-tour-section__inner {
@@ -549,32 +693,79 @@
   grid-template-columns: minmax(0, 1fr);
 }
 
+.iss-tour-section--layout-material .iss-tour-section__inner {
+  grid-template-columns: minmax(0, 0.35fr) minmax(0, 1fr);
+}
+
 .iss-tour-section__copy {
   display: grid;
-  gap: 0.85rem;
+  gap: 0.95rem;
   max-width: 58rem;
 }
 
+.iss-tour-section__kicker {
+  align-self: start;
+}
+
 .iss-tour-section__title {
-  max-width: 16ch;
-  font-size: clamp(1.8rem, 3vw, 2.85rem);
-  line-height: 1.02;
+  max-width: 24ch;
+  font-size: 2.25rem;
+  line-height: 1.08;
+  letter-spacing: 0;
 }
 
 .iss-tour-section__body {
   color: rgba(30, 30, 30, 0.8);
-  font-size: 1rem;
-  line-height: 1.66;
+  font-size: 1.05rem;
+  line-height: 1.72;
+}
+
+.iss-tour-section--layout-chapter .iss-tour-section__body {
+  max-width: 44rem;
+}
+
+.iss-tour-section--layout-chapter.is-text-only {
+  display: grid;
+  align-items: center;
+  min-height: 58vh;
+  padding-top: 4.5rem;
+  padding-bottom: 4.5rem;
+  border-top: 0;
+}
+
+.iss-tour-section--layout-thesis {
+  padding: 2.4rem;
+  border: 1px solid rgba(30, 30, 30, 0.12);
+  border-left: 0.28rem solid var(--iss-scarlet-red, #e81d25);
+  border-radius: 0.45rem;
+  background: #fff;
+}
+
+.iss-tour-section--layout-thesis .iss-tour-section__copy {
+  max-width: 58rem;
+}
+
+.iss-tour-section--layout-thesis .iss-tour-section__title {
+  max-width: 30ch;
+  font-size: 2.55rem;
+}
+
+.iss-tour-section--layout-quote,
+.iss-tour-section--layout-conclusion {
+  padding: 2rem;
+  border: 1px solid rgba(30, 30, 30, 0.12);
+  border-radius: 0.45rem;
+  background: #fbfaf7;
 }
 
 .iss-tour-section__quote {
   margin: 0;
-  padding: 1rem 0 1rem 1.2rem;
+  padding: 1rem 0 1rem 1.25rem;
   border-left: 0.22rem solid var(--iss-scarlet-red, #e81d25);
   color: rgba(30, 30, 30, 0.9);
-  font-size: clamp(1.25rem, 2vw, 1.8rem);
+  font-size: 1.55rem;
   font-weight: 700;
-  line-height: 1.24;
+  line-height: 1.28;
 }
 
 .iss-tour-section__quote cite {
@@ -606,6 +797,13 @@
   padding-bottom: 0.35rem;
 }
 
+.iss-tour-section--gesture-image_wall .iss-tour-section__media--strip {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(13rem, 1fr));
+  overflow: visible;
+  padding-bottom: 0;
+}
+
 .iss-tour-section__media-item {
   margin: 0;
   border: 1px solid rgba(30, 30, 30, 0.12);
@@ -619,10 +817,20 @@
   scroll-snap-align: start;
 }
 
+.iss-tour-section--gesture-image_wall .iss-tour-section__media-item {
+  min-height: 100%;
+}
+
 .iss-tour-section__media-item img {
   display: block;
   width: 100%;
   height: auto;
+}
+
+.iss-tour-section--gesture-image_wall .iss-tour-section__media-item img {
+  height: 100%;
+  min-height: 13rem;
+  object-fit: cover;
 }
 
 .iss-tour-section__media-item figcaption {
@@ -632,8 +840,96 @@
   line-height: 1.4;
 }
 
+.iss-tour-section.has-media:not(.iss-tour-section--layout-gallery, .iss-tour-section--layout-image-wall) {
+  display: grid;
+  align-items: stretch;
+  width: 100%;
+  max-width: none;
+  min-height: 100vh;
+  min-height: 100svh;
+  padding: 0;
+  border-top: 0;
+  background: #f7f6f3;
+}
+
+.iss-tour-section.has-media:not(.iss-tour-section--layout-gallery, .iss-tour-section--layout-image-wall) .iss-tour-section__inner {
+  grid-template-columns: minmax(0, 56vw) minmax(20rem, 1fr);
+  gap: 0;
+  align-items: stretch;
+  width: 100%;
+  max-width: none;
+  min-height: inherit;
+  margin: 0;
+  padding: 0;
+}
+
+.iss-tour-section.has-media:not(.iss-tour-section--layout-gallery, .iss-tour-section--layout-image-wall) .iss-tour-section__media {
+  position: relative;
+  grid-row: 1;
+  grid-column: 1;
+  height: 100vh;
+  height: 100svh;
+  min-height: 100vh;
+  min-height: 100svh;
+  margin: 0;
+  overflow: hidden;
+}
+
+.iss-tour-section.has-media.iss-tour-section--media-aside:not(.iss-tour-section--layout-gallery, .iss-tour-section--layout-image-wall) .iss-tour-section__media {
+  grid-column: 2;
+}
+
+.iss-tour-section.has-media:not(.iss-tour-section--layout-gallery, .iss-tour-section--layout-image-wall) .iss-tour-section__copy {
+  align-self: center;
+  grid-row: 1;
+  grid-column: 2;
+  width: 100%;
+  max-width: none;
+  padding: 5rem;
+}
+
+.iss-tour-section.has-media.iss-tour-section--media-aside:not(.iss-tour-section--layout-gallery, .iss-tour-section--layout-image-wall) .iss-tour-section__copy {
+  grid-column: 1;
+}
+
+.iss-tour-section.has-media:not(.iss-tour-section--layout-gallery, .iss-tour-section--layout-image-wall) .iss-tour-section__media--strip,
+.iss-tour-section.has-media:not(.iss-tour-section--layout-gallery, .iss-tour-section--layout-image-wall) .iss-tour-section__media-item {
+  width: 100%;
+  height: 100%;
+  margin: 0;
+}
+
+.iss-tour-section.has-media:not(.iss-tour-section--layout-gallery, .iss-tour-section--layout-image-wall) .iss-tour-section__media-item {
+  position: absolute;
+  inset: 0;
+  border: 0;
+  border-radius: 0;
+}
+
+.iss-tour-section.has-media:not(.iss-tour-section--layout-gallery, .iss-tour-section--layout-image-wall) .iss-tour-section__media-item img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  aspect-ratio: auto;
+  object-fit: cover;
+}
+
+.iss-tour-section.has-media:not(.iss-tour-section--layout-gallery, .iss-tour-section--layout-image-wall) .iss-tour-section__media-item figcaption {
+  position: absolute;
+  right: 1rem;
+  bottom: 1rem;
+  left: 1rem;
+  width: fit-content;
+  max-width: min(36rem, calc(100% - 2rem));
+  margin: 0;
+  padding: 0.5rem 0.7rem;
+  background: rgba(249, 249, 250, 0.9);
+  color: rgba(30, 30, 30, 0.78);
+}
+
 .iss-tour-section__refs {
   display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(13rem, 1fr));
   gap: 0.85rem;
 }
 
@@ -686,10 +982,11 @@
 }
 
 .iss-tour-hero__media-card {
-  min-height: clamp(22rem, 32vw, 30rem);
-  border-radius: 0.55rem;
+  min-height: 34rem;
+  height: min(66vh, 46rem);
+  border-radius: 0.35rem;
   overflow: hidden;
-  box-shadow: none;
+  box-shadow: 0 1.5rem 4rem rgba(0, 0, 0, 0.38);
 }
 
 .iss-tour-hero__media-card > .wp-block-post-featured-image,
@@ -710,18 +1007,36 @@
   display: none;
 }
 
+.iss-tour-hero__gallery-wrap:not(:empty) {
+  position: absolute;
+  right: 0.9rem;
+  bottom: 0.9rem;
+  left: 0.9rem;
+  z-index: 2;
+  padding: 0.55rem;
+  border: 1px solid rgba(249, 249, 250, 0.14);
+  border-radius: 0.35rem;
+  background: rgba(20, 20, 20, 0.58);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+}
+
 .iss-tour-hero .iss-tour-hero-gallery {
   display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: 0.55rem;
+  grid-template-columns: repeat(auto-fit, minmax(4.2rem, 1fr));
+  gap: 0.42rem;
 }
 
 .iss-tour-hero .iss-tour-hero-gallery__thumb {
-  border: 1px solid rgba(30, 30, 30, 0.14);
-  border-radius: 0.5rem;
-  background: #fff;
+  border: 1px solid rgba(249, 249, 250, 0.22);
+  border-radius: 0.25rem;
+  background: rgba(20, 20, 20, 0.56);
   box-shadow: none;
   overflow: hidden;
+}
+
+.iss-tour-hero .iss-tour-hero-gallery__thumb.is-active {
+  border-color: var(--iss-accent);
 }
 
 .iss-tour-hero .iss-tour-hero-gallery__thumb-img {
@@ -742,10 +1057,10 @@
   gap: 0.18rem;
   min-height: 0;
   padding: 0.68rem 0.72rem 0.72rem 1.55rem;
-  border: 1px solid rgba(30, 30, 30, 0.14);
+  border: 1px solid rgba(249, 249, 250, 0.14);
   border-left-width: 1px;
   border-radius: 0.55rem;
-  background: rgba(255, 255, 255, 0.9);
+  background: rgba(249, 249, 250, 0.08);
   box-shadow: none;
 }
 
@@ -766,7 +1081,7 @@
 
 .iss-tour-hero .iss-fuehrung-fact__label {
   margin-bottom: 0;
-  color: rgba(30, 30, 30, 0.56);
+  color: rgba(249, 249, 250, 0.58);
   font-size: 0.62rem;
   font-weight: 800;
   letter-spacing: 0.1em;
@@ -774,6 +1089,7 @@
 }
 
 .iss-tour-hero .iss-fuehrung-fact__value {
+  color: rgba(249, 249, 250, 0.88);
   font-size: 0.87rem;
   line-height: 1.38;
 }
@@ -785,10 +1101,12 @@
 
 .iss-tour-hero__aside {
   padding: 0.88rem 0.92rem;
-  border: 1px solid rgba(30, 30, 30, 0.14);
+  border: 1px solid rgba(249, 249, 250, 0.16);
   border-radius: 0.65rem;
-  background: rgba(255, 255, 255, 0.92);
+  background: rgba(20, 20, 20, 0.64);
   box-shadow: none;
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
 }
 
 .iss-tour-hero__aside-block {
@@ -798,20 +1116,21 @@
 
 .iss-tour-hero__aside-block + .iss-tour-hero__aside-block {
   padding-top: 0.85rem;
-  border-top: 1px solid rgba(30, 30, 30, 0.12);
+  border-top: 1px solid rgba(249, 249, 250, 0.16);
 }
 
 .iss-tour-hero__aside-title {
   margin: 0;
+  color: var(--iss-white, #f9f9fa);
   font-size: clamp(1.05rem, 1.2vw, 1.24rem);
   line-height: 1.12;
-  letter-spacing: -0.02em;
+  letter-spacing: 0;
 }
 
 .iss-tour-hero__aside-text,
 .iss-tour-hero__aside-note {
   margin: 0;
-  color: rgba(30, 30, 30, 0.72);
+  color: rgba(249, 249, 250, 0.72);
   font-size: 0.85rem;
   line-height: 1.48;
 }
@@ -830,7 +1149,8 @@
 .iss-tour-hero__aside .iss-fuehrung-fact {
   min-height: 0;
   padding: 0.62rem 0.68rem 0.66rem 1.45rem;
-  background: #fbfaf7;
+  border-color: rgba(249, 249, 250, 0.14);
+  background: rgba(249, 249, 250, 0.08);
 }
 
 .iss-tour-hero__aside .iss-fuehrung-fact::before {
@@ -873,7 +1193,7 @@
   align-items: start;
   gap: 0.38rem 0.65rem;
   padding: 0.62rem 0;
-  border-top: 1px solid rgba(30, 30, 30, 0.1);
+  border-top: 1px solid rgba(249, 249, 250, 0.14);
 }
 
 .iss-tour-hero__aside .iss-tour-dates__item:first-child {
@@ -885,7 +1205,7 @@
 .iss-tour-hero__aside .iss-tour-dates__label:visited {
   display: grid;
   gap: 0.08rem;
-  color: var(--iss-black);
+  color: var(--iss-white, #f9f9fa);
   line-height: 1.35;
   text-decoration: none;
 }
@@ -896,7 +1216,7 @@
 }
 
 .iss-tour-hero__aside .iss-tour-dates__time {
-  color: rgba(30, 30, 30, 0.68);
+  color: rgba(249, 249, 250, 0.68);
   font-size: 0.77rem;
   font-weight: 500;
 }
@@ -917,7 +1237,7 @@
 
 .iss-tour-hero__aside .wp-block-iss-tour-dates > p {
   margin: 0;
-  color: rgba(30, 30, 30, 0.72);
+  color: rgba(249, 249, 250, 0.72);
   font-size: 0.84rem;
   line-height: 1.48;
 }
@@ -946,7 +1266,7 @@
 
 .iss-tour-hero__aside .iss-fuehrung-booking__note {
   margin: 0;
-  color: rgba(30, 30, 30, 0.72);
+  color: rgba(249, 249, 250, 0.72);
   font-size: 0.84rem;
   line-height: 1.42;
 }
@@ -973,8 +1293,8 @@
 }
 
 .iss-tour-hero__aside .iss-fuehrung-booking__actions .iss-fuehrung-booking__secondary {
-  border: 1px solid rgba(30, 30, 30, 0.18);
-  color: var(--iss-black);
+  border: 1px solid rgba(249, 249, 250, 0.22);
+  color: var(--iss-white, #f9f9fa);
   text-decoration: none;
 }
 
@@ -1388,7 +1708,7 @@
     padding-top: 0;
     padding-left: 0.95rem;
     border-top: 0;
-    border-left: 1px solid rgba(30, 30, 30, 0.12);
+    border-left: 1px solid rgba(249, 249, 250, 0.16);
   }
 
   .iss-tour-main__subsections {
@@ -1403,14 +1723,122 @@
 
   .iss-tour-hero__title {
     max-width: none;
+    font-size: 2.75rem;
+    line-height: 1.02;
+  }
+
+  .iss-tour-hero {
+    min-height: 100vh;
+    min-height: 100svh;
+    padding-top: 5.4rem;
+    padding-bottom: 2.4rem;
+  }
+
+  .iss-tour-has-stage-gesture .iss-tour-hero::after {
+    display: none;
+  }
+
+  .iss-tour-has-stage-gesture .iss-tour-hero__composition {
+    display: grid !important;
+    grid-template-columns: 1fr;
+    min-height: 0;
+  }
+
+  .iss-tour-has-stage-gesture .iss-tour-hero__copy-col,
+  .iss-tour-has-stage-gesture .iss-tour-hero__visual-col,
+  .iss-tour-has-stage-gesture .iss-tour-hero__aside-col {
+    grid-column: 1 / -1;
+    width: 100%;
+  }
+
+  .iss-tour-has-stage-gesture .iss-tour-hero__visual-col {
+    position: relative;
+    top: auto;
+    bottom: auto;
+    left: auto;
+    grid-column: auto;
+    z-index: 2;
+    width: auto;
+    height: auto;
+    min-height: 0;
+    transform: none;
+  }
+
+  .iss-tour-has-stage-gesture .iss-tour-hero__copy-col,
+  .iss-tour-has-stage-gesture .iss-tour-hero__aside-col {
+    grid-column: auto;
+  }
+
+  .iss-tour-has-stage-gesture .iss-tour-hero__visual {
+    position: relative;
+    width: 100%;
+  }
+
+  .iss-tour-has-stage-gesture .iss-tour-hero__media-card {
+    position: relative;
+    width: 100%;
+    height: 22rem;
+    min-height: 17rem;
+    border-radius: 0.35rem;
+  }
+
+  .iss-tour-has-stage-gesture .iss-tour-hero__gallery-wrap:not(:empty) {
+    right: 0.9rem;
+    bottom: 0.9rem;
+    left: 0.9rem;
+    width: auto;
+    transform: none;
   }
 
   .iss-tour-section__inner,
   .iss-tour-section--media-aside .iss-tour-section__inner,
   .iss-tour-section--layout-thesis .iss-tour-section__inner,
   .iss-tour-section--layout-quote .iss-tour-section__inner,
-  .iss-tour-section--layout-conclusion .iss-tour-section__inner {
+  .iss-tour-section--layout-conclusion .iss-tour-section__inner,
+  .iss-tour-section--layout-material .iss-tour-section__inner,
+  .iss-tour-section.is-text-only .iss-tour-section__inner,
+  .iss-tour-section.has-media:not(.iss-tour-section--layout-gallery, .iss-tour-section--layout-image-wall) .iss-tour-section__inner {
     grid-template-columns: 1fr;
+  }
+
+  .iss-tour-section.is-text-only .iss-tour-section__copy {
+    grid-column: auto;
+  }
+
+  .iss-tour-section--layout-thesis,
+  .iss-tour-section--layout-quote,
+  .iss-tour-section--layout-conclusion {
+    padding: 1.35rem;
+  }
+
+  .iss-tour-section.has-media:not(.iss-tour-section--layout-gallery, .iss-tour-section--layout-image-wall) {
+    min-height: auto;
+  }
+
+  .iss-tour-section.has-media:not(.iss-tour-section--layout-gallery, .iss-tour-section--layout-image-wall) .iss-tour-section__media,
+  .iss-tour-section.has-media.iss-tour-section--media-aside:not(.iss-tour-section--layout-gallery, .iss-tour-section--layout-image-wall) .iss-tour-section__media,
+  .iss-tour-section.has-media:not(.iss-tour-section--layout-gallery, .iss-tour-section--layout-image-wall) .iss-tour-section__copy,
+  .iss-tour-section.has-media.iss-tour-section--media-aside:not(.iss-tour-section--layout-gallery, .iss-tour-section--layout-image-wall) .iss-tour-section__copy {
+    grid-row: auto;
+    grid-column: auto;
+  }
+
+  .iss-tour-section.has-media:not(.iss-tour-section--layout-gallery, .iss-tour-section--layout-image-wall) .iss-tour-section__media {
+    height: 22rem;
+    min-height: 0;
+  }
+
+  .iss-tour-section.has-media:not(.iss-tour-section--layout-gallery, .iss-tour-section--layout-image-wall) .iss-tour-section__copy {
+    padding: 1.35rem;
+  }
+
+  .iss-tour-section__title,
+  .iss-tour-section--layout-thesis .iss-tour-section__title {
+    font-size: 1.85rem;
+  }
+
+  .iss-tour-section__quote {
+    font-size: 1.28rem;
   }
 
   .iss-tour-section--media-aside .iss-tour-section__media {
@@ -1425,6 +1853,11 @@
     font-size: 0.92rem;
   }
 
+  .iss-tour-hero__media-card {
+    min-height: 17rem;
+    height: 22rem;
+  }
+
   .iss-tour-hero__aside {
     grid-template-columns: 1fr;
   }
@@ -1432,7 +1865,7 @@
   .iss-tour-hero__aside-block + .iss-tour-hero__aside-block {
     padding-top: 0.95rem;
     padding-left: 0;
-    border-top: 1px solid rgba(30, 30, 30, 0.12);
+    border-top: 1px solid rgba(249, 249, 250, 0.16);
     border-left: 0;
   }
 
@@ -1473,7 +1906,7 @@
   }
 
   .iss-tour-hero .iss-tour-hero-gallery {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
+    grid-template-columns: repeat(auto-fit, minmax(4.25rem, 1fr));
   }
 
   .iss-tour-route__station-body {
