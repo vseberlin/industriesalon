@@ -20,7 +20,23 @@ Use this for code, design, Gutenberg, CSS, PHP, JavaScript, template, theme, and
 
 ## CSS
 
-- Before adding CSS, inspect `theme.json`, global tokens, shared variables, layout primitives, existing utilities, pattern/card CSS, and `overrides.css`.
+- Before adding CSS, inspect `theme.json`, `assets/css/tokens.css`, global tokens, shared variables, layout primitives, existing utilities, pattern/card CSS, renderer/skin CSS, and `overrides.css`.
+- Treat `assets/css/tokens.css` as layer 0 for the `--iss-*` custom property contract. Do not put layout, component, page, or WordPress markup selectors there.
+- Do not tokenize every value. Add layer-0 tokens only for shared, semantic
+  values expected to vary across theme/site/skin/component contexts. Keep
+  one-off geometry, temporary migration values, implementation glue, and
+  component-only internals as local variables or plain declarations.
+- Prefer this layer order: token values, base helpers, primitives/patterns, renderer contracts, skins, then page exceptions.
+- For JSON-rendered pages, target stable gesture/treatment/skin classes before page-specific selectors.
+- Public first-party plugin CSS may consume `--iss-*` tokens with fallback
+  values and plugin-prefixed local variables, but it must not redefine global
+  tokens or duplicate theme-owned button/card/surface/type systems.
+- Admin plugin CSS is outside the public CSS layer stack; keep it scoped to
+  wp-admin/plugin classes and WordPress admin conventions.
+- CSS changes should be migration-positive. When touching an old page-specific
+  stylesheet, drain reusable rules into tokens, primitives/patterns,
+  renderer-contract CSS, or skins, then delete the obsolete page selector when
+  nothing still depends on it.
 - Prefer structural layout changes over appearance patches.
 - Keep CSS global, structural, token-based, predictable, and low-specificity.
 - Avoid `!important`, page-specific hacks, duplicated tokens, selector escalation, DOM-dependent styling, and deep specificity chains.

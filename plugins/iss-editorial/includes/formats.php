@@ -226,6 +226,55 @@ function iss_editorial_get_autosave_meta_key(string $format_slug): string
     return iss_editorial_get_document_meta_key($format_slug) . '_autosave';
 }
 
+function iss_editorial_get_preview_nonce_action(int $post_id, string $format_slug): string
+{
+    return 'iss_editorial_preview_' . (string) $post_id . '_' . sanitize_key($format_slug);
+}
+
+function iss_editorial_add_preview_args(string $url, int $post_id, string $format_slug): string
+{
+    if ($url === '' || $post_id <= 0 || $format_slug === '') {
+        return $url;
+    }
+
+    $format_slug = sanitize_key($format_slug);
+
+    return add_query_arg(
+        [
+            'iss_editorial_preview' => '1',
+            'iss_editorial_format' => $format_slug,
+            'iss_editorial_preview_nonce' => wp_create_nonce(iss_editorial_get_preview_nonce_action($post_id, $format_slug)),
+        ],
+        $url
+    );
+}
+
+function iss_editorial_should_prefer_preview_autosave(int $post_id, string $format_slug): bool
+{
+    if ($post_id <= 0 || $format_slug === '' || !current_user_can('edit_post', $post_id)) {
+        return false;
+    }
+
+    if (is_preview()) {
+        return true;
+    }
+
+    // phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Nonce is verified below; read-only preview routing.
+    if ((string) ($_GET['iss_editorial_preview'] ?? '') !== '1') {
+        return false;
+    }
+
+    // phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Nonce is verified below; read-only preview routing.
+    if (sanitize_key((string) ($_GET['iss_editorial_format'] ?? '')) !== sanitize_key($format_slug)) {
+        return false;
+    }
+
+    // phpcs:ignore WordPress.Security.NonceVerification.Recommended -- This is the nonce value being verified.
+    $nonce = isset($_GET['iss_editorial_preview_nonce']) ? sanitize_text_field(wp_unslash((string) $_GET['iss_editorial_preview_nonce'])) : '';
+
+    return $nonce !== '' && wp_verify_nonce($nonce, iss_editorial_get_preview_nonce_action($post_id, $format_slug));
+}
+
 function iss_editorial_get_enabled_meta_key(string $format_slug): string
 {
     return '_iss_editorial_enabled_' . sanitize_key($format_slug);

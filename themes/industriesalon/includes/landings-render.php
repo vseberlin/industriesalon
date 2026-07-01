@@ -66,6 +66,15 @@ function industriesalon_get_editorial_landing_post_skin(int $post_id): string
     return industriesalon_resolve_editorial_landing_skin(iss_editorial_get_read_model($post_id, 'landing', false));
 }
 
+function industriesalon_editorial_landing_prefer_autosave(int $post_id): bool
+{
+    if (function_exists('iss_editorial_should_prefer_preview_autosave')) {
+        return iss_editorial_should_prefer_preview_autosave($post_id, 'landing');
+    }
+
+    return is_preview() && current_user_can('edit_post', $post_id);
+}
+
 function industriesalon_editorial_landing_treatment_slug(array $section): string
 {
     $type = sanitize_key((string) ($section['type'] ?? 'gateway'));
@@ -77,15 +86,21 @@ function industriesalon_editorial_landing_treatment_slug(array $section): string
         'dynamic_slot' => 'slot.projects',
     ];
     $allowed = [
-        'statement' => ['statement.lead', 'statement.callout'],
+        'statement' => ['statement.lead', 'statement.leitfrage'],
         'fliesstext' => ['text.standard'],
         'gateway' => ['gateway.cards', 'gateway.link-list', 'gateway.feature-strip'],
-        'feature' => ['feature.media-panel', 'feature.media-text', 'feature.microblocks'],
+        'feature' => ['feature.media-panel', 'feature.media-text', 'feature.image-overlay'],
         'dynamic_slot' => ['slot.projects', 'slot.timeline', 'slot.visit-info', 'slot.newsletter'],
     ];
     $default = $defaults[$type] ?? 'gateway.cards';
     $treatment = strtolower((string) ($section['treatment'] ?? $default));
     $treatment = (string) preg_replace('/[^a-z0-9_.-]/', '', $treatment);
+    if ($type === 'statement' && $treatment === 'statement.callout') {
+        $treatment = 'statement.leitfrage';
+    }
+    if ($type === 'feature' && $treatment === 'feature.microblocks') {
+        $treatment = 'feature.image-overlay';
+    }
 
     return in_array($treatment, $allowed[$type] ?? [], true) ? $treatment : $default;
 }
@@ -93,6 +108,14 @@ function industriesalon_editorial_landing_treatment_slug(array $section): string
 function industriesalon_editorial_landing_class_slug(string $value): string
 {
     return sanitize_html_class(str_replace(['.', '_'], '-', $value));
+}
+
+function industriesalon_editorial_landing_media_text_layout(array $section): string
+{
+    $layout = sanitize_key((string) ($section['media_layout'] ?? '50-50'));
+    $allowed = ['40-60', '50-50', '60-40'];
+
+    return in_array($layout, $allowed, true) ? $layout : '50-50';
 }
 
 function industriesalon_editorial_landing_section_classes(array $section, string $skin, int $item_count = 0): array
@@ -112,12 +135,9 @@ function industriesalon_editorial_landing_section_classes(array $section, string
     if ($item_count > 0) {
         $classes[] = 'iss-landing-section--items-' . min(4, max(0, $item_count));
     }
-    if ($type === 'statement') {
-        $classes[] = 'iss-front-schoneweide-statement';
-    }
     if ($type === 'feature' && $treatment === 'feature.media-text') {
         $classes[] = 'iss-media-text';
-        $classes[] = 'iss-media-text--50-50';
+        $classes[] = 'iss-media-text--' . industriesalon_editorial_landing_media_text_layout($section);
         $classes[] = 'iss-media-text--gap-l';
     }
     if ($anchor === 'vor-ort') {
@@ -583,7 +603,7 @@ function industriesalon_render_editorial_landing_feature(array $section, int $re
     if ($treatment === 'feature.media-text') {
         return industriesalon_render_editorial_landing_feature_media_text($section, $rendered_index, $skin);
     }
-    if ($treatment === 'feature.microblocks') {
+    if ($treatment === 'feature.image-overlay') {
         return industriesalon_render_editorial_landing_feature_microblocks($section, $rendered_index, $skin);
     }
 
@@ -788,7 +808,7 @@ function industriesalon_render_editorial_landing_content(string $content): strin
         return $content;
     }
 
-    $prefer_autosave = is_preview() && current_user_can('edit_post', (int) $post_id);
+    $prefer_autosave = industriesalon_editorial_landing_prefer_autosave((int) $post_id);
     $document = iss_editorial_get_read_model((int) $post_id, 'landing', $prefer_autosave);
     $html = industriesalon_editorial_landing_render_document($document);
     if (trim($html) === '') {
@@ -816,7 +836,7 @@ function industriesalon_front_page_landing_has_sections(): bool
         return $has_sections;
     }
 
-    $document = iss_editorial_get_read_model($post_id, 'landing', is_preview() && current_user_can('edit_post', $post_id));
+    $document = iss_editorial_get_read_model($post_id, 'landing', industriesalon_editorial_landing_prefer_autosave($post_id));
     $sections = is_array($document['sections'] ?? null) ? $document['sections'] : [];
     $has_sections = false;
     foreach ($sections as $section) {
@@ -877,7 +897,7 @@ function industriesalon_render_editorial_landing_block(): string
         return '';
     }
 
-    $prefer_autosave = is_preview() && current_user_can('edit_post', $post_id);
+    $prefer_autosave = industriesalon_editorial_landing_prefer_autosave($post_id);
     $document = iss_editorial_get_read_model($post_id, 'landing', $prefer_autosave);
     return industriesalon_editorial_landing_render_document($document);
 }

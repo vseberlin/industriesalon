@@ -4,6 +4,69 @@ This file records durable project changes. Keep it compact: current state belong
 `handoff_CURRENT.md`, active follow-up in `TODO.md`, and detailed investigation can
 be recovered from Git history.
 
+## 2026-07-01
+
+- Added the CSS layering skeleton for the JSON migration: `tokens.css` now owns
+  the layer-0 `--iss-*` token contract, `style.css` depends on it as the base
+  layer, and `docs/architecture/css-layering-adr.md` records the token ->
+  primitives/patterns -> renderer contract -> skin -> page-exception order.
+  The WordPress CSS skill and engineering docs now direct future CSS work
+  through that layer contract.
+- Extended the CSS layering contract to first-party plugin styles: public
+  plugin CSS consumes `--iss-*` tokens with fallbacks and plugin-prefixed local
+  variables, while admin plugin CSS remains scoped to wp-admin and outside the
+  public renderer stack. Updated the programme/timeline/dense-image-wall/tour
+  public CSS headers and obvious base values to follow that contract.
+- Made CSS changes migration-positive in the repo rules: touched legacy or
+  page-specific stylesheets should drain reusable rules into tokens,
+  primitives/patterns, renderer contracts, or skins, and delete obsolete
+  selectors when safe.
+- Added the inverse token rule to the CSS contract: layer-0 tokens are only for
+  shared semantic values with likely cross-context consumers; one-off geometry,
+  temporary migration values, implementation glue, and component-only internals
+  stay local.
+- Migrated the native landing `statement` gesture to the new renderer contract:
+  the former generic/front-page statement styling now lives on
+  `statement.lead`, the old `statement.callout` vocabulary was replaced by
+  `statement.leitfrage` with a typografisch-style guiding-question treatment,
+  and JSON-rendered statement sections no longer emit the legacy
+  `iss-front-schoneweide-statement` class. Stored `statement.callout` values are
+  mapped to `statement.leitfrage` for compatibility.
+- Renamed the confusing landing `feature.microblocks` treatment to
+  `feature.image-overlay` and updated editor labels to user-facing outcomes:
+  `Bild mit Infokasten`, `Bild neben Text`, and `Titel auf Bild`. Existing
+  stored `feature.microblocks` values are mapped to `feature.image-overlay`;
+  facts remain facts and only the treatment changes their presentation.
+- Added compact/balanced/wide ratio options to landing `feature.media-text`, so
+  image-beside-text sections such as `/salon-vermietung/` “Der Ort” can migrate
+  into the shared feature treatment instead of keeping rental-only 50/50 CSS.
+- Added the JSON editor UX redesign contract in
+  `docs/project/json-editor-ux-redesign-sow.md`, introduced
+  `plugins/iss-editorial/assets/ui.js` for modal/panel primitives, and rebuilt
+  section editing as a structured panel modal (`Inhalt`, `Darstellung`,
+  `Archiv`, `Bilder`, `Album`, `Fakten`, `Ziele`, `Links`) with a footer trash
+  action that reuses the existing deleted-section workflow. Existing JSON
+  storage and public render ownership remain unchanged.
+- Polished the redesigned JSON editor modal so tall section forms scroll inside
+  the modal instead of the underlying WordPress page, while text and rich-text
+  fields keep stable minimum editing heights inside panels.
+- Added a separate `iss-editorial` drag/drop helper for the shared JSON canvas.
+  Gesture cards can now be reordered by dragging the card body or compact
+  handle, or by focusing the handle and using ArrowUp/ArrowDown, while palette
+  gestures can be dragged into the composition to create a section at the drop
+  position. The visible `Hoch` / `Runter` buttons were removed from section
+  cards; JSON storage remains unchanged and `admin.js` still owns document
+  mutation.
+- Routed the native WordPress preview button through the same JSON preview
+  autosave path as the custom canvas preview button, so unsaved canvas changes
+  such as drag/drop reordering are saved to preview meta before the preview tab
+  opens.
+- Added signed `iss-editorial` preview URL parameters and taught the native
+  landing renderer to prefer editorial autosave data when that preview signature
+  is valid. This keeps JSON canvas preview behavior reliable even on native page
+  templates where WordPress does not consistently expose the request as
+  `is_preview()`.
+
 ## 2026-06-30
 
 - Added JSON-editor safety guardrails for the shared `iss-editorial` canvas:

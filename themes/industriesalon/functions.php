@@ -1223,9 +1223,18 @@ function industriesalon_enqueue_assets(): void
     };
 
     wp_enqueue_style(
+        'industriesalon-tokens',
+        $theme_uri . '/assets/css/tokens.css',
+        array(),
+        file_exists($theme_dir . '/assets/css/tokens.css')
+            ? (string) filemtime($theme_dir . '/assets/css/tokens.css')
+            : $version
+    );
+
+    wp_enqueue_style(
         'industriesalon-base',
         get_stylesheet_uri(),
-        array(),
+        array('industriesalon-tokens'),
         $base_version
     );
 

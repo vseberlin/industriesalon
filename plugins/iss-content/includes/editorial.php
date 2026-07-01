@@ -76,11 +76,11 @@ function iss_content_model_register_editorial_formats(array $formats): array
         'sections' => [
             'statement' => [
                 'label' => __('Statement', 'iss-content-model'),
-                'description' => __('Redaktionelle These, Intro oder Callout mit optionalem Link.', 'iss-content-model'),
+                'description' => __('Redaktionelle These, Intro oder Leitfrage mit optionalem Link.', 'iss-content-model'),
                 'supports' => ['treatment', 'links'],
                 'treatments' => [
                     'statement.lead' => __('Leitstatement', 'iss-content-model'),
-                    'statement.callout' => __('Callout', 'iss-content-model'),
+                    'statement.leitfrage' => __('Leitfrage', 'iss-content-model'),
                 ],
             ],
             'fliesstext' => [
@@ -100,12 +100,12 @@ function iss_content_model_register_editorial_formats(array $formats): array
             ],
             'feature' => [
                 'label' => __('Feature', 'iss-content-model'),
-                'description' => __('Bild, Fakten oder Mikroblöcke als hervorgehobener Landing-Abschnitt.', 'iss-content-model'),
-                'supports' => ['treatment', 'facts', 'links', 'media_refs'],
+                'description' => __('Bild, Text und Fakten als hervorgehobener Landing-Abschnitt.', 'iss-content-model'),
+                'supports' => ['treatment', 'facts', 'links', 'media_refs', 'media_layout'],
                 'treatments' => [
-                    'feature.media-panel' => __('Medienpanel', 'iss-content-model'),
-                    'feature.media-text' => __('Bild/Text 50/50', 'iss-content-model'),
-                    'feature.microblocks' => __('Mikroblöcke', 'iss-content-model'),
+                    'feature.media-panel' => __('Bild mit Infokasten', 'iss-content-model'),
+                    'feature.media-text' => __('Bild neben Text', 'iss-content-model'),
+                    'feature.image-overlay' => __('Titel auf Bild', 'iss-content-model'),
                 ],
             ],
             'dynamic_slot' => [

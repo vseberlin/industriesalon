@@ -2,6 +2,8 @@
    ISS FUEHRUNGEN BASE
    Structure only. Theme skin owns colors, surfaces, radii,
    shadows, and interactive appearance.
+   Public plugin CSS consumes --iss-* tokens with fallbacks;
+   it does not define the global token contract.
    ========================================================= */
 
 .iss-fuehrung-hero {

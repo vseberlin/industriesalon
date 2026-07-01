@@ -16,9 +16,23 @@ Immediate executable work only. Larger future programs live in `docs/project/bac
   `ops/sql/2026-06-30-frontpage-landing-json.sql` only on a target with matching
   front-page content/media IDs. Then browser-check `/`, `/about/`, `/verein/`,
   `/salon-vermietung/`, and `/sammlungen/`; disabled or empty JSON must keep the
-  existing template/post-content output. Continue the editor-safety slice with
-  drag/drop ordering with the current buttons as fallback, and admin-only
-  treatment controls before client handover.
+  existing template/post-content output. UAT the JSON canvas drag/drop helper:
+  gesture reordering, drag-to-add from the gesture palette, and the compact drag
+  handle keyboard fallback. UAT the redesigned section modal panels and preview
+  ordering before client handover. Restrict landing treatment controls to
+  admins before client handover.
+- CSS layering follow-up during JSON gesture polish: migrate page-specific
+  landing/front-page rules into the new layer order gesture by gesture.
+  `statement.lead` / `statement.leitfrage` and the renamed
+  `feature.image-overlay` treatment are on renderer-treatment selectors; next
+  move `gateway` and remaining `feature` treatment styles toward
+  renderer-contract selectors before deleting front-page compatibility
+  selectors. Migrate `/salon-vermietung/` “Der Ort” from `iss-rental-story`
+  into `feature.media-text` with compact text / larger image ratio instead
+  of adding a rental-only 50/50 variant. Each touched legacy/page stylesheet
+  should be migration-positive:
+  drain reusable rules into the proper layer and remove obsolete selectors when
+  safe.
 - SuperSaaS/timeline follow-up after this checkpoint: deploy the occurrence and
   timeline code together, replay
   `ops/sql/2026-06-29-repair-cafe-canonical-event-series.sql` only if the local
@@ -62,6 +76,13 @@ Immediate executable work only. Larger future programs live in `docs/project/bac
   separate Gutenberg adapter for `page`, `post`, and Video if those screens
   should enter the shared workflow. Before hiding or purging more legacy boxes,
   run edit/save/reload parity with a normal editorial role.
+- JSON editor maintainability cleanup after modal/drag-drop UAT: split
+  picker-heavy code out of `plugins/iss-editorial/assets/admin.js`.
+  `assets/dnd.js` now owns shared drag/drop and `assets/ui.js` owns the modal
+  shell/panel primitives. Archive object picking, media tray/picker behavior,
+  gateway item media, and album/source sheet import are good first extraction
+  candidates; keep the main file focused on document state, section rendering,
+  save/preview wiring, and editor orchestration.
 - Führung JSON migration: after deploying the code, review/apply
   `ops/sql/2026-06-27-fuehrung-editorial-json.sql` only on a target that
   already has the 15 published Führung posts listed in the artifact. The SQL

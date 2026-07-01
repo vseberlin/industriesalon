@@ -1,5 +1,6 @@
 (function () {
   var config = window.issEditorialAdmin || {};
+  var editorUi = window.issEditorialUi || {};
 
   function parseJson(value, fallback) {
     try {
@@ -206,6 +207,7 @@
     var field = container.querySelector('.iss-editorial-document-field');
     var enabledField = container.querySelector('.iss-editorial-enabled-field');
     var previewButton = container.querySelector('.iss-editorial-preview-button');
+    var nativePreviewButton = document.getElementById('post-preview');
     var status = container.querySelector('.iss-editorial-autosave-status');
     if (!root || !field) {
       return;
@@ -494,7 +496,7 @@
         parts.push('Jahr: ' + String(section.year).replace(/\s+/g, ' ').slice(0, 24));
       }
       if (section.media_layout) {
-        parts.push(section.media_layout === 'aside-right' ? 'Bild rechts' : 'Bild im Text');
+        parts.push(mediaLayoutLabel(section.media_layout, section));
       }
       if (section.gallery_layout) {
         parts.push('Galerie: ' + galleryLayoutLabel(section.gallery_layout));
@@ -547,12 +549,17 @@
       return documentState.deleted_sections;
     }
 
-    function addSection(type) {
-      if (isSectionHidden(type)) {
-        return;
-      }
+    function focusSectionHandle(index) {
+      window.setTimeout(function () {
+        var handle = root.querySelector('.iss-editorial-card[data-section-index="' + String(index) + '"] .iss-editorial-card__drag-handle');
+        if (handle) {
+          handle.focus();
+        }
+      }, 0);
+    }
 
-      documentState.sections.push({
+    function createSection(type) {
+      return {
         type: type,
         anchor: '',
         kicker: '',
@@ -564,9 +571,20 @@
         items: supports(type, 'items') ? [] : undefined,
         slot_key: supports(type, 'slot_key') ? defaultSlotKey(type) : undefined,
         treatment: defaultTreatment(type)
-      });
+      };
+    }
+
+    function addSection(type, index) {
+      var insertAt;
+      if (isSectionHidden(type)) {
+        return;
+      }
+
+      insertAt = Number.isFinite(index) ? index : documentState.sections.length;
+      insertAt = Math.max(0, Math.min(documentState.sections.length, insertAt));
+      documentState.sections.splice(insertAt, 0, createSection(type));
       render();
-      openEditor(documentState.sections.length - 1);
+      openEditor(insertAt);
       scheduleAutosave();
     }
 
@@ -577,6 +595,33 @@
       }
       var item = documentState.sections.splice(index, 1)[0];
       documentState.sections.splice(next, 0, item);
+      render();
+      focusSectionHandle(next);
+      scheduleAutosave();
+    }
+
+    function reorderSection(fromIndex, dropIndex) {
+      var item;
+      var nextIndex;
+      fromIndex = parseInt(fromIndex, 10);
+      dropIndex = parseInt(dropIndex, 10);
+      if (!Number.isFinite(fromIndex) || !Number.isFinite(dropIndex)) {
+        return;
+      }
+      if (fromIndex < 0 || fromIndex >= documentState.sections.length) {
+        return;
+      }
+
+      nextIndex = Math.max(0, Math.min(documentState.sections.length, dropIndex));
+      if (nextIndex > fromIndex) {
+        nextIndex -= 1;
+      }
+      if (nextIndex === fromIndex) {
+        return;
+      }
+
+      item = documentState.sections.splice(fromIndex, 1)[0];
+      documentState.sections.splice(nextIndex, 0, item);
       render();
       scheduleAutosave();
     }
@@ -626,6 +671,9 @@
         var dot = createElement('span', 'iss-editorial-gesture__dot');
         var body = createElement('span', 'iss-editorial-gesture__body');
         button.type = 'button';
+        button.draggable = true;
+        button.setAttribute('data-section-type', type);
+        button.setAttribute('aria-label', 'Abschnitt hinzufügen: ' + (sectionConfig(type).label || type));
         dot.style.backgroundColor = sectionTone(type);
         body.appendChild(createElement('strong', '', sectionConfig(type).label || type));
         body.appendChild(createElement('span', '', sectionConfig(type).description || type));
@@ -650,11 +698,13 @@
       var marker = createElement('span', 'iss-editorial-card__marker');
       var meta = createElement('div', 'iss-editorial-card__meta');
       var actions = createElement('div', 'iss-editorial-card__actions');
+      var handle = createElement('button', 'button-link iss-editorial-card__drag-handle');
+      var handleText = createElement('span', 'screen-reader-text', 'Abschnitt ziehen oder mit Pfeiltasten verschieben');
       var edit = createElement('button', 'button button-primary', 'Bearbeiten');
-      var up = createElement('button', 'button', 'Hoch');
-      var down = createElement('button', 'button', 'Runter');
       var remove = createElement('button', 'button button-link-delete', 'In Papierkorb');
 
+      card.draggable = true;
+      card.setAttribute('data-section-index', String(index));
       marker.style.backgroundColor = sectionTone(type);
       meta.appendChild(createElement('span', 'iss-editorial-card__type', sectionConfig(type).label || type));
       meta.appendChild(createElement('h3', '', section.title || 'Ohne Titel'));
@@ -663,18 +713,16 @@
         renderMediaThumbs(section, meta);
       }
 
-      [edit, up, down, remove].forEach(function (button) {
+      [handle, edit, remove].forEach(function (button) {
         button.type = 'button';
       });
+      handle.draggable = true;
+      handle.setAttribute('aria-label', 'Abschnitt "' + (section.title || sectionConfig(type).label || type) + '" verschieben');
+      handle.appendChild(handleText);
       edit.addEventListener('click', function () { openEditor(index); });
-      up.disabled = index === 0;
-      down.disabled = index >= documentState.sections.length - 1;
-      up.addEventListener('click', function () { moveSection(index, -1); });
-      down.addEventListener('click', function () { moveSection(index, 1); });
       remove.addEventListener('click', function () { removeSection(index); });
+      actions.appendChild(handle);
       actions.appendChild(edit);
-      actions.appendChild(up);
-      actions.appendChild(down);
       actions.appendChild(remove);
 
       card.appendChild(marker);
@@ -724,6 +772,7 @@
       var head = createElement('div', 'iss-editorial-stage__head');
       var heading = createElement('div', 'iss-editorial-stage__title', 'Komposition');
       var tools = createElement('div', 'iss-editorial-stage__tools');
+      stage.setAttribute('data-section-count', String(documentState.sections.length));
       head.appendChild(heading);
       if (skins.length > 1) {
         tools.appendChild(renderSkinControl());
@@ -745,6 +794,23 @@
       }
 
       target.appendChild(stage);
+    }
+
+    function bindSectionDragDrop(layout) {
+      if (!window.issEditorialDnd || !window.issEditorialDnd.bindSectionCanvas) {
+        return;
+      }
+
+      window.issEditorialDnd.bindSectionCanvas({
+        palette: layout.querySelector('.iss-editorial-palette'),
+        stage: layout.querySelector('.iss-editorial-stage'),
+        onInsert: function (type, index) {
+          activeType = type;
+          addSection(type, index);
+        },
+        onReorder: reorderSection,
+        onKeyboardMove: moveSection
+      });
     }
 
     function renderDeletedSections(target) {
@@ -1209,6 +1275,120 @@
         modal.remove();
         modal = null;
       }
+      document.body.classList.remove('iss-editorial-modal-open');
+    }
+
+    function createEditorModal(section, callbacks) {
+      var options = callbacks || {};
+      var configData = sectionConfig(section.type);
+
+      if (editorUi.createModal) {
+        return editorUi.createModal({
+          kicker: 'Abschnitt bearbeiten',
+          title: configData.label || section.type || 'Abschnitt',
+          closeLabel: 'Schließen',
+          doneLabel: 'Übernehmen',
+          onClose: options.onClose,
+          onDone: options.onDone
+        });
+      }
+
+      var root = createElement('div', 'iss-editorial-modal');
+      var dialog = createElement('div', 'iss-editorial-modal__dialog');
+      var head = createElement('div', 'iss-editorial-modal__head');
+      var body = createElement('div', 'iss-editorial-modal__body');
+      var foot = createElement('div', 'iss-editorial-modal__foot');
+      var footLeft = createElement('div', 'iss-editorial-modal__foot-left');
+      var footTools = createElement('div', 'iss-editorial-modal__foot-tools');
+      var title = createElement('h2', '', configData.label || section.type || 'Abschnitt');
+      var close = createElement('button', 'button', 'Schließen');
+      var done = createElement('button', 'button button-primary', 'Übernehmen');
+
+      close.type = 'button';
+      done.type = 'button';
+      close.addEventListener('click', function (event) {
+        event.preventDefault();
+        event.stopPropagation();
+        if (typeof options.onClose === 'function') {
+          options.onClose();
+        }
+      });
+      done.addEventListener('click', function (event) {
+        event.preventDefault();
+        event.stopPropagation();
+        if (typeof options.onDone === 'function') {
+          options.onDone();
+        }
+      });
+
+      head.appendChild(title);
+      head.appendChild(close);
+      footTools.appendChild(done);
+      foot.appendChild(footLeft);
+      foot.appendChild(footTools);
+      dialog.appendChild(head);
+      dialog.appendChild(body);
+      dialog.appendChild(foot);
+      root.appendChild(dialog);
+
+      return {
+        root: root,
+        body: body,
+        footLeft: footLeft,
+        footTools: footTools,
+        doneButton: done
+      };
+    }
+
+    function createEditorPanel(name, label, icon, count) {
+      if (editorUi.createPanel) {
+        return editorUi.createPanel({
+          name: name,
+          label: label,
+          icon: icon || name,
+          count: count
+        });
+      }
+
+      var root = createElement('section', 'iss-editorial-panel iss-editorial-panel--' + name);
+      var head = createElement('div', 'iss-editorial-panel__head');
+      var title = createElement('div', 'iss-editorial-panel__title');
+      var marker = createElement('span', 'iss-editorial-panel__icon');
+      var body = createElement('div', 'iss-editorial-panel__body');
+      var countNode = null;
+
+      marker.setAttribute('aria-hidden', 'true');
+      title.appendChild(marker);
+      title.appendChild(createElement('span', 'iss-editorial-panel__label', label));
+      head.appendChild(title);
+      if (typeof count === 'number') {
+        countNode = createElement('span', 'iss-editorial-panel__count', String(count));
+        head.appendChild(countNode);
+      }
+      root.appendChild(head);
+      root.appendChild(body);
+
+      return {
+        root: root,
+        body: body,
+        setCount: function (value) {
+          if (!countNode) {
+            countNode = createElement('span', 'iss-editorial-panel__count');
+            head.appendChild(countNode);
+          }
+          countNode.textContent = String(value);
+        }
+      };
+    }
+
+    function appendPanelIfUsed(target, panel) {
+      if (panel && panel.body && panel.body.children.length) {
+        target.appendChild(panel.root);
+      }
+    }
+
+    function collectionCount(section, key) {
+      return Array.isArray(section[key]) ? section[key].length : 0;
     }
 
     function openEditor(index) {
@@ -1218,43 +1398,41 @@
       }
 
       closeModal();
-      modal = createElement('div', 'iss-editorial-modal');
-      var dialog = createElement('div', 'iss-editorial-modal__dialog');
-      var head = createElement('div', 'iss-editorial-modal__head');
-      var body = createElement('div', 'iss-editorial-modal__body');
-      var foot = createElement('div', 'iss-editorial-modal__foot');
-      var title = createElement('h2', '', sectionConfig(section.type).label || section.type || 'Abschnitt');
-      var close = createElement('button', 'button', 'Schließen');
-      var done = createElement('button', 'button button-primary', 'Übernehmen');
+      var shell = createEditorModal(section, {
+        onClose: closeModal,
+        onDone: function () {
+          closeModal();
+          render();
+          scheduleAutosave();
+        }
+      });
+      var remove = createElement('button', 'button-link-delete iss-editorial-modal__delete', 'In Papierkorb');
 
-      close.type = 'button';
-      close.addEventListener('click', function (event) {
+      remove.type = 'button';
+      remove.addEventListener('click', function (event) {
         event.preventDefault();
         event.stopPropagation();
+        removeSection(index);
         closeModal();
-      });
-      done.type = 'button';
-      done.addEventListener('click', function (event) {
-        event.preventDefault();
-        event.stopPropagation();
-        closeModal();
-        render();
-        scheduleAutosave();
       });
 
-      head.appendChild(title);
-      head.appendChild(close);
-      renderSectionFields(section, body);
-      foot.appendChild(done);
-      dialog.appendChild(head);
-      dialog.appendChild(body);
-      dialog.appendChild(foot);
-      modal.appendChild(dialog);
+      shell.footLeft.appendChild(remove);
+      renderSectionFields(section, shell.body);
+      modal = shell.root;
+      document.body.classList.add('iss-editorial-modal-open');
       document.body.appendChild(modal);
     }
 
     function renderSectionFields(section, body) {
       var type = section.type || 'kapitel';
+      var contentPanel = createEditorPanel('content', 'Inhalt', 'content');
+      var displayPanel = createEditorPanel('display', 'Darstellung', 'display');
+      var archivePanel = createEditorPanel('archive', 'Archiv', 'archive', collectionCount(section, 'object_refs'));
+      var mediaPanel = createEditorPanel('media', 'Bilder', 'media', collectionCount(section, 'media_refs'));
+      var albumPanel = createEditorPanel('album', 'Album', 'album', collectionCount(section, 'sheets'));
+      var factPanel = createEditorPanel('facts', 'Fakten', 'facts', collectionCount(section, 'facts'));
+      var itemPanel = createEditorPanel('items', 'Ziele', 'items', collectionCount(section, 'items'));
+      var linkPanel = createEditorPanel('links', 'Links', 'links', collectionCount(section, 'links'));
       var kickerField = createTextInput('Vorspann', section.kicker || '', function (value) {
         section.kicker = value;
         render();
@@ -1274,37 +1452,40 @@
         render();
         scheduleAutosave();
       });
-      body.appendChild(kickerField);
-      body.appendChild(titleField);
+      contentPanel.body.appendChild(kickerField);
+      contentPanel.body.appendChild(titleField);
       if (isEditorFieldVisible(type, 'anchor')) {
-        body.appendChild(createTextInput('Anker', section.anchor || '', function (value) {
+        contentPanel.body.appendChild(createTextInput('Anker', section.anchor || '', function (value) {
           section.anchor = value;
           render();
           scheduleAutosave();
         }));
       }
       if (!supports(type, 'no_body')) {
-        body.appendChild(bodyField);
+        contentPanel.body.appendChild(bodyField);
       }
 
       if (supports(type, 'facts')) {
-        renderFactEditor(section, body);
+        renderFactEditor(section, factPanel.body);
       }
 
       if (supports(type, 'treatment')) {
-        renderTreatmentControl(section, body);
+        renderTreatmentControl(section, displayPanel.body, function () {
+          clear(body);
+          renderSectionFields(section, body);
+        });
       }
 
       if (supports(type, 'items')) {
-        renderGatewayItemEditor(section, body);
+        renderGatewayItemEditor(section, itemPanel.body);
       }
 
       if (supports(type, 'slot_key')) {
-        renderSlotKeyControl(section, body);
+        renderSlotKeyControl(section, displayPanel.body);
       }
 
       if (supports(type, 'year')) {
-        body.appendChild(createTextInput('Jahr', section.year || '', function (value) {
+        contentPanel.body.appendChild(createTextInput('Jahr', section.year || '', function (value) {
           section.year = value;
           render();
           scheduleAutosave();
@@ -1312,24 +1493,24 @@
       }
 
       if (supports(type, 'media_layout')) {
-        renderMediaLayoutControl(section, body);
+        renderMediaLayoutControl(section, displayPanel.body);
       }
 
       if (supports(type, 'gallery_layout')) {
-        renderGalleryLayoutControl(section, body);
+        renderGalleryLayoutControl(section, displayPanel.body);
       }
 
       if (supports(type, 'rail_options')) {
-        renderRailEditor(section, body);
+        renderRailEditor(section, displayPanel.body);
       }
 
       if (supports(type, 'quote')) {
-        body.appendChild(createTextarea('Zitat', section.quote || '', function (value) {
+        contentPanel.body.appendChild(createTextarea('Zitat', section.quote || '', function (value) {
           section.quote = value;
           render();
           scheduleAutosave();
         }));
-        body.appendChild(createTextInput('Zuordnung', section.attribution || '', function (value) {
+        contentPanel.body.appendChild(createTextInput('Zuordnung', section.attribution || '', function (value) {
           section.attribution = value;
           render();
           scheduleAutosave();
@@ -1337,32 +1518,41 @@
       }
 
       if (supports(type, 'quote_treatment')) {
-        renderQuoteTreatmentControl(section, body);
+        renderQuoteTreatmentControl(section, displayPanel.body);
       }
 
       if (supports(type, 'section_treatment')) {
-        renderSectionTreatmentControl(section, body);
+        renderSectionTreatmentControl(section, displayPanel.body);
       }
 
       if (supports(type, 'object_refs')) {
-        renderObjectPicker(section, body);
+        renderObjectPicker(section, archivePanel.body);
       }
 
       if (supports(type, 'media_refs')) {
-        renderMediaPicker(section, body);
+        renderMediaPicker(section, mediaPanel.body);
       }
 
       if (supports(type, 'album_source') || supports(type, 'sheets')) {
-        renderAlbumEditor(section, body);
+        renderAlbumEditor(section, albumPanel.body);
       }
 
       if (supports(type, 'orientation')) {
-        renderOrientationControl(section, body);
+        renderOrientationControl(section, displayPanel.body);
       }
 
       if (supports(type, 'links')) {
-        renderLinkEditor(section, body);
+        renderLinkEditor(section, linkPanel.body);
       }
+
+      appendPanelIfUsed(body, contentPanel);
+      appendPanelIfUsed(body, displayPanel);
+      appendPanelIfUsed(body, archivePanel);
+      appendPanelIfUsed(body, mediaPanel);
+      appendPanelIfUsed(body, albumPanel);
+      appendPanelIfUsed(body, factPanel);
+      appendPanelIfUsed(body, itemPanel);
+      appendPanelIfUsed(body, linkPanel);
     }
 
     function renderObjectPicker(section, body) {
@@ -1400,7 +1590,6 @@
         });
       });
 
-      refs.appendChild(createElement('span', '', 'Archivobjekte'));
       refs.appendChild(tray);
       refs.appendChild(pickerButton);
       refs.appendChild(pickerMount);
@@ -1443,13 +1632,17 @@
     }
 
     function renderMediaLayoutControl(section, body) {
+      var choices = mediaLayoutChoices(section);
+      var current;
+      if (!choices.length) {
+        return;
+      }
+
       var wrapper = createElement('div', 'iss-editorial-field iss-editorial-field--media-layout');
       var options = createElement('div', 'iss-editorial-segmented');
-      var choices = [
-        { value: 'inline', label: 'Im Text' },
-        { value: 'aside-right', label: 'Rechts daneben' }
-      ];
-      var current = section.media_layout === 'aside-right' ? 'aside-right' : 'inline';
+      current = choices.filter(function (choice) {
+        return choice.value === section.media_layout;
+      })[0] ? section.media_layout : choices[0].value;
 
       choices.forEach(function (choice) {
         var label = createElement('label', 'iss-editorial-segmented__option');
@@ -1474,6 +1667,34 @@
       wrapper.appendChild(createElement('span', '', 'Bildposition'));
       wrapper.appendChild(options);
       body.appendChild(wrapper);
+    }
+
+    function mediaLayoutChoices(section) {
+      if (format === 'landing' && (section.type || '') === 'feature') {
+        if ((section.treatment || defaultTreatment('feature')) !== 'feature.media-text') {
+          return [];
+        }
+
+        return [
+          { value: '50-50', label: 'Ausgewogen' },
+          { value: '40-60', label: 'Text kompakt' },
+          { value: '60-40', label: 'Text breit' }
+        ];
+      }
+
+      return [
+        { value: 'inline', label: 'Im Text' },
+        { value: 'aside-right', label: 'Rechts daneben' }
+      ];
+    }
+
+    function mediaLayoutLabel(layout, section) {
+      var choices = mediaLayoutChoices(section || {});
+      var match = choices.filter(function (choice) {
+        return choice.value === layout;
+      })[0];
+
+      return match ? 'Bild: ' + match.label : 'Bild: ' + layout;
     }
 
     function galleryLayoutLabel(layout) {
@@ -1508,7 +1729,18 @@
       return match ? match.label : treatment;
     }
 
-    function renderTreatmentControl(section, body) {
+    function normalizeTreatmentValue(type, treatment) {
+      if (type === 'statement' && treatment === 'statement.callout') {
+        return 'statement.leitfrage';
+      }
+      if (type === 'feature' && treatment === 'feature.microblocks') {
+        return 'feature.image-overlay';
+      }
+
+      return treatment || '';
+    }
+
+    function renderTreatmentControl(section, body, onChange) {
       var type = section.type || 'kapitel';
       var choices = treatmentChoices(type);
       var wrapper = createElement('div', 'iss-editorial-field iss-editorial-field--treatment');
@@ -1518,6 +1750,7 @@
         return;
       }
 
+      section.treatment = normalizeTreatmentValue(type, section.treatment);
       if (!section.treatment) {
         section.treatment = choices[0].slug;
       }
@@ -1532,6 +1765,9 @@
 
       select.addEventListener('change', function () {
         section.treatment = select.value || choices[0].slug;
+        if (typeof onChange === 'function') {
+          onChange();
+        }
         render();
         scheduleAutosave();
       });
@@ -1754,7 +1990,6 @@
         scheduleAutosave();
       });
 
-      wrapper.appendChild(createElement('span', '', 'Links'));
       wrapper.appendChild(rows);
       wrapper.appendChild(add);
       body.appendChild(wrapper);
@@ -1808,7 +2043,6 @@
         scheduleAutosave();
       });
 
-      wrapper.appendChild(createElement('span', '', 'Fakten'));
       wrapper.appendChild(rows);
       wrapper.appendChild(add);
       body.appendChild(wrapper);
@@ -1961,7 +2195,6 @@
         scheduleAutosave();
       });
 
-      wrapper.appendChild(createElement('span', '', 'Ziele'));
       wrapper.appendChild(rows);
       wrapper.appendChild(add);
       body.appendChild(wrapper);
@@ -2333,7 +2566,6 @@
         sourceRow.appendChild(titleField);
         sourceRow.appendChild(importButton);
       }
-      wrapper.appendChild(createElement('span', '', 'Albumfolge'));
       wrapper.appendChild(sourceRow);
       wrapper.appendChild(status);
       wrapper.appendChild(list);
@@ -2455,7 +2687,6 @@
         openMediaLibrary();
       });
 
-      refs.appendChild(createElement('span', '', isMaterial ? 'Medien/Dateien' : 'Bilder'));
       refs.appendChild(tray);
       actions.appendChild(setPickerButton);
       actions.appendChild(mediaLibraryButton);
@@ -2630,6 +2861,7 @@
       renderRouteStationPanel(main);
       layout.appendChild(main);
       root.appendChild(layout);
+      bindSectionDragDrop(layout);
       updateField();
       syncRouteHiddenFields();
     }
@@ -2668,6 +2900,48 @@
       });
     }
 
+    function setPreviewButtonBusy(button, isBusy) {
+      if (!button) {
+        return;
+      }
+
+      if ('disabled' in button) {
+        button.disabled = !!isBusy;
+      }
+      button.classList.toggle('disabled', !!isBusy);
+      button.setAttribute('aria-disabled', isBusy ? 'true' : 'false');
+    }
+
+    function previewUrlFromButton(button) {
+      if (!button) {
+        return config.previewUrl;
+      }
+
+      return button.getAttribute('href') || button.getAttribute('data-preview-url') || config.previewUrl;
+    }
+
+    function bindPreviewSave(button) {
+      if (!button || button.getAttribute('data-iss-editorial-preview-bound') === '1') {
+        return;
+      }
+
+      button.setAttribute('data-iss-editorial-preview-bound', '1');
+      button.addEventListener('click', function (event) {
+        var fallbackUrl = previewUrlFromButton(button);
+        event.preventDefault();
+        setPreviewButtonBusy(button, true);
+        setStatus((config.strings && config.strings.previewSaving) || 'Vorschau wird vorbereitet ...');
+        savePreviewDocument().then(function (previewUrl) {
+          window.open(previewUrl || fallbackUrl || config.previewUrl, '_blank', 'noopener');
+          setStatus((config.strings && config.strings.previewReady) || 'Vorschau wurde geoeffnet.');
+        }).catch(function (error) {
+          setStatus(error && error.message ? error.message : ((config.strings && config.strings.previewError) || 'Die Vorschau konnte nicht vorbereitet werden.'));
+        }).finally(function () {
+          setPreviewButtonBusy(button, false);
+        });
+      });
+    }
+
     if (enabledField) {
       enabledField.addEventListener('change', function () {
         updateField();
@@ -2675,21 +2949,8 @@
       });
     }
 
-    if (previewButton) {
-      previewButton.addEventListener('click', function (event) {
-        event.preventDefault();
-        previewButton.disabled = true;
-        setStatus((config.strings && config.strings.previewSaving) || 'Vorschau wird vorbereitet ...');
-        savePreviewDocument().then(function (previewUrl) {
-          window.open(previewUrl || config.previewUrl, '_blank', 'noopener');
-          setStatus((config.strings && config.strings.previewReady) || 'Vorschau wurde geoeffnet.');
-        }).catch(function (error) {
-          setStatus(error && error.message ? error.message : ((config.strings && config.strings.previewError) || 'Die Vorschau konnte nicht vorbereitet werden.'));
-        }).finally(function () {
-          previewButton.disabled = false;
-        });
-      });
-    }
+    bindPreviewSave(previewButton);
+    bindPreviewSave(nativePreviewButton);
 
     render();
   }

@@ -1,10 +1,16 @@
+/*
+ * Dense image wall public block style.
+ * The block owns its structural renderer shape and consumes --iss-* tokens
+ * with fallbacks; it does not define the global token contract.
+ */
+
 .iss-dense-image-wall {
   --iss-dense-image-wall-columns: 4;
   --iss-dense-image-wall-row-size: clamp(6.75rem, 10vw, 9rem);
   display: grid;
   grid-template-columns: repeat(var(--iss-dense-image-wall-columns), minmax(0, 1fr));
   grid-auto-rows: var(--iss-dense-image-wall-row-size);
-  gap: 0.45rem;
+  gap: var(--iss-space-xs, 0.45rem);
 }
 
 .iss-dense-image-wall__cell,
@@ -12,8 +18,8 @@
   position: relative;
   margin: 0;
   overflow: hidden;
-  border-radius: 4px;
-  background: #d7d7d8;
+  border-radius: var(--iss-radius-sm, 4px);
+  background: var(--iss-surface-inset, #d7d7d8);
 }
 
 .iss-dense-image-wall__cell img {

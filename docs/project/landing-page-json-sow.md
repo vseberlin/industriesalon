@@ -93,13 +93,13 @@ treatment.
 
 Front-page reconstruction adds constrained landing gestures:
 
-- `statement`: a text-forward editorial thesis, intro, or callout with
+- `statement`: a text-forward editorial thesis, intro, or Leitfrage with
   optional links.
 - `fliesstext`: free landing prose with optional page links, no facts or media
   fields. Use it when editors need longer text without expanding `feature`.
 - `feature`: a highlighted section with body copy, optional media, links, and
-  fact/microblock rows. Its treatments include the reusable 50/50 image-text
-  pattern used across pages and CPT detail views.
+  facts. Its treatments decide whether those facts appear as an infobox,
+  supporting rows, or image-overlay support.
 - `dynamic_slot`: a mapped theme-owned dynamic module. Editors choose from
   approved slot keys; they do not paste raw block markup or shortcode-like
   content.
@@ -115,12 +115,14 @@ These slots preserve existing dynamic render ownership for project notes,
 timeline queries, visit information, and the newsletter form while letting the
 front-page body be ordered from landing JSON.
 
-`feature.media-text` renders the reusable 50/50 image-text anatomy used across
-pages and CPT detail views. For front-page parity, `feature.microblocks` renders
-the older overlay variant: microblocks and the action link live in the text
-column, while `kicker`, `title`, and `body` render as the overlay heading inside
-the media card. `feature.media-panel` remains the simpler copy/facts/media panel
-used by sections such as the rental block.
+`feature.media-text` renders the reusable image-beside-text anatomy used across
+pages and CPT detail views. It carries ratio variants for balanced, compact
+text / larger image, and wider text layouts; `/salon-vermietung/` “Der Ort”
+should migrate here rather than keep `iss-rental-story` as a separate layout.
+`feature.image-overlay` renders the image-dominant variant where `kicker`,
+`title`, and `body` sit on the image. Facts remain facts; treatments only change
+how they are presented. `feature.media-panel` remains the simpler copy/facts/media
+panel used by sections such as the rental block.
 
 Do not add fallback text fields to `feature` just to survive deleted facts.
 Use `fliesstext` for text-led sections and keep `feature` focused on highlighted
@@ -134,10 +136,10 @@ The first landing treatment registry entries are:
 - `gateway.link-list`
 - `gateway.feature-strip`
 - `statement.lead`
-- `statement.callout`
+- `statement.leitfrage`
 - `feature.media-panel`
 - `feature.media-text`
-- `feature.microblocks`
+- `feature.image-overlay`
 - `slot.projects`
 - `slot.timeline`
 - `slot.visit-info`

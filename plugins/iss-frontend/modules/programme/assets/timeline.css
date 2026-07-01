@@ -2,6 +2,8 @@
  * Timeline structural base styles.
  * Keeps layout, spacing, and interaction scaffolding only.
  * Visual skin belongs to the active theme.
+ * Public plugin CSS consumes --iss-* tokens with fallbacks;
+ * it does not define the global token contract.
  */
 
 .iss-timeline-query.is-loading [data-timeline-query-results] {
@@ -15,7 +17,7 @@
 }
 
 .iss-timeline__section {
-  margin-top: 2.25rem;
+  margin-top: var(--iss-space-xl, 2.25rem);
 }
 
 .iss-timeline__section-title {

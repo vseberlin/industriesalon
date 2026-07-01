@@ -2,15 +2,17 @@
    ISS PROGRAMM CALENDAR BASE
    Structure only. Theme skin owns colors, borders, radii,
    shadows, and button/link appearance.
+   Public plugin CSS consumes --iss-* tokens with fallbacks;
+   it does not define the global token contract.
    ========================================================= */
 
 .is-tour-calendar {
-  width: min(1720px, calc(100% - 2rem));
-  margin: clamp(2rem, 4vw, 3.5rem) auto;
+  width: min(var(--iss-content-width, 1720px), calc(100% - (var(--iss-container-pad, 1rem) * 2)));
+  margin: var(--iss-section-pad-y, clamp(2rem, 4vw, 3.5rem)) auto;
 }
 
 .is-tour-calendar__inner {
-  gap: 1.5rem;
+  gap: var(--iss-gap, 1.5rem);
 }
 
 .is-tour-calendar__header {
@@ -50,7 +52,7 @@
 .is-tour-calendar__calendar {
   width: 100%;
   max-width: 100%;
-  padding: 1rem;
+  padding: var(--iss-space-md, 1rem);
   box-sizing: border-box;
 }
 

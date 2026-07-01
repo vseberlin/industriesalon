@@ -15,3 +15,10 @@ Record durable architectural decisions here when they should outlive a single ha
 - Keep editors in parent WordPress objects. Do not add an editor-visible occurrence/calendar/programme CPT.
 - Keep the Offer bridge contract-only: `fuehrung` maps to `offer/tour`; `veranstaltung` maps to structural `_iss_entity_key` plus semantic `veranstaltung_art` terms. Public consumers should use graph-owned subtype labels instead of duplicating maps.
 - Keep SuperSaaS ingestion in `iss-occurrences`; `iss-commerce-lite` owns booking/order request writes only.
+- CSS layering follows `docs/architecture/css-layering-adr.md`: `tokens.css` owns
+  the `--iss-*` token contract, reusable shapes belong in primitives/patterns,
+  JSON output is styled through gesture/treatment/skin renderer classes, and
+  page-specific CSS is only for true exceptions or migration compatibility.
+- First-party public plugin CSS consumes the same token contract with fallbacks
+  and plugin-prefixed local variables; admin plugin CSS stays scoped to wp-admin
+  and is outside the public renderer stack.

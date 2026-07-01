@@ -514,7 +514,11 @@ function iss_editorial_sanitize_section(array $section, array $format): array
 
     if (iss_editorial_format_supports_section_field($format, $type, 'media_layout')) {
         $media_layout = sanitize_key((string) ($section['media_layout'] ?? 'inline'));
-        $sanitized['media_layout'] = in_array($media_layout, ['inline', 'aside-right'], true) ? $media_layout : 'inline';
+        if (($format['slug'] ?? '') === 'landing' && $type === 'feature') {
+            $sanitized['media_layout'] = in_array($media_layout, ['40-60', '50-50', '60-40'], true) ? $media_layout : '50-50';
+        } else {
+            $sanitized['media_layout'] = in_array($media_layout, ['inline', 'aside-right'], true) ? $media_layout : 'inline';
+        }
     }
 
     if (iss_editorial_format_supports_section_field($format, $type, 'gallery_layout')) {

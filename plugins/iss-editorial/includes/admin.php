@@ -246,6 +246,14 @@ function iss_editorial_get_page_link_choices(): array
     return $choices;
 }
 
+function iss_editorial_get_preview_url(int $post_id, string $format_slug): string
+{
+    $url = get_preview_post_link($post_id) ?: add_query_arg('preview', 'true', get_permalink($post_id));
+    $url = is_string($url) ? $url : '';
+
+    return iss_editorial_add_preview_args($url, $post_id, $format_slug);
+}
+
 function iss_editorial_enqueue_admin_assets(string $hook): void
 {
     if (!in_array($hook, ['post.php', 'post-new.php'], true)) {
@@ -301,6 +309,28 @@ function iss_editorial_enqueue_admin_assets(string $hook): void
         );
     }
 
+    $dnd_path = iss_editorial_admin_path() . 'assets/dnd.js';
+    if (file_exists($dnd_path)) {
+        wp_enqueue_script(
+            'iss-editorial-dnd',
+            iss_editorial_admin_url() . 'assets/dnd.js',
+            [],
+            (string) filemtime($dnd_path),
+            true
+        );
+    }
+
+    $ui_path = iss_editorial_admin_path() . 'assets/ui.js';
+    if (file_exists($ui_path)) {
+        wp_enqueue_script(
+            'iss-editorial-ui',
+            iss_editorial_admin_url() . 'assets/ui.js',
+            [],
+            (string) filemtime($ui_path),
+            true
+        );
+    }
+
     $script_path = iss_editorial_admin_path() . 'assets/admin.js';
     if (file_exists($script_path)) {
         $route_config = iss_editorial_get_route_station_editor_config($post_id, (string) $format['slug'], (string) $screen->post_type);
@@ -308,7 +338,11 @@ function iss_editorial_enqueue_admin_assets(string $hook): void
         wp_enqueue_script(
             'iss-editorial-admin',
             iss_editorial_admin_url() . 'assets/admin.js',
-            array_values(array_filter([file_exists($set_media_picker_path) ? 'iss-editorial-set-media-picker' : ''])),
+            array_values(array_filter([
+                file_exists($set_media_picker_path) ? 'iss-editorial-set-media-picker' : '',
+                file_exists($dnd_path) ? 'iss-editorial-dnd' : '',
+                file_exists($ui_path) ? 'iss-editorial-ui' : '',
+            ])),
             (string) filemtime($script_path),
             true
         );
@@ -327,7 +361,7 @@ function iss_editorial_enqueue_admin_assets(string $hook): void
                 'format' => (string) $format['slug'],
                 'document' => $document,
                 'enabled' => iss_editorial_document_is_enabled($post_id, (string) $format['slug']),
-                'previewUrl' => get_preview_post_link($post_id) ?: add_query_arg('preview', 'true', get_permalink($post_id)),
+                'previewUrl' => iss_editorial_get_preview_url($post_id, (string) $format['slug']),
                 'canPurgeDeletedSections' => current_user_can('manage_options'),
                 'pageChoices' => (string) ($format['slug'] ?? '') === 'landing' ? iss_editorial_get_page_link_choices() : [],
                 'sections' => (array) $format['sections'],
@@ -367,7 +401,7 @@ function iss_editorial_ajax_save_preview_document(): void
     }
 
     wp_send_json_success([
-        'previewUrl' => get_preview_post_link($post_id) ?: add_query_arg('preview', 'true', get_permalink($post_id)),
+        'previewUrl' => iss_editorial_get_preview_url($post_id, $format_slug),
     ]);
 }
 add_action('wp_ajax_iss_editorial_save_preview_document', 'iss_editorial_ajax_save_preview_document');

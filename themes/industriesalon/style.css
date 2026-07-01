@@ -14,17 +14,17 @@ Tags: block-theme, full-site-editing, custom-colors, custom-spacing, editor-styl
 
 /* =====================================================================
    FILE: style.css
-   ROLE: Global authority stylesheet.
+   ROLE: Global base stylesheet.
    PURPOSE:
-   - Own shared design tokens and low-level layout primitives.
+   - Own low-level layout primitives and site-wide structural helpers.
    - Define section intros, kicker logic, alignment behavior, and
      site-wide structural helpers that multiple templates rely on.
    - Stay free of page-specific composition rules. Those belong in
-     patterns.css. Card internals belong in cards.css.
+     renderer/page/skin CSS. Card internals belong in cards.css.
 
    HOW TO MAINTAIN THIS FILE:
-   1. Edit tokens here first when a visual change should affect the
-      whole site.
+   1. Edit `assets/css/tokens.css` first when a visual value should affect
+      the whole site.
    2. Add new global helpers here only if they are reusable across
       multiple templates or plugins.
    3. Do not place one-off landing-page or hero fixes here.
@@ -126,115 +126,9 @@ Tags: block-theme, full-site-editing, custom-colors, custom-spacing, editor-styl
 
    LOAD ORDER
    ----------
-   theme.json -> style.css -> cards.css -> patterns.css -> plugin CSS
+   theme.json -> tokens.css -> style.css -> cards.css -> primitives.css
+   -> patterns.css -> renderer/page/skin CSS -> plugin CSS
    ===================================================================== */
-
-
-:root {
-  /* Core Colors - Mapped to theme.json presets */
-  --iss-red: #e81d25;
-  --iss-white: #f9f9fa;
-  --iss-black: #1e1e1e;
-  --iss-grey: #c0b8b5;
-  --iss-green: #579e7d;
-  --iss-blue: #869fba;
-  --iss-yellow: #ebbc1e;
-  --iss-brown: #753a18;
-  --iss-accent: var(--iss-red);
-  --iss-accent-rgb: 232, 29, 37;
-  --iss-accent-soft: rgba(var(--iss-accent-rgb), 0.16);
-  --iss-accent-border: rgba(var(--iss-accent-rgb), 0.28);
-
-  /* Layout & Spacing */
-  --iss-content-width: 1720px;
-  --iss-container-pad: 1.25rem;
-  --iss-gap: 1.35rem;
-  --iss-header-height: 5.5rem;
-  --iss-space-2xs: 0.35rem;
-  --iss-space-xs: 0.5rem;
-  --iss-space-sm: 0.75rem;
-  --iss-space-md: 1rem;
-  --iss-space-lg: 1.5rem;
-  --iss-space-xl: 2.5rem;
-  --iss-space-2xl: 4rem;
-  --iss-section-pad-y: clamp(1.75rem, 3.4vw, 3.5rem);
-  --iss-section-pad-y-tight: clamp(1rem, 2.2vw, 2rem);
-
-  /* Border & Radius */
-  --iss-border: rgba(30, 30, 30, 0.12);
-  --iss-border-strong: rgba(30, 30, 30, 0.2);
-  --iss-radius-sm: 4px;
-  --iss-radius-md: 6px;
-  --iss-radius-lg: 10px;
-  --iss-radius-pill: 999px;
-
-  /* Surfaces */
-  --iss-surface-base: #ffffff;
-  --iss-surface-paper: #ffffff;
-  --iss-surface-panel: #f6f6f7;
-  --iss-surface-inset: #f4f4f5;
-  --iss-surface-archive: #f1f1f2;
-  --iss-surface-dark: #201d1b;
-  --iss-surface-map: #efefee;
-  --iss-surface-overlay: rgba(255, 255, 255, 0.94);
-  --iss-surface-bg: var(--iss-surface-base);
-  --iss-surface-fg: var(--iss-black);
-  --iss-surface-muted: rgba(30, 30, 30, 0.72);
-  --iss-surface-subtle: rgba(30, 30, 30, 0.56);
-  --iss-surface-rule: var(--iss-border);
-  --iss-heading-title-color: var(--iss-surface-fg);
-  --iss-heading-text-color: var(--iss-surface-muted);
-  --iss-kicker-accent: var(--iss-accent);
-  --iss-kicker-color: var(--iss-surface-fg);
-
-  /* Effects */
-  --iss-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.24);
-  --iss-transition: 0.2s ease;
-
-  /* Legacy aliases for older classes/templates. Keep until old markup is fully retired. */
-  --is--color-red: var(--iss-red);
-  --is--color-white: var(--iss-white);
-  --is--color-black: var(--iss-black);
-  --is--color-grey: var(--iss-grey);
-  --is--color-green: var(--iss-green);
-  --is--color-blue: var(--iss-blue);
-  --is--color-yellow: var(--iss-yellow);
-  --is--color-brown: var(--iss-brown);
-  --is--radius-sm: var(--iss-radius-sm);
-  --is--radius-md: var(--iss-radius-md);
-  --is--radius-lg: var(--iss-radius-lg);
-  --is--radius-pill: var(--iss-radius-pill);
-  --is--transition: var(--iss-transition);
-  --is--container-pad: var(--iss-container-pad);
-  --is--content-width: var(--iss-content-width);
-  --iss-link-fg: var(--iss-accent);
-  --iss-link-hover-fg: var(--iss-black);
-  --iss-button-fg: var(--iss-black);
-  --iss-button-bg: transparent;
-  --iss-button-accent: var(--iss-accent);
-  --iss-button-fill-bg: var(--iss-accent-soft);
-  --iss-button-border: var(--iss-border);
-  --iss-button-fill-border: var(--iss-accent-border);
-  --iss-button-hover-bg: var(--iss-accent-soft);
-  --iss-button-hover-border: var(--iss-accent);
-  --iss-button-hover-fg: var(--iss-black);
-
-  /* Primary button tier - solid fill, used for the single most important
-     action in a given context (Buchen, Anmelden, Senden). Distinct from
-     the tonal --iss-button-fill-bg tier used for secondary actions and
-     filter/toggle states, so primary actions read as genuinely heavier. */
-  --iss-button-primary-bg: var(--iss-accent);
-  --iss-button-primary-fg: var(--iss-white);
-  --iss-button-primary-border: var(--iss-accent);
-  --iss-button-primary-hover-bg: var(--iss-black);
-  --iss-button-primary-hover-border: var(--iss-black);
-  --iss-button-primary-hover-fg: var(--iss-white);
-
-  --iss-site-header-pad-top: 0.1rem;
-  --iss-site-header-pad-bottom: 1rem;
-  --iss-site-logo-size: 120px;
-  --iss-site-logo-bottom: calc(var(--iss-site-header-pad-top) + var(--iss-site-logo-size));
-}
 
 .iss-scheme-red {
   --iss-accent: var(--iss-red);
