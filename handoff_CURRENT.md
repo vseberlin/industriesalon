@@ -76,8 +76,8 @@ follow-up belongs in `TODO.md`.
 ## Next Action
 
 - UAT `/kalender/` with real booking paths: month selection, day selection,
-  grouped `Termin wählen`, popup slot selection, direct `Buchen`, empty day
-  state, and form submit.
+  direct `Buchen`, empty day state, and form submit. Staging smoke has covered
+  grouped `Termin wählen` popup slot selection and booking-form handoff.
 - UAT the JSON canvas drag/drop helper and redesigned section modal panels.
 - During JSON gesture polish, migrate landing/front-page CSS gesture by
   gesture toward renderer/treatment/skin selectors. Continue with `gateway`
@@ -118,7 +118,32 @@ follow-up belongs in `TODO.md`.
 - WP runtime probes confirmed signed preview URLs and preview autosave ordering
   for the landing renderer.
 
+## Verified On Staging
+
+- Feature deploy verified at `8f1c9bc`; closeout handoff commit is also pushed
+  and fast-forwarded on staging before stopping.
+- Staging host `iss-prod-01`: low load, Docker available, `/` at 34% disk use,
+  no failed systemd units.
+- `docker compose ps` in `/srv/industriesalon/stage` shows WordPress, MariaDB,
+  Redis, and Mailpit running; WordPress and MariaDB are healthy.
+- `docker compose run --rm wpcli eval 'var_dump(get_block_template("industriesalon//page-kalender", "wp_template")->source ?? null);'`
+  -> `theme`
+- `https://staging.industriesalon.info/kalender/` returns `200`, loads the new
+  `page-kalender.css`, `tour-calendar-skin.css`, `timeline-query.js`, and
+  `programm.js` assets, and renders `iss-scheme-red`.
+- Playwright Chromium against staging confirmed no horizontal overflow, grouped
+  `Termin wählen` opens the booking modal, a slot can be selected, and the
+  booking form opens with populated slot data and no console/page errors.
+- Post-deploy WordPress container logs for the smoke-test window showed only
+  successful `200` requests.
+
 ## Commit State
 
-- No commit requested or made for this checkpoint.
-- No staging/live deploy performed in this checkpoint.
+- Feature checkpoint: `8f1c9bc` (`Redesign calendar booking selectors`),
+  including previous JSON editor commit `d777e9c`.
+- Staging deployed: `/srv/industriesalon/stage/repo` fast-forwarded through
+  the feature checkpoint and this closeout handoff commit.
+- No SQL or upload artifact was required for this code-only deploy.
+- Staging has one preserved, pre-existing uncommitted `TODO.md` note about the
+  2026-06-29 Repair-Café deploy follow-up; it is intentionally not part of this
+  checkpoint.
