@@ -124,6 +124,9 @@ require_once ISS_CONTENT_MODEL_PATH . 'includes/editorial-sets-promotion.php';
 require_once ISS_CONTENT_MODEL_PATH . 'includes/editorial-sets-rest.php';
 require_once ISS_CONTENT_MODEL_PATH . 'includes/editorial-sets-admin.php';
 require_once ISS_CONTENT_MODEL_PATH . 'includes/editorial-sets-integrations.php';
+require_once ISS_CONTENT_MODEL_PATH . 'includes/fallback-projection.php';
+require_once ISS_CONTENT_MODEL_PATH . 'includes/fallback-mode.php';
+require_once ISS_CONTENT_MODEL_PATH . 'includes/fallback-admin.php';
 require_once ISS_CONTENT_MODEL_PATH . 'modules/tours/bootstrap.php';
 
 function iss_content_editorial_sets_ensure_runtime_state(): void
@@ -138,6 +141,7 @@ add_action('admin_init', 'iss_content_editorial_sets_ensure_runtime_state', 5);
 if (defined('WP_CLI') && WP_CLI) {
     require_once ISS_CONTENT_MODEL_PATH . 'includes/veranstaltungen-cli.php';
     require_once ISS_CONTENT_MODEL_PATH . 'includes/editor-ui-audit-cli.php';
+    require_once ISS_CONTENT_MODEL_PATH . 'includes/fallback-cli.php';
 }
 
 register_activation_hook(__FILE__, function () {

@@ -12,7 +12,7 @@ if (!defined('ABSPATH')) {
 define('ISS_CORE_VERSION', '0.1.0');
 define('ISS_CORE_FILE', __FILE__);
 define('ISS_CORE_PATH', plugin_dir_path(__FILE__));
-define('ISS_CORE_CAPS_VERSION', '2026-06-24-operations-caps-1');
+define('ISS_CORE_CAPS_VERSION', '2026-07-02-fallback-caps-1');
 define('ISS_CORE_CAPS_OPTION', 'iss_caps_version');
 define('ISS_CORE_OPERATIONS_MENU_SLUG', 'iss-operations');
 
@@ -39,6 +39,8 @@ function iss_core_default_capability_definitions(): array
         'iss_repair_data' => ['label' => 'Run repair and consistency tools', 'owner' => 'iss-core'],
         'iss_cleanup_data' => ['label' => 'Run destructive or semi-destructive cleanup tools', 'owner' => 'iss-core'],
         'iss_run_diagnostics' => ['label' => 'Run read-only diagnostics', 'owner' => 'iss-core'],
+        'iss_run_fallback_projection' => ['label' => 'Run fallback projection', 'owner' => 'iss-content'],
+        'iss_manage_fallback_mode' => ['label' => 'Manage fallback mode', 'owner' => 'iss-content'],
         'iss_manage_requests' => ['label' => 'Manage operational requests', 'owner' => 'iss-commerce-lite'],
 
         'edit_rueckblick' => ['label' => 'Edit one Rueckblick', 'owner' => 'iss-content'],
@@ -199,6 +201,7 @@ function iss_core_operation_capability_map(): array
         'publications' => 'iss_manage_publications',
         'newsletter_content' => 'iss_manage_newsletter_content',
         'newsletter_send' => 'iss_send_newsletter',
+        'fallback' => 'iss_manage_fallback_mode',
     ];
 }
 
@@ -368,7 +371,7 @@ function iss_core_operations_role_grants(): array
     $all_declared = iss_core_all_capability_slugs();
     $content_caps = array_merge($archive_item_caps, $publication_caps, $register_caps, $rueckblick_caps, $notice_caps);
     $set_caps = ['iss_create_sets', 'iss_edit_sets', 'iss_review_sets', 'iss_promote_media', 'iss_delete_sets', 'iss_cleanup_sets'];
-    $technical_caps = ['iss_sync_external_sources', 'iss_repair_data', 'iss_cleanup_data', 'iss_run_diagnostics', 'iss_import_archive'];
+    $technical_caps = ['iss_sync_external_sources', 'iss_repair_data', 'iss_cleanup_data', 'iss_run_diagnostics', 'iss_import_archive', 'iss_run_fallback_projection', 'iss_manage_fallback_mode'];
 
     return [
         'administrator' => $all_declared,
@@ -401,7 +404,7 @@ function iss_core_operations_role_grants(): array
             'iss_manage_publications',
             'iss_manage_newsletter_content',
             'iss_manage_requests',
-        ], $set_caps, $content_caps, ['iss_sync_external_sources', 'iss_run_diagnostics']),
+        ], $set_caps, $content_caps, ['iss_sync_external_sources', 'iss_run_diagnostics', 'iss_run_fallback_projection', 'iss_manage_fallback_mode']),
         'iss_curator_editor' => array_merge([
             'read',
             'upload_files',
@@ -892,6 +895,7 @@ function iss_core_status_report(): array
     }
 
     $rows = array_merge($rows, iss_core_status_theme_helper_rows());
+    $rows = apply_filters('iss_core_status_rows', $rows);
     $summary = ['ok' => 0, 'warning' => 0, 'error' => 0, 'skipped' => 0];
     foreach ($rows as $row) {
         $status = (string) ($row['status'] ?? 'warning');
@@ -999,6 +1003,8 @@ function iss_core_backfill_all(bool $dry_run = false, bool $include_external = f
     } else {
         $steps[] = ['label' => 'iss-content editorial sets schema', 'status' => 'skipped', 'result' => 'function unavailable'];
     }
+
+    $steps = apply_filters('iss_core_backfill_steps', $steps, $dry_run, $include_external);
 
     return [
         'dry_run' => $dry_run,

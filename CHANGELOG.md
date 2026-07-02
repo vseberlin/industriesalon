@@ -6,6 +6,20 @@ be recovered from Git history.
 
 ## 2026-07-02
 
+- Added the Intentional Vanilla Fallback Mode contract and v1 implementation:
+  `iss-content` now coordinates native Category seeding, generated/fallback-native
+  origin meta, read-model-to-vanilla serialization, idempotent projection,
+  scheduled sweeps, WP-CLI/admin controls, and explicit enable/disable mode
+  switching; `iss-publications` contributes its own publication projector; and
+  `iss-core` exposes fallback status/backfill/capability integration. The local
+  verification projected 89 generated draft objects, confirmed idempotency,
+  exercised enable/disable, and restored normal mode with zero generated
+  fallback posts published.
+- Added repo docs for the fallback architecture, implementation SOW, and
+  operator runbook under `docs/architecture/`, `docs/project/`, and
+  `docs/runbooks/`. The no-parallel-systems decision is recorded there: native
+  WordPress Categories with fixed `iss-...` slugs replace the earlier custom
+  shadow-taxonomy idea because Categories survive with zero first-party plugins.
 - Synced the current DB-saved `page-fuehrungen` block template back to
   `themes/industriesalon/templates/page-fuehrungen.html` and flushed the local
   `wp_template` override so the Führung landing page is file-backed again. The

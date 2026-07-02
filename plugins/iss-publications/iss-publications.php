@@ -20,6 +20,7 @@ require_once ISS_PUBLICATIONS_PATH . 'includes/admin-publication.php';
 require_once ISS_PUBLICATIONS_PATH . 'includes/editorial-publication.php';
 require_once ISS_PUBLICATIONS_PATH . 'includes/render-publication.php';
 require_once ISS_PUBLICATIONS_PATH . 'includes/blocks.php';
+require_once ISS_PUBLICATIONS_PATH . 'includes/fallback-projector.php';
 
 register_activation_hook(__FILE__, function () {
     iss_publications_register_post_type();
