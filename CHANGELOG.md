@@ -4,6 +4,14 @@ This file records durable project changes. Keep it compact: current state belong
 `handoff_CURRENT.md`, active follow-up in `TODO.md`, and detailed investigation can
 be recovered from Git history.
 
+## 2026-07-02
+
+- Synced the current DB-saved `page-fuehrungen` block template back to
+  `themes/industriesalon/templates/page-fuehrungen.html` and flushed the local
+  `wp_template` override so the Führung landing page is file-backed again. The
+  template copy removes the embedded upcoming-dates list section and keeps the
+  Führung overview/card surface plus existing follow-on sections.
+
 ## 2026-07-01
 
 - Refined the public single Führung renderer around a stable gesture contract:
