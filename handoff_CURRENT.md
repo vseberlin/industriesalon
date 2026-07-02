@@ -1,25 +1,26 @@
 # Current Handoff
 
-Updated: 2026-07-01
+Updated: 2026-07-02
 
 Current checkpoint only. Completed history belongs in `CHANGELOG.md`; active
 follow-up belongs in `TODO.md`.
 
 ## Current Work
 
-- Latest local commit: `e818c37 Add Fuehrung image stage gesture`.
-- The Führung JSON format now exposes `bildbuehne` as the explicit hero-stage
-  gesture. It is registered in `iss-content`, editable/sanitized through
-  `iss-editorial`, and consumed by the theme in the existing
-  `single-fuehrung` hero scaffold.
-- When a `bildbuehne` section exists, the theme consumes its title, body, and
-  media into the first viewport hero. The gesture is not rendered again in the
-  body.
-- Booking, dates, facts, route, Atlas map, and related cards remain outside the
-  JSON gesture body and continue to render through their existing template /
-  module contracts.
-- The current local Elektropolis runtime test section was restored; no
-  temporary `bildbuehne` content remains in post `12183`.
+- Latest pushed/deployed checkpoint: current `main` HEAD.
+- Template-sync commit: `cc910a6 Sync Fuehrungen page template override`.
+- GitHub `main` and staging repo `/srv/industriesalon/stage/repo` were
+  fast-forwarded through this handoff checkpoint.
+- The local DB-saved `page-fuehrungen` template was synced back to
+  `themes/industriesalon/templates/page-fuehrungen.html` and the local
+  `page-fuehrungen` DB override was flushed. Local and staging now report
+  `page-fuehrungen source=theme`.
+- Führung `bildbuehne` support is deployed: the format is registered in
+  `iss-content`, editable/sanitized through `iss-editorial`, and rendered by
+  the theme in the `single-fuehrung` hero scaffold.
+- No real staging/local Führung post currently has migrated `bildbuehne`
+  content; the staging Elektropolis route renders without
+  `iss-tour-has-stage-gesture`.
 
 ## Preserve
 
@@ -33,33 +34,42 @@ follow-up belongs in `TODO.md`.
 
 ## Next Action
 
-- Push/deploy `e818c37`, then create or migrate at least one real Führung
-  `bildbuehne` section in content and browser-check desktop/mobile.
+- Create or migrate at least one real Führung `bildbuehne` section in content,
+  then browser-check desktop/mobile on staging.
 - Continue the existing calendar and JSON editor UAT follow-ups listed in
-  `TODO.md` when this Führung slice is deployed.
+  `TODO.md`.
 
-## Verified Locally
+## Verified
 
-- PHP lint:
-  - `themes/industriesalon/includes/tours-render.php`
-  - `plugins/iss-content/includes/editorial.php`
-  - `plugins/iss-editorial/includes/storage.php`
-- `node --check plugins/iss-editorial/assets/admin.js`
-- `npx stylelint themes/industriesalon/assets/css/single-tour.css`
-- `git diff --check`
-- Runtime registry check:
-  `bildbuehne,intro,kapitel,leitfrage,zitat,galerie,image_wall,material,schluss`
-- Temporary local Elektropolis `bildbuehne` smoke:
-  Chromium and Firefox desktop/mobile had no horizontal overflow, rendered the
-  stage in the hero, did not duplicate it as a body section, and kept the
-  booking rail outside the gesture.
-- Restore check after smoke: local Elektropolis page no longer contains
-  `iss-tour-has-stage-gesture`, `iss-tour-hero-gallery--stage`, or the temporary
-  stage copy.
+- Local:
+  - `page-fuehrungen` DB template content matched the disk template before the
+    override was flushed.
+  - `page-fuehrungen source=theme` after flush.
+  - `/fuehrungen/` returned `200`, rendered
+    `Führungen durch die Industriekultur`, and no longer rendered the
+    `iss-tours-booking__surface` section.
+  - `git diff --check`.
+- Staging:
+  - Repo fast-forwarded to `cc910a6` for code/template deploy; final handoff
+    checkpoint was deployed afterward.
+  - `front-page source=theme`; `page-fuehrungen source=theme`.
+  - PHP lint passed for:
+    - `plugins/iss-content/includes/editorial.php`
+    - `plugins/iss-editorial/includes/storage.php`
+    - `themes/industriesalon/includes/tours-render.php`
+  - Führung registry check:
+    `bildbuehne,intro,kapitel,leitfrage,zitat,galerie,image_wall,material,schluss`
+  - `/fuehrungen/` returned `200`, rendered
+    `Führungen durch die Industriekultur`, and no longer rendered the
+    `iss-tours-booking__surface` section.
+  - `/fuehrungen/elektropolis/` redirects to `/fuehrungen/elektropolis-tour/`
+    and returns `200` with tour markup.
 
 ## Commit State
 
-- Local `main` is ahead of `origin/main` by 1 commit:
-  `e818c37 Add Fuehrung image stage gesture`.
-- The checkpoint has not been pushed.
-- No SQL or upload artifact was created for this code/docs-only commit.
+- Local `main`, `origin/main`, and staging repo HEAD are aligned at the current
+  handoff checkpoint.
+- Staging still has an intentional uncommitted `TODO.md` note about the
+  Repair-Cafe staging artifact/old Apache stack; it was preserved during
+  deployment.
+- No SQL or upload artifact was created for this code/docs/template deploy.

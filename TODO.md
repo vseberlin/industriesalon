@@ -4,11 +4,11 @@ Immediate executable work only. Larger future programs live in `docs/project/bac
 
 ## Next
 
-- Führung `bildbuehne` stage gesture follow-up: push/deploy commit `e818c37`,
-  create or migrate at least one real Führung stage section in content, then
-  browser-check desktop/mobile that the full-viewport image stage, compact
-  gallery, and right booking rail render correctly. Booking, dates, facts,
-  route, Atlas, and related cards must remain outside the gesture body.
+- Führung `bildbuehne` stage gesture content/UAT follow-up: create or migrate
+  at least one real Führung stage section in content, then browser-check
+  desktop/mobile that the full-viewport image stage, compact gallery, and right
+  booking rail render correctly. Booking, dates, facts, route, Atlas, and
+  related cards must remain outside the gesture body.
 - Universal occurrence calendar/intake staging test: after pulling the pushed
   commit, live-test `/kalender/` grouped recurring `Termin wählen`, month
   navigation, available slot booking form, sold-out/unavailable date empty
