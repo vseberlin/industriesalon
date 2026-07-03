@@ -84,6 +84,7 @@ function industriesalon_editorial_landing_treatment_slug(array $section): string
         'gateway' => 'gateway.cards',
         'feature' => 'feature.media-panel',
         'dynamic_slot' => 'slot.projects',
+        'atlas_map' => 'atlas-map.map-only',
     ];
     $allowed = [
         'statement' => ['statement.lead', 'statement.leitfrage'],
@@ -91,6 +92,7 @@ function industriesalon_editorial_landing_treatment_slug(array $section): string
         'gateway' => ['gateway.cards', 'gateway.link-list', 'gateway.feature-strip'],
         'feature' => ['feature.media-panel', 'feature.media-text', 'feature.image-overlay'],
         'dynamic_slot' => ['slot.projects', 'slot.timeline', 'slot.visit-info', 'slot.newsletter'],
+        'atlas_map' => ['atlas-map.place-locator', 'atlas-map.map-only'],
     ];
     $default = $defaults[$type] ?? 'gateway.cards';
     $treatment = strtolower((string) ($section['treatment'] ?? $default));
@@ -108,6 +110,17 @@ function industriesalon_editorial_landing_treatment_slug(array $section): string
 function industriesalon_editorial_landing_class_slug(string $value): string
 {
     return sanitize_html_class(str_replace(['.', '_'], '-', $value));
+}
+
+function industriesalon_editorial_landing_atlas_map_variant(array $section): string
+{
+    $treatment = industriesalon_editorial_landing_treatment_slug($section);
+    $variants = [
+        'atlas-map.place-locator' => 'place-locator',
+        'atlas-map.map-only' => 'map-only',
+    ];
+
+    return (string) ($variants[$treatment] ?? 'map-only');
 }
 
 function industriesalon_editorial_landing_media_text_layout(array $section): string
@@ -746,6 +759,35 @@ function industriesalon_render_editorial_landing_dynamic_slot(array $section, in
     return trim((string) ob_get_clean());
 }
 
+function industriesalon_render_editorial_landing_atlas_map(array $section, int $rendered_index, string $skin): string
+{
+    if (!function_exists('iss_relations_render_atlas_map_variant')) {
+        return '';
+    }
+
+    $copy_html = industriesalon_render_editorial_landing_copy($section);
+    $variant = industriesalon_editorial_landing_atlas_map_variant($section);
+    $map_html = iss_relations_render_atlas_map_variant($variant, [
+        'shellMode' => 'body',
+    ]);
+
+    if (trim($map_html) === '') {
+        return '';
+    }
+
+    ob_start();
+    ?>
+    <section <?php echo industriesalon_editorial_landing_section_attrs($section, $skin); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- Attributes are escaped in helper. ?>>
+        <div class="iss-container iss-landing-section__inner iss-landing-atlas-map">
+            <?php echo $copy_html; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- Copy output is escaped in helper. ?>
+            <?php echo $map_html; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- Atlas map render delegates to escaped block renderer. ?>
+        </div>
+    </section>
+    <?php
+    unset($rendered_index);
+    return trim((string) ob_get_clean());
+}
+
 function industriesalon_render_editorial_landing_section(array $section, int $rendered_index, string $skin): string
 {
     $type = sanitize_key((string) ($section['type'] ?? ''));
@@ -763,6 +805,9 @@ function industriesalon_render_editorial_landing_section(array $section, int $re
     }
     if ($type === 'dynamic_slot') {
         return industriesalon_render_editorial_landing_dynamic_slot($section, $rendered_index, $skin);
+    }
+    if ($type === 'atlas_map') {
+        return industriesalon_render_editorial_landing_atlas_map($section, $rendered_index, $skin);
     }
 
     return '';

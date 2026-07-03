@@ -69,6 +69,7 @@ add_action('after_setup_theme', function () {
             'assets/css/front-page.css',
             'assets/css/cards.css',
             'assets/css/patterns.css',
+            'assets/css/gestures.css',
             'assets/css/ueber-uns.css',
             'assets/css/page-archive.css',
             'assets/css/page-kalender.css',
@@ -1264,8 +1265,17 @@ function industriesalon_enqueue_assets(): void
         $patterns_dependencies
     );
 
-    $page_dependencies = $patterns_loaded
+    $gestures_dependencies = $patterns_loaded
         ? array('industriesalon-patterns')
+        : $patterns_dependencies;
+    $gestures_loaded = $enqueue_theme_style(
+        'industriesalon-gestures',
+        '/assets/css/gestures.css',
+        $gestures_dependencies
+    );
+
+    $page_dependencies = $patterns_loaded
+        ? ($gestures_loaded ? array('industriesalon-gestures') : array('industriesalon-patterns'))
         : ($primitives_loaded
             ? array('industriesalon-primitives')
             : ($cards_loaded
@@ -1483,6 +1493,10 @@ function industriesalon_collect_skin_style_dependencies(string $primary_handle):
 
     if (wp_style_is('industriesalon-patterns', 'enqueued')) {
         $dependencies[] = 'industriesalon-patterns';
+    }
+
+    if (wp_style_is('industriesalon-gestures', 'enqueued')) {
+        $dependencies[] = 'industriesalon-gestures';
     }
 
     return array_values(array_unique($dependencies));

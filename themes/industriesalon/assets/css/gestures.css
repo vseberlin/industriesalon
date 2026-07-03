@@ -1,0 +1,259 @@
+/* =====================================================================
+   FILE: gestures.css
+   ROLE: Shared JSON gesture renderer contracts.
+   PURPOSE:
+   - Own universal gesture anatomy and default local variables.
+   - Let skins and content-type renderers override values through scoped custom
+     properties without forking the selector tree.
+   ===================================================================== */
+
+.iss-gesture-stage__media {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  margin: 0;
+  overflow: hidden;
+}
+
+.iss-gesture-stage__media::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  background: var(--iss-gesture-stage-overlay, linear-gradient(90deg, rgba(8, 8, 8, 0.76) 0%, rgba(8, 8, 8, 0.42) 54%, rgba(8, 8, 8, 0.22) 100%));
+  pointer-events: none;
+}
+
+.iss-gesture-stage__image {
+  position: relative;
+  z-index: 0;
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: var(--iss-gesture-stage-image-position, 50% 50%);
+}
+
+.iss-image-viewport-gallery {
+  --iss-image-viewport-gallery-control-size: 2.65rem;
+  --iss-image-viewport-gallery-item-width: clamp(7rem, 10vw, 9rem);
+  --iss-image-viewport-gallery-gap: 0.55rem;
+  --iss-image-viewport-gallery-control-bg: rgba(20, 20, 20, 0.72);
+  --iss-image-viewport-gallery-control-fg: var(--iss-white, #fff);
+  --iss-image-viewport-gallery-control-border: rgba(249, 249, 250, 0.24);
+  --iss-image-viewport-gallery-thumb-border: rgba(249, 249, 250, 0.22);
+  --iss-image-viewport-gallery-thumb-active: var(--iss-accent, #e81d25);
+
+  display: grid;
+  position: relative;
+  gap: 0;
+  min-width: 0;
+}
+
+.iss-image-viewport-gallery__track {
+  display: flex;
+  flex-wrap: nowrap;
+  gap: var(--iss-image-viewport-gallery-gap);
+  min-width: 0;
+  max-width: 100%;
+  overflow-x: auto;
+  overflow-y: hidden;
+  padding-bottom: 0.1rem;
+  scroll-padding-inline: 0.15rem;
+  scroll-snap-type: x mandatory;
+  scrollbar-width: thin;
+  -webkit-overflow-scrolling: touch;
+  overscroll-behavior-x: contain;
+  cursor: grab;
+  user-select: none;
+}
+
+.iss-image-viewport-gallery.is-carousel-ready .iss-image-viewport-gallery__track {
+  padding-inline: calc(var(--iss-image-viewport-gallery-control-size) + 0.5rem);
+  scroll-padding-inline: calc(var(--iss-image-viewport-gallery-control-size) + 0.5rem);
+  scrollbar-width: none;
+}
+
+.iss-image-viewport-gallery.is-carousel-ready .iss-image-viewport-gallery__track::-webkit-scrollbar {
+  display: none;
+}
+
+.iss-image-viewport-gallery__track.is-dragging {
+  cursor: grabbing;
+  scroll-snap-type: none;
+}
+
+.iss-image-viewport-gallery__controls {
+  display: none;
+  position: absolute;
+  top: 50%;
+  right: 0.15rem;
+  left: 0.15rem;
+  z-index: 2;
+  align-items: center;
+  justify-content: space-between;
+  height: var(--iss-image-viewport-gallery-control-size);
+  pointer-events: none;
+  transform: translateY(-50%);
+}
+
+.iss-image-viewport-gallery.is-carousel-ready .iss-image-viewport-gallery__controls {
+  display: flex;
+}
+
+.iss-image-viewport-gallery__control {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: var(--iss-image-viewport-gallery-control-size);
+  min-width: var(--iss-image-viewport-gallery-control-size);
+  height: var(--iss-image-viewport-gallery-control-size);
+  min-height: var(--iss-image-viewport-gallery-control-size);
+  padding: 0;
+  border: 1px solid var(--iss-image-viewport-gallery-control-border);
+  border-radius: var(--iss-radius-pill, 999px);
+  background: var(--iss-image-viewport-gallery-control-bg);
+  color: var(--iss-image-viewport-gallery-control-fg);
+  font: inherit;
+  font-size: 1.1rem;
+  line-height: 1;
+  pointer-events: auto;
+}
+
+.iss-image-viewport-gallery__control[disabled] {
+  opacity: 0.3;
+  pointer-events: none;
+}
+
+.iss-image-viewport-gallery__control:not([disabled]):hover,
+.iss-image-viewport-gallery__control:not([disabled]):focus-visible {
+  border-color: var(--iss-image-viewport-gallery-thumb-active);
+  background: var(--iss-image-viewport-gallery-thumb-active);
+}
+
+.iss-image-viewport-gallery__choice {
+  border: 1px solid var(--iss-image-viewport-gallery-thumb-border);
+  border-radius: var(--iss-radius-sm, 4px);
+  background: rgba(20, 20, 20, 0.56);
+  box-shadow: none;
+  overflow: hidden;
+}
+
+.iss-image-viewport-gallery__track .iss-image-viewport-gallery__choice {
+  flex: 0 0 var(--iss-image-viewport-gallery-item-width);
+  width: var(--iss-image-viewport-gallery-item-width);
+  scroll-snap-align: start;
+}
+
+.iss-image-viewport-gallery__choice.is-active {
+  border-color: var(--iss-image-viewport-gallery-thumb-active);
+}
+
+.iss-image-viewport-gallery__thumb-img {
+  width: 100%;
+  aspect-ratio: var(--iss-image-viewport-gallery-thumb-ratio, 4 / 3);
+  object-fit: cover;
+}
+
+.iss-gesture-atlas-map {
+  --iss-gesture-atlas-map-line: var(--iss-accent, #e81d25);
+  --iss-gesture-atlas-map-line-shadow: rgba(20, 18, 17, 0.28);
+  --iss-gesture-atlas-map-stage-min-height: clamp(18rem, 36vw, 30rem);
+  --iss-gesture-atlas-map-panel-max-height: none;
+
+  min-width: 0;
+}
+
+.iss-gesture-atlas-map__map {
+  min-width: 0;
+}
+
+.iss-gesture-atlas-map__stage {
+  width: 100%;
+  height: auto;
+  min-height: var(--iss-gesture-atlas-map-stage-min-height);
+}
+
+.iss-gesture-atlas-map--treatment-band {
+  --iss-gesture-atlas-map-stage-min-height: clamp(14rem, 28vw, 22rem);
+}
+
+.iss-gesture-atlas-map--treatment-panelled {
+  --iss-gesture-atlas-map-stage-min-height: clamp(20rem, 38vw, 32rem);
+  --iss-gesture-atlas-map-panel-max-height: clamp(20rem, 38vw, 32rem);
+}
+
+.iss-gesture-atlas-map--variant-tour-route {
+  --iss-gesture-atlas-map-stage-min-height: 0;
+  --iss-gesture-atlas-map-panel-max-height: clamp(18rem, 18vw, 21rem);
+}
+
+.iss-atlas-slice__route-line {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  display: block;
+  width: 100%;
+  height: 100%;
+  overflow: visible;
+  pointer-events: none;
+}
+
+.iss-atlas-slice__route-line polyline {
+  fill: none;
+  stroke: var(--iss-gesture-atlas-map-line);
+  stroke-width: 0.85;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  filter: drop-shadow(0 0.35rem 0.55rem var(--iss-gesture-atlas-map-line-shadow));
+}
+
+.iss-gesture-atlas-map .iss-atlas-slice__markers {
+  z-index: 2;
+}
+
+.iss-gesture-atlas-map--skin-route .iss-related-place-map__marker-dot {
+  border-color: rgba(255, 255, 255, 0.78);
+  background: var(--iss-accent, #e81d25);
+  box-shadow:
+    0 0 0 0.42rem rgba(232, 29, 37, 0.18),
+    0 0.55rem 1.35rem rgba(20, 18, 17, 0.22);
+}
+
+.iss-gesture-atlas-map--skin-route .iss-related-place-map__panel {
+  max-height: var(--iss-gesture-atlas-map-panel-max-height);
+  overflow: auto;
+}
+
+.iss-gesture-atlas-map--skin-route .iss-related-place-map__entry {
+  padding: 0.8rem 0.9rem;
+}
+
+.iss-gesture-atlas-map--skin-route .iss-related-place-map__entry-title {
+  font-size: 0.98rem;
+}
+
+.iss-gesture-atlas-map--skin-route .iss-related-place-map__entry-text {
+  font-size: 0.88rem;
+  line-height: 1.45;
+}
+
+.iss-landing-atlas-map {
+  display: grid;
+  gap: clamp(1rem, 2.4vw, 1.8rem);
+}
+
+.iss-landing-atlas-map .iss-landing-section__copy {
+  max-width: 44rem;
+}
+
+.iss-landing-atlas-map .iss-gesture-atlas-map--treatment-band {
+  --iss-gesture-atlas-map-stage-min-height: clamp(16rem, 34vw, 26rem);
+}
+
+@media (max-width: 900px) {
+  .iss-gesture-atlas-map--variant-tour-route {
+    --iss-gesture-atlas-map-stage-min-height: clamp(14rem, 62vw, 20rem);
+    --iss-gesture-atlas-map-panel-max-height: clamp(16rem, 64vw, 20rem);
+  }
+}

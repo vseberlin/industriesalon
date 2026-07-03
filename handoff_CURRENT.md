@@ -1,75 +1,80 @@
 # Current Handoff
 
-Updated: 2026-07-02
+Updated: 2026-07-03
 
 Current checkpoint only. Completed history belongs in `CHANGELOG.md`; active
 follow-up belongs in `TODO.md`.
 
 ## Current Work
 
-- Latest pushed/deployed checkpoint: current `main` HEAD.
-- Template-sync commit: `cc910a6 Sync Fuehrungen page template override`.
-- GitHub `main` and staging repo `/srv/industriesalon/stage/repo` were
-  fast-forwarded through this handoff checkpoint.
-- The local DB-saved `page-fuehrungen` template was synced back to
-  `themes/industriesalon/templates/page-fuehrungen.html` and the local
-  `page-fuehrungen` DB override was flushed. Local and staging now report
-  `page-fuehrungen source=theme`.
-- Führung `bildbuehne` support is deployed: the format is registered in
-  `iss-content`, editable/sanitized through `iss-editorial`, and rendered by
-  the theme in the `single-fuehrung` hero scaffold.
-- No real staging/local Führung post currently has migrated `bildbuehne`
-  content; the staging Elektropolis route renders without
-  `iss-tour-has-stage-gesture`.
+- Single Führung rendering now uses the shared JSON gesture direction:
+  `bildbuehne` owns hero image/text/gallery only, while booking, dates, facts,
+  route stations, Atlas map fallback, and related cards remain outside that
+  gesture body.
+- Shared `gestures.css` is the renderer-contract layer for JSON gestures.
+  Single-tour CSS now consumes scoped gesture variables and route-specific
+  overrides instead of page-only one-off rules where this checkpoint touched
+  the surface.
+- The compact hero gallery uses shared viewport-gallery JavaScript from
+  `iss-frontend`; clicks update the defined hero viewport rather than only the
+  thumbnail strip.
+- `iss/atlas-map` is registered as the shared static-map gesture/block.
+  Registered variants include `place-locator`, `map-only`, and `tour-route`.
+- Führung JSON exposes `atlas_map` with treatment `atlas-map.tour-route`. The
+  `single-fuehrung` template keeps an `iss/atlas-map` fallback block and
+  suppresses it when enabled Führung JSON contains an `atlas_map` section.
+- The `tour-route` Atlas variant uses internal marker-box ratio/crop fitting:
+  far-left/far-right and top/bottom markers define the crop with registry-owned
+  padding, and the route line is drawn by the shared static-map renderer.
+- Landing JSON has an initial `atlas_map` gesture path, but current landing
+  source/behavior is intentionally tracked as follow-up before broad use.
 
 ## Preserve
 
-- Keep `single-fuehrung` as the template scaffold for logo-aligned left text,
-  center/full-bleed visual stage, right booking rail, route/map/related
-  placement, and fallback hero.
-- Keep `bildbuehne` editorial only: image/gallery/title/body. Do not move
-  booking or transactional controls into JSON gestures.
-- Keep public rendering in the theme, format registration in `iss-content`, and
-  storage/editor behavior in `iss-editorial`.
+- Do not move booking, date selection, prices, duration, meeting point, route
+  stations, or commerce behavior into JSON gesture bodies.
+- Keep map fit/source/ratio/line details registry-owned internal renderer
+  options. Editors should choose stable gestures/treatments, not raw map
+  fitting knobs.
+- Keep public presentation in the theme, format registration in `iss-content`,
+  relation and map contracts in `iss-relations`, and static map rendering in
+  `iss-frontend`.
+- Keep legacy map blocks as fallback/delegation paths while draining old slice
+  and place-map variants into registered gesture variants.
 
 ## Next Action
 
-- Create or migrate at least one real Führung `bildbuehne` section in content,
-  then browser-check desktop/mobile on staging.
-- Continue the existing calendar and JSON editor UAT follow-ups listed in
+- Add the TODO-listed regression check for marker-box fit complexity so route
+  map marker padding is tested directly.
+- Sort out landing `atlas_map` behavior: decide when landing pages use
+  current-page relations, manual place recipes, or a dedicated source picker.
+- Migrate or create a real Führung `bildbuehne` / `atlas_map` JSON section and
+  browser-check desktop/mobile on staging.
+- Continue the calendar/intake and broader JSON editor UAT follow-ups listed in
   `TODO.md`.
 
 ## Verified
 
-- Local:
-  - `page-fuehrungen` DB template content matched the disk template before the
-    override was flushed.
-  - `page-fuehrungen source=theme` after flush.
-  - `/fuehrungen/` returned `200`, rendered
-    `Führungen durch die Industriekultur`, and no longer rendered the
-    `iss-tours-booking__surface` section.
-  - `git diff --check`.
-- Staging:
-  - Repo fast-forwarded to `cc910a6` for code/template deploy; final handoff
-    checkpoint was deployed afterward.
-  - `front-page source=theme`; `page-fuehrungen source=theme`.
-  - PHP lint passed for:
-    - `plugins/iss-content/includes/editorial.php`
-    - `plugins/iss-editorial/includes/storage.php`
-    - `themes/industriesalon/includes/tours-render.php`
-  - Führung registry check:
-    `bildbuehne,intro,kapitel,leitfrage,zitat,galerie,image_wall,material,schluss`
-  - `/fuehrungen/` returned `200`, rendered
-    `Führungen durch die Industriekultur`, and no longer rendered the
-    `iss-tours-booking__surface` section.
-  - `/fuehrungen/elektropolis/` redirects to `/fuehrungen/elektropolis-tour/`
-    and returns `200` with tour markup.
+- PHP syntax:
+  - `plugins/iss-frontend/modules/static-maps/includes/render.php`
+  - `plugins/iss-relations/includes/blocks.php`
+  - `plugins/iss-content/includes/editorial.php`
+  - `themes/industriesalon/includes/tours-render.php`
+- PHPCS target checks for the touched PHP/template map and Führung files.
+- ESLint for the related-content block editor and shared gallery scripts.
+- Stylelint for `gestures.css` and `single-tour.css`.
+- `wp iss-relations static-map-contract-check`.
+- Browser metrics for `/fuehrungen/elektropolis-tour/`:
+  - atlas route gesture present
+  - route line present
+  - no horizontal overflow
+  - marker fit lands around `x=8..92` and `y=12..87.9`
+  - desktop route block reduced to roughly 336px high
+  - mobile route block stacks without horizontal overflow
+- `git diff --check`.
 
 ## Commit State
 
-- Local `main`, `origin/main`, and staging repo HEAD are aligned at the current
-  handoff checkpoint.
-- Staging still has an intentional uncommitted `TODO.md` note about the
-  Repair-Cafe staging artifact/old Apache stack; it was preserved during
-  deployment.
-- No SQL or upload artifact was created for this code/docs/template deploy.
+- This checkpoint is code/docs/template/CSS/JS only.
+- No SQL artifact or uploads artifact was created.
+- Commit/push status should be confirmed from Git after closeout.

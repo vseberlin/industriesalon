@@ -4,6 +4,27 @@ This file records durable project changes. Keep it compact: current state belong
 `handoff_CURRENT.md`, active follow-up in `TODO.md`, and detailed investigation can
 be recovered from Git history.
 
+## 2026-07-03
+
+- Added the shared JSON gesture CSS layer and documented the public CSS
+  layering direction for gesture contracts, renderer skins, and scoped
+  overrides.
+- Reworked single Führung public rendering around the `bildbuehne` gesture:
+  hero text now sits over the image with a left-to-right readability gradient,
+  the compact image gallery uses shared viewport-gallery JavaScript, gallery
+  clicks update the defined hero viewport, and the booking rail is more compact.
+- Added the shared `iss/atlas-map` gesture/block contract and registered
+  variants for `place-locator`, `map-only`, and `tour-route`. Führung JSON now
+  exposes `atlas_map` as the route-map gesture, while the template block remains
+  a fallback that suppresses itself when JSON owns the section.
+- Extended the static-map renderer with route lines, marker-edge crop fitting,
+  and internal marker-box ratio mode so Führung route maps derive their crop and
+  stage height from marker bounds plus registry padding instead of one-off
+  Elektropolis CSS.
+- Added landing `atlas_map` gesture support behind the existing JSON renderer
+  path, with follow-up tracked for relation/source behavior before broad
+  landing-page use.
+
 ## 2026-07-02
 
 - Added the Intentional Vanilla Fallback Mode contract and v1 implementation:

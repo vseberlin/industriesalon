@@ -270,7 +270,7 @@ function iss_relations_static_map_contract_checks(): array
     $checks = [];
     $contracts = iss_relations_get_map_block_contracts();
     $public_contracts = iss_relations_get_map_block_public_contracts();
-    $target_blocks = ['iss/related-place-map', 'iss/atlas-slice', 'iss/spine-strip'];
+    $target_blocks = ['iss/related-place-map', 'iss/atlas-map', 'iss/atlas-slice', 'iss/spine-strip'];
     $place_id = iss_relations_static_map_find_sample_place_id();
 
     $checks[] = iss_relations_contract_check_result(

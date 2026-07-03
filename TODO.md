@@ -7,8 +7,15 @@ Immediate executable work only. Larger future programs live in `docs/project/bac
 - Führung `bildbuehne` stage gesture content/UAT follow-up: create or migrate
   at least one real Führung stage section in content, then browser-check
   desktop/mobile that the full-viewport image stage, compact gallery, and right
-  booking rail render correctly. Booking, dates, facts, route, Atlas, and
-  related cards must remain outside the gesture body.
+  booking rail render correctly. Booking, dates, facts, and related cards must
+  remain outside the gesture body.
+- Atlas map landing behavior follow-up: the `atlas_map` JSON gesture now exists
+  for landing pages, but its current relation-driven behavior looks strange.
+  Sort out when landing sections should use current-page relations, manual
+  place recipes, or a dedicated source picker before exposing it broadly.
+- Atlas map complexity guardrail: add a small regression check for the
+  marker-box fit math so route maps keep far-left/far-right and top/bottom
+  markers inside the configured padding without relying on visual inspection.
 - Universal occurrence calendar/intake staging test: after pulling the pushed
   commit, live-test `/kalender/` grouped recurring `Termin wählen`, month
   navigation, available slot booking form, sold-out/unavailable date empty

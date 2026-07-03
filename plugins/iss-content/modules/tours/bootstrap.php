@@ -30,16 +30,21 @@ function iss_fuehrungen_enqueue_assets() {
     do_action('iss_fuehrungen_assets_enqueued');
 
     if (is_singular(ISS_FUEHRUNGEN_POST_TYPE)) {
-        $hero_gallery_path = ISS_FUEHRUNGEN_PATH . 'assets/tour-hero-gallery.js';
         $route_carousel_path = ISS_FUEHRUNGEN_PATH . 'assets/tour-route-carousel.js';
 
-        wp_enqueue_script(
-            'iss-fuehrungen-hero-gallery',
-            ISS_FUEHRUNGEN_URL . 'assets/tour-hero-gallery.js',
-            [],
-            file_exists($hero_gallery_path) ? (string) filemtime($hero_gallery_path) : ISS_FUEHRUNGEN_VERSION,
-            true
-        );
+        if (function_exists('iss_frontend_enqueue_image_viewport_gallery_assets')) {
+            iss_frontend_enqueue_image_viewport_gallery_assets();
+        } else {
+            $hero_gallery_path = ISS_FUEHRUNGEN_PATH . 'assets/tour-hero-gallery.js';
+
+            wp_enqueue_script(
+                'iss-fuehrungen-hero-gallery',
+                ISS_FUEHRUNGEN_URL . 'assets/tour-hero-gallery.js',
+                [],
+                file_exists($hero_gallery_path) ? (string) filemtime($hero_gallery_path) : ISS_FUEHRUNGEN_VERSION,
+                true
+            );
+        }
 
         if (file_exists($route_carousel_path)) {
             wp_enqueue_script(

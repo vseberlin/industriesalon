@@ -28,6 +28,11 @@ Use this for code, design, Gutenberg, CSS, PHP, JavaScript, template, theme, and
   component-only internals as local variables or plain declarations.
 - Prefer this layer order: token values, base helpers, primitives/patterns, renderer contracts, skins, then page exceptions.
 - For JSON-rendered pages, target stable gesture/treatment/skin classes before page-specific selectors.
+- Put override values at the narrowest stable authority instead of expanding
+  global tokens: universal gesture defaults in renderer-contract CSS,
+  content-type or skin differences as scoped custom properties on skin/domain
+  wrappers, and page-file variable setters only as transition compatibility.
+  Page files should not fork a reusable gesture selector tree.
 - Public first-party plugin CSS may consume `--iss-*` tokens with fallback
   values and plugin-prefixed local variables, but it must not redefine global
   tokens or duplicate theme-owned button/card/surface/type systems.

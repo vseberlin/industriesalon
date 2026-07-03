@@ -97,35 +97,52 @@
 
     var spineFirst = spineStripControls.isSpineSurface(attrs, config);
     var controls = compactControls([
-      relatedCardsControls.renderPostTypeControl(attrs, setAttributes, config),
-      el(SelectControl, {
-        key: 'source',
-        label: config.showCardLayoutFields ? 'Quelle' : 'Ortsquelle',
-        value: editor.getRelatedBlockSource(attrs, config),
-        options: config.showCardLayoutFields ? optionSets.RELATED_SOURCE_OPTIONS : optionSets.SOURCE_OPTIONS,
-        onChange: function (value) {
-          setAttributes({ source: value || editor.getRelatedBlockDefaultSource(config) });
-        },
-      }),
-      sourceControls.renderManualPlaceControl(attrs, setAttributes, placeOptions, selectedIds, config),
+      config.variantOptions && config.variantOptions.length
+        ? el(SelectControl, {
+            key: 'variant',
+            label: 'Variante',
+            value: attrs.variant || config.defaultVariant || config.variantOptions[0].value,
+            options: config.variantOptions,
+            onChange: function (value) {
+              setAttributes({ variant: value || config.defaultVariant || config.variantOptions[0].value });
+            },
+          })
+        : null,
+      config.showPostTypeField === false ? null : relatedCardsControls.renderPostTypeControl(attrs, setAttributes, config),
+      config.showSourceFields === false
+        ? null
+        : el(SelectControl, {
+            key: 'source',
+            label: config.showCardLayoutFields ? 'Quelle' : 'Ortsquelle',
+            value: editor.getRelatedBlockSource(attrs, config),
+            options: config.showCardLayoutFields ? optionSets.RELATED_SOURCE_OPTIONS : optionSets.SOURCE_OPTIONS,
+            onChange: function (value) {
+              setAttributes({ source: value || editor.getRelatedBlockDefaultSource(config) });
+            },
+          }),
+      config.showSourceFields === false ? null : sourceControls.renderManualPlaceControl(attrs, setAttributes, placeOptions, selectedIds, config),
     ])
       .concat(renderHeadingControls(attrs, setAttributes, config))
       .concat(config.showCardLayoutFields ? relatedCardsControls.renderInspectorControls(attrs, setAttributes) : [])
       .concat(spineFirst ? spineStripControls.renderSpineStripControls(attrs, setAttributes, config) : [])
       .concat(staticMapControls.renderStaticMapControls(attrs, setAttributes, config))
       .concat(spineFirst ? [] : spineStripControls.renderSpineStripControls(attrs, setAttributes, config))
-      .concat([
-        el(RangeControl, {
-          key: 'perPage',
-          label: 'Anzahl',
-          min: 1,
-          max: config.perPageMax || 12,
-          value: attrs.perPage || 3,
-          onChange: function (value) {
-            setAttributes({ perPage: value || 3 });
-          },
-        }),
-      ]);
+      .concat(
+        config.showPerPageField === false
+          ? []
+          : [
+              el(RangeControl, {
+                key: 'perPage',
+                label: 'Anzahl',
+                min: 1,
+                max: config.perPageMax || 12,
+                value: attrs.perPage || 3,
+                onChange: function (value) {
+                  setAttributes({ perPage: value || 3 });
+                },
+              }),
+            ]
+      );
 
     return el(
       InspectorControls,
@@ -501,6 +518,30 @@
     fixedPostType: PLACE_POST_TYPE,
     showIntroTextField: true,
     showMapFields: true,
+    supports: {
+      align: ['wide', 'full'],
+    },
+  });
+
+  registerRelatedBlock('iss/atlas-map', {
+    defaultSource: 'current',
+    defaultVariant: 'place-locator',
+    panelTitle: 'Atlas Map',
+    placeholderClassName: 'wp-block-iss-atlas-map-editor',
+    placeholderTitle: 'Atlas Map',
+    placeholderText:
+      'Rendert eine registrierte Atlas-Map-Variante über den gemeinsamen Static-Map-Renderer.',
+    variantOptions: [
+      { label: 'Ort verorten', value: 'place-locator' },
+      { label: 'Führungsroute', value: 'tour-route' },
+      { label: 'Kartenband', value: 'map-only' },
+    ],
+    showHeadingFields: true,
+    showSourceFields: false,
+    showPerPageField: false,
+    showPostTypeField: false,
+    fixedPostType: PLACE_POST_TYPE,
+    showIntroTextField: true,
     supports: {
       align: ['wide', 'full'],
     },

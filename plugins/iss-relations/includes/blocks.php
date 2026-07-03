@@ -13,6 +13,12 @@ function iss_relations_get_map_block_contracts(): array
             'manual_ids_imply_manual_source' => true,
             'frontend_renderer' => 'iss_frontend_render_related_place_map_body',
         ],
+        'iss/atlas-map' => [
+            'default_source' => 'current',
+            'default_preset' => 'spree-horizontal-17',
+            'manual_ids_imply_manual_source' => true,
+            'frontend_renderer' => 'iss_frontend_render_atlas_map_block',
+        ],
         'iss/atlas-slice' => [
             'default_source' => 'current',
             'default_preset' => 'atlas-slice',
@@ -103,6 +109,96 @@ function iss_relations_resolve_map_block_source(array $attributes, string $block
     }
 
     return sanitize_key((string) ($contract['default_source'] ?? 'current')) ?: 'current';
+}
+
+function iss_relations_get_atlas_map_variants(): array
+{
+    $variants = [
+        'place-locator' => [
+            'source' => 'current',
+            'perPage' => 1,
+            'mapPreset' => 'spree-horizontal-17',
+            'skin' => 'locator',
+            'treatment' => 'stage',
+            'panelMode' => 'hide',
+            'lineMode' => 'none',
+            'fitMode' => 'markers-edge',
+            'ratioWidth' => 1600,
+            'ratioHeight' => 720,
+            'fitPaddingLeft' => 8,
+            'fitPaddingRight' => 8,
+            'fitPaddingTop' => 16,
+            'fitPaddingBottom' => 16,
+            'showMarkers' => true,
+            'shellMode' => 'body',
+        ],
+        'tour-route' => [
+            'source' => 'route',
+            'perPage' => 12,
+            'mapPreset' => 'spree-horizontal-17',
+            'skin' => 'route',
+            'treatment' => 'panelled',
+            'panelMode' => 'show',
+            'panelPosition' => 'right',
+            'lineMode' => 'route',
+            'fitMode' => 'markers-edge',
+            'ratioMode' => 'markers-box',
+            'ratioWidth' => 1600,
+            'ratioHeight' => 900,
+            'ratioMinHeight' => 480,
+            'ratioMaxHeight' => 1100,
+            'fitMinWindowHeight' => 1,
+            'fitPaddingLeft' => 8,
+            'fitPaddingRight' => 8,
+            'fitPaddingTop' => 12,
+            'fitPaddingBottom' => 12,
+            'showMarkers' => true,
+            'shellMode' => 'body',
+        ],
+        'map-only' => [
+            'source' => 'current',
+            'perPage' => 6,
+            'mapPreset' => 'spree-horizontal-17',
+            'skin' => 'terrain',
+            'treatment' => 'band',
+            'panelMode' => 'hide',
+            'lineMode' => 'none',
+            'fitMode' => 'markers-edge',
+            'ratioWidth' => 1600,
+            'ratioHeight' => 480,
+            'fitPaddingLeft' => 8,
+            'fitPaddingRight' => 8,
+            'fitPaddingTop' => 14,
+            'fitPaddingBottom' => 14,
+            'showMarkers' => true,
+            'shellMode' => 'body',
+        ],
+    ];
+
+    return apply_filters('iss_relations_atlas_map_variants', $variants);
+}
+
+function iss_relations_resolve_atlas_map_variant(array $attributes = [], string $variant_override = ''): array
+{
+    $variants = iss_relations_get_atlas_map_variants();
+    $variant = sanitize_key($variant_override !== '' ? $variant_override : (string) ($attributes['variant'] ?? ''));
+
+    if ($variant === '' || !isset($variants[$variant]) || !is_array($variants[$variant])) {
+        $variant = isset($variants['place-locator']) ? 'place-locator' : (string) array_key_first($variants);
+    }
+
+    $contract = is_array($variants[$variant] ?? null) ? $variants[$variant] : [];
+    $public_overrides = [];
+
+    foreach (['source', 'placeIds', 'perPage', 'mapPreset', 'title', 'kicker', 'text', 'linkUrl', 'linkLabel', 'shellMode'] as $key) {
+        if (array_key_exists($key, $attributes)) {
+            $public_overrides[$key] = $attributes[$key];
+        }
+    }
+
+    return array_merge($contract, $public_overrides, [
+        'variant' => $variant,
+    ]);
 }
 
 function iss_relations_register_blocks(): void
@@ -348,6 +444,54 @@ function iss_relations_register_blocks(): void
             'align' => ['wide', 'full'],
         ],
         'render_callback' => 'iss_relations_render_related_place_map_block',
+    ]);
+
+    register_block_type('iss/atlas-map', [
+        'api_version' => 3,
+        'title' => __('Atlas Map', 'iss-relations'),
+        'category' => 'widgets',
+        'icon' => 'location-alt',
+        'description' => __('Renders a registered Atlas map gesture variant through the shared static-map renderer.', 'iss-relations'),
+        'editor_script' => 'iss-relations-related-blocks',
+        'attributes' => [
+            'variant' => [
+                'type' => 'string',
+                'default' => 'place-locator',
+            ],
+            'title' => [
+                'type' => 'string',
+                'default' => '',
+            ],
+            'kicker' => [
+                'type' => 'string',
+                'default' => '',
+            ],
+            'text' => [
+                'type' => 'string',
+                'default' => '',
+            ],
+            'linkUrl' => [
+                'type' => 'string',
+                'default' => '',
+            ],
+            'linkLabel' => [
+                'type' => 'string',
+                'default' => '',
+            ],
+            'shellMode' => [
+                'type' => 'string',
+                'default' => 'body',
+            ],
+            'fallbackForGesture' => [
+                'type' => 'string',
+                'default' => '',
+            ],
+        ],
+        'supports' => [
+            'html' => false,
+            'align' => ['wide', 'full'],
+        ],
+        'render_callback' => 'iss_relations_render_atlas_map_block',
     ]);
 
     register_block_type('iss/atlas-slice', [
@@ -4119,6 +4263,12 @@ function iss_relations_render_related_place_map_block($attributes = [], $content
 {
     $attributes = is_array($attributes) ? $attributes : [];
     $shell_mode = sanitize_key((string) ($attributes['shellMode'] ?? 'section'));
+    if (iss_relations_resolve_map_block_source($attributes, 'iss/related-place-map') === 'route') {
+        return iss_relations_render_atlas_map_variant('tour-route', array_merge($attributes, [
+            'shellMode' => $shell_mode,
+        ]), $block);
+    }
+
     $body_html = iss_relations_render_related_place_map_body($attributes, $block);
     if ($body_html === '') {
         return '';
@@ -4165,4 +4315,85 @@ function iss_relations_render_related_place_map_block($attributes = [], $content
     $out .= '</section>';
 
     return $out;
+}
+
+function iss_relations_render_atlas_map_variant(string $variant, array $attributes = [], $block = null): string
+{
+    $resolved_attributes = iss_relations_resolve_atlas_map_variant($attributes, $variant);
+    $places = iss_relations_collect_map_places($resolved_attributes, $block);
+    if (!$places) {
+        return '';
+    }
+
+    $preset = iss_relations_resolve_place_map_preset($resolved_attributes);
+    $config = iss_relations_get_place_map_config($preset);
+    $body_html = function_exists('iss_frontend_render_atlas_map_block')
+        ? iss_frontend_render_atlas_map_block($resolved_attributes, $places, $config)
+        : '';
+
+    if ($body_html === '') {
+        return '';
+    }
+
+    $shell_mode = sanitize_key((string) ($resolved_attributes['shellMode'] ?? 'body'));
+    if ($shell_mode === 'body') {
+        return $body_html;
+    }
+
+    $kicker = trim(sanitize_text_field((string) ($resolved_attributes['kicker'] ?? '')));
+    $title = trim(sanitize_text_field((string) ($resolved_attributes['title'] ?? '')));
+    $text = trim((string) ($resolved_attributes['text'] ?? ''));
+    $link_url = trim((string) ($resolved_attributes['linkUrl'] ?? ''));
+    $link_label = trim(sanitize_text_field((string) ($resolved_attributes['linkLabel'] ?? '')));
+    $variant = sanitize_key((string) ($resolved_attributes['variant'] ?? 'place-locator'));
+    $classes = [
+        'section',
+        'section--plain',
+        'iss-gesture-atlas-map-section',
+        'iss-gesture-atlas-map-section--variant-' . sanitize_html_class($variant),
+    ];
+    $wrapper = function_exists('get_block_wrapper_attributes')
+        ? get_block_wrapper_attributes([
+            'class' => implode(' ', $classes),
+        ])
+        : 'class="' . esc_attr(implode(' ', $classes)) . '"';
+    $out = '<section ' . $wrapper . '>';
+    $out .= '<div class="iss-container">';
+    $out .= '<div class="iss-related-place-map__shell iss-gesture-atlas-map-section__shell">';
+
+    if ($kicker !== '' || $title !== '' || $text !== '' || $link_url !== '') {
+        $out .= '<div class="iss-heading iss-related-place-map__intro iss-gesture-atlas-map-section__intro">';
+        if ($kicker !== '') {
+            $out .= '<p class="iss-kicker iss-kicker--compact">' . esc_html($kicker) . '</p>';
+        }
+        if ($title !== '') {
+            $out .= '<h2 class="iss-heading__title">' . esc_html($title) . '</h2>';
+        }
+        if ($text !== '') {
+            $out .= '<p class="iss-heading__text">' . esc_html($text) . '</p>';
+        }
+        if ($link_url !== '') {
+            $out .= '<p class="iss-related-place-map__cta iss-gesture-atlas-map-section__cta"><a class="iss-action-link" href="' . esc_url($link_url) . '">' . esc_html($link_label !== '' ? $link_label : __('Zum Atlas', 'iss-relations')) . '</a></p>';
+        }
+        $out .= '</div>';
+    }
+
+    $out .= $body_html;
+    $out .= '</div>';
+    $out .= '</div>';
+    $out .= '</section>';
+
+    return $out;
+}
+
+function iss_relations_render_atlas_map_block($attributes = [], $content = '', $block = null): string
+{
+    $attributes = is_array($attributes) ? $attributes : [];
+    if ((bool) apply_filters('iss_relations_should_suppress_atlas_map_block', false, $attributes, $block)) {
+        return '';
+    }
+
+    $variant = sanitize_key((string) ($attributes['variant'] ?? 'place-locator'));
+
+    return iss_relations_render_atlas_map_variant($variant, $attributes, $block);
 }

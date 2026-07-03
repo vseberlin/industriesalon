@@ -71,11 +71,13 @@ raw Set intake state.
 Führungen now use the same `iss-editorial` engine boundary for narrative
 composition. `iss-content` registers the `fuehrung` format with gestures for
 `bildbuehne`, `intro`, `kapitel`, `leitfrage`, `zitat`, `galerie`,
-`image_wall`, `material`, and `schluss`. Existing Führung meta remains the
+`image_wall`, `atlas_map`, `material`, and `schluss`. Existing Führung meta remains the
 owner for duration,
 meeting point, target group, pricing, booking mode, inquiry details, and the
-hero gallery. Existing route, dates, booking, facts, Atlas map, and related
-content blocks stay outside the JSON document. Public JSON rendering is enabled
+legacy hero gallery when no `bildbuehne` is active. For `bildbuehne`, the first
+`media_refs` image is the stage background and later `media_refs` images are the
+compact stage gallery. Existing route station data, dates, booking, facts, and
+related content blocks stay outside the JSON document. Public JSON rendering is enabled
 per post through `_iss_editorial_enabled_fuehrung`; disabled Führung posts keep
 the legacy `post_content` description path through `iss/tour-description`.
 The theme consumes `iss_editorial_get_read_model()` in
@@ -88,19 +90,47 @@ The public Führung gesture contract is intentionally narrow:
 and a compact gallery; `intro` feeds the fallback hero description only;
 `kapitel` is the tour narrative or context; `leitfrage` is a framed guiding
 question; `zitat` is a source or voice moment; `galerie` and `image_wall` are
-image gestures; `material` is for downloads, archive references, and supporting
-links; `schluss` is the closing invitation. The route, booking panel, dates,
-facts, Atlas map, and related cards are template/module surfaces, not JSON
-gestures. The Führung template remains the scaffold for the left alignment
-grid, right booking rail, route/map/related placement, and fallback hero; the
-theme consumes `bildbuehne` into that scaffold instead of rendering it as a
-normal body section.
+image gestures; `atlas_map` is the optional route map gesture backed by existing
+relation station rows; `material` is for downloads, archive references, and
+supporting links; `schluss` is the closing invitation. The route station editor,
+booking panel, dates, facts, and related cards are template/module surfaces, not
+JSON payload fields. The Führung template remains the scaffold for the left
+alignment grid, right booking rail, fallback route map, related placement, and
+fallback hero; the theme consumes `bildbuehne` into that scaffold instead of
+rendering it as a normal body section. `bildbuehne` styling should follow the shared gesture
+contract: universal stage/gallery anatomy first, with Führung or
+`route-dossier` differences expressed as scoped custom properties on the tour
+renderer or skin wrapper. Do not promote single-tour geometry into global
+tokens, and do not duplicate the gesture selector tree for each content type.
 The custom Führung editor also shows a `Route / Stationen` panel, but that panel
 continues to write the existing `iss_related_places` relation rows through
 `iss-relations`. It is a unified authoring surface, not a second route storage
 contract. The route station fields map to relation keys `place_id`, `role=stop`,
 `weight`, `route_title`, `route_teaser`, `station_object_id`, and
 `station_story_id`.
+Static Atlas maps use the shared `atlas-map` gesture contract rather than
+separate map slice/strip/place-map authoring concepts. Editor-facing JSON and
+block fallback should declare only the gesture plus a registered variant such
+as `tour-route`, `place-locator`, or `map-only`; `iss-relations` expands that
+variant into source, preset, fit, line, marker, panel, and ratio renderer
+details. Those internal details are registry/developer-owned and should not
+become free editor controls. The fallback block form is
+`<!-- wp:iss/atlas-map {"variant":"tour-route"} /-->`, and it must render
+through `iss_relations_render_atlas_map_variant()` and the same shared
+static-map PHP renderer as JSON gestures. CSS targets the stable
+`.iss-gesture-atlas-map` namespace first, with legacy `related-place-map` /
+`atlas-slice` classes kept only as compatibility anatomy while old blocks are
+drained. Legacy block compatibility should delegate only to a registered
+variant when the old block's semantics are unambiguous, such as a
+`related-place-map` with `source=route` delegating to `tour-route`.
+Route variants may use the internal marker-box ratio mode: the renderer derives
+the crop and stage ratio from the far-left/far-right and top/bottom marker
+bounds plus registry padding, rather than exposing map-fit details to editors.
+Führung JSON exposes `atlas_map` with treatment `atlas-map.tour-route`; it calls
+the same `iss_relations_render_atlas_map_variant()` helper and reads route
+stations from `iss-relations`. The template `iss/atlas-map` block is marked as
+fallback and suppresses itself when the enabled Führung JSON document contains
+an `atlas_map` section.
 
 Native landing pages use the same engine only behind an eligibility gate. The
 `landing` format applies to native WordPress `page` posts, not a new CPT, and
@@ -120,6 +150,14 @@ The current front-page landing document uses the dedicated `frontpage` skin for
 parity with the hardcoded Gutenberg homepage body. That skin is scoped to the
 homepage migration; reusable visual choices still belong in per-gesture
 treatments.
+Landing JSON exposes the first JSON-native `atlas_map` gesture. Its treatment
+choices are recipe names that map to registered `atlas-map` variants:
+`atlas-map.place-locator` and `atlas-map.map-only`. The renderer calls
+`iss_relations_render_atlas_map_variant()` and resolves places through existing
+relations for the current page; it does not introduce a separate JSON place
+picker or store map source details in the section payload. Führung route maps
+use the same gesture contract but keep their source in relation station rows
+rather than storing route data in the narrative JSON document.
 
 Unresolved references are omitted from public output and shown as placeholders
 in previews for editors.

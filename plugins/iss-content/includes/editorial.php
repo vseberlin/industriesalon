@@ -119,6 +119,15 @@ function iss_content_model_register_editorial_formats(array $formats): array
                     'slot.newsletter' => __('Newsletter', 'iss-content-model'),
                 ],
             ],
+            'atlas_map' => [
+                'label' => __('Atlas-Karte', 'iss-content-model'),
+                'description' => __('Registrierte statische Atlas-Map-Variante mit Marker-Fit aus bestehenden Ortsbeziehungen.', 'iss-content-model'),
+                'supports' => ['treatment', 'links'],
+                'treatments' => [
+                    'atlas-map.place-locator' => __('Ort verorten', 'iss-content-model'),
+                    'atlas-map.map-only' => __('Kartenband', 'iss-content-model'),
+                ],
+            ],
         ],
     ];
 
@@ -156,6 +165,14 @@ function iss_content_model_register_editorial_formats(array $formats): array
             ],
             'galerie' => array_merge($gallery_section, ['supports' => ['anchor', 'media_refs', 'object_refs', 'gallery_layout']]),
             'image_wall' => array_merge($image_wall_section, ['supports' => ['anchor', 'media_refs']]),
+            'atlas_map' => [
+                'label' => __('Atlas-Karte', 'iss-content-model'),
+                'description' => __('Registrierte Atlas-Map-Variante für die Route dieser Führung.', 'iss-content-model'),
+                'supports' => ['anchor', 'treatment', 'links'],
+                'treatments' => [
+                    'atlas-map.tour-route' => __('Führungsroute', 'iss-content-model'),
+                ],
+            ],
             'material' => $material_section,
             'schluss' => [
                 'label' => __('Schluss', 'iss-content-model'),

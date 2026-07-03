@@ -38,8 +38,16 @@ Use this CSS layer order:
      `.iss-landing-section--treatment-*`,
      `.iss-landing-section--skin-*`, and
      `.iss-landing-section--items-*`.
+   - Theme shared gesture contracts live in `assets/css/gestures.css`.
+   - Owns universal gesture anatomy and default local variables for that
+     renderer contract. These local variables may use `--iss-*` names only when
+     they describe reusable renderer semantics, not page locations.
 4. Skin CSS
    - Scopes token overrides and treatment mood to a skin wrapper.
+   - Owns per-skin or per-content-type override values by setting scoped custom
+     properties on stable wrappers such as `.{domain}-editorial--skin-*`,
+     body-level skin classes, or a renderer root. Skin CSS should usually change
+     values, not duplicate the universal gesture selector tree.
 5. Page exceptions
    - Allowed only for true one-offs, legacy fallback pages, or transition
      compatibility. They should shrink as JSON gestures gain treatments.
@@ -47,6 +55,9 @@ Use this CSS layer order:
      old page-specific stylesheet should move reusable values, shapes, or JSON
      renderer styling into the proper earlier layer and delete the old selector
      when it is no longer needed.
+   - When a page file still needs to influence a reusable gesture, it should set
+     scoped variables on a stable page/content-type/skin wrapper. It should not
+     fork the gesture implementation with a parallel selector system.
 6. Public plugin CSS
    - First-party public plugin styles may consume the same `--iss-*` token
      contract, with fallback values for portability.
@@ -72,6 +83,13 @@ Use this CSS layer order:
 - Reusable shapes become primitives or patterns before page selectors.
 - JSON gesture polishing should add treatment/skin selectors rather than
   front-page or slug-specific overrides.
+- Overrides belong next to their authority:
+  - site-wide semantic values go in `tokens.css`;
+  - universal gesture defaults go in renderer contract CSS;
+  - content-type and skin differences go in skin CSS, or in the clearly marked
+    scoped-variable section of a domain renderer stylesheet until that skin has
+    its own file;
+  - page files may set scoped variables only as a transition measure.
 - First-party public plugin CSS joins the token contract as a consumer, not as
   another source of design authority.
 - Admin plugin CSS stays scoped to wp-admin surfaces and is not part of the

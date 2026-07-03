@@ -829,16 +829,22 @@ function iss_fuehrung_render_hero_gallery_block($attributes = [], $content = '')
         return '';
     }
 
+    $wrapper_attrs = [
+        'class' => 'wp-block-iss-tour-hero-gallery iss-image-viewport-gallery iss-tour-hero-gallery',
+        'data-iss-image-viewport-gallery' => '',
+        'data-iss-image-target' => '.iss-tour-hero__featured-image img',
+        'data-hero-target' => '.iss-tour-hero__featured-image img',
+    ];
     $wrapper = function_exists('get_block_wrapper_attributes')
-        ? get_block_wrapper_attributes(['class' => 'wp-block-iss-tour-hero-gallery iss-tour-hero-gallery'])
-        : 'class="wp-block-iss-tour-hero-gallery iss-tour-hero-gallery"';
+        ? get_block_wrapper_attributes($wrapper_attrs)
+        : 'class="' . esc_attr($wrapper_attrs['class']) . '" data-iss-image-viewport-gallery data-iss-image-target="' . esc_attr($wrapper_attrs['data-iss-image-target']) . '" data-hero-target="' . esc_attr($wrapper_attrs['data-hero-target']) . '"';
 
     ob_start();
     // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- Wrapper attributes come from get_block_wrapper_attributes() or a static fallback.
     echo '<div ' . $wrapper . '>';
 
     foreach ($ids as $index => $attachment_id) {
-        $thumb = wp_get_attachment_image($attachment_id, 'medium', false, ['class' => 'iss-tour-hero-gallery__thumb-img']);
+        $thumb = wp_get_attachment_image($attachment_id, 'medium', false, ['class' => 'iss-image-viewport-gallery__thumb-img iss-tour-hero-gallery__thumb-img']);
         $full_url = wp_get_attachment_image_url($attachment_id, 'large');
 
         if (!$thumb || !$full_url) {
@@ -850,14 +856,18 @@ function iss_fuehrung_render_hero_gallery_block($attributes = [], $content = '')
         $alt = get_post_meta($attachment_id, '_wp_attachment_image_alt', true);
         $alt = is_string($alt) ? $alt : '';
 
-        echo '<button type="button" class="iss-tour-hero-gallery__thumb' . ($index === 0 ? ' is-active' : '') . '"';
+        echo '<button type="button" class="iss-image-viewport-gallery__choice iss-tour-hero-gallery__thumb' . ($index === 0 ? ' is-active' : '') . '" data-iss-image-choice';
+        echo ' data-iss-image-src="' . esc_url($full_url) . '"';
         echo ' data-hero-src="' . esc_url($full_url) . '"';
         if ($full_srcset) {
+            echo ' data-iss-image-srcset="' . esc_attr($full_srcset) . '"';
             echo ' data-hero-srcset="' . esc_attr($full_srcset) . '"';
         }
         if ($full_sizes) {
+            echo ' data-iss-image-sizes="' . esc_attr($full_sizes) . '"';
             echo ' data-hero-sizes="' . esc_attr($full_sizes) . '"';
         }
+        echo ' data-iss-image-alt="' . esc_attr($alt) . '"';
         echo ' data-hero-alt="' . esc_attr($alt) . '"';
         echo ' aria-label="' . esc_attr__('Hero-Bild anzeigen', 'iss-fuehrungen') . '">';
         // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- wp_get_attachment_image() returns escaped image markup.

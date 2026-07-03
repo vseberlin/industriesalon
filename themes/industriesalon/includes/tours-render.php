@@ -170,6 +170,7 @@ function industriesalon_get_editorial_tour_section_context(array $section, strin
         'zitat' => 'quote',
         'galerie' => 'gallery',
         'image_wall' => 'image-wall',
+        'atlas_map' => 'atlas-map',
         'material' => 'material',
         'schluss' => 'conclusion',
     ];
@@ -180,6 +181,7 @@ function industriesalon_get_editorial_tour_section_context(array $section, strin
         'zitat' => __('Stimme', 'industriesalon'),
         'galerie' => __('Bilder', 'industriesalon'),
         'image_wall' => __('Bilderwand', 'industriesalon'),
+        'atlas_map' => __('Route im Atlas', 'industriesalon'),
         'material' => __('Material', 'industriesalon'),
         'schluss' => __('Abschluss', 'industriesalon'),
     ];
@@ -191,6 +193,46 @@ function industriesalon_get_editorial_tour_section_context(array $section, strin
         'label' => (string) ($labels[$type] ?? __('Abschnitt', 'industriesalon')),
     ];
 }
+
+function industriesalon_editorial_tour_has_atlas_map_section(int $post_id): bool
+{
+    if ($post_id <= 0) {
+        return false;
+    }
+
+    $prefer_autosave = is_preview() && current_user_can('edit_post', $post_id);
+    $document = industriesalon_get_editorial_tour_document($post_id, $prefer_autosave);
+    $sections = $document ? industriesalon_editorial_tour_sections($document) : [];
+
+    foreach ($sections as $section) {
+        if (is_array($section) && (string) ($section['type'] ?? '') === 'atlas_map') {
+            return true;
+        }
+    }
+
+    return false;
+}
+
+function industriesalon_editorial_tour_atlas_map_variant(array $section): string
+{
+    $treatment = strtolower((string) ($section['treatment'] ?? 'atlas-map.tour-route'));
+    $treatment = (string) preg_replace('/[^a-z0-9_.-]/', '', $treatment);
+
+    return $treatment === 'atlas-map.tour-route' ? 'tour-route' : 'tour-route';
+}
+
+add_filter('iss_relations_should_suppress_atlas_map_block', function (bool $suppress, array $attributes): bool {
+    if ($suppress || !is_singular('fuehrung')) {
+        return $suppress;
+    }
+
+    $fallback_for = sanitize_key((string) ($attributes['fallbackForGesture'] ?? ''));
+    if ($fallback_for !== 'atlas_map') {
+        return false;
+    }
+
+    return industriesalon_editorial_tour_has_atlas_map_section((int) get_queried_object_id());
+}, 10, 2);
 
 function industriesalon_editorial_tour_section_anchor(array $section, int $index, array $used = []): string
 {
@@ -321,7 +363,7 @@ function industriesalon_get_editorial_tour_stage_media_ids(array $stage): array
     return array_values(array_unique($ids));
 }
 
-function industriesalon_render_editorial_tour_stage_image(array $stage): string
+function industriesalon_render_editorial_tour_stage_background(array $stage): string
 {
     $ids = industriesalon_get_editorial_tour_stage_media_ids($stage);
     $attachment_id = $ids[0] ?? 0;
@@ -330,28 +372,32 @@ function industriesalon_render_editorial_tour_stage_image(array $stage): string
     }
 
     $image = wp_get_attachment_image($attachment_id, 'post-thumbnail', false, [
-        'class' => 'attachment-post-thumbnail size-post-thumbnail wp-post-image',
+        'class' => 'iss-gesture-stage__image iss-tour-hero__stage-image',
+        'data-iss-image-viewport' => '',
         'decoding' => 'async',
         'fetchpriority' => 'high',
-        'style' => 'object-fit:cover;',
     ]);
     if ($image === '') {
         return '';
     }
 
-    return '<figure class="iss-tour-hero__featured-image wp-block-post-featured-image">' . $image . '</figure>';
+    return '<figure class="iss-gesture-stage__media iss-tour-hero__stage-media" aria-hidden="true">' . $image . '</figure>';
 }
 
 function industriesalon_render_editorial_tour_stage_gallery(array $stage): string
 {
-    $ids = industriesalon_get_editorial_tour_stage_media_ids($stage);
+    $ids = array_slice(industriesalon_get_editorial_tour_stage_media_ids($stage), 1);
     if (!$ids) {
         return '';
     }
 
-    $html = '<div class="wp-block-iss-tour-hero-gallery iss-tour-hero-gallery iss-tour-hero-gallery--stage">';
+    if (function_exists('iss_relations_enqueue_related_strip_script')) {
+        iss_relations_enqueue_related_strip_script();
+    }
+
+    $items = '';
     foreach ($ids as $index => $attachment_id) {
-        $thumb = wp_get_attachment_image($attachment_id, 'medium', false, ['class' => 'iss-tour-hero-gallery__thumb-img']);
+        $thumb = wp_get_attachment_image($attachment_id, 'medium', false, ['class' => 'iss-image-viewport-gallery__thumb-img iss-tour-hero-gallery__thumb-img']);
         $full_url = wp_get_attachment_image_url($attachment_id, 'large');
         if (!$thumb || !$full_url) {
             continue;
@@ -362,20 +408,40 @@ function industriesalon_render_editorial_tour_stage_gallery(array $stage): strin
         $alt = get_post_meta($attachment_id, '_wp_attachment_image_alt', true);
         $alt = is_string($alt) ? $alt : '';
 
-        $html .= '<button type="button" class="iss-tour-hero-gallery__thumb' . ($index === 0 ? ' is-active' : '') . '"';
-        $html .= ' data-hero-src="' . esc_url($full_url) . '"';
+        $items .= '<button type="button" class="iss-image-viewport-gallery__choice iss-tour-hero-gallery__thumb" data-iss-image-choice';
+        $items .= ' data-iss-image-src="' . esc_url($full_url) . '"';
+        $items .= ' data-hero-src="' . esc_url($full_url) . '"';
         if ($full_srcset) {
-            $html .= ' data-hero-srcset="' . esc_attr($full_srcset) . '"';
+            $items .= ' data-iss-image-srcset="' . esc_attr($full_srcset) . '"';
+            $items .= ' data-hero-srcset="' . esc_attr($full_srcset) . '"';
         }
         if ($full_sizes) {
-            $html .= ' data-hero-sizes="' . esc_attr($full_sizes) . '"';
+            $items .= ' data-iss-image-sizes="' . esc_attr($full_sizes) . '"';
+            $items .= ' data-hero-sizes="' . esc_attr($full_sizes) . '"';
         }
-        $html .= ' data-hero-alt="' . esc_attr($alt) . '"';
-        $html .= ' aria-label="' . esc_attr__('Hero-Bild anzeigen', 'industriesalon') . '">';
-        $html .= $thumb;
-        $html .= '</button>';
+        $items .= ' data-iss-image-alt="' . esc_attr($alt) . '"';
+        $items .= ' data-hero-alt="' . esc_attr($alt) . '"';
+        $items .= ' aria-label="' . esc_attr__('Hero-Bild anzeigen', 'industriesalon') . '">';
+        $items .= $thumb;
+        $items .= '</button>';
     }
 
+    if ($items === '') {
+        return '';
+    }
+
+    $html = '<div class="wp-block-iss-tour-hero-gallery iss-image-viewport-gallery iss-gesture-stage__gallery iss-tour-hero-gallery iss-tour-hero-gallery--stage" data-iss-image-viewport-gallery data-iss-image-target=".iss-gesture-stage__media img" data-hero-target=".iss-tour-hero__stage-media img" data-iss-strip-carousel>';
+    $html .= '<div class="iss-image-viewport-gallery__track iss-tour-hero-gallery__track" data-iss-strip-carousel-track>';
+    $html .= $items;
+    $html .= '</div>';
+    $html .= '<div class="iss-image-viewport-gallery__controls iss-tour-hero-gallery__controls" aria-label="' . esc_attr__('Hero-Galerie steuern', 'industriesalon') . '">';
+    $html .= '<button type="button" class="iss-image-viewport-gallery__control iss-image-viewport-gallery__control--prev iss-tour-hero-gallery__control iss-tour-hero-gallery__control--prev" data-iss-strip-carousel-prev aria-label="' . esc_attr__('Vorherige Bilder', 'industriesalon') . '" disabled>';
+    $html .= '<span aria-hidden="true">&#8592;</span>';
+    $html .= '</button>';
+    $html .= '<button type="button" class="iss-image-viewport-gallery__control iss-image-viewport-gallery__control--next iss-tour-hero-gallery__control iss-tour-hero-gallery__control--next" data-iss-strip-carousel-next aria-label="' . esc_attr__('Nächste Bilder', 'industriesalon') . '" disabled>';
+    $html .= '<span aria-hidden="true">&#8594;</span>';
+    $html .= '</button>';
+    $html .= '</div>';
     $html .= '</div>';
 
     return $html;
@@ -435,11 +501,77 @@ function industriesalon_render_editorial_tour_archive_reference(array $item, boo
     return trim((string) ob_get_clean());
 }
 
+function industriesalon_render_editorial_tour_atlas_map_section(array $section, int $rendered_index, string $skin, string $anchor): string
+{
+    if (!function_exists('iss_relations_render_atlas_map_variant')) {
+        return '';
+    }
+
+    $variant = industriesalon_editorial_tour_atlas_map_variant($section);
+    $map_html = iss_relations_render_atlas_map_variant($variant, [
+        'shellMode' => 'body',
+    ]);
+
+    if (trim($map_html) === '') {
+        return '';
+    }
+
+    $context = industriesalon_get_editorial_tour_section_context($section, $skin);
+    $kicker = trim((string) ($section['kicker'] ?? ''));
+    $title = trim((string) ($section['title'] ?? ''));
+    $body = trim((string) ($section['body'] ?? ''));
+    $links = is_array($section['links'] ?? null) ? $section['links'] : [];
+    $links_html = industriesalon_render_editorial_tour_links($links);
+    $section_classes = [
+        'iss-tour-section',
+        'iss-tour-section--gesture-' . $context['gesture'],
+        'iss-tour-section--layout-' . $context['layout'],
+        'iss-tour-editorial__section',
+        'iss-tour-editorial__section--atlas_map',
+        'iss-tour-editorial__section--skin-' . sanitize_html_class($skin),
+        'has-map',
+    ];
+    $has_copy = $kicker !== '' || $title !== '' || $body !== '' || $links_html !== '';
+    if ($has_copy) {
+        $section_classes[] = 'has-copy';
+    }
+
+    ob_start();
+    ?>
+    <section id="<?php echo esc_attr($anchor); ?>" class="<?php echo esc_attr(implode(' ', array_unique($section_classes))); ?>" data-section-gesture="<?php echo esc_attr($context['gesture']); ?>" data-section-layout="<?php echo esc_attr($context['layout']); ?>" data-section-label="<?php echo esc_attr($has_copy ? '' : (string) ($context['label'] ?? '')); ?>">
+        <div class="iss-tour-section__inner iss-tour-section__inner--atlas-map">
+            <?php if ($has_copy) : ?>
+                <div class="iss-tour-section__copy">
+                    <?php if ($kicker !== '') : ?>
+                        <p class="iss-kicker iss-kicker--compact iss-tour-section__kicker"><?php echo esc_html($kicker); ?></p>
+                    <?php endif; ?>
+                    <?php if ($title !== '') : ?>
+                        <h2 class="iss-tour-section__title"><?php echo esc_html($title); ?></h2>
+                    <?php endif; ?>
+                    <?php if ($body !== '') : ?>
+                        <div class="iss-tour-section__body"><?php echo wp_kses_post(wpautop($body)); ?></div>
+                    <?php endif; ?>
+                    <?php echo $links_html; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- Links are escaped in industriesalon_render_editorial_tour_links(). ?>
+                </div>
+            <?php endif; ?>
+            <?php echo $map_html; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- Atlas map renderer escapes generated output. ?>
+        </div>
+    </section>
+    <?php
+    unset($rendered_index);
+
+    return trim((string) ob_get_clean());
+}
+
 function industriesalon_render_editorial_tour_section(array $section, bool $show_placeholders, int $rendered_index, string $skin, string $anchor): string
 {
     $type = sanitize_html_class((string) ($section['type'] ?? 'kapitel'));
     if ($type === 'bildbuehne' || $type === 'intro') {
         return '';
+    }
+
+    if ($type === 'atlas_map') {
+        return industriesalon_render_editorial_tour_atlas_map_section($section, $rendered_index, $skin, $anchor);
     }
 
     $context = industriesalon_get_editorial_tour_section_context($section, $skin);
@@ -589,6 +721,15 @@ function industriesalon_render_editorial_tour_stage_slots(string $block_content,
     $block_name = (string) ($block['blockName'] ?? '');
     $class_name = (string) ($block['attrs']['className'] ?? '');
 
+    if ($block_name === 'core/group' && preg_match('/(^|\s)iss-tour-hero(\s|$)/', $class_name) === 1) {
+        $stage_background = industriesalon_render_editorial_tour_stage_background($stage);
+        if ($stage_background === '') {
+            return $block_content;
+        }
+
+        return (string) preg_replace('/^(\s*<[a-z0-9]+\b[^>]*>)/i', '$1' . $stage_background, $block_content, 1);
+    }
+
     if ($block_name === 'core/post-title' && preg_match('/(^|\s)iss-tour-hero__title(\s|$)/', $class_name) === 1) {
         return industriesalon_render_editorial_tour_stage_title($block_content);
     }
@@ -598,15 +739,13 @@ function industriesalon_render_editorial_tour_stage_slots(string $block_content,
     }
 
     if ($block_name === 'core/post-featured-image' && preg_match('/(^|\s)iss-tour-hero__featured-image(\s|$)/', $class_name) === 1) {
-        $stage_image = industriesalon_render_editorial_tour_stage_image($stage);
-
-        return $stage_image !== '' ? $stage_image : $block_content;
+        return '';
     }
 
     if ($block_name === 'iss/tour-hero-gallery') {
         $stage_gallery = industriesalon_render_editorial_tour_stage_gallery($stage);
 
-        return $stage_gallery !== '' ? $stage_gallery : $block_content;
+        return $stage_gallery;
     }
 
     return $block_content;
