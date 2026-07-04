@@ -482,10 +482,6 @@ function iss_relations_register_blocks(): void
                 'type' => 'string',
                 'default' => 'body',
             ],
-            'fallbackForGesture' => [
-                'type' => 'string',
-                'default' => '',
-            ],
         ],
         'supports' => [
             'html' => false,
@@ -986,18 +982,25 @@ add_action('init', 'iss_relations_register_block_editor_script', 19);
 
 function iss_relations_register_frontend_scripts(): void
 {
-    $script_path = ISS_RELATIONS_PATH . 'assets/related-strip.js';
-    if (!file_exists($script_path)) {
-        return;
-    }
+    $scripts = [
+        'iss-relations-related-strip' => 'assets/related-strip.js',
+        'iss-relations-atlas-map' => 'assets/atlas-map.js',
+    ];
 
-    wp_register_script(
-        'iss-relations-related-strip',
-        ISS_RELATIONS_URL . 'assets/related-strip.js',
-        [],
-        (string) filemtime($script_path),
-        true
-    );
+    foreach ($scripts as $handle => $relative_path) {
+        $script_path = ISS_RELATIONS_PATH . $relative_path;
+        if (!file_exists($script_path)) {
+            continue;
+        }
+
+        wp_register_script(
+            $handle,
+            ISS_RELATIONS_URL . $relative_path,
+            [],
+            (string) filemtime($script_path),
+            true
+        );
+    }
 }
 add_action('init', 'iss_relations_register_frontend_scripts', 19);
 
@@ -1037,6 +1040,19 @@ function iss_relations_enqueue_related_strip_script(): void
     }
 
     wp_enqueue_script('iss-relations-related-strip');
+}
+
+function iss_relations_enqueue_atlas_map_script(): void
+{
+    if (is_admin()) {
+        return;
+    }
+
+    if (!wp_script_is('iss-relations-atlas-map', 'registered')) {
+        return;
+    }
+
+    wp_enqueue_script('iss-relations-atlas-map');
 }
 
 function iss_relations_get_related_content_defaults(string $post_type): array
@@ -2605,10 +2621,13 @@ function iss_relations_get_place_map_marker_position(array $place, array $marker
         : null;
 }
 
-function iss_relations_collect_map_places(array $attributes = [], $block = null): array
+function iss_relations_collect_map_places(array $attributes = [], $block = null, array $context = []): array
 {
     $attributes = is_array($attributes) ? $attributes : [];
-    $current_post_id = isset($block->context['postId']) ? (int) $block->context['postId'] : (int) get_the_ID();
+    $context_post_id = absint($context['post_id'] ?? 0);
+    $current_post_id = $context_post_id > 0
+        ? $context_post_id
+        : (isset($block->context['postId']) ? (int) $block->context['postId'] : (int) get_the_ID());
     $per_page = max(1, min(12, absint($attributes['perPage'] ?? 5)));
     $relation_result = iss_relations_resolve_static_map_relation_result(
         $attributes,
@@ -4317,10 +4336,15 @@ function iss_relations_render_related_place_map_block($attributes = [], $content
     return $out;
 }
 
-function iss_relations_render_atlas_map_variant(string $variant, array $attributes = [], $block = null): string
+function iss_relations_render_atlas_map_variant(string $variant, array $attributes = [], $block = null, array $context = []): string
 {
     $resolved_attributes = iss_relations_resolve_atlas_map_variant($attributes, $variant);
-    $places = iss_relations_collect_map_places($resolved_attributes, $block);
+    $resolved_variant = sanitize_key((string) ($resolved_attributes['variant'] ?? $variant));
+    if ($resolved_variant === 'tour-route') {
+        iss_relations_enqueue_atlas_map_script();
+    }
+
+    $places = iss_relations_collect_map_places($resolved_attributes, $block, $context);
     if (!$places) {
         return '';
     }
@@ -4389,10 +4413,6 @@ function iss_relations_render_atlas_map_variant(string $variant, array $attribut
 function iss_relations_render_atlas_map_block($attributes = [], $content = '', $block = null): string
 {
     $attributes = is_array($attributes) ? $attributes : [];
-    if ((bool) apply_filters('iss_relations_should_suppress_atlas_map_block', false, $attributes, $block)) {
-        return '';
-    }
-
     $variant = sanitize_key((string) ($attributes['variant'] ?? 'place-locator'));
 
     return iss_relations_render_atlas_map_variant($variant, $attributes, $block);

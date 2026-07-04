@@ -694,12 +694,14 @@
   gap: clamp(1rem, 2vw, 1.6rem);
 }
 
-.iss-tour-section--layout-atlas-map .iss-tour-section__copy {
-  max-width: 46rem;
+.iss-tour-section--layout-atlas-map {
+  width: min(var(--iss-content-width, 1720px), calc(100vw - (2 * var(--iss-container-pad, 1.25rem))));
+  max-width: none;
+  margin-left: calc((100% - min(var(--iss-content-width, 1720px), calc(100vw - (2 * var(--iss-container-pad, 1.25rem))))) / 2);
 }
 
-.iss-tour-section--layout-atlas-map .iss-gesture-atlas-map {
-  --iss-gesture-atlas-map-stage-min-height: clamp(22rem, 46vw, 34rem);
+.iss-tour-section--layout-atlas-map .iss-tour-section__copy {
+  max-width: 46rem;
 }
 
 .iss-tour-section--layout-material .iss-tour-section__inner {

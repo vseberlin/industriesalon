@@ -194,25 +194,6 @@ function industriesalon_get_editorial_tour_section_context(array $section, strin
     ];
 }
 
-function industriesalon_editorial_tour_has_atlas_map_section(int $post_id): bool
-{
-    if ($post_id <= 0) {
-        return false;
-    }
-
-    $prefer_autosave = is_preview() && current_user_can('edit_post', $post_id);
-    $document = industriesalon_get_editorial_tour_document($post_id, $prefer_autosave);
-    $sections = $document ? industriesalon_editorial_tour_sections($document) : [];
-
-    foreach ($sections as $section) {
-        if (is_array($section) && (string) ($section['type'] ?? '') === 'atlas_map') {
-            return true;
-        }
-    }
-
-    return false;
-}
-
 function industriesalon_editorial_tour_atlas_map_variant(array $section): string
 {
     $treatment = strtolower((string) ($section['treatment'] ?? 'atlas-map.tour-route'));
@@ -220,19 +201,6 @@ function industriesalon_editorial_tour_atlas_map_variant(array $section): string
 
     return $treatment === 'atlas-map.tour-route' ? 'tour-route' : 'tour-route';
 }
-
-add_filter('iss_relations_should_suppress_atlas_map_block', function (bool $suppress, array $attributes): bool {
-    if ($suppress || !is_singular('fuehrung')) {
-        return $suppress;
-    }
-
-    $fallback_for = sanitize_key((string) ($attributes['fallbackForGesture'] ?? ''));
-    if ($fallback_for !== 'atlas_map') {
-        return false;
-    }
-
-    return industriesalon_editorial_tour_has_atlas_map_section((int) get_queried_object_id());
-}, 10, 2);
 
 function industriesalon_editorial_tour_section_anchor(array $section, int $index, array $used = []): string
 {
@@ -501,7 +469,7 @@ function industriesalon_render_editorial_tour_archive_reference(array $item, boo
     return trim((string) ob_get_clean());
 }
 
-function industriesalon_render_editorial_tour_atlas_map_section(array $section, int $rendered_index, string $skin, string $anchor): string
+function industriesalon_render_editorial_tour_atlas_map_section(array $section, int $rendered_index, string $skin, string $anchor, int $post_id): string
 {
     if (!function_exists('iss_relations_render_atlas_map_variant')) {
         return '';
@@ -510,6 +478,8 @@ function industriesalon_render_editorial_tour_atlas_map_section(array $section, 
     $variant = industriesalon_editorial_tour_atlas_map_variant($section);
     $map_html = iss_relations_render_atlas_map_variant($variant, [
         'shellMode' => 'body',
+    ], null, [
+        'post_id' => $post_id,
     ]);
 
     if (trim($map_html) === '') {
@@ -563,7 +533,7 @@ function industriesalon_render_editorial_tour_atlas_map_section(array $section, 
     return trim((string) ob_get_clean());
 }
 
-function industriesalon_render_editorial_tour_section(array $section, bool $show_placeholders, int $rendered_index, string $skin, string $anchor): string
+function industriesalon_render_editorial_tour_section(array $section, bool $show_placeholders, int $rendered_index, string $skin, string $anchor, int $post_id): string
 {
     $type = sanitize_html_class((string) ($section['type'] ?? 'kapitel'));
     if ($type === 'bildbuehne' || $type === 'intro') {
@@ -571,7 +541,7 @@ function industriesalon_render_editorial_tour_section(array $section, bool $show
     }
 
     if ($type === 'atlas_map') {
-        return industriesalon_render_editorial_tour_atlas_map_section($section, $rendered_index, $skin, $anchor);
+        return industriesalon_render_editorial_tour_atlas_map_section($section, $rendered_index, $skin, $anchor, $post_id);
     }
 
     $context = industriesalon_get_editorial_tour_section_context($section, $skin);
@@ -691,7 +661,7 @@ function industriesalon_render_editorial_tour_content(string $content): string
     foreach ($sections as $index => $section) {
         $anchor = industriesalon_editorial_tour_section_anchor($section, (int) $index, $used_anchors);
         $used_anchors[] = $anchor;
-        $section_html = industriesalon_render_editorial_tour_section($section, $show_placeholders, $rendered_index, $skin, $anchor);
+        $section_html = industriesalon_render_editorial_tour_section($section, $show_placeholders, $rendered_index, $skin, $anchor, (int) $post_id);
         if (trim($section_html) !== '') {
             $html .= $section_html;
             ++$rendered_index;

@@ -4,6 +4,21 @@ This file records durable project changes. Keep it compact: current state belong
 `handoff_CURRENT.md`, active follow-up in `TODO.md`, and detailed investigation can
 be recovered from Git history.
 
+## 2026-07-04
+
+- Fixed Führung `atlas_map` rendering so JSON Atlas-Karte sections pass the
+  owning Führung post context into the shared static-map renderer, removed the
+  template fallback map shell during the JSON migration, and let the route-map
+  marker-box ratio control the stage height without single-tour CSS overriding it.
+  The JSON route-map section now expands to the 1720px content width and keeps
+  the station panel beside the map on desktop with a map-derived scroll height.
+- Connected Führung `atlas_map` route markers to the side panel so the
+  `tour-route` variant progressively enhances from a fallback station list into
+  a selected-station detail panel using the existing route title and teaser
+  fields. The renderer now builds markers and panel content from one mapped
+  station model, with legacy fallback suppression and private context attributes
+  removed from the public block path.
+
 ## 2026-07-03
 
 - Added the shared JSON gesture CSS layer and documented the public CSS

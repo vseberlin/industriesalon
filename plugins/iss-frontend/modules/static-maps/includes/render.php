@@ -532,29 +532,119 @@ function iss_frontend_static_maps_render_place_map_stage(array $places, array $c
     return '<div class="' . esc_attr(implode(' ', $stage_classes)) . '"' . $stage_attr . '><div class="' . esc_attr(implode(' ', $plane_classes)) . '"' . $plane_attr . '><div class="iss-related-place-map__viewport"><img class="iss-related-place-map__image" src="' . esc_url($image_url) . '" alt="' . esc_attr($image_alt) . '" loading="lazy" decoding="async"></div><div class="iss-related-place-map__markers">' . $markers . '</div></div></div>';
 }
 
-function iss_frontend_static_maps_render_place_map_panel(array $places): string
+function iss_frontend_static_maps_get_panel_entry_title(array $place, string $presentation): string
 {
-    $out = '<div class="iss-related-place-map__panel">';
-
-    foreach ($places as $index => $place) {
-        $permalink = (string) ($place['permalink'] ?? '');
-        $title = trim((string) ($place['title'] ?? ''));
-        $label = trim((string) ($place['label'] ?? ''));
-        $excerpt = trim((string) ($place['excerpt'] ?? ''));
-
-        $out .= '<article class="iss-related-place-map__entry">';
-        $out .= '<div class="iss-related-place-map__entry-index">' . esc_html((string) ($index + 1)) . '</div>';
-        $out .= '<div class="iss-related-place-map__entry-body">';
-        if ($label !== '') {
-            $out .= '<p class="iss-related-place-map__entry-kicker">' . esc_html($label) . '</p>';
+    if ($presentation === 'station-detail') {
+        $route_title = trim((string) ($place['route_title'] ?? ''));
+        if ($route_title !== '') {
+            return $route_title;
         }
+    }
+
+    $title = trim((string) ($place['title'] ?? ''));
+    if ($title !== '') {
+        return $title;
+    }
+
+    return trim((string) ($place['label'] ?? ''));
+}
+
+function iss_frontend_static_maps_get_panel_entry_text(array $place, string $presentation): string
+{
+    if ($presentation === 'station-detail') {
+        $route_teaser = trim((string) ($place['route_teaser'] ?? ''));
+        if ($route_teaser !== '') {
+            return $route_teaser;
+        }
+    }
+
+    return trim((string) ($place['excerpt'] ?? ''));
+}
+
+function iss_frontend_static_maps_render_place_map_panel_entry(array $place, int $index, string $presentation = 'list', array $options = []): string
+{
+    $permalink = (string) ($place['permalink'] ?? '');
+    $title = iss_frontend_static_maps_get_panel_entry_title($place, $presentation);
+    $label = trim((string) ($place['label'] ?? ''));
+    $excerpt = iss_frontend_static_maps_get_panel_entry_text($place, $presentation);
+    $entry_classes = ['iss-related-place-map__entry'];
+    $entry_attrs = '';
+
+    if (!empty($options['detail'])) {
+        $entry_classes[] = 'iss-related-place-map__entry--station-detail';
+    }
+
+    if (!empty($options['attrs']) && is_array($options['attrs'])) {
+        foreach ($options['attrs'] as $name => $value) {
+            $name = sanitize_key((string) $name);
+            if ($name === '') {
+                continue;
+            }
+            $entry_attrs .= ' ' . $name . '="' . esc_attr((string) $value) . '"';
+        }
+    }
+
+    $out = '<article class="' . esc_attr(implode(' ', $entry_classes)) . '"' . $entry_attrs . '>';
+    $out .= '<div class="iss-related-place-map__entry-index">' . esc_html((string) ($index + 1)) . '</div>';
+    $out .= '<div class="iss-related-place-map__entry-body">';
+    if ($label !== '') {
+        $out .= '<p class="iss-related-place-map__entry-kicker">' . esc_html($label) . '</p>';
+    }
+    if ($title !== '') {
         $out .= '<h3 class="iss-related-place-map__entry-title"><a href="' . esc_url($permalink) . '">' . esc_html($title) . '</a></h3>';
-        if ($excerpt !== '') {
-            $out .= '<p class="iss-related-place-map__entry-text">' . esc_html($excerpt) . '</p>';
+    }
+    if ($excerpt !== '') {
+        $out .= '<p class="iss-related-place-map__entry-text">' . esc_html($excerpt) . '</p>';
+    }
+    $out .= '<p class="iss-related-place-map__entry-link"><a class="iss-action-link" href="' . esc_url($permalink) . '">' . esc_html__('Zum Ort', 'iss-frontend') . '</a></p>';
+    $out .= '</div>';
+    $out .= '</article>';
+
+    return $out;
+}
+
+function iss_frontend_static_maps_render_place_map_panel(array $places, array $options = []): string
+{
+    $presentation = sanitize_key((string) ($options['presentation'] ?? 'list'));
+    $presentation = $presentation === 'station-detail' ? 'station-detail' : 'list';
+    $map_id = sanitize_html_class((string) ($options['map_id'] ?? ''));
+    $panel_classes = [
+        'iss-related-place-map__panel',
+        'iss-related-place-map__panel--' . $presentation,
+    ];
+    $panel_attrs = ' class="' . esc_attr(implode(' ', $panel_classes)) . '"';
+
+    if ($presentation === 'station-detail') {
+        $panel_attrs .= ' data-iss-map-panel';
+    }
+
+    $out = '<div' . $panel_attrs . '>';
+
+    if ($presentation === 'station-detail') {
+        $detail_id = $map_id !== '' ? $map_id . '-detail' : '';
+        $detail_attrs = ' class="iss-related-place-map__panel-detail" data-iss-map-active-detail hidden';
+        if ($detail_id !== '') {
+            $detail_attrs .= ' id="' . esc_attr($detail_id) . '"';
         }
-        $out .= '<p class="iss-related-place-map__entry-link"><a class="iss-action-link" href="' . esc_url($permalink) . '">' . esc_html__('Zum Ort', 'iss-frontend') . '</a></p>';
+
+        $out .= '<div class="iss-related-place-map__panel-fallback" data-iss-map-panel-fallback>';
+        foreach ($places as $index => $place) {
+            $out .= iss_frontend_static_maps_render_place_map_panel_entry($place, (int) $index, $presentation);
+        }
         $out .= '</div>';
-        $out .= '</article>';
+        $out .= '<div' . $detail_attrs . '></div>';
+
+        foreach ($places as $index => $place) {
+            $out .= '<template data-iss-map-detail-template="' . esc_attr((string) $index) . '">';
+            $out .= iss_frontend_static_maps_render_place_map_panel_entry($place, (int) $index, $presentation, [
+                'detail' => true,
+            ]);
+            $out .= '</template>';
+        }
+    } else {
+        foreach ($places as $index => $place) {
+            $out .= iss_frontend_static_maps_render_place_map_panel_entry($place, (int) $index, $presentation);
+        }
     }
 
     $out .= '</div>';
@@ -562,17 +652,23 @@ function iss_frontend_static_maps_render_place_map_panel(array $places): string
     return $out;
 }
 
-function iss_frontend_static_maps_render_atlas_slice_stage(array $places, array $config, array $options = []): string
+function iss_frontend_static_maps_get_atlas_slice_model(array $places, array $config, array $options = []): array
 {
     $mapped_places = iss_frontend_static_maps_collect_mapped_places($places, $config);
     $rotation_deg = iss_frontend_static_maps_normalize_rotation_degrees($options['rotation_deg'] ?? ($config['rotation_deg'] ?? 0));
     if (!$mapped_places) {
-        return '<div class="iss-related-place-map__empty">' . esc_html__('Für diese Auswahl sind noch keine Koordinaten hinterlegt.', 'iss-frontend') . '</div>';
+        return [
+            'empty_html' => '<div class="iss-related-place-map__empty">' . esc_html__('Für diese Auswahl sind noch keine Koordinaten hinterlegt.', 'iss-frontend') . '</div>',
+            'stations' => [],
+        ];
     }
 
     $image_url = (string) ($config['image_url'] ?? '');
     if ($image_url === '') {
-        return '<div class="iss-related-place-map__empty">' . esc_html__('Für diese Auswahl ist noch keine Atlaskarte hinterlegt.', 'iss-frontend') . '</div>';
+        return [
+            'empty_html' => '<div class="iss-related-place-map__empty">' . esc_html__('Für diese Auswahl ist noch keine Atlaskarte hinterlegt.', 'iss-frontend') . '</div>',
+            'stations' => [],
+        ];
     }
 
     $image_alt = (string) ($config['image_alt'] ?? '');
@@ -647,8 +743,8 @@ function iss_frontend_static_maps_render_atlas_slice_stage(array $places, array 
         '--iss-atlas-slice-image-left:' . number_format($image_left, 4, '.', '') . '%',
         '--iss-atlas-slice-image-top:' . number_format($image_top, 4, '.', '') . '%',
     ])) . '"';
-    $markers = '';
     $route_points = [];
+    $stations = [];
 
     foreach ($mapped_places as $item) {
         $raw_x = (float) ($item['position']['x'] ?? 0.0);
@@ -672,14 +768,13 @@ function iss_frontend_static_maps_render_atlas_slice_stage(array $places, array 
             $label = trim((string) ($place['label'] ?? ''));
             $marker_label = $label !== '' ? ($label . ': ' . $place['title']) : $place['title'];
 
-            $markers .= sprintf(
-                '<a class="iss-related-place-map__marker" href="%1$s" style="--x:%2$s%%;--y:%3$s%%" aria-label="%4$s"><span class="iss-related-place-map__marker-dot" aria-hidden="true"></span><span class="iss-related-place-map__marker-label">%5$s</span></a>',
-                esc_url((string) ($place['permalink'] ?? '')),
-                esc_attr(number_format($marker_x, 3, '.', '')),
-                esc_attr(number_format($marker_y, 3, '.', '')),
-                esc_attr($marker_label),
-                esc_html((string) ($index + 1))
-            );
+            $stations[] = [
+                'index' => $index,
+                'place' => $place,
+                'marker_label' => $marker_label,
+                'x' => iss_frontend_static_maps_clamp_float($marker_x, -20.0, 120.0),
+                'y' => iss_frontend_static_maps_clamp_float($marker_y, -20.0, 120.0),
+            ];
         }
     }
 
@@ -705,7 +800,86 @@ function iss_frontend_static_maps_render_atlas_slice_stage(array $places, array 
         '--iss-map-bias-y:' . number_format($plane_bias['y'], 3, '.', '') . '%',
     ])) . '"';
 
-    return '<div class="' . esc_attr(implode(' ', $stage_classes)) . '"' . $stage_attr . '><div class="' . esc_attr(implode(' ', $plane_classes)) . '"' . $plane_attr . '><div class="iss-atlas-slice__viewport"><img class="iss-atlas-slice__image" src="' . esc_url($image_url) . '" alt="' . esc_attr($image_alt) . '" loading="lazy" decoding="async">' . $route_line . '<div class="iss-atlas-slice__markers">' . $markers . '</div></div></div></div>';
+    return [
+        'empty_html' => '',
+        'image_url' => $image_url,
+        'image_alt' => $image_alt,
+        'route_line' => $route_line,
+        'stage_classes' => $stage_classes,
+        'stage_attr' => $stage_attr,
+        'plane_classes' => $plane_classes,
+        'plane_attr' => $plane_attr,
+        'stations' => $stations,
+    ];
+}
+
+function iss_frontend_static_maps_render_atlas_slice_stage_from_model(array $model, array $options = []): string
+{
+    if (!empty($model['empty_html'])) {
+        return (string) $model['empty_html'];
+    }
+
+    $markers = '';
+    $interactive_markers = !empty($options['interactive_markers']);
+    $map_id = sanitize_html_class((string) ($options['map_id'] ?? ''));
+
+    foreach (($model['stations'] ?? []) as $station) {
+        if (!is_array($station)) {
+            continue;
+        }
+
+        $index = (int) ($station['index'] ?? 0);
+        $place = is_array($station['place'] ?? null) ? $station['place'] : [];
+        $marker_classes = ['iss-related-place-map__marker'];
+        $marker_attrs = '';
+
+        if ($interactive_markers) {
+            if ($index === 0) {
+                $marker_classes[] = 'is-active';
+                $marker_attrs .= ' aria-current="location"';
+            }
+            if ($map_id !== '') {
+                $marker_attrs .= ' aria-controls="' . esc_attr($map_id . '-detail') . '"';
+            }
+            $marker_attrs .= ' data-iss-map-marker="' . esc_attr((string) $index) . '"';
+            $marker_attrs .= ' data-iss-map-index="' . esc_attr((string) $index) . '"';
+        }
+
+        $markers .= sprintf(
+            '<a class="%1$s" href="%2$s" style="--x:%3$s%%;--y:%4$s%%" aria-label="%5$s"%6$s><span class="iss-related-place-map__marker-dot" aria-hidden="true"></span><span class="iss-related-place-map__marker-label">%7$s</span></a>',
+            esc_attr(implode(' ', $marker_classes)),
+            esc_url((string) ($place['permalink'] ?? '')),
+            esc_attr(number_format((float) ($station['x'] ?? 0.0), 3, '.', '')),
+            esc_attr(number_format((float) ($station['y'] ?? 0.0), 3, '.', '')),
+            esc_attr((string) ($station['marker_label'] ?? '')),
+            $marker_attrs,
+            esc_html((string) ($index + 1))
+        );
+    }
+
+    return '<div class="' . esc_attr(implode(' ', (array) ($model['stage_classes'] ?? []))) . '"' . (string) ($model['stage_attr'] ?? '') . '><div class="' . esc_attr(implode(' ', (array) ($model['plane_classes'] ?? []))) . '"' . (string) ($model['plane_attr'] ?? '') . '><div class="iss-atlas-slice__viewport"><img class="iss-atlas-slice__image" src="' . esc_url((string) ($model['image_url'] ?? '')) . '" alt="' . esc_attr((string) ($model['image_alt'] ?? '')) . '" loading="lazy" decoding="async">' . (string) ($model['route_line'] ?? '') . '<div class="iss-atlas-slice__markers">' . $markers . '</div></div></div></div>';
+}
+
+function iss_frontend_static_maps_get_atlas_slice_model_places(array $model): array
+{
+    $places = [];
+
+    foreach (($model['stations'] ?? []) as $station) {
+        if (!is_array($station) || !is_array($station['place'] ?? null)) {
+            continue;
+        }
+
+        $places[] = $station['place'];
+    }
+
+    return $places;
+}
+
+function iss_frontend_static_maps_render_atlas_slice_stage(array $places, array $config, array $options = []): string
+{
+    $model = iss_frontend_static_maps_get_atlas_slice_model($places, $config, $options);
+
+    return iss_frontend_static_maps_render_atlas_slice_stage_from_model($model, $options);
 }
 
 function iss_frontend_render_related_place_map_body(array $attributes, array $places, array $config): string
@@ -809,7 +983,11 @@ function iss_frontend_render_atlas_map_block(array $attributes, array $places, a
     }
 
     $show_markers = !array_key_exists('showMarkers', $attributes) || !empty($attributes['showMarkers']);
-    $stage_html = iss_frontend_static_maps_render_atlas_slice_stage($places, $config, [
+    $interactive_panel = $variant === 'tour-route' && $panel_mode === 'show';
+    $map_id = function_exists('wp_unique_id')
+        ? wp_unique_id('iss-atlas-map-')
+        : uniqid('iss-atlas-map-', false);
+    $stage_options = [
         'class_name' => 'iss-gesture-atlas-map__stage iss-gesture-atlas-map__stage--' . $treatment,
         'ratio_width' => $ratio_width,
         'ratio_height' => $ratio_height,
@@ -828,12 +1006,27 @@ function iss_frontend_render_atlas_map_block(array $attributes, array $places, a
         'fit_padding_right' => $attributes['fitPaddingRight'] ?? null,
         'fit_padding_top' => $attributes['fitPaddingTop'] ?? null,
         'fit_padding_bottom' => $attributes['fitPaddingBottom'] ?? null,
-    ]);
+        'interactive_markers' => $interactive_panel,
+        'map_id' => $map_id,
+    ];
+    $slice_model = iss_frontend_static_maps_get_atlas_slice_model($places, $config, $stage_options);
+    $panel_places = $interactive_panel
+        ? iss_frontend_static_maps_get_atlas_slice_model_places($slice_model)
+        : $places;
+    $stage_html = iss_frontend_static_maps_render_atlas_slice_stage_from_model($slice_model, $stage_options);
 
-    $out = '<div class="' . esc_attr(implode(' ', $body_classes)) . '">';
+    $body_attrs = ' class="' . esc_attr(implode(' ', $body_classes)) . '"';
+    if ($interactive_panel) {
+        $body_attrs .= ' data-iss-atlas-map-interactive="station-detail"';
+    }
+
+    $out = '<div' . $body_attrs . '>';
     $out .= '<div class="iss-gesture-atlas-map__map">' . $stage_html . '</div>';
     if ($panel_mode === 'show') {
-        $out .= iss_frontend_static_maps_render_place_map_panel($places);
+        $out .= iss_frontend_static_maps_render_place_map_panel($panel_places, [
+            'presentation' => $interactive_panel ? 'station-detail' : 'list',
+            'map_id' => $map_id,
+        ]);
     }
     $out .= '</div>';
 
