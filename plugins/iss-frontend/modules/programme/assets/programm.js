@@ -110,7 +110,7 @@ async function initCalendarWidget(widget) {
         .map(slot => {
           const d = parseDate(slot.start);
           if (!d) return null;
-          return { ...slot, _date: d };
+          return applyWidgetSlotDefaults(widget, { ...slot, _date: d });
         })
         .filter(Boolean)
         .sort((a, b) => a._date - b._date);
@@ -441,6 +441,24 @@ function buildSlotMeta(slot) {
   }
 
   return '';
+}
+
+function applyWidgetSlotDefaults(widget, slot) {
+  if (!widget || !widget.dataset || !slot) {
+    return slot;
+  }
+
+  const out = { ...slot };
+  if (!out.amount && widget.dataset.amount) {
+    out.amount = Number(widget.dataset.amount || 0);
+  }
+  if (!out.label && widget.dataset.label) {
+    out.label = String(widget.dataset.label || '').trim();
+  }
+  if (!out.description && widget.dataset.description) {
+    out.description = String(widget.dataset.description || '').trim();
+  }
+  return out;
 }
 
 function openBookingForm(widget, slot, clickedEl) {
@@ -904,6 +922,9 @@ function createOccurrenceCalendarWidget(data) {
   if (data.sourcePostId) widget.dataset.sourcePostId = String(data.sourcePostId);
   if (data.sourcePostType) widget.dataset.sourcePostType = String(data.sourcePostType);
   if (data.itemType) widget.dataset.itemType = String(data.itemType);
+  if (data.amount) widget.dataset.amount = String(data.amount);
+  if (data.label) widget.dataset.label = String(data.label);
+  if (data.description) widget.dataset.description = String(data.description);
 
   widget.innerHTML = `
     <div class="is-tour-calendar__inner wp-block-group is-layout-constrained">

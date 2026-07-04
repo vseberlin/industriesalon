@@ -4,20 +4,11 @@ if (!defined('ABSPATH')) {
     exit;
 }
 
-function iss_content_model_editorial_image_wall_section(): array
-{
-    return [
-        'label' => __('Bilderwand', 'iss-content-model'),
-        'description' => __('Ordered image wall with framed, uncropped media', 'iss-content-model'),
-        'supports' => ['media_refs'],
-    ];
-}
-
 function iss_content_model_editorial_gallery_section(): array
 {
     return [
         'label' => __('Galerie', 'iss-content-model'),
-        'description' => __('Approved media promoted from a Set or selected from the media library', 'iss-content-model'),
+        'description' => __('Approved media promoted from a Set or selected from the media library, with grid, sequence, wall, or viewport treatments.', 'iss-content-model'),
         'supports' => ['media_refs', 'object_refs'],
     ];
 }
@@ -26,8 +17,8 @@ function iss_content_model_editorial_material_section(): array
 {
     return [
         'label' => __('Material', 'iss-content-model'),
-        'description' => __('Documents, links, archive references, and supporting project material', 'iss-content-model'),
-        'supports' => ['anchor', 'media_refs', 'object_refs', 'links'],
+        'description' => __('Files and links for supporting source material. Images and archive objects belong in gallery or object gestures.', 'iss-content-model'),
+        'supports' => ['anchor', 'media_refs', 'links'],
     ];
 }
 
@@ -62,7 +53,6 @@ function iss_content_model_landing_page_is_eligible($post): bool
 function iss_content_model_register_editorial_formats(array $formats): array
 {
     $gallery_section = iss_content_model_editorial_gallery_section();
-    $image_wall_section = iss_content_model_editorial_image_wall_section();
     $material_section = iss_content_model_editorial_material_section();
 
     $formats['landing'] = [
@@ -145,8 +135,9 @@ function iss_content_model_register_editorial_formats(array $formats): array
             ],
             'intro' => [
                 'label' => __('Einleitung', 'iss-content-model'),
-                'description' => __('Kurzer Einstieg für die Hero-Beschreibung der Führung.', 'iss-content-model'),
+                'description' => __('Legacy-Einstieg; die Hero-Beschreibung kommt aus Bildbühne oder Excerpt.', 'iss-content-model'),
                 'supports' => ['media_refs'],
+                'ui_hidden' => true,
             ],
             'kapitel' => [
                 'label' => __('Kapitel', 'iss-content-model'),
@@ -164,7 +155,6 @@ function iss_content_model_register_editorial_formats(array $formats): array
                 'supports' => ['quote'],
             ],
             'galerie' => array_merge($gallery_section, ['supports' => ['anchor', 'media_refs', 'object_refs', 'gallery_layout']]),
-            'image_wall' => array_merge($image_wall_section, ['supports' => ['anchor', 'media_refs']]),
             'atlas_map' => [
                 'label' => __('Atlas-Karte', 'iss-content-model'),
                 'description' => __('Registrierte Atlas-Map-Variante für die Route dieser Führung.', 'iss-content-model'),
@@ -204,10 +194,10 @@ function iss_content_model_register_editorial_formats(array $formats): array
                 'description' => __('1-3 archive objects inline', 'iss-content-model'),
                 'supports' => ['object_refs'],
             ],
-            'massstab' => [
-                'label' => __('Massstab', 'iss-content-model'),
-                'description' => __('Stats and context paragraph', 'iss-content-model'),
-                'supports' => [],
+            'facts' => [
+                'label' => __('Merkpunkte', 'iss-content-model'),
+                'description' => __('Facts, stats, or contextual key points with skin-owned presentation.', 'iss-content-model'),
+                'supports' => ['facts'],
             ],
             'zitat' => [
                 'label' => __('Zitat', 'iss-content-model'),
@@ -215,11 +205,6 @@ function iss_content_model_register_editorial_formats(array $formats): array
                 'supports' => ['quote', 'object_refs', 'media_refs', 'orientation', 'quote_treatment'],
             ],
             'galerie' => array_merge($gallery_section, ['supports' => ['object_refs', 'media_refs', 'gallery_layout']]),
-            'vollbild' => [
-                'label' => __('Vollbild', 'iss-content-model'),
-                'description' => __('One image, full viewport, short panel', 'iss-content-model'),
-                'supports' => ['media_refs'],
-            ],
             'fliesstext' => [
                 'label' => __('Fliesstext', 'iss-content-model'),
                 'description' => __('Essay paragraph or connective text', 'iss-content-model'),
@@ -250,7 +235,7 @@ function iss_content_model_register_editorial_formats(array $formats): array
                 'description' => __('Essay paragraph or connective text', 'iss-content-model'),
                 'supports' => ['anchor', 'links'],
             ],
-            'massstab' => [
+            'facts' => [
                 'label' => __('Merkpunkte', 'iss-content-model'),
                 'description' => __('Compact key points, facts, or context cards', 'iss-content-model'),
                 'supports' => ['anchor', 'facts'],
@@ -293,7 +278,7 @@ function iss_content_model_register_editorial_formats(array $formats): array
                 'description' => __('Archive objects that support the report.', 'iss-content-model'),
                 'supports' => ['object_refs'],
             ],
-            'material' => array_merge($material_section, ['supports' => ['media_refs', 'object_refs', 'links']]),
+            'material' => array_merge($material_section, ['supports' => ['media_refs', 'links']]),
             'schluss' => [
                 'label' => __('Schluss', 'iss-content-model'),
                 'description' => __('Closing note and onward links.', 'iss-content-model'),

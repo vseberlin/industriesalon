@@ -117,43 +117,11 @@ function industriesalon_filter_editorial_tour_description(string $description_ht
 {
     $prefer_autosave = is_preview() && current_user_can('edit_post', $post_id);
     $document = industriesalon_get_editorial_tour_document($post_id, $prefer_autosave);
-    $sections = $document ? industriesalon_editorial_tour_sections($document) : [];
-    $stage = $sections ? industriesalon_editorial_tour_stage_section($sections) : [];
-    $intro = $sections ? industriesalon_editorial_tour_intro_section($sections) : [];
-    $stage_has_description = $stage
-        && (
-            trim((string) ($stage['body'] ?? '')) !== ''
-            || !empty($stage['links'])
-        );
-    $source = $stage_has_description ? $stage : $intro;
-
-    if (!$source) {
-        return $description_html;
+    if ($document) {
+        return '';
     }
 
-    $title = $stage ? '' : trim((string) ($source['title'] ?? ''));
-    $body = trim((string) ($source['body'] ?? ''));
-    $links = is_array($source['links'] ?? null) ? $source['links'] : [];
-    $links_html = industriesalon_render_editorial_tour_links($links);
-
-    if ($title === '' && $body === '' && $links_html === '') {
-        return $description_html;
-    }
-
-    ob_start();
-    ?>
-    <div class="iss-tour-editorial-intro">
-        <?php if ($title !== '') : ?>
-            <h3 class="iss-tour-editorial-intro__title"><?php echo esc_html($title); ?></h3>
-        <?php endif; ?>
-        <?php if ($body !== '') : ?>
-            <div class="iss-tour-editorial-intro__body"><?php echo wp_kses_post(wpautop($body)); ?></div>
-        <?php endif; ?>
-        <?php echo $links_html; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- Links are escaped in industriesalon_render_editorial_tour_links(). ?>
-    </div>
-    <?php
-
-    return trim((string) ob_get_clean());
+    return $description_html;
 }
 add_filter('iss_fuehrung_description_html', 'industriesalon_filter_editorial_tour_description', 10, 2);
 
@@ -180,15 +148,23 @@ function industriesalon_get_editorial_tour_section_context(array $section, strin
         'leitfrage' => __('Leitfrage', 'industriesalon'),
         'zitat' => __('Stimme', 'industriesalon'),
         'galerie' => __('Bilder', 'industriesalon'),
-        'image_wall' => __('Bilderwand', 'industriesalon'),
+        'image_wall' => __('Bilder', 'industriesalon'),
         'atlas_map' => __('Route im Atlas', 'industriesalon'),
         'material' => __('Material', 'industriesalon'),
         'schluss' => __('Abschluss', 'industriesalon'),
     ];
+    if ($type === 'galerie') {
+        $gallery_layout = sanitize_key((string) ($section['gallery_layout'] ?? 'grid'));
+        if ($gallery_layout === 'wall') {
+            $layouts[$type] = 'image-wall';
+        } elseif ($gallery_layout === 'viewport') {
+            $layouts[$type] = 'viewport-image';
+        }
+    }
 
     return [
         'type' => $type,
-        'gesture' => $type,
+        'gesture' => $type === 'image_wall' ? 'galerie' : $type,
         'layout' => sanitize_html_class((string) ($layouts[$type] ?? 'standard')),
         'label' => (string) ($labels[$type] ?? __('Abschnitt', 'industriesalon')),
     ];
@@ -306,6 +282,16 @@ function industriesalon_get_editorial_tour_media_attachment_id(array $item): int
     return absint($reference['id'] ?? 0);
 }
 
+function industriesalon_editorial_tour_media_reference_is_image(array $item): bool
+{
+    $attachment_id = industriesalon_get_editorial_tour_media_attachment_id($item);
+    if ($attachment_id <= 0) {
+        return false;
+    }
+
+    return strpos((string) get_post_mime_type($attachment_id), 'image/') === 0;
+}
+
 function industriesalon_get_editorial_tour_stage(int $post_id): array
 {
     $prefer_autosave = is_preview() && current_user_can('edit_post', $post_id);
@@ -365,7 +351,7 @@ function industriesalon_render_editorial_tour_stage_gallery(array $stage): strin
 
     $items = '';
     foreach ($ids as $index => $attachment_id) {
-        $thumb = wp_get_attachment_image($attachment_id, 'medium', false, ['class' => 'iss-image-viewport-gallery__thumb-img iss-tour-hero-gallery__thumb-img']);
+        $thumb = wp_get_attachment_image($attachment_id, 'medium', false, ['class' => 'iss-image-viewport-gallery__thumb-img iss-gesture-stage-gallery__thumb-img']);
         $full_url = wp_get_attachment_image_url($attachment_id, 'large');
         if (!$thumb || !$full_url) {
             continue;
@@ -376,19 +362,15 @@ function industriesalon_render_editorial_tour_stage_gallery(array $stage): strin
         $alt = get_post_meta($attachment_id, '_wp_attachment_image_alt', true);
         $alt = is_string($alt) ? $alt : '';
 
-        $items .= '<button type="button" class="iss-image-viewport-gallery__choice iss-tour-hero-gallery__thumb" data-iss-image-choice';
+        $items .= '<button type="button" class="iss-image-viewport-gallery__choice iss-gesture-stage-gallery__thumb" data-iss-image-choice';
         $items .= ' data-iss-image-src="' . esc_url($full_url) . '"';
-        $items .= ' data-hero-src="' . esc_url($full_url) . '"';
         if ($full_srcset) {
             $items .= ' data-iss-image-srcset="' . esc_attr($full_srcset) . '"';
-            $items .= ' data-hero-srcset="' . esc_attr($full_srcset) . '"';
         }
         if ($full_sizes) {
             $items .= ' data-iss-image-sizes="' . esc_attr($full_sizes) . '"';
-            $items .= ' data-hero-sizes="' . esc_attr($full_sizes) . '"';
         }
         $items .= ' data-iss-image-alt="' . esc_attr($alt) . '"';
-        $items .= ' data-hero-alt="' . esc_attr($alt) . '"';
         $items .= ' aria-label="' . esc_attr__('Hero-Bild anzeigen', 'industriesalon') . '">';
         $items .= $thumb;
         $items .= '</button>';
@@ -398,15 +380,15 @@ function industriesalon_render_editorial_tour_stage_gallery(array $stage): strin
         return '';
     }
 
-    $html = '<div class="wp-block-iss-tour-hero-gallery iss-image-viewport-gallery iss-gesture-stage__gallery iss-tour-hero-gallery iss-tour-hero-gallery--stage" data-iss-image-viewport-gallery data-iss-image-target=".iss-gesture-stage__media img" data-hero-target=".iss-tour-hero__stage-media img" data-iss-strip-carousel>';
-    $html .= '<div class="iss-image-viewport-gallery__track iss-tour-hero-gallery__track" data-iss-strip-carousel-track>';
+    $html = '<div class="iss-image-viewport-gallery iss-gesture-stage__gallery iss-gesture-stage-gallery" data-iss-image-viewport-gallery data-iss-image-target=".iss-gesture-stage__media img" data-iss-strip-carousel>';
+    $html .= '<div class="iss-image-viewport-gallery__track iss-gesture-stage-gallery__track" data-iss-strip-carousel-track>';
     $html .= $items;
     $html .= '</div>';
-    $html .= '<div class="iss-image-viewport-gallery__controls iss-tour-hero-gallery__controls" aria-label="' . esc_attr__('Hero-Galerie steuern', 'industriesalon') . '">';
-    $html .= '<button type="button" class="iss-image-viewport-gallery__control iss-image-viewport-gallery__control--prev iss-tour-hero-gallery__control iss-tour-hero-gallery__control--prev" data-iss-strip-carousel-prev aria-label="' . esc_attr__('Vorherige Bilder', 'industriesalon') . '" disabled>';
+    $html .= '<div class="iss-image-viewport-gallery__controls iss-gesture-stage-gallery__controls" aria-label="' . esc_attr__('Hero-Galerie steuern', 'industriesalon') . '">';
+    $html .= '<button type="button" class="iss-image-viewport-gallery__control iss-image-viewport-gallery__control--prev iss-gesture-stage-gallery__control iss-gesture-stage-gallery__control--prev" data-iss-strip-carousel-prev aria-label="' . esc_attr__('Vorherige Bilder', 'industriesalon') . '" disabled>';
     $html .= '<span aria-hidden="true">&#8592;</span>';
     $html .= '</button>';
-    $html .= '<button type="button" class="iss-image-viewport-gallery__control iss-image-viewport-gallery__control--next iss-tour-hero-gallery__control iss-tour-hero-gallery__control--next" data-iss-strip-carousel-next aria-label="' . esc_attr__('Nächste Bilder', 'industriesalon') . '" disabled>';
+    $html .= '<button type="button" class="iss-image-viewport-gallery__control iss-image-viewport-gallery__control--next iss-gesture-stage-gallery__control iss-gesture-stage-gallery__control--next" data-iss-strip-carousel-next aria-label="' . esc_attr__('Nächste Bilder', 'industriesalon') . '" disabled>';
     $html .= '<span aria-hidden="true">&#8594;</span>';
     $html .= '</button>';
     $html .= '</div>';
@@ -428,6 +410,62 @@ function industriesalon_render_editorial_tour_stage_title(string $block_content)
     }
 
     return '<h1 class="iss-tour-hero__title iss-heading__title wp-block-post-title">' . esc_html($title) . '</h1>';
+}
+
+function industriesalon_trim_editorial_tour_hero_text(string $text): string
+{
+    $text = trim(wp_strip_all_tags(strip_shortcodes($text)));
+    $text = preg_replace('/\s+/u', ' ', $text);
+    $text = trim((string) $text);
+    if ($text === '') {
+        return '';
+    }
+
+    $word_limited = wp_trim_words($text, 44, '…');
+    if (function_exists('mb_strlen') && function_exists('mb_substr') && function_exists('mb_strrpos')) {
+        if (mb_strlen($word_limited) <= 320) {
+            return $word_limited;
+        }
+
+        $truncated = rtrim(mb_substr($word_limited, 0, 319));
+        $space = mb_strrpos($truncated, ' ');
+        if ($space !== false && $space > 220) {
+            $truncated = rtrim(mb_substr($truncated, 0, $space));
+        }
+
+        return rtrim($truncated, " \t\n\r\0\x0B.,;:") . '…';
+    }
+
+    if (strlen($word_limited) <= 320) {
+        return $word_limited;
+    }
+
+    return rtrim(substr($word_limited, 0, 319), " \t\n\r\0\x0B.,;:") . '…';
+}
+
+function industriesalon_get_editorial_tour_hero_text(int $post_id, array $stage = []): string
+{
+    $stage_body = trim((string) ($stage['body'] ?? ''));
+    if ($stage_body !== '') {
+        return industriesalon_trim_editorial_tour_hero_text($stage_body);
+    }
+
+    $post = get_post($post_id);
+    if (!$post instanceof WP_Post || !has_excerpt($post)) {
+        return '';
+    }
+
+    return industriesalon_trim_editorial_tour_hero_text((string) $post->post_excerpt);
+}
+
+function industriesalon_render_editorial_tour_hero_text(int $post_id, array $stage = []): string
+{
+    $text = industriesalon_get_editorial_tour_hero_text($post_id, $stage);
+    if ($text === '') {
+        return '';
+    }
+
+    return '<div class="iss-tour-hero__lede iss-heading__text wp-block-post-excerpt"><p class="wp-block-post-excerpt__excerpt">' . esc_html($text) . '</p></div>';
 }
 
 function industriesalon_render_editorial_tour_archive_reference(array $item, bool $show_placeholder): string
@@ -508,7 +546,7 @@ function industriesalon_render_editorial_tour_atlas_map_section(array $section, 
 
     ob_start();
     ?>
-    <section id="<?php echo esc_attr($anchor); ?>" class="<?php echo esc_attr(implode(' ', array_unique($section_classes))); ?>" data-section-gesture="<?php echo esc_attr($context['gesture']); ?>" data-section-layout="<?php echo esc_attr($context['layout']); ?>" data-section-label="<?php echo esc_attr($has_copy ? '' : (string) ($context['label'] ?? '')); ?>">
+    <section id="<?php echo esc_attr($anchor); ?>" class="<?php echo esc_attr(implode(' ', array_unique($section_classes))); ?>" data-section-gesture="<?php echo esc_attr($context['gesture']); ?>" data-section-layout="<?php echo esc_attr($context['layout']); ?>">
         <div class="iss-tour-section__inner iss-tour-section__inner--atlas-map">
             <?php if ($has_copy) : ?>
                 <div class="iss-tour-section__copy">
@@ -558,10 +596,16 @@ function industriesalon_render_editorial_tour_section(array $section, bool $show
     $refs_html = '';
 
     foreach ($media_refs as $ref) {
+        if ($type === 'material' && industriesalon_editorial_tour_media_reference_is_image((array) $ref)) {
+            continue;
+        }
         $media_html .= industriesalon_render_editorial_tour_media_reference((array) $ref, $show_placeholders);
     }
 
     foreach ($object_refs as $ref) {
+        if ($type === 'material') {
+            continue;
+        }
         $refs_html .= industriesalon_render_editorial_tour_archive_reference((array) $ref, $show_placeholders);
     }
 
@@ -577,7 +621,6 @@ function industriesalon_render_editorial_tour_section(array $section, bool $show
         'iss-tour-editorial__section--' . $type,
         'iss-tour-editorial__section--skin-' . sanitize_html_class($skin),
     ];
-    $section_label = $kicker === '' ? (string) ($context['label'] ?? '') : '';
     if ($media_html !== '') {
         $section_classes[] = 'has-media';
     }
@@ -597,9 +640,9 @@ function industriesalon_render_editorial_tour_section(array $section, bool $show
 
     ob_start();
     ?>
-    <section id="<?php echo esc_attr($anchor); ?>" class="<?php echo esc_attr(implode(' ', array_unique($section_classes))); ?>" data-section-gesture="<?php echo esc_attr($context['gesture']); ?>" data-section-layout="<?php echo esc_attr($context['layout']); ?>" data-section-label="<?php echo esc_attr($section_label); ?>">
+    <section id="<?php echo esc_attr($anchor); ?>" class="<?php echo esc_attr(implode(' ', array_unique($section_classes))); ?>" data-section-gesture="<?php echo esc_attr($context['gesture']); ?>" data-section-layout="<?php echo esc_attr($context['layout']); ?>">
         <div class="iss-tour-section__inner">
-            <?php if ($media_html !== '' && $type !== 'galerie' && $type !== 'image_wall') : ?>
+            <?php if ($media_html !== '' && !in_array($context['layout'], ['gallery', 'image-wall', 'viewport-image'], true)) : ?>
                 <div class="iss-tour-section__media"><?php echo $media_html; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- Media render through escaped helpers above. ?></div>
             <?php endif; ?>
             <?php if ($kicker !== '' || $title !== '' || $body !== '' || $quote !== '' || $links_html !== '') : ?>
@@ -624,7 +667,7 @@ function industriesalon_render_editorial_tour_section(array $section, bool $show
                     <?php echo $links_html; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- Links are escaped in industriesalon_render_editorial_tour_links(). ?>
                 </div>
             <?php endif; ?>
-            <?php if ($media_html !== '' && ($type === 'galerie' || $type === 'image_wall')) : ?>
+            <?php if ($media_html !== '' && in_array($context['layout'], ['gallery', 'image-wall', 'viewport-image'], true)) : ?>
                 <div class="iss-tour-section__media iss-tour-section__media--strip"><?php echo $media_html; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- Media render through escaped helpers above. ?></div>
             <?php endif; ?>
             <?php if ($refs_html !== '') : ?>
@@ -683,13 +726,25 @@ function industriesalon_render_editorial_tour_stage_slots(string $block_content,
     }
 
     $post_id = (int) get_queried_object_id();
+    $block_name = (string) ($block['blockName'] ?? '');
+    $class_name = (string) ($block['attrs']['className'] ?? '');
     $stage = industriesalon_get_editorial_tour_stage($post_id);
+
+    if ($block_name === 'core/post-excerpt' && preg_match('/(^|\s)iss-tour-hero__lede(\s|$)/', $class_name) === 1) {
+        return industriesalon_render_editorial_tour_hero_text($post_id, $stage);
+    }
+
+    if ($block_name === 'core/group' && preg_match('/(^|\s)iss-tour-hero__description(\s|$)/', $class_name) === 1) {
+        $prefer_autosave = is_preview() && current_user_can('edit_post', $post_id);
+        $document = industriesalon_get_editorial_tour_document($post_id, $prefer_autosave);
+        if ($document) {
+            return '';
+        }
+    }
+
     if (!$stage) {
         return $block_content;
     }
-
-    $block_name = (string) ($block['blockName'] ?? '');
-    $class_name = (string) ($block['attrs']['className'] ?? '');
 
     if ($block_name === 'core/group' && preg_match('/(^|\s)iss-tour-hero(\s|$)/', $class_name) === 1) {
         $stage_background = industriesalon_render_editorial_tour_stage_background($stage);
@@ -704,18 +759,17 @@ function industriesalon_render_editorial_tour_stage_slots(string $block_content,
         return industriesalon_render_editorial_tour_stage_title($block_content);
     }
 
-    if ($block_name === 'core/post-excerpt' && preg_match('/(^|\s)iss-tour-hero__lede(\s|$)/', $class_name) === 1) {
-        return '';
-    }
-
     if ($block_name === 'core/post-featured-image' && preg_match('/(^|\s)iss-tour-hero__featured-image(\s|$)/', $class_name) === 1) {
         return '';
     }
 
-    if ($block_name === 'iss/tour-hero-gallery') {
+    if ($block_name === 'core/group' && preg_match('/(^|\s)iss-tour-hero__visual(\s|$)/', $class_name) === 1) {
         $stage_gallery = industriesalon_render_editorial_tour_stage_gallery($stage);
+        if ($stage_gallery === '') {
+            return $block_content;
+        }
 
-        return $stage_gallery;
+        return (string) preg_replace('/(\s*<\/[a-z0-9]+>\s*)$/i', $stage_gallery . '$1', $block_content, 1);
     }
 
     return $block_content;

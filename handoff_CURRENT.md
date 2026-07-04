@@ -1,80 +1,74 @@
 # Current Handoff
 
-Updated: 2026-07-03
+Updated: 2026-07-04
 
 Current checkpoint only. Completed history belongs in `CHANGELOG.md`; active
 follow-up belongs in `TODO.md`.
 
 ## Current Work
 
-- Single Führung rendering now uses the shared JSON gesture direction:
-  `bildbuehne` owns hero image/text/gallery only, while booking, dates, facts,
-  route stations, Atlas map fallback, and related cards remain outside that
-  gesture body.
-- Shared `gestures.css` is the renderer-contract layer for JSON gestures.
-  Single-tour CSS now consumes scoped gesture variables and route-specific
-  overrides instead of page-only one-off rules where this checkpoint touched
-  the surface.
-- The compact hero gallery uses shared viewport-gallery JavaScript from
-  `iss-frontend`; clicks update the defined hero viewport rather than only the
-  thumbnail strip.
-- `iss/atlas-map` is registered as the shared static-map gesture/block.
-  Registered variants include `place-locator`, `map-only`, and `tour-route`.
-- Führung JSON exposes `atlas_map` with treatment `atlas-map.tour-route`. The
-  `single-fuehrung` template keeps an `iss/atlas-map` fallback block and
-  suppresses it when enabled Führung JSON contains an `atlas_map` section.
-- The `tour-route` Atlas variant uses internal marker-box ratio/crop fitting:
-  far-left/far-right and top/bottom markers define the crop with registry-owned
-  padding, and the route line is drawn by the shared static-map renderer.
-- Landing JSON has an initial `atlas_map` gesture path, but current landing
-  source/behavior is intentionally tracked as follow-up before broad use.
+- Führung JSON is the active presentation path for hero/stage, narrative
+  gestures, and `atlas_map`; the legacy tour hero-gallery block/path was
+  removed. Booking, prices, dates, facts, route stations, graph relations, and
+  related cards remain outside JSON gesture bodies.
+- The Führung route constructor is relation-owned. Editors unlock a route,
+  edit draft stations, can restore draft deletions, and explicitly
+  publish-and-lock before canonical relation rows and graph/map projections
+  update. Normal WordPress updates no longer carry stale route station fields.
+- Route stations for `elektropolis-tour` and `familienrallye` were restored from
+  backup and captured in narrow SQL artifacts under `ops/sql/2026-07-04-*`.
+- Booking CTAs for Führung and timeline slots use the shared occurrence calendar
+  and commerce request/payment modal. Führung has structured
+  `booking_price_cents`; `price_note` stays editorial display copy.
+- Shared JSON gesture vocabulary was reduced: `image_wall` and `vollbild` are
+  legacy aliases for `galerie` layouts (`wall` and `viewport`), and `massstab`
+  is a legacy alias for `facts`. `material` means files and links only.
 
 ## Preserve
 
-- Do not move booking, date selection, prices, duration, meeting point, route
-  stations, or commerce behavior into JSON gesture bodies.
-- Keep map fit/source/ratio/line details registry-owned internal renderer
-  options. Editors should choose stable gestures/treatments, not raw map
-  fitting knobs.
-- Keep public presentation in the theme, format registration in `iss-content`,
-  relation and map contracts in `iss-relations`, and static map rendering in
+- Public presentation stays in the theme; format registration and editor
+  contracts stay in `iss-content` / `iss-editorial`; route relations and Atlas
+  map contracts stay in `iss-relations`; static map/frontend behavior stays in
   `iss-frontend`.
-- Keep legacy map blocks as fallback/delegation paths while draining old slice
-  and place-map variants into registered gesture variants.
+- Do not reintroduce template fallback presentation for enabled Führung JSON.
+  Rebuild fallbacks later only as explicit, cloned hard-fallback paths.
+- Do not move booking, occurrence slots, commerce amounts, route stations, or
+  graph projection state into JSON gesture bodies.
+- CSS work must be migration-positive: drain old/page-specific selectors into
+  tokens, primitives, renderer contracts, skins, or scoped compatibility. Do not
+  hide structural issues with a second parallel selector system.
 
 ## Next Action
 
-- Add the TODO-listed regression check for marker-box fit complexity so route
-  map marker padding is tested directly.
-- Sort out landing `atlas_map` behavior: decide when landing pages use
-  current-page relations, manual place recipes, or a dedicated source picker.
-- Migrate or create a real Führung `bildbuehne` / `atlas_map` JSON section and
-  browser-check desktop/mobile on staging.
-- Continue the calendar/intake and broader JSON editor UAT follow-ups listed in
-  `TODO.md`.
+- Browser-UAT the committed Führung checkpoint on representative tours:
+  Electropolis, Familienrallye, and one tour without full route/stage data.
+  Check hero stage height, gallery aspect ratio, booking modal, Atlas route map,
+  draft route preview, and mobile overflow.
+- After staging deploy, apply/review only the intentional route-station SQL
+  artifacts if the target needs the restored station state. No upload artifact
+  is part of this checkpoint.
+- Continue the active TODO follow-ups for JSON editor maintainability:
+  extract picker-heavy code from `plugins/iss-editorial/assets/admin.js` and
+  keep gesture vocabulary changes in the registry/renderer contract, not CSS.
 
 ## Verified
 
-- PHP syntax:
-  - `plugins/iss-frontend/modules/static-maps/includes/render.php`
-  - `plugins/iss-relations/includes/blocks.php`
-  - `plugins/iss-content/includes/editorial.php`
-  - `themes/industriesalon/includes/tours-render.php`
-- PHPCS target checks for the touched PHP/template map and Führung files.
-- ESLint for the related-content block editor and shared gallery scripts.
-- Stylelint for `gestures.css` and `single-tour.css`.
-- `wp iss-relations static-map-contract-check`.
-- Browser metrics for `/fuehrungen/elektropolis-tour/`:
-  - atlas route gesture present
-  - route line present
-  - no horizontal overflow
-  - marker fit lands around `x=8..92` and `y=12..87.9`
-  - desktop route block reduced to roughly 336px high
-  - mobile route block stacks without horizontal overflow
+- PHP lint for touched `iss-content`, `iss-editorial`, route/booking, relation,
+  occurrence, frontend, and theme renderer files.
+- JS syntax/lint for `plugins/iss-editorial/assets/admin.js`,
+  `plugins/iss-editorial/assets/set-media-picker.js`, and route/media frontend
+  scripts where touched.
+- Stylelint for `themes/industriesalon/assets/css/single-tour.css`.
 - `git diff --check`.
+- WP-CLI registry/alias checks confirmed exposed formats use `galerie`/`facts`
+  while old `image_wall`, `vollbild`, and `massstab` payloads normalize to the
+  canonical sections.
+- WP-CLI route/booking checks covered route draft behavior, route-station
+  restore/projection, and occurrence-backed booking slot adapters.
 
 ## Commit State
 
-- This checkpoint is code/docs/template/CSS/JS only.
-- No SQL artifact or uploads artifact was created.
-- Commit/push status should be confirmed from Git after closeout.
+- Code, docs, templates, CSS, JS, and narrow SQL restore artifacts are intended
+  for the checkpoint commit.
+- No uploads artifact was created or required.
+- Confirm final commit/push state with Git after closeout.

@@ -54,8 +54,7 @@
 }
 
 .iss-editorial-palette,
-.iss-editorial-stage,
-.iss-editorial-route-panel {
+.iss-editorial-stage {
   border: 1px solid #dcdcde;
   border-radius: 4px;
   background: #fff;
@@ -172,37 +171,27 @@
   text-align: center;
 }
 
-.iss-editorial-route-panel {
+.iss-editorial-insert-preview {
   display: grid;
-  gap: 12px;
-  padding: 14px;
-}
-
-.iss-editorial-route-panel__head {
-  display: grid;
-  gap: 4px;
-  padding-bottom: 12px;
-  border-bottom: 1px solid #dcdcde;
-}
-
-.iss-editorial-route-panel__head p {
-  margin: 0;
-}
-
-.iss-editorial-route-rows {
-  display: grid;
-  gap: 10px;
-}
-
-.iss-editorial-route-row {
-  display: grid;
-  grid-template-columns: 42px minmax(0, 1fr) auto;
+  grid-template-columns: 9px minmax(0, 1fr);
   gap: 12px;
   align-items: start;
-  padding: 12px;
+  padding: 14px;
   border: 1px solid #dcdcde;
   border-radius: 4px;
   background: #fff;
+}
+
+.iss-editorial-insert-preview__marker {
+  width: 9px;
+  height: 9px;
+  margin-top: 4px;
+  border-radius: 50%;
+}
+
+.iss-editorial-insert-preview p {
+  margin: 0;
+  color: #50575e;
 }
 
 .iss-editorial-trash-panel {
@@ -230,35 +219,6 @@
 .iss-editorial-card__trash-note {
   color: #646970;
   font-size: 12px;
-}
-
-.iss-editorial-route-row__position {
-  display: inline-flex;
-  min-width: 2rem;
-  min-height: 2rem;
-  align-items: center;
-  justify-content: center;
-  border-radius: 4px;
-  background: #1d2327;
-  color: #fff;
-  font-weight: 700;
-}
-
-.iss-editorial-route-row__fields {
-  display: grid;
-  grid-template-columns: minmax(12rem, 1fr) minmax(12rem, 1fr);
-  gap: 10px;
-}
-
-.iss-editorial-route-row__fields .iss-editorial-field:nth-child(3) {
-  grid-column: 1 / -1;
-}
-
-.iss-editorial-route-row__tools {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 6px;
-  justify-content: flex-end;
 }
 
 .iss-editorial-card {
@@ -1015,9 +975,7 @@ body.iss-editorial-modal-open {
   }
 
   .iss-editorial-layout,
-  .iss-editorial-card,
-  .iss-editorial-route-row,
-  .iss-editorial-route-row__fields {
+  .iss-editorial-card {
     grid-template-columns: 1fr;
   }
 
@@ -1027,10 +985,6 @@ body.iss-editorial-modal-open {
   }
 
   .iss-editorial-card__actions {
-    justify-content: flex-start;
-  }
-
-  .iss-editorial-route-row__tools {
     justify-content: flex-start;
   }
 

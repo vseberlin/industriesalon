@@ -437,8 +437,8 @@
   margin-bottom: 0.4rem;
 }
 
-.is-tour-calendar__form-row input,
-.is-tour-calendar__field input,
+.is-tour-calendar__form-row input:not([type="radio"]):not([type="checkbox"]),
+.is-tour-calendar__field input:not([type="radio"]):not([type="checkbox"]),
 .is-tour-calendar__field select {
   width: 100%;
   padding: 0.8rem 1rem;
@@ -452,8 +452,14 @@
 }
 
 .is-tour-calendar__form-row input[type="radio"] {
-  width: auto;
+  width: 1rem;
+  height: 1rem;
+  min-height: 0;
+  padding: 0;
   margin-right: 0.5rem;
+  box-sizing: border-box;
+  accent-color: var(--iss-accent, #e81d25);
+  vertical-align: -0.12em;
 }
 
 .is-tour-calendar__form-actions {

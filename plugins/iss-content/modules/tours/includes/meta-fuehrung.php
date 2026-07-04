@@ -26,6 +26,11 @@ function iss_fuehrungen_meta_fields() {
             'sanitize' => 'sanitize_text_field',
             'default' => '',
         ],
+        'booking_price_cents' => [
+            'type' => 'integer',
+            'sanitize' => 'absint',
+            'default' => 0,
+        ],
         'booking_note' => [
             'type' => 'string',
             'sanitize' => 'sanitize_textarea_field',
@@ -68,50 +73,6 @@ function iss_fuehrungen_meta_fields() {
             'type' => 'string',
             'sanitize' => 'sanitize_text_field',
             'default' => '',
-        ],
-        'tour_color' => [
-            'type' => 'string',
-            'sanitize' => static function ($value) {
-                $value = sanitize_key((string) $value);
-                $allowed = ['red', 'blue', 'green', 'yellow', 'brown'];
-                return in_array($value, $allowed, true) ? $value : 'red';
-            },
-            'default' => 'red',
-        ],
-        'tour_icon' => [
-            'type' => 'string',
-            'sanitize' => 'sanitize_text_field',
-            'default' => '',
-        ],
-        'is_featured' => [
-            'type' => 'boolean',
-            'sanitize' => static function ($value) {
-                return !empty($value);
-            },
-            'default' => false,
-        ],
-        'hero_gallery_ids' => [
-            'type' => 'string',
-            'sanitize' => static function ($value) {
-                $parts = preg_split('/\s*,\s*/', (string) $value);
-                if (!is_array($parts)) {
-                    return '';
-                }
-
-                $ids = array_filter(array_map('absint', $parts));
-                if (!$ids) {
-                    return '';
-                }
-
-                $ids = array_values(array_unique($ids));
-                return implode(',', $ids);
-            },
-            'default' => '',
-        ],
-        'sort_weight' => [
-            'type' => 'integer',
-            'sanitize' => 'absint',
-            'default' => 0,
         ],
     ];
 }

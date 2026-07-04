@@ -506,6 +506,8 @@ function iss_payments_lite_process_slot_booking_request(array $payload, WP_REST_
             return new WP_REST_Response(['ok' => false, 'error' => 'Diese Veranstaltung ist derzeit nicht buchbar.'], 400);
         }
         $price_cents = max(0, (int) get_post_meta($source_post_id, 'iss_booking_price_cents', true));
+    } elseif ($source_post_type === 'fuehrung') {
+        $price_cents = max(0, (int) get_post_meta($source_post_id, 'booking_price_cents', true));
     }
     if ($title === '') {
         $title = get_the_title($source_post_id);

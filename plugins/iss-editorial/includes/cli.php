@@ -569,7 +569,7 @@ function iss_editorial_cli_build_project_sections(array $block): array
     $sections = [$section];
     if ($type === 'kapitel' && $facts) {
         $sections[] = [
-            'type' => 'massstab',
+            'type' => 'facts',
             'anchor' => $anchor !== '' ? $anchor . '-fakten' : '',
             'kicker' => __('Fakten', 'iss-editorial'),
             'title' => __('Eckdaten', 'iss-editorial'),

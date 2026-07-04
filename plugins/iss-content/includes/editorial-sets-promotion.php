@@ -240,7 +240,7 @@ function iss_content_editorial_sets_reference_mime(array $reference): string
 function iss_content_editorial_sets_project_section_type_for_entry(array $entry): string
 {
     if ((string) ($entry['field'] ?? '') === 'object_refs') {
-        return 'material';
+        return 'galerie';
     }
 
     $mime = iss_content_editorial_sets_reference_mime((array) ($entry['reference'] ?? []));
@@ -430,15 +430,29 @@ function iss_content_editorial_sets_promote_to_editorial_document(int $post_id, 
     ];
     $service = iss_content_editorial_sets_service();
     $promoted = 0;
+    $section_has_entries = false;
     foreach ($items as $entry) {
         $field = (string) $entry['field'];
-        if (isset($section[$field])) {
-            $section[$field][] = $entry['reference'];
+        if (
+            !isset($section[$field])
+            || (
+                function_exists('iss_editorial_format_supports_section_field')
+                && !iss_editorial_format_supports_section_field($format, $section_type, $field)
+            )
+        ) {
+            continue;
         }
+
+        $section[$field][] = $entry['reference'];
+        $section_has_entries = true;
         if ($service->mark_promoted((int) $entry['item']['id'], (string) get_post_type($post_id), $post_id)) {
             iss_content_editorial_sets_mark_external_upload_imported($entry['item'], $entry['reference']);
             $promoted++;
         }
+    }
+
+    if (!$section_has_entries) {
+        return ['promoted' => 0, 'message' => __('No selected items fit this editorial section.', 'iss-content-model')];
     }
 
     $document = iss_editorial_get_document($post_id, $format_slug, false);

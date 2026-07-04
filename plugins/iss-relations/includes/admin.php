@@ -229,6 +229,102 @@ function iss_relations_get_place_choices(): array
     return $choices;
 }
 
+function iss_relations_get_route_station_editor_config(int $post_id): array
+{
+    $post_type = (string) get_post_type($post_id);
+    if ($post_id <= 0 || !iss_relations_supports_route_fields($post_type)) {
+        return [
+            'enabled' => false,
+        ];
+    }
+
+    $stored = get_post_meta($post_id, ISS_RELATIONS_META_KEY, true);
+    $canonical = iss_relations_normalize_relations(is_array($stored) ? $stored : [], $post_id);
+    $draft = function_exists('iss_relations_get_route_draft') ? iss_relations_get_route_draft($post_id) : [];
+
+    return [
+        'enabled' => true,
+        'postId' => $post_id,
+        'locked' => !$draft,
+        'relations' => $draft ? (array) ($draft['relations'] ?? []) : $canonical,
+        'canonical' => $canonical,
+        'draft' => $draft,
+        'trash' => $draft ? (array) ($draft['trash'] ?? []) : [],
+        'previewArgs' => function_exists('iss_relations_get_route_draft_preview_args')
+            ? iss_relations_get_route_draft_preview_args($post_id)
+            : [],
+        'places' => iss_relations_get_place_choices(),
+        'restRoot' => esc_url_raw(rest_url('iss-relations/v1')),
+        'nonce' => wp_create_nonce('wp_rest'),
+        'ajaxUrl' => admin_url('admin-ajax.php'),
+        'choiceNonce' => wp_create_nonce('iss_relations_station_objects'),
+        'strings' => [
+            'heading' => __('Route / Stationen', 'iss-relations'),
+            'description' => __('Die veröffentlichte Route ist gesperrt. Änderungen passieren zuerst im Routen-Entwurf.', 'iss-relations'),
+            'lockedTitle' => __('Route veröffentlicht und gesperrt', 'iss-relations'),
+            'lockedDescription' => __('Diese Stationen sind öffentlich wirksam und mit der Atlas-Karte synchronisiert. Zum Bearbeiten muss die Route entsperrt werden.', 'iss-relations'),
+            'draftTitle' => __('Routen-Entwurf aktiv', 'iss-relations'),
+            'draftDescription' => __('Stationen, Reihenfolge und gelöschte Stationen sind nur im Entwurf geändert. Die öffentliche Route bleibt unverändert, bis Sie die Route veröffentlichen und sperren.', 'iss-relations'),
+            'unlock' => __('Route entsperren', 'iss-relations'),
+            'saveDraft' => __('Entwurf speichern', 'iss-relations'),
+            'publish' => __('Route veröffentlichen & sperren', 'iss-relations'),
+            'discard' => __('Entwurf verwerfen', 'iss-relations'),
+            'restoreStation' => __('Wiederherstellen', 'iss-relations'),
+            'trashHeading' => __('Gelöschte Stationen im Entwurf', 'iss-relations'),
+            'trashDescription' => __('Diese Stationen bleiben wiederherstellbar, solange der Entwurf nicht veröffentlicht wird.', 'iss-relations'),
+            'empty' => __('Noch keine Stationen. Eine Station verbindet die Führung mit einem Ort.', 'iss-relations'),
+            'addStation' => __('Station hinzufügen', 'iss-relations'),
+            'placePlaceholder' => __('Ort wählen', 'iss-relations'),
+            'changed' => __('Routen-Entwurf geändert.', 'iss-relations'),
+            'saving' => __('Routen-Entwurf wird gespeichert ...', 'iss-relations'),
+            'saved' => __('Routen-Entwurf gespeichert.', 'iss-relations'),
+            'published' => __('Route veröffentlicht, gesperrt und mit der Karte synchronisiert.', 'iss-relations'),
+            'discarded' => __('Routen-Entwurf verworfen.', 'iss-relations'),
+            'unlocked' => __('Routen-Entwurf aktiv. Normales WordPress-Aktualisieren veröffentlicht diese Änderungen nicht.', 'iss-relations'),
+            'saveError' => __('Route konnte nicht gespeichert werden.', 'iss-relations'),
+            'publishConfirm' => __('Route veröffentlichen und gelöschte Stationen aus der öffentlichen Route entfernen?', 'iss-relations'),
+            'sourceHeading' => __('Optionale Quellen', 'iss-relations'),
+            'sourceDescription' => __('Objekt und Beitrag sind Quellen für spätere Ausgaben. Die aktuelle Route und Atlas-Karte nutzen diese Felder nicht.', 'iss-relations'),
+            'objectPlaceholder' => __('Objekt wählen', 'iss-relations'),
+            'objectLoading' => __('Objekte werden geladen ...', 'iss-relations'),
+            'objectNone' => __('Keine verknüpften Objekte für diesen Ort', 'iss-relations'),
+            'objectError' => __('Objekte konnten nicht geladen werden', 'iss-relations'),
+            'storyPlaceholder' => __('Beitrag wählen', 'iss-relations'),
+            'storyLoading' => __('Beiträge werden geladen ...', 'iss-relations'),
+            'storyNone' => __('Keine verknüpften Beiträge für diesen Ort', 'iss-relations'),
+            'storyError' => __('Beiträge konnten nicht geladen werden', 'iss-relations'),
+        ],
+    ];
+}
+
+function iss_relations_get_route_station_relation_field_keys(): array
+{
+    return [
+        'place_id',
+        'role',
+        'weight',
+        'label',
+        'route_title',
+        'route_teaser',
+        'station_object_id',
+        'station_story_id',
+    ];
+}
+
+function iss_relations_render_route_station_hidden_fields(array $relations): void
+{
+    echo '<div class="iss-editorial-route-fields" hidden aria-hidden="true">';
+
+    foreach (array_values($relations) as $index => $relation) {
+        foreach (iss_relations_get_route_station_relation_field_keys() as $key) {
+            $value = $relation[$key] ?? '';
+            echo '<input type="hidden" name="iss_relations[' . esc_attr((string) $index) . '][' . esc_attr($key) . ']" value="' . esc_attr((string) $value) . '">';
+        }
+    }
+
+    echo '</div>';
+}
+
 function iss_relations_add_meta_boxes(): void
 {
     foreach (iss_relations_get_supported_post_types() as $post_type) {
@@ -480,6 +576,31 @@ function iss_relations_enqueue_admin_assets(string $hook_suffix): void
             'storyError' => __('Beiträge konnten nicht geladen werden', 'iss-relations'),
         ],
     ]);
+
+    if (iss_relations_supports_route_fields((string) $screen->post_type)) {
+        $route_script_path = ISS_RELATIONS_PATH . 'assets/route-station-editor.js';
+        $route_style_path = ISS_RELATIONS_PATH . 'assets/route-station-editor.css';
+
+        if (file_exists($route_style_path)) {
+            wp_enqueue_style(
+                'iss-relations-route-stations',
+                ISS_RELATIONS_URL . 'assets/route-station-editor.css',
+                [],
+                (string) filemtime($route_style_path)
+            );
+        }
+
+        if (file_exists($route_script_path)) {
+            wp_register_script(
+                'iss-relations-route-stations',
+                ISS_RELATIONS_URL . 'assets/route-station-editor.js',
+                [],
+                (string) filemtime($route_script_path),
+                true
+            );
+            wp_enqueue_script('iss-relations-route-stations');
+        }
+    }
 }
 add_action('admin_enqueue_scripts', 'iss_relations_enqueue_admin_assets');
 

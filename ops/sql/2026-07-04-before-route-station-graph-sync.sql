@@ -1,0 +1,18 @@
+-- Current graph relation backup before route station graph sync.
+-- Created 2026-07-04 from local DB.
+START TRANSACTION;
+DELETE FROM wp_iss_entity_relations WHERE from_entity_id IN (3602,3605);
+INSERT INTO wp_iss_entity_relations (id, from_entity_id, to_entity_id, relation_family, relation_type, relation_role, relation_label, note, weight, position, is_primary, valid_from_year, valid_to_year, source_system, source_ref, is_public, created_at, updated_at, edge_key, source_field, relation_status, confidence) VALUES
+(52171, 3602, 122, 'place', 'stop', 'stop', 'Industriesalon Schöneweide', '', 1, 0, 0, NULL, NULL, 'iss_relations_meta', 'post:12183', 1, '2026-07-04 08:35:39', '2026-07-04 08:35:39', 'rel_31144ce58ebaecca17262eefed8e9be0369b5aae', 'iss_relations', 'derived', 100),
+(52172, 3602, 124, 'place', 'stop', 'stop', 'Reinbeckstraße 4-8', '', 2, 1, 0, NULL, NULL, 'iss_relations_meta', 'post:12183', 1, '2026-07-04 08:35:39', '2026-07-04 08:35:39', 'rel_67f87b7460b9c67d13fb373b2e3d55addf7d1ee9', 'iss_relations', 'derived', 100),
+(52173, 3602, 125, 'place', 'stop', 'stop', 'Kaisersteg', '', 3, 2, 0, NULL, NULL, 'iss_relations_meta', 'post:12183', 1, '2026-07-04 08:35:39', '2026-07-04 08:35:39', 'rel_af13abc43b59e84787f03a012f473f36cf92d747', 'iss_relations', 'derived', 100),
+(52174, 3602, 126, 'place', 'stop', 'stop', 'Wilhelminenhofstraße 78', '', 4, 3, 0, NULL, NULL, 'iss_relations_meta', 'post:12183', 1, '2026-07-04 08:35:39', '2026-07-04 08:35:39', 'rel_d8e2fba395d2622427dfc75f460b6a69a3fe62d5', 'iss_relations', 'derived', 100),
+(52175, 3602, 127, 'place', 'stop', 'stop', 'Wilhelminenhofstraße 77', '', 5, 4, 0, NULL, NULL, 'iss_relations_meta', 'post:12183', 1, '2026-07-04 08:35:39', '2026-07-04 08:35:39', 'rel_55ac04a0c7fc3314c558c98ab35ebfe7573db583', 'iss_relations', 'derived', 100),
+(52176, 3602, 128, 'place', 'stop', 'stop', 'Mathildenstraße', '', 6, 5, 0, NULL, NULL, 'iss_relations_meta', 'post:12183', 1, '2026-07-04 08:35:39', '2026-07-04 08:35:39', 'rel_e3c3235e6c1cb0a180015c59e1d552b1bca1e806', 'iss_relations', 'derived', 100),
+(52177, 3602, 130, 'place', 'stop', 'stop', 'Wilhelminenhofstraße 76', '', 7, 6, 0, NULL, NULL, 'iss_relations_meta', 'post:12183', 1, '2026-07-04 08:35:39', '2026-07-04 08:35:39', 'rel_f7245ce76f177dcd99c90d27ec4652fe92e97d4c', 'iss_relations', 'derived', 100),
+(52178, 3602, 13, 'place', 'stop', 'stop', 'Rathenau-Villa', '', 8, 7, 0, NULL, NULL, 'iss_relations_meta', 'post:12183', 1, '2026-07-04 08:35:39', '2026-07-04 08:35:39', 'rel_4567e4407648c6ab117ae43b412a9f86b5a9f371', 'iss_relations', 'derived', 100),
+(52179, 3602, 132, 'place', 'stop', 'stop', 'Ostendstraße 1-5', '', 9, 8, 0, NULL, NULL, 'iss_relations_meta', 'post:12183', 1, '2026-07-04 08:35:39', '2026-07-04 08:35:39', 'rel_3a27bb8a4834544085bbec826eef4d96c13ea4e1', 'iss_relations', 'derived', 100),
+(52565, 3605, 122, 'place', 'primary', 'primary', '', '', 5, 0, 1, NULL, NULL, 'iss_relations_meta', 'post:12191', 1, '2026-07-04 10:49:18', '2026-07-04 10:49:18', 'rel_1cb8e8290c463deeb424003f3cdf0088ada8120e', 'iss_relations', 'derived', 100),
+(52566, 3605, 127, 'place', 'stop', 'stop', 'Kraftwerk Oberspree', '', 2, 1, 0, NULL, NULL, 'iss_relations_meta', 'post:12191', 1, '2026-07-04 10:49:18', '2026-07-04 10:49:18', 'rel_e63217da0def77e069879babb06cb07b724136fb', 'iss_relations', 'derived', 100),
+(52567, 3605, 125, 'place', 'stop', 'stop', 'Kaisersteg', '', 3, 2, 0, NULL, NULL, 'iss_relations_meta', 'post:12191', 1, '2026-07-04 10:49:18', '2026-07-04 10:49:18', 'rel_54edda0d74b37f28554bfd017cd5e5cbb5e2af39', 'iss_relations', 'derived', 100);
+COMMIT;

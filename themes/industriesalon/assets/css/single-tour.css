@@ -492,10 +492,6 @@
   line-height: 1.66;
 }
 
-.iss-tour-editorial-skin-route-dossier .iss-tour-hero__lede {
-  display: none;
-}
-
 .iss-tour-hero__description .iss-tour-editorial-intro__body {
   color: rgba(249, 249, 250, 0.78);
 }
@@ -808,7 +804,7 @@
   padding-bottom: 0.35rem;
 }
 
-.iss-tour-section--gesture-image_wall .iss-tour-section__media--strip {
+.iss-tour-section--layout-image-wall .iss-tour-section__media--strip {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(13rem, 1fr));
   overflow: visible;
@@ -828,7 +824,7 @@
   scroll-snap-align: start;
 }
 
-.iss-tour-section--gesture-image_wall .iss-tour-section__media-item {
+.iss-tour-section--layout-image-wall .iss-tour-section__media-item {
   min-height: 100%;
 }
 
@@ -838,7 +834,7 @@
   height: auto;
 }
 
-.iss-tour-section--gesture-image_wall .iss-tour-section__media-item img {
+.iss-tour-section--layout-image-wall .iss-tour-section__media-item img {
   height: 100%;
   min-height: 13rem;
   object-fit: cover;
@@ -1030,30 +1026,6 @@
   background: rgba(20, 20, 20, 0.58);
   backdrop-filter: blur(8px);
   -webkit-backdrop-filter: blur(8px);
-}
-
-.iss-tour-hero .iss-tour-hero-gallery {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(4.2rem, 1fr));
-  gap: 0.42rem;
-}
-
-.iss-tour-hero .iss-tour-hero-gallery__thumb {
-  border: 1px solid rgba(249, 249, 250, 0.22);
-  border-radius: 0.25rem;
-  background: rgba(20, 20, 20, 0.56);
-  box-shadow: none;
-  overflow: hidden;
-}
-
-.iss-tour-hero .iss-tour-hero-gallery__thumb.is-active {
-  border-color: var(--iss-accent);
-}
-
-.iss-tour-hero .iss-tour-hero-gallery__thumb-img {
-  width: 100%;
-  aspect-ratio: 1.35;
-  object-fit: cover;
 }
 
 .iss-tour-hero .iss-fuehrung-facts {
@@ -1920,10 +1892,6 @@
 
   .iss-tour-route__rail-link {
     max-width: none;
-  }
-
-  .iss-tour-hero .iss-tour-hero-gallery {
-    grid-template-columns: repeat(auto-fit, minmax(4.25rem, 1fr));
   }
 
   .iss-tour-route__station-body {

@@ -23,13 +23,6 @@ add_action('init', function () {
         ]);
     }
 
-    $hero_gallery_dir = ISS_FUEHRUNGEN_PATH . 'blocks/tour-hero-gallery';
-    if (file_exists($hero_gallery_dir . '/block.json')) {
-        register_block_type($hero_gallery_dir, [
-            'render_callback' => 'iss_fuehrung_render_hero_gallery_block',
-        ]);
-    }
-
     $description_dir = ISS_FUEHRUNGEN_PATH . 'blocks/tour-description';
     if (file_exists($description_dir . '/block.json')) {
         register_block_type($description_dir, [

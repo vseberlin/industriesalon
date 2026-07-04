@@ -48,6 +48,7 @@ function iss_editorial_resolve_reference(array $reference): array
             'thumbnail' => (string) wp_get_attachment_image_url($attachment_id, 'medium'),
             'width' => (string) $width,
             'height' => (string) $height,
+            'mime' => (string) get_post_mime_type($attachment_id),
             'post' => $post,
         ];
     }
@@ -77,6 +78,9 @@ function iss_editorial_hydrate_reference_preview(array $reference): array
     }
     if (empty($reference['height']) && !empty($resolved['height'])) {
         $reference['height'] = (string) $resolved['height'];
+    }
+    if (empty($reference['mime']) && !empty($resolved['mime'])) {
+        $reference['mime'] = (string) $resolved['mime'];
     }
 
     return $reference;

@@ -113,7 +113,8 @@
   function isSelectableMediaItem(item, mediaType) {
     var mime = item && item.preview ? String(item.preview.mime || '') : '';
     return selectableAttachmentId(item) > 0
-      && (mediaType !== 'image' || mime.indexOf('image/') === 0);
+      && (mediaType !== 'image' || mime.indexOf('image/') === 0)
+      && (mediaType !== 'file' || mime.indexOf('image/') !== 0);
   }
 
   function referenceFromSetItem(item) {
@@ -125,7 +126,8 @@
       label: item.label || preview.title || '',
       thumbnail: preview.thumbnail || '',
       width: preview.width ? String(preview.width) : '',
-      height: preview.height ? String(preview.height) : ''
+      height: preview.height ? String(preview.height) : '',
+      mime: preview.mime || ''
     };
   }
 
@@ -133,7 +135,12 @@
     options = options || {};
 
     var mode = options.mode === 'single' ? 'single' : 'multiple';
-    var selectedIds = uniqueIds(options.initialSelection || []);
+    var mediaType = options.mediaType || '';
+    var initialSelection = (options.initialSelection || []).filter(function (item) {
+      var mime = String(item && item.mime ? item.mime : '');
+      return mediaType !== 'file' || mime.indexOf('image/') !== 0;
+    });
+    var selectedIds = uniqueIds(initialSelection);
     var selectedItems = {};
     var currentSet = null;
     var attachedSetItems = [];
@@ -142,7 +149,6 @@
     var scope = root;
     var contextType = options.contextType || initialConfig.contextType || '';
     var contextId = intValue(options.contextId || initialConfig.postId || 0);
-    var mediaType = options.mediaType || '';
     var pickerMarkup =
       '<div class="iss-archive-object-picker iss-editorial-set-media-picker is-bucket-first" data-mode="' + mode + '">' +
         '<aside class="iss-archive-object-picker__sets">' +
@@ -200,7 +206,7 @@
     var currentMeta = scope.querySelector('.iss-archive-object-picker__current-meta');
 
     selectedIds.forEach(function (id) {
-      (options.initialSelection || []).forEach(function (item) {
+      initialSelection.forEach(function (item) {
         if (intValue(item && item.id ? item.id : item) === id && item && typeof item === 'object') {
           selectedItems[id] = item;
         }
@@ -317,6 +323,8 @@
         body.appendChild(createElement('p', 'description', 'Roh-Uploads erst im Set prüfen und in die Mediathek übernehmen.'));
       } else if (!selectable && mediaType === 'image') {
         body.appendChild(createElement('p', 'description', 'Dieser Abschnitt erwartet ein Bild.'));
+      } else if (!selectable && mediaType === 'file') {
+        body.appendChild(createElement('p', 'description', 'Material erwartet Dateien. Bilder bitte über Galerie oder Bilderwand einsetzen.'));
       }
       card.appendChild(body);
       button.type = 'button';

@@ -23,21 +23,20 @@ function iss_fuehrungen_render_meta_box($post) {
         'meeting_point' => __('Treffpunkt', 'iss-fuehrungen'),
         'target_group'  => __('Zielgruppe', 'iss-fuehrungen'),
         'price_note'    => __('Preishinweis', 'iss-fuehrungen'),
+        'booking_price_cents' => __('Buchungspreis in Euro', 'iss-fuehrungen'),
         'booking_note'  => __('Buchungshinweis', 'iss-fuehrungen'),
         'booking_mode'  => __('Buchungsmodus', 'iss-fuehrungen'),
-        'allow_on_demand_with_calendar' => __('Auf Anfrage zusätzlich erlauben (bei Modus Auto)', 'iss-fuehrungen'),
-        'inquiry_url'   => __('Anfrage-URL', 'iss-fuehrungen'),
+        'allow_on_demand_with_calendar' => __('Anfrage zusätzlich erlauben', 'iss-fuehrungen'),
         'inquiry_label' => __('Anfrage-Button Label', 'iss-fuehrungen'),
         'inquiry_note'  => __('Anfrage-Hinweis', 'iss-fuehrungen'),
-        'tour_badge'    => __('Badge', 'iss-fuehrungen'),
-        'tour_icon'     => __('Icon', 'iss-fuehrungen'),
-        'hero_gallery_ids' => __('Hero-Galerie (Bilder)', 'iss-fuehrungen'),
-        'sort_weight'   => __('Sortierung', 'iss-fuehrungen'),
+        'tour_badge'    => __('Kicker / Kartenlabel', 'iss-fuehrungen'),
     ];
+
+    echo '<div class="iss-fuehrung-meta-grid">';
 
     foreach ($fields as $key => $label) {
         $value = get_post_meta($post->ID, $key, true);
-        echo '<p>';
+        echo '<p class="iss-fuehrung-meta-field iss-fuehrung-meta-field--' . esc_attr($key) . '">';
         echo '<label for="iss_' . esc_attr($key) . '"><strong>' . esc_html($label) . '</strong></label>';
 
         if ($key === 'booking_mode') {
@@ -53,47 +52,43 @@ function iss_fuehrungen_render_meta_box($post) {
                 printf('<option value="%s" %s>%s</option>', esc_attr($option_value), selected($mode, $option_value, false), esc_html($option_label));
             }
             echo '</select>';
+        } elseif ($key === 'booking_price_cents') {
+            $price_cents = max(0, (int) $value);
+            $price_display = $price_cents > 0 ? number_format($price_cents / 100, 2, ',', '') : '';
+            echo '<input class="widefat" type="text" inputmode="decimal" id="iss_' . esc_attr($key) . '" name="iss_fuehrung_booking_price_display" value="' . esc_attr($price_display) . '" placeholder="12,00">';
         } elseif ($key === 'allow_on_demand_with_calendar') {
             echo '<label><input type="checkbox" name="iss_fuehrung[' . esc_attr($key) . ']" value="1" ' . checked(!empty($value), true, false) . '> ' . esc_html__('Ja', 'iss-fuehrungen') . '</label>';
-        } elseif ($key === 'booking_note' || $key === 'inquiry_note') {
-            echo '<textarea class="widefat" rows="3" id="iss_' . esc_attr($key) . '" name="iss_fuehrung[' . esc_attr($key) . ']">' . esc_textarea((string) $value) . '</textarea>';
-        } elseif ($key === 'hero_gallery_ids') {
-            $ids = array_filter(array_map('absint', explode(',', (string) $value)));
-            echo '<div class="iss-hero-gallery-field" data-input-id="iss_' . esc_attr($key) . '">';
-            echo '<input type="hidden" id="iss_' . esc_attr($key) . '" name="iss_fuehrung[' . esc_attr($key) . ']" value="' . esc_attr(implode(',', $ids)) . '">';
-            echo '<p style="margin:8px 0;">';
-            echo '<button type="button" class="button iss-hero-gallery-select">' . esc_html__('Bilder auswählen', 'iss-fuehrungen') . '</button> ';
-            echo '<button type="button" class="button-link iss-hero-gallery-clear">' . esc_html__('Leeren', 'iss-fuehrungen') . '</button>';
-            echo '</p>';
-            echo '<div class="iss-hero-gallery-preview" style="display:flex;flex-wrap:wrap;gap:6px;"></div>';
-            echo '<p class="description">' . esc_html__('Diese Bilder erscheinen unter dem Hero-Bild. Klick auf ein Thumbnail tauscht das große Hero-Bild. Mehrere Bilder: nacheinander auswählen oder im Medienfenster mehrfach markieren.', 'iss-fuehrungen') . '</p>';
-            echo '</div>';
-        } elseif ($key === 'sort_weight') {
-            echo '<input class="widefat" type="number" step="1" min="0" id="iss_' . esc_attr($key) . '" name="iss_fuehrung[' . esc_attr($key) . ']" value="' . esc_attr((string) $value) . '">';
-        } elseif ($key === 'inquiry_url') {
-            echo '<input class="widefat" type="url" id="iss_' . esc_attr($key) . '" name="iss_fuehrung[' . esc_attr($key) . ']" value="' . esc_attr((string) $value) . '">';
+        } elseif ($key === 'inquiry_note') {
+            echo '<textarea class="widefat" rows="2" id="iss_' . esc_attr($key) . '" name="iss_fuehrung[' . esc_attr($key) . ']">' . esc_textarea((string) $value) . '</textarea>';
         } else {
             echo '<input class="widefat" type="text" id="iss_' . esc_attr($key) . '" name="iss_fuehrung[' . esc_attr($key) . ']" value="' . esc_attr((string) $value) . '">';
         }
         echo '</p>';
     }
 
-    $tour_color = get_post_meta($post->ID, 'tour_color', true);
-    $tour_color = $tour_color ?: 'red';
-    $is_featured = (bool) get_post_meta($post->ID, 'is_featured', true);
+    echo '</div>';
 
-    echo '<p><label for="iss_tour_color"><strong>' . esc_html__('Farbakzent', 'iss-fuehrungen') . '</strong></label>';
-    echo '<select class="widefat" id="iss_tour_color" name="iss_fuehrung[tour_color]">';
-    foreach (['red' => 'Rot', 'blue' => 'Blau', 'green' => 'Grün', 'yellow' => 'Gelb', 'brown' => 'Braun'] as $value => $label) {
-        printf('<option value="%s" %s>%s</option>', esc_attr($value), selected($tour_color, $value, false), esc_html($label));
+}
+
+function iss_fuehrungen_parse_price_to_cents($value): int {
+    $value = trim((string) $value);
+    if ($value === '') {
+        return 0;
     }
-    echo '</select></p>';
 
-    echo '<p><label><input type="checkbox" name="iss_fuehrung[is_featured]" value="1" ' . checked($is_featured, true, false) . '> ' . esc_html__('Auf Landingpages hervorheben', 'iss-fuehrungen') . '</label></p>';
+    $normalized = str_replace(["\xc2\xa0", ' ', '€'], '', $value);
+    if (strpos($normalized, ',') !== false && strpos($normalized, '.') !== false) {
+        $normalized = str_replace('.', '', $normalized);
+        $normalized = str_replace(',', '.', $normalized);
+    } elseif (strpos($normalized, ',') !== false) {
+        $normalized = str_replace(',', '.', $normalized);
+    }
 
-    echo '<p style="margin-top:1rem;color:#666;font-size:12px;line-height:1.5;">';
-    echo esc_html__('Tour-Fakten, Buchung und Hero-Galerie bleiben hier. Redaktionelle Beschreibung, Abschnitte und Medien werden in der Komposition unter dem Titel gepflegt.', 'iss-fuehrungen');
-    echo '</p>';
+    if (!is_numeric($normalized)) {
+        return 0;
+    }
+
+    return max(0, (int) round(((float) $normalized) * 100));
 }
 
 add_action('save_post_' . ISS_FUEHRUNGEN_POST_TYPE, function ($post_id) {
@@ -111,6 +106,9 @@ add_action('save_post_' . ISS_FUEHRUNGEN_POST_TYPE, function ($post_id) {
 
     $raw = isset($_POST['iss_fuehrung']) && is_array($_POST['iss_fuehrung']) ? wp_unslash($_POST['iss_fuehrung']) : [];
     $fields = iss_fuehrungen_meta_fields();
+    $raw['booking_price_cents'] = isset($_POST['iss_fuehrung_booking_price_display'])
+        ? iss_fuehrungen_parse_price_to_cents(wp_unslash((string) $_POST['iss_fuehrung_booking_price_display']))
+        : 0;
 
     foreach ($fields as $key => $config) {
         $value = $raw[$key] ?? ($config['type'] === 'boolean' ? '' : $config['default']);
@@ -128,26 +126,6 @@ add_action('save_post_' . ISS_FUEHRUNGEN_POST_TYPE, function ($post_id) {
         }
     }
 }, 10, 1);
-
-add_action('admin_enqueue_scripts', function ($hook) {
-    if (!in_array($hook, ['post.php', 'post-new.php'], true)) {
-        return;
-    }
-
-    $screen = function_exists('get_current_screen') ? get_current_screen() : null;
-    if (!$screen || $screen->post_type !== ISS_FUEHRUNGEN_POST_TYPE) {
-        return;
-    }
-
-    wp_enqueue_media();
-    wp_enqueue_script(
-        'iss-fuehrungen-admin-gallery',
-        ISS_FUEHRUNGEN_URL . 'assets/admin-hero-gallery.js',
-        ['jquery'],
-        ISS_FUEHRUNGEN_VERSION,
-        true
-    );
-});
 
 add_action('admin_notices', function () {
     if (!function_exists('get_current_screen')) {
@@ -173,7 +151,7 @@ add_action('admin_notices', function () {
     echo '<div class="notice notice-warning"><p>';
     echo esc_html__('Für diese Führung sind keine zukünftigen öffentlichen Termine verknüpft, obwohl der Buchungsmodus den Termin-Kalender erwartet.', 'iss-fuehrungen');
     echo ' ';
-    echo '<a href="' . esc_url($edit_url) . '#iss-occurrences-calendar-mapping">' . esc_html__('SuperSaaS-Reihe prüfen', 'iss-fuehrungen') . '</a>';
+    echo '<a href="' . esc_url($edit_url) . '#iss-occurrences-calendar-mapping">' . esc_html__('SuperSaaS-Verknüpfung prüfen', 'iss-fuehrungen') . '</a>';
     echo '</p></div>';
 });
 

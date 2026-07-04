@@ -423,7 +423,7 @@ function iss_content_model_get_dashboard_promotion_target_slug(array $sections):
         }
 
         $slug = sanitize_key((string) ($section['slug'] ?? ''));
-        if ($slug === 'facts') {
+        if (in_array($slug, ['facts', 'schedule', 'booking'], true)) {
             return $slug;
         }
 
@@ -670,12 +670,12 @@ function iss_content_model_get_editor_dashboard_sections(string $post_type): arr
                 'slug' => 'identity',
                 'label' => __('Identität', 'iss-content-model'),
                 'description' => __('Kurzbeschreibung, Kartenbild und Pflichtangaben für Führungslisten, Karten und Vorschauen.', 'iss-content-model'),
-                'boxIds' => ['postexcerpt', 'postimagediv', 'iss-fuehrung-data', 'iss-occurrences-calendar-mapping'],
+                'boxIds' => ['postexcerpt', 'postimagediv', 'iss-fuehrung-data', 'iss-graph-related-promotion'],
             ],
             [
                 'slug' => 'composition',
                 'label' => __('Redaktionelle Komposition', 'iss-content-model'),
-                'description' => __('Führungserzählung und integrierte Route im bestehenden iss-editorial JSON-Canvas.', 'iss-content-model'),
+                'description' => '',
                 'selectors' => ['.iss-editorial-shell'],
             ],
             [
@@ -686,7 +686,6 @@ function iss_content_model_get_editor_dashboard_sections(string $post_type): arr
                     'iss-relations-places',
                     'iss-graph-public-content-relations',
                     'iss-wf-import-archive-picker',
-                    'iss-graph-related-promotion',
                     'iss-graph-editorial-signals',
                 ],
             ],

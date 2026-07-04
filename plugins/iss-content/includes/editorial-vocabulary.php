@@ -33,11 +33,7 @@ function iss_content_model_editorial_gesture_registry(): array
         ],
         'galerie' => [
             'label' => __('Galerie', 'iss-content-model'),
-            'absorbs' => ['galerie', 'photoalbum'],
-        ],
-        'vollbild' => [
-            'label' => __('Vollbild', 'iss-content-model'),
-            'absorbs' => ['vollbild'],
+            'absorbs' => ['galerie', 'image_wall', 'vollbild', 'photoalbum'],
         ],
         'objektfokus' => [
             'label' => __('Objektfokus', 'iss-content-model'),
@@ -47,9 +43,9 @@ function iss_content_model_editorial_gesture_registry(): array
             'label' => __('Material', 'iss-content-model'),
             'absorbs' => ['material'],
         ],
-        'massstab' => [
-            'label' => __('Massstab', 'iss-content-model'),
-            'absorbs' => ['massstab'],
+        'facts' => [
+            'label' => __('Merkpunkte', 'iss-content-model'),
+            'absorbs' => ['facts', 'massstab'],
         ],
         'programm' => [
             'label' => __('Programm', 'iss-content-model'),

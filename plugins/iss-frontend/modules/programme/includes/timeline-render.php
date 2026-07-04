@@ -347,7 +347,6 @@ function iss_timeline_get_ticket_action_for_occurrence($row, $opts = []) {
     $source_post_type = trim((string) ($row['source_post_type'] ?? ''));
     $slot_id = trim((string) ($row['slot_id'] ?? ''));
     $slot_start = trim((string) ($row['slot_start'] ?? ''));
-    $slot_end = trim((string) ($row['end_raw'] ?? ''));
 
     $action = [
         'url' => $booking_url,
@@ -355,23 +354,12 @@ function iss_timeline_get_ticket_action_for_occurrence($row, $opts = []) {
         'variant' => 'primary',
     ];
 
-    if ($slot_id !== '' && $slot_start !== '') {
-        $action['classes'] = ['js-is-tour-slot-trigger'];
-        $action['attrs'] = [
-            'data-slot-id' => $slot_id,
-            'data-start' => $slot_start,
-            'data-title' => trim((string) ($row['title'] ?? '')),
-        ];
-        if ($slot_end !== '') {
-            $action['attrs']['data-end'] = $slot_end;
-        }
-        if ($source_post_id > 0) {
-            $action['attrs']['data-source-post-id'] = (string) $source_post_id;
-        }
-        if ($source_post_type !== '') {
-            $action['attrs']['data-source-post-type'] = $source_post_type;
-        }
-        $action['attrs'] = array_merge($action['attrs'], iss_timeline_get_booking_action_attrs($row));
+    if ($source_post_id > 0 && $source_post_type !== '' && $slot_id !== '' && $slot_start !== '') {
+        $action['classes'] = ['js-iss-occurrence-calendar-trigger'];
+        $action['attrs'] = array_merge(
+            iss_timeline_get_calendar_trigger_attrs($row),
+            iss_timeline_get_booking_action_attrs($row)
+        );
     }
 
     return $action;
@@ -765,25 +753,13 @@ function iss_timeline_build_actions($row, $opts = []) {
         ];
         $slot_id = trim((string) ($row['slot_id'] ?? ''));
         $slot_start = trim((string) ($row['slot_start'] ?? ''));
-        $slot_end = trim((string) ($row['end_raw'] ?? ''));
         $source_post_type = trim((string) ($row['source_post_type'] ?? ''));
-        if ($slot_id !== '' && $slot_start !== '') {
-            $ticket_action['classes'] = ['js-is-tour-slot-trigger'];
-            $ticket_action['attrs'] = [
-                'data-slot-id' => $slot_id,
-                'data-start' => $slot_start,
-                'data-title' => trim((string) ($row['title'] ?? '')),
-            ];
-            if ($slot_end !== '') {
-                $ticket_action['attrs']['data-end'] = $slot_end;
-            }
-            if ($source_post_id > 0) {
-                $ticket_action['attrs']['data-source-post-id'] = (string) $source_post_id;
-            }
-            if ($source_post_type !== '') {
-                $ticket_action['attrs']['data-source-post-type'] = $source_post_type;
-            }
-            $ticket_action['attrs'] = array_merge($ticket_action['attrs'], iss_timeline_get_booking_action_attrs($row));
+        if ($source_post_id > 0 && $source_post_type !== '' && $slot_id !== '' && $slot_start !== '') {
+            $ticket_action['classes'] = ['js-iss-occurrence-calendar-trigger'];
+            $ticket_action['attrs'] = array_merge(
+                iss_timeline_get_calendar_trigger_attrs($row),
+                iss_timeline_get_booking_action_attrs($row)
+            );
         }
         $actions[] = $ticket_action;
     }

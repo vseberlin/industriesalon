@@ -32,6 +32,7 @@ All changes must be lean, reversible where practical, documented, tested, and ju
 - Do not rely on Gutenberg-generated class chains, fragile DOM structure, selector escalation, inline styles, or hidden shortcode-like workflows.
 - No `!important`, narrow selector hacks, workaround layers, duplicate logic, or unrelated refactors.
 - Before CSS changes, inspect `theme.json`, tokens, global styles, shared layout primitives, card/pattern CSS, and `overrides.css`.
+- CSS work must drain old/page-specific selectors into the owning layer (tokens, primitives, renderer contracts, skins, or scoped compatibility) instead of adding parallel selector systems. If touching legacy CSS, remove obsolete selectors when safe and record why any compatibility selector remains.
 - Before PHP or JavaScript changes, inspect hooks, helpers, enqueue logic, templates, blocks, and plugin ownership.
 - Use `WP_Query` for normal editorial post loops; use plugin-owned custom tables and prepared `$wpdb` SQL for projection, search, graph, archive, reporting, and other non-post-shaped data.
 - Verify frontend, editor, responsive behavior, template compatibility, and block validation when relevant.

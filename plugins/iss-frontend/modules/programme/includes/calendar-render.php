@@ -292,7 +292,11 @@ function iss_programm_render_tour_dates($attributes = [], $content = '') {
             $out .= '<span class="iss-tour-dates__label">' . $label_html . '</span>';
         }
 
-        if ($booking_url !== '') {
+        if ($booking_url !== '' && $is_sold_out) {
+            $out .= ' <span class="iss-tour-dates__link iss-tour-dates__link--disabled" aria-disabled="true">';
+            $out .= esc_html__('Ausgebucht', 'iss-programm');
+            $out .= '</span>';
+        } elseif ($booking_url !== '') {
             $link_classes = 'iss-tour-dates__link';
             $link_attrs = '';
             if ($slot_id !== '' && $slot_start !== '') {
@@ -306,7 +310,7 @@ function iss_programm_render_tour_dates($attributes = [], $content = '') {
             }
 
             $out .= ' <a class="' . esc_attr($link_classes) . '" href="' . esc_url($booking_url) . '"' . $link_attrs . '>';
-            $out .= $is_sold_out ? esc_html__('Ausgebucht', 'iss-programm') : esc_html__('Buchen', 'iss-programm');
+            $out .= esc_html__('Buchen', 'iss-programm');
             $out .= '</a>';
         }
 

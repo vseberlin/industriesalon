@@ -59,6 +59,9 @@ function iss_editorial_sanitize_reference($reference): array
     if (isset($reference['height'])) {
         $sanitized['height'] = (string) absint($reference['height']);
     }
+    if (isset($reference['mime'])) {
+        $sanitized['mime'] = sanitize_mime_type((string) $reference['mime']);
+    }
 
     return $sanitized;
 }
@@ -217,7 +220,7 @@ function iss_editorial_sanitize_gallery_layout($layout): string
 {
     $layout = sanitize_key((string) $layout);
 
-    return in_array($layout, ['grid', 'sequence', 'wall'], true) ? $layout : 'grid';
+    return in_array($layout, ['grid', 'sequence', 'wall', 'viewport'], true) ? $layout : 'grid';
 }
 
 function iss_editorial_sanitize_quote_treatment($treatment): string
@@ -450,6 +453,7 @@ function iss_editorial_sanitize_body_html(string $body, array $format, string $t
 
 function iss_editorial_sanitize_section(array $section, array $format): array
 {
+    $section = iss_editorial_normalize_section_alias($section, $format);
     $type = sanitize_key((string) ($section['type'] ?? ''));
     if ($type === '' || !isset($format['sections'][$type])) {
         return [];
@@ -551,6 +555,34 @@ function iss_editorial_sanitize_section(array $section, array $format): array
     }
 
     return $sanitized;
+}
+
+function iss_editorial_normalize_section_alias(array $section, array $format): array
+{
+    $type = sanitize_key((string) ($section['type'] ?? ''));
+    $sections = is_array($format['sections'] ?? null) ? $format['sections'] : [];
+
+    if ($type === 'image_wall' && isset($sections['galerie'])) {
+        $section['type'] = 'galerie';
+        if (empty($section['gallery_layout'])) {
+            $section['gallery_layout'] = 'wall';
+        }
+        return $section;
+    }
+
+    if ($type === 'vollbild' && isset($sections['galerie'])) {
+        $section['type'] = 'galerie';
+        if (empty($section['gallery_layout'])) {
+            $section['gallery_layout'] = 'viewport';
+        }
+        return $section;
+    }
+
+    if ($type === 'massstab' && isset($sections['facts'])) {
+        $section['type'] = 'facts';
+    }
+
+    return $section;
 }
 
 function iss_editorial_sanitize_deleted_section(array $section, array $format): array

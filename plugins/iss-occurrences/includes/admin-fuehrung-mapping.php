@@ -67,7 +67,7 @@ add_action('add_meta_boxes', function ($post_type, $post) {
 
     add_meta_box(
         'iss-occurrences-calendar-mapping',
-        __('SuperSaaS-Reihe', 'iss-occurrences'),
+        __('SuperSaaS direkt verknüpfen', 'iss-occurrences'),
         'iss_occurrences_render_fuehrung_mapping_metabox',
         'fuehrung',
         'side',
@@ -85,6 +85,10 @@ function iss_occurrences_render_fuehrung_mapping_metabox($post) {
     $options = iss_occurrences_get_series_source_options();
 
     wp_nonce_field('iss_occurrences_save_fuehrung_series_source', 'iss_occurrences_series_source_nonce');
+
+    echo '<p class="description" style="margin-top:0;">'
+        . esc_html__('Verbindet diese Führung mit den verfügbaren SaaS-Plätzen.', 'iss-occurrences')
+        . '</p>';
 
     echo '<p><label for="iss_occurrences_series_key"><strong>' . esc_html__('Terminreihe', 'iss-occurrences') . '</strong></label></p>';
     echo '<select class="widefat" id="iss_occurrences_series_key" name="iss_occurrences_series_key">';

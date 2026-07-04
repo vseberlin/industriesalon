@@ -162,6 +162,27 @@
     });
   }
 
+  function setupFuehrungSideColumnOrder() {
+    var side;
+    var typeBox;
+    var supersaasBox;
+
+    if (!document.body || !document.body.classList.contains('post-type-fuehrung')) {
+      return;
+    }
+
+    side = document.getElementById('side-sortables');
+    typeBox = document.getElementById('fuehrung_typdiv');
+    supersaasBox = document.getElementById('iss-occurrences-calendar-mapping');
+    if (!side || !typeBox || !supersaasBox || !side.contains(typeBox) || !side.contains(supersaasBox)) {
+      return;
+    }
+
+    if (typeBox.nextSibling !== supersaasBox) {
+      side.insertBefore(supersaasBox, typeBox.nextSibling);
+    }
+  }
+
   function createDashboardSection(section) {
     var panel = document.createElement('section');
     var header = document.createElement('div');
@@ -410,5 +431,6 @@
   document.addEventListener('DOMContentLoaded', function () {
     setupEditorTopGroups();
     setupSideRailSections();
+    setupFuehrungSideColumnOrder();
   });
 }());

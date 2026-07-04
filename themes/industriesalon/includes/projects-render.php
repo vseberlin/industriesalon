@@ -92,6 +92,7 @@ function industriesalon_get_editorial_project_section_context(array $section, st
         'kapitel' => 'chapter',
         'fliesstext' => 'essay',
         'massstab' => 'key-points',
+        'facts' => 'key-points',
         'galerie' => 'gallery',
         'material' => 'material',
         'upload_intake' => 'upload-intake',
@@ -733,12 +734,17 @@ function industriesalon_render_editorial_project_section(array $section, bool $s
     $upload_intake_html = $type === 'upload_intake' ? industriesalon_render_editorial_project_upload_intake($section) : '';
 
     foreach ($refs as $ref) {
+        if ($type === 'material') {
+            continue;
+        }
         $ref_html .= industriesalon_render_editorial_project_archive_reference((array) $ref, $show_placeholders);
     }
 
     foreach ($media_refs as $ref) {
-        if ($type === 'material' && industriesalon_editorial_project_media_reference_is_download((array) $ref)) {
-            $download_html .= industriesalon_render_editorial_project_file_reference((array) $ref, $show_placeholders);
+        if ($type === 'material') {
+            if (industriesalon_editorial_project_media_reference_is_download((array) $ref)) {
+                $download_html .= industriesalon_render_editorial_project_file_reference((array) $ref, $show_placeholders);
+            }
             continue;
         }
 
@@ -864,7 +870,7 @@ function industriesalon_render_editorial_project_content(string $content): strin
             $is_dossier_spread = $skin === 'dossier'
                 && (string) ($section['type'] ?? '') === 'kapitel'
                 && is_array($next_section)
-                && (string) ($next_section['type'] ?? '') === 'massstab';
+                && in_array((string) ($next_section['type'] ?? ''), ['facts', 'massstab'], true);
 
             if ($is_dossier_spread) {
                 $section_html = industriesalon_render_editorial_project_dossier_spread(

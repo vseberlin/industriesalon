@@ -22,7 +22,10 @@ Immediate executable work only. Larger future programs live in `docs/project/bac
   state, and publication order `intent=order` submission through
   `/iss-payments/v1/request`. Before production deploy, verify target mail mode
   and enable `Tools > ISS Anfragen` notification email only for an approved
-  recipient.
+  recipient. Follow-up refactor: publication orders already share the
+  `iss-commerce-lite` endpoint, but their frontend modal/form shell is still
+  publication-specific; collapse it into the shared commerce request modal
+  before adding more paid item types.
 - Native page JSON landing transfer/review: after deploying the landing code and
   theme assets, apply/review
   `ops/sql/2026-06-30-frontpage-landing-json.sql` only on a target with matching

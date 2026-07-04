@@ -306,8 +306,10 @@ function industriesalon_render_structured_veranstaltung_section(array $section, 
     $download_html = '';
     foreach ((array) ($section['media_refs'] ?? []) as $reference) {
         if (is_array($reference)) {
-            if ($type === 'material' && industriesalon_structured_veranstaltung_media_reference_is_download($reference)) {
-                $download_html .= industriesalon_render_structured_veranstaltung_file_reference($reference);
+            if ($type === 'material') {
+                if (industriesalon_structured_veranstaltung_media_reference_is_download($reference)) {
+                    $download_html .= industriesalon_render_structured_veranstaltung_file_reference($reference);
+                }
                 continue;
             }
             $media_html .= industriesalon_render_structured_veranstaltung_media_reference($reference);
@@ -316,9 +318,11 @@ function industriesalon_render_structured_veranstaltung_section(array $section, 
     $downloads_html = $type === 'material' ? industriesalon_render_structured_veranstaltung_downloads($download_html) : '';
 
     $refs_html = '';
-    foreach ((array) ($section['object_refs'] ?? []) as $reference) {
-        if (is_array($reference)) {
-            $refs_html .= industriesalon_render_structured_veranstaltung_object_reference($reference);
+    if ($type !== 'material') {
+        foreach ((array) ($section['object_refs'] ?? []) as $reference) {
+            if (is_array($reference)) {
+                $refs_html .= industriesalon_render_structured_veranstaltung_object_reference($reference);
+            }
         }
     }
 

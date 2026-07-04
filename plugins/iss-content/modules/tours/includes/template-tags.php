@@ -4,12 +4,6 @@ if (!defined('ABSPATH')) {
     exit;
 }
 
-function iss_fuehrung_get_color_class($post_id) {
-    $color = get_post_meta($post_id, 'tour_color', true);
-    $color = $color ?: 'red';
-    return 'iss-fuehrung--' . sanitize_html_class($color);
-}
-
 function iss_fuehrung_render_facts($post_id, array $args = []) {
     $items = [];
     $include_related_places = !empty($args['include_related_places']);
@@ -122,15 +116,10 @@ function iss_fuehrung_render_booking_box($post_id) {
         $availability_label = iss_fuehrung_get_availability_label($availability);
         $booking_url = iss_fuehrung_get_event_booking_url($next_event, $post_id);
         if ($next_event instanceof WP_Post) {
-            $slot_id = trim((string) get_post_meta($next_event->ID, 'external_id', true));
-            $slot_start = trim((string) get_post_meta($next_event->ID, 'event_start', true));
             $slot_title = trim((string) get_the_title($next_event->ID));
         } else {
-            $slot_id = trim((string) ($next_event['slot_id'] ?? ''));
-            $slot_start = trim((string) ($next_event['slot_start'] ?? $next_event['date_raw'] ?? ''));
             $slot_title = trim((string) ($next_event['title'] ?? get_the_title($post_id)));
         }
-        $is_slot_trigger = ($slot_id !== '' && $slot_start !== '');
         $should_enqueue_calendar_assets = false;
 
         echo '<h2 class="iss-fuehrung-booking__title">Nächster Termin</h2>';
@@ -146,25 +135,19 @@ function iss_fuehrung_render_booking_box($post_id) {
 
         echo '<div class="iss-fuehrung-booking__actions">';
         if ($booking_url !== '') {
-            $button_classes = 'wp-element-button';
-            if ($is_slot_trigger) {
-                $button_classes .= ' js-is-tour-slot-trigger';
-                $should_enqueue_calendar_assets = true;
-            }
+            $button_classes = 'wp-element-button js-iss-occurrence-calendar-trigger';
+            $should_enqueue_calendar_assets = true;
 
             $button_attrs = '';
-            if ($is_slot_trigger) {
-                $button_attrs .= ' data-slot-id="' . esc_attr($slot_id) . '"';
-                $button_attrs .= ' data-start="' . esc_attr($slot_start) . '"';
-                $button_attrs .= ' data-title="' . esc_attr($slot_title) . '"';
-                $button_attrs .= ' data-source-post-id="' . esc_attr((string) $post_id) . '"';
-                $button_attrs .= ' data-source-post-type="' . esc_attr(ISS_FUEHRUNGEN_POST_TYPE) . '"';
-            }
+            $calendar_title = trim((string) get_the_title($post_id));
+            $button_attrs .= ' data-title="' . esc_attr($calendar_title !== '' ? $calendar_title : $slot_title) . '"';
+            $button_attrs .= ' data-source-post-id="' . esc_attr((string) $post_id) . '"';
+            $button_attrs .= ' data-source-post-type="' . esc_attr(ISS_FUEHRUNGEN_POST_TYPE) . '"';
+            $button_attrs .= ' data-item-type="tour"';
 
             // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- Attribute string is built from escaped values above.
             echo '<a class="' . esc_attr($button_classes) . '" href="' . esc_url($booking_url) . '"' . $button_attrs . '>Buchen</a>';
         }
-        echo '<a class="iss-fuehrung-booking__secondary" href="#termine">Alle Termine</a>';
         if ($mode === 'hybrid' && $inquiry_url !== '') {
             echo '<a class="iss-fuehrung-booking__secondary" href="' . esc_url($inquiry_url) . '">' . esc_html($inquiry_label) . '</a>';
         }
@@ -802,81 +785,6 @@ function iss_fuehrung_render_booking_panel_block($attributes = [], $content = ''
         : 'class="wp-block-iss-tour-booking-panel"';
 
     return '<div ' . $wrapper . '>' . $panel . '</div>';
-}
-
-function iss_fuehrung_get_hero_gallery_ids($post_id) {
-    $raw = (string) get_post_meta($post_id, 'hero_gallery_ids', true);
-    if ($raw === '') {
-        return [];
-    }
-
-    $ids = array_filter(array_map('absint', preg_split('/\s*,\s*/', $raw)));
-    if (!$ids) {
-        return [];
-    }
-
-    return array_values(array_unique($ids));
-}
-
-function iss_fuehrung_render_hero_gallery_block($attributes = [], $content = '') {
-    $post_id = iss_fuehrung_block_resolve_post_id($attributes);
-    if ($post_id <= 0) {
-        return '';
-    }
-
-    $ids = iss_fuehrung_get_hero_gallery_ids($post_id);
-    if (!$ids) {
-        return '';
-    }
-
-    $wrapper_attrs = [
-        'class' => 'wp-block-iss-tour-hero-gallery iss-image-viewport-gallery iss-tour-hero-gallery',
-        'data-iss-image-viewport-gallery' => '',
-        'data-iss-image-target' => '.iss-tour-hero__featured-image img',
-        'data-hero-target' => '.iss-tour-hero__featured-image img',
-    ];
-    $wrapper = function_exists('get_block_wrapper_attributes')
-        ? get_block_wrapper_attributes($wrapper_attrs)
-        : 'class="' . esc_attr($wrapper_attrs['class']) . '" data-iss-image-viewport-gallery data-iss-image-target="' . esc_attr($wrapper_attrs['data-iss-image-target']) . '" data-hero-target="' . esc_attr($wrapper_attrs['data-hero-target']) . '"';
-
-    ob_start();
-    // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- Wrapper attributes come from get_block_wrapper_attributes() or a static fallback.
-    echo '<div ' . $wrapper . '>';
-
-    foreach ($ids as $index => $attachment_id) {
-        $thumb = wp_get_attachment_image($attachment_id, 'medium', false, ['class' => 'iss-image-viewport-gallery__thumb-img iss-tour-hero-gallery__thumb-img']);
-        $full_url = wp_get_attachment_image_url($attachment_id, 'large');
-
-        if (!$thumb || !$full_url) {
-            continue;
-        }
-
-        $full_srcset = wp_get_attachment_image_srcset($attachment_id, 'large');
-        $full_sizes = wp_get_attachment_image_sizes($attachment_id, 'large');
-        $alt = get_post_meta($attachment_id, '_wp_attachment_image_alt', true);
-        $alt = is_string($alt) ? $alt : '';
-
-        echo '<button type="button" class="iss-image-viewport-gallery__choice iss-tour-hero-gallery__thumb' . ($index === 0 ? ' is-active' : '') . '" data-iss-image-choice';
-        echo ' data-iss-image-src="' . esc_url($full_url) . '"';
-        echo ' data-hero-src="' . esc_url($full_url) . '"';
-        if ($full_srcset) {
-            echo ' data-iss-image-srcset="' . esc_attr($full_srcset) . '"';
-            echo ' data-hero-srcset="' . esc_attr($full_srcset) . '"';
-        }
-        if ($full_sizes) {
-            echo ' data-iss-image-sizes="' . esc_attr($full_sizes) . '"';
-            echo ' data-hero-sizes="' . esc_attr($full_sizes) . '"';
-        }
-        echo ' data-iss-image-alt="' . esc_attr($alt) . '"';
-        echo ' data-hero-alt="' . esc_attr($alt) . '"';
-        echo ' aria-label="' . esc_attr__('Hero-Bild anzeigen', 'iss-fuehrungen') . '">';
-        // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- wp_get_attachment_image() returns escaped image markup.
-        echo $thumb;
-        echo '</button>';
-    }
-
-    echo '</div>';
-    return (string) ob_get_clean();
 }
 
 function iss_fuehrung_get_route_station_title(array $item): string

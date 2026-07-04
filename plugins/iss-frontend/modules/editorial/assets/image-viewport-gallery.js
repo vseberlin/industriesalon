@@ -1,15 +1,10 @@
 (function () {
   function getCandidateSource(candidate, key) {
-    var value = candidate.getAttribute('data-iss-image-' + key);
-    if (value !== null && value !== '') {
-      return value;
-    }
-
-    return candidate.getAttribute('data-hero-' + key);
+    return candidate.getAttribute('data-iss-image-' + key);
   }
 
   function resolveViewport(gallery) {
-    var target = gallery.getAttribute('data-iss-image-target') || gallery.getAttribute('data-hero-target');
+    var target = gallery.getAttribute('data-iss-image-target');
     var scopeSelector = gallery.getAttribute('data-iss-image-scope');
     var scope = scopeSelector ? gallery.closest(scopeSelector) : null;
 
@@ -52,7 +47,7 @@
       viewport.setAttribute('alt', alt);
     }
 
-    gallery.querySelectorAll('[data-iss-image-choice], .iss-tour-hero-gallery__thumb').forEach(function (item) {
+    gallery.querySelectorAll('[data-iss-image-choice]').forEach(function (item) {
       item.classList.toggle('is-active', item === candidate);
       if (item === candidate) {
         item.setAttribute('aria-current', 'true');
@@ -74,7 +69,7 @@
 
     gallery.dataset.issImageViewportGalleryBound = '1';
 
-    gallery.querySelectorAll('[data-iss-image-choice], .iss-tour-hero-gallery__thumb').forEach(function (candidate) {
+    gallery.querySelectorAll('[data-iss-image-choice]').forEach(function (candidate) {
       candidate.addEventListener('click', function () {
         selectImage(gallery, candidate, viewport);
       });
@@ -83,7 +78,7 @@
 
   function initImageViewportGalleries(root) {
     var scope = root && root.querySelectorAll ? root : document;
-    scope.querySelectorAll('[data-iss-image-viewport-gallery], .iss-tour-hero-gallery').forEach(bindGallery);
+    scope.querySelectorAll('[data-iss-image-viewport-gallery]').forEach(bindGallery);
   }
 
   window.ISSFrontendImageViewportGallery = {

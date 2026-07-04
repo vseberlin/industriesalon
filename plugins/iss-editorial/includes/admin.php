@@ -82,9 +82,7 @@ function iss_editorial_uses_integrated_route_stations(string $format_slug, strin
 {
     return $format_slug === 'fuehrung'
         && $post_type === 'fuehrung'
-        && defined('ISS_RELATIONS_META_KEY')
-        && function_exists('iss_relations_normalize_relations')
-        && function_exists('iss_relations_get_place_choices');
+        && function_exists('iss_relations_get_route_station_editor_config');
 }
 
 function iss_editorial_get_route_station_editor_config(int $post_id, string $format_slug, string $post_type): array
@@ -95,28 +93,14 @@ function iss_editorial_get_route_station_editor_config(int $post_id, string $for
         ];
     }
 
-    $stored = get_post_meta($post_id, ISS_RELATIONS_META_KEY, true);
-
-    return [
-        'enabled' => true,
-        'relations' => iss_relations_normalize_relations(is_array($stored) ? $stored : [], $post_id),
-        'places' => iss_relations_get_place_choices(),
-        'restRoot' => esc_url_raw(rest_url('iss-relations/v1')),
-    ];
+    return iss_relations_get_route_station_editor_config($post_id);
 }
 
 function iss_editorial_render_route_relation_hidden_fields(array $relations): void
 {
-    echo '<div class="iss-editorial-route-fields" hidden aria-hidden="true">';
-
-    foreach (array_values($relations) as $index => $relation) {
-        foreach (['place_id', 'role', 'weight', 'label', 'route_title', 'route_teaser', 'station_object_id', 'station_story_id'] as $key) {
-            $value = $relation[$key] ?? '';
-            echo '<input type="hidden" name="iss_relations[' . esc_attr((string) $index) . '][' . esc_attr($key) . ']" value="' . esc_attr((string) $value) . '">';
-        }
+    if (function_exists('iss_relations_render_route_station_hidden_fields')) {
+        iss_relations_render_route_station_hidden_fields($relations);
     }
-
-    echo '</div>';
 }
 
 function iss_editorial_render_main_canvas(WP_Post $post): void
@@ -132,17 +116,11 @@ function iss_editorial_render_main_canvas(WP_Post $post): void
     $route_config = iss_editorial_get_route_station_editor_config((int) $post->ID, $format_slug, (string) $post->post_type);
 
     wp_nonce_field('iss_editorial_save_document', 'iss_editorial_nonce');
-    if (!empty($route_config['enabled'])) {
-        wp_nonce_field('iss_relations_save_meta', 'iss_relations_meta_nonce');
-    }
 
     echo '<div class="iss-editorial-shell">';
     echo '<div class="iss-editorial-admin iss-editorial-admin--canvas" data-format="' . esc_attr($format_slug) . '" data-post-id="' . esc_attr((string) $post->ID) . '">';
     echo '<input type="hidden" class="iss-editorial-enabled-field" name="iss_editorial[' . esc_attr($format_slug) . '][enabled]" value="' . esc_attr($enabled ? '1' : '0') . '">';
     echo '<input type="hidden" class="iss-editorial-document-field" name="iss_editorial[' . esc_attr($format_slug) . '][document]" value="' . esc_attr(iss_editorial_encode_document($document)) . '">';
-    if (!empty($route_config['enabled'])) {
-        iss_editorial_render_route_relation_hidden_fields((array) ($route_config['relations'] ?? []));
-    }
     echo '<div class="iss-editorial-canvas-toolbar">';
     echo '<div class="iss-editorial-canvas-toolbar__copy">';
     echo '<p class="iss-editorial-mode">' . esc_html__('Redaktionelle Komposition', 'iss-editorial') . '</p>';
@@ -334,6 +312,9 @@ function iss_editorial_enqueue_admin_assets(string $hook): void
     $script_path = iss_editorial_admin_path() . 'assets/admin.js';
     if (file_exists($script_path)) {
         $route_config = iss_editorial_get_route_station_editor_config($post_id, (string) $format['slug'], (string) $screen->post_type);
+        $route_dependency = !empty($route_config['enabled']) && wp_script_is('iss-relations-route-stations', 'registered')
+            ? 'iss-relations-route-stations'
+            : '';
         $document = iss_editorial_hydrate_document_previews(iss_editorial_get_document($post_id, (string) $format['slug'], false));
         wp_enqueue_script(
             'iss-editorial-admin',
@@ -342,6 +323,7 @@ function iss_editorial_enqueue_admin_assets(string $hook): void
                 file_exists($set_media_picker_path) ? 'iss-editorial-set-media-picker' : '',
                 file_exists($dnd_path) ? 'iss-editorial-dnd' : '',
                 file_exists($ui_path) ? 'iss-editorial-ui' : '',
+                $route_dependency,
             ])),
             (string) filemtime($script_path),
             true

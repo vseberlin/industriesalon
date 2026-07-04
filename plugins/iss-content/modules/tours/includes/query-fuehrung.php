@@ -134,7 +134,6 @@ function iss_fuehrung_get_booking_mode($post_id) {
 }
 
 function iss_fuehrung_get_inquiry_data($post_id) {
-    $url = trim((string) get_post_meta($post_id, 'inquiry_url', true));
     $label = trim((string) get_post_meta($post_id, 'inquiry_label', true));
     $note = trim((string) get_post_meta($post_id, 'inquiry_note', true));
 
@@ -143,7 +142,7 @@ function iss_fuehrung_get_inquiry_data($post_id) {
     }
 
     return [
-        'url' => $url,
+        'url' => '',
         'label' => $label,
         'note' => $note,
     ];

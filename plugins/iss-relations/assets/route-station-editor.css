@@ -1,0 +1,156 @@
+.iss-relations-route-panel {
+  display: grid;
+  gap: 12px;
+  padding: 14px;
+  border: 1px solid #dcdcde;
+  border-radius: 4px;
+  background: #fff;
+}
+
+.iss-relations-route-panel.is-draft {
+  border-color: #d63638;
+  background: #fff7f7;
+}
+
+.iss-relations-route-panel.is-locked {
+  border-color: #72aee6;
+  background: #f6fbff;
+}
+
+.iss-relations-route-panel__head {
+  display: grid;
+  gap: 4px;
+  padding-bottom: 12px;
+  border-bottom: 1px solid #dcdcde;
+}
+
+.iss-relations-route-panel__head p {
+  margin: 0;
+}
+
+.iss-relations-route-state {
+  font-weight: 700;
+}
+
+.iss-relations-route-panel.is-draft .iss-relations-route-state {
+  color: #b32d2e;
+}
+
+.iss-relations-route-panel.is-locked .iss-relations-route-state {
+  color: #135e96;
+}
+
+.iss-relations-route-rows {
+  display: grid;
+  gap: 10px;
+}
+
+.iss-relations-route-row {
+  display: grid;
+  grid-template-columns: 42px minmax(0, 1fr) auto;
+  gap: 12px;
+  align-items: start;
+  padding: 12px;
+  border: 1px solid #dcdcde;
+  border-radius: 4px;
+  background: #fff;
+}
+
+.iss-relations-route-row__position {
+  display: inline-flex;
+  min-width: 2rem;
+  min-height: 2rem;
+  align-items: center;
+  justify-content: center;
+  border-radius: 4px;
+  background: #1d2327;
+  color: #fff;
+  font-weight: 700;
+}
+
+.iss-relations-route-row__fields {
+  display: grid;
+  grid-template-columns: minmax(12rem, 1fr) minmax(12rem, 1fr);
+  gap: 10px;
+}
+
+.iss-relations-route-row__fields .iss-editorial-field:nth-child(3) {
+  grid-column: 1 / -1;
+}
+
+.iss-relations-route-source {
+  grid-column: 1 / -1;
+  padding: 10px 12px;
+  border: 1px solid #dcdcde;
+  border-radius: 4px;
+  background: #f6f7f7;
+}
+
+.iss-relations-route-source > summary {
+  cursor: pointer;
+  font-weight: 600;
+}
+
+.iss-relations-route-source > .description {
+  margin: 8px 0 10px;
+}
+
+.iss-relations-route-source > .iss-editorial-field + .iss-editorial-field {
+  margin-top: 10px;
+}
+
+.iss-relations-route-row__summary {
+  align-self: center;
+  font-weight: 600;
+}
+
+.iss-relations-route-row__tools {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  justify-content: flex-end;
+}
+
+.iss-relations-route-trash {
+  display: grid;
+  gap: 8px;
+  padding: 12px;
+  border: 1px solid #f0b849;
+  border-radius: 4px;
+  background: #fff8e5;
+}
+
+.iss-relations-route-trash__head {
+  display: grid;
+  gap: 2px;
+}
+
+.iss-relations-route-trash__head h3,
+.iss-relations-route-trash__head p {
+  margin: 0;
+}
+
+.iss-relations-route-trash__row,
+.iss-relations-route-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.iss-relations-route-actions {
+  justify-content: flex-start;
+}
+
+@media (max-width: 782px) {
+  .iss-relations-route-row,
+  .iss-relations-route-row__fields {
+    grid-template-columns: 1fr;
+  }
+
+  .iss-relations-route-row__tools,
+  .iss-relations-route-trash__row {
+    justify-content: flex-start;
+  }
+}

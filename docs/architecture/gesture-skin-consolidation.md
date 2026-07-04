@@ -42,9 +42,9 @@ The same concept appears under two-to-four different names:
 | Concept       | Current names                                          |
 |---------------|--------------------------------------------------------|
 | Quote         | `zitat`, `quellenauszug`                               |
-| Gallery/images| `galerie`, `bildstrecke`, `image_wall`, `autoalbum`, `photoalbum` |
+| Gallery/images| `galerie`, `bildstrecke`, `image_wall`, `vollbild`, `autoalbum`, `photoalbum` |
 | Essay text    | `fliesstext`, `bericht`                                |
-| Facts/stats   | `massstab` (label "Massstab" vs "Merkpunkte")          |
+| Facts/stats   | `facts`, `massstab` (label "Massstab" vs "Merkpunkte") |
 | Archive focus | `objektfokus`, `quellen`                               |
 
 Skins are similarly duplicated. Veranstaltungen define `typografisch, vortrag,
@@ -79,17 +79,16 @@ not a separate language.
 | 4 | `leitfrage`    | leitfrage                                                         |
 | 5 | `zitat`        | zitat, quellenauszug (source becomes a flag, not a 2nd type)      |
 | 6 | `schluss`      | schluss                                                           |
-| 7 | `galerie`      | galerie, bildstrecke, image_wall, autoalbum, photoalbum (layout = grid/sequence/wall is an option) |
-| 8 | `vollbild`     | vollbild (distinct from a gallery — kept)                         |
-| 9 | `objektfokus`  | objektfokus, quellen (archive-object signature — kept)            |
-| 10| `material`     | material                                                          |
-| 11| `massstab`     | massstab, "Merkpunkte" (unify the label)                          |
-| 12| `programm`     | programm (festival sub-schedule)                                  |
-| 13| `upload_intake`| upload_intake                                                     |
-| 14| `gateway`      | curated next-path cards/links for landing pages                   |
-| 15| `statement`    | landing-page thesis, editorial intro, or Leitfrage                |
-| 16| `feature`      | landing-page highlighted media/text/facts section                 |
-| 17| `dynamic_slot` | approved theme-owned dynamic modules for native page landings     |
+| 7 | `galerie`      | galerie, bildstrecke, image_wall, vollbild, autoalbum, photoalbum (layout = grid/sequence/wall/viewport is an option) |
+| 8 | `objektfokus`  | objektfokus, quellen (archive-object signature — kept)            |
+| 9 | `material`     | material                                                          |
+| 10| `facts`        | facts, massstab, "Merkpunkte"                                     |
+| 11| `programm`     | programm (festival sub-schedule)                                  |
+| 12| `upload_intake`| upload_intake                                                     |
+| 13| `gateway`      | curated next-path cards/links for landing pages                   |
+| 14| `statement`    | landing-page thesis, editorial intro, or Leitfrage                |
+| 15| `feature`      | landing-page highlighted media/text/facts section                 |
+| 16| `dynamic_slot` | approved theme-owned dynamic modules for native page landings     |
 
 **Retired as gestures:**
 
@@ -343,7 +342,8 @@ skins; it has no standalone content meaning.
 `dossier` is the real project skin. `brief` and `field` should become variants
 or feature presets of `dossier`, not separate canonical skins.
 
-`image_wall` folds into `galerie` with `layout = wall`.
+`image_wall` folds into `galerie` with `layout = wall`. `vollbild` folds into
+`galerie` with `layout = viewport`. `massstab` folds into `facts`.
 
 ## Photoalbums And Gallery-Led Content
 
@@ -397,8 +397,10 @@ Gestures:
 quellenauszug   → zitat            (set source flag)
 bildstrecke     → galerie          (layout = sequence)
 image_wall      → galerie          (layout = wall)
+vollbild        → galerie          (layout = viewport)
 autoalbum       → galerie          (source = set, auto)
 photoalbum      → galerie          (source = set)
+massstab        → facts
 bericht         → fliesstext
 quellen         → objektfokus      (or material if no object_refs)
 aside           → kapitel          (voice = curator flag)

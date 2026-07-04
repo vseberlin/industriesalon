@@ -95,32 +95,56 @@
   color: #fff;
 }
 
-.iss-tour-hero-gallery__thumb {
-  border: 1px solid var(--iss-tour-line);
-  border-radius: var(--iss-radius-sm, 8px);
-  background: #fff;
+body.single-fuehrung.iss-tour-has-stage-gesture .iss-tour-hero > .iss-container {
+  margin-block-start: 0;
 }
 
-.iss-tour-hero-gallery__thumb.is-active {
+@media (min-width: 901px) {
+  body.single-fuehrung.iss-tour-has-stage-gesture .iss-tour-hero__copy-col,
+  body.single-fuehrung.iss-tour-has-stage-gesture .iss-tour-hero__aside-col {
+    transform: translateY(6rem);
+  }
+}
+
+body.single-fuehrung .iss-tour-hero__intro.iss-hero-anchor > .iss-kicker {
+  border-left: 0;
+  padding-left: 0;
+}
+
+body.single-fuehrung.iss-tour-editorial-skin-route-dossier .iss-tour-hero__lede {
+  display: block;
+  margin-top: 0.95rem;
+}
+
+body.single-fuehrung.iss-tour-editorial-skin-route-dossier .iss-tour-hero__lede p {
+  color: rgba(255, 255, 255, 0.9);
+}
+
+body.single-fuehrung .iss-tour-hero .iss-gesture-stage-gallery {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(4.2rem, 1fr));
+  gap: 0.42rem;
+}
+
+body.single-fuehrung .iss-tour-hero .iss-gesture-stage-gallery__thumb {
+  border: 1px solid rgba(249, 249, 250, 0.22);
+  border-radius: 0.25rem;
+  background: rgba(20, 20, 20, 0.56);
+  box-shadow: none;
+  overflow: hidden;
+}
+
+body.single-fuehrung .iss-tour-hero .iss-gesture-stage-gallery__thumb.is-active {
   border-color: var(--iss-accent);
 }
 
-.iss-fuehrung--blue .iss-fuehrung-fact,
-.iss-fuehrung--blue .iss-fuehrung-booking__inner {
-  border-left-color: var(--iss-blue, #869fba);
+body.single-fuehrung .iss-tour-hero .iss-gesture-stage-gallery__thumb-img {
+  width: 100%;
+  object-fit: cover;
 }
 
-.iss-fuehrung--green .iss-fuehrung-fact,
-.iss-fuehrung--green .iss-fuehrung-booking__inner {
-  border-left-color: var(--iss-green, #579e7d);
-}
-
-.iss-fuehrung--yellow .iss-fuehrung-fact,
-.iss-fuehrung--yellow .iss-fuehrung-booking__inner {
-  border-left-color: var(--iss-yellow, #ebbc1e);
-}
-
-.iss-fuehrung--brown .iss-fuehrung-fact,
-.iss-fuehrung--brown .iss-fuehrung-booking__inner {
-  border-left-color: var(--iss-brown, #753a18);
+@media (max-width: 600px) {
+  body.single-fuehrung .iss-tour-hero .iss-gesture-stage-gallery {
+    grid-template-columns: repeat(auto-fit, minmax(4.25rem, 1fr));
+  }
 }

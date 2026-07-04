@@ -432,6 +432,220 @@ function iss_relations_get_stored_post_relations(int $post_id): array
     return iss_relations_normalize_relations(is_array($stored) ? $stored : [], $post_id);
 }
 
+function iss_relations_supports_route_drafts(int $post_id): bool
+{
+    $post_type = (string) get_post_type($post_id);
+
+    return $post_id > 0 && iss_relations_supports_route_fields($post_type);
+}
+
+function iss_relations_route_station_rows(array $relations): array
+{
+    return array_values(array_filter($relations, static function ($relation): bool {
+        return is_array($relation) && (($relation['role'] ?? '') === 'stop');
+    }));
+}
+
+function iss_relations_route_relation_hash(array $relations): string
+{
+    $rows = [];
+
+    foreach (iss_relations_route_station_rows($relations) as $relation) {
+        $rows[] = [
+            'place_id' => (int) ($relation['place_id'] ?? 0),
+            'role' => (string) ($relation['role'] ?? ''),
+            'weight' => (int) ($relation['weight'] ?? 0),
+            'label' => (string) ($relation['label'] ?? ''),
+            'route_title' => (string) ($relation['route_title'] ?? ''),
+            'route_teaser' => (string) ($relation['route_teaser'] ?? ''),
+            'station_object_id' => (int) ($relation['station_object_id'] ?? 0),
+            'station_story_id' => (int) ($relation['station_story_id'] ?? 0),
+        ];
+    }
+
+    return hash('sha256', wp_json_encode($rows));
+}
+
+function iss_relations_get_route_draft(int $post_id): array
+{
+    if (!iss_relations_supports_route_drafts($post_id)) {
+        return [];
+    }
+
+    $draft = get_post_meta($post_id, ISS_RELATIONS_ROUTE_DRAFT_META_KEY, true);
+    if (!is_array($draft)) {
+        return [];
+    }
+
+    $relations = iss_relations_normalize_relations(is_array($draft['relations'] ?? null) ? $draft['relations'] : [], $post_id);
+    $trash = iss_relations_normalize_relations(is_array($draft['trash'] ?? null) ? $draft['trash'] : [], $post_id);
+
+    return [
+        'schema_version' => 1,
+        'relations' => $relations,
+        'trash' => iss_relations_route_station_rows($trash),
+        'base_hash' => sanitize_text_field((string) ($draft['base_hash'] ?? '')),
+        'updated_at' => sanitize_text_field((string) ($draft['updated_at'] ?? '')),
+        'updated_by' => absint($draft['updated_by'] ?? 0),
+    ];
+}
+
+function iss_relations_save_route_draft(int $post_id, array $relations, array $trash = [], string $base_hash = ''): array
+{
+    if (!iss_relations_supports_route_drafts($post_id)) {
+        return [];
+    }
+
+    $clean_relations = iss_relations_normalize_relations($relations, $post_id);
+    $clean_trash = iss_relations_route_station_rows(iss_relations_normalize_relations($trash, $post_id));
+    $canonical = iss_relations_get_stored_post_relations($post_id);
+    $base_hash = $base_hash !== '' ? sanitize_text_field($base_hash) : iss_relations_route_relation_hash($canonical);
+
+    $draft = [
+        'schema_version' => 1,
+        'relations' => $clean_relations,
+        'trash' => $clean_trash,
+        'base_hash' => $base_hash,
+        'updated_at' => current_time('mysql'),
+        'updated_by' => get_current_user_id(),
+    ];
+
+    update_post_meta($post_id, ISS_RELATIONS_ROUTE_DRAFT_META_KEY, $draft);
+
+    return iss_relations_get_route_draft($post_id);
+}
+
+function iss_relations_create_route_draft(int $post_id): array
+{
+    $existing = iss_relations_get_route_draft($post_id);
+    if ($existing) {
+        return $existing;
+    }
+
+    $canonical = iss_relations_get_stored_post_relations($post_id);
+
+    return iss_relations_save_route_draft(
+        $post_id,
+        $canonical,
+        [],
+        iss_relations_route_relation_hash($canonical)
+    );
+}
+
+function iss_relations_discard_route_draft(int $post_id): void
+{
+    if (iss_relations_supports_route_drafts($post_id)) {
+        delete_post_meta($post_id, ISS_RELATIONS_ROUTE_DRAFT_META_KEY);
+    }
+}
+
+function iss_relations_add_route_snapshot(int $post_id, array $canonical, array $draft, array $trash): void
+{
+    $snapshots = get_post_meta($post_id, ISS_RELATIONS_ROUTE_SNAPSHOTS_META_KEY, true);
+    $snapshots = is_array($snapshots) ? $snapshots : [];
+    array_unshift($snapshots, [
+        'created_at' => current_time('mysql'),
+        'created_by' => get_current_user_id(),
+        'canonical' => $canonical,
+        'published' => $draft,
+        'deleted' => iss_relations_route_station_rows($trash),
+        'canonical_hash' => iss_relations_route_relation_hash($canonical),
+        'published_hash' => iss_relations_route_relation_hash($draft),
+    ]);
+
+    update_post_meta(
+        $post_id,
+        ISS_RELATIONS_ROUTE_SNAPSHOTS_META_KEY,
+        array_slice($snapshots, 0, 10)
+    );
+}
+
+function iss_relations_ensure_route_station_source_relations(array $relations): void
+{
+    foreach (iss_relations_route_station_rows($relations) as $relation) {
+        $place_id = (int) ($relation['place_id'] ?? 0);
+        if ($place_id <= 0) {
+            continue;
+        }
+
+        $station_object_id = (int) ($relation['station_object_id'] ?? 0);
+        if ($station_object_id > 0) {
+            iss_relations_ensure_post_has_place_relation($station_object_id, $place_id);
+        }
+
+        $station_story_id = (int) ($relation['station_story_id'] ?? 0);
+        if ($station_story_id > 0) {
+            iss_relations_ensure_post_has_place_relation($station_story_id, $place_id);
+        }
+    }
+}
+
+function iss_relations_publish_route_draft(int $post_id): array
+{
+    $draft = iss_relations_get_route_draft($post_id);
+    if (!$draft) {
+        return [
+            'relations' => iss_relations_get_stored_post_relations($post_id),
+            'published' => false,
+        ];
+    }
+
+    $canonical = iss_relations_get_stored_post_relations($post_id);
+    $published = iss_relations_normalize_relations((array) ($draft['relations'] ?? []), $post_id);
+    iss_relations_add_route_snapshot($post_id, $canonical, $published, (array) ($draft['trash'] ?? []));
+    iss_relations_update_post_relations($post_id, $published);
+    iss_relations_ensure_route_station_source_relations($published);
+    update_post_meta($post_id, ISS_RELATIONS_ROUTE_GRAPH_HASH_META_KEY, iss_relations_route_relation_hash($published));
+    delete_post_meta($post_id, ISS_RELATIONS_ROUTE_DRAFT_META_KEY);
+    iss_relations_sync_post_read_models($post_id);
+
+    return [
+        'relations' => iss_relations_get_stored_post_relations($post_id),
+        'published' => true,
+    ];
+}
+
+function iss_relations_route_draft_preview_nonce_action(int $post_id): string
+{
+    return 'iss_relations_route_draft_preview_' . (int) $post_id;
+}
+
+function iss_relations_get_route_draft_preview_args(int $post_id): array
+{
+    return [
+        'iss_relations_route_draft_preview' => '1',
+        'iss_relations_route_draft_nonce' => wp_create_nonce(iss_relations_route_draft_preview_nonce_action($post_id)),
+    ];
+}
+
+function iss_relations_should_prefer_route_draft(int $post_id): bool
+{
+    if (!iss_relations_supports_route_drafts($post_id) || !current_user_can('edit_post', $post_id)) {
+        return false;
+    }
+
+    // phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Nonce is verified below for read-only preview routing.
+    if ((string) ($_GET['iss_relations_route_draft_preview'] ?? '') !== '1') {
+        return false;
+    }
+
+    // phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Read-only preview nonce.
+    $nonce = isset($_GET['iss_relations_route_draft_nonce']) ? sanitize_text_field(wp_unslash((string) $_GET['iss_relations_route_draft_nonce'])) : '';
+
+    return $nonce !== '' && wp_verify_nonce($nonce, iss_relations_route_draft_preview_nonce_action($post_id));
+}
+
+function iss_relations_get_route_preview_relations(int $post_id): array
+{
+    if (!iss_relations_should_prefer_route_draft($post_id)) {
+        return [];
+    }
+
+    $draft = iss_relations_get_route_draft($post_id);
+
+    return $draft ? (array) ($draft['relations'] ?? []) : [];
+}
+
 function iss_relations_graph_is_available(): bool
 {
     return function_exists('iss_graph_get_service');
@@ -748,6 +962,12 @@ function iss_relations_graph_read_post_relations(int $post_id, array $stored_rel
 function iss_relations_get_post_relations(int $post_id): array
 {
     $stored = iss_relations_get_stored_post_relations($post_id);
+    $preview = iss_relations_get_route_preview_relations($post_id);
+
+    if ($preview) {
+        return iss_relations_normalize_relations($preview, $post_id);
+    }
+
     $external = apply_filters('iss_relations_external_post_relations', null, $post_id, $stored);
 
     if ($external !== null) {
@@ -1071,22 +1291,7 @@ function iss_relations_save_post_relations(int $post_id, array $relations): arra
     iss_relations_update_post_relations($post_id, $clean);
 
     if ($post->post_type === 'fuehrung') {
-        foreach ($clean as $relation) {
-            $place_id = (int) ($relation['place_id'] ?? 0);
-            if ($place_id <= 0) {
-                continue;
-            }
-
-            $station_object_id = (int) ($relation['station_object_id'] ?? 0);
-            if ($station_object_id > 0) {
-                iss_relations_ensure_post_has_place_relation($station_object_id, $place_id);
-            }
-
-            $station_story_id = (int) ($relation['station_story_id'] ?? 0);
-            if ($station_story_id > 0) {
-                iss_relations_ensure_post_has_place_relation($station_story_id, $place_id);
-            }
-        }
+        iss_relations_ensure_route_station_source_relations($clean);
     }
 
     return $clean;
@@ -1257,6 +1462,10 @@ function iss_relations_sync_supported_post_on_save(int $post_id, WP_Post $post):
     }
 
     if (!iss_relations_is_supported_post_type($post->post_type)) {
+        return;
+    }
+
+    if (iss_relations_supports_route_fields($post->post_type)) {
         return;
     }
 

@@ -6,6 +6,14 @@ be recovered from Git history.
 
 ## 2026-07-04
 
+- Moved the Führung `Route / Stationen` constructor out of the generic
+  `iss-editorial` admin bundle into an `iss-relations` route-station editor
+  module. The integrated canvas now mounts the relation-owned editor without
+  hidden canonical route fields, and route edits flow through the draft route
+  endpoint instead of the legacy `/places` write path. Route station payloads
+  now let valid `role=stop` rows win over duplicate non-station rows for the
+  same place, preventing a station from disappearing when editors change it to
+  a place already stored as primary/related.
 - Fixed Führung `atlas_map` rendering so JSON Atlas-Karte sections pass the
   owning Führung post context into the shared static-map renderer, removed the
   template fallback map shell during the JSON migration, and let the route-map
@@ -18,6 +26,90 @@ be recovered from Git history.
   fields. The renderer now builds markers and panel content from one mapped
   station model, with legacy fallback suppression and private context attributes
   removed from the public block path.
+- Restored route-station data deleted during route-constructor testing from the
+  June 11 postmeta backup for `elektropolis-tour` and `familienrallye`, then
+  refreshed the graph relation projection so the public route helper and Atlas
+  map source consume the restored station rows. Rollback and restore SQL
+  artifacts live under `ops/sql/2026-07-04-*route-station*.sql`.
+- Added a locked route-draft workflow for Führung stations. Normal WordPress
+  updates no longer carry integrated route fields; stale canonical `/places`
+  writes for route-enabled posts are rejected. Editors must unlock a route,
+  save sandboxed draft edits, can restore draft-deleted stations from a draft
+  trash area, and explicitly publish-and-lock before canonical `iss_related_places`
+  and the graph/map projection update. JSON/WP preview can opt into the draft
+  route through signed preview args while public rendering stays on the locked
+  route. Fixed the extracted editor state update path so place/object/story,
+  title, and teaser edits write back into the draft row before save instead of
+  being lost on rerender. Route publish now also ensures selected station source
+  objects and Beiträge are indexed against the station place, and the constructor
+  demotes those source fields into an optional collapsed area because the current
+  public route presentation does not consume them yet.
+- Removed the legacy Führung template presentation path for hero-gallery data:
+  the old `iss/tour-hero-gallery` block, admin gallery picker, fallback gallery
+  scripts, and template placeholder are gone. The Führung side meta box now
+  keeps only facts, booking, and `tour_badge` as a card/kicker label; unused
+  icon, color, featured, sort, and `hero_gallery_ids` meta registration/UI were
+  removed so JSON composition is the single source for Hero, Medien, route, and
+  gesture presentation.
+- Tightened the Führung editor dashboard after the cleanup: identity now stacks
+  excerpt and featured image beside a two-column Pflichtangaben box, while
+  SuperSaaS linking and related-content promotion live together in a dedicated
+  Termine/Sichtbarkeit section with clearer SuperSaaS copy.
+- Unified occurrence-backed public booking entry points around the shared
+  programme calendar modal: single Führung booking CTAs and timeline ticket
+  buttons now open the source-level slot chooser, available slots open the
+  shared request/payment form, sold-out compact date rows no longer trigger the
+  form, and the temporary single-Führung `Alle Termine` calendar section was
+  removed. The occurrence slot adapter now carries Veranstaltung price/copy
+  metadata and treats `source_post_type` as the canonical slot-query kind.
+- Added a structured Führung `booking_price_cents` field for the booking/payment
+  contract while keeping `price_note` as editorial display copy. The Führung
+  admin Pflichtangaben grid is more compact, the occurrence slot adapter
+  projects the structured amount when present, and `iss-commerce-lite`
+  recalculates Führung booking request amounts server-side from post meta.
+- Tightened the Führung admin layout again: `Anfrage-URL` is no longer exposed
+  or used for booking-mode decisions, `Buchungshinweis` is a single-line field,
+  promotion sits with the identity/Pflichtangaben dashboard column, and the
+  SuperSaaS mapping box stays in the native WordPress side column below
+  `Führungstypen`.
+- Simplified the single Führung hero text contract: JSON `bildbuehne` body owns
+  the hero lede when present, the manual excerpt is the only fallback, both are
+  capped server-side, and JSON-backed tours no longer let the description block
+  fall back to Kapitel or generated post content. The route-dossier skin now
+  shows that lede instead of hiding it through the old description-panel CSS,
+  and the legacy Führung `intro` section stays schema-valid but hidden from the
+  add-section palette because it is not part of the public hero contract.
+- Tightened CSS boundaries after the Führung stage cleanup: stage-gallery
+  thumbnails now use the shared gesture ratio again instead of a renamed legacy
+  tour-gallery override, and the shared programme booking form no longer applies
+  text-field sizing to radio controls inside the payment selector. The active
+  Führung stage overrides now live in `fuehrungen-skin.css`, including the
+  flow-layout margin reset that keeps desktop Bildbühne heroes within the
+  viewport. The single Führung stage copy/booking rail now sit lower on desktop,
+  and the hero kicker drops its own mini rail when it already sits inside the
+  larger hero-anchor rail.
+- Removed generated fallback labels from Führung JSON sections. Gesture type no
+  longer creates visible pseudo-kickers such as `Tourprofil`; section kicker text
+  is now purely an editorial field.
+- Made JSON gesture palette clicks non-destructive in the editorial admin:
+  clicking a gesture now opens an add-confirmation modal, while the section is
+  written to the composition only after explicit confirmation or drag/drop into
+  the structure. Accidental palette clicks no longer create empty sections or
+  fill the draft trash.
+- Tightened the shared `material` gesture contract: material now means files and
+  links only, while images and archive objects belong to gallery/object gestures.
+  The editorial media picker excludes images for material sections, stored media
+  references preserve MIME type, Set promotion no longer routes archive objects
+  into project material, and Führung/Projekt/Veranstaltung renderers ignore
+  legacy image/object refs in material output.
+- Collapsed the next JSON gesture vocabulary layer without adding a renderer:
+  `image_wall` and `vollbild` are now legacy aliases for `galerie` treatments
+  (`gallery_layout=wall` / `viewport`), while `massstab` is a legacy alias for
+  `facts`. Führung, Ausstellung, and Projekt renderers map the canonical
+  sections to existing layout skins, the project import path emits `facts`, and
+  the architecture docs now describe the reduced vocabulary.
+- Added an explicit agent/CSS-skill guardrail for future cleanup: touched legacy
+  CSS must drain into the owning layer and avoid parallel selector systems.
 
 ## 2026-07-03
 

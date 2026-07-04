@@ -36,8 +36,8 @@ legacy `post_content` path.
 
 Projects now have their first registry/gesture migration path. The `projekt`
 format uses the existing OrderedFormat engine with the `dossier` skin and
-gestures for `kapitel`, `fliesstext`, `massstab`, `projekt_rail`, `galerie`,
-`image_wall`, `material`, and `schluss`. `projekt_rail` is optional and carries
+gestures for `kapitel`, `fliesstext`, `facts`, `galerie`, `material`, and
+`schluss`. The rail is a document feature rather than a content gesture and carries
 only the rail heading language. When present, the theme appends the rail below
 the existing project meta panel and derives links from `kapitel` and `schluss`
 section anchors. When absent, no rail renders, so short project notes can remain
@@ -48,7 +48,7 @@ project as private working collections. Public project documents store only
 promoted `media_refs` and `object_refs`; the theme never reads raw Set state.
 Set promotion defaults projects into `galerie` so approved intake material can
 become public without collapsing the preserved Set history.
-Project `massstab` sections own structured `facts` rows (`value` plus `label`)
+Project `facts` sections own structured fact rows (`value` plus `label`)
 so editors do not have to encode fact emphasis with inline HTML in body text.
 The body remains available as an optional explanatory paragraph and as a legacy
 fallback.
@@ -71,7 +71,7 @@ raw Set intake state.
 Führungen now use the same `iss-editorial` engine boundary for narrative
 composition. `iss-content` registers the `fuehrung` format with gestures for
 `bildbuehne`, `intro`, `kapitel`, `leitfrage`, `zitat`, `galerie`,
-`image_wall`, `atlas_map`, `material`, and `schluss`. Existing Führung meta remains the
+`atlas_map`, `material`, and `schluss`. Existing Führung meta remains the
 owner for duration,
 meeting point, target group, pricing, booking mode, inquiry details, and the
 legacy hero gallery when no `bildbuehne` is active. For `bildbuehne`, the first
@@ -89,10 +89,10 @@ The public Führung gesture contract is intentionally narrow:
 `bildbuehne` is the optional first-viewport image stage with overlay title/text
 and a compact gallery; `intro` feeds the fallback hero description only;
 `kapitel` is the tour narrative or context; `leitfrage` is a framed guiding
-question; `zitat` is a source or voice moment; `galerie` and `image_wall` are
-image gestures; `atlas_map` is the optional route map gesture backed by existing
-relation station rows; `material` is for downloads, archive references, and
-supporting links; `schluss` is the closing invitation. The route station editor,
+question; `zitat` is a source or voice moment; `galerie` owns image treatments
+such as sequence, wall, and viewport; `atlas_map` is the optional route map
+gesture backed by existing relation station rows; `material` is for downloads
+and supporting links; `schluss` is the closing invitation. The route station editor,
 booking panel, dates, facts, and related cards are template/module surfaces, not
 JSON payload fields. The Führung template remains the scaffold for the left
 alignment grid, right booking rail, fallback route map, related placement, and
@@ -184,15 +184,10 @@ a scoped text-position flip for left/right source stations. `kapitel`,
 receive quiet typographic treatments in skin CSS; their content uses the common
 `kicker`, `title`, `body`, `quote`, and `attribution` fields rather than
 parallel gesture-specific keys. `objektfokus` remains reserved for
-archive-object grid treatments. `vollbild` is a one-image, full-viewport
-gesture; editors are guided toward 16:9 media and the theme uses a generic
-`viewport-image` treatment with cover-cropped imagery and an ink-panel text
-overlay. `image_wall` is the reusable Bilderwand gesture for approved media
-refs: editors select and reorder images, while the theme renders a framed,
-uncropped image wall with horizontal scrolling on narrow screens. It exists for
-dense promoted media where the asymmetric Gutenberg `iss/dense-image-wall`
-composition controls would be too heavy for the custom editor and where
-`bildstrecke` would imply a documentary sequence. Theme partials are reserved
+archive-object grid treatments. `galerie` owns full-viewport and image-wall
+treatments through `gallery_layout=viewport` and `gallery_layout=wall`: editors
+select and reorder images, while the skin decides whether it renders as a
+cover-cropped viewport image, sequence, grid, or dense wall. Theme partials are reserved
 for true structural exceptions, not for normal gesture rendering.
 
 ## Migration Audit

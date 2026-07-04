@@ -154,6 +154,7 @@
         objektfokus: '#1d9e75',
         vollbild: '#185fa5',
         massstab: '#ba7517',
+        facts: '#ba7517',
         publication_rail: '#255f63',
       intro: '#b94436',
       longread_chapter: '#1a1a2e',
@@ -199,7 +200,8 @@
       label: attachment.title || attachment.caption || '',
       thumbnail: thumbnail,
       width: attachment.width ? String(attachment.width) : '',
-      height: attachment.height ? String(attachment.height) : ''
+      height: attachment.height ? String(attachment.height) : '',
+      mime: attachment.mime || ''
     };
   }
 
@@ -239,9 +241,7 @@
       ? config.routeStations
       : null;
     var routeFields = container.querySelector('.iss-editorial-route-fields');
-    var routeRelations = routeConfig && Array.isArray(routeConfig.relations)
-      ? routeConfig.relations.map(normalizeRouteRelation)
-      : [];
+    var routeStationEditor = null;
 
     function sectionConfig(type) {
       return sections[type] || { label: type, supports: [] };
@@ -374,81 +374,6 @@
       field.value = JSON.stringify(documentState);
     }
 
-    function normalizeRouteRelation(relation) {
-      relation = relation && typeof relation === 'object' ? relation : {};
-
-      return {
-        place_id: parseInt(relation.place_id || '0', 10) || 0,
-        role: relation.role || 'related',
-        weight: parseInt(relation.weight || '0', 10) || 0,
-        label: relation.label || '',
-        route_title: relation.route_title || '',
-        route_teaser: relation.route_teaser || '',
-        station_object_id: parseInt(relation.station_object_id || '0', 10) || 0,
-        station_story_id: parseInt(relation.station_story_id || '0', 10) || 0
-      };
-    }
-
-    function routePlaces() {
-      return routeConfig && Array.isArray(routeConfig.places) ? routeConfig.places : [];
-    }
-
-    function routeStationRows() {
-      return routeRelations.filter(function (relation) {
-        return relation.role === 'stop';
-      }).sort(function (left, right) {
-        if (left.weight === right.weight) {
-          return left.place_id - right.place_id;
-        }
-
-        return left.weight - right.weight;
-      });
-    }
-
-    function routeNonStationRows() {
-      return routeRelations.filter(function (relation) {
-        return relation.role !== 'stop';
-      });
-    }
-
-    function renumberRouteStations(stations) {
-      stations.forEach(function (station, index) {
-        station.role = 'stop';
-        station.weight = index + 1;
-      });
-      routeRelations = routeNonStationRows().concat(stations);
-    }
-
-    function buildRouteRelationsPayload() {
-      var stations = routeStationRows();
-      renumberRouteStations(stations);
-
-      return routeRelations.map(function (relation) {
-        return normalizeRouteRelation(relation);
-      });
-    }
-
-    function appendHiddenRelationField(target, index, key, value) {
-      var input = document.createElement('input');
-      input.type = 'hidden';
-      input.name = 'iss_relations[' + String(index) + '][' + key + ']';
-      input.value = String(value || '');
-      target.appendChild(input);
-    }
-
-    function syncRouteHiddenFields() {
-      if (!routeFields || !routeConfig) {
-        return;
-      }
-
-      clear(routeFields);
-      buildRouteRelationsPayload().forEach(function (relation, index) {
-        ['place_id', 'role', 'weight', 'label', 'route_title', 'route_teaser', 'station_object_id', 'station_story_id'].forEach(function (key) {
-          appendHiddenRelationField(routeFields, index, key, relation[key]);
-        });
-      });
-    }
-
     function currentSkin() {
       var skin = String(documentState.skin || 'standard');
       var exists = skins.some(function (item) {
@@ -526,8 +451,8 @@
       if ((section.object_refs || []).length) {
         parts.push(String((section.object_refs || []).length) + ' Archivobjekt(e)');
       }
-      if ((section.media_refs || []).length) {
-        parts.push(String((section.media_refs || []).length) + ' Medien');
+      if (sectionMediaRefsForDisplay(section).length) {
+        parts.push(String(sectionMediaRefsForDisplay(section).length) + ((section.type || '') === 'material' ? ' Datei(en)' : ' Medien'));
       }
       if ((section.links || []).length) {
         parts.push(String((section.links || []).length) + ' Link(s)');
@@ -587,6 +512,44 @@
       render();
       openEditor(insertAt);
       scheduleAutosave();
+    }
+
+    function openGesturePreview(type) {
+      var configData;
+      var shell;
+      var intro;
+      var marker;
+
+      if (isSectionHidden(type)) {
+        return;
+      }
+
+      configData = sectionConfig(type);
+      closeModal();
+      shell = createEditorModal(createSection(type), {
+        kicker: 'Abschnitt hinzufügen',
+        title: configData.label || type || 'Abschnitt',
+        closeLabel: 'Schließen',
+        doneLabel: 'Zur Komposition hinzufügen',
+        onClose: closeModal,
+        onDone: function () {
+          closeModal();
+          addSection(type);
+        }
+      });
+      intro = createElement('div', 'iss-editorial-insert-preview');
+      marker = createElement('span', 'iss-editorial-insert-preview__marker');
+      marker.style.backgroundColor = sectionTone(type);
+      intro.appendChild(marker);
+      intro.appendChild(createElement(
+        'p',
+        '',
+        configData.description || 'Abschnitt vorbereiten und erst nach Bestätigung zur Komposition hinzufügen.'
+      ));
+      shell.body.appendChild(intro);
+      modal = shell.root;
+      document.body.classList.add('iss-editorial-modal-open');
+      document.body.appendChild(modal);
     }
 
     function moveSection(index, direction) {
@@ -671,18 +634,32 @@
         var button = createElement('button', 'iss-editorial-gesture' + (type === activeType ? ' active' : ''));
         var dot = createElement('span', 'iss-editorial-gesture__dot');
         var body = createElement('span', 'iss-editorial-gesture__body');
+        var suppressClick = false;
         button.type = 'button';
         button.draggable = true;
         button.setAttribute('data-section-type', type);
-        button.setAttribute('aria-label', 'Abschnitt hinzufügen: ' + (sectionConfig(type).label || type));
+        button.setAttribute('aria-label', 'Abschnitt ansehen: ' + (sectionConfig(type).label || type));
         dot.style.backgroundColor = sectionTone(type);
         body.appendChild(createElement('strong', '', sectionConfig(type).label || type));
         body.appendChild(createElement('span', '', sectionConfig(type).description || type));
         button.appendChild(dot);
         button.appendChild(body);
-        button.addEventListener('click', function () {
+        button.addEventListener('dragstart', function () {
+          suppressClick = true;
+        });
+        button.addEventListener('dragend', function () {
+          window.setTimeout(function () {
+            suppressClick = false;
+          }, 0);
+        });
+        button.addEventListener('click', function (event) {
+          if (suppressClick) {
+            event.preventDefault();
+            event.stopPropagation();
+            return;
+          }
           activeType = type;
-          addSection(type);
+          openGesturePreview(type);
         });
         list.appendChild(button);
       });
@@ -710,7 +687,7 @@
       meta.appendChild(createElement('span', 'iss-editorial-card__type', sectionConfig(type).label || type));
       meta.appendChild(createElement('h3', '', section.title || 'Ohne Titel'));
       meta.appendChild(createElement('p', '', sectionSummary(section) || 'Noch kein Inhalt.'));
-      if ((section.media_refs || []).length) {
+      if (sectionMediaRefsForDisplay(section).length) {
         renderMediaThumbs(section, meta);
       }
 
@@ -748,7 +725,7 @@
       if (section.deleted_at) {
         meta.appendChild(createElement('p', 'iss-editorial-card__trash-note', 'Gelöscht: ' + String(section.deleted_at).replace('T', ' ').replace(/\..+$/, '')));
       }
-      if ((section.media_refs || []).length) {
+      if (sectionMediaRefsForDisplay(section).length) {
         renderMediaThumbs(section, meta);
       }
 
@@ -836,236 +813,24 @@
       target.appendChild(panel);
     }
 
-    function relationChoiceStrings() {
-      return (window.issRelationsAdmin && window.issRelationsAdmin.strings) || {};
-    }
-
-    function relationChoiceConfig() {
-      return window.issRelationsAdmin || {};
-    }
-
-    function relationChoiceString(key, fallback) {
-      return relationChoiceStrings()[key] || fallback;
-    }
-
-    function setSelectOptions(select, items, selectedId, emptyLabel) {
-      var placeholder = document.createElement('option');
-      var fragment = document.createDocumentFragment();
-      placeholder.value = '';
-      placeholder.textContent = emptyLabel;
-      fragment.appendChild(placeholder);
-
-      (items || []).forEach(function (item) {
-        var option = document.createElement('option');
-        option.value = String(item.id || '');
-        option.textContent = item.title || '';
-        option.selected = String(item.id || '') === String(selectedId || '');
-        fragment.appendChild(option);
-      });
-
-      select.innerHTML = '';
-      select.appendChild(fragment);
-    }
-
-    function fetchRouteStationChoices(kind, placeId, selectedId) {
-      var relations = relationChoiceConfig();
-      var action = kind === 'object' ? 'iss_relations_station_objects' : 'iss_relations_station_stories';
-      var dataKey = kind === 'object' ? 'objects' : 'stories';
-      var url;
-
-      if (!relations.ajaxUrl || !relations.nonce || !placeId) {
-        return Promise.resolve([]);
-      }
-
-      url = new URL(relations.ajaxUrl, window.location.origin);
-      url.searchParams.set('action', action);
-      url.searchParams.set('nonce', relations.nonce);
-      url.searchParams.set('place_id', String(placeId));
-      if (selectedId) {
-        url.searchParams.set('selected_id', String(selectedId));
-      }
-
-      return window.fetch(url.toString(), {
-        credentials: 'same-origin'
-      }).then(function (response) {
-        if (!response.ok) {
-          throw new Error('choice request failed');
-        }
-        return response.json();
-      }).then(function (payload) {
-        if (!payload || !payload.success || !payload.data) {
-          throw new Error('invalid choice payload');
-        }
-
-        return Array.isArray(payload.data[dataKey]) ? payload.data[dataKey] : [];
-      });
-    }
-
-    function createRoutePlaceSelect(station, rerender) {
-      var field = createElement('label', 'iss-editorial-field');
-      var select = document.createElement('select');
-      var currentPlaceId = station.place_id || 0;
-      var hasCurrent = false;
-
-      select.className = 'widefat';
-      select.appendChild(new Option('Ort wählen', ''));
-      routePlaces().forEach(function (place) {
-        var option = new Option(place.title || ('Ort #' + String(place.id || '')), String(place.id || ''));
-        option.selected = String(place.id || '') === String(currentPlaceId || '');
-        if (option.selected) {
-          hasCurrent = true;
-        }
-        select.appendChild(option);
-      });
-      if (currentPlaceId && !hasCurrent) {
-        select.appendChild(new Option('Ort #' + String(currentPlaceId), String(currentPlaceId), true, true));
-      }
-      select.addEventListener('change', function () {
-        station.place_id = parseInt(select.value || '0', 10) || 0;
-        station.station_object_id = 0;
-        station.station_story_id = 0;
-        syncRouteHiddenFields();
-        rerender();
-      });
-
-      field.appendChild(createElement('span', '', 'Ort'));
-      field.appendChild(select);
-
-      return field;
-    }
-
-    function createRouteChoiceSelect(kind, station) {
-      var field = createElement('label', 'iss-editorial-field');
-      var select = document.createElement('select');
-      var key = kind === 'object' ? 'station_object_id' : 'station_story_id';
-      var selectedId = station[key] || 0;
-      var placeholder = kind === 'object'
-        ? relationChoiceString('objectPlaceholder', 'Objekt wählen')
-        : relationChoiceString('storyPlaceholder', 'Beitrag wählen');
-      var loading = kind === 'object'
-        ? relationChoiceString('objectLoading', 'Objekte werden geladen ...')
-        : relationChoiceString('storyLoading', 'Beiträge werden geladen ...');
-      var none = kind === 'object'
-        ? relationChoiceString('objectNone', 'Keine verknüpften Objekte für diesen Ort')
-        : relationChoiceString('storyNone', 'Keine verknüpften Beiträge für diesen Ort');
-      var error = kind === 'object'
-        ? relationChoiceString('objectError', 'Objekte konnten nicht geladen werden')
-        : relationChoiceString('storyError', 'Beiträge konnten nicht geladen werden');
-
-      select.className = 'widefat';
-      setSelectOptions(select, [], selectedId, station.place_id ? loading : placeholder);
-      select.addEventListener('change', function () {
-        station[key] = parseInt(select.value || '0', 10) || 0;
-        syncRouteHiddenFields();
-      });
-
-      if (station.place_id) {
-        fetchRouteStationChoices(kind, station.place_id, selectedId).then(function (items) {
-          setSelectOptions(select, items, selectedId, items.length ? placeholder : none);
-        }).catch(function () {
-          setSelectOptions(select, [], selectedId, error);
-        });
-      }
-
-      field.appendChild(createElement('span', '', kind === 'object' ? 'Objekt' : 'Beitrag'));
-      field.appendChild(select);
-
-      return field;
-    }
-
     function renderRouteStationPanel(target) {
-      if (!routeConfig) {
+      var mount;
+      if (!routeConfig || !window.issRelationsRouteStations || !window.issRelationsRouteStations.create) {
         return;
       }
 
-      var panel = createElement('section', 'iss-editorial-route-panel');
-      var head = createElement('div', 'iss-editorial-route-panel__head');
-      var rows = createElement('div', 'iss-editorial-route-rows');
-      var add = createElement('button', 'button', 'Station hinzufügen');
-      var stations = routeStationRows();
-
-      function rerenderPanel() {
-        render();
+      if (!routeStationEditor) {
+        routeStationEditor = window.issRelationsRouteStations.create({
+          config: routeConfig,
+          postId: postId,
+          fields: routeFields,
+          setStatus: setStatus
+        });
       }
 
-      head.appendChild(createElement('div', 'iss-editorial-stage__title', 'Route / Stationen'));
-      head.appendChild(createElement('p', 'description', 'Stationen bleiben als Verknüpfte Orte gespeichert. Die Reihenfolge entspricht der Route.'));
-      panel.appendChild(head);
-
-      if (!stations.length) {
-        rows.appendChild(createElement('p', 'iss-editorial-empty', 'Noch keine Stationen. Eine Station verbindet die Führung mit einem Ort.'));
-      }
-
-      stations.forEach(function (station, index) {
-        var row = createElement('article', 'iss-editorial-route-row');
-        var position = createElement('div', 'iss-editorial-route-row__position', String(index + 1));
-        var fields = createElement('div', 'iss-editorial-route-row__fields');
-        var tools = createElement('div', 'iss-editorial-route-row__tools');
-        var up = createElement('button', 'button', 'Hoch');
-        var down = createElement('button', 'button', 'Runter');
-        var remove = createElement('button', 'button button-link-delete', 'Entfernen');
-
-        fields.appendChild(createRoutePlaceSelect(station, rerenderPanel));
-        fields.appendChild(createTextInput('Stations-Titel', station.route_title || '', function (value) {
-          station.route_title = value;
-          syncRouteHiddenFields();
-        }));
-        fields.appendChild(createTextarea('Stations-Teaser', station.route_teaser || '', function (value) {
-          station.route_teaser = value;
-          syncRouteHiddenFields();
-        }, 3));
-        fields.appendChild(createRouteChoiceSelect('object', station));
-        fields.appendChild(createRouteChoiceSelect('story', station));
-
-        [up, down, remove].forEach(function (button) {
-          button.type = 'button';
-        });
-        up.disabled = index === 0;
-        down.disabled = index >= stations.length - 1;
-        up.addEventListener('click', function () {
-          var current = stations.splice(index, 1)[0];
-          stations.splice(index - 1, 0, current);
-          renumberRouteStations(stations);
-          syncRouteHiddenFields();
-          rerenderPanel();
-        });
-        down.addEventListener('click', function () {
-          var current = stations.splice(index, 1)[0];
-          stations.splice(index + 1, 0, current);
-          renumberRouteStations(stations);
-          syncRouteHiddenFields();
-          rerenderPanel();
-        });
-        remove.addEventListener('click', function () {
-          stations.splice(index, 1);
-          renumberRouteStations(stations);
-          syncRouteHiddenFields();
-          rerenderPanel();
-        });
-
-        tools.appendChild(up);
-        tools.appendChild(down);
-        tools.appendChild(remove);
-        row.appendChild(position);
-        row.appendChild(fields);
-        row.appendChild(tools);
-        rows.appendChild(row);
-      });
-
-      add.type = 'button';
-      add.addEventListener('click', function () {
-        stations.push(normalizeRouteRelation({
-          role: 'stop',
-          weight: stations.length + 1
-        }));
-        renumberRouteStations(stations);
-        syncRouteHiddenFields();
-        rerenderPanel();
-      });
-
-      panel.appendChild(rows);
-      panel.appendChild(add);
-      target.appendChild(panel);
+      mount = createElement('div', 'iss-editorial-route-station-mount');
+      target.appendChild(mount);
+      routeStationEditor.render(mount);
     }
 
     function renderSkinControl() {
@@ -1180,7 +945,7 @@
 
     function renderMediaThumbs(section, target) {
       var strip = createElement('div', 'iss-editorial-media-strip');
-      (section.media_refs || []).slice(0, 6).forEach(function (reference) {
+      sectionMediaRefsForDisplay(section).slice(0, 6).forEach(function (reference) {
         var item = createElement('span', 'iss-editorial-media-thumb');
         if (reference.thumbnail) {
           var image = document.createElement('img');
@@ -1188,7 +953,7 @@
           image.alt = '';
           item.appendChild(image);
         } else {
-          item.textContent = reference.label || 'Bild';
+          item.textContent = reference.label || ((section.type || '') === 'material' ? 'Datei' : 'Bild');
         }
         strip.appendChild(item);
       });
@@ -1213,14 +978,41 @@
       return ratio > 1.7 && ratio < 1.85;
     }
 
+    function mediaReferenceIsImage(reference) {
+      return String(reference && reference.mime ? reference.mime : '').indexOf('image/') === 0;
+    }
+
+    function sectionUsesViewportGallery(section) {
+      return (section.type || '') === 'vollbild' || ((section.type || '') === 'galerie' && (section.gallery_layout || '') === 'viewport');
+    }
+
+    function sectionMediaRefsForDisplay(section) {
+      var refs = section && Array.isArray(section.media_refs) ? section.media_refs : [];
+      if ((section.type || '') !== 'material') {
+        return refs;
+      }
+
+      return refs.filter(function (reference) {
+        return !mediaReferenceIsImage(reference);
+      });
+    }
+
     function renderMediaTray(section, target, rerender) {
-      var isFullViewport = (section.type || '') === 'vollbild';
+      var isFullViewport = sectionUsesViewportGallery(section);
+      var isMaterial = (section.type || '') === 'material';
       clear(target);
       if (isFullViewport) {
         target.appendChild(createElement(
           'p',
           'description iss-editorial-media-rule',
           'Vollbild verwendet genau ein 16:9-Bild. Andere Formate werden vollflächig beschnitten.'
+        ));
+      }
+      if (isMaterial) {
+        target.appendChild(createElement(
+          'p',
+          'description iss-editorial-media-rule',
+          'Material verwendet Dateien. Bilder bitte über Galerie einsetzen.'
         ));
       }
       (section.media_refs || []).forEach(function (reference, index) {
@@ -1236,14 +1028,17 @@
           image.alt = '';
           preview.appendChild(image);
         } else {
-          preview.textContent = 'Bild';
+          preview.textContent = isMaterial ? 'Datei' : 'Bild';
         }
 
-        controls.appendChild(createTextInput('Bildunterschrift', reference.label || '', function (value) {
+        controls.appendChild(createTextInput(isMaterial ? 'Dateiname / Label' : 'Bildunterschrift', reference.label || '', function (value) {
           reference.label = value;
           render();
           scheduleAutosave();
         }));
+        if (isMaterial && mediaReferenceIsImage(reference)) {
+          controls.appendChild(createElement('p', 'description is-warning', 'Bild wird im Material nicht gerendert.'));
+        }
         if (ratioText) {
           controls.appendChild(createElement(
             'p',
@@ -1267,7 +1062,7 @@
       });
 
       if (!(section.media_refs || []).length) {
-        target.appendChild(createElement('p', 'description', 'Noch keine Bilder ausgewählt.'));
+        target.appendChild(createElement('p', 'description', isMaterial ? 'Noch keine Dateien ausgewählt.' : 'Noch keine Bilder ausgewählt.'));
       }
     }
 
@@ -1285,10 +1080,10 @@
 
       if (editorUi.createModal) {
         return editorUi.createModal({
-          kicker: 'Abschnitt bearbeiten',
-          title: configData.label || section.type || 'Abschnitt',
-          closeLabel: 'Schließen',
-          doneLabel: 'Übernehmen',
+          kicker: options.kicker || 'Abschnitt bearbeiten',
+          title: options.title || configData.label || section.type || 'Abschnitt',
+          closeLabel: options.closeLabel || 'Schließen',
+          doneLabel: options.doneLabel || 'Übernehmen',
           onClose: options.onClose,
           onDone: options.onDone
         });
@@ -1301,9 +1096,9 @@
       var foot = createElement('div', 'iss-editorial-modal__foot');
       var footLeft = createElement('div', 'iss-editorial-modal__foot-left');
       var footTools = createElement('div', 'iss-editorial-modal__foot-tools');
-      var title = createElement('h2', '', configData.label || section.type || 'Abschnitt');
-      var close = createElement('button', 'button', 'Schließen');
-      var done = createElement('button', 'button button-primary', 'Übernehmen');
+      var title = createElement('h2', '', options.title || configData.label || section.type || 'Abschnitt');
+      var close = createElement('button', 'button', options.closeLabel || 'Schließen');
+      var done = createElement('button', 'button button-primary', options.doneLabel || 'Übernehmen');
 
       close.type = 'button';
       done.type = 'button';
@@ -1429,7 +1224,7 @@
       var contentPanel = createEditorPanel('content', 'Inhalt', 'content');
       var displayPanel = createEditorPanel('display', 'Darstellung', 'display');
       var archivePanel = createEditorPanel('archive', 'Archiv', 'archive', collectionCount(section, 'object_refs'));
-      var mediaPanel = createEditorPanel('media', 'Bilder', 'media', collectionCount(section, 'media_refs'));
+      var mediaPanel = createEditorPanel('media', type === 'material' ? 'Dateien' : 'Bilder', 'media', sectionMediaRefsForDisplay(section).length);
       var albumPanel = createEditorPanel('album', 'Album', 'album', collectionCount(section, 'sheets'));
       var factPanel = createEditorPanel('facts', 'Fakten', 'facts', collectionCount(section, 'facts'));
       var itemPanel = createEditorPanel('items', 'Ziele', 'items', collectionCount(section, 'items'));
@@ -1845,9 +1640,10 @@
       var choices = [
         { value: 'grid', label: 'Raster' },
         { value: 'sequence', label: 'Strecke' },
-        { value: 'wall', label: 'Bilderwand' }
+        { value: 'wall', label: 'Bilderwand' },
+        { value: 'viewport', label: 'Vollbild' }
       ];
-      var current = ['grid', 'sequence', 'wall'].indexOf(section.gallery_layout) !== -1 ? section.gallery_layout : 'grid';
+      var current = ['grid', 'sequence', 'wall', 'viewport'].indexOf(section.gallery_layout) !== -1 ? section.gallery_layout : 'grid';
 
       choices.forEach(function (choice) {
         var label = createElement('label', 'iss-editorial-segmented__option');
@@ -2577,12 +2373,12 @@
     function renderMediaPicker(section, body) {
       var refs = createElement('div', 'iss-editorial-field iss-editorial-field--media');
       var tray = createElement('div', 'iss-editorial-media-tray');
-      var isFullViewport = (section.type || '') === 'vollbild';
+      var isFullViewport = sectionUsesViewportGallery(section);
       var isMaterial = (section.type || '') === 'material';
-      var noun = isMaterial ? 'Medien/Dateien' : (isFullViewport ? 'Bild' : 'Bilder');
+      var noun = isMaterial ? 'Dateien' : (isFullViewport ? 'Bild' : 'Bilder');
       var actions = createElement('div', 'iss-editorial-media-actions');
       var setPickerButton = createElement('button', 'button button-primary', 'Aus Set auswählen');
-      var mediaLibraryButton = createElement('button', 'button', 'Medien suchen');
+      var mediaLibraryButton = createElement('button', 'button', isMaterial ? 'Dateien suchen' : 'Medien suchen');
 
       function rerenderTray() {
         renderMediaTray(section, tray, rerenderTray);
@@ -2606,7 +2402,7 @@
           }
           return reference;
         }).filter(function (reference) {
-          return reference.id;
+          return reference.id && (!isMaterial || !mediaReferenceIsImage(reference));
         });
         if (isFullViewport) {
           section.media_refs = section.media_refs.slice(0, 1);
@@ -2626,7 +2422,7 @@
           title: noun + ' auswählen',
           button: { text: noun + ' übernehmen' },
           multiple: !isFullViewport,
-          library: isMaterial ? {} : { type: 'image' }
+          library: isMaterial ? { type: 'application' } : { type: 'image' }
         });
 
         frame.on('open', function () {
@@ -2667,7 +2463,7 @@
         window.issEditorialSetMediaPicker.create(document.createElement('div'), {
           modal: true,
           mode: isFullViewport ? 'single' : 'multiple',
-          mediaType: isMaterial ? '' : 'image',
+          mediaType: isMaterial ? 'file' : 'image',
           contextId: config.postId || 0,
           initialSelection: section.media_refs || [],
           onConfirm: function (references) {
@@ -2864,7 +2660,34 @@
       root.appendChild(layout);
       bindSectionDragDrop(layout);
       updateField();
-      syncRouteHiddenFields();
+    }
+
+    function saveRouteStationsIfDirty() {
+      if (!routeStationEditor || !routeStationEditor.saveIfDirty) {
+        return Promise.resolve();
+      }
+
+      return routeStationEditor.saveIfDirty();
+    }
+
+    function appendRoutePreviewArgs(previewUrl) {
+      if (!routeStationEditor || !routeStationEditor.getPreviewArgs) {
+        return previewUrl;
+      }
+
+      var args = routeStationEditor.getPreviewArgs() || {};
+      var keys = Object.keys(args);
+      var next;
+      if (!keys.length) {
+        return previewUrl;
+      }
+
+      next = new URL(previewUrl, window.location.origin);
+      keys.forEach(function (key) {
+        next.searchParams.set(key, String(args[key]));
+      });
+
+      return next.toString();
     }
 
     function savePreviewDocument() {
@@ -2932,8 +2755,8 @@
         event.preventDefault();
         setPreviewButtonBusy(button, true);
         setStatus((config.strings && config.strings.previewSaving) || 'Vorschau wird vorbereitet ...');
-        savePreviewDocument().then(function (previewUrl) {
-          window.open(previewUrl || fallbackUrl || config.previewUrl, '_blank', 'noopener');
+        saveRouteStationsIfDirty().then(savePreviewDocument).then(function (previewUrl) {
+          window.open(appendRoutePreviewArgs(previewUrl || fallbackUrl || config.previewUrl), '_blank', 'noopener');
           setStatus((config.strings && config.strings.previewReady) || 'Vorschau wurde geoeffnet.');
         }).catch(function (error) {
           setStatus(error && error.message ? error.message : ((config.strings && config.strings.previewError) || 'Die Vorschau konnte nicht vorbereitet werden.'));

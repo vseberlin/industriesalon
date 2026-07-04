@@ -753,7 +753,7 @@ function iss_occurrences_get_booking_slots(array $args = []): array {
     $horizon_months = isset($args['horizon_months']) ? (int) $args['horizon_months'] : 12;
     $horizon_months = min(24, max(1, $horizon_months));
 
-    if ($item_type === '' && $source_post_type !== '' && function_exists('iss_occurrences_kind_for_source_post_type')) {
+    if ($source_post_type !== '' && function_exists('iss_occurrences_kind_for_source_post_type')) {
         $item_type = iss_occurrences_kind_for_source_post_type($source_post_type);
     }
     if ($item_type === '' && $tag !== '') {
@@ -810,7 +810,9 @@ function iss_occurrences_get_booking_slots(array $args = []): array {
         }
 
         $booking_url = trim((string) ($item['booking_url'] ?? ''));
-        $slots[] = [
+        $slot_source_post_id = isset($item['source_post_id']) ? (int) $item['source_post_id'] : 0;
+        $slot_source_post_type = isset($item['source_post_type']) ? sanitize_key((string) $item['source_post_type']) : '';
+        $slot = [
             'id' => $external_id,
             'title' => trim((string) ($item['title'] ?? '')),
             'start' => $start,
@@ -819,9 +821,31 @@ function iss_occurrences_get_booking_slots(array $args = []): array {
             'available' => array_key_exists('available', $item) ? $item['available'] : null,
             'booking_url' => $booking_url !== '' ? $booking_url : null,
             'content_url' => !empty($item['content_url']) ? (string) $item['content_url'] : null,
-            'source_post_id' => isset($item['source_post_id']) ? (int) $item['source_post_id'] : 0,
-            'source_post_type' => isset($item['source_post_type']) ? sanitize_key((string) $item['source_post_type']) : '',
+            'source_post_id' => $slot_source_post_id,
+            'source_post_type' => $slot_source_post_type,
         ];
+
+        if ($slot_source_post_id > 0 && in_array($slot_source_post_type, ['fuehrung', 'veranstaltung'], true)) {
+            $price_meta_key = $slot_source_post_type === 'fuehrung' ? 'booking_price_cents' : 'iss_booking_price_cents';
+            $description_meta_key = $slot_source_post_type === 'fuehrung' ? 'price_note' : 'iss_booking_gateway_description';
+            $price_cents = max(0, (int) get_post_meta($slot_source_post_id, $price_meta_key, true));
+            $cta_label = $slot_source_post_type === 'veranstaltung'
+                ? trim((string) get_post_meta($slot_source_post_id, 'iss_booking_cta_label', true))
+                : '';
+            $description = trim((string) get_post_meta($slot_source_post_id, $description_meta_key, true));
+
+            if ($price_cents > 0) {
+                $slot['amount'] = $price_cents;
+            }
+            if ($cta_label !== '') {
+                $slot['label'] = $cta_label;
+            }
+            if ($description !== '') {
+                $slot['description'] = $description;
+            }
+        }
+
+        $slots[] = $slot;
     }
 
     return $slots;

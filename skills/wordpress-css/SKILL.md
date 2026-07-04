@@ -36,3 +36,6 @@ Layering rule:
 8. Make CSS changes migration-positive. When touching old page-specific CSS,
    drain reusable rules into tokens, primitives/patterns, renderer contracts,
    or skins, and remove obsolete page selectors in the same pass when safe.
+9. Do not hide structural problems with a second selector system. If a legacy
+   selector must remain for compatibility, keep it narrow, document the owner,
+   and prefer moving active rendering to stable gesture/treatment/layout classes.
