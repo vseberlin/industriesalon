@@ -59,8 +59,9 @@ function iss_fuehrungen_register_post_type() {
         ],
         'public'            => true,
         'hierarchical'      => true,
-        'show_admin_column' => true,
-        'show_in_rest'      => true,
+        'show_ui'           => false,
+        'show_admin_column' => false,
+        'show_in_rest'      => false,
         'rewrite'           => ['slug' => 'fuehrungsart', 'with_front' => false],
     ]);
 }

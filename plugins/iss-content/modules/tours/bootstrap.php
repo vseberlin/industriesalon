@@ -29,22 +29,8 @@ function iss_fuehrungen_enqueue_assets() {
     );
     do_action('iss_fuehrungen_assets_enqueued');
 
-    if (is_singular(ISS_FUEHRUNGEN_POST_TYPE)) {
-        $route_carousel_path = ISS_FUEHRUNGEN_PATH . 'assets/tour-route-carousel.js';
-
-        if (function_exists('iss_frontend_enqueue_image_viewport_gallery_assets')) {
-            iss_frontend_enqueue_image_viewport_gallery_assets();
-        }
-
-        if (file_exists($route_carousel_path)) {
-            wp_enqueue_script(
-                'iss-fuehrungen-route-carousel',
-                ISS_FUEHRUNGEN_URL . 'assets/tour-route-carousel.js',
-                [],
-                (string) filemtime($route_carousel_path),
-                true
-            );
-        }
+    if (function_exists('iss_frontend_enqueue_image_viewport_gallery_assets')) {
+        iss_frontend_enqueue_image_viewport_gallery_assets();
     }
 }
 add_action('wp_enqueue_scripts', 'iss_fuehrungen_enqueue_assets');

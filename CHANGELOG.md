@@ -4,6 +4,31 @@ This file records durable project changes. Keep it compact: current state belong
 `handoff_CURRENT.md`, active follow-up in `TODO.md`, and detailed investigation can
 be recovered from Git history.
 
+## 2026-07-06
+
+- Removed the legacy `iss/tour-route` public block from the active single
+  Führung template and deleted its route-dossier renderer, carousel script,
+  block registration, block files, and dedicated `.iss-tour-route` CSS. Route
+  presentation for JSON-enabled Führungen now flows through the `atlas_map`
+  gesture backed by `iss-relations`; a later vanilla WordPress fallback should
+  be rebuilt explicitly from the stabilized JSON and relation contracts.
+- Replaced the single Führung related-card tail with a required shared
+  `iss/related-content` relation network rail, aligned Veranstaltung to the same
+  wrapper contract, and drained retired Führung/event relation CSS into the
+  shared `patterns.css` system.
+- Added `upload_intake` to the Führung JSON gesture palette. The theme now
+  renders it as a moderated photo-sharing CTA to Event Drop with a
+  `fuehrung__{slug}` context, and shared upload-intake styling moved into
+  `gestures.css` with project/event CSS reduced to local variables.
+- Polished editor-facing gesture labels and descriptions for `galerie`,
+  `material`, and `upload_intake` so gallery, downloads, and public guest
+  upload intake have clearer boundaries in the JSON editor.
+- Replaced heuristic-only Führungen landing filters with controlled
+  `offer_catalog_groups` post meta in the Führung side panel. The offer catalog
+  now uses explicit categories first and falls back to the old booking/text
+  heuristic only for unclassified posts; the free `fuehrung_typ` taxonomy is no
+  longer exposed as an editor classification surface.
+
 ## 2026-07-04
 
 - Moved the Führung `Route / Stationen` constructor out of the generic

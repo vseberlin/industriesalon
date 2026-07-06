@@ -291,9 +291,9 @@ function industriesalon_render_editorial_project_upload_intake(array $section): 
         $note = __('Uploads landen im Projekt-Set und werden vor der Veröffentlichung redaktionell geprüft.', 'industriesalon');
     }
 
-    $html = '<div class="iss-project-upload-intake">';
-    $html .= '<a class="iss-project-upload-intake__button" href="' . esc_url($url) . '">' . esc_html($label) . '</a>';
-    $html .= '<p class="iss-project-upload-intake__note">' . esc_html($note) . '</p>';
+    $html = '<div class="iss-upload-intake iss-project-upload-intake">';
+    $html .= '<a class="iss-upload-intake__button iss-project-upload-intake__button" href="' . esc_url($url) . '">' . esc_html($label) . '</a>';
+    $html .= '<p class="iss-upload-intake__note iss-project-upload-intake__note">' . esc_html($note) . '</p>';
     $html .= '</div>';
 
     return $html;

@@ -140,6 +140,7 @@ function industriesalon_get_editorial_tour_section_context(array $section, strin
         'image_wall' => 'image-wall',
         'atlas_map' => 'atlas-map',
         'material' => 'material',
+        'upload_intake' => 'upload-intake',
         'schluss' => 'conclusion',
     ];
     $labels = [
@@ -151,6 +152,7 @@ function industriesalon_get_editorial_tour_section_context(array $section, strin
         'image_wall' => __('Bilder', 'industriesalon'),
         'atlas_map' => __('Route im Atlas', 'industriesalon'),
         'material' => __('Material', 'industriesalon'),
+        'upload_intake' => __('Bilder teilen', 'industriesalon'),
         'schluss' => __('Abschluss', 'industriesalon'),
     ];
     if ($type === 'galerie') {
@@ -571,6 +573,74 @@ function industriesalon_render_editorial_tour_atlas_map_section(array $section, 
     return trim((string) ob_get_clean());
 }
 
+function industriesalon_editorial_tour_upload_intake_url(int $post_id): string
+{
+    $post = $post_id > 0 ? get_post($post_id) : null;
+    if (!$post instanceof WP_Post) {
+        return '';
+    }
+
+    $args = ['event' => 'fuehrung__' . $post->post_name];
+    $upload_code = trim((string) getenv('EVENT_DROP_UPLOAD_CODE'));
+    if ($upload_code !== '') {
+        $args['code'] = $upload_code;
+    }
+
+    $url = add_query_arg($args, home_url('/event-drop/'));
+
+    return (string) apply_filters('industriesalon_tour_upload_intake_url', $url, $post_id);
+}
+
+function industriesalon_render_editorial_tour_upload_intake_section(array $section, int $rendered_index, string $skin, string $anchor, int $post_id): string
+{
+    $url = industriesalon_editorial_tour_upload_intake_url($post_id);
+    if ($url === '') {
+        return '';
+    }
+
+    $context = industriesalon_get_editorial_tour_section_context($section, $skin);
+    $kicker = trim((string) ($section['kicker'] ?? ''));
+    $title = trim((string) ($section['title'] ?? ''));
+    $body = trim((string) ($section['body'] ?? ''));
+    if ($title === '') {
+        $title = __('Bilder zur Führung teilen', 'industriesalon');
+    }
+    if ($body === '') {
+        $body = __('Uploads landen im moderierten Set und werden vor einer Veröffentlichung redaktionell geprüft.', 'industriesalon');
+    }
+
+    $section_classes = [
+        'iss-tour-section',
+        'iss-tour-section--gesture-' . $context['gesture'],
+        'iss-tour-section--layout-' . $context['layout'],
+        'iss-tour-editorial__section',
+        'iss-tour-editorial__section--upload_intake',
+        'iss-tour-editorial__section--skin-' . sanitize_html_class($skin),
+        'has-copy',
+        'is-text-only',
+    ];
+
+    ob_start();
+    ?>
+    <section id="<?php echo esc_attr($anchor); ?>" class="<?php echo esc_attr(implode(' ', array_unique($section_classes))); ?>" data-section-gesture="<?php echo esc_attr($context['gesture']); ?>" data-section-layout="<?php echo esc_attr($context['layout']); ?>">
+        <div class="iss-tour-section__inner">
+            <div class="iss-tour-section__copy">
+                <?php if ($kicker !== '') : ?>
+                    <p class="iss-kicker iss-kicker--compact iss-tour-section__kicker"><?php echo esc_html($kicker); ?></p>
+                <?php endif; ?>
+                <div class="iss-upload-intake iss-tour-upload-intake">
+                    <a class="iss-upload-intake__button iss-tour-upload-intake__button" href="<?php echo esc_url($url); ?>"><?php esc_html_e('Bilder hochladen', 'industriesalon'); ?></a>
+                    <p class="iss-upload-intake__note iss-tour-upload-intake__note"><strong><?php echo esc_html($title); ?></strong><br><?php echo esc_html($body); ?></p>
+                </div>
+            </div>
+        </div>
+    </section>
+    <?php
+    unset($rendered_index);
+
+    return trim((string) ob_get_clean());
+}
+
 function industriesalon_render_editorial_tour_section(array $section, bool $show_placeholders, int $rendered_index, string $skin, string $anchor, int $post_id): string
 {
     $type = sanitize_html_class((string) ($section['type'] ?? 'kapitel'));
@@ -580,6 +650,10 @@ function industriesalon_render_editorial_tour_section(array $section, bool $show
 
     if ($type === 'atlas_map') {
         return industriesalon_render_editorial_tour_atlas_map_section($section, $rendered_index, $skin, $anchor, $post_id);
+    }
+
+    if ($type === 'upload_intake') {
+        return industriesalon_render_editorial_tour_upload_intake_section($section, $rendered_index, $skin, $anchor, $post_id);
     }
 
     $context = industriesalon_get_editorial_tour_section_context($section, $skin);

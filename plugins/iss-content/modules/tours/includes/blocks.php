@@ -37,10 +37,4 @@ add_action('init', function () {
         ]);
     }
 
-    $route_dir = ISS_FUEHRUNGEN_PATH . 'blocks/tour-route';
-    if (file_exists($route_dir . '/block.json')) {
-        register_block_type($route_dir, [
-            'render_callback' => 'iss_fuehrung_render_route_block',
-        ]);
-    }
 });

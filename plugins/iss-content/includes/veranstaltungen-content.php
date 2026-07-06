@@ -36,13 +36,13 @@ function iss_content_model_veranstaltung_content_gestures(): array
             'supports' => ['kicker', 'title', 'body', 'media_refs', 'dynamic_refs'],
         ],
         'leitfrage' => [
-            'label' => __('Leitfrage', 'iss-content-model'),
-            'description' => __('Frage oder These, die den Beitrag rahmt.', 'iss-content-model'),
+            'label' => __('Die Kernfrage oder These', 'iss-content-model'),
+            'description' => __('Gibt den roten Faden vor und führt den Besucher durch das Thema.', 'iss-content-model'),
             'supports' => ['kicker', 'title', 'body'],
         ],
         'zitat' => [
-            'label' => __('Zitat', 'iss-content-model'),
-            'description' => __('Zitat mit Zuordnung oder Quellenhinweis.', 'iss-content-model'),
+            'label' => __('Ein prägnantes Zitat zum Inhalt.', 'iss-content-model'),
+            'description' => __('Mit Angabe der Person oder der historischen Quelle.', 'iss-content-model'),
             'supports' => ['kicker', 'title', 'body', 'quote', 'attribution'],
         ],
         'programm' => [
@@ -51,18 +51,18 @@ function iss_content_model_veranstaltung_content_gestures(): array
             'supports' => ['kicker', 'title', 'body'],
         ],
         'material' => [
-            'label' => __('Material', 'iss-content-model'),
-            'description' => __('Beschreibung und herunterladbare Dateien zum Material.', 'iss-content-model'),
+            'label' => __('Begleitende Dateien', 'iss-content-model'),
+            'description' => __('Zum Herunterladen. Wichtig: Bilder und Archiv-Objekte gehören stattdessen in die Galerie.', 'iss-content-model'),
             'supports' => ['kicker', 'title', 'body', 'media_refs'],
         ],
         'upload_intake' => [
-            'label' => __('Upload-Aufruf', 'iss-content-model'),
-            'description' => __('Oeffentlicher Aufruf zum Hochladen von Material in den moderierten Intake.', 'iss-content-model'),
+            'label' => __('Öffentlicher Mitmach-Aufruf für Gäste', 'iss-content-model'),
+            'description' => __('Schickt hochgeladene Besucherfotos direkt in die Warteschlange zur Freigabe.', 'iss-content-model'),
             'supports' => ['kicker', 'title', 'body'],
         ],
         'galerie' => [
-            'label' => __('Galerie', 'iss-content-model'),
-            'description' => __('Bildstrecke aus Medienbibliothek oder spaeterem Upload-Intake.', 'iss-content-model'),
+            'label' => __('Bildergalerie', 'iss-content-model'),
+            'description' => __('Freigegebene Gästefotos und Medienbilder. Flexibel dargestellt als Raster, Bilderwand, Reihe oder Fokus-Ansicht.', 'iss-content-model'),
             'supports' => ['kicker', 'title', 'body', 'media_refs', 'object_refs'],
         ],
         'schluss' => [

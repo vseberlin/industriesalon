@@ -30,6 +30,7 @@ function iss_fuehrungen_render_meta_box($post) {
         'inquiry_label' => __('Anfrage-Button Label', 'iss-fuehrungen'),
         'inquiry_note'  => __('Anfrage-Hinweis', 'iss-fuehrungen'),
         'tour_badge'    => __('Kicker / Kartenlabel', 'iss-fuehrungen'),
+        'offer_catalog_groups' => __('Art der Führung', 'iss-fuehrungen'),
     ];
 
     echo '<div class="iss-fuehrung-meta-grid">';
@@ -58,6 +59,18 @@ function iss_fuehrungen_render_meta_box($post) {
             echo '<input class="widefat" type="text" inputmode="decimal" id="iss_' . esc_attr($key) . '" name="iss_fuehrung_booking_price_display" value="' . esc_attr($price_display) . '" placeholder="12,00">';
         } elseif ($key === 'allow_on_demand_with_calendar') {
             echo '<label><input type="checkbox" name="iss_fuehrung[' . esc_attr($key) . ']" value="1" ' . checked(!empty($value), true, false) . '> ' . esc_html__('Ja', 'iss-fuehrungen') . '</label>';
+        } elseif ($key === 'offer_catalog_groups') {
+            $selected_groups = iss_fuehrung_sanitize_offer_catalog_groups($value);
+            $selected_lookup = array_fill_keys($selected_groups, true);
+            echo '<span class="description">' . esc_html__('Leer lassen, um es automatisch zuzuordnen.', 'iss-fuehrungen') . '</span>';
+            echo '<span class="iss-fuehrung-meta-checklist">';
+            foreach (iss_fuehrung_get_offer_catalog_group_definitions() as $group_key => $group) {
+                echo '<label>';
+                echo '<input type="checkbox" name="iss_fuehrung[' . esc_attr($key) . '][]" value="' . esc_attr($group_key) . '" ' . checked(isset($selected_lookup[$group_key]), true, false) . '> ';
+                echo esc_html((string) ($group['label'] ?? $group_key));
+                echo '</label>';
+            }
+            echo '</span>';
         } elseif ($key === 'inquiry_note') {
             echo '<textarea class="widefat" rows="2" id="iss_' . esc_attr($key) . '" name="iss_fuehrung[' . esc_attr($key) . ']">' . esc_textarea((string) $value) . '</textarea>';
         } else {
@@ -119,7 +132,9 @@ add_action('save_post_' . ISS_FUEHRUNGEN_POST_TYPE, function ($post_id) {
             $value = $value ? '1' : '';
         }
 
-        if ($value === '' || $value === false || $value === null) {
+        if (is_array($value) && empty($value)) {
+            delete_post_meta($post_id, $key);
+        } elseif ($value === '' || $value === false || $value === null) {
             delete_post_meta($post_id, $key);
         } else {
             update_post_meta($post_id, $key, $value);

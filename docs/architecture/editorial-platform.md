@@ -71,20 +71,25 @@ raw Set intake state.
 Führungen now use the same `iss-editorial` engine boundary for narrative
 composition. `iss-content` registers the `fuehrung` format with gestures for
 `bildbuehne`, `intro`, `kapitel`, `leitfrage`, `zitat`, `galerie`,
-`atlas_map`, `material`, and `schluss`. Existing Führung meta remains the
+`atlas_map`, `material`, `upload_intake`, and `schluss`. Existing Führung meta remains the
 owner for duration,
 meeting point, target group, pricing, booking mode, inquiry details, and the
 legacy hero gallery when no `bildbuehne` is active. For `bildbuehne`, the first
 `media_refs` image is the stage background and later `media_refs` images are the
 compact stage gallery. Existing route station data, dates, booking, facts, and
-related content blocks stay outside the JSON document. Public JSON rendering is enabled
+the required relation network stay outside the JSON document. Public JSON rendering is enabled
 per post through `_iss_editorial_enabled_fuehrung`; disabled Führung posts keep
 the legacy `post_content` description path through `iss/tour-description`.
+The Führungen landing offer catalog uses the controlled `offer_catalog_groups`
+post meta for `Öffentlich`, `Gruppen`, `Individuell`, and `Familien & Kinder`;
+empty values fall back to the legacy booking/text heuristic only for migration
+continuity. The old `fuehrung_typ` taxonomy is no longer an editor-facing
+classification source for landing filters.
 The theme consumes `iss_editorial_get_read_model()` in
 `themes/industriesalon/includes/tours-render.php`, exposes `route-dossier`,
 `compact`, and `standard` skins, replaces the hero description from the first
 `intro` section, and renders later gesture sections in the dedicated
-single-tour editorial slot before the existing route block.
+single-tour editorial slot.
 The public Führung gesture contract is intentionally narrow:
 `bildbuehne` is the optional first-viewport image stage with overlay title/text
 and a compact gallery; `intro` feeds the fallback hero description only;
@@ -92,11 +97,15 @@ and a compact gallery; `intro` feeds the fallback hero description only;
 question; `zitat` is a source or voice moment; `galerie` owns image treatments
 such as sequence, wall, and viewport; `atlas_map` is the optional route map
 gesture backed by existing relation station rows; `material` is for downloads
-and supporting links; `schluss` is the closing invitation. The route station editor,
-booking panel, dates, facts, and related cards are template/module surfaces, not
-JSON payload fields. The Führung template remains the scaffold for the left
-alignment grid, right booking rail, fallback route map, related placement, and
-fallback hero; the theme consumes `bildbuehne` into that scaffold instead of
+and supporting links; `upload_intake` is an optional public contribution CTA
+that sends visitor uploads into the moderated Event Drop / Set workflow with a
+`fuehrung__{slug}` context and never publishes raw uploads directly; `schluss`
+is the closing invitation. The route station editor,
+booking panel, dates, facts, and the shared `iss/related-content` relation
+network are template/module surfaces, not JSON payload fields or editor-owned
+body gestures. The Führung template remains the scaffold for the left alignment
+grid, right booking rail, required relation placement, and fallback hero; the
+theme consumes `bildbuehne` into that scaffold instead of
 rendering it as a normal body section. `bildbuehne` styling should follow the shared gesture
 contract: universal stage/gallery anatomy first, with Führung or
 `route-dossier` differences expressed as scoped custom properties on the tour
@@ -128,9 +137,11 @@ the crop and stage ratio from the far-left/far-right and top/bottom marker
 bounds plus registry padding, rather than exposing map-fit details to editors.
 Führung JSON exposes `atlas_map` with treatment `atlas-map.tour-route`; it calls
 the same `iss_relations_render_atlas_map_variant()` helper and reads route
-stations from `iss-relations`. The template `iss/atlas-map` block is marked as
-fallback and suppresses itself when the enabled Führung JSON document contains
-an `atlas_map` section.
+stations from `iss-relations`. Route presentation currently flows through that
+JSON gesture; the old `iss/tour-route` template block and route dossier
+carousel were removed during the JSON-only Führung stabilization. A later
+vanilla WordPress fallback should be rebuilt explicitly from the stabilized JSON
+and relation contracts instead of reviving the deleted block surface.
 
 Native landing pages use the same engine only behind an eligibility gate. The
 `landing` format applies to native WordPress `page` posts, not a new CPT, and

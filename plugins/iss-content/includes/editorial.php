@@ -7,8 +7,8 @@ if (!defined('ABSPATH')) {
 function iss_content_model_editorial_gallery_section(): array
 {
     return [
-        'label' => __('Galerie', 'iss-content-model'),
-        'description' => __('Approved media promoted from a Set or selected from the media library, with grid, sequence, wall, or viewport treatments.', 'iss-content-model'),
+        'label' => __('Bildergalerie', 'iss-content-model'),
+        'description' => __('Freigegebene Gästefotos und Medienbilder. Flexibel dargestellt als Raster, Bilderwand, Reihe oder Fokus-Ansicht.', 'iss-content-model'),
         'supports' => ['media_refs', 'object_refs'],
     ];
 }
@@ -16,8 +16,8 @@ function iss_content_model_editorial_gallery_section(): array
 function iss_content_model_editorial_material_section(): array
 {
     return [
-        'label' => __('Material', 'iss-content-model'),
-        'description' => __('Files and links for supporting source material. Images and archive objects belong in gallery or object gestures.', 'iss-content-model'),
+        'label' => __('Begleitende Dateien', 'iss-content-model'),
+        'description' => __('Zum Herunterladen. Wichtig: Bilder und Archiv-Objekte gehören stattdessen in die Galerie.', 'iss-content-model'),
         'supports' => ['anchor', 'media_refs', 'links'],
     ];
 }
@@ -145,25 +145,30 @@ function iss_content_model_register_editorial_formats(array $formats): array
                 'supports' => ['anchor', 'media_refs', 'media_layout'],
             ],
             'leitfrage' => [
-                'label' => __('Leitfrage', 'iss-content-model'),
-                'description' => __('Frage oder These, die die Führung rahmt.', 'iss-content-model'),
+                'label' => __('Die Kernfrage oder These', 'iss-content-model'),
+                'description' => __('Gibt den roten Faden vor und führt den Besucher durch das Thema.', 'iss-content-model'),
                 'supports' => ['anchor'],
             ],
             'zitat' => [
-                'label' => __('Zitat', 'iss-content-model'),
-                'description' => __('Zitat mit Zuordnung oder Quellenhinweis.', 'iss-content-model'),
+                'label' => __('Ein prägnantes Zitat zum Inhalt.', 'iss-content-model'),
+                'description' => __('Mit Angabe der Person oder der historischen Quelle.', 'iss-content-model'),
                 'supports' => ['quote'],
             ],
             'galerie' => array_merge($gallery_section, ['supports' => ['anchor', 'media_refs', 'object_refs', 'gallery_layout']]),
             'atlas_map' => [
-                'label' => __('Atlas-Karte', 'iss-content-model'),
-                'description' => __('Registrierte Atlas-Map-Variante für die Route dieser Führung.', 'iss-content-model'),
+                'label' => __('Die interaktive Landkarte zur Tour.', 'iss-content-model'),
+                'description' => __('Zeigt den genauen Routenverlauf und die einzelnen Stationen der Führung.', 'iss-content-model'),
                 'supports' => ['anchor', 'treatment', 'links'],
                 'treatments' => [
                     'atlas-map.tour-route' => __('Führungsroute', 'iss-content-model'),
                 ],
             ],
             'material' => $material_section,
+            'upload_intake' => [
+                'label' => __('Öffentlicher Mitmach-Aufruf für Gäste', 'iss-content-model'),
+                'description' => __('Schickt hochgeladene Besucherfotos direkt in die Warteschlange zur Freigabe.', 'iss-content-model'),
+                'supports' => ['anchor'],
+            ],
             'schluss' => [
                 'label' => __('Schluss', 'iss-content-model'),
                 'description' => __('Abschluss, Einladung oder weiterführende Links.', 'iss-content-model'),
@@ -185,8 +190,8 @@ function iss_content_model_register_editorial_formats(array $formats): array
                 'supports' => ['links', 'section_treatment'],
             ],
             'leitfrage' => [
-                'label' => __('Leitfrage', 'iss-content-model'),
-                'description' => __('The guiding question', 'iss-content-model'),
+                'label' => __('Die Kernfrage oder These', 'iss-content-model'),
+                'description' => __('Gibt den roten Faden vor und führt den Besucher durch das Thema.', 'iss-content-model'),
                 'supports' => [],
             ],
             'objektfokus' => [
@@ -200,8 +205,8 @@ function iss_content_model_register_editorial_formats(array $formats): array
                 'supports' => ['facts'],
             ],
             'zitat' => [
-                'label' => __('Zitat', 'iss-content-model'),
-                'description' => __('Direct quote with attribution', 'iss-content-model'),
+                'label' => __('Ein prägnantes Zitat zum Inhalt.', 'iss-content-model'),
+                'description' => __('Mit Angabe der Person oder der historischen Quelle.', 'iss-content-model'),
                 'supports' => ['quote', 'object_refs', 'media_refs', 'orientation', 'quote_treatment'],
             ],
             'galerie' => array_merge($gallery_section, ['supports' => ['object_refs', 'media_refs', 'gallery_layout']]),
@@ -243,8 +248,8 @@ function iss_content_model_register_editorial_formats(array $formats): array
             'galerie' => array_merge($gallery_section, ['supports' => ['anchor', 'media_refs', 'object_refs', 'gallery_layout']]),
             'material' => $material_section,
             'upload_intake' => [
-                'label' => __('Upload-Aufruf', 'iss-content-model'),
-                'description' => __('Public contribution call that sends uploads into the moderated project Set.', 'iss-content-model'),
+                'label' => __('Öffentlicher Mitmach-Aufruf für Gäste', 'iss-content-model'),
+                'description' => __('Schickt hochgeladene Besucherfotos direkt in die Warteschlange zur Freigabe.', 'iss-content-model'),
                 'supports' => ['anchor', 'links'],
             ],
             'schluss' => [

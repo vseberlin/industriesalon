@@ -2828,8 +2828,7 @@ iss-info-panel--brown
 }
 
 /* Modifier for panels inside narrow columns (e.g. tour asides) */
-.iss-info-panel--full-width,
-.iss-tour-main__aside .iss-info-panel {
+.iss-info-panel--full-width {
   width: 100%;
 }
 
@@ -6523,6 +6522,35 @@ iss-info-panel--brown
 .iss-register-place__term a {
   color: inherit;
   text-decoration: none;
+}
+
+.iss-relation-network {
+  border-top: 1px solid var(--iss-relation-network-rule, var(--iss-surface-rule, rgba(30, 30, 30, 0.16)));
+}
+
+.iss-relation-network:not(:has(.iss-related-network-group)) {
+  display: none;
+}
+
+.iss-relation-network__rail {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 17rem), 1fr));
+  gap: clamp(1rem, 2vw, 1.45rem);
+  align-items: start;
+}
+
+.iss-relation-network__rail > * {
+  min-width: 0;
+  margin: 0;
+}
+
+.iss-relation-network__rail .iss-related-network-group {
+  padding-top: var(--iss-relation-network-group-padding, 0.72rem);
+  border-top-color: var(--iss-relation-network-group-rule, var(--iss-surface-rule, rgba(30, 30, 30, 0.16)));
+}
+
+.iss-relation-network__rail .iss-related-network-group__title {
+  font-size: var(--iss-relation-network-title-size, 1rem);
 }
 
 .iss-related-place-links,

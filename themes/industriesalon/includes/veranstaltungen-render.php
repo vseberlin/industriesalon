@@ -277,10 +277,10 @@ function industriesalon_render_structured_veranstaltung_upload_intake(array $sec
     $label = $items[0] ?? __('Material hochladen', 'industriesalon');
     $note = $items[1] ?? __('Uploads werden vor der Veröffentlichung redaktionell geprüft.', 'industriesalon');
 
-    $html = '<div class="iss-event-upload-intake">';
-    $html .= '<a class="iss-event-upload-intake__button" href="' . esc_url($url) . '">' . esc_html($label) . '</a>';
+    $html = '<div class="iss-upload-intake iss-event-upload-intake">';
+    $html .= '<a class="iss-upload-intake__button iss-event-upload-intake__button" href="' . esc_url($url) . '">' . esc_html($label) . '</a>';
     if ($note !== '') {
-        $html .= '<p class="iss-event-upload-intake__note">' . esc_html($note) . '</p>';
+        $html .= '<p class="iss-upload-intake__note iss-event-upload-intake__note">' . esc_html($note) . '</p>';
     }
     $html .= '</div>';
 

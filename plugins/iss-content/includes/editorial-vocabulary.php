@@ -20,11 +20,11 @@ function iss_content_model_editorial_gesture_registry(): array
             'absorbs' => ['fliesstext'],
         ],
         'leitfrage' => [
-            'label' => __('Leitfrage', 'iss-content-model'),
+            'label' => __('Die Kernfrage oder These', 'iss-content-model'),
             'absorbs' => ['leitfrage'],
         ],
         'zitat' => [
-            'label' => __('Zitat', 'iss-content-model'),
+            'label' => __('Ein prägnantes Zitat zum Inhalt.', 'iss-content-model'),
             'absorbs' => ['zitat'],
         ],
         'schluss' => [
@@ -32,7 +32,7 @@ function iss_content_model_editorial_gesture_registry(): array
             'absorbs' => ['schluss'],
         ],
         'galerie' => [
-            'label' => __('Galerie', 'iss-content-model'),
+            'label' => __('Bildergalerie', 'iss-content-model'),
             'absorbs' => ['galerie', 'image_wall', 'vollbild', 'photoalbum'],
         ],
         'objektfokus' => [
@@ -40,7 +40,7 @@ function iss_content_model_editorial_gesture_registry(): array
             'absorbs' => ['objektfokus'],
         ],
         'material' => [
-            'label' => __('Material', 'iss-content-model'),
+            'label' => __('Begleitende Dateien', 'iss-content-model'),
             'absorbs' => ['material'],
         ],
         'facts' => [
@@ -52,7 +52,7 @@ function iss_content_model_editorial_gesture_registry(): array
             'absorbs' => ['programm'],
         ],
         'upload_intake' => [
-            'label' => __('Upload-Aufruf', 'iss-content-model'),
+            'label' => __('Öffentlicher Mitmach-Aufruf für Gäste', 'iss-content-model'),
             'absorbs' => ['upload_intake'],
         ],
     ];

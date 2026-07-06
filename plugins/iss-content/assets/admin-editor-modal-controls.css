@@ -198,6 +198,11 @@ body.post-type-fuehrung.iss-editor-dashboard-ready .iss-fuehrung-meta-field text
   min-height: 72px;
 }
 
+body.post-type-fuehrung.iss-editor-dashboard-ready .iss-fuehrung-meta-checklist {
+  display: grid;
+  gap: 4px;
+}
+
 body.post-type-fuehrung.iss-editor-dashboard-ready .iss-fuehrung-meta-note {
   margin: 12px 0 0;
   color: #646970;

@@ -155,6 +155,52 @@
   object-fit: cover;
 }
 
+.iss-upload-intake {
+  --iss-upload-intake-accent: var(--iss-accent, #e81d25);
+  --iss-upload-intake-button-fg: var(--iss-white, #fff);
+  --iss-upload-intake-note-color: var(--iss-surface-muted, rgba(30, 30, 30, 0.72));
+
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.85rem 1rem;
+  margin-top: var(--iss-upload-intake-margin, 1.1rem);
+  padding: var(--iss-upload-intake-padding, clamp(0.9rem, 1.8vw, 1.2rem));
+  border: var(--iss-upload-intake-border, 1px solid var(--iss-upload-intake-rule, rgba(30, 30, 30, 0.16)));
+  background: var(--iss-upload-intake-background, rgba(255, 255, 255, 0.72));
+}
+
+.iss-upload-intake__button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: var(--iss-upload-intake-button-min-height, 2.85rem);
+  padding: var(--iss-upload-intake-button-padding, 0.05rem 1.15rem 0);
+  border: 2px solid var(--iss-upload-intake-accent);
+  background: var(--iss-upload-intake-accent);
+  color: var(--iss-upload-intake-button-fg);
+  font-size: 0.92rem;
+  font-weight: 750;
+  line-height: 1.1;
+  text-align: center;
+  text-decoration: none;
+  text-transform: uppercase;
+}
+
+.iss-upload-intake__button:where(:hover, :focus-visible) {
+  background: transparent;
+  color: var(--iss-upload-intake-accent);
+}
+
+.iss-upload-intake__note {
+  flex: 1 1 min(100%, 22rem);
+  max-width: var(--iss-upload-intake-note-max-width, 44rem);
+  margin: 0;
+  color: var(--iss-upload-intake-note-color);
+  font-size: 0.94rem;
+  line-height: 1.45;
+}
+
 .iss-gesture-atlas-map {
   --iss-gesture-atlas-map-line: var(--iss-accent, #e81d25);
   --iss-gesture-atlas-map-line-shadow: rgba(20, 18, 17, 0.28);
