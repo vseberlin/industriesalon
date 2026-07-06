@@ -38,11 +38,9 @@ follow-up belongs in `TODO.md`.
 
 ## Next Action
 
-- Deploy the pushed `main` checkpoint to staging and smoke-test:
-  `/fuehrungen/`, representative single Führungen, and one Veranstaltung.
-- On staging, confirm the single Führung relation network, upload-intake CTA,
-  JSON atlas-map route rendering, and booking rail still render without mobile
-  overflow.
+- Continue browser UAT on staging for representative single Führungen and one
+  Veranstaltung, especially mobile overflow around the booking rail, relation
+  network, upload-intake CTA, and JSON atlas-map route rendering.
 - No SQL artifact or uploads artifact is part of this checkpoint.
 
 ## Verified Locally
@@ -59,6 +57,8 @@ follow-up belongs in `TODO.md`.
 
 ## Commit State
 
-- Local checkpoint is ready to commit and push to `origin/main`.
-- After push/deploy, record the final commit hash and staging verification in
-  the closeout response.
+- Local, GitHub, and staging `main` were synchronized during the July 6
+  closeout. Staging was fast-forwarded from GitHub after the Führung JSON
+  presentation checkpoint.
+- Staging public smoke checks returned `200` for `/fuehrungen/`,
+  `/fuehrungen/familienrallye/`, and `/veranstaltungen/`.
