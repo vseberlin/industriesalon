@@ -56,6 +56,15 @@ Immediate executable work only. Larger future programs live in `docs/project/bac
   Current audit leftovers are non-blocking: unmapped inert series have zero
   occurrence rows, and `Stadtrallye für Erwachsene` is mapped but has no future
   SuperSaaS rows.
+- Staging deploy follow-up from 2026-06-29: do not replay
+  `ops/sql/2026-06-29-repair-cafe-canonical-event-series.sql` until the target
+  has the matching Repair-Café Veranstaltung rows and `salonbelegung`
+  `event:repair-cafe` staged SuperSaaS slots, or until a staging-specific
+  artifact is prepared from the actual target IDs. Staging currently has the
+  Repair Café landing page (`page` 13253) but not local Veranstaltung IDs
+  `26805`, `26808`, `26810`, `26812`, or `26813`. Separately review whether
+  the older repo-local Apache stack on `8082` (`wp_app`/`wp_db`) is still
+  intentionally running before planning any retirement.
 - Front-page client experiment decision: original baseline is captured in
   `ops/sql/2026-06-29-frontpage-baseline.sql`; current DB override content is
   synced to `themes/industriesalon/templates/front-page.html` for review. After
