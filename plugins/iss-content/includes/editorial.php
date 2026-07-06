@@ -65,8 +65,8 @@ function iss_content_model_register_editorial_formats(array $formats): array
         'skin_meta_key' => '_iss_editorial_landing_skin',
         'sections' => [
             'statement' => [
-                'label' => __('Statement', 'iss-content-model'),
-                'description' => __('Redaktionelle These, Intro oder Leitfrage mit optionalem Link.', 'iss-content-model'),
+                'label' => __('Überschrift & Einleitung', 'iss-content-model'),
+                'description' => __('Der große Einführungstext oder die Leitfrage ganz oben auf der Seite (optional mit Link).', 'iss-content-model'),
                 'supports' => ['treatment', 'links'],
                 'treatments' => [
                     'statement.lead' => __('Leitstatement', 'iss-content-model'),
@@ -74,13 +74,13 @@ function iss_content_model_register_editorial_formats(array $formats): array
                 ],
             ],
             'fliesstext' => [
-                'label' => __('Text', 'iss-content-model'),
-                'description' => __('Freier Landing-Text ohne Fakten- oder Medienfelder.', 'iss-content-model'),
+                'label' => __('Freitext', 'iss-content-model'),
+                'description' => __('Ganz normaler Textabschnitt ohne starre Boxen oder Medieninhalte für tiefere Infos.', 'iss-content-model'),
                 'supports' => ['links'],
             ],
             'gateway' => [
-                'label' => __('Gateway', 'iss-content-model'),
-                'description' => __('Kuratiert nächste Wege als Karten oder Linkliste.', 'iss-content-model'),
+                'label' => __('Einstiegs-Boxen', 'iss-content-model'),
+                'description' => __('Kurze Vorschau-Karten zu anderen Seiten (z. B. als Kacheln oder Linkliste).', 'iss-content-model'),
                 'supports' => ['treatment', 'items'],
                 'treatments' => [
                     'gateway.cards' => __('Karten', 'iss-content-model'),
@@ -89,8 +89,8 @@ function iss_content_model_register_editorial_formats(array $formats): array
                 ],
             ],
             'feature' => [
-                'label' => __('Feature', 'iss-content-model'),
-                'description' => __('Bild, Text und Fakten als hervorgehobener Landing-Abschnitt.', 'iss-content-model'),
+                'label' => __('Hervorgehobener Inhalt', 'iss-content-model'),
+                'description' => __('Ein auffälliger Abschnitt mit Bild, Text und Kernfakten, um ein Thema besonders zu betonen.', 'iss-content-model'),
                 'supports' => ['treatment', 'facts', 'links', 'media_refs', 'media_layout'],
                 'treatments' => [
                     'feature.media-panel' => __('Bild mit Infokasten', 'iss-content-model'),
@@ -99,8 +99,8 @@ function iss_content_model_register_editorial_formats(array $formats): array
                 ],
             ],
             'dynamic_slot' => [
-                'label' => __('Dynamischer Slot', 'iss-content-model'),
-                'description' => __('Theme-eigener Slot für bestehende dynamische Frontpage-Module.', 'iss-content-model'),
+                'label' => __('Automatische Inhalte', 'iss-content-model'),
+                'description' => __('Platzhalter, der selbstständig Termine oder Projekt-Notizen lädt.', 'iss-content-model'),
                 'supports' => ['treatment', 'slot_key', 'no_body'],
                 'treatments' => [
                     'slot.projects' => __('Projekt-Notizen', 'iss-content-model'),
@@ -110,8 +110,8 @@ function iss_content_model_register_editorial_formats(array $formats): array
                 ],
             ],
             'atlas_map' => [
-                'label' => __('Atlas-Karte', 'iss-content-model'),
-                'description' => __('Registrierte statische Atlas-Map-Variante mit Marker-Fit aus bestehenden Ortsbeziehungen.', 'iss-content-model'),
+                'label' => __('Atlas Karte', 'iss-content-model'),
+                'description' => __('Eine vorgefertigte Landkarte mit Markierung.', 'iss-content-model'),
                 'supports' => ['treatment', 'links'],
                 'treatments' => [
                     'atlas-map.place-locator' => __('Ort verorten', 'iss-content-model'),
