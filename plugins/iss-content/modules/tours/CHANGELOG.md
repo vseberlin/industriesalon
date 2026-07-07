@@ -29,7 +29,7 @@ All notable changes for `iss-fuehrungen` are documented here.
 - Added this changelog file.
 - Added Phase 1 booking-mode support in `iss-fuehrungen`:
   - new tour meta: `booking_mode`, `allow_on_demand_with_calendar`,
-  - new inquiry meta: `inquiry_url`, `inquiry_label`, `inquiry_note`,
+  - new inquiry meta: `inquiry_label`, `inquiry_note`,
   - effective mode resolver for `auto|calendar|on_demand|hybrid`,
   - mode-aware booking box and archive status rendering,
   - conditional single-template rendering (calendar section vs on-demand section).
@@ -62,6 +62,9 @@ All notable changes for `iss-fuehrungen` are documented here.
 - Updated ownership docs to reflect the thin booking boundary split:
   - `saas-api` is documented as calendar infrastructure only,
   - `iss-payments-lite` is documented as the booking submit owner for `/is-tours/v1/book`.
+- Removed the legacy SuperSaaS-derived `inquiry_url` field from the active
+  Führung booking contract. On-demand and hybrid inquiry CTAs now use the local
+  request modal path instead of stored external URLs.
 
 ### Planned
 - Security hardening for booking entry flow (implemented in `iss-payments-lite`, tracked from this plugin doc set).

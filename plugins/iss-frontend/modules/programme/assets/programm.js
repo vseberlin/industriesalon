@@ -892,7 +892,7 @@ function initOccurrenceCalendarTriggers() {
 
   document.addEventListener('click', (event) => {
     const trigger = event.target && event.target.closest
-      ? event.target.closest('.js-iss-occurrence-calendar-trigger')
+      ? event.target.closest('.js-iss-occurrence-calendar-trigger, .js-iss-tour-inquiry-trigger')
       : null;
 
     if (!trigger) {
@@ -900,6 +900,22 @@ function initOccurrenceCalendarTriggers() {
     }
 
     event.preventDefault();
+
+    if (String(trigger.dataset.calendarMode || '') === 'inquiry') {
+      const context = document.createElement('div');
+      context.dataset.title = String(trigger.dataset.title || 'Terminanfrage').trim() || 'Terminanfrage';
+      if (trigger.dataset.sourcePostId) context.dataset.sourcePostId = String(trigger.dataset.sourcePostId);
+      if (trigger.dataset.sourcePostType) context.dataset.sourcePostType = String(trigger.dataset.sourcePostType);
+
+      const form = createInquiryForm(context);
+      const modal = getTourCalendarModal();
+      if (modal && modal.open(form)) {
+        return;
+      }
+
+      document.body.appendChild(form);
+      return;
+    }
 
     const widget = createOccurrenceCalendarWidget(trigger.dataset || {});
     const modal = getTourCalendarModal();

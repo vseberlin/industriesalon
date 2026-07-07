@@ -97,13 +97,6 @@ function iss_fuehrungen_meta_fields() {
             },
             'default' => false,
         ],
-        'inquiry_url' => [
-            'type' => 'string',
-            'sanitize' => static function ($value) {
-                return esc_url_raw(trim((string) $value));
-            },
-            'default' => '',
-        ],
         'inquiry_label' => [
             'type' => 'string',
             'sanitize' => 'sanitize_text_field',

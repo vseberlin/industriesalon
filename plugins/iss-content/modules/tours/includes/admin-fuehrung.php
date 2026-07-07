@@ -122,6 +122,7 @@ add_action('save_post_' . ISS_FUEHRUNGEN_POST_TYPE, function ($post_id) {
     $raw['booking_price_cents'] = isset($_POST['iss_fuehrung_booking_price_display'])
         ? iss_fuehrungen_parse_price_to_cents(wp_unslash((string) $_POST['iss_fuehrung_booking_price_display']))
         : 0;
+    delete_post_meta($post_id, 'inquiry_url');
 
     foreach ($fields as $key => $config) {
         $value = $raw[$key] ?? ($config['type'] === 'boolean' ? '' : $config['default']);

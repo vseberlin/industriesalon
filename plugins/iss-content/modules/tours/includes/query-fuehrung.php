@@ -142,7 +142,6 @@ function iss_fuehrung_get_inquiry_data($post_id) {
     }
 
     return [
-        'url' => '',
         'label' => $label,
         'note' => $note,
     ];
@@ -158,7 +157,7 @@ function iss_fuehrung_get_effective_booking_mode($post_id) {
     $has_calendar = iss_fuehrung_is_calendar_event($next_event);
 
     $inquiry = iss_fuehrung_get_inquiry_data($post_id);
-    $has_on_demand = ($inquiry['url'] !== '' || $inquiry['note'] !== '');
+    $has_on_demand = ($inquiry['note'] !== '');
     $allow_hybrid = !empty(get_post_meta($post_id, 'allow_on_demand_with_calendar', true));
 
     if ($has_calendar && $has_on_demand && $allow_hybrid) {

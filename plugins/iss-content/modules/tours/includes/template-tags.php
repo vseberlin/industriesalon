@@ -74,12 +74,32 @@ function iss_fuehrung_get_availability_label($availability) {
     return '';
 }
 
+function iss_fuehrung_render_inquiry_trigger($post_id, string $label, string $classes = 'wp-element-button'): string {
+    $post_id = (int) $post_id;
+    if ($post_id <= 0) {
+        return '';
+    }
+
+    $label = trim($label);
+    if ($label === '') {
+        $label = __('Anfrage senden', 'iss-fuehrungen');
+    }
+
+    $classes = trim($classes . ' js-iss-tour-inquiry-trigger');
+    $attrs = ' data-calendar-mode="inquiry"';
+    $attrs .= ' data-title="' . esc_attr(get_the_title($post_id)) . '"';
+    $attrs .= ' data-source-post-id="' . esc_attr((string) $post_id) . '"';
+    $attrs .= ' data-source-post-type="' . esc_attr(ISS_FUEHRUNGEN_POST_TYPE) . '"';
+    $attrs .= ' data-item-type="tour"';
+
+    return '<a class="' . esc_attr($classes) . '" href="#tour-anfrage"' . $attrs . '>' . esc_html($label) . '</a>';
+}
+
 function iss_fuehrung_render_booking_box($post_id) {
     $mode = iss_fuehrung_get_effective_booking_mode($post_id);
     $next_event = iss_fuehrung_get_next_event($post_id);
     $booking_note = trim((string) get_post_meta($post_id, 'booking_note', true));
     $inquiry = iss_fuehrung_get_inquiry_data($post_id);
-    $inquiry_url = trim((string) ($inquiry['url'] ?? ''));
     $inquiry_label = trim((string) ($inquiry['label'] ?? ''));
     $inquiry_note = trim((string) ($inquiry['note'] ?? ''));
     $archive_link = get_post_type_archive_link(ISS_FUEHRUNGEN_POST_TYPE);
@@ -101,13 +121,16 @@ function iss_fuehrung_render_booking_box($post_id) {
         }
 
         echo '<div class="iss-fuehrung-booking__actions">';
-        if ($inquiry_url !== '') {
-            echo '<a class="wp-element-button" href="' . esc_url($inquiry_url) . '">' . esc_html($inquiry_label) . '</a>';
-        }
+        // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- Helper returns fully escaped inquiry trigger markup.
+        echo iss_fuehrung_render_inquiry_trigger($post_id, $inquiry_label);
         if ($archive_link) {
             echo '<a class="iss-fuehrung-booking__secondary" href="' . esc_url($archive_link) . '">' . esc_html__('Alle Führungen', 'iss-fuehrungen') . '</a>';
         }
         echo '</div>';
+
+        if (function_exists('iss_programm_enqueue_calendar_assets')) {
+            iss_programm_enqueue_calendar_assets();
+        }
     } elseif ($next_event instanceof WP_Post || is_array($next_event)) {
         $date_label = iss_fuehrung_get_event_start_label($next_event);
         $availability = $next_event instanceof WP_Post
@@ -148,8 +171,10 @@ function iss_fuehrung_render_booking_box($post_id) {
             // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- Attribute string is built from escaped values above.
             echo '<a class="' . esc_attr($button_classes) . '" href="' . esc_url($booking_url) . '"' . $button_attrs . '>Buchen</a>';
         }
-        if ($mode === 'hybrid' && $inquiry_url !== '') {
-            echo '<a class="iss-fuehrung-booking__secondary" href="' . esc_url($inquiry_url) . '">' . esc_html($inquiry_label) . '</a>';
+        if ($mode === 'hybrid') {
+            // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- Helper returns fully escaped inquiry trigger markup.
+            echo iss_fuehrung_render_inquiry_trigger($post_id, $inquiry_label, 'iss-fuehrung-booking__secondary');
+            $should_enqueue_calendar_assets = true;
         }
         echo '</div>';
 
@@ -180,8 +205,12 @@ function iss_fuehrung_render_booking_box($post_id) {
         }
 
         echo '<div class="iss-fuehrung-booking__actions">';
-        if ($mode === 'hybrid' && $inquiry_url !== '') {
-            echo '<a class="wp-element-button" href="' . esc_url($inquiry_url) . '">' . esc_html($inquiry_label) . '</a>';
+        if ($mode === 'hybrid') {
+            // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- Helper returns fully escaped inquiry trigger markup.
+            echo iss_fuehrung_render_inquiry_trigger($post_id, $inquiry_label);
+            if (function_exists('iss_programm_enqueue_calendar_assets')) {
+                iss_programm_enqueue_calendar_assets();
+            }
         }
         if ($archive_link) {
             echo '<a class="iss-fuehrung-booking__secondary" href="' . esc_url($archive_link) . '">Alle Führungen</a>';
@@ -365,7 +394,6 @@ function iss_fuehrung_get_offer_catalog_item_state($post_id) {
     $next_event = iss_fuehrung_get_next_event($post_id);
     $booking_note = trim((string) get_post_meta($post_id, 'booking_note', true));
     $inquiry = iss_fuehrung_get_inquiry_data($post_id);
-    $inquiry_url = trim((string) ($inquiry['url'] ?? ''));
     $inquiry_label = trim((string) ($inquiry['label'] ?? ''));
     $inquiry_note = trim((string) ($inquiry['note'] ?? ''));
     $primary_action = null;
@@ -410,17 +438,10 @@ function iss_fuehrung_get_offer_catalog_item_state($post_id) {
     }
 
     if ($mode === 'on_demand') {
-        if ($inquiry_url !== '') {
-            $primary_action = [
-                'url' => $inquiry_url,
-                'label' => $inquiry_label,
-            ];
-        } else {
-            $primary_action = [
-                'url' => '#tour-anfrage',
-                'label' => __('Anfrage', 'iss-fuehrungen'),
-            ];
-        }
+        $primary_action = [
+            'url' => get_permalink($post_id),
+            'label' => $inquiry_label,
+        ];
 
         return [
             'mode' => $mode,
@@ -433,17 +454,10 @@ function iss_fuehrung_get_offer_catalog_item_state($post_id) {
     }
 
     if ($mode === 'hybrid') {
-        if ($inquiry_url !== '') {
-            $primary_action = [
-                'url' => $inquiry_url,
-                'label' => $inquiry_label,
-            ];
-        } else {
-            $primary_action = [
-                'url' => '#tour-anfrage',
-                'label' => __('Anfrage', 'iss-fuehrungen'),
-            ];
-        }
+        $primary_action = [
+            'url' => get_permalink($post_id),
+            'label' => $inquiry_label,
+        ];
 
         return [
             'mode' => $mode,

@@ -4,6 +4,13 @@ This file records durable project changes. Keep it compact: current state belong
 `handoff_CURRENT.md`, active follow-up in `TODO.md`, and detailed investigation can
 be recovered from Git history.
 
+## 2026-07-07
+
+- Removed the legacy SuperSaaS-derived `inquiry_url` from the active Führung
+  booking contract. Führung on-demand and hybrid inquiry CTAs now open the
+  existing local `iss-payments/v1/request` inquiry modal, while saved Führung
+  edits clear any old `inquiry_url` post meta.
+
 ## 2026-07-06
 
 - Removed the legacy `iss/tour-route` public block from the active single
