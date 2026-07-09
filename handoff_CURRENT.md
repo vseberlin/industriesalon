@@ -31,15 +31,16 @@ follow-up belongs in `TODO.md`.
 - The optimized upload WebPs are display assets referenced directly by the
   file-backed Schöneweide template. They are not Media Library attachments.
 
-## Next Action
+## Staging State
 
-- Deploy code through GitHub `main`, then extract
-  `ops/uploads/2026-07-09-schoneweide-display-webp.tar.gz` into staging
-  `wp-content/uploads`.
+- Code and uploads artifact are deployed on staging.
+- Staging repo was fast-forwarded to
+  `5682aec Optimize Schoneweide Atlas load`.
+- The artifact
+  `ops/uploads/2026-07-09-schoneweide-display-webp.tar.gz` was checksum-verified
+  on staging and extracted into `/var/www/html`.
 - No SQL artifact is required for this checkpoint: no DB-backed template,
   attachment rows, or content rows were changed.
-- After staging deploy, verify `/schoneweide/`, the Atlas bootstrap endpoint,
-  and representative optimized media URLs.
 
 ## Verified Locally
 
@@ -55,7 +56,18 @@ follow-up belongs in `TODO.md`.
   one `tax_query` warning and two direct-DB warnings for transient cleanup. No
   PHPCS errors.
 
+## Verified On Staging
+
+- `/schoneweide/` returns `200` and includes the Atlas bootstrap URL plus the
+  optimized WebP references.
+- `/wp-json/iss-register/v1/atlas-bootstrap` returns `200` with 76 places and
+  3 context payloads; warm checks returned in about 110-150 ms.
+- Representative optimized upload and theme map WebP URLs return `200`.
+- All eight optimized upload WebPs are present in the WordPress container with
+  expected byte sizes.
+
 ## Commit State
 
-- Local and `origin/main` were aligned at `062f994` before this checkpoint.
-- This checkpoint is ready to commit, push, and deploy to staging.
+- Local and `origin/main` are aligned at
+  `5682aec Optimize Schoneweide Atlas load` before the staging closeout doc
+  update.
