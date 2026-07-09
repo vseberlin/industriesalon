@@ -1,76 +1,61 @@
 # Current Handoff
 
-Updated: 2026-07-07
+Updated: 2026-07-09
 
 Current checkpoint only. Completed history belongs in `CHANGELOG.md`; active
 follow-up belongs in `TODO.md`.
 
 ## Current Work
 
-- Führung booking no longer uses the legacy SuperSaaS-derived `inquiry_url`
-  field. The field is removed from active meta registration, saved Führung
-  edits clear any old value, and on-demand/hybrid inquiry CTAs open the local
-  `iss-payments/v1/request` inquiry modal through the shared programme
-  frontend runtime.
-- Führung single templates are now JSON-first: the old `iss/tour-route` block,
-  route carousel assets, renderer helpers, and dedicated route CSS were removed.
-  Route presentation for enabled JSON content flows through the `atlas_map`
-  gesture backed by `iss-relations`.
-- Single Führung related output now uses a required shared
-  `iss/related-content` relation network rail. Veranstaltung uses the same
-  wrapper contract, with shared CSS in `patterns.css`.
-- Führung JSON gained `upload_intake`, rendered as a moderated Event Drop CTA
-  with a `fuehrung__{slug}` context. Gallery, material, upload, Leitfrage,
-  Zitat, and Führung atlas-map editor copy was polished.
-- Führung landing categorisation now has explicit `offer_catalog_groups` meta
-  labelled `Art der Führung`. The offer catalog uses explicit groups first and
-  falls back to the legacy booking/text heuristic only when empty. The old
-  `fuehrung_typ` taxonomy is no longer editor-facing.
+- Schöneweide Atlas first load now uses a combined
+  `/wp-json/iss-register/v1/atlas-bootstrap` payload. The browser no longer
+  starts separate cold `/atlas` and `/atlas-context` place-model builds.
+- The Atlas context contract has its own transient, and the bootstrap response
+  warms it for the unfiltered Atlas view.
+- The Schöneweide page now uses lighter display WebP assets for heavy static
+  media and a lighter theme-owned static map display image. Originals are still
+  present and untouched.
+- The matching uploads deploy artifact is:
+  `ops/uploads/2026-07-09-schoneweide-display-webp.tar.gz`, with manifest and
+  SHA256 sidecar in the same directory.
 
 ## Preserve
 
-- Public presentation stays in the theme; editor/format contracts stay in
-  `iss-content` / `iss-editorial`; route relations and Atlas map contracts stay
-  in `iss-relations`.
-- Do not reintroduce the deleted `iss/tour-route` block as an interim fallback.
-  A vanilla WordPress fallback should be rebuilt later from the stabilized JSON
-  and relation contracts.
-- Booking, occurrence slots, commerce amounts, facts, route stations, graph
-  projection state, and the required relation network stay outside JSON gesture
-  bodies.
-- Local request capture for Führung inquiries stays in `iss-commerce-lite`;
-  do not reintroduce a SuperSaaS/external inquiry URL as the canonical booking
-  path.
-- CSS migration should keep draining old page-specific selectors into shared
-  primitives, renderer contracts, or scoped compatibility.
+- Keep the interactive Atlas source modular for now:
+  `themes/industriesalon/assets/js/atlas/*.js` plus
+  `themes/industriesalon/assets/js/schoneweide.js`. Do not introduce a bundle
+  unless the project is ready to add a build step.
+- `industriesalon-schoeneweide-register` owns `register_place`, Atlas REST
+  payloads, and register caches. The theme owns the Schöneweide page template,
+  map image assets, and visual presets.
+- The optimized upload WebPs are display assets referenced directly by the
+  file-backed Schöneweide template. They are not Media Library attachments.
 
 ## Next Action
 
-- Continue browser UAT on staging for representative single Führungen and one
-  Veranstaltung, especially mobile overflow around the booking rail, Führung
-  inquiry modal, relation network, upload-intake CTA, and JSON atlas-map route
-  rendering.
-- No SQL artifact or uploads artifact is part of this checkpoint.
+- Deploy code through GitHub `main`, then extract
+  `ops/uploads/2026-07-09-schoneweide-display-webp.tar.gz` into staging
+  `wp-content/uploads`.
+- No SQL artifact is required for this checkpoint: no DB-backed template,
+  attachment rows, or content rows were changed.
+- After staging deploy, verify `/schoneweide/`, the Atlas bootstrap endpoint,
+  and representative optimized media URLs.
 
 ## Verified Locally
 
-- PHP lint for touched Führung, editorial, Veranstaltung, and theme renderer
-  files.
-- Stylelint for touched shared/admin/content/event/tour CSS.
-- `git diff --check`.
-- WP-CLI registry probes for gesture labels/descriptions, Führung
-  `upload_intake`, and `offer_catalog_groups`.
-- WP-CLI runtime probes confirmed explicit landing category override,
-  taxonomy visibility, `iss-fuehrungen drift-check`, and source ownership for
-  the relevant templates/pages.
-- For the Führung booking cleanup: `node --check` for the programme calendar
-  JS, PHP lint for touched Führung files, targeted PHPCS for touched Führung
-  PHP files, `git diff --check`, and WP-CLI render smoke confirmed a published
-  Führung booking panel renders a local inquiry trigger.
+- `page-schoneweide` template authority is `theme`.
+- New optimized media URLs return `200` locally.
+- Upload artifact checksum passes.
+- Browser pass on `/schoneweide/`: initial image transfer dropped from about
+  15.7 MB to about 4.9 MB; full-scroll image transfer is about 5.5 MB; the old
+  6.8 MB hall JPEG is no longer requested; Atlas reaches ready state with 74
+  markers.
+- `npm run lint:js`, PHP lint, PHPStan, and `git diff --check` passed.
+- PHPCS still reports three warnings in existing Atlas cache/model patterns:
+  one `tax_query` warning and two direct-DB warnings for transient cleanup. No
+  PHPCS errors.
 
 ## Commit State
 
-- Local, GitHub, and staging `main` should be synchronized at the July 7
-  Führung booking inquiry checkpoint after this closeout deploy.
-- No SQL artifact or uploads artifact is required for the July 7 booking
-  cleanup.
+- Local and `origin/main` were aligned at `062f994` before this checkpoint.
+- This checkpoint is ready to commit, push, and deploy to staging.

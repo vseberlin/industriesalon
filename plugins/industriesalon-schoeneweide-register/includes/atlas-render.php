@@ -18,8 +18,9 @@ function iss_register_get_schoneweide_atlas_bootstrap_config(array $attributes =
     return [
         'placesUrl' => untrailingslashit(rest_url(ISS_REGISTER_REST_NAMESPACE)) . '/atlas',
         'contextUrl' => untrailingslashit(rest_url(ISS_REGISTER_REST_NAMESPACE)) . '/atlas-context',
+        'bootstrapUrl' => untrailingslashit(rest_url(ISS_REGISTER_REST_NAMESPACE)) . '/atlas-bootstrap',
         'overlaysUrl' => iss_register_get_theme_asset_url('/assets/maps/schoneweide-overlays.geojson'),
-        'relationStaticMapUrl' => iss_register_get_theme_asset_url('/assets/maps/schoneweide-static-map-big.png'),
+        'relationStaticMapUrl' => iss_register_get_theme_asset_url('/assets/maps/schoneweide-static-map-big-industrial-v3-q90.webp'),
         'basemapProvider' => defined('INDUSTRIESALON_MAP_BASEMAP_PROVIDER') ? (string) INDUSTRIESALON_MAP_BASEMAP_PROVIDER : 'carto',
         'maptilerKey' => defined('INDUSTRIESALON_MAPTILER_KEY') ? (string) INDUSTRIESALON_MAPTILER_KEY : '',
         'maptilerStyle' => defined('INDUSTRIESALON_MAPTILER_STYLE') ? (string) INDUSTRIESALON_MAPTILER_STYLE : 'streets-v2',

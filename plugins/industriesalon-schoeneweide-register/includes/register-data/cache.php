@@ -10,6 +10,7 @@ function iss_register_clear_places_cache(): void
 
     delete_transient('iss_register_places_cache');
     delete_transient('iss_register_atlas_places_cache');
+    delete_transient('iss_register_atlas_context_cache');
     delete_transient('iss_register_place_tour_usage_map_cache');
 
     $like_timeout = $wpdb->esc_like('_transient_timeout_iss_register_atlas_places_cache:') . '%';

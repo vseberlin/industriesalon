@@ -251,7 +251,7 @@ add_filter('iss_relations_place_map_presets', function (array $presets): array {
     $variants = [
         'default' => [
             'label' => __('Atlas Übersicht', 'industriesalon'),
-            'map' => '/assets/maps/schoneweide-map-canonical.webp',
+            'map' => '/assets/maps/schoneweide-map-canonical-display.webp',
             'markers' => '/assets/maps/schoneweide-static-markers-new.json',
             'width' => 4096,
             'height' => 2389,
@@ -264,7 +264,7 @@ add_filter('iss_relations_place_map_presets', function (array $presets): array {
         ],
         'front-page' => [
             'label' => __('Frontpage Fokus', 'industriesalon'),
-            'map' => '/assets/maps/schoneweide-map-canonical.webp',
+            'map' => '/assets/maps/schoneweide-map-canonical-display.webp',
             'markers' => '/assets/maps/schoneweide-static-markers-new.json',
             'width' => 4096,
             'height' => 2389,
@@ -290,7 +290,7 @@ add_filter('iss_relations_place_map_presets', function (array $presets): array {
         ],
         'atlas-slice' => [
             'label' => __('Atlas Slice Fokus', 'industriesalon'),
-            'map' => '/assets/maps/schoneweide-map-canonical.webp',
+            'map' => '/assets/maps/schoneweide-map-canonical-display.webp',
             'markers' => '/assets/maps/schoneweide-static-markers-new.json',
             'width' => 4096,
             'height' => 2389,
@@ -303,7 +303,7 @@ add_filter('iss_relations_place_map_presets', function (array $presets): array {
         ],
         'atlas-split' => [
             'label' => __('Atlas Split Fokus', 'industriesalon'),
-            'map' => '/assets/maps/schoneweide-map-canonical.webp',
+            'map' => '/assets/maps/schoneweide-map-canonical-display.webp',
             'markers' => '/assets/maps/schoneweide-static-markers-new.json',
             'width' => 4096,
             'height' => 2389,

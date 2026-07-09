@@ -17,28 +17,51 @@
   }
 
   function getAtlasPayload(config) {
+    var bootstrapUrl = text(config.bootstrapUrl);
     var contextUrl = text(config.contextUrl);
     var overlaysUrl = text(config.overlaysUrl);
     var cacheKey = [
+      bootstrapUrl,
       text(config.placesUrl),
       contextUrl,
       overlaysUrl
     ].join('|');
 
     if (!payloadCache[cacheKey]) {
-      payloadCache[cacheKey] = Promise.all([
-        fetchJson(config.placesUrl),
-        contextUrl
-          ? fetchJson(contextUrl).catch(function () {
-              return { eras: [], stories: [] };
-            })
-          : Promise.resolve({ eras: [], stories: [] }),
-        overlaysUrl
-          ? fetchJson(overlaysUrl).catch(function () {
-              return { type: 'FeatureCollection', features: [] };
-            })
-          : Promise.resolve({ type: 'FeatureCollection', features: [] })
-      ]);
+      if (bootstrapUrl) {
+        payloadCache[cacheKey] = Promise.all([
+          fetchJson(bootstrapUrl).catch(function () {
+            return { places: [], context: { eras: [], actors: [], stories: [] } };
+          }),
+          overlaysUrl
+            ? fetchJson(overlaysUrl).catch(function () {
+                return { type: 'FeatureCollection', features: [] };
+              })
+            : Promise.resolve({ type: 'FeatureCollection', features: [] })
+        ]).then(function (results) {
+          var bootstrap = results[0] && typeof results[0] === 'object' ? results[0] : {};
+
+          return [
+            Array.isArray(bootstrap.places) ? bootstrap.places : [],
+            bootstrap.context && typeof bootstrap.context === 'object' ? bootstrap.context : { eras: [], actors: [], stories: [] },
+            results[1]
+          ];
+        });
+      } else {
+        payloadCache[cacheKey] = Promise.all([
+          fetchJson(config.placesUrl),
+          contextUrl
+            ? fetchJson(contextUrl).catch(function () {
+                return { eras: [], actors: [], stories: [] };
+              })
+            : Promise.resolve({ eras: [], actors: [], stories: [] }),
+          overlaysUrl
+            ? fetchJson(overlaysUrl).catch(function () {
+                return { type: 'FeatureCollection', features: [] };
+              })
+            : Promise.resolve({ type: 'FeatureCollection', features: [] })
+        ]);
+      }
     }
 
     return payloadCache[cacheKey];

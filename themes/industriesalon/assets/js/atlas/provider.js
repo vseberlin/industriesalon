@@ -7,7 +7,7 @@
   var relativeUrl = core.relativeUrl || function (value) {
     return text(value);
   };
-  var DEFAULT_RELATION_MAP_URL = '/wp-content/themes/industriesalon/assets/maps/schoneweide-map-canonical.png';
+  var DEFAULT_RELATION_MAP_URL = '/wp-content/themes/industriesalon/assets/maps/schoneweide-map-canonical-display.webp';
   var CARTO_BASEMAP = {
     tileUrl: 'https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png',
     options: {

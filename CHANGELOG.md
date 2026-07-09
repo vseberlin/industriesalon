@@ -4,6 +4,15 @@ This file records durable project changes. Keep it compact: current state belong
 `handoff_CURRENT.md`, active follow-up in `TODO.md`, and detailed investigation can
 be recovered from Git history.
 
+## 2026-07-09
+
+- Added a combined Schöneweide Atlas bootstrap REST payload so first load no
+  longer fires separate cold `/atlas` and `/atlas-context` place-model builds,
+  cached the context contract, and switched the relation mini-map bootstrap
+  asset from the 6 MB PNG to the existing WebP map image.
+- Added display WebP variants for heavy Schöneweide page media and switched the
+  file-backed Schöneweide template plus static-map preset to the lighter assets.
+
 ## 2026-07-07
 
 - Removed the legacy SuperSaaS-derived `inquiry_url` from the active Führung

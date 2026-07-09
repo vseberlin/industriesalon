@@ -367,9 +367,8 @@ function iss_register_get_editorial_atlas_story_items(string $era_slug = ''): ar
  * This route is intentionally separate from `/atlas` so current frontend code
  * keeps working unchanged while phase 1 editorial data is introduced.
  */
-function iss_register_get_atlas_context_data(): array
+function iss_register_build_atlas_context_data(array $places): array
 {
-    $places = iss_register_get_atlas_places_data();
     $stories = iss_register_get_editorial_atlas_story_items();
     $actors = function_exists('iss_register_get_industry_actor_service')
         ? iss_register_get_industry_actor_service()->build_actor_context_from_places($places)
@@ -417,4 +416,17 @@ function iss_register_get_atlas_context_data(): array
         'actors' => $actors,
         'stories' => $stories,
     ];
+}
+
+function iss_register_get_atlas_context_data(): array
+{
+    $cached = get_transient('iss_register_atlas_context_cache');
+    if (is_array($cached)) {
+        return $cached;
+    }
+
+    $context = iss_register_build_atlas_context_data(iss_register_get_atlas_places_data());
+    set_transient('iss_register_atlas_context_cache', $context, HOUR_IN_SECONDS);
+
+    return $context;
 }

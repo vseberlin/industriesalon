@@ -118,6 +118,25 @@ function iss_register_rest_get_atlas_context(WP_REST_Request $request): WP_REST_
     return rest_ensure_response($context);
 }
 
+function iss_register_rest_get_atlas_bootstrap(WP_REST_Request $request): WP_REST_Response
+{
+    $places = iss_register_get_atlas_places_data([
+        'era_slug' => $request->get_param('era_slug'),
+        'function_key' => $request->get_param('function_key'),
+        'actor_key' => $request->get_param('actor_key'),
+    ]);
+    $context = iss_register_build_atlas_context_data($places);
+
+    if (!$request->get_param('era_slug') && !$request->get_param('function_key') && !$request->get_param('actor_key')) {
+        set_transient('iss_register_atlas_context_cache', $context, HOUR_IN_SECONDS);
+    }
+
+    return rest_ensure_response([
+        'places' => $places,
+        'context' => $context,
+    ]);
+}
+
 function iss_register_rest_get_place(WP_REST_Request $request)
 {
     $target_id = trim((string) $request['id']);
@@ -178,6 +197,26 @@ function iss_register_register_rest_routes(): void
         'methods' => WP_REST_Server::READABLE,
         'callback' => 'iss_register_rest_get_atlas_context',
         'permission_callback' => '__return_true',
+    ]);
+
+    register_rest_route(ISS_REGISTER_REST_NAMESPACE, '/atlas-bootstrap', [
+        'methods' => WP_REST_Server::READABLE,
+        'callback' => 'iss_register_rest_get_atlas_bootstrap',
+        'permission_callback' => '__return_true',
+        'args' => [
+            'era_slug' => [
+                'type' => 'string',
+                'required' => false,
+            ],
+            'function_key' => [
+                'type' => 'string',
+                'required' => false,
+            ],
+            'actor_key' => [
+                'type' => 'string',
+                'required' => false,
+            ],
+        ],
     ]);
 
     register_rest_route(ISS_REGISTER_REST_NAMESPACE, '/places/(?P<id>[^/]+)', [
