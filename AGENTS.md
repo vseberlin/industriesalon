@@ -35,6 +35,7 @@ All changes must be lean, reversible where practical, documented, tested, and ju
 - CSS work must drain old/page-specific selectors into the owning layer (tokens, primitives, renderer contracts, skins, or scoped compatibility) instead of adding parallel selector systems. If touching legacy CSS, remove obsolete selectors when safe and record why any compatibility selector remains.
 - Before PHP or JavaScript changes, inspect hooks, helpers, enqueue logic, templates, blocks, and plugin ownership.
 - Use `WP_Query` for normal editorial post loops; use plugin-owned custom tables and prepared `$wpdb` SQL for projection, search, graph, archive, reporting, and other non-post-shaped data.
+- For archive preservation, provenance, builder, workbench, or `iss-archive` projection work, read `docs/architecture/archive-preservation-architecture-adr.md` before designing implementation details.
 - Verify frontend, editor, responsive behavior, template compatibility, and block validation when relevant.
 - Use `docs/agent/verification.md` to choose checks for the task class.
 - Before commit, push, or deploy, always check whether changed templates, content, media references, or DB-backed state require paired SQL and uploads artifacts; create/sync them together or record why no artifact is needed.

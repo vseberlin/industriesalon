@@ -107,6 +107,18 @@ Immediate executable work only. Larger future programs live in `docs/project/bac
   gateway item media, and album/source sheet import are good first extraction
   candidates; keep the main file focused on document state, section rendering,
   save/preview wiring, and editor orchestration.
+- Archive provenance intake/browse pipeline: bring the local WF archive
+  reconstruction work into the WP archive line owned by `iss-archive`, starting
+  with provenance to museum-digital before DDB/Europeana. Source artifacts live
+  under `/home/vladimir/Archive-restoration/`:
+  `archive_index.sqlite`, `reconcile_museum_digital.py`, and
+  `md_provenance_report.md`. Next slice: model/import a read-only provenance
+  chain from local TIFF/master paths and derivatives to archive object,
+  museum-digital ID/JSON, source metadata row, and browse/report views for
+  complete chains, missing local masters, invalid MD fields, and unfetched/503
+  MD records. Keep `/mnt/volume` read-only and keep high-resolution masters
+  outside WordPress media-library authority; WP should store/import provenance
+  records and preview/browse references, not become the master-file store.
 - Führung JSON migration: after deploying the code, review/apply
   `ops/sql/2026-06-27-fuehrung-editorial-json.sql` only on a target that
   already has the 15 published Führung posts listed in the artifact. The SQL

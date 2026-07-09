@@ -6,6 +6,10 @@ be recovered from Git history.
 
 ## 2026-07-09
 
+- Added ADR-001 for archive preservation architecture, defining the
+  preservation archive as authority, public systems as projections, a
+  standalone builder plus archivist workbench boundary, and `iss-archive` as
+  the WordPress-side projection consumer rather than the master-file owner.
 - Added a combined Schöneweide Atlas bootstrap REST payload so first load no
   longer fires separate cold `/atlas` and `/atlas-context` place-model builds,
   cached the context contract, and switched the relation mini-map bootstrap

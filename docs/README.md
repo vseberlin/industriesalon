@@ -26,6 +26,7 @@ This directory is the repo-owned source for durable project, agent, architecture
 - Content/editorial: `docs/architecture/content-model.md`, `docs/project/uat.md`
 - Theme/presentation: `docs/agent/wordpress-engineering.md`
 - Plugin/data contract: `docs/architecture/plugin-map.md`, `docs/architecture/database.md`
+- Archive preservation/provenance: `docs/architecture/archive-preservation-architecture-adr.md`
 - Infrastructure/deploy: `docs/agent/server-operations.md`, `docs/runbooks/deployment.md`
 - Database transfer: `docs/infrastructure/data-artifacts.md`
 - Uploads/media: `docs/runbooks/uploads-sync.md`, `docs/infrastructure/sync.md`
