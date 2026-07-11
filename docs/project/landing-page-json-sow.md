@@ -17,11 +17,15 @@ and fallback behavior.
 - Existing URLs, menu assignments, page hierarchy, and the WordPress static
   front-page setting remain source of truth.
 - The first allowlist is the front page plus pages with these slugs:
-  `about`, `verein`, `salon-vermietung`, and `sammlungen`.
+  `about`, `verein`, `salon-vermietung`, `sammlungen`, and `fuehrungen`.
 - The front page keeps `front-page.html` as the wrapper/template authority.
 - JSON rendering replaces only eligible editable landing sections.
 - Disabled JSON, missing JSON, invalid JSON, or an empty section list falls
   back to the current template and `post_content` output.
+- `/fuehrungen/` is an explicit completed-cutover exception: its file template
+  retains the hero and one inert landing slot, while the paired SQL enables the
+  JSON-owned body. Deploy the code and SQL together; disabling that document is
+  a rollback to the hero shell, not to the deleted Query Loop body.
 - This docs pass creates no SQL, content migration, or upload artifact.
 
 ## Ownership
@@ -111,6 +115,13 @@ The first dynamic slot keys are front-page scoped:
 - `front-visit-info`
 - `front-newsletter`
 
+The Führungen landing adds `fuehrungen-offers`. `iss-content` owns its tour
+query, controlled offer-group classification, and booking state. The theme owns
+the slot markup and uses the existing `iss-card` plus shared
+`data-iss-strip-carousel*` contract from `iss-relations`; the JSON document
+stores only the ordered slot assignment and editorial copy. It does not revive
+the removed `iss/tour-offer-catalog` block or add a second carousel runtime.
+
 These slots preserve existing dynamic render ownership for project notes,
 timeline queries, visit information, and the newsletter form while letting the
 front-page body be ordered from landing JSON.
@@ -135,19 +146,30 @@ The first landing treatment registry entries are:
 - `gateway.cards`
 - `gateway.link-list`
 - `gateway.feature-strip`
+- `gateway.pathways`
 - `statement.lead`
 - `statement.leitfrage`
 - `feature.media-panel`
 - `feature.media-text`
 - `feature.image-overlay`
+- `atlas-map.place-locator`
+- `atlas-map.map-only`
+- `atlas-map.editorial-split`
 - `slot.projects`
 - `slot.timeline`
 - `slot.visit-info`
 - `slot.newsletter`
+- `slot.fuehrungen-offers`
+
+The landing registry also exposes the canonical `galerie` gesture with
+`gallery_layout`; this is a layout option rather than another treatment. The
+Führungen migration uses `sequence` and the shared carousel runtime instead of
+the retired dense-image-wall composition.
 
 `gateway.cards` must support two, three, or four items with CSS only and no
-markup change. Treatment names describe durable visual behavior, not every card
-count or one-off layout.
+markup change. `gateway.pathways` uses the same markup for a compact horizontal
+sequence of image-led destinations. Treatment names describe durable visual
+behavior, not every card count or one-off layout.
 
 ## Implementation Plan
 
@@ -179,8 +201,8 @@ count or one-off layout.
 - Verify enabled front-page JSON suppresses only the hardcoded body fallback,
   keeps the `front-page.html` hero wrapper, and renders project/timeline/visit
   info/newsletter dynamic slots.
-- Browser-check `/`, `/about/`, `/verein/`, `/salon-vermietung/`, and
-  `/sammlungen/` on desktop and mobile.
+- Browser-check `/`, `/about/`, `/verein/`, `/salon-vermietung/`,
+  `/sammlungen/`, and `/fuehrungen/` on desktop and mobile.
 - Run PHP lint for changed PHP files, JavaScript syntax checks for changed JS,
   targeted CSS lint for changed CSS, and `git diff --check`.
 
@@ -191,5 +213,8 @@ count or one-off layout.
   media IDs already used by the current front-page template/uploads set.
 - Existing page templates remain source of truth until a page is explicitly
   JSON-enabled.
+- The Führungen landing migration is paired with
+  `ops/migrations/2026-07-11-fuehrungen-landing.php`. It requires no upload
+  artifact because the document contains no media references.
 - Treatment choice is editor-visible during internal buildout and then
   capability-gated to administrators before client handover.

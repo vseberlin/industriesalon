@@ -269,10 +269,19 @@
   z-index: 2;
 }
 
-.iss-gesture-atlas-map--skin-route .iss-related-place-map__marker-dot {
-  border-color: rgba(255, 255, 255, 0.78);
-  background: var(--iss-accent, #e81d25);
-  box-shadow:
+.iss-gesture-atlas-map .iss-related-place-map__marker-dot {
+  border-color: var(--iss-gesture-atlas-map-marker-border, rgba(30, 30, 30, 0.2));
+  background: var(--iss-gesture-atlas-map-marker-background, rgba(22, 18, 15, 0.9));
+  box-shadow: var(
+    --iss-gesture-atlas-map-marker-shadow,
+    0 0 0 0.45rem rgba(183, 75, 38, 0.14), 0 8px 22px rgba(22, 18, 15, 0.16)
+  );
+}
+
+.iss-gesture-atlas-map--skin-route {
+  --iss-gesture-atlas-map-marker-border: rgba(255, 255, 255, 0.78);
+  --iss-gesture-atlas-map-marker-background: var(--iss-accent, #e81d25);
+  --iss-gesture-atlas-map-marker-shadow:
     0 0 0 0.42rem rgba(232, 29, 37, 0.18),
     0 0.55rem 1.35rem rgba(20, 18, 17, 0.22);
 }

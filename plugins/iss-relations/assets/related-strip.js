@@ -233,11 +233,83 @@
     strips.forEach(bindRelatedStrip);
   }
 
+  function bindStripFilter(root) {
+    if (!root || root.dataset.issStripFilterBound === '1') {
+      return;
+    }
+
+    var buttons = Array.prototype.slice.call(root.querySelectorAll('[data-iss-strip-filter-target]'));
+    var panels = Array.prototype.slice.call(root.querySelectorAll('[data-iss-strip-filter-panel]'));
+    if (!buttons.length || !panels.length) {
+      return;
+    }
+
+    root.dataset.issStripFilterBound = '1';
+
+    function activate(target, focusButton) {
+      buttons.forEach(function (button) {
+        var active = button.dataset.issStripFilterTarget === target;
+        button.classList.toggle('is-active', active);
+        button.setAttribute('aria-selected', active ? 'true' : 'false');
+        button.tabIndex = active ? 0 : -1;
+        if (active && focusButton) {
+          button.focus();
+        }
+      });
+
+      panels.forEach(function (panel) {
+        var active = panel.dataset.issStripFilterPanel === target;
+        panel.hidden = !active;
+        if (active) {
+          window.requestAnimationFrame(function () {
+            Array.prototype.forEach.call(panel.querySelectorAll('[data-iss-strip-carousel-track]'), updateCarouselState);
+          });
+        }
+      });
+    }
+
+    buttons.forEach(function (button, index) {
+      button.addEventListener('click', function () {
+        activate(button.dataset.issStripFilterTarget || '', false);
+      });
+
+      button.addEventListener('keydown', function (event) {
+        var nextIndex = index;
+        if (event.key === 'ArrowRight') {
+          nextIndex = (index + 1) % buttons.length;
+        } else if (event.key === 'ArrowLeft') {
+          nextIndex = (index - 1 + buttons.length) % buttons.length;
+        } else if (event.key === 'Home') {
+          nextIndex = 0;
+        } else if (event.key === 'End') {
+          nextIndex = buttons.length - 1;
+        } else {
+          return;
+        }
+
+        event.preventDefault();
+        activate(buttons[nextIndex].dataset.issStripFilterTarget || '', true);
+      });
+    });
+
+    var selected = buttons.filter(function (button) {
+      return button.getAttribute('aria-selected') === 'true';
+    })[0] || buttons[0];
+    activate(selected.dataset.issStripFilterTarget || '', false);
+  }
+
+  function initStripFilters(root) {
+    var scope = root && root.querySelectorAll ? root : document;
+    scope.querySelectorAll('[data-iss-strip-filter]').forEach(bindStripFilter);
+  }
+
   if (document.readyState === 'loading') {
     document.addEventListener('DOMContentLoaded', function () {
       initRelatedStrips(document);
+      initStripFilters(document);
     }, { once: true });
   } else {
     initRelatedStrips(document);
+    initStripFilters(document);
   }
 }());

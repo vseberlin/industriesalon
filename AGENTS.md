@@ -38,7 +38,7 @@ All changes must be lean, reversible where practical, documented, tested, and ju
 - For archive preservation, provenance, builder, workbench, or `iss-archive` projection work, read `docs/architecture/archive-preservation-architecture-adr.md` before designing implementation details.
 - Verify frontend, editor, responsive behavior, template compatibility, and block validation when relevant.
 - Use `docs/agent/verification.md` to choose checks for the task class.
-- Before commit, push, or deploy, always check whether changed templates, content, media references, or DB-backed state require paired SQL and uploads artifacts; create/sync them together or record why no artifact is needed.
+- Before commit, push, or deploy, always check whether changed templates, content, media references, or DB-backed state require paired database migrations (SQL or API-owned) and uploads artifacts; create/sync them together or record why no artifact is needed.
 
 ## Operations Rules
 

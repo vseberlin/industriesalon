@@ -1582,7 +1582,8 @@
         { value: 'front-projects', label: 'Projekt-Notizen' },
         { value: 'front-timeline', label: 'Termine' },
         { value: 'front-visit-info', label: 'Besuchsinfo' },
-        { value: 'front-newsletter', label: 'Newsletter' }
+        { value: 'front-newsletter', label: 'Newsletter' },
+        { value: 'fuehrungen-offers', label: 'Führungsangebote' }
       ];
     }
 

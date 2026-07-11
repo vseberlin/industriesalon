@@ -29,6 +29,7 @@ function iss_content_model_landing_page_allowed_slugs(): array
         'verein',
         'salon-vermietung',
         'sammlungen',
+        'fuehrungen',
     ];
 }
 
@@ -86,8 +87,10 @@ function iss_content_model_register_editorial_formats(array $formats): array
                     'gateway.cards' => __('Karten', 'iss-content-model'),
                     'gateway.link-list' => __('Linkliste', 'iss-content-model'),
                     'gateway.feature-strip' => __('Feature-Leiste', 'iss-content-model'),
+                    'gateway.pathways' => __('Themenpfade', 'iss-content-model'),
                 ],
             ],
+            'galerie' => array_merge($gallery_section, ['supports' => ['anchor', 'media_refs', 'gallery_layout']]),
             'feature' => [
                 'label' => __('Hervorgehobener Inhalt', 'iss-content-model'),
                 'description' => __('Ein auffälliger Abschnitt mit Bild, Text und Kernfakten, um ein Thema besonders zu betonen.', 'iss-content-model'),
@@ -107,6 +110,7 @@ function iss_content_model_register_editorial_formats(array $formats): array
                     'slot.timeline' => __('Termine', 'iss-content-model'),
                     'slot.visit-info' => __('Besuchsinfo', 'iss-content-model'),
                     'slot.newsletter' => __('Newsletter', 'iss-content-model'),
+                    'slot.fuehrungen-offers' => __('Führungsangebote', 'iss-content-model'),
                 ],
             ],
             'atlas_map' => [
@@ -116,6 +120,7 @@ function iss_content_model_register_editorial_formats(array $formats): array
                 'treatments' => [
                     'atlas-map.place-locator' => __('Ort verorten', 'iss-content-model'),
                     'atlas-map.map-only' => __('Kartenband', 'iss-content-model'),
+                    'atlas-map.editorial-split' => __('Text und Karte', 'iss-content-model'),
                 ],
             ],
         ],

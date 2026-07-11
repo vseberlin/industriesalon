@@ -30,11 +30,4 @@ add_action('init', function () {
         ]);
     }
 
-    $offer_catalog_dir = ISS_FUEHRUNGEN_PATH . 'blocks/tour-offer-catalog';
-    if (file_exists($offer_catalog_dir . '/block.json')) {
-        register_block_type($offer_catalog_dir, [
-            'render_callback' => 'iss_fuehrung_render_offer_catalog_block',
-        ]);
-    }
-
 });

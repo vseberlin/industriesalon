@@ -116,13 +116,8 @@ if (defined('WP_CLI') && WP_CLI) {
                     }
                 }
 
-                $template_tags_source = file_exists(ISS_FUEHRUNGEN_PATH . 'includes/template-tags.php')
-                    ? (string) file_get_contents(ISS_FUEHRUNGEN_PATH . 'includes/template-tags.php')
-                    : '';
-                foreach (['iss-tour-offer-catalog', 'data-filterable="1"', 'iss-fuehrungen-offer-catalog'] as $required_fragment) {
-                    if (strpos($template_tags_source, $required_fragment) === false) {
-                        $errors[] = sprintf('Tour offer catalog renderer is missing required fragment: %s.', $required_fragment);
-                    }
+                if (!function_exists('industriesalon_render_fuehrungen_offers_slot')) {
+                    $errors[] = 'The active theme does not expose the Führungen landing offer slot.';
                 }
             }
 

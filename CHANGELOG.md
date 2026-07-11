@@ -4,6 +4,35 @@ This file records durable project changes. Keep it compact: current state belong
 `handoff_CURRENT.md`, active follow-up in `TODO.md`, and detailed investigation can
 be recovered from Git history.
 
+## 2026-07-11
+
+- Migrated `/fuehrungen/` from its static Query Loop and standalone offer
+  catalog block to an eligible landing JSON document with a theme-owned
+  `fuehrungen-offers` slot. The slot keeps tour query and booking data in
+  `iss-content`, reuses the site-wide card/carousel contract, and removes the
+  old block, private JavaScript, page pattern, and page-specific CSS layer.
+- Reintroduced the Führungen “Formate” map as the JSON `atlas_map` treatment
+  `editorial-split`. It uses the standard current-page relation source and
+  shared static-map renderer, stores the three highlighted places as ordinary
+  page relations, and keeps the 20/80 composition in the landing CSS while
+  route-colored marker variables remain in the shared gesture layer.
+- Migrated the Führungen “Bleiben Sie dran” pathways into the registered
+  `gateway.pathways` landing treatment. The six image-led destinations now use
+  the standard gateway JSON and renderer contract instead of the deleted
+  pathway block markup and page-specific CSS.
+- Added the canonical `galerie` gesture to native landing JSON and migrated the
+  six Führungen images into a `sequence` gallery. It reuses the site-wide
+  carousel runtime with stable image geometry and captions, without restoring
+  dense-wall spans, overlays, or page-specific gallery CSS.
+- Added treatment-scoped orientation labels to the Führungen landing map. Its
+  shared route-colored markers now expose their existing place names below the
+  dots in condensed red type, without changing the static-map renderer or
+  adding opaque label panels.
+- Replaced the Führungen landing SQL blob with a readable WP-CLI migration.
+  Landing JSON now saves through `iss-editorial`, page relations save through
+  `iss-relations`, and the migration creates and verifies a targeted backup
+  instead of embedding normalized serialized postmeta.
+
 ## 2026-07-09
 
 - Added ADR-001 for archive preservation architecture, defining the

@@ -32,6 +32,8 @@
 !/ops/sql/
 !/ops/sql/*.sql
 /ops/sql/2026-06-03-production-newsletter-sync.sql
+!/ops/migrations/
+!/ops/migrations/*.php
 !/ops/uploads/
 !/ops/uploads/*.manifest
 !/ops/uploads/*.tar.gz

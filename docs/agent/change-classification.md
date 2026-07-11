@@ -19,6 +19,7 @@ Classify every task before changing files or infrastructure. If a task spans cla
 Before any commit, push, deploy, or handoff, check whether the change depends on
 local upload files, attachment rows, DB-backed templates, options, custom-table
 rows, or imported content state. If it does, also classify the task as
-`Database transfer` and/or `Uploads/media`, create paired artifacts when both
-SQL and files are required, and record the artifact names plus verification. If
-no artifact is needed, record that decision in the closeout context.
+`Database transfer` and/or `Uploads/media`, create paired artifacts when both a
+database migration (SQL or API-owned) and files are required, and record the
+artifact names plus verification. If no artifact is needed, record that
+decision in the closeout context.

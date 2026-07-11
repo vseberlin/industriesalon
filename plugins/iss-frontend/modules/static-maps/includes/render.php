@@ -493,13 +493,15 @@ function iss_frontend_static_maps_render_place_map_stage(array $places, array $c
         $marker_y = ((float) $position['y'] * ($scale_y > 0 ? $scale_y : 1.0)) + $offset_y;
         $label = trim((string) ($place['label'] ?? ''));
         $marker_label = $label !== '' ? ($label . ': ' . $place['title']) : $place['title'];
+        $place_name = $label !== '' ? $label : trim((string) ($place['title'] ?? ''));
 
         $markers .= sprintf(
-            '<a class="iss-related-place-map__marker" href="%1$s" style="--x:%2$s%%;--y:%3$s%%" aria-label="%4$s"><span class="iss-related-place-map__marker-dot" aria-hidden="true"></span><span class="iss-related-place-map__marker-label">%5$s</span></a>',
+            '<a class="iss-related-place-map__marker" href="%1$s" style="--x:%2$s%%;--y:%3$s%%" aria-label="%4$s" data-place-name="%5$s"><span class="iss-related-place-map__marker-dot" aria-hidden="true"></span><span class="iss-related-place-map__marker-label">%6$s</span></a>',
             esc_url((string) ($place['permalink'] ?? '')),
             esc_attr(number_format($marker_x, 3, '.', '')),
             esc_attr(number_format($marker_y, 3, '.', '')),
             esc_attr($marker_label),
+            esc_attr($place_name),
             esc_html((string) ($index + 1))
         );
     }
@@ -830,8 +832,12 @@ function iss_frontend_static_maps_render_atlas_slice_stage_from_model(array $mod
 
         $index = (int) ($station['index'] ?? 0);
         $place = is_array($station['place'] ?? null) ? $station['place'] : [];
+        $place_name = trim((string) ($place['label'] ?? ''));
+        if ($place_name === '') {
+            $place_name = trim((string) ($place['title'] ?? ''));
+        }
         $marker_classes = ['iss-related-place-map__marker'];
-        $marker_attrs = '';
+        $marker_attrs = ' data-place-name="' . esc_attr($place_name) . '"';
 
         if ($interactive_markers) {
             if ($index === 0) {

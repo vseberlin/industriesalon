@@ -89,10 +89,10 @@ function industriesalon_editorial_landing_treatment_slug(array $section): string
     $allowed = [
         'statement' => ['statement.lead', 'statement.leitfrage'],
         'fliesstext' => ['text.standard'],
-        'gateway' => ['gateway.cards', 'gateway.link-list', 'gateway.feature-strip'],
+        'gateway' => ['gateway.cards', 'gateway.link-list', 'gateway.feature-strip', 'gateway.pathways'],
         'feature' => ['feature.media-panel', 'feature.media-text', 'feature.image-overlay'],
-        'dynamic_slot' => ['slot.projects', 'slot.timeline', 'slot.visit-info', 'slot.newsletter'],
-        'atlas_map' => ['atlas-map.place-locator', 'atlas-map.map-only'],
+        'dynamic_slot' => ['slot.projects', 'slot.timeline', 'slot.visit-info', 'slot.newsletter', 'slot.fuehrungen-offers'],
+        'atlas_map' => ['atlas-map.place-locator', 'atlas-map.map-only', 'atlas-map.editorial-split'],
     ];
     $default = $defaults[$type] ?? 'gateway.cards';
     $treatment = strtolower((string) ($section['treatment'] ?? $default));
@@ -118,6 +118,7 @@ function industriesalon_editorial_landing_atlas_map_variant(array $section): str
     $variants = [
         'atlas-map.place-locator' => 'place-locator',
         'atlas-map.map-only' => 'map-only',
+        'atlas-map.editorial-split' => 'map-only',
     ];
 
     return (string) ($variants[$treatment] ?? 'map-only');
@@ -131,19 +132,33 @@ function industriesalon_editorial_landing_media_text_layout(array $section): str
     return in_array($layout, $allowed, true) ? $layout : '50-50';
 }
 
+function industriesalon_editorial_landing_gallery_layout(array $section): string
+{
+    $layout = sanitize_key((string) ($section['gallery_layout'] ?? 'sequence'));
+    $allowed = ['grid', 'sequence', 'wall', 'viewport'];
+
+    return in_array($layout, $allowed, true) ? $layout : 'sequence';
+}
+
 function industriesalon_editorial_landing_section_classes(array $section, string $skin, int $item_count = 0): array
 {
     $type = sanitize_key((string) ($section['type'] ?? 'section'));
     $anchor = sanitize_title((string) ($section['anchor'] ?? ''));
     $slot_key = sanitize_key((string) ($section['slot_key'] ?? ''));
-    $treatment = industriesalon_editorial_landing_treatment_slug($section);
+    $treatment = $type === 'galerie' ? '' : industriesalon_editorial_landing_treatment_slug($section);
     $classes = [
         'iss-section',
         'iss-landing-section',
         'iss-landing-section--gesture-' . sanitize_html_class($type),
         'iss-landing-section--skin-' . sanitize_html_class($skin),
-        'iss-landing-section--treatment-' . industriesalon_editorial_landing_class_slug($treatment),
     ];
+
+    if ($treatment !== '') {
+        $classes[] = 'iss-landing-section--treatment-' . industriesalon_editorial_landing_class_slug($treatment);
+    }
+    if ($type === 'galerie') {
+        $classes[] = 'iss-landing-section--layout-' . sanitize_html_class(industriesalon_editorial_landing_gallery_layout($section));
+    }
 
     if ($item_count > 0) {
         $classes[] = 'iss-landing-section--items-' . min(4, max(0, $item_count));
@@ -186,13 +201,19 @@ function industriesalon_editorial_landing_section_classes(array $section, string
 function industriesalon_editorial_landing_section_attrs(array $section, string $skin, int $item_count = 0): string
 {
     $type = sanitize_key((string) ($section['type'] ?? 'section'));
-    $treatment = industriesalon_editorial_landing_treatment_slug($section);
+    $treatment = $type === 'galerie' ? '' : industriesalon_editorial_landing_treatment_slug($section);
     $anchor = sanitize_title((string) ($section['anchor'] ?? ''));
     $attrs = 'class="' . esc_attr(implode(' ', industriesalon_editorial_landing_section_classes($section, $skin, $item_count))) . '"';
     if ($anchor !== '') {
         $attrs .= ' id="' . esc_attr($anchor) . '"';
     }
-    $attrs .= ' data-section-gesture="' . esc_attr($type) . '" data-section-treatment="' . esc_attr($treatment) . '"';
+    $attrs .= ' data-section-gesture="' . esc_attr($type) . '"';
+    if ($treatment !== '') {
+        $attrs .= ' data-section-treatment="' . esc_attr($treatment) . '"';
+    }
+    if ($type === 'galerie') {
+        $attrs .= ' data-gallery-layout="' . esc_attr(industriesalon_editorial_landing_gallery_layout($section)) . '"';
+    }
 
     return $attrs;
 }
@@ -338,6 +359,73 @@ function industriesalon_render_editorial_landing_gateway(array $section, int $re
                 <div class="iss-landing-gateway" data-item-count="<?php echo esc_attr((string) $item_count); ?>">
                     <?php echo $items_html; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- Items are escaped in industriesalon_render_editorial_landing_gateway_item(). ?>
                 </div>
+            <?php endif; ?>
+        </div>
+    </section>
+    <?php
+    unset($rendered_index);
+    return trim((string) ob_get_clean());
+}
+
+function industriesalon_render_editorial_landing_gallery_item(array $reference): string
+{
+    $stored = is_array($reference['reference'] ?? null) ? $reference['reference'] : [];
+    $resolved = is_array($reference['resolved'] ?? null) ? $reference['resolved'] : [];
+    $attachment_id = absint($resolved['id'] ?? $stored['id'] ?? 0);
+    if ($attachment_id <= 0 || !wp_attachment_is_image($attachment_id)) {
+        return '';
+    }
+
+    $caption = trim((string) ($stored['label'] ?? ''));
+    if ($caption === '') {
+        $caption = trim((string) wp_get_attachment_caption($attachment_id));
+    }
+
+    ob_start();
+    ?>
+    <figure class="iss-landing-gallery__item">
+        <div class="iss-landing-gallery__media"><?php echo wp_get_attachment_image($attachment_id, 'large', false, ['loading' => 'lazy']); ?></div>
+        <?php if ($caption !== '') : ?><figcaption><?php echo esc_html($caption); ?></figcaption><?php endif; ?>
+    </figure>
+    <?php
+    return trim((string) ob_get_clean());
+}
+
+function industriesalon_render_editorial_landing_gallery(array $section, int $rendered_index, string $skin): string
+{
+    $references = is_array($section['media_refs_resolved'] ?? null) ? $section['media_refs_resolved'] : [];
+    $items_html = '';
+    foreach ($references as $reference) {
+        if (is_array($reference)) {
+            $items_html .= industriesalon_render_editorial_landing_gallery_item($reference);
+        }
+    }
+
+    if ($items_html === '') {
+        return '';
+    }
+
+    $layout = industriesalon_editorial_landing_gallery_layout($section);
+    $copy_html = industriesalon_render_editorial_landing_copy($section);
+    if ($layout === 'sequence' && function_exists('iss_relations_enqueue_related_strip_script')) {
+        iss_relations_enqueue_related_strip_script();
+    }
+
+    ob_start();
+    ?>
+    <section <?php echo industriesalon_editorial_landing_section_attrs($section, $skin); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- Attributes are escaped in helper. ?>>
+        <div class="iss-container iss-landing-section__inner iss-landing-gallery">
+            <?php echo $copy_html; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- Copy output is escaped in helper. ?>
+            <?php if ($layout === 'sequence') : ?>
+                <div class="iss-related-feed__carousel iss-landing-gallery__carousel" data-iss-strip-carousel>
+                    <div class="iss-related-feed__carousel-controls" aria-label="<?php esc_attr_e('Galerie-Steuerung', 'industriesalon'); ?>">
+                        <button type="button" class="iss-related-feed__carousel-control iss-related-feed__carousel-control--prev" data-iss-strip-carousel-prev aria-label="<?php esc_attr_e('Vorherige Bilder', 'industriesalon'); ?>" disabled><span class="iss-related-feed__carousel-control-icon" aria-hidden="true"></span><span class="iss-related-feed__carousel-control-text"><?php esc_html_e('Zurück', 'industriesalon'); ?></span></button>
+                        <button type="button" class="iss-related-feed__carousel-control iss-related-feed__carousel-control--next" data-iss-strip-carousel-next aria-label="<?php esc_attr_e('Nächste Bilder', 'industriesalon'); ?>" disabled><span class="iss-related-feed__carousel-control-text"><?php esc_html_e('Weiter', 'industriesalon'); ?></span><span class="iss-related-feed__carousel-control-icon" aria-hidden="true"></span></button>
+                    </div>
+                    <div class="iss-landing-gallery__track" data-iss-strip-carousel-track><?php echo $items_html; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- Gallery items escape their content. ?></div>
+                </div>
+            <?php else : ?>
+                <div class="iss-landing-gallery__track"><?php echo $items_html; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- Gallery items escape their content. ?></div>
             <?php endif; ?>
         </div>
     </section>
@@ -727,6 +815,117 @@ function industriesalon_render_front_newsletter_slot(): string
     return trim((string) ob_get_clean());
 }
 
+function industriesalon_render_fuehrungen_offer_card(int $post_id): string
+{
+    if ($post_id <= 0 || !function_exists('iss_fuehrung_get_offer_catalog_item_state')) {
+        return '';
+    }
+
+    $state = iss_fuehrung_get_offer_catalog_item_state($post_id);
+    $badge = trim((string) get_post_meta($post_id, 'tour_badge', true));
+    $excerpt = trim((string) get_post_field('post_excerpt', $post_id, 'raw'));
+    $meta = function_exists('iss_fuehrung_get_card_meta') ? iss_fuehrung_get_card_meta($post_id) : [];
+    $action = !empty($state['primary_action']['url']) && !empty($state['primary_action']['label'])
+        ? $state['primary_action']
+        : ($state['secondary_action'] ?? []);
+
+    if ($badge === '') {
+        $labels = [
+            'calendar' => __('Öffentlicher Rundgang', 'industriesalon'),
+            'hybrid' => __('Öffentlich + Anfrage', 'industriesalon'),
+            'on_demand' => __('Individuell buchbar', 'industriesalon'),
+        ];
+        $badge = (string) ($labels[(string) ($state['mode'] ?? '')] ?? __('Führung', 'industriesalon'));
+    }
+
+    $summary = array_slice(array_values(array_filter(array_map('trim', (array) $meta))), 0, 2);
+    if (!empty($state['value'])) {
+        $summary[] = sprintf('%s: %s', (string) ($state['label'] ?? ''), (string) $state['value']);
+    }
+    if ($excerpt === '' && !empty($state['note'])) {
+        $excerpt = (string) $state['note'];
+    }
+
+    ob_start();
+    ?>
+    <article class="iss-card iss-fuehrungen-catalog__card" role="listitem">
+        <?php if (has_post_thumbnail($post_id)) : ?>
+            <figure class="iss-card__media"><a href="<?php echo esc_url(get_permalink($post_id)); ?>"><?php echo get_the_post_thumbnail($post_id, 'large'); ?></a></figure>
+        <?php endif; ?>
+        <div class="iss-card__body">
+            <p class="iss-card__kicker iss-kicker"><?php echo esc_html($badge); ?></p>
+            <h4 class="iss-card__title"><a href="<?php echo esc_url(get_permalink($post_id)); ?>"><?php echo esc_html(get_the_title($post_id)); ?></a></h4>
+            <?php if ($excerpt !== '') : ?><p class="iss-card__text"><?php echo esc_html($excerpt); ?></p><?php endif; ?>
+            <?php if ($summary) : ?><p class="iss-card__meta"><?php echo esc_html(implode(' · ', $summary)); ?></p><?php endif; ?>
+            <?php if (!empty($action['url']) && !empty($action['label'])) : ?>
+                <div class="iss-card__footer"><a class="iss-card__link" href="<?php echo esc_url((string) $action['url']); ?>"><?php echo esc_html((string) $action['label']); ?></a></div>
+            <?php endif; ?>
+        </div>
+    </article>
+    <?php
+    return trim((string) ob_get_clean());
+}
+
+function industriesalon_render_fuehrungen_offers_slot(): string
+{
+    if (!function_exists('iss_fuehrung_get_catalog_posts') || !function_exists('iss_fuehrung_group_offer_catalog_posts') || !function_exists('iss_fuehrung_get_offer_catalog_groups')) {
+        return '';
+    }
+
+    $posts = iss_fuehrung_get_catalog_posts();
+    $groups = iss_fuehrung_get_offer_catalog_groups();
+    $grouped_posts = iss_fuehrung_group_offer_catalog_posts((array) $posts);
+    if (!$posts || !$groups) {
+        return '';
+    }
+
+    if (function_exists('iss_relations_enqueue_related_strip_script')) {
+        iss_relations_enqueue_related_strip_script();
+    }
+
+    $available_groups = array_values(array_filter(array_keys($groups), static function (string $group_key) use ($grouped_posts): bool {
+        return !empty($grouped_posts[$group_key]);
+    }));
+    if (!$available_groups) {
+        return '';
+    }
+
+    ob_start();
+    ?>
+    <div class="iss-fuehrungen-catalog" data-iss-strip-filter>
+        <div class="iss-fuehrungen-catalog__nav" role="tablist" aria-label="<?php esc_attr_e('Führungskategorien', 'industriesalon'); ?>">
+            <?php foreach ($available_groups as $group_key) : ?>
+                <?php $group_slug = sanitize_html_class($group_key); ?>
+                <button type="button" id="fuehrungen-tab-<?php echo esc_attr($group_slug); ?>" data-iss-strip-filter-target="<?php echo esc_attr($group_key); ?>" role="tab" aria-controls="fuehrungen-<?php echo esc_attr($group_slug); ?>" aria-selected="<?php echo $group_key === $available_groups[0] ? 'true' : 'false'; ?>"><?php echo esc_html((string) $groups[$group_key]['label']); ?></button>
+            <?php endforeach; ?>
+        </div>
+        <div class="iss-fuehrungen-catalog__groups">
+            <?php foreach ($available_groups as $group_key) : $group = $groups[$group_key]; ?>
+                <?php $group_slug = sanitize_html_class($group_key); ?>
+                <section id="fuehrungen-<?php echo esc_attr($group_slug); ?>" class="iss-fuehrungen-catalog__group" data-iss-strip-filter-panel="<?php echo esc_attr($group_key); ?>" role="tabpanel" aria-labelledby="fuehrungen-tab-<?php echo esc_attr($group_slug); ?>"<?php echo $group_key === $available_groups[0] ? '' : ' hidden'; ?>>
+                    <header class="iss-fuehrungen-catalog__group-head">
+                        <h3><?php echo esc_html((string) $group['title']); ?></h3>
+                        <p><?php echo esc_html((string) $group['description']); ?></p>
+                    </header>
+                    <div class="iss-related-feed__carousel iss-fuehrungen-catalog__carousel" data-iss-strip-carousel>
+                        <div class="iss-related-feed__carousel-controls" aria-label="<?php esc_attr_e('Karussell-Steuerung', 'industriesalon'); ?>">
+                            <button type="button" class="iss-related-feed__carousel-control iss-related-feed__carousel-control--prev" data-iss-strip-carousel-prev aria-label="<?php esc_attr_e('Vorherige Führungen', 'industriesalon'); ?>" disabled><span class="iss-related-feed__carousel-control-icon" aria-hidden="true"></span><span class="iss-related-feed__carousel-control-text"><?php esc_html_e('Zurück', 'industriesalon'); ?></span></button>
+                            <button type="button" class="iss-related-feed__carousel-control iss-related-feed__carousel-control--next" data-iss-strip-carousel-next aria-label="<?php esc_attr_e('Nächste Führungen', 'industriesalon'); ?>" disabled><span class="iss-related-feed__carousel-control-icon" aria-hidden="true"></span><span class="iss-related-feed__carousel-control-text"><?php esc_html_e('Weiter', 'industriesalon'); ?></span></button>
+                        </div>
+                        <div class="iss-related-feed__grid iss-related-feed__grid--fuehrung iss-related-feed__grid--layout-strip iss-related-feed__grid--columns-3 iss-fuehrungen-catalog__track" data-iss-strip-carousel-track role="list">
+                            <?php foreach ($grouped_posts[$group_key] as $post) : ?>
+                                <?php echo industriesalon_render_fuehrungen_offer_card((int) $post->ID); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- Card renderer escapes dynamic values. ?>
+                            <?php endforeach; ?>
+                        </div>
+                    </div>
+                </section>
+            <?php endforeach; ?>
+        </div>
+    </div>
+    <?php
+    return trim((string) ob_get_clean());
+}
+
 function industriesalon_render_editorial_landing_dynamic_slot(array $section, int $rendered_index, string $skin): string
 {
     $slot_key = sanitize_key((string) ($section['slot_key'] ?? ''));
@@ -740,6 +939,8 @@ function industriesalon_render_editorial_landing_dynamic_slot(array $section, in
         $slot_html = industriesalon_render_front_visit_info_slot();
     } elseif ($slot_key === 'front-newsletter') {
         $slot_html = industriesalon_render_front_newsletter_slot();
+    } elseif ($slot_key === 'fuehrungen-offers') {
+        $slot_html = industriesalon_render_fuehrungen_offers_slot();
     }
 
     if (trim($slot_html) === '') {
@@ -769,6 +970,8 @@ function industriesalon_render_editorial_landing_atlas_map(array $section, int $
     $variant = industriesalon_editorial_landing_atlas_map_variant($section);
     $map_html = iss_relations_render_atlas_map_variant($variant, [
         'shellMode' => 'body',
+    ], null, [
+        'post_id' => (int) get_queried_object_id(),
     ]);
 
     if (trim($map_html) === '') {
@@ -799,6 +1002,9 @@ function industriesalon_render_editorial_landing_section(array $section, int $re
     }
     if ($type === 'gateway') {
         return industriesalon_render_editorial_landing_gateway($section, $rendered_index, $skin);
+    }
+    if ($type === 'galerie') {
+        return industriesalon_render_editorial_landing_gallery($section, $rendered_index, $skin);
     }
     if ($type === 'feature') {
         return industriesalon_render_editorial_landing_feature($section, $rendered_index, $skin);
@@ -844,7 +1050,7 @@ function industriesalon_editorial_landing_render_document(array $document): stri
 
 function industriesalon_render_editorial_landing_content(string $content): string
 {
-    if (is_admin() || !is_singular('page') || !in_the_loop() || !is_main_query()) {
+    if (is_admin() || doing_filter('get_the_excerpt') || !is_singular('page') || !in_the_loop() || !is_main_query()) {
         return $content;
     }
 
@@ -888,7 +1094,7 @@ function industriesalon_front_page_landing_has_sections(): bool
         if (!is_array($section)) {
             continue;
         }
-        if (in_array((string) ($section['type'] ?? ''), ['statement', 'fliesstext', 'gateway', 'feature', 'dynamic_slot'], true)) {
+        if (in_array((string) ($section['type'] ?? ''), ['statement', 'fliesstext', 'gateway', 'galerie', 'feature', 'dynamic_slot'], true)) {
             $has_sections = true;
             break;
         }

@@ -74,7 +74,6 @@ add_action('after_setup_theme', function () {
             'assets/css/page-archive.css',
             'assets/css/page-kalender.css',
             'assets/css/page-sammlungen.css',
-            'assets/css/page-fuehrungen.css',
             'assets/css/page-events.css',
             'assets/css/page-projekte.css',
             'assets/css/page-salon-vermietung.css',
@@ -515,13 +514,6 @@ function industriesalon_register_block_patterns(): void
             'description' => 'Editorial deep-dive for one permanent exhibition workstation or object ensemble.',
             'categories' => array('industriesalon', 'text', 'media'),
             'file' => '/patterns/iss-section-ausstellung-workstation.html',
-        ),
-        array(
-            'name' => 'industriesalon/page-fuehrungen-template',
-            'title' => 'ISS Fuehrungen Page Template',
-            'description' => 'Booking-first tours page content for the dedicated fuehrungen landing page.',
-            'categories' => array('industriesalon', 'text'),
-            'file' => '/patterns/page-fuehrungen-template.html',
         ),
         array(
             'name' => 'industriesalon/page-salon-vermietung-template',
@@ -1325,12 +1317,6 @@ function industriesalon_enqueue_assets(): void
             'handle' => 'industriesalon-page-sammlungen',
             'path' => '/assets/css/page-sammlungen.css',
             'condition' => is_page('sammlungen'),
-        ),
-        array(
-            'handle' => 'industriesalon-page-fuehrungen',
-            'path' => '/assets/css/page-fuehrungen.css',
-            'condition' => $current_page_template === 'page-fuehrungen'
-                || is_page('fuehrungen'),
         ),
         array(
             'handle' => 'industriesalon-page-events',

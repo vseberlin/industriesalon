@@ -5,7 +5,8 @@ Shared sync expectations across local, GitHub, staging, and production.
 ## Channels
 
 - Code: local repo -> GitHub `main` -> staging deploy.
-- SQL/data: explicit artifacts under `ops/sql/`.
+- SQL/data: explicit artifacts under `ops/sql/` or API-owned migrations under
+  `ops/migrations/`.
 - Uploads: explicit archive or `rsync` workflow; never assume uploads are already present.
 - Search indexes: rebuildable from WordPress/database state.
 - Mail queues/logs: runtime state, not canonical content.

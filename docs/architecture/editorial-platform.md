@@ -84,7 +84,14 @@ The Führungen landing offer catalog uses the controlled `offer_catalog_groups`
 post meta for `Öffentlich`, `Gruppen`, `Individuell`, and `Familien & Kinder`;
 empty values fall back to the legacy booking/text heuristic only for migration
 continuity. The old `fuehrung_typ` taxonomy is no longer an editor-facing
-classification source for landing filters.
+classification source for landing filters. Its landing composition is the
+JSON-native `fuehrungen-offers` dynamic slot: `iss-content` supplies grouped
+posts and booking state, the theme renders the cards, and the existing
+`iss-relations` strip runtime supplies carousel interaction. The former Query
+Loop, standalone catalog block, and private catalog JavaScript are retired.
+After this cutover the file template owns only the hero shell and inert landing
+slot; `ops/migrations/2026-07-11-fuehrungen-landing.php` enables the JSON-owned
+body and writes page relations through their owning APIs after code deployment.
 The theme consumes `iss_editorial_get_read_model()` in
 `themes/industriesalon/includes/tours-render.php`, exposes `route-dossier`,
 `compact`, and `standard` skins, replaces the hero description from the first
@@ -146,7 +153,7 @@ and relation contracts instead of reviving the deleted block surface.
 Native landing pages use the same engine only behind an eligibility gate. The
 `landing` format applies to native WordPress `page` posts, not a new CPT, and
 is limited in V1 to the front page plus `about`, `verein`, `salon-vermietung`,
-and `sammlungen`. WordPress keeps page identity, URLs, menus, hierarchy, and the
+`sammlungen`, and `fuehrungen`. WordPress keeps page identity, URLs, menus, hierarchy, and the
 static front-page setting. The front page keeps `front-page.html` as its wrapper.
 Landing JSON is stored in `_iss_editorial_landing`, enabled through
 `_iss_editorial_enabled_landing`, and assigned a page posture through
@@ -163,12 +170,26 @@ homepage migration; reusable visual choices still belong in per-gesture
 treatments.
 Landing JSON exposes the first JSON-native `atlas_map` gesture. Its treatment
 choices are recipe names that map to registered `atlas-map` variants:
-`atlas-map.place-locator` and `atlas-map.map-only`. The renderer calls
-`iss_relations_render_atlas_map_variant()` and resolves places through existing
-relations for the current page; it does not introduce a separate JSON place
-picker or store map source details in the section payload. Führung route maps
-use the same gesture contract but keep their source in relation station rows
-rather than storing route data in the narrative JSON document.
+`atlas-map.place-locator`, `atlas-map.map-only`, and
+`atlas-map.editorial-split`. The renderer calls
+`iss_relations_render_atlas_map_variant()` and does not store map source details
+in the section payload. General landing maps resolve current-page relations;
+the editorial split treatment changes only the text/map composition and marker
+presentation. Its markers remain ordinary page relations, with no treatment-
+specific selection or result cap. Single Führung route maps use the same gesture
+contract but keep their source and order in relation station rows.
+
+The reusable `gateway.pathways` treatment presents a sequence of image-led
+destinations as a compact horizontal editorial strip. It uses the normal
+gateway item contract and belongs to landing composition CSS; legacy pathway
+block classes and page-specific CSS are not part of the treatment.
+
+Native landing pages also expose the canonical `galerie` gesture with the
+shared `gallery_layout` option. The Führungen landing uses `sequence`: the
+theme renders a light, image-led carousel through the site-wide strip runtime,
+while JSON stores only ordered media references and stable captions. New
+landing galleries must not revive `iss/dense-image-wall`, per-cell spans,
+manual row heights, or overlay copy.
 
 Unresolved references are omitted from public output and shown as placeholders
 in previews for editors.

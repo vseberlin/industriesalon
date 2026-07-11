@@ -55,6 +55,7 @@ services:
       - ./wp:/var/www/html
       - ./plugins:/var/www/html/wp-content/plugins
       - ./themes:/var/www/html/wp-content/themes
+      - ./ops/migrations:/var/www/html/ops/migrations:ro
       - ./var/event-drop-storage:/event-drop-storage
       - ./docker/php/uploads.ini:/usr/local/etc/php/conf.d/uploads.ini:ro
 

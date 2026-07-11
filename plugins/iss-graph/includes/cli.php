@@ -1866,12 +1866,12 @@ function iss_graph_wpcli_frontend_view_contract(): array
         'tours' => [
             'file' => trailingslashit($theme_root) . 'templates/page-fuehrungen.html',
             'requires' => [
-                'wp:industriesalon/timeline-query',
-                '"fixedItemTypesList":["fuehrungen"]',
-                'wp:iss/tour-offer-catalog',
+                'wp:industriesalon/editorial-landing',
             ],
             'forbids' => [
                 'wp:industriesalon/ausstellungen-browser',
+                'wp:core/query',
+                'wp:iss/tour-offer-catalog',
             ],
         ],
         'events' => [
