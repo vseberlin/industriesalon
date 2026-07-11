@@ -1929,7 +1929,7 @@
     }
 
     function renderGatewayItemEditor(section, body) {
-      var isTextImageRow = (section.type || '') === 'text_bild_reihe';
+      var isTextImageRow = ['text_bild_reihe', 'map_img'].indexOf(section.type || '') !== -1;
       var wrapper = createElement('div', 'iss-editorial-field iss-editorial-field--gateway-items');
       var rows = createElement('div', 'iss-editorial-gateway-item-rows');
       var add = createElement('button', 'button', isTextImageRow ? 'Bild-Text-Paar hinzufügen' : 'Ziel hinzufügen');

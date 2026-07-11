@@ -30,6 +30,7 @@ function iss_content_model_landing_page_allowed_slugs(): array
         'salon-vermietung',
         'sammlungen',
         'fuehrungen',
+        'schoneweide',
     ];
 }
 
@@ -94,6 +95,7 @@ function iss_content_model_register_editorial_formats(array $formats): array
                     'gateway.link-list' => __('Linkliste', 'iss-content-model'),
                     'gateway.feature-strip' => __('Feature-Leiste', 'iss-content-model'),
                     'gateway.pathways' => __('Themenpfade', 'iss-content-model'),
+                    'gateway.atlas-plates' => __('Atlas-Ortskarten', 'iss-content-model'),
                 ],
             ],
             'text_bild_reihe' => [
@@ -103,6 +105,15 @@ function iss_content_model_register_editorial_formats(array $formats): array
                 'treatments' => [
                     'text-bild-reihe.visual' => __('Großformatige Bildreihe', 'iss-content-model'),
                     'text-bild-reihe.compact' => __('Kompakte Bildreihe', 'iss-content-model'),
+                    'text-bild-reihe.chronology' => __('Chronologische Bildreihe', 'iss-content-model'),
+                ],
+            ],
+            'map_img' => [
+                'label' => __('Karte & Bild', 'iss-content-model'),
+                'description' => __('Eine räumliche Orientierungskarte neben einem großen Ortsbild mit ergänzenden Bild-Text-Karten.', 'iss-content-model'),
+                'supports' => ['treatment', 'lead', 'media_refs', 'items'],
+                'treatments' => [
+                    'map-img.editorial-atlas' => __('Karte, Panorama und Ortskarten', 'iss-content-model'),
                 ],
             ],
             'galerie' => array_merge($gallery_section, ['supports' => ['anchor', 'media_refs', 'gallery_layout']]),
@@ -128,6 +139,7 @@ function iss_content_model_register_editorial_formats(array $formats): array
                     'slot.newsletter' => __('Newsletter', 'iss-content-model'),
                     'slot.fuehrungen-offers' => __('Führungsangebote', 'iss-content-model'),
                     'slot.team-directory' => __('Team-Verzeichnis', 'iss-content-model'),
+                    'slot.schoneweide-atlas' => __('Schöneweide-Atlas', 'iss-content-model'),
                 ],
             ],
             'atlas_map' => [

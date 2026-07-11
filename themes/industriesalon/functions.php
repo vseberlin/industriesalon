@@ -1187,11 +1187,6 @@ function industriesalon_enqueue_assets(): void
             'condition' => is_page('projekte'),
         ),
         array(
-            'handle' => 'industriesalon-page-schoneweide',
-            'path' => '/assets/css/page-schoneweide.css',
-            'condition' => $is_schoneweide_page,
-        ),
-        array(
             'handle' => 'industriesalon-page-salon-vermietung',
             'path' => '/assets/css/page-salon-vermietung.css',
             'condition' => $current_page_template === 'page-salon-vermietung'

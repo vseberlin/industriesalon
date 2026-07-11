@@ -126,6 +126,7 @@ A skin is the whole-page reading posture, orthogonal to event taxonomy.
 | 6 | `buehne`       | festival                                                      | Image/atmosphere-forward events and programmes |
 | 7 | `chronik`      | dokumentarisch                                                | Timeline-driven Rückblicke and historical views |
 | 8 | `frontpage`    | front-page Gutenberg parity                                   | Native page JSON reconstruction of the current homepage body |
+| 9 | `territorial`  | Schöneweide map-led page posture                              | Place, map, and spatial-index landing pages       |
 
 **Key move:** `Vortrag`, `Lesung`, `Gespräch`, `Workshop`, `Konzert`,
 `Repair Cafe` stop being skins. They remain the **semantic type** — driving the
@@ -142,6 +143,10 @@ cleanup and is not a canonical skin.
 existing hardcoded homepage visual posture into native landing JSON. If its
 rules prove useful elsewhere, they can be promoted later; until then, do not
 turn individual homepage row spacing into new public gesture treatments.
+
+`territorial` is the map-led landing posture. It controls indexed typography,
+rules, spatial card density, and the transition into an operational map. It
+does not own Atlas data or create page-specific gestures.
 
 `blueprint-matrix` is a real skin behavior. The current publication renderer
 switches photoalbum output into a separate coordinate/matrix treatment, so the
@@ -270,7 +275,7 @@ ausstellung     exhibition        quellenbuehne       [shared subset]      rail 
 projekt         evergreen         dossier             [shared subset]      rail on
 rückblick       backward          chronik             [shared subset]      rail optional
 publication     photoalbum        bildmatrix          galerie/material     rail top
-page            landing           typografisch/dossier/frontpage gateway    rail off
+page            landing           typografisch/dossier/frontpage/territorial gateway rail off
 ```
 
 Concretely:
@@ -366,8 +371,9 @@ or matrix.
 ## Native Landing Pages
 
 Native landing pages stay WordPress `page` posts and use an eligibility-gated
-`landing` format rather than a `landing_page` CPT. The first allowed pages are
-the front page, `about`, `verein`, `salon-vermietung`, and `sammlungen`.
+`landing` format rather than a `landing_page` CPT. Eligible pages currently
+include the front page, `about`, `verein`, `salon-vermietung`, `sammlungen`,
+`fuehrungen`, and `schoneweide`.
 
 The landing registry owns allowed gestures, skins, default skin, and treatment
 options. Page meta stores `_iss_editorial_landing`,

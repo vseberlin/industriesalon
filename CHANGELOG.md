@@ -11,6 +11,11 @@ be recovered from Git history.
   Team directory slot, and staff drag-and-drop ordering for `team_member`; the
   cutover removes the legacy Query Loop, person-name crop condition, and more
   than 1,000 lines of page-specific body CSS.
+- Migrated `/schoneweide/` to seven sections in the new `territorial` landing
+  skin. Added reusable chronology and Atlas-place treatments, delegated the
+  interactive Atlas through a constrained dynamic slot, established canonical
+  page relations, restored the map/panorama/card composition as the reusable
+  `map_img` gesture, and removed the 383-line legacy page stylesheet.
 - Migrated `/fuehrungen/` from its static Query Loop and standalone offer
   catalog block to an eligible landing JSON document with a theme-owned
   `fuehrungen-offers` slot. The slot keeps tour query and booking data in

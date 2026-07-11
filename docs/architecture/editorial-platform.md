@@ -127,7 +127,8 @@ contract. The route station fields map to relation keys `place_id`, `role=stop`,
 Static Atlas maps use the shared `atlas-map` gesture contract rather than
 separate map slice/strip/place-map authoring concepts. Editor-facing JSON and
 block fallback should declare only the gesture plus a registered variant such
-as `tour-route`, `place-locator`, or `map-only`; `iss-relations` expands that
+as `tour-route`, `place-locator`, `map-only`, or `editorial-split`;
+`iss-relations` expands that
 variant into source, preset, fit, line, marker, panel, and ratio renderer
 details. Those internal details are registry/developer-owned and should not
 become free editor controls. The fallback block form is
@@ -174,9 +175,10 @@ choices are recipe names that map to registered `atlas-map` variants:
 `atlas-map.editorial-split`. The renderer calls
 `iss_relations_render_atlas_map_variant()` and does not store map source details
 in the section payload. General landing maps resolve current-page relations;
-the editorial split treatment changes only the text/map composition and marker
-presentation. Its markers remain ordinary page relations, with no treatment-
-specific selection or result cap. Single Führung route maps use the same gesture
+the editorial split treatment selects a taller registered viewport ratio for its
+text/map composition and adds its marker presentation. Its markers remain
+ordinary page relations, with no treatment-specific selection or result cap.
+Single Führung route maps use the same gesture
 contract but keep their source and order in relation station rows.
 
 `/about/` is a completed landing cutover. Its file template owns only the
@@ -200,6 +202,16 @@ the existing role-label and profile fields control card content, and staff
 manage `menu_order` through the shared drag-and-drop list control. The slot
 queries every published profile in that order and stores no person IDs or
 person-specific presentation rules in landing JSON or PHP.
+
+`/schoneweide/` is a territorial landing. Its file template retains the hero;
+seven JSON sections own the body. `map-img.editorial-atlas` restores the
+map/panorama orientation composition and its four non-linked place cards;
+`text-bild-reihe.chronology` presents the epoch sequence,
+`gateway.atlas-plates` presents linked place dossiers, and
+`slot.schoneweide-atlas` delegates to the existing interactive Atlas renderer.
+The map panel inside `map_img` resolves the page's ordinary place relations
+without a treatment-specific cap. Its registered crop and all Atlas payloads
+remain outside landing JSON.
 
 The reusable `gateway.pathways` treatment presents a sequence of image-led
 destinations as a compact horizontal editorial strip. It uses the normal

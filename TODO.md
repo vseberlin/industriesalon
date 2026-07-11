@@ -4,6 +4,11 @@ Immediate executable work only. Larger future programs live in `docs/project/bac
 
 ## Next
 
+- Schöneweide landing staging cutover: deploy the committed code, take a target
+  DB backup, run
+  `wp eval-file ops/migrations/2026-07-11-schoneweide-landing.php --allow-root`,
+  then review `/schoneweide/` and the landing editor. No uploads artifact is
+  required because the migration validates and reuses existing attachment IDs.
 - Führung `bildbuehne` stage gesture content/UAT follow-up: create or migrate
   at least one real Führung stage section in content, then browser-check
   desktop/mobile that the full-viewport image stage, compact gallery, and right

@@ -75,6 +75,11 @@ skin for reconstructing the existing hardcoded Gutenberg homepage body while
 durable choices such as `gateway.cards` or `feature.media-panel`; they should
 not multiply just to preserve one homepage row's spacing during migration.
 
+The Schöneweide landing uses the `territorial` skin for a map-led reading
+posture with compact technical labels, indexed rules, place plates, and an
+operational Atlas destination. It remains semantic and reusable; it does not
+expose Schöneweide page classes as an editor contract.
+
 ## Landing Gestures
 
 Add `gateway` as a shared landing gesture. `gateway` is curated next-path
@@ -114,6 +119,10 @@ Front-page reconstruction adds constrained landing gestures:
 - `text_bild_reihe`: repeated, non-navigational image/title/text items. It is
   used when media and explanatory copy form one editorial row; unlike
   `gateway`, its items do not require or store destination links.
+- `map_img`: a spatial editorial composition with a relation-driven map panel,
+  one lead image, an optional contextual note, and non-linked supporting cards.
+  The treatment owns the composition; JSON stores the image and card content,
+  while map source and crop remain registered renderer details.
 
 The first dynamic slot keys are front-page scoped:
 
@@ -133,6 +142,10 @@ The About landing adds `team-directory`. `iss-content` owns the `team_member`
 records and staff-editable `menu_order`; the theme queries every published
 profile and renders the existing card contract. The slot stores no roster,
 role filter, item limit, or person-specific crop rule.
+
+The Schöneweide landing adds `schoneweide-atlas`. The slot delegates to the
+existing register plugin renderer and stores no Atlas configuration, place
+payload, or map markup in landing JSON.
 
 These slots preserve existing dynamic render ownership for project notes,
 timeline queries, visit information, and the newsletter form while letting the
@@ -164,6 +177,7 @@ The first landing treatment registry entries are:
 - `gateway.link-list`
 - `gateway.feature-strip`
 - `gateway.pathways`
+- `gateway.atlas-plates`
 - `statement.lead`
 - `statement.leitfrage`
 - `statement.callout`
@@ -171,6 +185,8 @@ The first landing treatment registry entries are:
 - `text.story-split-flip`
 - `text-bild-reihe.visual`
 - `text-bild-reihe.compact`
+- `text-bild-reihe.chronology`
+- `map-img.editorial-atlas`
 - `feature.media-panel`
 - `feature.media-text`
 - `feature.image-overlay`
@@ -183,6 +199,8 @@ The first landing treatment registry entries are:
 - `slot.visit-info`
 - `slot.newsletter`
 - `slot.fuehrungen-offers`
+- `slot.team-directory`
+- `slot.schoneweide-atlas`
 - `slot.team-directory`
 
 The landing registry also exposes the canonical `galerie` gesture with

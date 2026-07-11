@@ -11,6 +11,7 @@ function industriesalon_get_editorial_landing_skins(): array
         'typografisch',
         'frontpage',
         'dossier',
+        'territorial',
     ];
 }
 
@@ -35,6 +36,10 @@ add_filter('iss_editorial_format_skins', function (array $skins, string $format_
         'dossier' => [
             'slug' => 'dossier',
             'label' => __('Dossier', 'industriesalon'),
+        ],
+        'territorial' => [
+            'slug' => 'territorial',
+            'label' => __('Territorial', 'industriesalon'),
         ],
     ];
 }, 10, 2);
@@ -83,6 +88,7 @@ function industriesalon_editorial_landing_treatment_slug(array $section): string
         'fliesstext' => 'text.standard',
         'gateway' => 'gateway.cards',
         'text_bild_reihe' => 'text-bild-reihe.visual',
+        'map_img' => 'map-img.editorial-atlas',
         'feature' => 'feature.media-panel',
         'dynamic_slot' => 'slot.projects',
         'atlas_map' => 'atlas-map.map-only',
@@ -90,10 +96,11 @@ function industriesalon_editorial_landing_treatment_slug(array $section): string
     $allowed = [
         'statement' => ['statement.lead', 'statement.leitfrage', 'statement.callout'],
         'fliesstext' => ['text.standard', 'text.story-split', 'text.story-split-flip'],
-        'gateway' => ['gateway.cards', 'gateway.link-list', 'gateway.feature-strip', 'gateway.pathways'],
-        'text_bild_reihe' => ['text-bild-reihe.visual', 'text-bild-reihe.compact'],
+        'gateway' => ['gateway.cards', 'gateway.link-list', 'gateway.feature-strip', 'gateway.pathways', 'gateway.atlas-plates'],
+        'text_bild_reihe' => ['text-bild-reihe.visual', 'text-bild-reihe.compact', 'text-bild-reihe.chronology'],
+        'map_img' => ['map-img.editorial-atlas'],
         'feature' => ['feature.media-panel', 'feature.media-text', 'feature.image-overlay', 'feature.origin-story'],
-        'dynamic_slot' => ['slot.projects', 'slot.timeline', 'slot.visit-info', 'slot.newsletter', 'slot.fuehrungen-offers', 'slot.team-directory'],
+        'dynamic_slot' => ['slot.projects', 'slot.timeline', 'slot.visit-info', 'slot.newsletter', 'slot.fuehrungen-offers', 'slot.team-directory', 'slot.schoneweide-atlas'],
         'atlas_map' => ['atlas-map.place-locator', 'atlas-map.map-only', 'atlas-map.editorial-split'],
     ];
     $default = $defaults[$type] ?? 'gateway.cards';
@@ -117,7 +124,7 @@ function industriesalon_editorial_landing_atlas_map_variant(array $section): str
     $variants = [
         'atlas-map.place-locator' => 'place-locator',
         'atlas-map.map-only' => 'map-only',
-        'atlas-map.editorial-split' => 'map-only',
+        'atlas-map.editorial-split' => 'editorial-split',
     ];
 
     return (string) ($variants[$treatment] ?? 'map-only');
@@ -429,6 +436,115 @@ function industriesalon_render_editorial_landing_text_image_row(array $section, 
                 <div class="iss-landing-text-image-row__items" data-item-count="<?php echo esc_attr((string) $item_count); ?>">
                     <?php echo $items_html; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- Items are escaped in their renderer. ?>
                 </div>
+            <?php endif; ?>
+        </div>
+    </section>
+    <?php
+    unset($rendered_index);
+    return trim((string) ob_get_clean());
+}
+
+function industriesalon_editorial_landing_first_media(array $section): array
+{
+    $references = is_array($section['media_refs_resolved'] ?? null) ? $section['media_refs_resolved'] : [];
+    foreach ($references as $reference) {
+        if (!is_array($reference)) {
+            continue;
+        }
+        $stored = is_array($reference['reference'] ?? null) ? $reference['reference'] : [];
+        $resolved = is_array($reference['resolved'] ?? null) ? $reference['resolved'] : [];
+        $attachment_id = absint($resolved['id'] ?? $stored['id'] ?? 0);
+        if ($attachment_id > 0 && wp_attachment_is_image($attachment_id)) {
+            return [
+                'id' => $attachment_id,
+                'label' => trim((string) ($stored['label'] ?? '')),
+            ];
+        }
+    }
+
+    foreach ((array) ($section['media_refs'] ?? []) as $reference) {
+        if (!is_array($reference)) {
+            continue;
+        }
+        $attachment_id = absint($reference['id'] ?? 0);
+        if ($attachment_id > 0 && wp_attachment_is_image($attachment_id)) {
+            return [
+                'id' => $attachment_id,
+                'label' => trim((string) ($reference['label'] ?? '')),
+            ];
+        }
+    }
+
+    return [];
+}
+
+function industriesalon_render_editorial_landing_map_image(array $section, int $rendered_index, string $skin): string
+{
+    if (!function_exists('iss_relations_render_atlas_map_variant')) {
+        return '';
+    }
+
+    $copy_html = industriesalon_render_editorial_landing_copy($section);
+    $lead = trim((string) ($section['lead'] ?? ''));
+    $media = industriesalon_editorial_landing_first_media($section);
+    $attachment_id = absint($media['id'] ?? 0);
+    $caption = trim((string) ($media['label'] ?? ''));
+    $items_html = '';
+    $item_count = 0;
+    foreach ((array) ($section['items'] ?? []) as $item) {
+        if (!is_array($item)) {
+            continue;
+        }
+        $item_html = industriesalon_render_editorial_landing_text_image_item($item);
+        if ($item_html === '') {
+            continue;
+        }
+        $items_html .= $item_html;
+        ++$item_count;
+    }
+
+    $post_id = (int) get_queried_object_id();
+    $map_attributes = [];
+    if ($post_id > 0 && function_exists('iss_relations_get_related_place_ids')) {
+        $relation_count = count(iss_relations_get_related_place_ids($post_id));
+        if ($relation_count > 0) {
+            $map_attributes['perPage'] = $relation_count;
+        }
+    }
+    $map_html = iss_relations_render_atlas_map_variant(
+        'map-image-panel',
+        $map_attributes,
+        null,
+        ['post_id' => $post_id]
+    );
+
+    if ($copy_html === '' && trim($map_html) === '' && $attachment_id <= 0 && $items_html === '') {
+        return '';
+    }
+
+    ob_start();
+    ?>
+    <section <?php echo industriesalon_editorial_landing_section_attrs($section, $skin, $item_count); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- Attributes are escaped in helper. ?>>
+        <div class="iss-container iss-landing-section__inner iss-landing-map-image">
+            <div class="iss-landing-map-image__intro">
+                <?php echo $copy_html; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- Copy output is escaped in helper. ?>
+                <?php if ($lead !== '') : ?>
+                    <aside class="iss-landing-map-image__note"><?php echo wp_kses_post(wpautop($lead)); ?></aside>
+                <?php endif; ?>
+            </div>
+            <?php if (trim($map_html) !== '' || $attachment_id > 0) : ?>
+                <div class="iss-landing-map-image__visual">
+                    <?php if (trim($map_html) !== '') : ?><div class="iss-landing-map-image__map"><?php echo $map_html; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- Atlas renderer escapes its output. ?></div><?php endif; ?>
+                    <?php if ($attachment_id > 0) : ?>
+                        <figure class="iss-landing-map-image__panorama">
+                            <?php echo wp_get_attachment_image($attachment_id, 'full', false, ['loading' => 'lazy']); ?>
+                            <?php if ($caption !== '') : ?><figcaption><?php echo esc_html($caption); ?></figcaption><?php endif; ?>
+                        </figure>
+                    <?php endif; ?>
+                </div>
+            <?php endif; ?>
+            <?php if ($items_html !== '') : ?>
+                <div class="iss-landing-map-image__cards" data-item-count="<?php echo esc_attr((string) $item_count); ?>"><?php echo $items_html; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- Items escape their content. ?></div>
             <?php endif; ?>
         </div>
     </section>
@@ -1112,6 +1228,17 @@ function industriesalon_render_team_directory_slot(): string
     return trim((string) ob_get_clean());
 }
 
+function industriesalon_render_schoneweide_atlas_slot(): string
+{
+    if (!function_exists('iss_register_render_schoneweide_atlas')) {
+        return '';
+    }
+
+    return iss_register_render_schoneweide_atlas([
+        'className' => 'iss-atlas-app--landing',
+    ]);
+}
+
 function industriesalon_render_editorial_landing_dynamic_slot(array $section, int $rendered_index, string $skin): string
 {
     $slot_key = sanitize_key((string) ($section['slot_key'] ?? ''));
@@ -1129,6 +1256,8 @@ function industriesalon_render_editorial_landing_dynamic_slot(array $section, in
         $slot_html = industriesalon_render_fuehrungen_offers_slot();
     } elseif ($slot_key === 'team-directory') {
         $slot_html = industriesalon_render_team_directory_slot();
+    } elseif ($slot_key === 'schoneweide-atlas') {
+        $slot_html = industriesalon_render_schoneweide_atlas_slot();
     }
 
     if (trim($slot_html) === '') {
@@ -1156,11 +1285,22 @@ function industriesalon_render_editorial_landing_atlas_map(array $section, int $
 
     $copy_html = industriesalon_render_editorial_landing_copy($section);
     $variant = industriesalon_editorial_landing_atlas_map_variant($section);
-    $map_html = iss_relations_render_atlas_map_variant($variant, [
+    $map_attributes = [
         'shellMode' => 'body',
-    ], null, [
-        'post_id' => (int) get_queried_object_id(),
-    ]);
+    ];
+    $post_id = (int) get_queried_object_id();
+    if ($post_id > 0 && function_exists('iss_relations_get_related_place_ids')) {
+        $relation_count = count(iss_relations_get_related_place_ids($post_id));
+        if ($relation_count > 0) {
+            $map_attributes['perPage'] = $relation_count;
+        }
+    }
+    $map_html = iss_relations_render_atlas_map_variant(
+        $variant,
+        $map_attributes,
+        null,
+        ['post_id' => $post_id]
+    );
 
     if (trim($map_html) === '') {
         return '';
@@ -1193,6 +1333,9 @@ function industriesalon_render_editorial_landing_section(array $section, int $re
     }
     if ($type === 'text_bild_reihe') {
         return industriesalon_render_editorial_landing_text_image_row($section, $rendered_index, $skin);
+    }
+    if ($type === 'map_img') {
+        return industriesalon_render_editorial_landing_map_image($section, $rendered_index, $skin);
     }
     if ($type === 'galerie') {
         return industriesalon_render_editorial_landing_gallery($section, $rendered_index, $skin);
@@ -1285,7 +1428,7 @@ function industriesalon_front_page_landing_has_sections(): bool
         if (!is_array($section)) {
             continue;
         }
-        if (in_array((string) ($section['type'] ?? ''), ['statement', 'fliesstext', 'gateway', 'text_bild_reihe', 'galerie', 'feature', 'dynamic_slot'], true)) {
+        if (in_array((string) ($section['type'] ?? ''), ['statement', 'fliesstext', 'gateway', 'text_bild_reihe', 'map_img', 'galerie', 'feature', 'dynamic_slot'], true)) {
             $has_sections = true;
             break;
         }

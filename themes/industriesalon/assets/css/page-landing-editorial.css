@@ -68,7 +68,7 @@
 
 .iss-landing-section--treatment-atlas-map-editorial-split .iss-landing-atlas-map {
   grid-template-columns: minmax(12rem, 1fr) minmax(0, 4fr);
-  align-items: center;
+  align-items: start;
 }
 
 .iss-landing-section--treatment-atlas-map-editorial-split .iss-landing-section__copy {
@@ -87,7 +87,7 @@
 }
 
 .iss-landing-section--treatment-atlas-map-editorial-split .iss-gesture-atlas-map--treatment-band {
-  --iss-gesture-atlas-map-stage-min-height: clamp(14rem, 20vw, 18rem);
+  --iss-gesture-atlas-map-stage-min-height: 0;
 }
 
 .iss-landing-section--treatment-atlas-map-editorial-split .iss-related-place-map__marker::after {
@@ -114,6 +114,142 @@
   pointer-events: none;
 }
 
+.iss-landing-map-image {
+  gap: clamp(1.5rem, 2.5vw, 2rem);
+}
+
+.iss-landing-map-image__intro {
+  display: grid;
+  grid-template-columns: minmax(0, 1.2fr) minmax(20rem, 1fr);
+  gap: clamp(2rem, 4vw, 4rem);
+  align-items: start;
+}
+
+.iss-landing-map-image__intro .iss-landing-section__copy {
+  max-width: 56rem;
+}
+
+.iss-landing-map-image__intro .iss-landing-section__title {
+  max-width: 19ch;
+  font-family: "IBM Plex Sans Condensed", "Arial Narrow", var(--wp--preset--font-family--plex, sans-serif);
+  font-size: clamp(2.4rem, 3vw, 3.65rem);
+  font-weight: 700;
+  line-height: 1.02;
+}
+
+.iss-landing-map-image__note {
+  display: grid;
+  gap: 0.75rem;
+  padding: 1.1rem 0 0 1.25rem;
+  border-top: 1px solid var(--iss-landing-rule);
+  border-left: 3px solid var(--iss-accent, #e81d25);
+  color: var(--iss-landing-muted);
+  font-size: 0.9rem;
+  line-height: 1.5;
+}
+
+.iss-landing-map-image__note > :first-child,
+.iss-landing-map-image__note > :last-child {
+  margin-block: 0;
+}
+
+.iss-landing-map-image__note strong {
+  color: var(--iss-accent, #e81d25);
+  font-family: "IBM Plex Sans Condensed", "Arial Narrow", var(--wp--preset--font-family--plex, sans-serif);
+  font-size: 0.8rem;
+  letter-spacing: 0;
+  text-transform: uppercase;
+}
+
+.iss-landing-map-image__visual {
+  display: grid;
+  grid-template-columns: minmax(12rem, 1fr) minmax(0, 3.78fr);
+  gap: 1.25rem;
+  align-items: stretch;
+}
+
+.iss-landing-map-image__map,
+.iss-landing-map-image__panorama {
+  min-width: 0;
+  overflow: hidden;
+  margin: 0;
+  border: 1px solid var(--iss-landing-rule);
+}
+
+.iss-landing-map-image__map .iss-gesture-atlas-map--treatment-band {
+  --iss-gesture-atlas-map-stage-min-height: 0;
+}
+
+.iss-landing-map-image__panorama {
+  position: relative;
+  min-height: 100%;
+}
+
+.iss-landing-map-image__panorama img {
+  position: absolute;
+  inset: 0;
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.iss-landing-map-image__panorama figcaption {
+  position: absolute;
+  bottom: 1rem;
+  left: 1rem;
+  max-width: min(34rem, calc(100% - 2rem));
+  padding: 0.8rem 1rem;
+  color: var(--iss-white, #fff);
+  background: rgba(20, 18, 17, 0.72);
+  font-size: 0.86rem;
+  line-height: 1.45;
+}
+
+.iss-landing-map-image__cards {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 1.25rem;
+}
+
+.iss-landing-map-image__cards .iss-landing-text-image-row__item {
+  display: flex;
+  min-height: 33rem;
+  flex-direction: column;
+  border: 1px solid var(--iss-landing-rule);
+  background: #fff;
+}
+
+.iss-landing-map-image__cards .iss-landing-text-image-row__item::after {
+  min-height: 3rem;
+  background:
+    radial-gradient(circle at 1rem center, var(--iss-accent, #e81d25) 0 0.24rem, transparent 0.27rem),
+    color-mix(in srgb, var(--iss-black, #1e1e1e) 88%, var(--iss-accent, #e81d25) 12%);
+  content: "";
+}
+
+.iss-landing-map-image__cards .iss-landing-text-image-row__media {
+  aspect-ratio: 5 / 4;
+}
+
+.iss-landing-map-image__cards .iss-landing-text-image-row__item-body {
+  align-content: start;
+  flex: 1 1 auto;
+  padding: 1rem;
+}
+
+.iss-landing-map-image__cards .iss-landing-text-image-row__item-title {
+  color: var(--iss-landing-ink);
+  font-family: "IBM Plex Sans Condensed", "Arial Narrow", var(--wp--preset--font-family--plex, sans-serif);
+  font-size: 1.15rem;
+  font-weight: 700;
+}
+
+.iss-landing-map-image__cards .iss-landing-text-image-row__item-text {
+  font-size: 0.84rem;
+  line-height: 1.5;
+}
+
 .iss-landing-surface {
   --iss-surface-bg: transparent;
   --iss-surface-fg: var(--iss-landing-ink);
@@ -133,9 +269,6 @@
     align-items: start;
   }
 
-  .iss-landing-section--treatment-atlas-map-editorial-split .iss-gesture-atlas-map--treatment-band {
-    --iss-gesture-atlas-map-stage-min-height: 16rem;
-  }
 }
 
 .iss-landing-surface--light {
@@ -468,6 +601,57 @@
   content: "\2192";
 }
 
+.iss-landing-section--treatment-gateway-atlas-plates .iss-landing-section__inner {
+  grid-template-columns: minmax(21rem, 27rem) minmax(0, 1fr);
+  gap: clamp(2rem, 4vw, 4.25rem);
+  align-items: start;
+}
+
+.iss-landing-section--treatment-gateway-atlas-plates .iss-landing-gateway {
+  grid-template-columns: repeat(6, minmax(0, 1fr));
+  gap: 0.9rem;
+}
+
+.iss-landing-section--treatment-gateway-atlas-plates .iss-landing-gateway__link {
+  grid-template-rows: auto 1fr 3rem;
+  width: 100%;
+  min-width: 0;
+  min-height: 25.5rem;
+  border: 1px solid var(--iss-landing-rule);
+  background: #fff;
+}
+
+.iss-landing-section--treatment-gateway-atlas-plates .iss-landing-gateway__media {
+  aspect-ratio: 5 / 4;
+}
+
+.iss-landing-section--treatment-gateway-atlas-plates .iss-landing-gateway__item-body {
+  align-content: start;
+  padding: 0.85rem;
+}
+
+.iss-landing-section--treatment-gateway-atlas-plates .iss-landing-gateway__item-title {
+  font-family: "IBM Plex Sans Condensed", "Arial Narrow", var(--wp--preset--font-family--plex, sans-serif);
+  font-size: 0.95rem;
+  line-height: 1.05;
+  letter-spacing: 0;
+  text-transform: uppercase;
+  overflow-wrap: anywhere;
+}
+
+.iss-landing-section--treatment-gateway-atlas-plates .iss-landing-gateway__item-text {
+  font-size: 0.76rem;
+  line-height: 1.4;
+}
+
+.iss-landing-section--treatment-gateway-atlas-plates .iss-landing-gateway__link::after {
+  background:
+    radial-gradient(circle at 1rem center, var(--iss-accent, #e81d25) 0 0.24rem, transparent 0.27rem),
+    linear-gradient(rgba(20, 18, 17, 0.34), rgba(20, 18, 17, 0.34)),
+    url("../maps/schoneweide-map-spree-horizontal-17.webp") center / 250% auto;
+  content: "";
+}
+
 .iss-landing-text-image-row__items {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(min(100%, 13rem), 1fr));
@@ -544,6 +728,55 @@
 
 .iss-landing-section--treatment-text-bild-reihe-compact .iss-landing-text-image-row__item-text {
   font-size: 0.9rem;
+}
+
+.iss-landing-section--treatment-text-bild-reihe-chronology .iss-landing-text-image-row__items {
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+}
+
+.iss-landing-section--treatment-text-bild-reihe-chronology .iss-landing-text-image-row__item {
+  position: relative;
+  min-height: 22rem;
+  overflow: hidden;
+  background: var(--iss-black, #1e1e1e);
+}
+
+.iss-landing-section--treatment-text-bild-reihe-chronology .iss-landing-text-image-row__media {
+  position: absolute;
+  inset: 0;
+  height: 100%;
+  aspect-ratio: auto;
+}
+
+.iss-landing-section--treatment-text-bild-reihe-chronology .iss-landing-text-image-row__media::after {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(180deg, rgba(20, 20, 20, 0.06) 25%, rgba(20, 20, 20, 0.9) 100%);
+  content: "";
+}
+
+.iss-landing-section--treatment-text-bild-reihe-chronology .iss-landing-text-image-row__item-body {
+  position: absolute;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  z-index: 1;
+  align-content: end;
+  padding: 4rem 1rem 1rem;
+}
+
+.iss-landing-section--treatment-text-bild-reihe-chronology .iss-landing-text-image-row__item-title {
+  color: var(--iss-white, #fff);
+  font-family: "IBM Plex Sans Condensed", "Arial Narrow", var(--wp--preset--font-family--plex, sans-serif);
+  font-size: 1.45rem;
+  line-height: 1;
+  letter-spacing: 0;
+}
+
+.iss-landing-section--treatment-text-bild-reihe-chronology .iss-landing-text-image-row__item-text {
+  color: rgba(255, 255, 255, 0.82);
+  font-size: 0.85rem;
+  line-height: 1.45;
 }
 
 .iss-landing-gallery {
@@ -945,6 +1178,133 @@
   padding-top: 0.85rem;
   margin-bottom: 0;
   border-top: 1px solid var(--iss-landing-rule);
+}
+
+.iss-landing-editorial--skin-territorial {
+  --iss-landing-surface: #f7f7f5;
+  --iss-landing-ink: var(--iss-black, #1e1e1e);
+  --iss-landing-muted: rgba(30, 30, 30, 0.68);
+  --iss-landing-rule: rgba(30, 30, 30, 0.16);
+
+  background: var(--iss-landing-surface);
+}
+
+.iss-landing-editorial--skin-territorial .iss-landing-section {
+  padding-block: 3.75rem;
+}
+
+.iss-landing-editorial--skin-territorial .iss-kicker {
+  font-family: "IBM Plex Sans Condensed", "Arial Narrow", var(--wp--preset--font-family--plex, sans-serif);
+  letter-spacing: 0;
+}
+
+.iss-landing-editorial--skin-territorial .iss-landing-section__title {
+  max-width: 18ch;
+  font-size: 3rem;
+  line-height: 1;
+}
+
+.iss-landing-editorial--skin-territorial .iss-landing-section__body {
+  font-size: 1rem;
+  line-height: 1.62;
+}
+
+.iss-landing-editorial--skin-territorial .iss-landing-story-split {
+  display: grid;
+  grid-template-columns: minmax(0, 1.28fr) minmax(17rem, 0.72fr);
+  gap: clamp(2rem, 5vw, 5rem);
+  align-items: end;
+}
+
+.iss-landing-editorial--skin-territorial .iss-landing-section--treatment-text-story-split .iss-landing-story-split__heading {
+  grid-column: 2;
+  grid-row: 1;
+}
+
+.iss-landing-editorial--skin-territorial .iss-landing-section--treatment-text-story-split .iss-landing-story-split__content {
+  grid-column: 1;
+  grid-row: 1;
+}
+
+.iss-landing-editorial--skin-territorial .iss-landing-story-split__title {
+  max-width: 12ch;
+  margin: 0;
+  font-family: "IBM Plex Sans Condensed", "Arial Narrow", var(--wp--preset--font-family--plex, sans-serif);
+  font-size: 3rem;
+  line-height: 0.95;
+  letter-spacing: 0;
+}
+
+.iss-landing-editorial--skin-territorial .iss-landing-story-split__body {
+  column-count: 3;
+  column-gap: clamp(1.25rem, 2.5vw, 2.5rem);
+  color: var(--iss-landing-muted);
+  font-size: 0.95rem;
+  line-height: 1.55;
+}
+
+.iss-landing-editorial--skin-territorial .iss-landing-story-split__body > p:first-child,
+.iss-landing-editorial--skin-territorial .iss-landing-story-split__body > p:last-child {
+  column-span: all;
+}
+
+.iss-landing-editorial--skin-territorial .iss-landing-story-split__body > p:first-child {
+  margin-top: 0;
+  color: var(--iss-landing-ink);
+  font-size: 1.15rem;
+}
+
+.iss-landing-editorial--skin-territorial .iss-landing-story-split__body > p:last-child {
+  padding-top: 0.85rem;
+  margin-bottom: 0;
+  border-top: 1px solid var(--iss-landing-rule);
+}
+
+.iss-landing-editorial--skin-territorial .iss-landing-section--treatment-text-bild-reihe-chronology .iss-landing-section__inner {
+  grid-template-columns: minmax(0, 1fr) minmax(21rem, 27rem);
+  gap: clamp(2rem, 4vw, 4.25rem);
+  align-items: end;
+}
+
+.iss-landing-editorial--skin-territorial :is(
+  .iss-landing-section--treatment-text-bild-reihe-chronology,
+  .iss-landing-section--treatment-gateway-atlas-plates
+) .iss-landing-section__title {
+  font-family: "IBM Plex Sans Condensed", "Arial Narrow", var(--wp--preset--font-family--plex, sans-serif);
+  font-weight: 700;
+}
+
+.iss-landing-editorial--skin-territorial .iss-landing-section--treatment-text-bild-reihe-chronology .iss-landing-section__copy {
+  grid-column: 2;
+  grid-row: 1;
+}
+
+.iss-landing-editorial--skin-territorial .iss-landing-section--treatment-text-bild-reihe-chronology .iss-landing-text-image-row__items {
+  grid-column: 1;
+  grid-row: 1;
+}
+
+.iss-landing-editorial--skin-territorial .iss-landing-section--treatment-atlas-map-editorial-split {
+  background: #fff;
+}
+
+.iss-landing-editorial--skin-territorial .iss-landing-section--treatment-feature-media-text .iss-media-text__layout {
+  flex-direction: row-reverse;
+}
+
+.iss-landing-editorial--skin-territorial .iss-landing-section--treatment-feature-media-text .iss-media-text__inner {
+  padding-left: 1rem;
+  border-left: 1px solid var(--iss-landing-rule);
+}
+
+.iss-landing-editorial--skin-territorial .iss-landing-dynamic-slot--schoneweide-atlas {
+  display: block;
+  max-width: 108rem;
+}
+
+.iss-landing-editorial--skin-territorial .iss-landing-dynamic-slot--schoneweide-atlas > .iss-landing-section__copy {
+  max-width: 46rem;
+  margin-bottom: 1.5rem;
 }
 
 .iss-landing-section--treatment-feature-media-text .iss-media-text__image {
@@ -1438,6 +1798,42 @@
   color: rgba(30, 30, 30, 0.72);
 }
 
+@media (max-width: 900px) {
+  .iss-landing-map-image__intro,
+  .iss-landing-editorial--skin-territorial .iss-landing-story-split,
+  .iss-landing-editorial--skin-territorial .iss-landing-section--treatment-text-bild-reihe-chronology .iss-landing-section__inner,
+  .iss-landing-section--treatment-gateway-atlas-plates .iss-landing-section__inner {
+    grid-template-columns: 1fr;
+  }
+
+  .iss-landing-map-image__visual {
+    grid-template-columns: minmax(7rem, 1fr) minmax(0, 2.5fr);
+    gap: 0.75rem;
+  }
+
+  .iss-landing-map-image__cards {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .iss-landing-section--treatment-gateway-atlas-plates .iss-landing-gateway {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+
+  .iss-landing-editorial--skin-territorial :is(
+    .iss-landing-story-split__heading,
+    .iss-landing-story-split__content,
+    .iss-landing-section--treatment-text-bild-reihe-chronology .iss-landing-section__copy,
+    .iss-landing-section--treatment-text-bild-reihe-chronology .iss-landing-text-image-row__items
+  ) {
+    grid-column: auto;
+    grid-row: auto;
+  }
+
+  .iss-landing-editorial--skin-territorial .iss-landing-story-split__body {
+    column-count: 1;
+  }
+}
+
 @media (max-width: 720px) {
   .iss-landing-editorial--skin-dossier {
     --iss-dossier-section-padding-block: 2.5rem;
@@ -1445,25 +1841,47 @@
 
   .iss-landing-origin-story__head,
   .iss-landing-origin-story__layout,
-  .iss-landing-editorial--skin-dossier .iss-landing-story-split {
+  .iss-landing-editorial--skin-dossier .iss-landing-story-split,
+  .iss-landing-editorial--skin-territorial .iss-landing-story-split,
+  .iss-landing-editorial--skin-territorial .iss-landing-section--treatment-text-bild-reihe-chronology .iss-landing-section__inner,
+  .iss-landing-section--treatment-gateway-atlas-plates .iss-landing-section__inner {
     grid-template-columns: 1fr;
+  }
+
+  .iss-landing-map-image__cards,
+  .iss-landing-section--treatment-gateway-atlas-plates .iss-landing-gateway {
+    grid-template-columns: 1fr;
+  }
+
+  .iss-landing-map-image__cards .iss-landing-text-image-row__item,
+  .iss-landing-section--treatment-gateway-atlas-plates .iss-landing-gateway__link {
+    min-height: 24rem;
   }
 
   .iss-landing-origin-story__title,
   .iss-landing-editorial--skin-dossier .iss-landing-section__title,
-  .iss-landing-editorial--skin-dossier .iss-landing-story-split__title {
+  .iss-landing-editorial--skin-dossier .iss-landing-story-split__title,
+  .iss-landing-editorial--skin-territorial .iss-landing-section__title,
+  .iss-landing-editorial--skin-territorial .iss-landing-story-split__title {
     max-width: none;
     font-size: 2rem;
     line-height: 1.05;
   }
 
   .iss-landing-origin-story__body,
-  .iss-landing-editorial--skin-dossier .iss-landing-story-split__body {
+  .iss-landing-editorial--skin-dossier .iss-landing-story-split__body,
+  .iss-landing-editorial--skin-territorial .iss-landing-story-split__body {
     column-count: 1;
   }
 
   .iss-landing-editorial--skin-dossier .iss-landing-story-split__heading,
-  .iss-landing-editorial--skin-dossier .iss-landing-story-split__content {
+  .iss-landing-editorial--skin-dossier .iss-landing-story-split__content,
+  .iss-landing-editorial--skin-territorial .iss-landing-story-split__heading,
+  .iss-landing-editorial--skin-territorial .iss-landing-story-split__content,
+  .iss-landing-editorial--skin-territorial .iss-landing-section--treatment-text-story-split .iss-landing-story-split__heading,
+  .iss-landing-editorial--skin-territorial .iss-landing-section--treatment-text-story-split .iss-landing-story-split__content,
+  .iss-landing-editorial--skin-territorial .iss-landing-section--treatment-text-bild-reihe-chronology .iss-landing-section__copy,
+  .iss-landing-editorial--skin-territorial .iss-landing-section--treatment-text-bild-reihe-chronology .iss-landing-text-image-row__items {
     grid-column: auto;
     grid-row: auto;
   }
@@ -1472,13 +1890,22 @@
     flex-direction: column;
   }
 
+  .iss-landing-editorial--skin-territorial .iss-landing-section--treatment-feature-media-text .iss-media-text__layout {
+    flex-direction: column;
+  }
+
   .iss-landing-section--treatment-text-bild-reihe-compact .iss-landing-section__inner {
     grid-template-columns: 1fr;
   }
 
   .iss-landing-section--treatment-text-bild-reihe-visual .iss-landing-text-image-row__items,
-  .iss-landing-section--treatment-text-bild-reihe-compact .iss-landing-text-image-row__items {
+  .iss-landing-section--treatment-text-bild-reihe-compact .iss-landing-text-image-row__items,
+  .iss-landing-section--treatment-text-bild-reihe-chronology .iss-landing-text-image-row__items {
     grid-template-columns: 1fr;
+  }
+
+  .iss-landing-section--treatment-text-bild-reihe-chronology .iss-landing-text-image-row__item {
+    min-height: 18rem;
   }
 
   .iss-landing-section {

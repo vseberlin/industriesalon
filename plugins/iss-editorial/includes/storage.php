@@ -532,7 +532,7 @@ function iss_editorial_sanitize_section(array $section, array $format): array
     }
 
     if (iss_editorial_format_supports_section_field($format, $type, 'items')) {
-        $sanitized['items'] = $type === 'text_bild_reihe'
+        $sanitized['items'] = in_array($type, ['text_bild_reihe', 'map_img'], true)
             ? iss_editorial_sanitize_text_image_item_list($section['items'] ?? [])
             : iss_editorial_sanitize_gateway_item_list($section['items'] ?? []);
     }
