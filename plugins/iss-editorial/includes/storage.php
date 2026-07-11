@@ -200,6 +200,39 @@ function iss_editorial_sanitize_gateway_item_list($items): array
     return $sanitized;
 }
 
+function iss_editorial_sanitize_text_image_item($item): array
+{
+    if (!is_array($item)) {
+        return [];
+    }
+
+    $label = sanitize_text_field((string) ($item['label'] ?? ''));
+    $text = sanitize_textarea_field((string) ($item['text'] ?? ''));
+    $media_refs = iss_editorial_sanitize_reference_list($item['media_refs'] ?? []);
+    if ($label === '' && $text === '' && !$media_refs) {
+        return [];
+    }
+
+    return [
+        'label' => $label,
+        'text' => $text,
+        'media_refs' => array_slice($media_refs, 0, 1),
+    ];
+}
+
+function iss_editorial_sanitize_text_image_item_list($items): array
+{
+    $sanitized = [];
+    foreach ((array) $items as $item) {
+        $item = iss_editorial_sanitize_text_image_item($item);
+        if ($item) {
+            $sanitized[] = $item;
+        }
+    }
+
+    return $sanitized;
+}
+
 function iss_editorial_sanitize_rail_options($options): array
 {
     $options = is_array($options) ? $options : [];
@@ -466,6 +499,10 @@ function iss_editorial_sanitize_section(array $section, array $format): array
         'body' => iss_editorial_sanitize_body_html((string) ($section['body'] ?? ''), $format, $type),
     ];
 
+    if (iss_editorial_format_supports_section_field($format, $type, 'lead')) {
+        $sanitized['lead'] = wp_kses_post((string) ($section['lead'] ?? ''));
+    }
+
     if (isset($section['anchor'])) {
         $anchor = sanitize_title((string) $section['anchor']);
         if ($anchor !== '') {
@@ -495,7 +532,9 @@ function iss_editorial_sanitize_section(array $section, array $format): array
     }
 
     if (iss_editorial_format_supports_section_field($format, $type, 'items')) {
-        $sanitized['items'] = iss_editorial_sanitize_gateway_item_list($section['items'] ?? []);
+        $sanitized['items'] = $type === 'text_bild_reihe'
+            ? iss_editorial_sanitize_text_image_item_list($section['items'] ?? [])
+            : iss_editorial_sanitize_gateway_item_list($section['items'] ?? []);
     }
 
     if (iss_editorial_format_supports_section_field($format, $type, 'slot_key')) {

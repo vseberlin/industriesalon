@@ -23,9 +23,13 @@ and fallback behavior.
 - Disabled JSON, missing JSON, invalid JSON, or an empty section list falls
   back to the current template and `post_content` output.
 - `/fuehrungen/` is an explicit completed-cutover exception: its file template
-  retains the hero and one inert landing slot, while the paired SQL enables the
-  JSON-owned body. Deploy the code and SQL together; disabling that document is
+  retains the hero and one inert landing slot, while the paired API migration
+  enables the JSON-owned body. Deploy them together; disabling that document is
   a rollback to the hero shell, not to the deleted Query Loop body.
+- `/about/` is an explicit completed-cutover exception: its file template keeps
+  the masthead and landing slot, while the paired API migration enables the
+  JSON-owned body and initial Team order. Disabling the document returns to the
+  masthead shell, not to the deleted hardcoded body.
 - This docs pass creates no SQL, content migration, or upload artifact.
 
 ## Ownership
@@ -107,6 +111,9 @@ Front-page reconstruction adds constrained landing gestures:
 - `dynamic_slot`: a mapped theme-owned dynamic module. Editors choose from
   approved slot keys; they do not paste raw block markup or shortcode-like
   content.
+- `text_bild_reihe`: repeated, non-navigational image/title/text items. It is
+  used when media and explanatory copy form one editorial row; unlike
+  `gateway`, its items do not require or store destination links.
 
 The first dynamic slot keys are front-page scoped:
 
@@ -122,6 +129,11 @@ the slot markup and uses the existing `iss-card` plus shared
 stores only the ordered slot assignment and editorial copy. It does not revive
 the removed `iss/tour-offer-catalog` block or add a second carousel runtime.
 
+The About landing adds `team-directory`. `iss-content` owns the `team_member`
+records and staff-editable `menu_order`; the theme queries every published
+profile and renders the existing card contract. The slot stores no roster,
+role filter, item limit, or person-specific crop rule.
+
 These slots preserve existing dynamic render ownership for project notes,
 timeline queries, visit information, and the newsletter form while letting the
 front-page body be ordered from landing JSON.
@@ -134,6 +146,11 @@ should migrate here rather than keep `iss-rental-story` as a separate layout.
 `title`, and `body` sit on the image. Facts remain facts; treatments only change
 how they are presented. `feature.media-panel` remains the simpler copy/facts/media
 panel used by sections such as the rental block.
+
+`feature.origin-story` is the two-stage dossier treatment used by About: a
+separate editable `lead` sits opposite the heading, followed by media opposite
+the narrative and facts. `text.story-split` and `text.story-split-flip` retain
+directional long-form composition without introducing page-specific gestures.
 
 Do not add fallback text fields to `feature` just to survive deleted facts.
 Use `fliesstext` for text-led sections and keep `feature` focused on highlighted
@@ -149,9 +166,15 @@ The first landing treatment registry entries are:
 - `gateway.pathways`
 - `statement.lead`
 - `statement.leitfrage`
+- `statement.callout`
+- `text.story-split`
+- `text.story-split-flip`
+- `text-bild-reihe.visual`
+- `text-bild-reihe.compact`
 - `feature.media-panel`
 - `feature.media-text`
 - `feature.image-overlay`
+- `feature.origin-story`
 - `atlas-map.place-locator`
 - `atlas-map.map-only`
 - `atlas-map.editorial-split`
@@ -160,6 +183,7 @@ The first landing treatment registry entries are:
 - `slot.visit-info`
 - `slot.newsletter`
 - `slot.fuehrungen-offers`
+- `slot.team-directory`
 
 The landing registry also exposes the canonical `galerie` gesture with
 `gallery_layout`; this is a layout option rather than another treatment. The
@@ -216,5 +240,8 @@ behavior, not every card count or one-off layout.
 - The Führungen landing migration is paired with
   `ops/migrations/2026-07-11-fuehrungen-landing.php`. It requires no upload
   artifact because the document contains no media references.
+- The About landing migration is paired with
+  `ops/migrations/2026-07-11-about-landing.php`. Its media references already
+  exist in the current Media Library, so no uploads artifact is required.
 - Treatment choice is editor-visible during internal buildout and then
   capability-gated to administrators before client handover.

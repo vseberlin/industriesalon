@@ -72,12 +72,18 @@ function iss_content_model_register_editorial_formats(array $formats): array
                 'treatments' => [
                     'statement.lead' => __('Leitstatement', 'iss-content-model'),
                     'statement.leitfrage' => __('Leitfrage', 'iss-content-model'),
+                    'statement.callout' => __('Handlungsaufruf', 'iss-content-model'),
                 ],
             ],
             'fliesstext' => [
                 'label' => __('Freitext', 'iss-content-model'),
                 'description' => __('Ganz normaler Textabschnitt ohne starre Boxen oder Medieninhalte für tiefere Infos.', 'iss-content-model'),
-                'supports' => ['links'],
+                'supports' => ['treatment', 'links'],
+                'treatments' => [
+                    'text.standard' => __('Standard', 'iss-content-model'),
+                    'text.story-split' => __('Erzählung links, Titel rechts', 'iss-content-model'),
+                    'text.story-split-flip' => __('Titel links, Erzählung rechts', 'iss-content-model'),
+                ],
             ],
             'gateway' => [
                 'label' => __('Einstiegs-Boxen', 'iss-content-model'),
@@ -90,27 +96,38 @@ function iss_content_model_register_editorial_formats(array $formats): array
                     'gateway.pathways' => __('Themenpfade', 'iss-content-model'),
                 ],
             ],
+            'text_bild_reihe' => [
+                'label' => __('Text-Bild-Reihe', 'iss-content-model'),
+                'description' => __('Eine Reihe nicht verlinkter Bild-Text-Paare, etwa für Perspektiven, Räume oder Auszeichnungen.', 'iss-content-model'),
+                'supports' => ['treatment', 'items'],
+                'treatments' => [
+                    'text-bild-reihe.visual' => __('Großformatige Bildreihe', 'iss-content-model'),
+                    'text-bild-reihe.compact' => __('Kompakte Bildreihe', 'iss-content-model'),
+                ],
+            ],
             'galerie' => array_merge($gallery_section, ['supports' => ['anchor', 'media_refs', 'gallery_layout']]),
             'feature' => [
                 'label' => __('Hervorgehobener Inhalt', 'iss-content-model'),
                 'description' => __('Ein auffälliger Abschnitt mit Bild, Text und Kernfakten, um ein Thema besonders zu betonen.', 'iss-content-model'),
-                'supports' => ['treatment', 'facts', 'links', 'media_refs', 'media_layout'],
+                'supports' => ['treatment', 'lead', 'facts', 'links', 'media_refs', 'media_layout'],
                 'treatments' => [
                     'feature.media-panel' => __('Bild mit Infokasten', 'iss-content-model'),
                     'feature.media-text' => __('Bild neben Text', 'iss-content-model'),
                     'feature.image-overlay' => __('Titel auf Bild', 'iss-content-model'),
+                    'feature.origin-story' => __('Zweiteilige Herkunftserzählung', 'iss-content-model'),
                 ],
             ],
             'dynamic_slot' => [
                 'label' => __('Automatische Inhalte', 'iss-content-model'),
                 'description' => __('Platzhalter, der selbstständig Termine oder Projekt-Notizen lädt.', 'iss-content-model'),
-                'supports' => ['treatment', 'slot_key', 'no_body'],
+                'supports' => ['treatment', 'slot_key'],
                 'treatments' => [
                     'slot.projects' => __('Projekt-Notizen', 'iss-content-model'),
                     'slot.timeline' => __('Termine', 'iss-content-model'),
                     'slot.visit-info' => __('Besuchsinfo', 'iss-content-model'),
                     'slot.newsletter' => __('Newsletter', 'iss-content-model'),
                     'slot.fuehrungen-offers' => __('Führungsangebote', 'iss-content-model'),
+                    'slot.team-directory' => __('Team-Verzeichnis', 'iss-content-model'),
                 ],
             ],
             'atlas_map' => [

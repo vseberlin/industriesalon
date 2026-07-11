@@ -164,6 +164,7 @@
         galerie: '#426d54',
         statement: '#a32d2d',
         gateway: '#255f63',
+        text_bild_reihe: '#8a4f2d',
         feature: '#426d54',
         dynamic_slot: '#5f5e5a',
         fliesstext: '#5f5e5a',
@@ -273,7 +274,7 @@
         return true;
       }
 
-      if (format === 'landing' && ['statement', 'fliesstext', 'gateway', 'feature'].indexOf(type) !== -1) {
+      if (format === 'landing' && ['statement', 'fliesstext', 'gateway', 'text_bild_reihe', 'feature'].indexOf(type) !== -1) {
         return true;
       }
 
@@ -491,6 +492,7 @@
         kicker: '',
         title: '',
         body: '',
+        lead: supports(type, 'lead') ? '' : undefined,
         object_refs: [],
         media_refs: [],
         links: [],
@@ -1227,7 +1229,7 @@
       var mediaPanel = createEditorPanel('media', type === 'material' ? 'Dateien' : 'Bilder', 'media', sectionMediaRefsForDisplay(section).length);
       var albumPanel = createEditorPanel('album', 'Album', 'album', collectionCount(section, 'sheets'));
       var factPanel = createEditorPanel('facts', 'Fakten', 'facts', collectionCount(section, 'facts'));
-      var itemPanel = createEditorPanel('items', 'Ziele', 'items', collectionCount(section, 'items'));
+      var itemPanel = createEditorPanel('items', type === 'text_bild_reihe' ? 'Bild-Text-Paare' : 'Ziele', 'items', collectionCount(section, 'items'));
       var linkPanel = createEditorPanel('links', 'Links', 'links', collectionCount(section, 'links'));
       var kickerField = createTextInput('Vorspann', section.kicker || '', function (value) {
         section.kicker = value;
@@ -1250,6 +1252,13 @@
       });
       contentPanel.body.appendChild(kickerField);
       contentPanel.body.appendChild(titleField);
+      if (supports(type, 'lead')) {
+        contentPanel.body.appendChild(createRichTextInput('Einleitung', section.lead || '', function (value) {
+          section.lead = value;
+          render();
+          scheduleAutosave();
+        }));
+      }
       if (isEditorFieldVisible(type, 'anchor')) {
         contentPanel.body.appendChild(createTextInput('Anker', section.anchor || '', function (value) {
           section.anchor = value;
@@ -1583,7 +1592,8 @@
         { value: 'front-timeline', label: 'Termine' },
         { value: 'front-visit-info', label: 'Besuchsinfo' },
         { value: 'front-newsletter', label: 'Newsletter' },
-        { value: 'fuehrungen-offers', label: 'Führungsangebote' }
+        { value: 'fuehrungen-offers', label: 'Führungsangebote' },
+        { value: 'team-directory', label: 'Team-Verzeichnis' }
       ];
     }
 
@@ -1919,9 +1929,10 @@
     }
 
     function renderGatewayItemEditor(section, body) {
+      var isTextImageRow = (section.type || '') === 'text_bild_reihe';
       var wrapper = createElement('div', 'iss-editorial-field iss-editorial-field--gateway-items');
       var rows = createElement('div', 'iss-editorial-gateway-item-rows');
-      var add = createElement('button', 'button', 'Ziel hinzufügen');
+      var add = createElement('button', 'button', isTextImageRow ? 'Bild-Text-Paar hinzufügen' : 'Ziel hinzufügen');
 
       function rerenderRows() {
         clear(rows);
@@ -1945,13 +1956,15 @@
             render();
             scheduleAutosave();
           }, 3));
-          fields.appendChild(usePageLinkSelector()
-            ? createPageLinkSelect(item, rerenderRows)
-            : createTextInput('URL', item.url || '', function (value) {
-              item.url = value;
-              render();
-              scheduleAutosave();
-            }));
+          if (!isTextImageRow) {
+            fields.appendChild(usePageLinkSelector()
+              ? createPageLinkSelect(item, rerenderRows)
+              : createTextInput('URL', item.url || '', function (value) {
+                item.url = value;
+                render();
+                scheduleAutosave();
+              }));
+          }
 
           function rerenderMedia() {
             renderGatewayItemMedia(item, tray, rerenderMedia);
@@ -1980,14 +1993,16 @@
           rerenderMedia();
         });
         if (!section.items.length) {
-          rows.appendChild(createElement('p', 'description', 'Noch keine Ziele hinzugefügt.'));
+          rows.appendChild(createElement('p', 'description', isTextImageRow ? 'Noch keine Bild-Text-Paare hinzugefügt.' : 'Noch keine Ziele hinzugefügt.'));
         }
       }
 
       add.type = 'button';
       add.addEventListener('click', function () {
         section.items = Array.isArray(section.items) ? section.items : [];
-        section.items.push({ label: '', text: '', url: '', page_id: '', media_refs: [] });
+        section.items.push(isTextImageRow
+          ? { label: '', text: '', media_refs: [] }
+          : { label: '', text: '', url: '', page_id: '', media_refs: [] });
         rerenderRows();
         render();
         scheduleAutosave();

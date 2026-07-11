@@ -2169,7 +2169,7 @@ function iss_content_model_save_meta_box(int $post_id): void
 }
 add_action('save_post', 'iss_content_model_save_meta_box', 20, 1);
 
-function iss_content_model_project_order_query_args(): array
+function iss_content_model_order_query_args(): array
 {
     // phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Read-only admin list state for enabling the reorder UI.
     $query_args = wp_unslash($_GET);
@@ -2177,10 +2177,15 @@ function iss_content_model_project_order_query_args(): array
     return is_array($query_args) ? $query_args : [];
 }
 
-function iss_content_model_get_ordered_project_ids(): array
+function iss_content_model_get_ordered_post_ids(string $post_type): array
 {
-    $project_ids = get_posts([
-        'post_type' => ISS_CONTENT_MODEL_PROJEKT_POST_TYPE,
+    $post_type = sanitize_key($post_type);
+    if (!in_array($post_type, [ISS_CONTENT_MODEL_PROJEKT_POST_TYPE, ISS_CONTENT_MODEL_TEAM_POST_TYPE], true)) {
+        return [];
+    }
+
+    $post_ids = get_posts([
+        'post_type' => $post_type,
         'post_status' => ['publish', 'future', 'draft', 'pending', 'private'],
         'posts_per_page' => -1,
         'fields' => 'ids',
@@ -2192,41 +2197,52 @@ function iss_content_model_get_ordered_project_ids(): array
         'suppress_filters' => true,
     ]);
 
-    return array_values(array_filter(array_map('absint', $project_ids)));
+    return array_values(array_filter(array_map('absint', $post_ids)));
 }
 
-function iss_content_model_user_can_reorder_projects(): bool
+function iss_content_model_get_ordered_project_ids(): array
 {
-    static $can_reorder = null;
+    return iss_content_model_get_ordered_post_ids(ISS_CONTENT_MODEL_PROJEKT_POST_TYPE);
+}
 
-    if ($can_reorder !== null) {
-        return $can_reorder;
+function iss_content_model_user_can_reorder_post_type(string $post_type): bool
+{
+    static $permissions = [];
+    $post_type = sanitize_key($post_type);
+
+    if (array_key_exists($post_type, $permissions)) {
+        return $permissions[$post_type];
     }
 
-    $post_type_object = get_post_type_object(ISS_CONTENT_MODEL_PROJEKT_POST_TYPE);
+    $post_type_object = get_post_type_object($post_type);
     $edit_posts_cap = $post_type_object && isset($post_type_object->cap->edit_posts)
         ? (string) $post_type_object->cap->edit_posts
         : 'edit_posts';
 
     if (!current_user_can($edit_posts_cap)) {
-        $can_reorder = false;
-        return $can_reorder;
+        $permissions[$post_type] = false;
+        return false;
     }
 
-    foreach (iss_content_model_get_ordered_project_ids() as $project_id) {
-        if (!current_user_can('edit_post', $project_id)) {
-            $can_reorder = false;
-            return $can_reorder;
+    foreach (iss_content_model_get_ordered_post_ids($post_type) as $post_id) {
+        if (!current_user_can('edit_post', $post_id)) {
+            $permissions[$post_type] = false;
+            return false;
         }
     }
 
-    $can_reorder = true;
-    return $can_reorder;
+    $permissions[$post_type] = true;
+    return true;
+}
+
+function iss_content_model_user_can_reorder_projects(): bool
+{
+    return iss_content_model_user_can_reorder_post_type(ISS_CONTENT_MODEL_PROJEKT_POST_TYPE);
 }
 
 function iss_content_model_project_order_request_has_modifiers(): bool
 {
-    $query_args = iss_content_model_project_order_query_args();
+    $query_args = iss_content_model_order_query_args();
 
     foreach (['s', 'm', 'cat', 'author', 'author_name'] as $key) {
         if (trim((string) ($query_args[$key] ?? '')) !== '') {
@@ -2282,24 +2298,25 @@ function iss_content_model_project_order_list_is_reorderable_request(): bool
         && !iss_content_model_project_order_request_has_modifiers();
 }
 
-function iss_content_model_update_project_menu_order(array $ordered_post_ids)
+function iss_content_model_update_post_type_menu_order(string $post_type, array $ordered_post_ids)
 {
+    $post_type = sanitize_key($post_type);
     $ordered_post_ids = array_values(array_unique(array_filter(array_map('absint', $ordered_post_ids))));
-    $expected_post_ids = iss_content_model_get_ordered_project_ids();
+    $expected_post_ids = iss_content_model_get_ordered_post_ids($post_type);
 
     if (count($ordered_post_ids) !== count($expected_post_ids) || array_diff($ordered_post_ids, $expected_post_ids) || array_diff($expected_post_ids, $ordered_post_ids)) {
         return new WP_Error(
-            'iss_content_project_order_partial_set',
-            __('Bitte laden Sie die ungefilterte Projektliste neu und sortieren Sie dann erneut.', 'iss-content-model')
+            'iss_content_order_partial_set',
+            __('Bitte laden Sie die ungefilterte Liste neu und sortieren Sie dann erneut.', 'iss-content-model')
         );
     }
 
     $orders = [];
     foreach ($ordered_post_ids as $index => $post_id) {
-        if (get_post_type($post_id) !== ISS_CONTENT_MODEL_PROJEKT_POST_TYPE || !current_user_can('edit_post', $post_id)) {
+        if (get_post_type($post_id) !== $post_type || !current_user_can('edit_post', $post_id)) {
             return new WP_Error(
-                'iss_content_project_order_forbidden_post',
-                __('Mindestens ein Projekt darf von diesem Konto nicht sortiert werden.', 'iss-content-model')
+                'iss_content_order_forbidden_post',
+                __('Mindestens ein Eintrag darf von diesem Konto nicht sortiert werden.', 'iss-content-model')
             );
         }
 
@@ -2321,6 +2338,11 @@ function iss_content_model_update_project_menu_order(array $ordered_post_ids)
     }
 
     return $orders;
+}
+
+function iss_content_model_update_project_menu_order(array $ordered_post_ids)
+{
+    return iss_content_model_update_post_type_menu_order(ISS_CONTENT_MODEL_PROJEKT_POST_TYPE, $ordered_post_ids);
 }
 
 function iss_content_model_add_project_order_column(array $columns): array
@@ -2348,14 +2370,14 @@ function iss_content_model_render_project_order_column(string $column, int $post
     $menu_order = (int) get_post_field('menu_order', $post_id);
     if (iss_content_model_project_order_list_is_reorderable_request() && current_user_can('edit_post', $post_id)) {
         printf(
-            '<button type="button" class="button-link iss-project-order-handle" data-post-id="%d" aria-label="%s"><span class="dashicons dashicons-menu" aria-hidden="true"></span><span class="screen-reader-text">%s</span></button>',
+            '<button type="button" class="button-link iss-content-order-handle" data-post-id="%d" aria-label="%s"><span class="dashicons dashicons-menu" aria-hidden="true"></span><span class="screen-reader-text">%s</span></button>',
             absint($post_id),
             esc_attr(sprintf(__('Projekt "%s" in der Liste verschieben', 'iss-content-model'), get_the_title($post_id))),
             esc_html__('Projekt verschieben', 'iss-content-model')
         );
 
         if (current_user_can('manage_options')) {
-            echo ' <span class="iss-project-order-value">' . esc_html((string) $menu_order) . '</span>';
+            echo ' <span class="iss-content-order-value">' . esc_html((string) $menu_order) . '</span>';
         }
         return;
     }
@@ -2417,16 +2439,18 @@ function iss_content_model_render_project_order_admin_notice(): void
 }
 add_action('admin_notices', 'iss_content_model_render_project_order_admin_notice');
 
-function iss_content_model_enqueue_project_order_assets(string $hook): void
+function iss_content_model_enqueue_order_assets(string $hook): void
 {
     if ($hook !== 'edit.php') {
         return;
     }
 
     $screen = function_exists('get_current_screen') ? get_current_screen() : null;
-    if (!$screen || $screen->post_type !== ISS_CONTENT_MODEL_PROJEKT_POST_TYPE) {
+    if (!$screen || !in_array($screen->post_type, [ISS_CONTENT_MODEL_PROJEKT_POST_TYPE, ISS_CONTENT_MODEL_TEAM_POST_TYPE], true)) {
         return;
     }
+
+    $is_team = $screen->post_type === ISS_CONTENT_MODEL_TEAM_POST_TYPE;
 
     $style_path = ISS_CONTENT_MODEL_PATH . 'assets/admin-project-order.css';
     if (file_exists($style_path)) {
@@ -2452,20 +2476,22 @@ function iss_content_model_enqueue_project_order_assets(string $hook): void
     );
     wp_localize_script(
         'iss-content-model-project-order',
-        'issContentProjectOrder',
+        'issContentOrder',
         [
             'ajaxUrl' => admin_url('admin-ajax.php'),
-            'enabled' => iss_content_model_project_order_list_is_reorderable_request(),
-            'nonce' => wp_create_nonce('iss_content_project_order'),
+            'enabled' => $is_team ? iss_content_model_team_order_list_is_reorderable_request() : iss_content_model_project_order_list_is_reorderable_request(),
+            'action' => $is_team ? 'iss_content_team_reorder' : 'iss_content_project_reorder',
+            'rowSelector' => 'tr.type-' . $screen->post_type,
+            'nonce' => wp_create_nonce($is_team ? 'iss_content_team_order' : 'iss_content_project_order'),
             'strings' => [
                 'saving' => __('Reihenfolge wird gespeichert ...', 'iss-content-model'),
-                'saved' => __('Projekt-Reihenfolge gespeichert.', 'iss-content-model'),
-                'error' => __('Projekt-Reihenfolge konnte nicht gespeichert werden.', 'iss-content-model'),
+                'saved' => $is_team ? __('Team-Reihenfolge gespeichert.', 'iss-content-model') : __('Projekt-Reihenfolge gespeichert.', 'iss-content-model'),
+                'error' => $is_team ? __('Team-Reihenfolge konnte nicht gespeichert werden.', 'iss-content-model') : __('Projekt-Reihenfolge konnte nicht gespeichert werden.', 'iss-content-model'),
             ],
         ]
     );
 }
-add_action('admin_enqueue_scripts', 'iss_content_model_enqueue_project_order_assets');
+add_action('admin_enqueue_scripts', 'iss_content_model_enqueue_order_assets');
 
 function iss_content_model_handle_project_order_ajax(): void
 {
@@ -2494,6 +2520,156 @@ function iss_content_model_handle_project_order_ajax(): void
     ]);
 }
 add_action('wp_ajax_iss_content_project_reorder', 'iss_content_model_handle_project_order_ajax');
+
+function iss_content_model_team_order_request_has_modifiers(): bool
+{
+    $query_args = iss_content_model_order_query_args();
+    foreach (['s', 'm', 'cat', 'author', 'author_name', ISS_CONTENT_MODEL_TEAM_ROLE_TAXONOMY] as $key) {
+        if (trim((string) ($query_args[$key] ?? '')) !== '') {
+            return true;
+        }
+    }
+
+    $post_status = sanitize_key((string) ($query_args['post_status'] ?? ''));
+    if ($post_status !== '' && $post_status !== 'all') {
+        return true;
+    }
+    if (absint($query_args['paged'] ?? 0) > 1) {
+        return true;
+    }
+
+    $orderby = sanitize_key((string) ($query_args['orderby'] ?? ''));
+    if ($orderby !== '' && !in_array($orderby, ['menu_order', 'iss_team_order'], true)) {
+        return true;
+    }
+
+    $order = strtolower(sanitize_key((string) ($query_args['order'] ?? '')));
+    return $order !== '' && $order !== 'asc';
+}
+
+function iss_content_model_team_order_list_is_reorderable_request(): bool
+{
+    $screen = function_exists('get_current_screen') ? get_current_screen() : null;
+    if (!$screen || $screen->base !== 'edit' || $screen->post_type !== ISS_CONTENT_MODEL_TEAM_POST_TYPE) {
+        return false;
+    }
+
+    return iss_content_model_user_can_reorder_post_type(ISS_CONTENT_MODEL_TEAM_POST_TYPE)
+        && !iss_content_model_team_order_request_has_modifiers();
+}
+
+function iss_content_model_add_team_order_column(array $columns): array
+{
+    $ordered_columns = [];
+    foreach ($columns as $key => $label) {
+        $ordered_columns[$key] = $label;
+        if ($key === 'title') {
+            $ordered_columns['iss_team_order'] = __('Reihenfolge', 'iss-content-model');
+        }
+    }
+
+    return $ordered_columns;
+}
+add_filter('manage_' . ISS_CONTENT_MODEL_TEAM_POST_TYPE . '_posts_columns', 'iss_content_model_add_team_order_column');
+
+function iss_content_model_render_team_order_column(string $column, int $post_id): void
+{
+    if ($column !== 'iss_team_order') {
+        return;
+    }
+
+    $menu_order = (int) get_post_field('menu_order', $post_id);
+    if (iss_content_model_team_order_list_is_reorderable_request() && current_user_can('edit_post', $post_id)) {
+        printf(
+            '<button type="button" class="button-link iss-content-order-handle" data-post-id="%d" aria-label="%s"><span class="dashicons dashicons-menu" aria-hidden="true"></span><span class="screen-reader-text">%s</span></button>',
+            absint($post_id),
+            esc_attr(sprintf(__('Teammitglied "%s" in der Liste verschieben', 'iss-content-model'), get_the_title($post_id))),
+            esc_html__('Teammitglied verschieben', 'iss-content-model')
+        );
+        if (current_user_can('manage_options')) {
+            echo ' <span class="iss-content-order-value">' . esc_html((string) $menu_order) . '</span>';
+        }
+        return;
+    }
+
+    if (current_user_can('manage_options')) {
+        echo esc_html((string) $menu_order);
+        return;
+    }
+
+    echo '<span aria-hidden="true">-</span><span class="screen-reader-text">' . esc_html__('Reihenfolge in der ungefilterten Teamliste bearbeiten.', 'iss-content-model') . '</span>';
+}
+add_action('manage_' . ISS_CONTENT_MODEL_TEAM_POST_TYPE . '_posts_custom_column', 'iss_content_model_render_team_order_column', 10, 2);
+
+function iss_content_model_make_team_order_column_sortable(array $columns): array
+{
+    $columns['iss_team_order'] = 'menu_order';
+    return $columns;
+}
+add_filter('manage_edit-' . ISS_CONTENT_MODEL_TEAM_POST_TYPE . '_sortable_columns', 'iss_content_model_make_team_order_column_sortable');
+
+function iss_content_model_order_team_admin_query(WP_Query $query): void
+{
+    if (!is_admin() || !$query->is_main_query() || $query->get('post_type') !== ISS_CONTENT_MODEL_TEAM_POST_TYPE) {
+        return;
+    }
+
+    $orderby = (string) $query->get('orderby');
+    if ($orderby === '' || $orderby === 'menu_order' || $orderby === 'iss_team_order') {
+        $query->set('orderby', [
+            'menu_order' => 'ASC',
+            'title' => 'ASC',
+            'ID' => 'ASC',
+        ]);
+        $query->set('order', 'ASC');
+    }
+
+    if (iss_content_model_user_can_reorder_post_type(ISS_CONTENT_MODEL_TEAM_POST_TYPE) && !iss_content_model_team_order_request_has_modifiers()) {
+        $query->set('posts_per_page', -1);
+    }
+}
+add_action('pre_get_posts', 'iss_content_model_order_team_admin_query');
+
+function iss_content_model_render_team_order_admin_notice(): void
+{
+    if (iss_content_model_team_order_list_is_reorderable_request()) {
+        return;
+    }
+
+    $screen = function_exists('get_current_screen') ? get_current_screen() : null;
+    if (!$screen || $screen->base !== 'edit' || $screen->post_type !== ISS_CONTENT_MODEL_TEAM_POST_TYPE || !iss_content_model_user_can_reorder_post_type(ISS_CONTENT_MODEL_TEAM_POST_TYPE)) {
+        return;
+    }
+
+    echo '<div class="notice notice-info"><p>' . esc_html__('Team-Reihenfolge per Drag & Drop ist in der ungefilterten Reihenfolge-Ansicht aktiv.', 'iss-content-model') . '</p></div>';
+}
+add_action('admin_notices', 'iss_content_model_render_team_order_admin_notice');
+
+function iss_content_model_handle_team_order_ajax(): void
+{
+    check_ajax_referer('iss_content_team_order', 'nonce');
+    if (!iss_content_model_user_can_reorder_post_type(ISS_CONTENT_MODEL_TEAM_POST_TYPE)) {
+        wp_send_json_error([
+            'message' => __('Dieses Konto darf die Team-Reihenfolge nicht ändern.', 'iss-content-model'),
+        ], 403);
+    }
+
+    $post_ids = isset($_POST['post_ids']) && is_array($_POST['post_ids'])
+        ? wp_unslash($_POST['post_ids'])
+        : [];
+    $orders = iss_content_model_update_post_type_menu_order(ISS_CONTENT_MODEL_TEAM_POST_TYPE, (array) $post_ids);
+    if (is_wp_error($orders)) {
+        wp_send_json_error([
+            'message' => $orders->get_error_message(),
+        ], 400);
+    }
+
+    wp_send_json_success([
+        'message' => __('Team-Reihenfolge gespeichert.', 'iss-content-model'),
+        'orders' => $orders,
+    ]);
+}
+add_action('wp_ajax_iss_content_team_reorder', 'iss_content_model_handle_team_order_ajax');
 
 function iss_content_model_add_veranstaltung_entity_column(array $columns): array
 {

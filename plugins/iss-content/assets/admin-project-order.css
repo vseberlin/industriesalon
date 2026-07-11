@@ -1,8 +1,9 @@
-.column-iss_project_front_page_order {
+.column-iss_project_front_page_order,
+.column-iss_team_order {
   width: 7.5rem;
 }
 
-.iss-project-order-handle {
+.iss-content-order-handle {
   align-items: center;
   cursor: grab;
   display: inline-flex;
@@ -11,41 +12,43 @@
   vertical-align: middle;
 }
 
-.iss-project-order-handle:active {
+.iss-content-order-handle:active {
   cursor: grabbing;
 }
 
-.iss-project-order-handle .dashicons {
+.iss-content-order-handle .dashicons {
   color: #50575e;
   font-size: 20px;
   height: 20px;
   width: 20px;
 }
 
-.iss-project-order-handle:hover .dashicons,
-.iss-project-order-handle:focus .dashicons {
+.iss-content-order-handle:hover .dashicons,
+.iss-content-order-handle:focus .dashicons {
   color: #2271b1;
 }
 
-.iss-project-order-value {
+.iss-content-order-value {
   color: #646970;
   margin-left: 6px;
 }
 
-.iss-project-order-saving .iss-project-order-handle {
+.iss-content-order-saving .iss-content-order-handle {
   cursor: wait;
   opacity: 0.55;
 }
 
-.iss-project-order-enabled #the-list tr.type-projekt {
+.iss-content-order-enabled #the-list tr.type-projekt,
+.iss-content-order-enabled #the-list tr.type-team_member {
   transition: background-color 0.12s ease;
 }
 
-.iss-project-order-enabled #the-list tr.type-projekt:hover {
+.iss-content-order-enabled #the-list tr.type-projekt:hover,
+.iss-content-order-enabled #the-list tr.type-team_member:hover {
   background: #f6f7f7;
 }
 
-#the-list tr.iss-project-order-placeholder {
+#the-list tr.iss-content-order-placeholder {
   background: #f0f6fc;
   box-shadow: inset 0 0 0 1px #72aee6;
   height: 48px;
@@ -57,7 +60,8 @@
 }
 
 @media (max-width: 782px) {
-  .column-iss_project_front_page_order {
+  .column-iss_project_front_page_order,
+  .column-iss_team_order {
     width: 5rem;
   }
 }

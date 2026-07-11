@@ -6,6 +6,11 @@ be recovered from Git history.
 
 ## 2026-07-11
 
+- Migrated `/about/` from a hardcoded page body to nine registered landing JSON
+  sections. Added the reusable non-link `text_bild_reihe` gesture, a data-driven
+  Team directory slot, and staff drag-and-drop ordering for `team_member`; the
+  cutover removes the legacy Query Loop, person-name crop condition, and more
+  than 1,000 lines of page-specific body CSS.
 - Migrated `/fuehrungen/` from its static Query Loop and standalone offer
   catalog block to an eligible landing JSON document with a theme-owned
   `fuehrungen-offers` slot. The slot keeps tour query and booking data in

@@ -179,6 +179,28 @@ presentation. Its markers remain ordinary page relations, with no treatment-
 specific selection or result cap. Single Führung route maps use the same gesture
 contract but keep their source and order in relation station rows.
 
+`/about/` is a completed landing cutover. Its file template owns only the
+masthead and `industriesalon/editorial-landing` slot; the paired API migration
+owns the nine-section body document. The landing `text_bild_reihe` gesture
+represents repeated, non-navigational image/title/text items and stays distinct
+from linked `gateway` destinations. Its `visual` and `compact` treatments share
+one markup contract and let item count resolve in CSS.
+
+The About dossier keeps three reusable composition treatments instead of
+normalizing every narrative into the default landing stack:
+`feature.origin-story` separates heading/lead from the image, quotation,
+narrative, and fact card; `text.story-split` places narrative left and heading
+right; `text.story-split-flip` reverses that direction. `feature` exposes a
+separate `lead` field so this structure remains editable without parsing body
+HTML or storing page-specific markup classes.
+
+The About Team section is the `team-directory` dynamic slot. `team_member`
+posts remain the roster source of truth: publish status controls visibility,
+the existing role-label and profile fields control card content, and staff
+manage `menu_order` through the shared drag-and-drop list control. The slot
+queries every published profile in that order and stores no person IDs or
+person-specific presentation rules in landing JSON or PHP.
+
 The reusable `gateway.pathways` treatment presents a sequence of image-led
 destinations as a compact horizontal editorial strip. It uses the normal
 gateway item contract and belongs to landing composition CSS; legacy pathway

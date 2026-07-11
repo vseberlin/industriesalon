@@ -1,5 +1,5 @@
 (function ($) {
-  var config = window.issContentProjectOrder || {};
+  var config = window.issContentOrder || {};
   var request = null;
   var originalRows = [];
 
@@ -15,26 +15,26 @@
     return $('#the-list');
   }
 
-  function projectRows() {
-    return tableBody().children('tr.type-projekt');
+  function contentRows() {
+    return tableBody().children(config.rowSelector || 'tr');
   }
 
   function orderedIds() {
-    return projectRows().map(function () {
-      return parseInt($(this).find('.iss-project-order-handle').attr('data-post-id'), 10) || 0;
+    return contentRows().map(function () {
+      return parseInt($(this).find('.iss-content-order-handle').attr('data-post-id'), 10) || 0;
     }).get().filter(Boolean);
   }
 
   function notice(message, type) {
     var wrap = $('.wrap').first();
-    var node = $('.iss-project-order-notice');
+    var node = $('.iss-content-order-notice');
 
     if (!wrap.length) {
       return;
     }
 
     if (!node.length) {
-      node = $('<div class="notice iss-project-order-notice"><p></p></div>');
+      node = $('<div class="notice iss-content-order-notice"><p></p></div>');
       wrap.find('h1').first().after(node);
     }
 
@@ -46,8 +46,8 @@
   }
 
   function setSaving(isSaving) {
-    $('body').toggleClass('iss-project-order-saving', !!isSaving);
-    $('.iss-project-order-handle').prop('disabled', !!isSaving);
+    $('body').toggleClass('iss-content-order-saving', !!isSaving);
+    $('.iss-content-order-handle').prop('disabled', !!isSaving);
   }
 
   function restoreRows() {
@@ -63,11 +63,11 @@
       return;
     }
 
-    $('.iss-project-order-handle').each(function () {
+    $('.iss-content-order-handle').each(function () {
       var id = parseInt($(this).attr('data-post-id'), 10) || 0;
       var value = orders[id] || orders[String(id)] || '';
       if (value !== '') {
-        $(this).siblings('.iss-project-order-value').text(value);
+        $(this).siblings('.iss-content-order-value').text(value);
       }
     });
   }
@@ -80,32 +80,32 @@
     }
 
     setSaving(true);
-    notice(text('saving', 'Saving project order ...'), 'info');
+    notice(text('saving', 'Saving order ...'), 'info');
 
     request = $.ajax({
       url: config.ajaxUrl,
       method: 'POST',
       dataType: 'json',
       data: {
-        action: 'iss_content_project_reorder',
+        action: config.action || 'iss_content_project_reorder',
         nonce: config.nonce || '',
         post_ids: ids
       }
     }).done(function (response) {
       if (!response || !response.success) {
         restoreRows();
-        notice((response && response.data && response.data.message) || text('error', 'Project order could not be saved.'), 'error');
+        notice((response && response.data && response.data.message) || text('error', 'Order could not be saved.'), 'error');
         return;
       }
 
       applyOrders(response.data && response.data.orders);
-      notice((response.data && response.data.message) || text('saved', 'Project order saved.'), 'success');
+      notice((response.data && response.data.message) || text('saved', 'Order saved.'), 'success');
     }).fail(function (xhr, status) {
       var response = xhr && xhr.responseJSON ? xhr.responseJSON : null;
 
       if (status !== 'abort') {
         restoreRows();
-        notice((response && response.data && response.data.message) || text('error', 'Project order could not be saved.'), 'error');
+        notice((response && response.data && response.data.message) || text('error', 'Order could not be saved.'), 'error');
       }
     }).always(function () {
       setSaving(false);
@@ -114,14 +114,14 @@
   }
 
   function moveFocusedRow(button, direction) {
-    var row = button.closest('tr.type-projekt');
-    var target = direction < 0 ? row.prev('tr.type-projekt') : row.next('tr.type-projekt');
+    var row = button.closest(config.rowSelector || 'tr');
+    var target = direction < 0 ? row.prev(config.rowSelector || 'tr') : row.next(config.rowSelector || 'tr');
 
     if (!target.length) {
       return;
     }
 
-    originalRows = projectRows().get();
+    originalRows = contentRows().get();
     if (direction < 0) {
       row.insertBefore(target);
     } else {
@@ -133,35 +133,35 @@
 
   $(function () {
     var body = tableBody();
-    var rows = projectRows();
+    var rows = contentRows();
 
     if (!isEnabled(config.enabled) || !body.length || rows.length < 2) {
       return;
     }
 
-    $('body').addClass('iss-project-order-enabled');
+    $('body').addClass('iss-content-order-enabled');
 
     body.sortable({
       axis: 'y',
       cancel: 'input, textarea, select, option, a',
       cursor: 'move',
-      handle: '.iss-project-order-handle',
+      handle: '.iss-content-order-handle',
       helper: function (event, row) {
         row.children().each(function () {
           $(this).width($(this).width());
         });
         return row;
       },
-      items: '> tr.type-projekt',
-      placeholder: 'iss-project-order-placeholder',
+      items: '> ' + (config.rowSelector || 'tr'),
+      placeholder: 'iss-content-order-placeholder',
       start: function (event, ui) {
-        originalRows = projectRows().get();
+        originalRows = contentRows().get();
         ui.placeholder.height(ui.item.outerHeight());
       },
       update: saveOrder
     });
 
-    body.on('keydown', '.iss-project-order-handle', function (event) {
+    body.on('keydown', '.iss-content-order-handle', function (event) {
       if (event.key === 'ArrowUp') {
         event.preventDefault();
         moveFocusedRow($(this), -1);
