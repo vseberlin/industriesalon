@@ -6,6 +6,10 @@ be recovered from Git history.
 
 ## 2026-07-12
 
+- Added a paired migration and checksummed upload artifact for About landing
+  image attachment `26059`, which was present locally but absent on staging.
+  The migration restores the canonical attachment ID and metadata through
+  WordPress APIs and verifies the extracted five-file WebP family.
 - Changed the interactive Atlas to start without a selected place. Filtering
   and single-result search keep the map card-free while retaining map panning;
   a place card and active marker now appear only after explicit marker
