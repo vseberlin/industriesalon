@@ -9,18 +9,10 @@ Immediate executable work only. Larger future programs live in `docs/project/bac
   area is `Oberschöneweide`. The expanded navigation boundary deliberately
   exposes the record instead of hiding it; confirm whether the coordinate and
   Atlas membership are editorially intended before staging sign-off.
-- Static-map projection staging verification: deploy the canonical calibration,
-  generated marker/manifest artifacts, and responsive map derivatives together,
-  then run `wp iss-relations map-markers verify --allow-root` before browser UAT
-  of `/fuehrungen/`, one Führung route, `/schoneweide/`, and one
-  `register_place`. No database or uploads artifact is required for the current
-  cutover; future place-coordinate changes must regenerate and deploy the marker
-  artifacts with the corresponding DB change.
-- Schöneweide landing staging cutover: deploy the committed code, take a target
-  DB backup, run
-  `wp eval-file ops/migrations/2026-07-11-schoneweide-landing.php --allow-root`,
-  then review `/schoneweide/` and the landing editor. No uploads artifact is
-  required because the migration validates and reuses existing attachment IDs.
+- Staging map-block audit: published test page `25114` (`test1`) still requests
+  the removed `viewport-industrial-spine-strip` preset. Review and unpublish or
+  update that test content so `wp iss-relations map-block-audit --allow-root`
+  returns without a blocking legacy-preset error.
 - Führung `bildbuehne` stage gesture content/UAT follow-up: create or migrate
   at least one real Führung stage section in content, then browser-check
   desktop/mobile that the full-viewport image stage, compact gallery, and right
