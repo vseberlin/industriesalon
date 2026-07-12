@@ -21,3 +21,23 @@ test("/schoneweide/ renders its territorial landing and existing Atlas", async (
   await expect(page.locator(".iss-schoneweide-intro-section, .iss-schoneweide-topography, .iss-schoneweide-today-section")).toHaveCount(0);
   expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth + 1)).toBe(true);
 });
+
+test("/schoneweide/ Atlas opens place details only after a marker click", async ({ page }) => {
+  await page.goto("/schoneweide/#atlas-buehne");
+
+  const atlas = page.locator("[data-iss-schoneweide-atlas]");
+  const popup = atlas.locator("[data-iss-schoneweide-popup]");
+
+  await expect(atlas).toHaveAttribute("data-iss-schoneweide-atlas-ready", "true");
+  await expect(popup).toHaveClass(/is-empty/);
+  await expect(popup.locator(".iss-atlas-popup-card")).toHaveCount(0);
+  await expect(atlas.locator(".iss-atlas-marker.is-active")).toHaveCount(0);
+
+  await atlas.locator("[data-iss-schoneweide-search]").fill("Spreepark");
+  await expect(atlas.locator(".iss-atlas-marker")).toHaveCount(1);
+  await expect(popup.locator(".iss-atlas-popup-card")).toHaveCount(0);
+
+  await atlas.locator(".iss-atlas-marker").click();
+  await expect(atlas.locator(".iss-atlas-marker.is-active")).toHaveCount(1);
+  await expect(popup.locator(".iss-atlas-popup-card")).toHaveCount(1);
+});

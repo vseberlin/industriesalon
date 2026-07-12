@@ -1,0 +1,28 @@
+{
+  "version": 1,
+  "profile": "schoneweide-canonical",
+  "source": {
+    "file": "schoneweide-map-canonical.png",
+    "width": 4096,
+    "height": 2389,
+    "sha256": "b1ee2c0a0ee4e269048851eb072317a28db73257c67bb34378dd6941d7de76af"
+  },
+  "quality": {
+    "max_rmse_norm": 0.0002,
+    "max_control_error_norm": 0.0003
+  },
+  "control_points": [
+    { "label": "Industriesalon", "lng": 13.5185113, "lat": 52.4604688, "xNorm": 0.485837, "yNorm": 0.434685 },
+    { "label": "KWO", "lng": 13.5324307, "lat": 52.461739, "xNorm": 0.658964, "yNorm": 0.390239 },
+    { "label": "Funkhaus", "lng": 13.5030369, "lat": 52.4699677, "xNorm": 0.293369, "yNorm": 0.102271 },
+    { "label": "Bärenquell", "lng": 13.5052662, "lat": 52.4599968, "xNorm": 0.321097, "yNorm": 0.451201 },
+    { "label": "Mellowpark", "lng": 13.5594195, "lat": 52.4553237, "xNorm": 0.994646, "yNorm": 0.614708 },
+    { "label": "Waldorfschule", "lng": 13.5340678, "lat": 52.4525132, "xNorm": 0.679326, "yNorm": 0.713036 },
+    { "label": "Spreepark", "lng": 13.4911953, "lat": 52.484234, "xNorm": 0.146086, "yNorm": -0.397112 },
+    { "label": "BTB", "lng": 13.530583, "lat": 52.4460399, "xNorm": 0.635983, "yNorm": 0.939488 },
+    { "label": "Union", "lng": 13.5680789, "lat": 52.4569741, "xNorm": 1.10235, "yNorm": 0.556964 },
+    { "label": "Wuhlheide", "lng": 13.5667758, "lat": 52.4681285, "xNorm": 1.086143, "yNorm": 0.166641 },
+    { "label": "Energie-Museum", "lng": 13.3299736, "lat": 52.4434373, "xNorm": -1.859162, "yNorm": 1.030643 },
+    { "label": "Spree 27", "lng": 13.5047905, "lat": 52.4657542, "xNorm": 0.31518, "yNorm": 0.249719 }
+  ]
+}

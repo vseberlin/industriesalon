@@ -3,7 +3,6 @@
   if (!editor) return;
 
   const el = editor.components.el;
-  const RangeControl = editor.components.RangeControl;
   const SelectControl = editor.components.SelectControl;
   const TextControl = editor.components.TextControl;
   const TextareaControl = editor.components.TextareaControl;
@@ -61,49 +60,7 @@
       }));
     }
 
-    if (config.showAtlasSliceFields || config.showAtlasStripFields) {
-      controls.push(el(SelectControl, {
-        key: 'framingMode',
-        label: 'Framing',
-        value: attrs.framingMode || 'inherit',
-        options: optionSets.FRAMING_MODE_OPTIONS,
-        help: 'Preset nutzt den hinterlegten Viewport. Auto-Fokus croppt auf Basis der gewählten Orte.',
-        onChange: function (value) {
-          setAttributes({ framingMode: value || 'inherit' });
-        },
-      }));
-    }
-
-    if (!config.showMapFields || !RangeControl) {
-      return controls;
-    }
-
-    return controls.concat([
-      el(RangeControl, {
-        key: 'biasY',
-        label: 'Vertikaler Zuschnitt',
-        value: Number(attrs.biasY || 0),
-        min: -60,
-        max: 60,
-        step: 0.5,
-        help: 'Schiebt den sichtbaren Kartenausschnitt nach oben oder unten. Rotation ist im Kartenpreset gebacken.',
-        onChange: function (value) {
-          setAttributes({ biasY: Number(value || 0) });
-        },
-      }),
-      el(RangeControl, {
-        key: 'mapScale',
-        label: 'Zoom',
-        value: Number(attrs.mapScale || 1),
-        min: 0.9,
-        max: 2,
-        step: 0.05,
-        help: 'Skaliert den Kartenviewport. Route-Fokus kann bis 200% gehen.',
-        onChange: function (value) {
-          setAttributes({ mapScale: Number(value || 1) });
-        },
-      }),
-    ]);
+    return controls;
   }
 
   function renderMapPanelControls(attrs, setAttributes, config) {

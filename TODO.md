@@ -4,6 +4,18 @@ Immediate executable work only. Larger future programs live in `docs/project/bac
 
 ## Next
 
+- Review the interactive Atlas outlier `Energie-Museum Berlin`: its current
+  authoritative coordinate is far west of the Schöneweide core while its stored
+  area is `Oberschöneweide`. The expanded navigation boundary deliberately
+  exposes the record instead of hiding it; confirm whether the coordinate and
+  Atlas membership are editorially intended before staging sign-off.
+- Static-map projection staging verification: deploy the canonical calibration,
+  generated marker/manifest artifacts, and responsive map derivatives together,
+  then run `wp iss-relations map-markers verify --allow-root` before browser UAT
+  of `/fuehrungen/`, one Führung route, `/schoneweide/`, and one
+  `register_place`. No database or uploads artifact is required for the current
+  cutover; future place-coordinate changes must regenerate and deploy the marker
+  artifacts with the corresponding DB change.
 - Schöneweide landing staging cutover: deploy the committed code, take a target
   DB backup, run
   `wp eval-file ops/migrations/2026-07-11-schoneweide-landing.php --allow-root`,
@@ -14,9 +26,6 @@ Immediate executable work only. Larger future programs live in `docs/project/bac
   desktop/mobile that the full-viewport image stage, compact gallery, and right
   booking rail render correctly. Booking, dates, facts, and the required
   relation network must remain outside the gesture body.
-- Atlas map complexity guardrail: add a small regression check for the
-  marker-box fit math so route maps keep far-left/far-right and top/bottom
-  markers inside the configured padding without relying on visual inspection.
 - Universal occurrence calendar/intake staging test: after pulling the pushed
   commit, live-test `/kalender/` grouped recurring `Termin wählen`, month
   navigation, available slot booking form, sold-out/unavailable date empty

@@ -63,6 +63,7 @@
 /themes/*
 !/themes/industriesalon/
 !/themes/industriesalon/**
+/themes/industriesalon/assets/maps/qa/
 
 # Keep all plugins.
 !/plugins/

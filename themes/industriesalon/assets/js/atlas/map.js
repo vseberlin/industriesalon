@@ -35,7 +35,19 @@
     }
   };
 
-  function createLeafletState(container, config) {
+  function getNavigationBounds(initialBounds, places) {
+    var bounds = window.L.latLngBounds(initialBounds.getSouthWest(), initialBounds.getNorthEast());
+
+    (Array.isArray(places) ? places : []).forEach(function (place) {
+      if (Number.isFinite(Number(place.lat)) && Number.isFinite(Number(place.lng))) {
+        bounds.extend([Number(place.lat), Number(place.lng)]);
+      }
+    });
+
+    return bounds;
+  }
+
+  function createLeafletState(container, config, places) {
     if (!window.L) {
       return null;
     }
@@ -44,9 +56,10 @@
       [MAP_BOUNDS.minLat, MAP_BOUNDS.minLng],
       [MAP_BOUNDS.maxLat, MAP_BOUNDS.maxLng]
     );
+    var navigationBounds = getNavigationBounds(atlasBounds, places);
     var map = window.L.map(container, {
       attributionControl: true,
-      maxBounds: atlasBounds.pad(0.16),
+      maxBounds: navigationBounds.pad(0.08),
       maxBoundsViscosity: 1,
       scrollWheelZoom: false,
       tap: false,
@@ -68,6 +81,7 @@
     return {
       map: map,
       atlasBounds: atlasBounds,
+      navigationBounds: navigationBounds,
       markerLayer: window.L.layerGroup().addTo(map),
       overlayLayer: null
     };
@@ -201,8 +215,13 @@
         leaflet.markerLayer.addLayer(marker);
       });
 
-    if (options.shouldPan && selectedPlace) {
-      leaflet.map.panTo([selectedPlace.lat, selectedPlace.lng], { animate: true });
+    if (options.shouldResetView && leaflet.atlasBounds) {
+      leaflet.map.fitBounds(leaflet.atlasBounds, {
+        animate: true,
+        padding: [24, 24]
+      });
+    } else if (options.panPlace) {
+      leaflet.map.panTo([options.panPlace.lat, options.panPlace.lng], { animate: true });
     }
   }
 

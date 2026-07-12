@@ -76,6 +76,10 @@
   }
 
   function renderMap(state, filteredPlaces, selectedPlace) {
+    var panPlace = state.shouldPan && selectedPlace
+      ? selectedPlace
+      : (!selectedPlace && state.search && filteredPlaces.length === 1 ? filteredPlaces[0] : null);
+
     mapAdapter.renderMarkers(state.leaflet, filteredPlaces, selectedPlace, {
       createMarkerIcon: function (place, active) {
         return createMarkerIcon(place, active, state);
@@ -85,9 +89,11 @@
         state.shouldPan = true;
         state.render();
       },
-      shouldPan: state.shouldPan
+      panPlace: panPlace,
+      shouldResetView: state.shouldResetView
     });
     state.shouldPan = false;
+    state.shouldResetView = false;
   }
 
   Atlas.markers = {

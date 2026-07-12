@@ -111,23 +111,6 @@ function industriesalon_publications_resolve_longread_payload_from_content(int $
     return is_array($cache[$cache_key]) ? $cache[$cache_key] : [];
 }
 
-function industriesalon_publications_replace_inline_css_var(string $html, string $var_name, string $value): string
-{
-    $pattern = '/(' . preg_quote($var_name, '/') . '\s*:\s*)[^;"]+/';
-    if (!preg_match($pattern, $html)) {
-        return $html;
-    }
-
-    return (string) preg_replace_callback(
-        $pattern,
-        static function (array $matches) use ($value): string {
-            return (string) ($matches[1] ?? '') . $value;
-        },
-        $html,
-        1
-    );
-}
-
 function industriesalon_publications_transform_essay_map_html(string $html): string
 {
     $html = trim($html);
@@ -142,11 +125,6 @@ function industriesalon_publications_transform_essay_map_html(string $html): str
         1
     );
     $html = str_replace('iss-related-place-map__body--panel-right', 'iss-related-place-map__body--panel-below', $html);
-    $html = industriesalon_publications_replace_inline_css_var($html, '--iss-related-place-map-scale-x', '2.8000');
-    $html = industriesalon_publications_replace_inline_css_var($html, '--iss-related-place-map-scale-y', '2.4500');
-    $html = industriesalon_publications_replace_inline_css_var($html, '--iss-related-place-map-offset-x', '-106.710%');
-    $html = industriesalon_publications_replace_inline_css_var($html, '--iss-related-place-map-offset-y', '-74.308%');
-
     return $html;
 }
 

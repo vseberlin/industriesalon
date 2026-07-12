@@ -20,7 +20,7 @@ function iss_register_get_schoneweide_atlas_bootstrap_config(array $attributes =
         'contextUrl' => untrailingslashit(rest_url(ISS_REGISTER_REST_NAMESPACE)) . '/atlas-context',
         'bootstrapUrl' => untrailingslashit(rest_url(ISS_REGISTER_REST_NAMESPACE)) . '/atlas-bootstrap',
         'overlaysUrl' => iss_register_get_theme_asset_url('/assets/maps/schoneweide-overlays.geojson'),
-        'relationStaticMapUrl' => iss_register_get_theme_asset_url('/assets/maps/schoneweide-static-map-big-industrial-v3-q90.webp'),
+        'relationStaticMapUrl' => iss_register_get_theme_asset_url('/assets/maps/schoneweide-map-canonical-display.webp'),
         'basemapProvider' => defined('INDUSTRIESALON_MAP_BASEMAP_PROVIDER') ? (string) INDUSTRIESALON_MAP_BASEMAP_PROVIDER : 'carto',
         'maptilerKey' => defined('INDUSTRIESALON_MAPTILER_KEY') ? (string) INDUSTRIESALON_MAPTILER_KEY : '',
         'maptilerStyle' => defined('INDUSTRIESALON_MAPTILER_STYLE') ? (string) INDUSTRIESALON_MAPTILER_STYLE : 'streets-v2',
@@ -69,7 +69,7 @@ function iss_register_render_schoneweide_atlas(array $attributes = []): string
     $html .= '<button class="iss-atlas-app__layout-mode" type="button" data-iss-atlas-layout-mode="fullscreen" aria-pressed="false">Vollbild</button>';
     $html .= '<button class="iss-atlas-app__layout-mode" type="button" data-iss-atlas-layout-mode="kiosk" aria-pressed="false">Kiosk</button>';
     $html .= '</div>';
-    $html .= '<p class="iss-atlas-app__scope-note">Ausschnitt: Schöneweide beidseits der Spree mit Nalepastraßen-Korridor.</p>';
+    $html .= '<p class="iss-atlas-app__scope-note">Ausschnitt: Schöneweide und verbundene Orte.</p>';
     $html .= '<div class="iss-atlas-app__search">';
     $html .= '<label class="screen-reader-text" for="' . esc_attr($search_id) . '">Ort suchen</label>';
     $html .= '<input id="' . esc_attr($search_id) . '" type="search" placeholder="Ort, Straße, Werk, Firma ..." data-iss-schoneweide-search />';

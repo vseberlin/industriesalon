@@ -103,11 +103,6 @@
       { label: 'Tafel rechts', value: 'end' },
       { label: 'Tafel links', value: 'start' },
     ],
-    FRAMING_MODE_OPTIONS: [
-      { label: 'Bestehend', value: 'inherit' },
-      { label: 'Preset / Viewport', value: 'preset' },
-      { label: 'Auto-Fokus', value: 'auto' },
-    ],
     LAYOUT_MODE_OPTIONS: [
       { label: 'Horizontaler Streifen', value: 'band' },
       { label: 'Asymmetrisches Split-Feld', value: 'split' },

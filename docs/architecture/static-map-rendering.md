@@ -12,9 +12,11 @@ cleaning related blocks or moving more renderer code.
   `current`, `related`, `route`, graph/taxonomy lookups, and map-block source
   contracts.
 - `iss-frontend` owns public frontend rendering for static map surfaces:
-  related-place map bodies, atlas slices, atlas strips, and spine strips.
-- The theme owns page composition, CSS skins, map image assets, static marker
-  JSON, and map preset definitions.
+  related-place map bodies, Atlas maps/slices/strips, and spine strips. Its
+  shared Leaflet image-viewport runtime owns fitting, pan, zoom, and resize.
+- The theme owns page composition, CSS skins, the canonical map source,
+  responsive derivatives, projection calibration, generated marker JSON, and
+  the single visual map preset.
 
 ## Dependency Direction
 
@@ -25,6 +27,25 @@ Rendering must flow in one direction:
 3. `iss-frontend` renders the frontend map markup from resolved places and map
    config.
 4. The theme CSS/assets skin the output.
+
+## Viewport Runtime
+
+All first-class editorial map surfaces use one progressive-enhancement path:
+
+- PHP emits the selected map image, its intrinsic dimensions, projected marker
+  coordinates, and an ordinary full-image fallback.
+- Leaflet uses `L.CRS.Simple` and `L.imageOverlay`; no geographic tile model is
+  introduced for these image maps.
+- The marker bounds determine the initial view. That fitted zoom is also the
+  minimum zoom, and the fitted view is the maximum pan boundary.
+- The existing route/station JavaScript continues to own active-marker and
+  detail-panel behavior; Leaflet owns only the image viewport and marker layer.
+- Without JavaScript, the full image, projected markers, route line, and panel
+  content remain available without server-side crop or camera calculations.
+
+The single map preset selects the canonical responsive image set and generated
+marker artifact. It does not contain runtime crop, rotation, bias, scale, or
+framing controls.
 
 Do not make `iss-frontend` query related places directly, and do not make
 `industriesalon-schoeneweide-register` render static editorial strips.
@@ -78,10 +99,9 @@ Rules:
 For future map cleanups:
 
 - Move top-level public rendering into `iss-frontend`.
-- Keep low-level projection helpers temporary only when moving them would create
-  unnecessary churn.
-- Retire legacy helper calls from `iss-relations` in small slices after the
-  delegated frontend renderer is proven.
+- Keep viewport behavior inside the shared Leaflet image runtime; do not add
+  PHP focus windows, transform cameras, or page-specific CSS framing variables.
+- Keep `iss-relations` limited to source contracts and ordered place DTOs.
 - Add drift checks that read the same map block contract instead of duplicating
   defaults in scan scripts.
 
@@ -103,34 +123,39 @@ static-map relation result/DTO shape for first-class static map surfaces.
 ## Marker Provenance
 
 `themes/industriesalon/assets/maps/schoneweide-static-markers-new.json` is a
-derived projection file for the theme-owned canonical static map image. It is not
-canonical place data. Canonical place identity, coordinates, and visibility stay
-in `register_place` posts owned by `industriesalon-schoeneweide-register`.
+generated projection file for the theme-owned canonical map coordinate space.
+It is not canonical place data. Canonical place identity, coordinates, and
+visibility stay in published `register_place` posts owned by
+`industriesalon-schoeneweide-register`.
 
-Marker entries should include:
+The projection chain is:
 
-- `id`: legacy register ID when available, otherwise the WordPress post ID.
-- `post_id`: WordPress `register_place` post ID when it differs from `id` or
-  when the place has no legacy register ID.
-- `name`, `lat`, and `lng`: copied from the published `register_place` record.
-- `x`, `y`, `xNorm`, and `yNorm`: projected static-map position for the current
-  canonical map image.
+1. `schoneweide-map-canonical.png` is the source/build master and is never used
+   as the normal frontend image.
+2. `schoneweide-map-calibration.json` holds twelve distributed control points,
+   the calibrated source checksum/dimensions, and accepted error thresholds.
+3. `iss-relations` fits the affine longitude/latitude-to-image transform and
+   projects every published coordinate-bearing `register_place`.
+4. `schoneweide-static-markers-new.json` stores generated post IDs, titles,
+   source longitude/latitude, canonical pixels, and normalized coordinates.
+5. `schoneweide-map-projection.generated.json` records source, calibration,
+   marker, and responsive-derivative checksums plus projection quality.
 
-The current manual projection uses the existing marker set as the reference
-basis. Fit an affine transform from known `lng`/`lat` values to existing
-`xNorm`/`yNorm`, calculate the missing place positions, then add the resulting
-entries by hand to the marker JSON. Some outlying places can legitimately have
-`xNorm`/`yNorm` outside the `0..1` image frame because the canonical static map
-crop does not include the full coordinate extent. Keep those entries so the
-audit can distinguish "known but outside crop" from "missing marker".
+Some outlying places legitimately have normalized coordinates outside `0..1`
+because the artwork does not include the full geographic extent. Generation
+keeps those records so audits can distinguish known out-of-frame places from
+missing projections.
 
-After changing marker JSON, always run:
+Do not edit generated marker or manifest JSON by hand. After changing a
+published place coordinate, the master image, calibration, or encoding recipe,
+run:
 
 ```bash
-jq empty themes/industriesalon/assets/maps/schoneweide-static-markers-new.json
-docker compose run --rm wpcli iss-relations map-block-audit --allow-root
+tools/build-static-map-assets.sh
+tools/generate-static-map-markers.sh
 ```
 
-If marker updates become frequent, replace this manual process with a tracked
-generator that reads published `register_place` coordinates and the existing
-projection reference markers.
+The first command deterministically produces 1024px and 2048px WebP delivery
+assets. The second generates marker/provenance artifacts as the host user,
+writes an ignored visual QA SVG under `assets/maps/qa/`, and runs the immutable
+verification command. See `docs/runbooks/static-map-assets.md`.

@@ -83,6 +83,10 @@
     return store.buildScopeLabel(state);
   }
 
+  function placeCountLabel(count) {
+    return String(count) + (count === 1 ? ' Ort' : ' Orte');
+  }
+
   function buildFilterButton(options) {
     var button = createElement(
       'button',
@@ -330,8 +334,8 @@
 
     var label = buildScopeLabel(state);
     container.textContent = label
-      ? String(filteredPlaces.length) + ' Orte in ' + label
-      : String(filteredPlaces.length) + ' Orte in der aktuellen Auswahl';
+      ? placeCountLabel(filteredPlaces.length) + ' in ' + label
+      : placeCountLabel(filteredPlaces.length) + ' in der aktuellen Auswahl';
   }
 
   function renderSummary(container, filteredPlaces, selectedPlace, state) {
@@ -352,7 +356,7 @@
 
     container.appendChild(createElement('strong', EMPTY, headline));
     container.appendChild(
-      createElement('span', EMPTY, String(filteredPlaces.length) + ' Orte in der aktuellen Auswahl')
+      createElement('span', EMPTY, placeCountLabel(filteredPlaces.length) + ' in der aktuellen Auswahl')
     );
   }
 
@@ -393,6 +397,8 @@
 
     if (selectedPlace) {
       state.selectedPostId = selectedPlace.post_id;
+    } else {
+      state.selectedPostId = 0;
     }
 
     return {
@@ -439,6 +445,7 @@
     state.search = EMPTY;
     state.selectedPostId = 0;
     state.shouldPan = false;
+    state.shouldResetView = true;
     if (elements.search) {
       elements.search.value = EMPTY;
     }
@@ -450,6 +457,7 @@
       state.search = event.target.value || EMPTY;
       state.selectedPostId = 0;
       state.shouldPan = false;
+      state.shouldResetView = state.search === EMPTY;
       state.render();
     });
 

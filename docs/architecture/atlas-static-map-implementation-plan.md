@@ -12,6 +12,16 @@ static map rendering, and the interactive Atlas app.
 This is a planning document. Completed implementation history belongs in
 `CHANGELOG.md`; current operational state belongs in `handoff_CURRENT.md`.
 
+Status update (2026-07-12): the transitional static camera described below has
+been retired. All first-class editorial image-map surfaces now delegate public
+rendering to `iss-frontend` and share its Leaflet `L.CRS.Simple` viewport.
+`iss-relations` retains selection/contracts only; runtime crop, focus, rotation,
+projection, bias, scale, and editor camera controls were removed. See
+`docs/architecture/static-map-rendering.md` for the current contract.
+The follow-up projection phase also replaced hand-maintained marker and
+pre-rendered-map variants with one calibrated source, generated marker and
+provenance artifacts, and responsive 1024px/2048px delivery derivatives.
+
 ## Current Shape
 
 The intended ownership split is already visible:
@@ -195,6 +205,13 @@ The map adapter should receive commands such as:
 
 Filtering and place selection should live in the store/UI modules, not inside
 Leaflet event code.
+
+The current viewport contract keeps two extents: the fixed Schöneweide core is
+the initial and reset composition, while the navigation boundary is derived
+from all valid places returned by the Atlas REST payload. The frontend no longer
+maintains a second area-name allowlist. A single-result search may request a pan
+through the map adapter so distant payload places remain reachable without
+zooming the initial view out to their full extent.
 
 ## Leaflet And Provider Decision
 

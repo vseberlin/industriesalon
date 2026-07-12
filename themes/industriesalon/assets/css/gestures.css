@@ -220,6 +220,38 @@
   min-height: var(--iss-gesture-atlas-map-stage-min-height);
 }
 
+.iss-static-map-fallback,
+.iss-static-map-leaflet {
+  position: absolute;
+  inset: 0;
+}
+
+.iss-static-map-leaflet {
+  z-index: 3;
+  visibility: hidden;
+  background: var(--iss-surface-map);
+}
+
+.has-leaflet-image-viewport.is-leaflet-enhanced .iss-static-map-leaflet {
+  visibility: visible;
+}
+
+.iss-static-map-leaflet__marker {
+  border: 0;
+  background: transparent;
+}
+
+.iss-static-map-leaflet__marker-link {
+  position: relative;
+  top: auto;
+  left: auto;
+  transform: none;
+}
+
+.iss-static-map-leaflet__route {
+  filter: drop-shadow(0 0.35rem 0.55rem var(--iss-gesture-atlas-map-line-shadow));
+}
+
 .iss-gesture-atlas-map--treatment-band {
   --iss-gesture-atlas-map-stage-min-height: clamp(14rem, 28vw, 22rem);
 }
@@ -230,19 +262,29 @@
 }
 
 .iss-gesture-atlas-map--variant-tour-route {
+  --iss-gesture-atlas-map-route-height: clamp(20rem, 24vw, 22rem);
   --iss-gesture-atlas-map-stage-min-height: 0;
-  --iss-gesture-atlas-map-panel-max-height: none;
+  --iss-gesture-atlas-map-panel-max-height: var(--iss-gesture-atlas-map-route-height);
 }
 
 .iss-gesture-atlas-map--variant-tour-route.iss-related-place-map__body--panel-right {
   --iss-gesture-atlas-map-gap: clamp(1rem, 1.8vw, 1.5rem);
-  --iss-gesture-atlas-map-panel-height-ratio: 0.2596;
-  --iss-gesture-atlas-map-panel-max-height: calc((100cqw - var(--iss-gesture-atlas-map-gap)) * var(--iss-gesture-atlas-map-panel-height-ratio));
 
   align-items: stretch;
-  container-type: inline-size;
   gap: var(--iss-gesture-atlas-map-gap);
   grid-template-columns: minmax(0, 1fr) minmax(22rem, 0.45fr);
+}
+
+.iss-gesture-atlas-map--variant-tour-route :where(
+  .iss-gesture-atlas-map__map,
+  .iss-gesture-atlas-map__stage,
+  .iss-related-place-map__panel
+) {
+  height: var(--iss-gesture-atlas-map-route-height);
+}
+
+.iss-gesture-atlas-map--variant-tour-route .iss-gesture-atlas-map__stage {
+  aspect-ratio: auto;
 }
 
 .iss-atlas-slice__route-line {
@@ -335,6 +377,10 @@
   overflow: auto;
 }
 
+.iss-gesture-atlas-map--variant-tour-route.iss-gesture-atlas-map--skin-route .iss-related-place-map__panel {
+  height: var(--iss-gesture-atlas-map-route-height);
+}
+
 .iss-gesture-atlas-map--skin-route .iss-related-place-map__panel--station-detail {
   align-content: start;
 }
@@ -387,13 +433,11 @@
 
 @media (max-width: 900px) {
   .iss-gesture-atlas-map--variant-tour-route {
+    --iss-gesture-atlas-map-route-height: clamp(16rem, 64vw, 20rem);
     --iss-gesture-atlas-map-stage-min-height: 0;
-    --iss-gesture-atlas-map-panel-max-height: clamp(16rem, 64vw, 20rem);
   }
 
   .iss-gesture-atlas-map--variant-tour-route.iss-related-place-map__body--panel-right {
-    --iss-gesture-atlas-map-panel-max-height: clamp(16rem, 64vw, 20rem);
-
     grid-template-columns: minmax(0, 1fr);
   }
 }

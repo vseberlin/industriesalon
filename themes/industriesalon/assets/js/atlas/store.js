@@ -44,14 +44,6 @@
   var DEFAULT_ACTOR_LABEL = 'Alle Akteure';
   var UNKNOWN_EPOCH_SUMMARY =
     'Für diesen Ort liegen im gewählten Zeitfenster bisher keine gesicherten historischen Nachweise vor. Wenn Sie historische Dokumente, Fotos oder andere Objekte haben, freuen wir uns über Ihre Kontaktaufnahme.';
-  var ATLAS_AREAS = {
-    'Niederschöneweide': true,
-    'Oberschöneweide': true,
-    'Nalepastraße': true,
-    Schöneweide: true,
-    Wuhlheide: true
-  };
-
   function text(value) {
     return typeof core.text === 'function' ? core.text(value) : (typeof value === 'string' ? value.trim() : EMPTY);
   }
@@ -231,7 +223,7 @@
       return false;
     }
 
-    return ATLAS_AREAS[place.area] === true;
+    return true;
   }
 
   function sortPlaces(left, right) {
@@ -475,15 +467,13 @@
   }
 
   function getSelectedPlace(state, filteredPlaces) {
-    if (!filteredPlaces.length || state.selectedPostId === -1) {
+    if (!filteredPlaces.length || state.selectedPostId <= 0) {
       return null;
     }
 
-    var selected = filteredPlaces.find(function (place) {
+    return filteredPlaces.find(function (place) {
       return place.post_id === state.selectedPostId;
-    });
-
-    return selected || filteredPlaces[0];
+    }) || null;
   }
 
   function buildScopeLabel(state) {
@@ -919,8 +909,9 @@
       currentStatus: EMPTY,
       currentUseType: EMPTY,
       search: EMPTY,
-      selectedPostId: places.length ? places[0].post_id : 0,
+      selectedPostId: 0,
       shouldPan: false,
+      shouldResetView: false,
       render: typeof options.render === 'function' ? options.render : function () {}
     };
   }
@@ -936,8 +927,7 @@
       HISTORICAL_NO_DATA_KEY: HISTORICAL_NO_DATA_KEY,
       ERA_FILTER_CONTEXT_ONLY: ERA_FILTER_CONTEXT_ONLY,
       DEFAULT_ACTOR_LABEL: DEFAULT_ACTOR_LABEL,
-      UNKNOWN_EPOCH_SUMMARY: UNKNOWN_EPOCH_SUMMARY,
-      ATLAS_AREAS: ATLAS_AREAS
+      UNKNOWN_EPOCH_SUMMARY: UNKNOWN_EPOCH_SUMMARY
     },
     actorFilterLabel: actorFilterLabel,
     buildActorMap: buildActorMap,

@@ -1,0 +1,53 @@
+{
+    "version": 1,
+    "profile": "schoneweide-canonical",
+    "coordinate_source": "published register_place lat/lng",
+    "source": {
+        "file": "schoneweide-map-canonical.png",
+        "width": 4096,
+        "height": 2389,
+        "sha256": "b1ee2c0a0ee4e269048851eb072317a28db73257c67bb34378dd6941d7de76af"
+    },
+    "calibration": {
+        "file": "schoneweide-map-calibration.json",
+        "sha256": "628448094588ffc0a0c4ee4f776f6d2de1254d793ddf83a3b2fd9d9a44fb7ae5",
+        "origin": {
+            "lng": 13.5120107917,
+            "lat": 52.4603814333
+        },
+        "x": [
+            12.437825140528,
+            1.1356051e-5,
+            0.404984916667
+        ],
+        "y": [
+            0.000179603376,
+            -34.994931455226,
+            0.437706916666
+        ],
+        "control_points": 12,
+        "rmse_norm": 4.8140215e-5,
+        "max_error_norm": 0.000103228911
+    },
+    "markers": {
+        "file": "schoneweide-static-markers-new.json",
+        "count": 83,
+        "sha256": "0b0ed2f2ba19c8642bb321c4adc9d56435edae3a01a5b26247a063f62e59395a"
+    },
+    "derivatives": [
+        {
+            "file": "schoneweide-map-canonical-display-1024.webp",
+            "width": 1024,
+            "height": 597,
+            "bytes": 119842,
+            "sha256": "32e02a6c52b5feb33d135d42d08d52a9b77a15eb80c0d486e0edb0b9cfea3541"
+        },
+        {
+            "file": "schoneweide-map-canonical-display.webp",
+            "width": 2048,
+            "height": 1195,
+            "bytes": 415910,
+            "sha256": "163fafb33188816dc401247f1ff85f9da0e25c11dee450169a74665b0ef1926b"
+        }
+    ]
+}

@@ -88,6 +88,10 @@ body.iss-atlas-layout-open {
   min-height: 2.72rem;
 }
 
+.iss-atlas-app__map-canvas .leaflet-tile-pane {
+  filter: brightness(86%) contrast(135%) saturate(200%) hue-rotate(5deg);
+}
+
 [data-iss-schoneweide-atlas][data-active-era="kaiserzeit"] {
   --iss-atlas-era-accent: #2b465f;
   --iss-atlas-era-accent-strong: #1f3850;
@@ -959,6 +963,7 @@ body.iss-atlas-layout-open {
       0 0 0 0.72rem var(--iss-atlas-marker-local-ring),
       0 0.58rem 1rem rgba(18, 16, 15, 0.24);
   }
+
   55% {
     box-shadow:
       0 0 0 0.18rem rgba(18, 16, 15, 0.26),

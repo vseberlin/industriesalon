@@ -553,7 +553,7 @@
     placeholderClassName: 'wp-block-iss-atlas-slice-editor',
     placeholderTitle: 'Atlas Slice',
     placeholderText:
-      'Rendert einen gecroppten und gezoomten Atlasstreifen mit echten Ortsmarkern und einer begleitenden Text- oder Bildtafel.',
+      'Rendert einen interaktiven Atlasstreifen mit echten Ortsmarkern und einer begleitenden Text- oder Bildtafel.',
     showHeadingFields: true,
     showPostTypeField: false,
     fixedPostType: PLACE_POST_TYPE,

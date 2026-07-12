@@ -176,75 +176,23 @@ add_action('template_redirect', function (): void {
     exit;
 });
 
-function industriesalon_get_schoneweide_viewport_manifest(): array
-{
-    static $cache = null;
+add_filter('iss_relations_map_projection_profiles', function (array $profiles): array {
+    $map_dir = get_stylesheet_directory() . '/assets/maps';
 
-    if ($cache !== null) {
-        return $cache;
-    }
+    $profiles['schoneweide-canonical'] = [
+        'calibration_path' => $map_dir . '/schoneweide-map-calibration.json',
+        'master_path' => $map_dir . '/schoneweide-map-canonical.png',
+        'markers_path' => $map_dir . '/schoneweide-static-markers-new.json',
+        'manifest_path' => $map_dir . '/schoneweide-map-projection.generated.json',
+        'qa_image_href' => '../schoneweide-map-canonical-display.webp',
+        'derivatives' => [
+            ['path' => $map_dir . '/schoneweide-map-canonical-display-1024.webp'],
+            ['path' => $map_dir . '/schoneweide-map-canonical-display.webp'],
+        ],
+    ];
 
-    $path = get_stylesheet_directory() . '/assets/maps/schoneweide-viewport-manifest.json';
-    if (!is_readable($path)) {
-        $cache = [];
-        return $cache;
-    }
-
-    $decoded = json_decode((string) file_get_contents($path), true);
-    if (!is_array($decoded)) {
-        $cache = [];
-        return $cache;
-    }
-
-    $cache = $decoded;
-
-    return $cache;
-}
-
-function industriesalon_get_schoneweide_viewport_preset_variants(): array
-{
-    $manifest = industriesalon_get_schoneweide_viewport_manifest();
-    $presets = is_array($manifest['presets'] ?? null) ? $manifest['presets'] : [];
-
-    if (!$presets) {
-        return [];
-    }
-
-    $variants = [];
-
-    foreach ($presets as $preset) {
-        if (!is_array($preset)) {
-            continue;
-        }
-
-        $id = sanitize_key((string) ($preset['id'] ?? ''));
-        $image = (string) ($preset['image'] ?? '');
-        $markers = (string) ($preset['markers'] ?? '');
-
-        if ($id === '' || $image === '' || $markers === '') {
-            continue;
-        }
-
-        $variants[$id] = [
-            'label' => (string) ($preset['label'] ?? $id),
-            'map' => '/assets/maps/' . ltrim($image, '/'),
-            'markers' => '/assets/maps/' . ltrim($markers, '/'),
-            'width' => max(1, absint($preset['width'] ?? 2200)),
-            'height' => max(1, absint($preset['height'] ?? 1000)),
-            'crop_mode' => 'fixed',
-            'rotation_deg' => is_numeric($preset['rotation_deg'] ?? null) ? (float) $preset['rotation_deg'] : 0.0,
-            'viewport' => [
-                'scale_x' => 1,
-                'scale_y' => 1,
-                'offset_x' => 0,
-                'offset_y' => 0,
-            ],
-            'rail' => is_array($preset['rail'] ?? null) ? $preset['rail'] : [],
-        ];
-    }
-
-    return $variants;
-}
+    return $profiles;
+});
 
 add_filter('iss_relations_place_map_presets', function (array $presets): array {
     $variants = [
@@ -254,71 +202,29 @@ add_filter('iss_relations_place_map_presets', function (array $presets): array {
             'markers' => '/assets/maps/schoneweide-static-markers-new.json',
             'width' => 4096,
             'height' => 2389,
-            'viewport' => [
-                'scale_x' => 1,
-                'scale_y' => 1,
-                'offset_x' => 0,
-                'offset_y' => 0,
+            'sources' => [
+                [
+                    'map' => '/assets/maps/schoneweide-map-canonical-display-1024.webp',
+                    'width' => 1024,
+                ],
+                [
+                    'map' => '/assets/maps/schoneweide-map-canonical-display.webp',
+                    'width' => 2048,
+                ],
             ],
-        ],
-        'front-page' => [
-            'label' => __('Frontpage Fokus', 'industriesalon'),
-            'map' => '/assets/maps/schoneweide-map-canonical-display.webp',
-            'markers' => '/assets/maps/schoneweide-static-markers-new.json',
-            'width' => 4096,
-            'height' => 2389,
-            'viewport' => [
-                'scale_x' => 2.507,
-                'scale_y' => 2.676,
-                'offset_x' => -68.411,
-                'offset_y' => -77.398,
-            ],
-        ],
-        'spree-horizontal-17' => [
-            'label' => __('Spree Horizontal 17 Grad', 'industriesalon'),
-            'map' => '/assets/maps/schoneweide-map-spree-horizontal-17.webp',
-            'markers' => '/assets/maps/schoneweide-map-spree-horizontal-17-markers.json',
-            'width' => 4618,
-            'height' => 3485,
-            'viewport' => [
-                'scale_x' => 1,
-                'scale_y' => 1,
-                'offset_x' => 0,
-                'offset_y' => 0,
-            ],
-        ],
-        'atlas-slice' => [
-            'label' => __('Atlas Slice Fokus', 'industriesalon'),
-            'map' => '/assets/maps/schoneweide-map-canonical-display.webp',
-            'markers' => '/assets/maps/schoneweide-static-markers-new.json',
-            'width' => 4096,
-            'height' => 2389,
-            'viewport' => [
-                'scale_x' => 1.72,
-                'scale_y' => 1.98,
-                'offset_x' => -28.250,
-                'offset_y' => -39.250,
-            ],
-        ],
-        'atlas-split' => [
-            'label' => __('Atlas Split Fokus', 'industriesalon'),
-            'map' => '/assets/maps/schoneweide-map-canonical-display.webp',
-            'markers' => '/assets/maps/schoneweide-static-markers-new.json',
-            'width' => 4096,
-            'height' => 2389,
-            'viewport' => [
-                'scale_x' => 2.48,
-                'scale_y' => 2.82,
-                'offset_x' => -72.500,
-                'offset_y' => -49.750,
+            'rail' => [
+                'station_offset_x' => 3.25,
+                'stations' => [
+                    ['id' => '12869', 'label' => 'Rathenau-Hallen'],
+                    ['id' => '17960', 'label' => 'Industriesalon'],
+                    ['id' => '17969', 'label' => 'Kaisersteg'],
+                    ['id' => '17972', 'label' => 'AEG / Mathildenstraße'],
+                    ['id' => '17971', 'label' => 'Kraftwerk'],
+                    ['id' => '17973', 'label' => 'KWO'],
+                ],
             ],
         ],
     ];
-
-    $viewport_variants = industriesalon_get_schoneweide_viewport_preset_variants();
-    if ($viewport_variants) {
-        $variants = array_merge($variants, $viewport_variants);
-    }
 
     $theme_dir = get_stylesheet_directory();
     $theme_uri = get_stylesheet_directory_uri();
@@ -329,6 +235,19 @@ add_filter('iss_relations_place_map_presets', function (array $presets): array {
         $markers_rel = (string) ($variant['markers'] ?? '');
         $map_path = $theme_dir . $map_rel;
         $markers_path = $theme_dir . $markers_rel;
+        $sources = [];
+
+        foreach ((array) ($variant['sources'] ?? []) as $source) {
+            $source_rel = (string) ($source['map'] ?? '');
+            if ($source_rel === '' || !file_exists($theme_dir . $source_rel)) {
+                continue;
+            }
+
+            $sources[] = [
+                'url' => $theme_uri . $source_rel,
+                'width' => max(1, absint($source['width'] ?? 0)),
+            ];
+        }
 
         if (!file_exists($map_path) || !file_exists($markers_path)) {
             continue;
@@ -341,9 +260,7 @@ add_filter('iss_relations_place_map_presets', function (array $presets): array {
             'image_alt' => __('Übersichtskarte des Schöneweide-Atlas.', 'industriesalon'),
             'width' => max(1, absint($variant['width'] ?? 2400)),
             'height' => max(1, absint($variant['height'] ?? 1313)),
-            'crop_mode' => sanitize_key((string) ($variant['crop_mode'] ?? 'dynamic')),
-            'rotation_deg' => is_numeric($variant['rotation_deg'] ?? null) ? (float) $variant['rotation_deg'] : 0.0,
-            'viewport' => is_array($variant['viewport'] ?? null) ? $variant['viewport'] : [],
+            'image_sources' => $sources,
             'rail' => is_array($variant['rail'] ?? null) ? $variant['rail'] : [],
         ];
     }

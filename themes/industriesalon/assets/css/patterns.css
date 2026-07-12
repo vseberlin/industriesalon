@@ -6873,6 +6873,15 @@ iss-info-panel--brown
 }
 
 @media (max-width: 900px) {
+  .iss-register-place-atlas .iss-atlas-slice {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .iss-register-place-atlas .iss-atlas-slice__stage {
+    width: 100%;
+    height: auto;
+  }
+
   .iss-register-place__dossier-grid,
   .iss-register-place__data-grid,
   .iss-register-place__interpretation {
@@ -7357,45 +7366,6 @@ iss-info-panel--brown
   background: var(--iss-surface-map);
 }
 
-.iss-related-place-map__viewport {
-  position: absolute;
-  inset: 0;
-  transform-origin: top left;
-  transform:
-    translate(
-      var(--iss-related-place-map-offset-x, 0),
-      var(--iss-related-place-map-offset-y, 0)
-    )
-    scale(
-      var(--iss-related-place-map-scale-x, 1),
-      var(--iss-related-place-map-scale-y, 1)
-    );
-}
-
-.iss-related-place-map__plane {
-  position: absolute;
-  inset: 0;
-  transform-origin: center;
-  transform:
-    translate(var(--iss-map-bias-x, 0), var(--iss-map-bias-y, 0))
-    rotate(var(--iss-map-rotation-deg, 0deg))
-    scale(var(--iss-map-rotation-scale, 1));
-}
-
-.iss-related-place-map__image {
-  position: absolute;
-  inset: 0;
-  display: block;
-  width: 100%;
-  height: 100%;
-}
-
-.iss-related-place-map__markers {
-  position: absolute;
-  inset: 0;
-  pointer-events: none;
-}
-
 .iss-related-place-map__marker {
   position: absolute;
   left: var(--x);
@@ -7406,7 +7376,7 @@ iss-info-panel--brown
   justify-content: center;
   width: 2rem;
   height: 2rem;
-  transform: translate(-50%, -50%) rotate(calc(var(--iss-map-rotation-deg, 0deg) * -1));
+  transform: translate(-50%, -50%);
   pointer-events: auto;
   text-decoration: none;
 }

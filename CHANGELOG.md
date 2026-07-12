@@ -4,8 +4,61 @@ This file records durable project changes. Keep it compact: current state belong
 `handoff_CURRENT.md`, active follow-up in `TODO.md`, and detailed investigation can
 be recovered from Git history.
 
+## 2026-07-12
+
+- Changed the interactive Atlas to start without a selected place. Filtering
+  and single-result search keep the map card-free while retaining map panning;
+  a place card and active marker now appear only after explicit marker
+  selection.
+- Added a shared high-contrast treatment to the interactive Atlas tile pane in
+  embedded, fullscreen, and kiosk modes. Increased contrast and saturation
+  sharpen roads and buildings while leaving markers, overlays, controls,
+  labels, and detail cards unfiltered.
+- Extended the interactive Atlas from its fixed core pan boundary to a
+  data-derived navigation boundary while preserving the existing Schöneweide
+  core as the initial/reset composition. The REST Atlas payload is now the
+  frontend inclusion authority, so all 76 valid payload places render;
+  single-result searches automatically pan distant places into view and reset
+  returns to the core map. Updated the scope label and singular result grammar.
+- Consolidated static maps onto one calibrated Schöneweide coordinate space and
+  canonical source image. Added deterministic WP-CLI marker generation from all
+  83 published coordinate-bearing `register_place` records, calibration/source
+  checksums, projection quality thresholds, a generated provenance manifest,
+  and a visual QA overlay. Public maps now use generated 1024px (~120 KB) and
+  2048px (~416 KB) WebP derivatives without duplicate requests; removed the
+  superseded rotated, cropped, and duplicate static-map rasters and marker
+  files. Desktop keeps the 2048px asset while mobile uses the 1024px derivative.
+- Replaced the complete editorial static-map camera engine with progressively
+  enhanced Leaflet image viewports across the Führungen landing, Schöneweide
+  Topografie, Führung route maps, related-place maps, Atlas slices/strips, and
+  spine strips. Existing image assets and marker projections remain
+  authoritative; Leaflet now owns responsive marker-bound fitting, resize,
+  constrained pan, and zoom interaction while the station-detail contract is
+  preserved. The marker-fitted initial view is both minimum zoom and safe pan
+  boundary, wheel zoom is deliberately restrained, and the no-JavaScript
+  fallback is a plain full-map image. Removed the superseded crop/focus,
+  rotation, projection, bias, scale, viewport-transform, editor-camera, and
+  publication-specific CSS-variable workaround paths.
+
 ## 2026-07-11
 
+- Created `/mnt/volume/ISS_ARCHIVE_READY` as an empty archive-ready filesystem
+  skeleton with `00_MANIFESTS`, `01_UNITS`, `90_GAPS`, and
+  `99_TRANSIENT_REFERENCE`, using `ISS_ARCHIVE_READY` as the archive container
+  and unit folders such as `WF_TFA`, `WF_Kurt_Schwarz`, `WF_Sender`,
+  `WF_Paragon`, `WF_Trafo_Bibliocopy`, `WF_Mediathek_Audio_AV`, and
+  `ISS_History`.
+- Remounted the external USB `Elements` source read-only and started a
+  manifest-driven rsync intake from
+  `/media/vladimir/Elements/restore/archive` into
+  `/mnt/volume/archive-intake/elements-restore-md-candidates/`, selecting
+  `64,299` MD-relevant candidate files (`3,681,284,532,528` bytes) that were not
+  already present in `/mnt/volume/archive` by filename+size.
+- Updated the local archive restoration reconciler under
+  `/home/vladimir/Archive-restoration/` to use museum-digital's batch export API
+  (`/export/json/ids:...`) and completed the full MD fetch pass: `6,746` records
+  cached OK, `17` persistent 404/error IDs, and `1,625` local master-to-MD
+  object chains restored.
 - Migrated `/about/` from a hardcoded page body to nine registered landing JSON
   sections. Added the reusable non-link `text_bild_reihe` gesture, a data-driven
   Team directory slot, and staff drag-and-drop ordering for `team_member`; the

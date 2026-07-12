@@ -26,6 +26,7 @@ require_once ISS_RELATIONS_PATH . 'includes/meta.php';
 require_once ISS_RELATIONS_PATH . 'includes/admin.php';
 require_once ISS_RELATIONS_PATH . 'includes/rest.php';
 require_once ISS_RELATIONS_PATH . 'includes/blocks.php';
+require_once ISS_RELATIONS_PATH . 'includes/map-projection.php';
 require_once ISS_RELATIONS_PATH . 'includes/query-loop.php';
 require_once ISS_RELATIONS_PATH . 'includes/cli.php';
 

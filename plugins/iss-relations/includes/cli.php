@@ -9,6 +9,90 @@ if (defined('WP_CLI') && WP_CLI) {
     WP_CLI::add_command('iss-relations backfill-quality', 'iss_relations_wpcli_backfill_quality_command');
     WP_CLI::add_command('iss-relations map-block-audit', 'iss_relations_wpcli_map_block_audit_command');
     WP_CLI::add_command('iss-relations static-map-contract-check', 'iss_relations_wpcli_static_map_contract_check_command');
+    WP_CLI::add_command('iss-relations map-markers generate', 'iss_relations_wpcli_map_markers_generate_command');
+    WP_CLI::add_command('iss-relations map-markers verify', 'iss_relations_wpcli_map_markers_verify_command');
+}
+
+function iss_relations_wpcli_resolve_map_projection_profile(array $assoc_args): array
+{
+    $profiles = iss_relations_get_map_projection_profiles();
+    if (!$profiles) {
+        WP_CLI::error('No map projection profiles are registered by the active theme.');
+    }
+
+    $profile_id = sanitize_key((string) ($assoc_args['profile'] ?? ''));
+    if ($profile_id === '') {
+        $profile_id = (string) array_key_first($profiles);
+    }
+
+    if (!isset($profiles[$profile_id]) || !is_array($profiles[$profile_id])) {
+        WP_CLI::error(sprintf('Unknown map projection profile: %s', $profile_id));
+    }
+
+    return [$profile_id, $profiles[$profile_id]];
+}
+
+function iss_relations_wpcli_map_markers_generate_command(array $args, array $assoc_args): void
+{
+    [$profile_id, $profile] = iss_relations_wpcli_resolve_map_projection_profile($assoc_args);
+
+    try {
+        $expected = iss_relations_map_projection_build_expected($profile_id, $profile);
+        iss_relations_map_projection_write((string) $profile['markers_path'], (string) $expected['markers_json']);
+        iss_relations_map_projection_write((string) $profile['manifest_path'], (string) $expected['manifest_json']);
+
+        if (array_key_exists('qa', $assoc_args)) {
+            $qa_arg = trim((string) $assoc_args['qa']);
+            $qa_path = $qa_arg !== '' && $qa_arg !== '1'
+                ? $qa_arg
+                : trailingslashit(sys_get_temp_dir()) . $profile_id . '-projection-qa.svg';
+            iss_relations_map_projection_write($qa_path, iss_relations_map_projection_generate_qa_svg($expected));
+            WP_CLI::log(sprintf('QA overlay: %s', $qa_path));
+        }
+    } catch (RuntimeException $error) {
+        WP_CLI::error($error->getMessage());
+    }
+
+    WP_CLI::success(sprintf(
+        'Generated %d markers for %s (control RMSE %.8f).',
+        count($expected['markers']),
+        $profile_id,
+        (float) $expected['transform']['quality']['rmse_norm']
+    ));
+}
+
+function iss_relations_wpcli_map_markers_verify_command(array $args, array $assoc_args): void
+{
+    [$profile_id, $profile] = iss_relations_wpcli_resolve_map_projection_profile($assoc_args);
+
+    try {
+        $expected = iss_relations_map_projection_build_expected($profile_id, $profile);
+    } catch (RuntimeException $error) {
+        WP_CLI::error($error->getMessage());
+    }
+
+    $checks = [
+        (string) $profile['markers_path'] => (string) $expected['markers_json'],
+        (string) $profile['manifest_path'] => (string) $expected['manifest_json'],
+    ];
+    $stale = [];
+
+    foreach ($checks as $path => $contents) {
+        if (!is_readable($path) || !hash_equals(hash('sha256', $contents), (string) hash_file('sha256', $path))) {
+            $stale[] = $path;
+        }
+    }
+
+    if ($stale) {
+        WP_CLI::error('Stale or missing generated projection artifact(s): ' . implode(', ', $stale));
+    }
+
+    WP_CLI::success(sprintf(
+        'Verified %d generated markers and %d responsive derivative(s) for %s.',
+        count($expected['markers']),
+        count($expected['manifest']['derivatives']),
+        $profile_id
+    ));
 }
 
 function iss_relations_contract_check_result(string $label, bool $passed, string $details = ''): array

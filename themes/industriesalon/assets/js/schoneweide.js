@@ -71,8 +71,8 @@
     container.appendChild(createElement('p', 'iss-atlas-loading', message));
   }
 
-  function createLeafletState(container, config) {
-    return AtlasMap.createLeafletState(container, config);
+  function createLeafletState(container, config, places) {
+    return AtlasMap.createLeafletState(container, config, places);
   }
 
   function render(elements, state) {
@@ -224,7 +224,7 @@
           return;
         }
 
-        var leafletState = createLeafletState(elements.mapCanvas, config);
+        var leafletState = createLeafletState(elements.mapCanvas, config, places);
 
         if (!leafletState) {
           root.setAttribute('data-iss-schoneweide-atlas-ready', 'error');
@@ -251,7 +251,7 @@
         AtlasPlaces.bindInputs(elements, state);
 
         elements.popup.addEventListener('iss-close-selection', function () {
-          state.selectedPostId = -1;
+          state.selectedPostId = 0;
           state.shouldPan = false;
           state.render();
         });

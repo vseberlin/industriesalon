@@ -68,7 +68,7 @@
 
 .iss-landing-section--treatment-atlas-map-editorial-split .iss-landing-atlas-map {
   grid-template-columns: minmax(12rem, 1fr) minmax(0, 4fr);
-  align-items: start;
+  align-items: stretch;
 }
 
 .iss-landing-section--treatment-atlas-map-editorial-split .iss-landing-section__copy {
@@ -88,6 +88,18 @@
 
 .iss-landing-section--treatment-atlas-map-editorial-split .iss-gesture-atlas-map--treatment-band {
   --iss-gesture-atlas-map-stage-min-height: 0;
+}
+
+.iss-landing-section--treatment-atlas-map-editorial-split :where(
+  .iss-gesture-atlas-map,
+  .iss-gesture-atlas-map__map,
+  .iss-gesture-atlas-map__stage
+) {
+  height: 100%;
+}
+
+.iss-landing-section--treatment-atlas-map-editorial-split .iss-gesture-atlas-map__stage {
+  aspect-ratio: auto;
 }
 
 .iss-landing-section--treatment-atlas-map-editorial-split .iss-related-place-map__marker::after {
@@ -267,6 +279,18 @@
   .iss-landing-section--treatment-atlas-map-editorial-split .iss-landing-atlas-map {
     grid-template-columns: 1fr;
     align-items: start;
+  }
+
+  .iss-landing-section--treatment-atlas-map-editorial-split :where(
+    .iss-gesture-atlas-map,
+    .iss-gesture-atlas-map__map,
+    .iss-gesture-atlas-map__stage
+  ) {
+    height: auto;
+  }
+
+  .iss-landing-section--treatment-atlas-map-editorial-split .iss-gesture-atlas-map__stage {
+    aspect-ratio: var(--iss-atlas-slice-ratio, 1600 / 780);
   }
 
 }
@@ -608,6 +632,8 @@
 }
 
 .iss-landing-section--treatment-gateway-atlas-plates .iss-landing-gateway {
+  --iss-landing-atlas-plate-map: url("../maps/schoneweide-map-canonical-display.webp");
+
   grid-template-columns: repeat(6, minmax(0, 1fr));
   gap: 0.9rem;
 }
@@ -648,7 +674,7 @@
   background:
     radial-gradient(circle at 1rem center, var(--iss-accent, #e81d25) 0 0.24rem, transparent 0.27rem),
     linear-gradient(rgba(20, 18, 17, 0.34), rgba(20, 18, 17, 0.34)),
-    url("../maps/schoneweide-map-spree-horizontal-17.webp") center / 250% auto;
+    var(--iss-landing-atlas-plate-map) center / 250% auto;
   content: "";
 }
 
@@ -1835,6 +1861,10 @@
 }
 
 @media (max-width: 720px) {
+  .iss-landing-section--treatment-gateway-atlas-plates .iss-landing-gateway {
+    --iss-landing-atlas-plate-map: url("../maps/schoneweide-map-canonical-display-1024.webp");
+  }
+
   .iss-landing-editorial--skin-dossier {
     --iss-dossier-section-padding-block: 2.5rem;
   }
