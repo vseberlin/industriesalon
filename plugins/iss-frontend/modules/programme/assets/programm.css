@@ -437,8 +437,8 @@
   margin-bottom: 0.4rem;
 }
 
-.is-tour-calendar__form-row input:not([type="radio"]):not([type="checkbox"]),
-.is-tour-calendar__field input:not([type="radio"]):not([type="checkbox"]),
+.is-tour-calendar__form-row input:not([type="radio"], [type="checkbox"]),
+.is-tour-calendar__field input:not([type="radio"], [type="checkbox"]),
 .is-tour-calendar__field select {
   width: 100%;
   padding: 0.8rem 1rem;
