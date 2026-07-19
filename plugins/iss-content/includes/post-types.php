@@ -5,6 +5,40 @@ if (!defined('ABSPATH')) {
 }
 
 function iss_content_model_register_post_types() {
+    register_post_type(ISS_CONTENT_MODEL_PLACE_POST_TYPE, [
+        'labels' => [
+            'name' => __('Orte', 'iss-content-model'),
+            'singular_name' => __('Ort / Standort', 'iss-content-model'),
+            'menu_name' => __('Orte', 'iss-content-model'),
+            'name_admin_bar' => __('Ort / Standort', 'iss-content-model'),
+            'add_new_item' => __('Ort / Standort hinzufügen', 'iss-content-model'),
+            'edit_item' => __('Ort / Standort bearbeiten', 'iss-content-model'),
+            'view_item' => __('Ort / Standort ansehen', 'iss-content-model'),
+            'search_items' => __('Orte / Standorte durchsuchen', 'iss-content-model'),
+            'not_found' => __('Keine Orte / Standorte gefunden', 'iss-content-model'),
+            'all_items' => __('Alle Orte / Standorte', 'iss-content-model'),
+        ],
+        'public' => true,
+        'publicly_queryable' => true,
+        'show_ui' => true,
+        'show_in_menu' => defined('ISS_CORE_OPERATIONS_MENU_SLUG') ? ISS_CORE_OPERATIONS_MENU_SLUG : true,
+        'show_in_rest' => true,
+        'menu_icon' => 'dashicons-location-alt',
+        'has_archive' => false,
+        'rewrite' => [
+            'slug' => 'schoeneweide/orte',
+            'with_front' => false,
+            'feeds' => false,
+            'pages' => false,
+        ],
+        'supports' => ['title', 'excerpt', 'thumbnail', 'revisions'],
+        'capability_type' => ['register_place', 'register_places'],
+        'capabilities' => function_exists('iss_core_post_type_capabilities')
+            ? iss_core_post_type_capabilities('register_place', 'register_places', 'create_register_places')
+            : [],
+        'map_meta_cap' => true,
+    ]);
+
     register_post_type(ISS_CONTENT_MODEL_VERANSTALTUNG_POST_TYPE, [
         'labels' => [
             'name' => __('Veranstaltungen', 'iss-content-model'),

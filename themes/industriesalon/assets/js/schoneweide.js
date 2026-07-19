@@ -239,6 +239,7 @@
           root: root,
           leaflet: leafletState,
           relationMapUrl: getStaticRelationMapUrl(config),
+          detailUrl: text(config.detailUrl),
           places: places,
           eras: eras,
           actors: actors,
@@ -277,7 +278,27 @@
   }
 
   function init() {
-    collectRoots().forEach(initRoot);
+    var roots = collectRoots();
+    if (!('IntersectionObserver' in window)) {
+      roots.forEach(initRoot);
+      return;
+    }
+
+    var observer = new IntersectionObserver(function (entries) {
+      entries.forEach(function (entry) {
+        if (!entry.isIntersecting) {
+          return;
+        }
+        observer.unobserve(entry.target);
+        initRoot(entry.target);
+      });
+    }, {
+      rootMargin: '600px 0px'
+    });
+
+    roots.forEach(function (root) {
+      observer.observe(root);
+    });
   }
 
   if (document.readyState === 'loading') {

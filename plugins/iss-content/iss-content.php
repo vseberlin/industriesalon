@@ -22,6 +22,7 @@ define('ISS_CONTENT_MODEL_RUECKBLICK_POST_TYPE', 'rueckblick');
 define('ISS_CONTENT_MODEL_TEAM_POST_TYPE', 'team_member');
 define('ISS_CONTENT_MODEL_VIDEO_POST_TYPE', 'video');
 define('ISS_CONTENT_MODEL_ENTITY_PROFILE_POST_TYPE', 'entity_profile');
+define('ISS_CONTENT_MODEL_PLACE_POST_TYPE', 'register_place');
 define('ISS_CONTENT_EDITORIAL_SETS_SCHEMA_OPTION', 'iss_content_editorial_sets_schema_version');
 define('ISS_CONTENT_EDITORIAL_SETS_SCHEMA_VERSION', '2026-06-24-editorial-sets-1');
 define('ISS_CONTENT_EDITORIAL_SETS_CAPABILITY', 'iss_edit_sets');

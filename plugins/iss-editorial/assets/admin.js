@@ -422,6 +422,15 @@
       if (section.year) {
         parts.push('Jahr: ' + String(section.year).replace(/\s+/g, ' ').slice(0, 24));
       }
+      if (section.start_year || section.end_year) {
+        parts.push('Zeitraum: ' + [section.start_year || '', section.end_year || 'heute'].join('–'));
+      }
+      if (section.era_key) {
+        parts.push('Epoche: ' + section.era_key);
+      }
+      if (section.function_key) {
+        parts.push('Funktion: ' + section.function_key);
+      }
       if (section.media_layout) {
         parts.push(mediaLayoutLabel(section.media_layout, section));
       }
@@ -1231,6 +1240,7 @@
       var factPanel = createEditorPanel('facts', 'Fakten', 'facts', collectionCount(section, 'facts'));
       var itemPanel = createEditorPanel('items', type === 'text_bild_reihe' ? 'Bild-Text-Paare' : 'Ziele', 'items', collectionCount(section, 'items'));
       var linkPanel = createEditorPanel('links', 'Links', 'links', collectionCount(section, 'links'));
+      var sourcePanel = createEditorPanel('sources', 'Quellen', 'links', collectionCount(section, 'source_refs'));
       var kickerField = createTextInput('Vorspann', section.kicker || '', function (value) {
         section.kicker = value;
         render();
@@ -1297,6 +1307,91 @@
         }));
       }
 
+      if (supports(type, 'start_year')) {
+        contentPanel.body.appendChild(createNumberInput('Beginn', section.start_year || '', 1500, 2100, function (value) {
+          section.start_year = value;
+          render();
+          scheduleAutosave();
+        }));
+      }
+
+      if (supports(type, 'end_year')) {
+        contentPanel.body.appendChild(createNumberInput('Ende (leer = offen)', section.end_year || '', 1500, 2100, function (value) {
+          section.end_year = value;
+          render();
+          scheduleAutosave();
+        }));
+      }
+
+      if (supports(type, 'era_key')) {
+        contentPanel.body.appendChild(createSelect('Historische Epoche', section.era_key || '', [
+          { value: '', label: 'Bitte wählen' },
+          { value: 'kaiserzeit', label: 'Kaiserzeit' },
+          { value: 'weimar', label: 'Weimarer Republik' },
+          { value: 'ns-zeit', label: 'NS-Zeit' },
+          { value: 'nachkriegszeit', label: 'Nachkriegszeit' },
+          { value: 'ddr', label: 'DDR' },
+          { value: 'nach-1990', label: 'Nach 1990' }
+        ], function (value) {
+          section.era_key = value;
+          render();
+          scheduleAutosave();
+        }));
+      }
+
+      if (supports(type, 'function_key')) {
+        contentPanel.body.appendChild(createSelect('Funktion', section.function_key || '', [
+          { value: '', label: 'Bitte wählen' },
+          { value: 'industrial', label: 'Industrie / Produktion' },
+          { value: 'commercial', label: 'Gewerbe / Handel' },
+          { value: 'culture', label: 'Kultur' },
+          { value: 'education', label: 'Bildung / Forschung' },
+          { value: 'community', label: 'Gemeinwohl / Soziales' },
+          { value: 'residential', label: 'Wohnen' },
+          { value: 'mixed', label: 'Mischnutzung' },
+          { value: 'vacant', label: 'Leerstand' },
+          { value: 'infrastructure', label: 'Infrastruktur' }
+        ], function (value) {
+          section.function_key = value;
+          render();
+          scheduleAutosave();
+        }));
+      }
+
+      if (supports(type, 'is_current')) {
+        contentPanel.body.appendChild(createCheckbox('Aktuelle Phase', section.is_current, function (checked) {
+          section.is_current = checked;
+          render();
+          scheduleAutosave();
+        }));
+      }
+
+      if (supports(type, 'source_confidence')) {
+        sourcePanel.body.appendChild(createSelect('Quellentyp', section.source_confidence || 'unknown', [
+          { value: 'unknown', label: 'Unbekannt / nicht bewertet' },
+          { value: 'oral', label: 'Mündliche Quelle' },
+          { value: 'archive', label: 'Archivquelle' },
+          { value: 'publication', label: 'Publikation' },
+          { value: 'url', label: 'Webquelle' }
+        ], function (value) {
+          section.source_confidence = value;
+          render();
+          scheduleAutosave();
+        }));
+      }
+
+      if (supports(type, 'source_summary')) {
+        sourcePanel.body.appendChild(createTextarea('Quellenhinweis', section.source_summary || '', function (value) {
+          section.source_summary = value;
+          render();
+          scheduleAutosave();
+        }, 4));
+      }
+
+      if (supports(type, 'source_refs')) {
+        renderSourceRefEditor(section, sourcePanel.body);
+      }
+
       if (supports(type, 'media_layout')) {
         renderMediaLayoutControl(section, displayPanel.body);
       }
@@ -1358,6 +1453,7 @@
       appendPanelIfUsed(body, factPanel);
       appendPanelIfUsed(body, itemPanel);
       appendPanelIfUsed(body, linkPanel);
+      appendPanelIfUsed(body, sourcePanel);
     }
 
     function renderObjectPicker(section, body) {
@@ -1793,6 +1889,59 @@
       add.addEventListener('click', function () {
         section.links = Array.isArray(section.links) ? section.links : [];
         section.links.push({ label: '', url: '', page_id: '' });
+        rerenderRows();
+        render();
+        scheduleAutosave();
+      });
+
+      wrapper.appendChild(rows);
+      wrapper.appendChild(add);
+      body.appendChild(wrapper);
+      rerenderRows();
+    }
+
+    function renderSourceRefEditor(section, body) {
+      var wrapper = createElement('div', 'iss-editorial-field iss-editorial-field--links');
+      var rows = createElement('div', 'iss-editorial-link-rows');
+      var add = createElement('button', 'button', 'Quelle hinzufügen');
+
+      function rerenderRows() {
+        clear(rows);
+        section.source_refs = Array.isArray(section.source_refs) ? section.source_refs : [];
+        section.source_refs.forEach(function (link, index) {
+          var row = createElement('div', 'iss-editorial-link-row');
+          var label = createTextInput('Bezeichnung', link.label || '', function (value) {
+            link.label = value;
+            render();
+            scheduleAutosave();
+          });
+          var url = createTextInput('URL', link.url || '', function (value) {
+            link.url = value;
+            render();
+            scheduleAutosave();
+          });
+          var remove = createElement('button', 'button button-link-delete', 'Entfernen');
+          remove.type = 'button';
+          remove.addEventListener('click', function () {
+            section.source_refs.splice(index, 1);
+            rerenderRows();
+            render();
+            scheduleAutosave();
+          });
+          row.appendChild(label);
+          row.appendChild(url);
+          row.appendChild(remove);
+          rows.appendChild(row);
+        });
+        if (!section.source_refs.length) {
+          rows.appendChild(createElement('p', 'description', 'Noch keine Quellen hinzugefügt.'));
+        }
+      }
+
+      add.type = 'button';
+      add.addEventListener('click', function () {
+        section.source_refs = Array.isArray(section.source_refs) ? section.source_refs : [];
+        section.source_refs.push({ label: '', url: '' });
         rerenderRows();
         render();
         scheduleAutosave();
@@ -2517,6 +2666,39 @@
       input.addEventListener('input', function () { onChange(input.value); });
       wrapper.appendChild(createElement('span', '', label));
       wrapper.appendChild(input);
+      return wrapper;
+    }
+
+    function createNumberInput(label, value, min, max, onChange) {
+      var wrapper = createElement('label', 'iss-editorial-field');
+      var input = document.createElement('input');
+      input.type = 'number';
+      input.className = 'small-text';
+      input.min = String(min);
+      input.max = String(max);
+      input.value = value || '';
+      input.addEventListener('input', function () {
+        onChange(input.value === '' ? '' : parseInt(input.value, 10));
+      });
+      wrapper.appendChild(createElement('span', '', label));
+      wrapper.appendChild(input);
+      return wrapper;
+    }
+
+    function createSelect(label, value, choices, onChange) {
+      var wrapper = createElement('label', 'iss-editorial-field');
+      var select = document.createElement('select');
+      select.className = 'widefat';
+      choices.forEach(function (choice) {
+        var option = document.createElement('option');
+        option.value = choice.value;
+        option.textContent = choice.label;
+        option.selected = String(choice.value) === String(value);
+        select.appendChild(option);
+      });
+      select.addEventListener('change', function () { onChange(select.value); });
+      wrapper.appendChild(createElement('span', '', label));
+      wrapper.appendChild(select);
       return wrapper;
     }
 

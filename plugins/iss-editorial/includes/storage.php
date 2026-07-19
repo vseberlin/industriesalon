@@ -555,6 +555,55 @@ function iss_editorial_sanitize_section(array $section, array $format): array
         $sanitized['year'] = sanitize_text_field((string) ($section['year'] ?? ''));
     }
 
+    foreach (['start_year', 'end_year'] as $year_field) {
+        if (!iss_editorial_format_supports_section_field($format, $type, $year_field)) {
+            continue;
+        }
+
+        $year = absint($section[$year_field] ?? 0);
+        $sanitized[$year_field] = $year >= 1500 && $year <= 2100 ? $year : null;
+    }
+
+    if (
+        array_key_exists('start_year', $sanitized)
+        && array_key_exists('end_year', $sanitized)
+        && $sanitized['start_year'] !== null
+        && $sanitized['end_year'] !== null
+        && $sanitized['end_year'] < $sanitized['start_year']
+    ) {
+        $sanitized['end_year'] = $sanitized['start_year'];
+    }
+
+    if (iss_editorial_format_supports_section_field($format, $type, 'era_key')) {
+        $era_key = sanitize_title((string) ($section['era_key'] ?? ''));
+        $allowed_eras = ['kaiserzeit', 'weimar', 'ns-zeit', 'nachkriegszeit', 'ddr', 'nach-1990'];
+        $sanitized['era_key'] = in_array($era_key, $allowed_eras, true) ? $era_key : '';
+    }
+
+    if (iss_editorial_format_supports_section_field($format, $type, 'function_key')) {
+        $function_key = sanitize_key((string) ($section['function_key'] ?? ''));
+        $allowed_functions = ['industrial', 'commercial', 'culture', 'education', 'community', 'residential', 'mixed', 'vacant', 'infrastructure'];
+        $sanitized['function_key'] = in_array($function_key, $allowed_functions, true) ? $function_key : '';
+    }
+
+    if (iss_editorial_format_supports_section_field($format, $type, 'is_current')) {
+        $sanitized['is_current'] = !empty($section['is_current']);
+    }
+
+    if (iss_editorial_format_supports_section_field($format, $type, 'source_confidence')) {
+        $source_confidence = sanitize_key((string) ($section['source_confidence'] ?? 'unknown'));
+        $allowed_confidence = ['unknown', 'oral', 'archive', 'publication', 'url'];
+        $sanitized['source_confidence'] = in_array($source_confidence, $allowed_confidence, true) ? $source_confidence : 'unknown';
+    }
+
+    if (iss_editorial_format_supports_section_field($format, $type, 'source_summary')) {
+        $sanitized['source_summary'] = sanitize_textarea_field((string) ($section['source_summary'] ?? ''));
+    }
+
+    if (iss_editorial_format_supports_section_field($format, $type, 'source_refs')) {
+        $sanitized['source_refs'] = iss_editorial_sanitize_link_list($section['source_refs'] ?? []);
+    }
+
     if (iss_editorial_format_supports_section_field($format, $type, 'media_layout')) {
         $media_layout = sanitize_key((string) ($section['media_layout'] ?? 'inline'));
         if (($format['slug'] ?? '') === 'landing' && $type === 'feature') {
@@ -741,6 +790,7 @@ function iss_editorial_save_document(int $post_id, string $format_slug, $documen
         if ($skin_meta_key !== '') {
             update_post_meta($post_id, $skin_meta_key, sanitize_key((string) ($document['skin'] ?? '')));
         }
+        do_action('iss_editorial_document_saved', $post_id, sanitize_key($format_slug), $document);
     }
 
     return true;

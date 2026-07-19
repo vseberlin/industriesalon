@@ -8,6 +8,10 @@ WordPress posts, post meta, terms, and `WP_Query` are the default model for norm
 - `iss-occurrences`: public programme occurrence projection and recurrence series for indexed calendar/timeline queries.
 - `iss-commerce-lite`: lightweight public booking/order request intake, review/export/status handling, and notification state for low-volume operational handling. The request table keeps the existing `wp_iss_payments_lite_requests` name for compatibility.
 - `iss-archive`: archive objects, archive collections, collection members, assertions, evidence, and source snapshots.
+- `industriesalon-schoeneweide-register` (transitional): Place epoch/state and
+  industry-actor projections used by the interactive Atlas while the accepted
+  Place migration is observed. Enabled Place JSON is the epoch write authority;
+  these tables are derived read models, not a second editorial source.
 
 See `source-of-truth.md` before deciding which storage layer is canonical for a surface.
 

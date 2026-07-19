@@ -18,6 +18,7 @@ function industriesalon_expected_render_helpers(): array
         'veranstaltungen' => '/includes/veranstaltungen-render.php',
         'archive' => '/includes/archive-render.php',
         'landings' => '/includes/landings-render.php',
+        'places' => '/includes/places-render.php',
     ];
 }
 

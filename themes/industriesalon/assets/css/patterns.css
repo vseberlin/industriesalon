@@ -6427,7 +6427,9 @@ iss-info-panel--brown
 
 .iss-register-place__section {
   display: grid;
+  grid-template-columns: minmax(0, 1fr);
   gap: 1rem;
+  min-width: 0;
 }
 
 .iss-register-place__section--epochs:not(:has(.iss-register-place__epoch-rail)) {
@@ -6782,7 +6784,12 @@ iss-info-panel--brown
 }
 
 .iss-register-place__epoch-rail {
+  min-width: 0;
   border-top: 2px solid var(--iss-black);
+}
+
+.iss-register-place__epoch-source-links a {
+  overflow-wrap: anywhere;
 }
 
 .iss-register-place__epoch-row {

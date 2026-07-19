@@ -34,6 +34,22 @@ Gutenberg content remains the fallback. Public JSON rendering is enabled per
 post through `_iss_editorial_enabled_ausstellung`; disabled posts keep the
 legacy `post_content` path.
 
+Places now have the first complete pilot on the same engine. `iss-content`
+registers the existing `register_place` CPT and the `place` format with
+`intro`, typed repeatable `epoche`, `gegenwart`, `galerie`, `material`, and
+`upload_intake` gestures. Structured address, coordinates, construction,
+monument, visibility, and current-use facts remain outside narrative JSON.
+Enabled Place JSON is the sole epoch write authority for that post; save
+rebuilds the existing epoch/state read projections, and the old epoch metabox
+is hidden. Disabled Places retain the legacy editor and renderer.
+
+Post `12899` (`Kino Spreehöfe`) is the enabled local pilot. Its theme-owned
+renderer consumes `iss_editorial_get_read_model()` through the
+`industriesalon/editorial-place` template slot. The replayable migration is
+`ops/migrations/2026-07-19-kino-spreehoefe-place-editorial.php`; parity is
+guarded by `wp iss-register place-editorial-check`. Curator review remains
+required before wider Place migration.
+
 Projects now have their first registry/gesture migration path. The `projekt`
 format uses the existing OrderedFormat engine with the `dossier` skin and
 gestures for `kapitel`, `fliesstext`, `facts`, `galerie`, `material`, and

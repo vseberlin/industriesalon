@@ -474,14 +474,20 @@ add_action('add_meta_boxes', function () {
         );
     }
 
-    add_meta_box(
-        'iss-register-epochs',
-        __('Zeitschichten', 'industriesalon-schoeneweide-register'),
-        'iss_register_render_epoch_meta_box',
-        ISS_REGISTER_POST_TYPE,
-        'normal',
-        'default'
-    );
+    $post_id = isset($_GET['post']) ? absint(wp_unslash($_GET['post'])) : 0; // phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Read-only editor routing.
+    $uses_editorial_epochs = $post_id > 0
+        && function_exists('iss_editorial_document_is_enabled')
+        && iss_editorial_document_is_enabled($post_id, 'place');
+    if (!$uses_editorial_epochs) {
+        add_meta_box(
+            'iss-register-epochs',
+            __('Zeitschichten', 'industriesalon-schoeneweide-register'),
+            'iss_register_render_epoch_meta_box',
+            ISS_REGISTER_POST_TYPE,
+            'normal',
+            'default'
+        );
+    }
 });
 
 function iss_register_save_meta_box(int $post_id): void
@@ -523,6 +529,12 @@ function iss_register_save_meta_box(int $post_id): void
         }
 
         update_post_meta($post_id, $key, $sanitized);
+    }
+
+    $uses_editorial_epochs = function_exists('iss_editorial_document_is_enabled')
+        && iss_editorial_document_is_enabled($post_id, 'place');
+    if ($uses_editorial_epochs) {
+        return;
     }
 
     $epoch_rows = $_POST['iss_register_epoch_rows'] ?? '[]';
@@ -570,19 +582,25 @@ function iss_register_admin_enqueue_image_group_assets(string $hook): void
         [],
         ISS_REGISTER_VERSION
     );
-    wp_enqueue_script(
-        'iss-register-place-epochs-admin',
-        ISS_REGISTER_URL . 'assets/js/register-place-epochs-admin.js',
-        [],
-        ISS_REGISTER_VERSION,
-        true
-    );
-    wp_enqueue_style(
-        'iss-register-place-epochs-admin',
-        ISS_REGISTER_URL . 'assets/css/register-place-epochs-admin.css',
-        [],
-        ISS_REGISTER_VERSION
-    );
+    $post_id = isset($_GET['post']) ? absint(wp_unslash($_GET['post'])) : 0; // phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Read-only editor routing.
+    $uses_editorial_epochs = $post_id > 0
+        && function_exists('iss_editorial_document_is_enabled')
+        && iss_editorial_document_is_enabled($post_id, 'place');
+    if (!$uses_editorial_epochs) {
+        wp_enqueue_script(
+            'iss-register-place-epochs-admin',
+            ISS_REGISTER_URL . 'assets/js/register-place-epochs-admin.js',
+            [],
+            ISS_REGISTER_VERSION,
+            true
+        );
+        wp_enqueue_style(
+            'iss-register-place-epochs-admin',
+            ISS_REGISTER_URL . 'assets/css/register-place-epochs-admin.css',
+            [],
+            ISS_REGISTER_VERSION
+        );
+    }
 }
 
 add_action('admin_enqueue_scripts', 'iss_register_admin_enqueue_image_group_assets');

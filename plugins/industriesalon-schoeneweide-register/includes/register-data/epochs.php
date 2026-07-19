@@ -4,6 +4,8 @@ if (!defined('ABSPATH')) {
     exit;
 }
 
+// phpcs:disable WordPress.DB.DirectDatabaseQuery -- This projection service owns and caches its indexed custom-table queries.
+
 define('ISS_REGISTER_EPOCH_SCHEMA_VERSION', '2026-05-11-v2');
 define('ISS_REGISTER_EPOCH_SCHEMA_OPTION', 'iss_register_epoch_schema_version');
 define('ISS_REGISTER_EPOCH_SNAPSHOT_META_KEY', '_iss_register_epoch_snapshot_latest');
@@ -128,6 +130,7 @@ final class ISS_Register_Place_Epoch_Service
         }
 
         $placeholders = implode(', ', array_fill(0, count($place_post_ids), '%d'));
+        // phpcs:disable WordPress.DB.PreparedSQL, WordPress.DB.PreparedSQLPlaceholders -- Service-owned table name and a bounded placeholder list are prepared below.
         $rows = $wpdb->get_results(
             $wpdb->prepare(
                 "SELECT * FROM {$this->get_table_name()}
@@ -137,6 +140,7 @@ final class ISS_Register_Place_Epoch_Service
             ),
             ARRAY_A
         );
+        // phpcs:enable WordPress.DB.PreparedSQL, WordPress.DB.PreparedSQLPlaceholders
 
         $grouped = [];
         foreach ($place_post_ids as $place_post_id) {
@@ -275,10 +279,12 @@ final class ISS_Register_Place_Epoch_Service
         $era_counts = [];
         $function_counts = [];
 
+        // phpcs:disable WordPress.DB.PreparedSQL -- Service-owned table name.
         $era_rows = $wpdb->get_results(
             "SELECT era_slug, COUNT(*) AS total FROM {$this->get_table_name()} GROUP BY era_slug",
             ARRAY_A
         );
+        // phpcs:enable WordPress.DB.PreparedSQL
         foreach ((array) $era_rows as $row) {
             $slug = sanitize_title((string) ($row['era_slug'] ?? ''));
             if ($slug !== '') {
@@ -286,10 +292,12 @@ final class ISS_Register_Place_Epoch_Service
             }
         }
 
+        // phpcs:disable WordPress.DB.PreparedSQL -- Service-owned table name.
         $function_rows = $wpdb->get_results(
             "SELECT function_key, COUNT(*) AS total FROM {$this->get_table_name()} GROUP BY function_key",
             ARRAY_A
         );
+        // phpcs:enable WordPress.DB.PreparedSQL
         foreach ((array) $function_rows as $row) {
             $key = sanitize_key((string) ($row['function_key'] ?? ''));
             if ($key !== '') {
@@ -327,10 +335,15 @@ final class ISS_Register_Place_Epoch_Service
             $values[] = $function_key;
         }
 
+        // phpcs:disable WordPress.DB.PreparedSQL -- Table name and conditions come from this service's fixed schema.
         $sql = "SELECT DISTINCT place_post_id FROM {$this->get_table_name()} WHERE " . implode(' AND ', $where);
         $prepared = $values ? $wpdb->prepare($sql, $values) : $sql;
 
-        return array_values(array_filter(array_map('absint', (array) $wpdb->get_col($prepared))));
+        return array_values(array_filter(array_map(
+            'absint',
+            (array) $wpdb->get_col($prepared)
+        )));
+        // phpcs:enable WordPress.DB.PreparedSQL
     }
 
     public function build_seed_epoch_rows(array $place): array
@@ -727,6 +740,63 @@ function iss_register_get_epoch_service(): ISS_Register_Place_Epoch_Service
 {
     return ISS_Register_Place_Epoch_Service::get_instance();
 }
+
+function iss_register_sync_editorial_place_projection(int $post_id, string $format_slug, array $document)
+{
+    if (
+        $format_slug !== 'place'
+        || get_post_type($post_id) !== ISS_REGISTER_POST_TYPE
+        || !function_exists('iss_editorial_document_is_enabled')
+        || !iss_editorial_document_is_enabled($post_id, 'place')
+    ) {
+        return true;
+    }
+
+    $rows = [];
+    foreach ((array) ($document['sections'] ?? []) as $index => $section) {
+        if (!is_array($section) || ($section['type'] ?? '') !== 'epoche') {
+            continue;
+        }
+
+        $source_links = [];
+        foreach ((array) ($section['source_refs'] ?? []) as $source_ref) {
+            if (is_array($source_ref) && !empty($source_ref['url'])) {
+                $source_links[] = (string) $source_ref['url'];
+            }
+        }
+
+        $media_ids = [];
+        foreach ((array) ($section['media_refs'] ?? []) as $media_ref) {
+            if (is_array($media_ref)) {
+                $media_ids[] = absint($media_ref['id'] ?? 0);
+            }
+        }
+
+        $rows[] = [
+            'era_slug' => (string) ($section['era_key'] ?? ''),
+            'function_key' => (string) ($section['function_key'] ?? ''),
+            'phase_name' => (string) ($section['title'] ?? ''),
+            'summary' => wp_strip_all_tags((string) ($section['body'] ?? '')),
+            'start_year' => $section['start_year'] ?? null,
+            'end_year' => $section['end_year'] ?? null,
+            'sort_order' => $index,
+            'is_current' => !empty($section['is_current']),
+            'source_confidence' => (string) ($section['source_confidence'] ?? 'unknown'),
+            'source_summary' => (string) ($section['source_summary'] ?? ''),
+            'source_links' => array_values(array_filter($source_links)),
+            'media_ids' => array_values(array_filter($media_ids)),
+        ];
+    }
+
+    if (!$rows) {
+        return new WP_Error('iss_register_place_projection_empty', 'An enabled Place document must contain at least one epoch.');
+    }
+
+    return iss_register_get_epoch_service()->save_epochs_for_place($post_id, $rows, [
+        'source' => 'iss_editorial_place',
+    ]);
+}
+add_action('iss_editorial_document_saved', 'iss_register_sync_editorial_place_projection', 10, 3);
 
 function iss_register_get_epoch_function_definitions(): array
 {

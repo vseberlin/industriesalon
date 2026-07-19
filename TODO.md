@@ -223,13 +223,14 @@ Immediate executable work only. Larger future programs live in `docs/project/bac
 - Continue live-testing `typografisch` and `chronik` Ausstellung JSON skins against real archival-source exhibition candidates before treating them as production-ready.
 - Keep Ausstellung layout/gesture decisions out of editor controls while exposing only document skin assignment through `Darstellung`: editors add, edit, save, and reorder gesture sections; the theme renders each `gesture x skin` treatment through the universal section slots and dedicated skin CSS such as `themes/industriesalon/assets/css/skins/ausstellung-quellenbuehne.css` and `themes/industriesalon/assets/css/skins/ausstellung-objektalbum.css`.
 - Before transferring the `Frauen im Werk` / `Kinder im Werk` JSON state elsewhere, prefer the normalized artifact `ops/sql/2026-06-27-editorial-vocabulary-normalized-json.sql`; it contains the canonical `objektalbum` / `quellenbuehne` skin assignments and canonical gesture names.
-- Follow `docs/architecture/places-editorial-atlas-restructure-plan.md` for the
-  accepted Place JSON/Atlas ownership migration. First implement only its
-  Phase 0 baseline and non-destructive Phase 1 slice: semantic REST fixtures,
-  repeatable Atlas load measurements, target consumer/data inventory, cache
-  contract tests, dead-partial removal, and reviewed TouchTable/feedback
-  retirement artifacts. Do not start by moving the CPT, dropping tables, or
-  decoding Place JSON during Atlas requests.
+- Curator/editor-review the enabled Kino Spreehöfe Place JSON pilot (`12899`):
+  save/reload, preview, facts, six epochs, historical image/source, present-day
+  text, and contribution CTA. Then migrate further Places only in reviewed
+  batches using the accepted plan and parity check. Keep the legacy register
+  plugin until graph actors/identity move to `iss-graph`, interactive Atlas
+  runtime moves to `iss-frontend`, and a stable observation period proves the
+  compatibility tables removable. Investigate the remaining local 170–260 ms
+  warm Atlas TTFB separately; payload, gzip, cache, and 304 budgets already pass.
 - Before production deploy, verify target mail mode and enable `Tools > ISS Anfragen` notification email only for an approved recipient if request emails should leave the server.
 - Before production deploy, reduce first-party dynamic block clutter: reconcile DB template overrides, move theme render-filter dependencies into plugin defaults where needed, hide unused legacy blocks from the inserter, migrate `industriesalon/program-cards` to `industriesalon/timeline-query`, and collapse related-content wrappers around one shared card renderer before deleting registrations.
 - Delete the `page-projekte` DB template override after the flushed file template is verified on the target.

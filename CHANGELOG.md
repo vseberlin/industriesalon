@@ -23,6 +23,16 @@ be recovered from Git history.
   also records complete TouchTable runtime retirement: live TouchTable and SQL
   backup remain the recovery source, with target inventory and backup required
   before obsolete snapshot rows are removed.
+- Implemented the complete local Place JSON pilot for Kino Spreehöfe: moved
+  `register_place` CPT registration to `iss-content`, added typed Place gestures
+  to the shared editor, made enabled JSON authoritative for deterministic
+  epoch/state projections, and added the theme-owned renderer with legacy
+  fallback. Retired the obsolete TouchTable/feedback/story runtime and backed
+  up then removed 184 local TouchTable snapshots. Reduced the 76-Place Atlas
+  bootstrap from 245,413 to 58,535 bytes (9,526 bytes gzipped), added versioned
+  caches, ETag/304 delivery, lazy Place detail, near-viewport initialization,
+  and parity/payload CLI checks. Graph actor migration and final register-plugin
+  removal remain later reviewed phases.
 
 ## 2026-07-12
 

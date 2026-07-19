@@ -6,16 +6,20 @@ if (!defined('ABSPATH')) {
 
 function iss_register_clear_places_cache(): void
 {
-    global $wpdb;
-
     delete_transient('iss_register_places_cache');
     delete_transient('iss_register_atlas_places_cache');
     delete_transient('iss_register_atlas_context_cache');
     delete_transient('iss_register_place_tour_usage_map_cache');
+    update_option(
+        'iss_register_atlas_cache_version',
+        max(1, absint(get_option('iss_register_atlas_cache_version', 1)) + 1),
+        false
+    );
+}
 
-    $like_timeout = $wpdb->esc_like('_transient_timeout_iss_register_atlas_places_cache:') . '%';
-    $like_value = $wpdb->esc_like('_transient_iss_register_atlas_places_cache:') . '%';
-    $wpdb->query($wpdb->prepare("DELETE FROM {$wpdb->options} WHERE option_name LIKE %s OR option_name LIKE %s", $like_timeout, $like_value));
+function iss_register_get_atlas_cache_version(): int
+{
+    return max(1, absint(get_option('iss_register_atlas_cache_version', 1)));
 }
 
 function iss_register_should_clear_places_cache_for_post_type($post_type): bool

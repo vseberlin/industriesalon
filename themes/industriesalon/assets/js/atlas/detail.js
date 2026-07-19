@@ -223,6 +223,37 @@
       return;
     }
 
+    if (
+      state.detailUrl
+      && place.detailLevel !== 'full'
+      && !place.detailLoading
+      && !place.detailFailed
+    ) {
+      place.detailLoading = true;
+      fetch(state.detailUrl + encodeURIComponent(String(place.post_id)), {
+        credentials: 'same-origin'
+      })
+        .then(function (response) {
+          if (!response.ok) {
+            throw new Error('Place detail request failed');
+          }
+          return response.json();
+        })
+        .then(function (payload) {
+          var normalized = store.normalizePlace(payload);
+          Object.keys(normalized).forEach(function (key) {
+            place[key] = normalized[key];
+          });
+          place.detailLoading = false;
+          place.detailLevel = 'full';
+          state.render();
+        })
+        .catch(function () {
+          place.detailLoading = false;
+          place.detailFailed = true;
+        });
+    }
+
     var card = createElement('article', 'iss-card iss-card--flat iss-atlas-popup-card');
     var close = createElement('button', 'iss-atlas-popup-card__close', '×');
     var body = createElement('div', 'iss-card__body');

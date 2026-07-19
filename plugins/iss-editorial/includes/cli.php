@@ -1468,3 +1468,107 @@ function iss_editorial_cli_fuehrung_import_candidate(array $args, array $assoc_a
 }
 
 WP_CLI::add_command('iss-editorial fuehrung-import-candidate', 'iss_editorial_cli_fuehrung_import_candidate');
+
+function iss_editorial_cli_build_place_candidate(WP_Post $post): array
+{
+    return function_exists('iss_content_model_build_place_editorial_candidate')
+        ? iss_content_model_build_place_editorial_candidate($post)
+        : [];
+}
+
+function iss_editorial_cli_place_dry_run(array $args, array $assoc_args): void
+{
+    unset($args);
+
+    $token = trim((string) ($assoc_args['post'] ?? 'all'));
+    $query_args = [
+        'post_type' => 'register_place',
+        'post_status' => ['publish', 'draft', 'private'],
+        'posts_per_page' => -1,
+        'orderby' => 'ID',
+        'order' => 'ASC',
+    ];
+    $posts = $token === 'all'
+        ? get_posts($query_args)
+        : array_filter([iss_editorial_cli_get_post_by_token_for_type($token, 'register_place')]);
+    $rows = [];
+
+    foreach ($posts as $post) {
+        if (!$post instanceof WP_Post) {
+            continue;
+        }
+        $candidate = iss_editorial_cli_build_place_candidate($post);
+        $types = array_values(array_map(static function (array $section): string {
+            return (string) ($section['type'] ?? '');
+        }, (array) ($candidate['sections'] ?? [])));
+
+        $rows[] = [
+            'ID' => (int) $post->ID,
+            'title' => get_the_title($post),
+            'status' => (string) $post->post_status,
+            'legacy_epochs' => function_exists('iss_register_get_epoch_service')
+                ? count(iss_register_get_epoch_service()->get_epochs_for_place((int) $post->ID))
+                : 0,
+            'candidate_sections' => count($types),
+            'section_types' => implode(',', $types),
+            'enabled' => iss_editorial_document_is_enabled((int) $post->ID, 'place') ? 'yes' : 'no',
+        ];
+    }
+
+    iss_editorial_cli_print_rows((string) ($assoc_args['format'] ?? 'table'), $rows, [
+        'ID',
+        'title',
+        'status',
+        'legacy_epochs',
+        'candidate_sections',
+        'section_types',
+        'enabled',
+    ]);
+}
+
+WP_CLI::add_command('iss-editorial place-dry-run', 'iss_editorial_cli_place_dry_run');
+
+function iss_editorial_cli_place_import_candidate(array $args, array $assoc_args): void
+{
+    unset($args);
+
+    $token = trim((string) ($assoc_args['post'] ?? ''));
+    if ($token === '') {
+        WP_CLI::error('Missing required --post=<place-id-or-slug>.');
+    }
+
+    $post = iss_editorial_cli_get_post_by_token_for_type($token, 'register_place');
+    if (!$post instanceof WP_Post) {
+        WP_CLI::error(sprintf('Place not found: %s', $token));
+    }
+
+    $stored = get_post_meta((int) $post->ID, iss_editorial_get_document_meta_key('place'), true);
+    if (is_string($stored) && trim($stored) !== '' && !isset($assoc_args['force'])) {
+        WP_CLI::error('Place already has an editorial document. Use --force to replace it.');
+    }
+
+    $candidate = iss_editorial_cli_build_place_candidate($post);
+    if (!iss_editorial_save_document((int) $post->ID, 'place', $candidate, false)) {
+        WP_CLI::error('Place editorial document could not be saved.');
+    }
+
+    $enabled = isset($assoc_args['enable']);
+    iss_editorial_set_document_enabled((int) $post->ID, 'place', $enabled);
+    delete_post_meta((int) $post->ID, iss_editorial_get_autosave_meta_key('place'));
+
+    if ($enabled && function_exists('iss_register_sync_editorial_place_projection')) {
+        $result = iss_register_sync_editorial_place_projection((int) $post->ID, 'place', $candidate);
+        if (is_wp_error($result)) {
+            WP_CLI::error($result->get_error_message());
+        }
+    }
+
+    WP_CLI::success(sprintf(
+        'Imported %d Place sections for post %d (%s).',
+        count((array) ($candidate['sections'] ?? [])),
+        (int) $post->ID,
+        $enabled ? 'enabled' : 'disabled'
+    ));
+}
+
+WP_CLI::add_command('iss-editorial place-import-candidate', 'iss_editorial_cli_place_import_candidate');

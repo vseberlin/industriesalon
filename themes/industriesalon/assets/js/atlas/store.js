@@ -87,6 +87,7 @@
 
   function normalizePlace(place) {
     return {
+      detailLevel: text(place.detail_level) || (Object.prototype.hasOwnProperty.call(place, 'thumbnail') ? 'summary' : 'full'),
       post_id: Number.parseInt(place.post_id, 10) || 0,
       slug: text(place.slug),
       name: text(place.name),
@@ -102,7 +103,7 @@
       current_use_type_label: text(place.current_use_type_label),
       present_label: text(place.present_label),
       permalink: relativeUrl(place.permalink),
-      featured_image_url: relativeUrl(place.featured_image_url),
+      featured_image_url: relativeUrl(place.featured_image_url || place.thumbnail),
       archive_image_url: relativeUrl(place.archive_image_url),
       color: text(place.color),
       summary: compact(place.summary || place.excerpt || place.current_summary || place.current, 220),
@@ -171,6 +172,7 @@
       archive_summary: compact(place.archive_summary, 160),
       current_summary: compact(place.current_summary, 160),
       note_text: compact(place.note_text, 120),
+      has_tour_usage: !!place.has_tour_usage,
       storyScore: score(place)
     };
   }
@@ -897,6 +899,7 @@
       root: options.root,
       leaflet: options.leaflet,
       relationMapUrl: options.relationMapUrl || EMPTY,
+      detailUrl: options.detailUrl || EMPTY,
       places: places,
       eras: eras,
       eraMap: buildEraMap(fallbackEras),

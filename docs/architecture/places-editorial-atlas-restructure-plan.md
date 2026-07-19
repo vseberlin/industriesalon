@@ -1,6 +1,41 @@
 # Places Editorial And Atlas Restructure Plan
 
-Status: accepted direction; implementation not started.
+Status: accepted direction; end-to-end pilot implemented locally, wider
+migration and final ownership removal pending review.
+
+## Implementation Checkpoint — 2026-07-19
+
+The first operational slice is complete:
+
+- `iss-content` registers the unchanged `register_place` CPT and the shared
+  `place` editorial format;
+- `iss-editorial` supports typed epoch fields and Place dry-run/import
+  commands;
+- post 12899 is enabled locally with nine JSON sections and six deterministic
+  epoch projections;
+- the theme renders enabled Place JSON and preserves legacy fallback for all
+  other Places;
+- enabled Place saves rebuild epoch/state projections, while their legacy epoch
+  metabox is unavailable;
+- TouchTable crawler/review/story runtime, feedback runtime, and nine dead
+  partials are removed; the bounded retirement migration backed up then removed
+  184 local snapshot rows;
+- the Atlas bootstrap is compact and cached, exposes `ETag`/conditional
+  responses, loads full Place detail on selection, and defers application
+  startup until near the viewport;
+- local Atlas bootstrap measurement is 58,535 bytes uncompressed and 9,526
+  bytes gzipped for 76 Places, versus the 245,413-byte baseline;
+- CPT ownership has moved, but the legacy register plugin still temporarily
+  owns structured Place facts, projections, actor rows, and interactive Atlas
+  PHP. Do not delete it yet.
+
+Remaining phases are deliberately bounded: curator/editor review and wider
+Place batches, graph actor/identity migration, moving interactive Atlas runtime
+to `iss-frontend`, then one stable observation period before removing
+compatibility tables or the old plugin. The local warm TTFB remains roughly
+170–260 ms; payload and cache targets pass, but the absolute 120 ms target does
+not, so future work should measure WordPress bootstrap separately rather than
+reintroducing request-time JSON decoding.
 
 This plan replaces the accumulated ownership model around
 `industriesalon-schoeneweide-register` with the repository's established

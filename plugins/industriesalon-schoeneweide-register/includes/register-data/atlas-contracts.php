@@ -463,7 +463,7 @@ function iss_register_get_related_publications_by_place(array $place_post_ids, i
         'order' => 'DESC',
         'suppress_filters' => true,
         'ignore_sticky_posts' => true,
-        'tax_query' => [[
+        'tax_query' => [[ // phpcs:ignore WordPress.DB.SlowDBQuery.slow_db_query_tax_query -- Bounded publication lookup uses the registered relation taxonomy.
             'taxonomy' => ISS_RELATIONS_TAXONOMY,
             'field' => 'term_id',
             'terms' => array_keys($term_to_place),
@@ -634,7 +634,7 @@ function iss_register_build_atlas_place_contract(array $place, array $actor_rela
 
 function iss_register_get_atlas_places_data(array $filters = []): array
 {
-    $cache_key = 'iss_register_atlas_places_cache';
+    $cache_key = 'iss_register_atlas_places_cache:v' . iss_register_get_atlas_cache_version();
     if (!empty($filters['era_slug']) || !empty($filters['function_key']) || !empty($filters['actor_key'])) {
         $cache_key .= ':' . md5(wp_json_encode($filters));
     }
@@ -720,4 +720,123 @@ function iss_register_get_atlas_places_data(array $filters = []): array
     set_transient($cache_key, $atlas_places, HOUR_IN_SECONDS);
 
     return $atlas_places;
+}
+
+function iss_register_build_atlas_summary_place_contract(array $place, array $actor_relations_by_place = []): array
+{
+    $lat = isset($place['lat']) ? (float) $place['lat'] : 0.0;
+    $lng = isset($place['lng']) ? (float) $place['lng'] : 0.0;
+    $post_id = absint($place['post_id'] ?? 0);
+    if ($lat === 0.0 || $lng === 0.0 || $post_id <= 0 || empty($place['permalink'])) {
+        return [];
+    }
+
+    $era = iss_register_detect_atlas_era($place);
+    $current_status = iss_register_get_normalized_current_status_payload($place);
+    $current_use_type = iss_register_detect_current_use_type($place);
+    $actor_relations = array_values((array) ($actor_relations_by_place[$post_id] ?? []));
+    $compact_actor_relations = array_values(array_filter(array_map(static function (array $relation): array {
+        $actor_key = sanitize_key((string) ($relation['actor_key'] ?? ''));
+        if ($actor_key === '') {
+            return [];
+        }
+
+        return [
+            'actor_key' => $actor_key,
+            'era_slug' => sanitize_title((string) ($relation['era_slug'] ?? '')),
+        ];
+    }, $actor_relations)));
+    $epoch_filters = array_values(array_map(static function (array $epoch): array {
+        $item = [
+            'era_slug' => sanitize_title((string) ($epoch['era_slug'] ?? '')),
+            'function_key' => sanitize_key((string) ($epoch['function_key'] ?? '')),
+        ];
+        if (isset($epoch['start_year'])) {
+            $item['start_year'] = (int) $epoch['start_year'];
+        }
+        if (isset($epoch['end_year'])) {
+            $item['end_year'] = (int) $epoch['end_year'];
+        }
+
+        return $item;
+    }, (array) ($place['epochs'] ?? [])));
+    $excerpt = (string) ($place['excerpt'] ?? '');
+    $current = (string) ($place['current'] ?? '');
+    $history = (string) ($place['history'] ?? '');
+
+    return [
+        'post_id' => $post_id,
+        'slug' => (string) ($place['slug'] ?? ''),
+        'name' => (string) ($place['name'] ?? ''),
+        'permalink' => wp_make_link_relative((string) $place['permalink']),
+        'thumbnail' => wp_make_link_relative((string) ($place['featured_image_url'] ?? '')),
+        'lat' => $lat,
+        'lng' => $lng,
+        'address' => (string) ($place['address'] ?? ''),
+        'area' => (string) ($place['area'] ?? ''),
+        'current_status' => (string) ($current_status['key'] ?? ''),
+        'current_use_type' => (string) ($current_use_type['key'] ?? ''),
+        'explicit_era_slugs' => array_values(array_map(static function (array $item): string {
+            return (string) ($item['slug'] ?? '');
+        }, (array) ($era['explicit_eras'] ?? []))),
+        'industry_actor_relations' => $compact_actor_relations,
+        'epoch_summaries' => $epoch_filters,
+        'summary' => iss_register_atlas_compact_text(
+            $excerpt !== '' ? $excerpt : ($current !== '' ? $current : ($history !== '' ? $history : (string) ($place['address'] ?? ''))),
+            96
+        ),
+    ];
+}
+
+function iss_register_get_atlas_summary_places_data(): array
+{
+    $cache_key = 'iss_register_atlas_summary:v' . iss_register_get_atlas_cache_version();
+    $cached = get_transient($cache_key);
+    if (is_array($cached)) {
+        return $cached;
+    }
+
+    $places = iss_register_get_public_place_entities();
+    $post_ids = array_values(array_filter(array_map(static function (array $place): int {
+        return absint($place['post_id'] ?? 0);
+    }, $places)));
+    $relations = function_exists('iss_register_get_industry_actor_service')
+        ? iss_register_get_industry_actor_service()->get_relations_for_places($post_ids)
+        : [];
+    $summary = array_values(array_filter(array_map(
+        static function (array $place) use ($relations): array {
+            return iss_register_build_atlas_summary_place_contract($place, $relations);
+        },
+        $places
+    )));
+
+    set_transient($cache_key, $summary, HOUR_IN_SECONDS);
+
+    return $summary;
+}
+
+function iss_register_get_atlas_place_detail(int $post_id): array
+{
+    $cache_key = 'iss_register_atlas_detail:v' . iss_register_get_atlas_cache_version() . ':' . $post_id;
+    $cached = get_transient($cache_key);
+    if (is_array($cached)) {
+        return $cached;
+    }
+
+    $place = iss_register_get_place_entity_by_post_id($post_id);
+    if (!is_array($place) || !iss_register_is_public_place_entity($place)) {
+        return [];
+    }
+
+    $actor_relations = function_exists('iss_register_get_industry_actor_service')
+        ? iss_register_get_industry_actor_service()->get_relations_for_places([$post_id])
+        : [];
+    $publications = iss_register_get_related_publications_by_place([$post_id], 2);
+    $detail = iss_register_build_atlas_place_contract($place, $actor_relations, $publications);
+    if ($detail) {
+        $detail['detail_level'] = 'full';
+        set_transient($cache_key, $detail, HOUR_IN_SECONDS);
+    }
+
+    return $detail;
 }

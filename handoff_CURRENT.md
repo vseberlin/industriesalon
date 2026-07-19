@@ -23,21 +23,23 @@ follow-up belongs in `TODO.md`.
 
 - The accepted migration plan is
   `docs/architecture/places-editorial-atlas-restructure-plan.md`.
-- `register_place` will become an ordinary `iss-content` editorial CPT using
-  the shared `iss-editorial` JSON engine and a theme-owned public renderer.
-  Query-critical facts remain structured outside narrative JSON.
-- Interactive Atlas becomes a compact projection owned by `iss-frontend`; it
-  must never decode all Place JSON documents during public requests. Existing
-  epoch/state tables remain until deterministic JSON-to-projection parity and a
-  measured replacement are proven.
-- The TouchTable crawler, Elementor parser, snapshot review pipeline, and
-  runtime story extraction are obsolete. Live TouchTable plus SQL backup is
-  the recovery source; target rows still require count/inventory and DB backup
-  before obsolete snapshot rows are removed.
-- Immediate implementation is Phase 0 and the non-destructive part of Phase 1:
-  baseline fixtures/measurements, target inventory, cache contract tests, dead
-  partial removal, conditional legacy loading, and reviewed retirement
-  migrations.
+- The end-to-end local pilot is implemented. `iss-content` now registers the
+  unchanged `register_place` CPT and Place format; `iss-editorial` stores typed
+  Place JSON; the theme owns enabled dossier rendering with legacy fallback.
+- Post 12899 (`Kino Spreehöfe`) is enabled with nine sections and six epochs.
+  `wp iss-register place-editorial-check` proves the document/projection hash
+  match. Editorial save rebuilds epoch/state projections and hides the legacy
+  epoch metabox only for enabled Places.
+- TouchTable crawler/review/story and feedback runtime plus nine dead partials
+  are retired. The local retirement migration backed up and removed 184 source
+  rows; live TouchTable plus SQL backup remains the recovery source.
+- Atlas bootstrap is 58,535 bytes / 9,526 bytes gzipped for 76 Places, with
+  versioned caches, ETag/304, lazy detail, and near-viewport startup. The
+  absolute local warm TTFB remains about 170–260 ms despite the payload win.
+- Next bounded action: curator-check the 12899 editor/save/preview content.
+  After review, migrate further Places in batches. Do not remove the register
+  plugin until graph actor/identity migration, Atlas ownership transfer to
+  `iss-frontend`, and a stable observation period are complete.
 
 ## Preserve
 

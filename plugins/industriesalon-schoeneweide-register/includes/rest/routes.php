@@ -120,21 +120,45 @@ function iss_register_rest_get_atlas_context(WP_REST_Request $request): WP_REST_
 
 function iss_register_rest_get_atlas_bootstrap(WP_REST_Request $request): WP_REST_Response
 {
-    $places = iss_register_get_atlas_places_data([
-        'era_slug' => $request->get_param('era_slug'),
-        'function_key' => $request->get_param('function_key'),
-        'actor_key' => $request->get_param('actor_key'),
-    ]);
+    unset($request);
+    $places = iss_register_get_atlas_summary_places_data();
     $context = iss_register_build_atlas_context_data($places);
-
-    if (!$request->get_param('era_slug') && !$request->get_param('function_key') && !$request->get_param('actor_key')) {
-        set_transient('iss_register_atlas_context_cache', $context, HOUR_IN_SECONDS);
-    }
-
-    return rest_ensure_response([
+    $context['stories'] = [];
+    $payload = [
         'places' => $places,
         'context' => $context,
-    ]);
+    ];
+    $etag = '"' . hash('sha256', (string) wp_json_encode($payload)) . '"';
+
+    $request_etag = isset($_SERVER['HTTP_IF_NONE_MATCH'])
+        ? sanitize_text_field(wp_unslash((string) $_SERVER['HTTP_IF_NONE_MATCH']))
+        : '';
+    if (hash_equals($etag, $request_etag)) {
+        $response = new WP_REST_Response(null, 304);
+    } else {
+        $response = rest_ensure_response($payload);
+    }
+    $response->header('ETag', $etag);
+    $response->header('Cache-Control', 'public, max-age=300, stale-while-revalidate=3600');
+    $response->header('Vary', 'Accept-Encoding');
+
+    return $response;
+}
+
+function iss_register_rest_get_atlas_detail(WP_REST_Request $request)
+{
+    $post_id = absint($request['post_id']);
+    $detail = iss_register_get_atlas_place_detail($post_id);
+    if (!$detail) {
+        return new WP_Error('iss_register_not_found', 'Place not found.', ['status' => 404]);
+    }
+
+    $etag = '"' . hash('sha256', (string) wp_json_encode($detail)) . '"';
+    $response = rest_ensure_response($detail);
+    $response->header('ETag', $etag);
+    $response->header('Cache-Control', 'public, max-age=300, stale-while-revalidate=3600');
+
+    return $response;
 }
 
 function iss_register_rest_get_place(WP_REST_Request $request)
@@ -217,6 +241,12 @@ function iss_register_register_rest_routes(): void
                 'required' => false,
             ],
         ],
+    ]);
+
+    register_rest_route(ISS_REGISTER_REST_NAMESPACE, '/atlas-detail/(?P<post_id>\d+)', [
+        'methods' => WP_REST_Server::READABLE,
+        'callback' => 'iss_register_rest_get_atlas_detail',
+        'permission_callback' => '__return_true',
     ]);
 
     register_rest_route(ISS_REGISTER_REST_NAMESPACE, '/places/(?P<id>[^/]+)', [

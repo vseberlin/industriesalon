@@ -5,9 +5,14 @@ This repo uses WordPress editorial content as the primary authoring surface. Cus
 ## Ownership
 
 - Theme: public templates, skins, layout composition, frontend CSS/JS, and editor-visible patterns.
-- `iss-content`: shared CPT/editor/data contracts, including the former content-model and Führung module surfaces.
+- `iss-content`: shared CPT/editor/data contracts, including `register_place`,
+  its shared Place editorial-format registration, and the former content-model
+  and Führung module surfaces.
 - `industriesalon-steuerung`: persistent institutional visit, address, contact, and notice facts.
-- `industriesalon-schoeneweide-register`: `register_place` structured data, epochs, state projection, register tools, and admin workflows.
+- `industriesalon-schoeneweide-register`: transitional Place facts, legacy
+  epoch/state projections, compact interactive-Atlas contracts, register tools,
+  and admin workflows. It no longer owns the `register_place` CPT or Place
+  narrative editor.
 - `iss-archive`: archive ingest, normalization, projection, archive object runtime, assertions, evidence, and collection data.
 - `iss-graph`: shared entities, names, relations, graph-backed profiles, and public search projection.
 - `iss-relations`: relation queries and relation-aware blocks.

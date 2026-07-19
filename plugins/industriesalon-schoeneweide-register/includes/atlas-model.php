@@ -103,7 +103,7 @@ function iss_register_get_atlas_era_term_seed(): array
 
 function iss_register_register_atlas_era_taxonomy(): void
 {
-    register_taxonomy(ISS_REGISTER_ATLAS_ERA_TAXONOMY, [ISS_REGISTER_POST_TYPE, ISS_REGISTER_ATLAS_STORY_POST_TYPE], [
+    register_taxonomy(ISS_REGISTER_ATLAS_ERA_TAXONOMY, [ISS_REGISTER_POST_TYPE], [
         'labels' => [
             'name' => __('Atlas-Epochen', 'industriesalon-schoeneweide-register'),
             'singular_name' => __('Atlas-Epoche', 'industriesalon-schoeneweide-register'),
@@ -127,36 +127,6 @@ function iss_register_register_atlas_era_taxonomy(): void
     ]);
 }
 add_action('init', 'iss_register_register_atlas_era_taxonomy', 12);
-
-function iss_register_register_atlas_story_post_type(): void
-{
-    register_post_type(ISS_REGISTER_ATLAS_STORY_POST_TYPE, [
-        'labels' => [
-            'name' => __('Atlas-Geschichten', 'industriesalon-schoeneweide-register'),
-            'singular_name' => __('Atlas-Geschichte', 'industriesalon-schoeneweide-register'),
-            'menu_name' => __('Atlas-Geschichten', 'industriesalon-schoeneweide-register'),
-            'add_new_item' => __('Atlas-Geschichte hinzufügen', 'industriesalon-schoeneweide-register'),
-            'edit_item' => __('Atlas-Geschichte bearbeiten', 'industriesalon-schoeneweide-register'),
-            'new_item' => __('Neue Atlas-Geschichte', 'industriesalon-schoeneweide-register'),
-            'view_item' => __('Atlas-Geschichte ansehen', 'industriesalon-schoeneweide-register'),
-            'search_items' => __('Atlas-Geschichten durchsuchen', 'industriesalon-schoeneweide-register'),
-        ],
-        'public' => true,
-        'publicly_queryable' => true,
-        'show_ui' => true,
-        'show_in_menu' => 'edit.php?post_type=' . ISS_REGISTER_POST_TYPE,
-        'show_in_rest' => true,
-        'has_archive' => false,
-        'rewrite' => [
-            'slug' => 'atlas-geschichten',
-            'with_front' => false,
-        ],
-        'menu_icon' => 'dashicons-book-alt',
-        'supports' => ['title', 'editor', 'excerpt', 'thumbnail', 'revisions', 'page-attributes'],
-        'taxonomies' => [ISS_REGISTER_ATLAS_ERA_TAXONOMY],
-    ]);
-}
-add_action('init', 'iss_register_register_atlas_story_post_type', 12);
 
 function iss_register_seed_atlas_era_terms(): void
 {
@@ -191,14 +161,13 @@ function iss_register_seed_atlas_era_terms(): void
 }
 add_action('init', 'iss_register_seed_atlas_era_terms', 30);
 
-function iss_register_add_atlas_story_to_place_relations(array $post_types): array
+function iss_register_add_archive_objects_to_place_relations(array $post_types): array
 {
-    $post_types[] = ISS_REGISTER_ATLAS_STORY_POST_TYPE;
     $post_types[] = 'archivobjekt';
 
     return array_values(array_unique(array_filter(array_map('sanitize_key', $post_types))));
 }
-add_filter('iss_relations_candidate_post_types', 'iss_register_add_atlas_story_to_place_relations');
+add_filter('iss_relations_candidate_post_types', 'iss_register_add_archive_objects_to_place_relations');
 
 function iss_register_clear_atlas_cache_on_term_change($object_id, $terms, $tt_ids, $taxonomy): void
 {
@@ -344,7 +313,7 @@ function iss_register_get_editorial_atlas_story_items(string $era_slug = ''): ar
 
     $era_slug = sanitize_title($era_slug);
     if ($era_slug !== '') {
-        $query_args['tax_query'] = [
+        $query_args['tax_query'] = [ // phpcs:ignore WordPress.DB.SlowDBQuery.slow_db_query_tax_query -- Optional era lookup uses the registered indexed taxonomy.
             [
                 'taxonomy' => ISS_REGISTER_ATLAS_ERA_TAXONOMY,
                 'field' => 'slug',

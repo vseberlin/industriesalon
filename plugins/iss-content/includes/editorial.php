@@ -52,10 +52,145 @@ function iss_content_model_landing_page_is_eligible($post): bool
     return in_array((string) $post->post_name, iss_content_model_landing_page_allowed_slugs(), true);
 }
 
+function iss_content_model_place_media_reference(int $attachment_id): array
+{
+    $attachment = $attachment_id > 0 ? get_post($attachment_id) : null;
+    if (!$attachment instanceof WP_Post || $attachment->post_type !== 'attachment') {
+        return [];
+    }
+
+    return [
+        'kind' => 'wp_media',
+        'source' => 'wordpress',
+        'id' => (string) $attachment_id,
+        'label' => (string) get_the_title($attachment),
+    ];
+}
+
+function iss_content_model_build_place_editorial_candidate(WP_Post $post): array
+{
+    $sections = [];
+    $history_short = trim((string) get_post_meta((int) $post->ID, 'history_short', true));
+    $current_use = trim((string) get_post_meta((int) $post->ID, 'current_use', true));
+
+    if ($history_short !== '') {
+        $sections[] = [
+            'type' => 'intro',
+            'title' => __('Ort auf einen Blick', 'iss-content-model'),
+            'body' => $history_short,
+        ];
+    }
+
+    $epochs = function_exists('iss_register_get_epoch_service')
+        ? iss_register_get_epoch_service()->get_epochs_for_place((int) $post->ID)
+        : [];
+
+    foreach ($epochs as $epoch) {
+        $media_refs = [];
+        foreach ((array) ($epoch['media_ids'] ?? []) as $attachment_id) {
+            $reference = iss_content_model_place_media_reference(absint($attachment_id));
+            if ($reference) {
+                $media_refs[] = $reference;
+            }
+        }
+
+        $source_refs = [];
+        foreach ((array) ($epoch['source_links'] ?? []) as $source_url) {
+            $source_url = esc_url_raw((string) $source_url);
+            if ($source_url !== '') {
+                $source_refs[] = [
+                    'label' => wp_parse_url($source_url, PHP_URL_HOST) ?: __('Quelle', 'iss-content-model'),
+                    'url' => $source_url,
+                ];
+            }
+        }
+
+        $sections[] = [
+            'type' => 'epoche',
+            'title' => (string) ($epoch['phase_name'] ?? ''),
+            'body' => (string) ($epoch['summary'] ?? ''),
+            'start_year' => $epoch['start_year'] ?? null,
+            'end_year' => $epoch['end_year'] ?? null,
+            'era_key' => (string) ($epoch['era_slug'] ?? ''),
+            'function_key' => (string) ($epoch['function_key'] ?? ''),
+            'is_current' => !empty($epoch['is_current']),
+            'source_confidence' => (string) ($epoch['source_confidence'] ?? 'unknown'),
+            'source_summary' => (string) ($epoch['source_summary'] ?? ''),
+            'source_refs' => $source_refs,
+            'media_refs' => $media_refs,
+        ];
+    }
+
+    if ($current_use !== '') {
+        $sections[] = [
+            'type' => 'gegenwart',
+            'title' => __('Heute', 'iss-content-model'),
+            'body' => $current_use,
+        ];
+    }
+
+    $sections[] = [
+        'type' => 'upload_intake',
+        'title' => __('Wissen Sie mehr über diesen Ort?', 'iss-content-model'),
+        'body' => __('Eigene Fotos, Erinnerungen oder Korrekturen helfen, die Geschichte dieses Ortes vollständiger zu erzählen.', 'iss-content-model'),
+    ];
+
+    return [
+        'schema_version' => 1,
+        'skin' => 'ortsdossier',
+        'variant' => 'standard',
+        'features' => [],
+        'sections' => $sections,
+        'deleted_sections' => [],
+    ];
+}
+
 function iss_content_model_register_editorial_formats(array $formats): array
 {
     $gallery_section = iss_content_model_editorial_gallery_section();
     $material_section = iss_content_model_editorial_material_section();
+
+    $formats['place'] = [
+        'label' => __('Ort', 'iss-content-model'),
+        'base' => 'ordered',
+        'post_types' => ['register_place'],
+        'default_skin' => 'ortsdossier',
+        'default_variant' => 'standard',
+        'sections' => [
+            'intro' => [
+                'label' => __('Kurzprofil', 'iss-content-model'),
+                'description' => __('Ein knapper Einstieg in Bedeutung und heutige Lesart des Ortes.', 'iss-content-model'),
+                'supports' => ['media_refs'],
+            ],
+            'epoche' => [
+                'label' => __('Epoche', 'iss-content-model'),
+                'description' => __('Eine datierte historische Phase mit Funktion, Quellen und Bildern.', 'iss-content-model'),
+                'supports' => [
+                    'start_year',
+                    'end_year',
+                    'era_key',
+                    'function_key',
+                    'is_current',
+                    'source_confidence',
+                    'source_summary',
+                    'source_refs',
+                    'media_refs',
+                ],
+            ],
+            'gegenwart' => [
+                'label' => __('Gegenwart', 'iss-content-model'),
+                'description' => __('Heutige Nutzung, Zustand und aktuelle Entwicklung.', 'iss-content-model'),
+                'supports' => ['media_refs', 'links'],
+            ],
+            'galerie' => array_merge($gallery_section, ['supports' => ['media_refs', 'object_refs', 'gallery_layout']]),
+            'material' => $material_section,
+            'upload_intake' => [
+                'label' => __('Material beitragen', 'iss-content-model'),
+                'description' => __('Öffentlicher Mitmach-Aufruf; Uploads werden vor Veröffentlichung geprüft.', 'iss-content-model'),
+                'supports' => ['links'],
+            ],
+        ],
+    ];
 
     $formats['landing'] = [
         'label' => __('Landing Page', 'iss-content-model'),
