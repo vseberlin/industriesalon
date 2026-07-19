@@ -19,6 +19,26 @@ follow-up belongs in `TODO.md`.
   `ops/uploads/2026-07-09-schoneweide-display-webp.tar.gz`, with manifest and
   SHA256 sidecar in the same directory.
 
+## Places And Interactive Atlas Direction
+
+- The accepted migration plan is
+  `docs/architecture/places-editorial-atlas-restructure-plan.md`.
+- `register_place` will become an ordinary `iss-content` editorial CPT using
+  the shared `iss-editorial` JSON engine and a theme-owned public renderer.
+  Query-critical facts remain structured outside narrative JSON.
+- Interactive Atlas becomes a compact projection owned by `iss-frontend`; it
+  must never decode all Place JSON documents during public requests. Existing
+  epoch/state tables remain until deterministic JSON-to-projection parity and a
+  measured replacement are proven.
+- The TouchTable crawler, Elementor parser, snapshot review pipeline, and
+  runtime story extraction are obsolete. Live TouchTable plus SQL backup is
+  the recovery source; target rows still require count/inventory and DB backup
+  before obsolete snapshot rows are removed.
+- Immediate implementation is Phase 0 and the non-destructive part of Phase 1:
+  baseline fixtures/measurements, target inventory, cache contract tests, dead
+  partial removal, conditional legacy loading, and reviewed retirement
+  migrations.
+
 ## Preserve
 
 - Keep the interactive Atlas source modular for now:

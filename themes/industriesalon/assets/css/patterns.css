@@ -5344,18 +5344,6 @@ iss-info-panel--brown
   color: rgba(249, 249, 250, 0.78);
 }
 
-.iss-register-place__body > :first-child,
-.iss-register-place__body > :last-child {
-  margin-top: 0;
-  margin-bottom: 0;
-}
-
-.iss-register-place__body p,
-.iss-register-place__body li {
-  font-size: 1.02rem;
-  line-height: 1.75;
-}
-
 /* Schoneweide reading path: compact numbered chapter rail that bridges atlas and longread. */
 .iss-reading-nav {
   display: grid;
@@ -6297,6 +6285,66 @@ iss-info-panel--brown
   max-width: 15ch;
 }
 
+.iss-register-place__hero-contribution {
+  display: grid;
+  gap: 0.35rem;
+  min-width: min(18rem, 100%);
+  padding: 1rem 1.1rem;
+  border: 1px solid rgba(255, 255, 255, 0.58);
+  background: rgba(30, 30, 30, 0.68);
+  color: var(--iss-white);
+  text-decoration: none;
+  backdrop-filter: blur(5px);
+  transition:
+    background var(--iss-transition),
+    border-color var(--iss-transition);
+}
+
+.iss-register-place__hero-contribution:where(:hover, :focus-visible) {
+  border-color: var(--iss-white);
+  background: rgba(30, 30, 30, 0.86);
+  color: var(--iss-white);
+}
+
+.iss-register-place__hero-contribution-kicker {
+  font-size: 0.72rem;
+  font-weight: 750;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.iss-register-place__hero-contribution-action {
+  font-size: clamp(0.95rem, 0.9rem + 0.22vw, 1.08rem);
+  font-weight: 650;
+  line-height: 1.3;
+}
+
+.iss-register-place__fact-band {
+  border-bottom: 1px solid rgba(30, 30, 30, 0.12);
+  background: rgba(255, 255, 255, 0.92);
+}
+
+.iss-register-place__fact-band:not(:has(.iss-register-place__fact)) {
+  display: none;
+}
+
+.iss-register-place__fact-band-inner {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 10rem), 1fr));
+  padding-top: 0;
+  padding-bottom: 0;
+}
+
+.iss-register-place__fact-band .iss-register-place__fact {
+  min-width: 0;
+  padding: 1rem clamp(0.75rem, 2vw, 1.4rem);
+  border-left: 1px solid rgba(30, 30, 30, 0.1);
+}
+
+.iss-register-place__fact-band .iss-register-place__fact:last-child {
+  border-right: 1px solid rgba(30, 30, 30, 0.1);
+}
+
 .iss-register-place-atlas {
   padding: 0;
   border-top: 1px solid rgba(30, 30, 30, 0.12);
@@ -6351,11 +6399,12 @@ iss-info-panel--brown
 
 .iss-register-place-story {
   background: rgba(246, 246, 247, 0.96);
+  scroll-margin-top: 2rem;
 }
 
 .iss-register-place__dossier-grid {
   display: grid;
-  grid-template-columns: minmax(14rem, 18rem) minmax(0, 1fr);
+  grid-template-columns: minmax(0, 1fr) minmax(14rem, 18rem);
   gap: 2.2rem;
   align-items: start;
 }
@@ -6366,22 +6415,8 @@ iss-info-panel--brown
   display: grid;
   gap: 1.15rem;
   align-self: start;
-}
-
-.iss-register-place__summary {
-  display: grid;
-  gap: 0.85rem;
   padding-top: 0.95rem;
   border-top: 2px solid var(--iss-black);
-}
-
-.iss-register-place__summary-heading {
-  gap: 0.35rem;
-}
-
-.iss-register-place__summary .iss-register-place__fact + .iss-register-place__fact {
-  padding-top: 0.75rem;
-  border-top: 1px solid rgba(30, 30, 30, 0.1);
 }
 
 .iss-register-place__terms {
@@ -6393,6 +6428,10 @@ iss-info-panel--brown
 .iss-register-place__section {
   display: grid;
   gap: 1rem;
+}
+
+.iss-register-place__section--epochs:not(:has(.iss-register-place__epoch-rail)) {
+  display: none;
 }
 
 .iss-register-place__section + .iss-register-place__section {
@@ -6415,12 +6454,16 @@ iss-info-panel--brown
 }
 
 .iss-register-place__lead-primary {
-  font-size: clamp(1.04rem, 0.98rem + 0.22vw, 1.18rem);
-  line-height: 1.68;
+  max-width: 38ch;
+  font-size: clamp(1.2rem, 1.05rem + 0.65vw, 1.55rem);
+  font-weight: 520;
+  line-height: 1.48;
   color: rgba(30, 30, 30, 0.9);
+  text-wrap: pretty;
 }
 
 .iss-register-place__lead-secondary {
+  max-width: 52rem;
   font-size: 0.98rem;
   line-height: 1.72;
   color: rgba(30, 30, 30, 0.76);
@@ -6446,14 +6489,6 @@ iss-info-panel--brown
 
 .iss-register-place__content {
   min-width: 0;
-}
-
-.iss-register-place__body {
-  margin-top: 1.25rem;
-}
-
-.iss-register-place__section .iss-register-place__body {
-  margin-top: 0.2rem;
 }
 
 .iss-register-place__lead {
@@ -6754,13 +6789,31 @@ iss-info-panel--brown
   display: grid;
   grid-template-columns: minmax(5.2rem, 8rem) minmax(0, 1fr);
   gap: 1.1rem;
-  padding: 1rem 0;
+  padding: 1.35rem 0;
   border-bottom: 1px solid rgba(30, 30, 30, 0.12);
 }
 
+.iss-register-place__epoch-row.has-media {
+  grid-template-columns: minmax(5.2rem, 7rem) repeat(2, minmax(0, 1fr));
+  gap: clamp(1.25rem, 3vw, 2.25rem);
+  align-items: center;
+  padding: clamp(1.75rem, 4vw, 2.75rem) 0;
+}
+
+.iss-register-place__epoch-row.has-media:nth-child(even) .iss-register-place__epoch-figure {
+  grid-row: 1;
+  grid-column: 2;
+}
+
+.iss-register-place__epoch-row.has-media:nth-child(even) .iss-register-place__epoch-body {
+  grid-column: 3;
+}
+
 .iss-register-place__epoch-row.is-current {
-  padding-left: 0.8rem;
+  margin-top: 1.25rem;
+  padding: clamp(1.25rem, 3vw, 1.8rem);
   border-left: 3px solid var(--iss-accent);
+  background: rgba(255, 255, 255, 0.76);
 }
 
 .iss-register-place__epoch-index,
@@ -6778,8 +6831,7 @@ iss-info-panel--brown
   line-height: 1.2;
 }
 
-.iss-register-place__epoch-meta,
-.iss-register-place__epoch-source {
+.iss-register-place__epoch-meta {
   margin: 0;
   color: rgba(30, 30, 30, 0.56);
   font-size: 0.73rem;
@@ -6791,8 +6843,9 @@ iss-info-panel--brown
 
 .iss-register-place__epoch-title {
   margin: 0;
-  font-size: 1.08rem;
+  font-size: clamp(1.08rem, 1rem + 0.35vw, 1.35rem);
   line-height: 1.22;
+  text-wrap: balance;
 }
 
 .iss-register-place__epoch-text {
@@ -6800,6 +6853,184 @@ iss-info-panel--brown
   color: rgba(30, 30, 30, 0.78);
   font-size: 0.96rem;
   line-height: 1.62;
+}
+
+.iss-register-place__epoch-figure {
+  align-self: start;
+  margin: 0;
+  background: var(--iss-white);
+}
+
+.iss-register-place__epoch-image {
+  display: block;
+  width: 100%;
+  height: auto;
+  aspect-ratio: 4 / 3;
+  object-fit: cover;
+}
+
+.iss-register-place__comparison {
+  display: grid;
+  gap: 1.2rem;
+  margin-top: clamp(2.25rem, 5vw, 4rem);
+  padding: clamp(1.25rem, 3vw, 2rem);
+  border: 1px solid rgba(30, 30, 30, 0.12);
+  background: rgba(162, 128, 97, 0.1);
+}
+
+.iss-register-place__comparison-heading {
+  display: grid;
+  gap: 0.55rem;
+}
+
+.iss-register-place__comparison-title {
+  margin: 0;
+  font-size: clamp(1.45rem, 1.2rem + 0.8vw, 2rem);
+  line-height: 1.1;
+}
+
+.iss-register-place__comparison-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 2px;
+}
+
+.iss-register-place__comparison-figure {
+  min-width: 0;
+  margin: 0;
+  background: var(--iss-white);
+}
+
+.iss-register-place__comparison-media {
+  position: relative;
+}
+
+.iss-register-place__comparison-image {
+  display: block;
+  width: 100%;
+  aspect-ratio: 4 / 3;
+  object-fit: cover;
+}
+
+.iss-register-place__comparison-label {
+  position: absolute;
+  bottom: 0.75rem;
+  left: 0.75rem;
+  padding: 0.35rem 0.55rem;
+  background: rgba(30, 30, 30, 0.82);
+  color: var(--iss-white);
+  font-size: 0.7rem;
+  font-weight: 750;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.iss-register-place__comparison-caption {
+  display: grid;
+  gap: 0.35rem;
+  padding: 0.7rem 0.8rem 0.8rem;
+  color: rgba(30, 30, 30, 0.72);
+  font-size: 0.75rem;
+  line-height: 1.45;
+}
+
+.iss-register-place__comparison-year {
+  color: rgba(30, 30, 30, 0.54);
+  font-weight: 700;
+}
+
+.iss-register-place__comparison-caption summary {
+  width: fit-content;
+  cursor: pointer;
+  font-weight: 650;
+}
+
+.iss-register-place__comparison-caption p {
+  margin: 0.35rem 0 0;
+  overflow-wrap: anywhere;
+}
+
+.iss-register-place__epoch-caption {
+  display: grid;
+  gap: 0.22rem;
+  padding: 0.55rem 0.65rem 0.62rem;
+  color: rgba(30, 30, 30, 0.7);
+  font-size: 0.7rem;
+  line-height: 1.4;
+}
+
+.iss-register-place__epoch-caption-text {
+  color: rgba(30, 30, 30, 0.86);
+  font-weight: 650;
+}
+
+.iss-register-place__epoch-credit {
+  color: rgba(30, 30, 30, 0.58);
+}
+
+.iss-register-place__epoch-image-details {
+  margin-top: 0.15rem;
+}
+
+.iss-register-place__epoch-image-details summary {
+  width: fit-content;
+  cursor: pointer;
+  font-weight: 650;
+}
+
+.iss-register-place__epoch-image-details p {
+  margin: 0.35rem 0 0;
+  overflow-wrap: anywhere;
+}
+
+.iss-register-place__epoch-sources {
+  margin-top: 0.3rem;
+  color: rgba(30, 30, 30, 0.62);
+  font-size: 0.78rem;
+  line-height: 1.5;
+}
+
+.iss-register-place__epoch-sources summary,
+.iss-register-place__dossier-details > summary {
+  width: fit-content;
+  cursor: pointer;
+  font-weight: 680;
+}
+
+.iss-register-place__epoch-source,
+.iss-register-place__epoch-source-confidence {
+  margin: 0.45rem 0 0;
+}
+
+.iss-register-place__epoch-source-confidence {
+  color: rgba(30, 30, 30, 0.52);
+  font-size: 0.7rem;
+  font-weight: 750;
+  text-transform: uppercase;
+}
+
+.iss-register-place__today-meta {
+  padding: 0.95rem 1rem;
+  border-left: 3px solid var(--iss-accent);
+  background: rgba(255, 255, 255, 0.72);
+}
+
+.iss-register-place__today-fact {
+  display: grid;
+  gap: 0.3rem;
+}
+
+.iss-register-place__dossier-details {
+  margin-top: 0.25rem;
+}
+
+.iss-register-place__dossier-details > summary {
+  padding: 0.72rem 0;
+  color: rgba(30, 30, 30, 0.72);
+}
+
+.iss-register-place__dossier-details[open] > summary {
+  color: var(--iss-black);
 }
 
 .iss-register-place__data-grid {
@@ -6868,8 +7099,116 @@ iss-info-panel--brown
   border-top-color: var(--iss-red);
 }
 
-.iss-register-place__interpretation-item--question {
-  border-top-color: var(--iss-blue);
+.iss-register-place-present {
+  scroll-margin-top: 2rem;
+  padding: clamp(3.5rem, 7vw, 6rem) 0;
+  background: var(--iss-black);
+  color: var(--iss-white);
+}
+
+.iss-register-place-present__inner {
+  display: grid;
+  grid-template-columns: minmax(15rem, 0.72fr) minmax(0, 1.28fr);
+  gap: clamp(2rem, 6vw, 5rem);
+  align-items: start;
+}
+
+.iss-register-place-present__heading,
+.iss-register-place-present__data {
+  display: grid;
+  gap: 1rem;
+}
+
+.iss-register-place-present .iss-kicker {
+  --iss-kicker-color: rgba(255, 255, 255, 0.72);
+  --iss-kicker-accent: var(--iss-accent);
+}
+
+.iss-register-place-present__title {
+  margin: 0;
+  color: var(--iss-white);
+  font-size: clamp(2rem, 1.65rem + 1.25vw, 3rem);
+  line-height: 1.02;
+}
+
+.iss-register-place-present .iss-register-place__today-meta {
+  border-left-color: var(--iss-accent);
+  background: rgba(255, 255, 255, 0.07);
+}
+
+.iss-register-place-present .iss-register-place__today-label,
+.iss-register-place-present .iss-register-place__data-label,
+.iss-register-place-present .iss-register-place__interpretation-label {
+  color: rgba(255, 255, 255, 0.52);
+}
+
+.iss-register-place-present .iss-register-place__today-value,
+.iss-register-place-present .iss-register-place__data-value,
+.iss-register-place-present .iss-register-place__interpretation-text,
+.iss-register-place-present .iss-register-place__data-value a {
+  color: rgba(255, 255, 255, 0.9);
+}
+
+.iss-register-place-present .iss-register-place__dossier-details {
+  margin: 0;
+}
+
+.iss-register-place-present .iss-register-place__dossier-details > summary,
+.iss-register-place-present .iss-register-place__dossier-details[open] > summary {
+  color: rgba(255, 255, 255, 0.8);
+}
+
+.iss-register-place-present .iss-register-place__data-grid {
+  border-top-color: rgba(255, 255, 255, 0.72);
+}
+
+.iss-register-place-present .iss-register-place__data-item {
+  border-bottom-color: rgba(255, 255, 255, 0.14);
+}
+
+.iss-register-place-present .iss-register-place__data-item:nth-child(odd) {
+  border-right-color: rgba(255, 255, 255, 0.12);
+}
+
+.iss-register-place-contribution {
+  scroll-margin-top: 2rem;
+  padding: clamp(3.5rem, 7vw, 6rem) 0;
+  border-bottom: 1px solid rgba(30, 30, 30, 0.12);
+  background: rgba(162, 128, 97, 0.14);
+}
+
+.iss-register-place-contribution__inner {
+  display: grid;
+  grid-template-columns: minmax(0, 1.05fr) minmax(18rem, 0.95fr);
+  gap: clamp(2rem, 6vw, 5rem);
+  align-items: center;
+}
+
+.iss-register-place-contribution__copy {
+  display: grid;
+  gap: 0.9rem;
+}
+
+.iss-register-place-contribution__title {
+  max-width: 18ch;
+  margin: 0;
+  font-size: clamp(2rem, 1.6rem + 1.4vw, 3.1rem);
+  line-height: 1.02;
+  text-wrap: balance;
+}
+
+.iss-register-place-contribution__text {
+  max-width: 42rem;
+  margin: 0;
+  color: rgba(30, 30, 30, 0.72);
+  line-height: 1.65;
+}
+
+.iss-register-place__upload-intake {
+  --iss-upload-intake-background: rgba(255, 255, 255, 0.68);
+  --iss-upload-intake-margin: 0;
+  --iss-upload-intake-padding: clamp(1.1rem, 2.5vw, 1.5rem);
+  --iss-upload-intake-rule: rgba(30, 30, 30, 0.14);
 }
 
 @media (max-width: 900px) {
@@ -6880,16 +7219,38 @@ iss-info-panel--brown
   .iss-register-place-atlas .iss-atlas-slice__stage {
     width: 100%;
     height: auto;
+    min-height: 11rem;
   }
 
   .iss-register-place__dossier-grid,
   .iss-register-place__data-grid,
-  .iss-register-place__interpretation {
+  .iss-register-place__interpretation,
+  .iss-register-place-present__inner,
+  .iss-register-place-contribution__inner {
     grid-template-columns: 1fr;
   }
 
   .iss-register-place__network-rail {
     position: static;
+    margin-top: clamp(2.5rem, 7vw, 4rem);
+    padding-top: 1.5rem;
+    border-top: 2px solid var(--iss-black);
+  }
+
+  .iss-register-place__epoch-row.has-media {
+    grid-template-columns: minmax(5.2rem, 7rem) minmax(0, 1fr);
+  }
+
+  .iss-register-place__epoch-row.has-media .iss-register-place__epoch-body,
+  .iss-register-place__epoch-row.has-media:nth-child(even) .iss-register-place__epoch-body {
+    grid-row: 1;
+    grid-column: 2;
+  }
+
+  .iss-register-place__epoch-row.has-media .iss-register-place__epoch-figure,
+  .iss-register-place__epoch-row.has-media:nth-child(even) .iss-register-place__epoch-figure {
+    grid-row: 2;
+    grid-column: 2;
   }
 
   .iss-register-place__data-item,
@@ -6908,9 +7269,32 @@ iss-info-panel--brown
     --iss-hero-min-h: 25rem;
   }
 
-  .iss-register-place__epoch-row {
+  .iss-register-place__epoch-row,
+  .iss-register-place__epoch-row.has-media {
     grid-template-columns: 1fr;
     gap: 0.45rem;
+  }
+
+  .iss-register-place__epoch-figure {
+    margin-top: 0.45rem;
+  }
+
+  .iss-register-place__fact-band .iss-register-place__fact {
+    padding-right: 0.6rem;
+    padding-left: 0.6rem;
+  }
+
+  .iss-register-place__fact-label {
+    font-size: 0.62rem;
+  }
+
+  .iss-register-place__fact-value {
+    font-size: 0.76rem;
+  }
+
+  .iss-register-place__comparison-grid {
+    grid-template-columns: 1fr;
+    gap: 1rem;
   }
 }
 

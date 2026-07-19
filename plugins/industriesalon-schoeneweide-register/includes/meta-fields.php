@@ -45,6 +45,10 @@ function iss_register_get_meta_schema(): array
 {
     return [
         'register_id' => ['type' => 'string', 'label' => 'Register ID', 'input' => 'text', 'show_in_rest' => true, 'admin' => true],
+        'construction_period' => ['type' => 'string', 'label' => 'Entstehungszeit', 'input' => 'text', 'show_in_rest' => true, 'admin' => true],
+        'original_name' => ['type' => 'string', 'label' => 'Ursprünglicher Name', 'input' => 'text', 'show_in_rest' => true, 'admin' => true],
+        'monument_status' => ['type' => 'string', 'label' => 'Denkmalstatus', 'input' => 'text', 'show_in_rest' => true, 'admin' => true],
+        'monument_record_url' => ['type' => 'string', 'label' => 'Denkmaldatenbank', 'input' => 'text', 'show_in_rest' => true, 'admin' => true],
         'area' => ['type' => 'string', 'label' => 'Gebiet', 'input' => 'text', 'show_in_rest' => true, 'admin' => true],
         'address' => ['type' => 'string', 'label' => 'Adresse', 'input' => 'text', 'show_in_rest' => true, 'admin' => true],
         'lat' => ['type' => 'number', 'label' => 'Lat', 'input' => 'number', 'show_in_rest' => true, 'admin' => true],
@@ -289,7 +293,7 @@ function iss_register_get_meta_box_groups(): array
             'context' => 'normal',
             'priority' => 'high',
             'description' => __('Für einen nutzbaren Atlas-Ort reichen der Titel oben, Adresse, Koordinaten und mindestens ein kurzer öffentlicher Text. Alles andere kann später ergänzt werden.', 'industriesalon-schoeneweide-register'),
-            'fields' => ['area', 'address', 'lat', 'lng', 'coordinates_accuracy', 'status', 'role', 'current_status', 'current_use_type', 'place_visibility', 'is_unclear', 'sort_order'],
+            'fields' => ['register_id', 'address', 'construction_period', 'original_name', 'monument_status', 'monument_record_url', 'area', 'lat', 'lng', 'coordinates_accuracy', 'status', 'role', 'current_status', 'current_use_type', 'place_visibility', 'is_unclear', 'sort_order'],
         ],
         'atlas_public' => [
             'title' => __('Öffentliche Atlas-Texte', 'industriesalon-schoeneweide-register'),
@@ -310,7 +314,7 @@ function iss_register_get_meta_box_groups(): array
             'context' => 'normal',
             'priority' => 'default',
             'description' => __('Diese Angaben bleiben wichtig für Recherche und längere Dossiers, sind aber nicht nötig, um einen Ort zuerst im Atlas sichtbar zu machen.', 'industriesalon-schoeneweide-register'),
-            'fields' => ['register_id', 'owner', 'operator', 'developer', 'tenant', 'investment', 'size', 'jobs', 'previous_use', 'history_long', 'research_note', 'source_links', 'legacy_website', 'legacy_kaufpreis', 'legacy_questions', 'legacy_icon', 'legacy_color'],
+            'fields' => ['owner', 'operator', 'developer', 'tenant', 'investment', 'size', 'jobs', 'previous_use', 'history_long', 'research_note', 'source_links', 'legacy_website', 'legacy_kaufpreis', 'legacy_questions', 'legacy_icon', 'legacy_color'],
         ],
     ];
 }
@@ -327,25 +331,25 @@ function iss_register_render_fields_table(WP_Post $post, array $field_keys): voi
 
         $field = $schema[$key];
         $value = get_post_meta($post->ID, $key, true);
-        $label = esc_html($field['label']);
-        $input_name = 'iss_register_meta[' . esc_attr($key) . ']';
+        $label = (string) $field['label'];
+        $input_name = 'iss_register_meta[' . $key . ']';
 
         echo '<tr>';
-        echo '<th scope="row"><label for="iss-register-' . esc_attr($key) . '">' . $label . '</label></th>';
+        echo '<th scope="row"><label for="iss-register-' . esc_attr($key) . '">' . esc_html($label) . '</label></th>';
         echo '<td>';
 
         if ($field['input'] === 'textarea') {
-            echo '<textarea id="iss-register-' . esc_attr($key) . '" name="' . $input_name . '" class="large-text" rows="3">' . esc_textarea((string) $value) . '</textarea>';
+            echo '<textarea id="iss-register-' . esc_attr($key) . '" name="' . esc_attr($input_name) . '" class="large-text" rows="3">' . esc_textarea((string) $value) . '</textarea>';
         } elseif ($field['input'] === 'select') {
             $options = isset($field['options']) && is_array($field['options']) ? $field['options'] : [];
-            echo '<select id="iss-register-' . esc_attr($key) . '" name="' . $input_name . '" class="regular-text">';
+            echo '<select id="iss-register-' . esc_attr($key) . '" name="' . esc_attr($input_name) . '" class="regular-text">';
             foreach ($options as $option_value => $option_label) {
                 echo '<option value="' . esc_attr((string) $option_value) . '" ' . selected((string) $value, (string) $option_value, false) . '>' . esc_html((string) $option_label) . '</option>';
             }
             echo '</select>';
         } elseif ($field['input'] === 'array_textarea') {
             $array_value = is_array($value) ? $value : [];
-            echo '<textarea id="iss-register-' . esc_attr($key) . '" name="' . $input_name . '" class="large-text" rows="4">' . esc_textarea(implode("\n", $array_value)) . '</textarea>';
+            echo '<textarea id="iss-register-' . esc_attr($key) . '" name="' . esc_attr($input_name) . '" class="large-text" rows="4">' . esc_textarea(implode("\n", $array_value)) . '</textarea>';
         } elseif ($field['input'] === 'image_group') {
             $images = iss_register_sanitize_image_group($value);
             $json_value = wp_json_encode($images, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
@@ -356,13 +360,13 @@ function iss_register_render_fields_table(WP_Post $post, array $field_keys): voi
             echo '<div class="iss-register-image-group__rows"></div>';
             echo '<p><button type="button" class="button iss-register-image-group__add">Bild hinzufügen</button></p>';
             echo '</div>';
-            echo '<textarea id="iss-register-' . esc_attr($key) . '" name="' . $input_name . '" class="iss-register-image-group__input" rows="2" style="display:none;">' . esc_textarea($json_value) . '</textarea>';
+            echo '<textarea id="iss-register-' . esc_attr($key) . '" name="' . esc_attr($input_name) . '" class="iss-register-image-group__input" rows="2" style="display:none;">' . esc_textarea($json_value) . '</textarea>';
             echo '<p class="description">Nur Bilder mit Sichtbarkeit <code>public</code> werden im öffentlichen REST-Output ausgegeben.</p>';
         } elseif ($field['input'] === 'checkbox') {
-            echo '<label><input id="iss-register-' . esc_attr($key) . '" type="checkbox" name="' . $input_name . '" value="1" ' . checked((int) $value, 1, false) . '> Ja</label>';
+            echo '<label><input id="iss-register-' . esc_attr($key) . '" type="checkbox" name="' . esc_attr($input_name) . '" value="1" ' . checked((int) $value, 1, false) . '> Ja</label>';
         } else {
             $input_type = $field['input'] === 'number' ? 'number' : 'text';
-            echo '<input id="iss-register-' . esc_attr($key) . '" type="' . esc_attr($input_type) . '" name="' . $input_name . '" class="regular-text" value="' . esc_attr((string) $value) . '">';
+            echo '<input id="iss-register-' . esc_attr($key) . '" type="' . esc_attr($input_type) . '" name="' . esc_attr($input_name) . '" class="regular-text" value="' . esc_attr((string) $value) . '">';
         }
 
         $description = trim((string) ($field['description'] ?? ''));

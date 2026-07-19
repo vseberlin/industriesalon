@@ -308,6 +308,26 @@ function iss_content_editorial_sets_event_drop_target_context(string $target_key
         }
     }
 
+    $place_prefix = 'ort__';
+    if (strpos($target_key, $place_prefix) === 0) {
+        $place_slug = sanitize_title(substr($target_key, strlen($place_prefix)));
+        $place = $place_slug !== '' && post_type_exists('register_place')
+            ? get_page_by_path($place_slug, OBJECT, 'register_place')
+            : null;
+        if ($place instanceof WP_Post) {
+            return [
+                'post' => $place,
+                'context_type' => 'register_place',
+                'context_id' => (int) $place->ID,
+                'set_id' => 0,
+                'set_key' => 'event-drop-' . $target_key,
+                'set_title' => sprintf(__('Ort-Beitrag: %s', 'iss-content-model'), get_the_title($place)),
+                'set_role' => 'intake',
+                'link_role' => 'source_material',
+            ];
+        }
+    }
+
     $event = iss_content_editorial_sets_event_drop_context_post($target_key);
     if ($event instanceof WP_Post) {
         return [

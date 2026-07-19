@@ -4,6 +4,26 @@ This file records durable project changes. Keep it compact: current state belong
 `handoff_CURRENT.md`, active follow-up in `TODO.md`, and detailed investigation can
 be recovered from Git history.
 
+## 2026-07-19
+
+- Redesigned the `register_place` dossier around an image-led hero, compact
+  public identity band, epoch rail with archival media and source disclosure,
+  present-day data panel, contribution intake, related rails, and bottom Atlas.
+  Added construction/original-name/monument fields and a replayable Kino
+  Spreehöfe migration plus paired historical-media uploads artifact; removed
+  the redundant post-content history chapter because the curated epochs now
+  carry that narrative.
+- Added the accepted repo-owned Place editorial and interactive Atlas
+  restructuring plan. It moves ordinary Place ownership toward `iss-content`,
+  uses the shared `iss-editorial` JSON engine and theme renderer, keeps
+  query-critical facts outside narrative JSON, preserves epoch/state tables as
+  derived projections during migration, moves semantic actors toward graph
+  organizations, keeps ordered routes in `iss-relations`, and targets a compact
+  `iss-frontend` Atlas projection with explicit payload/cache budgets. The plan
+  also records complete TouchTable runtime retirement: live TouchTable and SQL
+  backup remain the recovery source, with target inventory and backup required
+  before obsolete snapshot rows are removed.
+
 ## 2026-07-12
 
 - Added a paired migration and checksummed upload artifact for About landing
