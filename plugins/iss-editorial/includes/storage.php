@@ -41,6 +41,9 @@ function iss_editorial_sanitize_reference($reference): array
         'thumbnail' => esc_url_raw((string) ($reference['thumbnail'] ?? '')),
     ];
 
+    if (isset($reference['editorial_set_item_id'])) {
+        $sanitized['editorial_set_item_id'] = (string) absint($reference['editorial_set_item_id']);
+    }
     if (isset($reference['set_id'])) {
         $sanitized['set_id'] = (string) absint($reference['set_id']);
     }
@@ -532,9 +535,11 @@ function iss_editorial_sanitize_section(array $section, array $format): array
     }
 
     if (iss_editorial_format_supports_section_field($format, $type, 'items')) {
-        $sanitized['items'] = in_array($type, ['text_bild_reihe', 'map_img'], true)
+        $sanitized['items'] = ($format['sections'][$type]['items_kind'] ?? '') === 'text'
+            ? array_values(array_filter(array_map('sanitize_text_field', (array) ($section['items'] ?? []))))
+            : (in_array($type, ['text_bild_reihe', 'map_img'], true)
             ? iss_editorial_sanitize_text_image_item_list($section['items'] ?? [])
-            : iss_editorial_sanitize_gateway_item_list($section['items'] ?? []);
+            : iss_editorial_sanitize_gateway_item_list($section['items'] ?? []));
     }
 
     if (iss_editorial_format_supports_section_field($format, $type, 'slot_key')) {
@@ -642,7 +647,7 @@ function iss_editorial_sanitize_section(array $section, array $format): array
         $sanitized['orientation'] = in_array($orientation, ['media-left', 'media-right'], true) ? $orientation : 'media-left';
     }
 
-    return $sanitized;
+    return (array) apply_filters('iss_editorial_sanitized_section', $sanitized, $section, $format);
 }
 
 function iss_editorial_normalize_section_alias(array $section, array $format): array
@@ -731,7 +736,109 @@ function iss_editorial_sanitize_document($document, string $format_slug): array
         }
     }
 
-    return $sanitized;
+    return (array) apply_filters('iss_editorial_sanitized_document', $sanitized, $document, $format);
+}
+
+/**
+ * Validate before normalization can discard an author's content.
+ *
+ * @return array|WP_Error
+ */
+function iss_editorial_validate_document($value, string $format_slug)
+{
+    $format = iss_editorial_get_format($format_slug);
+    $document = is_string($value) ? json_decode($value, true) : $value;
+    if (!$format || !is_array($document) || (is_string($value) && json_last_error() !== JSON_ERROR_NONE)) {
+        return new WP_Error('editorial_invalid_json', __('Der Inhalt konnte nicht gelesen werden. Die gespeicherte Fassung bleibt erhalten.', 'iss-editorial'));
+    }
+    if (($document['schema_version'] ?? null) !== 1 || !isset($document['sections']) || !is_array($document['sections']) || !array_is_list($document['sections'])) {
+        return new WP_Error('editorial_invalid_schema', __('Dieses Dokumentformat wird nicht unterstützt. Die gespeicherte Fassung bleibt erhalten.', 'iss-editorial'));
+    }
+    $allowed_document_fields = (array) apply_filters('iss_editorial_document_fields', ['schema_version', 'skin', 'variant', 'features', 'sections', 'deleted_sections'], $format);
+    foreach ($document as $key => $value) {
+        if (!in_array($key, $allowed_document_fields, true) && $value !== '' && $value !== [] && $value !== null) {
+            return new WP_Error('editorial_unknown_field', sprintf(__('Ein unbekanntes Dokumentfeld muss geprüft werden: %s.', 'iss-editorial'), $key));
+        }
+    }
+    if (isset($document['skin']) && !in_array($document['skin'], array_column(iss_editorial_get_format_skins($format_slug), 'slug'), true)) {
+        return new WP_Error('editorial_invalid_skin', __('Bitte eine verfügbare Darstellung wählen.', 'iss-editorial'));
+    }
+    foreach (['variant', 'entity_key'] as $key) {
+        if (isset($document[$key]) && !is_string($document[$key])) {
+            return new WP_Error('editorial_invalid_field', sprintf(__('Bitte das Dokumentfeld „%s“ prüfen.', 'iss-editorial'), $key));
+        }
+    }
+    if (isset($document['features']) && (!is_array($document['features']) || $document['features'] !== iss_editorial_sanitize_document_features($document['features']))) {
+        return new WP_Error('editorial_invalid_features', __('Bitte die Dokumentdarstellung prüfen.', 'iss-editorial'));
+    }
+    foreach (['sections', 'deleted_sections'] as $list_key) {
+        $list = $document[$list_key] ?? [];
+        if (!is_array($list) || !array_is_list($list)) {
+            return new WP_Error('editorial_invalid_sections', __('Die Abschnittsliste konnte nicht gelesen werden.', 'iss-editorial'));
+        }
+        foreach ($list as $index => $section) {
+            if (!is_array($section)) {
+                return new WP_Error('editorial_invalid_section', sprintf(__('Abschnitt %d konnte nicht gelesen werden.', 'iss-editorial'), $index + 1));
+            }
+            if (!isset($section['type']) || !is_string($section['type'])) {
+                return new WP_Error('editorial_invalid_section', sprintf(__('Abschnitt %d hat keinen gültigen Typ.', 'iss-editorial'), $index + 1));
+            }
+            $section = iss_editorial_normalize_section_alias($section, $format);
+            $type = (string) ($section['type'] ?? '');
+            if (!isset($format['sections'][$type])) {
+                return new WP_Error('editorial_unknown_section', sprintf(__('Abschnitt %d hat einen unbekannten Typ (%s). Er wurde nicht entfernt.', 'iss-editorial'), $index + 1, $type));
+            }
+            $supports = (array) $format['sections'][$type]['supports'];
+            $allowed = array_merge(['type', 'kicker', 'title', 'body', 'anchor', 'deleted_at', 'original_index'], $supports);
+            if (in_array('quote', $supports, true)) {
+                $allowed[] = 'attribution';
+            }
+            foreach ($section as $key => $value) {
+                if (!in_array($key, $allowed, true) && $value !== '' && $value !== [] && $value !== null) {
+                    return new WP_Error('editorial_unsupported_field', sprintf(__('Abschnitt %1$d: Das Feld „%2$s“ wird hier nicht unterstützt. Der Inhalt bleibt erhalten.', 'iss-editorial'), $index + 1, $key));
+                }
+            }
+            $collections = ['media_refs', 'object_refs', 'links', 'facts', 'items', 'sheets', 'source_refs', 'dynamic_refs', 'rail_options', 'album_source'];
+            foreach (array_diff($allowed, $collections) as $key) {
+                if (isset($section[$key]) && !is_scalar($section[$key])) {
+                    return new WP_Error('editorial_invalid_field', sprintf(__('Abschnitt %1$d: Bitte „%2$s“ prüfen.', 'iss-editorial'), $index + 1, $key));
+                }
+            }
+            foreach ($collections as $key) {
+                if (isset($section[$key]) && !is_array($section[$key])) {
+                    return new WP_Error('editorial_invalid_field', sprintf(__('Abschnitt %1$d: Bitte „%2$s“ prüfen.', 'iss-editorial'), $index + 1, $key));
+                }
+            }
+            $normalized = iss_editorial_sanitize_section($section, $format);
+            foreach (['media_refs', 'object_refs', 'links', 'facts', 'items', 'sheets', 'source_refs', 'dynamic_refs'] as $key) {
+                if (!isset($section[$key]) || $section[$key] === []) {
+                    continue;
+                }
+                if (!is_array($section[$key]) || !array_is_list($section[$key]) || count($section[$key]) !== count((array) ($normalized[$key] ?? []))) {
+                    return new WP_Error('editorial_incomplete_items', sprintf(__('Abschnitt %1$d: Bitte die Einträge unter „%2$s“ vervollständigen oder entfernen.', 'iss-editorial'), $index + 1, $key));
+                }
+            }
+            if (!empty($section['treatment']) && ($normalized['treatment'] ?? '') !== $section['treatment']) {
+                return new WP_Error('editorial_invalid_treatment', sprintf(__('Abschnitt %d: Bitte eine verfügbare Darstellung wählen.', 'iss-editorial'), $index + 1));
+            }
+            foreach (['gallery_layout', 'media_layout', 'quote_treatment', 'section_treatment', 'orientation', 'era_key', 'function_key', 'source_confidence', 'start_year', 'end_year'] as $key) {
+                if (isset($section[$key]) && $section[$key] !== '' && (string) $section[$key] !== (string) ($normalized[$key] ?? '')) {
+                    return new WP_Error('editorial_invalid_field', sprintf(__('Abschnitt %1$d: Bitte „%2$s“ prüfen.', 'iss-editorial'), $index + 1, $key));
+                }
+            }
+            $slots = (array) ($format['sections'][$type]['slots'] ?? []);
+            if ($slots && !isset($slots[$section['slot_key'] ?? ''])) {
+                return new WP_Error('editorial_invalid_slot', sprintf(__('Abschnitt %d: Bitte die automatischen Inhalte auswählen.', 'iss-editorial'), $index + 1));
+            }
+            if ($slots && !empty($section['treatment']) && $section['treatment'] !== $slots[$section['slot_key']]['treatment']) {
+                return new WP_Error('editorial_invalid_slot', sprintf(__('Abschnitt %d: Automatischer Inhalt und Darstellung passen nicht zusammen.', 'iss-editorial'), $index + 1));
+            }
+            if (!empty($section['start_year']) && !empty($section['end_year']) && (int) $section['end_year'] < (int) $section['start_year']) {
+                return new WP_Error('editorial_invalid_dates', sprintf(__('Abschnitt %d: Das Ende liegt vor dem Beginn.', 'iss-editorial'), $index + 1));
+            }
+        }
+    }
+    return apply_filters('iss_editorial_validated_document', iss_editorial_sanitize_document($document, $format_slug), $document, $format);
 }
 
 function iss_editorial_encode_document(array $document): string
@@ -747,10 +854,10 @@ function iss_editorial_get_document(int $post_id, string $format_slug, bool $pre
         return [];
     }
 
-    if ($prefer_autosave) {
-        $autosave = get_post_meta($post_id, iss_editorial_get_autosave_meta_key($format_slug), true);
-        if (is_string($autosave) && trim($autosave) !== '') {
-            return iss_editorial_sanitize_document($autosave, $format_slug);
+    if ($prefer_autosave && current_user_can('edit_post', $post_id)) {
+        $draft = iss_editorial_get_draft($post_id, $format_slug);
+        if ($draft) {
+            return iss_editorial_sanitize_document($draft['document'], $format_slug);
         }
     }
 
@@ -778,13 +885,20 @@ function iss_editorial_save_document(int $post_id, string $format_slug, $documen
         return false;
     }
 
-    $document = iss_editorial_sanitize_document($document, $format_slug);
-    if (!$document) {
+    $document = iss_editorial_validate_document($document, $format_slug);
+    if (is_wp_error($document)) {
         return false;
     }
 
-    $meta_key = $autosave ? iss_editorial_get_autosave_meta_key($format_slug) : iss_editorial_get_document_meta_key($format_slug);
-    update_post_meta($post_id, $meta_key, wp_slash(iss_editorial_encode_document($document)));
+    if ($autosave) {
+        return !is_wp_error(iss_editorial_save_draft($post_id, $format_slug, $document, iss_editorial_document_is_enabled($post_id, $format_slug)));
+    }
+    $meta_key = iss_editorial_get_document_meta_key($format_slug);
+    $encoded = iss_editorial_encode_document($document);
+    update_post_meta($post_id, $meta_key, wp_slash($encoded));
+    if (get_metadata_raw('post', $post_id, $meta_key, true) !== $encoded) {
+        return false;
+    }
     if (!$autosave) {
         $skin_meta_key = iss_editorial_get_skin_meta_key($format_slug);
         if ($skin_meta_key !== '') {
@@ -798,6 +912,15 @@ function iss_editorial_save_document(int $post_id, string $format_slug, $documen
 
 function iss_editorial_document_is_enabled(int $post_id, string $format_slug): bool
 {
+    if (!empty(iss_editorial_get_format($format_slug)['always_enabled'])) {
+        return $post_id > 0;
+    }
+    if (iss_editorial_should_prefer_preview_autosave($post_id, $format_slug)) {
+        $draft = iss_editorial_get_draft($post_id, $format_slug);
+        if ($draft) {
+            return $draft['enabled'];
+        }
+    }
     return $post_id > 0 && get_post_meta($post_id, iss_editorial_get_enabled_meta_key($format_slug), true) === '1';
 }
 
@@ -812,6 +935,7 @@ function iss_editorial_set_document_enabled(int $post_id, string $format_slug, b
 
 function iss_editorial_get_read_model(int $post_id, string $format_slug, bool $prefer_autosave = false): array
 {
+    $prefer_autosave = $prefer_autosave || iss_editorial_should_prefer_preview_autosave($post_id, $format_slug);
     $document = iss_editorial_get_document($post_id, $format_slug, $prefer_autosave);
     if (!$document) {
         return [];

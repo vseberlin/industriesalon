@@ -15,17 +15,134 @@ This is the implementation checkpoint for the SOW in
   canonical owners of their data. `iss-editorial` stores typed references only.
 - The theme owns public HTML and CSS. It consumes `iss_editorial_get_read_model()`
   and does not decode storage JSON directly.
-- When `iss-editorial` is active, registered editorial post types leave the
-  Gutenberg block editor. The expected `ausstellung` editor surface is a custom
+- When `iss-editorial` is active, enabled documents and eligible new auto-drafts use
+  the shared editor. Existing disabled documents retain their legacy editor and
+  public authority. The shared editor surface is a custom
   main-canvas composition UI below the title, with section gestures on the left,
   ordered section cards in the main area, and section editing in modals. Media
   selection uses the WordPress media library inside the section modal. Archive
   object selection uses the archive picker modal: attached/context buckets first,
   object thumbnails after bucket choice, and faceted object search as the
   secondary fallback.
-- Media/object intake buckets are a separate future workflow documented in
-  `docs/architecture/editorial-media-buckets.md`. Buckets are private review
-  state; public renderers consume only promoted `media_refs` / `object_refs`.
+- Media/object intake Sets are implemented in `iss-content` and documented in
+  `docs/architecture/editorial-media-buckets.md`. Sets are private review
+  state; public renderers consume only saved `media_refs` / `object_refs`.
+
+## Material and optional Rückblicke
+
+Events, exhibitions, projects and tours can create a separate optional Rückblick
+from **Material & Rückblicke → Rückblick anlegen**. The original offer/date stays
+intact. A Rückblick can refer to several source posts and has an optional date for
+one occurrence of a recurring tour. Sources are canonical `iss-graph` edges:
+family/type `reports_on`, source system `iss_content_rueckblick`, from report to
+source. Publication/withdrawal updates the edge flag; public cards also verify
+current post status. The theme reuses the ordered exhibition renderer/Chronik skin
+and shared related-card renderer, with a native `single-rueckblick` template.
+Relationship cards are composed on the native `core/post-content` block for the
+queried post. They must not be appended through `the_content`: automatic card
+excerpts also run that filter and would recursively render the relationships.
+
+The source and report share existing private Sets. If necessary a source Set is
+created when connecting the report, so later submissions enter that same Set.
+Removing a report's source relation does not delete previously shared material.
+**Zum Entwurf hinzufügen** requires reviewed material, an explicit destination,
+and current document/draft tokens. Images enter `galerie`, documents `material`.
+It prepares the current editor's native autosave; restore it in the editor, inspect
+preview, then Save Draft / Update / Publish normally. It never silently enables
+an existing legacy document. `editorial_set_item_id` records provenance; actual
+canonical saves record all confirmed uses in the existing Set audit history.
+Use history is historical and does not claim that removed references remain live.
+The Set picker excludes unapproved/rejected items and pages through Sets/items.
+Validation rechecks stamped references before save/preview, including approval
+withdrawn after a draft was prepared. Deleted sections do not count as uses.
+
+**Beiträge von Gästen → Upload geöffnet**, followed by native Save/Update,
+controls a shareable link bound to one post. Closing and reopening invalidates
+older links. Add an `upload_intake` section for a public invitation, or share the
+link directly. Existing upload sections remain open until explicitly closed;
+new content defaults closed. The existing Event Drop receiver loads WordPress to
+verify the post and link on every GET/POST. Legacy code URLs may upload only into
+an open, resolvable context. Files remain in intake for rights review. Supported
+extensions: JPG/JPEG, PNG, GIF, WebP; MP4/MOV/M4V/MKV/WebM/AVI; ZIP;
+PDF, DOCX, PPTX, XLSX, ODT. The server verifies extension/MIME compatibility.
+
+Validation commands (local Docker stack):
+
+```bash
+docker compose run --rm -T --no-deps -v "$PWD/tests/e2e/bin:/tmp/iss-tests:ro" wpcli eval-file /tmp/iss-tests/editorial-sets.php --allow-root
+node tests/e2e/bin/editorial-set-ui.cjs
+```
+
+The integration harness creates and removes its own records, including momentary
+local publication fixtures to test public/withdrawn report edges. It verifies that
+pre-existing Sets/items/links are unchanged. It must not run against production.
+
+## Shared editing and recovery
+
+Eligible landing pages, exhibitions, projects, tours, publications, retrospectives,
+Places and events share `iss-editorial`'s section canvas, WordPress text editor,
+media/link controls, keyboard reordering, trash, preview and recovery controls.
+The section registry still decides what each content type supports. Dates, booking,
+route stations and other structured facts retain their owning plugin interfaces.
+This does not migrate other pages or disabled CPT documents into JSON.
+
+Events register an adapter from `iss-content` to the existing `_iss_content_json`
+key. `_iss_entity_key` continues to determine event structure and public skin.
+The old event script is only a fallback when the shared engine is inactive.
+Event material lists and existing references are preserved. Automatic landing
+content choices and their treatments come from one PHP registry entry.
+Section, archive and Set dialogs share one focus lifecycle: Tab stays inside
+the active dialog, Escape closes that layer, and focus returns to its opener.
+The pickers accept the shared focus handler as an optional callback, preserving
+their existing standalone consumers. Adding archive references keeps the labels
+and context of references already selected; panel counts update with their lists.
+
+Section edits, title and excerpt are autosaved after an idle interval to the
+current author's native WordPress autosave revision. A successful server response
+is required before reporting that a draft is secured. Reloading offers explicit
+recovery or discard when a different own draft exists; neither choice publishes.
+The classic edit screen's post-field-only cleanup must not delete editorial
+autosaves containing JSON changes. A narrowly scoped `pre_delete_post` filter
+retains those revisions on edit-screen GET requests; normal save and explicit
+draft discard keep their native deletion path.
+Draft recovery preserves unfinished entries, including a link whose address is
+still missing. Such a draft is secured with a diagnostic; preview and publication
+wait until the entries are completed or removed.
+WordPress Update / Publish saves the permanent document and its enabled state.
+The canvas replaces classic autosave for these fields, while heartbeat keeps
+WordPress's post locking. Other fact and relation fields retain their existing
+save contracts; they are not part of JSON draft recovery.
+Project ordering joins the original `wp_insert_post_data` update, avoiding a
+recursive `save_post` update that would invalidate the editorial version token.
+
+Canonical and draft tokens reject stale saved versions and competing tabs.
+Validation runs before the main WordPress update and before owner save hooks:
+malformed JSON, unsupported schema/sections, unsupported populated section fields,
+incomplete list entries, invalid registered choices and incompatible slots fail
+without normalizing away the submitted content. An invalid stored document is
+shown with a blocking diagnostic. Existing hidden gesture types remain visible
+in stored documents even when they are unavailable in the insertion palette.
+Security sanitization remains in the storage layer.
+
+Document, skin and enabled metadata, plus event structure, participate in WordPress revisions. The
+native revision comparison includes section changes; restoration invokes the
+existing document-saved contract to rebuild owner projections. Preview reads
+the current author's draft only for the requested post.
+
+Regression checks:
+
+- `node --test tests/e2e/bin/editorial-ui.cjs` checks the common DOM interactions,
+  recovery and failed-save behavior; it stubs WordPress rich editing and is not a
+  substitute for browser checks of TinyMCE, media dialogs or responsive layout.
+- `docker compose run --rm -T --no-deps -v "$PWD/tests/e2e/bin/editorial-storage.php:/tmp/editorial-storage.php:ro" wpcli eval-file /tmp/editorial-storage.php --allow-root`
+  validates stored documents and exercises drafts, version conflicts, atomic
+  validation, native revision restore, authenticated admin/AJAX and preview
+  requests using temporary records. It removes
+  its fixtures and verifies existing post content/meta are unchanged.
+
+This editor rollout requires code only: no content or template migration and no
+uploads artifact. Existing enabled flags and database template overrides remain
+the authority for already published content.
 
 ## Rollout
 
@@ -314,8 +431,8 @@ Lesung, Präsentation, Workshop, Konzert, Film, and Repair Cafe for search and
 filter use.
 
 All current Veranstaltungen have curated `_iss_entity_key` and reviewed
-`_iss_content_json`. The active editor surface is the `Struktur` box, not the
-Gutenberg content canvas. The public single template renders valid JSON through
+`_iss_content_json`. The active editor surface is the shared section canvas;
+event structure remains in its existing facts panel. The public single template renders valid JSON through
 the theme helper and falls back to `post_content` only when no valid structured
 document exists.
 
@@ -386,10 +503,9 @@ Archivset. Rendering can still resolve by object ID, but the provenance stays
 available for future captions and source context. Veranstaltung references use
 the leaner event path above.
 
-Editors save reviewed structure changes through the canvas' explicit `Speichern`
-action. That route writes the permanent JSON document and the enabled flag
-together. WordPress' default update action is only needed for WordPress-owned
-post fields such as title, slug, status, taxonomies, or other metabox data.
+Editors save reviewed structure changes through WordPress Update / Publish,
+along with WordPress-owned fields. Automatic draft saving and section-modal
+`Fertig` do not publish changes.
 
 For the current Ausstellung pilot, Phase 2 covers archive-object and media
 selection only. Archive-object selection uses the existing bucket-first archive

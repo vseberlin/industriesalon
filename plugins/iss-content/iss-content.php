@@ -125,6 +125,7 @@ require_once ISS_CONTENT_MODEL_PATH . 'includes/editorial-sets-promotion.php';
 require_once ISS_CONTENT_MODEL_PATH . 'includes/editorial-sets-rest.php';
 require_once ISS_CONTENT_MODEL_PATH . 'includes/editorial-sets-admin.php';
 require_once ISS_CONTENT_MODEL_PATH . 'includes/editorial-sets-integrations.php';
+require_once ISS_CONTENT_MODEL_PATH . 'includes/editorial-contributions.php';
 require_once ISS_CONTENT_MODEL_PATH . 'includes/fallback-projection.php';
 require_once ISS_CONTENT_MODEL_PATH . 'includes/fallback-mode.php';
 require_once ISS_CONTENT_MODEL_PATH . 'includes/fallback-admin.php';

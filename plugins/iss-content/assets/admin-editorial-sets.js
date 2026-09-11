@@ -9,8 +9,16 @@
 
   apiFetch.use(apiFetch.createNonceMiddleware(config.nonce || ''));
 
+  var modalNode = null;
+  var releaseModalFocus = null;
+  var lastPreviewId = 0;
+
   var state = {
     sets: [],
+    setsPage: 1, setsTotal: 0, setSearch: '',
+    itemsPage: 1, itemsTotal: 0,
+    targets: [], target: null, targetSearch: '', targetPage: 1, targetPages: 1,
+    sectionType: '', editUrl: '',
     items: [],
     selectedSetId: parseInt(config.setId, 10) || 0,
     selectedItems: {},
@@ -71,34 +79,8 @@
     }).filter(Boolean);
   }
 
-  function selectedSet() {
-    return state.sets.filter(function (set) {
-      return set.id === state.selectedSetId;
-    })[0] || null;
-  }
-
   function promotionTarget() {
-    if (config.contextType && config.contextId) {
-      return {
-        type: config.contextType,
-        id: parseInt(config.contextId, 10) || 0
-      };
-    }
-
-    var set = selectedSet();
-    var links = set && set.links ? set.links : [];
-    var link = links.filter(function (candidate) {
-      return candidate.contextType && candidate.contextId;
-    })[0] || null;
-
-    if (!link) {
-      return null;
-    }
-
-    return {
-      type: link.contextType,
-      id: parseInt(link.contextId, 10) || 0
-    };
+    return state.target;
   }
 
   function setNotice(message) {
@@ -118,40 +100,87 @@
     });
   }
 
-  function loadSets() {
-    var query = '';
-    if (config.contextType && config.contextId) {
-      query = '?contextType=' + encodeURIComponent(config.contextType) + '&contextId=' + encodeURIComponent(config.contextId);
-    }
-
+  function loadSets(append) {
+    if (append !== true) { state.setsPage = 1; }
+    var query = '?page=' + state.setsPage + '&search=' + encodeURIComponent(state.setSearch);
     return request({ path: path('/editorial-sets' + query) }).then(function (response) {
-      state.sets = response.items || [];
-      if (state.selectedSetId && !state.sets.some(function (set) {
-        return set.id === state.selectedSetId;
-      })) {
-        state.selectedSetId = 0;
-      }
-      if (!state.selectedSetId && state.sets.length) {
-        state.selectedSetId = state.sets[0].id;
-      }
+      state.sets = append === true ? state.sets.concat(response.items || []) : response.items || [];
+      state.setsTotal = response.total || 0;
+      if (!state.selectedSetId && state.sets.length) { state.selectedSetId = state.sets[0].id; }
       return loadItems();
     });
   }
 
   function loadItems() {
-    var parts = [];
-    if (state.selectedSetId || state.selectedSetId === 0) {
-      parts.push('setId=' + encodeURIComponent(String(state.selectedSetId)));
-    }
-    if (state.status) {
-      parts.push('status=' + encodeURIComponent(state.status));
-    }
-
+    var parts = ['setId=' + state.selectedSetId, 'page=' + state.itemsPage];
+    if (state.status) { parts.push('status=' + encodeURIComponent(state.status)); }
     return request({ path: path('/editorial-set-items?' + parts.join('&')) }).then(function (response) {
       state.items = response.items || [];
+      state.itemsTotal = response.total || 0;
       state.selectedItems = {};
       render();
     });
+  }
+
+  function loadTargets(initial) {
+    var query = '?search=' + encodeURIComponent(state.targetSearch) + '&page=' + state.targetPage;
+    if (initial && config.contextId) { query = '?id=' + config.contextId; }
+    return request({path: path('/editorial-set-targets' + query)}).then(function (response) {
+      state.targets = response.items || [];
+      state.targetPages = response.totalPages || 1;
+      if (initial && config.contextId) { state.target = state.targets[0] || null; }
+      render();
+    });
+  }
+
+  function pager(page, pages, onPage) {
+    var bar = el('div', 'tablenav');
+    ['Zurück', 'Weiter'].forEach(function (label, index) {
+      var button = el('button', 'button', label);
+      button.type = 'button';
+      button.disabled = state.busy || (index ? page >= pages : page <= 1);
+      button.addEventListener('click', function () { onPage(page + (index ? 1 : -1)); });
+      bar.appendChild(button);
+    });
+    bar.appendChild(el('span', 'description', ' Seite ' + page + ' / ' + Math.max(1, pages)));
+    return bar;
+  }
+
+  function renderDestination() {
+    var panel = el('div', 'iss-editorial-sets-filters');
+    var label = el('label', '', 'Ziel für das Material ');
+    var search = el('input');
+    search.type = 'search'; search.value = state.targetSearch; search.setAttribute('aria-label', 'Inhalte suchen');
+    var run = el('button', 'button', 'Inhalte suchen'); run.type = 'button';
+    run.addEventListener('click', function () { state.targetSearch = search.value; state.targetPage = 1; loadTargets(); });
+    panel.appendChild(search); panel.appendChild(run);
+    var select = el('select'); select.setAttribute('aria-label', 'Ziel für das Material');
+    select.appendChild(el('option', '', 'Ziel auswählen'));
+    select.firstChild.value = '';
+    var choices = state.targets.slice();
+    if (state.target && !choices.some(function (item) { return item.id === state.target.id; })) { choices.unshift(state.target); }
+    choices.forEach(function (item) {
+      var option = el('option', '', item.title + ' (' + (item.typeLabel || item.type) + ')');
+      option.value = String(item.id); option.selected = !!state.target && item.id === state.target.id;
+      select.appendChild(option);
+    });
+    select.value = state.target ? String(state.target.id) : '';
+    select.addEventListener('change', function () {
+      state.target = choices.find(function (item) { return String(item.id) === select.value; }) || null;
+      state.sectionType = ''; state.editUrl = ''; render();
+    });
+    label.appendChild(select); panel.appendChild(label);
+    panel.appendChild(pager(state.targetPage, state.targetPages, function (page) { state.targetPage = page; loadTargets(); }));
+    if (state.target) {
+      var section = el('select'); section.setAttribute('aria-label', 'Zielabschnitt');
+      [{value:'', label:'Fotos in Galerie, Dokumente in Dateien'}, {value:'galerie', label:'Galerie'}, {value:'material', label:'Dokumente & Downloads'}].forEach(function (choice) {
+        if (choice.value && state.target.sections.indexOf(choice.value) < 0) { return; }
+        var option = el('option', '', choice.label); option.value = choice.value; option.selected = state.sectionType === choice.value; section.appendChild(option);
+      });
+      section.addEventListener('change', function () { state.sectionType = section.value; });
+      panel.appendChild(section);
+    }
+    return panel;
   }
 
   function createSet() {
@@ -283,7 +312,7 @@
         itemIds: ids,
         setId: state.selectedSetId
       }
-    }).then(loadItems);
+    }).then(function (response) { state.notice = response.message || ('Geändert: ' + response.updated); return loadItems(); });
   }
 
   function moveSelected() {
@@ -315,22 +344,17 @@
     if (!item) {
       return;
     }
-    var label = root.querySelector('.iss-editorial-sets-modal__label');
-    var status = root.querySelector('.iss-editorial-sets-modal__status');
-    var notes = root.querySelector('.iss-editorial-sets-modal__notes');
-    var rights = root.querySelector('.iss-editorial-sets-modal__rights');
-    var provenance = root.querySelector('.iss-editorial-sets-modal__provenance');
-    var rightsValue = {};
-    var provenanceValue = {};
+    var label = modalNode.querySelector('.iss-editorial-sets-modal__label');
+    var status = modalNode.querySelector('.iss-editorial-sets-modal__status');
+    var notes = modalNode.querySelector('.iss-editorial-sets-modal__notes');
+    var rightsValue = Object.assign({}, item.rights || {});
+    var provenanceValue = Object.assign({}, item.provenance || {});
+    rightsValue.attribution = modalNode.querySelector('.iss-editorial-sets-modal__credit').value.trim();
+    rightsValue.license = modalNode.querySelector('.iss-editorial-sets-modal__license').value;
+    rightsValue.consent = modalNode.querySelector('.iss-editorial-sets-modal__consent').checked ? '1' : '';
+    provenanceValue.source_note = modalNode.querySelector('.iss-editorial-sets-modal__source-note').value.trim();
 
-    try {
-      rightsValue = JSON.parse((rights && rights.value) || '{}');
-      provenanceValue = JSON.parse((provenance && provenance.value) || '{}');
-    } catch (error) {
-      setNotice(t('invalidJson', 'Rights and provenance must be valid JSON.'));
-      return;
-    }
-
+    state.modalItem = Object.assign({}, item, { label: label.value, status: status.value, notes: notes.value, rights: rightsValue, provenance: provenanceValue });
     request({
       path: path('/editorial-set-items/' + item.id),
       method: 'POST',
@@ -345,7 +369,8 @@
         retainReason: item.retainReason || ''
       }
     }).then(function (response) {
-      state.modalItem = response && response.item ? response.item : null;
+      state.modalItem = null;
+      state.notice = response && response.item ? 'Eintrag gespeichert.' : '';
       return loadItems();
     });
   }
@@ -363,10 +388,12 @@
       data: {
         itemIds: ids,
         targetType: target.type,
-        targetId: target.id
+        targetId: target.id, sectionType: state.sectionType, base: target.base, draftToken: target.draftToken
       }
     }).then(function (response) {
-      setNotice(response && response.message ? response.message : t('promotionComplete', 'Promotion complete.'));
+      state.editUrl = response.editUrl || '';
+      setNotice(response && response.message ? response.message : t('promotionComplete', 'Draft prepared.'));
+      if (response.prepared) { state.target = null; }
       loadItems();
     });
   }
@@ -436,7 +463,11 @@
 
   function renderFilters() {
     var filters = el('div', 'iss-editorial-sets-filters');
-    var setSelect = el('select');
+    var search = el('input'); search.type = 'search'; search.value = state.setSearch; search.setAttribute('aria-label', 'Sets suchen');
+    var run = el('button', 'button', 'Sets suchen'); run.type = 'button';
+    run.addEventListener('click', function () { state.setSearch = search.value; state.setsPage = 1; loadSets(); });
+    filters.appendChild(search); filters.appendChild(run);
+    var setSelect = el('select'); setSelect.setAttribute('aria-label', 'Material-Set');
     var uncategorized = el('option', '', t('uncategorized', 'Uncategorized'));
     uncategorized.value = '0';
     setSelect.appendChild(uncategorized);
@@ -448,9 +479,13 @@
     });
     setSelect.addEventListener('change', function () {
       state.selectedSetId = parseInt(setSelect.value, 10) || 0;
-      loadItems();
+      state.itemsPage = 1; loadItems();
     });
     filters.appendChild(setSelect);
+    if (state.sets.length < state.setsTotal) {
+      var more = el('button', 'button', 'Weitere Sets laden'); more.type = 'button';
+      more.addEventListener('click', function () { state.setsPage++; loadSets(true); }); filters.appendChild(more);
+    }
 
     if (config.contextType && config.contextId && state.selectedSetId) {
       var attach = el('button', 'button', t('attachHere', 'Attach here'));
@@ -472,7 +507,7 @@
       statusSelect.appendChild(option);
     });
     statusSelect.addEventListener('change', function () {
-      state.status = statusSelect.value;
+      state.status = statusSelect.value; state.itemsPage = 1;
       loadItems();
     });
     filters.appendChild(statusSelect);
@@ -491,6 +526,7 @@
       var card = el('article', 'iss-editorial-sets-card');
       var preview = el('button', 'iss-editorial-sets-card__preview');
       preview.type = 'button';
+      preview.dataset.itemId = String(item.id);
       var thumb = item.preview && item.preview.thumbnail ? item.preview.thumbnail : '';
       if (thumb) {
         var img = el('img');
@@ -501,6 +537,7 @@
         preview.appendChild(el('span', 'iss-editorial-sets-card__icon', kindLabel(item.kind)));
       }
       preview.addEventListener('click', function () {
+        lastPreviewId = item.id;
         state.modalItem = item;
         render();
       });
@@ -537,6 +574,9 @@
     var item = state.modalItem;
     var overlay = el('div', 'iss-editorial-sets-modal');
     var dialog = el('div', 'iss-editorial-sets-modal__dialog');
+    dialog.setAttribute('role', 'dialog');
+    dialog.setAttribute('aria-modal', 'true');
+    dialog.setAttribute('aria-label', item.label || 'Material prüfen');
     var head = el('div', 'iss-editorial-sets-modal__head');
     head.appendChild(el('h2', '', item.label || (item.preview && item.preview.title) || t('item', 'Item')));
     var close = el('button', 'button', t('close', 'Close'));
@@ -560,7 +600,7 @@
         image.alt = item.label || item.preview.title || '';
         link.appendChild(image);
       } else {
-        link.textContent = item.preview.url;
+        link.textContent = 'Datei öffnen / herunterladen';
       }
       body.appendChild(link);
     }
@@ -591,7 +631,7 @@
     var statusWrap = el('label', 'iss-editorial-sets-field');
     statusWrap.appendChild(el('span', '', t('status', 'Status')));
     var statusSelect = el('select', 'iss-editorial-sets-modal__status');
-    (config.statuses || []).forEach(function (statusName) {
+    (config.statuses || []).filter(function (name) { return name !== 'promoted' || item.status === 'promoted'; }).forEach(function (statusName) {
       var option = el('option', '', statusLabel(statusName));
       option.value = statusName;
       option.selected = statusName === item.status;
@@ -608,24 +648,25 @@
     notesWrap.appendChild(notesInput);
     form.appendChild(notesWrap);
 
-    var rightsWrap = el('label', 'iss-editorial-sets-field');
-    rightsWrap.appendChild(el('span', '', t('rightsJson', 'Rights / consent JSON')));
-    var rightsInput = el('textarea', 'iss-editorial-sets-modal__rights');
-    rightsInput.rows = 5;
-    rightsInput.value = JSON.stringify(item.rights || {}, null, 2);
-    rightsWrap.appendChild(rightsInput);
-    form.appendChild(rightsWrap);
-
-    var provenanceWrap = el('label', 'iss-editorial-sets-field');
-    provenanceWrap.appendChild(el('span', '', t('provenanceJson', 'Provenance JSON')));
-    var provenanceInput = el('textarea', 'iss-editorial-sets-modal__provenance');
-    provenanceInput.rows = 5;
-    provenanceInput.value = JSON.stringify(item.provenance || {}, null, 2);
-    provenanceWrap.appendChild(provenanceInput);
-    form.appendChild(provenanceWrap);
+    [['credit', 'Bildnachweis / Urheber', (item.rights || {}).attribution || ''], ['source-note', 'Herkunft / erhalten von', (item.provenance || {}).source_note || '']].forEach(function (field) {
+      var wrap = el('label', 'iss-editorial-sets-field'); wrap.appendChild(el('span', '', field[1]));
+      var input = el('input', 'iss-editorial-sets-modal__' + field[0]); input.value = field[2]; wrap.appendChild(input); form.appendChild(wrap);
+    });
+    var licenseWrap = el('label', 'iss-editorial-sets-field'); licenseWrap.appendChild(el('span', '', 'Nutzungsrechte'));
+    var license = el('select', 'iss-editorial-sets-modal__license');
+    var currentLicense = (item.rights || {}).license || '';
+    var licenses = ['', 'all-rights-reserved', 'cc-by-4.0', 'cc-by-sa-4.0', 'cc-by-nc-4.0', 'cc0-1.0'];
+    if (currentLicense && licenses.indexOf(currentLicense) < 0) { licenses.push(currentLicense); }
+    licenses.forEach(function (value) { var option = el('option', '', value === '' ? 'Bitte klären' : value === 'all-rights-reserved' ? 'Alle Rechte vorbehalten / individuelle Erlaubnis' : value.toUpperCase()); option.value = value; option.selected = value === currentLicense; license.appendChild(option); });
+    licenseWrap.appendChild(license); form.appendChild(licenseWrap);
+    var consentWrap = el('label', 'iss-editorial-sets-field');
+    var consent = el('input', 'iss-editorial-sets-modal__consent'); consent.type = 'checkbox'; consent.checked = String((item.rights || {}).consent || '') === '1';
+    consentWrap.appendChild(consent); consentWrap.appendChild(el('span', '', 'Veröffentlichung ist erlaubt; Rechte und Einwilligungen sind geklärt.')); form.appendChild(consentWrap);
+    (item.uses || []).forEach(function (use) { var link = el('a', '', 'Bereits verwendet: ' + use.title); link.href = use.editUrl; form.appendChild(link); });
 
     var save = el('button', 'button button-primary', t('saveItem', 'Save item'));
     save.type = 'button';
+    save.disabled = state.busy;
     save.addEventListener('click', saveModalItem);
     form.appendChild(save);
     body.appendChild(form);
@@ -641,24 +682,35 @@
   }
 
   function render() {
+    var hadModal = !!modalNode;
+    if (releaseModalFocus) { releaseModalFocus(); releaseModalFocus = null; }
+    if (modalNode) { modalNode.remove(); modalNode = null; }
     clear(root);
     root.appendChild(renderToolbar());
     root.appendChild(renderFilters());
+    root.appendChild(renderDestination());
     if (state.notice) {
       root.appendChild(el('div', 'notice notice-info inline iss-editorial-sets-notice', state.notice));
     }
     if (state.busy) {
       root.appendChild(el('p', 'description', t('loading', 'Loading...')));
     }
+    if (state.editUrl) { var editorLink = el('a', 'button button-primary', 'Entwurf im Editor öffnen'); editorLink.href = state.editUrl; root.appendChild(editorLink); }
     root.appendChild(renderGrid());
+    root.appendChild(pager(state.itemsPage, Math.ceil(state.itemsTotal / 60), function (page) { state.itemsPage = page; loadItems(); }));
     var modal = renderModal();
+    var opener = root.querySelector('[data-item-id="' + lastPreviewId + '"]');
+    if ((modal || hadModal) && opener) { opener.focus(); }
     if (modal) {
-      root.appendChild(modal);
+      modalNode = modal; document.body.appendChild(modal);
+      if (window.issEditorialUi) {
+        releaseModalFocus = window.issEditorialUi.manageModalFocus(modal.querySelector('[role="dialog"]'), function () { state.modalItem = null; render(); });
+      }
     }
   }
 
   render();
-  loadSets().then(function () {
+  loadTargets(true).then(function () { return loadSets(); }).then(function () {
     if (config.upload && !state.uploadOpened && state.selectedSetId) {
       state.uploadOpened = true;
       uploadRawFiles();

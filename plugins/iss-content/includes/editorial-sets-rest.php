@@ -119,6 +119,7 @@ function iss_content_editorial_sets_rest_list_sets(WP_REST_Request $request): WP
     return rest_ensure_response([
         'items' => array_map([$service, 'prepare_set'], (array) ($result['items'] ?? [])),
         'page' => (int) ($result['page'] ?? 1),
+        'total' => (int) ($result['total'] ?? 0),
         'perPage' => (int) ($result['per_page'] ?? 30),
     ]);
 }
@@ -211,6 +212,7 @@ function iss_content_editorial_sets_rest_list_items(WP_REST_Request $request): W
     return rest_ensure_response([
         'items' => array_map([$service, 'prepare_item'], (array) ($result['items'] ?? [])),
         'page' => (int) ($result['page'] ?? 1),
+        'total' => (int) ($result['total'] ?? 0),
         'perPage' => (int) ($result['per_page'] ?? 60),
     ]);
 }
@@ -223,7 +225,7 @@ function iss_content_editorial_sets_rest_add_item(WP_REST_Request $request)
         'kind' => (string) ($request->get_param('kind') ?: 'wp_media'),
         'source' => (string) ($request->get_param('source') ?: 'wp-media'),
         'source_id' => (string) ($request->get_param('sourceId') ?: $request->get_param('source_id') ?: $request->get_param('id')),
-        'status' => (string) ($request->get_param('status') ?: 'pending'),
+        'status' => 'pending',
         'label' => (string) $request->get_param('label'),
         'origin' => (string) ($request->get_param('origin') ?: 'manual_upload'),
         'provenance' => $request->get_param('provenance'),
@@ -398,6 +400,10 @@ function iss_content_editorial_sets_rest_update_item(WP_REST_Request $request)
 {
     $service = iss_content_editorial_sets_service();
     $item_id = absint($request->get_param('id'));
+    $existing = $service->get_item($item_id);
+    if ($request->get_param('status') === 'promoted' && ($existing['status'] ?? '') !== 'promoted') {
+        return new WP_Error('iss_content_use_not_saved', __('Verwendung wird erst beim Speichern eines Inhalts erfasst.', 'iss-content-model'), ['status' => 400]);
+    }
     $ok = $service->update_item($item_id, [
         'status' => (string) $request->get_param('status'),
         'label' => (string) $request->get_param('label'),
@@ -410,7 +416,7 @@ function iss_content_editorial_sets_rest_update_item(WP_REST_Request $request)
     ]);
 
     if (!$ok) {
-        return new WP_Error('iss_content_set_item_update_failed', __('Item could not be updated.', 'iss-content-model'), ['status' => 400]);
+        return new WP_Error('iss_content_set_item_update_failed', __('Nicht gespeichert. Für die Freigabe bitte Urheber, Nutzungsrechte und Veröffentlichungserlaubnis angeben.', 'iss-content-model'), ['status' => 400]);
     }
 
     if (function_exists('iss_core_audit_log')) {
@@ -455,7 +461,7 @@ function iss_content_editorial_sets_rest_batch(WP_REST_Request $request)
                 'updated' => $updated,
             ]);
         }
-        return rest_ensure_response(['updated' => $updated]);
+        return rest_ensure_response(['updated' => $updated, 'message' => $updated < count($item_ids) ? __('Einige Einträge wurden nicht geändert. Für die Freigabe bitte die Rechteangaben jedes Eintrags prüfen.', 'iss-content-model') : sprintf(__('%d Einträge geändert.', 'iss-content-model'), $updated)]);
     }
 
     if ($action === 'move') {
@@ -486,7 +492,7 @@ function iss_content_editorial_sets_rest_batch(WP_REST_Request $request)
                 'updated' => $updated,
             ]);
         }
-        return rest_ensure_response(['updated' => $updated]);
+        return rest_ensure_response(['updated' => $updated, 'message' => $updated < count($item_ids) ? __('Einige Einträge wurden nicht geändert. Für die Freigabe bitte die Rechteangaben jedes Eintrags prüfen.', 'iss-content-model') : sprintf(__('%d Einträge geändert.', 'iss-content-model'), $updated)]);
     }
 
     return new WP_Error('iss_content_set_batch_action_unknown', __('Unknown batch action.', 'iss-content-model'), ['status' => 400]);
@@ -527,6 +533,8 @@ function iss_content_editorial_sets_rest_promote(WP_REST_Request $request)
         [
             'sectionTitle' => (string) $request->get_param('sectionTitle'),
             'sectionType' => (string) $request->get_param('sectionType'),
+            'base' => (string) $request->get_param('base'),
+            'draftToken' => (string) $request->get_param('draftToken'),
         ]
     );
 
@@ -534,16 +542,51 @@ function iss_content_editorial_sets_rest_promote(WP_REST_Request $request)
         iss_core_audit_log('media_promotion', [
             'capability' => 'iss_promote_media',
             'object_ids' => array_merge([absint($request->get_param('targetId') ?: $request->get_param('target_id'))], $item_ids),
-            'result' => 'completed',
+            'result' => !empty($result['prepared']) ? 'draft_prepared' : 'rejected',
         ]);
     }
 
     return rest_ensure_response($result);
 }
 
+function iss_content_editorial_sets_rest_targets(WP_REST_Request $request): WP_REST_Response
+{
+    $page = max(1, (int) $request->get_param('page'));
+    $args = ['post_type' => iss_content_editorial_sets_supported_post_types(), 'post_status' => ['publish', 'draft', 'private', 'pending'], 'posts_per_page' => 30, 'paged' => $page, 's' => sanitize_text_field((string) $request->get_param('search')), 'orderby' => 'title', 'order' => 'ASC'];
+    if ($request->get_param('sourceOnly')) {
+        $args['post_type'] = iss_content_report_source_types();
+    }
+    if ($request->get_param('id')) {
+        $args['p'] = absint($request->get_param('id'));
+    }
+    $query = new WP_Query($args);
+    $items = [];
+    foreach ($query->posts as $post) {
+        if ($request->get_param('sourceOnly')) {
+            if (current_user_can('edit_post', $post->ID)) {
+                $items[] = ['id' => $post->ID, 'type' => $post->post_type, 'title' => html_entity_decode(get_the_title($post), ENT_QUOTES, 'UTF-8'), 'typeLabel' => get_post_type_object($post->post_type)->labels->singular_name];
+            }
+            continue;
+        }
+        $format = iss_editorial_get_format_for_post($post);
+        if (!$format || !current_user_can('edit_post', $post->ID)) {
+            continue;
+        }
+        $draft = iss_editorial_get_draft($post->ID, $format['slug']);
+        $items[] = ['id' => $post->ID, 'type' => $post->post_type, 'title' => html_entity_decode(get_the_title($post), ENT_QUOTES, 'UTF-8'), 'typeLabel' => get_post_type_object($post->post_type)->labels->singular_name, 'base' => iss_editorial_saved_token($post->ID, $format['slug']), 'draftToken' => (string) ($draft['token'] ?? ''), 'sections' => array_values(array_intersect(['galerie', 'material'], array_keys($format['sections'])))];
+    }
+    return rest_ensure_response(['items' => $items, 'page' => $page, 'totalPages' => (int) $query->max_num_pages]);
+}
+
 function iss_content_editorial_sets_register_rest_routes(): void
 {
     $namespace = iss_content_editorial_sets_rest_namespace();
+
+    register_rest_route($namespace, '/editorial-set-targets', [
+        'methods' => WP_REST_Server::READABLE,
+        'callback' => 'iss_content_editorial_sets_rest_targets',
+        'permission_callback' => 'iss_content_editorial_sets_can_access',
+    ]);
 
     register_rest_route($namespace, '/editorial-sets', [
         [

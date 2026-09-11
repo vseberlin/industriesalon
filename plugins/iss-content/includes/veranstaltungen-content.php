@@ -52,8 +52,9 @@ function iss_content_model_veranstaltung_content_gestures(): array
         ],
         'material' => [
             'label' => __('Begleitende Dateien', 'iss-content-model'),
-            'description' => __('Zum Herunterladen. Wichtig: Bilder und Archiv-Objekte gehören stattdessen in die Galerie.', 'iss-content-model'),
-            'supports' => ['kicker', 'title', 'body', 'media_refs'],
+            'description' => __('Downloads, Quellen und ergänzende Verweise zum Inhalt.', 'iss-content-model'),
+            'supports' => ['kicker', 'title', 'body', 'media_refs', 'object_refs', 'links', 'dynamic_refs', 'items'],
+            'items_kind' => 'text',
         ],
         'upload_intake' => [
             'label' => __('Öffentlicher Mitmach-Aufruf für Gäste', 'iss-content-model'),
@@ -309,6 +310,10 @@ function iss_content_model_sanitize_veranstaltung_content_json($value): string
     if (!is_array($decoded)) {
         return '';
     }
+    if (function_exists('iss_editorial_validate_document') && iss_editorial_get_format('veranstaltung')) {
+        $validated = iss_editorial_validate_document($decoded, 'veranstaltung');
+        return is_wp_error($validated) ? '' : iss_editorial_encode_document($validated);
+    }
 
     $schema_version = (int) ($decoded['schema_version'] ?? $decoded['schemaVersion'] ?? 0);
     if ($schema_version !== 1) {
@@ -406,6 +411,9 @@ function iss_content_model_veranstaltung_content_document(int $post_id): array
     if ($post_id <= 0 || get_post_type($post_id) !== ISS_CONTENT_MODEL_VERANSTALTUNG_POST_TYPE) {
         return [];
     }
+    if (function_exists('iss_editorial_should_prefer_preview_autosave') && iss_editorial_should_prefer_preview_autosave($post_id, 'veranstaltung')) {
+        return iss_editorial_get_document($post_id, 'veranstaltung', true);
+    }
 
     $stored = trim((string) get_post_meta($post_id, iss_content_model_veranstaltung_content_meta_key(), true));
     if ($stored === '') {
@@ -436,3 +444,118 @@ function iss_content_model_register_veranstaltung_content_meta(): void
     ]);
 }
 add_action('init', 'iss_content_model_register_veranstaltung_content_meta', 25);
+
+/** The shared editor writes the existing event document; no content migration is required. */
+function iss_content_model_veranstaltung_dynamic_previews(array $document): array
+{
+    $previews = [];
+    $steuerung = class_exists('Industriesalon_Steuerung') ? Industriesalon_Steuerung::instance() : null;
+    foreach ((array) ($document['sections'] ?? []) as $section) {
+        foreach ((array) ($section['dynamic_refs'] ?? []) as $reference) {
+            if (($reference['source'] ?? '') !== 'industriesalon-steuerung' || ($reference['kind'] ?? '') !== 'control_field' || empty($reference['key'])) {
+                continue;
+            }
+            $key = (string) $reference['key'];
+            $previews[$key] = ['label' => (string) ($reference['label'] ?? ''), 'value' => $steuerung ? (string) $steuerung->get_field_value($key, '') : ''];
+        }
+    }
+    return $previews;
+}
+
+add_filter('iss_editorial_formats', static function (array $formats): array {
+    $formats['veranstaltung'] = [
+        'label' => __('Veranstaltung', 'iss-content-model'),
+        'post_types' => [ISS_CONTENT_MODEL_VERANSTALTUNG_POST_TYPE],
+        'storage_meta_key' => iss_content_model_veranstaltung_content_meta_key(),
+        'always_enabled' => true,
+        'default_skin' => 'typografisch',
+        'sections' => iss_content_model_veranstaltung_content_gestures(),
+    ];
+    return $formats;
+});
+
+add_filter('iss_editorial_document_fields', static function (array $fields, array $format): array {
+    if ($format['slug'] === 'veranstaltung') {
+        $fields[] = 'entity_key';
+    }
+    return $fields;
+}, 10, 2);
+
+add_filter('iss_editorial_draft_meta', static function (array $meta, array $document, array $format): array {
+    if ($format['slug'] === 'veranstaltung') {
+        $meta['_iss_entity_key'] = iss_content_model_sanitize_veranstaltung_entity_key($document['entity_key'] ?? '');
+    }
+    return $meta;
+}, 10, 3);
+
+add_filter('get_post_metadata', static function ($value, int $post_id, string $key, bool $single) {
+    if ($key === '_iss_entity_key' && function_exists('iss_editorial_should_prefer_preview_autosave') && iss_editorial_should_prefer_preview_autosave($post_id, 'veranstaltung')) {
+        $draft = iss_editorial_get_draft($post_id, 'veranstaltung');
+        if (!empty($draft['document']['entity_key'])) {
+            return $single ? $draft['document']['entity_key'] : [$draft['document']['entity_key']];
+        }
+    }
+    return $value;
+}, 9, 4);
+
+add_filter('iss_editorial_admin_settings', static function (array $settings, WP_Post $post, array $format): array {
+    if ($format['slug'] === 'veranstaltung') {
+        $settings['skins'] = [];
+        $settings['dynamicPreviews'] = iss_content_model_veranstaltung_dynamic_previews($settings['document']);
+        $settings['documentBindings'] = ['entity_key' => '[name="iss_content_model[_iss_entity_key]"]'];
+        $settings['sectionContexts'] = ['entity_key' => []];
+        foreach (array_keys(iss_content_model_veranstaltung_entities()) as $key) {
+            $settings['sectionContexts']['entity_key'][$key] = array_keys(iss_content_model_veranstaltung_content_gestures_for_entity($key));
+        }
+    }
+    return $settings;
+}, 10, 3);
+
+add_filter('iss_editorial_editor_document', static function (array $document, int $post_id, string $format): array {
+    if ($format === 'veranstaltung') {
+        $document['entity_key'] = get_post_meta($post_id, '_iss_entity_key', true) ?: ($document['entity_key'] ?? 'event.general');
+    }
+    return $document;
+}, 10, 3);
+
+add_filter('iss_editorial_sanitized_section', static function (array $sanitized, array $section, array $format): array {
+    if ($format['slug'] === 'veranstaltung' && in_array('dynamic_refs', $format['sections'][$sanitized['type']]['supports'], true)) {
+        $sanitized['dynamic_refs'] = iss_content_model_sanitize_veranstaltung_content_dynamic_reference_list($section['dynamic_refs'] ?? []);
+    }
+    return $sanitized;
+}, 10, 3);
+
+add_filter('iss_editorial_sanitized_document', static function (array $sanitized, array $document, array $format): array {
+    if ($format['slug'] === 'veranstaltung') {
+        $sanitized['entity_key'] = iss_content_model_sanitize_veranstaltung_entity_key((string) ($document['entity_key'] ?? 'event.general'));
+    }
+    return $sanitized;
+}, 10, 3);
+
+add_filter('iss_editorial_validated_document', static function ($validated, array $document, array $format) {
+    if (is_wp_error($validated) || $format['slug'] !== 'veranstaltung') {
+        return $validated;
+    }
+    $entity = $validated['entity_key'];
+    if ($entity === '') {
+        return new WP_Error('editorial_event_type', __('Bitte die Veranstaltungsstruktur auswählen.', 'iss-content-model'));
+    }
+    $allowed = iss_content_model_veranstaltung_content_gestures_for_entity($entity);
+    foreach ($validated['sections'] as $index => $section) {
+        if (!isset($allowed[$section['type']])) {
+            return new WP_Error('editorial_event_section', sprintf(__('Abschnitt %d passt nicht zur gewählten Veranstaltungsstruktur. Bitte den Abschnitt oder die Struktur prüfen.', 'iss-content-model'), $index + 1));
+        }
+    }
+    return $validated;
+}, 10, 3);
+
+add_filter('rest_pre_insert_veranstaltung', static function ($prepared, WP_REST_Request $request) {
+    $meta = $request->get_param('meta');
+    if (is_array($meta) && isset($meta['_iss_content_json']) && function_exists('iss_editorial_validate_document')) {
+        $result = iss_editorial_validate_document($meta['_iss_content_json'], 'veranstaltung');
+        if (is_wp_error($result)) {
+            return $result;
+        }
+    }
+    return $prepared;
+}, 10, 2);

@@ -9,6 +9,8 @@ function iss_content_editorial_sets_supported_post_types(): array
     $post_types = [
         ISS_CONTENT_MODEL_VERANSTALTUNG_POST_TYPE,
         'rueckblick',
+        'fuehrung',
+        'register_place',
         ISS_CONTENT_MODEL_AUSSTELLUNG_POST_TYPE,
         ISS_CONTENT_MODEL_PROJEKT_POST_TYPE,
         'publication',
@@ -72,12 +74,18 @@ function iss_content_editorial_sets_enqueue_admin_assets(string $hook): void
         );
     }
 
+    $dependencies = ['wp-api-fetch'];
+    if (function_exists('iss_editorial_admin_path')) {
+        wp_enqueue_script('iss-editorial-ui', iss_editorial_admin_url() . 'assets/ui.js', [], (string) filemtime(iss_editorial_admin_path() . 'assets/ui.js'), true);
+        $dependencies[] = 'iss-editorial-ui';
+    }
+
     $script_path = ISS_CONTENT_MODEL_PATH . 'assets/admin-editorial-sets.js';
     if (file_exists($script_path)) {
         wp_enqueue_script(
             'iss-content-editorial-sets',
             plugins_url('../assets/admin-editorial-sets.js', __FILE__),
-            ['wp-api-fetch'],
+            $dependencies,
             (string) filemtime($script_path),
             true
         );
@@ -110,7 +118,7 @@ function iss_content_editorial_sets_enqueue_admin_assets(string $hook): void
                     'restore' => __('Wiederherstellen', 'iss-content-model'),
                     'archiveCandidate' => __('Archivkandidat', 'iss-content-model'),
                     'move' => __('Verschieben', 'iss-content-model'),
-                    'promote' => __('Veroeffentlichen', 'iss-content-model'),
+                    'promote' => __('Zum Entwurf hinzufügen', 'iss-content-model'),
                     'uncategorized' => __('Ohne Set', 'iss-content-model'),
                     'attachHere' => __('Hier anhaengen', 'iss-content-model'),
                     'allStatuses' => __('Alle Status', 'iss-content-model'),
@@ -118,9 +126,8 @@ function iss_content_editorial_sets_enqueue_admin_assets(string $hook): void
                     'noSelection' => __('Keine Eintraege ausgewaehlt.', 'iss-content-model'),
                     'setMissingForUpload' => __('Bitte zuerst ein Set anlegen oder auswaehlen.', 'iss-content-model'),
                     'moveToSet' => __('In Set-ID verschieben', 'iss-content-model'),
-                    'invalidJson' => __('Rechte und Herkunft muessen gueltiges JSON sein.', 'iss-content-model'),
-                    'promotionTargetMissing' => __('Freigegebene Eintraege aus einem angehaengten Set auswaehlen.', 'iss-content-model'),
-                    'promotionComplete' => __('Veroeffentlichung abgeschlossen.', 'iss-content-model'),
+                    'promotionTargetMissing' => __('Bitte freigegebenes Material und einen Zielinhalt auswählen.', 'iss-content-model'),
+                    'promotionComplete' => __('Material im Entwurf bereit.', 'iss-content-model'),
                     'loading' => __('Laedt...', 'iss-content-model'),
                     'close' => __('Schliessen', 'iss-content-model'),
                     'item' => __('Eintrag', 'iss-content-model'),
@@ -132,11 +139,9 @@ function iss_content_editorial_sets_enqueue_admin_assets(string $hook): void
                     'uploaded' => __('Hochgeladen', 'iss-content-model'),
                     'filename' => __('Dateiname', 'iss-content-model'),
                     'mime' => __('MIME', 'iss-content-model'),
-                    'decay' => __('Loeschen ab', 'iss-content-model'),
+                    'decay' => __('Erneut prüfen ab', 'iss-content-model'),
                     'label' => __('Beschriftung', 'iss-content-model'),
                     'notes' => __('Notizen', 'iss-content-model'),
-                    'rightsJson' => __('Rechte / Einwilligung JSON', 'iss-content-model'),
-                    'provenanceJson' => __('Herkunft JSON', 'iss-content-model'),
                     'saveItem' => __('Eintrag speichern', 'iss-content-model'),
                     'statusLabels' => [
                         'pending' => __('Neu', 'iss-content-model'),
@@ -144,7 +149,7 @@ function iss_content_editorial_sets_enqueue_admin_assets(string $hook): void
                         'approved' => __('Freigegeben', 'iss-content-model'),
                         'rejected' => __('Abgelehnt', 'iss-content-model'),
                         'stale' => __('Abgelaufen', 'iss-content-model'),
-                        'promoted' => __('Veroeffentlicht', 'iss-content-model'),
+                        'promoted' => __('In Inhalt verwendet', 'iss-content-model'),
                         'retained' => __('Behalten', 'iss-content-model'),
                     ],
                     'kindLabels' => [
@@ -175,26 +180,13 @@ function iss_content_editorial_sets_context_set_title(WP_Post $post): string
     return sprintf('%s Set', $label);
 }
 
-function iss_content_editorial_sets_admin_post_ensure_context_set(): void
+function iss_content_editorial_sets_ensure_context_set(WP_Post $post): int
 {
-    $context_type = sanitize_key((string) wp_unslash($_REQUEST['context_type'] ?? '')); // phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Nonce is validated before mutation below.
-    $context_id = absint(wp_unslash($_REQUEST['context_id'] ?? 0)); // phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Nonce is validated before mutation below.
-
-    if ($context_type === '' || $context_id <= 0) {
-        wp_die(esc_html__('Missing Set context.', 'iss-content-model'), 400);
+    if (!current_user_can('iss_create_sets') || !current_user_can('edit_post', $post->ID) || !in_array($post->post_type, iss_content_editorial_sets_supported_post_types(), true)) {
+        return 0;
     }
-
-    check_admin_referer('iss_editorial_sets_ensure_' . $context_type . '_' . $context_id);
-
-    if (!current_user_can('iss_create_sets') || !current_user_can('edit_post', $context_id)) {
-        wp_die(esc_html__('Keine Berechtigung.', 'iss-content-model'), 403);
-    }
-
-    $post = get_post($context_id);
-    if (!$post instanceof WP_Post || $post->post_type !== $context_type) {
-        wp_die(esc_html__('Invalid Set context.', 'iss-content-model'), 400);
-    }
-
+    $context_type = $post->post_type;
+    $context_id = $post->ID;
     $service = iss_content_editorial_sets_service();
     $links = $service->get_links_for_context($context_type, $context_id);
     $set_id = 0;
@@ -218,6 +210,31 @@ function iss_content_editorial_sets_admin_post_ensure_context_set(): void
             $service->attach_context($set_id, $context_type, $context_id, 'source_material');
         }
     }
+
+    return $set_id;
+}
+
+function iss_content_editorial_sets_admin_post_ensure_context_set(): void
+{
+    $context_type = sanitize_key((string) wp_unslash($_REQUEST['context_type'] ?? '')); // phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Nonce is validated before mutation below.
+    $context_id = absint(wp_unslash($_REQUEST['context_id'] ?? 0)); // phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Nonce is validated before mutation below.
+
+    if ($context_type === '' || $context_id <= 0) {
+        wp_die(esc_html__('Missing Set context.', 'iss-content-model'), 400);
+    }
+
+    check_admin_referer('iss_editorial_sets_ensure_' . $context_type . '_' . $context_id);
+
+    if (!current_user_can('iss_create_sets') || !current_user_can('edit_post', $context_id)) {
+        wp_die(esc_html__('Keine Berechtigung.', 'iss-content-model'), 403);
+    }
+
+    $post = get_post($context_id);
+    if (!$post instanceof WP_Post || $post->post_type !== $context_type) {
+        wp_die(esc_html__('Invalid Set context.', 'iss-content-model'), 400);
+    }
+
+    $set_id = iss_content_editorial_sets_ensure_context_set($post);
 
     if ($set_id <= 0) {
         wp_die(esc_html__('Set could not be created.', 'iss-content-model'), 400);
@@ -310,14 +327,16 @@ function iss_content_editorial_sets_stream_file_preview(): void
 
     $filetype = wp_check_filetype($path);
     $mime = (string) ($filetype['type'] ?? '');
-    if (strpos($mime, 'image/') !== 0) {
-        wp_die('', 415);
+    if ($mime === '') {
+        $mime = 'application/octet-stream';
     }
 
     nocache_headers();
     header('Content-Type: ' . $mime);
     header('Content-Length: ' . (string) filesize($path));
-    header('Content-Disposition: inline; filename="' . basename($path) . '"');
+    header('X-Content-Type-Options: nosniff');
+    $disposition = strpos($mime, 'image/') === 0 || $mime === 'application/pdf' ? 'inline' : 'attachment';
+    header('Content-Disposition: ' . $disposition . '; filename="' . sanitize_file_name(basename($path)) . '"');
     readfile($path); // phpcs:ignore WordPress.WP.AlternativeFunctions.file_system_operations_readfile -- Streaming private local intake file to authenticated admin.
     exit;
 }
@@ -328,7 +347,7 @@ function iss_content_editorial_sets_add_context_metaboxes(): void
     foreach (iss_content_editorial_sets_supported_post_types() as $post_type) {
         add_meta_box(
             'iss-content-editorial-sets',
-            __('Sets', 'iss-content-model'),
+            __('Material & Rückblicke', 'iss-content-model'),
             'iss_content_editorial_sets_render_context_metabox',
             $post_type,
             'side',
@@ -343,13 +362,14 @@ function iss_content_editorial_sets_render_context_metabox(WP_Post $post): void
     $service = iss_content_editorial_sets_service();
     $context_type = (string) $post->post_type;
     $links = $service->get_links_for_context($context_type, (int) $post->ID);
+    $links = array_values(array_column($links, null, 'set_id'));
     $workbench_url = iss_content_editorial_sets_admin_url([
         'context_type' => $context_type,
         'context_id' => (int) $post->ID,
     ]);
 
     echo '<div class="iss-editorial-sets-context">';
-    echo '<p>' . esc_html__('Private Arbeitssets fuer Rohmaterial, Review und Promotion.', 'iss-content-model') . '</p>';
+    echo '<p>' . esc_html__('Private Materialsammlungen für Uploads und redaktionelle Freigabe.', 'iss-content-model') . '</p>';
     if (!$links) {
         echo '<p class="description">' . esc_html__('Noch keine Sets angehaengt.', 'iss-content-model') . '</p>';
     } else {
@@ -367,8 +387,8 @@ function iss_content_editorial_sets_render_context_metabox(WP_Post $post): void
     }
     echo '<div class="iss-editorial-sets-context__actions">';
     if (!$links && current_user_can('iss_create_sets')) {
-        echo '<a class="button button-primary" href="' . esc_url(iss_content_editorial_sets_ensure_context_set_url($post, false)) . '">' . esc_html__('Projekt-Set anlegen', 'iss-content-model') . '</a> ';
-        echo '<a class="button" href="' . esc_url(iss_content_editorial_sets_ensure_context_set_url($post, true)) . '">' . esc_html__('Projekt-Set anlegen und hochladen', 'iss-content-model') . '</a>';
+        echo '<a class="button button-primary" href="' . esc_url(iss_content_editorial_sets_ensure_context_set_url($post, false)) . '">' . esc_html__('Material-Set anlegen', 'iss-content-model') . '</a> ';
+        echo '<a class="button" href="' . esc_url(iss_content_editorial_sets_ensure_context_set_url($post, true)) . '">' . esc_html__('Material-Set anlegen und hochladen', 'iss-content-model') . '</a>';
     } elseif (!$links) {
         echo '<a class="button" href="' . esc_url($workbench_url) . '">' . esc_html__('Workbench oeffnen', 'iss-content-model') . '</a>';
     } else {
@@ -380,9 +400,10 @@ function iss_content_editorial_sets_render_context_metabox(WP_Post $post): void
         ]) : $workbench_url;
         $upload_url = $primary_set_id > 0 ? add_query_arg('upload', '1', $primary_url) : $workbench_url;
         echo '<a class="button button-primary" href="' . esc_url($primary_url) . '">' . esc_html__('Set oeffnen', 'iss-content-model') . '</a> ';
-        echo '<a class="button" href="' . esc_url($upload_url) . '">' . esc_html__('In Projekt-Set hochladen', 'iss-content-model') . '</a> ';
+        echo '<a class="button" href="' . esc_url($upload_url) . '">' . esc_html__('Material hochladen', 'iss-content-model') . '</a> ';
         echo '<a class="button" href="' . esc_url($workbench_url) . '">' . esc_html__('Alle Sets anzeigen', 'iss-content-model') . '</a>';
     }
     echo '</div>';
+    iss_content_render_contributions_controls($post);
     echo '</div>';
 }

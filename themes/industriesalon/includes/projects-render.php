@@ -258,20 +258,10 @@ function industriesalon_render_editorial_project_gallery(string $media_html): st
 
 function industriesalon_editorial_project_upload_intake_url(int $post_id): string
 {
-    $post = $post_id > 0 ? get_post($post_id) : null;
-    if (!$post instanceof WP_Post) {
+    if (!function_exists('iss_content_upload_url') || !iss_content_upload_is_open($post_id)) {
         return '';
     }
-
-    $args = ['event' => 'projekt__' . $post->post_name];
-    $upload_code = trim((string) getenv('EVENT_DROP_UPLOAD_CODE'));
-    if ($upload_code !== '') {
-        $args['code'] = $upload_code;
-    }
-
-    $url = add_query_arg($args, home_url('/event-drop/'));
-
-    return (string) apply_filters('industriesalon_project_upload_intake_url', $url, $post_id);
+    return (string) apply_filters('industriesalon_project_upload_intake_url', iss_content_upload_url($post_id), $post_id);
 }
 
 function industriesalon_render_editorial_project_upload_intake(array $section): string
@@ -732,6 +722,9 @@ function industriesalon_render_editorial_project_section(array $section, bool $s
     $links_html = industriesalon_render_editorial_project_links($links);
     $facts_html = industriesalon_render_editorial_project_facts($facts);
     $upload_intake_html = $type === 'upload_intake' ? industriesalon_render_editorial_project_upload_intake($section) : '';
+    if ($type === 'upload_intake' && $upload_intake_html === '') {
+        return '';
+    }
 
     foreach ($refs as $ref) {
         if ($type === 'material') {

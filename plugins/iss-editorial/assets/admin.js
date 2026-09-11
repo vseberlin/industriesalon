@@ -1,6 +1,7 @@
 (function () {
   var config = window.issEditorialAdmin || {};
   var editorUi = window.issEditorialUi || {};
+  var richEditorCounter = 0;
 
   function parseJson(value, fallback) {
     try {
@@ -129,24 +130,6 @@
     return (element.textContent || '').replace(/\s+/g, ' ').trim();
   }
 
-  function currentRichTextLink(editor) {
-    var selection = window.getSelection ? window.getSelection() : null;
-    var node;
-    if (!selection || selection.rangeCount < 1) {
-      return null;
-    }
-
-    node = selection.anchorNode;
-    if (node && node.nodeType === Node.TEXT_NODE) {
-      node = node.parentElement;
-    }
-    if (!node || !editor.contains(node)) {
-      return null;
-    }
-
-    return node.closest ? node.closest('a') : null;
-  }
-
     function sectionTone(type) {
       var tones = {
         bildbuehne: '#185fa5',
@@ -234,6 +217,20 @@
       return page && page.id && page.url;
     }) : [];
     var autosaveTimer = null;
+    var richEditorIds = [];
+    var saveChain = Promise.resolve();
+    var draftToken = config.draftToken || '';
+    var draftTokenField = container.querySelector('.iss-editorial-draft-token-field');
+    var identityFields = { title: document.getElementById('title'), excerpt: document.getElementById('excerpt') };
+    var lastSavedValue = field.value;
+    var activeSectionIndex = null;
+    var submitting = false;
+    var recoveryPending = !!config.recovery;
+    var retry = createElement('button', 'button button-secondary', 'Erneut sichern');
+    retry.type = 'button';
+    retry.hidden = true;
+    status.insertAdjacentElement('afterend', retry);
+    retry.addEventListener('click', function () { queueSave().catch(function () {}); });
     var activeType = Object.keys(sections).filter(function (type) {
       return !isSectionHidden(type);
     })[0] || 'kapitel';
@@ -249,7 +246,10 @@
     }
 
     function isSectionHidden(type) {
-      return !!sectionConfig(type).ui_hidden;
+      return !!sectionConfig(type).ui_hidden || Object.keys(config.sectionContexts || {}).some(function (key) {
+        var allowed = config.sectionContexts[key][documentState[key]];
+        return Array.isArray(allowed) && allowed.indexOf(type) === -1;
+      });
     }
 
     function supports(type, fieldName) {
@@ -266,27 +266,14 @@
     }
 
     function usesRichBodyEditor(type) {
-      if (format === 'projekt' && ['kapitel', 'fliesstext', 'schluss'].indexOf(type) !== -1) {
-        return true;
-      }
-
-      if (format === 'fuehrung' && ['bildbuehne', 'intro', 'kapitel', 'leitfrage', 'material', 'schluss'].indexOf(type) !== -1) {
-        return true;
-      }
-
-      if (format === 'landing' && ['statement', 'fliesstext', 'gateway', 'text_bild_reihe', 'feature'].indexOf(type) !== -1) {
-        return true;
-      }
-
-      return format === 'publication'
-        && ['intro', 'source', 'longread_chapter', 'longread_quote', 'timeline_item'].indexOf(type) !== -1;
+      return !supports(type, 'no_body');
     }
 
     function usePageLinkSelector() {
-      return format === 'landing' && pageChoices.length > 0;
+      return pageChoices.length > 0;
     }
 
-    function normalizedPathFromUrl(url) {
+    function normalizedLinkUrl(url) {
       var parsed;
       if (!url) {
         return '';
@@ -298,12 +285,12 @@
         return '';
       }
 
-      return parsed.pathname.replace(/\/?$/, '/');
+      return parsed.href;
     }
 
     function pageChoiceForLink(link) {
       var pageId = parseInt(link.page_id || '0', 10) || 0;
-      var path = normalizedPathFromUrl(link.url || '');
+      var url = normalizedLinkUrl(link.url || '');
       var match = pageChoices.filter(function (page) {
         return parseInt(page.id || '0', 10) === pageId;
       })[0];
@@ -313,7 +300,7 @@
       }
 
       return pageChoices.filter(function (page) {
-        return normalizedPathFromUrl(page.url || page.path || '') === path || page.path === path;
+        return url && normalizedLinkUrl(page.url || '') === url;
       })[0] || null;
     }
 
@@ -332,7 +319,8 @@
     }
 
     function createPageLinkSelect(target, afterChange) {
-      var wrapper = createElement('label', 'iss-editorial-field');
+      var wrapper = createElement('div', 'iss-editorial-field');
+      var pageLabel = createElement('label', 'iss-editorial-field');
       var select = document.createElement('select');
       var current = pageChoiceForLink(target);
       var placeholder = document.createElement('option');
@@ -349,15 +337,12 @@
         select.appendChild(option);
       });
 
-      if (current && !target.page_id) {
-        applyPageChoiceToLink(target, current);
-      }
-
       select.addEventListener('change', function () {
         var selected = pageChoices.filter(function (page) {
           return String(page.id || '') === select.value;
         })[0] || null;
         applyPageChoiceToLink(target, selected);
+        url.querySelector('input').value = target.url;
         if (typeof afterChange === 'function') {
           afterChange();
         }
@@ -365,14 +350,30 @@
         scheduleAutosave();
       });
 
-      wrapper.appendChild(createElement('span', '', 'Seite'));
-      wrapper.appendChild(select);
+      pageLabel.appendChild(createElement('span', '', 'Seite'));
+      pageLabel.appendChild(select);
+      wrapper.appendChild(pageLabel);
+      var url = createTextInput('Link-Adresse', target.url || '', function (value) {
+        target.url = value;
+        target.page_id = '';
+        select.value = '';
+        scheduleAutosave();
+      });
+      wrapper.appendChild(url);
 
       return wrapper;
     }
 
     function updateField() {
+      Object.keys(config.documentBindings || {}).forEach(function (key) {
+        var input = document.querySelector(config.documentBindings[key]);
+        if (input && input.value) { documentState[key] = input.value; }
+      });
       field.value = JSON.stringify(documentState);
+    }
+
+    function currentSaveValue() {
+      return JSON.stringify([field.value, identityFields.title ? identityFields.title.value : '', identityFields.excerpt ? identityFields.excerpt.value : '']);
     }
 
     function currentSkin() {
@@ -473,9 +474,11 @@
 
     function scheduleAutosave() {
       updateField();
+      if (recoveryPending || submitting) { return; }
       window.clearTimeout(autosaveTimer);
+      setStatus('Änderungen werden gesichert …');
       autosaveTimer = window.setTimeout(function () {
-        setStatus((config.strings && config.strings.pendingUpdate) || 'Aenderungen werden mit WordPress-Aktualisieren gespeichert.');
+        queueSave().catch(function () {});
       }, 1200);
     }
 
@@ -526,41 +529,7 @@
     }
 
     function openGesturePreview(type) {
-      var configData;
-      var shell;
-      var intro;
-      var marker;
-
-      if (isSectionHidden(type)) {
-        return;
-      }
-
-      configData = sectionConfig(type);
-      closeModal();
-      shell = createEditorModal(createSection(type), {
-        kicker: 'Abschnitt hinzufügen',
-        title: configData.label || type || 'Abschnitt',
-        closeLabel: 'Schließen',
-        doneLabel: 'Zur Komposition hinzufügen',
-        onClose: closeModal,
-        onDone: function () {
-          closeModal();
-          addSection(type);
-        }
-      });
-      intro = createElement('div', 'iss-editorial-insert-preview');
-      marker = createElement('span', 'iss-editorial-insert-preview__marker');
-      marker.style.backgroundColor = sectionTone(type);
-      intro.appendChild(marker);
-      intro.appendChild(createElement(
-        'p',
-        '',
-        configData.description || 'Abschnitt vorbereiten und erst nach Bestätigung zur Komposition hinzufügen.'
-      ));
-      shell.body.appendChild(intro);
-      modal = shell.root;
-      document.body.classList.add('iss-editorial-modal-open');
-      document.body.appendChild(modal);
+      addSection(type);
     }
 
     function moveSection(index, direction) {
@@ -679,9 +648,6 @@
 
     function renderSectionCard(section, index, target) {
       var type = section.type || 'kapitel';
-      if (isSectionHidden(type)) {
-        return;
-      }
 
       var card = createElement('article', 'iss-editorial-card iss-editorial-card--' + type);
       var marker = createElement('span', 'iss-editorial-card__marker');
@@ -689,20 +655,25 @@
       var actions = createElement('div', 'iss-editorial-card__actions');
       var handle = createElement('button', 'button-link iss-editorial-card__drag-handle');
       var handleText = createElement('span', 'screen-reader-text', 'Abschnitt ziehen oder mit Pfeiltasten verschieben');
-      var edit = createElement('button', 'button button-primary', 'Bearbeiten');
+      var edit = createElement('button', 'button button-primary iss-editorial-card__edit', 'Bearbeiten');
       var remove = createElement('button', 'button button-link-delete', 'In Papierkorb');
+      var up = createElement('button', 'button', 'Nach oben');
+      var down = createElement('button', 'button', 'Nach unten');
 
       card.draggable = true;
       card.setAttribute('data-section-index', String(index));
       marker.style.backgroundColor = sectionTone(type);
       meta.appendChild(createElement('span', 'iss-editorial-card__type', sectionConfig(type).label || type));
       meta.appendChild(createElement('h3', '', section.title || 'Ohne Titel'));
+      if (sectionConfig(type).ui_hidden) {
+        meta.appendChild(createElement('p', 'description', 'Vorhandener Abschnitt · nicht mehr neu einfügbar.'));
+      }
       meta.appendChild(createElement('p', '', sectionSummary(section) || 'Noch kein Inhalt.'));
       if (sectionMediaRefsForDisplay(section).length) {
         renderMediaThumbs(section, meta);
       }
 
-      [handle, edit, remove].forEach(function (button) {
+      [handle, edit, remove, up, down].forEach(function (button) {
         button.type = 'button';
       });
       handle.draggable = true;
@@ -710,8 +681,14 @@
       handle.appendChild(handleText);
       edit.addEventListener('click', function () { openEditor(index); });
       remove.addEventListener('click', function () { removeSection(index); });
+      up.disabled = index === 0;
+      down.disabled = index === documentState.sections.length - 1;
+      up.addEventListener('click', function () { moveSection(index, -1); });
+      down.addEventListener('click', function () { moveSection(index, 1); });
       actions.appendChild(handle);
       actions.appendChild(edit);
+      actions.appendChild(up);
+      actions.appendChild(down);
       actions.appendChild(remove);
 
       card.appendChild(marker);
@@ -759,7 +736,7 @@
     function renderStage(target) {
       var stage = createElement('div', 'iss-editorial-stage');
       var head = createElement('div', 'iss-editorial-stage__head');
-      var heading = createElement('div', 'iss-editorial-stage__title', 'Komposition');
+      var heading = createElement('div', 'iss-editorial-stage__title', 'Abschnitte');
       var tools = createElement('div', 'iss-editorial-stage__tools');
       stage.setAttribute('data-section-count', String(documentState.sections.length));
       head.appendChild(heading);
@@ -772,9 +749,7 @@
       head.appendChild(tools);
       stage.appendChild(head);
 
-      if (!documentState.sections.some(function (section) {
-        return section && !isSectionHidden(section.type || 'kapitel');
-      })) {
+      if (!documentState.sections.length) {
         stage.appendChild(createElement('p', 'iss-editorial-empty', 'Noch keine Abschnitte. Links einen Abschnitt wählen.'));
       } else {
         documentState.sections.forEach(function (section, index) {
@@ -1078,114 +1053,47 @@
     }
 
     function closeModal() {
+      disposeRichEditors();
       if (modal) {
+        if (modal.issEditorialDestroy) { modal.issEditorialDestroy(); }
         modal.remove();
         modal = null;
       }
       document.body.classList.remove('iss-editorial-modal-open');
     }
 
+    function disposeRichEditors() {
+      richEditorIds.forEach(function (id) {
+        if (window.wp && window.wp.editor) { window.wp.editor.remove(id); }
+      });
+      richEditorIds = [];
+    }
+
+    function finishSection() {
+      closeModal();
+      render();
+      var cards = root.querySelectorAll('.iss-editorial-card');
+      var card = activeSectionIndex === null ? null : cards[activeSectionIndex];
+      var opener = card && card.querySelector('.iss-editorial-card__edit');
+      if (opener) { opener.focus(); }
+      scheduleAutosave();
+    }
+
     function createEditorModal(section, callbacks) {
       var options = callbacks || {};
-      var configData = sectionConfig(section.type);
-
-      if (editorUi.createModal) {
-        return editorUi.createModal({
-          kicker: options.kicker || 'Abschnitt bearbeiten',
-          title: options.title || configData.label || section.type || 'Abschnitt',
-          closeLabel: options.closeLabel || 'Schließen',
-          doneLabel: options.doneLabel || 'Übernehmen',
-          onClose: options.onClose,
-          onDone: options.onDone
-        });
-      }
-
-      var root = createElement('div', 'iss-editorial-modal');
-      var dialog = createElement('div', 'iss-editorial-modal__dialog');
-      var head = createElement('div', 'iss-editorial-modal__head');
-      var body = createElement('div', 'iss-editorial-modal__body');
-      var foot = createElement('div', 'iss-editorial-modal__foot');
-      var footLeft = createElement('div', 'iss-editorial-modal__foot-left');
-      var footTools = createElement('div', 'iss-editorial-modal__foot-tools');
-      var title = createElement('h2', '', options.title || configData.label || section.type || 'Abschnitt');
-      var close = createElement('button', 'button', options.closeLabel || 'Schließen');
-      var done = createElement('button', 'button button-primary', options.doneLabel || 'Übernehmen');
-
-      close.type = 'button';
-      done.type = 'button';
-      close.addEventListener('click', function (event) {
-        event.preventDefault();
-        event.stopPropagation();
-        if (typeof options.onClose === 'function') {
-          options.onClose();
-        }
+      var sectionData = sectionConfig(section.type);
+      return editorUi.createModal({
+        kicker: options.kicker || 'Abschnitt bearbeiten',
+        title: options.title || sectionData.label || 'Abschnitt',
+        closeLabel: 'Fertig',
+        doneLabel: options.doneLabel || 'Fertig',
+        onClose: options.onClose,
+        onDone: options.onDone
       });
-      done.addEventListener('click', function (event) {
-        event.preventDefault();
-        event.stopPropagation();
-        if (typeof options.onDone === 'function') {
-          options.onDone();
-        }
-      });
-
-      head.appendChild(title);
-      head.appendChild(close);
-      footTools.appendChild(done);
-      foot.appendChild(footLeft);
-      foot.appendChild(footTools);
-      dialog.appendChild(head);
-      dialog.appendChild(body);
-      dialog.appendChild(foot);
-      root.appendChild(dialog);
-
-      return {
-        root: root,
-        body: body,
-        footLeft: footLeft,
-        footTools: footTools,
-        doneButton: done
-      };
     }
 
     function createEditorPanel(name, label, icon, count) {
-      if (editorUi.createPanel) {
-        return editorUi.createPanel({
-          name: name,
-          label: label,
-          icon: icon || name,
-          count: count
-        });
-      }
-
-      var root = createElement('section', 'iss-editorial-panel iss-editorial-panel--' + name);
-      var head = createElement('div', 'iss-editorial-panel__head');
-      var title = createElement('div', 'iss-editorial-panel__title');
-      var marker = createElement('span', 'iss-editorial-panel__icon');
-      var body = createElement('div', 'iss-editorial-panel__body');
-      var countNode = null;
-
-      marker.setAttribute('aria-hidden', 'true');
-      title.appendChild(marker);
-      title.appendChild(createElement('span', 'iss-editorial-panel__label', label));
-      head.appendChild(title);
-      if (typeof count === 'number') {
-        countNode = createElement('span', 'iss-editorial-panel__count', String(count));
-        head.appendChild(countNode);
-      }
-      root.appendChild(head);
-      root.appendChild(body);
-
-      return {
-        root: root,
-        body: body,
-        setCount: function (value) {
-          if (!countNode) {
-            countNode = createElement('span', 'iss-editorial-panel__count');
-            head.appendChild(countNode);
-          }
-          countNode.textContent = String(value);
-        }
-      };
+      return editorUi.createPanel({ name: name, label: label, icon: icon || name, count: count });
     }
 
     function appendPanelIfUsed(target, panel) {
@@ -1205,14 +1113,19 @@
       }
 
       closeModal();
+      activeSectionIndex = index;
+      var original = JSON.parse(JSON.stringify(section));
       var shell = createEditorModal(section, {
-        onClose: closeModal,
-        onDone: function () {
-          closeModal();
-          render();
-          scheduleAutosave();
-        }
+        onClose: finishSection,
+        onDone: finishSection
       });
+      var discard = createElement('button', 'button', 'Änderungen verwerfen');
+      discard.type = 'button';
+      discard.addEventListener('click', function () {
+        documentState.sections[index] = original;
+        finishSection();
+      });
+      shell.footTools.insertBefore(discard, shell.doneButton);
       var remove = createElement('button', 'button-link-delete iss-editorial-modal__delete', 'In Papierkorb');
 
       remove.type = 'button';
@@ -1228,6 +1141,7 @@
       modal = shell.root;
       document.body.classList.add('iss-editorial-modal-open');
       document.body.appendChild(modal);
+      if (modal.issEditorialOpen) { modal.issEditorialOpen(); }
     }
 
     function renderSectionFields(section, body) {
@@ -1281,18 +1195,28 @@
       }
 
       if (supports(type, 'facts')) {
-        renderFactEditor(section, factPanel.body);
+        renderFactEditor(section, factPanel.body, factPanel.setCount);
       }
 
-      if (supports(type, 'treatment')) {
+      if (supports(type, 'treatment') && !supports(type, 'slot_key')) {
         renderTreatmentControl(section, displayPanel.body, function () {
+          disposeRichEditors();
           clear(body);
           renderSectionFields(section, body);
         });
       }
 
       if (supports(type, 'items')) {
-        renderGatewayItemEditor(section, itemPanel.body);
+        if (sectionConfig(type).items_kind === 'text') {
+          itemPanel.body.appendChild(createTextarea('Hinweise (ein Eintrag pro Zeile)', (section.items || []).join('\n'), function (value) {
+            section.items = value.split(/\r?\n/).filter(function (line) { return line.trim(); });
+            itemPanel.setCount(section.items.length);
+            render();
+            scheduleAutosave();
+          }));
+        } else {
+          renderGatewayItemEditor(section, itemPanel.body, itemPanel.setCount);
+        }
       }
 
       if (supports(type, 'slot_key')) {
@@ -1389,7 +1313,7 @@
       }
 
       if (supports(type, 'source_refs')) {
-        renderSourceRefEditor(section, sourcePanel.body);
+        renderSourceRefEditor(section, sourcePanel.body, sourcePanel.setCount);
       }
 
       if (supports(type, 'media_layout')) {
@@ -1426,15 +1350,15 @@
       }
 
       if (supports(type, 'object_refs')) {
-        renderObjectPicker(section, archivePanel.body);
+        renderObjectPicker(section, archivePanel.body, archivePanel.setCount);
       }
 
       if (supports(type, 'media_refs')) {
-        renderMediaPicker(section, mediaPanel.body);
+        renderMediaPicker(section, mediaPanel.body, mediaPanel.setCount);
       }
 
       if (supports(type, 'album_source') || supports(type, 'sheets')) {
-        renderAlbumEditor(section, albumPanel.body);
+        renderAlbumEditor(section, albumPanel.body, albumPanel.setCount);
       }
 
       if (supports(type, 'orientation')) {
@@ -1442,7 +1366,25 @@
       }
 
       if (supports(type, 'links')) {
-        renderLinkEditor(section, linkPanel.body);
+        renderLinkEditor(section, linkPanel.body, linkPanel.setCount);
+      }
+      if (supports(type, 'dynamic_refs') && Array.isArray(section.dynamic_refs)) {
+        section.dynamic_refs.forEach(function (reference) {
+          var row = createElement('div', 'iss-editorial-field');
+          row.appendChild(createElement('p', 'description', (reference.label || reference.key) + ' · Zentral gepflegte Information'));
+          var preview = (config.dynamicPreviews || {})[reference.key];
+          if (preview) { row.appendChild(createElement('p', '', preview.value || 'Kein aktueller Wert aus Steuerung.')); }
+          var remove = createElement('button', 'button button-link-delete', 'Verweis entfernen');
+          remove.type = 'button';
+          remove.addEventListener('click', function () {
+            section.dynamic_refs.splice(section.dynamic_refs.indexOf(reference), 1);
+            row.remove();
+            render();
+            scheduleAutosave();
+          });
+          row.appendChild(remove);
+          sourcePanel.body.appendChild(row);
+        });
       }
 
       appendPanelIfUsed(body, contentPanel);
@@ -1456,7 +1398,7 @@
       appendPanelIfUsed(body, sourcePanel);
     }
 
-    function renderObjectPicker(section, body) {
+    function renderObjectPicker(section, body, setCount) {
       var refs = createElement('div', 'iss-editorial-field iss-editorial-field--refs');
       var tray = createElement('div', 'iss-editorial-ref-tray');
       var pickerMount = createElement('div', 'iss-editorial-picker');
@@ -1464,6 +1406,7 @@
 
       function rerenderTray() {
         renderReferenceTray(section, tray, rerenderTray);
+        setCount(collectionCount(section, 'object_refs'));
       }
 
       pickerButton.type = 'button';
@@ -1478,10 +1421,14 @@
           mode: 'multiple',
           modal: true,
           bucketFirst: true,
+          manageModalFocus: editorUi.manageModalFocus,
           contextPostId: postId,
           initialSelection: (section.object_refs || []).map(function (reference) { return reference.id; }),
           onConfirm: function (items) {
-            section.object_refs = (items || []).map(referenceFromArchiveItem).filter(function (reference) {
+            var previous = section.object_refs || [];
+            section.object_refs = (items || []).map(function (item) {
+              return previous.find(function (reference) { return String(reference.id) === String(item.id); }) || referenceFromArchiveItem(item);
+            }).filter(function (reference) {
               return reference.id;
             });
             rerenderTray();
@@ -1630,17 +1577,6 @@
       return match ? match.label : treatment;
     }
 
-    function normalizeTreatmentValue(type, treatment) {
-      if (type === 'statement' && treatment === 'statement.callout') {
-        return 'statement.leitfrage';
-      }
-      if (type === 'feature' && treatment === 'feature.microblocks') {
-        return 'feature.image-overlay';
-      }
-
-      return treatment || '';
-    }
-
     function renderTreatmentControl(section, body, onChange) {
       var type = section.type || 'kapitel';
       var choices = treatmentChoices(type);
@@ -1651,7 +1587,6 @@
         return;
       }
 
-      section.treatment = normalizeTreatmentValue(type, section.treatment);
       if (!section.treatment) {
         section.treatment = choices[0].slug;
       }
@@ -1683,14 +1618,10 @@
         return [];
       }
 
-      return [
-        { value: 'front-projects', label: 'Projekt-Notizen' },
-        { value: 'front-timeline', label: 'Termine' },
-        { value: 'front-visit-info', label: 'Besuchsinfo' },
-        { value: 'front-newsletter', label: 'Newsletter' },
-        { value: 'fuehrungen-offers', label: 'Führungsangebote' },
-        { value: 'team-directory', label: 'Team-Verzeichnis' }
-      ];
+      var slots = sectionConfig(type).slots || {};
+      return Object.keys(slots).map(function (key) {
+        return { value: key, label: slots[key].label, treatment: slots[key].treatment };
+      });
     }
 
     function defaultSlotKey(type) {
@@ -1732,11 +1663,13 @@
 
       select.addEventListener('change', function () {
         section.slot_key = select.value || choices[0].value;
+        var selected = choices.filter(function (choice) { return choice.value === section.slot_key; })[0];
+        if (selected) { section.treatment = selected.treatment; }
         render();
         scheduleAutosave();
       });
 
-      wrapper.appendChild(createElement('span', '', 'Slot'));
+      wrapper.appendChild(createElement('span', '', 'Automatische Inhalte'));
       wrapper.appendChild(select);
       body.appendChild(wrapper);
     }
@@ -1845,7 +1778,7 @@
       body.appendChild(wrapper);
     }
 
-    function renderLinkEditor(section, body) {
+    function renderLinkEditor(section, body, setCount) {
       var wrapper = createElement('div', 'iss-editorial-field iss-editorial-field--links');
       var rows = createElement('div', 'iss-editorial-link-rows');
       var add = createElement('button', 'button', 'Link hinzufügen');
@@ -1853,6 +1786,7 @@
       function rerenderRows() {
         clear(rows);
         section.links = Array.isArray(section.links) ? section.links : [];
+        setCount(section.links.length);
         section.links.forEach(function (link, index) {
           var row = createElement('div', 'iss-editorial-link-row');
           var label = createTextInput('Beschriftung', link.label || '', function (value) {
@@ -1900,7 +1834,7 @@
       rerenderRows();
     }
 
-    function renderSourceRefEditor(section, body) {
+    function renderSourceRefEditor(section, body, setCount) {
       var wrapper = createElement('div', 'iss-editorial-field iss-editorial-field--links');
       var rows = createElement('div', 'iss-editorial-link-rows');
       var add = createElement('button', 'button', 'Quelle hinzufügen');
@@ -1908,6 +1842,7 @@
       function rerenderRows() {
         clear(rows);
         section.source_refs = Array.isArray(section.source_refs) ? section.source_refs : [];
+        setCount(section.source_refs.length);
         section.source_refs.forEach(function (link, index) {
           var row = createElement('div', 'iss-editorial-link-row');
           var label = createTextInput('Bezeichnung', link.label || '', function (value) {
@@ -1953,7 +1888,7 @@
       rerenderRows();
     }
 
-    function renderFactEditor(section, body) {
+    function renderFactEditor(section, body, setCount) {
       var wrapper = createElement('div', 'iss-editorial-field iss-editorial-field--facts');
       var rows = createElement('div', 'iss-editorial-fact-rows');
       var add = createElement('button', 'button', 'Fakt hinzufügen');
@@ -1961,6 +1896,7 @@
       function rerenderRows() {
         clear(rows);
         section.facts = Array.isArray(section.facts) ? section.facts : [];
+        setCount(section.facts.length);
         section.facts.forEach(function (fact, index) {
           var row = createElement('div', 'iss-editorial-fact-row');
           var value = createTextInput('Wert', fact.value || '', function (nextValue) {
@@ -2077,7 +2013,7 @@
       frame.open();
     }
 
-    function renderGatewayItemEditor(section, body) {
+    function renderGatewayItemEditor(section, body, setCount) {
       var isTextImageRow = ['text_bild_reihe', 'map_img'].indexOf(section.type || '') !== -1;
       var wrapper = createElement('div', 'iss-editorial-field iss-editorial-field--gateway-items');
       var rows = createElement('div', 'iss-editorial-gateway-item-rows');
@@ -2086,6 +2022,7 @@
       function rerenderRows() {
         clear(rows);
         section.items = Array.isArray(section.items) ? section.items : [];
+        setCount(section.items.length);
         section.items.forEach(function (item, index) {
           var row = createElement('div', 'iss-editorial-gateway-item-row');
           var fields = createElement('div', 'iss-editorial-gateway-item-row__fields');
@@ -2464,7 +2401,7 @@
       });
     }
 
-    function renderAlbumEditor(section, body) {
+    function renderAlbumEditor(section, body, setCount) {
       var wrapper = createElement('div', 'iss-editorial-field iss-editorial-field--album');
       var source = section.album_source && typeof section.album_source === 'object' ? section.album_source : {};
       var sourceRow = createElement('div', 'iss-editorial-album-source');
@@ -2518,6 +2455,7 @@
 
       function rerenderSheets() {
         renderAlbumSheetList(section, list, rerenderSheets);
+        setCount(collectionCount(section, 'sheets'));
       }
 
       kindLabel.appendChild(createElement('span', '', 'Quelle'));
@@ -2535,7 +2473,7 @@
       rerenderSheets();
     }
 
-    function renderMediaPicker(section, body) {
+    function renderMediaPicker(section, body, setCount) {
       var refs = createElement('div', 'iss-editorial-field iss-editorial-field--media');
       var tray = createElement('div', 'iss-editorial-media-tray');
       var isFullViewport = sectionUsesViewportGallery(section);
@@ -2547,6 +2485,7 @@
 
       function rerenderTray() {
         renderMediaTray(section, tray, rerenderTray);
+        setCount(sectionMediaRefsForDisplay(section).length);
       }
 
       function existingReferencesById() {
@@ -2627,6 +2566,7 @@
 
         window.issEditorialSetMediaPicker.create(document.createElement('div'), {
           modal: true,
+          manageModalFocus: editorUi.manageModalFocus,
           mode: isFullViewport ? 'single' : 'multiple',
           mediaType: isMaterial ? 'file' : 'image',
           contextId: config.postId || 0,
@@ -2727,120 +2667,43 @@
 
     function createRichTextInput(label, value, onChange) {
       var wrapper = createElement('div', 'iss-editorial-field iss-editorial-field--rich-text');
-      var toolbar = createElement('div', 'iss-editorial-rich-toolbar');
-      var editor = createElement('div', 'iss-editorial-rich-editor');
-      var activeLink = null;
-      var commands = [
-        { label: 'P', command: 'formatBlock', value: 'p' },
-        { label: 'B', command: 'bold' },
-        { label: 'I', command: 'italic' },
-        { label: 'Link', command: 'createLink' },
-        { label: 'Liste', command: 'insertUnorderedList', icon: 'dashicons-editor-ul' },
-        { label: 'Nummerierte Liste', command: 'insertOrderedList', icon: 'dashicons-editor-ol' }
-      ];
-
-      function commit() {
-        var nextValue = sanitizeRichHtml(editor.innerHTML);
-        onChange(nextValue);
-      }
-
-      function replaceEditorHtml() {
-        var cleaned = sanitizeRichHtml(editor.innerHTML);
-        if (editor.innerHTML !== cleaned) {
-          editor.innerHTML = cleaned;
-        }
-        onChange(cleaned);
-      }
-
-      function unwrapLink(link) {
-        while (link.firstChild) {
-          link.parentNode.insertBefore(link.firstChild, link);
-        }
-        link.remove();
-      }
-
-      function rememberActiveLink() {
-        var link = currentRichTextLink(editor);
-        if (link) {
-          activeLink = link;
-        }
-      }
-
-      commands.forEach(function (item) {
-        var button = createElement('button', 'button iss-editorial-rich-toolbar__button', item.icon ? '' : item.label);
-        button.type = 'button';
-        button.title = item.label;
-        button.setAttribute('aria-label', item.label);
-        if (item.icon) {
-          button.classList.add('iss-editorial-rich-toolbar__button--icon');
-          button.appendChild(createElement('span', 'dashicons ' + item.icon));
-        }
-        button.addEventListener('click', function (event) {
-          var href;
-          event.preventDefault();
-          editor.focus();
-          if (item.command === 'createLink') {
-            var link = currentRichTextLink(editor) || (activeLink && editor.contains(activeLink) ? activeLink : null);
-            href = window.prompt(
-              link ? 'Link URL (leer lassen zum Entfernen)' : 'Link URL',
-              link ? link.getAttribute('href') || '' : ''
-            );
-            if (href === null) {
-              return;
+      var input = document.createElement('textarea');
+      var textLabel = createElement('label', '', label);
+      var id = 'iss-editorial-text-' + (++richEditorCounter);
+      input.id = id;
+      input.className = 'widefat';
+      input.rows = 8;
+      input.value = /<[a-z][\s\S]*>/i.test(String(value || '')) ? value : plainTextToRichHtml(value);
+      textLabel.htmlFor = id;
+      wrapper.appendChild(textLabel);
+      wrapper.appendChild(input);
+      input.addEventListener('input', function () { onChange(input.value); });
+      window.setTimeout(function () {
+        if (!input.isConnected || !window.wp || !window.wp.editor) { return; }
+        richEditorIds.push(id);
+        window.wp.editor.initialize(id, {
+          mediaButtons: false,
+          quicktags: false,
+          tinymce: {
+            wpautop: true,
+            menubar: false,
+            statusbar: false,
+            height: 230,
+            toolbar1: 'undo redo | bold italic | bullist numlist | link unlink | removeformat',
+            toolbar2: '',
+            setup: function (editor) {
+              editor.on('input change undo redo', function () { onChange(editor.getContent()); });
+              editor.on('keydown', function (event) {
+                if (event.key === 'Escape') {
+                  event.preventDefault();
+                  // TinyMCE must finish handling the key before its selection is destroyed.
+                  window.setTimeout(finishSection, 0);
+                }
+              });
             }
-            if (link && href.trim() === '') {
-              unwrapLink(link);
-              activeLink = null;
-              commit();
-              return;
-            }
-            if (!isSafeRichTextHref(href)) {
-              return;
-            }
-            if (link) {
-              link.setAttribute('href', href.trim());
-            } else {
-              document.execCommand('createLink', false, href.trim());
-            }
-          } else {
-            document.execCommand(item.command, false, item.value || null);
           }
-          commit();
         });
-        toolbar.appendChild(button);
-      });
-
-      editor.contentEditable = 'true';
-      editor.setAttribute('role', 'textbox');
-      editor.setAttribute('aria-label', label);
-      editor.setAttribute('data-placeholder', 'Text eingeben');
-      editor.innerHTML = /<[a-z][\s\S]*>/i.test(String(value || ''))
-        ? sanitizeRichHtml(value)
-        : plainTextToRichHtml(value);
-      editor.addEventListener('input', commit);
-      editor.addEventListener('click', rememberActiveLink);
-      editor.addEventListener('keyup', rememberActiveLink);
-      editor.addEventListener('mouseup', rememberActiveLink);
-      editor.addEventListener('blur', replaceEditorHtml);
-      editor.addEventListener('paste', function (event) {
-        var clipboard = event.clipboardData || window.clipboardData;
-        var html;
-        if (!clipboard) {
-          return;
-        }
-        event.preventDefault();
-        html = clipboard.getData('text/html');
-        if (html) {
-          document.execCommand('insertHTML', false, sanitizeRichHtml(html));
-        } else {
-          document.execCommand('insertHTML', false, plainTextToRichHtml(clipboard.getData('text/plain')));
-        }
-        commit();
-      });
-
-      wrapper.appendChild(createElement('span', '', label));
-      wrapper.appendChild(toolbar);
-      wrapper.appendChild(editor);
+      }, 0);
       return wrapper;
     }
 
@@ -2888,7 +2751,7 @@
       return next.toString();
     }
 
-    function savePreviewDocument() {
+    function savePreviewDocument(intent) {
       var params = new window.URLSearchParams();
       var saveUrl = config.ajaxUrl || window.ajaxurl || '';
 
@@ -2898,11 +2761,19 @@
       }
 
       updateField();
+      var snapshot = currentSaveValue();
       params.append('action', 'iss_editorial_save_preview_document');
       params.append('nonce', config.previewNonce);
       params.append('post_id', String(config.postId));
       params.append('format', format);
       params.append('document', field.value || JSON.stringify(documentState));
+      params.append('base', config.baseToken || '');
+      params.append('draft_token', draftToken);
+      params.append('enabled', enabledField ? enabledField.value : '1');
+      params.append('intent', intent || 'autosave');
+      Object.keys(identityFields).forEach(function (key) {
+        if (identityFields[key]) { params.append(key, identityFields[key].value); }
+      });
 
       return window.fetch(saveUrl, {
         method: 'POST',
@@ -2917,8 +2788,33 @@
             throw new Error(payload && payload.data && payload.data.message ? payload.data.message : 'preview failed');
           }
 
+          draftToken = payload.data.draftToken || '';
+          if (draftTokenField) { draftTokenField.value = draftToken; }
+          lastSavedValue = snapshot;
+          retry.hidden = true;
+          if (payload.data.validationMessage) {
+            setStatus('Entwurf gesichert. Vor dem Veröffentlichen prüfen: ' + payload.data.validationMessage);
+            if (intent === 'preview' || intent === 'submit') { throw new Error(payload.data.validationMessage); }
+            return '';
+          }
+          setStatus(currentSaveValue() === snapshot ? 'Entwurf gesichert. Noch nicht veröffentlicht.' : 'Weitere Änderungen werden gesichert …');
           return payload.data && payload.data.previewUrl ? payload.data.previewUrl : config.previewUrl;
         });
+      });
+    }
+
+    function queueSave(intent) {
+      window.clearTimeout(autosaveTimer);
+      if (recoveryPending || config.validationError) {
+        return Promise.reject(new Error(config.validationError || 'Bitte zuerst den vorhandenen Entwurf prüfen.'));
+      }
+      saveChain = saveChain.catch(function () {}).then(function () {
+        return savePreviewDocument(intent);
+      });
+      return saveChain.catch(function (error) {
+        setStatus(error.message || 'Nicht gesichert. Bitte erneut versuchen.');
+        retry.hidden = false;
+        throw error;
       });
     }
 
@@ -2951,12 +2847,28 @@
       button.addEventListener('click', function (event) {
         var fallbackUrl = previewUrlFromButton(button);
         event.preventDefault();
+        if (recoveryPending || config.validationError) {
+          setStatus(config.validationError || 'Bitte zuerst den vorhandenen Entwurf prüfen.');
+          return;
+        }
+        var previewWindow = window.open('', '_blank');
+        if (previewWindow) { previewWindow.opener = null; }
         setPreviewButtonBusy(button, true);
         setStatus((config.strings && config.strings.previewSaving) || 'Vorschau wird vorbereitet ...');
-        saveRouteStationsIfDirty().then(savePreviewDocument).then(function (previewUrl) {
-          window.open(appendRoutePreviewArgs(previewUrl || fallbackUrl || config.previewUrl), '_blank', 'noopener');
-          setStatus((config.strings && config.strings.previewReady) || 'Vorschau wurde geoeffnet.');
+        saveRouteStationsIfDirty().then(function () { return queueSave('preview'); }).then(function (previewUrl) {
+          var url = appendRoutePreviewArgs(previewUrl || fallbackUrl || config.previewUrl);
+          if (previewWindow) {
+            previewWindow.location.href = url;
+          } else {
+            var link = createElement('a', '', 'Vorschau öffnen');
+            link.href = url;
+            link.target = '_blank';
+            link.rel = 'noopener';
+            status.appendChild(document.createTextNode(' '));
+            status.appendChild(link);
+          }
         }).catch(function (error) {
+          if (previewWindow) { previewWindow.close(); }
           setStatus(error && error.message ? error.message : ((config.strings && config.strings.previewError) || 'Die Vorschau konnte nicht vorbereitet werden.'));
         }).finally(function () {
           setPreviewButtonBusy(button, false);
@@ -2975,6 +2887,81 @@
     bindPreviewSave(nativePreviewButton);
 
     render();
+    lastSavedValue = currentSaveValue();
+    setStatus(config.validationError || 'Gespeicherte Fassung geladen.');
+    if (config.validationError) { root.inert = true; }
+
+    Object.keys(identityFields).forEach(function (key) {
+      if (identityFields[key]) { identityFields[key].addEventListener('input', scheduleAutosave); }
+    });
+
+    Object.keys(config.documentBindings || {}).forEach(function (key) {
+      var input = document.querySelector(config.documentBindings[key]);
+      if (input) {
+        input.addEventListener('change', function () {
+          updateField();
+          render();
+          scheduleAutosave();
+        });
+      }
+    });
+
+    if (recoveryPending) {
+      root.inert = true;
+      var recovery = container.querySelector('.iss-editorial-recovery');
+      var restore = createElement('button', 'button button-primary', 'Entwurf wiederherstellen');
+      var discard = createElement('button', 'button', 'Gespeicherte Fassung verwenden');
+      var stale = config.recovery.base !== config.baseToken;
+      recovery.appendChild(createElement('p', '', stale
+        ? 'Ein eigener Entwurf liegt vor. Seitdem wurde der Inhalt aktualisiert. Prüfen Sie den wiederhergestellten Entwurf vor dem Veröffentlichen.'
+        : 'Ein eigener, noch nicht veröffentlichter Entwurf liegt vor (' + config.recovery.modified + ').'));
+      restore.type = discard.type = 'button';
+      restore.addEventListener('click', function () {
+        documentState = JSON.parse(JSON.stringify(config.recovery.document));
+        Object.keys(identityFields).forEach(function (key) {
+          if (identityFields[key]) { identityFields[key].value = config.recovery[key] || ''; }
+        });
+        Object.keys(config.documentBindings || {}).forEach(function (key) {
+          var input = document.querySelector(config.documentBindings[key]);
+          if (input && documentState[key]) { input.value = documentState[key]; }
+        });
+        recoveryPending = false;
+        root.inert = false;
+        clear(recovery);
+        render();
+        scheduleAutosave();
+      });
+      discard.addEventListener('click', function () {
+        recoveryPending = false;
+        queueSave('discard').then(function () {
+          root.inert = false;
+          clear(recovery);
+          setStatus('Gespeicherte Fassung geladen.');
+        }).catch(function () { recoveryPending = true; });
+      });
+      recovery.appendChild(restore);
+      recovery.appendChild(discard);
+    }
+
+    var form = container.closest('form');
+    if (form) {
+      form.addEventListener('submit', function (event) {
+        if (submitting) { return; }
+        event.preventDefault();
+        event.stopImmediatePropagation();
+        var submitter = event.submitter;
+        queueSave('submit').then(function () {
+          submitting = true;
+          form.requestSubmit(submitter || undefined);
+        }).catch(function () {});
+      }, true);
+    }
+    window.addEventListener('beforeunload', function (event) {
+      if (!submitting && currentSaveValue() !== lastSavedValue) {
+        event.preventDefault();
+        event.returnValue = '';
+      }
+    });
   }
 
   document.addEventListener('DOMContentLoaded', function () {

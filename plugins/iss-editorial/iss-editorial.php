@@ -16,6 +16,7 @@ define('ISS_EDITORIAL_URL', plugin_dir_url(__FILE__));
 
 require_once ISS_EDITORIAL_PATH . 'includes/formats.php';
 require_once ISS_EDITORIAL_PATH . 'includes/storage.php';
+require_once ISS_EDITORIAL_PATH . 'includes/revisions.php';
 require_once ISS_EDITORIAL_PATH . 'includes/references.php';
 require_once ISS_EDITORIAL_PATH . 'includes/admin.php';
 

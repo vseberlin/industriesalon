@@ -71,7 +71,7 @@ function industriesalon_get_editorial_ausstellung_skins(): array
 }
 
 add_filter('iss_editorial_format_skins', function (array $skins, string $format_slug): array {
-    if ($format_slug !== 'ausstellung') {
+    if (!in_array($format_slug, ['ausstellung', 'rueckblick'], true)) {
         return $skins;
     }
 
@@ -112,11 +112,12 @@ function industriesalon_get_editorial_ausstellung_post_skin(int $post_id): strin
         return '';
     }
 
-    if (!iss_editorial_document_is_enabled($post_id, 'ausstellung')) {
+    $format = get_post_type($post_id) === 'rueckblick' ? 'rueckblick' : 'ausstellung';
+    if (!iss_editorial_document_is_enabled($post_id, $format)) {
         return '';
     }
 
-    return industriesalon_resolve_editorial_ausstellung_skin(iss_editorial_get_read_model($post_id, 'ausstellung', false));
+    return industriesalon_resolve_editorial_ausstellung_skin(iss_editorial_get_read_model($post_id, $format, false));
 }
 
 function industriesalon_render_editorial_reference_placeholder(array $reference): string
@@ -335,7 +336,23 @@ function industriesalon_render_editorial_ausstellung_section(array $section, boo
     }
 
     foreach ($media_refs as $ref) {
-        $media_html .= industriesalon_render_editorial_media_reference((array) $ref, $show_placeholders);
+        if ($type === 'material') {
+            $resolved = (array) ($ref['resolved'] ?? []);
+            $url = (string) ($resolved['url'] ?? '');
+            $label = (string) ($ref['reference']['label'] ?? $resolved['title'] ?? __('Dokument herunterladen', 'industriesalon'));
+            if ($url !== '') {
+                $links_html .= '<p><a href="' . esc_url($url) . '" download>' . esc_html($label) . '</a></p>';
+            }
+        } else {
+            $media_html .= industriesalon_render_editorial_media_reference((array) $ref, $show_placeholders);
+        }
+    }
+    if ($type === 'upload_intake') {
+        $upload_html = industriesalon_render_editorial_project_upload_intake($section);
+        if ($upload_html === '') {
+            return '';
+        }
+        $links_html .= $upload_html;
     }
 
     if ($kicker === '' && $title === '' && $body === '' && $quote === '' && $facts_html === '' && $ref_html === '' && $media_html === '' && $links_html === '') {
@@ -400,7 +417,7 @@ function industriesalon_render_editorial_ausstellung_section(array $section, boo
 
 function industriesalon_render_editorial_ausstellung_content(string $content): string
 {
-    if (is_admin() || !is_singular(ISS_CONTENT_MODEL_AUSSTELLUNG_POST_TYPE) || !in_the_loop() || !is_main_query()) {
+    if (is_admin() || !is_singular(['ausstellung', 'rueckblick']) || !in_the_loop() || !is_main_query()) {
         return $content;
     }
 
@@ -409,12 +426,13 @@ function industriesalon_render_editorial_ausstellung_content(string $content): s
         return $content;
     }
 
-    if (!iss_editorial_document_is_enabled((int) $post_id, 'ausstellung')) {
+    $format = get_post_type($post_id) === 'rueckblick' ? 'rueckblick' : 'ausstellung';
+    if (!iss_editorial_document_is_enabled((int) $post_id, $format)) {
         return $content;
     }
 
     $prefer_autosave = is_preview() && current_user_can('edit_post', (int) $post_id);
-    $document = iss_editorial_get_read_model((int) $post_id, 'ausstellung', $prefer_autosave);
+    $document = iss_editorial_get_read_model((int) $post_id, $format, $prefer_autosave);
     $sections = is_array($document['sections'] ?? null) ? $document['sections'] : [];
     if (!$sections) {
         return $content;
@@ -442,3 +460,34 @@ function industriesalon_render_editorial_ausstellung_content(string $content): s
     return trim($html) !== '' ? '<div class="' . esc_attr(implode(' ', $classes)) . '">' . $html . '</div>' : $content;
 }
 add_filter('the_content', 'industriesalon_render_editorial_ausstellung_content', 12);
+
+/** Compose report links on the native content block; excerpts also run the_content. */
+add_filter('render_block_core/post-content', static function (string $content, array $block, WP_Block $instance): string {
+    if (is_admin() || !is_singular(['veranstaltung', 'ausstellung', 'projekt', 'fuehrung', 'rueckblick']) || !in_the_loop() || !is_main_query() || !function_exists('iss_content_report_connections') || !function_exists('iss_relations_render_related_content_card')) {
+        return $content;
+    }
+    $post_id = (int) ($instance->context['postId'] ?? 0);
+    if ($post_id <= 0 || $post_id !== (int) get_queried_object_id()) {
+        return $content;
+    }
+    $is_report = get_post_type($post_id) === 'rueckblick';
+    $cards = [];
+    foreach (iss_content_report_connections($post_id, true) as $post) {
+        $cards[] = iss_relations_render_related_content_card($post, ['kicker' => get_post_type_object($post->post_type)->labels->singular_name], ['skin' => 'standard']);
+    }
+    if ($cards) {
+        $content .= '<section class="iss-related-feed iss-container section"><h2>' . esc_html($is_report ? __('Dazu gehört dieser Rückblick', 'industriesalon') : __('Rückblicke', 'industriesalon')) . '</h2>' . iss_relations_render_cards_grid($cards, 'rueckblick', ['columns' => 3]) . '</section>';
+    }
+    if ($is_report) {
+        $date = (string) get_post_meta($post_id, '_iss_report_date', true);
+        if ($date !== '') {
+            $content = '<div class="iss-container"><p><time datetime="' . esc_attr($date) . '">' . esc_html(mysql2date(get_option('date_format'), $date)) . '</time></p></div>' . $content;
+        }
+    }
+    return $content;
+}, 15, 3);
+
+// Empty report summaries must not auto-extract the entire rendered gallery and downloads.
+add_filter('get_the_excerpt', static function (string $excerpt, WP_Post $post): string {
+    return $post->post_type === 'rueckblick' && !has_excerpt($post) ? '' : $excerpt;
+}, 20, 2);

@@ -575,20 +575,10 @@ function industriesalon_render_editorial_tour_atlas_map_section(array $section, 
 
 function industriesalon_editorial_tour_upload_intake_url(int $post_id): string
 {
-    $post = $post_id > 0 ? get_post($post_id) : null;
-    if (!$post instanceof WP_Post) {
+    if (!function_exists('iss_content_upload_url') || !iss_content_upload_is_open($post_id)) {
         return '';
     }
-
-    $args = ['event' => 'fuehrung__' . $post->post_name];
-    $upload_code = trim((string) getenv('EVENT_DROP_UPLOAD_CODE'));
-    if ($upload_code !== '') {
-        $args['code'] = $upload_code;
-    }
-
-    $url = add_query_arg($args, home_url('/event-drop/'));
-
-    return (string) apply_filters('industriesalon_tour_upload_intake_url', $url, $post_id);
+    return (string) apply_filters('industriesalon_tour_upload_intake_url', iss_content_upload_url($post_id), $post_id);
 }
 
 function industriesalon_render_editorial_tour_upload_intake_section(array $section, int $rendered_index, string $skin, string $anchor, int $post_id): string

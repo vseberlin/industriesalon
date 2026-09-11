@@ -4,6 +4,10 @@
  */
 declare(strict_types=1);
 
+require_once dirname(__DIR__) . '/wp-load.php';
+nocache_headers();
+header('Referrer-Policy: no-referrer');
+
 $eventSlug = preg_replace('/[^a-zA-Z0-9._-]/', '-', (string)($_GET['event'] ?? ($_ENV['EVENT_SLUG'] ?? 'event')));
 if ($eventSlug === '') {
     $eventSlug = 'event';
@@ -13,7 +17,7 @@ $incomingDir = $storageRoot . '/incoming';
 $acceptedDir = $storageRoot . '/accepted';
 $rejectedDir = $storageRoot . '/rejected';
 $manifestFile = $storageRoot . '/manifests/upload-manifest.csv';
-$allowedExtensions = ['jpg', 'jpeg', 'png', 'gif', 'webp', 'mp4', 'mov', 'm4v', 'mkv', 'webm', 'avi', 'zip'];
+$allowedExtensions = ['jpg', 'jpeg', 'png', 'gif', 'webp', 'mp4', 'mov', 'm4v', 'mkv', 'webm', 'avi', 'zip', 'pdf', 'docx', 'pptx', 'xlsx', 'odt'];
 $allowedLicenses = [
     'all-rights-reserved' => 'All rights reserved',
     'cc-by-4.0' => 'CC BY 4.0',
@@ -329,6 +333,18 @@ function renderAdmin(string $incomingDir, string $acceptedDir, string $rejectedD
     exit;
 }
 
+// Signed links are bound to one content item. The POST check repeats the open-state check.
+$contextId = absint($_POST['context'] ?? ($_GET['context'] ?? 0));
+$contextKey = (string) ($_POST['key'] ?? ($_GET['key'] ?? ''));
+$contextAuthorized = function_exists('iss_content_upload_authorized') && iss_content_upload_authorized($contextId, $contextKey);
+if ($contextId > 0 && !$contextAuthorized) {
+    reject(403, 'Dieser Upload-Link ist geschlossen oder nicht mehr gültig.');
+}
+$contextPost = $contextAuthorized ? get_post($contextId) : null;
+if ($contextPost) {
+    $eventSlug = $contextPost->post_type . '__' . $contextPost->post_name;
+}
+
 if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
     $view = (string)($_GET['view'] ?? '');
     $token = (string)($_GET['token'] ?? '');
@@ -398,8 +414,8 @@ if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
         renderAdmin($incomingDir, $acceptedDir, $rejectedDir, $manifestFile, $adminToken, $adminCode);
     }
 
-    $uploadCodeHint = hasAuth($expectedToken, $uploadCode, '', $code);
-    $tokenHint = $uploadCodeHint ? 'Upload link accepted. No access token is needed.' : 'Access token required.';
+    $uploadCodeHint = $contextAuthorized || hasAuth($expectedToken, $uploadCode, '', $code);
+    $tokenHint = $uploadCodeHint ? 'Upload-Link geöffnet.' : 'Zugangscode erforderlich.';
     header('Content-Type: text/html; charset=utf-8');
 
     $licenseOptions = '';
@@ -409,18 +425,18 @@ if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
     }
 
     $eventInputValue = h((string)$eventSlug);
-    $codeValue = h($uploadCodeHint ? $code : '');
+    $codeValue = h(!$contextAuthorized && $uploadCodeHint ? $code : '');
     $allowedJson = json_encode(array_map(static fn($ext) => '.' . $ext, $allowedExtensions), JSON_UNESCAPED_SLASHES);
     $maxUploadJson = (string)$maxUploadBytes;
 
-    echo '<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">';
-    echo '<title>Event media upload</title>';
+    echo '<!doctype html><html lang="de"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">';
+    echo '<title>Material beitragen</title>';
     echo '<link href="https://releases.transloadit.com/uppy/v5.2.1/uppy.min.css" rel="stylesheet">';
     echo '<style>
         :root { color-scheme: light; --ink: #1e2528; --muted: #667176; --line: #d8dedc; --paper: #f7f5ef; --accent: #1f6f78; --accent-dark: #164d54; }
         body { margin: 0; font-family: ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; color: var(--ink); background: linear-gradient(135deg, #f7f5ef 0%, #e9f0ed 52%, #f4eadb 100%); }
         main { width: min(980px, calc(100% - 32px)); margin: 0 auto; padding: 32px 0 48px; }
-        .drop-shell { display: grid; gap: 20px; }
+        .drop-shell { display: grid; grid-template-columns: minmax(0, 1fr); gap: 20px; }
         .drop-head { display: grid; gap: 8px; }
         h1 { margin: 0; font-size: clamp(2rem, 5vw, 4rem); line-height: 0.95; letter-spacing: 0; }
         .drop-note { margin: 0; color: var(--muted); font-size: 1rem; max-width: 62ch; }
@@ -433,29 +449,30 @@ if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
         #uppy { background: rgba(255,255,255,0.74); border: 1px solid var(--line); border-radius: 8px; padding: 10px; }
         .drop-links { display: flex; flex-wrap: wrap; gap: 12px; font-size: 0.92rem; color: var(--muted); }
         .drop-links a { color: var(--accent-dark); }
-        .uppy-Dashboard-inner { border-radius: 6px !important; }
+
         @media (max-width: 680px) { main { width: min(100% - 20px, 980px); padding-top: 20px; } .drop-fields { grid-template-columns: 1fr; padding: 14px; } }
     </style></head><body><main><section class="drop-shell">';
-    echo '<div class="drop-head"><h1>Event media upload</h1><p class="drop-note">' . h($tokenHint) . ' Add photos, videos, or capture directly from your camera, check the consent box, then start the upload. Files go to moderation before they appear in the event gallery.</p></div>';
+    echo '<div class="drop-head"><h1>Material beitragen</h1><p class="drop-note">' . h($tokenHint) . ' Fotos, Videos und Dokumente einsenden. Die Redaktion prüft alle Dateien vor einer Veröffentlichung.</p></div>';
     echo '<div class="drop-fields" id="event-drop-fields">';
-    echo '<label class="drop-field">Participant name or initials<input id="participant_id" name="participant_id" autocomplete="name" required></label>';
+    echo '<label class="drop-field">Name oder Kürzel<input id="participant_id" name="participant_id" autocomplete="name" required></label>';
     if (!$uploadCodeHint) {
-        echo '<label class="drop-field">Access token<input id="token" name="token" required></label>';
+        echo '<label class="drop-field">Zugangscode<input id="token" name="token" required></label>';
         echo '<input type="hidden" id="code" value="">';
     } else {
         echo '<input type="hidden" id="token" value=""><input type="hidden" id="code" value="' . $codeValue . '">';
     }
-    echo '<label class="drop-field">Event code<input id="event" name="event" value="' . $eventInputValue . '" required></label>';
-    echo '<label class="drop-field">Credit / attribution<input id="attribution" name="attribution" required></label>';
-    echo '<label class="drop-field">License<select id="license" name="license">' . $licenseOptions . '</select></label>';
-    echo '<label class="drop-field">E-mail optional<input id="uploader_email" name="uploader_email" type="email"></label>';
-    echo '<label class="drop-check"><input id="consent" name="consent" type="checkbox" value="1" required><span>I confirm that I have rights/consent for publishing these files and agree to the selected license.</span></label>';
-    echo '</div><div id="uppy"></div>';
-    echo '<div class="drop-links"><span>Allowed: ' . h(implode(', ', $allowedExtensions)) . '</span><a href="/event-drop/?view=shared&' . h(authQuery($publicToken, $publicCode)) . '">Accepted files</a>';
-    if (authQuery($adminToken, $adminCode) !== '') {
-        echo '<a href="/event-drop/?view=admin&' . h(authQuery($adminToken, $adminCode)) . '">Admin</a>';
+    echo '<input type="hidden" id="context" value="' . h((string) $contextId) . '"><input type="hidden" id="key" value="' . h($contextKey) . '">';
+    if ($contextPost) {
+        echo '<p class="drop-field">Beitrag zu: ' . h($contextPost->post_title) . '</p><input type="hidden" id="event" value="' . $eventInputValue . '">';
+    } else {
+        echo '<label class="drop-field">Beitragscode<input id="event" value="' . $eventInputValue . '" required></label>';
     }
-    echo '</div></section></main>';
+    echo '<label class="drop-field">Urheber / Bildnachweis<input id="attribution" name="attribution" required></label>';
+    echo '<label class="drop-field">Nutzungsrechte<select id="license" name="license">' . $licenseOptions . '</select></label>';
+    echo '<label class="drop-field">E-Mail (freiwillig)<input id="uploader_email" name="uploader_email" type="email"></label>';
+    echo '<label class="drop-check"><input id="consent" name="consent" type="checkbox" value="1" required><span>Ich darf diese Dateien zur Veröffentlichung weitergeben und stimme den ausgewählten Nutzungsrechten zu.</span></label>';
+    echo '</div><div id="uppy"></div>';
+    echo '<div class="drop-links"><span>Dateitypen: ' . h(implode(', ', $allowedExtensions)) . '</span></div></section></main>';
     echo '<script type="module">
         import { Uppy, Dashboard, Webcam, XHRUpload } from "https://releases.transloadit.com/uppy/v5.2.1/uppy.min.mjs";
 
@@ -466,6 +483,8 @@ if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
             token: document.getElementById("token"),
             code: document.getElementById("code"),
             event: document.getElementById("event"),
+            context: document.getElementById("context"),
+            key: document.getElementById("key"),
             attribution: document.getElementById("attribution"),
             license: document.getElementById("license"),
             uploader_email: document.getElementById("uploader_email"),
@@ -478,6 +497,8 @@ if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
                 token: fields.token.value.trim(),
                 code: fields.code.value.trim(),
                 event: fields.event.value.trim(),
+                context: fields.context.value,
+                key: fields.key.value,
                 attribution: fields.attribution.value.trim(),
                 license: fields.license.value,
                 uploader_email: fields.uploader_email.value.trim(),
@@ -492,7 +513,7 @@ if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
             if (!meta.event) missing.push("event code");
             if (!meta.attribution) missing.push("credit / attribution");
             if (!meta.consent) missing.push("consent");
-            if (!meta.code && !meta.token) missing.push("access token");
+            if (!(meta.context && meta.key) && !meta.code && !meta.token) missing.push("Zugangscode");
             return missing;
         }
 
@@ -508,7 +529,7 @@ if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
                 const meta = collectMeta();
                 const missing = validateMeta(meta);
                 if (missing.length > 0) {
-                    uppy.info("Please fill: " + missing.join(", "), "error", 6000);
+                    uppy.info("Bitte ausfüllen: " + missing.join(", "), "error", 6000);
                     return false;
                 }
                 for (const fileID of Object.keys(files)) {
@@ -525,7 +546,7 @@ if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
             showProgressDetails: true,
             hideCancelButton: false,
             plugins: ["Webcam"],
-            note: "Photos, videos, ZIP archives, or direct camera capture. Each file is uploaded separately and reviewed before publishing.",
+            note: "Fotos, Videos, Dokumente oder ZIP-Dateien. Jede Datei wird vor der Veröffentlichung geprüft.",
         });
 
         uppy.use(Webcam, {
@@ -545,18 +566,18 @@ if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
             limit: 2,
             timeout: 0,
             responseType: "json",
-            allowedMetaFields: ["participant_id", "token", "code", "event", "attribution", "license", "uploader_email", "consent", "format"],
+            allowedMetaFields: ["participant_id", "token", "code", "event", "context", "key", "attribution", "license", "uploader_email", "consent", "format"],
         });
 
         uppy.on("upload-success", (file, response) => {
             const storedName = response?.body?.file || file.name;
-            uppy.info("Uploaded: " + storedName + " - waiting for approval", "success", 5000);
+            uppy.info("Hochgeladen: " + storedName + " – wartet auf Freigabe", "success", 5000);
         });
     </script></body></html>';
     exit;
 }
 
-if (!hasAuth(
+if (!$contextAuthorized && !hasAuth(
     $expectedToken,
     $uploadCode,
     (string)($_POST['token'] ?? ''),
@@ -570,8 +591,17 @@ if (!isset($_FILES['media'])) {
 }
 
 $token = (string)($_POST['token'] ?? ($_POST['code'] ?? ($_GET['code'] ?? '')));
-$event = preg_replace('/[^a-zA-Z0-9._-]/', '-', (string)($_POST['event'] ?? $eventSlug));
-$participant = preg_replace('/[^a-zA-Z0-9._-]/', '-', (string)($_POST['participant_id'] ?? '')); 
+// Legacy code links must also point to an open editorial context.
+$event = $contextPost ? $eventSlug : preg_replace('/[^a-zA-Z0-9._-]/', '-', (string) ($_POST['event'] ?? $eventSlug));
+if (!$contextPost) {
+    $parts = explode('__', $event, 2);
+    $legacyPost = get_page_by_path($parts[1] ?? $parts[0], OBJECT, count($parts) === 2 ? $parts[0] : 'veranstaltung');
+    if (!$legacyPost || !iss_content_upload_is_open((int) $legacyPost->ID)) {
+        reject(403, 'Für diesen Beitrag ist der Upload geschlossen.');
+    }
+    $contextPost = $legacyPost;
+}
+$participant = preg_replace('/[^a-zA-Z0-9._-]/', '-', (string)($_POST['participant_id'] ?? ''));
 if ($event === '') {
     $event = $eventSlug;
 }
@@ -624,13 +654,19 @@ if ($extension === '' || !in_array($extension, $allowedExtensions, true)) {
 }
 
 $rawMime = mime_content_type((string)$upload['tmp_name']) ?: 'application/octet-stream';
-$allowedMimes = [
-    'image/jpeg', 'image/png', 'image/gif', 'image/webp',
-    'video/mp4', 'video/quicktime', 'video/x-msvideo', 'video/webm', 'video/x-matroska', 'video/x-m4v',
-    'application/zip', 'application/x-zip-compressed'
+$mimeByExtension = [
+    'jpg' => ['image/jpeg'], 'jpeg' => ['image/jpeg'], 'png' => ['image/png'],
+    'gif' => ['image/gif'], 'webp' => ['image/webp'], 'pdf' => ['application/pdf'],
+    'mp4' => ['video/mp4'], 'mov' => ['video/quicktime'], 'm4v' => ['video/x-m4v', 'video/mp4'],
+    'mkv' => ['video/x-matroska'], 'webm' => ['video/webm'], 'avi' => ['video/x-msvideo'],
+    'zip' => ['application/zip', 'application/x-zip-compressed'],
+    'docx' => ['application/vnd.openxmlformats-officedocument.wordprocessingml.document', 'application/zip'],
+    'pptx' => ['application/vnd.openxmlformats-officedocument.presentationml.presentation', 'application/zip'],
+    'xlsx' => ['application/vnd.openxmlformats-officedocument.spreadsheetml.sheet', 'application/zip'],
+    'odt' => ['application/vnd.oasis.opendocument.text', 'application/zip'],
 ];
-if ($rawMime === false || (!in_array($rawMime, $allowedMimes, true) && !in_array($extension, ['webm', 'gif', 'zip'], true))) {
-    reject(400, 'Uploaded media MIME type not accepted.', ['mime' => $rawMime]);
+if (!in_array($rawMime, $mimeByExtension[$extension] ?? [], true)) {
+    reject(400, 'Dateityp und Dateiinhalt passen nicht zusammen.');
 }
 
 $timestamp = gmdate('Ymd_His');
@@ -692,7 +728,6 @@ if (($mediaType = $_POST['format'] ?? '') === 'json' || (strpos($_SERVER['HTTP_A
     echo json_encode([
         'ok' => true,
         'file' => $storedName,
-        'path' => $destination,
     ], JSON_UNESCAPED_SLASHES);
     exit;
 }

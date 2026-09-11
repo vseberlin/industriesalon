@@ -1,95 +1,105 @@
-# Current Handoff
+# Current handoff — 2026-09-11
 
-Updated: 2026-07-09
+Website checkout: `/home/vladimir/wp-website`, branch `main`; read `AGENTS.md`
+first. Archive work is preserved separately in `/home/vladimir/wp` on
+`archive/local-work-20260911` and must stay out of website delivery.
 
-Current checkpoint only. Completed history belongs in `CHANGELOG.md`; active
-follow-up belongs in `TODO.md`.
+## Current task and accepted local state
 
-## Current Work
+The shared JSON editor and optional Rückblick/material workflow are implemented
+locally. The installed Chrome extension connects; yesterday's native-host blocker
+is resolved. No further extension installation is needed.
 
-- Schöneweide Atlas first load now uses a combined
-  `/wp-json/iss-register/v1/atlas-bootstrap` payload. The browser no longer
-  starts separate cold `/atlas` and `/atlas-context` place-model builds.
-- The Atlas context contract has its own transient, and the bootstrap response
-  warms it for the unfiltered Atlas view.
-- The Schöneweide page now uses lighter display WebP assets for heavy static
-  media and a lighter theme-owned static map display image. Originals are still
-  present and untouched.
-- The matching uploads deploy artifact is:
-  `ops/uploads/2026-07-09-schoneweide-display-webp.tar.gz`, with manifest and
-  SHA256 sidecar in the same directory.
+Eligible landing pages, exhibitions, projects, tours, publications, retrospectives,
+Places and events share the bounded JSON canvas and explicit autosave recovery.
+Existing disabled/non-JSON content retains its authority. Dates, booking and other
+owner panels still use their own native save contracts.
 
-## Places And Interactive Atlas Direction
+Events, exhibitions, projects and tours expose **Material & Rückblicke**:
+create a linked Rückblick draft, share existing source Sets, and open/close a
+per-content guest upload link. Guest files remain pending for rights review.
+**Zum Entwurf hinzufügen** prepares reviewed photos/documents in an explicit
+destination's own autosave; restore, preview and save normally. Approval is checked
+again before save/preview. Use history retains multiple destinations. Graph edges
+own report/source links; native publication determines public visibility. The
+Rückblick template reuses the ordered renderer, Chronik skin and shared cards.
 
-- The accepted migration plan is
-  `docs/architecture/places-editorial-atlas-restructure-plan.md`.
-- The end-to-end local pilot is implemented. `iss-content` now registers the
-  unchanged `register_place` CPT and Place format; `iss-editorial` stores typed
-  Place JSON; the theme owns enabled dossier rendering with legacy fallback.
-- Post 12899 (`Kino Spreehöfe`) is enabled with nine sections and six epochs.
-  `wp iss-register place-editorial-check` proves the document/projection hash
-  match. Editorial save rebuilds epoch/state projections and hides the legacy
-  epoch metabox only for enabled Places.
-- TouchTable crawler/review/story and feedback runtime plus nine dead partials
-  are retired. The local retirement migration backed up and removed 184 source
-  rows; live TouchTable plus SQL backup remains the recovery source.
-- Atlas bootstrap is 58,535 bytes / 9,526 bytes gzipped for 76 Places, with
-  versioned caches, ETag/304, lazy detail, and near-viewport startup. The
-  absolute local warm TTFB remains about 170–260 ms despite the payload win.
-- Next bounded action: curator-check the 12899 editor/save/preview content.
-  After review, migrate further Places in batches. Do not remove the register
-  plugin until graph actor/identity migration, Atlas ownership transfer to
-  `iss-frontend`, and a stable observation period are complete.
+The Repair-Café critical error is resolved: relationship cards appended through
+`the_content` recursively generated excerpts until PHP exhausted memory. The
+theme now composes those cards on the queried post's native `core/post-content`
+block. User-created published report **27388** links to event **26813**; preserve
+both. Their public pages return HTTP 200 and their reciprocal links work in Chrome.
 
-## Preserve
+Implementation, editor instructions and repeatable commands:
+[Editorial platform](docs/architecture/editorial-platform.md).
+Guest receiver dependency/delivery notes:
+[Event Drop](docs/runbooks/event-drop-staging.md#current-editorial-integration-2026-09-11).
 
-- Keep the interactive Atlas source modular for now:
-  `themes/industriesalon/assets/js/atlas/*.js` plus
-  `themes/industriesalon/assets/js/schoneweide.js`. Do not introduce a bundle
-  unless the project is ready to add a build step.
-- `industriesalon-schoeneweide-register` owns `register_place`, Atlas REST
-  payloads, and register caches. The theme owns the Schöneweide page template,
-  map image assets, and visual presets.
-- The optimized upload WebPs are display assets referenced directly by the
-  file-backed Schöneweide template. They are not Media Library attachments.
+## Verification and remaining review
 
-## Staging State
+- Storage/HTTP suite: **171 checks**, including **85 existing documents**;
+  pre-existing post content/meta unchanged. Sets suite: **169 assertions** plus
+  cleanup checks, including all five content types, rights withdrawal, multiple
+  report sources, publication/withdrawal, pagination and protected Set deletion.
+  Regression coverage renders singular content blocks with empty report excerpts
+  for all four source types and checks that excerpts exclude relationship cards.
+- **11 shared-editor DOM tests + 2 Set/upload interaction tests** passed.
+  Targeted ESLint, PHPCS, PHPStan, PHP syntax and whitespace checks passed.
+- Chrome: earlier TinyMCE, nested pickers, recovery, reorder and native saves;
+  new rights form, explicit destination, gallery/PDF recovery, native Save Draft,
+  linked Rückblick creation, source search, optional date and two confirmed uses.
+  Actual HTTP JPEG/PDF submissions reached the selected private Set; altered
+  event text did not change the destination; closed GET/POST returned 403.
+- Rückblick preview and guest upload were checked at **390px**, without horizontal
+  overflow. A guest-form grid issue was fixed. Earlier event nested-picker mobile,
+  mouse dragging and Firefox checks remain unverified; do not claim a complete
+  cross-browser matrix. Temporary viewport overrides were reset.
+- Temporary browser posts/account, one imported fixture image, raw fixture files,
+  manifest rows and orphan fixture graph records were removed. Ten old empty
+  integration Sets were removed after SQL backup and exact-ID/dead-link checks.
+  At that initial feature cleanup checkpoint, **11 real Sets / 37 original items**
+  remained and existing published post content/meta checksums were unchanged.
+  The user subsequently created report 27388. The critical-error regression suite
+  removed only its own fixtures and left existing Sets, items and links unchanged.
 
-- Code and uploads artifact are deployed on staging.
-- Staging repo was fast-forwarded to
-  `5682aec Optimize Schoneweide Atlas load`.
-- The artifact
-  `ops/uploads/2026-07-09-schoneweide-display-webp.tar.gz` was checksum-verified
-  on staging and extracted into `/var/www/html`.
-- No SQL artifact is required for this checkpoint: no DB-backed template,
-  attachment rows, or content rows were changed.
+Next: user review of the local workflow, then coordinated delivery if requested.
+Local site `http://localhost:8082`; canonical `http://192.168.2.31:8082`.
+The temporary browser login was removed; the user should use their normal account.
 
-## Verified Locally
+## Preserve and delivery state
 
-- `page-schoneweide` template authority is `theme`.
-- New optimized media URLs return `200` locally.
-- Upload artifact checksum passes.
-- Browser pass on `/schoneweide/`: initial image transfer dropped from about
-  15.7 MB to about 4.9 MB; full-scroll image transfer is about 5.5 MB; the old
-  6.8 MB hall JPEG is no longer requested; Atlas reaches ready state with 74
-  markers.
-- `npm run lint:js`, PHP lint, PHPStan, and `git diff --check` passed.
-- PHPCS still reports three warnings in existing Atlas cache/model patterns:
-  one `tax_query` warning and two direct-DB warnings for transient cleanup. No
-  PHPCS errors.
-
-## Verified On Staging
-
-- `/schoneweide/` returns `200` and includes the Atlas bootstrap URL plus the
-  optimized WebP references.
-- `/wp-json/iss-register/v1/atlas-bootstrap` returns `200` with 76 places and
-  3 context payloads; warm checks returned in about 110-150 ms.
-- Representative optimized upload and theme map WebP URLs return `200`.
-- All eight optimized upload WebPs are present in the WordPress container with
-  expected byte sizes.
-
-## Commit State
-
-- Local and `origin/main` are aligned at
-  `5682aec Optimize Schoneweide Atlas load` before the staging closeout doc
-  update.
+- Website development continues in `/home/vladimir/wp-website` on **main**,
+  tracking `origin/main` `0857845`. This checkpoint commits the shared editor,
+  recovery, Rückblick and reviewed-upload changes on top of the two website
+  commits `5c6433a` (from `cf862c9`) and `7d97628` (from `aa1a23a`). The 20
+  unpublished archive commits are excluded from this history. Nothing is pushed.
+- The original checkout `/home/vladimir/wp` is preserved on
+  **archive/local-work-20260911**, HEAD `8d6889e`, without an upstream. Its full
+  mixed history and archive working files remain intact. Do not merge or push
+  this branch into website main. Archive preservation tools/tests/docs,
+  archive-only AGENTS changes, `AGENTS-wp.md`, `archive-backlog.md` and the old
+  `TODO.md` deletion were not copied into the website checkout.
+- This checkpoint records all **39 website/editorial files**, including the
+  small shared object-picker modal-focus integration in `plugins/iss-archive`.
+  Original uncommitted copies remain in the preserved checkout. Continue
+  website edits in the website checkout to avoid diverging copies.
+- Docker and the local site still serve `/home/vladimir/wp`; this Git separation
+  did not change services, mounts, the database or uploads. The copied runtime
+  code/templates match that checkout. Future edits in `wp-website` are not
+  automatically served by the existing containers; arrange an explicit runtime
+  switch or controlled code sync before browser verification of further edits.
+- Separation verification: all 13 editor/Set DOM interaction tests passed in the
+  website checkout; source/template/artifact byte comparisons and Git whitespace
+  checks passed. Earlier storage, rights and browser checks above were performed
+  against the original running checkout. No fresh PHP/DB suite was needed for
+  the unchanged runtime code.
+- The replayed Place commits retain all three `ops/migrations/2026-07-19-*.php`
+  artifacts and the paired `2026-07-19-kino-spreehoefe-historical-media` upload
+  archive/manifest/checksum. The archive hash and five manifest members were
+  verified. No migrations were run. This editor/Rückblick code commit requires
+  no new DB or uploads artifact: reports, settings and media use normal editor
+  actions; existing local editorial content is not exported by this commit.
+  Deliver Event Drop, `iss-content`, `iss-editorial` and the theme together.
+- A verified pre-separation patch, untracked-file backup and scope manifest are
+  machine-local at `/home/vladimir/wp/.git/branch-separation-20260911/`.
+  The editor changes are committed locally; nothing was pushed or deployed.

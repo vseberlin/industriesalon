@@ -1,8 +1,12 @@
 # Editorial Media Intake And Sets SOW
 
-This is the implementation scope for a future shared intake, review, and
-promotion workflow. It is not a renderer and not a public content model by
-itself. Public pages consume only promoted references.
+This is the scope and contract for shared intake, review, and material reuse.
+The implemented local workflow is described in
+[Editorial platform](editorial-platform.md#material-and-optional-rückblicke).
+`iss-content` owns Sets, rights review, pagination and preparation of editor drafts;
+Event Drop supplies controlled guest uploads. Public pages consume only references
+saved through the content editor. Broader archive-candidate work below remains
+subject to its own archive contract.
 
 ## Purpose
 
@@ -21,14 +25,14 @@ Core editorial rule:
 ```text
 Upload first.
 Meaning later.
-Public only after promotion.
+Public only after review, draft preparation, and normal WordPress publication.
 Archive only after stricter curation.
 ```
 
 ## Boundary
 
-- `iss-content` should own the cross-CPT editorial Set workflow if this
-  becomes code, because it owns CPT/editor contracts.
+- `iss-content` owns the cross-CPT editorial Set workflow because it owns
+  CPT/editor contracts.
 - A new isolated intake receiver may exist outside the normal public renderer
   path, but it must communicate through explicit interfaces only.
 - `iss-archive` continues to own Archivsets, archive objects, source snapshots,

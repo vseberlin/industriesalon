@@ -267,14 +267,14 @@ function iss_content_model_register_editorial_formats(array $formats): array
                 'label' => __('Automatische Inhalte', 'iss-content-model'),
                 'description' => __('Platzhalter, der selbstständig Termine oder Projekt-Notizen lädt.', 'iss-content-model'),
                 'supports' => ['treatment', 'slot_key'],
-                'treatments' => [
-                    'slot.projects' => __('Projekt-Notizen', 'iss-content-model'),
-                    'slot.timeline' => __('Termine', 'iss-content-model'),
-                    'slot.visit-info' => __('Besuchsinfo', 'iss-content-model'),
-                    'slot.newsletter' => __('Newsletter', 'iss-content-model'),
-                    'slot.fuehrungen-offers' => __('Führungsangebote', 'iss-content-model'),
-                    'slot.team-directory' => __('Team-Verzeichnis', 'iss-content-model'),
-                    'slot.schoneweide-atlas' => __('Schöneweide-Atlas', 'iss-content-model'),
+                'slots' => [
+                    'front-projects' => ['label' => __('Projekt-Notizen', 'iss-content-model'), 'treatment' => 'slot.projects'],
+                    'front-timeline' => ['label' => __('Termine', 'iss-content-model'), 'treatment' => 'slot.timeline'],
+                    'front-visit-info' => ['label' => __('Besuchsinfo', 'iss-content-model'), 'treatment' => 'slot.visit-info'],
+                    'front-newsletter' => ['label' => __('Newsletter', 'iss-content-model'), 'treatment' => 'slot.newsletter'],
+                    'fuehrungen-offers' => ['label' => __('Führungsangebote', 'iss-content-model'), 'treatment' => 'slot.fuehrungen-offers'],
+                    'team-directory' => ['label' => __('Team-Verzeichnis', 'iss-content-model'), 'treatment' => 'slot.team-directory'],
+                    'schoneweide-atlas' => ['label' => __('Schöneweide-Atlas', 'iss-content-model'), 'treatment' => 'slot.schoneweide-atlas'],
                 ],
             ],
             'atlas_map' => [
@@ -384,6 +384,12 @@ function iss_content_model_register_editorial_formats(array $formats): array
                 'description' => __('Essay paragraph or connective text', 'iss-content-model'),
                 'supports' => [],
             ],
+            'material' => $material_section,
+            'upload_intake' => [
+                'label' => __('Material beitragen', 'iss-content-model'),
+                'description' => __('Fotos und Dokumente zur redaktionellen Prüfung einsenden.', 'iss-content-model'),
+                'supports' => [],
+            ],
             'schluss' => [
                 'label' => __('Schluss', 'iss-content-model'),
                 'description' => __('Closing statement and onward direction', 'iss-content-model'),
@@ -430,7 +436,7 @@ function iss_content_model_register_editorial_formats(array $formats): array
     ];
 
     $formats['rueckblick'] = [
-        'label' => __('Rueckblick', 'iss-content-model'),
+        'label' => __('Rückblick', 'iss-content-model'),
         'base' => 'ordered',
         'post_types' => [ISS_CONTENT_MODEL_RUECKBLICK_POST_TYPE],
         'default_skin' => 'chronik',
@@ -453,6 +459,7 @@ function iss_content_model_register_editorial_formats(array $formats): array
                 'supports' => ['object_refs'],
             ],
             'material' => array_merge($material_section, ['supports' => ['media_refs', 'links']]),
+            'upload_intake' => $formats['ausstellung']['sections']['upload_intake'],
             'schluss' => [
                 'label' => __('Schluss', 'iss-content-model'),
                 'description' => __('Closing note and onward links.', 'iss-content-model'),

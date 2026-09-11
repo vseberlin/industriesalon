@@ -1160,7 +1160,7 @@ function industriesalon_enqueue_assets(): void
         array(
             'handle' => 'industriesalon-single-ausstellung',
             'path' => '/assets/css/single-ausstellung.css',
-            'condition' => is_singular('ausstellung'),
+            'condition' => is_singular(array('ausstellung', 'rueckblick')),
         ),
         array(
             'handle' => 'industriesalon-single-event',
@@ -1187,7 +1187,7 @@ function industriesalon_enqueue_assets(): void
         $enqueue_theme_style($style['handle'], $style['path'], $page_dependencies);
     }
 
-    if (is_singular('ausstellung') && function_exists('industriesalon_get_editorial_ausstellung_post_skin')) {
+    if (is_singular(array('ausstellung', 'rueckblick')) && function_exists('industriesalon_get_editorial_ausstellung_post_skin')) {
         $ausstellung_skin = industriesalon_get_editorial_ausstellung_post_skin((int) get_queried_object_id());
         $ausstellung_skin_styles = array(
             'quellenbuehne' => array(

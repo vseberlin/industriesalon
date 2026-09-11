@@ -1,4 +1,5 @@
 (function () {
+  var modalCount = 0;
   function createElement(tag, className, text) {
     var element = document.createElement(tag);
     if (className) {
@@ -17,6 +18,43 @@
     return icon;
   }
 
+  function manageModalFocus(dialog, onClose, initialFocus) {
+    var opener = document.activeElement;
+    var background = (opener && opener.closest('[role="dialog"]')) || document.getElementById('wpwrap');
+    var wasInert = background ? background.inert : false;
+    dialog.tabIndex = -1;
+    if (background) { background.inert = true; }
+
+    function keydown(event) {
+      if (event.key === 'Escape') {
+        event.preventDefault();
+        event.stopPropagation();
+        if (onClose) { onClose(); }
+      } else if (event.key === 'Tab') {
+        var items = Array.prototype.filter.call(dialog.querySelectorAll('button, a[href], input, select, textarea, iframe, [tabindex="0"], [contenteditable="true"]'), function (item) {
+          return !item.disabled && item.getClientRects().length > 0;
+        });
+        var first = items[0] || dialog;
+        var last = items[items.length - 1] || dialog;
+        if (event.shiftKey && (event.target === first || event.target === dialog)) {
+          event.preventDefault();
+          last.focus();
+        } else if (!event.shiftKey && event.target === last) {
+          event.preventDefault();
+          first.focus();
+        }
+      }
+    }
+    // Nested WordPress media/link dialogs outside this element keep their own keyboard handling.
+    dialog.addEventListener('keydown', keydown);
+    (initialFocus || dialog.querySelector('input, textarea, button, select') || dialog).focus();
+    return function () {
+      dialog.removeEventListener('keydown', keydown);
+      if (background) { background.inert = wasInert; }
+      if (opener && opener.isConnected) { opener.focus(); }
+    };
+  }
+
   function createModal(options) {
     var config = options || {};
     var root = createElement('div', 'iss-editorial-modal');
@@ -28,7 +66,14 @@
     var footTools = createElement('div', 'iss-editorial-modal__foot-tools');
     var close = createElement('button', 'button-link iss-editorial-modal__close');
     var closeIcon = createElement('span', 'dashicons dashicons-no-alt');
-    var done = createElement('button', 'button button-primary', config.doneLabel || 'Übernehmen');
+    var done = createElement('button', 'button button-primary', config.doneLabel || 'Fertig');
+    var heading = createElement('h2', '', config.title || 'Abschnitt');
+    var releaseFocus = null;
+    heading.id = 'iss-editorial-dialog-title-' + (++modalCount);
+    dialog.setAttribute('role', 'dialog');
+    dialog.setAttribute('aria-modal', 'true');
+    dialog.setAttribute('aria-labelledby', heading.id);
+    dialog.tabIndex = -1;
 
     close.type = 'button';
     close.setAttribute('aria-label', config.closeLabel || 'Schließen');
@@ -39,7 +84,7 @@
     if (config.kicker) {
       titleWrap.appendChild(createElement('span', 'iss-editorial-modal__kicker', config.kicker));
     }
-    titleWrap.appendChild(createElement('h2', '', config.title || 'Abschnitt'));
+    titleWrap.appendChild(heading);
 
     if (typeof config.onClose === 'function') {
       close.addEventListener('click', function (event) {
@@ -65,6 +110,13 @@
     dialog.appendChild(body);
     dialog.appendChild(foot);
     root.appendChild(dialog);
+
+    root.issEditorialDestroy = function () {
+      if (releaseFocus) { releaseFocus(); }
+    };
+    root.issEditorialOpen = function () {
+      releaseFocus = manageModalFocus(dialog, config.onClose, body.querySelector('input, textarea, button, select'));
+    };
 
     return {
       root: root,
@@ -131,6 +183,7 @@
   }
 
   window.issEditorialUi = {
+    manageModalFocus: manageModalFocus,
     createModal: createModal,
     createPanel: createPanel
   };

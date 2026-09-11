@@ -112,7 +112,7 @@
 
   function isSelectableMediaItem(item, mediaType) {
     var mime = item && item.preview ? String(item.preview.mime || '') : '';
-    return selectableAttachmentId(item) > 0
+    return !!item && ['approved', 'promoted'].indexOf(item.status) !== -1 && selectableAttachmentId(item) > 0
       && (mediaType !== 'image' || mime.indexOf('image/') === 0)
       && (mediaType !== 'file' || mime.indexOf('image/') !== 0);
   }
@@ -122,6 +122,7 @@
     return {
       kind: 'media',
       source: 'wp-media',
+      editorial_set_item_id: String(item.id),
       id: String(selectableAttachmentId(item) || ''),
       label: item.label || preview.title || '',
       thumbnail: preview.thumbnail || '',
@@ -143,9 +144,8 @@
     var selectedIds = uniqueIds(initialSelection);
     var selectedItems = {};
     var currentSet = null;
-    var attachedSetItems = [];
-    var allSetItems = [];
     var modal = null;
+    var releaseModalFocus = null;
     var scope = root;
     var contextType = options.contextType || initialConfig.contextType || '';
     var contextId = intValue(options.contextId || initialConfig.postId || 0);
@@ -232,6 +232,7 @@
       if (modal) {
         modal.remove();
       }
+      if (releaseModalFocus) { releaseModalFocus(); releaseModalFocus = null; }
       root.innerHTML = '';
     }
 
@@ -319,7 +320,9 @@
       if (meta) {
         body.appendChild(createElement('p', 'description', meta));
       }
-      if (!selectable && item.kind === 'external_upload') {
+      if (!selectable && ['approved', 'promoted'].indexOf(item.status) === -1) {
+        body.appendChild(createElement('p', 'description', 'Dieses Material ist nicht freigegeben. Bitte zuerst im Set prüfen.'));
+      } else if (!selectable && item.kind === 'external_upload') {
         body.appendChild(createElement('p', 'description', 'Roh-Uploads erst im Set prüfen und in die Mediathek übernehmen.'));
       } else if (!selectable && mediaType === 'image') {
         body.appendChild(createElement('p', 'description', 'Dieser Abschnitt erwartet ein Bild.'));
@@ -382,17 +385,18 @@
       });
     }
 
-    function searchSets(query, attachedOnly) {
+    function searchSets(query, attachedOnly, page) {
       var params = new URLSearchParams();
       params.set('search', query || '');
       params.set('perPage', '30');
+      params.set('page', String(page || 1));
       if (attachedOnly && contextType && contextId) {
         params.set('contextType', contextType);
         params.set('contextId', String(contextId));
       }
 
       return request('/editorial-sets?' + params.toString()).then(function (payload) {
-        return payload.items || [];
+        return payload;
       });
     }
 
@@ -402,9 +406,10 @@
         return Promise.resolve([]);
       }
 
-      return searchSets('', true).then(function (sets) {
-        attachedSetItems = sets;
+      return searchSets('', true).then(function (payload) {
+        var sets = payload.items || [];
         renderSetList(attachedSets, sets, 'Verknüpfte Sets', 'Keine verknüpften Sets.');
+        appendMoreSets(attachedSets, sets, '', true, 1, payload.total);
         return sets;
       }).catch(function (error) {
         renderSetList(attachedSets, [], 'Verknüpfte Sets', error.message || 'Sets konnten nicht geladen werden.');
@@ -415,9 +420,10 @@
     function searchAllSets() {
       var query = setQuery.value || '';
       setStatus('Sets werden geladen...');
-      return searchSets(query, false).then(function (sets) {
-        allSetItems = sets;
+      return searchSets(query, false).then(function (payload) {
+        var sets = payload.items || [];
         renderSetList(setResults, sets, query ? 'Suchergebnisse' : 'Alle Sets', 'Kein Set gefunden.');
+        appendMoreSets(setResults, sets, query, false, 1, payload.total);
         setStatus('');
         return sets;
       }).catch(function (error) {
@@ -426,16 +432,36 @@
       });
     }
 
-    function loadSetItems(set) {
+    function appendMoreSets(container, sets, query, attachedOnly, page, total) {
+      if (sets.length >= total) { return; }
+      var more = createElement('button', 'button', 'Weitere Sets laden'); more.type = 'button';
+      more.addEventListener('click', function () {
+        more.disabled = true;
+        searchSets(query, attachedOnly, page + 1).then(function (payload) {
+          var all = sets.concat(payload.items || []);
+          renderSetList(container, all, attachedOnly ? 'Verknüpfte Sets' : 'Alle Sets', 'Keine Sets.');
+          appendMoreSets(container, all, query, attachedOnly, page + 1, payload.total);
+        }).catch(function (error) { more.disabled = false; setStatus(error.message); });
+      });
+      container.appendChild(more);
+    }
+
+    function loadSetItems(set, page) {
+      page = page || 1;
       currentSet = set;
       currentTitle.textContent = set.title || 'Set #' + String(set.id);
       currentMeta.textContent = setMetaLine(set);
-      renderSetList(attachedSets, attachedSetItems, 'Verknüpfte Sets', 'Keine verknüpften Sets.');
-      renderSetList(setResults, allSetItems, (setQuery.value || '') ? 'Suchergebnisse' : 'Alle Sets', 'Kein Set gefunden.');
       setStatus('Medien werden geladen...');
 
-      return request('/editorial-set-items?setId=' + encodeURIComponent(String(set.id)) + '&perPage=120').then(function (payload) {
+      return request('/editorial-set-items?setId=' + encodeURIComponent(String(set.id)) + '&perPage=60&page=' + page).then(function (payload) {
         renderItems(payload.items || []);
+        var pager = scope.querySelector('.iss-archive-object-picker__pager'); clear(pager);
+        ['Zurück', 'Weiter'].forEach(function (label, index) {
+          var button = createElement('button', 'button', label); button.type = 'button';
+          button.disabled = index ? page * 60 >= payload.total : page <= 1;
+          button.addEventListener('click', function () { loadSetItems(set, page + (index ? 1 : -1)); }); pager.appendChild(button);
+        });
+        pager.appendChild(createElement('span', 'description', ' Seite ' + page + ' / ' + Math.max(1, Math.ceil(payload.total / 60))));
         setStatus('');
         return payload;
       }).catch(function (error) {
@@ -483,6 +509,9 @@
 
     if (modal) {
       scope.querySelector('.iss-archive-object-picker__close').addEventListener('click', closePicker);
+      if (typeof options.manageModalFocus === 'function') {
+        releaseModalFocus = options.manageModalFocus(scope.querySelector('[role="dialog"]'), closePicker, setQuery);
+      }
     }
     scope.querySelector('.iss-archive-object-picker__set-run').addEventListener('click', function (event) {
       stopAction(event);

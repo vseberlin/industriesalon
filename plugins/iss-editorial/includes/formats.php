@@ -30,7 +30,11 @@ function iss_editorial_get_registered_formats(): array
             }
 
             $treatments = [];
-            foreach ((array) ($section['treatments'] ?? []) as $treatment_slug => $treatment) {
+            $registered_treatments = (array) ($section['treatments'] ?? []);
+            foreach ((array) ($section['slots'] ?? []) as $slot) {
+                $registered_treatments[$slot['treatment']] = $slot['label'];
+            }
+            foreach ($registered_treatments as $treatment_slug => $treatment) {
                 if (is_array($treatment)) {
                     $treatment_slug = iss_editorial_sanitize_treatment_slug(is_string($treatment_slug) ? $treatment_slug : (string) ($treatment['slug'] ?? ''));
                     $treatment_label = sanitize_text_field((string) ($treatment['label'] ?? $treatment_slug));
@@ -56,6 +60,8 @@ function iss_editorial_get_registered_formats(): array
                 'supports' => array_values(array_filter(array_map('sanitize_key', (array) ($section['supports'] ?? [])))),
                 'treatments' => array_values($treatments),
                 'ui_hidden' => !empty($section['ui_hidden']),
+                'slots' => (array) ($section['slots'] ?? []),
+                'items_kind' => ($section['items_kind'] ?? '') === 'text' ? 'text' : 'cards',
             ];
         }
 
@@ -74,6 +80,8 @@ function iss_editorial_get_registered_formats(): array
             'default_variant' => sanitize_key((string) ($format['default_variant'] ?? 'standard')),
             'post_eligibility_callback' => is_callable($format['post_eligibility_callback'] ?? null) ? $format['post_eligibility_callback'] : null,
             'skin_meta_key' => sanitize_key((string) ($format['skin_meta_key'] ?? '')),
+            'storage_meta_key' => sanitize_key((string) ($format['storage_meta_key'] ?? '')),
+            'always_enabled' => !empty($format['always_enabled']),
         ];
     }
 
@@ -218,7 +226,8 @@ function iss_editorial_post_type_supports_format(string $post_type, string $form
 
 function iss_editorial_get_document_meta_key(string $format_slug): string
 {
-    return '_iss_editorial_' . sanitize_key($format_slug);
+    $format = iss_editorial_get_format($format_slug);
+    return (string) ($format['storage_meta_key'] ?? '') ?: '_iss_editorial_' . sanitize_key($format_slug);
 }
 
 function iss_editorial_get_autosave_meta_key(string $format_slug): string
@@ -255,7 +264,7 @@ function iss_editorial_should_prefer_preview_autosave(int $post_id, string $form
         return false;
     }
 
-    if (is_preview()) {
+    if (is_preview() && get_queried_object_id() === $post_id) {
         return true;
     }
 

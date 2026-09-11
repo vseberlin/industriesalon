@@ -308,33 +308,29 @@ function iss_content_editorial_sets_event_drop_target_context(string $target_key
         }
     }
 
-    $place_prefix = 'ort__';
-    if (strpos($target_key, $place_prefix) === 0) {
-        $place_slug = sanitize_title(substr($target_key, strlen($place_prefix)));
-        $place = $place_slug !== '' && post_type_exists('register_place')
-            ? get_page_by_path($place_slug, OBJECT, 'register_place')
-            : null;
-        if ($place instanceof WP_Post) {
-            return [
-                'post' => $place,
-                'context_type' => 'register_place',
-                'context_id' => (int) $place->ID,
-                'set_id' => 0,
-                'set_key' => 'event-drop-' . $target_key,
-                'set_title' => sprintf(__('Ort-Beitrag: %s', 'iss-content-model'), get_the_title($place)),
-                'set_role' => 'intake',
-                'link_role' => 'source_material',
-            ];
+    if (str_contains($target_key, '__')) {
+        [$type, $slug] = explode('__', $target_key, 2);
+        $type = $type === 'ort' ? 'register_place' : $type;
+        if (in_array($type, iss_content_editorial_sets_supported_post_types(), true)) {
+            $post = get_page_by_path($slug, OBJECT, $type);
+            if ($post instanceof WP_Post) {
+                $links = iss_content_editorial_sets_service()->get_links_for_context($type, (int) $post->ID);
+                return ['post' => $post, 'context_type' => $type, 'context_id' => (int) $post->ID,
+                    'set_id' => (int) ($links[0]['set_id'] ?? 0), 'set_key' => 'event-drop-' . $target_key,
+                    'set_title' => sprintf(__('Beiträge: %s', 'iss-content-model'), get_the_title($post)),
+                    'set_role' => 'intake', 'link_role' => 'source_material'];
+            }
         }
     }
 
     $event = iss_content_editorial_sets_event_drop_context_post($target_key);
     if ($event instanceof WP_Post) {
+        $links = iss_content_editorial_sets_service()->get_links_for_context($event->post_type, (int) $event->ID);
         return [
             'post' => $event,
             'context_type' => ISS_CONTENT_MODEL_VERANSTALTUNG_POST_TYPE,
             'context_id' => (int) $event->ID,
-            'set_id' => 0,
+            'set_id' => (int) ($links[0]['set_id'] ?? 0),
             'set_key' => 'event-drop-' . $target_key,
             'set_title' => sprintf(__('Event Drop: %s', 'iss-content-model'), get_the_title($event)),
             'set_role' => 'intake',
@@ -553,6 +549,10 @@ function iss_content_editorial_sets_sync_event_drop_incoming(): int
         }
 
         $stored_name = basename($path);
+        // Workbench uploads already belong to their selected Set; never reassign them by filename.
+        if ($service->source_is_registered('external_upload', 'event-drop', $stored_name)) {
+            continue;
+        }
         $meta = $manifest_rows[$stored_name] ?? iss_content_editorial_sets_event_drop_meta_from_filename($stored_name, $path);
         $target_key = sanitize_title((string) ($meta['event_slug'] ?? ''));
         $target = iss_content_editorial_sets_event_drop_target_context($target_key);
@@ -626,6 +626,11 @@ function iss_content_editorial_sets_event_drop_set_for_attachment(int $attachmen
 
     $stored_name = (string) get_post_meta($attachment_id, '_event_drop_stored_name', true);
     if ($stored_name === '') {
+        return 0;
+    }
+
+    // The reviewed raw item remains authoritative after import; do not create a second pending item.
+    if (iss_content_editorial_sets_service()->source_is_registered('external_upload', 'event-drop', $stored_name)) {
         return 0;
     }
 

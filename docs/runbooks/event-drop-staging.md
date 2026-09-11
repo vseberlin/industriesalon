@@ -1,5 +1,19 @@
 # Event Drop Staging Runbook
 
+## Current editorial integration (2026-09-11)
+
+The receiver now requires the local WordPress bootstrap at `../wp-load.php` and
+the active `iss-content` plugin. Publish its code together with the plugin/theme
+changes; a standalone receiver copy is no longer sufficient. Editors control
+uploads per post in **Material & Rückblicke → Beiträge von Gästen**. Signed links
+bind the target and are checked on GET and POST; closing/reopening rotates them.
+Legacy upload-code links require an open resolvable content context. The guest
+page no longer emits the separate accepted-files/admin credentials as links.
+Photos, videos and ZIP remain supported; PDF/DOCX/PPTX/XLSX/ODT were added.
+Review and draft preparation remain in existing Sets; no old MU bridge should be
+installed. See [the editorial contract](../architecture/editorial-platform.md#material-and-optional-rückblicke).
+
+
 ## Scope
 
 Use this when enabling or repairing the Event Drop intake pipeline on staging.

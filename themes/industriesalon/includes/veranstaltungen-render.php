@@ -249,20 +249,10 @@ function industriesalon_render_structured_veranstaltung_dynamic_reference(array 
 
 function industriesalon_structured_veranstaltung_upload_intake_url(int $post_id): string
 {
-    $post = $post_id > 0 ? get_post($post_id) : null;
-    if (!$post instanceof WP_Post) {
+    if (!function_exists('iss_content_upload_url') || !iss_content_upload_is_open($post_id)) {
         return '';
     }
-
-    $args = ['event' => $post->post_name];
-    $upload_code = trim((string) getenv('EVENT_DROP_UPLOAD_CODE'));
-    if ($upload_code !== '') {
-        $args['code'] = $upload_code;
-    }
-
-    $url = add_query_arg($args, home_url('/event-drop/'));
-
-    return (string) apply_filters('industriesalon_event_upload_intake_url', $url, $post_id);
+    return (string) apply_filters('industriesalon_event_upload_intake_url', iss_content_upload_url($post_id), $post_id);
 }
 
 function industriesalon_render_structured_veranstaltung_upload_intake(array $section): string
@@ -299,6 +289,9 @@ function industriesalon_render_structured_veranstaltung_section(array $section, 
     $upload_intake_html = '';
     if ($type === 'upload_intake') {
         $upload_intake_html = industriesalon_render_structured_veranstaltung_upload_intake($section);
+        if ($upload_intake_html === '') {
+            return '';
+        }
         $items = [];
     }
 

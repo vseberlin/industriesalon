@@ -70,6 +70,7 @@
     root.innerHTML = '';
 
     var modal = null;
+    var releaseModalFocus = null;
     var scope = root;
     var pickerMarkup =
         '<div class="iss-archive-object-picker ' + (bucketFirst ? 'is-bucket-first' : 'is-search-first') + '" data-mode="' + mode + '">' +
@@ -189,6 +190,7 @@
       if (modal) {
         modal.remove();
       }
+      if (releaseModalFocus) { releaseModalFocus(); releaseModalFocus = null; }
       root.innerHTML = '';
     }
 
@@ -530,7 +532,9 @@
       loadSearch(1, false);
     }
 
-    if (options.autoFocus === true) {
+    if (useModal && typeof options.manageModalFocus === 'function') {
+      releaseModalFocus = options.manageModalFocus(scope.querySelector('[role="dialog"]'), closePicker, setQuery);
+    } else if (options.autoFocus === true) {
       setQuery.focus();
     }
 

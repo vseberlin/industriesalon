@@ -100,11 +100,11 @@ function iss_content_model_register_post_types() {
 
     register_post_type(ISS_CONTENT_MODEL_RUECKBLICK_POST_TYPE, [
         'labels' => [
-            'name' => __('Rueckblicke', 'iss-content-model'),
-            'singular_name' => __('Rueckblick', 'iss-content-model'),
-            'menu_name' => __('Rueckblicke', 'iss-content-model'),
-            'add_new_item' => __('Neuen Rueckblick anlegen', 'iss-content-model'),
-            'edit_item' => __('Rueckblick bearbeiten', 'iss-content-model'),
+            'name' => __('Rückblicke', 'iss-content-model'),
+            'singular_name' => __('Rückblick', 'iss-content-model'),
+            'menu_name' => __('Rückblicke', 'iss-content-model'),
+            'add_new_item' => __('Neuen Rückblick anlegen', 'iss-content-model'),
+            'edit_item' => __('Rückblick bearbeiten', 'iss-content-model'),
         ],
         'public' => true,
         'show_in_rest' => true,
@@ -320,6 +320,9 @@ add_filter('use_block_editor_for_post', 'iss_content_model_use_block_editor_for_
 
 function iss_content_model_remove_veranstaltung_default_editor_support(): void
 {
+    if (function_exists('iss_editorial_uses_canvas')) {
+        return;
+    }
     remove_post_type_support(ISS_CONTENT_MODEL_VERANSTALTUNG_POST_TYPE, 'editor');
 }
 add_action('init', 'iss_content_model_remove_veranstaltung_default_editor_support', 100);

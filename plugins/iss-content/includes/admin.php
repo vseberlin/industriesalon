@@ -23,14 +23,16 @@ add_action('add_meta_boxes', function () {
         'high'
     );
 
-    add_meta_box(
-        'iss-content-model-veranstaltung-content',
-        __('Struktur', 'iss-content-model'),
-        'iss_content_model_render_veranstaltung_content_box',
-        ISS_CONTENT_MODEL_VERANSTALTUNG_POST_TYPE,
-        'normal',
-        'high'
-    );
+    if (!function_exists('iss_editorial_uses_canvas')) {
+        add_meta_box(
+            'iss-content-model-veranstaltung-content',
+            __('Struktur', 'iss-content-model'),
+            'iss_content_model_render_veranstaltung_content_box',
+            ISS_CONTENT_MODEL_VERANSTALTUNG_POST_TYPE,
+            'normal',
+            'high'
+        );
+    }
 
     add_meta_box(
         'iss-content-model-veranstaltung-booking',
@@ -217,6 +219,10 @@ function iss_content_model_get_editor_dashboard_post_types(): array
 function iss_content_model_use_editor_dashboard(string $post_type): bool
 {
     $post_type = sanitize_key($post_type);
+    $post = $GLOBALS['post'] ?? null;
+    if ($post instanceof WP_Post && $post->post_type === $post_type && function_exists('iss_editorial_get_format_for_post') && iss_editorial_get_format_for_post($post)) {
+        return iss_editorial_uses_canvas($post);
+    }
     if (in_array($post_type, [
         ISS_CONTENT_MODEL_VERANSTALTUNG_POST_TYPE,
         ISS_CONTENT_MODEL_PROJEKT_POST_TYPE,
@@ -555,7 +561,8 @@ function iss_content_model_get_editor_dashboard_sections(string $post_type): arr
                 'slug' => 'composition',
                 'label' => __('Redaktionelle Komposition', 'iss-content-model'),
                 'description' => '',
-                'boxIds' => ['iss-content-model-veranstaltung-content'],
+                'boxIds' => function_exists('iss_editorial_uses_canvas') ? [] : ['iss-content-model-veranstaltung-content'],
+                'selectors' => function_exists('iss_editorial_uses_canvas') ? ['.iss-editorial-shell'] : [],
             ],
             [
                 'slug' => 'relations',
@@ -720,8 +727,21 @@ function iss_content_model_get_editor_dashboard_sections(string $post_type): arr
         ];
     }
 
+    if (!$sections && iss_content_model_use_editor_dashboard($post_type)) {
+        $sections = [
+            ['slug' => 'identity', 'label' => __('Identität', 'iss-content-model'), 'boxIds' => ['postexcerpt', 'postimagediv']],
+            ['slug' => 'composition', 'label' => __('Inhalt bearbeiten', 'iss-content-model'), 'selectors' => ['.iss-editorial-shell']],
+        ];
+    }
     $sections = (array) apply_filters('iss_content_model_editor_dashboard_sections', $sections, $post_type);
     $sections = iss_content_model_compact_dashboard_relation_sections($sections, $post_type);
+    foreach ($sections as &$section) {
+        if (in_array('.iss-editorial-shell', (array) ($section['selectors'] ?? []), true)) {
+            $section['label'] = __('Inhalt bearbeiten', 'iss-content-model');
+            $section['description'] = __('Abschnitte hinzufügen, bearbeiten und ordnen.', 'iss-content-model');
+        }
+    }
+    unset($section);
 
     return array_values(array_filter(array_map(static function ($section): array {
         if (!is_array($section)) {
@@ -1150,7 +1170,7 @@ add_action('admin_enqueue_scripts', function ($hook) {
     }
 
     $script_path = ISS_CONTENT_MODEL_PATH . 'assets/admin-veranstaltung-content.js';
-    if (file_exists($script_path)) {
+    if (!function_exists('iss_editorial_uses_canvas') && file_exists($script_path)) {
         wp_enqueue_script(
             'iss-content-model-veranstaltung-content',
             plugins_url('../assets/admin-veranstaltung-content.js', __FILE__),
@@ -1632,11 +1652,7 @@ function iss_content_model_render_veranstaltung_content_box($post): void
         : '_iss_content_json';
     $encoded_document = (string) wp_json_encode($document, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE);
     $media_previews = [];
-    $dynamic_previews = [];
-    $steuerung = null;
-    if (class_exists('Industriesalon_Steuerung') && method_exists('Industriesalon_Steuerung', 'instance')) {
-        $steuerung = Industriesalon_Steuerung::instance();
-    }
+    $dynamic_previews = iss_content_model_veranstaltung_dynamic_previews($document);
     foreach ((array) ($document['sections'] ?? []) as $section) {
         if (!is_array($section)) {
             continue;
@@ -1655,27 +1671,6 @@ function iss_content_model_render_veranstaltung_content_box($post): void
                 'thumbnail' => (string) wp_get_attachment_image_url($attachment_id, 'medium'),
                 'width' => is_array($metadata) ? (string) absint($metadata['width'] ?? 0) : '',
                 'height' => is_array($metadata) ? (string) absint($metadata['height'] ?? 0) : '',
-            ];
-        }
-        foreach ((array) ($section['dynamic_refs'] ?? []) as $reference) {
-            if (
-                !is_array($reference)
-                || (string) ($reference['source'] ?? '') !== 'industriesalon-steuerung'
-                || (string) ($reference['kind'] ?? '') !== 'control_field'
-            ) {
-                continue;
-            }
-            $key = trim(sanitize_text_field((string) ($reference['key'] ?? '')));
-            if ($key === '') {
-                continue;
-            }
-            $value = '';
-            if (is_object($steuerung) && method_exists($steuerung, 'get_field_value')) {
-                $value = (string) $steuerung->get_field_value($key, '');
-            }
-            $dynamic_previews[$key] = [
-                'label' => trim(sanitize_text_field((string) ($reference['label'] ?? ''))),
-                'value' => $value,
             ];
         }
     }
@@ -2155,19 +2150,22 @@ function iss_content_model_save_meta_box(int $post_id): void
     if ($post_type === ISS_CONTENT_MODEL_VERANSTALTUNG_POST_TYPE) {
         iss_content_model_sync_veranstaltung_primary_place($post_id, $selected_place_id);
     }
-
-    if ($post_type === ISS_CONTENT_MODEL_PROJEKT_POST_TYPE && array_key_exists('menu_order', $raw) && current_user_can('manage_options')) {
-        $front_page_order = (int) $raw['menu_order'];
-
-        remove_action('save_post', 'iss_content_model_save_meta_box', 20);
-        wp_update_post([
-            'ID' => $post_id,
-            'menu_order' => $front_page_order,
-        ]);
-        add_action('save_post', 'iss_content_model_save_meta_box', 20, 1);
-    }
 }
 add_action('save_post', 'iss_content_model_save_meta_box', 20, 1);
+
+// Save the project order in the original update, so save_post never starts a second editorial save.
+add_filter('wp_insert_post_data', static function (array $data, array $postarr): array {
+    if (($data['post_type'] ?? '') !== ISS_CONTENT_MODEL_PROJEKT_POST_TYPE
+        || (defined('DOING_AUTOSAVE') && DOING_AUTOSAVE)
+        || !isset($_POST['iss_content_model_meta_nonce'])
+        || !wp_verify_nonce((string) $_POST['iss_content_model_meta_nonce'], 'iss_content_model_save_meta')
+        || !current_user_can('manage_options') || !current_user_can('edit_post', absint($postarr['ID'] ?? 0))
+        || !isset($_POST['iss_content_model']['menu_order'])) {
+        return $data;
+    }
+    $data['menu_order'] = (int) $_POST['iss_content_model']['menu_order'];
+    return $data;
+}, 20, 2);
 
 function iss_content_model_order_query_args(): array
 {

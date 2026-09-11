@@ -180,6 +180,8 @@ class ISS_Content_Editorial_Sets_Service
         $types = [
             ISS_CONTENT_MODEL_VERANSTALTUNG_POST_TYPE,
             'rueckblick',
+            'fuehrung',
+            'register_place',
             ISS_CONTENT_MODEL_AUSSTELLUNG_POST_TYPE,
             ISS_CONTENT_MODEL_PROJEKT_POST_TYPE,
             'publication',
@@ -450,8 +452,12 @@ class ISS_Content_Editorial_Sets_Service
         $values[] = $offset;
 
         $items = $wpdb->get_results($wpdb->prepare($sql, $values), ARRAY_A);
+        $count_values = array_slice($values, 0, -2);
+        $count_sql = "SELECT COUNT(DISTINCT s.id) FROM {$this->get_sets_table_name()} s {$join_sql} WHERE {$where_sql}";
+        $total = (int) $wpdb->get_var($count_values ? $wpdb->prepare($count_sql, $count_values) : $count_sql);
 
         return [
+            'total' => $total,
             'items' => is_array($items) ? $items : [],
             'page' => $page,
             'per_page' => $per_page,
@@ -513,6 +519,12 @@ class ISS_Content_Editorial_Sets_Service
         $this->record_audit($set_id, $item_id, 'item_added', __('Item added.', 'iss-content-model'), $data);
 
         return $item_id;
+    }
+
+    public function source_is_registered(string $kind, string $source, string $source_id): bool
+    {
+        global $wpdb;
+        return (bool) $wpdb->get_var($wpdb->prepare("SELECT id FROM {$this->get_items_table_name()} WHERE kind=%s AND source=%s AND source_id=%s LIMIT 1", $kind, $source, $source_id));
     }
 
     public function find_item(int $set_id, string $kind, string $source, string $source_id): ?array
@@ -587,7 +599,12 @@ class ISS_Content_Editorial_Sets_Service
 
         $items = $wpdb->get_results($wpdb->prepare($sql, $values), ARRAY_A);
 
+        $count_values = array_slice($values, 0, -2);
+        $count_sql = "SELECT COUNT(*) FROM {$this->get_items_table_name()} i WHERE {$where_sql}";
+        $total = (int) $wpdb->get_var($count_values ? $wpdb->prepare($count_sql, $count_values) : $count_sql);
+
         return [
+            'total' => $total,
             'items' => is_array($items) ? $items : [],
             'page' => $page,
             'per_page' => $per_page,
@@ -610,11 +627,16 @@ class ISS_Content_Editorial_Sets_Service
             'rights_json' => $this->encode_json_field($args['rights'] ?? $this->decode_json_field((string) $item['rights_json'])),
             'provenance_json' => $this->encode_json_field($args['provenance'] ?? $this->decode_json_field((string) $item['provenance_json'])),
             'decay_at' => $this->sanitize_mysql_datetime_or_null((string) ($args['decay_at'] ?? $item['decay_at'])),
-            'retain' => !empty($args['retain']) ? 1 : 0,
+            'retain' => !empty($args['retain'] ?? $item['retain']) ? 1 : 0,
             'retain_reason' => sanitize_textarea_field((string) ($args['retain_reason'] ?? $item['retain_reason'])),
             'updated_by' => get_current_user_id(),
             'updated_at' => current_time('mysql', true),
         ];
+
+        $rights = json_decode($data['rights_json'], true);
+        if ($data['status'] === 'approved' && (empty($rights['attribution']) || empty($rights['license']) || (string) ($rights['consent'] ?? '') !== '1')) {
+            return false;
+        }
 
         $updated = $wpdb->update(
             $this->get_items_table_name(),
@@ -791,6 +813,13 @@ class ISS_Content_Editorial_Sets_Service
             return false;
         }
 
+        if ($item['status'] === 'promoted') {
+            foreach ($this->get_item_uses($item_id) as $use) {
+                if ($use['id'] === $target_id && $use['type'] === $target_type) {
+                    return true;
+                }
+            }
+        }
         global $wpdb;
 
         $updated = $wpdb->update(
@@ -862,14 +891,15 @@ class ISS_Content_Editorial_Sets_Service
             return false;
         }
 
-        $items = $this->list_items(['set_id' => $set_id, 'per_page' => 120]);
-        foreach ((array) ($items['items'] ?? []) as $item) {
-            if ((string) ($item['status'] ?? '') === 'promoted' || (string) ($item['archive_candidate_status'] ?? '') !== '') {
-                return false;
-            }
+        global $wpdb;
+        $protected = (int) $wpdb->get_var($wpdb->prepare(
+            "SELECT COUNT(*) FROM {$this->get_items_table_name()} WHERE set_id = %d AND (status = 'promoted' OR archive_candidate_status <> '')",
+            $set_id
+        ));
+        if ($protected > 0) {
+            return false;
         }
 
-        global $wpdb;
         $wpdb->delete($this->get_items_table_name(), ['set_id' => $set_id], ['%d']);
         $wpdb->delete($this->get_links_table_name(), ['set_id' => $set_id], ['%d']);
         $deleted = $wpdb->delete($this->get_sets_table_name(), ['id' => $set_id], ['%d']);
@@ -938,7 +968,7 @@ class ISS_Content_Editorial_Sets_Service
             $filename = (string) ($provenance['stored_name'] ?? $source_id);
             $mime = $filename !== '' ? (string) wp_check_filetype($filename)['type'] : '';
             $media_url = '';
-            if ((int) ($item['id'] ?? 0) > 0 && strpos($mime, 'image/') === 0) {
+            if ((int) ($item['id'] ?? 0) > 0) {
                 $media_url = add_query_arg(
                     [
                         'action' => 'iss_editorial_set_file_preview',
@@ -951,7 +981,7 @@ class ISS_Content_Editorial_Sets_Service
 
             return [
                 'title' => (string) ($item['label'] ?? $filename),
-                'thumbnail' => $media_url,
+                'thumbnail' => strpos($mime, 'image/') === 0 ? $media_url : '',
                 'url' => $media_url,
                 'mime' => $mime,
                 'filename' => $filename,
@@ -1009,6 +1039,7 @@ class ISS_Content_Editorial_Sets_Service
             'promotedTargetType' => (string) ($item['promoted_target_type'] ?? ''),
             'promotedTargetId' => (int) ($item['promoted_target_id'] ?? 0),
             'archiveCandidateStatus' => (string) ($item['archive_candidate_status'] ?? ''),
+            'uses' => $this->get_item_uses((int) $item['id']),
             'preview' => $this->preview_item($item),
             'updatedAt' => (string) ($item['updated_at'] ?? ''),
         ];
@@ -1021,9 +1052,27 @@ class ISS_Content_Editorial_Sets_Service
             'setId' => (int) ($link['set_id'] ?? 0),
             'contextType' => (string) ($link['context_type'] ?? ''),
             'contextId' => (int) ($link['context_id'] ?? 0),
+            'title' => (string) get_the_title((int) ($link['context_id'] ?? 0)),
             'linkRole' => (string) ($link['link_role'] ?? ''),
             'position' => (int) ($link['position'] ?? 0),
         ];
+    }
+
+    /** Existing audit rows retain every confirmed destination, including reuse. */
+    public function get_item_uses(int $item_id): array
+    {
+        global $wpdb;
+        $rows = $wpdb->get_col($wpdb->prepare("SELECT payload_json FROM {$this->get_audit_table_name()} WHERE item_id=%d AND action='item_promoted' ORDER BY id DESC", $item_id));
+        $uses = [];
+        foreach ($rows as $row) {
+            $payload = json_decode($row, true);
+            $id = absint($payload['target_id'] ?? 0);
+            $post = $id ? get_post($id) : null;
+            if ($post && current_user_can('edit_post', $id)) {
+                $uses[$id] = ['id' => $id, 'type' => $post->post_type, 'title' => get_the_title($id), 'editUrl' => get_edit_post_link($id, 'raw')];
+            }
+        }
+        return array_values($uses);
     }
 
     public function record_audit(int $set_id, int $item_id, string $action, string $message, array $payload = []): void

@@ -310,6 +310,7 @@ function iss_content_model_register_veranstaltung_entity_meta(): void
         'type' => 'string',
         'default' => '',
         'show_in_rest' => true,
+        'revisions_enabled' => true,
         'sanitize_callback' => 'iss_content_model_sanitize_veranstaltung_entity_key',
         'auth_callback' => static function () {
             return current_user_can('edit_posts');
