@@ -1,0 +1,12 @@
+/* Editing affordances, enqueued only for authenticated embedded previews. */
+[data-iss-preview-section] {
+  cursor: pointer;
+  scroll-margin-block-start: 1rem;
+}
+
+[data-iss-preview-section]:hover,
+[data-iss-preview-section]:focus-visible,
+[data-iss-preview-active] {
+  outline: 2px solid #2271b1;
+  outline-offset: -2px;
+}

@@ -235,6 +235,7 @@
       return !isSectionHidden(type);
     })[0] || 'kapitel';
     var modal = null;
+    var livePreview = null;
     var routeConfig = config.routeStations && config.routeStations.enabled && format === 'fuehrung'
       ? config.routeStations
       : null;
@@ -263,6 +264,10 @@
       }
 
       return supports(type, fieldName);
+    }
+
+    function textProfile(type, fieldName) {
+      return documentState.schema_version >= 2 ? (sectionConfig(type).rich_text || {})[fieldName] || '' : '';
     }
 
     function usesRichBodyEditor(type) {
@@ -373,7 +378,7 @@
     }
 
     function currentSaveValue() {
-      return JSON.stringify([field.value, identityFields.title ? identityFields.title.value : '', identityFields.excerpt ? identityFields.excerpt.value : '']);
+      return JSON.stringify([field.value, identityFields.title ? identityFields.title.value : '', identityFields.excerpt ? identityFields.excerpt.value : '', enabledField ? enabledField.value : '1']);
     }
 
     function currentSkin() {
@@ -477,9 +482,10 @@
       if (recoveryPending || submitting) { return; }
       window.clearTimeout(autosaveTimer);
       setStatus('Änderungen werden gesichert …');
+      if (livePreview) { livePreview.stale('Änderungen werden gesichert …'); }
       autosaveTimer = window.setTimeout(function () {
         queueSave().catch(function () {});
-      }, 1200);
+      }, config.livePreview ? 350 : 1200);
     }
 
     function deletedSections() {
@@ -740,6 +746,22 @@
       var tools = createElement('div', 'iss-editorial-stage__tools');
       stage.setAttribute('data-section-count', String(documentState.sections.length));
       head.appendChild(heading);
+      if (documentState.schema_version === 1 && (config.supportedVersions || []).indexOf(2) !== -1) {
+        var upgrade = createElement('button', 'button', 'Textfarben aktivieren');
+        upgrade.type = 'button';
+        upgrade.addEventListener('click', function () {
+          ['sections', 'deleted_sections'].forEach(function (key) {
+            (documentState[key] || []).forEach(function (section) {
+              if ((sectionConfig(section.type).rich_text || {}).items) {
+                (section.items || []).forEach(function (item) { item.text = escapeText(item.text || '').replace(/\n/g, '<br>'); });
+              }
+            });
+          });
+          documentState.schema_version = 2;
+          render(); scheduleAutosave();
+        });
+        tools.appendChild(upgrade);
+      }
       if (skins.length > 1) {
         tools.appendChild(renderSkinControl());
       }
@@ -1053,6 +1075,7 @@
     }
 
     function closeModal() {
+      if (livePreview) { livePreview.destroy(); livePreview = null; }
       disposeRichEditors();
       if (modal) {
         if (modal.issEditorialDestroy) { modal.issEditorialDestroy(); }
@@ -1062,11 +1085,13 @@
       document.body.classList.remove('iss-editorial-modal-open');
     }
 
-    function disposeRichEditors() {
-      richEditorIds.forEach(function (id) {
+    function disposeRichEditors(within) {
+      richEditorIds = richEditorIds.filter(function (id) {
+        var input = document.getElementById(id);
+        if (within && input && !within.contains(input)) { return true; }
         if (window.wp && window.wp.editor) { window.wp.editor.remove(id); }
+        return false;
       });
-      richEditorIds = [];
     }
 
     function finishSection() {
@@ -1114,7 +1139,9 @@
 
       closeModal();
       activeSectionIndex = index;
-      var original = JSON.parse(JSON.stringify(section));
+      var originals = {};
+      originals[index] = JSON.parse(JSON.stringify(section));
+      var sectionOrder = documentState.sections.slice();
       var shell = createEditorModal(section, {
         onClose: finishSection,
         onDone: finishSection
@@ -1122,7 +1149,7 @@
       var discard = createElement('button', 'button', 'Änderungen verwerfen');
       discard.type = 'button';
       discard.addEventListener('click', function () {
-        documentState.sections[index] = original;
+        documentState.sections[index] = originals[index];
         finishSection();
       });
       shell.footTools.insertBefore(discard, shell.doneButton);
@@ -1138,6 +1165,51 @@
 
       shell.footLeft.appendChild(remove);
       renderSectionFields(section, shell.body);
+      if (config.livePreview && window.issEditorialLivePreview) {
+        var picker = createElement('label', 'iss-editorial-section-picker');
+        picker.appendChild(createElement('span', '', 'Abschnitt'));
+        var sectionSelect = document.createElement('select');
+        sectionSelect.setAttribute('aria-label', 'Abschnitt wählen');
+        function updateSectionChoices() {
+          clear(sectionSelect);
+          documentState.sections.forEach(function (item, itemIndex) {
+            var option = createElement('option', '', String(itemIndex + 1) + ' · ' + (item.title || slotKeyLabel(item.slot_key) || sectionConfig(item.type).label || 'Abschnitt'));
+            option.value = String(itemIndex);
+            option.selected = itemIndex === index;
+            sectionSelect.appendChild(option);
+          });
+        }
+        function selectSection(next, fromPreview) {
+          // Section order cannot change inside this workspace. Reject obsolete preview indices.
+          if (!Number.isInteger(next) || !documentState.sections[next] || sectionOrder[next] !== documentState.sections[next]) { return; }
+          if (next !== index) {
+            disposeRichEditors(shell.body);
+            index = next;
+            activeSectionIndex = index;
+            section = documentState.sections[index];
+            if (!originals[index]) { originals[index] = JSON.parse(JSON.stringify(section)); }
+            clear(shell.body);
+            renderSectionFields(section, shell.body);
+            shell.body.scrollTop = 0;
+            shell.heading.textContent = sectionConfig(section.type).label || 'Abschnitt';
+            updateSectionChoices();
+          }
+          livePreview.selectSection(index, !fromPreview);
+          if (fromPreview) {
+            livePreview.edit();
+            var firstField = shell.body.querySelector('input, textarea, button, select');
+            if (firstField) { firstField.focus(); }
+          }
+        }
+        updateSectionChoices();
+        sectionSelect.addEventListener('focus', updateSectionChoices);
+        sectionSelect.addEventListener('change', function () { selectSection(Number(sectionSelect.value), false); });
+        picker.appendChild(sectionSelect);
+        shell.closeButton.before(picker);
+        discard.textContent = 'Änderungen im Abschnitt verwerfen';
+        livePreview = window.issEditorialLivePreview(shell, index, function () { queueSave().catch(function () {}); }, function (next) { selectSection(next, true); });
+        queueSave().catch(function () {});
+      }
       modal = shell.root;
       document.body.classList.add('iss-editorial-modal-open');
       document.body.appendChild(modal);
@@ -1169,7 +1241,7 @@
         section.body = value;
         render();
         scheduleAutosave();
-      }) : createTextarea('Text', section.body || '', function (value) {
+      }, textProfile(type, 'body')) : createTextarea('Text', section.body || '', function (value) {
         section.body = value;
         render();
         scheduleAutosave();
@@ -1181,7 +1253,7 @@
           section.lead = value;
           render();
           scheduleAutosave();
-        }));
+        }, textProfile(type, 'lead')));
       }
       if (isEditorFieldVisible(type, 'anchor')) {
         contentPanel.body.appendChild(createTextInput('Anker', section.anchor || '', function (value) {
@@ -2020,6 +2092,7 @@
       var add = createElement('button', 'button', isTextImageRow ? 'Bild-Text-Paar hinzufügen' : 'Ziel hinzufügen');
 
       function rerenderRows() {
+        disposeRichEditors(rows);
         clear(rows);
         section.items = Array.isArray(section.items) ? section.items : [];
         setCount(section.items.length);
@@ -2037,11 +2110,12 @@
             render();
             scheduleAutosave();
           }));
-          fields.appendChild(createTextarea('Text', item.text || '', function (value) {
+          var itemTextInput = textProfile(section.type, 'items') ? createRichTextInput : createTextarea;
+          fields.appendChild(itemTextInput('Text', item.text || '', function (value) {
             item.text = value;
             render();
             scheduleAutosave();
-          }, 3));
+          }, textProfile(section.type, 'items') || 3));
           if (!isTextImageRow) {
             fields.appendChild(usePageLinkSelector()
               ? createPageLinkSelect(item, rerenderRows)
@@ -2665,7 +2739,7 @@
       return wrapper;
     }
 
-    function createRichTextInput(label, value, onChange) {
+    function createRichTextInput(label, value, onChange, profile) {
       var wrapper = createElement('div', 'iss-editorial-field iss-editorial-field--rich-text');
       var input = document.createElement('textarea');
       var textLabel = createElement('label', '', label);
@@ -2673,18 +2747,18 @@
       input.id = id;
       input.className = 'widefat';
       input.rows = 8;
-      input.value = /<[a-z][\s\S]*>/i.test(String(value || '')) ? value : plainTextToRichHtml(value);
+      input.value = profile || /<[a-z][\s\S]*>/i.test(String(value || '')) ? value : plainTextToRichHtml(value);
       textLabel.htmlFor = id;
       wrapper.appendChild(textLabel);
       wrapper.appendChild(input);
       input.addEventListener('input', function () { onChange(input.value); });
-      window.setTimeout(function () {
+      function startEditor() {
         if (!input.isConnected || !window.wp || !window.wp.editor) { return; }
         richEditorIds.push(id);
         window.wp.editor.initialize(id, {
           mediaButtons: false,
           quicktags: false,
-          tinymce: {
+          tinymce: profile && window.issEditorialRichText ? window.issEditorialRichText.configure({ profile: profile, wrapper: wrapper, palette: config.textPalette, onChange: onChange, onClose: finishSection }) : {
             wpautop: true,
             menubar: false,
             statusbar: false,
@@ -2703,7 +2777,22 @@
             }
           }
         });
-      }, 0);
+      }
+      if (profile && window.issEditorialRichText.hasUnsupportedMarkup(input.value, profile)) {
+        input.readOnly = true;
+        var warning = createElement('p', 'description', 'Dieser Text enthält ältere Formatierung. Sie bleibt erhalten. Vor der Bearbeitung bitte prüfen; Vereinfachen entfernt nicht unterstützte Gestaltung.');
+        var simplify = createElement('button', 'button', 'Formatierung vereinfachen');
+        simplify.type = 'button';
+        simplify.addEventListener('click', function () {
+          input.value = window.issEditorialRichText.sanitize(input.value, profile);
+          input.readOnly = false;
+          onChange(input.value);
+          warning.remove(); simplify.remove(); startEditor();
+        });
+        wrapper.appendChild(warning); wrapper.appendChild(simplify);
+      } else {
+        window.setTimeout(startEditor, 0);
+      }
       return wrapper;
     }
 
@@ -2794,9 +2883,11 @@
           retry.hidden = true;
           if (payload.data.validationMessage) {
             setStatus('Entwurf gesichert. Vor dem Veröffentlichen prüfen: ' + payload.data.validationMessage);
+            if (livePreview) { livePreview.stale('Bitte prüfen: ' + payload.data.validationMessage); }
             if (intent === 'preview' || intent === 'submit') { throw new Error(payload.data.validationMessage); }
             return '';
           }
+          if (livePreview && currentSaveValue() === snapshot && payload.data.previewUrl) { livePreview.update(payload.data.previewUrl, draftToken); }
           setStatus(currentSaveValue() === snapshot ? 'Entwurf gesichert. Noch nicht veröffentlicht.' : 'Weitere Änderungen werden gesichert …');
           return payload.data && payload.data.previewUrl ? payload.data.previewUrl : config.previewUrl;
         });
@@ -2814,6 +2905,7 @@
       return saveChain.catch(function (error) {
         setStatus(error.message || 'Nicht gesichert. Bitte erneut versuchen.');
         retry.hidden = false;
+        if (livePreview) { livePreview.stale('Vorschau nicht aktualisiert: ' + error.message); }
         throw error;
       });
     }
@@ -2908,13 +3000,17 @@
 
     if (recoveryPending) {
       root.inert = true;
+      root.hidden = true;
+      previewButton.disabled = true;
+      setStatus('Bitte zuerst eine Fassung zum Weiterarbeiten wählen.');
       var recovery = container.querySelector('.iss-editorial-recovery');
-      var restore = createElement('button', 'button button-primary', 'Entwurf wiederherstellen');
-      var discard = createElement('button', 'button', 'Gespeicherte Fassung verwenden');
+      var restore = createElement('button', 'button button-primary', 'Entwurf weiterbearbeiten');
+      var discard = createElement('button', 'button', 'Entwurf verwerfen');
       var stale = config.recovery.base !== config.baseToken;
+      recovery.appendChild(createElement('strong', '', 'Unveröffentlichter Entwurf vorhanden'));
       recovery.appendChild(createElement('p', '', stale
-        ? 'Ein eigener Entwurf liegt vor. Seitdem wurde der Inhalt aktualisiert. Prüfen Sie den wiederhergestellten Entwurf vor dem Veröffentlichen.'
-        : 'Ein eigener, noch nicht veröffentlichter Entwurf liegt vor (' + config.recovery.modified + ').'));
+        ? 'Seit Ihrem Entwurf wurde die gespeicherte Seite geändert. Sie können am Entwurf weiterarbeiten und die Änderungen prüfen oder ihn verwerfen und die gespeicherte Seite öffnen.'
+        : 'Ihr Entwurf vom ' + config.recovery.modified + ' ist automatisch gesichert. Arbeiten Sie daran weiter oder verwerfen Sie ihn, um die gespeicherte Seite zu öffnen.'));
       restore.type = discard.type = 'button';
       restore.addEventListener('click', function () {
         documentState = JSON.parse(JSON.stringify(config.recovery.document));
@@ -2927,14 +3023,20 @@
         });
         recoveryPending = false;
         root.inert = false;
+        root.hidden = false;
+        previewButton.disabled = false;
         clear(recovery);
         render();
+        var firstEdit = root.querySelector('.iss-editorial-card__edit');
+        if (firstEdit) { firstEdit.focus(); }
         scheduleAutosave();
       });
       discard.addEventListener('click', function () {
         recoveryPending = false;
         queueSave('discard').then(function () {
           root.inert = false;
+          root.hidden = false;
+          previewButton.disabled = false;
           clear(recovery);
           setStatus('Gespeicherte Fassung geladen.');
         }).catch(function () { recoveryPending = true; });

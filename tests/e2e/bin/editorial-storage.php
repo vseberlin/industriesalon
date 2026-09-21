@@ -176,6 +176,7 @@ try {
         $assert(!is_wp_error($response) && wp_remote_retrieve_response_code($response) === 200, 'Authenticated editor returns HTTP 200');
         $html = wp_remote_retrieve_body($response);
         $assert(str_contains($html, 'iss-editorial-root') && str_contains($html, 'id="editor-js"') && !str_contains($html, 'id="autosave-js"'), 'Real admin loads shared canvas and WordPress text editing with a single autosave owner');
+        $assert(strpos($html, 'class="iss-editorial-recovery"') < strpos($html, 'class="iss-editorial-root"'), 'Draft choice appears before the section canvas, not below a long disabled document');
         $assert(!str_contains($html, 'id="iss-content-model-veranstaltung-content-js"'), 'Old event script is not loaded with shared editor');
         preg_match('/var issEditorialAdmin = (.*?);\s*\n/', $html, $matches);
         $settings = json_decode($matches[1] ?? '', true);
@@ -190,6 +191,14 @@ try {
         $assert(get_metadata_raw('post', $id, $key, true) === $canonical, 'AJAX autosave leaves canonical JSON unchanged');
         $preview_response = wp_remote_get($saved['data']['previewUrl'], ['headers' => $headers, 'timeout' => 30]);
         $assert(wp_remote_retrieve_response_code($preview_response) === 200 && str_contains(wp_remote_retrieve_body($preview_response), 'HTTP draft title'), 'Real preview displays the saved draft title');
+        $assert(!str_contains(wp_remote_retrieve_body($preview_response), 'iss-editorial-preview-frame-js') && !str_contains(wp_remote_retrieve_body($preview_response), 'iss-editorial-preview-frame-css'), 'Separate-window preview does not load the embedding bridge or selection outline');
+        $embedded_url = add_query_arg(['iss_editorial_embed' => '1', 'iss_editorial_snapshot' => $saved['data']['draftToken']], $saved['data']['previewUrl']);
+        $embedded = wp_remote_get($embedded_url, ['headers' => $headers, 'timeout' => 30]);
+        $assert(wp_remote_retrieve_response_code($embedded) === 200 && str_contains(wp_remote_retrieve_body($embedded), 'iss-editorial-preview-frame-js') && str_contains(wp_remote_retrieve_body($embedded), 'iss-editorial-preview-frame-css'), 'Matching authenticated snapshot loads the preview bridge and section selection styles');
+        $outdated = wp_remote_get(add_query_arg('iss_editorial_snapshot', str_repeat('0', 64), $embedded_url), ['headers' => $headers, 'timeout' => 30]);
+        $assert(wp_remote_retrieve_response_code($outdated) === 409, 'Outdated iframe snapshot is rejected');
+        $anonymous = wp_remote_get($embedded_url, ['timeout' => 30]);
+        $assert(wp_remote_retrieve_response_code($anonymous) !== 200 || !str_contains(wp_remote_retrieve_body($anonymous), 'iss-editorial-preview-frame-js'), 'Anonymous request cannot render the private embedded draft');
         $partial_response = wp_remote_post($settings['ajaxUrl'], ['headers' => $headers, 'timeout' => 30, 'body' => [
             'action' => 'iss_editorial_save_preview_document', 'nonce' => $settings['previewNonce'], 'post_id' => $id, 'format' => $format,
             'document' => iss_editorial_encode_document($partial), 'base' => $settings['baseToken'], 'draft_token' => $saved['data']['draftToken'], 'enabled' => '1',
@@ -212,6 +221,63 @@ try {
         $assert(!empty($discard_result['success']) && !$wpdb->get_var($wpdb->prepare("SELECT ID FROM {$wpdb->posts} WHERE ID=%d", $autosave_id)), 'Explicit recovery discard still deletes its autosave');
         WP_Session_Tokens::get_instance($other_user)->destroy($token);
     }
+    wp_set_current_user($admin->ID);
+    $rich_doc = iss_editorial_get_empty_document('landing');
+    $rich_doc['schema_version'] = 2;
+    $rich = '<p><a href="/archive/"><strong><span class="iss-ink-123abc">Colour</span></strong></a> <span class="iss-mark-ffeeaa">mark</span></p>';
+    $rich_doc['sections'] = [
+        ['type' => 'fliesstext', 'title' => 'Rich text fixture', 'body' => $rich, 'treatment' => 'text.standard'],
+        ['type' => 'text_bild_reihe', 'body' => '', 'items' => [['label' => 'Row', 'text' => '<a href="/archive/"><em>Visit</em></a><br>Literal &lt;b&gt;text&lt;/b&gt;']], 'treatment' => 'text-bild-reihe.compact'],
+        ['type' => 'gateway', 'body' => '', 'items' => [['label' => 'Card', 'url' => '/archive/', 'text' => '<span class="iss-ink-e81d25">Red</span>']], 'treatment' => 'gateway.cards'],
+    ];
+    $v2 = iss_editorial_validate_document($rich_doc, 'landing');
+    $assert(!is_wp_error($v2), 'Landing v2 validates rich prose and inline descriptions');
+    $assert($v2['sections'][0]['body'] === $rich, 'Colour, highlight, emphasis and link survive server normalization');
+    $rendered = industriesalon_editorial_landing_render_document($v2);
+    $assert(str_contains($rendered, $rich), 'Theme renders v2 body formatting');
+    $assert(str_contains($rendered, '<a href="/archive/"><em>Visit</em></a>'), 'Non-linked row renders its inline prose link');
+    $assert(str_contains($rendered, 'Literal &lt;b&gt;text&lt;/b&gt;'), 'Literal legacy markup stays literal after explicit upgrade');
+    $assert(str_contains($rendered, '<span class="iss-ink-e81d25">Red</span>'), 'Card text renders its colour span');
+    $legacy = $rich_doc;
+    $legacy['schema_version'] = 1;
+    $legacy['sections'][1]['items'][0]['text'] = 'Literal <b>text</b>';
+    $legacy_html = industriesalon_editorial_landing_render_document($legacy);
+    $assert(str_contains($legacy_html, 'Literal &lt;b&gt;text&lt;/b&gt;'), 'v1 theme continues to escape plain item descriptions');
+    $bad = $rich_doc;
+    $bad['sections'][2]['items'][0]['text'] = '<a href="/nested/">nested</a>';
+    $assert(is_wp_error(iss_editorial_validate_document($bad, 'landing')), 'Card text cannot contain a nested link');
+    foreach (['<span class="iss-ink-red">bad</span>', '<span class="iss-ink-123abc evil">bad</span>', '<p style="color:red">old</p>', '<a href="javascript:alert(1)">bad</a>', '<iframe src="/">bad</iframe>'] as $markup) {
+        $bad['sections'][0]['body'] = $markup;
+        $bad['sections'][2] = $rich_doc['sections'][2];
+        $assert(is_wp_error(iss_editorial_validate_document($bad, 'landing')), 'Unsupported markup is reported before save: ' . $markup);
+    }
+    $assert(iss_editorial_sanitize_rich_text('<a href="javascript:alert(1)">bad</a>', 'block') === '<a>bad</a>', 'Unsafe protocol does not reach public output');
+    $new_tab = new WP_HTML_Tag_Processor(iss_editorial_sanitize_rich_text('<a href="/" target="_blank">new tab</a>', 'inline'));
+    $new_tab->next_tag('a');
+    $assert($new_tab->get_attribute('target') === '_blank' && $new_tab->get_attribute('rel') === 'noopener noreferrer', 'New-tab links receive safe rel attributes');
+    $assert(!iss_editorial_supports_version(iss_editorial_get_format('projekt'), 2), 'Other formats do not opt into v2');
+    $assert(!iss_editorial_supports_version(iss_editorial_get_format('landing'), '2'), 'Schema version remains a strict integer');
+    $id = wp_insert_post(['post_type' => 'page', 'post_status' => 'draft', 'post_title' => 'Editorial v2 fixture', 'post_author' => $admin->ID]);
+    $fixtures[] = $id;
+    $fixture_format = static function (array $formats) use ($id): array {
+        $original = $formats['landing']['post_eligibility_callback'];
+        $formats['landing']['post_eligibility_callback'] = static fn($post) => (int) $post->ID === $id || $original($post);
+        return $formats;
+    };
+    add_filter('iss_editorial_formats', $fixture_format, 99);
+    $assert(iss_editorial_save_document($id, 'landing', $v2), 'Save v2 canonical fixture');
+    $key = iss_editorial_get_document_meta_key('landing');
+    $canonical_v2 = get_metadata_raw('post', $id, $key, true);
+    $revision_v2 = wp_save_post_revision($id);
+    $changed_v2 = $v2;
+    $changed_v2['sections'][0]['body'] = str_replace('123abc', 'abcdef', $rich);
+    $draft_v2 = iss_editorial_save_draft($id, 'landing', $changed_v2, true);
+    $assert(!is_wp_error($draft_v2) && $draft_v2['document']['sections'][0]['body'] === $changed_v2['sections'][0]['body'], 'Native draft recovery preserves v2 colours exactly');
+    $assert(get_metadata_raw('post', $id, $key, true) === $canonical_v2, 'Private v2 draft leaves canonical unchanged');
+    $assert(iss_editorial_save_document($id, 'landing', $changed_v2), 'Save changed v2 fixture');
+    wp_restore_post_revision($revision_v2);
+    $assert(get_metadata_raw('post', $id, $key, true) === $canonical_v2, 'Native revision restore retains v2 marks and inline text');
+    remove_filter('iss_editorial_formats', $fixture_format, 99);
     WP_CLI::log("PASS: $checks checks, including $stored_count existing documents; temporary records only.");
 } finally {
     $_POST = [];

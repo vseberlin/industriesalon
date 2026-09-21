@@ -4,6 +4,9 @@ Immediate executable work only. Larger future programs live in `docs/project/bac
 
 ## Next
 
+- Complete the remaining Firefox and real clipboard/paste checks for the
+  [front-page rich-text/live-preview pilot](docs/project/editorial-rich-text-preview-plan.md#local-verification-and-staff-review)
+  before extending version-2 rich text to other formats or publishing the pilot.
 - Review the interactive Atlas outlier `Energie-Museum Berlin`: its current
   authoritative coordinate is far west of the Schöneweide core while its stored
   area is `Oberschöneweide`. The expanded navigation boundary deliberately

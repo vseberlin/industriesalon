@@ -106,6 +106,8 @@ function iss_editorial_render_main_canvas(WP_Post $post): void
     echo '<input type="hidden" class="iss-editorial-base-field" name="iss_editorial[' . esc_attr($format_slug) . '][base]" value="' . esc_attr(iss_editorial_saved_token($post->ID, $format_slug)) . '">';
     $draft = iss_editorial_get_draft($post->ID, $format_slug);
     echo '<input type="hidden" class="iss-editorial-draft-token-field" name="iss_editorial[' . esc_attr($format_slug) . '][draft_token]" value="' . esc_attr((string) ($draft['token'] ?? '')) . '">';
+    echo '<div class="iss-editorial-recovery" role="region" aria-label="' . esc_attr__('Entwurf fortsetzen', 'iss-editorial') . '"></div>';
+    echo '<p class="description iss-editorial-autosave-status" aria-live="polite"></p>';
     echo '<div class="iss-editorial-canvas-toolbar">';
     echo '<div class="iss-editorial-canvas-toolbar__copy">';
     echo '<p class="iss-editorial-mode">' . esc_html__('Inhalt bearbeiten', 'iss-editorial') . '</p>';
@@ -114,8 +116,6 @@ function iss_editorial_render_main_canvas(WP_Post $post): void
     echo '<button type="button" class="button button-secondary iss-editorial-preview-button">' . esc_html__('Vorschau öffnen', 'iss-editorial') . '</button>';
     echo '</div>';
     echo '<div class="iss-editorial-root" data-document="' . esc_attr(iss_editorial_encode_document($document)) . '" data-sections="' . esc_attr(iss_editorial_encode_document((array) $format['sections'])) . '"></div>';
-    echo '<p class="description iss-editorial-autosave-status" aria-live="polite"></p>';
-    echo '<div class="iss-editorial-recovery"></div>';
     $revisions = wp_get_post_revisions($post->ID, ['posts_per_page' => 1, 'check_enabled' => false]);
     if ($revisions) {
         $revision = reset($revisions);
@@ -306,6 +306,10 @@ function iss_editorial_enqueue_admin_assets(string $hook): void
         );
     }
 
+    foreach (['rich-text', 'live-preview'] as $asset) {
+        wp_enqueue_script('iss-editorial-' . $asset, iss_editorial_admin_url() . 'assets/' . $asset . '.js', ['editor', 'wplink'], (string) filemtime(iss_editorial_admin_path() . 'assets/' . $asset . '.js'), true);
+    }
+
     $script_path = iss_editorial_admin_path() . 'assets/admin.js';
     if (file_exists($script_path)) {
         $route_config = iss_editorial_get_route_station_editor_config($post_id, (string) $format['slug'], (string) $screen->post_type);
@@ -325,6 +329,8 @@ function iss_editorial_enqueue_admin_assets(string $hook): void
                 file_exists($dnd_path) ? 'iss-editorial-dnd' : '',
                 file_exists($ui_path) ? 'iss-editorial-ui' : '',
                 'editor',
+                'iss-editorial-rich-text',
+                'iss-editorial-live-preview',
                 $route_dependency,
             ])),
             (string) filemtime($script_path),
@@ -343,6 +349,9 @@ function iss_editorial_enqueue_admin_assets(string $hook): void
                 'previewNonce' => wp_create_nonce('iss_editorial_preview_document'),
                 'postId' => $post_id,
                 'format' => (string) $format['slug'],
+                'supportedVersions' => $format['supported_versions'],
+                'textPalette' => iss_editorial_text_palette(),
+                'livePreview' => $format['slug'] === 'landing',
                 'document' => $document,
                 'enabled' => true,
                 'baseToken' => iss_editorial_saved_token($post_id, (string) $format['slug']),
@@ -402,7 +411,7 @@ function iss_editorial_ajax_save_preview_document(): void
     }
     $validated = iss_editorial_validate_document($document, $format_slug);
     $decoded = json_decode($document, true);
-    if (!is_array($decoded) || ($decoded['schema_version'] ?? null) !== 1 || !isset($decoded['sections']) || !is_array($decoded['sections']) || !array_is_list($decoded['sections'])) {
+    if (!is_array($decoded) || !iss_editorial_supports_version($format, $decoded['schema_version'] ?? null) || !isset($decoded['sections']) || !is_array($decoded['sections']) || !array_is_list($decoded['sections'])) {
         wp_send_json_error(['message' => is_wp_error($validated) ? $validated->get_error_message() : __('Der Entwurf konnte nicht gelesen werden.', 'iss-editorial')], 422);
     }
     $post_fields = [];

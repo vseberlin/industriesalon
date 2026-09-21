@@ -1776,7 +1776,7 @@
   margin: 0;
   padding: clamp(1.5rem, 4vw, 3rem) clamp(1.25rem, 3vw, 2rem) clamp(3rem, 7vw, 5rem);
   color: var(--iss-surface-fg);
-  pointer-events: none;
+
 }
 
 .iss-landing-editorial--skin-frontpage .iss-landing-section--treatment-feature-image-overlay .iss-media-text__heading .iss-kicker,
@@ -2078,4 +2078,55 @@
     border-top: 1px solid var(--iss-surface-rule);
     border-left: 0;
   }
+}
+
+/* Opening role of the existing image-overlay feature, for v2 front pages. */
+.iss-landing-section--opening {
+  padding-block: 0;
+  border-top: 0;
+}
+
+.iss-landing-opening {
+  display: grid;
+  position: relative;
+  isolation: isolate;
+  min-height: min(740px, 85svh);
+  align-items: end;
+  background: var(--iss-black);
+  color: var(--iss-white);
+}
+
+.iss-landing-opening__image {
+  position: absolute;
+  inset: 0;
+  z-index: -2;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.iss-landing-opening::before {
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  content: "";
+  background: linear-gradient(90deg, rgb(12 12 12 / 85%), rgb(12 12 12 / 20%));
+}
+
+.iss-landing-opening__content {
+  padding-block: clamp(2rem, 6vw, 5rem);
+}
+
+.iss-landing-opening__title {
+  max-width: 16ch;
+  margin: 0.4em 0;
+  color: inherit;
+  font-family: var(--iss-landing-serif);
+  font-size: clamp(2.3rem, 5vw, 5.5rem);
+  line-height: 1.06;
+}
+
+.iss-landing-opening__body {
+  max-width: 52ch;
+  font-size: clamp(1rem, 1.5vw, 1.3rem);
 }

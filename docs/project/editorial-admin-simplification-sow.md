@@ -4,6 +4,11 @@ This SOW defines how to simplify ISS editorial edit screens without painting the
 whole WordPress admin. The goal is one coherent editor workflow across public
 content types while preserving the real storage and render owners.
 
+The implemented local text-editing pilot is the
+[rich-text and live-preview front-page pilot](editorial-rich-text-preview-plan.md).
+It targets existing staff and volunteers, with practical link editing, text
+colours and immediate rendered feedback.
+
 ## Goal
 
 Build one shared ISS editorial admin layer for content editing screens. Editors

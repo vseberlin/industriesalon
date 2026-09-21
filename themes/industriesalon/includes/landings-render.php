@@ -68,7 +68,7 @@ function industriesalon_get_editorial_landing_post_skin(int $post_id): string
         return '';
     }
 
-    return industriesalon_resolve_editorial_landing_skin(iss_editorial_get_read_model($post_id, 'landing', false));
+    return industriesalon_resolve_editorial_landing_skin(iss_editorial_get_read_model($post_id, 'landing', industriesalon_editorial_landing_prefer_autosave($post_id)));
 }
 
 function industriesalon_editorial_landing_prefer_autosave(int $post_id): bool
@@ -159,6 +159,9 @@ function industriesalon_editorial_landing_section_classes(array $section, string
         'iss-landing-section--skin-' . sanitize_html_class($skin),
     ];
 
+    if (!empty($section['_opening'])) {
+        $classes[] = 'iss-landing-section--opening';
+    }
     if ($treatment !== '') {
         $classes[] = 'iss-landing-section--treatment-' . industriesalon_editorial_landing_class_slug($treatment);
     }
@@ -261,6 +264,9 @@ function industriesalon_render_editorial_landing_copy(array $section): string
     $kicker = trim((string) ($section['kicker'] ?? ''));
     $title = trim((string) ($section['title'] ?? ''));
     $body = trim((string) ($section['body'] ?? ''));
+    if (($section['_text_version'] ?? 1) >= 2 && !empty($section['lead'])) {
+        $body = wpautop($section['lead']) . wpautop($body);
+    }
     $links = is_array($section['links'] ?? null) ? $section['links'] : [];
     $links_html = industriesalon_render_editorial_landing_links($links);
 
@@ -308,7 +314,7 @@ function industriesalon_render_editorial_landing_item_media(array $item): string
     return trim((string) ob_get_clean());
 }
 
-function industriesalon_render_editorial_landing_gateway_item(array $item): string
+function industriesalon_render_editorial_landing_gateway_item(array $item, bool $rich_text = false): string
 {
     $label = trim((string) ($item['label'] ?? ''));
     $text = trim((string) ($item['text'] ?? ''));
@@ -326,7 +332,7 @@ function industriesalon_render_editorial_landing_gateway_item(array $item): stri
             <span class="iss-landing-gateway__item-body">
                 <strong class="iss-landing-gateway__item-title"><?php echo esc_html($label); ?></strong>
                 <?php if ($text !== '') : ?>
-                    <span class="iss-landing-gateway__item-text"><?php echo esc_html($text); ?></span>
+                    <span class="iss-landing-gateway__item-text"><?php echo $rich_text ? iss_editorial_sanitize_rich_text($text, 'inline-card') : esc_html($text); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- Versioned inline allowlist. ?></span>
                 <?php endif; ?>
             </span>
         </a>
@@ -344,7 +350,7 @@ function industriesalon_render_editorial_landing_gateway(array $section, int $re
 
     foreach ($items as $item) {
         if (is_array($item)) {
-            $item_html = industriesalon_render_editorial_landing_gateway_item($item);
+            $item_html = industriesalon_render_editorial_landing_gateway_item($item, ($section['_text_version'] ?? 1) >= 2);
             if ($item_html !== '') {
                 $items_html .= $item_html;
                 ++$item_count;
@@ -373,7 +379,7 @@ function industriesalon_render_editorial_landing_gateway(array $section, int $re
     return trim((string) ob_get_clean());
 }
 
-function industriesalon_render_editorial_landing_text_image_item(array $item, int $heading_level = 3): string
+function industriesalon_render_editorial_landing_text_image_item(array $item, int $heading_level = 3, bool $rich_text = false): string
 {
     $label = trim((string) ($item['label'] ?? ''));
     $text = trim((string) ($item['text'] ?? ''));
@@ -396,7 +402,7 @@ function industriesalon_render_editorial_landing_text_image_item(array $item, in
                 <?php if ($label !== '') : ?>
                     <<?php echo esc_attr($heading_tag); ?> class="iss-landing-text-image-row__item-title"><?php echo esc_html($label); ?></<?php echo esc_attr($heading_tag); ?>>
                 <?php endif; ?>
-                <?php if ($text !== '') : ?><p class="iss-landing-text-image-row__item-text"><?php echo esc_html($text); ?></p><?php endif; ?>
+                <?php if ($text !== '') : ?><p class="iss-landing-text-image-row__item-text"><?php echo $rich_text ? iss_editorial_sanitize_rich_text($text, 'inline') : esc_html($text); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- Versioned inline allowlist. ?></p><?php endif; ?>
             </div>
         <?php endif; ?>
     </article>
@@ -414,7 +420,7 @@ function industriesalon_render_editorial_landing_text_image_row(array $section, 
         if (!is_array($item)) {
             continue;
         }
-        $item_html = industriesalon_render_editorial_landing_text_image_item($item, $item_heading_level);
+        $item_html = industriesalon_render_editorial_landing_text_image_item($item, $item_heading_level, ($section['_text_version'] ?? 1) >= 2);
         if ($item_html === '') {
             continue;
         }
@@ -495,7 +501,7 @@ function industriesalon_render_editorial_landing_map_image(array $section, int $
         if (!is_array($item)) {
             continue;
         }
-        $item_html = industriesalon_render_editorial_landing_text_image_item($item);
+        $item_html = industriesalon_render_editorial_landing_text_image_item($item, 3, ($section['_text_version'] ?? 1) >= 2);
         if ($item_html === '') {
             continue;
         }
@@ -821,6 +827,9 @@ function industriesalon_render_editorial_landing_media_text_overlay_copy(array $
     $kicker = trim((string) ($section['kicker'] ?? ''));
     $title = trim((string) ($section['title'] ?? ''));
     $body = trim((string) ($section['body'] ?? ''));
+    if (($section['_text_version'] ?? 1) >= 2 && !empty($section['lead'])) {
+        $body = wpautop($section['lead']) . wpautop($body);
+    }
     if ($kicker === '' && $title === '' && $body === '') {
         return '';
     }
@@ -835,7 +844,11 @@ function industriesalon_render_editorial_landing_media_text_overlay_copy(array $
             <h2 class="iss-heading__title iss-media-text__title"><?php echo esc_html($title); ?></h2>
         <?php endif; ?>
         <?php if ($body !== '') : ?>
-            <p class="iss-heading__text iss-media-text__text"><?php echo esc_html(wp_strip_all_tags($body)); ?></p>
+            <?php if (($section['_text_version'] ?? 1) >= 2) : ?>
+                <div class="iss-heading__text iss-media-text__text"><?php echo wp_kses_post(wpautop($body)); ?></div>
+            <?php else : ?>
+                <p class="iss-heading__text iss-media-text__text"><?php echo esc_html(wp_strip_all_tags($body)); ?></p>
+            <?php endif; ?>
         <?php endif; ?>
     </div>
     <?php
@@ -847,6 +860,9 @@ function industriesalon_render_editorial_landing_media_text_copy(array $section)
     $kicker = trim((string) ($section['kicker'] ?? ''));
     $title = trim((string) ($section['title'] ?? ''));
     $body = trim((string) ($section['body'] ?? ''));
+    if (($section['_text_version'] ?? 1) >= 2 && !empty($section['lead'])) {
+        $body = wpautop($section['lead']) . wpautop($body);
+    }
     $links_html = industriesalon_render_editorial_landing_links(is_array($section['links'] ?? null) ? $section['links'] : []);
     if ($kicker === '' && $title === '' && $body === '' && $links_html === '') {
         return '';
@@ -960,6 +976,24 @@ function industriesalon_render_editorial_landing_feature(array $section, int $re
     }
     if ($treatment === 'feature.media-text') {
         return industriesalon_render_editorial_landing_feature_media_text($section, $rendered_index, $skin);
+    }
+    if ($treatment === 'feature.image-overlay' && !empty($section['_opening'])) {
+        $image_id = absint($section['media_refs'][0]['id'] ?? 0);
+        ob_start();
+        ?>
+        <section <?php echo industriesalon_editorial_landing_section_attrs($section, $skin); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- Escaped attribute helper. ?>>
+            <div class="iss-landing-opening">
+                <?php echo wp_get_attachment_image($image_id, 'full', false, ['class' => 'iss-landing-opening__image', 'loading' => 'eager', 'fetchpriority' => 'high']); ?>
+                <div class="iss-container iss-landing-opening__content">
+                    <?php if (!empty($section['kicker'])) : ?><p class="iss-kicker iss-kicker--light"><?php echo esc_html($section['kicker']); ?></p><?php endif; ?>
+                    <h1 class="iss-landing-opening__title"><?php echo esc_html($section['title']); ?></h1>
+                    <div class="iss-landing-opening__body"><?php echo wp_kses_post(wpautop($section['lead'] ?? '') . wpautop($section['body'] ?? '')); ?></div>
+                    <?php echo industriesalon_render_editorial_landing_links($section['links'] ?? []); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- Escaped link helper. ?>
+                </div>
+            </div>
+        </section>
+        <?php
+        return trim((string) ob_get_clean());
     }
     if ($treatment === 'feature.image-overlay') {
         return industriesalon_render_editorial_landing_feature_microblocks($section, $rendered_index, $skin);
@@ -1363,12 +1397,21 @@ function industriesalon_editorial_landing_render_document(array $document): stri
     $skin = industriesalon_resolve_editorial_landing_skin($document);
     $html = '';
     $rendered_index = 0;
-    foreach ($sections as $section) {
+    foreach ($sections as $source_index => $section) {
         if (!is_array($section)) {
             continue;
         }
 
+        $section['_text_version'] = (int) ($document['schema_version'] ?? 1);
+        $section['_opening'] = $source_index === 0 && is_front_page() && industriesalon_landing_has_opening($document);
         $section_html = industriesalon_render_editorial_landing_section($section, $rendered_index, $skin);
+        if ($section_html !== '' && function_exists('iss_editorial_embedded_preview') && iss_editorial_embedded_preview()) {
+            $html_tags = new WP_HTML_Tag_Processor($section_html);
+            if ($html_tags->next_tag()) {
+                $html_tags->set_attribute('data-iss-preview-section', (string) $source_index);
+                $section_html = $html_tags->get_updated_html();
+            }
+        }
         if (trim($section_html) !== '') {
             $html .= $section_html;
             ++$rendered_index;
@@ -1446,6 +1489,11 @@ function industriesalon_suppress_front_page_landing_fallback_group(string $block
     $attrs = is_array($block['attrs'] ?? null) ? $block['attrs'] : [];
     $class_name = ' ' . (string) ($attrs['className'] ?? '') . ' ';
     $anchor = sanitize_title((string) ($attrs['anchor'] ?? ''));
+    if (strpos($class_name, ' iss-section--hero ') !== false) {
+        $post_id = (int) get_queried_object_id();
+        $document = iss_editorial_get_read_model($post_id, 'landing', industriesalon_editorial_landing_prefer_autosave($post_id));
+        if (industriesalon_landing_has_opening($document)) { return ''; }
+    }
     $fallback_classes = [
         'iss-front-schoneweide-statement',
         'iss-front-explore',
@@ -1495,3 +1543,39 @@ function industriesalon_register_editorial_landing_block(): void
     ]);
 }
 add_action('init', 'industriesalon_register_editorial_landing_block');
+
+/** The first v2 image feature can replace the front-page template's static hero. */
+function industriesalon_landing_has_opening(array $document): bool
+{
+    $first = $document['sections'][0] ?? [];
+    return ($document['schema_version'] ?? 1) >= 2
+        && ($document['skin'] ?? '') === 'frontpage'
+        && ($first['type'] ?? '') === 'feature'
+        && ($first['treatment'] ?? '') === 'feature.image-overlay'
+        && trim((string) ($first['title'] ?? '')) !== ''
+        && wp_attachment_is_image(absint($first['media_refs'][0]['id'] ?? 0));
+}
+
+add_action('wp_enqueue_scripts', static function (): void {
+    $post_id = (int) get_queried_object_id();
+    if (!is_singular('page') || !industriesalon_editorial_landing_is_enabled($post_id)) { return; }
+    $document = iss_editorial_get_read_model($post_id, 'landing', industriesalon_editorial_landing_prefer_autosave($post_id));
+    if (($document['schema_version'] ?? 1) < 2) { return; }
+    $rules = [];
+    foreach ((array) ($document['sections'] ?? []) as $section) {
+        $values = [$section['body'] ?? '', $section['lead'] ?? ''];
+        foreach ((array) ($section['items'] ?? []) as $item) { $values[] = $item['text'] ?? ''; }
+        foreach ($values as $value) {
+            $tags = new WP_HTML_Tag_Processor($value);
+            while ($tags->next_tag('span')) {
+                foreach (preg_split('/\s+/', (string) $tags->get_attribute('class')) as $class) {
+                    if (preg_match('/^iss-(ink|mark)-([0-9a-f]{6})$/D', $class, $match)) {
+                        $property = $match[1] === 'ink' ? 'color' : 'background-color';
+                        $rules[$class] = '.iss-landing-editorial .' . $class . '{' . $property . ':#' . $match[2] . '}';
+                    }
+                }
+            }
+        }
+    }
+    if ($rules) { wp_add_inline_style('industriesalon-base', implode("\n", $rules)); }
+}, 30);

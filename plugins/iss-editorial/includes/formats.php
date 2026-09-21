@@ -61,6 +61,7 @@ function iss_editorial_get_registered_formats(): array
                 'treatments' => array_values($treatments),
                 'ui_hidden' => !empty($section['ui_hidden']),
                 'slots' => (array) ($section['slots'] ?? []),
+                'rich_text' => array_intersect((array) ($section['rich_text'] ?? []), ['block', 'inline', 'inline-card']),
                 'items_kind' => ($section['items_kind'] ?? '') === 'text' ? 'text' : 'cards',
             ];
         }
@@ -81,6 +82,7 @@ function iss_editorial_get_registered_formats(): array
             'post_eligibility_callback' => is_callable($format['post_eligibility_callback'] ?? null) ? $format['post_eligibility_callback'] : null,
             'skin_meta_key' => sanitize_key((string) ($format['skin_meta_key'] ?? '')),
             'storage_meta_key' => sanitize_key((string) ($format['storage_meta_key'] ?? '')),
+            'supported_versions' => array_values(array_unique(array_map('absint', (array) ($format['supported_versions'] ?? [1])))),
             'always_enabled' => !empty($format['always_enabled']),
         ];
     }

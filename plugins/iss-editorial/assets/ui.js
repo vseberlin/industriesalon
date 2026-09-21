@@ -121,6 +121,7 @@
     return {
       root: root,
       dialog: dialog,
+      heading: heading,
       body: body,
       foot: foot,
       footLeft: foot.firstChild,

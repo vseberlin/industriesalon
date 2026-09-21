@@ -193,6 +193,7 @@ function iss_content_model_register_editorial_formats(array $formats): array
     ];
 
     $formats['landing'] = [
+        'supported_versions' => [1, 2],
         'label' => __('Landing Page', 'iss-content-model'),
         'base' => 'ordered',
         'post_types' => ['page'],
@@ -289,6 +290,14 @@ function iss_content_model_register_editorial_formats(array $formats): array
             ],
         ],
     ];
+
+    foreach ($formats['landing']['sections'] as $type => &$section) {
+        $section['rich_text'] = ['body' => 'block', 'lead' => 'block'];
+        if (in_array('items', $section['supports'], true)) {
+            $section['rich_text']['items'] = in_array($type, ['text_bild_reihe', 'map_img'], true) ? 'inline' : 'inline-card';
+        }
+    }
+    unset($section);
 
     $formats['fuehrung'] = [
         'label' => __('Führung', 'iss-content-model'),

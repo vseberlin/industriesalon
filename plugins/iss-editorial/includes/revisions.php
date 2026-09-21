@@ -79,12 +79,13 @@ function iss_editorial_get_draft(int $post_id, string $format_slug): array
     if (!is_string($document) || $document === '') {
         return [];
     }
+    $enabled = !empty(iss_editorial_get_format($format_slug)['always_enabled'])
+        || get_metadata_raw('post', $revision->ID, iss_editorial_get_enabled_meta_key($format_slug), true) === '1';
     return [
         'id' => $revision->ID,
         'document' => iss_editorial_decode_document($document),
-        'enabled' => !empty(iss_editorial_get_format($format_slug)['always_enabled'])
-            || get_metadata_raw('post', $revision->ID, iss_editorial_get_enabled_meta_key($format_slug), true) === '1',
-        'token' => hash('sha256', $document . '|' . $revision->post_title . '|' . $revision->post_excerpt . '|' . (string) get_metadata_raw('post', $revision->ID, '_iss_editorial_draft_base', true)),
+        'enabled' => $enabled,
+        'token' => hash('sha256', $document . '|' . $revision->post_title . '|' . $revision->post_excerpt . '|' . ($enabled ? '1' : '0') . '|' . (string) get_metadata_raw('post', $revision->ID, '_iss_editorial_draft_base', true)),
         'base' => (string) get_metadata_raw('post', $revision->ID, '_iss_editorial_draft_base', true),
         'modified' => $revision->post_modified,
         'title' => $revision->post_title,
@@ -101,7 +102,7 @@ function iss_editorial_save_draft(int $post_id, string $format_slug, array $docu
     if (!$post || !current_user_can('edit_post', $post_id)) {
         return new WP_Error('editorial_permission', __('Keine Berechtigung.', 'iss-editorial'));
     }
-    if (($document['schema_version'] ?? null) !== 1 || !isset($document['sections']) || !is_array($document['sections']) || !array_is_list($document['sections'])) {
+    if (!iss_editorial_supports_version(iss_editorial_get_format($format_slug), $document['schema_version'] ?? null) || !isset($document['sections']) || !is_array($document['sections']) || !array_is_list($document['sections'])) {
         return new WP_Error('editorial_invalid_schema', __('Der Entwurf konnte nicht gelesen werden.', 'iss-editorial'));
     }
     // Recovery must preserve unfinished form entries. Canonical saves validate separately.
@@ -126,6 +127,8 @@ function iss_editorial_save_draft(int $post_id, string $format_slug, array $docu
     if (isset($post_fields['excerpt'])) {
         $post_data['post_excerpt'] = wp_kses_post((string) $post_fields['excerpt']);
     }
+    $post_data['post_modified'] = current_time('mysql');
+    $post_data['post_modified_gmt'] = current_time('mysql', true);
     $revision_id = $controller->create_post_autosave($post_data, $meta);
     if (is_wp_error($revision_id) || !$revision_id) {
         return is_wp_error($revision_id) ? $revision_id : new WP_Error('editorial_autosave_failed', __('Der Entwurf konnte nicht gespeichert werden.', 'iss-editorial'));

@@ -157,7 +157,7 @@ function iss_editorial_sanitize_fact_list($facts): array
     return $items;
 }
 
-function iss_editorial_sanitize_gateway_item($item): array
+function iss_editorial_sanitize_gateway_item($item, string $profile = ''): array
 {
     if (!is_array($item)) {
         return [];
@@ -178,7 +178,7 @@ function iss_editorial_sanitize_gateway_item($item): array
 
     $sanitized = [
         'label' => $label,
-        'text' => sanitize_textarea_field((string) ($item['text'] ?? '')),
+        'text' => ($profile !== '' ? iss_editorial_sanitize_rich_text((string) ($item['text'] ?? ''), $profile) : sanitize_textarea_field((string) ($item['text'] ?? ''))),
         'url' => $url,
         'media_refs' => iss_editorial_sanitize_reference_list($item['media_refs'] ?? []),
     ];
@@ -190,11 +190,11 @@ function iss_editorial_sanitize_gateway_item($item): array
     return $sanitized;
 }
 
-function iss_editorial_sanitize_gateway_item_list($items): array
+function iss_editorial_sanitize_gateway_item_list($items, string $profile = ''): array
 {
     $sanitized = [];
     foreach ((array) $items as $item) {
-        $item = iss_editorial_sanitize_gateway_item($item);
+        $item = iss_editorial_sanitize_gateway_item($item, $profile);
         if ($item) {
             $sanitized[] = $item;
         }
@@ -203,14 +203,14 @@ function iss_editorial_sanitize_gateway_item_list($items): array
     return $sanitized;
 }
 
-function iss_editorial_sanitize_text_image_item($item): array
+function iss_editorial_sanitize_text_image_item($item, string $profile = ''): array
 {
     if (!is_array($item)) {
         return [];
     }
 
     $label = sanitize_text_field((string) ($item['label'] ?? ''));
-    $text = sanitize_textarea_field((string) ($item['text'] ?? ''));
+    $text = ($profile !== '' ? iss_editorial_sanitize_rich_text((string) ($item['text'] ?? ''), $profile) : sanitize_textarea_field((string) ($item['text'] ?? '')));
     $media_refs = iss_editorial_sanitize_reference_list($item['media_refs'] ?? []);
     if ($label === '' && $text === '' && !$media_refs) {
         return [];
@@ -223,11 +223,11 @@ function iss_editorial_sanitize_text_image_item($item): array
     ];
 }
 
-function iss_editorial_sanitize_text_image_item_list($items): array
+function iss_editorial_sanitize_text_image_item_list($items, string $profile = ''): array
 {
     $sanitized = [];
     foreach ((array) $items as $item) {
-        $item = iss_editorial_sanitize_text_image_item($item);
+        $item = iss_editorial_sanitize_text_image_item($item, $profile);
         if ($item) {
             $sanitized[] = $item;
         }
@@ -461,6 +461,10 @@ function iss_editorial_strip_unsafe_body_hrefs(string $body): string
 
 function iss_editorial_sanitize_body_html(string $body, array $format, string $type): string
 {
+    $profile = iss_editorial_text_profile($format, $type, 'body');
+    if ($profile !== '') {
+        return iss_editorial_sanitize_rich_text($body, $profile);
+    }
     $format_slug = (string) ($format['slug'] ?? '');
     $safe_rich_text_sections = [
         'fuehrung' => ['bildbuehne', 'intro', 'kapitel', 'leitfrage', 'material', 'schluss'],
@@ -503,7 +507,8 @@ function iss_editorial_sanitize_section(array $section, array $format): array
     ];
 
     if (iss_editorial_format_supports_section_field($format, $type, 'lead')) {
-        $sanitized['lead'] = wp_kses_post((string) ($section['lead'] ?? ''));
+        $profile = iss_editorial_text_profile($format, $type, 'lead');
+        $sanitized['lead'] = $profile !== '' ? iss_editorial_sanitize_rich_text((string) ($section['lead'] ?? ''), $profile) : wp_kses_post((string) ($section['lead'] ?? ''));
     }
 
     if (isset($section['anchor'])) {
@@ -538,8 +543,8 @@ function iss_editorial_sanitize_section(array $section, array $format): array
         $sanitized['items'] = ($format['sections'][$type]['items_kind'] ?? '') === 'text'
             ? array_values(array_filter(array_map('sanitize_text_field', (array) ($section['items'] ?? []))))
             : (in_array($type, ['text_bild_reihe', 'map_img'], true)
-            ? iss_editorial_sanitize_text_image_item_list($section['items'] ?? [])
-            : iss_editorial_sanitize_gateway_item_list($section['items'] ?? []));
+            ? iss_editorial_sanitize_text_image_item_list($section['items'] ?? [], iss_editorial_text_profile($format, $type, 'items'))
+            : iss_editorial_sanitize_gateway_item_list($section['items'] ?? [], iss_editorial_text_profile($format, $type, 'items')));
     }
 
     if (iss_editorial_format_supports_section_field($format, $type, 'slot_key')) {
@@ -708,6 +713,7 @@ function iss_editorial_sanitize_document($document, string $format_slug): array
     $sanitized = iss_editorial_get_empty_document($format_slug);
     $schema_version = absint($document['schema_version'] ?? 1);
     $sanitized['schema_version'] = max(1, $schema_version);
+    $format['document_version'] = $sanitized['schema_version'];
     $sanitized['skin'] = sanitize_key((string) ($document['skin'] ?? $sanitized['skin']));
     $sanitized['variant'] = sanitize_key((string) ($document['variant'] ?? $sanitized['variant']));
     $sanitized['features'] = iss_editorial_sanitize_document_features($document['features'] ?? []);
@@ -751,9 +757,10 @@ function iss_editorial_validate_document($value, string $format_slug)
     if (!$format || !is_array($document) || (is_string($value) && json_last_error() !== JSON_ERROR_NONE)) {
         return new WP_Error('editorial_invalid_json', __('Der Inhalt konnte nicht gelesen werden. Die gespeicherte Fassung bleibt erhalten.', 'iss-editorial'));
     }
-    if (($document['schema_version'] ?? null) !== 1 || !isset($document['sections']) || !is_array($document['sections']) || !array_is_list($document['sections'])) {
+    if (!iss_editorial_supports_version($format, $document['schema_version'] ?? null) || !isset($document['sections']) || !is_array($document['sections']) || !array_is_list($document['sections'])) {
         return new WP_Error('editorial_invalid_schema', __('Dieses Dokumentformat wird nicht unterstützt. Die gespeicherte Fassung bleibt erhalten.', 'iss-editorial'));
     }
+    $format['document_version'] = $document['schema_version'];
     $allowed_document_fields = (array) apply_filters('iss_editorial_document_fields', ['schema_version', 'skin', 'variant', 'features', 'sections', 'deleted_sections'], $format);
     foreach ($document as $key => $value) {
         if (!in_array($key, $allowed_document_fields, true) && $value !== '' && $value !== [] && $value !== null) {
@@ -807,6 +814,15 @@ function iss_editorial_validate_document($value, string $format_slug)
             foreach ($collections as $key) {
                 if (isset($section[$key]) && !is_array($section[$key])) {
                     return new WP_Error('editorial_invalid_field', sprintf(__('Abschnitt %1$d: Bitte „%2$s“ prüfen.', 'iss-editorial'), $index + 1, $key));
+                }
+            }
+            foreach ((array) $format['sections'][$type]['rich_text'] as $field => $profile) {
+                if ($document['schema_version'] < 2) { continue; }
+                $values = $field === 'items' ? array_column((array) ($section['items'] ?? []), 'text') : [$section[$field] ?? ''];
+                foreach ($values as $text) {
+                    if (!is_string($text) || !iss_editorial_rich_text_is_supported($text, $profile)) {
+                        return new WP_Error('editorial_unsupported_markup', sprintf(__('Abschnitt %d: Die Textformatierung muss geprüft werden. Der Entwurf bleibt erhalten.', 'iss-editorial'), $index + 1));
+                    }
                 }
             }
             $normalized = iss_editorial_sanitize_section($section, $format);

@@ -101,6 +101,11 @@ Section edits, title and excerpt are autosaved after an idle interval to the
 current author's native WordPress autosave revision. A successful server response
 is required before reporting that a draft is secured. Reloading offers explicit
 recovery or discard when a different own draft exists; neither choice publishes.
+This choice appears above the section canvas. Until it is made, the inactive
+canvas is hidden and preview is disabled, rather than displaying unresponsive
+section buttons. **Entwurf weiterbearbeiten** restores the draft and focuses its
+first edit control; **Entwurf verwerfen** opens the saved version only after the
+server acknowledges the discard. Failed discard keeps the choice available.
 The classic edit screen's post-field-only cleanup must not delete editorial
 autosaves containing JSON changes. A narrowly scoped `pre_delete_post` filter
 retains those revisions on edit-screen GET requests; normal save and explicit
@@ -143,6 +148,73 @@ Regression checks:
 This editor rollout requires code only: no content or template migration and no
 uploads artifact. Existing enabled flags and database template overrides remain
 the authority for already published content.
+
+### Landing rich text and live preview
+
+Landing documents support versions 1 and 2. Other formats still support version
+1. The explicit **Textfarben aktivieren** action converts legacy plain item
+descriptions to escaped rich text in the author's draft, including deleted
+sections. Opening a document does not upgrade or save it. The format registry's
+`rich_text` profiles declare block prose, inline descriptions and descriptions
+inside a linked card. The last profile excludes hyperlinks to prevent nested
+anchors; headings, labels and factual fields remain plain text.
+
+Version 2 uses the installed WordPress TinyMCE with a compact toolbar. **Link**
+opens the full native dialog, including link text when no text is selected and
+internal-content search. **Farbe** and **Marker** offer the effective theme
+palette, custom six-digit RGB values, session-local recent colours and separate
+resets. Undo, selection and links survive colour changes. The stored contract is
+`span.iss-ink-rrggbb` / `span.iss-mark-rrggbb`; arbitrary classes and CSS are
+excluded. The theme collects the used marks and emits scoped stylesheet rules.
+Block prose permits paragraphs, emphasis, lists, breaks and safe links; short
+descriptions permit their inline subset. Unsupported imported markup stays
+visible for review until the editor explicitly chooses **Formatierung
+vereinfachen**; server validation also rejects lossy normalization.
+
+Landing section dialogs show the actual WordPress page preview beside the
+controls, with 1280/768/390px layout viewports. Narrow editor windows use
+Edit/Preview tabs. The **Abschnitt** selector switches the controls and reveals
+that section in the preview without reloading the iframe. Clicking a preview
+section (or focusing it and pressing Enter/Space) opens its controls; narrow
+windows return to the editing tab. The active section is outlined only in the
+embedded preview. Scrolling alone leaves the editor selection unchanged.
+Navigation retains pending edits and the existing save queue. **Änderungen im
+Abschnitt verwerfen** reverts only the active section to its first-opened state
+in this workspace. Preview selections check the displayed frame, origin, token
+and source index; a changed section order cannot address a different section.
+
+The existing serialized autosave queue coalesces edits after
+350ms idle time. Only an acknowledged, valid, current draft loads a new preview.
+The iframe handshake checks source, origin and exact snapshot token; an older
+response cannot replace newer work. Pending frames replace the displayed frame
+only after readiness, preserving scroll while leaving TinyMCE mounted. Invalid
+input and failed refreshes retain the previous valid preview with a visible
+stale-state message. Unfinished input still belongs to native draft recovery.
+The embedded page disables navigation and form submission; the separate-window
+preview remains available. No route/date/relation panel is saved by this queue.
+
+The preview bridge and source-section markers are emitted only for an
+authenticated, authorized WordPress preview of the matching draft. Public HTML
+keeps its existing anchors and contains neither bridge nor editing markers.
+`rich-text.js` owns the text controls, `live-preview.js` owns the workspace/frame
+lifecycle, and `preview-frame.js` owns the authenticated frame interaction.
+The preview selection stylesheet also loads only in the authenticated embedded
+page. `includes/rich-text.php` and `includes/preview.php` implement their server
+contracts; public rendering remains in the theme.
+
+On the front page, the first version-2 `feature.image-overlay` in the `frontpage`
+skin supplies the opening image, H1, prose and actions when it has a valid image
+and heading. Only then is the template's static hero suppressed. Version-1
+documents retain the previous interpretation and fallback. Version-2 lead/body
+and item formatting render through the same landing renderer used in previews.
+
+Deploy the version registry, editor, sanitizer and theme together before saving
+version-2 content. Keep the version-2 reader/sanitizer/renderer if reverting the
+new UI afterward. The front-page pilot is an author's private autosave using
+existing media, so these code changes require no database migration or uploads
+artifact. Moving the accepted composition to another site is a separate content
+delivery with destination/media mapping. See the
+[front-page pilot plan and review](../project/editorial-rich-text-preview-plan.md).
 
 ## Rollout
 
