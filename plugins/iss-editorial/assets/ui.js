@@ -145,7 +145,9 @@
       root.className += ' iss-editorial-panel--' + String(config.name).replace(/[^a-z0-9_-]/gi, '-').toLowerCase();
     }
 
-    title.appendChild(createIcon(config.icon || config.name));
+    if (config.plain) { root.classList.add('iss-editorial-panel--plain'); }
+    head.hidden = !!config.hideHeading;
+    if (!config.plain) { title.appendChild(createIcon(config.icon || config.name)); }
     title.appendChild(label);
     head.appendChild(title);
 

@@ -1,9 +1,29 @@
-/* Shared editor chrome; public theme tokens remain authoritative when present. */
+/* Editor chrome only. Content colours and public theme tokens stay independent. */
+.iss-editorial-admin,
+.iss-editorial-modal,
 .iss-editorial-studio,
-body.iss-editorial-preview-document {
-  --iss-editor-accent: var(--iss-accent, #e81d25);
-  --iss-editor-line: var(--iss-border-strong, #c3c4c7);
-  --iss-editor-muted: #50575e;
-  --iss-editor-radius: var(--iss-radius-sm, 4px);
-  --iss-editor-font: system-ui, sans-serif;
+.iss-editorial-workspace-screen,
+.iss-editorial-preview-document {
+  --iss-editor-font: system-ui, -apple-system, "Segoe UI", sans-serif;
+  --iss-editor-font-display: ui-serif, Georgia, serif;
+  --iss-editor-ink: #1c1b1a;
+  --iss-editor-muted: #6b665f;
+  --iss-editor-paper: #fff;
+  --iss-editor-surface: #fbfaf8;
+  --iss-editor-canvas: #efece7;
+  --iss-editor-hover: #f4f1ec;
+  --iss-editor-pressed: #ebe7e0;
+  --iss-editor-line: #e4e0d9;
+  --iss-editor-line-strong: #cfc9bf;
+  --iss-editor-brand: var(--iss-red, #e81d25);
+  --iss-editor-accent: #c4141b;
+  --iss-editor-accent-hover: #a80f15;
+  --iss-editor-accent-soft: #fdf0ee;
+  --iss-editor-ok: #2f7d4f;
+  --iss-editor-warn: #895100;
+  --iss-editor-warn-soft: #fcf3e3;
+  --iss-editor-radius: 6px;
+  --iss-editor-radius-panel: 10px;
+  --iss-editor-shadow: 0 1px 2px #1c1b1a0f, 0 8px 24px #1c1b1a14;
+  --iss-editor-focus: 0 0 0 2px var(--iss-editor-paper), 0 0 0 4px var(--iss-editor-accent);
 }

@@ -1,44 +1,205 @@
-/* Compact text controls shared by the inspector and authenticated canvas. */
+/* One colour picker and one TinyMCE skin for the inspector and canvas. */
 .iss-editorial-colour-panel {
-  padding: 12px;
-  border: 1px solid #8c8f94;
-  background: #fff;
+  padding: 16px;
+  margin: 0;
+  min-width: 0;
+  border: 1px solid var(--iss-editor-line-strong);
+  border-radius: var(--iss-editor-radius-panel);
+  color: var(--iss-editor-ink);
+  background: var(--iss-editor-paper);
+  font: 14px/1.45 var(--iss-editor-font);
+  box-sizing: border-box;
+}
+
+.iss-editorial-colour-panel legend {
+  padding: 2px 6px;
+  color: var(--iss-editor-ink);
+  background: var(--iss-editor-paper);
+  font-weight: 600;
+}
+
+.iss-editorial-colour-panel :is(p, .description) {
+  color: var(--iss-editor-muted);
+  font: 12px/1.5 var(--iss-editor-font);
+  margin-block: 8px;
 }
 
 .iss-editorial-colour-panel__choices {
-  display: flex;
-  flex-wrap: wrap;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 125px), 1fr));
   gap: 6px;
-  margin-block: 8px;
+  margin-block: 12px;
 }
 
 .iss-editorial-colour-panel label {
   display: inline-flex;
+  flex-wrap: wrap;
   align-items: center;
   gap: 6px;
-  margin: 6px;
+  margin: 6px 0;
+  color: var(--iss-editor-ink);
+  font-size: 13px;
 }
 
 .iss-editorial-colour-panel input[type="text"] {
   width: 8em;
+  min-height: 36px;
+  padding: 6px 8px;
+  color: var(--iss-editor-ink);
+  background: var(--iss-editor-paper);
+  border: 1px solid var(--iss-editor-line-strong);
+  border-radius: var(--iss-editor-radius);
+  font: 14px/1.4 var(--iss-editor-font);
+}
+
+.iss-editorial-colour-panel input[type="color"] {
+  width: 44px;
+  height: 36px;
+  padding: 2px;
+  border: 1px solid var(--iss-editor-line-strong);
+  border-radius: var(--iss-editor-radius);
+  background: var(--iss-editor-paper);
+}
+
+.iss-editorial-colour-panel .button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: flex-start;
+  gap: 6px;
+  min-height: 36px;
+  padding: 6px 8px;
+  border: 1px solid var(--iss-editor-line);
+  border-radius: var(--iss-editor-radius);
+  color: var(--iss-editor-ink);
+  background: var(--iss-editor-paper);
+  font: 13px/1.4 var(--iss-editor-font);
+  text-align: left;
+  white-space: normal;
+  box-sizing: border-box;
+  box-shadow: none;
+  cursor: pointer;
+}
+
+.iss-editorial-colour-panel .button:hover {
+  border-color: var(--iss-editor-line-strong);
+  background: var(--iss-editor-hover);
+}
+
+.iss-editorial-colour-panel :is(button, input, summary):focus-visible {
+  outline: 2px solid var(--iss-editor-accent);
+  outline-offset: 2px;
 }
 
 .iss-editorial-swatch::before {
   display: inline-block;
-  width: 1em;
-  height: 1em;
-  margin-right: 6px;
-  border: 1px solid #8c8f94;
+  flex: 0 0 16px;
+  width: 16px;
+  height: 16px;
+  border: 1px solid var(--iss-editor-muted);
   border-radius: 50%;
-  vertical-align: middle;
   content: "";
 }
 
 .iss-editorial-colour-panel details {
-  margin-block: 10px;
+  margin-block: 12px;
+  border-block: 1px solid var(--iss-editor-line);
+  padding-block: 8px;
 }
 
 .iss-editorial-colour-panel summary {
   cursor: pointer;
   font-weight: 600;
+  min-height: 32px;
+  align-content: center;
+}
+
+/* Adapt the installed WordPress TinyMCE toolbar; content typography is separate. */
+.iss-editorial-text-controls :is(.mce-panel, .mce-toolbar-grp) {
+  background: var(--iss-editor-control-surface, var(--iss-editor-surface));
+  border-color: var(--iss-editor-control-line, var(--iss-editor-line));
+  box-shadow: none;
+}
+
+.iss-editorial-text-controls .mce-toolbar-grp {
+  padding: 4px;
+  border-radius: var(--iss-editor-radius) var(--iss-editor-radius) 0 0;
+}
+
+.iss-editorial-text-controls .mce-toolbar .mce-btn-group .mce-btn {
+  border-radius: var(--iss-editor-radius);
+  border-color: transparent;
+  background: transparent;
+  color: var(--iss-editor-control-ink, var(--iss-editor-ink));
+}
+
+.iss-editorial-text-controls .mce-toolbar .mce-btn button {
+  min-height: 32px;
+  min-width: 30px;
+  padding: 4px 6px;
+  color: var(--iss-editor-control-ink, var(--iss-editor-ink));
+  background: transparent;
+}
+
+.iss-editorial-text-controls .mce-btn :is(.mce-txt, .mce-ico) {
+  color: var(--iss-editor-control-ink, var(--iss-editor-ink));
+}
+
+.iss-editorial-text-controls .mce-btn .mce-txt {
+  font: 13px/1.4 var(--iss-editor-font);
+}
+
+.iss-editorial-text-controls .mce-toolbar .mce-btn-group .mce-btn:is(:hover, :focus, .mce-active) {
+  background: var(--iss-editor-control-hover, var(--iss-editor-hover));
+  border-color: var(--iss-editor-control-line, var(--iss-editor-line-strong));
+  box-shadow: none;
+}
+
+.iss-editorial-text-controls .mce-toolbar .mce-btn-group .mce-btn:focus-within {
+  outline: 2px solid var(--iss-editor-control-ink, var(--iss-editor-accent));
+  outline-offset: 1px;
+}
+
+/* Only our authoring screens adapt WordPress's native link dialog. */
+:is(.iss-editorial-workspace-screen, .iss-editorial-preview-document) #wp-link-wrap {
+  --wp-admin-theme-color: var(--iss-editor-accent);
+  --wp-admin-theme-color--rgb: 196, 20, 27;
+  --wp-admin-theme-color-darker-10: var(--iss-editor-accent-hover);
+  --wp-admin-theme-color-darker-20: var(--iss-editor-accent-hover);
+
+  color: var(--iss-editor-ink);
+  background: var(--iss-editor-paper);
+  border: 1px solid var(--iss-editor-line);
+  border-radius: var(--iss-editor-radius-panel);
+  box-shadow: var(--iss-editor-shadow);
+  font-family: var(--iss-editor-font);
+}
+
+:is(.iss-editorial-workspace-screen, .iss-editorial-preview-document) #wp-link-wrap :is(#link-modal-title, .submitbox) {
+  color: var(--iss-editor-ink);
+  background: var(--iss-editor-surface);
+  border-color: var(--iss-editor-line);
+}
+
+:is(.iss-editorial-workspace-screen, .iss-editorial-preview-document) #wp-link-wrap :is(input[type="text"], input[type="search"]) {
+  min-height: 36px;
+  padding: 6px 8px;
+  color: var(--iss-editor-ink);
+  background: var(--iss-editor-paper);
+  border: 1px solid var(--iss-editor-line-strong);
+  border-radius: var(--iss-editor-radius);
+  font: 14px/1.4 var(--iss-editor-font);
+}
+
+:is(.iss-editorial-workspace-screen, .iss-editorial-preview-document) #wp-link-wrap :is(input[type="text"], input[type="search"]):focus {
+  border-color: var(--iss-editor-accent);
+  outline: 2px solid var(--iss-editor-accent);
+  outline-offset: 1px;
+}
+
+@media (pointer: coarse) {
+  .iss-editorial-colour-panel :is(button, summary, input),
+  .iss-editorial-text-controls .mce-toolbar .mce-btn button,
+  :is(.iss-editorial-workspace-screen, .iss-editorial-preview-document) #wp-link-wrap :is(input[type="text"], input[type="search"]) {
+    min-height: 44px;
+  }
 }

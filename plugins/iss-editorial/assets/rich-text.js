@@ -66,6 +66,7 @@
     node.addEventListener('click', action); return node;
   }
   function configure(options) {
+    options.wrapper.classList.add('iss-editorial-text-controls');
     var profile = options.profile;
     var palette = options.palette || [];
     var panel = document.createElement('fieldset');

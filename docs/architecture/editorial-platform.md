@@ -179,10 +179,21 @@ vereinfachen**; server validation also rejects lossy normalization.
 Rich-text landings use a persistent three-pane workspace: section outline, the
 actual WordPress page preview, and a tabbed inspector reusing the section form
 controls. The preview has 1280/768/390px viewports. Narrow workspaces use pane
-selection; expansion is optional. Searchable grouped insertion, gaps, keyboard
-reordering and recoverable trash use the existing document state. Native save,
+selection. The workspace starts expanded, with one compact top bar and separate
+acknowledgements for draft saving and preview freshness. Covered native controls
+are inert only while expanded; leaving restores their prior state. Publishing
+navigation focuses the native control without submitting. Searchable grouped
+insertion, gaps, keyboard reordering and recoverable trash/undo use the existing
+document state. Native save,
 publication and revision history remain authoritative. The old modal is retained
 under **Weitere Werkzeuge** during UAT and remains the editor for other formats.
+
+Editor chrome uses the shared `--iss-editor-*` tokens for warm neutral panes,
+readable fields, focus and selection. Existing workspace, text-control and frame
+stylesheets own their respective surfaces; native media/link dialog adapters are
+scoped to the authoring screen. The public theme and authored content palette
+remain independent. See the [styling contract](../project/editor-workspace-plan.md#editor-styling)
+for responsive behavior and the limited WordPress compatibility exception.
 
 Title, kicker, body and lead can be edited directly in the authenticated canvas
 with visible buttons, double-click or Enter. The same WordPress text engine and

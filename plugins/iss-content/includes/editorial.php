@@ -505,6 +505,11 @@ add_filter('iss_editorial_formats', 'iss_content_model_register_editorial_format
 function iss_content_model_landing_treatment_presentations(): array
 {
     return [
+        'slot.projects' => ['schematic' => 'notes', 'hint' => 'Zwei Projekt-Notizen mit Titel, Kurztext und Projektlogo.'],
+        'slot.timeline' => ['schematic' => 'list', 'hint' => 'Anstehende Termine in einer zeitlichen Liste.'],
+        'slot.visit-info' => ['schematic' => 'panel', 'hint' => 'Besuchsinformationen mit Adresse und Öffnungszeiten.'],
+        'slot.newsletter' => ['schematic' => 'callout', 'hint' => 'Einladung und Formular zur Newsletter-Anmeldung.'],
+        'slot.schoneweide-atlas' => ['schematic' => 'panel', 'hint' => 'Interaktive Karte und verknüpfte Orte.'],
         'statement.lead' => ['schematic' => 'heading', 'hint' => 'Große Überschrift mit Einleitung.'],
         'statement.leitfrage' => ['schematic' => 'heading', 'hint' => 'Eine Frage als Blickfang.'],
         'statement.callout' => ['schematic' => 'callout', 'hint' => 'Kurzer Aufruf mit Link.'],

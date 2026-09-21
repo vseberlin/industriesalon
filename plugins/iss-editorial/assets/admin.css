@@ -18,7 +18,7 @@
   align-items: center;
   justify-content: space-between;
   padding: 12px 14px;
-  border: 1px solid #dcdcde;
+  border: 1px solid var(--iss-editor-line, #dcdcde);
   border-radius: 4px;
   background: #fff;
 }
@@ -55,7 +55,7 @@
 
 .iss-editorial-palette,
 .iss-editorial-stage {
-  border: 1px solid #dcdcde;
+  border: 1px solid var(--iss-editor-line, #dcdcde);
   border-radius: 4px;
   background: #fff;
 }
@@ -72,7 +72,7 @@
   gap: 10px;
   width: 100%;
   padding: 9px 10px;
-  border: 1px solid #dcdcde;
+  border: 1px solid var(--iss-editor-line, #dcdcde);
   border-radius: 4px;
   background: #fff;
   color: #1d2327;
@@ -177,7 +177,7 @@
   gap: 12px;
   align-items: start;
   padding: 14px;
-  border: 1px solid #dcdcde;
+  border: 1px solid var(--iss-editor-line, #dcdcde);
   border-radius: 4px;
   background: #fff;
 }
@@ -191,14 +191,14 @@
 
 .iss-editorial-insert-preview p {
   margin: 0;
-  color: #50575e;
+  color: var(--iss-editor-muted, #50575e);
 }
 
 .iss-editorial-trash-panel {
   display: grid;
   gap: 12px;
   padding: 14px;
-  border: 1px solid #dcdcde;
+  border: 1px solid var(--iss-editor-line, #dcdcde);
   border-radius: 4px;
   background: #fff;
 }
@@ -227,7 +227,7 @@
   gap: 12px;
   align-items: start;
   padding: 14px;
-  border: 1px solid #dcdcde;
+  border: 1px solid var(--iss-editor-line, #dcdcde);
   border-radius: 4px;
   background: #fff;
 }
@@ -268,7 +268,7 @@
 
 .iss-editorial-card p {
   margin: 0;
-  color: #50575e;
+  color: var(--iss-editor-muted, #50575e);
   font-size: 13px;
   line-height: 1.55;
 }
@@ -287,10 +287,10 @@
   height: 32px;
   align-items: center;
   justify-content: center;
-  border: 1px solid #dcdcde;
+  border: 1px solid var(--iss-editor-line, #dcdcde);
   border-radius: 4px;
   background: #fff;
-  color: #50575e;
+  color: var(--iss-editor-muted, #50575e);
   cursor: grab;
   text-decoration: none;
 }
@@ -306,17 +306,17 @@
 }
 
 .iss-editorial-card__drag-handle:focus-visible {
-  border-color: #2271b1;
-  box-shadow: 0 0 0 1px #2271b1;
+  border-color: var(--iss-editor-accent, #2271b1);
+  box-shadow: 0 0 0 1px var(--iss-editor-accent, #2271b1);
   color: #1d2327;
   outline: 2px solid transparent;
 }
 
 .iss-editorial-dnd-placeholder {
   min-height: 54px;
-  border: 2px dashed #2271b1;
+  border: 2px dashed var(--iss-editor-accent, #2271b1);
   border-radius: 4px;
-  background: #f0f6fc;
+  background: var(--iss-editor-accent-soft, #f0f6fc);
 }
 
 .iss-editorial-field {
@@ -350,7 +350,7 @@
   align-items: center;
   max-width: 100%;
   padding: 6px 8px;
-  border: 1px solid #dcdcde;
+  border: 1px solid var(--iss-editor-line, #dcdcde);
   border-radius: 4px;
   background: #fff;
 }
@@ -392,7 +392,7 @@
   gap: 10px;
   align-items: end;
   padding: 12px;
-  border: 1px solid #dcdcde;
+  border: 1px solid var(--iss-editor-line, #dcdcde);
   border-radius: 6px;
   background: #fff;
 }
@@ -455,7 +455,7 @@
 }
 
 .iss-editorial-segmented__option input:focus-visible + span {
-  outline: 2px solid #2271b1;
+  outline: 2px solid var(--iss-editor-accent, #2271b1);
   outline-offset: -2px;
 }
 
@@ -471,7 +471,7 @@
   width: 78px;
   height: 58px;
   overflow: hidden;
-  border: 1px solid #dcdcde;
+  border: 1px solid var(--iss-editor-line, #dcdcde);
   border-radius: 4px;
   background: #f6f7f7;
   color: #646970;
@@ -484,7 +484,7 @@
   gap: 12px;
   width: 100%;
   padding: 10px;
-  border: 1px solid #dcdcde;
+  border: 1px solid var(--iss-editor-line, #dcdcde);
   border-radius: 4px;
   background: #fff;
 }
@@ -496,7 +496,7 @@
   width: 120px;
   height: 88px;
   overflow: hidden;
-  border: 1px solid #dcdcde;
+  border: 1px solid var(--iss-editor-line, #dcdcde);
   border-radius: 4px;
   background: #f6f7f7;
   color: #646970;
@@ -608,7 +608,7 @@ body.iss-editorial-modal-open {
   align-items: center;
   justify-content: center;
   border-radius: 6px;
-  color: #50575e;
+  color: var(--iss-editor-muted, #50575e);
   font-size: 18px;
   line-height: 1;
   text-decoration: none;
@@ -729,7 +729,7 @@ body.iss-editorial-modal-open {
   padding: 0 0.45rem;
   border-radius: 999px;
   background: #edf0f2;
-  color: #50575e;
+  color: var(--iss-editor-muted, #50575e);
   font-size: 11px;
   font-weight: 700;
   line-height: 1;
@@ -792,7 +792,7 @@ body.iss-editorial-modal-open {
   gap: 10px;
   align-items: start;
   padding: 10px;
-  border: 1px solid #dcdcde;
+  border: 1px solid var(--iss-editor-line, #dcdcde);
   border-radius: 4px;
   background: #fff;
 }
@@ -804,7 +804,7 @@ body.iss-editorial-modal-open {
   width: 96px;
   height: 72px;
   overflow: hidden;
-  border: 1px solid #dcdcde;
+  border: 1px solid var(--iss-editor-line, #dcdcde);
   border-radius: 4px;
   background: #f6f7f7;
   color: #646970;
@@ -938,8 +938,8 @@ body.iss-editorial-modal-open {
 
 .iss-editorial-recovery:not(:empty) {
   padding: 12px 16px;
-  border-left: 4px solid #dba617;
-  background: #fff8e5;
+  border-left: 4px solid var(--iss-editor-warn, #dba617);
+  background: var(--iss-editor-warn-soft, #fff8e5);
 }
 
 .iss-editorial-recovery .button {
@@ -1076,18 +1076,18 @@ body.iss-editorial-modal-open {
   grid-template-columns: auto 1fr;
   gap: 8px;
   padding: 12px;
-  border: 1px solid #c3c4c7;
+  border: 1px solid var(--iss-editor-line-strong, #c3c4c7);
   border-radius: 4px;
   cursor: pointer;
 }
 
 .iss-editorial-treatment-choice:has(input:checked) {
-  border-color: #2271b1;
-  background: #f0f6fc;
+  border-color: var(--iss-editor-accent, #2271b1);
+  background: var(--iss-editor-accent-soft, #f0f6fc);
 }
 
 .iss-editorial-treatment-choice:focus-within {
-  outline: 2px solid #2271b1;
+  outline: 2px solid var(--iss-editor-accent, #2271b1);
   outline-offset: 2px;
 }
 
@@ -1099,7 +1099,7 @@ body.iss-editorial-modal-open {
   width: 100%;
   max-width: 120px;
   height: auto;
-  color: #50575e;
+  color: var(--iss-editor-muted, #50575e);
 }
 
 .iss-editorial-gesture > .iss-editorial-treatment-sketch,
@@ -1111,15 +1111,15 @@ body.iss-editorial-modal-open {
 
 .iss-editorial-opening-note {
   padding: 10px 12px;
-  border-left: 3px solid #2271b1;
-  background: #f0f6fc;
+  border-left: 3px solid var(--iss-editor-accent, #2271b1);
+  background: var(--iss-editor-accent-soft, #f0f6fc);
 }
 
 .iss-editorial-opening-badge {
   display: inline-block;
   padding: 2px 6px;
-  background: #f0f6fc;
-  color: #135e96;
+  background: var(--iss-editor-accent-soft, #f0f6fc);
+  color: var(--iss-editor-accent, #135e96);
 }
 
 /* Registry-owned section families replace the former JavaScript hex map. */

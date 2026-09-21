@@ -352,7 +352,7 @@ test('Visual treatment choices preserve text and focus, and opening requirements
     choice.focus(); choice.click();
     assert.equal(e.window.document.activeElement, choice);
     assert.equal(e.value().sections[0].body, '<p>Keep text</p>');
-    assert.match(dialog.querySelector('.iss-editorial-opening-note').textContent, /Vorlagenauftakt aktiv/);
+    assert.equal(dialog.querySelector('.iss-editorial-opening-note').hidden, true, 'A non-opening section has no opening note');
     dialog.querySelector('input[value="feature.opening"]').click();
     assert.match(dialog.querySelector('.iss-editorial-opening-note').textContent, /ersetzt den Auftakt/);
     e.button('Fertig',dialog).click(); e.button('Nach unten').click();
@@ -377,18 +377,20 @@ test('Landing workspace keeps field focus and preview mounted, selects and reord
   const e=await editor('landing',workspaceOptions());
   try {
     await e.settle(); const frame=readyFrame(e);
+    const outgoing = []; frame.contentWindow.postMessage = data => outgoing.push(data);
     assert.equal(e.window.document.querySelector('[role=dialog]'),null);
-    const title=e.root.querySelector('.iss-editorial-studio__fields input'); title.focus(); e.input(title,'Edited first');
+    const title=e.root.querySelector('.iss-editorial-field--title textarea'); title.focus(); e.input(title,'Edited first');
     assert.equal(e.window.document.activeElement,title);
-    assert.equal(e.root.querySelector('.iss-editorial-studio__fields input'),title);
+    assert.equal(e.root.querySelector('.iss-editorial-field--title textarea'),title);
     previewMessage(e,frame,{type:'iss-preview-select',section:1});
-    assert.equal(e.root.querySelector('.iss-editorial-studio__fields input').value,'Second');
+    assert.equal(e.root.querySelector('.iss-editorial-field--title textarea').value,'Second');
     const handle=e.root.querySelector('[data-section-index="1"] .iss-editorial-card__drag-handle');
     handle.dispatchEvent(new e.window.KeyboardEvent('keydown',{key:'ArrowUp',bubbles:true}));
     assert.equal(e.value().sections[0].title,'Second');
-    assert.equal(e.root.querySelector('.iss-editorial-studio__fields input').value,'Second','Selected object follows reorder');
+    assert.equal(outgoing.at(-1).section, 1, 'Selected object is highlighted at its old snapshot index until refresh');
+    assert.equal(e.root.querySelector('.iss-editorial-field--title textarea').value,'Second','Selected object follows reorder');
     previewMessage(e,frame,{type:'iss-preview-select',section:0});
-    assert.equal(e.root.querySelector('.iss-editorial-studio__fields input').value,'Edited first','Old frame index is mapped to the original object');
+    assert.equal(e.root.querySelector('.iss-editorial-field--title textarea').value,'Edited first','Old frame index is mapped to the original object');
     previewMessage(e,frame,{type:'iss-preview-insert',section:1});
     const search=e.root.querySelector('input[type=search]');e.input(search,'Ein Text');search.dispatchEvent(new e.window.KeyboardEvent('keydown',{key:'Enter',bubbles:true}));
     assert.equal(e.value().sections[0].type,'statement','Gap inserts before the old snapshot object after reorder');
@@ -437,7 +439,7 @@ test('Canvas invalid drafts remain recoverable and form editing survives a previ
     assert.equal(JSON.parse(e.requests.at(-1).get('document')).sections[0].title,'');
     assert.equal(frame.isConnected,true);
     assert.match(e.root.querySelector('.iss-editorial-studio__notice').textContent,/Titel fehlt/);
-    const title=e.root.querySelector('.iss-editorial-studio__fields input');
+    const title=e.root.querySelector('.iss-editorial-field--title textarea');
     e.setValidation('');e.setFailure(true);e.input(title,'Recovered');await e.settle();
     assert.match(e.root.querySelector('.iss-editorial-studio__notice').textContent,/Nicht gesichert/);
     assert.equal(title.isConnected,true);
@@ -482,11 +484,68 @@ test('Workspace waits for an active canvas edit before reordering and can return
     assert.equal(e.value().sections[0].title,'Typed','Reorder waits for the frame finish acknowledgement');
     previewMessage(e,frame,{...data,type:'iss-preview-field-end',sequence:2});
     assert.equal(e.value().sections[1].title,'Typed');
-    assert.equal(e.root.querySelector('.iss-editorial-studio__fields input').value,'Typed');
+    assert.equal(e.root.querySelector('.iss-editorial-field--title textarea').value,'Typed');
     const before=JSON.stringify(e.value());
     e.button('Bisherige Abschnittsansicht').click();assert.equal(e.root.querySelector('.iss-editorial-studio'),null);
     e.button('Arbeitsfläche öffnen').click();assert.ok(e.root.querySelector('.iss-editorial-studio'));
     assert.equal(JSON.stringify(e.value()),before,'View changes preserve the same document');
     await e.settle();assert.match(e.root.querySelector('.iss-editorial-live-preview__frame').src,/iss_editorial_canvas=1/);
   } finally {e.dom.window.close();}
+});
+
+
+test('Workspace opening guidance follows its owner and invalid opening remains visible after reorder', async () => {
+  const options = workspaceOptions(); options.isFrontPage = true;
+  options.document.skin = 'frontpage'; options.skins = [{slug:'frontpage',label:'Startseite'}];
+  options.document.sections[0].treatment = 'feature.opening'; options.document.sections[0].media_refs = [{id:1}];
+  options.sections.feature.treatments.push({slug:'feature.opening',label:'Seitenauftakt',schematic:'opening'});
+  const e = await editor('landing', options);
+  try {
+    assert.match(e.root.querySelector('.iss-editorial-opening-note').textContent, /ersetzt den Auftakt/);
+    e.root.querySelectorAll('.iss-editorial-outline__select')[1].click();
+    assert.equal(e.root.querySelector('.iss-editorial-opening-note').hidden, true, 'Section 2 never claims to replace the template opening');
+    e.root.querySelectorAll('.iss-editorial-outline__select')[0].click();
+    const handle=e.root.querySelector('[data-section-index="0"] .iss-editorial-card__drag-handle');
+    handle.dispatchEvent(new e.window.KeyboardEvent('keydown',{key:'ArrowDown',bubbles:true}));
+    assert.match(e.root.querySelector('.iss-editorial-opening-note').textContent, /Seitenauftakt prüfen/);
+    assert.equal(e.root.querySelector('.iss-editorial-opening-note').hidden, false, 'Invalid opening does not lose its warning');
+    assert.equal(e.root.querySelector('.iss-editorial-studio__position').textContent, 'Abschnitt 2 von 2');
+  } finally { e.dom.window.close(); }
+});
+
+test('Workspace trash undo restores its own section and leaving restores native status and scrolling', async () => {
+  const e = await editor('landing', workspaceOptions());
+  try {
+    assert.equal(e.window.document.body.classList.contains('iss-editorial-studio-open'), true);
+    assert.ok(e.root.querySelector('.iss-editorial-studio__status .iss-editorial-autosave-status'));
+    e.button('In Papierkorb', e.root.querySelector('.iss-editorial-studio__inspector')).click();
+    assert.equal(e.value().sections.length, 1);
+    e.button('Rückgängig').click();
+    assert.equal(e.value().sections[0].title, 'First');
+    assert.equal(e.value().deleted_sections.length, 0);
+    const content = e.value();
+    e.button('Bisherige Abschnittsansicht').click();
+    assert.equal(e.window.document.body.classList.contains('iss-editorial-studio-open'), false);
+    assert.equal(e.container.querySelectorAll('.iss-editorial-autosave-status').length, 1);
+    assert.equal(e.root.contains(e.container.querySelector('.iss-editorial-autosave-status')), false);
+    assert.deepEqual(e.value(), content);
+  } finally { e.dom.window.close(); }
+});
+
+
+test('Publishing navigation uncovers native controls without submitting or changing the draft', async () => {
+  const e = await editor('landing', workspaceOptions());
+  try {
+    const native = e.button('Update'); native.id = 'publish'; native.scrollIntoView = () => {};
+    let submitted = false;
+    e.window.document.getElementById('post').addEventListener('submit', () => { submitted = true; });
+    const before = e.value();
+    assert.equal(native.inert, true, 'Covered native control is outside the keyboard path');
+    e.button('Speichern / Veröffentlichen …').click();
+    assert.notEqual(native.inert, true);
+    assert.equal(e.window.document.activeElement, native);
+    assert.equal(submitted, false);
+    assert.equal(e.window.document.body.classList.contains('iss-editorial-studio-open'), false);
+    assert.deepEqual(e.value(), before);
+  } finally { e.dom.window.close(); }
 });

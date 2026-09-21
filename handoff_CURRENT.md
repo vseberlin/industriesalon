@@ -3,8 +3,10 @@
 Website checkout: `/home/vladimir/wp-website`, branch `main`; read `AGENTS.md`
 first. `/home/vladimir/wp` remains the preserved mixed archive checkout on
 `archive/local-work-20260911`. Do not edit, merge or push that branch for website
-work. Audit follow-up committed as **acee74f**; this checkpoint adds the landing
-workspace. Use fresh Git refs before exchange. No deployment or publication.
+work. Fetched `origin/main` is **e9564c8**. The workspace polish and styling below
+are recorded in the local commit following that base; use `git log -1` for its
+hash. This checkpoint is not pushed, deployed or published. Use fresh Git refs
+before exchange.
 
 ## Current feature and next action
 
@@ -15,10 +17,18 @@ active field. Native cursor-only links, named/custom colours and the existing
 section/media/item/archive controls remain available. Generated content is
 read-only in the canvas; individual item fields remain in the inspector.
 
-Searchable insertion, preview gaps, keyboard/pointer reordering, recoverable
-trash, device widths, responsive pane switching and workspace expansion share
-existing state and save mechanics. **Weitere Werkzeuge** opens the previous
-section view and revision history. Native WordPress Update/Publish remains the
+Workspace now starts expanded with a compact top bar, separate draft/preview
+status, compact outline, treatment schematics, growing title input and quiet
+trash with undo. Opening notes stay with their section; preview selection stays
+solid on hover and clears the measured header. Narrow screens switch panes.
+Warm panes, consistent fields/actions, the shared text toolbar and native
+media/link dialogs now use editor tokens. Link/item rows fit the inspector;
+short windows scroll the whole inspector. Canvas controls stay above the logo.
+Only three scoped disabled-button colours use user-approved `!important` to
+match core's important declarations; no extra override stylesheet was added.
+Collapsing restores native controls, scrolling and keyboard access. Searchable
+insertion, preview gaps and keyboard/pointer reordering retain existing state.
+**Weitere Werkzeuge** opens the previous section view and revision history. Native WordPress Update/Publish remains the
 publication action. Other formats keep the existing editor until staff UAT.
 Details: [workspace plan](docs/project/editor-workspace-plan.md) and
 [editorial platform](docs/architecture/editorial-platform.md#landing-rich-text-and-live-preview).
@@ -36,20 +46,28 @@ the normal browser edit lock. **Update** was not clicked. Reload and choose
 **Entwurf weiterbearbeiten**:
 `http://192.168.2.31:8082/wp-admin/post.php?post=12257&action=edit`.
 
-- Storage/HTTP: **269 checks**, including **86 existing documents**, passed;
+- Storage/HTTP implementation checkpoint: **269 checks**, including **86 existing documents**, passed;
   existing content/meta unchanged and disposable fixtures removed. Includes
   registered workspace metadata/schematics, authenticated field markers, older
   versions, revision restore, invalid drafts and preview isolation.
-- **25 editor DOM tests + 2 Set/upload tests** passed. New checks cover mounted
-  field focus, old-frame object mapping after reorder, gap insertion, streamed
-  edits, Escape, invalid/failed saves, message/session/sequence validation,
+- **28 editor DOM tests + 2 Set/upload tests** passed. Checks cover
+  section-specific opening guidance, trash undo, publishing navigation, restored
+  native focus/status, field focus, old-frame object mapping after reorder,
+  gap insertion, streamed edits, Escape, invalid/failed saves, message/session/sequence validation,
   finishing before reorder, and switching back through the legacy view.
 - Targeted ESLint, Stylelint, PHPCS, PHPStan and PHP syntax checks passed.
-- Chrome: native link insertion at the cursor, theme and exact custom colours
-  in the canvas, draft persistence during active editing, title and rich-text
-  cancellation, recovery, 800px/390px pane layout and 390px preview without
-  horizontal overflow. Browser viewport restored. Public homepage: HTTP 200,
-  one H1, no editing bridge or markers. Temporary test text/link/colours removed.
+- Chrome workspace checks: correct section-2 guidance, long-title wrapping, compact
+  desktop toolbar, 800px/390px pane layout without horizontal overflow, cursor-only
+  link dialog, named/custom colour controls, canvas cancellation and navigation
+  back to native publishing without submission. Viewport restored. Private draft
+  matches the clean workspace baseline. Public homepage: HTTP 200, one H1,
+  no editing bridge or markers; canonical content/meta/template unchanged.
+- Styling checks: shared toolbar/colour picker, exact custom-colour controls,
+  native link/media dialogs, stacked link fields, treatment cards, selected
+  section controls above the logo, visible field focus, 800px/390px pane layout
+  and reachable fields at 844×390. No horizontal overflow; desktop restored.
+  Thirty DOM tests and targeted CSS/JS lint passed with the styling changes.
+  The private-draft/canonical/public preservation check was repeated successfully.
 
 ## Runtime and artifacts
 

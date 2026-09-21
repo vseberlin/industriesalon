@@ -5,14 +5,24 @@
     if (text) { el.textContent = text; } return el;
   }
   function button(text, action, cls) {
-    var el = node('button', cls || 'button', text); el.type = 'button';
+    var el = node('button', cls || 'iss-editorial-studio__button', text); el.type = 'button';
     el.addEventListener('click', action); return el;
+  }
+  function iconButton(label, icon, action) {
+    var el = button('', action, 'iss-editorial-studio__button iss-editorial-studio__icon');
+    el.setAttribute('aria-label', label); el.title = label;
+    var glyph = node('span', 'dashicons dashicons-' + icon); glyph.setAttribute('aria-hidden', 'true'); el.appendChild(glyph); return el;
   }
   window.issEditorialWorkspace = function (mount, options) {
     var root = node('section', 'iss-editorial-studio');
     root.setAttribute('aria-label', 'Seite gestalten');
+    document.body.classList.add('iss-editorial-workspace-screen');
     var head = node('div', 'iss-editorial-studio__head');
-    var title = node('strong', '', 'Seite gestalten');
+    var title = node('strong', 'iss-editorial-studio__breadcrumb', 'Seiten / ' + (document.getElementById('title').value || 'Neue Seite'));
+    var previewTools = node('div', 'iss-editorial-studio__preview-tools');
+    var statusMount = node('div', 'iss-editorial-studio__status');
+    var statusAnchor = document.createComment('editorial status');
+    options.status.before(statusAnchor); statusMount.append(options.status, options.retry);
     var tools = node('div', 'iss-editorial-studio__tools');
     var tabs = node('nav', 'iss-editorial-studio__views');
     tabs.setAttribute('aria-label', 'Arbeitsbereich');
@@ -26,13 +36,19 @@
     var preview = node('div', 'iss-editorial-studio__preview');
     var inspector = node('section', 'iss-editorial-studio__inspector'); inspector.setAttribute('aria-label', 'Abschnitt bearbeiten');
     var navigation = node('div', 'iss-editorial-studio__navigation');
-    var previous = button('↑ Vorheriger', function () { options.select(selected - 1); });
-    var next = button('Nächster ↓', function () { options.select(selected + 1); });
+    var previous = iconButton('Vorheriger Abschnitt', 'arrow-up-alt2', function () { options.select(selected - 1); });
+    var next = iconButton('Nächster Abschnitt', 'arrow-down-alt2', function () { options.select(selected + 1); });
     var heading = node('h3');
+    var position = node('small', 'iss-editorial-studio__position');
     var inspectorTabs = node('nav', 'iss-editorial-studio__inspector-tabs'); inspectorTabs.setAttribute('aria-label', 'Abschnitt-Einstellungen');
     var body = node('div', 'iss-editorial-studio__fields');
     var note = node('p', 'iss-editorial-studio__notice'); note.hidden = true; note.setAttribute('role', 'status');
-    var remove = button('In Papierkorb', function () { options.remove(selected); }, 'button-link-delete');
+    var remove = button('In Papierkorb', function () { options.remove(selected); }, 'iss-editorial-studio__button iss-editorial-studio__remove');
+    var undo = node('div', 'iss-editorial-studio__undo'); undo.hidden = true;
+    var undoText = node('span'); undoText.setAttribute('role', 'status');
+    var restoreRemoved = null;
+    var undoAction = button('Rückgängig', function () { options.afterEditing(function () { if (restoreRemoved) { restoreRemoved(); } undo.hidden = true; }); });
+    undo.append(undoText, undoAction);
     var selected = 0;
     var activeTab = 'content';
     function setView(view) {
@@ -40,28 +56,49 @@
       Array.from(tabs.children).forEach(function (el) { el.setAttribute('aria-pressed', String(el.dataset.view === view)); });
     }
     [['outline', 'Abschnitte'], ['preview', 'Vorschau'], ['inspector', 'Bearbeiten']].forEach(function (choice) {
-      var tab = button(choice[1], function () { options.afterEditing(function () { setView(choice[0]); }); }); tab.dataset.view = choice[0]; tabs.appendChild(tab);
+      var tab = button(choice[1], function () { options.afterEditing(function () { setView(choice[0]); }); }, 'iss-editorial-studio__tab'); tab.dataset.view = choice[0]; tabs.appendChild(tab);
     });
-    var expand = button('Arbeitsfläche vergrößern', function () {
-      var full = root.classList.toggle('iss-editorial-studio--expanded');
-      expand.textContent = full ? 'Arbeitsfläche verkleinern' : 'Arbeitsfläche vergrößern'; expand.setAttribute('aria-pressed', String(full));
+    var background = [];
+    function setExpanded(full) {
+      if (full && !background.length) {
+        // Keep native controls out of the keyboard path while covered. WordPress
+        // media/link dialogs outside wpwrap retain their own focus handling.
+        var branch = root;
+        while (branch.parentElement && branch.id !== 'wpwrap') {
+          Array.from(branch.parentElement.children).forEach(function (sibling) {
+            if (sibling !== branch && sibling.id !== 'wpadminbar') { background.push([sibling, sibling.inert]); sibling.inert = true; }
+          });
+          branch = branch.parentElement;
+        }
+      } else if (!full) {
+        background.forEach(function (item) { item[0].inert = item[1]; }); background = [];
+      }
+      root.classList.toggle('iss-editorial-studio--expanded', full);
+      document.body.classList.toggle('iss-editorial-studio-open', full);
+      var label = full ? 'Arbeitsfläche verkleinern' : 'Arbeitsfläche vergrößern';
+      expand.setAttribute('aria-label', label); expand.title = label; expand.setAttribute('aria-pressed', String(full));
+      if (full) { expand.focus(); }
+    }
+    var expand = iconButton('Arbeitsfläche vergrößern', 'editor-expand', function () {
+      setExpanded(!root.classList.contains('iss-editorial-studio--expanded'));
     });
-    expand.setAttribute('aria-pressed', 'false');
-    var publish = button('Zum Speichern / Veröffentlichen', function () {
+    var publish = button('Speichern / Veröffentlichen …', function () {
       options.afterEditing(function () {
-        root.classList.remove('iss-editorial-studio--expanded'); expand.textContent = 'Arbeitsfläche vergrößern'; expand.setAttribute('aria-pressed', 'false');
+        setExpanded(false);
         var native = document.getElementById('publish');
         if (native) { native.scrollIntoView({ block: 'center' }); native.focus(); }
       });
-    });
-    var more = node('details', 'iss-editorial-studio__more'); more.appendChild(node('summary', '', 'Weitere Werkzeuge'));
-    more.appendChild(button('Bisherige Abschnittsansicht', function () { options.afterEditing(options.legacy); }));
+    }, 'iss-editorial-studio__button iss-editorial-studio__primary');
+    publish.title = 'Zu den WordPress-Steuerelementen zum Speichern und Veröffentlichen';
+    var more = node('details', 'iss-editorial-studio__more'); var moreLabel = node('summary', 'iss-editorial-studio__button iss-editorial-studio__icon', '⋯'); moreLabel.setAttribute('aria-label', 'Weitere Werkzeuge'); moreLabel.title = 'Weitere Werkzeuge'; more.appendChild(moreLabel);
+    var menu = node('div', 'iss-editorial-studio__menu'); more.appendChild(menu);
+    menu.appendChild(button('Bisherige Abschnittsansicht', function () { options.afterEditing(options.legacy); }));
     var history = mount.closest('.iss-editorial-admin').querySelector('a[href*="revision.php"]');
-    if (history) { var link = history.cloneNode(true); link.textContent = 'Verlauf'; more.appendChild(link); }
-    head.append(title, tools, expand, publish, more);
+    if (history) { var link = history.cloneNode(true); link.textContent = 'Verlauf'; menu.appendChild(link); }
+    head.append(title, tools, previewTools, statusMount, publish, expand, more);
     outline.append(button('+ Abschnitt hinzufügen', function () { options.insert(); }), palette, stage, trash);
-    navigation.append(previous, next); inspector.append(navigation, heading, inspectorTabs, note, body, remove);
-    grid.append(outline, preview, inspector); root.append(head, tabs, grid); mount.appendChild(root); setView('preview');
+    navigation.append(position, previous, next); inspector.append(navigation, heading, inspectorTabs, note, body, undo, remove);
+    grid.append(outline, preview, inspector); root.append(head, tabs, grid); mount.appendChild(root); setView('preview'); setExpanded(true);
     var search = node('input'); search.type = 'search'; search.placeholder = 'Abschnitt suchen'; search.setAttribute('aria-label', 'Abschnitt suchen');
     var results = node('div');
     palette.append(search, results, button('Schließen', function () { palette.hidden = true; }));
@@ -101,8 +138,10 @@
       Array.from(body.children).forEach(function (panel) { panel.hidden = panel.dataset.inspectorTab !== key; });
     }
     return {
-      root: root, body: body, previewMount: preview, tools: tools, palette: palette, stage: stage, trashBody: trashBody,
+      root: root, body: body, previewMount: preview, previewTools: previewTools, previewStatus: statusMount, tools: tools, palette: palette, stage: stage, trashBody: trashBody,
       showView: setView,
+      destroy: function () { document.body.classList.remove('iss-editorial-workspace-screen'); setExpanded(false); statusAnchor.replaceWith(options.status, options.retry); },
+      removed: function (label, restore) { restoreRemoved = restore; undoText.textContent = '„' + label + '“ im Papierkorb.'; undo.hidden = false; },
       message: function (text) { note.textContent = text || ''; note.hidden = !text; },
       editing: function (active) { body.inert = active; remove.disabled = active; },
       insert: function (index) { insertAt = index; search.value = ''; filterPalette(); palette.hidden = false; setView('outline'); search.focus(); },
@@ -115,7 +154,7 @@
         });
         [['content', 'Inhalt'], ['display', 'Darstellung'], ['links', 'Links'], ['media', 'Medien']].forEach(function (choice) {
           if (!groups[choice[0]]) { return; }
-          var tab = button(choice[1], function () { showInspectorTab(choice[0]); }); tab.dataset.panel = choice[0]; inspectorTabs.appendChild(tab);
+          var tab = button(choice[1], function () { showInspectorTab(choice[0]); }, 'iss-editorial-studio__tab'); tab.dataset.panel = choice[0]; inspectorTabs.appendChild(tab);
         });
         showInspectorTab(groups[activeTab] ? activeTab : 'content');
       },
@@ -131,16 +170,21 @@
           var select = button('', function () { options.select(i); }, 'iss-editorial-outline__select'); select.setAttribute('aria-current', String(i === index));
           var sketch = options.sketch(section); if (sketch) { select.appendChild(sketch); }
           var icon = node('span', 'dashicons dashicons-' + (definition.icon || 'editor-paragraph')); icon.setAttribute('aria-hidden', 'true');
-          var kind = node('small', '', definition.label || section.type); kind.prepend(icon);
-          var label = node('span', 'iss-editorial-outline__label'); label.append(kind, node('strong', '', section.title || 'Ohne Titel'), node('small', '', options.treatmentLabel(section)));
+          var treatment = options.treatmentLabel(section);
+          var kind = node('small', '', (definition.label || section.type) + (treatment ? ' · ' + treatment : '')); kind.title = kind.textContent; kind.prepend(icon);
+          var label = node('span', 'iss-editorial-outline__label');
+          var sectionTitle = node('strong', '', section.title || treatment || definition.label || 'Abschnitt');
+          select.title = sectionTitle.textContent + ' · ' + kind.textContent;
+          label.append(sectionTitle, kind);
           select.appendChild(label);
-          var handle = button('', function () { handle.focus(); }, 'button-link iss-editorial-card__drag-handle'); handle.draggable = true; handle.setAttribute('aria-label', 'Abschnitt „' + (section.title || definition.label) + '“ mit Pfeiltasten verschieben');
+          var handle = button('', function () { handle.focus(); }, 'iss-editorial-card__drag-handle'); handle.draggable = true; handle.setAttribute('aria-label', 'Abschnitt „' + (section.title || definition.label) + '“ mit Pfeiltasten verschieben');
           row.append(select, handle); stage.appendChild(row);
         });
         if (focusIndex >= 0) { var restore = stage.querySelector('[data-section-index="' + focusIndex + '"] ' + (focusHandle ? '.iss-editorial-card__drag-handle' : '.iss-editorial-outline__select')); if (restore) { restore.focus(); } }
         previous.disabled = index <= 0; next.disabled = index >= sections.length - 1;
         remove.hidden = !sections.length;
-        heading.textContent = sections[index] ? (sections[index].title || (options.sections[sections[index].type] || {}).label || 'Abschnitt') : 'Abschnitt hinzufügen';
+        position.textContent = sections.length ? 'Abschnitt ' + (index + 1) + ' von ' + sections.length : 'Keine Abschnitte';
+        heading.textContent = sections[index] ? ((options.sections[sections[index].type] || {}).label || 'Abschnitt') : 'Abschnitt hinzufügen';
         trashLabel.textContent = 'Papierkorb (' + deletedCount + ')';
       }
     };

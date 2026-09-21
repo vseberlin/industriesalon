@@ -96,6 +96,7 @@
       controls.appendChild(button(labels[field.dataset.issField] + ' bearbeiten', function () { begin(field); }));
     });
     controls.appendChild(button('Im Formular bearbeiten', function () { send('iss-preview-form', { section: Number(section.dataset.issPreviewSection) }); }));
+    var label = document.createElement('span'); label.className = 'iss-preview-section-label'; label.textContent = 'Abschnitt ' + (Number(section.dataset.issPreviewSection) + 1); controls.prepend(label);
     section.prepend(controls);
     var gap = button('+ Abschnitt', function () { send('iss-preview-insert', { section: Number(section.dataset.issPreviewSection) }); }); gap.className = 'iss-preview-gap'; section.before(gap);
   });
@@ -152,7 +153,9 @@
     if (message.type !== 'iss-preview-position' || active) { return; }
     var section = document.querySelector('[data-iss-preview-section="' + Number(message.section) + '"]');
     document.querySelectorAll('[data-iss-preview-section]').forEach(function (item) { item.toggleAttribute('data-iss-preview-active', item === section); });
+    if (section && typeof message.label === 'string') { var label = section.querySelector('.iss-preview-section-label'); if (label) { label.textContent = message.label; } }
     if (message.scroll !== null && Number.isFinite(message.scroll)) { window.scrollTo(0, message.scroll); }
+    else if (section && Number(message.section) === 0) { window.scrollTo(0, 0); }
     else if (section) { section.scrollIntoView({ block: 'start' }); }
   });
   var scheduled = false;
@@ -160,5 +163,11 @@
     if (scheduled) { return; } scheduled = true;
     window.requestAnimationFrame(function () { scheduled = false; send('iss-preview-scroll', { scroll: window.scrollY }); });
   }, { passive: true });
+  var header = document.querySelector('.iss-site-header');
+  if (header && window.ResizeObserver) {
+    var headerOffset = document.createElement('style'); document.head.appendChild(headerOffset);
+    function measureHeader() { headerOffset.textContent = '.iss-editorial-preview-document{--iss-preview-header-offset:' + Math.ceil(header.getBoundingClientRect().height + 8) + 'px}'; }
+    new window.ResizeObserver(measureHeader).observe(header); measureHeader();
+  }
   send('iss-preview-ready');
 })();

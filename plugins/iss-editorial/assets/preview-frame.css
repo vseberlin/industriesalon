@@ -1,12 +1,12 @@
-/* Editing affordances, enqueued only for authenticated embedded previews. */
+/* Editing affordances only; the page itself retains its public theme styling. */
 [data-iss-preview-section] {
   position: relative;
   cursor: pointer;
-  scroll-margin-block-start: 3rem;
+  scroll-margin-block-start: var(--iss-preview-header-offset, var(--iss-header-height, 5.5rem));
 }
 
-[data-iss-preview-section]:hover {
-  outline: 1px dashed var(--iss-editor-accent);
+[data-iss-preview-section]:where(:hover):not([data-iss-preview-active]) {
+  outline: 1px dashed var(--iss-editor-muted);
   outline-offset: -2px;
 }
 
@@ -14,6 +14,11 @@
 [data-iss-preview-active] {
   outline: 2px solid var(--iss-editor-accent);
   outline-offset: -2px;
+}
+
+[data-iss-field]:where(:hover):not([data-iss-editing]) {
+  outline: 1px dotted var(--iss-editor-accent);
+  outline-offset: 4px;
 }
 
 [data-iss-field]:focus-visible,
@@ -27,21 +32,24 @@
 .iss-preview-section-tools,
 .iss-preview-tools,
 .iss-preview-gap {
-  font: 14px/1.4 var(--iss-editor-font);
-  color: #1d2327;
-  background: #fff;
+  font: 13px/1.4 var(--iss-editor-font);
 }
 
 .iss-preview-section-tools {
   position: absolute;
-  inset: 2px auto auto 8px;
-  max-width: calc(100% - 16px);
-  z-index: 10;
+  inset: 0 auto auto 0;
+  max-width: 100%;
+  box-sizing: border-box;
+  /* Authoring controls sit above the theme's fixed header (1100). */
+  z-index: 1200;
   display: none;
-  gap: 6px;
+  align-items: center;
+  gap: 2px;
   flex-wrap: wrap;
   padding: 4px;
-  border: 1px solid var(--iss-editor-line);
+  color: var(--iss-editor-paper);
+  background: var(--iss-editor-accent);
+  border-radius: 0 0 var(--iss-editor-radius) 0;
 }
 
 [data-iss-preview-active] > .iss-preview-section-tools,
@@ -50,38 +58,99 @@
 }
 
 .iss-preview-section-tools button,
-.iss-preview-tools button,
-.iss-preview-gap {
-  min-height: 44px;
-  padding: 6px 10px;
-  color: #1d2327;
-  background: #fff;
-  border: 1px solid var(--iss-editor-line);
+.iss-preview-tools > button {
+  min-height: 32px;
+  padding: 4px 8px;
+  color: var(--iss-editor-paper);
+  background: transparent;
+  border: 1px solid transparent;
   border-radius: var(--iss-editor-radius);
+  font: inherit;
   cursor: pointer;
 }
 
+.iss-preview-section-tools button:hover,
+.iss-preview-tools > button:hover {
+  background: #ffffff26;
+}
+
+.iss-preview-section-tools button:focus-visible,
+.iss-preview-tools > button:focus-visible {
+  outline: 2px solid var(--iss-editor-paper);
+  outline-offset: -2px;
+}
+
 .iss-preview-tools {
+  --iss-editor-control-surface: var(--iss-editor-ink);
+  --iss-editor-control-ink: var(--iss-editor-paper);
+  --iss-editor-control-hover: #45423d;
+  --iss-editor-control-line: #6b665f;
+
   position: fixed;
   z-index: 100000;
   inset: auto 12px 12px auto;
   width: min(620px, calc(100% - 24px));
-  padding: 12px;
+  max-height: calc(100dvh - 24px);
+  overflow: auto;
+  padding: 8px;
+  color: var(--iss-editor-paper);
+  background: var(--iss-editor-ink);
   box-sizing: border-box;
-  box-shadow: 0 3px 24px #0003;
-  border: 1px solid var(--iss-editor-line);
+  border: 1px solid var(--iss-editor-control-line);
+  border-radius: var(--iss-editor-radius-panel);
+  box-shadow: var(--iss-editor-shadow);
 }
 
 .iss-preview-tools strong {
-  margin-right: 12px;
+  margin-inline: 8px;
 }
 
 .iss-preview-tools__status {
-  margin: 6px 0;
-  color: var(--iss-editor-muted);
+  margin: 6px 8px;
+  color: #e4e0d9;
+  font-size: 12px;
 }
 
 .iss-preview-gap {
-  display: block;
-  margin: 4px auto;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  width: 100%;
+  min-height: 32px;
+  margin: 0;
+  padding: 0 8px;
+  box-sizing: border-box;
+  border: 0;
+  color: var(--iss-editor-muted);
+  background: var(--iss-editor-surface);
+  cursor: pointer;
+}
+
+.iss-preview-gap::before,
+.iss-preview-gap::after {
+  content: "";
+  flex: 1;
+  height: 1px;
+  background: var(--iss-editor-line-strong);
+}
+
+.iss-preview-gap:is(:hover, :focus-visible) {
+  color: var(--iss-editor-accent);
+  outline: 2px solid var(--iss-editor-accent);
+  outline-offset: -2px;
+}
+
+.iss-preview-section-label {
+  padding: 4px 8px;
+  font-weight: 600;
+  color: var(--iss-editor-paper);
+}
+
+@media (pointer: coarse) {
+  .iss-preview-section-tools button,
+  .iss-preview-tools > button,
+  .iss-preview-gap {
+    min-height: 44px;
+  }
 }
