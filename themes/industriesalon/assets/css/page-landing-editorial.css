@@ -1776,7 +1776,6 @@
   margin: 0;
   padding: clamp(1.5rem, 4vw, 3rem) clamp(1.25rem, 3vw, 2rem) clamp(3rem, 7vw, 5rem);
   color: var(--iss-surface-fg);
-
 }
 
 .iss-landing-editorial--skin-frontpage .iss-landing-section--treatment-feature-image-overlay .iss-media-text__heading .iss-kicker,
@@ -2080,7 +2079,7 @@
   }
 }
 
-/* Opening role of the existing image-overlay feature, for v2 front pages. */
+/* Explicit opening treatment; v2 image-overlay openings keep this contract. */
 .iss-landing-section--opening {
   padding-block: 0;
   border-top: 0;
@@ -2129,4 +2128,20 @@
 .iss-landing-opening__body {
   max-width: 52ch;
   font-size: clamp(1rem, 1.5vw, 1.3rem);
+}
+
+
+.iss-landing-section__lead {
+  max-width: 52ch;
+  font-size: 1.15em;
+  font-weight: 500;
+  line-height: 1.55;
+}
+
+.iss-landing-section__lead > :first-child {
+  margin-top: 0;
+}
+
+.iss-landing-section__lead > :last-child {
+  margin-bottom: 0;
 }

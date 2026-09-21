@@ -196,7 +196,7 @@ try {
         $embedded = wp_remote_get($embedded_url, ['headers' => $headers, 'timeout' => 30]);
         $assert(wp_remote_retrieve_response_code($embedded) === 200 && str_contains(wp_remote_retrieve_body($embedded), 'iss-editorial-preview-frame-js') && str_contains(wp_remote_retrieve_body($embedded), 'iss-editorial-preview-frame-css'), 'Matching authenticated snapshot loads the preview bridge and section selection styles');
         $outdated = wp_remote_get(add_query_arg('iss_editorial_snapshot', str_repeat('0', 64), $embedded_url), ['headers' => $headers, 'timeout' => 30]);
-        $assert(wp_remote_retrieve_response_code($outdated) === 409, 'Outdated iframe snapshot is rejected');
+        $assert(wp_remote_retrieve_response_code($outdated) === 409 && str_contains(wp_remote_retrieve_body($outdated), 'data-iss-preview-stale="' . str_repeat('0', 64) . '"'), 'Outdated iframe snapshot is rejected with an immediate parent notification');
         $anonymous = wp_remote_get($embedded_url, ['timeout' => 30]);
         $assert(wp_remote_retrieve_response_code($anonymous) !== 200 || !str_contains(wp_remote_retrieve_body($anonymous), 'iss-editorial-preview-frame-js'), 'Anonymous request cannot render the private embedded draft');
         $partial_response = wp_remote_post($settings['ajaxUrl'], ['headers' => $headers, 'timeout' => 30, 'body' => [
@@ -277,6 +277,86 @@ try {
     $assert(iss_editorial_save_document($id, 'landing', $changed_v2), 'Save changed v2 fixture');
     wp_restore_post_revision($revision_v2);
     $assert(get_metadata_raw('post', $id, $key, true) === $canonical_v2, 'Native revision restore retains v2 marks and inline text');
+    $v3 = $v2;
+    $v3['schema_version'] = 3;
+    $palette = iss_editorial_text_palette();
+    $slug = $palette[0]['slug'];
+    $named = '<p><span class="iss-ink-preset-' . $slug . ' iss-mark-ffeeaa">Named colour</span></p>';
+    $v3['sections'][0]['body'] = $named;
+    $assert(!is_wp_error(iss_editorial_validate_document($v3, 'landing')), 'v3 permits registered palette names and exact custom colours');
+    $bad = $v3;
+    $bad['sections'][0]['body'] = '<span class="iss-ink-preset-not-registered">Unknown</span>';
+    $assert(is_wp_error(iss_editorial_validate_document($bad, 'landing')), 'Unknown palette slugs are rejected without changing content');
+    $bad = $v3;
+    $bad['schema_version'] = 2;
+    $assert(is_wp_error(iss_editorial_validate_document($bad, 'landing')), 'Named colour storage requires the v3 contract');
+    $assert(iss_content_model_landing_editor_document($legacy, $id, 'landing') === $legacy, 'v1 remains opt-in');
+    $upgraded = iss_content_model_landing_editor_document($v2, $id, 'landing');
+    $assert($upgraded['schema_version'] === 3 && $upgraded['sections'] === $v2['sections'], 'Editor upgrade keeps existing hex colours and content exact');
+    $images = get_posts(['post_type' => 'attachment', 'post_mime_type' => 'image', 'posts_per_page' => 1, 'fields' => 'ids']);
+    $opening = $v3;
+    $opening['skin'] = 'frontpage';
+    $opening['sections'] = [['type' => 'feature', 'treatment' => 'feature.opening', 'title' => 'Opening', 'body' => '<p>Body</p>', 'lead' => '<p>Lead</p>', 'media_refs' => [['kind' => 'media', 'source' => 'wp-media', 'id' => (string) $images[0]]]]];
+    $assert(!is_wp_error(iss_editorial_validate_document($opening, 'landing')) && industriesalon_landing_has_opening($opening), 'Explicit opening validates with title and image');
+    $old_opening = $opening; $old_opening['schema_version'] = 2; $old_opening['sections'][0]['treatment'] = 'feature.image-overlay';
+    $mapped = iss_content_model_landing_editor_document($old_opening, (int) get_option('page_on_front'), 'landing');
+    $assert($mapped === $opening, 'Existing v2 opening is named explicitly in the editor copy');
+    $assert(industriesalon_landing_has_opening($old_opening), 'Existing v2 public opening keeps its rendering');
+    $bad = $opening; $bad['sections'][0]['treatment'] = 'feature.image-overlay';
+    $assert(!industriesalon_landing_has_opening($bad), 'An ordinary v3 overlay is never inferred to be the opening');
+    foreach (['title', 'media_refs'] as $required) {
+        $bad = $opening; unset($bad['sections'][0][$required]);
+        $assert(is_wp_error(iss_editorial_validate_document($bad, 'landing')), 'Incomplete opening cannot replace a valid preview: ' . $required);
+    }
+    $bad = $opening; array_unshift($bad['sections'], $v3['sections'][0]);
+    $assert(is_wp_error(iss_editorial_validate_document($bad, 'landing')), 'Moving the opening away from the first position is diagnosed');
+    $bad = $opening; $bad['skin'] = 'standard';
+    $assert(is_wp_error(iss_editorial_validate_document($bad, 'landing')), 'Opening requires its registered frontpage context');
+    $copy = $opening['sections'][0]; $copy['_text_version'] = 3;
+    $prose = industriesalon_render_editorial_landing_copy($copy);
+    $assert(str_contains($prose, 'class="iss-landing-section__lead"><p>Lead</p>') && str_contains($prose, 'class="iss-landing-section__body"><p>Body</p>'), 'Lead and body retain separate rendering hooks');
+    $assert(!str_contains(industriesalon_landing_prose('<h3>Extra</h3><p style="color:red">Body</p>', $copy), '<h3>'), 'v3 render allowlist matches the block storage profile');
+
+    $assert(iss_editorial_save_document($id, 'landing', $v3), 'Native save accepts v3 palette references');
+    $canonical_v3 = get_metadata_raw('post', $id, $key, true);
+    $revision_v3 = wp_save_post_revision($id);
+    $changed_v3 = $v3; $changed_v3['sections'][0]['body'] = '<p>Changed version three</p>';
+    $assert(iss_editorial_save_document($id, 'landing', $changed_v3), 'Native save changes a v3 fixture');
+    wp_restore_post_revision($revision_v3);
+    $assert(get_metadata_raw('post', $id, $key, true) === $canonical_v3, 'Native revision restore preserves named palette references exactly');
+    $map_copy = $copy; $map_copy['type'] = 'map_img'; $map_copy['treatment'] = 'map-img.editorial-atlas';
+    $assert(substr_count(industriesalon_render_editorial_landing_map_image($map_copy, 0, 'standard'), '<p>Lead</p>') === 1, 'Map lead renders once in its existing note');
+
+    // Repeated render consumers share one authenticated snapshot, even if another save occurs mid-request.
+    $draft_v3 = iss_editorial_save_draft($id, 'landing', $v3, true);
+    $saved_get = $_GET;
+    $saved_query = $GLOBALS['wp_query'];
+    $GLOBALS['wp_query'] = new WP_Query();
+    $GLOBALS['wp_query']->queried_object_id = $id;
+    $GLOBALS['wp_query']->queried_object = get_post($id);
+    $_GET = ['iss_editorial_embed' => '1', 'iss_editorial_snapshot' => $draft_v3['token'], 'iss_editorial_preview' => '1', 'iss_editorial_format' => 'landing', 'iss_editorial_preview_nonce' => wp_create_nonce(iss_editorial_get_preview_nonce_action($id, 'landing'))];
+    $validations = 0;
+    $count_validation = static function ($document) use (&$validations) { ++$validations; return $document; };
+    add_filter('iss_editorial_validated_document', $count_validation, 100);
+    try {
+        for ($n = 0; $n < 14; ++$n) {
+            $context = iss_editorial_embedded_preview();
+            $model = iss_editorial_get_read_model($id, 'landing', true);
+        }
+        $assert($validations === 1 && $context['document']['sections'][0]['body'] === $named, 'Fourteen preview consumers validate the snapshot only once');
+        remove_filter('iss_editorial_validated_document', $count_validation, 100);
+        $newer = $v3; $newer['sections'][0]['body'] = '<p>Later save</p>';
+        iss_editorial_save_draft($id, 'landing', $newer, true);
+        $assert(iss_editorial_get_document($id, 'landing', true)['sections'][0]['body'] === $named && iss_editorial_get_read_model($id, 'landing', true) === $model, 'Concurrent autosave cannot change the document underneath the validated preview token');
+        wp_set_current_user($other_user);
+        $assert(iss_editorial_embedded_preview() === [], 'Request cache never leaks between users');
+        wp_set_current_user($admin->ID);
+    } finally {
+        remove_filter('iss_editorial_validated_document', $count_validation, 100);
+        $_GET = $saved_get;
+        $GLOBALS['wp_query'] = $saved_query;
+    }
+    $assert(iss_editorial_get_document($id, 'landing', true)['sections'][0]['body'] === '<p>Later save</p>', 'Non-embedded API reads remain fresh after a save');
     remove_filter('iss_editorial_formats', $fixture_format, 99);
     WP_CLI::log("PASS: $checks checks, including $stored_count existing documents; temporary records only.");
 } finally {

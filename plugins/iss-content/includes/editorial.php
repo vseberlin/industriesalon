@@ -193,7 +193,7 @@ function iss_content_model_register_editorial_formats(array $formats): array
     ];
 
     $formats['landing'] = [
-        'supported_versions' => [1, 2],
+        'supported_versions' => [1, 2, 3],
         'label' => __('Landing Page', 'iss-content-model'),
         'base' => 'ordered',
         'post_types' => ['page'],
@@ -262,6 +262,7 @@ function iss_content_model_register_editorial_formats(array $formats): array
                     'feature.media-text' => __('Bild neben Text', 'iss-content-model'),
                     'feature.image-overlay' => __('Titel auf Bild', 'iss-content-model'),
                     'feature.origin-story' => __('Zweiteilige Herkunftserzählung', 'iss-content-model'),
+                    'feature.opening' => ['label' => __('Seitenauftakt', 'iss-content-model'), 'role' => 'opening', 'min_version' => 3],
                 ],
             ],
             'dynamic_slot' => [
@@ -291,7 +292,11 @@ function iss_content_model_register_editorial_formats(array $formats): array
         ],
     ];
 
+    $presentations = iss_content_model_landing_treatment_presentations();
     foreach ($formats['landing']['sections'] as $type => &$section) {
+        foreach (($section['treatments'] ?? []) as $slug => $treatment) {
+            $section['treatments'][$slug] = array_merge(is_array($treatment) ? $treatment : ['label' => $treatment], $presentations[$slug] ?? []);
+        }
         $section['rich_text'] = ['body' => 'block', 'lead' => 'block'];
         if (in_array('items', $section['supports'], true)) {
             $section['rich_text']['items'] = in_array($type, ['text_bild_reihe', 'map_img'], true) ? 'inline' : 'inline-card';
@@ -480,3 +485,61 @@ function iss_content_model_register_editorial_formats(array $formats): array
     return $formats;
 }
 add_filter('iss_editorial_formats', 'iss_content_model_register_editorial_formats');
+
+/** Small diagrams describe existing treatments; public layout remains theme-owned. */
+function iss_content_model_landing_treatment_presentations(): array
+{
+    return [
+        'statement.lead' => ['schematic' => 'heading', 'hint' => 'Große Überschrift mit Einleitung.'],
+        'statement.leitfrage' => ['schematic' => 'heading', 'hint' => 'Eine Frage als Blickfang.'],
+        'statement.callout' => ['schematic' => 'callout', 'hint' => 'Kurzer Aufruf mit Link.'],
+        'text.standard' => ['schematic' => 'text', 'hint' => 'Titel und Text untereinander.'],
+        'text.story-split' => ['schematic' => 'split', 'hint' => 'Erzählung links, Titel rechts.'],
+        'text.story-split-flip' => ['schematic' => 'split-flip', 'hint' => 'Titel links, Erzählung rechts.'],
+        'gateway.cards' => ['schematic' => 'cards', 'hint' => 'Verlinkte Karten mit Bild und Text.'],
+        'gateway.link-list' => ['schematic' => 'list', 'hint' => 'Kompakte Liste mit Links.'],
+        'gateway.feature-strip' => ['schematic' => 'strip', 'hint' => 'Breite Reihe hervorgehobener Ziele.'],
+        'gateway.pathways' => ['schematic' => 'cards', 'hint' => 'Thematische Einstiege nebeneinander.'],
+        'gateway.atlas-plates' => ['schematic' => 'cards', 'hint' => 'Orte als Karten zum Entdecken.'],
+        'text-bild-reihe.visual' => ['schematic' => 'cards', 'hint' => 'Große Bilder mit Text darunter.'],
+        'text-bild-reihe.compact' => ['schematic' => 'strip', 'hint' => 'Kleine Bilder neben kurzen Texten.'],
+        'text-bild-reihe.chronology' => ['schematic' => 'list', 'hint' => 'Bild und Text in zeitlicher Folge.'],
+        'map-img.editorial-atlas' => ['schematic' => 'split', 'hint' => 'Karte neben Panorama und Ortskarten.'],
+        'feature.media-panel' => ['schematic' => 'panel', 'hint' => 'Bild mit hervorgehobenem Infokasten.'],
+        'feature.media-text' => ['schematic' => 'split', 'hint' => 'Bild und Text nebeneinander.'],
+        'feature.image-overlay' => ['schematic' => 'overlay', 'hint' => 'Text liegt über dem Bild. Hintergrundkontrast prüfen.'],
+        'feature.origin-story' => ['schematic' => 'split-flip', 'hint' => 'Einleitung und Bilder erzählen die Herkunft.'],
+        'feature.opening' => ['schematic' => 'opening', 'hint' => 'Ersetzt den Vorlagenauftakt: erster Abschnitt, Startseiten-Stil, Titel und Bild erforderlich.'],
+        'atlas-map.place-locator' => ['schematic' => 'panel', 'hint' => 'Ein Ort auf der Karte.'],
+        'atlas-map.map-only' => ['schematic' => 'overlay', 'hint' => 'Breites Kartenband.'],
+        'atlas-map.editorial-split' => ['schematic' => 'split', 'hint' => 'Erklärung neben der Karte.'],
+    ];
+}
+
+/** Upgrade the editor copy only. Stored/public v1 and v2 documents stay unchanged. */
+function iss_content_model_landing_editor_document(array $document, int $post_id, string $format): array
+{
+    if ($format !== 'landing' || ($document['schema_version'] ?? 1) !== 2) { return $document; }
+    $first = $document['sections'][0] ?? [];
+    if ($post_id === (int) get_option('page_on_front') && ($document['skin'] ?? '') === 'frontpage'
+        && ($first['type'] ?? '') === 'feature' && ($first['treatment'] ?? '') === 'feature.image-overlay'
+        && trim((string) ($first['title'] ?? '')) !== '' && wp_attachment_is_image(absint($first['media_refs'][0]['id'] ?? 0))) {
+        $document['sections'][0]['treatment'] = 'feature.opening';
+    }
+    $document['schema_version'] = 3;
+    return $document;
+}
+add_filter('iss_editorial_editor_document', 'iss_content_model_landing_editor_document', 10, 3);
+
+/** Invalid opening edits remain recoverable drafts, but cannot replace a valid preview. */
+add_filter('iss_editorial_validated_document', static function ($validated, array $raw, array $format) {
+    if (is_wp_error($validated) || $format['slug'] !== 'landing') { return $validated; }
+    foreach ($raw['sections'] as $index => $section) {
+        if (($section['treatment'] ?? '') !== 'feature.opening') { continue; }
+        if ($raw['schema_version'] < 3 || $index !== 0 || ($raw['skin'] ?? '') !== 'frontpage'
+            || trim((string) ($section['title'] ?? '')) === '' || !wp_attachment_is_image(absint($section['media_refs'][0]['id'] ?? 0))) {
+            return new WP_Error('editorial_invalid_opening', __('Seitenauftakt: Bitte an die erste Stelle setzen, den Startseiten-Stil wählen sowie Titel und Bild ergänzen.', 'iss-content-model'));
+        }
+    }
+    return $validated;
+}, 10, 3);

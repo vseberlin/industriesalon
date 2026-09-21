@@ -239,6 +239,15 @@ test('Live preview accepts only its current frame and token and retains valid ou
     send(first, 'one'); assert.equal(third.hidden, true);
     send(third, 'three'); assert.equal(first.isConnected, false); assert.equal(third.hidden, false);
     select(first, 'one', 2); assert.deepEqual(selected, [1], 'Replaced frames cannot change the selected section');
+    preview.update('/?preview=true', 'four');
+    const fourth = shell.root.querySelector('iframe[hidden]');
+    const stale = (source, token, origin='http://localhost:8082') => e.window.dispatchEvent(new e.window.MessageEvent('message', {source:source.contentWindow, origin, data:{type:'iss-preview-stale', token}}));
+    stale(third, 'four'); stale(fourth, 'wrong'); stale(fourth, 'four', 'https://elsewhere.example');
+    assert.equal(fourth.isConnected, true, 'Untrusted stale signals cannot cancel a pending preview');
+    stale(fourth, 'four');
+    assert.equal(fourth.isConnected, false, 'A stale response reports immediately without waiting for the timeout');
+    assert.equal(third.isConnected, true, 'Previous valid preview survives a stale response');
+    assert.match(shell.root.querySelector('[role=status]').textContent, /nicht mehr aktuell/);
     preview.destroy();
   } finally { e.dom.window.close(); }
 });
@@ -312,4 +321,43 @@ test('Embedded preview selects sections by click or keyboard and marks only auth
     assert.equal(story.hasAttribute('data-iss-preview-active'), true);
     assert.equal(window.document.querySelectorAll('[data-iss-preview-active]').length, 1);
   } finally { window.close(); }
+});
+
+
+test('Named palette colours preserve identity while custom hex colours remain exact', async () => {
+  const e = await editor('landing', { textPalette: [{slug:'scarlet-red', name:'Rot', color:'#e81d25'}] });
+  try {
+    const rich = e.window.issEditorialRichText;
+    const prose = '<p><span class="iss-ink-preset-scarlet-red iss-mark-ffeeaa">Text</span></p>';
+    assert.equal(rich.sanitize(prose, 'block'), prose);
+    assert.equal(rich.hasUnsupportedMarkup(prose, 'block'), false);
+    assert.equal(rich.hasUnsupportedMarkup('<span class="iss-ink-preset-invented">X</span>', 'inline'), true);
+    assert.equal(rich.sanitize('<span class="iss-ink-preset-invented">X</span>', 'inline'), '<span>X</span>');
+    assert.equal(rich.sanitize('<a href="/story/"><span class="iss-ink-123abc">Linked</span></a>', 'inline'), '<a href="/story/"><span class="iss-ink-123abc">Linked</span></a>');
+  } finally { e.dom.window.close(); }
+});
+
+test('Visual treatment choices preserve text and focus, and opening requirements remain visible after reordering', async () => {
+  const sections = {feature:{label:'Feature', supports:['lead','treatment','media_refs'], rich_text:{body:'block',lead:'block'}, treatments:[
+    {slug:'feature.image-overlay',label:'Titel auf Bild',schematic:'overlay',hint:'Text über Bild'},
+    {slug:'feature.opening',label:'Seitenauftakt',schematic:'opening',role:'opening',min_version:3,hint:'Erster Abschnitt mit Titel und Bild'}
+  ]}};
+  const document = {schema_version:3,skin:'frontpage',sections:[{type:'feature',title:'Opening',body:'<p>Keep text</p>',treatment:'feature.opening',media_refs:[{id:'1'}]},{type:'feature',title:'Other',treatment:'feature.image-overlay'}]};
+  const e = await editor('landing',{isFrontPage:true,sections,document,skins:[{slug:'frontpage',label:'Startseite'}]});
+  try {
+    assert.equal(e.root.querySelectorAll('.iss-editorial-opening-badge').length,1);
+    e.button('Bearbeiten').click(); await e.settle();
+    const dialog = e.window.document.querySelector('[role=dialog]');
+    const choice = dialog.querySelector('input[value="feature.image-overlay"]');
+    choice.focus(); choice.click();
+    assert.equal(e.window.document.activeElement, choice);
+    assert.equal(e.value().sections[0].body, '<p>Keep text</p>');
+    assert.match(dialog.querySelector('.iss-editorial-opening-note').textContent, /Vorlagenauftakt aktiv/);
+    dialog.querySelector('input[value="feature.opening"]').click();
+    assert.match(dialog.querySelector('.iss-editorial-opening-note').textContent, /ersetzt den Auftakt/);
+    e.button('Fertig',dialog).click(); e.button('Nach unten').click();
+    assert.equal(e.value().sections[1].treatment,'feature.opening');
+    assert.match(e.root.querySelector('.iss-editorial-opening-note').textContent,/Seitenauftakt prüfen/);
+    assert.ok(e.root.querySelectorAll('svg').length >= 3);
+  } finally { e.dom.window.close(); }
 });

@@ -50,7 +50,7 @@ their actual DB/template authority before preparing the draft. Proposed order:
 
 | Reader purpose | Existing composition mechanism |
 | --- | --- |
-| Understand the Industriesalon | Opening `feature.image-overlay`, with image, heading, short text and action |
+| Understand the Industriesalon | Opening `feature.opening`, with image, heading, short text and action |
 | Choose a visit or activity | `gateway` cards for tours, exhibitions and relevant existing destinations |
 | See current activity | Existing `front-timeline` and `front-projects` automatic slots |
 | Discover a story or archive material | `feature` and/or non-linked `text_bild_reihe` using existing editorial material |
@@ -121,8 +121,9 @@ and a separate colour database are unnecessary.
 ### Versioning and content compatibility
 
 Existing HTML body/lead fields and plain item descriptions must not be confused.
-For the landing pilot, introduce document version 2 for the extended text
-contract, keeping the same section fields and reference structure. Version 1
+Version 2 introduced the extended text contract; version 3 adds named palette
+references and an explicit opening treatment, keeping the same section fields
+and reference structure. Version 1
 remains readable and retains its current public interpretation.
 
 Convert the pilot explicitly into the author's draft: escape legacy plain item
@@ -133,8 +134,8 @@ reported, never silently discarded by opening/saving the editor.
 
 Generalize the existing version checks in validation, autosave and revision
 recovery to consult format-supported versions. Initially only `landing` opts
-into version 2; event storage and other format semantics are unchanged. Do not
-allow older writers to silently remove the new formatting. Keep version-2
+into versions 2 and 3; event storage and other format semantics are unchanged. Do not
+allow older writers to silently remove the new formatting. Keep version-3
 reader support if the new editor UI must be reverted after content is saved.
 
 ## Live preview
@@ -235,7 +236,7 @@ The preserved mixed archive checkout `/home/vladimir/wp` was not edited or synce
 
 The current homepage is post 12257; its effective front-page template comes from
 the theme, with no active database override. The admin author's private autosave
-27454 contains the 12-section version-2 pilot, including an editable opening and
+27454 contains the 12-section version-3 pilot, including an editable opening and
 a non-linked image/text row. Existing canonical content, enabled metadata,
 deleted sections, dynamic slots and approved media references are preserved.
 A verified local database backup and the clean draft JSON are retained outside
@@ -244,18 +245,36 @@ Git; see the current handoff for the local runtime checkpoint.
 Code delivery needs no database migration or uploads artifact. Moving or
 publishing the composition is a separate editorial action and requires its own
 content/media mapping. Deploy registry, reader, sanitizer and renderer together
-before accepting version-2 content; keep version-2 reading support on UI rollback.
+before accepting version-3 content; keep version-3 reading support on UI rollback.
 The user authorized GitHub delivery of the website branch after reviewing the
 local workflow. Deployment and publication remain separate actions; neither was
 performed for this pilot.
 
 ## Local verification and staff review
 
-- Storage/HTTP harness: 204 checks, including 86 existing documents; existing
+The audit follow-up adds registry-owned layout diagrams/native radio choices,
+**Seitenauftakt** with visible requirements, named theme colours, retained custom
+colours under **Eigene Farbe**, and contrast guidance. Existing hex choices are
+preserved exactly. Preview processing reuses one validated snapshot and reports
+stale frames immediately. Lead/body have separate rendering hooks. See the
+[implemented contracts](../architecture/editorial-platform.md#landing-rich-text-and-live-preview).
+
+Chrome follow-up: named colour → custom hex → Undo → reset verified with actual
+TinyMCE and rendered preview. Clearing the opening title retained the previous
+valid preview and displayed the correction. Layout choices preserve focus/text;
+800px and 390px editor windows and the 390px preview fit without horizontal
+overflow. Temporary browser edits were removed; the private composition matches
+its baseline except for its intended v3/explicit-opening upgrade. Canonical
+homepage content, metadata and effective template remain unchanged.
+
+- Storage/HTTP harness: 227 checks, including 86 existing documents; existing
   content/meta unchanged and disposable fixtures removed. Covers versioned rich
   text, unsafe markup, plain legacy text, native draft/revision round trips,
-  authenticated embedded preview, stale tokens and anonymous access.
-- Shared editor: 18 DOM tests and 2 Set/upload tests pass. Targeted ESLint,
+  authenticated embedded preview, stale tokens and anonymous access. The audit
+  follow-up covers named colours, v3 native save/revisions, explicit opening
+  validation, one validation across 14 preview consumers and snapshot consistency
+  across a concurrent save; ordinary API reads remain fresh.
+- Shared editor: 20 DOM tests and 2 Set/upload tests pass. Targeted ESLint,
   Stylelint, PHPCS, PHPStan, PHP syntax and whitespace checks pass.
 - Chrome in the user's admin session: selected-text and cursor-only links,
   internal search, changing link destinations, custom colour replacement,
@@ -275,7 +294,7 @@ performed for this pilot.
   verified in Chrome. Regression tests cover pending edits, selective discard,
   keyboard selection and messages from stale/unrelated frames. Selection styles
   remain absent from ordinary page previews and public pages.
-- Two final title edits reached the visible preview in 1.94s and 1.85s after
+- Before the audit follow-up, two title edits reached the visible preview in 1.94s and 1.85s after
   editing, measured through the browser on this local stack. This meets the
   two-second pilot target in those samples, not a general latency guarantee.
 - Staff still need to perform the acceptance task above without a lesson.

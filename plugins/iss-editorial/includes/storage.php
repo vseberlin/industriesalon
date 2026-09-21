@@ -820,7 +820,7 @@ function iss_editorial_validate_document($value, string $format_slug)
                 if ($document['schema_version'] < 2) { continue; }
                 $values = $field === 'items' ? array_column((array) ($section['items'] ?? []), 'text') : [$section[$field] ?? ''];
                 foreach ($values as $text) {
-                    if (!is_string($text) || !iss_editorial_rich_text_is_supported($text, $profile)) {
+                    if (!is_string($text) || ($document['schema_version'] < 3 && preg_match('/class="[^"]*iss-(ink|mark)-preset-/', $text)) || !iss_editorial_rich_text_is_supported($text, $profile)) {
                         return new WP_Error('editorial_unsupported_markup', sprintf(__('Abschnitt %d: Die Textformatierung muss geprüft werden. Der Entwurf bleibt erhalten.', 'iss-editorial'), $index + 1));
                     }
                 }
@@ -871,6 +871,8 @@ function iss_editorial_get_document(int $post_id, string $format_slug, bool $pre
     }
 
     if ($prefer_autosave && current_user_can('edit_post', $post_id)) {
+        $context = iss_editorial_embedded_preview();
+        if ($context && $context['postId'] === $post_id && $context['format'] === $format_slug) { return $context['document']; }
         $draft = iss_editorial_get_draft($post_id, $format_slug);
         if ($draft) {
             return iss_editorial_sanitize_document($draft['document'], $format_slug);
@@ -932,6 +934,8 @@ function iss_editorial_document_is_enabled(int $post_id, string $format_slug): b
         return $post_id > 0;
     }
     if (iss_editorial_should_prefer_preview_autosave($post_id, $format_slug)) {
+        $context = iss_editorial_embedded_preview();
+        if ($context && $context['postId'] === $post_id && $context['format'] === $format_slug) { return $context['enabled']; }
         $draft = iss_editorial_get_draft($post_id, $format_slug);
         if ($draft) {
             return $draft['enabled'];
@@ -952,6 +956,11 @@ function iss_editorial_set_document_enabled(int $post_id, string $format_slug, b
 function iss_editorial_get_read_model(int $post_id, string $format_slug, bool $prefer_autosave = false): array
 {
     $prefer_autosave = $prefer_autosave || iss_editorial_should_prefer_preview_autosave($post_id, $format_slug);
+    static $preview_models = [];
+    $context = $prefer_autosave ? iss_editorial_embedded_preview() : [];
+    $cache_key = $context && $context['postId'] === $post_id && $context['format'] === $format_slug
+        ? get_current_user_id() . ':' . $post_id . ':' . $format_slug . ':' . $context['token'] : '';
+    if ($cache_key !== '' && isset($preview_models[$cache_key])) { return $preview_models[$cache_key]; }
     $document = iss_editorial_get_document($post_id, $format_slug, $prefer_autosave);
     if (!$document) {
         return [];
@@ -974,5 +983,6 @@ function iss_editorial_get_read_model(int $post_id, string $format_slug, bool $p
         }
     }
 
+    if ($cache_key !== '') { $preview_models[$cache_key] = $document; }
     return $document;
 }

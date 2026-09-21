@@ -151,21 +151,26 @@ the authority for already published content.
 
 ### Landing rich text and live preview
 
-Landing documents support versions 1 and 2. Other formats still support version
+Landing documents support versions 1, 2 and 3. Other formats still support version
 1. The explicit **Textfarben aktivieren** action converts legacy plain item
 descriptions to escaped rich text in the author's draft, including deleted
-sections. Opening a document does not upgrade or save it. The format registry's
+sections. Version-2 documents are prepared as version 3 in the editor copy,
+including recovered drafts; this does not write canonical content. The format registry's
 `rich_text` profiles declare block prose, inline descriptions and descriptions
 inside a linked card. The last profile excludes hyperlinks to prevent nested
 anchors; headings, labels and factual fields remain plain text.
 
-Version 2 uses the installed WordPress TinyMCE with a compact toolbar. **Link**
+Rich-text landing documents use the installed WordPress TinyMCE with a compact toolbar. **Link**
 opens the full native dialog, including link text when no text is selected and
 internal-content search. **Farbe** and **Marker** offer the effective theme
 palette, custom six-digit RGB values, session-local recent colours and separate
-resets. Undo, selection and links survive colour changes. The stored contract is
-`span.iss-ink-rrggbb` / `span.iss-mark-rrggbb`; arbitrary classes and CSS are
-excluded. The theme collects the used marks and emits scoped stylesheet rules.
+resets. Undo, selection and links survive colour changes. Version 3 stores named
+palette choices as `span.iss-ink-preset-{slug}` / `span.iss-mark-preset-{slug}`;
+the server allowlists effective WordPress palette slugs and the theme resolves
+its preset variables. Custom colours stay under **Eigene Farbe**, with contrast
+guidance. They retain `span.iss-ink-rrggbb` / `span.iss-mark-rrggbb`, including
+existing saved colours; there is no nearest-colour conversion. Arbitrary classes
+and CSS are excluded. The theme emits scoped stylesheet rules, not style attributes.
 Block prose permits paragraphs, emphasis, lists, breaks and safe links; short
 descriptions permit their inline subset. Unsupported imported markup stays
 visible for review until the editor explicitly chooses **Formatierung
@@ -189,7 +194,8 @@ The iframe handshake checks source, origin and exact snapshot token; an older
 response cannot replace newer work. Pending frames replace the displayed frame
 only after readiness, preserving scroll while leaving TinyMCE mounted. Invalid
 input and failed refreshes retain the previous valid preview with a visible
-stale-state message. Unfinished input still belongs to native draft recovery.
+stale-state message. HTTP 409 responses notify the pending frame immediately,
+with the same source/origin/token checks. Unfinished input still belongs to native draft recovery.
 The embedded page disables navigation and form submission; the separate-window
 preview remains available. No route/date/relation panel is saved by this queue.
 
@@ -200,16 +206,27 @@ keeps its existing anchors and contains neither bridge nor editing markers.
 lifecycle, and `preview-frame.js` owns the authenticated frame interaction.
 The preview selection stylesheet also loads only in the authenticated embedded
 page. `includes/rich-text.php` and `includes/preview.php` implement their server
-contracts; public rendering remains in the theme.
+contracts; public rendering remains in the theme. Each embedded request validates
+one snapshot and reuses its document, enabled state and resolved references.
+A concurrent autosave cannot replace that snapshot during rendering. The cache
+is request-local and keyed by user, post, format and token; ordinary API reads
+remain fresh after writes. The iframe sandbox restricts interactions such as
+forms/popups; it is not the authentication boundary.
 
-On the front page, the first version-2 `feature.image-overlay` in the `frontpage`
-skin supplies the opening image, H1, prose and actions when it has a valid image
-and heading. Only then is the template's static hero suppressed. Version-1
-documents retain the previous interpretation and fallback. Version-2 lead/body
-and item formatting render through the same landing renderer used in previews.
+Version 3 registers **Seitenauftakt** (`feature.opening`) explicitly. It requires
+first position, `frontpage` skin, title and an image. Incomplete or moved openings
+remain recoverable drafts but fail preview/publication validation; the editor
+keeps the last valid preview and explains what needs fixing. Cards show the role,
+and a notice explains when the template opening is active. Version-2 public
+openings retain their previous interpretation; the server maps an existing valid
+implicit opening to the explicit role only in the editor copy. Version 1 remains
+opt-in. Landing treatments carry schematic/hint metadata in the existing format
+registry and appear as labelled native radio choices with miniature diagrams.
+Palette and section cards reuse those diagrams. Lead and body render separately
+through the storage prose allowlist, including the existing map-note placement.
 
 Deploy the version registry, editor, sanitizer and theme together before saving
-version-2 content. Keep the version-2 reader/sanitizer/renderer if reverting the
+version-3 content. Keep the version-3 reader/sanitizer/renderer if reverting the
 new UI afterward. The front-page pilot is an author's private autosave using
 existing media, so these code changes require no database migration or uploads
 artifact. Moving the accepted composition to another site is a separate content

@@ -67,7 +67,8 @@
         if (['iss-preview-scroll', 'iss-preview-select'].indexOf(event.data.type) !== -1 && Number.isFinite(event.data.scroll)) { scroll = event.data.scroll; }
         if (event.data.type === 'iss-preview-select' && Number.isInteger(event.data.section) && event.data.section >= 0 && onSelectSection) { onSelectSection(event.data.section); }
       }
-      if (!pending || event.source !== pending.contentWindow || event.data.token !== currentToken || event.data.type !== 'iss-preview-ready') { return; }
+      if (!pending || event.source !== pending.contentWindow || event.data.token !== currentToken || ['iss-preview-ready', 'iss-preview-stale'].indexOf(event.data.type) === -1) { return; }
+      if (event.data.type === 'iss-preview-stale') { stale('Vorschau ist nicht mehr aktuell. Bitte Vorschau aktualisieren.'); return; }
       window.clearTimeout(timer);
       if (shown) { shown.remove(); }
       shown = pending; pending = null; shown.hidden = false;
@@ -105,6 +106,7 @@
         address.searchParams.set('iss_editorial_snapshot', token);
         pending = element('iframe', 'iss-editorial-live-preview__frame');
         pending.title = 'Seitenvorschau'; pending.hidden = true; pending.dataset.token = token;
+        // Restricts forms/popups as an interaction guard; authentication and snapshot checks protect the draft.
         pending.setAttribute('sandbox', 'allow-scripts allow-same-origin');
         pending.src = address.href; viewport.appendChild(pending);
         status.textContent = 'Vorschau wird geladen …'; pane.dataset.state = 'loading';

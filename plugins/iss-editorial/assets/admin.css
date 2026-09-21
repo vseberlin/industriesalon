@@ -223,7 +223,7 @@
 
 .iss-editorial-card {
   display: grid;
-  grid-template-columns: 8px minmax(0, 1fr) auto;
+  grid-template-columns: auto minmax(0, 1fr) auto;
   gap: 12px;
   align-items: start;
   padding: 14px;
@@ -1098,4 +1098,71 @@ body.iss-editorial-modal-open {
   border-radius: 50%;
   vertical-align: middle;
   content: "";
+}
+
+
+.iss-editorial-treatment-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 145px), 1fr));
+  gap: 10px;
+}
+
+.iss-editorial-treatment-choice {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: 8px;
+  padding: 12px;
+  border: 1px solid #c3c4c7;
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+.iss-editorial-treatment-choice:has(input:checked) {
+  border-color: #2271b1;
+  background: #f0f6fc;
+}
+
+.iss-editorial-treatment-choice:focus-within {
+  outline: 2px solid #2271b1;
+  outline-offset: 2px;
+}
+
+.iss-editorial-treatment-choice :where(strong, span) {
+  grid-column: 1 / -1;
+}
+
+.iss-editorial-treatment-sketch {
+  width: 100%;
+  max-width: 120px;
+  height: auto;
+  color: #50575e;
+}
+
+.iss-editorial-gesture > .iss-editorial-treatment-sketch,
+.iss-editorial-card > .iss-editorial-treatment-sketch {
+  width: 52px;
+  flex: 0 0 52px;
+  align-self: start;
+}
+
+.iss-editorial-opening-note {
+  padding: 10px 12px;
+  border-left: 3px solid #2271b1;
+  background: #f0f6fc;
+}
+
+.iss-editorial-opening-badge {
+  display: inline-block;
+  padding: 2px 6px;
+  background: #f0f6fc;
+  color: #135e96;
+}
+
+.iss-editorial-colour-panel details {
+  margin-block: 10px;
+}
+
+.iss-editorial-colour-panel summary {
+  cursor: pointer;
+  font-weight: 600;
 }

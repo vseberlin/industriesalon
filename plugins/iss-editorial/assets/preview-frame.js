@@ -1,4 +1,9 @@
 (function () {
+  var staleToken = document.currentScript && document.currentScript.getAttribute('data-iss-preview-stale');
+  if (staleToken !== null && staleToken !== undefined && window.parent !== window) {
+    window.parent.postMessage({ type: 'iss-preview-stale', token: staleToken }, window.location.origin);
+    return;
+  }
   var context = window.issEditorialPreviewFrame;
   if (!context || window.parent === window) { return; }
   var origin = window.location.origin;

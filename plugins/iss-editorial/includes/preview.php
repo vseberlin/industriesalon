@@ -15,13 +15,18 @@ function iss_editorial_embedded_preview(): array
     if (!$format || !iss_editorial_should_prefer_preview_autosave($post_id, $format['slug'])) {
         return [];
     }
-    $draft = iss_editorial_get_draft($post_id, $format['slug']);
     // phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Authenticated preview, token identifies the saved snapshot.
     $token = sanitize_text_field(wp_unslash((string) ($_GET['iss_editorial_snapshot'] ?? '')));
-    if (!$draft || !hash_equals($draft['token'], $token) || is_wp_error(iss_editorial_validate_document($draft['document'], $format['slug']))) {
-        return [];
-    }
-    return ['token' => $token, 'postId' => $post_id];
+    static $snapshots = [];
+    $key = get_current_user_id() . ':' . $post_id . ':' . $format['slug'] . ':' . $token;
+    if (array_key_exists($key, $snapshots)) { return $snapshots[$key]; }
+    $snapshots[$key] = [];
+    $draft = iss_editorial_get_draft($post_id, $format['slug']);
+    if (!$draft || !hash_equals($draft['token'], $token)) { return []; }
+    $document = iss_editorial_validate_document($draft['document'], $format['slug']);
+    if (is_wp_error($document)) { return []; }
+    $snapshots[$key] = ['token' => $token, 'postId' => $post_id, 'format' => $format['slug'], 'document' => $document, 'enabled' => $draft['enabled']];
+    return $snapshots[$key];
 }
 
 add_action('template_redirect', static function (): void {
@@ -31,7 +36,12 @@ add_action('template_redirect', static function (): void {
     }
     nocache_headers();
     if (!iss_editorial_embedded_preview()) {
-        wp_die(esc_html__('Diese Vorschau ist nicht mehr aktuell. Bitte im Editor erneut laden.', 'iss-editorial'), '', ['response' => 409]);
+        // The error page sends only the requested token, never private draft data.
+        // phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Invalid/unauthenticated previews disclose no content.
+        $token = sanitize_text_field(wp_unslash((string) ($_GET['iss_editorial_snapshot'] ?? '')));
+        $script = wp_get_script_tag(['src' => iss_editorial_admin_url() . 'assets/preview-frame.js', 'data-iss-preview-stale' => $token]);
+        // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- wp_get_script_tag escapes every attribute; the message is escaped separately.
+        wp_die(esc_html__('Diese Vorschau ist nicht mehr aktuell. Bitte im Editor erneut laden.', 'iss-editorial') . $script, '', ['response' => 409]);
     }
     show_admin_bar(false);
 });
@@ -43,5 +53,5 @@ add_action('wp_enqueue_scripts', static function (): void {
     }
     wp_enqueue_style('iss-editorial-preview-frame', iss_editorial_admin_url() . 'assets/preview-frame.css', [], (string) filemtime(iss_editorial_admin_path() . 'assets/preview-frame.css'));
     wp_enqueue_script('iss-editorial-preview-frame', iss_editorial_admin_url() . 'assets/preview-frame.js', [], (string) filemtime(iss_editorial_admin_path() . 'assets/preview-frame.js'), true);
-    wp_localize_script('iss-editorial-preview-frame', 'issEditorialPreviewFrame', $context);
+    wp_localize_script('iss-editorial-preview-frame', 'issEditorialPreviewFrame', ['token' => $context['token'], 'postId' => $context['postId']]);
 });

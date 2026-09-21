@@ -319,6 +319,7 @@ function iss_editorial_enqueue_admin_assets(string $hook): void
         $document = iss_editorial_hydrate_document_previews(iss_editorial_get_editor_document($post_id, (string) $format['slug']));
         $validation = iss_editorial_validate_document($document, (string) $format['slug']);
         $draft = iss_editorial_get_draft($post_id, (string) $format['slug']);
+        if ($draft) { $draft['document'] = (array) apply_filters('iss_editorial_editor_document', $draft['document'], $post_id, (string) $format['slug']); }
         $draft_validation = $draft ? iss_editorial_validate_document($draft['document'], (string) $format['slug']) : [];
         $has_recovery = $draft && (is_wp_error($draft_validation) || $draft_validation !== iss_editorial_sanitize_document($document, (string) $format['slug']) || $draft['title'] !== $post->post_title || $draft['excerpt'] !== $post->post_excerpt);
         wp_enqueue_script(
@@ -352,6 +353,7 @@ function iss_editorial_enqueue_admin_assets(string $hook): void
                 'supportedVersions' => $format['supported_versions'],
                 'textPalette' => iss_editorial_text_palette(),
                 'livePreview' => $format['slug'] === 'landing',
+                'isFrontPage' => $post_id === (int) get_option('page_on_front'),
                 'document' => $document,
                 'enabled' => true,
                 'baseToken' => iss_editorial_saved_token($post_id, (string) $format['slug']),

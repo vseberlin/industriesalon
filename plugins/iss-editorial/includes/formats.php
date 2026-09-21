@@ -50,6 +50,10 @@ function iss_editorial_get_registered_formats(): array
                 $treatments[$treatment_slug] = [
                     'slug' => $treatment_slug,
                     'label' => $treatment_label !== '' ? $treatment_label : $treatment_slug,
+                    'schematic' => is_array($treatment) ? sanitize_key($treatment['schematic'] ?? '') : '',
+                    'hint' => is_array($treatment) ? sanitize_text_field($treatment['hint'] ?? '') : '',
+                    'role' => is_array($treatment) ? sanitize_key($treatment['role'] ?? '') : '',
+                    'min_version' => is_array($treatment) ? absint($treatment['min_version'] ?? 1) : 1,
                 ];
             }
 

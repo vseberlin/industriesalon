@@ -99,7 +99,7 @@ function industriesalon_editorial_landing_treatment_slug(array $section): string
         'gateway' => ['gateway.cards', 'gateway.link-list', 'gateway.feature-strip', 'gateway.pathways', 'gateway.atlas-plates'],
         'text_bild_reihe' => ['text-bild-reihe.visual', 'text-bild-reihe.compact', 'text-bild-reihe.chronology'],
         'map_img' => ['map-img.editorial-atlas'],
-        'feature' => ['feature.media-panel', 'feature.media-text', 'feature.image-overlay', 'feature.origin-story'],
+        'feature' => ['feature.media-panel', 'feature.media-text', 'feature.image-overlay', 'feature.origin-story', 'feature.opening'],
         'dynamic_slot' => ['slot.projects', 'slot.timeline', 'slot.visit-info', 'slot.newsletter', 'slot.fuehrungen-offers', 'slot.team-directory', 'slot.schoneweide-atlas'],
         'atlas_map' => ['atlas-map.place-locator', 'atlas-map.map-only', 'atlas-map.editorial-split'],
     ];
@@ -259,18 +259,25 @@ function industriesalon_editorial_landing_link_url(array $link): string
     return trim((string) ($link['url'] ?? ''));
 }
 
+/** Match the storage profile; v1 retains its historical HTML contract. */
+function industriesalon_landing_prose(string $text, array $section, bool $legacy_autop = true): string
+{
+    if (($section['_text_version'] ?? 1) >= 2) {
+        return iss_editorial_sanitize_rich_text(wpautop($text), 'block');
+    }
+    return wp_kses_post($legacy_autop ? wpautop($text) : $text);
+}
+
 function industriesalon_render_editorial_landing_copy(array $section): string
 {
     $kicker = trim((string) ($section['kicker'] ?? ''));
     $title = trim((string) ($section['title'] ?? ''));
     $body = trim((string) ($section['body'] ?? ''));
-    if (($section['_text_version'] ?? 1) >= 2 && !empty($section['lead'])) {
-        $body = wpautop($section['lead']) . wpautop($body);
-    }
+    $lead = ($section['_text_version'] ?? 1) >= 2 ? trim((string) ($section['lead'] ?? '')) : '';
     $links = is_array($section['links'] ?? null) ? $section['links'] : [];
     $links_html = industriesalon_render_editorial_landing_links($links);
 
-    if ($kicker === '' && $title === '' && $body === '' && $links_html === '') {
+    if ($kicker === '' && $title === '' && empty($lead) && $body === '' && $links_html === '') {
         return '';
     }
 
@@ -283,8 +290,9 @@ function industriesalon_render_editorial_landing_copy(array $section): string
         <?php if ($title !== '') : ?>
             <h2 class="iss-landing-section__title"><?php echo esc_html($title); ?></h2>
         <?php endif; ?>
+        <?php if ($lead !== '') : ?><div class="iss-landing-section__lead"><?php echo industriesalon_landing_prose($lead, $section); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- Versioned prose allowlist. ?></div><?php endif; ?>
         <?php if ($body !== '') : ?>
-            <div class="iss-landing-section__body"><?php echo wp_kses_post(wpautop($body)); ?></div>
+            <div class="iss-landing-section__body"><?php echo industriesalon_landing_prose($body, $section); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- Versioned prose allowlist. ?></div>
         <?php endif; ?>
         <?php echo $links_html; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- Link output is escaped in helper. ?>
     </div>
@@ -490,7 +498,9 @@ function industriesalon_render_editorial_landing_map_image(array $section, int $
         return '';
     }
 
-    $copy_html = industriesalon_render_editorial_landing_copy($section);
+    $copy = $section;
+    unset($copy['lead']); // This treatment gives the lead its own map note below.
+    $copy_html = industriesalon_render_editorial_landing_copy($copy);
     $lead = trim((string) ($section['lead'] ?? ''));
     $media = industriesalon_editorial_landing_first_media($section);
     $attachment_id = absint($media['id'] ?? 0);
@@ -535,7 +545,7 @@ function industriesalon_render_editorial_landing_map_image(array $section, int $
             <div class="iss-landing-map-image__intro">
                 <?php echo $copy_html; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- Copy output is escaped in helper. ?>
                 <?php if ($lead !== '') : ?>
-                    <aside class="iss-landing-map-image__note"><?php echo wp_kses_post(wpautop($lead)); ?></aside>
+                    <aside class="iss-landing-map-image__note"><?php echo industriesalon_landing_prose($lead, $section); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- Versioned prose allowlist. ?></aside>
                 <?php endif; ?>
             </div>
             <?php if (trim($map_html) !== '' || $attachment_id > 0) : ?>
@@ -666,7 +676,7 @@ function industriesalon_render_editorial_landing_text(array $section, int $rende
                     <?php if ($title !== '') : ?><h2 class="iss-landing-story-split__title"><?php echo esc_html($title); ?></h2><?php endif; ?>
                 </div>
                 <div class="iss-landing-story-split__content">
-                    <?php if ($body !== '') : ?><div class="iss-landing-story-split__body"><?php echo wp_kses_post($body); ?></div><?php endif; ?>
+                    <?php if ($body !== '') : ?><div class="iss-landing-story-split__body"><?php echo industriesalon_landing_prose($body, $section, false); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- Versioned prose allowlist. ?></div><?php endif; ?>
                     <?php echo $links_html; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- Links are escaped in their renderer. ?>
                 </div>
             </div>
@@ -776,12 +786,12 @@ function industriesalon_render_editorial_landing_origin_story(array $section, in
                     <?php if ($kicker !== '') : ?><p class="iss-kicker"><?php echo esc_html($kicker); ?></p><?php endif; ?>
                     <?php if ($title !== '') : ?><h2 class="iss-landing-origin-story__title"><?php echo esc_html($title); ?></h2><?php endif; ?>
                 </div>
-                <?php if ($lead !== '') : ?><div class="iss-landing-origin-story__lead"><?php echo wp_kses_post($lead); ?></div><?php endif; ?>
+                <?php if ($lead !== '') : ?><div class="iss-landing-origin-story__lead"><?php echo industriesalon_landing_prose($lead, $section, false); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- Versioned prose allowlist. ?></div><?php endif; ?>
             </div>
             <div class="iss-landing-origin-story__layout">
                 <?php if ($media_html !== '') : ?><div class="iss-landing-origin-story__media"><?php echo $media_html; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- Media output uses wp_get_attachment_image. ?></div><?php endif; ?>
                 <div class="iss-landing-origin-story__side">
-                    <?php if ($body !== '') : ?><div class="iss-landing-origin-story__body"><?php echo wp_kses_post($body); ?></div><?php endif; ?>
+                    <?php if ($body !== '') : ?><div class="iss-landing-origin-story__body"><?php echo industriesalon_landing_prose($body, $section, false); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- Versioned prose allowlist. ?></div><?php endif; ?>
                     <?php echo $facts_html; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- Facts are escaped in their renderer. ?>
                     <?php echo $links_html; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- Links are escaped in their renderer. ?>
                 </div>
@@ -827,10 +837,8 @@ function industriesalon_render_editorial_landing_media_text_overlay_copy(array $
     $kicker = trim((string) ($section['kicker'] ?? ''));
     $title = trim((string) ($section['title'] ?? ''));
     $body = trim((string) ($section['body'] ?? ''));
-    if (($section['_text_version'] ?? 1) >= 2 && !empty($section['lead'])) {
-        $body = wpautop($section['lead']) . wpautop($body);
-    }
-    if ($kicker === '' && $title === '' && $body === '') {
+    $lead = ($section['_text_version'] ?? 1) >= 2 ? trim((string) ($section['lead'] ?? '')) : '';
+    if ($kicker === '' && $title === '' && $lead === '' && $body === '') {
         return '';
     }
 
@@ -843,9 +851,10 @@ function industriesalon_render_editorial_landing_media_text_overlay_copy(array $
         <?php if ($title !== '') : ?>
             <h2 class="iss-heading__title iss-media-text__title"><?php echo esc_html($title); ?></h2>
         <?php endif; ?>
+        <?php if ($lead !== '') : ?><div class="iss-landing-section__lead"><?php echo industriesalon_landing_prose($lead, $section); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- Versioned prose allowlist. ?></div><?php endif; ?>
         <?php if ($body !== '') : ?>
             <?php if (($section['_text_version'] ?? 1) >= 2) : ?>
-                <div class="iss-heading__text iss-media-text__text"><?php echo wp_kses_post(wpautop($body)); ?></div>
+                <div class="iss-heading__text iss-media-text__text"><?php echo industriesalon_landing_prose($body, $section); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- Versioned prose allowlist. ?></div>
             <?php else : ?>
                 <p class="iss-heading__text iss-media-text__text"><?php echo esc_html(wp_strip_all_tags($body)); ?></p>
             <?php endif; ?>
@@ -860,11 +869,9 @@ function industriesalon_render_editorial_landing_media_text_copy(array $section)
     $kicker = trim((string) ($section['kicker'] ?? ''));
     $title = trim((string) ($section['title'] ?? ''));
     $body = trim((string) ($section['body'] ?? ''));
-    if (($section['_text_version'] ?? 1) >= 2 && !empty($section['lead'])) {
-        $body = wpautop($section['lead']) . wpautop($body);
-    }
+    $lead = ($section['_text_version'] ?? 1) >= 2 ? trim((string) ($section['lead'] ?? '')) : '';
     $links_html = industriesalon_render_editorial_landing_links(is_array($section['links'] ?? null) ? $section['links'] : []);
-    if ($kicker === '' && $title === '' && $body === '' && $links_html === '') {
+    if ($kicker === '' && $title === '' && empty($lead) && $body === '' && $links_html === '') {
         return '';
     }
 
@@ -877,8 +884,9 @@ function industriesalon_render_editorial_landing_media_text_copy(array $section)
         <?php if ($title !== '') : ?>
             <h2 class="iss-heading__title iss-media-text__title"><?php echo esc_html($title); ?></h2>
         <?php endif; ?>
+        <?php if ($lead !== '') : ?><div class="iss-landing-section__lead"><?php echo industriesalon_landing_prose($lead, $section); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- Versioned prose allowlist. ?></div><?php endif; ?>
         <?php if ($body !== '') : ?>
-            <div class="iss-heading__text iss-media-text__text"><?php echo wp_kses_post($body); ?></div>
+            <div class="iss-heading__text iss-media-text__text"><?php echo industriesalon_landing_prose($body, $section, false); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- Versioned prose allowlist. ?></div>
         <?php endif; ?>
         <?php echo $links_html; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- Links are escaped in helper. ?>
     </div>
@@ -977,7 +985,7 @@ function industriesalon_render_editorial_landing_feature(array $section, int $re
     if ($treatment === 'feature.media-text') {
         return industriesalon_render_editorial_landing_feature_media_text($section, $rendered_index, $skin);
     }
-    if ($treatment === 'feature.image-overlay' && !empty($section['_opening'])) {
+    if (!empty($section['_opening'])) {
         $image_id = absint($section['media_refs'][0]['id'] ?? 0);
         ob_start();
         ?>
@@ -987,7 +995,8 @@ function industriesalon_render_editorial_landing_feature(array $section, int $re
                 <div class="iss-container iss-landing-opening__content">
                     <?php if (!empty($section['kicker'])) : ?><p class="iss-kicker iss-kicker--light"><?php echo esc_html($section['kicker']); ?></p><?php endif; ?>
                     <h1 class="iss-landing-opening__title"><?php echo esc_html($section['title']); ?></h1>
-                    <div class="iss-landing-opening__body"><?php echo wp_kses_post(wpautop($section['lead'] ?? '') . wpautop($section['body'] ?? '')); ?></div>
+                    <?php if (!empty($section['lead'])) : ?><div class="iss-landing-section__lead"><?php echo industriesalon_landing_prose($section['lead'], $section); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- Versioned prose allowlist. ?></div><?php endif; ?>
+                    <div class="iss-landing-opening__body"><?php echo industriesalon_landing_prose($section['body'] ?? '', $section); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- Versioned prose allowlist. ?></div>
                     <?php echo industriesalon_render_editorial_landing_links($section['links'] ?? []); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- Escaped link helper. ?>
                 </div>
             </div>
@@ -1544,14 +1553,14 @@ function industriesalon_register_editorial_landing_block(): void
 }
 add_action('init', 'industriesalon_register_editorial_landing_block');
 
-/** The first v2 image feature can replace the front-page template's static hero. */
+/** v3 names the opening explicitly; older v2 pages retain their existing output. */
 function industriesalon_landing_has_opening(array $document): bool
 {
     $first = $document['sections'][0] ?? [];
     return ($document['schema_version'] ?? 1) >= 2
         && ($document['skin'] ?? '') === 'frontpage'
         && ($first['type'] ?? '') === 'feature'
-        && ($first['treatment'] ?? '') === 'feature.image-overlay'
+        && ($first['treatment'] ?? '') === (($document['schema_version'] ?? 1) >= 3 ? 'feature.opening' : 'feature.image-overlay')
         && trim((string) ($first['title'] ?? '')) !== ''
         && wp_attachment_is_image(absint($first['media_refs'][0]['id'] ?? 0));
 }
@@ -1562,6 +1571,7 @@ add_action('wp_enqueue_scripts', static function (): void {
     $document = iss_editorial_get_read_model($post_id, 'landing', industriesalon_editorial_landing_prefer_autosave($post_id));
     if (($document['schema_version'] ?? 1) < 2) { return; }
     $rules = [];
+    $palette_slugs = array_column(iss_editorial_text_palette(), 'slug');
     foreach ((array) ($document['sections'] ?? []) as $section) {
         $values = [$section['body'] ?? '', $section['lead'] ?? ''];
         foreach ((array) ($section['items'] ?? []) as $item) { $values[] = $item['text'] ?? ''; }
@@ -1572,6 +1582,9 @@ add_action('wp_enqueue_scripts', static function (): void {
                     if (preg_match('/^iss-(ink|mark)-([0-9a-f]{6})$/D', $class, $match)) {
                         $property = $match[1] === 'ink' ? 'color' : 'background-color';
                         $rules[$class] = '.iss-landing-editorial .' . $class . '{' . $property . ':#' . $match[2] . '}';
+                    } elseif (preg_match('/^iss-(ink|mark)-preset-([a-z0-9-]+)$/D', $class, $match) && in_array($match[2], $palette_slugs, true)) {
+                        $property = $match[1] === 'ink' ? 'color' : 'background-color';
+                        $rules[$class] = '.iss-landing-editorial .' . $class . '{' . $property . ':var(--wp--preset--color--' . $match[2] . ')}';
                     }
                 }
             }

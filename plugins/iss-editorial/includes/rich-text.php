@@ -30,10 +30,14 @@ function iss_editorial_rich_text_tags(string $profile): array
 function iss_editorial_sanitize_rich_text(string $value, string $profile): string
 {
     $value = wp_kses(iss_editorial_strip_unsafe_body_hrefs($value), iss_editorial_rich_text_tags($profile), ['http', 'https', 'mailto', 'tel']);
+    $palette_slugs = array_column(iss_editorial_text_palette(), 'slug');
     $html = new WP_HTML_Tag_Processor($value);
     while ($html->next_tag('span')) {
         $classes = preg_split('/\s+/', (string) $html->get_attribute('class'));
-        $classes = array_filter($classes, static fn($class) => preg_match('/^iss-(ink|mark)-[0-9a-f]{6}$/D', $class));
+        $classes = array_filter($classes, static function ($class) use ($palette_slugs): bool {
+            return (bool) preg_match('/^iss-(ink|mark)-[0-9a-f]{6}$/D', $class)
+                || (preg_match('/^iss-(ink|mark)-preset-([a-z0-9-]+)$/D', $class, $match) && in_array($match[2], $palette_slugs, true));
+        });
         if ($classes) {
             $html->set_attribute('class', implode(' ', array_unique($classes)));
         } else {
@@ -68,7 +72,10 @@ function iss_editorial_text_palette(): array
         foreach ((array) $origin as $color) {
             $hex = sanitize_hex_color($color['color'] ?? '');
             if ($hex && strlen($hex) === 7) {
-                $colors[strtolower($hex)] = ['color' => strtolower($hex), 'name' => sanitize_text_field($color['name'] ?? $hex)];
+                $slug = sanitize_title($color['slug'] ?? '');
+                if ($slug !== '' && preg_match('/^[a-z0-9-]+$/D', $slug)) {
+                    $colors[$slug] = ['slug' => $slug, 'color' => strtolower($hex), 'name' => sanitize_text_field($color['name'] ?? $slug)];
+                }
             }
         }
     }

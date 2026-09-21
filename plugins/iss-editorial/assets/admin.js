@@ -628,7 +628,8 @@
         dot.style.backgroundColor = sectionTone(type);
         body.appendChild(createElement('strong', '', sectionConfig(type).label || type));
         body.appendChild(createElement('span', '', sectionConfig(type).description || type));
-        button.appendChild(dot);
+        var sketch = treatmentChoices(type)[0];
+        button.appendChild(sketch && sketch.schematic ? treatmentSketch(sketch) : dot);
         button.appendChild(body);
         button.addEventListener('dragstart', function () {
           suppressClick = true;
@@ -670,6 +671,7 @@
       card.setAttribute('data-section-index', String(index));
       marker.style.backgroundColor = sectionTone(type);
       meta.appendChild(createElement('span', 'iss-editorial-card__type', sectionConfig(type).label || type));
+      if (section.treatment === 'feature.opening') { meta.appendChild(createElement('strong', 'iss-editorial-opening-badge', 'Seitenauftakt')); }
       meta.appendChild(createElement('h3', '', section.title || 'Ohne Titel'));
       if (sectionConfig(type).ui_hidden) {
         meta.appendChild(createElement('p', 'description', 'Vorhandener Abschnitt · nicht mehr neu einfügbar.'));
@@ -697,7 +699,8 @@
       actions.appendChild(down);
       actions.appendChild(remove);
 
-      card.appendChild(marker);
+      var sketch = treatmentChoices(type).find(function (choice) { return choice.slug === (section.treatment || defaultTreatment(type)); });
+      card.appendChild(sketch && sketch.schematic ? treatmentSketch(sketch) : marker);
       card.appendChild(meta);
       card.appendChild(actions);
       target.appendChild(card);
@@ -757,7 +760,7 @@
               }
             });
           });
-          documentState.schema_version = 2;
+          documentState.schema_version = (config.supportedVersions || []).indexOf(3) !== -1 ? 3 : 2;
           render(); scheduleAutosave();
         });
         tools.appendChild(upgrade);
@@ -770,6 +773,7 @@
       }
       head.appendChild(tools);
       stage.appendChild(head);
+      if (openingNote()) { stage.appendChild(createElement('p', 'iss-editorial-opening-note', openingNote())); }
 
       if (!documentState.sections.length) {
         stage.appendChild(createElement('p', 'iss-editorial-empty', 'Noch keine Abschnitte. Links einen Abschnitt wählen.'));
@@ -1246,6 +1250,7 @@
         render();
         scheduleAutosave();
       });
+      if (openingNote()) { contentPanel.body.appendChild(createElement('p', 'iss-editorial-opening-note', openingNote())); }
       contentPanel.body.appendChild(kickerField);
       contentPanel.body.appendChild(titleField);
       if (supports(type, 'lead')) {
@@ -1271,11 +1276,7 @@
       }
 
       if (supports(type, 'treatment') && !supports(type, 'slot_key')) {
-        renderTreatmentControl(section, displayPanel.body, function () {
-          disposeRichEditors();
-          clear(body);
-          renderSectionFields(section, body);
-        });
+        renderTreatmentControl(section, displayPanel.body);
       }
 
       if (supports(type, 'items')) {
@@ -1630,7 +1631,7 @@
 
     function treatmentChoices(type) {
       return (sectionConfig(type).treatments || []).filter(function (item) {
-        return item && item.slug;
+        return item && item.slug && (item.min_version || 1) <= documentState.schema_version && (item.role !== 'opening' || config.isFrontPage);
       });
     }
 
@@ -1649,40 +1650,65 @@
       return match ? match.label : treatment;
     }
 
-    function renderTreatmentControl(section, body, onChange) {
-      var type = section.type || 'kapitel';
-      var choices = treatmentChoices(type);
-      var wrapper = createElement('div', 'iss-editorial-field iss-editorial-field--treatment');
-      var select = document.createElement('select');
+    function treatmentSketch(choice) {
+      var shapes = {
+        heading: [[8, 12, 82, 12], [8, 33, 104, 5], [8, 45, 88, 5]],
+        text: [[8, 10, 66, 9], [8, 28, 104, 4], [8, 39, 104, 4], [8, 50, 85, 4]],
+        callout: [[8, 10, 104, 20], [8, 42, 40, 12]],
+        split: [[8, 8, 48, 50], [64, 12, 48, 9], [64, 31, 48, 5], [64, 44, 40, 5]],
+        'split-flip': [[64, 8, 48, 50], [8, 12, 48, 9], [8, 31, 48, 5], [8, 44, 40, 5]],
+        cards: [[8, 8, 30, 30], [45, 8, 30, 30], [82, 8, 30, 30], [8, 46, 30, 5], [45, 46, 30, 5], [82, 46, 30, 5]],
+        list: [[8, 10, 14, 12], [30, 13, 82, 5], [8, 30, 14, 12], [30, 33, 82, 5], [8, 50, 14, 12], [30, 53, 82, 5]],
+        strip: [[8, 8, 34, 50], [50, 13, 62, 8], [50, 31, 62, 4], [50, 44, 50, 4]],
+        panel: [[8, 8, 104, 42], [64, 25, 42, 33]],
+        overlay: [[8, 8, 104, 50], [18, 20, 60, 9], [18, 38, 80, 5]],
+        opening: [[4, 4, 112, 58], [14, 24, 70, 12], [14, 46, 28, 8]]
+      };
+      var svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+      svg.setAttribute('viewBox', '0 0 120 66'); svg.setAttribute('aria-hidden', 'true');
+      svg.setAttribute('class', 'iss-editorial-treatment-sketch');
+      (shapes[choice.schematic] || shapes.text).forEach(function (box, index) {
+        var rect = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
+        ['x', 'y', 'width', 'height'].forEach(function (attr, i) { rect.setAttribute(attr, String(box[i])); });
+        rect.setAttribute('fill', 'currentColor'); rect.setAttribute('opacity', index === 0 ? '0.3' : '0.8'); svg.appendChild(rect);
+      });
+      return svg;
+    }
 
-      if (!choices.length) {
-        return;
+    function openingNote() {
+      if (!config.isFrontPage || documentState.schema_version < 3) { return ''; }
+      var opening = documentState.sections.findIndex(function (section) { return section.treatment === 'feature.opening'; });
+      if (opening === -1) { return 'Vorlagenauftakt aktiv. Für einen eigenen Auftakt im ersten hervorgehobenen Inhalt „Seitenauftakt“ wählen.'; }
+      var section = documentState.sections[opening];
+      if (opening !== 0 || currentSkin() !== 'frontpage' || !(section.title || '').trim() || !(section.media_refs || []).length) {
+        return 'Seitenauftakt prüfen: erster Abschnitt, Startseiten-Stil, Titel und Bild erforderlich. Die Vorschau bleibt bei der letzten gültigen Fassung.';
       }
+      return 'Seitenauftakt: Dieser erste Abschnitt ersetzt den Auftakt der Vorlage. Titel und Bild sind erforderlich.';
+    }
 
-      if (!section.treatment) {
-        section.treatment = choices[0].slug;
-      }
-
+    function renderTreatmentControl(section, body) {
+      var choices = treatmentChoices(section.type || 'kapitel');
+      if (!choices.length) { return; }
+      var wrapper = createElement('fieldset', 'iss-editorial-field iss-editorial-field--treatment');
+      wrapper.appendChild(createElement('legend', '', 'Darstellung wählen'));
+      var grid = createElement('div', 'iss-editorial-treatment-grid');
+      var current = section.treatment || choices[0].slug;
       choices.forEach(function (choice) {
-        var option = document.createElement('option');
-        option.value = choice.slug;
-        option.textContent = choice.label || choice.slug;
-        option.selected = choice.slug === section.treatment;
-        select.appendChild(option);
+        var label = createElement('label', 'iss-editorial-treatment-choice');
+        var input = document.createElement('input'); input.type = 'radio';
+        input.name = 'iss-editorial-treatment-' + String(documentState.sections.indexOf(section));
+        input.value = choice.slug; input.checked = choice.slug === current;
+        input.addEventListener('change', function () {
+          if (!input.checked) { return; }
+          section.treatment = choice.slug;
+          render(); scheduleAutosave();
+        });
+        label.appendChild(input); label.appendChild(treatmentSketch(choice));
+        label.appendChild(createElement('strong', '', choice.label || choice.slug));
+        if (choice.hint) { label.appendChild(createElement('span', '', choice.hint)); }
+        grid.appendChild(label);
       });
-
-      select.addEventListener('change', function () {
-        section.treatment = select.value || choices[0].slug;
-        if (typeof onChange === 'function') {
-          onChange();
-        }
-        render();
-        scheduleAutosave();
-      });
-
-      wrapper.appendChild(createElement('span', '', 'Darstellung'));
-      wrapper.appendChild(select);
-      body.appendChild(wrapper);
+      wrapper.appendChild(grid); body.appendChild(wrapper);
     }
 
     function slotKeyChoices(type) {
@@ -2809,6 +2835,7 @@
       layout.appendChild(main);
       root.appendChild(layout);
       bindSectionDragDrop(layout);
+      if (modal) { modal.querySelectorAll('.iss-editorial-opening-note').forEach(function (note) { note.textContent = openingNote(); }); }
       updateField();
     }
 
