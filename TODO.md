@@ -4,7 +4,10 @@ Immediate executable work only. Larger future programs live in `docs/project/bac
 
 ## Next
 
-- Complete the remaining Firefox and real clipboard/paste checks for the
+- Staff-test the [landing workspace](docs/project/editor-workspace-plan.md): add
+  a section with image, title and text in under five minutes using either canvas
+  or inspector, then verify draft recovery. Complete Firefox and real clipboard/paste
+  checks for the
   [front-page rich-text/live-preview pilot](docs/project/editorial-rich-text-preview-plan.md#local-verification-and-staff-review)
   before extending landing rich text to other formats or publishing the pilot.
 - Review the interactive Atlas outlier `Energie-Museum Berlin`: its current

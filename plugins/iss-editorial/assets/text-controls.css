@@ -1,0 +1,44 @@
+/* Compact text controls shared by the inspector and authenticated canvas. */
+.iss-editorial-colour-panel {
+  padding: 12px;
+  border: 1px solid #8c8f94;
+  background: #fff;
+}
+
+.iss-editorial-colour-panel__choices {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-block: 8px;
+}
+
+.iss-editorial-colour-panel label {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  margin: 6px;
+}
+
+.iss-editorial-colour-panel input[type="text"] {
+  width: 8em;
+}
+
+.iss-editorial-swatch::before {
+  display: inline-block;
+  width: 1em;
+  height: 1em;
+  margin-right: 6px;
+  border: 1px solid #8c8f94;
+  border-radius: 50%;
+  vertical-align: middle;
+  content: "";
+}
+
+.iss-editorial-colour-panel details {
+  margin-block: 10px;
+}
+
+.iss-editorial-colour-panel summary {
+  cursor: pointer;
+  font-weight: 600;
+}

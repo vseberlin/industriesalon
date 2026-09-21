@@ -5,8 +5,10 @@
     if (text) { node.textContent = text; }
     return node;
   }
-  window.issEditorialLivePreview = function (shell, section, onRetry, onSelectSection) {
-    shell.root.classList.add('iss-editorial-modal--preview');
+  window.issEditorialLivePreview = function (shell, section, onRetry, onSelectSection, options) {
+    options = options || {};
+    var persistent = !!shell.previewMount;
+    if (!persistent) { shell.root.classList.add('iss-editorial-modal--preview'); }
     var workspace = element('div', 'iss-editorial-workspace');
     var pane = element('section', 'iss-editorial-live-preview');
     pane.setAttribute('aria-label', 'Live-Vorschau');
@@ -22,13 +24,21 @@
     viewport.dataset.device = 'desktop';
     select.addEventListener('change', function () { viewport.dataset.device = select.value; resize(); });
     toolbar.appendChild(element('strong', '', 'Live-Vorschau'));
-    toolbar.appendChild(select);
+    if (persistent) {
+      var devices = element('div', 'iss-editorial-preview-devices');
+      devices.setAttribute('role', 'group'); devices.setAttribute('aria-label', 'Vorschau-Breite');
+      [['desktop', 'Desktop'], ['tablet', 'Tablet'], ['phone', 'Telefon']].forEach(function (choice) {
+        var device = element('button', 'button', choice[1]); device.type = 'button'; device.dataset.device = choice[0];
+        device.setAttribute('aria-pressed', String(choice[0] === 'desktop'));
+        device.addEventListener('click', function () { select.value = choice[0]; viewport.dataset.device = choice[0]; resize(); Array.from(devices.children).forEach(function (item) { item.setAttribute('aria-pressed', String(item === device)); }); }); devices.appendChild(device);
+      }); toolbar.appendChild(devices);
+    } else { toolbar.appendChild(select); }
     var retry = element('button', 'button', 'Vorschau aktualisieren'); retry.type = 'button';
     retry.addEventListener('click', function () { if (onRetry) { onRetry(); } });
     toolbar.appendChild(retry);
     pane.appendChild(toolbar); pane.appendChild(status); pane.appendChild(viewport);
-    shell.body.before(workspace);
-    workspace.appendChild(shell.body); workspace.appendChild(pane);
+    if (persistent) { shell.previewMount.appendChild(pane); }
+    else { shell.body.before(workspace); workspace.appendChild(shell.body); workspace.appendChild(pane); }
     var tabs = element('div', 'iss-editorial-workspace__tabs');
     function setTab(value) {
       workspace.dataset.tab = value;
@@ -41,15 +51,22 @@
       button.addEventListener('click', function () { setTab(choice[0]); });
       tabs.appendChild(button);
     });
-    workspace.before(tabs); workspace.dataset.tab = 'edit';
+    if (!persistent) { workspace.before(tabs); workspace.dataset.tab = 'edit'; }
     var shown = null;
     var pending = null;
     var timer = null;
     var scroll = null;
     var currentToken = '';
     var destroyed = false;
+    var editing = false;
+    var waitingActions = [];
+    function tell(data) { if (shown) { shown.contentWindow.postMessage(Object.assign({ token: shown.dataset.token }, data), window.location.origin); } }
+    function afterEditing(action) {
+      if (!editing) { action(); return; }
+      waitingActions.push(action); tell({ type: 'iss-preview-field-finish' });
+    }
     function position() {
-      if (shown) { shown.contentWindow.postMessage({ type: 'iss-preview-position', token: shown.dataset.token, section: section, scroll: scroll }, window.location.origin); }
+      if (shown && !editing) { shown.contentWindow.postMessage({ type: 'iss-preview-position', token: shown.dataset.token, section: section, scroll: scroll }, window.location.origin); }
     }
     function cancelPending() {
       window.clearTimeout(timer);
@@ -58,15 +75,26 @@
     function stale(message) {
       cancelPending();
       currentToken = '';
-      status.textContent = message + (shown ? ' Die Vorschau zeigt die vorige Fassung.' : '');
+      status.textContent = message + (shown && !editing ? ' Die Vorschau zeigt die vorige Fassung.' : '');
       pane.dataset.state = 'stale';
     }
     function receive(event) {
       if (destroyed || event.origin !== window.location.origin || !event.data) { return; }
       if (shown && event.source === shown.contentWindow && event.data.token === shown.dataset.token) {
         if (['iss-preview-scroll', 'iss-preview-select'].indexOf(event.data.type) !== -1 && Number.isFinite(event.data.scroll)) { scroll = event.data.scroll; }
-        if (event.data.type === 'iss-preview-select' && Number.isInteger(event.data.section) && event.data.section >= 0 && onSelectSection) { onSelectSection(event.data.section); }
+        if (event.data.type === 'iss-preview-select' && Number.isInteger(event.data.section) && event.data.section >= 0 && onSelectSection) { onSelectSection(event.data.section, shown.issSnapshot); }
       }
+      if (shown && event.source === shown.contentWindow && event.data.token === shown.dataset.token && options.field && /^iss-preview-field-(start|change|end)$/.test(event.data.type)) {
+        var response = options.field(event.data, shown.issSnapshot);
+        if (event.data.type === 'iss-preview-field-start' && response.accepted) { editing = true; cancelPending(); }
+        tell(Object.assign({ type: 'iss-preview-field-ack', session: event.data.session, sequence: event.data.sequence || 0 }, response));
+        if (event.data.type === 'iss-preview-field-end' && response.accepted) {
+          editing = false;
+          var actions = waitingActions.splice(0); actions.forEach(function (action) { action(); });
+        }
+      }
+      if (shown && event.source === shown.contentWindow && event.data.token === shown.dataset.token && event.data.type === 'iss-preview-insert' && options.insert && Number.isInteger(event.data.section) && event.data.section >= 0 && event.data.section <= shown.issSnapshot.refs.length) { options.insert(event.data.section, shown.issSnapshot); }
+      if (shown && event.source === shown.contentWindow && event.data.token === shown.dataset.token && event.data.type === 'iss-preview-form' && options.form && Number.isInteger(event.data.section)) { options.form(event.data.section, shown.issSnapshot, event.data.message); }
       if (!pending || event.source !== pending.contentWindow || event.data.token !== currentToken || ['iss-preview-ready', 'iss-preview-stale'].indexOf(event.data.type) === -1) { return; }
       if (event.data.type === 'iss-preview-stale') { stale('Vorschau ist nicht mehr aktuell. Bitte Vorschau aktualisieren.'); return; }
       window.clearTimeout(timer);
@@ -91,20 +119,25 @@
     window.addEventListener('message', receive);
     return {
       stale: stale,
+      reportSave: function (message) { tell({ type: 'iss-preview-save-status', message: message }); },
       selectSection: function (index, reveal) {
         section = index;
         if (reveal) { scroll = null; }
         position();
       },
+      afterEditing: afterEditing,
       edit: function () { setTab('edit'); },
-      update: function (url, token) {
+      update: function (url, token, snapshot) {
+        if (editing) { return; }
         if (destroyed) { return; }
         cancelPending(); currentToken = token;
         var address = new URL(url, window.location.href);
         if (address.origin !== window.location.origin) { stale('Vorschau-Adresse gehört zu einer anderen Website.'); return; }
         address.searchParams.set('iss_editorial_embed', '1');
+        if (persistent) { address.searchParams.set('iss_editorial_canvas', '1'); }
         address.searchParams.set('iss_editorial_snapshot', token);
         pending = element('iframe', 'iss-editorial-live-preview__frame');
+        pending.issSnapshot = snapshot;
         pending.title = 'Seitenvorschau'; pending.hidden = true; pending.dataset.token = token;
         // Restricts forms/popups as an interaction guard; authentication and snapshot checks protect the draft.
         pending.setAttribute('sandbox', 'allow-scripts allow-same-origin');

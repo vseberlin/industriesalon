@@ -1,6 +1,9 @@
 # Editorial text editing and live preview: front-page pilot
 
 Status: implemented locally, 2026-09-21; staff acceptance and publication pending.
+The subsequent [landing workspace](editor-workspace-plan.md) replaces the modal
+as the default v2/v3 landing interface. This file records the underlying rich-text
+and preview contract; use the workspace plan for its current interaction model.
 The homepage composition exists only in the admin author's private autosave.
 
 ## Outcome and scope

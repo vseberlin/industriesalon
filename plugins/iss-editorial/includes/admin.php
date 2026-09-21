@@ -115,6 +115,7 @@ function iss_editorial_render_main_canvas(WP_Post $post): void
     echo '</div>';
     echo '<button type="button" class="button button-secondary iss-editorial-preview-button">' . esc_html__('Vorschau öffnen', 'iss-editorial') . '</button>';
     echo '</div>';
+    echo '<noscript><p>' . esc_html__('Zum Bearbeiten der Abschnitte bitte JavaScript aktivieren. Ihre gespeicherten Inhalte bleiben erhalten.', 'iss-editorial') . '</p></noscript>';
     echo '<div class="iss-editorial-root" data-document="' . esc_attr(iss_editorial_encode_document($document)) . '" data-sections="' . esc_attr(iss_editorial_encode_document((array) $format['sections'])) . '"></div>';
     $revisions = wp_get_post_revisions($post->ID, ['posts_per_page' => 1, 'check_enabled' => false]);
     if ($revisions) {
@@ -260,6 +261,10 @@ function iss_editorial_enqueue_admin_assets(string $hook): void
         wp_enqueue_style('iss-editorial-admin', iss_editorial_admin_url() . 'assets/admin.css', [], (string) filemtime($style_path));
     }
 
+    foreach (['editor-tokens', 'text-controls', 'workspace'] as $asset) {
+        wp_enqueue_style('iss-editorial-' . $asset, iss_editorial_admin_url() . 'assets/' . $asset . '.css', ['iss-editorial-admin'], (string) filemtime(iss_editorial_admin_path() . 'assets/' . $asset . '.css'));
+    }
+
     $set_media_picker_path = iss_editorial_admin_path() . 'assets/set-media-picker.js';
     if (file_exists($set_media_picker_path)) {
         wp_enqueue_script(
@@ -306,7 +311,7 @@ function iss_editorial_enqueue_admin_assets(string $hook): void
         );
     }
 
-    foreach (['rich-text', 'live-preview'] as $asset) {
+    foreach (['rich-text', 'live-preview', 'workspace'] as $asset) {
         wp_enqueue_script('iss-editorial-' . $asset, iss_editorial_admin_url() . 'assets/' . $asset . '.js', ['editor', 'wplink'], (string) filemtime(iss_editorial_admin_path() . 'assets/' . $asset . '.js'), true);
     }
 
@@ -332,6 +337,7 @@ function iss_editorial_enqueue_admin_assets(string $hook): void
                 'editor',
                 'iss-editorial-rich-text',
                 'iss-editorial-live-preview',
+                'iss-editorial-workspace',
                 $route_dependency,
             ])),
             (string) filemtime($script_path),
@@ -353,6 +359,7 @@ function iss_editorial_enqueue_admin_assets(string $hook): void
                 'supportedVersions' => $format['supported_versions'],
                 'textPalette' => iss_editorial_text_palette(),
                 'livePreview' => $format['slug'] === 'landing',
+                'workspace' => $format['slug'] === 'landing',
                 'isFrontPage' => $post_id === (int) get_option('page_on_front'),
                 'document' => $document,
                 'enabled' => true,

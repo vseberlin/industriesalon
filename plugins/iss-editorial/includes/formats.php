@@ -32,7 +32,7 @@ function iss_editorial_get_registered_formats(): array
             $treatments = [];
             $registered_treatments = (array) ($section['treatments'] ?? []);
             foreach ((array) ($section['slots'] ?? []) as $slot) {
-                $registered_treatments[$slot['treatment']] = $slot['label'];
+                $registered_treatments[$slot['treatment']] = $registered_treatments[$slot['treatment']] ?? $slot['label'];
             }
             foreach ($registered_treatments as $treatment_slug => $treatment) {
                 if (is_array($treatment)) {
@@ -60,6 +60,9 @@ function iss_editorial_get_registered_formats(): array
             $sections[$type] = [
                 'type' => $type,
                 'label' => sanitize_text_field((string) ($section['label'] ?? $type)),
+                'icon' => sanitize_key($section['icon'] ?? 'editor-paragraph'),
+                'tone' => in_array($section['tone'] ?? '', ['text', 'media', 'navigation', 'automatic'], true) ? $section['tone'] : 'text',
+                'group' => sanitize_text_field($section['group'] ?? 'Text'),
                 'description' => sanitize_text_field((string) ($section['description'] ?? '')),
                 'supports' => array_values(array_filter(array_map('sanitize_key', (array) ($section['supports'] ?? [])))),
                 'treatments' => array_values($treatments),

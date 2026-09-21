@@ -259,6 +259,14 @@ function industriesalon_editorial_landing_link_url(array $link): string
     return trim((string) ($link['url'] ?? ''));
 }
 
+/** Field addresses belong to the authenticated preview, never public HTML. */
+function industriesalon_landing_field_attrs(array $section, string $field): string
+{
+    if (empty($section['_canvas_edit'])) { return ''; }
+    $profile = in_array($field, ['title', 'kicker'], true) ? 'plain' : 'block';
+    return ' data-iss-field="' . esc_attr($field) . '" data-iss-profile="' . esc_attr($profile) . '"';
+}
+
 /** Match the storage profile; v1 retains its historical HTML contract. */
 function industriesalon_landing_prose(string $text, array $section, bool $legacy_autop = true): string
 {
@@ -285,14 +293,14 @@ function industriesalon_render_editorial_landing_copy(array $section): string
     ?>
     <div class="iss-landing-section__copy">
         <?php if ($kicker !== '') : ?>
-            <p class="iss-kicker iss-kicker--compact iss-landing-section__kicker"><?php echo esc_html($kicker); ?></p>
+            <p class="iss-kicker iss-kicker--compact iss-landing-section__kicker"<?php echo industriesalon_landing_field_attrs($section, 'kicker'); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- Escaped preview attributes. ?>><?php echo esc_html($kicker); ?></p>
         <?php endif; ?>
         <?php if ($title !== '') : ?>
-            <h2 class="iss-landing-section__title"><?php echo esc_html($title); ?></h2>
+            <h2 class="iss-landing-section__title"<?php echo industriesalon_landing_field_attrs($section, 'title'); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- Escaped preview attributes. ?>><?php echo esc_html($title); ?></h2>
         <?php endif; ?>
-        <?php if ($lead !== '') : ?><div class="iss-landing-section__lead"><?php echo industriesalon_landing_prose($lead, $section); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- Versioned prose allowlist. ?></div><?php endif; ?>
+        <?php if ($lead !== '') : ?><div class="iss-landing-section__lead"<?php echo industriesalon_landing_field_attrs($section, 'lead'); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- Escaped preview attributes. ?>><?php echo industriesalon_landing_prose($lead, $section); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- Versioned prose allowlist. ?></div><?php endif; ?>
         <?php if ($body !== '') : ?>
-            <div class="iss-landing-section__body"><?php echo industriesalon_landing_prose($body, $section); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- Versioned prose allowlist. ?></div>
+            <div class="iss-landing-section__body"<?php echo industriesalon_landing_field_attrs($section, 'body'); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- Escaped preview attributes. ?>><?php echo industriesalon_landing_prose($body, $section); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- Versioned prose allowlist. ?></div>
         <?php endif; ?>
         <?php echo $links_html; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- Link output is escaped in helper. ?>
     </div>
@@ -672,11 +680,11 @@ function industriesalon_render_editorial_landing_text(array $section, int $rende
         <section <?php echo industriesalon_editorial_landing_section_attrs($section, $skin); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- Attributes are escaped in helper. ?>>
             <div class="iss-container iss-landing-story-split">
                 <div class="iss-landing-story-split__heading">
-                    <?php if ($kicker !== '') : ?><p class="iss-kicker"><?php echo esc_html($kicker); ?></p><?php endif; ?>
-                    <?php if ($title !== '') : ?><h2 class="iss-landing-story-split__title"><?php echo esc_html($title); ?></h2><?php endif; ?>
+                    <?php if ($kicker !== '') : ?><p class="iss-kicker"<?php echo industriesalon_landing_field_attrs($section, 'kicker'); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- Escaped preview attributes. ?>><?php echo esc_html($kicker); ?></p><?php endif; ?>
+                    <?php if ($title !== '') : ?><h2 class="iss-landing-story-split__title"<?php echo industriesalon_landing_field_attrs($section, 'title'); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- Escaped preview attributes. ?>><?php echo esc_html($title); ?></h2><?php endif; ?>
                 </div>
                 <div class="iss-landing-story-split__content">
-                    <?php if ($body !== '') : ?><div class="iss-landing-story-split__body"><?php echo industriesalon_landing_prose($body, $section, false); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- Versioned prose allowlist. ?></div><?php endif; ?>
+                    <?php if ($body !== '') : ?><div class="iss-landing-story-split__body"<?php echo industriesalon_landing_field_attrs($section, 'body'); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- Escaped preview attributes. ?>><?php echo industriesalon_landing_prose($body, $section, false); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- Versioned prose allowlist. ?></div><?php endif; ?>
                     <?php echo $links_html; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- Links are escaped in their renderer. ?>
                 </div>
             </div>
@@ -783,15 +791,15 @@ function industriesalon_render_editorial_landing_origin_story(array $section, in
         <div class="iss-container iss-landing-origin-story">
             <div class="iss-landing-origin-story__head">
                 <div class="iss-landing-origin-story__heading">
-                    <?php if ($kicker !== '') : ?><p class="iss-kicker"><?php echo esc_html($kicker); ?></p><?php endif; ?>
-                    <?php if ($title !== '') : ?><h2 class="iss-landing-origin-story__title"><?php echo esc_html($title); ?></h2><?php endif; ?>
+                    <?php if ($kicker !== '') : ?><p class="iss-kicker"<?php echo industriesalon_landing_field_attrs($section, 'kicker'); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- Escaped preview attributes. ?>><?php echo esc_html($kicker); ?></p><?php endif; ?>
+                    <?php if ($title !== '') : ?><h2 class="iss-landing-origin-story__title"<?php echo industriesalon_landing_field_attrs($section, 'title'); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- Escaped preview attributes. ?>><?php echo esc_html($title); ?></h2><?php endif; ?>
                 </div>
-                <?php if ($lead !== '') : ?><div class="iss-landing-origin-story__lead"><?php echo industriesalon_landing_prose($lead, $section, false); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- Versioned prose allowlist. ?></div><?php endif; ?>
+                <?php if ($lead !== '') : ?><div class="iss-landing-origin-story__lead"<?php echo industriesalon_landing_field_attrs($section, 'lead'); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- Escaped preview attributes. ?>><?php echo industriesalon_landing_prose($lead, $section, false); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- Versioned prose allowlist. ?></div><?php endif; ?>
             </div>
             <div class="iss-landing-origin-story__layout">
                 <?php if ($media_html !== '') : ?><div class="iss-landing-origin-story__media"><?php echo $media_html; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- Media output uses wp_get_attachment_image. ?></div><?php endif; ?>
                 <div class="iss-landing-origin-story__side">
-                    <?php if ($body !== '') : ?><div class="iss-landing-origin-story__body"><?php echo industriesalon_landing_prose($body, $section, false); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- Versioned prose allowlist. ?></div><?php endif; ?>
+                    <?php if ($body !== '') : ?><div class="iss-landing-origin-story__body"<?php echo industriesalon_landing_field_attrs($section, 'body'); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- Escaped preview attributes. ?>><?php echo industriesalon_landing_prose($body, $section, false); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- Versioned prose allowlist. ?></div><?php endif; ?>
                     <?php echo $facts_html; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- Facts are escaped in their renderer. ?>
                     <?php echo $links_html; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- Links are escaped in their renderer. ?>
                 </div>
@@ -846,15 +854,15 @@ function industriesalon_render_editorial_landing_media_text_overlay_copy(array $
     ?>
     <div class="iss-heading iss-media-text__heading iss-landing-surface iss-landing-surface--dark">
         <?php if ($kicker !== '') : ?>
-            <p class="iss-kicker"><?php echo esc_html($kicker); ?></p>
+            <p class="iss-kicker"<?php echo industriesalon_landing_field_attrs($section, 'kicker'); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- Escaped preview attributes. ?>><?php echo esc_html($kicker); ?></p>
         <?php endif; ?>
         <?php if ($title !== '') : ?>
-            <h2 class="iss-heading__title iss-media-text__title"><?php echo esc_html($title); ?></h2>
+            <h2 class="iss-heading__title iss-media-text__title"<?php echo industriesalon_landing_field_attrs($section, 'title'); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- Escaped preview attributes. ?>><?php echo esc_html($title); ?></h2>
         <?php endif; ?>
-        <?php if ($lead !== '') : ?><div class="iss-landing-section__lead"><?php echo industriesalon_landing_prose($lead, $section); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- Versioned prose allowlist. ?></div><?php endif; ?>
+        <?php if ($lead !== '') : ?><div class="iss-landing-section__lead"<?php echo industriesalon_landing_field_attrs($section, 'lead'); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- Escaped preview attributes. ?>><?php echo industriesalon_landing_prose($lead, $section); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- Versioned prose allowlist. ?></div><?php endif; ?>
         <?php if ($body !== '') : ?>
             <?php if (($section['_text_version'] ?? 1) >= 2) : ?>
-                <div class="iss-heading__text iss-media-text__text"><?php echo industriesalon_landing_prose($body, $section); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- Versioned prose allowlist. ?></div>
+                <div class="iss-heading__text iss-media-text__text"<?php echo industriesalon_landing_field_attrs($section, 'body'); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- Escaped preview attributes. ?>><?php echo industriesalon_landing_prose($body, $section); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- Versioned prose allowlist. ?></div>
             <?php else : ?>
                 <p class="iss-heading__text iss-media-text__text"><?php echo esc_html(wp_strip_all_tags($body)); ?></p>
             <?php endif; ?>
@@ -879,14 +887,14 @@ function industriesalon_render_editorial_landing_media_text_copy(array $section)
     ?>
     <div class="iss-media-text__copy">
         <?php if ($kicker !== '') : ?>
-            <p class="iss-kicker"><?php echo esc_html($kicker); ?></p>
+            <p class="iss-kicker"<?php echo industriesalon_landing_field_attrs($section, 'kicker'); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- Escaped preview attributes. ?>><?php echo esc_html($kicker); ?></p>
         <?php endif; ?>
         <?php if ($title !== '') : ?>
-            <h2 class="iss-heading__title iss-media-text__title"><?php echo esc_html($title); ?></h2>
+            <h2 class="iss-heading__title iss-media-text__title"<?php echo industriesalon_landing_field_attrs($section, 'title'); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- Escaped preview attributes. ?>><?php echo esc_html($title); ?></h2>
         <?php endif; ?>
-        <?php if ($lead !== '') : ?><div class="iss-landing-section__lead"><?php echo industriesalon_landing_prose($lead, $section); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- Versioned prose allowlist. ?></div><?php endif; ?>
+        <?php if ($lead !== '') : ?><div class="iss-landing-section__lead"<?php echo industriesalon_landing_field_attrs($section, 'lead'); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- Escaped preview attributes. ?>><?php echo industriesalon_landing_prose($lead, $section); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- Versioned prose allowlist. ?></div><?php endif; ?>
         <?php if ($body !== '') : ?>
-            <div class="iss-heading__text iss-media-text__text"><?php echo industriesalon_landing_prose($body, $section, false); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- Versioned prose allowlist. ?></div>
+            <div class="iss-heading__text iss-media-text__text"<?php echo industriesalon_landing_field_attrs($section, 'body'); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- Escaped preview attributes. ?>><?php echo industriesalon_landing_prose($body, $section, false); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- Versioned prose allowlist. ?></div>
         <?php endif; ?>
         <?php echo $links_html; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- Links are escaped in helper. ?>
     </div>
@@ -993,10 +1001,10 @@ function industriesalon_render_editorial_landing_feature(array $section, int $re
             <div class="iss-landing-opening">
                 <?php echo wp_get_attachment_image($image_id, 'full', false, ['class' => 'iss-landing-opening__image', 'loading' => 'eager', 'fetchpriority' => 'high']); ?>
                 <div class="iss-container iss-landing-opening__content">
-                    <?php if (!empty($section['kicker'])) : ?><p class="iss-kicker iss-kicker--light"><?php echo esc_html($section['kicker']); ?></p><?php endif; ?>
-                    <h1 class="iss-landing-opening__title"><?php echo esc_html($section['title']); ?></h1>
-                    <?php if (!empty($section['lead'])) : ?><div class="iss-landing-section__lead"><?php echo industriesalon_landing_prose($section['lead'], $section); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- Versioned prose allowlist. ?></div><?php endif; ?>
-                    <div class="iss-landing-opening__body"><?php echo industriesalon_landing_prose($section['body'] ?? '', $section); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- Versioned prose allowlist. ?></div>
+                    <?php if (!empty($section['kicker'])) : ?><p class="iss-kicker iss-kicker--light"<?php echo industriesalon_landing_field_attrs($section, 'kicker'); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- Escaped preview attributes. ?>><?php echo esc_html($section['kicker']); ?></p><?php endif; ?>
+                    <h1 class="iss-landing-opening__title"<?php echo industriesalon_landing_field_attrs($section, 'title'); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- Escaped preview attributes. ?>><?php echo esc_html($section['title']); ?></h1>
+                    <?php if (!empty($section['lead'])) : ?><div class="iss-landing-section__lead"<?php echo industriesalon_landing_field_attrs($section, 'lead'); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- Escaped preview attributes. ?>><?php echo industriesalon_landing_prose($section['lead'], $section); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- Versioned prose allowlist. ?></div><?php endif; ?>
+                    <div class="iss-landing-opening__body"<?php echo industriesalon_landing_field_attrs($section, 'body'); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- Escaped preview attributes. ?>><?php echo industriesalon_landing_prose($section['body'] ?? '', $section); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- Versioned prose allowlist. ?></div>
                     <?php echo industriesalon_render_editorial_landing_links($section['links'] ?? []); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- Escaped link helper. ?>
                 </div>
             </div>
@@ -1411,6 +1419,7 @@ function industriesalon_editorial_landing_render_document(array $document): stri
             continue;
         }
 
+        $section['_canvas_edit'] = ($document['schema_version'] ?? 1) >= 2 && ($section['type'] ?? '') !== 'dynamic_slot' && function_exists('iss_editorial_embedded_preview') && !empty(iss_editorial_embedded_preview()['canvas']);
         $section['_text_version'] = (int) ($document['schema_version'] ?? 1);
         $section['_opening'] = $source_index === 0 && is_front_page() && industriesalon_landing_has_opening($document);
         $section_html = industriesalon_render_editorial_landing_section($section, $rendered_index, $skin);

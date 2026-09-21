@@ -130,36 +130,6 @@
     return (element.textContent || '').replace(/\s+/g, ' ').trim();
   }
 
-    function sectionTone(type) {
-      var tones = {
-        bildbuehne: '#185fa5',
-        leitfrage: '#7f77dd',
-        objektfokus: '#1d9e75',
-        vollbild: '#185fa5',
-        massstab: '#ba7517',
-        facts: '#ba7517',
-        publication_rail: '#255f63',
-      intro: '#b94436',
-      longread_chapter: '#1a1a2e',
-      longread_quote: '#8a3b59',
-      timeline_item: '#3a6c8f',
-        photoalbum: '#426d54',
-        galerie: '#426d54',
-        statement: '#a32d2d',
-        gateway: '#255f63',
-        text_bild_reihe: '#8a4f2d',
-        feature: '#426d54',
-        dynamic_slot: '#5f5e5a',
-        fliesstext: '#5f5e5a',
-        kapitel: '#1a1a2e',
-        zitat: '#d4537e',
-        material: '#6b5b35',
-        schluss: '#a32d2d'
-      };
-
-    return tones[type] || '#1a1a2e';
-  }
-
   function referenceFromArchiveItem(item) {
     return {
       kind: 'archive_object',
@@ -236,6 +206,111 @@
     })[0] || 'kapitel';
     var modal = null;
     var livePreview = null;
+    var studio = null;
+    var studioSection = null;
+    var canvasEdit = null;
+    var useWorkspace = format === 'landing' && config.workspace && window.issEditorialWorkspace && window.issEditorialLivePreview;
+
+    function afterCanvasEdit(action) {
+      if (livePreview && studio) { livePreview.afterEditing(action); } else { action(); }
+    }
+
+    function selectWorkspace(index, fromPreview) {
+      if (!documentState.sections[index]) { return; }
+      studioSection = documentState.sections[index];
+      activeSectionIndex = index;
+      disposeRichEditors(studio.body);
+      clear(studio.body);
+      renderSectionFields(studioSection, studio.body);
+      studio.organizeFields();
+      studio.body.scrollTop = 0;
+      renderWorkspaceOutline();
+      if (livePreview) { livePreview.selectSection(index, !fromPreview); }
+    }
+
+    function renderWorkspaceOutline() {
+      studio.outline(documentState.sections, activeSectionIndex || 0, deletedSections().length);
+      clear(studio.trashBody);
+      deletedSections().forEach(function (section, index) { renderDeletedSectionCard(section, index, studio.trashBody); });
+    }
+
+    function receiveCanvasField(data, snapshot) {
+      if (!snapshot || !Number.isInteger(data.section) || typeof data.field !== 'string' || ['title', 'kicker', 'body', 'lead'].indexOf(data.field) === -1) { return { accepted: false }; }
+      var section = snapshot.refs[data.section];
+      var index = documentState.sections.indexOf(section);
+      if (!section || index < 0 || typeof data.session !== 'string') { return { accepted: false }; }
+      if (data.type === 'iss-preview-field-start') {
+        if (canvasEdit || documentState.schema_version < 2 || section.type === 'dynamic_slot' || JSON.stringify(section) !== JSON.stringify(snapshot.values[data.section])) { return { accepted: false, message: 'Die Vorschau wird aktualisiert. Bitte danach erneut bearbeiten.' }; }
+        var profile = ['title', 'kicker'].indexOf(data.field) !== -1 ? 'plain' : textProfile(section.type, data.field);
+        if (!profile || (data.field === 'lead' && !supports(section.type, 'lead'))) { return { accepted: false }; }
+        canvasEdit = { section: section, field: data.field, original: section[data.field] || '', session: data.session, sequence: 0 };
+        selectWorkspace(index, true);
+        studio.editing(true);
+        studio.message('Text wird direkt in der Vorschau bearbeitet. Fertig oder Escape beendet die Eingabe.');
+        return { accepted: true, value: canvasEdit.original, profile: profile };
+      }
+      if (!canvasEdit || canvasEdit.section !== section || canvasEdit.field !== data.field || canvasEdit.session !== data.session || !Number.isInteger(data.sequence) || data.sequence <= canvasEdit.sequence) { return { accepted: false }; }
+      canvasEdit.sequence = data.sequence;
+      if (data.type === 'iss-preview-field-change') {
+        if (typeof data.value !== 'string') { return { accepted: false }; }
+        section[data.field] = ['title', 'kicker'].indexOf(data.field) !== -1 ? data.value : window.issEditorialRichText.sanitize(data.value, textProfile(section.type, data.field));
+      } else if (data.type === 'iss-preview-field-end') {
+        if (data.cancel) { section[data.field] = canvasEdit.original; }
+        canvasEdit = null;
+        studio.editing(false);
+        studio.message('');
+        selectWorkspace(index, true);
+      } else { return { accepted: false }; }
+      renderWorkspaceOutline(); updateField(); scheduleAutosave();
+      return { accepted: true };
+    }
+
+    function renderWorkspace() {
+      if (!studio) {
+        clear(root);
+        studio = window.issEditorialWorkspace(root, {
+          sections: sections, hidden: isSectionHidden,
+          legacy: function () { disposeRichEditors(studio.body); livePreview.destroy(); livePreview = null; studio = null; studioSection = null; useWorkspace = false; render(); },
+          select: function (index) { afterCanvasEdit(function () { selectWorkspace(index); }); },
+          remove: function (index) { afterCanvasEdit(function () { removeSection(index); }); },
+          insert: function () { afterCanvasEdit(function () { studio.insert(documentState.sections.length); }); },
+          add: function (type, index) { afterCanvasEdit(function () { addSection(type, index); }); },
+          afterEditing: afterCanvasEdit,
+          sketch: function (section) { var media = sectionMediaRefsForDisplay(section)[0]; if (media && media.thumbnail) { var image = createElement('img', 'iss-editorial-outline__image'); image.src = media.thumbnail; image.alt = ''; return image; } var choice = treatmentChoices(section.type).find(function (item) { return item.slug === (section.treatment || defaultTreatment(section.type)); }); return choice && choice.schematic ? treatmentSketch(choice) : null; },
+          treatmentLabel: function (section) { var choice = treatmentChoices(section.type).find(function (item) { return item.slug === (section.treatment || defaultTreatment(section.type)); }); return choice ? choice.label : ''; }
+        });
+        if (skins.length > 1) { studio.tools.appendChild(renderSkinControl()); }
+        livePreview = window.issEditorialLivePreview(studio, 0, function () { afterCanvasEdit(function () { queueSave().catch(function () {}); }); }, function (index, snapshot) {
+          var section = snapshot && snapshot.refs[index];
+          var current = documentState.sections.indexOf(section);
+          if (current >= 0) { afterCanvasEdit(function () { selectWorkspace(current, true); }); }
+        }, {
+          field: receiveCanvasField,
+          form: function (index, snapshot, message) {
+            var current = snapshot ? documentState.sections.indexOf(snapshot.refs[index]) : -1;
+            if (current >= 0) { afterCanvasEdit(function () { selectWorkspace(current, true); studio.showView('inspector'); studio.message(message || ''); var input = studio.body.querySelector('input, textarea'); if (input) { input.focus(); } }); }
+          },
+          insert: function (index, snapshot) { afterCanvasEdit(function () { var before = snapshot.refs[index]; var current = before ? documentState.sections.indexOf(before) : documentState.sections.length; if (current >= 0) { studio.insert(current); } }); }
+        });
+        if (window.issEditorialDnd) {
+          window.issEditorialDnd.bindSectionCanvas({ palette: studio.palette, stage: studio.stage,
+            onInsert: function (type, index) { afterCanvasEdit(function () { addSection(type, index); }); },
+            onReorder: function (from, to) { afterCanvasEdit(function () { reorderSection(from, to); }); },
+            onKeyboardMove: function (index, direction) { afterCanvasEdit(function () { moveSection(index, direction); }); }
+          });
+        }
+        if (!recoveryPending) { window.setTimeout(function () { queueSave().catch(function () {}); }, 0); }
+      }
+      var selected = documentState.sections.indexOf(studioSection);
+      if (selected < 0) { studioSection = null; selected = Math.min(activeSectionIndex || 0, documentState.sections.length - 1); }
+      activeSectionIndex = selected;
+      if (!studioSection && selected >= 0) { selectWorkspace(selected); }
+      if (selected < 0) { disposeRichEditors(studio.body); clear(studio.body); }
+      renderWorkspaceOutline();
+      studio.body.querySelectorAll('.iss-editorial-opening-note').forEach(function (note) { note.textContent = openingNote(); });
+      if (livePreview) { livePreview.selectSection(selected, false); }
+      updateField();
+    }
     var routeConfig = config.routeStations && config.routeStations.enabled && format === 'fuehrung'
       ? config.routeStations
       : null;
@@ -625,7 +700,7 @@
         button.draggable = true;
         button.setAttribute('data-section-type', type);
         button.setAttribute('aria-label', 'Abschnitt ansehen: ' + (sectionConfig(type).label || type));
-        dot.style.backgroundColor = sectionTone(type);
+        dot.dataset.tone = sectionConfig(type).tone || 'text';
         body.appendChild(createElement('strong', '', sectionConfig(type).label || type));
         body.appendChild(createElement('span', '', sectionConfig(type).description || type));
         var sketch = treatmentChoices(type)[0];
@@ -669,7 +744,7 @@
 
       card.draggable = true;
       card.setAttribute('data-section-index', String(index));
-      marker.style.backgroundColor = sectionTone(type);
+      marker.dataset.tone = sectionConfig(type).tone || 'text';
       meta.appendChild(createElement('span', 'iss-editorial-card__type', sectionConfig(type).label || type));
       if (section.treatment === 'feature.opening') { meta.appendChild(createElement('strong', 'iss-editorial-opening-badge', 'Seitenauftakt')); }
       meta.appendChild(createElement('h3', '', section.title || 'Ohne Titel'));
@@ -715,7 +790,7 @@
       var restore = createElement('button', 'button button-secondary', 'Wiederherstellen');
       var purge = createElement('button', 'button button-link-delete', 'Endgültig löschen');
 
-      marker.style.backgroundColor = sectionTone(type);
+      marker.dataset.tone = sectionConfig(type).tone || 'text';
       meta.appendChild(createElement('span', 'iss-editorial-card__type', 'Papierkorb · ' + (sectionConfig(type).label || type)));
       meta.appendChild(createElement('h3', '', section.title || 'Ohne Titel'));
       meta.appendChild(createElement('p', '', sectionSummary(section) || 'Noch kein Inhalt.'));
@@ -749,6 +824,10 @@
       var tools = createElement('div', 'iss-editorial-stage__tools');
       stage.setAttribute('data-section-count', String(documentState.sections.length));
       head.appendChild(heading);
+      if (format === 'landing' && config.workspace && window.issEditorialWorkspace && window.issEditorialLivePreview && documentState.schema_version >= 2) {
+        var workspaceButton = createElement('button', 'button', 'Arbeitsfläche öffnen'); workspaceButton.type = 'button';
+        workspaceButton.addEventListener('click', function () { closeModal(); useWorkspace = true; render(); }); tools.appendChild(workspaceButton);
+      }
       if (documentState.schema_version === 1 && (config.supportedVersions || []).indexOf(2) !== -1) {
         var upgrade = createElement('button', 'button', 'Textfarben aktivieren');
         upgrade.type = 'button';
@@ -860,10 +939,10 @@
       });
 
       select.addEventListener('change', function () {
-        documentState.skin = select.value || 'standard';
-        updateField();
-        render();
-        scheduleAutosave();
+        afterCanvasEdit(function () {
+          documentState.skin = select.value || 'standard';
+          updateField(); render(); scheduleAutosave();
+        });
       });
 
       wrapper.appendChild(label);
@@ -1079,8 +1158,8 @@
     }
 
     function closeModal() {
-      if (livePreview) { livePreview.destroy(); livePreview = null; }
-      disposeRichEditors();
+      if (livePreview && !studio) { livePreview.destroy(); livePreview = null; }
+      if (!studio) { disposeRichEditors(); }
       if (modal) {
         if (modal.issEditorialDestroy) { modal.issEditorialDestroy(); }
         modal.remove();
@@ -1099,6 +1178,7 @@
     }
 
     function finishSection() {
+      if (studio) { scheduleAutosave(); return; }
       closeModal();
       render();
       var cards = root.querySelectorAll('.iss-editorial-card');
@@ -1136,6 +1216,7 @@
     }
 
     function openEditor(index) {
+      if (studio) { afterCanvasEdit(function () { selectWorkspace(index); studio.showView('inspector'); }); return; }
       var section = documentState.sections[index];
       if (!section) {
         return;
@@ -1251,10 +1332,12 @@
         scheduleAutosave();
       });
       if (openingNote()) { contentPanel.body.appendChild(createElement('p', 'iss-editorial-opening-note', openingNote())); }
-      contentPanel.body.appendChild(kickerField);
       contentPanel.body.appendChild(titleField);
+      var optional = studio ? createElement('details', 'iss-editorial-studio__optional') : contentPanel.body;
+      if (studio) { optional.appendChild(createElement('summary', '', 'Vorspann & Einleitung (optional)')); contentPanel.body.appendChild(optional); }
+      optional.appendChild(kickerField);
       if (supports(type, 'lead')) {
-        contentPanel.body.appendChild(createRichTextInput('Einleitung', section.lead || '', function (value) {
+        optional.appendChild(createRichTextInput('Einleitung', section.lead || '', function (value) {
           section.lead = value;
           render();
           scheduleAutosave();
@@ -2823,6 +2906,7 @@
     }
 
     function render() {
+      if (useWorkspace && !recoveryPending && !config.validationError && documentState.schema_version >= 2) { renderWorkspace(); return; }
       var layout = createElement('div', 'iss-editorial-layout');
       var main = createElement('div', 'iss-editorial-main');
       clear(root);
@@ -2878,6 +2962,7 @@
 
       updateField();
       var snapshot = currentSaveValue();
+      var previewSections = { refs: documentState.sections.slice(), values: JSON.parse(JSON.stringify(documentState.sections)) };
       params.append('action', 'iss_editorial_save_preview_document');
       params.append('nonce', config.previewNonce);
       params.append('post_id', String(config.postId));
@@ -2910,11 +2995,14 @@
           retry.hidden = true;
           if (payload.data.validationMessage) {
             setStatus('Entwurf gesichert. Vor dem Veröffentlichen prüfen: ' + payload.data.validationMessage);
-            if (livePreview) { livePreview.stale('Bitte prüfen: ' + payload.data.validationMessage); }
+            if (studio) { studio.message('Entwurf gesichert. Bitte prüfen: ' + payload.data.validationMessage); }
+            if (livePreview) { livePreview.stale('Bitte prüfen: ' + payload.data.validationMessage); livePreview.reportSave('Entwurf gesichert. Bitte prüfen: ' + payload.data.validationMessage); }
             if (intent === 'preview' || intent === 'submit') { throw new Error(payload.data.validationMessage); }
             return '';
           }
-          if (livePreview && currentSaveValue() === snapshot && payload.data.previewUrl) { livePreview.update(payload.data.previewUrl, draftToken); }
+          if (livePreview) { livePreview.reportSave('Entwurf gesichert. Noch nicht veröffentlicht.'); }
+          if (studio && !canvasEdit) { studio.message(''); }
+          if (livePreview && currentSaveValue() === snapshot && payload.data.previewUrl) { livePreview.update(payload.data.previewUrl, draftToken, previewSections); }
           setStatus(currentSaveValue() === snapshot ? 'Entwurf gesichert. Noch nicht veröffentlicht.' : 'Weitere Änderungen werden gesichert …');
           return payload.data && payload.data.previewUrl ? payload.data.previewUrl : config.previewUrl;
         });
@@ -2931,8 +3019,9 @@
       });
       return saveChain.catch(function (error) {
         setStatus(error.message || 'Nicht gesichert. Bitte erneut versuchen.');
+        if (studio) { studio.message('Nicht gesichert: ' + error.message); }
         retry.hidden = false;
-        if (livePreview) { livePreview.stale('Vorschau nicht aktualisiert: ' + error.message); }
+        if (livePreview) { livePreview.stale('Vorschau nicht aktualisiert: ' + error.message); livePreview.reportSave('Nicht gesichert: ' + error.message); }
         throw error;
       });
     }
@@ -3065,6 +3154,7 @@
           root.hidden = false;
           previewButton.disabled = false;
           clear(recovery);
+          render();
           setStatus('Gespeicherte Fassung geladen.');
         }).catch(function () { recoveryPending = true; });
       });
@@ -3079,10 +3169,10 @@
         event.preventDefault();
         event.stopImmediatePropagation();
         var submitter = event.submitter;
-        queueSave('submit').then(function () {
+        afterCanvasEdit(function () { queueSave('submit').then(function () {
           submitting = true;
           form.requestSubmit(submitter || undefined);
-        }).catch(function () {});
+        }).catch(function () {}); });
       }, true);
     }
     window.addEventListener('beforeunload', function (event) {

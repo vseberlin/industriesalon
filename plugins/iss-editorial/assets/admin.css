@@ -1027,30 +1027,6 @@ body.iss-editorial-modal-open {
   display: none;
 }
 
-.iss-editorial-colour-panel {
-  padding: 12px;
-  border: 1px solid #8c8f94;
-  background: #fff;
-}
-
-.iss-editorial-colour-panel__choices {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 6px;
-  margin-block: 8px;
-}
-
-.iss-editorial-colour-panel label {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  margin: 6px;
-}
-
-.iss-editorial-colour-panel input[type="text"] {
-  width: 8em;
-}
-
 @media (max-width: 900px) {
   .iss-editorial-modal--preview .iss-editorial-modal__head {
     flex-wrap: wrap;
@@ -1088,18 +1064,6 @@ body.iss-editorial-modal-open {
     display: none;
   }
 }
-
-.iss-editorial-swatch::before {
-  display: inline-block;
-  width: 1em;
-  height: 1em;
-  margin-right: 6px;
-  border: 1px solid #8c8f94;
-  border-radius: 50%;
-  vertical-align: middle;
-  content: "";
-}
-
 
 .iss-editorial-treatment-grid {
   display: grid;
@@ -1158,11 +1122,19 @@ body.iss-editorial-modal-open {
   color: #135e96;
 }
 
-.iss-editorial-colour-panel details {
-  margin-block: 10px;
+/* Registry-owned section families replace the former JavaScript hex map. */
+.iss-editorial-admin [data-tone="text"] {
+  background: #a32d2d;
 }
 
-.iss-editorial-colour-panel summary {
-  cursor: pointer;
-  font-weight: 600;
+.iss-editorial-admin [data-tone="media"] {
+  background: #426d54;
+}
+
+.iss-editorial-admin [data-tone="navigation"] {
+  background: #255f63;
+}
+
+.iss-editorial-admin [data-tone="automatic"] {
+  background: #5f5e5a;
 }

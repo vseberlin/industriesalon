@@ -49,6 +49,12 @@ try {
             ++$stored_count;
         }
     }
+    foreach (iss_editorial_get_format('landing')['sections'] as $type => $section) {
+        $assert($section['icon'] !== '' && $section['tone'] !== '' && $section['group'] !== '', 'Landing workspace registry metadata: ' . $type);
+        foreach ($section['treatments'] as $treatment) {
+            $assert($treatment['schematic'] !== '', 'Landing treatment schematic: ' . $treatment['slug']);
+        }
+    }
     foreach (['projekt', 'veranstaltung'] as $post_type) {
         $id = wp_insert_post(['post_type' => $post_type, 'post_status' => 'auto-draft', 'post_title' => 'Editorial integration fixture', 'post_author' => $admin->ID], true);
         $assert(!is_wp_error($id), 'Create fixture');
@@ -315,6 +321,10 @@ try {
     $copy = $opening['sections'][0]; $copy['_text_version'] = 3;
     $prose = industriesalon_render_editorial_landing_copy($copy);
     $assert(str_contains($prose, 'class="iss-landing-section__lead"><p>Lead</p>') && str_contains($prose, 'class="iss-landing-section__body"><p>Body</p>'), 'Lead and body retain separate rendering hooks');
+    $assert(!str_contains($prose, 'data-iss-field'), 'Ordinary public render has no editable field addresses');
+    $copy['_canvas_edit'] = true;
+    $editable_copy = industriesalon_render_editorial_landing_copy($copy);
+    $assert(str_contains($editable_copy, 'data-iss-field="title" data-iss-profile="plain"') && str_contains($editable_copy, 'data-iss-field="body" data-iss-profile="block"') && str_contains($editable_copy, 'data-iss-field="lead"'), 'Authenticated render exposes exact owned field addresses and profiles');
     $assert(!str_contains(industriesalon_landing_prose('<h3>Extra</h3><p style="color:red">Body</p>', $copy), '<h3>'), 'v3 render allowlist matches the block storage profile');
 
     $assert(iss_editorial_save_document($id, 'landing', $v3), 'Native save accepts v3 palette references');
@@ -334,7 +344,7 @@ try {
     $GLOBALS['wp_query'] = new WP_Query();
     $GLOBALS['wp_query']->queried_object_id = $id;
     $GLOBALS['wp_query']->queried_object = get_post($id);
-    $_GET = ['iss_editorial_embed' => '1', 'iss_editorial_snapshot' => $draft_v3['token'], 'iss_editorial_preview' => '1', 'iss_editorial_format' => 'landing', 'iss_editorial_preview_nonce' => wp_create_nonce(iss_editorial_get_preview_nonce_action($id, 'landing'))];
+    $_GET = ['iss_editorial_embed' => '1', 'iss_editorial_canvas' => '1', 'iss_editorial_snapshot' => $draft_v3['token'], 'iss_editorial_preview' => '1', 'iss_editorial_format' => 'landing', 'iss_editorial_preview_nonce' => wp_create_nonce(iss_editorial_get_preview_nonce_action($id, 'landing'))];
     $validations = 0;
     $count_validation = static function ($document) use (&$validations) { ++$validations; return $document; };
     add_filter('iss_editorial_validated_document', $count_validation, 100);
@@ -343,6 +353,7 @@ try {
             $context = iss_editorial_embedded_preview();
             $model = iss_editorial_get_read_model($id, 'landing', true);
         }
+        $assert($context['canvas'] && str_contains(industriesalon_editorial_landing_render_document($context['document']), 'data-iss-field="body"'), 'Workspace field markers require the authenticated canvas context');
         $assert($validations === 1 && $context['document']['sections'][0]['body'] === $named, 'Fourteen preview consumers validate the snapshot only once');
         remove_filter('iss_editorial_validated_document', $count_validation, 100);
         $newer = $v3; $newer['sections'][0]['body'] = '<p>Later save</p>';

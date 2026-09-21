@@ -293,7 +293,22 @@ function iss_content_model_register_editorial_formats(array $formats): array
     ];
 
     $presentations = iss_content_model_landing_treatment_presentations();
+    $workspace_sections = [
+        'statement' => ['editor-textcolor', 'text', 'Text'],
+        'fliesstext' => ['editor-paragraph', 'text', 'Text'],
+        'gateway' => ['screenoptions', 'navigation', 'Orientierung'],
+        'text_bild_reihe' => ['format-gallery', 'media', 'Bild'],
+        'map_img' => ['location-alt', 'navigation', 'Orientierung'],
+        'galerie' => ['format-gallery', 'media', 'Bild'],
+        'feature' => ['format-image', 'media', 'Bild'],
+        'dynamic_slot' => ['update', 'automatic', 'Automatisch'],
+        'atlas_map' => ['location-alt', 'navigation', 'Orientierung'],
+    ];
     foreach ($formats['landing']['sections'] as $type => &$section) {
+        [$section['icon'], $section['tone'], $section['group']] = $workspace_sections[$type];
+        foreach (($section['slots'] ?? []) as $slot) {
+            $section['treatments'][$slot['treatment']] = ['label' => $slot['label'], 'schematic' => 'cards', 'hint' => 'Inhalte werden aus den verknüpften Daten geladen.'];
+        }
         foreach (($section['treatments'] ?? []) as $slug => $treatment) {
             $section['treatments'][$slug] = array_merge(is_array($treatment) ? $treatment : ['label' => $treatment], $presentations[$slug] ?? []);
         }

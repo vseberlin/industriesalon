@@ -30,7 +30,7 @@ async function editor(format = 'landing', extra = {}) {
   window.wp = { editor: { initialize: (id, options) => rich.push({ id, options }), remove: () => {} } };
   window.HTMLElement.prototype.getClientRects = function () { return this.hidden ? [] : [1]; };
   window.ResizeObserver = class { observe() {} disconnect() {} };
-  for (const asset of ['ui.js', 'rich-text.js', 'live-preview.js', 'admin.js']) {
+  for (const asset of ['ui.js', 'dnd.js', 'rich-text.js', 'live-preview.js', 'workspace.js', 'admin.js']) {
     window.eval(fs.readFileSync('plugins/iss-editorial/assets/' + asset, 'utf8'));
   }
   // Let jsdom emit its single DOMContentLoaded event.
@@ -360,4 +360,133 @@ test('Visual treatment choices preserve text and focus, and opening requirements
     assert.match(e.root.querySelector('.iss-editorial-opening-note').textContent,/Seitenauftakt prüfen/);
     assert.ok(e.root.querySelectorAll('svg').length >= 3);
   } finally { e.dom.window.close(); }
+});
+
+function workspaceOptions() {
+  return {workspace:true,livePreview:true,sections:{feature:{label:'Feature',description:'Bild und Text',group:'Bild',supports:['lead','links','treatment'],rich_text:{body:'block',lead:'block'},treatments:[{slug:'feature.media-text',label:'Bild neben Text',schematic:'split'}]},statement:{label:'Text',description:'Ein Text',group:'Text',supports:['links'],rich_text:{body:'block'}}},document:{schema_version:3,skin:'standard',sections:[{type:'feature',title:'First',body:'<p>Original</p>',treatment:'feature.media-text'},{type:'statement',title:'Second',body:'<p>Other</p>'}]}};
+}
+function previewMessage(e, frame, data, origin=e.window.location.origin, source=frame.contentWindow) {
+  e.window.dispatchEvent(new e.window.MessageEvent('message',{origin,source,data:{token:frame.dataset.token,...data}}));
+}
+function readyFrame(e) {
+  const frame=e.root.querySelector('iframe[hidden]') || e.root.querySelector('.iss-editorial-live-preview__frame');
+  assert.ok(frame); previewMessage(e,frame,{type:'iss-preview-ready'}); return frame;
+}
+
+test('Landing workspace keeps field focus and preview mounted, selects and reorders by object identity, inserts at a gap',async()=>{
+  const e=await editor('landing',workspaceOptions());
+  try {
+    await e.settle(); const frame=readyFrame(e);
+    assert.equal(e.window.document.querySelector('[role=dialog]'),null);
+    const title=e.root.querySelector('.iss-editorial-studio__fields input'); title.focus(); e.input(title,'Edited first');
+    assert.equal(e.window.document.activeElement,title);
+    assert.equal(e.root.querySelector('.iss-editorial-studio__fields input'),title);
+    previewMessage(e,frame,{type:'iss-preview-select',section:1});
+    assert.equal(e.root.querySelector('.iss-editorial-studio__fields input').value,'Second');
+    const handle=e.root.querySelector('[data-section-index="1"] .iss-editorial-card__drag-handle');
+    handle.dispatchEvent(new e.window.KeyboardEvent('keydown',{key:'ArrowUp',bubbles:true}));
+    assert.equal(e.value().sections[0].title,'Second');
+    assert.equal(e.root.querySelector('.iss-editorial-studio__fields input').value,'Second','Selected object follows reorder');
+    previewMessage(e,frame,{type:'iss-preview-select',section:0});
+    assert.equal(e.root.querySelector('.iss-editorial-studio__fields input').value,'Edited first','Old frame index is mapped to the original object');
+    previewMessage(e,frame,{type:'iss-preview-insert',section:1});
+    const search=e.root.querySelector('input[type=search]');e.input(search,'Ein Text');search.dispatchEvent(new e.window.KeyboardEvent('keydown',{key:'Enter',bubbles:true}));
+    assert.equal(e.value().sections[0].type,'statement','Gap inserts before the old snapshot object after reorder');
+    assert.equal(e.value().sections.length,3);
+    assert.equal(e.value().sections[2].title,'Edited first');
+    assert.equal(frame.isConnected,true,'A pending save does not blank the canvas');
+  } finally {e.dom.window.close();}
+});
+
+test('Canvas changes save before blur, defer frame replacement, reject untrusted paths and sessions, and Escape restores the original',async()=>{
+  const e=await editor('landing',workspaceOptions());
+  try {
+    await e.settle(); const frame=readyFrame(e);
+    const start={type:'iss-preview-field-start',section:0,field:'title',session:'a',sequence:0};
+    previewMessage(e,frame,start,'https://bad.example');
+    previewMessage(e,frame,{...start,token:'old'});
+    previewMessage(e,frame,{...start,field:'__proto__'});
+    assert.notEqual(e.root.querySelector('.iss-editorial-studio__fields').inert,true);
+    previewMessage(e,frame,start);
+    assert.equal(e.root.querySelector('.iss-editorial-studio__fields').inert,true);
+    previewMessage(e,frame,{...start,type:'iss-preview-field-change',sequence:1,value:'Unfinished title'});
+    previewMessage(e,frame,{...start,type:'iss-preview-field-change',sequence:2,session:'wrong',value:'Bad'});
+    previewMessage(e,frame,{...start,type:'iss-preview-field-change',sequence:1,value:'Out of order'});
+    assert.equal(e.value().sections[0].title,'Unfinished title');
+    await e.settle();
+    assert.equal(JSON.parse(e.requests.at(-1).get('document')).sections[0].title,'Unfinished title','Autosave works during active typing');
+    assert.equal(e.root.querySelectorAll('.iss-editorial-live-preview__frame').length,1,'No reload while editing');
+    previewMessage(e,frame,{...start,type:'iss-preview-field-end',sequence:3,cancel:true});
+    assert.equal(e.value().sections[0].title,'First');
+    assert.equal(e.root.querySelector('.iss-editorial-studio__fields').inert,false);
+    await e.settle(); assert.ok(e.root.querySelector('iframe[hidden]'),'Actual renderer reconciles after the edit');
+  } finally {e.dom.window.close();}
+});
+
+test('Canvas invalid drafts remain recoverable and form editing survives a preview or save failure',async()=>{
+  const e=await editor('landing',workspaceOptions());
+  try {
+    await e.settle(); const frame=readyFrame(e);
+    const data={section:0,field:'title',session:'incomplete'};
+    previewMessage(e,frame,{...data,type:'iss-preview-field-start'});
+    previewMessage(e,frame,{...data,type:'iss-preview-field-change',sequence:1,value:''});
+    e.setValidation('Titel fehlt');
+    previewMessage(e,frame,{...data,type:'iss-preview-field-end',sequence:2});
+    await e.settle();
+    assert.equal(e.value().sections[0].title,'');
+    assert.equal(JSON.parse(e.requests.at(-1).get('document')).sections[0].title,'');
+    assert.equal(frame.isConnected,true);
+    assert.match(e.root.querySelector('.iss-editorial-studio__notice').textContent,/Titel fehlt/);
+    const title=e.root.querySelector('.iss-editorial-studio__fields input');
+    e.setValidation('');e.setFailure(true);e.input(title,'Recovered');await e.settle();
+    assert.match(e.root.querySelector('.iss-editorial-studio__notice').textContent,/Nicht gesichert/);
+    assert.equal(title.isConnected,true);
+    assert.equal(e.value().sections[0].title,'Recovered');
+    e.setFailure(false);e.button('Erneut sichern').click();await e.settle();
+    assert.equal(JSON.parse(e.requests.at(-1).get('document')).sections[0].title,'Recovered');
+  } finally {e.dom.window.close();}
+});
+
+test('Frame plain-text keyboard edits wait for acknowledgement, stream changes, and Escape restores rendered text',()=>{
+  const dom=new JSDOM('<section data-iss-preview-section="0"><h1 data-iss-field="title" data-iss-profile="plain">Original</h1></section>',{url:'http://localhost:8082',runScripts:'outside-only'});
+  const {window}=dom;const sent=[];const parent={postMessage:data=>sent.push(data)};
+  try {
+    Object.defineProperty(window,'parent',{value:parent});window.issEditorialPreviewFrame={token:'t',editing:true};
+    window.eval(fs.readFileSync('plugins/iss-editorial/assets/preview-frame.js','utf8'));
+    const title=window.document.querySelector('h1');
+    title.dispatchEvent(new window.KeyboardEvent('keydown',{key:'Enter',bubbles:true}));
+    assert.equal(sent.at(-1).type,'iss-preview-field-start');
+    assert.equal(title.hasAttribute('data-iss-editing'),false);
+    const session=sent.at(-1).session;
+    const ack=data=>window.dispatchEvent(new window.MessageEvent('message',{origin:window.location.origin,source:parent,data:{type:'iss-preview-field-ack',token:'t',session,...data}}));
+    ack({accepted:true,sequence:0,profile:'plain',value:'Original'});
+    assert.equal(title.hasAttribute('data-iss-editing'),true);
+    title.textContent='Typing';title.dispatchEvent(new window.Event('input',{bubbles:true}));
+    assert.equal(sent.at(-1).value,'Typing');
+    title.dispatchEvent(new window.KeyboardEvent('keydown',{key:'Escape',bubbles:true}));
+    assert.equal(sent.at(-1).cancel,true);const sequence=sent.at(-1).sequence;
+    ack({accepted:true,sequence});assert.equal(title.textContent,'Original');
+    assert.equal(title.hasAttribute('contenteditable'),false);
+  } finally {window.close();}
+});
+
+test('Workspace waits for an active canvas edit before reordering and can return through the legacy view without changing content',async()=>{
+  const e=await editor('landing',workspaceOptions());
+  try {
+    await e.settle();const frame=readyFrame(e);
+    const data={section:0,field:'title',session:'move'};
+    previewMessage(e,frame,{...data,type:'iss-preview-field-start'});
+    previewMessage(e,frame,{...data,type:'iss-preview-field-change',sequence:1,value:'Typed'});
+    const handle=e.root.querySelector('[data-section-index="0"] .iss-editorial-card__drag-handle');
+    handle.dispatchEvent(new e.window.KeyboardEvent('keydown',{key:'ArrowDown',bubbles:true}));
+    assert.equal(e.value().sections[0].title,'Typed','Reorder waits for the frame finish acknowledgement');
+    previewMessage(e,frame,{...data,type:'iss-preview-field-end',sequence:2});
+    assert.equal(e.value().sections[1].title,'Typed');
+    assert.equal(e.root.querySelector('.iss-editorial-studio__fields input').value,'Typed');
+    const before=JSON.stringify(e.value());
+    e.button('Bisherige Abschnittsansicht').click();assert.equal(e.root.querySelector('.iss-editorial-studio'),null);
+    e.button('Arbeitsfläche öffnen').click();assert.ok(e.root.querySelector('.iss-editorial-studio'));
+    assert.equal(JSON.stringify(e.value()),before,'View changes preserve the same document');
+    await e.settle();assert.match(e.root.querySelector('.iss-editorial-live-preview__frame').src,/iss_editorial_canvas=1/);
+  } finally {e.dom.window.close();}
 });

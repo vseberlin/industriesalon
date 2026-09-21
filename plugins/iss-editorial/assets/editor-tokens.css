@@ -1,0 +1,9 @@
+/* Shared editor chrome; public theme tokens remain authoritative when present. */
+.iss-editorial-studio,
+body.iss-editorial-preview-document {
+  --iss-editor-accent: var(--iss-accent, #e81d25);
+  --iss-editor-line: var(--iss-border-strong, #c3c4c7);
+  --iss-editor-muted: #50575e;
+  --iss-editor-radius: var(--iss-radius-sm, 4px);
+  --iss-editor-font: system-ui, sans-serif;
+}

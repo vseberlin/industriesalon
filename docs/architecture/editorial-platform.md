@@ -176,17 +176,26 @@ descriptions permit their inline subset. Unsupported imported markup stays
 visible for review until the editor explicitly chooses **Formatierung
 vereinfachen**; server validation also rejects lossy normalization.
 
-Landing section dialogs show the actual WordPress page preview beside the
-controls, with 1280/768/390px layout viewports. Narrow editor windows use
-Edit/Preview tabs. The **Abschnitt** selector switches the controls and reveals
-that section in the preview without reloading the iframe. Clicking a preview
-section (or focusing it and pressing Enter/Space) opens its controls; narrow
-windows return to the editing tab. The active section is outlined only in the
-embedded preview. Scrolling alone leaves the editor selection unchanged.
-Navigation retains pending edits and the existing save queue. **Änderungen im
-Abschnitt verwerfen** reverts only the active section to its first-opened state
-in this workspace. Preview selections check the displayed frame, origin, token
-and source index; a changed section order cannot address a different section.
+Rich-text landings use a persistent three-pane workspace: section outline, the
+actual WordPress page preview, and a tabbed inspector reusing the section form
+controls. The preview has 1280/768/390px viewports. Narrow workspaces use pane
+selection; expansion is optional. Searchable grouped insertion, gaps, keyboard
+reordering and recoverable trash use the existing document state. Native save,
+publication and revision history remain authoritative. The old modal is retained
+under **Weitere Werkzeuge** during UAT and remains the editor for other formats.
+
+Title, kicker, body and lead can be edited directly in the authenticated canvas
+with visible buttons, double-click or Enter. The same WordPress text engine and
+colour/link contracts apply. Input is sent to the parent for autosave before blur;
+Escape restores only the active field. Snapshot-bound messages check source,
+origin, token, explicit field names, session and increasing sequence. Snapshot
+indices map to the original section objects after reordering. A stale field
+cannot start an edit. Structural changes wait for the active edit to finish.
+Frame replacement is deferred during typing and reconciles with the real renderer
+after completion. All fields remain available in the inspector; individual item
+text and generated content do not become editable in the canvas in this slice.
+Scrolling alone does not change the selected section. See the
+[workspace plan](../project/editor-workspace-plan.md) for acceptance and scope.
 
 The existing serialized autosave queue coalesces edits after
 350ms idle time. Only an acknowledged, valid, current draft loads a new preview.
@@ -202,8 +211,8 @@ preview remains available. No route/date/relation panel is saved by this queue.
 The preview bridge and source-section markers are emitted only for an
 authenticated, authorized WordPress preview of the matching draft. Public HTML
 keeps its existing anchors and contains neither bridge nor editing markers.
-`rich-text.js` owns the text controls, `live-preview.js` owns the workspace/frame
-lifecycle, and `preview-frame.js` owns the authenticated frame interaction.
+`workspace.js` owns the pane layout, `admin.js` retains document state and field
+controls, `rich-text.js` owns text controls, `live-preview.js` owns frame lifecycle, and `preview-frame.js` owns the authenticated frame interaction.
 The preview selection stylesheet also loads only in the authenticated embedded
 page. `includes/rich-text.php` and `includes/preview.php` implement their server
 contracts; public rendering remains in the theme. Each embedded request validates
