@@ -275,29 +275,8 @@ function iss_editorial_sanitize_section_treatment($treatment): string
 
 function iss_editorial_sanitize_registered_treatment($treatment, array $format, string $type): string
 {
-    $treatment = function_exists('iss_editorial_sanitize_treatment_slug')
-        ? iss_editorial_sanitize_treatment_slug((string) $treatment)
-        : sanitize_key((string) $treatment);
     $section = is_array($format['sections'][$type] ?? null) ? $format['sections'][$type] : [];
-    $allowed = [];
-
-    foreach ((array) ($section['treatments'] ?? []) as $item) {
-        if (!is_array($item)) {
-            continue;
-        }
-        $slug = function_exists('iss_editorial_sanitize_treatment_slug')
-            ? iss_editorial_sanitize_treatment_slug((string) ($item['slug'] ?? ''))
-            : sanitize_key((string) ($item['slug'] ?? ''));
-        if ($slug !== '') {
-            $allowed[] = $slug;
-        }
-    }
-
-    if ($allowed === []) {
-        return '';
-    }
-
-    return in_array($treatment, $allowed, true) ? $treatment : (string) $allowed[0];
+    return iss_editorial_resolve_treatment((string) $treatment, $section);
 }
 
 function iss_editorial_sanitize_document_rail_feature($feature): array
@@ -659,27 +638,15 @@ function iss_editorial_normalize_section_alias(array $section, array $format): a
 {
     $type = sanitize_key((string) ($section['type'] ?? ''));
     $sections = is_array($format['sections'] ?? null) ? $format['sections'] : [];
-
-    if ($type === 'image_wall' && isset($sections['galerie'])) {
-        $section['type'] = 'galerie';
-        if (empty($section['gallery_layout'])) {
-            $section['gallery_layout'] = 'wall';
+    foreach ($sections as $target => $definition) {
+        if (isset($definition['legacy_types'][$type])) {
+            $section['type'] = $target;
+            foreach ($definition['legacy_types'][$type] as $field => $value) {
+                if (empty($section[$field])) { $section[$field] = $value; }
+            }
+            break;
         }
-        return $section;
     }
-
-    if ($type === 'vollbild' && isset($sections['galerie'])) {
-        $section['type'] = 'galerie';
-        if (empty($section['gallery_layout'])) {
-            $section['gallery_layout'] = 'viewport';
-        }
-        return $section;
-    }
-
-    if ($type === 'massstab' && isset($sections['facts'])) {
-        $section['type'] = 'facts';
-    }
-
     return $section;
 }
 
@@ -967,6 +934,7 @@ function iss_editorial_get_read_model(int $post_id, string $format_slug, bool $p
     }
 
     foreach ($document['sections'] as $index => $section) {
+        if ($cache_key !== '') { $document['sections'][$index]['_editorial_index'] = $index; }
         foreach (['object_refs', 'media_refs'] as $field) {
             if (empty($section[$field]) || !is_array($section[$field])) {
                 continue;

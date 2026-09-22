@@ -100,3 +100,21 @@ Use this CSS layer order:
   when the rule belongs in tokens, primitives/patterns, renderer contracts, or
   skins. Touched legacy CSS files should get smaller or more explicitly scoped
   over time.
+
+## Editorial consolidation, 2026-09-22
+
+- `editorial-landing.css` owns ordered section/treatment anatomy for landings and
+  ordinary articles. `editorial-skins.css` owns their skin choices and the shared
+  front-page template wrapper. Both follow the shared primitives/patterns.
+- `front-page.css` is a compatibility stylesheet for the existing block fallback.
+  It is not enqueued when the JSON document supplies the front page. Five identical
+  declarations formerly repeated across both paths share one rule in the skin
+  layer. Remaining fallback rules stay until those stored/template blocks retire.
+- URL anchors identify links only. Gateway treatment/item count and feature
+  treatments determine presentation. The image-overlay grid is scoped to that
+  treatment; media-text retains the shared flex/ratio primitive.
+- Admin `editor-tokens.css` owns values, `admin.css` shared controls and collections,
+  `workspace.css` pane/inspector layout, `text-controls.css` text tools and native
+  link dialogs, and `preview-frame.css` authenticated editing affordances. Obsolete
+  section-modal/palette layout rules were removed. The three previously approved
+  disabled-button `!important` declarations remain the sole scoped exception.

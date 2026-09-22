@@ -2,6 +2,13 @@
   var config = window.issEditorialAdmin || {};
   var editorUi = window.issEditorialUi || {};
   var richEditorCounter = 0;
+  var treatmentSketch = editorUi.treatmentSketch;
+  var createTextInput = editorUi.createTextInput;
+  var createNumberInput = editorUi.createNumberInput;
+  var createSelect = editorUi.createSelect;
+  var createTextarea = editorUi.createTextarea;
+  var createCheckbox = editorUi.createCheckbox;
+
 
   function parseJson(value, fallback) {
     try {
@@ -201,15 +208,10 @@
     retry.hidden = true;
     status.insertAdjacentElement('afterend', retry);
     retry.addEventListener('click', function () { queueSave().catch(function () {}); });
-    var activeType = Object.keys(sections).filter(function (type) {
-      return !isSectionHidden(type);
-    })[0] || 'kapitel';
-    var modal = null;
     var livePreview = null;
     var studio = null;
     var studioSection = null;
     var canvasEdit = null;
-    var useWorkspace = format === 'landing' && config.workspace && window.issEditorialWorkspace && window.issEditorialLivePreview;
 
     function afterCanvasEdit(action) {
       if (livePreview && studio) { livePreview.afterEditing(action); } else { action(); }
@@ -240,7 +242,7 @@
       var index = documentState.sections.indexOf(section);
       if (!section || index < 0 || typeof data.session !== 'string') { return { accepted: false }; }
       if (data.type === 'iss-preview-field-start') {
-        if (canvasEdit || documentState.schema_version < 2 || section.type === 'dynamic_slot' || JSON.stringify(section) !== JSON.stringify(snapshot.values[data.section])) { return { accepted: false, message: 'Die Vorschau wird aktualisiert. Bitte danach erneut bearbeiten.' }; }
+        if (canvasEdit || section.type === 'dynamic_slot' || JSON.stringify(section) !== JSON.stringify(snapshot.values[data.section])) { return { accepted: false, message: 'Die Vorschau wird aktualisiert. Bitte danach erneut bearbeiten.' }; }
         var profile = ['title', 'kicker'].indexOf(data.field) !== -1 ? 'plain' : textProfile(section.type, data.field);
         if (!profile || (data.field === 'lead' && !supports(section.type, 'lead'))) { return { accepted: false }; }
         canvasEdit = { section: section, field: data.field, original: section[data.field] || '', session: data.session, sequence: 0 };
@@ -269,17 +271,19 @@
       if (!studio) {
         clear(root);
         studio = window.issEditorialWorkspace(root, {
-          sections: sections, hidden: isSectionHidden, status: status, retry: retry,
-          legacy: function () { studio.destroy(); disposeRichEditors(studio.body); livePreview.destroy(); livePreview = null; studio = null; studioSection = null; useWorkspace = false; render(); },
+          sections: sections, hidden: isSectionHidden, status: status, retry: retry, label: config.formatLabel,
           select: function (index) { afterCanvasEdit(function () { selectWorkspace(index); }); },
           remove: function (index) { afterCanvasEdit(function () { removeSection(index); }); },
           insert: function () { afterCanvasEdit(function () { studio.insert(documentState.sections.length); }); },
           add: function (type, index) { afterCanvasEdit(function () { addSection(type, index); }); },
           afterEditing: afterCanvasEdit,
-          sketch: function (section) { var choice = treatmentChoices(section.type).find(function (item) { return item.slug === (section.treatment || defaultTreatment(section.type)); }); return choice && choice.schematic ? treatmentSketch(choice) : null; },
+          sketch: function (section) { var choice = treatmentChoices(section.type).find(function (item) { return item.slug === (section.treatment || defaultTreatment(section.type)); }); return treatmentSketch(choice || sectionConfig(section.type)); },
           treatmentLabel: function (section) { var choice = treatmentChoices(section.type).find(function (item) { return item.slug === (section.treatment || defaultTreatment(section.type)); }); return choice ? choice.label : ''; }
         });
         if (skins.length > 1) { studio.tools.appendChild(renderSkinControl()); }
+        if (format === 'projekt') { studio.ownerBody.appendChild(renderRailFeatureControl()); }
+        renderRouteStationPanel(studio.ownerBody);
+        renderTextUpgrade(studio.menu);
         livePreview = window.issEditorialLivePreview(studio, 0, function () { afterCanvasEdit(function () { queueSave().catch(function () {}); }); }, function (index, snapshot) {
           var section = snapshot && snapshot.refs[index];
           var current = documentState.sections.indexOf(section);
@@ -305,7 +309,21 @@
       if (selected < 0) { studioSection = null; selected = Math.min(activeSectionIndex || 0, documentState.sections.length - 1); }
       activeSectionIndex = selected;
       if (!studioSection && selected >= 0) { selectWorkspace(selected); }
-      if (selected < 0) { disposeRichEditors(studio.body); clear(studio.body); }
+      if (selected < 0) {
+        disposeRichEditors(studio.body); clear(studio.body);
+        studio.body.appendChild(createElement('p', '', 'Abschnitte einzeln hinzufügen oder mit einer Vorlage beginnen.'));
+        (config.starters || []).filter(function (starter) { return starter.sections.every(function (section) { return !isSectionHidden(section.type); }); }).forEach(function (starter) {
+          var button = createElement('button', 'button iss-editorial-starter', starter.label);
+          button.type = 'button';
+          starter.sections.forEach(function (section) { button.appendChild(treatmentSketch(sectionConfig(section.type))); });
+          button.addEventListener('click', function () {
+            if (documentState.sections.length) { return; }
+            documentState.sections = starter.sections.map(function (section) { return Object.assign(createSection(section.type), JSON.parse(JSON.stringify(section))); });
+            activeSectionIndex = 0; render(); scheduleAutosave();
+          });
+          studio.body.appendChild(button);
+        });
+      }
       renderWorkspaceOutline();
       studio.body.querySelectorAll('.iss-editorial-opening-note').forEach(function (note) { note.textContent = openingNote(studioSection); note.hidden = !note.textContent; });
       if (livePreview) { livePreview.selectSection(selected, false, documentState.sections[selected]); }
@@ -605,12 +623,8 @@
       insertAt = Math.max(0, Math.min(documentState.sections.length, insertAt));
       documentState.sections.splice(insertAt, 0, createSection(type));
       render();
-      openEditor(insertAt);
+      afterCanvasEdit(function () { selectWorkspace(insertAt); studio.showView('inspector'); });
       scheduleAutosave();
-    }
-
-    function openGesturePreview(type) {
-      addSection(type);
     }
 
     function moveSection(index, direction) {
@@ -658,7 +672,6 @@
         removed.original_index = index;
         deletedSections().unshift(removed);
       }
-      closeModal();
       render();
       scheduleAutosave();
       if (studio && removed) { studio.removed(removed.title || treatmentLabel(removed.type, removed.treatment) || sectionConfig(removed.type).label, function () { var deletedIndex = deletedSections().indexOf(removed); if (deletedIndex >= 0) { restoreDeletedSection(deletedIndex); } }); }
@@ -684,102 +697,6 @@
       deletedSections().splice(index, 1);
       render();
       scheduleAutosave();
-    }
-
-    function renderPalette(target) {
-      var list = createElement('div', 'iss-editorial-palette');
-      Object.keys(sections).forEach(function (type) {
-        if (isSectionHidden(type)) {
-          return;
-        }
-
-        var button = createElement('button', 'iss-editorial-gesture' + (type === activeType ? ' active' : ''));
-        var dot = createElement('span', 'iss-editorial-gesture__dot');
-        var body = createElement('span', 'iss-editorial-gesture__body');
-        var suppressClick = false;
-        button.type = 'button';
-        button.draggable = true;
-        button.setAttribute('data-section-type', type);
-        button.setAttribute('aria-label', 'Abschnitt ansehen: ' + (sectionConfig(type).label || type));
-        dot.dataset.tone = sectionConfig(type).tone || 'text';
-        body.appendChild(createElement('strong', '', sectionConfig(type).label || type));
-        body.appendChild(createElement('span', '', sectionConfig(type).description || type));
-        var sketch = treatmentChoices(type)[0];
-        button.appendChild(sketch && sketch.schematic ? treatmentSketch(sketch) : dot);
-        button.appendChild(body);
-        button.addEventListener('dragstart', function () {
-          suppressClick = true;
-        });
-        button.addEventListener('dragend', function () {
-          window.setTimeout(function () {
-            suppressClick = false;
-          }, 0);
-        });
-        button.addEventListener('click', function (event) {
-          if (suppressClick) {
-            event.preventDefault();
-            event.stopPropagation();
-            return;
-          }
-          activeType = type;
-          openGesturePreview(type);
-        });
-        list.appendChild(button);
-      });
-      target.appendChild(list);
-    }
-
-    function renderSectionCard(section, index, target) {
-      var type = section.type || 'kapitel';
-
-      var card = createElement('article', 'iss-editorial-card iss-editorial-card--' + type);
-      var marker = createElement('span', 'iss-editorial-card__marker');
-      var meta = createElement('div', 'iss-editorial-card__meta');
-      var actions = createElement('div', 'iss-editorial-card__actions');
-      var handle = createElement('button', 'button-link iss-editorial-card__drag-handle');
-      var handleText = createElement('span', 'screen-reader-text', 'Abschnitt ziehen oder mit Pfeiltasten verschieben');
-      var edit = createElement('button', 'button button-primary iss-editorial-card__edit', 'Bearbeiten');
-      var remove = createElement('button', 'button button-link-delete', 'In Papierkorb');
-      var up = createElement('button', 'button', 'Nach oben');
-      var down = createElement('button', 'button', 'Nach unten');
-
-      card.draggable = true;
-      card.setAttribute('data-section-index', String(index));
-      marker.dataset.tone = sectionConfig(type).tone || 'text';
-      meta.appendChild(createElement('span', 'iss-editorial-card__type', sectionConfig(type).label || type));
-      if (section.treatment === 'feature.opening') { meta.appendChild(createElement('strong', 'iss-editorial-opening-badge', 'Seitenauftakt')); }
-      meta.appendChild(createElement('h3', '', section.title || 'Ohne Titel'));
-      if (sectionConfig(type).ui_hidden) {
-        meta.appendChild(createElement('p', 'description', 'Vorhandener Abschnitt · nicht mehr neu einfügbar.'));
-      }
-      meta.appendChild(createElement('p', '', sectionSummary(section) || 'Noch kein Inhalt.'));
-      if (sectionMediaRefsForDisplay(section).length) {
-        renderMediaThumbs(section, meta);
-      }
-
-      [handle, edit, remove, up, down].forEach(function (button) {
-        button.type = 'button';
-      });
-      handle.draggable = true;
-      handle.setAttribute('aria-label', 'Abschnitt "' + (section.title || sectionConfig(type).label || type) + '" verschieben');
-      handle.appendChild(handleText);
-      edit.addEventListener('click', function () { openEditor(index); });
-      remove.addEventListener('click', function () { removeSection(index); });
-      up.disabled = index === 0;
-      down.disabled = index === documentState.sections.length - 1;
-      up.addEventListener('click', function () { moveSection(index, -1); });
-      down.addEventListener('click', function () { moveSection(index, 1); });
-      actions.appendChild(handle);
-      actions.appendChild(edit);
-      actions.appendChild(up);
-      actions.appendChild(down);
-      actions.appendChild(remove);
-
-      var sketch = treatmentChoices(type).find(function (choice) { return choice.slug === (section.treatment || defaultTreatment(type)); });
-      card.appendChild(sketch && sketch.schematic ? treatmentSketch(sketch) : marker);
-      card.appendChild(meta);
-      card.appendChild(actions);
-      target.appendChild(card);
     }
 
     function renderDeletedSectionCard(section, index, target) {
@@ -818,17 +735,7 @@
       target.appendChild(card);
     }
 
-    function renderStage(target) {
-      var stage = createElement('div', 'iss-editorial-stage');
-      var head = createElement('div', 'iss-editorial-stage__head');
-      var heading = createElement('div', 'iss-editorial-stage__title', 'Abschnitte');
-      var tools = createElement('div', 'iss-editorial-stage__tools');
-      stage.setAttribute('data-section-count', String(documentState.sections.length));
-      head.appendChild(heading);
-      if (format === 'landing' && config.workspace && window.issEditorialWorkspace && window.issEditorialLivePreview && documentState.schema_version >= 2) {
-        var workspaceButton = createElement('button', 'button', 'Arbeitsfläche öffnen'); workspaceButton.type = 'button';
-        workspaceButton.addEventListener('click', function () { closeModal(); useWorkspace = true; render(); }); tools.appendChild(workspaceButton);
-      }
+    function renderTextUpgrade(target) {
       if (documentState.schema_version === 1 && (config.supportedVersions || []).indexOf(2) !== -1) {
         var upgrade = createElement('button', 'button', 'Textfarben aktivieren');
         upgrade.type = 'button';
@@ -841,68 +748,11 @@
             });
           });
           documentState.schema_version = (config.supportedVersions || []).indexOf(3) !== -1 ? 3 : 2;
+          if (studio) { studio.destroy(); disposeRichEditors(studio.body); livePreview.destroy(); studio = null; livePreview = null; studioSection = null; }
           render(); scheduleAutosave();
         });
-        tools.appendChild(upgrade);
+        target.appendChild(upgrade);
       }
-      if (skins.length > 1) {
-        tools.appendChild(renderSkinControl());
-      }
-      if (format === 'projekt') {
-        tools.appendChild(renderRailFeatureControl());
-      }
-      head.appendChild(tools);
-      stage.appendChild(head);
-      if (openingNote()) { stage.appendChild(createElement('p', 'iss-editorial-opening-note', openingNote())); }
-
-      if (!documentState.sections.length) {
-        stage.appendChild(createElement('p', 'iss-editorial-empty', 'Noch keine Abschnitte. Links einen Abschnitt wählen.'));
-      } else {
-        documentState.sections.forEach(function (section, index) {
-          renderSectionCard(section, index, stage);
-        });
-      }
-
-      target.appendChild(stage);
-    }
-
-    function bindSectionDragDrop(layout) {
-      if (!window.issEditorialDnd || !window.issEditorialDnd.bindSectionCanvas) {
-        return;
-      }
-
-      window.issEditorialDnd.bindSectionCanvas({
-        palette: layout.querySelector('.iss-editorial-palette'),
-        stage: layout.querySelector('.iss-editorial-stage'),
-        onInsert: function (type, index) {
-          activeType = type;
-          addSection(type, index);
-        },
-        onReorder: reorderSection,
-        onKeyboardMove: moveSection
-      });
-    }
-
-    function renderDeletedSections(target) {
-      var items = deletedSections();
-      var panel;
-      var head;
-
-      if (!items.length) {
-        return;
-      }
-
-      panel = createElement('div', 'iss-editorial-trash-panel');
-      head = createElement('div', 'iss-editorial-trash-panel__head');
-      head.appendChild(createElement('h3', '', 'Gelöschte Abschnitte'));
-      head.appendChild(createElement('p', '', 'Diese Abschnitte werden öffentlich nicht gerendert und bleiben nach Aktualisieren wiederherstellbar.'));
-      panel.appendChild(head);
-
-      items.forEach(function (section, index) {
-        renderDeletedSectionCard(section, index, panel);
-      });
-
-      target.appendChild(panel);
     }
 
     function renderRouteStationPanel(target) {
@@ -954,7 +804,7 @@
 
     function renderRailFeatureControl() {
       var rail = currentRailFeature();
-      var wrapper = createElement('div', 'iss-editorial-skin-control iss-editorial-rail-feature-control');
+      var wrapper = createElement('div', 'iss-editorial-rail-feature-control');
       var enabled = document.createElement('input');
       var enabledLabel = createElement('label', '');
       var placement = document.createElement('select');
@@ -983,6 +833,7 @@
         placement.appendChild(option);
       });
       placement.disabled = !rail.enabled;
+      placement.setAttribute('aria-label', 'Position der Lesenavigation');
       placement.addEventListener('change', function () {
         setRailFeature({ placement: placement.value || 'right', enabled: true });
       });
@@ -1001,6 +852,7 @@
         treatment.appendChild(option);
       });
       treatment.disabled = !rail.enabled;
+      treatment.setAttribute('aria-label', 'Darstellung der Lesenavigation');
       treatment.addEventListener('change', function () {
         setRailFeature({ treatment: treatment.value || 'quiet', enabled: true });
       });
@@ -1158,47 +1010,12 @@
       }
     }
 
-    function closeModal() {
-      if (livePreview && !studio) { livePreview.destroy(); livePreview = null; }
-      if (!studio) { disposeRichEditors(); }
-      if (modal) {
-        if (modal.issEditorialDestroy) { modal.issEditorialDestroy(); }
-        modal.remove();
-        modal = null;
-      }
-      document.body.classList.remove('iss-editorial-modal-open');
-    }
-
     function disposeRichEditors(within) {
       richEditorIds = richEditorIds.filter(function (id) {
         var input = document.getElementById(id);
         if (within && input && !within.contains(input)) { return true; }
         if (window.wp && window.wp.editor) { window.wp.editor.remove(id); }
         return false;
-      });
-    }
-
-    function finishSection() {
-      if (studio) { scheduleAutosave(); return; }
-      closeModal();
-      render();
-      var cards = root.querySelectorAll('.iss-editorial-card');
-      var card = activeSectionIndex === null ? null : cards[activeSectionIndex];
-      var opener = card && card.querySelector('.iss-editorial-card__edit');
-      if (opener) { opener.focus(); }
-      scheduleAutosave();
-    }
-
-    function createEditorModal(section, callbacks) {
-      var options = callbacks || {};
-      var sectionData = sectionConfig(section.type);
-      return editorUi.createModal({
-        kicker: options.kicker || 'Abschnitt bearbeiten',
-        title: options.title || sectionData.label || 'Abschnitt',
-        closeLabel: 'Fertig',
-        doneLabel: options.doneLabel || 'Fertig',
-        onClose: options.onClose,
-        onDone: options.onDone
       });
     }
 
@@ -1214,92 +1031,6 @@
 
     function collectionCount(section, key) {
       return Array.isArray(section[key]) ? section[key].length : 0;
-    }
-
-    function openEditor(index) {
-      if (studio) { afterCanvasEdit(function () { selectWorkspace(index); studio.showView('inspector'); }); return; }
-      var section = documentState.sections[index];
-      if (!section) {
-        return;
-      }
-
-      closeModal();
-      activeSectionIndex = index;
-      var originals = {};
-      originals[index] = JSON.parse(JSON.stringify(section));
-      var sectionOrder = documentState.sections.slice();
-      var shell = createEditorModal(section, {
-        onClose: finishSection,
-        onDone: finishSection
-      });
-      var discard = createElement('button', 'button', 'Änderungen verwerfen');
-      discard.type = 'button';
-      discard.addEventListener('click', function () {
-        documentState.sections[index] = originals[index];
-        finishSection();
-      });
-      shell.footTools.insertBefore(discard, shell.doneButton);
-      var remove = createElement('button', 'button-link-delete iss-editorial-modal__delete', 'In Papierkorb');
-
-      remove.type = 'button';
-      remove.addEventListener('click', function (event) {
-        event.preventDefault();
-        event.stopPropagation();
-        removeSection(index);
-        closeModal();
-      });
-
-      shell.footLeft.appendChild(remove);
-      renderSectionFields(section, shell.body);
-      if (config.livePreview && window.issEditorialLivePreview) {
-        var picker = createElement('label', 'iss-editorial-section-picker');
-        picker.appendChild(createElement('span', '', 'Abschnitt'));
-        var sectionSelect = document.createElement('select');
-        sectionSelect.setAttribute('aria-label', 'Abschnitt wählen');
-        function updateSectionChoices() {
-          clear(sectionSelect);
-          documentState.sections.forEach(function (item, itemIndex) {
-            var option = createElement('option', '', String(itemIndex + 1) + ' · ' + (item.title || slotKeyLabel(item.slot_key) || sectionConfig(item.type).label || 'Abschnitt'));
-            option.value = String(itemIndex);
-            option.selected = itemIndex === index;
-            sectionSelect.appendChild(option);
-          });
-        }
-        function selectSection(next, fromPreview) {
-          // Section order cannot change inside this workspace. Reject obsolete preview indices.
-          if (!Number.isInteger(next) || !documentState.sections[next] || sectionOrder[next] !== documentState.sections[next]) { return; }
-          if (next !== index) {
-            disposeRichEditors(shell.body);
-            index = next;
-            activeSectionIndex = index;
-            section = documentState.sections[index];
-            if (!originals[index]) { originals[index] = JSON.parse(JSON.stringify(section)); }
-            clear(shell.body);
-            renderSectionFields(section, shell.body);
-            shell.body.scrollTop = 0;
-            shell.heading.textContent = sectionConfig(section.type).label || 'Abschnitt';
-            updateSectionChoices();
-          }
-          livePreview.selectSection(index, !fromPreview);
-          if (fromPreview) {
-            livePreview.edit();
-            var firstField = shell.body.querySelector('input, textarea, button, select');
-            if (firstField) { firstField.focus(); }
-          }
-        }
-        updateSectionChoices();
-        sectionSelect.addEventListener('focus', updateSectionChoices);
-        sectionSelect.addEventListener('change', function () { selectSection(Number(sectionSelect.value), false); });
-        picker.appendChild(sectionSelect);
-        shell.closeButton.before(picker);
-        discard.textContent = 'Änderungen im Abschnitt verwerfen';
-        livePreview = window.issEditorialLivePreview(shell, index, function () { queueSave().catch(function () {}); }, function (next) { selectSection(next, true); });
-        queueSave().catch(function () {});
-      }
-      modal = shell.root;
-      document.body.classList.add('iss-editorial-modal-open');
-      document.body.appendChild(modal);
-      if (modal.issEditorialOpen) { modal.issEditorialOpen(); }
     }
 
     function renderSectionFields(section, body) {
@@ -1731,7 +1462,7 @@
     function defaultTreatment(type) {
       var choices = treatmentChoices(type);
 
-      return choices.length ? choices[0].slug : '';
+      return sectionConfig(type).default_treatment || (choices.length ? choices[0].slug : '');
     }
 
     function treatmentLabel(type, treatment) {
@@ -1741,32 +1472,6 @@
       })[0];
 
       return match ? match.label : treatment;
-    }
-
-    function treatmentSketch(choice) {
-      var shapes = {
-        heading: [[8, 12, 82, 12], [8, 33, 104, 5], [8, 45, 88, 5]],
-        text: [[8, 10, 66, 9], [8, 28, 104, 4], [8, 39, 104, 4], [8, 50, 85, 4]],
-        callout: [[8, 10, 104, 20], [8, 42, 40, 12]],
-        split: [[8, 8, 48, 50], [64, 12, 48, 9], [64, 31, 48, 5], [64, 44, 40, 5]],
-        'split-flip': [[64, 8, 48, 50], [8, 12, 48, 9], [8, 31, 48, 5], [8, 44, 40, 5]],
-        notes: [[8, 8, 3, 40], [17, 8, 38, 9], [17, 25, 38, 4], [17, 36, 32, 4], [65, 8, 3, 40], [74, 8, 38, 9], [74, 25, 38, 4], [74, 36, 32, 4]],
-        cards: [[8, 8, 30, 30], [45, 8, 30, 30], [82, 8, 30, 30], [8, 46, 30, 5], [45, 46, 30, 5], [82, 46, 30, 5]],
-        list: [[8, 10, 14, 12], [30, 13, 82, 5], [8, 30, 14, 12], [30, 33, 82, 5], [8, 50, 14, 12], [30, 53, 82, 5]],
-        strip: [[8, 8, 34, 50], [50, 13, 62, 8], [50, 31, 62, 4], [50, 44, 50, 4]],
-        panel: [[8, 8, 104, 42], [64, 25, 42, 33]],
-        overlay: [[8, 8, 104, 50], [18, 20, 60, 9], [18, 38, 80, 5]],
-        opening: [[4, 4, 112, 58], [14, 24, 70, 12], [14, 46, 28, 8]]
-      };
-      var svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
-      svg.setAttribute('viewBox', '0 0 120 66'); svg.setAttribute('aria-hidden', 'true');
-      svg.setAttribute('class', 'iss-editorial-treatment-sketch');
-      (shapes[choice.schematic] || shapes.text).forEach(function (box, index) {
-        var rect = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
-        ['x', 'y', 'width', 'height'].forEach(function (attr, i) { rect.setAttribute(attr, String(box[i])); });
-        rect.setAttribute('fill', 'currentColor'); rect.setAttribute('opacity', index === 0 ? '0.3' : '0.8'); svg.appendChild(rect);
-      });
-      return svg;
     }
 
     function openingNote(selectedSection) {
@@ -2792,74 +2497,6 @@
       rerenderTray();
     }
 
-    function createTextInput(label, value, onChange) {
-      var wrapper = createElement('label', 'iss-editorial-field');
-      var input = document.createElement('input');
-      input.type = 'text';
-      input.className = 'widefat';
-      input.value = value;
-      input.addEventListener('input', function () { onChange(input.value); });
-      wrapper.appendChild(createElement('span', '', label));
-      wrapper.appendChild(input);
-      return wrapper;
-    }
-
-    function createNumberInput(label, value, min, max, onChange) {
-      var wrapper = createElement('label', 'iss-editorial-field');
-      var input = document.createElement('input');
-      input.type = 'number';
-      input.className = 'small-text';
-      input.min = String(min);
-      input.max = String(max);
-      input.value = value || '';
-      input.addEventListener('input', function () {
-        onChange(input.value === '' ? '' : parseInt(input.value, 10));
-      });
-      wrapper.appendChild(createElement('span', '', label));
-      wrapper.appendChild(input);
-      return wrapper;
-    }
-
-    function createSelect(label, value, choices, onChange) {
-      var wrapper = createElement('label', 'iss-editorial-field');
-      var select = document.createElement('select');
-      select.className = 'widefat';
-      choices.forEach(function (choice) {
-        var option = document.createElement('option');
-        option.value = choice.value;
-        option.textContent = choice.label;
-        option.selected = String(choice.value) === String(value);
-        select.appendChild(option);
-      });
-      select.addEventListener('change', function () { onChange(select.value); });
-      wrapper.appendChild(createElement('span', '', label));
-      wrapper.appendChild(select);
-      return wrapper;
-    }
-
-    function createTextarea(label, value, onChange, rows) {
-      var wrapper = createElement('label', 'iss-editorial-field');
-      var input = document.createElement('textarea');
-      input.className = 'widefat';
-      input.rows = rows || 7;
-      input.value = value;
-      input.addEventListener('input', function () { onChange(input.value); });
-      wrapper.appendChild(createElement('span', '', label));
-      wrapper.appendChild(input);
-      return wrapper;
-    }
-
-    function createCheckbox(label, checked, onChange) {
-      var wrapper = createElement('label', 'iss-editorial-check');
-      var input = document.createElement('input');
-      input.type = 'checkbox';
-      input.checked = !!checked;
-      input.addEventListener('change', function () { onChange(input.checked); });
-      wrapper.appendChild(input);
-      wrapper.appendChild(createElement('span', '', label));
-      return wrapper;
-    }
-
     function createRichTextInput(label, value, onChange, profile) {
       var wrapper = createElement('div', 'iss-editorial-field iss-editorial-field--rich-text');
       var input = document.createElement('textarea');
@@ -2879,7 +2516,7 @@
         window.wp.editor.initialize(id, {
           mediaButtons: false,
           quicktags: false,
-          tinymce: profile && window.issEditorialRichText ? window.issEditorialRichText.configure({ profile: profile, wrapper: wrapper, palette: config.textPalette, onChange: onChange, onClose: finishSection }) : {
+          tinymce: profile && window.issEditorialRichText ? window.issEditorialRichText.configure({ profile: profile, wrapper: wrapper, palette: config.textPalette, onChange: onChange, onClose: scheduleAutosave }) : {
             wpautop: true,
             menubar: false,
             statusbar: false,
@@ -2892,7 +2529,7 @@
                 if (event.key === 'Escape') {
                   event.preventDefault();
                   // TinyMCE must finish handling the key before its selection is destroyed.
-                  window.setTimeout(finishSection, 0);
+                  window.setTimeout(scheduleAutosave, 0);
                 }
               });
             }
@@ -2918,21 +2555,14 @@
     }
 
     function render() {
-      if (useWorkspace && !recoveryPending && !config.validationError && documentState.schema_version >= 2) { renderWorkspace(); return; }
-      var layout = createElement('div', 'iss-editorial-layout');
-      var main = createElement('div', 'iss-editorial-main');
-      clear(root);
       documentState.sections = Array.isArray(documentState.sections) ? documentState.sections : [];
       documentState.deleted_sections = deletedSections();
-      renderPalette(layout);
-      renderStage(main);
-      renderDeletedSections(main);
-      renderRouteStationPanel(main);
-      layout.appendChild(main);
-      root.appendChild(layout);
-      bindSectionDragDrop(layout);
-      if (modal) { modal.querySelectorAll('.iss-editorial-opening-note').forEach(function (note) { note.textContent = openingNote(documentState.sections[activeSectionIndex]); note.hidden = !note.textContent; }); }
-      updateField();
+      if (recoveryPending) { updateField(); return; }
+      if (!window.issEditorialWorkspace || !window.issEditorialLivePreview) {
+        setStatus('Die Arbeitsfläche konnte nicht geladen werden. Bitte die Seite neu laden.');
+        return;
+      }
+      renderWorkspace();
     }
 
     function saveRouteStationsIfDirty() {
@@ -3155,7 +2785,7 @@
         previewButton.disabled = false;
         clear(recovery);
         render();
-        var firstEdit = root.querySelector('.iss-editorial-card__edit');
+        var firstEdit = root.querySelector('.iss-editorial-outline__select');
         if (firstEdit) { firstEdit.focus(); }
         scheduleAutosave();
       });

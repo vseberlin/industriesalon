@@ -70,6 +70,11 @@ function iss_editorial_get_registered_formats(): array
                 'slots' => (array) ($section['slots'] ?? []),
                 'rich_text' => array_intersect((array) ($section['rich_text'] ?? []), ['block', 'inline', 'inline-card']),
                 'items_kind' => ($section['items_kind'] ?? '') === 'text' ? 'text' : 'cards',
+                'family' => sanitize_key($section['family'] ?? $type),
+                'schematic' => sanitize_key($section['schematic'] ?? 'text'),
+                'default_treatment' => iss_editorial_sanitize_treatment_slug($section['default_treatment'] ?? (array_key_first($treatments) ?? '')),
+                'treatment_aliases' => (array) ($section['treatment_aliases'] ?? []),
+                'legacy_types' => (array) ($section['legacy_types'] ?? []),
             ];
         }
 
@@ -91,10 +96,71 @@ function iss_editorial_get_registered_formats(): array
             'storage_meta_key' => sanitize_key((string) ($format['storage_meta_key'] ?? '')),
             'supported_versions' => array_values(array_unique(array_map('absint', (array) ($format['supported_versions'] ?? [1])))),
             'always_enabled' => !empty($format['always_enabled']),
+            'default_version' => absint($format['default_version'] ?? 1),
+            'editor' => array_merge(['workspace' => false, 'preview' => false, 'canvas' => false], (array) ($format['editor'] ?? [])),
+            'starters' => (array) ($format['starters'] ?? []),
+            'skins' => (array) ($format['skins'] ?? []),
+            'renderer' => sanitize_key($format['renderer'] ?? ''),
         ];
     }
 
     return $normalized;
+}
+
+/** Resolve declared aliases/defaults; validation separately rejects unknown input. */
+function iss_editorial_resolve_treatment(string $value, array $section): string
+{
+    $value = iss_editorial_sanitize_treatment_slug($value);
+    $value = (string) ($section['treatment_aliases'][$value] ?? $value);
+    $allowed = array_column((array) ($section['treatments'] ?? []), 'slug');
+    return in_array($value, $allowed, true) ? $value : (string) ($section['default_treatment'] ?? '');
+}
+
+/** Read-only diagnostics for the single effective contract supplied by its owners. */
+function iss_editorial_registry_errors(): array
+{
+    $errors = [];
+    $raw = (array) apply_filters('iss_editorial_formats', []);
+    foreach (iss_editorial_get_registered_formats() as $slug => $format) {
+        if (!in_array($format['default_version'], $format['supported_versions'], true)) {
+            $errors[] = "$slug: unsupported default document version";
+        }
+        if (!in_array($format['default_skin'], array_column(iss_editorial_get_format_skins($slug), 'slug'), true)) {
+            $errors[] = "$slug: missing default skin";
+        }
+        $aliases = [];
+        foreach ($format['sections'] as $type => $section) {
+            foreach (['label', 'description', 'family', 'icon', 'tone', 'group', 'schematic'] as $field) {
+                if (empty($raw[$slug]['sections'][$type][$field])) { $errors[] = "$slug.$type: missing $field"; }
+            }
+            $treatments = array_column($section['treatments'], 'slug');
+            if ($treatments && !in_array($section['default_treatment'], $treatments, true)) {
+                $errors[] = "$slug.$type: unknown default treatment";
+            }
+            foreach ($section['treatments'] as $treatment) {
+                if ($treatment['label'] === '' || $treatment['schematic'] === '') {
+                    $errors[] = "$slug.$type: treatment {$treatment['slug']} lacks presentation metadata";
+                }
+            }
+            foreach ($section['treatment_aliases'] as $alias => $target) {
+                if (in_array($alias, $treatments, true) || !in_array($target, $treatments, true)) {
+                    $errors[] = "$slug.$type: invalid treatment alias $alias";
+                }
+            }
+            foreach ($section['legacy_types'] as $alias => $defaults) {
+                if (isset($format['sections'][$alias]) || isset($aliases[$alias]) || !is_array($defaults)) {
+                    $errors[] = "$slug: ambiguous section alias $alias";
+                }
+                $aliases[$alias] = $type;
+            }
+        }
+        foreach ($format['starters'] as $starter) {
+            foreach ($starter['sections'] ?? [] as $section) {
+                if (!isset($format['sections'][$section['type'] ?? ''])) { $errors[] = "$slug: unknown starter section"; }
+            }
+        }
+    }
+    return $errors;
 }
 
 function iss_editorial_sanitize_treatment_slug(string $slug): string
@@ -180,6 +246,7 @@ function iss_editorial_normalize_format_skins(array $skins, array $format = []):
         $normalized[$slug] = [
             'slug' => $slug,
             'label' => $label !== '' ? $label : $slug,
+            'features' => is_array($skin) ? (array) ($skin['features'] ?? []) : [],
         ];
     }
 
@@ -311,7 +378,7 @@ function iss_editorial_get_empty_document(string $format_slug): array
     $format = iss_editorial_get_format($format_slug);
 
     return [
-        'schema_version' => 1,
+        'schema_version' => (int) ($format['default_version'] ?? 1),
         'skin' => (string) ($format['default_skin'] ?? 'standard'),
         'variant' => (string) ($format['default_variant'] ?? 'standard'),
         'features' => [],

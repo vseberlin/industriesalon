@@ -61,43 +61,10 @@ add_filter('body_class', function (array $classes): array {
 
 function industriesalon_get_editorial_ausstellung_skins(): array
 {
-    return [
-        'standard',
-        'quellenbuehne',
-        'objektalbum',
-        'typografisch',
-        'chronik',
-    ];
+    return industriesalon_editorial_skin_slugs('ausstellung');
 }
 
-add_filter('iss_editorial_format_skins', function (array $skins, string $format_slug): array {
-    if (!in_array($format_slug, ['ausstellung', 'rueckblick'], true)) {
-        return $skins;
-    }
 
-    return [
-        'standard' => [
-            'slug' => 'standard',
-            'label' => __('Standard', 'industriesalon'),
-        ],
-        'quellenbuehne' => [
-            'slug' => 'quellenbuehne',
-            'label' => __('Quellenbühne', 'industriesalon'),
-        ],
-        'objektalbum' => [
-            'slug' => 'objektalbum',
-            'label' => __('Objektalbum', 'industriesalon'),
-        ],
-        'typografisch' => [
-            'slug' => 'typografisch',
-            'label' => __('Typografisch', 'industriesalon'),
-        ],
-        'chronik' => [
-            'slug' => 'chronik',
-            'label' => __('Chronik', 'industriesalon'),
-        ],
-    ];
-}, 10, 2);
 
 function industriesalon_resolve_editorial_ausstellung_skin(array $document): string
 {
@@ -373,7 +340,7 @@ function industriesalon_render_editorial_ausstellung_section(array $section, boo
     if ($partial !== '') {
         ob_start();
         include $partial;
-        return trim((string) ob_get_clean());
+        return industriesalon_editorial_preview_section(trim((string) ob_get_clean()), $section, ['title' => 'iss-ausstellung-section__title', 'kicker' => 'iss-ausstellung-section__kicker', 'body' => 'iss-ausstellung-section__body']);
     }
 
     ob_start();
@@ -412,12 +379,12 @@ function industriesalon_render_editorial_ausstellung_section(array $section, boo
         </div>
     </section>
     <?php
-    return trim((string) ob_get_clean());
+    return industriesalon_editorial_preview_section(trim((string) ob_get_clean()), $section, ['title' => 'iss-ausstellung-section__title', 'kicker' => 'iss-ausstellung-section__kicker', 'body' => 'iss-ausstellung-section__body']);
 }
 
 function industriesalon_render_editorial_ausstellung_content(string $content): string
 {
-    if (is_admin() || !is_singular(['ausstellung', 'rueckblick']) || !in_the_loop() || !is_main_query()) {
+    if (is_admin() || doing_filter('get_the_excerpt') || !is_singular(['ausstellung', 'rueckblick']) || !in_the_loop() || !is_main_query()) {
         return $content;
     }
 

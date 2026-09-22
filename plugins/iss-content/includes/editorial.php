@@ -293,19 +293,7 @@ function iss_content_model_register_editorial_formats(array $formats): array
     ];
 
     $presentations = iss_content_model_landing_treatment_presentations();
-    $workspace_sections = [
-        'statement' => ['editor-textcolor', 'text', 'Text'],
-        'fliesstext' => ['editor-paragraph', 'text', 'Text'],
-        'gateway' => ['screenoptions', 'navigation', 'Orientierung'],
-        'text_bild_reihe' => ['format-gallery', 'media', 'Bild'],
-        'map_img' => ['location-alt', 'navigation', 'Orientierung'],
-        'galerie' => ['format-gallery', 'media', 'Bild'],
-        'feature' => ['format-image', 'media', 'Bild'],
-        'dynamic_slot' => ['update', 'automatic', 'Automatisch'],
-        'atlas_map' => ['location-alt', 'navigation', 'Orientierung'],
-    ];
     foreach ($formats['landing']['sections'] as $type => &$section) {
-        [$section['icon'], $section['tone'], $section['group']] = $workspace_sections[$type];
         foreach (($section['slots'] ?? []) as $slot) {
             $section['treatments'][$slot['treatment']] = ['label' => $slot['label'], 'schematic' => 'cards', 'hint' => 'Inhalte werden aus den verknüpften Daten geladen.'];
         }
@@ -318,6 +306,20 @@ function iss_content_model_register_editorial_formats(array $formats): array
         }
     }
     unset($section);
+
+    // General editorial content uses the same section contracts and theme renderer.
+    // Existing block content stays authoritative until a reviewed document is enabled.
+    $formats['article'] = [
+        'label' => __('Seite / Beitrag', 'iss-content-model'),
+        'post_types' => ['page', 'post', 'video'],
+        'post_eligibility_callback' => static function (WP_Post $post): bool {
+            return $post->post_type !== 'page' || !iss_content_model_landing_page_is_eligible($post);
+        },
+        'default_skin' => 'typografisch',
+        'sections' => array_intersect_key($formats['landing']['sections'], array_flip(['statement', 'fliesstext', 'gateway', 'text_bild_reihe', 'feature', 'galerie'])),
+    ];
+    // The opening belongs to the front-page template, not ordinary articles.
+    unset($formats['article']['sections']['feature']['treatments']['feature.opening']);
 
     $formats['fuehrung'] = [
         'label' => __('Führung', 'iss-content-model'),
@@ -348,7 +350,7 @@ function iss_content_model_register_editorial_formats(array $formats): array
                 'supports' => ['anchor'],
             ],
             'zitat' => [
-                'label' => __('Ein prägnantes Zitat zum Inhalt.', 'iss-content-model'),
+                'label' => __('Zitat', 'iss-content-model'),
                 'description' => __('Mit Angabe der Person oder der historischen Quelle.', 'iss-content-model'),
                 'supports' => ['quote'],
             ],
@@ -384,7 +386,7 @@ function iss_content_model_register_editorial_formats(array $formats): array
         'sections' => [
             'kapitel' => [
                 'label' => __('Kapitel', 'iss-content-model'),
-                'description' => __('Numbered chapter break', 'iss-content-model'),
+                'description' => __('Ein neues Kapitel mit Überschrift und Text beginnen.', 'iss-content-model'),
                 'supports' => ['links', 'section_treatment'],
             ],
             'leitfrage' => [
@@ -394,23 +396,23 @@ function iss_content_model_register_editorial_formats(array $formats): array
             ],
             'objektfokus' => [
                 'label' => __('Objektfokus', 'iss-content-model'),
-                'description' => __('1-3 archive objects inline', 'iss-content-model'),
+                'description' => __('Ausgewählte Archivobjekte im Zusammenhang zeigen.', 'iss-content-model'),
                 'supports' => ['object_refs'],
             ],
             'facts' => [
                 'label' => __('Merkpunkte', 'iss-content-model'),
-                'description' => __('Facts, stats, or contextual key points with skin-owned presentation.', 'iss-content-model'),
+                'description' => __('Fakten und Zahlen übersichtlich zusammenstellen.', 'iss-content-model'),
                 'supports' => ['facts'],
             ],
             'zitat' => [
-                'label' => __('Ein prägnantes Zitat zum Inhalt.', 'iss-content-model'),
+                'label' => __('Zitat', 'iss-content-model'),
                 'description' => __('Mit Angabe der Person oder der historischen Quelle.', 'iss-content-model'),
                 'supports' => ['quote', 'object_refs', 'media_refs', 'orientation', 'quote_treatment'],
             ],
             'galerie' => array_merge($gallery_section, ['supports' => ['object_refs', 'media_refs', 'gallery_layout']]),
             'fliesstext' => [
-                'label' => __('Fliesstext', 'iss-content-model'),
-                'description' => __('Essay paragraph or connective text', 'iss-content-model'),
+                'label' => __('Fließtext', 'iss-content-model'),
+                'description' => __('Ein zusammenhängender Textabschnitt.', 'iss-content-model'),
                 'supports' => [],
             ],
             'material' => $material_section,
@@ -421,7 +423,7 @@ function iss_content_model_register_editorial_formats(array $formats): array
             ],
             'schluss' => [
                 'label' => __('Schluss', 'iss-content-model'),
-                'description' => __('Closing statement and onward direction', 'iss-content-model'),
+                'description' => __('Den Inhalt abschließen und weiterführende Links anbieten.', 'iss-content-model'),
                 'supports' => ['links'],
             ],
         ],
@@ -436,17 +438,17 @@ function iss_content_model_register_editorial_formats(array $formats): array
         'sections' => [
             'kapitel' => [
                 'label' => __('Kapitel', 'iss-content-model'),
-                'description' => __('Project chapter with title and narrative body', 'iss-content-model'),
+                'description' => __('Ein Projektthema mit Überschrift und Text vorstellen.', 'iss-content-model'),
                 'supports' => ['anchor', 'links'],
             ],
             'fliesstext' => [
-                'label' => __('Fliesstext', 'iss-content-model'),
-                'description' => __('Essay paragraph or connective text', 'iss-content-model'),
+                'label' => __('Fließtext', 'iss-content-model'),
+                'description' => __('Ein zusammenhängender Textabschnitt.', 'iss-content-model'),
                 'supports' => ['anchor', 'links'],
             ],
             'facts' => [
                 'label' => __('Merkpunkte', 'iss-content-model'),
-                'description' => __('Compact key points, facts, or context cards', 'iss-content-model'),
+                'description' => __('Kernpunkte, Fakten und Zusammenhänge hervorheben.', 'iss-content-model'),
                 'supports' => ['anchor', 'facts'],
             ],
             'galerie' => array_merge($gallery_section, ['supports' => ['anchor', 'media_refs', 'object_refs', 'gallery_layout']]),
@@ -458,7 +460,7 @@ function iss_content_model_register_editorial_formats(array $formats): array
             ],
             'schluss' => [
                 'label' => __('Kontakt / Schluss', 'iss-content-model'),
-                'description' => __('Closing note, contact, and onward links', 'iss-content-model'),
+                'description' => __('Abschluss, Kontakt und weiterführende Links.', 'iss-content-model'),
                 'supports' => ['anchor', 'links'],
             ],
         ],
@@ -473,25 +475,25 @@ function iss_content_model_register_editorial_formats(array $formats): array
         'sections' => [
             'intro' => [
                 'label' => __('Intro', 'iss-content-model'),
-                'description' => __('Post-event opening and summary.', 'iss-content-model'),
+                'description' => __('Den Anlass und die wichtigsten Eindrücke zusammenfassen.', 'iss-content-model'),
                 'supports' => ['media_refs'],
             ],
             'fliesstext' => [
-                'label' => __('Fliesstext', 'iss-content-model'),
-                'description' => __('Curated report text.', 'iss-content-model'),
+                'label' => __('Fließtext', 'iss-content-model'),
+                'description' => __('Erlebnisse und Ergebnisse im Zusammenhang beschreiben.', 'iss-content-model'),
                 'supports' => ['media_refs', 'object_refs'],
             ],
             'galerie' => array_merge($gallery_section, ['supports' => ['media_refs', 'object_refs', 'gallery_layout']]),
             'objektfokus' => [
                 'label' => __('Objektfokus', 'iss-content-model'),
-                'description' => __('Archive objects that support the report.', 'iss-content-model'),
+                'description' => __('Archivobjekte als Ergänzung zum Bericht zeigen.', 'iss-content-model'),
                 'supports' => ['object_refs'],
             ],
             'material' => array_merge($material_section, ['supports' => ['media_refs', 'links']]),
             'upload_intake' => $formats['ausstellung']['sections']['upload_intake'],
             'schluss' => [
                 'label' => __('Schluss', 'iss-content-model'),
-                'description' => __('Closing note and onward links.', 'iss-content-model'),
+                'description' => __('Abschluss und weiterführende Links.', 'iss-content-model'),
                 'supports' => ['links'],
             ],
         ],
@@ -563,3 +565,46 @@ add_filter('iss_editorial_validated_document', static function ($validated, arra
     }
     return $validated;
 }, 10, 3);
+
+/** Shared definitions enrich the existing format registry, without changing stored documents. */
+add_filter('iss_editorial_formats', static function (array $formats): array {
+    $definitions = iss_content_model_editorial_gesture_registry();
+    $starters = [
+        'landing' => [['label' => 'Einführung und Überblick', 'sections' => [['type' => 'statement'], ['type' => 'gateway']]]],
+        'article' => [['label' => 'Text mit Bildern', 'sections' => [['type' => 'statement'], ['type' => 'fliesstext'], ['type' => 'galerie']]]],
+        'projekt' => [['label' => 'Projektdossier', 'sections' => [['type' => 'kapitel', 'title' => 'Das Projekt'], ['type' => 'facts', 'title' => 'Auf einen Blick'], ['type' => 'galerie']]]],
+        'rueckblick' => [['label' => 'Bericht mit Bildern', 'sections' => [['type' => 'intro'], ['type' => 'fliesstext'], ['type' => 'galerie']]]],
+        'ausstellung' => [['label' => 'Ausstellungsrundgang', 'sections' => [['type' => 'leitfrage'], ['type' => 'kapitel', 'title' => 'Die Ausstellung'], ['type' => 'galerie']]]],
+        'fuehrung' => [['label' => 'Führung vorstellen', 'sections' => [['type' => 'kapitel', 'title' => 'Die Führung'], ['type' => 'galerie']]]],
+        'place' => [['label' => 'Ortsdossier', 'sections' => [['type' => 'intro'], ['type' => 'epoche', 'title' => 'Geschichte'], ['type' => 'gegenwart']]]],
+        'veranstaltung' => [['label' => 'Veranstaltung vorstellen', 'sections' => [['type' => 'intro'], ['type' => 'kapitel', 'title' => 'Programm']]]],
+    ];
+    foreach ($formats as $slug => &$format) {
+        if (!isset($starters[$slug]) && $slug !== 'publication') { continue; }
+        $format['starters'] = $format['starters'] ?? ($starters[$slug] ?? []);
+        $format['editor'] = array_merge(['workspace' => true], (array) ($format['editor'] ?? []));
+        $format['supported_versions'] = $format['supported_versions'] ?? [1, 2, 3];
+        $format['default_version'] = $format['default_version'] ?? 3;
+        foreach ($format['sections'] as $type => &$section) {
+            if (!isset($definitions[$type])) { continue; }
+            $section = array_merge($definitions[$type], $section);
+            $section['family'] = $type;
+            if (!in_array('no_body', $section['supports'] ?? [], true) && !in_array($type, ['source', 'bildbuehne'], true)) {
+                $section['rich_text'] = array_merge(['body' => 'block'], (array) ($section['rich_text'] ?? []));
+                if (in_array('lead', $section['supports'] ?? [], true)) { $section['rich_text']['lead'] = 'block'; }
+            }
+            if ($type === 'atlas_map' && $slug === 'landing') {
+                // Keep the editor/storage default that existing saved documents already use.
+                $section['default_treatment'] = 'atlas-map.place-locator';
+            }
+            $section['treatments'] = (array) ($section['treatments'] ?? []);
+            foreach ($section['treatments'] as $treatment => &$choice) {
+                $choice = array_merge(['schematic' => $section['schematic']], is_array($choice) ? $choice : ['label' => $choice]);
+            }
+            unset($choice);
+        }
+        unset($section);
+    }
+    unset($format);
+    return $formats;
+}, 90);

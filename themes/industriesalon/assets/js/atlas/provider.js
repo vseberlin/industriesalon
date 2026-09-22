@@ -41,7 +41,11 @@
       };
     }
 
-    return CARTO_BASEMAP;
+    var cartoKey = text(config.cartoKey);
+    return {
+      tileUrl: CARTO_BASEMAP.tileUrl + (cartoKey ? '?key=' + encodeURIComponent(cartoKey) : ''),
+      options: CARTO_BASEMAP.options
+    };
   }
 
   function getStaticRelationMapUrl(config) {

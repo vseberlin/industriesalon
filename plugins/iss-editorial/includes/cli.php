@@ -4,6 +4,29 @@ if (!defined('ABSPATH')) {
     exit;
 }
 
+/** Check format contributions without changing documents, options or templates. */
+WP_CLI::add_command('iss-editorial registry-check', static function (array $args, array $options): void {
+    $errors = iss_editorial_registry_errors();
+    $rows = [];
+    foreach (iss_editorial_get_registered_formats() as $slug => $format) {
+        $rows[] = [
+            'format' => $slug,
+            'sections' => count($format['sections']),
+            'versions' => implode(',', $format['supported_versions']),
+            'workspace' => !empty($format['editor']['workspace']) ? 'yes' : 'no',
+            'preview' => !empty($format['editor']['preview']) ? 'yes' : 'no',
+        ];
+    }
+    if (($options['format'] ?? '') === 'json') {
+        WP_CLI::log((string) wp_json_encode(['formats' => $rows, 'errors' => $errors], JSON_PRETTY_PRINT));
+    } else {
+        WP_CLI::log("format\tsections\tversions\tworkspace\tpreview");
+        foreach ($rows as $row) { WP_CLI::log(implode("\t", $row)); }
+    }
+    if ($errors) { WP_CLI::error(implode("\n", $errors)); }
+    if (($options['format'] ?? '') !== 'json') { WP_CLI::success('Editorial registry is consistent. No content changed.'); }
+});
+
 function iss_editorial_cli_get_post_by_token_for_type(string $token, string $post_type): ?WP_Post
 {
     $token = trim($token);

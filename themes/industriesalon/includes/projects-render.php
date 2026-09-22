@@ -6,33 +6,10 @@ if (!defined('ABSPATH')) {
 
 function industriesalon_get_editorial_project_skins(): array
 {
-    return [
-        'dossier',
-        'standard',
-        'typografisch',
-    ];
+    return industriesalon_editorial_skin_slugs('projekt');
 }
 
-add_filter('iss_editorial_format_skins', function (array $skins, string $format_slug): array {
-    if ($format_slug !== 'projekt') {
-        return $skins;
-    }
 
-    return [
-        'dossier' => [
-            'slug' => 'dossier',
-            'label' => __('Dossier', 'industriesalon'),
-        ],
-        'standard' => [
-            'slug' => 'standard',
-            'label' => __('Standard', 'industriesalon'),
-        ],
-        'typografisch' => [
-            'slug' => 'typografisch',
-            'label' => __('Typografisch', 'industriesalon'),
-        ],
-    ];
-}, 10, 2);
 
 function industriesalon_resolve_editorial_project_skin(array $document): string
 {
@@ -698,7 +675,8 @@ function industriesalon_render_editorial_project_dossier_spread(array $chapter, 
     </section>
     <?php
 
-    return trim((string) ob_get_clean());
+    $html = industriesalon_editorial_preview_section(trim((string) ob_get_clean()), $chapter, ['title' => 'iss-project-section__title', 'kicker' => 'iss-project-section__kicker', 'body' => 'iss-project-section__body']);
+    return industriesalon_editorial_preview_section($html, $facts_section, ['title' => 'iss-project-dossier-spread__facts-title', 'body' => 'iss-project-dossier-spread__facts-body'], 'iss-project-dossier-spread__facts');
 }
 
 function industriesalon_render_editorial_project_section(array $section, bool $show_placeholders, int $rendered_index, string $skin, string $anchor = ''): string
@@ -818,12 +796,12 @@ function industriesalon_render_editorial_project_section(array $section, bool $s
         </div>
     </section>
     <?php
-    return trim((string) ob_get_clean());
+    return industriesalon_editorial_preview_section(trim((string) ob_get_clean()), $section, ['title' => 'iss-project-section__title', 'kicker' => 'iss-project-section__kicker', 'body' => 'iss-project-section__body']);
 }
 
 function industriesalon_render_editorial_project_content(string $content): string
 {
-    if (is_admin() || !is_singular('projekt') || !in_the_loop() || !is_main_query()) {
+    if (is_admin() || doing_filter('get_the_excerpt') || !is_singular('projekt') || !in_the_loop() || !is_main_query()) {
         return $content;
     }
 

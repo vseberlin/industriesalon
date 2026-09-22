@@ -1,16 +1,10 @@
+/* Compatibility: legacy block front-page compositions only. Not loaded when the editorial document supplies the page. Shared declarations and template wrapper live in editorial-skins.css. */
+
 /* =====================================================================
    FILE: front-page.css
    ROLE: Homepage-only composition.
    LOAD: only on the front page.
    ===================================================================== */
-
-.home .iss-front-page-main {
-  overflow: clip;
-}
-
-.home .iss-front-page-main .iss-section {
-  width: 100%;
-}
 
 .home .iss-section--mission {
   padding-top: var(--iss-section-pad-y);
@@ -166,10 +160,6 @@
   margin-top: auto;
 }
 
-.home .iss-front-explore {
-  padding-top: clamp(1.1rem, 2vw, 1.75rem);
-}
-
 .home .iss-front-explore__heading {
   max-width: 52rem;
 }
@@ -314,10 +304,6 @@
   transform: translateX(-35%) rotate(14deg);
 }
 
-.home .iss-front-project-note__marker {
-  display: none;
-}
-
 .home .iss-front-project-note__logo {
   position: absolute;
   right: clamp(1.05rem, 2vw, 1.55rem);
@@ -367,11 +353,6 @@
   font-size: clamp(1.25rem, 1.2rem + 0.45vw, 1.7rem);
   line-height: 1.12;
   text-wrap: balance;
-}
-
-.home .iss-front-project-note__title a {
-  color: inherit;
-  text-decoration: none;
 }
 
 .home .iss-front-project-note__title a:hover,
@@ -614,22 +595,10 @@
   object-fit: cover;
 }
 
-.home .iss-section--newsletter .iss-container {
-  padding-top: 0;
-  padding-bottom: 0;
-}
-
 .home .iss-newsletter-band__grid {
   gap: clamp(2rem, 4vw, 4rem);
   padding-bottom: clamp(1.5rem, 3vw, 2.5rem);
   border-bottom: 1px solid var(--iss-border);
-}
-
-.home .iss-newsletter-band__lead,
-.home .iss-newsletter-band__note,
-.home .iss-newsletter-band__support-title,
-.home .iss-newsletter-band__partners-title {
-  color: rgba(30, 30, 30, 0.72);
 }
 
 @media (max-width: 1100px) {

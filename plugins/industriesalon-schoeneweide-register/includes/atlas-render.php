@@ -23,6 +23,7 @@ function iss_register_get_schoneweide_atlas_bootstrap_config(array $attributes =
         'overlaysUrl' => iss_register_get_theme_asset_url('/assets/maps/schoneweide-overlays.geojson'),
         'relationStaticMapUrl' => iss_register_get_theme_asset_url('/assets/maps/schoneweide-map-canonical-display.webp'),
         'basemapProvider' => defined('INDUSTRIESALON_MAP_BASEMAP_PROVIDER') ? (string) INDUSTRIESALON_MAP_BASEMAP_PROVIDER : 'carto',
+        'cartoKey' => defined('INDUSTRIESALON_CARTO_KEY') ? (string) INDUSTRIESALON_CARTO_KEY : '',
         'maptilerKey' => defined('INDUSTRIESALON_MAPTILER_KEY') ? (string) INDUSTRIESALON_MAPTILER_KEY : '',
         'maptilerStyle' => defined('INDUSTRIESALON_MAPTILER_STYLE') ? (string) INDUSTRIESALON_MAPTILER_STYLE : 'streets-v2',
     ];

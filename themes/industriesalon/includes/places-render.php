@@ -151,7 +151,7 @@ function industriesalon_render_editorial_place_epoch(array $section): string
     }
     $html .= '</div>' . $media . '</article>';
 
-    return $html;
+    return industriesalon_editorial_preview_section($html, $section, ['title' => 'iss-register-place__epoch-title', 'body' => 'iss-register-place__epoch-text']);
 }
 
 function industriesalon_render_editorial_place_document(int $post_id, array $document): string
@@ -160,6 +160,9 @@ function industriesalon_render_editorial_place_document(int $post_id, array $doc
     $intro = '';
     $epochs = [];
     $present = '';
+    $intro_section = [];
+    $present_section = [];
+    $supplements = '';
 
     foreach ($sections as $section) {
         if (!is_array($section)) {
@@ -168,10 +171,15 @@ function industriesalon_render_editorial_place_document(int $post_id, array $doc
         $type = (string) ($section['type'] ?? '');
         if ($type === 'intro' && $intro === '') {
             $intro = (string) ($section['body'] ?? '');
+            $intro_section = $section;
         } elseif ($type === 'epoche') {
             $epochs[] = $section;
         } elseif ($type === 'gegenwart' && $present === '') {
             $present = (string) ($section['body'] ?? '');
+            $present_section = $section;
+        } elseif (in_array($type, ['galerie', 'material', 'upload_intake'], true)) {
+            // Reuse the shared archive/media section renderer and its CSS contract.
+            $supplements .= industriesalon_render_editorial_ausstellung_section($section, false, 0, 'standard');
         }
     }
 
@@ -200,7 +208,9 @@ function industriesalon_render_editorial_place_document(int $post_id, array $doc
         $html .= '<div class="iss-register-place__present-text">' . wp_kses_post($present) . '</div></section>';
     }
 
-    return $html . '</div>';
+    $html = industriesalon_editorial_preview_section($html, $intro_section, ['body' => 'iss-register-place__lead-primary'], 'iss-register-place__section--lead');
+    $html = industriesalon_editorial_preview_section($html, $present_section, ['body' => 'iss-register-place__present-text'], 'iss-register-place__section--present');
+    return $html . $supplements . '</div>';
 }
 
 function industriesalon_render_editorial_place_fallback(int $post_id): string

@@ -1,4 +1,4 @@
-/* Persistent landing shell. Document state, fields and saves remain in admin.js. */
+/* Shared editorial workspace. Document state, fields and saves remain in admin.js. */
 (function () {
   function node(tag, cls, text) {
     var el = document.createElement(tag); el.className = cls || '';
@@ -18,7 +18,7 @@
     root.setAttribute('aria-label', 'Seite gestalten');
     document.body.classList.add('iss-editorial-workspace-screen');
     var head = node('div', 'iss-editorial-studio__head');
-    var title = node('strong', 'iss-editorial-studio__breadcrumb', 'Seiten / ' + (document.getElementById('title').value || 'Neue Seite'));
+    var title = node('strong', 'iss-editorial-studio__breadcrumb', (options.label || 'Inhalt') + ' / ' + (document.getElementById('title').value || 'Neuer Inhalt'));
     var previewTools = node('div', 'iss-editorial-studio__preview-tools');
     var statusMount = node('div', 'iss-editorial-studio__status');
     var statusAnchor = document.createComment('editorial status');
@@ -92,11 +92,12 @@
     publish.title = 'Zu den WordPress-Steuerelementen zum Speichern und Veröffentlichen';
     var more = node('details', 'iss-editorial-studio__more'); var moreLabel = node('summary', 'iss-editorial-studio__button iss-editorial-studio__icon', '⋯'); moreLabel.setAttribute('aria-label', 'Weitere Werkzeuge'); moreLabel.title = 'Weitere Werkzeuge'; more.appendChild(moreLabel);
     var menu = node('div', 'iss-editorial-studio__menu'); more.appendChild(menu);
-    menu.appendChild(button('Bisherige Abschnittsansicht', function () { options.afterEditing(options.legacy); }));
+    menu.appendChild(button('Angaben & Beziehungen …', function () { options.afterEditing(function () { setExpanded(false); var native = document.getElementById('poststuff'); if (native) { native.scrollIntoView({ block: 'start' }); } }); }));
     var history = mount.closest('.iss-editorial-admin').querySelector('a[href*="revision.php"]');
     if (history) { var link = history.cloneNode(true); link.textContent = 'Verlauf'; menu.appendChild(link); }
     head.append(title, tools, previewTools, statusMount, publish, expand, more);
-    outline.append(button('+ Abschnitt hinzufügen', function () { options.insert(); }), palette, stage, trash);
+    var ownerBody = node('div', 'iss-editorial-studio__owner-controls');
+    outline.append(button('+ Abschnitt hinzufügen', function () { options.insert(); }), palette, stage, trash, ownerBody);
     navigation.append(position, previous, next); inspector.append(navigation, heading, inspectorTabs, note, body, undo, remove);
     grid.append(outline, preview, inspector); root.append(head, tabs, grid); mount.appendChild(root); setView('preview'); setExpanded(true);
     var search = node('input'); search.type = 'search'; search.placeholder = 'Abschnitt suchen'; search.setAttribute('aria-label', 'Abschnitt suchen');
@@ -138,7 +139,7 @@
       Array.from(body.children).forEach(function (panel) { panel.hidden = panel.dataset.inspectorTab !== key; });
     }
     return {
-      root: root, body: body, previewMount: preview, previewTools: previewTools, previewStatus: statusMount, tools: tools, palette: palette, stage: stage, trashBody: trashBody,
+      root: root, body: body, menu: menu, ownerBody: ownerBody, previewMount: preview, previewTools: previewTools, previewStatus: statusMount, tools: tools, palette: palette, stage: stage, trashBody: trashBody,
       showView: setView,
       destroy: function () { document.body.classList.remove('iss-editorial-workspace-screen'); setExpanded(false); statusAnchor.replaceWith(options.status, options.retry); },
       removed: function (label, restore) { restoreRemoved = restore; undoText.textContent = '„' + label + '“ im Papierkorb.'; undo.hidden = false; },

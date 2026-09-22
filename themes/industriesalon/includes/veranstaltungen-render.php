@@ -412,7 +412,7 @@ function industriesalon_render_structured_veranstaltung_section(array $section, 
 
 function industriesalon_render_structured_veranstaltung_content(string $content): string
 {
-    if (is_admin() || !is_singular('veranstaltung') || !in_the_loop() || !is_main_query()) {
+    if (is_admin() || doing_filter('get_the_excerpt') || !is_singular('veranstaltung') || !in_the_loop() || !is_main_query()) {
         return $content;
     }
 
@@ -421,7 +421,7 @@ function industriesalon_render_structured_veranstaltung_content(string $content)
         return $content;
     }
 
-    $document = iss_content_model_veranstaltung_content_document($post_id);
+    $document = function_exists('iss_editorial_get_read_model') ? iss_editorial_get_read_model($post_id, 'veranstaltung') : iss_content_model_veranstaltung_content_document($post_id);
     $sections = is_array($document['sections'] ?? null) ? $document['sections'] : [];
     if (!$sections) {
         return $content;
@@ -431,7 +431,7 @@ function industriesalon_render_structured_veranstaltung_content(string $content)
     $html = '';
     foreach ($sections as $section) {
         if (is_array($section)) {
-            $html .= industriesalon_render_structured_veranstaltung_section($section, $skin);
+            $html .= industriesalon_editorial_preview_section(industriesalon_render_structured_veranstaltung_section($section, $skin), $section, ['title' => 'iss-event-structured__title', 'kicker' => 'iss-event-structured__kicker', 'body' => 'iss-event-structured__body']);
         }
     }
 

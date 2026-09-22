@@ -3,7 +3,7 @@
 This is the implementation checkpoint for the SOW in
 `/home/vladimir/Downloads/editor-sow.md`.
 
-## V1 Boundary
+## Ownership
 
 - `iss-editorial` is an engine-only plugin. It owns versioned JSON document
   storage, section registry behavior, validation, autosave, and normalized read
@@ -18,9 +18,9 @@ This is the implementation checkpoint for the SOW in
 - When `iss-editorial` is active, enabled documents and eligible new auto-drafts use
   the shared editor. Existing disabled documents retain their legacy editor and
   public authority. The shared editor surface is a custom
-  main-canvas composition UI below the title, with section gestures on the left,
-  ordered section cards in the main area, and section editing in modals. Media
-  selection uses the WordPress media library inside the section modal. Archive
+  workspace with outline, theme preview and inspector. All registered formats
+  use that workspace, including retained v1 documents. Media selection uses the
+  WordPress media library; there is no second section editor. Archive
   object selection uses the archive picker modal: attached/context buckets first,
   object thumbnails after bucket choice, and faceted object search as the
   secondary fallback.
@@ -149,10 +149,35 @@ This editor rollout requires code only: no content or template migration and no
 uploads artifact. Existing enabled flags and database template overrides remain
 the authority for already published content.
 
+### Unified format contract
+
+`iss_editorial_get_registered_formats()` is the effective contract. Data owners
+contribute sections, supports, rich-text profiles, family/icon/tone/group,
+treatments/defaults/aliases, and explicit starter compositions. The theme
+contributes supported skins and preview capabilities in `includes/editorial-render.php`;
+`iss-content` contributes skin feature defaults to those same choices. Renderers
+read the normalized choices instead of maintaining separate allowed lists.
+`wp iss-editorial registry-check [--format=json]` diagnoses missing metadata,
+invalid defaults, alias collisions and unknown starter types without writes.
+
+Formats are `landing`, `article`, `projekt`, `ausstellung`, `rueckblick`,
+`veranstaltung`, `place`, `fuehrung`, and `publication`. `article` covers ordinary
+pages, posts and videos, sharing a subset of landing sections and the same theme
+renderer. Existing landing eligibility wins. WordPress/WooCommerce/archive data
+screens retain their domain ownership. Existing block content is never parsed
+or replaced automatically: an existing post switches only when a reviewed JSON
+document is explicitly enabled through the existing storage API/migration path.
+New eligible auto-drafts use the shared workspace immediately.
+
+Preview-only source indices are attached to the hydrated snapshot, carried through
+publication payloads and combined project sections, and never stored. Native
+owner panels, route station controls, project rails, Set permissions, bookings
+and publication metadata remain attached to their original owners.
+
 ### Landing rich text and live preview
 
-Landing documents support versions 1, 2 and 3. Other formats still support version
-1. The explicit **Textfarben aktivieren** action converts legacy plain item
+All nine editorial formats support versions 1, 2 and 3. New documents start at
+version 3; saved v1 documents retain their version until explicitly upgraded. The explicit **Textfarben aktivieren** action converts legacy plain item
 descriptions to escaped rich text in the author's draft, including deleted
 sections. Version-2 documents are prepared as version 3 in the editor copy,
 including recovered drafts; this does not write canonical content. The format registry's
@@ -160,7 +185,7 @@ including recovered drafts; this does not write canonical content. The format re
 inside a linked card. The last profile excludes hyperlinks to prevent nested
 anchors; headings, labels and factual fields remain plain text.
 
-Rich-text landing documents use the installed WordPress TinyMCE with a compact toolbar. **Link**
+Registered rich-text fields use the installed WordPress TinyMCE with a compact toolbar. **Link**
 opens the full native dialog, including link text when no text is selected and
 internal-content search. **Farbe** and **Marker** offer the effective theme
 palette, custom six-digit RGB values, session-local recent colours and separate
@@ -176,7 +201,7 @@ descriptions permit their inline subset. Unsupported imported markup stays
 visible for review until the editor explicitly chooses **Formatierung
 vereinfachen**; server validation also rejects lossy normalization.
 
-Rich-text landings use a persistent three-pane workspace: section outline, the
+All enabled editorial documents use one persistent three-pane workspace: section outline, the
 actual WordPress page preview, and a tabbed inspector reusing the section form
 controls. The preview has 1280/768/390px viewports. Narrow workspaces use pane
 selection. The workspace starts expanded, with one compact top bar and separate
@@ -185,8 +210,9 @@ are inert only while expanded; leaving restores their prior state. Publishing
 navigation focuses the native control without submitting. Searchable grouped
 insertion, gaps, keyboard reordering and recoverable trash/undo use the existing
 document state. Native save,
-publication and revision history remain authoritative. The old modal is retained
-under **Weitere Werkzeuge** during UAT and remains the editor for other formats.
+publication and revision history remain authoritative. **Weitere Werkzeuge →
+Angaben & Beziehungen** reveals native owner controls without replacing the
+workspace. The old section modal and its alternate preview layout are removed.
 
 Editor chrome uses the shared `--iss-editor-*` tokens for warm neutral panes,
 readable fields, focus and selection. Existing workspace, text-control and frame
@@ -222,8 +248,8 @@ preview remains available. No route/date/relation panel is saved by this queue.
 The preview bridge and source-section markers are emitted only for an
 authenticated, authorized WordPress preview of the matching draft. Public HTML
 keeps its existing anchors and contains neither bridge nor editing markers.
-`workspace.js` owns the pane layout, `admin.js` retains document state and field
-controls, `rich-text.js` owns text controls, `live-preview.js` owns frame lifecycle, and `preview-frame.js` owns the authenticated frame interaction.
+`workspace.js` owns the pane layout, `admin.js` retains document state and domain
+field controls, `ui.js` owns shared inputs, schematics and picker focus, `rich-text.js` owns text controls, `live-preview.js` owns frame lifecycle, and `preview-frame.js` owns the authenticated frame interaction.
 The preview selection stylesheet also loads only in the authenticated embedded
 page. `includes/rich-text.php` and `includes/preview.php` implement their server
 contracts; public rendering remains in the theme. Each embedded request validates
@@ -232,6 +258,13 @@ A concurrent autosave cannot replace that snapshot during rendering. The cache
 is request-local and keyed by user, post, format and token; ordinary API reads
 remain fresh after writes. The iframe sandbox restricts interactions such as
 forms/popups; it is not the authentication boundary.
+
+Hero content belongs to JSON; appearance belongs to the existing theme hero
+pattern. The homepage opening renders native Cover/Buttons with `iss-front-hero`
+and its homepage modifier, shared with the template fallback. Optional lead/body
+appear beneath the image. There is no separate opening typography/layout family.
+Other landing templates retain their current hero content until explicitly
+migrated; migrations must preserve their design and leave only one active owner.
 
 Version 3 registers **Seitenauftakt** (`feature.opening`) explicitly. It requires
 first position, `frontpage` skin, title and an image. Incomplete or moved openings

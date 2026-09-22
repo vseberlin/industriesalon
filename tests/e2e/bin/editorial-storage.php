@@ -261,7 +261,10 @@ try {
     $new_tab = new WP_HTML_Tag_Processor(iss_editorial_sanitize_rich_text('<a href="/" target="_blank">new tab</a>', 'inline'));
     $new_tab->next_tag('a');
     $assert($new_tab->get_attribute('target') === '_blank' && $new_tab->get_attribute('rel') === 'noopener noreferrer', 'New-tab links receive safe rel attributes');
-    $assert(!iss_editorial_supports_version(iss_editorial_get_format('projekt'), 2), 'Other formats do not opt into v2');
+    $assert(iss_editorial_registry_errors() === [], 'All effective registry contracts are complete and consistent');
+    foreach (iss_editorial_get_registered_formats() as $format) {
+        $assert(iss_editorial_supports_version($format, 3) && $format['editor']['workspace'], $format['slug'] . ': shared workspace and v3 profile');
+    }
     $assert(!iss_editorial_supports_version(iss_editorial_get_format('landing'), '2'), 'Schema version remains a strict integer');
     $id = wp_insert_post(['post_type' => 'page', 'post_status' => 'draft', 'post_title' => 'Editorial v2 fixture', 'post_author' => $admin->ID]);
     $fixtures[] = $id;
@@ -326,6 +329,21 @@ try {
     $editable_copy = industriesalon_render_editorial_landing_copy($copy);
     $assert(str_contains($editable_copy, 'data-iss-field="title" data-iss-profile="plain"') && str_contains($editable_copy, 'data-iss-field="body" data-iss-profile="block"') && str_contains($editable_copy, 'data-iss-field="lead"'), 'Authenticated render exposes exact owned field addresses and profiles');
     $assert(!str_contains(industriesalon_landing_prose('<h3>Extra</h3><p style="color:red">Body</p>', $copy), '<h3>'), 'v3 render allowlist matches the block storage profile');
+
+    $hero = $opening['sections'][0]; $hero['_opening'] = true; $hero['_text_version'] = 3;
+    $hero['kicker'] = 'Hero kicker';
+    $hero['links'] = [['label' => 'Primary', 'url' => '/first/'], ['label' => 'Secondary', 'url' => '/second/']];
+    $hero_html = industriesalon_render_editorial_landing_feature($hero, 0, 'frontpage');
+    $assert(str_contains($hero_html, 'iss-front-hero iss-front-hero--home') && !str_contains($hero_html, 'iss-landing-opening'), 'JSON opening reuses the original theme hero instead of a second design');
+    $assert(substr_count($hero_html, '<h1 ') === 1 && str_contains($hero_html, 'wp-block-cover__image-background'), 'Opening has one heading and a native responsive Cover image');
+    $assert(str_contains($hero_html, 'is-style-fill') && str_contains($hero_html, 'is-style-outline') && !str_contains($hero_html, '<!-- wp:'), 'Opening renders native primary and secondary buttons with their block assets');
+    $assert(strpos($hero_html, 'iss-front-hero__actions-wrap') < strpos($hero_html, '<p>Body</p>') && str_contains($hero_html, '<p>Lead</p>'), 'Existing introduction is preserved beneath the image');
+    $assert(!str_contains($hero_html, 'data-iss-field'), 'Public hero has no editing addresses');
+    $hero['_canvas_edit'] = true;
+    $hero_html = industriesalon_render_editorial_landing_feature($hero, 0, 'frontpage');
+    foreach (['title', 'kicker', 'body', 'lead'] as $field) {
+        $assert(str_contains($hero_html, 'data-iss-field="' . $field . '"'), 'Shared hero retains authenticated editing: ' . $field);
+    }
 
     $assert(iss_editorial_save_document($id, 'landing', $v3), 'Native save accepts v3 palette references');
     $canonical_v3 = get_metadata_raw('post', $id, $key, true);

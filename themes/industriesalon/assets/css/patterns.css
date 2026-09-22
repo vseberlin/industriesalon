@@ -702,6 +702,22 @@
   overflow: visible;
 }
 
+/* Homepage treatment shared by the template fallback and JSON opening. */
+.iss-front-hero.iss-front-hero--home {
+  --iss-hero-overlay: linear-gradient(90deg, rgba(12, 12, 12, 0.82) 0%, rgba(12, 12, 12, 0.58) 28%, rgba(12, 12, 12, 0.22) 50%, rgba(12, 12, 12, 0) 76%);
+}
+
+.iss-front-hero__kicker {
+  margin: 0;
+  font-size: clamp(1.08rem, 0.65vw + 0.92rem, 1.45rem);
+  letter-spacing: 0.18em;
+}
+
+.iss-front-hero--home .iss-front-hero__title {
+  /* Preserve the original group rhythm without depending on generated flow classes. */
+  margin-block-start: var(--wp--preset--spacing--section);
+}
+
 .iss-front-hero__row {
   display: contents;
 }

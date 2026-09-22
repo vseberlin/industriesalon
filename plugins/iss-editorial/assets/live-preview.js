@@ -7,54 +7,29 @@
   }
   window.issEditorialLivePreview = function (shell, section, onRetry, onSelectSection, options) {
     options = options || {};
-    var persistent = !!shell.previewMount;
-    if (!persistent) { shell.root.classList.add('iss-editorial-modal--preview'); }
-    var workspace = element('div', 'iss-editorial-workspace');
     var pane = element('section', 'iss-editorial-live-preview');
     pane.setAttribute('aria-label', 'Live-Vorschau');
     var toolbar = element('div', 'iss-editorial-live-preview__toolbar');
     var status = element('p', 'iss-editorial-live-preview__status', 'Vorschau wird vorbereitet …');
     status.setAttribute('role', 'status');
     var viewport = element('div', 'iss-editorial-live-preview__viewport');
-    var select = element('select', '');
-    select.setAttribute('aria-label', 'Vorschau-Breite');
-    [['desktop', 'Desktop · 1280 px'], ['tablet', 'Tablet · 768 px'], ['phone', 'Telefon · 390 px']].forEach(function (choice) {
-      var option = element('option', '', choice[1]); option.value = choice[0]; select.appendChild(option);
-    });
     viewport.dataset.device = 'desktop';
-    select.addEventListener('change', function () { viewport.dataset.device = select.value; resize(); });
-    if (!persistent) { toolbar.appendChild(element('strong', '', 'Live-Vorschau')); }
-    if (persistent) {
       var devices = element('div', 'iss-editorial-preview-devices');
       devices.setAttribute('role', 'group'); devices.setAttribute('aria-label', 'Vorschau-Breite');
       [['desktop', 'Desktop'], ['tablet', 'Tablet'], ['phone', 'Telefon']].forEach(function (choice) {
         var device = element('button', 'iss-editorial-preview-device', choice[1]); device.type = 'button'; device.dataset.device = choice[0];
         device.setAttribute('aria-pressed', String(choice[0] === 'desktop'));
-        device.addEventListener('click', function () { select.value = choice[0]; viewport.dataset.device = choice[0]; resize(); Array.from(devices.children).forEach(function (item) { item.setAttribute('aria-pressed', String(item === device)); }); }); devices.appendChild(device);
+        device.addEventListener('click', function () { viewport.dataset.device = choice[0]; resize(); Array.from(devices.children).forEach(function (item) { item.setAttribute('aria-pressed', String(item === device)); }); }); devices.appendChild(device);
       }); toolbar.appendChild(devices);
-    } else { toolbar.appendChild(select); }
-    var retry = element('button', persistent ? 'iss-editorial-studio__button iss-editorial-studio__icon' : 'button', persistent ? '↻' : 'Vorschau aktualisieren'); retry.type = 'button';
+    var retry = element('button', 'iss-editorial-studio__button iss-editorial-studio__icon', '↻'); retry.type = 'button';
     retry.setAttribute('aria-label', 'Vorschau aktualisieren'); retry.title = 'Vorschau aktualisieren';
     retry.addEventListener('click', function () { if (onRetry) { onRetry(); } });
     toolbar.appendChild(retry);
-    if (persistent) { shell.previewTools.appendChild(toolbar); shell.previewStatus.appendChild(status); pane.classList.add('iss-editorial-live-preview--canvas'); }
-    else { pane.appendChild(toolbar); pane.appendChild(status); }
+    shell.previewTools.appendChild(toolbar);
+    shell.previewStatus.appendChild(status);
+    pane.classList.add('iss-editorial-live-preview--canvas');
     pane.appendChild(viewport);
-    if (persistent) { shell.previewMount.appendChild(pane); }
-    else { shell.body.before(workspace); workspace.appendChild(shell.body); workspace.appendChild(pane); }
-    var tabs = element('div', 'iss-editorial-workspace__tabs');
-    function setTab(value) {
-      workspace.dataset.tab = value;
-      Array.from(tabs.children).forEach(function (tab) { tab.setAttribute('aria-pressed', String(tab.dataset.tab === value)); });
-    }
-    [['edit', 'Bearbeiten'], ['preview', 'Vorschau']].forEach(function (choice) {
-      var button = element('button', 'button', choice[1]); button.type = 'button';
-      button.dataset.tab = choice[0];
-      button.setAttribute('aria-pressed', String(choice[0] === 'edit'));
-      button.addEventListener('click', function () { setTab(choice[0]); });
-      tabs.appendChild(button);
-    });
-    if (!persistent) { workspace.before(tabs); workspace.dataset.tab = 'edit'; }
+    shell.previewMount.appendChild(pane);
     var sectionRef = null;
     function previewStatus(message, state) { status.textContent = message; status.dataset.state = state; pane.dataset.state = state; }
     var shown = null;
@@ -114,12 +89,12 @@
     var sizing = document.createElement('style');
     pane.appendChild(sizing);
     function resize() {
-      var width = { desktop: 1280, tablet: 768, phone: 390 }[select.value];
+      var width = { desktop: 1280, tablet: 768, phone: 390 }[viewport.dataset.device];
       var available = viewport.clientWidth;
       if (!available || !viewport.clientHeight) { return; }
       var scale = Math.min(1, available / width);
       // Numeric geometry only, in a workspace stylesheet rather than inline attributes.
-      sizing.textContent = '.iss-editorial-live-preview__frame{width:' + width + 'px;height:' + (viewport.clientHeight / scale) + 'px;zoom:' + scale + '}';
+      sizing.textContent = '.iss-editorial-live-preview__frame{width:' + width + 'px;height:' + (viewport.clientHeight / scale) + 'px;transform:scale(' + scale + ');transform-origin:top left}';
     }
     var observer = new window.ResizeObserver(resize);
     observer.observe(viewport);
@@ -133,7 +108,6 @@
         position();
       },
       afterEditing: afterEditing,
-      edit: function () { setTab('edit'); },
       update: function (url, token, snapshot) {
         if (editing) { return; }
         if (destroyed) { return; }
@@ -141,7 +115,7 @@
         var address = new URL(url, window.location.href);
         if (address.origin !== window.location.origin) { stale('Vorschau-Adresse gehört zu einer anderen Website.'); return; }
         address.searchParams.set('iss_editorial_embed', '1');
-        if (persistent) { address.searchParams.set('iss_editorial_canvas', '1'); }
+        address.searchParams.set('iss_editorial_canvas', '1');
         address.searchParams.set('iss_editorial_snapshot', token);
         pending = element('iframe', 'iss-editorial-live-preview__frame');
         pending.issSnapshot = snapshot;

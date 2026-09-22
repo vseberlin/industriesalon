@@ -6,43 +6,10 @@ if (!defined('ABSPATH')) {
 
 function industriesalon_get_editorial_landing_skins(): array
 {
-    return [
-        'standard',
-        'typografisch',
-        'frontpage',
-        'dossier',
-        'territorial',
-    ];
+    return industriesalon_editorial_skin_slugs('landing');
 }
 
-add_filter('iss_editorial_format_skins', function (array $skins, string $format_slug): array {
-    if ($format_slug !== 'landing') {
-        return $skins;
-    }
 
-    return [
-        'standard' => [
-            'slug' => 'standard',
-            'label' => __('Standard', 'industriesalon'),
-        ],
-        'typografisch' => [
-            'slug' => 'typografisch',
-            'label' => __('Typografisch', 'industriesalon'),
-        ],
-        'frontpage' => [
-            'slug' => 'frontpage',
-            'label' => __('Frontpage', 'industriesalon'),
-        ],
-        'dossier' => [
-            'slug' => 'dossier',
-            'label' => __('Dossier', 'industriesalon'),
-        ],
-        'territorial' => [
-            'slug' => 'territorial',
-            'label' => __('Territorial', 'industriesalon'),
-        ],
-    ];
-}, 10, 2);
 
 function industriesalon_resolve_editorial_landing_skin(array $document): string
 {
@@ -59,7 +26,7 @@ function industriesalon_editorial_landing_is_enabled(int $post_id): bool
 
     $format = iss_editorial_get_format_for_post($post_id);
 
-    return (string) ($format['slug'] ?? '') === 'landing' && iss_editorial_document_is_enabled($post_id, 'landing');
+    return ($format['renderer'] ?? '') === 'landing' && iss_editorial_document_is_enabled($post_id, $format['slug']);
 }
 
 function industriesalon_get_editorial_landing_post_skin(int $post_id): string
@@ -68,13 +35,13 @@ function industriesalon_get_editorial_landing_post_skin(int $post_id): string
         return '';
     }
 
-    return industriesalon_resolve_editorial_landing_skin(iss_editorial_get_read_model($post_id, 'landing', industriesalon_editorial_landing_prefer_autosave($post_id)));
+    return industriesalon_resolve_editorial_landing_skin(iss_editorial_get_read_model($post_id, iss_editorial_get_format_for_post($post_id)['slug'], industriesalon_editorial_landing_prefer_autosave($post_id)));
 }
 
 function industriesalon_editorial_landing_prefer_autosave(int $post_id): bool
 {
     if (function_exists('iss_editorial_should_prefer_preview_autosave')) {
-        return iss_editorial_should_prefer_preview_autosave($post_id, 'landing');
+        return iss_editorial_should_prefer_preview_autosave($post_id, iss_editorial_get_format_for_post($post_id)['slug'] ?? 'landing');
     }
 
     return is_preview() && current_user_can('edit_post', $post_id);
@@ -82,35 +49,9 @@ function industriesalon_editorial_landing_prefer_autosave(int $post_id): bool
 
 function industriesalon_editorial_landing_treatment_slug(array $section): string
 {
+    $format = iss_editorial_get_format('landing');
     $type = sanitize_key((string) ($section['type'] ?? 'gateway'));
-    $defaults = [
-        'statement' => 'statement.lead',
-        'fliesstext' => 'text.standard',
-        'gateway' => 'gateway.cards',
-        'text_bild_reihe' => 'text-bild-reihe.visual',
-        'map_img' => 'map-img.editorial-atlas',
-        'feature' => 'feature.media-panel',
-        'dynamic_slot' => 'slot.projects',
-        'atlas_map' => 'atlas-map.map-only',
-    ];
-    $allowed = [
-        'statement' => ['statement.lead', 'statement.leitfrage', 'statement.callout'],
-        'fliesstext' => ['text.standard', 'text.story-split', 'text.story-split-flip'],
-        'gateway' => ['gateway.cards', 'gateway.link-list', 'gateway.feature-strip', 'gateway.pathways', 'gateway.atlas-plates'],
-        'text_bild_reihe' => ['text-bild-reihe.visual', 'text-bild-reihe.compact', 'text-bild-reihe.chronology'],
-        'map_img' => ['map-img.editorial-atlas'],
-        'feature' => ['feature.media-panel', 'feature.media-text', 'feature.image-overlay', 'feature.origin-story', 'feature.opening'],
-        'dynamic_slot' => ['slot.projects', 'slot.timeline', 'slot.visit-info', 'slot.newsletter', 'slot.fuehrungen-offers', 'slot.team-directory', 'slot.schoneweide-atlas'],
-        'atlas_map' => ['atlas-map.place-locator', 'atlas-map.map-only', 'atlas-map.editorial-split'],
-    ];
-    $default = $defaults[$type] ?? 'gateway.cards';
-    $treatment = strtolower((string) ($section['treatment'] ?? $default));
-    $treatment = (string) preg_replace('/[^a-z0-9_.-]/', '', $treatment);
-    if ($type === 'feature' && $treatment === 'feature.microblocks') {
-        $treatment = 'feature.image-overlay';
-    }
-
-    return in_array($treatment, $allowed[$type] ?? [], true) ? $treatment : $default;
+    return iss_editorial_resolve_treatment((string) ($section['treatment'] ?? ''), $format['sections'][$type] ?? []);
 }
 
 function industriesalon_editorial_landing_class_slug(string $value): string
@@ -149,7 +90,6 @@ function industriesalon_editorial_landing_gallery_layout(array $section): string
 function industriesalon_editorial_landing_section_classes(array $section, string $skin, int $item_count = 0): array
 {
     $type = sanitize_key((string) ($section['type'] ?? 'section'));
-    $anchor = sanitize_title((string) ($section['anchor'] ?? ''));
     $slot_key = sanitize_key((string) ($section['slot_key'] ?? ''));
     $treatment = $type === 'galerie' ? '' : industriesalon_editorial_landing_treatment_slug($section);
     $classes = [
@@ -177,18 +117,9 @@ function industriesalon_editorial_landing_section_classes(array $section, string
         $classes[] = 'iss-media-text--' . industriesalon_editorial_landing_media_text_layout($section);
         $classes[] = 'iss-media-text--gap-l';
     }
-    if ($anchor === 'vor-ort') {
-        $classes[] = 'iss-front-explore';
-    }
-    if ($anchor === 'archiv-wissen') {
-        $classes[] = 'iss-4-card-row';
-    }
-    if ($anchor === 'raum-nutzen') {
-        $classes[] = 'iss-section--rental';
-    }
-    if ($anchor === 'industriesalon') {
+    if (empty($section['_opening']) && $type === 'feature' && $treatment === 'feature.image-overlay') {
         $classes[] = 'iss-media-text';
-        $classes[] = 'iss-media-text--45-55';
+        $classes[] = 'iss-media-text--' . industriesalon_editorial_landing_media_text_layout($section);
         $classes[] = 'iss-media-text--gap-l';
         $classes[] = 'iss-media-text--flip';
         $classes[] = 'iss-media-text--overlay-heading';
@@ -227,7 +158,7 @@ function industriesalon_editorial_landing_section_attrs(array $section, string $
     return $attrs;
 }
 
-function industriesalon_render_editorial_landing_links(array $links): string
+function industriesalon_render_editorial_landing_links(array $links, bool $hero = false): string
 {
     $html = '';
     foreach ($links as $link) {
@@ -239,14 +170,21 @@ function industriesalon_render_editorial_landing_links(array $links): string
         if ($label === '' || $url === '') {
             continue;
         }
-        $html .= '<a class="iss-button iss-landing-section__action" href="' . esc_url($url) . '">' . esc_html($label) . '</a>';
+        if ($hero) {
+            $style = $html === '' ? 'is-style-fill' : 'is-style-outline';
+            $html .= '<!-- wp:button {"className":"' . $style . '"} --><div class="wp-block-button ' . $style . '"><a class="wp-block-button__link wp-element-button" href="' . esc_url($url) . '">' . esc_html($label) . '</a></div><!-- /wp:button -->';
+        } else {
+            $html .= '<a class="iss-button iss-landing-section__action" href="' . esc_url($url) . '">' . esc_html($label) . '</a>';
+        }
     }
 
     if ($html === '') {
         return '';
     }
 
-    return '<div class="iss-landing-section__actions">' . $html . '</div>';
+    return $hero
+        ? '<!-- wp:buttons {"className":"iss-front-hero__actions"} --><div class="wp-block-buttons iss-front-hero__actions">' . $html . '</div><!-- /wp:buttons -->'
+        : '<div class="iss-landing-section__actions">' . $html . '</div>';
 }
 
 function industriesalon_editorial_landing_link_url(array $link): string
@@ -995,22 +933,36 @@ function industriesalon_render_editorial_landing_feature(array $section, int $re
     }
     if (!empty($section['_opening'])) {
         $image_id = absint($section['media_refs'][0]['id'] ?? 0);
+        $image = wp_get_attachment_image_src($image_id, 'full');
+        // A cover image on a narrow screen is scaled by height, not just viewport width.
+        $image_sizes = $image && $image[2] > 0
+            ? '(min-aspect-ratio: ' . $image[1] . '/' . $image[2] . ') 100vw, ' . round(100 * $image[1] / $image[2], 2) . 'vh'
+            : '100vw';
         ob_start();
         ?>
         <section <?php echo industriesalon_editorial_landing_section_attrs($section, $skin); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- Escaped attribute helper. ?>>
-            <div class="iss-landing-opening">
-                <?php echo wp_get_attachment_image($image_id, 'full', false, ['class' => 'iss-landing-opening__image', 'loading' => 'eager', 'fetchpriority' => 'high']); ?>
-                <div class="iss-container iss-landing-opening__content">
-                    <?php if (!empty($section['kicker'])) : ?><p class="iss-kicker iss-kicker--light"<?php echo industriesalon_landing_field_attrs($section, 'kicker'); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- Escaped preview attributes. ?>><?php echo esc_html($section['kicker']); ?></p><?php endif; ?>
-                    <h1 class="iss-landing-opening__title"<?php echo industriesalon_landing_field_attrs($section, 'title'); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- Escaped preview attributes. ?>><?php echo esc_html($section['title']); ?></h1>
-                    <?php if (!empty($section['lead'])) : ?><div class="iss-landing-section__lead"<?php echo industriesalon_landing_field_attrs($section, 'lead'); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- Escaped preview attributes. ?>><?php echo industriesalon_landing_prose($section['lead'], $section); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- Versioned prose allowlist. ?></div><?php endif; ?>
-                    <div class="iss-landing-opening__body"<?php echo industriesalon_landing_field_attrs($section, 'body'); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- Escaped preview attributes. ?>><?php echo industriesalon_landing_prose($section['body'] ?? '', $section); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- Versioned prose allowlist. ?></div>
-                    <?php echo industriesalon_render_editorial_landing_links($section['links'] ?? []); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- Escaped link helper. ?>
+            <!-- wp:cover {"className":"iss-front-hero iss-front-hero--home","contentPosition":"bottom left"} -->
+            <div class="wp-block-cover has-custom-content-position is-position-bottom-left iss-front-hero iss-front-hero--home">
+                <?php echo wp_get_attachment_image($image_id, 'full', false, ['class' => 'wp-block-cover__image-background', 'data-object-fit' => 'cover', 'sizes' => $image_sizes, 'loading' => 'eager', 'fetchpriority' => 'high']); ?>
+                <div class="wp-block-cover__inner-container">
+                    <div class="iss-front-hero__shell">
+                        <div class="iss-heading iss-front-hero__content">
+                            <?php if (!empty($section['kicker'])) : ?><p class="iss-kicker iss-kicker--light iss-kicker--lg iss-front-hero__kicker"<?php echo industriesalon_landing_field_attrs($section, 'kicker'); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- Escaped preview attributes. ?>><?php echo esc_html($section['kicker']); ?></p><?php endif; ?>
+                            <h1 class="wp-block-heading iss-heading__title iss-front-hero__title"<?php echo industriesalon_landing_field_attrs($section, 'title'); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- Escaped preview attributes. ?>><?php echo esc_html($section['title']); ?></h1>
+                        </div>
+                    </div>
                 </div>
+            </div>
+            <!-- /wp:cover -->
+            <div class="iss-container iss-front-hero__actions-wrap">
+                <?php if (!empty($section['lead'])) : ?><div class="iss-landing-section__lead"<?php echo industriesalon_landing_field_attrs($section, 'lead'); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- Escaped preview attributes. ?>><?php echo industriesalon_landing_prose($section['lead'], $section); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- Versioned prose allowlist. ?></div><?php endif; ?>
+                <?php if (!empty($section['body']) || !empty($section['_canvas_edit'])) : ?><div class="iss-landing-section__body"<?php echo industriesalon_landing_field_attrs($section, 'body'); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- Escaped preview attributes. ?>><?php echo industriesalon_landing_prose($section['body'] ?? '', $section); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- Versioned prose allowlist. ?></div><?php endif; ?>
+                <?php echo industriesalon_render_editorial_landing_links($section['links'] ?? [], true); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- Escaped link helper. ?>
             </div>
         </section>
         <?php
-        return trim((string) ob_get_clean());
+        // Native blocks supply their own assets; the theme supplies the shared hero skin.
+        return do_blocks(trim((string) ob_get_clean()));
     }
     if ($treatment === 'feature.image-overlay') {
         return industriesalon_render_editorial_landing_feature_microblocks($section, $rendered_index, $skin);
@@ -1445,7 +1397,7 @@ function industriesalon_editorial_landing_render_document(array $document): stri
 
 function industriesalon_render_editorial_landing_content(string $content): string
 {
-    if (is_admin() || doing_filter('get_the_excerpt') || !is_singular('page') || !in_the_loop() || !is_main_query()) {
+    if (is_admin() || doing_filter('get_the_excerpt') || !is_singular() || !in_the_loop() || !is_main_query()) {
         return $content;
     }
 
@@ -1455,7 +1407,7 @@ function industriesalon_render_editorial_landing_content(string $content): strin
     }
 
     $prefer_autosave = industriesalon_editorial_landing_prefer_autosave((int) $post_id);
-    $document = iss_editorial_get_read_model((int) $post_id, 'landing', $prefer_autosave);
+    $document = iss_editorial_get_read_model((int) $post_id, iss_editorial_get_format_for_post($post_id)['slug'], $prefer_autosave);
     $html = industriesalon_editorial_landing_render_document($document);
     if (trim($html) === '') {
         return $content;
@@ -1482,7 +1434,7 @@ function industriesalon_front_page_landing_has_sections(): bool
         return $has_sections;
     }
 
-    $document = iss_editorial_get_read_model($post_id, 'landing', industriesalon_editorial_landing_prefer_autosave($post_id));
+    $document = iss_editorial_get_read_model($post_id, iss_editorial_get_format_for_post($post_id)['slug'], industriesalon_editorial_landing_prefer_autosave($post_id));
     $sections = is_array($document['sections'] ?? null) ? $document['sections'] : [];
     $has_sections = false;
     foreach ($sections as $section) {
@@ -1509,7 +1461,7 @@ function industriesalon_suppress_front_page_landing_fallback_group(string $block
     $anchor = sanitize_title((string) ($attrs['anchor'] ?? ''));
     if (strpos($class_name, ' iss-section--hero ') !== false) {
         $post_id = (int) get_queried_object_id();
-        $document = iss_editorial_get_read_model($post_id, 'landing', industriesalon_editorial_landing_prefer_autosave($post_id));
+        $document = iss_editorial_get_read_model($post_id, iss_editorial_get_format_for_post($post_id)['slug'], industriesalon_editorial_landing_prefer_autosave($post_id));
         if (industriesalon_landing_has_opening($document)) { return ''; }
     }
     $fallback_classes = [
@@ -1539,7 +1491,7 @@ add_filter('render_block_core/group', 'industriesalon_suppress_front_page_landin
 
 function industriesalon_render_editorial_landing_block(): string
 {
-    if (is_admin() || !is_singular('page')) {
+    if (is_admin() || !is_singular()) {
         return '';
     }
 
@@ -1549,7 +1501,7 @@ function industriesalon_render_editorial_landing_block(): string
     }
 
     $prefer_autosave = industriesalon_editorial_landing_prefer_autosave($post_id);
-    $document = iss_editorial_get_read_model($post_id, 'landing', $prefer_autosave);
+    $document = iss_editorial_get_read_model($post_id, iss_editorial_get_format_for_post($post_id)['slug'], $prefer_autosave);
     return industriesalon_editorial_landing_render_document($document);
 }
 
@@ -1573,31 +1525,3 @@ function industriesalon_landing_has_opening(array $document): bool
         && trim((string) ($first['title'] ?? '')) !== ''
         && wp_attachment_is_image(absint($first['media_refs'][0]['id'] ?? 0));
 }
-
-add_action('wp_enqueue_scripts', static function (): void {
-    $post_id = (int) get_queried_object_id();
-    if (!is_singular('page') || !industriesalon_editorial_landing_is_enabled($post_id)) { return; }
-    $document = iss_editorial_get_read_model($post_id, 'landing', industriesalon_editorial_landing_prefer_autosave($post_id));
-    if (($document['schema_version'] ?? 1) < 2) { return; }
-    $rules = [];
-    $palette_slugs = array_column(iss_editorial_text_palette(), 'slug');
-    foreach ((array) ($document['sections'] ?? []) as $section) {
-        $values = [$section['body'] ?? '', $section['lead'] ?? ''];
-        foreach ((array) ($section['items'] ?? []) as $item) { $values[] = $item['text'] ?? ''; }
-        foreach ($values as $value) {
-            $tags = new WP_HTML_Tag_Processor($value);
-            while ($tags->next_tag('span')) {
-                foreach (preg_split('/\s+/', (string) $tags->get_attribute('class')) as $class) {
-                    if (preg_match('/^iss-(ink|mark)-([0-9a-f]{6})$/D', $class, $match)) {
-                        $property = $match[1] === 'ink' ? 'color' : 'background-color';
-                        $rules[$class] = '.iss-landing-editorial .' . $class . '{' . $property . ':#' . $match[2] . '}';
-                    } elseif (preg_match('/^iss-(ink|mark)-preset-([a-z0-9-]+)$/D', $class, $match) && in_array($match[2], $palette_slugs, true)) {
-                        $property = $match[1] === 'ink' ? 'color' : 'background-color';
-                        $rules[$class] = '.iss-landing-editorial .' . $class . '{' . $property . ':var(--wp--preset--color--' . $match[2] . ')}';
-                    }
-                }
-            }
-        }
-    }
-    if ($rules) { wp_add_inline_style('industriesalon-base', implode("\n", $rules)); }
-}, 30);

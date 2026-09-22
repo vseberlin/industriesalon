@@ -96,6 +96,11 @@ function iss_content_model_get_video_transcript_html(int $post_id): string
         }
     }
 
+    // Article composition has its own template slot. Timed transcripts above
+    // retain their owner; legacy post_content must not duplicate the article.
+    if (function_exists('iss_editorial_document_is_enabled') && iss_editorial_document_is_enabled($post_id, 'article')) {
+        return '';
+    }
     $content_html = apply_filters('the_content', (string) get_post_field('post_content', $post_id));
     return trim(wp_strip_all_tags($content_html)) === '' ? '' : $content_html;
 }
@@ -354,9 +359,9 @@ function iss_content_model_pick_display_video_category(array $categories): ?arra
     return $best_category;
 }
 
-function iss_content_model_get_video_cards(): array
+function iss_content_model_get_video_cards(int $post_id = 0): array
 {
-    $posts = get_posts([
+    $query = [
         'post_type' => ISS_CONTENT_MODEL_VIDEO_POST_TYPE,
         'post_status' => 'publish',
         'posts_per_page' => -1,
@@ -365,7 +370,15 @@ function iss_content_model_get_video_cards(): array
             'date' => 'DESC',
         ],
         'suppress_filters' => true,
-    ]);
+    ];
+    if ($post_id > 0) {
+        $query['include'] = [$post_id];
+        $query['posts_per_page'] = 1;
+        if (current_user_can('edit_post', $post_id)) {
+            $query['post_status'] = ['publish', 'private', 'draft', 'pending', 'future'];
+        }
+    }
+    $posts = get_posts($query);
 
     if (!$posts) {
         return [];
@@ -386,6 +399,9 @@ function iss_content_model_get_video_cards(): array
         $year_label = trim((string) get_post_meta($post->ID, 'iss_video_year', true));
         $original_date = trim((string) get_post_meta($post->ID, 'iss_video_original_date', true));
         $body_content = trim((string) get_post_field('post_content', $post->ID));
+        if (function_exists('iss_editorial_document_is_enabled') && iss_editorial_document_is_enabled((int) $post->ID, 'article')) {
+            $body_content = '';
+        }
         $transcript_html = iss_content_model_get_video_transcript_html((int) $post->ID);
         $has_transcript_content = trim(wp_strip_all_tags($transcript_html)) !== '';
         $transcript_status = iss_content_model_resolve_video_transcript_status(
@@ -1080,7 +1096,7 @@ function iss_content_model_get_single_video_card(int $post_id): ?array
         return null;
     }
 
-    $cards = iss_content_model_get_video_cards();
+    $cards = iss_content_model_get_video_cards($post_id);
     foreach ($cards as $card) {
         if ((int) ($card['id'] ?? 0) === $post_id) {
             return $card;

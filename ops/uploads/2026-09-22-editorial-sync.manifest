@@ -1,0 +1,35 @@
+# Local uploads -> staging uploads. SHA256, bytes, uploads-relative path.
+# Full rollback: staging backups/20260922-132743/uploads.tar.gz.
+de32ce9b451515dc7bf7bd5fa5ac88846dde0aff2d2309ffedef74c716809699	187142	2026/04/treskowbruecke-gasanstalt-oberspree-1926-1024x696.webp
+99b91d8b65ad006840796079b7de2fc23f962991019e4f5066a10f169e54cdb2	8826	2026/04/treskowbruecke-gasanstalt-oberspree-1926-150x150.webp
+796a3581e782c2427e5741f8a0595674f5a0ee8306bb5bb23e84ff49089d7df9	21462	2026/04/treskowbruecke-gasanstalt-oberspree-1926-300x204.webp
+68ed429f8ca28c38ba1e71745ac21cd2b1f86c0cece9698f7b8eca80dfbbb378	121176	2026/04/treskowbruecke-gasanstalt-oberspree-1926-768x522.webp
+8a17bfff7f5f472adee38798c28b893c66dd36f4bcd7e8c92a601b296f75056d	493150	2026/04/treskowbruecke-gasanstalt-oberspree-1926.webp
+9809fffa68499357359334fa1f9323c20aa422beadd05639de27793226ac3444	346458	2026/06/1_WFS-1954-16-5f33ff60b3889-1024x940.webp
+7291849de8bdd2197109e6894f6c4470d92af75970fefc72f6c302562b10cdd4	7404	2026/06/1_WFS-1954-16-5f33ff60b3889-150x150.webp
+1886652c26b7f5ce4d70a6b085525fa6282114ee0d25f2a2e07dbfcd3a1023e3	25404	2026/06/1_WFS-1954-16-5f33ff60b3889-300x275.webp
+b00cfe2e0130ed2cf51c6403682489df0d99f4b3f2b0658737b1c05ad4cc9157	197904	2026/06/1_WFS-1954-16-5f33ff60b3889-768x705.webp
+428cc94c827b1ea2fde24846ac298907864e63db60ad335e46c3fff11a138a02	533800	2026/06/1_WFS-1954-16-5f33ff60b3889.webp
+6f5257ddf2c2066aa9bf4c572979ddbeb3e208632fe9936b55696587af509f7a	5410	2026/06/1_eine-gruppe-von-kindern-bei-der-ausstellung-des-zeichenwettbewerbs-der-berliner-zeitung-sw-150x150.webp
+5786ccb97e16cb775808f18829cb91cb25386e9aadc843f2b9fb96c669dcefef	16102	2026/06/1_eine-gruppe-von-kindern-bei-der-ausstellung-des-zeichenwettbewerbs-der-berliner-zeitung-sw-300x300.webp
+5e7928733a499dfe62f3d0b989b16168b3d2b12b3091cafa6f35e6a27a3d2ce9	74286	2026/06/1_eine-gruppe-von-kindern-bei-der-ausstellung-des-zeichenwettbewerbs-der-berliner-zeitung-sw-768x767.webp
+2d38cb8dea8a31dae07a38584a9ae32493aed8298fe0f978eeb560c3b063c5cf	110684	2026/06/1_eine-gruppe-von-kindern-bei-der-ausstellung-des-zeichenwettbewerbs-der-berliner-zeitung-sw.webp
+db8bd9337645b65895a88b09e3f43ab7ef9ad03c902edd9bf54aa7be7ecae008	98476	2026/06/1_kinder-und-ein-kuenstler-beim-modellieren-mit-ton-1974-sw-foto-kurt-schwarz-98585-1024x1024.webp
+f07df634ea2daa9ad47ac45d38244579d86beeeea06c2918d3260cf7187ee84f	6212	2026/06/1_kinder-und-ein-kuenstler-beim-modellieren-mit-ton-1974-sw-foto-kurt-schwarz-98585-150x150.webp
+6b0d5d6347c8e6b9ff9d647cd4b3a3d0b9b667070de8daf025b0991cf5f1b574	17884	2026/06/1_kinder-und-ein-kuenstler-beim-modellieren-mit-ton-1974-sw-foto-kurt-schwarz-98585-300x300.webp
+ef421a0ce53017c84f84f06cc6f4f1ca4ddf8abba0dcc480888520ca48491890	68926	2026/06/1_kinder-und-ein-kuenstler-beim-modellieren-mit-ton-1974-sw-foto-kurt-schwarz-98585-768x768.webp
+0fa71c655cf342913a0de2b6218063ba72f375b48045ceb887be9280c4e361a5	127160	2026/06/1_kinder-und-ein-kuenstler-beim-modellieren-mit-ton-1974-sw-foto-kurt-schwarz-98585.webp
+d53e5e01bd007c3cd798dbd16f94cb1d670fb52288faab2e2a5e397c1ac46222	196306	2026/06/kinder-mit-erzieherin-spielen-im-sandkasten-auf-dem-spielplatz-vor-dem-gebaeude-des-wf-1024x971.webp
+06590d363938384f9d5dd6ce4a288fcd0a1e9f68f2251f7f38ea8f3fb39923b1	8708	2026/06/kinder-mit-erzieherin-spielen-im-sandkasten-auf-dem-spielplatz-vor-dem-gebaeude-des-wf-150x150.webp
+4fb175b7b54ac5ebeadda1b47be5ae7a3d2f53ce6178686f3df568929579986c	25596	2026/06/kinder-mit-erzieherin-spielen-im-sandkasten-auf-dem-spielplatz-vor-dem-gebaeude-des-wf-300x284.webp
+8ed0d54e5b604d1ef3cf0636399e3d9f3ea9e4036b35b7eb619c0a1939118ae3	125370	2026/06/kinder-mit-erzieherin-spielen-im-sandkasten-auf-dem-spielplatz-vor-dem-gebaeude-des-wf-768x728.webp
+f000d5f2559eb2184780c48a14e3f1b51588bc5f80202dd4c11950433aa21ed2	297764	2026/06/kinder-mit-erzieherin-spielen-im-sandkasten-auf-dem-spielplatz-vor-dem-gebaeude-des-wf.webp
+71580d6f45ab5310ba5dfa2d6ae8fe8ccac4c9c746bf55d367f1974a721b6016	12145	event-drop-storage/accepted/16-20260626-071807-Brand-Guidelines_Industriesalon-Schoneweide-pdf-1024x576.jpg
+9fe592a55e74fd0ef10e027f22d048a8e12833584f87d372d15378be843cb4d8	923	event-drop-storage/accepted/16-20260626-071807-Brand-Guidelines_Industriesalon-Schoneweide-pdf-150x84.jpg
+7ee0ce49230c1c5ffb9680e80bc47e6afffdcac8eb5b69f0e4c24c1cec7473e4	2154	event-drop-storage/accepted/16-20260626-071807-Brand-Guidelines_Industriesalon-Schoneweide-pdf-300x169.jpg
+4b76c05d6c5b77aded330ab8b40663971c184b598dd6ff22e60d575d6eb3cc58	73041	event-drop-storage/accepted/16-20260626-071807-Brand-Guidelines_Industriesalon-Schoneweide-pdf.jpg
+03ba508588a8a2c131abf5dbd058ec3839e3823ff46368a1680731aae5d1ff2c	151014831	event-drop-storage/accepted/16-20260626-071807-Brand-Guidelines_Industriesalon-Schoneweide.pdf
+25da7a325687d898e229f6255ebcdbc472bddca9edbf5dcd9175bef57ae67294	476533	event-drop-storage/accepted/projekt__walk-of-fame-schoeneweide_vladimir_20260626_071703_c4b7da3f-1024x576.png
+d01b155a9ac4c6b5c8a005ebe64ca3fc5383b5c6064cb98ffafdbd6f0a27bf59	16777	event-drop-storage/accepted/projekt__walk-of-fame-schoeneweide_vladimir_20260626_071703_c4b7da3f-150x150.png
+4bdff73e7b5d49e04b834b89f645bd0fe66097ea9000d470a81733209710648f	1036156	event-drop-storage/accepted/projekt__walk-of-fame-schoeneweide_vladimir_20260626_071703_c4b7da3f-1536x864.png
+9178dd19059dfedb9a216fbacf7202a5aebb170dbf960204246a5fa3a32654fe	270359	event-drop-storage/accepted/projekt__walk-of-fame-schoeneweide_vladimir_20260626_071703_c4b7da3f-768x432.png

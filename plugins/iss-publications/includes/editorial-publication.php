@@ -12,6 +12,10 @@ function iss_publications_register_editorial_format(array $formats): array
         'post_types' => [ISS_PUBLICATIONS_POST_TYPE],
         'default_skin' => 'standard',
         'default_variant' => 'standard',
+        'starters' => [
+            ['label' => __('Longread beginnen', 'iss-publications'), 'sections' => [['type' => 'intro'], ['type' => 'longread_chapter', 'title' => 'Einführung']]],
+            ['label' => __('Fotoalbum beginnen', 'iss-publications'), 'sections' => [['type' => 'intro'], ['type' => 'photoalbum']]],
+        ],
         'sections' => [
             'intro' => [
                 'label' => __('Einleitung', 'iss-publications'),
@@ -24,28 +28,28 @@ function iss_publications_register_editorial_format(array $formats): array
                 'supports' => ['links'],
             ],
             'publication_rail' => [
-                'label' => __('Leserail', 'iss-publications'),
-                'description' => __('Optional reading rail generated from the publication sections.', 'iss-publications'),
+                'label' => __('Lesenavigation', 'iss-publications'),
+                'description' => __('Optionale Lesenavigation aus den Abschnitten der Publikation.', 'iss-publications'),
                 'supports' => ['rail_options', 'no_body'],
             ],
             'longread_chapter' => [
                 'label' => __('Longread-Kapitel', 'iss-publications'),
-                'description' => __('One chapter in a JSON-backed longread publication.', 'iss-publications'),
+                'description' => __('Ein Kapitel mit Text und begleitenden Bildern.', 'iss-publications'),
                 'supports' => ['anchor', 'media_refs', 'media_layout'],
             ],
             'longread_quote' => [
                 'label' => __('Longread-Zitat', 'iss-publications'),
-                'description' => __('A standalone quote moment in a JSON-backed longread publication.', 'iss-publications'),
+                'description' => __('Ein eigenständiges Zitat mit Quellenangabe.', 'iss-publications'),
                 'supports' => ['quote'],
             ],
             'timeline_item' => [
                 'label' => __('Zeitleisten-Station', 'iss-publications'),
-                'description' => __('One dated station in a JSON-backed timeline publication.', 'iss-publications'),
+                'description' => __('Einen Zeitpunkt mit Text und Bild erläutern.', 'iss-publications'),
                 'supports' => ['year', 'media_refs'],
             ],
             'photoalbum' => [
                 'label' => __('Fotoalbum', 'iss-publications'),
-                'description' => __('Editable album sequence imported from an Archivset or editorial Set.', 'iss-publications'),
+                'description' => __('Eine Bildfolge aus einem Archivset oder redaktionellen Set zusammenstellen.', 'iss-publications'),
                 'supports' => ['album_source', 'sheets', 'no_body'],
             ],
         ],

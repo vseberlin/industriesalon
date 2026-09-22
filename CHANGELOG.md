@@ -4,6 +4,26 @@ This file records durable project changes. Keep it compact: current state belong
 `handoff_CURRENT.md`, active follow-up in `TODO.md`, and detailed investigation can
 be recovered from Git history.
 
+## 2026-09-22
+
+- Preserved staging's CARTO key support in the shared code, keeping the key
+  outside Git. Added the guarded editor/content sync migration and required
+  media checksum manifest; private drafts and unrelated domain data stay local
+  to their environments.
+
+- Restored the homepage hero's original staging appearance while retaining JSON
+  ownership. Reused native Cover/Buttons and the existing theme hero pattern,
+  removed the duplicate opening design and ordinary-section padding conflict,
+  and preserved optional introductory content beneath the image.
+
+- Consolidated JSON authoring into one workspace and effective format registry,
+  extended previews to nine formats, and removed the alternate cards/modal
+  editor. Added explicit starters and repeatable registry/renderer checks.
+- Split landing renderer CSS from skins, restricted legacy front-page styles to
+  fallback output, and removed anchor-dependent presentation. Preserved stored
+  documents and native domain controls. Video articles use the shared renderer;
+  excerpts no longer render full compositions. See the consolidation audit.
+
 ## 2026-07-19
 
 - Redesigned the `register_place` dossier around an image-led hero, compact

@@ -37,6 +37,8 @@ parameters:
     - plugins/iss-publications/iss-publications.php
     - plugins/iss-relations/iss-relations.php
     - plugins/iss-archive/iss-archive.php
+  scanDirectories:
+    - themes/industriesalon/includes
   excludePaths:
     analyse:
       - */vendor/*

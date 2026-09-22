@@ -1,6 +1,6 @@
-# Landing editor workspace
+# Shared editorial workspace
 
-Accepted implementation scope, 2026-09-21. Based on the supplied
+Accepted implementation scope, updated 2026-09-22. Based on the supplied
 `editor-workspace-sow.md`, with the review corrections below. Staff and volunteer
 editors are the first audience. The existing private front-page composition is
 the pilot; publication is a separate editorial action.
@@ -10,13 +10,16 @@ the pilot; publication is a separate editorial action.
 `iss-editorial` owns the workspace shell, existing section controls, compact
 WordPress TinyMCE configuration, draft/recovery flow and authenticated preview
 bridge. `iss-content` owns section/treatment metadata. The theme owns all public
-markup and the exact preview-only field addresses in its landing renderers.
+markup and the exact preview-only field addresses in each renderer.
 
 The workspace is a layout adapter around `admin.js`, not a second document state,
 renderer or save mechanism. It reuses the native autosave revision and existing
-AJAX endpoint. The previous modal remains available during UAT; other formats
-retain their current editor. No framework, build step, new metadata key or schema
-version is introduced. Landing v1 keeps its explicit rich-text upgrade.
+AJAX endpoint. All nine formats use this workspace; the previous section modal
+and alternate preview layout are removed. No framework, build step or additional
+save store is introduced. The general `article` format uses the engine's standard
+per-format metadata contract. Existing v1 documents keep an explicit upgrade;
+new documents use the existing v3 schema. See the
+[consolidation audit](editorial-consolidation-audit.md) for coverage and checks.
 
 ## Delivery
 
@@ -43,8 +46,9 @@ version is introduced. Landing v1 keeps its explicit rich-text upgrade.
   double-click. Cursor-only links, named theme colours and exact custom hex
   colours are retained. The form path remains a first-class editing choice.
 - Generated content stays read-only in the preview. Individual gateway/item
-  fields remain in the inspector in this first delivery. Other CPTs follow only
-  after staff UAT, with renderer-specific field ownership reviewed separately.
+  fields remain in the inspector. Public renderers retain their distinct content
+  composition; generated slots, route data and source summaries are not made into
+  editable prose. Empty documents offer registry-owned starter compositions.
 
 ## Editor styling
 
@@ -88,10 +92,10 @@ structural actions wait for the active field to finish. No IDs are added to stor
 sections. Parent form controls for the selected section are inert only during a
 canvas edit; the pane navigation and finish path remain available.
 
-Both the old editor and workspace require JavaScript. With JavaScript disabled,
-a truthful notice explains this and stored content remains untouched. Preview
-failure must not disable the inspector. The legacy modal is a transitional
-fallback, not a second permanent authoring system.
+The workspace requires JavaScript. With JavaScript disabled, a truthful notice
+explains this and stored content remains untouched. Preview failure must not
+disable the inspector. Missing workspace assets report an error; they do not
+open a second authoring system.
 
 ## Acceptance
 

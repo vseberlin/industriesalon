@@ -16,33 +16,10 @@ function industriesalon_editorial_tour_is_enabled(int $post_id): bool
 
 function industriesalon_get_editorial_tour_skins(): array
 {
-    return [
-        'route-dossier',
-        'compact',
-        'standard',
-    ];
+    return industriesalon_editorial_skin_slugs('fuehrung');
 }
 
-add_filter('iss_editorial_format_skins', function (array $skins, string $format_slug): array {
-    if ($format_slug !== 'fuehrung') {
-        return $skins;
-    }
 
-    return [
-        'route-dossier' => [
-            'slug' => 'route-dossier',
-            'label' => __('Routendossier', 'industriesalon'),
-        ],
-        'compact' => [
-            'slug' => 'compact',
-            'label' => __('Kompakt', 'industriesalon'),
-        ],
-        'standard' => [
-            'slug' => 'standard',
-            'label' => __('Standard', 'industriesalon'),
-        ],
-    ];
-}, 10, 2);
 
 function industriesalon_resolve_editorial_tour_skin(array $document): string
 {
@@ -747,7 +724,7 @@ function industriesalon_render_editorial_tour_section(array $section, bool $show
 
 function industriesalon_render_editorial_tour_content(string $content): string
 {
-    if (is_admin() || !is_singular('fuehrung') || !in_the_loop() || !is_main_query()) {
+    if (is_admin() || doing_filter('get_the_excerpt') || !is_singular('fuehrung') || !in_the_loop() || !is_main_query()) {
         return $content;
     }
 
@@ -769,6 +746,7 @@ function industriesalon_render_editorial_tour_content(string $content): string
         $anchor = industriesalon_editorial_tour_section_anchor($section, (int) $index, $used_anchors);
         $used_anchors[] = $anchor;
         $section_html = industriesalon_render_editorial_tour_section($section, $show_placeholders, $rendered_index, $skin, $anchor, (int) $post_id);
+        $section_html = industriesalon_editorial_preview_section($section_html, $section, ['title' => 'iss-tour-section__title', 'kicker' => 'iss-tour-section__kicker', 'body' => 'iss-tour-section__body']);
         if (trim($section_html) !== '') {
             $html .= $section_html;
             ++$rendered_index;
@@ -816,7 +794,7 @@ function industriesalon_render_editorial_tour_stage_slots(string $block_content,
             return $block_content;
         }
 
-        return (string) preg_replace('/^(\s*<[a-z0-9]+\b[^>]*>)/i', '$1' . $stage_background, $block_content, 1);
+        return industriesalon_editorial_preview_section((string) preg_replace('/^(\s*<[a-z0-9]+\b[^>]*>)/i', '$1' . $stage_background, $block_content, 1), $stage, ['title' => 'iss-tour-hero__title']);
     }
 
     if ($block_name === 'core/post-title' && preg_match('/(^|\s)iss-tour-hero__title(\s|$)/', $class_name) === 1) {

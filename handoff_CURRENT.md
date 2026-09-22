@@ -1,92 +1,91 @@
-# Current handoff — 2026-09-21
+# Current handoff — 2026-09-22
 
-Website checkout: `/home/vladimir/wp-website`, branch `main`; read `AGENTS.md`
-first. `/home/vladimir/wp` remains the preserved mixed archive checkout on
-`archive/local-work-20260911`. Do not edit, merge or push that branch for website
-work. Fetched `origin/main` is **e9564c8**. The workspace polish and styling below
-are recorded in the local commit following that base; use `git log -1` for its
-hash. This checkpoint is not pushed, deployed or published. Use fresh Git refs
-before exchange.
+Website source: `/home/vladimir/wp-website`, branch `main`. The accepted editor
+consolidation, hero restoration and staging CARTO repair are prepared for the
+GitHub -> staging sync authorized on 2026-09-22. Deployment is in progress;
+verify the final Git refs and migration result before treating it as complete.
+`/home/vladimir/wp` remains the preserved archive checkout; do not merge its
+history into website delivery.
 
-## Current feature and next action
+## Implementation and next action
 
-Rich-text landings now have a persistent outline, real theme preview and tabbed
-inspector. Title/kicker and body/lead can be edited in place; input autosaves before
-blur, frame replacement waits until editing finishes, and Escape restores the
-active field. Native cursor-only links, named/custom colours and the existing
-section/media/item/archive controls remain available. Generated content is
-read-only in the canvas; individual item fields remain in the inspector.
+One JSON workspace serves nine registered formats: landing, article, project,
+tour, exhibition, report, event, place and publication. Article reuses the
+landing renderer for ordinary pages/posts/videos. Registry metadata owns
+versions, sections, treatments, aliases, skins, features and explicit starters.
+The old cards/modal authoring path is removed. Native relationship, route,
+transcript and publishing controls retain their owners. Existing block content
+is not automatically migrated or enabled.
 
-Workspace now starts expanded with a compact top bar, separate draft/preview
-status, compact outline, treatment schematics, growing title input and quiet
-trash with undo. Opening notes stay with their section; preview selection stays
-solid on hover and clears the measured header. Narrow screens switch panes.
-Warm panes, consistent fields/actions, the shared text toolbar and native
-media/link dialogs now use editor tokens. Link/item rows fit the inspector;
-short windows scroll the whole inspector. Canvas controls stay above the logo.
-Only three scoped disabled-button colours use user-approved `!important` to
-match core's important declarations; no extra override stylesheet was added.
-Collapsing restores native controls, scrolling and keyboard access. Searchable
-insertion, preview gaps and keyboard/pointer reordering retain existing state.
-**Weitere Werkzeuge** opens the previous section view and revision history. Native WordPress Update/Publish remains the
-publication action. Other formats keep the existing editor until staff UAT.
-Details: [workspace plan](docs/project/editor-workspace-plan.md) and
-[editorial platform](docs/architecture/editorial-platform.md#landing-rich-text-and-live-preview).
+Theme CSS now separates `editorial-landing.css` anatomy/treatments from
+`editorial-skins.css`. The old combined stylesheet is removed; legacy
+`front-page.css` loads only for the fallback composition. URL anchors no longer
+choose presentation. Admin control appearance and workspace layout remain in
+their existing separate layers. No new `!important` or override layer.
+Homepage hero regression repaired: JSON reuses the original `iss-front-hero`
+pattern, matching staging geometry/type/gradient at desktop and phone widths.
+Duplicate opening CSS is removed; optional prose remains below the image.
+The theme-owned `front-page` fallback shares the same pattern; no DB migration.
 
-Next: staff acceptance using a section with image, title and text; either canvas
-or inspector is valid. Firefox and real clipboard/paste remain unverified. No
-new end-to-end latency claim. Target deployment/publication remain separate.
+Read the [audit and latest-audit comparison](docs/project/editorial-consolidation-audit.md)
+and [editorial contract](docs/architecture/editorial-platform.md).
+Deploy the matching owning plugins and theme together. The code itself needs
+no DB rewrite; the explicitly requested content sync uses
+`ops/migrations/2026-09-22-editorial-staging-sync.php` and
+`ops/uploads/2026-09-22-editorial-sync.manifest`. Use `--use-include` with
+`wp eval-file`; default is guarded preflight, `apply` writes, `verify` checks.
+Scope: 52 documents, 59 content/template records and 13 new attachment rows;
+33 media files are checksum verified. Preserve private autosaves, unrelated
+Sets/programme data, accounts and environment configuration. Staging backup:
+`/srv/industriesalon/stage/backups/20260922-132743/` (DB and uploads). Config and
+original dirty patch: `/home/vladimir/server-actions/sync-20260922/`.
+The staged CARTO key stays in `app/wp-config.php`, outside Git. The old dirty
+repo Compose change is inactive (staging uses `stage/compose.yml`); preserve its
+patch/stash while making the checkout match GitHub.
+Next: complete deploy/migration verification, then staff acceptance, Firefox
+and real clipboard/paste checks.
 
-## Local pilot and verification
+## Authority and preservation
 
-The `admin` author's private native autosave **27454** for homepage **12257**
-(`home`) retains 12 v3 sections and two deleted sections. Canonical homepage
-post/meta and the effective theme front-page template are unchanged, apart from
-the normal browser edit lock. **Update** was not clicked. Reload and choose
-**Entwurf weiterbearbeiten**:
-`http://192.168.2.31:8082/wp-admin/post.php?post=12257&action=edit`.
+- Homepage **12257**, slug `home-2`, has a published v3 document with **10 sections
+  and four deleted sections**. Administrator autosave **27678** has its own valid
+  **10+4** composition. Both are retained. The old handoff's 27454 / 12+2 state
+  was stale. Home content/JSON is unchanged; preview refreshed only its autosave
+  timestamps/base-token bookkeeping and normal edit locks.
+- **86 existing documents** validate. About, Schöneweide and Führungen stay v1;
+  schema upgrades are explicit. Preserve report **27388**, event **26813**, Set
+  data, Event Drop and existing Place migration/upload artifacts.
+- Effective DB overrides remain: `single-ausstellung` **26309**,
+  `page-publikationen` **26560**, `page-projekte` **26532**. `single-video` is
+  theme-owned locally; check target template authority before deployment.
+- Verified pre-change backup and full-row baseline are in
+  `/home/vladimir/.local/state/iss-editorial-consolidation-20260922/`:
+  `before.sql.gz`, `baseline.json`, `preservation-result.json`. Read-only
+  `verify-preservation.py` checks 15,390 posts and 238,520 non-lock metadata rows;
+  expected home-preview bookkeeping is explicitly classified. The latest broad
+  comparison is **not clean**: autosaves 26790/27228 changed, 27941 was added,
+  metadata was added to autosaves 26723/26790/27941, and route draft metadata
+  was added to 12191. Published content/JSON and home draft content are unchanged;
+  no rows were removed. Preserve these private drafts; review their provenance
+  before claiming full-row equality. Do not replay fixture or old draft scripts.
 
-- Storage/HTTP implementation checkpoint: **269 checks**, including **86 existing documents**, passed;
-  existing content/meta unchanged and disposable fixtures removed. Includes
-  registered workspace metadata/schematics, authenticated field markers, older
-  versions, revision restore, invalid drafts and preview isolation.
-- **28 editor DOM tests + 2 Set/upload tests** passed. Checks cover
-  section-specific opening guidance, trash undo, publishing navigation, restored
-  native focus/status, field focus, old-frame object mapping after reorder,
-  gap insertion, streamed edits, Escape, invalid/failed saves, message/session/sequence validation,
-  finishing before reorder, and switching back through the legacy view.
-- Targeted ESLint, Stylelint, PHPCS, PHPStan and PHP syntax checks passed.
-- Chrome workspace checks: correct section-2 guidance, long-title wrapping, compact
-  desktop toolbar, 800px/390px pane layout without horizontal overflow, cursor-only
-  link dialog, named/custom colour controls, canvas cancellation and navigation
-  back to native publishing without submission. Viewport restored. Private draft
-  matches the clean workspace baseline. Public homepage: HTTP 200, one H1,
-  no editing bridge or markers; canonical content/meta/template unchanged.
-- Styling checks: shared toolbar/colour picker, exact custom-colour controls,
-  native link/media dialogs, stacked link fields, treatment cards, selected
-  section controls above the logo, visible field focus, 800px/390px pane layout
-  and reachable fields at 844×390. No horizontal overflow; desktop restored.
-  Thirty DOM tests and targeted CSS/JS lint passed with the styling changes.
-  The private-draft/canonical/public preservation check was repeated successfully.
+## Verified and runtime
 
-## Runtime and artifacts
-
-- `wp_app` mounts plugins/themes from `wp-website` through the machine-local
+- **34 DOM tests**, **287 storage checks**, **137 registry/renderer checks**,
+  **169 Set assertions** pass; database fixtures are removed in `finally`.
+  `wp iss-editorial registry-check --format=json` validates all nine formats.
+- Targeted JS/CSS lint, PHP syntax and PHPStan pass. PHPCS passes 18 changed
+  PHP files; `videos.php` retains **24 pre-existing escaping findings**, verified
+  against HEAD, with no new findings. See audit for exact validation scope.
+- Chrome: home workspace; disposable project/tour/publication/page/video
+  workspaces; project edit → autosave → reload/recover → native Save Draft;
+  native relationship navigation; project/publication phone and project 800px
+  layouts. Fixtures removed, viewport reset. Public landing checks at phone and
+  desktop widths: no overflow, one H1, no editing markers; media/text ratio kept.
+  Eleven existing public routes returned 200. Firefox/paste/staff UAT remain.
+- `wp_app` mounts website code through
   `/home/vladimir/.local/state/iss-editorial-pilot-20260921/website-code.yml`.
-  Core, DB, uploads and event-drop mounts retain their original locations.
-  Do not blindly restart base Compose; it restores the older source mounts.
-- That directory contains the WP-CLI wrapper, verified pre-pilot SQL backup,
-  canonical baseline, clean draft export and verification scripts. Do not rerun
-  draft-preparation or cleanup scripts. `workspace-verify.php` compares the
-  private draft to `workspace-baseline.json`, then checks canonical content,
-  template and anonymous output. The workspace baseline preserves section 7's
-  `text-bild-reihe.visual`, already observed in the first workspace read; the
-  older follow-up baseline expected `compact`. Do not replay the older baseline.
-- **No SQL migration or uploads artifact is needed** for this code delivery.
-  Deploy `iss-content`, `iss-editorial` and the theme together. Retain v3 reader,
-  sanitizer and renderer support on UI rollback. Moving the private composition
-  needs a separate content/media dependency review.
-- Preserve report **27388**, event **26813**, shared related-card recursion fix,
-  Event Drop integration and existing Place migration/upload artifacts. No
-  earlier migrations were replayed. See
-  [Event Drop delivery](docs/runbooks/event-drop-staging.md#current-editorial-integration-2026-09-11).
+  **Do not restart base Compose:** it would restore older source mounts.
+  Local WP-CLI wrapper: `/home/vladimir/.local/state/iss-editorial-pilot-20260921/wp`.
+  PHP test scripts are mounted under `/tmp/iss-tests/`; run database suites
+  sequentially. Repeatable commands are in the audit.

@@ -11,6 +11,7 @@ if (file_exists($industriesalon_fuehrungen_filters_helper)) {
 function industriesalon_expected_render_helpers(): array
 {
     return [
+        'editorial' => '/includes/editorial-render.php',
         'publications' => '/includes/publications-render.php',
         'ausstellungen' => '/includes/ausstellungen-render.php',
         'projects' => '/includes/projects-render.php',
@@ -1080,7 +1081,7 @@ function industriesalon_enqueue_assets(): void
         array(
             'handle' => 'industriesalon-front-page',
             'path' => '/assets/css/front-page.css',
-            'condition' => is_front_page(),
+            'condition' => is_front_page() && !industriesalon_front_page_landing_has_sections(),
         ),
         array(
             'handle' => 'industriesalon-ueber-uns',
@@ -1136,11 +1137,18 @@ function industriesalon_enqueue_assets(): void
             'condition' => is_page('verein'),
         ),
         array(
-            'handle' => 'industriesalon-page-landing-editorial',
-            'path' => '/assets/css/page-landing-editorial.css',
-            'condition' => is_singular('page')
+            'handle' => 'industriesalon-editorial-landing',
+            'path' => '/assets/css/editorial-landing.css',
+            'condition' => is_singular()
                 && function_exists('industriesalon_editorial_landing_is_enabled')
                 && industriesalon_editorial_landing_is_enabled((int) get_queried_object_id()),
+        ),
+        array(
+            'handle' => 'industriesalon-editorial-skins',
+            'path' => '/assets/css/editorial-skins.css',
+            'condition' => is_front_page() || (is_singular()
+                && function_exists('industriesalon_editorial_landing_is_enabled')
+                && industriesalon_editorial_landing_is_enabled((int) get_queried_object_id())),
         ),
         array(
             'handle' => 'industriesalon-publications',
@@ -1160,7 +1168,8 @@ function industriesalon_enqueue_assets(): void
         array(
             'handle' => 'industriesalon-single-ausstellung',
             'path' => '/assets/css/single-ausstellung.css',
-            'condition' => is_singular(array('ausstellung', 'rueckblick')),
+            'condition' => is_singular(array('ausstellung', 'rueckblick'))
+                || (is_singular('register_place') && industriesalon_editorial_place_is_enabled((int) get_queried_object_id())),
         ),
         array(
             'handle' => 'industriesalon-single-event',

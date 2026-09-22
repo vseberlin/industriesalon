@@ -2072,11 +2072,13 @@ body.iss-publication-editorial-skin-bildmatrix.iss-publication-layout-photoalbum
   max-width: 48rem;
 }
 
-.iss-publication-longread__chapter-body > :first-child {
+.iss-publication-longread__chapter-body > :first-child,
+.iss-publication-longread__chapter-text > :first-child {
   margin-top: 0;
 }
 
-.iss-publication-longread__chapter-body > :last-child {
+.iss-publication-longread__chapter-body > :last-child,
+.iss-publication-longread__chapter-text > :last-child {
   margin-bottom: 0;
 }
 

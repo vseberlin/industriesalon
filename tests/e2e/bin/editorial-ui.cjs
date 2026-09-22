@@ -19,7 +19,7 @@ async function editor(format = 'landing', extra = {}) {
   const requests = [];
   let fail = false;
   let validationMessage = '';
-  window.issEditorialAdmin = { postId: 99, ajaxUrl: '/wp-admin/admin-ajax.php', previewNonce: 'test', baseToken: 'base', pageChoices: [{ id: 2, url: 'http://localhost:8082/about/', title: 'About' }], sections, skins: [], ...extra };
+  window.issEditorialAdmin = { workspace: true, livePreview: true, postId: 99, ajaxUrl: '/wp-admin/admin-ajax.php', previewNonce: 'test', baseToken: 'base', pageChoices: [{ id: 2, url: 'http://localhost:8082/about/', title: 'About' }], sections, skins: [], ...extra };
   const nativeSetTimeout = window.setTimeout.bind(window);
   window.setTimeout = (fn, delay) => nativeSetTimeout(fn, [350, 1200].includes(delay) ? 10 : delay);
   window.fetch = async (_url, request) => {
@@ -28,6 +28,9 @@ async function editor(format = 'landing', extra = {}) {
   };
   const rich = [];
   window.wp = { editor: { initialize: (id, options) => rich.push({ id, options }), remove: () => {} } };
+  if (extra.routeStations) {
+    window.issRelationsRouteStations = {create: () => ({render: target => { target.textContent = 'Native route stations'; }, saveIfDirty: () => Promise.resolve(), getPreviewArgs: () => ({})})};
+  }
   window.HTMLElement.prototype.getClientRects = function () { return this.hidden ? [] : [1]; };
   window.ResizeObserver = class { observe() {} disconnect() {} };
   for (const asset of ['ui.js', 'dnd.js', 'rich-text.js', 'live-preview.js', 'workspace.js', 'admin.js']) {
@@ -42,34 +45,23 @@ async function editor(format = 'landing', extra = {}) {
   return { window, dom, root, container, requests, rich, button, value, input, settle, setFailure: value => { fail = value; }, setValidation: value => { validationMessage = value; } };
 }
 
-for (const format of ['landing', 'projekt', 'veranstaltung', 'place', 'fuehrung', 'publication', 'ausstellung', 'rueckblick']) {
-  test(format + ': same section editing, discard, keyboard focus, reorder and recovery storage', async () => {
+for (const format of ['landing', 'article', 'projekt', 'veranstaltung', 'place', 'fuehrung', 'publication', 'ausstellung', 'rueckblick']) {
+  test(format + ': one workspace retains hidden sections, edits, reorder, trash and recovery storage', async () => {
     const e = await editor(format);
     try {
-      assert.equal(e.root.querySelectorAll('.iss-editorial-card').length, 2, 'Stored hidden intro remains visible');
-      e.button('Bearbeiten').focus();
-      e.button('Bearbeiten').click();
-      await e.settle();
-      const dialog = e.window.document.querySelector('[role="dialog"]');
-      assert.equal(dialog.getAttribute('aria-modal'), 'true');
-      assert.equal(e.window.document.getElementById('wpwrap').inert, true);
-      assert.ok(dialog.contains(e.window.document.activeElement));
-      assert.equal(e.rich.length, 1, 'Every format uses WordPress rich editor');
-      assert.equal(e.value().sections[0].links[0].url, 'https://elsewhere.example/about/', 'Opening a section never rewrites an external URL');
-      const title = [...dialog.querySelectorAll('label')].find(node => node.firstChild.textContent === 'Titel').querySelector('input');
-      e.input(title, 'Temporary change');
-      e.button('Änderungen verwerfen', dialog).click();
-      await e.settle();
-      assert.equal(e.value().sections[0].title, 'First section');
-      assert.equal(e.window.document.getElementById('wpwrap').inert, false);
-      assert.equal(e.window.document.activeElement.classList.contains('iss-editorial-card__edit'), true);
-      e.button('Nach unten').click();
-      assert.equal(e.value().sections[0].title, 'Legacy intro');
-      e.button('In Papierkorb').click();
-      assert.equal(e.value().deleted_sections[0].title, 'Legacy intro');
+      assert.equal(e.root.querySelectorAll('.iss-editorial-outline__select').length, 2);
+      assert.equal(e.window.document.querySelector('.iss-editorial-modal'), null);
+      await e.settle(); assert.ok(e.rich.length, 'Shared native rich-text control');
+      assert.equal(e.value().sections[0].links[0].url, 'https://elsewhere.example/about/');
+      const title = e.root.querySelector('.iss-editorial-field--title textarea');
+      e.input(title, 'Edited title');
+      const handle = e.root.querySelector('[data-section-index="0"] .iss-editorial-card__drag-handle');
+      handle.dispatchEvent(new e.window.KeyboardEvent('keydown', {key:'ArrowDown', bubbles:true}));
+      assert.equal(e.value().sections[1].title, 'Edited title');
+      e.button('In Papierkorb', e.root.querySelector('.iss-editorial-studio__inspector')).click();
+      assert.equal(e.value().deleted_sections[0].title, 'Edited title');
       e.button('Wiederherstellen').click();
-      await e.settle();
-      assert.equal(e.value().sections.length, 2);
+      assert.equal(e.value().sections[1].title, 'Edited title');
       assert.equal(e.value().deleted_sections.length, 0);
       e.input(e.window.document.getElementById('title'), 'Changed page title');
       e.input(e.window.document.getElementById('excerpt'), 'Changed summary');
@@ -97,7 +89,7 @@ test('Recovery is explicit and restores title, summary and event structure with 
     assert.equal(e.root.inert, false);
     assert.equal(e.root.hidden, false);
     assert.equal(e.button('Preview').disabled, false);
-    assert.equal(e.window.document.activeElement, e.button('Bearbeiten'), 'Continue directly with the recovered sections');
+    assert.equal(e.window.document.activeElement, e.root.querySelector('.iss-editorial-outline__select'), 'Continue directly with the recovered sections');
     assert.equal(e.value().sections[0].title, 'Recovered section');
     assert.equal(e.value().entity_key, 'event.festival');
     assert.equal(e.requests.at(-1).get('title'), 'Recovered title');
@@ -184,12 +176,12 @@ test('Upgrade is explicit and escapes legacy literal item text, including delete
   const e = await editor('landing', { sections, document, supportedVersions: [1,2] });
   try {
     assert.equal(e.value().schema_version, 1);
-    assert.equal(e.requests.length, 0);
+    assert.ok(e.requests.every(request => JSON.parse(request.get('document')).schema_version === 1));
     e.button('Textfarben aktivieren').click();
     assert.equal(e.value().schema_version, 2);
     assert.equal(e.value().sections[0].items[0].text, 'Literal &lt;b&gt;word&lt;/b&gt; &amp; label');
     assert.equal(e.value().deleted_sections[0].items[0].text, 'Keep &lt;i&gt;literal&lt;/i&gt;');
-    e.button('Bearbeiten').click(); await e.settle();
+    await e.settle();
     const card = e.rich.find(item => item.options.tinymce.forced_root_block === false);
     assert.ok(card);
     assert.ok(!card.options.tinymce.toolbar1.includes('isslink'));
@@ -200,7 +192,7 @@ test('Upgrade is explicit and escapes legacy literal item text, including delete
 test('Unsupported imported markup remains intact until the author explicitly simplifies it', async () => {
   const e = await editor('landing', { sections: {kapitel:{label:'Text',supports:[],rich_text:{body:'block'}}}, document: {schema_version:2,skin:'standard',sections:[{type:'kapitel',body:'<p style="color:red">Old <strong>text</strong></p>'}]} });
   try {
-    e.button('Bearbeiten').click(); await e.settle();
+    await e.settle();
     assert.equal(e.rich.length, 0);
     assert.equal(e.value().sections[0].body, '<p style="color:red">Old <strong>text</strong></p>');
     e.button('Formatierung vereinfachen').click();
@@ -212,7 +204,8 @@ test('Unsupported imported markup remains intact until the author explicitly sim
 test('Live preview accepts only its current frame and token and retains valid output on failed refresh', async () => {
   const e = await editor();
   try {
-    const shell = e.window.issEditorialUi.createModal({title:'Preview fixture'});
+    const shell = { root:e.window.document.createElement('div') };
+    for (const key of ['previewMount','previewTools','previewStatus']) { shell[key]=e.window.document.createElement('div'); shell.root.appendChild(shell[key]); }
     e.window.document.body.appendChild(shell.root);
     const selected = [];
     const preview = e.window.issEditorialLivePreview(shell, 0, null, index => selected.push(index));
@@ -252,42 +245,23 @@ test('Live preview accepts only its current frame and token and retains valid ou
   } finally { e.dom.window.close(); }
 });
 
-test('Section navigation retains pending edits and the displayed preview; discard applies only to the active section', async () => {
-  const e = await editor('landing', {livePreview:true});
+test('Section navigation keeps pending edits and the same preview frame', async () => {
+  const e = await editor();
   try {
-    e.button('Bearbeiten').click(); await e.settle();
-    const shell = e.window.document.querySelector('.iss-editorial-modal');
-    const frame = shell.querySelector('iframe');
-    const send = data => e.window.dispatchEvent(new e.window.MessageEvent('message', {source:frame.contentWindow,origin:'http://localhost:8082',data:{...data,token:frame.dataset.token}}));
-    send({type:'iss-preview-ready'});
-    const positions = [];
-    frame.contentWindow.postMessage = message => positions.push(message);
-    const field = () => [...shell.querySelectorAll('label')].find(node=>node.firstChild.textContent === 'Titel').querySelector('input');
-    const select = shell.querySelector('[aria-label="Abschnitt wählen"]');
+    await e.settle(); const frame = readyFrame(e);
+    const field = () => e.root.querySelector('.iss-editorial-field--title textarea');
     e.input(field(), 'First edited');
-    select.value = '1'; select.dispatchEvent(new e.window.Event('change'));
+    e.root.querySelectorAll('.iss-editorial-outline__select')[1].click();
     assert.equal(field().value, 'Legacy intro');
     assert.equal(e.value().sections[0].title, 'First edited');
-    assert.equal(shell.querySelector('iframe'), frame, 'Changing section does not reload the preview');
-    assert.equal(positions.at(-1).section, 1);
-    assert.equal(positions.at(-1).scroll, null, 'Editor selection reveals the corresponding preview section');
+    assert.equal(e.root.querySelector('iframe'), frame);
     e.input(field(), 'Second edited');
-    e.button('Vorschau', shell).click();
-    send({type:'iss-preview-select',section:99,scroll:400});
-    assert.equal(field().value, 'Second edited', 'Out-of-range section is ignored');
-    send({type:'iss-preview-select',section:0,scroll:400});
+    e.root.querySelectorAll('.iss-editorial-outline__select')[0].click();
     assert.equal(field().value, 'First edited');
-    assert.equal(select.value, '0');
-    assert.equal(shell.querySelector('.iss-editorial-workspace').dataset.tab, 'edit', 'On narrow screens a preview click opens editing');
-    assert.equal(positions.at(-1).scroll, 400, 'Preview click retains the reader position');
     await e.settle();
     const saved = JSON.parse(e.requests.at(-1).get('document'));
     assert.equal(saved.sections[0].title, 'First edited');
     assert.equal(saved.sections[1].title, 'Second edited');
-    e.button('Änderungen im Abschnitt verwerfen', shell).click();
-    await e.settle();
-    assert.equal(e.value().sections[0].title, 'First section');
-    assert.equal(e.value().sections[1].title, 'Second edited', 'Discard does not undo edits in another section');
   } finally { e.dom.window.close(); }
 });
 
@@ -337,28 +311,18 @@ test('Named palette colours preserve identity while custom hex colours remain ex
   } finally { e.dom.window.close(); }
 });
 
-test('Visual treatment choices preserve text and focus, and opening requirements remain visible after reordering', async () => {
-  const sections = {feature:{label:'Feature', supports:['lead','treatment','media_refs'], rich_text:{body:'block',lead:'block'}, treatments:[
-    {slug:'feature.image-overlay',label:'Titel auf Bild',schematic:'overlay',hint:'Text über Bild'},
-    {slug:'feature.opening',label:'Seitenauftakt',schematic:'opening',role:'opening',min_version:3,hint:'Erster Abschnitt mit Titel und Bild'}
-  ]}};
-  const document = {schema_version:3,skin:'frontpage',sections:[{type:'feature',title:'Opening',body:'<p>Keep text</p>',treatment:'feature.opening',media_refs:[{id:'1'}]},{type:'feature',title:'Other',treatment:'feature.image-overlay'}]};
-  const e = await editor('landing',{isFrontPage:true,sections,document,skins:[{slug:'frontpage',label:'Startseite'}]});
+test('Visual treatment choices preserve text and focus', async () => {
+  const options = workspaceOptions();
+  options.sections.feature.treatments.push({slug:'feature.media-panel',label:'Bild und Texttafel',schematic:'panel'});
+  const e = await editor('landing', options);
   try {
-    assert.equal(e.root.querySelectorAll('.iss-editorial-opening-badge').length,1);
-    e.button('Bearbeiten').click(); await e.settle();
-    const dialog = e.window.document.querySelector('[role=dialog]');
-    const choice = dialog.querySelector('input[value="feature.image-overlay"]');
+    const inspector = e.root.querySelector('.iss-editorial-studio__inspector');
+    const choice = inspector.querySelector('input[value="feature.media-panel"]');
+    const before = e.value().sections[0].body;
     choice.focus(); choice.click();
     assert.equal(e.window.document.activeElement, choice);
-    assert.equal(e.value().sections[0].body, '<p>Keep text</p>');
-    assert.equal(dialog.querySelector('.iss-editorial-opening-note').hidden, true, 'A non-opening section has no opening note');
-    dialog.querySelector('input[value="feature.opening"]').click();
-    assert.match(dialog.querySelector('.iss-editorial-opening-note').textContent, /ersetzt den Auftakt/);
-    e.button('Fertig',dialog).click(); e.button('Nach unten').click();
-    assert.equal(e.value().sections[1].treatment,'feature.opening');
-    assert.match(e.root.querySelector('.iss-editorial-opening-note').textContent,/Seitenauftakt prüfen/);
-    assert.ok(e.root.querySelectorAll('svg').length >= 3);
+    assert.equal(e.value().sections[0].body, before);
+    assert.equal(e.value().sections[0].treatment, 'feature.media-panel');
   } finally { e.dom.window.close(); }
 });
 
@@ -472,7 +436,7 @@ test('Frame plain-text keyboard edits wait for acknowledgement, stream changes, 
   } finally {window.close();}
 });
 
-test('Workspace waits for an active canvas edit before reordering and can return through the legacy view without changing content',async()=>{
+test('Workspace waits for an active canvas edit before reordering and exposes native controls without replacing the workspace',async()=>{
   const e=await editor('landing',workspaceOptions());
   try {
     await e.settle();const frame=readyFrame(e);
@@ -486,8 +450,10 @@ test('Workspace waits for an active canvas edit before reordering and can return
     assert.equal(e.value().sections[1].title,'Typed');
     assert.equal(e.root.querySelector('.iss-editorial-field--title textarea').value,'Typed');
     const before=JSON.stringify(e.value());
-    e.button('Bisherige Abschnittsansicht').click();assert.equal(e.root.querySelector('.iss-editorial-studio'),null);
-    e.button('Arbeitsfläche öffnen').click();assert.ok(e.root.querySelector('.iss-editorial-studio'));
+    const workspace = e.root.querySelector('.iss-editorial-studio');
+    e.button('Angaben & Beziehungen …').click();assert.equal(e.root.querySelector('.iss-editorial-studio'), workspace);
+    e.root.querySelector('[aria-label="Arbeitsfläche vergrößern"]').click();
+    assert.equal(e.root.querySelector('.iss-editorial-studio'), workspace);
     assert.equal(JSON.stringify(e.value()),before,'View changes preserve the same document');
     await e.settle();assert.match(e.root.querySelector('.iss-editorial-live-preview__frame').src,/iss_editorial_canvas=1/);
   } finally {e.dom.window.close();}
@@ -524,10 +490,10 @@ test('Workspace trash undo restores its own section and leaving restores native 
     assert.equal(e.value().sections[0].title, 'First');
     assert.equal(e.value().deleted_sections.length, 0);
     const content = e.value();
-    e.button('Bisherige Abschnittsansicht').click();
+    e.button('Angaben & Beziehungen …').click();
     assert.equal(e.window.document.body.classList.contains('iss-editorial-studio-open'), false);
     assert.equal(e.container.querySelectorAll('.iss-editorial-autosave-status').length, 1);
-    assert.equal(e.root.contains(e.container.querySelector('.iss-editorial-autosave-status')), false);
+    assert.equal(e.root.contains(e.container.querySelector('.iss-editorial-autosave-status')), true);
     assert.deepEqual(e.value(), content);
   } finally { e.dom.window.close(); }
 });
@@ -547,5 +513,48 @@ test('Publishing navigation uncovers native controls without submitting or chang
     assert.equal(submitted, false);
     assert.equal(e.window.document.body.classList.contains('iss-editorial-studio-open'), false);
     assert.deepEqual(e.value(), before);
+  } finally { e.dom.window.close(); }
+});
+
+test('Starter compositions require an explicit choice, reuse the document, and preserve trash', async () => {
+  const options = workspaceOptions();
+  options.document.sections = [];
+  options.document.deleted_sections = [{type:'statement',title:'Retained'}];
+  options.starters = [{label:'Text with image',sections:[{type:'feature',title:'Introduction',treatment:'feature.media-text'},{type:'statement'}]}];
+  const e = await editor('article', options);
+  try {
+    assert.equal(e.value().sections.length, 0);
+    e.button('Text with image').click();
+    assert.equal(e.value().sections[0].title, 'Introduction');
+    assert.equal(e.value().sections[0].treatment, 'feature.media-text');
+    assert.equal(e.value().deleted_sections[0].title, 'Retained');
+    assert.equal(e.root.querySelector('.iss-editorial-starter'), null);
+    await e.settle();
+    assert.equal(JSON.parse(e.requests.at(-1).get('document')).sections.length, 2);
+  } finally { e.dom.window.close(); }
+});
+
+test('Tour owner controls remain inside the shared workspace and native form', async () => {
+  const e = await editor('fuehrung', {...workspaceOptions(),routeStations:{enabled:true}});
+  try {
+    assert.match(e.root.querySelector('.iss-editorial-studio__owner-controls').textContent, /Native route stations/);
+    assert.equal(e.root.querySelectorAll('.iss-editorial-studio').length, 1);
+    e.button('Angaben & Beziehungen …').click();
+    assert.notEqual(e.button('Update').inert, true);
+  } finally { e.dom.window.close(); }
+});
+
+test('Preview device sizing preserves CSS viewport dimensions with portable transforms', async () => {
+  const e = await editor('article', workspaceOptions());
+  try {
+    const viewport = e.root.querySelector('.iss-editorial-live-preview__viewport');
+    Object.defineProperty(viewport,'clientWidth',{value:300});
+    Object.defineProperty(viewport,'clientHeight',{value:500});
+    e.button('Telefon').click();
+    const css = e.root.querySelector('.iss-editorial-live-preview style').textContent;
+    assert.match(css,/width:390px/);
+    assert.match(css,/height:650px/);
+    assert.match(css,/transform:scale\(0\.769/);
+    assert.doesNotMatch(css,/zoom:/);
   } finally { e.dom.window.close(); }
 });

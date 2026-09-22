@@ -509,24 +509,6 @@ body.iss-editorial-studio-open {
 }
 
 /* Form controls and collection rows must fit the inspector, not the window. */
-.iss-editorial-studio :is(input[type="text"], input[type="url"], input[type="search"], input[type="number"], select, textarea):not(:where(.iss-editorial-title-input textarea)) {
-  min-height: 36px;
-  padding: 6px 10px;
-  color: var(--iss-editor-ink);
-  background-color: var(--iss-editor-paper);
-  border: 1px solid var(--iss-editor-line-strong);
-  border-radius: var(--iss-editor-radius);
-  font: 14px/1.45 var(--iss-editor-font);
-  box-shadow: none;
-}
-
-.iss-editorial-studio select {
-  padding-right: 28px;
-}
-
-.iss-editorial-studio :is(input, select, textarea):focus {
-  border-color: var(--iss-editor-accent);
-}
 
 .iss-editorial-studio .iss-editorial-skin-control select {
   background-color: var(--iss-editor-hover);
@@ -537,18 +519,6 @@ body.iss-editorial-studio-open {
   grid-template-columns: minmax(0, 1fr);
   border-color: var(--iss-editor-line);
   border-radius: var(--iss-editor-radius);
-}
-
-.iss-editorial-studio .iss-editorial-panel__label {
-  text-transform: none;
-  font-size: 13px;
-  color: var(--iss-editor-muted);
-}
-
-.iss-editorial-studio .iss-editorial-panel__count {
-  background: var(--iss-editor-pressed);
-  color: var(--iss-editor-muted);
-  font-size: 12px;
 }
 
 .iss-editorial-studio__optional summary::before {
@@ -579,30 +549,8 @@ body.iss-editorial-studio-open {
   background: var(--iss-editor-accent-soft);
 }
 
-.iss-editorial-studio .iss-editorial-treatment-choice {
-  padding: 10px;
-  background: var(--iss-editor-paper);
-  font-size: 13px;
-}
-
-.iss-editorial-studio .iss-editorial-treatment-choice:has(input:checked) {
-  background: var(--iss-editor-accent-soft);
-}
-
-.iss-editorial-studio .iss-editorial-treatment-choice span {
-  font-size: 12px;
-  line-height: 1.45;
-  color: var(--iss-editor-muted);
-}
-
 .iss-editorial-studio__fields :is(p, label, button) {
   overflow-wrap: anywhere;
-}
-
-.iss-editorial-studio :is(button, summary, a, input, textarea, select):focus-visible {
-  outline: 2px solid transparent;
-  outline-offset: 2px;
-  box-shadow: var(--iss-editor-focus);
 }
 
 
@@ -722,10 +670,6 @@ body.iss-editorial-studio-open {
 }
 
 @media (pointer: coarse) {
-  .iss-editorial-studio :is(button, summary) {
-    min-height: 44px;
-  }
-
   .iss-editorial-studio .iss-editorial-outline {
     grid-template-columns: minmax(0, 1fr) 44px;
   }
@@ -733,4 +677,19 @@ body.iss-editorial-studio-open {
   .iss-editorial-studio .iss-editorial-card__drag-handle {
     width: 44px;
   }
+}
+
+
+.iss-editorial-studio__owner-controls:not(:empty) {
+  padding: 12px;
+  border-top: 1px solid var(--iss-editor-line);
+}
+
+.iss-editorial-starter {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  margin-bottom: 8px;
 }
