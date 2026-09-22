@@ -22,7 +22,7 @@ Use this when syncing, restoring, archiving, or debugging WordPress uploads acro
 ## Procedure
 
 1. Confirm direction explicitly. Do not infer local -> staging or staging -> local.
-2. For commit/checkpoint work, compare changed media references and attachment IDs against existing committed upload artifacts before push.
+2. Collect media dependencies from all canonical editor documents in the sync scope, including unchanged documents. Compare attachment records/metadata and upload files separately; identical JSON and existing files do not prove that the target attachment record exists. Include changed non-editor media references as well.
 3. Prefer `rsync --dry-run` before a real sync.
 4. Preserve upload tree shape so the root maps to `wp-content/uploads/`.
 5. Preserve timestamps and permissions where appropriate.
@@ -32,6 +32,12 @@ Use this when syncing, restoring, archiving, or debugging WordPress uploads acro
 ## Verification
 
 Compare counts/sizes and check representative media URLs.
+
+Run `wp iss-editorial media-check` on both hosts. It checks all registered
+canonical documents for missing WordPress attachment records, current files
+and image rendering, without changing content. Private workspace autosaves are
+outside this check. Also verify transferred image variants against the paired
+checksum manifest and inspect the affected cards in a browser.
 
 ## Rollback
 

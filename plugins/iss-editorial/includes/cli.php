@@ -27,6 +27,57 @@ WP_CLI::add_command('iss-editorial registry-check', static function (array $args
     if (($options['format'] ?? '') !== 'json') { WP_CLI::success('Editorial registry is consistent. No content changed.'); }
 });
 
+/** Check canonical documents, including unchanged documents, before closing a sync. */
+WP_CLI::add_command('iss-editorial media-check', static function (): void {
+    $references = [];
+    $documents = 0;
+    $walk = static function ($value, int $owner) use (&$walk, &$references): void {
+        if (!is_array($value)) {
+            return;
+        }
+        if (isset($value['source'], $value['id']) && in_array($value['source'], ['wp-media', 'wordpress'], true)) {
+            $references[absint($value['id'])][$owner] = true;
+        }
+        foreach ($value as $child) {
+            $walk($child, $owner);
+        }
+    };
+    foreach (iss_editorial_get_registered_formats() as $slug => $format) {
+        $posts = get_posts([
+            'post_type' => $format['post_types'],
+            'post_status' => 'any',
+            'numberposts' => -1,
+            'meta_key' => iss_editorial_get_document_meta_key($slug), // phpcs:ignore WordPress.DB.SlowDBQuery.slow_db_query_meta_key -- Explicit CLI audit of every stored document.
+        ]);
+        foreach ($posts as $post) {
+            $document = iss_editorial_get_document($post->ID, $slug, false);
+            if ($document) {
+                ++$documents;
+                $walk($document, $post->ID);
+            }
+        }
+    }
+    $errors = [];
+    foreach ($references as $id => $owners) {
+        $reason = '';
+        if (get_post_type($id) !== 'attachment') {
+            $reason = 'missing attachment record';
+        } elseif (!get_attached_file($id) || !is_file(get_attached_file($id))) {
+            $reason = 'missing current attachment file';
+        } elseif (wp_attachment_is_image($id) && !wp_get_attachment_image($id, 'medium_large')) {
+            $reason = 'image cannot render';
+        }
+        if ($reason !== '') {
+            $errors[] = sprintf('%d: %s (content %s)', $id, $reason, implode(', ', array_keys($owners)));
+        }
+    }
+    WP_CLI::log(sprintf('Checked %d canonical documents and %d unique WordPress media references.', $documents, count($references)));
+    if ($errors) {
+        WP_CLI::error(implode("\n", $errors));
+    }
+    WP_CLI::success('Attachment records and current files exist. No content changed. Check transferred variants against the uploads manifest.');
+});
+
 function iss_editorial_cli_get_post_by_token_for_type(string $token, string $post_type): ?WP_Post
 {
     $token = trim($token);
