@@ -11885,7 +11885,7 @@ foreach ($payload['records'] as $row) {
         }
     }
     foreach ($row['expected_meta'] as $key => $expected) {
-        $values = $wpdb->get_col($wpdb->prepare("SELECT meta_value FROM {$wpdb->postmeta} WHERE post_id = %d AND meta_key = %s ORDER BY meta_id", $id, $key));
+        $values = array_column($wpdb->get_results($wpdb->prepare("SELECT meta_value FROM {$wpdb->postmeta} WHERE post_id = %d AND meta_key = %s ORDER BY meta_id", $id, $key), ARRAY_A), 'meta_value');
         $hashes = array_map(static fn($value) => hash('sha256', json_encode($normalize(maybe_unserialize($value)))), $values);
         if ($hashes !== $expected) { WP_CLI::error("Target metadata changed: $id $key."); }
     }
