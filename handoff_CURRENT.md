@@ -2,7 +2,7 @@
 
 Website source is `/home/vladimir/wp-website`; `/home/vladimir/wp` is the preserved
 archive checkout. Local code, GitHub `main` and staging are synchronized through
-**072e11f**; the subsequent closeout commit records this checkpoint. Verify current
+**41b34d2**; the subsequent closeout commit records this checkpoint. Verify current
 `HEAD`/`origin/main` before work. Production was read for this import, not changed.
 
 ## Current programme state and ownership
@@ -104,7 +104,7 @@ Local runtime mounts website code through
 **Do not restart base Compose:** it would restore the older source mounts.
 Local WP-CLI wrapper: `/home/vladimir/.local/state/iss-editorial-pilot-20260921/wp`.
 
-Next: deploy and postflight the Veranstaltungen overview checkpoint, then staff acceptance, Firefox and real clipboard/paste checks.
+Next: staff acceptance of the revised Veranstaltungen page; Firefox and real clipboard/paste checks remain separate UAT items.
 The authenticated staging editor was not tested during this programme sync.
 Production release and further data transfers remain separate tasks.
 
@@ -133,5 +133,22 @@ Local before-image and receipts are in
 `events-landing-before.sql`, `events-local-receipt.json`, `events-copy-receipt.json`.
 All pre-existing local posts/meta survived the import. Local media-check passed
 94 documents / 169 media references; 23 read-only programme checks passed.
-CSS/JS lint, targeted PHP checks, desktop and 390px checks passed. Staging deploy
-and postflight are the next bounded action. Production remains unchanged.
+CSS/JS lint, targeted PHP checks, desktop and 390px checks passed. Staging is
+also deployed at 41b34d2 with the excerpt migration applied once. Both sites pass
+23 programme checks and media-check (94 documents / 169 media references).
+Staging desktop/phone checks confirm real images, October dates, current ranges,
+no horizontal overflow, native history disclosure and pagination. Homepage,
+Veranstaltungen, Kalender and Ausstellungen return HTTP 200 on both sites;
+staging retains noindex/nofollow. Containers are healthy; none restarted.
+Authenticated Site Editor interaction and Firefox were not retested.
+
+Staging backup/receipt:
+`/home/vladimir/server-actions/events-landing-20260922/private/` contains verified
+`before.sql.gz` and `copy-receipt.json`. Before/after checksum evidence locally:
+`/home/vladimir/.local/state/iss-events-landing-20260922/staging-{before,after}.json`.
+All unrelated staging posts/meta are unchanged; 100 SQL tables are unchanged.
+Changes are limited to the eight target posts/meta and their existing graph,
+search, occurrence and cache projections. Existing archive, commerce, newsletter
+and user data remain unchanged. Rollback uses the excerpt before-images plus the
+preceding code commit; local import additions are enumerated in its receipt.
+Do not replay either import or the excerpt apply. Production remains unchanged.
