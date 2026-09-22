@@ -1,7 +1,7 @@
 # Current handoff — 2026-09-22
 
 Local website checkout, GitHub `main` and staging are synchronized. Implementation
-and data migrations are committed through **ec3d73a**; the subsequent closeout
+and data migrations are committed through **fce22fa**; the subsequent closeout
 commit only records this state. Verify current `HEAD`/`origin/main` before work.
 Website source: `/home/vladimir/wp-website`. `/home/vladimir/wp` is the preserved
 archive checkout, not the website delivery branch. Production was not changed.
@@ -11,6 +11,11 @@ archive checkout, not the website delivery branch. Production was not changed.
 One JSON workspace and registry serve nine formats. Theme CSS separates renderer
 anatomy from skins; the alternate cards/modal editor and duplicate homepage hero
 CSS are removed. The JSON homepage uses the original shared theme hero pattern.
+About's pre-July-11 triptych layout is restored: inset heading, taller images,
+light kicker captions and stacked mobile images. Its theme template places the
+first JSON section inside the hero and the remaining eight afterward through
+two bounded slots in the same renderer. One document/editor remains canonical.
+Both environments use the file template; no DB or upload artifact was needed.
 Staging's CARTO key support is now shared code; its actual key stays outside Git.
 See the [audit](docs/project/editorial-consolidation-audit.md) and
 [editorial contract](docs/architecture/editorial-platform.md).
@@ -89,6 +94,13 @@ Local backup and comparison evidence:
   unchanged documents too; continue checking variants against upload manifests.
   Targeted PHP lint, PHPCS and PHPStan pass. Archive/programme/booking/newsletter/
   user table data remain unchanged; containers remain healthy.
+- About restoration: local desktop/phone/tablet and staging desktop/phone Chrome
+  checks pass with three loaded images and no horizontal overflow. Local editor
+  preview retains section indexes 0–8 exactly once. Read-only renderer comparison
+  confirms the two slots reproduce the complete document; template parses.
+  All 137 registry/renderer checks and targeted PHP/CSS checks pass. About route
+  specs were updated and linted; layout assertions were exercised through Chrome,
+  not the standalone Playwright runner. Staging public routes return 200.
 - Next: staff acceptance of the staging editor, Firefox and real clipboard/paste
   checks. Staging's authenticated editor was not exercised in this deployment
   turn; earlier Chrome editor/save/recovery checks ran locally. Production
