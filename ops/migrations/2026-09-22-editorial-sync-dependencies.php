@@ -27,8 +27,6 @@ $source = json_decode(<<<'ISS_DEPENDENCIES'
     "meta": {
         "iss_end_datetime": "2026-09-09 19:00:00",
         "_wp_page_template": "default",
-        "_iss_datetime_start": "2026-09-09 17:00:00",
-        "_iss_datetime_end": "2026-09-09 19:00:00",
         "iss_primary_place_id": "17960",
         "iss_location": "Industriesalon Schöneweide",
         "_iss_entity_key": "event.series",
