@@ -130,12 +130,21 @@ flags or DB template overrides are changed by this repair.
 
 ## Delivery boundary and next action
 
-Deploy `iss-editorial`, `iss-content`, `iss-publications` and the theme together.
-This delivery needs no SQL migration or uploads artifact: registry/reader/UI/CSS
-changes do not rewrite existing documents, enabled flags, database templates or media.
-New article documents use the engine's existing per-format metadata mechanism.
-Existing content cutovers require a separate reviewed content/media migration.
+The owning plugins and theme are deployed together on staging. The code alone
+requires no data rewrite. The subsequently authorized website/editor content sync
+applied `ops/migrations/2026-09-22-editorial-staging-sync.php`, followed by
+`ops/migrations/2026-09-22-editorial-sync-dependencies.php`, with
+`ops/uploads/2026-09-22-editorial-sync.manifest`. It transferred 52 documents,
+their content/template/media prerequisites, and the report's required source
+connection through owner APIs. Private autosaves and unrelated domain data were
+preserved. Use migration `verify --use-include`, not a second `apply`.
 
-Next action: staff acceptance and Firefox/clipboard checks on a landing, project, tour and publication,
-including owner controls, draft recovery and native Save Draft. Existing tests
-and the registry command are the repeatable gate for later registry extensions.
+Staging validates all 86 stored documents and all nine registry formats. Public
+route, desktop/phone hero and keyed map-tile checks pass. Full and targeted
+backups, scope and preservation evidence are recorded in `handoff_CURRENT.md`.
+The local content database was not rewritten. Production was not touched.
+
+Next action: authenticated staff acceptance and Firefox/clipboard checks on a
+landing, project, tour and publication, including owner controls, draft recovery
+and native Save Draft. Existing tests and the registry command remain the
+repeatable gate for later registry extensions.

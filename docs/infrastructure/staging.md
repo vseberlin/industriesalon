@@ -21,3 +21,22 @@ Inspect system state, disk, memory, failed services, logs, active containers, an
 - See `data-artifacts.md` for SQL/upload transfer artifact rules.
 - See `sync.md` and `../runbooks/uploads-sync.md` before syncing uploads.
 - See `services.md` before changing mail, search, or other optional services.
+
+## Access and active paths
+
+- SSH: `vladimir@staging.industriesalon.info` using the saved workstation key;
+  verify the host key and identity before operations.
+- Checkout: `/srv/industriesalon/stage/repo`.
+- Runtime: `/srv/industriesalon/stage/compose.yml`, with environment settings in
+  the sibling `.env`; neither is the repository's development Compose file.
+- WordPress root: `/srv/industriesalon/stage/app`; uploads:
+  `/srv/industriesalon/stage/shared/uploads`.
+- WP-CLI: from `/srv/industriesalon/stage`, run
+  `docker compose run --rm -T --no-deps wpcli ...`.
+
+The existing `ops/deploy-stage.sh` resets the checkout. Do not use it over
+unreviewed local edits. For code-only updates with unchanged runtime configuration,
+preserve/classify dirty state, fetch GitHub and fast-forward the checkout; the
+running containers already bind-mount its plugin and theme directories. A restart
+is not needed just to load changed source. Keep secrets such as the CARTO key in
+`app/wp-config.php`, never in the shared repository.

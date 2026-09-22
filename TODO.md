@@ -4,14 +4,12 @@ Immediate executable work only. Larger future programs live in `docs/project/bac
 
 ## Next
 
-- Staff-test the [shared workspace](docs/project/editor-workspace-plan.md) on one
-  landing, project, tour and publication: image/title/text, owner controls,
-  recovery, and native Save Draft. Chrome fixture checks are complete; verify
-  Firefox and real clipboard/paste before rollout. The
-  [consolidation audit](docs/project/editorial-consolidation-audit.md) records
-  automated coverage and the code/data boundary. Deploy the owning plugins and
-  theme together after acceptance; existing block-to-JSON cutovers remain
-  explicit content migrations.
+- Staff-test the deployed [shared workspace](docs/project/editor-workspace-plan.md)
+  on staging: one landing, project, tour and publication; image/title/text,
+  owner controls, recovery and native Save Draft. Verify Firefox and real
+  clipboard/paste before a production release. Local Chrome fixture checks and
+  staging code/data/media sync are complete; authenticated staging editor UAT
+  remains. See the [audit](docs/project/editorial-consolidation-audit.md).
 - Review the interactive Atlas outlier `Energie-Museum Berlin`: its current
   authoritative coordinate is far west of the Schöneweide core while its stored
   area is `Oberschöneweide`. The expanded navigation boundary deliberately

@@ -1,91 +1,83 @@
 # Current handoff — 2026-09-22
 
-Website source: `/home/vladimir/wp-website`, branch `main`. The accepted editor
-consolidation, hero restoration and staging CARTO repair are prepared for the
-GitHub -> staging sync authorized on 2026-09-22. Deployment is in progress;
-verify the final Git refs and migration result before treating it as complete.
-`/home/vladimir/wp` remains the preserved archive checkout; do not merge its
-history into website delivery.
+Local website checkout, GitHub `main` and staging are synchronized. Implementation
+and data migrations are committed through **0bba0dd**; the subsequent closeout
+commit only records this state. Verify current `HEAD`/`origin/main` before work.
+Website source: `/home/vladimir/wp-website`. `/home/vladimir/wp` is the preserved
+archive checkout, not the website delivery branch. Production was not changed.
 
-## Implementation and next action
+## Accepted state
 
-One JSON workspace serves nine registered formats: landing, article, project,
-tour, exhibition, report, event, place and publication. Article reuses the
-landing renderer for ordinary pages/posts/videos. Registry metadata owns
-versions, sections, treatments, aliases, skins, features and explicit starters.
-The old cards/modal authoring path is removed. Native relationship, route,
-transcript and publishing controls retain their owners. Existing block content
-is not automatically migrated or enabled.
+One JSON workspace and registry serve nine formats. Theme CSS separates renderer
+anatomy from skins; the alternate cards/modal editor and duplicate homepage hero
+CSS are removed. The JSON homepage uses the original shared theme hero pattern.
+Staging's CARTO key support is now shared code; its actual key stays outside Git.
+See the [audit](docs/project/editorial-consolidation-audit.md) and
+[editorial contract](docs/architecture/editorial-platform.md).
 
-Theme CSS now separates `editorial-landing.css` anatomy/treatments from
-`editorial-skins.css`. The old combined stylesheet is removed; legacy
-`front-page.css` loads only for the fallback composition. URL anchors no longer
-choose presentation. Admin control appearance and workspace layout remain in
-their existing separate layers. No new `!important` or override layer.
-Homepage hero regression repaired: JSON reuses the original `iss-front-hero`
-pattern, matching staging geometry/type/gradient at desktop and phone widths.
-Duplicate opening CSS is removed; optional prose remains below the image.
-The theme-owned `front-page` fallback shares the same pattern; no DB migration.
+The explicitly authorized local -> staging content sync is complete:
 
-Read the [audit and latest-audit comparison](docs/project/editorial-consolidation-audit.md)
-and [editorial contract](docs/architecture/editorial-platform.md).
-Deploy the matching owning plugins and theme together. The code itself needs
-no DB rewrite; the explicitly requested content sync uses
-`ops/migrations/2026-09-22-editorial-staging-sync.php` and
-`ops/uploads/2026-09-22-editorial-sync.manifest`. Use `--use-include` with
-`wp eval-file`; default is guarded preflight, `apply` writes, `verify` checks.
-Scope: 52 documents, 59 content/template records and 13 new attachment rows;
-33 media files are checksum verified. Preserve private autosaves, unrelated
-Sets/programme data, accounts and environment configuration. Staging backup:
-`/srv/industriesalon/stage/backups/20260922-132743/` (DB and uploads). Config and
-original dirty patch: `/home/vladimir/server-actions/sync-20260922/`.
-The staged CARTO key stays in `app/wp-config.php`, outside Git. The old dirty
-repo Compose change is inactive (staging uses `stage/compose.yml`); preserve its
-patch/stash while making the checkout match GitHub.
-Next: complete deploy/migration verification, then staff acceptance, Firefox
-and real clipboard/paste checks.
+- **52 editor documents**, **60 content/template records**, **13 attachment rows**;
+  **33 media files** transferred, all **1,408 available referenced files** match
+  by SHA256. The manifest records the direct uploads transfer; the large PDF
+  was not put into Git.
+- Three existing local template overrides now match staging: `single-ausstellung`
+  **26309**, `page-publikationen` **26560**, `page-projekte` **26532**. `front-page`
+  and `single-video` remain theme-owned. Keep inspecting effective authority.
+- Report **27388** includes its required source event **26813**, connected through
+  the owning report API. Its venue relation uses the relation API. Media rights,
+  attribution and consent for transferred Event Drop attachments are retained.
+  Native APIs created required empty editorial context Sets and derived graph/
+  Place projections; unrelated Set contents were not imported.
+- Local posts and non-lock metadata did not change. Existing staging posts/meta
+  outside the named migration scope and all existing private autosaves were
+  preserved. Database INSERT-data comparison confirms archive Sets, programme/
+  occurrences, SuperSaaS slots, booking requests, newsletters, users and usermeta
+  are unchanged. Staging config file hash and noindex setting are unchanged.
+- Local home **12257** retains published **10+4** and autosave **27678** **10+4**.
+  Private drafts remain environment-specific. Legacy fixture **27415** was not
+  transferred. Neither old cleanup SQL nor archive retirement scripts were run.
 
-## Authority and preservation
+## Artifacts and recovery
 
-- Homepage **12257**, slug `home-2`, has a published v3 document with **10 sections
-  and four deleted sections**. Administrator autosave **27678** has its own valid
-  **10+4** composition. Both are retained. The old handoff's 27454 / 12+2 state
-  was stale. Home content/JSON is unchanged; preview refreshed only its autosave
-  timestamps/base-token bookkeeping and normal edit locks.
-- **86 existing documents** validate. About, Schöneweide and Führungen stay v1;
-  schema upgrades are explicit. Preserve report **27388**, event **26813**, Set
-  data, Event Drop and existing Place migration/upload artifacts.
-- Effective DB overrides remain: `single-ausstellung` **26309**,
-  `page-publikationen` **26560**, `page-projekte` **26532**. `single-video` is
-  theme-owned locally; check target template authority before deployment.
-- Verified pre-change backup and full-row baseline are in
-  `/home/vladimir/.local/state/iss-editorial-consolidation-20260922/`:
-  `before.sql.gz`, `baseline.json`, `preservation-result.json`. Read-only
-  `verify-preservation.py` checks 15,390 posts and 238,520 non-lock metadata rows;
-  expected home-preview bookkeeping is explicitly classified. The latest broad
-  comparison is **not clean**: autosaves 26790/27228 changed, 27941 was added,
-  metadata was added to autosaves 26723/26790/27941, and route draft metadata
-  was added to 12191. Published content/JSON and home draft content are unchanged;
-  no rows were removed. Preserve these private drafts; review their provenance
-  before claiming full-row equality. Do not replay fixture or old draft scripts.
+Applied in order, after code and media:
 
-## Verified and runtime
+1. `ops/migrations/2026-09-22-editorial-staging-sync.php`
+2. `ops/migrations/2026-09-22-editorial-sync-dependencies.php`
 
-- **34 DOM tests**, **287 storage checks**, **137 registry/renderer checks**,
-  **169 Set assertions** pass; database fixtures are removed in `finally`.
-  `wp iss-editorial registry-check --format=json` validates all nine formats.
-- Targeted JS/CSS lint, PHP syntax and PHPStan pass. PHPCS passes 18 changed
-  PHP files; `videos.php` retains **24 pre-existing escaping findings**, verified
-  against HEAD, with no new findings. See audit for exact validation scope.
-- Chrome: home workspace; disposable project/tour/publication/page/video
-  workspaces; project edit → autosave → reload/recover → native Save Draft;
-  native relationship navigation; project/publication phone and project 800px
-  layouts. Fixtures removed, viewport reset. Public landing checks at phone and
-  desktop widths: no overflow, one H1, no editing markers; media/text ratio kept.
-  Eleven existing public routes returned 200. Firefox/paste/staff UAT remain.
-- `wp_app` mounts website code through
-  `/home/vladimir/.local/state/iss-editorial-pilot-20260921/website-code.yml`.
-  **Do not restart base Compose:** it would restore older source mounts.
-  Local WP-CLI wrapper: `/home/vladimir/.local/state/iss-editorial-pilot-20260921/wp`.
-  PHP test scripts are mounted under `/tmp/iss-tests/`; run database suites
-  sequentially. Repeatable commands are in the audit.
+Use `wp eval-file FILE verify --use-include` for read-only verification. These
+are guarded one-time migrations; do not rerun `apply`. Media manifest:
+`ops/uploads/2026-09-22-editorial-sync.manifest`. Staging permalink rules were
+flushed after the new Rückblick type was deployed.
+
+Verified full staging DB/uploads backup:
+`/srv/industriesalon/stage/backups/20260922-132743/`.
+Configuration backup, original dirty patch, final DB dump, protected-table
+verification and targeted migration before-images:
+`/home/vladimir/server-actions/sync-20260922/` (before-images under `cli/`).
+The original staging edits also remain in its named pre-sync Git stash. Its
+inactive repo Compose port patch was preserved there, not reapplied; staging
+uses the separate `stage/compose.yml`. No containers were restarted.
+Local backup and comparison evidence:
+`/home/vladimir/.local/state/iss-sync-20260922/`.
+
+## Verification and next action
+
+- Local: **34 DOM tests**, **287 storage checks**, **137 registry/renderer checks**,
+  **169 Set assertions**; targeted lint/static checks. `videos.php` has 24 existing
+  PHPCS findings, unchanged from the earlier baseline.
+- Staging: both migration postflights pass; **86 stored documents** validate;
+  nine-format registry has no errors. Seventeen route/API/login checks return
+  200 without local URLs or public editing markers. Chrome desktop/phone hero
+  checks pass with no overflow; Atlas loads 18 keyed tiles without console errors.
+  Containers remain healthy. Existing backups/retired image variants missing on
+  both hosts were not invented or deleted; current referenced originals exist.
+- Next: staff acceptance of the staging editor, Firefox and real clipboard/paste
+  checks. Staging's authenticated editor was not exercised in this deployment
+  turn; earlier Chrome editor/save/recovery checks ran locally. Production
+  release and further content migrations remain separate tasks.
+
+Local runtime still mounts website code via
+`/home/vladimir/.local/state/iss-editorial-pilot-20260921/website-code.yml`.
+**Do not restart base Compose:** it would restore the older source mounts.
+Local WP-CLI wrapper: `/home/vladimir/.local/state/iss-editorial-pilot-20260921/wp`.

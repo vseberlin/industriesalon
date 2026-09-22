@@ -6,6 +6,11 @@ be recovered from Git history.
 
 ## 2026-09-22
 
+- Synchronized the accepted website code and scoped editor/content data to
+  staging: 52 documents, required templates/media and report source connection.
+  Verified backups, migration read-back, media hashes, preserved private/domain
+  data and public desktop/mobile output. Production is unchanged.
+
 - Preserved staging's CARTO key support in the shared code, keeping the key
   outside Git. Added the guarded editor/content sync migration and required
   media checksum manifest; private drafts and unrelated domain data stay local
