@@ -6,6 +6,11 @@ be recovered from Git history.
 
 ## 2026-09-22
 
+- Restored missing attachment records behind Führungen card thumbnails and two
+  other editor images. Added a read-only media dependency check across all
+  canonical documents, including unchanged JSON, plus a guarded staging repair
+  and paired file manifest. Existing card CSS and markup are unchanged.
+
 - Synchronized the accepted website code and scoped editor/content data to
   staging: 52 documents, required templates/media and report source connection.
   Verified backups, migration read-back, media hashes, preserved private/domain
