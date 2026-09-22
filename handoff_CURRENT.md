@@ -2,7 +2,7 @@
 
 Website source is `/home/vladimir/wp-website`; `/home/vladimir/wp` is the preserved
 archive checkout. Local code, GitHub `main` and staging are synchronized through
-**41b34d2**; the subsequent closeout commit records this checkpoint. Verify current
+**8dddf10**; the subsequent closeout commit records this checkpoint. Verify current
 `HEAD`/`origin/main` before work. Production was read for this import, not changed.
 
 ## Current programme state and ownership
@@ -152,3 +152,25 @@ search, occurrence and cache projections. Existing archive, commerce, newsletter
 and user data remain unchanged. Rollback uses the excerpt before-images plus the
 preceding code commit; local import additions are enumerated in its receipt.
 Do not replay either import or the excerpt apply. Production remains unchanged.
+
+
+## Date rotation — current delivery
+
+`8dddf10` adds automatic date rotation, Berlin-day handling for missing event ends,
+ongoing/open-ended exhibitions, recurring next dates, six-week quiet-period
+exhibition fallback, and expiring focus through the existing graph promotion.
+Event basis fields now offer Terminstatus; existing promotion exposes Hervorheben
+bis. Cancelled/sold-out entries carry notices and use Details. Editors can open
+“Datumsvorschau für die Redaktion” on Veranstaltungen; its nonce-protected clock
+changes no records. Preview history intentionally has no AJAX continuation.
+See `docs/architecture/content-model.md` for the contract and test commands.
+
+Local and staging each pass **48 rotation + 23 overview checks**, including actual
+SQL/REST midnight transitions, preview permissions, future overview, DST/year
+boundaries and existing promotion expiry conversion. Targeted PHPCS/PHPStan pass.
+Public Chrome desktop/mobile and no-cache headers verified; staging still
+noindex/nofollow. Anonymous preview parameters cannot change the featured event.
+No source content/date/media changes, DB migration or uploads artifact required;
+blank metadata defaults and existing graph storage suffice. No service restarted.
+Authenticated form rendering and preview were exercised through WP-CLI; a browser
+save of the editor controls and Firefox remain staff acceptance checks.
