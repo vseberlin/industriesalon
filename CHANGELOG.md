@@ -6,6 +6,12 @@ be recovered from Git history.
 
 ## 2026-09-22
 
+- Added a bounded production-to-staging programme import for four events and
+  four exhibitions, with paired attachment/file evidence and duplicate checks.
+  The discovery game stays with its Walk of Fame installation. Veranstaltungen
+  now includes exhibitions through the existing timeline block; the existing
+  Waldfriedhof tour receives its missing SuperSaaS series mapping.
+
 - Restored the About hero's pre-July-11 triptych composition: inset heading,
   taller images, legible kicker captions and stacked phone layout. The template
   places the existing JSON image row inside one hero using bounded slots in the
