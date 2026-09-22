@@ -1,112 +1,109 @@
 # Current handoff — 2026-09-22
 
-Local website checkout, GitHub `main` and staging are synchronized. Implementation
-and data migrations are committed through **fce22fa**; the subsequent closeout
-commit only records this state. Verify current `HEAD`/`origin/main` before work.
-Website source: `/home/vladimir/wp-website`. `/home/vladimir/wp` is the preserved
-archive checkout, not the website delivery branch. Production was not changed.
+Website source is `/home/vladimir/wp-website`; `/home/vladimir/wp` is the preserved
+archive checkout. Local code, GitHub `main` and staging are synchronized through
+**072e11f**; the subsequent closeout commit records this checkpoint. Verify current
+`HEAD`/`origin/main` before work. Production was read for this import, not changed.
 
-## Accepted state
+## Current programme state and ownership
 
-One JSON workspace and registry serve nine formats. Theme CSS separates renderer
-anatomy from skins; the alternate cards/modal editor and duplicate homepage hero
-CSS are removed. The JSON homepage uses the original shared theme hero pattern.
-About's pre-July-11 triptych layout is restored: inset heading, taller images,
-light kicker captions and stacked mobile images. Its theme template places the
-first JSON section inside the hero and the remaining eight afterward through
-two bounded slots in the same renderer. One document/editor remains canonical.
-Both environments use the file template; no DB or upload artifact was needed.
-Staging's CARTO key support is now shared code; its actual key stays outside Git.
-See the [audit](docs/project/editorial-consolidation-audit.md) and
+Staging now has **four new Veranstaltungen and four new Ausstellungen**, imported
+from nine published production announcements. The discovery game belongs to Walk
+of Fame, so it is not a duplicate event with an invented date. Veranstaltungen
+includes exhibitions through its existing timeline block; Kalender uses the
+existing occurrence projection. Both landing templates are theme-owned.
+
+| Production source | Staging ID | Programme entry |
+| --- | --- | --- |
+| 12763 | 27411 | Anne Rabe, 15 October, 19:00 |
+| 12060 | 27413 | Nachts am Telefon, 24 September, 19:00 |
+| 11969 | 27415 | Tag des offenen Denkmals, 12–13 September |
+| 11915 | 27417 | Festival der Berliner Industriekultur, 12 September–4 October |
+| 12744 | 27419 | Jüdisches Leben und Arbeiten, 9 October–7 November |
+| 12680 | 27421 | Pioniere der Transformation, 12 September–4 October |
+| 11895 + 12018 | 27423 | Walk of Fame, 12 September–4 October |
+| 11696 | 27425 | PS & Pioniergeist, 4 July–30 August |
+
+All dates are 2026. Unspecified end times stay blank; inclusive date-range bounds
+are not opening hours. Source identity, wording, image metadata, ticket links and
+material are retained. Two old inline image references are missing in production
+itself; the import records that and uses the available current featured images.
+Event material links now render through the existing shared theme helper.
+
+SuperSaaS refreshed **45 slots**: one new occurrence, 44 updated, no errors or
+inactivations. Its previously unmapped `tour:waldfriedhof-anja` series now points
+to existing Führung **11940**, including 14 November, 11:00–13:00. Production's
+announcement corroborates the mapping. Do not run another import merely to test.
+
+**Data now differ by design:** the new programme entries exist on staging only.
+Local has 86 canonical documents; staging has 94. Staging **27415** is now the
+Denkmaltag event; local **27415** is an unrelated legacy fixture. Never identify
+cross-environment content by matching numeric IDs or overwrite staging with a
+local database snapshot. Use source identity and the recorded migration maps.
+
+## Programme artifacts and verification
+
+- Applied once: `ops/migrations/2026-09-22-programme-sync.php`; public source and
+  media evidence: `ops/migrations/2026-09-22-programme-source.json`.
+- Paired uploads manifest: `ops/uploads/2026-09-22-programme-sync.manifest`.
+  **18 attachments / 215 files / 99,701,416 bytes**, hashes verified. All files were
+  additions; no existing upload was overwritten or removed.
+- Private staging evidence: `/home/vladimir/server-actions/programme-20260922/`:
+  verified `before.sql.gz`, `after.sql.gz`, `table-comparison.json`, and
+  `cli/receipt.json` with new IDs, existing-content hashes and mapping before-image.
+  Local evidence: `/home/vladimir/.local/state/iss-programme-sync-20260922/`.
+- Read-only verification, with the migration and receipt available to WP-CLI:
+  `wp eval-file FILE verify /PRIVATE/receipt.json --use-include`. **Do not replay
+  `apply`**, including any earlier editorial/media migration.
+- Postflight passed: all eight published documents and dates, exactly one public
+  active WP occurrence per entry, media hashes, and Waldfriedhof mapping. Every
+  pre-existing post and metadata row is unchanged. Comparison of 67 SQL tables
+  confirms archive, booking/commerce, newsletter, user and usermeta data unchanged.
+- `wp iss-editorial media-check`: **94 canonical documents / 169 unique media
+  references**, passed. Local **139 registry/renderer checks**, targeted PHP lint,
+  PHPCS/PHPStan and `git diff --check` passed; test fixtures removed.
+- Chrome desktop verified September/October programme listings, calendar listings
+  including November's mapped tour, detail dates/media, Walk of Fame game/PDFs and
+  the telephone event's external ticket link. No horizontal overflow on checked
+  pages. The summer exhibition detail shows its July–August range. Phone layout
+  was not retested for this import. Containers remain healthy; none restarted.
+
+## Earlier accepted website state to preserve
+
+One JSON workspace and registry serve nine formats; the theme owns composition
+and skins. The homepage uses the original shared hero pattern. About restores
+its inset heading, tall triptych images, light captions and stacked mobile
+images via two bounded slots in the same document renderer. Staging's CARTO key
+support is shared code; the key stays outside Git. See the
+[audit](docs/project/editorial-consolidation-audit.md) and
 [editorial contract](docs/architecture/editorial-platform.md).
 
-The explicitly authorized local -> staging content sync is complete:
+Earlier local-to-staging editorial sync and thumbnail repair remain applied:
+52 documents, 60 content/template records, 13 initial plus seven repaired media
+records, 33 plus eight transferred files. Their postflights, media checks and
+desktop/phone checks passed. Original private drafts and unrelated data survived.
+Report **27388** retains source event **26813** and its owner-managed venue link.
+Local home **12257** keeps published **10+4** and autosave **27678** **10+4**.
+Local overrides `single-ausstellung` **26309**, `page-publikationen` **26560** and
+`page-projekte` **26532** match staging; keep checking effective template authority.
+Earlier checks included 34 DOM tests, 287 storage checks and 169 Set assertions.
+`videos.php` retains its 24 pre-existing PHPCS findings.
 
-- **52 editor documents**, **60 content/template records**, **13 attachment rows**;
-  **33 media files** transferred, all **1,408 available referenced files** match
-  by SHA256. The manifest records the direct uploads transfer; the large PDF
-  was not put into Git.
-- Follow-up thumbnail repair restored **7 further attachment records**, including
-  five “Bleiben Sie dran” cards on Führungen and two images referenced by content
-  **24988**. Their unchanged JSON had incorrectly excluded their media from the
-  first dependency comparison. **8 files** added; all **43 repair files** verified
-  by SHA256. All six Führungen thumbnails now load locally and on staging;
-  staging desktop/phone Chrome checks pass. Card markup and CSS are unchanged.
-- Three existing local template overrides now match staging: `single-ausstellung`
-  **26309**, `page-publikationen` **26560**, `page-projekte` **26532**. `front-page`
-  and `single-video` remain theme-owned. Keep inspecting effective authority.
-- Report **27388** includes its required source event **26813**, connected through
-  the owning report API. Its venue relation uses the relation API. Media rights,
-  attribution and consent for transferred Event Drop attachments are retained.
-  Native APIs created required empty editorial context Sets and derived graph/
-  Place projections; unrelated Set contents were not imported.
-- Local posts and non-lock metadata did not change. Existing staging posts/meta
-  outside the named migration scope and all existing private autosaves were
-  preserved. Database INSERT-data comparison confirms archive Sets, programme/
-  occurrences, SuperSaaS slots, booking requests, newsletters, users and usermeta
-  are unchanged. Staging config file hash and noindex setting are unchanged.
-- Local home **12257** retains published **10+4** and autosave **27678** **10+4**.
-  Private drafts remain environment-specific. Legacy fixture **27415** was not
-  transferred. Neither old cleanup SQL nor archive retirement scripts were run.
+Earlier one-time artifacts: `2026-09-22-editorial-staging-sync.php`,
+`2026-09-22-editorial-sync-dependencies.php`, and
+`2026-09-22-editorial-media-repair.php` under `ops/migrations/`, with matching
+uploads manifests. Full staging DB/uploads backup:
+`/srv/industriesalon/stage/backups/20260922-132743/`. Earlier private before-images
+and comparisons: `/home/vladimir/server-actions/sync-20260922/` and
+`/home/vladimir/server-actions/thumbnails-20260922/`. The original staging changes
+remain in its named pre-sync Git stash; its inactive Compose patch was not
+reapplied. Staging uses `/srv/industriesalon/stage/compose.yml`.
 
-## Artifacts and recovery
-
-Applied in order, after code and media:
-
-1. `ops/migrations/2026-09-22-editorial-staging-sync.php`
-2. `ops/migrations/2026-09-22-editorial-sync-dependencies.php`
-3. `ops/migrations/2026-09-22-editorial-media-repair.php`
-
-Use `wp eval-file FILE verify --use-include` for read-only verification. These
-are guarded one-time migrations; do not rerun `apply`. Media manifest:
-`ops/uploads/2026-09-22-editorial-sync.manifest`. Staging permalink rules were
-flushed after the new Rückblick type was deployed.
-Repair manifest: `ops/uploads/2026-09-22-editorial-media-repair.manifest`.
-Its verified database backup, before-image and protected-table comparison are
-under `/home/vladimir/server-actions/thumbnails-20260922/`; local evidence is
-`/home/vladimir/.local/state/iss-thumbnails-20260922/`.
-
-Verified full staging DB/uploads backup:
-`/srv/industriesalon/stage/backups/20260922-132743/`.
-Configuration backup, original dirty patch, final DB dump, protected-table
-verification and targeted migration before-images:
-`/home/vladimir/server-actions/sync-20260922/` (before-images under `cli/`).
-The original staging edits also remain in its named pre-sync Git stash. Its
-inactive repo Compose port patch was preserved there, not reapplied; staging
-uses the separate `stage/compose.yml`. No containers were restarted.
-Local backup and comparison evidence:
-`/home/vladimir/.local/state/iss-sync-20260922/`.
-
-## Verification and next action
-
-- Local: **34 DOM tests**, **287 storage checks**, **137 registry/renderer checks**,
-  **169 Set assertions**; targeted lint/static checks. `videos.php` has 24 existing
-  PHPCS findings, unchanged from the earlier baseline.
-- Staging: both migration postflights pass; **86 stored documents** validate;
-  nine-format registry has no errors. Seventeen route/API/login checks return
-  200 without local URLs or public editing markers. Chrome desktop/phone hero
-  checks pass with no overflow; Atlas loads 18 keyed tiles without console errors.
-  Containers remain healthy. Existing backups/retired image variants missing on
-  both hosts were not invented or deleted; current referenced originals exist.
-- Media-repair postflight passes. New read-only `wp iss-editorial media-check`
-  reproduces all seven missing records before repair and passes afterward:
-  **86 canonical documents / 162 media references** on both hosts. It covers
-  unchanged documents too; continue checking variants against upload manifests.
-  Targeted PHP lint, PHPCS and PHPStan pass. Archive/programme/booking/newsletter/
-  user table data remain unchanged; containers remain healthy.
-- About restoration: local desktop/phone/tablet and staging desktop/phone Chrome
-  checks pass with three loaded images and no horizontal overflow. Local editor
-  preview retains section indexes 0–8 exactly once. Read-only renderer comparison
-  confirms the two slots reproduce the complete document; template parses.
-  All 137 registry/renderer checks and targeted PHP/CSS checks pass. About route
-  specs were updated and linted; layout assertions were exercised through Chrome,
-  not the standalone Playwright runner. Staging public routes return 200.
-- Next: staff acceptance of the staging editor, Firefox and real clipboard/paste
-  checks. Staging's authenticated editor was not exercised in this deployment
-  turn; earlier Chrome editor/save/recovery checks ran locally. Production
-  release and further content migrations remain separate tasks.
-
-Local runtime still mounts website code via
+Local runtime mounts website code through
 `/home/vladimir/.local/state/iss-editorial-pilot-20260921/website-code.yml`.
 **Do not restart base Compose:** it would restore the older source mounts.
 Local WP-CLI wrapper: `/home/vladimir/.local/state/iss-editorial-pilot-20260921/wp`.
+
+Next: staff acceptance of staging, Firefox and real clipboard/paste checks.
+The authenticated staging editor was not tested during this programme sync.
+Production release and further data transfers remain separate tasks.
