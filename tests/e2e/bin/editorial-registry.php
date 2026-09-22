@@ -25,6 +25,12 @@ $landing_fixture = static function (array $formats) use (&$landing_id): array {
 add_filter('iss_editorial_formats', $landing_fixture, 99);
 try {
     $assert(iss_editorial_registry_errors() === [], 'Effective registry must be internally consistent');
+    $event_links = industriesalon_render_structured_veranstaltung_section([
+        'type' => 'material',
+        'links' => [['label' => 'Tickets & Infos', 'url' => 'https://example.invalid/tickets?a=1&b=2']],
+    ]);
+    $assert(str_contains($event_links, 'https://example.invalid/tickets?a=1&#038;b=2'), 'Event material links render without requiring a title or body');
+    $assert(str_contains($event_links, 'Tickets &amp; Infos'), 'Event material link labels are escaped');
     $colour = 'iss-ink-preset-' . iss_editorial_text_palette()[0]['slug'];
     $types = ['landing' => 'fliesstext', 'article' => 'fliesstext', 'projekt' => 'kapitel', 'ausstellung' => 'kapitel', 'rueckblick' => 'fliesstext', 'veranstaltung' => 'kapitel', 'place' => 'epoche', 'fuehrung' => 'kapitel', 'publication' => 'longread_chapter'];
     foreach ($types as $slug => $type) {

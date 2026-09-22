@@ -309,6 +309,7 @@ function industriesalon_render_structured_veranstaltung_section(array $section, 
         }
     }
     $downloads_html = $type === 'material' ? industriesalon_render_structured_veranstaltung_downloads($download_html) : '';
+    $links_html = industriesalon_render_editorial_links((array) ($section['links'] ?? []));
 
     $refs_html = '';
     if ($type !== 'material') {
@@ -326,7 +327,7 @@ function industriesalon_render_structured_veranstaltung_section(array $section, 
         }
     }
 
-    if ($kicker === '' && $title === '' && $body === '' && $quote === '' && !$items && $media_html === '' && $downloads_html === '' && $refs_html === '' && $dynamic_html === '' && $upload_intake_html === '') {
+    if ($kicker === '' && $title === '' && $body === '' && $quote === '' && !$items && $media_html === '' && $downloads_html === '' && $links_html === '' && $refs_html === '' && $dynamic_html === '' && $upload_intake_html === '') {
         return '';
     }
 
@@ -402,6 +403,7 @@ function industriesalon_render_structured_veranstaltung_section(array $section, 
         <?php if ($downloads_html !== '') : ?>
             <div class="iss-event-structured__downloads"><?php echo $downloads_html; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- Download cards are escaped in helper functions above. ?></div>
         <?php endif; ?>
+        <?php echo $links_html; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- Links are escaped by the shared industriesalon_render_editorial_links() helper. ?>
         <?php if ($refs_html !== '') : ?>
             <div class="iss-event-structured__refs"><?php echo $refs_html; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- Object references are escaped in the helper. ?></div>
         <?php endif; ?>

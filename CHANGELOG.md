@@ -10,7 +10,9 @@ be recovered from Git history.
   four exhibitions, with paired attachment/file evidence and duplicate checks.
   The discovery game stays with its Walk of Fame installation. Veranstaltungen
   now includes exhibitions through the existing timeline block; the existing
-  Waldfriedhof tour receives its missing SuperSaaS series mapping.
+  Waldfriedhof tour receives its missing SuperSaaS series mapping. Event material
+  sections now render their existing link field through the shared theme helper,
+  preserving imported ticket and film links; renderer regression checks cover it.
 
 - Restored the About hero's pre-July-11 triptych composition: inset heading,
   taller images, legible kicker captions and stacked phone layout. The template

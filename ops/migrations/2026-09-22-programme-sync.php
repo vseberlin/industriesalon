@@ -99,7 +99,7 @@ if ($mode === 'verify') {
     iss_programme_20260922_require(iss_programme_20260922_old_content($receipt['max_existing_post_id']) === $receipt['existing_content_hashes'], 'Pre-existing post or meta changed.');
     foreach ($payload['items'] as $item) {
         $id = (int) $receipt['post_map'][$item['source_id']];
-        iss_programme_20260922_require(get_post_status($id) === 'publish' && get_post_type($id) === $item['post_type'] && get_the_title($id) === $item['title'], 'Post mismatch.');
+        iss_programme_20260922_require(get_post_status($id) === 'publish' && get_post_type($id) === $item['post_type'] && get_post_field('post_title', $id, 'raw') === $item['title'], 'Post mismatch.');
         $saved = iss_editorial_get_document($id, $item['post_type']);
         $expected = iss_editorial_validate_document(iss_programme_20260922_document($item, $receipt['media_map'], $media_by_id, $uploads['baseurl']), $item['post_type']);
         iss_programme_20260922_require($saved === $expected, 'Saved document differs: ' . $id);
