@@ -456,9 +456,15 @@ ordinary page relations, with no treatment-specific selection or result cap.
 Single Führung route maps use the same gesture
 contract but keep their source and order in relation station rows.
 
-`/about/` is a completed landing cutover. Its file template owns only the
-masthead and `industriesalon/editorial-landing` slot; the paired API migration
-owns the nine-section body document. The landing `text_bild_reihe` gesture
+`/about/` is a completed landing cutover. Its file template owns the hero shell
+and heading. Two instances of the existing `industriesalon/editorial-landing`
+block place the first section inside that shell (`limit: 1`) and the remaining
+sections afterward (`offset: 1`). These non-overlapping template slots consume
+one nine-section JSON document through the same renderer and preserve original
+section indexes for workspace preview/editing. With no attributes the block
+still renders the complete document. The triptych remains the first editable
+section; images and captions are never copied into the template.
+The landing `text_bild_reihe` gesture
 represents repeated, non-navigational image/title/text items and stays distinct
 from linked `gateway` destinations. Its `visual` and `compact` treatments share
 one markup contract and let item count resolve in CSS.

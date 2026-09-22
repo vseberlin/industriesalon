@@ -333,7 +333,7 @@ function industriesalon_render_editorial_landing_gateway(array $section, int $re
     return trim((string) ob_get_clean());
 }
 
-function industriesalon_render_editorial_landing_text_image_item(array $item, int $heading_level = 3, bool $rich_text = false): string
+function industriesalon_render_editorial_landing_text_image_item(array $item, int $heading_level = 3, bool $rich_text = false, bool $visual = false): string
 {
     $label = trim((string) ($item['label'] ?? ''));
     $text = trim((string) ($item['text'] ?? ''));
@@ -354,7 +354,7 @@ function industriesalon_render_editorial_landing_text_image_item(array $item, in
         <?php if ($label !== '' || $text !== '') : ?>
             <div class="iss-landing-text-image-row__item-body">
                 <?php if ($label !== '') : ?>
-                    <<?php echo esc_attr($heading_tag); ?> class="iss-landing-text-image-row__item-title"><?php echo esc_html($label); ?></<?php echo esc_attr($heading_tag); ?>>
+                    <<?php echo esc_attr($heading_tag); ?> class="iss-landing-text-image-row__item-title<?php echo $visual ? ' iss-kicker iss-kicker--compact iss-kicker--light' : ''; ?>"><?php echo esc_html($label); ?></<?php echo esc_attr($heading_tag); ?>>
                 <?php endif; ?>
                 <?php if ($text !== '') : ?><p class="iss-landing-text-image-row__item-text"><?php echo $rich_text ? iss_editorial_sanitize_rich_text($text, 'inline') : esc_html($text); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- Versioned inline allowlist. ?></p><?php endif; ?>
             </div>
@@ -374,7 +374,7 @@ function industriesalon_render_editorial_landing_text_image_row(array $section, 
         if (!is_array($item)) {
             continue;
         }
-        $item_html = industriesalon_render_editorial_landing_text_image_item($item, $item_heading_level, ($section['_text_version'] ?? 1) >= 2);
+        $item_html = industriesalon_render_editorial_landing_text_image_item($item, $item_heading_level, ($section['_text_version'] ?? 1) >= 2, ($section['treatment'] ?? '') === 'text-bild-reihe.visual');
         if ($item_html === '') {
             continue;
         }
@@ -1356,7 +1356,7 @@ function industriesalon_render_editorial_landing_section(array $section, int $re
     return '';
 }
 
-function industriesalon_editorial_landing_render_document(array $document): string
+function industriesalon_editorial_landing_render_document(array $document, int $offset = 0, int $limit = 0): string
 {
     $sections = is_array($document['sections'] ?? null) ? $document['sections'] : [];
     if (!$sections) {
@@ -1367,6 +1367,10 @@ function industriesalon_editorial_landing_render_document(array $document): stri
     $html = '';
     $rendered_index = 0;
     foreach ($sections as $source_index => $section) {
+        // Template slots partition one document; retain source indexes for editor previews.
+        if ($source_index < $offset || ($limit > 0 && $source_index >= $offset + $limit)) {
+            continue;
+        }
         if (!is_array($section)) {
             continue;
         }
@@ -1489,7 +1493,7 @@ function industriesalon_suppress_front_page_landing_fallback_group(string $block
 }
 add_filter('render_block_core/group', 'industriesalon_suppress_front_page_landing_fallback_group', 9, 2);
 
-function industriesalon_render_editorial_landing_block(): string
+function industriesalon_render_editorial_landing_block(array $attributes = []): string
 {
     if (is_admin() || !is_singular()) {
         return '';
@@ -1502,13 +1506,17 @@ function industriesalon_render_editorial_landing_block(): string
 
     $prefer_autosave = industriesalon_editorial_landing_prefer_autosave($post_id);
     $document = iss_editorial_get_read_model($post_id, iss_editorial_get_format_for_post($post_id)['slug'], $prefer_autosave);
-    return industriesalon_editorial_landing_render_document($document);
+    return industriesalon_editorial_landing_render_document($document, absint($attributes['offset'] ?? 0), absint($attributes['limit'] ?? 0));
 }
 
 function industriesalon_register_editorial_landing_block(): void
 {
     register_block_type('industriesalon/editorial-landing', [
         'api_version' => 2,
+        'attributes' => [
+            'offset' => ['type' => 'integer', 'default' => 0],
+            'limit' => ['type' => 'integer', 'default' => 0],
+        ],
         'render_callback' => 'industriesalon_render_editorial_landing_block',
     ]);
 }

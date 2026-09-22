@@ -680,7 +680,7 @@
 .iss-landing-text-image-row__items {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(min(100%, 13rem), 1fr));
-  gap: clamp(1rem, 2vw, 1.5rem);
+  gap: var(--iss-landing-text-image-gap, clamp(1rem, 2vw, 1.5rem));
 }
 
 .iss-landing-text-image-row__item {
@@ -706,6 +706,8 @@
   display: grid;
   gap: 0.55rem;
   padding-top: var(--iss-landing-text-image-body-padding-top, 0.9rem);
+  margin-top: var(--iss-landing-text-image-body-margin-top, 0);
+  border-top: var(--iss-landing-text-image-body-border, 0);
 }
 
 .iss-landing-text-image-row__item-title,
@@ -714,9 +716,11 @@
 }
 
 .iss-landing-text-image-row__item-title {
+  color: var(--iss-landing-ink);
   font-family: var(--iss-landing-text-image-title-font-family, var(--iss-landing-serif));
   font-size: var(--iss-landing-text-image-title-font-size, clamp(1.15rem, 0.8vw + 1rem, 1.65rem));
   line-height: 1.08;
+  letter-spacing: var(--iss-landing-text-image-title-spacing, normal);
   text-transform: var(--iss-landing-text-image-title-transform, none);
 }
 
@@ -1327,8 +1331,7 @@
     grid-template-columns: 1fr;
   }
 
-  .iss-landing-section--treatment-text-bild-reihe-visual .iss-landing-text-image-row__items,
-.iss-landing-section--treatment-text-bild-reihe-compact .iss-landing-text-image-row__items,
+  .iss-landing-section--treatment-text-bild-reihe-compact .iss-landing-text-image-row__items,
 .iss-landing-section--treatment-text-bild-reihe-chronology .iss-landing-text-image-row__items {
     grid-template-columns: 1fr;
   }
@@ -1416,4 +1419,10 @@
 
 .iss-landing-section__lead > :last-child {
   margin-bottom: 0;
+}
+
+@media (max-width: 782px) {
+  .iss-landing-section--treatment-text-bild-reihe-visual .iss-landing-text-image-row__items {
+    grid-template-columns: 1fr;
+  }
 }

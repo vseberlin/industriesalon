@@ -13,6 +13,7 @@
 }
 
 .iss-landing-editorial--skin-dossier .iss-landing-section--treatment-text-bild-reihe-visual {
+  --iss-landing-surface: var(--iss-dossier-visual-surface, var(--iss-black));
   --iss-dossier-section-padding-block: var(--iss-dossier-visual-padding-block, 3.75rem);
   --iss-landing-text-image-media-height: var(--iss-dossier-visual-media-height, auto);
   --iss-landing-text-image-media-ratio: var(--iss-dossier-visual-media-ratio, 5 / 4);

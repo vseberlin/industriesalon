@@ -6,6 +6,11 @@ be recovered from Git history.
 
 ## 2026-09-22
 
+- Restored the About hero's pre-July-11 triptych composition: inset heading,
+  taller images, legible kicker captions and stacked phone layout. The template
+  places the existing JSON image row inside one hero using bounded slots in the
+  same renderer. No second editor, duplicated content or DB/media changes.
+
 - Restored missing attachment records behind Führungen card thumbnails and two
   other editor images. Added a read-only media dependency check across all
   canonical documents, including unchanged JSON, plus a guarded staging repair

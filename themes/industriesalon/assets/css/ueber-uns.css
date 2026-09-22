@@ -1,20 +1,7 @@
-/* FILE: ueber-uns.css
-   PURPOSE: Template-owned masthead for the JSON About landing. */
+/* Template-owned About opening. JSON items use the shared visual-row renderer.
+   Geometry restored from the triptych preceding c170e4d (11 July 2026). */
 
 .iss-about-page {
-  --iss-about-hero-head-height: clamp(16rem, 38svh, 24rem);
-  --iss-dossier-visual-min-height: calc(100svh - var(--iss-about-hero-head-height));
-  --iss-dossier-visual-padding-block: clamp(1rem, 2svh, 1.5rem);
-  --iss-dossier-visual-border-top: 0;
-  --iss-dossier-visual-media-height: clamp(18rem, 34svh, 23rem);
-  --iss-dossier-visual-media-ratio: auto;
-  --iss-dossier-visual-body-padding-top: 0.65rem;
-  --iss-dossier-visual-title-font-family: var(--wp--preset--font-family--plex, sans-serif);
-  --iss-dossier-visual-title-font-size: 0.82rem;
-  --iss-dossier-visual-title-transform: uppercase;
-  --iss-dossier-visual-text-font-size: 0.88rem;
-  --iss-dossier-visual-text-line-height: 1.33;
-
   background: var(--iss-white);
   color: var(--iss-black);
   overflow: clip;
@@ -25,52 +12,96 @@
 }
 
 .iss-about-hero {
+  --iss-dossier-visual-padding-block: 0;
+  --iss-dossier-visual-border-top: 0;
+  --iss-dossier-visual-media-ratio: 4 / 3.3;
+  --iss-dossier-visual-body-padding-top: 0.65rem;
+  --iss-dossier-visual-title-font-family: var(--wp--preset--font-family--plex, sans-serif);
+  --iss-dossier-visual-title-font-size: 0.7rem;
+  --iss-dossier-visual-title-transform: uppercase;
+  --iss-dossier-visual-text-font-size: 0.88rem;
+  --iss-dossier-visual-text-line-height: 1.33;
+  --iss-landing-text-image-gap: clamp(0.9rem, 1.8vw, 1.25rem);
+  --iss-landing-text-image-body-margin-top: 0.75rem;
+  --iss-landing-text-image-body-border: 1px solid rgba(249, 249, 250, 0.16);
+  --iss-landing-text-image-title-spacing: 0.14em;
+  --iss-dossier-visual-surface: transparent;
+
   color: var(--iss-white);
-  background: var(--iss-black);
+  background:
+    radial-gradient(circle at top left, rgba(232, 29, 37, 0.16), transparent 38%),
+    linear-gradient(180deg, rgba(30, 30, 30, 0.28), rgba(30, 30, 30, 0)),
+    linear-gradient(180deg, rgba(30, 30, 30, 0.94), rgba(30, 30, 30, 0.88));
 }
 
 .iss-about-hero__inner {
   display: grid;
   align-content: end;
-  justify-items: end;
-  min-height: var(--iss-about-hero-head-height);
-  padding-top: calc(var(--iss-header-height) + 4rem);
-  padding-bottom: clamp(2rem, 5vw, 4rem);
+  gap: clamp(1.2rem, 2.2vw, 1.8rem);
+  min-height: 100svh;
+  padding-top: calc(var(--iss-header-height) + 6.25rem);
+  padding-bottom: clamp(1.1rem, 2.4vw, 1.75rem);
+}
+
+.iss-about-hero__intro-row {
+  display: grid;
+  grid-template-columns: 1fr minmax(16rem, 34rem) clamp(7rem, 10vw, 10rem);
+  align-items: end;
+  padding-bottom: clamp(0.35rem, 0.9vw, 0.7rem);
+}
+
+.iss-about-hero__intro {
+  grid-column: 2;
   text-align: right;
 }
 
 .iss-about-hero :is(.iss-page-hero__kicker, .iss-page-hero__title) {
-  max-width: 18ch;
+  max-width: none;
   margin-right: 0;
   margin-left: auto;
   color: inherit;
+  text-align: inherit;
 }
 
 .iss-about-hero .iss-page-hero__kicker {
   margin-bottom: 0.7rem;
 }
 
-.iss-about-hero .iss-page-hero__title {
-  font-family: var(--wp--preset--font-family--plex-serif, "IBM Plex Serif", Georgia, serif);
-  font-size: 5.5rem;
-  line-height: 0.9;
-}
-
+.iss-about-hero__inner > .iss-landing-editorial,
 .iss-about-page > .iss-landing-editorial {
   margin-block-start: 0;
 }
 
-@media (max-width: 720px) {
-  .iss-about-page {
-    --iss-dossier-visual-min-height: 0;
+@media (max-width: 1024px) {
+  .iss-about-hero__inner {
+    min-height: auto;
+    gap: 1.2rem;
+    padding-top: calc(var(--iss-header-height) + 4.9rem);
+  }
+
+  .iss-about-hero__intro-row {
+    grid-template-columns: 1fr minmax(14rem, 28rem) clamp(5.5rem, 8vw, 8rem);
+  }
+}
+
+@media (max-width: 782px) {
+  .iss-about-hero {
+    --iss-dossier-visual-media-ratio: 16 / 10;
   }
 
   .iss-about-hero__inner {
-    min-height: 16rem;
-    padding-top: calc(var(--iss-header-height) + 2.5rem);
+    gap: 1.35rem;
+    padding-top: calc(var(--iss-header-height) + 4.1rem);
+    padding-bottom: 1.5rem;
   }
 
-  .iss-about-hero .iss-page-hero__title {
-    font-size: 3rem;
+  .iss-about-hero__intro-row {
+    grid-template-columns: 1fr;
+    padding-bottom: 0.35rem;
+  }
+
+  .iss-about-hero__intro {
+    grid-column: 1;
+    text-align: left;
   }
 }
