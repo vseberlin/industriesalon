@@ -378,14 +378,10 @@
     padding: 0.9rem 0.9rem 1rem;
   }
 
-/* .iss-card__title: Element class for `iss-card`; apply on `title` element. */
-  .iss-card__title {
-    font-size: 1.06rem;
-  }
-
-/* .iss-card__text: Element class for `iss-card`; apply on `text` element. */
-  .iss-card__text {
-    font-size: 0.9rem;
+  /* Responsive defaults remain tokens so card variants keep their hierarchy. */
+  .iss-card {
+    --iss-card-title-size: 1.06rem;
+    --iss-card-text-size: 0.9rem;
   }
 }
 /* =====================================================================
@@ -1868,5 +1864,141 @@
 /* .iss-fuehrungen-query__grid: Element class for `iss-fuehrungen-query`; apply on `grid` element. */
   .iss-fuehrungen-query__grid {
     grid-template-columns: 1fr;
+  }
+}
+
+/* Programme cards share the card anatomy; appointment rows remain distinct
+   from relation-driven discovery cards. Images retain their full composition. */
+.iss-card--programme {
+  --iss-card-title-size: clamp(1.4rem, 2.1vw, 2rem);
+  --iss-card-title-clamp: unset;
+  --iss-card-text-size: 1.05rem;
+  --iss-card-media-bg: var(--iss-surface-inset);
+  --iss-card-rail-width: 0;
+  --iss-card-rail-width-hover: 0;
+  --iss-card-body-gap: 0.85rem;
+  --iss-card-accent: #294c70;
+
+  min-height: 0;
+  height: auto;
+  border: 0;
+  border-radius: 0;
+}
+
+.iss-card--programme .iss-card__media {
+  margin: 0;
+  aspect-ratio: 16 / 9;
+}
+
+.iss-card--programme .iss-card__media img {
+  object-fit: contain;
+  transform: none;
+}
+
+.iss-card--programme .iss-card__title {
+  display: block;
+  min-height: 0;
+  overflow: visible;
+  overflow-wrap: anywhere;
+}
+
+.iss-card__date {
+  margin: 0;
+  color: var(--iss-card-accent, var(--iss-link-fg));
+  font-size: 1rem;
+  font-weight: 650;
+}
+
+.iss-card--programme .iss-card__meta {
+  margin: 0;
+  font-size: 0.98rem;
+  text-transform: none;
+  letter-spacing: normal;
+}
+
+.iss-card--programme .iss-card__footer {
+  margin: 0;
+}
+
+.iss-card--programme-feature {
+  --iss-card-title-size: clamp(1.65rem, 2.3vw, 2.5rem);
+
+  display: grid;
+  grid-template-columns: minmax(0, 1.15fr) minmax(0, 1fr);
+  background: var(--iss-accent-soft);
+}
+
+.iss-card--programme-feature .iss-card__media {
+  aspect-ratio: auto;
+  align-self: stretch;
+  display: flex;
+  align-items: center;
+  max-height: 30rem;
+  background: transparent;
+}
+
+.iss-card--programme-feature .iss-card__media img {
+  height: 100%;
+  max-height: 30rem;
+}
+
+.iss-card--programme-feature .iss-card__body {
+  align-self: center;
+  padding: clamp(1.25rem, 2.8vw, 3rem);
+}
+
+.iss-card--programme-feature .iss-card__kicker {
+  font-size: 0.8rem;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+.iss-card--programme-row {
+  display: grid;
+  grid-template-columns: minmax(8rem, 0.7fr) minmax(0, 3fr) minmax(10rem, 1fr);
+  gap: 1.5rem;
+  align-items: start;
+  padding-block: 1.25rem;
+  border-bottom: 1px solid var(--iss-border);
+}
+
+.iss-card--programme-row .iss-card__media {
+  grid-column: 3;
+  grid-row: 1;
+}
+
+.iss-card--programme-row .iss-card__body {
+  grid-column: 2;
+  grid-row: 1;
+  padding: 0;
+}
+
+.iss-card--programme-exhibition .iss-card__body {
+  padding: 1rem 0;
+}
+
+.iss-card--programme-no-image {
+  grid-template-columns: minmax(0, 1fr);
+}
+
+.iss-card--programme-row.iss-card--programme-no-image {
+  grid-template-columns: minmax(8rem, 0.7fr) minmax(0, 4fr);
+}
+
+@media (max-width: 781px) {
+  .iss-card--programme-feature,
+  .iss-card--programme-row,
+  .iss-card--programme-row.iss-card--programme-no-image {
+    display: flex;
+    flex-direction: column;
+  }
+
+  .iss-card--programme-feature .iss-card__body {
+    order: -1;
+  }
+
+  .iss-card--programme-row .iss-card__media {
+    order: 1;
+    width: min(100%, 24rem);
   }
 }

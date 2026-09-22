@@ -98,6 +98,12 @@
               el(
                 PanelBody,
                 { title: 'Programm Karten', initialOpen: true },
+                SelectControl ? el(SelectControl, {
+                  label: 'Darstellung',
+                  value: attrs.presentation || 'cards',
+                  options: [{ value: 'cards', label: 'Karten' }, { value: 'programme', label: 'Veranstaltungsübersicht' }],
+                  onChange: function (value) { setAttributes({ presentation: value }); }
+                }) : null,
                 TextControl
                   ? el(TextControl, {
                       label: 'Kicker',
@@ -256,7 +262,9 @@
         'div',
         null,
         controls,
-        el('p', null, 'Programm Karten (server-rendered, nutzt die Timeline-Abfrage).')
+        el('p', null, attrs.presentation === 'programme'
+          ? 'Veranstaltungsübersicht: nächster Termin, weitere Termine, laufendes Programm und Ausstellungen. Termine und Bilder stammen aus den veröffentlichten Einträgen; Kurztexte aus deren Textauszug.'
+          : 'Programm Karten (server-rendered, nutzt die Timeline-Abfrage).')
       );
     },
     save: function () {

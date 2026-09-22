@@ -1098,6 +1098,11 @@ function iss_timeline_get_listing_response($query_args = [], $render_opts = []) 
     $limit = isset($query_args['limit']) ? (int) $query_args['limit'] : 0;
     $group_recurring_tours = !empty($render_opts['groupRecurringTours']);
 
+    // Keep initial render and REST pagination in the same chronological order.
+    if (($query_args['filters']['time_mode'] ?? '') === 'past') {
+        $query_args['order'] = 'DESC';
+        $render_opts['order'] = 'DESC';
+    }
     $fetch_args = $query_args;
     if ($group_recurring_tours) {
         $group_recurring_by_month = iss_timeline_should_group_recurring_by_month($query_args, $render_opts);

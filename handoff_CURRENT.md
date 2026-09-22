@@ -35,8 +35,8 @@ inactivations. Its previously unmapped `tour:waldfriedhof-anja` series now point
 to existing Führung **11940**, including 14 November, 11:00–13:00. Production's
 announcement corroborates the mapping. Do not run another import merely to test.
 
-**Data now differ by design:** the new programme entries exist on staging only.
-Local has 86 canonical documents; staging has 94. Staging **27415** is now the
+**The eight programme entries now also exist locally**, imported by source URL
+with fresh post and attachment IDs. Both environments have 94 canonical documents. Staging **27415** is now the
 Denkmaltag event; local **27415** is an unrelated legacy fixture. Never identify
 cross-environment content by matching numeric IDs or overwrite staging with a
 local database snapshot. Use source identity and the recorded migration maps.
@@ -104,6 +104,34 @@ Local runtime mounts website code through
 **Do not restart base Compose:** it would restore the older source mounts.
 Local WP-CLI wrapper: `/home/vladimir/.local/state/iss-editorial-pilot-20260921/wp`.
 
-Next: staff acceptance of staging, Firefox and real clipboard/paste checks.
+Next: deploy and postflight the Veranstaltungen overview checkpoint, then staff acceptance, Firefox and real clipboard/paste checks.
 The authenticated staging editor was not tested during this programme sync.
 Production release and further data transfers remain separate tasks.
+
+
+## Veranstaltungen overview — current delivery
+
+The accepted page now leads with its next event and an editorial summary, then
+full-width upcoming date rows, ongoing programme notices and separate current /
+future exhibitions. Past appointments are behind the native details disclosure;
+only illustrated published event/exhibition reports qualify as Rückblicke. The
+existing programme block/query and shared cards own this presentation. Theme
+`page-veranstaltungen` is effective locally and on staging; no DB override reset
+or service restart is required.
+
+Local-only one-time import: `ops/migrations/2026-09-22-programme-local.php`,
+with `2026-09-22-programme-local-source.json` and
+`ops/uploads/2026-09-22-programme-local.manifest`. It uses the already verified
+programme media bundle: 18 attachment records / 215 files, all additions locally.
+No old staging import or SuperSaaS refresh was replayed. Local-only existing
+recurring occurrences remain local; databases are not interchangeable snapshots.
+
+Both environments use `ops/migrations/2026-09-22-events-copy.php` for eight native
+editorial excerpts. This changes no dates, original document text or media.
+Local before-image and receipts are in
+`/home/vladimir/.local/state/iss-editorial-pilot-20260921/`:
+`events-landing-before.sql`, `events-local-receipt.json`, `events-copy-receipt.json`.
+All pre-existing local posts/meta survived the import. Local media-check passed
+94 documents / 169 media references; 23 read-only programme checks passed.
+CSS/JS lint, targeted PHP checks, desktop and 390px checks passed. Staging deploy
+and postflight are the next bounded action. Production remains unchanged.

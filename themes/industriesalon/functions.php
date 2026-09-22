@@ -880,7 +880,7 @@ function industriesalon_is_offset_header_context(): bool
         return true;
     }
 
-    if (is_page(array('archiv', 'publikationen', 'kalender', 'verein'))) {
+    if (is_page(array('archiv', 'publikationen', 'kalender', 'verein', 'veranstaltungen'))) {
         return true;
     }
 

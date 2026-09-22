@@ -11,6 +11,7 @@
     "align": ["wide", "full"]
   },
   "attributes": {
+    "presentation": { "type": "string", "default": "cards" },
     "title": { "type": "string", "default": "" },
     "kicker": { "type": "string", "default": "" },
     "intro": { "type": "string", "default": "" },

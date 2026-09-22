@@ -54,7 +54,9 @@ function iss_programm_cards_build_block_config($attributes = []) {
 
     return [
         'query' => [
-            'limit' => max(1, (int) ($attributes['limit'] ?? 3)),
+            'limit' => ($attributes['presentation'] ?? '') === 'programme' ? -1 : max(1, (int) ($attributes['limit'] ?? 3)),
+            'group_recurring' => ($attributes['presentation'] ?? '') === 'programme',
+            'group_recurring_by_source' => ($attributes['presentation'] ?? '') === 'programme',
             'order' => $time_mode === 'past' ? 'DESC' : 'ASC',
             'groups' => $group !== '' ? [$group] : [],
             'filters' => [
@@ -167,6 +169,12 @@ function iss_programm_render_cards_block($attributes = [], $content = '', $block
     $items = function_exists('iss_timeline_get_items_advanced')
         ? iss_timeline_get_items_advanced($config['query'])
         : [];
+
+    // The theme composes the programme overview; the existing query remains authoritative.
+    $presentation = apply_filters('iss_programm_cards_presentation', null, $items, $attributes);
+    if (is_string($presentation)) {
+        return $presentation;
+    }
 
     $title = trim((string) ($attributes['title'] ?? ''));
     $kicker = trim((string) ($attributes['kicker'] ?? ''));
