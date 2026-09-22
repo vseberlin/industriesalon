@@ -11831,10 +11831,12 @@ $payload['records'] = $translate($payload['records']);
 $documents = 0;
 foreach ($payload['records'] as &$row) {
     if (isset($row['document'])) {
+        ++$documents;
+        // On staging, missing attachment rows are prerequisites created in the transaction.
+        if (!in_array($mode, ['validate', 'verify'], true)) { continue; }
         $validated = iss_editorial_validate_document($row['document'], $row['format']);
         if (is_wp_error($validated)) { WP_CLI::error("Invalid document {$row['id']}: " . $validated->get_error_message()); }
         $row['document'] = $validated;
-        ++$documents;
     }
 }
 unset($row);
