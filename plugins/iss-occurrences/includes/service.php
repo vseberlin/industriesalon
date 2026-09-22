@@ -1739,7 +1739,7 @@ final class ISS_Occurrences_Service
     private function build_order_by(array $filters, string $order, array &$values): string
     {
         if ($order === 'ASC' && $filters['time_mode'] === 'upcoming' && !empty($filters['include_running_ranges'])) {
-            $now = current_time('mysql');
+            $now = iss_occurrences_query_now();
             $deferred_condition = "(o.is_open_ended = 1 AND o.starts_at < %s)";
             $fallback_condition = "({$deferred_condition} AND o.date_source = 'fallback_post_date')";
             $values[] = $now;
@@ -1894,7 +1894,8 @@ final class ISS_Occurrences_Service
     private function build_time_where(array $filters, array &$values): string
     {
         $mode = $filters['time_mode'];
-        $now = current_time('mysql');
+        $now = iss_occurrences_query_now();
+        $display_end = "CASE WHEN o.origin = 'wp' AND o.source_post_type = 'veranstaltung' AND o.ends_at IS NULL THEN CONCAT(DATE(o.starts_at), ' 23:59:59') ELSE o.ends_at END";
 
         if ($mode === 'upcoming') {
             $end = $this->get_future_horizon_end_mysql();
@@ -1904,7 +1905,7 @@ final class ISS_Occurrences_Service
                 $values[] = $end;
                 $values[] = $now;
                 $values[] = $end;
-                return '((o.starts_at >= %s AND o.starts_at <= %s) OR ((o.is_open_ended = 1 OR (o.ends_at IS NOT NULL AND o.ends_at >= %s)) AND o.starts_at <= %s))';
+                return "((o.starts_at >= %s AND o.starts_at <= %s) OR ((o.is_open_ended = 1 OR ({$display_end} >= %s)) AND o.starts_at <= %s))";
             }
 
             $values[] = $now;
@@ -1915,7 +1916,7 @@ final class ISS_Occurrences_Service
         if ($mode === 'past') {
             $values[] = $now;
             $values[] = $now;
-            return '(o.is_open_ended = 0 AND ((o.ends_at IS NOT NULL AND o.ends_at < %s) OR (o.ends_at IS NULL AND o.starts_at < %s)))';
+            return "(o.is_open_ended = 0 AND (({$display_end} < %s) OR ({$display_end} IS NULL AND o.starts_at < %s)))";
         }
 
         if ($mode === 'month') {
@@ -1929,7 +1930,7 @@ final class ISS_Occurrences_Service
                 $values[] = $range['end'];
                 $values[] = $range['start'];
                 $values[] = $range['end'];
-                return '((o.starts_at >= %s AND o.starts_at <= %s) OR ((o.is_open_ended = 1 OR (o.ends_at IS NOT NULL AND o.ends_at >= %s)) AND o.starts_at <= %s))';
+                return "((o.starts_at >= %s AND o.starts_at <= %s) OR ((o.is_open_ended = 1 OR ({$display_end} >= %s)) AND o.starts_at <= %s))";
             }
 
             $values[] = $range['start'];
@@ -1947,7 +1948,7 @@ final class ISS_Occurrences_Service
                     $values[] = $end;
                     $values[] = $start;
                     $values[] = $end;
-                    return '((o.starts_at >= %s AND o.starts_at <= %s) OR ((o.is_open_ended = 1 OR (o.ends_at IS NOT NULL AND o.ends_at >= %s)) AND o.starts_at <= %s))';
+                    return "((o.starts_at >= %s AND o.starts_at <= %s) OR ((o.is_open_ended = 1 OR ({$display_end} >= %s)) AND o.starts_at <= %s))";
                 }
 
                 $values[] = $start;
@@ -2022,7 +2023,7 @@ final class ISS_Occurrences_Service
             $end_ts = null;
         }
 
-        $is_running_open_ended = $is_open_ended && $starts_at !== '' && $starts_at <= current_time('mysql');
+        $is_running_open_ended = $is_open_ended && $starts_at !== '' && $starts_at <= iss_occurrences_query_now();
         $date_label = $start_ts ? $this->format_date_long_de($start_ts, wp_timezone()) : $starts_at;
         $day_label = $start_ts ? $this->format_day_short_de($start_ts, wp_timezone()) : $date_label;
 
@@ -2091,6 +2092,13 @@ final class ISS_Occurrences_Service
             }
         }
 
+        if ($source_post_type === 'veranstaltung') {
+            $editorial_status = (string) get_post_meta($source_post_id, 'iss_event_status', true);
+            if (in_array($editorial_status, ['cancelled', 'sold_out'], true)) {
+                $row['availability_state'] = $editorial_status;
+            }
+        }
+
         return [
             'id' => isset($row['id']) ? (int) $row['id'] : 0,
             'title' => $title,
@@ -2101,6 +2109,7 @@ final class ISS_Occurrences_Service
             'time_label' => $time_label,
             'datetime_label' => $datetime_label,
             'end_raw' => $ends_at,
+            'is_open_ended' => $is_open_ended,
             'type' => isset($row['kind']) ? sanitize_key((string) $row['kind']) : '',
             'series_id' => isset($row['series_id']) ? (int) $row['series_id'] : 0,
             'series_key' => trim((string) ($row['series_key'] ?? '')),
@@ -2136,7 +2145,7 @@ final class ISS_Occurrences_Service
     {
         try {
             $tz = wp_timezone();
-            $now = new DateTimeImmutable('now', $tz);
+            $now = new DateTimeImmutable(iss_occurrences_query_now(), $tz);
             $end = $now->modify('+' . $this->get_future_horizon_months() . ' months');
             return $end->format('Y-m-d H:i:s');
         } catch (Throwable $e) {
@@ -2241,4 +2250,10 @@ function iss_occurrences_get_next_dates(int $source_post_id, int $limit = 4): ar
         'time_mode' => 'upcoming',
         'source_post_ids' => [$source_post_id],
     ]);
+}
+
+/** Read-only query clock. Projection, booking and sync timestamps retain the real clock. */
+function iss_occurrences_query_now(): string
+{
+    return (string) apply_filters('iss_occurrences_query_now', current_time('mysql'));
 }

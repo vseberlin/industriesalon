@@ -443,48 +443,25 @@ function industriesalon_render_structured_veranstaltung_content(string $content)
 }
 add_filter('the_content', 'industriesalon_render_structured_veranstaltung_content', 12);
 
-/** Partition occurrence rows without confusing an opening date with an appointment. */
-function industriesalon_programme_sections(array $items, string $now): array
-{
-    $sections = ['dates' => [], 'running' => [], 'exhibitions' => [], 'later_exhibitions' => []];
-    $seen_series = [];
-    foreach ($items as $row) {
-        $series = (string) ($row['series_key'] ?? '');
-        if ($series !== '' && isset($seen_series[$series])) {
-            continue;
-        }
-        $start = (string) ($row['start_raw'] ?? '');
-        $end = (string) ($row['end_raw'] ?? '');
-        if ($start === '' || ($end !== '' ? $end : $start) < $now) {
-            continue;
-        }
-        if ($series !== '') {
-            $seen_series[$series] = true;
-        }
-        if (($row['source_post_type'] ?? '') === 'ausstellung') {
-            $sections[$start <= $now ? 'exhibitions' : 'later_exhibitions'][] = $row;
-        } elseif ($start <= $now && substr($start, 0, 10) !== substr($end, 0, 10) && $end !== '') {
-            $sections['running'][] = $row;
-        } else {
-            $sections['dates'][] = $row;
-        }
-    }
-    return $sections;
-}
-
 /** Date ranges are inclusive, not opening hours. */
 function industriesalon_programme_date(array $row, string $now): string
 {
     $start = (string) ($row['start_raw'] ?? '');
     $end = (string) ($row['end_raw'] ?? '');
     $is_range = $end !== '' && substr($start, 0, 10) !== substr($end, 0, 10);
-    if ($is_range && $start <= $now && $end >= $now) {
+    if (($is_range || ($row['source_post_type'] ?? '') === 'ausstellung') && $end !== '' && $start <= $now && $end >= $now) {
         return sprintf(__('Noch bis %s', 'industriesalon'), iss_programm_format_date_long_de((new DateTimeImmutable($end, wp_timezone()))->getTimestamp(), wp_timezone()));
+    }
+    if (!empty($row['is_open_ended']) && $start <= $now) {
+        return __('Laufend zu erleben', 'industriesalon');
     }
     if (($row['source_post_type'] ?? '') === 'ausstellung') {
         return sprintf(__('Ab %s', 'industriesalon'), (string) ($row['date_label'] ?? ''));
     }
     $day = substr($start, 0, 4) === substr($now, 0, 4) ? ($row['day_label'] ?? $row['date_label'] ?? '') : ($row['date_label'] ?? '');
+    if (substr($start, 0, 10) === substr($now, 0, 10)) {
+        $day = __('Heute', 'industriesalon');
+    }
     return trim((string) $day . ' · ' . (string) ($row['time_label'] ?? ''), ' ·');
 }
 
@@ -512,26 +489,41 @@ function industriesalon_programme_entry(array $row, string $variant, string $now
             }
         }
     }
+    $status = (string) ($row['availability_state'] ?? '');
+    if (in_array($status, ['cancelled', 'sold_out'], true)) {
+        $action_url = $url;
+        $label = __('Details', 'industriesalon');
+    }
     $date = industriesalon_programme_date($row, $now);
+    $date_value = !empty($row['end_raw']) && ($row['start_raw'] ?? '') <= $now && (($row['source_post_type'] ?? '') === 'ausstellung' || substr($row['start_raw'], 0, 10) !== substr($row['end_raw'], 0, 10)) ? $row['end_raw'] : ($row['start_raw'] ?? '');
+    $date_html = '<time datetime="' . esc_attr(str_replace(' ', 'T', $date_value)) . '" title="' . esc_attr((string) ($row['datetime_label'] ?? $row['start_raw'] ?? '')) . '">' . esc_html($date) . '</time>';
+    if (substr((string) ($row['start_raw'] ?? ''), 0, 10) === substr($now, 0, 10)) {
+        $date_html .= '<span class="screen-reader-text"> (' . esc_html((string) ($row['date_label'] ?? $row['start_raw'])) . ')</span>';
+    }
     $heading = $variant === 'feature' ? 'h2' : 'h3';
     $image = get_the_post_thumbnail($id, $variant === 'feature' ? 'full' : 'large', $variant === 'feature'
         ? ['loading' => 'eager', 'fetchpriority' => 'high', 'sizes' => '(max-width: 781px) 100vw, 55vw']
         : ['loading' => 'lazy']);
     $html = '<article class="iss-card iss-card--flat iss-card--programme iss-card--programme-' . esc_attr($variant) . ($image === '' ? ' iss-card--programme-no-image' : '') . '">';
     if ($variant === 'row') {
-        $html .= '<p class="iss-card__date">' . esc_html($date) . '</p>';
+        $html .= '<p class="iss-card__date">' . $date_html . '</p>';
     }
     if ($image !== '') {
         $html .= '<figure class="iss-card__media">' . $image . '</figure>';
     }
     $html .= '<div class="iss-card__body">';
     if ($variant === 'feature') {
-        $html .= '<p class="iss-card__kicker">' . esc_html__('Als Nächstes', 'industriesalon') . '</p>';
+        $labels = ['next' => __('Als Nächstes', 'industriesalon'), 'focus' => __('Im Fokus', 'industriesalon'), 'current' => __('Jetzt zu erleben', 'industriesalon')];
+        $html .= '<p class="iss-card__kicker">' . esc_html($labels[$row['feature_label'] ?? 'next']) . '</p>';
     }
     if ($variant !== 'row') {
-        $html .= '<p class="iss-card__date">' . esc_html($date) . '</p>';
+        $html .= '<p class="iss-card__date">' . $date_html . '</p>';
     }
     $html .= '<' . $heading . ' class="iss-card__title"><a href="' . esc_url($url) . '">' . esc_html($title) . '</a></' . $heading . '>';
+    $notice = industriesalon_programme_status($row, $now);
+    if ($notice !== '') {
+        $html .= '<p class="iss-card__meta"><strong>' . esc_html($notice) . '</strong></p>';
+    }
     if ($excerpt !== '') {
         $html .= '<p class="iss-card__text">' . esc_html(wp_strip_all_tags($excerpt)) . '</p>';
     }
@@ -548,10 +540,14 @@ function industriesalon_programme_overview($html, array $items, array $attribute
     if (($attributes['presentation'] ?? '') !== 'programme') {
         return $html;
     }
-    $now = current_time('mysql');
-    $sections = industriesalon_programme_sections($items, $now);
-    $html = '<div class="iss-programme-overview">';
-    $featured = array_shift($sections['dates']);
+    $now = iss_occurrences_query_now();
+    foreach ($items as &$item) {
+        $item['focus_until'] = iss_programm_focus_until((int) ($item['source_post_id'] ?? 0));
+    }
+    unset($item);
+    $sections = iss_programm_sections($items, $now);
+    $html = '<div class="iss-programme-overview">' . industriesalon_programme_preview_form($now);
+    $featured = iss_programm_take_feature($sections, $now);
     if ($featured) {
         $html .= industriesalon_programme_entry($featured, 'feature', $now);
     } else {
@@ -566,7 +562,7 @@ function industriesalon_programme_overview($html, array $items, array $attribute
     }
     $html .= '</section>';
     foreach ($sections['running'] as $row) {
-        $html .= '<aside class="iss-programme-overview__notice"><p><strong>' . esc_html($row['title']) . '</strong> · ' . esc_html(industriesalon_programme_date($row, $now)) . '</p><a class="iss-action-link" href="' . esc_url(get_permalink($row['source_post_id'])) . '">' . esc_html__('Programm entdecken', 'industriesalon') . '</a></aside>';
+        $html .= '<aside class="iss-programme-overview__notice"><p><strong>' . esc_html($row['title']) . '</strong> · ' . esc_html(industriesalon_programme_date($row, $now)) . ' ' . esc_html(industriesalon_programme_status($row, $now)) . '</p><a class="iss-action-link" href="' . esc_url(get_permalink($row['source_post_id'])) . '">' . esc_html__('Programm entdecken', 'industriesalon') . '</a></aside>';
     }
     foreach (['exhibitions' => __('Ausstellungen und Installationen', 'industriesalon'), 'later_exhibitions' => __('Demnächst zu sehen', 'industriesalon')] as $key => $title) {
         if (!$sections[$key]) {
@@ -603,3 +599,44 @@ function industriesalon_programme_overview($html, array $items, array $attribute
     return $html . '</div>';
 }
 add_filter('iss_programm_cards_presentation', 'industriesalon_programme_overview', 10, 3);
+
+/** Public notices also appear on the event itself, including direct/search visits. */
+function industriesalon_programme_status(array $row, string $now): string
+{
+    $status = (string) ($row['availability_state'] ?? '');
+    if ($status === 'cancelled') {
+        return __('Abgesagt', 'industriesalon');
+    }
+    if ($status === 'sold_out') {
+        return __('Ausgebucht', 'industriesalon');
+    }
+    if (!empty($row['end_raw']) && $row['start_raw'] <= $now && $row['end_raw'] >= $now && ($row['source_post_type'] ?? '') === 'veranstaltung' && substr($row['start_raw'], 0, 10) === substr($row['end_raw'], 0, 10)) {
+        return __('Findet gerade statt', 'industriesalon');
+    }
+    return '';
+}
+
+add_filter('the_content', static function (string $content): string {
+    if (!is_singular('veranstaltung') || !in_the_loop() || !is_main_query()) {
+        return $content;
+    }
+    $notice = industriesalon_programme_status(['availability_state' => get_post_meta(get_the_ID(), 'iss_event_status', true)], iss_occurrences_query_now());
+    return $notice !== '' ? '<p class="iss-event-status"><strong>' . esc_html($notice) . '</strong></p>' . $content : $content;
+}, 13);
+
+/** Native GET form: editor-only, nonce-protected, never cached or persisted. */
+function industriesalon_programme_preview_form(string $now): string
+{
+    if (!current_user_can('edit_others_posts')) {
+        return '';
+    }
+    $preview = iss_programm_preview_datetime() !== '';
+    $html = '<details class="iss-programme-overview__notice"' . ($preview ? ' open' : '') . '><summary>' . esc_html__('Datumsvorschau für die Redaktion', 'industriesalon') . '</summary>';
+    $html .= '<form method="get" action="' . esc_url(home_url('/veranstaltungen/')) . '"><p><label>' . esc_html__('Seite zum Datum ansehen (Berlin)', 'industriesalon') . ' <input type="datetime-local" name="programme_at" required value="' . esc_attr(str_replace(' ', 'T', substr($now, 0, 16))) . '"></label></p>';
+    $html .= wp_nonce_field('iss_programme_preview', '_wpnonce', false, false);
+    $html .= '<p><button type="submit">' . esc_html__('Vorschau anzeigen', 'industriesalon') . '</button> <a href="' . esc_url(home_url('/veranstaltungen/')) . '">' . esc_html__('Zur aktuellen Ansicht', 'industriesalon') . '</a></p></form>';
+    if ($preview) {
+        $html .= '<p><strong>' . esc_html(sprintf(__('Vorschau: %s (Berlin). Keine Termine werden geändert. Vergangene Termine zeigen hier nur die erste Seite.', 'industriesalon'), $now)) . '</strong></p>';
+    }
+    return $html . '</details>';
+}

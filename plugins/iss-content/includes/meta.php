@@ -102,6 +102,7 @@ function iss_content_model_meta_definitions() {
         ISS_CONTENT_MODEL_VERANSTALTUNG_POST_TYPE => [
             'iss_start_datetime' => ['type' => 'string', 'sanitize' => 'sanitize_text_field', 'default' => ''],
             'iss_end_datetime' => ['type' => 'string', 'sanitize' => 'sanitize_text_field', 'default' => ''],
+            'iss_event_status' => ['type' => 'string', 'sanitize' => 'iss_content_model_sanitize_event_status', 'default' => ''],
             'iss_primary_place_id' => ['type' => 'integer', 'sanitize' => 'absint', 'default' => 0],
             'iss_location' => ['type' => 'string', 'sanitize' => 'sanitize_text_field', 'default' => ''],
             'iss_programme_enabled' => ['type' => 'boolean', 'sanitize' => 'rest_sanitize_boolean', 'default' => false],
@@ -336,4 +337,9 @@ function iss_content_model_sanitize_meta_value($value, $meta_key, $meta_type) {
     }
 
     return sanitize_text_field((string) $value);
+}
+
+function iss_content_model_sanitize_event_status($value): string
+{
+    return in_array($value, ['cancelled', 'sold_out'], true) ? $value : '';
 }

@@ -1920,7 +1920,7 @@ function iss_timeline_render_query_block($attributes = [], $content = '', $block
     if (!empty($config['render']['showTicketsButton'])) {
         $out .= iss_timeline_render_booking_host();
     }
-    if (!empty($config['render']['showLoadMore'])) {
+    if (!empty($config['render']['showLoadMore']) && iss_programm_preview_datetime() === '') {
         $load_more_text = trim((string) ($config['render']['loadMoreText'] ?? ''));
         if ($load_more_text === '') {
             $load_more_text = __('Mehr laden', 'iss-timeline');

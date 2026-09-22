@@ -180,11 +180,14 @@ function iss_timeline_rest_render_collection(WP_REST_Request $request) {
     $query_args = iss_timeline_rest_prepare_query_args($params);
     $render_opts = iss_timeline_rest_prepare_render_opts($params);
     $cache_key = iss_timeline_rest_build_cache_key($query_args, $render_opts);
-    $listing = get_transient($cache_key);
+    $time_sensitive = in_array($query_args['filters']['time_mode'] ?? 'all', ['upcoming', 'past'], true);
+    $listing = $time_sensitive ? false : get_transient($cache_key);
 
     if (!is_array($listing)) {
         $listing = iss_timeline_get_listing_response($query_args, $render_opts);
-        set_transient($cache_key, $listing, iss_timeline_rest_get_cache_ttl());
+        if (!$time_sensitive) {
+            set_transient($cache_key, $listing, iss_timeline_rest_get_cache_ttl());
+        }
     }
 
     return rest_ensure_response([

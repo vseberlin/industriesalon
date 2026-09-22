@@ -6,6 +6,7 @@ function programme_expect(bool $ok, string $message): void {
     if (!$ok) { WP_CLI::error($message); }
 }
 $now = '2026-09-22 12:00:00';
+add_filter('iss_occurrences_query_now', static function () { return '2026-09-22 12:00:00'; }, 99);
 $rows = [
     ['source_post_type' => 'veranstaltung', 'start_raw' => '2026-09-12 00:00:00', 'end_raw' => '2026-09-13 23:59:59'],
     ['source_post_type' => 'veranstaltung', 'start_raw' => '2026-09-12 00:00:00', 'end_raw' => '2026-10-04 23:59:59'],
@@ -16,16 +17,16 @@ $rows = [
     ['source_post_type' => 'veranstaltung', 'start_raw' => '2026-11-01 17:00:00', 'end_raw' => '2026-11-01 19:00:00', 'series_key' => 'event:repair'],
     ['source_post_type' => 'veranstaltung', 'start_raw' => '2026-12-01 17:00:00', 'end_raw' => '2026-12-01 19:00:00', 'series_key' => 'event:repair'],
 ];
-$sections = industriesalon_programme_sections($rows, $now);
+$sections = iss_programm_sections($rows, $now);
 programme_expect(count($sections['dates']) === 3, 'Future dates cross months; series appears once.');
 programme_expect(count($sections['running']) === 1, 'Ongoing festival is not an appointment.');
 programme_expect(count($sections['exhibitions']) === 1, 'Open exhibition separated.');
 programme_expect(count($sections['later_exhibitions']) === 1, 'Future exhibition is not open yet.');
 programme_expect(industriesalon_programme_date($rows[2], $now) === 'Noch bis 4. Oktober 2026', 'German end date independent of admin locale.');
-programme_expect(count(industriesalon_programme_sections([$rows[2]], '2026-10-04 23:59:59')['exhibitions']) === 1, 'Inclusive last day retained.');
-programme_expect(!industriesalon_programme_sections([$rows[2]], '2026-10-05 00:00:00')['exhibitions'], 'Expired exhibition removed.');
-programme_expect(!industriesalon_programme_sections([$rows[3]], '2026-09-25 00:00:00')['dates'], 'Finished appointment removed.');
-programme_expect(industriesalon_programme_sections([], $now)['dates'] === [], 'Empty programme supported.');
+programme_expect(count(iss_programm_sections([$rows[2]], '2026-10-04 23:59:59')['exhibitions']) === 1, 'Inclusive last day retained.');
+programme_expect(!iss_programm_sections([$rows[2]], '2026-10-05 00:00:00')['exhibitions'], 'Expired exhibition removed.');
+programme_expect(!iss_programm_sections([$rows[3]], '2026-09-25 00:00:00')['dates'], 'Finished appointment removed.');
+programme_expect(iss_programm_sections([], $now)['dates'] === [], 'Empty programme supported.');
 programme_expect(strpos(industriesalon_programme_date(['start_raw' => '2027-01-02 19:00:00', 'day_label' => 'Sa. 02.01.', 'date_label' => '2. Januar 2027'], $now), '2027') !== false, 'Next-year appointments retain their year.');
 programme_expect(industriesalon_programme_overview(null, [], []) === null, 'Default programme cards unchanged.');
 $config = iss_programm_cards_build_block_config(['limit' => 3]);

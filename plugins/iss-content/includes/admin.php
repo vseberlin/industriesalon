@@ -1504,6 +1504,13 @@ function iss_content_model_render_veranstaltung_basis_box($post): void {
     echo '<p class="iss-veranstaltung-admin__field"><label for="iss_end_datetime"><strong>' . esc_html__('Ende', 'iss-content-model') . '</strong></label>';
     echo '<input class="widefat" type="datetime-local" id="iss_end_datetime" name="iss_content_model[iss_end_datetime]" value="' . esc_attr(iss_content_model_mysql_to_local_input($end)) . '"></p>';
 
+    echo '<p class="iss-veranstaltung-admin__field"><label for="iss_event_status"><strong>' . esc_html__('Terminstatus', 'iss-content-model') . '</strong></label>';
+    echo '<select class="widefat" id="iss_event_status" name="iss_content_model[iss_event_status]">';
+    foreach (['' => __('Findet statt', 'iss-content-model'), 'sold_out' => __('Ausgebucht', 'iss-content-model'), 'cancelled' => __('Abgesagt', 'iss-content-model')] as $value => $label) {
+        echo '<option value="' . esc_attr($value) . '" ' . selected(get_post_meta($post->ID, 'iss_event_status', true), $value, false) . '>' . esc_html($label) . '</option>';
+    }
+    echo '</select><span class="description">' . esc_html__('Ohne Endzeit bleibt der Termin bis zum Tagesende sichtbar. Alle Zeiten gelten für Berlin.', 'iss-content-model') . '</span></p>';
+
     echo '<p class="iss-veranstaltung-admin__field"><label for="iss_primary_place_id"><strong>' . esc_html__('Atlas-Ort', 'iss-content-model') . '</strong></label>';
     echo '<select class="widefat" id="iss_primary_place_id" name="iss_content_model[iss_primary_place_id]">';
     echo '<option value="">' . esc_html__('Keinen Atlas-Ort auswählen', 'iss-content-model') . '</option>';
@@ -1768,7 +1775,7 @@ function iss_content_model_render_ausstellung_box($post) {
 
 function iss_content_model_render_project_promotion_control(WP_Post $post): void
 {
-    if (current_user_can('manage_options')) {
+    if (current_user_can('manage_options') && $post->post_type !== ISS_CONTENT_MODEL_VERANSTALTUNG_POST_TYPE) {
         return;
     }
 
@@ -1795,7 +1802,12 @@ function iss_content_model_render_project_promotion_control(WP_Post $post): void
     echo '<hr>';
     echo '<p><label><input type="checkbox" name="iss_graph_related_promotion[enabled]" value="1" ' . checked($is_active, true, false) . '> ' . esc_html__('Inhalt promoten', 'iss-content-model') . '</label></p>';
     echo '<input type="hidden" name="iss_graph_related_promotion[reason]" value="' . esc_attr($reason) . '">';
-    echo '<input type="hidden" name="iss_graph_related_promotion[expires_at]" value="' . esc_attr($expires_at) . '">';
+    if ($post->post_type === ISS_CONTENT_MODEL_VERANSTALTUNG_POST_TYPE) {
+        echo '<p><label>' . esc_html__('Hervorheben bis', 'iss-content-model') . ' <input type="date" name="iss_graph_related_promotion[expires_at]" value="' . esc_attr($expires_at) . '"></label></p>';
+        echo '<p class="description">' . esc_html__('Mit Ablaufdatum erscheint ein noch gültiger Termin als „Im Fokus“. Abgesagte und beendete Termine werden nicht hervorgehoben. Ohne Ablaufdatum bleibt die Veranstaltungsübersicht chronologisch.', 'iss-content-model') . '</p>';
+    } else {
+        echo '<input type="hidden" name="iss_graph_related_promotion[expires_at]" value="' . esc_attr($expires_at) . '">';
+    }
     echo '<p class="description">' . esc_html__('Mit dieser Auswahl rückt der Post nach vorne.', 'iss-content-model') . '</p>';
 }
 
