@@ -1245,7 +1245,7 @@ function iss_content_model_get_publication_choices(): array
     return $choices;
 }
 
-function iss_content_model_get_veranstaltung_primary_place_id(int $post_id): int
+function iss_content_model_get_veranstaltung_primary_place_id(int $post_id, bool $venue_only = false): int
 {
     $native_place_id = absint(get_post_meta($post_id, 'iss_primary_place_id', true));
     if (
@@ -1264,7 +1264,7 @@ function iss_content_model_get_veranstaltung_primary_place_id(int $post_id): int
         return 0;
     }
 
-    foreach (['venue', 'primary', 'related', 'stop', 'subject'] as $preferred_role) {
+    foreach (($venue_only ? ['venue'] : ['venue', 'primary', 'related', 'stop', 'subject']) as $preferred_role) {
         foreach ($relations as $relation) {
             if ((string) ($relation['role'] ?? '') !== $preferred_role) {
                 continue;
@@ -1274,7 +1274,7 @@ function iss_content_model_get_veranstaltung_primary_place_id(int $post_id): int
         }
     }
 
-    return (int) ($relations[0]['place_id'] ?? 0);
+    return $venue_only ? 0 : (int) ($relations[0]['place_id'] ?? 0);
 }
 
 function iss_content_model_get_veranstaltung_place_title(int $place_id): string

@@ -465,7 +465,7 @@
     function updateField() {
       Object.keys(config.documentBindings || {}).forEach(function (key) {
         var input = document.querySelector(config.documentBindings[key]);
-        if (input && input.value) { documentState[key] = input.value; }
+        if (input) { documentState[key] = input.value; }
       });
       field.value = JSON.stringify(documentState);
     }
@@ -2748,6 +2748,7 @@
     Object.keys(config.documentBindings || {}).forEach(function (key) {
       var input = document.querySelector(config.documentBindings[key]);
       if (input) {
+        input.addEventListener('input', scheduleAutosave);
         input.addEventListener('change', function () {
           updateField();
           render();
@@ -2777,7 +2778,7 @@
         });
         Object.keys(config.documentBindings || {}).forEach(function (key) {
           var input = document.querySelector(config.documentBindings[key]);
-          if (input && documentState[key]) { input.value = documentState[key]; }
+          if (input) { input.value = documentState[key] || ''; }
         });
         recoveryPending = false;
         root.inert = false;

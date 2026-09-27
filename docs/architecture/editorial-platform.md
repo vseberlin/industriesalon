@@ -66,6 +66,71 @@ an open, resolvable context. Files remain in intake for rights review. Supported
 extensions: JPG/JPEG, PNG, GIF, WebP; MP4/MOV/M4V/MKV/WebM/AVI; ZIP;
 PDF, DOCX, PPTX, XLSX, ODT. The server verifies extension/MIME compatibility.
 
+### Event presentation and written feedback
+
+Veranstaltungen use one theme-owned opening layout: title, excerpt and current
+occurrence facts alongside the featured image. The native `single-veranstaltung`
+template remains file-backed. Both skins share the layout; their colour and
+content treatments remain distinct. Recurring detail dates read the same
+`iss-occurrences` query as the programme, including running appointments. If no
+current occurrence remains, the latest historical one is labelled accordingly;
+posts without projection retain their editorial dates and expire at their stated
+end (or end of the starting day). Detail pages are uncached.
+
+The opening has an optional `hero_kicker`, `hero_title`, `hero_subtitle` and
+`hero_image_fit` (`contain` or `cover`) in the same event JSON document. These
+use the shared editor's document bindings, draft recovery and revision storage;
+clearing a bound field is a saved change. In the editor choose **Angaben &
+Beziehungen → Seitenauftakt gestalten**. The post title remains the search/list
+identity; an empty opening title falls back to it. No automatic title splitting.
+Native featured-image sizing preserves posters; the optional photo treatment
+uses a landscape crop. Captions come from the selected attachment.
+
+The existing `iss/content-meta` block has theme-owned `event-summary` and
+`event-visit` presentations, editable in its inspector. The visit card reads the
+selected Atlas place or an explicit venue relation, never a merely related place.
+External ticket links use the same material-link convention as programme cards.
+Past/cancelled/sold-out events suppress those ticket actions; past events move
+published reports and approved voices ahead of the original announcement and
+invite contributions only when intake is open. The existing programme-cards
+block uses `event-next` to show up to three distinct upcoming events, excluding
+the current event and cancelled entries. Fewer eligible events produce fewer
+cards. There is no new calendar, content store or custom block.
+
+Published Rückblicke use the shared card renderer's `stack` layout: image and
+copy side by side on desktop, stacked on phones. Reports without a featured image
+omit the media placeholder. Existing legacy aligned-body-image selectors remain
+only for stored WordPress content; obsolete event sidebar/hero selector trees
+were removed. Shared card geometry belongs in `patterns.css`.
+
+For events, **Feedback und Upload geöffnet** uses the existing upload-open state
+and signed link. Opening it also exposes **Erinnerung oder Fotos beitragen** on
+the event page. Existing explicit closed choices stay closed. The receiver has
+an independent text form, so a file is optional. Photos and documents still go
+to private Sets; text goes to native WordPress comments with type `iss_feedback`.
+This uses the existing moderation interface instead of introducing another review
+store or turning private media Sets into public content.
+
+**Feedback prüfen** opens the event's filtered comment list. Every submission
+starts pending, including submissions from logged-in staff. **Approve / Genehmigen**
+publishes it under **Stimmen zur Veranstaltung**; unapproving, spam or trash removes
+it. Closing intake retains already approved voices. Public output requires consent,
+escapes text, omits email/IP, and paginates twelve voices at a time. Text is limited
+to 4,000 characters, with signed-context and nonce checks, explicit consent, a
+honeypot, and native duplicate/flood checks. The native moderation notification
+settings continue to apply. Feedback requires a published, accessible event.
+
+Deploy receiver, `iss-content`, `iss-editorial`, `iss-frontend` and theme together.
+No schema, uploads or DB-template migration is required. The explicit Anne Rabe
+opening copy is transferred with `ops/migrations/2026-09-27-event-opening.php`
+after code deployment (`check`, `apply` with a new private receipt path, `verify`).
+Its targeted before-image and header describe rollback through the editor API;
+it preserves post title, body, media and all other document fields. Existing
+media are reused. Native comments/commentmeta and per-post controls own feedback.
+Local regression: `wp eval-file tests/e2e/bin/event-detail-feedback.php` (through
+the documented local wrapper/mounted `/tmp/iss-tests/` path); creates and removes
+its own fixtures and suppresses fixture notifications.
+
 Validation commands (local Docker stack):
 
 ```bash

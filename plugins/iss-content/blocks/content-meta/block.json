@@ -30,6 +30,10 @@
     "showPlaces": {
       "type": "boolean",
       "default": true
+    },
+    "presentation": {
+      "type": "string",
+      "default": ""
     }
   }
 }

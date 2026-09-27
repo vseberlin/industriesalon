@@ -6,6 +6,21 @@ be recovered from Git history.
 
 ## 2026-09-27
 
+- Reworked event details around an illustrated opening, compact occurrence-backed
+  dates and shared stacked Rückblick cards. Removed obsolete event layout CSS.
+  Added optional text-only guest feedback through the existing signed upload
+  link and native WordPress moderation; media remains in private Sets. This
+  reuses the existing receiver, open control and review UI without another
+  storage/editor system. Public voices require approval and consent. Local only;
+  explicit Anne Rabe opening copy has a scoped API migration; no new media or
+  schema is needed. See the editorial contract for checks.
+- Adapted the event layout from the approved reference: optional series/headline/
+  subtitle fields in the shared document, uncropped posters or landscape photos,
+  a real visit action and venue-backed address panel, and distinct upcoming
+  programme cards. Extended the existing metadata/programme blocks and shared
+  ticket helper; past events lead with reports/voices and suppress expired ticket
+  links. No new block or editor. Empty-field autosave/recovery now persists.
+
 - Deployed the Atlas update, Reinbeckhallen source mapping and private-contact
   separation to staging through GitHub, with scoped API migrations and verified
   backups. All 51 runtime checks and anonymous privacy/noindex checks passed.

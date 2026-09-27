@@ -345,7 +345,23 @@ if ($contextPost) {
     $eventSlug = $contextPost->post_type . '__' . $contextPost->post_name;
 }
 
-if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+$feedbackError = '';
+$feedbackValues = [];
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['submit_feedback'])) {
+    $feedbackValues = wp_unslash($_POST);
+    $feedback = iss_content_submit_event_feedback($contextId, $contextKey, $feedbackValues);
+    if (is_wp_error($feedback)) {
+        $feedbackError = $feedback->get_error_message();
+        $errorData = $feedback->get_error_data();
+        http_response_code(is_int($errorData) ? $errorData : (is_array($errorData) ? (int) ($errorData['status'] ?? 400) : 400));
+        $feedbackValues = array_map(static fn($value) => is_scalar($value) ? (string) $value : '', $feedbackValues);
+    } else {
+        wp_safe_redirect(add_query_arg('feedback_sent', '1', iss_content_upload_url($contextId)), 303);
+        exit;
+    }
+}
+
+if ($_SERVER['REQUEST_METHOD'] !== 'POST' || $feedbackError !== '') {
     $view = (string)($_GET['view'] ?? '');
     $token = (string)($_GET['token'] ?? '');
     $code = (string)($_GET['code'] ?? '');
@@ -430,7 +446,7 @@ if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
     $maxUploadJson = (string)$maxUploadBytes;
 
     echo '<!doctype html><html lang="de"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">';
-    echo '<title>Material beitragen</title>';
+    echo '<title>Erinnerungen und Material beitragen</title>';
     echo '<link href="https://releases.transloadit.com/uppy/v5.2.1/uppy.min.css" rel="stylesheet">';
     echo '<style>
         :root { color-scheme: light; --ink: #1e2528; --muted: #667176; --line: #d8dedc; --paper: #f7f5ef; --accent: #1f6f78; --accent-dark: #164d54; }
@@ -442,7 +458,13 @@ if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
         .drop-note { margin: 0; color: var(--muted); font-size: 1rem; max-width: 62ch; }
         .drop-fields { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 14px; padding: 18px; background: rgba(255,255,255,0.74); border: 1px solid var(--line); border-radius: 8px; }
         .drop-field { display: grid; gap: 6px; font-size: 0.9rem; font-weight: 700; }
-        .drop-field input, .drop-field select { min-height: 42px; border: 1px solid #b9c3c0; border-radius: 6px; padding: 0 10px; font: inherit; background: #fff; }
+        .drop-field input, .drop-field select, .drop-field textarea { min-height: 42px; border: 1px solid #b9c3c0; border-radius: 6px; padding: 0 10px; font: inherit; background: #fff; }
+        .drop-field textarea { padding: 10px; resize: vertical; }
+        .drop-feedback { display: grid; gap: 14px; }
+        .drop-feedback h2 { margin-bottom: 0; }
+        .drop-feedback button { justify-self: start; min-height: 44px; padding: 10px 18px; border: 0; border-radius: 6px; background: var(--accent-dark); color: #fff; font: inherit; cursor: pointer; }
+        .drop-status { padding: 16px; border: 1px solid var(--accent-dark); background: #fff; }
+        .drop-trap { display: none; }
         .drop-field--wide { grid-column: 1 / -1; }
         .drop-check { grid-column: 1 / -1; display: flex; gap: 10px; align-items: flex-start; line-height: 1.35; color: var(--ink); font-weight: 600; }
         .drop-check input { margin-top: 3px; }
@@ -452,7 +474,25 @@ if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
 
         @media (max-width: 680px) { main { width: min(100% - 20px, 980px); padding-top: 20px; } .drop-fields { grid-template-columns: 1fr; padding: 14px; } }
     </style></head><body><main><section class="drop-shell">';
-    echo '<div class="drop-head"><h1>Material beitragen</h1><p class="drop-note">' . h($tokenHint) . ' Fotos, Videos und Dokumente einsenden. Die Redaktion prüft alle Dateien vor einer Veröffentlichung.</p></div>';
+    echo '<div class="drop-head"><h1>Erinnerungen und Material beitragen</h1><p class="drop-note">' . h($tokenHint) . ' Die Redaktion prüft alle Beiträge vor einer Veröffentlichung.</p></div>';
+    if ($contextPost && $contextPost->post_type === 'veranstaltung' && $contextPost->post_status === 'publish' && !post_password_required($contextPost)) {
+        echo '<p>Zur Veranstaltung: <a href="' . esc_url(get_permalink($contextPost)) . '">' . h($contextPost->post_title) . '</a></p>';
+        if (isset($_GET['feedback_sent']) && $feedbackError === '') {
+            echo '<p class="drop-status" role="status">Vielen Dank! Ihr Textbeitrag ist eingegangen und wartet auf redaktionelle Prüfung. Sie können unten zusätzlich Fotos oder Dokumente hochladen.</p>';
+        }
+        if ($feedbackError !== '') {
+            echo '<p class="drop-status" role="alert">' . h($feedbackError) . '</p>';
+        }
+        echo '<form class="drop-feedback" method="post" action="' . esc_url(iss_content_upload_url($contextId)) . '"><h2>Ihre Stimme zur Veranstaltung</h2><p class="drop-note">Ein Text genügt. Fotos und Dokumente können Sie unabhängig davon weiter unten einsenden.</p>';
+        echo '<input type="hidden" name="submit_feedback" value="1"><input type="hidden" name="context" value="' . h((string) $contextId) . '"><input type="hidden" name="key" value="' . h($contextKey) . '">';
+        wp_nonce_field('iss_feedback_' . $contextId, 'feedback_nonce', false);
+        echo '<div class="drop-fields"><label class="drop-field">Name oder Kürzel (öffentlich)<input name="feedback_name" maxlength="80" required value="' . h((string) ($feedbackValues['feedback_name'] ?? '')) . '"></label>';
+        echo '<label class="drop-field">E-Mail (freiwillig, nicht öffentlich)<input name="feedback_email" type="email" value="' . h((string) ($feedbackValues['feedback_email'] ?? '')) . '"></label>';
+        echo '<label class="drop-field drop-field--wide">Ihre Eindrücke<textarea name="feedback_text" rows="5" maxlength="4000" required>' . h((string) ($feedbackValues['feedback_text'] ?? '')) . '</textarea></label>';
+        echo '<label class="drop-trap" aria-hidden="true">Website<input name="feedback_website" tabindex="-1" autocomplete="off"></label>';
+        echo '<label class="drop-check"><input name="feedback_consent" type="checkbox" value="1" required' . checked((string) ($feedbackValues['feedback_consent'] ?? ''), '1', false) . '><span>Mein Text und mein Name oder Kürzel dürfen nach redaktioneller Prüfung auf der Veranstaltungsseite veröffentlicht werden.</span></label></div><button type="submit">Textbeitrag einsenden</button></form>';
+    }
+    echo '<h2>Fotos und Dokumente beitragen</h2>';
     echo '<div class="drop-fields" id="event-drop-fields">';
     echo '<label class="drop-field">Name oder Kürzel<input id="participant_id" name="participant_id" autocomplete="name" required></label>';
     if (!$uploadCodeHint) {

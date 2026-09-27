@@ -201,6 +201,30 @@ function iss_content_model_get_default_meta_panel_copy($post_type) {
     }
 }
 
+/** Resolve the same current or most recent appointment for every event surface. */
+function iss_content_model_event_appointment(int $post_id): array {
+    if (function_exists('iss_occurrences_query')) {
+        $dates = iss_occurrences_query(['source_post_ids' => [$post_id], 'time_mode' => 'upcoming', 'include_running_ranges' => true, 'limit' => 1]);
+        if ($dates) {
+            return ['row' => $dates[0], 'past' => false];
+        }
+        $dates = iss_occurrences_query(['source_post_ids' => [$post_id], 'time_mode' => 'past', 'order' => 'DESC', 'limit' => 1]);
+        if ($dates) {
+            return ['row' => $dates[0], 'past' => true];
+        }
+    }
+    // An event outside the public programme still has its editorial date facts.
+    $start = trim((string) get_post_meta($post_id, 'iss_start_datetime', true));
+    $end = trim((string) get_post_meta($post_id, 'iss_end_datetime', true));
+    $end = $end !== '' ? $end : ($start !== '' ? substr($start, 0, 10) . ' 23:59:59' : '');
+    $date = DateTimeImmutable::createFromFormat('!Y-m-d H:i:s', $end, wp_timezone());
+    if (!$date || $date->format('Y-m-d H:i:s') !== $end) {
+        return [];
+    }
+    $now = function_exists('iss_occurrences_query_now') ? iss_occurrences_query_now() : current_time('mysql');
+    return ['past' => $end < $now];
+}
+
 function iss_content_model_get_meta_rows_for_post($post_id, array $options = []) {
     $post_id = (int) $post_id;
     $post_type = (string) get_post_type($post_id);
@@ -221,6 +245,18 @@ function iss_content_model_get_meta_rows_for_post($post_id, array $options = [])
         $end = iss_content_model_format_datetime(get_post_meta($post_id, 'iss_end_datetime', true));
         $location = trim((string) get_post_meta($post_id, 'iss_location', true));
 
+        // Public programme dates own recurring appointments; post meta describes the source.
+        $appointment_state = iss_content_model_event_appointment($post_id);
+        $appointment = $appointment_state['row'] ?? null;
+        if ($appointment) {
+            $rows[] = ['label' => empty($appointment_state['past']) ? __('Termin', 'iss-content-model') : __('Vergangener Termin', 'iss-content-model'), 'value' => $appointment['datetime_label']];
+            $start = '';
+            $end = '';
+            $status = (string) ($appointment['availability_state'] ?? '');
+            if (in_array($status, ['cancelled', 'sold_out'], true)) {
+                $rows[] = ['label' => __('Status', 'iss-content-model'), 'value' => $status === 'cancelled' ? __('Abgesagt', 'iss-content-model') : __('Ausgebucht', 'iss-content-model')];
+            }
+        }
         if ($start !== '') {
             $rows[] = ['label' => __('Beginn', 'iss-content-model'), 'value' => $start];
         }
@@ -384,6 +420,10 @@ function iss_content_model_render_meta_block($attributes = [], $content = '', $b
     $rows = iss_content_model_get_meta_rows_for_post($post_id, [
         'show_places' => !isset($attributes['showPlaces']) || !empty($attributes['showPlaces']),
     ]);
+    $presentation = apply_filters('iss_content_meta_presentation', null, $post_id, $rows, $attributes);
+    if (is_string($presentation)) {
+        return $presentation;
+    }
     if (empty($rows)) {
         return '';
     }

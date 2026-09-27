@@ -158,7 +158,7 @@ add_filter('iss_occurrences_query_now', static function (string $now): string {
 
 // Dates are evaluated on each page request; shared full-page caches must not freeze them.
 add_action('template_redirect', static function (): void {
-    if (is_page(['veranstaltungen', 'kalender'])) {
+    if (is_page(['veranstaltungen', 'kalender']) || is_singular('veranstaltung')) {
         if (!defined('DONOTCACHEPAGE')) {
             define('DONOTCACHEPAGE', true);
         }

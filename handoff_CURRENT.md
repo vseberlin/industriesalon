@@ -1,9 +1,48 @@
 # Current handoff — 2026-09-27
 
+
+## Veranstaltungen release — staging sync in progress
+
+The reviewed website changes add an image-led event opening, occurrence-backed
+current dates, wider shared Rückblick cards and moderated text feedback through
+the existing guest link. **Material & Rückblicke → Feedback und Upload geöffnet**
+opens intake; **Feedback prüfen** uses native WordPress comment moderation.
+Existing events/reports, saved documents and explicit closed choices are preserved.
+The user authorized GitHub/staging synchronization. Preflight: local and staging
+started at `21123a2`, staging checkout clean, healthy containers, no failed host
+services. Deploy this code through GitHub `main`, then the scoped content migration.
+The approved layout includes optional opening fields, visit panel, upcoming cards
+and past-event report/voice priority. Deploy `iss-editorial` with the other components.
+Anne Rabe opening copy is applied locally via
+`ops/migrations/2026-09-27-event-opening.php`; run check/apply/verify after target
+code deployment. Its before-image is
+`/home/vladimir/.local/state/iss-editorial-pilot-20260921/event-opening-before-20260927.json`.
+No schema/new uploads/template override artifact is needed. Existing 240px Anne
+Rabe artwork is preserved; its low resolution limits the image quality.
+
+Local receiver runtime is still mounted from `/home/vladimir/wp/ops/event-drop/interface/`;
+its `index.php` was backed up and explicitly synced from website source, without a
+restart. Before-image and HTTP receipts are under
+`/home/vladimir/.local/state/iss-events-feedback-20260927/`. Other runtime code uses
+the existing website-code override. Deliver receiver/plugin/theme changes together.
+
+Validation: 49 event/feedback checks, 295 shared-storage checks (94 documents),
+33 editor UI checks, 169 prior Set checks and 48+23 programme checks;
+PHP syntax, targeted PHPCS/PHPStan, CSS lint and whitespace checks. Chrome desktop
+and actual 390px covered the event opening (including the dark programme skin), illustrated report, approved voices and
+contribution form; native editor controls/moderation list were inspected. A new
+temporary draft verified headline editing, subtitle clearing, photo selection,
+autosave, live preview and native Save Draft; that fixture and its revisions
+were removed. The existing Anne Rabe image remains uncropped. HTTP
+verified consent/nonce denial, text-only submission, pending privacy, approval,
+duplicate rejection, file upload and closed GET/POST. Temporary fixtures and their
+files/manifest rows are removed after verification. Firefox remains staff UAT.
+
+
 Website source is `/home/vladimir/wp-website`; `/home/vladimir/wp` remains the
 preserved archive checkout. Atlas implementation **8ab3571** is pushed to GitHub
 `main` and deployed on **https://staging.industriesalon.info**, together with all
-four data migration steps below. This closeout is the only subsequent change.
+four data migration steps below. Preserve that applied Atlas state during event deployment.
 `staging.industriesalon.de` does not resolve; the configured `.info` host was
 verified and used. Production was not changed. No services were restarted.
 

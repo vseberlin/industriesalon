@@ -476,7 +476,7 @@ add_filter('iss_editorial_formats', static function (array $formats): array {
 
 add_filter('iss_editorial_document_fields', static function (array $fields, array $format): array {
     if ($format['slug'] === 'veranstaltung') {
-        $fields[] = 'entity_key';
+        $fields = array_merge($fields, ['entity_key', 'hero_title', 'hero_subtitle', 'hero_kicker', 'hero_image_fit']);
     }
     return $fields;
 }, 10, 2);
@@ -503,6 +503,9 @@ add_filter('iss_editorial_admin_settings', static function (array $settings, WP_
         $settings['skins'] = [];
         $settings['dynamicPreviews'] = iss_content_model_veranstaltung_dynamic_previews($settings['document']);
         $settings['documentBindings'] = ['entity_key' => '[name="iss_content_model[_iss_entity_key]"]'];
+        foreach (['hero_title', 'hero_subtitle', 'hero_kicker', 'hero_image_fit'] as $field) {
+            $settings['documentBindings'][$field] = '#iss_event_' . $field;
+        }
         $settings['sectionContexts'] = ['entity_key' => []];
         foreach (array_keys(iss_content_model_veranstaltung_entities()) as $key) {
             $settings['sectionContexts']['entity_key'][$key] = array_keys(iss_content_model_veranstaltung_content_gestures_for_entity($key));
@@ -528,6 +531,14 @@ add_filter('iss_editorial_sanitized_section', static function (array $sanitized,
 add_filter('iss_editorial_sanitized_document', static function (array $sanitized, array $document, array $format): array {
     if ($format['slug'] === 'veranstaltung') {
         $sanitized['entity_key'] = iss_content_model_sanitize_veranstaltung_entity_key((string) ($document['entity_key'] ?? 'event.general'));
+        foreach (['hero_title', 'hero_subtitle', 'hero_kicker'] as $field) {
+            if (isset($document[$field]) && is_scalar($document[$field])) {
+                $sanitized[$field] = sanitize_text_field((string) $document[$field]);
+            }
+        }
+        if (isset($document['hero_image_fit'])) {
+            $sanitized['hero_image_fit'] = $document['hero_image_fit'] === 'cover' ? 'cover' : 'contain';
+        }
     }
     return $sanitized;
 }, 10, 3);
@@ -559,3 +570,21 @@ add_filter('rest_pre_insert_veranstaltung', static function ($prepared, WP_REST_
     }
     return $prepared;
 }, 10, 2);
+
+/** Optional opening copy stays in the shared document, including drafts and revisions. */
+add_action('edit_form_after_title', static function (WP_Post $post): void {
+    if ($post->post_type !== 'veranstaltung' || !function_exists('iss_editorial_get_editor_document')) {
+        return;
+    }
+    $document = iss_editorial_get_editor_document($post->ID, 'veranstaltung');
+    echo '<details class="iss-event-editor-opening"><summary>' . esc_html__('Seitenauftakt gestalten', 'iss-content-model') . '</summary>';
+    echo '<p class="description">' . esc_html__('Optional: Den Auftakt in Reihe, Haupttitel und Untertitel gliedern. Ohne Haupttitel wird der Beitragstitel verwendet. Der Beitragstitel bleibt für Suche und Listen erhalten.', 'iss-content-model') . '</p>';
+    foreach (['hero_kicker' => __('Reihe / Vorspann', 'iss-content-model'), 'hero_title' => __('Haupttitel', 'iss-content-model'), 'hero_subtitle' => __('Untertitel', 'iss-content-model')] as $key => $label) {
+        echo '<p><label for="iss_event_' . esc_attr($key) . '">' . esc_html($label) . '</label><input class="widefat" id="iss_event_' . esc_attr($key) . '" type="text" value="' . esc_attr((string) ($document[$key] ?? '')) . '"></p>';
+    }
+    echo '<p><label for="iss_event_hero_image_fit">' . esc_html__('Beitragsbild', 'iss-content-model') . '</label> <select id="iss_event_hero_image_fit">';
+    foreach (['contain' => __('Ganzes Bild / Plakat', 'iss-content-model'), 'cover' => __('Foto im Querformat (beschnitten)', 'iss-content-model')] as $value => $label) {
+        echo '<option value="' . esc_attr($value) . '"' . selected($document['hero_image_fit'] ?? 'contain', $value, false) . '>' . esc_html($label) . '</option>';
+    }
+    echo '</select></p></details>';
+}, 15);

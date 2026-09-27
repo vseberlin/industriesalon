@@ -558,3 +558,20 @@ test('Preview device sizing preserves CSS viewport dimensions with portable tran
     assert.doesNotMatch(css,/zoom:/);
   } finally { e.dom.window.close(); }
 });
+
+
+test('Optional document bindings save cleared text and recover an intentionally empty value', async () => {
+  const e = await editor('veranstaltung', { document: { schema_version: 1, entity_key: 'event.general', hero_subtitle: 'Before', sections: [] }, documentBindings: { hero_subtitle: '#excerpt' } });
+  try {
+    e.input(e.window.document.getElementById('excerpt'), '');
+    await e.settle();
+    assert.equal(JSON.parse(e.requests.at(-1).get('document')).hero_subtitle, '');
+  } finally { e.dom.window.close(); }
+  const r = await editor('veranstaltung', { recovery: { base: 'base', title: 'Recovered', excerpt: 'Summary', document: {schema_version: 1, entity_key: 'event.general', hero_subtitle: '', sections: []} }, documentBindings: {hero_subtitle: '#excerpt'} });
+  try {
+    r.button('Entwurf weiterbearbeiten').click();
+    await r.settle();
+    assert.equal(r.window.document.getElementById('excerpt').value, '');
+    assert.equal(r.value().hero_subtitle, '');
+  } finally { r.dom.window.close(); }
+});

@@ -163,6 +163,56 @@ function iss_content_set_upload_open(int $post_id, bool $open): void
     update_post_meta($post_id, '_iss_upload_open', $open ? '1' : '0');
 }
 
+/** Text submissions use WordPress moderation; files continue to use private Sets. */
+function iss_content_submit_event_feedback(int $post_id, string $key, array $input)
+{
+    foreach (['feedback_nonce', 'feedback_name', 'feedback_text', 'feedback_email', 'feedback_consent', 'feedback_website'] as $field) {
+        if (isset($input[$field]) && !is_scalar($input[$field])) {
+            return new WP_Error('feedback_invalid', __('Ungültige Formulardaten.', 'iss-content-model'), ['status' => 400]);
+        }
+    }
+    if (get_post_type($post_id) !== 'veranstaltung' || get_post_status($post_id) !== 'publish'
+        || post_password_required($post_id) || !iss_content_upload_authorized($post_id, $key)) {
+        return new WP_Error('feedback_closed', __('Beiträge sind für diese Veranstaltung geschlossen.', 'iss-content-model'), ['status' => 403]);
+    }
+    if (!wp_verify_nonce((string) ($input['feedback_nonce'] ?? ''), 'iss_feedback_' . $post_id)) {
+        return new WP_Error('feedback_nonce', __('Bitte laden Sie das Formular neu.', 'iss-content-model'), ['status' => 403]);
+    }
+    $name = sanitize_text_field((string) ($input['feedback_name'] ?? ''));
+    $text = sanitize_textarea_field((string) ($input['feedback_text'] ?? ''));
+    $email = trim((string) ($input['feedback_email'] ?? ''));
+    if ($name === '' || mb_strlen($name) > 80 || $text === '' || mb_strlen($text) > 4000
+        || ($email !== '' && !is_email($email)) || (string) ($input['feedback_consent'] ?? '') !== '1'
+        || !empty($input['feedback_website'])) {
+        return new WP_Error('feedback_invalid', __('Bitte Name oder Kürzel, einen Beitrag bis 4.000 Zeichen und die Zustimmung zur Veröffentlichung angeben.', 'iss-content-model'), ['status' => 400]);
+    }
+    // Core supplies duplicate/flood checks and moderation, including for logged-in guests.
+    $result = wp_new_comment(wp_slash([
+        'comment_post_ID' => $post_id,
+        'comment_type' => 'iss_feedback',
+        'comment_author' => $name,
+        'comment_author_email' => sanitize_email($email),
+        'comment_author_url' => '',
+        'comment_content' => $text,
+        'comment_parent' => 0,
+        'user_id' => 0,
+        'comment_meta' => ['_iss_feedback_consent' => '1'],
+    ]), true);
+    return $result ?: new WP_Error('feedback_storage', __('Der Beitrag konnte nicht gespeichert werden. Bitte versuchen Sie es erneut.', 'iss-content-model'), ['status' => 500]);
+}
+
+add_filter('pre_comment_approved', static function ($approved, array $data) {
+    if (($data['comment_type'] ?? '') !== 'iss_feedback' || is_wp_error($approved) || in_array($approved, ['spam', 'trash'], true)) {
+        return $approved;
+    }
+    return 0;
+}, 99, 2);
+
+add_filter('admin_comment_types_dropdown', static function (array $types): array {
+    $types['iss_feedback'] = __('Veranstaltungsfeedback', 'iss-content-model');
+    return $types;
+});
+
 function iss_content_render_contributions_controls(WP_Post $post): void
 {
     if (!in_array($post->post_type, array_merge(iss_content_report_source_types(), ['rueckblick']), true)) {
@@ -186,8 +236,12 @@ function iss_content_render_contributions_controls(WP_Post $post): void
         echo '<p><a class="button" href="' . esc_url($url) . '">' . esc_html__('Rückblick anlegen', 'iss-content-model') . '</a></p>';
     }
     echo '<hr><h4>' . esc_html__('Beiträge von Gästen', 'iss-content-model') . '</h4>';
-    echo '<label><input type="checkbox" name="iss_upload_open" value="1" ' . checked(iss_content_upload_is_open($post->ID), true, false) . '> ' . esc_html__('Upload geöffnet', 'iss-content-model') . '</label>';
+    echo '<label><input type="checkbox" name="iss_upload_open" value="1" ' . checked(iss_content_upload_is_open($post->ID), true, false) . '> ' . esc_html($post->post_type === 'veranstaltung' ? __('Feedback und Upload geöffnet', 'iss-content-model') : __('Upload geöffnet', 'iss-content-model')) . '</label>';
     echo '<p class="description">' . esc_html__('Mit „Aktualisieren“ speichern. Fotos und Dokumente bleiben bis zur redaktionellen Freigabe im privaten Set.', 'iss-content-model') . '</p>';
+    if ($post->post_type === 'veranstaltung') {
+        echo '<p class="description">' . esc_html__('Textbeiträge werden unter Kommentare geprüft. Erst „Genehmigen“ veröffentlicht sie als Stimmen zur Veranstaltung. Der geöffnete Beitragslink erscheint auf der Veranstaltungsseite.', 'iss-content-model') . '</p>';
+        echo '<p><a class="button" href="' . esc_url(add_query_arg(['p' => $post->ID, 'comment_type' => 'iss_feedback'], admin_url('edit-comments.php'))) . '">' . esc_html__('Feedback prüfen', 'iss-content-model') . '</a></p>';
+    }
     $url = iss_content_upload_url($post->ID);
     if ($url !== '') {
         echo '<p><a target="_blank" rel="noopener" href="' . esc_url($url) . '">' . esc_html__('Upload-Link öffnen / teilen', 'iss-content-model') . '</a></p>';

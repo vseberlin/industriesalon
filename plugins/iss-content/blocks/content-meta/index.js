@@ -30,6 +30,12 @@
           el(
             PanelBody,
             { title: 'Content Meta', initialOpen: true },
+            el(SelectControl, {
+              label: 'Darstellung',
+              value: attrs.presentation || '',
+              options: [{label: 'Infobox', value: ''}, {label: 'Veranstaltung: Kurzinfo und Aktion', value: 'event-summary'}, {label: 'Veranstaltung: Besuch', value: 'event-visit'}],
+              onChange: function (value) { setAttributes({presentation: value}); },
+            }),
             el(TextControl, {
               label: 'Kicker',
               value: attrs.kicker || '',

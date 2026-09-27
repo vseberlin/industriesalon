@@ -7502,6 +7502,26 @@ iss-info-panel--brown
   grid-template-columns: repeat(2, minmax(0, 1fr));
 }
 
+/* Stacked report rows reuse the shared card, with media alongside its copy. */
+.iss-related-feed__card--layout-stack {
+  --iss-related-card-display: grid;
+  --iss-related-card-gap: var(--iss-space-xl);
+  --iss-related-card-title-size: clamp(1.25rem, 2vw, 2rem);
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1.6fr);
+  align-items: center;
+}
+
+.iss-related-feed__card--layout-stack.iss-related-feed__card--no-media {
+  grid-template-columns: minmax(0, 1fr);
+}
+
+@media (max-width: 640px) {
+  .iss-related-feed__card--layout-stack {
+    grid-template-columns: minmax(0, 1fr);
+    --iss-related-card-gap: var(--iss-space-md);
+  }
+}
+
 .iss-related-feed__grid--columns-3 {
   grid-template-columns: repeat(3, minmax(0, 1fr));
 }
@@ -7598,9 +7618,9 @@ iss-info-panel--brown
   --iss-card-rail-width: 0;
   --iss-card-rail-width-hover: 0;
 
-  display: flex;
+  display: var(--iss-related-card-display, flex);
   flex-direction: column;
-  gap: 0.85rem;
+  gap: var(--iss-related-card-gap, 0.85rem);
   height: 100%;
   border: 0;
   border-radius: 0;
@@ -7672,7 +7692,7 @@ iss-info-panel--brown
 
 .iss-related-feed__grid .iss-card__title {
   margin: 0;
-  font-size: clamp(1rem, 0.96rem + 0.2vw, 1.14rem);
+  font-size: var(--iss-related-card-title-size, clamp(1rem, 0.96rem + 0.2vw, 1.14rem));
   line-height: 1.25;
   min-height: 0;
 }

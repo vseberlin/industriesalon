@@ -14,6 +14,13 @@ Review and draft preparation remain in existing Sets; no old MU bridge should be
 installed. See [the editorial contract](../architecture/editorial-platform.md#material-and-optional-rückblicke).
 
 
+Event links also offer an independent written-feedback form. It uses native
+WordPress comment moderation through `iss-content`; files retain their existing
+Set pipeline. Closing the existing per-post control revokes both text and file
+intake. Publish receiver, plugin and theme together; see the editorial contract
+for moderation, consent and public rendering behavior.
+
+
 ## Scope
 
 Use this when enabling or repairing the Event Drop intake pipeline on staging.

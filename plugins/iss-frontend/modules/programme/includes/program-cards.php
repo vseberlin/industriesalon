@@ -55,8 +55,8 @@ function iss_programm_cards_build_block_config($attributes = []) {
     return [
         'query' => [
             'limit' => ($attributes['presentation'] ?? '') === 'programme' ? -1 : max(1, (int) ($attributes['limit'] ?? 3)),
-            'group_recurring' => ($attributes['presentation'] ?? '') === 'programme',
-            'group_recurring_by_source' => ($attributes['presentation'] ?? '') === 'programme',
+            'group_recurring' => in_array(($attributes['presentation'] ?? ''), ['programme', 'event-next'], true),
+            'group_recurring_by_source' => in_array(($attributes['presentation'] ?? ''), ['programme', 'event-next'], true),
             'order' => $time_mode === 'past' ? 'DESC' : 'ASC',
             'groups' => $group !== '' ? [$group] : [],
             'filters' => [

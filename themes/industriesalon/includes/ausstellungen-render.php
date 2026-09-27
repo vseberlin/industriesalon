@@ -438,13 +438,27 @@ add_filter('render_block_core/post-content', static function (string $content, a
         return $content;
     }
     $is_report = get_post_type($post_id) === 'rueckblick';
+    $is_event = get_post_type($post_id) === 'veranstaltung';
+    $card_options = $is_event ? ['layoutVariant' => 'stack', 'show_image' => true] : ['skin' => 'standard'];
     $cards = [];
     foreach (iss_content_report_connections($post_id, true) as $post) {
-        $cards[] = iss_relations_render_related_content_card($post, ['kicker' => get_post_type_object($post->post_type)->labels->singular_name], ['skin' => 'standard']);
+        if ($is_event) {
+            $card_options['show_image'] = has_post_thumbnail($post);
+        }
+        $cards[] = iss_relations_render_related_content_card($post, ['kicker' => get_post_type_object($post->post_type)->labels->singular_name, 'link_text' => $is_event ? __('Rückblick lesen', 'industriesalon') : __('Weiter', 'industriesalon')], $card_options);
     }
+    $contributions = '';
     if ($cards) {
-        $content .= '<section class="iss-related-feed iss-container section"><h2>' . esc_html($is_report ? __('Dazu gehört dieser Rückblick', 'industriesalon') : __('Rückblicke', 'industriesalon')) . '</h2>' . iss_relations_render_cards_grid($cards, 'rueckblick', ['columns' => 3]) . '</section>';
+        $contributions .= '<section' . ($is_event ? ' id="rueckblicke"' : '') . ' class="iss-related-feed' . ($is_event ? '' : ' iss-container') . ' section"><h2>' . esc_html($is_report ? __('Dazu gehört dieser Rückblick', 'industriesalon') : __('Rückblicke', 'industriesalon')) . '</h2>' . iss_relations_render_cards_grid($cards, 'rueckblick', $is_event ? ['columns' => 1, 'layoutVariant' => 'stack'] : ['columns' => 3]) . '</section>';
     }
+    if ($is_event && function_exists('industriesalon_render_event_feedback')) {
+        $contributions .= industriesalon_render_event_feedback($post_id);
+    }
+    $state = $is_event ? iss_content_model_event_appointment($post_id) : [];
+    if ($is_event) {
+        $content = '<section class="iss-event-description"><h2>' . esc_html(!empty($state['past']) ? __('Die Ankündigung', 'industriesalon') : __('Über die Veranstaltung', 'industriesalon')) . '</h2>' . $content . '</section>';
+    }
+    $content = !empty($state['past']) ? $contributions . $content : $content . $contributions;
     if ($is_report) {
         $date = (string) get_post_meta($post_id, '_iss_report_date', true);
         if ($date !== '') {
