@@ -1,0 +1,280 @@
+{
+  "schema_version": 1,
+  "source_namespace": "industriesalon-schoeneweide/schoeneweide-register",
+  "source_revision": "8574160c4ae79a6101dad59d21c9817ab29d0814",
+  "source_url": "https://github.com/industriesalon-schoeneweide/schoeneweide-register/blob/8574160c4ae79a6101dad59d21c9817ab29d0814/index.html",
+  "source_file_sha256": "d5bc4addcd863bb472258461636635b9c28d9245a2da53ac0102bba12366ff0d",
+  "observed_at": "2026-09-27T09:04:43+00:00",
+  "records": [
+    {
+      "source_id": "01",
+      "expected_slug": "behrens-ufer-be-u",
+      "expected_meta": {
+        "owner": [
+          "DIEAG (Berliner Versorgungswerk als Investor)"
+        ],
+        "current_use": [
+          "Das Areal befindet sich im Umbau. Denkmalgeschützte Bestandsbauten werden revitalisiert, neue Flächen für Produktion, Forschung, Büros und weitere gewerbliche Nutzungen entstehen schrittweise; erste Nutzer wie ASML sind bereits angebunden."
+        ]
+      },
+      "fields": {
+        "owner": "Berliner Versorgungswerk (laut Standortregister; Anteilsübertragung durch DIEAG am 5. März 2025)",
+        "current_use": "Das Behrens-Ufer wird als gemischt genutzter Standort für Gewerbe, Forschung und Produktion entwickelt. Nach Angaben des Standortregisters hat DIEAG ihre Anteile am 5. März 2025 an das Berliner Versorgungswerk übertragen. Der Registerbericht vom Mai 2026 beschreibt einen weiterhin niedrigen Vermietungsstand; ein verlässlicher Fertigstellungstermin für das Gesamtquartier ist darin nicht eindeutig belegt."
+      },
+      "milestones": [
+        {
+          "key": "schoeneweide-register:01:development-2019",
+          "event_date": "2019",
+          "date_precision": "year",
+          "event_type": "development",
+          "title": "DIEAG als Projektentwickler",
+          "summary": "Das Standortregister beschreibt DIEAG für den Zeitraum 2019 bis 2025 als Projektentwickler des Behrens-Ufers. Ein genauer Beginn innerhalb des Jahres 2019 ist nicht angegeben.",
+          "source_url": "https://github.com/industriesalon-schoeneweide/schoeneweide-register/blob/8574160c4ae79a6101dad59d21c9817ab29d0814/index.html",
+          "source_revision": "8574160c4ae79a6101dad59d21c9817ab29d0814",
+          "source_summary": "Standortregister Schöneweide, Eintrag #01. die.ag/2025/03/05 (DIEAG-Pressemitteilung Anteilsübergabe) | iz.de (Immobilien Zeitung 3/2025) | kucera.biz (Versorgungswerk-Beratung) | be-u.berlin/leasing | immobilienmanager.de 7/2024 (Architekturwettbewerb) | competitionline.com 7/2024 | entwicklungsstadt.de | berliner-lokalnachrichten.de 11/2024 (ASML) | airport-region.com (ASML High-Tech Facility) | LOKATION:S Rahmenplan OSW 2025-2026 | Konferenz/2026-05-05_SALON_Behrens-Ufer_Quellen_Realitaetscheck_v1.md",
+          "observed_at": "2026-09-27T09:04:43+00:00"
+        },
+        {
+          "key": "schoeneweide-register:01:share-transfer-2025-03-05",
+          "event_date": "2025-03-05",
+          "date_precision": "day",
+          "event_type": "ownership",
+          "title": "Anteilsübertragung an Berliner Versorgungswerk",
+          "summary": "Nach Angaben des Standortregisters übertrug DIEAG am 5. März 2025 ihre Anteile am Behrens-Ufer-Projekt an das Berliner Versorgungswerk. Der zuvor als Investor beschriebene Akteur wird im Register seither als Eigentümer geführt.",
+          "source_url": "https://github.com/industriesalon-schoeneweide/schoeneweide-register/blob/8574160c4ae79a6101dad59d21c9817ab29d0814/index.html",
+          "source_revision": "8574160c4ae79a6101dad59d21c9817ab29d0814",
+          "source_summary": "Standortregister Schöneweide, Eintrag #01. die.ag/2025/03/05 (DIEAG-Pressemitteilung Anteilsübergabe) | iz.de (Immobilien Zeitung 3/2025) | kucera.biz (Versorgungswerk-Beratung) | be-u.berlin/leasing | immobilienmanager.de 7/2024 (Architekturwettbewerb) | competitionline.com 7/2024 | entwicklungsstadt.de | berliner-lokalnachrichten.de 11/2024 (ASML) | airport-region.com (ASML High-Tech Facility) | LOKATION:S Rahmenplan OSW 2025-2026 | Konferenz/2026-05-05_SALON_Behrens-Ufer_Quellen_Realitaetscheck_v1.md",
+          "observed_at": "2026-09-27T09:04:43+00:00"
+        }
+      ],
+      "source_record_sha256": "c301d3f0c16601cebadedd5eb8b74037380571de1910382c6101c32c5083fa8f"
+    },
+    {
+      "source_id": "05",
+      "expected_slug": "rathenau-hallen-basecamp-campus",
+      "expected_meta": {
+        "owner": [
+          "XIOR Student Housing NV (über BaseCamp Student GmbH)"
+        ],
+        "legacy_website": [
+          "https://urbanbanksberlin.com"
+        ],
+        "current_use": [
+          "Heute steht das Teilareal fuer studentisches Wohnen, Veranstaltungen und die schrittweise Entwicklung eines gemischt genutzten Standorts im Umfeld der Rathenau-Hallen."
+        ]
+      },
+      "fields": {
+        "owner": "Laut Standortregister neue Steuerung durch Empira Group; rechtliches Vehikel weiterhin ESHF II Berlin Rathenau Hallen Students S.à r.l. / BaseCamp Student GmbH. Eigentümerstruktur öffentlich nicht eindeutig dokumentiert (Stand Mai 2026).",
+        "legacy_website": "https://rathenau-hallen.de",
+        "current_use": "Der BaseCamp Campus wird für studentisches Wohnen genutzt. Das Standortregister berichtet im Mai 2026 über eine neue Steuerung durch Empira Group im BaseCamp-Umfeld; die rechtliche Eigentümerstruktur wird dort zugleich als öffentlich nicht eindeutig dokumentiert beschrieben. Die Entwicklung des Gesamtareals und die Nutzung des bestehenden Studentenwohnheims sind getrennt zu betrachten."
+      },
+      "milestones": [],
+      "source_record_sha256": "75dd50bf713375732a8c796f97a6efdc9e11d395e5e0adc7f1b51613f7b3d904"
+    },
+    {
+      "source_id": "06",
+      "expected_slug": "rathenau-hallen-komplex-urban-banks-berlin",
+      "expected_meta": {
+        "owner": [
+          "XIOR Student Housing NV (über BaseCamp Student GmbH) / Projektname: Urban Banks Berlin"
+        ],
+        "legacy_website": [
+          "https://urbanbanksberlin.com"
+        ],
+        "current_use": [
+          "Die Rathenau-Hallen werden denkmalgerecht umgebaut und zugleich bereits genutzt. Veranstaltungen, Kultur und gewerbliche Formate finden weiterhin statt, während das Areal schrittweise zu einem offenen Ort für Gewerbe, Kultur und Freizeit transformiert wird."
+        ]
+      },
+      "fields": {
+        "owner": "Laut Standortregister neue Steuerung durch Empira Group im ESHF-II-/BaseCamp-Umfeld; Eigentümerstruktur öffentlich nicht eindeutig dokumentiert (Stand Mai 2026).",
+        "legacy_website": "https://rathenau-hallen.de",
+        "current_use": "Das Areal verbindet Kultur- und Veranstaltungsnutzungen mit studentischem Wohnen und weiteren Entwicklungsplänen. Das Standortregister berichtet im Mai 2026 über Empira als neue Steuerungsebene; die rechtliche Eigentümerstruktur ist darin nicht öffentlich eindeutig belegt. Die frühere Gesamtprojektmarke Urban Banks Berlin wird laut Register nicht mehr aktiv geführt; die Expohalle bleibt als Veranstaltungslocation benannt."
+      },
+      "milestones": [],
+      "source_record_sha256": "bc917894ee12a1a2a21a86a67d21ef5457a81750917cd173e04658e4429af609"
+    },
+    {
+      "source_id": "11",
+      "expected_slug": "barenquell-brauerei",
+      "expected_meta": {
+        "current_status": [
+          "in_transition"
+        ],
+        "current_use": [
+          "Das Areal wird derzeit als Entwicklungsprojekt vorbereitet. Unter dem Namen The Brew sind Mischnutzungen mit Büros, Cafés, Einzelhandel und öffentlichen Angeboten vorgesehen; die bauliche Erneuerung läuft, der Gesamtumbau ist aber noch nicht abgeschlossen."
+        ]
+      },
+      "fields": {
+        "current_status": "unclear",
+        "current_use": "Das Standortregister bewertet die Entwicklung des ehemaligen Brauereiareals als unklar. Unter dem Projektnamen The Brew werden gemischte Nutzungen mit Büros, Gastronomie, Einzelhandel und Veranstaltungen beschrieben; der tatsächliche Fortschritt des Gesamtprojekts bleibt offen. Einzelne Veranstaltungsnutzungen bedeuten keine abgeschlossene Entwicklung des gesamten Areals. Ein konkretes Datum der letzten Überprüfung ist im Registereintrag nicht angegeben."
+      },
+      "milestones": [],
+      "source_record_sha256": "9c930722de0f3bcf994ad2217f0899abbfb4a3eb872b2f92420f2d9b042820ac"
+    },
+    {
+      "source_id": "31",
+      "expected_slug": "xtro-ateliers",
+      "expected_meta": {
+        "tenant": [],
+        "current_use": [
+          "Atelierstandort mit mehr als 40 Ateliers im Gebaeude G83."
+        ]
+      },
+      "fields": {
+        "tenant": "Steffen Blunck (Hauptmieter von G83; Untervermietung an die einzelnen Künstlerinnen und Künstler, laut Standortregister)",
+        "current_use": "G83 wird als Atelierstandort genutzt. Nach Angaben des Standortregisters ist Steffen Blunck Hauptmieter und vermietet einzelne Ateliers an Künstlerinnen und Künstler weiter. Die Vertragslage im Zusammenhang mit der vom Register berichteten neuen Steuerung des Gesamtareals bleibt offen (Stand Mai 2026). Daraus folgt keine Aussage über Blunck als Grundstückseigentümer."
+      },
+      "milestones": [],
+      "source_record_sha256": "2e484622071fde7586936f210fb5fc43186dee59e9f4b0f016a380f603815eb6"
+    },
+    {
+      "source_id": "36",
+      "expected_slug": "theaterhaus-berlin-schoneweide",
+      "expected_meta": {
+        "size": [
+          "Schöneweide B-Teil: 16 Räume, 15-94 m²; gesamter theaterhaus-Verbund 58 Räume"
+        ],
+        "current_use": [
+          "An der Schnellerstrasse werden Proben- und Produktionsraeume fuer Theater, Tanz, Performance und Artistik schrittweise ausgebaut und betrieben."
+        ]
+      },
+      "fields": {
+        "size": "Laut Standortregister: 34 Probenräume (15–115 m²) und eine Studiobühne mit 218 m²; vollständige Inbetriebnahme aus dem Eintrag nicht eindeutig ableitbar.",
+        "current_use": "Am Standort Schnellerstraße werden Proben- und Produktionsräume für die freie darstellende Szene betrieben und ausgebaut. Der Registereintrag nennt in seiner jüngeren Korrektur 34 Räume und eine Studiobühne mit 218 m². Er nennt Frühjahr 2026 für die volle Eröffnung, bestätigt deren tatsächlichen Vollzug jedoch nicht eindeutig. Die vollständige Inbetriebnahme wird deshalb hier nicht als abgeschlossen dargestellt."
+      },
+      "milestones": [],
+      "source_record_sha256": "42dd9491103764b3a52bdb874e31cf9854bff5bbb443309c5a96efb85e0bfec9"
+    },
+    {
+      "source_id": "44",
+      "expected_slug": "kulturraum-wilhelminenhofstr-90a-land-berlin",
+      "expected_meta": {
+        "developer": [],
+        "current_use": [
+          "Umsetzungsphase 2024-2025. Voruntersuchung für Musikproberäume abgeschlossen."
+        ]
+      },
+      "fields": {
+        "developer": "BIM Berliner Immobilienmanagement GmbH (Bauherrin, laut Standortregister)",
+        "current_use": "Der Standort wird für Musikproberäume und Ateliers hergerichtet. Laut Standortregister ist BIM Bauherrin; die Vergabe der Musikproberäume im Erdgeschoss liegt bei Kulturraum Berlin gGmbH, die Ateliervergabe in den Obergeschossen beim Atelierbüro des bbk Berlin Kulturwerks. Der Eintrag nennt einen erwarteten Eröffnungszeitraum 2025/2026; eine tatsächlich erfolgte Eröffnung ist damit nicht belegt."
+      },
+      "milestones": [],
+      "source_record_sha256": "d54c5b44ae8eb25362ebac39cfeb23dd5a1891375e08d8ef5ac2db23e4fafb92"
+    },
+    {
+      "source_id": "46",
+      "expected_slug": "kaos-93-kunst-und-gewerbehof-genossenschaft-i-gr",
+      "expected_meta": {
+        "owner": [
+          "D&R Investments B.V. (Amsterdam) / Kunst- und Gewerbehof KAOS eG i.Gr. (Käufer)"
+        ],
+        "legacy_kaufpreis": [
+          "Kaufverhandlungen laufend (2025)"
+        ],
+        "investment": [
+          "Genossenschaftlich (Nachrangdarlehen)"
+        ],
+        "current_use": [
+          "Kaufverhandlungen mit D&R Investments laufen (Stand Mai 2025). Genossenschaftsgründung im Gang."
+        ]
+      },
+      "fields": {
+        "owner": "D&R Investments B.V. (Amsterdam), laut Standortregister; kein belegter Eigentumsübergang an die KAOS-Genossenschaft.",
+        "legacy_kaufpreis": "Erwerbsverhandlungen laut Registerbericht Mai 2026 ausgesetzt; kein Kaufabschluss für diesen Standort belegt.",
+        "investment": "Der genossenschaftliche Erwerb dieses Standorts wird laut Registerbericht Mai 2026 nicht weiterverfolgt; keine bestätigte aktuelle Investitionssumme für das Areal.",
+        "current_use": "Nach dem Registerbericht vom Mai 2026 sind die Erwerbsverhandlungen der KAOS-Genossenschaft mit D&R Investments wegen des Grundstückspreises ausgesetzt. Die inzwischen eingetragene Genossenschaft richtet ihre Erwerbsbemühungen auf MarziPlan in Berlin-Neukölln. Ein Kaufabschluss oder ein erfolgter Umzug wird daraus nicht abgeleitet. Für den Standort Wilhelminenhofstraße 93 ist kein Eigentumsübergang an die Genossenschaft belegt."
+      },
+      "milestones": [
+        {
+          "key": "schoeneweide-register:46:cooperative-founded-2024-05-29",
+          "event_date": "2024-05-29",
+          "date_precision": "day",
+          "event_type": "organization",
+          "title": "Gründung der KAOS-Genossenschaft",
+          "summary": "Das Standortregister nennt den 29. Mai 2024 als Gründungsdatum der Kunst- und Gewerbehof KAOS eG. Die Gründung allein bedeutet keinen Erwerb des Grundstücks.",
+          "source_url": "https://github.com/industriesalon-schoeneweide/schoeneweide-register/blob/8574160c4ae79a6101dad59d21c9817ab29d0814/index.html",
+          "source_revision": "8574160c4ae79a6101dad59d21c9817ab29d0814",
+          "source_summary": "Standortregister Schöneweide, Eintrag #46. kaosberlin.de/marzi | kaosberlin.de/kaos93 | tagesspiegel.de | LOKATION:S Rahmenplan OSW 2025-2026",
+          "observed_at": "2026-09-27T09:04:43+00:00"
+        },
+        {
+          "key": "schoeneweide-register:46:cooperative-registered-2025-08-06",
+          "event_date": "2025-08-06",
+          "date_precision": "day",
+          "event_type": "organization",
+          "title": "Eintragung der Genossenschaft",
+          "summary": "Nach Angaben des Standortregisters wurde die Kunst- und Gewerbehof KAOS eG am 6. August 2025 eingetragen.",
+          "source_url": "https://github.com/industriesalon-schoeneweide/schoeneweide-register/blob/8574160c4ae79a6101dad59d21c9817ab29d0814/index.html",
+          "source_revision": "8574160c4ae79a6101dad59d21c9817ab29d0814",
+          "source_summary": "Standortregister Schöneweide, Eintrag #46. kaosberlin.de/marzi | kaosberlin.de/kaos93 | tagesspiegel.de | LOKATION:S Rahmenplan OSW 2025-2026",
+          "observed_at": "2026-09-27T09:04:43+00:00"
+        },
+        {
+          "key": "schoeneweide-register:46:acquisition-talks-suspended",
+          "event_date": null,
+          "date_precision": "unknown",
+          "event_type": "development",
+          "title": "Erwerbsverhandlungen ausgesetzt",
+          "summary": "Der Registerbericht vom Mai 2026 beschreibt die Verhandlungen mit D&R Investments über diesen Standort als ausgesetzt. Die Genossenschaft konzentriert ihre Erwerbsbemühungen auf MarziPlan in Neukölln. Das Datum der Aussetzung sowie ein Kaufabschluss am anderen Standort sind nicht belegt.",
+          "source_url": "https://github.com/industriesalon-schoeneweide/schoeneweide-register/blob/8574160c4ae79a6101dad59d21c9817ab29d0814/index.html",
+          "source_revision": "8574160c4ae79a6101dad59d21c9817ab29d0814",
+          "source_summary": "Standortregister Schöneweide, Eintrag #46. kaosberlin.de/marzi | kaosberlin.de/kaos93 | tagesspiegel.de | LOKATION:S Rahmenplan OSW 2025-2026",
+          "observed_at": "2026-09-27T09:04:43+00:00",
+          "reported_as_of": "2026-05"
+        }
+      ],
+      "source_record_sha256": "222525b4d01db58bf3abf1ba943d6d53ac40f47671d424baec29eb49657b89af"
+    },
+    {
+      "source_id": "62",
+      "expected_slug": "btb-gmbh-blockheizkraftwerk",
+      "expected_meta": {
+        "legacy_website": [
+          "https://www.btb-berlin.de"
+        ],
+        "current_use": [
+          "Schlüsselakteur für die Energiewende am Standort. Heizkraftwerk Schöneweide wird auf erneuerbare Brennstoffe umgestellt."
+        ]
+      },
+      "fields": {
+        "legacy_website": "https://www.btb-berlin.de/innovationen/energie-aus-der-spree/",
+        "current_use": "Das Heizkraftwerk Schöneweide ist Teil der Wärme- und Stromversorgung im Berliner Südosten. Laut Standortregister arbeiten dort seit Juli 2023 zwei Flusswasser-Großwärmepumpen mit zusammen rund 7 MW thermischer Leistung. Der Registerstand Mai 2026 beschreibt einen saisonalen Betrieb von April bis September. Die bestehende Kraftwerksinfrastruktur wird im Zuge der Wärmewende weiterentwickelt."
+      },
+      "milestones": [
+        {
+          "key": "schoeneweide-register:62:river-heat-pumps-2023-07",
+          "event_date": "2023-07",
+          "date_precision": "month",
+          "event_type": "opening",
+          "title": "Flusswasser-Wärmepumpen in Betrieb",
+          "summary": "Nach Angaben des Standortregisters sind seit Juli 2023 zwei Flusswasser-Großwärmepumpen am Heizkraftwerk Schöneweide in Betrieb. Der Eintrag nennt zusammen rund 7 MW thermische Leistung.",
+          "source_url": "https://github.com/industriesalon-schoeneweide/schoeneweide-register/blob/8574160c4ae79a6101dad59d21c9817ab29d0814/index.html",
+          "source_revision": "8574160c4ae79a6101dad59d21c9817ab29d0814",
+          "source_summary": "Standortregister Schöneweide, Eintrag #62. btb-berlin.de/innovationen/energie-aus-der-spree | berlin-spart-energie.de (Projekt des Monats 02/2024) | energie-experten.org | waermepumpe.de (BWP-Datenbank 7 MW Flusswasser-WP) | adlershof.de | LOKATION:S Rahmenplan OSW 2025-2026",
+          "observed_at": "2026-09-27T09:04:43+00:00"
+        }
+      ],
+      "source_record_sha256": "d5b22f358764f343ec47f0e8889f163764c72c31381d32eccae2dac70b51a35f"
+    },
+    {
+      "source_id": "69",
+      "expected_slug": "ateliergemeinschaft-g59-g60-w-str-83-85",
+      "expected_meta": {
+        "current_use": [
+          "Ateliergemeinschaft im Gebaeudeteil G59/G60 auf dem Gelaende Wilhelminenhofstrasse 83-85."
+        ]
+      },
+      "fields": {
+        "current_use": "Die Ateliergemeinschaft nutzt G59/G60 auf dem Gelände Wilhelminenhofstraße 83–85. Nach Angaben des Standortregisters verwaltet GSE gGmbH die Atelieretage und vermietet an die dort arbeitenden Künstlerinnen und Künstler. Der direkte Vermieter an GSE und der rechtliche Eigentümer sind nicht geklärt; die im Register vermutete Verbindung zu Empira ist keine gesicherte Eigentümerangabe (Stand Mai 2026)."
+      },
+      "milestones": [],
+      "source_record_sha256": "8a390a6952d429450ae6369fd82ec5c71ab1f31ec89e75f45bafc439c8c65620"
+    }
+  ],
+  "excluded": [
+    "51: planning document; no new Place",
+    "70: new Place identity/location requires separate review",
+    "16: preserve local address and history",
+    "07: no material current change needed"
+  ]
+}

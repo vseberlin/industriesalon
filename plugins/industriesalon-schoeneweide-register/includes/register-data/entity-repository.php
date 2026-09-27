@@ -4,6 +4,51 @@ if (!defined('ABSPATH')) {
     exit;
 }
 
+/** Resolve supplier components before classifying a record as a new Place. */
+function iss_register_resolve_supplier_place(string $namespace, string $source_id)
+{
+    $mapping = json_decode((string) file_get_contents(__DIR__ . '/source-place-mappings.json'), true);
+    if (!is_array($mapping) || $namespace !== $mapping['source_namespace']) {
+        return new WP_Error('supplier_namespace', 'Unknown supplier identity mapping.');
+    }
+    $component = $mapping['components'][$source_id] ?? null;
+    $canonical = (string) ($component['canonical_source_id'] ?? $source_id);
+    $source_ids = [$canonical];
+    foreach ($mapping['components'] as $id => $rule) {
+        if ($rule['canonical_source_id'] === $canonical) {
+            $source_ids[] = (string) $id;
+        }
+    }
+    $ids = get_posts([
+        'post_type' => ISS_REGISTER_POST_TYPE,
+        'post_status' => ['publish', 'draft', 'private', 'pending', 'future', 'trash'],
+        'posts_per_page' => 2,
+        'fields' => 'ids',
+        'meta_query' => [[ // phpcs:ignore WordPress.DB.SlowDBQuery.slow_db_query_meta_query -- Bounded import identity lookup, never a public collection query.
+            'key' => 'register_id',
+            'value' => $source_ids,
+            'compare' => 'IN',
+        ]],
+    ]);
+    if (count($ids) !== 1 || (string) get_post_meta((int) $ids[0], 'register_id', true) !== $canonical) {
+        return new WP_Error('supplier_identity', 'Expected one canonical Place; resolve missing or conflicting supplier identities before importing.');
+    }
+    $post = get_post((int) $ids[0]);
+    foreach ($mapping['components'] as $rule) {
+        if ($rule['canonical_source_id'] === $canonical && $post->post_name !== $rule['expected_slug']) {
+            return new WP_Error('supplier_identity', 'Mapped Place identity differs.');
+        }
+    }
+    return [
+        'post_id' => (int) $post->ID,
+        'canonical_source_id' => $canonical,
+        'source_ids' => $source_ids,
+        'scope' => $component['scope'] ?? 'place',
+        'allowed_fields' => $component['allowed_fields'] ?? null,
+        'allowed_event_types' => $component['allowed_event_types'] ?? null,
+    ];
+}
+
 function iss_register_get_meta_value(int $post_id, string $key, $default = '')
 {
     $value = get_post_meta($post_id, $key, true);

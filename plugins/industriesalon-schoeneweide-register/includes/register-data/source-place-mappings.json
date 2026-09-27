@@ -1,0 +1,14 @@
+{
+  "schema_version": 1,
+  "source_namespace": "industriesalon-schoeneweide/schoeneweide-register",
+  "components": {
+    "70": {
+      "canonical_source_id": "13",
+      "expected_slug": "stiftung-reinbeckhallen",
+      "scope": "development",
+      "allowed_fields": ["current_use"],
+      "allowed_event_types": ["development", "opening"],
+      "reason": "Gründerzentrum is an extension within the existing Reinbeckhallen place. Preserve the whole site's active cultural use and local history."
+    }
+  }
+}

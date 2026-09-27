@@ -155,7 +155,14 @@ function iss_graph_sync_register_place_entity(int $post_id): ?array
     }
 
     $organization_rows = [];
+    // Imported role statements can include uncertainty and several parties.
+    // Keep them as sourced facts; bind identities through the existing graph editor.
+    $current_import = get_post_meta($post_id, '_iss_register_current_import', true);
+    $imported_fields = is_array($current_import) ? ($current_import['accepted_fields'] ?? []) : [];
     foreach (['owner', 'operator', 'developer', 'tenant'] as $index => $relation_type) {
+        if (array_key_exists($relation_type, $imported_fields)) {
+            continue;
+        }
         $name = iss_graph_get_register_meta_value($post_id, $relation_type, '');
         if ($name === '') {
             continue;

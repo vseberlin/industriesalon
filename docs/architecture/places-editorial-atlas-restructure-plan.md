@@ -654,6 +654,103 @@ Also run:
 - paired SQL/API and uploads artifacts whenever DB-backed content references
   local media.
 
+## Supplier Current-Fact Exchange
+
+The local website owns historical narratives, usage phases, local-only Places,
+media and editorial relationships. The external Schöneweide register supplies
+reviewed current owner/operator/developer/tenant statements, present use/status
+and related substantial facts. Missing upstream records or values never delete
+local content. Source history, coordinates, UI labels, colors and icons are not
+automatic update inputs. A new upstream record needs Place identity review.
+
+Use versioned UTF-8 JSON for exchange and reviewable Git diffs. Keep WordPress
+and its existing MariaDB tables as runtime storage; SQLite can be an optional
+analysis export, not another database to synchronize. Each batch records source
+namespace, commit, retrieval time and checksum. Records match by upstream ID,
+then assert the expected local identity and before-values. A reviewed manifest
+contains only accepted field changes and sourced events. Current facts retain
+their source and accepted values in `_iss_register_current_import`.
+
+Before classifying supplier records as new Places, imports must call
+`iss_register_resolve_supplier_place()`. The register-owned
+`includes/register-data/source-place-mappings.json` records accepted component
+identities. Upstream **#13 and #70 both resolve to Reinbeckhallen (#13)**;
+#70 contributes the Gründerzentrum extension's development information, not a
+second Place. Its allowed field is `current_use`, with development/opening
+milestones; it cannot overwrite whole-site ownership, active status, history or
+identity. Keep 2027 as a reported target, never an accomplished opening date.
+Missing canonical Places, mismatched slugs and duplicate alias Places block
+imports. Group changes by resolved local identity and review conflicting claims;
+never let source order decide the final value. The current bounded importer
+rejects duplicate targets and different prior receipts, requiring an explicit
+reviewed follow-up rather than overwriting accepted combined information.
+
+Real-world modern changes append to the existing public chronology. Corrections
+to wording or uncertain assertions do not automatically create events. A
+milestone has a stable key, event type, title, summary, event date with
+day/month/year/unknown precision, source URL/revision and observation time;
+an optional reporting date remains separate from the event date. Unknown event
+dates stay unknown. Identical re-imports are no-ops; a conflicting existing event
+requires reconciliation rather than silent replacement.
+
+Milestones use nullable `milestone_key`/`milestone_json` columns in the existing
+epoch table, uniquely keyed per Place. Usage-phase reads, counts, filtering,
+saves and state projections exclude them. The theme/legacy chronology merges
+both kinds for display, the existing dossier shows source-bearing milestones,
+and Atlas detail includes them without enlarging bootstrap. Enabled Place JSON
+continues to own usage phases; normal phase saves cannot remove milestones.
+
+Qualified imported party statements do not establish organization identities.
+The graph bridge skips automatic string-to-organization conversion for imported
+roles; editors can bind identities in the existing graph editor. A bounded
+cleanup deprecates only obsolete undated `register_meta` derived current links,
+preserving dated, accepted, manually pinned and editorial relationships.
+
+The first accepted batch is `ops/migrations/2026-09-27-register-updates.json`,
+backed by the pinned `2026-09-27-register-source.json` snapshot. Deploy the matching
+plugin/theme code, then run `2026-09-27-register-current-sync.php` followed by
+`2026-09-27-register-current-relations.php` through WP-CLI `eval-file` with
+`dry-run`, `apply`, or `verify` and `--use-include`. Both default to dry-run and
+create scoped before-images before mutation. Take a full database backup first.
+No uploads artifact is needed. Current projection writes are limited to the
+current state row; preservation hashes cover historical phases/states, posts,
+unapproved metadata and taxonomy relationships. The graph cleanup compares all
+relation rows and permits only the scoped status/publicity changes.
+
+The Reinbeckhallen follow-up reuses the current-sync migration with a second
+argument: `wp eval-file FILE apply reinbeckhallen --use-include` (also dry-run or
+verify). Its accepted payload is `2026-09-27-register-reinbeckhallen.json` and its
+separate before-images are `prefix_iss_backup_20260927_register_reinbeck_*`.
+It preserves canonical `register_id=13`, records both source identities in the
+receipt, updates one current-use field and appends one undated development event.
+
+### Internal contacts
+
+Contact names, emails and phones belong in protected `_iss_register_contacts`
+post meta, with separate `name`, `email`, `phone`, `role` and `source` properties.
+The existing Place editor owns the fields under “Interne Kontakte — nicht
+öffentlich”; only users who can edit that Place may render or save them.
+Contacts and `research_note` are excluded from WordPress REST metadata and all
+public Atlas, Place, export and search contracts. Historical people and
+substantive organization/ownership facts remain part of public editorial content.
+
+Supplier import review must separate contact clauses before accepting public
+text. `iss_register_validate_public_import_text()` rejects email/contact markers
+and stored contact names/phones in proposed public fields or milestones. It
+requires review rather than guessing which unlabelled person is a contact.
+Never copy raw contact-bearing supplier snapshots or migration payloads into
+public/Git artifacts. The shared source snapshot is contact-redacted; its
+`content_sha256` values identify the original supplier records, and the enclosing
+file checksum identifies the redacted exchange artifact. Original evidence stays
+private outside the web root.
+
+`2026-09-27-register-private-contacts.php` moves the seven existing contact
+clauses from research notes into structured fields. Run with `dry-run|apply|verify`
+and a reviewed private payload path after deploying the code. The payload must
+be transferred privately, not committed or served over HTTP. The migration
+checks source identity/before-values, backs up target metadata, preserves all
+other content, and verifies idempotence. No media artifact is needed.
+
 ## Non-Goals
 
 - Do not rename `register_place` or change its public URLs.

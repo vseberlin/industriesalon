@@ -1,9 +1,77 @@
-# Current handoff — 2026-09-22
+# Current handoff — 2026-09-27
 
 Website source is `/home/vladimir/wp-website`; `/home/vladimir/wp` is the preserved
-archive checkout. Local code, GitHub `main` and staging are synchronized through
-**8dddf10**; the subsequent closeout commit records this checkpoint. Verify current
-`HEAD`/`origin/main` before work. Production was read for this import, not changed.
+archive checkout. The Atlas implementation is being exchanged from baseline
+**e4cb658** through GitHub `main` to `staging.industriesalon.info`. The `.de`
+staging hostname does not resolve. Data below is locally applied; target
+migration receipts and the deployment closeout must confirm staging completion.
+Production is outside this deployment.
+
+## Atlas supplier update — local only
+
+Applied the reviewed source revision `8574160c4ae79a6101dad59d21c9817ab29d0814`:
+**24 current-field changes / eleven Places / seven modern milestones**, including
+the accepted Reinbeckhallen follow-up. All 84 local
+Places, 186 historical phases and 186 historical states remain intact; public
+Atlas still contains 76 Places. Existing posts, protected metadata and taxonomy
+relationships match their pre-import hashes. Four obsolete derived current owner
+links are deprecated; every other graph relation is unchanged. Supplier reports
+include May 2026 observations; retrieval in September does not make those facts
+September-verified. Uncertain ownership and opening dates remain qualified.
+
+Paired artifacts in `ops/migrations/`: `2026-09-27-register-source.json`,
+`2026-09-27-register-updates.json`, `2026-09-27-register-current-sync.php`, then
+`2026-09-27-register-current-relations.php`. Deploy matching plugin/theme code
+before applying these on another environment. Both migrations support dry-run,
+apply and verify; local apply is complete, repeat is a no-op. No uploads required.
+Private backup/receipts: `/home/vladimir/.local/state/iss-register-sync-20260927/`.
+Verified `before.sql.gz` SHA256:
+`d708ad494d2b94dddda23e9daa717944ddd8a55c15aaeb7219bfee7589e717af`.
+Verified post-import `after.sql.gz` SHA256:
+`e0061f42ac9b9b33f0bc0f1081db765cb1e5e236c05b90d54cc6d24e09768875`.
+Scoped before-images also remain in `wp_iss_backup_20260927_register_*` tables.
+Rollback only affected rows using before-images, preserving later edits and the
+additive schema; do not restore the entire database over subsequent work.
+
+Verification: 25 transactional runtime checks, migration read-back/idempotence,
+REST bootstrap/detail, desktop and 390px chronology, and existing dossier editor.
+Targeted PHP syntax/static analysis pass. PHPCS passes changed files except
+pre-existing unchanged findings in `place-states.php` (7 errors / 22 warnings).
+Source authority and the JSON exchange/storage contract are documented in
+`docs/architecture/places-editorial-atlas-restructure-plan.md`. Next shared action
+is to review/commit the bounded changes and deploy code with both migrations;
+no push or deployment has been performed for this task.
+
+Reinbeckhallen follow-up: upstream #70 is a development within canonical #13,
+local Place 12877, not a new Place. The register-owned
+`includes/register-data/source-place-mappings.json` and shared import resolver
+enforce this for future imports. Active cultural status, owner and all four local
+historical phases remain unchanged. The extension's 22 studios and planned 2027
+completion are sourced; its unknown start date stays unknown.
+After the original two migrations, run the same current-sync migration with
+`apply reinbeckhallen --use-include`; payload is
+`ops/migrations/2026-09-27-register-reinbeckhallen.json`. Locally applied and
+verified; repeat produces zero writes/events. Backup `reinbeck-before.sql.gz`
+and `reinbeck-{dry-run,apply,repeat,verify}.json` are in the private evidence
+directory above; separate `wp_iss_backup_20260927_register_reinbeck_*` tables
+hold before-images. No uploads. All **30 runtime checks** pass, including alias
+resolution and duplicate-identity rejection; PHP checks, REST count/status,
+preservation hashes and the public chronology were verified.
+
+Contacts: seven local contact clauses now live in staff-only
+`_iss_register_contacts`; `research_note` is no longer public REST metadata.
+Existing editor has separate name/email/phone/role/source fields. Public import
+review rejects contact-bearing text. Shared supplier JSON is redacted; original
+record hashes remain provenance identifiers and file checksums were refreshed.
+Deploy code, then `2026-09-27-register-private-contacts.php` with mode and a
+**privately transferred** payload path (outside the web root). Local private
+`contact-separation/` under the evidence directory above holds `payload.json`,
+original supplier evidence, verified `before.sql.gz` and migration receipts.
+Do not put these files in Git/uploads. Backup table:
+`wp_iss_backup_20260927_register_contacts`. Apply and repeat are verified;
+21 privacy + 30 import tests pass, along with 16 anonymous page/API checks and
+the authenticated contact editor. Public content/history are unchanged. This
+follow-up is also local/uncommitted; no staging or production changes.
 
 ## Current programme state and ownership
 

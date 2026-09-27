@@ -177,6 +177,38 @@ final class ISS_Register_Place_State_Service
         iss_register_clear_places_cache();
     }
 
+    // phpcs:disable WordPress.DB.DirectDatabaseQuery -- This service updates only its own current-state projection.
+    /** Refresh current facts without rewriting any historical state row. */
+    public function sync_current_state_for_post(int $post_id)
+    {
+        global $wpdb;
+
+        $post = get_post($post_id);
+        if (!$post instanceof WP_Post || $post->post_type !== ISS_REGISTER_POST_TYPE || $post->post_status !== 'publish') {
+            return new WP_Error('current_state_place', 'Expected a published Place.');
+        }
+        $existing = $wpdb->get_results($wpdb->prepare('SELECT * FROM %i WHERE place_post_id = %d AND state_kind = %s', $this->get_table_name(), $post_id, 'current'), ARRAY_A);
+        if (count($existing) !== 1) {
+            return new WP_Error('current_state_count', 'Expected exactly one current state.');
+        }
+        $row = $this->build_current_state_row(iss_register_map_place_entity($post), 0);
+        $proof = get_post_meta($post_id, '_iss_register_current_import', true);
+        if (is_array($proof) && !empty($proof['source_url'])) {
+            $row['source_summary'] = 'Aktuelle Angaben: Standortregister Schöneweide.';
+            $row['source_links'] = [$proof['source_url']];
+        }
+        $data = $this->prepare_row_for_db($post_id, $row);
+        $data['sort_order'] = (int) $existing[0]['sort_order'];
+        $data['created_at'] = $existing[0]['created_at'];
+        if ($wpdb->update($this->get_table_name(), $data, ['id' => (int) $existing[0]['id']]) === false) {
+            return new WP_Error('current_state_write', 'Current state could not be refreshed.');
+        }
+        iss_register_clear_places_cache();
+        return true;
+    }
+
+    // phpcs:enable WordPress.DB.DirectDatabaseQuery
+
     public function delete_states_for_place(int $post_id): void
     {
         global $wpdb;

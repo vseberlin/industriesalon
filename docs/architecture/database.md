@@ -11,7 +11,11 @@ WordPress posts, post meta, terms, and `WP_Query` are the default model for norm
 - `industriesalon-schoeneweide-register` (transitional): Place epoch/state and
   industry-actor projections used by the interactive Atlas while the accepted
   Place migration is observed. Enabled Place JSON is the epoch write authority;
-  these tables are derived read models, not a second editorial source.
+  phase/state rows are derived read models, not a second editorial source.
+  The existing epoch table also stores accepted supplier milestones with a
+  non-null `milestone_key` and source-bearing `milestone_json`; phase queries
+  exclude these rows. These append-only event records survive phase rebuilds.
+  See the supplier exchange contract in `places-editorial-atlas-restructure-plan.md`.
 
 See `source-of-truth.md` before deciding which storage layer is canonical for a surface.
 

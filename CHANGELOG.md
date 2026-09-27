@@ -4,6 +4,27 @@ This file records durable project changes. Keep it compact: current state belong
 `handoff_CURRENT.md`, active follow-up in `TODO.md`, and detailed investigation can
 be recovered from Git history.
 
+## 2026-09-27
+
+- Added a bounded, source-pinned Atlas current-fact import: 23 field changes
+  across ten existing Places and six sourced modern milestones in the existing
+  chronology. Historical content and local-only Places remain locally owned.
+  Exact/unknown event dates are distinct from reporting/import dates; repeat
+  imports cannot duplicate events. Retired four stale automatic owner links
+  without changing editorial or historical graph relationships. JSON exchange,
+  paired migration artifacts and transactional preservation checks are documented.
+
+- Mapped upstream Gründerzentrum #70 into the existing Reinbeckhallen #13 Place.
+  Added its development statement and sourced milestone, preserving the site's
+  active cultural status. Future imports share a component-aware identity
+  resolver and reject duplicate Places or whole-site changes from component data.
+
+- Separated seven embedded Place contacts into staff-only name/email/phone/role/
+  source fields in the existing editor. Removed research notes from public REST,
+  redacted contacts from the shareable supplier snapshot, and added a public
+  import contact gate. Private migration evidence stays outside Git/web access;
+  anonymous route checks cover the public boundary.
+
 ## 2026-09-22
 
 - Added a bounded production-to-staging programme import for four events and

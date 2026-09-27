@@ -6,7 +6,7 @@ if (!defined('ABSPATH')) {
 
 // phpcs:disable WordPress.DB.DirectDatabaseQuery -- This projection service owns and caches its indexed custom-table queries.
 
-define('ISS_REGISTER_EPOCH_SCHEMA_VERSION', '2026-05-11-v2');
+define('ISS_REGISTER_EPOCH_SCHEMA_VERSION', '2026-09-27-v3');
 define('ISS_REGISTER_EPOCH_SCHEMA_OPTION', 'iss_register_epoch_schema_version');
 define('ISS_REGISTER_EPOCH_SNAPSHOT_META_KEY', '_iss_register_epoch_snapshot_latest');
 define('ISS_REGISTER_EPOCH_SNAPSHOTS_META_KEY', '_iss_register_epoch_snapshots');
@@ -57,6 +57,8 @@ final class ISS_Register_Place_Epoch_Service
             era_slug varchar(100) NOT NULL,
             function_key varchar(100) NOT NULL,
             phase_name varchar(255) NOT NULL,
+            milestone_key varchar(191) DEFAULT NULL,
+            milestone_json longtext DEFAULT NULL,
             summary text NOT NULL,
             start_year smallint(6) DEFAULT NULL,
             end_year smallint(6) DEFAULT NULL,
@@ -70,6 +72,7 @@ final class ISS_Register_Place_Epoch_Service
             updated_at datetime NOT NULL,
             PRIMARY KEY  (id),
             KEY place_post_id (place_post_id),
+            UNIQUE KEY place_milestone (place_post_id, milestone_key),
             KEY era_function (era_slug, function_key),
             KEY place_sort (place_post_id, sort_order),
             KEY place_current (place_post_id, is_current),
@@ -134,7 +137,7 @@ final class ISS_Register_Place_Epoch_Service
         $rows = $wpdb->get_results(
             $wpdb->prepare(
                 "SELECT * FROM {$this->get_table_name()}
-                WHERE place_post_id IN ({$placeholders})
+                WHERE place_post_id IN ({$placeholders}) AND milestone_key IS NULL
                 ORDER BY place_post_id ASC, start_year ASC, sort_order ASC, id ASC",
                 $place_post_ids
             ),
@@ -157,6 +160,98 @@ final class ISS_Register_Place_Epoch_Service
         }
 
         return $grouped;
+    }
+
+    /** Modern events share the chronology table, but are not land-use phases. */
+    public function get_milestones_for_place(int $post_id): array
+    {
+        global $wpdb;
+
+        $rows = $wpdb->get_col($wpdb->prepare('SELECT milestone_json FROM %i WHERE place_post_id = %d AND milestone_key IS NOT NULL ORDER BY start_year IS NULL, start_year, id', $this->get_table_name(), $post_id));
+        return array_values(array_filter(array_map(static function ($json): array {
+            $value = json_decode((string) $json, true);
+            return is_array($value) ? $value : [];
+        }, (array) $rows)));
+    }
+
+    /** Validate dates without turning a reporting date into an event date. */
+    public function validate_milestone(array $event)
+    {
+        foreach (['key', 'title', 'summary', 'event_type', 'source_url', 'source_revision', 'source_summary', 'observed_at', 'date_precision'] as $field) {
+            if (!isset($event[$field]) || !is_string($event[$field]) || trim($event[$field]) === '') {
+                return new WP_Error('milestone_field', 'Missing milestone field: ' . $field);
+            }
+        }
+        if (strlen($event['key']) > 191 || !preg_match('/^[a-z0-9:._\/-]+$/D', $event['key'])) {
+            return new WP_Error('milestone_key', 'Invalid milestone identity.');
+        }
+        if (!in_array($event['event_type'], ['ownership', 'development', 'organization', 'opening', 'closure', 'tenancy', 'relocation'], true)) {
+            return new WP_Error('milestone_type', 'Invalid milestone type.');
+        }
+        $precision = $event['date_precision'];
+        $date = $event['event_date'] ?? null;
+        $formats = ['day' => 'Y-m-d', 'month' => 'Y-m', 'year' => 'Y'];
+        if ($precision === 'unknown') {
+            if ($date !== null) {
+                return new WP_Error('milestone_date', 'Unknown event dates must remain null.');
+            }
+        } elseif (isset($formats[$precision]) && is_string($date)) {
+            $parsed = DateTimeImmutable::createFromFormat('!' . $formats[$precision], $date);
+            if (!$parsed || $parsed->format($formats[$precision]) !== $date) {
+                return new WP_Error('milestone_date', 'Invalid event date.');
+            }
+        } else {
+            return new WP_Error('milestone_date', 'Invalid event-date precision.');
+        }
+        if (!preg_match('/^[a-f0-9]{40}$/D', $event['source_revision']) || !wp_http_validate_url($event['source_url'])) {
+            return new WP_Error('milestone_source', 'Invalid source revision or URL.');
+        }
+        return true;
+    }
+
+    /** Append an accepted event once; changing an accepted account requires review. */
+    public function append_milestone(int $post_id, array $event)
+    {
+        global $wpdb;
+
+        if (get_post_type($post_id) !== ISS_REGISTER_POST_TYPE) {
+            return new WP_Error('milestone_place', 'Expected an existing Place.');
+        }
+        $valid = $this->validate_milestone($event);
+        if (is_wp_error($valid)) {
+            return $valid;
+        }
+        foreach ($this->get_milestones_for_place($post_id) as $existing) {
+            if ($existing['key'] === $event['key']) {
+                return $existing === $event ? false : new WP_Error('milestone_conflict', 'Accepted milestone differs; do not overwrite it.');
+            }
+        }
+        $year = isset($event['event_date']) ? (int) substr($event['event_date'], 0, 4) : null;
+        $now = current_time('mysql', true);
+        $inserted = $wpdb->insert($this->get_table_name(), [
+            'place_post_id' => $post_id,
+            'milestone_key' => $event['key'],
+            'milestone_json' => wp_json_encode($event, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES),
+            'era_slug' => '',
+            'function_key' => '',
+            'phase_name' => sanitize_text_field($event['title']),
+            'summary' => sanitize_textarea_field($event['summary']),
+            'start_year' => $year,
+            'end_year' => $year,
+            'sort_order' => 0,
+            'is_current' => 0,
+            'source_confidence' => 'url',
+            'source_summary' => sanitize_textarea_field($event['source_summary']),
+            'source_links_json' => wp_json_encode([$event['source_url']]),
+            'media_ids_json' => '[]',
+            'created_at' => $now,
+            'updated_at' => $now,
+        ]);
+        if ($inserted === false) {
+            return new WP_Error('milestone_write', 'Could not append milestone.');
+        }
+        iss_register_clear_places_cache();
+        return true;
     }
 
     public function delete_epochs_for_place(int $place_post_id): void
@@ -281,7 +376,7 @@ final class ISS_Register_Place_Epoch_Service
 
         // phpcs:disable WordPress.DB.PreparedSQL -- Service-owned table name.
         $era_rows = $wpdb->get_results(
-            "SELECT era_slug, COUNT(*) AS total FROM {$this->get_table_name()} GROUP BY era_slug",
+            "SELECT era_slug, COUNT(*) AS total FROM {$this->get_table_name()} WHERE milestone_key IS NULL GROUP BY era_slug",
             ARRAY_A
         );
         // phpcs:enable WordPress.DB.PreparedSQL
@@ -294,7 +389,7 @@ final class ISS_Register_Place_Epoch_Service
 
         // phpcs:disable WordPress.DB.PreparedSQL -- Service-owned table name.
         $function_rows = $wpdb->get_results(
-            "SELECT function_key, COUNT(*) AS total FROM {$this->get_table_name()} GROUP BY function_key",
+            "SELECT function_key, COUNT(*) AS total FROM {$this->get_table_name()} WHERE milestone_key IS NULL GROUP BY function_key",
             ARRAY_A
         );
         // phpcs:enable WordPress.DB.PreparedSQL
@@ -322,7 +417,7 @@ final class ISS_Register_Place_Epoch_Service
             return [];
         }
 
-        $where = [];
+        $where = ['milestone_key IS NULL'];
         $values = [];
 
         if ($era_slug !== '') {
@@ -459,16 +554,13 @@ final class ISS_Register_Place_Epoch_Service
             'totalEpochs' => count($epochs),
             'places' => array_values($places),
             'epochs' => array_values($epochs),
+            'milestones' => array_map(fn(int $id): array => ['place_post_id' => $id, 'events' => $this->get_milestones_for_place($id)], $place_post_ids),
         ];
     }
 
     public function import_export_document(array $document)
     {
         $epochs = isset($document['epochs']) && is_array($document['epochs']) ? $document['epochs'] : [];
-        if (!$epochs) {
-            return true;
-        }
-
         $grouped = [];
         foreach ($epochs as $epoch) {
             if (!is_array($epoch)) {
@@ -497,6 +589,14 @@ final class ISS_Register_Place_Epoch_Service
             }
         }
 
+        foreach ((array) ($document['milestones'] ?? []) as $batch) {
+            foreach ((array) ($batch['events'] ?? []) as $event) {
+                $result = $this->append_milestone(absint($batch['place_post_id'] ?? 0), $event);
+                if (is_wp_error($result)) {
+                    return $result;
+                }
+            }
+        }
         return true;
     }
 
@@ -734,6 +834,52 @@ final class ISS_Register_Place_Epoch_Service
 
         return $years ? min($years) : null;
     }
+}
+
+/** Merge accepted events into the existing public chronology, not Atlas use filters. */
+function iss_register_merge_place_milestones(int $post_id, array $epochs): array
+{
+    $events = iss_register_get_epoch_service()->get_milestones_for_place($post_id);
+    if (!$events) {
+        return $epochs;
+    }
+    foreach ($events as $event) {
+        $date = $event['event_date'] ?? null;
+        $year = is_string($date) ? (int) substr($date, 0, 4) : null;
+        $epochs[] = [
+            'milestone' => $event,
+            'title' => $event['title'],
+            'phase_name' => $event['title'],
+            'body' => esc_html($event['summary']),
+            'summary' => $event['summary'],
+            'start_year' => $year,
+            'end_year' => $year,
+            'source_confidence' => 'url',
+            'source_summary' => $event['source_summary'],
+            'source_refs' => [['label' => 'Standortregister', 'url' => $event['source_url']]],
+            'source_links' => [$event['source_url']],
+        ];
+    }
+    usort($epochs, static function (array $a, array $b): int {
+        $left = $a['milestone']['event_date'] ?? (isset($a['start_year']) ? (string) $a['start_year'] : '9999');
+        $right = $b['milestone']['event_date'] ?? (isset($b['start_year']) ? (string) $b['start_year'] : '9999');
+        return strcmp(str_pad($left, 10, '-00'), str_pad($right, 10, '-00'));
+    });
+    return $epochs;
+}
+
+function iss_register_milestone_date_label(array $event): string
+{
+    $date = $event['event_date'] ?? null;
+    if (!is_string($date) || $date === '') {
+        return __('Zeitpunkt unbekannt', 'industriesalon-schoeneweide-register');
+    }
+    if (($event['date_precision'] ?? '') === 'year') {
+        return $date;
+    }
+    $month_only = ($event['date_precision'] ?? '') === 'month';
+    $timestamp = strtotime($month_only ? $date . '-01 UTC' : $date . ' UTC');
+    return wp_date($month_only ? 'm.Y' : 'd.m.Y', $timestamp, new DateTimeZone('UTC'));
 }
 
 function iss_register_get_epoch_service(): ISS_Register_Place_Epoch_Service

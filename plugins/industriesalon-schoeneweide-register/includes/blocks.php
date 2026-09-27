@@ -53,6 +53,10 @@ function iss_register_get_place_context_history_terms(array $place, array $era):
 
 function iss_register_get_place_context_epoch_year_label(array $epoch): string
 {
+    if (!empty($epoch['milestone'])) {
+        return iss_register_milestone_date_label($epoch['milestone']);
+    }
+
     $years = [];
     if (isset($epoch['start_year']) && $epoch['start_year'] !== null && $epoch['start_year'] !== '') {
         $years[] = (string) $epoch['start_year'];
@@ -480,6 +484,9 @@ function iss_register_render_place_context(array $attributes = []): string
         return $html;
     }
 
+    if ($variant === 'epoch_rail') {
+        $context['epochs'] = iss_register_merge_place_milestones($post_id, (array) ($context['epochs'] ?? []));
+    }
     if ($variant === 'epoch_rail' && !empty($context['epochs'])) {
         $html = '<div class="wp-block-group iss-register-place__epoch-rail">';
         foreach ($context['epochs'] as $epoch) {
@@ -534,6 +541,9 @@ function iss_register_render_place_context(array $attributes = []): string
                     $html .= '<p class="iss-register-place__epoch-source-confidence">' . esc_html($source_confidence) . '</p>';
                 }
                 $html .= '<p class="iss-register-place__epoch-source">' . esc_html($source_summary) . '</p>';
+                if (!empty($epoch['milestone']['source_url'])) {
+                    $html .= '<p><a href="' . esc_url($epoch['milestone']['source_url']) . '">Standortregister</a></p>';
+                }
                 $html .= '</details>';
             }
             $html .= '</div>';

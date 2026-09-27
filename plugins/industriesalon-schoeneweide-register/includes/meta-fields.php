@@ -73,7 +73,8 @@ function iss_register_get_meta_schema(): array
         'risk_note' => ['type' => 'string', 'label' => 'Risiko', 'input' => 'textarea', 'show_in_rest' => true, 'admin' => true],
         'history_short' => ['type' => 'string', 'label' => 'Historie kurz', 'input' => 'textarea', 'show_in_rest' => true, 'admin' => true],
         'history_long' => ['type' => 'string', 'label' => 'Historie lang', 'input' => 'textarea', 'show_in_rest' => true, 'admin' => true],
-        'research_note' => ['type' => 'string', 'label' => 'Research Note', 'input' => 'textarea', 'show_in_rest' => true, 'admin' => true],
+        'research_note' => ['type' => 'string', 'label' => 'Interne Recherche', 'input' => 'textarea', 'show_in_rest' => false, 'admin' => true, 'description' => 'Nur für die Redaktion; nicht öffentlich oder über die öffentliche API verfügbar.'],
+        '_iss_register_contacts' => ['type' => 'array', 'label' => 'Interne Kontakte', 'input' => 'contact_group', 'show_in_rest' => false, 'admin' => true],
         'source_summary' => ['type' => 'string', 'label' => 'Quellen (Zusammenfassung)', 'input' => 'textarea', 'show_in_rest' => true, 'admin' => true],
         'source_links' => ['type' => 'array', 'label' => 'Quellen-Links', 'input' => 'array_textarea', 'show_in_rest' => true, 'admin' => true],
         'tags' => ['type' => 'array', 'label' => 'Tags', 'input' => 'array_textarea', 'show_in_rest' => true, 'admin' => true],
@@ -88,6 +89,43 @@ function iss_register_get_meta_schema(): array
         'legacy_kaufpreis' => ['type' => 'string', 'label' => 'Kaufpreis', 'input' => 'text', 'show_in_rest' => false, 'admin' => true],
         'legacy_questions' => ['type' => 'array', 'label' => 'Fragen', 'input' => 'array_textarea', 'show_in_rest' => false, 'admin' => true],
     ];
+}
+
+/** Staff-only structured contacts; never add these to public Place contracts. */
+function iss_register_sanitize_contacts($value): array
+{
+    $contacts = [];
+    foreach (is_array($value) ? $value : [] as $row) {
+        if (!is_array($row)) {
+            continue;
+        }
+        $contact = [];
+        foreach (['name', 'email', 'phone', 'role', 'source'] as $field) {
+            $raw = is_scalar($row[$field] ?? null) ? (string) $row[$field] : '';
+            $contact[$field] = $field === 'email' ? sanitize_email($raw) : sanitize_text_field($raw);
+        }
+        if ($contact['name'] !== '' || $contact['email'] !== '' || $contact['phone'] !== '') {
+            $contacts[] = $contact;
+        }
+    }
+    return array_values(array_unique($contacts, SORT_REGULAR));
+}
+
+/** Import gate: contact-bearing prose requires separation before publication. */
+function iss_register_validate_public_import_text(int $post_id, array $values)
+{
+    $text = (string) wp_json_encode($values, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
+    if (preg_match('/[\w.+-]+@[\w.-]+\.[a-z]{2,}|mailto:|\b(?:Kontakt(?:e|person)?|Ansprechpartner(?:in)?)\s*:?\s|\b(?:Telefon|Tel\.)\s*:|(?<![\p{L}\p{N}])(?:\+49|0049|0[1-9]\d{1,3})[ \/-]?\d{3,}[ -]?\d{3,}(?![\p{L}\p{N}])/iu', $text)) {
+        return new WP_Error('private_contact_in_public_text', 'Separate contact details into internal contacts before publishing supplier text.');
+    }
+    foreach (iss_register_sanitize_contacts(get_post_meta($post_id, '_iss_register_contacts', true)) as $contact) {
+        foreach (['name', 'email', 'phone'] as $field) {
+            if ($contact[$field] !== '' && mb_stripos($text, $contact[$field]) !== false) {
+                return new WP_Error('private_contact_in_public_text', 'Public import text contains a stored internal contact; review required.');
+            }
+        }
+    }
+    return true;
 }
 
 function iss_register_image_group_fields(): array
@@ -226,6 +264,9 @@ function iss_register_sanitize_meta_value(string $field, $value)
     $type = $schema[$field]['type'];
 
     if ($type === 'array') {
+        if ($field === '_iss_register_contacts') {
+            return iss_register_sanitize_contacts($value);
+        }
         if (iss_register_is_image_group_field($field)) {
             return iss_register_sanitize_image_group($value);
         }
@@ -316,6 +357,13 @@ function iss_register_get_meta_box_groups(): array
             'description' => __('Diese Angaben bleiben wichtig für Recherche und längere Dossiers, sind aber nicht nötig, um einen Ort zuerst im Atlas sichtbar zu machen.', 'industriesalon-schoeneweide-register'),
             'fields' => ['owner', 'operator', 'developer', 'tenant', 'investment', 'size', 'jobs', 'previous_use', 'history_long', 'research_note', 'source_links', 'legacy_website', 'legacy_kaufpreis', 'legacy_questions', 'legacy_icon', 'legacy_color'],
         ],
+        'atlas_contacts' => [
+            'title' => __('Interne Kontakte — nicht öffentlich', 'industriesalon-schoeneweide-register'),
+            'context' => 'normal',
+            'priority' => 'default',
+            'description' => __('Nur für berechtigte Redakteure. Namen, E-Mail-Adressen und Telefonnummern gehören hierher, nicht in öffentliche Standorttexte. Für weitere Kontakte die leere Zeile ausfüllen und speichern.', 'industriesalon-schoeneweide-register'),
+            'fields' => ['_iss_register_contacts'],
+        ],
     ];
 }
 
@@ -330,6 +378,9 @@ function iss_register_render_fields_table(WP_Post $post, array $field_keys): voi
         }
 
         $field = $schema[$key];
+        if (in_array($key, ['_iss_register_contacts', 'research_note'], true) && !current_user_can('edit_post', $post->ID)) {
+            continue;
+        }
         $value = get_post_meta($post->ID, $key, true);
         $label = (string) $field['label'];
         $input_name = 'iss_register_meta[' . $key . ']';
@@ -338,7 +389,19 @@ function iss_register_render_fields_table(WP_Post $post, array $field_keys): voi
         echo '<th scope="row"><label for="iss-register-' . esc_attr($key) . '">' . esc_html($label) . '</label></th>';
         echo '<td>';
 
-        if ($field['input'] === 'textarea') {
+        if ($field['input'] === 'contact_group') {
+            $contacts = iss_register_sanitize_contacts($value);
+            $contacts[] = [];
+            foreach ($contacts as $index => $contact) {
+                echo '<fieldset><legend>' . esc_html(sprintf('Kontakt %d', $index + 1)) . '</legend>';
+                foreach (['name' => 'Name', 'email' => 'E-Mail', 'phone' => 'Telefon', 'role' => 'Funktion / Organisation', 'source' => 'Quelle / Stand'] as $part => $part_label) {
+                    $id = 'iss-register-contact-' . $index . '-' . $part;
+                    echo '<p><label for="' . esc_attr($id) . '">' . esc_html($part_label) . '</label><br>';
+                    echo '<input class="large-text" id="' . esc_attr($id) . '" type="' . ($part === 'email' ? 'email' : 'text') . '" name="' . esc_attr($input_name . '[' . $index . '][' . $part . ']') . '" value="' . esc_attr($contact[$part] ?? '') . '"></p>';
+                }
+                echo '</fieldset>';
+            }
+        } elseif ($field['input'] === 'textarea') {
             echo '<textarea id="iss-register-' . esc_attr($key) . '" name="' . esc_attr($input_name) . '" class="large-text" rows="3">' . esc_textarea((string) $value) . '</textarea>';
         } elseif ($field['input'] === 'select') {
             $options = isset($field['options']) && is_array($field['options']) ? $field['options'] : [];
@@ -400,6 +463,17 @@ function iss_register_render_group_meta_box(WP_Post $post, array $box): void
     }
 
     iss_register_render_fields_table($post, (array) ($group['fields'] ?? []));
+    if ($group_key === 'atlas_research') {
+        $events = iss_register_get_epoch_service()->get_milestones_for_place((int) $post->ID);
+        if ($events) {
+            echo '<h3>' . esc_html__('Übernommene Meilensteine', 'industriesalon-schoeneweide-register') . '</h3><ol>';
+            foreach ($events as $event) {
+                echo '<li><strong>' . esc_html(iss_register_milestone_date_label($event) . ' · ' . $event['title']) . '</strong><p>' . esc_html($event['summary']) . '</p><p>' . esc_html($event['source_summary']) . ' <a href="' . esc_url($event['source_url']) . '">Standortregister</a></p></li>';
+            }
+            echo '</ol>';
+        }
+    }
+
 }
 
 function iss_register_render_epoch_meta_box(WP_Post $post): void
@@ -512,6 +586,9 @@ function iss_register_save_meta_box(int $post_id): void
     $schema = iss_register_get_meta_schema();
     foreach ($schema as $key => $field) {
         if (empty($field['admin'])) {
+            continue;
+        }
+        if ($key === '_iss_register_contacts' && !array_key_exists($key, $meta_input)) {
             continue;
         }
 

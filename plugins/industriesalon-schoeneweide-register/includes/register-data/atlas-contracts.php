@@ -835,6 +835,7 @@ function iss_register_get_atlas_place_detail(int $post_id): array
     $detail = iss_register_build_atlas_place_contract($place, $actor_relations, $publications);
     if ($detail) {
         $detail['detail_level'] = 'full';
+        $detail['milestones'] = iss_register_get_epoch_service()->get_milestones_for_place($post_id);
         set_transient($cache_key, $detail, HOUR_IN_SECONDS);
     }
 

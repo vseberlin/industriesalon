@@ -1,0 +1,43 @@
+{
+  "schema_version": 1,
+  "source_namespace": "industriesalon-schoeneweide/schoeneweide-register",
+  "source_revision": "8574160c4ae79a6101dad59d21c9817ab29d0814",
+  "source_url": "https://github.com/industriesalon-schoeneweide/schoeneweide-register/blob/8574160c4ae79a6101dad59d21c9817ab29d0814/index.html",
+  "source_file_sha256": "d5bc4addcd863bb472258461636635b9c28d9245a2da53ac0102bba12366ff0d",
+  "observed_at": "2026-09-27T09:25:42+00:00",
+  "records": [
+    {
+      "source_id": "70",
+      "expected_slug": "stiftung-reinbeckhallen",
+      "expected_meta": {
+        "current_use": [
+          "Aktiver Kunstbetrieb. Wechselausstellungen."
+        ]
+      },
+      "fields": {
+        "current_use": "Aktiver Kunstbetrieb mit Wechselausstellungen. Die Stiftung Reinbeckhallen entwickelt am Kaisersteg einen direkt angebundenen Erweiterungsbau für ein Gründerzentrum der Kreativwirtschaft. Vorgesehen sind 22 Studios, Gemeinschaftsflächen und ein gemeinsames Foyer; die vorhandenen Werkstätten und Ausstellungshallen sollen mitgenutzt werden. Das Standortregister nennt 2027 als geplantes Fertigstellungsjahr. Ein genauer Projektbeginn und eine erfolgte Eröffnung sind damit nicht belegt."
+      },
+      "milestones": [
+        {
+          "key": "schoeneweide-register:70:gruenderzentrum-development",
+          "event_date": null,
+          "date_precision": "unknown",
+          "event_type": "development",
+          "title": "Erweiterung um ein Gründerzentrum",
+          "summary": "Die Stiftung Reinbeckhallen entwickelt am Kaisersteg einen direkt angebundenen Erweiterungsbau für ein Gründerzentrum der Kreativwirtschaft. Vorgesehen sind 22 Studios, Gemeinschaftsflächen und ein gemeinsames Foyer; die vorhandenen Werkstätten und Ausstellungshallen sollen mitgenutzt werden. Das Standortregister nennt 2027 als geplantes Fertigstellungsjahr. Ein genauer Projektbeginn und eine erfolgte Eröffnung sind damit nicht belegt.",
+          "source_url": "https://github.com/industriesalon-schoeneweide/schoeneweide-register/blob/8574160c4ae79a6101dad59d21c9817ab29d0814/index.html",
+          "source_revision": "8574160c4ae79a6101dad59d21c9817ab29d0814",
+          "source_summary": "schuessler-plan.de/de/projekte/gruenderzentrum-reinbeckhallen.html | entwicklungsstadt.de/oberschoeneweide-gruenderzentrum-an-den-reinbeckhallen-nimmt-gestalt-an | Stiftung Reinbeckhallen (siehe auch Eintrag #13)",
+          "observed_at": "2026-09-27T09:25:42+00:00"
+        }
+      ],
+      "source_record_sha256": "6eb12b1c7d375643eea2f965d2ccc60cc2a0429d772584cf9ed72ac980d80755"
+    }
+  ],
+  "excluded": [
+    "51: planning document; no new Place",
+    "70: new Place identity/location requires separate review",
+    "16: preserve local address and history",
+    "07: no material current change needed"
+  ]
+}

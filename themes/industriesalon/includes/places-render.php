@@ -13,6 +13,10 @@ function industriesalon_editorial_place_is_enabled(int $post_id): bool
 
 function industriesalon_editorial_place_year_label(array $section): string
 {
+    if (!empty($section['milestone'])) {
+        return iss_register_milestone_date_label($section['milestone']);
+    }
+
     $start = absint($section['start_year'] ?? 0);
     $end = absint($section['end_year'] ?? 0);
 
@@ -183,6 +187,8 @@ function industriesalon_render_editorial_place_document(int $post_id, array $doc
         }
     }
 
+    $epochs = iss_register_merge_place_milestones($post_id, $epochs);
+
     $html = '<div class="iss-register-place-editorial iss-register-place-editorial--ortsdossier">';
     if (trim($intro) !== '') {
         $html .= '<section class="iss-register-place__section iss-register-place__section--lead">';
@@ -228,6 +234,10 @@ function industriesalon_render_editorial_place_fallback(int $post_id): string
         }
         if ($current_use !== '') {
             $html .= '<p class="iss-register-place__lead-secondary">' . esc_html($current_use) . '</p>';
+            $current_source = get_post_meta($post_id, '_iss_register_current_import', true);
+            if (is_array($current_source) && !empty($current_source['source_url'])) {
+                $html .= '<p><a href="' . esc_url($current_source['source_url']) . '">' . esc_html__('Quelle der aktuellen Angaben: Standortregister', 'industriesalon') . '</a></p>';
+            }
         }
         $html .= '</div></section>';
     }
