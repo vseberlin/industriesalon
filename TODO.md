@@ -5,11 +5,12 @@ Immediate executable work only. Larger future programs live in `docs/project/bac
 ## Next
 
 - Staff-test the deployed [shared workspace](docs/project/editor-workspace-plan.md)
-  on staging: one landing, project, tour and publication; image/title/text,
+  on staging: one landing, project, tour, publication and event; image/title/text,
   owner controls, recovery and native Save Draft. Verify Firefox and real
   clipboard/paste before a production release. Local Chrome fixture checks and
   staging code/data/media sync are complete; authenticated staging editor UAT
-  remains. See the [audit](docs/project/editorial-consolidation-audit.md).
+  remains. Include event opening controls and written-feedback moderation.
+  See the [audit](docs/project/editorial-consolidation-audit.md).
 - Review the interactive Atlas outlier `Energie-Museum Berlin`: its current
   authoritative coordinate is far west of the Schöneweide core while its stored
   area is `Oberschöneweide`. The expanded navigation boundary deliberately
@@ -60,25 +61,17 @@ Immediate executable work only. Larger future programs live in `docs/project/bac
   Current audit leftovers are non-blocking: unmapped inert series have zero
   occurrence rows, and `Stadtrallye für Erwachsene` is mapped but has no future
   SuperSaaS rows.
-- Staging deploy follow-up from 2026-06-29: do not replay
-  `ops/sql/2026-06-29-repair-cafe-canonical-event-series.sql` until the target
-  has the matching Repair-Café Veranstaltung rows and `salonbelegung`
-  `event:repair-cafe` staged SuperSaaS slots, or until a staging-specific
-  artifact is prepared from the actual target IDs. Staging currently has the
-  Repair Café landing page (`page` 13253) but not local Veranstaltung IDs
-  `26805`, `26808`, `26810`, `26812`, or `26813`. Separately review whether
-  the older repo-local Apache stack on `8082` (`wp_app`/`wp_db`) is still
+- Repair-Café staging schedule: the 2026-09-27 check finds Veranstaltung 26813
+  with July–September source dates and no projected occurrences. Review the
+  intended schedule and prepare an artifact using actual target IDs before any
+  import; do not blindly replay the June canonical-event SQL. Separately review
+  whether the older repo-local Apache stack on `8082` (`wp_app`/`wp_db`) is still
   intentionally running before planning any retirement.
 - Front-page client experiment decision: original baseline is captured in
   `ops/sql/2026-06-29-frontpage-baseline.sql`; current DB override content is
   synced to `themes/industriesalon/templates/front-page.html` for review. After
   the client finishes, either replay the baseline artifact to restore the old
   page or intentionally accept the current template and remove the DB override.
-- Veranstaltung booking public render: the editor meta and
-  `iss-commerce-lite` request endpoint exist, but single Veranstaltung output
-  still needs a visible booking section/block in the theme template or
-  `_iss_content_json` renderer. Add the public CTA/modal trigger so bookable
-  Veranstaltungen are visible outside timeline cards.
 - Related graph autonomy ops: after deploying the `iss-graph` autonomy slice,
   run `wp iss-graph migrate --skip-sync`, then configure a monitored external
   scheduler entry for `wp iss-graph reconcile --batch-size=50 --max-runtime=30`

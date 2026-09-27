@@ -1,48 +1,49 @@
 # Current handoff — 2026-09-27
 
 
-## Veranstaltungen release — staging sync in progress
+## Veranstaltungen release — deployed to staging
 
-The reviewed website changes add an image-led event opening, occurrence-backed
-current dates, wider shared Rückblick cards and moderated text feedback through
-the existing guest link. **Material & Rückblicke → Feedback und Upload geöffnet**
-opens intake; **Feedback prüfen** uses native WordPress comment moderation.
-Existing events/reports, saved documents and explicit closed choices are preserved.
-The user authorized GitHub/staging synchronization. Preflight: local and staging
-started at `21123a2`, staging checkout clean, healthy containers, no failed host
-services. Deploy this code through GitHub `main`, then the scoped content migration.
-The approved layout includes optional opening fields, visit panel, upcoming cards
-and past-event report/voice priority. Deploy `iss-editorial` with the other components.
-Anne Rabe opening copy is applied locally via
-`ops/migrations/2026-09-27-event-opening.php`; run check/apply/verify after target
-code deployment. Its before-image is
-`/home/vladimir/.local/state/iss-editorial-pilot-20260921/event-opening-before-20260927.json`.
-No schema/new uploads/template override artifact is needed. Existing 240px Anne
-Rabe artwork is preserved; its low resolution limits the image quality.
+Event implementation **6df8ea8** and portable regressions **8439160** are pushed
+through GitHub `main` and deployed on **https://staging.industriesalon.info**.
+The image-led opening, occurrence-backed dates, visit panel, upcoming cards,
+shared Rückblick cards and moderated written feedback reuse the existing editor,
+receiver and native comments. **Material & Rückblicke → Feedback und Upload geöffnet**
+opens intake; **Feedback prüfen** opens moderation. Existing closed choices stay closed.
 
-Local receiver runtime is still mounted from `/home/vladimir/wp/ops/event-drop/interface/`;
-its `index.php` was backed up and explicitly synced from website source, without a
-restart. Before-image and HTTP receipts are under
-`/home/vladimir/.local/state/iss-events-feedback-20260927/`. Other runtime code uses
-the existing website-code override. Deliver receiver/plugin/theme changes together.
+The scoped `ops/migrations/2026-09-27-event-opening.php` check/apply/verify passed
+for staging Anne Rabe (source 12763 → post 27411). Its four opening fields were
+merged through the shared API; no schema, uploads or DB-template artifact was
+needed. Existing 240px artwork remains the image-quality limit.
+Verified before/after database dumps, config backups and the migration receipt
+are private under `/home/vladimir/server-actions/events-sync-20260927/private/`;
+rollback receipt: `cli/event-opening-before.json`. Both dumps contain 118 tables
+and complete dump footers. No service restart or production change occurred.
 
-Validation: 49 event/feedback checks, 295 shared-storage checks (94 documents),
-33 editor UI checks, 169 prior Set checks and 48+23 programme checks;
-PHP syntax, targeted PHPCS/PHPStan, CSS lint and whitespace checks. Chrome desktop
-and actual 390px covered the event opening (including the dark programme skin), illustrated report, approved voices and
-contribution form; native editor controls/moderation list were inspected. A new
-temporary draft verified headline editing, subtitle clearing, photo selection,
-autosave, live preview and native Save Draft; that fixture and its revisions
-were removed. The existing Anne Rabe image remains uncropped. HTTP
-verified consent/nonce denial, text-only submission, pending privacy, approval,
-duplicate rejection, file upload and closed GET/POST. Temporary fixtures and their
-files/manifest rows are removed after verification. Firefox remains staff UAT.
+Staging verification: 49 event/feedback, 48 rotation and 23 programme checks;
+94 canonical documents / 169 media references valid; signed receiver HTTP text
+and upload interfaces and closed-link denial passed. Existing events/reports
+and all 9875 comments were preserved; disposable fixtures were removed. Desktop
+and actual 390px Chrome inspection passed for the opening and past-event state;
+HTTP/noindex/no-cache checks passed. Containers remain healthy; no failed host
+services. Staging Repair-Café has no projected dates; this release preserves its
+schedule. Recurrence regressions now create and remove their own dates.
+
+Local verification also covered 295 storage, 33 editor UI and 169 Set checks,
+PHP/JS/CSS checks, shared-editor save/clear/recovery, approved voices, file upload
+and feedback submission/moderation. Firefox and authenticated staging editor
+staff UAT remain before production release.
+
+Local receiver runtime remains mounted from `/home/vladimir/wp/ops/event-drop/interface/`;
+its receiver was explicitly synced with a private before-image under
+`/home/vladimir/.local/state/iss-events-feedback-20260927/`. Other local runtime
+code uses the website-code override. Staging mounts all three components directly
+from its Git checkout. Preserve receiver/plugin/theme deployment together.
 
 
 Website source is `/home/vladimir/wp-website`; `/home/vladimir/wp` remains the
 preserved archive checkout. Atlas implementation **8ab3571** is pushed to GitHub
 `main` and deployed on **https://staging.industriesalon.info**, together with all
-four data migration steps below. Preserve that applied Atlas state during event deployment.
+four data migration steps below. That applied Atlas state is preserved.
 `staging.industriesalon.de` does not resolve; the configured `.info` host was
 verified and used. Production was not changed. No services were restarted.
 

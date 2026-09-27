@@ -11,9 +11,10 @@ be recovered from Git history.
   Added optional text-only guest feedback through the existing signed upload
   link and native WordPress moderation; media remains in private Sets. This
   reuses the existing receiver, open control and review UI without another
-  storage/editor system. Public voices require approval and consent. Local only;
-  explicit Anne Rabe opening copy has a scoped API migration; no new media or
-  schema is needed. See the editorial contract for checks.
+  storage/editor system. Public voices require approval and consent. Deployed to
+  staging through GitHub with the scoped Anne Rabe opening migration and verified
+  before/after backups. All 120 event/programme checks, media integrity and
+  signed-receiver HTTP checks passed; no new media or schema was needed.
 - Adapted the event layout from the approved reference: optional series/headline/
   subtitle fields in the shared document, uncropped posters or landscape photos,
   a real visit action and venue-backed address panel, and distinct upcoming
