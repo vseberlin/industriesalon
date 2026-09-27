@@ -6,6 +6,10 @@ be recovered from Git history.
 
 ## 2026-09-27
 
+- Deployed the Atlas update, Reinbeckhallen source mapping and private-contact
+  separation to staging through GitHub, with scoped API migrations and verified
+  backups. All 51 runtime checks and anonymous privacy/noindex checks passed.
+
 - Added a bounded, source-pinned Atlas current-fact import: 23 field changes
   across ten existing Places and six sourced modern milestones in the existing
   chronology. Historical content and local-only Places remain locally owned.
