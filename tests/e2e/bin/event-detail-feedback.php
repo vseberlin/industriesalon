@@ -69,13 +69,19 @@ try {
     // Shared date query: recurring future, running, completed, missing projection.
     $clock = static fn() => '2026-09-27 12:00:00';
     add_filter('iss_occurrences_query_now', $clock, 100);
-    $repair = get_page_by_path('repair-cafe-terminreihe', OBJECT, 'veranstaltung');
-    if ($repair) {
-        $next = iss_occurrences_get_next_dates($repair->ID, 1);
-        $rows = iss_content_model_get_meta_rows_for_post($repair->ID);
-        $expect($rows[0]['value'] === $next[0]['datetime_label'], 'Recurring detail date equals overview occurrence');
-        $expect(!str_contains(wp_json_encode($rows), 'Juli'), 'Old source date range not displayed as next appointment');
+    wp_update_post(['ID' => $id, 'post_password' => '']);
+    update_post_meta($id, 'iss_start_datetime', '2026-07-01 17:00:00');
+    update_post_meta($id, 'iss_end_datetime', '2026-09-09 19:00:00');
+    $occurrences = iss_occurrences_get_service();
+    foreach (['2026-09-09 17:00:00', '2026-10-07 17:00:00'] as $date) {
+        $occurrences->upsert_occurrence(['source_post_id' => $id, 'source_post_type' => 'veranstaltung', 'kind' => 'event', 'origin' => 'wp', 'external_id' => 'feedback-fixture:' . $id . ':' . $date, 'title' => 'Temporary recurring event', 'starts_at' => $date, 'ends_at' => substr($date, 0, 10) . ' 19:00:00']);
     }
+    $next = iss_occurrences_get_next_dates($id, 1);
+    $rows = iss_content_model_get_meta_rows_for_post($id);
+    $expect(count($next) === 1 && $rows[0]['value'] === $next[0]['datetime_label'], 'Recurring detail date equals overview occurrence');
+    $expect(!str_contains(wp_json_encode($rows), 'Juli'), 'Old source date range not displayed as next appointment');
+    $occurrences->delete_source_occurrences($id, 'veranstaltung');
+    delete_post_meta($id, 'iss_end_datetime');
     remove_filter('iss_occurrences_query_now', $clock, 100);
     wp_update_post(['ID' => $id, 'post_password' => '']);
     update_post_meta($id, 'iss_start_datetime', '2026-10-10 17:00:00');
