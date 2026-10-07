@@ -4,6 +4,11 @@ Immediate executable work only. Larger future programs live in `docs/project/bac
 
 ## Next
 
+- Resume the [WordPress refactoring plan](docs/project/wordpress-refactoring-plan.md):
+  verify the local website/receiver mounts against the current handoff, capture
+  the staging-compatible baseline, then version-gate the three taxonomy seed
+  routines. The native Flatpickr replacement follows the existing calendar plan;
+  implementation and staging deployment have not started.
 - Staff-test the deployed [shared workspace](docs/project/editor-workspace-plan.md)
   on staging: one landing, project, tour, publication and event; image/title/text,
   owner controls, recovery and native Save Draft. Verify Firefox and real

@@ -4,6 +4,17 @@ This file records durable project changes. Keep it compact: current state belong
 `handoff_CURRENT.md`, active follow-up in `TODO.md`, and detailed investigation can
 be recovered from Git history.
 
+## 2026-10-07
+
+- Prepared a staging-informed WordPress refactoring plan and extended the existing
+  universal calendar/intake plan for native controls and WordPress Interactivity
+  API. Sequenced query reduction, atomic writes, frontend dependency removal,
+  code/CSS consolidation and routine maintenance with verification/rollback
+  gates. This is planning only; no runtime, database or deployment changes.
+- Saved the next-session handoff and first executable follow-up. Corrected the
+  stale local mount claim using current Docker evidence; prior detailed release
+  receipts remain recoverable from the preceding handoff in Git history.
+
 ## 2026-09-27
 
 - Reworked event details around an illustrated opening, compact occurrence-backed

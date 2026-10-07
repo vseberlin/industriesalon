@@ -25,6 +25,8 @@ This directory is the repo-owned source for durable project, agent, architecture
 
 - Content/editorial: `docs/architecture/content-model.md`, `docs/project/uat.md`
 - Theme/presentation: `docs/agent/wordpress-engineering.md`
+- WordPress refactoring and native programme interactions:
+  `docs/project/wordpress-refactoring-plan.md`
 - Plugin/data contract: `docs/architecture/plugin-map.md`, `docs/architecture/database.md`
 - Places JSON editor and interactive Atlas ownership migration:
   `docs/architecture/places-editorial-atlas-restructure-plan.md`
