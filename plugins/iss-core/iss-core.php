@@ -497,7 +497,20 @@ function iss_core_apply_capability_migration(bool $dry_run = false): array
     }
 
     if (!$dry_run) {
+        // WP_Role mutates its in-memory object before persistence. Verify the
+        // stored option, not the object, before declaring the migration complete.
+        $stored_roles = get_option(wp_roles()->role_key, []);
+        foreach ($role_grants as $role_name => $caps) {
+            foreach ($caps as $capability) {
+                if (empty($stored_roles[$role_name]['capabilities'][$capability])) {
+                    throw new RuntimeException(esc_html('Capability migration incomplete; inspect role ' . $role_name . '.'));
+                }
+            }
+        }
         update_option(ISS_CORE_CAPS_OPTION, ISS_CORE_CAPS_VERSION, false);
+        if (get_option(ISS_CORE_CAPS_OPTION) !== ISS_CORE_CAPS_VERSION) {
+            throw new RuntimeException('Could not record the capability migration version.');
+        }
         iss_core_audit_log('capability_role_migration', [
             'capability' => 'iss_access_operations',
             'result' => 'completed',
@@ -518,13 +531,21 @@ function iss_core_apply_capability_migration(bool $dry_run = false): array
 
 function iss_core_maybe_run_capability_migration(): void
 {
+    if (!current_user_can('manage_options') || wp_doing_ajax()) { return; }
     if ((string) get_option(ISS_CORE_CAPS_OPTION, '') === ISS_CORE_CAPS_VERSION) {
         return;
     }
 
-    iss_core_apply_capability_migration(false);
+    try {
+        iss_core_apply_capability_migration(false);
+    } catch (Throwable $error) {
+        add_action('admin_notices', static function () use ($error): void {
+            echo '<div class="notice notice-error"><p>' . esc_html($error->getMessage()) . '</p></div>';
+        });
+    }
 }
-add_action('plugins_loaded', 'iss_core_maybe_run_capability_migration', 99);
+add_action('admin_init', 'iss_core_maybe_run_capability_migration', 5);
+register_activation_hook(__FILE__, 'iss_core_maybe_run_capability_migration');
 
 function iss_core_register_operations_menu(): void
 {
@@ -550,7 +571,7 @@ function iss_core_render_operations_page(): void
     echo '</div>';
 }
 
-function iss_core_migrate_domain_plugin_basenames(): void
+function iss_core_migrate_domain_plugin_basenames(bool $persist = true): void
 {
     $active = get_option('active_plugins', []);
     if (!is_array($active) || empty($active)) {
@@ -608,7 +629,12 @@ function iss_core_migrate_domain_plugin_basenames(): void
         return;
     }
 
-    update_option('active_plugins', array_values($next));
+    if ($persist) {
+        update_option('active_plugins', array_values($next));
+        if (get_option('active_plugins') !== array_values($next)) {
+            throw new RuntimeException('Could not record migrated domain plugin names.');
+        }
+    }
 
     $plugin_root = defined('WP_PLUGIN_DIR') ? WP_PLUGIN_DIR : trailingslashit(WP_CONTENT_DIR) . 'plugins';
     foreach ($next as $plugin) {
@@ -621,7 +647,19 @@ function iss_core_migrate_domain_plugin_basenames(): void
         }
     }
 }
-iss_core_migrate_domain_plugin_basenames();
+// Legacy installations still load the replacement owners during bootstrap;
+// persistence belongs to privileged administration, never a public request.
+iss_core_migrate_domain_plugin_basenames(false);
+add_action('admin_init', static function (): void {
+    if (!current_user_can('manage_options') || wp_doing_ajax()) { return; }
+    try {
+        iss_core_migrate_domain_plugin_basenames();
+    } catch (Throwable $error) {
+        add_action('admin_notices', static function () use ($error): void {
+            echo '<div class="notice notice-error"><p>' . esc_html($error->getMessage()) . '</p></div>';
+        });
+    }
+}, 4);
 
 function iss_core_schema_option_name(string $plugin_slug): string
 {

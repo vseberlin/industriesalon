@@ -6,6 +6,15 @@ be recovered from Git history.
 
 ## 2026-10-11
 
+- Moved capability migration and newsletter defaults out of public bootstrap;
+  privileged setup verifies persisted roles/options before advancing versions.
+  Legacy plugin aliases still load their owners early but persist only during
+  controlled setup. Relation backfill flags survive failed work and AJAX cannot
+  trigger those backfills. The newsletter early-translation notice is resolved.
+  Passed 16 isolated gate/failure checks and owner migration check/apply/verify
+  in the WordPress 7.0 fixture. Deploy `2026-10-11-owner-setup.php` with a private
+  target before-image; no uploads/content transfer or remote notifications.
+
 - Coalesced ordinary content/relation/search save and metadata callbacks through
   the existing graph queue, with a bounded request-scoped shutdown drain and
   durable retry after lock contention or checked write failure. Explicit atomic

@@ -1578,7 +1578,7 @@ add_action('before_delete_post', 'iss_relations_delete_supported_post_graph_on_b
 
 function iss_relations_maybe_run_backfill(): void
 {
-    if (!is_admin() || !current_user_can('manage_options')) {
+    if (!is_admin() || !current_user_can('manage_options') || wp_doing_ajax()) {
         return;
     }
 
@@ -1586,13 +1586,13 @@ function iss_relations_maybe_run_backfill(): void
         return;
     }
 
-    delete_option('iss_relations_needs_backfill');
     iss_relations_backfill_index();
+    delete_option('iss_relations_needs_backfill');
 }
 
 function iss_relations_maybe_backfill_graph_identifiers(): void
 {
-    if (!is_admin() || !current_user_can('manage_options')) {
+    if (!is_admin() || !current_user_can('manage_options') || wp_doing_ajax()) {
         return;
     }
 
@@ -1607,6 +1607,9 @@ function iss_relations_maybe_backfill_graph_identifiers(): void
 
     iss_relations_backfill_index();
     update_option(ISS_RELATIONS_GRAPH_IDENTIFIER_BACKFILL_OPTION, ISS_RELATIONS_GRAPH_IDENTIFIER_BACKFILL_VERSION, false);
+    if (get_option(ISS_RELATIONS_GRAPH_IDENTIFIER_BACKFILL_OPTION) !== ISS_RELATIONS_GRAPH_IDENTIFIER_BACKFILL_VERSION) {
+        throw new RuntimeException('Could not record relation identifier backfill version.');
+    }
 }
 add_action('admin_init', 'iss_relations_maybe_run_backfill', 20);
 add_action('admin_init', 'iss_relations_maybe_backfill_graph_identifiers', 21);

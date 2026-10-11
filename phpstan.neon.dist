@@ -16,12 +16,15 @@ parameters:
     - plugins/iss-frontend
     - plugins/iss-graph
     - plugins/iss-media-control
+    - plugins/iss-newsletter
     - plugins/iss-commerce-lite
     - plugins/iss-occurrences
     - plugins/iss-publications
     - plugins/iss-relations
     - plugins/iss-archive
   scanFiles:
+    - plugins/newsletter/includes/classes.php
+    - plugins/iss-newsletter/iss-newsletter.php
     - themes/industriesalon/functions.php
     - plugins/industriesalon-notices/industriesalon-notices.php
     - plugins/industriesalon-schoeneweide-register/industriesalon-schoeneweide-register.php

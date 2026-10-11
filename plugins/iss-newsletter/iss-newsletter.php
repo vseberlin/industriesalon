@@ -11,6 +11,7 @@ if (!defined('ABSPATH')) {
 }
 
 define('ISS_NEWSLETTER_VERSION', '0.1.0');
+define('ISS_NEWSLETTER_DEFAULTS_VERSION', '2026-10-11-defaults-v1');
 
 function iss_newsletter_render_form_block(): string
 {
@@ -51,7 +52,7 @@ function iss_newsletter_dependency_active(): bool
 
 function iss_newsletter_configure_defaults(): void
 {
-    if (!iss_newsletter_dependency_active()) {
+    if (!iss_newsletter_dependency_active() || get_option('iss_newsletter_defaults_version') === ISS_NEWSLETTER_DEFAULTS_VERSION) {
         return;
     }
 
@@ -100,8 +101,24 @@ function iss_newsletter_configure_defaults(): void
         'title_female' => __('Frau', 'iss-newsletter'),
     ]);
     update_option('newsletter_form', $form, true);
+    if (get_option('newsletter_antispam') !== $antispam || get_option('newsletter_form') !== $form) {
+        throw new RuntimeException('Could not persist newsletter defaults.');
+    }
+    update_option('iss_newsletter_defaults_version', ISS_NEWSLETTER_DEFAULTS_VERSION, false);
+    if (get_option('iss_newsletter_defaults_version') !== ISS_NEWSLETTER_DEFAULTS_VERSION) {
+        throw new RuntimeException('Could not record newsletter defaults version.');
+    }
 }
-add_action('newsletter_loaded', 'iss_newsletter_configure_defaults', 20);
+add_action('admin_init', static function (): void {
+    if (!current_user_can('manage_options') || wp_doing_ajax()) { return; }
+    try {
+        iss_newsletter_configure_defaults();
+    } catch (Throwable $error) {
+        add_action('admin_notices', static function () use ($error): void {
+            echo '<div class="notice notice-error"><p>' . esc_html($error->getMessage()) . '</p></div>';
+        });
+    }
+}, 20);
 register_activation_hook(__FILE__, 'iss_newsletter_configure_defaults');
 
 function iss_newsletter_is_random_name_token(string $value): bool

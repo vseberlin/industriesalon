@@ -466,3 +466,21 @@ until the request boundary. Queue/schema/data format is unchanged.
 `tests/e2e/bin/projection-coalescing.php` covers repeated callbacks, final values,
 scoped acknowledgment, write failure/retry and a busy worker. Existing queue race
 and atomic writer suites retain their contracts; real rows remain untouched.
+
+### Core and newsletter setup gates
+
+Capabilities and newsletter defaults run through activation/privileged non-AJAX
+administration or their explicit owner APIs, never `plugins_loaded` or
+`newsletter_loaded`. Capability completion checks persisted role grants;
+newsletter completion checks both settings before advancing its version.
+Existing newsletter administrator edits remain intact after that first versioned
+setup. Legacy plugin aliases load compatible owners during bootstrap without
+rewriting `active_plugins`; privileged setup persists replacements.
+
+Deploy `ops/migrations/2026-10-11-owner-setup.php` with these changes. Its
+`check|apply|verify` interface follows the taxonomy seed artifact; apply requires
+a new private mode-0600 target-local before-image for the six exact option names.
+Do not copy local options/roles into another environment. Verify the target
+before normal administration; rollback must review later settings edits first.
+The original local database was not migrated by this slice; the isolated
+WordPress 7.0 fixture exercised apply/verify. No uploads artifact is required.
