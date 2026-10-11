@@ -105,14 +105,6 @@ function iss_programm_register_frontend_assets() {
     );
 
     wp_register_script(
-        'iss-timeline-query',
-        $programm_url . 'assets/timeline-query.js',
-        ['is-tour-calendar-flatpickr', 'is-tour-calendar-flatpickr-l10n-de'],
-        filemtime(plugin_dir_path(ISS_PROGRAMM_FILE) . 'assets/timeline-query.js'),
-        true
-    );
-
-    wp_register_script(
         'iss-ausstellungen-browser',
         $programm_url . 'assets/ausstellungen-browser.js',
         [],
@@ -126,14 +118,6 @@ function iss_programm_register_frontend_assets() {
             'slotsUrl' => function_exists('iss_frontend_rest_url') ? iss_frontend_rest_url('iss/v1/booking-slots') : rest_url('iss/v1/booking-slots'),
             'requestUrl' => function_exists('iss_frontend_rest_url') ? iss_frontend_rest_url('iss-payments/v1/request') : rest_url('iss-payments/v1/request'),
             'nonce' => wp_create_nonce('wp_rest'),
-        ]) . ';',
-        'before'
-    );
-
-    wp_add_inline_script(
-        'iss-timeline-query',
-        'window.ISS_TIMELINE = ' . wp_json_encode([
-            'restUrl' => function_exists('iss_frontend_rest_url') ? iss_frontend_rest_url('iss/v1/timeline') : rest_url('iss/v1/timeline'),
         ]) . ';',
         'before'
     );
@@ -172,15 +156,6 @@ function iss_programm_enqueue_timeline_assets() {
 
 function iss_programm_enqueue_timeline_query_assets() {
     iss_programm_enqueue_timeline_assets();
-
-    if (!wp_script_is('iss-timeline-query', 'registered')) {
-        iss_programm_register_frontend_assets();
-    }
-
-    wp_enqueue_style('is-tour-calendar-flatpickr');
-    wp_enqueue_script('is-tour-calendar-flatpickr');
-    wp_enqueue_script('is-tour-calendar-flatpickr-l10n-de');
-    wp_enqueue_script('iss-timeline-query');
 }
 
 function iss_programm_enqueue_ausstellungen_browser_assets() {

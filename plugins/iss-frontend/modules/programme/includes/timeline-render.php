@@ -1540,47 +1540,10 @@ function iss_timeline_merge_preset_filters($filters = [], $preset = []) {
     return $filters;
 }
 
-function iss_timeline_render_preset_buttons($attributes = []) {
-    $buttons = iss_timeline_get_preset_buttons_from_attributes($attributes);
-    if (empty($buttons)) {
-        return '';
-    }
-
-    $out = '<div class="iss-timeline__presets" data-timeline-presets>';
-    foreach ($buttons as $button) {
-        $label = $button['label'];
-        $time_mode = $button['timeMode'] ?? '';
-        $range_preset = $button['rangePreset'] ?? '';
-        $taxonomy = $button['taxonomy'] ?? '';
-        $terms = !empty($button['terms']) && is_array($button['terms']) ? implode(',', $button['terms']) : '';
-        $is_default = !empty($button['isDefault']);
-
-        $out .= '<button type="button" class="iss-timeline__preset' . ($is_default ? ' is-active' : '') . '" data-timeline-preset';
-        $out .= ' data-timeline-preset-default="' . ($is_default ? 'true' : 'false') . '"';
-        $out .= ' aria-pressed="' . ($is_default ? 'true' : 'false') . '"';
-        if ($time_mode !== '') {
-            $out .= ' data-preset-time-mode="' . esc_attr($time_mode) . '"';
-        }
-        if ($range_preset !== '') {
-            $out .= ' data-preset-range="' . esc_attr($range_preset) . '"';
-        }
-        if ($taxonomy !== '') {
-            $out .= ' data-preset-taxonomy="' . esc_attr($taxonomy) . '"';
-        }
-        if ($terms !== '') {
-            $out .= ' data-preset-terms="' . esc_attr($terms) . '"';
-        }
-        $out .= '>' . esc_html($label) . '</button>';
-    }
-    $out .= '</div>';
-
-    return $out;
-}
-
 function iss_timeline_render_choice_filter($args = []) {
     $args = is_array($args) ? $args : [];
 
-    $name = sanitize_key((string) ($args['name'] ?? ''));
+    $name = (string) ($args['name'] ?? '');
     $filter_key = sanitize_key((string) ($args['filter_key'] ?? $name));
     $label = (string) ($args['label'] ?? '');
     $selected = sanitize_key((string) ($args['selected'] ?? ''));
@@ -1722,219 +1685,119 @@ function iss_timeline_build_query_block_config($attributes = []) {
 }
 
 function iss_timeline_render_query_block($attributes = [], $content = '', $block = null) {
-    if (function_exists('iss_programm_enqueue_timeline_query_assets')) {
-        iss_programm_enqueue_timeline_query_assets();
-    }
-
+    iss_programm_enqueue_timeline_query_assets();
     $attributes = is_array($attributes) ? $attributes : [];
-    $config = iss_timeline_build_query_block_config($attributes);
-    $config['baseFilters'] = $config['filters'];
-    $default_preset = iss_timeline_get_default_preset_button($attributes);
-    if (!empty($default_preset)) {
-        $config['filters'] = iss_timeline_merge_preset_filters($config['filters'], $default_preset);
-    }
-    $listing_config = $config;
-    if (!empty($config['render']['showTicketsButton']) && function_exists('iss_programm_enqueue_calendar_assets')) {
-        iss_programm_enqueue_calendar_assets();
-    }
-    $listing = iss_timeline_get_listing_response($listing_config, $listing_config['render']);
-    $config['initialNextOffset'] = (int) ($listing['nextOffset'] ?? 0);
-
+    $scope = iss_timeline_query_scope($attributes);
+    $query = iss_timeline_navigation_query();
+    $input = $query['iss_timeline'][$scope] ?? [];
+    $input = is_array($input) ? $input : [];
+    $config = iss_timeline_apply_public_filters(iss_timeline_build_query_block_config($attributes), $attributes, $input);
+    if (!empty($config['render']['showTicketsButton'])) { iss_programm_enqueue_calendar_assets(); }
+    $listing = iss_timeline_get_listing_response($config, $config['render']);
+    $selection = $config['selection'];
+    $ui = $config['ui'];
+    $name = 'iss_timeline[' . $scope . ']';
     $title = trim((string) ($attributes['title'] ?? ''));
     $intro = trim((string) ($attributes['intro'] ?? ''));
     $shell_mode = sanitize_key((string) ($attributes['shellMode'] ?? 'section'));
-    $months = iss_timeline_collect_future_month_options(function_exists('iss_timeline_get_future_horizon_months') ? iss_timeline_get_future_horizon_months() : 6);
-
-    $use_block_wrapper = function_exists('get_block_wrapper_attributes') && ($block instanceof WP_Block);
-    $wrapper_class = 'iss-timeline-query';
-    if ($shell_mode !== 'body') {
-        $wrapper_class .= ' iss-container';
-    }
-    $attrs = $use_block_wrapper
-        ? get_block_wrapper_attributes(['class' => $wrapper_class])
-        : 'class="' . esc_attr($wrapper_class) . '"';
-
+    $wrapper = ['class' => 'iss-timeline-query' . ($shell_mode === 'body' ? '' : ' iss-container'), 'id' => $scope];
+    $attrs = ($block instanceof WP_Block) ? get_block_wrapper_attributes($wrapper) : iss_timeline_render_attr_list($wrapper);
     $tag = $shell_mode === 'body' ? 'div' : 'section';
-    $out = '<' . $tag . ' ' . $attrs . ' data-timeline-query data-config="' . esc_attr(wp_json_encode($config)) . '">';
-
+    $out = '<' . $tag . ' ' . $attrs . ' data-timeline-query>';
     if ($shell_mode !== 'body') {
-        if ($title !== '') {
-            $out .= '<h2 class="iss-timeline__section-title">' . esc_html($title) . '</h2>';
-        }
-        if ($intro !== '') {
-            $out .= '<p class="iss-timeline__summary">' . esc_html($intro) . '</p>';
-        }
+        if ($title !== '') { $out .= '<h2 class="iss-timeline__section-title">' . esc_html($title) . '</h2>'; }
+        if ($intro !== '') { $out .= '<p class="iss-timeline__summary">' . esc_html($intro) . '</p>'; }
     }
-
-    $out .= iss_timeline_render_preset_buttons($attributes);
-
-    $has_filter_ui = !empty($config['ui']['showTimeModeFilter'])
-        || !empty($config['ui']['showItemTypeFilter'])
-        || !empty($config['ui']['showPostTypeFilter'])
-        || !empty($config['ui']['showMonthFilter'])
-        || !empty($config['ui']['showCalendarBridge'])
-        || !empty($config['ui']['taxonomyUiFilters']);
-
-    $has_non_bridge_filter_ui = !empty($config['ui']['showTimeModeFilter'])
-        || !empty($config['ui']['showItemTypeFilter'])
-        || !empty($config['ui']['showPostTypeFilter'])
-        || !empty($config['ui']['showMonthFilter'])
-        || !empty($config['ui']['taxonomyUiFilters']);
-
-    if ($has_filter_ui) {
-        $out .= '<form class="iss-timeline__filters" data-timeline-query-form>';
-
-        if (!empty($config['ui']['showCalendarBridge'])) {
-            $out .= '<div class="iss-timeline__calendar-bridge" data-timeline-calendar-bridge>';
-            $out .= '<label class="iss-timeline__filter iss-timeline__filter--calendar">';
-            $out .= '<span class="iss-timeline__filter-label">' . esc_html__('Monat', 'iss-timeline') . '</span>';
-            $out .= '<select data-calendar-bridge-month>';
-            foreach ($months as $ym) {
-                $out .= '<option value="' . esc_attr($ym) . '"' . selected($config['filters']['month'], $ym, false) . '>' . esc_html(iss_timeline_format_month_label($ym)) . '</option>';
-            }
-            $out .= '</select>';
-            $out .= '</label>';
-            $out .= '<label class="iss-timeline__filter iss-timeline__filter--calendar">';
-            $out .= '<span class="iss-timeline__filter-label">' . esc_html__('Tag', 'iss-timeline') . '</span>';
-            $out .= '<input type="text" value="" placeholder="' . esc_attr__('TT.MM.JJJJ', 'iss-timeline') . '" autocomplete="off" data-calendar-bridge-day />';
-            $out .= '</label>';
-            $out .= '<button type="button" class="iss-timeline__apply iss-timeline__apply--ghost" data-calendar-bridge-reset>'
-                . esc_html__('Zurücksetzen', 'iss-timeline') . '</button>';
-            $out .= '</div>';
+    $buttons = iss_timeline_get_preset_buttons_from_attributes($attributes);
+    if ($buttons) {
+        $out .= '<nav class="iss-timeline__presets" aria-label="' . esc_attr__('Zeitraum wählen', 'iss-timeline') . '">';
+        foreach ($buttons as $index => $button) {
+            $active = $selection['presetActive'] && $selection['preset'] === (string) $index;
+            $out .= '<a class="iss-timeline__preset' . ($active ? ' is-active' : '') . '"' . ($active ? ' aria-current="true"' : '')
+                . ' href="' . esc_url(iss_timeline_navigation_url($scope, ['preset' => (string) $index])) . '">' . esc_html($button['label']) . '</a>';
         }
-
-        if (!empty($config['ui']['showTimeModeFilter']) && !empty($config['ui']['timeModeOptions']) && is_array($config['ui']['timeModeOptions'])) {
-            $out .= '<label class="iss-timeline__filter"><span class="iss-timeline__filter-label">' . esc_html__('Zeitraum', 'iss-timeline') . '</span>';
-            $out .= '<select name="time_mode" data-filter-key="time_mode">';
-            foreach ($config['ui']['timeModeOptions'] as $option) {
-                if (!is_array($option)) {
-                    continue;
-                }
-                $value = isset($option['value']) ? sanitize_key((string) $option['value']) : '';
-                $label = isset($option['label']) ? (string) $option['label'] : $value;
-                if ($value === '') {
-                    continue;
-                }
-                $out .= '<option value="' . esc_attr($value) . '"' . selected($config['filters']['time_mode'], $value, false) . '>' . esc_html($label) . '</option>';
+        $out .= '</nav>';
+    }
+    $has_filters = $ui['showTimeModeFilter'] || $ui['showItemTypeFilter'] || $ui['showPostTypeFilter'] || $ui['showMonthFilter'] || $ui['showCalendarBridge'] || $ui['taxonomyUiFilters'];
+    if ($has_filters) {
+        $action = iss_timeline_navigation_url($scope);
+        $out .= '<form method="get" action="' . esc_url($action) . '" class="iss-timeline__filters" data-timeline-query-form>';
+        // GET submission replaces the action query; carry other instances explicitly.
+        if (isset($query['iss_timeline']) && is_array($query['iss_timeline'])) { unset($query['iss_timeline'][$scope]); }
+        $hidden = static function (array $values, string $parent = '') use (&$hidden): string {
+            $html = '';
+            foreach ($values as $key => $value) {
+                $field = $parent === '' ? (string) $key : $parent . '[' . $key . ']';
+                if (is_array($value)) { $html .= $hidden($value, $field); }
+                else { $html .= '<input type="hidden" name="' . esc_attr($field) . '" value="' . esc_attr((string) $value) . '">'; }
             }
-            $out .= '</select></label>';
-        }
-
-        if (!empty($config['ui']['showItemTypeFilter'])) {
+            return $html;
+        };
+        $out .= $hidden($query);
+        if ($selection['preset'] !== '') { $out .= $hidden(['iss_timeline' => [$scope => ['preset' => $selection['preset']]]]); }
+        $select = static function (string $key, string $label, array $options, string $value) use ($name): string {
+            $html = '<label class="iss-timeline__filter"><span class="iss-timeline__filter-label">' . esc_html($label) . '</span><select name="' . esc_attr($name . '[' . $key . ']') . '">';
+            foreach ($options as $option) { $html .= '<option value="' . esc_attr($option['value']) . '"' . selected($value, $option['value'], false) . '>' . esc_html($option['label']) . '</option>'; }
+            return $html . '</select></label>';
+        };
+        if ($ui['showTimeModeFilter']) { $out .= $select('time_mode', __('Zeitraum', 'iss-timeline'), $ui['timeModeOptions'], $config['filters']['time_mode']); }
+        if ($ui['showItemTypeFilter']) {
             $out .= iss_timeline_render_choice_filter([
-                'name' => 'item_type',
-                'filter_key' => 'item_type',
-                'label' => __('Inhaltstyp', 'iss-timeline'),
-                'selected' => (string) ($config['filters']['item_type'] ?? 'all'),
-                'options' => is_array($config['ui']['typeOptions']) ? $config['ui']['typeOptions'] : [],
-                'links' => is_array($attributes['externalTypeLinks'] ?? null) ? $attributes['externalTypeLinks'] : [],
-                'className' => 'iss-timeline__filter--type',
+                'name' => $name . '[item_type]', 'filter_key' => 'item_type', 'label' => __('Inhaltstyp', 'iss-timeline'),
+                'selected' => $config['filters']['item_type'] ?: 'all', 'options' => $ui['typeOptions'],
+                'links' => is_array($attributes['externalTypeLinks'] ?? null) ? $attributes['externalTypeLinks'] : [], 'className' => 'iss-timeline__filter--type',
             ]);
         }
-
-        if (!empty($config['ui']['showMonthFilter'])) {
-            $month_hidden = ($config['filters']['time_mode'] === 'month') ? '' : ' hidden';
-            $out .= '<label class="iss-timeline__filter iss-timeline__filter--month"' . $month_hidden . ' data-timeline-month-filter><span class="iss-timeline__filter-label">' . esc_html__('Monat', 'iss-timeline') . '</span>';
-            $out .= '<select name="month" data-filter-key="month"' . $month_hidden . '>';
-            foreach ($months as $ym) {
-                $out .= '<option value="' . esc_attr($ym) . '"' . selected($config['filters']['month'], $ym, false) . '>' . esc_html(iss_timeline_format_month_label($ym)) . '</option>';
+        if ($ui['showMonthFilter'] || $ui['showCalendarBridge']) {
+            $months = iss_timeline_collect_future_month_options(iss_timeline_get_future_horizon_months());
+            $month = $selection['month'] ?: ($config['filters']['time_mode'] === 'month' ? $config['filters']['month'] : '');
+            if ($month !== '' && !in_array($month, $months, true)) { $months[] = $month; sort($months); }
+            $options = [['value' => '', 'label' => __('Alle Monate', 'iss-timeline')]];
+            foreach ($months as $ym) { $options[] = ['value' => $ym, 'label' => iss_timeline_format_month_label($ym)]; }
+            $out .= $select('month', __('Monat', 'iss-timeline'), $options, $month);
+        }
+        if ($ui['showCalendarBridge']) {
+            $out .= '<label class="iss-timeline__filter"><span class="iss-timeline__filter-label">' . esc_html__('Tag', 'iss-timeline') . '</span>'
+                . '<input type="date" name="' . esc_attr($name . '[day]') . '" value="' . esc_attr($selection['day']) . '"></label>';
+        }
+        if ($ui['showPostTypeFilter']) {
+            $post_type = count($config['filters']['post_types']) === 1 ? $config['filters']['post_types'][0] : '';
+            $out .= $select('post_type', __('Post-Typ', 'iss-timeline'), $ui['postTypeOptions'], $post_type);
+        }
+        foreach ($ui['taxonomyUiFilters'] as $rule) {
+            $taxonomy = $rule['taxonomy'];
+            $out .= '<label class="iss-timeline__filter"><span class="iss-timeline__filter-label">' . esc_html($rule['label']) . '</span>'
+                . '<select multiple size="4" name="' . esc_attr($name . '[taxonomy_' . $taxonomy . '][]') . '">';
+            foreach ($rule['options'] as $option) {
+                if ($option['value'] === '') { continue; }
+                $out .= '<option value="' . esc_attr($option['value']) . '"' . selected(in_array($option['value'], $selection['taxonomies'][$taxonomy] ?? [], true), true, false) . '>' . esc_html($option['label']) . '</option>';
             }
             $out .= '</select></label>';
         }
-
-        if (!empty($config['ui']['showPostTypeFilter']) && !empty($config['ui']['postTypeOptions']) && is_array($config['ui']['postTypeOptions'])) {
-            $out .= '<label class="iss-timeline__filter"><span class="iss-timeline__filter-label">' . esc_html__('Post-Typ', 'iss-timeline') . '</span>';
-            $out .= '<select name="post_type" data-filter-key="post_type">';
-            foreach ($config['ui']['postTypeOptions'] as $option) {
-                if (!is_array($option)) {
-                    continue;
-                }
-                $value = isset($option['value']) ? sanitize_key((string) $option['value']) : '';
-                $label = isset($option['label']) ? (string) $option['label'] : $value;
-                $selected = count($config['filters']['post_types']) === 1 ? (string) $config['filters']['post_types'][0] : '';
-                $out .= '<option value="' . esc_attr($value) . '"' . selected($selected, $value, false) . '>' . esc_html($label) . '</option>';
-            }
-            $out .= '</select></label>';
-        }
-
-        if (!empty($config['ui']['taxonomyUiFilters']) && is_array($config['ui']['taxonomyUiFilters'])) {
-            foreach ($config['ui']['taxonomyUiFilters'] as $taxonomy_filter) {
-                if (!is_array($taxonomy_filter)) {
-                    continue;
-                }
-                $taxonomy = isset($taxonomy_filter['taxonomy']) ? sanitize_key((string) $taxonomy_filter['taxonomy']) : '';
-                if ($taxonomy === '' || empty($taxonomy_filter['options']) || !is_array($taxonomy_filter['options'])) {
-                    continue;
-                }
-                $label = isset($taxonomy_filter['label']) ? (string) $taxonomy_filter['label'] : $taxonomy;
-                $out .= '<label class="iss-timeline__filter"><span class="iss-timeline__filter-label">' . esc_html($label) . '</span>';
-                $out .= '<select name="taxonomy_' . esc_attr($taxonomy) . '[]" data-filter-taxonomy="' . esc_attr($taxonomy) . '" multiple size="' . esc_attr((string) min(8, max(4, count($taxonomy_filter['options']) - 1))) . '">';
-                foreach ($taxonomy_filter['options'] as $option) {
-                    if (!is_array($option)) {
-                        continue;
-                    }
-                    $value = isset($option['value']) ? sanitize_title((string) $option['value']) : '';
-                    $option_label = isset($option['label']) ? (string) $option['label'] : $value;
-                    if ($value === '') {
-                        continue;
-                    }
-                    $out .= '<option value="' . esc_attr($value) . '">' . esc_html($option_label) . '</option>';
-                }
-                $out .= '</select></label>';
-            }
-        }
-
-        if ($has_non_bridge_filter_ui) {
-            $out .= '<div class="iss-timeline__filter-actions">';
-            $out .= '<button type="button" class="iss-timeline__apply iss-timeline__apply--ghost" data-timeline-query-reset>'
-                . esc_html__('Filter zurücksetzen', 'iss-timeline') . '</button>';
-            $out .= '</div>';
-        }
-
-        $out .= '</form>';
+        $out .= '<div class="iss-timeline__filter-actions"><button type="submit" class="iss-timeline__apply">' . esc_html__('Anwenden', 'iss-timeline') . '</button>'
+            . '<a class="iss-timeline__apply iss-timeline__apply--ghost" href="' . esc_url(iss_timeline_navigation_url($scope)) . '">' . esc_html__('Filter zurücksetzen', 'iss-timeline') . '</a></div></form>';
     }
-
     if (!empty($config['render']['showMeta'])) {
         $count_label = sprintf(
-            /* translators: %d number of timeline entries */
-            _n('%d Eintrag', '%d Einträge', (int) $listing['count'], 'iss-timeline'),
-            (int) $listing['count']
+            /* translators: %d number of entries on this page */
+            _n('%d Eintrag auf dieser Seite', '%d Einträge auf dieser Seite', (int) $listing['batchCount'], 'iss-timeline'),
+            (int) $listing['batchCount']
         );
-        $meta_class = 'iss-timeline-query__meta';
-        if (!empty($listing['isEmpty'])) {
-            $meta_class .= ' is-empty';
-        }
-        $out .= '<p class="' . esc_attr($meta_class) . '" data-timeline-query-meta>';
-        $out .= '<span class="iss-timeline-query__count" data-timeline-query-count>' . esc_html($count_label) . '</span>';
-        $out .= '<span class="iss-timeline-query__empty-note" data-timeline-query-empty-note>';
-        if (!empty($listing['isEmpty'])) {
-            $out .= esc_html__('Keine Einträge für die aktuelle Auswahl.', 'iss-timeline');
-        }
-        $out .= '</span>';
-        $out .= '</p>';
+        $out .= '<p class="iss-timeline-query__meta" data-timeline-query-meta>' . esc_html($count_label) . '</p>';
     }
-
-    $out .= '<div class="iss-timeline" data-timeline-query-results>';
-    $out .= $listing['html'];
-    $out .= '</div>';
-    if (!empty($config['render']['showTicketsButton'])) {
-        $out .= iss_timeline_render_booking_host();
-    }
-    if (!empty($config['render']['showLoadMore']) && iss_programm_preview_datetime() === '') {
-        $load_more_text = trim((string) ($config['render']['loadMoreText'] ?? ''));
-        if ($load_more_text === '') {
-            $load_more_text = __('Mehr laden', 'iss-timeline');
+    $out .= '<div class="iss-timeline" data-timeline-query-results>' . $listing['html'] . '</div>';
+    if (!empty($config['render']['showTicketsButton'])) { $out .= iss_timeline_render_booking_host(); }
+    if (!empty($config['render']['showLoadMore']) && iss_programm_preview_datetime() === '' && ($selection['page'] > 1 || $listing['hasMore'])) {
+        $out .= '<nav class="iss-timeline-query__pagination" aria-label="' . esc_attr__('Ergebnisseiten', 'iss-timeline') . '">';
+        if ($selection['page'] > 1) {
+            $out .= '<a class="iss-timeline__btn iss-timeline__btn--secondary" rel="prev" href="' . esc_url(iss_timeline_navigation_url($scope, array_merge($input, ['page' => $selection['page'] - 1]))) . '">' . esc_html__('Zurück', 'iss-timeline') . '</a>';
         }
-        $button_hidden = !empty($listing['hasMore']) ? '' : ' hidden';
-        $out .= '<div class="iss-timeline-query__load-more"' . $button_hidden . ' data-timeline-query-load-more-wrap>';
-        $out .= '<button type="button" class="iss-timeline__btn iss-timeline__btn--secondary" data-timeline-query-load-more>';
-        $out .= esc_html($load_more_text);
-        $out .= '</button></div>';
+        if ($listing['hasMore'] && $selection['page'] < 1000) {
+            $out .= '<a class="iss-timeline__btn iss-timeline__btn--secondary" rel="next" href="' . esc_url(iss_timeline_navigation_url($scope, array_merge($input, ['page' => $selection['page'] + 1]))) . '">' . esc_html__('Weiter', 'iss-timeline') . '</a>';
+        }
+        $out .= '</nav>';
     }
-    $out .= iss_timeline_render_bottom_button($config['render']);
-    $out .= '</' . $tag . '>';
-
-    return $out;
+    return $out . iss_timeline_render_bottom_button($config['render']) . '</' . $tag . '>';
 }
 
 function iss_timeline_format_month_label($ym) {

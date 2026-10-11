@@ -206,3 +206,114 @@ function iss_timeline_get_items_advanced($args = []) {
 
     return iss_occurrences_query(iss_timeline_normalize_filter_payload($args));
 }
+
+/** Resolve only editor-exposed GET controls; fixed owner restrictions remain authoritative. */
+function iss_timeline_apply_public_filters(array $config, array $attributes, array $input): array {
+    $scalar = static fn(string $key): string => isset($input[$key]) && is_scalar($input[$key]) ? sanitize_text_field((string) $input[$key]) : '';
+    $selection = ['preset' => '', 'day' => '', 'month' => '', 'taxonomies' => []];
+    $buttons = iss_timeline_get_preset_buttons_from_attributes($attributes);
+    $preset = $scalar('preset');
+    if ($preset !== '' && ctype_digit($preset) && isset($buttons[(int) $preset])) {
+        $selection['preset'] = $preset;
+    } else {
+        foreach ($buttons as $index => $button) {
+            if (!empty($button['isDefault'])) { $selection['preset'] = (string) $index; break; }
+        }
+    }
+    if ($selection['preset'] !== '') {
+        $config['filters'] = iss_timeline_merge_preset_filters($config['filters'], $buttons[(int) $selection['preset']]);
+    }
+    $preset_dates = array_intersect_key($config['filters'], array_flip(['time_mode', 'month', 'date_start', 'date_end']));
+    $ui = $config['ui'];
+    if ($ui['showTimeModeFilter'] && in_array($scalar('time_mode'), array_column($ui['timeModeOptions'], 'value'), true)) {
+        $config['filters']['time_mode'] = $scalar('time_mode');
+        unset($config['filters']['date_start'], $config['filters']['date_end']);
+    }
+    $fixed = iss_timeline_normalize_item_types($config['filters']['item_types']);
+    if ($fixed) {
+        $config['ui']['typeOptions'] = array_values(array_filter($ui['typeOptions'], static fn(array $option): bool => $option['value'] === 'all' || in_array(iss_timeline_resolve_item_type_value($option['value']), $fixed, true)));
+    }
+    $type = $scalar('item_type');
+    if ($ui['showItemTypeFilter'] && in_array($type, array_column($config['ui']['typeOptions'], 'value'), true)) {
+        if ($type !== 'all') {
+            // The occurrence owner combines item_types and item_type with OR. Narrow
+            // the allowed list here instead of adding a kind to that union.
+            $config['filters']['item_types'] = [iss_timeline_resolve_item_type_value($type)];
+        }
+        $config['filters']['item_type'] = $type === 'all' ? '' : $type;
+    }
+    $post_type = $scalar('post_type');
+    if ($ui['showPostTypeFilter'] && $post_type !== '' && in_array($post_type, array_column($ui['postTypeOptions'], 'value'), true) && in_array($post_type, $config['filters']['post_types'], true)) {
+        $config['filters']['post_types'] = [$post_type];
+    }
+    $month = $scalar('month');
+    if (($ui['showMonthFilter'] || $ui['showCalendarBridge']) && preg_match('/^\d{4}-\d{2}$/D', $month) && checkdate((int) substr($month, 5), 1, (int) substr($month, 0, 4))) {
+        $selection['month'] = $month;
+        $config['filters']['month'] = $month;
+        if ($ui['showCalendarBridge']) { $config['filters']['time_mode'] = 'month'; }
+    }
+    $day = $scalar('day');
+    if ($ui['showCalendarBridge'] && preg_match('/^\d{4}-\d{2}-\d{2}$/D', $day) && checkdate((int) substr($day, 5, 2), (int) substr($day, 8), (int) substr($day, 0, 4))) {
+        $selection['day'] = $day;
+        $selection['month'] = substr($day, 0, 7);
+        $config['filters']['month'] = $selection['month'];
+        $config['filters']['time_mode'] = 'range';
+        $config['filters']['date_start'] = $day . ' 00:00:00';
+        $config['filters']['date_end'] = $day . ' 23:59:59';
+    }
+    foreach ($ui['taxonomyUiFilters'] as $rule) {
+        $taxonomy = $rule['taxonomy'];
+        $requested = $input['taxonomy_' . $taxonomy] ?? [];
+        $requested = is_array($requested) ? $requested : [$requested];
+        $requested = array_map('sanitize_title', array_filter(array_slice($requested, 0, 50), 'is_scalar'));
+        $terms = array_values(array_intersect(array_column($rule['options'], 'value'), $requested));
+        $terms = array_values(array_filter($terms, static fn(string $term): bool => $term !== ''));
+        $selection['taxonomies'][$taxonomy] = $terms;
+        if ($terms) {
+            $config['filters']['taxonomy_filters'][] = ['taxonomy' => $taxonomy, 'field' => 'slug', 'terms' => $terms, 'operator' => 'IN'];
+        }
+    }
+    $config['limit'] = min(100, max(1, (int) $config['limit']));
+    $page = !empty($config['render']['showLoadMore']) ? min(1000, max(1, (int) $scalar('page'))) : 1;
+    $selection['page'] = $page;
+    $selection['presetActive'] = $preset_dates === array_intersect_key($config['filters'], array_flip(['time_mode', 'month', 'date_start', 'date_end']));
+    $config['offset'] = ($page - 1) * $config['limit'];
+    $config['selection'] = $selection;
+    return $config;
+}
+
+/** Stable for full requests and router requests, including repeated identical blocks. */
+function iss_timeline_query_scope(array $attributes): string {
+    static $instances = [];
+    $hash = substr(hash('sha256', get_queried_object_id() . '|' . wp_json_encode($attributes)), 0, 12);
+    $instances[$hash] = ($instances[$hash] ?? 0) + 1;
+    return 'timeline-' . $hash . '-' . $instances[$hash];
+}
+
+/** Bound reflected navigation data and retain other block instances and WP routing. */
+function iss_timeline_navigation_query(): array {
+    // phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Public read-only navigation, no state mutation.
+    $input = wp_unslash($_GET);
+    $clean = static function (array $values, int $depth = 0) use (&$clean): array {
+        $result = [];
+        foreach (array_slice($values, 0, 50, true) as $key => $value) {
+            if (!preg_match('/^[a-zA-Z0-9_-]{1,80}$/D', (string) $key)) { continue; }
+            if (is_array($value) && $depth < 3) { $result[$key] = $clean($value, $depth + 1); }
+            elseif (is_scalar($value)) { $result[$key] = substr(sanitize_text_field((string) $value), 0, 200); }
+        }
+        return $result;
+    };
+    return $clean($input);
+}
+
+function iss_timeline_navigation_url(string $scope, array $selection = []): string {
+    $query = iss_timeline_navigation_query();
+    if (!isset($query['iss_timeline']) || !is_array($query['iss_timeline'])) { $query['iss_timeline'] = []; }
+    unset($query['iss_timeline'][$scope]);
+    if ($selection) { $query['iss_timeline'][$scope] = $selection; }
+    if (!$query['iss_timeline']) { unset($query['iss_timeline']); }
+    $path = wp_parse_url(isset($_SERVER['REQUEST_URI']) ? esc_url_raw(wp_unslash($_SERVER['REQUEST_URI'])) : '/', PHP_URL_PATH);
+    // An origin-relative path avoids trusting a request-supplied host.
+    $path = '/' . ltrim(is_string($path) ? $path : '/', '/');
+    return $path . ($query ? '?' . http_build_query($query, '', '&', PHP_QUERY_RFC3986) : '') . '#'. $scope;
+}

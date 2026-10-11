@@ -254,113 +254,6 @@
   border-bottom: 1px solid rgba(134, 159, 186, 0.18);
 }
 
-.iss-calendar-page .iss-timeline__calendar-bridge {
-  display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: 0.85rem;
-  width: 100%;
-}
-
-.iss-calendar-page .iss-timeline__calendar-bridge.has-calendar-grid {
-  grid-template-columns: 1fr;
-}
-
-.iss-calendar-page .iss-timeline__calendar-bridge.has-calendar-grid > .iss-timeline__filter--calendar,
-.iss-calendar-page .iss-timeline__calendar-bridge.has-calendar-grid > [data-calendar-bridge-reset] {
-  position: absolute;
-  overflow: hidden;
-  width: 1px;
-  height: 1px;
-  padding: 0;
-  border: 0;
-  clip-path: inset(50%);
-  white-space: nowrap;
-}
-
-.iss-calendar-page .iss-timeline-calendar-grid {
-  padding: 1rem;
-  border: 1px solid var(--iss-border);
-  border-radius: var(--iss-radius-lg);
-  background: var(--iss-surface-paper);
-}
-
-.iss-calendar-page .iss-timeline-calendar-grid__kicker {
-  color: var(--iss-surface-subtle);
-  font-size: 0.72rem;
-  font-weight: 800;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
-}
-
-.iss-calendar-page .iss-timeline-calendar-grid__title {
-  margin-top: 0.2rem;
-  font-size: 1.15rem;
-  line-height: 1.15;
-}
-
-.iss-calendar-page .iss-timeline-calendar-grid__reset,
-.iss-calendar-page .iss-timeline-calendar-grid__month,
-.iss-calendar-page .iss-timeline-calendar-grid__day {
-  border: 1px solid var(--iss-border);
-  border-radius: var(--iss-radius-md);
-  background: #fff;
-  color: var(--iss-black);
-  font: inherit;
-  font-weight: 700;
-}
-
-.iss-calendar-page .iss-timeline-calendar-grid__reset {
-  min-height: 2.25rem;
-  padding: 0.35rem 0.65rem;
-  color: var(--iss-surface-muted);
-  font-size: 0.78rem;
-}
-
-.iss-calendar-page .iss-timeline-calendar-grid__month {
-  min-height: 2.35rem;
-  padding: 0.45rem 0.55rem;
-  font-size: 0.82rem;
-}
-
-.iss-calendar-page .iss-timeline-calendar-grid__weekday {
-  padding: 0.15rem 0;
-  color: var(--iss-surface-subtle);
-  font-size: 0.72rem;
-  font-weight: 800;
-  text-transform: uppercase;
-}
-
-.iss-calendar-page .iss-timeline-calendar-grid__day {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  min-height: 2.4rem;
-  padding: 0;
-  font-size: 0.92rem;
-}
-
-.iss-calendar-page .iss-timeline-calendar-grid__month:hover,
-.iss-calendar-page .iss-timeline-calendar-grid__month:focus-visible,
-.iss-calendar-page .iss-timeline-calendar-grid__day:hover,
-.iss-calendar-page .iss-timeline-calendar-grid__day:focus-visible,
-.iss-calendar-page .iss-timeline-calendar-grid__reset:hover,
-.iss-calendar-page .iss-timeline-calendar-grid__reset:focus-visible {
-  border-color: var(--iss-accent);
-  background: var(--iss-accent-soft);
-  outline: none;
-}
-
-.iss-calendar-page .iss-timeline-calendar-grid__month[aria-pressed="true"],
-.iss-calendar-page .iss-timeline-calendar-grid__day[aria-pressed="true"] {
-  border-color: var(--iss-accent);
-  background: var(--iss-accent);
-  color: #fff;
-}
-
-.iss-calendar-page .iss-timeline-calendar-grid__day.is-today:not([aria-pressed="true"]) {
-  border-color: var(--iss-accent);
-}
-
 .iss-calendar-page .iss-timeline__filter--type {
   flex: 1 1 auto;
   min-width: min(100%, 28rem);
@@ -561,7 +454,7 @@
 
   .iss-calendar-page .iss-timeline-query__meta,
   .iss-calendar-page .iss-timeline,
-  .iss-calendar-page .iss-timeline-query__load-more,
+  .iss-calendar-page .iss-timeline-query__pagination,
   .iss-calendar-page .iss-timeline__footer {
     grid-column: 2;
     min-width: 0;
@@ -669,7 +562,7 @@
     margin: 0;
   }
 
-  .iss-calendar-page .iss-timeline-query__load-more {
+  .iss-calendar-page .iss-timeline-query__pagination {
     grid-row: 3;
     margin: 0;
     padding: 0 1.6rem 1.6rem;
@@ -734,10 +627,6 @@
     flex-direction: column;
   }
 
-  .iss-calendar-page .iss-timeline__calendar-bridge {
-    grid-template-columns: 1fr 1fr auto;
-  }
-
   .iss-calendar-page .iss-timeline__filter-actions {
     justify-content: flex-start;
   }
@@ -762,10 +651,6 @@
   .iss-calendar-intro__copy .iss-heading__title,
   .iss-calendar-query__head .iss-heading__title {
     font-size: clamp(2rem, 11vw, 3.1rem);
-  }
-
-  .iss-calendar-page .iss-timeline__calendar-bridge {
-    grid-template-columns: 1fr;
   }
 
   .iss-calendar-page .iss-timeline__choice-list {

@@ -6,6 +6,16 @@ be recovered from Git history.
 
 ## 2026-10-11
 
+- Converted timeline-query filters to scoped native GET forms, date/month fields,
+  preset links and bounded previous/next pagination using the existing PHP
+  listing renderer. Editor attributes remain unchanged; public selections cannot
+  widen fixed types, sources, taxonomy rules or hidden controls. Removed the
+  old AJAX/grid controller, its enqueue/global and retired grid/bridge CSS.
+  Flatpickr remains only for the booking consumer pending its next conversion.
+  Passed 26 read-only filter checks, 71 programme/rotation checks and desktop,
+  phone and JavaScript-disabled Chrome navigation/history checks; targeted PHP,
+  PHPCS/PHPStan and CSS checks passed. Code/assets only; no data/uploads artifact.
+
 - Made commerce retries idempotent in the existing request table: optional client
   keys with a unique constraint, intent fingerprints and serialized duplicate
   checks preserve existing responses while coalescing concurrent retries. New

@@ -54,8 +54,19 @@ Private scoped SQL backup and target-local JSON before-image are retained under
 `commerce-before-idempotency.sql.gz` and `commerce-migration-fixtures/` in the
 private evidence root. Deploy with `ops/migrations/2026-10-11-commerce-idempotency.php`
 check/apply/verify and a new target-local before-image; no uploads artifact.
-Next: native GET programme filters, then the shared native booking flow. Existing
-email dispatch is not exactly-once across process crashes.
+Programme filters now use scoped native GET forms and bounded pagination;
+fixed restrictions and saved block attributes remain authoritative. Removed the
+old filter AJAX/grid controller and its CSS. Passed 26 read-only filter checks,
+71 programme/rotation checks and desktop/phone/JavaScript-disabled Chrome checks.
+Seven routes return HTTP 200; Kalender retains rendered IDs/order and uses 126
+queries in both current samples. Its scripts/styles total 115,957 gzip bytes
+versus 123,836 before this slice (34 browser resources versus 35). This is a
+local measurement, not a staging speed guarantee. Historical home IDs differ
+from the 8 October baseline; date rotation and remaining public cache writes
+need comparison during query consolidation. Native booking is next; Flatpickr
+remains for that consumer. Enable router
+updates only after booking triggers are compatible. No data/uploads artifact
+for filters. Email dispatch is not exactly-once across process crashes.
 Do not run real imports/merges or destructive cleanup for verification.
 
 ## Runtime and evidence
