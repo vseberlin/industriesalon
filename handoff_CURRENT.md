@@ -77,7 +77,9 @@ response 27 slots / 12,519 JSON bytes (11 October). Core router region navigatio
 failure fallback and Back-during-pending-request checks on all three engines.
 Next: query/projection consolidation. A naive menu occurrence swap selects a
 different recurring event; preserve the existing selection contract until parity
-is established. Search currently caps candidates at 1,000 before WP pagination. No data/uploads artifact
+is established. Search currently caps candidates at 1,000 before WP pagination. Public relation
+lookups are now read-only and batched; all seven current route samples show
+zero writes. Tour/publication query counts are 188/98; IDs/order are retained. No data/uploads artifact
 for filters. Email dispatch is not exactly-once across process crashes.
 Do not run real imports/merges or destructive cleanup for verification.
 

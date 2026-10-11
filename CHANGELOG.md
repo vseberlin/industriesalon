@@ -6,6 +6,14 @@ be recovered from Git history.
 
 ## 2026-10-11
 
+- Separated public place-term lookups from relation taxonomy creation/repair.
+  Multi-place reads now batch post/term loading; existing save and backfill
+  paths retain term maintenance. Nine guarded read checks and 92 content-editor
+  atomicity checks pass, plus PHP/PHPCS/PHPStan. All seven sampled public routes
+  now render with zero database writes; tour queries fell from 207 to 188 and
+  publication queries from 102 to 98. Current rendered IDs/order are retained.
+  Code only; no term backfill, data migration or uploads artifact required.
+
 - Enabled core Interactivity router enhancement for scoped programme GET forms,
   presets/reset and pagination. The shared PHP renderer remains the only result
   renderer, including full-page failure fallback. Fixed the WordPress 7.0

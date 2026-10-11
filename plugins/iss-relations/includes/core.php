@@ -300,6 +300,12 @@ function iss_relations_is_usable_place(int $place_id): bool
 
 function iss_relations_get_place_term_id(int $place_id): int
 {
+    return (int) (iss_relations_get_place_term_ids([$place_id])[0] ?? 0);
+}
+
+/** Maintain the derived taxonomy only from the existing save/backfill path. */
+function iss_relations_ensure_place_term_id(int $place_id): int
+{
     if (!taxonomy_exists(ISS_RELATIONS_TAXONOMY) || !iss_relations_is_usable_place($place_id)) {
         return 0;
     }
@@ -1253,16 +1259,22 @@ function iss_relations_parse_place_ids($value): array
 
 function iss_relations_get_place_term_ids(array $place_ids): array
 {
-    $term_ids = [];
-
-    foreach ($place_ids as $place_id) {
-        $term_id = iss_relations_get_place_term_id((int) $place_id);
-        if ($term_id > 0) {
-            $term_ids[] = $term_id;
-        }
-    }
-
-    return array_values(array_unique(array_filter(array_map('absint', $term_ids))));
+    if (!taxonomy_exists(ISS_RELATIONS_TAXONOMY)) { return []; }
+    $place_ids = array_values(array_unique(array_filter(array_map('absint', $place_ids))));
+    if (!$place_ids) { return []; }
+    _prime_post_caches($place_ids, false, false);
+    $place_ids = array_values(array_filter($place_ids, 'iss_relations_is_usable_place'));
+    if (!$place_ids) { return []; }
+    $slugs = array_map('iss_relations_term_slug_for_place', $place_ids);
+    $terms = get_terms([
+        'taxonomy' => ISS_RELATIONS_TAXONOMY, 'slug' => $slugs,
+        'hide_empty' => false, 'update_term_meta_cache' => false,
+    ]);
+    if (is_wp_error($terms)) { return []; }
+    $by_slug = [];
+    foreach ($terms as $term) { $by_slug[$term->slug] = (int) $term->term_id; }
+    // Preserve input order and leave a missing projection to save/backfill.
+    return array_values(array_filter(array_map(static fn($slug) => $by_slug[$slug] ?? 0, $slugs)));
 }
 
 function iss_relations_render_related_place_links_html(int $post_id): string
@@ -1426,7 +1438,7 @@ function iss_relations_sync_post_terms(int $post_id): void
     $term_ids = [];
 
     foreach ($place_ids as $place_id) {
-        $term_id = iss_relations_get_place_term_id($place_id);
+        $term_id = iss_relations_ensure_place_term_id($place_id);
         if ($term_id > 0) {
             $term_ids[] = $term_id;
         }
