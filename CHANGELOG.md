@@ -6,6 +6,15 @@ be recovered from Git history.
 
 ## 2026-10-11
 
+- Occurrence pages now check current source publication/password/type before
+  pagination and batch source/location post caches. Removed obsolete timeline
+  HTML transients and their version writes; retained REST responses are fresh
+  and `no-store`. Passed 16 isolated privacy/cache checks and 99 programme/filter/
+  rotation checks, including Berlin DST midnight; PHP/PHPCS/PHPStan pass.
+  EXPLAIN uses public_date and the post primary key; no index added. Menu query
+  retained after proving occurrence ordering changes its curated selection.
+  Code only; no schema/content/uploads artifact or projection rebuild.
+
 - Replaced the public search route's capped candidate list and repeated metadata
   filter with bounded SQL-provider pages and complete totals. Shared match/count
   predicates preserve relevance while excluding current private/password and

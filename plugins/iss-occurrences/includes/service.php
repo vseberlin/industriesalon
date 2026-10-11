@@ -1389,7 +1389,15 @@ final class ISS_Occurrences_Service
 
         $filters = $this->normalize_query_filters($filters);
         $table = $this->get_occurrences_table_name();
-        $where = ['o.visibility = %s', 'o.status = %s'];
+        // Projections may lag a save. Check the current source before pagination;
+        // unmapped external occurrences retain their explicit public visibility.
+        $where = [
+            'o.visibility = %s',
+            'o.status = %s',
+            "(o.source_post_id = 0 OR EXISTS (SELECT 1 FROM {$wpdb->posts} source
+                WHERE source.ID = o.source_post_id AND source.post_type = o.source_post_type
+                  AND source.post_status = 'publish' AND source.post_password = ''))",
+        ];
         $values = ['public', 'active'];
 
         if (!empty($filters['kinds'])) {
@@ -1466,6 +1474,7 @@ final class ISS_Occurrences_Service
 
         $rows = $wpdb->get_results($wpdb->prepare($sql, $values), ARRAY_A);
         $rows = is_array($rows) ? $rows : [];
+        $this->prime_timeline_sources($rows);
 
         return array_values(array_map([$this, 'format_timeline_row'], $rows));
     }
@@ -1517,6 +1526,7 @@ final class ISS_Occurrences_Service
             ORDER BY o.starts_at {$order}, o.id {$order}";
         $rows = $wpdb->get_results($wpdb->prepare($row_sql, $row_values), ARRAY_A);
         $rows = is_array($rows) ? $rows : [];
+        $this->prime_timeline_sources($rows);
 
         $rows_by_group = [];
         foreach ($rows as $row) {
@@ -2001,6 +2011,16 @@ final class ISS_Occurrences_Service
             ];
         } catch (Throwable $e) {
             return null;
+        }
+    }
+
+    /** Prime only the bounded result's source/location data through core caches. */
+    private function prime_timeline_sources(array $rows): void
+    {
+        $ids = array_merge(array_column($rows, 'source_post_id'), array_column($rows, 'location_post_id'));
+        $ids = array_values(array_unique(array_filter(array_map('absint', $ids))));
+        if ($ids) {
+            _prime_post_caches($ids, true, true);
         }
     }
 

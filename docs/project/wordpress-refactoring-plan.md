@@ -22,7 +22,7 @@ changes outside those roots require separate authorization.
 | 1 Baseline | Local mounts, backups and route/query comparisons retained; WordPress 7.0 and Chrome/Firefox/Linux-WebKit checks pass locally; staff/staging acceptance separate |
 | 2 Database/setup | Seeds, graph/queue/profile/transcript/archive boundaries and Set service writes completed; Event Drop recovery and public setup gates complete; installer verification and migrated commerce idempotency complete |
 | 3 Native frontend | Native GET filters, shared booking and core region navigation complete; Flatpickr removed; 45 three-engine WordPress 7.0 scenarios pass |
-| 4 Query/projection consolidation | Read-only relation batching and bounded/private SQL search complete; menu equivalence, date caches and save coalescing in progress |
+| 4 Query/projection consolidation | Read-only relation batching and bounded/private SQL search complete; occurrence privacy/batching and date cache removal complete; save coalescing next |
 | 5 Code/CSS consolidation | Pending |
 | 6 Maintenance | Pending within repository/local scope; target operations remain separate |
 
@@ -219,3 +219,21 @@ imports, or remove archive/preservation records as part of dead-code cleanup.
 The first implementation slice is phase 1 followed by the versioned seed work
 in phase 2; the native frontend work follows after the write/query baseline is
 stable.
+
+### Query decisions recorded on 11 October
+
+The menu's curated `_iss_datetime_start` query and legacy fallback remain with
+`iss-content`. The occurrence service uses explicit programme opt-in and expands
+recurrence: the local next result is Repair-Café on 14 October, whereas the
+curated menu selects event 28060 on 15 October. Opt-out behavior also differs.
+The planned move was conditional on equivalence; that condition is not met.
+Changing editorial selection requires a separate product decision.
+
+Public occurrence reads check current source visibility before pagination and
+prime core post/meta/term caches. EXPLAIN uses `public_date` plus the source
+primary key (one row); no index addition is justified. The old timeline REST
+HTML transient layer is removed now its JavaScript consumer has retired. Fresh
+PHP results and `no-store` preserve privacy and Berlin date/preview isolation;
+existing transient rows can expire normally. Booking slot reads are also fresh.
+Redis remains unintegrated: current measurements do not justify another cache
+invalidation mechanism or a host-service change.
