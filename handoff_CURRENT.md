@@ -25,14 +25,13 @@ audit. Git history, [CHANGELOG.md](CHANGELOG.md) and
 
 Continue the [refactoring plan](docs/project/wordpress-refactoring-plan.md):
 
-1. Finish public setup/schema gates and commerce idempotency. Preserve owner contracts and use isolated fixtures.
-2. Migrate programme filters and shared booking/inquiry to native controls and
+1. Migrate programme filters and shared booking/inquiry to native controls and
    core Interactivity API; remove Flatpickr only after its last consumer moves.
-3. Simplify occurrence-backed menu dates, search queries, batched reads and
+2. Simplify occurrence-backed menu dates, search queries, batched reads and
    coalesced projection updates with measured plans and privacy/date equivalence.
-4. Extract responsibilities within existing owners; consolidate touched CSS and
+3. Extract responsibilities within existing owners; consolidate touched CSS and
    remove obsolete paths only with saved-content/enqueue/browser evidence.
-5. Complete repository-owned maintenance commands, monitoring, backup/restore
+4. Complete repository-owned maintenance commands, monitoring, backup/restore
    verification and operational documentation within the local scope. Target
    deployment and any host changes outside the checkout roots remain separate.
 
@@ -46,8 +45,17 @@ Schema setup is now privileged non-AJAX admin/activation/explicit CLI work.
 All eleven owner installers verify structure and version persistence; existing
 occurrence/collection migration writes are checked. Two suites passed 194
 checks; lint/PHPCS/PHPStan passed and all 11 live schemas passed read-only
-inspection. Commerce CLI verification is read-only. Next implement commerce
-request idempotency with an owner migration and isolated concurrency/mail tests.
+inspection. Commerce CLI verification is read-only. Commerce idempotency is now
+complete: unique request keys, checked duplicate serialization, stable client
+retry keys and dispatch only for newly committed rows. Passed 76 backend, 16
+migration and three Chrome retry checks; PHP lint/PHPCS/PHPStan and JS lint pass.
+The commerce migration is applied locally; all three historical requests remain.
+Private scoped SQL backup and target-local JSON before-image are retained under
+`commerce-before-idempotency.sql.gz` and `commerce-migration-fixtures/` in the
+private evidence root. Deploy with `ops/migrations/2026-10-11-commerce-idempotency.php`
+check/apply/verify and a new target-local before-image; no uploads artifact.
+Next: native GET programme filters, then the shared native booking flow. Existing
+email dispatch is not exactly-once across process crashes.
 Do not run real imports/merges or destructive cleanup for verification.
 
 ## Runtime and evidence

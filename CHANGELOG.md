@@ -6,6 +6,18 @@ be recovered from Git history.
 
 ## 2026-10-11
 
+- Made commerce retries idempotent in the existing request table: optional client
+  keys with a unique constraint, intent fingerprints and serialized duplicate
+  checks preserve existing responses while coalescing concurrent retries. New
+  forms retain their key after failures and suppress pending submissions.
+  Notifications/hooks run only after a new committed request, never on replay;
+  this does not promise exactly-once email across a process crash. Passed 76
+  backend, 16 migration and three Chrome browser checks plus lint/PHPCS/PHPStan.
+  Applied `ops/migrations/2026-10-11-commerce-idempotency.php` locally after a
+  verified scoped SQL backup and private target-local before-image; all three
+  historical requests retained. Existing installations require that check/apply/
+  verify artifact; public intake returns 503 while pending. No uploads artifact.
+
 - Extended structural verification to occurrence, Set, commerce and all seven
   archive installers, retaining each owner's SQL as the sole declaration. Schema
   versions advance only after verified structure and persisted option writes.

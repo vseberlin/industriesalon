@@ -618,6 +618,7 @@ function createBookingForm(widget, slot) {
     : '<input type="hidden" name="payment" value="onsite">';
   const submitLabel = escapeHtml(String(slot.label || 'Buchung anfragen').trim() || 'Buchung anfragen');
 
+  const requestKey = Array.from(window.crypto.getRandomValues(new Uint8Array(16)), (byte) => byte.toString(16).padStart(2, '0')).join('');
   const wrap = document.createElement('div');
   wrap.innerHTML = `
     <div class="is-tour-calendar__booking-sheet">
@@ -638,6 +639,7 @@ function createBookingForm(widget, slot) {
           <input type="text" name="website" value="" tabindex="-1" autocomplete="off" hidden>
           <input type="hidden" name="intent" value="booking">
           <input type="hidden" name="selection_mode" value="slot">
+          <input type="hidden" name="request_key" value="${requestKey}">
           <input type="hidden" name="loaded_at" value="${Math.floor(Date.now() / 1000)}">
           <input type="hidden" name="slot_id" value="${escapeHtml(slot.id ?? '')}">
           <input type="hidden" name="start" value="${escapeHtml(startISO)}">
@@ -697,6 +699,8 @@ function createBookingForm(widget, slot) {
   const status = wrap.querySelector('.is-tour-calendar__form-status');
   const cancelBtn = wrap.querySelector('.is-tour-calendar__form-cancel');
   if (!form || !status) return wrap;
+  let submitting = false;
+  const submitButton = form.querySelector('button[type="submit"]');
 
   if (cancelBtn) {
     cancelBtn.addEventListener('click', () => {
@@ -707,6 +711,7 @@ function createBookingForm(widget, slot) {
 
   form.addEventListener('submit', async (e) => {
     e.preventDefault();
+    if (submitting) return;
     if (typeof form.reportValidity === 'function' && !form.reportValidity()) {
       return;
     }
@@ -727,6 +732,8 @@ function createBookingForm(widget, slot) {
       return;
     }
 
+    submitting = true;
+    if (submitButton) submitButton.disabled = true;
     try {
       status.textContent = 'Sende ...';
       const res = await fetch(postUrl, {
@@ -750,6 +757,9 @@ function createBookingForm(widget, slot) {
       if (modal) modal.close();
     } catch {
       status.textContent = 'Netzwerkfehler. Bitte später erneut versuchen.';
+    } finally {
+      submitting = false;
+      if (submitButton) submitButton.disabled = false;
     }
   });
 
@@ -764,6 +774,7 @@ function createInquiryForm(widget) {
   const title = (widget && widget.dataset && widget.dataset.title) ? widget.dataset.title : 'Terminanfrage';
   const hasPostUrl = !!postUrl;
 
+  const requestKey = Array.from(window.crypto.getRandomValues(new Uint8Array(16)), (byte) => byte.toString(16).padStart(2, '0')).join('');
   const wrap = document.createElement('div');
   wrap.innerHTML = `
     <div class="is-tour-calendar__booking-sheet">
@@ -773,6 +784,7 @@ function createInquiryForm(widget) {
           <input type="text" name="website" value="" tabindex="-1" autocomplete="off" hidden>
           <input type="hidden" name="intent" value="inquiry">
           <input type="hidden" name="selection_mode" value="preferred_date">
+          <input type="hidden" name="request_key" value="${requestKey}">
           <input type="hidden" name="loaded_at" value="${Math.floor(Date.now() / 1000)}">
           <input type="hidden" name="title" value="${escapeHtml(title)}">
           <input type="hidden" name="source_post_id" value="${escapeHtml(sourcePostId)}">
@@ -821,6 +833,8 @@ function createInquiryForm(widget) {
   const status = wrap.querySelector('.is-tour-calendar__form-status');
   const cancelBtn = wrap.querySelector('.is-tour-calendar__form-cancel');
   if (!form || !status) return wrap;
+  let submitting = false;
+  const submitButton = form.querySelector('button[type="submit"]');
 
   if (cancelBtn) {
     cancelBtn.addEventListener('click', () => {
@@ -831,6 +845,7 @@ function createInquiryForm(widget) {
 
   form.addEventListener('submit', async (event) => {
     event.preventDefault();
+    if (submitting) return;
     if (typeof form.reportValidity === 'function' && !form.reportValidity()) {
       return;
     }
@@ -854,6 +869,8 @@ function createInquiryForm(widget) {
       return;
     }
 
+    submitting = true;
+    if (submitButton) submitButton.disabled = true;
     try {
       status.textContent = 'Sende ...';
       const res = await fetch(postUrl, {
@@ -877,6 +894,9 @@ function createInquiryForm(widget) {
       if (modal) modal.close();
     } catch {
       status.textContent = 'Netzwerkfehler. Bitte später erneut versuchen.';
+    } finally {
+      submitting = false;
+      if (submitButton) submitButton.disabled = false;
     }
   });
 

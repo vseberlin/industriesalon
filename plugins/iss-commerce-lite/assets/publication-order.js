@@ -53,6 +53,7 @@
   }
 
   function createForm(payload, closeModal) {
+    const requestKey = Array.from(window.crypto.getRandomValues(new Uint8Array(16)), (byte) => byte.toString(16).padStart(2, '0')).join('');
     const wrap = document.createElement('div');
     const mollieDisabledAttr = 'disabled aria-disabled="true"';
     const amountEuros = Number(payload.amount || 0) / 100;
@@ -63,6 +64,7 @@
         <input type="hidden" name="selection_mode" value="order">
         <input type="hidden" name="source_post_id" value="${escapeHtml(payload.publicationId)}">
         <input type="hidden" name="source_post_type" value="publication">
+        <input type="hidden" name="request_key" value="${requestKey}">
         <input type="hidden" name="loaded_at" value="${Math.floor(Date.now() / 1000)}">
         <input type="text" name="website" value="" tabindex="-1" autocomplete="off" hidden>
         <div class="iss-publication-order-form__intro">
@@ -94,13 +96,18 @@
     const form = wrap.querySelector('form');
     const status = wrap.querySelector('.iss-publication-order-form__status');
     if (!form || !status) return wrap;
+    let submitting = false;
+    const submitButton = form.querySelector('button[type="submit"]');
 
     form.addEventListener('submit', async (event) => {
       event.preventDefault();
+      if (submitting) return;
       const fd = new FormData(form);
       const body = Object.fromEntries(fd.entries());
       body.quantity = Number(body.quantity || 1);
 
+      submitting = true;
+      if (submitButton) submitButton.disabled = true;
       try {
         status.textContent = 'Sende ...';
         const res = await fetch(orderUrl, {
@@ -122,6 +129,9 @@
         window.setTimeout(() => closeModal(), 500);
       } catch {
         status.textContent = 'Netzwerkfehler. Bitte später erneut versuchen.';
+      } finally {
+        submitting = false;
+        if (submitButton) submitButton.disabled = false;
       }
     });
 

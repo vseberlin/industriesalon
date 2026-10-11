@@ -11,7 +11,7 @@ if (!defined('ABSPATH')) {
 
 // phpcs:disable WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching, WordPress.DB.PreparedSQL.InterpolatedNotPrepared -- This plugin owns the lightweight booking/order request table.
 
-define('ISS_PAYMENTS_LITE_SCHEMA_VERSION', '2026-06-13-requests-v2');
+define('ISS_PAYMENTS_LITE_SCHEMA_VERSION', '2026-10-11-requests-v3-idempotency');
 define('ISS_PAYMENTS_LITE_SCHEMA_OPTION', 'iss_payments_lite_schema_version');
 define('ISS_PAYMENTS_LITE_SETTINGS_OPTION', 'iss_payments_lite_settings');
 define('ISS_PAYMENTS_LITE_PATH', plugin_dir_path(__FILE__));
@@ -78,10 +78,18 @@ function iss_payments_lite_maybe_install_schema(): void {
     iss_payments_lite_install_schema();
 }
 
-function iss_payments_lite_install_schema(): void {
+function iss_payments_lite_install_schema(bool $allow_existing_upgrade = false): void {
     require_once ABSPATH . 'wp-admin/includes/upgrade.php';
     require_once dirname(__DIR__) . '/iss-core/schema.php';
 
+    global $wpdb;
+    $columns = $wpdb->get_col($wpdb->prepare('SELECT COLUMN_NAME FROM information_schema.COLUMNS WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = %s', iss_payments_lite_requests_table_name()));
+    if ($wpdb->last_error !== '') {
+        throw new RuntimeException('Commerce schema could not be inspected before upgrade.');
+    }
+    if ($columns && array_diff(['request_key', 'request_fingerprint'], $columns) && !$allow_existing_upgrade) {
+        throw new RuntimeException('Commerce upgrade requires the scoped backup in ops/migrations/2026-10-11-commerce-idempotency.php.');
+    }
     $statements = iss_payments_lite_schema_statements();
     foreach ($statements as $statement) {
         dbDelta($statement);
@@ -114,6 +122,8 @@ function iss_payments_lite_schema_statements(): array {
         tag varchar(100) NOT NULL DEFAULT '',
         payload longtext NOT NULL,
         duplicate_hash varchar(64) NOT NULL DEFAULT '',
+        request_key char(64) DEFAULT NULL,
+        request_fingerprint char(64) NOT NULL DEFAULT '',
         ip_address varchar(100) NOT NULL DEFAULT '',
         user_agent varchar(255) NOT NULL DEFAULT '',
         notified_at datetime DEFAULT NULL,
@@ -124,7 +134,8 @@ function iss_payments_lite_schema_statements(): array {
         KEY kind_status_created (request_kind, status, created_at),
         KEY source_lookup (source_post_type, source_post_id),
         KEY email_lookup (customer_email),
-        KEY duplicate_lookup (duplicate_hash)
+        KEY duplicate_lookup (duplicate_hash),
+        UNIQUE KEY request_key (request_key)
     ) {$charset_collate};";
 
     return [$sql];
@@ -167,6 +178,8 @@ function iss_payments_lite_insert_request(string $request_kind, array $entry): i
             'tag' => strtoupper(sanitize_text_field((string) ($entry['tag'] ?? ''))),
             'payload' => is_string($payload) ? $payload : '{}',
             'duplicate_hash' => sanitize_text_field((string) ($entry['duplicate_hash'] ?? '')),
+            'request_key' => !empty($entry['request_key']) ? (string) $entry['request_key'] : null,
+            'request_fingerprint' => (string) ($entry['request_fingerprint'] ?? ''),
             'ip_address' => sanitize_text_field((string) ($entry['ip'] ?? '')),
             'user_agent' => substr(sanitize_text_field((string) ($entry['ua'] ?? '')), 0, 255),
             'created_at' => sanitize_text_field((string) ($entry['time'] ?? $now)),
@@ -191,10 +204,12 @@ function iss_payments_lite_insert_request(string $request_kind, array $entry): i
             '%s',
             '%s',
             '%s',
+            '%s',
+            '%s',
         ]
     );
 
-    return $inserted ? (int) $wpdb->insert_id : 0;
+    return $inserted === 1 ? (int) $wpdb->insert_id : 0;
 }
 
 function iss_payments_lite_maybe_upgrade_schema(): void {
@@ -359,7 +374,7 @@ function iss_payments_lite_recent_duplicate_exists(string $request_kind, string 
 
     $request_kind = sanitize_key($request_kind);
     $duplicate_hash = sanitize_text_field($duplicate_hash);
-    if ($request_kind === '' || $duplicate_hash === '' || !iss_payments_lite_table_exists()) {
+    if ($request_kind === '' || $duplicate_hash === '') {
         return false;
     }
 
@@ -374,18 +389,10 @@ function iss_payments_lite_recent_duplicate_exists(string $request_kind, string 
         )
     );
 
-    return $count > 0;
-}
-
-function iss_payments_lite_check_duplicate(string $scope, array $parts, int $window = 10 * MINUTE_IN_SECONDS): ?WP_REST_Response {
-    $fingerprint = iss_payments_lite_duplicate_hash($scope, $parts);
-    $key = 'iss_payments_lite_dupe_' . md5($fingerprint);
-    if (get_transient($key)) {
-        return new WP_REST_Response(['ok' => false, 'error' => 'Diese Anfrage wurde bereits gesendet.'], 409);
+    if ($wpdb->last_error !== '') {
+        throw new RuntimeException('Commerce duplicate lookup failed.');
     }
-
-    set_transient($key, 1, $window);
-    return null;
+    return $count > 0;
 }
 
 function iss_payments_lite_record_notification_result(int $request_id, bool $sent, string $error = ''): void {
@@ -483,21 +490,123 @@ function iss_payments_lite_create_request(WP_REST_Request $request) {
     return iss_payments_lite_process_request_payload($payload, $request);
 }
 
+/** The fingerprint describes customer intent, excluding mutable prices, titles and transport metadata. */
+function iss_payments_lite_request_identity(string $kind, array $payload): array {
+    $key = $payload['request_key'] ?? '';
+    if (!is_string($key) || ($key !== '' && !preg_match('/^[a-zA-Z0-9_-]{16,128}$/D', $key))) {
+        throw new InvalidArgumentException('Invalid request key.');
+    }
+    $intent = [
+        'kind' => $kind,
+        'source_post_id' => (int) ($payload['source_post_id'] ?? $payload['publication_id'] ?? 0),
+        'source_post_type' => $kind === 'order' ? 'publication' : sanitize_key($payload['source_post_type'] ?? ''),
+        'name' => sanitize_text_field($payload['name'] ?? ''),
+        'email' => strtolower(sanitize_email($payload['email'] ?? '')),
+        'quantity' => $kind === 'booking' ? (int) ($payload['tickets'] ?? 0) : ($kind === 'order' ? (int) ($payload['quantity'] ?? 0) : 1),
+        'payment' => $kind === 'inquiry' ? 'onsite' : sanitize_key($payload['payment'] ?? ''),
+        'slot_id' => $kind === 'booking' ? trim(sanitize_text_field($payload['slot_id'] ?? '')) : '',
+        'start' => $kind === 'inquiry' ? sanitize_text_field($payload['start'] ?? '') : '',
+    ];
+    return ['key' => $key !== '' ? hash('sha256', $key) : null, 'fingerprint' => hash('sha256', (string) wp_json_encode($intent)), 'kind' => $kind];
+}
+
+/** Replaying a committed request does not depend on later availability or send another notification. */
+function iss_payments_lite_replay_request(array $identity): ?WP_REST_Response {
+    if ($identity['key'] === null) {
+        return null;
+    }
+    global $wpdb;
+    $table = iss_payments_lite_requests_table_name();
+    $row = $wpdb->get_row($wpdb->prepare("SELECT request_kind, request_fingerprint FROM {$table} WHERE request_key = %s", $identity['key']), ARRAY_A);
+    if ($wpdb->last_error !== '') {
+        throw new RuntimeException('Commerce retry lookup failed.');
+    }
+    if (!$row) {
+        return null;
+    }
+    return $row['request_kind'] === $identity['kind'] && hash_equals($row['request_fingerprint'], $identity['fingerprint'])
+        ? new WP_REST_Response(['ok' => true], 200)
+        : new WP_REST_Response(['ok' => false, 'error' => 'Diese Anfrage wurde bereits mit anderen Angaben gesendet. Bitte das Formular erneut öffnen.'], 409);
+}
+
 function iss_payments_lite_process_request_payload(array $payload, WP_REST_Request $request): WP_REST_Response {
     $intent = sanitize_key((string) ($payload['intent'] ?? ''));
     if (!in_array($intent, ['booking', 'inquiry', 'order'], true)) {
         return new WP_REST_Response(['ok' => false, 'error' => 'Ungültige Anfrageart.'], 400);
     }
-
-    if ($intent === 'order') {
-        return iss_payments_lite_process_order_request($payload, $request);
+    if ((string) get_option(ISS_PAYMENTS_LITE_SCHEMA_OPTION, '') !== ISS_PAYMENTS_LITE_SCHEMA_VERSION) {
+        return new WP_REST_Response(['ok' => false, 'error' => 'Anfragen sind vorübergehend nicht verfügbar. Bitte später erneut versuchen.'], 503);
     }
-
-    if ($intent === 'inquiry') {
-        return iss_payments_lite_process_inquiry_request($payload, $request);
+    try {
+        $identity = iss_payments_lite_request_identity($intent, $payload);
+        $replay = iss_payments_lite_replay_request($identity);
+        if ($replay) {
+            return $replay;
+        }
+        if ($intent === 'order') {
+            return iss_payments_lite_process_order_request($payload, $request);
+        }
+        if ($intent === 'inquiry') {
+            return iss_payments_lite_process_inquiry_request($payload, $request);
+        }
+        return iss_payments_lite_process_slot_booking_request($payload, $request);
+    } catch (InvalidArgumentException $error) {
+        return new WP_REST_Response(['ok' => false, 'error' => 'Ungültige Anfragekennung.'], 400);
+    } catch (RuntimeException $error) {
+        if (function_exists('iss_core_debug_log')) {
+            iss_core_debug_log('Commerce request persistence failed.', ['error' => $error->getMessage()]);
+        }
+        return new WP_REST_Response(['ok' => false, 'error' => 'Anfrage konnte nicht gespeichert werden. Bitte erneut versuchen.'], 500);
     }
+}
 
-    return iss_payments_lite_process_slot_booking_request($payload, $request);
+/** Serialize the existing duplicate window, then use the unique request key to settle retry races. */
+function iss_payments_lite_store_request(string $kind, array $entry, array $payload, WP_REST_Request $request): WP_REST_Response {
+    global $wpdb;
+    $identity = iss_payments_lite_request_identity($kind, $payload);
+    $state = $wpdb->get_row('SELECT @@SESSION.in_transaction AS in_transaction, @@SESSION.autocommit AS autocommit, DATABASE() AS database_name', ARRAY_A);
+    if ($wpdb->last_error !== '' || !$state || !isset($state['in_transaction'], $state['autocommit'], $state['database_name']) || (int) $state['in_transaction'] !== 0 || (int) $state['autocommit'] !== 1) {
+        throw new RuntimeException('Commerce intake requires an independent committed write.');
+    }
+    $lock = 'iss_request_' . substr(hash('sha256', $state['database_name'] . '|' . $wpdb->prefix . '|' . $entry['duplicate_hash']), 0, 48);
+    if ((int) $wpdb->get_var($wpdb->prepare('SELECT GET_LOCK(%s, 2)', $lock)) !== 1) {
+        throw new RuntimeException('Commerce request is busy; retry.');
+    }
+    try {
+        $replay = iss_payments_lite_replay_request($identity);
+        if ($replay) {
+            return $replay;
+        }
+        if (iss_payments_lite_recent_duplicate_exists($kind, $entry['duplicate_hash'])) {
+            return new WP_REST_Response(['ok' => false, 'error' => 'Diese Anfrage wurde bereits gesendet.'], 409);
+        }
+        $entry['request_key'] = $identity['key'];
+        $entry['request_fingerprint'] = $identity['fingerprint'];
+        $request_id = iss_payments_lite_insert_request($kind, $entry);
+        if ($request_id <= 0) {
+            // A different intent may have raced with this request key under another duplicate lock.
+            $replay = iss_payments_lite_replay_request($identity);
+            if ($replay) {
+                return $replay;
+            }
+            throw new RuntimeException('Commerce request insert failed.');
+        }
+    } finally {
+        if ((int) $wpdb->get_var($wpdb->prepare('SELECT RELEASE_LOCK(%s)', $lock)) !== 1 && function_exists('iss_core_debug_log')) {
+            // The insert is already committed. Do not skip its dispatch or replace a
+            // persistence error; connection teardown also releases this session lock.
+            iss_core_debug_log('Commerce request lock release could not be confirmed.');
+        }
+    }
+    $entry['request_id'] = $request_id;
+    iss_payments_lite_send_request_notification($request_id, $kind, $entry);
+    if ($kind === 'order') {
+        do_action('iss_payments_lite_order_created', 'publication', $entry, $request);
+    } else {
+        do_action('iss_payments_lite_' . $kind . '_created', $entry, $request);
+    }
+    do_action('iss_payments_lite_request_created', $kind, $entry, $request);
+    return new WP_REST_Response(['ok' => true], 200);
 }
 
 function iss_payments_lite_process_slot_booking_request(array $payload, WP_REST_Request $request): WP_REST_Response {
@@ -597,15 +706,7 @@ function iss_payments_lite_process_slot_booking_request(array $payload, WP_REST_
         $slot_id,
         $source_post_id,
     ];
-    $duplicate_scope = 'booking';
-    $duplicate = iss_payments_lite_check_duplicate($duplicate_scope, $duplicate_parts);
-    if ($duplicate instanceof WP_REST_Response) {
-        return $duplicate;
-    }
-    $duplicate_hash = iss_payments_lite_duplicate_hash($duplicate_scope, $duplicate_parts);
-    if (iss_payments_lite_recent_duplicate_exists('booking', $duplicate_hash)) {
-        return new WP_REST_Response(['ok' => false, 'error' => 'Diese Anfrage wurde bereits gesendet.'], 409);
-    }
+    $duplicate_hash = iss_payments_lite_duplicate_hash('booking', $duplicate_parts);
 
     $entry = [
         'time' => current_time('mysql'),
@@ -626,17 +727,7 @@ function iss_payments_lite_process_slot_booking_request(array $payload, WP_REST_
         'ua' => isset($_SERVER['HTTP_USER_AGENT']) ? sanitize_text_field((string) $_SERVER['HTTP_USER_AGENT']) : '',
     ];
 
-    $request_id = iss_payments_lite_insert_request('booking', $entry);
-    if ($request_id <= 0) {
-        return new WP_REST_Response(['ok' => false, 'error' => 'Anfrage konnte nicht gespeichert werden.'], 500);
-    }
-    $entry['request_id'] = $request_id;
-    iss_payments_lite_send_request_notification($request_id, 'booking', $entry);
-
-    do_action('iss_payments_lite_booking_created', $entry, $request);
-    do_action('iss_payments_lite_request_created', 'booking', $entry, $request);
-
-    return new WP_REST_Response(['ok' => true], 200);
+    return iss_payments_lite_store_request('booking', $entry, $payload, $request);
 }
 
 function iss_payments_lite_process_inquiry_request(array $payload, WP_REST_Request $request): WP_REST_Response {
@@ -674,14 +765,7 @@ function iss_payments_lite_process_inquiry_request(array $payload, WP_REST_Reque
         $source_post_id,
         $start,
     ];
-    $duplicate = iss_payments_lite_check_duplicate('inquiry', $duplicate_parts);
-    if ($duplicate instanceof WP_REST_Response) {
-        return $duplicate;
-    }
     $duplicate_hash = iss_payments_lite_duplicate_hash('inquiry', $duplicate_parts);
-    if (iss_payments_lite_recent_duplicate_exists('inquiry', $duplicate_hash)) {
-        return new WP_REST_Response(['ok' => false, 'error' => 'Diese Anfrage wurde bereits gesendet.'], 409);
-    }
 
     $entry = [
         'time' => current_time('mysql'),
@@ -698,17 +782,7 @@ function iss_payments_lite_process_inquiry_request(array $payload, WP_REST_Reque
         'ua' => isset($_SERVER['HTTP_USER_AGENT']) ? sanitize_text_field((string) $_SERVER['HTTP_USER_AGENT']) : '',
     ];
 
-    $request_id = iss_payments_lite_insert_request('inquiry', $entry);
-    if ($request_id <= 0) {
-        return new WP_REST_Response(['ok' => false, 'error' => 'Anfrage konnte nicht gespeichert werden.'], 500);
-    }
-    $entry['request_id'] = $request_id;
-    iss_payments_lite_send_request_notification($request_id, 'inquiry', $entry);
-
-    do_action('iss_payments_lite_inquiry_created', $entry, $request);
-    do_action('iss_payments_lite_request_created', 'inquiry', $entry, $request);
-
-    return new WP_REST_Response(['ok' => true], 200);
+    return iss_payments_lite_store_request('inquiry', $entry, $payload, $request);
 }
 
 function iss_payments_lite_process_order_request(array $payload, WP_REST_Request $request): WP_REST_Response {
@@ -755,14 +829,7 @@ function iss_payments_lite_process_order_request(array $payload, WP_REST_Request
         $publication_id,
         $quantity,
     ];
-    $duplicate = iss_payments_lite_check_duplicate('order', $duplicate_parts);
-    if ($duplicate instanceof WP_REST_Response) {
-        return $duplicate;
-    }
     $duplicate_hash = iss_payments_lite_duplicate_hash('order', $duplicate_parts);
-    if (iss_payments_lite_recent_duplicate_exists('order', $duplicate_hash)) {
-        return new WP_REST_Response(['ok' => false, 'error' => 'Diese Anfrage wurde bereits gesendet.'], 409);
-    }
 
     $entry = [
         'time' => current_time('mysql'),
@@ -781,17 +848,7 @@ function iss_payments_lite_process_order_request(array $payload, WP_REST_Request
         'ua' => isset($_SERVER['HTTP_USER_AGENT']) ? sanitize_text_field((string) $_SERVER['HTTP_USER_AGENT']) : '',
     ];
 
-    $request_id = iss_payments_lite_insert_request('order', $entry);
-    if ($request_id <= 0) {
-        return new WP_REST_Response(['ok' => false, 'error' => 'Anfrage konnte nicht gespeichert werden.'], 500);
-    }
-    $entry['request_id'] = $request_id;
-    iss_payments_lite_send_request_notification($request_id, 'order', $entry);
-
-    do_action('iss_payments_lite_order_created', 'publication', $entry, $request);
-    do_action('iss_payments_lite_request_created', 'order', $entry, $request);
-
-    return new WP_REST_Response(['ok' => true], 200);
+    return iss_payments_lite_store_request('order', $entry, $payload, $request);
 }
 
 add_filter('iss_publications_order_button_html', function ($html, $post_id, $context) {
