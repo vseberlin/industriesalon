@@ -508,10 +508,15 @@
 }
 
 .iss-timeline-query__controls--calendar .iss-timeline__presets {
-  display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
+  display: flex;
   gap: 0.4rem;
   margin: 0;
+}
+
+.iss-timeline-query__controls--calendar .iss-timeline__preset {
+  flex: 1 1 auto;
+  width: auto;
+  white-space: nowrap;
 }
 
 .iss-timeline-query__controls--calendar .iss-timeline__filters {
@@ -523,8 +528,20 @@
 
 .iss-timeline-query__controls--calendar .iss-timeline__filter--choices,
 .iss-timeline-query__controls--calendar .iss-date-calendar,
+.iss-timeline__date-options,
 .iss-timeline-query__controls--calendar .iss-timeline__filter-actions {
   grid-column: 1 / -1;
+}
+
+.iss-timeline__date-options summary {
+  cursor: pointer;
+}
+
+.iss-timeline__date-fields {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.75rem;
+  margin-top: 0.75rem;
 }
 
 .iss-timeline-query__controls--calendar .iss-date-calendar {

@@ -34,4 +34,33 @@ $expect(str_contains($calendar['html'], 'data-wp-on--click="actions.follow"') &&
 $picker = iss_programm_render_availability_calendar(['id' => 1, 'type' => 'fuehrung', 'tag' => '']);
 $expect(str_contains($picker, 'role="grid"') && str_contains($picker, 'actions.calendarKey') && str_contains($picker, 'aria-disabled'), 'One accessible picker exposes keyboard and availability contracts');
 $expect(!str_contains($picker, '<script') && !str_contains($picker, 'flatpickr'), 'Picker uses existing script module, with no library or inline script');
+$compact = iss_timeline_build_query_block_config(['className' => 'is-style-programme-compact', 'showCalendarBridge' => false]);
+$expect($compact['render']['programmeLayout'] && !$compact['ui']['showCalendarBridge'], 'Programme presentation works independently of calendar controls');
+$expect(!$base['render']['programmeLayout'], 'Calendar controls alone do not change the row presentation');
+$clock = static fn(): string => '2028-02-20 12:00:00';
+add_filter('iss_occurrences_query_now', $clock);
+try {
+    $exhibition = ['type' => 'ausstellung', 'title' => 'Fixture', 'start_raw' => '2028-02-01 00:00:00', 'end_raw' => '2028-03-07 23:59:59', 'day_label' => '01.02.', 'time_label' => 'bis 7. März 2028'];
+    $opts = ['programmeLayout' => true, 'yearGrouping' => false, 'showRecommendButton' => false];
+    $html = iss_timeline_render_items_list([$exhibition], $opts);
+    $expect(str_contains($html, 'Läuft bis') && str_contains($html, 'datetime="2028-03-07"'), 'Running exhibitions display their closing date');
+    $expect(!str_contains($html, 'iss-timeline__time'), 'Closing date is not repeated as a second date label');
+    foreach (['2028-01-01 12:00:00', '2028-04-01 12:00:00'] as $now) {
+        $shifted_clock = static fn(): string => $now;
+        add_filter('iss_occurrences_query_now', $shifted_clock, 20);
+        $html = iss_timeline_render_items_list([$exhibition], $opts);
+        $expect(!str_contains($html, 'Läuft bis') && str_contains($html, 'datetime="2028-02-01"'), 'Future and past exhibitions retain their start date');
+        remove_filter('iss_occurrences_query_now', $shifted_clock, 20);
+    }
+    $exhibition['is_open_ended'] = true;
+    $exhibition['day_label'] = 'Laufend';
+    $html = iss_timeline_render_items_list([$exhibition], $opts);
+    $expect(!str_contains($html, 'Läuft bis') && str_contains($html, 'Laufend'), 'Open-ended exhibitions do not acquire a closing date');
+    unset($exhibition['is_open_ended']);
+    $exhibition['type'] = 'event';
+    $html = iss_timeline_render_items_list([$exhibition], $opts);
+    $expect(!str_contains($html, 'Läuft bis') && str_contains($html, 'datetime="2028-02-01"'), 'Running events retain their start date');
+} finally {
+    remove_filter('iss_occurrences_query_now', $clock);
+}
 WP_CLI::success("Month calendar: $checks read-only checks passed.");

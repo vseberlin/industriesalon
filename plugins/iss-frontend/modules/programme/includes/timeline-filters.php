@@ -469,6 +469,7 @@ function iss_timeline_render_choice_filter($args = []) {
 
 function iss_timeline_build_query_block_config($attributes = []) {
     $attributes = is_array($attributes) ? $attributes : [];
+    $styles = preg_split('/\s+/', trim((string) ($attributes['className'] ?? ''))) ?: [];
 
     $group = sanitize_text_field((string) ($attributes['group'] ?? ''));
     $default_month = preg_replace('/[^0-9\-]/', '', (string) ($attributes['defaultMonth'] ?? ''));
@@ -503,6 +504,7 @@ function iss_timeline_build_query_block_config($attributes = []) {
             'taxonomy_filters' => iss_timeline_get_fixed_taxonomy_rules_from_attributes($attributes),
         ],
         'render' => [
+            'programmeLayout' => (bool) array_intersect(['is-style-programme', 'is-style-programme-compact'], $styles),
             'renderMode' => (($attributes['renderMode'] ?? 'timeline') === 'cards') ? 'cards' : 'timeline',
             'showCardImage' => !array_key_exists('showCardImage', $attributes) || (bool) $attributes['showCardImage'],
             'showCardSummary' => !array_key_exists('showCardSummary', $attributes) || (bool) $attributes['showCardSummary'],
@@ -556,6 +558,9 @@ function iss_timeline_render_query_block($attributes = [], $content = '', $block
     $config = iss_timeline_apply_public_filters(iss_timeline_build_query_block_config($attributes), $attributes, $input);
     if (!empty($config['render']['showTicketsButton'])) { iss_programm_enqueue_calendar_assets(); }
     $selection = $config['selection'];
+    if ($config['render']['programmeLayout'] && in_array($config['filters']['time_mode'], ['month', 'range'], true)) {
+        $config['render']['yearGrouping'] = false;
+    }
     $calendar = $selection['view'] === 'calendar' ? iss_timeline_render_month_calendar($config, $scope, $input) : null;
     $listing = iss_timeline_get_listing_response($config, $config['render']);
     $ui = $config['ui'];
@@ -564,7 +569,7 @@ function iss_timeline_render_query_block($attributes = [], $content = '', $block
     $intro = trim((string) ($attributes['intro'] ?? ''));
     $shell_mode = sanitize_key((string) ($attributes['shellMode'] ?? 'section'));
     $wrapper = [
-        'class' => 'iss-timeline-query' . ($shell_mode === 'body' ? '' : ' iss-container'), 'id' => $scope,
+        'class' => 'iss-timeline-query' . ($config['render']['programmeLayout'] ? ' iss-timeline--programme' : '') . ($ui['showCalendarBridge'] ? ' iss-timeline-query--calendar' : '') . ($shell_mode === 'body' ? '' : ' iss-container'), 'id' => $scope,
         'data-wp-interactive' => 'iss/timeline', 'data-wp-router-region' => $scope,
         'data-wp-bind--aria-busy' => 'context.busy',
     ];
@@ -626,6 +631,9 @@ function iss_timeline_render_query_block($attributes = [], $content = '', $block
             ]);
         }
         $out .= $calendar['html'] ?? '';
+        if ($calendar) {
+            $out .= '<details class="iss-timeline__date-options"' . ($selection['day'] !== '' ? ' open' : '') . '><summary>' . esc_html__('Datum direkt wählen', 'iss-timeline') . '</summary><div class="iss-timeline__date-fields">';
+        }
         if ($ui['showMonthFilter'] || $ui['showCalendarBridge']) {
             $months = iss_timeline_collect_future_month_options(iss_timeline_get_future_horizon_months());
             $month = $selection['month'] ?: ($config['filters']['time_mode'] === 'month' ? $config['filters']['month'] : '');
@@ -638,6 +646,7 @@ function iss_timeline_render_query_block($attributes = [], $content = '', $block
             $out .= '<label class="iss-timeline__filter"><span class="iss-timeline__filter-label">' . esc_html__('Tag', 'iss-timeline') . '</span>'
                 . '<input type="date" name="' . esc_attr($name . '[day]') . '" value="' . esc_attr($selection['day']) . '"></label>';
         }
+        if ($calendar) { $out .= '</div></details>'; }
         if ($ui['showPostTypeFilter']) {
             $post_type = count($config['filters']['post_types']) === 1 ? $config['filters']['post_types'][0] : '';
             $out .= $select('post_type', __('Post-Typ', 'iss-timeline'), $ui['postTypeOptions'], $post_type);
@@ -662,7 +671,25 @@ function iss_timeline_render_query_block($attributes = [], $content = '', $block
             _n('%d Eintrag auf dieser Seite', '%d Einträge auf dieser Seite', (int) $listing['batchCount'], 'iss-timeline'),
             (int) $listing['batchCount']
         );
+        if ($ui['showCalendarBridge']) {
+            $heading = __('Termine', 'iss-timeline');
+            if ($selection['day'] !== '') {
+                $date = new DateTimeImmutable($selection['day'], wp_timezone());
+                $heading = iss_programm_format_date_long_de($date->getTimestamp());
+            } elseif ($config['filters']['time_mode'] === 'month') {
+                $heading = iss_timeline_format_month_label($config['filters']['month']);
+            } elseif ($selection['presetActive'] && isset($buttons[(int) $selection['preset']])) {
+                $heading = $buttons[(int) $selection['preset']]['label'];
+            }
+            foreach ($ui['typeOptions'] as $option) {
+                if ($option['value'] === $config['filters']['item_type'] && $option['value'] !== 'all') {
+                    $count_label .= ' · ' . $option['label'];
+                }
+            }
+            $out .= '<header class="iss-timeline-query__heading"><h2 class="iss-timeline-query__title">' . esc_html($heading) . '</h2>';
+        }
         $out .= '<p class="iss-timeline-query__meta" data-timeline-query-meta>' . esc_html($count_label) . '</p>';
+        if ($ui['showCalendarBridge']) { $out .= '</header>'; }
     }
     $out .= '<div class="iss-timeline" data-timeline-query-results tabindex="-1">' . $listing['html'] . '</div>';
     if (!empty($config['render']['showLoadMore']) && iss_programm_preview_datetime() === '' && ($selection['page'] > 1 || $listing['hasMore'])) {

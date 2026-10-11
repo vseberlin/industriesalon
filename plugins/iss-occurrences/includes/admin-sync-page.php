@@ -262,17 +262,9 @@ if (!function_exists('iss_occurrences_sync_slot_excerpt')) {
 
 if (!function_exists('iss_occurrences_sync_slot_landing_target_url')) {
     function iss_occurrences_sync_slot_landing_target_url(array $slot_row): string {
-        if (!iss_occurrences_sync_slot_contains_repair_cafe($slot_row)) {
-            return '';
-        }
-
-        $page = get_page_by_path('repair-cafe');
-        if ($page instanceof WP_Post && $page->post_status === 'publish') {
-            $url = get_permalink($page);
-            return is_string($url) ? esc_url_raw($url) : '';
-        }
-
-        return esc_url_raw(home_url('/repair-cafe/'));
+        return iss_occurrences_sync_slot_contains_repair_cafe($slot_row)
+            ? iss_occurrences_event_series_landing_target_url('event:repair-cafe')
+            : '';
     }
 }
 
@@ -299,18 +291,6 @@ if (!function_exists('iss_occurrences_sync_event_series_title')) {
         $title = trim($title);
 
         return $title !== '' ? mb_convert_case($title, MB_CASE_TITLE, 'UTF-8') : 'Veranstaltungsreihe';
-    }
-}
-
-if (!function_exists('iss_occurrences_sync_event_series_landing_target_url')) {
-    function iss_occurrences_sync_event_series_landing_target_url(string $series_key): string {
-        return iss_occurrences_normalize_series_key($series_key) === 'event:repair-cafe'
-            ? iss_occurrences_sync_slot_landing_target_url([
-                'raw_title' => 'Repair-Café',
-                'clean_title' => 'Repair-Café',
-                'description' => '',
-            ])
-            : '';
     }
 }
 
@@ -623,7 +603,7 @@ add_action('admin_post_iss_occurrences_set_event_series_source', function () {
     $summaries = iss_occurrences_sync_get_event_series_summaries();
     $summary = is_array($summaries[$series_key] ?? null) ? $summaries[$series_key] : [];
     $title = iss_occurrences_sync_event_series_title($series_key, $summary);
-    $fallback_url = iss_occurrences_sync_event_series_landing_target_url($series_key);
+    $fallback_url = iss_occurrences_event_series_landing_target_url($series_key);
     if ($fallback_url !== '' && trim((string) get_post_meta($post_id, 'iss_timeline_target_url', true)) === '') {
         update_post_meta($post_id, 'iss_timeline_target_url', $fallback_url);
     }
@@ -726,7 +706,7 @@ add_action('admin_post_iss_occurrences_set_event_series_review_state', function 
             'source_post_id' => 0,
             'source_post_type' => '',
             'supersaas_title' => $title,
-            'fallback_url' => iss_occurrences_sync_event_series_landing_target_url($series_key),
+            'fallback_url' => iss_occurrences_event_series_landing_target_url($series_key),
             'review_state' => $review_state,
             'origin' => 'supersaas',
         ]);

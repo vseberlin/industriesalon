@@ -8,6 +8,7 @@ test('filters replace one server region, preserve history and keep booking usabl
     if (request.resourceType() === 'fetch' && new URL(request.url()).pathname === '/kalender/') reads.push(request.url());
   });
   const block = page.locator('[data-timeline-query]').first();
+  await block.locator('.iss-timeline__date-options > summary').click();
   await block.locator('input[type="date"]').fill('2030-10-11');
   await block.getByRole('button', { name: 'Anwenden', exact: true }).click();
   await expect(page).toHaveURL(/2030-10-11/);
@@ -62,6 +63,7 @@ test('a later filter wins when an older page response arrives last', async ({ pa
     await route.continue();
   });
   const block = page.locator('[data-timeline-query]').first();
+  await block.locator('.iss-timeline__date-options > summary').click();
   const day = block.locator('input[type="date"]');
   await day.fill('2030-10-11');
   await block.getByRole('button', { name: 'Anwenden', exact: true }).click();
@@ -86,6 +88,7 @@ test('a failed region fetch falls back to its ordinary GET page', async ({ page 
     else await route.continue();
   });
   const block = page.locator('[data-timeline-query]').first();
+  await block.locator('.iss-timeline__date-options > summary').click();
   await block.locator('input[type="date"]').fill('2030-10-11');
   await block.getByRole('button', { name: 'Anwenden', exact: true }).click();
   await expect(page).toHaveURL(/2030-10-11/);
@@ -97,6 +100,7 @@ test('a failed region fetch falls back to its ordinary GET page', async ({ page 
 test('Back while a filter is pending keeps the selected history entry', async ({ page }) => {
   await page.goto('/kalender/', { waitUntil: 'networkidle' });
   const block = page.locator('[data-timeline-query]').first();
+  await block.locator('.iss-timeline__date-options > summary').click();
   const day = block.locator('input[type="date"]');
   await day.fill('2030-10-10');
   await block.getByRole('button', { name: 'Anwenden', exact: true }).click();

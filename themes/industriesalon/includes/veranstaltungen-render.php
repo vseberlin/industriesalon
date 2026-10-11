@@ -540,11 +540,30 @@ function industriesalon_event_ticket_action(int $id, array $row): array
     return [];
 }
 
+/** Repair-Cafe programme images follow its effective landing hero, including editor overrides. */
+add_filter('iss_programm_card_image', static function (string $image, array $row, string $size, array $attr): string {
+    if (($row['series_key'] ?? '') !== 'event:repair-cafe') {
+        return $image;
+    }
+    $template = get_block_template(get_stylesheet() . '//page-repair-cafe', 'wp_template');
+    $blocks = parse_blocks($template->content ?? '');
+    while ($blocks) {
+        $block = array_shift($blocks);
+        if (($block['blockName'] ?? '') === 'core/cover') {
+            $id = absint($block['attrs']['id'] ?? 0);
+            return wp_attachment_is_image($id) ? wp_get_attachment_image($id, $size, false, $attr) : $image;
+        }
+        $blocks = array_merge($block['innerBlocks'] ?? [], $blocks);
+    }
+    return $image;
+}, 10, 4);
+
 /** Shared card anatomy, with feature and dated-row composition owned by the theme. */
 function industriesalon_programme_entry(array $row, string $variant, string $now): string
 {
+    $is_feature = in_array($variant, ['feature', 'feature-compact'], true);
     $id = (int) ($row['source_post_id'] ?? 0);
-    $url = get_permalink($id);
+    $url = iss_programm_cards_get_card_url($row);
     $title = get_the_title($id);
     $excerpt = trim((string) get_post_field('post_excerpt', $id, 'raw'));
     $location = trim((string) ($row['location_label'] ?? ''));
@@ -558,7 +577,7 @@ function industriesalon_programme_entry(array $row, string $variant, string $now
         $date_html .= '<span class="screen-reader-text"> (' . esc_html((string) ($row['date_label'] ?? $row['start_raw'])) . ')</span>';
     }
     $heading = $variant === 'feature' ? 'h2' : 'h3';
-    $image = get_the_post_thumbnail($id, $variant === 'feature' ? 'full' : 'large', $variant === 'feature'
+    $image = iss_programm_cards_get_image($row, $variant === 'feature' ? 'full' : 'large', $variant === 'feature'
         ? ['loading' => 'eager', 'fetchpriority' => 'high', 'sizes' => '(max-width: 781px) 100vw, 55vw']
         : ['loading' => 'lazy']);
     $html = '<article class="iss-card iss-card--flat iss-card--programme iss-card--programme-' . esc_attr($variant) . ($image === '' ? ' iss-card--programme-no-image' : '') . '">';
@@ -569,7 +588,7 @@ function industriesalon_programme_entry(array $row, string $variant, string $now
         $html .= '<figure class="iss-card__media">' . $image . '</figure>';
     }
     $html .= '<div class="iss-card__body">';
-    if ($variant === 'feature') {
+    if ($is_feature) {
         $labels = ['next' => __('Als Nächstes', 'industriesalon'), 'focus' => __('Im Fokus', 'industriesalon'), 'current' => __('Jetzt zu erleben', 'industriesalon')];
         $html .= '<p class="iss-card__kicker">' . esc_html($labels[$row['feature_label'] ?? 'next']) . '</p>';
     }
@@ -587,13 +606,34 @@ function industriesalon_programme_entry(array $row, string $variant, string $now
     if ($location !== '') {
         $html .= '<p class="iss-card__meta">' . esc_html($location) . '</p>';
     }
-    $html .= '<p class="iss-card__footer"><a class="' . ($variant === 'feature' ? 'iss-button' : 'iss-action-link') . '" href="' . esc_url($action_url) . '">' . esc_html($label) . '<span class="screen-reader-text">: ' . esc_html($title) . '</span></a></p>';
+    $html .= '<p class="iss-card__footer"><a class="' . ($is_feature ? 'iss-button' : 'iss-action-link') . '" href="' . esc_url($action_url) . '">' . esc_html($label) . '<span class="screen-reader-text">: ' . esc_html($title) . '</span></a></p>';
     return $html . '</div></article>';
 }
 
 /** Compose the existing programme block; no second calendar or content store. */
 function industriesalon_programme_overview($html, array $items, array $attributes)
 {
+    if (($attributes['presentation'] ?? '') === 'programme-preview') {
+        iss_programm_enqueue_timeline_assets();
+        iss_programm_enqueue_calendar_assets();
+        $now = iss_occurrences_query_now();
+        $preview = iss_programm_preview_items($items, $now, (int) ($attributes['limit'] ?? 4));
+        $wrapper = get_block_wrapper_attributes(['class' => 'iss-programme-preview' . ($preview['feature'] && $preview['items'] ? ' iss-programme-preview--featured' : '')]);
+        $html = '<div ' . $wrapper . '>';
+        if ($preview['feature']) {
+            $html .= industriesalon_programme_entry($preview['feature'], 'feature-compact', $now);
+        }
+        $html .= '<div class="iss-programme-preview__dates iss-timeline--programme is-style-programme-compact"><div class="iss-timeline">';
+        $html .= $preview['feature'] && !$preview['items']
+            ? '<p>' . esc_html__('Weitere Termine werden angekündigt.', 'industriesalon') . '</p>'
+            : iss_timeline_render_items_list($preview['items'], [
+            'programmeLayout' => true, 'yearGrouping' => false, 'showRecurringNote' => false,
+            'showRecommendButton' => false, 'detailsButtonText' => __('Details', 'industriesalon'),
+            'ticketsButtonText' => __('Buchen', 'industriesalon'),
+        ]);
+        $html .= '</div><p class="iss-programme-preview__more"><a class="iss-action-link" href="' . esc_url(home_url('/kalender/')) . '">' . esc_html__('Alle Termine ansehen', 'industriesalon') . '</a></p></div>';
+        return $html . '</div>';
+    }
     if (($attributes['presentation'] ?? '') !== 'programme') {
         return $html;
     }

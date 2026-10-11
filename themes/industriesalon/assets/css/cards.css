@@ -1953,6 +1953,36 @@
   text-transform: uppercase;
 }
 
+.iss-card--programme-feature-compact {
+  --iss-card-title-size: clamp(1.5rem, 2vw, 2rem);
+  --iss-card-accent: var(--iss-accent);
+
+  background: var(--iss-accent-soft);
+  border-top: 3px solid var(--iss-accent);
+}
+
+.iss-card--programme-feature-compact .iss-card__media {
+  aspect-ratio: 4 / 3;
+}
+
+.iss-card--programme-feature-compact .iss-card__body {
+  padding: clamp(1.25rem, 2vw, 2rem);
+  gap: 1rem;
+}
+
+.iss-card--programme-feature-compact .iss-card__kicker {
+  font-size: 0.75rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.iss-card--programme-feature-compact .iss-card__text {
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 4;
+  overflow: hidden;
+}
+
 .iss-card--programme-row {
   display: grid;
   grid-template-columns: minmax(8rem, 0.7fr) minmax(0, 3fr) minmax(10rem, 1fr);

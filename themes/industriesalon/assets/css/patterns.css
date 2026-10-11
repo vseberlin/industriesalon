@@ -5099,44 +5099,6 @@ iss-info-panel--brown
    FRONT PAGE TIMELINE SECTION
    ========================================================= */
 
-.iss-timeline-section__header {
-  display: grid;
-  grid-template-columns: minmax(0, 1.7fr) minmax(18rem, 1fr);
-  gap: clamp(1.5rem, 3vw, 3rem);
-  align-items: end;
-  margin-bottom: clamp(2rem, 4vw, 3rem);
-}
-
-.iss-timeline-section__intro {
-  max-width: none;
-}
-
-.iss-section--timeline .wp-block-columns {
-  display: grid;
-  grid-template-columns: clamp(16rem, 24vw, 19rem) minmax(0, 1fr);
-  gap: clamp(1.5rem, 3vw, 3rem);
-  align-items: start;
-}
-
-.iss-section--timeline .wp-block-columns > .wp-block-column {
-  margin-top: 0;
-}
-
-.iss-timeline-section__intro-col,
-.iss-timeline-section__list-col {
-  min-width: 0;
-}
-
-.iss-timeline-section__intro-col {
-  flex: initial;
-  flex-basis: auto;
-}
-
-.iss-timeline-section__list-col {
-  flex: initial;
-  flex-basis: auto;
-}
-
 .iss-timeline-promo-slot {
   justify-self: end;
   width: min(100%, 22rem);
@@ -5242,15 +5204,6 @@ iss-info-panel--brown
 }
 
 @media (max-width: 900px) {
-  .iss-timeline-section__header {
-    grid-template-columns: 1fr;
-    align-items: start;
-  }
-
-  .iss-section--timeline .wp-block-columns {
-    grid-template-columns: 1fr;
-  }
-
   .iss-timeline-promo-slot {
     justify-self: stretch;
     width: 100%;

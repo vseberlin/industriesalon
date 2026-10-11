@@ -101,7 +101,7 @@
                 SelectControl ? el(SelectControl, {
                   label: 'Darstellung',
                   value: attrs.presentation || 'cards',
-                  options: [{ value: 'cards', label: 'Karten' }, { value: 'programme', label: 'Veranstaltungsübersicht' }],
+                  options: [{ value: 'cards', label: 'Karten' }, { value: 'programme', label: 'Veranstaltungsübersicht' }, { value: 'programme-preview', label: 'Automatischer Fokus mit Terminen' }],
                   onChange: function (value) { setAttributes({ presentation: value }); }
                 }) : null,
                 TextControl
@@ -262,7 +262,9 @@
         'div',
         null,
         controls,
-        el('p', null, attrs.presentation === 'programme'
+        el('p', null, attrs.presentation === 'programme-preview'
+          ? 'Automatischer Fokus mit kommenden Terminen: Die nächste Veranstaltung wird hervorgehoben, in ruhigen Zeiten eine laufende Ausstellung. Der Fokus wechselt mit den Terminen und erscheint nicht doppelt in der Liste. Die Anzahl steuert die Liste daneben.'
+          : attrs.presentation === 'programme'
           ? 'Veranstaltungsübersicht: nächster Termin, weitere Termine, laufendes Programm und Ausstellungen. Termine und Bilder stammen aus den veröffentlichten Einträgen; Kurztexte aus deren Textauszug.'
           : 'Programm Karten (server-rendered, nutzt die Timeline-Abfrage).')
       );

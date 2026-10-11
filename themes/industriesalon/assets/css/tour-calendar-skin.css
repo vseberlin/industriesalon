@@ -235,3 +235,36 @@
   font-weight: 400;
   cursor: default;
 }
+
+/* Programme dots mark occurrence days, including non-bookable exhibitions. */
+.iss-programme-calendar .iss-date-calendar__day {
+  position: relative;
+}
+
+.iss-programme-calendar .has-events .iss-date-calendar__day::after,
+.iss-date-calendar__marker {
+  content: "";
+  width: 0.35rem;
+  height: 0.35rem;
+  border-radius: var(--iss-radius-pill);
+  background: var(--iss-cal-accent);
+}
+
+.iss-programme-calendar .has-events .iss-date-calendar__day::after {
+  position: absolute;
+  bottom: 0.25rem;
+  left: calc(50% - 0.175rem);
+}
+
+.iss-programme-calendar .has-events [data-selected="true"]::after {
+  background: var(--iss-cal-bg);
+}
+
+.iss-date-calendar__legend {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin: 0.5rem 0 0;
+  color: var(--iss-cal-muted);
+  font-size: 0.8rem;
+}

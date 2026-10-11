@@ -319,7 +319,6 @@ function iss_timeline_render_bottom_button($opts = []) {
 function iss_timeline_build_actions($row, $opts = []) {
     if (!is_array($row)) return [];
     $opts = is_array($opts) ? $opts : [];
-    $mode = isset($row['cta_mode']) ? sanitize_key((string) $row['cta_mode']) : '';
     $source_post_id = isset($row['source_post_id']) ? (int) $row['source_post_id'] : 0;
     $show_details = !array_key_exists('showDetailsButton', $opts) || (bool) $opts['showDetailsButton'];
     $show_recommend = !array_key_exists('showRecommendButton', $opts) || (bool) $opts['showRecommendButton'];
@@ -338,22 +337,8 @@ function iss_timeline_build_actions($row, $opts = []) {
     if ($recommend_label === '') $recommend_label = __('Empfehlen', 'iss-timeline');
     if ($tickets_label === '') $tickets_label = __('Tickets kaufen', 'iss-timeline');
 
-    $details_url = '';
-    if ($source_post_id > 0) {
-        $permalink = get_permalink($source_post_id);
-        if (is_string($permalink) && $permalink !== '') {
-            $details_url = $permalink;
-        }
-    }
-
+    $details_url = iss_programm_cards_get_card_url($row);
     $booking_url = iss_timeline_get_booking_url_for_row($row);
-
-    $fallback_url = trim((string) ($row['cta_url'] ?? ''));
-    if ($mode === 'external' && $fallback_url !== '') {
-        $details_url = $fallback_url;
-    } elseif ($details_url === '' && $fallback_url !== '') {
-        $details_url = $fallback_url;
-    }
 
     $share_target = $details_url !== '' ? $details_url : $booking_url;
     $recommend_url = '';
@@ -518,9 +503,8 @@ function iss_timeline_render_items_cards($items, $opts = []) {
         $type_label = iss_timeline_get_card_badge_label($row);
         $summary = trim((string) ($row['summary'] ?? ''));
         $actions = iss_timeline_build_actions($row, $opts);
-        $source_post_id = isset($row['source_post_id']) ? (int) $row['source_post_id'] : 0;
-        $permalink = $source_post_id > 0 ? get_permalink($source_post_id) : '';
-        $permalink = is_string($permalink) ? trim($permalink) : '';
+        $permalink = iss_programm_cards_get_card_url($row);
+        $image = $show_card_image ? iss_programm_cards_get_image($row) : '';
         $card_footer = '';
 
         if (count($actions) === 1 && $permalink !== '') {
@@ -546,12 +530,12 @@ function iss_timeline_render_items_cards($items, $opts = []) {
         }
         $out .= '<article class="' . esc_attr($card_class) . '">';
 
-        if ($show_card_image && $source_post_id > 0 && has_post_thumbnail($source_post_id)) {
+        if ($image !== '') {
             $out .= '<figure class="iss-card__media iss-timeline-card__media">';
             if ($permalink !== '') {
                 $out .= '<a href="' . esc_url($permalink) . '">';
             }
-            $out .= get_the_post_thumbnail($source_post_id, 'large');
+            $out .= $image;
             if ($permalink !== '') {
                 $out .= '</a>';
             }
@@ -622,6 +606,8 @@ function iss_timeline_render_items_cards($items, $opts = []) {
 
 function iss_timeline_render_items_list($items, $opts = []) {
     $opts = is_array($opts) ? $opts : [];
+    $programme_layout = !empty($opts['programmeLayout']);
+    $now = $programme_layout ? date_create_immutable(iss_occurrences_query_now(), wp_timezone()) : false;
     $yearGrouping = array_key_exists('yearGrouping', $opts) ? (bool) $opts['yearGrouping'] : true;
     $order = isset($opts['order']) ? strtoupper((string) $opts['order']) : 'ASC';
     if (!in_array($order, ['ASC', 'DESC'], true)) $order = 'ASC';
@@ -655,18 +641,35 @@ function iss_timeline_render_items_list($items, $opts = []) {
         }
 
         foreach ($groupRows as $row) {
-            $type_label = iss_timeline_get_card_badge_label($row);
-            $source_post_id = isset($row['source_post_id']) ? (int) $row['source_post_id'] : 0;
-            $permalink = $source_post_id > 0 ? get_permalink($source_post_id) : '';
-            $permalink = is_string($permalink) ? trim($permalink) : '';
-            $has_media = $source_post_id > 0 && has_post_thumbnail($source_post_id);
+            $type_label = $programme_layout ? iss_timeline_get_type_label($row['type'] ?? '') : iss_timeline_get_card_badge_label($row);
+            $permalink = iss_programm_cards_get_card_url($row);
+            $image = iss_programm_cards_get_image($row);
+            $has_media = $image !== '';
             $item_classes = 'iss-timeline__item';
             $item_classes .= $has_media ? ' iss-timeline__item--has-media' : ' iss-timeline__item--no-media';
 
             $out .= '<article class="' . esc_attr($item_classes) . '">';
             $out .= '<div class="iss-timeline__date">';
-            $out .= '<div class="iss-timeline__day">' . esc_html((string) ($row['day_label'] ?? '')) . '</div>';
-            if (!empty($row['time_label'])) {
+            $date = $programme_layout && !empty($row['start_raw']) ? date_create_immutable($row['start_raw'], wp_timezone()) : false;
+            $end = $programme_layout && !empty($row['end_raw']) ? date_create_immutable($row['end_raw'], wp_timezone()) : false;
+            $running_exhibition = $date && $end && $now && empty($row['is_open_ended'])
+                && in_array($row['type'] ?? '', ['ausstellung', 'ausstellungen', 'exhibition'], true)
+                && $date <= $now && $end >= $now;
+            if ($running_exhibition) {
+                $date = $end;
+                $out .= '<span class="iss-timeline__date-status">' . esc_html__('Läuft bis', 'iss-timeline') . '</span>';
+            }
+            if ($programme_layout && $date && empty($row['is_open_ended'])) {
+                $weekday = rtrim(iss_programm_weekday_short_de((int) $date->format('N')), '.');
+                $month = mb_substr(iss_programm_month_name_de((int) $date->format('n')), 0, 3);
+                $out .= '<time class="iss-timeline__day" datetime="' . esc_attr($date->format('Y-m-d')) . '">';
+                $out .= '<span class="screen-reader-text">' . esc_html(iss_programm_format_date_long_de($date->getTimestamp())) . '</span>';
+                $out .= '<span class="iss-timeline__weekday" aria-hidden="true">' . esc_html($weekday . ' · ' . $month) . '</span>';
+                $out .= '<span class="iss-timeline__day-number" aria-hidden="true">' . esc_html($date->format('d')) . '</span></time>';
+            } else {
+                $out .= '<div class="iss-timeline__day">' . esc_html((string) ($row['day_label'] ?? '')) . '</div>';
+            }
+            if (!$running_exhibition && !empty($row['time_label'])) {
                 $out .= '<div class="iss-timeline__time">' . esc_html((string) $row['time_label']) . '</div>';
             }
             $out .= '</div>';
@@ -693,13 +696,14 @@ function iss_timeline_render_items_list($items, $opts = []) {
             if ($recurring_note !== '') {
                 $out .= '<div class="iss-timeline__summary">' . esc_html($recurring_note) . '</div>';
             }
-            if ($grouped_occurrences !== '') {
+            if ($grouped_occurrences !== '' && !$programme_layout) {
                 $out .= $grouped_occurrences;
             }
 
             $actions = iss_timeline_build_actions($row, $opts);
-            if (!empty($actions)) {
+            if (!empty($actions) || ($programme_layout && $grouped_occurrences !== '')) {
                 $out .= '<div class="iss-timeline__actions">';
+                if ($programme_layout) { $out .= $grouped_occurrences; }
                 foreach ($actions as $action) {
                     if (!is_array($action) || empty($action['url'])) continue;
                     $out .= iss_timeline_render_action_link($action);
@@ -712,7 +716,7 @@ function iss_timeline_render_items_list($items, $opts = []) {
                 if ($permalink !== '') {
                     $out .= '<a href="' . esc_url($permalink) . '">';
                 }
-                $out .= get_the_post_thumbnail($source_post_id, 'large');
+                $out .= $image;
                 if ($permalink !== '') {
                     $out .= '</a>';
                 }

@@ -4,15 +4,15 @@ Immediate executable work only. Larger future programs live in `docs/project/bac
 
 ## Next
 
-- Coordinate an authorized release of the completed local
-  [WordPress refactor](docs/project/wordpress-refactoring-plan.md): review/push
-  the local commits, take target-local backups, apply the four scoped owner
+- Coordinate an authorized staging release of the completed
+  [WordPress refactor](docs/project/wordpress-refactoring-plan.md) and accepted
+  programme presentation from GitHub `main`: take target-local backups, apply the four scoped owner
   migrations, and activate the prepared
   [maintenance path](docs/runbooks/staging-maintenance.md). Verify real editor
   save/reload/block validity, staff booking/order flows, the availability picker
   and programme month view, macOS Safari, full
   uploads/intake restoration and the paired FPM/Nginx limits before acceptance.
-  No push, deployment, host configuration or staging migration has been done.
+  No deployment, host configuration or staging migration has been done.
 - Staff-test the deployed [shared workspace](docs/project/editor-workspace-plan.md)
   on staging: one landing, project, tour, publication and event; image/title/text,
   owner controls, recovery and native Save Draft. Verify Firefox and real

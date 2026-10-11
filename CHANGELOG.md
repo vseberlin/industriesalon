@@ -6,6 +6,67 @@ be recovered from Git history.
 
 ## 2026-10-11
 
+- Made the Repair-Café landing destination an occurrence-owner rule shared by
+  mapping, SuperSaaS sync and public reads, so stale imported metadata cannot
+  replace it for current or new dates. Programme renderers now share one image
+  helper; the theme supplies Repair-Café's effective landing-template hero,
+  including Site Editor overrides. The former direct-thumbnail paths could not
+  use that hero without copying media metadata. Existing images remain the
+  fallback. Passed 96 read-only destination/hero/overview/preview/booking checks,
+  PHP lint/PHPStan and desktop/390px browser review. PHPCS passes the six other
+  changed runtime files; sync admin retains the same 8 errors/21 warnings as
+  the `3ef84f7` baseline, outside the changed lines. No live SuperSaaS sync, content/media copy,
+  DB migration or uploads artifact was needed or performed.
+
+- Programme titles, images and detail actions now honor the occurrence owner's
+  existing content destination through the shared card URL helper. Repair-Café
+  therefore links to `/repair-cafe/` across the homepage, calendar and programme
+  cards for every occurrence; its series metadata/import already supplies that
+  destination. Booking destinations retain their separate owner. Passed 80
+  read-only overview/preview/booking checks, PHP lint/PHPCS/PHPStan and a browser
+  link check. No content, DB or uploads artifact is needed for this renderer fix.
+
+- Added an automatic feature beside the four homepage programme dates. The
+  existing program-cards block reuses programme selection, expiry and optional
+  expiring editorial focus; a current exhibition fills quiet periods. The
+  featured source is excluded from the adjacent list. Existing feature-card
+  markup handles entries with or without images; the layout stacks on phones
+  and collapses when no feature is available. Both editorial and fallback
+  homepage paths use the same presentation, exposed in the block editor.
+  Homepage cache headers now keep date rotation current. Passed 122 read-only
+  preview/rotation/overview/booking checks, targeted PHP/JS/CSS checks, editor
+  control smoke checks and template roundtrips. Chrome desktop/phone review
+  covered the feature, full-calendar link and booking request-form handoff
+  without submission. Real editor save/reload and cross-engine rerun remain.
+  Existing editorial data/media are unchanged; no DB/uploads artifact is needed.
+
+- Aligned the homepage programme preview with the calendar through native
+  Programme / Compact programme styles on the existing timeline-query block.
+  The active editorial `front-timeline` slot and Gutenberg fallback both keep
+  four entries under Demnächst, shorter summaries, Details links and primary
+  date selection; obsolete split-column CSS was removed. Running exhibitions
+  show their closing date with Läuft bis, using the occurrence query clock.
+  Shared row presentation no longer depends on displaying calendar controls.
+  Passed 78 read-only calendar/filter/booking checks, targeted PHP lint,
+  PHPCS/PHPStan and CSS lint; template parse roundtrips and native style
+  registration pass. Chrome desktop/390px review covered both pages, the
+  homepage-to-calendar link, filters/month navigation and booking request-form
+  handoff without submission. Real editor save/reload and cross-engine rerun
+  remain. Code and existing media only; no DB/uploads artifact is required.
+
+- Applied the supplied calendar mockup locally: a quiet filter panel, month/day
+  result heading, large semantic dates, existing featured images, inline details
+  and prominent booking actions. Programme days have occurrence dots and only
+  the required week rows; direct date fields remain in native expandable controls.
+  Replaced page-owned boxed rows and unused intro selectors with the shared
+  timeline renderer/skin. Existing occurrence queries, booking intake and editor
+  block settings remain the owners. Template stays theme-backed; no DB migration
+  or uploads artifact is needed. Verified 70 read-only backend checks, PHP
+  lint/PHPCS/PHPStan, CSS/JS checks and parsed-template roundtrip. Live Chrome
+  desktop/phone checks cover filters, empty day, list/month navigation and booking
+  date/time-to-request transition. Existing browser tests were adapted to expand
+  date controls; the cross-engine suite and editor save/reload were not rerun.
+
 - Compared the live staging booking chooser read-only and restored its calendar
   and time-button layout locally, followed by the existing request form. Inline
   and programme grids share the same compact date tiles. Calendar filters now

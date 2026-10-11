@@ -2120,9 +2120,13 @@ final class ISS_Occurrences_Service
         $target_url = '';
         if ($source_post_id > 0) {
             $target_url = esc_url_raw(trim((string) get_post_meta($source_post_id, 'iss_timeline_target_url', true)));
-            if ($target_url !== '') {
-                $content_url = $target_url;
-            }
+        }
+        $series_target = $source_post_type === 'veranstaltung'
+            ? iss_occurrences_event_series_landing_target_url((string) ($row['series_key'] ?? ''))
+            : '';
+        $target_url = $series_target !== '' ? $series_target : $target_url;
+        if ($target_url !== '') {
+            $content_url = $target_url;
         }
 
         if ($source_post_type === 'veranstaltung') {

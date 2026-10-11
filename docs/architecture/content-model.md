@@ -38,7 +38,11 @@ programme card variants extend `cards.css`; obsolete page intro/sidebar/formats
 selectors were removed from `page-events.css`.
 
 Editors maintain titles, featured images and native excerpts on the source
-records. Excerpts are displayed as complete editorial summaries, without automatic
+records. Repair-Café's synced series uses `/repair-cafe/` as its permanent
+programme destination and reuses that landing template's hero image. Mapping,
+SuperSaaS sync and public reads share the destination rule; programme cards read
+the effective template, including Site Editor overrides, without copying image
+metadata to the event. Excerpts are displayed as complete editorial summaries, without automatic
 truncation. Existing material ticket links supply the primary ticket action.
 Images retain their full composition, including embedded credits and poster text.
 Past appointments use the existing paginated timeline, newest first; illustrated,

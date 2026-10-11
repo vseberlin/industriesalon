@@ -109,6 +109,14 @@ add_action('init', function (): void {
             ]
         );
     }
+    foreach (
+        [
+            'programme' => __('Programme', 'industriesalon'),
+            'programme-compact' => __('Compact programme', 'industriesalon'),
+        ] as $name => $label
+    ) {
+        register_block_style('industriesalon/timeline-query', ['name' => $name, 'label' => $label]);
+    }
 });
 
 add_action('enqueue_block_editor_assets', function (): void {

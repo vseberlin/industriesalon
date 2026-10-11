@@ -52,4 +52,24 @@ $dates = array_column(array_merge($first['items'], $second['items']), 'start_raw
 $sorted = $dates; rsort($sorted);
 programme_expect($dates === $sorted, 'Past results newest first across pagination.');
 programme_expect(count(array_unique(array_column(array_merge($first['items'], $second['items']), 'id'))) === count($dates), 'History pages do not repeat occurrences.');
+$repair = get_page_by_path('repair-cafe-terminreihe', OBJECT, 'veranstaltung');
+programme_expect($repair instanceof WP_Post, 'Repair-Cafe series fixture exists.');
+$repair_url = home_url('/repair-cafe/');
+$repair_rows = array_values(array_filter(iss_timeline_get_items_advanced(['limit' => -1, 'filters' => ['time_mode' => 'all', 'post_types' => ['veranstaltung']]]), static function ($row) use ($repair) {
+    return (int) $row['source_post_id'] === $repair->ID;
+}));
+programme_expect(count($repair_rows) > 1 && array_unique(array_column($repair_rows, 'content_url')) === [$repair_url], 'Every Repair-Cafe occurrence inherits the saved landing destination.');
+$repair_html = iss_timeline_render_items_list($repair_rows, ['programmeLayout' => true])
+    . iss_timeline_render_items_cards($repair_rows);
+foreach ($repair_rows as $row) {
+    $repair_html .= iss_programm_cards_render_item($row);
+    foreach (['feature', 'feature-compact', 'row'] as $variant) {
+        $repair_html .= industriesalon_programme_entry($row, $variant, $now);
+    }
+}
+programme_expect(str_contains($repair_html, 'href="' . esc_url($repair_url) . '"') && !str_contains($repair_html, get_permalink($repair)), 'All programme title/detail links use the series destination, never the source event URL.');
+$plain = ['source_post_id' => $repair->ID];
+programme_expect(iss_programm_cards_get_card_url($plain) === get_permalink($repair), 'Rows without a destination retain the source permalink fallback.');
+programme_expect(iss_programm_cards_get_card_url(array_merge($plain, ['content_url' => $repair_url])) === $repair_url, 'Owner-resolved content destination takes precedence over source permalink.');
+programme_expect(iss_programm_cards_get_card_url(array_merge($plain, ['content_url' => $repair_url, 'cta_mode' => 'external', 'cta_url' => 'https://example.org/event/'])) === 'https://example.org/event/', 'Explicit external destination retains existing precedence.');
 WP_CLI::success($GLOBALS['iss_programme_checks'] . ' programme checks passed; no records changed.');

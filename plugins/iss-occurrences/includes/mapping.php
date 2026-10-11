@@ -29,6 +29,18 @@ function iss_occurrences_build_series_key($title, $kind = ''): string
     return $kind !== '' ? $kind . ':' . $slug : $slug;
 }
 
+/** The dedicated landing destination is shared by mapping, sync and public reads. */
+function iss_occurrences_event_series_landing_target_url(string $series_key): string
+{
+    if (iss_occurrences_normalize_series_key($series_key) !== 'event:repair-cafe') {
+        return '';
+    }
+    $page = get_page_by_path('repair-cafe');
+    return $page instanceof WP_Post && $page->post_status === 'publish'
+        ? (string) get_permalink($page)
+        : home_url('/repair-cafe/');
+}
+
 function iss_occurrences_get_tag_sources(): array
 {
     $sources = [];

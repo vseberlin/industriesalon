@@ -1034,7 +1034,7 @@ function industriesalon_render_front_projects_slot(): string
 
 function industriesalon_render_front_timeline_slot(): string
 {
-    return do_blocks('<!-- wp:industriesalon/timeline-query {"shellMode":"body","limit":4,"showMeta":false,"includeRunningRanges":true,"fixedItemTypesList":["fuehrungen","veranstaltungen","ausstellungen"],"showItemTypeFilter":false,"groupRecurringTours":true,"showRecurringNote":false,"showBottomButton":true,"bottomButtonText":"Alle Termine ansehen","bottomButtonUrl":"/kalender/","ticketsButtonText":"Buchen","className":"iss-timeline--scheme-scarlet-red"} /-->');
+    return do_blocks('<!-- wp:industriesalon/program-cards {"presentation":"programme-preview","limit":4,"timeMode":"upcoming","includeRunningRanges":true,"postTypesList":["fuehrung","veranstaltung","ausstellung"]} /-->');
 }
 
 function industriesalon_render_front_visit_info_slot(): string

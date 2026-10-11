@@ -47,7 +47,7 @@ function iss_timeline_render_month_calendar(array $config, string $scope, array 
     }
     $out .= '</tr></thead><tbody><tr>';
     $offset = (int) $start->format('N') - 1;
-    $cells = 42;
+    $cells = (int) ceil(($offset + count($days)) / 7) * 7;
     $today = wp_date('Y-m-d', null, wp_timezone());
     for ($index = 0; $index < $cells; ++$index) {
         if ($index && $index % 7 === 0) { $out .= '</tr><tr>'; }
@@ -65,6 +65,7 @@ function iss_timeline_render_month_calendar(array $config, string $scope, array 
         $out .= '</td>';
     }
     $out .= '</tr></tbody></table>';
+    $out .= '<p class="iss-date-calendar__legend"><span class="iss-date-calendar__marker" aria-hidden="true"></span>' . esc_html__('Mit Termin', 'iss-timeline') . '</p>';
     if (!$items) { $out .= '<p>' . esc_html__('In diesem Monat wurden keine Termine gefunden.', 'iss-timeline') . '</p>'; }
     if ($config['selection']['day'] !== '') {
         $out .= '<p><a data-wp-on--click="actions.follow" href="' . $link([]) . '">' . esc_html__('Ganzen Monat anzeigen', 'iss-timeline') . '</a></p>';

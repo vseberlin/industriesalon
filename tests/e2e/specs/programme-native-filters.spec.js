@@ -23,6 +23,7 @@ for (const scenario of [{ name: 'desktop', js: true, width: 1280 }, { name: 'pho
     await page.getByRole('link', { name: 'Filter zurücksetzen', exact: true }).click();
     await expect(facets.getByRole('radio', { name: 'Alle', exact: true })).toBeChecked();
     const date = block.locator('input[type="date"]');
+    await block.locator('.iss-timeline__date-options > summary').click();
     await expect(date).toBeVisible();
     await date.fill('2030-10-11');
     await block.getByRole('button', { name: 'Anwenden', exact: true }).click();

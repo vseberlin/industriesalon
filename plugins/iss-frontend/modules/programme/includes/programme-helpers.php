@@ -138,6 +138,27 @@ function iss_programm_take_feature(array &$sections, string $now): ?array
     return $row;
 }
 
+/** Compose already-public upcoming rows without repeating the featured source. */
+function iss_programm_preview_items(array $items, string $now, int $limit): array
+{
+    $candidates = array_filter($items, static function (array $row): bool {
+        return in_array($row['source_post_type'] ?? '', ['veranstaltung', 'ausstellung'], true)
+            && ($row['availability_state'] ?? '') !== 'cancelled';
+    });
+    foreach ($candidates as &$row) {
+        $row['focus_until'] = iss_programm_focus_until((int) ($row['source_post_id'] ?? 0));
+    }
+    unset($row);
+    $sections = iss_programm_sections($candidates, $now);
+    $feature = iss_programm_take_feature($sections, $now);
+    if ($feature) {
+        $items = array_filter($items, static function (array $row) use ($feature): bool {
+            return (int) ($row['source_post_id'] ?? 0) !== (int) $feature['source_post_id'];
+        });
+    }
+    return ['feature' => $feature, 'items' => array_slice(array_values($items), 0, max(1, $limit))];
+}
+
 /** Only authenticated editors can change the display clock; no source dates are written. */
 function iss_programm_preview_datetime(): string
 {
@@ -158,7 +179,7 @@ add_filter('iss_occurrences_query_now', static function (string $now): string {
 
 // Dates are evaluated on each page request; shared full-page caches must not freeze them.
 add_action('template_redirect', static function (): void {
-    if (is_page(['veranstaltungen', 'kalender']) || is_singular('veranstaltung')) {
+    if (is_front_page() || is_page(['veranstaltungen', 'kalender']) || is_singular('veranstaltung')) {
         if (!defined('DONOTCACHEPAGE')) {
             define('DONOTCACHEPAGE', true);
         }

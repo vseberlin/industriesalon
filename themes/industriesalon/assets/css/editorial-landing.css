@@ -1121,15 +1121,6 @@
   min-height: 100%;
 }
 
-.iss-landing-dynamic-slot--front-timeline {
-  grid-template-columns: minmax(12rem, 0.4fr) minmax(0, 1fr);
-  align-items: start;
-}
-
-.iss-landing-dynamic-slot--front-timeline > .iss-landing-section__copy .iss-landing-section__title {
-  max-width: 8ch;
-}
-
 .iss-landing-dynamic-slot--front-projects,
 .iss-landing-dynamic-slot--front-visit-info,
 .iss-landing-dynamic-slot--front-newsletter {
@@ -1352,7 +1343,6 @@
 .iss-landing-text,
 .iss-landing-section--treatment-feature-image-overlay .iss-landing-feature,
 .iss-landing-section--treatment-feature-image-overlay .iss-landing-feature__fact,
-.iss-landing-dynamic-slot--front-timeline,
 .iss-landing-dynamic-slot--front-newsletter .iss-newsletter-band__grid {
     grid-template-columns: 1fr;
   }

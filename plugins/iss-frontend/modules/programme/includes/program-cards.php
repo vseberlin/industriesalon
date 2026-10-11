@@ -26,6 +26,15 @@ function iss_programm_cards_get_type_label($item_type) {
 function iss_programm_cards_get_card_url($row) {
     $row = is_array($row) ? $row : [];
 
+    $cta_url = trim((string) ($row['cta_url'] ?? ''));
+    if (($row['cta_mode'] ?? '') === 'external' && $cta_url !== '') {
+        return $cta_url;
+    }
+    $content_url = trim((string) ($row['content_url'] ?? ''));
+    if ($content_url !== '') {
+        return $content_url;
+    }
+
     $source_post_id = isset($row['source_post_id']) ? (int) $row['source_post_id'] : 0;
     if ($source_post_id > 0) {
         $permalink = get_permalink($source_post_id);
@@ -34,8 +43,14 @@ function iss_programm_cards_get_card_url($row) {
         }
     }
 
-    $cta_url = isset($row['cta_url']) ? trim((string) $row['cta_url']) : '';
-    return $cta_url !== '' ? $cta_url : '';
+    return $cta_url;
+}
+
+/** Keep one image path for programme cards, with theme-owned landing composition. */
+function iss_programm_cards_get_image(array $row, string $size = 'large', array $attr = []): string {
+    $post_id = (int) ($row['source_post_id'] ?? 0);
+    $image = $post_id > 0 ? get_the_post_thumbnail($post_id, $size, $attr) : '';
+    return (string) apply_filters('iss_programm_card_image', $image, $row, $size, $attr);
 }
 
 function iss_programm_cards_build_block_config($attributes = []) {
@@ -46,6 +61,12 @@ function iss_programm_cards_build_block_config($attributes = []) {
     if (!in_array($time_mode, ['all', 'upcoming', 'past', 'month'], true)) {
         $time_mode = 'upcoming';
     }
+    $preview = ($attributes['presentation'] ?? '') === 'programme-preview';
+    if ($preview) {
+        $time_mode = 'upcoming';
+    }
+    $programme = in_array(($attributes['presentation'] ?? ''), ['programme', 'programme-preview'], true);
+    $group_recurring = $programme || ($attributes['presentation'] ?? '') === 'event-next';
 
     $default_month = preg_replace('/[^0-9\-]/', '', (string) ($attributes['defaultMonth'] ?? ''));
     if (!preg_match('/^\d{4}-\d{2}$/', $default_month)) {
@@ -54,9 +75,9 @@ function iss_programm_cards_build_block_config($attributes = []) {
 
     return [
         'query' => [
-            'limit' => ($attributes['presentation'] ?? '') === 'programme' ? -1 : max(1, (int) ($attributes['limit'] ?? 3)),
-            'group_recurring' => in_array(($attributes['presentation'] ?? ''), ['programme', 'event-next'], true),
-            'group_recurring_by_source' => in_array(($attributes['presentation'] ?? ''), ['programme', 'event-next'], true),
+            'limit' => $programme ? -1 : max(1, (int) ($attributes['limit'] ?? 3)),
+            'group_recurring' => $group_recurring,
+            'group_recurring_by_source' => $group_recurring,
             'order' => $time_mode === 'past' ? 'DESC' : 'ASC',
             'groups' => $group !== '' ? [$group] : [],
             'filters' => [
@@ -68,7 +89,7 @@ function iss_programm_cards_build_block_config($attributes = []) {
                 'post_types' => function_exists('iss_timeline_get_attribute_token_list')
                     ? iss_timeline_get_attribute_token_list($attributes['postTypesList'] ?? [], [])
                     : [],
-                'include_running_ranges' => !empty($attributes['includeRunningRanges']),
+                'include_running_ranges' => $preview || !empty($attributes['includeRunningRanges']),
             ],
         ],
         'display' => [
@@ -128,9 +149,10 @@ function iss_programm_cards_render_item($timeline_item, $display = []) {
 
     $out = '<article class="iss-card iss-card--flat iss-program-cards__card">';
 
-    if (!empty($display['showImage']) && $source_post_id > 0 && has_post_thumbnail($source_post_id)) {
+    $image = !empty($display['showImage']) ? iss_programm_cards_get_image($row) : '';
+    if ($image !== '') {
         $out .= '<figure class="iss-card__media">';
-        $out .= get_the_post_thumbnail($source_post_id, 'large');
+        $out .= $image;
         $out .= '</figure>';
     }
 

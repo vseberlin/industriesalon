@@ -330,7 +330,7 @@ function iss_timeline_render_grouped_occurrence_picker($row, array $occurrences,
 
     return '<div class="iss-timeline-slot-picker-wrap">'
         . '<p class="iss-timeline-slot-picker__count">' . esc_html($count_label) . '</p>'
-        . '<a href="' . esc_url($fallback ?: home_url('/kalender/')) . '" class="iss-timeline__btn iss-timeline__btn--secondary iss-timeline-slot-picker__trigger"'
+        . '<a href="' . esc_url($fallback ?: home_url('/kalender/')) . '" class="iss-timeline__btn iss-timeline__btn--' . (!empty($opts['programmeLayout']) ? 'primary' : 'secondary') . ' iss-timeline-slot-picker__trigger"'
         . ' aria-label="' . esc_attr($trigger_aria) . '"'
         . iss_timeline_render_attr_list($attrs) . '>'
         . esc_html($trigger_label) . '</a>'

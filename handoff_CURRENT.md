@@ -5,9 +5,10 @@
 The six-phase [WordPress refactoring plan](docs/project/wordpress-refactoring-plan.md)
 is complete within the authorized local scope. The user authorized commits and
 execution through completion; stepwise confirmation is superseded. Work lives in
-`/home/vladimir/wp-website` on `main`. Commits are local and unpushed; freshly
-fetched `origin/main` is `fe849bc`, with no incoming commits. Use Git history for
-implementation details. The distinct `/home/vladimir/wp` mixed checkout remains
+`/home/vladimir/wp-website` on `main`. The accepted calendar/homepage and Repair-Café
+checkpoint joins the completed refactor for GitHub exchange on exit; use Git
+history and `HEAD` / `origin/main` for delivery refs. Staging deployment remains
+separate. The distinct `/home/vladimir/wp` mixed checkout remains
 dirty and is not a commit/cleanup target. No home-level files, other drives,
 preservation sources or staging state were changed.
 
@@ -65,6 +66,32 @@ the plain list and 116 for calendar plus results (zero writes in each); the earl
 was for the retired grid without its adjacent listing. Booking month/day changes
 reuse loaded slots without extra requests. These are local, not staging timings.
 
+Accepted programme presentation: the calendar mockup and
+homepage share Programme / Compact programme rows, large dates, existing images
+and booking actions; running exhibitions show Läuft bis and their closing date.
+The active editorial `front-timeline` slot and Gutenberg fallback now use the
+existing program-cards block's automatic feature plus four compact dates below
+Demnächst. Existing selection/expiry rules choose the feature, including a
+current-exhibition fallback and expiring editorial focus; its source is removed
+from the adjacent list. Missing images and empty states need no manual handling.
+The layout stacks on phones and homepage cache headers prevent frozen dates.
+All 122 read-only preview/rotation/overview/booking checks, targeted PHP/JS/CSS
+checks, editor control smoke checks and template roundtrips pass; the preceding
+78-check calendar/filter/booking checkpoint also passed. Chrome desktop/390px
+review covers both pages, filters/month navigation, the feature, calendar link
+and booking request-form handoff without submission. The latest presentation's
+cross-engine rerun and real editor save/reload remain. No additional DB/uploads
+artifact is needed; editorial JSON and existing media are unchanged. No staging
+deployment was made.
+
+Repair-Café's `/repair-cafe/` destination is now enforced by shared mapping,
+SuperSaaS sync and public-read logic, including newly imported dates. Its cards
+use the effective landing-template hero without copying attachment metadata.
+All 96 destination/hero/overview/preview/booking checks, PHP lint/PHPStan and
+desktop/390px review pass. PHPCS passes six changed runtime files; sync admin's
+8 errors/21 warnings match the preceding `3ef84f7` baseline and are outside the changes. No live sync,
+content/media write or new data artifact was required.
+
 ## Runtime, recovery evidence and next action
 
 `wp_app` still serves website plugin/theme/receiver code from this checkout;
@@ -86,7 +113,7 @@ matching checksums; volatile options differed), and six representative files
 restored with matching hashes. Full multi-GB uploads/intake restoration remains
 a release gate. Never restore these snapshots over later editorial work.
 
-Next is a separately authorized GitHub/staging release and acceptance, following
+Next is a separately authorized staging release and acceptance from GitHub `main`, following
 the maintenance runbook. Deliver matching code with four scoped artifacts:
 `2026-10-08-taxonomy-seeds.php`, `2026-10-11-commerce-idempotency.php`,
 `2026-10-11-owner-setup.php`, `2026-10-11-maintenance-cron.php` under

@@ -1341,6 +1341,10 @@ function iss_supersaas_sync_occurrences() {
         if ($fallback_url === '' && !empty($series_entry['fallback_url'])) {
             $fallback_url = esc_url_raw((string) $series_entry['fallback_url']);
         }
+        $series_target = iss_occurrences_event_series_landing_target_url($series_key);
+        if ($series_target !== '') {
+            $fallback_url = $series_target;
+        }
 
         if ($source_post_id <= 0 && $is_known_tag) {
             $resolved_from_source = iss_supersaas_try_resolve_source_post_from_source_entry($tag_source);
