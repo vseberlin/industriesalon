@@ -63,13 +63,17 @@ queries in both current samples. Its scripts/styles total 115,957 gzip bytes
 versus 123,836 before this slice (34 browser resources versus 35). This is a
 local measurement, not a staging speed guarantee. Historical home IDs differ
 from the 8 October baseline; date rotation and remaining public cache writes
-need comparison during query consolidation. Native booking is next; Flatpickr
-remains for that consumer. Booking intake now rejects private sources,
+need comparison during query consolidation. Native booking now shares one PHP-authored dialog and core Interactivity
+module across tours, programme rows, inquiries and publication orders. Flatpickr,
+the legacy booking/publication controllers and their CSS are removed. On the
+isolated WordPress 7.0 runtime, 26 renderer checks, 97 programme/filter checks,
+114 intake checks and 27 Chrome/Firefox/Linux-WebKit scenarios passed. Browser
+coverage includes phone/no-JavaScript navigation, stale/deduplicated reads, retry,
+nonce failure and focus return; staff/editor and staging acceptance remain open. Booking intake now rejects private sources,
 cancelled/over-capacity slots and invalid/past Berlin dates. Slot data is complete
 within the existing 12-month horizon and REST reads bypass old tag transients;
 114 isolated commerce checks passed. Live size: 73 published sources, largest
-response 27 slots / 12,519 JSON bytes (11 October). Enable router
-updates only after booking triggers are compatible. No data/uploads artifact
+response 27 slots / 12,519 JSON bytes (11 October). Core router region navigation is the next slice. No data/uploads artifact
 for filters. Email dispatch is not exactly-once across process crashes.
 Do not run real imports/merges or destructive cleanup for verification.
 

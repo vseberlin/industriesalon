@@ -12,6 +12,10 @@ module.exports = [
   },
   js.configs.recommended,
   {
+    files: ["tests/e2e/specs/**/*.js"],
+    languageOptions: { sourceType: "commonjs", globals: { ...globals.node, ...globals.browser } },
+  },
+  {
     files: [
       "themes/industriesalon/**/*.js",
       "plugins/iss-*/**/*.js",
@@ -27,7 +31,6 @@ module.exports = [
         jQuery: "readonly",
         $: "readonly",
         ajaxurl: "readonly",
-        flatpickr: "readonly",
         L: "readonly",
         issRegisterImageSuggestionsAdmin: "readonly",
       },
@@ -49,5 +52,9 @@ module.exports = [
         },
       ],
     },
+  },
+  {
+    files: ["plugins/iss-frontend/modules/programme/assets/booking.js", "plugins/iss-frontend/modules/programme/assets/timeline-navigation.js"],
+    languageOptions: { sourceType: "module" },
   },
 ];

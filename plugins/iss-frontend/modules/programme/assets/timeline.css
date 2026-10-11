@@ -274,6 +274,13 @@
   padding-inline: 1.35rem;
 }
 
+.iss-timeline-query__controls {
+  display: grid;
+  gap: 1rem;
+  align-content: start;
+  min-width: 0;
+}
+
 .iss-timeline__filters {
   display: flex;
   flex-wrap: wrap;

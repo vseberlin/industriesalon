@@ -7,6 +7,7 @@ define('ISS_PROGRAMM_VERSION', '0.1.0');
 define('ISS_PROGRAMM_FILE', __FILE__);
 
 require_once __DIR__ . '/includes/assets.php';
+require_once __DIR__ . '/includes/booking-render.php';
 require_once __DIR__ . '/includes/calendar-render.php';
 require_once __DIR__ . '/includes/calendar-blocks.php';
 

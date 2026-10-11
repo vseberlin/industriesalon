@@ -370,32 +370,28 @@
     background: #fff;
   }
 
-  .iss-calendar-page .iss-timeline__filters,
-  .iss-calendar-page .iss-timeline__presets {
+  .iss-calendar-page .iss-timeline-query__controls {
     grid-column: 1;
-    margin: 0;
+    grid-row: 1 / 4;
     padding: 1.4rem;
+    border-right: 1px solid var(--iss-border);
     background: #fff;
   }
 
   .iss-calendar-page .iss-timeline__filters {
-    grid-row: 1 / 4;
     display: grid;
     gap: 1rem;
-    align-items: start;
-    border-right: 1px solid var(--iss-border);
-    border-bottom: 0;
-    padding-bottom: 10rem;
+    align-content: start;
+    margin: 0;
+    padding: 0;
+    border: 0;
   }
 
   .iss-calendar-page .iss-timeline__presets {
-    grid-row: 1 / 4;
     display: grid;
     grid-template-columns: repeat(2, minmax(0, 1fr));
     gap: 0.5rem;
-    align-self: end;
-    border-top: 1px solid var(--iss-border);
-    border-right: 1px solid var(--iss-border);
+    margin: 0;
   }
 
   .iss-calendar-page .iss-timeline__presets::before {

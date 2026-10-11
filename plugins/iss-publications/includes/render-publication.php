@@ -273,7 +273,7 @@ function iss_publications_get_order_panel_context(int $post_id): array
 
     $description = trim((string) iss_publications_get_meta($post_id, '_iss_publication_gateway_description', ''));
     if ($description === '') {
-        $description = __('Diese Publikation kann online bezahlt werden. Mit dem Kauf unterstützen Sie die Arbeit des Industriesalon Schöneweide.', 'iss-publications');
+        $description = __('Sie können diese Publikation anfragen. Wir melden uns zur Bestätigung und Abholung; hier erfolgt keine Online-Zahlung.', 'iss-publications');
     }
 
     $button_html = apply_filters('iss_publications_order_button_html', '', $post_id, [

@@ -6,6 +6,16 @@ be recovered from Git history.
 
 ## 2026-10-11
 
+- Replaced the booking and publication controllers with one PHP-authored native
+  dialog and WordPress Interactivity module. Native date/slot and preferred-date
+  controls retain public contact/external navigation fallbacks, deduplicate reads,
+  reject stale responses and preserve failed submissions. Removed Flatpickr,
+  both retired controllers and their CSS; saved block attributes are unchanged.
+  WordPress 7.0: 26 booking renderer checks, 97 filter/programme checks, 114 intake
+  checks and all 27 browser scenarios passed across Chrome, Firefox and Linux
+  WebKit (including phone/no-JavaScript navigation, retries and focus return).
+  PHP/PHPCS/PHPStan and JS/CSS lint pass. Code/assets only; no migration/uploads.
+
 - Tightened booking/order source visibility, current slot status/quantity and
   strict Berlin preferred-date validation. Persisted slot time/title now come
   from owners. Slot reads cover the complete existing 12-month source horizon;

@@ -103,98 +103,38 @@ if (!function_exists('iss_programm_format_datetime_de')) {
 }
 
 function iss_programm_render_tour_calendar_shell($title, $booking_url, $post_id = 0, $post_type = '', $wrapper_attributes = '', $tag = '') {
-    $title = trim((string) $title);
-    if ($title === '') {
-        $title = __('Termine wählen', 'iss-programm');
-    }
-
-    $post_id = (int) $post_id;
-    $post_type = sanitize_key((string) $post_type);
-    $tag = strtoupper(sanitize_text_field((string) $tag));
-    $slot_select_id = 'is-tour-slot-';
-
-    if ($tag !== '') {
-        $slot_select_id .= sanitize_title($tag);
-    } elseif ($post_id > 0) {
-        $slot_select_id .= 'post-' . $post_id;
+    iss_programm_enqueue_calendar_assets();
+    $source = iss_programm_booking_context(['source_post_id' => $post_id, 'source_post_type' => $post_type, 'tag' => $tag, 'title' => $title]);
+    $slots = iss_occurrences_get_booking_slots(['source_post_id' => $source['id'], 'source_post_type' => $source['type'], 'tag' => $source['tag']]);
+    $payload = iss_occurrences_build_booking_slots_payload('occurrences', $slots, $source['id'], $source['type']);
+    wp_interactivity_state('iss/booking', ['catalog' => [iss_programm_booking_scope($source) => $payload]]);
+    $contact_id = wp_unique_id('iss-booking-contact-');
+    $fallback = $booking_url && !iss_programm_tour_url_is_same_page_anchor($booking_url, $source['id']) ? $booking_url : '#' . $contact_id;
+    $out = '<div ' . $wrapper_attributes . '><div class="is-tour-calendar__inner"><div class="is-tour-calendar__header">';
+    $out .= '<h3 class="is-tour-calendar__heading">' . esc_html($title ?: __('Termine wählen', 'iss-programm')) . '</h3></div>';
+    if ($source['id'] > 0 && ($slots || $payload['inquiry']['allowed'])) {
+        $label = $slots ? __('Termin wählen', 'iss-programm') : __('Wunschtermin anfragen', 'iss-programm');
+        $attrs = iss_programm_booking_trigger_attributes(['source_post_id' => $source['id'], 'source_post_type' => $source['type'], 'tag' => $source['tag'], 'title' => $source['title']]);
+        $out .= '<a class="wp-element-button" href="' . esc_url($fallback) . '"' . iss_timeline_render_attr_list($attrs) . '>' . esc_html($label) . '</a>';
     } else {
-        $slot_select_id .= 'calendar';
+        $out .= '<p class="is-tour-calendar__status">' . esc_html__('Aktuell sind keine buchbaren Termine verfügbar.', 'iss-programm') . '</p>';
     }
-
-    $slot_select_id = sanitize_html_class($slot_select_id) . '-time';
-
-    $booking_url = esc_url_raw((string) $booking_url);
-
-    $booking_link_label = iss_programm_tour_url_is_same_page_anchor($booking_url, $post_id)
-        ? esc_html__('Alle Termine anzeigen', 'iss-programm')
-        : esc_html__('Direkt buchen', 'iss-programm');
-
-    $booking_link_html = '';
-    if ($booking_url) {
-        $booking_link_html = '<p class="is-tour-calendar__fallback has-small-font-size">'
-            . '<a class="is-tour-calendar__fallback-link" href="' . esc_url($booking_url) . '">' . $booking_link_label . '</a>'
-            . '</p>';
+    if ($slots) {
+        $out .= '<details class="is-tour-calendar__dates"><summary>' . esc_html(sprintf(__('Alle Termine (%d)', 'iss-programm'), count($slots))) . '</summary><ul>';
+        foreach ($slots as $slot) {
+            $start = new DateTimeImmutable($slot['start'], wp_timezone());
+            $label = iss_programm_format_datetime_de($start->getTimestamp());
+            if (($slot['availability_state'] ?? '') === 'cancelled') { $label .= ' · ' . __('Abgesagt', 'iss-programm'); }
+            elseif (($slot['availability_state'] ?? '') === 'sold_out' || ($slot['available'] !== null && $slot['available'] <= 0)) { $label .= ' · ' . __('Ausgebucht', 'iss-programm'); }
+            $out .= '<li>' . esc_html($label) . '</li>';
+        }
+        $out .= '</ul></details>';
     }
-
-    $noscript = '<noscript><p class="is-tour-calendar__status has-small-font-size">'
-        . esc_html__('Bitte JavaScript aktivieren, um den Kalender zu nutzen.', 'iss-programm')
-        . '</p>'
-        . $booking_link_html
-        . '</noscript>';
-
-    return sprintf(
-        '<div %1$s data-tag="%2$s" data-booking-url="%3$s" data-title="%4$s" data-source-post-id="%5$s" data-source-post-type="%6$s">'
-        . '<div class="is-tour-calendar__inner wp-block-group is-layout-constrained">'
-        . '<div class="is-tour-calendar__header wp-block-group is-layout-constrained">'
-        . '<p class="is-tour-calendar__eyebrow has-small-font-size">%7$s</p>'
-        . '<h3 class="is-tour-calendar__heading wp-block-heading">%8$s</h3>'
-        . '<p class="is-tour-calendar__status has-small-font-size">%9$s</p>'
-        . '%10$s'
-        . '</div>'
-        . '<div class="is-tour-calendar__layout">'
-        . '<div class="is-tour-calendar__calendar">'
-        . '<input type="text" class="is-tour-calendar__date-input" aria-label="%11$s" />'
-        . '<div class="is-tour-calendar__slots-panel">'
-        . '<p class="is-tour-calendar__selected-date has-small-font-size">%12$s</p>'
-        . '<div class="is-tour-calendar__appointments">'
-        . '<p class="is-tour-calendar__appointments-title">'
-        . '<span class="is-tour-calendar__appointments-title-label">%13$s</span>'
-        . '<span class="is-tour-calendar__appointments-title-date"></span>'
-        . '</p>'
-        . '<div class="is-tour-calendar__appointments-divider" aria-hidden="true"></div>'
-        . '<div class="is-tour-calendar__appointments-list"></div>'
-        . '</div>'
-        . '<div class="is-tour-calendar__slot-select-wrap">'
-        . '<label class="is-tour-calendar__slot-label" for="%14$s">%15$s</label>'
-        . '<select id="%14$s" class="is-tour-calendar__slot-select" disabled>'
-        . '<option value="">%16$s</option>'
-        . '</select>'
-        . '</div>'
-        . '<div class="is-tour-calendar__booking"></div>'
-        . '</div>'
-        . '</div>'
-        . '</div>'
-        . '%17$s'
-        . '</div>'
-        . '</div>',
-        $wrapper_attributes,
-        esc_attr($tag),
-        esc_url($booking_url),
-        esc_attr($title),
-        esc_attr($post_id > 0 ? (string) $post_id : ''),
-        esc_attr($post_type),
-        esc_html__('Kalender', 'iss-programm'),
-        esc_html($title),
-        esc_html__('Termine werden geladen …', 'iss-programm'),
-        $booking_link_html,
-        esc_attr__('Datum auswählen', 'iss-programm'),
-        esc_html__('Bitte wählen Sie einen Tag.', 'iss-programm'),
-        esc_html__('Verfügbare Termine am', 'iss-programm'),
-        esc_attr($slot_select_id),
-        esc_html__('Uhrzeit', 'iss-programm'),
-        esc_html__('Bitte zuerst ein Datum wählen', 'iss-programm'),
-        $noscript
-    );
+    if ($booking_url && !iss_programm_tour_url_is_same_page_anchor($booking_url, $source['id'])) {
+        $out .= '<p class="is-tour-calendar__fallback"><a href="' . esc_url($booking_url) . '">' . esc_html__('Direkt buchen', 'iss-programm') . '</a></p>';
+    }
+    $out .= '<div id="' . esc_attr($contact_id) . '" class="is-tour-calendar__fallback">' . iss_programm_booking_contact() . '</div>';
+    return $out . '</div></div>';
 }
 
 /**
@@ -299,13 +239,10 @@ function iss_programm_render_tour_dates($attributes = [], $content = '') {
         } elseif ($booking_url !== '') {
             $link_classes = 'iss-tour-dates__link';
             $link_attrs = '';
-            if ($slot_id !== '' && $slot_start !== '') {
-                $link_classes .= ' js-is-tour-slot-trigger';
-                $link_attrs .= ' data-slot-id="' . esc_attr($slot_id) . '"';
-                $link_attrs .= ' data-start="' . esc_attr($slot_start) . '"';
-                $link_attrs .= ' data-title="' . esc_attr($slot_title) . '"';
-                $link_attrs .= ' data-source-post-id="' . esc_attr((string) $post_id) . '"';
-                $link_attrs .= ' data-source-post-type="' . esc_attr($post_type) . '"';
+            if (($data['cta_mode'] ?? '') !== 'external' && $slot_id !== '' && $slot_start !== '') {
+                $link_attrs = iss_timeline_render_attr_list(iss_programm_booking_trigger_attributes([
+                    'source_post_id' => $post_id, 'source_post_type' => $post_type, 'slot_id' => $slot_id, 'title' => $slot_title,
+                ]));
                 $has_slot_trigger = true;
             }
 
@@ -370,11 +307,7 @@ function iss_programm_render_tour_calendar($attributes = [], $content = '') {
         return '<div ' . $attrs . '><p class="is-tour-calendar__status has-small-font-size">' . $msg . '</p></div>';
     }
 
-    if ($tag !== '' && function_exists('iss_occurrences_remember_tag_source')) {
-        iss_occurrences_remember_tag_source($tag, $booking_url, $post_id, $post_type);
-    }
-
-    // Render only a lightweight mount node; front-end JS builds the UI.
+    // Source mappings are maintained by occurrence sync/editorial owners, never a public render.
     $attrs = function_exists('get_block_wrapper_attributes')
         ? get_block_wrapper_attributes([
             'class' => 'is-tour-calendar wp-block-group alignwide has-global-padding is-layout-constrained',

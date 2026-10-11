@@ -261,34 +261,7 @@ function iss_timeline_get_booking_action_attrs($row): array {
 }
 
 function iss_timeline_get_calendar_trigger_attrs($row): array {
-    if (!is_array($row)) {
-        return [];
-    }
-
-    $source_post_id = isset($row['source_post_id']) ? (int) $row['source_post_id'] : 0;
-    $source_post_type = sanitize_key((string) ($row['source_post_type'] ?? ''));
-    $item_type = sanitize_key((string) ($row['type'] ?? $row['item_type'] ?? ''));
-    $tag = strtoupper(sanitize_text_field((string) ($row['tag'] ?? '')));
-    $title = trim((string) ($row['title'] ?? ''));
-
-    $attrs = [
-        'data-title' => $title !== '' ? $title : __('Termine wählen', 'iss-timeline'),
-    ];
-
-    if ($source_post_id > 0) {
-        $attrs['data-source-post-id'] = (string) $source_post_id;
-    }
-    if ($source_post_type !== '') {
-        $attrs['data-source-post-type'] = $source_post_type;
-    }
-    if ($item_type !== '') {
-        $attrs['data-item-type'] = $item_type;
-    }
-    if ($tag !== '') {
-        $attrs['data-tag'] = $tag;
-    }
-
-    return $attrs;
+    return is_array($row) ? iss_programm_booking_trigger_attributes($row) : [];
 }
 
 function iss_timeline_get_booking_url_for_row($row): string {
@@ -354,8 +327,7 @@ function iss_timeline_get_ticket_action_for_occurrence($row, $opts = []) {
         'variant' => 'primary',
     ];
 
-    if ($source_post_id > 0 && $source_post_type !== '' && $slot_id !== '' && $slot_start !== '') {
-        $action['classes'] = ['js-iss-occurrence-calendar-trigger'];
+    if ($tickets_override === '' && ($row['cta_mode'] ?? '') !== 'external' && $source_post_id > 0 && $source_post_type !== '' && $slot_id !== '' && $slot_start !== '') {
         $action['attrs'] = array_merge(
             iss_timeline_get_calendar_trigger_attrs($row),
             iss_timeline_get_booking_action_attrs($row)
@@ -582,14 +554,16 @@ function iss_timeline_render_grouped_occurrence_picker($row, array $occurrences,
         $count
     );
 
+    $row['slot_id'] = '';
     $attrs = iss_timeline_get_calendar_trigger_attrs($row);
+    $fallback = $row['content_url'] ?? get_permalink((int) ($row['source_post_id'] ?? 0));
 
     return '<div class="iss-timeline-slot-picker-wrap">'
         . '<p class="iss-timeline-slot-picker__count">' . esc_html($count_label) . '</p>'
-        . '<button type="button" class="iss-timeline__btn iss-timeline__btn--secondary iss-timeline-slot-picker__trigger js-iss-occurrence-calendar-trigger"'
-        . ' aria-haspopup="dialog" aria-label="' . esc_attr($trigger_aria) . '"'
+        . '<a href="' . esc_url($fallback ?: home_url('/kalender/')) . '" class="iss-timeline__btn iss-timeline__btn--secondary iss-timeline-slot-picker__trigger"'
+        . ' aria-label="' . esc_attr($trigger_aria) . '"'
         . iss_timeline_render_attr_list($attrs) . '>'
-        . esc_html($trigger_label) . '</button>'
+        . esc_html($trigger_label) . '</a>'
         . '</div>';
 }
 
@@ -754,8 +728,7 @@ function iss_timeline_build_actions($row, $opts = []) {
         $slot_id = trim((string) ($row['slot_id'] ?? ''));
         $slot_start = trim((string) ($row['slot_start'] ?? ''));
         $source_post_type = trim((string) ($row['source_post_type'] ?? ''));
-        if ($source_post_id > 0 && $source_post_type !== '' && $slot_id !== '' && $slot_start !== '') {
-            $ticket_action['classes'] = ['js-iss-occurrence-calendar-trigger'];
+        if ($tickets_override === '' && ($row['cta_mode'] ?? '') !== 'external' && $source_post_id > 0 && $source_post_type !== '' && $slot_id !== '' && $slot_start !== '') {
             $ticket_action['attrs'] = array_merge(
                 iss_timeline_get_calendar_trigger_attrs($row),
                 iss_timeline_get_booking_action_attrs($row)
@@ -801,10 +774,6 @@ function iss_timeline_render_action_link($action = []) {
     return '<a class="' . esc_attr(implode(' ', array_values(array_unique($classes)))) . '" href="'
         . esc_url((string) $action['url']) . '"' . $attrs . '>'
         . esc_html((string) ($action['label'] ?? '')) . '</a>';
-}
-
-function iss_timeline_render_booking_host() {
-    return '<div class="is-tour-calendar iss-tour-calendar--booking-host" data-booking-host="1" hidden aria-hidden="true"></div>';
 }
 
 function iss_timeline_get_type_label($item_type) {
@@ -1708,6 +1677,7 @@ function iss_timeline_render_query_block($attributes = [], $content = '', $block
         if ($title !== '') { $out .= '<h2 class="iss-timeline__section-title">' . esc_html($title) . '</h2>'; }
         if ($intro !== '') { $out .= '<p class="iss-timeline__summary">' . esc_html($intro) . '</p>'; }
     }
+    $out .= '<div class="iss-timeline-query__controls">';
     $buttons = iss_timeline_get_preset_buttons_from_attributes($attributes);
     if ($buttons) {
         $out .= '<nav class="iss-timeline__presets" aria-label="' . esc_attr__('Zeitraum wählen', 'iss-timeline') . '">';
@@ -1777,6 +1747,7 @@ function iss_timeline_render_query_block($attributes = [], $content = '', $block
         $out .= '<div class="iss-timeline__filter-actions"><button type="submit" class="iss-timeline__apply">' . esc_html__('Anwenden', 'iss-timeline') . '</button>'
             . '<a class="iss-timeline__apply iss-timeline__apply--ghost" href="' . esc_url(iss_timeline_navigation_url($scope)) . '">' . esc_html__('Filter zurücksetzen', 'iss-timeline') . '</a></div></form>';
     }
+    $out .= '</div>';
     if (!empty($config['render']['showMeta'])) {
         $count_label = sprintf(
             /* translators: %d number of entries on this page */
@@ -1786,7 +1757,6 @@ function iss_timeline_render_query_block($attributes = [], $content = '', $block
         $out .= '<p class="iss-timeline-query__meta" data-timeline-query-meta>' . esc_html($count_label) . '</p>';
     }
     $out .= '<div class="iss-timeline" data-timeline-query-results>' . $listing['html'] . '</div>';
-    if (!empty($config['render']['showTicketsButton'])) { $out .= iss_timeline_render_booking_host(); }
     if (!empty($config['render']['showLoadMore']) && iss_programm_preview_datetime() === '' && ($selection['page'] > 1 || $listing['hasMore'])) {
         $out .= '<nav class="iss-timeline-query__pagination" aria-label="' . esc_attr__('Ergebnisseiten', 'iss-timeline') . '">';
         if ($selection['page'] > 1) {

@@ -220,57 +220,6 @@ function iss_payments_lite_maybe_upgrade_schema(): void {
 }
 add_action('admin_init', 'iss_payments_lite_maybe_upgrade_schema', 4);
 
-add_action('wp_enqueue_scripts', function () {
-    if (!is_singular('publication')) {
-        return;
-    }
-
-    $post_id = get_queried_object_id();
-    if ($post_id <= 0) {
-        return;
-    }
-
-    $sale_enabled = !empty(get_post_meta($post_id, '_iss_publication_sale_enabled', true));
-    $price_cents = (int) get_post_meta($post_id, '_iss_publication_price_cents', true);
-    if (!$sale_enabled || $price_cents <= 0) {
-        return;
-    }
-
-    wp_enqueue_script(
-        'iss-payments-lite-publications',
-        plugin_dir_url(__FILE__) . 'assets/publication-order.js',
-        [],
-        filemtime(__DIR__ . '/assets/publication-order.js'),
-        true
-    );
-
-    wp_localize_script('iss-payments-lite-publications', 'ISS_PUBLICATION_ORDER', [
-        'orderUrl' => esc_url_raw(rest_url('iss-payments/v1/request')),
-        'nonce' => wp_create_nonce('wp_rest'),
-    ]);
-});
-
-add_action('wp_footer', function () {
-    if (!wp_script_is('iss-payments-lite-publications', 'enqueued')) {
-        return;
-    }
-
-    static $rendered = false;
-    if ($rendered) {
-        return;
-    }
-
-    $rendered = true;
-
-    echo '<div class="iss-publication-order-modal" data-shared-publication-order-modal="1" hidden>';
-    echo '<div class="iss-publication-order-modal__overlay" data-close="1" tabindex="-1"></div>';
-    echo '<div class="iss-publication-order-modal__panel" role="dialog" aria-modal="true" aria-label="' . esc_attr__('Publikation bestellen', 'iss-payments-lite') . '">';
-    echo '<button type="button" class="iss-publication-order-modal__close" data-close="1" aria-label="' . esc_attr__('Schließen', 'iss-payments-lite') . '">×</button>';
-    echo '<div class="iss-publication-order-modal__content"></div>';
-    echo '</div>';
-    echo '</div>';
-}, 20);
-
 add_action('rest_api_init', function () {
     // Public intentionally: visitors submit booking, inquiry, and order requests.
     register_rest_route('iss-payments/v1', '/request', [
@@ -858,30 +807,6 @@ function iss_payments_lite_process_order_request(array $payload, WP_REST_Request
 
     return iss_payments_lite_store_request('order', $entry, $payload, $request);
 }
-
-add_filter('iss_publications_order_button_html', function ($html, $post_id, $context) {
-    $post_id = (int) $post_id;
-    if ($post_id <= 0) {
-        return $html;
-    }
-
-    $label = isset($context['label']) ? trim((string) $context['label']) : '';
-    if ($label === '') {
-        $label = 'Publikation bestellen';
-    }
-
-    $amount = isset($context['amount']) ? (int) $context['amount'] : 0;
-    $title = isset($context['title']) ? (string) $context['title'] : get_the_title($post_id);
-
-    return sprintf(
-        '<div class="iss-publication-order-panel__actions"><button type="button" class="iss-publication-order-trigger" data-publication-id="%1$d" data-title="%2$s" data-amount="%3$d" data-label="%4$s">%5$s</button></div>',
-        $post_id,
-        esc_attr($title),
-        $amount,
-        esc_attr($label),
-        esc_html($label)
-    );
-}, 10, 3);
 
 require_once ISS_PAYMENTS_LITE_PATH . 'includes/admin.php';
 require_once ISS_PAYMENTS_LITE_PATH . 'includes/cli.php';

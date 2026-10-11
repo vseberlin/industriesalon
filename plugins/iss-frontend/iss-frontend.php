@@ -49,21 +49,6 @@ function iss_frontend_disclosure_attributes(bool $expanded = false): array
     ];
 }
 
-function iss_frontend_register_datepicker_assets(
-    string $handle,
-    string $script_url,
-    string $style_url = '',
-    array $deps = [],
-    string $version = ISS_FRONTEND_VERSION
-): void
-{
-    if ($style_url !== '') {
-        wp_register_style($handle, $style_url, [], $version);
-    }
-
-    wp_register_script($handle, $script_url, $deps, $version, true);
-}
-
 require_once ISS_FRONTEND_PATH . 'modules/programme/bootstrap.php';
 require_once ISS_FRONTEND_PATH . 'modules/editorial/bootstrap.php';
 require_once ISS_FRONTEND_PATH . 'modules/static-maps/bootstrap.php';

@@ -8,6 +8,7 @@
   "description": "Server-rendered program cards based on the shared timeline query layer.",
   "supports": {
     "html": false,
+    "interactivity": true,
     "align": ["wide", "full"]
   },
   "attributes": {

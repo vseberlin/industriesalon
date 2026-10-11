@@ -85,14 +85,14 @@ function iss_fuehrung_render_inquiry_trigger($post_id, string $label, string $cl
         $label = __('Anfrage senden', 'iss-fuehrungen');
     }
 
-    $classes = trim($classes . ' js-iss-tour-inquiry-trigger');
-    $attrs = ' data-calendar-mode="inquiry"';
-    $attrs .= ' data-title="' . esc_attr(get_the_title($post_id)) . '"';
-    $attrs .= ' data-source-post-id="' . esc_attr((string) $post_id) . '"';
-    $attrs .= ' data-source-post-type="' . esc_attr(ISS_FUEHRUNGEN_POST_TYPE) . '"';
-    $attrs .= ' data-item-type="tour"';
+    $attrs = function_exists('iss_programm_booking_trigger_attributes')
+        ? iss_timeline_render_attr_list(iss_programm_booking_trigger_attributes(['source_post_id' => $post_id, 'source_post_type' => ISS_FUEHRUNGEN_POST_TYPE, 'title' => get_the_title($post_id), 'intent' => 'inquiry']))
+        : '';
+    $contact_id = wp_unique_id('iss-inquiry-contact-');
+    $contact = function_exists('iss_programm_booking_contact') ? iss_programm_booking_contact() : '';
+    return '<a class="' . esc_attr($classes) . '" href="#' . esc_attr($contact_id) . '"' . $attrs . '>' . esc_html($label) . '</a>'
+        . '<div id="' . esc_attr($contact_id) . '">' . $contact . '</div>';
 
-    return '<a class="' . esc_attr($classes) . '" href="#tour-anfrage"' . $attrs . '>' . esc_html($label) . '</a>';
 }
 
 function iss_fuehrung_render_booking_box($post_id) {
@@ -158,15 +158,12 @@ function iss_fuehrung_render_booking_box($post_id) {
 
         echo '<div class="iss-fuehrung-booking__actions">';
         if ($booking_url !== '') {
-            $button_classes = 'wp-element-button js-iss-occurrence-calendar-trigger';
+            $button_classes = 'wp-element-button';
             $should_enqueue_calendar_assets = true;
 
-            $button_attrs = '';
-            $calendar_title = trim((string) get_the_title($post_id));
-            $button_attrs .= ' data-title="' . esc_attr($calendar_title !== '' ? $calendar_title : $slot_title) . '"';
-            $button_attrs .= ' data-source-post-id="' . esc_attr((string) $post_id) . '"';
-            $button_attrs .= ' data-source-post-type="' . esc_attr(ISS_FUEHRUNGEN_POST_TYPE) . '"';
-            $button_attrs .= ' data-item-type="tour"';
+            $button_attrs = function_exists('iss_programm_booking_trigger_attributes')
+                ? iss_timeline_render_attr_list(iss_programm_booking_trigger_attributes(['source_post_id' => $post_id, 'source_post_type' => ISS_FUEHRUNGEN_POST_TYPE, 'title' => get_the_title($post_id)]))
+                : '';
 
             // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- Attribute string is built from escaped values above.
             echo '<a class="' . esc_attr($button_classes) . '" href="' . esc_url($booking_url) . '"' . $button_attrs . '>Buchen</a>';

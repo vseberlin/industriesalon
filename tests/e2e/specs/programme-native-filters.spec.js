@@ -22,12 +22,12 @@ for (const scenario of [{ name: 'desktop', js: true, width: 1280 }, { name: 'pho
     await page.screenshot({ path: testInfo.outputPath('native-date.png'), fullPage: true });
     if (scenario.js) expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
     await page.getByRole('link', { name: 'Filter zurücksetzen', exact: true }).click();
-    await expect(page.locator('input[type="date"]')).toHaveValue('');
+    await expect(block.locator('input[type="date"]')).toHaveValue('');
     expect(new URL(page.url()).searchParams.has(`iss_timeline[${scope}][day]`)).toBe(false);
     await page.goBack();
-    await expect(page.locator('input[type="date"]')).toHaveValue('2030-10-11');
+    await expect(block.locator('input[type="date"]')).toHaveValue('2030-10-11');
     await page.goForward();
-    await expect(page.locator('input[type="date"]')).toHaveValue('');
+    await expect(block.locator('input[type="date"]')).toHaveValue('');
     expect(obsolete).toEqual([]);
     expect(errors).toEqual([]);
     await context.close();

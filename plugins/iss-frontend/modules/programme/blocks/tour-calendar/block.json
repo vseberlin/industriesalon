@@ -5,10 +5,12 @@
   "title": "Tour Calendar (Interactive)",
   "category": "widgets",
   "icon": "calendar-alt",
-  "description": "Interactive booking calendar (Flatpickr + SuperSaaS + JS).",
+  "description": "Server-rendered dates with native booking and inquiry controls.",
   "editorScript": "file:./index.js",
+  "viewScriptModule": "iss/booking",
   "supports": {
-    "html": false
+    "html": false,
+    "interactivity": true
   },
   "attributes": {
     "tag": {
