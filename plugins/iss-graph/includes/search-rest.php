@@ -48,6 +48,7 @@ function iss_search_rest_search(WP_REST_Request $request)
         return $hits;
     }
 
+    _prime_post_caches(array_map('intval', array_column($hits, 'post_id')), true, true);
     $items = [];
     foreach (is_array($hits) ? $hits : [] as $hit) {
         $item = is_array($hit) ? iss_search_prepare_result($hit) : null;

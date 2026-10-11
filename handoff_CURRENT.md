@@ -77,7 +77,10 @@ response 27 slots / 12,519 JSON bytes (11 October). Core router region navigatio
 failure fallback and Back-during-pending-request checks on all three engines.
 Next: query/projection consolidation. A naive menu occurrence swap selects a
 different recurring event; preserve the existing selection contract until parity
-is established. Search currently caps candidates at 1,000 before WP pagination. Public relation
+is established. Search now supplies bounded SQL-provider pages and complete totals, with
+current privacy predicates and no 1,000-candidate truncation. Passed 35 isolated
+search checks, 661 write regressions, three facade comparisons and six
+three-engine browser scenarios; existing first-page relevance is retained. Public relation
 lookups are now read-only and batched; all seven current route samples show
 zero writes. Tour/publication query counts are 188/98; IDs/order are retained. No data/uploads artifact
 for filters. Email dispatch is not exactly-once across process crashes.

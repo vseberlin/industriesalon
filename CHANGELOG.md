@@ -6,6 +6,18 @@ be recovered from Git history.
 
 ## 2026-10-11
 
+- Replaced the public search route's capped candidate list and repeated metadata
+  filter with bounded SQL-provider pages and complete totals. Shared match/count
+  predicates preserve relevance while excluding current private/password and
+  tour-only sources before pagination. Batched result caches and a SQL fallback
+  retain native templates and the existing REST facade. Read queries now live in
+  `iss-graph/includes/search-query.php`. Passed 35 isolated search checks, 661
+  atomic-write regressions, three facade comparisons and six Chrome/Firefox/
+  WebKit desktop/no-JavaScript scenarios. Four first-page orders match the
+  baseline; local search renders use 79 queries (previously 81), with full totals
+  rather than the old 1,000-match cap. EXPLAIN supports retaining existing
+  indexes. PHP/PHPCS/PHPStan and JS checks pass. No schema/data/uploads artifact.
+
 - Separated public place-term lookups from relation taxonomy creation/repair.
   Multi-place reads now batch post/term loading; existing save and backfill
   paths retain term maintenance. Nine guarded read checks and 92 content-editor

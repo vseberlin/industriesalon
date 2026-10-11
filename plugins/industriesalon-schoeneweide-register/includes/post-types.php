@@ -23,7 +23,7 @@ function iss_register_query_includes_place_post_type($post_type): bool
 
 function iss_register_exclude_tour_only_places_from_search(WP_Query $query): void
 {
-    if (is_admin() || !$query->is_main_query() || !$query->is_search()) {
+    if (is_admin() || !$query->is_main_query() || !$query->is_search() || $query->get('iss_graph_public_search')) {
         return;
     }
 
@@ -39,7 +39,7 @@ function iss_register_exclude_tour_only_places_from_search(WP_Query $query): voi
     $meta_query[] = iss_register_build_public_place_visibility_meta_query_clause();
     $query->set('meta_query', $meta_query);
 }
-add_action('pre_get_posts', 'iss_register_exclude_tour_only_places_from_search', 20);
+add_action('pre_get_posts', 'iss_register_exclude_tour_only_places_from_search', 30);
 
 function iss_register_exclude_tour_only_places_from_sitemaps(array $args, string $post_type): array
 {

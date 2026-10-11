@@ -361,7 +361,7 @@ function iss_graph_sync_public_search_post(int $post_id): ?array
     }
 
     $config = iss_graph_get_public_search_post_type_config((string) $post->post_type);
-    if (!$config || $post->post_status !== 'publish') {
+    if (!$config || $post->post_status !== 'publish' || $post->post_password !== '') {
         iss_graph_get_service()->delete_search_row_by_post($post_id);
         return null;
     }
@@ -452,170 +452,6 @@ function iss_graph_backfill_public_search_index(): int
     return $count;
 }
 
-function iss_graph_normalize_public_search_query(string $search): string
-{
-    $search = html_entity_decode($search, ENT_QUOTES, 'UTF-8');
-    $search = wp_strip_all_tags($search);
-    $search = trim(preg_replace('/\s+/u', ' ', $search));
-
-    return is_string($search) ? $search : '';
-}
-
-function iss_graph_tokenize_public_search_query(string $search): array
-{
-    $search = iss_graph_normalize_public_search_query($search);
-    if ($search === '') {
-        return [];
-    }
-
-    $parts = preg_split('/[\s,.;:\/\-_]+/u', $search) ?: [];
-    $tokens = [];
-
-    foreach ($parts as $part) {
-        $part = trim((string) $part);
-        if ($part === '') {
-            continue;
-        }
-
-        if (function_exists('mb_strlen') && mb_strlen($part) < 2) {
-            continue;
-        }
-
-        if (!function_exists('mb_strlen') && strlen($part) < 2) {
-            continue;
-        }
-
-        $tokens[] = $part;
-    }
-
-    $tokens = array_values(array_unique($tokens));
-
-    return $tokens ?: [$search];
-}
-
-function iss_graph_search_public_posts(string $search, array $args = []): array
-{
-    global $wpdb;
-
-    $search = iss_graph_normalize_public_search_query($search);
-    if ($search === '') {
-        return [];
-    }
-
-    $tokens = iss_graph_tokenize_public_search_query($search);
-    if (!$tokens) {
-        return [];
-    }
-
-    $post_types = isset($args['post_types']) && is_array($args['post_types']) && $args['post_types']
-        ? array_values(array_intersect(array_map('sanitize_key', $args['post_types']), iss_graph_get_public_search_post_types()))
-        : iss_graph_get_public_search_post_types();
-
-    if (!$post_types) {
-        return [];
-    }
-
-    $limit = isset($args['limit']) ? max(1, min(1000, (int) $args['limit'])) : 1000;
-    $service = iss_graph_get_service();
-    $table = $service->get_search_table_name();
-    $signal_table = $service->get_editorial_signal_table_name();
-    $type_placeholders = implode(', ', array_fill(0, count($post_types), '%s'));
-
-    $select_values = [$search];
-    $phrase_like = '%' . $wpdb->esc_like($search) . '%';
-    $select_values[] = $phrase_like;
-    $select_values[] = $phrase_like;
-    $select_values[] = $phrase_like;
-
-    $score_sql = "i.boost
-        + CASE WHEN i.title = %s THEN 5000 ELSE 0 END
-        + CASE WHEN i.title LIKE %s THEN 1800 ELSE 0 END
-        + CASE WHEN i.excerpt LIKE %s THEN 700 ELSE 0 END
-        + CASE WHEN i.search_text LIKE %s THEN 500 ELSE 0 END
-        + CASE sig.signal_type
-            WHEN 'pin' THEN 50000
-            WHEN 'feature' THEN 12000
-            WHEN 'boost' THEN 4000
-            ELSE 0
-        END";
-
-    $token_where = [];
-    $where_values = $post_types;
-
-    foreach ($tokens as $token) {
-        $like = '%' . $wpdb->esc_like($token) . '%';
-
-        $score_sql .= "
-        + CASE WHEN i.title LIKE %s THEN 180 ELSE 0 END
-        + CASE WHEN i.excerpt LIKE %s THEN 90 ELSE 0 END
-        + CASE WHEN i.search_text LIKE %s THEN 45 ELSE 0 END";
-        $select_values[] = $like;
-        $select_values[] = $like;
-        $select_values[] = $like;
-
-        $token_where[] = '(i.title LIKE %s OR i.excerpt LIKE %s OR i.search_text LIKE %s)';
-        $where_values[] = $like;
-        $where_values[] = $like;
-        $where_values[] = $like;
-    }
-
-    $sql = "SELECT
-            i.entity_id,
-            i.target_post_id AS post_id,
-            i.target_post_type,
-            i.search_bucket,
-            i.title,
-            i.excerpt,
-            CASE WHEN sig.signal_type = 'hide' THEN 'suppress' ELSE COALESCE(sig.signal_type, '') END AS editorial_signal,
-            ({$score_sql}) AS relevance
-        FROM {$table} i
-        INNER JOIN {$wpdb->posts} p
-            ON p.ID = i.target_post_id
-        LEFT JOIN {$signal_table} sig
-            ON sig.context_post_id = i.target_post_id
-            AND sig.target_post_id = i.target_post_id
-            AND sig.surface = 'search'
-            AND sig.status = 'active'
-            AND (sig.expires_at IS NULL OR sig.expires_at >= %s)
-        WHERE i.is_public = 1
-          AND p.post_status = 'publish'
-          AND p.post_type IN ({$type_placeholders})
-          AND (sig.id IS NULL OR sig.signal_type NOT IN ('suppress', 'hide'))
-          AND " . implode(' AND ', $token_where) . "
-        ORDER BY CASE sig.signal_type WHEN 'pin' THEN 1 ELSE 0 END DESC, relevance DESC, p.post_date_gmt DESC, i.target_post_id DESC
-        LIMIT %d";
-
-    $params = array_merge($select_values, [current_time('mysql', true)], $where_values, [$limit]);
-    // phpcs:ignore WordPress.DB.PreparedSQL.NotPrepared, WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching -- Central search reads the denormalized graph search projection.
-    $rows = $wpdb->get_results($wpdb->prepare($sql, $params), ARRAY_A);
-
-    if (!is_array($rows)) {
-        return [];
-    }
-
-    return array_values(array_map(static function (array $row): array {
-        return [
-            'entity_id' => (int) ($row['entity_id'] ?? 0),
-            'post_id' => (int) ($row['post_id'] ?? 0),
-            'post_type' => (string) ($row['target_post_type'] ?? ''),
-            'search_bucket' => (string) ($row['search_bucket'] ?? ''),
-            'title' => (string) ($row['title'] ?? ''),
-            'excerpt' => (string) ($row['excerpt'] ?? ''),
-            'relevance' => isset($row['relevance']) ? (int) $row['relevance'] : 0,
-            'editorial_signal' => sanitize_key((string) ($row['editorial_signal'] ?? '')),
-        ];
-    }, $rows));
-}
-
-function iss_graph_search_public_post_ids(string $search, array $args = []): array
-{
-    $ids = array_map(static function (array $row): int {
-        return (int) ($row['post_id'] ?? 0);
-    }, iss_graph_search_public_posts($search, $args));
-
-    return array_values(array_unique(array_filter($ids)));
-}
-
 function iss_graph_sync_public_search_on_save(int $post_id, WP_Post $post): void
 {
     if (wp_is_post_revision($post_id) || wp_is_post_autosave($post_id)) {
@@ -654,17 +490,30 @@ function iss_graph_intercept_public_search_query(WP_Query $query): void
         return;
     }
 
-    $search = iss_graph_normalize_public_search_query((string) $query->get('s'));
-    $post_ids = function_exists('iss_search_public_post_ids')
-        ? iss_search_public_post_ids($search, ['limit' => 1000])
-        : iss_graph_search_public_post_ids($search, ['limit' => 1000]);
-
     $query->set('post_type', iss_graph_get_public_search_post_types());
     $query->set('post_status', 'publish');
     $query->set('ignore_sticky_posts', true);
-    $query->set('orderby', 'post__in');
-    $query->set('post__in', $post_ids ?: [0]);
+    $query->set('posts_per_page', max(1, min(100, (int) ($query->get('posts_per_page') ?: get_option('posts_per_page', 10)))));
+    $query->set('no_found_rows', true);
+    // Signals, projection and visibility can change independently of WP's post
+    // query cache. This owner performs a fresh, bounded read for every search.
+    $query->set('cache_results', false);
     $query->set('iss_graph_public_search', true);
+}
+
+function iss_graph_supply_public_search_posts($posts, WP_Query $query)
+{
+    if ($posts !== null || is_admin() || !$query->get('iss_graph_public_search')) { return $posts; }
+    $limit = max(1, min(100, (int) $query->get('posts_per_page')));
+    $page = max(1, (int) $query->get('paged'));
+    $offset = min($page - 1, intdiv(PHP_INT_MAX, $limit)) * $limit;
+    $result = iss_search_public_page((string) $query->get('s'), ['limit' => $limit, 'offset' => $offset]);
+    if (is_wp_error($result)) { $result = ['items' => [], 'total' => 0]; }
+    $query->found_posts = (int) $result['total'];
+    $query->max_num_pages = (int) ceil($query->found_posts / $limit);
+    $ids = array_map('intval', array_column($result['items'], 'post_id'));
+    _prime_post_caches($ids, true, true);
+    return $query->get('fields') === 'ids' ? $ids : array_values(array_filter(array_map('get_post', $ids)));
 }
 
 function iss_graph_disable_default_search_sql(string $search_sql, WP_Query $query): string
@@ -683,4 +532,5 @@ add_action('added_post_meta', 'iss_graph_sync_public_search_on_meta_change', 30,
 add_action('updated_post_meta', 'iss_graph_sync_public_search_on_meta_change', 30, 3);
 add_action('deleted_post_meta', 'iss_graph_sync_public_search_on_meta_change', 30, 3);
 add_action('pre_get_posts', 'iss_graph_intercept_public_search_query', 20);
+add_filter('posts_pre_query', 'iss_graph_supply_public_search_posts', 20, 2);
 add_filter('posts_search', 'iss_graph_disable_default_search_sql', 20, 2);

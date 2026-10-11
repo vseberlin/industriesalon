@@ -39,6 +39,7 @@ require_once ISS_GRAPH_PATH . 'includes/content-bridge.php';
 require_once ISS_GRAPH_PATH . 'includes/video-transcript-bridge.php';
 require_once ISS_GRAPH_PATH . 'includes/profiles.php';
 require_once ISS_GRAPH_PATH . 'includes/search-index.php';
+require_once ISS_GRAPH_PATH . 'includes/search-query.php';
 require_once ISS_GRAPH_PATH . 'includes/search-service.php';
 require_once ISS_GRAPH_PATH . 'includes/search-rest.php';
 require_once ISS_GRAPH_PATH . 'includes/facade-rest.php';

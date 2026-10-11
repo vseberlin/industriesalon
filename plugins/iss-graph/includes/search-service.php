@@ -10,10 +10,24 @@ interface ISS_Graph_Search_Provider_Interface
      * @return array<int, array<string, mixed>>|WP_Error
      */
     public function search(string $query, array $args = []);
+
+    /** @return array{items: array, total: int}|WP_Error */
+    public function search_page(string $query, array $args = []);
 }
 
 final class ISS_Graph_SQL_Search_Provider implements ISS_Graph_Search_Provider_Interface
 {
+    public function search_page(string $query, array $args = [])
+    {
+        $post_types = iss_search_resolve_public_search_post_types($args);
+        if (!$post_types) { return ['items' => [], 'total' => 0]; }
+        return iss_graph_search_public_page($query, [
+            'post_types' => $post_types,
+            'limit' => iss_search_normalize_limit($args['limit'] ?? 24),
+            'offset' => max(0, (int) ($args['offset'] ?? 0)),
+        ]);
+    }
+
     public function search(string $query, array $args = [])
     {
         $post_types = iss_search_resolve_public_search_post_types($args);
@@ -30,6 +44,11 @@ final class ISS_Graph_SQL_Search_Provider implements ISS_Graph_Search_Provider_I
 
 final class ISS_Graph_Meili_Search_Provider implements ISS_Graph_Search_Provider_Interface
 {
+    public function search_page(string $query, array $args = [])
+    {
+        return $this->search($query, $args);
+    }
+
     public function search(string $query, array $args = [])
     {
         return new WP_Error(
@@ -265,6 +284,18 @@ function iss_search_public_post_ids(string $query, array $args = []): array
     return array_values(array_unique(array_filter($ids)));
 }
 
+function iss_search_public_page(string $query, array $args = [])
+{
+    $query = iss_graph_normalize_public_search_query($query);
+    if ($query === '') { return ['items' => [], 'total' => 0]; }
+    $result = iss_search_get_provider()->search_page($query, $args);
+    // The full WordPress search route is the documented SQL fallback when an
+    // optional external provider is unavailable. The REST facade stays intact.
+    return is_wp_error($result) && iss_search_get_provider_name() !== 'sql'
+        ? (new ISS_Graph_SQL_Search_Provider())->search_page($query, $args)
+        : $result;
+}
+
 function iss_search_get_result_image(WP_Post $post): ?array
 {
     $thumbnail_id = get_post_thumbnail_id($post);
@@ -329,7 +360,7 @@ function iss_search_prepare_result(array $hit): ?array
 {
     $post_id = (int) ($hit['post_id'] ?? 0);
     $post = $post_id > 0 ? get_post($post_id) : null;
-    if (!$post instanceof WP_Post || $post->post_status !== 'publish') {
+    if (!$post instanceof WP_Post || $post->post_status !== 'publish' || $post->post_password !== '') {
         return null;
     }
 
