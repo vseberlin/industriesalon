@@ -42,9 +42,23 @@ class ISS_WF_Import_Archivset_Service
 
     public function install_schema(): void
     {
-        global $wpdb;
-
         require_once ABSPATH . 'wp-admin/includes/upgrade.php';
+        require_once dirname(__DIR__, 2) . '/iss-core/schema.php';
+
+        $statements = $this->get_schema_statements();
+        foreach ($statements as $statement) {
+            dbDelta($statement);
+        }
+        iss_core_verify_schema($statements);
+        update_option(ISS_WF_IMPORT_ARCHIVSET_SCHEMA_OPTION, ISS_WF_IMPORT_ARCHIVSET_SCHEMA_VERSION, false);
+        if ((string) get_option(ISS_WF_IMPORT_ARCHIVSET_SCHEMA_OPTION, '') !== ISS_WF_IMPORT_ARCHIVSET_SCHEMA_VERSION) {
+            throw new RuntimeException('Schema version could not be recorded.');
+        }
+    }
+
+    public function get_schema_statements(): array
+    {
+        global $wpdb;
 
         $sets_table = $this->get_set_table_name();
         $members_table = $this->get_member_table_name();
@@ -117,11 +131,7 @@ class ISS_WF_Import_Archivset_Service
             KEY post_type (post_type)
         ) {$charset_collate};";
 
-        dbDelta($sets_sql);
-        dbDelta($members_sql);
-        dbDelta($links_sql);
-
-        update_option(ISS_WF_IMPORT_ARCHIVSET_SCHEMA_OPTION, ISS_WF_IMPORT_ARCHIVSET_SCHEMA_VERSION, false);
+        return [$sets_sql, $members_sql, $links_sql];
     }
 
     public function create_set(array $args): int

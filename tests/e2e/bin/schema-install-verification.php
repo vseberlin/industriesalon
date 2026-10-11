@@ -37,9 +37,9 @@ try {
     $stage = 'missing_index'; update_option(ISS_GRAPH_SCHEMA_OPTION, 'before', false);
     $expect($wpdb->query("ALTER TABLE `$queue` DROP INDEX queue_order") !== false, 'Create incomplete fixture index state');
     $fail(static fn() => iss_core_verify_schema($schemas));
-    $expect(iss_graph_schema_status_rows([])[0]['status'] === 'error', 'Existing diagnostics expose incorrect live indexes');
+    $expect(iss_core_schema_status_rows([])[0]['status'] === 'error', 'Existing diagnostics expose incorrect live indexes');
     $service->maybe_install_schema();
-    $expect(iss_graph_schema_status_rows([])[0]['status'] === 'ok', 'Existing diagnostics recognize verified repair');
+    $expect(iss_core_schema_status_rows([])[0]['status'] === 'ok', 'Existing diagnostics recognize verified repair');
     $expect(get_option(ISS_GRAPH_SCHEMA_OPTION) === ISS_GRAPH_SCHEMA_VERSION && $wpdb->get_results("SELECT * FROM `$queue`", ARRAY_A) === $row, 'Upgrade repairs missing index and preserves rows');
     $stage = 'failed_create'; $missing = $service->get_name_table_name();
     $wpdb->query("DROP TABLE `$missing`"); update_option(ISS_GRAPH_SCHEMA_OPTION, 'before', false); $hits = 0;

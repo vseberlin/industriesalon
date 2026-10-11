@@ -7,8 +7,7 @@ Immediate executable work only. Larger future programs live in `docs/project/bac
 - Continue the [WordPress refactoring plan](docs/project/wordpress-refactoring-plan.md)
   autonomously under the [current handoff](handoff_CURRENT.md). The user approved
   local commits and continuation through the remaining plan on 11 October.
-  Next: structural verification for the remaining owner installers, migration
-  write checks and commerce idempotency. Preserve existing
+  Next: commerce request idempotency, its owner migration and concurrency checks. Preserve existing
   contracts; use isolated fixtures and sequential stateful checks. Native calendar,
   query/code/CSS consolidation and repository-owned maintenance follow in plan
   order. Keep writes inside the two WordPress checkout roots; no staging mutation

@@ -109,16 +109,3 @@ function iss_graph_current_user_can_manage_editorial_signals(int $context_post_i
 
     return current_user_can('edit_post', $context_post_id);
 }
-
-function iss_graph_schema_status_rows(array $rows): array
-{
-    require_once dirname(__DIR__) . '/iss-core/schema.php';
-    try {
-        iss_core_verify_schema(iss_graph_get_service()->get_schema_statements());
-        $rows[] = iss_core_status_row('schema', 'iss-graph structure', 'ok', 'Owner columns and indexes verified');
-    } catch (Throwable $error) {
-        $rows[] = iss_core_status_row('schema', 'iss-graph structure', 'error', $error->getMessage());
-    }
-    return $rows;
-}
-add_filter('iss_core_status_rows', 'iss_graph_schema_status_rows');

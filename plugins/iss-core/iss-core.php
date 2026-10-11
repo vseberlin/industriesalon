@@ -835,6 +835,16 @@ function iss_core_status_report(): array
     if (defined('ISS_CONTENT_EDITORIAL_SETS_SCHEMA_OPTION') && defined('ISS_CONTENT_EDITORIAL_SETS_SCHEMA_VERSION')) {
         iss_core_add_status_option_row($rows, 'iss-content editorial sets schema', ISS_CONTENT_EDITORIAL_SETS_SCHEMA_OPTION, ISS_CONTENT_EDITORIAL_SETS_SCHEMA_VERSION);
     }
+    if (defined('ISS_PAYMENTS_LITE_SCHEMA_OPTION') && defined('ISS_PAYMENTS_LITE_SCHEMA_VERSION')) {
+        iss_core_add_status_option_row($rows, 'iss-commerce-lite schema', ISS_PAYMENTS_LITE_SCHEMA_OPTION, ISS_PAYMENTS_LITE_SCHEMA_VERSION);
+    }
+    foreach (['collection', 'object', 'media', 'archivset', 'relation', 'import', 'assertion'] as $kind) {
+        $option_constant = 'ISS_WF_IMPORT_' . strtoupper($kind) . '_SCHEMA_OPTION';
+        $version_constant = 'ISS_WF_IMPORT_' . strtoupper($kind) . '_SCHEMA_VERSION';
+        if (defined($option_constant) && defined($version_constant)) {
+            iss_core_add_status_option_row($rows, 'iss-archive ' . $kind . ' schema', constant($option_constant), constant($version_constant));
+        }
+    }
     if (defined('ISS_RELATIONS_GRAPH_IDENTIFIER_BACKFILL_OPTION') && defined('ISS_RELATIONS_GRAPH_IDENTIFIER_BACKFILL_VERSION')) {
         iss_core_add_status_option_row($rows, 'iss-relations graph identifiers', ISS_RELATIONS_GRAPH_IDENTIFIER_BACKFILL_OPTION, ISS_RELATIONS_GRAPH_IDENTIFIER_BACKFILL_VERSION);
     }
@@ -895,6 +905,8 @@ function iss_core_status_report(): array
     }
 
     $rows = array_merge($rows, iss_core_status_theme_helper_rows());
+    require_once ISS_CORE_PATH . 'schema.php';
+    $rows = iss_core_schema_status_rows($rows);
     $rows = apply_filters('iss_core_status_rows', $rows);
     $summary = ['ok' => 0, 'warning' => 0, 'error' => 0, 'skipped' => 0];
     foreach ($rows as $row) {

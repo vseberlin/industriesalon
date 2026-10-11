@@ -28,19 +28,26 @@ upgrade errors as notices, allowing the existing diagnostics to remain usable.
 It is bundled infrastructure code, not a requirement to activate ISS Core for
 an owner's installer; deploy the helper with its callers.
 
-Graph installation retains its existing `dbDelta()` declarations and exposes
-those same declarations through `get_schema_statements()`. The shared read-only
-verifier checks table engines, required column types/nullability/autoincrement
-and BTREE index names/columns/prefixes/uniqueness before recording the schema
-version. Integer display widths are normalized; extra legacy columns/indexes
-and default-expression comparison are outside this check. Unsupported declaration
-syntax fails closed. No second schema manifest or migration writer was added.
-Failed DDL remains repairable by retry; it is not transactional DDL. The existing
-status report additionally verifies live graph structure. Other owners still
-need to adopt structural verification before marking versions current.
-`schema-install-verification.php` covers fresh/partial installs, repeated upgrades,
-metadata/DDL/version-write failures and routing with disposable tables/options.
-No table definition or version changed, so this slice needs no migration artifact.
+All eleven installers retain their existing `dbDelta()` declarations and expose
+those same declarations through `get_schema_statements()` (commerce uses its
+existing function-style owner). The shared read-only verifier checks table
+engines, required column types/nullability/autoincrement and BTREE index
+names/columns/prefixes/uniqueness before recording each schema version. Integer
+display widths are normalized; extra legacy columns/indexes and default-expression
+comparison are outside this check. Unsupported declaration syntax fails closed.
+No second schema manifest or migration writer was added. Failed DDL remains
+repairable by retry; it is not transactional DDL. The existing operations report
+checks every available owner's live structure and schema version. Commerce's
+`verify` command now checks structure without installing it.
+
+Occurrence upgrades check legacy graph-index/column removal, sentinel-date
+replacement and retired option deletion before recording success. Collection
+text-column upgrades likewise check reads and writes. These are the existing
+migrations with verified outcomes, not new data transformations. The two
+`*schema-install-verification.php` suites cover fresh/partial installs, repeated
+upgrades, metadata/DDL/version-write failures, interrupted legacy migration and
+routing with disposable tables/options. No table definition or version changed,
+so this slice needs no migration artifact; no real upgrade/backfill was replayed.
 
 `ISS_Content_Editorial_Sets_Service` owns atomic Set creation/update/deletion,
 item creation/update/moves/status batches, context attachment, promotion and

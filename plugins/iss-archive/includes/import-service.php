@@ -54,9 +54,23 @@ class ISS_WF_Import_Import_Service
 
     public function install_schema(): void
     {
-        global $wpdb;
-
         require_once ABSPATH . 'wp-admin/includes/upgrade.php';
+        require_once dirname(__DIR__, 2) . '/iss-core/schema.php';
+
+        $statements = $this->get_schema_statements();
+        foreach ($statements as $statement) {
+            dbDelta($statement);
+        }
+        iss_core_verify_schema($statements);
+        update_option(ISS_WF_IMPORT_IMPORT_SCHEMA_OPTION, ISS_WF_IMPORT_IMPORT_SCHEMA_VERSION, false);
+        if ((string) get_option(ISS_WF_IMPORT_IMPORT_SCHEMA_OPTION, '') !== ISS_WF_IMPORT_IMPORT_SCHEMA_VERSION) {
+            throw new RuntimeException('Schema version could not be recorded.');
+        }
+    }
+
+    public function get_schema_statements(): array
+    {
+        global $wpdb;
 
         $charset_collate = $wpdb->get_charset_collate();
 
@@ -149,12 +163,7 @@ class ISS_WF_Import_Import_Service
             KEY mode (mode)
         ) {$charset_collate};";
 
-        dbDelta($sql_sources);
-        dbDelta($sql_source_records);
-        dbDelta($sql_source_snapshots);
-        dbDelta($sql_import_runs);
-
-        update_option(ISS_WF_IMPORT_IMPORT_SCHEMA_OPTION, ISS_WF_IMPORT_IMPORT_SCHEMA_VERSION, false);
+        return [$sql_sources, $sql_source_records, $sql_source_snapshots, $sql_import_runs];
     }
 
     public function maybe_backfill(): void

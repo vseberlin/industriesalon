@@ -50,9 +50,23 @@ class ISS_Content_Editorial_Sets_Service
 
     public function install_schema(): void
     {
-        global $wpdb;
-
         require_once ABSPATH . 'wp-admin/includes/upgrade.php';
+        require_once dirname(__DIR__, 2) . '/iss-core/schema.php';
+
+        $statements = $this->get_schema_statements();
+        foreach ($statements as $statement) {
+            dbDelta($statement);
+        }
+        iss_core_verify_schema($statements);
+        update_option(ISS_CONTENT_EDITORIAL_SETS_SCHEMA_OPTION, ISS_CONTENT_EDITORIAL_SETS_SCHEMA_VERSION, false);
+        if ((string) get_option(ISS_CONTENT_EDITORIAL_SETS_SCHEMA_OPTION, '') !== ISS_CONTENT_EDITORIAL_SETS_SCHEMA_VERSION) {
+            throw new RuntimeException('Schema version could not be recorded.');
+        }
+    }
+
+    public function get_schema_statements(): array
+    {
+        global $wpdb;
 
         $sets_table = $this->get_sets_table_name();
         $items_table = $this->get_items_table_name();
@@ -144,12 +158,7 @@ class ISS_Content_Editorial_Sets_Service
             KEY created_at (created_at)
         ) {$charset_collate};";
 
-        dbDelta($sets_sql);
-        dbDelta($items_sql);
-        dbDelta($links_sql);
-        dbDelta($audit_sql);
-
-        update_option(ISS_CONTENT_EDITORIAL_SETS_SCHEMA_OPTION, ISS_CONTENT_EDITORIAL_SETS_SCHEMA_VERSION, false);
+        return [$sets_sql, $items_sql, $links_sql, $audit_sql];
     }
 
     public function get_allowed_set_roles(): array

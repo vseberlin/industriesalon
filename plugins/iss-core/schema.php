@@ -110,3 +110,31 @@ function iss_core_admin_schema_upgrade(callable $upgrade): void
         });
     }
 }
+
+/** Extend the existing operations report with live structure checks in each available owner. */
+function iss_core_schema_status_rows(array $rows): array
+{
+    $owners = [
+        'iss-graph' => 'iss_graph_get_service',
+        'iss-occurrences' => 'iss_occurrences_get_service',
+        'iss-content editorial sets' => 'iss_content_editorial_sets_service',
+        'iss-commerce-lite' => 'iss_payments_lite_schema_statements',
+    ];
+    foreach (['collection', 'object', 'media', 'archivset', 'relation', 'import', 'assertion'] as $kind) {
+        $owners['iss-archive ' . $kind] = 'iss_wf_import_get_' . $kind . '_service';
+    }
+    foreach ($owners as $label => $factory) {
+        if (!function_exists($factory)) {
+            continue;
+        }
+        try {
+            $owner = $factory();
+            $statements = is_array($owner) ? $owner : $owner->get_schema_statements();
+            iss_core_verify_schema($statements);
+            $rows[] = iss_core_status_row('schema', $label . ' structure', 'ok', 'Owner columns and indexes verified');
+        } catch (Throwable $error) {
+            $rows[] = iss_core_status_row('schema', $label . ' structure', 'error', $error->getMessage());
+        }
+    }
+    return $rows;
+}

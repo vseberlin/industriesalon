@@ -30,9 +30,23 @@ class ISS_WF_Import_Media_Service
 
     public function install_schema(): void
     {
-        global $wpdb;
-
         require_once ABSPATH . 'wp-admin/includes/upgrade.php';
+        require_once dirname(__DIR__, 2) . '/iss-core/schema.php';
+
+        $statements = $this->get_schema_statements();
+        foreach ($statements as $statement) {
+            dbDelta($statement);
+        }
+        iss_core_verify_schema($statements);
+        update_option(ISS_WF_IMPORT_MEDIA_SCHEMA_OPTION, ISS_WF_IMPORT_MEDIA_SCHEMA_VERSION, false);
+        if ((string) get_option(ISS_WF_IMPORT_MEDIA_SCHEMA_OPTION, '') !== ISS_WF_IMPORT_MEDIA_SCHEMA_VERSION) {
+            throw new RuntimeException('Schema version could not be recorded.');
+        }
+    }
+
+    public function get_schema_statements(): array
+    {
+        global $wpdb;
 
         $table_name = $this->get_media_table_name();
         $charset_collate = $wpdb->get_charset_collate();
@@ -70,8 +84,7 @@ class ISS_WF_Import_Media_Service
             KEY preview_attachment_id (preview_attachment_id)
         ) {$charset_collate};";
 
-        dbDelta($sql);
-        update_option(ISS_WF_IMPORT_MEDIA_SCHEMA_OPTION, ISS_WF_IMPORT_MEDIA_SCHEMA_VERSION, false);
+        return [$sql];
     }
 
     public function maybe_backfill(): void

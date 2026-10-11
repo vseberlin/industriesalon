@@ -6,6 +6,15 @@ be recovered from Git history.
 
 ## 2026-10-11
 
+- Extended structural verification to occurrence, Set, commerce and all seven
+  archive installers, retaining each owner's SQL as the sole declaration. Schema
+  versions advance only after verified structure and persisted option writes.
+  Checked existing occurrence legacy migrations and collection text-column
+  upgrades; consolidated live checks into the existing ISS Core diagnostics.
+  Commerce CLI verification is now read-only. Passed 194 isolated schema checks,
+  PHP lint, PHPCS/PHPStan; all 11 live schemas passed read-only inspection. No
+  definition/version change, real migration replay or uploads/data artifact.
+
 - Removed graph, occurrence, commerce and archive schema work from public `init`;
   restricted automatic schema checks, including Sets, to privileged non-AJAX
   admin requests. Activation and explicit CLI owner paths remain. Added a small

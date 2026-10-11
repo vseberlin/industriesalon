@@ -43,11 +43,11 @@ PHPCS and PHPStan. Logs: `editorial-set-*-final.log` in the private evidence roo
 Event Drop moderation now has collision-safe retry resolution and its extra
 audit shares the item transaction (33 file recovery checks plus 369 regressions).
 Schema setup is now privileged non-AJAX admin/activation/explicit CLI work.
-Graph verifies structure before recording its version; 40 disposable-schema
-checks, lint, PHPCS/PHPStan and Kalender HTTP 200 passed. Next adopt the same
-read-only verifier in the occurrence/archive/Set/commerce installers, check
-legacy migration write results, and add their fresh/failed-upgrade coverage.
-Then implement commerce request idempotency.
+All eleven owner installers verify structure and version persistence; existing
+occurrence/collection migration writes are checked. Two suites passed 194
+checks; lint/PHPCS/PHPStan passed and all 11 live schemas passed read-only
+inspection. Commerce CLI verification is read-only. Next implement commerce
+request idempotency with an owner migration and isolated concurrency/mail tests.
 Do not run real imports/merges or destructive cleanup for verification.
 
 ## Runtime and evidence

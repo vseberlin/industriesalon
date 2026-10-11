@@ -85,9 +85,33 @@ final class ISS_Occurrences_Service
 
     public function install_schema(): void
     {
-        global $wpdb;
-
         require_once ABSPATH . 'wp-admin/includes/upgrade.php';
+        require_once dirname(__DIR__, 2) . '/iss-core/schema.php';
+
+        $statements = $this->get_schema_statements();
+        foreach ($statements as $statement) {
+            dbDelta($statement);
+        }
+        iss_core_verify_schema($statements);
+        $this->drop_legacy_graph_columns();
+        $this->migrate_open_ended_sentinel();
+        global $wpdb;
+        foreach ([ISS_OCCURRENCES_RETIRED_SERIES_MAP_OPTION, ISS_OCCURRENCES_RETIRED_SOURCE_MAP_OPTION, 'iss_calendar_source_map', 'iss_calendar_series_map', 'iss_calendar_cron_sync'] as $option) {
+            delete_option($option);
+            $remaining = $wpdb->get_var($wpdb->prepare("SELECT option_id FROM {$wpdb->options} WHERE option_name = %s", $option));
+            if ($wpdb->last_error !== '' || $remaining !== null) {
+                throw new RuntimeException('Occurrence migration could not remove a retired mapping option.');
+            }
+        }
+        update_option(ISS_OCCURRENCES_SCHEMA_OPTION, ISS_OCCURRENCES_SCHEMA_VERSION, false);
+        if ((string) get_option(ISS_OCCURRENCES_SCHEMA_OPTION, '') !== ISS_OCCURRENCES_SCHEMA_VERSION) {
+            throw new RuntimeException('Schema version could not be recorded.');
+        }
+    }
+
+    public function get_schema_statements(): array
+    {
+        global $wpdb;
 
         $charset_collate = $wpdb->get_charset_collate();
         $occurrences_table = $this->get_occurrences_table_name();
@@ -196,46 +220,45 @@ final class ISS_Occurrences_Service
             KEY last_seen (last_seen_at)
         ) {$charset_collate};";
 
-        dbDelta($occurrences_sql);
-        dbDelta($series_sql);
-        dbDelta($supersaas_slots_sql);
-        $this->drop_legacy_graph_columns();
-        $this->migrate_open_ended_sentinel();
-        delete_option(ISS_OCCURRENCES_RETIRED_SERIES_MAP_OPTION);
-        delete_option(ISS_OCCURRENCES_RETIRED_SOURCE_MAP_OPTION);
-        delete_option('iss_calendar_source_map');
-        delete_option('iss_calendar_series_map');
-        delete_option('iss_calendar_cron_sync');
-        update_option(ISS_OCCURRENCES_SCHEMA_OPTION, ISS_OCCURRENCES_SCHEMA_VERSION, false);
+        return [$occurrences_sql, $series_sql, $supersaas_slots_sql];
     }
 
     private function drop_legacy_graph_columns(): void
     {
         global $wpdb;
-
         $table = $this->get_occurrences_table_name();
-        $found = (string) $wpdb->get_var($wpdb->prepare('SHOW TABLES LIKE %s', $table));
-        if ($found !== $table) {
-            return;
-        }
-
         foreach (['entity_date', 'location_entity_date'] as $index_name) {
-            $index_exists = (string) $wpdb->get_var(
-                $wpdb->prepare("SHOW INDEX FROM {$table} WHERE Key_name = %s", $index_name)
-            );
-            if ($index_exists !== '') {
+            $query = $wpdb->prepare("SHOW INDEX FROM {$table} WHERE Key_name = %s", $index_name);
+            $index = $wpdb->get_row($query, ARRAY_A);
+            if ($wpdb->last_error !== '') {
+                throw new RuntimeException('Occurrence migration could not inspect a retired graph index.');
+            }
+            if ($index) {
                 // phpcs:ignore WordPress.DB.DirectDatabaseQuery.SchemaChange -- Dropping retired service-owned graph indexes.
-                $wpdb->query("ALTER TABLE {$table} DROP INDEX {$index_name}");
+                if ($wpdb->query("ALTER TABLE {$table} DROP INDEX {$index_name}") === false) {
+                    throw new RuntimeException('Occurrence migration could not remove a retired graph index.');
+                }
+                $remaining = $wpdb->get_row($query, ARRAY_A);
+                if ($wpdb->last_error !== '' || $remaining) {
+                    throw new RuntimeException('Occurrence migration could not verify graph index removal.');
+                }
             }
         }
-
         foreach (['entity_id', 'location_entity_id'] as $column_name) {
-            $column_exists = (string) $wpdb->get_var(
-                $wpdb->prepare("SHOW COLUMNS FROM {$table} LIKE %s", $column_name)
-            );
-            if ($column_exists !== '') {
+            $query = $wpdb->prepare("SHOW COLUMNS FROM {$table} LIKE %s", $wpdb->esc_like($column_name));
+            $column = $wpdb->get_row($query, ARRAY_A);
+            if ($wpdb->last_error !== '') {
+                throw new RuntimeException('Occurrence migration could not inspect a retired graph column.');
+            }
+            if ($column) {
                 // phpcs:ignore WordPress.DB.DirectDatabaseQuery.SchemaChange -- Dropping retired service-owned graph columns.
-                $wpdb->query("ALTER TABLE {$table} DROP COLUMN {$column_name}");
+                if ($wpdb->query("ALTER TABLE {$table} DROP COLUMN {$column_name}") === false) {
+                    throw new RuntimeException('Occurrence migration could not remove a retired graph column.');
+                }
+                $remaining = $wpdb->get_row($query, ARRAY_A);
+                if ($wpdb->last_error !== '' || $remaining) {
+                    throw new RuntimeException('Occurrence migration could not verify graph column removal.');
+                }
             }
         }
     }
@@ -243,24 +266,14 @@ final class ISS_Occurrences_Service
     private function migrate_open_ended_sentinel(): void
     {
         global $wpdb;
-
         $table = $this->get_occurrences_table_name();
-        $found = (string) $wpdb->get_var($wpdb->prepare('SHOW TABLES LIKE %s', $table));
-        if ($found !== $table) {
-            return;
+        if ($wpdb->query("UPDATE {$table} SET is_open_ended = 1, ends_at = NULL WHERE ends_at IS NOT NULL AND ends_at >= '2099-12-31 00:00:00'") === false) {
+            throw new RuntimeException('Occurrence migration could not replace retired sentinel dates.');
         }
-
-        $column_exists = (string) $wpdb->get_var(
-            $wpdb->prepare("SHOW COLUMNS FROM {$table} LIKE %s", 'is_open_ended')
-        );
-        if ($column_exists === '') {
-            return;
+        $remaining = $wpdb->get_var("SELECT COUNT(*) FROM {$table} WHERE ends_at >= '2099-12-31 00:00:00'");
+        if ($wpdb->last_error !== '' || $remaining === null || (int) $remaining !== 0) {
+            throw new RuntimeException('Occurrence migration could not verify sentinel date replacement.');
         }
-
-        // phpcs:ignore WordPress.DB.DirectDatabaseQuery.SchemaChange -- Service-owned migration from retired sentinel dates.
-        $wpdb->query(
-            "UPDATE {$table} SET is_open_ended = 1, ends_at = NULL WHERE ends_at IS NOT NULL AND ends_at >= '2099-12-31 00:00:00'"
-        );
     }
 
     public function tables_exist(): bool

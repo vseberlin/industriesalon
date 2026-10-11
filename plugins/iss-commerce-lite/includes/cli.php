@@ -13,19 +13,13 @@ if (defined('WP_CLI') && WP_CLI) {
         {
             global $wpdb;
 
-            iss_payments_lite_maybe_install_schema();
-
+            require_once dirname(__DIR__, 2) . '/iss-core/schema.php';
             $errors = [];
             $table = iss_payments_lite_requests_table_name();
-            if (!iss_payments_lite_table_exists()) {
-                $errors[] = 'Payments-lite request table is missing.';
-            } else {
-                foreach (['id', 'request_kind', 'status', 'duplicate_hash', 'notified_at', 'notification_error', 'created_at'] as $column) {
-                    $found = (string) $wpdb->get_var($wpdb->prepare("SHOW COLUMNS FROM {$table} LIKE %s", $column));
-                    if ($found === '') {
-                        $errors[] = sprintf('Payments-lite request table is missing column %s.', $column);
-                    }
-                }
+            try {
+                iss_core_verify_schema(iss_payments_lite_schema_statements());
+            } catch (Throwable $error) {
+                $errors[] = $error->getMessage();
             }
 
             $schema_version = (string) get_option(ISS_PAYMENTS_LITE_SCHEMA_OPTION, '');

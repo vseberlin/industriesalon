@@ -37,9 +37,27 @@ class ISS_WF_Import_Collection_Service
 
     public function install_schema(): void
     {
-        global $wpdb;
-
         require_once ABSPATH . 'wp-admin/includes/upgrade.php';
+        require_once dirname(__DIR__, 2) . '/iss-core/schema.php';
+
+        $statements = $this->get_schema_statements();
+        foreach ($statements as $statement) {
+            dbDelta($statement);
+        }
+        $this->ensure_text_column($this->get_collection_table_name(), 'title');
+        $this->ensure_text_column($this->get_member_table_name(), 'member_title');
+        $this->ensure_text_column($this->get_member_table_name(), 'title_override');
+
+        iss_core_verify_schema($statements);
+        update_option(ISS_WF_IMPORT_COLLECTION_SCHEMA_OPTION, ISS_WF_IMPORT_COLLECTION_SCHEMA_VERSION, false);
+        if ((string) get_option(ISS_WF_IMPORT_COLLECTION_SCHEMA_OPTION, '') !== ISS_WF_IMPORT_COLLECTION_SCHEMA_VERSION) {
+            throw new RuntimeException('Schema version could not be recorded.');
+        }
+    }
+
+    public function get_schema_statements(): array
+    {
+        global $wpdb;
 
         $collections_table = $this->get_collection_table_name();
         $members_table = $this->get_member_table_name();
@@ -89,13 +107,7 @@ class ISS_WF_Import_Collection_Service
             KEY member_role (member_role)
         ) {$charset_collate};";
 
-        dbDelta($collections_sql);
-        dbDelta($members_sql);
-        $this->ensure_text_column($collections_table, 'title');
-        $this->ensure_text_column($members_table, 'member_title');
-        $this->ensure_text_column($members_table, 'title_override');
-
-        update_option(ISS_WF_IMPORT_COLLECTION_SCHEMA_OPTION, ISS_WF_IMPORT_COLLECTION_SCHEMA_VERSION, false);
+        return [$collections_sql, $members_sql];
     }
 
     public function maybe_backfill(): void
@@ -524,8 +536,8 @@ class ISS_WF_Import_Collection_Service
             ARRAY_A
         );
 
-        if (!is_array($column)) {
-            return;
+        if ($wpdb->last_error !== '' || !is_array($column)) {
+            throw new RuntimeException('Archive collection migration could not inspect its text column.');
         }
 
         $column_type = strtolower((string) ($column['Type'] ?? ''));
@@ -533,7 +545,9 @@ class ISS_WF_Import_Collection_Service
             return;
         }
 
-        $wpdb->query("ALTER TABLE {$table_name} MODIFY {$column_name} text NOT NULL");
+        if ($wpdb->query("ALTER TABLE {$table_name} MODIFY {$column_name} text NOT NULL") === false) {
+            throw new RuntimeException('Archive collection migration could not widen its text column.');
+        }
     }
 
     protected function truncate_value(string $value, int $limit): string

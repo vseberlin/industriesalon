@@ -79,9 +79,22 @@ function iss_payments_lite_maybe_install_schema(): void {
 }
 
 function iss_payments_lite_install_schema(): void {
-    global $wpdb;
-
     require_once ABSPATH . 'wp-admin/includes/upgrade.php';
+    require_once dirname(__DIR__) . '/iss-core/schema.php';
+
+    $statements = iss_payments_lite_schema_statements();
+    foreach ($statements as $statement) {
+        dbDelta($statement);
+    }
+    iss_core_verify_schema($statements);
+    update_option(ISS_PAYMENTS_LITE_SCHEMA_OPTION, ISS_PAYMENTS_LITE_SCHEMA_VERSION, false);
+    if ((string) get_option(ISS_PAYMENTS_LITE_SCHEMA_OPTION, '') !== ISS_PAYMENTS_LITE_SCHEMA_VERSION) {
+        throw new RuntimeException('Commerce schema version could not be recorded.');
+    }
+}
+
+function iss_payments_lite_schema_statements(): array {
+    global $wpdb;
 
     $table = iss_payments_lite_requests_table_name();
     $charset_collate = $wpdb->get_charset_collate();
@@ -114,8 +127,7 @@ function iss_payments_lite_install_schema(): void {
         KEY duplicate_lookup (duplicate_hash)
     ) {$charset_collate};";
 
-    dbDelta($sql);
-    update_option(ISS_PAYMENTS_LITE_SCHEMA_OPTION, ISS_PAYMENTS_LITE_SCHEMA_VERSION, false);
+    return [$sql];
 }
 
 function iss_payments_lite_insert_request(string $request_kind, array $entry): int {

@@ -20,7 +20,7 @@ changes outside those roots require separate authorization.
 | Phase | Current state |
 | --- | --- |
 | 1 Baseline | Local mounts, backups and route/query comparisons retained; browser and WordPress 7.0 acceptance still open |
-| 2 Database/setup | Seeds, graph/queue/profile/transcript/archive boundaries and Set service writes completed; Event Drop recovery and public setup gates complete; remaining installer verification and commerce retries next |
+| 2 Database/setup | Seeds, graph/queue/profile/transcript/archive boundaries and Set service writes completed; Event Drop recovery and public setup gates complete; installer verification complete; commerce retries next |
 | 3 Native frontend | Pending |
 | 4 Query/projection consolidation | Pending |
 | 5 Code/CSS consolidation | Pending |
