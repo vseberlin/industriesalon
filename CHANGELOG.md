@@ -6,6 +6,17 @@ be recovered from Git history.
 
 ## 2026-10-11
 
+- Split graph schema/queue/read/identifier/evidence/signal methods and CLI
+  diagnostics/migrations within the existing owner. Extracted relation block
+  registration/query helpers and programme booking/filter configuration without
+  changing public APIs, hooks or saved block attributes. Graph core is 1,233
+  lines, CLI entry 81, relations blocks 1,927 and timeline renderer 778.
+  Shared signal policy remains public/REST; audited graph/relations admin and
+  CLI implementations load only in their contexts. Updated facade consumer
+  checks for the native Interactivity booking config and GET timeline.
+  Passed 1,821 PHP checks, facade checks/comparisons, PHP/PHPCS/PHPStan and 51
+  Chrome/Firefox/Linux-WebKit scenarios. No schema/content/uploads artifact.
+
 - Moved capability migration and newsletter defaults out of public bootstrap;
   privileged setup verifies persisted roles/options before advancing versions.
   Legacy plugin aliases still load their owners early but persist only during

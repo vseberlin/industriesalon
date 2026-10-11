@@ -45,9 +45,14 @@ require_once ISS_GRAPH_PATH . 'includes/search-service.php';
 require_once ISS_GRAPH_PATH . 'includes/search-rest.php';
 require_once ISS_GRAPH_PATH . 'includes/facade-rest.php';
 require_once ISS_GRAPH_PATH . 'includes/editorial-signals-rest.php';
-require_once ISS_GRAPH_PATH . 'includes/editorial-signals-admin.php';
+require_once ISS_GRAPH_PATH . 'includes/editorial-signals.php';
+if (is_admin() || (defined('WP_CLI') && WP_CLI)) {
+    require_once ISS_GRAPH_PATH . 'includes/editorial-signals-admin.php';
+}
 require_once ISS_GRAPH_PATH . 'includes/enrichments.php';
-require_once ISS_GRAPH_PATH . 'includes/cli.php';
+if (defined('WP_CLI') && WP_CLI) {
+    require_once ISS_GRAPH_PATH . 'includes/cli.php';
+}
 
 register_activation_hook(__FILE__, function () {
     iss_graph_get_service()->install_schema();

@@ -27,10 +27,11 @@ Continue the [refactoring plan](docs/project/wordpress-refactoring-plan.md):
 
 1. Native filters, shared booking and router region navigation are complete.
    All 45 WordPress 7.0 Chrome/Firefox/Linux-WebKit scenarios pass locally.
-2. Simplify occurrence-backed menu dates, search queries, batched reads and
-   coalesced projection updates with measured plans and privacy/date equivalence.
-3. Extract responsibilities within existing owners; consolidate touched CSS and
-   remove obsolete paths only with saved-content/enqueue/browser evidence.
+2. Query consolidation is complete: bounded SQL search, current occurrence
+   privacy/date checks, batched caches and request-scoped save coalescing.
+   Keep the existing menu query: recurrence/opt-in equivalence was disproved.
+3. Owner file extraction and audited admin/CLI context loading are complete.
+   Finish native admin ordering and the final CSS/saved-content asset audit.
 4. Complete repository-owned maintenance commands, monitoring, backup/restore
    verification and operational documentation within the local scope. Target
    deployment and any host changes outside the checkout roots remain separate.

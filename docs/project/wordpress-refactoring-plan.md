@@ -23,7 +23,7 @@ changes outside those roots require separate authorization.
 | 2 Database/setup | Seeds, graph/queue/profile/transcript/archive boundaries and Set service writes completed; Event Drop recovery and public setup gates complete; installer verification and migrated commerce idempotency complete |
 | 3 Native frontend | Native GET filters, shared booking and core region navigation complete; Flatpickr removed; 45 three-engine WordPress 7.0 scenarios pass |
 | 4 Query/projection consolidation | Read-only relation batching and bounded/private SQL search complete; occurrence privacy/batching, date cache removal and ordinary save coalescing complete; menu retained after failed equivalence proof |
-| 5 Code/CSS consolidation | Pending |
+| 5 Code/CSS consolidation | Owner extraction/context loading complete; native admin ordering and final asset audit next |
 | 6 Maintenance | Pending within repository/local scope; target operations remain separate |
 
 Use `handoff_CURRENT.md` and the private verification receipts for live checkpoint

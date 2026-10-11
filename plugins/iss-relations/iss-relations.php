@@ -23,12 +23,16 @@ define('ISS_RELATIONS_GRAPH_IDENTIFIER_BACKFILL_OPTION', 'iss_relations_graph_id
 
 require_once ISS_RELATIONS_PATH . 'includes/core.php';
 require_once ISS_RELATIONS_PATH . 'includes/meta.php';
-require_once ISS_RELATIONS_PATH . 'includes/admin.php';
+if (is_admin() || (defined('WP_CLI') && WP_CLI)) {
+    require_once ISS_RELATIONS_PATH . 'includes/admin.php';
+}
 require_once ISS_RELATIONS_PATH . 'includes/rest.php';
 require_once ISS_RELATIONS_PATH . 'includes/blocks.php';
 require_once ISS_RELATIONS_PATH . 'includes/map-projection.php';
 require_once ISS_RELATIONS_PATH . 'includes/query-loop.php';
-require_once ISS_RELATIONS_PATH . 'includes/cli.php';
+if (defined('WP_CLI') && WP_CLI) {
+    require_once ISS_RELATIONS_PATH . 'includes/cli.php';
+}
 
 register_activation_hook(__FILE__, function () {
     update_option('iss_relations_needs_backfill', '1', false);
