@@ -1843,32 +1843,6 @@ ol.wp-block-list.is-style-iss-list-plain {
   color: var(--iss-black, #1e1e1e);
 }
 
-.is-tour-calendar__calendar,
-.is-tour-calendar__appointments,
-.is-tour-calendar__slot-card,
-.is-tour-calendar__appointment,
-.is-tour-calendar__booking-summary,
-.is-tour-calendar-modal__panel,
-.is-tour-calendar__field input,
-.is-tour-calendar__field select,
-.is-tour-calendar__time-btn,
-.is-tour-calendar__appointment-btn,
-.is-tour-calendar__day-cell {
-  border: 1px solid var(--iss-border, rgba(30, 30, 30, 0.14));
-  background: var(--iss-white, #fff);
-  box-shadow: none;
-}
-
-.is-tour-calendar__appointment {
-  border-left: 0;
-  border-right: 0;
-}
-
-.is-tour-calendar__day-cell--empty {
-  border-color: transparent;
-  background: transparent;
-}
-
 /* =====================================================================
    TIMELINE COLOR SCHEMES
    ---------------------------------------------------------------------

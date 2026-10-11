@@ -575,7 +575,7 @@ function iss_timeline_render_query_block($attributes = [], $content = '', $block
         if ($title !== '') { $out .= '<h2 class="iss-timeline__section-title">' . esc_html($title) . '</h2>'; }
         if ($intro !== '') { $out .= '<p class="iss-timeline__summary">' . esc_html($intro) . '</p>'; }
     }
-    $out .= '<div class="iss-timeline-query__controls">';
+    $out .= '<div class="iss-timeline-query__controls' . ($ui['showCalendarBridge'] ? ' iss-timeline-query__controls--calendar' : '') . '">';
     if ($ui['showCalendarBridge']) {
         $out .= '<nav class="iss-timeline__views" aria-label="' . esc_attr__('Ansicht wählen', 'iss-timeline') . '">';
         foreach (['list' => __('Liste', 'iss-timeline'), 'calendar' => __('Kalender', 'iss-timeline')] as $view => $label) {
@@ -584,7 +584,6 @@ function iss_timeline_render_query_block($attributes = [], $content = '', $block
         }
         $out .= '</nav>';
     }
-    $out .= $calendar['html'] ?? '';
     $buttons = iss_timeline_get_preset_buttons_from_attributes($attributes);
     if ($buttons) {
         $out .= '<nav class="iss-timeline__presets" aria-label="' . esc_attr__('Zeitraum wählen', 'iss-timeline') . '">';
@@ -598,7 +597,7 @@ function iss_timeline_render_query_block($attributes = [], $content = '', $block
     $has_filters = $ui['showTimeModeFilter'] || $ui['showItemTypeFilter'] || $ui['showPostTypeFilter'] || $ui['showMonthFilter'] || $ui['showCalendarBridge'] || $ui['taxonomyUiFilters'];
     if ($has_filters) {
         $action = iss_timeline_navigation_url($scope);
-        $out .= '<form method="get" action="' . esc_url($action) . '" class="iss-timeline__filters" data-timeline-query-form data-wp-on--submit="actions.submit">';
+        $out .= '<form method="get" action="' . esc_url($action) . '" class="iss-timeline__filters" data-timeline-query-form data-wp-on--submit="actions.submit" data-wp-on--change="actions.changeFacet">';
         // GET submission replaces the action query; carry other instances explicitly.
         if (isset($query['iss_timeline']) && is_array($query['iss_timeline'])) { unset($query['iss_timeline'][$scope]); }
         $hidden = static function (array $values, string $parent = '') use (&$hidden): string {
@@ -626,6 +625,7 @@ function iss_timeline_render_query_block($attributes = [], $content = '', $block
                 'links' => is_array($attributes['externalTypeLinks'] ?? null) ? $attributes['externalTypeLinks'] : [], 'className' => 'iss-timeline__filter--type',
             ]);
         }
+        $out .= $calendar['html'] ?? '';
         if ($ui['showMonthFilter'] || $ui['showCalendarBridge']) {
             $months = iss_timeline_collect_future_month_options(iss_timeline_get_future_horizon_months());
             $month = $selection['month'] ?: ($config['filters']['time_mode'] === 'month' ? $config['filters']['month'] : '');

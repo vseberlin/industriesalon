@@ -11,6 +11,17 @@ for (const scenario of [{ name: 'desktop', js: true, width: 1280 }, { name: 'pho
     const block = page.locator('[data-timeline-query]').first();
     const scope = await block.getAttribute('id');
     await expect(block.locator('[data-timeline-query-results]')).not.toBeEmpty();
+    const facets = block.getByRole('group', { name: 'Inhaltstyp', exact: true });
+    const facetBox = await facets.boundingBox();
+    const calendarBox = await block.locator('.iss-programme-calendar').boundingBox();
+    expect(facetBox.y + facetBox.height).toBeLessThanOrEqual(calendarBox.y);
+    await facets.getByText('Führungen', { exact: true }).click();
+    if (!scenario.js) await block.getByRole('button', { name: 'Anwenden', exact: true }).click();
+    await expect.poll(() => new URL(page.url()).searchParams.get(`iss_timeline[${scope}][item_type]`)).toBe('fuehrungen');
+    await expect(block.locator('.iss-programme-calendar')).toBeVisible();
+    await expect(facets.getByRole('radio', { name: 'Führungen', exact: true })).toBeChecked();
+    await page.getByRole('link', { name: 'Filter zurücksetzen', exact: true }).click();
+    await expect(facets.getByRole('radio', { name: 'Alle', exact: true })).toBeChecked();
     const date = block.locator('input[type="date"]');
     await expect(date).toBeVisible();
     await date.fill('2030-10-11');

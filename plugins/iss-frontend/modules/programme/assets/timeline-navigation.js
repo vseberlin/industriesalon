@@ -39,6 +39,9 @@ function* navigate(url, context) {
 
 store('iss/timeline', {
   actions: {
+    changeFacet: withSyncEvent((event) => {
+      if (event.target.matches('input[type="radio"]')) getElement().ref.requestSubmit();
+    }),
     submit: withSyncEvent(function* (event) {
       const form = getElement().ref;
       if (!form.reportValidity()) return;

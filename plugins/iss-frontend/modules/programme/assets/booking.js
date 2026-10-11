@@ -10,7 +10,7 @@ const dialog = () => document.getElementById('iss-booking-dialog');
 const dayOf = (slot) => String(slot.start || '').slice(0, 10);
 const bookable = (slot) => !!slot && !['cancelled', 'unavailable', 'sold_out'].includes(slot.availability_state) && (slot.available == null || Number(slot.available) > 0);
 const dateLabel = (slot) => slot.date_label || new Intl.DateTimeFormat('de-DE', { day: 'numeric', month: 'long', year: 'numeric', timeZone: 'UTC' }).format(new Date(`${dayOf(slot)}T12:00:00Z`));
-const timeLabel = (slot) => slot.time_label || `${String(slot.start || '').slice(11, 16)} Uhr`;
+const timeLabel = (slot) => slot.time_label || `${String(slot.start || '').slice(11, 16)}${slot.end ? ` – ${String(slot.end).slice(11, 16)}` : ''} Uhr`;
 const unavailableLabel = (slot) => slot.availability_state === 'cancelled' ? 'abgesagt' : slot.available != null && Number(slot.available) <= 0 || slot.availability_state === 'sold_out' ? 'ausgebucht' : 'nicht verfügbar';
 
 // Day-only arithmetic deliberately stays in UTC; the occurrence owner supplies
@@ -61,6 +61,10 @@ const { state, actions } = store('iss/booking', {
     get needsQuantity() { return !state.isInquiry; },
     get hidePreferred() { return !state.isInquiry; },
     get hideSlots() { return state.intent !== 'booking'; },
+    get choosingDate() { return state.intent === 'booking' && !bookable(state.selectedSlot); },
+    get step() { return state.choosingDate ? 'dates' : 'request'; },
+    get headingLabel() { return state.choosingDate ? 'Termin wählen' : state.intent === 'order' ? 'Publikation anfragen' : 'Buchung anfragen'; },
+    get selectedTimeLabel() { return state.selectedSlot ? timeLabel(state.selectedSlot) : ''; },
     get noSlots() { return state.slots.length === 0; },
     get noDay() { return state.day === ''; },
     get hideRetry() { return !state.failed; },
@@ -74,7 +78,7 @@ const { state, actions } = store('iss/booking', {
       return cents > 0 ? `${new Intl.NumberFormat('de-DE', { style: 'currency', currency: 'EUR' }).format(cents / 100)} · Zahlung vor Ort` : 'Keine Online-Zahlung';
     },
     picker: { month: '', focusDay: '' },
-    get selectedDateLabel() { return state.day ? dateLabel({ start: state.day }) : 'Bitte einen verfügbaren Tag wählen.'; },
+    get selectedDateLabel() { return state.day ? new Intl.DateTimeFormat('de-DE', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric', timeZone: 'UTC' }).format(new Date(`${state.day}T12:00:00Z`)) : 'Bitte einen verfügbaren Tag wählen.'; },
     get calendarMonth() { return picker().month || initialDay(calendarSlots()).slice(0, 7); },
     get calendarLabel() { return monthLabel(state.calendarMonth); },
     get calendarMonths() {
@@ -88,7 +92,7 @@ const { state, actions } = store('iss/booking', {
     get calendarAtStart() { return state.calendarMonth <= state.calendarMonths[0].value; },
     get calendarAtEnd() { return state.calendarMonth >= state.calendarMonths.at(-1).value; },
     get calendarHasDates() { return calendarSlots().some(slot => bookable(slot) && dayOf(slot) >= today() && dayOf(slot).startsWith(state.calendarMonth)); },
-    get hideNextAvailable() { return !calendarSlots().some(slot => bookable(slot) && dayOf(slot).slice(0, 7) > state.calendarMonth); },
+    get hideNextAvailable() { return state.calendarHasDates || !calendarSlots().some(slot => bookable(slot) && dayOf(slot).slice(0, 7) > state.calendarMonth); },
     get calendarWeeks() {
       const month = state.calendarMonth;
       const first = new Date(`${month}-01T12:00:00Z`);
@@ -102,16 +106,15 @@ const { state, actions } = store('iss/booking', {
       }
       const chosen = getContext().calendar.inline ? picker().day : state.day;
       const focus = picker().focusDay.startsWith(month) ? picker().focusDay : chosen.startsWith(month) ? chosen : [...groups.keys()].sort().find(day => day.startsWith(month) && groups.get(day).some(bookable)) || `${month}-01`;
-      const days = Array.from({ length: Math.ceil((offset + count) / 7) * 7 }, (_, index) => {
+      const days = Array.from({ length: 42 }, (_, index) => {
         const number = index - offset + 1;
-        if (number < 1 || number > count) return { key: `${month}-empty-${index}`, empty: true };
+        if (number < 1 || number > count) return { key: `${month}-empty-${index}`, empty: true, number: new Date(Date.UTC(first.getUTCFullYear(), first.getUTCMonth(), number)).getUTCDate() };
         const value = `${month}-${String(number).padStart(2, '0')}`;
         const slots = groups.get(value) || [];
         const free = value >= today() ? slots.filter(bookable).length : 0;
         const availability = free ? 'available' : slots.length ? 'unavailable' : 'empty';
         return { key: value, value, number, empty: false, disabled: !free, availability, selected: chosen === value,
           current: value === today() ? 'date' : undefined, tabIndex: focus === value ? 0 : -1,
-          mark: free ? '●' : slots.length ? '×' : '',
           label: `${dateLabel({ start: value })} · ${free ? `${free} verfügbare ${free === 1 ? 'Uhrzeit' : 'Uhrzeiten'}` : slots.length ? 'ausgebucht oder nicht verfügbar' : 'keine Termine'}` };
       });
       return Array.from({ length: days.length / 7 }, (_, week) => ({ key: `${month}-${week}`, days: days.slice(week * 7, week * 7 + 7) }));
@@ -167,11 +170,11 @@ const { state, actions } = store('iss/booking', {
         state.inquiryAllowed = payload.inquiry.allowed;
         state.intent = payload.inquiry.allowed && (source.intent === 'inquiry' || payload.mode === 'inquiry') ? 'inquiry' : 'booking';
         const selected = state.slots.find((slot) => String(slot.id) === source.slotId && bookable(slot));
-        state.day = selected ? dayOf(selected) : state.slots.some(slot => dayOf(slot) === source.day && bookable(slot)) ? source.day : '';
+        state.day = selected ? dayOf(selected) : state.slots.some(slot => dayOf(slot) === source.day && bookable(slot)) ? source.day : state.slots.some(bookable) ? initialDay(state.slots) : '';
         const firstDay = state.day || initialDay(state.slots);
         state.picker = { month: firstDay.slice(0, 7), focusDay: firstDay };
         state.slotId = selected ? String(selected.id) : '';
-        state.status = payload.slots.length ? 'Bitte Datum und Uhrzeit wählen.' : payload.inquiry.allowed ? 'Aktuell sind keine festen Termine verfügbar. Sie können einen Wunschtermin anfragen.' : 'Aktuell sind keine buchbaren Termine verfügbar. Nutzen Sie bitte den Kontakt auf der Seite.';
+        state.status = selected ? '' : payload.slots.length ? 'Bitte Datum und Uhrzeit wählen.' : payload.inquiry.allowed ? 'Aktuell sind keine festen Termine verfügbar. Sie können einen Wunschtermin anfragen.' : 'Aktuell sind keine buchbaren Termine verfügbar. Nutzen Sie bitte den Kontakt auf der Seite.';
       } catch (error) {
         if (version === generation && state.open) { state.failed = true; state.status = error.message || 'Termine konnten nicht geladen werden.'; }
       } finally { if (version === generation) state.loading = false; }
@@ -216,9 +219,28 @@ const { state, actions } = store('iss/booking', {
       yield new Promise(resolve => requestAnimationFrame(resolve));
       calendar.querySelector(`[data-calendar-day="${target}"]`)?.focus();
     }),
-    selectSlot() { state.slotId = getElement().ref.value; state.quantity = 1; },
-    chooseInquiry() { if (state.inquiryAllowed) { state.intent = 'inquiry'; state.status = ''; } },
-    chooseBooking() { state.intent = 'booking'; state.status = ''; },
+    *selectSlot() {
+      const slot = getContext().slot;
+      if (!bookable(slot)) return;
+      const trigger = getElement().ref;
+      state.slotId = String(slot.id); state.quantity = 1; state.status = '';
+      yield new Promise(resolve => requestAnimationFrame(resolve));
+      if (document.activeElement === trigger || document.activeElement === document.body) dialog().querySelector('[name="name"]')?.focus();
+    },
+    *chooseInquiry() {
+      if (!state.inquiryAllowed) return;
+      const trigger = getElement().ref;
+      state.intent = 'inquiry'; state.status = '';
+      yield new Promise(resolve => requestAnimationFrame(resolve));
+      if (document.activeElement === trigger || document.activeElement === document.body) dialog().querySelector('[name="preferred_date"]')?.focus();
+    },
+    *chooseBooking() {
+      const trigger = getElement().ref;
+      state.intent = 'booking'; state.slotId = ''; state.status = 'Bitte Datum und Uhrzeit wählen.';
+      if (state.day) state.picker = { month: state.day.slice(0, 7), focusDay: state.day };
+      yield new Promise(resolve => requestAnimationFrame(resolve));
+      if (document.activeElement === trigger || document.activeElement === document.body) dialog().querySelector(`[data-calendar-day="${state.day}"]`)?.focus();
+    },
     input() {
       const { ref } = getElement();
       const property = { name: 'customerName', email: 'email', preferred_date: 'preferredDate', preferred_time: 'preferredTime', quantity: 'quantity' }[ref.name];

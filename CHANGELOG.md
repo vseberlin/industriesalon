@@ -6,6 +6,17 @@ be recovered from Git history.
 
 ## 2026-10-11
 
+- Compared the live staging booking chooser read-only and restored its calendar
+  and time-button layout locally, followed by the existing request form. Inline
+  and programme grids share the same compact date tiles. Calendar filters now
+  precede the grid, use smaller buttons and apply content-type changes through
+  the existing core router; native GET submission remains available. Drained
+  duplicate page controls and obsolete pattern calendar surfaces into the existing
+  renderer/skins. Availability ownership, intake and saved block attributes are
+  unchanged; no database migration or uploads artifact is required. Passed 70
+  backend checks, 60 Chrome/Firefox/Linux-WebKit scenarios and targeted PHP/JS/CSS
+  checks, with desktop/phone review of the original local site and inline fixture.
+
 - Matched programme, inline-tour and booking calendars to the former Flatpickr
   visual treatment using one shared date-tile skin: compact rounded dates,
   circular month arrows, red markers/selection and desktop calendar/details

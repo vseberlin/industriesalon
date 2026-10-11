@@ -28,10 +28,14 @@ for (const kind of ['booking', 'inquiry', 'order']) {
     const dialog = page.locator('#iss-booking-dialog');
     await expect(dialog).toBeVisible();
     if (kind === 'booking') {
+      await expect(dialog.locator('[name="name"]')).toBeHidden();
       await dialog.locator('[data-calendar-day="2030-10-11"]').click();
-      await dialog.locator('[name="slot_id"]').selectOption('fixture-a');
+      await dialog.locator('[data-slot-id="fixture-a"]').click();
+      await expect(dialog.locator('[name="name"]')).toBeFocused();
+      await dialog.getByRole('button', { name: 'Termin ändern', exact: true }).click();
+      await expect(dialog.locator('[data-calendar-day="2030-10-11"]')).toBeFocused();
       await dialog.locator('[data-calendar-day="2030-10-12"]').click();
-      await dialog.locator('[name="slot_id"]').selectOption('fixture-b');
+      await dialog.locator('[data-slot-id="fixture-b"]').click();
       expect(slotReads).toBe(1);
     } else if (kind === 'inquiry') {
       await dialog.locator('[name="preferred_date"]').fill('2030-10-11');
@@ -56,6 +60,7 @@ for (const kind of ['booking', 'inquiry', 'order']) {
     expect(requests[1].request_key).toMatch(/^[a-f0-9]{32}$/);
     expect(requests[0].request_key).toBe(requests[1].request_key);
     expect(requests[1].intent).toBe(kind);
+    if (kind === 'booking') expect(requests[1].slot_id).toBe('fixture-b');
     await expect(submit).toBeDisabled();
     await page.screenshot({ path: testInfo.outputPath(`${kind}-dialog.png`), fullPage: true });
     await page.keyboard.press('Escape');

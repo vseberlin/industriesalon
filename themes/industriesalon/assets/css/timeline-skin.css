@@ -337,3 +337,21 @@
   border-color: var(--iss-tl-primary);
   background: var(--iss-accent-soft);
 }
+
+.iss-timeline-query__controls--calendar .iss-timeline__preset,
+.iss-timeline-query__controls--calendar .iss-timeline__choice-label,
+.iss-timeline-query__controls--calendar .iss-timeline__apply,
+.iss-timeline-query__controls--calendar .iss-timeline__btn {
+  border-left-width: 1px;
+  border-radius: var(--iss-radius-md);
+  font-size: 0.8rem;
+  text-decoration: none;
+}
+
+.iss-timeline-query__controls--calendar .iss-timeline__filter-label {
+  color: var(--iss-surface-subtle);
+  font-size: 0.72rem;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}

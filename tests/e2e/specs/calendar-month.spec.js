@@ -26,8 +26,8 @@ test('booking month grid marks availability, handles empty months and leap days 
   await expect(picker.locator('[data-calendar-day="2030-10-12"]')).toHaveAttribute('aria-disabled', 'true');
   await expect(picker.locator('[data-calendar-day="2030-10-13"]')).toHaveAttribute('aria-disabled', 'true');
   await picker.locator('[data-calendar-day="2030-10-14"]').click();
-  await expect(dialog.locator('[name="slot_id"] option[value="mixed-sold"]')).toHaveJSProperty('disabled', true);
-  await expect(dialog.locator('[name="slot_id"] option[value="mixed-free"]')).toHaveJSProperty('disabled', false);
+  await expect(dialog.locator('[data-slot-id="mixed-sold"]')).toHaveJSProperty('disabled', true);
+  await expect(dialog.locator('[data-slot-id="mixed-free"]')).toHaveJSProperty('disabled', false);
   await picker.locator('[data-calendar-day="2030-10-12"]').dispatchEvent('click');
   await expect(picker.locator('[data-calendar-day="2030-10-14"]')).toHaveAttribute('aria-pressed', 'true');
   await picker.getByRole('button', { name: 'Nächster Monat', exact: true }).click();
@@ -39,7 +39,13 @@ test('booking month grid marks availability, handles empty months and leap days 
   await page.keyboard.press('ArrowRight');
   await expect(picker.locator('[data-calendar-day="2032-02-29"]')).toBeFocused();
   await page.keyboard.press('Enter');
-  await expect(dialog.locator('[name="slot_id"] option[value="leap"]')).toHaveJSProperty('disabled', false);
+  await expect(dialog.locator('[data-slot-id="leap"]')).toHaveJSProperty('disabled', false);
+  await picker.getByRole('button', { name: 'Vorheriger Monat', exact: true }).click();
+  await dialog.locator('[data-slot-id="leap"]').click();
+  await expect(dialog.locator('[name="name"]')).toBeFocused();
+  await dialog.getByRole('button', { name: 'Termin ändern', exact: true }).click();
+  await expect(picker.getByLabel('Monat und Jahr')).toHaveValue('2032-02');
+  await expect(picker.locator('[data-calendar-day="2032-02-29"]')).toBeFocused();
   await page.screenshot({ path: testInfo.outputPath('booking-month-grid.png'), fullPage: true });
   expect(reads).toBe(1);
   expect(errors).toEqual([]);
@@ -62,7 +68,7 @@ test('phone date grid keeps Berlin days in a different browser timezone and supp
   await page.keyboard.press('End');
   await expect(picker.locator('[data-calendar-day="2030-10-13"]')).toBeFocused();
   await page.keyboard.press('Enter');
-  await expect(page.locator('#iss-booking-dialog [name="slot_id"]')).toBeDisabled();
+  await expect(picker.locator('[data-calendar-day="2030-10-11"]')).toHaveAttribute('aria-pressed', 'true');
   await picker.getByLabel('Monat und Jahr').selectOption('2030-10');
   await picker.locator('[data-calendar-day="2030-10-11"]').click();
   await expect(page.locator('.is-tour-calendar__selected-date')).toContainText('11. Oktober 2030');

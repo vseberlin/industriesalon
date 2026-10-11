@@ -495,3 +495,61 @@
   gap: 0.75rem;
   margin-block: 1rem;
 }
+
+/* Compact calendar controls: shared renderer layout, independent of a page slug. */
+.iss-timeline-query__controls--calendar {
+  max-width: 26rem;
+  gap: 0.75rem;
+}
+
+.iss-timeline-query__controls--calendar .iss-timeline__views {
+  margin: 0;
+  gap: 0.5rem;
+}
+
+.iss-timeline-query__controls--calendar .iss-timeline__presets {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 0.4rem;
+  margin: 0;
+}
+
+.iss-timeline-query__controls--calendar .iss-timeline__filters {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.75rem;
+  margin: 0;
+}
+
+.iss-timeline-query__controls--calendar .iss-timeline__filter--choices,
+.iss-timeline-query__controls--calendar .iss-date-calendar,
+.iss-timeline-query__controls--calendar .iss-timeline__filter-actions {
+  grid-column: 1 / -1;
+}
+
+.iss-timeline-query__controls--calendar .iss-date-calendar {
+  margin: 0;
+}
+
+.iss-timeline-query__controls--calendar .iss-timeline__choice-list {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.4rem;
+}
+
+.iss-timeline-query__controls--calendar .iss-timeline__choice-label,
+.iss-timeline-query__controls--calendar .iss-timeline__filter select,
+.iss-timeline-query__controls--calendar .iss-timeline__filter input {
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.iss-timeline-query__controls--calendar .iss-timeline__preset,
+.iss-timeline-query__controls--calendar .iss-timeline__choice-label,
+.iss-timeline-query__controls--calendar .iss-timeline__apply,
+.iss-timeline-query__controls--calendar .iss-timeline__btn {
+  justify-content: center;
+  min-height: 2.25rem;
+  padding: 0.45rem 0.55rem;
+  text-align: center;
+}

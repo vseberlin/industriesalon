@@ -7,6 +7,7 @@
 .is-tour-calendar__inner {
   display: grid;
   gap: var(--iss-space-md, 1rem);
+  justify-items: start;
 }
 
 .is-tour-calendar__heading,
@@ -32,7 +33,8 @@
 }
 
 .is-tour-calendar-modal__header {
-  padding: 1.35rem 4rem 1.1rem 1.5rem;
+  padding: 1.5rem 3rem 2rem;
+  text-align: center;
 }
 
 .is-tour-calendar-modal__header h2 {
@@ -42,9 +44,10 @@
 }
 
 .is-tour-calendar__date-panel,
+.is-tour-calendar__times-panel,
 .is-tour-calendar__request-details {
   min-width: 0;
-  padding: 1.4rem 1.5rem;
+  padding: 1.5rem;
 }
 
 .is-tour-calendar__date-panel .iss-date-calendar {
@@ -56,11 +59,11 @@
 }
 
 @media (min-width: 860px) {
-  .is-tour-calendar-modal[data-intent="booking"] {
+  .is-tour-calendar-modal[data-step="dates"] {
     width: min(62rem, calc(100vw - 2rem));
   }
 
-  .is-tour-calendar__form-fields[data-intent="booking"] {
+  .is-tour-calendar__chooser {
     display: grid;
     grid-template-columns: minmax(20rem, 25rem) minmax(0, 1fr);
   }
@@ -73,7 +76,8 @@
   min-height: 2.5rem;
 }
 
-.is-tour-calendar__form-fields {
+.is-tour-calendar__form-fields,
+.is-tour-calendar__chooser {
   min-width: 0;
   margin: 0;
   padding: 0;
@@ -93,7 +97,9 @@
   margin-block: 0.8rem;
 }
 
-.is-tour-calendar__field[hidden] {
+.is-tour-calendar__field[hidden],
+.is-tour-calendar__form-fields[hidden],
+.is-tour-calendar__chooser[hidden] {
   display: none;
 }
 
@@ -109,17 +115,12 @@
 
 .is-tour-calendar__form-submit,
 .is-tour-calendar__form-cancel,
-.is-tour-calendar__form-switch {
+.is-tour-calendar__form-switch,
+.is-tour-calendar__time {
   min-height: 2.75rem;
   padding: 0.65rem 1rem;
   cursor: pointer;
   font: inherit;
-}
-
-@media (max-width: 600px) {
-  .is-tour-calendar__form-grid {
-    grid-template-columns: 1fr;
-  }
 }
 
 /* Shared availability-picker structure; the theme owns day/status colors. */
@@ -135,17 +136,16 @@
 
 .iss-date-calendar__nav {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) auto auto;
+  grid-template-columns: auto minmax(0, 1fr) auto;
   gap: 0.5rem;
   align-items: center;
 }
 
 .iss-date-calendar__month {
-  grid-column: 1;
-  grid-row: 1;
   min-width: 0;
   margin: 0;
-  font-size: 1.05rem;
+  font-size: 1rem;
+  text-align: center;
   line-height: 1.2;
 }
 
@@ -163,8 +163,8 @@
   text-decoration: none;
   box-sizing: border-box;
   padding: 0;
-  min-width: 2.75rem;
-  min-height: 2.75rem;
+  min-width: 2.4rem;
+  min-height: 2.4rem;
   font: inherit;
 }
 
@@ -186,7 +186,7 @@
   display: grid;
   place-content: center;
   width: 100%;
-  min-height: 3rem;
+  min-height: 2.85rem;
   padding: 0.15rem;
   font: inherit;
   line-height: 1.1;
@@ -199,12 +199,6 @@
   display: none;
 }
 
-.iss-date-calendar__mark {
-  min-height: 0.8rem;
-  font-size: 0.7rem;
-}
-
-.iss-date-calendar__legend,
 .iss-date-calendar__empty {
   margin-block: 0.6rem;
   font-size: 0.875rem;
@@ -214,4 +208,50 @@
   min-height: 2.75rem;
   padding: 0.5rem;
   font: inherit;
+}
+
+.is-tour-calendar-modal__eyebrow,
+.is-tour-calendar__times-label {
+  margin: 0 0 0.35rem;
+}
+
+.is-tour-calendar-modal__eyebrow {
+  margin-bottom: 1.75rem;
+}
+
+.is-tour-calendar__status:empty {
+  display: none;
+}
+
+.is-tour-calendar__times-card {
+  padding: 1rem;
+  margin-bottom: 1rem;
+}
+
+.is-tour-calendar__times-card h3 {
+  margin: 0 0 1rem;
+  font-size: 1.1rem;
+}
+
+.is-tour-calendar__times {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.65rem;
+  padding-top: 1rem;
+}
+
+.is-tour-calendar__request-summary {
+  padding-bottom: 1rem;
+}
+
+.is-tour-calendar__request-heading {
+  margin: 1rem 0 0;
+  font-size: 1.25rem;
+}
+
+@media (max-width: 600px) {
+  .is-tour-calendar__form-grid,
+  .is-tour-calendar__times {
+    grid-template-columns: 1fr;
+  }
 }

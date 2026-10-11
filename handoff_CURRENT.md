@@ -26,8 +26,10 @@ been installed there; see [maintenance activation/recovery](docs/runbooks/stagin
   native booking/inquiry/order dialog. The subsequent user-requested full
   calendar adds an availability month picker to inline tours/dialogs and a
   Liste/Kalender programme month view with existing day results. The requested
-  former Flatpickr appearance now uses one shared compact picker skin across all
-  three surfaces; `/kalender/` opens with calendar and programme results together.
+  live staging calendar/time chooser now uses one shared compact picker skin
+  across all three surfaces. Choosing a time reveals the request fields.
+  `/kalender/` keeps compact period/type buttons above the grid and the programme
+  results alongside it; type selection submits the existing native GET form.
   Flatpickr and obsolete controllers/cache helpers are removed. Source
   visibility, capacity and Berlin dates are checked
   at intake. Booking records requests; it does not reserve capacity or confirm
@@ -54,10 +56,12 @@ calendar/tour assets and increased publication assets are not a uniform speedup.
 
 Calendar design checkpoint: 70 backend checks and 60 Chrome/Firefox/Linux-WebKit
 booking/month/commerce/filter/router scenarios pass, including phone, keyboard,
-timezone and no-JavaScript cases. PHP/PHPCS/PHPStan and JS/CSS checks pass.
-Desktop/phone visual review confirms identical date-tile styles and no overflow.
-Warm full local renders measured 113 SQL queries for the plain list and 116 for
-calendar plus results (zero writes in each); the earlier 79-query measurement
+timezone and no-JavaScript cases. The final return-to-selected-date focus check
+also passes in all three engines. PHP/PHPCS/PHPStan and JS/CSS checks pass.
+Live staging was compared read-only in the browser. Desktop/phone review confirms
+the shared date tiles, date/time/request sequence and filters above the calendar,
+without overflow. Earlier warm full local renders measured 113 SQL queries for
+the plain list and 116 for calendar plus results (zero writes in each); the earlier 79-query measurement
 was for the retired grid without its adjacent listing. Booking month/day changes
 reuse loaded slots without extra requests. These are local, not staging timings.
 
@@ -75,7 +79,8 @@ Private ignored evidence/backups: `var/refactoring-20261008/` (0700), especially
 `wp70/final-*.log`, `maintenance-runner-tests.log`, `wp70/restore-verification.json`
 and `file-restore-verification.json`; calendar receipts are `wp70/month-*.log`,
 `month-calendar-request-queries.json`, `month-calendar-assets.json`, and the
-current `wp70/calendar-design-*` logs/screenshots plus `calendar-design-queries.json`.
+current `wp70/staging-design-*` logs/screenshots; the preceding layout and query
+receipts remain in `wp70/calendar-design-*` and `calendar-design-queries.json`.
 A 118-table database restore passed (117
 matching checksums; volatile options differed), and six representative files
 restored with matching hashes. Full multi-GB uploads/intake restoration remains

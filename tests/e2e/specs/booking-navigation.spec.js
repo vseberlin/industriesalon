@@ -38,11 +38,11 @@ test('availability reads deduplicate across reopen and ignore a stale different 
   await second.click();
   await expect.poll(() => reads).toBe(2);
   await dialog.locator('[data-calendar-day="2030-10-11"]').click();
-  await dialog.locator('[name="slot_id"]').selectOption('newer-source');
+  await dialog.locator('[data-slot-id="newer-source"]').click();
   releaseFirst();
   await page.waitForTimeout(150);
-  await expect(dialog.locator('[name="slot_id"]')).toHaveValue('newer-source');
-  expect(await dialog.locator('option[value="older-source"]').count()).toBe(0);
+  await expect(dialog.locator('.is-tour-calendar__request-summary')).toContainText('11. Oktober 2030');
+  expect(await dialog.locator('[data-slot-id="older-source"]').count()).toBe(0);
   await expect(dialog.locator('[data-calendar-day="2030-10-12"]')).toHaveAttribute('aria-disabled', 'true');
   await expect(dialog.locator('[data-calendar-day="2030-10-13"]')).toHaveAttribute('aria-disabled', 'true');
 });
@@ -61,7 +61,7 @@ test('availability failure can be retried and an expired nonce preserves form va
   const dialog = page.locator('#iss-booking-dialog');
   await dialog.getByRole('button', { name: 'Termine erneut laden' }).click();
   await dialog.locator('[data-calendar-day="2030-10-11"]').click();
-  await dialog.locator('[name="slot_id"]').selectOption('fixture');
+  await dialog.locator('[data-slot-id="fixture"]').click();
   await dialog.locator('[name="name"]').fill('Fixture');
   await dialog.locator('[name="email"]').fill('fixture@example.invalid');
   await page.waitForTimeout(100);

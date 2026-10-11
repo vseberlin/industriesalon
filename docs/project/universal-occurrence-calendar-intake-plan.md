@@ -154,7 +154,7 @@ remain in `industriesalon`; request persistence stays in `iss-commerce-lite`.
 | Programme day filter | Labelled `input type="date"`, submit/reset buttons |
 | Programme month filter | Existing native month `select`; retain month presets |
 | Programme month view | Compact Monday-first picker beside the existing programme results; marked dates and month/day GET links |
-| Bookable dates | Shared availability month grid, then a native available-time/slot `select` |
+| Bookable dates | Shared availability month grid and available-time buttons, followed by the request form |
 | Preferred-date inquiry | Native date/time fields, visibly identified as a request |
 | Booking dialog | One shared native `dialog`, with accessible title and focus return |
 | Results and history | Existing PHP cards/rows, accessible links and pagination |
@@ -183,9 +183,11 @@ arithmetic does not reinterpret Berlin dates in the visitor's timezone.
 
 All three picker surfaces share the `iss-date-calendar` visual contract in the
 existing programme stylesheet and theme calendar skin. The treatment follows the
-former Flatpickr design: compact rounded date tiles, circular month navigation,
-red markers/selected dates and a two-column calendar/details layout on desktop.
-Phones stack the panels. The old vendor selectors and controller stay removed.
+live staging design inspected on 11 October: compact rounded date tiles,
+circular month navigation, grey unavailable dates, red selection and a two-column
+calendar/time chooser on desktop. Phones stack the panels. Choosing a time opens
+the request fields; changing the date returns to the chooser with focus retained.
+The old vendor selectors and controller stay removed.
 
 The programme grid uses one bounded month query through the existing occurrence
 service, preserving source/type/taxonomy restrictions. It distributes those rows
@@ -195,8 +197,12 @@ narrows the adjacent existing results to that day. Titles, times and booking
 actions remain in those results instead of repeating inside the date tiles.
 Month-based blocks, including `/kalender/`, open with the picker visible and the
 paginated month results alongside it. An explicit Liste choice is retained;
-broader period presets keep their ordinary listing behavior. Month markers use
-the complete month even while the adjacent listing is paginated.
+broader period presets keep their ordinary listing behavior. Date availability uses
+the complete month even while the adjacent listing is paginated. Compact period
+and content-type buttons precede the calendar in DOM order. Type selection submits
+the existing GET form through the core router; without JavaScript the Apply button
+remains available. Calendar control geometry belongs to the shared renderer and
+timeline skin rather than duplicate page selectors.
 Both views and their month/day links work without JavaScript; the core router
 enhances the same URLs. Inline booking retains its server-rendered date list and
 contact fallback when scripting is unavailable.
