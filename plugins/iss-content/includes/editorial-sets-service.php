@@ -294,81 +294,101 @@ class ISS_Content_Editorial_Sets_Service
 
     public function update_set(int $set_id, array $args): bool
     {
-        if ($set_id <= 0 || !$this->get_set($set_id)) {
+        if ($set_id <= 0) {
             return false;
         }
 
         global $wpdb;
+        $saved = false;
+        $this->run_atomic_write([$this->get_sets_table_name(), $this->get_audit_table_name()], function () use ($wpdb, $set_id, $args, &$saved): void {
+            $set = $wpdb->get_row($wpdb->prepare("SELECT * FROM {$this->get_sets_table_name()} WHERE id = %d FOR UPDATE", $set_id), ARRAY_A);
+            if ($wpdb->last_error !== '') {
+                throw new RuntimeException('Editorial Set update could not lock its Set.');
+            }
+            if (!$set) {
+                return;
+            }
 
-        $data = [
-            'title' => trim(sanitize_text_field((string) ($args['title'] ?? ''))),
-            'summary' => sanitize_textarea_field((string) ($args['summary'] ?? '')),
-            'set_role' => $this->sanitize_set_role((string) ($args['set_role'] ?? 'intake')),
-            'status' => $this->sanitize_set_status((string) ($args['status'] ?? 'working')),
-            'updated_by' => get_current_user_id(),
-            'updated_at' => current_time('mysql', true),
-        ];
+            $data = [
+                'title' => trim(sanitize_text_field((string) ($args['title'] ?? ''))),
+                'summary' => sanitize_textarea_field((string) ($args['summary'] ?? '')),
+                'set_role' => $this->sanitize_set_role((string) ($args['set_role'] ?? 'intake')),
+                'status' => $this->sanitize_set_status((string) ($args['status'] ?? 'working')),
+                'updated_by' => get_current_user_id(),
+                'updated_at' => current_time('mysql', true),
+            ];
+            if ($data['title'] === '') {
+                unset($data['title']);
+            }
 
-        if ($data['title'] === '') {
-            unset($data['title']);
-        }
+            if ($wpdb->update($this->get_sets_table_name(), $data, ['id' => $set_id], array_fill(0, count($data), '%s'), ['%d']) === false) {
+                return;
+            }
+            $stored = $wpdb->get_row($wpdb->prepare("SELECT * FROM {$this->get_sets_table_name()} WHERE id = %d", $set_id), ARRAY_A);
+            if ($wpdb->last_error !== '' || !$stored || array_diff_assoc($data, $stored)) {
+                throw new RuntimeException('Editorial Set update could not verify its saved values.');
+            }
+            if (!$this->record_audit($set_id, 0, 'set_updated', __('Set updated.', 'iss-content-model'), $data)) {
+                throw new RuntimeException('Editorial Set update could not record its required audit row.');
+            }
+            $saved = true;
+        }, 'Editorial Set update');
 
-        $updated = $wpdb->update(
-            $this->get_sets_table_name(),
-            $data,
-            ['id' => $set_id],
-            array_fill(0, count($data), '%s'),
-            ['%d']
-        );
-
-        if ($updated === false) {
-            return false;
-        }
-
-        $this->record_audit($set_id, 0, 'set_updated', __('Set updated.', 'iss-content-model'), $data);
-        return true;
+        return $saved;
     }
 
     public function update_set_key(int $set_id, string $set_key): bool
     {
-        $set = $this->get_set($set_id);
         $set_key = $this->normalize_key($set_key);
-        if (!$set || $set_key === '') {
-            return false;
-        }
-        if ((string) ($set['set_key'] ?? '') === $set_key) {
-            return true;
-        }
-
-        $existing = $this->get_set_by_key($set_key);
-        if ($existing && (int) ($existing['id'] ?? 0) !== $set_id) {
+        if ($set_id <= 0 || $set_key === '') {
             return false;
         }
 
         global $wpdb;
+        $saved = false;
+        $this->run_atomic_write([$this->get_sets_table_name(), $this->get_audit_table_name()], function () use ($wpdb, $set_id, $set_key, &$saved): void {
+            $set = $wpdb->get_row($wpdb->prepare("SELECT * FROM {$this->get_sets_table_name()} WHERE id = %d FOR UPDATE", $set_id), ARRAY_A);
+            if ($wpdb->last_error !== '') {
+                throw new RuntimeException('Editorial Set key update could not lock its Set.');
+            }
+            if (!$set) {
+                return;
+            }
+            if ((string) $set['set_key'] === $set_key) {
+                $saved = true;
+                return;
+            }
 
-        $updated = $wpdb->update(
-            $this->get_sets_table_name(),
-            [
+            $existing = $this->get_set_by_key($set_key);
+            if ($wpdb->last_error !== '') {
+                throw new RuntimeException('Editorial Set key update could not check its new key.');
+            }
+            if ($existing && (int) $existing['id'] !== $set_id) {
+                return;
+            }
+
+            $data = [
                 'set_key' => $set_key,
                 'updated_by' => get_current_user_id(),
                 'updated_at' => current_time('mysql', true),
-            ],
-            ['id' => $set_id],
-            ['%s', '%d', '%s'],
-            ['%d']
-        );
+            ];
+            if ($wpdb->update($this->get_sets_table_name(), $data, ['id' => $set_id], ['%s', '%d', '%s'], ['%d']) === false) {
+                return;
+            }
+            $stored = $wpdb->get_row($wpdb->prepare("SELECT * FROM {$this->get_sets_table_name()} WHERE id = %d", $set_id), ARRAY_A);
+            if ($wpdb->last_error !== '' || !$stored || array_diff_assoc($data, $stored)) {
+                throw new RuntimeException('Editorial Set key update could not verify its saved values.');
+            }
+            if (!$this->record_audit($set_id, 0, 'set_key_updated', __('Set key updated.', 'iss-content-model'), [
+                'from' => (string) $set['set_key'],
+                'to' => $set_key,
+            ])) {
+                throw new RuntimeException('Editorial Set key update could not record its required audit row.');
+            }
+            $saved = true;
+        }, 'Editorial Set key update');
 
-        if ($updated === false) {
-            return false;
-        }
-
-        $this->record_audit($set_id, 0, 'set_key_updated', __('Set key updated.', 'iss-content-model'), [
-            'from' => (string) ($set['set_key'] ?? ''),
-            'to' => $set_key,
-        ]);
-
-        return true;
+        return $saved;
     }
 
     public function get_set(int $set_id): ?array

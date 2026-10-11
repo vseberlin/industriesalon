@@ -39,7 +39,16 @@ first insert, including a duplicate explicit key, retains the existing `0`
 result and produces no audit. Valid inputs retain positive IDs, normalization,
 generated-key suffixes/defaults, actor attribution and payload encoding.
 `record_audit()` now returns the insert's success as a boolean. Creation requires
-it; other callers retain their previous behavior until their own atomicity work.
+it, as do Set updates and key changes. Other callers retain their previous
+behavior until their own atomicity work.
+
+`update_set()` and `update_set_key()` lock the current Set, check key lookups
+and saved fields, and require their audit inside that same transaction. Failed
+prerequisite/readback/audit/transaction operations throw and roll back; a rejected
+first update retains `false`. Missing/invalid/conflicting input, empty-title
+preservation, field defaults, valid zero-row updates and unchanged-key no-op
+behavior retain their contracts. `editorial-set-update-atomic.php` covers these
+paths and caller-owned transactions using temporary tables.
 
 The helper is extracted from the verified Set deletion implementation inside the
 existing owner; no dependency on graph/archive transaction helpers was added.

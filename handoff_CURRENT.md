@@ -25,7 +25,7 @@ audit. Git history, [CHANGELOG.md](CHANGELOG.md) and
 
 Continue the [refactoring plan](docs/project/wordpress-refactoring-plan.md):
 
-1. Finish Set updates/key changes, item/context multi-table writes and audit
+1. Finish Set item/context multi-table writes and audit
    consistency through the existing private transaction helper. Inspect caller
    boundaries and retain protections, normalization, zero-row/no-op semantics and
    ownership. Then finish public setup/schema gates and commerce idempotency.
@@ -39,11 +39,11 @@ Continue the [refactoring plan](docs/project/wordpress-refactoring-plan.md):
    verification and operational documentation within the local scope. Target
    deployment and any host changes outside the checkout roots remain separate.
 
-Next concrete functions are `ISS_Content_Editorial_Sets_Service::update_set()`
-and `update_set_key()`. Both update the Set before ignoring `record_audit()`'s
-boolean result. Reuse `run_atomic_write()`, check/lock prerequisite rows and
-preserve field/default, empty-title, unchanged-key and conflict semantics. Use
-isolated fixtures; do not run real Set imports, merges or destructive cleanup.
+Set field/key updates are now atomic with audit (169 isolated checks, lint,
+PHPCS and PHPStan). Next are item creation/update/moves, context attachment,
+promotion/candidate markers and their required audit/touch writes. Reuse the
+existing owner helper and preserve intake Set zero, rights and no-op contracts.
+Use isolated fixtures; do not run real Set imports, merges or cleanup.
 
 ## Runtime and evidence
 
@@ -74,7 +74,7 @@ isolated fixtures; do not run real Set imports, merges or destructive cleanup.
 
 ## Contracts and release gates
 
-Creation/deletion are atomic within the Set owner. Other Set audit callers still
+Creation/deletion and field/key updates are atomic within the Set owner. Other Set audit callers still
 need their own transaction work. Caller transactions retain final decisions;
 generated-key races can return zero. Later attachment/import/merge operations
 are separate until refactored. Archive source preparation commits before graph

@@ -6,6 +6,12 @@ be recovered from Git history.
 
 ## 2026-10-11
 
+- Made Set field/key changes atomic with their required audit, checking locked
+  source rows, key conflicts and saved values. Preserved defaults, empty-title
+  behavior, unchanged keys and rejected first-write results. Passed 169 isolated
+  rollback/retry/caller-transaction checks, PHP lint, PHPCS and PHPStan. Real rows
+  stayed unchanged; no schema/data migration or uploads artifact is needed.
+
 - Committed the accumulated refactor checkpoint after a combined regression pass:
   3,134 checks across 21 suites, PHP lint, PHPCS and PHPStan. The user authorized
   autonomous continuation in verified local commits. The taxonomy seed migration
