@@ -37,14 +37,14 @@ test('availability reads deduplicate across reopen and ignore a stale different 
   await expect(dialog).not.toBeVisible();
   await second.click();
   await expect.poll(() => reads).toBe(2);
-  await dialog.locator('[name="day"]').selectOption('2030-10-11');
+  await dialog.locator('[data-calendar-day="2030-10-11"]').click();
   await dialog.locator('[name="slot_id"]').selectOption('newer-source');
   releaseFirst();
   await page.waitForTimeout(150);
   await expect(dialog.locator('[name="slot_id"]')).toHaveValue('newer-source');
   expect(await dialog.locator('option[value="older-source"]').count()).toBe(0);
-  await expect(dialog.locator('option[value="2030-10-12"]')).toHaveJSProperty('disabled', true);
-  await expect(dialog.locator('option[value="2030-10-13"]')).toHaveJSProperty('disabled', true);
+  await expect(dialog.locator('[data-calendar-day="2030-10-12"]')).toHaveAttribute('aria-disabled', 'true');
+  await expect(dialog.locator('[data-calendar-day="2030-10-13"]')).toHaveAttribute('aria-disabled', 'true');
 });
 
 test('availability failure can be retried and an expired nonce preserves form values', async ({ page }) => {
@@ -60,7 +60,7 @@ test('availability failure can be retried and an expired nonce preserves form va
   await page.locator('[data-wp-on--click="actions.open"]').first().click();
   const dialog = page.locator('#iss-booking-dialog');
   await dialog.getByRole('button', { name: 'Termine erneut laden' }).click();
-  await dialog.locator('[name="day"]').selectOption('2030-10-11');
+  await dialog.locator('[data-calendar-day="2030-10-11"]').click();
   await dialog.locator('[name="slot_id"]').selectOption('fixture');
   await dialog.locator('[name="name"]').fill('Fixture');
   await dialog.locator('[name="email"]').fill('fixture@example.invalid');
@@ -83,6 +83,7 @@ test('inline dates reuse server availability and remain visible without JavaScri
     await expect(calendar).toBeVisible();
     await expect(calendar.locator('.is-tour-calendar__dates li').first()).toContainText(/20\d\d/);
     expect(reads).toBe(0);
+    if (!javaScriptEnabled) await expect(calendar.locator('.iss-availability-calendar')).toBeHidden();
     if (javaScriptEnabled) {
       await calendar.locator('[data-wp-on--click="actions.open"]').click();
       const dialog = page.locator('#iss-booking-dialog');

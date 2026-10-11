@@ -112,6 +112,7 @@ function iss_programm_render_tour_calendar_shell($title, $booking_url, $post_id 
     $fallback = $booking_url && !iss_programm_tour_url_is_same_page_anchor($booking_url, $source['id']) ? $booking_url : '#' . $contact_id;
     $out = '<div ' . $wrapper_attributes . '><div class="is-tour-calendar__inner"><div class="is-tour-calendar__header">';
     $out .= '<h3 class="is-tour-calendar__heading">' . esc_html($title ?: __('Termine wählen', 'iss-programm')) . '</h3></div>';
+    if ($slots) { $out .= iss_programm_render_availability_calendar($source); }
     if ($source['id'] > 0 && ($slots || $payload['inquiry']['allowed'])) {
         $label = $slots ? __('Termin wählen', 'iss-programm') : __('Wunschtermin anfragen', 'iss-programm');
         $attrs = iss_programm_booking_trigger_attributes(['source_post_id' => $source['id'], 'source_post_type' => $source['type'], 'tag' => $source['tag'], 'title' => $source['title']]);

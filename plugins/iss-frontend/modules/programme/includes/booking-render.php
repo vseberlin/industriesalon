@@ -43,6 +43,34 @@ function iss_programm_booking_contact(): string {
         : '';
 }
 
+/** One availability picker for the inline block and the shared dialog. */
+function iss_programm_render_availability_calendar(?array $source = null): string {
+    $id = wp_unique_id('iss-availability-calendar-');
+    $context = ['calendar' => ['inline' => $source !== null, 'ready' => false, 'month' => '', 'focusDay' => '', 'day' => '']];
+    if ($source !== null) { $context['source'] = $source; }
+    ob_start(); ?>
+    <?php // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- Core escapes the context attribute. ?>
+    <section class="iss-availability-calendar" data-wp-interactive="iss/booking" <?php echo wp_interactivity_data_wp_context($context); ?> data-wp-init="callbacks.initCalendar" data-wp-bind--hidden="!context.calendar.ready" hidden aria-label="<?php esc_attr_e('Verfügbare Termine', 'iss-programm'); ?>">
+        <div class="iss-availability-calendar__nav">
+            <button type="button" class="iss-availability-calendar__move" data-calendar-step="-1" data-wp-bind--disabled="state.calendarAtStart" data-wp-on--click="actions.moveCalendar" aria-label="<?php esc_attr_e('Vorheriger Monat', 'iss-programm'); ?>">←</button>
+            <label class="iss-availability-calendar__month"><span class="screen-reader-text"><?php esc_html_e('Monat und Jahr', 'iss-programm'); ?></span><select data-wp-bind--value="state.calendarMonth" data-wp-on--change="actions.changeCalendarMonth"><template data-wp-each--month="state.calendarMonths" data-wp-each-key="context.month.value"><option data-wp-bind--value="context.month.value" data-wp-bind--selected="context.month.selected" data-wp-text="context.month.label"></option></template></select></label>
+            <button type="button" class="iss-availability-calendar__move" data-calendar-step="1" data-wp-bind--disabled="state.calendarAtEnd" data-wp-on--click="actions.moveCalendar" aria-label="<?php esc_attr_e('Nächster Monat', 'iss-programm'); ?>">→</button>
+        </div>
+        <p id="<?php echo esc_attr($id); ?>" class="screen-reader-text" aria-live="polite" data-wp-text="state.calendarLabel"></p>
+        <table class="iss-availability-calendar__grid" role="grid" aria-labelledby="<?php echo esc_attr($id); ?>">
+            <thead><tr><?php foreach (['Montag' => 'Mo', 'Dienstag' => 'Di', 'Mittwoch' => 'Mi', 'Donnerstag' => 'Do', 'Freitag' => 'Fr', 'Samstag' => 'Sa', 'Sonntag' => 'So'] as $long => $short) { echo '<th scope="col" abbr="' . esc_attr($long) . '">' . esc_html($short) . '</th>'; } ?></tr></thead>
+            <tbody><template data-wp-each--week="state.calendarWeeks" data-wp-each-key="context.week.key"><tr><template data-wp-each--cell="context.week.days" data-wp-each-key="context.cell.key"><td role="gridcell" data-wp-bind--aria-selected="context.cell.selected">
+                <button type="button" class="iss-availability-calendar__day" data-wp-bind--hidden="context.cell.empty" data-wp-bind--data-calendar-day="context.cell.value" data-wp-bind--data-availability="context.cell.availability" data-wp-bind--aria-label="context.cell.label" data-wp-bind--aria-disabled="context.cell.disabled" data-wp-bind--aria-pressed="context.cell.selected" data-wp-bind--aria-current="context.cell.current" data-wp-bind--tabindex="context.cell.tabIndex" data-wp-on--click="actions.pickCalendarDay" data-wp-on--keydown="actions.calendarKey" data-wp-on--focus="actions.focusCalendarDay"><span data-wp-text="context.cell.number"></span><span class="iss-availability-calendar__mark" aria-hidden="true" data-wp-text="context.cell.mark"></span></button>
+            </td></template></tr></template></tbody>
+        </table>
+        <p class="iss-availability-calendar__legend"><?php esc_html_e('● Verfügbar · × Ausgebucht / nicht verfügbar', 'iss-programm'); ?></p>
+        <p class="iss-availability-calendar__empty" data-wp-bind--hidden="state.calendarHasDates" hidden><?php esc_html_e('In diesem Monat sind keine Termine verfügbar.', 'iss-programm'); ?></p>
+        <button type="button" class="iss-availability-calendar__next" data-wp-bind--hidden="state.hideNextAvailable" data-wp-on--click="actions.nextAvailableMonth" hidden><?php esc_html_e('Zum nächsten verfügbaren Termin', 'iss-programm'); ?></button>
+        <p class="screen-reader-text"><?php esc_html_e('Mit den Pfeiltasten navigieren. Bild auf/ab wechselt den Monat, mit Umschalt das Jahr. Eingabe wählt einen verfügbaren Tag.', 'iss-programm'); ?></p>
+    </section>
+    <?php return (string) ob_get_clean();
+}
+
 function iss_programm_render_calendar_modal_host(): void {
     static $rendered = false;
     if ($rendered || !did_action('iss_programm_calendar_assets_enqueued')) { return; }
@@ -59,12 +87,8 @@ function iss_programm_render_calendar_modal_host(): void {
             <form class="is-tour-calendar__form" data-wp-on--submit="actions.submit">
                 <fieldset class="is-tour-calendar__form-fields" data-wp-bind--disabled="state.fieldsDisabled">
                     <div data-wp-bind--hidden="state.hideSlots">
-                        <label class="is-tour-calendar__field"><span><?php esc_html_e('Verfügbares Datum', 'iss-programm'); ?></span>
-                            <select name="day" data-wp-bind--value="state.day" data-wp-on--change="actions.selectDay">
-                                <option value=""><?php esc_html_e('Datum wählen', 'iss-programm'); ?></option>
-                                <template data-wp-each--date="state.dates" data-wp-each-key="context.date.value"><option data-wp-bind--value="context.date.value" data-wp-bind--disabled="context.date.disabled" data-wp-text="context.date.label"></option></template>
-                            </select>
-                        </label>
+                        <?php echo iss_programm_render_availability_calendar(); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- Shared renderer escapes its complete markup. ?>
+                        <p class="is-tour-calendar__selected-date" data-wp-text="state.selectedDateLabel"></p>
                         <label class="is-tour-calendar__field"><span><?php esc_html_e('Uhrzeit', 'iss-programm'); ?></span>
                             <select name="slot_id" data-wp-bind--value="state.slotId" data-wp-bind--disabled="state.noDay" data-wp-on--change="actions.selectSlot">
                                 <option value=""><?php esc_html_e('Uhrzeit wählen', 'iss-programm'); ?></option>

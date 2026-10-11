@@ -9,7 +9,8 @@ Immediate executable work only. Larger future programs live in `docs/project/bac
   the local commits, take target-local backups, apply the four scoped owner
   migrations, and activate the prepared
   [maintenance path](docs/runbooks/staging-maintenance.md). Verify real editor
-  save/reload/block validity, staff booking/order flows, macOS Safari, full
+  save/reload/block validity, staff booking/order flows, the availability picker
+  and programme month view, macOS Safari, full
   uploads/intake restoration and the paired FPM/Nginx limits before acceptance.
   No push, deployment, host configuration or staging migration has been done.
 - Staff-test the deployed [shared workspace](docs/project/editor-workspace-plan.md)

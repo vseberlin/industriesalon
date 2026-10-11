@@ -3,6 +3,7 @@ if (!defined('ABSPATH')) exit;
 
 require_once __DIR__ . '/timeline-booking.php';
 require_once __DIR__ . '/timeline-filters.php';
+require_once __DIR__ . '/programme-calendar.php';
 
 function iss_timeline_extract_teaser_text($post_id, $word_limit = 28) {
     $post_id = (int) $post_id;

@@ -72,3 +72,51 @@
   opacity: 0.55;
   cursor: default;
 }
+
+.iss-availability-calendar__month select,
+.iss-availability-calendar__move,
+.iss-availability-calendar__next {
+  border: 1px solid var(--iss-cal-line);
+  border-radius: var(--iss-radius-sm);
+  background: var(--iss-cal-bg);
+  color: var(--iss-cal-text);
+}
+
+.iss-availability-calendar__day {
+  border: 1px solid transparent;
+  border-radius: var(--iss-radius-sm);
+  background: var(--iss-surface-panel);
+  color: var(--iss-cal-muted);
+}
+
+.iss-availability-calendar__day[data-availability="available"] {
+  border-color: var(--iss-accent-border);
+  background: var(--iss-accent-soft);
+  color: var(--iss-cal-text);
+  font-weight: 700;
+}
+
+.iss-availability-calendar__day[aria-current="date"] {
+  border-color: var(--iss-cal-text);
+}
+
+.iss-availability-calendar__day[aria-pressed="true"] {
+  background: var(--iss-cal-text);
+  color: var(--iss-white);
+}
+
+.iss-availability-calendar__day[aria-disabled="true"] {
+  cursor: default;
+}
+
+.iss-availability-calendar__day:focus-visible,
+.iss-availability-calendar__move:focus-visible,
+.iss-availability-calendar__month select:focus-visible,
+.iss-availability-calendar__next:focus-visible {
+  outline: 2px solid var(--iss-cal-accent);
+  outline-offset: 1px;
+}
+
+.iss-availability-calendar__move:disabled {
+  opacity: 0.5;
+}

@@ -23,8 +23,10 @@ been installed there; see [maintenance activation/recovery](docs/runbooks/stagin
   graph/Set writers, ownership-aware queue processing, Event Drop recovery and
   commerce retry idempotency. Public requests no longer install/backfill schemas.
 - Native GET programme controls, core Interactivity/router navigation and one
-  native booking/inquiry/order dialog. Flatpickr and obsolete controllers/cache
-  helpers are removed. Source visibility, capacity and Berlin dates are checked
+  native booking/inquiry/order dialog. The subsequent user-requested full
+  calendar adds an availability month picker to inline tours/dialogs and a
+  Liste/Kalender programme month view with existing day results. Flatpickr and
+  obsolete controllers/cache helpers are removed. Source visibility, capacity and Berlin dates are checked
   at intake. Booking records requests; it does not reserve capacity or confirm
   payment. Email dispatch is not exactly-once across a process crash.
 - Bounded/private SQL search, batched read-only relations/occurrences and coalesced
@@ -38,7 +40,7 @@ been installed there; see [maintenance activation/recovery](docs/runbooks/stagin
   seven-artifact verified backups with guarded retention, inactive-owner cron
   migration and paired public/intake limit proposal are ready for release review.
 
-Final checks: 355 backend assertions across seven affected suites, 23 disposable
+Refactor closeout checks: 355 backend assertions across seven affected suites, 23 disposable
 host-runner/backup assertions, PHP lint/PHPCS/PHPStan, shell syntax and 63
 Chrome/Firefox/Linux-WebKit browser scenarios pass. The scoped cron migration
 passed check/apply/verify on the isolated fixture; every other event was retained.
@@ -46,6 +48,15 @@ Earlier broader checkpoints (3,134 assertions; later extraction 1,821) retain
 separate receipts and scopes. No real notification, external sync or real queue
 drain was executed for verification. Public pages were measured locally; reduced
 calendar/tour assets and increased publication assets are not a uniform speedup.
+
+Calendar extension: 155 backend checks and final 36 Chrome/Firefox/Linux-WebKit
+booking/month/commerce scenarios pass, including phone, keyboard, timezone and
+no-JavaScript cases. PHP/PHPCS/PHPStan and JS/CSS checks pass. The broader 60-case
+run passed 59 with one WebKit page-close failure in an existing router case;
+that case passed three consecutive reruns. Warm full local renders measured
+113 SQL queries for the list and 79 for the month view (zero writes in each).
+Booking month/day changes reuse loaded slots without extra requests. Changed
+frontend assets add 2,728 computed gzip bytes; this is not a staging speed claim.
 
 ## Runtime, recovery evidence and next action
 
@@ -59,7 +70,9 @@ its private core/database/Compose files and blocked-mail/HTTP configuration rema
 
 Private ignored evidence/backups: `var/refactoring-20261008/` (0700), especially
 `wp70/final-*.log`, `maintenance-runner-tests.log`, `wp70/restore-verification.json`
-and `file-restore-verification.json`. A 118-table database restore passed (117
+and `file-restore-verification.json`; calendar receipts are `wp70/month-*.log`,
+`month-calendar-request-queries.json` and `month-calendar-assets.json`.
+A 118-table database restore passed (117
 matching checksums; volatile options differed), and six representative files
 restored with matching hashes. Full multi-GB uploads/intake restoration remains
 a release gate. Never restore these snapshots over later editorial work.
@@ -71,11 +84,13 @@ the maintenance runbook. Deliver matching code with four scoped artifacts:
 `ops/migrations/`, each with target-local before-images and check/apply/verify.
 Taxonomy/commerce are already applied to the original local site; owner setup and
 cron cleanup were exercised only on the isolated fixture. No uploads transfer is
-needed for this refactor. Preserve DB template overrides (`single-ausstellung`,
+needed for this refactor. The calendar extension changes only code/assets/tests;
+it needs no additional DB or uploads artifact. Preserve DB template overrides (`single-ausstellung`,
 `page-projekte`, `page-publikationen`), editorial recovery, private contacts/Sets,
 historical orders, moderation and uploads. Do not copy the local DB to staging.
 
-Remaining acceptance: real editor save/reload/block validity, staff workflows,
+Remaining acceptance: real editor save/reload/block validity, staff workflows
+including both new calendar views,
 macOS Safari (Linux WebKit is not Safari acceptance), full file restoration and
 actual FPM/Nginx large-upload behavior. These are release gates, not unfinished
 local code slices. Unrelated TODOs and the inactive map thread remain separate.

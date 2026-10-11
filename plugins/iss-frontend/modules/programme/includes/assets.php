@@ -23,6 +23,7 @@ function iss_programm_register_frontend_assets() {
         'slotsUrl' => rest_url('iss/v1/booking-slots'),
         'requestUrl' => rest_url('iss-payments/v1/request'),
         'nonce' => wp_create_nonce('wp_rest'),
+        'today' => wp_date('Y-m-d', null, wp_timezone()),
     ]);
     wp_interactivity_state('iss/booking', ['catalog' => []]);
 

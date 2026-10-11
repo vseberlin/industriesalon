@@ -6,6 +6,22 @@ be recovered from Git history.
 
 ## 2026-10-11
 
+- Added the requested availability month picker to inline tour calendars and the
+  shared booking dialog, plus a Liste/Kalender month view on the programme page.
+  The existing occurrence service supplies dates; the existing WordPress
+  Interactivity module and core router handle selection/navigation. Available,
+  sold-out, cancelled and empty dates, keyboard navigation, leap days and Berlin
+  date semantics are covered. Programme month/day links work without scripting;
+  inline booking retains its server-rendered date/contact fallback. No new
+  calendar dependency, endpoint, schema, saved attributes or uploads artifact.
+  Passed 155 backend checks and final 36 Chrome/Firefox/Linux-WebKit booking,
+  month-view and commerce scenarios, plus PHP/JS/CSS checks. The broader 60-case
+  run had one WebKit page-close failure; that existing router case passed three
+  consecutive reruns. Warm local full renders measured 113 SQL queries for the
+  list and 79 for the month view; booking date changes add no availability read.
+  The five changed frontend assets add 2,728 computed gzip bytes versus the prior
+  commit. Staff/staging and macOS Safari acceptance remain separate.
+
 - Completed the local maintenance phase: existing SuperSaaS/fallback/Set jobs
   record checked success/failure receipts; Operations and CLI report stale jobs,
   missing callbacks, dead/stalled graph rows and diagnostic read failures. Set

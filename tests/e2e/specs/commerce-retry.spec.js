@@ -28,9 +28,9 @@ for (const kind of ['booking', 'inquiry', 'order']) {
     const dialog = page.locator('#iss-booking-dialog');
     await expect(dialog).toBeVisible();
     if (kind === 'booking') {
-      await dialog.locator('[name="day"]').selectOption('2030-10-11');
+      await dialog.locator('[data-calendar-day="2030-10-11"]').click();
       await dialog.locator('[name="slot_id"]').selectOption('fixture-a');
-      await dialog.locator('[name="day"]').selectOption('2030-10-12');
+      await dialog.locator('[data-calendar-day="2030-10-12"]').click();
       await dialog.locator('[name="slot_id"]').selectOption('fixture-b');
       expect(slotReads).toBe(1);
     } else if (kind === 'inquiry') {

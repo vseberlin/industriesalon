@@ -210,7 +210,7 @@ function iss_timeline_get_items_advanced($args = []) {
 /** Resolve only editor-exposed GET controls; fixed owner restrictions remain authoritative. */
 function iss_timeline_apply_public_filters(array $config, array $attributes, array $input): array {
     $scalar = static fn(string $key): string => isset($input[$key]) && is_scalar($input[$key]) ? sanitize_text_field((string) $input[$key]) : '';
-    $selection = ['preset' => '', 'day' => '', 'month' => '', 'taxonomies' => []];
+    $selection = ['preset' => '', 'day' => '', 'month' => '', 'taxonomies' => [], 'view' => 'list'];
     $buttons = iss_timeline_get_preset_buttons_from_attributes($attributes);
     $preset = $scalar('preset');
     if ($preset !== '' && ctype_digit($preset) && isset($buttons[(int) $preset])) {
@@ -253,6 +253,13 @@ function iss_timeline_apply_public_filters(array $config, array $attributes, arr
         if ($ui['showCalendarBridge']) { $config['filters']['time_mode'] = 'month'; }
     }
     $day = $scalar('day');
+    if ($ui['showCalendarBridge'] && $scalar('view') === 'calendar') {
+        $selection['view'] = 'calendar';
+        $selection['month'] = $selection['month'] ?: wp_date('Y-m', null, wp_timezone());
+        $config['filters']['month'] = $selection['month'];
+        $config['filters']['time_mode'] = 'month';
+        unset($config['filters']['date_start'], $config['filters']['date_end']);
+    }
     if ($ui['showCalendarBridge'] && preg_match('/^\d{4}-\d{2}-\d{2}$/D', $day) && checkdate((int) substr($day, 5, 2), (int) substr($day, 8), (int) substr($day, 0, 4))) {
         $selection['day'] = $day;
         $selection['month'] = substr($day, 0, 7);
@@ -275,6 +282,7 @@ function iss_timeline_apply_public_filters(array $config, array $attributes, arr
     }
     $config['limit'] = min(100, max(1, (int) $config['limit']));
     $page = !empty($config['render']['showLoadMore']) ? min(1000, max(1, (int) $scalar('page'))) : 1;
+    if ($selection['view'] === 'calendar' && $selection['day'] === '') { $page = 1; }
     $selection['page'] = $page;
     $selection['presetActive'] = $preset_dates === array_intersect_key($config['filters'], array_flip(['time_mode', 'month', 'date_start', 'date_end']));
     $config['offset'] = ($page - 1) * $config['limit'];

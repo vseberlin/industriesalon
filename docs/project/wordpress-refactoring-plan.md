@@ -21,7 +21,7 @@ changes outside those roots require separate authorization.
 | --- | --- |
 | 1 Baseline | Local mounts, backups and route/query comparisons retained; WordPress 7.0 and Chrome/Firefox/Linux-WebKit checks pass locally; staff/staging acceptance separate |
 | 2 Database/setup | Seeds, graph/queue/profile/transcript/archive boundaries and Set service writes completed; Event Drop recovery and public setup gates complete; installer verification and migrated commerce idempotency complete |
-| 3 Native frontend | Native GET filters, shared booking and core region navigation complete; Flatpickr removed; 45 three-engine WordPress 7.0 scenarios pass |
+| 3 Native frontend | Native GET filters, shared booking and core region navigation complete; Flatpickr removed; user-requested availability picker and programme month view implemented with three-engine WordPress 7.0 coverage |
 | 4 Query/projection consolidation | Read-only relation batching and bounded/private SQL search complete; occurrence privacy/batching, date cache removal and ordinary save coalescing complete; menu retained after failed equivalence proof |
 | 5 Code/CSS consolidation | Owner extraction/context loading, native admin ordering and scoped asset audit complete |
 | 6 Maintenance | Monitored owner jobs, bounded runner, verified backup/retention, scoped stale-hook migration and intake-limit proposal complete locally; target activation remains separate |
@@ -120,6 +120,11 @@ Each converted surface has one active implementation. Keep native controls,
 server rendering, core script modules and the existing query/intake owners.
 Remove Flatpickr vendor assets, adapters and selector rules when its last
 consumer is migrated. Keep booking identity and editorial block attributes stable.
+
+The subsequent user-requested full calendar is implemented through the same
+owners: a shared availability month picker for inline tours/dialogs and a
+server-rendered programme month view with existing day results. No extra booking
+read is needed for a month/day change once the complete slots are loaded.
 
 Exit: zero Flatpickr assets or initialization on affected routes; one request
 path per interaction; server validation and accessible no-JavaScript navigation

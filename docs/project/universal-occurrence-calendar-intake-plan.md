@@ -1,7 +1,8 @@
 # Universal Occurrence Calendar And Intake Plan
 
-Status: existing shared intake contract; native frontend migration proposed on
-2026-10-07. Part of the [WordPress refactoring plan](wordpress-refactoring-plan.md).
+Status: native frontend migration and availability/programme month views
+implemented locally on 2026-10-11; staging and staff acceptance remain separate.
+Part of the [WordPress refactoring plan](wordpress-refactoring-plan.md).
 
 ## Decision
 
@@ -105,14 +106,18 @@ must submit the universal payload.
 
 Local implementation checkpoint (11 October 2026): native GET filters and the
 shared booking/inquiry/publication dialog are implemented; Flatpickr and both
-legacy booking controllers are removed. Core router navigation uses the same
+legacy booking controllers are removed. The user-requested month views extend
+this implementation: one availability picker serves inline tour calendars and
+the shared dialog, and the main programme offers Liste/Kalender navigation.
+Core router navigation uses the same
 PHP page and scoped URLs, with no speculative prefetch. WordPress 7.0 needs an
 explicit core navigation replacement when Back interrupts a pending request;
 the module covers that race without a second renderer/history implementation.
 
 Regression entry points: `programme-native-filters.php`,
-`programme-native-booking.php` and the `programme-router`, `booking-navigation`,
-`commerce-retry`, `programme-native-filters` browser specs under `tests/e2e/`.
+`programme-native-booking.php`, `programme-month-calendar.php` and the
+`programme-router`, `booking-navigation`, `calendar-month`, `commerce-retry`,
+`programme-native-filters` browser specs under `tests/e2e/`.
 The inline and multiple-instance browser scenarios require the guarded
 `tests/e2e/bin/native-frontend-fixture.php` MU-plugin include on a disposable
 local runtime (`ISS_TEST_FRONTEND_FIXTURE=true`, `WP_ENVIRONMENT_TYPE=local`).
@@ -136,31 +141,55 @@ per-instance context with `wp_interactivity_data_wp_context()`. No application
 framework, TypeScript, JSX, extra block family or additional build pipeline is
 required for this migration.
 
-The Interactivity API supplies state/actions and directive processing, not a
-ready-made date picker. Native controls deliberately use the browser's own
-presentation. Public frontend modules belong to `iss-frontend`; theme skins
+The Interactivity API supplies state/actions and directive processing. The
+availability picker is a small first-party component made from PHP-authored
+buttons, a table and a native month select, using the existing booking store.
+Public frontend modules belong to `iss-frontend`; theme skins
 remain in `industriesalon`; request persistence stays in `iss-commerce-lite`.
 
 ### Native control choices
 
-| Surface | Planned control and behavior |
+| Surface | Implemented control and behavior |
 | --- | --- |
 | Programme day filter | Labelled `input type="date"`, submit/reset buttons |
 | Programme month filter | Existing native month `select`; retain month presets |
-| Bookable dates | Native available-date `select`, then available times/slot controls |
+| Programme month view | Server-rendered Monday-first grid, event titles/counts, month/day GET links and the existing filtered day listing |
+| Bookable dates | Shared availability month grid, then a native available-time/slot `select` |
 | Preferred-date inquiry | Native date/time fields, visibly identified as a request |
 | Booking dialog | One shared native `dialog`, with accessible title and focus return |
 | Results and history | Existing PHP cards/rows, accessible links and pagination |
 
 Native date inputs support range/step constraints, not a sparse list of arbitrary
-available dates. Use the available-date selector for booking so unavailable days
-are not presented as bookable. Keep date-only values as `YYYY-MM-DD` strings;
+available dates. The booking grid marks available days and disables selection of
+unavailable days; its keyboard navigation still allows inspection of every day.
+Keep date-only values as `YYYY-MM-DD` strings;
 apply Europe/Berlin semantics on the server and avoid implicit browser timezone
 conversion. Cancelled, sold-out, unmapped and empty states retain explicit text.
 
-The styled inline Flatpickr month grid and the separate timeline calendar-grid
-enhancement retire. Native date/slot choices replace those widgets. This visible
-change needs staff acceptance, including mobile and keyboard use.
+The former Flatpickr and timeline controllers are retired. The new month views
+use the same WordPress module/router and occurrence owners, with no calendar
+library, endpoint, table or recurrence engine. These visible changes need staff
+acceptance, including mobile and keyboard use.
+
+### Month views and availability
+
+The booking picker uses the complete owner slot response already loaded for its
+source. Inline calendars seed that same catalogue from their existing PHP read;
+opening one does not repeat the read. Month/day/time changes need no additional
+request. Available days, sold-out/cancelled dates, mixed availability, empty
+months and the next available month have explicit states. Arrow keys, Home/End,
+Page Up/Down and Shift+Page Up/Down move through days, months and years. Date-only
+arithmetic does not reinterpret Berlin dates in the visitor's timezone.
+
+The programme grid uses one bounded month query through the existing occurrence
+service, preserving source/type/taxonomy restrictions. It distributes those rows
+into days in PHP, including running ranges only where the block allows them;
+there is no database query per day or silent list-pagination cutoff. A day link
+shows the existing day results beneath the grid. On phones the compact grid
+shows dates/counts; the day results expose full details. Liste stays the default.
+Both views and their month/day links work without JavaScript; the core router
+enhances the same URLs. Inline booking retains its server-rendered date list and
+contact fallback when scripting is unavailable.
 
 ### 1 Migrate programme filters
 
@@ -256,7 +285,9 @@ dependencies must not be globally dequeued as a calendar optimization.
   expired nonces, denied submissions and retry after a network error behave
   predictably. Retried requests persist only once.
 - German labels, Berlin date boundaries, DST, empty/sold-out/cancelled states,
-  keyboard operation, dialog Escape/focus return and announced status are tested.
+  leap days, month navigation, keyboard operation, dialog Escape/focus return and
+  announced status are tested. Verify initial month-select hydration as well as
+  later month changes; dynamic options must preserve the selected month.
 - Native controls are checked on desktop/phone Chrome, Firefox and real
   WebKit/Safari. Browser variation in native picker appearance is accepted;
   missing availability or controls is not.
