@@ -96,6 +96,8 @@ for (const javaScriptEnabled of [true, false]) {
     const page = await context.newPage();
     await page.goto(`${baseURL}/kalender/`, { waitUntil: 'networkidle' });
     const region = page.locator('[data-timeline-query]').first();
+    await expect(region.locator('.iss-programme-calendar')).toBeVisible();
+    await expect(region.locator('[data-timeline-query-results] article').first()).toBeVisible();
     const scope = await region.getAttribute('id');
     const target = new URL(await region.getByRole('navigation', { name: 'Ansicht wählen' }).getByRole('link', { name: 'Kalender', exact: true }).getAttribute('href'), baseURL);
     // Use the fixture's recorded content month, independent of today's date.
@@ -108,12 +110,18 @@ for (const javaScriptEnabled of [true, false]) {
     const calendar = region.locator('.iss-programme-calendar');
     await expect(calendar).toBeVisible();
     await expect(calendar.locator('[data-calendar-day]')).toHaveCount(31);
-    await expect(region.locator('.iss-timeline-query__pagination')).toHaveCount(0);
+    await expect(region.locator('[data-timeline-query-results] article').first()).toBeVisible();
+    if (javaScriptEnabled) {
+      const pickerBox = await calendar.boundingBox();
+      const resultsBox = await region.locator('[data-timeline-query-results]').boundingBox();
+      expect(pickerBox.x + pickerBox.width).toBeLessThanOrEqual(resultsBox.x);
+    }
     const first = calendar.locator('.has-events [data-calendar-day]').first();
     const day = await first.getAttribute('data-calendar-day');
     await page.screenshot({ path: testInfo.outputPath(`programme-month-${javaScriptEnabled ? 'desktop' : 'phone'}.png`), fullPage: true });
     await first.click();
     await expect(region.locator('input[type="date"]')).toHaveValue(day);
+    await expect(calendar.locator(`[data-calendar-day="${day}"]`)).toHaveAttribute('data-selected', 'true');
     await expect(region.locator('[data-timeline-query-results] article').first()).toBeVisible();
     await calendar.getByRole('link', { name: 'Ganzen Monat anzeigen' }).click();
     await calendar.getByRole('link', { name: 'Nächster Monat', exact: true }).click();

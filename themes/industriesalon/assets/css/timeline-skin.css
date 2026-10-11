@@ -333,44 +333,7 @@
   }
 }
 
-.iss-programme-calendar__grid th,
-.iss-programme-calendar__grid td {
-  border: 1px solid var(--iss-tl-line);
-}
-
-.iss-programme-calendar__cell.has-events {
-  background: var(--iss-accent-soft);
-}
-
-.iss-programme-calendar__cell.is-selected {
-  background: var(--iss-surface-panel);
-  outline: 2px solid var(--iss-tl-primary);
-  outline-offset: -2px;
-}
-
-.iss-programme-calendar__day {
-  color: var(--iss-tl-text);
-  font-weight: 700;
-}
-
-.iss-programme-calendar__day[aria-current="date"] {
-  text-decoration: underline;
-  text-underline-offset: 0.2em;
-}
-
-.iss-programme-calendar__count {
-  background: var(--iss-tl-text);
-  color: var(--iss-white);
-  border-radius: var(--iss-radius-pill);
-}
-
 .iss-timeline__views [aria-current="true"] {
   border-color: var(--iss-tl-primary);
   background: var(--iss-accent-soft);
-}
-
-.iss-programme-calendar__event-link {
-  color: var(--iss-tl-text);
-  text-decoration: underline;
-  text-underline-offset: 0.15em;
 }

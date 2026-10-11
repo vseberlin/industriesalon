@@ -16,7 +16,11 @@ $expect(count(iss_timeline_calendar_days([], '2026-03')) === 31 && count(iss_tim
 $attrs = ['limit' => 2, 'showLoadMore' => true, 'showCalendarBridge' => true, 'fixedItemTypesList' => ['event'], 'postTypesList' => ['veranstaltung'], 'group' => 'fixture-fixed'];
 $base = iss_timeline_build_query_block_config($attrs);
 $config = iss_timeline_apply_public_filters($base, $attrs, ['view' => 'calendar', 'month' => '2028-02', 'page' => 999, 'item_type' => 'fuehrungen']);
-$expect($config['selection']['view'] === 'calendar' && $config['selection']['page'] === 1 && $config['offset'] === 0, 'A complete month has no list pagination offset');
+$expect($config['selection']['view'] === 'calendar' && $config['selection']['page'] === 999 && $config['offset'] === 1996, 'Calendar selection preserves the adjacent listing pagination');
+$month_attrs = array_merge($attrs, ['timeMode' => 'month']);
+$month_base = iss_timeline_build_query_block_config($month_attrs);
+$expect(iss_timeline_apply_public_filters($month_base, $month_attrs, [])['selection']['view'] === 'calendar', 'Month-based blocks show the calendar on first render');
+$expect(iss_timeline_apply_public_filters($month_base, $month_attrs, ['view' => 'list'])['selection']['view'] === 'list', 'An explicit list choice remains authoritative');
 $expect($config['filters']['time_mode'] === 'month' && $config['filters']['item_types'] === ['event'] && $config['filters']['post_types'] === ['veranstaltung'] && $config['groups'] === ['fixture-fixed'], 'Month view preserves editor-owned source restrictions');
 $day = iss_timeline_apply_public_filters($base, $attrs, ['view' => 'calendar', 'month' => '2028-02', 'day' => '2028-03-02']);
 $expect($day['selection']['month'] === '2028-03' && $day['filters']['date_start'] === '2028-03-02 00:00:00', 'Selected day owns both visible month and list range');

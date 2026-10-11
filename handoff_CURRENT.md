@@ -25,8 +25,11 @@ been installed there; see [maintenance activation/recovery](docs/runbooks/stagin
 - Native GET programme controls, core Interactivity/router navigation and one
   native booking/inquiry/order dialog. The subsequent user-requested full
   calendar adds an availability month picker to inline tours/dialogs and a
-  Liste/Kalender programme month view with existing day results. Flatpickr and
-  obsolete controllers/cache helpers are removed. Source visibility, capacity and Berlin dates are checked
+  Liste/Kalender programme month view with existing day results. The requested
+  former Flatpickr appearance now uses one shared compact picker skin across all
+  three surfaces; `/kalender/` opens with calendar and programme results together.
+  Flatpickr and obsolete controllers/cache helpers are removed. Source
+  visibility, capacity and Berlin dates are checked
   at intake. Booking records requests; it does not reserve capacity or confirm
   payment. Email dispatch is not exactly-once across a process crash.
 - Bounded/private SQL search, batched read-only relations/occurrences and coalesced
@@ -49,14 +52,14 @@ separate receipts and scopes. No real notification, external sync or real queue
 drain was executed for verification. Public pages were measured locally; reduced
 calendar/tour assets and increased publication assets are not a uniform speedup.
 
-Calendar extension: 155 backend checks and final 36 Chrome/Firefox/Linux-WebKit
-booking/month/commerce scenarios pass, including phone, keyboard, timezone and
-no-JavaScript cases. PHP/PHPCS/PHPStan and JS/CSS checks pass. The broader 60-case
-run passed 59 with one WebKit page-close failure in an existing router case;
-that case passed three consecutive reruns. Warm full local renders measured
-113 SQL queries for the list and 79 for the month view (zero writes in each).
-Booking month/day changes reuse loaded slots without extra requests. Changed
-frontend assets add 2,728 computed gzip bytes; this is not a staging speed claim.
+Calendar design checkpoint: 70 backend checks and 60 Chrome/Firefox/Linux-WebKit
+booking/month/commerce/filter/router scenarios pass, including phone, keyboard,
+timezone and no-JavaScript cases. PHP/PHPCS/PHPStan and JS/CSS checks pass.
+Desktop/phone visual review confirms identical date-tile styles and no overflow.
+Warm full local renders measured 113 SQL queries for the plain list and 116 for
+calendar plus results (zero writes in each); the earlier 79-query measurement
+was for the retired grid without its adjacent listing. Booking month/day changes
+reuse loaded slots without extra requests. These are local, not staging timings.
 
 ## Runtime, recovery evidence and next action
 
@@ -71,7 +74,8 @@ its private core/database/Compose files and blocked-mail/HTTP configuration rema
 Private ignored evidence/backups: `var/refactoring-20261008/` (0700), especially
 `wp70/final-*.log`, `maintenance-runner-tests.log`, `wp70/restore-verification.json`
 and `file-restore-verification.json`; calendar receipts are `wp70/month-*.log`,
-`month-calendar-request-queries.json` and `month-calendar-assets.json`.
+`month-calendar-request-queries.json`, `month-calendar-assets.json`, and the
+current `wp70/calendar-design-*` logs/screenshots plus `calendar-design-queries.json`.
 A 118-table database restore passed (117
 matching checksums; volatile options differed), and six representative files
 restored with matching hashes. Full multi-GB uploads/intake restoration remains

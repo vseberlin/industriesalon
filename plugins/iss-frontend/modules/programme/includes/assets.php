@@ -66,9 +66,15 @@ function iss_programm_register_frontend_assets() {
 }
 add_action('wp_enqueue_scripts', 'iss_programm_register_frontend_assets');
 
-function iss_programm_enqueue_calendar_assets() {
+/** Shared picker presentation also serves the server-rendered programme grid. */
+function iss_programm_enqueue_calendar_styles() {
     iss_programm_register_frontend_assets();
     wp_enqueue_style('is-tour-calendar');
+    do_action('iss_programm_calendar_styles_enqueued');
+}
+
+function iss_programm_enqueue_calendar_assets() {
+    iss_programm_enqueue_calendar_styles();
     do_action('iss_programm_calendar_assets_enqueued');
     wp_enqueue_script_module('iss/booking');
 }

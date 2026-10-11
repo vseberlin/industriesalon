@@ -6,6 +6,19 @@ be recovered from Git history.
 
 ## 2026-10-11
 
+- Matched programme, inline-tour and booking calendars to the former Flatpickr
+  visual treatment using one shared date-tile skin: compact rounded dates,
+  circular month arrows, red markers/selection and desktop calendar/details
+  panels. `/kalender/` now opens with the picker beside the existing paginated
+  programme results; selecting a day filters those results. Removed the separate
+  large event-cell grid and its CSS. Shared style enqueue does not load booking
+  behavior for a calendar-only block. Native WordPress navigation, booking
+  contracts and no-JavaScript fallbacks remain. Passed 70 backend checks, 60
+  Chrome/Firefox/Linux-WebKit scenarios and targeted PHP/JS/CSS checks; desktop
+  and phone visual review confirmed matching tile styles without overflow.
+  Warm local full renders: 116 SQL queries for calendar plus results, 113 for
+  the plain list. Code/assets only; no saved-template, DB or uploads artifact.
+
 - Added the requested availability month picker to inline tour calendars and the
   shared booking dialog, plus a Liste/Kalender month view on the programme page.
   The existing occurrence service supplies dates; the existing WordPress

@@ -1328,7 +1328,7 @@ function industriesalon_enqueue_tour_calendar_skin(): void
         (string) filemtime($absolute_path)
     );
 }
-add_action('iss_programm_calendar_assets_enqueued', 'industriesalon_enqueue_tour_calendar_skin');
+add_action('iss_programm_calendar_styles_enqueued', 'industriesalon_enqueue_tour_calendar_skin');
 
 function industriesalon_enqueue_fuehrungen_skin(): void
 {

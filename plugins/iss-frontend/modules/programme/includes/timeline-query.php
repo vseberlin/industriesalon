@@ -253,9 +253,12 @@ function iss_timeline_apply_public_filters(array $config, array $attributes, arr
         if ($ui['showCalendarBridge']) { $config['filters']['time_mode'] = 'month'; }
     }
     $day = $scalar('day');
-    if ($ui['showCalendarBridge'] && $scalar('view') === 'calendar') {
+    // Month-based calendar blocks open with their picker visible; explicit list
+    // choices and broader period presets retain the ordinary listing view.
+    $default_calendar = !isset($input['view']) && $config['filters']['time_mode'] === 'month';
+    if ($ui['showCalendarBridge'] && ($scalar('view') === 'calendar' || $default_calendar)) {
         $selection['view'] = 'calendar';
-        $selection['month'] = $selection['month'] ?: wp_date('Y-m', null, wp_timezone());
+        $selection['month'] = $selection['month'] ?: ($config['filters']['month'] ?: wp_date('Y-m', null, wp_timezone()));
         $config['filters']['month'] = $selection['month'];
         $config['filters']['time_mode'] = 'month';
         unset($config['filters']['date_start'], $config['filters']['date_end']);
@@ -282,7 +285,6 @@ function iss_timeline_apply_public_filters(array $config, array $attributes, arr
     }
     $config['limit'] = min(100, max(1, (int) $config['limit']));
     $page = !empty($config['render']['showLoadMore']) ? min(1000, max(1, (int) $scalar('page'))) : 1;
-    if ($selection['view'] === 'calendar' && $selection['day'] === '') { $page = 1; }
     $selection['page'] = $page;
     $selection['presetActive'] = $preset_dates === array_intersect_key($config['filters'], array_flip(['time_mode', 'month', 'date_start', 'date_end']));
     $config['offset'] = ($page - 1) * $config['limit'];

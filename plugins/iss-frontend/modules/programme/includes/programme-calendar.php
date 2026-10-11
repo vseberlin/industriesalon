@@ -23,6 +23,7 @@ function iss_timeline_calendar_days(array $items, string $month, bool $include_r
 }
 
 function iss_timeline_render_month_calendar(array $config, string $scope, array $input): array {
+    iss_programm_enqueue_calendar_styles();
     $month = $config['selection']['month'];
     $start = new DateTimeImmutable($month . '-01', wp_timezone());
     $args = $config;
@@ -36,11 +37,11 @@ function iss_timeline_render_month_calendar(array $config, string $scope, array 
     $navigation = array_merge($input, ['view' => 'calendar', 'month' => $month]);
     unset($navigation['day'], $navigation['page']);
     $link = static fn(array $values): string => esc_url(iss_timeline_navigation_url($scope, array_merge($navigation, $values)));
-    $out = '<div class="iss-programme-calendar"><nav class="iss-programme-calendar__nav" aria-label="' . esc_attr__('Kalendermonat', 'iss-timeline') . '">';
-    $out .= '<a class="iss-timeline__btn iss-timeline__btn--secondary" data-wp-on--click="actions.follow" aria-label="' . esc_attr__('Vorheriger Monat', 'iss-timeline') . '" href="' . $link(['month' => $start->modify('-1 month')->format('Y-m')]) . '">←</a>';
-    $out .= '<h3 id="' . esc_attr($scope . '-month') . '">' . esc_html(iss_timeline_format_month_label($month)) . '</h3>';
-    $out .= '<a class="iss-timeline__btn iss-timeline__btn--secondary" data-wp-on--click="actions.follow" aria-label="' . esc_attr__('Nächster Monat', 'iss-timeline') . '" href="' . $link(['month' => $start->modify('+1 month')->format('Y-m')]) . '">→</a></nav>';
-    $out .= '<table class="iss-programme-calendar__grid" aria-labelledby="' . esc_attr($scope . '-month') . '"><thead><tr>';
+    $out = '<div class="iss-programme-calendar iss-date-calendar"><nav class="iss-date-calendar__nav" aria-label="' . esc_attr__('Kalendermonat', 'iss-timeline') . '">';
+    $out .= '<a class="iss-date-calendar__move" data-wp-on--click="actions.follow" aria-label="' . esc_attr__('Vorheriger Monat', 'iss-timeline') . '" href="' . $link(['month' => $start->modify('-1 month')->format('Y-m')]) . '">←</a>';
+    $out .= '<h3 class="iss-date-calendar__month" id="' . esc_attr($scope . '-month') . '">' . esc_html(iss_timeline_format_month_label($month)) . '</h3>';
+    $out .= '<a class="iss-date-calendar__move" data-wp-on--click="actions.follow" aria-label="' . esc_attr__('Nächster Monat', 'iss-timeline') . '" href="' . $link(['month' => $start->modify('+1 month')->format('Y-m')]) . '">→</a></nav>';
+    $out .= '<table class="iss-date-calendar__grid" aria-labelledby="' . esc_attr($scope . '-month') . '"><thead><tr>';
     foreach (['Montag' => 'Mo', 'Dienstag' => 'Di', 'Mittwoch' => 'Mi', 'Donnerstag' => 'Do', 'Freitag' => 'Fr', 'Samstag' => 'Sa', 'Sonntag' => 'So'] as $long => $short) {
         $out .= '<th scope="col" abbr="' . esc_attr($long) . '">' . esc_html($short) . '</th>';
     }
@@ -51,36 +52,19 @@ function iss_timeline_render_month_calendar(array $config, string $scope, array 
     for ($index = 0; $index < $cells; ++$index) {
         if ($index && $index % 7 === 0) { $out .= '</tr><tr>'; }
         $number = $index - $offset + 1;
-        if ($number < 1 || $number > count($days)) { $out .= '<td class="iss-programme-calendar__blank"></td>'; continue; }
+        if ($number < 1 || $number > count($days)) { $out .= '<td class="iss-date-calendar__blank"></td>'; continue; }
         $day = sprintf('%s-%02d', $month, $number);
         $rows = $days[$day];
         $selected = $day === $config['selection']['day'];
         $label = wp_date('j. F Y', $start->setDate((int) $start->format('Y'), (int) $start->format('m'), $number)->getTimestamp(), wp_timezone());
         /* translators: 1: full date, 2: number of occurrences on this day */
         $label = sprintf(__('%1$s · %2$d Termine', 'iss-timeline'), $label, count($rows));
-        $out .= '<td class="iss-programme-calendar__cell' . ($rows ? ' has-events' : '') . ($selected ? ' is-selected' : '') . '">';
-        $out .= '<a class="iss-programme-calendar__day" data-calendar-day="' . esc_attr($day) . '" data-wp-on--click="actions.follow" href="' . $link(['day' => $day]) . '" aria-label="' . esc_attr($label) . '"' . ($day === $today ? ' aria-current="date"' : '') . '>' . $number;
-        if ($rows) { $out .= '<span class="iss-programme-calendar__count" aria-hidden="true">' . count($rows) . '</span>'; }
-        $out .= '</a>';
-        if ($rows) {
-            $out .= '<ul class="iss-programme-calendar__events">';
-            foreach (array_slice($rows, 0, 3) as $row) {
-                $title = (string) ($row['title'] ?? '');
-                if (!empty($row['time_label'])) { $title = $row['time_label'] . ' · ' . $title; }
-                if (($row['availability'] ?? '') === 'cancelled') { $title .= ' · ' . __('abgesagt', 'iss-timeline'); }
-                elseif (($row['availability'] ?? '') === 'sold_out' || (isset($row['available']) && (int) $row['available'] <= 0)) { $title .= ' · ' . __('ausgebucht', 'iss-timeline'); }
-                $url = (string) ($row['content_url'] ?? '');
-                $out .= '<li>' . ($url !== '' ? '<a class="iss-programme-calendar__event-link" href="' . esc_url($url) . '">' . esc_html($title) . '</a>' : esc_html($title)) . '</li>';
-            }
-            if (count($rows) > 3) {
-                /* translators: %d: remaining occurrences available through the day link */
-                $out .= '<li><a class="iss-programme-calendar__event-link" data-wp-on--click="actions.follow" href="' . $link(['day' => $day]) . '">' . esc_html(sprintf(__('+ %d weitere', 'iss-timeline'), count($rows) - 3)) . '</a></li>';
-            }
-            $out .= '</ul>';
-        }
+        $out .= '<td' . ($rows ? ' class="has-events"' : '') . '>';
+        $out .= '<a class="iss-date-calendar__day" data-calendar-day="' . esc_attr($day) . '" data-availability="' . ($rows ? 'available' : 'empty') . '" data-selected="' . ($selected ? 'true' : 'false') . '" data-wp-on--click="actions.follow" href="' . $link(['day' => $day]) . '" aria-label="' . esc_attr($label) . '"' . ($day === $today ? ' aria-current="date"' : '') . '><span>' . $number . '</span>';
+        $out .= '<span class="iss-date-calendar__mark" aria-hidden="true">' . ($rows ? '●' : '') . '</span></a>';
         $out .= '</td>';
     }
-    $out .= '</tr></tbody></table>';
+    $out .= '</tr></tbody></table><p class="iss-date-calendar__legend">' . esc_html__('● Termine vorhanden · Tag für Details wählen', 'iss-timeline') . '</p>';
     if (!$items) { $out .= '<p>' . esc_html__('In diesem Monat wurden keine Termine gefunden.', 'iss-timeline') . '</p>'; }
     if ($config['selection']['day'] !== '') {
         $out .= '<p><a data-wp-on--click="actions.follow" href="' . $link([]) . '">' . esc_html__('Ganzen Monat anzeigen', 'iss-timeline') . '</a></p>';

@@ -557,9 +557,7 @@ function iss_timeline_render_query_block($attributes = [], $content = '', $block
     if (!empty($config['render']['showTicketsButton'])) { iss_programm_enqueue_calendar_assets(); }
     $selection = $config['selection'];
     $calendar = $selection['view'] === 'calendar' ? iss_timeline_render_month_calendar($config, $scope, $input) : null;
-    $listing = $calendar !== null && $selection['day'] === ''
-        ? ['html' => '', 'batchCount' => $calendar['count'], 'hasMore' => false]
-        : iss_timeline_get_listing_response($config, $config['render']);
+    $listing = iss_timeline_get_listing_response($config, $config['render']);
     $ui = $config['ui'];
     $name = 'iss_timeline[' . $scope . ']';
     $title = trim((string) ($attributes['title'] ?? ''));
@@ -586,6 +584,7 @@ function iss_timeline_render_query_block($attributes = [], $content = '', $block
         }
         $out .= '</nav>';
     }
+    $out .= $calendar['html'] ?? '';
     $buttons = iss_timeline_get_preset_buttons_from_attributes($attributes);
     if ($buttons) {
         $out .= '<nav class="iss-timeline__presets" aria-label="' . esc_attr__('Zeitraum wählen', 'iss-timeline') . '">';
@@ -613,7 +612,7 @@ function iss_timeline_render_query_block($attributes = [], $content = '', $block
         };
         $out .= $hidden($query);
         if ($selection['preset'] !== '') { $out .= $hidden(['iss_timeline' => [$scope => ['preset' => $selection['preset']]]]); }
-        if ($selection['view'] === 'calendar') { $out .= $hidden(['iss_timeline' => [$scope => ['view' => 'calendar']]]); }
+        if ($ui['showCalendarBridge']) { $out .= $hidden(['iss_timeline' => [$scope => ['view' => $selection['view']]]]); }
         $select = static function (string $key, string $label, array $options, string $value) use ($name): string {
             $html = '<label class="iss-timeline__filter"><span class="iss-timeline__filter-label">' . esc_html($label) . '</span><select name="' . esc_attr($name . '[' . $key . ']') . '">';
             foreach ($options as $option) { $html .= '<option value="' . esc_attr($option['value']) . '"' . selected($value, $option['value'], false) . '>' . esc_html($option['label']) . '</option>'; }
@@ -665,7 +664,7 @@ function iss_timeline_render_query_block($attributes = [], $content = '', $block
         );
         $out .= '<p class="iss-timeline-query__meta" data-timeline-query-meta>' . esc_html($count_label) . '</p>';
     }
-    $out .= '<div class="iss-timeline" data-timeline-query-results tabindex="-1">' . ($calendar['html'] ?? '') . $listing['html'] . '</div>';
+    $out .= '<div class="iss-timeline" data-timeline-query-results tabindex="-1">' . $listing['html'] . '</div>';
     if (!empty($config['render']['showLoadMore']) && iss_programm_preview_datetime() === '' && ($selection['page'] > 1 || $listing['hasMore'])) {
         $out .= '<nav class="iss-timeline-query__pagination" aria-label="' . esc_attr__('Ergebnisseiten', 'iss-timeline') . '">';
         if ($selection['page'] > 1) {

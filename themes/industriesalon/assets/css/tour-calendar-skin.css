@@ -1,6 +1,7 @@
-/* Theme skin for the shared native date/slot/request dialog and inline dates. */
+/* Shared theme skin for programme/booking month pickers and request controls. */
 .is-tour-calendar,
-.is-tour-calendar-modal {
+.is-tour-calendar-modal,
+.iss-date-calendar {
   --iss-cal-bg: var(--iss-surface-paper);
   --iss-cal-text: var(--iss-black);
   --iss-cal-muted: var(--iss-surface-muted);
@@ -26,8 +27,9 @@
 
 .is-tour-calendar-modal {
   border: 1px solid var(--iss-cal-line);
-  border-radius: var(--iss-radius-lg);
+  border-radius: 24px;
   background: var(--iss-cal-bg);
+  box-shadow: 0 1.6rem 3.5rem rgba(0, 0, 0, 0.24);
 }
 
 .is-tour-calendar-modal::backdrop {
@@ -35,7 +37,8 @@
 }
 
 .is-tour-calendar-modal__close,
-.is-tour-calendar__form-cancel {
+.is-tour-calendar__form-cancel,
+.is-tour-calendar__form-switch {
   border: 1px solid var(--iss-cal-line);
   border-radius: var(--iss-radius-sm);
   background: var(--iss-cal-bg);
@@ -73,50 +76,128 @@
   cursor: default;
 }
 
-.iss-availability-calendar__month select,
-.iss-availability-calendar__move,
-.iss-availability-calendar__next {
+/* One visual contract for programme, inline and dialog month pickers. */
+.iss-date-calendar__month {
+  color: var(--iss-cal-text);
+  font-weight: 800;
+}
+
+.iss-date-calendar__month select {
+  border: 0;
+  background: transparent;
+  color: inherit;
+  font-weight: inherit;
+  cursor: pointer;
+}
+
+.iss-date-calendar__move,
+.iss-date-calendar__next {
   border: 1px solid var(--iss-cal-line);
-  border-radius: var(--iss-radius-sm);
   background: var(--iss-cal-bg);
   color: var(--iss-cal-text);
 }
 
-.iss-availability-calendar__day {
-  border: 1px solid transparent;
-  border-radius: var(--iss-radius-sm);
-  background: var(--iss-surface-panel);
-  color: var(--iss-cal-muted);
+.iss-date-calendar__move {
+  border-radius: var(--iss-radius-pill);
 }
 
-.iss-availability-calendar__day[data-availability="available"] {
-  border-color: var(--iss-accent-border);
-  background: var(--iss-accent-soft);
-  color: var(--iss-cal-text);
+.iss-date-calendar__next {
+  border-radius: var(--iss-radius-md);
+}
+
+.iss-date-calendar__grid th {
+  padding-block: 0.3rem;
+  color: var(--iss-cal-muted);
+  font-size: 0.72rem;
+  font-weight: 800;
+  text-transform: uppercase;
+}
+
+.iss-date-calendar__day {
+  border: 1px solid var(--iss-cal-line);
+  border-radius: var(--iss-radius-md);
+  background: var(--iss-surface-inset);
+  color: var(--iss-cal-muted);
+  font-size: 0.92rem;
   font-weight: 700;
 }
 
-.iss-availability-calendar__day[aria-current="date"] {
-  border-color: var(--iss-cal-text);
+.iss-date-calendar__day[data-availability="available"] {
+  background: var(--iss-cal-bg);
+  color: var(--iss-cal-text);
 }
 
-.iss-availability-calendar__day[aria-pressed="true"] {
-  background: var(--iss-cal-text);
-  color: var(--iss-white);
+.iss-date-calendar__mark {
+  color: var(--iss-cal-accent);
 }
 
-.iss-availability-calendar__day[aria-disabled="true"] {
+.iss-date-calendar__day[aria-disabled="true"] {
   cursor: default;
 }
 
-.iss-availability-calendar__day:focus-visible,
-.iss-availability-calendar__move:focus-visible,
-.iss-availability-calendar__month select:focus-visible,
-.iss-availability-calendar__next:focus-visible {
-  outline: 2px solid var(--iss-cal-accent);
-  outline-offset: 1px;
+.iss-date-calendar__day:where(:hover):not([aria-disabled="true"]),
+.iss-date-calendar__move:hover:not(:disabled),
+.iss-date-calendar__next:hover {
+  border-color: var(--iss-cal-accent);
+  background: var(--iss-accent-soft);
+  color: var(--iss-cal-text);
 }
 
-.iss-availability-calendar__move:disabled {
-  opacity: 0.5;
+.iss-date-calendar__day[aria-current="date"] {
+  border-color: var(--iss-cal-accent);
+  border-width: 2px;
+}
+
+.iss-date-calendar__day[aria-pressed="true"],
+.iss-date-calendar__day[data-selected="true"] {
+  border-color: var(--iss-cal-accent);
+  background: var(--iss-cal-accent);
+  color: var(--iss-surface-paper);
+}
+
+.iss-date-calendar__day[aria-pressed="true"] .iss-date-calendar__mark,
+.iss-date-calendar__day[data-selected="true"] .iss-date-calendar__mark {
+  color: inherit;
+}
+
+.iss-date-calendar__day:focus-visible,
+.iss-date-calendar__move:focus-visible,
+.iss-date-calendar__month select:focus-visible,
+.iss-date-calendar__next:focus-visible {
+  outline: 2px solid var(--iss-cal-accent);
+  outline-offset: 2px;
+}
+
+.iss-date-calendar__move:disabled {
+  opacity: 0.45;
+}
+
+.iss-date-calendar__legend {
+  color: var(--iss-cal-muted);
+}
+
+.is-tour-calendar-modal__header {
+  border-bottom: 1px solid var(--iss-cal-line);
+}
+
+.is-tour-calendar-modal__close {
+  border-radius: var(--iss-radius-pill);
+}
+
+.is-tour-calendar__request-details {
+  background: var(--iss-surface-panel);
+  border-block: 1px solid var(--iss-cal-line);
+  margin-bottom: 1.4rem;
+}
+
+.is-tour-calendar__selected-date {
+  margin: 0 0 1rem;
+  font-weight: 800;
+}
+
+@media (min-width: 860px) {
+  .is-tour-calendar__form-fields[data-intent="booking"] .is-tour-calendar__request-details {
+    border-top: 0;
+    border-left: 1px solid var(--iss-cal-line);
+  }
 }

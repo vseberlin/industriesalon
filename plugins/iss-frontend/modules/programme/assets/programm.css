@@ -29,11 +29,41 @@
 
 .is-tour-calendar-modal__panel {
   position: relative;
-  padding: clamp(1rem, 3vw, 2rem);
 }
 
-.is-tour-calendar-modal__panel h2 {
-  margin: 0 2.75rem 1rem 0;
+.is-tour-calendar-modal__header {
+  padding: 1.35rem 4rem 1.1rem 1.5rem;
+}
+
+.is-tour-calendar-modal__header h2 {
+  margin: 0 0 0.4rem;
+  font-size: clamp(1.45rem, 2vw, 2rem);
+  line-height: 1.15;
+}
+
+.is-tour-calendar__date-panel,
+.is-tour-calendar__request-details {
+  min-width: 0;
+  padding: 1.4rem 1.5rem;
+}
+
+.is-tour-calendar__date-panel .iss-date-calendar {
+  margin: 0 auto;
+}
+
+.is-tour-calendar__form-cancel {
+  margin: 0 1.5rem 1.4rem;
+}
+
+@media (min-width: 860px) {
+  .is-tour-calendar-modal[data-intent="booking"] {
+    width: min(62rem, calc(100vw - 2rem));
+  }
+
+  .is-tour-calendar__form-fields[data-intent="booking"] {
+    display: grid;
+    grid-template-columns: minmax(20rem, 25rem) minmax(0, 1fr);
+  }
 }
 
 .is-tour-calendar-modal__close {
@@ -45,7 +75,7 @@
 
 .is-tour-calendar__form-fields {
   min-width: 0;
-  margin: 1rem 0;
+  margin: 0;
   padding: 0;
   border: 0;
 }
@@ -78,10 +108,12 @@
 }
 
 .is-tour-calendar__form-submit,
-.is-tour-calendar__form-cancel {
+.is-tour-calendar__form-cancel,
+.is-tour-calendar__form-switch {
   min-height: 2.75rem;
   padding: 0.65rem 1rem;
   cursor: pointer;
+  font: inherit;
 }
 
 @media (max-width: 600px) {
@@ -91,51 +123,66 @@
 }
 
 /* Shared availability-picker structure; the theme owns day/status colors. */
-.iss-availability-calendar {
+.iss-date-calendar {
   width: 100%;
-  max-width: 30rem;
+  max-width: 25rem;
   margin-block: 1rem;
 }
 
-.iss-availability-calendar[hidden] {
+.iss-date-calendar[hidden] {
   display: none;
 }
 
-.iss-availability-calendar__nav {
+.iss-date-calendar__nav {
   display: grid;
-  grid-template-columns: auto minmax(0, 1fr) auto;
+  grid-template-columns: minmax(0, 1fr) auto auto;
   gap: 0.5rem;
   align-items: center;
 }
 
-.iss-availability-calendar__month select {
+.iss-date-calendar__month {
+  grid-column: 1;
+  grid-row: 1;
+  min-width: 0;
+  margin: 0;
+  font-size: 1.05rem;
+  line-height: 1.2;
+}
+
+.iss-date-calendar__month select {
   width: 100%;
   min-width: 0;
   min-height: 2.75rem;
-  padding: 0.5rem;
+  padding: 0.25rem 0;
   font: inherit;
 }
 
-.iss-availability-calendar__move {
+.iss-date-calendar__move {
+  display: inline-grid;
+  place-content: center;
+  text-decoration: none;
+  box-sizing: border-box;
+  padding: 0;
   min-width: 2.75rem;
   min-height: 2.75rem;
   font: inherit;
 }
 
-.iss-availability-calendar__grid {
+.iss-date-calendar__grid {
   width: 100%;
   table-layout: fixed;
-  border-collapse: collapse;
+  border-collapse: separate;
+  border-spacing: 0.3rem;
   margin-block: 0.75rem;
 }
 
-.iss-availability-calendar__grid th,
-.iss-availability-calendar__grid td {
-  padding: 0.15rem;
+.iss-date-calendar__grid th,
+.iss-date-calendar__grid td {
+  padding: 0;
   text-align: center;
 }
 
-.iss-availability-calendar__day {
+.iss-date-calendar__day {
   display: grid;
   place-content: center;
   width: 100%;
@@ -144,24 +191,26 @@
   font: inherit;
   line-height: 1.1;
   cursor: pointer;
+  text-decoration: none;
+  box-sizing: border-box;
 }
 
-.iss-availability-calendar__day[hidden] {
+.iss-date-calendar__day[hidden] {
   display: none;
 }
 
-.iss-availability-calendar__mark {
+.iss-date-calendar__mark {
   min-height: 0.8rem;
   font-size: 0.7rem;
 }
 
-.iss-availability-calendar__legend,
-.iss-availability-calendar__empty {
+.iss-date-calendar__legend,
+.iss-date-calendar__empty {
   margin-block: 0.6rem;
   font-size: 0.875rem;
 }
 
-.iss-availability-calendar__next {
+.iss-date-calendar__next {
   min-height: 2.75rem;
   padding: 0.5rem;
   font: inherit;
