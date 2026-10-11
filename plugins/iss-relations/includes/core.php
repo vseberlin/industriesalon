@@ -1444,7 +1444,10 @@ function iss_relations_sync_post_terms(int $post_id): void
         }
     }
 
-    wp_set_object_terms($post_id, array_values(array_unique($term_ids)), ISS_RELATIONS_TAXONOMY, false);
+    $result = wp_set_object_terms($post_id, array_values(array_unique($term_ids)), ISS_RELATIONS_TAXONOMY, false);
+    if (is_wp_error($result)) {
+        throw new RuntimeException('Could not update relation taxonomy projection.');
+    }
 }
 
 function iss_relations_backfill_index(array $post_types = []): array
@@ -1530,7 +1533,9 @@ function iss_relations_sync_supported_post_on_save(int $post_id, WP_Post $post):
         return;
     }
 
-    iss_relations_sync_post_read_models($post_id);
+    if (!function_exists('iss_graph_defer_post_projection') || !iss_graph_defer_post_projection($post_id, 'relations_changed', 'iss_relations')) {
+        iss_relations_sync_post_read_models($post_id);
+    }
 }
 add_action('save_post', 'iss_relations_sync_supported_post_on_save', 30, 2);
 
@@ -1540,7 +1545,9 @@ function iss_relations_sync_post_terms_on_meta_change($meta_id, int $post_id, st
         return;
     }
 
-    iss_relations_sync_post_read_models($post_id);
+    if (!function_exists('iss_graph_defer_post_projection') || !iss_graph_defer_post_projection($post_id, 'relations_changed', 'iss_relations')) {
+        iss_relations_sync_post_read_models($post_id);
+    }
 }
 add_action('added_post_meta', 'iss_relations_sync_post_terms_on_meta_change', 10, 3);
 add_action('updated_post_meta', 'iss_relations_sync_post_terms_on_meta_change', 10, 3);

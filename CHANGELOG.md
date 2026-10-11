@@ -6,6 +6,14 @@ be recovered from Git history.
 
 ## 2026-10-11
 
+- Coalesced ordinary content/relation/search save and metadata callbacks through
+  the existing graph queue, with a bounded request-scoped shutdown drain and
+  durable retry after lock contention or checked write failure. Explicit atomic
+  writers retain immediate semantics; occurrence sync stays in its owner.
+  Removed duplicate bridge reconciliation. Passed 31 isolated coalescing checks,
+  87 queue/race checks and 427 atomic writer regressions; PHP/PHPCS/PHPStan pass.
+  No new queue/service, schema migration, content or uploads artifact.
+
 - Occurrence pages now check current source publication/password/type before
   pagination and batch source/location post caches. Removed obsolete timeline
   HTML transients and their version writes; retained REST responses are fresh

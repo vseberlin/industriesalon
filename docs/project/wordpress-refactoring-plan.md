@@ -22,7 +22,7 @@ changes outside those roots require separate authorization.
 | 1 Baseline | Local mounts, backups and route/query comparisons retained; WordPress 7.0 and Chrome/Firefox/Linux-WebKit checks pass locally; staff/staging acceptance separate |
 | 2 Database/setup | Seeds, graph/queue/profile/transcript/archive boundaries and Set service writes completed; Event Drop recovery and public setup gates complete; installer verification and migrated commerce idempotency complete |
 | 3 Native frontend | Native GET filters, shared booking and core region navigation complete; Flatpickr removed; 45 three-engine WordPress 7.0 scenarios pass |
-| 4 Query/projection consolidation | Read-only relation batching and bounded/private SQL search complete; occurrence privacy/batching and date cache removal complete; save coalescing next |
+| 4 Query/projection consolidation | Read-only relation batching and bounded/private SQL search complete; occurrence privacy/batching, date cache removal and ordinary save coalescing complete; menu retained after failed equivalence proof |
 | 5 Code/CSS consolidation | Pending |
 | 6 Maintenance | Pending within repository/local scope; target operations remain separate |
 

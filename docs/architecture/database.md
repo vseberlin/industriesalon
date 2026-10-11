@@ -441,3 +441,28 @@ explicitly added.
 - Access custom tables through service classes. Do not build raw SQL in theme templates or block markup.
 - Use `$wpdb->prepare()` for dynamic values. Keep dynamic table names limited to service-owned table-name methods.
 - Add custom tables only when WordPress storage is the wrong shape or makes query logic fragile.
+
+### Ordinary save projection boundary
+
+Ordinary content refresh, relation save/meta and search save/meta callbacks now
+coalesce through the existing graph dirty queue. Every accepted mutation marks
+its source durably; a request-local ID set only narrows the shutdown drain after
+classic metabox and REST metadata callbacks finish. The drain uses existing
+owned leases/claims/retries, at most 50 sources and five seconds between items.
+It never drains unrelated historic work. Empty or invalid ID scopes fail closed.
+Busy/failed/remaining sources stay in the queue for the maintenance command.
+Public read-only requests never flush this work; SQL source visibility checks
+remain authoritative even when a projection is delayed.
+
+Explicit atomic editorial/profile/transcript/route writers keep their immediate
+contracts. Occurrence sync remains synchronous in its existing owner; booking
+validation cannot depend on a delayed search projection. The reconciliation path
+calls each source bridge through the relations owner once and checks search and
+term write failures before queue acknowledgment. Derived hooks from that same
+reconciliation do not requeue themselves. Direct metadata callers needing a
+read-your-write search projection must explicitly use the owner sync API or wait
+until the request boundary. Queue/schema/data format is unchanged.
+
+`tests/e2e/bin/projection-coalescing.php` covers repeated callbacks, final values,
+scoped acknowledgment, write failure/retry and a busy worker. Existing queue race
+and atomic writer suites retain their contracts; real rows remain untouched.

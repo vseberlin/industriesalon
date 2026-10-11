@@ -32,6 +32,7 @@ define('ISS_GRAPH_ADVANCED_EDITORIAL_SIGNALS_CAPABILITY', 'manage_graph_editoria
 
 require_once ISS_GRAPH_PATH . 'includes/entity-kinds.php';
 require_once ISS_GRAPH_PATH . 'includes/core.php';
+require_once ISS_GRAPH_PATH . 'includes/projection-hooks.php';
 require_once ISS_GRAPH_PATH . 'includes/aliases.php';
 require_once ISS_GRAPH_PATH . 'includes/register-bridge.php';
 require_once ISS_GRAPH_PATH . 'includes/archive-bridge.php';

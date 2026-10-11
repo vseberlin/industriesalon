@@ -499,7 +499,9 @@ function iss_graph_refresh_public_content_entity_on_save(int $post_id, WP_Post $
         return;
     }
 
-    iss_graph_sync_public_content_entity($post_id);
+    if (!iss_graph_defer_post_projection($post_id, 'content_changed', 'iss_graph')) {
+        iss_graph_sync_public_content_entity($post_id);
+    }
 }
 add_action('save_post', 'iss_graph_refresh_public_content_entity_on_save', 35, 2);
 

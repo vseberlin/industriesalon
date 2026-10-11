@@ -462,7 +462,9 @@ function iss_graph_sync_public_search_on_save(int $post_id, WP_Post $post): void
         return;
     }
 
-    iss_graph_sync_public_search_post($post_id);
+    if (!iss_graph_defer_post_projection($post_id, 'search_source_changed', 'iss_graph')) {
+        iss_graph_sync_public_search_post($post_id);
+    }
 }
 
 function iss_graph_delete_public_search_on_before_delete(int $post_id): void
@@ -481,7 +483,9 @@ function iss_graph_sync_public_search_on_meta_change($meta_id, int $post_id, str
         return;
     }
 
-    iss_graph_sync_public_search_post($post_id);
+    if (!iss_graph_defer_post_projection($post_id, 'search_source_changed', 'iss_graph')) {
+        iss_graph_sync_public_search_post($post_id);
+    }
 }
 
 function iss_graph_intercept_public_search_query(WP_Query $query): void

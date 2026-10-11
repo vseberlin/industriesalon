@@ -2863,7 +2863,7 @@ final class ISS_Graph_Service
 
         if ($row) {
             $db_data['created_at'] = (string) ($row['created_at'] ?? $timestamp);
-            $wpdb->update(
+            $written = $wpdb->update(
                 $this->get_search_table_name(),
                 $db_data,
                 ['target_post_id' => $post_id],
@@ -2871,16 +2871,18 @@ final class ISS_Graph_Service
                 ['%d']
             );
 
+            if ($written === false) { throw new RuntimeException('Could not update public search projection.'); }
             return $this->get_search_row_by_post($post_id);
         }
 
         $db_data['created_at'] = $timestamp;
-        $wpdb->insert(
+        $written = $wpdb->insert(
             $this->get_search_table_name(),
             $db_data,
             ['%d', '%d', '%s', '%s', '%s', '%s', '%s', '%d', '%d', '%s', '%s']
         );
 
+        if ($written === false) { throw new RuntimeException('Could not insert public search projection.'); }
         return $this->get_search_row_by_post($post_id);
     }
 
@@ -2892,7 +2894,9 @@ final class ISS_Graph_Service
 
         global $wpdb;
 
-        $wpdb->delete($this->get_search_table_name(), ['target_post_id' => $post_id], ['%d']);
+        if ($wpdb->delete($this->get_search_table_name(), ['target_post_id' => $post_id], ['%d']) === false) {
+            throw new RuntimeException('Could not delete public search projection.');
+        }
     }
 
     public function mark_post_dirty(int $post_id, string $reason = '', string $source_system = 'iss_graph'): bool
@@ -2987,6 +2991,8 @@ final class ISS_Graph_Service
         $max_runtime = max(1, min(900, absint($args['max_runtime'] ?? 30)));
         $max_attempts = max(1, min(20, absint($args['max_attempts'] ?? 3)));
         $dry_run = !empty($args['dry_run']);
+        $post_ids = array_key_exists('post_ids', $args)
+            ? array_values(array_unique(array_filter(array_map('absint', is_array($args['post_ids']) ? $args['post_ids'] : [])))) : null;
         $started = microtime(true);
         $deadline = $started + $max_runtime;
         $stats = [
@@ -3007,6 +3013,8 @@ final class ISS_Graph_Service
             'duration_seconds' => 0.0,
             'completed_at' => '',
         ];
+
+        if ($post_ids === []) { return $stats; }
 
         if (!$this->table_exists($table)) {
             $stats['last_error'] = 'dirty_queue_table_missing';
@@ -3030,12 +3038,19 @@ final class ISS_Graph_Service
         try {
             // With our own lease, processing rows belong to abandoned runs.
             // Recovery shares the batch limit instead of using an unbounded sweep.
+            $scope = '';
+            $selection_values = [$dry_run ? 'dirty' : 'processing'];
+            if ($post_ids !== null) {
+                $scope = ' AND target_post_id IN (' . implode(', ', array_fill(0, count($post_ids), '%d')) . ')';
+                $selection_values = array_merge($selection_values, $post_ids);
+            }
+            $selection_values[] = $batch_size;
+            // phpcs:ignore WordPress.DB.PreparedSQLPlaceholders.ReplacementsWrongNumber -- Values include the optional prepared ID scope.
             $rows = $wpdb->get_results($wpdb->prepare(
                 "SELECT * FROM {$table}
-                 WHERE status IN ('dirty', %s)
+                 WHERE status IN ('dirty', %s){$scope}
                  ORDER BY updated_at ASC, id ASC LIMIT %d",
-                $dry_run ? 'dirty' : 'processing',
-                $batch_size
+                $selection_values
             ), ARRAY_A);
             if ($wpdb->last_error !== '') {
                 throw new RuntimeException('Could not select graph queue work.');
@@ -3675,6 +3690,17 @@ function iss_graph_can_reconcile_current_request(): bool
 
 function iss_graph_reconcile_post(int $post_id): array
 {
+    $previous = $GLOBALS['iss_graph_reconciling_post'] ?? 0;
+    $GLOBALS['iss_graph_reconciling_post'] = $post_id;
+    try {
+        return iss_graph_reconcile_post_projections($post_id);
+    } finally {
+        $GLOBALS['iss_graph_reconciling_post'] = $previous;
+    }
+}
+
+function iss_graph_reconcile_post_projections(int $post_id): array
+{
     $post_id = absint($post_id);
     if ($post_id <= 0) {
         return ['status' => 'dead', 'message' => 'invalid_post_id'];
@@ -3696,18 +3722,17 @@ function iss_graph_reconcile_post(int $post_id): array
     $archive_post_type = defined('ISS_WF_IMPORT_OBJECT_POST_TYPE') ? sanitize_key((string) ISS_WF_IMPORT_OBJECT_POST_TYPE) : 'archivobjekt';
     $synced = false;
 
-    if ($post_type === $register_post_type && function_exists('iss_graph_sync_register_place_entity')) {
+    // The relations owner already delegates source-entity work to the correct
+    // register/content/archive bridge. Do not repeat that bridge first.
+    if (function_exists('iss_relations_is_supported_post_type') && iss_relations_is_supported_post_type($post_type)) {
+        iss_relations_sync_post_terms($post_id);
+        $synced = (bool) iss_relations_sync_post_graph($post_id);
+    } elseif ($post_type === $register_post_type && function_exists('iss_graph_sync_register_place_entity')) {
         $synced = (bool) iss_graph_sync_register_place_entity($post_id);
     } elseif ($post_type === $archive_post_type && function_exists('iss_graph_sync_archive_object_entity')) {
         $synced = (bool) iss_graph_sync_archive_object_entity($post_id);
     } elseif (function_exists('iss_graph_is_content_relation_post_type') && iss_graph_is_content_relation_post_type($post_type)) {
         $synced = (bool) iss_graph_sync_public_content_entity($post_id);
-    } elseif (function_exists('iss_relations_is_supported_post_type') && iss_relations_is_supported_post_type($post_type) && function_exists('iss_relations_sync_post_graph')) {
-        $synced = (bool) iss_relations_sync_post_graph($post_id);
-    }
-
-    if (function_exists('iss_relations_sync_post_read_models')) {
-        iss_relations_sync_post_read_models($post_id);
     }
 
     if (function_exists('iss_graph_sync_public_search_post')) {
@@ -3757,7 +3782,7 @@ function iss_graph_mark_related_post_dirty_on_save(int $post_id, WP_Post $post):
         return;
     }
 
-    iss_graph_mark_post_dirty($post_id, 'post_save', 'wp_post');
+    iss_graph_defer_post_projection($post_id, 'post_save', 'wp_post');
 }
 add_action('save_post', 'iss_graph_mark_related_post_dirty_on_save', 8, 2);
 
