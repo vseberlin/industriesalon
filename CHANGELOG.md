@@ -6,6 +6,15 @@ be recovered from Git history.
 
 ## 2026-10-11
 
+- Replaced the project/team ordering controller's jQuery Sortable/AJAX dependency
+  with native drag events, keyboard arrows, touch up/down controls and fetch.
+  Existing nonce/action/array payload and server save owner are unchanged.
+  Pending saves suppress overlap; server/network failures restore row order;
+  focus, zero-valued order labels and Quick Edit replacements are retained.
+  Removed obsolete sortable helper/placeholder CSS. Twelve Chrome/Firefox/
+  Linux-WebKit checks pass, including actual pointer drag and phone controls;
+  JS/CSS lint and PHP/PHPCS/PHPStan pass. No content/schema/uploads artifact.
+
 - Split graph schema/queue/read/identifier/evidence/signal methods and CLI
   diagnostics/migrations within the existing owner. Extracted relation block
   registration/query helpers and programme booking/filter configuration without

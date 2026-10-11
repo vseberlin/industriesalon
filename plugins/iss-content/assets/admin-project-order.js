@@ -1,174 +1,154 @@
-(function ($) {
-  var config = window.issContentOrder || {};
-  var request = null;
-  var originalRows = [];
+(() => {
+  const config = window.issContentOrder || {};
+  const text = (key, fallback) => (config.strings && config.strings[key]) || fallback;
 
-  function isEnabled(value) {
-    return value === true || value === '1' || value === 1;
-  }
+  function init() {
+    const body = document.getElementById('the-list');
+    if (![true, 1, '1'].includes(config.enabled) || !body) return;
+    const selector = config.rowSelector || 'tr';
+    const rows = () => Array.from(body.children).filter((row) => row.matches(selector));
+    const ids = () => rows().map((row) => Number(row.querySelector('.iss-content-order-handle')?.dataset.postId)).filter(Boolean);
+    let busy = false;
+    let dragged = null;
+    let dropped = false;
+    let before = [];
+    const restore = () => before.forEach((row) => body.append(row));
 
-  function text(key, fallback) {
-    return (config.strings && config.strings[key]) || fallback || key;
-  }
-
-  function tableBody() {
-    return $('#the-list');
-  }
-
-  function contentRows() {
-    return tableBody().children(config.rowSelector || 'tr');
-  }
-
-  function orderedIds() {
-    return contentRows().map(function () {
-      return parseInt($(this).find('.iss-content-order-handle').attr('data-post-id'), 10) || 0;
-    }).get().filter(Boolean);
-  }
-
-  function notice(message, type) {
-    var wrap = $('.wrap').first();
-    var node = $('.iss-content-order-notice');
-
-    if (!wrap.length) {
-      return;
-    }
-
-    if (!node.length) {
-      node = $('<div class="notice iss-content-order-notice"><p></p></div>');
-      wrap.find('h1').first().after(node);
-    }
-
-    node
-      .removeClass('notice-success notice-error notice-info')
-      .addClass('notice-' + (type || 'info'))
-      .find('p')
-      .text(message || '');
-  }
-
-  function setSaving(isSaving) {
-    $('body').toggleClass('iss-content-order-saving', !!isSaving);
-    $('.iss-content-order-handle').prop('disabled', !!isSaving);
-  }
-
-  function restoreRows() {
-    var body = tableBody();
-
-    originalRows.forEach(function (row) {
-      body.append(row);
-    });
-  }
-
-  function applyOrders(orders) {
-    if (!orders) {
-      return;
-    }
-
-    $('.iss-content-order-handle').each(function () {
-      var id = parseInt($(this).attr('data-post-id'), 10) || 0;
-      var value = orders[id] || orders[String(id)] || '';
-      if (value !== '') {
-        $(this).siblings('.iss-content-order-value').text(value);
+    function notice(message, type) {
+      const wrap = document.querySelector('.wrap');
+      if (!wrap) return;
+      let node = wrap.querySelector('.iss-content-order-notice');
+      if (!node) {
+        node = document.createElement('div');
+        node.setAttribute('role', 'status');
+        node.setAttribute('aria-live', 'polite');
+        node.append(document.createElement('p'));
+        (wrap.querySelector('h1') || wrap.firstElementChild).after(node);
       }
-    });
-  }
-
-  function saveOrder() {
-    var ids = orderedIds();
-
-    if (request) {
-      return;
+      node.className = `notice iss-content-order-notice notice-${type}`;
+      node.querySelector('p').textContent = message;
     }
 
-    setSaving(true);
-    notice(text('saving', 'Saving order ...'), 'info');
-
-    request = $.ajax({
-      url: config.ajaxUrl,
-      method: 'POST',
-      dataType: 'json',
-      data: {
-        action: config.action || 'iss_content_project_reorder',
-        nonce: config.nonce || '',
-        post_ids: ids
-      }
-    }).done(function (response) {
-      if (!response || !response.success) {
-        restoreRows();
-        notice((response && response.data && response.data.message) || text('error', 'Order could not be saved.'), 'error');
-        return;
-      }
-
-      applyOrders(response.data && response.data.orders);
-      notice((response.data && response.data.message) || text('saved', 'Order saved.'), 'success');
-    }).fail(function (xhr, status) {
-      var response = xhr && xhr.responseJSON ? xhr.responseJSON : null;
-
-      if (status !== 'abort') {
-        restoreRows();
-        notice((response && response.data && response.data.message) || text('error', 'Order could not be saved.'), 'error');
-      }
-    }).always(function () {
-      setSaving(false);
-      request = null;
-    });
-  }
-
-  function moveFocusedRow(button, direction) {
-    var row = button.closest(config.rowSelector || 'tr');
-    var target = direction < 0 ? row.prev(config.rowSelector || 'tr') : row.next(config.rowSelector || 'tr');
-
-    if (!target.length) {
-      return;
+    function setBusy(value) {
+      busy = value;
+      document.body.classList.toggle('iss-content-order-saving', value);
+      body.setAttribute('aria-busy', String(value));
+      body.querySelectorAll('.iss-content-order-handle, .iss-content-order-step').forEach((button) => {
+        button.disabled = value;
+      });
     }
 
-    originalRows = contentRows().get();
-    if (direction < 0) {
-      row.insertBefore(target);
-    } else {
-      row.insertAfter(target);
-    }
-    button.trigger('focus');
-    saveOrder();
-  }
-
-  $(function () {
-    var body = tableBody();
-    var rows = contentRows();
-
-    if (!isEnabled(config.enabled) || !body.length || rows.length < 2) {
-      return;
-    }
-
-    $('body').addClass('iss-content-order-enabled');
-
-    body.sortable({
-      axis: 'y',
-      cancel: 'input, textarea, select, option, a',
-      cursor: 'move',
-      handle: '.iss-content-order-handle',
-      helper: function (event, row) {
-        row.children().each(function () {
-          $(this).width($(this).width());
+    async function save(focusTarget) {
+      if (busy) return;
+      setBusy(true);
+      notice(text('saving', 'Saving order ...'), 'info');
+      const data = new URLSearchParams({ action: config.action || 'iss_content_project_reorder', nonce: config.nonce || '' });
+      ids().forEach((id) => data.append('post_ids[]', String(id)));
+      let failureMessage = text('error', 'Order could not be saved.');
+      try {
+        const response = await fetch(config.ajaxUrl, { method: 'POST', credentials: 'same-origin', body: data });
+        const result = await response.json();
+        if (!response.ok || !result?.success) {
+          failureMessage = result?.data?.message || failureMessage;
+          throw new Error(failureMessage);
+        }
+        const orders = result.data?.orders || {};
+        rows().forEach((row) => {
+          const id = row.querySelector('.iss-content-order-handle')?.dataset.postId;
+          const value = row.querySelector('.iss-content-order-value');
+          if (value && Object.prototype.hasOwnProperty.call(orders, id)) value.textContent = String(orders[id]);
         });
-        return row;
-      },
-      items: '> ' + (config.rowSelector || 'tr'),
-      placeholder: 'iss-content-order-placeholder',
-      start: function (event, ui) {
-        originalRows = contentRows().get();
-        ui.placeholder.height(ui.item.outerHeight());
-      },
-      update: saveOrder
-    });
+        notice(result.data?.message || text('saved', 'Order saved.'), 'success');
+      } catch {
+        restore();
+        notice(failureMessage, 'error');
+      } finally {
+        setBusy(false);
+        if (focusTarget?.isConnected && (document.activeElement === document.body || document.activeElement === focusTarget)) focusTarget.focus();
+      }
+    }
 
-    body.on('keydown', '.iss-content-order-handle', function (event) {
-      if (event.key === 'ArrowUp') {
+    function move(button, direction) {
+      if (busy || dragged) return;
+      const row = button.closest(selector);
+      const current = rows();
+      const target = current[current.indexOf(row) + direction];
+      if (!row || !target) return;
+      before = Array.from(body.children);
+      body.insertBefore(row, direction < 0 ? target : target.nextSibling);
+      save(button);
+    }
+
+    function decorateRows() {
+      rows().forEach((row) => {
+        const handle = row.querySelector('.iss-content-order-handle');
+        if (!handle || row.querySelector('.iss-content-order-controls')) return;
+        handle.draggable = true;
+        const controls = document.createElement('span');
+        controls.className = 'iss-content-order-controls';
+        const title = row.querySelector('.row-title')?.textContent.trim() || '';
+        [[-1, 'earlier', 'Move up', '↑'], [1, 'later', 'Move down', '↓']].forEach(([direction, key, fallback, symbol]) => {
+          const button = document.createElement('button');
+          button.type = 'button';
+          button.className = 'button-link iss-content-order-step';
+          button.dataset.direction = String(direction);
+          button.setAttribute('aria-label', `${text(key, fallback)}${title ? `: ${title}` : ''}`);
+          button.textContent = symbol;
+          controls.append(button);
+        });
+        handle.after(controls);
+      });
+    }
+
+    body.addEventListener('click', (event) => {
+      const button = event.target.closest('.iss-content-order-step');
+      if (button) move(button, Number(button.dataset.direction));
+    });
+    body.addEventListener('keydown', (event) => {
+      const button = event.target.closest('.iss-content-order-handle');
+      if (button && ['ArrowUp', 'ArrowDown'].includes(event.key)) {
         event.preventDefault();
-        moveFocusedRow($(this), -1);
-      } else if (event.key === 'ArrowDown') {
-        event.preventDefault();
-        moveFocusedRow($(this), 1);
+        move(button, event.key === 'ArrowUp' ? -1 : 1);
       }
     });
-  });
-}(jQuery));
+    body.addEventListener('dragstart', (event) => {
+      const handle = event.target.closest('.iss-content-order-handle');
+      if (busy || !handle) { event.preventDefault(); return; }
+      dragged = handle.closest(selector);
+      if (!dragged) { event.preventDefault(); return; }
+      before = Array.from(body.children);
+      dropped = false;
+      event.dataTransfer.effectAllowed = 'move';
+      event.dataTransfer.setData('text/plain', handle.dataset.postId);
+      dragged.classList.add('iss-content-order-dragging');
+    });
+    body.addEventListener('dragover', (event) => {
+      if (!dragged || busy) return;
+      event.preventDefault();
+      event.dataTransfer.dropEffect = 'move';
+      const target = event.target.closest(selector);
+      if (!target || target === dragged || target.parentElement !== body) return;
+      const bounds = target.getBoundingClientRect();
+      body.insertBefore(dragged, event.clientY < bounds.top + bounds.height / 2 ? target : target.nextSibling);
+    });
+    body.addEventListener('drop', (event) => {
+      if (!dragged || busy) return;
+      event.preventDefault();
+      dropped = true;
+      const changed = before.some((row, index) => body.children[index] !== row);
+      if (changed) save(dragged.querySelector('.iss-content-order-handle'));
+    });
+    body.addEventListener('dragend', () => {
+      if (!dragged) return;
+      dragged.classList.remove('iss-content-order-dragging');
+      if (!dropped) restore();
+      dragged = null;
+    });
+    document.body.classList.add('iss-content-order-enabled');
+    decorateRows();
+    // Core Quick Edit replaces table rows. Decorate those new native handles too.
+    new MutationObserver(decorateRows).observe(body, { childList: true });
+  }
+  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', init, { once: true });
+  else init();
+})();

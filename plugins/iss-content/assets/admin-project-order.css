@@ -48,15 +48,19 @@
   background: #f6f7f7;
 }
 
-#the-list tr.iss-content-order-placeholder {
-  background: #f0f6fc;
-  box-shadow: inset 0 0 0 1px #72aee6;
-  height: 48px;
+.iss-content-order-controls {
+  display: inline-flex;
+  gap: 0.35rem;
+  margin-left: 0.35rem;
 }
 
-#the-list tr.ui-sortable-helper {
-  background: #fff;
-  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.18);
+.iss-content-order-step {
+  min-width: 24px;
+  min-height: 28px;
+}
+
+.iss-content-order-dragging {
+  opacity: 0.6;
 }
 
 @media (max-width: 782px) {

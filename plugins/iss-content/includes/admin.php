@@ -2480,7 +2480,7 @@ function iss_content_model_enqueue_order_assets(string $hook): void
     wp_enqueue_script(
         'iss-content-model-project-order',
         plugins_url('../assets/admin-project-order.js', __FILE__),
-        ['jquery', 'jquery-ui-sortable'],
+        [],
         (string) filemtime($script_path),
         true
     );
@@ -2494,6 +2494,8 @@ function iss_content_model_enqueue_order_assets(string $hook): void
             'rowSelector' => 'tr.type-' . $screen->post_type,
             'nonce' => wp_create_nonce($is_team ? 'iss_content_team_order' : 'iss_content_project_order'),
             'strings' => [
+                'earlier' => __('Nach oben verschieben', 'iss-content-model'),
+                'later' => __('Nach unten verschieben', 'iss-content-model'),
                 'saving' => __('Reihenfolge wird gespeichert ...', 'iss-content-model'),
                 'saved' => $is_team ? __('Team-Reihenfolge gespeichert.', 'iss-content-model') : __('Projekt-Reihenfolge gespeichert.', 'iss-content-model'),
                 'error' => $is_team ? __('Team-Reihenfolge konnte nicht gespeichert werden.', 'iss-content-model') : __('Projekt-Reihenfolge konnte nicht gespeichert werden.', 'iss-content-model'),
