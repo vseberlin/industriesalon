@@ -25,8 +25,7 @@ audit. Git history, [CHANGELOG.md](CHANGELOG.md) and
 
 Continue the [refactoring plan](docs/project/wordpress-refactoring-plan.md):
 
-1. Check Set caller recovery boundaries, then finish public setup/schema gates
-   and commerce idempotency. Preserve owner contracts and use isolated fixtures.
+1. Finish public setup/schema gates and commerce idempotency. Preserve owner contracts and use isolated fixtures.
 2. Migrate programme filters and shared booking/inquiry to native controls and
    core Interactivity API; remove Flatpickr only after its last consumer moves.
 3. Simplify occurrence-backed menu dates, search queries, batched reads and
@@ -41,8 +40,9 @@ Set field/key and item/context writers now require their audits/timestamps in
 one owner transaction; move/status batches roll back late failures. Five suites
 passed 890 checks, including two-connection deletion/ownership races, plus lint,
 PHPCS and PHPStan. Logs: `editorial-set-*-final.log` in the private evidence root.
-Next inspect broader Set import/promotion callers for file/database recovery;
-then move schema/setup out of public requests and enforce verified versions.
+Event Drop moderation now has collision-safe retry resolution and its extra
+audit shares the item transaction (33 file recovery checks plus 369 regressions).
+Next move schema/setup out of public requests and enforce verified versions.
 Do not run real imports/merges or destructive cleanup for verification.
 
 ## Runtime and evidence

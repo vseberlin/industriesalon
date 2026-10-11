@@ -356,6 +356,19 @@ function iss_content_editorial_sets_event_drop_item_provenance(array $item): arr
     return is_array($provenance) ? $provenance : [];
 }
 
+/** Stable collision names let a retry find a moved file even when its database save failed. */
+function iss_content_editorial_sets_event_drop_recovery_filename(array $item): string
+{
+    $item_id = absint($item['id'] ?? 0);
+    if ($item_id <= 0) {
+        return '';
+    }
+    $provenance = iss_content_editorial_sets_event_drop_item_provenance($item);
+    $stored_name = sanitize_file_name((string) ($provenance['stored_name'] ?? $item['source_id'] ?? ''));
+    $extension = pathinfo($stored_name, PATHINFO_EXTENSION);
+    return 'item-' . $item_id . '-' . substr(hash('sha256', $stored_name), 0, 16) . ($extension !== '' ? '.' . $extension : '');
+}
+
 function iss_content_editorial_sets_event_drop_resolve_item_path(array $item): string
 {
     if ((string) ($item['kind'] ?? '') !== 'external_upload' || (string) ($item['source'] ?? '') !== 'event-drop') {
@@ -377,6 +390,12 @@ function iss_content_editorial_sets_event_drop_resolve_item_path(array $item): s
     if (!empty($provenance['path'])) {
         $paths[] = (string) $provenance['path'];
     }
+    $recovery_name = iss_content_editorial_sets_event_drop_recovery_filename($item);
+    foreach (['incoming', 'accepted', 'rejected'] as $state) {
+        if ($recovery_name !== '') {
+            $paths[] = $root . '/' . $state . '/' . $recovery_name;
+        }
+    }
     foreach (['incoming', 'accepted', 'rejected'] as $state) {
         $paths[] = $root . '/' . $state . '/' . $stored_name;
     }
@@ -384,6 +403,10 @@ function iss_content_editorial_sets_event_drop_resolve_item_path(array $item): s
     foreach (array_unique($paths) as $path) {
         $real = realpath($path);
         if (is_string($real) && strpos($real, $root . '/') === 0 && is_file($real) && is_readable($real)) {
+            $expected_hash = (string) ($provenance['sha256'] ?? '');
+            if ($expected_hash !== '' && !hash_equals($expected_hash, (string) hash_file('sha256', $real))) {
+                continue;
+            }
             return $real;
         }
     }
@@ -419,6 +442,10 @@ function iss_content_editorial_sets_event_drop_move_item_file(array $item, strin
         return '';
     }
 
+    $real_target_dir = realpath($target_dir);
+    if (!is_string($real_target_dir) || strpos($real_target_dir, $root . '/') !== 0) {
+        return '';
+    }
     $target_path = $target_dir . '/' . $stored_name;
     if (realpath($source_path) === realpath($target_path)) {
         return $target_path;
@@ -431,7 +458,15 @@ function iss_content_editorial_sets_event_drop_move_item_file(array $item, strin
             return $target_path;
         }
 
-        $target_path = $target_dir . '/' . wp_unique_filename($target_dir, $stored_name);
+        $recovery_name = iss_content_editorial_sets_event_drop_recovery_filename($item);
+        if ($recovery_name === '') {
+            return '';
+        }
+        $target_path = $target_dir . '/' . $recovery_name;
+        if (is_file($target_path)) {
+            $recovery_hash = is_readable($target_path) ? (string) hash_file('sha256', $target_path) : '';
+            return $source_hash !== '' && hash_equals($source_hash, $recovery_hash) ? $target_path : '';
+        }
     }
 
     if (!rename($source_path, $target_path)) {
@@ -507,16 +542,15 @@ function iss_content_editorial_sets_event_drop_moderate_item(int $item_id, strin
         return false;
     }
 
-    $ok = $service->update_item($item_id, $args);
-    if ($ok) {
-        $service->record_audit((int) ($item['set_id'] ?? 0), $item_id, 'event_drop_' . sanitize_key($action), __('Event Drop storage state updated.', 'iss-content-model'), [
+    return $service->update_item($item_id, $args, [
+        'action' => 'event_drop_' . sanitize_key($action),
+        'message' => __('Event Drop storage state updated.', 'iss-content-model'),
+        'payload' => [
             'action' => $action,
             'at' => $now,
             'storage_state' => (string) ($args['provenance']['storage_state'] ?? $provenance['storage_state'] ?? ''),
-        ]);
-    }
-
-    return $ok;
+        ],
+    ]);
 }
 
 function iss_content_editorial_sets_event_drop_moderate_items(array $item_ids, string $action): int

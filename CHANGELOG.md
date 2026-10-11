@@ -6,6 +6,16 @@ be recovered from Git history.
 
 ## 2026-10-11
 
+- Made failed Event Drop moderation recoverable when file movement encounters a
+  filename collision. The existing resolver now finds deterministic item paths
+  and checks known hashes; unrelated collision files remain untouched. Item
+  updates accept the caller's supplemental audit within their existing atomic
+  scope, so moderation state and both audits roll back together. File work stays
+  outside that scope; retry finds the moved bytes. Passed 33 isolated file/DB
+  recovery checks and 369 Set regressions, lint, PHPCS and PHPStan. Test files
+  were confined to a private checkout fixture mount and removed. No data/uploads
+  migration or real intake operation was required.
+
 - Completed atomic item/context writes in the existing editorial Set owner,
   including moves, status batches, promotions, candidates and required audits/
   timestamps. Reused the owner transaction helper; added shared checked parent/

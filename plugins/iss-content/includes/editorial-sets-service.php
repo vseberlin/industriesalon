@@ -646,13 +646,13 @@ class ISS_Content_Editorial_Sets_Service
         ];
     }
 
-    public function update_item(int $item_id, array $args): bool
+    public function update_item(int $item_id, array $args, array $additional_audit = []): bool
     {
         if ($item_id <= 0) {
             return false;
         }
         $saved = false;
-        $this->run_atomic_write([$this->get_sets_table_name(), $this->get_items_table_name(), $this->get_audit_table_name()], function () use ($item_id, $args, &$saved): void {
+        $this->run_atomic_write([$this->get_sets_table_name(), $this->get_items_table_name(), $this->get_audit_table_name()], function () use ($item_id, $args, $additional_audit, &$saved): void {
             $item = $this->lock_items_for_write([$item_id])[$item_id] ?? null;
             if (!$item) {
                 return;
@@ -682,6 +682,15 @@ class ISS_Content_Editorial_Sets_Service
             $this->touch_set((int) $item['set_id']);
             if (!$this->record_audit((int) $item['set_id'], $item_id, 'item_updated', __('Item updated.', 'iss-content-model'), $data)) {
                 throw new RuntimeException('Editorial Set item update could not record its required audit row.');
+            }
+            if ($additional_audit && (empty($additional_audit['action']) || !$this->record_audit(
+                (int) $item['set_id'],
+                $item_id,
+                (string) $additional_audit['action'],
+                (string) ($additional_audit['message'] ?? ''),
+                (array) ($additional_audit['payload'] ?? [])
+            ))) {
+                throw new RuntimeException('Editorial Set item update could not record its integration audit row.');
             }
             $saved = true;
         }, 'Editorial Set item update');

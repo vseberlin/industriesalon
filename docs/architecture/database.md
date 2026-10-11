@@ -43,7 +43,8 @@ The archive-candidate action runs after the owner's successful scope, so a
 failed audit emits no event. Within a caller-owned transaction, that caller still
 controls final commit/rollback and external hook side effects. File/network
 operations, promotion into editorial documents and supplemental integration/core
-audits remain separate caller responsibilities; service atomicity does not make
+audits remain separate caller responsibilities (item callers can supply a
+required additional audit to the existing update boundary); service atomicity does not make
 an entire import or media workflow transactional. Generated-key/unassigned-item
 races can still return zero through unique constraints; there is no automatic
 retry. Context positions may tie across different Sets, ordered by ID as before.
@@ -54,6 +55,16 @@ MariaDB connections. They verify rollback/retry, parent deletion races, stale
 ownership, audit/timestamp failures and caller transactions without changing real
 Set, child or audit rows. These changes need no schema/data migration or uploads
 artifact. No real import, merge, promotion or cleanup was run.
+
+Event Drop moderation uses that additional audit for its storage-state event.
+Its file move remains outside the short database transaction. The existing
+resolver checks known SHA-256 values and searches stable item-specific collision
+filenames, allowing retry after a failed database save without losing the moved
+file or selecting unrelated bytes. Target directories must resolve inside the
+private intake root. This is retry recovery, not filesystem/database atomicity;
+legacy unique-suffix moves already stranded before this change still require
+exact-path review. `editorial-set-file-recovery.php` requires an explicit writable
+`ISS_TEST_FILE_ROOT` fixture mount and never touches real intake files.
 
 Graph relationship replacement is atomic for one entity, relation family and
 source system. Name, identifier and evidence replacement are atomic for one entity and source system,
