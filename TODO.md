@@ -4,11 +4,15 @@ Immediate executable work only. Larger future programs live in `docs/project/bac
 
 ## Next
 
-- Resume the [WordPress refactoring plan](docs/project/wordpress-refactoring-plan.md):
-  verify the local website/receiver mounts against the current handoff, capture
-  the staging-compatible baseline, then version-gate the three taxonomy seed
-  routines. The native Flatpickr replacement follows the existing calendar plan;
-  implementation and staging deployment have not started.
+- Continue the [WordPress refactoring plan](docs/project/wordpress-refactoring-plan.md)
+  autonomously under the [current handoff](handoff_CURRENT.md). The user approved
+  local commits and continuation through the remaining plan on 11 October.
+  Next: atomic Set updates/key changes with audit, followed by remaining Set
+  writes, public schema/setup gates and commerce idempotency. Preserve existing
+  contracts; use isolated fixtures and sequential stateful checks. Native calendar,
+  query/code/CSS consolidation and repository-owned maintenance follow in plan
+  order. Keep writes inside the two WordPress checkout roots; no staging mutation
+  or push is authorized. Browser/WordPress 7.0/staging acceptance remains open.
 - Staff-test the deployed [shared workspace](docs/project/editor-workspace-plan.md)
   on staging: one landing, project, tour, publication and event; image/title/text,
   owner controls, recovery and native Save Draft. Verify Firefox and real

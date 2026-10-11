@@ -647,6 +647,9 @@ function iss_graph_wpcli_reconcile_command(array $args, array $assoc_args): void
     if (!empty($stats['locked'])) {
         WP_CLI::warning('Dirty queue is locked by another reconcile run.');
     }
+    if (!empty($stats['lease_lost'])) {
+        WP_CLI::warning('Dirty queue processing stopped because this run no longer owns its lease.');
+    }
 
     WP_CLI::success($dry_run ? 'ISS graph reconcile dry-run completed. No changes made.' : 'ISS graph dirty queue reconcile completed.');
 }

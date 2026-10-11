@@ -9,6 +9,26 @@ running reference and acceptance target. Local phpMyAdmin, Mailpit exposure and
 local PHP version findings are development housekeeping, not prerequisites for
 this refactor. Preserve staging access and indexing settings.
 
+## Execution checkpoint — 2026-10-11
+
+The user authorized committing the existing checkpoint and continuing this plan
+through completion autonomously. Keep reviewable commits and checks between
+slices; the earlier pause-for-confirmation requirement is superseded. Execution
+remains inside the two local WordPress roots. Push/staging deployment and host
+changes outside those roots require separate authorization.
+
+| Phase | Current state |
+| --- | --- |
+| 1 Baseline | Local mounts, backups and route/query comparisons retained; browser and WordPress 7.0 acceptance still open |
+| 2 Database/setup | Seeds, graph/queue/profile/transcript/archive boundaries and Set creation/deletion completed; remaining Set writes, setup gates and commerce retries next |
+| 3 Native frontend | Pending |
+| 4 Query/projection consolidation | Pending |
+| 5 Code/CSS consolidation | Pending |
+| 6 Maintenance | Pending within repository/local scope; target operations remain separate |
+
+Use `handoff_CURRENT.md` and the private verification receipts for live checkpoint
+state. The following starting-point observations are historical, from 7 October.
+
 ## Verified starting point
 
 Read-only SSH inspection found local website source, GitHub `main` and staging

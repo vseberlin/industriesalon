@@ -392,30 +392,37 @@ function iss_content_model_get_default_taxonomy_terms() {
     ];
 }
 
-function iss_content_model_maybe_seed_taxonomy_terms() {
+function iss_content_model_maybe_seed_taxonomy_terms(): bool {
+    if ((string) get_option(ISS_CONTENT_MODEL_TAXONOMY_SEED_OPTION, '') === ISS_CONTENT_MODEL_TAXONOMY_SEED_VERSION) {
+        return true;
+    }
+
     foreach (iss_content_model_get_default_taxonomy_terms() as $taxonomy => $terms) {
         if (!taxonomy_exists($taxonomy) || !is_array($terms)) {
-            continue;
+            return false;
         }
 
         foreach ($terms as $term) {
             $slug = isset($term['slug']) ? sanitize_title((string) $term['slug']) : '';
             $name = isset($term['name']) ? trim((string) $term['name']) : '';
             if ($slug === '' || $name === '') {
-                continue;
+                return false;
             }
 
             if (term_exists($slug, $taxonomy)) {
                 continue;
             }
 
-            wp_insert_term($name, $taxonomy, ['slug' => $slug]);
+            $created = wp_insert_term($name, $taxonomy, ['slug' => $slug]);
+            if (is_wp_error($created) && !term_exists($slug, $taxonomy)) {
+                return false;
+            }
         }
     }
 
-    update_option('iss_content_model_taxonomy_seed_version', ISS_CONTENT_MODEL_VERSION, false);
+    update_option(ISS_CONTENT_MODEL_TAXONOMY_SEED_OPTION, ISS_CONTENT_MODEL_TAXONOMY_SEED_VERSION, false);
+    return (string) get_option(ISS_CONTENT_MODEL_TAXONOMY_SEED_OPTION, '') === ISS_CONTENT_MODEL_TAXONOMY_SEED_VERSION;
 }
-add_action('init', 'iss_content_model_maybe_seed_taxonomy_terms', 30);
 
 function iss_content_model_get_initial_topic_assignments(): array
 {

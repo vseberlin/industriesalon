@@ -22,6 +22,9 @@ define('ISS_WF_IMPORT_REWRITE_VERSION', '2026-05-05-archive-routing-2');
 define('ISS_ARCHIVE_VERSION', ISS_WF_IMPORT_VERSION);
 define('ISS_ARCHIVE_PATH', ISS_WF_IMPORT_PATH);
 define('ISS_ARCHIVE_URL', ISS_WF_IMPORT_URL);
+// Independent of the plugin release; bump when the default archive terms change.
+define('ISS_WF_IMPORT_TAXONOMY_SEED_OPTION', 'iss_wf_import_taxonomy_seed_version');
+define('ISS_WF_IMPORT_TAXONOMY_SEED_VERSION', '2026-10-08-v1');
 
 define('ISS_WF_IMPORT_POST_TYPE', 'archivbeitrag');
 define('ISS_WF_IMPORT_COLLECTION_POST_TYPE', 'archivsammlung');
@@ -150,6 +153,22 @@ register_activation_hook(__FILE__, function () {
     }
     flush_rewrite_rules();
 });
+register_activation_hook(__FILE__, 'iss_wf_import_ensure_museum_digital_terms');
+
+function iss_wf_import_maybe_upgrade_taxonomy_terms(): void
+{
+    if (current_user_can('manage_options') && !wp_doing_ajax()) {
+        iss_wf_import_ensure_museum_digital_terms();
+    }
+}
+add_action('admin_init', 'iss_wf_import_maybe_upgrade_taxonomy_terms', 20);
+
+function iss_wf_import_taxonomy_seed_status_rows(array $rows): array
+{
+    iss_core_add_status_option_row($rows, 'iss-archive taxonomy seed', ISS_WF_IMPORT_TAXONOMY_SEED_OPTION, ISS_WF_IMPORT_TAXONOMY_SEED_VERSION);
+    return $rows;
+}
+add_filter('iss_core_status_rows', 'iss_wf_import_taxonomy_seed_status_rows');
 
 register_deactivation_hook(__FILE__, function () {
     flush_rewrite_rules();

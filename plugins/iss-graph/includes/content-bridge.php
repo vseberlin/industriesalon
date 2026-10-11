@@ -190,12 +190,22 @@ function iss_graph_collect_public_content_native_place_rows(WP_Post $post): arra
         return [];
     }
 
+    global $wpdb;
+
+    $queries = $wpdb->num_queries;
     $place_id = absint(get_post_meta((int) $post->ID, 'iss_primary_place_id', true));
+    if ($wpdb->num_queries > $queries && $wpdb->last_error !== '') {
+        throw new RuntimeException('Content graph synchronization could not read venue metadata.');
+    }
     if ($place_id <= 0) {
         return [];
     }
 
+    $queries = $wpdb->num_queries;
     $place = get_post($place_id);
+    if ($wpdb->num_queries > $queries && $wpdb->last_error !== '') {
+        throw new RuntimeException('Content graph synchronization could not read the venue post.');
+    }
     $register_post_type = function_exists('iss_graph_get_register_post_type')
         ? iss_graph_get_register_post_type()
         : 'register_place';
@@ -214,7 +224,7 @@ function iss_graph_collect_public_content_native_place_rows(WP_Post $post): arra
 
     $place_entity_id = (int) ($place_entity['id'] ?? 0);
     if ($place_entity_id <= 0) {
-        return [];
+        throw new RuntimeException('Content graph synchronization could not synchronize the venue entity.');
     }
 
     return [[
@@ -233,7 +243,13 @@ function iss_graph_collect_public_content_native_place_rows(WP_Post $post): arra
 
 function iss_graph_sync_public_content_entity(int $post_id): ?array
 {
+    global $wpdb;
+
+    $queries = $wpdb->num_queries;
     $post = get_post($post_id);
+    if ($wpdb->num_queries > $queries && $wpdb->last_error !== '') {
+        throw new RuntimeException('Content graph synchronization could not read the source post.');
+    }
     if (!$post instanceof WP_Post || !iss_graph_is_content_relation_post_type((string) $post->post_type)) {
         return null;
     }
@@ -242,49 +258,61 @@ function iss_graph_sync_public_content_entity(int $post_id): ?array
     $entity_kind = function_exists('iss_graph_get_entity_kind_for_post_type')
         ? iss_graph_get_entity_kind_for_post_type((string) $post->post_type)
         : sanitize_key((string) $post->post_type);
-    $existing = $service->find_entity_by_post($entity_kind, (int) $post->ID);
-
     if (in_array($post->post_status, ['auto-draft', 'trash'], true)) {
+        $existing = $service->find_entity_by_post($entity_kind, (int) $post->ID);
+        if ($wpdb->last_error !== '') {
+            throw new RuntimeException('Content graph synchronization could not read the entity to remove.');
+        }
         if ($existing) {
-            $service->delete_entity_by_post($entity_kind, (int) $post->ID);
+            $service->delete_entity((int) $existing['id']);
         }
 
         return null;
     }
 
-    $entity = $service->upsert_entity([
-        'entity_kind' => $entity_kind,
-        'post_id' => (int) $post->ID,
-        'source_system' => 'wp_post',
-        'source_id' => (string) $post->ID,
-        'canonical_slug' => $post->post_type . '-' . (int) $post->ID . '-' . (trim((string) $post->post_name) !== '' ? (string) $post->post_name : sanitize_title((string) get_the_title($post))),
-        'display_title' => get_the_title($post),
-        'summary' => (string) get_post_field('post_excerpt', $post->ID),
-        'status' => sanitize_key((string) $post->post_status),
-        'is_public' => $post->post_status === 'publish',
-        'search_visibility' => 'hidden',
-    ]);
+    $entity = null;
+    // Include native target creation (notably register venues) in this graph
+    // transaction. Source posts/meta and subsequent search updates stay outside.
+    $service->synchronize_entity_graph(function () use ($service, $post, $entity_kind, &$entity): void {
+        $entity = $service->upsert_entity([
+            'entity_kind' => $entity_kind,
+            'post_id' => (int) $post->ID,
+            'source_system' => 'wp_post',
+            'source_id' => (string) $post->ID,
+            'canonical_slug' => $post->post_type . '-' . (int) $post->ID . '-' . (trim((string) $post->post_name) !== '' ? (string) $post->post_name : sanitize_title((string) get_the_title($post))),
+            'display_title' => get_the_title($post),
+            'summary' => (string) get_post_field('post_excerpt', $post->ID),
+            'status' => sanitize_key((string) $post->post_status),
+            'is_public' => $post->post_status === 'publish',
+            'search_visibility' => 'hidden',
+        ]);
 
-    if (!$entity || empty($entity['id'])) {
-        return null;
-    }
+        if (!$entity || empty($entity['id'])) {
+            throw new RuntimeException('Content graph synchronization could not store the content entity.');
+        }
 
-    $service->replace_entity_names_for_source((int) $entity['id'], 'iss_graph_content_post_title', [[
-        'name' => get_the_title($post) ?: ($post->post_type . ' ' . (int) $post->ID),
-        'name_type' => 'primary',
-        'is_primary' => true,
-        'position' => 0,
-    ]], 'post:' . (int) $post->ID);
+        $service->replace_entity_names_for_source((int) $entity['id'], 'iss_graph_content_post_title', [[
+            'name' => get_the_title($post) ?: ($post->post_type . ' ' . (int) $post->ID),
+            'name_type' => 'primary',
+            'is_primary' => true,
+            'position' => 0,
+        ]], 'post:' . (int) $post->ID);
 
-    iss_graph_sync_wp_post_identifiers((int) $entity['id'], $post, 'wp_post');
+        iss_graph_sync_wp_post_identifiers((int) $entity['id'], $post, 'wp_post');
 
-    if (function_exists('iss_graph_sync_entity_alias_backfill')) {
-        iss_graph_sync_entity_alias_backfill((int) $entity['id']);
-    }
+        if (function_exists('iss_graph_sync_entity_alias_backfill')) {
+            iss_graph_sync_entity_alias_backfill((int) $entity['id']);
+        }
 
-    iss_graph_sync_public_content_native_relations((int) $entity['id'], $post);
+        iss_graph_sync_public_content_native_relations((int) $entity['id'], $post);
 
-    return $service->get_entity_by_id((int) $entity['id']);
+        $entity = $service->get_entity_by_id((int) $entity['id']);
+        if (!$entity) {
+            throw new RuntimeException('Content graph synchronization could not read the completed entity.');
+        }
+    });
+
+    return $entity;
 }
 
 function iss_graph_render_public_content_relations_meta_box(WP_Post $post): void
@@ -347,6 +375,8 @@ function iss_graph_render_public_content_relations_meta_box(WP_Post $post): void
 
 function iss_graph_sanitize_content_relation_rows(array $rows, string $target_kind): array
 {
+    global $wpdb;
+
     $service = iss_graph_get_service();
     $options = iss_graph_get_content_relation_options($target_kind);
     $allowed_types = array_fill_keys(array_keys($options), true);
@@ -364,6 +394,9 @@ function iss_graph_sanitize_content_relation_rows(array $rows, string $target_ki
 
         $entity_id = absint($row['entity_id'] ?? 0);
         $target_entity = $entity_id > 0 ? $service->get_entity_by_id($entity_id) : null;
+        if ($entity_id > 0 && $wpdb->last_error !== '') {
+            throw new RuntimeException('Content graph editor could not read a relation target.');
+        }
 
         if (!$target_entity || (string) ($target_entity['entity_kind'] ?? '') !== $target_kind) {
             continue;
@@ -414,37 +447,37 @@ function iss_graph_save_public_content_relations(int $post_id, WP_Post $post): v
         return;
     }
 
+    global $wpdb;
+
     $service = iss_graph_get_service();
-    $entity_kind = function_exists('iss_graph_get_entity_kind_for_post_type')
-        ? iss_graph_get_entity_kind_for_post_type((string) $post->post_type)
-        : sanitize_key((string) $post->post_type);
-    $entity = $service->find_entity_by_post($entity_kind, $post_id);
-    $person_rows = iss_graph_sanitize_content_relation_rows(iss_graph_decode_posted_rows('iss_graph_content_person_rows'), 'person');
-    $organization_rows = iss_graph_sanitize_content_relation_rows(iss_graph_decode_posted_rows('iss_graph_content_organization_rows'), 'organization');
+    $service->synchronize_entity_graph(function () use ($wpdb, $service, $post_id, $post): void {
+        $entity_kind = function_exists('iss_graph_get_entity_kind_for_post_type')
+            ? iss_graph_get_entity_kind_for_post_type((string) $post->post_type)
+            : sanitize_key((string) $post->post_type);
+        $entity = $service->find_entity_by_post($entity_kind, $post_id);
+        if ($wpdb->last_error !== '') {
+            throw new RuntimeException('Content graph editor could not read the source entity.');
+        }
+        $person_rows = iss_graph_sanitize_content_relation_rows(iss_graph_decode_posted_rows('iss_graph_content_person_rows'), 'person');
+        $organization_rows = iss_graph_sanitize_content_relation_rows(iss_graph_decode_posted_rows('iss_graph_content_organization_rows'), 'organization');
 
-    if ((!$entity || empty($entity['id'])) && ($person_rows || $organization_rows)) {
-        $entity = iss_graph_sync_public_content_entity($post_id);
-    }
+        if ((!$entity || empty($entity['id'])) && ($person_rows || $organization_rows)) {
+            $entity = iss_graph_sync_public_content_entity($post_id);
+            if (!$entity && !in_array($post->post_status, ['auto-draft', 'trash'], true)) {
+                throw new RuntimeException('Content graph editor could not create the source entity.');
+            }
+        }
 
-    $entity_id = (int) ($entity['id'] ?? 0);
-    if ($entity_id > 0) {
-        $source_ref = 'post:' . $post_id;
-        $service->replace_entity_relations_for_source(
-            $entity_id,
-            'person',
-            'content_admin',
-            $person_rows,
-            $source_ref
-        );
-        $service->replace_entity_relations_for_source(
-            $entity_id,
-            'organization',
-            'content_admin',
-            $organization_rows,
-            $source_ref
-        );
-    }
+        $entity_id = (int) ($entity['id'] ?? 0);
+        if ($entity_id > 0) {
+            $service->replace_entity_projection($entity_id, 'content_admin', [
+                'source_ref' => 'post:' . $post_id,
+                'relations' => ['person' => $person_rows, 'organization' => $organization_rows],
+            ]);
+        }
+    });
 
+    // Derived read models and search retain their own boundary after graph save.
     if (function_exists('iss_relations_sync_post_read_models')) {
         iss_relations_sync_post_read_models($post_id);
     } elseif (function_exists('iss_relations_sync_post_graph')) {

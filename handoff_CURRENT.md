@@ -1,92 +1,96 @@
-# Current handoff — 2026-10-07
+# Current handoff — 2026-10-11
 
-## Tomorrow start here
+## Execution and scope
 
-Continue website work in `/home/vladimir/wp-website` on `main`. The user asked
-to retain the refactoring plan for tomorrow and stop; implementation has not
-started. Read:
+Work in `/home/vladimir/wp-website`, branch `main`. On 11 October the user
+requested: **commit the current checkpoint and continue the refactoring plan
+through completion autonomously**. This supersedes the earlier requirement to
+pause for confirmation after every slice. Continue in small verified commits.
 
-- [WordPress refactoring plan](docs/project/wordpress-refactoring-plan.md)
-- [Native calendar and intake migration](docs/project/universal-occurrence-calendar-intake-plan.md#native-wordpress-frontend-migration)
+Keep writes inside `/home/vladimir/wp` and `/home/vladimir/wp-website`; preserve
+unrelated work. Home-level files, other drives, preservation storage and staging
+mutations remain outside scope. No push or staging deployment is authorized.
+GitHub `origin/main` was freshly checked at `fe849bc`; this checkpoint and later
+work are local commits. Follow [git-exchange.md](docs/runbooks/git-exchange.md)
+before later exchange; never pull over unrelated dirty work.
 
-First establish the correct local development mounts and record the query/UI
-baseline. Then implement version-gated taxonomy seeding as the first small
-change. Follow with atomic writes/queue locking, native frontend migration,
-query consolidation, code/CSS cleanup and predictable scheduled maintenance.
-Run changes and stateful verification sequentially.
+## Current implementation and next work
 
-The requested direction is PHP, JavaScript and CSS using native WordPress APIs,
-with no additional application framework or parallel implementation. Remove
-Flatpickr through native controls and the Interactivity API while preserving
-the existing occurrence, editorial and commerce owners. Native date/slot
-presentation and pagination changes in the plan still need staff acceptance.
-The ambiguous jQuery wording was not clarified: the plan audits first-party
-jQuery separately and does not remove WordPress admin dependencies globally.
+The first 22 slices are complete: controlled local runtime mounts, versioned
+seed delivery, graph replacement/deletion and bridge atomicity, owned queue
+leases/processing, profile and transcript consistency, archive projection
+transactions/caches, and editorial Set deletion/creation with required creation
+audit. Git history, [CHANGELOG.md](CHANGELOG.md) and
+[database.md](docs/architecture/database.md) hold the implementation record.
 
-## Runtime and exchange boundary
+Continue the [refactoring plan](docs/project/wordpress-refactoring-plan.md):
 
-- The running website/reference target is
-  `https://staging.industriesalon.info`. The 7 October SSH inspection verified
-  `vladimir@iss-prod-01`, repository `/srv/industriesalon/stage/repo`, and runtime
-  `/srv/industriesalon/stage/compose.yml`. Use the saved key with strict host
-  verification. Staging was inspected only.
-- Before this documentation closeout, local website source, GitHub main and
-  staging were all at `6c8cea7`. The closeout commit contains documentation
-  only; the deployed staging code remains `6c8cea7` until a later deliberate
-  deployment. Check current refs on resume.
-- Staging runs WordPress 7.0, PHP 8.3.31 and MariaDB 11.8.8. Core Interactivity
-  modules are present. Local exposure/PHP findings are development housekeeping,
-  not refactoring prerequisites.
-- **Local mount warning:** fresh Docker inspection found plugins, theme and
-  receiver served from the preserved `/home/vladimir/wp` checkout. This
-  supersedes the earlier handoff's claim that the website-code override is
-  active. Inspect the existing override/wrapper under
-  `~/.local/state/iss-editorial-pilot-20260921/` before choosing a controlled
-  local mount correction. Do not blindly restart base Compose.
-- Preserve the mixed archive checkout and its dirty work. Do not merge it into
-  website main, copy its old code over staging, or replace either site's database
-  with the other. Source identity, not numeric post ID, governs transfers.
+1. Finish Set updates/key changes, item/context multi-table writes and audit
+   consistency through the existing private transaction helper. Inspect caller
+   boundaries and retain protections, normalization, zero-row/no-op semantics and
+   ownership. Then finish public setup/schema gates and commerce idempotency.
+2. Migrate programme filters and shared booking/inquiry to native controls and
+   core Interactivity API; remove Flatpickr only after its last consumer moves.
+3. Simplify occurrence-backed menu dates, search queries, batched reads and
+   coalesced projection updates with measured plans and privacy/date equivalence.
+4. Extract responsibilities within existing owners; consolidate touched CSS and
+   remove obsolete paths only with saved-content/enqueue/browser evidence.
+5. Complete repository-owned maintenance commands, monitoring, backup/restore
+   verification and operational documentation within the local scope. Target
+   deployment and any host changes outside the checkout roots remain separate.
 
-## Evidence and preservation
+Next concrete functions are `ISS_Content_Editorial_Sets_Service::update_set()`
+and `update_set_key()`. Both update the Set before ignoring `record_audit()`'s
+boolean result. Reuse `run_atomic_write()`, check/lock prerequisite rows and
+preserve field/default, empty-title, unchanged-key and conflict semantics. Use
+isolated fixtures; do not run real Set imports, merges or destructive cleanup.
 
-The local diagnostic calendar dropped from 342 to 136 queries when seed
-callbacks were skipped in that process only. Staging's matching seed code needs
-the same bounded review; this is not a measured staging speed improvement.
-Staging has 66 pending graph entries, not the local 462. All 118 staging tables
-are InnoDB; sampled orphan metadata/graph-edge checks returned zero. Four public
-staging routes returned HTTP 200 and retain noindex/nofollow.
+## Runtime and evidence
 
-Keep the deployed event presentation, automatic date rotation, shared JSON
-workspace/recovery, moderated feedback and rights-controlled private Sets.
-Source dates, historical chronology, private contacts, captions, relationships,
-uploads and preservation records remain under their existing owners.
-Keep checking DB template overrides for `single-ausstellung`,
-`page-projekte` and `page-publikationen`.
+- `wp_app` serves plugin/theme/receiver code from `wp-website`; core, database,
+  uploads and private intake remain in `wp`. Mounts checked again 11 October.
+- Use Compose project `wp`, base `/home/vladimir/wp/docker-compose.yml` and
+  `/home/vladimir/wp-website/var/refactoring-20261008/website-code.yml` together.
+  Do not recreate from base Compose alone or use the old home-level wrapper.
+- CLI: `var/refactoring-20261008/wp`; pass
+  `--exec='define("DISABLE_WP_CRON", true);'` for isolated checks. Stateful suites
+  run sequentially. Do not send real notifications from tests.
+- Local runtime: WordPress 7.1.3, web PHP 8.2.30, CLI PHP 8.3.31, MariaDB 10.11.15.
+  Staging's last known reference was WordPress 7.0/PHP 8.3.31/MariaDB 11.8.8 on
+  7 October; these are historical facts, not current health/acceptance evidence.
+- Private ignored evidence directory: `var/refactoring-20261008/` (mode 0700).
+  `autonomous-checkpoint-tests.json` and checkpoint logs record the combined
+  regression pass: 3,134 checks across 21 suites, PHP lint, PHPCS and PHPStan.
+  Per-slice `*-verification.json` receipts retain earlier scope.
+- Latest Set creation receipt: `editorial-set-create-verification.json`, with
+  133 creation and 181 deletion checks, lint/PHPCS/PHPStan and HTTP 200. Real
+  Set/items/links/audit/options/queue rows were retained. The broader checkpoint
+  regression pass covers the accumulated code together before committing.
+- Source before-images and backup hashes remain in `*-backup-verification.json`.
+  Set backup: `editorial-set-delete-before.sql.gz`; archive/graph backup:
+  `graph-archive-before.sql.gz`. Original database/files baselines and seven-route
+  comparisons remain available. Their gzip/hash/SQL checks passed; a full restore
+  rehearsal is still outstanding. Never restore these over later editorial work.
 
-Existing imports and migrations are already applied. Do not replay apply to
-verify them. Detailed prior delivery/receipt context remains in
-`git show 6c8cea7:handoff_CURRENT.md`, canonical architecture docs and changelog.
-The prior handoff records these private evidence locations; verify their host
-and existence before use:
+## Contracts and release gates
 
-- `/home/vladimir/server-actions/events-sync-20260927/private/`
-- `/home/vladimir/server-actions/atlas-sync-20260927/private/`
-- `/home/vladimir/server-actions/programme-20260922/`
-- `/srv/industriesalon/stage/backups/20260922-132743/`
+Creation/deletion are atomic within the Set owner. Other Set audit callers still
+need their own transaction work. Caller transactions retain final decisions;
+generated-key races can return zero. Later attachment/import/merge operations
+are separate until refactored. Archive source preparation commits before graph
+writes; projection caches discard pending observations. Canonical editorial
+source/cache coordination and preservation storage retain their owners.
 
-These are prior receipts, not a fresh backup for tomorrow's mutations.
-Local/staging post IDs differ; for example, staging 27415 is Denkmaltag while
-local 27415 is unrelated. Preserve useful template edits and later editorial
-work during any scoped migration/rollback.
+The taxonomy migration is applied locally. Its delivery artifact is
+`ops/migrations/2026-10-08-taxonomy-seeds.php` with target-local before-images and
+check/apply/verify; do not replay its completed local application. Current graph,
+archive and Set code changes need no schema/data migration or uploads artifact.
+Before future commits, check whether their changes introduce such dependencies.
 
-## Verification and delivery
-
-Planning links and Git whitespace checks passed. No source implementation,
-database migration, uploads artifact, runtime switch, restart or deployment was
-performed. This documentation closeout needs no SQL or uploads artifacts.
-Existing Firefox/authenticated-editor/staff UAT remains listed in `TODO.md`;
-do not turn prior automated checks into new visual acceptance.
-
-Use the plan's per-phase verification and rollback gates. Fresh staging status,
-logs and backup verification precede any later staging mutation. Deliver code
-through the website checkout, GitHub main and a coordinated staging release.
+Browser/editor/responsive, Firefox/WebKit, WordPress 7.0 and staging acceptance
+remain open. Backend tests do not establish those results. Preserve DB template
+overrides (`single-ausstellung`, `page-projekte`, `page-publikationen`), editorial
+history/recovery, private contacts/Sets, date rotation, moderation and uploads.
+No full-database equality claim: concurrent editor activity exists; per-suite
+receipts state the exact retained rows. No real queue has been drained. Keep the
+map thread and unrelated TODOs outside this refactor.

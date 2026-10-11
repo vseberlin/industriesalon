@@ -76,13 +76,19 @@ function iss_graph_backfill_archive_objects(): int
 
 function iss_graph_get_archive_object_projection(int $post_id): ?array
 {
+    global $wpdb;
+
     if (function_exists('iss_wf_import_get_object_service')) {
         $projection = iss_wf_import_get_object_service()->ensure_projection_for_post($post_id);
 
         return is_array($projection) ? $projection : null;
     }
 
+    $queries = $wpdb->num_queries;
     $post = get_post($post_id);
+    if ($wpdb->num_queries > $queries && $wpdb->last_error !== '') {
+        throw new RuntimeException('Archive graph synchronization could not read the source post.');
+    }
     if (!$post instanceof WP_Post || $post->post_type !== iss_graph_get_archive_object_post_type()) {
         return null;
     }
@@ -138,11 +144,16 @@ function iss_graph_find_archive_named_entity_for_placeholder_source(
     string $source_system,
     string $display_title
 ): ?array {
+    global $wpdb;
+
     $service = iss_graph_get_service();
     $matches = $service->find_entities_by_normalized_name($display_title, [
         'entity_kind' => $entity_kind,
         'limit' => 20,
     ]);
+    if ($wpdb->last_error !== '') {
+        throw new RuntimeException('Archive graph synchronization could not read placeholder matches.');
+    }
 
     $source_system = sanitize_key($source_system);
     $preferred = [];
@@ -159,7 +170,11 @@ function iss_graph_find_archive_named_entity_for_placeholder_source(
     if (count($preferred) === 1) {
         $match = reset($preferred);
 
-        return is_array($match) ? $service->get_entity_by_id((int) ($match['id'] ?? 0)) : null;
+        $entity = is_array($match) ? $service->get_entity_by_id((int) ($match['id'] ?? 0)) : null;
+        if (!$entity || $wpdb->last_error !== '') {
+            throw new RuntimeException('Archive graph synchronization could not read the matched entity.');
+        }
+        return $entity;
     }
 
     return null;
@@ -261,6 +276,8 @@ function iss_graph_ensure_archive_named_entity(
     string $display_title,
     array $extra_entity_data = []
 ): ?array {
+    global $wpdb;
+
     $service = iss_graph_get_service();
     $display_title = sanitize_text_field($display_title);
     if ($display_title === '') {
@@ -299,7 +316,7 @@ function iss_graph_ensure_archive_named_entity(
     ]);
 
     if (!$entity) {
-        return null;
+        throw new RuntimeException('Archive graph synchronization could not resolve a named entity.');
     }
 
     $service->replace_entity_names_for_source((int) $entity['id'], 'archive_title', [[
@@ -319,17 +336,21 @@ function iss_graph_ensure_archive_named_entity(
         'status' => 'accepted',
     ]], 'entity:' . (int) $entity['id']);
 
-    return $service->get_entity_by_id((int) $entity['id']);
+    $saved = $service->get_entity_by_id((int) $entity['id']);
+    if (!$saved || $wpdb->last_error !== '') {
+        throw new RuntimeException('Archive graph synchronization could not read the saved named entity.');
+    }
+    return $saved;
 }
 
-function iss_graph_build_archive_object_relation_rows(int $object_post_id): array
+function iss_graph_build_archive_object_relation_rows(int $object_post_id, ?array $object_projection = null, ?array $relation_projection = null): array
 {
-    $projection = iss_graph_get_archive_object_relation_projection($object_post_id);
+    $projection = $relation_projection ?? iss_graph_get_archive_object_relation_projection($object_post_id);
     $people_rows = iss_graph_build_archive_object_people_rows($projection);
 
     return [
         'organization_rows' => array_merge(
-            iss_graph_build_archive_object_organization_rows($object_post_id),
+            iss_graph_build_archive_object_organization_rows($object_post_id, $object_projection),
             (array) ($people_rows['organization_rows'] ?? [])
         ),
         'person_rows' => (array) ($people_rows['person_rows'] ?? []),
@@ -337,9 +358,9 @@ function iss_graph_build_archive_object_relation_rows(int $object_post_id): arra
     ];
 }
 
-function iss_graph_build_archive_object_organization_rows(int $object_post_id): array
+function iss_graph_build_archive_object_organization_rows(int $object_post_id, ?array $projection = null): array
 {
-    $projection = iss_graph_get_archive_object_projection($object_post_id);
+    $projection = $projection ?? iss_graph_get_archive_object_projection($object_post_id);
     if (!$projection) {
         return [];
     }
@@ -475,6 +496,8 @@ function iss_graph_build_archive_object_person_rows(array $projection): array
 
 function iss_graph_build_archive_object_place_rows(array $projection): array
 {
+    global $wpdb;
+
     $rows = [];
     $position = 0;
 
@@ -489,8 +512,21 @@ function iss_graph_build_archive_object_place_rows(array $projection): array
         }
 
         $place_entity = iss_graph_get_service()->find_entity_by_post('place', $place_post_id);
+        if ($wpdb->last_error !== '') {
+            throw new RuntimeException('Archive graph synchronization could not read the local place entity.');
+        }
         if (!$place_entity && function_exists('iss_graph_sync_register_place_entity')) {
-            $place_entity = iss_graph_sync_register_place_entity($place_post_id);
+            $queries = $wpdb->num_queries;
+            $place_post = get_post($place_post_id);
+            if ($wpdb->num_queries > $queries && $wpdb->last_error !== '') {
+                throw new RuntimeException('Archive graph synchronization could not read the local place post.');
+            }
+            if ($place_post instanceof WP_Post && $place_post->post_type === iss_graph_get_register_post_type()) {
+                $place_entity = iss_graph_sync_register_place_entity($place_post_id);
+                if (!$place_entity) {
+                    throw new RuntimeException('Archive graph synchronization could not create the local place entity.');
+                }
+            }
         }
 
         if (!$place_entity) {
@@ -553,103 +589,129 @@ function iss_graph_build_archive_object_place_rows(array $projection): array
 
 function iss_graph_sync_archive_object_entity(int $post_id): ?array
 {
+    global $wpdb;
+
+    $queries = $wpdb->num_queries;
     $post = get_post($post_id);
+    if ($wpdb->num_queries > $queries && $wpdb->last_error !== '') {
+        throw new RuntimeException('Archive graph synchronization could not read the source post.');
+    }
     if (!$post instanceof WP_Post || $post->post_type !== iss_graph_get_archive_object_post_type()) {
         return null;
     }
 
-    $projection = iss_graph_get_archive_object_projection($post_id);
+    // Prepare both archive projections together, before the separate graph write.
+    $projection = null;
+    $relation_projection = [];
+    $prepare = static function () use ($post_id, &$projection, &$relation_projection): void {
+        $projection = iss_graph_get_archive_object_projection($post_id);
+        if ($projection) {
+            $relation_projection = iss_graph_get_archive_object_relation_projection($post_id);
+        }
+    };
+    if (function_exists('iss_wf_import_get_object_service')) {
+        iss_wf_import_get_object_service()->synchronize_projection($post_id, $prepare, true);
+    } else {
+        $prepare();
+    }
     if (!$projection) {
         return null;
     }
-
     $service = iss_graph_get_service();
-    $object_key = trim((string) ($projection['object_key'] ?? ''));
-    if ($object_key === '') {
-        $object_key = 'wp-id:' . $post_id;
-    }
+    $entity = null;
+    $service->synchronize_entity_graph(function () use ($wpdb, $service, $post, $post_id, $projection, $relation_projection, &$entity): void {
+        $object_key = trim((string) ($projection['object_key'] ?? ''));
+        if ($object_key === '') {
+            $object_key = 'wp-id:' . $post_id;
+        }
 
-    $entity = $service->upsert_entity([
-        'entity_kind' => 'archive_object',
-        'post_id' => $post_id,
-        'source_system' => 'archive_object',
-        'source_id' => $object_key,
-        'canonical_slug' => trim((string) $post->post_name) !== '' ? (string) $post->post_name : ('archive-object-' . $post_id),
-        'display_title' => sanitize_text_field((string) ($projection['title'] ?? get_the_title($post))),
-        'summary' => sanitize_textarea_field((string) ($projection['summary'] ?? get_post_field('post_excerpt', $post_id))),
-        'status' => sanitize_key((string) $post->post_status),
-        'is_public' => $post->post_status === 'publish',
-        'search_visibility' => 'hidden',
-        'sort_start' => (int) ($projection['sort_year_start'] ?? 0),
-        'sort_end' => (int) ($projection['sort_year_end'] ?? 0),
-    ]);
+        $entity = $service->upsert_entity([
+            'entity_kind' => 'archive_object',
+            'post_id' => $post_id,
+            'source_system' => 'archive_object',
+            'source_id' => $object_key,
+            'canonical_slug' => trim((string) $post->post_name) !== '' ? (string) $post->post_name : ('archive-object-' . $post_id),
+            'display_title' => sanitize_text_field((string) ($projection['title'] ?? get_the_title($post))),
+            'summary' => sanitize_textarea_field((string) ($projection['summary'] ?? get_post_field('post_excerpt', $post_id))),
+            'status' => sanitize_key((string) $post->post_status),
+            'is_public' => $post->post_status === 'publish',
+            'search_visibility' => 'hidden',
+            'sort_start' => (int) ($projection['sort_year_start'] ?? 0),
+            'sort_end' => (int) ($projection['sort_year_end'] ?? 0),
+        ]);
 
-    if (!$entity) {
-        return null;
-    }
+        if (!$entity) {
+            throw new RuntimeException('Archive graph synchronization could not store the object entity.');
+        }
 
-    $entity_id = (int) ($entity['id'] ?? 0);
-    if ($entity_id <= 0) {
-        return null;
-    }
+        $entity_id = (int) ($entity['id'] ?? 0);
+        if ($entity_id <= 0) {
+            throw new RuntimeException('Archive graph synchronization returned an invalid object entity.');
+        }
 
-    $service->replace_entity_names_for_source($entity_id, 'archive_object_title', [[
-        'name' => sanitize_text_field((string) ($projection['title'] ?? get_the_title($post))),
-        'name_type' => 'primary',
-        'is_primary' => true,
-        'position' => 0,
-    ]], 'post:' . $post_id);
+        $service->replace_entity_names_for_source($entity_id, 'archive_object_title', [[
+            'name' => sanitize_text_field((string) ($projection['title'] ?? get_the_title($post))),
+            'name_type' => 'primary',
+            'is_primary' => true,
+            'position' => 0,
+        ]], 'post:' . $post_id);
 
-    $identifier_rows = [[
-        'namespace' => 'archive_object_id',
-        'value' => $object_key,
-        'label' => 'Archive object ID',
-        'trust_level' => 'trusted_auto_link',
-        'confidence' => 100,
-        'is_primary' => true,
-        'status' => 'accepted',
-    ]];
-    $source_id = trim((string) ($projection['source_id'] ?? ''));
-    if ($source_id !== '') {
-        $identifier_rows[] = [
-            'namespace' => 'archive_source_id',
-            'value' => $source_id,
-            'label' => 'Archive source ID',
-            'trust_level' => 'trusted_review',
-            'confidence' => 80,
+        $identifier_rows = [[
+            'namespace' => 'archive_object_id',
+            'value' => $object_key,
+            'label' => 'Archive object ID',
+            'trust_level' => 'trusted_auto_link',
+            'confidence' => 100,
+            'is_primary' => true,
             'status' => 'accepted',
-        ];
-    }
-    iss_graph_sync_wp_post_identifiers($entity_id, $post, 'archive_object', $identifier_rows);
+        ]];
+        $source_id = trim((string) ($projection['source_id'] ?? ''));
+        if ($source_id !== '') {
+            $identifier_rows[] = [
+                'namespace' => 'archive_source_id',
+                'value' => $source_id,
+                'label' => 'Archive source ID',
+                'trust_level' => 'trusted_review',
+                'confidence' => 80,
+                'status' => 'accepted',
+            ];
+        }
+        iss_graph_sync_wp_post_identifiers($entity_id, $post, 'archive_object', $identifier_rows);
 
-    if (function_exists('iss_graph_sync_entity_alias_backfill')) {
-        iss_graph_sync_entity_alias_backfill($entity_id);
-    }
+        if (function_exists('iss_graph_sync_entity_alias_backfill')) {
+            iss_graph_sync_entity_alias_backfill($entity_id);
+        }
 
-    $relation_rows = iss_graph_build_archive_object_relation_rows($post_id);
-    $service->replace_entity_relations_for_source(
-        $entity_id,
-        'organization',
-        'archive_projection',
-        (array) ($relation_rows['organization_rows'] ?? []),
-        'post:' . $post_id
-    );
-    $service->replace_entity_relations_for_source(
-        $entity_id,
-        'person',
-        'archive_projection',
-        (array) ($relation_rows['person_rows'] ?? []),
-        'post:' . $post_id
-    );
-    $service->replace_entity_relations_for_source(
-        $entity_id,
-        'place',
-        'archive_projection',
-        (array) ($relation_rows['place_rows'] ?? []),
-        'post:' . $post_id
-    );
+        $relation_rows = iss_graph_build_archive_object_relation_rows($post_id, $projection, $relation_projection);
+        $service->replace_entity_relations_for_source(
+            $entity_id,
+            'organization',
+            'archive_projection',
+            (array) ($relation_rows['organization_rows'] ?? []),
+            'post:' . $post_id
+        );
+        $service->replace_entity_relations_for_source(
+            $entity_id,
+            'person',
+            'archive_projection',
+            (array) ($relation_rows['person_rows'] ?? []),
+            'post:' . $post_id
+        );
+        $service->replace_entity_relations_for_source(
+            $entity_id,
+            'place',
+            'archive_projection',
+            (array) ($relation_rows['place_rows'] ?? []),
+            'post:' . $post_id
+        );
 
-    return $service->get_entity_by_id($entity_id);
+        $entity = $service->get_entity_by_id($entity_id);
+        if (!$entity || $wpdb->last_error !== '') {
+            throw new RuntimeException('Archive graph synchronization could not read the saved object entity.');
+        }
+    });
+
+    return $entity;
 }
 
 function iss_graph_get_archive_objects_for_place(int $place_post_id, int $limit = 6): array

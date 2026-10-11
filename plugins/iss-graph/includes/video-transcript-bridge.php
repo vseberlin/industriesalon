@@ -28,7 +28,13 @@ function iss_graph_video_transcript_is_video_post(WP_Post $post): bool
 
 function iss_graph_video_transcript_get_status(int $post_id, bool $has_content): string
 {
+    global $wpdb;
+
+    $queries = $wpdb->num_queries;
     $status = sanitize_key((string) get_post_meta($post_id, 'iss_video_transcript_status', true));
+    if ($wpdb->num_queries > $queries && $wpdb->last_error !== '') {
+        throw new RuntimeException('Video transcript synchronization could not read transcript status.');
+    }
     if (function_exists('iss_content_model_resolve_video_transcript_status')) {
         return iss_content_model_resolve_video_transcript_status($status, $has_content);
     }
@@ -73,12 +79,22 @@ function iss_graph_video_transcript_timecode_id(string $timecode): string
 
 function iss_graph_video_transcript_extract_segments(int $post_id): array
 {
+    global $wpdb;
+
+    $queries = $wpdb->num_queries;
     $raw_content = (string) get_post_field('post_content', $post_id);
+    if ($wpdb->num_queries > $queries && $wpdb->last_error !== '') {
+        throw new RuntimeException('Video transcript synchronization could not read transcript content.');
+    }
     if (trim(wp_strip_all_tags($raw_content)) === '' && trim($raw_content) === '') {
         return [];
     }
 
+    $queries = $wpdb->num_queries;
     $rendered = do_blocks($raw_content);
+    if ($wpdb->num_queries > $queries && $wpdb->last_error !== '') {
+        throw new RuntimeException('Video transcript synchronization could not render transcript content.');
+    }
     if (trim((string) $rendered) === '') {
         $rendered = $raw_content;
     }
@@ -211,6 +227,9 @@ function iss_graph_video_transcript_get_candidate_names(): array
 
     // phpcs:ignore WordPress.DB.PreparedSQL.NotPrepared -- Placeholder lists are built from sanitized fixed arrays above, then prepared with values.
     $rows = $wpdb->get_results($wpdb->prepare($sql, $values), ARRAY_A);
+    if ($wpdb->last_error !== '') {
+        throw new RuntimeException('Video transcript synchronization could not read candidate names.');
+    }
     if (!is_array($rows)) {
         return [];
     }
@@ -399,7 +418,13 @@ function iss_graph_video_transcript_collect_mentions(int $post_id, array $segmen
 
 function iss_graph_video_transcript_build_evidence_rows(int $post_id, array $mentions, string $transcript_status): array
 {
+    global $wpdb;
+
+    $queries = $wpdb->num_queries;
     $permalink = (string) get_permalink($post_id);
+    if ($wpdb->num_queries > $queries && $wpdb->last_error !== '') {
+        throw new RuntimeException('Video transcript synchronization could not read the source URL.');
+    }
     $rows = [];
     foreach ($mentions as $mention) {
         if (!is_array($mention)) {
@@ -445,10 +470,15 @@ function iss_graph_video_transcript_get_reviewed_target_ids(int $entity_id): arr
         return [];
     }
 
+    global $wpdb;
+
     $review_rows = iss_graph_get_service()->get_evidence_refs_for_entity($entity_id, [
         'source_system' => iss_graph_video_transcript_review_source_system(),
         'limit' => 500,
     ]);
+    if ($wpdb->last_error !== '') {
+        throw new RuntimeException('Video transcript synchronization could not read review decisions.');
+    }
 
     $target_ids = [];
     foreach ($review_rows as $row) {
@@ -486,51 +516,71 @@ function iss_graph_video_transcript_filter_reviewed_mentions(array $mentions, in
 
 function iss_graph_sync_video_transcript_mentions(int $post_id): array
 {
+    global $wpdb;
+
+    $queries = $wpdb->num_queries;
     $post = get_post($post_id);
+    if ($wpdb->num_queries > $queries && $wpdb->last_error !== '') {
+        throw new RuntimeException('Video transcript synchronization could not read the source post.');
+    }
+    $result = ['synced' => false, 'entity_id' => 0, 'mentions' => 0];
     if (!$post instanceof WP_Post || !iss_graph_video_transcript_is_video_post($post)) {
-        return [
-            'synced' => false,
-            'entity_id' => 0,
-            'mentions' => 0,
-        ];
+        return $result;
     }
 
-    $entity = iss_graph_get_service()->find_entity_by_post('video', $post_id);
-    if (!$entity && function_exists('iss_graph_sync_public_content_entity')) {
-        $entity = iss_graph_sync_public_content_entity($post_id);
-    }
-
-    $entity_id = (int) ($entity['id'] ?? 0);
-    if ($entity_id <= 0) {
-        return [
-            'synced' => false,
-            'entity_id' => 0,
-            'mentions' => 0,
-        ];
-    }
-
+    // Block rendering can invoke other owners; keep it outside graph write locks.
     $segments = iss_graph_video_transcript_extract_segments($post_id);
     $transcript_status = iss_graph_video_transcript_get_status($post_id, $segments !== []);
-    $mentions = in_array($transcript_status, ['excerpt', 'full'], true)
-        ? iss_graph_video_transcript_collect_mentions($post_id, $segments, $transcript_status)
-        : [];
-    $mentions = iss_graph_video_transcript_filter_reviewed_mentions($mentions, $entity_id);
-    $rows = iss_graph_video_transcript_build_evidence_rows($post_id, $mentions, $transcript_status);
 
-    iss_graph_get_service()->replace_entity_evidence_refs_for_source(
-        $entity_id,
-        iss_graph_video_transcript_source_system(),
-        $rows,
-        'post:' . $post_id
-    );
+    return iss_graph_sync_video_transcript_segments($post, $segments, $transcript_status);
+}
 
-    return [
-        'synced' => true,
-        'entity_id' => $entity_id,
-        'mentions' => count($rows),
-        'segments' => count($segments),
-        'status' => $transcript_status,
-    ];
+/** Share the evidence writer with reviews that render before taking write locks. */
+function iss_graph_sync_video_transcript_segments(WP_Post $post, array $segments, string $transcript_status): array
+{
+    global $wpdb;
+
+    $post_id = (int) $post->ID;
+    $result = ['synced' => false, 'entity_id' => 0, 'mentions' => 0];
+    $service = iss_graph_get_service();
+    $service->synchronize_entity_graph(function () use ($wpdb, $service, $post_id, $post, $segments, $transcript_status, &$result): void {
+        $entity = $service->find_entity_by_post('video', $post_id);
+        if ($wpdb->last_error !== '') {
+            throw new RuntimeException('Video transcript synchronization could not read the video entity.');
+        }
+        if (!$entity && function_exists('iss_graph_sync_public_content_entity')) {
+            $entity = iss_graph_sync_public_content_entity($post_id);
+            if (!$entity && !in_array($post->post_status, ['auto-draft', 'trash'], true)) {
+                throw new RuntimeException('Video transcript synchronization could not create the video entity.');
+            }
+        }
+
+        $entity_id = (int) ($entity['id'] ?? 0);
+        if ($entity_id <= 0) {
+            return;
+        }
+        $mentions = in_array($transcript_status, ['excerpt', 'full'], true)
+            ? iss_graph_video_transcript_collect_mentions($post_id, $segments, $transcript_status)
+            : [];
+        $mentions = iss_graph_video_transcript_filter_reviewed_mentions($mentions, $entity_id);
+        $rows = iss_graph_video_transcript_build_evidence_rows($post_id, $mentions, $transcript_status);
+
+        $service->replace_entity_evidence_refs_for_source(
+            $entity_id,
+            iss_graph_video_transcript_source_system(),
+            $rows,
+            'post:' . $post_id
+        );
+        $result = [
+            'synced' => true,
+            'entity_id' => $entity_id,
+            'mentions' => count($rows),
+            'segments' => count($segments),
+            'status' => $transcript_status,
+        ];
+    });
+
+    return $result;
 }
 
 function iss_graph_video_transcript_decode_evidence_note(array $evidence): array
@@ -591,17 +641,25 @@ function iss_graph_video_transcript_get_review_rows_for_video(int $post_id): arr
 
 function iss_graph_video_transcript_find_evidence_by_id(int $post_id, int $evidence_id): ?array
 {
+    global $wpdb;
+
     if ($post_id <= 0 || $evidence_id <= 0) {
         return null;
     }
 
     $entity = iss_graph_get_service()->find_entity_by_post('video', $post_id);
+    if ($wpdb->last_error !== '') {
+        throw new RuntimeException('Transcript review could not read the video entity.');
+    }
     $entity_id = (int) ($entity['id'] ?? 0);
     if ($entity_id <= 0) {
         return null;
     }
 
     $evidence = iss_graph_get_service()->get_evidence_ref_by_id($evidence_id);
+    if ($wpdb->last_error !== '') {
+        throw new RuntimeException('Transcript review could not read pending evidence.');
+    }
     if (
         !$evidence
         || (int) ($evidence['entity_id'] ?? 0) !== $entity_id
@@ -616,6 +674,8 @@ function iss_graph_video_transcript_find_evidence_by_id(int $post_id, int $evide
 
 function iss_graph_video_transcript_upsert_review_decision(int $entity_id, int $target_id, string $status, array $source_evidence = []): void
 {
+    global $wpdb;
+
     if ($entity_id <= 0 || $target_id <= 0) {
         return;
     }
@@ -630,6 +690,9 @@ function iss_graph_video_transcript_upsert_review_decision(int $entity_id, int $
         'source_system' => iss_graph_video_transcript_review_source_system(),
         'limit' => 500,
     ]);
+    if ($wpdb->last_error !== '') {
+        throw new RuntimeException('Transcript review could not read existing decisions.');
+    }
     foreach ($existing_rows as $row) {
         if (is_array($row) && absint($row['target_id'] ?? 0) === $target_id) {
             $existing_id = (int) ($row['id'] ?? 0);
@@ -639,6 +702,9 @@ function iss_graph_video_transcript_upsert_review_decision(int $entity_id, int $
 
     $source_note = iss_graph_video_transcript_decode_evidence_note($source_evidence);
     $target = iss_graph_get_service()->get_entity_by_id($target_id);
+    if ($wpdb->last_error !== '') {
+        throw new RuntimeException('Transcript review could not read the decision target.');
+    }
     $target_title = $target ? (string) ($target['display_title'] ?? '') : ('Entity ' . $target_id);
     $note = wp_json_encode([
         'decision_type' => 'video_transcript_review',
@@ -648,22 +714,28 @@ function iss_graph_video_transcript_upsert_review_decision(int $entity_id, int $
         'source_note' => $source_note,
     ], JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
 
-    iss_graph_get_service()->upsert_entity_evidence_ref($entity_id, [
-        'id' => $existing_id,
+    $data = [
+        'entity_id' => $entity_id,
         'target_kind' => 'entity',
         'target_id' => $target_id,
         'source_system' => iss_graph_video_transcript_review_source_system(),
         'source_ref' => 'entity:' . $entity_id,
-        'source_url' => (string) ($source_evidence['source_url'] ?? ''),
-        'label' => sprintf('Transcript review: %s', $target_title),
-        'note' => is_string($note) ? $note : '',
-        'confidence' => (int) ($source_evidence['confidence'] ?? 0),
+        'source_url' => esc_url_raw((string) ($source_evidence['source_url'] ?? '')),
+        'label' => sanitize_text_field(sprintf('Transcript review: %s', $target_title)),
+        'note' => is_string($note) ? sanitize_textarea_field($note) : '',
+        'confidence' => iss_graph_get_service()->normalize_confidence($source_evidence['confidence'] ?? 0),
         'status' => $status,
-    ]);
+    ];
+    $saved = iss_graph_get_service()->upsert_entity_evidence_ref($entity_id, ['id' => $existing_id] + $data);
+    if (!$saved || $wpdb->last_error !== '' || array_intersect_key($saved, $data) != $data) {
+        throw new RuntimeException('Transcript review could not store the decision.');
+    }
 }
 
 function iss_graph_video_transcript_append_graph_relation(int $from_entity_id, int $target_id, string $target_kind): bool
 {
+    global $wpdb;
+
     $target_kind = sanitize_key($target_kind);
     if (!in_array($target_kind, ['person', 'organization'], true)) {
         return false;
@@ -674,6 +746,9 @@ function iss_graph_video_transcript_append_graph_relation(int $from_entity_id, i
         'source_system' => 'content_admin',
         'limit' => 500,
     ]);
+    if ($wpdb->last_error !== '') {
+        throw new RuntimeException('Transcript review could not read existing relations.');
+    }
     $rows = [];
     foreach ($existing as $index => $row) {
         if (!is_array($row)) {
@@ -729,7 +804,7 @@ function iss_graph_video_transcript_append_place_relation(int $post_id, array $t
     }
 
     $place_post_id = absint($target['post_id'] ?? 0);
-    if ($place_post_id <= 0) {
+    if ($place_post_id <= 0 || !iss_relations_is_usable_place($place_post_id)) {
         return false;
     }
 
@@ -748,19 +823,24 @@ function iss_graph_video_transcript_append_place_relation(int $post_id, array $t
     ];
 
     iss_relations_update_post_relations($post_id, $relations);
-    if (function_exists('iss_relations_sync_post_read_models')) {
-        iss_relations_sync_post_read_models($post_id);
-    }
 
     return true;
 }
 
 function iss_graph_video_transcript_promote_evidence(int $post_id, array $evidence): bool
 {
+    global $wpdb;
+
     $entity = iss_graph_get_service()->find_entity_by_post('video', $post_id);
+    if ($wpdb->last_error !== '') {
+        throw new RuntimeException('Transcript review could not read the promotion source.');
+    }
     $from_entity_id = (int) ($entity['id'] ?? 0);
     $target_id = absint($evidence['target_id'] ?? 0);
     $target = $target_id > 0 ? iss_graph_get_service()->get_entity_by_id($target_id) : null;
+    if ($wpdb->last_error !== '') {
+        throw new RuntimeException('Transcript review could not read the promotion target.');
+    }
     if ($from_entity_id <= 0 || !$target) {
         return false;
     }
@@ -781,7 +861,12 @@ function iss_graph_video_transcript_promote_evidence(int $post_id, array $eviden
 
 function iss_graph_video_transcript_dismiss_evidence(int $post_id, array $evidence): bool
 {
+    global $wpdb;
+
     $entity = iss_graph_get_service()->find_entity_by_post('video', $post_id);
+    if ($wpdb->last_error !== '') {
+        throw new RuntimeException('Transcript review could not read the dismissal source.');
+    }
     $from_entity_id = (int) ($entity['id'] ?? 0);
     $target_id = absint($evidence['target_id'] ?? 0);
     if ($from_entity_id <= 0 || $target_id <= 0) {
@@ -904,6 +989,8 @@ add_action('add_meta_boxes', 'iss_graph_add_video_transcript_review_meta_box');
 
 function iss_graph_save_video_transcript_review(int $post_id, WP_Post $post): void
 {
+    global $wpdb;
+
     if (!iss_graph_video_transcript_is_video_post($post)) {
         return;
     }
@@ -932,25 +1019,69 @@ function iss_graph_save_video_transcript_review(int $post_id, WP_Post $post): vo
         iss_graph_video_transcript_posted_ids('iss_graph_video_transcript_dismiss'),
         $accepted_ids
     );
+    if (!$accepted_ids && !$dismissed_ids) {
+        return;
+    }
 
+    $segments = iss_graph_video_transcript_extract_segments($post_id);
+    $transcript_status = iss_graph_video_transcript_get_status($post_id, $segments !== []);
+    // The Metadata API remains the source writer; postpone its derived callbacks.
+    $deferred_hooks = [];
+    foreach (['added_post_meta', 'updated_post_meta', 'deleted_post_meta'] as $hook) {
+        foreach (['iss_relations_sync_post_terms_on_meta_change', 'iss_graph_sync_public_search_on_meta_change'] as $callback) {
+            $priority = has_action($hook, $callback);
+            if ($priority !== false) {
+                $deferred_hooks[] = [$hook, $callback, $priority];
+                remove_action($hook, $callback, $priority);
+            }
+        }
+    }
+    $cache_suspended = wp_suspend_cache_addition();
+    wp_suspend_cache_addition(true);
     $changed = false;
-    foreach ($accepted_ids as $evidence_id) {
-        $evidence = iss_graph_video_transcript_find_evidence_by_id($post_id, (int) $evidence_id);
-        if ($evidence && iss_graph_video_transcript_promote_evidence($post_id, $evidence)) {
-            $changed = true;
+    $place_promoted = false;
+    try {
+        iss_graph_get_service()->synchronize_video_transcript_review(function () use ($wpdb, $post_id, $accepted_ids, $dismissed_ids, $segments, $transcript_status, &$changed, &$place_promoted): void {
+            $row = $wpdb->get_row($wpdb->prepare("SELECT * FROM {$wpdb->posts} WHERE ID = %d FOR UPDATE", $post_id));
+            if ($wpdb->last_error !== '' || !$row || !iss_graph_video_transcript_is_video_post(new WP_Post($row))) {
+                throw new RuntimeException('Transcript review could not lock the source video.');
+            }
+            wp_cache_delete($post_id, 'post_meta');
+            foreach ($accepted_ids as $evidence_id) {
+                $evidence = iss_graph_video_transcript_find_evidence_by_id($post_id, (int) $evidence_id);
+                if ($evidence && iss_graph_video_transcript_promote_evidence($post_id, $evidence)) {
+                    $changed = true;
+                    // The evidence note is descriptive; use the authoritative target kind.
+                    $target = iss_graph_get_service()->get_entity_by_id((int) $evidence['target_id']);
+                    if ($wpdb->last_error !== '') {
+                        throw new RuntimeException('Transcript review could not read the promoted target.');
+                    }
+                    $place_promoted = $place_promoted || ($target['entity_kind'] ?? '') === 'place';
+                }
+            }
+            foreach ($dismissed_ids as $evidence_id) {
+                $evidence = iss_graph_video_transcript_find_evidence_by_id($post_id, (int) $evidence_id);
+                if ($evidence && iss_graph_video_transcript_dismiss_evidence($post_id, $evidence)) {
+                    $changed = true;
+                }
+            }
+            if ($changed) {
+                iss_graph_sync_video_transcript_segments(new WP_Post($row), $segments, $transcript_status);
+            }
+        });
+    } finally {
+        wp_cache_delete($post_id, 'post_meta');
+        wp_suspend_cache_addition($cache_suspended);
+        foreach ($deferred_hooks as [$hook, $callback, $priority]) {
+            add_action($hook, $callback, $priority, 3);
         }
     }
 
-    foreach ($dismissed_ids as $evidence_id) {
-        $evidence = iss_graph_video_transcript_find_evidence_by_id($post_id, (int) $evidence_id);
-        if ($evidence && iss_graph_video_transcript_dismiss_evidence($post_id, $evidence)) {
-            $changed = true;
-        }
-    }
-
+    // Outer transaction callers retain final commit and cache coordination.
     if ($changed) {
-        iss_graph_sync_video_transcript_mentions($post_id);
-
+        if ($place_promoted && function_exists('iss_relations_sync_post_read_models')) {
+            iss_relations_sync_post_read_models($post_id);
+        }
         if (function_exists('iss_graph_sync_public_search_post')) {
             iss_graph_sync_public_search_post($post_id);
         }

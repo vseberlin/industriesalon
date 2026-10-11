@@ -789,18 +789,30 @@ final class ISS_Graph_Service
         $entity_id = absint($data['id'] ?? 0);
         if ($entity_id > 0) {
             $row = $this->get_entity_by_id($entity_id);
+            if ($wpdb->last_error !== '') {
+                return null;
+            }
         }
 
         if (!$row && $post_id > 0) {
             $row = $this->find_entity_by_post($entity_kind, $post_id);
+            if ($wpdb->last_error !== '') {
+                return null;
+            }
         }
 
         if (!$row && $source_system !== '' && $source_id !== '') {
             $row = $this->find_entity_by_source($entity_kind, $source_system, $source_id);
+            if ($wpdb->last_error !== '') {
+                return null;
+            }
         }
 
         if (!$row && $canonical_slug !== '') {
             $row = $this->find_entity_by_slug($entity_kind, $canonical_slug);
+            if ($wpdb->last_error !== '') {
+                return null;
+            }
         }
 
         $timestamp = current_time('mysql', true);
@@ -825,23 +837,29 @@ final class ISS_Graph_Service
 
         if ($row) {
             $db_data['created_at'] = (string) ($row['created_at'] ?? $timestamp);
-            $wpdb->update(
+            $updated = $wpdb->update(
                 $this->get_entity_table_name(),
                 $db_data,
                 ['id' => (int) $row['id']],
                 ['%s', '%d', '%d', '%s', '%s', '%s', '%s', '%s', '%s', '%d', '%d', '%s', '%d', '%d', '%d', '%s', '%s'],
                 ['%d']
             );
+            if ($updated === false) {
+                return null;
+            }
 
             return $this->get_entity_by_id((int) $row['id']);
         }
 
         $db_data['created_at'] = $timestamp;
-        $wpdb->insert(
+        $inserted = $wpdb->insert(
             $this->get_entity_table_name(),
             $db_data,
             ['%s', '%d', '%d', '%s', '%s', '%s', '%s', '%s', '%s', '%d', '%d', '%s', '%d', '%d', '%d', '%s', '%s']
         );
+        if ($inserted !== 1) {
+            return null;
+        }
 
         $insert_id = (int) $wpdb->insert_id;
 
@@ -855,6 +873,8 @@ final class ISS_Graph_Service
 
     public function resolve_or_create_named_entity(string $entity_kind, string $name, array $overrides = [], array $args = []): ?array
     {
+        global $wpdb;
+
         $name = sanitize_text_field($name);
         if ($name === '') {
             return null;
@@ -898,6 +918,9 @@ final class ISS_Graph_Service
 
         if ($source_system !== '' && $source_id !== '') {
             $source_entity = $this->find_entity_by_source($entity_kind, $source_system, $source_id);
+            if ($wpdb->last_error !== '') {
+                return null;
+            }
             if ($source_entity) {
                 $entity_data['id'] = (int) ($source_entity['id'] ?? 0);
                 $entity = $this->upsert_entity($entity_data);
@@ -906,8 +929,14 @@ final class ISS_Graph_Service
             }
 
             $identifier = $this->get_identifier_by_namespace_value($source_system, $source_id);
+            if ($wpdb->last_error !== '') {
+                return null;
+            }
             if ($identifier && (string) ($identifier['status'] ?? '') === 'accepted') {
                 $identifier_entity = $this->get_entity_by_id((int) ($identifier['entity_id'] ?? 0));
+                if ($wpdb->last_error !== '') {
+                    return null;
+                }
                 if ($identifier_entity && (string) ($identifier_entity['entity_kind'] ?? '') === $entity_kind) {
                     return $identifier_entity;
                 }
@@ -915,6 +944,9 @@ final class ISS_Graph_Service
         }
 
         $existing = $this->find_entity_by_slug($entity_kind, $name_slug);
+        if ($wpdb->last_error !== '') {
+            return null;
+        }
         if ($existing) {
             return $this->sync_named_entity_title($existing, $name);
         }
@@ -1012,6 +1044,137 @@ final class ISS_Graph_Service
         return null;
     }
 
+    /**
+     * Synchronize bridge-owned entities, names, identifiers and relations together.
+     * Callbacks must propagate failure and keep source/cache writes outside this scope.
+     *
+     * @throws RuntimeException When a write or the transaction fails.
+     */
+    public function synchronize_entity_graph(callable $write): void
+    {
+        $this->run_atomic_write([
+            $this->get_entity_table_name(),
+            $this->get_name_table_name(),
+            $this->get_identifier_table_name(),
+            $this->get_relation_table_name(),
+        ], $write, 'Graph entity synchronization');
+    }
+
+    /**
+     * Keep profile binding metadata and graph identity in one transaction.
+     * The bridge owns metadata cache cleanup and deferred search/cache updates.
+     */
+    public function synchronize_profile_binding(callable $write): void
+    {
+        global $wpdb;
+
+        $this->run_atomic_write([
+            $wpdb->posts,
+            $wpdb->postmeta,
+            $this->get_entity_table_name(),
+            $this->get_name_table_name(),
+            $this->get_identifier_table_name(),
+        ], $write, 'Graph profile binding');
+    }
+
+    /** Keep transcript review sources and evidence together; the bridge defers read models. */
+    public function synchronize_video_transcript_review(callable $write): void
+    {
+        global $wpdb;
+
+        $this->run_atomic_write([
+            $wpdb->posts,
+            $wpdb->postmeta,
+            $this->get_entity_table_name(),
+            $this->get_name_table_name(),
+            $this->get_identifier_table_name(),
+            $this->get_relation_table_name(),
+            $this->get_evidence_table_name(),
+        ], $write, 'Video transcript review');
+    }
+
+    /**
+     * Replace the supplied parts of one entity/source projection together.
+     * Omitted parts and relation families retain their existing rows.
+     *
+     * @throws RuntimeException When any component or the transaction fails.
+     */
+    public function replace_entity_projection(int $entity_id, string $source_system, array $payload): void
+    {
+        $source_system = sanitize_key($source_system);
+        $entity_id = absint($entity_id);
+        if ($source_system === '' || $entity_id <= 0) {
+            return;
+        }
+
+        $source_ref = sanitize_text_field((string) ($payload['source_ref'] ?? ('entity:' . $entity_id)));
+        $names = $payload['names'] ?? null;
+        $identifiers = $payload['identifiers'] ?? null;
+        $evidence_rows = $payload['evidence_refs'] ?? ($payload['evidence'] ?? null);
+        $relations = is_array($payload['relations'] ?? null) ? $payload['relations'] : [];
+        $is_list = array_keys($relations) === range(0, count($relations) - 1);
+        if ($is_list) {
+            $grouped = [];
+            foreach ($relations as $row) {
+                if (!is_array($row)) {
+                    continue;
+                }
+
+                $family = sanitize_key((string) ($row['relation_family'] ?? ''));
+                if ($family !== '') {
+                    $grouped[$family][] = $row;
+                }
+            }
+            $relations = $grouped;
+        }
+
+        $relation_sets = [];
+        foreach ($relations as $relation_family => $rows) {
+            $family = sanitize_key((string) $relation_family);
+            if (is_array($rows) && $family !== '') {
+                // Keep input order even when distinct keys sanitize to one family.
+                $relation_sets[] = ['family' => $family, 'rows' => $rows];
+            }
+        }
+
+        $tables = [];
+        if (is_array($names)) {
+            $tables[] = $this->get_name_table_name();
+        }
+        if (is_array($identifiers)) {
+            $tables[] = $this->get_identifier_table_name();
+        }
+        if (is_array($evidence_rows)) {
+            $tables[] = $this->get_evidence_table_name();
+        }
+        if ($relation_sets) {
+            $tables[] = $this->get_relation_table_name();
+        }
+        if (!$tables) {
+            return;
+        }
+
+        $this->run_atomic_write($tables, function () use ($entity_id, $source_system, $source_ref, $names, $identifiers, $evidence_rows, $relation_sets): void {
+            if (is_array($names)) {
+                $this->replace_entity_names_for_source($entity_id, $source_system, $names, $source_ref);
+            }
+            if (is_array($identifiers)) {
+                $this->replace_entity_identifiers_for_source($entity_id, $source_system, $identifiers, $source_ref);
+            }
+            if (is_array($evidence_rows)) {
+                $this->replace_entity_evidence_refs_for_source($entity_id, $source_system, $evidence_rows, $source_ref);
+            }
+            foreach ($relation_sets as $set) {
+                $this->replace_entity_relations_for_source($entity_id, $set['family'], $source_system, $set['rows'], $source_ref);
+            }
+        }, 'Graph entity projection replacement');
+    }
+
+    /**
+     * Replace one entity/source name set atomically, retaining caller transactions.
+     *
+     * @throws RuntimeException When a name write or its transaction fails.
+     */
     public function replace_entity_names_for_source(int $entity_id, string $source_system, array $rows, string $source_ref = ''): void
     {
         global $wpdb;
@@ -1026,19 +1189,7 @@ final class ISS_Graph_Service
         }
 
         $source_ref = sanitize_text_field($source_ref);
-        $wpdb->delete(
-            $this->get_name_table_name(),
-            [
-                'entity_id' => $entity_id,
-                'source_system' => $source_system,
-            ],
-            ['%d', '%s']
-        );
-
-        if (!$rows) {
-            return;
-        }
-
+        $prepared_rows = [];
         $timestamp = current_time('mysql', true);
 
         foreach (array_values($rows) as $index => $row) {
@@ -1047,26 +1198,48 @@ final class ISS_Graph_Service
                 continue;
             }
 
-            $wpdb->insert(
-                $this->get_name_table_name(),
+            $prepared_rows[] = [
+                'entity_id' => $entity_id,
+                'name' => $name,
+                'normalized_name' => $this->build_canonical_slug($name, 'name'),
+                'name_type' => sanitize_key((string) ($row['name_type'] ?? '')),
+                'language' => sanitize_key((string) ($row['language'] ?? '')),
+                'is_primary' => $this->normalize_bool($row['is_primary'] ?? false),
+                'valid_from_year' => $this->normalize_year($row['valid_from_year'] ?? null),
+                'valid_to_year' => $this->normalize_year($row['valid_to_year'] ?? null),
+                'position' => isset($row['position']) ? (int) $row['position'] : $index,
+                'source_system' => $source_system,
+                'source_ref' => $source_ref,
+                'created_at' => $timestamp,
+                'updated_at' => $timestamp,
+            ];
+        }
+
+        $table = $this->get_name_table_name();
+        $this->run_atomic_write([$table], static function () use ($wpdb, $table, $entity_id, $source_system, $prepared_rows): void {
+            $deleted = $wpdb->delete(
+                $table,
                 [
                     'entity_id' => $entity_id,
-                    'name' => $name,
-                    'normalized_name' => $this->build_canonical_slug($name, 'name'),
-                    'name_type' => sanitize_key((string) ($row['name_type'] ?? '')),
-                    'language' => sanitize_key((string) ($row['language'] ?? '')),
-                    'is_primary' => $this->normalize_bool($row['is_primary'] ?? false),
-                    'valid_from_year' => $this->normalize_year($row['valid_from_year'] ?? null),
-                    'valid_to_year' => $this->normalize_year($row['valid_to_year'] ?? null),
-                    'position' => isset($row['position']) ? (int) $row['position'] : $index,
                     'source_system' => $source_system,
-                    'source_ref' => $source_ref,
-                    'created_at' => $timestamp,
-                    'updated_at' => $timestamp,
                 ],
-                ['%d', '%s', '%s', '%s', '%s', '%d', '%d', '%d', '%d', '%s', '%s', '%s', '%s']
+                ['%d', '%s']
             );
-        }
+            if ($deleted === false) {
+                throw new RuntimeException('Graph name replacement could not delete the previous rows.');
+            }
+
+            foreach ($prepared_rows as $row) {
+                $inserted = $wpdb->insert(
+                    $table,
+                    $row,
+                    ['%d', '%s', '%s', '%s', '%s', '%d', '%d', '%d', '%d', '%s', '%s', '%s', '%s']
+                );
+                if ($inserted !== 1) {
+                    throw new RuntimeException('Graph name replacement could not insert a replacement row.');
+                }
+            }
+        }, 'Graph name replacement');
     }
 
     private function map_identifier_row(array $row): array
@@ -1165,6 +1338,8 @@ final class ISS_Graph_Service
 
     public function upsert_entity_identifier(int $entity_id, array $data): ?array
     {
+        global $wpdb;
+
         if ($entity_id <= 0 || !$this->get_entity_by_id($entity_id)) {
             return null;
         }
@@ -1177,11 +1352,9 @@ final class ISS_Graph_Service
         }
 
         $existing = $this->get_identifier_by_namespace_value($namespace, $value);
-        if ($existing && (int) ($existing['entity_id'] ?? 0) !== $entity_id) {
+        if ($wpdb->last_error !== '' || ($existing && (int) ($existing['entity_id'] ?? 0) !== $entity_id)) {
             return null;
         }
-
-        global $wpdb;
 
         $timestamp = current_time('mysql', true);
         $db_data = [
@@ -1205,26 +1378,36 @@ final class ISS_Graph_Service
         if ($existing) {
             $db_data['created_at'] = (string) ($existing['created_at'] ?? $timestamp);
             $formats[] = '%s';
-            $wpdb->update(
+            $updated = $wpdb->update(
                 $this->get_identifier_table_name(),
                 $db_data,
                 ['id' => (int) $existing['id']],
                 $formats,
                 ['%d']
             );
+            if ($updated === false) {
+                return null;
+            }
 
             return $this->get_identifier_by_id((int) $existing['id']);
         }
 
         $db_data['created_at'] = $timestamp;
         $formats[] = '%s';
-        $wpdb->insert($this->get_identifier_table_name(), $db_data, $formats);
+        if ($wpdb->insert($this->get_identifier_table_name(), $db_data, $formats) !== 1) {
+            return null;
+        }
 
         $insert_id = (int) $wpdb->insert_id;
 
         return $insert_id > 0 ? $this->get_identifier_by_id($insert_id) : null;
     }
 
+    /**
+     * Replace one entity/source identifier set, including same-entity upserts.
+     *
+     * @throws RuntimeException When a row is rejected or a database operation fails.
+     */
     public function replace_entity_identifiers_for_source(int $entity_id, string $source_system, array $rows, string $source_ref = ''): void
     {
         global $wpdb;
@@ -1239,24 +1422,32 @@ final class ISS_Graph_Service
         }
 
         $source_ref = sanitize_text_field($source_ref);
-        $wpdb->delete(
-            $this->get_identifier_table_name(),
-            [
-                'entity_id' => $entity_id,
-                'source_system' => $source_system,
-            ],
-            ['%d', '%s']
-        );
-
-        foreach ($rows as $row) {
-            if (!is_array($row)) {
-                continue;
+        $table = $this->get_identifier_table_name();
+        $this->run_atomic_write([$table], function () use ($wpdb, $table, $entity_id, $source_system, $source_ref, $rows): void {
+            $deleted = $wpdb->delete(
+                $table,
+                [
+                    'entity_id' => $entity_id,
+                    'source_system' => $source_system,
+                ],
+                ['%d', '%s']
+            );
+            if ($deleted === false) {
+                throw new RuntimeException('Graph identifier replacement could not delete the previous rows.');
             }
 
-            $row['source_system'] = $source_system;
-            $row['source_ref'] = $source_ref;
-            $this->upsert_entity_identifier($entity_id, $row);
-        }
+            foreach ($rows as $row) {
+                if (!is_array($row)) {
+                    continue;
+                }
+
+                $row['source_system'] = $source_system;
+                $row['source_ref'] = $source_ref;
+                if (!$this->upsert_entity_identifier($entity_id, $row)) {
+                    throw new RuntimeException('Graph identifier replacement could not store a replacement row.');
+                }
+            }
+        }, 'Graph identifier replacement');
     }
 
     public function get_identifiers_for_entity(int $entity_id, array $args = []): array
@@ -1357,7 +1548,7 @@ final class ISS_Graph_Service
         $timestamp = current_time('mysql', true);
         $evidence_id = absint($data['id'] ?? 0);
         $existing = $evidence_id > 0 ? $this->get_evidence_ref_by_id($evidence_id) : null;
-        if ($existing && (int) ($existing['entity_id'] ?? 0) !== $entity_id) {
+        if (($evidence_id > 0 && $wpdb->last_error !== '') || ($existing && (int) ($existing['entity_id'] ?? 0) !== $entity_id)) {
             return null;
         }
 
@@ -1380,26 +1571,36 @@ final class ISS_Graph_Service
         if ($existing) {
             $db_data['created_at'] = (string) ($existing['created_at'] ?? $timestamp);
             $formats[] = '%s';
-            $wpdb->update(
+            $updated = $wpdb->update(
                 $this->get_evidence_table_name(),
                 $db_data,
                 ['id' => $evidence_id],
                 $formats,
                 ['%d']
             );
+            if ($updated === false) {
+                return null;
+            }
 
             return $this->get_evidence_ref_by_id($evidence_id);
         }
 
         $db_data['created_at'] = $timestamp;
         $formats[] = '%s';
-        $wpdb->insert($this->get_evidence_table_name(), $db_data, $formats);
+        if ($wpdb->insert($this->get_evidence_table_name(), $db_data, $formats) !== 1) {
+            return null;
+        }
 
         $insert_id = (int) $wpdb->insert_id;
 
         return $insert_id > 0 ? $this->get_evidence_ref_by_id($insert_id) : null;
     }
 
+    /**
+     * Replace one entity/source evidence set, including same-entity ID updates.
+     *
+     * @throws RuntimeException When a row is rejected or a database operation fails.
+     */
     public function replace_entity_evidence_refs_for_source(int $entity_id, string $source_system, array $rows, string $source_ref = ''): void
     {
         global $wpdb;
@@ -1414,24 +1615,32 @@ final class ISS_Graph_Service
         }
 
         $source_ref = sanitize_text_field($source_ref);
-        $wpdb->delete(
-            $this->get_evidence_table_name(),
-            [
-                'entity_id' => $entity_id,
-                'source_system' => $source_system,
-            ],
-            ['%d', '%s']
-        );
-
-        foreach ($rows as $row) {
-            if (!is_array($row)) {
-                continue;
+        $table = $this->get_evidence_table_name();
+        $this->run_atomic_write([$table], function () use ($wpdb, $table, $entity_id, $source_system, $source_ref, $rows): void {
+            $deleted = $wpdb->delete(
+                $table,
+                [
+                    'entity_id' => $entity_id,
+                    'source_system' => $source_system,
+                ],
+                ['%d', '%s']
+            );
+            if ($deleted === false) {
+                throw new RuntimeException('Graph evidence replacement could not delete the previous rows.');
             }
 
-            $row['source_system'] = $source_system;
-            $row['source_ref'] = $source_ref;
-            $this->upsert_entity_evidence_ref($entity_id, $row);
-        }
+            foreach ($rows as $row) {
+                if (!is_array($row)) {
+                    continue;
+                }
+
+                $row['source_system'] = $source_system;
+                $row['source_ref'] = $source_ref;
+                if (!$this->upsert_entity_evidence_ref($entity_id, $row)) {
+                    throw new RuntimeException('Graph evidence replacement could not store a replacement row.');
+                }
+            }
+        }, 'Graph evidence replacement');
     }
 
     public function get_evidence_refs_for_entity(int $entity_id, array $args = []): array
@@ -1883,6 +2092,12 @@ final class ISS_Graph_Service
         return $updated !== false;
     }
 
+    /**
+     * Replace one source/family atomically on the supported MariaDB/InnoDB stack.
+     * An existing caller transaction retains ownership through a savepoint.
+     *
+     * @throws RuntimeException When transaction setup or a write fails.
+     */
     public function replace_entity_relations_for_source(int $from_entity_id, string $relation_family, string $source_system, array $rows, string $source_ref = ''): void
     {
         global $wpdb;
@@ -1899,20 +2114,7 @@ final class ISS_Graph_Service
             return;
         }
 
-        $wpdb->delete(
-            $this->get_relation_table_name(),
-            [
-                'from_entity_id' => $from_entity_id,
-                'relation_family' => $relation_family,
-                'source_system' => $source_system,
-            ],
-            ['%d', '%s', '%s']
-        );
-
-        if (!$rows) {
-            return;
-        }
-
+        $prepared_rows = [];
         $timestamp = current_time('mysql', true);
 
         foreach (array_values($rows) as $index => $row) {
@@ -1942,33 +2144,106 @@ final class ISS_Graph_Service
                 );
             }
 
-            $wpdb->insert(
-                $this->get_relation_table_name(),
+            $prepared_rows[] = [
+                'from_entity_id' => $from_entity_id,
+                'to_entity_id' => $to_entity_id,
+                'relation_family' => $relation_family,
+                'relation_type' => $relation_type,
+                'relation_role' => $relation_role,
+                'edge_key' => $this->limit_string($edge_key, 191),
+                'relation_label' => sanitize_text_field((string) ($row['relation_label'] ?? '')),
+                'note' => sanitize_textarea_field((string) ($row['note'] ?? '')),
+                'weight' => (int) ($row['weight'] ?? 0),
+                'position' => isset($row['position']) ? (int) $row['position'] : $index,
+                'is_primary' => $this->normalize_bool($row['is_primary'] ?? false),
+                'valid_from_year' => $this->normalize_year($row['valid_from_year'] ?? null),
+                'valid_to_year' => $this->normalize_year($row['valid_to_year'] ?? null),
+                'source_system' => $source_system,
+                'source_ref' => $source_ref,
+                'source_field' => $source_field,
+                'relation_status' => $this->normalize_relation_status($row['relation_status'] ?? ($row['status'] ?? ''), $source_system),
+                'confidence' => $this->normalize_confidence($row['confidence'] ?? 0),
+                'is_public' => $this->normalize_bool($row['is_public'] ?? true),
+                'created_at' => $timestamp,
+                'updated_at' => $timestamp,
+            ];
+        }
+
+        $table = $this->get_relation_table_name();
+        $this->run_atomic_write([$table], static function () use ($wpdb, $table, $from_entity_id, $relation_family, $source_system, $prepared_rows): void {
+            $deleted = $wpdb->delete(
+                $table,
                 [
                     'from_entity_id' => $from_entity_id,
-                    'to_entity_id' => $to_entity_id,
                     'relation_family' => $relation_family,
-                    'relation_type' => $relation_type,
-                    'relation_role' => $relation_role,
-                    'edge_key' => $this->limit_string($edge_key, 191),
-                    'relation_label' => sanitize_text_field((string) ($row['relation_label'] ?? '')),
-                    'note' => sanitize_textarea_field((string) ($row['note'] ?? '')),
-                    'weight' => (int) ($row['weight'] ?? 0),
-                    'position' => isset($row['position']) ? (int) $row['position'] : $index,
-                    'is_primary' => $this->normalize_bool($row['is_primary'] ?? false),
-                    'valid_from_year' => $this->normalize_year($row['valid_from_year'] ?? null),
-                    'valid_to_year' => $this->normalize_year($row['valid_to_year'] ?? null),
                     'source_system' => $source_system,
-                    'source_ref' => $source_ref,
-                    'source_field' => $source_field,
-                    'relation_status' => $this->normalize_relation_status($row['relation_status'] ?? ($row['status'] ?? ''), $source_system),
-                    'confidence' => $this->normalize_confidence($row['confidence'] ?? 0),
-                    'is_public' => $this->normalize_bool($row['is_public'] ?? true),
-                    'created_at' => $timestamp,
-                    'updated_at' => $timestamp,
                 ],
-                ['%d', '%d', '%s', '%s', '%s', '%s', '%s', '%s', '%d', '%d', '%d', '%d', '%d', '%s', '%s', '%s', '%s', '%d', '%d', '%s', '%s']
+                ['%d', '%s', '%s']
             );
+            if ($deleted === false) {
+                throw new RuntimeException('Graph relation replacement could not delete the previous rows.');
+            }
+
+            foreach ($prepared_rows as $row) {
+                $inserted = $wpdb->insert(
+                    $table,
+                    $row,
+                    ['%d', '%d', '%s', '%s', '%s', '%s', '%s', '%s', '%d', '%d', '%d', '%d', '%d', '%s', '%s', '%s', '%s', '%d', '%d', '%s', '%s']
+                );
+                if ($inserted !== 1) {
+                    throw new RuntimeException('Graph relation replacement could not insert a replacement row.');
+                }
+            }
+        }, 'Graph relation replacement');
+    }
+
+    /**
+     * Own the transaction only when the caller has not already started one.
+     * Tables are supplied exclusively by this service's write operations.
+     *
+     * @throws RuntimeException When the storage contract or transaction fails.
+     */
+    private function run_atomic_write(array $tables, callable $write, string $operation): void
+    {
+        global $wpdb;
+
+        $tables = array_values(array_unique($tables));
+        $placeholders = implode(', ', array_fill(0, count($tables), '%s'));
+        // MariaDB exposes transactions started outside this service. Check every
+        // participating table before writing so rollback covers the whole operation.
+        $states = $wpdb->get_results($wpdb->prepare(
+            "SELECT ENGINE AS engine, @@SESSION.in_transaction AS in_transaction,
+                @@SESSION.autocommit AS autocommit
+             FROM information_schema.TABLES
+             WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME IN ($placeholders)", // phpcs:ignore WordPress.DB.PreparedSQLPlaceholders.UnfinishedPrepare -- One %s placeholder is generated above per service-owned table.
+            $tables
+        ), ARRAY_A);
+        if (!$states || count($states) !== count($tables) || array_filter($states, static function (array $state): bool {
+            return ($state['engine'] ?? '') !== 'InnoDB' || !isset($state['in_transaction'], $state['autocommit']);
+        })) {
+            throw new RuntimeException(esc_html($operation . ' requires MariaDB transaction state and InnoDB tables.'));
+        }
+
+        $state = $states[0];
+        $owns_transaction = (int) $state['in_transaction'] === 0 && (int) $state['autocommit'] === 1;
+        $savepoint = wp_unique_id('iss_graph_write_');
+        if ($wpdb->query($owns_transaction ? 'START TRANSACTION' : "SAVEPOINT $savepoint") === false) {
+            throw new RuntimeException(esc_html($operation . ' could not begin its transaction.'));
+        }
+
+        try {
+            $write();
+            if ($wpdb->query($owns_transaction ? 'COMMIT' : "RELEASE SAVEPOINT $savepoint") === false) {
+                throw new RuntimeException(esc_html($operation . ' could not finish its transaction.'));
+            }
+        } catch (Throwable $error) {
+            if ($wpdb->query($owns_transaction ? 'ROLLBACK' : "ROLLBACK TO SAVEPOINT $savepoint") === false) {
+                throw new RuntimeException(esc_html($operation . ' failed and rollback could not be confirmed.'), 0, $error); // phpcs:ignore WordPress.Security.EscapeOutput.ExceptionNotEscaped -- Third argument chains the Throwable; it is not rendered output.
+            }
+            if (!$owns_transaction && $wpdb->query("RELEASE SAVEPOINT $savepoint") === false) {
+                throw new RuntimeException(esc_html($operation . ' rolled back but could not release its savepoint.'), 0, $error); // phpcs:ignore WordPress.Security.EscapeOutput.ExceptionNotEscaped -- Third argument chains the Throwable; it is not rendered output.
+            }
+            throw $error;
         }
     }
 
@@ -2441,6 +2716,7 @@ final class ISS_Graph_Service
         return $base;
     }
 
+    /** Persist one facts row with checked reads/writes, retaining caller transactions. */
     public function upsert_entity_facts(string $entity_kind, int $entity_id, array $data): array
     {
         $entity_kind = $this->normalize_entity_kind($entity_kind);
@@ -2450,58 +2726,76 @@ final class ISS_Graph_Service
             return [];
         }
 
-        $entity = $this->get_entity_by_id($entity_id);
-        if (!$entity || ($entity['entity_kind'] ?? '') !== $entity_kind) {
-            return [];
-        }
-
         global $wpdb;
 
-        $timestamp = current_time('mysql', true);
-        $row = $this->get_entity_facts($entity_kind, $entity_id);
-        $db_data = [
-            'entity_id' => $entity_id,
-            'summary' => sanitize_textarea_field((string) ($data['summary'] ?? '')),
-            'description' => sanitize_textarea_field((string) ($data['description'] ?? '')),
-            'website' => esc_url_raw((string) ($data['website'] ?? '')),
-            'source_summary' => sanitize_textarea_field((string) ($data['source_summary'] ?? '')),
-            'updated_at' => $timestamp,
-        ];
+        $result = [];
+        $this->run_atomic_write([$this->get_entity_table_name(), $table_name], function () use ($wpdb, $entity_kind, $entity_id, $table_name, $data, &$result): void {
+            // Serialize first insertion and updates against the same entity.
+            $entity = $wpdb->get_row($wpdb->prepare(
+                "SELECT * FROM {$this->get_entity_table_name()} WHERE id = %d FOR UPDATE", // phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared -- Table name is supplied by the owning graph service.
+                $entity_id
+            ), ARRAY_A);
+            if ($wpdb->last_error !== '') {
+                throw new RuntimeException('Graph facts could not read the entity.');
+            }
+            if (!$entity || ($entity['entity_kind'] ?? '') !== $entity_kind) {
+                return;
+            }
 
-        $formats = ['%d', '%s', '%s', '%s', '%s', '%s'];
+            $row = $wpdb->get_row($wpdb->prepare(
+                "SELECT created_at FROM {$table_name} WHERE entity_id = %d FOR UPDATE", // phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared -- Table name is selected from the graph-owned facts tables.
+                $entity_id
+            ), ARRAY_A);
+            if ($wpdb->last_error !== '') {
+                throw new RuntimeException('Graph facts could not read the previous row.');
+            }
 
-        if ($entity_kind === 'person') {
-            $db_data['person_kind'] = sanitize_text_field((string) ($data['person_kind'] ?? ''));
-            $db_data['birth_year'] = $this->normalize_year($data['birth_year'] ?? null);
-            $db_data['death_year'] = $this->normalize_year($data['death_year'] ?? null);
-            $formats = ['%d', '%s', '%s', '%s', '%s', '%s', '%s', '%d', '%d'];
-        } elseif ($entity_kind === 'organization') {
-            $db_data['organization_kind'] = sanitize_text_field((string) ($data['organization_kind'] ?? ''));
-            $db_data['organization_status'] = sanitize_text_field((string) ($data['organization_status'] ?? ''));
-            $db_data['founded_year'] = $this->normalize_year($data['founded_year'] ?? null);
-            $db_data['dissolved_year'] = $this->normalize_year($data['dissolved_year'] ?? null);
-            $formats = ['%d', '%s', '%s', '%s', '%s', '%s', '%s', '%s', '%d', '%d'];
-        }
+            $timestamp = current_time('mysql', true);
+            $db_data = [
+                'entity_id' => $entity_id,
+                'summary' => sanitize_textarea_field((string) ($data['summary'] ?? '')),
+                'description' => sanitize_textarea_field((string) ($data['description'] ?? '')),
+                'website' => esc_url_raw((string) ($data['website'] ?? '')),
+                'source_summary' => sanitize_textarea_field((string) ($data['source_summary'] ?? '')),
+                'updated_at' => $timestamp,
+            ];
 
-        if ($row) {
+            $formats = ['%d', '%s', '%s', '%s', '%s', '%s'];
+
+            if ($entity_kind === 'person') {
+                $db_data['person_kind'] = sanitize_text_field((string) ($data['person_kind'] ?? ''));
+                $db_data['birth_year'] = $this->normalize_year($data['birth_year'] ?? null);
+                $db_data['death_year'] = $this->normalize_year($data['death_year'] ?? null);
+                $formats = ['%d', '%s', '%s', '%s', '%s', '%s', '%s', '%d', '%d'];
+            } elseif ($entity_kind === 'organization') {
+                $db_data['organization_kind'] = sanitize_text_field((string) ($data['organization_kind'] ?? ''));
+                $db_data['organization_status'] = sanitize_text_field((string) ($data['organization_status'] ?? ''));
+                $db_data['founded_year'] = $this->normalize_year($data['founded_year'] ?? null);
+                $db_data['dissolved_year'] = $this->normalize_year($data['dissolved_year'] ?? null);
+                $formats = ['%d', '%s', '%s', '%s', '%s', '%s', '%s', '%s', '%d', '%d'];
+            }
+
             $db_data['created_at'] = (string) ($row['created_at'] ?? $timestamp);
             $formats[] = '%s';
-            $wpdb->update(
-                $table_name,
-                $db_data,
-                ['entity_id' => $entity_id],
-                $formats,
-                ['%d']
-            );
+            $written = $row
+                ? $wpdb->update($table_name, $db_data, ['entity_id' => $entity_id], $formats, ['%d'])
+                : $wpdb->insert($table_name, $db_data, $formats);
+            if ($written === false) {
+                throw new RuntimeException('Graph facts could not store the row.');
+            }
 
-            return $this->get_entity_facts($entity_kind, $entity_id);
-        }
+            $result = $this->get_entity_facts($entity_kind, $entity_id);
+            if ($wpdb->last_error !== '' || !$result) {
+                throw new RuntimeException('Graph facts could not read the saved row.');
+            }
+            foreach ($db_data as $field => $value) {
+                if ($result[$field] !== $value) {
+                    throw new RuntimeException('Graph facts could not verify the saved row.');
+                }
+            }
+        }, 'Graph facts persistence');
 
-        $db_data['created_at'] = $timestamp;
-        $formats[] = '%s';
-        $wpdb->insert($table_name, $db_data, $formats);
-
-        return $this->get_entity_facts($entity_kind, $entity_id);
+        return $result;
     }
 
     public function delete_entity_facts(string $entity_kind, int $entity_id): void
@@ -2613,47 +2907,24 @@ final class ISS_Graph_Service
         $reason = $this->limit_string(sanitize_text_field($reason), 191);
         $source_system = sanitize_key($source_system);
         $timestamp = current_time('mysql', true);
-        $existing_id = (int) $wpdb->get_var(
-            $wpdb->prepare(
-                "SELECT id FROM {$this->get_dirty_queue_table_name()} WHERE target_post_id = %d",
-                $post_id
-            )
-        );
-
-        $data = [
-            'target_post_id' => $post_id,
-            'target_post_type' => $post_type,
-            'reason' => $reason,
-            'source_system' => $source_system,
-            'status' => 'dirty',
-            'last_error' => '',
-            'locked_at' => null,
-            'updated_at' => $timestamp,
-        ];
-        $formats = ['%d', '%s', '%s', '%s', '%s', '%s', '%s', '%s'];
-
-        if ($existing_id > 0) {
-            $updated = $wpdb->update(
-                $this->get_dirty_queue_table_name(),
-                $data,
-                ['id' => $existing_id],
-                $formats,
-                ['%d']
-            );
-
-            return $updated !== false;
-        }
-
-        $data['attempts'] = 0;
-        $data['created_at'] = $timestamp;
-        $data['last_processed_at'] = null;
-        $inserted = $wpdb->insert(
-            $this->get_dirty_queue_table_name(),
-            $data,
-            array_merge($formats, ['%d', '%s', '%s'])
-        );
-
-        return $inserted !== false;
+        // A new dirty signal revokes an in-flight claim, including same-second
+        // saves, and starts a fresh retry budget. The unique post key coalesces it.
+        return $wpdb->query($wpdb->prepare(
+            "INSERT INTO {$this->get_dirty_queue_table_name()}
+                (target_post_id, target_post_type, reason, source_system, status, attempts,
+                 last_error, locked_at, created_at, updated_at, last_processed_at)
+             VALUES (%d, %s, %s, %s, 'dirty', 0, '', NULL, %s, %s, NULL)
+             ON DUPLICATE KEY UPDATE target_post_type = VALUES(target_post_type),
+                reason = VALUES(reason), source_system = VALUES(source_system),
+                status = 'dirty', attempts = 0, last_error = '', locked_at = NULL,
+                updated_at = VALUES(updated_at)",
+            $post_id,
+            $post_type,
+            $reason,
+            $source_system,
+            $timestamp,
+            $timestamp
+        )) !== false;
     }
 
     public function get_dirty_queue_stats(): array
@@ -2713,7 +2984,6 @@ final class ISS_Graph_Service
         $dry_run = !empty($args['dry_run']);
         $started = microtime(true);
         $deadline = $started + $max_runtime;
-        $timestamp = current_time('mysql', true);
         $stats = [
             'dry_run' => $dry_run,
             'locked' => false,
@@ -2725,6 +2995,9 @@ final class ISS_Graph_Service
             'failed' => 0,
             'dead' => 0,
             'skipped' => 0,
+            'recovered' => 0,
+            'superseded' => 0,
+            'lease_lost' => false,
             'items' => [],
             'duration_seconds' => 0.0,
             'completed_at' => '',
@@ -2735,62 +3008,104 @@ final class ISS_Graph_Service
             return $stats;
         }
 
-        $rows = $wpdb->get_results(
-            $wpdb->prepare(
-                "SELECT *
-                FROM {$table}
-                WHERE status = 'dirty'
-                ORDER BY updated_at ASC, id ASC
-                LIMIT %d",
-                $batch_size
-            ),
-            ARRAY_A
-        );
-        $rows = is_array($rows) ? $rows : [];
-        $stats['selected'] = count($rows);
-
-        if ($dry_run) {
-            foreach ($rows as $row) {
-                $stats['items'][] = [
-                    'id' => (int) ($row['id'] ?? 0),
-                    'post_id' => (int) ($row['target_post_id'] ?? 0),
-                    'post_type' => (string) ($row['target_post_type'] ?? ''),
-                    'reason' => (string) ($row['reason'] ?? ''),
-                    'attempts' => (int) ($row['attempts'] ?? 0),
-                    'would_reconcile' => true,
-                ];
+        $lock = null;
+        if (!$dry_run) {
+            // Each short claim must commit before reconciliation is called.
+            $state = $wpdb->get_row('SELECT @@SESSION.in_transaction AS active, @@SESSION.autocommit AS autocommit', ARRAY_A);
+            if (!$state || (int) $state['active'] !== 0 || (int) $state['autocommit'] !== 1) {
+                throw new RuntimeException('Graph queue draining requires an independent autocommit connection.');
             }
-            $stats['duration_seconds'] = round(microtime(true) - $started, 4);
-            return $stats;
-        }
-
-        if (!$this->acquire_dirty_queue_lock($max_runtime + 60)) {
-            $stats['locked'] = true;
-            return $stats;
+            $lock = $this->acquire_dirty_queue_lock($max_runtime + 60);
+            if ($lock === null) {
+                $stats['locked'] = true;
+                return $stats;
+            }
         }
 
         try {
+            // With our own lease, processing rows belong to abandoned runs.
+            // Recovery shares the batch limit instead of using an unbounded sweep.
+            $rows = $wpdb->get_results($wpdb->prepare(
+                "SELECT * FROM {$table}
+                 WHERE status IN ('dirty', %s)
+                 ORDER BY updated_at ASC, id ASC LIMIT %d",
+                $dry_run ? 'dirty' : 'processing',
+                $batch_size
+            ), ARRAY_A);
+            if ($wpdb->last_error !== '') {
+                throw new RuntimeException('Could not select graph queue work.');
+            }
+            $stats['selected'] = count($rows);
+
+            if ($dry_run) {
+                foreach ($rows as $row) {
+                    $stats['items'][] = [
+                        'id' => (int) $row['id'],
+                        'post_id' => (int) $row['target_post_id'],
+                        'post_type' => (string) $row['target_post_type'],
+                        'reason' => (string) $row['reason'],
+                        'attempts' => (int) $row['attempts'],
+                        'would_reconcile' => (int) $row['attempts'] < $max_attempts,
+                    ];
+                }
+                $stats['duration_seconds'] = round(microtime(true) - $started, 4);
+                return $stats;
+            }
+
             foreach ($rows as $row) {
                 if (microtime(true) >= $deadline) {
                     $stats['skipped']++;
                     continue;
                 }
 
-                $queue_id = (int) ($row['id'] ?? 0);
-                $post_id = (int) ($row['target_post_id'] ?? 0);
-                $attempts = (int) ($row['attempts'] ?? 0) + 1;
-                $wpdb->update(
-                    $table,
-                    [
+                $queue_id = (int) $row['id'];
+                $post_id = (int) $row['target_post_id'];
+                $claim = null;
+                $owned = $this->with_dirty_queue_lock($lock, function () use ($wpdb, $table, $queue_id, $max_attempts, &$claim, &$stats): void {
+                    $current = $wpdb->get_row($wpdb->prepare(
+                        "SELECT * FROM {$table} WHERE id = %d FOR UPDATE",
+                        $queue_id
+                    ), ARRAY_A);
+                    if ($wpdb->last_error !== '') {
+                        throw new RuntimeException('Could not read a graph queue claim.');
+                    }
+                    if (!$current || !in_array($current['status'], ['dirty', 'processing'], true)) {
+                        return;
+                    }
+                    if ($current['status'] === 'processing') {
+                        $stats['recovered']++;
+                    }
+                    $timestamp = current_time('mysql', true);
+                    if ((int) $current['attempts'] >= $max_attempts) {
+                        if ($wpdb->update($table, [
+                            'status' => 'dead',
+                            'locked_at' => null,
+                            'last_error' => $current['last_error'] !== '' ? $current['last_error'] : 'max_attempts_exceeded',
+                            'updated_at' => $timestamp,
+                        ], ['id' => $queue_id]) !== 1) {
+                            throw new RuntimeException('Could not retire an exhausted graph queue item.');
+                        }
+                        $stats['dead']++;
+                        return;
+                    }
+                    $claim = [
                         'status' => 'processing',
-                        'attempts' => $attempts,
-                        'locked_at' => current_time('mysql', true),
-                        'updated_at' => current_time('mysql', true),
-                    ],
-                    ['id' => $queue_id],
-                    ['%s', '%d', '%s', '%s'],
-                    ['%d']
-                );
+                        'attempts' => (int) $current['attempts'] + 1,
+                        'locked_at' => $timestamp,
+                        'updated_at' => $timestamp,
+                    ];
+                    if ($wpdb->update($table, $claim, ['id' => $queue_id]) !== 1) {
+                        throw new RuntimeException('Could not claim a graph queue item.');
+                    }
+                });
+                if (!$owned) {
+                    $stats['lease_lost'] = true;
+                    break;
+                }
+                if ($claim === null) {
+                    $stats['skipped']++;
+                    continue;
+                }
 
                 try {
                     $result = function_exists('iss_graph_reconcile_post')
@@ -2798,74 +3113,102 @@ final class ISS_Graph_Service
                         : ['status' => 'dead', 'message' => 'reconcile_function_missing'];
                     $status = sanitize_key((string) ($result['status'] ?? ''));
                     $message = sanitize_textarea_field((string) ($result['message'] ?? ''));
-
-                    if ($status === 'clean') {
-                        $wpdb->update(
-                            $table,
-                            [
-                                'status' => 'clean',
-                                'last_error' => '',
-                                'locked_at' => null,
-                                'last_processed_at' => current_time('mysql', true),
-                                'updated_at' => current_time('mysql', true),
-                            ],
-                            ['id' => $queue_id],
-                            ['%s', '%s', '%s', '%s', '%s'],
-                            ['%d']
-                        );
-                        $stats['processed']++;
-                        $stats['items'][] = ['post_id' => $post_id, 'status' => 'clean'];
-                        continue;
-                    }
-
-                    $next_status = $attempts >= $max_attempts ? 'dead' : 'dirty';
-                    $wpdb->update(
-                        $table,
-                        [
-                            'status' => $next_status,
-                            'last_error' => $message !== '' ? $message : 'reconcile_failed',
-                            'locked_at' => null,
-                            'updated_at' => current_time('mysql', true),
-                        ],
-                        ['id' => $queue_id],
-                        ['%s', '%s', '%s', '%s'],
-                        ['%d']
-                    );
-                    $stats['failed']++;
-                    if ($next_status === 'dead') {
-                        $stats['dead']++;
-                    }
-                    $stats['items'][] = ['post_id' => $post_id, 'status' => $next_status, 'message' => $message];
                 } catch (Throwable $throwable) {
-                    $next_status = $attempts >= $max_attempts ? 'dead' : 'dirty';
-                    $wpdb->update(
-                        $table,
-                        [
-                            'status' => $next_status,
-                            'last_error' => $throwable->getMessage(),
-                            'locked_at' => null,
-                            'updated_at' => current_time('mysql', true),
-                        ],
-                        ['id' => $queue_id],
-                        ['%s', '%s', '%s', '%s'],
-                        ['%d']
-                    );
-                    $stats['failed']++;
-                    if ($next_status === 'dead') {
-                        $stats['dead']++;
+                    $status = 'failed';
+                    $message = $throwable->getMessage();
+                }
+
+                $next_status = $status === 'clean' ? 'clean' : ($claim['attempts'] >= $max_attempts ? 'dead' : 'dirty');
+                $finished = 0;
+                // A source save can revoke this claim while reconciliation runs;
+                // a replacement lease also prevents this worker from finishing it.
+                $owned = $this->with_dirty_queue_lock($lock, function () use ($wpdb, $table, $queue_id, $claim, $next_status, $message, &$finished): void {
+                    $data = [
+                        'status' => $next_status,
+                        'last_error' => $next_status === 'clean' ? '' : ($message !== '' ? $message : 'reconcile_failed'),
+                        'locked_at' => null,
+                        'updated_at' => current_time('mysql', true),
+                    ];
+                    if ($next_status === 'clean') {
+                        $data['last_processed_at'] = current_time('mysql', true);
                     }
-                    $stats['items'][] = ['post_id' => $post_id, 'status' => $next_status, 'message' => $throwable->getMessage()];
+                    $finished = $wpdb->update($table, $data, [
+                        'id' => $queue_id,
+                        'status' => 'processing',
+                        'attempts' => $claim['attempts'],
+                        'locked_at' => $claim['locked_at'],
+                    ]);
+                    if ($finished === false) {
+                        throw new RuntimeException('Could not finish a graph queue item.');
+                    }
+                });
+                if (!$owned) {
+                    $stats['lease_lost'] = true;
+                    break;
+                }
+                if ($finished === 0) {
+                    $stats['superseded']++;
+                    $stats['items'][] = ['post_id' => $post_id, 'status' => 'superseded'];
+                } elseif ($next_status === 'clean') {
+                    $stats['processed']++;
+                    $stats['items'][] = ['post_id' => $post_id, 'status' => 'clean'];
+                } else {
+                    $stats['failed']++;
+                    $stats['dead'] += $next_status === 'dead' ? 1 : 0;
+                    $stats['items'][] = ['post_id' => $post_id, 'status' => $next_status, 'message' => $message];
                 }
             }
+
+            $stats['duration_seconds'] = round(microtime(true) - $started, 4);
+            $stats['completed_at'] = current_time('mysql', true);
+            if (!$stats['lease_lost']) {
+                $stats['lease_lost'] = !$this->with_dirty_queue_lock($lock, static function () use ($wpdb, $stats): void {
+                    // Publish run status under the lease; cache only after commit.
+                    if ($wpdb->query($wpdb->prepare(
+                        "INSERT INTO {$wpdb->options} (option_name, option_value, autoload) VALUES (%s, %s, 'no')
+                         ON DUPLICATE KEY UPDATE option_value = VALUES(option_value), autoload = 'no'",
+                        'iss_graph_dirty_queue_last_run',
+                        maybe_serialize($stats)
+                    )) === false) {
+                        throw new RuntimeException('Could not record the graph queue run.');
+                    }
+                });
+                wp_cache_delete('iss_graph_dirty_queue_last_run', 'options');
+                wp_cache_delete('notoptions', 'options');
+                wp_cache_delete('alloptions', 'options');
+            }
+
+            return $stats;
         } finally {
-            $this->release_dirty_queue_lock();
+            if ($lock !== null) {
+                $this->release_dirty_queue_lock($lock);
+            }
         }
+    }
 
-        $stats['duration_seconds'] = round(microtime(true) - $started, 4);
-        $stats['completed_at'] = current_time('mysql', true);
-        update_option('iss_graph_dirty_queue_last_run', $stats, false);
+    /** Protect short queue state changes with the current lease, never reconciliation. */
+    private function with_dirty_queue_lock(string $lock, callable $write): bool
+    {
+        global $wpdb;
 
-        return $stats;
+        $owned = false;
+        $expires = (int) (maybe_unserialize($lock)['expires'] ?? 0);
+        $this->run_atomic_write([$wpdb->options, $this->get_dirty_queue_table_name()], static function () use ($wpdb, $lock, $expires, $write, &$owned): void {
+            $row = $wpdb->get_row($wpdb->prepare(
+                "SELECT option_value FROM {$wpdb->options} WHERE option_name = %s FOR UPDATE",
+                'iss_graph_dirty_queue_lock'
+            ), ARRAY_A);
+            if ($wpdb->last_error !== '') {
+                throw new RuntimeException('Could not verify graph queue lock ownership.');
+            }
+            if ($expires <= time() || !$row || $row['option_value'] !== $lock) {
+                return;
+            }
+            $write();
+            $owned = true;
+        }, 'Graph queue state change');
+
+        return $owned;
     }
 
     public function backfill_relation_autonomy_columns(array $args = []): array
@@ -2969,25 +3312,77 @@ final class ISS_Graph_Service
         return $stats;
     }
 
-    private function acquire_dirty_queue_lock(int $ttl): bool
+    private function acquire_dirty_queue_lock(int $ttl): ?string
     {
-        $now = time();
-        $lock = get_option('iss_graph_dirty_queue_lock', []);
-        if (is_array($lock) && isset($lock['expires']) && (int) $lock['expires'] > $now) {
-            return false;
+        global $wpdb;
+
+        // Read the database directly: cached options cannot arbitrate workers.
+        $option = 'iss_graph_dirty_queue_lock';
+        $row = $wpdb->get_row($wpdb->prepare(
+            "SELECT option_value FROM {$wpdb->options} WHERE option_name = %s",
+            $option
+        ), ARRAY_A);
+        if ($wpdb->last_error !== '') {
+            throw new RuntimeException('Could not read the graph dirty queue lock.');
         }
 
-        update_option('iss_graph_dirty_queue_lock', [
+        $previous = $row['option_value'] ?? null;
+        $now = time();
+        $lock = maybe_unserialize($previous);
+        if (is_array($lock) && isset($lock['expires']) && (int) $lock['expires'] > $now) {
+            return null;
+        }
+
+        $value = maybe_serialize([
+            'token' => wp_generate_uuid4(),
             'created' => $now,
             'expires' => $now + max(60, $ttl),
-        ], false);
+        ]);
+        // The unique option name arbitrates first acquisition; exact-value CAS
+        // prevents a stale reader from overwriting a replacement lease.
+        if ($previous === null) {
+            $changed = $wpdb->query($wpdb->prepare(
+                "INSERT IGNORE INTO {$wpdb->options} (option_name, option_value, autoload) VALUES (%s, %s, 'no')",
+                $option,
+                $value
+            ));
+        } else {
+            $changed = $wpdb->query($wpdb->prepare(
+                "UPDATE {$wpdb->options} SET option_value = %s, autoload = 'no'
+                WHERE option_name = %s AND BINARY option_value = BINARY %s",
+                $value,
+                $option,
+                $previous
+            ));
+        }
+        if ($changed === false) {
+            throw new RuntimeException('Could not acquire the graph dirty queue lock.');
+        }
 
-        return true;
+        wp_cache_delete($option, 'options');
+        wp_cache_delete('notoptions', 'options');
+        wp_cache_delete('alloptions', 'options');
+
+        return $changed === 1 ? $value : null;
     }
 
-    private function release_dirty_queue_lock(): void
+    private function release_dirty_queue_lock(string $lock): void
     {
-        delete_option('iss_graph_dirty_queue_lock');
+        global $wpdb;
+
+        $option = 'iss_graph_dirty_queue_lock';
+        $deleted = $wpdb->query($wpdb->prepare(
+            "DELETE FROM {$wpdb->options} WHERE option_name = %s AND BINARY option_value = BINARY %s",
+            $option,
+            $lock
+        ));
+        if ($deleted === false) {
+            throw new RuntimeException('Could not release the graph dirty queue lock.');
+        }
+
+        wp_cache_delete($option, 'options');
+        wp_cache_delete('notoptions', 'options');
+        wp_cache_delete('alloptions', 'options');
     }
 
     public function delete_entity_by_post(string $entity_kind, int $post_id): void
@@ -3000,6 +3395,11 @@ final class ISS_Graph_Service
         $this->delete_entity((int) $entity['id']);
     }
 
+    /**
+     * Delete the entity and its existing graph dependents as one atomic write.
+     *
+     * @throws RuntimeException When a delete or its transaction fails.
+     */
     public function delete_entity(int $entity_id): void
     {
         global $wpdb;
@@ -3008,15 +3408,24 @@ final class ISS_Graph_Service
             return;
         }
 
-        $wpdb->delete($this->get_relation_table_name(), ['from_entity_id' => $entity_id], ['%d']);
-        $wpdb->delete($this->get_relation_table_name(), ['to_entity_id' => $entity_id], ['%d']);
-        $wpdb->delete($this->get_name_table_name(), ['entity_id' => $entity_id], ['%d']);
-        $wpdb->delete($this->get_identifier_table_name(), ['entity_id' => $entity_id], ['%d']);
-        $wpdb->delete($this->get_evidence_table_name(), ['entity_id' => $entity_id], ['%d']);
-        $wpdb->delete($this->get_search_table_name(), ['entity_id' => $entity_id], ['%d']);
-        $wpdb->delete($this->get_person_facts_table_name(), ['entity_id' => $entity_id], ['%d']);
-        $wpdb->delete($this->get_organization_facts_table_name(), ['entity_id' => $entity_id], ['%d']);
-        $wpdb->delete($this->get_entity_table_name(), ['id' => $entity_id], ['%d']);
+        $deletes = [
+            [$this->get_relation_table_name(), 'from_entity_id'],
+            [$this->get_relation_table_name(), 'to_entity_id'],
+            [$this->get_name_table_name(), 'entity_id'],
+            [$this->get_identifier_table_name(), 'entity_id'],
+            [$this->get_evidence_table_name(), 'entity_id'],
+            [$this->get_search_table_name(), 'entity_id'],
+            [$this->get_person_facts_table_name(), 'entity_id'],
+            [$this->get_organization_facts_table_name(), 'entity_id'],
+            [$this->get_entity_table_name(), 'id'],
+        ];
+        $this->run_atomic_write(array_column($deletes, 0), static function () use ($wpdb, $deletes, $entity_id): void {
+            foreach ($deletes as [$table, $column]) {
+                if ($wpdb->delete($table, [$column => $entity_id], ['%d']) === false) {
+                    throw new RuntimeException('Graph entity deletion could not delete a dependent row set.');
+                }
+            }
+        }, 'Graph entity deletion');
     }
 }
 
@@ -3349,58 +3758,7 @@ add_action('save_post', 'iss_graph_mark_related_post_dirty_on_save', 8, 2);
 
 function iss_graph_replace_entity_projection(string $source_system, int $entity_id, array $payload): void
 {
-    $source_system = sanitize_key($source_system);
-    $entity_id = absint($entity_id);
-    if ($source_system === '' || $entity_id <= 0) {
-        return;
-    }
-
-    $service = iss_graph_get_service();
-    $source_ref = sanitize_text_field((string) ($payload['source_ref'] ?? ('entity:' . $entity_id)));
-
-    if (isset($payload['names']) && is_array($payload['names'])) {
-        $service->replace_entity_names_for_source($entity_id, $source_system, $payload['names'], $source_ref);
-    }
-
-    if (isset($payload['identifiers']) && is_array($payload['identifiers'])) {
-        $service->replace_entity_identifiers_for_source($entity_id, $source_system, $payload['identifiers'], $source_ref);
-    }
-
-    $evidence_rows = $payload['evidence_refs'] ?? ($payload['evidence'] ?? null);
-    if (is_array($evidence_rows)) {
-        $service->replace_entity_evidence_refs_for_source($entity_id, $source_system, $evidence_rows, $source_ref);
-    }
-
-    if (!isset($payload['relations']) || !is_array($payload['relations'])) {
-        return;
-    }
-
-    $relations = $payload['relations'];
-    $is_list = array_keys($relations) === range(0, count($relations) - 1);
-    if ($is_list) {
-        $grouped = [];
-        foreach ($relations as $row) {
-            if (!is_array($row)) {
-                continue;
-            }
-
-            $family = sanitize_key((string) ($row['relation_family'] ?? ''));
-            if ($family === '') {
-                continue;
-            }
-
-            $grouped[$family][] = $row;
-        }
-        $relations = $grouped;
-    }
-
-    foreach ($relations as $relation_family => $rows) {
-        if (!is_array($rows)) {
-            continue;
-        }
-
-        $service->replace_entity_relations_for_source($entity_id, sanitize_key((string) $relation_family), $source_system, $rows, $source_ref);
-    }
+    iss_graph_get_service()->replace_entity_projection($entity_id, $source_system, $payload);
 }
 
 function iss_graph_map_resolver_candidate(array $entity, string $match_type, int $confidence, string $reason = '', array $extra = []): array
@@ -3437,6 +3795,8 @@ function iss_graph_resolve_or_create_named_entity(string $entity_kind, string $n
 
 function iss_graph_resolve_entity(array $args): array
 {
+    global $wpdb;
+
     $service = iss_graph_get_service();
     $entity_kind = $service->normalize_entity_kind((string) ($args['entity_kind'] ?? ($args['kind'] ?? '')));
     $entity_id = absint($args['entity_id'] ?? 0);
@@ -3479,10 +3839,14 @@ function iss_graph_resolve_entity(array $args): array
 
     $label = sanitize_text_field((string) ($args['label'] ?? ($args['raw_label'] ?? '')));
     if ($label !== '') {
+        $queries = $wpdb->num_queries;
         $exact_rows = $service->find_entities_by_normalized_name($label, [
             'entity_kind' => $entity_kind,
             'limit' => 10,
         ]);
+        if ($wpdb->num_queries > $queries && $wpdb->last_error !== '') {
+            throw new RuntimeException('Graph entity resolution could not read matching names.');
+        }
 
         if ($exact_rows) {
             $candidates = array_map(static function (array $row): array {
@@ -3505,6 +3869,9 @@ function iss_graph_resolve_entity(array $args): array
             'entity_kind' => $entity_kind,
             'limit' => isset($args['limit']) ? (int) $args['limit'] : 10,
         ]);
+        if ($wpdb->last_error !== '') {
+            throw new RuntimeException('Graph entity resolution could not search candidates.');
+        }
 
         if ($search_rows) {
             $candidates = array_map(static function (array $row): array {

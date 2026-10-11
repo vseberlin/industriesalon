@@ -11,6 +11,11 @@ class ISS_WF_Import_Relation_Service
     /** @var array<int, array<string, mixed>|null> */
     private array $projection_cache = [];
 
+    public function clear_projection_cache(int $post_id): void
+    {
+        unset($this->projection_cache[$post_id]);
+    }
+
     public function get_relation_table_name(): string
     {
         global $wpdb;
@@ -109,19 +114,22 @@ class ISS_WF_Import_Relation_Service
 
     public function sync_object_relations(int $post_id): void
     {
-        $snapshot = $this->build_snapshot($post_id);
-        if (!$snapshot) {
-            return;
+        $this->clear_projection_cache($post_id);
+        try {
+            iss_wf_import_get_object_service()->synchronize_projection($post_id, function (WP_Post $post) use ($post_id): void {
+                $snapshot = $this->build_snapshot($post_id, $post);
+                if (!$snapshot) {
+                    return;
+                }
+                $object_row = $this->get_or_create_object_row($post_id);
+                if (!$object_row) {
+                    throw new RuntimeException('Archive relation projection could not create its object row.');
+                }
+                $this->replace_relation_rows((int) $object_row['id'], $snapshot, current_time('mysql', true));
+            }, true);
+        } finally {
+            $this->clear_projection_cache($post_id);
         }
-
-        $object_row = $this->get_or_create_object_row($post_id);
-        if (!$object_row) {
-            return;
-        }
-
-        $timestamp = current_time('mysql', true);
-        $this->replace_relation_rows((int) $object_row['id'], $snapshot, $timestamp);
-        unset($this->projection_cache[$post_id]);
     }
 
     public function delete_object_relations(int $post_id): void
@@ -144,13 +152,19 @@ class ISS_WF_Import_Relation_Service
             return null;
         }
 
-        if (array_key_exists($post_id, $this->projection_cache)) {
+        $cacheable = iss_wf_import_get_object_service()->can_cache_projection();
+        if (!$cacheable) {
+            $this->clear_projection_cache($post_id);
+        }
+        if ($cacheable && array_key_exists($post_id, $this->projection_cache)) {
             return $this->projection_cache[$post_id];
         }
 
         $object_row = iss_wf_import_get_object_service()->get_projection_for_post($post_id);
         if (!is_array($object_row)) {
-            $this->projection_cache[$post_id] = null;
+            if ($cacheable) {
+                $this->projection_cache[$post_id] = null;
+            }
             return null;
         }
 
@@ -214,7 +228,9 @@ class ISS_WF_Import_Relation_Service
             }
         }
 
-        $this->projection_cache[$post_id] = $projection;
+        if ($cacheable) {
+            $this->projection_cache[$post_id] = $projection;
+        }
 
         return $projection;
     }
@@ -290,15 +306,28 @@ class ISS_WF_Import_Relation_Service
         return $this->normalize_local_place_relations($relations);
     }
 
-    protected function build_snapshot(int $post_id): ?array
+    protected function build_snapshot(int $post_id, ?WP_Post $post = null): ?array
     {
-        $post = get_post($post_id);
+        global $wpdb;
+
+        $queries = $wpdb->num_queries;
+        $post = $post ?? get_post($post_id);
+        if ($wpdb->num_queries > $queries && $wpdb->last_error !== '') {
+            throw new RuntimeException('Archive relation projection could not read the source post.');
+        }
         if (!$post instanceof WP_Post || $post->post_type !== ISS_WF_IMPORT_OBJECT_POST_TYPE) {
             return null;
         }
 
         if (in_array($post->post_status, ['auto-draft', 'trash'], true)) {
             return null;
+        }
+
+        $queries = $wpdb->num_queries;
+        get_post_meta($post_id);
+        if ($wpdb->num_queries > $queries && $wpdb->last_error !== '') {
+            wp_cache_delete($post_id, 'post_meta');
+            throw new RuntimeException('Archive relation projection could not read source metadata.');
         }
 
         return [
@@ -334,7 +363,9 @@ class ISS_WF_Import_Relation_Service
         global $wpdb;
 
         $table = $this->get_relation_table_name();
-        $wpdb->delete($table, ['object_id' => $object_id], ['%d']);
+        if ($wpdb->delete($table, ['object_id' => $object_id], ['%d']) === false) {
+            throw new RuntimeException('Archive relation projection could not delete previous rows.');
+        }
 
         $position = 0;
         foreach ((array) $snapshot['tags'] as $item) {
@@ -361,13 +392,16 @@ class ISS_WF_Import_Relation_Service
         foreach ((array) $snapshot['local_places'] as $item) {
             $this->insert_local_place_row($object_id, $item, $position++, $timestamp);
         }
+        if (count($this->get_relation_rows($object_id)) !== $position) {
+            throw new RuntimeException('Archive relation projection could not verify its replacement rows.');
+        }
     }
 
     protected function insert_named_ref_row(int $object_id, string $family, array $item, int $position, string $timestamp): void
     {
         global $wpdb;
 
-        $wpdb->insert($this->get_relation_table_name(), [
+        if ($wpdb->insert($this->get_relation_table_name(), [
             'object_id' => $object_id,
             'relation_family' => $family,
             'relation_source' => 'source_named_ref',
@@ -399,14 +433,16 @@ class ISS_WF_Import_Relation_Service
             '%d', '%s', '%s', '%s', '%d', '%s', '%s', '%s', '%s', '%s',
             '%d', '%s', '%d', '%d', '%s', '%s', '%s', '%s', '%d', '%s',
             '%d', '%s', '%f', '%f', '%d', '%s', '%s',
-        ]);
+        ]) !== 1) {
+            throw new RuntimeException('Archive relation projection could not insert a row.');
+        }
     }
 
     protected function insert_event_row(int $object_id, array $item, int $position, string $timestamp): void
     {
         global $wpdb;
 
-        $wpdb->insert($this->get_relation_table_name(), [
+        if ($wpdb->insert($this->get_relation_table_name(), [
             'object_id' => $object_id,
             'relation_family' => 'event',
             'relation_source' => 'source_event',
@@ -438,7 +474,9 @@ class ISS_WF_Import_Relation_Service
             '%d', '%s', '%s', '%s', '%d', '%s', '%s', '%s', '%s', '%s',
             '%d', '%s', '%d', '%d', '%s', '%s', '%s', '%s', '%d', '%s',
             '%d', '%s', '%s', '%s', '%d', '%s', '%s',
-        ]);
+        ]) !== 1) {
+            throw new RuntimeException('Archive relation projection could not insert a row.');
+        }
     }
 
     protected function insert_object_relation_row(int $object_id, array $item, int $position, string $timestamp): void
@@ -447,7 +485,7 @@ class ISS_WF_Import_Relation_Service
 
         $target_post_id = absint($item['object_id'] ?? 0);
 
-        $wpdb->insert($this->get_relation_table_name(), [
+        if ($wpdb->insert($this->get_relation_table_name(), [
             'object_id' => $object_id,
             'relation_family' => 'object',
             'relation_source' => 'source_object',
@@ -479,7 +517,9 @@ class ISS_WF_Import_Relation_Service
             '%d', '%s', '%s', '%s', '%d', '%s', '%s', '%s', '%s', '%s',
             '%d', '%s', '%d', '%d', '%s', '%s', '%s', '%s', '%d', '%s',
             '%d', '%s', '%f', '%f', '%d', '%s', '%s',
-        ]);
+        ]) !== 1) {
+            throw new RuntimeException('Archive relation projection could not insert a row.');
+        }
     }
 
     protected function insert_local_place_row(int $object_id, array $item, int $position, string $timestamp): void
@@ -487,15 +527,20 @@ class ISS_WF_Import_Relation_Service
         global $wpdb;
 
         $place_id = absint($item['place_id'] ?? 0);
+        $queries = $wpdb->num_queries;
+        $title = $place_id > 0 ? sanitize_text_field((string) get_the_title($place_id)) : '';
+        if ($wpdb->num_queries > $queries && $wpdb->last_error !== '') {
+            throw new RuntimeException('Archive relation projection could not read the local place title.');
+        }
 
-        $wpdb->insert($this->get_relation_table_name(), [
+        if ($wpdb->insert($this->get_relation_table_name(), [
             'object_id' => $object_id,
             'relation_family' => 'local_place',
             'relation_source' => 'editorial_place',
             'relation_type' => sanitize_key((string) ($item['role'] ?? 'related')),
             'target_post_id' => $place_id,
             'target_source_id' => '',
-            'target_name' => $place_id > 0 ? sanitize_text_field((string) get_the_title($place_id)) : '',
+            'target_name' => $title,
             'source_url' => '',
             'note' => '',
             'relation_context' => '',
@@ -520,7 +565,9 @@ class ISS_WF_Import_Relation_Service
             '%d', '%s', '%s', '%s', '%d', '%s', '%s', '%s', '%s', '%s',
             '%d', '%s', '%d', '%d', '%s', '%s', '%s', '%s', '%d', '%s',
             '%d', '%s', '%f', '%f', '%d', '%s', '%s',
-        ]);
+        ]) !== 1) {
+            throw new RuntimeException('Archive relation projection could not insert a row.');
+        }
     }
 
     protected function get_relation_rows(int $object_id): array
@@ -534,6 +581,9 @@ class ISS_WF_Import_Relation_Service
             ORDER BY position ASC, id ASC",
             $object_id
         ), ARRAY_A);
+        if ($wpdb->last_error !== '') {
+            throw new RuntimeException('Archive relation projection could not read its rows.');
+        }
 
         return is_array($rows) ? $rows : [];
     }
@@ -682,6 +732,15 @@ class ISS_WF_Import_Relation_Service
 
     protected function relation_has_payload(int $post_id): bool
     {
+        global $wpdb;
+
+        $queries = $wpdb->num_queries;
+        get_post_meta($post_id);
+        if ($wpdb->num_queries > $queries && $wpdb->last_error !== '') {
+            wp_cache_delete($post_id, 'post_meta');
+            throw new RuntimeException('Archive relation projection could not read source payload.');
+        }
+
         foreach ([
             ISS_WF_IMPORT_OBJECT_TAGS_META,
             ISS_WF_IMPORT_OBJECT_COLLECTIONS_META,

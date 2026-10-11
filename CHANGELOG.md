@@ -4,6 +4,240 @@ This file records durable project changes. Keep it compact: current state belong
 `handoff_CURRENT.md`, active follow-up in `TODO.md`, and detailed investigation can
 be recovered from Git history.
 
+## 2026-10-11
+
+- Committed the accumulated refactor checkpoint after a combined regression pass:
+  3,134 checks across 21 suites, PHP lint, PHPCS and PHPStan. The user authorized
+  autonomous continuation in verified local commits. The taxonomy seed migration
+  is included; other checkpoint changes need no data or uploads artifact.
+- Made editorial Set creation atomic with its required audit row. Extracted the
+  verified deletion transaction mechanics into one private helper in the same
+  service; no new graph/archive dependency or parallel writer. Key-generation
+  reads are checked, and the existing audit writer returns insert success.
+  Creation requires that result; other callers retain their current policy.
+  Preserved positive IDs, duplicate/first-insert rejection as zero, normalization,
+  actor attribution and audit payloads. Passed 133 creation checks plus all 181
+  deletion regressions, lint, PHPCS and PHPStan. Temporary fixtures retained real
+  Set/audit/options/queue rows. Retained a service before-image and reverified the
+  four-table backup. No schema/data migration, uploads artifact, real Set changes,
+  import/merge run or staging deployment. Broader caller workflows remain separate.
+- Made editorial Set deletion atomic across items, context links and the Set,
+  preserving audit history and existing promoted/archive-candidate protection.
+  The owner method checks table engines/state, locks all relevant rows, verifies
+  delete counts and preserves caller transactions with savepoints. Database
+  failures now raise errors; missing/protected Sets retain their false result.
+  No Set transaction helper existed; the boundary stays in this method without
+  adding dependencies on graph/archive owners. Passed 181 isolated checks plus
+  lint, PHPCS and PHPStan; real Set/audit/options/queue rows stayed unchanged.
+  Retained a source before-image and verified four-table backup. No real deletion
+  or merge run, schema/data migration, uploads artifact or staging deployment.
+  Earlier merge moves and other Set writes remain separate transaction work.
+- Made archive object saves and complete relation replacements atomic, including
+  required object creation and paired source preparation before graph sync.
+  Added one shared boundary in the existing archive owner: no archive helper
+  existed, and the graph helper is private to its owner. Checked stored results,
+  locked source posts, savepoints and transaction-aware projection caches retain
+  complete old rows after failure and support retry/caller rollback. Failed
+  metadata queries now evict WordPress's empty error cache before retry. Passed
+  371 projection checks, 195 archive graph and 221 register regressions, plus
+  lint, PHPCS and PHPStan. Isolated suites preserved real graph/archive/queue/
+  options rows. Retained source before-images and reverified the scoped backup.
+  No schema/data migration, uploads artifact, real repair/backfill, preservation
+  storage changes or staging deployment. Browser/staging acceptance remains open.
+- Made automatic archive-object graph synchronization atomic through the existing
+  graph transaction helper, including title/identifiers/aliases, all projection
+  relationship families, named targets and nested register-place/owner creation.
+  Checked source and identity reads plus required write results prevent empty or
+  partial graph replacement. Reused prepared archive snapshots across families;
+  retained source labels, identity matching, privacy and no-op behavior. Existing
+  archive projection preparation stays before graph writes, with explicit read/
+  write failures and cache invalidation in its owners. Its own non-atomic relation
+  replacement remains the next bounded step. Passed 195 archive, 221 register and
+  114 content checks plus lint, PHPCS and PHPStan; isolated suites preserved real
+  graph/archive projections, queue and options. Retained source before-images and
+  verified scoped graph/archive projection backup. No schema/data migration,
+  uploads artifact, real backfill, preservation-storage work or staging deployment.
+- Made manual video transcript review batches atomic across person/organization
+  promotions, canonical place metadata, review decisions and automatic evidence
+  refresh through the existing transaction helper. Checked prerequisite reads,
+  stored decisions and relation metadata; preserved permissions, sources and
+  review precedence. The relation owner retains Metadata API writes, now verifies
+  stored values and preserves backslashes. Restored deferred metadata hooks/cache
+  state on success and failure; derived place taxonomy/graph and search run after
+  standalone commit. Shared prepared transcript evidence writing keeps rendering
+  outside standalone write locks. Passed 180 review checks, 128 transcript,
+  92 content-editor and 114 content regressions, plus lint, PHPCS and PHPStan.
+  Isolated fixtures retained real graph, taxonomy, relation/status metadata,
+  queue and options. Retained three source before-images and a verified scoped
+  graph/postmeta backup. No schema/data migration or uploads artifact is needed;
+  browser UAT and staging acceptance remain outstanding.
+- Made automatic video transcript evidence synchronization atomic with required
+  video graph creation through the existing graph transaction helper. Checked
+  source/status, candidate, review and evidence-URL reads prevent failed queries
+  from becoming empty evidence. Standalone calls render blocks before opening
+  the graph transaction. Preserved matching/order/caps, visibility, status
+  normalization, source labels, reviewed-target exclusions and save priority.
+  Passed 128 transcript checks, 114 content regressions and 105 evidence
+  regressions, plus PHP lint, PHPCS and PHPStan. Isolated suites retained real
+  graph/transcript-status/queue/options rows. Kalender and a published video
+  returned HTTP 200 with no web PHP errors. Retained a source before-image and
+  reverified the scoped graph backup. No schema/data migration or uploads
+  artifact is needed; manual review writes and staging remain separate.
+- Hardened profile facts saves and the existing shared facts writer. Entity and
+  facts reads, insert/update results and saved values are checked inside the
+  existing transaction helper; failures roll back instead of returning an old
+  row as success. Valid zero-row updates, sanitation, creation timestamps and
+  clearing semantics remain supported. Profile saves lock the stored binding;
+  stale metadata cannot redirect facts. Search follows successful standalone
+  commit. Passed 234 facts checks, 155 binding regressions and 102 alias
+  regressions, plus PHP lint, PHPCS and PHPStan. Temporary fixtures preserved real
+  graph/facts/binding/queue/options rows. Retained source before-images and a
+  verified facts-table backup. No schema/data migration or uploads artifact is
+  needed; staging untouched.
+- Made manual profile names and generated aliases atomic through the existing
+  profile transaction helper. Checked source, binding and entity reads use the
+  binding save's lock order; cached metadata cannot redirect the name save.
+  Search follows a successful standalone commit and refreshes binding metadata.
+  Preserved permissions, nonces, source labels, ordering, empty-clearing and
+  privacy. Passed 102 isolated alias checks, 155 binding regressions and 68 name
+  regressions, plus PHP lint, PHPCS and PHPStan. Real graph/binding/queue/options
+  rows were unchanged and temporary fixtures removed. Retained a source
+  before-image and reverified the scoped graph/postmeta backup. No schema/data
+  migration or uploads artifact is needed; staging untouched.
+- Made profile binding saves atomic across current/displaced binding metadata,
+  previous/new entities, profile identifiers and generated aliases. Added a
+  profile-specific entry to the existing transaction helper because the graph-only
+  boundary cannot include WordPress metadata. Writes still use the Metadata API;
+  checked reads, locked rows and stored-result verification prevent partial moves.
+  Detachment removes stale profile identifiers and verifies ownership before
+  clearing a link. Editor requests enter the transaction before changing metadata.
+  Deferred the existing metadata search callback, cleaned metadata caches on
+  success/failure and refreshed register cache/search after standalone commit.
+  Existing primary/identifier keys bound entity lookup to four candidates instead
+  of an estimated 3,649-row scan; no index or schema change. Passed 155 binding,
+  221 register and 92 content editor checks, plus PHP lint, PHPCS and PHPStan.
+  Isolated suites preserved real graph/binding/queue/options data. Source
+  before-images and a verified graph/postmeta dump are retained locally.
+  Kalender and a published profile returned HTTP 200 with no web PHP errors.
+  No schema/data migration or uploads artifact is needed; staging untouched.
+- Made manual public-content person/organization relation saves atomic through
+  the existing graph transaction and combined projection APIs. Target/source
+  reads and required source/venue graph creation share the boundary; database
+  read failures cannot silently discard selected targets. Preserved nonces,
+  permissions, profile-only targets, privacy, source labels, empty-clearing and
+  save priority. Derived read-model/search updates run afterward and retain their
+  own failure boundary. Passed 92 isolated editor-save checks and 114 automatic
+  content regressions, plus PHP lint, PHPCS, PHPStan and whitespace checks.
+  Real graph, queue, terms, postmeta and options remained unchanged during the
+  editor suite; fixtures were removed. Veranstaltungen and Kalender returned
+  HTTP 200. Retained a source before-image and reverified the existing scoped
+  graph backup. No schema/data migration, uploads or staging deployment.
+- Made automatic public-content graph synchronization atomic through the existing
+  graph transaction helper. Entity/title, identifiers, aliases and native relation
+  families now include nested venue/owner graph writes in one boundary. Failed
+  source/venue reads and entity writes raise errors instead of committing partial
+  projections or clearing a venue. Retained source labels, visibility, supported
+  post types and atomic trash/auto-draft deletion; source posts/meta and subsequent
+  search writes remain separate. Passed 114 isolated content checks, 221 register
+  regressions and 87 queue regressions, with real data unchanged during the suites.
+  PHP lint, PHPCS, PHPStan and whitespace checks passed; Veranstaltungen and
+  Kalender returned HTTP 200. Verified source before-image and scoped graph dump
+  retained locally. No schema/data migration, uploads or staging deployment.
+  Manual content editor relation groups remain the next bounded step.
+- Hardened graph queue processing within the existing queue/lease owner. Select
+  after locking; use the existing transaction helper for short ownership-checked
+  claims, acknowledgements and run-status writes. Reconcile outside transactions;
+  stop on lease loss. Atomic dirty upserts preserve same-second edits and reset
+  their retry budget. Recover abandoned processing within the batch limit and
+  retire exhausted work without another attempt. No schema or scheduler change.
+  Passed 87 processing checks and all 57 lock regressions, plus PHP lint,
+  PHPCS/PHPStan and whitespace checks; Kalender returned HTTP 200. Both isolated
+  suites preserved real queue/options and removed their fixtures. Source
+  before-images and a verified scoped queue dump are retained locally. No real
+  queue drain, data migration, uploads artifact or staging deployment was needed.
+- Made graph queue lock acquisition atomic in its existing option: unique-name
+  insertion, exact-value stale takeover and a per-lease ownership token. Release
+  checks the drain's saved lease, so an old worker cannot remove a replacement.
+  Bypassed cached reads for arbitration, invalidated option caches after writes
+  and surfaced SQL failures. Passed 57 isolated checks using two DB connections,
+  including forced competing acquisitions, stale takeover, old-owner release,
+  legacy/cache behavior, SQL failures and drain cleanup. The suite leaves the real
+  queue and lock/run options unchanged; a later real post-save entry was preserved.
+  Fixture tables were removed. PHP lint, PHPCS, PHPStan
+  and whitespace checks passed; local Kalender returned HTTP 200. Queue claiming,
+  processing recovery and retry behavior remain the next bounded step. Local
+  only; no schema/data migration or uploads artifact is needed.
+
+## 2026-10-08
+
+- Made register automatic graph sync and editor graph saves atomic together,
+  including place/target entities, identifiers, roles and aliases. Added a narrow
+  bridge entry to the existing transaction helper because the single-source API
+  cannot encompass target creation or multiple source owners. The editor's three
+  groups use that API inside the outer transaction. Checked entity writes and
+  prerequisite reads; derive aliases after saving manual names. Retained source
+  labels, imported-role exclusions, target privacy, permissions and nonces.
+  Passed 221 isolated register-graph checks, 683 graph/register/privacy regression
+  checks and PHP lint/PHPCS/PHPStan. Seven pages match; projection tables are
+  unchanged. Concurrent editor revisions, locks/session and queue activity were
+  preserved. No schema/data migration or uploads artifact is needed.
+- Made the combined graph projection API atomic across supplied names,
+  identifiers, evidence and relation families. Moved its existing dispatch into
+  the graph service and reused the transaction helper; component savepoints keep
+  one outer commit. Preserved partial payloads, aliases, family order and empty
+  clearing. Passed 205 projection checks and 457 component/register checks, plus
+  PHP lint/PHPCS/PHPStan. All 117 non-options tables remain unchanged; seven page
+  responses match after normalizing rotating REST nonces and email entities.
+  Bridge workflows still require separate integration. No migration/uploads needed.
+- Made graph evidence replacement atomic through the existing transaction helper.
+  Failed upsert reads/writes and foreign entity IDs now abort the batch, restoring
+  deleted rows and preceding same-entity ID updates. Preserved generated IDs,
+  default/duplicate rows and zero-row updates. Passed 105 isolated evidence checks,
+  30 register checks and PHP lint/PHPCS/PHPStan. Real graph data and seven sampled
+  pages are unchanged; the existing booking cron refreshed its own tables.
+  No schema/data migration or uploads artifact is needed.
+- Made graph identifier replacement atomic through the existing transaction
+  helper and checked identifier upsert. Invalid rows, cross-entity conflicts and
+  failed reads/writes now roll back the batch, including preceding source changes.
+  Retained same-entity source reassignment, last-duplicate behavior and successful
+  zero-row updates. Passed 105 isolated identifier checks, 30 register checks and
+  PHP lint/PHPCS/PHPStan. Graph rows and seven sampled pages are unchanged; the
+  existing booking cron refreshed its own tables. No migration/uploads needed.
+- Made graph name replacement atomic for one entity/source using the existing
+  transaction helper. Prepare names before deleting, check every write, and
+  preserve original names on failure. Kept other sources, historical dates,
+  normalization, ordering and empty-clearing behavior. Passed 68 isolated name
+  checks, 30 register-sync checks and PHP lint/PHPCS/PHPStan. Real graph data and
+  seven sampled pages are unchanged. No schema/data migration or uploads needed.
+- Made the existing nine graph entity-deletion writes across eight tables atomic.
+  Extracted the preceding relationship transaction handling into one private
+  graph-service helper, retaining savepoint ownership and checking every table's
+  engine before mutation. No second transaction layer or expanded deletion scope.
+  Passed 161 isolated deletion checks, all 149 relationship checks, 30 register
+  checks and PHP lint/PHPCS/PHPStan. Real graph rows and seven sampled pages remain
+  unchanged. No real entity was deleted; no migration/uploads artifact is needed.
+- Made graph relationship replacement atomic for one entity/family/source.
+  Normalize rows before writing, require MariaDB/InnoDB, check delete/insert and
+  transaction results, and roll back on failure. Savepoints preserve caller-owned
+  transactions; exceptions reach the existing queue retry handler. All 149 new
+  isolated relation checks, 30 register-sync checks and 23 programme checks pass,
+  alongside PHP lint, PHPCS and PHPStan. Graph checksums and seven sampled pages
+  are unchanged. Local only; no schema, data migration or uploads artifact needed.
+- Version-gated the existing content, fallback-category and archive taxonomy
+  seed routines. Registration stays on `init`; seeding runs through activation,
+  privileged admin upgrades or the scoped check/apply/verify migration. Failed
+  setup leaves the version pending and visible in existing diagnostics.
+  All 91 transactional seed checks and 23 programme checks passed. Local
+  calendar queries fell from 340 to 136, with unchanged sampled page content
+  landmarks, links, assets and preserved term IDs. Applied locally only.
+- Corrected local WordPress development mounts to serve the website checkout's
+  plugins, theme and receiver, retaining existing data mounts and the same web
+  image. Kept the override, WP-CLI wrapper, verified database/files backup and
+  seven-route server/asset baseline inside the WordPress workspace. All 23
+  programme checks passed; table schemas and preserved content were unchanged.
+  Recorded normal options/startup-marker changes and remaining browser/staging
+  acceptance. Later refactoring slices require separate user confirmations.
+
 ## 2026-10-07
 
 - Prepared a staging-informed WordPress refactoring plan and extended the existing

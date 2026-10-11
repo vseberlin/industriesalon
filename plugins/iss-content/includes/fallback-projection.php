@@ -47,23 +47,35 @@ function iss_content_fallback_category_slug_for_source(string $source_type): str
     return (string) ($map[sanitize_key($source_type)] ?? '');
 }
 
-function iss_content_fallback_seed_categories(): void
+function iss_content_fallback_seed_categories(): bool
 {
+    if ((string) get_option(ISS_CONTENT_FALLBACK_CATEGORY_SEED_OPTION, '') === ISS_CONTENT_FALLBACK_CATEGORY_SEED_VERSION) {
+        return true;
+    }
+    if (!taxonomy_exists('category')) {
+        return false;
+    }
+
     foreach (iss_content_fallback_category_terms() as $term) {
         $slug = sanitize_title((string) ($term['slug'] ?? ''));
         $label = trim((string) ($term['label'] ?? ''));
         if ($slug === '' || $label === '') {
-            continue;
+            return false;
         }
 
         if (term_exists($slug, 'category')) {
             continue;
         }
 
-        wp_insert_term($label, 'category', ['slug' => $slug]);
+        $created = wp_insert_term($label, 'category', ['slug' => $slug]);
+        if (is_wp_error($created) && !term_exists($slug, 'category')) {
+            return false;
+        }
     }
+
+    update_option(ISS_CONTENT_FALLBACK_CATEGORY_SEED_OPTION, ISS_CONTENT_FALLBACK_CATEGORY_SEED_VERSION, false);
+    return (string) get_option(ISS_CONTENT_FALLBACK_CATEGORY_SEED_OPTION, '') === ISS_CONTENT_FALLBACK_CATEGORY_SEED_VERSION;
 }
-add_action('init', 'iss_content_fallback_seed_categories', 35);
 
 function iss_content_fallback_register_category_for_pages(): void
 {

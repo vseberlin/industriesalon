@@ -4,6 +4,7 @@ WordPress posts, post meta, terms, and `WP_Query` are the default model for norm
 
 ## Existing Custom Table Owners
 
+- `iss-content`: private editorial Sets, their items/context links and retained audit history.
 - `iss-graph`: entity index, entity names, entity identifiers, entity evidence references, entity relations, editorial relation signals, search index, person facts, and organization facts.
 - `iss-occurrences`: public programme occurrence projection and recurrence series for indexed calendar/timeline queries.
 - `iss-commerce-lite`: lightweight public booking/order request intake, review/export/status handling, and notification state for low-volume operational handling. The request table keeps the existing `wp_iss_payments_lite_requests` name for compatibility.
@@ -18,6 +19,337 @@ WordPress posts, post meta, terms, and `WP_Query` are the default model for norm
   See the supplier exchange contract in `places-editorial-atlas-restructure-plan.md`.
 
 See `source-of-truth.md` before deciding which storage layer is canonical for a surface.
+
+`ISS_Content_Editorial_Sets_Service::delete_set_if_safe()` now treats Set, item
+and context-link removal as one transaction. It checks all three table engines
+and session state, locks the Set followed by all its items and links, and checks
+both child delete counts plus the single Set delete. The existing SQL predicate
+still protects promoted items and nonempty archive-candidate statuses, including
+items beyond the UI page limit and the database's collation semantics. Invalid,
+missing and protected Sets return `false`; failed reads, writes or transaction
+commands raise an exception rather than masquerading as a missing/unprotected Set
+or a successful deletion. Audit rows are retained, and no source media/post or
+unrelated Set is deleted. The service has no projection cache to invalidate.
+
+`create_set()` now shares the extracted private `run_atomic_write()` helper with
+deletion. It validates the Set/audit tables and creates the Set together with its
+required `set_created` audit row. Failed key-generation reads raise an error;
+audit or transaction failures roll back the new Set and propagate. A rejected
+first insert, including a duplicate explicit key, retains the existing `0`
+result and produces no audit. Valid inputs retain positive IDs, normalization,
+generated-key suffixes/defaults, actor attribution and payload encoding.
+`record_audit()` now returns the insert's success as a boolean. Creation requires
+it; other callers retain their previous behavior until their own atomicity work.
+
+The helper is extracted from the verified Set deletion implementation inside the
+existing owner; no dependency on graph/archive transaction helpers was added.
+Standalone calls commit or roll back their transaction; caller transactions and
+disabled autocommit use savepoints and retain the caller's final decision. Failed
+rollback or savepoint cleanup is reported with the original cause. Later context
+attachment, item creation, broader REST/core audit logging and import/merge work
+remain separate. Generated-key races can still return `0` from the unique-key
+constraint; no automatic concurrency retry is introduced. Other Set writers have
+not yet adopted the shared transaction/locking contract, and no multi-worker
+consistency guarantee is claimed.
+
+The isolated real-schema temporary-table suites
+`tests/e2e/bin/editorial-set-create-atomic.php` and
+`tests/e2e/bin/editorial-set-delete-atomic.php` cover required audit failure,
+retries, keys, normalization, protections, partial deletes, caller transactions,
+existing owner APIs and REST first-insert rejection. Real Set/audit/options/queue
+rows are retained. No schema/data migration or uploads artifact is needed; no
+real Set creation/deletion, import or merge routine was run.
+
+Graph relationship replacement is atomic for one entity, relation family and
+source system. Name, identifier and evidence replacement are atomic for one entity and source system,
+across that source's references. Empty rows intentionally clear the relevant
+scope; name normalization, ordering and blank-name skipping are retained. Graph entity deletion
+is atomic across its existing nine deletes in eight tables, including incoming
+and outgoing edges, names, identifiers, evidence, search, facts and the entity.
+Identifier replacement retains the existing same-entity source reassignment and
+last-duplicate-input behavior. Invalid identifier arrays, conflicts with another
+entity, or failed reads/writes now abort the entire replacement; non-array entries
+remain skipped. Empty input still clears the requested source. The existing
+upsert returns failure for failed inserts/updates, while a zero-row update succeeds.
+Evidence replacement likewise aborts on rejected rows or failed reads/writes.
+An explicit evidence ID can update another source's row belonging to the same
+entity, and that update rolls back with the batch on failure. Foreign entity IDs
+are rejected. Missing IDs (including rows deleted in the replacement scope)
+still create new identities; no-ID duplicates and default evidence rows remain
+valid. Non-array entries are skipped and empty input clears the source.
+The combined `iss_graph_replace_entity_projection()` facade delegates to
+`ISS_Graph_Service::replace_entity_projection()`. All supplied name, identifier,
+evidence and relation-family sets share one outer transaction. Every participating
+table is validated before any write; component writers retain their savepoints.
+A failure in the final family restores preceding component writes and source
+reassignments. Omitted/non-array parts are skipped; explicit empty arrays clear
+only their existing scopes. An empty relation map clears no families. Flat lists,
+the evidence alias and sequential sanitized-family collisions retain their
+existing behavior. Empty/no-op payloads perform no database work.
+`ISS_Graph_Service` shares one private transaction helper between these six
+operations. It checks MariaDB session state and every participating InnoDB table,
+checks writes and raises exceptions on failure. Caller-owned transactions,
+including disabled autocommit, retain ownership through a savepoint. Only a
+transaction started by the helper is committed.
+
+The register bridge now runs automatic place synchronization and optional editor
+groups inside `synchronize_entity_graph()`, which exposes that same private helper
+for bridge-owned entity/name/identifier/relation writes. One-source payloads
+cannot encompass target creation or several source labels, so this boundary
+wraps the existing writers without merging their provenance. Place and target
+entity upserts, identifiers, automatic roles, the three `register_admin` groups
+and alias refresh succeed or roll back together. Aliases are derived after the
+new manual names are written. Failed source/identity/alias reads and failed
+entity writes abort rather than silently removing rows or reporting success;
+unchanged entity updates remain valid. Imported role exclusions, hidden target
+defaults, editor permissions/nonces and empty-group clearing are retained.
+
+Standalone editor saves invalidate the existing register cache after the graph
+commit. A caller owning an outer transaction remains responsible for final
+commit/cache coordination. WordPress source posts/meta, register epoch/state
+tables and search updates are outside this graph transaction; a graph failure
+does not undo an already-saved WordPress post. No schema or content migration is
+required.
+
+Automatic public-content synchronization in `iss_graph_sync_public_content_entity()`
+also uses `synchronize_entity_graph()`. Content entity/title, WordPress identifiers,
+aliases and the native place/person/organization families commit together,
+including nested register venue and venue-owner graph creation. Prerequisite
+source/venue read failures and missing results from required entity writes abort
+the operation. A genuinely absent, invalid or trashed venue still intentionally
+clears its native relation. Manual `content_admin` rows and other source labels
+remain separate. Trash/auto-draft projection removal uses the existing atomic
+entity deletion boundary; a failed lookup cannot report successful removal.
+Caller transactions retain their savepoints and final commit ownership. Source
+WordPress posts/meta and subsequent read-model/search writes remain outside this
+graph transaction. No schema/data migration or uploads are required.
+`tests/e2e/bin/graph-content-atomic.php` checks rollback, nested venue writes,
+source contracts and queue retry integration with temporary graph/queue/options
+tables and process-local source fixtures; real data is retained.
+
+Automatic archive-object graph synchronization in
+`iss_graph_sync_archive_object_entity()` uses `synchronize_entity_graph()` around
+the object entity, title, identifiers, aliases and all `archive_projection`
+relationship families. Required named person/organization/place creation and
+local register-place/owner graph writes share that boundary. Checked source,
+placeholder, local-place and result reads prevent failed SQL from becoming empty
+relations or duplicate identities. Required entity failures raise errors. Source
+labels, identifier trust, placeholder identity reuse, organization-like person
+labels, hidden named targets, object status/privacy and unsupported/missing-source
+no-ops remain unchanged. It does not write search or drain the dirty queue.
+
+The `iss-archive` object/relation getters can create missing projections. The
+existing object service now owns `synchronize_projection()`, shared by standalone
+object saves, complete relation replacements and paired graph-source preparation.
+It checks MariaDB transaction state and InnoDB tables, locks the source post,
+uses a standalone transaction or caller savepoint, and checks finish/rollback
+results. The locked post supplies the current source type/status/title. Required
+object creation rolls back with failed relation replacement, including all eight
+families. Object readback verifies saved values and relation readback verifies
+replacement count; valid zero-row updates and empty replacements still succeed.
+No archive transaction helper existed; the graph helper is private and scoped to
+graph ownership, so this small boundary belongs in the existing archive owner.
+No new service, table or graph dependency was added to the archive plugin.
+
+Paired preparation commits before the standalone graph transaction. Every graph
+family consumes the same prepared object/relation snapshots, including the
+institution relation. Failed preparation restores both archive projections and
+stops graph work; a later graph rollback preserves successfully prepared archive
+rows. Canonical WordPress posts/meta, media/collection projections, deletion,
+search and preservation storage remain separate.
+
+Both request-local projection caches are invalidated around saves. Each getter
+checks session transaction state before reusing cached rows: reads inside caller
+transactions or with autocommit disabled bypass and evict the cache. Pending rows
+and absence are never cached, so caller rollback cannot leave those observations
+behind. Object saves also invalidate the relation cache's embedded object row.
+Failed metadata queries evict WordPress's empty error result before propagating,
+allowing a complete retry. Canonical metadata writes and cache coordination after
+caller-owned source changes remain the caller's responsibility. The extra
+transaction-state query per getter is intentional; this is not a performance claim.
+
+`tests/e2e/bin/archive-projection-atomic.php` checks warm/cold replacements, all
+families, late failures, retries, caches, unsupported sources and caller
+transactions. `tests/e2e/bin/graph-archive-atomic.php` retains graph rollback,
+identity/privacy and source-preparation coverage. Real projection/graph/queue/
+options rows remain unchanged in the temporary-table suites. No real repair or
+backfill, schema/data migration or uploads artifact is required or performed.
+Multi-worker consistency and browser/staging acceptance were not exercised.
+
+Automatic video transcript synchronization in
+`iss_graph_sync_video_transcript_mentions()` reuses `synchronize_entity_graph()`
+around required video graph creation and `video_transcript` evidence replacement.
+The nested evidence writer checks its table before writing, and failures undo
+both evidence changes and any new video entity/title/identifiers/aliases/native
+relations. Candidate and review reads fail explicitly instead of producing empty
+sets. Reviewed targets, other evidence sources and existing manual relations
+retain their separate ownership. Matching, confidence, caps, status normalization
+and the automatic save hook's priority remain unchanged.
+
+Source post/status reads and block rendering precede the standalone graph
+transaction. The bridge checks its source reads and the renderer's reported SQL
+error; rendering side effects and errors swallowed inside another renderer are
+outside this write contract. Caller-owned transactions retain final commit and
+cache coordination. This function does not update search, write review decisions
+or promote relationships. Source editorial saves remain separate, and no
+concurrent-worker ordering guarantee is established by the isolated tests in
+`tests/e2e/bin/graph-video-transcript-atomic.php`. No schema/data migration or
+uploads are required.
+
+Manual video transcript review in `iss_graph_save_video_transcript_review()`
+uses `synchronize_video_transcript_review()`, an entry to the same transaction
+helper covering posts (source lock), postmeta and graph entities, names,
+identifiers, relations and evidence. One submitted batch commits or rolls back
+its `content_admin` person/organization promotions, canonical `iss_related_places`
+metadata, accepted/rejected `video_transcript_review` decisions and automatic
+transcript evidence refresh together. Prerequisite reads, decision writer results
+and stored decision fields are checked. Existing permissions, nonce, ownership
+and pending-evidence checks, accept-over-dismiss precedence, source labels and
+save priority remain in place. Unusable place posts are skipped without an
+accepted decision.
+
+Place writes retain the `iss-relations` owner and WordPress Metadata API.
+Its source reads/target normalization now distinguish SQL errors from missing
+values. Its writer verifies persisted serialized rows, including duplicate rows,
+accepts unchanged values and checks explicit clearing; slashing preserves literal
+backslashes. The review clears its metadata cache before reading source relations,
+suspends cache additions during the transaction and clears metadata caches in
+`finally`. The existing relation-read-model and search metadata callbacks are
+restored in `finally` and their work runs after a successful boundary. Other native
+metadata callbacks remain active. The register cache callback excludes videos.
+
+Place taxonomy/graph projections and public search retain their existing derived
+owners and run after standalone review commit; their later failure cannot undo
+that commit. A caller-owned outer transaction retains final commit/rollback and
+cache coordination, including these derived updates. Arbitrary plugin callback
+side effects are outside the verified write set. Source post content/status is
+already saved separately. Rendering is prepared before the standalone review
+transaction and automatic/review callers share the existing evidence writer via
+`iss_graph_sync_video_transcript_segments()`. No multi-worker ordering guarantee
+is claimed. `tests/e2e/bin/graph-video-review-atomic.php` covers the save handler,
+whole-batch rollback, source metadata and real owner callbacks using temporary
+tables. No schema/data migration or uploads artifact is required.
+
+The manual content editor's `iss_graph_save_public_content_relations()` wraps
+its source/target reads, required content graph creation and both `content_admin`
+person/organization groups in `synchronize_entity_graph()`, using the existing
+combined projection writer. Read failures abort; genuinely invalid, wrong-kind
+or profileless targets retain their existing skip behavior. Nonces, permissions,
+privacy, source references, missing/malformed field clearing and save priority
+remain unchanged. Other relation families and sources are retained. Missing
+required source creation raises an error; trash/auto-draft keeps its no-create
+behavior. Read-model/search updates follow the manual graph boundary and are
+skipped when it fails. A later derived-update failure cannot undo a standalone
+graph commit. An outer transaction owner still controls final commit and cache
+coordination. `tests/e2e/bin/graph-content-editor-atomic.php` exercises the actual
+save handler with temporary graph/queue/options, taxonomy and postmeta tables.
+
+Profile binding uses `synchronize_profile_binding()` in the same graph service,
+delegating to its existing transaction helper with posts (for source-row locking),
+postmeta, entities, names and identifiers. The editor passes its requested entity
+into `iss_graph_sync_profile_binding_for_post()` before metadata changes. Current
+and displaced profile metadata, old/new entity binding fields, profile-owned
+identifiers and generated aliases succeed or roll back together. Source post
+content/status is already saved and remains outside this write boundary.
+
+Binding metadata reads use prepared SQL with row locks; writes retain WordPress's
+Metadata API and hooks, with result verification. The source post row serializes
+same-profile saves. Entity locks use primary IDs from requested/stored bindings,
+the previous-ID hint and the existing unique WordPress identifier; no scan of the
+unindexed `profile_post_id` column or new index is needed. Detachment checks the
+expected profile owner and removes its `entity_profile` identifiers so reassignment
+does not conflict with stale identities. A stale reverse link cannot remove a
+displaced profile's different current metadata choice. Legacy inconsistencies
+outside those known identities are not swept or migrated by this save.
+
+The bridge temporarily defers its own metadata-triggered search callback and
+suspends cache additions, restoring both in `finally`. Affected metadata caches
+are cleared after commit/rollback; register cache invalidation and affected
+profile search refreshes follow a successful standalone binding transaction.
+Other Metadata API callbacks still run inside it. A later search failure does
+not undo the committed binding. Caller-owned transactions retain savepoints and
+must coordinate their final commit/rollback and cache invalidation. Direct callers
+which already saved source metadata before synchronization retain that metadata
+as the rollback baseline; this does not undo an earlier REST/import source write.
+No schema/data migration or uploads are required. The isolated binding suite is
+`tests/e2e/bin/graph-profile-binding-atomic.php`.
+
+Manual profile names in `iss_graph_save_entity_profile_aliases()` reuse that
+profile transaction boundary. The source post, stored binding metadata and
+linked entity are locked in the same order as binding saves. Prerequisite SQL
+failures abort; an absent or unsupported entity remains a no-op. Manual
+`entity_profile_admin` names and `entity_alias_backfill` aliases derived from
+those new names commit or roll back together. Other name sources, facts,
+identifiers and source post/metadata values remain untouched. Existing nonce,
+capability, sanitation and empty-input clearing rules are retained.
+
+After successful standalone commit, the metadata cache is invalidated before
+refreshing search; cached bindings cannot redirect the save or its search text.
+Search failure cannot undo committed names. An outer transaction caller retains
+final commit/rollback and cache coordination. The isolated failure/behavior suite
+is `tests/e2e/bin/graph-profile-aliases-atomic.php`; it does not establish
+multi-worker concurrency behavior. No schema/data migration or uploads are needed.
+
+`upsert_entity_facts()` uses the same transaction helper for the entity and its
+person/organization facts table. It locks the entity and existing facts row,
+checks prerequisite reads and writes, and verifies the stored fields before
+commit. Failed or missing readback and mismatched stored values roll back;
+zero-row updates remain successful when the stored values match. Sanitation,
+nullable/clamped years, creation timestamps and replacement defaults are retained.
+Unsupported kinds and genuinely absent entities still return an empty result.
+The service contract also applies to enrichment callers; it does not make an
+entire enrichment import transactional.
+
+`iss_graph_save_entity_profile_facts()` locks the stored profile binding inside
+the existing profile transaction boundary, then calls the facts writer. Its
+checked nested transaction validates the facts table before any facts write.
+Search runs only after successful standalone persistence and metadata cache
+invalidation. Source posts, bindings, aliases and other fact rows are unchanged;
+the separate facts, alias and binding callbacks do not form one whole-editor
+transaction. Outer callers retain final commit/rollback and cache coordination.
+`tests/e2e/bin/graph-profile-facts-atomic.php` covers inserts/updates and injected
+failures with isolated real-schema tables. No schema/data migration or uploads
+are needed; concurrent-worker behavior is not established by these fixtures.
+
+The graph dirty queue retains its `iss_graph_dirty_queue_lock` option. Acquisition
+reads the database directly, then uses the unique option name for first insertion
+or an exact-value conditional update for expired/malformed leases. Each lease
+has a unique token; `drain_dirty_queue()` retains the serialized lease and releases
+only that exact value in `finally`. A former owner cannot delete its successor's
+lock. Conditional SQL is required because the Options API has no compare-and-swap
+operation; option caches are invalidated after writes. Live legacy leases are
+respected, expired ones are replaced, and SQL errors raise exceptions rather
+than reporting success or ordinary contention. No schema/data migration is needed.
+The existing TTL remains `max_runtime + 60` seconds for drains, with a 60-second
+minimum. This is a lease, not cancellation of an overlong worker or rollback of
+projection writes that reconciliation has already performed.
+The isolated check is `tests/e2e/bin/graph-queue-lock.php`; run through WP-CLI
+with cron disabled. It uses two database connections, a disposable options table
+and a temporary queue, leaving real queue rows and lock/run-status options intact.
+
+Queue processing selects its bounded batch after acquiring the lease. A new
+owner can recover abandoned `processing` rows because no earlier run owns the
+current lease; recovery and dirty work share the batch/runtime limits. Claim,
+acknowledgement and last-run recording reuse the graph transaction helper, locking
+the option row and checking its exact lease value and expiry. Reconciliation runs
+outside those short transactions. A drain requires an independent autocommit
+connection so it cannot hold queue locks inside a caller's transaction. Lease loss
+stops further claims and acknowledgements, preserves the replacement owner's run
+status, and is reported through `lease_lost` and a CLI warning.
+
+`mark_post_dirty()` atomically coalesces on the existing unique source-post key.
+Each new source signal sets `dirty`, clears the claim/error and resets attempts,
+while retaining row identity, creation time and last successful processing time.
+Completion matches the processing claim and current lease; a newer dirty signal
+survives even when timestamps and attempt numbers could repeat. Reported failures
+and exceptions consume one attempt per selected row per run. Abandoned claims
+retain consumed attempts; exhausted dirty/processing rows become `dead` without
+another reconciliation. New source signals reopen dead rows with a fresh budget.
+Dry runs only list dirty rows and never recover, claim or record a run. SQL failures
+are surfaced and leave untouched or recoverable work instead of false success.
+No new table, schema migration, scheduler or worker is introduced. Coverage is in
+`tests/e2e/bin/graph-queue-processing.php`, using disposable tables and missing
+fixture post IDs; the real queue is never drained by these tests.
 
 Programme calendar/timeline queries are served from `iss-occurrences`. The old
 hidden `iss_calendar_item` post type is not an active storage or query layer.

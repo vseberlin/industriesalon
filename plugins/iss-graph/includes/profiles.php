@@ -647,83 +647,196 @@ function iss_graph_render_profile_aliases_meta_box(WP_Post $post): void
     echo '</div>';
 }
 
-function iss_graph_clear_profile_binding_for_entity_id(int $entity_id): void
+/** Read the binding directly while coordinating graph writes; cached metadata cannot arbitrate moves. */
+function iss_graph_read_profile_binding_meta(int $post_id): array
+{
+    global $wpdb;
+
+    $rows = $wpdb->get_col($wpdb->prepare(
+        "SELECT meta_value FROM {$wpdb->postmeta} WHERE post_id = %d AND meta_key = %s ORDER BY meta_id FOR UPDATE",
+        $post_id,
+        iss_graph_get_entity_profile_meta_key()
+    ));
+    if ($wpdb->last_error !== '') {
+        throw new RuntimeException('Profile binding could not read metadata.');
+    }
+
+    return $rows;
+}
+
+/** Use the Metadata API, checking its stored result and retaining legitimate unchanged writes. */
+function iss_graph_write_profile_binding_meta(int $post_id, int $entity_id): void
+{
+    $before = iss_graph_read_profile_binding_meta($post_id);
+    if (($entity_id <= 0 && !$before) || ($entity_id > 0 && array_unique($before) === [(string) $entity_id])) {
+        return;
+    }
+
+    wp_cache_delete($post_id, 'post_meta');
+    $written = $entity_id > 0
+        ? update_post_meta($post_id, iss_graph_get_entity_profile_meta_key(), $entity_id)
+        : delete_post_meta($post_id, iss_graph_get_entity_profile_meta_key());
+    $after = iss_graph_read_profile_binding_meta($post_id);
+    $expected = $entity_id > 0 ? array_fill(0, max(1, count($before)), (string) $entity_id) : [];
+    if ($written === false || $after !== $expected) {
+        throw new RuntimeException('Profile binding could not store metadata.');
+    }
+}
+
+function iss_graph_clear_profile_binding_for_entity_id(int $entity_id, int $expected_post_id = 0, bool $refresh_cache = true): void
 {
     if ($entity_id <= 0) {
         return;
     }
 
+    global $wpdb;
+
     $service = iss_graph_get_service();
-    $entity = $service->get_entity_by_id($entity_id);
-    if (!$entity) {
-        return;
+    $changed = false;
+    $service->synchronize_entity_graph(function () use ($wpdb, $service, $entity_id, $expected_post_id, &$changed): void {
+        $entity = $wpdb->get_row($wpdb->prepare(
+            "SELECT * FROM {$service->get_entity_table_name()} WHERE id = %d FOR UPDATE", // phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared -- Graph table name is supplied by its owning service.
+            $entity_id
+        ), ARRAY_A);
+        if ($wpdb->last_error !== '') {
+            throw new RuntimeException('Profile binding could not read the previous entity.');
+        }
+        if (!$entity || ($expected_post_id > 0 && (int) $entity['profile_post_id'] !== $expected_post_id)) {
+            return;
+        }
+
+        if (!$service->upsert_entity(array_merge($entity, [
+            'has_profile' => false,
+            'profile_post_id' => 0,
+            'is_public' => false,
+            'search_visibility' => 'hidden',
+        ]))) {
+            throw new RuntimeException('Profile binding could not clear the previous entity.');
+        }
+        $service->replace_entity_identifiers_for_source($entity_id, 'entity_profile', []);
+        $changed = true;
+    });
+    if ($changed && $refresh_cache) {
+        iss_graph_maybe_clear_register_places_cache();
     }
-
-    $service->upsert_entity(array_merge($entity, [
-        'has_profile' => false,
-        'profile_post_id' => 0,
-        'is_public' => false,
-        'search_visibility' => 'hidden',
-    ]));
-
-    iss_graph_maybe_clear_register_places_cache();
 }
 
-function iss_graph_sync_profile_binding_for_post(int $post_id, int $previous_entity_id = 0): void
+function iss_graph_sync_profile_binding_for_post(int $post_id, int $previous_entity_id = 0, ?int $requested_entity_id = null): void
 {
+    global $wpdb;
+
+    $queries = $wpdb->num_queries;
     $post = get_post($post_id);
+    if ($wpdb->num_queries > $queries && $wpdb->last_error !== '') {
+        throw new RuntimeException('Profile binding could not read the source post.');
+    }
     if (!$post instanceof WP_Post || $post->post_type !== iss_graph_get_entity_profile_post_type()) {
         return;
     }
 
     $service = iss_graph_get_service();
-    $entity_id = iss_graph_get_profile_linked_entity_id($post_id);
-    $entity = $entity_id > 0 ? $service->get_entity_by_id($entity_id) : null;
-
-    if (!$entity || !in_array((string) ($entity['entity_kind'] ?? ''), iss_graph_get_profile_entity_kinds(), true)) {
-        if ($entity_id > 0) {
-            delete_post_meta($post_id, iss_graph_get_entity_profile_meta_key());
-        }
-        $entity_id = 0;
-    }
-
-    if ($previous_entity_id > 0 && $previous_entity_id !== $entity_id) {
-        iss_graph_clear_profile_binding_for_entity_id($previous_entity_id);
-    }
-
-    if ($entity_id <= 0 || !$entity) {
-        return;
-    }
-
-    $other_profile_post_id = absint($entity['profile_post_id'] ?? 0);
-    if ($other_profile_post_id > 0 && $other_profile_post_id !== $post_id) {
-        delete_post_meta($other_profile_post_id, iss_graph_get_entity_profile_meta_key());
-        if (function_exists('iss_graph_sync_public_search_post')) {
-            iss_graph_sync_public_search_post($other_profile_post_id);
+    $affected_posts = [$post_id];
+    // Metadata hooks otherwise refresh search against an incomplete binding.
+    $search_hooks = [];
+    foreach (['added_post_meta', 'updated_post_meta', 'deleted_post_meta'] as $hook) {
+        $priority = has_action($hook, 'iss_graph_sync_public_search_on_meta_change');
+        if ($priority !== false) {
+            $search_hooks[$hook] = $priority;
+            remove_action($hook, 'iss_graph_sync_public_search_on_meta_change', $priority);
         }
     }
+    $cache_suspended = wp_suspend_cache_addition();
+    wp_suspend_cache_addition(true);
+    try {
+        $service->synchronize_profile_binding(function () use ($wpdb, $service, $post_id, $previous_entity_id, $requested_entity_id, &$affected_posts): void {
+            // Serialize changes to one profile, then lock participating graph rows.
+            $row = $wpdb->get_row($wpdb->prepare("SELECT * FROM {$wpdb->posts} WHERE ID = %d FOR UPDATE", $post_id));
+            if ($wpdb->last_error !== '' || !$row || $row->post_type !== iss_graph_get_entity_profile_post_type()) {
+                throw new RuntimeException('Profile binding could not lock the source post.');
+            }
+            $post = new WP_Post($row);
+            $stored = iss_graph_read_profile_binding_meta($post_id);
+            $entity_id = $requested_entity_id === null ? absint($stored[0] ?? 0) : absint($requested_entity_id);
+            // The unique WordPress identifier finds a previous binding even when
+            // another entrypoint has already saved new metadata. Avoid scanning
+            // the unindexed profile_post_id column while holding write locks.
+            $identity = $service->get_identifier_by_namespace_value('wp_post', (string) $post_id);
+            if ($wpdb->last_error !== '') {
+                throw new RuntimeException('Profile binding could not read the previous identity.');
+            }
+            $identity_entity_id = ($identity['source_system'] ?? '') === 'entity_profile' ? (int) $identity['entity_id'] : 0;
+            $entities = $wpdb->get_results($wpdb->prepare(
+                "SELECT * FROM {$service->get_entity_table_name()} WHERE id IN (%d, %d, %d, %d) ORDER BY id FOR UPDATE", // phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared -- Graph table name is supplied by its owning service; row values use placeholders.
+                $entity_id,
+                $previous_entity_id,
+                absint($stored[0] ?? 0),
+                $identity_entity_id
+            ), ARRAY_A);
+            if ($wpdb->last_error !== '') {
+                throw new RuntimeException('Profile binding could not read participating entities.');
+            }
+            $entity = null;
+            foreach ($entities as $candidate) {
+                if ((int) $candidate['id'] === $entity_id && in_array((string) $candidate['entity_kind'], iss_graph_get_profile_entity_kinds(), true)) {
+                    $entity = $candidate;
+                }
+            }
+            if (!$entity) {
+                $entity_id = 0;
+            }
 
-    $is_public = $post->post_status === 'publish';
-    $has_profile = !in_array($post->post_status, ['trash', 'auto-draft'], true);
+            iss_graph_write_profile_binding_meta($post_id, $entity_id);
+            foreach ($entities as $previous) {
+                if ((int) $previous['profile_post_id'] === $post_id && (int) $previous['id'] !== $entity_id) {
+                    iss_graph_clear_profile_binding_for_entity_id((int) $previous['id'], $post_id, false);
+                }
+            }
+            if (!$entity) {
+                return;
+            }
 
-    $service->upsert_entity(array_merge($entity, [
-        'profile_post_id' => $post_id,
-        'has_profile' => $has_profile,
-        'is_public' => $is_public,
-        'search_visibility' => $is_public ? 'public' : 'hidden',
-    ]));
+            $other_post_id = absint($entity['profile_post_id'] ?? 0);
+            if ($other_post_id > 0 && $other_post_id !== $post_id) {
+                $affected_posts[] = $other_post_id;
+                $other_binding = iss_graph_read_profile_binding_meta($other_post_id);
+                // A stale reverse link must not remove another profile's newer choice.
+                if (absint($other_binding[0] ?? 0) === $entity_id) {
+                    iss_graph_write_profile_binding_meta($other_post_id, 0);
+                }
+            }
 
-    iss_graph_sync_wp_post_identifiers((int) $entity_id, $post, 'entity_profile');
-
-    if (function_exists('iss_graph_sync_entity_alias_backfill')) {
-        iss_graph_sync_entity_alias_backfill((int) $entity_id);
+            $is_public = $post->post_status === 'publish';
+            if (!$service->upsert_entity(array_merge($entity, [
+                'profile_post_id' => $post_id,
+                'has_profile' => !in_array($post->post_status, ['trash', 'auto-draft'], true),
+                'is_public' => $is_public,
+                'search_visibility' => $is_public ? 'public' : 'hidden',
+            ]))) {
+                throw new RuntimeException('Profile binding could not store the linked entity.');
+            }
+            iss_graph_sync_wp_post_identifiers($entity_id, $post, 'entity_profile');
+            if (function_exists('iss_graph_sync_entity_alias_backfill')) {
+                iss_graph_sync_entity_alias_backfill($entity_id);
+            }
+        });
+    } finally {
+        // API hooks may read metadata before failure; never retain rolled-back values.
+        foreach (array_unique($affected_posts) as $affected_post_id) {
+            wp_cache_delete($affected_post_id, 'post_meta');
+        }
+        wp_suspend_cache_addition($cache_suspended);
+        foreach ($search_hooks as $hook => $priority) {
+            add_action($hook, 'iss_graph_sync_public_search_on_meta_change', $priority, 3);
+        }
     }
 
-    if (function_exists('iss_graph_sync_public_search_post')) {
-        iss_graph_sync_public_search_post($post_id);
-    }
-
+    // Caller-owned outer transactions retain final commit/cache coordination.
     iss_graph_maybe_clear_register_places_cache();
+    if (function_exists('iss_graph_sync_public_search_post')) {
+        foreach (array_reverse(array_unique($affected_posts)) as $affected_post_id) {
+            iss_graph_sync_public_search_post($affected_post_id);
+        }
+    }
 }
 
 function iss_graph_maybe_backfill_entity_profile_bindings(): void
@@ -789,16 +902,8 @@ function iss_graph_save_entity_profile_link(int $post_id, WP_Post $post): void
         return;
     }
 
-    $previous_entity_id = iss_graph_get_profile_linked_entity_id($post_id);
     $entity_id = isset($_POST['iss_graph_profile_entity_id']) ? absint(wp_unslash($_POST['iss_graph_profile_entity_id'])) : 0;
-
-    if ($entity_id > 0) {
-        update_post_meta($post_id, iss_graph_get_entity_profile_meta_key(), $entity_id);
-    } else {
-        delete_post_meta($post_id, iss_graph_get_entity_profile_meta_key());
-    }
-
-    iss_graph_sync_profile_binding_for_post($post_id, $previous_entity_id);
+    iss_graph_sync_profile_binding_for_post($post_id, 0, $entity_id);
 }
 add_action('save_post', 'iss_graph_save_entity_profile_link', 40, 2);
 
@@ -834,30 +939,52 @@ function iss_graph_save_entity_profile_facts(int $post_id, WP_Post $post): void
         return;
     }
 
-    $entity = iss_graph_get_profile_linked_entity($post_id);
-    if (!$entity || empty($entity['id']) || empty($entity['entity_kind'])) {
-        return;
-    }
-
     $raw = $_POST['iss_graph_profile_facts'] ?? [];
     if (!is_array($raw)) {
         return;
     }
 
-    iss_graph_get_service()->upsert_entity_facts((string) $entity['entity_kind'], (int) $entity['id'], [
-        'summary' => wp_unslash($raw['summary'] ?? ''),
-        'description' => wp_unslash($raw['description'] ?? ''),
-        'website' => wp_unslash($raw['website'] ?? ''),
-        'source_summary' => wp_unslash($raw['source_summary'] ?? ''),
-        'person_kind' => wp_unslash($raw['person_kind'] ?? ''),
-        'birth_year' => wp_unslash($raw['birth_year'] ?? ''),
-        'death_year' => wp_unslash($raw['death_year'] ?? ''),
-        'organization_kind' => wp_unslash($raw['organization_kind'] ?? ''),
-        'organization_status' => wp_unslash($raw['organization_status'] ?? ''),
-        'founded_year' => wp_unslash($raw['founded_year'] ?? ''),
-        'dissolved_year' => wp_unslash($raw['dissolved_year'] ?? ''),
-    ]);
+    global $wpdb;
 
+    $service = iss_graph_get_service();
+    $saved = false;
+    $service->synchronize_profile_binding(function () use ($wpdb, $service, $post_id, $raw, &$saved): void {
+        // Keep the stored binding stable until the facts writer has finished.
+        $stored = iss_graph_read_profile_binding_meta($post_id);
+        $entity_id = absint($stored[0] ?? 0);
+        if ($entity_id <= 0) {
+            return;
+        }
+        $entity = $service->get_entity_by_id($entity_id);
+        if ($wpdb->last_error !== '') {
+            throw new RuntimeException('Profile facts could not read the linked entity.');
+        }
+        if (!$entity || !in_array((string) $entity['entity_kind'], iss_graph_get_profile_entity_kinds(), true)) {
+            return;
+        }
+
+        if (!$service->upsert_entity_facts((string) $entity['entity_kind'], (int) $entity['id'], [
+            'summary' => wp_unslash($raw['summary'] ?? ''),
+            'description' => wp_unslash($raw['description'] ?? ''),
+            'website' => wp_unslash($raw['website'] ?? ''),
+            'source_summary' => wp_unslash($raw['source_summary'] ?? ''),
+            'person_kind' => wp_unslash($raw['person_kind'] ?? ''),
+            'birth_year' => wp_unslash($raw['birth_year'] ?? ''),
+            'death_year' => wp_unslash($raw['death_year'] ?? ''),
+            'organization_kind' => wp_unslash($raw['organization_kind'] ?? ''),
+            'organization_status' => wp_unslash($raw['organization_status'] ?? ''),
+            'founded_year' => wp_unslash($raw['founded_year'] ?? ''),
+            'dissolved_year' => wp_unslash($raw['dissolved_year'] ?? ''),
+        ])) {
+            throw new RuntimeException('Profile facts could not store the linked entity facts.');
+        }
+        $saved = true;
+    });
+    if (!$saved) {
+        return;
+    }
+
+    wp_cache_delete($post_id, 'post_meta');
     if (function_exists('iss_graph_sync_public_search_post')) {
         iss_graph_sync_public_search_post($post_id);
     }
@@ -882,26 +1009,54 @@ function iss_graph_save_entity_profile_aliases(int $post_id, WP_Post $post): voi
         return;
     }
 
-    $entity = iss_graph_get_profile_linked_entity($post_id);
-    if (!$entity || empty($entity['id'])) {
-        return;
-    }
+    global $wpdb;
 
+    $service = iss_graph_get_service();
     $source_system = function_exists('iss_graph_get_profile_alias_source_system')
         ? iss_graph_get_profile_alias_source_system()
         : 'entity_profile_admin';
+    $saved = false;
 
-    iss_graph_get_service()->replace_entity_names_for_source(
-        (int) $entity['id'],
-        $source_system,
-        iss_graph_sanitize_entity_name_rows(iss_graph_decode_posted_rows('iss_graph_profile_name_rows'), iss_graph_get_entity_name_type_options()),
-        'profile:' . $post_id
-    );
+    $service->synchronize_profile_binding(function () use ($wpdb, $service, $post_id, $source_system, &$saved): void {
+        // Share binding-save lock order so names follow the current stored choice.
+        $row = $wpdb->get_row($wpdb->prepare("SELECT * FROM {$wpdb->posts} WHERE ID = %d FOR UPDATE", $post_id));
+        if ($wpdb->last_error !== '' || !$row || $row->post_type !== iss_graph_get_entity_profile_post_type()) {
+            throw new RuntimeException('Profile aliases could not lock the source post.');
+        }
+        $stored = iss_graph_read_profile_binding_meta($post_id);
+        $entity_id = absint($stored[0] ?? 0);
+        if ($entity_id <= 0) {
+            return;
+        }
 
-    if (function_exists('iss_graph_sync_entity_alias_backfill')) {
-        iss_graph_sync_entity_alias_backfill((int) $entity['id']);
+        $entity = $wpdb->get_row($wpdb->prepare(
+            "SELECT * FROM {$service->get_entity_table_name()} WHERE id = %d FOR UPDATE", // phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared -- Graph table name is supplied by its owning service.
+            $entity_id
+        ), ARRAY_A);
+        if ($wpdb->last_error !== '') {
+            throw new RuntimeException('Profile aliases could not read the linked entity.');
+        }
+        if (!$entity || !in_array((string) $entity['entity_kind'], iss_graph_get_profile_entity_kinds(), true)) {
+            return;
+        }
+
+        $service->replace_entity_names_for_source(
+            $entity_id,
+            $source_system,
+            iss_graph_sanitize_entity_name_rows(iss_graph_decode_posted_rows('iss_graph_profile_name_rows'), iss_graph_get_entity_name_type_options()),
+            'profile:' . $post_id
+        );
+        if (function_exists('iss_graph_sync_entity_alias_backfill')) {
+            iss_graph_sync_entity_alias_backfill($entity_id);
+        }
+        $saved = true;
+    });
+    if (!$saved) {
+        return;
     }
 
+    // Search must read the same stored binding, even if metadata was cached earlier.
+    wp_cache_delete($post_id, 'post_meta');
     if (function_exists('iss_graph_sync_public_search_post')) {
         iss_graph_sync_public_search_post($post_id);
     }
@@ -954,7 +1109,7 @@ function iss_graph_clear_profile_binding_on_delete(int $post_id): void
 
     $entity_id = iss_graph_get_profile_linked_entity_id($post_id);
     if ($entity_id > 0) {
-        iss_graph_clear_profile_binding_for_entity_id($entity_id);
+        iss_graph_clear_profile_binding_for_entity_id($entity_id, $post_id);
     }
 }
 add_action('before_delete_post', 'iss_graph_clear_profile_binding_on_delete', 8);

@@ -83,6 +83,8 @@ function iss_relations_target_from_place_id(int $place_id): array
 
 function iss_relations_normalize_relation_target(array $relation): ?array
 {
+    global $wpdb;
+
     $target = isset($relation['target']) && is_array($relation['target']) ? $relation['target'] : [];
     $entity_id = absint($target['entity_id'] ?? ($relation['entity_id'] ?? ($relation['to_entity_id'] ?? 0)));
     $entity_kind = sanitize_key((string) ($target['entity_kind'] ?? ($relation['entity_kind'] ?? ($relation['relation_family'] ?? ''))));
@@ -90,6 +92,9 @@ function iss_relations_normalize_relation_target(array $relation): ?array
 
     if ($entity_id > 0 && function_exists('iss_graph_get_service')) {
         $entity = iss_graph_get_service()->get_entity_by_id($entity_id);
+        if ($wpdb->last_error !== '') {
+            throw new RuntimeException('Relation normalization could not read the target entity.');
+        }
         if (!is_array($entity)) {
             return null;
         }
@@ -121,8 +126,15 @@ function iss_relations_normalize_relation_target(array $relation): ?array
         }
     }
 
-    if ($entity_kind === '' && $post_id > 0 && get_post_type($post_id) === iss_relations_get_place_post_type()) {
-        $entity_kind = 'place';
+    if ($entity_kind === '' && $post_id > 0) {
+        $queries = $wpdb->num_queries;
+        $post_type = get_post_type($post_id);
+        if ($wpdb->num_queries > $queries && $wpdb->last_error !== '') {
+            throw new RuntimeException('Relation normalization could not read the target post type.');
+        }
+        if ($post_type === iss_relations_get_place_post_type()) {
+            $entity_kind = 'place';
+        }
     }
 
     if ($entity_kind === 'register_place') {
@@ -264,11 +276,17 @@ function iss_relations_term_slug_for_place(int $place_id): string
 
 function iss_relations_is_usable_place(int $place_id): bool
 {
+    global $wpdb;
+
     if ($place_id <= 0) {
         return false;
     }
 
+    $queries = $wpdb->num_queries;
     $place = get_post($place_id);
+    if ($wpdb->num_queries > $queries && $wpdb->last_error !== '') {
+        throw new RuntimeException('Place relations could not read the target post.');
+    }
     if (!$place instanceof WP_Post) {
         return false;
     }
@@ -427,7 +445,13 @@ function iss_relations_normalize_relations($relations, int $context_post_id = 0)
 
 function iss_relations_get_stored_post_relations(int $post_id): array
 {
+    global $wpdb;
+
+    $queries = $wpdb->num_queries;
     $stored = get_post_meta($post_id, ISS_RELATIONS_META_KEY, true);
+    if ($wpdb->num_queries > $queries && $wpdb->last_error !== '') {
+        throw new RuntimeException('Place relations could not read source metadata.');
+    }
 
     return iss_relations_normalize_relations(is_array($stored) ? $stored : [], $post_id);
 }
@@ -1270,14 +1294,39 @@ function iss_relations_render_related_place_links_html(int $post_id): string
 
 function iss_relations_update_post_relations(int $post_id, array $relations): void
 {
-    $clean = iss_relations_normalize_relations($relations, $post_id);
+    global $wpdb;
 
-    if (!$clean) {
-        delete_post_meta($post_id, ISS_RELATIONS_META_KEY);
+    $clean = iss_relations_normalize_relations($relations, $post_id);
+    // Check persisted values, including duplicate rows, without a cached before-image.
+    $read = static function () use ($wpdb, $post_id): array {
+        // phpcs:ignore WordPress.DB.DirectDatabaseQuery -- Metadata write verification requires the stored values rather than a cached or filtered read.
+        $rows = $wpdb->get_col($wpdb->prepare(
+            "SELECT meta_value FROM {$wpdb->postmeta} WHERE post_id = %d AND meta_key = %s ORDER BY meta_id",
+            $post_id,
+            ISS_RELATIONS_META_KEY
+        ));
+        if ($wpdb->last_error !== '') {
+            throw new RuntimeException('Place relations could not read stored metadata.');
+        }
+        return $rows;
+    };
+    $before = $read();
+    $expected = $clean ? array_fill(0, max(1, count($before)), maybe_serialize($clean)) : [];
+    if ($before === $expected) {
         return;
     }
 
-    update_post_meta($post_id, ISS_RELATIONS_META_KEY, $clean);
+    wp_cache_delete($post_id, 'post_meta');
+    try {
+        $written = $clean
+            ? update_post_meta($post_id, ISS_RELATIONS_META_KEY, wp_slash($clean))
+            : delete_post_meta($post_id, ISS_RELATIONS_META_KEY);
+        if ($read() !== $expected || $written === false) {
+            throw new RuntimeException('Place relations could not store source metadata.');
+        }
+    } finally {
+        wp_cache_delete($post_id, 'post_meta');
+    }
 }
 
 function iss_relations_save_post_relations(int $post_id, array $relations): array

@@ -102,100 +102,125 @@ function iss_graph_backfill_register_places(): int
     return $count;
 }
 
-function iss_graph_sync_register_place_entity(int $post_id): ?array
+function iss_graph_sync_register_place_entity(int $post_id, ?array $editor_rows = null): ?array
 {
     $post = get_post($post_id);
     if (!$post instanceof WP_Post || $post->post_type !== iss_graph_get_register_post_type()) {
         return null;
     }
 
+    global $wpdb;
+
+    // Prime the WordPress metadata cache before graph writes. A failed source
+    // read must not look like intentionally empty owner or identifier fields.
+    $queries = $wpdb->num_queries;
+    get_post_meta($post_id);
+    if ($wpdb->num_queries > $queries && $wpdb->last_error !== '') {
+        throw new RuntimeException('Register graph synchronization could not read source metadata.');
+    }
+
     $service = iss_graph_get_service();
-    $is_public = $post->post_status === 'publish' && iss_graph_get_register_meta_value($post_id, 'place_visibility', 'public') === 'public';
-    $entity = $service->upsert_entity([
-        'entity_kind' => 'place',
-        'post_id' => $post_id,
-        'source_system' => 'register_post',
-        'source_id' => (string) $post_id,
-        'canonical_slug' => (string) $post->post_name,
-        'display_title' => get_the_title($post),
-        'summary' => (string) get_post_field('post_excerpt', $post_id),
-        'status' => sanitize_key((string) $post->post_status),
-        'is_public' => $is_public,
-        'search_visibility' => $is_public ? 'public' : 'hidden',
-    ]);
-
-    if (!$entity) {
-        return null;
-    }
-
-    $service->replace_entity_names_for_source((int) $entity['id'], 'register_title', [[
-        'name' => get_the_title($post) ?: ('Ort ' . $post_id),
-        'name_type' => 'primary',
-        'is_primary' => true,
-        'position' => 0,
-    ]], 'post:' . $post_id);
-
-    $identifier_rows = [];
-    $register_id = iss_graph_get_register_meta_value($post_id, 'register_id', '');
-    if ($register_id !== '') {
-        $identifier_rows[] = [
-            'namespace' => 'register_id',
-            'value' => $register_id,
-            'label' => 'Register ID',
-            'trust_level' => 'trusted_auto_link',
-            'confidence' => 100,
-            'is_primary' => true,
-            'status' => 'accepted',
-        ];
-    }
-    iss_graph_sync_wp_post_identifiers((int) $entity['id'], $post, 'register_post', $identifier_rows);
-
-    if (function_exists('iss_graph_sync_entity_alias_backfill')) {
-        iss_graph_sync_entity_alias_backfill((int) $entity['id']);
-    }
-
-    $organization_rows = [];
-    // Imported role statements can include uncertainty and several parties.
-    // Keep them as sourced facts; bind identities through the existing graph editor.
-    $current_import = get_post_meta($post_id, '_iss_register_current_import', true);
-    $imported_fields = is_array($current_import) ? ($current_import['accepted_fields'] ?? []) : [];
-    foreach (['owner', 'operator', 'developer', 'tenant'] as $index => $relation_type) {
-        if (array_key_exists($relation_type, $imported_fields)) {
-            continue;
-        }
-        $name = iss_graph_get_register_meta_value($post_id, $relation_type, '');
-        if ($name === '') {
-            continue;
-        }
-
-        $organization = iss_graph_resolve_or_create_named_entity('organization', $name, [
-            'source_system' => 'manual_slug',
-            'search_visibility' => 'hidden',
-            'is_public' => false,
-        ], [
-            'source_ref' => 'post:' . $post_id,
+    $entity = null;
+    $service->synchronize_entity_graph(function () use ($service, $post, $post_id, $editor_rows, &$entity): void {
+        $is_public = $post->post_status === 'publish' && iss_graph_get_register_meta_value($post_id, 'place_visibility', 'public') === 'public';
+        $entity = $service->upsert_entity([
+            'entity_kind' => 'place',
+            'post_id' => $post_id,
+            'source_system' => 'register_post',
+            'source_id' => (string) $post_id,
+            'canonical_slug' => (string) $post->post_name,
+            'display_title' => get_the_title($post),
+            'summary' => (string) get_post_field('post_excerpt', $post_id),
+            'status' => sanitize_key((string) $post->post_status),
+            'is_public' => $is_public,
+            'search_visibility' => $is_public ? 'public' : 'hidden',
         ]);
 
-        if (!$organization) {
-            continue;
+        if (!$entity) {
+            throw new RuntimeException('Register graph synchronization could not store the place entity.');
         }
 
-        $organization_rows[] = [
-            'to_entity_id' => (int) $organization['id'],
-            'relation_type' => $relation_type,
-            'relation_label' => (string) (iss_graph_get_register_place_organization_relation_options()[$relation_type] ?? $relation_type),
-            'position' => $index,
-            'is_public' => true,
-        ];
-    }
+        $service->replace_entity_names_for_source((int) $entity['id'], 'register_title', [[
+            'name' => get_the_title($post) ?: ('Ort ' . $post_id),
+            'name_type' => 'primary',
+            'is_primary' => true,
+            'position' => 0,
+        ]], 'post:' . $post_id);
 
-    $service->replace_entity_relations_for_source(
-        (int) $entity['id'],
-        'organization',
-        'register_meta',
-        $organization_rows,
-        'post:' . $post_id
-    );
+        $identifier_rows = [];
+        $register_id = iss_graph_get_register_meta_value($post_id, 'register_id', '');
+        if ($register_id !== '') {
+            $identifier_rows[] = [
+                'namespace' => 'register_id',
+                'value' => $register_id,
+                'label' => 'Register ID',
+                'trust_level' => 'trusted_auto_link',
+                'confidence' => 100,
+                'is_primary' => true,
+                'status' => 'accepted',
+            ];
+        }
+        iss_graph_sync_wp_post_identifiers((int) $entity['id'], $post, 'register_post', $identifier_rows);
+
+        $organization_rows = [];
+        // Imported role statements can include uncertainty and several parties.
+        // Keep them as sourced facts; bind identities through the existing graph editor.
+        $current_import = get_post_meta($post_id, '_iss_register_current_import', true);
+        $imported_fields = is_array($current_import) ? ($current_import['accepted_fields'] ?? []) : [];
+        foreach (['owner', 'operator', 'developer', 'tenant'] as $index => $relation_type) {
+            if (array_key_exists($relation_type, $imported_fields)) {
+                continue;
+            }
+            $name = iss_graph_get_register_meta_value($post_id, $relation_type, '');
+            if ($name === '') {
+                continue;
+            }
+
+            $organization = iss_graph_resolve_or_create_named_entity('organization', $name, [
+                'source_system' => 'manual_slug',
+                'search_visibility' => 'hidden',
+                'is_public' => false,
+            ], [
+                'source_ref' => 'post:' . $post_id,
+            ]);
+
+            if (!$organization) {
+                throw new RuntimeException('Register graph synchronization could not resolve an organization.');
+            }
+
+            $organization_rows[] = [
+                'to_entity_id' => (int) $organization['id'],
+                'relation_type' => $relation_type,
+                'relation_label' => (string) (iss_graph_get_register_place_organization_relation_options()[$relation_type] ?? $relation_type),
+                'position' => $index,
+                'is_public' => true,
+            ];
+        }
+
+        $service->replace_entity_relations_for_source(
+            (int) $entity['id'],
+            'organization',
+            'register_meta',
+            $organization_rows,
+            'post:' . $post_id
+        );
+
+        if ($editor_rows !== null) {
+            $service->replace_entity_projection((int) $entity['id'], 'register_admin', [
+                'source_ref' => 'post:' . $post_id,
+                'names' => iss_graph_sanitize_register_name_rows($editor_rows['names'] ?? []),
+                'relations' => [
+                    'organization' => iss_graph_sanitize_register_relation_rows($editor_rows['organizations'] ?? [], 'organization'),
+                    'person' => iss_graph_sanitize_register_relation_rows($editor_rows['people'] ?? [], 'person'),
+                ],
+            ]);
+        }
+
+        // Derive aliases from the names saved in this same transaction.
+        if (function_exists('iss_graph_sync_entity_alias_backfill')) {
+            iss_graph_sync_entity_alias_backfill((int) $entity['id']);
+        }
+    });
 
     return $entity;
 }
@@ -421,7 +446,7 @@ function iss_graph_sanitize_register_relation_rows(array $rows, string $target_k
         ]);
 
         if (!$target_entity) {
-            continue;
+            throw new RuntimeException('Register graph synchronization could not resolve an editor relation target.');
         }
 
         $sanitized[] = [
@@ -458,37 +483,19 @@ function iss_graph_save_register_place_graph(int $post_id, WP_Post $post): void
         return;
     }
 
-    $entity = iss_graph_sync_register_place_entity($post_id);
-    $entity_id = (int) ($entity['id'] ?? 0);
-
+    $editor_rows = null;
     if (
-        $entity_id > 0
-        && isset($_POST['iss_graph_register_place_graph_nonce'])
+        isset($_POST['iss_graph_register_place_graph_nonce'])
         && wp_verify_nonce(sanitize_text_field(wp_unslash($_POST['iss_graph_register_place_graph_nonce'])), 'iss_graph_save_register_place_graph')
     ) {
-        $service = iss_graph_get_service();
-        $source_ref = 'post:' . $post_id;
-        $service->replace_entity_names_for_source(
-            $entity_id,
-            'register_admin',
-            iss_graph_sanitize_register_name_rows(iss_graph_decode_posted_rows('iss_graph_register_name_rows')),
-            $source_ref
-        );
-        $service->replace_entity_relations_for_source(
-            $entity_id,
-            'organization',
-            'register_admin',
-            iss_graph_sanitize_register_relation_rows(iss_graph_decode_posted_rows('iss_graph_register_organization_rows'), 'organization'),
-            $source_ref
-        );
-        $service->replace_entity_relations_for_source(
-            $entity_id,
-            'person',
-            'register_admin',
-            iss_graph_sanitize_register_relation_rows(iss_graph_decode_posted_rows('iss_graph_register_person_rows'), 'person'),
-            $source_ref
-        );
+        $editor_rows = [
+            'names' => iss_graph_decode_posted_rows('iss_graph_register_name_rows'),
+            'organizations' => iss_graph_decode_posted_rows('iss_graph_register_organization_rows'),
+            'people' => iss_graph_decode_posted_rows('iss_graph_register_person_rows'),
+        ];
     }
+
+    iss_graph_sync_register_place_entity($post_id, $editor_rows);
 
     if (function_exists('iss_register_clear_places_cache')) {
         iss_register_clear_places_cache();

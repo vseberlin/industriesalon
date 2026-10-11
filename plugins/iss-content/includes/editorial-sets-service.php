@@ -216,6 +216,10 @@ class ISS_Content_Editorial_Sets_Service
             $candidate = $base . '-' . $index;
             $index++;
         }
+        global $wpdb;
+        if ($wpdb->last_error !== '') {
+            throw new RuntimeException('Editorial Set creation could not check its generated key.');
+        }
 
         return $candidate;
     }
@@ -248,37 +252,42 @@ class ISS_Content_Editorial_Sets_Service
     {
         global $wpdb;
 
-        $timestamp = current_time('mysql', true);
-        $title = trim(sanitize_text_field((string) ($args['title'] ?? '')));
-        $set_key = $this->normalize_key((string) ($args['set_key'] ?? ''));
-        if ($set_key === '') {
-            $set_key = $this->build_unique_set_key($title);
-        }
+        $set_id = 0;
+        $this->run_atomic_write([$this->get_sets_table_name(), $this->get_audit_table_name()], function () use ($wpdb, $args, &$set_id): void {
+            $timestamp = current_time('mysql', true);
+            $title = trim(sanitize_text_field((string) ($args['title'] ?? '')));
+            $set_key = $this->normalize_key((string) ($args['set_key'] ?? ''));
+            if ($set_key === '') {
+                $set_key = $this->build_unique_set_key($title);
+            }
 
-        $data = [
-            'set_key' => $set_key,
-            'title' => $title !== '' ? $title : __('Untitled set', 'iss-content-model'),
-            'summary' => sanitize_textarea_field((string) ($args['summary'] ?? '')),
-            'set_role' => $this->sanitize_set_role((string) ($args['set_role'] ?? 'intake')),
-            'status' => $this->sanitize_set_status((string) ($args['status'] ?? 'working')),
-            'created_by' => get_current_user_id(),
-            'updated_by' => get_current_user_id(),
-            'created_at' => $timestamp,
-            'updated_at' => $timestamp,
-        ];
+            $data = [
+                'set_key' => $set_key,
+                'title' => $title !== '' ? $title : __('Untitled set', 'iss-content-model'),
+                'summary' => sanitize_textarea_field((string) ($args['summary'] ?? '')),
+                'set_role' => $this->sanitize_set_role((string) ($args['set_role'] ?? 'intake')),
+                'status' => $this->sanitize_set_status((string) ($args['status'] ?? 'working')),
+                'created_by' => get_current_user_id(),
+                'updated_by' => get_current_user_id(),
+                'created_at' => $timestamp,
+                'updated_at' => $timestamp,
+            ];
 
-        $inserted = $wpdb->insert(
-            $this->get_sets_table_name(),
-            $data,
-            ['%s', '%s', '%s', '%s', '%s', '%d', '%d', '%s', '%s']
-        );
+            $inserted = $wpdb->insert(
+                $this->get_sets_table_name(),
+                $data,
+                ['%s', '%s', '%s', '%s', '%s', '%d', '%d', '%s', '%s']
+            );
 
-        if (!$inserted) {
-            return 0;
-        }
+            if ($inserted !== 1) {
+                return;
+            }
 
-        $set_id = (int) $wpdb->insert_id;
-        $this->record_audit($set_id, 0, 'set_created', __('Set created.', 'iss-content-model'), $data);
+            $set_id = (int) $wpdb->insert_id;
+            if ($set_id <= 0 || !$this->record_audit($set_id, 0, 'set_created', __('Set created.', 'iss-content-model'), $data)) {
+                throw new RuntimeException('Editorial Set creation could not record its required audit row.');
+            }
+        }, 'Editorial Set creation');
 
         return $set_id;
     }
@@ -886,25 +895,91 @@ class ISS_Content_Editorial_Sets_Service
 
     public function delete_set_if_safe(int $set_id): bool
     {
-        $set = $this->get_set($set_id);
-        if (!$set) {
+        if ($set_id <= 0) {
             return false;
         }
 
         global $wpdb;
-        $protected = (int) $wpdb->get_var($wpdb->prepare(
-            "SELECT COUNT(*) FROM {$this->get_items_table_name()} WHERE set_id = %d AND (status = 'promoted' OR archive_candidate_status <> '')",
-            $set_id
-        ));
-        if ($protected > 0) {
-            return false;
+        $sets = $this->get_sets_table_name();
+        $items = $this->get_items_table_name();
+        $links = $this->get_links_table_name();
+        $deleted = false;
+        $this->run_atomic_write([$sets, $items, $links], static function () use ($wpdb, $sets, $items, $links, $set_id, &$deleted): void {
+            $stored_id = $wpdb->get_var($wpdb->prepare("SELECT id FROM $sets WHERE id = %d FOR UPDATE", $set_id));
+            if ($wpdb->last_error !== '') {
+                throw new RuntimeException('Editorial Set deletion could not lock its Set.');
+            }
+            if ($stored_id !== null) {
+                // Preserve the SQL protection predicate and lock every child, beyond any UI page limit.
+                $item_rows = $wpdb->get_results($wpdb->prepare(
+                    "SELECT id, (status = 'promoted' OR archive_candidate_status <> '') AS is_protected
+                     FROM $items WHERE set_id = %d ORDER BY id ASC FOR UPDATE",
+                    $set_id
+                ), ARRAY_A);
+                if ($wpdb->last_error !== '' || !is_array($item_rows)) {
+                    throw new RuntimeException('Editorial Set deletion could not read its protected items.');
+                }
+                $protected = array_filter($item_rows, static fn(array $item): bool => (int) $item['is_protected'] === 1);
+                if (!$protected) {
+                    $link_ids = $wpdb->get_col($wpdb->prepare("SELECT id FROM $links WHERE set_id = %d ORDER BY id ASC FOR UPDATE", $set_id));
+                    if ($wpdb->last_error !== '') {
+                        throw new RuntimeException('Editorial Set deletion could not lock its context links.');
+                    }
+                    if ($wpdb->delete($items, ['set_id' => $set_id], ['%d']) !== count($item_rows)) {
+                        throw new RuntimeException('Editorial Set deletion could not remove all its items.');
+                    }
+                    if ($wpdb->delete($links, ['set_id' => $set_id], ['%d']) !== count($link_ids)) {
+                        throw new RuntimeException('Editorial Set deletion could not remove all its context links.');
+                    }
+                    if ($wpdb->delete($sets, ['id' => $set_id], ['%d']) !== 1) {
+                        throw new RuntimeException('Editorial Set deletion could not remove its Set.');
+                    }
+                    $deleted = true;
+                }
+            }
+        }, 'Editorial Set deletion');
+
+        return $deleted;
+    }
+
+    /** Tables come only from this owner's operations; callers retain existing transactions. */
+    private function run_atomic_write(array $tables, callable $write, string $operation): void
+    {
+        global $wpdb;
+
+        $placeholders = implode(', ', array_fill(0, count($tables), '%s'));
+        $states = $wpdb->get_results($wpdb->prepare(
+            "SELECT ENGINE AS engine, @@SESSION.in_transaction AS in_transaction,
+                @@SESSION.autocommit AS autocommit
+             FROM information_schema.TABLES
+             WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME IN ($placeholders)", // phpcs:ignore WordPress.DB.PreparedSQLPlaceholders.UnfinishedPrepare -- One %s placeholder per service-owned table above.
+            $tables
+        ), ARRAY_A);
+        if ($wpdb->last_error !== '' || !$states || count($states) !== count($tables) || array_filter($states, static function (array $state): bool {
+            return ($state['engine'] ?? '') !== 'InnoDB' || !isset($state['in_transaction'], $state['autocommit']);
+        })) {
+            throw new RuntimeException(esc_html($operation . ' requires MariaDB transaction state and InnoDB tables.'));
         }
 
-        $wpdb->delete($this->get_items_table_name(), ['set_id' => $set_id], ['%d']);
-        $wpdb->delete($this->get_links_table_name(), ['set_id' => $set_id], ['%d']);
-        $deleted = $wpdb->delete($this->get_sets_table_name(), ['id' => $set_id], ['%d']);
-
-        return $deleted !== false;
+        $owns_transaction = (int) $states[0]['in_transaction'] === 0 && (int) $states[0]['autocommit'] === 1;
+        $savepoint = wp_unique_id('iss_editorial_set_write_');
+        if ($wpdb->query($owns_transaction ? 'START TRANSACTION' : "SAVEPOINT $savepoint") === false) {
+            throw new RuntimeException(esc_html($operation . ' could not begin its transaction.'));
+        }
+        try {
+            $write();
+            if ($wpdb->query($owns_transaction ? 'COMMIT' : "RELEASE SAVEPOINT $savepoint") === false) {
+                throw new RuntimeException(esc_html($operation . ' could not finish its transaction.'));
+            }
+        } catch (Throwable $error) {
+            if ($wpdb->query($owns_transaction ? 'ROLLBACK' : "ROLLBACK TO SAVEPOINT $savepoint") === false) {
+                throw new RuntimeException(esc_html($operation . ' failed and rollback could not be confirmed.'), 0, $error); // phpcs:ignore WordPress.Security.EscapeOutput.ExceptionNotEscaped -- Chain the original Throwable.
+            }
+            if (!$owns_transaction && $wpdb->query("RELEASE SAVEPOINT $savepoint") === false) {
+                throw new RuntimeException(esc_html($operation . ' rolled back but could not release its savepoint.'), 0, $error); // phpcs:ignore WordPress.Security.EscapeOutput.ExceptionNotEscaped -- Chain the original Throwable.
+            }
+            throw $error;
+        }
     }
 
     public function preview_item(array $item): array
@@ -1075,11 +1150,12 @@ class ISS_Content_Editorial_Sets_Service
         return array_values($uses);
     }
 
-    public function record_audit(int $set_id, int $item_id, string $action, string $message, array $payload = []): void
+    /** Report the insert result; the calling operation owns its failure policy. */
+    public function record_audit(int $set_id, int $item_id, string $action, string $message, array $payload = []): bool
     {
         global $wpdb;
 
-        $wpdb->insert(
+        return $wpdb->insert(
             $this->get_audit_table_name(),
             [
                 'set_id' => $set_id,
@@ -1091,7 +1167,7 @@ class ISS_Content_Editorial_Sets_Service
                 'created_at' => current_time('mysql', true),
             ],
             ['%d', '%d', '%s', '%d', '%s', '%s', '%s']
-        );
+        ) === 1;
     }
 
     private function next_item_position(int $set_id): int

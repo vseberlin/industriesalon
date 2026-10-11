@@ -362,7 +362,13 @@ function iss_graph_build_entity_alias_rows(array $entity): array
         $seen[iss_graph_alias_candidate_key($display_title)] = true;
     }
 
-    foreach (iss_graph_get_service()->get_names_for_entity($entity_id, ['limit' => 500]) as $row) {
+    global $wpdb;
+
+    $names = iss_graph_get_service()->get_names_for_entity($entity_id, ['limit' => 500]);
+    if ($wpdb->last_error !== '') {
+        throw new RuntimeException('Graph alias synchronization could not read source names.');
+    }
+    foreach ($names as $row) {
         if (!is_array($row) || (string) ($row['source_system'] ?? '') === $source_system) {
             continue;
         }
@@ -396,6 +402,8 @@ function iss_graph_build_entity_alias_rows(array $entity): array
 
 function iss_graph_sync_entity_alias_backfill(int $entity_id): int
 {
+    global $wpdb;
+
     $entity_id = absint($entity_id);
     if ($entity_id <= 0) {
         return 0;
@@ -403,6 +411,9 @@ function iss_graph_sync_entity_alias_backfill(int $entity_id): int
 
     $service = iss_graph_get_service();
     $entity = $service->get_entity_by_id($entity_id);
+    if ($wpdb->last_error !== '') {
+        throw new RuntimeException('Graph alias synchronization could not read the entity.');
+    }
     if (!$entity) {
         return 0;
     }

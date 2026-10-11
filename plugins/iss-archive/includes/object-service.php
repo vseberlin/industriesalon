@@ -18,6 +18,89 @@ class ISS_WF_Import_Object_Service
         return $wpdb->prefix . 'iss_archive_objects';
     }
 
+    public function clear_projection_cache(int $post_id): void
+    {
+        unset($this->projection_cache[$post_id]);
+    }
+
+    /** Never retain a projection read from a transaction whose caller can roll it back. */
+    public function can_cache_projection(): bool
+    {
+        global $wpdb;
+
+        $state = $wpdb->get_row('SELECT @@SESSION.in_transaction AS in_transaction, @@SESSION.autocommit AS autocommit', ARRAY_A);
+        if ($wpdb->last_error !== '' || !is_array($state) || !isset($state['in_transaction'], $state['autocommit'])) {
+            throw new RuntimeException('Archive projection caching could not read transaction state.');
+        }
+
+        return (int) $state['in_transaction'] === 0 && (int) $state['autocommit'] === 1;
+    }
+
+    /** Share one archive-owned boundary for object saves and complete relation replacements. */
+    public function synchronize_projection(int $post_id, callable $write, bool $include_relations = false): void
+    {
+        global $wpdb;
+
+        $relation_service = function_exists('iss_wf_import_get_relation_service') ? iss_wf_import_get_relation_service() : null;
+        $this->clear_projection_cache($post_id);
+        if ($relation_service) {
+            $relation_service->clear_projection_cache($post_id);
+        }
+        try {
+            $tables = [$wpdb->posts, $this->get_object_table_name()];
+            if ($include_relations) {
+                if (!$relation_service) {
+                    throw new RuntimeException('Archive relation projection requires its relation owner.');
+                }
+                $tables[] = $relation_service->get_relation_table_name();
+            }
+            $placeholders = implode(', ', array_fill(0, count($tables), '%s'));
+            $states = $wpdb->get_results($wpdb->prepare(
+                "SELECT ENGINE AS engine, @@SESSION.in_transaction AS in_transaction,
+                    @@SESSION.autocommit AS autocommit
+                 FROM information_schema.TABLES
+                 WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME IN ($placeholders)", // phpcs:ignore WordPress.DB.PreparedSQLPlaceholders.UnfinishedPrepare -- One %s placeholder per owner-supplied table above.
+                $tables
+            ), ARRAY_A);
+            if ($wpdb->last_error !== '' || !$states || count($states) !== count($tables) || array_filter($states, static function (array $state): bool {
+                return ($state['engine'] ?? '') !== 'InnoDB' || !isset($state['in_transaction'], $state['autocommit']);
+            })) {
+                throw new RuntimeException('Archive projection writes require MariaDB transaction state and InnoDB tables.');
+            }
+
+            $owns_transaction = (int) $states[0]['in_transaction'] === 0 && (int) $states[0]['autocommit'] === 1;
+            $savepoint = wp_unique_id('iss_archive_write_');
+            if ($wpdb->query($owns_transaction ? 'START TRANSACTION' : "SAVEPOINT $savepoint") === false) { // phpcs:ignore WordPress.DB.PreparedSQL.NotPrepared -- Fixed transaction statements; savepoint generated internally.
+                throw new RuntimeException('Archive projection could not begin its transaction.');
+            }
+            try {
+                $row = $wpdb->get_row($wpdb->prepare("SELECT * FROM {$wpdb->posts} WHERE ID = %d FOR UPDATE", $post_id));
+                if ($wpdb->last_error !== '') {
+                    throw new RuntimeException('Archive projection could not lock its source post.');
+                }
+                if ($row) {
+                    $write(new WP_Post($row));
+                }
+                if ($wpdb->query($owns_transaction ? 'COMMIT' : "RELEASE SAVEPOINT $savepoint") === false) { // phpcs:ignore WordPress.DB.PreparedSQL.NotPrepared -- Fixed transaction statements; savepoint generated internally.
+                    throw new RuntimeException('Archive projection could not finish its transaction.');
+                }
+            } catch (Throwable $error) {
+                if ($wpdb->query($owns_transaction ? 'ROLLBACK' : "ROLLBACK TO SAVEPOINT $savepoint") === false) { // phpcs:ignore WordPress.DB.PreparedSQL.NotPrepared -- Fixed transaction statements; savepoint generated internally.
+                    throw new RuntimeException('Archive projection failed and rollback could not be confirmed.', 0, $error); // phpcs:ignore WordPress.Security.EscapeOutput.ExceptionNotEscaped -- Chain the original Throwable.
+                }
+                if (!$owns_transaction && $wpdb->query("RELEASE SAVEPOINT $savepoint") === false) {
+                    throw new RuntimeException('Archive projection rolled back but could not release its savepoint.', 0, $error); // phpcs:ignore WordPress.Security.EscapeOutput.ExceptionNotEscaped -- Chain the original Throwable.
+                }
+                throw $error;
+            }
+        } finally {
+            $this->clear_projection_cache($post_id);
+            if ($relation_service) {
+                $relation_service->clear_projection_cache($post_id);
+            }
+        }
+    }
+
     public function maybe_install_schema(): void
     {
         $stored = (string) get_option(ISS_WF_IMPORT_OBJECT_SCHEMA_OPTION, '');
@@ -121,14 +204,12 @@ class ISS_WF_Import_Object_Service
 
     public function sync_object_post(int $post_id): void
     {
-        $snapshot = $this->build_snapshot($post_id);
-        if (!$snapshot) {
-            return;
-        }
-
-        $timestamp = current_time('mysql', true);
-        $this->upsert_object_row($snapshot, $timestamp);
-        unset($this->projection_cache[$post_id]);
+        $this->synchronize_projection($post_id, function (WP_Post $post) use ($post_id): void {
+            $snapshot = $this->build_snapshot($post_id, $post);
+            if ($snapshot) {
+                $this->upsert_object_row($snapshot, current_time('mysql', true));
+            }
+        });
     }
 
     public function delete_object_post(int $post_id): void
@@ -145,14 +226,20 @@ class ISS_WF_Import_Object_Service
             return null;
         }
 
-        if (array_key_exists($post_id, $this->projection_cache)) {
+        $cacheable = $this->can_cache_projection();
+        if (!$cacheable) {
+            $this->clear_projection_cache($post_id);
+        }
+        if ($cacheable && array_key_exists($post_id, $this->projection_cache)) {
             return $this->projection_cache[$post_id];
         }
 
         $row = $this->get_object_row_by_post_id($post_id);
-        $this->projection_cache[$post_id] = is_array($row) ? $row : null;
+        if ($cacheable) {
+            $this->projection_cache[$post_id] = $row;
+        }
 
-        return $this->projection_cache[$post_id];
+        return $row;
     }
 
     public function ensure_projection_for_post(int $post_id): ?array
@@ -234,15 +321,28 @@ class ISS_WF_Import_Object_Service
         return absint($post_id);
     }
 
-    protected function build_snapshot(int $post_id): ?array
+    protected function build_snapshot(int $post_id, ?WP_Post $post = null): ?array
     {
-        $post = get_post($post_id);
+        global $wpdb;
+
+        $queries = $wpdb->num_queries;
+        $post = $post ?? get_post($post_id);
+        if ($wpdb->num_queries > $queries && $wpdb->last_error !== '') {
+            throw new RuntimeException('Archive object projection could not read the source post.');
+        }
         if (!$post instanceof WP_Post || $post->post_type !== ISS_WF_IMPORT_OBJECT_POST_TYPE) {
             return null;
         }
 
         if (in_array($post->post_status, ['auto-draft', 'trash'], true)) {
             return null;
+        }
+
+        $queries = $wpdb->num_queries;
+        get_post_meta($post_id);
+        if ($wpdb->num_queries > $queries && $wpdb->last_error !== '') {
+            wp_cache_delete($post_id, 'post_meta');
+            throw new RuntimeException('Archive object projection could not read source metadata.');
         }
 
         $source_system = sanitize_key((string) get_post_meta($post_id, ISS_WF_IMPORT_SOURCE_KIND_META, true));
@@ -355,18 +455,28 @@ class ISS_WF_Import_Object_Service
         ];
 
         if ($existing) {
-            $wpdb->update($table, $data, ['id' => (int) $existing['id']], $formats, ['%d']);
-
-            if (($existing['created_at'] ?? '') === '0000-00-00 00:00:00' || ($existing['created_at'] ?? '') === '') {
-                $wpdb->update($table, ['created_at' => $timestamp], ['id' => (int) $existing['id']], ['%s'], ['%d']);
+            if ($wpdb->update($table, $data, ['id' => (int) $existing['id']], $formats, ['%d']) === false) {
+                throw new RuntimeException('Archive object projection could not update its row.');
             }
 
-            return;
+            if (($existing['created_at'] ?? '') === '0000-00-00 00:00:00' || ($existing['created_at'] ?? '') === '') {
+                if ($wpdb->update($table, ['created_at' => $timestamp], ['id' => (int) $existing['id']], ['%s'], ['%d']) === false) {
+                    throw new RuntimeException('Archive object projection could not store its creation timestamp.');
+                }
+                $data['created_at'] = $timestamp;
+            }
+        } else {
+            $data['created_at'] = $timestamp;
+            $formats[] = '%s';
+            if ($wpdb->insert($table, $data, $formats) !== 1) {
+                throw new RuntimeException('Archive object projection could not insert its row.');
+            }
         }
 
-        $data['created_at'] = $timestamp;
-        $formats[] = '%s';
-        $wpdb->insert($table, $data, $formats);
+        $saved = $this->get_object_row_by_post_id((int) $snapshot['post_id']);
+        if (!$saved || array_intersect_key($saved, $data) != $data) {
+            throw new RuntimeException('Archive object projection could not verify its saved row.');
+        }
     }
 
     protected function get_object_row_by_post_id(int $post_id): ?array
@@ -377,6 +487,9 @@ class ISS_WF_Import_Object_Service
             "SELECT * FROM {$this->get_object_table_name()} WHERE object_post_id = %d LIMIT 1",
             $post_id
         ), ARRAY_A);
+        if ($wpdb->last_error !== '') {
+            throw new RuntimeException('Archive object projection could not read its row.');
+        }
 
         return is_array($row) ? $row : null;
     }

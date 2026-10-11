@@ -14,6 +14,11 @@ define('ISS_CONTENT_MODEL_VERSION', '0.2.0');
 define('ISS_CONTENT_MODEL_PATH', plugin_dir_path(__FILE__));
 define('ISS_CONTENT_VERSION', ISS_CONTENT_MODEL_VERSION);
 define('ISS_CONTENT_PATH', ISS_CONTENT_MODEL_PATH);
+// Bump each seed version only when that owner's default terms change.
+define('ISS_CONTENT_MODEL_TAXONOMY_SEED_OPTION', 'iss_content_model_taxonomy_seed_version');
+define('ISS_CONTENT_MODEL_TAXONOMY_SEED_VERSION', '2026-10-08-v1');
+define('ISS_CONTENT_FALLBACK_CATEGORY_SEED_OPTION', 'iss_content_fallback_category_seed_version');
+define('ISS_CONTENT_FALLBACK_CATEGORY_SEED_VERSION', '2026-10-08-v1');
 
 define('ISS_CONTENT_MODEL_VERANSTALTUNG_POST_TYPE', 'veranstaltung');
 define('ISS_CONTENT_MODEL_AUSSTELLUNG_POST_TYPE', 'ausstellung');
@@ -140,6 +145,25 @@ function iss_content_editorial_sets_ensure_runtime_state(): void
 }
 add_action('admin_init', 'iss_content_editorial_sets_ensure_runtime_state', 5);
 
+function iss_content_model_maybe_upgrade_taxonomy_terms(): void
+{
+    if (!current_user_can('manage_options') || wp_doing_ajax()) {
+        return;
+    }
+
+    iss_content_model_maybe_seed_taxonomy_terms();
+    iss_content_fallback_seed_categories();
+}
+add_action('admin_init', 'iss_content_model_maybe_upgrade_taxonomy_terms', 20);
+
+function iss_content_model_taxonomy_seed_status_rows(array $rows): array
+{
+    iss_core_add_status_option_row($rows, 'iss-content taxonomy seed', ISS_CONTENT_MODEL_TAXONOMY_SEED_OPTION, ISS_CONTENT_MODEL_TAXONOMY_SEED_VERSION);
+    iss_core_add_status_option_row($rows, 'iss-content fallback category seed', ISS_CONTENT_FALLBACK_CATEGORY_SEED_OPTION, ISS_CONTENT_FALLBACK_CATEGORY_SEED_VERSION);
+    return $rows;
+}
+add_filter('iss_core_status_rows', 'iss_content_model_taxonomy_seed_status_rows');
+
 if (defined('WP_CLI') && WP_CLI) {
     require_once ISS_CONTENT_MODEL_PATH . 'includes/veranstaltungen-cli.php';
     require_once ISS_CONTENT_MODEL_PATH . 'includes/editor-ui-audit-cli.php';
@@ -159,6 +183,9 @@ register_activation_hook(__FILE__, function () {
     }
     flush_rewrite_rules();
 });
+// The activation callback above registers the taxonomies before these seeders.
+register_activation_hook(__FILE__, 'iss_content_model_maybe_seed_taxonomy_terms');
+register_activation_hook(__FILE__, 'iss_content_fallback_seed_categories');
 
 register_deactivation_hook(__FILE__, function () {
     flush_rewrite_rules();

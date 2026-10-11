@@ -314,8 +314,12 @@ function iss_wf_import_ensure_taxonomy_term(string $taxonomy, string $slug, stri
     return (int) ($created['term_id'] ?? 0);
 }
 
-function iss_wf_import_ensure_museum_digital_terms(): void
+function iss_wf_import_ensure_museum_digital_terms(): bool
 {
+    if ((string) get_option(ISS_WF_IMPORT_TAXONOMY_SEED_OPTION, '') === ISS_WF_IMPORT_TAXONOMY_SEED_VERSION) {
+        return true;
+    }
+
     $taxonomy_terms = [
         ISS_WF_IMPORT_FIELD_TAXONOMY => [
             'roehre' => 'Röhre',
@@ -389,11 +393,15 @@ function iss_wf_import_ensure_museum_digital_terms(): void
 
     foreach ($taxonomy_terms as $taxonomy => $terms) {
         foreach ($terms as $slug => $label) {
-            iss_wf_import_ensure_taxonomy_term($taxonomy, (string) $slug, (string) $label);
+            if (iss_wf_import_ensure_taxonomy_term($taxonomy, (string) $slug, (string) $label) <= 0) {
+                return false;
+            }
         }
     }
+
+    update_option(ISS_WF_IMPORT_TAXONOMY_SEED_OPTION, ISS_WF_IMPORT_TAXONOMY_SEED_VERSION, false);
+    return (string) get_option(ISS_WF_IMPORT_TAXONOMY_SEED_OPTION, '') === ISS_WF_IMPORT_TAXONOMY_SEED_VERSION;
 }
-add_action('init', 'iss_wf_import_ensure_museum_digital_terms', 30);
 
 function iss_wf_import_add_to_relations_post_types(array $post_types): array
 {
