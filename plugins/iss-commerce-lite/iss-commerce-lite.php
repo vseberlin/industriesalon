@@ -624,7 +624,7 @@ function iss_payments_lite_process_slot_booking_request(array $payload, WP_REST_
     $price_cents = 0;
 
     $tag = $payload_tag;
-    if ($source_post_id <= 0 || $source_post_type === '' || get_post_type($source_post_id) !== $source_post_type) {
+    if ($source_post_id <= 0 || !in_array($source_post_type, ['fuehrung', 'veranstaltung'], true) || get_post_type($source_post_id) !== $source_post_type || !is_post_publicly_viewable($source_post_id) || get_post_field('post_password', $source_post_id) !== '') {
         return new WP_REST_Response(['ok' => false, 'error' => 'Ungültige Quelle.'], 400);
     }
 
@@ -689,9 +689,14 @@ function iss_payments_lite_process_slot_booking_request(array $payload, WP_REST_
         }
 
         if ($found !== null) {
-            if (array_key_exists('available', $found) && $found['available'] !== null && (int) $found['available'] <= 0) {
-                $errors[] = 'Slot ist ausgebucht.';
+            if (in_array($found['availability_state'] ?? '', ['cancelled', 'unavailable', 'sold_out'], true)) {
+                $errors[] = 'Dieser Termin ist nicht buchbar.';
             }
+            if (array_key_exists('available', $found) && $found['available'] !== null && $tickets > (int) $found['available']) {
+                $errors[] = 'Für diese Anzahl sind nicht genügend Plätze verfügbar.';
+            }
+            $start = (string) $found['start'];
+            $title = get_the_title($source_post_id);
         } else {
             $errors[] = 'Ungültiger Slot.';
         }
@@ -739,7 +744,7 @@ function iss_payments_lite_process_inquiry_request(array $payload, WP_REST_Reque
     $title = sanitize_text_field($payload['title'] ?? '');
 
     $errors = [];
-    if ($source_post_id <= 0 || $source_post_type === '' || get_post_type($source_post_id) !== $source_post_type) {
+    if (!function_exists('iss_occurrences_booking_inquiry_allowed') || !iss_occurrences_booking_inquiry_allowed($source_post_id, $source_post_type)) {
         $errors[] = 'Ungültige Quelle.';
     }
     if ($name === '') {
@@ -748,8 +753,11 @@ function iss_payments_lite_process_inquiry_request(array $payload, WP_REST_Reque
     if (!is_email($email)) {
         $errors[] = 'Ungültige E-Mail.';
     }
-    if ($start === '') {
-        $errors[] = 'Bitte einen Wunschtermin angeben.';
+    $format = strlen($start) === 10 ? 'Y-m-d' : 'Y-m-d\\TH:i:s';
+    $preferred = DateTimeImmutable::createFromFormat('!' . $format, $start, wp_timezone());
+    $now = current_datetime();
+    if (!$preferred || $preferred->format($format) !== $start || (strlen($start) === 10 ? $preferred->format('Y-m-d') < $now->format('Y-m-d') : $preferred < $now)) {
+        $errors[] = 'Bitte einen gültigen zukünftigen Wunschtermin angeben.';
     }
 
     if (!empty($errors)) {
@@ -794,7 +802,7 @@ function iss_payments_lite_process_order_request(array $payload, WP_REST_Request
 
     $errors = [];
 
-    if ($publication_id <= 0 || get_post_type($publication_id) !== 'publication') {
+    if ($publication_id <= 0 || get_post_type($publication_id) !== 'publication' || !is_post_publicly_viewable($publication_id) || get_post_field('post_password', $publication_id) !== '') {
         $errors[] = 'Ungültige Publikation.';
     }
 

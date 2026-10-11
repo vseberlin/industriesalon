@@ -59,6 +59,47 @@ try {
     $db->update($occurrence_table, ['capacity_available' => 0], ['source_post_id' => $base]);
     $expect($call($data)->get_status() === 200 && count($read()) === 1 && $sent === 1, 'Committed replay survives later sold-out state');
     $db->update($occurrence_table, ['capacity_available' => 10], ['source_post_id' => $base]);
+    $stage = 'current_validation'; $reset(); $data = $payload('booking');
+    $db->update($occurrence_table, ['capacity_available' => 1], ['source_post_id' => $base]);
+    $expect($call($data)->get_status() === 400 && !$read() && !$sent, 'Current capacity rejects excess requested quantity');
+    $db->update($occurrence_table, ['capacity_available' => 10, 'availability_state' => 'cancelled'], ['source_post_id' => $base]);
+    $expect($call($data)->get_status() === 400 && !$read() && !$sent, 'Cancelled slot cannot accept a new request');
+    $db->update($occurrence_table, ['availability_state' => ''], ['source_post_id' => $base]);
+    $data['start'] = '1900-01-01'; $data['title'] = 'Forged title';
+    $expect($call($data)->get_status() === 200, 'Owner slot and source determine persisted display values');
+    $stored_payload = json_decode($read()[0]['payload'], true);
+    $expect($stored_payload['start'] !== '1900-01-01' && $stored_payload['title'] === 'Fixture', 'Client cannot forge persisted slot time or title');
+    foreach (['booking','inquiry','order'] as $kind) {
+        foreach (['draft','private','password'] as $visibility) {
+            $reset(); $data = $payload($kind); $id = $data['source_post_id'];
+            $db->update($db->posts, ['post_status' => $visibility === 'password' ? 'publish' : $visibility, 'post_password' => $visibility === 'password' ? 'protected-fixture' : ''], ['ID'=>$id]); wp_cache_delete($id, 'posts');
+            $expect($call($data)->get_status() === 400 && !$read() && !$sent, 'Private, draft and password sources reject new public intake');
+            $expect(!iss_occurrences_booking_inquiry_allowed($id, $data['source_post_type']), 'Private source never offers inquiry');
+            if ($kind !== 'order') { $expect(iss_occurrences_get_booking_slots(['source_post_id'=>$id,'source_post_type'=>$data['source_post_type']]) === [], 'Stale public projection cannot leak hidden source slots'); }
+            $db->update($db->posts, ['post_status'=>'publish','post_password'=>''], ['ID'=>$id]); wp_cache_delete($id, 'posts');
+        }
+    }
+    $reset(); $data = $payload('inquiry');
+    foreach (['2027-02-29', '2027-03-28T02:30:00', '2000-01-01', 'tomorrow', '2030-13-01'] as $invalid_date) {
+        $data['start'] = $invalid_date;
+        $expect($call($data)->get_status() === 400 && !$read() && !$sent, 'Invalid, past and nonexistent Berlin DST inquiry times are rejected');
+    }
+    $data['start'] = '2030-10-11';
+    $expect($call($data)->get_status() === 200, 'Date-only future inquiry remains supported');
+    $reset();
+    $stage = 'complete_availability';
+    $fixture_row = $db->get_row("SELECT * FROM `$occurrence_table` LIMIT 1", ARRAY_A); unset($fixture_row['id']);
+    for ($index = 0; $index < 1000; ++$index) {
+        $fixture_row['external_id'] = 'extra-' . $index;
+        if ($db->insert($occurrence_table, $fixture_row) !== 1) { throw new RuntimeException('Cannot seed complete-availability fixture'); }
+    }
+    $expect(count(iss_occurrences_get_booking_slots(['source_post_id'=>$base,'source_post_type'=>'veranstaltung'])) === 1001, 'Complete source horizon is not silently truncated at 1000 slots');
+    $slot_request = new WP_REST_Request('GET', '/iss/v1/booking-slots');
+    $slot_request->set_param('source_post_id', $base); $slot_request->set_param('source_post_type', 'veranstaltung'); $slot_request->set_param('tag', 'FIXTURE');
+    set_transient('is_tours_slots_' . md5('FIXTURE'), [['id'=>'poisoned-old-cache']], 600);
+    $slot_response = iss_occurrences_get_booking_slots_rest($slot_request);
+    $expect($slot_response->get_headers()['Cache-Control'] === 'no-store' && count($slot_response->get_data()['slots']) === 1001, 'REST returns complete fresh owner data instead of a partial tag cache');
+    $db->query("DELETE FROM `$occurrence_table` WHERE external_id LIKE 'extra-%'");
     foreach (['lookup','state','lock','inside_lookup','duplicate','insert','ignored_insert'] as $stage) {
         $reset(); $data = $payload(); $hits = 0; $lookups = 0;
         $filter = static function (string $sql) use ($stage,$table,&$hits,&$lookups): string {

@@ -6,6 +6,18 @@ be recovered from Git history.
 
 ## 2026-10-11
 
+- Tightened booking/order source visibility, current slot status/quantity and
+  strict Berlin preferred-date validation. Persisted slot time/title now come
+  from owners. Slot reads cover the complete existing 12-month source horizon;
+  removed the silent 1000-row cap and REST tag-cache reuse/writes that could
+  outlive visibility or mix source scopes. Passed 114 isolated commerce checks,
+  including private sources, cancellation, DST and 1001-slot completeness, plus
+  PHP lint/PHPCS/PHPStan. No schema/data or uploads artifact is required.
+  The WordPress 7.0/PHP 8.3.31 fixture passed the same commerce checks, 26 native
+  filter checks and three desktop/phone/no-JS Chrome checks. A scoped isolated
+  full SQL restore retained all 118 tables; 117 checksums matched the live source,
+  with only volatile options different after testing. Original data was untouched.
+
 - Converted timeline-query filters to scoped native GET forms, date/month fields,
   preset links and bounded previous/next pagination using the existing PHP
   listing renderer. Editor attributes remain unchanged; public selections cannot

@@ -430,112 +430,28 @@ function is_tours_public_rate_limit_response(string $scope, int $limit = 60, int
 
 function iss_occurrences_get_booking_slots_rest(WP_REST_Request $request) {
     $rate_limited = is_tours_public_rate_limit_response('booking-slots');
-    if ($rate_limited instanceof WP_REST_Response) {
-        return $rate_limited;
-    }
+    if ($rate_limited instanceof WP_REST_Response) { return $rate_limited; }
 
-    $tag = strtoupper(sanitize_text_field($request->get_param('tag')));
+    $tag = strtoupper(sanitize_text_field((string) $request->get_param('tag')));
     $source_post_id = (int) ($request->get_param('source_post_id') ?: $request->get_param('post_id'));
     $source_post_type = sanitize_key((string) $request->get_param('source_post_type'));
     $item_type = sanitize_key((string) $request->get_param('item_type'));
-
-    if (!$tag && $source_post_id > 0) {
-        if (function_exists('iss_occurrences_resolve_tag_for_source_post_id')) {
-            $tag = iss_occurrences_resolve_tag_for_source_post_id($source_post_id);
-        }
+    if ($source_post_id <= 0 && $tag !== '') {
+        $mapping = iss_occurrences_get_tag_source($tag);
+        $source_post_id = (int) ($mapping['source_post_id'] ?? 0);
+        $source_post_type = (string) ($mapping['source_post_type'] ?? '');
     }
-
-    if (!$tag && $source_post_id <= 0) {
-        $res = new WP_REST_Response([
-            'source' => 'nomap',
-            'mode' => 'unavailable',
-            'slots' => [],
-            'inquiry' => ['allowed' => false],
-        ], 200);
-        $res->header('X-IS-Tours-Source', 'nomap');
-        $res->header('X-IS-Tours-Error', 'missing-tag');
-        $res->header('Cache-Control', 'no-store');
-        return $res;
-    }
-
-    if ($tag !== '' && $source_post_id <= 0) {
-        $cache_key = 'is_tours_slots_' . md5($tag);
-        $cached = get_transient($cache_key);
-    } else {
-        $cached = false;
-    }
-
-    if ($cached !== false) {
-        $cached_at = is_tours_get_cached_at_by_tag($tag);
-        $source = is_tours_get_cached_source_by_tag($tag);
-        if ($source === '' || $source === 'cache') {
-            $source = 'occurrences';
-            is_tours_set_cached_source_by_tag($tag, $source, 60 * 10);
-        }
-        $slots = is_array($cached) ? $cached : [];
-        $payload = iss_occurrences_build_booking_slots_payload($source, $slots, $source_post_id, $source_post_type);
-        $etag = is_tours_build_etag($payload);
-        $maybe = is_tours_maybe_304($request, $etag, $cached_at, 60);
-        if ($maybe) {
-            $maybe->header('X-IS-Tours-Source', 'cache');
-            return $maybe;
-        }
-
-        $res = new WP_REST_Response($payload, 200);
-        $res->header('X-IS-Tours-Source', 'cache');
-        if ($etag !== '') $res->header('ETag', $etag);
-        $res->header('Cache-Control', 'public, max-age=60');
-        if ($cached_at > 0) {
-            $res->header('Last-Modified', gmdate('D, d M Y H:i:s', $cached_at) . ' GMT');
-        }
-        return $res;
-	    }
-
-    if (!function_exists('iss_occurrences_query')) {
-        return new WP_REST_Response([
-            'error' => 'Occurrence module missing',
-        ], 500);
-    }
-
     $slots = iss_occurrences_get_booking_slots([
-        'tag' => $tag,
-        'source_post_id' => $source_post_id,
-        'source_post_type' => $source_post_type,
-        'item_type' => $item_type,
+        'tag' => $tag, 'source_post_id' => $source_post_id,
+        'source_post_type' => $source_post_type, 'item_type' => $item_type,
     ]);
-    $source = 'occurrences';
-
-    if (!empty($slots)) {
-        if ($tag !== '') {
-            $ttl = 60 * 10;
-            is_tours_set_cached_slots_by_tag($tag, $slots, $ttl);
-            is_tours_set_cached_source_by_tag($tag, $source, $ttl);
-        }
-
-        $payload = iss_occurrences_build_booking_slots_payload($source, $slots, $source_post_id, $source_post_type);
-        $etag = is_tours_build_etag($payload);
-        $cached_at = $tag !== '' ? is_tours_get_cached_at_by_tag($tag) : 0;
-        $max_age = 60;
-        $maybe = is_tours_maybe_304($request, $etag, $cached_at, $max_age);
-        if ($maybe) {
-            $maybe->header('X-IS-Tours-Source', $source);
-            return $maybe;
-        }
-
-        $res = new WP_REST_Response($payload, 200);
-        $res->header('X-IS-Tours-Source', $source);
-        if ($etag !== '') $res->header('ETag', $etag);
-        $res->header('Cache-Control', 'public, max-age=' . $max_age);
-        if ($cached_at > 0) {
-            $res->header('Last-Modified', gmdate('D, d M Y H:i:s', $cached_at) . ' GMT');
-        }
-        return $res;
-    }
-
-    $res = new WP_REST_Response(iss_occurrences_build_booking_slots_payload($source, [], $source_post_id, $source_post_type), 200);
-    $res->header('X-IS-Tours-Source', $source);
-    $res->header('Cache-Control', 'no-store');
-    return $res;
+    $payload = iss_occurrences_build_booking_slots_payload('occurrences', $slots, $source_post_id, $source_post_type);
+    // Read the projection on every request: tag-only caches could outlive source
+    // visibility changes or hold a different source's partial availability.
+    $response = new WP_REST_Response($payload, 200);
+    $response->header('X-IS-Tours-Source', 'occurrences');
+    $response->header('Cache-Control', 'no-store');
+    return $response;
 }
 
 function iss_occurrences_build_booking_slots_payload(string $source, array $slots, int $source_post_id = 0, string $source_post_type = ''): array {
@@ -563,7 +479,7 @@ function iss_occurrences_booking_inquiry_allowed(int $source_post_id, string $so
         return false;
     }
 
-    if (get_post_type($source_post_id) !== $source_post_type) {
+    if (get_post_type($source_post_id) !== $source_post_type || !is_post_publicly_viewable($source_post_id) || get_post_field('post_password', $source_post_id) !== '') {
         return false;
     }
 
@@ -764,7 +680,8 @@ function iss_occurrences_get_booking_slots(array $args = []): array {
     }
 
     $query = [
-        'limit' => 1000,
+        // Complete availability inside the explicit source/date horizon; no silent row cap.
+        'limit' => -1,
         'order' => 'ASC',
         'time_mode' => 'upcoming',
     ];
@@ -812,11 +729,15 @@ function iss_occurrences_get_booking_slots(array $args = []): array {
         $booking_url = trim((string) ($item['booking_url'] ?? ''));
         $slot_source_post_id = isset($item['source_post_id']) ? (int) $item['source_post_id'] : 0;
         $slot_source_post_type = isset($item['source_post_type']) ? sanitize_key((string) $item['source_post_type']) : '';
+        if ($slot_source_post_id <= 0 || get_post_type($slot_source_post_id) !== $slot_source_post_type || !is_post_publicly_viewable($slot_source_post_id) || get_post_field('post_password', $slot_source_post_id) !== '') {
+            continue;
+        }
         $slot = [
             'id' => $external_id,
             'title' => trim((string) ($item['title'] ?? '')),
             'start' => $start,
             'end' => !empty($item['end_raw']) ? (string) $item['end_raw'] : null,
+            'availability_state' => (string) ($item['availability_state'] ?? ''),
             'capacity' => array_key_exists('capacity', $item) ? $item['capacity'] : null,
             'available' => array_key_exists('available', $item) ? $item['available'] : null,
             'booking_url' => $booking_url !== '' ? $booking_url : null,

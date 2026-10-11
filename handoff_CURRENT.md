@@ -64,7 +64,11 @@ versus 123,836 before this slice (34 browser resources versus 35). This is a
 local measurement, not a staging speed guarantee. Historical home IDs differ
 from the 8 October baseline; date rotation and remaining public cache writes
 need comparison during query consolidation. Native booking is next; Flatpickr
-remains for that consumer. Enable router
+remains for that consumer. Booking intake now rejects private sources,
+cancelled/over-capacity slots and invalid/past Berlin dates. Slot data is complete
+within the existing 12-month horizon and REST reads bypass old tag transients;
+114 isolated commerce checks passed. Live size: 73 published sources, largest
+response 27 slots / 12,519 JSON bytes (11 October). Enable router
 updates only after booking triggers are compatible. No data/uploads artifact
 for filters. Email dispatch is not exactly-once across process crashes.
 Do not run real imports/merges or destructive cleanup for verification.
@@ -93,8 +97,9 @@ Do not run real imports/merges or destructive cleanup for verification.
 - Source before-images and backup hashes remain in `*-backup-verification.json`.
   Set backup: `editorial-set-delete-before.sql.gz`; archive/graph backup:
   `graph-archive-before.sql.gz`. Original database/files baselines and seven-route
-  comparisons remain available. Their gzip/hash/SQL checks passed; a full restore
-  rehearsal is still outstanding. Never restore these over later editorial work.
+  comparisons remain available. Their gzip/hash/SQL checks passed; a SQL restore rehearsal now passed in the isolated
+  WordPress 7.0 fixture (118 tables, 117 matching checksums; volatile options
+  differed after tests). Files restore rehearsal remains outstanding. Never restore these over later editorial work.
 
 ## Contracts and release gates
 
@@ -111,8 +116,13 @@ check/apply/verify; do not replay its completed local application. Current graph
 archive and Set code changes need no schema/data migration or uploads artifact.
 Before future commits, check whether their changes introduce such dependencies.
 
-Browser/editor/responsive, Firefox/WebKit, WordPress 7.0 and staging acceptance
-remain open. Backend tests do not establish those results. Preserve DB template
+Native-filter desktop/phone/no-JS Chrome and isolated WordPress 7.0 checks pass.
+The local 7.0/PHP 8.3.31 fixture uses Compose project `iss-refactor-wp70`,
+`var/refactoring-20261008/wp70/compose.yml`, loopback port 8097, private database
+bind storage and read-only shared code/uploads; mail/external HTTP are blocked.
+Stop its services after final checks. Existing newsletter early-translation
+notices are visible with its debug mode. Broader booking/editor, Firefox/WebKit
+and staging acceptance remain open. Backend tests do not establish those results. Preserve DB template
 overrides (`single-ausstellung`, `page-projekte`, `page-publikationen`), editorial
 history/recovery, private contacts/Sets, date rotation, moderation and uploads.
 No full-database equality claim: concurrent editor activity exists; per-suite

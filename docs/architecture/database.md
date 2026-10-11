@@ -412,7 +412,23 @@ Commerce-lite request rows are stored in the existing `wp_iss_payments_lite_requ
 New public writes use the universal `/iss-payments/v1/request` intake with
 `booking`, `inquiry`, and `order` intents. The table keeps its existing
 `request_kind` column name until a dedicated schema cleanup is worth doing, but
-new writes store the normalized intent value there.
+new writes store the normalized intent value there. Schema v3 adds nullable
+unique `request_key` and `request_fingerprint` fields through
+`ops/migrations/2026-10-11-commerce-idempotency.php`; historical rows retain null
+keys. New forms retain their random key through network retries. A matching
+committed replay returns the original success without another mail/hook dispatch;
+changed intent conflicts. A database session lock serializes the existing semantic
+duplicate window. Mail remains outside persistence and is not exactly-once across
+process termination.
+
+New intake validates public, non-password-protected sources, current slot state
+and quantity. Slot time/title come from the occurrence/source owners. Preferred
+dates use strict site-timezone validation, including nonexistent DST times.
+Booking availability is the complete source set within the existing default
+12-month horizon (owner maximum 24 months), with no silent 1000-row truncation.
+The public endpoint reads the occurrence projection and returns `no-store`;
+legacy tag-only transients cannot override current source visibility. This is
+request capture, not a capacity reservation or automatic external booking.
 Online settlement is not implied by a stored request row; supported payment
 methods default to onsite/request capture until a provider integration is
 explicitly added.
