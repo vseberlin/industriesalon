@@ -26,6 +26,13 @@ function iss_programm_register_frontend_assets() {
     ]);
     wp_interactivity_state('iss/booking', ['catalog' => []]);
 
+    wp_register_script_module(
+        'iss/timeline-navigation',
+        $programm_url . 'assets/timeline-navigation.js',
+        ['@wordpress/interactivity', ['id' => '@wordpress/interactivity-router', 'import' => 'dynamic']],
+        (string) filemtime(plugin_dir_path(ISS_PROGRAMM_FILE) . 'assets/timeline-navigation.js')
+    );
+
     wp_register_style(
         'is-tour-calendar',
         $programm_url . 'assets/programm.css',
@@ -76,6 +83,7 @@ function iss_programm_enqueue_timeline_assets() {
 
 function iss_programm_enqueue_timeline_query_assets() {
     iss_programm_enqueue_timeline_assets();
+    wp_enqueue_script_module('iss/timeline-navigation');
 }
 
 function iss_programm_enqueue_ausstellungen_browser_assets() {

@@ -103,6 +103,25 @@ must submit the universal payload.
 
 ## Native WordPress frontend migration
 
+Local implementation checkpoint (11 October 2026): native GET filters and the
+shared booking/inquiry/publication dialog are implemented; Flatpickr and both
+legacy booking controllers are removed. Core router navigation uses the same
+PHP page and scoped URLs, with no speculative prefetch. WordPress 7.0 needs an
+explicit core navigation replacement when Back interrupts a pending request;
+the module covers that race without a second renderer/history implementation.
+
+Regression entry points: `programme-native-filters.php`,
+`programme-native-booking.php` and the `programme-router`, `booking-navigation`,
+`commerce-retry`, `programme-native-filters` browser specs under `tests/e2e/`.
+The inline and multiple-instance browser scenarios require the guarded
+`tests/e2e/bin/native-frontend-fixture.php` MU-plugin include on a disposable
+local runtime (`ISS_TEST_FRONTEND_FIXTURE=true`, `WP_ENVIRONMENT_TYPE=local`).
+It renders owner data without creating posts/templates. Keep mail/external HTTP
+blocked; retry tests intercept intake so no real notification is sent. Use an
+explicit Playwright base URL/config for the mounted checkout; do not launch a
+second wp-env runtime accidentally. Staff/editor and staging acceptance remain
+release gates, separate from the automated local checks.
+
 Replace Flatpickr and its imperative calendar controllers with native HTML
 controls enhanced through the WordPress Interactivity API. Keep the shared
 occurrence and commerce contracts above. This changes frontend implementation

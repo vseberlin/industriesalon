@@ -7,8 +7,8 @@ Immediate executable work only. Larger future programs live in `docs/project/bac
 - Continue the [WordPress refactoring plan](docs/project/wordpress-refactoring-plan.md)
   autonomously under the [current handoff](handoff_CURRENT.md). The user approved
   local commits and continuation through the remaining plan on 11 October.
-  Next: Interactivity API region navigation; shared native booking is verified. Preserve existing
-  contracts; use isolated fixtures and sequential stateful checks. Native calendar,
+  Next: bounded SQL search and query/projection consolidation; native frontend
+  and core region navigation are verified. Preserve existing contracts; use isolated fixtures and sequential stateful checks. Native calendar,
   query/code/CSS consolidation and repository-owned maintenance follow in plan
   order. Keep writes inside the two WordPress checkout roots; no staging mutation
   or push is authorized. WordPress 7.0 and three browser engines pass locally; editor/staff/staging acceptance remains open.

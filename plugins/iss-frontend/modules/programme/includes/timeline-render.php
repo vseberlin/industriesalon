@@ -1669,10 +1669,14 @@ function iss_timeline_render_query_block($attributes = [], $content = '', $block
     $title = trim((string) ($attributes['title'] ?? ''));
     $intro = trim((string) ($attributes['intro'] ?? ''));
     $shell_mode = sanitize_key((string) ($attributes['shellMode'] ?? 'section'));
-    $wrapper = ['class' => 'iss-timeline-query' . ($shell_mode === 'body' ? '' : ' iss-container'), 'id' => $scope];
+    $wrapper = [
+        'class' => 'iss-timeline-query' . ($shell_mode === 'body' ? '' : ' iss-container'), 'id' => $scope,
+        'data-wp-interactive' => 'iss/timeline', 'data-wp-router-region' => $scope,
+        'data-wp-bind--aria-busy' => 'context.busy',
+    ];
     $attrs = ($block instanceof WP_Block) ? get_block_wrapper_attributes($wrapper) : iss_timeline_render_attr_list($wrapper);
     $tag = $shell_mode === 'body' ? 'div' : 'section';
-    $out = '<' . $tag . ' ' . $attrs . ' data-timeline-query>';
+    $out = '<' . $tag . ' ' . $attrs . ' ' . wp_interactivity_data_wp_context(['scope' => $scope, 'busy' => false]) . ' data-timeline-query>';
     if ($shell_mode !== 'body') {
         if ($title !== '') { $out .= '<h2 class="iss-timeline__section-title">' . esc_html($title) . '</h2>'; }
         if ($intro !== '') { $out .= '<p class="iss-timeline__summary">' . esc_html($intro) . '</p>'; }
@@ -1684,14 +1688,14 @@ function iss_timeline_render_query_block($attributes = [], $content = '', $block
         foreach ($buttons as $index => $button) {
             $active = $selection['presetActive'] && $selection['preset'] === (string) $index;
             $out .= '<a class="iss-timeline__preset' . ($active ? ' is-active' : '') . '"' . ($active ? ' aria-current="true"' : '')
-                . ' href="' . esc_url(iss_timeline_navigation_url($scope, ['preset' => (string) $index])) . '">' . esc_html($button['label']) . '</a>';
+                . ' data-wp-on--click="actions.follow" href="' . esc_url(iss_timeline_navigation_url($scope, ['preset' => (string) $index])) . '">' . esc_html($button['label']) . '</a>';
         }
         $out .= '</nav>';
     }
     $has_filters = $ui['showTimeModeFilter'] || $ui['showItemTypeFilter'] || $ui['showPostTypeFilter'] || $ui['showMonthFilter'] || $ui['showCalendarBridge'] || $ui['taxonomyUiFilters'];
     if ($has_filters) {
         $action = iss_timeline_navigation_url($scope);
-        $out .= '<form method="get" action="' . esc_url($action) . '" class="iss-timeline__filters" data-timeline-query-form>';
+        $out .= '<form method="get" action="' . esc_url($action) . '" class="iss-timeline__filters" data-timeline-query-form data-wp-on--submit="actions.submit">';
         // GET submission replaces the action query; carry other instances explicitly.
         if (isset($query['iss_timeline']) && is_array($query['iss_timeline'])) { unset($query['iss_timeline'][$scope]); }
         $hidden = static function (array $values, string $parent = '') use (&$hidden): string {
@@ -1745,7 +1749,7 @@ function iss_timeline_render_query_block($attributes = [], $content = '', $block
             $out .= '</select></label>';
         }
         $out .= '<div class="iss-timeline__filter-actions"><button type="submit" class="iss-timeline__apply">' . esc_html__('Anwenden', 'iss-timeline') . '</button>'
-            . '<a class="iss-timeline__apply iss-timeline__apply--ghost" href="' . esc_url(iss_timeline_navigation_url($scope)) . '">' . esc_html__('Filter zurücksetzen', 'iss-timeline') . '</a></div></form>';
+            . '<a class="iss-timeline__apply iss-timeline__apply--ghost" data-wp-on--click="actions.follow" href="' . esc_url(iss_timeline_navigation_url($scope)) . '">' . esc_html__('Filter zurücksetzen', 'iss-timeline') . '</a></div></form>';
     }
     $out .= '</div>';
     if (!empty($config['render']['showMeta'])) {
@@ -1756,14 +1760,14 @@ function iss_timeline_render_query_block($attributes = [], $content = '', $block
         );
         $out .= '<p class="iss-timeline-query__meta" data-timeline-query-meta>' . esc_html($count_label) . '</p>';
     }
-    $out .= '<div class="iss-timeline" data-timeline-query-results>' . $listing['html'] . '</div>';
+    $out .= '<div class="iss-timeline" data-timeline-query-results tabindex="-1">' . $listing['html'] . '</div>';
     if (!empty($config['render']['showLoadMore']) && iss_programm_preview_datetime() === '' && ($selection['page'] > 1 || $listing['hasMore'])) {
         $out .= '<nav class="iss-timeline-query__pagination" aria-label="' . esc_attr__('Ergebnisseiten', 'iss-timeline') . '">';
         if ($selection['page'] > 1) {
-            $out .= '<a class="iss-timeline__btn iss-timeline__btn--secondary" rel="prev" href="' . esc_url(iss_timeline_navigation_url($scope, array_merge($input, ['page' => $selection['page'] - 1]))) . '">' . esc_html__('Zurück', 'iss-timeline') . '</a>';
+            $out .= '<a class="iss-timeline__btn iss-timeline__btn--secondary" rel="prev" data-wp-on--click="actions.follow" href="' . esc_url(iss_timeline_navigation_url($scope, array_merge($input, ['page' => $selection['page'] - 1]))) . '">' . esc_html__('Zurück', 'iss-timeline') . '</a>';
         }
         if ($listing['hasMore'] && $selection['page'] < 1000) {
-            $out .= '<a class="iss-timeline__btn iss-timeline__btn--secondary" rel="next" href="' . esc_url(iss_timeline_navigation_url($scope, array_merge($input, ['page' => $selection['page'] + 1]))) . '">' . esc_html__('Weiter', 'iss-timeline') . '</a>';
+            $out .= '<a class="iss-timeline__btn iss-timeline__btn--secondary" rel="next" data-wp-on--click="actions.follow" href="' . esc_url(iss_timeline_navigation_url($scope, array_merge($input, ['page' => $selection['page'] + 1]))) . '">' . esc_html__('Weiter', 'iss-timeline') . '</a>';
         }
         $out .= '</nav>';
     }

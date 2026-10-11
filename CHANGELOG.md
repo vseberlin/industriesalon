@@ -6,6 +6,19 @@ be recovered from Git history.
 
 ## 2026-10-11
 
+- Enabled core Interactivity router enhancement for scoped programme GET forms,
+  presets/reset and pagination. The shared PHP renderer remains the only result
+  renderer, including full-page failure fallback. Fixed the WordPress 7.0
+  Back-during-navigation race through its existing navigation API. All 45 local
+  Chrome/Firefox/Linux-WebKit scenarios pass, including independent instances,
+  stale responses, history, booking after replacement and phone keyboard/axe;
+  28 filter PHP checks and PHP/PHPCS/PHPStan/JS lint pass. Seven routes return
+  HTTP 200 without browser errors. Local calendar initial scripts/styles fell
+  from 123,836 to 103,804 gzip bytes; first navigation adds 11,826 script bytes
+  and a 91,763-byte HTML response. Publication initial assets rose from 88,804
+  to 106,170 bytes because the shared core module replaces its small standalone
+  controller. No uniform speed claim; no schema/content/uploads artifact.
+
 - Replaced the booking and publication controllers with one PHP-authored native
   dialog and WordPress Interactivity module. Native date/slot and preferred-date
   controls retain public contact/external navigation fallbacks, deduplicate reads,

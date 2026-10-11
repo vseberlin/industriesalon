@@ -25,8 +25,8 @@ audit. Git history, [CHANGELOG.md](CHANGELOG.md) and
 
 Continue the [refactoring plan](docs/project/wordpress-refactoring-plan.md):
 
-1. Migrate programme filters and shared booking/inquiry to native controls and
-   core Interactivity API; remove Flatpickr only after its last consumer moves.
+1. Native filters, shared booking and router region navigation are complete.
+   All 45 WordPress 7.0 Chrome/Firefox/Linux-WebKit scenarios pass locally.
 2. Simplify occurrence-backed menu dates, search queries, batched reads and
    coalesced projection updates with measured plans and privacy/date equivalence.
 3. Extract responsibilities within existing owners; consolidate touched CSS and
@@ -73,7 +73,11 @@ nonce failure and focus return; staff/editor and staging acceptance remain open.
 cancelled/over-capacity slots and invalid/past Berlin dates. Slot data is complete
 within the existing 12-month horizon and REST reads bypass old tag transients;
 114 isolated commerce checks passed. Live size: 73 published sources, largest
-response 27 slots / 12,519 JSON bytes (11 October). Core router region navigation is the next slice. No data/uploads artifact
+response 27 slots / 12,519 JSON bytes (11 October). Core router region navigation now passes independent-instance, stale-response,
+failure fallback and Back-during-pending-request checks on all three engines.
+Next: query/projection consolidation. A naive menu occurrence swap selects a
+different recurring event; preserve the existing selection contract until parity
+is established. Search currently caps candidates at 1,000 before WP pagination. No data/uploads artifact
 for filters. Email dispatch is not exactly-once across process crashes.
 Do not run real imports/merges or destructive cleanup for verification.
 
@@ -125,8 +129,8 @@ The local 7.0/PHP 8.3.31 fixture uses Compose project `iss-refactor-wp70`,
 `var/refactoring-20261008/wp70/compose.yml`, loopback port 8097, private database
 bind storage and read-only shared code/uploads; mail/external HTTP are blocked.
 Stop its services after final checks. Existing newsletter early-translation
-notices are visible with its debug mode. Broader booking/editor, Firefox/WebKit
-and staging acceptance remain open. Backend tests do not establish those results. Preserve DB template
+notices are visible with its debug mode. Shared booking, phone keyboard/axe and three-engine checks pass locally.
+Staff/editor and staging acceptance remain open. Backend tests do not establish those results. Preserve DB template
 overrides (`single-ausstellung`, `page-projekte`, `page-publikationen`), editorial
 history/recovery, private contacts/Sets, date rotation, moderation and uploads.
 No full-database equality claim: concurrent editor activity exists; per-suite

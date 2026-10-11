@@ -1,4 +1,5 @@
 const { test, expect } = require('@playwright/test');
+const AxeBuilder = require('@axe-core/playwright').default;
 const payload = (id = 'fixture', allowed = true) => ({ mode: 'slots', inquiry: { allowed }, slots: [
   { id, start: '2030-10-11 10:00:00', available: 2, amount: 500 },
   { id: `${id}-sold`, start: '2030-10-12 11:00:00', available: 0 },
@@ -94,4 +95,28 @@ test('inline dates reuse server availability and remain visible without JavaScri
     await expect(calendar.locator('a[href^="mailto:"]').first()).toBeVisible();
     await context.close();
   }
+});
+
+test('phone dialog keeps keyboard focus and accessible request controls', async ({ page }) => {
+  await page.setViewportSize({ width: 390, height: 844 });
+  await page.route('**/wp-json/iss/v1/booking-slots*', route => route.fulfill({ json: payload() }));
+  await page.goto('/kalender/', { waitUntil: 'networkidle' });
+  const trigger = page.locator('[data-wp-on--click="actions.open"]').first();
+  await trigger.focus();
+  await page.keyboard.press('Enter');
+  const dialog = page.locator('#iss-booking-dialog');
+  await expect(dialog).toBeVisible();
+  await expect(dialog.getByRole('status')).toContainText('wählen');
+  expect(await dialog.evaluate(element => element.matches(':modal'))).toBe(true);
+  for (let index = 0; index < 14; index += 1) {
+    await page.keyboard.press('Tab');
+    // Native dialogs may expose browser chrome between cycles (activeElement
+    // becomes body); no background page control may receive keyboard focus.
+    expect(await dialog.evaluate(element => element.contains(document.activeElement) || document.activeElement === document.body)).toBe(true);
+  }
+  expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
+  const accessibility = await new AxeBuilder({ page }).include('#iss-booking-dialog').analyze();
+  expect(accessibility.violations.filter(issue => ['serious', 'critical'].includes(issue.impact))).toEqual([]);
+  await page.keyboard.press('Escape');
+  await expect(trigger).toBeFocused();
 });

@@ -48,6 +48,8 @@ try {
     $expect(str_contains($html, 'method="get"') && str_contains($html, 'type="date"') && str_contains($html, 'type="submit"') && !str_contains($html, 'data-config=') && !str_contains($html, 'calendar-bridge'), 'Initial render uses native GET controls and no retired controller data');
     preg_match('/id="(timeline-[^"]+)"/', $html, $match); $scope = $match[1];
     $expect(str_contains($html, 'name="iss_timeline['.$scope.'][item_type]"'), 'Form names use the block scope');
+    $expect(str_contains($html, 'data-wp-router-region="' . $scope . '"') && str_contains($html, 'data-wp-interactive="iss/timeline"'), 'Router region and context use the stable GET instance identity');
+    $expect(str_contains($html, 'data-wp-on--submit="actions.submit"') && str_contains($html, 'data-wp-on--click="actions.follow"') && str_contains($html, 'data-timeline-query-results tabindex="-1"'), 'Progressive navigation retains native transport and focusable server results');
     $expect(!wp_script_is('iss-timeline-query','registered') && !wp_script_is('iss-timeline-query','enqueued'), 'Old AJAX client has no active enqueue');
     $block = WP_Block_Type_Registry::get_instance()->get_registered('industriesalon/timeline-query');
     $expect(isset($block->attributes['showCalendarBridge'], $block->attributes['showLoadMore']), 'Existing saved attributes remain registered');

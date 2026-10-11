@@ -64,5 +64,6 @@
     "recommendButtonUrl": { "type": "string", "default": "" },
     "ticketsButtonUrl": { "type": "string", "default": "" }
   },
-  "editorScript": "file:./index.js"
+  "editorScript": "file:./index.js",
+  "viewScriptModule": "iss/timeline-navigation"
 }
