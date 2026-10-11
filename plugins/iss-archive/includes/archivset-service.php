@@ -1083,9 +1083,12 @@ function iss_wf_import_get_archivset_service(): ISS_WF_Import_Archivset_Service
 
 function iss_wf_import_maybe_install_archivset_schema(): void
 {
-    iss_wf_import_get_archivset_service()->maybe_install_schema();
+    require_once dirname(__DIR__, 2) . '/iss-core/schema.php';
+    iss_core_admin_schema_upgrade(static function (): void {
+        iss_wf_import_get_archivset_service()->maybe_install_schema();
+    });
 }
-add_action('init', 'iss_wf_import_maybe_install_archivset_schema', 29);
+add_action('admin_init', 'iss_wf_import_maybe_install_archivset_schema', 29);
 
 if (defined('WP_CLI') && WP_CLI) {
     class ISS_WF_Import_Archivset_CLI_Command

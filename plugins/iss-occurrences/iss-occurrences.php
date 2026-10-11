@@ -39,6 +39,11 @@ register_deactivation_hook(__FILE__, function (): void {
     }
 });
 
-add_action('init', function (): void {
-    iss_occurrences_get_service()->maybe_install_schema();
-}, 4);
+function iss_occurrences_maybe_upgrade_schema(): void
+{
+    require_once dirname(__DIR__) . '/iss-core/schema.php';
+    iss_core_admin_schema_upgrade(static function (): void {
+        iss_occurrences_get_service()->maybe_install_schema();
+    });
+}
+add_action('admin_init', 'iss_occurrences_maybe_upgrade_schema', 4);

@@ -6,6 +6,17 @@ be recovered from Git history.
 
 ## 2026-10-11
 
+- Removed graph, occurrence, commerce and archive schema work from public `init`;
+  restricted automatic schema checks, including Sets, to privileged non-AJAX
+  admin requests. Activation and explicit CLI owner paths remain. Added a small
+  read-only checker and admin failure notice helper under ISS Core, the existing
+  shared infrastructure owner; `dbDelta()` remains the installer and owner SQL
+  remains the only declaration. Graph now verifies required columns/indexes and
+  version persistence, and exposes drift through existing diagnostics. Passed
+  40 disposable-schema checks, PHP lint, PHPCS/PHPStan and Kalender HTTP 200.
+  No real data/schema mutation or migration/uploads artifact. Structural checks
+  for the remaining installers follow; the helper must ship with its callers.
+
 - Made failed Event Drop moderation recoverable when file movement encounters a
   filename collision. The existing resolver now finds deterministic item paths
   and checks known hashes; unrelated collision files remain untouched. Item

@@ -138,9 +138,24 @@ final class ISS_Graph_Service
 
     public function install_schema(): void
     {
-        global $wpdb;
-
         require_once ABSPATH . 'wp-admin/includes/upgrade.php';
+        require_once dirname(__DIR__, 2) . '/iss-core/schema.php';
+
+        $statements = $this->get_schema_statements();
+        foreach ($statements as $statement) {
+            dbDelta($statement);
+        }
+        iss_core_verify_schema($statements);
+        update_option(ISS_GRAPH_SCHEMA_OPTION, ISS_GRAPH_SCHEMA_VERSION, false);
+        if ((string) get_option(ISS_GRAPH_SCHEMA_OPTION, '') !== ISS_GRAPH_SCHEMA_VERSION) {
+            throw new RuntimeException('Graph schema version could not be recorded.');
+        }
+    }
+
+    /** Owner declarations also serve read-only verification without duplicating a schema manifest. */
+    public function get_schema_statements(): array
+    {
+        global $wpdb;
 
         $charset_collate = $wpdb->get_charset_collate();
         $entity_table = $this->get_entity_table_name();
@@ -388,17 +403,7 @@ final class ISS_Graph_Service
             KEY post_type_lookup (target_post_type)
         ) {$charset_collate};";
 
-        dbDelta($entity_sql);
-        dbDelta($name_sql);
-        dbDelta($identifier_sql);
-        dbDelta($relation_sql);
-        dbDelta($search_sql);
-        dbDelta($person_facts_sql);
-        dbDelta($organization_facts_sql);
-        dbDelta($evidence_sql);
-        dbDelta($editorial_signal_sql);
-        dbDelta($dirty_queue_sql);
-        update_option(ISS_GRAPH_SCHEMA_OPTION, ISS_GRAPH_SCHEMA_VERSION, false);
+        return [$entity_sql, $name_sql, $identifier_sql, $relation_sql, $search_sql, $person_facts_sql, $organization_facts_sql, $evidence_sql, $editorial_signal_sql, $dirty_queue_sql];
     }
 
     public function table_exists(string $table_name): bool

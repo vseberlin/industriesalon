@@ -788,9 +788,12 @@ function iss_wf_import_get_relation_service(): ISS_WF_Import_Relation_Service
 
 function iss_wf_import_maybe_install_relation_schema(): void
 {
-    iss_wf_import_get_relation_service()->maybe_install_schema();
+    require_once dirname(__DIR__, 2) . '/iss-core/schema.php';
+    iss_core_admin_schema_upgrade(static function (): void {
+        iss_wf_import_get_relation_service()->maybe_install_schema();
+    });
 }
-add_action('init', 'iss_wf_import_maybe_install_relation_schema', 31);
+add_action('admin_init', 'iss_wf_import_maybe_install_relation_schema', 31);
 
 function iss_wf_import_maybe_backfill_relation_tables(): void
 {

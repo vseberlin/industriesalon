@@ -138,10 +138,10 @@ require_once ISS_CONTENT_MODEL_PATH . 'modules/tours/bootstrap.php';
 
 function iss_content_editorial_sets_ensure_runtime_state(): void
 {
-    if (function_exists('iss_content_editorial_sets_service')) {
+    require_once dirname(__DIR__) . '/iss-core/schema.php';
+    iss_core_admin_schema_upgrade(static function (): void {
         iss_content_editorial_sets_service()->maybe_install_schema();
-    }
-
+    });
 }
 add_action('admin_init', 'iss_content_editorial_sets_ensure_runtime_state', 5);
 

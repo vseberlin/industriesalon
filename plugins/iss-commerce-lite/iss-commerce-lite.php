@@ -185,7 +185,13 @@ function iss_payments_lite_insert_request(string $request_kind, array $entry): i
     return $inserted ? (int) $wpdb->insert_id : 0;
 }
 
-add_action('init', 'iss_payments_lite_maybe_install_schema', 4);
+function iss_payments_lite_maybe_upgrade_schema(): void {
+    require_once dirname(__DIR__) . '/iss-core/schema.php';
+    iss_core_admin_schema_upgrade(static function (): void {
+        iss_payments_lite_maybe_install_schema();
+    });
+}
+add_action('admin_init', 'iss_payments_lite_maybe_upgrade_schema', 4);
 
 add_action('wp_enqueue_scripts', function () {
     if (!is_singular('publication')) {

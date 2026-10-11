@@ -336,9 +336,12 @@ function iss_wf_import_get_media_service(): ISS_WF_Import_Media_Service
 
 function iss_wf_import_maybe_install_media_schema(): void
 {
-    iss_wf_import_get_media_service()->maybe_install_schema();
+    require_once dirname(__DIR__, 2) . '/iss-core/schema.php';
+    iss_core_admin_schema_upgrade(static function (): void {
+        iss_wf_import_get_media_service()->maybe_install_schema();
+    });
 }
-add_action('init', 'iss_wf_import_maybe_install_media_schema', 29);
+add_action('admin_init', 'iss_wf_import_maybe_install_media_schema', 29);
 
 function iss_wf_import_maybe_backfill_media_tables(): void
 {

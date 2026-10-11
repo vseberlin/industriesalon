@@ -42,7 +42,12 @@ passed 890 checks, including two-connection deletion/ownership races, plus lint,
 PHPCS and PHPStan. Logs: `editorial-set-*-final.log` in the private evidence root.
 Event Drop moderation now has collision-safe retry resolution and its extra
 audit shares the item transaction (33 file recovery checks plus 369 regressions).
-Next move schema/setup out of public requests and enforce verified versions.
+Schema setup is now privileged non-AJAX admin/activation/explicit CLI work.
+Graph verifies structure before recording its version; 40 disposable-schema
+checks, lint, PHPCS/PHPStan and Kalender HTTP 200 passed. Next adopt the same
+read-only verifier in the occurrence/archive/Set/commerce installers, check
+legacy migration write results, and add their fresh/failed-upgrade coverage.
+Then implement commerce request idempotency.
 Do not run real imports/merges or destructive cleanup for verification.
 
 ## Runtime and evidence

@@ -575,9 +575,12 @@ function iss_wf_import_get_collection_service(): ISS_WF_Import_Collection_Servic
 
 function iss_wf_import_maybe_install_collection_schema(): void
 {
-    iss_wf_import_get_collection_service()->maybe_install_schema();
+    require_once dirname(__DIR__, 2) . '/iss-core/schema.php';
+    iss_core_admin_schema_upgrade(static function (): void {
+        iss_wf_import_get_collection_service()->maybe_install_schema();
+    });
 }
-add_action('init', 'iss_wf_import_maybe_install_collection_schema', 25);
+add_action('admin_init', 'iss_wf_import_maybe_install_collection_schema', 25);
 
 function iss_wf_import_maybe_backfill_collection_tables(): void
 {

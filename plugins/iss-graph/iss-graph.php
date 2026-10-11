@@ -52,9 +52,14 @@ register_activation_hook(__FILE__, function () {
     iss_graph_ensure_editorial_signals_capability();
 });
 
-add_action('init', function (): void {
-    iss_graph_get_service()->maybe_install_schema();
-}, 5);
+function iss_graph_maybe_upgrade_schema(): void
+{
+    require_once dirname(__DIR__) . '/iss-core/schema.php';
+    iss_core_admin_schema_upgrade(static function (): void {
+        iss_graph_get_service()->maybe_install_schema();
+    });
+}
+add_action('admin_init', 'iss_graph_maybe_upgrade_schema', 5);
 
 add_action('admin_init', 'iss_graph_ensure_editorial_signals_capability', 5);
 
@@ -104,3 +109,16 @@ function iss_graph_current_user_can_manage_editorial_signals(int $context_post_i
 
     return current_user_can('edit_post', $context_post_id);
 }
+
+function iss_graph_schema_status_rows(array $rows): array
+{
+    require_once dirname(__DIR__) . '/iss-core/schema.php';
+    try {
+        iss_core_verify_schema(iss_graph_get_service()->get_schema_statements());
+        $rows[] = iss_core_status_row('schema', 'iss-graph structure', 'ok', 'Owner columns and indexes verified');
+    } catch (Throwable $error) {
+        $rows[] = iss_core_status_row('schema', 'iss-graph structure', 'error', $error->getMessage());
+    }
+    return $rows;
+}
+add_filter('iss_core_status_rows', 'iss_graph_schema_status_rows');
