@@ -6,6 +6,16 @@ be recovered from Git history.
 
 ## 2026-10-11
 
+- Completed atomic item/context writes in the existing editorial Set owner,
+  including moves, status batches, promotions, candidates and required audits/
+  timestamps. Reused the owner transaction helper; added shared checked parent/
+  item locks and item readback because existing read methods did not coordinate
+  writers with deletion. Preserved unassigned intake, rights and normal rejection
+  contracts; missing parents cannot gain new orphans. Candidate hooks follow the
+  successful owner scope. Passed 890 checks across five suites, including real
+  two-connection races, plus lint, PHPCS and PHPStan. No schema/data or uploads
+  artifact; real rows retained. External import/file workflows remain separate.
+
 - Made Set field/key changes atomic with their required audit, checking locked
   source rows, key conflicts and saved values. Preserved defaults, empty-title
   behavior, unchanged keys and rejected first-write results. Passed 169 isolated

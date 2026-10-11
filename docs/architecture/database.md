@@ -20,54 +20,40 @@ WordPress posts, post meta, terms, and `WP_Query` are the default model for norm
 
 See `source-of-truth.md` before deciding which storage layer is canonical for a surface.
 
-`ISS_Content_Editorial_Sets_Service::delete_set_if_safe()` now treats Set, item
-and context-link removal as one transaction. It checks all three table engines
-and session state, locks the Set followed by all its items and links, and checks
-both child delete counts plus the single Set delete. The existing SQL predicate
-still protects promoted items and nonempty archive-candidate statuses, including
-items beyond the UI page limit and the database's collation semantics. Invalid,
-missing and protected Sets return `false`; failed reads, writes or transaction
-commands raise an exception rather than masquerading as a missing/unprotected Set
-or a successful deletion. Audit rows are retained, and no source media/post or
-unrelated Set is deleted. The service has no projection cache to invalidate.
+`ISS_Content_Editorial_Sets_Service` owns atomic Set creation/update/deletion,
+item creation/update/moves/status batches, context attachment, promotion and
+archive-candidate markers. The private `run_atomic_write()` checks InnoDB/session
+state and preserves caller transactions with savepoints. Required audit and Set
+timestamp writes belong to the same transaction; rejected first writes preserve
+zero/false or skipped-item results, while failed prerequisites, readbacks, audits
+and transaction commands throw. Cleanup errors retain the original cause.
 
-`create_set()` now shares the extracted private `run_atomic_write()` helper with
-deletion. It validates the Set/audit tables and creates the Set together with its
-required `set_created` audit row. Failed key-generation reads raise an error;
-audit or transaction failures roll back the new Set and propagate. A rejected
-first insert, including a duplicate explicit key, retains the existing `0`
-result and produces no audit. Valid inputs retain positive IDs, normalization,
-generated-key suffixes/defaults, actor attribution and payload encoding.
-`record_audit()` now returns the insert's success as a boolean. Creation requires
-it, as do Set updates and key changes. Other callers retain their previous
-behavior until their own atomicity work.
+Writers lock parent Sets in ID order before their items, matching deletion.
+Item ownership is rechecked after locking; a concurrent move aborts stale work
+for retry. Missing positive Set IDs cannot acquire orphan children. Set zero
+remains unassigned intake. Existing rights gates, defaults, normalization,
+duplicate/no-op behavior, zero-row updates, position ordering and audit history
+are retained. Move/status batches roll back earlier successful rows on a late
+failure while retaining ordinary per-item rejection/count behavior. Deletion
+checks every child, including those beyond the UI limit, and retains SQL
+collation semantics for promoted/archive-candidate protection. It never deletes
+source media/posts or audit history. This owner has no projection cache.
 
-`update_set()` and `update_set_key()` lock the current Set, check key lookups
-and saved fields, and require their audit inside that same transaction. Failed
-prerequisite/readback/audit/transaction operations throw and roll back; a rejected
-first update retains `false`. Missing/invalid/conflicting input, empty-title
-preservation, field defaults, valid zero-row updates and unchanged-key no-op
-behavior retain their contracts. `editorial-set-update-atomic.php` covers these
-paths and caller-owned transactions using temporary tables.
+The archive-candidate action runs after the owner's successful scope, so a
+failed audit emits no event. Within a caller-owned transaction, that caller still
+controls final commit/rollback and external hook side effects. File/network
+operations, promotion into editorial documents and supplemental integration/core
+audits remain separate caller responsibilities; service atomicity does not make
+an entire import or media workflow transactional. Generated-key/unassigned-item
+races can still return zero through unique constraints; there is no automatic
+retry. Context positions may tie across different Sets, ordered by ID as before.
 
-The helper is extracted from the verified Set deletion implementation inside the
-existing owner; no dependency on graph/archive transaction helpers was added.
-Standalone calls commit or roll back their transaction; caller transactions and
-disabled autocommit use savepoints and retain the caller's final decision. Failed
-rollback or savepoint cleanup is reported with the original cause. Later context
-attachment, item creation, broader REST/core audit logging and import/merge work
-remain separate. Generated-key races can still return `0` from the unique-key
-constraint; no automatic concurrency retry is introduced. Other Set writers have
-not yet adopted the shared transaction/locking contract, and no multi-worker
-consistency guarantee is claimed.
-
-The isolated real-schema temporary-table suites
-`tests/e2e/bin/editorial-set-create-atomic.php` and
-`tests/e2e/bin/editorial-set-delete-atomic.php` cover required audit failure,
-retries, keys, normalization, protections, partial deletes, caller transactions,
-existing owner APIs and REST first-insert rejection. Real Set/audit/options/queue
-rows are retained. No schema/data migration or uploads artifact is needed; no
-real Set creation/deletion, import or merge routine was run.
+The `editorial-set-*-atomic.php` suites use real-schema temporary tables;
+`editorial-set-concurrency.php` uses uniquely named disposable tables and two
+MariaDB connections. They verify rollback/retry, parent deletion races, stale
+ownership, audit/timestamp failures and caller transactions without changing real
+Set, child or audit rows. These changes need no schema/data migration or uploads
+artifact. No real import, merge, promotion or cleanup was run.
 
 Graph relationship replacement is atomic for one entity, relation family and
 source system. Name, identifier and evidence replacement are atomic for one entity and source system,

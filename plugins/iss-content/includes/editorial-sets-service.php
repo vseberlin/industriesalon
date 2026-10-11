@@ -301,10 +301,7 @@ class ISS_Content_Editorial_Sets_Service
         global $wpdb;
         $saved = false;
         $this->run_atomic_write([$this->get_sets_table_name(), $this->get_audit_table_name()], function () use ($wpdb, $set_id, $args, &$saved): void {
-            $set = $wpdb->get_row($wpdb->prepare("SELECT * FROM {$this->get_sets_table_name()} WHERE id = %d FOR UPDATE", $set_id), ARRAY_A);
-            if ($wpdb->last_error !== '') {
-                throw new RuntimeException('Editorial Set update could not lock its Set.');
-            }
+            $set = $this->lock_set_for_write($set_id);
             if (!$set) {
                 return;
             }
@@ -347,10 +344,7 @@ class ISS_Content_Editorial_Sets_Service
         global $wpdb;
         $saved = false;
         $this->run_atomic_write([$this->get_sets_table_name(), $this->get_audit_table_name()], function () use ($wpdb, $set_id, $set_key, &$saved): void {
-            $set = $wpdb->get_row($wpdb->prepare("SELECT * FROM {$this->get_sets_table_name()} WHERE id = %d FOR UPDATE", $set_id), ARRAY_A);
-            if ($wpdb->last_error !== '') {
-                throw new RuntimeException('Editorial Set key update could not lock its Set.');
-            }
+            $set = $this->lock_set_for_write($set_id);
             if (!$set) {
                 return;
             }
@@ -497,7 +491,6 @@ class ISS_Content_Editorial_Sets_Service
     {
         global $wpdb;
 
-        $timestamp = current_time('mysql', true);
         $set_id = absint($args['set_id'] ?? 0);
         $kind = sanitize_key((string) ($args['kind'] ?? 'wp_media'));
         $source = sanitize_key((string) ($args['source'] ?? 'wp-media'));
@@ -507,45 +500,58 @@ class ISS_Content_Editorial_Sets_Service
             return 0;
         }
 
-        $existing = $this->find_item($set_id, $kind, $source, $source_id);
-        if ($existing) {
-            return (int) $existing['id'];
-        }
+        $item_id = 0;
+        $this->run_atomic_write([$this->get_sets_table_name(), $this->get_items_table_name(), $this->get_audit_table_name()], function () use ($wpdb, $args, $set_id, $kind, $source, $source_id, &$item_id): void {
+            if ($set_id > 0 && !$this->lock_set_for_write($set_id)) {
+                return;
+            }
+            $timestamp = current_time('mysql', true);
+            $existing = $this->find_item($set_id, $kind, $source, $source_id);
+            if ($wpdb->last_error !== '') {
+                throw new RuntimeException('Editorial Set item creation could not check its existing item.');
+            }
+            if ($existing) {
+                $item_id = (int) $existing['id'];
+                return;
+            }
 
-        $data = [
-            'set_id' => $set_id,
-            'kind' => $kind,
-            'source' => $source,
-            'source_id' => $source_id,
-            'status' => $this->sanitize_item_status((string) ($args['status'] ?? 'pending')),
-            'label' => sanitize_textarea_field((string) ($args['label'] ?? '')),
-            'origin' => sanitize_key((string) ($args['origin'] ?? 'manual_upload')),
-            'provenance_json' => $this->encode_json_field($args['provenance'] ?? []),
-            'rights_json' => $this->encode_json_field($args['rights'] ?? []),
-            'notes' => sanitize_textarea_field((string) ($args['notes'] ?? '')),
-            'decay_at' => $this->sanitize_mysql_datetime_or_null((string) ($args['decay_at'] ?? '')),
-            'retain' => !empty($args['retain']) ? 1 : 0,
-            'retain_reason' => sanitize_textarea_field((string) ($args['retain_reason'] ?? '')),
-            'position' => (int) ($args['position'] ?? $this->next_item_position($set_id)),
-            'created_by' => get_current_user_id(),
-            'updated_by' => get_current_user_id(),
-            'created_at' => $timestamp,
-            'updated_at' => $timestamp,
-        ];
+            $data = [
+                'set_id' => $set_id,
+                'kind' => $kind,
+                'source' => $source,
+                'source_id' => $source_id,
+                'status' => $this->sanitize_item_status((string) ($args['status'] ?? 'pending')),
+                'label' => sanitize_textarea_field((string) ($args['label'] ?? '')),
+                'origin' => sanitize_key((string) ($args['origin'] ?? 'manual_upload')),
+                'provenance_json' => $this->encode_json_field($args['provenance'] ?? []),
+                'rights_json' => $this->encode_json_field($args['rights'] ?? []),
+                'notes' => sanitize_textarea_field((string) ($args['notes'] ?? '')),
+                'decay_at' => $this->sanitize_mysql_datetime_or_null((string) ($args['decay_at'] ?? '')),
+                'retain' => !empty($args['retain']) ? 1 : 0,
+                'retain_reason' => sanitize_textarea_field((string) ($args['retain_reason'] ?? '')),
+                'position' => (int) ($args['position'] ?? $this->next_item_position($set_id)),
+                'created_by' => get_current_user_id(),
+                'updated_by' => get_current_user_id(),
+                'created_at' => $timestamp,
+                'updated_at' => $timestamp,
+            ];
 
-        $inserted = $wpdb->insert(
-            $this->get_items_table_name(),
-            $data,
-            ['%d', '%s', '%s', '%s', '%s', '%s', '%s', '%s', '%s', '%s', '%s', '%d', '%s', '%d', '%d', '%d', '%s', '%s']
-        );
+            $inserted = $wpdb->insert(
+                $this->get_items_table_name(),
+                $data,
+                ['%d', '%s', '%s', '%s', '%s', '%s', '%s', '%s', '%s', '%s', '%s', '%d', '%s', '%d', '%d', '%d', '%s', '%s']
+            );
 
-        if (!$inserted) {
-            return 0;
-        }
+            if ($inserted !== 1) {
+                return;
+            }
 
-        $item_id = (int) $wpdb->insert_id;
-        $this->touch_set($set_id);
-        $this->record_audit($set_id, $item_id, 'item_added', __('Item added.', 'iss-content-model'), $data);
+            $item_id = (int) $wpdb->insert_id;
+            $this->touch_set($set_id);
+            if ($item_id <= 0 || !$this->record_audit($set_id, $item_id, 'item_added', __('Item added.', 'iss-content-model'), $data)) {
+                throw new RuntimeException('Editorial Set item creation could not record its required audit row.');
+            }
+        }, 'Editorial Set item creation');
 
         return $item_id;
     }
@@ -642,85 +648,82 @@ class ISS_Content_Editorial_Sets_Service
 
     public function update_item(int $item_id, array $args): bool
     {
-        $item = $this->get_item($item_id);
-        if (!$item) {
+        if ($item_id <= 0) {
             return false;
         }
+        $saved = false;
+        $this->run_atomic_write([$this->get_sets_table_name(), $this->get_items_table_name(), $this->get_audit_table_name()], function () use ($item_id, $args, &$saved): void {
+            $item = $this->lock_items_for_write([$item_id])[$item_id] ?? null;
+            if (!$item) {
+                return;
+            }
+            $data = [
+                'status' => $this->sanitize_item_status((string) ($args['status'] ?? $item['status'])),
+                'label' => sanitize_textarea_field((string) ($args['label'] ?? $item['label'])),
+                'notes' => sanitize_textarea_field((string) ($args['notes'] ?? $item['notes'])),
+                'rights_json' => $this->encode_json_field($args['rights'] ?? $this->decode_json_field((string) $item['rights_json'])),
+                'provenance_json' => $this->encode_json_field($args['provenance'] ?? $this->decode_json_field((string) $item['provenance_json'])),
+                'decay_at' => $this->sanitize_mysql_datetime_or_null((string) ($args['decay_at'] ?? $item['decay_at'])),
+                'retain' => !empty($args['retain'] ?? $item['retain']) ? 1 : 0,
+                'retain_reason' => sanitize_textarea_field((string) ($args['retain_reason'] ?? $item['retain_reason'])),
+                'updated_by' => get_current_user_id(),
+                'updated_at' => current_time('mysql', true),
+            ];
 
-        global $wpdb;
+            $rights = json_decode($data['rights_json'], true);
+            if ($data['status'] === 'approved' && (empty($rights['attribution']) || empty($rights['license']) || (string) ($rights['consent'] ?? '') !== '1')) {
+                return;
+            }
 
-        $data = [
-            'status' => $this->sanitize_item_status((string) ($args['status'] ?? $item['status'])),
-            'label' => sanitize_textarea_field((string) ($args['label'] ?? $item['label'])),
-            'notes' => sanitize_textarea_field((string) ($args['notes'] ?? $item['notes'])),
-            'rights_json' => $this->encode_json_field($args['rights'] ?? $this->decode_json_field((string) $item['rights_json'])),
-            'provenance_json' => $this->encode_json_field($args['provenance'] ?? $this->decode_json_field((string) $item['provenance_json'])),
-            'decay_at' => $this->sanitize_mysql_datetime_or_null((string) ($args['decay_at'] ?? $item['decay_at'])),
-            'retain' => !empty($args['retain'] ?? $item['retain']) ? 1 : 0,
-            'retain_reason' => sanitize_textarea_field((string) ($args['retain_reason'] ?? $item['retain_reason'])),
-            'updated_by' => get_current_user_id(),
-            'updated_at' => current_time('mysql', true),
-        ];
+            if (!$this->update_item_row($item_id, $data, ['%s', '%s', '%s', '%s', '%s', '%s', '%d', '%s', '%d', '%s'])) {
+                return;
+            }
 
-        $rights = json_decode($data['rights_json'], true);
-        if ($data['status'] === 'approved' && (empty($rights['attribution']) || empty($rights['license']) || (string) ($rights['consent'] ?? '') !== '1')) {
-            return false;
-        }
+            $this->touch_set((int) $item['set_id']);
+            if (!$this->record_audit((int) $item['set_id'], $item_id, 'item_updated', __('Item updated.', 'iss-content-model'), $data)) {
+                throw new RuntimeException('Editorial Set item update could not record its required audit row.');
+            }
+            $saved = true;
+        }, 'Editorial Set item update');
 
-        $updated = $wpdb->update(
-            $this->get_items_table_name(),
-            $data,
-            ['id' => $item_id],
-            ['%s', '%s', '%s', '%s', '%s', '%s', '%d', '%s', '%d', '%s'],
-            ['%d']
-        );
-
-        if ($updated === false) {
-            return false;
-        }
-
-        $this->touch_set((int) $item['set_id']);
-        $this->record_audit((int) $item['set_id'], $item_id, 'item_updated', __('Item updated.', 'iss-content-model'), $data);
-        return true;
+        return $saved;
     }
 
     public function move_items(array $item_ids, int $set_id): int
     {
+        if ($set_id < 0 || !$item_ids) {
+            return 0;
+        }
         $moved = 0;
-        foreach ($item_ids as $item_id) {
-            $item_id = absint($item_id);
-            $item = $this->get_item($item_id);
-            if (!$item) {
-                continue;
-            }
-
-            global $wpdb;
-
-            $updated = $wpdb->update(
-                $this->get_items_table_name(),
-                [
+        $this->run_atomic_write([$this->get_sets_table_name(), $this->get_items_table_name(), $this->get_audit_table_name()], function () use ($item_ids, $set_id, &$moved): void {
+            $items = $this->lock_items_for_write($item_ids, [$set_id]);
+            foreach ($item_ids as $item_id) {
+                $item_id = absint($item_id);
+                $item = $items[$item_id] ?? null;
+                if (!$item) {
+                    continue;
+                }
+                $data = [
                     'set_id' => $set_id,
                     'position' => $this->next_item_position($set_id),
                     'updated_by' => get_current_user_id(),
                     'updated_at' => current_time('mysql', true),
-                ],
-                ['id' => $item_id],
-                ['%d', '%d', '%d', '%s'],
-                ['%d']
-            );
-
-            if ($updated === false) {
-                continue;
+                ];
+                if (!$this->update_item_row($item_id, $data, ['%d', '%d', '%d', '%s'])) {
+                    continue;
+                }
+                $this->touch_set((int) $item['set_id']);
+                $this->touch_set($set_id);
+                if (!$this->record_audit($set_id, $item_id, 'item_moved', __('Item moved.', 'iss-content-model'), [
+                    'from_set_id' => (int) $item['set_id'],
+                    'to_set_id' => $set_id,
+                ])) {
+                    throw new RuntimeException('Editorial Set item move could not record its required audit row.');
+                }
+                $items[$item_id]['set_id'] = $set_id;
+                $moved++;
             }
-
-            $this->touch_set((int) $item['set_id']);
-            $this->touch_set($set_id);
-            $this->record_audit($set_id, $item_id, 'item_moved', __('Item moved.', 'iss-content-model'), [
-                'from_set_id' => (int) $item['set_id'],
-                'to_set_id' => $set_id,
-            ]);
-            $moved++;
-        }
+        }, 'Editorial Set item move');
 
         return $moved;
     }
@@ -729,11 +732,14 @@ class ISS_Content_Editorial_Sets_Service
     {
         $status = $this->sanitize_item_status($status);
         $updated = 0;
-        foreach ($item_ids as $item_id) {
-            if ($this->update_item((int) $item_id, ['status' => $status])) {
-                $updated++;
+        $this->run_atomic_write([$this->get_sets_table_name(), $this->get_items_table_name(), $this->get_audit_table_name()], function () use ($item_ids, $status, &$updated): void {
+            $this->lock_items_for_write($item_ids);
+            foreach ($item_ids as $item_id) {
+                if ($this->update_item((int) $item_id, ['status' => $status])) {
+                    $updated++;
+                }
             }
-        }
+        }, 'Editorial Set status batch');
 
         return $updated;
     }
@@ -749,48 +755,60 @@ class ISS_Content_Editorial_Sets_Service
 
         global $wpdb;
 
-        $existing = $wpdb->get_row($wpdb->prepare(
-            "SELECT * FROM {$this->get_links_table_name()}
-            WHERE set_id = %d AND context_type = %s AND context_id = %d AND link_role = %s
-            LIMIT 1",
-            $set_id,
-            $context_type,
-            $context_id,
-            $link_role
-        ), ARRAY_A);
+        $link_id = 0;
+        $this->run_atomic_write([$this->get_sets_table_name(), $this->get_links_table_name(), $this->get_audit_table_name()], function () use ($wpdb, $set_id, $context_type, $context_id, $link_role, &$link_id): void {
+            if (!$this->lock_set_for_write($set_id)) {
+                return;
+            }
+            $existing = $wpdb->get_row($wpdb->prepare(
+                "SELECT * FROM {$this->get_links_table_name()}
+                WHERE set_id = %d AND context_type = %s AND context_id = %d AND link_role = %s
+                LIMIT 1",
+                $set_id,
+                $context_type,
+                $context_id,
+                $link_role
+            ), ARRAY_A);
 
-        if (is_array($existing)) {
-            return (int) $existing['id'];
-        }
+            if ($wpdb->last_error !== '') {
+                throw new RuntimeException('Editorial Set context attachment could not check its existing link.');
+            }
+            if (is_array($existing)) {
+                $link_id = (int) $existing['id'];
+                return;
+            }
 
-        $timestamp = current_time('mysql', true);
-        $inserted = $wpdb->insert(
-            $this->get_links_table_name(),
-            [
-                'set_id' => $set_id,
+            $timestamp = current_time('mysql', true);
+            $inserted = $wpdb->insert(
+                $this->get_links_table_name(),
+                [
+                    'set_id' => $set_id,
+                    'context_type' => $context_type,
+                    'context_id' => $context_id,
+                    'link_role' => $link_role,
+                    'position' => $this->next_link_position($context_type, $context_id),
+                    'created_by' => get_current_user_id(),
+                    'updated_by' => get_current_user_id(),
+                    'created_at' => $timestamp,
+                    'updated_at' => $timestamp,
+                ],
+                ['%d', '%s', '%d', '%s', '%d', '%d', '%d', '%s', '%s']
+            );
+
+            if ($inserted !== 1) {
+                return;
+            }
+
+            $link_id = (int) $wpdb->insert_id;
+            $this->touch_set($set_id);
+            if ($link_id <= 0 || !$this->record_audit($set_id, 0, 'set_attached', __('Set attached to context.', 'iss-content-model'), [
                 'context_type' => $context_type,
                 'context_id' => $context_id,
                 'link_role' => $link_role,
-                'position' => $this->next_link_position($context_type, $context_id),
-                'created_by' => get_current_user_id(),
-                'updated_by' => get_current_user_id(),
-                'created_at' => $timestamp,
-                'updated_at' => $timestamp,
-            ],
-            ['%d', '%s', '%d', '%s', '%d', '%d', '%d', '%s', '%s']
-        );
-
-        if (!$inserted) {
-            return 0;
-        }
-
-        $link_id = (int) $wpdb->insert_id;
-        $this->touch_set($set_id);
-        $this->record_audit($set_id, 0, 'set_attached', __('Set attached to context.', 'iss-content-model'), [
-            'context_type' => $context_type,
-            'context_id' => $context_id,
-            'link_role' => $link_role,
-        ]);
+            ])) {
+                throw new RuntimeException('Editorial Set context attachment could not record its required audit row.');
+            }
+        }, 'Editorial Set context attachment');
 
         return $link_id;
     }
@@ -837,80 +855,93 @@ class ISS_Content_Editorial_Sets_Service
 
     public function mark_promoted(int $item_id, string $target_type, int $target_id): bool
     {
-        $item = $this->get_item($item_id);
-        if (!$item) {
+        if ($item_id <= 0) {
             return false;
         }
-
-        if ($item['status'] === 'promoted') {
-            foreach ($this->get_item_uses($item_id) as $use) {
-                if ($use['id'] === $target_id && $use['type'] === $target_type) {
-                    return true;
+        $saved = false;
+        $this->run_atomic_write([$this->get_sets_table_name(), $this->get_items_table_name(), $this->get_audit_table_name()], function () use ($item_id, $target_type, $target_id, &$saved): void {
+            $item = $this->lock_items_for_write([$item_id])[$item_id] ?? null;
+            if (!$item) {
+                return;
+            }
+            if ($item['status'] === 'promoted') {
+                foreach ($this->get_item_uses($item_id) as $use) {
+                    if ($use['id'] === $target_id && $use['type'] === $target_type) {
+                        $saved = true;
+                        return;
+                    }
                 }
             }
-        }
-        global $wpdb;
 
-        $updated = $wpdb->update(
-            $this->get_items_table_name(),
-            [
-                'status' => 'promoted',
-                'promoted_target_type' => sanitize_key($target_type),
-                'promoted_target_id' => absint($target_id),
-                'promoted_at' => current_time('mysql', true),
-                'updated_by' => get_current_user_id(),
-                'updated_at' => current_time('mysql', true),
-            ],
-            ['id' => $item_id],
-            ['%s', '%s', '%d', '%s', '%d', '%s'],
-            ['%d']
-        );
+            $updated = $this->update_item_row(
+                $item_id,
+                [
+                    'status' => 'promoted',
+                    'promoted_target_type' => sanitize_key($target_type),
+                    'promoted_target_id' => absint($target_id),
+                    'promoted_at' => current_time('mysql', true),
+                    'updated_by' => get_current_user_id(),
+                    'updated_at' => current_time('mysql', true),
+                ],
+                ['%s', '%s', '%d', '%s', '%d', '%s']
+            );
 
-        if ($updated === false) {
-            return false;
-        }
+            if ($updated === false) {
+                return;
+            }
 
-        $this->record_audit((int) $item['set_id'], $item_id, 'item_promoted', __('Item promoted.', 'iss-content-model'), [
-            'target_type' => $target_type,
-            'target_id' => $target_id,
-        ]);
+            if (!$this->record_audit((int) $item['set_id'], $item_id, 'item_promoted', __('Item promoted.', 'iss-content-model'), [
+                'target_type' => $target_type,
+                'target_id' => $target_id,
+            ])) {
+                throw new RuntimeException('Editorial Set promotion could not record its required audit row.');
+            }
+            $saved = true;
+        }, 'Editorial Set promotion');
 
-        return true;
+        return $saved;
     }
 
     public function mark_archive_candidate(int $item_id, array $metadata = []): bool
     {
-        $item = $this->get_item($item_id);
-        if (!$item) {
+        if ($item_id <= 0) {
             return false;
         }
+        $saved = false;
+        $item = null;
+        $this->run_atomic_write([$this->get_sets_table_name(), $this->get_items_table_name(), $this->get_audit_table_name()], function () use ($item_id, $metadata, &$item, &$saved): void {
+            $item = $this->lock_items_for_write([$item_id])[$item_id] ?? null;
+            if (!$item) {
+                return;
+            }
+            $rights = $this->decode_json_field((string) $item['rights_json']);
+            $rights['archive_candidate'] = array_merge($rights['archive_candidate'] ?? [], $metadata);
 
-        global $wpdb;
+            $updated = $this->update_item_row(
+                $item_id,
+                [
+                    'archive_candidate_status' => 'candidate',
+                    'rights_json' => $this->encode_json_field($rights),
+                    'updated_by' => get_current_user_id(),
+                    'updated_at' => current_time('mysql', true),
+                ],
+                ['%s', '%s', '%d', '%s']
+            );
 
-        $rights = $this->decode_json_field((string) $item['rights_json']);
-        $rights['archive_candidate'] = array_merge($rights['archive_candidate'] ?? [], $metadata);
+            if ($updated === false) {
+                return;
+            }
 
-        $updated = $wpdb->update(
-            $this->get_items_table_name(),
-            [
-                'archive_candidate_status' => 'candidate',
-                'rights_json' => $this->encode_json_field($rights),
-                'updated_by' => get_current_user_id(),
-                'updated_at' => current_time('mysql', true),
-            ],
-            ['id' => $item_id],
-            ['%s', '%s', '%d', '%s'],
-            ['%d']
-        );
+            if (!$this->record_audit((int) $item['set_id'], $item_id, 'archive_candidate_marked', __('Archive candidate marked.', 'iss-content-model'), $metadata)) {
+                throw new RuntimeException('Editorial Set archive candidate could not record its required audit row.');
+            }
+            $saved = true;
+        }, 'Editorial Set archive candidate');
 
-        if ($updated === false) {
-            return false;
+        if ($saved) {
+            do_action('iss_content_editorial_set_archive_candidate', $item, $metadata);
         }
-
-        do_action('iss_content_editorial_set_archive_candidate', $item, $metadata);
-        $this->record_audit((int) $item['set_id'], $item_id, 'archive_candidate_marked', __('Archive candidate marked.', 'iss-content-model'), $metadata);
-
-        return true;
+        return $saved;
     }
 
     public function delete_set_if_safe(int $set_id): bool
@@ -1158,6 +1189,9 @@ class ISS_Content_Editorial_Sets_Service
     {
         global $wpdb;
         $rows = $wpdb->get_col($wpdb->prepare("SELECT payload_json FROM {$this->get_audit_table_name()} WHERE item_id=%d AND action='item_promoted' ORDER BY id DESC", $item_id));
+        if ($wpdb->last_error !== '') {
+            throw new RuntimeException('Editorial Set uses could not read promotion history.');
+        }
         $uses = [];
         foreach ($rows as $row) {
             $payload = json_decode($row, true);
@@ -1190,25 +1224,84 @@ class ISS_Content_Editorial_Sets_Service
         ) === 1;
     }
 
+    /** The Set row serializes its writers with deletion; zero remains unassigned intake. */
+    private function lock_set_for_write(int $set_id): ?array
+    {
+        global $wpdb;
+        $set = $wpdb->get_row($wpdb->prepare("SELECT * FROM {$this->get_sets_table_name()} WHERE id = %d FOR UPDATE", $set_id), ARRAY_A);
+        if ($wpdb->last_error !== '') {
+            throw new RuntimeException('Editorial Set write could not lock its Set.');
+        }
+        return is_array($set) ? $set : null;
+    }
+
+    /** Lock parents in ID order before children, matching Set deletion's ownership order. */
+    private function lock_items_for_write(array $item_ids, array $set_ids = []): array
+    {
+        global $wpdb;
+        $item_ids = array_values(array_unique(array_filter(array_map('absint', $item_ids))));
+        if (!$item_ids) {
+            return [];
+        }
+        $placeholders = implode(', ', array_fill(0, count($item_ids), '%d'));
+        $sql = $wpdb->prepare("SELECT * FROM {$this->get_items_table_name()} WHERE id IN ($placeholders) ORDER BY id ASC", $item_ids); // phpcs:ignore WordPress.DB.PreparedSQLPlaceholders.UnfinishedPrepare -- One %d per normalized ID above.
+        $initial = $wpdb->get_results($sql, ARRAY_A);
+        if ($wpdb->last_error !== '' || !is_array($initial)) {
+            throw new RuntimeException('Editorial Set write could not read its items.');
+        }
+        $set_ids = array_unique(array_merge($set_ids, array_map('intval', array_column($initial, 'set_id'))));
+        sort($set_ids, SORT_NUMERIC);
+        foreach ($set_ids as $set_id) {
+            if ($set_id > 0 && !$this->lock_set_for_write($set_id)) {
+                return [];
+            }
+        }
+        $locked = $wpdb->get_results($sql . ' FOR UPDATE', ARRAY_A);
+        if ($wpdb->last_error !== '' || !is_array($locked) || array_column($locked, 'set_id', 'id') !== array_column($initial, 'set_id', 'id')) {
+            throw new RuntimeException('Editorial Set items changed ownership or could not be locked; retry the operation.');
+        }
+        return array_column($locked, null, 'id');
+    }
+
+    /** A zero-row update is valid only when the locked item already stores the requested values. */
+    private function update_item_row(int $item_id, array $data, array $formats): bool
+    {
+        global $wpdb;
+        if ($wpdb->update($this->get_items_table_name(), $data, ['id' => $item_id], $formats, ['%d']) === false) {
+            return false;
+        }
+        $stored = $this->get_item($item_id);
+        if ($wpdb->last_error !== '' || !$stored || array_diff_assoc($data, $stored)) {
+            throw new RuntimeException('Editorial Set write could not verify its saved item.');
+        }
+        return true;
+    }
+
     private function next_item_position(int $set_id): int
     {
         global $wpdb;
-
-        return (int) $wpdb->get_var($wpdb->prepare(
+        $position = $wpdb->get_var($wpdb->prepare(
             "SELECT COALESCE(MAX(position), 0) + 1 FROM {$this->get_items_table_name()} WHERE set_id = %d",
             $set_id
         ));
+        if ($wpdb->last_error !== '' || $position === null) {
+            throw new RuntimeException('Editorial Set write could not read the next item position.');
+        }
+        return (int) $position;
     }
 
     private function next_link_position(string $context_type, int $context_id): int
     {
         global $wpdb;
-
-        return (int) $wpdb->get_var($wpdb->prepare(
+        $position = $wpdb->get_var($wpdb->prepare(
             "SELECT COALESCE(MAX(position), 0) + 1 FROM {$this->get_links_table_name()} WHERE context_type = %s AND context_id = %d",
             $context_type,
             $context_id
         ));
+        if ($wpdb->last_error !== '' || $position === null) {
+            throw new RuntimeException('Editorial Set write could not read the next context position.');
+        }
+        return (int) $position;
     }
 
     private function touch_set(int $set_id): void
@@ -1218,16 +1311,14 @@ class ISS_Content_Editorial_Sets_Service
         }
 
         global $wpdb;
-        $wpdb->update(
-            $this->get_sets_table_name(),
-            [
-                'updated_by' => get_current_user_id(),
-                'updated_at' => current_time('mysql', true),
-            ],
-            ['id' => $set_id],
-            ['%d', '%s'],
-            ['%d']
-        );
+        $data = ['updated_by' => get_current_user_id(), 'updated_at' => current_time('mysql', true)];
+        if ($wpdb->update($this->get_sets_table_name(), $data, ['id' => $set_id], ['%d', '%s'], ['%d']) === false) {
+            throw new RuntimeException('Editorial Set write could not update its Set timestamp.');
+        }
+        $stored = $wpdb->get_row($wpdb->prepare("SELECT * FROM {$this->get_sets_table_name()} WHERE id = %d", $set_id), ARRAY_A);
+        if ($wpdb->last_error !== '' || !$stored || array_diff_assoc($data, $stored)) {
+            throw new RuntimeException('Editorial Set write could not verify its Set timestamp.');
+        }
     }
 
     private function sanitize_mysql_datetime_or_null(string $value): ?string

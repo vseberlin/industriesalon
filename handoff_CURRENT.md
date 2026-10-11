@@ -25,10 +25,8 @@ audit. Git history, [CHANGELOG.md](CHANGELOG.md) and
 
 Continue the [refactoring plan](docs/project/wordpress-refactoring-plan.md):
 
-1. Finish Set item/context multi-table writes and audit
-   consistency through the existing private transaction helper. Inspect caller
-   boundaries and retain protections, normalization, zero-row/no-op semantics and
-   ownership. Then finish public setup/schema gates and commerce idempotency.
+1. Check Set caller recovery boundaries, then finish public setup/schema gates
+   and commerce idempotency. Preserve owner contracts and use isolated fixtures.
 2. Migrate programme filters and shared booking/inquiry to native controls and
    core Interactivity API; remove Flatpickr only after its last consumer moves.
 3. Simplify occurrence-backed menu dates, search queries, batched reads and
@@ -39,11 +37,13 @@ Continue the [refactoring plan](docs/project/wordpress-refactoring-plan.md):
    verification and operational documentation within the local scope. Target
    deployment and any host changes outside the checkout roots remain separate.
 
-Set field/key updates are now atomic with audit (169 isolated checks, lint,
-PHPCS and PHPStan). Next are item creation/update/moves, context attachment,
-promotion/candidate markers and their required audit/touch writes. Reuse the
-existing owner helper and preserve intake Set zero, rights and no-op contracts.
-Use isolated fixtures; do not run real Set imports, merges or cleanup.
+Set field/key and item/context writers now require their audits/timestamps in
+one owner transaction; move/status batches roll back late failures. Five suites
+passed 890 checks, including two-connection deletion/ownership races, plus lint,
+PHPCS and PHPStan. Logs: `editorial-set-*-final.log` in the private evidence root.
+Next inspect broader Set import/promotion callers for file/database recovery;
+then move schema/setup out of public requests and enforce verified versions.
+Do not run real imports/merges or destructive cleanup for verification.
 
 ## Runtime and evidence
 
@@ -74,8 +74,8 @@ Use isolated fixtures; do not run real Set imports, merges or cleanup.
 
 ## Contracts and release gates
 
-Creation/deletion and field/key updates are atomic within the Set owner. Other Set audit callers still
-need their own transaction work. Caller transactions retain final decisions;
+Set service writes are atomic within the owner. Supplemental integration audits
+and external file/editorial workflows remain caller responsibilities. Caller transactions retain final decisions;
 generated-key races can return zero. Later attachment/import/merge operations
 are separate until refactored. Archive source preparation commits before graph
 writes; projection caches discard pending observations. Canonical editorial
