@@ -993,10 +993,15 @@ add_action('init', 'iss_content_fallback_schedule_sweep');
 
 function iss_content_fallback_run_sweep(): void
 {
-    iss_content_fallback_project([
+    $run = static fn(): array => iss_content_fallback_project([
         'dry_run' => false,
         'limit' => 25,
         'mark_stale' => false,
     ]);
+    if (function_exists('iss_core_run_maintenance_job')) {
+        iss_core_run_maintenance_job('fallback', $run);
+    } else {
+        $run();
+    }
 }
 add_action(ISS_CONTENT_FALLBACK_CRON_HOOK, 'iss_content_fallback_run_sweep');

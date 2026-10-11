@@ -16,6 +16,8 @@ define('ISS_CORE_CAPS_VERSION', '2026-07-02-fallback-caps-1');
 define('ISS_CORE_CAPS_OPTION', 'iss_caps_version');
 define('ISS_CORE_OPERATIONS_MENU_SLUG', 'iss-operations');
 
+require_once __DIR__ . '/maintenance.php';
+
 function iss_core_default_capability_definitions(): array
 {
     return [

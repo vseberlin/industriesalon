@@ -19,12 +19,14 @@ function iss_content_editorial_sets_mark_stale_items(): int
         WHERE decay_at IS NOT NULL
             AND decay_at <= %s
             AND retain = 0
-            AND status IN ('pending', 'reviewing', 'approved')",
+            AND status IN ('pending', 'reviewing', 'approved')
+        ORDER BY id ASC LIMIT 500",
         $now,
         $now
     ));
 
-    return is_int($updated) ? $updated : 0;
+    if ($updated === false) { throw new RuntimeException('Could not mark expired Set items stale.'); }
+    return (int) $updated;
 }
 
 function iss_content_editorial_sets_schedule_decay(): void
@@ -37,7 +39,11 @@ add_action('init', 'iss_content_editorial_sets_schedule_decay');
 
 function iss_content_editorial_sets_run_decay(): void
 {
-    iss_content_editorial_sets_mark_stale_items();
+    if (function_exists('iss_core_run_maintenance_job')) {
+        iss_core_run_maintenance_job('set_decay', 'iss_content_editorial_sets_mark_stale_items');
+    } else {
+        iss_content_editorial_sets_mark_stale_items();
+    }
 }
 add_action('iss_content_editorial_sets_decay', 'iss_content_editorial_sets_run_decay');
 

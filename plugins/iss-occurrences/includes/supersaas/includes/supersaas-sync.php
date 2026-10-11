@@ -2,11 +2,17 @@
 
 if (!defined('ABSPATH')) exit;
 
+// phpcs:disable WordPress.DB.DirectDatabaseQuery, WordPress.DB.PreparedSQL.InterpolatedNotPrepared -- Sync queries use service-owned table names and prepared values.
+
 define('ISS_SUPERSAAS_SYNC_HOOK', 'iss_supersaas_occurrence_sync');
 define('ISS_SUPERSAAS_LAST_SYNC_OPTION', 'iss_supersaas_last_sync_at');
 
 add_action(ISS_SUPERSAAS_SYNC_HOOK, function () {
-    iss_supersaas_sync_occurrences();
+    if (function_exists('iss_core_run_maintenance_job')) {
+        iss_core_run_maintenance_job('supersaas', 'iss_supersaas_sync_occurrences');
+    } else {
+        iss_supersaas_sync_occurrences();
+    }
 });
 
 function iss_supersaas_activate_sync() {
@@ -1152,7 +1158,6 @@ function iss_supersaas_sync_occurrences() {
     $skipped_unlinked = 0;
     $seen_external_ids_by_calendar = [];
     $seen_staging_ids_by_schedule = [];
-    $slots_by_tag = [];
     $slot_id_counts_by_schedule = [];
 
     foreach ($slot_items as $slot) {
@@ -1585,23 +1590,6 @@ function iss_supersaas_sync_occurrences() {
         } else {
             $updated++;
         }
-
-        // Prime the REST/tag cache from the same normalized shape as the REST endpoint.
-        if ($tag !== '' && !isset($slots_by_tag[$tag])) {
-            $slots_by_tag[$tag] = [];
-        }
-        if ($tag !== '') {
-            $slots_by_tag[$tag][] = [
-                'id' => (string) $raw_slot_id,
-                'title' => $clean_title !== '' ? $clean_title : $raw_title,
-                'start' => $start,
-                'end' => $end,
-                'capacity' => $capacity_total !== null ? (int) $capacity_total : null,
-                'available' => $available,
-                'booking_url' => $booking_url ? (string) $booking_url : null,
-                'content_url' => get_permalink($source_post_id) ?: null,
-            ];
-        }
     }
 
     $inactivated = 0;
@@ -1628,25 +1616,6 @@ function iss_supersaas_sync_occurrences() {
     if (method_exists($service, 'mark_origin_past_active')) {
         foreach (array_keys($seen_external_ids_by_calendar) as $source_calendar) {
             $past_reactivated += $service->mark_origin_past_active('supersaas', (string) $source_calendar);
-        }
-    }
-
-    // Keep the REST endpoint cache and the occurrence table in sync.
-    foreach ($slots_by_tag as $tag => $slots) {
-        if (!is_array($slots)) continue;
-
-        usort($slots, function ($a, $b) {
-            return strcmp((string) ($a['start'] ?? ''), (string) ($b['start'] ?? ''));
-        });
-
-        if (function_exists('is_tours_set_cached_slots_by_tag')) {
-            is_tours_set_cached_slots_by_tag($tag, $slots, 60 * 60 * 6);
-            if (function_exists('is_tours_set_cached_source_by_tag')) {
-                is_tours_set_cached_source_by_tag($tag, 'occurrences', 60 * 60 * 6);
-            }
-        } else {
-            set_transient('is_tours_slots_' . md5($tag), $slots, 60 * 60 * 6);
-            set_transient('is_tours_slots_src_' . md5($tag), 'occurrences', 60 * 60 * 6);
         }
     }
 

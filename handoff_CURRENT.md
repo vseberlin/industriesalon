@@ -1,144 +1,81 @@
-# Current handoff — 2026-10-11
+# Current handoff — 11 October 2026
 
-## Execution and scope
+## Scope and delivery state
 
-Work in `/home/vladimir/wp-website`, branch `main`. On 11 October the user
-requested: **commit the current checkpoint and continue the refactoring plan
-through completion autonomously**. This supersedes the earlier requirement to
-pause for confirmation after every slice. Continue in small verified commits.
+The six-phase [WordPress refactoring plan](docs/project/wordpress-refactoring-plan.md)
+is complete within the authorized local scope. The user authorized commits and
+execution through completion; stepwise confirmation is superseded. Work lives in
+`/home/vladimir/wp-website` on `main`. Commits are local and unpushed; freshly
+fetched `origin/main` is `fe849bc`, with no incoming commits. Use Git history for
+implementation details. The distinct `/home/vladimir/wp` mixed checkout remains
+dirty and is not a commit/cleanup target. No home-level files, other drives,
+preservation sources or staging state were changed.
 
-Keep writes inside `/home/vladimir/wp` and `/home/vladimir/wp-website`; preserve
-unrelated work. Home-level files, other drives, preservation storage and staging
-mutations remain outside scope. No push or staging deployment is authorized.
-GitHub `origin/main` was freshly checked at `fe849bc`; this checkpoint and later
-work are local commits. Follow [git-exchange.md](docs/runbooks/git-exchange.md)
-before later exchange; never pull over unrelated dirty work.
+Staging was inspected read-only on 11 October: clean code at `6c8cea7`, WordPress
+7.0/PHP 8.3, healthy services, 118 GB free. Traffic WP-Cron is still enabled and
+66 old graph rows remain queued. These observations are not deployment evidence.
+The prepared scheduler, backup/retention scripts and scoped PHP limits have not
+been installed there; see [maintenance activation/recovery](docs/runbooks/staging-maintenance.md).
 
-## Current implementation and next work
+## Implemented and verified
 
-The first 22 slices are complete: controlled local runtime mounts, versioned
-seed delivery, graph replacement/deletion and bridge atomicity, owned queue
-leases/processing, profile and transcript consistency, archive projection
-transactions/caches, and editorial Set deletion/creation with required creation
-audit. Git history, [CHANGELOG.md](CHANGELOG.md) and
-[database.md](docs/architecture/database.md) hold the implementation record.
+- Versioned seed/setup gates, checked owner schema installation, transactional
+  graph/Set writers, ownership-aware queue processing, Event Drop recovery and
+  commerce retry idempotency. Public requests no longer install/backfill schemas.
+- Native GET programme controls, core Interactivity/router navigation and one
+  native booking/inquiry/order dialog. Flatpickr and obsolete controllers/cache
+  helpers are removed. Source visibility, capacity and Berlin dates are checked
+  at intake. Booking records requests; it does not reserve capacity or confirm
+  payment. Email dispatch is not exactly-once across a process crash.
+- Bounded/private SQL search, batched read-only relations/occurrences and coalesced
+  ordinary-save projections through the existing queue. Explicit transactional
+  writers remain immediate. Curated menu selection stays on its existing owner:
+  occurrence opt-in/recurrence semantics failed the equivalence check.
+- Graph/CLI/relations/programme responsibilities are split within their owners;
+  admin/CLI code loads in context. Project/team ordering uses native controls.
+  Existing saved-layout CSS compatibility and unrelated Atlas work are preserved.
+- Monitored owner jobs, bounded non-destructive Set decay, one locked host runner,
+  seven-artifact verified backups with guarded retention, inactive-owner cron
+  migration and paired public/intake limit proposal are ready for release review.
 
-Continue the [refactoring plan](docs/project/wordpress-refactoring-plan.md):
+Final checks: 355 backend assertions across seven affected suites, 23 disposable
+host-runner/backup assertions, PHP lint/PHPCS/PHPStan, shell syntax and 63
+Chrome/Firefox/Linux-WebKit browser scenarios pass. The scoped cron migration
+passed check/apply/verify on the isolated fixture; every other event was retained.
+Earlier broader checkpoints (3,134 assertions; later extraction 1,821) retain
+separate receipts and scopes. No real notification, external sync or real queue
+drain was executed for verification. Public pages were measured locally; reduced
+calendar/tour assets and increased publication assets are not a uniform speedup.
 
-1. Native filters, shared booking and router region navigation are complete.
-   All 45 WordPress 7.0 Chrome/Firefox/Linux-WebKit scenarios pass locally.
-2. Query consolidation is complete: bounded SQL search, current occurrence
-   privacy/date checks, batched caches and request-scoped save coalescing.
-   Keep the existing menu query: recurrence/opt-in equivalence was disproved.
-3. Owner file extraction and audited admin/CLI context loading are complete.
-   Native admin ordering and the scoped CSS/saved-content asset audit are complete.
-4. Complete repository-owned maintenance commands, monitoring, backup/restore
-   verification and operational documentation within the local scope. Target
-   deployment and any host changes outside the checkout roots remain separate.
+## Runtime, recovery evidence and next action
 
-Set field/key and item/context writers now require their audits/timestamps in
-one owner transaction; move/status batches roll back late failures. Five suites
-passed 890 checks, including two-connection deletion/ownership races, plus lint,
-PHPCS and PHPStan. Logs: `editorial-set-*-final.log` in the private evidence root.
-Event Drop moderation now has collision-safe retry resolution and its extra
-audit shares the item transaction (33 file recovery checks plus 369 regressions).
-Schema setup is now privileged non-AJAX admin/activation/explicit CLI work.
-All eleven owner installers verify structure and version persistence; existing
-occurrence/collection migration writes are checked. Two suites passed 194
-checks; lint/PHPCS/PHPStan passed and all 11 live schemas passed read-only
-inspection. Commerce CLI verification is read-only. Commerce idempotency is now
-complete: unique request keys, checked duplicate serialization, stable client
-retry keys and dispatch only for newly committed rows. Passed 76 backend, 16
-migration and three Chrome retry checks; PHP lint/PHPCS/PHPStan and JS lint pass.
-The commerce migration is applied locally; all three historical requests remain.
-Private scoped SQL backup and target-local JSON before-image are retained under
-`commerce-before-idempotency.sql.gz` and `commerce-migration-fixtures/` in the
-private evidence root. Deploy with `ops/migrations/2026-10-11-commerce-idempotency.php`
-check/apply/verify and a new target-local before-image; no uploads artifact.
-Programme filters now use scoped native GET forms and bounded pagination;
-fixed restrictions and saved block attributes remain authoritative. Removed the
-old filter AJAX/grid controller and its CSS. Passed 26 read-only filter checks,
-71 programme/rotation checks and desktop/phone/JavaScript-disabled Chrome checks.
-Seven routes return HTTP 200; Kalender retains rendered IDs/order and uses 126
-queries in both current samples. Its scripts/styles total 115,957 gzip bytes
-versus 123,836 before this slice (34 browser resources versus 35). This is a
-local measurement, not a staging speed guarantee. Historical home IDs differ
-from the 8 October baseline; date rotation and remaining public cache writes
-need comparison during query consolidation. Native booking now shares one PHP-authored dialog and core Interactivity
-module across tours, programme rows, inquiries and publication orders. Flatpickr,
-the legacy booking/publication controllers and their CSS are removed. On the
-isolated WordPress 7.0 runtime, 26 renderer checks, 97 programme/filter checks,
-114 intake checks and 27 Chrome/Firefox/Linux-WebKit scenarios passed. Browser
-coverage includes phone/no-JavaScript navigation, stale/deduplicated reads, retry,
-nonce failure and focus return; staff/editor and staging acceptance remain open. Booking intake now rejects private sources,
-cancelled/over-capacity slots and invalid/past Berlin dates. Slot data is complete
-within the existing 12-month horizon and REST reads bypass old tag transients;
-114 isolated commerce checks passed. Live size: 73 published sources, largest
-response 27 slots / 12,519 JSON bytes (11 October). Core router region navigation now passes independent-instance, stale-response,
-failure fallback and Back-during-pending-request checks on all three engines.
-Next: query/projection consolidation. A naive menu occurrence swap selects a
-different recurring event; preserve the existing selection contract until parity
-is established. Search now supplies bounded SQL-provider pages and complete totals, with
-current privacy predicates and no 1,000-candidate truncation. Passed 35 isolated
-search checks, 661 write regressions, three facade comparisons and six
-three-engine browser scenarios; existing first-page relevance is retained. Public relation
-lookups are now read-only and batched; all seven current route samples show
-zero writes. Tour/publication query counts are 188/98; IDs/order are retained. No data/uploads artifact
-for filters. Email dispatch is not exactly-once across process crashes.
-Do not run real imports/merges or destructive cleanup for verification.
+`wp_app` still serves website plugin/theme/receiver code from this checkout;
+core/database/uploads/intake remain in `wp`. Re-inspect mounts before testing.
+Use Compose project `wp` with both `/home/vladimir/wp/docker-compose.yml` and
+`var/refactoring-20261008/website-code.yml`; CLI wrapper is
+`var/refactoring-20261008/wp`, with `DISABLE_WP_CRON` explicitly enabled for checks.
+The isolated WordPress 7.0 fixture (`iss-refactor-wp70`, loopback 8097) is stopped;
+its private core/database/Compose files and blocked-mail/HTTP configuration remain.
 
-## Runtime and evidence
+Private ignored evidence/backups: `var/refactoring-20261008/` (0700), especially
+`wp70/final-*.log`, `maintenance-runner-tests.log`, `wp70/restore-verification.json`
+and `file-restore-verification.json`. A 118-table database restore passed (117
+matching checksums; volatile options differed), and six representative files
+restored with matching hashes. Full multi-GB uploads/intake restoration remains
+a release gate. Never restore these snapshots over later editorial work.
 
-- `wp_app` serves plugin/theme/receiver code from `wp-website`; core, database,
-  uploads and private intake remain in `wp`. Mounts checked again 11 October.
-- Use Compose project `wp`, base `/home/vladimir/wp/docker-compose.yml` and
-  `/home/vladimir/wp-website/var/refactoring-20261008/website-code.yml` together.
-  Do not recreate from base Compose alone or use the old home-level wrapper.
-- CLI: `var/refactoring-20261008/wp`; pass
-  `--exec='define("DISABLE_WP_CRON", true);'` for isolated checks. Stateful suites
-  run sequentially. Do not send real notifications from tests.
-- Local runtime: WordPress 7.1.3, web PHP 8.2.30, CLI PHP 8.3.31, MariaDB 10.11.15.
-  Staging's last known reference was WordPress 7.0/PHP 8.3.31/MariaDB 11.8.8 on
-  7 October; these are historical facts, not current health/acceptance evidence.
-- Private ignored evidence directory: `var/refactoring-20261008/` (mode 0700).
-  `autonomous-checkpoint-tests.json` and checkpoint logs record the combined
-  regression pass: 3,134 checks across 21 suites, PHP lint, PHPCS and PHPStan.
-  Per-slice `*-verification.json` receipts retain earlier scope.
-- Latest Set creation receipt: `editorial-set-create-verification.json`, with
-  133 creation and 181 deletion checks, lint/PHPCS/PHPStan and HTTP 200. Real
-  Set/items/links/audit/options/queue rows were retained. The broader checkpoint
-  regression pass covers the accumulated code together before committing.
-- Source before-images and backup hashes remain in `*-backup-verification.json`.
-  Set backup: `editorial-set-delete-before.sql.gz`; archive/graph backup:
-  `graph-archive-before.sql.gz`. Original database/files baselines and seven-route
-  comparisons remain available. Their gzip/hash/SQL checks passed; a SQL restore rehearsal now passed in the isolated
-  WordPress 7.0 fixture (118 tables, 117 matching checksums; volatile options
-  differed after tests). Files restore rehearsal remains outstanding. Never restore these over later editorial work.
+Next is a separately authorized GitHub/staging release and acceptance, following
+the maintenance runbook. Deliver matching code with four scoped artifacts:
+`2026-10-08-taxonomy-seeds.php`, `2026-10-11-commerce-idempotency.php`,
+`2026-10-11-owner-setup.php`, `2026-10-11-maintenance-cron.php` under
+`ops/migrations/`, each with target-local before-images and check/apply/verify.
+Taxonomy/commerce are already applied to the original local site; owner setup and
+cron cleanup were exercised only on the isolated fixture. No uploads transfer is
+needed for this refactor. Preserve DB template overrides (`single-ausstellung`,
+`page-projekte`, `page-publikationen`), editorial recovery, private contacts/Sets,
+historical orders, moderation and uploads. Do not copy the local DB to staging.
 
-## Contracts and release gates
-
-Set service writes are atomic within the owner. Supplemental integration audits
-and external file/editorial workflows remain caller responsibilities. Caller transactions retain final decisions;
-generated-key races can return zero. Later attachment/import/merge operations
-are separate until refactored. Archive source preparation commits before graph
-writes; projection caches discard pending observations. Canonical editorial
-source/cache coordination and preservation storage retain their owners.
-
-The taxonomy migration is applied locally. Its delivery artifact is
-`ops/migrations/2026-10-08-taxonomy-seeds.php` with target-local before-images and
-check/apply/verify; do not replay its completed local application. Current graph,
-archive and Set code changes need no schema/data migration or uploads artifact.
-Before future commits, check whether their changes introduce such dependencies.
-
-Native-filter desktop/phone/no-JS Chrome and isolated WordPress 7.0 checks pass.
-The local 7.0/PHP 8.3.31 fixture uses Compose project `iss-refactor-wp70`,
-`var/refactoring-20261008/wp70/compose.yml`, loopback port 8097, private database
-bind storage and read-only shared code/uploads; mail/external HTTP are blocked.
-Stop its services after final checks. Existing newsletter early-translation
-notices are visible with its debug mode. Shared booking, phone keyboard/axe and three-engine checks pass locally.
-Staff/editor and staging acceptance remain open. Backend tests do not establish those results. Preserve DB template
-overrides (`single-ausstellung`, `page-projekte`, `page-publikationen`), editorial
-history/recovery, private contacts/Sets, date rotation, moderation and uploads.
-No full-database equality claim: concurrent editor activity exists; per-suite
-receipts state the exact retained rows. No real queue has been drained. Keep the
-map thread and unrelated TODOs outside this refactor.
+Remaining acceptance: real editor save/reload/block validity, staff workflows,
+macOS Safari (Linux WebKit is not Safari acceptance), full file restoration and
+actual FPM/Nginx large-upload behavior. These are release gates, not unfinished
+local code slices. Unrelated TODOs and the inactive map thread remain separate.

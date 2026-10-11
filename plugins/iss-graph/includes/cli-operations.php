@@ -615,6 +615,9 @@ function iss_graph_wpcli_reconcile_command(array $args, array $assoc_args): void
         WP_CLI::warning('Dirty queue processing stopped because this run no longer owns its lease.');
     }
 
+    if (!$dry_run && (!empty($stats['failed']) || !empty($stats['dead']) || !empty($stats['lease_lost']) || !empty($stats['last_error']))) {
+        WP_CLI::error('Graph reconcile incomplete; inspect the queue last_error and retry counts.');
+    }
     WP_CLI::success($dry_run ? 'ISS graph reconcile dry-run completed. No changes made.' : 'ISS graph dirty queue reconcile completed.');
 }
 

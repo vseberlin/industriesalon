@@ -4,14 +4,14 @@ Immediate executable work only. Larger future programs live in `docs/project/bac
 
 ## Next
 
-- Continue the [WordPress refactoring plan](docs/project/wordpress-refactoring-plan.md)
-  autonomously under the [current handoff](handoff_CURRENT.md). The user approved
-  local commits and continuation through the remaining plan on 11 October.
-  Next: menu/date equivalence and save projection coalescing; native frontend
-  and core region navigation are verified. Preserve existing contracts; use isolated fixtures and sequential stateful checks. Native calendar,
-  query/code/CSS consolidation and repository-owned maintenance follow in plan
-  order. Keep writes inside the two WordPress checkout roots; no staging mutation
-  or push is authorized. WordPress 7.0 and three browser engines pass locally; editor/staff/staging acceptance remains open.
+- Coordinate an authorized release of the completed local
+  [WordPress refactor](docs/project/wordpress-refactoring-plan.md): review/push
+  the local commits, take target-local backups, apply the four scoped owner
+  migrations, and activate the prepared
+  [maintenance path](docs/runbooks/staging-maintenance.md). Verify real editor
+  save/reload/block validity, staff booking/order flows, macOS Safari, full
+  uploads/intake restoration and the paired FPM/Nginx limits before acceptance.
+  No push, deployment, host configuration or staging migration has been done.
 - Staff-test the deployed [shared workspace](docs/project/editor-workspace-plan.md)
   on staging: one landing, project, tour, publication and event; image/title/text,
   owner controls, recovery and native Save Draft. Verify Firefox and real
@@ -78,12 +78,10 @@ Immediate executable work only. Larger future programs live in `docs/project/bac
   synced to `themes/industriesalon/templates/front-page.html` for review. After
   the client finishes, either replay the baseline artifact to restore the old
   page or intentionally accept the current template and remove the DB override.
-- Related graph autonomy ops: after deploying the `iss-graph` autonomy slice,
-  run `wp iss-graph migrate --skip-sync`, then configure a monitored external
-  scheduler entry for `wp iss-graph reconcile --batch-size=50 --max-runtime=30`
-  on production. Do not treat page-request WP-Cron as the unattended healing
-  mechanism; verify with `wp iss-graph autonomy-health --format=json` and
-  `wp iss-graph drift-check --checks=relation-integrity --limit=25`.
+- Related graph autonomy ops: include `wp iss-graph migrate --skip-sync` and
+  owner health/drift verification in the coordinated release above. Use the
+  single maintenance runner for graph reconciliation; do not add a second
+  independent cron worker or rely on page-request WP-Cron.
 - Graph/native relation coverage: Veranstaltung venue is now harvested from
   native `iss_primary_place_id` into `content_native` graph edges. Add
   CPT-specific native person/organization harvesters only where a real

@@ -57,6 +57,7 @@ trait ISS_Graph_Queue
                 'clean' => 0,
                 'oldest_dirty_at' => '',
                 'oldest_dirty_age_seconds' => 0,
+                'oldest_processing_age_seconds' => 0,
                 'last_run' => get_option('iss_graph_dirty_queue_last_run', []),
             ];
         }
@@ -68,6 +69,7 @@ trait ISS_Graph_Queue
             'clean' => 0,
         ];
         $rows = $wpdb->get_results("SELECT status, COUNT(*) AS count FROM {$table} GROUP BY status", ARRAY_A);
+        $read_error = $wpdb->last_error !== '';
         foreach (is_array($rows) ? $rows : [] as $row) {
             $status = sanitize_key((string) ($row['status'] ?? ''));
             if (isset($counts[$status])) {
@@ -76,15 +78,21 @@ trait ISS_Graph_Queue
         }
 
         $oldest_dirty_at = (string) $wpdb->get_var("SELECT MIN(updated_at) FROM {$table} WHERE status = 'dirty'");
+        $read_error = $read_error || $wpdb->last_error !== '';
         $oldest_age = 0;
         if ($oldest_dirty_at !== '') {
             $oldest_age = max(0, strtotime(current_time('mysql', true) . ' UTC') - strtotime($oldest_dirty_at . ' UTC'));
         }
+        $oldest_processing_at = (string) $wpdb->get_var("SELECT MIN(COALESCE(locked_at, updated_at)) FROM {$table} WHERE status = 'processing'");
+        $read_error = $read_error || $wpdb->last_error !== '';
+        $processing_age = $oldest_processing_at !== '' ? max(0, time() - strtotime($oldest_processing_at . ' UTC')) : 0;
 
         return array_merge([
             'exists' => true,
+            'read_error' => $read_error,
             'oldest_dirty_at' => $oldest_dirty_at,
             'oldest_dirty_age_seconds' => $oldest_age,
+            'oldest_processing_age_seconds' => $processing_age,
             'last_run' => get_option('iss_graph_dirty_queue_last_run', []),
         ], $counts);
     }

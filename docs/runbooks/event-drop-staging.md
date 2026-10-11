@@ -152,6 +152,11 @@ workflow.
 
 ## Recreate WordPress With PHP Override
 
+For the inspected FPM staging stack, use the paired public/intake limit proposal
+in [staging maintenance](staging-maintenance.md#scope-the-event-drop-limits).
+The unlimited settings below document the existing development baseline, not
+the proposed global staging policy. Verify FPM output as well as CLI output.
+
 After mounts or `.env` changes:
 
 ```bash

@@ -6,6 +6,20 @@ be recovered from Git history.
 
 ## 2026-10-11
 
+- Completed the local maintenance phase: existing SuperSaaS/fallback/Set jobs
+  record checked success/failure receipts; Operations and CLI report stale jobs,
+  missing callbacks, dead/stalled graph rows and diagnostic read failures. Set
+  decay is bounded to 500 status updates without deleting evidence. Graph CLI
+  failures now exit nonzero. Removed unconsumed SuperSaaS tag-cache helpers.
+- Prepared one locked host scheduler path and a verified seven-artifact backup
+  replacement, including private intake and installed runtime packages. Managed
+  retention keeps 14 daily/four weekly points while preserving manual/partial
+  backups. Added an allowlisted inactive-owner cron migration with a private
+  before-image. Staging inventory, paired FPM/Nginx limits, activation, recovery
+  and update cadence are documented; no target scheduler/configuration changed.
+  No content/media transfer is required. Tests use isolated rows and fake host
+  commands; no real notification, remote sync or production queue was run.
+
 - Replaced the project/team ordering controller's jQuery Sortable/AJAX dependency
   with native drag events, keyboard arrows, touch up/down controls and fetch.
   Existing nonce/action/array payload and server save owner are unchanged.

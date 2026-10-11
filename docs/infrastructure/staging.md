@@ -21,6 +21,9 @@ Inspect system state, disk, memory, failed services, logs, active containers, an
 - See `data-artifacts.md` for SQL/upload transfer artifact rules.
 - See `sync.md` and `../runbooks/uploads-sync.md` before syncing uploads.
 - See `services.md` before changing mail, search, or other optional services.
+- Scheduler, monitored owner jobs, paired backups and scoped intake limits:
+  [staging maintenance](../runbooks/staging-maintenance.md). The October refactor
+  prepares these locally; it does not establish target activation.
 
 ## Access and active paths
 

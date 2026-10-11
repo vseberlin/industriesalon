@@ -24,7 +24,7 @@ changes outside those roots require separate authorization.
 | 3 Native frontend | Native GET filters, shared booking and core region navigation complete; Flatpickr removed; 45 three-engine WordPress 7.0 scenarios pass |
 | 4 Query/projection consolidation | Read-only relation batching and bounded/private SQL search complete; occurrence privacy/batching, date cache removal and ordinary save coalescing complete; menu retained after failed equivalence proof |
 | 5 Code/CSS consolidation | Owner extraction/context loading, native admin ordering and scoped asset audit complete |
-| 6 Maintenance | Pending within repository/local scope; target operations remain separate |
+| 6 Maintenance | Monitored owner jobs, bounded runner, verified backup/retention, scoped stale-hook migration and intake-limit proposal complete locally; target activation remains separate |
 
 Use `handoff_CURRENT.md` and the private verification receipts for live checkpoint
 state. The following starting-point observations are historical, from 7 October.
@@ -238,6 +238,10 @@ existing transient rows can expire normally. Booking slot reads are also fresh.
 Redis remains unintegrated: current measurements do not justify another cache
 invalidation mechanism or a host-service change.
 
+The orphaned SuperSaaS tag-cache writers and their unused read/conditional-GET
+helpers are also removed after a caller audit. Native booking reads the existing
+occurrence owner directly; old transient rows expire normally.
+
 ### Asset and saved-content audit recorded on 11 October
 
 The restored local database has no Flatpickr or retired booking/order script
@@ -257,3 +261,15 @@ editor acceptance, not a blind CSS deletion. The unrelated Atlas map styles and
 assets remain outside this task. No new selector escalation or `!important` was
 introduced. Reduced calendar/tour bytes and the measured publication increase
 are recorded in the native frontend checkpoint; there is no uniform speed claim.
+
+### Maintenance delivery recorded on 11 October
+
+All six phases are implemented within the authorized local scope. The
+[maintenance runbook](../runbooks/staging-maintenance.md) contains the verified
+target inventory, installation/rollback procedure, job failure recovery, backup
+retention/restore procedure and paired FPM/Nginx limit proposal. Source-controlled
+scripts replace the existing target operations path only during an approved
+release. Target cron, limits, backups and scheduled remote jobs were not changed.
+Database restoration and a representative six-file restore passed locally;
+full uploads/intake restore, staff/editor, macOS Safari and staging acceptance
+remain release gates. Linux WebKit automation is not macOS Safari acceptance.
