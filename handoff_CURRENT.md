@@ -31,7 +31,7 @@ Continue the [refactoring plan](docs/project/wordpress-refactoring-plan.md):
    privacy/date checks, batched caches and request-scoped save coalescing.
    Keep the existing menu query: recurrence/opt-in equivalence was disproved.
 3. Owner file extraction and audited admin/CLI context loading are complete.
-   Finish native admin ordering and the final CSS/saved-content asset audit.
+   Native admin ordering and the scoped CSS/saved-content asset audit are complete.
 4. Complete repository-owned maintenance commands, monitoring, backup/restore
    verification and operational documentation within the local scope. Target
    deployment and any host changes outside the checkout roots remain separate.

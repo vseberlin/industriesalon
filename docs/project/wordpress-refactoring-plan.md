@@ -23,7 +23,7 @@ changes outside those roots require separate authorization.
 | 2 Database/setup | Seeds, graph/queue/profile/transcript/archive boundaries and Set service writes completed; Event Drop recovery and public setup gates complete; installer verification and migrated commerce idempotency complete |
 | 3 Native frontend | Native GET filters, shared booking and core region navigation complete; Flatpickr removed; 45 three-engine WordPress 7.0 scenarios pass |
 | 4 Query/projection consolidation | Read-only relation batching and bounded/private SQL search complete; occurrence privacy/batching, date cache removal and ordinary save coalescing complete; menu retained after failed equivalence proof |
-| 5 Code/CSS consolidation | Owner extraction/context loading complete; native admin ordering complete; final asset audit next |
+| 5 Code/CSS consolidation | Owner extraction/context loading, native admin ordering and scoped asset audit complete |
 | 6 Maintenance | Pending within repository/local scope; target operations remain separate |
 
 Use `handoff_CURRENT.md` and the private verification receipts for live checkpoint
@@ -237,3 +237,23 @@ PHP results and `no-store` preserve privacy and Berlin date/preview isolation;
 existing transient rows can expire normally. Booking slot reads are also fresh.
 Redis remains unintegrated: current measurements do not justify another cache
 invalidation mechanism or a host-service change.
+
+### Asset and saved-content audit recorded on 11 October
+
+The restored local database has no Flatpickr or retired booking/order script
+references in stored post/template content or editorial metadata. Published DB
+template overrides remain `single-ausstellung`, `page-projekte` and
+`page-publikationen`; this refactor does not overwrite them. First-party PHP/JS/
+CSS/block registrations have no Flatpickr, retired publication-order controller
+or jQuery Sortable dependency. Browser coverage confirms the active native path.
+
+Programme/dialog styles and tour calendar skins were drained into their existing
+owners during the native conversion; the old publication modal and sortable
+helper/placeholder rules are removed. Theme tokens, primitives, cards, patterns,
+skins and conditional page enqueues remain the shared delivery layers. Existing
+Columns/flex/grid overrides supporting saved Gutenberg layouts are retained:
+removing their priority rules requires a paired block/content migration and
+editor acceptance, not a blind CSS deletion. The unrelated Atlas map styles and
+assets remain outside this task. No new selector escalation or `!important` was
+introduced. Reduced calendar/tour bytes and the measured publication increase
+are recorded in the native frontend checkpoint; there is no uniform speed claim.
