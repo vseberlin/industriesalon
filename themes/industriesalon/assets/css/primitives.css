@@ -682,12 +682,13 @@
 .iss-atlas-slice__stage {
   position: relative;
   overflow: hidden;
+  width: 100%;
   aspect-ratio: var(--iss-atlas-slice-ratio, 1600 / 720);
-  height: 100%;
-  min-height: clamp(15rem, 28vw, 20rem);
+  height: var(--iss-atlas-slice-height, 100%);
+  min-height: var(--iss-atlas-slice-min-height, clamp(15rem, 28vw, 20rem));
   background: var(--iss-surface-map);
-  border: 1px solid rgba(var(--iss-accent-rgb), 0.12);
-  border-radius: var(--iss-radius-md);
+  border: var(--iss-atlas-slice-border, 1px solid rgba(var(--iss-accent-rgb), 0.12));
+  border-radius: var(--iss-atlas-slice-radius, var(--iss-radius-md));
   box-shadow: none;
 }
 
@@ -1551,7 +1552,7 @@
   }
 
   .iss-atlas-slice__stage {
-    min-height: 12.5rem;
+    min-height: var(--iss-atlas-slice-min-height, 12.5rem);
   }
 
   .iss-program-spine-row__stage {

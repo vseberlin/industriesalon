@@ -4,6 +4,42 @@ This file records durable project changes. Keep it compact: current state belong
 `handoff_CURRENT.md`, active follow-up in `TODO.md`, and detailed investigation can
 be recovered from Git history.
 
+## 2026-10-12
+
+- Reworked `/schoneweide/` into five sections including the photographic opening:
+  one overview with three selected Place cards, a complete six-phase history,
+  a compact exploration list and the existing Atlas. Removed repeated curatorial
+  explanations and published planning notes; the historical additions use the
+  sources recorded in the migration payload. Editorial body copy falls from
+  539 to 258 words; Chrome at 390px measures about 7,900px total height against
+  the 14,231px baseline. Rewrote the existing Atlas-card/chronology treatments,
+  removed fixed card heights/overlays and chronology layout rules from the skin,
+  and consolidated map-stage width in its primitive. Native section links and
+  the existing fixed-header scroll-target utility keep the composition editable.
+  Passed 31 read-only composition/editor/map checks, targeted PHP/CSS checks,
+  migration check/apply/verify and repeat-apply; negative checks reject later
+  editorial changes or missing media before writing. Chrome desktop/900px/390px
+  review covered hierarchy, images, overflow and Atlas navigation. Authenticated
+  editor save/reload and cross-engine UAT remain. Local content was applied through
+  `2026-10-12-schoneweide-landing.php` with its JSON payload; the verified private
+  before-image is `var/schoneweide-20261012/before.json` (0600). Deployment needs
+  this guarded content migration alongside the theme/contract changes; existing
+  media are reused, so no uploads artifact is required. No staging change.
+
+- Schlüsselorte cards now resolve their existing dossier destinations to
+  published Place records and show the corresponding calibrated map position.
+  The shared map renderer/runtime supplies compact passive previews, initialized
+  only when visible; the card remains the single link. Removed the repeated CSS
+  map crop/fixed dot and consolidated marker styling into its existing owner.
+  CSS shrinks overall, with no new `!important`, page overrides, dependencies,
+  tiles, or content/schema changes. Passed 75 read-only card/location checks,
+  static-map contract/audit commands, PHP lint/PHPCS/PHPStan and CSS/JS lint.
+  Chrome desktop, 900px and 390px checks covered centred markers, resize,
+  overflow, lazy initialization, strip navigation and existing map zoom.
+  Editor document validation/rendering passes; authenticated editor save/reload
+  and cross-engine UAT remain. Existing data/media only; no DB or uploads
+  migration artifact is required.
+
 ## 2026-10-11
 
 - Made the Repair-Café landing destination an occurrence-owner rule shared by

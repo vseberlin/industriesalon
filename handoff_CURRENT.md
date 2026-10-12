@@ -1,4 +1,4 @@
-# Current handoff — 11 October 2026
+# Current handoff — 12 October 2026
 
 ## Scope and delivery state
 
@@ -92,6 +92,19 @@ desktop/390px review pass. PHPCS passes six changed runtime files; sync admin's
 8 errors/21 warnings match the preceding `3ef84f7` baseline and are outside the changes. No live sync,
 content/media write or new data artifact was required.
 
+## Schöneweide landing
+
+The locally applied landing now has five sections including the opening, three
+selected Place cards, six historical phases and the existing Atlas. The prior
+card previews are retained. Matching theme/section-contract changes and
+`ops/migrations/2026-10-12-schoneweide-landing.php` plus its JSON payload are
+delivered together in Git. Deploy matching code before applying the migration; it checks the
+reviewed baseline and existing media before writing through `iss-editorial`.
+It passed check/apply/verify, repeat-apply and rejection checks. Private recovery
+is `var/schoneweide-20261012/before.json` (0600); preserve later editorial edits.
+Chrome desktop/900px/390px and 31 backend checks pass; authenticated editor
+save/reload and cross-engine UAT remain. No new uploads or staging change.
+
 ## Runtime, recovery evidence and next action
 
 `wp_app` still serves website plugin/theme/receiver code from this checkout;
@@ -121,7 +134,8 @@ the maintenance runbook. Deliver matching code with four scoped artifacts:
 Taxonomy/commerce are already applied to the original local site; owner setup and
 cron cleanup were exercised only on the isolated fixture. No uploads transfer is
 needed for this refactor. The calendar extension changes only code/assets/tests;
-it needs no additional DB or uploads artifact. Preserve DB template overrides (`single-ausstellung`,
+it needs no additional DB or uploads artifact. The Schöneweide composition needs
+its separate guarded content migration described above. Preserve DB template overrides (`single-ausstellung`,
 `page-projekte`, `page-publikationen`), editorial recovery, private contacts/Sets,
 historical orders, moderation and uploads. Do not copy the local DB to staging.
 
@@ -129,4 +143,4 @@ Remaining acceptance: real editor save/reload/block validity, staff workflows
 including both new calendar views,
 macOS Safari (Linux WebKit is not Safari acceptance), full file restoration and
 actual FPM/Nginx large-upload behavior. These are release gates, not unfinished
-local code slices. Unrelated TODOs and the inactive map thread remain separate.
+local code slices. Unrelated TODOs and other Atlas backlog remain separate.

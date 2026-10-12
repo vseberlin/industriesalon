@@ -549,15 +549,20 @@ manage `menu_order` through the shared drag-and-drop list control. The slot
 queries every published profile in that order and stores no person IDs or
 person-specific presentation rules in landing JSON or PHP.
 
-`/schoneweide/` is a territorial landing. Its file template retains the hero;
-seven JSON sections own the body. `map-img.editorial-atlas` restores the
-map/panorama orientation composition and its four non-linked place cards;
-`text-bild-reihe.chronology` presents the epoch sequence,
-`gateway.atlas-plates` presents linked place dossiers, and
+`/schoneweide/` is a territorial landing. Its file template owns the photographic
+hero; four JSON sections own places, history, exploration links and the Atlas.
+`gateway.atlas-plates` resolves the selected dossier links once through the
+ordinary manual Place contract, supplying both the shared overview map and the
+individual card previews. `text-bild-reihe.chronology` uses the normal text/image
+item renderer for a compact chronological sequence, with optional images and no
+forced card height. Both sections expose the existing editor-visible `links`
+field. `gateway.link-list` supplies the exploration row, while
 `slot.schoneweide-atlas` delegates to the existing interactive Atlas renderer.
-The map panel inside `map_img` resolves the page's ordinary place relations
-without a treatment-specific cap. Its registered crop and all Atlas payloads
-remain outside landing JSON.
+The local content change has a guarded, owner-API migration under
+`ops/migrations/2026-10-12-schoneweide-landing.php`; it uses existing attachments.
+The reusable `map_img` treatment remains available for map/panorama compositions
+and resolves ordinary page Place relations. Map calibration and all Atlas
+payloads remain outside landing JSON.
 
 The reusable `gateway.pathways` treatment presents a sequence of image-led
 destinations as a compact horizontal editorial strip. It uses the normal

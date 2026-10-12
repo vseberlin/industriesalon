@@ -625,56 +625,42 @@
 }
 
 .iss-landing-section--treatment-gateway-atlas-plates .iss-landing-section__inner {
-  grid-template-columns: minmax(21rem, 27rem) minmax(0, 1fr);
-  gap: clamp(2rem, 4vw, 4.25rem);
-  align-items: start;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1.4fr);
+  align-items: center;
+}
+
+.iss-landing-gateway__map {
+  min-width: 0;
 }
 
 .iss-landing-section--treatment-gateway-atlas-plates .iss-landing-gateway {
-  --iss-landing-atlas-plate-map: url("../maps/schoneweide-map-canonical-display.webp");
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 16rem), 1fr));
+  gap: clamp(1rem, 2vw, 1.75rem);
+}
 
-  grid-template-columns: repeat(6, minmax(0, 1fr));
-  gap: 0.9rem;
+.iss-landing-section--treatment-gateway-atlas-plates :is(.iss-landing-gateway, .iss-landing-section__actions) {
+  grid-column: 1 / -1;
 }
 
 .iss-landing-section--treatment-gateway-atlas-plates .iss-landing-gateway__link {
   grid-template-rows: auto 1fr 3rem;
-  width: 100%;
-  min-width: 0;
-  min-height: 25.5rem;
-  border: 1px solid var(--iss-landing-rule);
-  background: #fff;
 }
 
 .iss-landing-section--treatment-gateway-atlas-plates .iss-landing-gateway__media {
-  aspect-ratio: 5 / 4;
+  aspect-ratio: 16 / 10;
 }
 
 .iss-landing-section--treatment-gateway-atlas-plates .iss-landing-gateway__item-body {
   align-content: start;
-  padding: 0.85rem;
 }
 
 .iss-landing-section--treatment-gateway-atlas-plates .iss-landing-gateway__item-title {
   font-family: "IBM Plex Sans Condensed", "Arial Narrow", var(--wp--preset--font-family--plex, sans-serif);
-  font-size: 0.95rem;
-  line-height: 1.05;
-  letter-spacing: 0;
-  text-transform: uppercase;
-  overflow-wrap: anywhere;
+  font-size: clamp(1.25rem, 1vw + 0.75rem, 1.75rem);
 }
 
 .iss-landing-section--treatment-gateway-atlas-plates .iss-landing-gateway__item-text {
-  font-size: 0.76rem;
-  line-height: 1.4;
-}
-
-.iss-landing-section--treatment-gateway-atlas-plates .iss-landing-gateway__link::after {
-  background:
-    radial-gradient(circle at 1rem center, var(--iss-accent, #e81d25) 0 0.24rem, transparent 0.27rem),
-    linear-gradient(rgba(20, 18, 17, 0.34), rgba(20, 18, 17, 0.34)),
-    var(--iss-landing-atlas-plate-map) center / 250% auto;
-  content: "";
+  font-size: 0.95rem;
 }
 
 .iss-landing-text-image-row__items {
@@ -759,53 +745,13 @@
   font-size: 0.9rem;
 }
 
-.iss-landing-section--treatment-text-bild-reihe-chronology .iss-landing-text-image-row__items {
-  grid-template-columns: repeat(4, minmax(0, 1fr));
-}
-
-.iss-landing-section--treatment-text-bild-reihe-chronology .iss-landing-text-image-row__item {
-  position: relative;
-  min-height: 22rem;
-  overflow: hidden;
-  background: var(--iss-black, #1e1e1e);
-}
-
-.iss-landing-section--treatment-text-bild-reihe-chronology .iss-landing-text-image-row__media {
-  position: absolute;
-  inset: 0;
-  height: 100%;
-  aspect-ratio: auto;
-}
-
-.iss-landing-section--treatment-text-bild-reihe-chronology .iss-landing-text-image-row__media::after {
-  position: absolute;
-  inset: 0;
-  background: linear-gradient(180deg, rgba(20, 20, 20, 0.06) 25%, rgba(20, 20, 20, 0.9) 100%);
-  content: "";
-}
-
-.iss-landing-section--treatment-text-bild-reihe-chronology .iss-landing-text-image-row__item-body {
-  position: absolute;
-  right: 0;
-  bottom: 0;
-  left: 0;
-  z-index: 1;
-  align-content: end;
-  padding: 4rem 1rem 1rem;
-}
-
-.iss-landing-section--treatment-text-bild-reihe-chronology .iss-landing-text-image-row__item-title {
-  color: var(--iss-white, #fff);
-  font-family: "IBM Plex Sans Condensed", "Arial Narrow", var(--wp--preset--font-family--plex, sans-serif);
-  font-size: 1.45rem;
-  line-height: 1;
-  letter-spacing: 0;
-}
-
-.iss-landing-section--treatment-text-bild-reihe-chronology .iss-landing-text-image-row__item-text {
-  color: rgba(255, 255, 255, 0.82);
-  font-size: 0.85rem;
-  line-height: 1.45;
+.iss-landing-section--treatment-text-bild-reihe-chronology {
+  --iss-landing-text-image-media-ratio: 16 / 9;
+  --iss-landing-text-image-title-font-family: "IBM Plex Sans Condensed", "Arial Narrow", var(--wp--preset--font-family--plex, sans-serif);
+  --iss-landing-text-image-title-font-size: 1.25rem;
+  --iss-landing-text-image-text-font-size: 0.95rem;
+  --iss-landing-text-image-body-padding-top: 1rem;
+  --iss-landing-text-image-body-border: 2px solid var(--iss-accent);
 }
 
 .iss-landing-gallery {
@@ -1278,29 +1224,19 @@
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 
-  .iss-landing-section--treatment-gateway-atlas-plates .iss-landing-gateway {
-    grid-template-columns: repeat(3, minmax(0, 1fr));
-  }
 }
 
 @media (max-width: 720px) {
-  .iss-landing-section--treatment-gateway-atlas-plates .iss-landing-gateway {
-    --iss-landing-atlas-plate-map: url("../maps/schoneweide-map-canonical-display-1024.webp");
-  }
-
   .iss-landing-origin-story__head,
-.iss-landing-origin-story__layout,
-.iss-landing-section--treatment-gateway-atlas-plates .iss-landing-section__inner {
+.iss-landing-origin-story__layout {
     grid-template-columns: 1fr;
   }
 
-  .iss-landing-map-image__cards,
-.iss-landing-section--treatment-gateway-atlas-plates .iss-landing-gateway {
+  .iss-landing-map-image__cards {
     grid-template-columns: 1fr;
   }
 
-  .iss-landing-map-image__cards .iss-landing-text-image-row__item,
-.iss-landing-section--treatment-gateway-atlas-plates .iss-landing-gateway__link {
+  .iss-landing-map-image__cards .iss-landing-text-image-row__item {
     min-height: 24rem;
   }
 
@@ -1322,13 +1258,8 @@
     grid-template-columns: 1fr;
   }
 
-  .iss-landing-section--treatment-text-bild-reihe-compact .iss-landing-text-image-row__items,
-.iss-landing-section--treatment-text-bild-reihe-chronology .iss-landing-text-image-row__items {
+  .iss-landing-section--treatment-text-bild-reihe-compact .iss-landing-text-image-row__items {
     grid-template-columns: 1fr;
-  }
-
-  .iss-landing-section--treatment-text-bild-reihe-chronology .iss-landing-text-image-row__item {
-    min-height: 18rem;
   }
 
   .iss-landing-section:where(:not(.iss-landing-section--opening)) {

@@ -47,6 +47,7 @@
     if (!window.L || root.dataset.mapReady === 'true') return;
 
     var config = readConfig(root);
+    var preview = Boolean(config && config.preview);
     var width = Math.max(1, Number(config && config.imageWidth));
     var height = Math.max(1, Number(config && config.imageHeight));
     var markers = config && Array.isArray(config.markers) ? config.markers : [];
@@ -61,20 +62,20 @@
       attributionControl: false,
       boxZoom: false,
       crs: window.L.CRS.Simple,
-      doubleClickZoom: true,
-      dragging: true,
+      doubleClickZoom: !preview,
+      dragging: !preview,
       fadeAnimation: false,
-      keyboard: true,
+      keyboard: !preview,
       maxZoom: 2,
       maxBoundsViscosity: 1,
       markerZoomAnimation: false,
       minZoom: -5,
-      scrollWheelZoom: true,
+      scrollWheelZoom: !preview,
       tap: false,
-      touchZoom: true,
+      touchZoom: !preview,
       wheelPxPerZoomLevel: 240,
       zoomAnimation: false,
-      zoomControl: true,
+      zoomControl: !preview,
       zoomSnap: 0,
     });
 
@@ -104,20 +105,24 @@
         markerAttributes += ' data-iss-map-marker="' + escapeHtml(marker.index) + '"';
         markerAttributes += ' data-iss-map-index="' + escapeHtml(marker.index) + '"';
       }
+      var markerTag = preview ? 'span' : 'a';
+      if (!preview) {
+        markerAttributes += ' href="' + escapeHtml(marker.url) + '" aria-label="' + escapeHtml(marker.label) + '"';
+      }
+      var markerLabel = preview ? '' : '<span class="iss-related-place-map__marker-label">' + escapeHtml(number) + '</span>';
       var icon = window.L.divIcon({
         className: 'iss-static-map-leaflet__marker',
         html:
-          '<a class="' + markerClasses + '" href="' + escapeHtml(marker.url) +
-          '" aria-label="' + escapeHtml(marker.label) + '"' + markerAttributes + '>' +
+          '<' + markerTag + ' class="' + markerClasses + '"' + markerAttributes + '>' +
           '<span class="iss-related-place-map__marker-dot" aria-hidden="true"></span>' +
-          '<span class="iss-related-place-map__marker-label">' + escapeHtml(number) + '</span></a>',
-        iconAnchor: [16, 16],
-        iconSize: [32, 32],
+          markerLabel + '</' + markerTag + '>',
+        iconAnchor: preview ? [5, 5] : [16, 16],
+        iconSize: preview ? [10, 10] : [32, 32],
       });
 
       window.L.marker(point, {
         icon: icon,
-        interactive: true,
+        interactive: !preview,
         keyboard: false,
         riseOnHover: true,
       }).addTo(map);
@@ -147,8 +152,8 @@
       map.invalidateSize({ animate: false, pan: false });
       map.fitBounds(markerBounds.pad(0.12), {
         animate: false,
-        maxZoom: 0,
-        padding: [32, 32],
+        maxZoom: preview ? -2 : 0,
+        padding: preview ? [8, 8] : [32, 32],
       });
       map.setMinZoom(map.getZoom());
       map.setMaxBounds(map.getBounds());
@@ -157,7 +162,7 @@
     fit();
 
     root.dataset.mapReady = 'true';
-    root.setAttribute('aria-hidden', 'false');
+    root.setAttribute('aria-hidden', preview ? 'true' : 'false');
     if (fallback) fallback.hidden = true;
     if (stage) stage.classList.add('is-leaflet-enhanced');
 
@@ -168,7 +173,21 @@
   }
 
   function initializeAll() {
-    document.querySelectorAll('[data-iss-static-map-leaflet]').forEach(initialize);
+    var observer = window.IntersectionObserver ? new window.IntersectionObserver(function (entries) {
+      entries.forEach(function (entry) {
+        if (!entry.isIntersecting) return;
+        initialize(entry.target);
+        observer.unobserve(entry.target);
+      });
+    }) : null;
+
+    document.querySelectorAll('[data-iss-static-map-leaflet]').forEach(function (root) {
+      if (observer && root.closest('.iss-static-map-preview')) {
+        observer.observe(root);
+      } else {
+        initialize(root);
+      }
+    });
   }
 
   if (document.readyState === 'loading') {

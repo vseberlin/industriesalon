@@ -1,0 +1,176 @@
+{
+  "expected_document_hash": "9d81b9c4ab4f36dc527ce737659f4b9b17c864e0f8f16a2b18a933e1df7824be",
+  "media_dependencies": [
+    18851,
+    24683,
+    25235,
+    25261
+  ],
+  "historical_sources": [
+    "https://www.industriesalon.de/ortsgeschichte/",
+    "https://industriekultur.berlin/erforschen/industriegeschichten/schoeneweide/"
+  ],
+  "document": {
+    "schema_version": 1,
+    "skin": "territorial",
+    "variant": "standard",
+    "features": [],
+    "sections": [
+      {
+        "type": "gateway",
+        "kicker": "",
+        "title": "Orte entdecken",
+        "body": "<p>Werkhallen, Backsteinfassaden und Wege am Wasser erzählen von Schöneweides Elektroindustrie. Beginnen Sie an einem dieser drei Orte: mit Architektur, einer Ausstellung oder den Spuren der Kabelproduktion.</p>",
+        "anchor": "schluesselorte",
+        "treatment": "gateway.atlas-plates",
+        "links": [
+          {
+            "label": "Alle Orte entdecken",
+            "url": "#atlas-buehne"
+          }
+        ],
+        "items": [
+          {
+            "label": "Behrensbau",
+            "text": "Der markante Bau von Peter Behrens verbindet Industriearchitektur mit der Geschichte der AEG.",
+            "url": "/schoeneweide/orte/ostendstrasse-1-5-behrensbau/",
+            "media_refs": [
+              {
+                "kind": "media",
+                "source": "wp-media",
+                "id": "24683",
+                "label": "",
+                "thumbnail": ""
+              }
+            ]
+          },
+          {
+            "label": "Industriesalon",
+            "text": "Maschinen, Geräte und Erinnerungen an das Werk für Fernsehelektronik: ein Einstieg in die Technik- und Arbeitsgeschichte des Viertels.",
+            "url": "/schoeneweide/orte/industriesalon-schoneweide-reinbeckstrasse/",
+            "media_refs": [
+              {
+                "kind": "media",
+                "source": "wp-media",
+                "id": "25235",
+                "label": "",
+                "thumbnail": ""
+              }
+            ]
+          },
+          {
+            "label": "Kabelwerk Oberspree",
+            "text": "Entlang der Wilhelminenhofstraße zeigt das ehemalige Kabelwerk, wie eng Fabriken, Energieversorgung und Stadtentwicklung zusammenhingen.",
+            "url": "/schoeneweide/orte/wilhelminenhofstrasse-rathenaustrasse-kwo/",
+            "media_refs": [
+              {
+                "kind": "media",
+                "source": "wp-media",
+                "id": "25261",
+                "label": "",
+                "thumbnail": ""
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "type": "text_bild_reihe",
+        "kicker": "",
+        "title": "Schöneweide im Wandel",
+        "body": "<p>Die Fabriken prägten Arbeit und Alltag über Generationen. Sechs Zeitabschnitte führen von der Industrialisierung bis zu den heutigen Nutzungen.</p>",
+        "anchor": "zeitschichten",
+        "treatment": "text-bild-reihe.chronology",
+        "links": [
+          {
+            "label": "Ortsgeschichte lesen",
+            "url": "/publikationen/schoeneweide-eine-ortsgeschichte/"
+          },
+          {
+            "label": "NS-Zwangsarbeit: Hintergründe",
+            "url": "https://www.ns-zwangsarbeit.de/"
+          }
+        ],
+        "items": [
+          {
+            "label": "1880–1918",
+            "text": "Industrialisierung. Kraftwerk, Kabelproduktion und große Werkhallen machen das Spreeufer zu einem Zentrum der Elektroindustrie.",
+            "media_refs": []
+          },
+          {
+            "label": "1918–1933",
+            "text": "Weimarer Republik. Die Elektroindustrie bleibt prägend; Arbeitskämpfe und wirtschaftliche Krisen bestimmen den Alltag mit.",
+            "media_refs": []
+          },
+          {
+            "label": "1933–1945",
+            "text": "Nationalsozialismus und Krieg. Die Werke produzieren für die Kriegswirtschaft. Verschleppte Menschen und KZ-Häftlinge müssen Zwangsarbeit leisten.",
+            "media_refs": []
+          },
+          {
+            "label": "1945–1989",
+            "text": "Nachkrieg und DDR. Nach Zerstörung und Wiederaufbau prägen KWO, TRO und WF als volkseigene Betriebe den Standort.",
+            "media_refs": []
+          },
+          {
+            "label": "1990–2005",
+            "text": "Umbruch. Stellenabbau und Werksschließungen verändern das Viertel. Erste neue Nutzungen ziehen in die Fabriken ein.",
+            "media_refs": []
+          },
+          {
+            "label": "Seit 2005",
+            "text": "Schöneweide heute. Hochschule, Ateliers und Kulturorte nutzen frühere Werkgebäude. Das Spreeufer wird zum Raum für Erholung und Begegnung.",
+            "media_refs": []
+          }
+        ]
+      },
+      {
+        "type": "gateway",
+        "kicker": "",
+        "title": "Schöneweide erkunden",
+        "body": "",
+        "anchor": "zugaenge",
+        "treatment": "gateway.link-list",
+        "items": [
+          {
+            "label": "Führungen",
+            "text": "Gemeinsam durch das Viertel und seine Industriegeschichte.",
+            "url": "/fuehrungen/",
+            "page_id": "13301",
+            "media_refs": []
+          },
+          {
+            "label": "Sammlungen",
+            "text": "Maschinen, Geräte und Zeugnisse der Arbeit entdecken.",
+            "url": "/sammlungen/",
+            "page_id": "19873",
+            "media_refs": []
+          },
+          {
+            "label": "Archiv",
+            "text": "Fotos, Dokumente und Quellen für die eigene Recherche.",
+            "url": "/archiv/",
+            "page_id": "12594",
+            "media_refs": []
+          },
+          {
+            "label": "Ortsgeschichte",
+            "text": "Die Geschichte Schöneweides ausführlicher kennenlernen.",
+            "url": "/publikationen/schoeneweide-eine-ortsgeschichte/",
+            "media_refs": []
+          }
+        ]
+      },
+      {
+        "type": "dynamic_slot",
+        "kicker": "",
+        "title": "Schöneweide auf der Karte",
+        "body": "<p>Finden Sie weitere Orte und ihre Geschichten. Im Atlas können Sie nach Namen suchen und nach Zeit oder heutiger Nutzung filtern.</p>",
+        "anchor": "atlas-buehne",
+        "slot_key": "schoneweide-atlas",
+        "treatment": "slot.schoneweide-atlas"
+      }
+    ],
+    "deleted_sections": []
+  }
+}

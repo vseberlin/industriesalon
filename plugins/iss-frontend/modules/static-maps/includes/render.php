@@ -383,6 +383,7 @@ function iss_frontend_static_maps_render_atlas_slice_stage_from_model(array $mod
     }
 
     $markers = '';
+    $preview = !empty($options['preview']);
     $interactive_markers = !empty($options['interactive_markers']);
     $map_id = sanitize_html_class((string) ($options['map_id'] ?? ''));
 
@@ -412,20 +413,25 @@ function iss_frontend_static_maps_render_atlas_slice_stage_from_model(array $mod
             $marker_attrs .= ' data-iss-map-index="' . esc_attr((string) $index) . '"';
         }
 
+        $marker_tag = $preview ? 'span' : 'a';
+        $marker_link_attrs = $preview ? '' : ' href="' . esc_url((string) ($place['permalink'] ?? '')) . '" aria-label="' . esc_attr((string) ($station['marker_label'] ?? '')) . '"' . $marker_attrs;
+        $marker_label_html = $preview ? '' : '<span class="iss-related-place-map__marker-label">' . esc_html((string) ($index + 1)) . '</span>';
         $markers .= sprintf(
-            '<a class="%1$s" href="%2$s" style="--x:%3$s%%;--y:%4$s%%" aria-label="%5$s"%6$s><span class="iss-related-place-map__marker-dot" aria-hidden="true"></span><span class="iss-related-place-map__marker-label">%7$s</span></a>',
+            '<%1$s class="%2$s" style="--x:%3$s%%;--y:%4$s%%"%5$s><span class="iss-related-place-map__marker-dot" aria-hidden="true"></span>%6$s</%1$s>',
+            $marker_tag,
             esc_attr(implode(' ', $marker_classes)),
-            esc_url((string) ($place['permalink'] ?? '')),
             esc_attr(number_format((float) ($station['x'] ?? 0.0), 3, '.', '')),
             esc_attr(number_format((float) ($station['y'] ?? 0.0), 3, '.', '')),
-            esc_attr((string) ($station['marker_label'] ?? '')),
-            $marker_attrs,
-            esc_html((string) ($index + 1))
+            $marker_link_attrs,
+            $marker_label_html
         );
     }
 
     $stage_classes = (array) ($model['stage_classes'] ?? []);
     $stage_classes[] = 'has-leaflet-image-viewport';
+    if ($preview) {
+        $stage_classes[] = 'iss-static-map-preview';
+    }
     $viewport_markers = [];
 
     foreach ((array) ($model['stations'] ?? []) as $station) {
@@ -459,6 +465,9 @@ function iss_frontend_static_maps_render_atlas_slice_stage_from_model(array $mod
         'mapId' => sanitize_html_class((string) ($options['map_id'] ?? '')),
         'markers' => $viewport_markers,
     ];
+    if ($preview) {
+        $viewport_config['preview'] = true;
+    }
     $leaflet_markup = '<div class="iss-static-map-leaflet" data-iss-static-map-leaflet data-map-config="' . esc_attr((string) wp_json_encode($viewport_config)) . '" aria-hidden="true"></div>';
     $source_set = [];
     foreach ((array) ($model['image_sources'] ?? []) as $source) {
@@ -473,7 +482,7 @@ function iss_frontend_static_maps_render_atlas_slice_stage_from_model(array $mod
         : '';
     $fallback = '<div class="iss-static-map-fallback"><div class="iss-atlas-slice__viewport"><img class="iss-atlas-slice__image" src="' . esc_url((string) ($model['image_url'] ?? '')) . '"' . $responsive_attrs . ' alt="' . esc_attr((string) ($model['image_alt'] ?? '')) . '" loading="lazy" decoding="async">' . (string) ($model['route_line'] ?? '') . '<div class="iss-atlas-slice__markers">' . $markers . '</div></div></div>';
 
-    return '<div class="' . esc_attr(implode(' ', $stage_classes)) . '"' . (string) ($model['stage_attr'] ?? '') . '>' . $fallback . $leaflet_markup . '</div>';
+    return '<div class="' . esc_attr(implode(' ', $stage_classes)) . '"' . (string) ($model['stage_attr'] ?? '') . ($preview ? ' aria-hidden="true"' : '') . '>' . $fallback . $leaflet_markup . '</div>';
 }
 
 function iss_frontend_static_maps_get_atlas_slice_model_places(array $model): array

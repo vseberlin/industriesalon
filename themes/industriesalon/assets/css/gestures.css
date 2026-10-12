@@ -215,7 +215,6 @@
 }
 
 .iss-gesture-atlas-map__stage {
-  width: 100%;
   height: auto;
   min-height: var(--iss-gesture-atlas-map-stage-min-height);
 }
@@ -250,6 +249,20 @@
 
 .iss-static-map-leaflet__route {
   filter: drop-shadow(0 0.35rem 0.55rem var(--iss-gesture-atlas-map-line-shadow));
+}
+
+.iss-static-map-preview {
+  --iss-atlas-slice-height: 3rem;
+  --iss-atlas-slice-min-height: 0;
+  --iss-atlas-slice-border: 0;
+  --iss-atlas-slice-radius: 0;
+  --iss-related-place-map-marker-size: 0.625rem;
+  --iss-related-place-map-marker-pointer-events: none;
+  --iss-gesture-atlas-map-marker-border: var(--iss-white);
+  --iss-gesture-atlas-map-marker-background: var(--iss-accent);
+  --iss-gesture-atlas-map-marker-shadow: none;
+
+  pointer-events: none;
 }
 
 .iss-gesture-atlas-map--treatment-band {
@@ -309,15 +322,6 @@
 
 .iss-gesture-atlas-map .iss-atlas-slice__markers {
   z-index: 2;
-}
-
-.iss-gesture-atlas-map .iss-related-place-map__marker-dot {
-  border-color: var(--iss-gesture-atlas-map-marker-border, rgba(30, 30, 30, 0.2));
-  background: var(--iss-gesture-atlas-map-marker-background, rgba(22, 18, 15, 0.9));
-  box-shadow: var(
-    --iss-gesture-atlas-map-marker-shadow,
-    0 0 0 0.45rem rgba(183, 75, 38, 0.14), 0 8px 22px rgba(22, 18, 15, 0.16)
-  );
 }
 
 .iss-gesture-atlas-map--skin-route {

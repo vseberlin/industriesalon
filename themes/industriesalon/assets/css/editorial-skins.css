@@ -181,28 +181,12 @@
   border-top: 1px solid var(--iss-landing-rule);
 }
 
-.iss-landing-editorial--skin-territorial .iss-landing-section--treatment-text-bild-reihe-chronology .iss-landing-section__inner {
-  grid-template-columns: minmax(0, 1fr) minmax(21rem, 27rem);
-  gap: clamp(2rem, 4vw, 4.25rem);
-  align-items: end;
-}
-
 .iss-landing-editorial--skin-territorial :is(
   .iss-landing-section--treatment-text-bild-reihe-chronology,
   .iss-landing-section--treatment-gateway-atlas-plates
 ) .iss-landing-section__title {
   font-family: "IBM Plex Sans Condensed", "Arial Narrow", var(--wp--preset--font-family--plex, sans-serif);
   font-weight: 700;
-}
-
-.iss-landing-editorial--skin-territorial .iss-landing-section--treatment-text-bild-reihe-chronology .iss-landing-section__copy {
-  grid-column: 2;
-  grid-row: 1;
-}
-
-.iss-landing-editorial--skin-territorial .iss-landing-section--treatment-text-bild-reihe-chronology .iss-landing-text-image-row__items {
-  grid-column: 1;
-  grid-row: 1;
 }
 
 .iss-landing-editorial--skin-territorial .iss-landing-section--treatment-atlas-map-editorial-split {
@@ -572,16 +556,13 @@
 }
 
 @media (max-width: 900px) {
-  .iss-landing-editorial--skin-territorial .iss-landing-story-split,
-.iss-landing-editorial--skin-territorial .iss-landing-section--treatment-text-bild-reihe-chronology .iss-landing-section__inner {
+  .iss-landing-editorial--skin-territorial .iss-landing-story-split {
     grid-template-columns: 1fr;
   }
 
   .iss-landing-editorial--skin-territorial :is(
     .iss-landing-story-split__heading,
-    .iss-landing-story-split__content,
-    .iss-landing-section--treatment-text-bild-reihe-chronology .iss-landing-section__copy,
-    .iss-landing-section--treatment-text-bild-reihe-chronology .iss-landing-text-image-row__items
+    .iss-landing-story-split__content
   ) {
     grid-column: auto;
     grid-row: auto;
@@ -598,8 +579,7 @@
   }
 
   .iss-landing-editorial--skin-dossier .iss-landing-story-split,
-.iss-landing-editorial--skin-territorial .iss-landing-story-split,
-.iss-landing-editorial--skin-territorial .iss-landing-section--treatment-text-bild-reihe-chronology .iss-landing-section__inner {
+.iss-landing-editorial--skin-territorial .iss-landing-story-split {
     grid-template-columns: 1fr;
   }
 
@@ -622,9 +602,7 @@
 .iss-landing-editorial--skin-territorial .iss-landing-story-split__heading,
 .iss-landing-editorial--skin-territorial .iss-landing-story-split__content,
 .iss-landing-editorial--skin-territorial .iss-landing-section--treatment-text-story-split .iss-landing-story-split__heading,
-.iss-landing-editorial--skin-territorial .iss-landing-section--treatment-text-story-split .iss-landing-story-split__content,
-.iss-landing-editorial--skin-territorial .iss-landing-section--treatment-text-bild-reihe-chronology .iss-landing-section__copy,
-.iss-landing-editorial--skin-territorial .iss-landing-section--treatment-text-bild-reihe-chronology .iss-landing-text-image-row__items {
+.iss-landing-editorial--skin-territorial .iss-landing-section--treatment-text-story-split .iss-landing-story-split__content {
     grid-column: auto;
     grid-row: auto;
   }

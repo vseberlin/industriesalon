@@ -47,6 +47,15 @@ The single map preset selects the canonical responsive image set and generated
 marker artifact. It does not contain runtime crop, rotation, bias, scale, or
 framing controls.
 
+Linked-card previews use the shared stage renderer's `preview` option. They
+render decorative marker spans inside the card link and initialize the same
+image viewport only when visible, with map interactions and controls disabled.
+The compact mode fits the selected place with surrounding context; its geometry
+and marker treatment live in the theme's shared map CSS. `gateway.atlas-plates`
+resolves each card destination through WordPress and the existing manual Place
+selection contract. A destination without a mapped published Place gets no map
+preview. The editor document, map preset, and generated projection stay unchanged.
+
 Do not make `iss-frontend` query related places directly, and do not make
 `industriesalon-schoeneweide-register` render static editorial strips.
 

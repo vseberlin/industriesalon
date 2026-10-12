@@ -7728,10 +7728,10 @@ iss-info-panel--brown
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  width: 2rem;
-  height: 2rem;
+  width: var(--iss-related-place-map-marker-size, 2rem);
+  height: var(--iss-related-place-map-marker-size, 2rem);
   transform: translate(-50%, -50%);
-  pointer-events: auto;
+  pointer-events: var(--iss-related-place-map-marker-pointer-events, auto);
   text-decoration: none;
 }
 
@@ -7739,11 +7739,12 @@ iss-info-panel--brown
   position: absolute;
   inset: 0;
   border-radius: 999px;
-  border: 1px solid rgba(30, 30, 30, 0.2);
-  background: rgba(22, 18, 15, 0.9);
-  box-shadow:
-    0 0 0 0.45rem rgba(183, 75, 38, 0.14),
-    0 8px 22px rgba(22, 18, 15, 0.16);
+  border: 1px solid var(--iss-gesture-atlas-map-marker-border, rgba(30, 30, 30, 0.2));
+  background: var(--iss-gesture-atlas-map-marker-background, rgba(22, 18, 15, 0.9));
+  box-shadow: var(
+    --iss-gesture-atlas-map-marker-shadow,
+    0 0 0 0.45rem rgba(183, 75, 38, 0.14), 0 8px 22px rgba(22, 18, 15, 0.16)
+  );
 }
 
 .iss-related-place-map__marker-label {

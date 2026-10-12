@@ -13,6 +13,9 @@ Immediate executable work only. Larger future programs live in `docs/project/bac
   and programme month view, macOS Safari, full
   uploads/intake restoration and the paired FPM/Nginx limits before acceptance.
   No deployment, host configuration or staging migration has been done.
+  Include the Schöneweide theme/contract changes and guarded
+  `ops/migrations/2026-10-12-schoneweide-landing.php` plus its JSON payload;
+  preserve target-local editorial changes and verify existing image dependencies.
 - Staff-test the deployed [shared workspace](docs/project/editor-workspace-plan.md)
   on staging: one landing, project, tour, publication and event; image/title/text,
   owner controls, recovery and native Save Draft. Verify Firefox and real

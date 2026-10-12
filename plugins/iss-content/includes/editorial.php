@@ -225,7 +225,7 @@ function iss_content_model_register_editorial_formats(array $formats): array
             'gateway' => [
                 'label' => __('Einstiegs-Boxen', 'iss-content-model'),
                 'description' => __('Kurze Vorschau-Karten zu anderen Seiten (z. B. als Kacheln oder Linkliste).', 'iss-content-model'),
-                'supports' => ['treatment', 'items'],
+                'supports' => ['treatment', 'items', 'links'],
                 'treatments' => [
                     'gateway.cards' => __('Karten', 'iss-content-model'),
                     'gateway.link-list' => __('Linkliste', 'iss-content-model'),
@@ -237,7 +237,7 @@ function iss_content_model_register_editorial_formats(array $formats): array
             'text_bild_reihe' => [
                 'label' => __('Text-Bild-Reihe', 'iss-content-model'),
                 'description' => __('Eine Reihe nicht verlinkter Bild-Text-Paare, etwa für Perspektiven, Räume oder Auszeichnungen.', 'iss-content-model'),
-                'supports' => ['treatment', 'items'],
+                'supports' => ['treatment', 'items', 'links'],
                 'treatments' => [
                     'text-bild-reihe.visual' => __('Großformatige Bildreihe', 'iss-content-model'),
                     'text-bild-reihe.compact' => __('Kompakte Bildreihe', 'iss-content-model'),

@@ -98,6 +98,9 @@ function industriesalon_editorial_landing_section_classes(array $section, string
         'iss-landing-section--gesture-' . sanitize_html_class($type),
         'iss-landing-section--skin-' . sanitize_html_class($skin),
     ];
+    if (sanitize_title((string) ($section['anchor'] ?? '')) !== '') {
+        $classes[] = 'iss-scroll-target';
+    }
 
     if (!empty($section['_opening'])) {
         $classes[] = 'iss-landing-section--opening';
@@ -268,7 +271,7 @@ function industriesalon_render_editorial_landing_item_media(array $item): string
     return trim((string) ob_get_clean());
 }
 
-function industriesalon_render_editorial_landing_gateway_item(array $item, bool $rich_text = false): string
+function industriesalon_render_editorial_landing_gateway_item(array $item, bool $rich_text = false, string $map = ''): string
 {
     $label = trim((string) ($item['label'] ?? ''));
     $text = trim((string) ($item['text'] ?? ''));
@@ -289,6 +292,7 @@ function industriesalon_render_editorial_landing_gateway_item(array $item, bool 
                     <span class="iss-landing-gateway__item-text"><?php echo $rich_text ? iss_editorial_sanitize_rich_text($text, 'inline-card') : esc_html($text); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- Versioned inline allowlist. ?></span>
                 <?php endif; ?>
             </span>
+            <?php echo $map; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- Shared map renderer escapes the resolved place and map assets. ?>
         </a>
     </article>
     <?php
@@ -298,13 +302,45 @@ function industriesalon_render_editorial_landing_gateway_item(array $item, bool 
 function industriesalon_render_editorial_landing_gateway(array $section, int $rendered_index, string $skin): string
 {
     $items = is_array($section['items'] ?? null) ? $section['items'] : [];
+    $links_html = industriesalon_render_editorial_landing_links(is_array($section['links'] ?? null) ? $section['links'] : []);
+    $section['links'] = [];
     $copy_html = industriesalon_render_editorial_landing_copy($section);
     $items_html = '';
     $item_count = 0;
+    $map_preview = industriesalon_editorial_landing_treatment_slug($section) === 'gateway.atlas-plates';
+    $map_html = '';
+    $place_ids = [];
+    $places = [];
+    $map_config = [];
+    if ($map_preview && function_exists('iss_relations_collect_map_places') && function_exists('iss_frontend_static_maps_render_atlas_slice_stage_from_model')) {
+        foreach ($items as $index => $item) {
+            if (!is_array($item) || trim((string) ($item['label'] ?? '')) === '') {
+                continue;
+            }
+            $url = industriesalon_editorial_landing_link_url($item);
+            $place_ids[$index] = url_to_postid(str_starts_with($url, '/') ? home_url($url) : $url);
+        }
+        $places = iss_relations_collect_map_places(['source' => 'manual', 'placeIds' => array_values($place_ids), 'perPage' => 12]);
+        $map_config = iss_relations_get_place_map_config();
+        $model = iss_frontend_static_maps_get_atlas_slice_model($places, $map_config);
+        if (!empty($model['stations'])) {
+            iss_frontend_static_maps_enqueue_image_viewport_assets();
+            $map_html = iss_frontend_static_maps_render_atlas_slice_stage_from_model($model);
+        }
+        $places = array_column($places, null, 'place_id');
+    }
 
-    foreach ($items as $item) {
+    foreach ($items as $index => $item) {
         if (is_array($item)) {
-            $item_html = industriesalon_render_editorial_landing_gateway_item($item, ($section['_text_version'] ?? 1) >= 2);
+            $preview_html = '';
+            $place = $places[$place_ids[$index] ?? 0] ?? null;
+            if ($place) {
+                $model = iss_frontend_static_maps_get_atlas_slice_model([$place], $map_config);
+                if (!empty($model['stations'])) {
+                    $preview_html = iss_frontend_static_maps_render_atlas_slice_stage_from_model($model, ['preview' => true]);
+                }
+            }
+            $item_html = industriesalon_render_editorial_landing_gateway_item($item, ($section['_text_version'] ?? 1) >= 2, $preview_html);
             if ($item_html !== '') {
                 $items_html .= $item_html;
                 ++$item_count;
@@ -312,7 +348,7 @@ function industriesalon_render_editorial_landing_gateway(array $section, int $re
         }
     }
 
-    if ($copy_html === '' && $items_html === '') {
+    if ($copy_html === '' && $items_html === '' && $links_html === '') {
         return '';
     }
 
@@ -321,11 +357,15 @@ function industriesalon_render_editorial_landing_gateway(array $section, int $re
     <section <?php echo industriesalon_editorial_landing_section_attrs($section, $skin, $item_count); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- Attributes are escaped in helper. ?>>
         <div class="iss-container iss-landing-section__inner">
             <?php echo $copy_html; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- Copy output is escaped in helper. ?>
+            <?php if ($map_html !== '') : ?>
+                <div class="iss-landing-gateway__map"><?php echo $map_html; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- Shared map renderer escapes its output. ?></div>
+            <?php endif; ?>
             <?php if ($items_html !== '') : ?>
                 <div class="iss-landing-gateway" data-item-count="<?php echo esc_attr((string) $item_count); ?>">
                     <?php echo $items_html; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- Items are escaped in industriesalon_render_editorial_landing_gateway_item(). ?>
                 </div>
             <?php endif; ?>
+            <?php echo $links_html; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- Links are escaped by the shared renderer. ?>
         </div>
     </section>
     <?php
