@@ -1,28 +1,31 @@
 # Current handoff — 13 October 2026
 
-## Editorial workspace and gesture review
+## Editorial workspace and publication review
 
-The accepted two-column workspace and expanded narrative CPT coverage are
-committed locally as `65c55b8`, not pushed or deployed. The accepted portability slice
-is ready for its local commit: four composition gestures now
-share their fields, treatments and renderer across seven formats. Places remain
-separate; publication longread/timeline/album adapters are the next bounded pass.
-The complete 28-gesture inventory and remaining field differences are in the
-[editorial audit](docs/project/editorial-consolidation-audit.md#gesture-portability-checkpoint--13-october-2026).
+The workspace/CPT expansion (`65c55b8`) and shared-gesture portability (`9eab967`)
+are committed locally, not pushed or deployed. The publication adapter slice
+is accepted for this local checkpoint. Four composition gestures now work in
+eight formats, including standard publications, longreads, timelines and albums.
+Native chapter navigation/counts and album sources stay with their owners;
+composed timelines retain section order with unique epoch anchors. Publication
+payload caches distinguish exact preview snapshots and disabled JSON. Empty
+legacy albums preserve fallback content. Places remain separate.
 
-Checks: 35 UI tests, 4,414 registry/renderer assertions, targeted PHP/JS/CSS checks,
-and Chrome tour/event/exhibition preview checks, including 390 px phone layout,
-Chronik palette, chooser, treatment save and full event content column. Storage
-checks pass 295 assertions, including all 94 existing documents and unchanged
-post content/metadata; disposable review records and
-their autosaves are removed. Staff UAT and Firefox remain separate release checks.
+Checks: 5,278 registry/renderer assertions, 295 storage checks covering all 94
+existing documents with unchanged post content/metadata, 35 UI tests, targeted
+PHP/PHPCS/PHPStan and CSS checks. Chrome review covered all four layouts at desktop
+and 390 px, palette inheritance, compact chooser, edit/Fertig, autosave recovery
+and preview rendering. Album viewport overflow and the phone title grid are fixed
+in the existing stylesheet. Disposable records and autosaves are removed. Staff
+UAT and Firefox remain separate release checks.
 
-No SQL, uploads or template artifact is needed for portability: existing content,
-media and template authority are preserved. The preceding CPT commit adds a
-file-backed archive collection composition slot; verify target template overrides
-before a later release. The media/text pattern retains native Columns compatibility
-because WordPress assigns its own flex basis; JSON now has an explicit flex layout
-and an overlay image height at both desktop and phone widths.
+Next: reconcile gallery/text/quote fields and native
+publication layout compatibility. Intro/source placement and layout-specific
+native section meanings retain their existing contracts. See the
+[gesture inventory](docs/project/editorial-consolidation-audit.md#gesture-portability-checkpoint--13-october-2026).
+No SQL, uploads or template artifact is required: no stored content or template
+changed; the local publication template is file-backed. The earlier CPT commit's
+archive collection composition slot still needs target override review at release.
 
 ## Scope and delivery state
 

@@ -32,14 +32,22 @@ This is the implementation checkpoint for the SOW in
 
 The vocabulary defines `statement`, `gateway`, `text_bild_reihe` and `feature`
 once, including supported fields and treatments. Landing, article, event,
-exhibition, project, report and tour formats use those contracts. The theme
+exhibition, project, report, tour and publication formats use those contracts. The theme
 registers their section renderer and delegates to the existing landing composition
 functions; native domain sections retain their renderers. Preview and public
 output use the same document and renderer. Event context rules permit these
 portable gestures while retaining restrictions on domain-specific sections.
 
-Places remain separate. Publication longread/timeline/album adapters require a
-further pass before exposing portable composition. Existing gallery/text/quote
+Publication payload adapters retain shared gestures in the reading flow. Standard
+and longread layouts use the existing chapter renderer; chapter navigation and
+counts only include chapters. Composed timelines keep consecutive epoch groups
+in document order, with unique anchors and one navigation link per epoch. Albums
+remain one owner-managed sheet sequence with shared gestures before or after it.
+Intro/source placement and native layout-specific section meanings retain their
+existing contracts. Publication payload caches distinguish saved content, disabled
+JSON and authenticated preview snapshots. No stored document is rewritten.
+
+Places remain separate. Existing gallery/text/quote
 variants are not automatically unified. The complete 28-gesture inventory and
 remaining contract differences are in the
 [consolidation audit](../project/editorial-consolidation-audit.md#gesture-portability-checkpoint--13-october-2026).

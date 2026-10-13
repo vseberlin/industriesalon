@@ -81,6 +81,18 @@ function iss_publications_get_editorial_publication_read_model(int $post_id): ar
     return is_array($document) ? $document : [];
 }
 
+/** Payload caches must distinguish canonical content, disabled JSON and exact preview snapshots. */
+function iss_publications_get_editorial_publication_cache_key(int $post_id): string
+{
+    $context = function_exists('iss_editorial_embedded_preview') ? iss_editorial_embedded_preview() : [];
+    if ($context && $context['postId'] === $post_id && $context['format'] === 'publication') {
+        return 'snapshot:' . $context['token'];
+    }
+    $stored = function_exists('iss_editorial_get_document_meta_key')
+        ? get_post_meta($post_id, iss_editorial_get_document_meta_key('publication'), true) : '';
+    return (iss_publications_editorial_document_is_enabled($post_id) ? 'enabled:' : 'disabled:') . md5(is_string($stored) ? $stored : '');
+}
+
 function iss_publications_get_editorial_publication_section(int $post_id, string $type): array
 {
     $type = sanitize_key($type);

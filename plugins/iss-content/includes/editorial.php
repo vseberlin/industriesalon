@@ -551,8 +551,8 @@ add_filter('iss_editorial_formats', static function (array $formats): array {
     foreach ($formats as $slug => &$format) {
         if (!isset($starters[$slug]) && $slug !== 'publication') { continue; }
         // These formats have an ordered composition adapter in the theme.
-        // Places and publication layouts require their own adapter review.
-        if (!in_array($slug, ['place', 'publication'], true)) { $format['sections'] += $portable; }
+        // Places retain their separate dossier contract.
+        if ($slug !== 'place') { $format['sections'] += $portable; }
         $format['starters'] = $format['starters'] ?? ($starters[$slug] ?? []);
         $format['editor'] = array_merge(['workspace' => true], (array) ($format['editor'] ?? []));
         $format['supported_versions'] = $format['supported_versions'] ?? [1, 2, 3];

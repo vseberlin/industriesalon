@@ -1,6 +1,20 @@
 /* Theme-owned editorial skins. Scoped legacy front-page selectors share declarations while block fallback content remains supported. */
 
 /* Portable composition inherits the existing domain skin's palette. */
+.iss-landing-editorial--skin-bildmatrix {
+  --iss-landing-surface: var(--iss-blueprint-bg, var(--iss-black));
+  --iss-landing-ink: var(--iss-blueprint-ink, var(--iss-white));
+  --iss-landing-muted: var(--iss-blueprint-muted, var(--iss-grey));
+  --iss-landing-rule: var(--iss-blueprint-line, var(--iss-border));
+}
+
+.iss-landing-editorial--skin-longread-poster {
+  --iss-landing-surface: var(--iss-longread-poster-paper, var(--wp--preset--color--vaporous-white));
+  --iss-landing-ink: var(--iss-longread-poster-ink, var(--iss-black));
+  --iss-landing-muted: var(--iss-longread-poster-soft, var(--iss-black));
+  --iss-landing-rule: var(--iss-longread-poster-line, var(--iss-border));
+}
+
 .iss-landing-editorial--skin-chronik {
   --iss-landing-surface: var(--iss-ausstellung-chronik-paper);
   --iss-landing-ink: var(--iss-ausstellung-chronik-ink);

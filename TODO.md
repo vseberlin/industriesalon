@@ -4,12 +4,11 @@ Immediate executable work only. Larger future programs live in `docs/project/bac
 
 ## Next
 
-- Extend the accepted portable-gesture slice to publications:
+- Continue from the accepted publication adapters and portability commit `9eab967`:
   shared statement, link cards, image/text rows and features now work across
-  seven formats. The next bounded implementation is publication
-  longread/timeline/album adapters, preserving order and source/navigation data
-  before exposing those gestures. Reconcile gallery/text/quote field differences
-  afterward; keep Places separate. See the full
+  eight formats, including all four publication layouts. Next reconcile
+  gallery/text/quote field differences and publication native-section/layout
+  compatibility before widening those contracts; keep Places separate. See the full
   [gesture inventory](docs/project/editorial-consolidation-audit.md#gesture-portability-checkpoint--13-october-2026).
 - Coordinate an authorized staging release of the completed
   [WordPress refactor](docs/project/wordpress-refactoring-plan.md) and accepted

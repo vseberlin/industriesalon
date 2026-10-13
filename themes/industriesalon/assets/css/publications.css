@@ -1221,13 +1221,6 @@ body.iss-publication-layout-photoalbum .iss-publication-reading-main a:not(.iss-
   text-transform: none;
 }
 
-body.iss-publication-editorial-skin-bildmatrix.iss-publication-layout-photoalbum .iss-publication-single__body-wrap {
-  width: 100vw;
-  margin-left: calc(50% - 50vw);
-  margin-right: calc(50% - 50vw);
-  padding-inline: var(--iss-container-pad);
-}
-
 body.iss-publication-editorial-skin-bildmatrix.iss-publication-layout-photoalbum .iss-publication-single__body {
   max-width: none;
 }
@@ -1311,6 +1304,7 @@ body.iss-publication-editorial-skin-bildmatrix.iss-publication-layout-photoalbum
 }
 
 .iss-publication-photoalbum-blueprint__title-main {
+  overflow-wrap: anywhere;
   color: var(--iss-blueprint-ink);
   font-family: var(--wp--preset--font-family--system, system-ui, sans-serif);
   font-size: 2.45rem;
@@ -3437,7 +3431,10 @@ body.iss-publication-layout-timeline .iss-publication-order-panel {
     padding: 1rem;
   }
 
-  .iss-publication-photoalbum-blueprint__title-block,
+  .iss-publication-photoalbum-blueprint__title-block {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
   .iss-publication-photoalbum-blueprint__facts,
   .iss-publication-photoalbum-blueprint__matrix {
     grid-template-columns: repeat(2, minmax(0, 1fr));

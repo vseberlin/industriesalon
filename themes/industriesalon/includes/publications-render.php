@@ -978,6 +978,19 @@ function industriesalon_publications_render_photoalbum_bildmatrix(int $post_id, 
 
 function industriesalon_publications_render_photoalbum_content(int $post_id, array $payload): string
 {
+    if (isset($payload['sections'])) {
+        $sections = $payload['sections'];
+        unset($payload['sections']);
+        $skin = industriesalon_get_editorial_publication_post_skin($post_id);
+        $html = '';
+        foreach ($sections as $index => $section) {
+            $portable = industriesalon_render_editorial_portable_section($section, $index, $skin, 'publication');
+            $html .= $portable ?? industriesalon_editorial_preview_section(
+                industriesalon_publications_render_photoalbum_content($post_id, $payload), $section
+            );
+        }
+        return $html;
+    }
     $sheets = is_array($payload['sheets'] ?? null) ? array_values(array_filter($payload['sheets'], 'is_array')) : [];
     if ($post_id <= 0 || $sheets === []) {
         return '';
@@ -1267,11 +1280,17 @@ function industriesalon_publications_render_longread_content(int $post_id, array
 
     $html .= '<div class="iss-publication-longread__chapters">';
     $chapter_index = 0;
-    foreach ($sections as $section) {
+    $skin = industriesalon_get_editorial_publication_post_skin($post_id);
+    foreach ($sections as $index => $section) {
         if (!is_array($section)) {
             continue;
         }
 
+        $portable = industriesalon_render_editorial_portable_section($section, $index, $skin, 'publication');
+        if ($portable !== null) {
+            $html .= $portable;
+            continue;
+        }
         $section_type = sanitize_key((string) ($section['type'] ?? 'chapter'));
         if ($section_type === 'quote') {
             $html .= industriesalon_publications_render_longread_quote_section($section);
@@ -1643,13 +1662,22 @@ function industriesalon_publications_render_timeline_related_rail(int $post_id):
 function industriesalon_publications_render_timeline_content(int $post_id, array $payload): string
 {
     $items = is_array($payload['items'] ?? null) ? $payload['items'] : [];
-    if (!$items) {
+    $sections = is_array($payload['sections'] ?? null) ? $payload['sections'] : $items;
+    if (!$sections) {
         return '';
     }
 
     $definitions = industriesalon_publications_get_timeline_epoch_definitions();
     $epochs = [];
-    foreach ($items as $item) {
+    $epoch_slugs = [];
+    $last_slug = '';
+    $group_key = '';
+    foreach ($sections as $index => $item) {
+        if (iss_publications_editorial_section_is_portable($item)) {
+            $epochs['section-' . $index] = ['section' => $item];
+            $last_slug = '';
+            continue;
+        }
         $year = (int) ($item['year'] ?? 0);
         if ($year <= 0) {
             continue;
@@ -1661,14 +1689,21 @@ function industriesalon_publications_render_timeline_content(int $post_id, array
             continue;
         }
 
-        if (!isset($epochs[$slug])) {
-            $epochs[$slug] = [
+        $epoch_slugs[$slug] = true;
+        if (!isset($payload['sections'])) {
+            $group_key = $slug;
+        } elseif ($slug !== $last_slug) {
+            $group_key = $slug . '-' . $index;
+        }
+        $last_slug = $slug;
+        if (!isset($epochs[$group_key])) {
+            $epochs[$group_key] = [
                 'definition' => $definition,
                 'items' => [],
             ];
         }
 
-        $epochs[$slug]['items'][] = $item;
+        $epochs[$group_key]['items'][] = $item;
     }
 
     if (!$epochs) {
@@ -1713,7 +1748,7 @@ function industriesalon_publications_render_timeline_content(int $post_id, array
     }
     if ($summary_show_epochs) {
         $summary[] = [
-                'value' => (string) count($epochs),
+                'value' => (string) count($epoch_slugs),
                 'label' => $summary_label_epochs,
         ];
     }
@@ -1728,14 +1763,24 @@ function industriesalon_publications_render_timeline_content(int $post_id, array
 
     $nav_html = '';
     $epochs_html = '';
-    foreach ($epochs as $slug => $epoch_data) {
+    $skin = industriesalon_get_editorial_publication_post_skin($post_id);
+    $seen_epochs = [];
+    foreach (array_values($epochs) as $index => $epoch_data) {
+        if (isset($epoch_data['section'])) {
+            $epochs_html .= industriesalon_render_editorial_portable_section($epoch_data['section'], $index, $skin, 'publication') ?? '';
+            continue;
+        }
         $definition = is_array($epoch_data['definition'] ?? null) ? $epoch_data['definition'] : [];
-        $slug_class = sanitize_html_class((string) $slug);
-        $anchor = 'iss-publication-epoch-' . $slug_class;
+        $slug_class = sanitize_html_class((string) ($definition['slug'] ?? ''));
+        $occurrence = $seen_epochs[$slug_class] ?? 0;
+        $seen_epochs[$slug_class] = $occurrence + 1;
+        $anchor = 'iss-publication-epoch-' . $slug_class . ($occurrence > 0 ? '-' . $occurrence : '');
         $title = (string) ($definition['title'] ?? '');
         $range_label = (string) ($definition['range_label'] ?? '');
 
-        $nav_html .= '<a class="iss-publication-timeline__nav-link iss-publication-timeline__nav-link--' . esc_attr($slug_class) . '" href="#' . esc_attr($anchor) . '"><span>' . esc_html($range_label) . '</span>' . esc_html($title) . '</a>';
+        if ($occurrence === 0) {
+            $nav_html .= '<a class="iss-publication-timeline__nav-link iss-publication-timeline__nav-link--' . esc_attr($slug_class) . '" href="#' . esc_attr($anchor) . '"><span>' . esc_html($range_label) . '</span>' . esc_html($title) . '</a>';
+        }
 
         $moments_html = '';
         foreach ((array) ($epoch_data['items'] ?? []) as $item) {
@@ -2557,7 +2602,7 @@ add_filter('post_thumbnail_html', function ($html, $post_id, $post_thumbnail_id,
 
 add_filter('iss_publications_render_longread_content', function ($rendered, $post_id, $payload_or_content, $content = '') {
     $post_id = (int) $post_id;
-    if ($post_id <= 0 || !function_exists('iss_publications_is_chaptered_longread') || !iss_publications_is_chaptered_longread($post_id)) {
+    if ($post_id <= 0 || !function_exists('iss_publications_is_chaptered_longread') || (!iss_publications_is_chaptered_longread($post_id) && !(iss_publications_get_layout($post_id) === 'standard' && iss_publications_editorial_document_is_enabled($post_id)))) {
         return $rendered;
     }
 
@@ -2592,11 +2637,12 @@ add_filter('iss_publications_render_photoalbum_content', function ($rendered, $p
     }
 
     $payload = is_array($payload) ? $payload : [];
-    if ($payload === []) {
+    if ($payload === [] || (empty($payload['sheets']) && !isset($payload['sections']))) {
         return $rendered;
     }
 
-    return industriesalon_editorial_preview_section(industriesalon_publications_render_photoalbum_content($post_id, $payload), $payload);
+    $html = industriesalon_publications_render_photoalbum_content($post_id, $payload);
+    return isset($payload['sections']) ? $html : industriesalon_editorial_preview_section($html, $payload);
 }, 10, 4);
 
 add_filter('body_class', function (array $classes): array {

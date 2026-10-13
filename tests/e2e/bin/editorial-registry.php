@@ -54,6 +54,7 @@ try {
             'ausstellung', 'rueckblick' => industriesalon_render_editorial_ausstellung_section($section, false, 0, $skin),
             'fuehrung' => industriesalon_render_editorial_tour_section($section, false, 0, $skin, 'portable-anchor', get_the_ID()),
             'veranstaltung' => industriesalon_render_structured_veranstaltung_section($section, $skin),
+            'publication' => industriesalon_render_editorial_portable_section($section, 0, $skin, 'publication') ?? '',
         };
     };
 
@@ -112,7 +113,7 @@ try {
             $assert(($slug === 'rueckblick' ? $excerpt === '' : str_contains($excerpt, 'Original block content')) && !str_contains($excerpt, 'Visible section') && !str_contains($excerpt, 'Verwandte Inhalte'), "$slug: automatic excerpt cannot render full composition or related cards");
             $GLOBALS['wp_the_query'] = $original_main_query;
         }
-        if (!in_array($slug, ['place', 'publication'], true)) {
+        if ($slug !== 'place') {
             $portable_doc = iss_editorial_get_empty_document($slug);
             if ($slug === 'veranstaltung') { $portable_doc['entity_key'] = 'event.general'; }
             foreach ($portable_types as $portable_type) {
@@ -218,6 +219,92 @@ try {
         }
 
     }
+    // Publication layout adapters preserve native data and the shared gesture order.
+    foreach (['standard', 'longread', 'timeline', 'photoalbum'] as $layout) {
+        foreach (['standard', 'longread-poster', 'bildmatrix'] as $skin) {
+            $_GET = [];
+            $id = wp_insert_post(['post_type' => 'publication', 'post_status' => 'draft', 'post_title' => 'Disposable publication composition', 'post_content' => '<p>Legacy fallback only</p>', 'post_author' => $admin->ID]);
+            $fixtures[] = $id;
+            update_post_meta($id, '_iss_publication_layout', $layout);
+            $query = new WP_Query(); $query->queried_object_id = $id; $query->queried_object = get_post($id);
+            $query->is_singular = true; $query->is_single = true; $query->in_the_loop = true; $query->post = get_post($id);
+            $GLOBALS['wp_query'] = $query; $GLOBALS['wp_the_query'] = $query; $GLOBALS['post'] = get_post($id);
+            $doc = iss_editorial_get_empty_document('publication'); $doc['skin'] = $skin;
+            $native = match ($layout) {
+                'timeline' => ['type' => 'timeline_item', 'year' => '1900', 'title' => 'Native first', 'body' => '<p>Native body</p>', 'media_refs' => [$media]],
+                'photoalbum' => ['type' => 'photoalbum', 'album_source' => ['kind' => 'manual', 'set_title' => 'Owned album source'], 'sheets' => [['source_kind' => 'wp_media', 'source_id' => $image_id, 'label' => 'Native first', 'nav_title' => 'Owned sheet', 'caption' => 'Owned caption']]],
+                default => ['type' => 'longread_chapter', 'title' => 'Native first', 'anchor' => 'native-first', 'body' => '<p>Native body</p>', 'media_refs' => [$media]],
+            };
+            $doc['sections'] = [
+                ['type' => 'intro', 'body' => '<p>Owned introduction</p>'],
+                ['type' => 'source', 'body' => 'Owned source note'],
+                ['type' => 'publication_rail', 'rail_options' => ['show_nav' => true, 'show_summary' => true, 'show_related' => false]],
+                ['type' => 'statement', 'title' => 'Shared before', 'body' => '<p>Shared before body</p>'],
+                $native,
+                ['type' => 'feature', 'title' => 'Shared middle', 'lead' => '<p>Shared lead</p>', 'body' => '<p>Shared middle body</p>', 'media_refs' => [$media]],
+            ];
+            if ($layout !== 'photoalbum') {
+                $second = $native; $second['title'] = 'Native second'; $second['anchor'] = 'native-second';
+                $doc['sections'][] = $second;
+            }
+            $doc['sections'][] = ['type' => 'gateway', 'title' => 'Shared after', 'body' => '<p>Shared after body</p>', 'items' => [['label' => 'Shared item', 'text' => '<em>Shared card copy</em>', 'url' => 'https://example.invalid/shared']]];
+            $label = "publication/$layout/$skin";
+            $assert(iss_editorial_save_document($id, 'publication', $doc), "$label: save mixed composition");
+            iss_editorial_set_document_enabled($id, 'publication', true);
+            $canonical = get_post_meta($id, iss_editorial_get_document_meta_key('publication'), true);
+            $html = apply_filters('the_content', '<p>Legacy fallback only</p>');
+            $markers = ['Shared before', 'Native first', 'Shared middle'];
+            if ($layout !== 'photoalbum') { $markers[] = 'Native second'; }
+            $markers[] = 'Shared after';
+            $position = -1;
+            foreach ($markers as $marker) {
+                $next = strpos($html, $marker);
+                $assert($next !== false && $next > $position, "$label: document order for $marker");
+                $position = $next;
+            }
+            foreach (['Shared before' => 2, 'Shared middle' => 2, 'Shared after' => 2, 'Shared lead' => 1, 'Owned source note' => 1] as $marker => $count) {
+                $assert(substr_count($html, $marker) === $count, "$label: content appears once per field: $marker");
+            }
+            $assert(!str_contains($html, 'Legacy fallback only'), "$label: enabled composition owns content");
+            $assert(iss_publications_get_publication_rail_settings($id)['show_related'] === false, "$label: rail options retained");
+            if ($layout === 'timeline') {
+                $tags = new WP_HTML_Tag_Processor($html); $moments = 0;
+                while ($tags->next_tag(['class_name' => 'iss-publication-moment'])) { ++$moments; }
+                $assert($moments === 2, "$label: both native moments survive");
+                $assert(str_contains($html, 'id="iss-publication-epoch-industrialisierung-1"'), "$label: repeated epoch has unique anchor");
+                $assert(substr_count($html, 'href="#iss-publication-epoch-industrialisierung"') === 1, "$label: epoch navigation stays unique");
+                $assert(str_contains($html, '<strong>2</strong><span>Stationen</span>') && str_contains($html, '<strong>1</strong><span>Epochen</span>'), "$label: summary counts only native data");
+            } elseif ($layout === 'photoalbum') {
+                $payload = iss_publications_get_photoalbum_payload($id);
+                $assert($payload['sheet_count'] === 1 && $payload['sheets'][0]['attachment_id'] === $image_id && $payload['source_manual_title'] === 'Owned album source', "$label: album source, attachment and count retained");
+                $assert(str_contains($html, 'Owned caption'), "$label: album caption survives");
+            } else {
+                $payload = iss_publications_get_longread_payload($id);
+                $assert(array_column($payload['nav_items'], 'href') === ['#native-first', '#native-second'], "$label: chapter navigation retains original anchors");
+                $assert($payload['summary'][0]['value'] === '2', "$label: summary counts chapters only");
+            }
+            // Read through the warmed public cache, then two distinct authenticated snapshots.
+            foreach (['Snapshot one', 'Snapshot two'] as $title) {
+                $draft_doc = $doc; $draft_doc['sections'][3]['title'] = $title;
+                $draft = iss_editorial_save_draft($id, 'publication', $draft_doc, true);
+                $assert(!is_wp_error($draft), "$label: save snapshot");
+                $_GET = ['iss_editorial_embed' => '1', 'iss_editorial_canvas' => '1', 'iss_editorial_preview' => '1', 'iss_editorial_format' => 'publication', 'iss_editorial_snapshot' => $draft['token'], 'iss_editorial_preview_nonce' => wp_create_nonce(iss_editorial_get_preview_nonce_action($id, 'publication'))];
+                $preview = apply_filters('the_content', '<p>Legacy fallback only</p>');
+                $assert(str_contains($preview, $title), "$label: payload cache follows exact snapshot");
+                foreach ([3, 4, 5] as $index) { $assert(substr_count($preview, 'data-iss-preview-section="' . $index . '"') === 1, "$label: exact editable address $index"); }
+                $assert(str_contains($preview, 'data-iss-field="body"'), "$label: shared body remains editable");
+            }
+            $_GET = [];
+            $assert(get_post_meta($id, iss_editorial_get_document_meta_key('publication'), true) === $canonical, "$label: preview preserves canonical JSON");
+            iss_editorial_set_document_enabled($id, 'publication', false);
+            $assert(trim(apply_filters('the_content', '<p>Legacy fallback only</p>')) === '<p>Legacy fallback only</p>', "$label: disabling JSON restores original block content after cached rendering");
+            iss_editorial_set_document_enabled($id, 'publication', true);
+            $only = $doc; $only['sections'] = [['type' => 'statement', 'title' => 'Standalone shared section', 'body' => '<p>Standalone body</p>']];
+            $assert(iss_editorial_save_document($id, 'publication', $only), "$label: save without domain sections");
+            $assert(substr_count(apply_filters('the_content', '<p>Legacy fallback only</p>'), 'Standalone shared section') === 1, "$label: shared-only composition works without a chapter, date or album");
+        }
+    }
+    $_GET = []; $GLOBALS['wp_the_query'] = $original_main_query;
     // Narrative bodies reuse article; facts and archive projections keep their owners.
     foreach (['team_member', 'entity_profile', 'archivbeitrag', 'archivsammlung', 'archivobjekt'] as $post_type) {
         $id = wp_insert_post(['post_type' => $post_type, 'post_status' => 'auto-draft', 'post_title' => 'Disposable editorial coverage fixture', 'post_author' => $admin->ID]);

@@ -9,13 +9,13 @@ published documents and private drafts are preserved.
 ## Gesture portability checkpoint — 13 October 2026
 
 The mounted website checkout now exposes 28 canonical gestures in nine formats.
-The workspace/CPT expansion is committed as `65c55b8`; the following portability
-slice is local review work. Registration, editor fields, save validation and
+The workspace/CPT expansion is committed as `65c55b8`, shared portability as
+`9eab967`; publication adapters are the current local review slice. Registration, editor fields, save validation and
 public rendering must agree before a gesture becomes available in another format.
 
 | Gesture identifiers | Effective boundary / remaining work |
 | --- | --- |
-| `statement`, `gateway`, `text_bild_reihe`, `feature` | One portable field/treatment contract in the vocabulary. Available in landing, article, event, exhibition, project, report and tour formats. All article CPTs inherit this. The existing composition renderer handles them under the selected skin. |
+| `statement`, `gateway`, `text_bild_reihe`, `feature` | One portable field/treatment contract in the vocabulary. Available in landing, article, event, exhibition, project, report, tour and publication formats. All article CPTs inherit this. The existing composition renderer handles them under the selected skin. |
 | `intro` | Event/report/Place/publication introductions differ from the hidden tour introduction feeding its hero. Preserve those meanings before consolidation. |
 | `kapitel` | Event and tour media differ from project/exhibition links and treatments; reconcile fields before widening. |
 | `fliesstext` | Landing/article treatments, project links and report media/object references are distinct contracts today. |
@@ -33,7 +33,7 @@ public rendering must agree before a gesture becomes available in another format
 | `atlas_map` | Landing locator/map treatments and the tour route have different owners and data requirements. |
 | `bildbuehne` | Tour hero integration, booking rail and excerpt fallback remain tour-owned. |
 | `epoche`, `gegenwart` | Place history and current-state projection remain a separate case. |
-| `source`, `publication_rail`, `longread_chapter`, `longread_quote`, `timeline_item`, `photoalbum` | Publication layouts consume different payloads, sometimes reorder or omit section types. Extend those adapters before offering portable composition there; preserve reading navigation, sources and album ownership. |
+| `source`, `publication_rail`, `longread_chapter`, `longread_quote`, `timeline_item`, `photoalbum` | Publication adapters now retain portable composition in all four layouts, with chapter navigation/counts, source notes and album ownership preserved. Native layout-specific sections still require their matching layout; reconcile those meanings and chooser compatibility separately. |
 
 `massstab`, `vollbild`, `image_wall` and `feature.microblocks` remain declared
 compatibility aliases. Existing stored documents are not renamed or migrated.
@@ -54,14 +54,29 @@ without changing the stored version. Event composition can use the full existing
 column; ordinary event prose keeps its reading measure. Archival skin palettes
 flow through existing domain variables, without new gesture selector trees.
 
-Verification covers all 15 portable treatments in every registered skin of the
-seven supported formats, save/reload, public content routing, snapshot field
-addresses, media, links, rich text, front-page exclusion and event-structure
-restrictions: 4,414 assertions plus 35 UI tests. Local Chrome checks covered
-tour/event/exhibition previews, a treatment change and draft save, the Chronik
-palette, full event composition width and a 390 px phone viewport. Publication
-and Place exclusions are explicit assertions. No SQL,
-content migration, uploads or template artifact is required for this slice.
+Publication adapters use the same shared renderer. Standard and longread layouts
+keep chapter/quote order around shared sections. Timeline composition preserves
+consecutive epoch groups, generates unique repeated-epoch anchors and counts only
+native dates/epochs. Album sheets stay one owner-managed sequence; gestures appear
+before or after it. Intro/source placement retains the existing layout contract.
+Payload caches now distinguish enabled/disabled canonical JSON and exact preview
+snapshots. An empty legacy album no longer suppresses original block content.
+The existing album stylesheet loses its `100vw` breakout (which caused horizontal
+scrolling), and its phone title stacks instead of clipping. Skin variables reuse
+publication palettes; no extra gesture selector tree is introduced.
+
+Verification covers all 15 portable treatments in every registered skin of eight
+formats, save/reload, public content routing, snapshot addresses, media, links,
+rich text, front-page exclusion and event-structure restrictions: 5,278 assertions
+plus 35 UI tests. The publication matrix covers four layouts in all three skins,
+interleaving, native navigation/source data, disabled fallback and two successive
+snapshots after a warmed public cache. Storage checks pass 295 assertions over all
+94 existing documents, with post content/metadata unchanged. Chrome covers all
+four layouts at desktop/390 px with no horizontal overflow, compact chooser,
+edit/Fertig, draft recovery and palette inheritance. Review fixtures are removed.
+Earlier tour/event/exhibition checks remain recorded in the preceding commit.
+Places remain explicitly excluded. No SQL, content migration, uploads or template
+artifact is needed; publication template authority is file-backed locally.
 
 ## Findings and disposition
 
