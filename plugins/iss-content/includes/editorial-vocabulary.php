@@ -60,7 +60,9 @@ function iss_content_model_editorial_gesture_registry(): array
         ],
         'material' => [
             'label' => __('Begleitende Dateien', 'iss-content-model'),
-            'description' => __('Dokumente und weiterführendes Material anbieten.', 'iss-content-model'),
+            'description' => __('Dateien zum Herunterladen und weiterführende Links anbieten.', 'iss-content-model'),
+            'portable' => true,
+            'supports' => ['anchor', 'media_refs', 'links'],
             'icon' => 'media-document', 'tone' => 'media', 'group' => 'Material', 'schematic' => 'list',
         ],
         'facts' => [

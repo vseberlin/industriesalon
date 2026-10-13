@@ -4,11 +4,10 @@ Immediate executable work only. Larger future programs live in `docs/project/bac
 
 ## Next
 
-- After accepted Merkpunkte consolidation, inspect `material` portability:
-  domain downloads, event text items and dynamic references must keep their
-  owner contracts and rendering. Native intro/hero contracts and Places remain
-  separate. See the
-  [gesture inventory](docs/project/editorial-consolidation-audit.md#gesture-portability-checkpoint--13-october-2026).
+- After accepted Material portability, inspect `objektfokus`
+  reuse with archive visibility, source links and captions intact. Native
+  intro/hero, maps, dynamic slots, intake and Places retain their owner contracts.
+  See the [gesture inventory](docs/project/editorial-consolidation-audit.md#gesture-portability-checkpoint--13-october-2026).
 - Coordinate an authorized staging release of the completed
   [WordPress refactor](docs/project/wordpress-refactoring-plan.md) and accepted
   programme presentation from GitHub `main`: take target-local backups, apply the four scoped owner

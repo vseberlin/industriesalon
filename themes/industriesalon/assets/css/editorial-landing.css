@@ -959,10 +959,22 @@
   line-height: 1.5;
 }
 
+.iss-landing-material__files {
+  display: grid;
+  gap: 0.85rem;
+  min-width: 0;
+}
+
+.iss-landing-material__sources {
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 16rem), min(100%, 24rem)));
+}
+
+.iss-landing-section--gesture-material,
 .iss-landing-section--gesture-facts {
   overflow-wrap: anywhere;
 }
 
+.iss-landing-material .iss-landing-section__title,
 .iss-landing-section--gesture-facts .iss-landing-section__title {
   max-width: 24ch;
   font-size: clamp(1.85rem, 2.7vw, 3.1rem);

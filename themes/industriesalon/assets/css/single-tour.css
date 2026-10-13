@@ -657,10 +657,6 @@
   max-width: 46rem;
 }
 
-.iss-tour-section--layout-material .iss-tour-section__inner {
-  grid-template-columns: minmax(0, 0.35fr) minmax(0, 1fr);
-}
-
 .iss-tour-section__copy {
   display: grid;
   gap: 0.95rem;
@@ -1328,7 +1324,6 @@
   .iss-tour-section--media-aside .iss-tour-section__inner,
   .iss-tour-section--layout-quote .iss-tour-section__inner,
   .iss-tour-section--layout-conclusion .iss-tour-section__inner,
-  .iss-tour-section--layout-material .iss-tour-section__inner,
   .iss-tour-section.is-text-only .iss-tour-section__inner,
   .iss-tour-section.has-media:not(.iss-tour-section--layout-gallery, .iss-tour-section--layout-image-wall) .iss-tour-section__inner {
     grid-template-columns: 1fr;

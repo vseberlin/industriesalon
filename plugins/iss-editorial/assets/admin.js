@@ -939,7 +939,7 @@
 
     function sectionMediaRefsForDisplay(section) {
       var refs = section && Array.isArray(section.media_refs) ? section.media_refs : [];
-      if ((section.type || '') !== 'material') {
+      if ((section.type || '') !== 'material' || sectionConfig('material').portable) {
         return refs;
       }
 
@@ -963,7 +963,9 @@
         target.appendChild(createElement(
           'p',
           'description iss-editorial-media-rule',
-          'Material verwendet Dateien. Bilder bitte über Galerie einsetzen.'
+          sectionConfig('material').portable
+            ? 'Dateien werden als Downloads angezeigt. Für eine Bildansicht bitte Galerie verwenden.'
+            : 'Material verwendet Dateien. Bilder bitte über Galerie einsetzen.'
         ));
       }
       (section.media_refs || []).forEach(function (reference, index) {
@@ -987,7 +989,7 @@
           render();
           scheduleAutosave();
         }));
-        if (isMaterial && mediaReferenceIsImage(reference)) {
+        if (isMaterial && !sectionConfig('material').portable && mediaReferenceIsImage(reference)) {
           controls.appendChild(createElement('p', 'description is-warning', 'Bild wird im Material nicht gerendert.'));
         }
         if (ratioText) {
@@ -2422,7 +2424,7 @@
           }
           return reference;
         }).filter(function (reference) {
-          return reference.id && (!isMaterial || !mediaReferenceIsImage(reference));
+          return reference.id && (!isMaterial || sectionConfig('material').portable || !mediaReferenceIsImage(reference));
         });
         if (isFullViewport) {
           section.media_refs = section.media_refs.slice(0, 1);
@@ -2442,7 +2444,7 @@
           title: noun + ' auswählen',
           button: { text: noun + ' übernehmen' },
           multiple: !isFullViewport,
-          library: isMaterial ? { type: 'application' } : { type: 'image' }
+          library: isMaterial ? (sectionConfig('material').portable ? {} : { type: 'application' }) : { type: 'image' }
         });
 
         frame.on('open', function () {
@@ -2484,7 +2486,7 @@
           modal: true,
           manageModalFocus: editorUi.manageModalFocus,
           mode: isFullViewport ? 'single' : 'multiple',
-          mediaType: isMaterial ? 'file' : 'image',
+          mediaType: isMaterial ? (sectionConfig('material').portable ? '' : 'file') : 'image',
           contextId: config.postId || 0,
           initialSelection: section.media_refs || [],
           onConfirm: function (references) {

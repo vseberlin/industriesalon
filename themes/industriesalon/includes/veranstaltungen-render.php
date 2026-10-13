@@ -478,7 +478,7 @@ function industriesalon_render_structured_veranstaltung_content(string $content)
             if ($closed && ($section['type'] ?? '') === 'material') {
                 $links = (array) ($section['links'] ?? []);
                 $section['links'] = array_values(array_filter($links, static fn(array $link): bool => !industriesalon_event_link_is_ticket($link)));
-                if ($links && !$section['links'] && empty($section['body']) && empty($section['media_refs']) && empty($section['object_refs']) && empty($section['dynamic_refs'])) {
+                if ($links && !$section['links'] && empty($section['body']) && empty($section['media_refs']) && empty($section['object_refs']) && empty($section['dynamic_refs']) && empty($section['items'])) {
                     continue;
                 }
             }

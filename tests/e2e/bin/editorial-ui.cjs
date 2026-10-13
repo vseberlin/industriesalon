@@ -622,3 +622,44 @@ test('Optional document bindings save cleared text and recover an intentionally 
     assert.equal(r.value().hero_subtitle, '');
   } finally { r.dom.window.close(); }
 });
+
+for (const portable of [true, false]) {
+  test((portable ? 'Shared Material' : 'Place Material') + ': media selection preserves the declared download contract', async () => {
+    const image = {id: '7', kind: 'media', source: 'wp-media', mime: 'image/png', label: 'Saved image'};
+    const pdf = {id: '8', kind: 'media', source: 'wp-media', mime: 'application/pdf', label: 'Saved document'};
+    const e = await editor(portable ? 'article' : 'place', {
+      sections: {material: {label: 'Begleitende Dateien', supports: ['media_refs', 'links'], portable}},
+      document: {schema_version: 3, sections: [{type: 'material', title: 'Downloads', media_refs: [image, pdf]}]}
+    });
+    try {
+      let options;
+      const callbacks = {};
+      const attachments = [image, pdf, {id: '9', mime: 'audio/mpeg', title: 'Recording', url: '/recording.mp3'}];
+      const selection = {add() {}, map: fn => attachments.map(a => fn({toJSON: () => a}))};
+      e.window.wp.media = config => {
+        options = config;
+        return {on: (name, fn) => {callbacks[name] = fn;}, state: () => ({get: () => selection}), open: () => callbacks.open()};
+      };
+      e.window.wp.media.attachment = () => ({fetch() {}});
+      e.button('Dateien suchen').click();
+      assert.equal(options.library.type, portable ? undefined : 'application');
+      callbacks.select();
+      await e.settle();
+      assert.deepEqual(Array.from(e.value().sections[0].media_refs, ref => ref.id), portable ? ['7','8','9'] : ['8','9']);
+      assert.equal(e.value().sections[0].media_refs.find(ref => ref.id === '8').label, 'Saved document');
+      const saved = JSON.parse(e.requests.at(-1).get('document'));
+      assert.equal(saved.sections[0].media_refs.length, portable ? 3 : 2, 'Autosave keeps every selected supported file');
+      if (portable) {
+        assert.doesNotMatch(e.root.textContent, /Bild wird im Material nicht gerendert/);
+        let setOptions;
+        e.window.issEditorialSetMediaPicker = {create: (_root, config) => {setOptions = config;}};
+        e.button('Aus Set auswählen').click();
+        assert.equal(setOptions.mediaType, '', 'The owner picker accepts all approved attachment types');
+        setOptions.onConfirm(setOptions.initialSelection);
+        assert.equal(e.value().sections[0].media_refs.length, 3, 'Confirming a Set selection cannot drop the saved image');
+        e.button('Entfernen', e.root.querySelector('.iss-editorial-media-item')).click();
+        assert.deepEqual(Array.from(e.value().sections[0].media_refs, ref => ref.id), ['8','9'], 'Only explicit removal drops the image');
+      }
+    } finally { e.dom.window.close(); }
+  });
+}

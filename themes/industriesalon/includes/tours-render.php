@@ -115,7 +115,6 @@ function industriesalon_get_editorial_tour_section_context(array $section, strin
         'galerie' => 'gallery',
         'image_wall' => 'image-wall',
         'atlas_map' => 'atlas-map',
-        'material' => 'material',
         'upload_intake' => 'upload-intake',
         'schluss' => 'conclusion',
     ];
@@ -257,16 +256,6 @@ function industriesalon_get_editorial_tour_media_attachment_id(array $item): int
     $reference = is_array($item['reference'] ?? null) ? $item['reference'] : [];
 
     return absint($reference['id'] ?? 0);
-}
-
-function industriesalon_editorial_tour_media_reference_is_image(array $item): bool
-{
-    $attachment_id = industriesalon_get_editorial_tour_media_attachment_id($item);
-    if ($attachment_id <= 0) {
-        return false;
-    }
-
-    return strpos((string) get_post_mime_type($attachment_id), 'image/') === 0;
 }
 
 function industriesalon_get_editorial_tour_stage(int $post_id): array
@@ -637,16 +626,10 @@ function industriesalon_render_editorial_tour_section(array $section, bool $show
     $refs_html = '';
 
     foreach ($media_refs as $ref) {
-        if ($type === 'material' && industriesalon_editorial_tour_media_reference_is_image((array) $ref)) {
-            continue;
-        }
         $media_html .= industriesalon_render_editorial_tour_media_reference((array) $ref, $show_placeholders);
     }
 
     foreach ($object_refs as $ref) {
-        if ($type === 'material') {
-            continue;
-        }
         $refs_html .= industriesalon_render_editorial_tour_archive_reference((array) $ref, $show_placeholders);
     }
 

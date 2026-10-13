@@ -13,8 +13,8 @@ The workspace/CPT expansion is committed as `65c55b8`, shared portability as
 `9eab967`, publication adapters as `c090540`, and shared gallery/text/quote
 contracts as `32d3e3f`; native publication layout compatibility is committed as
 `9fd10d0`, shared conclusions as `5fce0d0`, and shared chapters as `54afba5`.
-Leitfrage consolidation is committed locally as `0c1b046`. The Merkpunkte slice
-is accepted for local commit. Registration, editor fields, save validation and
+Leitfrage consolidation is committed locally as `0c1b046` and Merkpunkte as
+`3330c7f`. Material portability is accepted for local commit. Registration, editor fields, save validation and
 public rendering must agree before a gesture becomes available in another format.
 
 | Gesture identifiers | Effective boundary / remaining work |
@@ -28,7 +28,7 @@ public rendering must agree before a gesture becomes available in another format
 | `schluss` | One portable contract across eight formats: rich text, anchors and links, including links-only endings. Project contact navigation and tour anchors are retained; events now support conclusion links. |
 | `galerie` | One portable contract across eight formats: media and archive objects with captions/source links; grid, sequence, wall and viewport layouts. Place retains its separate existing contract. |
 | `objektfokus` | Exhibition/report archive references use the archive owner; future reuse must retain resolution and visibility checks. |
-| `material` | Domain downloads differ from event text items and dynamic references. Do not union fields that renderers would drop. |
+| `material` | One portable downloads/links/anchor/rich-text contract across eight formats. Events retain plain-text items, archive sources and live fields as owner-specific extensions. Place retains its separate contract and picker. |
 | `facts` | One portable contract across eight formats: optional rich text, title/kicker, anchors and plain-text value/description rows. Reuses the existing copy and fact-list components; project Dossier retains chapter/facts pairing with separate preview addresses. |
 | `upload_intake` | Depends on the context owner's open intake and signed invitation; registration alone cannot open collection. |
 | `programm` | Event structure controls availability. Shared composition does not bypass its domain allowlist. |
@@ -77,7 +77,7 @@ Chapter text and shared headings now consume existing surface/skin variables,
 fixing dark-on-dark text in Bildmatrix. Its album palette is component-owned so
 the same album can appear in other layouts without losing its colours.
 
-Ten visible composition gestures now share fields and rendering across eight
+Eleven visible composition gestures now share fields and rendering across eight
 formats. Gallery/text/quote rendering consumes resolved references through one
 existing composition path, with published-object checks delegated to the archive
 owner. Existing documents adopt the shared presentation while retaining their
@@ -86,16 +86,16 @@ duplicate Territorial positioning is removed so shared phone stacking can apply.
 Domain gallery/quote compatibility branches and their styling remain for legacy
 content and Place supplements; they are not a second new gesture contract.
 
-Verification covers the ten gestures, their treatments/layouts in every
+Verification covers the eleven gestures, their treatments/layouts in every
 registered skin of eight formats, save/reload, public content routing, snapshot
 addresses, media/archive captions, source visibility, links, rich text,
-front-page exclusion and event-structure restrictions: 11,911 assertions plus 35
+front-page exclusion and event-structure restrictions: 12,606 assertions plus 37
 UI tests. Retained publication quote IDs and Place fields/rendering are checked.
 The publication matrix covers four layouts in all three skins,
 interleaving, native navigation/source data, all-native mixed documents, multiple
 albums, standalone native gestures under mismatched layouts, warm-cache layout
 switches, disabled fallback and two successive
-snapshots after a warmed public cache. Storage checks pass 299 assertions over all
+snapshots after a warmed public cache. Storage checks pass 300 assertions over all
 94 existing documents, with post content/metadata unchanged. Chapter coverage
 includes all format/skin combinations, versions 1–3, both media positions and
 aside treatment, captions, links, event live-only references, owner boundaries,
@@ -181,9 +181,41 @@ the neighbouring chapter stays intact. Private fixtures/revisions/autosaves are
 removed. PHP lint, targeted PHPCS/PHPStan and changed CSS lint pass. Staff UAT
 and Firefox remain separate release checks.
 
-Next: inspect the `material` contract before sharing it. Domain downloads,
-event text items and owner-resolved dynamic references must retain their fields
-and renderers. Native intro/hero contracts and Places remain separate.
+## Material contract boundary
+
+The read-only inventory found 13 saved Material sections: seven projects, three
+events, two tours and one exhibition. The old project/tour paths suppressed
+image attachments, and the event path suppressed its stored archive source.
+Shared Material keeps every resolved attachment as a downloadable file, retaining
+labels and IDs; gallery images remain a separate presentation choice. Events
+retain their plain-text notes, live institution fields and archive references.
+Archive visibility stays owner-controlled. Closing booking removes ticket links
+without dropping accompanying notes. No stored sections are converted.
+
+The shared renderer reuses copy, links, the existing `iss-file-insert` primitive
+and the archive reference renderer. The primitive now uses semantic surface
+colours instead of hard-coded light colours. No new file-card CSS vocabulary,
+media store or editor is added. Obsolete project/tour Material branches and
+layout CSS are removed. Native event downloads remain for engine-disabled
+rendering, and Ausstellung supplements retain Place Material. Generic domain
+media helpers/CSS keep their callers. Material picker changes apply only to its portable contract,
+so Places keep their existing restrictions. Set selection still permits only
+approved/promoted attachment-backed items.
+
+Verification covers versions 1–3, every format/skin, all publication layouts,
+file-only/link-only/body-only sections, missing attachments, image downloads,
+labels, anchors, event extensions, private archive exclusion and closed tickets
+with retained notes. The UI suite covers media reselection, explicit removal,
+Set confirmation and Place compatibility. Chrome checks existing project,
+event and tour Material plus a private publication at desktop/390 px. Downloads
+fit both light/dark skins; native media selection preserves PDF/image IDs and
+edited labels. Fertig/native Update/reload retain the document and neighbouring
+chapter. Review fixtures, revisions and autosaves are removed. No real stored
+content, templates or uploads changed; no paired artifact is needed.
+
+Next: inspect `objektfokus` reuse, retaining archive visibility, source links and
+captions. Native intro/hero, maps, dynamic slots and intake remain owner-bound;
+Places remain separate. Staff UAT and Firefox are still release checks.
 
 ## Findings and disposition
 

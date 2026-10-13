@@ -818,6 +818,43 @@ function industriesalon_render_editorial_landing_facts(array $facts): string
     return $html !== '' ? '<ul class="iss-landing-feature__facts">' . $html . '</ul>' : '';
 }
 
+/** Shared downloads use the existing file-insert primitive and resolved attachments. */
+function industriesalon_render_editorial_landing_material(array $section, string $skin): string
+{
+    $copy = industriesalon_render_editorial_landing_copy($section);
+    $files = '';
+    foreach ((array) ($section['media_refs_resolved'] ?? []) as $item) {
+        $resolved = (array) ($item['resolved'] ?? []);
+        $url = (string) ($resolved['url'] ?? '');
+        if (($resolved['source'] ?? '') !== 'wp-media' || $url === '') { continue; }
+        $title = trim((string) ($item['reference']['label'] ?? ''));
+        if ($title === '') { $title = (string) ($resolved['title'] ?? __('Datei', 'industriesalon')); }
+        $filename = wp_basename((string) wp_parse_url($url, PHP_URL_PATH));
+        $extension = strtoupper((string) pathinfo($filename, PATHINFO_EXTENSION));
+        $files .= '<article class="iss-file-insert"><p class="iss-file-insert__type">' . esc_html($extension) . '</p>';
+        $files .= '<div class="iss-file-insert__body"><p class="iss-file-insert__title">' . esc_html($title) . '</p>';
+        $files .= '<p class="iss-file-insert__meta">' . esc_html((string) ($resolved['mime'] ?? '')) . '</p></div>';
+        $files .= '<a class="iss-file-insert__action" href="' . esc_url($url) . '" download="' . esc_attr($filename) . '" aria-label="' . esc_attr(sprintf(__('Herunterladen: %s', 'industriesalon'), $title)) . '">' . esc_html__('Herunterladen', 'industriesalon') . '</a></article>';
+    }
+    $items = '';
+    foreach ((array) ($section['items'] ?? []) as $item) {
+        if (is_string($item) && trim($item) !== '') { $items .= '<li>' . esc_html($item) . '</li>'; }
+    }
+    $dynamic = '';
+    foreach ((array) ($section['dynamic_refs'] ?? []) as $reference) {
+        $dynamic .= industriesalon_render_structured_veranstaltung_dynamic_reference($reference);
+    }
+    // Event source references keep the shared archive visibility and caption checks.
+    $sources = industriesalon_render_editorial_landing_references(['object_refs_resolved' => $section['object_refs_resolved'] ?? []]);
+    if ($copy === '' && $files === '' && $items === '' && $dynamic === '' && $sources === '') { return ''; }
+    $html = '<section ' . industriesalon_editorial_landing_section_attrs($section, $skin) . '><div class="iss-container iss-landing-section__inner iss-landing-material iss-landing-surface">' . $copy;
+    if ($items !== '') { $html .= '<ul class="iss-landing-section__body">' . $items . '</ul>'; }
+    if ($dynamic !== '') { $html .= '<div class="iss-landing-section__body">' . $dynamic . '</div>'; }
+    if ($files !== '') { $html .= '<div class="iss-landing-material__files">' . $files . '</div>'; }
+    if ($sources !== '') { $html .= '<div class="iss-landing-gallery__track iss-landing-material__sources">' . $sources . '</div>'; }
+    return $html . '</div></section>';
+}
+
 /** Standalone facts reuse the copy and fact-list components already used by features. */
 function industriesalon_render_editorial_landing_fact_section(array $section, string $skin): string
 {
@@ -1443,6 +1480,9 @@ function industriesalon_render_editorial_landing_atlas_map(array $section, int $
 function industriesalon_render_editorial_landing_section(array $section, int $rendered_index, string $skin): string
 {
     $type = sanitize_key((string) ($section['type'] ?? ''));
+    if ($type === 'material') {
+        return industriesalon_render_editorial_landing_material($section, $skin);
+    }
     if ($type === 'facts') {
         return industriesalon_render_editorial_landing_fact_section($section, $skin);
     }
@@ -1569,7 +1609,7 @@ function industriesalon_front_page_landing_has_sections(): bool
         if (!is_array($section)) {
             continue;
         }
-        if (in_array((string) ($section['type'] ?? ''), ['statement', 'fliesstext', 'schluss', 'kapitel', 'facts', 'zitat', 'gateway', 'text_bild_reihe', 'map_img', 'galerie', 'feature', 'dynamic_slot'], true)) {
+        if (in_array((string) ($section['type'] ?? ''), ['statement', 'fliesstext', 'schluss', 'kapitel', 'facts', 'material', 'zitat', 'gateway', 'text_bild_reihe', 'map_img', 'galerie', 'feature', 'dynamic_slot'], true)) {
             $has_sections = true;
             break;
         }

@@ -419,15 +419,16 @@
   gap: 0.85rem;
   align-items: center;
   padding: 0.85rem 0.95rem;
-  border: 1px solid rgba(30, 30, 30, 0.12);
+  border: 1px solid var(--iss-surface-rule, rgba(30, 30, 30, 0.12));
   border-radius: var(--iss-radius-sm);
-  background: #fff;
+  background: var(--iss-surface-bg, #fff);
+  overflow-wrap: anywhere;
 }
 
 .iss-file-insert__type {
   min-width: 3.5rem;
   margin: 0;
-  color: rgba(30, 30, 30, 0.58);
+  color: var(--iss-surface-muted, rgba(30, 30, 30, 0.58));
   font-size: 0.72rem;
   font-weight: 700;
   letter-spacing: 0.08em;
@@ -447,20 +448,20 @@
 }
 
 .iss-file-insert__title {
-  color: var(--iss-black);
+  color: var(--iss-surface-fg, var(--iss-black));
   font-size: 0.96rem;
   font-weight: 620;
   line-height: 1.28;
 }
 
 .iss-file-insert__meta {
-  color: rgba(30, 30, 30, 0.68);
+  color: var(--iss-surface-muted, rgba(30, 30, 30, 0.68));
   font-size: 0.8rem;
   line-height: 1.45;
 }
 
 .iss-file-insert__action {
-  color: var(--iss-black);
+  color: var(--iss-surface-fg, var(--iss-black));
   font-size: 0.82rem;
   font-weight: 700;
   letter-spacing: 0.08em;

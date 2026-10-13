@@ -309,7 +309,7 @@ function iss_content_model_register_editorial_formats(array $formats): array
                     'atlas-map.tour-route' => __('Führungsroute', 'iss-content-model'),
                 ],
             ],
-            'material' => $material_section,
+            'material' => $gestures['material'],
             'upload_intake' => [
                 'label' => __('Öffentlicher Mitmach-Aufruf für Gäste', 'iss-content-model'),
                 'description' => __('Schickt hochgeladene Besucherfotos direkt in die Warteschlange zur Freigabe.', 'iss-content-model'),
@@ -337,7 +337,7 @@ function iss_content_model_register_editorial_formats(array $formats): array
             'zitat' => $gestures['zitat'],
             'galerie' => $gestures['galerie'],
             'fliesstext' => $gestures['fliesstext'],
-            'material' => $material_section,
+            'material' => $gestures['material'],
             'upload_intake' => [
                 'label' => __('Material beitragen', 'iss-content-model'),
                 'description' => __('Fotos und Dokumente zur redaktionellen Prüfung einsenden.', 'iss-content-model'),
@@ -358,7 +358,7 @@ function iss_content_model_register_editorial_formats(array $formats): array
             'fliesstext' => $gestures['fliesstext'],
             'facts' => $gestures['facts'],
             'galerie' => $gestures['galerie'],
-            'material' => $material_section,
+            'material' => $gestures['material'],
             'upload_intake' => [
                 'label' => __('Öffentlicher Mitmach-Aufruf für Gäste', 'iss-content-model'),
                 'description' => __('Schickt hochgeladene Besucherfotos direkt in die Warteschlange zur Freigabe.', 'iss-content-model'),
@@ -387,7 +387,7 @@ function iss_content_model_register_editorial_formats(array $formats): array
                 'description' => __('Archivobjekte als Ergänzung zum Bericht zeigen.', 'iss-content-model'),
                 'supports' => ['object_refs'],
             ],
-            'material' => array_merge($material_section, ['supports' => ['media_refs', 'links']]),
+            'material' => $gestures['material'],
             'upload_intake' => $formats['ausstellung']['sections']['upload_intake'],
             'schluss' => $gestures['schluss'],
         ],
@@ -495,6 +495,9 @@ add_filter('iss_editorial_formats', static function (array $formats): array {
                 if ($slug === 'veranstaltung' && $type === 'kapitel') {
                     $section['supports'][] = 'dynamic_refs';
                 }
+                if ($slug === 'veranstaltung' && $type === 'material') {
+                    $section['supports'] = array_merge($section['supports'], ['object_refs', 'dynamic_refs', 'items']);
+                }
             }
             // One concise chooser label across formats; domain explanations
             // belong to descriptions, not alternate names for the same gesture.
@@ -502,7 +505,7 @@ add_filter('iss_editorial_formats', static function (array $formats): array {
             $section['family'] = $definitions[$type]['family'] ?? $type;
             if (!empty($section['portable'])) {
                 $section['rich_text'] = ['body' => 'block', 'lead' => 'block'];
-                if (in_array('items', $section['supports'], true)) {
+                if (in_array('items', $section['supports'], true) && ($section['items_kind'] ?? '') !== 'text') {
                     $section['rich_text']['items'] = $type === 'text_bild_reihe' ? 'inline' : 'inline-card';
                 }
             }

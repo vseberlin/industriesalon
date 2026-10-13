@@ -69,7 +69,6 @@ function industriesalon_get_editorial_project_section_context(array $section, st
         'kapitel' => 'chapter',
         'fliesstext' => 'essay',
         'galerie' => 'gallery',
-        'material' => 'material',
         'upload_intake' => 'upload-intake',
         'schluss' => 'conclusion',
     ];
@@ -132,19 +131,6 @@ function industriesalon_render_editorial_project_media_reference(array $item, bo
     return industriesalon_render_editorial_project_file_reference($item, $show_placeholder);
 }
 
-function industriesalon_editorial_project_media_reference_is_download(array $item): bool
-{
-    $resolved = is_array($item['resolved'] ?? null) ? $item['resolved'] : [];
-    $attachment_id = absint($resolved['id'] ?? 0);
-    if ($attachment_id <= 0) {
-        return false;
-    }
-
-    $mime = (string) get_post_mime_type($attachment_id);
-
-    return $mime !== '' && strpos($mime, 'image/') !== 0;
-}
-
 function industriesalon_render_editorial_project_file_reference(array $item, bool $show_placeholder): string
 {
     unset($show_placeholder);
@@ -178,25 +164,6 @@ function industriesalon_render_editorial_project_file_reference(array $item, boo
             <?php endif; ?>
         </a>
     </article>
-    <?php
-
-    return trim((string) ob_get_clean());
-}
-
-function industriesalon_render_editorial_project_downloads(string $download_html): string
-{
-    if (trim($download_html) === '') {
-        return '';
-    }
-
-    ob_start();
-    ?>
-    <div class="iss-project-downloads">
-        <h3 class="iss-project-downloads__title"><?php echo esc_html__('Herunterladen', 'industriesalon'); ?></h3>
-        <div class="iss-project-downloads__list">
-            <?php echo $download_html; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- File cards are escaped in industriesalon_render_editorial_project_file_reference(). ?>
-        </div>
-    </div>
     <?php
 
     return trim((string) ob_get_clean());
@@ -680,7 +647,6 @@ function industriesalon_render_editorial_project_section(array $section, bool $s
 
     $ref_html = '';
     $media_html = '';
-    $download_html = '';
     $links_html = industriesalon_render_editorial_project_links($links);
     $upload_intake_html = $type === 'upload_intake' ? industriesalon_render_editorial_project_upload_intake($section) : '';
     if ($type === 'upload_intake' && $upload_intake_html === '') {
@@ -688,26 +654,14 @@ function industriesalon_render_editorial_project_section(array $section, bool $s
     }
 
     foreach ($refs as $ref) {
-        if ($type === 'material') {
-            continue;
-        }
         $ref_html .= industriesalon_render_editorial_project_archive_reference((array) $ref, $show_placeholders);
     }
 
     foreach ($media_refs as $ref) {
-        if ($type === 'material') {
-            if (industriesalon_editorial_project_media_reference_is_download((array) $ref)) {
-                $download_html .= industriesalon_render_editorial_project_file_reference((array) $ref, $show_placeholders);
-            }
-            continue;
-        }
-
         $media_html .= industriesalon_render_editorial_project_media_reference((array) $ref, $show_placeholders);
     }
 
-    $downloads_html = $type === 'material' ? industriesalon_render_editorial_project_downloads($download_html) : '';
-
-    if ($kicker === '' && $title === '' && $body === '' && $ref_html === '' && $media_html === '' && $downloads_html === '' && $links_html === '' && $upload_intake_html === '') {
+    if ($kicker === '' && $title === '' && $body === '' && $ref_html === '' && $media_html === '' && $links_html === '' && $upload_intake_html === '') {
         return '';
     }
 
@@ -748,9 +702,6 @@ function industriesalon_render_editorial_project_section(array $section, bool $s
             <?php endif; ?>
             <?php if ($media_html !== '' && $uses_gallery_carousel) : ?>
                 <div class="iss-project-section__media iss-project-gallery"><?php echo industriesalon_render_editorial_project_gallery($media_html); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- Gallery media render through WordPress attachment helpers above. ?></div>
-            <?php endif; ?>
-            <?php if ($downloads_html !== '') : ?>
-                <div class="iss-project-section__downloads"><?php echo $downloads_html; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- Download cards are escaped in helper functions above. ?></div>
             <?php endif; ?>
             <?php if ($ref_html !== '') : ?>
                 <div class="iss-project-section__refs iss-project-editorial__refs"><?php echo $ref_html; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- References render through escaped helpers or archive-owned renderer. ?></div>

@@ -31,7 +31,7 @@ This is the implementation checkpoint for the SOW in
 ## Portable composition
 
 The vocabulary defines `statement`, `gateway`, `text_bild_reihe`, `feature`,
-`galerie`, `fliesstext`, `zitat`, `schluss`, `kapitel` and `facts` once, including
+`galerie`, `fliesstext`, `zitat`, `schluss`, `kapitel`, `facts` and `material` once, including
 supported fields and treatments. Landing, article, event, exhibition, project,
 report, tour and publication formats use those contracts. The theme registers
 their section renderer and delegates to the existing landing composition
@@ -82,6 +82,23 @@ unchanged. Legacy numeric prose remains prose, without parsing or rewriting it.
 Project Dossier still pairs a chapter followed by facts in its existing column;
 that column retains its own anchor, versioned prose and preview editing address.
 Place facts, event structure and other authoritative metadata keep their owners.
+
+Material (`material`, Begleitende Dateien) shares optional rich text, anchors,
+attachment downloads and links across all eight formats. The existing
+`iss-file-insert` primitive now consumes surface colours for light/dark skins.
+Saved image attachments remain downloadable files; gallery presentation stays
+with `galerie`. Both WordPress and Set media pickers retain every selected file
+type, with Set approval/visibility checks unchanged. Labels and attachment IDs
+remain in the existing document; files are neither copied nor re-uploaded.
+
+Events retain plain-text `items`, owner-resolved `dynamic_refs` and archive
+`object_refs` as Material-only extensions. Published archive sources use the
+shared visibility/caption renderer. Closed events still suppress ticket links
+while preserving accompanying notes. Other formats reject those event-only
+fields. Place Material retains its separate renderer and media-picker rules.
+Obsolete project/tour Material branches and layout CSS are removed. Native
+event downloads remain for the engine-disabled fallback; Ausstellung supplements
+retain Place Material rendering. Generic domain media helpers keep their callers.
 
 Publication payload adapters retain shared and publication-native gestures in
 the reading flow of all four layouts. Chapter, timeline-moment and album markup
@@ -778,8 +795,9 @@ Veranstaltung section schema. `intro` and `kapitel` can carry media refs for
 section images. `galerie` is the explicit image-gallery gesture for pictures
 from the media library or future upload intake and renders as a framed carousel
 strip on the public Veranstaltung page. `material` is reserved for
-downloads, links, archive objects, and dynamic references; it no longer carries
-rendered image refs. `galerie` means an approved presentation section, not an
+downloads, links, archive objects, and dynamic references. Image refs appear as
+downloadable files through the shared Material renderer, rather than inline
+gallery images. `galerie` means an approved presentation section, not an
 editor dump; raw media dumps belong in the future editorial media bucket
 workflow before promotion.
 The admin editor reuses WordPress media selection plus the existing archive
