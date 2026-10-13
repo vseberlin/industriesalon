@@ -91,6 +91,10 @@ try {
         $doc = iss_editorial_get_empty_document($slug);
         $assert($doc['schema_version'] === 3, "$slug: new document uses current version");
         $doc['sections'] = [['type' => $type], ['type' => $type, 'title' => 'Visible section', 'body' => '<p><strong>Reliable</strong> <span class="' . $colour . '">text</span></p>']];
+        if ($slug === 'place') {
+            $doc['sections'][0] = ['type' => 'intro'];
+            $doc['sections'][1] += ['era_key' => 'nach-1990', 'function_key' => 'culture'];
+        }
         if ($slug === 'veranstaltung') { $doc['entity_key'] = 'event.general'; update_post_meta($id, '_iss_entity_key', 'event.general'); }
         if ($slug === 'publication') { update_post_meta($id, '_iss_publication_layout', 'longread'); }
         $assert(iss_editorial_save_document($id, $slug, $doc), "$slug: save current document");

@@ -1,29 +1,30 @@
 # Current handoff — 13 October 2026
 
-## Editorial workspace and Place contract review
+## Editorial workspace and Place save validation
 
-Article workflow verification is committed locally as `6b60774`, following
-chooser guidance `242593c`; nothing is pushed or deployed. The accepted eight-type
-workflow passed Chrome save/reload, keyboard, paste, recovery and cancellation
-checks, 382 storage assertions and 41 UI tests. See the audit for exact scope.
+The Place review is committed locally as `ec54190`, following article workflow
+verification `6b60774` and chooser guidance `242593c`; nothing is pushed or deployed.
+The save guard is accepted for local commit: Place canonical/native saves now reuse the
+register epoch service's validation before writes. Missing epoch title/era/function,
+multiple current phases and removing the last epoch are rejected. Unfinished
+starters and deleted-epoch edits remain recoverable; corrected native retries
+update saved JSON and projected history.
 
-The completed Place contract review is accepted for local commit.
-There are 84 Places; only Kino Spreehöfe (12899) has enabled/stored Place JSON.
-Its six epochs match the register projection; the effective template is theme-backed.
-Five disposable save probes exposed a contract gap: missing epoch title/era/function,
-multiple current phases or no remaining epoch pass JSON validation and report a
-successful save while leaving the previous projection in place. The fixture and
-its projections are removed; live pilot JSON and epochs remained identical.
+Checks: 433 storage assertions over all 94 existing documents, 13,079 registry
+assertions, 41 UI tests, PHP syntax, PHPCS and PHPStan. Chrome covers the missing-era
+message, recovery after reload, correction and native Save Draft/reload. Existing
+post content/metadata and Place epochs/milestones/states survive test cleanup.
+All test posts and derived rows are removed. The only enabled Place, Kino
+Spreehöfe (12899), retains six matching epochs; its template is theme-backed.
 
-Next: guard Place canonical/native saves using the projection owner's validation,
-retain invalid drafts for recovery, and test a corrected retry. Then align
-intro/present-day fields and ordering with the dossier renderer, and resolve the
-separate contribution contract. The registered upload gesture renders nothing;
-template links use a legacy `ort` identifier the intake handler cannot resolve,
-and Places are outside its eligible types. No upload was submitted. See the
-[Place review](docs/project/editorial-consolidation-audit.md#place-contract-review--13-october-2026).
+Next: harden Place persistence against database write failures through the
+existing owners. This slice covers validation, not transactional projection writes.
+Then align intro/present-day fields and ordering with the dossier renderer and
+resolve the separate contribution contract. The JSON upload gesture is inert;
+template links use an unresolved `ort` identifier, and intake excludes Places.
+See the [save guard](docs/project/editorial-consolidation-audit.md#place-save-validation--13-october-2026).
 
-This slice changes documentation only. No SQL, uploads or template artifact is
+No real content, schema, template or uploads changed; no paired artifact is
 required. Staff UAT, Firefox and external Word/Docs paste remain release checks.
 Effective page/report/publication/Place templates are file-backed;
 Ausstellung override 26309 is retained. The earlier CPT commit's archive

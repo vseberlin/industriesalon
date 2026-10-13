@@ -29,6 +29,14 @@ $snapshot = static function (): string {
     return hash('sha256', serialize($wpdb->get_results("SELECT p.ID,p.post_title,p.post_excerpt,p.post_content,m.meta_key,m.meta_value FROM {$wpdb->posts} p LEFT JOIN {$wpdb->postmeta} m ON m.post_id=p.ID AND m.meta_key <> '_edit_lock' WHERE p.post_type <> 'revision' ORDER BY p.ID,m.meta_id", ARRAY_A)));
 };
 $before = $snapshot();
+$place_projection_snapshot = static function (): string {
+    $rows = [];
+    foreach (get_posts(['post_type' => 'register_place', 'post_status' => 'any', 'numberposts' => -1, 'fields' => 'ids']) as $place_id) {
+        $rows[$place_id] = [iss_register_get_epoch_service()->get_epochs_for_place($place_id), iss_register_get_epoch_service()->get_milestones_for_place($place_id), iss_register_get_place_state_service()->get_states_for_place($place_id)];
+    }
+    return hash('sha256', serialize($rows));
+};
+$place_projections_before = $place_projection_snapshot();
 $die_handler = static function () {
     return static function ($message): void {
         throw new RuntimeException('Rejected: ' . wp_strip_all_tags((string) $message));
@@ -278,6 +286,67 @@ try {
         }
     }
     $_POST = [];
+    // Place JSON and Atlas history must reject the same unfinished epoch documents.
+    $id = wp_insert_post(['post_type' => 'register_place', 'post_status' => 'draft', 'post_title' => 'Place validation fixture', 'post_content' => '<p>Native Place source</p>', 'post_excerpt' => 'Native Place summary', 'post_author' => $admin->ID], true);
+    $assert(!is_wp_error($id), 'Create Place validation fixture');
+    $fixtures[] = $id;
+    foreach (iss_content_editorial_sets_service()->get_links_for_context('register_place', $id) as $link) { $fixture_sets[] = (int) $link['set_id']; }
+    $place_doc = iss_editorial_get_empty_document('place');
+    $place_doc['sections'] = [['type' => 'intro', 'body' => '<p>Introduction</p>'], ['type' => 'epoche', 'title' => 'Original phase', 'body' => '<p>Original history</p>', 'era_key' => 'nach-1990', 'function_key' => 'culture', 'start_year' => 2000, 'is_current' => true]];
+    $assert(iss_editorial_save_document($id, 'place', $place_doc), 'Save valid Place candidate before enablement');
+    iss_editorial_set_document_enabled($id, 'place', true);
+    $assert(iss_editorial_save_document($id, 'place', $place_doc), 'Valid enabled Place saves and projects');
+    $place_doc = iss_editorial_get_document($id, 'place', false);
+    $place_epochs = iss_register_get_epoch_service()->get_epochs_for_place($id);
+    $place_states = iss_register_get_place_state_service()->get_states_for_place($id);
+    $assert(count($place_epochs) === 1 && $place_epochs[0]['phase_name'] === 'Original phase', 'Baseline Place projects its epoch');
+    $key = iss_editorial_get_document_meta_key('place');
+    $canonical = get_metadata_raw('post', $id, $key, true);
+    $base = iss_editorial_saved_token($id, 'place');
+    $cases = [];
+    foreach (['title' => 'iss_register_epoch_missing_name', 'era_key' => 'iss_register_epoch_invalid_era', 'function_key' => 'iss_register_epoch_invalid_function'] as $field => $error_code) {
+        $bad = $place_doc; $bad['sections'][1][$field] = '';
+        $cases[$field] = [$bad, $error_code];
+    }
+    $bad = $place_doc; $bad['sections'][] = $bad['sections'][1];
+    $cases['two current epochs'] = [$bad, 'iss_register_epoch_multiple_current'];
+    $bad = $place_doc; $bad['deleted_sections'][] = array_pop($bad['sections']);
+    $cases['last epoch in trash'] = [$bad, 'iss_register_place_projection_empty'];
+    $cases['empty new Place'] = [iss_editorial_get_empty_document('place'), 'iss_register_place_projection_empty'];
+    $bad = $place_doc; $bad['sections'] = iss_editorial_get_format('place')['starters'][0]['sections'];
+    $cases['unfinished Place starter'] = [$bad, 'iss_register_epoch_invalid_era'];
+    foreach ($cases as $label => [$bad, $error_code]) {
+        $_POST = [];
+        $valid = iss_editorial_validate_document($bad, 'place');
+        $assert(is_wp_error($valid) && $valid->get_error_code() === $error_code, 'Place rejects ' . $label . ' with its owner error');
+        $draft = iss_editorial_save_draft($id, 'place', $bad, true);
+        $assert(!is_wp_error($draft) && $draft['document'] === $bad, 'Place recovery retains ' . $label . ' exactly');
+        $assert(!iss_editorial_save_document($id, 'place', $bad) && get_metadata_raw('post', $id, $key, true) === $canonical, 'Canonical Place save rejects ' . $label);
+        $_POST = wp_slash(['iss_editorial_nonce' => wp_create_nonce('iss_editorial_save_document'), 'iss_editorial' => ['place' => ['document' => iss_editorial_encode_document($bad), 'base' => $base, 'draft_token' => $draft['token'], 'enabled' => '1']]]);
+        $rejected = false;
+        try { wp_update_post(['ID' => $id, 'post_title' => 'Must not change', 'post_content' => 'Must not replace source', 'post_excerpt' => 'Must not replace summary']); }
+        catch (RuntimeException $error) { $rejected = str_starts_with($error->getMessage(), 'Rejected:'); }
+        $post = get_post($id);
+        $assert($rejected && $post->post_title === 'Place validation fixture' && $post->post_content === '<p>Native Place source</p>' && $post->post_excerpt === 'Native Place summary' && get_metadata_raw('post', $id, $key, true) === $canonical, 'Native Place save rejects the whole update for ' . $label);
+        $assert(iss_register_get_epoch_service()->get_epochs_for_place($id) === $place_epochs && iss_register_get_place_state_service()->get_states_for_place($id) === $place_states, 'Place rejection preserves epoch/state rows for ' . $label);
+        $assert(iss_editorial_get_draft($id, 'place')['document'] === $bad, 'Rejected native save keeps Place recovery for ' . $label);
+    }
+    $_POST = [];
+    $corrected = $place_doc;
+    $corrected['sections'][1]['title'] = 'Corrected phase';
+    $corrected['sections'][1]['body'] = '<p><strong>Corrected history</strong></p>';
+    $corrected['deleted_sections'] = [['type' => 'epoche', 'title' => 'Unfinished discarded phase']];
+    $corrected = iss_editorial_validate_document($corrected, 'place');
+    $assert(!is_wp_error($corrected), 'Discarded incomplete epochs do not block valid active history');
+    $draft = iss_editorial_save_draft($id, 'place', $corrected, true);
+    $assert(!is_wp_error($draft), 'Corrected Place recovery is available for retry');
+    $_POST = wp_slash(['iss_editorial_nonce' => wp_create_nonce('iss_editorial_save_document'), 'iss_editorial' => ['place' => ['document' => iss_editorial_encode_document($corrected), 'base' => $base, 'draft_token' => $draft['token'], 'enabled' => '1']]]);
+    wp_update_post(['ID' => $id, 'post_title' => 'Corrected Place fixture']);
+    $projected = iss_register_get_epoch_service()->get_epochs_for_place($id);
+    $assert(get_post($id)->post_title === 'Corrected Place fixture' && iss_editorial_get_document($id, 'place', false) === $corrected, 'Corrected native Place retry saves JSON and identity together');
+    $assert(count($projected) === 1 && $projected[0]['phase_name'] === 'Corrected phase' && $projected[0]['summary'] === 'Corrected history', 'Corrected Place retry updates Atlas history');
+    $assert(iss_editorial_get_draft($id, 'place') === [], 'Successful Place retry clears recovery');
+    $_POST = [];
     $rich_doc = iss_editorial_get_empty_document('landing');
     $rich_doc['schema_version'] = 2;
     $rich = '<p><a href="/archive/"><strong><span class="iss-ink-123abc">Colour</span></strong></a> <span class="iss-mark-ffeeaa">mark</span></p>';
@@ -443,7 +512,11 @@ try {
     remove_filter('wp_die_handler', $die_handler, PHP_INT_MAX);
     wp_set_current_user($admin->ID);
     foreach ($fixtures as $id) {
+        $is_place = get_post_type($id) === 'register_place';
         wp_delete_post($id, true);
+        if ($is_place) {
+            $assert(iss_register_get_epoch_service()->get_epochs_for_place($id) === [] && iss_register_get_place_state_service()->get_states_for_place($id) === [], 'Place fixture deletion removes its derived rows');
+        }
     }
     foreach ($fixture_sets as $set_id) {
         $service = iss_content_editorial_sets_service();
@@ -456,5 +529,6 @@ try {
     $_POST = $original_post;
     wp_set_current_user($original_user);
     $assert($snapshot() === $before, 'Existing post content and metadata are unchanged after fixture cleanup');
+    $assert($place_projection_snapshot() === $place_projections_before, 'Existing Place epochs, milestones and states are unchanged after fixture cleanup');
     WP_CLI::log('PASS: existing post content and metadata unchanged; fixtures removed.');
 }

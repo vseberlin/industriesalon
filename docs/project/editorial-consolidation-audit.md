@@ -119,6 +119,8 @@ No SQL, uploads or template artifact is required.
 
 ### Place contract review — 13 October 2026
 
+Committed locally as `ec54190`; not pushed or deployed.
+
 This is a separate contract review, not an expansion of portable gestures or a
 Place migration. The mounted runtime has 84 Places; only Kino Spreehöfe (12899)
 has stored/enabled Place JSON. Its v1 document contains one introduction, six
@@ -144,7 +146,8 @@ existing owners; generic composition gestures must not duplicate them.
 
 Prioritized follow-up:
 
-1. **Guard Place saves before canonical JSON changes.** A disposable enabled
+1. **Guard Place saves before canonical JSON changes.** Implemented in the
+   validation slice below. The original review's disposable enabled
    Place with one valid projected epoch reproduced five failures: missing title,
    missing era, missing function, two current phases, and no remaining epoch.
    Each passed `iss_editorial_validate_document()` and
@@ -179,6 +182,38 @@ owner hooks. Live pilot JSON and epoch rows remained identical across the probes
 No production code, real content, templates, schema or uploads changed; no paired
 data artifact is needed. This review does not constitute Place upload acceptance
 or a full editor save test on real content.
+
+### Place save validation — 13 October 2026
+
+The register epoch service now exposes its existing row validation without
+writing. Both its projection writer and the shared editorial validation filter
+use that method. One extracted document-to-epoch mapping serves preflight and
+projection; required fields and the single-current-phase rule remain owned by
+the register service. Editors receive actionable German messages.
+
+Canonical saves and native WordPress updates reject missing epoch titles, eras
+or functions, multiple current phases, and documents without an active epoch.
+The empty new document and unfinished Place starter remain recoverable drafts;
+they must be completed before saving the canonical document. Trashed unfinished
+epochs do not block otherwise valid history. Failed validation leaves native
+post fields, saved JSON and epoch/state projections unchanged. A corrected retry
+updates the document and its derived history through the existing save hooks.
+
+Checks: 433 storage assertions over all 94 existing documents, 13,079
+registry/renderer assertions, all 41 UI tests, PHP syntax, PHPCS and PHPStan.
+The storage suite verifies recovery, whole-update rejection and corrected retry,
+plus preservation of existing Place epochs, supplier milestones and states after
+fixture cleanup. Its preview fixture now uses a valid epoch after an empty intro.
+Chrome confirms the missing-era message, Fertig retaining the invalid inspector,
+recovery after reload, correction, native Save Draft/reload and matching projected
+history. Browser and automated fixtures and their derived rows are removed;
+Kino Spreehöfe's six-epoch parity check still passes.
+
+This slice addresses validation failures before writes. It does not make the
+projection writer transactional or add propagation of database write failures;
+that is the next separate persistence slice. Renderer/ordering and contribution
+issues from the review remain open. No real content, template, schema or uploads
+changed, and no paired data artifact is needed.
 
 The existing media/text pattern now owns its flex layout for native blocks and
 JSON alike. Its defaults are component-scoped, the overlay retains image height

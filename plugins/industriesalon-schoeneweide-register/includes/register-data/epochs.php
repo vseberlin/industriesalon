@@ -270,19 +270,13 @@ final class ISS_Register_Place_Epoch_Service
         }
     }
 
-    public function save_epochs_for_place(int $place_post_id, array $rows, array $context = [])
+    /**
+     * Validate without writing; document preflight does not require a Place ID.
+     *
+     * @return array|WP_Error
+     */
+    public function validate_epochs(array $rows, int $place_post_id = 0)
     {
-        global $wpdb;
-
-        if ($place_post_id <= 0) {
-            return new WP_Error('iss_register_epoch_invalid_place', 'Invalid place ID.');
-        }
-
-        $existing_rows = [];
-        foreach ($this->get_epochs_for_place($place_post_id) as $existing_row) {
-            $existing_rows[(int) ($existing_row['id'] ?? 0)] = $existing_row;
-        }
-
         $sanitized_rows = [];
         foreach (array_values($rows) as $index => $row) {
             if (!is_array($row)) {
@@ -301,7 +295,27 @@ final class ISS_Register_Place_Epoch_Service
             return !empty($row['is_current']);
         }));
         if (count($current_rows) > 1) {
-            return new WP_Error('iss_register_epoch_multiple_current', 'Only one current epoch is allowed per place.');
+            return new WP_Error('iss_register_epoch_multiple_current', __('Bitte nur eine Epoche als „Aktuelle Phase“ markieren.', 'industriesalon-schoeneweide-register'));
+        }
+
+        return $sanitized_rows;
+    }
+
+    public function save_epochs_for_place(int $place_post_id, array $rows, array $context = [])
+    {
+        global $wpdb;
+
+        if ($place_post_id <= 0) {
+            return new WP_Error('iss_register_epoch_invalid_place', 'Invalid place ID.');
+        }
+        $sanitized_rows = $this->validate_epochs($rows, $place_post_id);
+        if (is_wp_error($sanitized_rows)) {
+            return $sanitized_rows;
+        }
+
+        $existing_rows = [];
+        foreach ($this->get_epochs_for_place($place_post_id) as $existing_row) {
+            $existing_rows[(int) ($existing_row['id'] ?? 0)] = $existing_row;
         }
 
         usort($sanitized_rows, static function (array $left, array $right): int {
@@ -611,17 +625,17 @@ final class ISS_Register_Place_Epoch_Service
     {
         $era_slug = sanitize_title((string) ($row['era_slug'] ?? ''));
         if ($era_slug === '' || !isset($this->get_era_definitions()[$era_slug])) {
-            return new WP_Error('iss_register_epoch_invalid_era', sprintf('Epoch %d has an invalid era.', $index + 1));
+            return new WP_Error('iss_register_epoch_invalid_era', sprintf(__('Epoche %d: Bitte eine historische Epoche wählen.', 'industriesalon-schoeneweide-register'), $index + 1));
         }
 
         $function_key = sanitize_key((string) ($row['function_key'] ?? ''));
         if ($function_key === '' || !isset($this->get_function_definitions()[$function_key])) {
-            return new WP_Error('iss_register_epoch_invalid_function', sprintf('Epoch %d has an invalid function.', $index + 1));
+            return new WP_Error('iss_register_epoch_invalid_function', sprintf(__('Epoche %d: Bitte eine Funktion wählen.', 'industriesalon-schoeneweide-register'), $index + 1));
         }
 
         $phase_name = sanitize_text_field((string) ($row['phase_name'] ?? ''));
         if ($phase_name === '') {
-            return new WP_Error('iss_register_epoch_missing_name', sprintf('Epoch %d is missing a phase name.', $index + 1));
+            return new WP_Error('iss_register_epoch_missing_name', sprintf(__('Epoche %d: Bitte einen Titel ergänzen.', 'industriesalon-schoeneweide-register'), $index + 1));
         }
 
         $start_year = $this->normalize_year($row['start_year'] ?? null);
@@ -887,17 +901,12 @@ function iss_register_get_epoch_service(): ISS_Register_Place_Epoch_Service
     return ISS_Register_Place_Epoch_Service::get_instance();
 }
 
-function iss_register_sync_editorial_place_projection(int $post_id, string $format_slug, array $document)
+/**
+ * One mapping for editorial validation and the derived epoch writer.
+ * @return array|WP_Error
+ */
+function iss_register_editorial_place_epoch_rows(array $document)
 {
-    if (
-        $format_slug !== 'place'
-        || get_post_type($post_id) !== ISS_REGISTER_POST_TYPE
-        || !function_exists('iss_editorial_document_is_enabled')
-        || !iss_editorial_document_is_enabled($post_id, 'place')
-    ) {
-        return true;
-    }
-
     $rows = [];
     foreach ((array) ($document['sections'] ?? []) as $index => $section) {
         if (!is_array($section) || ($section['type'] ?? '') !== 'epoche') {
@@ -935,9 +944,37 @@ function iss_register_sync_editorial_place_projection(int $post_id, string $form
     }
 
     if (!$rows) {
-        return new WP_Error('iss_register_place_projection_empty', 'An enabled Place document must contain at least one epoch.');
+        return new WP_Error('iss_register_place_projection_empty', __('Bitte mindestens eine Epoche für die Geschichte des Ortes ergänzen.', 'industriesalon-schoeneweide-register'));
     }
 
+    return $rows;
+}
+
+// Recovery stores unfinished documents separately; canonical saves and previews use this preflight.
+add_filter('iss_editorial_validated_document', static function ($validated, array $raw, array $format) {
+    if (is_wp_error($validated) || $format['slug'] !== 'place') {
+        return $validated;
+    }
+    $rows = iss_register_editorial_place_epoch_rows($validated);
+    $result = is_wp_error($rows) ? $rows : iss_register_get_epoch_service()->validate_epochs($rows);
+    return is_wp_error($result) ? $result : $validated;
+}, 10, 3);
+
+function iss_register_sync_editorial_place_projection(int $post_id, string $format_slug, array $document)
+{
+    if (
+        $format_slug !== 'place'
+        || get_post_type($post_id) !== ISS_REGISTER_POST_TYPE
+        || !function_exists('iss_editorial_document_is_enabled')
+        || !iss_editorial_document_is_enabled($post_id, 'place')
+    ) {
+        return true;
+    }
+
+    $rows = iss_register_editorial_place_epoch_rows($document);
+    if (is_wp_error($rows)) {
+        return $rows;
+    }
     return iss_register_get_epoch_service()->save_epochs_for_place($post_id, $rows, [
         'source' => 'iss_editorial_place',
     ]);
