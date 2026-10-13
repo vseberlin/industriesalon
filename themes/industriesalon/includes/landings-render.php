@@ -652,8 +652,35 @@ function industriesalon_render_editorial_landing_statement(array $section, int $
     return trim((string) ob_get_clean());
 }
 
+/** Chapter content is shared with the project dossier's chapter/facts pairing. */
+function industriesalon_render_editorial_landing_chapter_content(array $section): string
+{
+    $copy = industriesalon_render_editorial_landing_copy($section);
+    $media = industriesalon_render_editorial_landing_references($section);
+    $dynamic = '';
+    foreach ((array) ($section['dynamic_refs'] ?? []) as $reference) {
+        // Validation and field availability stay with the event owner.
+        $dynamic .= industriesalon_render_structured_veranstaltung_dynamic_reference($reference);
+    }
+    if ($copy === '' && $media === '' && $dynamic === '') { return ''; }
+
+    $classes = 'iss-landing-chapter';
+    if ($media !== '' && ($copy !== '' || $dynamic !== '') && ($section['media_layout'] ?? '') === 'aside-right') {
+        $classes .= ' iss-landing-chapter--media-aside';
+    }
+    if (($section['section_treatment'] ?? '') === 'aside') { $classes .= ' iss-landing-chapter--aside'; }
+    $html = '<div class="' . esc_attr($classes) . '">';
+    if ($copy !== '' || $dynamic !== '') { $html .= '<div class="iss-landing-chapter__copy">' . $copy . $dynamic . '</div>'; }
+    if ($media !== '') { $html .= '<div class="iss-landing-gallery__track iss-landing-chapter__media">' . $media . '</div>'; }
+    return $html . '</div>';
+}
+
 function industriesalon_render_editorial_landing_text(array $section, int $rendered_index, string $skin): string
 {
+    if (($section['type'] ?? '') === 'kapitel') {
+        $content = industriesalon_render_editorial_landing_chapter_content($section);
+        return $content !== '' ? '<section ' . industriesalon_editorial_landing_section_attrs($section, $skin) . '><div class="iss-container">' . $content . '</div></section>' : '';
+    }
     $references = industriesalon_render_editorial_landing_references($section);
     $media_html = $references !== '' ? '<div class="iss-landing-gallery__track iss-landing-reference-grid">' . $references . '</div>' : '';
     $treatment = industriesalon_editorial_landing_treatment_slug($section);
@@ -1413,7 +1440,7 @@ function industriesalon_render_editorial_landing_section(array $section, int $re
     if (in_array($type, ['zitat', 'longread_quote'], true)) {
         return industriesalon_render_editorial_landing_quote($section, $skin);
     }
-    if (in_array($type, ['fliesstext', 'schluss'], true)) {
+    if (in_array($type, ['fliesstext', 'schluss', 'kapitel'], true)) {
         return industriesalon_render_editorial_landing_text($section, $rendered_index, $skin);
     }
     if ($type === 'gateway') {
@@ -1530,7 +1557,7 @@ function industriesalon_front_page_landing_has_sections(): bool
         if (!is_array($section)) {
             continue;
         }
-        if (in_array((string) ($section['type'] ?? ''), ['statement', 'fliesstext', 'schluss', 'zitat', 'gateway', 'text_bild_reihe', 'map_img', 'galerie', 'feature', 'dynamic_slot'], true)) {
+        if (in_array((string) ($section['type'] ?? ''), ['statement', 'fliesstext', 'schluss', 'kapitel', 'zitat', 'gateway', 'text_bild_reihe', 'map_img', 'galerie', 'feature', 'dynamic_slot'], true)) {
             $has_sections = true;
             break;
         }

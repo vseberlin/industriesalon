@@ -414,6 +414,31 @@
   align-items: start;
 }
 
+.iss-landing-chapter {
+  display: grid;
+  gap: clamp(1.5rem, 3vw, 2.75rem);
+  align-items: start;
+}
+
+.iss-landing-chapter--media-aside {
+  grid-template-columns: minmax(0, 1.4fr) minmax(0, 1fr);
+}
+
+.iss-landing-chapter--aside {
+  padding: clamp(1rem, 2vw, 2rem);
+  border-inline-start: 3px solid var(--iss-accent);
+  background: color-mix(in srgb, var(--iss-landing-ink) 5%, var(--iss-landing-surface));
+}
+
+.iss-landing-chapter__copy,
+.iss-landing-chapter__media {
+  min-width: 0;
+}
+
+.iss-landing-chapter__media {
+  grid-template-columns: 1fr;
+}
+
 .iss-landing-text .iss-landing-section__copy {
   display: grid;
   grid-column: 2;
@@ -1398,6 +1423,7 @@
 .iss-landing-section--treatment-gateway-link-list .iss-landing-section__inner,
 .iss-landing-feature,
 .iss-landing-text,
+.iss-landing-chapter--media-aside,
 .iss-landing-section--treatment-feature-image-overlay .iss-landing-feature,
 .iss-landing-section--treatment-feature-image-overlay .iss-landing-feature__fact,
 .iss-landing-dynamic-slot--front-newsletter .iss-newsletter-band__grid {

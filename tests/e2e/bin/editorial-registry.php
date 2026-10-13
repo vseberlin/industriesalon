@@ -225,22 +225,26 @@ try {
             if ($slug !== 'landing') { $assert(is_wp_error(iss_editorial_validate_document($bad, $slug)), "$slug: front-page opening cannot leak into a domain format"); }
             $common_doc = iss_editorial_get_empty_document($slug);
             if ($slug === 'veranstaltung') { $common_doc['entity_key'] = 'event.general'; }
-            foreach (['galerie', 'fliesstext', 'zitat', 'schluss'] as $common_type) {
+            foreach (['galerie', 'fliesstext', 'zitat', 'schluss', 'kapitel'] as $common_type) {
                 $definition = $format['sections'][$common_type];
                 $contract = iss_editorial_get_format('article')['sections'][$common_type];
                 foreach (['supports', 'rich_text', 'treatments', 'default_treatment', 'legacy_types'] as $field) {
-                    $assert($definition[$field] === $contract[$field], "$slug.$common_type: identical $field contract");
+                    $actual = $definition[$field];
+                    if ($field === 'supports' && $slug === 'veranstaltung' && $common_type === 'kapitel') { $actual = array_values(array_diff($actual, ['dynamic_refs'])); }
+                    $assert($actual === $contract[$field], "$slug.$common_type: identical $field contract");
                 }
                 $sample = ['type' => $common_type, 'anchor' => 'shared-' . $common_type, 'kicker' => 'Common kicker', 'title' => 'Common ' . $common_type,
                     'body' => '<p><em>Common formatted body</em></p>', 'media_refs' => [array_merge($media, ['label' => 'Owned image caption'])], 'object_refs' => [$archive_ref, $private_ref]];
                 if ($common_type === 'schluss') { unset($sample['media_refs'], $sample['object_refs']); }
+                if ($common_type === 'kapitel') { unset($sample['object_refs']); }
                 $choices = match ($common_type) {
                     'galerie' => array_map(static fn(string $layout): array => ['gallery_layout' => $layout], ['grid', 'sequence', 'wall', 'viewport']),
                     'fliesstext' => array_map(static fn(array $treatment): array => ['treatment' => $treatment['slug']], $contract['treatments']),
                     'schluss' => [[]],
+                    'kapitel' => [['media_layout' => 'inline', 'section_treatment' => 'standard'], ['media_layout' => 'aside-right', 'section_treatment' => 'standard'], ['media_layout' => 'inline', 'section_treatment' => 'aside'], ['media_layout' => 'aside-right', 'section_treatment' => 'aside']],
                     default => [['quote_treatment' => 'pull'], ['quote_treatment' => 'source', 'orientation' => 'media-left'], ['quote_treatment' => 'source', 'orientation' => 'media-right']],
                 };
-                if (in_array($common_type, ['fliesstext', 'schluss'], true)) { $sample['links'] = [['label' => 'Common link', 'url' => 'https://example.invalid/common']]; }
+                if (in_array($common_type, ['fliesstext', 'schluss', 'kapitel'], true)) { $sample['links'] = [['label' => 'Common link', 'url' => 'https://example.invalid/common']]; }
                 if ($common_type === 'zitat') { $sample['quote'] = '<p><strong>Quoted words</strong></p>'; $sample['attribution'] = 'Author & Archive'; }
                 foreach ($format['skins'] as $skin => $skin_definition) {
                     foreach ($choices as $choice) {
@@ -250,12 +254,17 @@ try {
                         $assert(!is_wp_error($validated), "$label: shared fields validate");
                         $html = $render_portable($validated['sections'][0], $slug, $skin);
                         $expected = ['Common ' . $common_type, '<em>Common formatted body</em>'];
-                        if ($common_type !== 'schluss') { $expected = array_merge($expected, ['Owned image caption', 'Owned archive caption', esc_url(get_permalink($archive_id)), '<img ']); }
+                        if ($common_type !== 'schluss') { $expected = array_merge($expected, ['Owned image caption', '<img ']); }
+                        if (!in_array($common_type, ['schluss', 'kapitel'], true)) { $expected = array_merge($expected, ['Owned archive caption', esc_url(get_permalink($archive_id))]); }
                         foreach ($expected as $value) {
                             $assert(str_contains($html, $value), "$label: preserves $value");
                         }
                         $assert(!str_contains($html, 'Private archive caption') && !str_contains($html, 'Private reference must stay private'), "$label: archive owner rejects unpublished object");
-                        if (in_array($common_type, ['fliesstext', 'schluss'], true)) { $assert(str_contains($html, 'Common link'), "$label: links survive every text treatment"); }
+                        if (in_array($common_type, ['fliesstext', 'schluss', 'kapitel'], true)) { $assert(str_contains($html, 'Common link'), "$label: links survive every text treatment"); }
+                        if ($common_type === 'kapitel') {
+                            $assert(str_contains($html, 'iss-landing-chapter--media-aside') === ($choice['media_layout'] === 'aside-right'), "$label: chapter media placement retained");
+                            $assert(str_contains($html, 'iss-landing-chapter--aside') === ($choice['section_treatment'] === 'aside'), "$label: chapter aside retained");
+                        }
                         if ($common_type === 'galerie') { $assert(str_contains($html, 'data-gallery-layout="' . $choice['gallery_layout'] . '"'), "$label: renderer follows chosen gallery layout"); }
                         if ($common_type === 'zitat') {
                             $assert(str_contains($html, '<strong>Quoted words</strong>') && str_contains($html, 'Author &amp; Archive'), "$label: quote formatting and attribution survive");
@@ -266,11 +275,11 @@ try {
                 }
                 $common_doc['sections'][] = $sample;
             }
-            $assert(iss_editorial_save_document($id, $slug, $common_doc), "$slug: save common gallery/text/quote/conclusion composition");
+            $assert(iss_editorial_save_document($id, $slug, $common_doc), "$slug: save common composition");
             $assert(iss_editorial_get_document($id, $slug) === iss_editorial_validate_document($common_doc, $slug), "$slug: common fields round-trip without loss");
             $GLOBALS['wp_the_query'] = $query;
             $html = apply_filters('the_content', '<p>Original block content</p>');
-            foreach (['galerie', 'fliesstext', 'zitat', 'schluss'] as $common_type) { $assert(substr_count($html, 'Common ' . $common_type) === 1, "$slug.$common_type: native content route renders once"); }
+            foreach (['galerie', 'fliesstext', 'zitat', 'schluss', 'kapitel'] as $common_type) { $assert(substr_count($html, 'Common ' . $common_type) === 1, "$slug.$common_type: native content route renders once"); }
             $draft = iss_editorial_save_draft($id, $slug, $common_doc, true);
             $assert(!is_wp_error($draft), "$slug: common snapshot saves");
             $_GET = ['iss_editorial_embed' => '1', 'iss_editorial_canvas' => '1', 'iss_editorial_preview' => '1', 'iss_editorial_format' => $slug, 'iss_editorial_snapshot' => $draft['token'], 'iss_editorial_preview_nonce' => wp_create_nonce(iss_editorial_get_preview_nonce_action($id, $slug))];
@@ -303,9 +312,55 @@ try {
                     $assert(count($nav) === 1 && $nav[0]['anchor'] === 'contact-end' && $nav[0]['type'] === 'schluss', 'Project contact navigation retains the conclusion');
                 }
             }
+            $chapter_doc = iss_editorial_get_empty_document($slug);
+            if ($slug === 'veranstaltung') { $chapter_doc['entity_key'] = 'event.general'; }
+            $chapter_doc['sections'] = [['type' => 'kapitel', 'anchor' => 'shared-chapter', 'title' => 'Portable chapter', 'body' => '<p><strong>Chapter prose</strong></p>',
+                'links' => [['label' => 'Chapter link', 'url' => 'https://example.invalid/chapter']],
+                'media_refs' => [array_merge($media, ['label' => 'Chapter image caption'])], 'media_layout' => 'aside-right', 'section_treatment' => 'aside']];
+            foreach ([1, 2, 3] as $version) {
+                $chapter_doc['schema_version'] = $version;
+                $validated = iss_editorial_validate_document($chapter_doc, $slug);
+                $assert(!is_wp_error($validated), "$slug/v$version: retained chapter fields validate");
+                $html = $render_portable($validated['sections'][0], $slug, $format['default_skin'], $version);
+                foreach (['Chapter link', 'Chapter image caption', '<strong>Chapter prose</strong>', 'iss-landing-chapter--media-aside', 'iss-landing-chapter--aside'] as $value) {
+                    $assert(str_contains($html, $value), "$slug/v$version: chapter retains $value");
+                }
+            }
+            $dynamic_ref = ['kind' => 'control_field', 'source' => 'industriesalon-steuerung', 'key' => 'address.full', 'label' => 'Live institution address', 'tagName' => 'p', 'linkMode' => 'none'];
+            $dynamic_doc = $chapter_doc; $dynamic_doc['sections'] = [['type' => 'kapitel', 'dynamic_refs' => [$dynamic_ref]]];
+            if ($slug === 'veranstaltung') {
+                $assert(iss_editorial_save_document($id, $slug, $dynamic_doc), 'Event chapter retains live-only references without prose');
+                $assert(iss_editorial_get_document($id, $slug)['sections'][0]['dynamic_refs'] === [$dynamic_ref], 'Event live reference round-trips without converting it to text');
+                $model = iss_editorial_get_read_model($id, $slug);
+                $html = $render_portable($model['sections'][0], $slug, $format['default_skin']);
+                $value = trim((string) Industriesalon_Steuerung::instance()->get_field_value('address.full', ''));
+                $assert($value !== '' && str_contains($html, esc_html($value)) && str_contains($html, 'Live institution address'), 'Event chapter reads the current value from its owner');
+                foreach (iss_content_model_veranstaltung_entities() as $entity_key => $entity) {
+                    $dynamic_doc['entity_key'] = $entity_key;
+                    $assert(!is_wp_error(iss_editorial_validate_document($dynamic_doc, $slug)), "$entity_key: live references remain an event chapter extension");
+                }
+            } else {
+                $assert(is_wp_error(iss_editorial_validate_document($dynamic_doc, $slug)), "$slug: event live fields cannot leak into other formats");
+            }
+            if ($slug === 'projekt') {
+                $chapter_doc['skin'] = 'dossier';
+                $chapter_doc['sections'][] = ['type' => 'facts', 'anchor' => 'chapter-facts', 'title' => 'Paired facts', 'body' => '<p>Facts prose</p>', 'facts' => [['label' => 'Owned fact', 'value' => '12']]];
+                $assert(iss_editorial_save_document($id, $slug, $chapter_doc), 'Project chapter and facts save together');
+                $GLOBALS['wp_the_query'] = $query;
+                $html = apply_filters('the_content', '<p>Original block content</p>');
+                foreach (['iss-project-dossier-spread', 'Paired facts', 'Owned fact', 'Chapter image caption', 'Chapter link', 'iss-landing-chapter--media-aside', 'iss-landing-chapter--aside', 'id="shared-chapter"'] as $value) {
+                    $assert(str_contains($html, $value), "Paired project layout retains $value");
+                }
+                $draft = iss_editorial_save_draft($id, $slug, $chapter_doc, true);
+                $assert(!is_wp_error($draft), 'Paired project chapter snapshot saves');
+                $_GET = ['iss_editorial_embed' => '1', 'iss_editorial_canvas' => '1', 'iss_editorial_preview' => '1', 'iss_editorial_format' => $slug, 'iss_editorial_snapshot' => $draft['token'], 'iss_editorial_preview_nonce' => wp_create_nonce(iss_editorial_get_preview_nonce_action($id, $slug))];
+                $html = apply_filters('the_content', '<p>Original block content</p>');
+                $assert(substr_count($html, 'data-iss-preview-section="0"') === 1 && substr_count($html, 'data-iss-preview-section="1"') === 1 && substr_count($html, 'data-iss-field="body"') === 2, 'Chapter and facts retain separate editable snapshot addresses');
+                $_GET = []; $GLOBALS['wp_the_query'] = $original_main_query;
+            }
         } else {
             $assert(array_intersect($portable_types, array_keys($format['sections'])) === [], "$slug: specialized adapters are not silently widened");
-            $assert(!isset($format['sections']['schluss']), 'Places do not acquire shared conclusions');
+            $assert(!isset($format['sections']['schluss']) && !isset($format['sections']['kapitel']), 'Places do not acquire shared conclusions or chapters');
         }
 
     }
@@ -338,9 +393,10 @@ try {
                 $doc['sections'][] = $second;
             }
             $doc['sections'][] = ['type' => 'gateway', 'title' => 'Shared after', 'body' => '<p>Shared after body</p>', 'items' => [['label' => 'Shared item', 'text' => '<em>Shared card copy</em>', 'url' => 'https://example.invalid/shared']]];
-            foreach (['galerie', 'fliesstext', 'zitat', 'schluss'] as $common_type) {
+            foreach (['galerie', 'fliesstext', 'zitat', 'schluss', 'kapitel'] as $common_type) {
                 $extra = ['type' => $common_type, 'title' => 'Layout ' . $common_type, 'body' => '<p>Layout common body</p>', 'media_refs' => [$media], 'object_refs' => [$archive_ref]];
                 if ($common_type === 'schluss') { unset($extra['media_refs'], $extra['object_refs']); $extra['links'] = [['label' => 'Layout contact', 'url' => 'https://example.invalid/contact']]; }
+                if ($common_type === 'kapitel') { unset($extra['object_refs']); $extra['media_layout'] = 'aside-right'; $extra['section_treatment'] = 'aside'; }
                 if ($common_type === 'zitat') { $extra['quote'] = 'Layout quote'; $extra['attribution'] = 'Layout attribution'; }
                 $doc['sections'][] = $extra;
             }
@@ -361,7 +417,7 @@ try {
             foreach (['Shared before' => 2, 'Shared middle' => 2, 'Shared after' => 2, 'Shared lead' => 1, 'Owned source note' => 1] as $marker => $count) {
                 $assert(substr_count($html, $marker) === $count, "$label: content appears once per field: $marker");
             }
-            foreach (['galerie', 'fliesstext', 'zitat', 'schluss'] as $common_type) { $assert(substr_count($html, 'Layout ' . $common_type) === 1, "$label: shared $common_type renders once"); }
+            foreach (['galerie', 'fliesstext', 'zitat', 'schluss', 'kapitel'] as $common_type) { $assert(substr_count($html, 'Layout ' . $common_type) === 1, "$label: shared $common_type renders once"); }
             $assert(substr_count($html, 'Layout contact') === 1, "$label: conclusion links survive layout selection");
             $assert(!str_contains($html, 'Legacy fallback only'), "$label: enabled composition owns content");
             $assert(iss_publications_get_publication_rail_settings($id)['show_related'] === false, "$label: rail options retained");

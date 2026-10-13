@@ -547,7 +547,7 @@
         parts.push(section.quote_treatment === 'source' ? 'Quellenauszug' : 'Zitat');
       }
       if (section.section_treatment) {
-        parts.push(section.section_treatment === 'aside' ? 'Ausstellungsentscheidung' : 'Kapitel');
+        parts.push(section.section_treatment === 'aside' ? 'Hintergrund / Exkurs' : 'Kapitel');
       }
       if (section.treatment) {
         parts.push(treatmentLabel(section.type || '', section.treatment));
@@ -1050,7 +1050,7 @@
       var factPanel = createEditorPanel('facts', 'Fakten', 'facts', collectionCount(section, 'facts'));
       var itemPanel = createEditorPanel('items', type === 'text_bild_reihe' ? 'Bild-Text-Paare' : 'Ziele', 'items', collectionCount(section, 'items'));
       var linkPanel = createEditorPanel('links', 'Links', 'links', collectionCount(section, 'links'));
-      var sourcePanel = createEditorPanel('sources', 'Quellen', 'links', collectionCount(section, 'source_refs'));
+      var sourcePanel = createEditorPanel('sources', 'Quellen', 'links', collectionCount(section, 'source_refs') + collectionCount(section, 'dynamic_refs'));
       var kickerField = createTextInput('Vorspann', section.kicker || '', function (value) {
         section.kicker = value;
         render();
@@ -1663,7 +1663,7 @@
       var options = createElement('div', 'iss-editorial-segmented');
       var choices = [
         { value: 'standard', label: 'Kapitel' },
-        { value: 'aside', label: 'Ausstellungsentscheidung' }
+        { value: 'aside', label: 'Hintergrund / Exkurs' }
       ];
       var current = section.section_treatment === 'aside' ? 'aside' : 'standard';
 

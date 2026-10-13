@@ -1,33 +1,33 @@
 # Current handoff — 13 October 2026
 
-## Editorial workspace and shared conclusions
+## Editorial workspace and shared chapters
 
-The workspace/CPT expansion (`65c55b8`), shared portability (`9eab967`), publication
-adapters (`c090540`), gallery/text/quote consolidation (`32d3e3f`) and native
-publication layout compatibility (`9fd10d0`) are committed locally, not pushed or
-deployed. Shared conclusions are accepted for this local checkpoint.
-`schluss` now shares rich text, anchors and links across eight formats through
-the existing text renderer, including links-only endings and event links.
-Project contact navigation and tour anchors retain their owners. Bildmatrix
-kicker text uses its existing light palette. Places remain separate.
+The editorial sequence through shared chapters is accepted for local commit,
+not pushed or deployed. `kapitel` now shares rich text, anchors, links, media/captions,
+inline/right-side placement and standard/aside presentation across eight formats.
+Event live institution references remain an owner-specific extension. Project
+chapter/facts pairing reuses the shared chapter body with separate preview
+addresses. Publication Lesekapitel retains its native numbering/navigation.
+Nine composition gestures are shared; Places remain separate.
 
-Checks: 9,121 registry/renderer assertions, 297 storage checks covering all 94
+Checks: 10,405 registry/renderer assertions, 298 storage checks covering all 94
 existing documents with unchanged post content/metadata, 35 UI tests, targeted
-PHP/PHPCS/PHPStan and CSS checks. Chrome checks event/project/article/publication
-at desktop/390 px with both conclusion links and no document overflow. Compact
-chooser, title/link edit, Fertig and native Update/reload pass on the private
-event fixture. Review records, revisions, autosaves and its empty project Set
-are removed. Staff UAT and Firefox remain separate release checks.
+PHP/PHPCS/PHPStan, JavaScript and CSS checks. Chrome checks six formats at
+desktop/390 px, plus paired project layout at 820 px: no document overflow,
+media stack and captions survive. Event chapter edit/Fertig/native Update/reload
+preserves live reference, links and media choices. Paired project facts edit
+independently. The chooser distinguishes Kapitel/Lesekapitel and counts live
+sources correctly. Review records, revisions, autosaves and their empty project
+Set are removed. Staff UAT and Firefox remain separate release checks.
 
-Next: adapt `kapitel` while retaining event live
-institution references, tour media placement, exhibition asides and project
-chapter/facts pairing. The read-only inventory found 72 stored chapters,
-including one event chapter with a live reference. Native publication chapters
-retain their own title/navigation contract. See the
-[gesture inventory](docs/project/editorial-consolidation-audit.md#gesture-portability-checkpoint--13-october-2026).
+Next: reconcile `leitfrage` with shared statement
+treatments, retaining saved identifiers and distinct intro/hero contracts.
+See the [gesture inventory](docs/project/editorial-consolidation-audit.md#gesture-portability-checkpoint--13-october-2026).
 No SQL, uploads or template artifact is required: no real stored content or
-template changed; the reviewed local templates are file-backed. The earlier CPT
-commit's archive collection slot still needs target override review at release.
+template changed. Reviewed local templates are file-backed except the existing
+Ausstellung override (26309); it renders the shared chapters and was retained.
+The earlier CPT commit's archive collection slot still needs target override
+review at release.
 
 ## Scope and delivery state
 

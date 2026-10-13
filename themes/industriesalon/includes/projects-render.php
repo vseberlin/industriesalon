@@ -613,12 +613,6 @@ function industriesalon_render_editorial_project_dossier_spread(array $chapter, 
 {
     unset($show_placeholders);
 
-    $kicker = trim((string) ($chapter['kicker'] ?? ''));
-    $title = trim((string) ($chapter['title'] ?? ''));
-    $body = trim((string) ($chapter['body'] ?? ''));
-    $links = is_array($chapter['links'] ?? null) ? $chapter['links'] : [];
-    $links_html = industriesalon_render_editorial_project_links($links);
-
     $facts_kicker = trim((string) ($facts_section['kicker'] ?? ''));
     $facts_title = trim((string) ($facts_section['title'] ?? ''));
     $facts_body = trim((string) ($facts_section['body'] ?? ''));
@@ -645,17 +639,8 @@ function industriesalon_render_editorial_project_dossier_spread(array $chapter, 
     ?>
     <section id="<?php echo esc_attr($chapter_anchor); ?>" class="<?php echo esc_attr(implode(' ', array_unique($classes))); ?>" data-section-gesture="kapitel"<?php echo $facts_anchor !== '' ? ' data-facts-anchor="' . esc_attr($facts_anchor) . '"' : ''; ?>>
         <div class="iss-project-dossier-spread__inner">
-            <div class="iss-project-dossier-spread__copy iss-project-section__copy">
-                <?php if ($kicker !== '') : ?>
-                    <p class="iss-kicker iss-kicker--compact iss-project-section__kicker"><?php echo esc_html($kicker); ?></p>
-                <?php endif; ?>
-                <?php if ($title !== '') : ?>
-                    <h2 class="iss-project-section__title"><?php echo esc_html($title); ?></h2>
-                <?php endif; ?>
-                <?php if ($body !== '') : ?>
-                    <div class="iss-project-section__body iss-project-editorial__body"><?php echo wp_kses_post(wpautop($body)); ?></div>
-                <?php endif; ?>
-                <?php echo $links_html; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- Links are escaped in the shared helper. ?>
+            <div class="iss-project-dossier-spread__copy iss-landing-editorial iss-landing-editorial--skin-dossier">
+                <?php echo industriesalon_render_editorial_landing_chapter_content($chapter); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- Shared chapter renderer escapes text, links and resolved media. ?>
             </div>
             <?php if ($facts_html !== '' || $facts_kicker !== '' || $facts_title !== '' || $facts_body !== '') : ?>
                 <aside class="iss-project-dossier-spread__facts iss-project-section__fact-rail" aria-label="<?php echo esc_attr__('Projektfakten', 'industriesalon'); ?>">
@@ -675,7 +660,7 @@ function industriesalon_render_editorial_project_dossier_spread(array $chapter, 
     </section>
     <?php
 
-    $html = industriesalon_editorial_preview_section(trim((string) ob_get_clean()), $chapter, ['title' => 'iss-project-section__title', 'kicker' => 'iss-project-section__kicker', 'body' => 'iss-project-section__body']);
+    $html = industriesalon_editorial_preview_section(trim((string) ob_get_clean()), $chapter, ['title' => 'iss-landing-section__title', 'kicker' => 'iss-landing-section__kicker', 'body' => 'iss-landing-section__body']);
     return industriesalon_editorial_preview_section($html, $facts_section, ['title' => 'iss-project-dossier-spread__facts-title', 'body' => 'iss-project-dossier-spread__facts-body'], 'iss-project-dossier-spread__facts');
 }
 

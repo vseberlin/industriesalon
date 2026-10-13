@@ -297,11 +297,7 @@ function iss_content_model_register_editorial_formats(array $formats): array
                 'supports' => ['media_refs'],
                 'ui_hidden' => true,
             ],
-            'kapitel' => [
-                'label' => __('Kapitel', 'iss-content-model'),
-                'description' => __('Tour-Erzählung, Kontext oder thematischer Abschnitt.', 'iss-content-model'),
-                'supports' => ['anchor', 'media_refs', 'media_layout'],
-            ],
+            'kapitel' => $gestures['kapitel'],
             'leitfrage' => [
                 'label' => __('Die Kernfrage oder These', 'iss-content-model'),
                 'description' => __('Gibt den roten Faden vor und führt den Besucher durch das Thema.', 'iss-content-model'),
@@ -334,11 +330,7 @@ function iss_content_model_register_editorial_formats(array $formats): array
         'default_skin' => 'typografisch',
         'default_variant' => 'standard',
         'sections' => [
-            'kapitel' => [
-                'label' => __('Kapitel', 'iss-content-model'),
-                'description' => __('Ein neues Kapitel mit Überschrift und Text beginnen.', 'iss-content-model'),
-                'supports' => ['links', 'section_treatment'],
-            ],
+            'kapitel' => $gestures['kapitel'],
             'leitfrage' => [
                 'label' => __('Die Kernfrage oder These', 'iss-content-model'),
                 'description' => __('Gibt den roten Faden vor und führt den Besucher durch das Thema.', 'iss-content-model'),
@@ -374,11 +366,7 @@ function iss_content_model_register_editorial_formats(array $formats): array
         'default_skin' => 'dossier',
         'default_variant' => 'standard',
         'sections' => [
-            'kapitel' => [
-                'label' => __('Kapitel', 'iss-content-model'),
-                'description' => __('Ein Projektthema mit Überschrift und Text vorstellen.', 'iss-content-model'),
-                'supports' => ['anchor', 'links'],
-            ],
+            'kapitel' => $gestures['kapitel'],
             'fliesstext' => $gestures['fliesstext'],
             'facts' => [
                 'label' => __('Merkpunkte', 'iss-content-model'),
@@ -519,6 +507,10 @@ add_filter('iss_editorial_formats', static function (array $formats): array {
                 unset($section['portable']);
             } elseif (!empty($definitions[$type]['portable'])) {
                 $section['supports'] = $definitions[$type]['supports'];
+                // Live institution references remain an event-owned extension.
+                if ($slug === 'veranstaltung' && $type === 'kapitel') {
+                    $section['supports'][] = 'dynamic_refs';
+                }
             }
             // One concise chooser label across formats; domain explanations
             // belong to descriptions, not alternate names for the same gesture.

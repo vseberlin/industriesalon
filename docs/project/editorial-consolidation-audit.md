@@ -12,14 +12,15 @@ The mounted website checkout now exposes 28 registered gesture identifiers in ni
 The workspace/CPT expansion is committed as `65c55b8`, shared portability as
 `9eab967`, publication adapters as `c090540`, and shared gallery/text/quote
 contracts as `32d3e3f`; native publication layout compatibility is committed as
-`9fd10d0`. Shared conclusions are accepted for this local checkpoint. Registration, editor fields, save validation and
+`9fd10d0`, and shared conclusions as `5fce0d0`. Shared chapters are accepted for
+local commit. Registration, editor fields, save validation and
 public rendering must agree before a gesture becomes available in another format.
 
 | Gesture identifiers | Effective boundary / remaining work |
 | --- | --- |
 | `statement`, `gateway`, `text_bild_reihe`, `feature` | One portable field/treatment contract in the vocabulary. Available in landing, article, event, exhibition, project, report, tour and publication formats. All article CPTs inherit this. The existing composition renderer handles them under the selected skin. |
 | `intro` | Event/report/Place/publication introductions differ from the hidden tour introduction feeding its hero. Preserve those meanings before consolidation. |
-| `kapitel` | Remains domain-owned: event live institution references, tour media placement, exhibition asides and project chapter/facts pairing need explicit adapters before portability. |
+| `kapitel` | One shared chapter contract across eight formats: text, anchors, links, media/captions, inline/right-side media and standard/aside presentation. Event live references remain an owner-specific extension; project chapter/facts pairing retains its separate editing addresses. |
 | `fliesstext` | One portable contract across the same eight formats: three text treatments, links, media and archive references. Shared split geometry now works in every skin. |
 | `leitfrage` | Existing event/exhibition/tour text gesture; the portable statement also offers a question treatment. Avoid a silent type rewrite. |
 | `zitat` | One portable contract across eight formats: context, quote, attribution, media, objects and source/image orientation. Reuses the theme quote primitive. |
@@ -37,7 +38,7 @@ public rendering must agree before a gesture becomes available in another format
 | `epoche`, `gegenwart` | Place history and current-state projection remain a separate case. |
 | `longread_quote` | Retained saved publication identifier using the shared quote contract. Existing sections remain editable; hidden from new insertion so the chooser presents one quote. No identifier rewrite. |
 | `source`, `publication_rail` | Publication intro/source placement and reading-navigation options retain their existing owner contracts. Layout changes use native Update/Publish. |
-| `longread_chapter`, `timeline_item`, `photoalbum` | Publication-only gestures now render in every publication layout using the existing components. Mixed order, native navigation/counts and album sources are retained. Multiple albums render with distinct sheet links. Native title/year requirements remain. |
+| `longread_chapter`, `timeline_item`, `photoalbum` | Publication-only gestures now render in every publication layout using the existing components. Mixed order, native navigation/counts and album sources are retained. Multiple albums render with distinct sheet links. Native title/year requirements remain. The publication chapter is labelled Lesekapitel to distinguish its numbering/navigation from the shared Kapitel. |
 
 `massstab`, `vollbild`, `image_wall` and `feature.microblocks` remain declared
 compatibility aliases. Existing stored documents are not renamed or migrated.
@@ -75,7 +76,7 @@ Chapter text and shared headings now consume existing surface/skin variables,
 fixing dark-on-dark text in Bildmatrix. Its album palette is component-owned so
 the same album can appear in other layouts without losing its colours.
 
-Eight visible composition gestures now share fields and rendering across eight
+Nine visible composition gestures now share fields and rendering across eight
 formats. Gallery/text/quote rendering consumes resolved references through one
 existing composition path, with published-object checks delegated to the archive
 owner. Existing documents adopt the shared presentation while retaining their
@@ -84,39 +85,54 @@ duplicate Territorial positioning is removed so shared phone stacking can apply.
 Domain gallery/quote compatibility branches and their styling remain for legacy
 content and Place supplements; they are not a second new gesture contract.
 
-Verification covers the eight gestures, their treatments/layouts in every
+Verification covers the nine gestures, their treatments/layouts in every
 registered skin of eight formats, save/reload, public content routing, snapshot
 addresses, media/archive captions, source visibility, links, rich text,
-front-page exclusion and event-structure restrictions: 9,121 assertions plus 35
+front-page exclusion and event-structure restrictions: 10,405 assertions plus 35
 UI tests. Retained publication quote IDs and Place fields/rendering are checked.
 The publication matrix covers four layouts in all three skins,
 interleaving, native navigation/source data, all-native mixed documents, multiple
 albums, standalone native gestures under mismatched layouts, warm-cache layout
 switches, disabled fallback and two successive
-snapshots after a warmed public cache. Storage checks pass 297 assertions over all
-94 existing documents, with post content/metadata unchanged. Conclusion coverage
-includes all format/skin combinations, versions 1–3, event contexts, links-only
-endings, project contact navigation, save/reload and exact snapshot addresses.
-The publication matrix retains native navigation while conclusions render in all
-four layouts. Chrome checks event, project, article and publication conclusions
-at desktop/390 px with both links and no document overflow. The event chooser,
-title/link editing, Fertig and native Update/reload pass. Bildmatrix kicker text
-now inherits its existing light palette variable. The preceding publication
-checkpoint covered album links, layout save and chapter edit/Fertig.
+snapshots after a warmed public cache. Storage checks pass 298 assertions over all
+94 existing documents, with post content/metadata unchanged. Chapter coverage
+includes all format/skin combinations, versions 1–3, both media positions and
+aside treatment, captions, links, event live-only references, owner boundaries,
+project pairing and exact snapshot addresses. Shared chapters render in all
+publication layouts without joining native chapter counts/navigation.
+Chrome checks event, tour, exhibition, project, article and publication at
+desktop/390 px: no document overflow, images stack and captions remain visible.
+The project pairing also fits 820 px. Event edit/Fertig/native Update/reload
+preserves its live reference, media, caption and link. Paired project facts edit
+independently. The chooser distinguishes Kapitel and Lesekapitel; live reference
+counts now include dynamic sources. The preceding conclusion checkpoint covered
+links-only endings and title/link editing.
 Review fixtures are removed.
 Earlier tour/event/exhibition checks remain recorded in the preceding commit.
 Places remain explicitly excluded. No SQL, content migration, uploads or template
-artifact is needed; publication template authority is file-backed locally.
+artifact is needed. The reviewed local templates are file-backed except the
+existing Ausstellung override (26309), which was rendered successfully and left
+unchanged.
 
 ## Chapter contract boundary
 
-The read-only inventory found 72 stored `kapitel` sections: 21 event, 19 tour,
-seven exhibition and 25 project chapters. One event chapter has a live institution
-reference, so discarding `dynamic_refs` would lose existing content. Retain this
-field under the event owner. The next slice must preserve tour `media_layout`,
-exhibition `section_treatment`, links and project chapter/facts pairing before
-adding chapters to other formats. Native publication chapters retain their own
-title/navigation contract. No stored chapter or Place document changed here.
+The read-only inventory found 72 existing `kapitel` sections. They retain their
+stored identifiers and fields. The vocabulary supplies the common contract;
+only event chapters add `dynamic_refs`. The existing event sanitizer and
+institution-field renderer own those references, including the stored
+`address.full` reference. Other formats reject the event extension.
+
+The theme's chapter body reuses shared prose, links and resolved media. The
+project dossier uses that same body alongside its facts component, retaining
+both anchors and separate preview selection. A small chapter layout contract
+owns right-side media, phone stacking and aside presentation; no second field
+editor or storage path is added. Old domain renderer branches/CSS remain for
+legacy compatibility; this slice removes duplicate chapter definitions and the
+paired project's duplicate copy markup. Native publication chapters keep their
+numbering/navigation contract. Places remain separate.
+
+Next: reconcile `leitfrage` with shared statement treatments while retaining
+saved identifiers and the distinct intro/hero contracts.
 
 ## Findings and disposition
 

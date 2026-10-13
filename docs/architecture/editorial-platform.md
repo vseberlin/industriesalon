@@ -31,7 +31,7 @@ This is the implementation checkpoint for the SOW in
 ## Portable composition
 
 The vocabulary defines `statement`, `gateway`, `text_bild_reihe`, `feature`,
-`galerie`, `fliesstext`, `zitat` and `schluss` once, including supported fields and treatments. Landing, article, event,
+`galerie`, `fliesstext`, `zitat`, `schluss` and `kapitel` once, including supported fields and treatments. Landing, article, event,
 exhibition, project, report, tour and publication formats use those contracts. The theme
 registers their section renderer and delegates to the existing landing composition
 functions; native domain sections retain their renderers. Preview and public
@@ -52,9 +52,14 @@ duplicate chooser item.
 
 Conclusions share rich text, anchors and links, including links-only endings.
 They reuse the text renderer and selected skin. Project contact navigation and
-tour anchors keep their existing owners. Chapters remain domain-specific until
-event institution references, tour media placement, exhibition asides and
-project chapter/facts pairing have adapters that preserve all authored fields.
+tour anchors keep their existing owners. Chapters share links, resolved media
+with captions, inline/right-side placement and standard/aside presentation. The
+stored `section_treatment=aside` is labelled Hintergrund / Exkurs in the editor.
+Event chapters retain `dynamic_refs` as an event-only extension, sanitized and
+resolved by their existing owners. Project dossier pairing reuses the shared
+chapter body while keeping its facts column, anchors and separate preview
+addresses. Publication `longread_chapter` remains a distinct Lesekapitel with its
+native numbering/navigation; no stored identifiers are rewritten.
 
 Publication payload adapters retain shared and publication-native gestures in
 the reading flow of all four layouts. Chapter, timeline-moment and album markup

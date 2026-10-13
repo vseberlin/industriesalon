@@ -4,10 +4,9 @@ Immediate executable work only. Larger future programs live in `docs/project/bac
 
 ## Next
 
-- Continue from accepted shared conclusions after publication-layout commit `9fd10d0`. Next adapt
-  `kapitel` for portability while preserving event live institution references,
-  tour media placement, exhibition asides and project chapter/facts pairing.
-  Keep native publication title/navigation and Place contracts separate. See the
+- Reconcile `leitfrage` with shared statement treatments after accepted shared
+  chapter portability, retaining saved
+  identifiers and distinct intro/hero contracts. Places remain separate. See the
   [gesture inventory](docs/project/editorial-consolidation-audit.md#gesture-portability-checkpoint--13-october-2026).
 - Coordinate an authorized staging release of the completed
   [WordPress refactor](docs/project/wordpress-refactoring-plan.md) and accepted

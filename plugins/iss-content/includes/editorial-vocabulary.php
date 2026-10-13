@@ -15,6 +15,8 @@ function iss_content_model_editorial_gesture_registry(): array
         'kapitel' => [
             'label' => __('Kapitel', 'iss-content-model'),
             'description' => __('Ein Thema mit Überschrift und Text vertiefen.', 'iss-content-model'),
+            'portable' => true,
+            'supports' => ['anchor', 'links', 'media_refs', 'media_layout', 'section_treatment'],
             'icon' => 'editor-paragraph', 'tone' => 'text', 'group' => 'Text', 'schematic' => 'text',
         ],
         'fliesstext' => [
@@ -175,8 +177,8 @@ function iss_content_model_editorial_gesture_registry(): array
             'icon' => 'menu', 'tone' => 'automatic', 'group' => 'Orientierung', 'schematic' => 'list',
         ],
         'longread_chapter' => [
-            'label' => __('Kapitel', 'iss-content-model'),
-            'description' => __('Ein Kapitel mit Text und begleitenden Bildern.', 'iss-content-model'),
+            'label' => __('Lesekapitel', 'iss-content-model'),
+            'description' => __('Ein Publikationskapitel mit Nummerierung und Lesenavigation.', 'iss-content-model'),
             'icon' => 'editor-paragraph', 'tone' => 'text', 'group' => 'Text', 'schematic' => 'split',
         ],
         'timeline_item' => [
