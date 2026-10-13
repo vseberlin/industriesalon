@@ -1,36 +1,33 @@
 # Current handoff — 13 October 2026
 
-## Editorial workspace and publication layout review
+## Editorial workspace and shared conclusions
 
-The workspace/CPT expansion (`65c55b8`), shared-gesture portability (`9eab967`)
-and publication adapters (`c090540`), plus gallery/text/quote consolidation
-(`32d3e3f`), are committed locally, not pushed or deployed. The native publication
-layout slice is accepted for this local checkpoint. Chapters, dated entries
-and albums now render in all four publication layouts through their existing
-components, preserving document order and stored identifiers. Multiple albums
-keep separate sources and distinct sheet links; navigation/counts retain their
-native meaning. Native layout changes still require Update/Publish. Dark-skin
-chapter text and shared headings now use existing palette variables.
-Seven shared composition gestures remain available across eight formats; Places
-retain their separate fields and renderer.
+The workspace/CPT expansion (`65c55b8`), shared portability (`9eab967`), publication
+adapters (`c090540`), gallery/text/quote consolidation (`32d3e3f`) and native
+publication layout compatibility (`9fd10d0`) are committed locally, not pushed or
+deployed. Shared conclusions are accepted for this local checkpoint.
+`schluss` now shares rich text, anchors and links across eight formats through
+the existing text renderer, including links-only endings and event links.
+Project contact navigation and tour anchors retain their owners. Bildmatrix
+kicker text uses its existing light palette. Places remain separate.
 
-Checks: 8,800 registry/renderer assertions, 296 storage checks covering all 94
+Checks: 9,121 registry/renderer assertions, 297 storage checks covering all 94
 existing documents with unchanged post content/metadata, 35 UI tests, targeted
-PHP/PHPCS/PHPStan and CSS checks. Chrome checks all four publication layouts at
-desktop/390 px, album navigation, dark-skin contrast and a native layout save
-with all ten fixture sections retained. Chapter edit/Fertig works within the
-timeline preview. No document overflow. Native saves retain authored fields;
-existing media hydration adds preview metadata. Disposable records and autosaves
-are removed. Staff
-UAT and Firefox remain separate release checks.
+PHP/PHPCS/PHPStan and CSS checks. Chrome checks event/project/article/publication
+at desktop/390 px with both conclusion links and no document overflow. Compact
+chooser, title/link edit, Fertig and native Update/reload pass on the private
+event fixture. Review records, revisions, autosaves and its empty project Set
+are removed. Staff UAT and Firefox remain separate release checks.
 
-Next: reconcile `kapitel` and `schluss` field contracts
-across formats before widening their availability. Native publication title/year
-requirements and intro/source placement remain unchanged. See the
+Next: adapt `kapitel` while retaining event live
+institution references, tour media placement, exhibition asides and project
+chapter/facts pairing. The read-only inventory found 72 stored chapters,
+including one event chapter with a live reference. Native publication chapters
+retain their own title/navigation contract. See the
 [gesture inventory](docs/project/editorial-consolidation-audit.md#gesture-portability-checkpoint--13-october-2026).
-No SQL, uploads or template artifact is required: no stored content or template
-changed; the local publication template is file-backed. The earlier CPT commit's
-archive collection composition slot still needs target override review at release.
+No SQL, uploads or template artifact is required: no real stored content or
+template changed; the reviewed local templates are file-backed. The earlier CPT
+commit's archive collection slot still needs target override review at release.
 
 ## Scope and delivery state
 

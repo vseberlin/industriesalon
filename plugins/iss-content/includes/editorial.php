@@ -323,11 +323,7 @@ function iss_content_model_register_editorial_formats(array $formats): array
                 'description' => __('Schickt hochgeladene Besucherfotos direkt in die Warteschlange zur Freigabe.', 'iss-content-model'),
                 'supports' => ['anchor'],
             ],
-            'schluss' => [
-                'label' => __('Schluss', 'iss-content-model'),
-                'description' => __('Abschluss, Einladung oder weiterführende Links.', 'iss-content-model'),
-                'supports' => ['anchor', 'links'],
-            ],
+            'schluss' => $gestures['schluss'],
         ],
     ];
 
@@ -367,11 +363,7 @@ function iss_content_model_register_editorial_formats(array $formats): array
                 'description' => __('Fotos und Dokumente zur redaktionellen Prüfung einsenden.', 'iss-content-model'),
                 'supports' => [],
             ],
-            'schluss' => [
-                'label' => __('Schluss', 'iss-content-model'),
-                'description' => __('Den Inhalt abschließen und weiterführende Links anbieten.', 'iss-content-model'),
-                'supports' => ['links'],
-            ],
+            'schluss' => $gestures['schluss'],
         ],
     ];
 
@@ -400,11 +392,7 @@ function iss_content_model_register_editorial_formats(array $formats): array
                 'description' => __('Schickt hochgeladene Besucherfotos direkt in die Warteschlange zur Freigabe.', 'iss-content-model'),
                 'supports' => ['anchor', 'links'],
             ],
-            'schluss' => [
-                'label' => __('Kontakt / Schluss', 'iss-content-model'),
-                'description' => __('Abschluss, Kontakt und weiterführende Links.', 'iss-content-model'),
-                'supports' => ['anchor', 'links'],
-            ],
+            'schluss' => $gestures['schluss'],
         ],
     ];
 
@@ -429,11 +417,7 @@ function iss_content_model_register_editorial_formats(array $formats): array
             ],
             'material' => array_merge($material_section, ['supports' => ['media_refs', 'links']]),
             'upload_intake' => $formats['ausstellung']['sections']['upload_intake'],
-            'schluss' => [
-                'label' => __('Schluss', 'iss-content-model'),
-                'description' => __('Abschluss und weiterführende Links.', 'iss-content-model'),
-                'supports' => ['links'],
-            ],
+            'schluss' => $gestures['schluss'],
         ],
     ];
 

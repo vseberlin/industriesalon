@@ -6,6 +6,7 @@
   --iss-landing-ink: var(--iss-blueprint-ink, var(--iss-white));
   --iss-landing-muted: var(--iss-blueprint-muted, var(--iss-grey));
   --iss-landing-rule: var(--iss-blueprint-line, var(--iss-border));
+  --iss-kicker-color: var(--iss-landing-muted);
 }
 
 .iss-landing-editorial--skin-longread-poster {

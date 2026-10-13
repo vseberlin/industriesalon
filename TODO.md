@@ -4,12 +4,10 @@ Immediate executable work only. Larger future programs live in `docs/project/bac
 
 ## Next
 
-- Continue from accepted native publication layout compatibility after shared-gesture commit
-  `32d3e3f`: chapters, timeline stations and multiple albums now render in every
-  publication layout without changing their stored types. Next reconcile
-  `kapitel` and `schluss` field contracts across formats before making them
-  portable; retain domain navigation, required fields and the separate Place
-  contract. See the full
+- Continue from accepted shared conclusions after publication-layout commit `9fd10d0`. Next adapt
+  `kapitel` for portability while preserving event live institution references,
+  tour media placement, exhibition asides and project chapter/facts pairing.
+  Keep native publication title/navigation and Place contracts separate. See the
   [gesture inventory](docs/project/editorial-consolidation-audit.md#gesture-portability-checkpoint--13-october-2026).
 - Coordinate an authorized staging release of the completed
   [WordPress refactor](docs/project/wordpress-refactoring-plan.md) and accepted

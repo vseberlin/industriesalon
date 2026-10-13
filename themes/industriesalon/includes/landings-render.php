@@ -1413,7 +1413,7 @@ function industriesalon_render_editorial_landing_section(array $section, int $re
     if (in_array($type, ['zitat', 'longread_quote'], true)) {
         return industriesalon_render_editorial_landing_quote($section, $skin);
     }
-    if ($type === 'fliesstext') {
+    if (in_array($type, ['fliesstext', 'schluss'], true)) {
         return industriesalon_render_editorial_landing_text($section, $rendered_index, $skin);
     }
     if ($type === 'gateway') {
@@ -1530,7 +1530,7 @@ function industriesalon_front_page_landing_has_sections(): bool
         if (!is_array($section)) {
             continue;
         }
-        if (in_array((string) ($section['type'] ?? ''), ['statement', 'fliesstext', 'zitat', 'gateway', 'text_bild_reihe', 'map_img', 'galerie', 'feature', 'dynamic_slot'], true)) {
+        if (in_array((string) ($section['type'] ?? ''), ['statement', 'fliesstext', 'schluss', 'zitat', 'gateway', 'text_bild_reihe', 'map_img', 'galerie', 'feature', 'dynamic_slot'], true)) {
             $has_sections = true;
             break;
         }

@@ -44,6 +44,8 @@ function iss_content_model_editorial_gesture_registry(): array
         'schluss' => [
             'label' => __('Abschluss', 'iss-content-model'),
             'description' => __('Einordnung, Kontakt oder weiterführende Links.', 'iss-content-model'),
+            'portable' => true,
+            'supports' => ['anchor', 'links'],
             'icon' => 'editor-paragraph', 'tone' => 'text', 'group' => 'Text', 'schematic' => 'callout',
         ],
         'galerie' => [
