@@ -347,7 +347,7 @@ function iss_content_editorial_sets_add_context_metaboxes(): void
     foreach (iss_content_editorial_sets_supported_post_types() as $post_type) {
         add_meta_box(
             'iss-content-editorial-sets',
-            __('Material & Rückblicke', 'iss-content-model'),
+            $post_type === 'register_place' ? __('Material & Beiträge', 'iss-content-model') : __('Material & Rückblicke', 'iss-content-model'),
             'iss_content_editorial_sets_render_context_metabox',
             $post_type,
             'side',

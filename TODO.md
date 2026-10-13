@@ -4,9 +4,6 @@ Immediate executable work only. Larger future programs live in `docs/project/bac
 
 ## Next
 
-- Resolve the Place contribution owner contract: the JSON gesture is inert,
-  template links use an unresolved `ort` prefix, and signed intake excludes Places.
-  Keep this separate from report-source eligibility and broader Place migration.
 - Correct the archive landing quick-navigation grid at phone widths: its four
   columns overflow (409 px content / 375 px viewport). The shared archive cards
   already fit; fix the quick-navigation owner without changing their layout.

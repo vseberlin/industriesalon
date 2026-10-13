@@ -244,13 +244,10 @@ function iss_register_get_place_contribution_url(int $post_id): string
         return '';
     }
 
-    $args = ['event' => 'ort__' . $post->post_name];
-    $upload_code = trim((string) getenv('EVENT_DROP_UPLOAD_CODE'));
-    if ($upload_code !== '') {
-        $args['code'] = $upload_code;
+    $url = function_exists('iss_content_upload_url') ? iss_content_upload_url($post_id) : '';
+    if ($url === '') {
+        return '';
     }
-
-    $url = add_query_arg($args, home_url('/event-drop/'));
 
     return (string) apply_filters('iss_register_place_contribution_url', $url, $post_id);
 }

@@ -220,7 +220,7 @@ function industriesalon_render_editorial_project_upload_intake(array $section): 
 
     $note = trim((string) ($section['body'] ?? ''));
     if ($note === '') {
-        $note = __('Uploads landen im Projekt-Set und werden vor der Veröffentlichung redaktionell geprüft.', 'industriesalon');
+        $note = __('Fotos und Dokumente bleiben bis zur redaktionellen Freigabe im privaten Set.', 'industriesalon');
     }
 
     $html = '<div class="iss-upload-intake iss-project-upload-intake">';

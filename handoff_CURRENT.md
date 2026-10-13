@@ -1,37 +1,39 @@
 # Current handoff — 13 October 2026
 
-## Editorial workspace and Place dossier alignment
+## Editorial stabilization complete locally
 
-Place persistence is committed locally as `ae8ee01`, following validation
-`45a3568` and the contract review `ec54190`. Nothing is pushed or deployed.
-The next dossier alignment slice is implemented and verified, pending review.
-Introduction/present-day sections now render their title, kicker, text and all
-usable images; present-day links use the existing shared renderer. Empty slots
-stay absent and untitled content retains the default headings. The outline
-explains fixed grouping and milestone date order. Only one new introduction or
-present-day section can be inserted; existing duplicates and trash recovery
-remain editable, saveable and publicly visible within their group.
+The requested shared editor/gesture stabilization is implemented across all
+editorial CPTs, with Places retaining their separate dossier contract. The Place
+layout is committed as `50cebcf`, following atomic persistence `ae8ee01` and save
+validation `45a3568`. The final checkpoint completes the Place contribution
+contract. Nothing has been pushed or deployed.
 
-Checks: 13,115 registry/renderer assertions, 433 storage assertions over 94 existing
-documents, 42 UI tests, PHP syntax, PHPCS/PHPStan and targeted ESLint. Chrome covers
-desktop/390px phone preview, images/captions/links, insertion limits, inline title
-control, native Save Draft and fresh reload with all references and duplicate
-sections retained. Test drafts/projections were removed; Kino Spreehöfe's stored
-JSON hash is unchanged and its six-epoch projection parity passes. Its public
-present-day heading now correctly uses the saved title “Heute”.
+Place invitations now use the existing signed intake service and private Sets.
+Editors must explicitly open **Angaben & Beziehungen → Material & Beiträge →
+Upload geöffnet**; a stored Place gesture alone never enables uploads. Template
+and JSON invitation links share opening/closure/key rotation. Place report
+creation and event-only text feedback remain excluded. No real Place was opened.
 
-Next: resolve the separate Place contribution contract. The JSON gesture is inert,
-template links use an unresolved `ort` identifier, and intake excludes Places.
-Keep that separate from report-source eligibility and broader Place migration.
-See the [dossier checkpoint](docs/project/editorial-consolidation-audit.md#place-dossier-alignment--13-october-2026).
+Final verification: 13,115 registry/renderer checks, 433 storage checks across 94
+existing documents, 190 Set/contribution checks, 49 event/feedback checks and 44
+editor/Set UI tests. PHP lint, PHPCS and PHPStan pass. Chrome native save/reload,
+phone preview/guidance, Fertig return, correct upload form and closure pass; HTTP
+checks cover open GET, empty signed POST and closed GET/POST. No files submitted.
+All test records were removed; existing content/comments/Sets and the pilot JSON
+hash are unchanged. Kino Spreehöfe's six-epoch parity remains intact.
 
-No real content, schema, template or upload edits; no paired data/upload artifact
-is required. Public output follows existing saved fields through the theme owner.
-The committed persistence transaction covers sections/projections, not native
-post fields or earlier graph writes. Staff UAT, Firefox and external Word/Docs
-paste remain release checks. Effective page/report/publication/Place templates
-are file-backed; Ausstellung override 26309 is retained. The earlier CPT commit's
-archive collection slot still needs target override review at release.
+Next is staff acceptance and a separately authorized release. Firefox, external
+Word/Docs paste and target template overrides still require acceptance. All local
+code slices are complete; wider Place migration is separate. The persistence
+transaction covers sections/projections, not native post fields or earlier graph
+writes. Effective page/report/publication/Place templates are file-backed;
+Ausstellung override 26309 is retained, and the earlier CPT archive collection
+slot needs target override review. See the
+[final checkpoint](docs/project/editorial-consolidation-audit.md#final-place-contribution-checkpoint--13-october-2026).
+
+No real content, schema, template or upload edits; no additional paired data or
+uploads artifact is required. Work remains in `/home/vladimir/wp-website`; the
+mixed `/home/vladimir/wp` checkout is untouched.
 
 ## Scope and delivery state
 

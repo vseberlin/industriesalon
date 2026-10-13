@@ -122,15 +122,25 @@ add_action('admin_post_iss_content_create_report', static function (): void {
     exit;
 });
 
-/** An existing upload gesture remains enabled until explicitly closed by an editor. */
+/** Intake eligibility is independent of report relationships. */
+function iss_content_upload_post_types(): array
+{
+    return ['veranstaltung', 'ausstellung', 'projekt', 'fuehrung', 'rueckblick', 'register_place'];
+}
+
+/** Existing non-Place upload gestures retain their legacy open default. */
 function iss_content_upload_is_open(int $post_id): bool
 {
     $post = get_post($post_id);
-    if (!$post || !in_array($post->post_type, array_merge(iss_content_report_source_types(), ['rueckblick']), true) || in_array($post->post_status, ['trash', 'auto-draft'], true)) {
+    if (!$post || !in_array($post->post_type, iss_content_upload_post_types(), true) || in_array($post->post_status, ['trash', 'auto-draft'], true)) {
         return false;
     }
     if (metadata_exists('post', $post_id, '_iss_upload_open')) {
         return (bool) get_post_meta($post_id, '_iss_upload_open', true);
+    }
+    // Places were never enabled by their stored gesture; opening requires an explicit choice.
+    if ($post->post_type === 'register_place') {
+        return false;
     }
     $format = iss_editorial_get_format_for_post($post_id);
     if (!$format || !iss_editorial_document_is_enabled($post_id, $format['slug'])) {
@@ -215,25 +225,27 @@ add_filter('admin_comment_types_dropdown', static function (array $types): array
 
 function iss_content_render_contributions_controls(WP_Post $post): void
 {
-    if (!in_array($post->post_type, array_merge(iss_content_report_source_types(), ['rueckblick']), true)) {
+    if (!in_array($post->post_type, iss_content_upload_post_types(), true)) {
         return;
     }
     wp_nonce_field('iss_content_contributions_' . $post->ID, 'iss_content_contributions_nonce');
-    echo '<hr><h4>' . esc_html($post->post_type === 'rueckblick' ? __('Bezüge', 'iss-content-model') : __('Rückblicke', 'iss-content-model')) . '</h4>';
-    $connected = iss_content_report_connections($post->ID);
-    foreach ($connected as $related) {
-        echo '<p>';
-        if ($post->post_type === 'rueckblick') {
-            echo '<label><input type="checkbox" name="iss_report_sources[]" value="' . esc_attr((string) $related->ID) . '" checked> ' . esc_html__('Bezug behalten', 'iss-content-model') . '</label><br>';
+    if ($post->post_type === 'rueckblick' || in_array($post->post_type, iss_content_report_source_types(), true)) {
+        echo '<hr><h4>' . esc_html($post->post_type === 'rueckblick' ? __('Bezüge', 'iss-content-model') : __('Rückblicke', 'iss-content-model')) . '</h4>';
+        $connected = iss_content_report_connections($post->ID);
+        foreach ($connected as $related) {
+            echo '<p>';
+            if ($post->post_type === 'rueckblick') {
+                echo '<label><input type="checkbox" name="iss_report_sources[]" value="' . esc_attr((string) $related->ID) . '" checked> ' . esc_html__('Bezug behalten', 'iss-content-model') . '</label><br>';
+            }
+            echo '<a href="' . esc_url(get_edit_post_link($related->ID)) . '">' . esc_html($related->post_title) . '</a> (' . esc_html(get_post_status_object($related->post_status)->label) . ')</p>';
         }
-        echo '<a href="' . esc_url(get_edit_post_link($related->ID)) . '">' . esc_html($related->post_title) . '</a> (' . esc_html(get_post_status_object($related->post_status)->label) . ')</p>';
-    }
-    if ($post->post_type === 'rueckblick') {
-        echo '<div class="iss-report-source-search"><label>' . esc_html__('Weiteren Bezug suchen', 'iss-content-model') . '<input class="widefat" type="search" aria-label="Bezug suchen"></label><p><button class="button" type="button" data-source-search>' . esc_html__('Suchen', 'iss-content-model') . '</button></p><select class="widefat" name="iss_report_add_source" aria-label="Bezug auswählen"><option value="">' . esc_html__('Keinen weiteren Bezug', 'iss-content-model') . '</option></select><p data-source-pages></p><p role="status" data-source-status></p></div>';
-        echo '<p><label>' . esc_html__('Datum des Rückblicks (optional)', 'iss-content-model') . '<input type="date" name="iss_report_date" value="' . esc_attr((string) get_post_meta($post->ID, '_iss_report_date', true)) . '"></label></p>';
-    } elseif (!in_array($post->post_status, ['auto-draft', 'trash'], true)) {
-        $url = wp_nonce_url(add_query_arg(['action' => 'iss_content_create_report', 'post_id' => $post->ID], admin_url('admin-post.php')), 'iss_content_create_report_' . $post->ID);
-        echo '<p><a class="button" href="' . esc_url($url) . '">' . esc_html__('Rückblick anlegen', 'iss-content-model') . '</a></p>';
+        if ($post->post_type === 'rueckblick') {
+            echo '<div class="iss-report-source-search"><label>' . esc_html__('Weiteren Bezug suchen', 'iss-content-model') . '<input class="widefat" type="search" aria-label="Bezug suchen"></label><p><button class="button" type="button" data-source-search>' . esc_html__('Suchen', 'iss-content-model') . '</button></p><select class="widefat" name="iss_report_add_source" aria-label="Bezug auswählen"><option value="">' . esc_html__('Keinen weiteren Bezug', 'iss-content-model') . '</option></select><p data-source-pages></p><p role="status" data-source-status></p></div>';
+            echo '<p><label>' . esc_html__('Datum des Rückblicks (optional)', 'iss-content-model') . '<input type="date" name="iss_report_date" value="' . esc_attr((string) get_post_meta($post->ID, '_iss_report_date', true)) . '"></label></p>';
+        } elseif (!in_array($post->post_status, ['auto-draft', 'trash'], true)) {
+            $url = wp_nonce_url(add_query_arg(['action' => 'iss_content_create_report', 'post_id' => $post->ID], admin_url('admin-post.php')), 'iss_content_create_report_' . $post->ID);
+            echo '<p><a class="button" href="' . esc_url($url) . '">' . esc_html__('Rückblick anlegen', 'iss-content-model') . '</a></p>';
+        }
     }
     echo '<hr><h4>' . esc_html__('Beiträge von Gästen', 'iss-content-model') . '</h4>';
     echo '<label><input type="checkbox" name="iss_upload_open" value="1" ' . checked(iss_content_upload_is_open($post->ID), true, false) . '> ' . esc_html($post->post_type === 'veranstaltung' ? __('Feedback und Upload geöffnet', 'iss-content-model') : __('Upload geöffnet', 'iss-content-model')) . '</label>';
@@ -252,7 +264,7 @@ add_action('save_post', static function (int $post_id, WP_Post $post): void {
     if (wp_is_post_revision($post_id) || wp_is_post_autosave($post_id) || !current_user_can('edit_post', $post_id) || !isset($_POST['iss_content_contributions_nonce']) || !wp_verify_nonce(sanitize_text_field(wp_unslash($_POST['iss_content_contributions_nonce'])), 'iss_content_contributions_' . $post_id)) {
         return;
     }
-    if (!in_array($post->post_type, array_merge(iss_content_report_source_types(), ['rueckblick']), true)) {
+    if (!in_array($post->post_type, iss_content_upload_post_types(), true)) {
         return;
     }
     iss_content_set_upload_open($post_id, !empty($_POST['iss_upload_open']));

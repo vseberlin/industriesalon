@@ -98,6 +98,8 @@ try {
     add_filter('iss_occurrences_query_now', $past_clock, 100);
     $expect(iss_content_model_get_meta_rows_for_post($id)[0]['label'] === 'Vergangener Termin', 'Completed event is clearly historical');
     remove_filter('iss_occurrences_query_now', $past_clock, 100);
+    // Keep upcoming/past assertions independent of the workstation date.
+    add_filter('iss_occurrences_query_now', $clock, 100);
     $document = ['schema_version' => 1, 'entity_key' => 'event.general', 'sections' => [['type' => 'material', 'kicker' => 'Tickets', 'links' => [['label' => 'Tickets buchen', 'url' => 'https://example.org/book']]]], 'hero_title' => 'A short headline', 'hero_subtitle' => 'A second line', 'hero_kicker' => 'Series', 'hero_image_fit' => 'cover'];
     $expect(iss_editorial_save_document($id, 'veranstaltung', $document), 'Opening fields save through the shared document API');
     $saved = iss_content_model_veranstaltung_content_document($id);
@@ -138,6 +140,9 @@ try {
     $expect(serialize_blocks($blocks) === $template->content, 'Template block serialization round trip');
     WP_CLI::log("PASS: $checks event/feedback assertions.");
 } finally {
+    foreach ([$clock ?? null, $running_clock ?? null, $past_clock ?? null] as $test_clock) {
+        if ($test_clock) { remove_filter('iss_occurrences_query_now', $test_clock, 100); }
+    }
     foreach ($ids as $id) { wp_delete_post($id, true); }
     $expect($before === $wpdb->get_results("SELECT ID, post_title, post_content, post_excerpt, post_status FROM {$wpdb->posts} WHERE post_type IN ('veranstaltung','rueckblick') ORDER BY ID", ARRAY_A), 'Existing events and reports unchanged');
     $expect($before_comments === $wpdb->get_results("SELECT * FROM {$wpdb->comments} ORDER BY comment_ID", ARRAY_A), 'Existing comments unchanged');

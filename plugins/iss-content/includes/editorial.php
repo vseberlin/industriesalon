@@ -190,7 +190,7 @@ function iss_content_model_register_editorial_formats(array $formats): array
             'material' => $material_section,
             'upload_intake' => [
                 'label' => __('Material beitragen', 'iss-content-model'),
-                'description' => __('Öffentlicher Mitmach-Aufruf; Uploads werden vor Veröffentlichung geprüft.', 'iss-content-model'),
+                'description' => __('Einladung zum Hochladen von Fotos und Dokumenten. Unter Angaben & Beziehungen → Material & Beiträge den Upload ausdrücklich öffnen. Einsendungen bleiben bis zur Freigabe privat.', 'iss-content-model'),
                 'supports' => ['links'],
             ],
         ],

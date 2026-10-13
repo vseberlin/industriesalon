@@ -171,8 +171,11 @@ withdrawn after a draft was prepared. Deleted sections do not count as uses.
 **Beiträge von Gästen → Upload geöffnet**, followed by native Save/Update,
 controls a shareable link bound to one post. Closing and reopening invalidates
 older links. Add an `upload_intake` section for a public invitation, or share the
-link directly. Existing upload sections remain open until explicitly closed;
-new content defaults closed. The existing Event Drop receiver loads WordPress to
+link directly. Existing event/tour/project/exhibition/report upload sections
+retain their open default until explicitly closed; new content defaults closed.
+Places always require explicit opening, including existing stored invitations.
+Intake eligibility is separate from report-source eligibility: Places can accept
+files but cannot create or supply Rückblicke. The existing Event Drop receiver loads WordPress to
 verify the post and link on every GET/POST. Legacy code URLs may upload only into
 an open, resolvable context. Files remain in intake for rights review. Supported
 extensions: JPG/JPEG, PNG, GIF, WebP; MP4/MOV/M4V/MKV/WebM/AVI; ZIP;
@@ -508,6 +511,15 @@ Both overview slots render their title, kicker, body and all usable image
 references through existing Place components; present-day links reuse the shared
 link renderer. Empty slots remain absent, and body/image/link-only slots retain
 default headings. Preview fields keep their source JSON indexes across grouping.
+
+The Place gesture and template contribution links use the same signed intake
+owner URL. **Angaben & Beziehungen → Material & Beiträge → Upload geöffnet**
+controls both; closing hides both and reopening invalidates prior links. The
+register helper no longer embeds a shared environment upload code or emits an
+unresolved `ort` receiver target. The receiver derives `register_place__<slug>`
+from the signed post context, and the existing Set bridge resolves that context.
+Files remain private until review. Written event feedback stays event-only.
+No existing Place is opened or migrated by deploying this code.
 
 Place document persistence uses the register epoch service's transaction boundary.
 `iss_editorial_save_document()` accepts an optional fifth argument for activation;

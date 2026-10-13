@@ -133,7 +133,10 @@ try {
                 $GLOBALS['wp_query'] = $query; $GLOBALS['wp_the_query'] = $query;
                 $query->the_post();
                 $html = do_blocks('<!-- wp:post-content /-->');
-                $assert(substr_count($html, '<section class="iss-related-feed iss-container section">') === 1, 'Exactly one report-link section for ' . get_post_type($id));
+                $tags = new WP_HTML_Tag_Processor($html);
+                $report_sections = 0;
+                while ($tags->next_tag(['tag_name' => 'SECTION', 'class_name' => 'iss-related-feed'])) { ++$report_sections; }
+                $assert($report_sections === 1, 'Exactly one report-link section for ' . get_post_type($id));
                 $target_id = $id === $source_id ? $linked_report->ID : $source_id;
                 $assert(strpos($html, esc_url(get_permalink($target_id))) !== false, 'Linked card remains visible for ' . get_post_type($id));
                 $excerpt = get_the_excerpt(get_post($id));
@@ -146,6 +149,55 @@ try {
         foreach ($query_globals as $key => $value) { $GLOBALS[$key] = $value; }
         wp_reset_postdata();
     }
+    // Place intake shares signed URLs and private Sets, without becoming a report source.
+    $place_id = wp_insert_post(['post_type' => 'register_place', 'post_status' => 'draft', 'post_title' => $prefix . ' place', 'post_name' => $prefix . '-place', 'post_author' => $user->ID]);
+    $posts[] = $place_id;
+    $place_doc = iss_editorial_get_empty_document('place');
+    $place_doc['sections'] = [['type' => 'upload_intake', 'title' => 'Fotos beitragen'], ['type' => 'epoche', 'title' => 'Place history', 'body' => '<p>Historic use</p>', 'era_key' => 'nach-1990', 'function_key' => 'culture']];
+    $assert(iss_editorial_save_document($place_id, 'place', $place_doc), 'Save Place invitation');
+    iss_editorial_set_document_enabled($place_id, 'place', true);
+    $assert(!iss_content_upload_is_open($place_id), 'Stored Place invitation never implicitly opens intake');
+    $assert(iss_register_get_place_contribution_url($place_id) === '', 'Closed Place template has no link');
+    $assert(!in_array('register_place', iss_content_report_source_types(), true), 'Places remain outside report eligibility');
+    $assert(is_wp_error(iss_content_create_report($place_id)), 'Place cannot create a report');
+    $saved_post = $GLOBALS['post'] ?? null;
+    $GLOBALS['post'] = get_post($place_id);
+    $assert(industriesalon_render_editorial_ausstellung_section($place_doc['sections'][0], false, 0, 'standard', 'place') === '', 'Closed Place invitation stays hidden');
+    ob_start(); iss_content_render_contributions_controls(get_post($place_id)); $controls = ob_get_clean();
+    $assert(str_contains($controls, 'name="iss_upload_open"') && !str_contains($controls, 'Rückblick'), 'Place controls expose upload without report actions');
+    $_POST = ['iss_content_contributions_nonce' => 'invalid', 'iss_upload_open' => '1'];
+    do_action('save_post', $place_id, get_post($place_id), true);
+    $assert(!iss_content_upload_is_open($place_id), 'Invalid nonce cannot open Place intake');
+    $_POST['iss_content_contributions_nonce'] = wp_create_nonce('iss_content_contributions_' . $place_id);
+    do_action('save_post', $place_id, get_post($place_id), true);
+    $url = iss_content_upload_url($place_id);
+    $key = iss_content_upload_key($place_id);
+    $assert($url !== '' && iss_content_upload_authorized($place_id, $key), 'Native owner save explicitly opens Place intake');
+    $assert(iss_register_get_place_contribution_url($place_id) === $url, 'Template uses same signed Place URL');
+    $html = industriesalon_render_editorial_ausstellung_section($place_doc['sections'][0], false, 0, 'standard', 'place');
+    $assert(str_contains($html, esc_url($url)) && str_contains($html, 'Fotos beitragen') && str_contains($html, 'privaten Set'), 'Place gesture renders signed invitation and private review guidance');
+    $assert(!str_contains($html, 'Projekt-Set'), 'Place invitation avoids project-specific wording');
+    foreach (['register_place', 'ort'] as $prefix_type) {
+        $target = iss_content_editorial_sets_event_drop_target_context($prefix_type . '__' . get_post($place_id)->post_name);
+        $assert($target['context_type'] === 'register_place' && $target['context_id'] === $place_id, 'Place target resolves: ' . $prefix_type);
+    }
+    $set_id = iss_content_editorial_sets_ensure_context_set(get_post($place_id));
+    $sets[] = $set_id;
+    $assert($set_id > 0 && $service->get_links_for_context('register_place', $place_id)[0]['set_id'] == $set_id, 'Place material uses the existing context Set');
+    wp_set_current_user(0);
+    $assert(!iss_content_editorial_sets_can_use_context(new WP_REST_Request('GET')), 'Anonymous visitors cannot read private Place Sets');
+    wp_set_current_user($user->ID);
+    unset($_POST['iss_upload_open']);
+    do_action('save_post', $place_id, get_post($place_id), true);
+    $assert(!iss_content_upload_authorized($place_id, $key) && iss_register_get_place_contribution_url($place_id) === '', 'Native closure revokes Place links');
+    $assert(industriesalon_render_editorial_ausstellung_section($place_doc['sections'][0], false, 0, 'standard', 'place') === '', 'Closure hides saved gesture again');
+    iss_content_set_upload_open($place_id, true);
+    $assert(!iss_content_upload_authorized($place_id, $key), 'Reopening rotates Place key');
+    $assert(!iss_content_upload_authorized($posts[0], iss_content_upload_key($place_id)), 'Place key cannot target an event');
+    $_POST = [];
+    wp_update_post(['ID' => $place_id, 'post_status' => 'trash']);
+    $assert(!iss_content_upload_is_open($place_id) && iss_register_get_place_contribution_url($place_id) === '', 'Trashed Place cannot receive contributions');
+    $GLOBALS['post'] = $saved_post;
     // Pagination reaches later Sets and items; protection checks every row before deletion.
     for ($i = 0; $i < 32; $i++) { $sets[] = $service->create_set(['title' => $prefix . ' page ' . $i]); }
     $page_set = end($sets);

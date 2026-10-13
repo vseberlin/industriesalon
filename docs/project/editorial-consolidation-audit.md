@@ -16,6 +16,10 @@ contracts as `32d3e3f`; native publication layout compatibility is committed as
 Leitfrage consolidation is committed locally as `0c1b046` and Merkpunkte as
 `3330c7f`; Material is committed as `6bfd6d4` and Archivobjekte as `16b2e53`.
 The special-gesture chooser guidance is committed locally as `242593c`.
+The local implementation is complete, including the separate Place validation,
+atomic persistence, dossier alignment and signed contribution contract below.
+Staff acceptance, Firefox/Word-Docs paste and target template review remain
+release checks; broader Place activation/migration is outside this code change.
 Registration, editor fields, save validation and
 public rendering must agree before a gesture becomes available in another format.
 
@@ -32,7 +36,7 @@ public rendering must agree before a gesture becomes available in another format
 | `objektfokus` | One portable archive-card contract across eight formats: anchors, prose, saved labels/captions and owner-resolved metadata/source links. Missing, unpublished and non-archive references remain hidden. Places retain their separate supplements. |
 | `material` | One portable downloads/links/anchor/rich-text contract across eight formats. Events retain plain-text items, archive sources and live fields as owner-specific extensions. Place retains its separate contract and picker. |
 | `facts` | One portable contract across eight formats: optional rich text, title/kicker, anchors and plain-text value/description rows. Reuses the existing copy and fact-list components; project Dossier retains chapter/facts pairing with separate preview addresses. |
-| `upload_intake` | Tour/event/project/exhibition/report calls use the existing guest-contribution setting and signed upload URL. Explicit closure takes precedence. Without an explicit setting, an enabled stored call retains the legacy open default; registration or a private editor snapshot alone does not open intake. |
+| `upload_intake` | Tour/event/project/exhibition/report calls use the existing guest-contribution setting and signed upload URL. Explicit closure takes precedence. Without an explicit setting, an enabled stored call retains the legacy open default; registration or a private editor snapshot alone does not open intake. Places use the same signed owner but always require explicit opening. Their template links share that policy. |
 | `programm` | Manual programme text, shown in the Text group and available only for `event.festival` (Programm / Fest). Chooser filtering and server validation agree; retained invalid sections remain editable for correction. |
 | `dynamic_slot` | Landing-only: seven named sources for projects, programme, visit information, newsletter, tour offers, team and Schöneweide Atlas. Each source now explains its owning content beside the selector. |
 | `map_img` | Landing map/panorama composition uses linked places and the existing static-map model. Guidance points to native relationships for places and the section media controls for images. |
@@ -70,9 +74,9 @@ front-page-only opening treatment. It corrects the earlier intake assumption:
 `iss_content_upload_is_open()` deliberately retains legacy stored calls when
 no explicit setting exists. The chooser now points editors to **Beiträge von
 Gästen**; saving a call cannot override an explicit closure. Places remain a
-separate case: their retained `upload_intake` entry is outside this intake
-owner's eligible post types and produces no upload invitation. Resolve that
-Place-specific choice within its own contract before treating it as usable.
+separate case: at this checkpoint their retained `upload_intake` entry produced
+no invitation. The final Place contribution checkpoint below resolves that gap
+with explicit opening and the same signed intake owner.
 
 Checks: 13,079 registry/renderer assertions, including exact special-choice
 boundaries, festival-only programme validation and explicit upload closure;
@@ -116,6 +120,34 @@ unchanged after cleanup. All 41 UI tests and PHP syntax pass. No production
 defect was found in these workflows, so this slice changes tests and documentation
 only. Browser and automated fixtures, revisions and autosaves are removed.
 No SQL, uploads or template artifact is required.
+
+### Final Place contribution checkpoint — 13 October 2026
+
+Place intake now uses the existing `iss-content` signed contribution service.
+Eligibility has its own owner list, separate from Rückblick source types. Places
+require explicit **Upload geöffnet** in **Angaben & Beziehungen → Material &
+Beiträge**, even if a stored JSON invitation exists. Native save, capability and
+nonce checks apply. Template and gesture invitations follow the same open state;
+closure hides both, and reopening rotates the key. The register helper no longer
+emits an `ort` upload URL or includes the shared environment access code.
+
+The existing receiver derives `register_place__<slug>` from the signed context,
+and the existing Set bridge routes files to that Place. Private review and rights
+requirements remain unchanged. Places do not gain report creation, report-source
+eligibility or the event-only written-feedback form. Existing Places remain closed
+unless explicitly opened; no data migration, schema or uploads artifact is needed.
+
+Final checks: 13,115 registry/renderer assertions, 433 storage checks over all 94
+existing documents, 190 Set/contribution checks, 49 event/feedback checks and 44
+editor/Set UI tests. PHP syntax, PHPCS and PHPStan pass for changed production
+files. The Set suite now checks report sections by their semantic class, and the
+event suite freezes its clock instead of aging out its upcoming fixture.
+Chrome verifies native open/save/reload, phone inspector/preview, Fertig return,
+correct Place upload form and native closure invalidating the old link. Local
+HTTP probes verify open GET 200, signed empty POST 400 and closed GET/POST 403.
+No files or notifications were submitted. All fixture posts/projections/Sets were
+removed; existing content, comments and Sets remain unchanged, including the
+pilot JSON hash and six-epoch parity. No push or deployment.
 
 ### Place contract review — 13 October 2026
 
@@ -283,8 +315,8 @@ control. Native Save Draft/reload retains three image references, the present-da
 link, edited title and second introduction. All temporary fixtures and projections
 were removed; the pilot JSON hash and six-epoch parity remain unchanged.
 
-This slice is ready for review, not yet committed. Contribution/intake alignment
-is next. No real content, template, schema or uploads were edited, and no paired
+This slice is committed as `50cebcf`. Contribution/intake alignment is
+covered by the final checkpoint below. No real content, template, schema or uploads were edited, and no paired
 data/upload artifact is required.
 
 The existing media/text pattern now owns its flex layout for native blocks and
