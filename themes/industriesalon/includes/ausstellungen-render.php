@@ -279,6 +279,8 @@ function industriesalon_locate_editorial_ausstellung_section_partial(string $ski
 
 function industriesalon_render_editorial_ausstellung_section(array $section, bool $show_placeholders, int $rendered_index, string $skin): string
 {
+    $portable = industriesalon_render_editorial_portable_section($section, $rendered_index, $skin, 'ausstellung');
+    if ($portable !== null) { return $portable; }
     $type = sanitize_html_class((string) ($section['type'] ?? 'kapitel'));
     $context = industriesalon_get_editorial_ausstellung_section_context($section, $rendered_index, $skin);
     $kicker = trim((string) ($section['kicker'] ?? ''));
@@ -411,6 +413,7 @@ function industriesalon_render_editorial_ausstellung_content(string $content): s
     $show_placeholders = $prefer_autosave || current_user_can('edit_post', (int) $post_id);
     foreach ($sections as $section) {
         if (is_array($section)) {
+            $section['_text_version'] = (int) ($document['schema_version'] ?? 1);
             $section_html = industriesalon_render_editorial_ausstellung_section($section, $show_placeholders, $rendered_index, $skin);
             if (trim($section_html) !== '') {
                 $html .= $section_html;
@@ -456,7 +459,8 @@ add_filter('render_block_core/post-content', static function (string $content, a
     }
     $state = $is_event ? iss_content_model_event_appointment($post_id) : [];
     if ($is_event) {
-        $content = '<section class="iss-event-description"><h2>' . esc_html(!empty($state['past']) ? __('Die Ankündigung', 'industriesalon') : __('Über die Veranstaltung', 'industriesalon')) . '</h2>' . $content . '</section>';
+        $description_class = 'iss-event-description' . (industriesalon_editorial_has_portable_sections($post_id) ? ' iss-event-description--composition' : '');
+        $content = '<section class="' . esc_attr($description_class) . '"><h2>' . esc_html(!empty($state['past']) ? __('Die Ankündigung', 'industriesalon') : __('Über die Veranstaltung', 'industriesalon')) . '</h2>' . $content . '</section>';
     }
     $content = !empty($state['past']) ? $contributions . $content : $content . $contributions;
     if ($is_report) {

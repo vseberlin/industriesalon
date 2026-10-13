@@ -610,6 +610,8 @@ function industriesalon_render_editorial_tour_upload_intake_section(array $secti
 
 function industriesalon_render_editorial_tour_section(array $section, bool $show_placeholders, int $rendered_index, string $skin, string $anchor, int $post_id): string
 {
+    $portable = industriesalon_render_editorial_portable_section($section, $rendered_index, $skin, 'fuehrung', $anchor);
+    if ($portable !== null) { return $portable; }
     $type = sanitize_html_class((string) ($section['type'] ?? 'kapitel'));
     if ($type === 'bildbuehne' || $type === 'intro') {
         return '';
@@ -745,6 +747,7 @@ function industriesalon_render_editorial_tour_content(string $content): string
     foreach ($sections as $index => $section) {
         $anchor = industriesalon_editorial_tour_section_anchor($section, (int) $index, $used_anchors);
         $used_anchors[] = $anchor;
+        $section['_text_version'] = (int) ($document['schema_version'] ?? 1);
         $section_html = industriesalon_render_editorial_tour_section($section, $show_placeholders, $rendered_index, $skin, $anchor, (int) $post_id);
         $section_html = industriesalon_editorial_preview_section($section_html, $section, ['title' => 'iss-tour-section__title', 'kicker' => 'iss-tour-section__kicker', 'body' => 'iss-tour-section__body']);
         if (trim($section_html) !== '') {

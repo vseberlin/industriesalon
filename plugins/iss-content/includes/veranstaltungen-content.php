@@ -81,12 +81,15 @@ function iss_content_model_veranstaltung_content_gestures_for_entity(string $ent
         ? iss_content_model_veranstaltung_entity($entity_key)
         : [];
     $allowed = array_values(array_filter(array_map('sanitize_key', (array) ($entity['allowed_gestures'] ?? []))));
-
-    if (!$allowed) {
-        return $gestures;
+    if ($allowed) {
+        $gestures = array_intersect_key($gestures, array_fill_keys($allowed, true));
     }
-
-    return array_intersect_key($gestures, array_fill_keys($allowed, true));
+    // Shared composition is independent of event structure; domain gestures
+    // retain the entity's allowlist. The legacy editor keeps its old contract.
+    if (function_exists('iss_editorial_get_format')) {
+        $gestures += array_filter(iss_editorial_get_format('veranstaltung')['sections'] ?? [], static fn(array $section): bool => !empty($section['portable']));
+    }
+    return $gestures;
 }
 
 function iss_content_model_veranstaltung_content_type_for_entity(string $entity_key, string $preferred_type): string

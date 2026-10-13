@@ -1,5 +1,22 @@
 /* Theme-owned editorial skins. Scoped legacy front-page selectors share declarations while block fallback content remains supported. */
 
+/* Portable composition inherits the existing domain skin's palette. */
+.iss-landing-editorial--skin-chronik {
+  --iss-landing-surface: var(--iss-ausstellung-chronik-paper);
+  --iss-landing-ink: var(--iss-ausstellung-chronik-ink);
+  --iss-landing-rule: var(--iss-ausstellung-chronik-line);
+}
+
+.iss-landing-editorial--skin-quellenbuehne {
+  --iss-landing-surface: var(--iss-ausstellung-fiw-paper);
+  --iss-landing-rule: var(--iss-ausstellung-fiw-line);
+}
+
+.iss-landing-editorial--skin-objektalbum {
+  --iss-landing-surface: var(--iss-ausstellung-kinder-paper);
+  --iss-landing-rule: var(--iss-ausstellung-kinder-line);
+}
+
 .home .iss-front-page-main .iss-section {
   width: 100%;
 }

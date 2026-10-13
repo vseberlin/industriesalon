@@ -222,7 +222,7 @@ function industriesalon_render_editorial_landing_copy(array $section): string
     $kicker = trim((string) ($section['kicker'] ?? ''));
     $title = trim((string) ($section['title'] ?? ''));
     $body = trim((string) ($section['body'] ?? ''));
-    $lead = ($section['_text_version'] ?? 1) >= 2 ? trim((string) ($section['lead'] ?? '')) : '';
+    $lead = trim((string) ($section['lead'] ?? ''));
     $links = is_array($section['links'] ?? null) ? $section['links'] : [];
     $links_html = industriesalon_render_editorial_landing_links($links);
 
@@ -823,7 +823,7 @@ function industriesalon_render_editorial_landing_media_text_overlay_copy(array $
     $kicker = trim((string) ($section['kicker'] ?? ''));
     $title = trim((string) ($section['title'] ?? ''));
     $body = trim((string) ($section['body'] ?? ''));
-    $lead = ($section['_text_version'] ?? 1) >= 2 ? trim((string) ($section['lead'] ?? '')) : '';
+    $lead = trim((string) ($section['lead'] ?? ''));
     if ($kicker === '' && $title === '' && $lead === '' && $body === '') {
         return '';
     }
@@ -855,7 +855,7 @@ function industriesalon_render_editorial_landing_media_text_copy(array $section)
     $kicker = trim((string) ($section['kicker'] ?? ''));
     $title = trim((string) ($section['title'] ?? ''));
     $body = trim((string) ($section['body'] ?? ''));
-    $lead = ($section['_text_version'] ?? 1) >= 2 ? trim((string) ($section['lead'] ?? '')) : '';
+    $lead = trim((string) ($section['lead'] ?? ''));
     $links_html = industriesalon_render_editorial_landing_links(is_array($section['links'] ?? null) ? $section['links'] : []);
     if ($kicker === '' && $title === '' && empty($lead) && $body === '' && $links_html === '') {
         return '';
@@ -882,14 +882,15 @@ function industriesalon_render_editorial_landing_media_text_copy(array $section)
 
 function industriesalon_render_editorial_landing_media_text_actions(array $links): string
 {
-    $link = is_array($links[0] ?? null) ? $links[0] : [];
-    $label = trim((string) ($link['label'] ?? ''));
-    $url = industriesalon_editorial_landing_link_url($link);
-    if ($label === '' || $url === '') {
-        return '';
+    $html = '';
+    foreach ($links as $link) {
+        if (!is_array($link)) { continue; }
+        $label = trim((string) ($link['label'] ?? ''));
+        $url = industriesalon_editorial_landing_link_url($link);
+        if ($label === '' || $url === '') { continue; }
+        $html .= '<p class="iss-media-text__actions"><a class="iss-media-text__link" href="' . esc_url($url) . '">' . esc_html($label) . '</a></p>';
     }
-
-    return '<p class="iss-media-text__actions"><a class="iss-media-text__link" href="' . esc_url($url) . '">' . esc_html($label) . '</a></p>';
+    return $html;
 }
 
 function industriesalon_render_editorial_landing_feature_media_text(array $section, int $rendered_index, string $skin): string

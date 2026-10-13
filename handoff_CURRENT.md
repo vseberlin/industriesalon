@@ -1,23 +1,28 @@
 # Current handoff — 13 October 2026
 
-## Editorial workspace review
+## Editorial workspace and gesture review
 
-The first gesture/editor stabilization slice is accepted for a local commit and
-is not deployed. The preview now sits beside a single
-right panel that switches between outline, compact chooser, section editing and
-page/owner controls. **Fertig** secures a draft before returning to the overview;
-invalid input and failed saves remain editable. Route controls respond to their
-panel width. All public content CPTs now have a shared format: Team, profiles and
-the three archive narrative bodies reuse `article`; Places retain `place`.
-Existing block content still requires reviewed activation. Gesture labels are
-shared; broader cross-format gesture availability is the next separate slice.
+The accepted two-column workspace and expanded narrative CPT coverage are
+committed locally as `65c55b8`, not pushed or deployed. The accepted portability slice
+is ready for its local commit: four composition gestures now
+share their fields, treatments and renderer across seven formats. Places remain
+separate; publication longread/timeline/album adapters are the next bounded pass.
+The complete 28-gesture inventory and remaining field differences are in the
+[editorial audit](docs/project/editorial-consolidation-audit.md#gesture-portability-checkpoint--13-october-2026).
 
-Checks: 35 DOM tests, 256 registry/renderer checks, 297 storage/recovery checks,
-targeted PHP/JS/CSS checks, and local Chrome page/tour checks at desktop, laptop,
-tablet, phone and short height. Disposable fixtures are removed. No SQL or
-uploads artifact is needed: no existing content/media changed; the added archive
-collection composition slot is file-backed locally. Verify target template
-authority before a later release. Details: [workspace plan](docs/project/editor-workspace-plan.md).
+Checks: 35 UI tests, 4,414 registry/renderer assertions, targeted PHP/JS/CSS checks,
+and Chrome tour/event/exhibition preview checks, including 390 px phone layout,
+Chronik palette, chooser, treatment save and full event content column. Storage
+checks pass 295 assertions, including all 94 existing documents and unchanged
+post content/metadata; disposable review records and
+their autosaves are removed. Staff UAT and Firefox remain separate release checks.
+
+No SQL, uploads or template artifact is needed for portability: existing content,
+media and template authority are preserved. The preceding CPT commit adds a
+file-backed archive collection composition slot; verify target template overrides
+before a later release. The media/text pattern retains native Columns compatibility
+because WordPress assigns its own flex basis; JSON now has an explicit flex layout
+and an overlay image height at both desktop and phone widths.
 
 ## Scope and delivery state
 

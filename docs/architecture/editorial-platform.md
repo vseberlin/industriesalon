@@ -28,6 +28,22 @@ This is the implementation checkpoint for the SOW in
   `docs/architecture/editorial-media-buckets.md`. Sets are private review
   state; public renderers consume only saved `media_refs` / `object_refs`.
 
+## Portable composition
+
+The vocabulary defines `statement`, `gateway`, `text_bild_reihe` and `feature`
+once, including supported fields and treatments. Landing, article, event,
+exhibition, project, report and tour formats use those contracts. The theme
+registers their section renderer and delegates to the existing landing composition
+functions; native domain sections retain their renderers. Preview and public
+output use the same document and renderer. Event context rules permit these
+portable gestures while retaining restrictions on domain-specific sections.
+
+Places remain separate. Publication longread/timeline/album adapters require a
+further pass before exposing portable composition. Existing gallery/text/quote
+variants are not automatically unified. The complete 28-gesture inventory and
+remaining contract differences are in the
+[consolidation audit](../project/editorial-consolidation-audit.md#gesture-portability-checkpoint--13-october-2026).
+
 ## Material and optional Rückblicke
 
 Events, exhibitions, projects and tours can create a separate optional Rückblick

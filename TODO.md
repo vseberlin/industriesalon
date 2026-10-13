@@ -4,9 +4,13 @@ Immediate executable work only. Larger future programs live in `docs/project/bac
 
 ## Next
 
-- Implement shared gesture capabilities and renderer coverage across formats
-  after the accepted two-column [editor workspace](docs/project/editor-workspace-plan.md)
-  checkpoint; keep Place-specific changes separate.
+- Extend the accepted portable-gesture slice to publications:
+  shared statement, link cards, image/text rows and features now work across
+  seven formats. The next bounded implementation is publication
+  longread/timeline/album adapters, preserving order and source/navigation data
+  before exposing those gestures. Reconcile gallery/text/quote field differences
+  afterward; keep Places separate. See the full
+  [gesture inventory](docs/project/editorial-consolidation-audit.md#gesture-portability-checkpoint--13-october-2026).
 - Coordinate an authorized staging release of the completed
   [WordPress refactor](docs/project/wordpress-refactoring-plan.md) and accepted
   programme presentation from GitHub `main`: take target-local backups, apply the four scoped owner

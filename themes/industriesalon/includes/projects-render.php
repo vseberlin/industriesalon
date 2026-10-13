@@ -681,6 +681,8 @@ function industriesalon_render_editorial_project_dossier_spread(array $chapter, 
 
 function industriesalon_render_editorial_project_section(array $section, bool $show_placeholders, int $rendered_index, string $skin, string $anchor = ''): string
 {
+    $portable = industriesalon_render_editorial_portable_section($section, $rendered_index, $skin, 'projekt', $anchor);
+    if ($portable !== null) { return $portable; }
     $type = sanitize_html_class((string) ($section['type'] ?? 'kapitel'));
     $context = industriesalon_get_editorial_project_section_context($section, $skin);
     $kicker = trim((string) ($section['kicker'] ?? ''));
@@ -837,6 +839,7 @@ function industriesalon_render_editorial_project_content(string $content): strin
     for ($section_index = 0; $section_index < $section_count; ++$section_index) {
         $section = $content_sections[$section_index] ?? null;
         if (is_array($section)) {
+            $section['_text_version'] = (int) ($document['schema_version'] ?? 1);
             $next_section = $content_sections[$section_index + 1] ?? null;
             $is_dossier_spread = $skin === 'dossier'
                 && (string) ($section['type'] ?? '') === 'kapitel'

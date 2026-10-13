@@ -315,6 +315,8 @@ function industriesalon_render_structured_veranstaltung_upload_intake(array $sec
 
 function industriesalon_render_structured_veranstaltung_section(array $section, string $skin = ''): string
 {
+    $portable = industriesalon_render_editorial_portable_section($section, 0, $skin, 'veranstaltung');
+    if ($portable !== null) { return $portable; }
     $type = sanitize_html_class((string) ($section['type'] ?? 'kapitel'));
     $kicker = trim((string) ($section['kicker'] ?? ''));
     $title = trim((string) ($section['title'] ?? ''));
@@ -472,6 +474,7 @@ function industriesalon_render_structured_veranstaltung_content(string $content)
     $html = '';
     foreach ($sections as $section) {
         if (is_array($section)) {
+            $section['_text_version'] = (int) ($document['schema_version'] ?? 1);
             if ($closed && ($section['type'] ?? '') === 'material') {
                 $links = (array) ($section['links'] ?? []);
                 $section['links'] = array_values(array_filter($links, static fn(array $link): bool => !industriesalon_event_link_is_ticket($link)));

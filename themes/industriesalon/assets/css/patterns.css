@@ -3658,17 +3658,8 @@ iss-info-panel--brown
    Text block + image block.
 
    HEIGHT CONTROLS
-   Change these at the top as needed.
+   Component-scoped defaults live on `.iss-media-text`.
    ===================================================================== */
-
-:root {
-  --iss-media-text-section-min-height: 40svh;
-  --iss-media-text-section-min-height-mobile: auto;
-  --iss-media-text-media-min-height: auto;
-  --iss-media-text-media-max-height: none;
-  --iss-media-text-image-max-height: 80vh;
-  --iss-media-text-image-fit: cover;
-}
 
 /* =====================================================================
    EDITOR / UTILITY OPTIONS
@@ -3686,6 +3677,12 @@ iss-info-panel--brown
 
 /* .iss-media-text: Base class for iss media text; apply on primary wrapper/scope. */
 .iss-media-text {
+  --iss-media-text-section-min-height: 40svh;
+  --iss-media-text-section-min-height-mobile: auto;
+  --iss-media-text-media-min-height: 0px;
+  --iss-media-text-media-max-height: none;
+  --iss-media-text-image-max-height: 80vh;
+  --iss-media-text-image-fit: cover;
   --iss-media-text-content-basis: 40%;
   --iss-media-text-media-basis: 60%;
   --iss-media-text-gap: var(--iss-gap, 1.5rem);
@@ -3705,6 +3702,8 @@ iss-info-panel--brown
 /* .iss-media-text: Base class for iss media text; apply on primary wrapper/scope. */
 /* .iss-media-text__layout: Element class for `iss-media-text`; apply on `layout` element. */
 .iss-media-text .iss-media-text__layout {
+  display: flex;
+  flex-wrap: wrap;
   margin-top: 1rem;
   align-items: flex-start;
   gap: var(--iss-media-text-gap);
@@ -3738,7 +3737,8 @@ iss-info-panel--brown
   min-height: 0;
 }
 
-/* Stronger than Gutenberg columns defaults, without !important */
+/* Retained native Columns compatibility: core assigns its own flex basis.
+   JSON uses the semantic content/media geometry above. */
 /* .iss-media-text: Base class for iss media text; apply on primary wrapper/scope. */
 /* .iss-media-text__layout: Element class for `iss-media-text`; apply on `layout` element. */
 /* .wp-block-columns: Base class for wp block columns; apply on primary wrapper/scope. */
@@ -3861,6 +3861,7 @@ iss-info-panel--brown
 /* .iss-media-text__media: Element class for `iss-media-text`; apply on `media` element. */
 .iss-media-text.iss-media-text--overlay-heading .iss-media-text__media {
   position: relative;
+  min-height: max(24rem, var(--iss-media-text-media-min-height));
   overflow: hidden;
   justify-content: flex-end;
   border-radius: var(--iss-radius-lg);

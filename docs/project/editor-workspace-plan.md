@@ -35,7 +35,7 @@ new documents use the existing v3 schema. See the
   **Fertig** secures the draft and returns to the outline/preview. Validation or
   save failure retains the editing panel; publishing stays separate.
 - Workspace opens expanded to the viewport with outer scrolling locked. One top
-  bar holds skin, device width, separate draft/preview status and native publishing
+  bar holds device width, separate draft/preview status and native publishing
   navigation. Pane switches appear only where panes cannot remain together.
   Collapsing or leaving restores native WordPress controls and keyboard access;
   the publishing navigation never submits the post by itself.

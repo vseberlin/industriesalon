@@ -38,12 +38,42 @@ add_filter('iss_editorial_formats', static function (array $formats): array {
         $formats[$slug]['skins'] = array_replace(array_fill_keys($choices, ''), $formats[$slug]['skins']);
         $formats[$slug]['editor']['preview'] = true;
         $formats[$slug]['editor']['canvas'] = true;
+        foreach ($formats[$slug]['sections'] as &$section) {
+            if (!empty($section['portable'])) { $section['renderer'] = 'landing'; }
+        }
+        unset($section);
         if (in_array($slug, ['landing', 'article'], true)) {
             $formats[$slug]['renderer'] = 'landing';
         }
     }
     return $formats;
 }, 100);
+
+/** Read the effective document, including the authenticated draft shown in preview. */
+function industriesalon_editorial_has_portable_sections(int $post_id): bool
+{
+    if (!function_exists('iss_editorial_get_format_for_post')) { return false; }
+    $format = iss_editorial_get_format_for_post($post_id);
+    if (!$format || !iss_editorial_document_is_enabled($post_id, $format['slug'])) { return false; }
+    foreach (iss_editorial_get_read_model($post_id, $format['slug'])['sections'] ?? [] as $section) {
+        if (($format['sections'][$section['type']]['renderer'] ?? '') === 'landing') { return true; }
+    }
+    return false;
+}
+
+/** Reuse the existing composition renderer; null leaves domain sections with their owner. */
+function industriesalon_render_editorial_portable_section(array $section, int $index, string $skin, string $format, string $anchor = ''): ?string
+{
+    if (!function_exists('iss_editorial_get_format')) { return null; }
+    $definition = iss_editorial_get_format($format)['sections'][$section['type'] ?? ''] ?? [];
+    if (($definition['renderer'] ?? '') !== 'landing') { return null; }
+    if ($anchor !== '') { $section['anchor'] = $anchor; }
+    $section['_canvas_edit'] = ($section['_text_version'] ?? 1) >= 2 && isset($section['_editorial_index']) && !empty(iss_editorial_embedded_preview()['canvas']);
+    $html = industriesalon_render_editorial_landing_section($section, $index, $skin);
+    if ($html === '') { return ''; }
+    $html = '<div class="iss-landing-editorial iss-landing-editorial--skin-' . esc_attr(sanitize_html_class($skin)) . '">' . $html . '</div>';
+    return industriesalon_editorial_preview_section($html, $section);
+}
 
 /** A renderer reads allowed skins from the same normalized registry as the editor. */
 function industriesalon_editorial_skin_slugs(string $format): array

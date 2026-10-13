@@ -25,6 +25,10 @@ $landing_fixture = static function (array $formats) use (&$landing_id): array {
 add_filter('iss_editorial_formats', $landing_fixture, 99);
 try {
     $assert(iss_editorial_registry_errors() === [], 'Effective registry must be internally consistent');
+    $missing_renderer = static function (array $formats): array { unset($formats['projekt']['sections']['feature']['renderer']); return $formats; };
+    add_filter('iss_editorial_formats', $missing_renderer, 120);
+    $assert(in_array('projekt.feature: portable gesture has no renderer', iss_editorial_registry_errors(), true), 'Registry diagnostics detect missing portable renderer coverage');
+    remove_filter('iss_editorial_formats', $missing_renderer, 120);
     foreach (iss_editorial_get_registered_formats() as $format) {
         foreach ($format['sections'] as $type => $section) {
             $assert($section['label'] === iss_content_model_editorial_gesture_registry()[$type]['label'], 'Shared gesture label: ' . $type);
@@ -37,6 +41,22 @@ try {
     $assert(str_contains($event_links, 'https://example.invalid/tickets?a=1&#038;b=2'), 'Event material links render without requiring a title or body');
     $assert(str_contains($event_links, 'Tickets &amp; Infos'), 'Event material link labels are escaped');
     $colour = 'iss-ink-preset-' . iss_editorial_text_palette()[0]['slug'];
+    $image_id = (int) (get_posts(['post_type' => 'attachment', 'post_mime_type' => 'image', 'numberposts' => 1, 'fields' => 'ids'])[0] ?? 0);
+    $assert($image_id > 0, 'An existing image is available for read-only media coverage');
+    $media = ['kind' => 'wp_media', 'source' => 'wordpress', 'id' => (string) $image_id];
+    $portable_types = ['statement', 'gateway', 'text_bild_reihe', 'feature'];
+    $render_portable = static function (array $section, string $slug, string $skin, int $version = 3) use ($media): string {
+        $section['_text_version'] = $version;
+        if (!empty($section['media_refs'])) { $section['media_refs_resolved'] = [['reference' => $media, 'resolved' => iss_editorial_resolve_reference($media)]]; }
+        return match ($slug) {
+            'landing', 'article' => industriesalon_render_editorial_landing_section($section, 0, $skin),
+            'projekt' => industriesalon_render_editorial_project_section($section, false, 0, $skin),
+            'ausstellung', 'rueckblick' => industriesalon_render_editorial_ausstellung_section($section, false, 0, $skin),
+            'fuehrung' => industriesalon_render_editorial_tour_section($section, false, 0, $skin, 'portable-anchor', get_the_ID()),
+            'veranstaltung' => industriesalon_render_structured_veranstaltung_section($section, $skin),
+        };
+    };
+
     $types = ['landing' => 'fliesstext', 'article' => 'fliesstext', 'projekt' => 'kapitel', 'ausstellung' => 'kapitel', 'rueckblick' => 'fliesstext', 'veranstaltung' => 'kapitel', 'place' => 'epoche', 'fuehrung' => 'kapitel', 'publication' => 'longread_chapter'];
     foreach ($types as $slug => $type) {
         $format = iss_editorial_get_format($slug);
@@ -92,6 +112,111 @@ try {
             $assert(($slug === 'rueckblick' ? $excerpt === '' : str_contains($excerpt, 'Original block content')) && !str_contains($excerpt, 'Visible section') && !str_contains($excerpt, 'Verwandte Inhalte'), "$slug: automatic excerpt cannot render full composition or related cards");
             $GLOBALS['wp_the_query'] = $original_main_query;
         }
+        if (!in_array($slug, ['place', 'publication'], true)) {
+            $portable_doc = iss_editorial_get_empty_document($slug);
+            if ($slug === 'veranstaltung') { $portable_doc['entity_key'] = 'event.general'; }
+            foreach ($portable_types as $portable_type) {
+                $definition = $format['sections'][$portable_type];
+                $contract = iss_editorial_get_format('article')['sections'][$portable_type];
+                $assert($definition['portable'] && $definition['renderer'] === 'landing', "$slug.$portable_type: shared rendering capability");
+                foreach (['supports', 'rich_text', 'default_treatment', 'treatment_aliases'] as $field) {
+                    $assert($definition[$field] === $contract[$field], "$slug.$portable_type: identical $field contract");
+                }
+                $sample = ['type' => $portable_type, 'kicker' => 'Portable kicker', 'title' => 'Portable ' . $portable_type,
+                    'body' => '<p><strong>Portable body</strong> <span class="' . $colour . '">colour survives</span></p>',
+                    'links' => [['label' => 'Portable first link', 'url' => 'https://example.invalid/first'], ['label' => 'Portable second link', 'url' => 'https://example.invalid/second']]];
+                if (in_array($portable_type, ['gateway', 'text_bild_reihe'], true)) {
+                    $sample['items'] = [['label' => 'Portable item', 'text' => '<em>Portable item text</em>', 'media_refs' => [$media]]];
+                    if ($portable_type === 'gateway') { $sample['items'][0]['url'] = 'https://example.invalid/item'; }
+                }
+                if ($portable_type === 'feature') {
+                    $sample['lead'] = '<p>Portable lead</p>';
+                    $sample['facts'] = [['value' => 'Portable fact', 'label' => 'Portable fact label']];
+                    $sample['media_refs'] = [$media];
+                }
+                foreach ($format['skins'] as $skin => $skin_definition) {
+                    foreach ($contract['treatments'] as $treatment) {
+                        $sample['treatment'] = $treatment['slug'];
+                        $candidate = $portable_doc; $candidate['skin'] = $skin; $candidate['sections'] = [$sample];
+                        $validated = iss_editorial_validate_document($candidate, $slug);
+                        $label = "$slug.$portable_type/$skin/{$treatment['slug']}";
+                        $assert(!is_wp_error($validated), "$label: accepts portable contract");
+                        $html = $render_portable($validated['sections'][0], $slug, $skin);
+                        foreach (['Portable ' . $portable_type, '<strong>Portable body</strong>', $colour, 'Portable first link', 'Portable second link'] as $value) {
+                            $assert(str_contains($html, $value), "$label: renders $value");
+                        }
+                        if (isset($sample['items'])) {
+                            $assert(str_contains($html, '<em>Portable item text</em>') && str_contains($html, 'Portable item'), "$label: item text and formatting survive");
+                        }
+                        if ($portable_type === 'feature') {
+                            $assert(str_contains($html, 'Portable lead') && str_contains($html, 'Portable fact label'), "$label: lead and facts survive");
+                        }
+                        if ($portable_type !== 'statement') { $assert(str_contains($html, '<img '), "$label: image survives"); }
+                        $assert(str_contains($html, '--skin-' . $skin), "$label: requested skin applied");
+                        $assert(!str_contains($html, 'data-iss-preview-section') && !str_contains($html, 'data-iss-field='), "$label: public rendering cannot enable editing");
+                    }
+                }
+                if ($portable_type === 'feature') {
+                    foreach ([1, 2] as $version) {
+                        foreach ($contract['treatments'] as $treatment) {
+                            $candidate = $portable_doc; $candidate['schema_version'] = $version;
+                            $sample['treatment'] = $treatment['slug']; $candidate['sections'] = [$sample];
+                            // Named palette classes belong to v3; older documents retain their own text contract.
+                            $candidate['sections'][0]['body'] = '<p><strong>Portable body</strong></p>';
+                            $validated = iss_editorial_validate_document($candidate, $slug);
+                            $assert(!is_wp_error($validated), "$slug/{$treatment['slug']}: portable feature accepts retained v$version documents: " . (is_wp_error($validated) ? $validated->get_error_message() : ''));
+                            $html = $render_portable($validated['sections'][0], $slug, $format['default_skin'], $version);
+                            $assert(str_contains($html, 'Portable lead') && str_contains($html, 'Portable body'), "$slug/v$version/{$treatment['slug']}: retained document shows lead and body");
+                        }
+                    }
+                }
+                $sample['treatment'] = $definition['default_treatment'];
+                $portable_doc['sections'][] = $sample;
+            }
+            $assert(iss_editorial_save_document($id, $slug, $portable_doc), "$slug: save shared composition");
+            if ($slug === 'veranstaltung') {
+                foreach (iss_content_model_veranstaltung_entities() as $entity_key => $entity) {
+                    $candidate = $portable_doc; $candidate['entity_key'] = $entity_key;
+                    $assert(!is_wp_error(iss_editorial_validate_document($candidate, $slug)), "$entity_key: shared composition is independent of event structure");
+                    $allowed = array_keys(iss_content_model_veranstaltung_content_gestures_for_entity($entity_key));
+                    $assert(array_diff($portable_types, $allowed) === [], "$entity_key: editor chooser exposes the same shared gestures");
+                    foreach (array_diff(array_keys(iss_content_model_veranstaltung_content_gestures()), $entity['allowed_gestures']) as $restricted_type) {
+                        $candidate['sections'] = [['type' => $restricted_type, 'body' => 'Restricted domain section']];
+                        $assert(is_wp_error(iss_editorial_validate_document($candidate, $slug)), "$entity_key: native domain restrictions retained");
+                    }
+                }
+            }
+            $reloaded = iss_editorial_get_document($id, $slug);
+            $assert($reloaded === iss_editorial_validate_document($portable_doc, $slug), "$slug: save and reload preserve all shared fields");
+            $query->in_the_loop = true; $GLOBALS['wp_the_query'] = $query;
+            $html = apply_filters('the_content', '<p>Original block content</p>');
+            foreach ($portable_types as $portable_type) {
+                $assert(substr_count($html, 'Portable ' . $portable_type) === 1, "$slug.$portable_type: native content route renders section exactly once");
+            }
+            $assert(str_contains($html, 'Portable lead'), "$slug: document version reaches shared renderer");
+            if ($slug === 'veranstaltung') {
+                $assert(str_contains(do_blocks('<!-- wp:post-content /-->'), 'iss-event-description--composition'), 'Event native content block uses the full composition column');
+            }
+            wp_dequeue_style('industriesalon-editorial-landing'); wp_dequeue_style('industriesalon-editorial-skins');
+            industriesalon_enqueue_assets();
+            $assert(wp_style_is('industriesalon-editorial-landing', 'enqueued') && wp_style_is('industriesalon-editorial-skins', 'enqueued'), "$slug: shared render and skin styles enqueued");
+            $GLOBALS['wp_the_query'] = $original_main_query;
+            $draft = iss_editorial_save_draft($id, $slug, $portable_doc, true);
+            $assert(!is_wp_error($draft), "$slug: shared composition autosave");
+            $_GET = ['iss_editorial_embed' => '1', 'iss_editorial_canvas' => '1', 'iss_editorial_preview' => '1', 'iss_editorial_format' => $slug, 'iss_editorial_snapshot' => $draft['token'], 'iss_editorial_preview_nonce' => wp_create_nonce(iss_editorial_get_preview_nonce_action($id, $slug))];
+            $model = iss_editorial_get_read_model($id, $slug);
+            foreach ($model['sections'] as $index => $shared_section) {
+                $html = in_array($slug, ['landing', 'article'], true) ? industriesalon_editorial_landing_render_document($model, $index, 1) : $render_portable($shared_section, $slug, $model['skin']);
+                $assert(substr_count($html, 'data-iss-preview-section="' . $index . '"') === 1, "$slug: shared preview has one exact section address");
+                $assert(str_contains($html, 'data-iss-field="body"'), "$slug: shared body retains canvas editing");
+            }
+            $_GET = [];
+            $bad = $portable_doc; $bad['sections'][3]['treatment'] = 'feature.opening';
+            if ($slug !== 'landing') { $assert(is_wp_error(iss_editorial_validate_document($bad, $slug)), "$slug: front-page opening cannot leak into a domain format"); }
+        } else {
+            $assert(array_intersect($portable_types, array_keys($format['sections'])) === [], "$slug: specialized adapters are not silently widened");
+        }
+
     }
     // Narrative bodies reuse article; facts and archive projections keep their owners.
     foreach (['team_member', 'entity_profile', 'archivbeitrag', 'archivsammlung', 'archivobjekt'] as $post_type) {

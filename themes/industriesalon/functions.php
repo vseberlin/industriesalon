@@ -997,6 +997,14 @@ add_shortcode('iss_compact_header_context', 'industriesalon_render_compact_heade
 
 function industriesalon_enqueue_assets(): void
 {
+    $editorial_styles = false;
+    if (is_singular() && function_exists('iss_editorial_get_format_for_post')) {
+        $editorial_post_id = (int) get_queried_object_id();
+        $editorial_format = iss_editorial_get_format_for_post($editorial_post_id);
+        if ($editorial_format && iss_editorial_document_is_enabled($editorial_post_id, $editorial_format['slug'])) {
+            $editorial_styles = ($editorial_format['renderer'] ?? '') === 'landing' || industriesalon_editorial_has_portable_sections($editorial_post_id);
+        }
+    }
     $is_schoneweide_page = is_page('schoneweide');
     $current_page_template = is_page()
         ? (string) get_post_meta(get_queried_object_id(), '_wp_page_template', true)
@@ -1147,16 +1155,12 @@ function industriesalon_enqueue_assets(): void
         array(
             'handle' => 'industriesalon-editorial-landing',
             'path' => '/assets/css/editorial-landing.css',
-            'condition' => is_singular()
-                && function_exists('industriesalon_editorial_landing_is_enabled')
-                && industriesalon_editorial_landing_is_enabled((int) get_queried_object_id()),
+            'condition' => $editorial_styles,
         ),
         array(
             'handle' => 'industriesalon-editorial-skins',
             'path' => '/assets/css/editorial-skins.css',
-            'condition' => is_front_page() || (is_singular()
-                && function_exists('industriesalon_editorial_landing_is_enabled')
-                && industriesalon_editorial_landing_is_enabled((int) get_queried_object_id())),
+            'condition' => is_front_page() || $editorial_styles,
         ),
         array(
             'handle' => 'industriesalon-publications',

@@ -147,6 +147,7 @@ function iss_content_model_build_place_editorial_candidate(WP_Post $post): array
 
 function iss_content_model_register_editorial_formats(array $formats): array
 {
+    $gestures = iss_content_model_editorial_gesture_registry();
     $gallery_section = iss_content_model_editorial_gallery_section();
     $material_section = iss_content_model_editorial_material_section();
 
@@ -202,16 +203,7 @@ function iss_content_model_register_editorial_formats(array $formats): array
         'default_variant' => 'standard',
         'skin_meta_key' => '_iss_editorial_landing_skin',
         'sections' => [
-            'statement' => [
-                'label' => __('Überschrift & Einleitung', 'iss-content-model'),
-                'description' => __('Der große Einführungstext oder die Leitfrage ganz oben auf der Seite (optional mit Link).', 'iss-content-model'),
-                'supports' => ['treatment', 'links'],
-                'treatments' => [
-                    'statement.lead' => __('Leitstatement', 'iss-content-model'),
-                    'statement.leitfrage' => __('Leitfrage', 'iss-content-model'),
-                    'statement.callout' => __('Handlungsaufruf', 'iss-content-model'),
-                ],
-            ],
+            'statement' => $gestures['statement'],
             'fliesstext' => [
                 'label' => __('Freitext', 'iss-content-model'),
                 'description' => __('Ganz normaler Textabschnitt ohne starre Boxen oder Medieninhalte für tiefere Infos.', 'iss-content-model'),
@@ -222,28 +214,8 @@ function iss_content_model_register_editorial_formats(array $formats): array
                     'text.story-split-flip' => __('Titel links, Erzählung rechts', 'iss-content-model'),
                 ],
             ],
-            'gateway' => [
-                'label' => __('Einstiegs-Boxen', 'iss-content-model'),
-                'description' => __('Kurze Vorschau-Karten zu anderen Seiten (z. B. als Kacheln oder Linkliste).', 'iss-content-model'),
-                'supports' => ['treatment', 'items', 'links'],
-                'treatments' => [
-                    'gateway.cards' => __('Karten', 'iss-content-model'),
-                    'gateway.link-list' => __('Linkliste', 'iss-content-model'),
-                    'gateway.feature-strip' => __('Feature-Leiste', 'iss-content-model'),
-                    'gateway.pathways' => __('Themenpfade', 'iss-content-model'),
-                    'gateway.atlas-plates' => __('Atlas-Ortskarten', 'iss-content-model'),
-                ],
-            ],
-            'text_bild_reihe' => [
-                'label' => __('Text-Bild-Reihe', 'iss-content-model'),
-                'description' => __('Eine Reihe nicht verlinkter Bild-Text-Paare, etwa für Perspektiven, Räume oder Auszeichnungen.', 'iss-content-model'),
-                'supports' => ['treatment', 'items', 'links'],
-                'treatments' => [
-                    'text-bild-reihe.visual' => __('Großformatige Bildreihe', 'iss-content-model'),
-                    'text-bild-reihe.compact' => __('Kompakte Bildreihe', 'iss-content-model'),
-                    'text-bild-reihe.chronology' => __('Chronologische Bildreihe', 'iss-content-model'),
-                ],
-            ],
+            'gateway' => $gestures['gateway'],
+            'text_bild_reihe' => $gestures['text_bild_reihe'],
             'map_img' => [
                 'label' => __('Karte & Bild', 'iss-content-model'),
                 'description' => __('Eine räumliche Orientierungskarte neben einem großen Ortsbild mit ergänzenden Bild-Text-Karten.', 'iss-content-model'),
@@ -253,18 +225,7 @@ function iss_content_model_register_editorial_formats(array $formats): array
                 ],
             ],
             'galerie' => array_merge($gallery_section, ['supports' => ['anchor', 'media_refs', 'gallery_layout']]),
-            'feature' => [
-                'label' => __('Hervorgehobener Inhalt', 'iss-content-model'),
-                'description' => __('Ein auffälliger Abschnitt mit Bild, Text und Kernfakten, um ein Thema besonders zu betonen.', 'iss-content-model'),
-                'supports' => ['treatment', 'lead', 'facts', 'links', 'media_refs', 'media_layout'],
-                'treatments' => [
-                    'feature.media-panel' => __('Bild mit Infokasten', 'iss-content-model'),
-                    'feature.media-text' => __('Bild neben Text', 'iss-content-model'),
-                    'feature.image-overlay' => __('Titel auf Bild', 'iss-content-model'),
-                    'feature.origin-story' => __('Zweiteilige Herkunftserzählung', 'iss-content-model'),
-                    'feature.opening' => ['label' => __('Seitenauftakt', 'iss-content-model'), 'role' => 'opening', 'min_version' => 3],
-                ],
-            ],
+            'feature' => $gestures['feature'],
             'dynamic_slot' => [
                 'label' => __('Automatische Inhalte', 'iss-content-model'),
                 'description' => __('Platzhalter, der selbstständig Termine oder Projekt-Notizen lädt.', 'iss-content-model'),
@@ -292,6 +253,10 @@ function iss_content_model_register_editorial_formats(array $formats): array
         ],
     ];
 
+    // The front-page opening is a template capability, not a portable feature.
+    $formats['landing']['sections']['feature']['treatments']['feature.opening'] = [
+        'label' => __('Seitenauftakt', 'iss-content-model'), 'role' => 'opening', 'min_version' => 3,
+    ];
     $presentations = iss_content_model_landing_treatment_presentations();
     foreach ($formats['landing']['sections'] as $type => &$section) {
         foreach (($section['slots'] ?? []) as $slot) {
@@ -581,8 +546,13 @@ add_filter('iss_editorial_formats', static function (array $formats): array {
         'place' => [['label' => 'Ortsdossier', 'sections' => [['type' => 'intro'], ['type' => 'epoche', 'title' => 'Geschichte'], ['type' => 'gegenwart']]]],
         'veranstaltung' => [['label' => 'Veranstaltung vorstellen', 'sections' => [['type' => 'intro'], ['type' => 'kapitel', 'title' => 'Programm']]]],
     ];
+    $presentations = iss_content_model_landing_treatment_presentations();
+    $portable = array_filter($definitions, static fn(array $gesture): bool => !empty($gesture['portable']));
     foreach ($formats as $slug => &$format) {
         if (!isset($starters[$slug]) && $slug !== 'publication') { continue; }
+        // These formats have an ordered composition adapter in the theme.
+        // Places and publication layouts require their own adapter review.
+        if (!in_array($slug, ['place', 'publication'], true)) { $format['sections'] += $portable; }
         $format['starters'] = $format['starters'] ?? ($starters[$slug] ?? []);
         $format['editor'] = array_merge(['workspace' => true], (array) ($format['editor'] ?? []));
         $format['supported_versions'] = $format['supported_versions'] ?? [1, 2, 3];
@@ -594,6 +564,12 @@ add_filter('iss_editorial_formats', static function (array $formats): array {
             // belong to descriptions, not alternate names for the same gesture.
             $section['label'] = $definitions[$type]['label'];
             $section['family'] = $type;
+            if (!empty($section['portable'])) {
+                $section['rich_text'] = ['body' => 'block', 'lead' => 'block'];
+                if (in_array('items', $section['supports'], true)) {
+                    $section['rich_text']['items'] = $type === 'text_bild_reihe' ? 'inline' : 'inline-card';
+                }
+            }
             if (!in_array('no_body', $section['supports'] ?? [], true) && !in_array($type, ['source', 'bildbuehne'], true)) {
                 $section['rich_text'] = array_merge(['body' => 'block'], (array) ($section['rich_text'] ?? []));
                 if (in_array('lead', $section['supports'] ?? [], true)) { $section['rich_text']['lead'] = 'block'; }
@@ -604,7 +580,7 @@ add_filter('iss_editorial_formats', static function (array $formats): array {
             }
             $section['treatments'] = (array) ($section['treatments'] ?? []);
             foreach ($section['treatments'] as $treatment => &$choice) {
-                $choice = array_merge(['schematic' => $section['schematic']], is_array($choice) ? $choice : ['label' => $choice]);
+                $choice = array_merge(['schematic' => $section['schematic']], is_array($choice) ? $choice : ['label' => $choice], $presentations[$treatment] ?? []);
             }
             unset($choice);
         }

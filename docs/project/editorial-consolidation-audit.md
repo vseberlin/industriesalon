@@ -6,6 +6,63 @@ the supplied `iss-editorial-composer-audit (2).md` dated 2026-09-21, including i
 F1–F14 follow-up and V1–V9 visual review. This is a code delivery; existing
 published documents and private drafts are preserved.
 
+## Gesture portability checkpoint — 13 October 2026
+
+The mounted website checkout now exposes 28 canonical gestures in nine formats.
+The workspace/CPT expansion is committed as `65c55b8`; the following portability
+slice is local review work. Registration, editor fields, save validation and
+public rendering must agree before a gesture becomes available in another format.
+
+| Gesture identifiers | Effective boundary / remaining work |
+| --- | --- |
+| `statement`, `gateway`, `text_bild_reihe`, `feature` | One portable field/treatment contract in the vocabulary. Available in landing, article, event, exhibition, project, report and tour formats. All article CPTs inherit this. The existing composition renderer handles them under the selected skin. |
+| `intro` | Event/report/Place/publication introductions differ from the hidden tour introduction feeding its hero. Preserve those meanings before consolidation. |
+| `kapitel` | Event and tour media differ from project/exhibition links and treatments; reconcile fields before widening. |
+| `fliesstext` | Landing/article treatments, project links and report media/object references are distinct contracts today. |
+| `leitfrage` | Existing event/exhibition/tour text gesture; the portable statement also offers a question treatment. Avoid a silent type rewrite. |
+| `zitat` | Exhibition supports media, objects and quote treatments; event/tour quote contracts are smaller. |
+| `schluss` | Existing domain endings have different link support, especially events. |
+| `galerie` | Landing/article accept image references; other domains also accept objects. Layout choices and renderer behavior differ. |
+| `objektfokus` | Exhibition/report archive references use the archive owner; future reuse must retain resolution and visibility checks. |
+| `material` | Domain downloads differ from event text items and dynamic references. Do not union fields that renderers would drop. |
+| `facts` | Project/exhibition facts are reusable candidates, with project dossier pairing retained. Portable features already render their own facts. |
+| `upload_intake` | Depends on the context owner's open intake and signed invitation; registration alone cannot open collection. |
+| `programm` | Event structure controls availability. Shared composition does not bypass its domain allowlist. |
+| `dynamic_slot` | Landing slots bind named owner services; each requires a context/renderer review before reuse. |
+| `map_img` | Landing map/panorama composition uses the existing static-map model; retain its data contract. |
+| `atlas_map` | Landing locator/map treatments and the tour route have different owners and data requirements. |
+| `bildbuehne` | Tour hero integration, booking rail and excerpt fallback remain tour-owned. |
+| `epoche`, `gegenwart` | Place history and current-state projection remain a separate case. |
+| `source`, `publication_rail`, `longread_chapter`, `longread_quote`, `timeline_item`, `photoalbum` | Publication layouts consume different payloads, sometimes reorder or omit section types. Extend those adapters before offering portable composition there; preserve reading navigation, sources and album ownership. |
+
+`massstab`, `vollbild`, `image_wall` and `feature.microblocks` remain declared
+compatibility aliases. Existing stored documents are not renamed or migrated.
+`feature.opening` remains restricted to the front-page opening contract.
+
+Implementation uses the existing `iss_editorial_formats` filter, `supports`,
+rich-text profiles and treatment metadata. The vocabulary marks portable
+contracts; the theme declares their section renderer in the same effective
+registry. `registry-check` reports a portable gesture without a renderer. No
+second editor, document store, block or rendering vocabulary is introduced.
+
+The existing media/text pattern now owns its flex layout for native blocks and
+JSON alike. Its defaults are component-scoped, the overlay retains image height
+on phones. Native Columns compatibility selectors remain because WordPress
+assigns its own flex basis; their markup and responsive rules remain supported. The image-overlay treatment now
+renders every supplied link, and feature leads render in retained v1/v2 documents
+without changing the stored version. Event composition can use the full existing content
+column; ordinary event prose keeps its reading measure. Archival skin palettes
+flow through existing domain variables, without new gesture selector trees.
+
+Verification covers all 15 portable treatments in every registered skin of the
+seven supported formats, save/reload, public content routing, snapshot field
+addresses, media, links, rich text, front-page exclusion and event-structure
+restrictions: 4,414 assertions plus 35 UI tests. Local Chrome checks covered
+tour/event/exhibition previews, a treatment change and draft save, the Chronik
+palette, full event composition width and a 390 px phone viewport. Publication
+and Place exclusions are explicit assertions. No SQL,
+content migration, uploads or template artifact is required for this slice.
+
 ## Findings and disposition
 
 | Finding | Result |
@@ -33,7 +90,7 @@ published documents and private drafts are preserved.
 | Generated excerpts rendered full compositions | Content renderers skip excerpt generation, preserving native excerpts and preventing duplicated text/related-card content. |
 | Preview scaling created outer scrollbars | Existing viewport CSS now lets the iframe own scrolling; project navigation controls belong to the outline owner panel. |
 
-## Current content and template authority
+## Content and template snapshot — 22 September 2026
 
 - 86 stored documents validate: events 26, places 1, landings 4, tours 15,
   exhibitions 16, projects 7, reports 1, publications 16. Registration does not

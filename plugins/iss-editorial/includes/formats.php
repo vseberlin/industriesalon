@@ -71,6 +71,8 @@ function iss_editorial_get_registered_formats(): array
                 'rich_text' => array_intersect((array) ($section['rich_text'] ?? []), ['block', 'inline', 'inline-card']),
                 'items_kind' => ($section['items_kind'] ?? '') === 'text' ? 'text' : 'cards',
                 'family' => sanitize_key($section['family'] ?? $type),
+                'portable' => !empty($section['portable']),
+                'renderer' => sanitize_key($section['renderer'] ?? ''),
                 'schematic' => sanitize_key($section['schematic'] ?? 'text'),
                 'default_treatment' => iss_editorial_sanitize_treatment_slug($section['default_treatment'] ?? (array_key_first($treatments) ?? '')),
                 'treatment_aliases' => (array) ($section['treatment_aliases'] ?? []),
@@ -130,6 +132,9 @@ function iss_editorial_registry_errors(): array
         }
         $aliases = [];
         foreach ($format['sections'] as $type => $section) {
+            if ($section['portable'] && $section['renderer'] === '') {
+                $errors[] = "$slug.$type: portable gesture has no renderer";
+            }
             foreach (['label', 'description', 'family', 'icon', 'tone', 'group', 'schematic'] as $field) {
                 if (empty($raw[$slug]['sections'][$type][$field])) { $errors[] = "$slug.$type: missing $field"; }
             }

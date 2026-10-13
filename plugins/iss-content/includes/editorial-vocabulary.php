@@ -72,16 +72,39 @@ function iss_content_model_editorial_gesture_registry(): array
         'statement' => [
             'label' => __('Überschrift & Intro', 'iss-content-model'),
             'description' => __('Eine Überschrift, Einleitung oder Leitfrage hervorheben.', 'iss-content-model'),
+            'portable' => true,
+            'supports' => ['treatment', 'links'],
+            'treatments' => [
+                'statement.lead' => __('Leitstatement', 'iss-content-model'),
+                'statement.leitfrage' => __('Leitfrage', 'iss-content-model'),
+                'statement.callout' => __('Handlungsaufruf', 'iss-content-model'),
+            ],
             'icon' => 'editor-textcolor', 'tone' => 'text', 'group' => 'Text', 'schematic' => 'heading',
         ],
         'gateway' => [
             'label' => __('Linkkarten', 'iss-content-model'),
             'description' => __('Verlinkte Einstiege zu weiteren Inhalten zusammenstellen.', 'iss-content-model'),
+            'portable' => true,
+            'supports' => ['treatment', 'items', 'links'],
+            'treatments' => [
+                'gateway.cards' => __('Karten', 'iss-content-model'),
+                'gateway.link-list' => __('Linkliste', 'iss-content-model'),
+                'gateway.feature-strip' => __('Feature-Leiste', 'iss-content-model'),
+                'gateway.pathways' => __('Themenpfade', 'iss-content-model'),
+                'gateway.atlas-plates' => __('Atlas-Ortskarten', 'iss-content-model'),
+            ],
             'icon' => 'screenoptions', 'tone' => 'navigation', 'group' => 'Orientierung', 'schematic' => 'cards',
         ],
         'text_bild_reihe' => [
             'label' => __('Text-Bild-Reihe', 'iss-content-model'),
             'description' => __('Bilder und Texte als zusammengehörige Reihe zeigen.', 'iss-content-model'),
+            'portable' => true,
+            'supports' => ['treatment', 'items', 'links'],
+            'treatments' => [
+                'text-bild-reihe.visual' => __('Großformatige Bildreihe', 'iss-content-model'),
+                'text-bild-reihe.compact' => __('Kompakte Bildreihe', 'iss-content-model'),
+                'text-bild-reihe.chronology' => __('Chronologische Bildreihe', 'iss-content-model'),
+            ],
             'icon' => 'format-gallery', 'tone' => 'media', 'group' => 'Bild', 'schematic' => 'cards',
         ],
         'map_img' => [
@@ -92,6 +115,14 @@ function iss_content_model_editorial_gesture_registry(): array
         'feature' => [
             'label' => __('Bild & Text', 'iss-content-model'),
             'description' => __('Ein Thema mit Bild, Text und Kernfakten hervorheben.', 'iss-content-model'),
+            'portable' => true,
+            'supports' => ['treatment', 'lead', 'facts', 'links', 'media_refs', 'media_layout'],
+            'treatments' => [
+                'feature.media-panel' => __('Bild mit Infokasten', 'iss-content-model'),
+                'feature.media-text' => __('Bild neben Text', 'iss-content-model'),
+                'feature.image-overlay' => __('Titel auf Bild', 'iss-content-model'),
+                'feature.origin-story' => __('Zweiteilige Herkunftserzählung', 'iss-content-model'),
+            ],
             'icon' => 'format-image', 'tone' => 'media', 'group' => 'Bild', 'schematic' => 'panel',
             'treatment_aliases' => ['feature.microblocks' => 'feature.image-overlay'],
         ],

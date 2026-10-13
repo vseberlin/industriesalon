@@ -950,6 +950,10 @@
   max-width: var(--iss-event-measure);
 }
 
+.iss-event-description--composition {
+  max-width: none;
+}
+
 .iss-event-description > h2 {
   margin-top: 0;
 }
