@@ -5,6 +5,21 @@
    ========================================================= */
 
 .iss-ausstellung-page {
+  --iss-archive-featured-columns: minmax(14rem, 0.9fr) minmax(0, 1fr);
+  --iss-archive-featured-padding: 0;
+  --iss-archive-featured-gap: 0;
+  --iss-archive-featured-body-align: center;
+  --iss-archive-featured-body-gap: 0.75rem;
+  --iss-archive-featured-text-display: block;
+  --iss-archive-featured-mobile-media-width: none;
+  --iss-archive-featured-media-radius: 0;
+  --iss-archive-featured-bg: #fff;
+  --iss-archive-featured-ink: var(--iss-ausstellung-dark);
+  --iss-archive-featured-muted: rgba(30, 30, 30, 0.7);
+  --iss-archive-featured-media-height: 18rem;
+  --iss-archive-featured-body-padding: clamp(1.25rem, 2.5vw, 2.25rem);
+  --iss-archive-featured-title-size: clamp(1.25rem, 1.5vw, 1.8rem);
+
   --iss-ausstellung-bg: #f9f9fa;
   --iss-ausstellung-paper-fiber: rgba(30, 30, 30, 0.025);
   --iss-ausstellung-dark: var(--iss-black, #1e1e1e);
@@ -40,7 +55,7 @@
 
 .iss-ausstellung-page .iss-kicker {
   --iss-kicker-accent: var(--iss-ausstellung-accent);
-  --iss-kicker-color: var(--iss-ausstellung-dark);
+  --iss-kicker-color: var(--iss-surface-fg, var(--iss-ausstellung-dark));
 
   color: var(--iss-kicker-color);
 }
@@ -799,46 +814,6 @@
   margin-top: clamp(2rem, 4vw, 4rem);
 }
 
-.iss-ausstellung-page .iss-archive-featured-object {
-  display: grid;
-  grid-template-columns: minmax(14rem, 0.9fr) minmax(0, 1fr);
-  overflow: hidden;
-  border: 1px solid rgba(30, 30, 30, 0.12);
-  background: #fff;
-  color: var(--iss-ausstellung-dark);
-}
-
-.iss-ausstellung-page .iss-archive-featured-object__media {
-  min-height: 18rem;
-  border-radius: 0;
-}
-
-.iss-ausstellung-page .iss-archive-featured-object__media img {
-  width: 100%;
-  max-width: 100%;
-  height: 100%;
-  object-fit: cover;
-}
-
-.iss-ausstellung-page .iss-archive-featured-object__body {
-  align-content: center;
-  display: grid;
-  gap: 0.75rem;
-  padding: clamp(1.25rem, 2.5vw, 2.25rem);
-}
-
-.iss-ausstellung-page .iss-archive-featured-object__title {
-  font-size: clamp(1.25rem, 1.5vw, 1.8rem);
-  line-height: 1.12;
-}
-
-.iss-ausstellung-page .iss-archive-featured-object__text,
-.iss-ausstellung-page .iss-archive-featured-object__type,
-.iss-ausstellung-page .iss-archive-featured-object__meta {
-  margin: 0;
-  color: rgba(30, 30, 30, 0.7);
-}
-
 .iss-ausstellung-station--object .iss-archive-featured-object {
   grid-template-columns: minmax(18rem, 1fr) minmax(17.5rem, 26rem);
   gap: clamp(2rem, 4vw, 4rem);
@@ -1399,6 +1374,7 @@
 
 @media (max-width: 900px) {
   .iss-ausstellung-page {
+    --iss-archive-featured-columns: 1fr;
     --iss-ausstellung-title: clamp(2.35rem, 11.5vw, 4.25rem);
   }
 
@@ -1449,7 +1425,6 @@
     min-height: 76vh;
   }
 
-  .iss-ausstellung-page .iss-archive-featured-object,
   .iss-ausstellung-station--object .iss-archive-featured-object,
   .iss-ausstellung-content > .wp-block-post-content > .iss-ausstellung-object-grid {
     grid-template-columns: 1fr;

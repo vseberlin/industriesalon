@@ -884,8 +884,33 @@
           render();
           scheduleAutosave();
         });
-        item.appendChild(label);
-        item.appendChild(remove);
+        if (section.type === 'objektfokus' && sectionConfig(section.type).portable) {
+          item.className = 'iss-editorial-media-item';
+          var preview = createElement('div', 'iss-editorial-media-item__preview');
+          if (reference.thumbnail) {
+            var image = document.createElement('img');
+            image.src = reference.thumbnail;
+            image.alt = '';
+            preview.appendChild(image);
+          }
+          var controls = createElement('div', 'iss-editorial-media-item__controls');
+          controls.appendChild(createTextInput('Beschriftung', reference.label || '', function (value) {
+            reference.label = value;
+            render();
+            scheduleAutosave();
+          }));
+          controls.appendChild(createTextarea('Bildunterschrift / Kontext', reference.member_caption || '', function (value) {
+            reference.member_caption = value;
+            render();
+            scheduleAutosave();
+          }, 3));
+          controls.appendChild(remove);
+          item.appendChild(preview);
+          item.appendChild(controls);
+        } else {
+          item.appendChild(label);
+          item.appendChild(remove);
+        }
         target.appendChild(item);
       });
 

@@ -2032,3 +2032,136 @@
     width: min(100%, 24rem);
   }
 }
+
+/* Shared archive card; archive landing and composition skins supply its values. */
+.iss-archive-featured-object {
+  --iss-surface-fg: var(--iss-archive-featured-ink, var(--iss-archive-rail-text, var(--iss-black)));
+  --iss-surface-muted: var(--iss-archive-featured-muted, var(--iss-archive-rail-muted, color-mix(in srgb, var(--iss-surface-fg) 72%, transparent)));
+  --iss-surface-subtle: var(--iss-archive-featured-muted, var(--iss-archive-rail-muted, color-mix(in srgb, var(--iss-surface-fg) 72%, transparent)));
+  --iss-kicker-accent: var(--iss-accent);
+  --iss-kicker-color: var(--iss-surface-fg);
+
+  display: grid;
+  grid-template-columns: var(--iss-archive-featured-columns, minmax(10rem, 15rem) minmax(0, 1fr));
+  gap: var(--iss-archive-featured-gap, clamp(0.95rem, 1.6vw, 1.25rem));
+  align-items: var(--iss-archive-featured-align, center);
+  min-width: 0;
+  padding: var(--iss-archive-featured-padding, clamp(0.9rem, 1.5vw, 1.15rem));
+  border: 1px solid var(--iss-archive-featured-border, var(--iss-archive-rail-border, var(--iss-border)));
+  background: var(--iss-archive-featured-bg, var(--iss-archive-rail-bg, var(--iss-surface-paper)));
+  color: var(--iss-archive-featured-ink, var(--iss-archive-rail-text, var(--iss-black)));
+}
+
+.iss-archive-featured-object__media {
+  --iss-media-card-rail-width: 0;
+  --iss-media-card-radius: var(--iss-archive-featured-media-radius, var(--iss-radius-sm));
+
+  display: block;
+  min-height: var(--iss-archive-featured-media-height, 0);
+  aspect-ratio: 4 / 3;
+  min-width: 0;
+  background: var(--iss-archive-featured-panel, var(--iss-archive-rail-panel, var(--iss-surface-panel)));
+  border-color: rgba(244, 241, 237, 0.14);
+}
+
+.iss-archive-featured-object__media::before {
+  content: none;
+}
+
+.iss-archive-featured-object__media img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: var(--iss-archive-featured-fit, cover);
+}
+
+.iss-archive-featured-object__body {
+  display: grid;
+  gap: var(--iss-archive-featured-body-gap, 0.55rem);
+  min-width: 0;
+  align-content: var(--iss-archive-featured-body-align, start);
+  padding: var(--iss-archive-featured-body-padding, 0);
+  overflow-wrap: anywhere;
+}
+
+.iss-archive-featured-object__body .iss-kicker {
+  margin: 0;
+}
+
+.iss-archive-featured-object__title,
+.iss-archive-featured-object__type,
+.iss-archive-featured-object__text,
+.iss-archive-featured-object__action {
+  margin: 0;
+}
+
+.iss-archive-featured-object__title {
+  color: var(--iss-surface-fg);
+  font-size: var(--iss-archive-featured-title-size, clamp(1.15rem, 1.02rem + 0.34vw, 1.45rem));
+  line-height: 1.16;
+}
+
+.iss-archive-featured-object__type {
+  color: var(--iss-surface-muted);
+  font-size: 0.78rem;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  line-height: 1.35;
+  text-transform: uppercase;
+}
+
+.iss-archive-featured-object__text {
+  display: var(--iss-archive-featured-text-display, -webkit-box);
+  overflow: hidden;
+  color: var(--iss-surface-muted);
+  font-size: 0.92rem;
+  line-height: 1.48;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 3;
+  line-clamp: 3;
+}
+
+.iss-archive-featured-object__meta {
+  display: grid;
+  gap: 0.3rem;
+  margin: 0.1rem 0 0;
+  padding: 0.55rem 0 0;
+  border-top: 1px solid var(--iss-archive-featured-border, var(--iss-archive-rail-border, var(--iss-border)));
+  list-style: none;
+}
+
+.iss-archive-featured-object__meta li {
+  display: grid;
+  grid-template-columns: minmax(5.25rem, max-content) minmax(0, 1fr);
+  gap: 0.6rem;
+  color: var(--iss-surface-muted);
+  font-size: 0.82rem;
+  line-height: 1.36;
+}
+
+.iss-archive-featured-object__meta-label {
+  color: var(--iss-surface-muted);
+  font-size: 0.68rem;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.iss-archive-featured-object__action .iss-card__link {
+  color: var(--iss-link-fg, var(--iss-red));
+}
+
+@media (max-width: 782px) {
+  .iss-archive-featured-object {
+    grid-template-columns: 1fr;
+  }
+
+  .iss-archive-featured-object__media {
+    max-width: var(--iss-archive-featured-mobile-media-width, min(100%, 18rem));
+  }
+
+  .iss-archive-featured-object__meta li {
+    grid-template-columns: 1fr;
+    gap: 0.12rem;
+  }
+}

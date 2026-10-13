@@ -86,7 +86,7 @@ try {
         $canonical = get_post_meta($id, $key, true);
         $draft = iss_editorial_save_draft($id, $slug, $doc, true);
         $assert(!is_wp_error($draft), "$slug: native autosave");
-        $query = new WP_Query(); $query->queried_object_id = $id; $query->queried_object = get_post($id);
+        $query = new WP_Query(); $query->posts = [get_post($id)]; $query->queried_object_id = $id; $query->queried_object = get_post($id);
         $query->is_singular = true; $query->is_single = true; $query->post = get_post($id);
         $GLOBALS['wp_query'] = $query; $GLOBALS['post'] = get_post($id);
         $_GET = ['iss_editorial_embed' => '1', 'iss_editorial_canvas' => '1', 'iss_editorial_preview' => '1', 'iss_editorial_format' => $slug, 'iss_editorial_snapshot' => $draft['token'], 'iss_editorial_preview_nonce' => wp_create_nonce(iss_editorial_get_preview_nonce_action($id, $slug))];
@@ -231,7 +231,7 @@ try {
             if ($slug !== 'landing') { $assert(is_wp_error(iss_editorial_validate_document($bad, $slug)), "$slug: front-page opening cannot leak into a domain format"); }
             $common_doc = iss_editorial_get_empty_document($slug);
             if ($slug === 'veranstaltung') { $common_doc['entity_key'] = 'event.general'; }
-            foreach (['galerie', 'fliesstext', 'zitat', 'schluss', 'kapitel', 'facts', 'material'] as $common_type) {
+            foreach (['galerie', 'fliesstext', 'zitat', 'schluss', 'kapitel', 'facts', 'material', 'objektfokus'] as $common_type) {
                 $definition = $format['sections'][$common_type];
                 $contract = iss_editorial_get_format('article')['sections'][$common_type];
                 foreach (['supports', 'rich_text', 'treatments', 'default_treatment', 'legacy_types'] as $field) {
@@ -244,10 +244,11 @@ try {
                     'body' => '<p><em>Common formatted body</em></p>', 'media_refs' => [array_merge($media, ['label' => 'Owned image caption'])], 'object_refs' => [$archive_ref, $private_ref]];
                 if (in_array($common_type, ['schluss', 'facts'], true)) { unset($sample['media_refs'], $sample['object_refs']); }
                 if (in_array($common_type, ['kapitel', 'material'], true)) { unset($sample['object_refs']); }
+                if ($common_type === 'objektfokus') { unset($sample['media_refs']); }
                 $choices = match ($common_type) {
                     'galerie' => array_map(static fn(string $layout): array => ['gallery_layout' => $layout], ['grid', 'sequence', 'wall', 'viewport']),
                     'fliesstext' => array_map(static fn(array $treatment): array => ['treatment' => $treatment['slug']], $contract['treatments']),
-                    'schluss', 'facts', 'material' => [[]],
+                    'schluss', 'facts', 'material', 'objektfokus' => [[]],
                     'kapitel' => [['media_layout' => 'inline', 'section_treatment' => 'standard'], ['media_layout' => 'aside-right', 'section_treatment' => 'standard'], ['media_layout' => 'inline', 'section_treatment' => 'aside'], ['media_layout' => 'aside-right', 'section_treatment' => 'aside']],
                     default => [['quote_treatment' => 'pull'], ['quote_treatment' => 'source', 'orientation' => 'media-left'], ['quote_treatment' => 'source', 'orientation' => 'media-right']],
                 };
@@ -262,7 +263,7 @@ try {
                         $assert(!is_wp_error($validated), "$label: shared fields validate");
                         $html = $render_portable($validated['sections'][0], $slug, $skin);
                         $expected = ['Common ' . $common_type, '<em>Common formatted body</em>'];
-                        if (!in_array($common_type, ['schluss', 'facts', 'material'], true)) { $expected = array_merge($expected, ['Owned image caption', '<img ']); }
+                        if (!in_array($common_type, ['schluss', 'facts', 'material', 'objektfokus'], true)) { $expected = array_merge($expected, ['Owned image caption', '<img ']); }
                         if (!in_array($common_type, ['schluss', 'kapitel', 'facts', 'material'], true)) { $expected = array_merge($expected, ['Owned archive caption', esc_url(get_permalink($archive_id))]); }
                         if ($common_type === 'material') { $expected = array_merge($expected, ['Owned image caption', 'download=']); }
                         if ($common_type === 'facts') { $expected = array_merge($expected, ['>0<', 'Common zero value', '12 Tage', 'Common fact description']); }
@@ -289,7 +290,7 @@ try {
             $assert(iss_editorial_get_document($id, $slug) === iss_editorial_validate_document($common_doc, $slug), "$slug: common fields round-trip without loss");
             $GLOBALS['wp_the_query'] = $query;
             $html = apply_filters('the_content', '<p>Original block content</p>');
-            foreach (['galerie', 'fliesstext', 'zitat', 'schluss', 'kapitel', 'facts', 'material'] as $common_type) { $assert(substr_count($html, 'Common ' . $common_type) === 1, "$slug.$common_type: native content route renders once"); }
+            foreach (['galerie', 'fliesstext', 'zitat', 'schluss', 'kapitel', 'facts', 'material', 'objektfokus'] as $common_type) { $assert(substr_count($html, 'Common ' . $common_type) === 1, "$slug.$common_type: native content route renders once"); }
             $draft = iss_editorial_save_draft($id, $slug, $common_doc, true);
             $assert(!is_wp_error($draft), "$slug: common snapshot saves");
             $_GET = ['iss_editorial_embed' => '1', 'iss_editorial_canvas' => '1', 'iss_editorial_preview' => '1', 'iss_editorial_format' => $slug, 'iss_editorial_snapshot' => $draft['token'], 'iss_editorial_preview_nonce' => wp_create_nonce(iss_editorial_get_preview_nonce_action($id, $slug))];
@@ -297,7 +298,28 @@ try {
             foreach (array_keys($common_doc['sections']) as $index) { $assert(substr_count($html, 'data-iss-preview-section="' . $index . '"') === 1, "$slug: common snapshot source address $index"); }
             $assert(substr_count($html, 'data-iss-field="body"') === count($common_doc['sections']), "$slug: every common body is editable in the preview");
             $_GET = []; $GLOBALS['wp_the_query'] = $original_main_query;
-            // Material is portable; event source lists and live fields keep their owner contract.
+            foreach ([1, 2, 3] as $version) {
+                $object_doc = iss_editorial_get_empty_document($slug); $object_doc['schema_version'] = $version;
+                if ($slug === 'veranstaltung') { $object_doc['entity_key'] = 'event.general'; }
+                $saved_ref = array_merge($archive_ref, ['label' => 'Saved label & source', 'set_id' => '13', 'set_title' => 'Saved Set', 'member_id' => '42', 'member_caption' => 'Saved caption & context']);
+                $object_doc['sections'] = [['type' => 'objektfokus', 'anchor' => 'sources', 'object_refs' => [$saved_ref, $private_ref]]];
+                $valid = iss_editorial_validate_document($object_doc, $slug);
+                $assert(!is_wp_error($valid) && iss_editorial_save_document($id, $slug, $object_doc) && iss_editorial_get_document($id, $slug) === $valid, "$slug/v$version: title-free archive references round-trip");
+                $html = $render_portable($valid['sections'][0], $slug, $format['default_skin'], $version);
+                $expected_card = iss_wf_import_render_featured_archive_object($archive_id, ['title' => $saved_ref['label'], 'excerpt' => $saved_ref['member_caption']]);
+                $assert($expected_card !== '' && str_contains($html, $expected_card), "$slug/v$version: archive owner card keeps source metadata and saved label/caption");
+                $assert(!str_contains($html, 'Private archive caption'), "$slug/v$version: private source remains hidden");
+                $assert(str_contains($html, 'id="' . ($slug === 'fuehrung' ? 'portable-anchor' : 'sources') . '"'), "$slug/v$version: object anchor survives");
+                $assert($render_portable(['type' => 'objektfokus'], $slug, $format['default_skin'], $version) === '', "$slug/v$version: empty archive section omitted");
+                $html = $render_portable(['type' => 'objektfokus', 'body' => '<p><strong>Source introduction</strong></p>'], $slug, $format['default_skin'], $version);
+                $assert(str_contains($html, 'Source introduction'), "$slug/v$version: source introduction works without cards");
+            }
+            $bare_ref = array_diff_key($archive_ref, ['label' => true]);
+            $html = $render_portable(['type' => 'objektfokus', 'object_refs' => [$bare_ref]], $slug, $format['default_skin']);
+            $assert(str_contains($html, iss_wf_import_render_featured_archive_object($archive_id)), "$slug: missing overrides retain live archive title and excerpt");
+            foreach ([$private_ref, array_merge($archive_ref, ['id' => (string) PHP_INT_MAX]), array_merge($archive_ref, ['id' => (string) $image_id]), $media] as $hidden_ref) {
+                $assert($render_portable(['type' => 'objektfokus', 'object_refs' => [$hidden_ref]], $slug, $format['default_skin']) === '', "$slug: unpublished, missing and non-archive objects cannot leak");
+            }
             $file_id = (int) (get_posts(['post_type' => 'attachment', 'post_mime_type' => 'application/pdf', 'numberposts' => 1, 'fields' => 'ids'])[0] ?? 0);
             $assert($file_id > 0, 'Existing document available for read-only download coverage');
             $file_ref = ['kind' => 'media', 'source' => 'wp-media', 'id' => (string) $file_id, 'label' => 'File & source label'];
@@ -480,7 +502,7 @@ try {
             $id = wp_insert_post(['post_type' => 'publication', 'post_status' => 'draft', 'post_title' => 'Disposable publication composition', 'post_content' => '<p>Legacy fallback only</p>', 'post_author' => $admin->ID]);
             $fixtures[] = $id;
             update_post_meta($id, '_iss_publication_layout', $layout);
-            $query = new WP_Query(); $query->queried_object_id = $id; $query->queried_object = get_post($id);
+            $query = new WP_Query(); $query->posts = [get_post($id)]; $query->queried_object_id = $id; $query->queried_object = get_post($id);
             $query->is_singular = true; $query->is_single = true; $query->in_the_loop = true; $query->post = get_post($id);
             $GLOBALS['wp_query'] = $query; $GLOBALS['wp_the_query'] = $query; $GLOBALS['post'] = get_post($id);
             $doc = iss_editorial_get_empty_document('publication'); $doc['skin'] = $skin;
@@ -502,11 +524,12 @@ try {
                 $doc['sections'][] = $second;
             }
             $doc['sections'][] = ['type' => 'gateway', 'title' => 'Shared after', 'body' => '<p>Shared after body</p>', 'items' => [['label' => 'Shared item', 'text' => '<em>Shared card copy</em>', 'url' => 'https://example.invalid/shared']]];
-            foreach (['galerie', 'fliesstext', 'zitat', 'schluss', 'kapitel', 'facts', 'material'] as $common_type) {
+            foreach (['galerie', 'fliesstext', 'zitat', 'schluss', 'kapitel', 'facts', 'material', 'objektfokus'] as $common_type) {
                 $extra = ['type' => $common_type, 'title' => 'Layout ' . $common_type, 'body' => '<p>Layout common body</p>', 'media_refs' => [$media], 'object_refs' => [$archive_ref]];
                 if ($common_type === 'schluss') { unset($extra['media_refs'], $extra['object_refs']); $extra['links'] = [['label' => 'Layout contact', 'url' => 'https://example.invalid/contact']]; }
                 if ($common_type === 'facts') { unset($extra['media_refs'], $extra['object_refs']); $extra['facts'] = [['value' => 'Layout fact value', 'label' => 'Layout fact label']]; }
                 if ($common_type === 'material') { unset($extra['object_refs']); $extra['media_refs'] = [array_merge($media, ['label' => 'Layout download'])]; }
+                if ($common_type === 'objektfokus') { unset($extra['media_refs']); }
                 if ($common_type === 'kapitel') { unset($extra['object_refs']); $extra['media_layout'] = 'aside-right'; $extra['section_treatment'] = 'aside'; }
                 if ($common_type === 'zitat') { $extra['quote'] = 'Layout quote'; $extra['attribution'] = 'Layout attribution'; }
                 $doc['sections'][] = $extra;
@@ -528,7 +551,7 @@ try {
             foreach (['Shared before' => 2, 'Shared middle' => 2, 'Shared after' => 2, 'Shared lead' => 1, 'Owned source note' => 1] as $marker => $count) {
                 $assert(substr_count($html, $marker) === $count, "$label: content appears once per field: $marker");
             }
-            foreach (['galerie', 'fliesstext', 'zitat', 'schluss', 'kapitel', 'facts', 'material'] as $common_type) { $assert(substr_count($html, 'Layout ' . $common_type) === 1, "$label: shared $common_type renders once"); }
+            foreach (['galerie', 'fliesstext', 'zitat', 'schluss', 'kapitel', 'facts', 'material', 'objektfokus'] as $common_type) { $assert(substr_count($html, 'Layout ' . $common_type) === 1, "$label: shared $common_type renders once"); }
             $assert(str_contains($html, 'Layout download') && str_contains($html, 'download='), "$label: files survive publication layout selection");
             $assert(substr_count($html, 'Layout fact value') === 1 && substr_count($html, 'Layout fact label') === 1, "$label: structured facts survive publication layout selection");
             $assert(substr_count($html, 'Layout contact') === 1, "$label: conclusion links survive layout selection");
@@ -651,6 +674,7 @@ try {
     $starter = iss_editorial_get_format('ausstellung')['starters'][0]['sections'][0];
     $assert($starter === ['type' => 'statement', 'treatment' => 'statement.leitfrage'], 'Exhibition starter creates the canonical question treatment');
     $assert(!$place['sections']['material']['portable'] && $place['sections']['material']['supports'] === ['anchor', 'media_refs', 'links'], 'Place material retains its separate contract');
+    $assert(!isset($place['sections']['objektfokus']), 'Place retains its separate archive supplement contract');
     $assert(!$place['sections']['galerie']['portable'] && $place['sections']['galerie']['supports'] === ['media_refs', 'object_refs', 'gallery_layout'], 'Place gallery retains its separate contract');
     $place_html = industriesalon_render_editorial_ausstellung_section(['type' => 'galerie', 'title' => 'Place gallery', 'body' => 'Place body'], false, 0, 'standard', 'place');
     $assert(str_contains($place_html, 'iss-ausstellung-section') && !str_contains($place_html, 'iss-landing-section'), 'Place supplement retains native renderer');
@@ -675,7 +699,7 @@ try {
         $assert(iss_editorial_save_document($id, 'article', $doc), "$post_type: save article document");
         iss_editorial_set_document_enabled($id, 'article', true);
         $assert(iss_editorial_uses_canvas(get_post($id)), "$post_type: enabled content uses shared editor");
-        $query = new WP_Query(); $query->queried_object_id = $id; $query->queried_object = get_post($id);
+        $query = new WP_Query(); $query->posts = [get_post($id)]; $query->queried_object_id = $id; $query->queried_object = get_post($id);
         $query->is_singular = true; $query->is_single = true; $query->post = get_post($id); $query->in_the_loop = true;
         $GLOBALS['wp_query'] = $query; $GLOBALS['wp_the_query'] = $query; $GLOBALS['post'] = get_post($id);
         $template = get_block_template(get_stylesheet() . '//single-' . $post_type, 'wp_template') ?: get_block_template(get_stylesheet() . '//single', 'wp_template');
@@ -701,7 +725,7 @@ try {
     $doc['sections'] = [['type' => 'fliesstext', 'body' => '<p>Video article body</p>']];
     $assert(iss_editorial_save_document($id, 'article', $doc), 'Save video composition');
     iss_editorial_set_document_enabled($id, 'article', true);
-    $query = new WP_Query(); $query->queried_object_id = $id; $query->queried_object = get_post($id);
+    $query = new WP_Query(); $query->posts = [get_post($id)]; $query->queried_object_id = $id; $query->queried_object = get_post($id);
     $query->is_singular = true; $query->is_single = true; $query->post = get_post($id);
     $GLOBALS['wp_query'] = $query; $GLOBALS['post'] = get_post($id);
     $template = get_block_template(get_stylesheet() . '//single-video', 'wp_template');

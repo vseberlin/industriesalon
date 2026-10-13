@@ -31,8 +31,8 @@ This is the implementation checkpoint for the SOW in
 ## Portable composition
 
 The vocabulary defines `statement`, `gateway`, `text_bild_reihe`, `feature`,
-`galerie`, `fliesstext`, `zitat`, `schluss`, `kapitel`, `facts` and `material` once, including
-supported fields and treatments. Landing, article, event, exhibition, project,
+`galerie`, `fliesstext`, `zitat`, `schluss`, `kapitel`, `facts`, `material` and
+`objektfokus` once, including supported fields and treatments. Landing, article, event, exhibition, project,
 report, tour and publication formats use those contracts. The theme registers
 their section renderer and delegates to the existing landing composition
 functions; native domain sections retain their renderers. Preview and public
@@ -99,6 +99,22 @@ fields. Place Material retains its separate renderer and media-picker rules.
 Obsolete project/tour Material branches and layout CSS are removed. Native
 event downloads remain for the engine-disabled fallback; Ausstellung supplements
 retain Place Material rendering. Generic domain media helpers keep their callers.
+
+Archivobjekte (`objektfokus`) shares anchors, optional rich text and archive
+references across the same eight formats. The existing archive owner resolves
+public availability and supplies source links, thumbnails and live metadata.
+Saved labels override card titles; nonempty `member_caption` overrides the
+excerpt. Empty overrides use the archive title/excerpt. Set/member IDs remain in
+the document and never trigger Set or archive mutations. The existing picker
+preserves those fields on reselection; the shared inspector edits labels and
+captions with the existing media controls. Missing, unpublished and non-archive
+references emit no card; a wholly empty section emits no wrapper.
+
+The archive featured-card styles live in `cards.css`, with component variables
+for archive landing, native exhibition blocks and portable composition. Shared
+objects use bounded card widths, uncropped images and complete captions; skin palettes stay in
+`editorial-skins.css`. Superseded exhibition object-grid rules are removed.
+Places retain their existing supplementary archive path.
 
 Publication payload adapters retain shared and publication-native gestures in
 the reading flow of all four layouts. Chapter, timeline-moment and album markup
@@ -714,8 +730,9 @@ a scoped text-position flip for left/right source stations. `kapitel`,
 `leitfrage`, `zitat`, `fliesstext` and `facts` now use the shared composition renderer
 and selected skin; their content uses the common
 `kicker`, `title`, `body`, `quote`, and `attribution` fields rather than
-parallel gesture-specific keys. `objektfokus` remains reserved for
-archive-object grid treatments. `galerie` owns full-viewport and image-wall
+parallel gesture-specific keys. `objektfokus` uses shared archive cards across
+formats, with the selected skin and the archive owner visibility checks.
+`galerie` owns full-viewport and image-wall
 treatments through `gallery_layout=viewport` and `gallery_layout=wall`: editors
 select and reorder images, while the skin decides whether it renders as a
 cover-cropped viewport image, sequence, grid, or dense wall. Theme partials are reserved

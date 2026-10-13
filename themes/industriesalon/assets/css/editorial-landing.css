@@ -801,7 +801,29 @@
 }
 
 .iss-landing-reference-grid {
-  grid-template-columns: repeat(auto-fit, minmax(min(100%, 16rem), 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 16rem), var(--iss-reference-grid-max, 1fr)));
+}
+
+.iss-landing-objects {
+  --iss-reference-grid-max: min(100%, 24rem);
+  --iss-link-fg: var(--iss-landing-ink);
+  --iss-archive-featured-columns: 1fr;
+  --iss-archive-featured-gap: 0;
+  --iss-archive-featured-align: start;
+  --iss-archive-featured-padding: 0;
+  --iss-archive-featured-body-padding: 1rem;
+  --iss-archive-featured-body-align: start;
+  --iss-archive-featured-body-gap: 0.55rem;
+  --iss-archive-featured-bg: var(--iss-landing-surface);
+  --iss-archive-featured-panel: var(--iss-landing-surface);
+  --iss-archive-featured-ink: var(--iss-landing-ink);
+  --iss-archive-featured-muted: var(--iss-landing-muted);
+  --iss-archive-featured-border: var(--iss-landing-rule);
+  --iss-archive-featured-title-size: clamp(1.15rem, 0.65vw + 1rem, 1.45rem);
+  --iss-archive-featured-text-display: block;
+  --iss-archive-featured-fit: contain;
+  --iss-archive-featured-media-height: 0;
+  --iss-archive-featured-mobile-media-width: none;
 }
 
 .iss-landing-quote,
@@ -969,11 +991,13 @@
   grid-template-columns: repeat(auto-fit, minmax(min(100%, 16rem), min(100%, 24rem)));
 }
 
+.iss-landing-section--gesture-objektfokus,
 .iss-landing-section--gesture-material,
 .iss-landing-section--gesture-facts {
   overflow-wrap: anywhere;
 }
 
+.iss-landing-objects .iss-landing-section__title,
 .iss-landing-material .iss-landing-section__title,
 .iss-landing-section--gesture-facts .iss-landing-section__title {
   max-width: 24ch;

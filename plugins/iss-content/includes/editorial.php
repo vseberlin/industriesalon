@@ -328,11 +328,7 @@ function iss_content_model_register_editorial_formats(array $formats): array
         'sections' => [
             'kapitel' => $gestures['kapitel'],
             'leitfrage' => $gestures['leitfrage'],
-            'objektfokus' => [
-                'label' => __('Objektfokus', 'iss-content-model'),
-                'description' => __('Ausgewählte Archivobjekte im Zusammenhang zeigen.', 'iss-content-model'),
-                'supports' => ['object_refs'],
-            ],
+            'objektfokus' => $gestures['objektfokus'],
             'facts' => $gestures['facts'],
             'zitat' => $gestures['zitat'],
             'galerie' => $gestures['galerie'],
@@ -382,11 +378,7 @@ function iss_content_model_register_editorial_formats(array $formats): array
             ],
             'fliesstext' => $gestures['fliesstext'],
             'galerie' => $gestures['galerie'],
-            'objektfokus' => [
-                'label' => __('Objektfokus', 'iss-content-model'),
-                'description' => __('Archivobjekte als Ergänzung zum Bericht zeigen.', 'iss-content-model'),
-                'supports' => ['object_refs'],
-            ],
+            'objektfokus' => $gestures['objektfokus'],
             'material' => $gestures['material'],
             'upload_intake' => $formats['ausstellung']['sections']['upload_intake'],
             'schluss' => $gestures['schluss'],

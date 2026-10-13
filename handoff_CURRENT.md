@@ -1,31 +1,35 @@
 # Current handoff — 13 October 2026
 
-## Editorial workspace and shared Material
+## Editorial workspace and shared Archivobjekte
 
-Merkpunkte is committed locally as `3330c7f`, not pushed or deployed.
-Material portability is accepted for local commit. Eleven visible
-composition gestures share fields/rendering across eight formats. Material
-reuses the file-insert primitive for all resolved attachments, including stored
-images previously hidden by some renderers. Labels/IDs, anchors and rich text
-remain in the existing document. Events retain text notes, live institution
-fields and archive sources; closed tickets stay hidden without losing notes.
-Both media pickers preserve selected files. Obsolete project/tour Material
-branches and layout CSS are removed; event fallback and Places remain separate.
+Material is committed locally as `6bfd6d4`, not pushed or deployed.
+Archivobjekte (`objektfokus`) is accepted for local commit. Twelve
+visible composition gestures share contracts across eight formats. The existing
+archive card API retains public visibility, live metadata and source links;
+saved labels and Set captions now appear and can be edited in the inspector.
+Picker reselection preserves object/Set/member IDs. Empty, missing, unpublished
+and non-archive sources remain hidden. Places retain their separate supplements.
 
-Checks: 12,606 registry/renderer assertions, 300 storage checks over all 94
-existing documents with post content/metadata unchanged, 37 UI tests, targeted
-PHP/PHPCS/PHPStan, JS and CSS lint. Chrome checks project/event/tour Material and
-a private publication at desktop/390 px with no overflow, including light/dark
-skins. Media selection retains PDF/image IDs and edited labels; Fertig/native
-Update/reload retain the document and neighbouring chapter. Review records,
-revisions and autosaves are removed. Staff UAT and Firefox remain release checks.
+Card styles moved from archive landing to the shared card layer; obsolete
+exhibition object-grid rules are removed. Skins retain their palettes, shared
+images remain uncropped and captions complete. Existing archive landing and
+native block cards use the same component with their own values.
 
-Next after review: inspect `objektfokus` reuse with archive visibility, source
-links and captions intact. Intro/hero, maps, dynamic slots and intake retain
-their owners. See the [gesture inventory](docs/project/editorial-consolidation-audit.md#gesture-portability-checkpoint--13-october-2026).
+Checks: 13,039 registry/renderer assertions, 301 storage checks over all 94
+existing documents with post content/metadata unchanged, 39 UI tests, PHP lint,
+PHPCS/PHPStan, JS and CSS lint. Chrome covers both existing exhibitions and a
+private publication at desktop/390 px, light/dark skins, picker reselection,
+label/caption edits, removal, chooser insertion, Fertig and native Update/reload.
+Review records, revisions and autosaves are removed. Archive cards fit phone
+width; the archive landing's untouched quick-navigation grid overflows separately
+(409/375 px) and has a TODO. Staff UAT and Firefox remain release checks.
+
+Next after review: audit remaining owner-bound gesture availability/guidance
+(intro/hero, maps, programme/dynamic slots, intake). See the
+[gesture inventory](docs/project/editorial-consolidation-audit.md#gesture-portability-checkpoint--13-october-2026).
 No SQL, uploads or template artifact is required: no real stored content or
-template changed. Reviewed local templates are file-backed except the existing
-Ausstellung override (26309), retained. The earlier CPT commit's archive
+template changed. Effective page/report/publication templates are file-backed;
+Ausstellung override 26309 is retained. The earlier CPT commit's archive
 collection slot still needs target override review at release.
 
 ## Scope and delivery state

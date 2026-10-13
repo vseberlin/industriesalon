@@ -4,10 +4,13 @@ Immediate executable work only. Larger future programs live in `docs/project/bac
 
 ## Next
 
-- After accepted Material portability, inspect `objektfokus`
-  reuse with archive visibility, source links and captions intact. Native
-  intro/hero, maps, dynamic slots, intake and Places retain their owner contracts.
-  See the [gesture inventory](docs/project/editorial-consolidation-audit.md#gesture-portability-checkpoint--13-october-2026).
+- After accepted Archivobjekte portability, audit chooser
+  availability/guidance for owner-bound intro/hero, maps, programme/dynamic slots
+  and intake. Places retain their separate contracts. See the
+  [gesture inventory](docs/project/editorial-consolidation-audit.md#gesture-portability-checkpoint--13-october-2026).
+- Correct the archive landing quick-navigation grid at phone widths: its four
+  columns overflow (409 px content / 375 px viewport). The shared archive cards
+  already fit; fix the quick-navigation owner without changing their layout.
 - Coordinate an authorized staging release of the completed
   [WordPress refactor](docs/project/wordpress-refactoring-plan.md) and accepted
   programme presentation from GitHub `main`: take target-local backups, apply the four scoped owner

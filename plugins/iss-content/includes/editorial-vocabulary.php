@@ -56,6 +56,8 @@ function iss_content_model_editorial_gesture_registry(): array
         'objektfokus' => [
             'label' => __('Archivobjekte', 'iss-content-model'),
             'description' => __('Ausgewählte Archivobjekte im Zusammenhang zeigen.', 'iss-content-model'),
+            'portable' => true,
+            'supports' => ['anchor', 'object_refs'],
             'icon' => 'archive', 'tone' => 'media', 'group' => 'Material', 'schematic' => 'cards',
         ],
         'material' => [

@@ -663,3 +663,33 @@ for (const portable of [true, false]) {
     } finally { e.dom.window.close(); }
   });
 }
+
+for (const format of ['article', 'ausstellung']) {
+  test(format + ': shared archive picker retains captions and Set identity through edits and reselection', async () => {
+    const reference = {kind: 'archive_object', source: 'iss-archive', id: '15127', label: 'Saved object', thumbnail: '/object.jpg', set_id: '27', set_title: 'Saved Set', member_id: '4543', member_caption: 'Saved caption'};
+    const e = await editor(format, {sections: {objektfokus: {label: 'Archivobjekte', portable: true, supports: ['anchor', 'object_refs']}}, document: {schema_version: 3, sections: [{type: 'objektfokus', anchor: 'sources', object_refs: [reference]}]}});
+    try {
+      e.input(e.root.querySelector('.iss-editorial-media-item input'), 'Edited label');
+      e.input(e.root.querySelector('.iss-editorial-media-item textarea'), 'Edited caption');
+      await e.settle();
+      let options;
+      e.window.issArchiveObjectPicker = {create: (_mount, config) => { options = config; }};
+      e.button('Archivobjekte auswählen').click();
+      assert.equal(options.contextPostId, 99);
+      assert.deepEqual(Array.from(options.initialSelection), ['15127']);
+      options.onConfirm([{id: '26215', title: 'New source', setId: 13, memberId: 14, memberCaption: 'New Set caption'}, {id: '15127', title: 'Owner title changed'}]);
+      await e.settle();
+      assert.deepEqual(e.value().sections[0].object_refs[1], {...reference, label: 'Edited label', member_caption: 'Edited caption'});
+      assert.equal(e.value().sections[0].object_refs[0].member_caption, 'New Set caption');
+      assert.equal(e.value().sections[0].object_refs[0].set_id, '13');
+      e.button('Fertig').click(); await e.settle();
+      assert.equal(e.root.querySelector('.iss-editorial-studio').dataset.view, 'preview');
+      e.root.querySelector('.iss-editorial-outline__select').click();
+      e.button('Entfernen', e.root.querySelector('.iss-editorial-media-item')).click();
+      await e.settle();
+      assert.equal(e.value().sections[0].object_refs.length, 1);
+      assert.equal(e.value().sections[0].object_refs[0].id, '15127');
+      assert.equal(JSON.parse(e.requests.at(-1).get('document')).sections[0].object_refs[0].member_caption, 'Edited caption');
+    } finally { e.dom.window.close(); }
+  });
+}

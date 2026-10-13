@@ -14,7 +14,8 @@ The workspace/CPT expansion is committed as `65c55b8`, shared portability as
 contracts as `32d3e3f`; native publication layout compatibility is committed as
 `9fd10d0`, shared conclusions as `5fce0d0`, and shared chapters as `54afba5`.
 Leitfrage consolidation is committed locally as `0c1b046` and Merkpunkte as
-`3330c7f`. Material portability is accepted for local commit. Registration, editor fields, save validation and
+`3330c7f`; Material is committed as `6bfd6d4`. Archivobjekte portability is
+accepted for local commit. Registration, editor fields, save validation and
 public rendering must agree before a gesture becomes available in another format.
 
 | Gesture identifiers | Effective boundary / remaining work |
@@ -27,7 +28,7 @@ public rendering must agree before a gesture becomes available in another format
 | `zitat` | One portable contract across eight formats: context, quote, attribution, media, objects and source/image orientation. Reuses the theme quote primitive. |
 | `schluss` | One portable contract across eight formats: rich text, anchors and links, including links-only endings. Project contact navigation and tour anchors are retained; events now support conclusion links. |
 | `galerie` | One portable contract across eight formats: media and archive objects with captions/source links; grid, sequence, wall and viewport layouts. Place retains its separate existing contract. |
-| `objektfokus` | Exhibition/report archive references use the archive owner; future reuse must retain resolution and visibility checks. |
+| `objektfokus` | One portable archive-card contract across eight formats: anchors, prose, saved labels/captions and owner-resolved metadata/source links. Missing, unpublished and non-archive references remain hidden. Places retain their separate supplements. |
 | `material` | One portable downloads/links/anchor/rich-text contract across eight formats. Events retain plain-text items, archive sources and live fields as owner-specific extensions. Place retains its separate contract and picker. |
 | `facts` | One portable contract across eight formats: optional rich text, title/kicker, anchors and plain-text value/description rows. Reuses the existing copy and fact-list components; project Dossier retains chapter/facts pairing with separate preview addresses. |
 | `upload_intake` | Depends on the context owner's open intake and signed invitation; registration alone cannot open collection. |
@@ -213,9 +214,36 @@ edited labels. Fertig/native Update/reload retain the document and neighbouring
 chapter. Review fixtures, revisions and autosaves are removed. No real stored
 content, templates or uploads changed; no paired artifact is needed.
 
-Next: inspect `objektfokus` reuse, retaining archive visibility, source links and
-captions. Native intro/hero, maps, dynamic slots and intake remain owner-bound;
-Places remain separate. Staff UAT and Firefox are still release checks.
+## Archivobjekte contract boundary
+
+Read-only inventory found two existing sections, on Kinder im Werk (26381) and
+Frauen im Werk (26287). Their six source references retain object/Set/member IDs,
+labels and saved captions. The prior renderer ignored label/caption overrides;
+the shared renderer passes them through the existing archive featured-card API.
+No source record, Set membership, stored document or identifier is rewritten.
+
+Twelve visible composition gestures now share contracts across eight formats.
+The shared archive inspector uses the existing media controls and archive picker;
+label/caption edits, reselection and explicit removal retain reference identity.
+The archive owner still decides public availability and supplies metadata and
+canonical source links. Complete captions and uncropped images use the moved
+card component; archive landing and native exhibition geometry use component
+variables. Obsolete object-grid layout rules and its dispatch entry are removed.
+Place supplements and native Gutenberg archive cards retain their render paths.
+
+Verification: 13,039 registry/renderer assertions across formats/skins, versions
+1–3 and four publication layouts; 301 storage checks over all 94 existing
+documents with content/metadata unchanged; 39 UI tests; targeted PHP lint,
+PHPCS/PHPStan, JS and CSS checks. Chrome covers both existing exhibitions and
+a private publication at desktop/390 px, dark/light skins, source labels/captions,
+picker reselection, chooser insertion, removal, Fertig and native Update/reload.
+The archive landing card fits both widths. Its untouched quick-navigation grid
+has separate phone overflow (409 px content / 375 px viewport), recorded for
+follow-up. No SQL, uploads or template artifact is required.
+
+Next after review: audit availability and guidance for remaining owner-bound
+intro/hero, maps, programme/dynamic slots and intake. Places remain separate.
+Staff UAT and Firefox are still release checks.
 
 ## Findings and disposition
 

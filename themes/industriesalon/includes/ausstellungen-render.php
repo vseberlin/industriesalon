@@ -190,7 +190,6 @@ function industriesalon_get_editorial_ausstellung_section_context(array $section
 
     if ($skin !== 'standard') {
         $layouts = [
-            'objektfokus' => 'object-grid',
             'zitat' => 'quote',
             'vollbild' => 'viewport-image',
             'fliesstext' => 'essay',

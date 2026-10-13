@@ -32,6 +32,20 @@
   --iss-landing-rule: var(--iss-ausstellung-kinder-line);
 }
 
+.iss-landing-editorial--skin-quellenbuehne .iss-landing-section--gesture-objektfokus {
+  --iss-landing-surface: #25201f;
+  --iss-landing-ink: var(--iss-white);
+  --iss-landing-muted: rgba(249, 249, 250, 0.72);
+  --iss-landing-rule: rgba(249, 249, 250, 0.16);
+}
+
+.iss-landing-editorial--skin-chronik .iss-landing-section--gesture-objektfokus {
+  --iss-landing-surface: var(--iss-ausstellung-chronik-board);
+  --iss-landing-ink: #f0e9d8;
+  --iss-landing-muted: rgba(240, 233, 216, 0.72);
+  --iss-landing-rule: rgba(201, 169, 110, 0.28);
+}
+
 .home .iss-front-page-main .iss-section {
   width: 100%;
 }
