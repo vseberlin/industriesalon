@@ -4,11 +4,12 @@ Immediate executable work only. Larger future programs live in `docs/project/bac
 
 ## Next
 
-- Continue from the accepted publication adapters and portability commit `9eab967`:
-  shared statement, link cards, image/text rows and features now work across
-  eight formats, including all four publication layouts. Next reconcile
-  gallery/text/quote field differences and publication native-section/layout
-  compatibility before widening those contracts; keep Places separate. See the full
+- Continue from the accepted shared gallery/text/quote slice following publication commit
+  `c090540`: seven composition gestures now work across eight formats, with
+  preserved references and saved quote identifiers. Next reconcile publication
+  native-section/layout compatibility: chapters, timeline stations and albums
+  must not disappear when their selected layout differs. Preserve stored types
+  and owner-managed navigation/source data; keep Places separate. See the full
   [gesture inventory](docs/project/editorial-consolidation-audit.md#gesture-portability-checkpoint--13-october-2026).
 - Coordinate an authorized staging release of the completed
   [WordPress refactor](docs/project/wordpress-refactoring-plan.md) and accepted

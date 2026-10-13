@@ -1353,22 +1353,6 @@ function iss_publications_parse_editorial_longread_payload(int $post_id): array
             continue;
         }
         $type = sanitize_key((string) ($section['type'] ?? ''));
-        if ($type === 'longread_quote') {
-            $quote = trim((string) ($section['quote'] ?? ''));
-            if ($quote === '') {
-                continue;
-            }
-
-            $flow_sections[] = array_merge(array_intersect_key($section, ['_editorial_index' => true]), [
-                'type' => 'quote',
-                'kicker' => trim((string) ($section['kicker'] ?? '')),
-                'title' => trim((string) ($section['title'] ?? '')),
-                'quote' => $quote,
-                'attribution' => trim((string) ($section['attribution'] ?? '')),
-            ]);
-            continue;
-        }
-
         if ($type !== 'longread_chapter') {
             continue;
         }

@@ -30,13 +30,25 @@ This is the implementation checkpoint for the SOW in
 
 ## Portable composition
 
-The vocabulary defines `statement`, `gateway`, `text_bild_reihe` and `feature`
-once, including supported fields and treatments. Landing, article, event,
+The vocabulary defines `statement`, `gateway`, `text_bild_reihe`, `feature`,
+`galerie`, `fliesstext` and `zitat` once, including supported fields and treatments. Landing, article, event,
 exhibition, project, report, tour and publication formats use those contracts. The theme
 registers their section renderer and delegates to the existing landing composition
 functions; native domain sections retain their renderers. Preview and public
 output use the same document and renderer. Event context rules permit these
 portable gestures while retaining restrictions on domain-specific sections.
+
+Galleries share grid, sequence, wall and viewport layouts. Galleries, prose and
+quotes consume the same resolved media/archive references, retaining captions
+and archive source links. Archive visibility stays with the archive owner;
+unpublished objects do not render. Prose retains links and all three text
+treatments. Quote source treatments retain image orientation, context and
+attribution. Split-text geometry belongs to the renderer stylesheet in every
+skin; skin palettes and typography remain separate. Existing gallery/text/quote
+sections now use this shared presentation, without rewriting their documents.
+The saved publication identifier `longread_quote` delegates to the quote
+contract and remains editable; it is hidden from new insertion to avoid a
+duplicate chooser item.
 
 Publication payload adapters retain shared gestures in the reading flow. Standard
 and longread layouts use the existing chapter renderer; chapter navigation and
@@ -47,8 +59,9 @@ Intro/source placement and native layout-specific section meanings retain their
 existing contracts. Publication payload caches distinguish saved content, disabled
 JSON and authenticated preview snapshots. No stored document is rewritten.
 
-Places remain separate. Existing gallery/text/quote
-variants are not automatically unified. The complete 28-gesture inventory and
+Places remain separate, including their existing gallery fields and renderer.
+The complete inventory of 28 registered identifiers (including the retained
+publication quote identifier) and
 remaining contract differences are in the
 [consolidation audit](../project/editorial-consolidation-audit.md#gesture-portability-checkpoint--13-october-2026).
 

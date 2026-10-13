@@ -183,7 +183,7 @@ function industriesalon_render_editorial_place_document(int $post_id, array $doc
             $present_section = $section;
         } elseif (in_array($type, ['galerie', 'material', 'upload_intake'], true)) {
             // Reuse the shared archive/media section renderer and its CSS contract.
-            $supplements .= industriesalon_render_editorial_ausstellung_section($section, false, 0, 'standard');
+            $supplements .= industriesalon_render_editorial_ausstellung_section($section, false, 0, 'standard', 'place');
         }
     }
 

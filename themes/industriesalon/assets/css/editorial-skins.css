@@ -69,69 +69,6 @@
   line-height: 1.05;
 }
 
-.iss-landing-editorial--skin-dossier .iss-landing-story-split {
-  display: grid;
-  grid-template-columns: minmax(0, 1.18fr) minmax(17rem, 0.72fr);
-  gap: clamp(2rem, 5vw, 5.5rem);
-  align-items: start;
-}
-
-.iss-landing-editorial--skin-dossier .iss-landing-section--treatment-text-story-split-flip .iss-landing-story-split {
-  grid-template-columns: minmax(17rem, 0.72fr) minmax(0, 1.22fr);
-}
-
-.iss-landing-editorial--skin-dossier .iss-landing-section--treatment-text-story-split .iss-landing-story-split__heading {
-  grid-column: 2;
-  grid-row: 1;
-}
-
-.iss-landing-editorial--skin-dossier .iss-landing-section--treatment-text-story-split .iss-landing-story-split__content {
-  grid-column: 1;
-  grid-row: 1;
-}
-
-.iss-landing-editorial--skin-dossier .iss-landing-section--treatment-text-story-split-flip .iss-landing-story-split__heading {
-  grid-column: 1;
-  grid-row: 1;
-}
-
-.iss-landing-editorial--skin-dossier .iss-landing-section--treatment-text-story-split-flip .iss-landing-story-split__content {
-  grid-column: 2;
-  grid-row: 1;
-}
-
-.iss-landing-editorial--skin-dossier .iss-landing-story-split__title {
-  max-width: 14ch;
-  margin: 0;
-  font-family: var(--iss-landing-serif);
-  font-size: 3rem;
-  line-height: 1;
-}
-
-.iss-landing-editorial--skin-dossier .iss-landing-story-split__body {
-  max-width: none;
-  column-count: 2;
-  column-gap: clamp(1.5rem, 3vw, 3rem);
-  color: var(--iss-landing-muted);
-  font-size: 1rem;
-  line-height: 1.62;
-}
-
-.iss-landing-editorial--skin-dossier .iss-landing-story-split__body > p:first-child {
-  column-span: all;
-  margin-top: 0;
-  font-family: var(--iss-landing-serif);
-  font-size: 1.35rem;
-  line-height: 1.3;
-}
-
-.iss-landing-editorial--skin-dossier .iss-landing-story-split__body > p:last-child {
-  column-span: all;
-  padding-top: 0.85rem;
-  margin-bottom: 0;
-  border-top: 1px solid var(--iss-landing-rule);
-}
-
 .iss-landing-editorial--skin-territorial {
   --iss-landing-surface: #f7f7f5;
   --iss-landing-ink: var(--iss-black, #1e1e1e);
@@ -166,16 +103,6 @@
   grid-template-columns: minmax(0, 1.28fr) minmax(17rem, 0.72fr);
   gap: clamp(2rem, 5vw, 5rem);
   align-items: end;
-}
-
-.iss-landing-editorial--skin-territorial .iss-landing-section--treatment-text-story-split .iss-landing-story-split__heading {
-  grid-column: 2;
-  grid-row: 1;
-}
-
-.iss-landing-editorial--skin-territorial .iss-landing-section--treatment-text-story-split .iss-landing-story-split__content {
-  grid-column: 1;
-  grid-row: 1;
 }
 
 .iss-landing-editorial--skin-territorial .iss-landing-story-split__title {
@@ -609,11 +536,6 @@
     --iss-dossier-section-padding-block: 2.5rem;
   }
 
-  .iss-landing-editorial--skin-dossier .iss-landing-story-split,
-.iss-landing-editorial--skin-territorial .iss-landing-story-split {
-    grid-template-columns: 1fr;
-  }
-
   .iss-landing-editorial--skin-dossier .iss-landing-section__title,
 .iss-landing-editorial--skin-dossier .iss-landing-story-split__title,
 .iss-landing-editorial--skin-territorial .iss-landing-section__title,
@@ -621,21 +543,6 @@
     max-width: none;
     font-size: 2rem;
     line-height: 1.05;
-  }
-
-  .iss-landing-editorial--skin-dossier .iss-landing-story-split__body,
-.iss-landing-editorial--skin-territorial .iss-landing-story-split__body {
-    column-count: 1;
-  }
-
-  .iss-landing-editorial--skin-dossier .iss-landing-story-split__heading,
-.iss-landing-editorial--skin-dossier .iss-landing-story-split__content,
-.iss-landing-editorial--skin-territorial .iss-landing-story-split__heading,
-.iss-landing-editorial--skin-territorial .iss-landing-story-split__content,
-.iss-landing-editorial--skin-territorial .iss-landing-section--treatment-text-story-split .iss-landing-story-split__heading,
-.iss-landing-editorial--skin-territorial .iss-landing-section--treatment-text-story-split .iss-landing-story-split__content {
-    grid-column: auto;
-    grid-row: auto;
   }
 
   .iss-landing-editorial--skin-territorial .iss-landing-section--treatment-feature-media-text .iss-media-text__layout {

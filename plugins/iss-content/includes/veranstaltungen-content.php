@@ -87,7 +87,7 @@ function iss_content_model_veranstaltung_content_gestures_for_entity(string $ent
     // Shared composition is independent of event structure; domain gestures
     // retain the entity's allowlist. The legacy editor keeps its old contract.
     if (function_exists('iss_editorial_get_format')) {
-        $gestures += array_filter(iss_editorial_get_format('veranstaltung')['sections'] ?? [], static fn(array $section): bool => !empty($section['portable']));
+        $gestures = array_replace($gestures, array_filter(iss_editorial_get_format('veranstaltung')['sections'] ?? [], static fn(array $section): bool => !empty($section['portable'])));
     }
     return $gestures;
 }

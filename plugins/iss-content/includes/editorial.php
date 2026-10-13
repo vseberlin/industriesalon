@@ -204,16 +204,7 @@ function iss_content_model_register_editorial_formats(array $formats): array
         'skin_meta_key' => '_iss_editorial_landing_skin',
         'sections' => [
             'statement' => $gestures['statement'],
-            'fliesstext' => [
-                'label' => __('Freitext', 'iss-content-model'),
-                'description' => __('Ganz normaler Textabschnitt ohne starre Boxen oder Medieninhalte für tiefere Infos.', 'iss-content-model'),
-                'supports' => ['treatment', 'links'],
-                'treatments' => [
-                    'text.standard' => __('Standard', 'iss-content-model'),
-                    'text.story-split' => __('Erzählung links, Titel rechts', 'iss-content-model'),
-                    'text.story-split-flip' => __('Titel links, Erzählung rechts', 'iss-content-model'),
-                ],
-            ],
+            'fliesstext' => $gestures['fliesstext'],
             'gateway' => $gestures['gateway'],
             'text_bild_reihe' => $gestures['text_bild_reihe'],
             'map_img' => [
@@ -224,7 +215,7 @@ function iss_content_model_register_editorial_formats(array $formats): array
                     'map-img.editorial-atlas' => __('Karte, Panorama und Ortskarten', 'iss-content-model'),
                 ],
             ],
-            'galerie' => array_merge($gallery_section, ['supports' => ['anchor', 'media_refs', 'gallery_layout']]),
+            'galerie' => $gestures['galerie'],
             'feature' => $gestures['feature'],
             'dynamic_slot' => [
                 'label' => __('Automatische Inhalte', 'iss-content-model'),
@@ -316,12 +307,8 @@ function iss_content_model_register_editorial_formats(array $formats): array
                 'description' => __('Gibt den roten Faden vor und führt den Besucher durch das Thema.', 'iss-content-model'),
                 'supports' => ['anchor'],
             ],
-            'zitat' => [
-                'label' => __('Zitat', 'iss-content-model'),
-                'description' => __('Mit Angabe der Person oder der historischen Quelle.', 'iss-content-model'),
-                'supports' => ['quote'],
-            ],
-            'galerie' => array_merge($gallery_section, ['supports' => ['anchor', 'media_refs', 'object_refs', 'gallery_layout']]),
+            'zitat' => $gestures['zitat'],
+            'galerie' => $gestures['galerie'],
             'atlas_map' => [
                 'label' => __('Die interaktive Landkarte zur Tour.', 'iss-content-model'),
                 'description' => __('Zeigt den genauen Routenverlauf und die einzelnen Stationen der Führung.', 'iss-content-model'),
@@ -371,17 +358,9 @@ function iss_content_model_register_editorial_formats(array $formats): array
                 'description' => __('Fakten und Zahlen übersichtlich zusammenstellen.', 'iss-content-model'),
                 'supports' => ['facts'],
             ],
-            'zitat' => [
-                'label' => __('Zitat', 'iss-content-model'),
-                'description' => __('Mit Angabe der Person oder der historischen Quelle.', 'iss-content-model'),
-                'supports' => ['quote', 'object_refs', 'media_refs', 'orientation', 'quote_treatment'],
-            ],
-            'galerie' => array_merge($gallery_section, ['supports' => ['object_refs', 'media_refs', 'gallery_layout']]),
-            'fliesstext' => [
-                'label' => __('Fließtext', 'iss-content-model'),
-                'description' => __('Ein zusammenhängender Textabschnitt.', 'iss-content-model'),
-                'supports' => [],
-            ],
+            'zitat' => $gestures['zitat'],
+            'galerie' => $gestures['galerie'],
+            'fliesstext' => $gestures['fliesstext'],
             'material' => $material_section,
             'upload_intake' => [
                 'label' => __('Material beitragen', 'iss-content-model'),
@@ -408,17 +387,13 @@ function iss_content_model_register_editorial_formats(array $formats): array
                 'description' => __('Ein Projektthema mit Überschrift und Text vorstellen.', 'iss-content-model'),
                 'supports' => ['anchor', 'links'],
             ],
-            'fliesstext' => [
-                'label' => __('Fließtext', 'iss-content-model'),
-                'description' => __('Ein zusammenhängender Textabschnitt.', 'iss-content-model'),
-                'supports' => ['anchor', 'links'],
-            ],
+            'fliesstext' => $gestures['fliesstext'],
             'facts' => [
                 'label' => __('Merkpunkte', 'iss-content-model'),
                 'description' => __('Kernpunkte, Fakten und Zusammenhänge hervorheben.', 'iss-content-model'),
                 'supports' => ['anchor', 'facts'],
             ],
-            'galerie' => array_merge($gallery_section, ['supports' => ['anchor', 'media_refs', 'object_refs', 'gallery_layout']]),
+            'galerie' => $gestures['galerie'],
             'material' => $material_section,
             'upload_intake' => [
                 'label' => __('Öffentlicher Mitmach-Aufruf für Gäste', 'iss-content-model'),
@@ -445,12 +420,8 @@ function iss_content_model_register_editorial_formats(array $formats): array
                 'description' => __('Den Anlass und die wichtigsten Eindrücke zusammenfassen.', 'iss-content-model'),
                 'supports' => ['media_refs'],
             ],
-            'fliesstext' => [
-                'label' => __('Fließtext', 'iss-content-model'),
-                'description' => __('Erlebnisse und Ergebnisse im Zusammenhang beschreiben.', 'iss-content-model'),
-                'supports' => ['media_refs', 'object_refs'],
-            ],
-            'galerie' => array_merge($gallery_section, ['supports' => ['media_refs', 'object_refs', 'gallery_layout']]),
+            'fliesstext' => $gestures['fliesstext'],
+            'galerie' => $gestures['galerie'],
             'objektfokus' => [
                 'label' => __('Objektfokus', 'iss-content-model'),
                 'description' => __('Archivobjekte als Ergänzung zum Bericht zeigen.', 'iss-content-model'),
@@ -547,7 +518,7 @@ add_filter('iss_editorial_formats', static function (array $formats): array {
         'veranstaltung' => [['label' => 'Veranstaltung vorstellen', 'sections' => [['type' => 'intro'], ['type' => 'kapitel', 'title' => 'Programm']]]],
     ];
     $presentations = iss_content_model_landing_treatment_presentations();
-    $portable = array_filter($definitions, static fn(array $gesture): bool => !empty($gesture['portable']));
+    $portable = array_filter($definitions, static fn(array $gesture): bool => !empty($gesture['portable']) && empty($gesture['ui_hidden']));
     foreach ($formats as $slug => &$format) {
         if (!isset($starters[$slug]) && $slug !== 'publication') { continue; }
         // These formats have an ordered composition adapter in the theme.
@@ -560,10 +531,15 @@ add_filter('iss_editorial_formats', static function (array $formats): array {
         foreach ($format['sections'] as $type => &$section) {
             if (!isset($definitions[$type])) { continue; }
             $section = array_merge($definitions[$type], $section);
+            if ($slug === 'place') {
+                unset($section['portable']);
+            } elseif (!empty($definitions[$type]['portable'])) {
+                $section['supports'] = $definitions[$type]['supports'];
+            }
             // One concise chooser label across formats; domain explanations
             // belong to descriptions, not alternate names for the same gesture.
             $section['label'] = $definitions[$type]['label'];
-            $section['family'] = $type;
+            $section['family'] = $definitions[$type]['family'] ?? $type;
             if (!empty($section['portable'])) {
                 $section['rich_text'] = ['body' => 'block', 'lead' => 'block'];
                 if (in_array('items', $section['supports'], true)) {

@@ -6,7 +6,7 @@ if (!defined('ABSPATH')) {
 
 function iss_content_model_editorial_gesture_registry(): array
 {
-    return [
+    $gestures = [
         'intro' => [
             'label' => __('Einleitung', 'iss-content-model'),
             'description' => __('Den Inhalt kurz einordnen.', 'iss-content-model'),
@@ -20,6 +20,13 @@ function iss_content_model_editorial_gesture_registry(): array
         'fliesstext' => [
             'label' => __('Fließtext', 'iss-content-model'),
             'description' => __('Ein zusammenhängender Textabschnitt.', 'iss-content-model'),
+            'portable' => true,
+            'supports' => ['anchor', 'treatment', 'links', 'media_refs', 'object_refs'],
+            'treatments' => [
+                'text.standard' => __('Standard', 'iss-content-model'),
+                'text.story-split' => __('Erzählung links, Titel rechts', 'iss-content-model'),
+                'text.story-split-flip' => __('Titel links, Erzählung rechts', 'iss-content-model'),
+            ],
             'icon' => 'editor-paragraph', 'tone' => 'text', 'group' => 'Text', 'schematic' => 'text',
         ],
         'leitfrage' => [
@@ -30,6 +37,8 @@ function iss_content_model_editorial_gesture_registry(): array
         'zitat' => [
             'label' => __('Zitat', 'iss-content-model'),
             'description' => __('Ein Zitat mit Quellen- oder Personenangabe.', 'iss-content-model'),
+            'portable' => true,
+            'supports' => ['anchor', 'quote', 'object_refs', 'media_refs', 'orientation', 'quote_treatment'],
             'icon' => 'format-quote', 'tone' => 'text', 'group' => 'Text', 'schematic' => 'callout',
         ],
         'schluss' => [
@@ -40,6 +49,8 @@ function iss_content_model_editorial_gesture_registry(): array
         'galerie' => [
             'label' => __('Bildergalerie', 'iss-content-model'),
             'description' => __('Bilder mit ihren Beschreibungen zusammenstellen.', 'iss-content-model'),
+            'portable' => true,
+            'supports' => ['anchor', 'media_refs', 'object_refs', 'gallery_layout'],
             'icon' => 'format-gallery', 'tone' => 'media', 'group' => 'Bild', 'schematic' => 'cards',
             'legacy_types' => ['image_wall' => ['gallery_layout' => 'wall'], 'vollbild' => ['gallery_layout' => 'viewport']],
         ],
@@ -166,11 +177,6 @@ function iss_content_model_editorial_gesture_registry(): array
             'description' => __('Ein Kapitel mit Text und begleitenden Bildern.', 'iss-content-model'),
             'icon' => 'editor-paragraph', 'tone' => 'text', 'group' => 'Text', 'schematic' => 'split',
         ],
-        'longread_quote' => [
-            'label' => __('Zitat', 'iss-content-model'),
-            'description' => __('Ein eigenständiges Zitat mit Quellenangabe.', 'iss-content-model'),
-            'icon' => 'format-quote', 'tone' => 'text', 'group' => 'Text', 'schematic' => 'callout',
-        ],
         'timeline_item' => [
             'label' => __('Zeitleisten-Station', 'iss-content-model'),
             'description' => __('Einen Zeitpunkt mit Text und Bild erläutern.', 'iss-content-model'),
@@ -182,6 +188,9 @@ function iss_content_model_editorial_gesture_registry(): array
             'icon' => 'format-gallery', 'tone' => 'media', 'group' => 'Bild', 'schematic' => 'cards',
         ],
     ];
+    // Preserve saved publication identifiers while offering one quote in the chooser.
+    $gestures['longread_quote'] = array_merge($gestures['zitat'], ['ui_hidden' => true, 'family' => 'zitat']);
+    return $gestures;
 }
 
 function iss_content_model_editorial_skin_features(): array

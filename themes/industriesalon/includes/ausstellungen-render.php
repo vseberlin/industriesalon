@@ -277,9 +277,9 @@ function industriesalon_locate_editorial_ausstellung_section_partial(string $ski
     return '';
 }
 
-function industriesalon_render_editorial_ausstellung_section(array $section, bool $show_placeholders, int $rendered_index, string $skin): string
+function industriesalon_render_editorial_ausstellung_section(array $section, bool $show_placeholders, int $rendered_index, string $skin, string $format = 'ausstellung'): string
 {
-    $portable = industriesalon_render_editorial_portable_section($section, $rendered_index, $skin, 'ausstellung');
+    $portable = industriesalon_render_editorial_portable_section($section, $rendered_index, $skin, $format);
     if ($portable !== null) { return $portable; }
     $type = sanitize_html_class((string) ($section['type'] ?? 'kapitel'));
     $context = industriesalon_get_editorial_ausstellung_section_context($section, $rendered_index, $skin);

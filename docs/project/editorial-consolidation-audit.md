@@ -8,9 +8,10 @@ published documents and private drafts are preserved.
 
 ## Gesture portability checkpoint — 13 October 2026
 
-The mounted website checkout now exposes 28 canonical gestures in nine formats.
+The mounted website checkout now exposes 28 registered gesture identifiers in nine formats.
 The workspace/CPT expansion is committed as `65c55b8`, shared portability as
-`9eab967`; publication adapters are the current local review slice. Registration, editor fields, save validation and
+`9eab967`, and publication adapters as `c090540`. Shared gallery/text/quote
+contracts are accepted for this local checkpoint. Registration, editor fields, save validation and
 public rendering must agree before a gesture becomes available in another format.
 
 | Gesture identifiers | Effective boundary / remaining work |
@@ -18,11 +19,11 @@ public rendering must agree before a gesture becomes available in another format
 | `statement`, `gateway`, `text_bild_reihe`, `feature` | One portable field/treatment contract in the vocabulary. Available in landing, article, event, exhibition, project, report, tour and publication formats. All article CPTs inherit this. The existing composition renderer handles them under the selected skin. |
 | `intro` | Event/report/Place/publication introductions differ from the hidden tour introduction feeding its hero. Preserve those meanings before consolidation. |
 | `kapitel` | Event and tour media differ from project/exhibition links and treatments; reconcile fields before widening. |
-| `fliesstext` | Landing/article treatments, project links and report media/object references are distinct contracts today. |
+| `fliesstext` | One portable contract across the same eight formats: three text treatments, links, media and archive references. Shared split geometry now works in every skin. |
 | `leitfrage` | Existing event/exhibition/tour text gesture; the portable statement also offers a question treatment. Avoid a silent type rewrite. |
-| `zitat` | Exhibition supports media, objects and quote treatments; event/tour quote contracts are smaller. |
+| `zitat` | One portable contract across eight formats: context, quote, attribution, media, objects and source/image orientation. Reuses the theme quote primitive. |
 | `schluss` | Existing domain endings have different link support, especially events. |
-| `galerie` | Landing/article accept image references; other domains also accept objects. Layout choices and renderer behavior differ. |
+| `galerie` | One portable contract across eight formats: media and archive objects with captions/source links; grid, sequence, wall and viewport layouts. Place retains its separate existing contract. |
 | `objektfokus` | Exhibition/report archive references use the archive owner; future reuse must retain resolution and visibility checks. |
 | `material` | Domain downloads differ from event text items and dynamic references. Do not union fields that renderers would drop. |
 | `facts` | Project/exhibition facts are reusable candidates, with project dossier pairing retained. Portable features already render their own facts. |
@@ -33,7 +34,8 @@ public rendering must agree before a gesture becomes available in another format
 | `atlas_map` | Landing locator/map treatments and the tour route have different owners and data requirements. |
 | `bildbuehne` | Tour hero integration, booking rail and excerpt fallback remain tour-owned. |
 | `epoche`, `gegenwart` | Place history and current-state projection remain a separate case. |
-| `source`, `publication_rail`, `longread_chapter`, `longread_quote`, `timeline_item`, `photoalbum` | Publication adapters now retain portable composition in all four layouts, with chapter navigation/counts, source notes and album ownership preserved. Native layout-specific sections still require their matching layout; reconcile those meanings and chooser compatibility separately. |
+| `longread_quote` | Retained saved publication identifier using the shared quote contract. Existing sections remain editable; hidden from new insertion so the chooser presents one quote. No identifier rewrite. |
+| `source`, `publication_rail`, `longread_chapter`, `timeline_item`, `photoalbum` | Publication adapters retain portable composition in all four layouts, with chapter navigation/counts, source notes and album ownership preserved. Native layout-specific sections still require their matching layout; reconcile those meanings and chooser compatibility separately. |
 
 `massstab`, `vollbild`, `image_wall` and `feature.microblocks` remain declared
 compatibility aliases. Existing stored documents are not renamed or migrated.
@@ -65,15 +67,29 @@ The existing album stylesheet loses its `100vw` breakout (which caused horizonta
 scrolling), and its phone title stacks instead of clipping. Skin variables reuse
 publication palettes; no extra gesture selector tree is introduced.
 
-Verification covers all 15 portable treatments in every registered skin of eight
-formats, save/reload, public content routing, snapshot addresses, media, links,
-rich text, front-page exclusion and event-structure restrictions: 5,278 assertions
-plus 35 UI tests. The publication matrix covers four layouts in all three skins,
+Seven visible composition gestures now share fields and rendering across eight
+formats. Gallery/text/quote rendering consumes resolved references through one
+existing composition path, with published-object checks delegated to the archive
+owner. Existing documents adopt the shared presentation while retaining their
+selected palette. Split-text rules move out of Dossier into the renderer layer;
+duplicate Territorial positioning is removed so shared phone stacking can apply.
+Domain gallery/quote compatibility branches and their styling remain for legacy
+content and Place supplements; they are not a second new gesture contract.
+
+Verification covers the seven gestures, their treatments/layouts in every
+registered skin of eight formats, save/reload, public content routing, snapshot
+addresses, media/archive captions, source visibility, links, rich text,
+front-page exclusion and event-structure restrictions: 8,314 assertions plus 35
+UI tests. Retained publication quote IDs and Place fields/rendering are checked.
+The publication matrix covers four layouts in all three skins,
 interleaving, native navigation/source data, disabled fallback and two successive
-snapshots after a warmed public cache. Storage checks pass 295 assertions over all
-94 existing documents, with post content/metadata unchanged. Chrome covers all
-four layouts at desktop/390 px with no horizontal overflow, compact chooser,
-edit/Fertig, draft recovery and palette inheritance. Review fixtures are removed.
+snapshots after a warmed public cache. Storage checks pass 296 assertions over all
+94 existing documents, with post content/metadata unchanged. Chrome checks the
+new contracts in six representative formats/skins at desktop/390 px, gallery
+navigation, quote orientation and edit/Fertig; no document overflow. Territorial
+stacking is additionally checked at 390/820 px. The preceding publication
+checkpoint covered all four layouts, compact chooser and draft recovery.
+Review fixtures are removed.
 Earlier tour/event/exhibition checks remain recorded in the preceding commit.
 Places remain explicitly excluded. No SQL, content migration, uploads or template
 artifact is needed; publication template authority is file-backed locally.

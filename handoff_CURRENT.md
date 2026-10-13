@@ -1,27 +1,31 @@
 # Current handoff — 13 October 2026
 
-## Editorial workspace and publication review
+## Editorial workspace and shared gesture review
 
-The workspace/CPT expansion (`65c55b8`) and shared-gesture portability (`9eab967`)
-are committed locally, not pushed or deployed. The publication adapter slice
-is accepted for this local checkpoint. Four composition gestures now work in
-eight formats, including standard publications, longreads, timelines and albums.
-Native chapter navigation/counts and album sources stay with their owners;
-composed timelines retain section order with unique epoch anchors. Publication
-payload caches distinguish exact preview snapshots and disabled JSON. Empty
-legacy albums preserve fallback content. Places remain separate.
+The workspace/CPT expansion (`65c55b8`), shared-gesture portability (`9eab967`)
+and publication adapters (`c090540`) are committed locally, not pushed or
+deployed. The gallery/text/quote slice is accepted for this local checkpoint.
+Seven visible composition gestures now share fields and rendering in
+eight formats, including all four publication layouts. Media/archive references,
+captions, links and quote context/attribution are retained; archive visibility
+stays with its owner. Saved `longread_quote` identifiers remain editable but are
+hidden from new insertion. Existing sections adopt the shared presentation and
+selected skin palette. Split-text geometry belongs to the renderer layer.
+Places retain their separate fields and renderer.
 
-Checks: 5,278 registry/renderer assertions, 295 storage checks covering all 94
+Checks: 8,314 registry/renderer assertions, 296 storage checks covering all 94
 existing documents with unchanged post content/metadata, 35 UI tests, targeted
-PHP/PHPCS/PHPStan and CSS checks. Chrome review covered all four layouts at desktop
-and 390 px, palette inheritance, compact chooser, edit/Fertig, autosave recovery
-and preview rendering. Album viewport overflow and the phone title grid are fixed
-in the existing stylesheet. Disposable records and autosaves are removed. Staff
+PHP/PHPCS/PHPStan and CSS checks. Chrome checks six representative formats/skins
+at desktop and 390 px, gallery navigation, quote orientation and edit/Fertig;
+Territorial stacking also passes at 390/820 px. No document overflow. The previous
+publication checkpoint covered all four layouts and draft recovery. Disposable
+records and autosaves are removed. Staff
 UAT and Firefox remain separate release checks.
 
-Next: reconcile gallery/text/quote fields and native
-publication layout compatibility. Intro/source placement and layout-specific
-native section meanings retain their existing contracts. See the
+Next: reconcile native publication layout compatibility.
+Chapters, timeline stations and albums still require matching layouts; the
+chooser must not permit content that the selected layout silently omits.
+Intro/source placement and native navigation/counts retain their owner contracts. See the
 [gesture inventory](docs/project/editorial-consolidation-audit.md#gesture-portability-checkpoint--13-october-2026).
 No SQL, uploads or template artifact is required: no stored content or template
 changed; the local publication template is file-backed. The earlier CPT commit's
