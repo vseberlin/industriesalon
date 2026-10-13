@@ -4,10 +4,9 @@ Immediate executable work only. Larger future programs live in `docs/project/bac
 
 ## Next
 
-- Run a complete editor workflow across the added article CPTs after the
-  accepted chooser guidance: keyboard selection, real paste,
-  recovery, owner controls and native save/reload. Places retain their separate
-  contracts, including the unresolved Place-only intake choice. See the
+- Review Place-specific gesture availability against its existing owners,
+  especially the retained intake choice that currently renders no invitation.
+  Decide its intended availability before changing the separate Place contract. See the
   [gesture inventory](docs/project/editorial-consolidation-audit.md#gesture-portability-checkpoint--13-october-2026).
 - Correct the archive landing quick-navigation grid at phone widths: its four
   columns overflow (409 px content / 375 px viewport). The shared archive cards
@@ -27,8 +26,9 @@ Immediate executable work only. Larger future programs live in `docs/project/bac
 - Staff-test the [shared workspace](docs/project/editor-workspace-plan.md)
   after its next authorized staging release: one landing, project, tour,
   publication, event and each additional article CPT; image/title/text,
-  owner controls, recovery and native Save Draft. Verify Firefox and real
-  clipboard/paste before a production release. The 13 October panel/CPT changes
+  owner controls, recovery and native Save Draft. Verify Firefox and external
+  Word/Docs paste before a production release; controlled rich-text clipboard
+  paste passed locally in Chrome. The 13 October panel/CPT changes
   are local only; authenticated staging editor UAT remains. Include event opening
   controls and written-feedback moderation.
   See the [audit](docs/project/editorial-consolidation-audit.md).

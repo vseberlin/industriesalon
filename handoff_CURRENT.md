@@ -1,32 +1,31 @@
 # Current handoff — 13 October 2026
 
-## Editorial workspace and special-gesture guidance
+## Editorial workspace workflow verification
 
-Archivobjekte is committed locally as `16b2e53`, following Material `6bfd6d4`;
-neither is pushed or deployed. Twelve visible composition gestures share
-contracts across eight formats. The next bounded slice is accepted for local
-commit: visible setup guidance for native gestures in the compact
-chooser and inspector, plus source-specific hints for all seven automatic
-landing slots. Programme is correctly presented as manual festival text.
-An open chooser now refreshes immediately when event structure changes.
+Special-gesture guidance is committed locally as `242593c`, following
+Archivobjekte `16b2e53` and Material `6bfd6d4`; nothing is pushed or deployed.
+Twelve visible composition gestures share contracts across eight formats.
+The workflow slice is accepted for local commit: native save/recovery regression coverage
+for all eight article post types, with no production code change.
 
-Existing format/structure restrictions, hidden saved sections, tour station
-controls and opening rules remain intact. Intake guidance explains its existing
-owner setting and legacy open default; explicit closure still wins. Places
-retain their separate contract. Their existing intake choice is outside the
-guest-contribution owner's eligible types; see the audit before Place work.
+Chrome checks pass for page, post, video, Team, profiles and all three archive
+types: keyboard section selection, owner-panel access and native Save Draft /
+reload. The page also passes real rich-text clipboard paste, explicit recovery
+after reload, direct title editing and Escape cancellation of title/rich text.
+Bold, italic, links and lists survive. Original block content, summary, ordering
+and video URL/year remain intact. All temporary drafts, revisions and autosaves
+are removed.
 
-Checks: 13,079 registry/renderer assertions, 301 storage checks over all 94
-existing documents with post content/metadata unchanged, 41 UI tests, PHP lint,
-PHPCS/PHPStan, JS and CSS lint. Chrome covers route guidance/station shortcut,
-landing-map search, event-structure chooser refresh, automatic-source changes,
-Fertig and native Save Draft/reload. Test drafts, revisions and autosaves are removed.
-The 390 px chooser has no horizontal overflow. Staff UAT, Firefox and real
-clipboard remain release checks. The archive quick-navigation overflow remains
-a separate TODO.
+Checks: 382 storage assertions over 94 existing documents, with post content and
+metadata unchanged after cleanup; 41 UI tests and PHP syntax pass. The preceding
+guidance commit passed 13,079 registry assertions and PHP/JS/CSS checks; its
+390 px chooser fits without horizontal overflow. Staff UAT, Firefox and external
+Word/Docs paste remain release checks. Archive quick-navigation overflow is a
+separate TODO.
 
-Next: a complete editing workflow across the added article CPTs,
-including keyboard, real paste, recovery and native save/reload. See the
+Next proposed slice: review Place-specific gesture availability, especially its
+retained intake choice, which is outside the upload owner's eligible types.
+Places keep their separate contract pending that review. See the
 [gesture inventory](docs/project/editorial-consolidation-audit.md#gesture-portability-checkpoint--13-october-2026).
 No SQL, uploads or template artifact is required: no real stored content or
 template changed. Effective page/report/publication templates are file-backed;

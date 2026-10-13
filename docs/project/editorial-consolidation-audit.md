@@ -15,7 +15,7 @@ contracts as `32d3e3f`; native publication layout compatibility is committed as
 `9fd10d0`, shared conclusions as `5fce0d0`, and shared chapters as `54afba5`.
 Leitfrage consolidation is committed locally as `0c1b046` and Merkpunkte as
 `3330c7f`; Material is committed as `6bfd6d4` and Archivobjekte as `16b2e53`.
-The special-gesture chooser guidance is accepted for local commit.
+The special-gesture chooser guidance is committed locally as `242593c`.
 Registration, editor fields, save validation and
 public rendering must agree before a gesture becomes available in another format.
 
@@ -84,8 +84,36 @@ native Save Draft/reload on disposable content. Fixtures, revisions and autosave
 are removed.
 At 390 px the chooser and its text fit the panel without horizontal overflow.
 No real content, templates, database schema or uploads change; no paired data
-artifact is needed. Staff UAT, Firefox and real clipboard checks remain release
-work.
+artifact is needed. The subsequent workflow checks below cover controlled
+clipboard paste in Chrome; external Word/Docs paste, Firefox and staff UAT
+remain release work.
+
+### Article workflow verification — 13 October 2026
+
+Disposable drafts were checked in authenticated Chrome for all eight article
+post types: `page`, `post`, `video`, `team_member`, `entity_profile`,
+`archivbeitrag`, `archivsammlung` and `archivobjekt`. Each passes keyboard section
+selection, inspector editing, access to native owner panels and Save Draft /
+reload. Native source blocks, summary and ordering survive; the video URL and
+year remain unchanged. Archive metadata/taxonomy and collection sequence
+controls remain available from the native form.
+
+The page fixture also passes chooser search/ArrowDown/Escape, real keyboard
+copy/paste between rich-text fields, reload followed by explicit recovery,
+and native save of the recovered text. Bold, italic, links and lists survive
+in canonical JSON. Direct preview title editing confirms with Enter; Escape
+restores both title and rich-text contents, including the original formatting.
+A confirmed direct title edit also survives native Save Draft and reload.
+
+The existing storage suite now exercises every registered article post type:
+private recovery leaves canonical JSON untouched, invalid JSON rejects the
+whole native save while retaining recovery, and a valid native save preserves
+formatted text and source fields while clearing recovery. This adds 81 checks:
+382 total pass over 94 existing documents, with existing post content/metadata
+unchanged after cleanup. All 41 UI tests and PHP syntax pass. No production
+defect was found in these workflows, so this slice changes tests and documentation
+only. Browser and automated fixtures, revisions and autosaves are removed.
+No SQL, uploads or template artifact is required.
 
 The existing media/text pattern now owns its flex layout for native blocks and
 JSON alike. Its defaults are component-scoped, the overlay retains image height
