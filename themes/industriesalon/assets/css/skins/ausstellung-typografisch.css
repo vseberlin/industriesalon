@@ -65,31 +65,6 @@
   margin-bottom: 0;
 }
 
-.iss-ausstellung-editorial--skin-typografisch .iss-ausstellung-editorial__section--layout-thesis {
-  display: grid;
-  align-items: center;
-  min-height: 62vh;
-  border-top: 2px solid var(--iss-ausstellung-type-ink);
-  border-bottom: 2px solid var(--iss-ausstellung-type-ink);
-  background: var(--iss-ausstellung-type-paper);
-  text-align: center;
-}
-
-.iss-ausstellung-editorial--skin-typografisch .iss-ausstellung-editorial__section--layout-thesis > .iss-container,
-.iss-ausstellung-editorial--skin-typografisch .iss-ausstellung-editorial__section--layout-thesis .iss-ausstellung-section__copy {
-  justify-items: center;
-}
-
-.iss-ausstellung-editorial--skin-typografisch .iss-ausstellung-editorial__section--layout-thesis .iss-ausstellung-section__title {
-  max-width: 22ch;
-  font-size: clamp(2rem, 4.2vw, 3.5rem);
-}
-
-.iss-ausstellung-editorial--skin-typografisch .iss-ausstellung-editorial__section--layout-thesis .iss-ausstellung-editorial__body {
-  max-width: 54ch;
-  color: var(--iss-ausstellung-type-muted);
-}
-
 .iss-ausstellung-editorial--skin-typografisch .iss-ausstellung-editorial__section--layout-chapter {
   counter-increment: iss-type-chapter;
 }
@@ -408,7 +383,6 @@
     grid-template-columns: 1fr;
   }
 
-  .iss-ausstellung-editorial--skin-typografisch .iss-ausstellung-editorial__section--layout-thesis,
   .iss-ausstellung-editorial--skin-typografisch .iss-ausstellung-editorial__section--layout-quote,
   .iss-ausstellung-editorial--skin-typografisch .iss-ausstellung-editorial__section--layout-stat,
   .iss-ausstellung-editorial--skin-typografisch .iss-ausstellung-editorial__section--layout-conclusion {

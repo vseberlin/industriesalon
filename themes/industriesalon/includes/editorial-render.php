@@ -68,6 +68,11 @@ function industriesalon_render_editorial_portable_section(array $section, int $i
     $definition = iss_editorial_get_format($format)['sections'][$section['type'] ?? ''] ?? [];
     if (($definition['renderer'] ?? '') !== 'landing') { return null; }
     if ($anchor !== '') { $section['anchor'] = $anchor; }
+    // Render retained identifiers through their family without rewriting stored JSON.
+    if ($definition['family'] !== $section['type']) {
+        $section['treatment'] = iss_editorial_resolve_treatment((string) ($section['treatment'] ?? ''), $definition);
+        $section['type'] = $definition['family'];
+    }
     $section['_canvas_edit'] = ($section['_text_version'] ?? 1) >= 2 && isset($section['_editorial_index']) && !empty(iss_editorial_embedded_preview()['canvas']);
     $html = industriesalon_render_editorial_landing_section($section, $index, $skin);
     if ($html === '') { return ''; }

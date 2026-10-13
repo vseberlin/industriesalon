@@ -75,23 +75,6 @@
   line-height: 1.45;
 }
 
-.iss-ausstellung-editorial--skin-objektalbum .iss-ausstellung-section--layout-thesis {
-  display: grid;
-  align-content: center;
-  min-height: 72vh;
-  background: var(--iss-ausstellung-kinder-paper);
-}
-
-.iss-ausstellung-editorial--skin-objektalbum .iss-ausstellung-section--layout-thesis .iss-container {
-  width: min(100% - (2 * var(--iss-ausstellung-pad-x)), 70rem);
-}
-
-.iss-ausstellung-editorial--skin-objektalbum .iss-ausstellung-section--layout-thesis h2 {
-  max-width: 18ch;
-  font-size: clamp(2.2rem, 5vw, 5rem);
-  line-height: 0.98;
-}
-
 .iss-ausstellung-editorial--skin-objektalbum .iss-ausstellung-section--layout-source-focus,
 .iss-ausstellung-editorial--skin-objektalbum .iss-ausstellung-section--layout-source-focus-reverse {
   display: grid;

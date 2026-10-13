@@ -50,6 +50,17 @@ The saved publication identifier `longread_quote` delegates to the quote
 contract and remains editable; it is hidden from new insertion to avoid a
 duplicate chooser item.
 
+Questions use `statement.leitfrage` under Überschrift & Intro in all eight
+formats. Saved event/exhibition/tour `leitfrage` identifiers remain registered
+and editable, hidden from insertion, with the same statement fields and editor
+label. Their default treatment is the question; selected statement treatments
+are retained. The exhibition starter creates `statement.leitfrage`. Statements
+support anchors, preserving tour navigation. The theme routes retained
+identifiers through their declared family only in the render copy, leaving
+stored JSON and preview section indices intact. The obsolete tour/exhibition/
+event question styling is removed; the existing shared treatment and skin own
+presentation. Native introductions and hero bindings keep their owners.
+
 Conclusions share rich text, anchors and links, including links-only endings.
 They reuse the text renderer and selected skin. Project contact navigation and
 tour anchors keep their existing owners. Chapters share links, resolved media
@@ -515,8 +526,8 @@ single-tour editorial slot.
 The public Führung gesture contract is intentionally narrow:
 `bildbuehne` is the optional first-viewport image stage with overlay title/text
 and a compact gallery; `intro` feeds the fallback hero description only;
-`kapitel` is the tour narrative or context; `leitfrage` is a framed guiding
-question; `zitat` is a source or voice moment; `galerie` owns image treatments
+`kapitel` is the tour narrative or context; saved `leitfrage` sections use the
+shared statement question treatment; `zitat` is a source or voice moment; `galerie` owns image treatments
 such as sequence, wall, and viewport; `atlas_map` is the optional route map
 gesture backed by existing relation station rows; `material` is for downloads
 and supporting links; `upload_intake` is an optional public contribution CTA
@@ -672,8 +683,8 @@ onto those slots in CSS. `kicker` is a first-class JSON section field because it
 is shared site language, not a skin decoration. In the first `frauen-im-werk`
 treatment, `quellenauszug` owns the image/text/quote station treatment and has
 a scoped text-position flip for left/right source stations. `kapitel`,
-`leitfrage`, `zitat`, and `fliesstext` stay on the generic renderer anatomy and
-receive quiet typographic treatments in skin CSS; their content uses the common
+`leitfrage`, `zitat`, and `fliesstext` now use the shared composition renderer
+and selected skin; their content uses the common
 `kicker`, `title`, `body`, `quote`, and `attribution` fields rather than
 parallel gesture-specific keys. `objektfokus` remains reserved for
 archive-object grid treatments. `galerie` owns full-viewport and image-wall

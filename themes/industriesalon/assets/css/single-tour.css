@@ -632,7 +632,6 @@
   order: 2;
 }
 
-.iss-tour-section--layout-thesis .iss-tour-section__inner,
 .iss-tour-section--layout-quote .iss-tour-section__inner,
 .iss-tour-section--layout-conclusion .iss-tour-section__inner {
   grid-template-columns: minmax(0, 0.4fr) minmax(0, 1fr);
@@ -696,23 +695,6 @@
   padding-top: 4.5rem;
   padding-bottom: 4.5rem;
   border-top: 0;
-}
-
-.iss-tour-section--layout-thesis {
-  padding: 2.4rem;
-  border: 1px solid rgba(30, 30, 30, 0.12);
-  border-left: 0.28rem solid var(--iss-scarlet-red, #e81d25);
-  border-radius: 0.45rem;
-  background: #fff;
-}
-
-.iss-tour-section--layout-thesis .iss-tour-section__copy {
-  max-width: 58rem;
-}
-
-.iss-tour-section--layout-thesis .iss-tour-section__title {
-  max-width: 30ch;
-  font-size: 2.55rem;
 }
 
 .iss-tour-section--layout-quote,
@@ -1344,7 +1326,6 @@
 
   .iss-tour-section__inner,
   .iss-tour-section--media-aside .iss-tour-section__inner,
-  .iss-tour-section--layout-thesis .iss-tour-section__inner,
   .iss-tour-section--layout-quote .iss-tour-section__inner,
   .iss-tour-section--layout-conclusion .iss-tour-section__inner,
   .iss-tour-section--layout-material .iss-tour-section__inner,
@@ -1357,7 +1338,6 @@
     grid-column: auto;
   }
 
-  .iss-tour-section--layout-thesis,
   .iss-tour-section--layout-quote,
   .iss-tour-section--layout-conclusion {
     padding: 1.35rem;
@@ -1384,8 +1364,7 @@
     padding: 1.35rem;
   }
 
-  .iss-tour-section__title,
-  .iss-tour-section--layout-thesis .iss-tour-section__title {
+  .iss-tour-section__title {
     font-size: 1.85rem;
   }
 

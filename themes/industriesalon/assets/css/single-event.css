@@ -588,10 +588,6 @@
   border-left: 5px solid var(--iss-accent);
 }
 
-.iss-event-structured__section--gesture-leitfrage .iss-event-structured__title {
-  max-width: 24ch;
-}
-
 .iss-event-structured__section--gesture-chronik .iss-event-structured__items {
   border-top: 1px solid var(--iss-event-rule-strong);
 }

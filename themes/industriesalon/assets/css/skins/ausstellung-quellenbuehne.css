@@ -647,43 +647,6 @@
   max-width: 18ch;
 }
 
-.iss-ausstellung-editorial__section--layout-thesis {
-  display: grid;
-  align-items: center;
-  min-height: 64vh;
-  border-top: 1px solid var(--iss-ausstellung-fiw-line);
-  border-bottom: 1px solid var(--iss-ausstellung-fiw-line);
-  background: var(--iss-ausstellung-fiw-panel);
-  text-align: center;
-}
-
-.iss-ausstellung-editorial__section--layout-thesis > .iss-container {
-  width: min(100% - (2 * var(--iss-ausstellung-pad-x)), 58rem);
-  justify-items: center;
-}
-
-.iss-ausstellung-editorial__section--layout-thesis .iss-ausstellung-section__copy {
-  justify-items: center;
-}
-
-.iss-ausstellung-editorial__section--layout-thesis h2 {
-  max-width: 20ch;
-  color: var(--iss-ausstellung-dark);
-  font-size: clamp(1.95rem, 4.2vw, 3.25rem);
-  line-height: 1.1;
-}
-
-.iss-ausstellung-editorial__section--layout-thesis .iss-ausstellung-section__kicker {
-  justify-content: center;
-}
-
-.iss-ausstellung-editorial__section--layout-thesis .iss-ausstellung-editorial__body {
-  max-width: 52ch;
-  color: var(--iss-ausstellung-fiw-ink-muted);
-  font-size: clamp(1rem, 0.35vw + 0.95rem, 1.16rem);
-  line-height: 1.64;
-}
-
 .iss-ausstellung-editorial__section--layout-chapter > .iss-container,
 .iss-ausstellung-editorial__section--layout-essay > .iss-container,
 .iss-ausstellung-editorial__section--layout-aside > .iss-container {

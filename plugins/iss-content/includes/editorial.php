@@ -298,11 +298,7 @@ function iss_content_model_register_editorial_formats(array $formats): array
                 'ui_hidden' => true,
             ],
             'kapitel' => $gestures['kapitel'],
-            'leitfrage' => [
-                'label' => __('Die Kernfrage oder These', 'iss-content-model'),
-                'description' => __('Gibt den roten Faden vor und führt den Besucher durch das Thema.', 'iss-content-model'),
-                'supports' => ['anchor'],
-            ],
+            'leitfrage' => $gestures['leitfrage'],
             'zitat' => $gestures['zitat'],
             'galerie' => $gestures['galerie'],
             'atlas_map' => [
@@ -331,11 +327,7 @@ function iss_content_model_register_editorial_formats(array $formats): array
         'default_variant' => 'standard',
         'sections' => [
             'kapitel' => $gestures['kapitel'],
-            'leitfrage' => [
-                'label' => __('Die Kernfrage oder These', 'iss-content-model'),
-                'description' => __('Gibt den roten Faden vor und führt den Besucher durch das Thema.', 'iss-content-model'),
-                'supports' => [],
-            ],
+            'leitfrage' => $gestures['leitfrage'],
             'objektfokus' => [
                 'label' => __('Objektfokus', 'iss-content-model'),
                 'description' => __('Ausgewählte Archivobjekte im Zusammenhang zeigen.', 'iss-content-model'),
@@ -484,7 +476,7 @@ add_filter('iss_editorial_formats', static function (array $formats): array {
         'article' => [['label' => 'Text mit Bildern', 'sections' => [['type' => 'statement'], ['type' => 'fliesstext'], ['type' => 'galerie']]]],
         'projekt' => [['label' => 'Projektdossier', 'sections' => [['type' => 'kapitel', 'title' => 'Das Projekt'], ['type' => 'facts', 'title' => 'Auf einen Blick'], ['type' => 'galerie']]]],
         'rueckblick' => [['label' => 'Bericht mit Bildern', 'sections' => [['type' => 'intro'], ['type' => 'fliesstext'], ['type' => 'galerie']]]],
-        'ausstellung' => [['label' => 'Ausstellungsrundgang', 'sections' => [['type' => 'leitfrage'], ['type' => 'kapitel', 'title' => 'Die Ausstellung'], ['type' => 'galerie']]]],
+        'ausstellung' => [['label' => 'Ausstellungsrundgang', 'sections' => [['type' => 'statement', 'treatment' => 'statement.leitfrage'], ['type' => 'kapitel', 'title' => 'Die Ausstellung'], ['type' => 'galerie']]]],
         'fuehrung' => [['label' => 'Führung vorstellen', 'sections' => [['type' => 'kapitel', 'title' => 'Die Führung'], ['type' => 'galerie']]]],
         'place' => [['label' => 'Ortsdossier', 'sections' => [['type' => 'intro'], ['type' => 'epoche', 'title' => 'Geschichte'], ['type' => 'gegenwart']]]],
         'veranstaltung' => [['label' => 'Veranstaltung vorstellen', 'sections' => [['type' => 'intro'], ['type' => 'kapitel', 'title' => 'Programm']]]],

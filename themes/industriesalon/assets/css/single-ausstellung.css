@@ -276,14 +276,6 @@
   margin-bottom: 0;
 }
 
-.iss-ausstellung-editorial__section--leitfrage {
-  background: #fff;
-}
-
-.iss-ausstellung-editorial__section--leitfrage h2 {
-  color: var(--iss-ausstellung-accent);
-}
-
 .iss-ausstellung-editorial__quote {
   display: grid;
   gap: 0.75rem;

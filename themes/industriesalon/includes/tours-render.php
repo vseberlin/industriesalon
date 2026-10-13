@@ -111,7 +111,6 @@ function industriesalon_get_editorial_tour_section_context(array $section, strin
         'bildbuehne' => 'stage',
         'intro' => 'intro',
         'kapitel' => 'chapter',
-        'leitfrage' => 'thesis',
         'zitat' => 'quote',
         'galerie' => 'gallery',
         'image_wall' => 'image-wall',
@@ -123,7 +122,6 @@ function industriesalon_get_editorial_tour_section_context(array $section, strin
     $labels = [
         'bildbuehne' => __('Bildbühne', 'industriesalon'),
         'kapitel' => __('Tourprofil', 'industriesalon'),
-        'leitfrage' => __('Leitfrage', 'industriesalon'),
         'zitat' => __('Stimme', 'industriesalon'),
         'galerie' => __('Bilder', 'industriesalon'),
         'image_wall' => __('Bilder', 'industriesalon'),

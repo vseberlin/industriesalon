@@ -90,19 +90,6 @@
   padding-top: 0.35rem;
 }
 
-.iss-ausstellung-editorial--skin-chronik .iss-ausstellung-editorial__section--layout-thesis {
-  display: grid;
-  align-items: center;
-  min-height: 58vh;
-  background: var(--iss-ausstellung-chronik-panel);
-  text-align: center;
-}
-
-.iss-ausstellung-editorial--skin-chronik .iss-ausstellung-editorial__section--layout-thesis > .iss-container,
-.iss-ausstellung-editorial--skin-chronik .iss-ausstellung-editorial__section--layout-thesis .iss-ausstellung-section__copy {
-  justify-items: center;
-}
-
 .iss-ausstellung-editorial--skin-chronik .iss-ausstellung-editorial__section--layout-source-focus > .iss-container,
 .iss-ausstellung-editorial--skin-chronik .iss-ausstellung-editorial__section--layout-source-focus-reverse > .iss-container {
   display: grid;
@@ -411,7 +398,6 @@
     grid-template-columns: 1fr;
   }
 
-  .iss-ausstellung-editorial--skin-chronik .iss-ausstellung-editorial__section--layout-thesis,
   .iss-ausstellung-editorial--skin-chronik .iss-ausstellung-editorial__section--layout-quote,
   .iss-ausstellung-editorial--skin-chronik .iss-ausstellung-editorial__section--layout-stat,
   .iss-ausstellung-editorial--skin-chronik .iss-ausstellung-editorial__section--layout-conclusion {

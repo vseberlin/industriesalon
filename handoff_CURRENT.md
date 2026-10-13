@@ -1,31 +1,31 @@
 # Current handoff — 13 October 2026
 
-## Editorial workspace and shared chapters
+## Editorial workspace and shared questions
 
-The editorial sequence through shared chapters is accepted for local commit,
-not pushed or deployed. `kapitel` now shares rich text, anchors, links, media/captions,
-inline/right-side placement and standard/aside presentation across eight formats.
-Event live institution references remain an owner-specific extension. Project
-chapter/facts pairing reuses the shared chapter body with separate preview
-addresses. Publication Lesekapitel retains its native numbering/navigation.
-Nine composition gestures are shared; Places remain separate.
+Shared chapters are committed locally as `54afba5`, not pushed or deployed.
+Leitfrage consolidation is accepted for local commit. New questions
+use Überschrift & Intro → Leitfrage across eight formats. Saved `leitfrage`
+sections retain their identifiers and default question treatment, share the
+same inspector/renderer, and are hidden from new insertion. Statements now
+support anchors. The exhibition starter uses the canonical treatment, and old
+domain question styling is removed. Nine visible composition gestures are
+shared; native intro/hero bindings and Places remain separate.
 
-Checks: 10,405 registry/renderer assertions, 298 storage checks covering all 94
+Checks: 11,260 registry/renderer assertions, 298 storage checks covering all 94
 existing documents with unchanged post content/metadata, 35 UI tests, targeted
-PHP/PHPCS/PHPStan, JavaScript and CSS checks. Chrome checks six formats at
-desktop/390 px, plus paired project layout at 820 px: no document overflow,
-media stack and captions survive. Event chapter edit/Fertig/native Update/reload
-preserves live reference, links and media choices. Paired project facts edit
-independently. The chooser distinguishes Kapitel/Lesekapitel and counts live
-sources correctly. Review records, revisions, autosaves and their empty project
-Set are removed. Staff UAT and Firefox remain separate release checks.
+PHP/PHPCS/PHPStan and CSS checks. Chrome checks the three existing exhibition
+questions and private event/tour/exhibition samples at desktop/390 px: no
+overflow, links and formatted text survive. Existing question title/treatment
+edits return through Fertig to the outline; native Update/reload preserves type,
+anchor, text, links and the neighbouring section. Review records, revisions and
+autosaves are removed. Staff UAT and Firefox remain separate release checks.
 
-Next: reconcile `leitfrage` with shared statement
-treatments, retaining saved identifiers and distinct intro/hero contracts.
+Next: share `facts` (Merkpunkte) where its fields and
+rendering agree, retaining project chapter/facts pairing.
 See the [gesture inventory](docs/project/editorial-consolidation-audit.md#gesture-portability-checkpoint--13-october-2026).
 No SQL, uploads or template artifact is required: no real stored content or
 template changed. Reviewed local templates are file-backed except the existing
-Ausstellung override (26309); it renders the shared chapters and was retained.
+Ausstellung override (26309); it renders the shared questions and was retained.
 The earlier CPT commit's archive collection slot still needs target override
 review at release.
 

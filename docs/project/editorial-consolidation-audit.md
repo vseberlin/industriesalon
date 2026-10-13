@@ -12,8 +12,8 @@ The mounted website checkout now exposes 28 registered gesture identifiers in ni
 The workspace/CPT expansion is committed as `65c55b8`, shared portability as
 `9eab967`, publication adapters as `c090540`, and shared gallery/text/quote
 contracts as `32d3e3f`; native publication layout compatibility is committed as
-`9fd10d0`, and shared conclusions as `5fce0d0`. Shared chapters are accepted for
-local commit. Registration, editor fields, save validation and
+`9fd10d0`, shared conclusions as `5fce0d0`, and shared chapters as `54afba5`.
+Leitfrage consolidation is accepted for local commit. Registration, editor fields, save validation and
 public rendering must agree before a gesture becomes available in another format.
 
 | Gesture identifiers | Effective boundary / remaining work |
@@ -22,7 +22,7 @@ public rendering must agree before a gesture becomes available in another format
 | `intro` | Event/report/Place/publication introductions differ from the hidden tour introduction feeding its hero. Preserve those meanings before consolidation. |
 | `kapitel` | One shared chapter contract across eight formats: text, anchors, links, media/captions, inline/right-side media and standard/aside presentation. Event live references remain an owner-specific extension; project chapter/facts pairing retains its separate editing addresses. |
 | `fliesstext` | One portable contract across the same eight formats: three text treatments, links, media and archive references. Shared split geometry now works in every skin. |
-| `leitfrage` | Existing event/exhibition/tour text gesture; the portable statement also offers a question treatment. Avoid a silent type rewrite. |
+| `leitfrage` | Saved event/exhibition/tour identifier retained as a hidden statement-family entry. New questions use Überschrift & Intro → Leitfrage across eight formats; existing sections have the same inspector, fields, treatments and renderer. Default question treatment and stored identifiers survive. |
 | `zitat` | One portable contract across eight formats: context, quote, attribution, media, objects and source/image orientation. Reuses the theme quote primitive. |
 | `schluss` | One portable contract across eight formats: rich text, anchors and links, including links-only endings. Project contact navigation and tour anchors are retained; events now support conclusion links. |
 | `galerie` | One portable contract across eight formats: media and archive objects with captions/source links; grid, sequence, wall and viewport layouts. Place retains its separate existing contract. |
@@ -88,7 +88,7 @@ content and Place supplements; they are not a second new gesture contract.
 Verification covers the nine gestures, their treatments/layouts in every
 registered skin of eight formats, save/reload, public content routing, snapshot
 addresses, media/archive captions, source visibility, links, rich text,
-front-page exclusion and event-structure restrictions: 10,405 assertions plus 35
+front-page exclusion and event-structure restrictions: 11,260 assertions plus 35
 UI tests. Retained publication quote IDs and Place fields/rendering are checked.
 The publication matrix covers four layouts in all three skins,
 interleaving, native navigation/source data, all-native mixed documents, multiple
@@ -106,7 +106,16 @@ The project pairing also fits 820 px. Event edit/Fertig/native Update/reload
 preserves its live reference, media, caption and link. Paired project facts edit
 independently. The chooser distinguishes Kapitel and Lesekapitel; live reference
 counts now include dynamic sources. The preceding conclusion checkpoint covered
-links-only endings and title/link editing.
+links-only endings and title/link editing. Leitfrage coverage includes versions
+1–3, every native event/tour/exhibition skin and statement treatment, anchors,
+rich text, links, exact preview addresses and saved identifiers. New statements
+retain anchors across all eight formats; native intro/hero and Place contracts
+remain separate. Chrome checks all three existing exhibition questions and
+private event/tour/exhibition samples at desktop/390 px with no overflow.
+The compact chooser offers one question path; new question insertion and Fertig
+return to the outline were exercised. Existing question title/treatment
+edits return through Fertig to the outline; native Update/reload retains type,
+anchor, formatted text and links while leaving the neighbouring section intact.
 Review fixtures are removed.
 Earlier tour/event/exhibition checks remain recorded in the preceding commit.
 Places remain explicitly excluded. No SQL, content migration, uploads or template
@@ -131,8 +140,21 @@ legacy compatibility; this slice removes duplicate chapter definitions and the
 paired project's duplicate copy markup. Native publication chapters keep their
 numbering/navigation contract. Places remain separate.
 
-Next: reconcile `leitfrage` with shared statement treatments while retaining
-saved identifiers and the distinct intro/hero contracts.
+## Question contract boundary
+
+The read-only inventory found three saved `leitfrage` sections, all in
+exhibitions. They keep their identifiers and text. The hidden registry entry
+inherits the statement contract with `statement.leitfrage` as its default;
+saved selections can use the other statement treatments. No stored identifier
+is rewritten. The exhibition starter now creates the canonical statement
+treatment. The existing portable adapter resolves declared families for rendering
+only, including the retained publication quote identifier. The old question
+layout mappings and obsolete domain/skin CSS are removed; shared treatment/skin
+CSS owns the presentation. No new renderer, stylesheet or storage path is added.
+
+Next: share `facts` (Merkpunkte) where its field/rendering
+contract agrees, retaining the project chapter/facts pairing. Native intro/hero
+contracts and Places remain separate.
 
 ## Findings and disposition
 

@@ -135,6 +135,7 @@ try {
                 $sample = ['type' => $portable_type, 'kicker' => 'Portable kicker', 'title' => 'Portable ' . $portable_type,
                     'body' => '<p><strong>Portable body</strong> <span class="' . $colour . '">colour survives</span></p>',
                     'links' => [['label' => 'Portable first link', 'url' => 'https://example.invalid/first'], ['label' => 'Portable second link', 'url' => 'https://example.invalid/second']]];
+                if ($portable_type === 'statement') { $sample['anchor'] = 'guiding-question'; }
                 if (in_array($portable_type, ['gateway', 'text_bild_reihe'], true)) {
                     $sample['items'] = [['label' => 'Portable item', 'text' => '<em>Portable item text</em>', 'media_refs' => [$media]]];
                     if ($portable_type === 'gateway') { $sample['items'][0]['url'] = 'https://example.invalid/item'; }
@@ -152,6 +153,9 @@ try {
                         $label = "$slug.$portable_type/$skin/{$treatment['slug']}";
                         $assert(!is_wp_error($validated), "$label: accepts portable contract");
                         $html = $render_portable($validated['sections'][0], $slug, $skin);
+                        if ($portable_type === 'statement') {
+                            $assert(str_contains($html, 'id="' . ($slug === 'fuehrung' ? 'portable-anchor' : 'guiding-question') . '"'), "$label: statement retains navigation anchor");
+                        }
                         foreach (['Portable ' . $portable_type, '<strong>Portable body</strong>', $colour, 'Portable first link', 'Portable second link'] as $value) {
                             $assert(str_contains($html, $value), "$label: renders $value");
                         }
@@ -190,7 +194,9 @@ try {
                     $assert(!is_wp_error(iss_editorial_validate_document($candidate, $slug)), "$entity_key: shared composition is independent of event structure");
                     $allowed = array_keys(iss_content_model_veranstaltung_content_gestures_for_entity($entity_key));
                     $assert(array_diff($portable_types, $allowed) === [], "$entity_key: editor chooser exposes the same shared gestures");
-                    foreach (array_diff(array_keys(iss_content_model_veranstaltung_content_gestures()), $entity['allowed_gestures'], ['galerie', 'zitat']) as $restricted_type) {
+                    $candidate['sections'] = [['type' => 'leitfrage', 'title' => 'Retained question']];
+                    $assert(!is_wp_error(iss_editorial_validate_document($candidate, $slug)), "$entity_key: retained questions share statement availability");
+                    foreach (array_diff(array_keys(iss_content_model_veranstaltung_content_gestures()), $entity['allowed_gestures'], ['galerie', 'zitat', 'leitfrage']) as $restricted_type) {
                         $candidate['sections'] = [['type' => $restricted_type, 'body' => 'Restricted domain section']];
                         $assert(is_wp_error(iss_editorial_validate_document($candidate, $slug)), "$entity_key: native domain restrictions retained");
                     }
@@ -287,6 +293,40 @@ try {
             foreach (array_keys($common_doc['sections']) as $index) { $assert(substr_count($html, 'data-iss-preview-section="' . $index . '"') === 1, "$slug: common snapshot source address $index"); }
             $assert(substr_count($html, 'data-iss-field="body"') === count($common_doc['sections']), "$slug: every common body is editable in the preview");
             $_GET = []; $GLOBALS['wp_the_query'] = $original_main_query;
+            // Saved questions remain editable aliases; new questions use statement treatments.
+            if (in_array($slug, ['veranstaltung', 'ausstellung', 'fuehrung'], true)) {
+                $definition = $format['sections']['leitfrage'];
+                $assert($definition['ui_hidden'] && $definition['family'] === 'statement' && $definition['renderer'] === 'landing', "$slug: one question chooser path and shared renderer");
+                foreach (['label', 'supports', 'rich_text', 'treatments'] as $field) {
+                    $assert($definition[$field] === $format['sections']['statement'][$field], "$slug: retained question shares statement $field");
+                }
+                foreach ([1, 2, 3] as $version) {
+                    $question = iss_editorial_get_empty_document($slug); $question['schema_version'] = $version;
+                    if ($slug === 'veranstaltung') { $question['entity_key'] = 'event.general'; }
+                    $question['sections'] = [['type' => 'leitfrage', 'anchor' => 'saved-question', 'kicker' => 'Question context', 'title' => 'Saved question?', 'body' => '<p><strong>Question body</strong></p>', 'links' => [['label' => 'Question link', 'url' => 'https://example.invalid/question']]]];
+                    $validated = iss_editorial_validate_document($question, $slug);
+                    $assert(!is_wp_error($validated) && $validated['sections'][0]['type'] === 'leitfrage' && $validated['sections'][0]['treatment'] === 'statement.leitfrage', "$slug/v$version: retain identifier and resolve question default");
+                    foreach ($format['skins'] as $skin => $choice) {
+                        foreach (['', 'statement.lead', 'statement.leitfrage', 'statement.callout'] as $treatment) {
+                            $sample = $validated['sections'][0]; $sample['treatment'] = $treatment;
+                            $html = $render_portable($sample, $slug, $skin, $version);
+                            foreach (['Question context', 'Saved question?', '<strong>Question body</strong>', 'Question link', '--treatment-' . str_replace('.', '-', $treatment ?: 'statement.leitfrage')] as $value) {
+                                $assert(str_contains($html, $value), "$slug/$skin/v$version: question renders $value");
+                            }
+                            $assert(str_contains($html, 'id="' . ($slug === 'fuehrung' ? 'portable-anchor' : 'saved-question') . '"'), "$slug: retained question anchor survives");
+                        }
+                    }
+                    $assert(iss_editorial_save_document($id, $slug, $question) && iss_editorial_get_document($id, $slug) === $validated, "$slug/v$version: question save/reload retains complete contract");
+                }
+                $draft = iss_editorial_save_draft($id, $slug, $question, true);
+                $assert(!is_wp_error($draft), "$slug: retained question autosave");
+                $_GET = ['iss_editorial_embed' => '1', 'iss_editorial_canvas' => '1', 'iss_editorial_preview' => '1', 'iss_editorial_format' => $slug, 'iss_editorial_snapshot' => $draft['token'], 'iss_editorial_preview_nonce' => wp_create_nonce(iss_editorial_get_preview_nonce_action($id, $slug))];
+                $model = iss_editorial_get_read_model($id, $slug);
+                $html = $render_portable($model['sections'][0], $slug, $model['skin']);
+                $assert(substr_count($html, 'data-iss-preview-section="0"') === 1 && str_contains($html, 'data-iss-field="body"'), "$slug: alias rendering keeps exact preview edit address");
+                $assert($model['sections'][0]['type'] === 'leitfrage', "$slug: rendering cannot rewrite snapshot identifier");
+                $_GET = [];
+            }
             // Conclusions have one link-capable contract, including links-only endings.
             $assert($format['sections']['schluss']['portable'] && $format['sections']['schluss']['renderer'] === 'landing', "$slug: conclusion uses shared composition");
             foreach ([1, 2, 3] as $version) {
@@ -529,6 +569,13 @@ try {
     }
     $_GET = []; $GLOBALS['wp_the_query'] = $original_main_query;
     $place = iss_editorial_get_format('place');
+    $assert(!isset($place['sections']['statement']) && !isset($place['sections']['leitfrage']), 'Place retains its separate narrative contract');
+    foreach (['veranstaltung', 'fuehrung'] as $slug) {
+        $assert(!iss_editorial_get_format($slug)['sections']['intro']['portable'], "$slug: native introduction keeps its owner");
+    }
+    $assert(!iss_editorial_get_format('fuehrung')['sections']['bildbuehne']['portable'], 'Tour image stage retains its hero contract');
+    $starter = iss_editorial_get_format('ausstellung')['starters'][0]['sections'][0];
+    $assert($starter === ['type' => 'statement', 'treatment' => 'statement.leitfrage'], 'Exhibition starter creates the canonical question treatment');
     $assert(!$place['sections']['galerie']['portable'] && $place['sections']['galerie']['supports'] === ['media_refs', 'object_refs', 'gallery_layout'], 'Place gallery retains its separate contract');
     $place_html = industriesalon_render_editorial_ausstellung_section(['type' => 'galerie', 'title' => 'Place gallery', 'body' => 'Place body'], false, 0, 'standard', 'place');
     $assert(str_contains($place_html, 'iss-ausstellung-section') && !str_contains($place_html, 'iss-landing-section'), 'Place supplement retains native renderer');

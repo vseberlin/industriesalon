@@ -31,11 +31,6 @@ function iss_content_model_editorial_gesture_registry(): array
             ],
             'icon' => 'editor-paragraph', 'tone' => 'text', 'group' => 'Text', 'schematic' => 'text',
         ],
-        'leitfrage' => [
-            'label' => __('Leitfrage', 'iss-content-model'),
-            'description' => __('Die zentrale Frage oder These hervorheben.', 'iss-content-model'),
-            'icon' => 'editor-help', 'tone' => 'text', 'group' => 'Text', 'schematic' => 'heading',
-        ],
         'zitat' => [
             'label' => __('Zitat', 'iss-content-model'),
             'description' => __('Ein Zitat mit Quellen- oder Personenangabe.', 'iss-content-model'),
@@ -88,7 +83,7 @@ function iss_content_model_editorial_gesture_registry(): array
             'label' => __('Überschrift & Intro', 'iss-content-model'),
             'description' => __('Eine Überschrift, Einleitung oder Leitfrage hervorheben.', 'iss-content-model'),
             'portable' => true,
-            'supports' => ['treatment', 'links'],
+            'supports' => ['anchor', 'treatment', 'links'],
             'treatments' => [
                 'statement.lead' => __('Leitstatement', 'iss-content-model'),
                 'statement.leitfrage' => __('Leitfrage', 'iss-content-model'),
@@ -192,6 +187,13 @@ function iss_content_model_editorial_gesture_registry(): array
             'icon' => 'format-gallery', 'tone' => 'media', 'group' => 'Bild', 'schematic' => 'cards',
         ],
     ];
+    // Saved identifiers remain editable; new questions use the statement treatment.
+    $gestures['leitfrage'] = array_merge($gestures['statement'], [
+        'description' => __('Die zentrale Frage oder These hervorheben.', 'iss-content-model'),
+        'ui_hidden' => true,
+        'family' => 'statement',
+        'default_treatment' => 'statement.leitfrage',
+    ]);
     // Preserve saved publication identifiers while offering one quote in the chooser.
     $gestures['longread_quote'] = array_merge($gestures['zitat'], ['ui_hidden' => true, 'family' => 'zitat']);
     return $gestures;
