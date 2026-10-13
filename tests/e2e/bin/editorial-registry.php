@@ -25,6 +25,11 @@ $landing_fixture = static function (array $formats) use (&$landing_id): array {
 add_filter('iss_editorial_formats', $landing_fixture, 99);
 try {
     $assert(iss_editorial_registry_errors() === [], 'Effective registry must be internally consistent');
+    foreach (iss_editorial_get_registered_formats() as $format) {
+        foreach ($format['sections'] as $type => $section) {
+            $assert($section['label'] === iss_content_model_editorial_gesture_registry()[$type]['label'], 'Shared gesture label: ' . $type);
+        }
+    }
     $event_links = industriesalon_render_structured_veranstaltung_section([
         'type' => 'material',
         'links' => [['label' => 'Tickets & Infos', 'url' => 'https://example.invalid/tickets?a=1&b=2']],
@@ -88,6 +93,31 @@ try {
             $GLOBALS['wp_the_query'] = $original_main_query;
         }
     }
+    // Narrative bodies reuse article; facts and archive projections keep their owners.
+    foreach (['team_member', 'entity_profile', 'archivbeitrag', 'archivsammlung', 'archivobjekt'] as $post_type) {
+        $id = wp_insert_post(['post_type' => $post_type, 'post_status' => 'auto-draft', 'post_title' => 'Disposable editorial coverage fixture', 'post_author' => $admin->ID]);
+        $fixtures[] = $id;
+        $assert(iss_editorial_get_format_for_post($id)['slug'] === 'article', "$post_type: shared article contract");
+        $assert(iss_editorial_uses_canvas(get_post($id)), "$post_type: new content opens shared editor");
+        wp_update_post(['ID' => $id, 'post_status' => 'draft', 'post_content' => '<p>Preserved native body</p>']);
+        $assert(!iss_editorial_uses_canvas(get_post($id)), "$post_type: legacy content requires deliberate activation");
+        $doc = iss_editorial_get_empty_document('article');
+        $doc['sections'] = [['type' => 'fliesstext', 'body' => '<p>Shared narrative fixture</p>']];
+        $assert(iss_editorial_save_document($id, 'article', $doc), "$post_type: save article document");
+        iss_editorial_set_document_enabled($id, 'article', true);
+        $assert(iss_editorial_uses_canvas(get_post($id)), "$post_type: enabled content uses shared editor");
+        $query = new WP_Query(); $query->queried_object_id = $id; $query->queried_object = get_post($id);
+        $query->is_singular = true; $query->is_single = true; $query->post = get_post($id); $query->in_the_loop = true;
+        $GLOBALS['wp_query'] = $query; $GLOBALS['wp_the_query'] = $query; $GLOBALS['post'] = get_post($id);
+        $template = get_block_template(get_stylesheet() . '//single-' . $post_type, 'wp_template') ?: get_block_template(get_stylesheet() . '//single', 'wp_template');
+        $assert($template && (has_block('core/post-content', $template->content) || has_block('industriesalon/editorial-landing', $template->content)), "$post_type: effective template has a narrative slot");
+        $html = has_block('industriesalon/editorial-landing', $template->content) ? do_blocks('<!-- wp:industriesalon/editorial-landing /-->') : industriesalon_render_editorial_landing_content(get_post_field('post_content', $id));
+        $assert(str_contains($html, 'Shared narrative fixture'), "$post_type: theme renders article content");
+        $assert(!str_contains(get_the_excerpt($id), 'Shared narrative fixture'), "$post_type: excerpts cannot render the composition");
+        $assert(get_post_field('post_content', $id) === '<p>Preserved native body</p>', "$post_type: source body preserved");
+    }
+    $assert(iss_editorial_get_format_for_post_type('register_place')['slug'] === 'place', 'Places retain their specialized format');
+    $GLOBALS['wp_the_query'] = $original_main_query;
     // Video templates have an explicit composition slot rather than post-content.
     $id = wp_insert_post(['post_type' => 'video', 'post_status' => 'draft', 'post_title' => 'Disposable video registry fixture', 'post_content' => '<p>Legacy transcript body</p>', 'post_author' => $admin->ID]);
     $fixtures[] = $id;

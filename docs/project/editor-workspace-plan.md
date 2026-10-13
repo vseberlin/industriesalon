@@ -1,6 +1,6 @@
 # Shared editorial workspace
 
-Accepted implementation scope, updated 2026-09-22. Based on the supplied
+Accepted implementation scope, updated 2026-10-13. Based on the supplied
 `editor-workspace-sow.md`, with the review corrections below. Staff and volunteer
 editors are the first audience. The existing private front-page composition is
 the pilot; publication is a separate editorial action.
@@ -16,25 +16,31 @@ The workspace is a layout adapter around `admin.js`, not a second document state
 renderer or save mechanism. It reuses the native autosave revision and existing
 AJAX endpoint. All nine formats use this workspace; the previous section modal
 and alternate preview layout are removed. No framework, build step or additional
-save store is introduced. The general `article` format uses the engine's standard
-per-format metadata contract. Existing v1 documents keep an explicit upgrade;
+save store is introduced. The general `article` format covers ordinary pages,
+posts, videos, Team, profiles and all three archive CPT narrative bodies using
+the engine's standard per-format metadata contract. Places keep their own format
+and domain controls. Existing legacy bodies require reviewed activation; no
+existing content is converted automatically. Existing v1 documents keep an explicit upgrade;
 new documents use the existing v3 schema. See the
 [consolidation audit](editorial-consolidation-audit.md) for coverage and checks.
 
 ## Delivery
 
-- Persistent section outline, actual theme preview, and inspector with the same
-  content, layout, links, media, facts, items and archive controls.
+- Persistent theme preview beside one switching right panel: section outline,
+  compact chooser, inspector or page settings. Existing content, layout, links,
+  media, facts, items and archive controls retain their owners.
 - Compact registered section icons/groups/tones and the existing shared SVG
-  treatment schematics. Searchable insert palette, gap insertion, keyboard and
-  pointer reordering, recoverable section trash.
+  treatment schematics. Searchable two-column insert tiles with shared short
+  labels, click/gap insertion, keyboard and pointer reordering, recoverable trash.
+  **Fertig** secures the draft and returns to the outline/preview. Validation or
+  save failure retains the editing panel; publishing stays separate.
 - Workspace opens expanded to the viewport with outer scrolling locked. One top
   bar holds skin, device width, separate draft/preview status and native publishing
   navigation. Pane switches appear only where panes cannot remain together.
   Collapsing or leaving restores native WordPress controls and keyboard access;
   the publishing navigation never submits the post by itself.
 - Inspector tabs have one level of headings, section position and type, and an
-  automatically growing title field. Outline titles take at most two lines;
+  automatically growing 14px title field. Outline titles take at most two lines;
   untitled automatic sections use their registered treatment label. Treatment
   schematics include project notes, timeline, visit information and newsletter.
 - Opening guidance belongs only to the selected opening section, including an
@@ -52,7 +58,7 @@ new documents use the existing v3 schema. See the
 
 ## Editor styling
 
-The warm neutral panes, white fields, deep red actions, serif title input and
+The warm neutral panes, white fields, deep red actions, compact system type and
 dark canvas text toolbar adapt the supplied `admin-css.zip` to the current UI.
 `editor-tokens.css` owns the existing `--iss-editor-*` contract; `workspace.css`
 owns panes and inspector layout, `text-controls.css` owns shared TinyMCE/colour
@@ -68,7 +74,10 @@ cascade ownership. Status colour follows each status element's own state;
 secondary text remains readable and the white colour picker stays independent
 of the dark toolbar. Title input and sizing mirror share their typography.
 
-Collection rows stack inside the inspector. At short window heights the whole
+Skins, project rails and route controls live under **Seite**. A route section has
+a direct entry to its owner form. Collection and route rows fit the panel width,
+with a named route container query replacing window-based layout assumptions.
+At short window heights the whole
 inspector scrolls; phone layouts retain their existing pane switches. Canvas
 section controls sit above the fixed site header without changing public layout
 or replacing the measured header clearance used for section navigation.

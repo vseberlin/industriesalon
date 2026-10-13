@@ -1,4 +1,23 @@
-# Current handoff — 12 October 2026
+# Current handoff — 13 October 2026
+
+## Editorial workspace review
+
+The first gesture/editor stabilization slice is accepted for a local commit and
+is not deployed. The preview now sits beside a single
+right panel that switches between outline, compact chooser, section editing and
+page/owner controls. **Fertig** secures a draft before returning to the overview;
+invalid input and failed saves remain editable. Route controls respond to their
+panel width. All public content CPTs now have a shared format: Team, profiles and
+the three archive narrative bodies reuse `article`; Places retain `place`.
+Existing block content still requires reviewed activation. Gesture labels are
+shared; broader cross-format gesture availability is the next separate slice.
+
+Checks: 35 DOM tests, 256 registry/renderer checks, 297 storage/recovery checks,
+targeted PHP/JS/CSS checks, and local Chrome page/tour checks at desktop, laptop,
+tablet, phone and short height. Disposable fixtures are removed. No SQL or
+uploads artifact is needed: no existing content/media changed; the added archive
+collection composition slot is file-backed locally. Verify target template
+authority before a later release. Details: [workspace plan](docs/project/editor-workspace-plan.md).
 
 ## Scope and delivery state
 

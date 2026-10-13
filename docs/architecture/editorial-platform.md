@@ -227,12 +227,23 @@ invalid defaults, alias collisions and unknown starter types without writes.
 
 Formats are `landing`, `article`, `projekt`, `ausstellung`, `rueckblick`,
 `veranstaltung`, `place`, `fuehrung`, and `publication`. `article` covers ordinary
-pages, posts and videos, sharing a subset of landing sections and the same theme
-renderer. Existing landing eligibility wins. WordPress/WooCommerce/archive data
-screens retain their domain ownership. Existing block content is never parsed
+pages, posts, videos, Team, profiles, archive articles, collections and objects,
+sharing a subset of landing sections and the same theme renderer. All current
+public content CPTs have a format. Places retain the specialized `place` contract;
+their epochs, facts and projections are not generalized into article sections.
+Existing landing eligibility wins. Operational records such as notices, and
+WordPress internals such as attachments and navigation, are not narrative CPTs.
+Structured archive and profile data retain their domain ownership. Existing block content is never parsed
 or replaced automatically: an existing post switches only when a reviewed JSON
 document is explicitly enabled through the existing storage API/migration path.
 New eligible auto-drafts use the shared workspace immediately.
+
+The shared vocabulary owns concise gesture labels; formats retain their field
+capabilities and contextual descriptions. Cross-format gesture expansion requires
+renderer and provider coverage before exposing additional choices. Archive
+collections use the existing editorial block before their archive album; other
+new article integrations use their native post-content slot. These effective
+templates are file-backed locally; deploys must check target template authority.
 
 Preview-only source indices are attached to the hydrated snapshot, carried through
 publication payloads and combined project sections, and never stored. Native
@@ -266,10 +277,17 @@ descriptions permit their inline subset. Unsupported imported markup stays
 visible for review until the editor explicitly chooses **Formatierung
 vereinfachen**; server validation also rejects lossy normalization.
 
-All enabled editorial documents use one persistent three-pane workspace: section outline, the
-actual WordPress page preview, and a tabbed inspector reusing the section form
-controls. The preview has 1280/768/390px viewports. Narrow workspaces use pane
-selection. The workspace starts expanded, with one compact top bar and separate
+All enabled editorial documents use one persistent two-column workspace: the
+actual WordPress page preview and one right panel. **Abschnitte**, **Hinzufügen**
+and **Seite** switch between the outline, compact searchable two-column chooser
+and document controls. Selecting a section opens its inspector in the same panel.
+**Fertig** secures the draft through the existing save queue and returns to the
+outline/preview; invalid or failed saves retain the inspector and recoverable
+input. It never publishes. Skins, project rails and tour route controls live under
+**Seite**; a selected route provides a direct entry. Route rows respond to panel
+width, including on wide screens. The preview has 1280/768/390px viewports.
+Narrow workspaces switch between preview and controls. The workspace starts
+expanded, with one compact top bar and separate
 acknowledgements for draft saving and preview freshness. Covered native controls
 are inert only while expanded; leaving restores their prior state. Publishing
 navigation focuses the native control without submitting. Searchable grouped

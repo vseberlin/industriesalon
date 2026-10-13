@@ -70,12 +70,12 @@ function iss_content_model_editorial_gesture_registry(): array
             'icon' => 'upload', 'tone' => 'automatic', 'group' => 'Material', 'schematic' => 'callout',
         ],
         'statement' => [
-            'label' => __('Überschrift & Einleitung', 'iss-content-model'),
+            'label' => __('Überschrift & Intro', 'iss-content-model'),
             'description' => __('Eine Überschrift, Einleitung oder Leitfrage hervorheben.', 'iss-content-model'),
             'icon' => 'editor-textcolor', 'tone' => 'text', 'group' => 'Text', 'schematic' => 'heading',
         ],
         'gateway' => [
-            'label' => __('Einstiegs-Boxen', 'iss-content-model'),
+            'label' => __('Linkkarten', 'iss-content-model'),
             'description' => __('Verlinkte Einstiege zu weiteren Inhalten zusammenstellen.', 'iss-content-model'),
             'icon' => 'screenoptions', 'tone' => 'navigation', 'group' => 'Orientierung', 'schematic' => 'cards',
         ],
@@ -90,7 +90,7 @@ function iss_content_model_editorial_gesture_registry(): array
             'icon' => 'location-alt', 'tone' => 'navigation', 'group' => 'Orientierung', 'schematic' => 'split',
         ],
         'feature' => [
-            'label' => __('Hervorgehobener Inhalt', 'iss-content-model'),
+            'label' => __('Bild & Text', 'iss-content-model'),
             'description' => __('Ein Thema mit Bild, Text und Kernfakten hervorheben.', 'iss-content-model'),
             'icon' => 'format-image', 'tone' => 'media', 'group' => 'Bild', 'schematic' => 'panel',
             'treatment_aliases' => ['feature.microblocks' => 'feature.image-overlay'],

@@ -4,6 +4,9 @@ Immediate executable work only. Larger future programs live in `docs/project/bac
 
 ## Next
 
+- Implement shared gesture capabilities and renderer coverage across formats
+  after the accepted two-column [editor workspace](docs/project/editor-workspace-plan.md)
+  checkpoint; keep Place-specific changes separate.
 - Coordinate an authorized staging release of the completed
   [WordPress refactor](docs/project/wordpress-refactoring-plan.md) and accepted
   programme presentation from GitHub `main`: take target-local backups, apply the four scoped owner
@@ -16,12 +19,13 @@ Immediate executable work only. Larger future programs live in `docs/project/bac
   Include the Schöneweide theme/contract changes and guarded
   `ops/migrations/2026-10-12-schoneweide-landing.php` plus its JSON payload;
   preserve target-local editorial changes and verify existing image dependencies.
-- Staff-test the deployed [shared workspace](docs/project/editor-workspace-plan.md)
-  on staging: one landing, project, tour, publication and event; image/title/text,
+- Staff-test the [shared workspace](docs/project/editor-workspace-plan.md)
+  after its next authorized staging release: one landing, project, tour,
+  publication, event and each additional article CPT; image/title/text,
   owner controls, recovery and native Save Draft. Verify Firefox and real
-  clipboard/paste before a production release. Local Chrome fixture checks and
-  staging code/data/media sync are complete; authenticated staging editor UAT
-  remains. Include event opening controls and written-feedback moderation.
+  clipboard/paste before a production release. The 13 October panel/CPT changes
+  are local only; authenticated staging editor UAT remains. Include event opening
+  controls and written-feedback moderation.
   See the [audit](docs/project/editorial-consolidation-audit.md).
 - Review the interactive Atlas outlier `Energie-Museum Berlin`: its current
   authoritative coordinate is far west of the Schöneweide core while its stored
@@ -46,10 +50,9 @@ Immediate executable work only. Larger future programs live in `docs/project/bac
   `ops/sql/2026-06-30-frontpage-landing-json.sql` only on a target with matching
   front-page content/media IDs. Then browser-check `/`, `/about/`, `/verein/`,
   `/salon-vermietung/`, and `/sammlungen/`; disabled or empty JSON must keep the
-  existing template/post-content output. UAT the JSON canvas drag/drop helper:
-  gesture reordering, drag-to-add from the gesture palette, and the compact drag
-  handle keyboard fallback. UAT the redesigned section modal panels and preview
-  ordering before client handover. Restrict landing treatment controls to
+  existing template/post-content output. UAT gesture reordering, click/gap
+  insertion from the compact chooser, keyboard controls and the switching
+  inspector before client handover. Restrict landing treatment controls to
   admins before client handover.
 - CSS layering follow-up during JSON gesture polish: migrate page-specific
   landing/front-page rules into the new layer order gesture by gesture.

@@ -544,6 +544,53 @@ test('Tour owner controls remain inside the shared workspace and native form', a
   } finally { e.dom.window.close(); }
 });
 
+test('One sidebar switches between outline, chooser, editing and page controls without replacing the preview', async () => {
+  const e = await editor('fuehrung', {...workspaceOptions(),routeStations:{enabled:true}});
+  try {
+    const studio = e.root.querySelector('.iss-editorial-studio');
+    const preview = e.root.querySelector('.iss-editorial-live-preview');
+    assert.equal(studio.dataset.panel, 'outline');
+    assert.equal(e.root.querySelector('.iss-editorial-studio__inspector').hidden, true);
+    e.button('Hinzufügen').click();
+    assert.equal(studio.dataset.panel, 'insert');
+    assert.equal(e.root.querySelector('.iss-editorial-studio__outline').hidden, true);
+    e.root.querySelector('.iss-editorial-gesture').click();
+    assert.equal(studio.dataset.panel, 'inspector');
+    assert.equal(e.root.querySelector('.iss-editorial-palette').hidden, true);
+    e.input(e.root.querySelector('.iss-editorial-field--title textarea'), 'New section title');
+    e.button('Fertig').click();
+    await e.settle();
+    assert.equal(studio.dataset.panel, 'outline');
+    assert.equal(studio.dataset.view, 'preview');
+    assert.ok(JSON.parse(e.requests.at(-1).get('document')).sections.some(s => s.title === 'New section title'));
+    e.button('Seite').click();
+    assert.equal(studio.dataset.panel, 'settings');
+    assert.equal(e.root.querySelector('.iss-editorial-studio__settings').hidden, false);
+    assert.equal(e.root.querySelector('.iss-editorial-studio__owner-controls').closest('.iss-editorial-studio__outline'), null);
+    assert.equal(e.root.querySelector('.iss-editorial-live-preview'), preview);
+  } finally { e.dom.window.close(); }
+});
+
+test('Finish keeps failed or invalid drafts in the editing panel and permits retry', async () => {
+  const e = await editor('article', workspaceOptions());
+  try {
+    e.root.querySelector('.iss-editorial-outline__select').click();
+    const studio = e.root.querySelector('.iss-editorial-studio');
+    e.input(e.root.querySelector('.iss-editorial-field--title textarea'), 'Recoverable title');
+    e.setValidation('Please complete the link');
+    e.button('Fertig').click(); await e.settle();
+    assert.equal(studio.dataset.panel, 'inspector');
+    assert.match(e.root.querySelector('.iss-editorial-studio__notice').textContent, /Entwurf gesichert/);
+    e.setValidation(''); e.setFailure(true);
+    e.button('Fertig').click(); await e.settle();
+    assert.equal(studio.dataset.panel, 'inspector');
+    assert.equal(e.button('Fertig').disabled, false);
+    assert.equal(e.value().sections[0].title, 'Recoverable title');
+    e.setFailure(false); e.button('Fertig').click(); await e.settle();
+    assert.equal(studio.dataset.panel, 'outline');
+  } finally { e.dom.window.close(); }
+});
+
 test('Preview device sizing preserves CSS viewport dimensions with portable transforms', async () => {
   const e = await editor('article', workspaceOptions());
   try {

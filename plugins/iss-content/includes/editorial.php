@@ -311,7 +311,9 @@ function iss_content_model_register_editorial_formats(array $formats): array
     // Existing block content stays authoritative until a reviewed document is enabled.
     $formats['article'] = [
         'label' => __('Seite / Beitrag', 'iss-content-model'),
-        'post_types' => ['page', 'post', 'video'],
+        // General narrative bodies share one contract. Structured records and
+        // their metadata remain with their CPT owners; Places use `place`.
+        'post_types' => ['page', 'post', 'video', 'team_member', 'entity_profile', 'archivbeitrag', 'archivsammlung', 'archivobjekt'],
         'post_eligibility_callback' => static function (WP_Post $post): bool {
             return $post->post_type !== 'page' || !iss_content_model_landing_page_is_eligible($post);
         },
@@ -588,6 +590,9 @@ add_filter('iss_editorial_formats', static function (array $formats): array {
         foreach ($format['sections'] as $type => &$section) {
             if (!isset($definitions[$type])) { continue; }
             $section = array_merge($definitions[$type], $section);
+            // One concise chooser label across formats; domain explanations
+            // belong to descriptions, not alternate names for the same gesture.
+            $section['label'] = $definitions[$type]['label'];
             $section['family'] = $type;
             if (!in_array('no_body', $section['supports'] ?? [], true) && !in_array($type, ['source', 'bildbuehne'], true)) {
                 $section['rich_text'] = array_merge(['body' => 'block'], (array) ($section['rich_text'] ?? []));

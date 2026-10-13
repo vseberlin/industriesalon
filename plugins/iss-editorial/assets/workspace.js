@@ -27,6 +27,9 @@
     var tabs = node('nav', 'iss-editorial-studio__views');
     tabs.setAttribute('aria-label', 'Arbeitsbereich');
     var grid = node('div', 'iss-editorial-studio__grid');
+    var sidebar = node('aside', 'iss-editorial-studio__sidebar'); sidebar.setAttribute('aria-label', 'Inhalt gestalten');
+    var panelTabs = node('nav', 'iss-editorial-studio__panel-tabs'); panelTabs.setAttribute('aria-label', 'Inhaltswerkzeuge');
+    var settings = node('section', 'iss-editorial-studio__settings'); settings.setAttribute('aria-label', 'Seiteneinstellungen');
     var outline = node('nav', 'iss-editorial-studio__outline'); outline.setAttribute('aria-label', 'Abschnitte');
     var stage = node('div', 'iss-editorial-stage');
     var palette = node('div', 'iss-editorial-palette'); palette.hidden = true;
@@ -51,13 +54,39 @@
     undo.append(undoText, undoAction);
     var selected = 0;
     var activeTab = 'content';
+    function setPanel(panel) {
+      root.dataset.panel = panel;
+      outline.hidden = panel !== 'outline';
+      palette.hidden = panel !== 'insert';
+      inspector.hidden = panel !== 'inspector';
+      settings.hidden = panel !== 'settings';
+      Array.from(panelTabs.children).forEach(function (el) { el.setAttribute('aria-pressed', String(el.dataset.panel === panel)); });
+    }
     function setView(view) {
       root.dataset.view = view;
-      Array.from(tabs.children).forEach(function (el) { el.setAttribute('aria-pressed', String(el.dataset.view === view)); });
+      if (['outline', 'insert', 'inspector', 'settings'].indexOf(view) !== -1) { setPanel(view); }
+      Array.from(tabs.children).forEach(function (el) { el.setAttribute('aria-pressed', String(el.dataset.view === (view === 'preview' ? 'preview' : 'controls'))); });
     }
-    [['outline', 'Abschnitte'], ['preview', 'Vorschau'], ['inspector', 'Bearbeiten']].forEach(function (choice) {
+    [['preview', 'Vorschau'], ['controls', 'Bearbeiten']].forEach(function (choice) {
       var tab = button(choice[1], function () { options.afterEditing(function () { setView(choice[0]); }); }, 'iss-editorial-studio__tab'); tab.dataset.view = choice[0]; tabs.appendChild(tab);
     });
+    [['outline', 'Abschnitte'], ['insert', 'Hinzufügen'], ['settings', 'Seite']].forEach(function (choice) {
+      var tab = button(choice[1], function () {
+        options.afterEditing(function () { if (choice[0] === 'insert') { options.insert(); } else { setView(choice[0]); } });
+      }, 'iss-editorial-studio__tab'); tab.dataset.panel = choice[0]; panelTabs.appendChild(tab);
+    });
+    var finish = button('Fertig', function () {
+      options.afterEditing(function () {
+        finish.disabled = true;
+        options.finish().then(function (ready) {
+          if (!ready || root.dataset.panel !== 'inspector') { return; }
+          setPanel('outline'); setView('preview');
+          var selectedRow = stage.querySelector('[aria-current="true"]');
+          if (selectedRow && root.clientWidth > 760) { selectedRow.focus(); } else { tabs.querySelector('[data-view="preview"]').focus(); }
+        }).catch(function () { /* The existing save path reports the error and retains the fields. */ }).finally(function () { finish.disabled = false; });
+      });
+    }, 'iss-editorial-studio__button iss-editorial-studio__primary');
+    finish.title = 'Entwurf sichern und zur Übersicht zurückkehren';
     var background = [];
     function setExpanded(full) {
       if (full && !background.length) {
@@ -97,12 +126,16 @@
     if (history) { var link = history.cloneNode(true); link.textContent = 'Verlauf'; menu.appendChild(link); }
     head.append(title, tools, previewTools, statusMount, publish, expand, more);
     var ownerBody = node('div', 'iss-editorial-studio__owner-controls');
-    outline.append(button('+ Abschnitt hinzufügen', function () { options.insert(); }), palette, stage, trash, ownerBody);
-    navigation.append(position, previous, next); inspector.append(navigation, heading, inspectorTabs, note, body, undo, remove);
-    grid.append(outline, preview, inspector); root.append(head, tabs, grid); mount.appendChild(root); setView('preview'); setExpanded(true);
+    outline.append(button('+ Abschnitt hinzufügen', function () { options.insert(); }), stage, trash);
+    settings.append(node('h3', '', 'Seiteneinstellungen'), ownerBody, button('Angaben & Beziehungen …', function () {
+      options.afterEditing(function () { setExpanded(false); var native = document.getElementById('poststuff'); if (native) { native.scrollIntoView({ block: 'start' }); } });
+    }));
+    navigation.append(position, previous, next, finish); inspector.append(navigation, heading, inspectorTabs, note, body, remove);
+    sidebar.append(panelTabs, outline, palette, inspector, settings, undo);
+    grid.append(preview, sidebar); root.append(head, tabs, grid); mount.appendChild(root); setPanel('outline'); setView('preview'); setExpanded(true);
     var search = node('input'); search.type = 'search'; search.placeholder = 'Abschnitt suchen'; search.setAttribute('aria-label', 'Abschnitt suchen');
-    var results = node('div');
-    palette.append(search, results, button('Schließen', function () { palette.hidden = true; }));
+    var results = node('div', 'iss-editorial-palette__results');
+    palette.append(search, results, button('Schließen', function () { setView('outline'); panelTabs.children[0].focus(); }));
     var insertAt = null;
     function filterPalette() {
       results.replaceChildren();
@@ -115,8 +148,10 @@
         if ((definition.label + ' ' + definition.description).toLowerCase().indexOf(search.value.toLowerCase()) === -1) { return; }
         var group = definition.group || 'Text';
         if (group !== lastGroup) { results.appendChild(node('strong', '', group)); lastGroup = group; }
-        var choice = button(definition.label, function () { options.add(type, insertAt); palette.hidden = true; setView('inspector'); }, 'iss-editorial-gesture');
-        choice.dataset.sectionType = type; choice.draggable = true;
+        var choice = button('', function () { options.add(type, insertAt); }, 'iss-editorial-gesture');
+        var icon = node('span', 'dashicons dashicons-' + (definition.icon || 'editor-paragraph')); icon.setAttribute('aria-hidden', 'true');
+        choice.append(icon, node('span', '', definition.label)); choice.title = definition.description || definition.label;
+        choice.dataset.sectionType = type;
         results.appendChild(choice); if (!first) { first = choice; }
       });
       if (first) { first.dataset.first = 'true'; }
@@ -126,12 +161,13 @@
     search.addEventListener('keydown', function (event) {
       var first = results.querySelector('button');
       if (first && ['Enter', 'ArrowDown'].indexOf(event.key) !== -1) { event.preventDefault(); if (event.key === 'Enter') { first.click(); } else { first.focus(); } }
-      if (event.key === 'Escape') { palette.hidden = true; }
+    });
+    palette.addEventListener('keydown', function (event) {
+      if (event.key === 'Escape') { event.preventDefault(); setView('outline'); panelTabs.children[0].focus(); }
     });
     stage.addEventListener('keydown', function (event) {
       if (!event.target.matches('.iss-editorial-outline__select') || ['ArrowUp', 'ArrowDown'].indexOf(event.key) === -1) { return; }
       event.preventDefault(); options.select(selected + (event.key === 'ArrowUp' ? -1 : 1));
-      var active = stage.querySelector('[aria-current="true"]'); if (active) { active.focus(); }
     });
     function showInspectorTab(key) {
       activeTab = key;
@@ -145,7 +181,7 @@
       removed: function (label, restore) { restoreRemoved = restore; undoText.textContent = '„' + label + '“ im Papierkorb.'; undo.hidden = false; },
       message: function (text) { note.textContent = text || ''; note.hidden = !text; },
       editing: function (active) { body.inert = active; remove.disabled = active; },
-      insert: function (index) { insertAt = index; search.value = ''; filterPalette(); palette.hidden = false; setView('outline'); search.focus(); },
+      insert: function (index) { insertAt = index; search.value = ''; filterPalette(); setView('insert'); search.focus(); },
       organizeFields: function () {
         inspectorTabs.replaceChildren();
         var groups = {};

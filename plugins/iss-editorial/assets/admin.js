@@ -217,7 +217,7 @@
       if (livePreview && studio) { livePreview.afterEditing(action); } else { action(); }
     }
 
-    function selectWorkspace(index, fromPreview) {
+    function selectWorkspace(index, fromPreview, openInspector) {
       if (!documentState.sections[index]) { return; }
       studioSection = documentState.sections[index];
       activeSectionIndex = index;
@@ -227,7 +227,12 @@
       studio.organizeFields();
       studio.body.scrollTop = 0;
       renderWorkspaceOutline();
+      if (openInspector !== false) { studio.showView('inspector'); }
       if (livePreview) { livePreview.selectSection(index, !fromPreview, studioSection); }
+      if (openInspector !== false && !fromPreview) {
+        var firstField = studio.body.querySelector('input, textarea, select');
+        if (firstField) { firstField.focus(); }
+      }
     }
 
     function renderWorkspaceOutline() {
@@ -277,10 +282,11 @@
           insert: function () { afterCanvasEdit(function () { studio.insert(documentState.sections.length); }); },
           add: function (type, index) { afterCanvasEdit(function () { addSection(type, index); }); },
           afterEditing: afterCanvasEdit,
+          finish: function () { return saveRouteStationsIfDirty().then(function () { return queueSave(); }).then(function (url) { return !!url && currentSaveValue() === lastSavedValue; }); },
           sketch: function (section) { var choice = treatmentChoices(section.type).find(function (item) { return item.slug === (section.treatment || defaultTreatment(section.type)); }); return treatmentSketch(choice || sectionConfig(section.type)); },
           treatmentLabel: function (section) { var choice = treatmentChoices(section.type).find(function (item) { return item.slug === (section.treatment || defaultTreatment(section.type)); }); return choice ? choice.label : ''; }
         });
-        if (skins.length > 1) { studio.tools.appendChild(renderSkinControl()); }
+        if (skins.length > 1) { studio.ownerBody.appendChild(renderSkinControl()); }
         if (format === 'projekt') { studio.ownerBody.appendChild(renderRailFeatureControl()); }
         renderRouteStationPanel(studio.ownerBody);
         renderTextUpgrade(studio.menu);
@@ -308,8 +314,9 @@
       var selected = documentState.sections.indexOf(studioSection);
       if (selected < 0) { studioSection = null; selected = Math.min(activeSectionIndex || 0, documentState.sections.length - 1); }
       activeSectionIndex = selected;
-      if (!studioSection && selected >= 0) { selectWorkspace(selected); }
+      if (!studioSection && selected >= 0) { selectWorkspace(selected, false, false); }
       if (selected < 0) {
+        studio.showView('inspector');
         disposeRichEditors(studio.body); clear(studio.body);
         studio.body.appendChild(createElement('p', '', 'Abschnitte einzeln hinzufügen oder mit einer Vorlage beginnen.'));
         (config.starters || []).filter(function (starter) { return starter.sections.every(function (section) { return !isSectionHidden(section.type); }); }).forEach(function (starter) {
@@ -1074,6 +1081,15 @@
       });
       if (config.isFrontPage && documentState.schema_version >= 3) { var opening = createElement('p', 'iss-editorial-opening-note', openingNote(section)); opening.hidden = !opening.textContent; contentPanel.body.appendChild(opening); }
       contentPanel.body.appendChild(titleField);
+      if (format === 'fuehrung' && type === 'bildbuehne') {
+        titleField.querySelector('input, textarea').placeholder = identityFields.title ? identityFields.title.value : '';
+        contentPanel.body.appendChild(createElement('p', 'description', 'Ohne eigenen Titel erscheint der Titel der Führung.'));
+      }
+      if (format === 'fuehrung' && type === 'atlas_map' && routeConfig) {
+        var editRoute = createElement('button', 'button', 'Route / Stationen bearbeiten'); editRoute.type = 'button';
+        editRoute.addEventListener('click', function () { afterCanvasEdit(function () { studio.showView('settings'); var input = studio.ownerBody.querySelector('.iss-editorial-route-station-mount select'); if (input) { input.focus(); } }); });
+        contentPanel.body.appendChild(editRoute);
+      }
       var optional = studio ? createElement('details', 'iss-editorial-studio__optional') : contentPanel.body;
       if (studio) { optional.appendChild(createElement('summary', '', 'Vorspann & Einleitung (optional)')); contentPanel.body.appendChild(optional); }
       optional.appendChild(kickerField);

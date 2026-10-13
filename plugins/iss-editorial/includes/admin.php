@@ -360,7 +360,7 @@ function iss_editorial_enqueue_admin_assets(string $hook): void
                 'textPalette' => iss_editorial_text_palette(),
                 'livePreview' => !empty($format['editor']['preview']),
                 'workspace' => !empty($format['editor']['workspace']),
-                'formatLabel' => $format['label'],
+                'formatLabel' => get_post_type_object($post->post_type)->labels->singular_name ?? $format['label'],
                 'starters' => $format['starters'],
                 'isFrontPage' => $post_id === (int) get_option('page_on_front'),
                 'document' => $document,
