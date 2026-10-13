@@ -14,14 +14,15 @@ The workspace/CPT expansion is committed as `65c55b8`, shared portability as
 contracts as `32d3e3f`; native publication layout compatibility is committed as
 `9fd10d0`, shared conclusions as `5fce0d0`, and shared chapters as `54afba5`.
 Leitfrage consolidation is committed locally as `0c1b046` and Merkpunkte as
-`3330c7f`; Material is committed as `6bfd6d4`. Archivobjekte portability is
-accepted for local commit. Registration, editor fields, save validation and
+`3330c7f`; Material is committed as `6bfd6d4` and Archivobjekte as `16b2e53`.
+The special-gesture chooser guidance is accepted for local commit.
+Registration, editor fields, save validation and
 public rendering must agree before a gesture becomes available in another format.
 
 | Gesture identifiers | Effective boundary / remaining work |
 | --- | --- |
 | `statement`, `gateway`, `text_bild_reihe`, `feature` | One portable field/treatment contract in the vocabulary. Available in landing, article, event, exhibition, project, report, tour and publication formats. All article CPTs inherit this. The existing composition renderer handles them under the selected skin. |
-| `intro` | Event/report/Place/publication introductions differ from the hidden tour introduction feeding its hero. Preserve those meanings before consolidation. |
+| `intro` | Event/report/Place/publication introductions retain their native meanings. The saved tour introduction remains editable but hidden from insertion; the tour hero uses Bildbühne text or the native excerpt. |
 | `kapitel` | One shared chapter contract across eight formats: text, anchors, links, media/captions, inline/right-side media and standard/aside presentation. Event live references remain an owner-specific extension; project chapter/facts pairing retains its separate editing addresses. |
 | `fliesstext` | One portable contract across the same eight formats: three text treatments, links, media and archive references. Shared split geometry now works in every skin. |
 | `leitfrage` | Saved event/exhibition/tour identifier retained as a hidden statement-family entry. New questions use Überschrift & Intro → Leitfrage across eight formats; existing sections have the same inspector, fields, treatments and renderer. Default question treatment and stored identifiers survive. |
@@ -31,11 +32,11 @@ public rendering must agree before a gesture becomes available in another format
 | `objektfokus` | One portable archive-card contract across eight formats: anchors, prose, saved labels/captions and owner-resolved metadata/source links. Missing, unpublished and non-archive references remain hidden. Places retain their separate supplements. |
 | `material` | One portable downloads/links/anchor/rich-text contract across eight formats. Events retain plain-text items, archive sources and live fields as owner-specific extensions. Place retains its separate contract and picker. |
 | `facts` | One portable contract across eight formats: optional rich text, title/kicker, anchors and plain-text value/description rows. Reuses the existing copy and fact-list components; project Dossier retains chapter/facts pairing with separate preview addresses. |
-| `upload_intake` | Depends on the context owner's open intake and signed invitation; registration alone cannot open collection. |
-| `programm` | Event structure controls availability. Shared composition does not bypass its domain allowlist. |
-| `dynamic_slot` | Landing slots bind named owner services; each requires a context/renderer review before reuse. |
-| `map_img` | Landing map/panorama composition uses the existing static-map model; retain its data contract. |
-| `atlas_map` | Landing locator/map treatments and the tour route have different owners and data requirements. |
+| `upload_intake` | Tour/event/project/exhibition/report calls use the existing guest-contribution setting and signed upload URL. Explicit closure takes precedence. Without an explicit setting, an enabled stored call retains the legacy open default; registration or a private editor snapshot alone does not open intake. |
+| `programm` | Manual programme text, shown in the Text group and available only for `event.festival` (Programm / Fest). Chooser filtering and server validation agree; retained invalid sections remain editable for correction. |
+| `dynamic_slot` | Landing-only: seven named sources for projects, programme, visit information, newsletter, tour offers, team and Schöneweide Atlas. Each source now explains its owning content beside the selector. |
+| `map_img` | Landing map/panorama composition uses linked places and the existing static-map model. Guidance points to native relationships for places and the section media controls for images. |
+| `atlas_map` | Landing map treatments use linked places; tour routes use the existing station editor and separate route publication. Each format describes its own setup. |
 | `bildbuehne` | Tour hero integration, booking rail and excerpt fallback remain tour-owned. |
 | `epoche`, `gegenwart` | Place history and current-state projection remain a separate case. |
 | `longread_quote` | Retained saved publication identifier using the shared quote contract. Existing sections remain editable; hidden from new insertion so the chooser presents one quote. No identifier rewrite. |
@@ -51,6 +52,40 @@ rich-text profiles and treatment metadata. The vocabulary marks portable
 contracts; the theme declares their section renderer in the same effective
 registry. `registry-check` reports a portable gesture without a renderer. No
 second editor, document store, block or rendering vocabulary is introduced.
+
+### Special-gesture guidance — 13 October 2026
+
+The chooser keeps portable gestures as compact two-column tiles. Native choices
+show their existing registry descriptions across the panel width, before the
+compact tiles in each group. Their accessible names stay short; descriptions
+are also associated for assistive technology. Search includes those descriptions.
+An already-open chooser refreshes when event structure changes while preserving
+its search, so unavailable choices disappear immediately. The inspector shows
+the selected section's description, including saved hidden sections.
+Automatic-source guidance reuses treatment hints and updates immediately
+when the selection changes. No guidance is written into document JSON.
+
+The availability audit preserves all format/structure restrictions and the
+front-page-only opening treatment. It corrects the earlier intake assumption:
+`iss_content_upload_is_open()` deliberately retains legacy stored calls when
+no explicit setting exists. The chooser now points editors to **Beiträge von
+Gästen**; saving a call cannot override an explicit closure. Places remain a
+separate case: their retained `upload_intake` entry is outside this intake
+owner's eligible post types and produces no upload invitation. Resolve that
+Place-specific choice within its own contract before treating it as usable.
+
+Checks: 13,079 registry/renderer assertions, including exact special-choice
+boundaries, festival-only programme validation and explicit upload closure;
+301 storage checks over all 94 existing documents with content/metadata unchanged;
+41 UI tests, PHP lint/PHPCS/PHPStan, JS and CSS lint. Chrome covers tour-route
+guidance and its existing station-editor shortcut, landing-map search, live
+festival/general-event chooser refresh, automatic source changes, Fertig, and
+native Save Draft/reload on disposable content. Fixtures, revisions and autosaves
+are removed.
+At 390 px the chooser and its text fit the panel without horizontal overflow.
+No real content, templates, database schema or uploads change; no paired data
+artifact is needed. Staff UAT, Firefox and real clipboard checks remain release
+work.
 
 The existing media/text pattern now owns its flex layout for native blocks and
 JSON alike. Its defaults are component-scoped, the overlay retains image height

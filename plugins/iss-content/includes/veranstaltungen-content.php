@@ -27,7 +27,7 @@ function iss_content_model_veranstaltung_content_gestures(): array
     return [
         'intro' => [
             'label' => __('Intro', 'iss-content-model'),
-            'description' => __('Kurz gefasster Einstieg oder Ankuendigungstext.', 'iss-content-model'),
+            'description' => __('Die Veranstaltung kurz vorstellen. Termine und Veranstaltungsort werden in den Veranstaltungsangaben gepflegt.', 'iss-content-model'),
             'supports' => ['kicker', 'title', 'body', 'media_refs', 'dynamic_refs'],
         ],
         'kapitel' => [
@@ -47,7 +47,7 @@ function iss_content_model_veranstaltung_content_gestures(): array
         ],
         'programm' => [
             'label' => __('Programm', 'iss-content-model'),
-            'description' => __('Lineare Programmpunkte fuer Feste und Reihen.', 'iss-content-model'),
+            'description' => __('Den Ablauf als Text beschreiben. Verfügbar bei „Programm / Fest“; Termine werden in den Veranstaltungsangaben gepflegt.', 'iss-content-model'),
             'supports' => ['kicker', 'title', 'body'],
         ],
         'material' => [
@@ -58,7 +58,7 @@ function iss_content_model_veranstaltung_content_gestures(): array
         ],
         'upload_intake' => [
             'label' => __('Öffentlicher Mitmach-Aufruf für Gäste', 'iss-content-model'),
-            'description' => __('Schickt hochgeladene Besucherfotos direkt in die Warteschlange zur Freigabe.', 'iss-content-model'),
+            'description' => iss_content_model_editorial_gesture_registry()['upload_intake']['description'],
             'supports' => ['kicker', 'title', 'body'],
         ],
         'galerie' => [

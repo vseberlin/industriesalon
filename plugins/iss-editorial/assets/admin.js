@@ -1585,6 +1585,8 @@
       var choices = slotKeyChoices(type);
       var wrapper = createElement('div', 'iss-editorial-field iss-editorial-field--slot-key');
       var select = document.createElement('select');
+      var label = createElement('label', '', 'Automatische Inhalte');
+      var hint = createElement('p', 'description');
 
       if (!choices.length) {
         return;
@@ -1593,6 +1595,18 @@
       if (!section.slot_key) {
         section.slot_key = choices[0].value;
       }
+      select.id = 'iss-editorial-slot-' + documentState.sections.indexOf(section);
+      label.htmlFor = select.id;
+      hint.id = select.id + '-description';
+      function updateHint() {
+        var slot = choices.find(function (choice) { return choice.value === section.slot_key; });
+        var treatment = slot && treatmentChoices(type).find(function (choice) { return choice.slug === slot.treatment; });
+        hint.textContent = treatment ? treatment.hint || '' : '';
+        hint.hidden = !hint.textContent;
+        if (hint.textContent) { select.setAttribute('aria-describedby', hint.id); }
+        else { select.removeAttribute('aria-describedby'); }
+      }
+      updateHint();
 
       choices.forEach(function (choice) {
         var option = document.createElement('option');
@@ -1606,12 +1620,12 @@
         section.slot_key = select.value || choices[0].value;
         var selected = choices.filter(function (choice) { return choice.value === section.slot_key; })[0];
         if (selected) { section.treatment = selected.treatment; }
+        updateHint();
         render();
         scheduleAutosave();
       });
 
-      wrapper.appendChild(createElement('span', '', 'Automatische Inhalte'));
-      wrapper.appendChild(select);
+      wrapper.append(label, select, hint);
       body.appendChild(wrapper);
     }
 

@@ -209,7 +209,7 @@ function iss_content_model_register_editorial_formats(array $formats): array
             'text_bild_reihe' => $gestures['text_bild_reihe'],
             'map_img' => [
                 'label' => __('Karte & Bild', 'iss-content-model'),
-                'description' => __('Eine räumliche Orientierungskarte neben einem großen Ortsbild mit ergänzenden Bild-Text-Karten.', 'iss-content-model'),
+                'description' => __('Karte der verknüpften Orte mit Panorama und Bild-Text-Karten. Orte unter „Angaben & Beziehungen“ zuordnen; Bilder hier auswählen.', 'iss-content-model'),
                 'supports' => ['treatment', 'lead', 'media_refs', 'items'],
                 'treatments' => [
                     'map-img.editorial-atlas' => __('Karte, Panorama und Ortskarten', 'iss-content-model'),
@@ -219,7 +219,7 @@ function iss_content_model_register_editorial_formats(array $formats): array
             'feature' => $gestures['feature'],
             'dynamic_slot' => [
                 'label' => __('Automatische Inhalte', 'iss-content-model'),
-                'description' => __('Platzhalter, der selbstständig Termine oder Projekt-Notizen lädt.', 'iss-content-model'),
+                'description' => __('Termine, Projekte oder weitere automatisch geladene Inhalte. Die Quelle unter „Darstellung“ auswählen.', 'iss-content-model'),
                 'supports' => ['treatment', 'slot_key'],
                 'slots' => [
                     'front-projects' => ['label' => __('Projekt-Notizen', 'iss-content-model'), 'treatment' => 'slot.projects'],
@@ -233,7 +233,7 @@ function iss_content_model_register_editorial_formats(array $formats): array
             ],
             'atlas_map' => [
                 'label' => __('Atlas Karte', 'iss-content-model'),
-                'description' => __('Eine vorgefertigte Landkarte mit Markierung.', 'iss-content-model'),
+                'description' => __('Zeigt die verknüpften Orte der Seite. Orte unter „Angaben & Beziehungen“ zuordnen; die Kartenansicht hier auswählen.', 'iss-content-model'),
                 'supports' => ['treatment', 'links'],
                 'treatments' => [
                     'atlas-map.place-locator' => __('Ort verorten', 'iss-content-model'),
@@ -288,12 +288,12 @@ function iss_content_model_register_editorial_formats(array $formats): array
         'sections' => [
             'bildbuehne' => [
                 'label' => __('Bildbühne', 'iss-content-model'),
-                'description' => __('Viewport-Bühne mit großem Bild, Overlay-Text und optionaler kleiner Galerie.', 'iss-content-model'),
+                'description' => __('Bildauftakt der Führung mit Text und Buchungsangaben. Das erste Bild bildet den Hintergrund; weitere Bilder ergänzen die Galerie.', 'iss-content-model'),
                 'supports' => ['media_refs'],
             ],
             'intro' => [
                 'label' => __('Einleitung', 'iss-content-model'),
-                'description' => __('Legacy-Einstieg; die Hero-Beschreibung kommt aus Bildbühne oder Excerpt.', 'iss-content-model'),
+                'description' => __('Vorhandene Einleitung der Führung. Der Bildauftakt nutzt den Text der Bildbühne oder die Kurzbeschreibung.', 'iss-content-model'),
                 'supports' => ['media_refs'],
                 'ui_hidden' => true,
             ],
@@ -303,7 +303,7 @@ function iss_content_model_register_editorial_formats(array $formats): array
             'galerie' => $gestures['galerie'],
             'atlas_map' => [
                 'label' => __('Die interaktive Landkarte zur Tour.', 'iss-content-model'),
-                'description' => __('Zeigt den genauen Routenverlauf und die einzelnen Stationen der Führung.', 'iss-content-model'),
+                'description' => __('Zeigt die Route dieser Führung. Orte und Reihenfolge über „Route / Stationen bearbeiten“ festlegen und die Route dort veröffentlichen.', 'iss-content-model'),
                 'supports' => ['anchor', 'treatment', 'links'],
                 'treatments' => [
                     'atlas-map.tour-route' => __('Führungsroute', 'iss-content-model'),
@@ -312,7 +312,7 @@ function iss_content_model_register_editorial_formats(array $formats): array
             'material' => $gestures['material'],
             'upload_intake' => [
                 'label' => __('Öffentlicher Mitmach-Aufruf für Gäste', 'iss-content-model'),
-                'description' => __('Schickt hochgeladene Besucherfotos direkt in die Warteschlange zur Freigabe.', 'iss-content-model'),
+                'description' => $gestures['upload_intake']['description'],
                 'supports' => ['anchor'],
             ],
             'schluss' => $gestures['schluss'],
@@ -336,7 +336,7 @@ function iss_content_model_register_editorial_formats(array $formats): array
             'material' => $gestures['material'],
             'upload_intake' => [
                 'label' => __('Material beitragen', 'iss-content-model'),
-                'description' => __('Fotos und Dokumente zur redaktionellen Prüfung einsenden.', 'iss-content-model'),
+                'description' => $gestures['upload_intake']['description'],
                 'supports' => [],
             ],
             'schluss' => $gestures['schluss'],
@@ -357,7 +357,7 @@ function iss_content_model_register_editorial_formats(array $formats): array
             'material' => $gestures['material'],
             'upload_intake' => [
                 'label' => __('Öffentlicher Mitmach-Aufruf für Gäste', 'iss-content-model'),
-                'description' => __('Schickt hochgeladene Besucherfotos direkt in die Warteschlange zur Freigabe.', 'iss-content-model'),
+                'description' => $gestures['upload_intake']['description'],
                 'supports' => ['anchor', 'links'],
             ],
             'schluss' => $gestures['schluss'],
@@ -393,11 +393,13 @@ add_filter('iss_editorial_formats', 'iss_content_model_register_editorial_format
 function iss_content_model_landing_treatment_presentations(): array
 {
     return [
-        'slot.projects' => ['schematic' => 'notes', 'hint' => 'Zwei Projekt-Notizen mit Titel, Kurztext und Projektlogo.'],
-        'slot.timeline' => ['schematic' => 'list', 'hint' => 'Anstehende Termine in einer zeitlichen Liste.'],
-        'slot.visit-info' => ['schematic' => 'panel', 'hint' => 'Besuchsinformationen mit Adresse und Öffnungszeiten.'],
-        'slot.newsletter' => ['schematic' => 'callout', 'hint' => 'Einladung und Formular zur Newsletter-Anmeldung.'],
-        'slot.schoneweide-atlas' => ['schematic' => 'panel', 'hint' => 'Interaktive Karte und verknüpfte Orte.'],
+        'slot.projects' => ['schematic' => 'notes', 'hint' => 'Zwei veröffentlichte Projekte nach ihrer Reihenfolge. Titel, Kurztext und Bild werden bei den Projekten gepflegt.'],
+        'slot.timeline' => ['schematic' => 'list', 'hint' => 'Das Programm liefert automatisch den hervorgehobenen Beitrag und kommende Termine aus Führungen, Veranstaltungen und Ausstellungen.'],
+        'slot.visit-info' => ['schematic' => 'panel', 'hint' => 'Adresse und Öffnungszeiten aus den zentralen Besuchsinformationen.'],
+        'slot.newsletter' => ['schematic' => 'callout', 'hint' => 'Anmeldeformular des Newsletters mit Einladungstext und Partnerlogos.'],
+        'slot.fuehrungen-offers' => ['schematic' => 'cards', 'hint' => 'Der Führungskatalog liefert die verfügbaren Angebote. Texte, Bilder und Buchungsangaben werden bei den Führungen gepflegt.'],
+        'slot.team-directory' => ['schematic' => 'cards', 'hint' => 'Veröffentlichte Teammitglieder in ihrer festgelegten Reihenfolge. Namen, Bilder und Rollen werden bei den Teammitgliedern gepflegt.'],
+        'slot.schoneweide-atlas' => ['schematic' => 'panel', 'hint' => 'Der Schöneweide-Atlas liefert Karte und Orte aus dem Register. Ortsdaten werden dort gepflegt.'],
         'statement.lead' => ['schematic' => 'heading', 'hint' => 'Große Überschrift mit Einleitung.'],
         'statement.leitfrage' => ['schematic' => 'heading', 'hint' => 'Eine Frage als Blickfang.'],
         'statement.callout' => ['schematic' => 'callout', 'hint' => 'Kurzer Aufruf mit Link.'],

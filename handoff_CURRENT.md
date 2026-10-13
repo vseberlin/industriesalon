@@ -1,31 +1,32 @@
 # Current handoff — 13 October 2026
 
-## Editorial workspace and shared Archivobjekte
+## Editorial workspace and special-gesture guidance
 
-Material is committed locally as `6bfd6d4`, not pushed or deployed.
-Archivobjekte (`objektfokus`) is accepted for local commit. Twelve
-visible composition gestures share contracts across eight formats. The existing
-archive card API retains public visibility, live metadata and source links;
-saved labels and Set captions now appear and can be edited in the inspector.
-Picker reselection preserves object/Set/member IDs. Empty, missing, unpublished
-and non-archive sources remain hidden. Places retain their separate supplements.
+Archivobjekte is committed locally as `16b2e53`, following Material `6bfd6d4`;
+neither is pushed or deployed. Twelve visible composition gestures share
+contracts across eight formats. The next bounded slice is accepted for local
+commit: visible setup guidance for native gestures in the compact
+chooser and inspector, plus source-specific hints for all seven automatic
+landing slots. Programme is correctly presented as manual festival text.
+An open chooser now refreshes immediately when event structure changes.
 
-Card styles moved from archive landing to the shared card layer; obsolete
-exhibition object-grid rules are removed. Skins retain their palettes, shared
-images remain uncropped and captions complete. Existing archive landing and
-native block cards use the same component with their own values.
+Existing format/structure restrictions, hidden saved sections, tour station
+controls and opening rules remain intact. Intake guidance explains its existing
+owner setting and legacy open default; explicit closure still wins. Places
+retain their separate contract. Their existing intake choice is outside the
+guest-contribution owner's eligible types; see the audit before Place work.
 
-Checks: 13,039 registry/renderer assertions, 301 storage checks over all 94
-existing documents with post content/metadata unchanged, 39 UI tests, PHP lint,
-PHPCS/PHPStan, JS and CSS lint. Chrome covers both existing exhibitions and a
-private publication at desktop/390 px, light/dark skins, picker reselection,
-label/caption edits, removal, chooser insertion, Fertig and native Update/reload.
-Review records, revisions and autosaves are removed. Archive cards fit phone
-width; the archive landing's untouched quick-navigation grid overflows separately
-(409/375 px) and has a TODO. Staff UAT and Firefox remain release checks.
+Checks: 13,079 registry/renderer assertions, 301 storage checks over all 94
+existing documents with post content/metadata unchanged, 41 UI tests, PHP lint,
+PHPCS/PHPStan, JS and CSS lint. Chrome covers route guidance/station shortcut,
+landing-map search, event-structure chooser refresh, automatic-source changes,
+Fertig and native Save Draft/reload. Test drafts, revisions and autosaves are removed.
+The 390 px chooser has no horizontal overflow. Staff UAT, Firefox and real
+clipboard remain release checks. The archive quick-navigation overflow remains
+a separate TODO.
 
-Next after review: audit remaining owner-bound gesture availability/guidance
-(intro/hero, maps, programme/dynamic slots, intake). See the
+Next: a complete editing workflow across the added article CPTs,
+including keyboard, real paste, recovery and native save/reload. See the
 [gesture inventory](docs/project/editorial-consolidation-audit.md#gesture-portability-checkpoint--13-october-2026).
 No SQL, uploads or template artifact is required: no real stored content or
 template changed. Effective page/report/publication templates are file-backed;

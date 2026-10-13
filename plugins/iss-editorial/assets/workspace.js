@@ -42,6 +42,7 @@
     var previous = iconButton('Vorheriger Abschnitt', 'arrow-up-alt2', function () { options.select(selected - 1); });
     var next = iconButton('Nächster Abschnitt', 'arrow-down-alt2', function () { options.select(selected + 1); });
     var heading = node('h3');
+    var guidance = node('p', 'iss-editorial-studio__guidance'); guidance.hidden = true;
     var position = node('small', 'iss-editorial-studio__position');
     var inspectorTabs = node('nav', 'iss-editorial-studio__inspector-tabs'); inspectorTabs.setAttribute('aria-label', 'Abschnitt-Einstellungen');
     var body = node('div', 'iss-editorial-studio__fields');
@@ -130,7 +131,7 @@
     settings.append(node('h3', '', 'Seiteneinstellungen'), ownerBody, button('Angaben & Beziehungen …', function () {
       options.afterEditing(function () { setExpanded(false); var native = document.getElementById('poststuff'); if (native) { native.scrollIntoView({ block: 'start' }); } });
     }));
-    navigation.append(position, previous, next, finish); inspector.append(navigation, heading, inspectorTabs, note, body, remove);
+    navigation.append(position, previous, next, finish); inspector.append(navigation, heading, guidance, inspectorTabs, note, body, remove);
     sidebar.append(panelTabs, outline, palette, inspector, settings, undo);
     grid.append(preview, sidebar); root.append(head, tabs, grid); mount.appendChild(root); setPanel('outline'); setView('preview'); setExpanded(true);
     var search = node('input'); search.type = 'search'; search.placeholder = 'Abschnitt suchen'; search.setAttribute('aria-label', 'Abschnitt suchen');
@@ -142,7 +143,8 @@
       var first = null;
       var lastGroup = '';
       Object.keys(options.sections).filter(function (type) { return !options.hidden(type); }).sort(function (a, b) {
-        return (options.sections[a].group || 'Text').localeCompare(options.sections[b].group || 'Text');
+        return (options.sections[a].group || 'Text').localeCompare(options.sections[b].group || 'Text')
+          || Number(!!options.sections[a].portable) - Number(!!options.sections[b].portable);
       }).forEach(function (type) {
         var definition = options.sections[type];
         if ((definition.label + ' ' + definition.description).toLowerCase().indexOf(search.value.toLowerCase()) === -1) { return; }
@@ -150,7 +152,19 @@
         if (group !== lastGroup) { results.appendChild(node('strong', '', group)); lastGroup = group; }
         var choice = button('', function () { options.add(type, insertAt); }, 'iss-editorial-gesture');
         var icon = node('span', 'dashicons dashicons-' + (definition.icon || 'editor-paragraph')); icon.setAttribute('aria-hidden', 'true');
-        choice.append(icon, node('span', '', definition.label)); choice.title = definition.description || definition.label;
+        var label = node('span', '', definition.label);
+        choice.append(icon, label); choice.title = definition.description || definition.label;
+        // Shared gestures stay compact; domain-specific choices explain their
+        // requirements without relying on a mouse-only title tooltip.
+        if (!definition.portable && definition.description) {
+          choice.classList.add('iss-editorial-gesture--explained');
+          var description = node('small', 'iss-editorial-gesture__description', definition.description);
+          label.id = 'iss-editorial-choice-' + type;
+          description.id = label.id + '-description';
+          choice.setAttribute('aria-labelledby', label.id);
+          choice.setAttribute('aria-describedby', description.id);
+          choice.appendChild(description);
+        }
         choice.dataset.sectionType = type;
         results.appendChild(choice); if (!first) { first = choice; }
       });
@@ -222,7 +236,10 @@
         remove.hidden = !sections.length;
         position.textContent = sections.length ? 'Abschnitt ' + (index + 1) + ' von ' + sections.length : 'Keine Abschnitte';
         heading.textContent = sections[index] ? ((options.sections[sections[index].type] || {}).label || 'Abschnitt') : 'Abschnitt hinzufügen';
+        guidance.textContent = sections[index] ? ((options.sections[sections[index].type] || {}).description || '') : '';
+        guidance.hidden = !guidance.textContent;
         trashLabel.textContent = 'Papierkorb (' + deletedCount + ')';
+        if (!palette.hidden) { filterPalette(); }
       }
     };
   };

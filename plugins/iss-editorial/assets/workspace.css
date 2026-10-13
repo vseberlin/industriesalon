@@ -531,6 +531,25 @@ body.iss-editorial-studio-open {
   color: var(--iss-editor-muted);
 }
 
+.iss-editorial-studio .iss-editorial-gesture--explained {
+  grid-column: 1 / -1;
+  display: grid;
+  grid-template-columns: 20px minmax(0, 1fr);
+  gap: 2px 8px;
+}
+
+.iss-editorial-gesture__description {
+  grid-column: 2;
+}
+
+.iss-editorial-studio__guidance,
+.iss-editorial-gesture__description {
+  margin: 0;
+  font-size: 12px;
+  line-height: 1.45;
+  color: var(--iss-editor-muted);
+}
+
 .iss-editorial-studio__trash {
   margin-block: 16px;
 }

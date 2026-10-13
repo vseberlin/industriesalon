@@ -25,6 +25,19 @@ $landing_fixture = static function (array $formats) use (&$landing_id): array {
 add_filter('iss_editorial_formats', $landing_fixture, 99);
 try {
     $assert(iss_editorial_registry_errors() === [], 'Effective registry must be internally consistent');
+    $special_choices = [
+        'landing' => ['map_img', 'dynamic_slot', 'atlas_map'], 'article' => [],
+        'fuehrung' => ['bildbuehne', 'atlas_map', 'upload_intake'],
+        'veranstaltung' => ['intro', 'programm', 'upload_intake'],
+        'ausstellung' => ['upload_intake'], 'projekt' => ['upload_intake'], 'rueckblick' => ['intro', 'upload_intake'],
+        'publication' => ['intro', 'source', 'publication_rail', 'longread_chapter', 'timeline_item', 'photoalbum'],
+        'place' => ['intro', 'epoche', 'gegenwart', 'galerie', 'material', 'upload_intake'],
+    ];
+    foreach ($special_choices as $slug => $expected) {
+        $actual = array_keys(array_filter(iss_editorial_get_format($slug)['sections'], static fn(array $section): bool => !$section['portable'] && !$section['ui_hidden']));
+        sort($actual); sort($expected);
+        $assert($actual === $expected, "$slug: special chooser entries retain their owning format");
+    }
     $missing_renderer = static function (array $formats): array { unset($formats['projekt']['sections']['feature']['renderer']); return $formats; };
     add_filter('iss_editorial_formats', $missing_renderer, 120);
     $assert(in_array('projekt.feature: portable gesture has no renderer', iss_editorial_registry_errors(), true), 'Registry diagnostics detect missing portable renderer coverage');
@@ -194,6 +207,10 @@ try {
                     $assert(!is_wp_error(iss_editorial_validate_document($candidate, $slug)), "$entity_key: shared composition is independent of event structure");
                     $allowed = array_keys(iss_content_model_veranstaltung_content_gestures_for_entity($entity_key));
                     $assert(array_diff($portable_types, $allowed) === [], "$entity_key: editor chooser exposes the same shared gestures");
+                    $programme = $portable_doc; $programme['entity_key'] = $entity_key;
+                    $programme['sections'] = [['type' => 'programm', 'body' => 'Festival schedule']];
+                    $assert(in_array('programm', $allowed, true) === ($entity_key === 'event.festival'), "$entity_key: programme insertion belongs only to festivals");
+                    $assert(!is_wp_error(iss_editorial_validate_document($programme, $slug)) === ($entity_key === 'event.festival'), "$entity_key: programme save agrees with chooser availability");
                     $candidate['sections'] = [['type' => 'leitfrage', 'title' => 'Retained question']];
                     $assert(!is_wp_error(iss_editorial_validate_document($candidate, $slug)), "$entity_key: retained questions share statement availability");
                     foreach (array_diff(array_keys(iss_content_model_veranstaltung_content_gestures()), $entity['allowed_gestures'], ['galerie', 'zitat', 'leitfrage']) as $restricted_type) {
@@ -493,7 +510,17 @@ try {
             $assert(array_intersect($portable_types, array_keys($format['sections'])) === [], "$slug: specialized adapters are not silently widened");
             $assert(!isset($format['sections']['schluss']) && !isset($format['sections']['kapitel']), 'Places do not acquire shared conclusions or chapters');
         }
-
+        if (in_array($slug, ['fuehrung', 'veranstaltung', 'projekt', 'ausstellung', 'rueckblick'], true)) {
+            $upload = iss_editorial_get_empty_document($slug);
+            if ($slug === 'veranstaltung') { $upload['entity_key'] = 'event.general'; }
+            $upload['sections'] = [['type' => 'upload_intake', 'title' => 'Contribute material']];
+            $assert(iss_editorial_save_document($id, $slug, $upload), "$slug: save existing upload-call contract");
+            $assert(!metadata_exists('post', $id, '_iss_upload_open') && iss_content_upload_is_open($id), "$slug: retained call without an explicit setting uses the legacy open default");
+            iss_content_set_upload_open($id, false);
+            $assert(iss_editorial_save_document($id, $slug, $upload), "$slug: closed call remains editable");
+            $assert(!iss_content_upload_is_open($id) && iss_content_upload_url($id) === '', "$slug: saving a call cannot override explicit closure");
+            $assert(industriesalon_render_editorial_project_upload_intake($upload['sections'][0]) === '', "$slug: closed calls render no upload invitation");
+        }
     }
     // Publication layout adapters preserve native data and the shared gesture order.
     foreach (['standard', 'longread', 'timeline', 'photoalbum'] as $layout) {

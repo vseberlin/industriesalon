@@ -10,6 +10,7 @@ async function editor(format = 'landing', extra = {}) {
   window.document.getElementById('wpwrap').inert = false;
   const sections = extra.sections || { kapitel: { label: 'Kapitel', supports: ['body', 'links'] }, intro: { label: 'Intro', ui_hidden: true, supports: ['body'] } };
   const document = extra.document || { schema_version: 1, skin: 'standard', sections: [{ type: 'kapitel', title: 'First section', body: '<p>Original text</p>', links: [{ label: 'External', url: 'https://elsewhere.example/about/' }] }, { type: 'intro', title: 'Legacy intro', body: 'Keep this text' }] };
+  if (document.entity_key) { window.document.getElementById('entity').value = document.entity_key; }
   const root = window.document.querySelector('.iss-editorial-root');
   root.dataset.sections = JSON.stringify(sections);
   root.dataset.document = JSON.stringify(document);
@@ -568,6 +569,64 @@ test('One sidebar switches between outline, chooser, editing and page controls w
     assert.equal(e.root.querySelector('.iss-editorial-studio__settings').hidden, false);
     assert.equal(e.root.querySelector('.iss-editorial-studio__owner-controls').closest('.iss-editorial-studio__outline'), null);
     assert.equal(e.root.querySelector('.iss-editorial-live-preview'), preview);
+  } finally { e.dom.window.close(); }
+});
+
+test('Chooser guidance follows event availability while retained sections stay editable', async () => {
+  const sections = {
+    kapitel: {label:'Kapitel', description:'Shared text', group:'Text', portable:true, supports:['body']},
+    programm: {label:'Programm', description:'Festival programme', group:'Text', supports:['body']},
+    intro: {label:'Intro', description:'Retained introduction', ui_hidden:true, supports:['body']}
+  };
+  const e = await editor('veranstaltung', {sections, document:{schema_version:3, entity_key:'event.festival', sections:[{type:'intro', body:'Keep intro'}, {type:'programm', body:'Keep programme'}]}, documentBindings:{entity_key:'#entity'}, sectionContexts:{entity_key:{'event.festival':['kapitel','intro','programm'], 'event.general':['kapitel','intro']}}});
+  try {
+    e.button('Hinzufügen').click();
+    const choices = () => [...e.root.querySelectorAll('.iss-editorial-gesture')];
+    assert.deepEqual(choices().map(node => node.dataset.sectionType), ['programm','kapitel']);
+    const programme = choices()[0];
+    assert.equal(e.window.document.getElementById(programme.getAttribute('aria-describedby')).textContent, 'Festival programme');
+    assert.equal(e.window.document.getElementById(programme.getAttribute('aria-labelledby')).textContent, 'Programm');
+    assert.equal(choices()[1].querySelector('small'), null, 'Portable tiles stay compact');
+    e.input(e.root.querySelector('input[type="search"]'), 'Festival');
+    assert.equal(choices().length, 1, 'Search includes the owner explanation');
+    e.button('Abschnitte').click();
+    e.root.querySelector('.iss-editorial-outline__select').click();
+    assert.equal(e.root.querySelector('.iss-editorial-studio__guidance').textContent, 'Retained introduction');
+    e.button('Hinzufügen').click();
+    const search = e.root.querySelector('input[type="search"]');
+    e.input(search, 'Festival');
+    const entity = e.window.document.getElementById('entity');
+    entity.value = 'event.general'; entity.dispatchEvent(new e.window.Event('change', {bubbles:true}));
+    assert.equal(choices().length, 0, 'An already-open chooser immediately drops unavailable choices');
+    assert.equal(search.value, 'Festival', 'Refreshing availability preserves the search');
+    e.input(search, '');
+    assert.deepEqual(choices().map(node => node.dataset.sectionType), ['kapitel'], 'Changed structure refreshes insertion choices');
+    e.button('Abschnitte').click();
+    e.root.querySelectorAll('.iss-editorial-outline__select')[1].click();
+    assert.equal(e.root.querySelector('.iss-editorial-studio__guidance').textContent, 'Festival programme');
+    assert.equal(e.value().sections[1].body, 'Keep programme', 'Restricted saved content is retained for correction, not silently deleted');
+    await e.settle();
+    assert.equal(JSON.parse(e.requests.at(-1).get('document')).sections.length, 2);
+    assert.ok(e.value().sections.every(section => !('description' in section) && !('portable' in section)), 'Guidance never becomes document data');
+  } finally { e.dom.window.close(); }
+});
+
+test('Automatic content source hints track the selected owner through save and finish', async () => {
+  const e = await editor('landing', {sections:{dynamic_slot:{label:'Automatische Inhalte', description:'Select a source', supports:['treatment','slot_key'], slots:{projects:{label:'Projects',treatment:'slot.projects'},team:{label:'Team',treatment:'slot.team'}}, treatments:[{slug:'slot.projects',label:'Projects',hint:'Maintained in projects'},{slug:'slot.team',label:'Team',hint:'Maintained in team'}]}}, document:{schema_version:3,sections:[{type:'dynamic_slot',slot_key:'projects',treatment:'slot.projects'}]}});
+  try {
+    e.root.querySelector('.iss-editorial-outline__select').click();
+    e.button('Darstellung').click();
+    let select = e.root.querySelector('.iss-editorial-field--slot-key select');
+    assert.equal(select.labels[0].textContent, 'Automatische Inhalte');
+    assert.equal(e.window.document.getElementById(select.getAttribute('aria-describedby')).textContent, 'Maintained in projects');
+    select.value = 'team'; select.dispatchEvent(new e.window.Event('change', {bubbles:true}));
+    select = e.root.querySelector('.iss-editorial-field--slot-key select');
+    assert.equal(e.window.document.getElementById(select.getAttribute('aria-describedby')).textContent, 'Maintained in team');
+    e.button('Fertig').click(); await e.settle();
+    assert.equal(e.root.querySelector('.iss-editorial-studio').dataset.panel, 'outline');
+    const saved = JSON.parse(e.requests.at(-1).get('document')).sections[0];
+    assert.equal(saved.slot_key, 'team'); assert.equal(saved.treatment, 'slot.team');
+    assert.equal(saved.hint, undefined);
   } finally { e.dom.window.close(); }
 });
 

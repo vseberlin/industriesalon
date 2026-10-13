@@ -77,12 +77,12 @@ function iss_content_model_editorial_gesture_registry(): array
         ],
         'programm' => [
             'label' => __('Programm', 'iss-content-model'),
-            'description' => __('Programmpunkte und verknüpfte Inhalte zeigen.', 'iss-content-model'),
-            'icon' => 'calendar-alt', 'tone' => 'automatic', 'group' => 'Automatisch', 'schematic' => 'list',
+            'description' => __('Den Ablauf eines Programms oder Fests beschreiben.', 'iss-content-model'),
+            'icon' => 'calendar-alt', 'tone' => 'text', 'group' => 'Text', 'schematic' => 'list',
         ],
         'upload_intake' => [
             'label' => __('Material beitragen', 'iss-content-model'),
-            'description' => __('Gäste zur Einreichung von Material für die redaktionelle Prüfung einladen.', 'iss-content-model'),
+            'description' => __('Aufruf für Fotos und Dokumente zur Prüfung. Unter „Angaben & Beziehungen“ → „Beiträge von Gästen“ öffnen oder schließen. Ältere Aufrufe ohne eigene Einstellung gelten als geöffnet.', 'iss-content-model'),
             'icon' => 'upload', 'tone' => 'automatic', 'group' => 'Material', 'schematic' => 'callout',
         ],
         'statement' => [
