@@ -1,34 +1,31 @@
 # Current handoff — 13 October 2026
 
-## Editorial workspace workflow verification
+## Editorial workspace and Place contract review
 
-Special-gesture guidance is committed locally as `242593c`, following
-Archivobjekte `16b2e53` and Material `6bfd6d4`; nothing is pushed or deployed.
-Twelve visible composition gestures share contracts across eight formats.
-The workflow slice is accepted for local commit: native save/recovery regression coverage
-for all eight article post types, with no production code change.
+Article workflow verification is committed locally as `6b60774`, following
+chooser guidance `242593c`; nothing is pushed or deployed. The accepted eight-type
+workflow passed Chrome save/reload, keyboard, paste, recovery and cancellation
+checks, 382 storage assertions and 41 UI tests. See the audit for exact scope.
 
-Chrome checks pass for page, post, video, Team, profiles and all three archive
-types: keyboard section selection, owner-panel access and native Save Draft /
-reload. The page also passes real rich-text clipboard paste, explicit recovery
-after reload, direct title editing and Escape cancellation of title/rich text.
-Bold, italic, links and lists survive. Original block content, summary, ordering
-and video URL/year remain intact. All temporary drafts, revisions and autosaves
-are removed.
+The completed Place contract review is accepted for local commit.
+There are 84 Places; only Kino Spreehöfe (12899) has enabled/stored Place JSON.
+Its six epochs match the register projection; the effective template is theme-backed.
+Five disposable save probes exposed a contract gap: missing epoch title/era/function,
+multiple current phases or no remaining epoch pass JSON validation and report a
+successful save while leaving the previous projection in place. The fixture and
+its projections are removed; live pilot JSON and epochs remained identical.
 
-Checks: 382 storage assertions over 94 existing documents, with post content and
-metadata unchanged after cleanup; 41 UI tests and PHP syntax pass. The preceding
-guidance commit passed 13,079 registry assertions and PHP/JS/CSS checks; its
-390 px chooser fits without horizontal overflow. Staff UAT, Firefox and external
-Word/Docs paste remain release checks. Archive quick-navigation overflow is a
-separate TODO.
+Next: guard Place canonical/native saves using the projection owner's validation,
+retain invalid drafts for recovery, and test a corrected retry. Then align
+intro/present-day fields and ordering with the dossier renderer, and resolve the
+separate contribution contract. The registered upload gesture renders nothing;
+template links use a legacy `ort` identifier the intake handler cannot resolve,
+and Places are outside its eligible types. No upload was submitted. See the
+[Place review](docs/project/editorial-consolidation-audit.md#place-contract-review--13-october-2026).
 
-Next proposed slice: review Place-specific gesture availability, especially its
-retained intake choice, which is outside the upload owner's eligible types.
-Places keep their separate contract pending that review. See the
-[gesture inventory](docs/project/editorial-consolidation-audit.md#gesture-portability-checkpoint--13-october-2026).
-No SQL, uploads or template artifact is required: no real stored content or
-template changed. Effective page/report/publication templates are file-backed;
+This slice changes documentation only. No SQL, uploads or template artifact is
+required. Staff UAT, Firefox and external Word/Docs paste remain release checks.
+Effective page/report/publication/Place templates are file-backed;
 Ausstellung override 26309 is retained. The earlier CPT commit's archive
 collection slot still needs target override review at release.
 

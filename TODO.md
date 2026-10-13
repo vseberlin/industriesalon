@@ -4,10 +4,17 @@ Immediate executable work only. Larger future programs live in `docs/project/bac
 
 ## Next
 
-- Review Place-specific gesture availability against its existing owners,
-  especially the retained intake choice that currently renders no invitation.
-  Decide its intended availability before changing the separate Place contract. See the
-  [gesture inventory](docs/project/editorial-consolidation-audit.md#gesture-portability-checkpoint--13-october-2026).
+- Guard Place saves against projection-invalid epoch documents before canonical
+  JSON/native fields change. Reuse the register owner's validation; retain
+  unfinished recovery and test corrected native saves. The review reproduced
+  missing title/era/function, multiple current phases and last-epoch deletion
+  leaving old projections after a reported successful save. See the
+  [Place review](docs/project/editorial-consolidation-audit.md#place-contract-review--13-october-2026).
+- Align Place intro/present-day title, media and link controls with the dossier
+  renderer; explain fixed grouping/singular sections while preserving saved data.
+  Then resolve the Place contribution owner contract: the JSON gesture is inert,
+  template links use an unresolved `ort` prefix, and signed intake excludes Places.
+  Keep this separate from report-source eligibility and broader Place migration.
 - Correct the archive landing quick-navigation grid at phone widths: its four
   columns overflow (409 px content / 375 px viewport). The shared archive cards
   already fit; fix the quick-navigation owner without changing their layout.

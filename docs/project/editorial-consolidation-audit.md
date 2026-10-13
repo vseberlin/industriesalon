@@ -90,6 +90,8 @@ remain release work.
 
 ### Article workflow verification — 13 October 2026
 
+Committed locally as `6b60774`; not pushed or deployed.
+
 Disposable drafts were checked in authenticated Chrome for all eight article
 post types: `page`, `post`, `video`, `team_member`, `entity_profile`,
 `archivbeitrag`, `archivsammlung` and `archivobjekt`. Each passes keyboard section
@@ -114,6 +116,69 @@ unchanged after cleanup. All 41 UI tests and PHP syntax pass. No production
 defect was found in these workflows, so this slice changes tests and documentation
 only. Browser and automated fixtures, revisions and autosaves are removed.
 No SQL, uploads or template artifact is required.
+
+### Place contract review — 13 October 2026
+
+This is a separate contract review, not an expansion of portable gestures or a
+Place migration. The mounted runtime has 84 Places; only Kino Spreehöfe (12899)
+has stored/enabled Place JSON. Its v1 document contains one introduction, six
+epochs, one present-day section and one contribution section. The other 83 Places
+retain legacy rendering. `single-register_place` is theme-backed. The registry
+check and the pilot's six-epoch projection parity check pass.
+
+| Gesture | Current contract and observed behavior |
+| --- | --- |
+| `intro` | Body of the first nonempty introduction renders in the fixed opening position. The editor also offers title and media; neither renders. Additional introductions are accepted but their bodies disappear after the first nonempty one. |
+| `epoche` | Repeatable phase with title, prose, dates, era, function, current flag, sources and media. Public rows show the first usable image; the projection retains the media IDs. JSON owns editorial history, and the register service owns derived epoch/state rows. Validation disagrees with that service; see the first priority below. |
+| `gegenwart` | First nonempty body renders after the history rail under the fixed heading “Der Ort heute”. Offered title, media and links are not rendered. Additional present-day sections are likewise not displayed. |
+| `galerie` | Separate Place supplement: media/archive references and four gallery layouts use the existing exhibition renderer. It is not the portable gallery contract. |
+| `material` | Separate Place supplement: anchor, downloads and links use the same existing renderer. Archive objects belong in its gallery, not this picker. |
+| `upload_intake` | Registered, insertable, seeded by the candidate builder and retained in the pilot, but produces no gesture output because the signed intake owner excludes Places. The template has separate contribution links; these are also inconsistent with the current endpoint. |
+
+The dossier deliberately groups introduction, history, present-day prose and
+supplements rather than following arbitrary cross-type document order. Accepted
+supplier milestones can further sort the public chronology. The shared reorder
+interface does not explain this distinction. Geographic/current facts, graph
+actors, relationships, the template fact panels and Atlas remain with their
+existing owners; generic composition gestures must not duplicate them.
+
+Prioritized follow-up:
+
+1. **Guard Place saves before canonical JSON changes.** A disposable enabled
+   Place with one valid projected epoch reproduced five failures: missing title,
+   missing era, missing function, two current phases, and no remaining epoch.
+   Each passed `iss_editorial_validate_document()` and
+   `iss_editorial_save_document()` returned true; JSON changed while the previous
+   epoch projection remained. The projection callback returns `WP_Error` through
+   an action whose return value the save engine does not consume. Reuse the
+   register owner's validation through the existing editorial validation/native
+   update path, retain invalid work in recovery, and test rejection of the whole
+   native save plus a successful corrected retry. Include starter and last-epoch
+   deletion behavior. Projection write-failure handling needs its own explicit
+   owner-bound test; this review reproduced validation failures, not disk/DB faults.
+2. **Align offered fields and ordering with the dossier renderer.** Render
+   supported title/media/link fields through the existing Place components, and
+   make the fixed dossier positions and singular introduction/present-day sections
+   clear. Preserve saved content; do not silently delete fields or extra sections.
+3. **Resolve Place contributions through the existing intake owner.** The
+   template helper emits `event=ort__<slug>`. The current Event Drop handler
+   resolves the prefix as a post type; `ort` does not resolve `register_place`.
+   Moreover, `iss_content_upload_is_open()` rejects Places even if the identifier
+   is corrected. Runtime URL resolution confirms both mismatches; no upload was
+   submitted. Unify the template/gesture invitation with the chosen owner policy
+   in a separate slice. Changing the chooser alone would leave the public links
+   misleading; merely adding Places to report-source types would wrongly couple
+   intake to reports. Keep new Place intake insertion out of broader rollout until
+   this contract is settled, retaining stored sections for compatibility.
+
+Verification: authenticated Chrome inspection of the existing chooser/inspector
+and public dossier; read-only inventory/registry/parity checks; five temporary
+save/projection probes and renderer probes for ignored fields, duplicate intro
+and fixed ordering. The temporary post and its projections were deleted through
+owner hooks. Live pilot JSON and epoch rows remained identical across the probes.
+No production code, real content, templates, schema or uploads changed; no paired
+data artifact is needed. This review does not constitute Place upload acceptance
+or a full editor save test on real content.
 
 The existing media/text pattern now owns its flex layout for native blocks and
 JSON alike. Its defaults are component-scoped, the overlay retains image height
