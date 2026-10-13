@@ -50,14 +50,23 @@ The saved publication identifier `longread_quote` delegates to the quote
 contract and remains editable; it is hidden from new insertion to avoid a
 duplicate chooser item.
 
-Publication payload adapters retain shared gestures in the reading flow. Standard
-and longread layouts use the existing chapter renderer; chapter navigation and
-counts only include chapters. Composed timelines keep consecutive epoch groups
-in document order, with unique anchors and one navigation link per epoch. Albums
-remain one owner-managed sheet sequence with shared gestures before or after it.
-Intro/source placement and native layout-specific section meanings retain their
-existing contracts. Publication payload caches distinguish saved content, disabled
-JSON and authenticated preview snapshots. No stored document is rewritten.
+Publication payload adapters retain shared and publication-native gestures in
+the reading flow of all four layouts. Chapter, timeline-moment and album markup
+is reused by each layout; changing layout does not convert stored section types.
+Standard/longread navigation and counts include chapters only. Composed timelines
+keep consecutive epoch groups in document order, with unique anchors and one
+navigation link per epoch; their counts include dated moments only. Every album
+remains an owner-managed sheet sequence at its document position. Album navigation
+collects visible sheets from all albums; the first album retains existing sheet
+anchors and later albums receive distinct prefixes. Sheet sources, captions,
+visibility and numbering remain album-owned.
+
+Intro/source placement retains the existing layout contract. In album layouts
+with no album section, their text precedes the other authored sections. Native
+chapter title and timeline year requirements are unchanged. Publication payload
+caches distinguish saved content, disabled JSON and authenticated preview
+snapshots. Native layout changes take effect on WordPress Update/Publish; the
+editor explains that save boundary. No stored document is rewritten.
 
 Places remain separate, including their existing gallery fields and renderer.
 The complete inventory of 28 registered identifiers (including the retained

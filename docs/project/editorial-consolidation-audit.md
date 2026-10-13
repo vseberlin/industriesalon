@@ -10,8 +10,9 @@ published documents and private drafts are preserved.
 
 The mounted website checkout now exposes 28 registered gesture identifiers in nine formats.
 The workspace/CPT expansion is committed as `65c55b8`, shared portability as
-`9eab967`, and publication adapters as `c090540`. Shared gallery/text/quote
-contracts are accepted for this local checkpoint. Registration, editor fields, save validation and
+`9eab967`, publication adapters as `c090540`, and shared gallery/text/quote
+contracts as `32d3e3f`. Native publication layout compatibility is accepted
+for this local checkpoint. Registration, editor fields, save validation and
 public rendering must agree before a gesture becomes available in another format.
 
 | Gesture identifiers | Effective boundary / remaining work |
@@ -35,7 +36,8 @@ public rendering must agree before a gesture becomes available in another format
 | `bildbuehne` | Tour hero integration, booking rail and excerpt fallback remain tour-owned. |
 | `epoche`, `gegenwart` | Place history and current-state projection remain a separate case. |
 | `longread_quote` | Retained saved publication identifier using the shared quote contract. Existing sections remain editable; hidden from new insertion so the chooser presents one quote. No identifier rewrite. |
-| `source`, `publication_rail`, `longread_chapter`, `timeline_item`, `photoalbum` | Publication adapters retain portable composition in all four layouts, with chapter navigation/counts, source notes and album ownership preserved. Native layout-specific sections still require their matching layout; reconcile those meanings and chooser compatibility separately. |
+| `source`, `publication_rail` | Publication intro/source placement and reading-navigation options retain their existing owner contracts. Layout changes use native Update/Publish. |
+| `longread_chapter`, `timeline_item`, `photoalbum` | Publication-only gestures now render in every publication layout using the existing components. Mixed order, native navigation/counts and album sources are retained. Multiple albums render with distinct sheet links. Native title/year requirements remain. |
 
 `massstab`, `vollbild`, `image_wall` and `feature.microblocks` remain declared
 compatibility aliases. Existing stored documents are not renamed or migrated.
@@ -56,16 +58,22 @@ without changing the stored version. Event composition can use the full existing
 column; ordinary event prose keeps its reading measure. Archival skin palettes
 flow through existing domain variables, without new gesture selector trees.
 
-Publication adapters use the same shared renderer. Standard and longread layouts
-keep chapter/quote order around shared sections. Timeline composition preserves
+Publication adapters use the same shared renderer and existing publication-native
+components. All four layouts keep chapters, dated entries, albums and shared
+sections in document order. Timeline composition preserves
 consecutive epoch groups, generates unique repeated-epoch anchors and counts only
-native dates/epochs. Album sheets stay one owner-managed sequence; gestures appear
-before or after it. Intro/source placement retains the existing layout contract.
+native dates/epochs. Each album keeps its own sheet sequence and source metadata;
+album navigation includes visible sheets from every album with distinct anchors.
+Intro/source placement retains the existing layout contract; an album layout
+without an album section still shows that text before its other content.
 Payload caches now distinguish enabled/disabled canonical JSON and exact preview
 snapshots. An empty legacy album no longer suppresses original block content.
 The existing album stylesheet loses its `100vw` breakout (which caused horizontal
 scrolling), and its phone title stacks instead of clipping. Skin variables reuse
 publication palettes; no extra gesture selector tree is introduced.
+Chapter text and shared headings now consume existing surface/skin variables,
+fixing dark-on-dark text in Bildmatrix. Its album palette is component-owned so
+the same album can appear in other layouts without losing its colours.
 
 Seven visible composition gestures now share fields and rendering across eight
 formats. Gallery/text/quote rendering consumes resolved references through one
@@ -79,16 +87,20 @@ content and Place supplements; they are not a second new gesture contract.
 Verification covers the seven gestures, their treatments/layouts in every
 registered skin of eight formats, save/reload, public content routing, snapshot
 addresses, media/archive captions, source visibility, links, rich text,
-front-page exclusion and event-structure restrictions: 8,314 assertions plus 35
+front-page exclusion and event-structure restrictions: 8,800 assertions plus 35
 UI tests. Retained publication quote IDs and Place fields/rendering are checked.
 The publication matrix covers four layouts in all three skins,
-interleaving, native navigation/source data, disabled fallback and two successive
+interleaving, native navigation/source data, all-native mixed documents, multiple
+albums, standalone native gestures under mismatched layouts, warm-cache layout
+switches, disabled fallback and two successive
 snapshots after a warmed public cache. Storage checks pass 296 assertions over all
-94 existing documents, with post content/metadata unchanged. Chrome checks the
-new contracts in six representative formats/skins at desktop/390 px, gallery
-navigation, quote orientation and edit/Fertig; no document overflow. Territorial
-stacking is additionally checked at 390/820 px. The preceding publication
-checkpoint covered all four layouts, compact chooser and draft recovery.
+94 existing documents, with post content/metadata unchanged. Chrome checks all
+four publication layouts at desktop/390 px, second-album navigation, dark-skin
+contrast, a native Standard-to-Timeline save, and chapter edit/Fertig in the
+timeline preview. No document overflow. The browser save retains authored fields;
+the existing media hydration adds preview metadata. The preceding common-gesture
+checkpoint covered six formats/skins, gallery navigation, quote orientation and
+Territorial stacking at 390/820 px.
 Review fixtures are removed.
 Earlier tour/event/exhibition checks remain recorded in the preceding commit.
 Places remain explicitly excluded. No SQL, content migration, uploads or template

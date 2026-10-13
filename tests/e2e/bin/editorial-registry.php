@@ -370,6 +370,75 @@ try {
             $assert(substr_count(apply_filters('the_content', '<p>Legacy fallback only</p>'), 'Standalone shared section') === 1, "$label: shared-only composition works without a chapter, date or album");
         }
     }
+    // The same native composition must survive every layout, including warm-cache switches.
+    foreach (['standard', 'longread-poster', 'bildmatrix'] as $skin) {
+        $doc = iss_editorial_get_empty_document('publication'); $doc['skin'] = $skin;
+        $doc['sections'] = [
+            ['type' => 'source', 'body' => 'Mixed publication source'],
+            ['type' => 'longread_chapter', 'title' => 'Chapter Alpha', 'anchor' => 'chapter-alpha', 'body' => '<p>Chapter Alpha body</p>', 'media_layout' => 'aside-right', 'media_refs' => [$media]],
+            ['type' => 'timeline_item', 'year' => '1900', 'title' => 'Moment Alpha', 'body' => '<p>Moment Alpha body</p>', 'media_refs' => [$media]],
+            ['type' => 'photoalbum', 'album_source' => ['kind' => 'manual', 'set_title' => 'Album Alpha source'], 'sheets' => [['source_kind' => 'wp_media', 'source_id' => $image_id, 'label' => 'Blatt 1', 'nav_title' => 'Sheet Alpha', 'caption' => 'Caption Alpha']]],
+            ['type' => 'statement', 'title' => 'Mixed shared section'],
+            ['type' => 'longread_chapter', 'title' => 'Chapter Beta', 'anchor' => 'chapter-beta', 'body' => '<p>Chapter Beta body</p>'],
+            ['type' => 'photoalbum', 'album_source' => ['kind' => 'manual', 'set_title' => 'Album Beta source'], 'sheets' => [['source_kind' => 'wp_media', 'source_id' => $image_id, 'label' => 'Blatt 1', 'nav_title' => 'Sheet Beta', 'caption' => 'Caption Beta'], ['source_kind' => 'wp_media', 'source_id' => $image_id, 'label' => 'Hidden sheet', 'visible' => false]]],
+            ['type' => 'timeline_item', 'year' => '1920', 'title' => 'Moment Beta', 'body' => '<p>Moment Beta body</p>'],
+        ];
+        $assert(iss_editorial_save_document($id, 'publication', $doc), "$skin: save all native types together");
+        $saved = get_post_meta($id, iss_editorial_get_document_meta_key('publication'), true);
+        foreach (['standard', 'longread', 'timeline', 'photoalbum', 'standard'] as $layout) {
+            $_GET = [];
+            update_post_meta($id, '_iss_publication_layout', $layout);
+            $html = apply_filters('the_content', '<p>Legacy fallback only</p>');
+            $label = "$layout/$skin mixed native sections";
+            $position = -1;
+            foreach (['Chapter Alpha', 'Moment Alpha', 'Sheet Alpha', 'Mixed shared section', 'Chapter Beta', 'Sheet Beta', 'Moment Beta'] as $marker) {
+                $next = strpos($html, $marker);
+                $assert($next !== false && $next > $position, "$label: retains order for $marker");
+                $position = $next;
+            }
+            foreach (['Chapter Alpha body', 'Moment Alpha body', 'Caption Alpha', 'Chapter Beta body', 'Caption Beta', 'Moment Beta body', 'Mixed publication source'] as $marker) {
+                $assert(substr_count($html, $marker) === 1, "$label: renders $marker once");
+            }
+            $assert(!str_contains($html, 'Hidden sheet'), "$label: hidden sheet remains hidden");
+            $assert(str_contains($html, 'iss-publication-longread__media--aside-right'), "$label: preserves chapter media layout");
+            $assert(str_contains($html, 'Kapitel 02'), "$label: chapter numbering ignores other gestures");
+            $tags = new WP_HTML_Tag_Processor($html); $anchors = [];
+            while ($tags->next_tag()) { $anchor = $tags->get_attribute('id'); if ($anchor) { $anchors[] = $anchor; } }
+            $assert(count($anchors) === count(array_unique($anchors)), "$label: unique anchors across albums and chapters");
+            if ($layout === 'photoalbum') {
+                $payload = iss_publications_get_photoalbum_payload($id);
+                $assert($payload['sheet_count'] === 2 && count($payload['sheets']) === 2, "$label: album count includes both albums only");
+                $assert(count(array_unique(array_column($payload['sheets'], 'anchor'))) === 2, "$label: sheet navigation targets are distinct");
+                foreach ($payload['sheets'] as $sheet) { $assert(in_array($sheet['anchor'], $anchors, true), "$label: sheet navigation resolves"); }
+            } elseif (in_array($layout, ['standard', 'longread'], true)) {
+                $payload = iss_publications_get_longread_payload($id);
+                $assert(array_column($payload['nav_items'], 'href') === ['#chapter-alpha', '#chapter-beta'], "$label: chapter navigation remains owned");
+                $assert($payload['summary'][0]['value'] === '2', "$label: only chapters counted");
+            } else {
+                $assert(str_contains($html, '<strong>2</strong><span>Stationen</span>'), "$label: only moments counted");
+            }
+            $draft = iss_editorial_save_draft($id, 'publication', $doc, true);
+            $assert(!is_wp_error($draft), "$label: save exact mixed draft");
+            $_GET = ['iss_editorial_embed' => '1', 'iss_editorial_canvas' => '1', 'iss_editorial_preview' => '1', 'iss_editorial_format' => 'publication', 'iss_editorial_snapshot' => $draft['token'], 'iss_editorial_preview_nonce' => wp_create_nonce(iss_editorial_get_preview_nonce_action($id, 'publication'))];
+            $preview = apply_filters('the_content', '<p>Legacy fallback only</p>');
+            foreach (range(1, 7) as $index) { $assert(substr_count($preview, 'data-iss-preview-section="' . $index . '"') === 1, "$label: exact section address $index"); }
+            $_GET = [];
+            $assert(get_post_meta($id, iss_editorial_get_document_meta_key('publication'), true) === $saved, "$label: layout switching preserves canonical JSON");
+        }
+    }
+    // A native gesture must work even without any section belonging to the chosen layout.
+    foreach (['standard', 'longread', 'timeline', 'photoalbum'] as $layout) {
+        update_post_meta($id, '_iss_publication_layout', $layout);
+        foreach ([1 => 'Chapter Alpha body', 2 => 'Moment Alpha body', 3 => 'Caption Alpha'] as $index => $marker) {
+            $single = iss_editorial_get_empty_document('publication');
+            $single['sections'] = [['type' => 'intro', 'body' => 'Single introduction'], ['type' => 'source', 'body' => 'Single source'], $doc['sections'][$index]];
+            $assert(iss_editorial_save_document($id, 'publication', $single), "$layout: save standalone native gesture");
+            $html = apply_filters('the_content', '<p>Legacy fallback only</p>');
+            $assert(substr_count($html, $marker) === 1, "$layout: standalone $marker survives");
+            $assert(substr_count($html, 'Single source') === 1, "$layout: standalone source survives");
+            if ($layout !== 'timeline') { $assert(substr_count($html, 'Single introduction') === 1, "$layout: standalone introduction survives"); }
+        }
+    }
     $_GET = []; $GLOBALS['wp_the_query'] = $original_main_query;
     $place = iss_editorial_get_format('place');
     $assert(!$place['sections']['galerie']['portable'] && $place['sections']['galerie']['supports'] === ['media_refs', 'object_refs', 'gallery_layout'], 'Place gallery retains its separate contract');

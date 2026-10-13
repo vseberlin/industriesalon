@@ -976,29 +976,48 @@ function industriesalon_publications_render_photoalbum_bildmatrix(int $post_id, 
     return $html;
 }
 
+/** Reuse publication components when authored sections occur in another layout. */
+function industriesalon_publications_render_editorial_section(int $post_id, array $section, int $index, string $skin): ?string
+{
+    $portable = industriesalon_render_editorial_portable_section($section, $index, $skin, 'publication');
+    if ($portable !== null) { return $portable; }
+    switch ($section['type'] ?? '') {
+        case 'longread_chapter':
+            $chapter = iss_publications_editorial_chapter_payload($section);
+            return $chapter ? industriesalon_publications_render_longread_chapter($chapter, max(0, ($section['_chapter_number'] ?? 1) - 1)) : '';
+        case 'timeline_item':
+            $item = iss_publications_editorial_timeline_item_payload($section);
+            return $item ? industriesalon_publications_render_timeline_moment($item) : '';
+        case 'photoalbum':
+            $album = $section['_album_payload'] ?? iss_publications_editorial_photoalbum_section_payload($post_id, $section);
+            return industriesalon_editorial_preview_section(industriesalon_publications_render_photoalbum_content($post_id, $album), $section);
+    }
+    return null;
+}
+
 function industriesalon_publications_render_photoalbum_content(int $post_id, array $payload): string
 {
     if (isset($payload['sections'])) {
-        $sections = $payload['sections'];
-        unset($payload['sections']);
         $skin = industriesalon_get_editorial_publication_post_skin($post_id);
         $html = '';
-        foreach ($sections as $index => $section) {
-            $portable = industriesalon_render_editorial_portable_section($section, $index, $skin, 'publication');
-            $html .= $portable ?? industriesalon_editorial_preview_section(
-                industriesalon_publications_render_photoalbum_content($post_id, $payload), $section
-            );
+        if (!array_filter($payload['sections'], static fn(array $section): bool => ($section['type'] ?? '') === 'photoalbum')) {
+            $heading = $payload;
+            unset($heading['sections']);
+            $html = industriesalon_publications_render_photoalbum_content($post_id, $heading);
+        }
+        foreach ($payload['sections'] as $index => $section) {
+            $html .= industriesalon_publications_render_editorial_section($post_id, $section, $index, $skin) ?? '';
         }
         return $html;
     }
     $sheets = is_array($payload['sheets'] ?? null) ? array_values(array_filter($payload['sheets'], 'is_array')) : [];
-    if ($post_id <= 0 || $sheets === []) {
+    if ($post_id <= 0 || ($sheets === [] && empty($payload['intro_html']) && empty($payload['source_html']) && empty($payload['heading_title']) && empty($payload['heading_kicker']))) {
         return '';
     }
 
     $publication_skin = industriesalon_get_editorial_publication_post_skin($post_id);
 
-    if ($publication_skin === 'bildmatrix') {
+    if ($publication_skin === 'bildmatrix' && $sheets !== []) {
         return industriesalon_publications_render_photoalbum_bildmatrix($post_id, $payload);
     }
 
@@ -1006,10 +1025,6 @@ function industriesalon_publications_render_photoalbum_content(int $post_id, arr
     foreach ($sheets as $sheet) {
         $items_html .= industriesalon_publications_render_photoalbum_item($sheet);
     }
-    if ($items_html === '') {
-        return '';
-    }
-
     $intro_html = trim((string) ($payload['intro_html'] ?? ''));
     $source_html = trim((string) ($payload['source_html'] ?? ''));
     $heading_kicker = trim((string) ($payload['heading_kicker'] ?? ''));
@@ -1249,6 +1264,32 @@ function industriesalon_publications_render_longread_chapter_media(array $sectio
     return $html;
 }
 
+function industriesalon_publications_render_longread_chapter(array $section, int $chapter_index): string
+{
+    $anchor = trim((string) ($section['anchor'] ?? ''));
+    $title = trim((string) ($section['title'] ?? ''));
+    $body = is_array($section['body'] ?? null) ? $section['body'] : [];
+    $media = is_array($section['media'] ?? null) ? $section['media'] : [];
+    if ($anchor === '' || $title === '') {
+        return '';
+    }
+
+    $chapter_html = '<section id="' . esc_attr($anchor) . '" class="iss-publication-longread__chapter">';
+    $chapter_html .= '<div class="iss-publication-longread__chapter-aside">';
+    $chapter_html .= '<p class="iss-publication-longread__chapter-index">' . esc_html(sprintf(__('Kapitel %02d', 'industriesalon'), $chapter_index + 1)) . '</p>';
+    $chapter_html .= '<h2 class="iss-publication-longread__chapter-title">' . esc_html($title) . '</h2>';
+    $chapter_html .= '</div>';
+    $chapter_html .= '<div class="iss-publication-longread__chapter-body">' . '<div class="iss-publication-longread__chapter-text">' . implode('', $body) . '</div>';
+    foreach ($media as $media_item) {
+        if (is_array($media_item)) {
+            $chapter_html .= industriesalon_publications_render_longread_chapter_media($media_item);
+        }
+    }
+    $chapter_html .= '</div>';
+    $chapter_html .= '</section>';
+    return industriesalon_editorial_preview_section($chapter_html, $section, ['title' => 'iss-publication-longread__chapter-title', 'body' => 'iss-publication-longread__chapter-text']);
+}
+
 function industriesalon_publications_render_longread_content(int $post_id, array $payload): string
 {
     $sections = is_array($payload['sections'] ?? null) ? $payload['sections'] : [];
@@ -1286,7 +1327,7 @@ function industriesalon_publications_render_longread_content(int $post_id, array
             continue;
         }
 
-        $portable = industriesalon_render_editorial_portable_section($section, $index, $skin, 'publication');
+        $portable = industriesalon_publications_render_editorial_section($post_id, $section, $index, $skin);
         if ($portable !== null) {
             $html .= $portable;
             continue;
@@ -1296,28 +1337,7 @@ function industriesalon_publications_render_longread_content(int $post_id, array
             $html .= industriesalon_publications_render_longread_quote_section($section);
             continue;
         }
-        $anchor = trim((string) ($section['anchor'] ?? ''));
-        $title = trim((string) ($section['title'] ?? ''));
-        $body = is_array($section['body'] ?? null) ? $section['body'] : [];
-        $media = is_array($section['media'] ?? null) ? $section['media'] : [];
-        if ($anchor === '' || $title === '') {
-            continue;
-        }
-
-        $chapter_html = '<section id="' . esc_attr($anchor) . '" class="iss-publication-longread__chapter">';
-        $chapter_html .= '<div class="iss-publication-longread__chapter-aside">';
-        $chapter_html .= '<p class="iss-publication-longread__chapter-index">' . esc_html(sprintf(__('Kapitel %02d', 'industriesalon'), $chapter_index + 1)) . '</p>';
-        $chapter_html .= '<h2 class="iss-publication-longread__chapter-title">' . esc_html($title) . '</h2>';
-        $chapter_html .= '</div>';
-        $chapter_html .= '<div class="iss-publication-longread__chapter-body">' . '<div class="iss-publication-longread__chapter-text">' . implode('', $body) . '</div>';
-        foreach ($media as $media_item) {
-            if (is_array($media_item)) {
-                $chapter_html .= industriesalon_publications_render_longread_chapter_media($media_item);
-            }
-        }
-        $chapter_html .= '</div>';
-        $chapter_html .= '</section>';
-        $html .= industriesalon_editorial_preview_section($chapter_html, $section, ['title' => 'iss-publication-longread__chapter-title', 'body' => 'iss-publication-longread__chapter-text']);
+        $html .= industriesalon_publications_render_longread_chapter($section, $chapter_index);
         $chapter_index++;
     }
     $html .= '</div>';
@@ -1659,6 +1679,22 @@ function industriesalon_publications_render_timeline_related_rail(int $post_id):
         . '</aside>';
 }
 
+function industriesalon_publications_render_timeline_moment(array $item): string
+{
+    $year = (int) ($item['year'] ?? 0);
+    $item_title = trim((string) ($item['title'] ?? ''));
+    $fallback_title = $item_title !== '' ? $item_title : sprintf(__('Station %d', 'industriesalon'), $year);
+    $variant = sanitize_html_class(industriesalon_publications_get_timeline_item_variant(is_array($item) ? $item : []));
+    $variant_class = $variant !== '' ? ' iss-publication-moment--' . $variant : '';
+    $card_html = industriesalon_publications_render_timeline_card(is_array($item) ? $item : [], $fallback_title);
+
+    $moment_html = '<article class="iss-publication-moment' . esc_attr($variant_class) . '">';
+    $moment_html .= '<p class="iss-publication-moment__year">' . esc_html((string) $year) . '</p>';
+    $moment_html .= '<div class="iss-publication-moment__card">' . $card_html . '</div>';
+    $moment_html .= '</article>';
+    return industriesalon_editorial_preview_section($moment_html, $item, ['title' => 'iss-publication-chronicle__title', 'body' => 'iss-publication-chronicle__text']);
+}
+
 function industriesalon_publications_render_timeline_content(int $post_id, array $payload): string
 {
     $items = is_array($payload['items'] ?? null) ? $payload['items'] : [];
@@ -1673,7 +1709,7 @@ function industriesalon_publications_render_timeline_content(int $post_id, array
     $last_slug = '';
     $group_key = '';
     foreach ($sections as $index => $item) {
-        if (iss_publications_editorial_section_is_portable($item)) {
+        if (iss_publications_editorial_section_is_composition($item, 'timeline_item')) {
             $epochs['section-' . $index] = ['section' => $item];
             $last_slug = '';
             continue;
@@ -1767,7 +1803,7 @@ function industriesalon_publications_render_timeline_content(int $post_id, array
     $seen_epochs = [];
     foreach (array_values($epochs) as $index => $epoch_data) {
         if (isset($epoch_data['section'])) {
-            $epochs_html .= industriesalon_render_editorial_portable_section($epoch_data['section'], $index, $skin, 'publication') ?? '';
+            $epochs_html .= industriesalon_publications_render_editorial_section($post_id, $epoch_data['section'], $index, $skin) ?? '';
             continue;
         }
         $definition = is_array($epoch_data['definition'] ?? null) ? $epoch_data['definition'] : [];
@@ -1784,18 +1820,7 @@ function industriesalon_publications_render_timeline_content(int $post_id, array
 
         $moments_html = '';
         foreach ((array) ($epoch_data['items'] ?? []) as $item) {
-            $year = (int) ($item['year'] ?? 0);
-            $item_title = trim((string) ($item['title'] ?? ''));
-            $fallback_title = $item_title !== '' ? $item_title : sprintf(__('Station %d', 'industriesalon'), $year);
-            $variant = sanitize_html_class(industriesalon_publications_get_timeline_item_variant(is_array($item) ? $item : []));
-            $variant_class = $variant !== '' ? ' iss-publication-moment--' . $variant : '';
-            $card_html = industriesalon_publications_render_timeline_card(is_array($item) ? $item : [], $fallback_title);
-
-            $moment_html = '<article class="iss-publication-moment' . esc_attr($variant_class) . '">';
-            $moment_html .= '<p class="iss-publication-moment__year">' . esc_html((string) $year) . '</p>';
-            $moment_html .= '<div class="iss-publication-moment__card">' . $card_html . '</div>';
-            $moment_html .= '</article>';
-            $moments_html .= industriesalon_editorial_preview_section($moment_html, $item, ['title' => 'iss-publication-chronicle__title', 'body' => 'iss-publication-chronicle__text']);
+            $moments_html .= industriesalon_publications_render_timeline_moment($item);
         }
 
         $epochs_html .= '<section id="' . esc_attr($anchor) . '" class="iss-publication-epoch iss-publication-epoch--' . esc_attr($slug_class) . '">';

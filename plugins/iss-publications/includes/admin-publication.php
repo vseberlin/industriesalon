@@ -151,7 +151,9 @@ function iss_publications_render_display_box($post) {
     echo '</p>';
     echo '<p><label><input type="checkbox" name="iss_publication[_iss_publication_featured]" value="1" ' . checked($featured, true, false) . '> ' . esc_html__('Als ausgewählte Publikation hervorheben', 'iss-publications') . '</label></p>';
     echo '<p style="margin-top:1rem;color:#666;font-size:12px;line-height:1.5;">';
-    echo esc_html__('Longread ist für kapitelbasierte Lesestücke gedacht. Zeitleiste und Fotoalbum nutzen im Block-Editor eigene Publikationsblöcke oder die Starter-Patterns gleichen Namens. Ein Fotoalbum-Archivset testet eine schlanke Albumquelle ohne die Gutenberg-Bilder im Inhalt zu löschen. Verkauf bleibt optional.', 'iss-publications');
+    echo function_exists('iss_editorial_uses_canvas') && iss_editorial_uses_canvas($post)
+        ? esc_html__('Das Layout bestimmt die Lesenavigation. Kapitel, Zeitleisten-Stationen und Fotoalben bleiben in allen Layouts sichtbar. Layoutänderungen werden mit Aktualisieren oder Veröffentlichen übernommen.', 'iss-publications')
+        : esc_html__('Longread ist für kapitelbasierte Lesestücke gedacht. Zeitleiste und Fotoalbum nutzen im Block-Editor eigene Publikationsblöcke oder die Starter-Patterns gleichen Namens. Ein Fotoalbum-Archivset testet eine schlanke Albumquelle ohne die Gutenberg-Bilder im Inhalt zu löschen. Verkauf bleibt optional.', 'iss-publications');
     echo '</p>';
 }
 
