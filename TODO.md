@@ -4,11 +4,6 @@ Immediate executable work only. Larger future programs live in `docs/project/bac
 
 ## Next
 
-- Harden Place persistence against database write failures: test failures in
-  epoch/state writes and prevent a reported success or partial replacement of
-  history. Coordinate saved JSON and projections through existing owners; keep
-  recovery available for retry. Validation failures are covered by the
-  [completed save guard](docs/project/editorial-consolidation-audit.md#place-save-validation--13-october-2026).
 - Align Place intro/present-day title, media and link controls with the dossier
   renderer; explain fixed grouping/singular sections while preserving saved data.
   Then resolve the Place contribution owner contract: the JSON gesture is inert,

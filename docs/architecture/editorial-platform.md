@@ -497,6 +497,17 @@ Enabled Place JSON is the sole epoch write authority for that post; save
 rebuilds the existing epoch/state read projections, and the old epoch metabox
 is hidden. Disabled Places retain the legacy editor and renderer.
 
+Place document persistence uses the register epoch service's transaction boundary.
+`iss_editorial_save_document()` accepts an optional fifth argument for activation;
+Place callers must include activation in that call rather than setting the flag
+after saving. The `iss_editorial_document_writer` filter wraps the engine's native
+metadata writer with the register projection. `iss_editorial_document_saved` is
+a success notification after this boundary, not the projection write hook.
+Native revision restoration runs WordPress's metadata copy through the same
+boundary and verifies the copied values before rebuilding projections. Failure
+keeps the prior section document and recovery draft; native WordPress post fields
+such as title and excerpt are outside this transaction.
+
 Post `12899` (`Kino Spreehöfe`) is the enabled local pilot. Its theme-owned
 renderer consumes `iss_editorial_get_read_model()` through the
 `industriesalon/editorial-place` template slot. The replayable migration is

@@ -473,15 +473,9 @@ function iss_editorial_save_meta_box(int $post_id): void
         return;
     }
 
-    if (!iss_editorial_save_document($post_id, $format_slug, (string) ($format_payload['document'] ?? ''), false)) {
-        return;
-    }
-    if (empty($format['always_enabled']) && array_key_exists('enabled', $format_payload)) {
-        $was_enabled = iss_editorial_document_is_enabled($post_id, $format_slug);
-        iss_editorial_set_document_enabled($post_id, $format_slug, !empty($format_payload['enabled']));
-        if (!$was_enabled && !empty($format_payload['enabled'])) {
-            do_action('iss_editorial_document_saved', $post_id, $format_slug, iss_editorial_get_document($post_id, $format_slug));
-        }
+    $enabled = array_key_exists('enabled', $format_payload) ? !empty($format_payload['enabled']) : null;
+    if (!iss_editorial_save_document($post_id, $format_slug, (string) ($format_payload['document'] ?? ''), false, $enabled)) {
+        wp_die(esc_html__('Die Abschnitte konnten nicht gespeichert werden. Bitte die Seite neu öffnen und den gesicherten Entwurf prüfen.', 'iss-editorial'), esc_html__('Inhalt nicht gespeichert', 'iss-editorial'), ['response' => 500, 'back_link' => true]);
     }
     $draft = iss_editorial_get_draft($post_id, $format_slug);
     if ($draft) {

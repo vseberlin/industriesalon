@@ -205,17 +205,39 @@ function iss_editorial_validate_post_update(array $data, array $postarr): array
 }
 add_filter('wp_insert_post_data', 'iss_editorial_validate_post_update', 99, 2);
 
-function iss_editorial_after_revision_restore(int $post_id): void
+/** Keep core's metadata copy inside the same owner boundary as ordinary saves. */
+function iss_editorial_restore_revision_meta(int $post_id, int $revision_id): void
 {
     $format = iss_editorial_get_format_for_post($post_id);
     if (!$format) {
+        wp_restore_post_revision_meta($post_id, $revision_id);
         return;
     }
-    $document = iss_editorial_get_document($post_id, $format['slug']);
-    // Rebuild owner projections through their existing save contract.
-    do_action('iss_editorial_document_saved', $post_id, $format['slug'], $document);
+    $saved = iss_editorial_persist_document($post_id, $format['slug'], static function () use ($post_id, $revision_id): bool {
+        global $wpdb;
+        wp_cache_delete($revision_id, 'post_meta');
+        if (update_meta_cache('post', [$revision_id]) === false || $wpdb->last_error !== '') {
+            return false;
+        }
+        $values = [];
+        foreach (wp_post_revision_meta_keys(get_post_type($post_id)) as $key) {
+            $values[$key] = get_post_meta($revision_id, $key);
+        }
+        wp_restore_post_revision_meta($post_id, $revision_id);
+        wp_cache_delete($post_id, 'post_meta');
+        foreach ($values as $key => $value) {
+            if (get_post_meta($post_id, $key) !== $value) {
+                return false;
+            }
+        }
+        return true;
+    });
+    if (!$saved) {
+        wp_die(esc_html__('Die Abschnitte dieser Revision konnten nicht wiederhergestellt werden. Bitte die Seite neu öffnen und erneut versuchen.', 'iss-editorial'), esc_html__('Revision nicht wiederhergestellt', 'iss-editorial'), ['response' => 500, 'back_link' => true]);
+    }
 }
-add_action('wp_restore_post_revision', 'iss_editorial_after_revision_restore', 20);
+remove_action('wp_restore_post_revision', 'wp_restore_post_revision_meta');
+add_action('wp_restore_post_revision', 'iss_editorial_restore_revision_meta', 10, 2);
 
 /** The shared preview URL uses the current author's title and summary too. */
 add_filter('the_preview', static function ($post) {

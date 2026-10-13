@@ -11953,13 +11953,8 @@ try {
             if (is_wp_error($result)) { throw new RuntimeException($result->get_error_message()); }
         }
         if (isset($row['document'])) {
-            if (!iss_editorial_save_document($id, $row['format'], $row['document'], false)) { throw new RuntimeException("Document save failed: $id"); }
-            iss_editorial_set_document_enabled($id, $row['format'], $row['enabled']);
-            // Place projection is derived from the enabled document, not transferred table rows.
-            if ($row['format'] === 'place' && $row['enabled']) {
-                $result = iss_register_sync_editorial_place_projection($id, 'place', $row['document']);
-                if (is_wp_error($result)) { throw new RuntimeException($result->get_error_message()); }
-            }
+            // Activation and Place projection share the document's checked write boundary.
+            if (!iss_editorial_save_document($id, $row['format'], $row['document'], false, $row['enabled'])) { throw new RuntimeException("Document save failed: $id"); }
         }
     }
     $verify();

@@ -863,7 +863,18 @@ function iss_editorial_get_document(int $post_id, string $format_slug, bool $pre
     return $document;
 }
 
-function iss_editorial_save_document(int $post_id, string $format_slug, $document, bool $autosave = false): bool
+/** Let a data owner wrap the native metadata write and its required projections. */
+function iss_editorial_persist_document(int $post_id, string $format_slug, callable $write): bool
+{
+    $write = apply_filters('iss_editorial_document_writer', $write, $post_id, $format_slug);
+    if (!is_callable($write) || $write() !== true) {
+        return false;
+    }
+    do_action('iss_editorial_document_saved', $post_id, $format_slug, iss_editorial_get_document($post_id, $format_slug));
+    return true;
+}
+
+function iss_editorial_save_document(int $post_id, string $format_slug, $document, bool $autosave = false, ?bool $enabled = null): bool
 {
     $format = $post_id > 0 ? iss_editorial_get_format_for_post($post_id) : [];
     if ($post_id <= 0 || !$format || (string) ($format['slug'] ?? '') !== sanitize_key($format_slug)) {
@@ -878,21 +889,23 @@ function iss_editorial_save_document(int $post_id, string $format_slug, $documen
     if ($autosave) {
         return !is_wp_error(iss_editorial_save_draft($post_id, $format_slug, $document, iss_editorial_document_is_enabled($post_id, $format_slug)));
     }
-    $meta_key = iss_editorial_get_document_meta_key($format_slug);
-    $encoded = iss_editorial_encode_document($document);
-    update_post_meta($post_id, $meta_key, wp_slash($encoded));
-    if (get_metadata_raw('post', $post_id, $meta_key, true) !== $encoded) {
-        return false;
-    }
-    if (!$autosave) {
+    return iss_editorial_persist_document($post_id, sanitize_key($format_slug), static function () use ($post_id, $format_slug, $format, $document, $enabled): bool {
+        $values = [iss_editorial_get_document_meta_key($format_slug) => iss_editorial_encode_document($document)];
         $skin_meta_key = iss_editorial_get_skin_meta_key($format_slug);
         if ($skin_meta_key !== '') {
-            update_post_meta($post_id, $skin_meta_key, sanitize_key((string) ($document['skin'] ?? '')));
+            $values[$skin_meta_key] = sanitize_key((string) ($document['skin'] ?? ''));
         }
-        do_action('iss_editorial_document_saved', $post_id, sanitize_key($format_slug), $document);
-    }
-
-    return true;
+        if ($enabled !== null && empty($format['always_enabled'])) {
+            $values[iss_editorial_get_enabled_meta_key($format_slug)] = $enabled ? '1' : '0';
+        }
+        foreach ($values as $key => $value) {
+            update_post_meta($post_id, $key, wp_slash($value));
+            if (get_metadata_raw('post', $post_id, $key, true) !== $value) {
+                return false;
+            }
+        }
+        return true;
+    });
 }
 
 function iss_editorial_document_is_enabled(int $post_id, string $format_slug): bool

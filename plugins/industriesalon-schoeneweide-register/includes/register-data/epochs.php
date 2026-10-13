@@ -15,6 +15,7 @@ define('ISS_REGISTER_EPOCH_MIGRATED_META_KEY', '_iss_register_epoch_seeded');
 final class ISS_Register_Place_Epoch_Service
 {
     private static ?ISS_Register_Place_Epoch_Service $instance = null;
+    private int $write_depth = 0;
 
     public static function get_instance(): ISS_Register_Place_Epoch_Service
     {
@@ -144,6 +145,10 @@ final class ISS_Register_Place_Epoch_Service
             ARRAY_A
         );
         // phpcs:enable WordPress.DB.PreparedSQL, WordPress.DB.PreparedSQLPlaceholders
+
+        if ($this->write_depth > 0 && $wpdb->last_error !== '') {
+            throw new RuntimeException('Place epochs could not be read.');
+        }
 
         $grouped = [];
         foreach ($place_post_ids as $place_post_id) {
@@ -303,8 +308,6 @@ final class ISS_Register_Place_Epoch_Service
 
     public function save_epochs_for_place(int $place_post_id, array $rows, array $context = [])
     {
-        global $wpdb;
-
         if ($place_post_id <= 0) {
             return new WP_Error('iss_register_epoch_invalid_place', 'Invalid place ID.');
         }
@@ -312,6 +315,74 @@ final class ISS_Register_Place_Epoch_Service
         if (is_wp_error($sanitized_rows)) {
             return $sanitized_rows;
         }
+
+        return $this->with_place_transaction($place_post_id, function () use ($place_post_id, $sanitized_rows, $context) {
+            return $this->replace_epochs($place_post_id, $sanitized_rows, $context);
+        });
+    }
+
+    /** Register owns this boundary; graph and Sets transactions have different participants. */
+    public function with_place_transaction(int $place_post_id, callable $write)
+    {
+        global $wpdb;
+
+        $tables = [$wpdb->posts, $wpdb->postmeta, $this->get_table_name(), iss_register_get_place_state_service()->get_table_name()];
+        $states = $wpdb->get_results($wpdb->prepare(
+            'SELECT ENGINE AS engine, @@SESSION.in_transaction AS in_transaction, @@SESSION.autocommit AS autocommit
+             FROM information_schema.TABLES WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME IN (%s, %s, %s, %s)',
+            $tables[0], $tables[1], $tables[2], $tables[3]
+        ), ARRAY_A);
+        if (!$states || count($states) !== count($tables) || array_filter($states, static function (array $state): bool {
+            return ($state['engine'] ?? '') !== 'InnoDB' || !isset($state['in_transaction'], $state['autocommit']);
+        })) {
+            return new WP_Error('iss_register_place_transaction', 'Place saves require MariaDB transaction state and InnoDB tables.');
+        }
+        $owns_transaction = (int) $states[0]['in_transaction'] === 0 && (int) $states[0]['autocommit'] === 1;
+        $savepoint = wp_unique_id('iss_place_write_');
+        // phpcs:disable WordPress.DB.PreparedSQL -- Savepoint identifiers are generated above, never supplied by callers.
+        if ($wpdb->query($owns_transaction ? 'START TRANSACTION' : "SAVEPOINT $savepoint") === false) {
+            return new WP_Error('iss_register_place_transaction', 'Place save could not begin its transaction.');
+        }
+        ++$this->write_depth;
+        try {
+            $locked_id = $wpdb->get_var($wpdb->prepare('SELECT ID FROM %i WHERE ID = %d AND post_type = %s FOR UPDATE', $wpdb->posts, $place_post_id, ISS_REGISTER_POST_TYPE));
+            if ((int) $locked_id !== $place_post_id || $wpdb->last_error !== '') {
+                throw new RuntimeException('Place save could not lock its source post.');
+            }
+            // Metadata APIs must not make decisions from a stale or failed cache fill.
+            wp_cache_delete($place_post_id, 'post_meta');
+            if (update_meta_cache('post', [$place_post_id]) === false || $wpdb->last_error !== '') {
+                throw new RuntimeException('Place metadata could not be read.');
+            }
+            $result = $write();
+            if (is_wp_error($result) || $result === false) {
+                throw new RuntimeException('Place document or projection could not be saved.');
+            }
+            if ($wpdb->query($owns_transaction ? 'COMMIT' : "RELEASE SAVEPOINT $savepoint") === false) {
+                throw new RuntimeException('Place save could not finish its transaction.');
+            }
+        } catch (Throwable $error) {
+            $rolled_back = $wpdb->query($owns_transaction ? 'ROLLBACK' : "ROLLBACK TO SAVEPOINT $savepoint") !== false;
+            $released = $owns_transaction || $wpdb->query("RELEASE SAVEPOINT $savepoint") !== false;
+            $result = new WP_Error('iss_register_place_write', $rolled_back && $released
+                ? 'Place save failed; its document and projections were rolled back.'
+                : 'Place save failed and transaction cleanup could not be confirmed.');
+        } finally {
+            --$this->write_depth;
+            // A rollback does not evict values populated by WordPress metadata hooks.
+            wp_cache_delete($place_post_id, 'post_meta');
+        }
+        // phpcs:enable WordPress.DB.PreparedSQL
+        if ($this->write_depth === 0 && !is_wp_error($result)) {
+            // A caller-owned transaction remains responsible for its eventual commit/cache coordination.
+            iss_register_clear_places_cache();
+        }
+        return $result;
+    }
+
+    private function replace_epochs(int $place_post_id, array $sanitized_rows, array $context): array
+    {
+        global $wpdb;
 
         $existing_rows = [];
         foreach ($this->get_epochs_for_place($place_post_id) as $existing_row) {
@@ -341,26 +412,30 @@ final class ISS_Register_Place_Epoch_Service
             if ($row_id > 0 && isset($existing_rows[$row_id])) {
                 $db_data['created_at'] = (string) ($existing_rows[$row_id]['created_at'] ?? current_time('mysql', true));
                 $db_data['updated_at'] = current_time('mysql', true);
-                $wpdb->update(
+                $updated = $wpdb->update(
                     $this->get_table_name(),
                     $db_data,
                     ['id' => $row_id, 'place_post_id' => $place_post_id],
                     ['%d', '%s', '%s', '%s', '%s', '%d', '%d', '%d', '%d', '%s', '%s', '%s', '%s', '%s', '%s'],
                     ['%d', '%d']
                 );
+                if ($updated === false) {
+                    throw new RuntimeException('Place epoch could not be updated.');
+                }
                 $seen_ids[] = $row_id;
                 continue;
             }
 
-            $wpdb->insert(
+            $inserted = $wpdb->insert(
                 $this->get_table_name(),
                 $db_data,
                 ['%d', '%s', '%s', '%s', '%s', '%d', '%d', '%d', '%d', '%s', '%s', '%s', '%s', '%s', '%s']
             );
             $new_id = (int) $wpdb->insert_id;
-            if ($new_id > 0) {
-                $seen_ids[] = $new_id;
+            if ($inserted !== 1 || $new_id <= 0) {
+                throw new RuntimeException('Place epoch could not be inserted.');
             }
+            $seen_ids[] = $new_id;
         }
 
         foreach (array_keys($existing_rows) as $existing_id) {
@@ -368,15 +443,19 @@ final class ISS_Register_Place_Epoch_Service
                 continue;
             }
 
-            $wpdb->delete($this->get_table_name(), ['id' => (int) $existing_id, 'place_post_id' => $place_post_id], ['%d', '%d']);
+            if ($wpdb->delete($this->get_table_name(), ['id' => (int) $existing_id, 'place_post_id' => $place_post_id], ['%d', '%d']) === false) {
+                throw new RuntimeException('Place epoch could not be removed.');
+            }
         }
 
         $saved_rows = $this->get_epochs_for_place($place_post_id);
         $this->write_snapshot_meta($place_post_id, $saved_rows, $context);
         if (function_exists('iss_register_get_place_state_service')) {
-            iss_register_get_place_state_service()->sync_place_state_for_post($place_post_id);
+            $states = iss_register_get_place_state_service()->sync_place_state_for_post($place_post_id);
+            if (is_wp_error($states)) {
+                throw new RuntimeException('Place states could not be saved.');
+            }
         }
-        iss_register_clear_places_cache();
 
         return $saved_rows;
     }
@@ -793,7 +872,10 @@ final class ISS_Register_Place_Epoch_Service
             'rows' => array_values($rows),
         ];
 
-        update_post_meta($place_post_id, ISS_REGISTER_EPOCH_SNAPSHOT_META_KEY, $snapshot);
+        update_post_meta($place_post_id, ISS_REGISTER_EPOCH_SNAPSHOT_META_KEY, wp_slash($snapshot));
+        if (get_post_meta($place_post_id, ISS_REGISTER_EPOCH_SNAPSHOT_META_KEY, true) !== $snapshot) {
+            throw new RuntimeException('Place epoch snapshot could not be saved.');
+        }
 
         $history = get_post_meta($place_post_id, ISS_REGISTER_EPOCH_SNAPSHOTS_META_KEY, true);
         if (!is_array($history)) {
@@ -805,7 +887,10 @@ final class ISS_Register_Place_Epoch_Service
             $history = array_slice($history, -10);
         }
 
-        update_post_meta($place_post_id, ISS_REGISTER_EPOCH_SNAPSHOTS_META_KEY, array_values($history));
+        update_post_meta($place_post_id, ISS_REGISTER_EPOCH_SNAPSHOTS_META_KEY, wp_slash(array_values($history)));
+        if (get_post_meta($place_post_id, ISS_REGISTER_EPOCH_SNAPSHOTS_META_KEY, true) !== array_values($history)) {
+            throw new RuntimeException('Place epoch snapshot history could not be saved.');
+        }
     }
 
     private function infer_function_key(array $place): string
@@ -979,7 +1064,21 @@ function iss_register_sync_editorial_place_projection(int $post_id, string $form
         'source' => 'iss_editorial_place',
     ]);
 }
-add_action('iss_editorial_document_saved', 'iss_register_sync_editorial_place_projection', 10, 3);
+add_filter('iss_editorial_document_writer', static function (callable $write, int $post_id, string $format_slug): callable {
+    if ($format_slug !== 'place' || get_post_type($post_id) !== ISS_REGISTER_POST_TYPE) {
+        return $write;
+    }
+    return static function () use ($write, $post_id): bool {
+        $result = iss_register_get_epoch_service()->with_place_transaction($post_id, static function () use ($write, $post_id) {
+            if ($write() !== true) {
+                return false;
+            }
+            $projection = iss_register_sync_editorial_place_projection($post_id, 'place', iss_editorial_get_document($post_id, 'place'));
+            return is_wp_error($projection) ? $projection : true;
+        });
+        return $result === true;
+    };
+}, 10, 3);
 
 function iss_register_get_epoch_function_definitions(): array
 {

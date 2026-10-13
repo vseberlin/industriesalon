@@ -166,15 +166,17 @@ final class ISS_Register_Place_State_Service
         return $grouped;
     }
 
-    public function sync_place_state_for_post(int $post_id, ?array $place = null): void
+    public function sync_place_state_for_post(int $post_id, ?array $place = null)
     {
         if ($post_id <= 0 || get_post_type($post_id) !== ISS_REGISTER_POST_TYPE) {
-            return;
+            return new WP_Error('iss_register_state_place', 'Expected a Place post.');
         }
 
-        $states = $this->build_state_rows_for_post($post_id, $place);
-        $this->replace_state_rows($post_id, $states);
-        iss_register_clear_places_cache();
+        return iss_register_get_epoch_service()->with_place_transaction($post_id, function () use ($post_id, $place): bool {
+            $states = $this->build_state_rows_for_post($post_id, $place);
+            $this->replace_state_rows($post_id, $states);
+            return true;
+        });
     }
 
     // phpcs:disable WordPress.DB.DirectDatabaseQuery -- This service updates only its own current-state projection.
@@ -375,15 +377,20 @@ final class ISS_Register_Place_State_Service
         global $wpdb;
 
         $table_name = $this->get_table_name();
-        $wpdb->delete($table_name, ['place_post_id' => $post_id], ['%d']);
+        if ($wpdb->delete($table_name, ['place_post_id' => $post_id], ['%d']) === false) {
+            throw new RuntimeException('Place states could not be removed.');
+        }
 
         foreach ($rows as $row) {
             $db_row = $this->prepare_row_for_db($post_id, $row);
-            $wpdb->insert(
+            $inserted = $wpdb->insert(
                 $table_name,
                 $db_row,
                 ['%d', '%s', '%s', '%s', '%s', '%s', '%s', '%d', '%d', '%d', '%d', '%s', '%s', '%s', '%s', '%s', '%s', '%s']
             );
+            if ($inserted !== 1) {
+                throw new RuntimeException('Place state could not be inserted.');
+            }
         }
     }
 

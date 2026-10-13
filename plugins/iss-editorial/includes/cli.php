@@ -1622,20 +1622,12 @@ function iss_editorial_cli_place_import_candidate(array $args, array $assoc_args
     }
 
     $candidate = iss_editorial_cli_build_place_candidate($post);
-    if (!iss_editorial_save_document((int) $post->ID, 'place', $candidate, false)) {
+    $enabled = isset($assoc_args['enable']);
+    if (!iss_editorial_save_document((int) $post->ID, 'place', $candidate, false, $enabled)) {
         WP_CLI::error('Place editorial document could not be saved.');
     }
 
-    $enabled = isset($assoc_args['enable']);
-    iss_editorial_set_document_enabled((int) $post->ID, 'place', $enabled);
     delete_post_meta((int) $post->ID, iss_editorial_get_autosave_meta_key('place'));
-
-    if ($enabled && function_exists('iss_register_sync_editorial_place_projection')) {
-        $result = iss_register_sync_editorial_place_projection((int) $post->ID, 'place', $candidate);
-        if (is_wp_error($result)) {
-            WP_CLI::error($result->get_error_message());
-        }
-    }
 
     WP_CLI::success(sprintf(
         'Imported %d Place sections for post %d (%s).',

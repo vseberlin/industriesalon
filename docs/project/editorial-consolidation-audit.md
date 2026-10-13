@@ -185,7 +185,7 @@ or a full editor save test on real content.
 
 ### Place save validation — 13 October 2026
 
-The register epoch service now exposes its existing row validation without
+Committed locally as `45a3568`. The register epoch service exposes its existing row validation without
 writing. Both its projection writer and the shared editorial validation filter
 use that method. One extracted document-to-epoch mapping serves preflight and
 projection; required fields and the single-current-phase rule remain owned by
@@ -214,6 +214,43 @@ projection writer transactional or add propagation of database write failures;
 that is the next separate persistence slice. Renderer/ordering and contribution
 issues from the review remain open. No real content, template, schema or uploads
 changed, and no paired data artifact is needed.
+
+### Place persistence — 13 October 2026
+
+The register epoch owner now coordinates canonical Place JSON, skin/activation,
+epoch rows, snapshot metadata and Atlas states in one checked transaction. Epoch
+and state replacements also use it independently. Participating tables must be
+InnoDB; a source-row lock serializes writers and savepoints preserve caller-owned
+transactions. Failed reads/writes and PHP exceptions return failure after rollback;
+WordPress metadata caches are evicted and successful-save notifications follow
+successful persistence. The engine exposes one writer wrapper for this owner,
+without moving Place data rules into the shared editor.
+
+Native save failures show an error before recovery is cleared. WordPress's native
+revision metadata copy is wrapped and verified before projection, preserving exact
+revision values. First activation, the Place candidate CLI and the two existing
+Place migration consumers use the combined save API instead of a later activation
+and second projection. Those scripts were not executed. Native post fields such as
+title/excerpt, taxonomies and earlier graph writes are outside this boundary; it
+does not promise rollback of the whole WordPress update. Callers with an outer
+transaction retain responsibility for final commit and cache coordination.
+
+Verification: 205 checks in `tests/e2e/bin/place-editorial-atomic.php` use temporary
+copies of the actual schemas. They cover transaction/engine checks, source reads,
+JSON/skin/activation writes, epoch update/insert/delete/readback, both snapshots,
+state delete/insert, late PHP failure, commit/savepoint release, native error and
+recovery retention, revision read/copy/delete/projection, retry, and caller-owned
+transactions including disabled autocommit. Real posts, postmeta, epoch/state rows
+and options are unchanged after cleanup. The 433 storage checks, 13,079 registry
+checks and 41 UI tests pass. PHP syntax and PHPStan pass; PHPCS passes for the
+engine/CLI/epoch service, while the state service has exactly its pre-existing
+7 errors/22 warnings. Chrome confirms an epoch edit, Fertig, native Save Draft and
+fresh reload; saved JSON and projected history agree and recovery is cleared.
+All browser/test fixtures are removed; Kino Spreehöfe still has six matching epochs.
+
+No real content, schema, template or upload changes and no new paired data artifact
+are required. Renderer/ordering alignment is next; contribution intake remains a
+separate follow-up. This persistence slice is verified and accepted for local commit.
 
 The existing media/text pattern now owns its flex layout for native blocks and
 JSON alike. Its defaults are component-scoped, the overlay retains image height

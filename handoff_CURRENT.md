@@ -1,34 +1,36 @@
 # Current handoff — 13 October 2026
 
-## Editorial workspace and Place save validation
+## Editorial workspace and Place persistence
 
-The Place review is committed locally as `ec54190`, following article workflow
-verification `6b60774` and chooser guidance `242593c`; nothing is pushed or deployed.
-The save guard is accepted for local commit: Place canonical/native saves now reuse the
-register epoch service's validation before writes. Missing epoch title/era/function,
-multiple current phases and removing the last epoch are rejected. Unfinished
-starters and deleted-epoch edits remain recoverable; corrected native retries
-update saved JSON and projected history.
+Place save validation is committed locally as `45a3568`, following the contract
+review `ec54190`. The persistence slice is verified and accepted for local commit; nothing is pushed or deployed. Canonical Place JSON, skin/activation,
+epoch snapshots and Atlas states now share a checked register-owned transaction.
+Native saves report failures and retain recovery. Revision metadata restores and
+Place import callers use the same boundary. Standalone epoch/state replacement is
+also atomic; caller transactions retain ownership through savepoints.
 
-Checks: 433 storage assertions over all 94 existing documents, 13,079 registry
-assertions, 41 UI tests, PHP syntax, PHPCS and PHPStan. Chrome covers the missing-era
-message, recovery after reload, correction and native Save Draft/reload. Existing
-post content/metadata and Place epochs/milestones/states survive test cleanup.
-All test posts and derived rows are removed. The only enabled Place, Kino
-Spreehöfe (12899), retains six matching epochs; its template is theme-backed.
+Checks: 205 isolated fault-injection assertions, 433 storage assertions over 94
+existing documents, 13,079 registry assertions and 41 UI tests. PHP syntax and
+PHPStan pass. PHPCS passes for the engine, CLI and epoch service; the state service
+retains its baseline 7 errors/22 warnings, with no new findings. Chrome confirms
+an epoch edit, Fertig, native Save Draft and fresh reload with matching JSON/history.
+All temporary fixtures are removed. Kino Spreehöfe (12899) still has six matching
+epochs. Fault tests preserve the real posts, metadata, epochs, states and options.
 
-Next: harden Place persistence against database write failures through the
-existing owners. This slice covers validation, not transactional projection writes.
-Then align intro/present-day fields and ordering with the dossier renderer and
-resolve the separate contribution contract. The JSON upload gesture is inert;
+The transaction protects the section document and projections, not native post
+fields, taxonomies or graph work earlier in the WordPress save lifecycle. A caller
+owning a larger transaction also owns final commit/cache coordination. See the
+[persistence checkpoint](docs/project/editorial-consolidation-audit.md#place-persistence--13-october-2026).
+Next: align Place intro/present-day fields and ordering with the dossier renderer;
+then resolve the separate contribution contract. Its JSON gesture is inert,
 template links use an unresolved `ort` identifier, and intake excludes Places.
-See the [save guard](docs/project/editorial-consolidation-audit.md#place-save-validation--13-october-2026).
 
-No real content, schema, template or uploads changed; no paired artifact is
-required. Staff UAT, Firefox and external Word/Docs paste remain release checks.
-Effective page/report/publication/Place templates are file-backed;
-Ausstellung override 26309 is retained. The earlier CPT commit's archive
-collection slot still needs target override review at release.
+No real content, schema, templates or uploads changed; no paired data/upload
+artifact is required. Existing migration scripts only adopt the combined save API;
+no migration was executed. Staff UAT, Firefox and external Word/Docs paste remain
+release checks. Effective page/report/publication/Place templates are file-backed;
+Ausstellung override 26309 is retained. The earlier CPT commit's archive collection
+slot still needs target override review at release.
 
 ## Scope and delivery state
 

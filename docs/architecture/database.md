@@ -146,6 +146,20 @@ tables and search updates are outside this graph transaction; a graph failure
 does not undo an already-saved WordPress post. No schema or content migration is
 required.
 
+Place narrative persistence has a separate register-owned boundary in
+`ISS_Register_Place_Epoch_Service::with_place_transaction()`. It checks the posts,
+postmeta, epoch and state tables for InnoDB, locks the source Place row, and wraps
+canonical JSON, skin/activation, epoch snapshots and state replacement. It checks
+reads/writes, rolls back SQL/PHP failures, evicts metadata caches, and returns
+`WP_Error` on failure. Epoch and state writers also use this boundary independently.
+Nested/caller-owned transactions use savepoints; only an owned transaction is
+committed. The register cache is invalidated after successful outer service work;
+callers owning a larger transaction retain final commit/cache responsibility.
+Native post fields, taxonomies, graph and subsequent Set-use notifications remain
+outside this Place document boundary. No table or schema change is involved.
+`tests/e2e/bin/place-editorial-atomic.php` injects failures against connection-local
+copies of the actual schemas, with recovery and real-table preservation checks.
+
 Automatic public-content synchronization in `iss_graph_sync_public_content_entity()`
 also uses `synchronize_entity_graph()`. Content entity/title, WordPress identifiers,
 aliases and the native place/person/organization families commit together,

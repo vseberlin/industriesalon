@@ -19,10 +19,8 @@ $post = get_post($post_id);
 $required_functions = [
     'iss_content_model_build_place_editorial_candidate',
     'iss_editorial_save_document',
-    'iss_editorial_set_document_enabled',
     'iss_editorial_get_document',
     'iss_editorial_document_is_enabled',
-    'iss_register_sync_editorial_place_projection',
     'iss_register_get_epoch_service',
 ];
 
@@ -73,14 +71,8 @@ if (count($candidate_epochs) !== 6) {
     WP_CLI::error(sprintf('Candidate must contain six epoch sections; found %d.', count($candidate_epochs)));
 }
 
-if (!iss_editorial_save_document($post_id, 'place', $candidate, false)) {
+if (!iss_editorial_save_document($post_id, 'place', $candidate, false, true)) {
     WP_CLI::error('Failed to save the Place editorial document.');
-}
-
-iss_editorial_set_document_enabled($post_id, 'place', true);
-$projection = iss_register_sync_editorial_place_projection($post_id, 'place', $candidate);
-if (is_wp_error($projection)) {
-    WP_CLI::error($projection->get_error_message());
 }
 
 $saved = iss_editorial_get_document($post_id, 'place', false);
