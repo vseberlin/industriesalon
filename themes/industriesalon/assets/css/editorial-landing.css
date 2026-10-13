@@ -941,6 +941,7 @@
 
 .iss-landing-feature__fact {
   display: grid;
+  align-content: start;
   gap: 0.3rem;
   padding: 1rem;
   border: 1px solid var(--iss-landing-rule);
@@ -956,6 +957,20 @@
 .iss-landing-feature__fact-label {
   color: var(--iss-landing-muted);
   line-height: 1.5;
+}
+
+.iss-landing-section--gesture-facts {
+  overflow-wrap: anywhere;
+}
+
+.iss-landing-section--gesture-facts .iss-landing-section__title {
+  max-width: 24ch;
+  font-size: clamp(1.85rem, 2.7vw, 3.1rem);
+  line-height: 1.05;
+}
+
+.iss-landing-section--gesture-facts .iss-landing-feature__facts {
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 16rem), 1fr));
 }
 
 .iss-landing-surface .iss-landing-feature__fact-label {

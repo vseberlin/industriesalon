@@ -66,6 +66,8 @@ function iss_content_model_editorial_gesture_registry(): array
         'facts' => [
             'label' => __('Merkpunkte', 'iss-content-model'),
             'description' => __('Fakten und Zahlen übersichtlich zusammenstellen.', 'iss-content-model'),
+            'portable' => true,
+            'supports' => ['anchor', 'facts'],
             'icon' => 'list-view', 'tone' => 'text', 'group' => 'Text', 'schematic' => 'list',
             'legacy_types' => ['massstab' => []],
         ],

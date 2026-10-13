@@ -818,6 +818,15 @@ function industriesalon_render_editorial_landing_facts(array $facts): string
     return $html !== '' ? '<ul class="iss-landing-feature__facts">' . $html . '</ul>' : '';
 }
 
+/** Standalone facts reuse the copy and fact-list components already used by features. */
+function industriesalon_render_editorial_landing_fact_section(array $section, string $skin): string
+{
+    $copy = industriesalon_render_editorial_landing_copy($section);
+    $facts = industriesalon_render_editorial_landing_facts((array) ($section['facts'] ?? []));
+    if ($copy === '' && $facts === '') { return ''; }
+    return '<section ' . industriesalon_editorial_landing_section_attrs($section, $skin) . '><div class="iss-container iss-landing-section__inner">' . $copy . $facts . '</div></section>';
+}
+
 function industriesalon_render_editorial_landing_origin_story(array $section, int $rendered_index, string $skin): string
 {
     $kicker = trim((string) ($section['kicker'] ?? ''));
@@ -1434,6 +1443,9 @@ function industriesalon_render_editorial_landing_atlas_map(array $section, int $
 function industriesalon_render_editorial_landing_section(array $section, int $rendered_index, string $skin): string
 {
     $type = sanitize_key((string) ($section['type'] ?? ''));
+    if ($type === 'facts') {
+        return industriesalon_render_editorial_landing_fact_section($section, $skin);
+    }
     if ($type === 'statement') {
         return industriesalon_render_editorial_landing_statement($section, $rendered_index, $skin);
     }
@@ -1557,7 +1569,7 @@ function industriesalon_front_page_landing_has_sections(): bool
         if (!is_array($section)) {
             continue;
         }
-        if (in_array((string) ($section['type'] ?? ''), ['statement', 'fliesstext', 'schluss', 'kapitel', 'zitat', 'gateway', 'text_bild_reihe', 'map_img', 'galerie', 'feature', 'dynamic_slot'], true)) {
+        if (in_array((string) ($section['type'] ?? ''), ['statement', 'fliesstext', 'schluss', 'kapitel', 'facts', 'zitat', 'gateway', 'text_bild_reihe', 'map_img', 'galerie', 'feature', 'dynamic_slot'], true)) {
             $has_sections = true;
             break;
         }

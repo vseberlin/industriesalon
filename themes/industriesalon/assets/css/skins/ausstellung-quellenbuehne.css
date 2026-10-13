@@ -755,69 +755,6 @@
   line-height: 1.45;
 }
 
-.iss-ausstellung-editorial__section--layout-stat {
-  display: grid;
-  align-content: center;
-  width: 100%;
-  min-height: 70vh;
-  padding: var(--iss-ausstellung-pad-y) 0;
-  background: var(--iss-ausstellung-dark);
-  color: var(--iss-ausstellung-light);
-}
-
-.iss-ausstellung-editorial__section--layout-stat > .iss-container {
-  width: min(100% - (2 * var(--iss-ausstellung-pad-x)), 76rem);
-}
-
-.iss-ausstellung-editorial__section--layout-stat h2,
-.iss-ausstellung-editorial__section--layout-stat .iss-ausstellung-section__copy {
-  color: inherit;
-}
-
-.iss-ausstellung-editorial--skin-quellenbuehne .iss-ausstellung-editorial__section--layout-stat h2 {
-  max-width: 18ch;
-  padding-top: 1rem;
-  border-top: 4px solid var(--iss-ausstellung-accent);
-  color: inherit;
-  font-size: clamp(1.9rem, 4.2vw, 3.25rem);
-  line-height: 0.98;
-}
-
-.iss-ausstellung-editorial__section--layout-stat .iss-ausstellung-editorial__body {
-  max-width: 58rem;
-  color: rgba(249, 249, 250, 0.72);
-  font-size: clamp(1rem, 0.35vw + 0.95rem, 1.16rem);
-  line-height: 1.64;
-}
-
-.iss-ausstellung-editorial__section--layout-stat .iss-ausstellung-editorial__body p {
-  margin: 0;
-}
-
-.iss-ausstellung-editorial__section--layout-stat .iss-ausstellung-editorial__body p + p {
-  margin-top: 0.85rem;
-}
-
-.iss-ausstellung-editorial__section--layout-stat .iss-ausstellung-editorial__body strong {
-  display: block;
-  margin-bottom: 0.25rem;
-  color: var(--iss-ausstellung-light);
-  font-size: clamp(1.6rem, 3vw, 2.6rem);
-  line-height: 1;
-}
-
-.iss-ausstellung-editorial__section--layout-stat .iss-ausstellung-section__copy {
-  gap: clamp(1rem, 2vw, 1.6rem);
-}
-
-.iss-ausstellung-editorial__section--layout-stat .iss-ausstellung-section__kicker {
-  color: #ff5a60;
-}
-
-.iss-ausstellung-editorial__section--layout-stat .iss-ausstellung-section__links {
-  margin-top: 0.5rem;
-}
-
 .iss-ausstellung-editorial__section--layout-album > .iss-container {
   width: min(100% - (2 * var(--iss-ausstellung-pad-x)), 88rem);
 }
@@ -988,12 +925,6 @@
 
   .iss-ausstellung-editorial__section--layout-object-grid {
     min-height: auto;
-  }
-
-  .iss-ausstellung-editorial__section--layout-stat {
-    min-height: auto;
-    padding-top: clamp(3rem, 12vw, 5rem);
-    padding-bottom: clamp(3rem, 12vw, 5rem);
   }
 
   .iss-ausstellung-editorial__section--layout-chapter > .iss-container {

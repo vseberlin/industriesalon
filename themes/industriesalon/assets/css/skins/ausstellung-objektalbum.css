@@ -262,60 +262,6 @@
   object-fit: cover;
 }
 
-.iss-ausstellung-editorial--skin-objektalbum .iss-ausstellung-section--layout-stat {
-  display: grid;
-  align-content: center;
-  min-height: 46vh;
-  background: var(--iss-ausstellung-dark);
-  color: var(--iss-ausstellung-light);
-}
-
-.iss-ausstellung-editorial--skin-objektalbum .iss-ausstellung-section--layout-stat .iss-ausstellung-section__title,
-.iss-ausstellung-editorial--skin-objektalbum .iss-ausstellung-section--layout-stat .iss-ausstellung-section__copy {
-  color: inherit;
-}
-
-.iss-ausstellung-editorial--skin-objektalbum .iss-ausstellung-section--layout-stat .iss-ausstellung-section__kicker {
-  --iss-kicker-color: var(--iss-ausstellung-light);
-
-  color: var(--iss-kicker-color);
-}
-
-.iss-ausstellung-editorial--skin-objektalbum .iss-ausstellung-section--layout-stat .iss-ausstellung-section__copy {
-  gap: clamp(2rem, 5vw, 4.5rem);
-}
-
-.iss-ausstellung-editorial--skin-objektalbum .iss-ausstellung-section--layout-stat .iss-ausstellung-section__title {
-  max-width: none;
-  color: inherit;
-  font-size: clamp(2.2rem, 6vw, 5.2rem);
-  line-height: 0.94;
-}
-
-.iss-ausstellung-editorial--skin-objektalbum .iss-ausstellung-section--layout-stat .iss-ausstellung-editorial__body {
-  display: flex;
-  flex-wrap: wrap;
-  gap: clamp(1.25rem, 4vw, 3rem);
-  margin-top: clamp(1.25rem, 3vw, 2.75rem);
-  color: rgba(249, 249, 250, 0.66);
-}
-
-.iss-ausstellung-editorial--skin-objektalbum .iss-ausstellung-section--layout-stat .iss-ausstellung-editorial__body p {
-  max-width: 16ch;
-  margin: 0;
-}
-
-.iss-ausstellung-editorial--skin-objektalbum .iss-ausstellung-section--layout-stat .iss-ausstellung-editorial__body strong {
-  display: block;
-  padding-top: clamp(0.65rem, 1vw, 0.9rem);
-  border-top: 4px solid var(--iss-ausstellung-accent);
-  color: #fff;
-  font-family: Georgia, "Times New Roman", serif;
-  font-size: clamp(2.3rem, 5vw, 4.2rem);
-  font-weight: 400;
-  line-height: 1;
-}
-
 .iss-ausstellung-editorial--skin-objektalbum .iss-ausstellung-section--layout-essay {
   background: var(--iss-ausstellung-kinder-paper);
 }

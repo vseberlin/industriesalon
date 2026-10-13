@@ -68,8 +68,6 @@ function industriesalon_get_editorial_project_section_context(array $section, st
     $layouts = [
         'kapitel' => 'chapter',
         'fliesstext' => 'essay',
-        'massstab' => 'key-points',
-        'facts' => 'key-points',
         'galerie' => 'gallery',
         'material' => 'material',
         'upload_intake' => 'upload-intake',
@@ -643,7 +641,7 @@ function industriesalon_render_editorial_project_dossier_spread(array $chapter, 
                 <?php echo industriesalon_render_editorial_landing_chapter_content($chapter); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- Shared chapter renderer escapes text, links and resolved media. ?>
             </div>
             <?php if ($facts_html !== '' || $facts_kicker !== '' || $facts_title !== '' || $facts_body !== '') : ?>
-                <aside class="iss-project-dossier-spread__facts iss-project-section__fact-rail" aria-label="<?php echo esc_attr__('Projektfakten', 'industriesalon'); ?>">
+                <aside<?php echo $facts_anchor !== '' ? ' id="' . esc_attr($facts_anchor) . '"' : ''; ?> class="iss-project-dossier-spread__facts iss-project-section__fact-rail iss-scroll-target" aria-label="<?php echo esc_attr__('Projektfakten', 'industriesalon'); ?>">
                     <?php if ($facts_kicker !== '') : ?>
                         <p class="iss-kicker iss-kicker--compact iss-project-section__kicker"><?php echo esc_html($facts_kicker); ?></p>
                     <?php endif; ?>
@@ -651,7 +649,7 @@ function industriesalon_render_editorial_project_dossier_spread(array $chapter, 
                         <h3 class="iss-project-dossier-spread__facts-title"><?php echo esc_html($facts_title); ?></h3>
                     <?php endif; ?>
                     <?php if ($facts_body !== '') : ?>
-                        <div class="iss-project-dossier-spread__facts-body"><?php echo wp_kses_post(wpautop($facts_body)); ?></div>
+                        <div class="iss-project-dossier-spread__facts-body"><?php echo industriesalon_landing_prose($facts_body, $facts_section); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- Shared versioned prose allowlist. ?></div>
                     <?php endif; ?>
                     <?php echo $facts_html; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- Facts are escaped in industriesalon_render_editorial_project_facts(). ?>
                 </aside>
@@ -661,7 +659,7 @@ function industriesalon_render_editorial_project_dossier_spread(array $chapter, 
     <?php
 
     $html = industriesalon_editorial_preview_section(trim((string) ob_get_clean()), $chapter, ['title' => 'iss-landing-section__title', 'kicker' => 'iss-landing-section__kicker', 'body' => 'iss-landing-section__body']);
-    return industriesalon_editorial_preview_section($html, $facts_section, ['title' => 'iss-project-dossier-spread__facts-title', 'body' => 'iss-project-dossier-spread__facts-body'], 'iss-project-dossier-spread__facts');
+    return industriesalon_editorial_preview_section($html, $facts_section, ['title' => 'iss-project-dossier-spread__facts-title', 'kicker' => 'iss-project-section__kicker', 'body' => 'iss-project-dossier-spread__facts-body'], 'iss-project-dossier-spread__facts');
 }
 
 function industriesalon_render_editorial_project_section(array $section, bool $show_placeholders, int $rendered_index, string $skin, string $anchor = ''): string
@@ -673,7 +671,6 @@ function industriesalon_render_editorial_project_section(array $section, bool $s
     $kicker = trim((string) ($section['kicker'] ?? ''));
     $title = trim((string) ($section['title'] ?? ''));
     $body = trim((string) ($section['body'] ?? ''));
-    $facts = is_array($section['facts'] ?? null) ? $section['facts'] : [];
     $refs = is_array($section['object_refs_resolved'] ?? null) ? $section['object_refs_resolved'] : [];
     $media_refs = is_array($section['media_refs_resolved'] ?? null) ? $section['media_refs_resolved'] : [];
     $links = is_array($section['links'] ?? null) ? $section['links'] : [];
@@ -685,7 +682,6 @@ function industriesalon_render_editorial_project_section(array $section, bool $s
     $media_html = '';
     $download_html = '';
     $links_html = industriesalon_render_editorial_project_links($links);
-    $facts_html = industriesalon_render_editorial_project_facts($facts);
     $upload_intake_html = $type === 'upload_intake' ? industriesalon_render_editorial_project_upload_intake($section) : '';
     if ($type === 'upload_intake' && $upload_intake_html === '') {
         return '';
@@ -711,7 +707,7 @@ function industriesalon_render_editorial_project_section(array $section, bool $s
 
     $downloads_html = $type === 'material' ? industriesalon_render_editorial_project_downloads($download_html) : '';
 
-    if ($kicker === '' && $title === '' && $body === '' && $facts_html === '' && $ref_html === '' && $media_html === '' && $downloads_html === '' && $links_html === '' && $upload_intake_html === '') {
+    if ($kicker === '' && $title === '' && $body === '' && $ref_html === '' && $media_html === '' && $downloads_html === '' && $links_html === '' && $upload_intake_html === '') {
         return '';
     }
 
@@ -726,7 +722,6 @@ function industriesalon_render_editorial_project_section(array $section, bool $s
         'iss-project-editorial__section--skin-' . sanitize_html_class($skin),
     ];
 
-    $uses_fact_rail = $skin === 'dossier' && $context['layout'] === 'key-points' && $facts_html !== '';
     $uses_gallery_carousel = $type === 'galerie' && $context['layout'] === 'gallery';
 
     ob_start();
@@ -736,39 +731,19 @@ function industriesalon_render_editorial_project_section(array $section, bool $s
             <?php if ($media_html !== '' && !$uses_gallery_carousel) : ?>
                 <div class="iss-project-section__media iss-project-editorial__media-strip"><?php echo $media_html; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- Media render through WordPress attachment helpers above. ?></div>
             <?php endif; ?>
-            <?php if ($kicker !== '' || $title !== '' || $facts_html !== '' || $body !== '' || $links_html !== '' || $upload_intake_html !== '') : ?>
+            <?php if ($kicker !== '' || $title !== '' || $body !== '' || $links_html !== '' || $upload_intake_html !== '') : ?>
                 <div class="iss-project-section__copy">
-                    <?php if ($uses_fact_rail) : ?>
-                        <div class="iss-project-section__copy-main">
-                            <?php if ($kicker !== '') : ?>
-                                <p class="iss-kicker iss-kicker--compact iss-project-section__kicker"><?php echo esc_html($kicker); ?></p>
-                            <?php endif; ?>
-                            <?php if ($title !== '') : ?>
-                                <h2 class="iss-project-section__title"><?php echo esc_html($title); ?></h2>
-                            <?php endif; ?>
-                            <?php if ($body !== '') : ?>
-                                <div class="iss-project-section__body iss-project-editorial__body"><?php echo wp_kses_post(wpautop($body)); ?></div>
-                            <?php endif; ?>
-                            <?php echo $links_html; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- Links are escaped in the shared helper. ?>
-                            <?php echo $upload_intake_html; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- Upload intake markup is escaped above. ?>
-                        </div>
-                        <aside class="iss-project-section__fact-rail" aria-label="<?php echo esc_attr__('Projektfakten', 'industriesalon'); ?>">
-                            <?php echo $facts_html; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- Facts are escaped in industriesalon_render_editorial_project_facts(). ?>
-                        </aside>
-                    <?php else : ?>
-                        <?php if ($kicker !== '') : ?>
-                            <p class="iss-kicker iss-kicker--compact iss-project-section__kicker"><?php echo esc_html($kicker); ?></p>
-                        <?php endif; ?>
-                        <?php if ($title !== '') : ?>
-                            <h2 class="iss-project-section__title"><?php echo esc_html($title); ?></h2>
-                        <?php endif; ?>
-                        <?php echo $facts_html; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- Facts are escaped in industriesalon_render_editorial_project_facts(). ?>
-                        <?php if ($body !== '') : ?>
-                            <div class="iss-project-section__body iss-project-editorial__body"><?php echo wp_kses_post(wpautop($body)); ?></div>
-                        <?php endif; ?>
-                        <?php echo $links_html; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- Links are escaped in the shared helper. ?>
-                        <?php echo $upload_intake_html; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- Upload intake markup is escaped above. ?>
+                    <?php if ($kicker !== '') : ?>
+                        <p class="iss-kicker iss-kicker--compact iss-project-section__kicker"><?php echo esc_html($kicker); ?></p>
                     <?php endif; ?>
+                    <?php if ($title !== '') : ?>
+                        <h2 class="iss-project-section__title"><?php echo esc_html($title); ?></h2>
+                    <?php endif; ?>
+                    <?php if ($body !== '') : ?>
+                        <div class="iss-project-section__body iss-project-editorial__body"><?php echo wp_kses_post(wpautop($body)); ?></div>
+                    <?php endif; ?>
+                    <?php echo $links_html; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- Links are escaped in the shared helper. ?>
+                    <?php echo $upload_intake_html; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- Upload intake markup is escaped above. ?>
                 </div>
             <?php endif; ?>
             <?php if ($media_html !== '' && $uses_gallery_carousel) : ?>
@@ -832,6 +807,7 @@ function industriesalon_render_editorial_project_content(string $content): strin
                 && in_array((string) ($next_section['type'] ?? ''), ['facts', 'massstab'], true);
 
             if ($is_dossier_spread) {
+                $next_section['_text_version'] = (int) ($document['schema_version'] ?? 1);
                 $section_html = industriesalon_render_editorial_project_dossier_spread(
                     $section,
                     $next_section,

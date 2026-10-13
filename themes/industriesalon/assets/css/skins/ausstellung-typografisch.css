@@ -172,47 +172,6 @@
   line-height: 1.45;
 }
 
-.iss-ausstellung-editorial--skin-typografisch .iss-ausstellung-editorial__section--layout-stat {
-  display: grid;
-  align-content: center;
-  min-height: 46vh;
-  background: var(--iss-ausstellung-type-dark);
-  color: #fff;
-}
-
-.iss-ausstellung-editorial--skin-typografisch .iss-ausstellung-editorial__section--layout-stat .iss-ausstellung-section__copy,
-.iss-ausstellung-editorial--skin-typografisch .iss-ausstellung-editorial__section--layout-stat .iss-ausstellung-section__title {
-  color: inherit;
-}
-
-.iss-ausstellung-editorial--skin-typografisch .iss-ausstellung-editorial__section--layout-stat .iss-ausstellung-section__title {
-  max-width: none;
-  color: inherit;
-  font-size: clamp(2.2rem, 6vw, 5.2rem);
-  line-height: 0.94;
-}
-
-.iss-ausstellung-editorial--skin-typografisch .iss-ausstellung-editorial__section--layout-stat .iss-ausstellung-editorial__body {
-  display: flex;
-  flex-wrap: wrap;
-  gap: clamp(1.25rem, 4vw, 3rem);
-  color: rgba(255, 255, 255, 0.66);
-}
-
-.iss-ausstellung-editorial--skin-typografisch .iss-ausstellung-editorial__section--layout-stat .iss-ausstellung-editorial__body p {
-  max-width: 16ch;
-  margin: 0;
-}
-
-.iss-ausstellung-editorial--skin-typografisch .iss-ausstellung-editorial__section--layout-stat .iss-ausstellung-editorial__body strong {
-  display: block;
-  color: #fff;
-  font-family: Georgia, "Times New Roman", serif;
-  font-size: clamp(2.3rem, 5vw, 4.2rem);
-  font-weight: 400;
-  line-height: 1;
-}
-
 .iss-ausstellung-editorial--skin-typografisch .iss-ausstellung-editorial__section--layout-object-grid {
   background: var(--iss-ausstellung-type-paper);
 }
@@ -384,7 +343,6 @@
   }
 
   .iss-ausstellung-editorial--skin-typografisch .iss-ausstellung-editorial__section--layout-quote,
-  .iss-ausstellung-editorial--skin-typografisch .iss-ausstellung-editorial__section--layout-stat,
   .iss-ausstellung-editorial--skin-typografisch .iss-ausstellung-editorial__section--layout-conclusion {
     min-height: auto;
   }

@@ -181,29 +181,6 @@ function industriesalon_render_editorial_links(array $links): string
     return $items ? '<nav class="iss-ausstellung-section__links iss-ausstellung-editorial__links" aria-label="' . esc_attr__('Weiterführende Links', 'industriesalon') . '">' . implode('', $items) . '</nav>' : '';
 }
 
-function industriesalon_render_editorial_ausstellung_facts(array $facts): string
-{
-    $items = [];
-    foreach ($facts as $fact) {
-        if (!is_array($fact)) {
-            continue;
-        }
-
-        $value = trim((string) ($fact['value'] ?? ''));
-        $label = trim((string) ($fact['label'] ?? ''));
-        if ($value === '' && $label === '') {
-            continue;
-        }
-
-        $items[] = '<p>'
-            . ($value !== '' ? '<strong>' . esc_html($value) . '</strong>' : '')
-            . ($label !== '' ? ' ' . esc_html($label) : '')
-            . '</p>';
-    }
-
-    return $items ? '<div class="iss-ausstellung-section__facts iss-ausstellung-editorial__body">' . implode('', $items) . '</div>' : '';
-}
-
 function industriesalon_get_editorial_ausstellung_section_context(array $section, int $rendered_index, string $skin): array
 {
     $type = sanitize_html_class((string) ($section['type'] ?? 'kapitel'));
@@ -216,8 +193,6 @@ function industriesalon_get_editorial_ausstellung_section_context(array $section
             'objektfokus' => 'object-grid',
             'zitat' => 'quote',
             'vollbild' => 'viewport-image',
-            'massstab' => 'stat',
-            'facts' => 'stat',
             'fliesstext' => 'essay',
             'galerie' => 'album',
             'schluss' => 'conclusion',
@@ -287,7 +262,6 @@ function industriesalon_render_editorial_ausstellung_section(array $section, boo
     $body = trim((string) ($section['body'] ?? ''));
     $quote = trim((string) ($section['quote'] ?? ''));
     $attribution = trim((string) ($section['attribution'] ?? ''));
-    $facts = is_array($section['facts'] ?? null) ? $section['facts'] : [];
     $refs = is_array($section['object_refs_resolved'] ?? null) ? $section['object_refs_resolved'] : [];
     $media_refs = is_array($section['media_refs_resolved'] ?? null) ? $section['media_refs_resolved'] : [];
     $links = is_array($section['links'] ?? null) ? $section['links'] : [];
@@ -296,7 +270,6 @@ function industriesalon_render_editorial_ausstellung_section(array $section, boo
     }
     $ref_html = '';
     $media_html = '';
-    $facts_html = industriesalon_render_editorial_ausstellung_facts($facts);
     $links_html = industriesalon_render_editorial_links($links);
 
     foreach ($refs as $ref) {
@@ -323,7 +296,7 @@ function industriesalon_render_editorial_ausstellung_section(array $section, boo
         $links_html .= $upload_html;
     }
 
-    if ($kicker === '' && $title === '' && $body === '' && $quote === '' && $facts_html === '' && $ref_html === '' && $media_html === '' && $links_html === '') {
+    if ($kicker === '' && $title === '' && $body === '' && $quote === '' && $ref_html === '' && $media_html === '' && $links_html === '') {
         return '';
     }
 
@@ -351,7 +324,7 @@ function industriesalon_render_editorial_ausstellung_section(array $section, boo
             <?php if ($media_html !== '') : ?>
                 <div class="iss-ausstellung-section__media iss-ausstellung-editorial__media-strip"><?php echo $media_html; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- Media render through WordPress attachment helpers above. ?></div>
             <?php endif; ?>
-            <?php if ($kicker !== '' || $title !== '' || $body !== '' || $quote !== '' || $facts_html !== '' || $links_html !== '') : ?>
+            <?php if ($kicker !== '' || $title !== '' || $body !== '' || $quote !== '' || $links_html !== '') : ?>
                 <div class="iss-ausstellung-section__copy">
                     <?php if ($kicker !== '') : ?>
                         <p class="iss-kicker iss-kicker--compact iss-ausstellung-section__kicker"><?php echo esc_html($kicker); ?></p>
@@ -362,7 +335,6 @@ function industriesalon_render_editorial_ausstellung_section(array $section, boo
                     <?php if ($body !== '') : ?>
                         <div class="iss-ausstellung-section__body iss-ausstellung-editorial__body"><?php echo wp_kses_post(wpautop($body)); ?></div>
                     <?php endif; ?>
-                    <?php echo $facts_html; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- Facts are escaped in industriesalon_render_editorial_ausstellung_facts(). ?>
                     <?php if ($quote !== '') : ?>
                         <blockquote class="iss-ausstellung-section__quote iss-ausstellung-editorial__quote">
                             <?php echo wp_kses_post(wpautop($quote)); ?>

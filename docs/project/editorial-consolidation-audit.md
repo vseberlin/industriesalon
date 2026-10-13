@@ -13,7 +13,8 @@ The workspace/CPT expansion is committed as `65c55b8`, shared portability as
 `9eab967`, publication adapters as `c090540`, and shared gallery/text/quote
 contracts as `32d3e3f`; native publication layout compatibility is committed as
 `9fd10d0`, shared conclusions as `5fce0d0`, and shared chapters as `54afba5`.
-Leitfrage consolidation is accepted for local commit. Registration, editor fields, save validation and
+Leitfrage consolidation is committed locally as `0c1b046`. The Merkpunkte slice
+is accepted for local commit. Registration, editor fields, save validation and
 public rendering must agree before a gesture becomes available in another format.
 
 | Gesture identifiers | Effective boundary / remaining work |
@@ -28,7 +29,7 @@ public rendering must agree before a gesture becomes available in another format
 | `galerie` | One portable contract across eight formats: media and archive objects with captions/source links; grid, sequence, wall and viewport layouts. Place retains its separate existing contract. |
 | `objektfokus` | Exhibition/report archive references use the archive owner; future reuse must retain resolution and visibility checks. |
 | `material` | Domain downloads differ from event text items and dynamic references. Do not union fields that renderers would drop. |
-| `facts` | Project/exhibition facts are reusable candidates, with project dossier pairing retained. Portable features already render their own facts. |
+| `facts` | One portable contract across eight formats: optional rich text, title/kicker, anchors and plain-text value/description rows. Reuses the existing copy and fact-list components; project Dossier retains chapter/facts pairing with separate preview addresses. |
 | `upload_intake` | Depends on the context owner's open intake and signed invitation; registration alone cannot open collection. |
 | `programm` | Event structure controls availability. Shared composition does not bypass its domain allowlist. |
 | `dynamic_slot` | Landing slots bind named owner services; each requires a context/renderer review before reuse. |
@@ -76,7 +77,7 @@ Chapter text and shared headings now consume existing surface/skin variables,
 fixing dark-on-dark text in Bildmatrix. Its album palette is component-owned so
 the same album can appear in other layouts without losing its colours.
 
-Nine visible composition gestures now share fields and rendering across eight
+Ten visible composition gestures now share fields and rendering across eight
 formats. Gallery/text/quote rendering consumes resolved references through one
 existing composition path, with published-object checks delegated to the archive
 owner. Existing documents adopt the shared presentation while retaining their
@@ -85,16 +86,16 @@ duplicate Territorial positioning is removed so shared phone stacking can apply.
 Domain gallery/quote compatibility branches and their styling remain for legacy
 content and Place supplements; they are not a second new gesture contract.
 
-Verification covers the nine gestures, their treatments/layouts in every
+Verification covers the ten gestures, their treatments/layouts in every
 registered skin of eight formats, save/reload, public content routing, snapshot
 addresses, media/archive captions, source visibility, links, rich text,
-front-page exclusion and event-structure restrictions: 11,260 assertions plus 35
+front-page exclusion and event-structure restrictions: 11,911 assertions plus 35
 UI tests. Retained publication quote IDs and Place fields/rendering are checked.
 The publication matrix covers four layouts in all three skins,
 interleaving, native navigation/source data, all-native mixed documents, multiple
 albums, standalone native gestures under mismatched layouts, warm-cache layout
 switches, disabled fallback and two successive
-snapshots after a warmed public cache. Storage checks pass 298 assertions over all
+snapshots after a warmed public cache. Storage checks pass 299 assertions over all
 94 existing documents, with post content/metadata unchanged. Chapter coverage
 includes all format/skin combinations, versions 1–3, both media positions and
 aside treatment, captions, links, event live-only references, owner boundaries,
@@ -152,9 +153,37 @@ only, including the retained publication quote identifier. The old question
 layout mappings and obsolete domain/skin CSS are removed; shared treatment/skin
 CSS owns the presentation. No new renderer, stylesheet or storage path is added.
 
-Next: share `facts` (Merkpunkte) where its field/rendering
-contract agrees, retaining the project chapter/facts pairing. Native intro/hero
-contracts and Places remain separate.
+## Facts contract boundary
+
+The read-only inventory found 12 stored `massstab` sections: five prose-only
+sections in two exhibitions and seven structured lists in six projects. The
+existing normalizer already resolves these to `facts`; no stored documents or
+versions are rewritten. The shared registry now exposes Merkpunkte across eight
+formats. Optional formatted prose remains intact, including legacy numbers and
+emphasis. Fact values/descriptions remain escaped plain text. Empty, value-only,
+description-only and zero-value cases are covered.
+
+Standalone facts use the existing shared copy and fact-list components, with a
+smaller heading, responsive columns and top-aligned card contents. Removed
+exhibition stat-layout CSS and standalone project key-points CSS are obsolete
+because those paths now delegate to the shared renderer. Project Dossier keeps
+its existing paired fact column and component styles; its anchor now targets the
+column, and kicker/body preview fields and document text version are propagated.
+Domain fact styling outside these replaced layouts remains compatibility code.
+
+Facts verification includes versions 1–3, every format/skin, all publication
+layouts, save/reload, unsupported-field rejection, escaping and distinct project
+chapter/fact snapshot addresses. Chrome checks the two existing exhibitions,
+Futura's paired facts, and private article/publication samples at desktop/390 px
+without horizontal overflow. Article chooser insertion, row edit/add/remove,
+Fertig, native Update and reload retain zero values, anchors and formatted text;
+the neighbouring chapter stays intact. Private fixtures/revisions/autosaves are
+removed. PHP lint, targeted PHPCS/PHPStan and changed CSS lint pass. Staff UAT
+and Firefox remain separate release checks.
+
+Next: inspect the `material` contract before sharing it. Domain downloads,
+event text items and owner-resolved dynamic references must retain their fields
+and renderers. Native intro/hero contracts and Places remain separate.
 
 ## Findings and disposition
 

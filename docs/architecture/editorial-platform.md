@@ -31,9 +31,10 @@ This is the implementation checkpoint for the SOW in
 ## Portable composition
 
 The vocabulary defines `statement`, `gateway`, `text_bild_reihe`, `feature`,
-`galerie`, `fliesstext`, `zitat`, `schluss` and `kapitel` once, including supported fields and treatments. Landing, article, event,
-exhibition, project, report, tour and publication formats use those contracts. The theme
-registers their section renderer and delegates to the existing landing composition
+`galerie`, `fliesstext`, `zitat`, `schluss`, `kapitel` and `facts` once, including
+supported fields and treatments. Landing, article, event, exhibition, project,
+report, tour and publication formats use those contracts. The theme registers
+their section renderer and delegates to the existing landing composition
 functions; native domain sections retain their renderers. Preview and public
 output use the same document and renderer. Event context rules permit these
 portable gestures while retaining restrictions on domain-specific sections.
@@ -71,6 +72,16 @@ resolved by their existing owners. Project dossier pairing reuses the shared
 chapter body while keeping its facts column, anchors and separate preview
 addresses. Publication `longread_chapter` remains a distinct Lesekapitel with its
 native numbering/navigation; no stored identifiers are rewritten.
+
+Merkpunkte (`facts`) shares optional rich text, title/kicker, anchors and plain-text
+`value`/`label` rows across the same eight formats. Standalone sections reuse the
+existing copy and fact-list components, with responsive cards and the selected
+skin. Zero values and rows containing only a value or description remain visible;
+empty sections emit no public wrapper. Existing `massstab` normalization is
+unchanged. Legacy numeric prose remains prose, without parsing or rewriting it.
+Project Dossier still pairs a chapter followed by facts in its existing column;
+that column retains its own anchor, versioned prose and preview editing address.
+Place facts, event structure and other authoritative metadata keep their owners.
 
 Publication payload adapters retain shared and publication-native gestures in
 the reading flow of all four layouts. Chapter, timeline-moment and album markup
@@ -474,7 +485,7 @@ project as private working collections. Public project documents store only
 promoted `media_refs` and `object_refs`; the theme never reads raw Set state.
 Set promotion defaults projects into `galerie` so approved intake material can
 become public without collapsing the preserved Set history.
-Project `facts` sections own structured fact rows (`value` plus `label`)
+The shared `facts` contract supplies project fact rows (`value` plus `label`)
 so editors do not have to encode fact emphasis with inline HTML in body text.
 The body remains available as an optional explanatory paragraph and as a legacy
 fallback.
@@ -683,7 +694,7 @@ onto those slots in CSS. `kicker` is a first-class JSON section field because it
 is shared site language, not a skin decoration. In the first `frauen-im-werk`
 treatment, `quellenauszug` owns the image/text/quote station treatment and has
 a scoped text-position flip for left/right source stations. `kapitel`,
-`leitfrage`, `zitat`, and `fliesstext` now use the shared composition renderer
+`leitfrage`, `zitat`, `fliesstext` and `facts` now use the shared composition renderer
 and selected skin; their content uses the common
 `kicker`, `title`, `body`, `quote`, and `attribution` fields rather than
 parallel gesture-specific keys. `objektfokus` remains reserved for

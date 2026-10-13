@@ -244,39 +244,6 @@
   font-style: normal;
 }
 
-.iss-ausstellung-editorial--skin-chronik .iss-ausstellung-editorial__section--layout-stat {
-  display: grid;
-  align-content: center;
-  min-height: 48vh;
-  background: var(--iss-ausstellung-chronik-paper);
-}
-
-.iss-ausstellung-editorial--skin-chronik .iss-ausstellung-editorial__section--layout-stat .iss-ausstellung-section__title {
-  max-width: 18ch;
-  padding-top: 0.8rem;
-  border-top: 3px solid var(--iss-ausstellung-chronik-accent);
-}
-
-.iss-ausstellung-editorial--skin-chronik .iss-ausstellung-editorial__section--layout-stat .iss-ausstellung-editorial__body {
-  display: flex;
-  flex-wrap: wrap;
-  gap: clamp(1.25rem, 4vw, 2.6rem);
-}
-
-.iss-ausstellung-editorial--skin-chronik .iss-ausstellung-editorial__section--layout-stat .iss-ausstellung-editorial__body p {
-  max-width: 16ch;
-  margin: 0;
-}
-
-.iss-ausstellung-editorial--skin-chronik .iss-ausstellung-editorial__section--layout-stat .iss-ausstellung-editorial__body strong {
-  display: block;
-  padding-top: 0.65rem;
-  border-top: 3px solid var(--iss-ausstellung-chronik-accent);
-  color: var(--iss-ausstellung-chronik-ink);
-  font-size: clamp(2rem, 4.5vw, 3.7rem);
-  line-height: 1;
-}
-
 .iss-ausstellung-editorial--skin-chronik .iss-ausstellung-editorial__section--layout-album > .iss-container {
   width: min(100% - (2 * var(--iss-ausstellung-pad-x)), 88rem);
 }
@@ -399,7 +366,6 @@
   }
 
   .iss-ausstellung-editorial--skin-chronik .iss-ausstellung-editorial__section--layout-quote,
-  .iss-ausstellung-editorial--skin-chronik .iss-ausstellung-editorial__section--layout-stat,
   .iss-ausstellung-editorial--skin-chronik .iss-ausstellung-editorial__section--layout-conclusion {
     min-height: auto;
   }

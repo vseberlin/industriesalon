@@ -4,9 +4,10 @@ Immediate executable work only. Larger future programs live in `docs/project/bac
 
 ## Next
 
-- After accepted Leitfrage consolidation, share
-  `facts` (Merkpunkte) where its fields and rendering agree, retaining project
-  chapter/facts pairing. Native intro/hero contracts and Places remain separate. See the
+- After accepted Merkpunkte consolidation, inspect `material` portability:
+  domain downloads, event text items and dynamic references must keep their
+  owner contracts and rendering. Native intro/hero contracts and Places remain
+  separate. See the
   [gesture inventory](docs/project/editorial-consolidation-audit.md#gesture-portability-checkpoint--13-october-2026).
 - Coordinate an authorized staging release of the completed
   [WordPress refactor](docs/project/wordpress-refactoring-plan.md) and accepted

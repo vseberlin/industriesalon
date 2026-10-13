@@ -333,11 +333,7 @@ function iss_content_model_register_editorial_formats(array $formats): array
                 'description' => __('Ausgewählte Archivobjekte im Zusammenhang zeigen.', 'iss-content-model'),
                 'supports' => ['object_refs'],
             ],
-            'facts' => [
-                'label' => __('Merkpunkte', 'iss-content-model'),
-                'description' => __('Fakten und Zahlen übersichtlich zusammenstellen.', 'iss-content-model'),
-                'supports' => ['facts'],
-            ],
+            'facts' => $gestures['facts'],
             'zitat' => $gestures['zitat'],
             'galerie' => $gestures['galerie'],
             'fliesstext' => $gestures['fliesstext'],
@@ -360,11 +356,7 @@ function iss_content_model_register_editorial_formats(array $formats): array
         'sections' => [
             'kapitel' => $gestures['kapitel'],
             'fliesstext' => $gestures['fliesstext'],
-            'facts' => [
-                'label' => __('Merkpunkte', 'iss-content-model'),
-                'description' => __('Kernpunkte, Fakten und Zusammenhänge hervorheben.', 'iss-content-model'),
-                'supports' => ['anchor', 'facts'],
-            ],
+            'facts' => $gestures['facts'],
             'galerie' => $gestures['galerie'],
             'material' => $material_section,
             'upload_intake' => [
