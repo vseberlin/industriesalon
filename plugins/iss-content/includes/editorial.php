@@ -157,10 +157,12 @@ function iss_content_model_register_editorial_formats(array $formats): array
         'post_types' => ['register_place'],
         'default_skin' => 'ortsdossier',
         'default_variant' => 'standard',
+        'editor' => ['order_notice' => __('Feste Seitenfolge: Einleitung → Epochen → Gegenwart → Galerie und Material. Verschieben wirkt innerhalb dieser Bereiche. Enthält die Chronik ergänzte Ereignisse, gilt dort die Datumsfolge.', 'iss-content-model')],
         'sections' => [
             'intro' => [
                 'label' => __('Kurzprofil', 'iss-content-model'),
-                'description' => __('Ein knapper Einstieg in Bedeutung und heutige Lesart des Ortes.', 'iss-content-model'),
+                'description' => __('Am Anfang des Dossiers: Titel, Text und Bilder zum Ort. Kann einmal hinzugefügt werden.', 'iss-content-model'),
+                'max_instances' => 1,
                 'supports' => ['media_refs'],
             ],
             'epoche' => [
@@ -180,7 +182,8 @@ function iss_content_model_register_editorial_formats(array $formats): array
             ],
             'gegenwart' => [
                 'label' => __('Gegenwart', 'iss-content-model'),
-                'description' => __('Heutige Nutzung, Zustand und aktuelle Entwicklung.', 'iss-content-model'),
+                'description' => __('Nach der Geschichte: heutige Nutzung, Bilder und weiterführende Links. Kann einmal hinzugefügt werden.', 'iss-content-model'),
+                'max_instances' => 1,
                 'supports' => ['media_refs', 'links'],
             ],
             'galerie' => array_merge($gallery_section, ['supports' => ['media_refs', 'object_refs', 'gallery_layout']]),

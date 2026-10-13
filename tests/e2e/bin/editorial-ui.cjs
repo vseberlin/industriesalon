@@ -752,3 +752,50 @@ for (const format of ['article', 'ausstellung']) {
     } finally { e.dom.window.close(); }
   });
 }
+
+test('Place insertion limits preserve retained duplicates, editing, reorder and trash recovery', async () => {
+  const sections = {
+    intro: {label:'Einleitung', description:'Am Anfang; einmal hinzufügen.', max_instances:1, supports:['media_refs']},
+    epoche: {label:'Epoche', description:'Repeatable history', supports:['body']},
+    gegenwart: {label:'Gegenwart', description:'Nach der Geschichte; einmal hinzufügen.', max_instances:1, supports:['media_refs','links']}
+  };
+  const orderNotice = 'Feste Seitenfolge: Einleitung → Epochen → Gegenwart.';
+  const e = await editor('place', {sections, orderNotice, document:{schema_version:3, sections:[{type:'intro',title:'Retained first',body:'First body'},{type:'epoche',title:'Historic phase',body:'History'},{type:'intro',title:'Retained second',body:'Second body'}]}});
+  try {
+    assert.equal(e.root.querySelector('.iss-editorial-studio__outline .iss-editorial-studio__guidance').textContent, orderNotice);
+    const choices = () => [...e.root.querySelectorAll('.iss-editorial-gesture')].map(node => node.dataset.sectionType);
+    e.button('Hinzufügen').click();
+    assert.deepEqual(choices().sort(), ['epoche','gegenwart']);
+    const presentChoice = e.root.querySelector('[data-section-type="gegenwart"]');
+    presentChoice.click();
+    assert.equal(e.value().sections.filter(s => s.type === 'gegenwart').length, 1);
+    presentChoice.click();
+    assert.equal(e.value().sections.filter(s => s.type === 'gegenwart').length, 1, 'Stale chooser/insert callbacks cannot bypass the insertion limit');
+    e.button('Hinzufügen').click();
+    assert.deepEqual(choices(), ['epoche']);
+    e.button('Abschnitte').click();
+    e.root.querySelector('[data-section-index="2"] .iss-editorial-outline__select').click();
+    e.input(e.root.querySelector('.iss-editorial-field--title textarea'), 'Edited retained second');
+    assert.equal(e.value().sections[2].title, 'Edited retained second', 'Retained repeated slots remain editable');
+    e.button('Abschnitte').click();
+    e.root.querySelector('[data-section-index="2"] .iss-editorial-card__drag-handle').dispatchEvent(new e.window.KeyboardEvent('keydown', {key:'ArrowUp',bubbles:true}));
+    assert.equal(e.value().sections[1].title, 'Edited retained second', 'Existing repeated slots can still be ordered');
+    for (let n = 0; n < 2; n++) {
+      e.button('Abschnitte').click();
+      e.root.querySelector('[data-section-index="0"] .iss-editorial-outline__select').click();
+      e.button('In Papierkorb', e.root.querySelector('.iss-editorial-studio__inspector')).click();
+      e.button('Hinzufügen').click();
+      assert.equal(choices().includes('intro'), n === 1, 'Insertion becomes available only when all existing introductions are in trash');
+    }
+    e.root.querySelector('[data-section-type="intro"]').click();
+    assert.equal(e.value().sections.filter(s => s.type === 'intro').length, 1);
+    e.button('Wiederherstellen').click();
+    assert.equal(e.value().sections.filter(s => s.type === 'intro').length, 2, 'Recovery restores content even after a new introduction was added');
+    e.button('Hinzufügen').click();
+    assert.deepEqual(choices(), ['epoche']);
+    await e.settle();
+    const saved = JSON.parse(e.requests.at(-1).get('document'));
+    assert.ok(saved.sections.some(s => s.title === 'Edited retained second'));
+    assert.ok(saved.deleted_sections.some(s => s.title === 'Retained first'));
+  } finally { e.dom.window.close(); }
+});

@@ -1,36 +1,37 @@
 # Current handoff — 13 October 2026
 
-## Editorial workspace and Place persistence
+## Editorial workspace and Place dossier alignment
 
-Place save validation is committed locally as `45a3568`, following the contract
-review `ec54190`. The persistence slice is verified and accepted for local commit; nothing is pushed or deployed. Canonical Place JSON, skin/activation,
-epoch snapshots and Atlas states now share a checked register-owned transaction.
-Native saves report failures and retain recovery. Revision metadata restores and
-Place import callers use the same boundary. Standalone epoch/state replacement is
-also atomic; caller transactions retain ownership through savepoints.
+Place persistence is committed locally as `ae8ee01`, following validation
+`45a3568` and the contract review `ec54190`. Nothing is pushed or deployed.
+The next dossier alignment slice is implemented and verified, pending review.
+Introduction/present-day sections now render their title, kicker, text and all
+usable images; present-day links use the existing shared renderer. Empty slots
+stay absent and untitled content retains the default headings. The outline
+explains fixed grouping and milestone date order. Only one new introduction or
+present-day section can be inserted; existing duplicates and trash recovery
+remain editable, saveable and publicly visible within their group.
 
-Checks: 205 isolated fault-injection assertions, 433 storage assertions over 94
-existing documents, 13,079 registry assertions and 41 UI tests. PHP syntax and
-PHPStan pass. PHPCS passes for the engine, CLI and epoch service; the state service
-retains its baseline 7 errors/22 warnings, with no new findings. Chrome confirms
-an epoch edit, Fertig, native Save Draft and fresh reload with matching JSON/history.
-All temporary fixtures are removed. Kino Spreehöfe (12899) still has six matching
-epochs. Fault tests preserve the real posts, metadata, epochs, states and options.
+Checks: 13,115 registry/renderer assertions, 433 storage assertions over 94 existing
+documents, 42 UI tests, PHP syntax, PHPCS/PHPStan and targeted ESLint. Chrome covers
+desktop/390px phone preview, images/captions/links, insertion limits, inline title
+control, native Save Draft and fresh reload with all references and duplicate
+sections retained. Test drafts/projections were removed; Kino Spreehöfe's stored
+JSON hash is unchanged and its six-epoch projection parity passes. Its public
+present-day heading now correctly uses the saved title “Heute”.
 
-The transaction protects the section document and projections, not native post
-fields, taxonomies or graph work earlier in the WordPress save lifecycle. A caller
-owning a larger transaction also owns final commit/cache coordination. See the
-[persistence checkpoint](docs/project/editorial-consolidation-audit.md#place-persistence--13-october-2026).
-Next: align Place intro/present-day fields and ordering with the dossier renderer;
-then resolve the separate contribution contract. Its JSON gesture is inert,
+Next: resolve the separate Place contribution contract. The JSON gesture is inert,
 template links use an unresolved `ort` identifier, and intake excludes Places.
+Keep that separate from report-source eligibility and broader Place migration.
+See the [dossier checkpoint](docs/project/editorial-consolidation-audit.md#place-dossier-alignment--13-october-2026).
 
-No real content, schema, templates or uploads changed; no paired data/upload
-artifact is required. Existing migration scripts only adopt the combined save API;
-no migration was executed. Staff UAT, Firefox and external Word/Docs paste remain
-release checks. Effective page/report/publication/Place templates are file-backed;
-Ausstellung override 26309 is retained. The earlier CPT commit's archive collection
-slot still needs target override review at release.
+No real content, schema, template or upload edits; no paired data/upload artifact
+is required. Public output follows existing saved fields through the theme owner.
+The committed persistence transaction covers sections/projections, not native
+post fields or earlier graph writes. Staff UAT, Firefox and external Word/Docs
+paste remain release checks. Effective page/report/publication/Place templates
+are file-backed; Ausstellung override 26309 is retained. The earlier CPT commit's
+archive collection slot still needs target override review at release.
 
 ## Scope and delivery state
 

@@ -4,9 +4,7 @@ Immediate executable work only. Larger future programs live in `docs/project/bac
 
 ## Next
 
-- Align Place intro/present-day title, media and link controls with the dossier
-  renderer; explain fixed grouping/singular sections while preserving saved data.
-  Then resolve the Place contribution owner contract: the JSON gesture is inert,
+- Resolve the Place contribution owner contract: the JSON gesture is inert,
   template links use an unresolved `ort` prefix, and signed intake excludes Places.
   Keep this separate from report-source eligibility and broader Place migration.
 - Correct the archive landing quick-navigation grid at phone widths: its four

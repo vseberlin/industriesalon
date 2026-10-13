@@ -67,6 +67,8 @@ function iss_editorial_get_registered_formats(): array
                 'supports' => array_values(array_filter(array_map('sanitize_key', (array) ($section['supports'] ?? [])))),
                 'treatments' => array_values($treatments),
                 'ui_hidden' => !empty($section['ui_hidden']),
+                // An insertion limit, not a reason to discard previously saved sections.
+                'max_instances' => absint($section['max_instances'] ?? 0),
                 'slots' => (array) ($section['slots'] ?? []),
                 'rich_text' => array_intersect((array) ($section['rich_text'] ?? []), ['block', 'inline', 'inline-card']),
                 'items_kind' => ($section['items_kind'] ?? '') === 'text' ? 'text' : 'cards',

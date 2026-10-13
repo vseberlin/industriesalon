@@ -497,6 +497,18 @@ Enabled Place JSON is the sole epoch write authority for that post; save
 rebuilds the existing epoch/state read projections, and the old epoch metabox
 is hidden. Disabled Places retain the legacy editor and renderer.
 
+The dossier keeps a fixed public sequence: introductions, epochs, present-day
+sections, then gallery/material supplements. The editor explains this grouping
+and the dated order used when accepted milestones supplement the chronology.
+Introduction and present-day sections expose `max_instances: 1` in the registry;
+the shared chooser and insertion path apply that limit to active sections only.
+This is an insertion constraint, not a save validator: retained duplicates and
+trash recovery remain editable, saveable and visible within their dossier group.
+Both overview slots render their title, kicker, body and all usable image
+references through existing Place components; present-day links reuse the shared
+link renderer. Empty slots remain absent, and body/image/link-only slots retain
+default headings. Preview fields keep their source JSON indexes across grouping.
+
 Place document persistence uses the register epoch service's transaction boundary.
 `iss_editorial_save_document()` accepts an optional fifth argument for activation;
 Place callers must include activation in that call rather than setting the flag

@@ -250,7 +250,42 @@ All browser/test fixtures are removed; Kino Spreehöfe still has six matching ep
 
 No real content, schema, template or upload changes and no new paired data artifact
 are required. Renderer/ordering alignment is next; contribution intake remains a
-separate follow-up. This persistence slice is verified and accepted for local commit.
+separate follow-up. This persistence slice is committed locally as `ae8ee01`.
+
+### Place dossier alignment — 13 October 2026
+
+The existing Place renderer now displays introduction and present-day titles,
+kickers, body text and every usable image with its caption. Present-day links use
+the existing shared link component. Title-only, image-only and link-only content
+is visible; completely empty slots remain absent. Existing default headings apply
+when no title is supplied. The pilot's saved “Heute” title consequently replaces
+the formerly hard-coded “Der Ort heute” heading without changing its JSON.
+
+The registry declares one insertable introduction and one present-day section.
+The shared chooser and insertion callback apply this limit to active sections,
+while existing duplicates and trash restoration remain fully editable and
+saveable. Every retained duplicate now renders in its fixed dossier group, with
+its own preview source index and fields. The outline explains the fixed public
+sequence and the date ordering used when accepted events supplement the chronology.
+No JSON reordering, field removal or conversion of Places to portable composition
+is performed. Existing Place figures/headings/prose and shared links supply the
+presentation; no additional stylesheet or selector system was introduced.
+
+Verification: 13,115 registry/renderer checks include mixed source order, retained
+duplicates, empty/title/image/link-only content, all image captions, escaped links,
+public output without editing attributes and exact preview source indexes. All
+433 storage checks over 94 real documents and 42 UI tests pass. UI coverage includes
+stale insertion callbacks, adding after trashing, retained duplicate editing and
+reordering, and restoration after a replacement section has been inserted. PHP
+syntax, PHPCS/PHPStan and targeted ESLint pass. Chrome desktop and 390px phone
+previews confirm images, captions, links, chooser limits and the inline title
+control. Native Save Draft/reload retains three image references, the present-day
+link, edited title and second introduction. All temporary fixtures and projections
+were removed; the pilot JSON hash and six-epoch parity remain unchanged.
+
+This slice is ready for review, not yet committed. Contribution/intake alignment
+is next. No real content, template, schema or uploads were edited, and no paired
+data/upload artifact is required.
 
 The existing media/text pattern now owns its flex layout for native blocks and
 JSON alike. Its defaults are component-scoped, the overlay retains image height

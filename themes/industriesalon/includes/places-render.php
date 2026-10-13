@@ -66,8 +66,9 @@ function industriesalon_editorial_place_definition_label(string $kind, string $k
     return (string) ($labels[$kind][$key] ?? '');
 }
 
-function industriesalon_render_editorial_place_media(array $section): string
+function industriesalon_render_editorial_place_media(array $section, bool $all = false): string
 {
+    $figures = '';
     foreach ((array) ($section['media_refs_resolved'] ?? []) as $item) {
         $resolved = is_array($item['resolved'] ?? null) ? $item['resolved'] : [];
         $reference = is_array($item['reference'] ?? null) ? $item['reference'] : [];
@@ -91,10 +92,13 @@ function industriesalon_render_editorial_place_media(array $section): string
                 . esc_html($caption) . '</span></figcaption>';
         }
 
-        return $html . '</figure>';
+        $figures .= $html . '</figure>';
+        if (!$all) {
+            break;
+        }
     }
 
-    return '';
+    return $figures;
 }
 
 function industriesalon_render_editorial_place_epoch(array $section): string
@@ -158,14 +162,41 @@ function industriesalon_render_editorial_place_epoch(array $section): string
     return industriesalon_editorial_preview_section($html, $section, ['title' => 'iss-register-place__epoch-title', 'body' => 'iss-register-place__epoch-text']);
 }
 
+/** Fixed dossier slots reuse the Place heading, prose and image components. */
+function industriesalon_render_editorial_place_overview(array $section): string
+{
+    $intro = ($section['type'] ?? '') === 'intro';
+    $title = trim((string) ($section['title'] ?? ''));
+    $kicker = trim((string) ($section['kicker'] ?? ''));
+    $body = trim((string) ($section['body'] ?? ''));
+    $media = industriesalon_render_editorial_place_media($section, true);
+    $links = $intro ? '' : industriesalon_render_editorial_links((array) ($section['links'] ?? []));
+    if ($title === '' && $kicker === '' && $body === '' && $media === '' && $links === '') {
+        return '';
+    }
+    $title = $title !== '' ? $title : ($intro ? __('Ort auf einen Blick', 'industriesalon') : __('Der Ort heute', 'industriesalon'));
+    $kicker = $kicker !== '' ? $kicker : ($intro ? __('Kurzprofil', 'industriesalon') : __('Gegenwart', 'industriesalon'));
+    $body_class = $intro ? 'iss-indent iss-indent--uncaged iss-register-place__lead iss-register-place__lead-primary' : 'iss-register-place__present-text';
+    $html = '<section class="iss-register-place__section iss-register-place__section--' . ($intro ? 'lead' : 'present') . '">';
+    $html .= '<p class="iss-kicker iss-kicker--compact">' . esc_html($kicker) . '</p>';
+    $html .= '<h2 class="iss-register-place__section-title">' . esc_html($title) . '</h2>';
+    if ($body !== '') {
+        $html .= '<div class="' . esc_attr($body_class) . '">' . wp_kses_post($body) . '</div>';
+    }
+    $html .= $media . $links . '</section>';
+    return industriesalon_editorial_preview_section($html, $section, [
+        'title' => 'iss-register-place__section-title',
+        'kicker' => 'iss-kicker',
+        'body' => $intro ? 'iss-register-place__lead-primary' : 'iss-register-place__present-text',
+    ]);
+}
+
 function industriesalon_render_editorial_place_document(int $post_id, array $document): string
 {
     $sections = is_array($document['sections'] ?? null) ? $document['sections'] : [];
     $intro = '';
     $epochs = [];
     $present = '';
-    $intro_section = [];
-    $present_section = [];
     $supplements = '';
 
     foreach ($sections as $section) {
@@ -173,14 +204,13 @@ function industriesalon_render_editorial_place_document(int $post_id, array $doc
             continue;
         }
         $type = (string) ($section['type'] ?? '');
-        if ($type === 'intro' && $intro === '') {
-            $intro = (string) ($section['body'] ?? '');
-            $intro_section = $section;
+        if ($type === 'intro') {
+            // Existing repeated slots remain visible even though new insertion is limited.
+            $intro .= industriesalon_render_editorial_place_overview($section);
         } elseif ($type === 'epoche') {
             $epochs[] = $section;
-        } elseif ($type === 'gegenwart' && $present === '') {
-            $present = (string) ($section['body'] ?? '');
-            $present_section = $section;
+        } elseif ($type === 'gegenwart') {
+            $present .= industriesalon_render_editorial_place_overview($section);
         } elseif (in_array($type, ['galerie', 'material', 'upload_intake'], true)) {
             // Reuse the shared archive/media section renderer and its CSS contract.
             $supplements .= industriesalon_render_editorial_ausstellung_section($section, false, 0, 'standard', 'place');
@@ -189,14 +219,7 @@ function industriesalon_render_editorial_place_document(int $post_id, array $doc
 
     $epochs = iss_register_merge_place_milestones($post_id, $epochs);
 
-    $html = '<div class="iss-register-place-editorial iss-register-place-editorial--ortsdossier">';
-    if (trim($intro) !== '') {
-        $html .= '<section class="iss-register-place__section iss-register-place__section--lead">';
-        $html .= '<p class="iss-kicker iss-kicker--compact">' . esc_html__('Kurzprofil', 'industriesalon') . '</p>';
-        $html .= '<h2 class="iss-register-place__section-title">' . esc_html__('Ort auf einen Blick', 'industriesalon') . '</h2>';
-        $html .= '<div class="iss-indent iss-indent--uncaged iss-register-place__lead iss-register-place__lead-primary">'
-            . wp_kses_post($intro) . '</div></section>';
-    }
+    $html = '<div class="iss-register-place-editorial iss-register-place-editorial--ortsdossier">' . $intro;
     if ($epochs) {
         $html .= '<section class="iss-register-place__section iss-register-place__section--epochs">';
         $html .= '<p class="iss-kicker iss-kicker--compact">' . esc_html__('Epochen', 'industriesalon') . '</p>';
@@ -207,16 +230,7 @@ function industriesalon_render_editorial_place_document(int $post_id, array $doc
         }
         $html .= '</div></section>';
     }
-    if (trim($present) !== '') {
-        $html .= '<section class="iss-register-place__section iss-register-place__section--present">';
-        $html .= '<p class="iss-kicker iss-kicker--compact">' . esc_html__('Gegenwart', 'industriesalon') . '</p>';
-        $html .= '<h2 class="iss-register-place__section-title">' . esc_html__('Der Ort heute', 'industriesalon') . '</h2>';
-        $html .= '<div class="iss-register-place__present-text">' . wp_kses_post($present) . '</div></section>';
-    }
-
-    $html = industriesalon_editorial_preview_section($html, $intro_section, ['body' => 'iss-register-place__lead-primary'], 'iss-register-place__section--lead');
-    $html = industriesalon_editorial_preview_section($html, $present_section, ['body' => 'iss-register-place__present-text'], 'iss-register-place__section--present');
-    return $html . $supplements . '</div>';
+    return $html . $present . $supplements . '</div>';
 }
 
 function industriesalon_render_editorial_place_fallback(int $post_id): string

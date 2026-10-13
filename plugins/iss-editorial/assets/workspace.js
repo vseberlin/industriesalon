@@ -127,7 +127,9 @@
     if (history) { var link = history.cloneNode(true); link.textContent = 'Verlauf'; menu.appendChild(link); }
     head.append(title, tools, previewTools, statusMount, publish, expand, more);
     var ownerBody = node('div', 'iss-editorial-studio__owner-controls');
-    outline.append(button('+ Abschnitt hinzufügen', function () { options.insert(); }), stage, trash);
+    outline.appendChild(button('+ Abschnitt hinzufügen', function () { options.insert(); }));
+    if (options.orderNotice) { outline.appendChild(node('p', 'iss-editorial-studio__guidance', options.orderNotice)); }
+    outline.append(stage, trash);
     settings.append(node('h3', '', 'Seiteneinstellungen'), ownerBody, button('Angaben & Beziehungen …', function () {
       options.afterEditing(function () { setExpanded(false); var native = document.getElementById('poststuff'); if (native) { native.scrollIntoView({ block: 'start' }); } });
     }));

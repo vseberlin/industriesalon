@@ -709,6 +709,55 @@ try {
     $assert(!$place['sections']['galerie']['portable'] && $place['sections']['galerie']['supports'] === ['media_refs', 'object_refs', 'gallery_layout'], 'Place gallery retains its separate contract');
     $place_html = industriesalon_render_editorial_ausstellung_section(['type' => 'galerie', 'title' => 'Place gallery', 'body' => 'Place body'], false, 0, 'standard', 'place');
     $assert(str_contains($place_html, 'iss-ausstellung-section') && !str_contains($place_html, 'iss-landing-section'), 'Place supplement retains native renderer');
+    $assert($place['sections']['intro']['max_instances'] === 1 && $place['sections']['gegenwart']['max_instances'] === 1 && $place['sections']['epoche']['max_instances'] === 0, 'Place insertion limits only its fixed overview slots');
+    $assert(str_contains($place['editor']['order_notice'], 'Datumsfolge') && str_contains($place['editor']['order_notice'], 'Einleitung'), 'Place explains fixed grouping and dated chronology');
+    $place_id = wp_insert_post(['post_type' => 'register_place', 'post_status' => 'draft', 'post_title' => 'Place layout fixture', 'post_author' => $admin->ID]);
+    $fixtures[] = $place_id;
+    $place_doc = iss_editorial_get_empty_document('place');
+    $place_doc['sections'] = [
+        ['type' => 'gegenwart', 'title' => 'Present & future', 'kicker' => 'Present context', 'body' => '<p><strong>Present prose</strong></p>', 'media_refs' => [array_merge($media, ['label' => 'Present image'])], 'links' => [['label' => 'Visit & learn', 'url' => 'https://example.invalid/place?a=1&b=2']]],
+        ['type' => 'intro', 'title' => 'Opening & context', 'kicker' => 'Opening context', 'body' => '<p><em>Opening prose</em></p>', 'media_refs' => [array_merge($media, ['label' => 'First opening image']), array_merge($media, ['label' => 'Second opening image'])]],
+        ['type' => 'epoche', 'title' => 'Historic phase', 'body' => '<p>Historic prose</p>', 'era_key' => 'nach-1990', 'function_key' => 'culture'],
+        ['type' => 'intro', 'title' => 'Retained second opening'],
+        ['type' => 'gegenwart', 'body' => '<p>Retained second present</p>'],
+        ['type' => 'material', 'title' => 'Dossier supplement', 'links' => [['label' => 'Material source', 'url' => 'https://example.invalid/material']]],
+    ];
+    $assert(iss_editorial_save_document($place_id, 'place', $place_doc, false, true), 'Existing repeated Place overviews remain valid and saveable');
+    $place_doc = iss_editorial_get_document($place_id, 'place');
+    $canonical_place = get_post_meta($place_id, iss_editorial_get_document_meta_key('place'), true);
+    $public_place = industriesalon_render_editorial_place_document($place_id, iss_editorial_get_read_model($place_id, 'place'));
+    foreach (['Opening &amp; context', 'Opening context', '<em>Opening prose</em>', 'First opening image', 'Second opening image', 'Historic prose', 'Present &amp; future', 'Present context', '<strong>Present prose</strong>', 'Present image', 'Visit &amp; learn', 'https://example.invalid/place?a=1&#038;b=2', 'Retained second opening', 'Retained second present', 'Dossier supplement'] as $value) {
+        $assert(substr_count($public_place, $value) === 1, 'Place renders offered field or retained content once: ' . $value);
+    }
+    $positions = array_map(static fn(string $value): int => strpos($public_place, $value), ['Opening &amp; context', 'Retained second opening', 'Historic phase', 'Present &amp; future', 'Retained second present', 'Dossier supplement']);
+    $sorted = $positions; sort($sorted);
+    $assert($positions === $sorted, 'Out-of-order Place JSON keeps fixed dossier groups and order within them');
+    $assert(substr_count($public_place, '<figure') === 3 && !str_contains($public_place, 'data-iss-'), 'All overview images render without public editing attributes');
+    foreach (['intro' => 'Ort auf einen Blick', 'gegenwart' => 'Der Ort heute'] as $type => $fallback_title) {
+        $assert(industriesalon_render_editorial_place_overview(['type' => $type]) === '', $type . ': empty slots produce no phantom heading');
+        $assert(str_contains(industriesalon_render_editorial_place_overview(['type' => $type, 'body' => 'Body without title']), $fallback_title), $type . ': body-only content retains its default heading');
+        $assert(str_contains(industriesalon_render_editorial_place_overview(['type' => $type, 'title' => 'Title without body']), 'Title without body'), $type . ': title-only content is visible');
+        $image_only = ['type' => $type, 'media_refs_resolved' => [['reference' => $media, 'resolved' => iss_editorial_resolve_reference($media)]]];
+        $assert(str_contains(industriesalon_render_editorial_place_overview($image_only), '<img'), $type . ': image-only content is visible');
+    }
+    $assert(str_contains(industriesalon_render_editorial_place_overview(['type' => 'gegenwart', 'links' => [['label' => 'Link-only present', 'url' => 'https://example.invalid/']]]), 'Link-only present'), 'Link-only present content is visible');
+    $draft = iss_editorial_save_draft($place_id, 'place', $place_doc, true);
+    $assert(!is_wp_error($draft), 'Place preview fixture saves its recovery document');
+    $query = new WP_Query(); $query->posts = [get_post($place_id)]; $query->queried_object_id = $place_id; $query->queried_object = get_post($place_id);
+    $query->is_singular = true; $query->is_single = true; $query->post = get_post($place_id);
+    $GLOBALS['wp_query'] = $query; $GLOBALS['post'] = get_post($place_id);
+    $_GET = ['iss_editorial_embed' => '1', 'iss_editorial_canvas' => '1', 'iss_editorial_preview' => '1', 'iss_editorial_format' => 'place', 'iss_editorial_snapshot' => $draft['token'], 'iss_editorial_preview_nonce' => wp_create_nonce(iss_editorial_get_preview_nonce_action($place_id, 'place'))];
+    $preview_place = industriesalon_render_editorial_place_document($place_id, iss_editorial_get_read_model($place_id, 'place'));
+    $tags = new WP_HTML_Tag_Processor($preview_place); $addresses = []; $fields = []; $address = null;
+    while ($tags->next_tag()) {
+        if ($tags->get_attribute('data-iss-preview-section') !== null) { $address = (int) $tags->get_attribute('data-iss-preview-section'); $addresses[] = $address; }
+        if ($tags->get_attribute('data-iss-field') !== null) { $fields[$address][] = $tags->get_attribute('data-iss-field'); }
+    }
+    $assert($addresses === [1, 3, 2, 0, 4, 5], 'Preview addresses retain exact JSON indexes across fixed grouping and duplicates');
+    foreach ([0, 1, 4] as $index) { $assert($fields[$index] === ['kicker', 'title', 'body'], 'Place preview edits its own title, kicker and body at index ' . $index); }
+    $assert($fields[3] === ['kicker', 'title'], 'A title-only retained introduction has the correct editing address');
+    $assert(get_post_meta($place_id, iss_editorial_get_document_meta_key('place'), true) === $canonical_place, 'Rendering and preview do not rewrite saved Place JSON or remove duplicates');
+    $_GET = []; $GLOBALS['wp_query'] = $original_query; $GLOBALS['post'] = $original_post;
     $publication = iss_editorial_get_format('publication');
     $assert($publication['sections']['longread_quote']['ui_hidden'] && !$publication['sections']['zitat']['ui_hidden'], 'One visible quote choice; old publication quote remains registered');
     $legacy_quote = iss_editorial_get_empty_document('publication');

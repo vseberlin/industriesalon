@@ -277,6 +277,7 @@
         clear(root);
         studio = window.issEditorialWorkspace(root, {
           sections: sections, hidden: isSectionHidden, status: status, retry: retry, label: config.formatLabel,
+          orderNotice: config.orderNotice,
           select: function (index) { afterCanvasEdit(function () { selectWorkspace(index); }); },
           remove: function (index) { afterCanvasEdit(function () { removeSection(index); }); },
           insert: function () { afterCanvasEdit(function () { studio.insert(documentState.sections.length); }); },
@@ -347,7 +348,9 @@
     }
 
     function isSectionHidden(type) {
-      return !!sectionConfig(type).ui_hidden || Object.keys(config.sectionContexts || {}).some(function (key) {
+      var definition = sectionConfig(type);
+      var limit = Number(definition.max_instances || 0);
+      return !!definition.ui_hidden || (limit > 0 && documentState.sections.filter(function (section) { return section.type === type; }).length >= limit) || Object.keys(config.sectionContexts || {}).some(function (key) {
         var allowed = config.sectionContexts[key][documentState[key]];
         return Array.isArray(allowed) && allowed.indexOf(type) === -1;
       });
