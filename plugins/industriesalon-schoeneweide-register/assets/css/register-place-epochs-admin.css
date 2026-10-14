@@ -45,3 +45,21 @@
   gap: 8px;
   padding-top: 20px;
 }
+
+.iss-register-epoch__photos {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+
+.iss-register-epoch__photos figure {
+  margin: 0;
+  width: 120px;
+}
+
+.iss-register-epoch__photos img {
+  display: block;
+  width: 120px;
+  height: 90px;
+  object-fit: contain;
+}

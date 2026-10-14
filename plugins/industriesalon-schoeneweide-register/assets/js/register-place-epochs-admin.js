@@ -51,12 +51,15 @@
         '<label class="iss-register-epoch__current-wrap"><input type="checkbox" class="iss-register-epoch__current"' + (item.is_current ? ' checked' : '') + '> Aktuelle Phase</label>' +
         '<label>Quellen-Sicherheit<select class="iss-register-epoch__confidence"><option value="">Bitte wählen</option>' + createOptions(config.confidences, 'key', 'label', item.source_confidence || 'unknown') + '</select></label>' +
         '<label class="iss-register-epoch-row__full">Kurztext<textarea class="widefat iss-register-epoch__summary" rows="3">' + (item.summary || '') + '</textarea></label>' +
+        '<label class="iss-register-epoch-row__full">Eigene Forschungsfrage (optional, max. 240 Zeichen)<input type="text" maxlength="240" class="widefat iss-register-epoch__question"><span>Eine eingetragene Frage zeigt bei geöffneten Beiträgen eine Einladung. Im JSON-Editor stattdessen die Geste „Automatische Inhalte → Wissen zur Epoche beitragen“ hinzufügen.</span></label>' +
         '<label class="iss-register-epoch-row__full">Quellen-Zusammenfassung<textarea class="widefat iss-register-epoch__source-summary" rows="2">' + (item.source_summary || '') + '</textarea></label>' +
         '<label>Quellen-Links<textarea class="widefat iss-register-epoch__source-links" rows="3">' + normalizeList(item.source_links) + '</textarea></label>' +
-        '<label>Media IDs<textarea class="widefat iss-register-epoch__media-ids" rows="3">' + normalizeList(item.media_ids) + '</textarea></label>' +
+        '<div class="iss-register-epoch-row__full"><strong>Fotos dieser Epoche</strong><p><button type="button" class="button iss-register-epoch__choose-media">Fotos auswählen</button> <button type="button" class="button-link-delete iss-register-epoch__clear-media">Fotos entfernen</button></p><div class="iss-register-epoch__photos"></div><input type="hidden" class="iss-register-epoch__media-ids"><p class="description">Bilder aus der Mediathek auswählen oder hochladen. Bildunterschrift und Bildnachweis in der Mediathek bzw. unter Archivbilder / Aktuelle Bilder pflegen.</p></div>' +
       '</div>' +
       '<input type="hidden" class="iss-register-epoch__id" value="' + (item.id || 0) + '">' ;
 
+    row.querySelector('.iss-register-epoch__media-ids').value = normalizeList(item.media_ids);
+    row.querySelector('.iss-register-epoch__question').value = item.contribution_question || '';
     return row;
   }
 
@@ -78,6 +81,7 @@
       sort_order: parseInt(row.querySelector('.iss-register-epoch__sort-order').value || '0', 10),
       is_current: !!row.querySelector('.iss-register-epoch__current').checked,
       summary: row.querySelector('.iss-register-epoch__summary').value || '',
+      contribution_question: row.querySelector('.iss-register-epoch__question').value || '',
       source_confidence: row.querySelector('.iss-register-epoch__confidence').value || 'unknown',
       source_summary: row.querySelector('.iss-register-epoch__source-summary').value || '',
       source_links: readTextareaList(row.querySelector('.iss-register-epoch__source-links').value || ''),
@@ -102,6 +106,54 @@
   }
 
   function bindRow(group, row) {
+    function renderPhotos() {
+      var tray = row.querySelector('.iss-register-epoch__photos');
+      tray.replaceChildren();
+      readTextareaList(row.querySelector('.iss-register-epoch__media-ids').value).forEach(function (id) {
+        var attachment = wp.media.attachment(parseInt(id, 10));
+        var figure = document.createElement('figure');
+        var caption = document.createElement('figcaption');
+        caption.textContent = 'Bild ' + id;
+        figure.appendChild(caption);
+        tray.appendChild(figure);
+        function updatePreview() {
+          var data = attachment.toJSON();
+          var url = data.sizes && data.sizes.thumbnail ? data.sizes.thumbnail.url : data.url;
+          figure.querySelectorAll('img').forEach(function (image) { image.remove(); });
+          if (url) {
+            var image = document.createElement('img');
+            image.src = url;
+            image.alt = '';
+            figure.prepend(image);
+          }
+          caption.textContent = data.title || 'Bild ' + id;
+        }
+        attachment.fetch().then(updatePreview, function () { caption.textContent = 'Bild ' + id + ' nicht verfügbar'; });
+      });
+    }
+
+    row.querySelector('.iss-register-epoch__choose-media').addEventListener('click', function () {
+      var frame = wp.media({title: 'Fotos für diese Epoche', button: {text: 'Fotos verwenden'}, multiple: true, library: {type: 'image'}});
+      frame.on('open', function () {
+        var selection = frame.state().get('selection');
+        readTextareaList(row.querySelector('.iss-register-epoch__media-ids').value).forEach(function (id) {
+          selection.add(wp.media.attachment(parseInt(id, 10)));
+        });
+      });
+      frame.on('select', function () {
+        row.querySelector('.iss-register-epoch__media-ids').value = frame.state().get('selection').map(function (attachment) { return attachment.id; }).join('\n');
+        renderPhotos();
+        syncState(group);
+      });
+      frame.open();
+    });
+    row.querySelector('.iss-register-epoch__clear-media').addEventListener('click', function () {
+      row.querySelector('.iss-register-epoch__media-ids').value = '';
+      renderPhotos();
+      syncState(group);
+    });
+    renderPhotos();
+
     row.querySelectorAll('input,select,textarea').forEach(function (input) {
       input.addEventListener('input', function () {
         syncState(group);

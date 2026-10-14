@@ -7,40 +7,10 @@ if (!defined('ABSPATH')) {
     exit;
 }
 
-/** Native moderated comments, presented in the event's theme composition. */
+/** Existing event composition uses the shared guest-feedback renderer. */
 function industriesalon_render_event_feedback(int $post_id): string
 {
-    if (post_password_required($post_id) || get_post_status($post_id) !== 'publish') {
-        return '';
-    }
-    $page = max(1, absint($_GET['feedback_page'] ?? 1)); // phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Read-only pagination.
-    $query = ['post_id' => $post_id, 'type' => 'iss_feedback', 'status' => 'approve', 'meta_key' => '_iss_feedback_consent', 'meta_value' => '1']; // phpcs:ignore WordPress.DB.SlowDBQuery -- Native low-volume comment consent metadata.
-    $total = (int) get_comments(array_merge($query, ['count' => true]));
-    $url = function_exists('iss_content_upload_url') ? iss_content_upload_url($post_id) : '';
-    if (!$total && $url === '') {
-        return '';
-    }
-    $page = min($page, max(1, (int) ceil($total / 12)));
-    $comments = get_comments(array_merge($query, ['number' => 12, 'offset' => ($page - 1) * 12, 'orderby' => ['comment_date_gmt' => 'DESC', 'comment_ID' => 'DESC']]));
-    $html = '<section id="stimmen" class="iss-event-feedback section"><p class="iss-kicker">Erfahrungen &amp; Erinnerungen</p><h2>' . esc_html__('Stimmen zur Veranstaltung', 'industriesalon') . '</h2>';
-    if ($comments) {
-        $html .= '<div class="iss-event-feedback__voices">';
-        foreach ($comments as $comment) {
-            $html .= '<blockquote class="iss-event-feedback__voice">' . wpautop(esc_html($comment->comment_content)) . '<cite>' . esc_html($comment->comment_author) . '</cite></blockquote>';
-        }
-        $html .= '</div>';
-        if ($total > 12) {
-            $html .= '<nav aria-label="' . esc_attr__('Weitere Stimmen', 'industriesalon') . '">' . paginate_links([
-                'base' => add_query_arg('feedback_page', '%#%', get_permalink($post_id)) . '#stimmen',
-                'format' => '', 'current' => $page, 'total' => (int) ceil($total / 12),
-            ]) . '</nav>';
-        }
-    }
-    if ($url !== '') {
-        $html .= '<p>' . esc_html__('Was ist Ihnen in Erinnerung geblieben? Teilen Sie Ihre Eindrücke oder steuern Sie Fotos bei. Alle Beiträge werden vor der Veröffentlichung geprüft.', 'industriesalon') . '</p>';
-        $html .= '<p><a class="iss-button" href="' . esc_url($url) . '">' . esc_html__('Erinnerung oder Fotos beitragen', 'industriesalon') . '</a></p>';
-    }
-    return $html . '</section>';
+    return industriesalon_render_feedback($post_id);
 }
 
 function industriesalon_should_render_structured_veranstaltung(int $post_id): bool

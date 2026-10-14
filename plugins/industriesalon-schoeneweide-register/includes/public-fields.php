@@ -12,6 +12,15 @@ function iss_register_get_public_excerpt_candidate(int $post_id): string
         (string) get_post_field('post_content', $post_id),
     ];
 
+    if (function_exists('iss_editorial_document_is_enabled') && iss_editorial_document_is_enabled($post_id, 'place')) {
+        $sources = [];
+        foreach (iss_editorial_get_document($post_id, 'place')['sections'] ?? [] as $section) {
+            if (in_array($section['type'] ?? '', ['intro', 'gegenwart'], true)) {
+                $sources[] = (string) ($section['body'] ?? '');
+            }
+        }
+    }
+
     foreach ($sources as $source) {
         $source = trim(wp_strip_all_tags($source));
         if ($source === '') {

@@ -500,9 +500,15 @@ Enabled Place JSON is the sole epoch write authority for that post; save
 rebuilds the existing epoch/state read projections, and the old epoch metabox
 is hidden. Disabled Places retain the legacy editor and renderer.
 
-The dossier keeps a fixed public sequence: introductions, epochs, present-day
-sections, then gallery/material supplements. The editor explains this grouping
-and the dated order used when accepted milestones supplement the chronology.
+The native template gives the dossier a fixed public sequence: introduction and
+epochs, public people relations, gallery/material and linked collection objects,
+present-day narrative and structured facts, then one questions/contribution band.
+The existing `industriesalon/editorial-place` block exposes story, supplements,
+present, contribution-copy and approved-feedback slots; it remains the only
+narrative renderer. Source section indexes survive grouping for editor previews.
+Accepted dated milestones become compact source-bearing updates in their matching
+epoch. Undated or unmatched updates remain visible as compact independent rows;
+no event date or historical association is inferred.
 Introduction and present-day sections expose `max_instances: 1` in the registry;
 the shared chooser and insertion path apply that limit to active sections only.
 This is an insertion constraint, not a save validator: retained duplicates and
@@ -512,14 +518,177 @@ references through existing Place components; present-day links reuse the shared
 link renderer. Empty slots remain absent, and body/image/link-only slots retain
 default headings. Preview fields keep their source JSON indexes across grouping.
 
+Place public sections are optional by resolved content. A title or kicker alone,
+empty rich-text markup, and unresolved media/object references do not create a
+section. Narrative/media/link-only sections retain their default headings;
+epochs need a title plus narrative or usable imagery. An enabled empty document
+does not revive legacy text. Legacy and JSON dossiers both show available public
+archive/current images: two distinct usable attachments form a comparison, one
+forms a single view, and none leave no heading or spacing.
+
+The theme omits empty native template groups after their children render, without
+rerunning queries. Facts show populated fields; the Atlas slot requires a rendered
+Place marker. The existing related-content owner retains relation and editorial
+selection, while an empty rail disappears and a lone dossier column fills the
+grid. Authored `legacy_questions` already exposed by the public Place contract
+appear in the optional closing questions/contribution section. It survives when
+there are authored questions or a working signed action, and otherwise disappears. Native template groups and all stored sections stay
+available to editors; there is no additional visibility toggle, storage, or page
+template. `tests/e2e/bin/place-optional-sections.php` verifies sparse/populated
+rendering with process-local fixtures and a database write guard. The optional
+section rules alone need no database migration or uploads artifact.
+
+The shared Place template now follows the supplied dossier mockup: text opening
+and manual excerpt, full-width public image comparison, compact fact band,
+chronology, optional people/objects and visible current facts in the reading
+column, related links followed by a compact Atlas excerpt in the rail, then one
+optional questions/intake band. The excerpt retains the current Place marker and
+address/district caption. The shared band layout uses one column; reserving the
+copy column for a minimal strip previously squeezed its desktop map to zero width.
+The legacy chronology reads authored epoch rows for narrative/source/question
+fields; Atlas-only historical states remain readable where no authored phases
+exist. Enabled present-day JSON stays the narrative authority; its old legacy
+current-use note is suppressed. Legacy Places now display their existing published narrative (or existing long
+history) as the introduction; imported current-use reporting stays with current
+facts. Source text and authored manual excerpts are not rewritten. Slash-separated post titles
+display their existing descriptor below the main heading; saved titles do not
+change. The legacy profile omits history repeated verbatim by the manual excerpt.
+The theme's existing Plex font presets, native blocks, renderer classes and skin
+palette remain the owners. Legacy Places also load the editorial skin stylesheet;
+the retired cover, alternating epoch layout and dark data/disclosure styles are
+removed. The rail precedes the chronology below 900px. Images keep their complete
+attachment proportions and recorded dates, without implying that an older
+photograph shows today's condition.
+
+KAOS 93's original public TIFF has no native browser rendering. The paired
+`2026-10-14-place-image-preview.php` migration and
+`ops/uploads/2026-10-14-place-dossier-preview.tar.gz` add its reviewed JPEG as the
+existing attachment's native `large` size. The migration matches the exact
+uploads-relative source, checks source/preview hashes, backs up metadata in
+`iss_backup_20261014_place_image_preview`, and writes through WordPress's media
+API. The original TIFF, attachment ID, Place content, image group and attribution
+remain unchanged. Deploy the metadata migration with its media artifact; use
+`dry-run`, `apply`, and `verify`. The backup option contains the metadata required
+for API-owned rollback.
+
 The Place gesture and template contribution links use the same signed intake
-owner URL. **Angaben & Beziehungen → Material & Beiträge → Upload geöffnet**
+owner URL. **Angaben & Beziehungen → Material & Beiträge → Feedback und Upload geöffnet**
 controls both; closing hides both and reopening invalidates prior links. The
 register helper no longer embeds a shared environment upload code or emits an
 unresolved `ort` receiver target. The receiver derives `register_place__<slug>`
 from the signed post context, and the existing Set bridge resolves that context.
-Files remain private until review. Written event feedback stays event-only.
+Files remain private until review. Places and events share native moderated
+`iss_feedback` comments; text requires no file. Approved Place memories appear
+after its narrative, while pending or absent memories leave no heading. The
+theme's shared feedback primitive retains event labels in the event composition.
 No existing Place is opened or migrated by deploying this code.
+
+Epoch invitations are added on demand using the existing **Automatische Inhalte**
+gesture with the Place-owned source **Wissen zur Epoche beitragen**
+(`dynamic_slot`, `slot_key: place-epoch-contribution`). Insert it after the intended
+epoch; it uses the nearest preceding `epoche` in the authored document order.
+The inspector names that epoch. Native chooser add/remove, generated preview and
+saved/reloaded gesture controls are verified alongside the atomic Place suites.
+Reordering the gesture changes its context; an
+orphan before every epoch cannot publish and remains a recoverable draft.
+The theme derives the question from the epoch's dates, including single-year,
+ongoing/open-ended, end-only and undated phases. Leave the gesture's title blank
+for automatic wording or enter a custom question there. Generated text is never
+stored in JSON or phase rows. There is no implicit invitation on other epochs.
+A chosen gesture can expose an otherwise narrative-free named phase as a research
+gap while intake is open; removing it or closing intake hides that invitation.
+Its preview retains its own JSON source index inside the epoch row.
+
+All gesture links use the same signed Place context and single
+`register_place__<slug>` Set. The descriptive subject includes phase title, years
+and question. Place intake still requires explicit opening. Existing open
+questions retain their numbered closing list and one general action. There is
+no new block, Set, table, visibility flag or media artifact; Place admits only
+this existing dynamic gesture/source, without generic portable sections.
+
+The optional `subject` URL hint is escaped, bounded to 240 characters, and carried
+into `_iss_feedback_subject` or the file receipt's `contribution_subject`; it never
+changes signed post authorization. Editors see the text topic in native comment
+editing and the file topic in the private Set item. The manifest writer extends
+older CSV headers atomically under a shared writer lock, retains a
+`.before-subject` before-image and appends empty topic values to older rows. The
+Set bridge retains the topic in item provenance.
+
+The older `contribution_question` field remains a compatible typed value in
+existing Place JSON/phase rows. The legacy epoch editor retains its explicit
+question control; the canonical editor uses the gesture title instead. Epoch schema `2026-10-14-v4` adds only
+`contribution_question` with an empty default through the existing owner installer.
+Enabled JSON remains canonical and projects that field atomically; disabled
+Places store it in their existing phase rows. The chosen gesture derives its automatic invitation only from phase dates,
+never from a missing source or photograph. Stored legacy questions do not
+implicitly activate a gesture. The before-image
+`var/place-dossier-20261014/epochs-before-question.json` verified that all 193
+existing rows stayed identical apart from the new empty field. The isolated
+Place atomic suite verifies canonical/projection readback and rollback behavior.
+
+Both epoch editors use existing WordPress media selection: JSON `media_refs` and
+legacy `media_ids`. The older editor now has a photo chooser and previews, replacing
+manual ID entry. All usable selected photos appear in a single epoch media column;
+legacy Place image visibility remains authoritative. The rail's existing static
+map and selected marker receive a short caption from address/district data.
+There are no new map assets, storage tables, or upload forms.
+
+`ops/migrations/2026-10-14-place-contributions-preview.php` explicitly opens only
+KAOS 93 for the local preview through the contribution API, with a targeted
+before-image and rollback mode. It is separate from deployment and requires no
+uploads artifact. The earlier image-preview migration and paired JPEG artifact
+remain required for the KAOS archive TIFF preview. The separate
+`2026-10-14-place-research-question-preview.php` owner-API migration authors one
+KAOS 93 DDR-phase question, retaining a targeted before-image and supporting
+rollback. It has no media dependency and is not automatically applied elsewhere. Runtime checks are
+`tests/e2e/bin/place-contributions.php` (temporary comment tables and receipt files,
+no mail) and `place-optional-sections.php` (read-only cache fixtures).
+The later `2026-10-14-place-epoch-gesture.php` migration adds one chosen dynamic
+gesture after KAOS's DDR phase in its enabled JSON. It runs after the Place JSON
+migration, checks the reviewed document hash, retains a private before-image,
+and verifies unchanged phase facts, imported milestones, core/meta and intake.
+It provides `dry-run`, `apply`, `verify` and guarded `rollback`; no other Place
+receives a gesture. Once later editorial changes are made, older baseline-only
+migration verification intentionally refuses those changed documents.
+
+
+The Place CPT now uses the existing JSON section canvas for its narrative. The
+local reviewed migration covers all 84 existing Places (83 manifest entries plus
+the previously enabled Kino pilot). `ops/migrations/2026-10-14-place-json.php`
+and its adjacent readable `2026-10-14-place-documents.json` preflight legacy
+sources/recovery documents, save a private non-autoload before-image per Place,
+and activate through the atomic owner API. Modes are `dry-run`, `apply`, `verify`,
+and guarded `rollback`; an optional second argument selects one manifest slug.
+Existing enabled documents are verified, never replaced. Core titles, excerpts,
+old content/meta, permissions, relations, imported milestones and intake choices
+remain intact. No additional media transfer is needed for JSON activation.
+
+All sections, including epochs, are optional. Places without historical phases
+can save an introduction/current note without inventing a date or phase; clearing
+epochs removes their derived rows while independent milestones remain. New Places
+already use the same canvas. The facts panel retains address/map coordinates,
+visibility, status, factual data, shared sources, public image groups, open
+questions and private research/contacts. `legacy_icon` and `legacy_color` controls
+are retired; their registered/imported values remain compatible with older DTOs
+and the Atlas fallback color reader. Enabled Places hide `history_short`,
+`history_long`, `current_use` and the separate epoch editor. Missing/hidden form
+fields are never cleared; checkbox inputs explicitly submit their off value.
+Atlas narrative DTOs, generated teaser candidates and Place search text now read
+the enabled canonical document, including deliberately empty narrative. The old
+core/history text remains a before-image rather than stale public/search copy.
+The candidate builder retains the published full introduction, falls back to
+long history, keeps the manual teaser separate, and carries the current report's
+source link into Gegenwart. Native public image groups remain the header/media
+permission owner; individual epoch images are edited inside JSON sections. Local
+verification includes all 83 manifest readbacks, the preserved Kino pilot,
+KAOS's native editor Update/reload with unchanged content/meta, desktop/390px
+map-marker and overflow checks, and the isolated Place/storage regressions.
+Private before-images are also exported to
+`var/place-dossier-20261014/place-json-before-images.json` (0600); migration and
+verification receipts live alongside it. These local receipts are not deployment
+artifacts. The before-image export stays private because it includes staff-only
+metadata.
+
 
 Place document persistence uses the register epoch service's transaction boundary.
 `iss_editorial_save_document()` accepts an optional fifth argument for activation;

@@ -244,6 +244,48 @@ function iss_content_editorial_sets_event_drop_manifest_rows(string $manifest_fi
     return $rows;
 }
 
+/** Append receipts; atomically extend an older header without changing old values. */
+function iss_content_editorial_sets_event_drop_append_receipt(string $manifest_file, array $receipt): bool
+{
+    $lock = fopen($manifest_file . '.lock', 'c');
+    if ($lock === false) { return false; }
+    $temporary = '';
+    $input = false;
+    $output = false;
+    try {
+        if (!flock($lock, LOCK_EX)) { return false; }
+        $input = is_file($manifest_file) ? fopen($manifest_file, 'r') : false;
+        $header = $input ? fgetcsv($input) : false;
+        $keys = is_array($header) ? $header : [];
+        $next_keys = array_values(array_unique(array_merge($keys, array_keys($receipt))));
+        if ($keys !== $next_keys) {
+            $temporary = (string) tempnam(dirname($manifest_file), '.receipt-');
+            $output = fopen($temporary, 'w');
+            if (!$output || fputcsv($output, $next_keys) === false) { return false; }
+            while ($input && ($row = fgetcsv($input)) !== false) {
+                $row = array_pad($row, count($next_keys), '');
+                if (fputcsv($output, $row) === false) { return false; }
+            }
+            if ($input) { fclose($input); $input = false; }
+            if (!fflush($output)) { return false; }
+            fclose($output); $output = false;
+            if (is_file($manifest_file) && !is_file($manifest_file . '.before-subject')) {
+                if (!copy($manifest_file, $manifest_file . '.before-subject')) { return false; }
+            }
+            if (!rename($temporary, $manifest_file)) { return false; }
+            $temporary = '';
+        }
+        $output = fopen($manifest_file, 'a');
+        return $output && fputcsv($output, array_map(static fn($key) => (string) ($receipt[$key] ?? ''), $next_keys)) !== false && fflush($output);
+    } finally {
+        if ($input) { fclose($input); }
+        if ($output) { fclose($output); }
+        if ($temporary !== '' && is_file($temporary)) { unlink($temporary); }
+        flock($lock, LOCK_UN);
+        fclose($lock);
+    }
+}
+
 function iss_content_editorial_sets_event_drop_meta_from_filename(string $stored_name, string $path): array
 {
     $meta = [
@@ -638,6 +680,7 @@ function iss_content_editorial_sets_sync_event_drop_incoming(): int
                 'target_type' => $context_type,
                 'target_id' => $context_id > 0 ? (string) $context_id : '',
                 'participant_id' => (string) ($meta['participant_id'] ?? ''),
+                'contribution_subject' => iss_content_contribution_subject($meta['contribution_subject'] ?? ''),
                 'size_bytes' => (string) ($meta['size_bytes'] ?? ''),
                 'sha256' => (string) ($meta['sha256'] ?? ''),
                 'uploaded_at' => (string) ($meta['uploaded_at'] ?? ''),

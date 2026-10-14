@@ -155,9 +155,19 @@ function iss_content_upload_key(int $post_id): string
     return hash_hmac('sha256', 'editorial-upload:' . $post_id . ':' . (string) get_post_meta($post_id, '_iss_upload_generation', true), wp_salt('auth'));
 }
 
-function iss_content_upload_url(int $post_id): string
+/** Topic is a descriptive hint for editors, never an authorization scope. */
+function iss_content_contribution_subject($subject): string
 {
-    return iss_content_upload_is_open($post_id) ? add_query_arg(['context' => $post_id, 'key' => iss_content_upload_key($post_id)], home_url('/event-drop/')) : '';
+    return is_scalar($subject) ? mb_substr(sanitize_text_field((string) $subject), 0, 240) : '';
+}
+
+function iss_content_upload_url(int $post_id, string $subject = ''): string
+{
+    if (!iss_content_upload_is_open($post_id)) { return ''; }
+    $args = ['context' => $post_id, 'key' => iss_content_upload_key($post_id)];
+    $subject = iss_content_contribution_subject($subject);
+    if ($subject !== '') { $args['subject'] = rawurlencode($subject); }
+    return add_query_arg($args, home_url('/event-drop/'));
 }
 
 function iss_content_upload_authorized(int $post_id, string $key): bool
@@ -174,16 +184,16 @@ function iss_content_set_upload_open(int $post_id, bool $open): void
 }
 
 /** Text submissions use WordPress moderation; files continue to use private Sets. */
-function iss_content_submit_event_feedback(int $post_id, string $key, array $input)
+function iss_content_submit_feedback(int $post_id, string $key, array $input)
 {
-    foreach (['feedback_nonce', 'feedback_name', 'feedback_text', 'feedback_email', 'feedback_consent', 'feedback_website'] as $field) {
+    foreach (['feedback_nonce', 'feedback_name', 'feedback_text', 'feedback_email', 'feedback_consent', 'feedback_website', 'subject'] as $field) {
         if (isset($input[$field]) && !is_scalar($input[$field])) {
             return new WP_Error('feedback_invalid', __('Ungültige Formulardaten.', 'iss-content-model'), ['status' => 400]);
         }
     }
-    if (get_post_type($post_id) !== 'veranstaltung' || get_post_status($post_id) !== 'publish'
+    if (!in_array(get_post_type($post_id), ['veranstaltung', 'register_place'], true) || get_post_status($post_id) !== 'publish'
         || post_password_required($post_id) || !iss_content_upload_authorized($post_id, $key)) {
-        return new WP_Error('feedback_closed', __('Beiträge sind für diese Veranstaltung geschlossen.', 'iss-content-model'), ['status' => 403]);
+        return new WP_Error('feedback_closed', __('Beiträge sind für diese Seite geschlossen.', 'iss-content-model'), ['status' => 403]);
     }
     if (!wp_verify_nonce((string) ($input['feedback_nonce'] ?? ''), 'iss_feedback_' . $post_id)) {
         return new WP_Error('feedback_nonce', __('Bitte laden Sie das Formular neu.', 'iss-content-model'), ['status' => 403]);
@@ -206,9 +216,15 @@ function iss_content_submit_event_feedback(int $post_id, string $key, array $inp
         'comment_content' => $text,
         'comment_parent' => 0,
         'user_id' => 0,
-        'comment_meta' => ['_iss_feedback_consent' => '1'],
+        'comment_meta' => ['_iss_feedback_consent' => '1', '_iss_feedback_subject' => iss_content_contribution_subject($input['subject'] ?? '')],
     ]), true);
     return $result ?: new WP_Error('feedback_storage', __('Der Beitrag konnte nicht gespeichert werden. Bitte versuchen Sie es erneut.', 'iss-content-model'), ['status' => 500]);
+}
+
+/** Keep existing event callers on the shared moderation path. */
+function iss_content_submit_event_feedback(int $post_id, string $key, array $input)
+{
+    return iss_content_submit_feedback($post_id, $key, $input);
 }
 
 add_filter('pre_comment_approved', static function ($approved, array $data) {
@@ -219,7 +235,7 @@ add_filter('pre_comment_approved', static function ($approved, array $data) {
 }, 99, 2);
 
 add_filter('admin_comment_types_dropdown', static function (array $types): array {
-    $types['iss_feedback'] = __('Veranstaltungsfeedback', 'iss-content-model');
+    $types['iss_feedback'] = __('Erinnerungen und Feedback', 'iss-content-model');
     return $types;
 });
 
@@ -248,10 +264,11 @@ function iss_content_render_contributions_controls(WP_Post $post): void
         }
     }
     echo '<hr><h4>' . esc_html__('Beiträge von Gästen', 'iss-content-model') . '</h4>';
-    echo '<label><input type="checkbox" name="iss_upload_open" value="1" ' . checked(iss_content_upload_is_open($post->ID), true, false) . '> ' . esc_html($post->post_type === 'veranstaltung' ? __('Feedback und Upload geöffnet', 'iss-content-model') : __('Upload geöffnet', 'iss-content-model')) . '</label>';
+    $has_feedback = in_array($post->post_type, ['veranstaltung', 'register_place'], true);
+    echo '<label><input type="checkbox" name="iss_upload_open" value="1" ' . checked(iss_content_upload_is_open($post->ID), true, false) . '> ' . esc_html($has_feedback ? __('Feedback und Upload geöffnet', 'iss-content-model') : __('Upload geöffnet', 'iss-content-model')) . '</label>';
     echo '<p class="description">' . esc_html__('Mit „Aktualisieren“ speichern. Fotos und Dokumente bleiben bis zur redaktionellen Freigabe im privaten Set.', 'iss-content-model') . '</p>';
-    if ($post->post_type === 'veranstaltung') {
-        echo '<p class="description">' . esc_html__('Textbeiträge werden unter Kommentare geprüft. Erst „Genehmigen“ veröffentlicht sie als Stimmen zur Veranstaltung. Der geöffnete Beitragslink erscheint auf der Veranstaltungsseite.', 'iss-content-model') . '</p>';
+    if ($has_feedback) {
+        echo '<p class="description">' . esc_html__('Textbeiträge werden unter Kommentare geprüft. Erst „Genehmigen“ veröffentlicht sie als Erinnerungen auf dieser Seite. Der geöffnete Beitragslink erscheint auf der Seite.', 'iss-content-model') . '</p>';
         echo '<p><a class="button" href="' . esc_url(add_query_arg(['p' => $post->ID, 'comment_type' => 'iss_feedback'], admin_url('edit-comments.php'))) . '">' . esc_html__('Feedback prüfen', 'iss-content-model') . '</a></p>';
     }
     $url = iss_content_upload_url($post->ID);
@@ -284,6 +301,12 @@ add_action('admin_enqueue_scripts', static function (): void {
     }
     $path = ISS_CONTENT_MODEL_PATH . 'assets/admin-contributions.js';
     wp_enqueue_script('iss-content-contributions', plugins_url('../assets/admin-contributions.js', __FILE__), ['wp-api-fetch'], (string) filemtime($path), true);
+});
+
+add_action('add_meta_boxes_comment', static function (): void {
+    add_meta_box('iss-feedback-subject', __('Bezug des Beitrags', 'iss-content-model'), static function (WP_Comment $comment): void {
+        echo '<p>' . esc_html((string) get_comment_meta($comment->comment_ID, '_iss_feedback_subject', true)) . '</p>';
+    }, 'comment', 'normal');
 });
 
 // Keep the graph's public flag in step with native publication and withdrawal.

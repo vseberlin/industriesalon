@@ -648,6 +648,9 @@
     notesWrap.appendChild(notesInput);
     form.appendChild(notesWrap);
 
+    if ((item.provenance || {}).contribution_subject) {
+      form.appendChild(el('p', '', 'Beitrag zu: ' + item.provenance.contribution_subject));
+    }
     [['credit', 'Bildnachweis / Urheber', (item.rights || {}).attribution || ''], ['source-note', 'Herkunft / erhalten von', (item.provenance || {}).source_note || '']].forEach(function (field) {
       var wrap = el('label', 'iss-editorial-sets-field'); wrap.appendChild(el('span', '', field[1]));
       var input = el('input', 'iss-editorial-sets-modal__' + field[0]); input.value = field[2]; wrap.appendChild(input); form.appendChild(wrap);

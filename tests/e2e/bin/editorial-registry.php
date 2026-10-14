@@ -31,7 +31,7 @@ try {
         'veranstaltung' => ['intro', 'programm', 'upload_intake'],
         'ausstellung' => ['upload_intake'], 'projekt' => ['upload_intake'], 'rueckblick' => ['intro', 'upload_intake'],
         'publication' => ['intro', 'source', 'publication_rail', 'longread_chapter', 'timeline_item', 'photoalbum'],
-        'place' => ['intro', 'epoche', 'gegenwart', 'galerie', 'material', 'upload_intake'],
+        'place' => ['intro', 'epoche', 'gegenwart', 'galerie', 'material', 'upload_intake', 'dynamic_slot'],
     ];
     foreach ($special_choices as $slug => $expected) {
         $actual = array_keys(array_filter(iss_editorial_get_format($slug)['sections'], static fn(array $section): bool => !$section['portable'] && !$section['ui_hidden']));
@@ -697,6 +697,7 @@ try {
     $_GET = []; $GLOBALS['wp_the_query'] = $original_main_query;
     $place = iss_editorial_get_format('place');
     $assert(!isset($place['sections']['facts']), 'Facts do not widen the Place contract');
+    $assert(array_keys($place['sections']['dynamic_slot']['slots']) === ['place-epoch-contribution'] && !$place['sections']['dynamic_slot']['portable'], 'Place reuses the dynamic gesture with only its owned invitation source');
     $assert(!isset($place['sections']['statement']) && !isset($place['sections']['leitfrage']), 'Place retains its separate narrative contract');
     foreach (['veranstaltung', 'fuehrung'] as $slug) {
         $assert(!iss_editorial_get_format($slug)['sections']['intro']['portable'], "$slug: native introduction keeps its owner");
@@ -718,11 +719,15 @@ try {
         ['type' => 'gegenwart', 'title' => 'Present & future', 'kicker' => 'Present context', 'body' => '<p><strong>Present prose</strong></p>', 'media_refs' => [array_merge($media, ['label' => 'Present image'])], 'links' => [['label' => 'Visit & learn', 'url' => 'https://example.invalid/place?a=1&b=2']]],
         ['type' => 'intro', 'title' => 'Opening & context', 'kicker' => 'Opening context', 'body' => '<p><em>Opening prose</em></p>', 'media_refs' => [array_merge($media, ['label' => 'First opening image']), array_merge($media, ['label' => 'Second opening image'])]],
         ['type' => 'epoche', 'title' => 'Historic phase', 'body' => '<p>Historic prose</p>', 'era_key' => 'nach-1990', 'function_key' => 'culture'],
-        ['type' => 'intro', 'title' => 'Retained second opening'],
+        ['type' => 'intro', 'title' => 'Retained second opening', 'body' => '<p>Retained opening prose</p>'],
         ['type' => 'gegenwart', 'body' => '<p>Retained second present</p>'],
         ['type' => 'material', 'title' => 'Dossier supplement', 'links' => [['label' => 'Material source', 'url' => 'https://example.invalid/material']]],
     ];
     $assert(iss_editorial_save_document($place_id, 'place', $place_doc, false, true), 'Existing repeated Place overviews remain valid and saveable');
+    $place_doc = iss_editorial_get_document($place_id, 'place');
+    $place_doc['sections'][] = ['type' => 'dynamic_slot', 'slot_key' => 'place-epoch-contribution', 'treatment' => 'slot.place-epoch-contribution'];
+    iss_content_set_upload_open($place_id, true);
+    $assert(iss_editorial_save_document($place_id, 'place', $place_doc, false, true), 'Place-owned dynamic gesture remains part of the canonical document');
     $place_doc = iss_editorial_get_document($place_id, 'place');
     $canonical_place = get_post_meta($place_id, iss_editorial_get_document_meta_key('place'), true);
     $public_place = industriesalon_render_editorial_place_document($place_id, iss_editorial_get_read_model($place_id, 'place'));
@@ -733,10 +738,10 @@ try {
     $sorted = $positions; sort($sorted);
     $assert($positions === $sorted, 'Out-of-order Place JSON keeps fixed dossier groups and order within them');
     $assert(substr_count($public_place, '<figure') === 3 && !str_contains($public_place, 'data-iss-'), 'All overview images render without public editing attributes');
-    foreach (['intro' => 'Ort auf einen Blick', 'gegenwart' => 'Der Ort heute'] as $type => $fallback_title) {
+    foreach (['intro' => 'Warum dieser Ort zählt', 'gegenwart' => 'Der Ort heute'] as $type => $fallback_title) {
         $assert(industriesalon_render_editorial_place_overview(['type' => $type]) === '', $type . ': empty slots produce no phantom heading');
         $assert(str_contains(industriesalon_render_editorial_place_overview(['type' => $type, 'body' => 'Body without title']), $fallback_title), $type . ': body-only content retains its default heading');
-        $assert(str_contains(industriesalon_render_editorial_place_overview(['type' => $type, 'title' => 'Title without body']), 'Title without body'), $type . ': title-only content is visible');
+        $assert(industriesalon_render_editorial_place_overview(['type' => $type, 'title' => 'Title without body']) === '', $type . ': title-only content does not create an empty section');
         $image_only = ['type' => $type, 'media_refs_resolved' => [['reference' => $media, 'resolved' => iss_editorial_resolve_reference($media)]]];
         $assert(str_contains(industriesalon_render_editorial_place_overview($image_only), '<img'), $type . ': image-only content is visible');
     }
@@ -753,9 +758,10 @@ try {
         if ($tags->get_attribute('data-iss-preview-section') !== null) { $address = (int) $tags->get_attribute('data-iss-preview-section'); $addresses[] = $address; }
         if ($tags->get_attribute('data-iss-field') !== null) { $fields[$address][] = $tags->get_attribute('data-iss-field'); }
     }
-    $assert($addresses === [1, 3, 2, 0, 4, 5], 'Preview addresses retain exact JSON indexes across fixed grouping and duplicates');
+    $assert($addresses === [1, 3, 2, 6, 0, 4, 5], 'Preview addresses retain exact JSON indexes across fixed grouping and duplicates');
     foreach ([0, 1, 4] as $index) { $assert($fields[$index] === ['kicker', 'title', 'body'], 'Place preview edits its own title, kicker and body at index ' . $index); }
-    $assert($fields[3] === ['kicker', 'title'], 'A title-only retained introduction has the correct editing address');
+    $assert($fields[3] === ['kicker', 'title', 'body'], 'A populated retained introduction has the correct editing address');
+    $assert(!isset($fields[6]), 'Automatic gesture retains its own preview address without exposing generated copy as editable text');
     $assert(get_post_meta($place_id, iss_editorial_get_document_meta_key('place'), true) === $canonical_place, 'Rendering and preview do not rewrite saved Place JSON or remove duplicates');
     $_GET = []; $GLOBALS['wp_query'] = $original_query; $GLOBALS['post'] = $original_post;
     $publication = iss_editorial_get_format('publication');

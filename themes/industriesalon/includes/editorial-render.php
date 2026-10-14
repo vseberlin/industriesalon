@@ -157,3 +157,39 @@ add_action('wp_enqueue_scripts', static function (): void {
     }
     if ($rules) { wp_add_inline_style('industriesalon-base', implode("\n", $rules)); }
 }, 30);
+
+/** Native moderated guest comments shared by events and Places. */
+function industriesalon_render_feedback(int $post_id, bool $with_invitation = true): string
+{
+    if (!in_array(get_post_type($post_id), ['veranstaltung', 'register_place'], true) || post_password_required($post_id) || get_post_status($post_id) !== 'publish') {
+        return '';
+    }
+    $page = max(1, absint($_GET['feedback_page'] ?? 1)); // phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Read-only pagination.
+    $query = ['post_id' => $post_id, 'type' => 'iss_feedback', 'status' => 'approve', 'meta_key' => '_iss_feedback_consent', 'meta_value' => '1']; // phpcs:ignore WordPress.DB.SlowDBQuery -- Native low-volume comment consent metadata.
+    $total = (int) get_comments(array_merge($query, ['count' => true]));
+    $url = $with_invitation && function_exists('iss_content_upload_url') ? iss_content_upload_url($post_id) : '';
+    if (!$total && $url === '') {
+        return '';
+    }
+    $page = min($page, max(1, (int) ceil($total / 12)));
+    $comments = get_comments(array_merge($query, ['number' => 12, 'offset' => ($page - 1) * 12, 'orderby' => ['comment_date_gmt' => 'DESC', 'comment_ID' => 'DESC']]));
+    $html = '<section id="stimmen" class="iss-editorial-feedback section"><p class="iss-kicker">Erfahrungen &amp; Erinnerungen</p><h2>' . esc_html(get_post_type($post_id) === 'register_place' ? __('Erinnerungen an diesen Ort', 'industriesalon') : __('Stimmen zur Veranstaltung', 'industriesalon')) . '</h2>';
+    if ($comments) {
+        $html .= '<div class="iss-editorial-feedback__voices">';
+        foreach ($comments as $comment) {
+            $html .= '<blockquote class="iss-editorial-feedback__voice">' . wpautop(esc_html($comment->comment_content)) . '<cite>' . esc_html($comment->comment_author) . '</cite></blockquote>';
+        }
+        $html .= '</div>';
+        if ($total > 12) {
+            $html .= '<nav aria-label="' . esc_attr__('Weitere Stimmen', 'industriesalon') . '">' . paginate_links([
+                'base' => add_query_arg('feedback_page', '%#%', get_permalink($post_id)) . '#stimmen',
+                'format' => '', 'current' => $page, 'total' => (int) ceil($total / 12),
+            ]) . '</nav>';
+        }
+    }
+    if ($url !== '') {
+        $html .= '<p>' . esc_html__('Was ist Ihnen in Erinnerung geblieben? Teilen Sie Ihre Eindrücke oder steuern Sie Fotos bei. Alle Beiträge werden vor der Veröffentlichung geprüft.', 'industriesalon') . '</p>';
+        $html .= '<p><a class="iss-button" href="' . esc_url($url) . '">' . esc_html__('Erinnerung oder Fotos beitragen', 'industriesalon') . '</a></p>';
+    }
+    return $html . '</section>';
+}

@@ -996,6 +996,9 @@
             : 'Material verwendet Dateien. Bilder bitte über Galerie einsetzen.'
         ));
       }
+      if (format === 'place' && section.type === 'epoche') {
+        target.appendChild(createElement('p', 'description iss-editorial-media-rule', 'Fotos dieser Epoche: Bilder aus einem Set oder der Mediathek auswählen. Alle ausgewählten Bilder erscheinen mit ihrer Bildunterschrift.'));
+      }
       (section.media_refs || []).forEach(function (reference, index) {
         var item = createElement('article', 'iss-editorial-media-item');
         var preview = createElement('div', 'iss-editorial-media-item__preview');
@@ -1111,6 +1114,13 @@
       });
       if (config.isFrontPage && documentState.schema_version >= 3) { var opening = createElement('p', 'iss-editorial-opening-note', openingNote(section)); opening.hidden = !opening.textContent; contentPanel.body.appendChild(opening); }
       contentPanel.body.appendChild(titleField);
+      if (format === 'place' && type === 'dynamic_slot') {
+        var precedingEpoch = documentState.sections.slice(0, documentState.sections.indexOf(section)).reverse().find(function (item) { return item.type === 'epoche'; });
+        titleField.querySelector('input, textarea').placeholder = 'Automatische Frage zur vorherigen Epoche';
+        contentPanel.body.appendChild(createElement('p', 'description', precedingEpoch
+          ? 'Bezug: ' + (precedingEpoch.title || 'Vorherige Epoche') + '. Titel leer lassen für die automatische Frage aus deren Zeitraum. Eigener Titel ersetzt sie.'
+          : 'Diese Geste nach der gewünschten Epoche einfügen. Titel leer lassen für die automatische Frage aus deren Zeitraum.'));
+      }
       if (format === 'fuehrung' && type === 'bildbuehne') {
         titleField.querySelector('input, textarea').placeholder = identityFields.title ? identityFields.title.value : '';
         contentPanel.body.appendChild(createElement('p', 'description', 'Ohne eigenen Titel erscheint der Titel der Führung.'));
@@ -1231,6 +1241,14 @@
           render();
           scheduleAutosave();
         }));
+      }
+
+      if (supports(type, 'contribution_question') && !(format === 'place' && type === 'epoche')) {
+        contentPanel.body.appendChild(createTextInput('Eigene Forschungsfrage (optional, max. 240 Zeichen)', section.contribution_question || '', function (value) {
+          section.contribution_question = value;
+          scheduleAutosave();
+        }));
+        contentPanel.body.appendChild(createElement('p', 'description', 'Leer lassen für die automatische Frage zur Zeitspanne dieser Epoche. Eigener Text ersetzt sie. Alle Beiträge gehen in das gemeinsame Set des Ortes; Beiträge unter Material & Beiträge öffnen.'));
       }
 
       if (supports(type, 'source_confidence')) {

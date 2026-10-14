@@ -122,6 +122,7 @@ function manifestLookup(string $manifestFile): array
                     'license' => $row[12] ?? '',
                     'consent' => $row[13] ?? '',
                     'uploader_email' => $row[14] ?? '',
+                    'contribution_subject' => $row[15] ?? '',
                 ];
             }
         }
@@ -177,7 +178,7 @@ function renderShared(string $acceptedDir, array $manifest, string $authToken, s
         $download = '/event-drop/?download=' . rawurlencode($name) . ($query === '' ? '' : '&' . $query);
         echo '<tr>';
         echo '<td>' . h($name) . '</td>';
-        echo '<td>' . h((string)($meta['event_slug'] ?? '')) . '</td>';
+        echo '<td>' . h((string)($meta['event_slug'] ?? '')) . '<br>' . esc_html((string)($meta['contribution_subject'] ?? '')) . '</td>';
         echo '<td>' . h((string)($meta['participant_id'] ?? '')) . '</td>';
         echo '<td>' . h((string)($meta['attribution'] ?? '')) . '</td>';
         echo '<td>' . h((string)($meta['license'] ?? '')) . '</td>';
@@ -295,7 +296,7 @@ function renderAdmin(string $incomingDir, string $acceptedDir, string $rejectedD
             $rejectLink = '/event-drop/?view=admin&action=reject&file=' . rawurlencode($name) . ($adminAuth === '' ? '' : '&' . $adminAuth);
             echo '<tr>';
             echo '<td>' . h($name) . '</td>';
-            echo '<td>' . h((string)($meta['event_slug'] ?? '')) . '</td>';
+            echo '<td>' . h((string)($meta['event_slug'] ?? '')) . '<br>' . esc_html((string)($meta['contribution_subject'] ?? '')) . '</td>';
             echo '<td>' . h((string)($meta['participant_id'] ?? '')) . '</td>';
             echo '<td>' . h((string)($meta['attribution'] ?? '')) . '</td>';
             echo '<td>' . h((string)($meta['license'] ?? '')) . '</td>';
@@ -341,6 +342,8 @@ if ($contextId > 0 && !$contextAuthorized) {
     reject(403, 'Dieser Upload-Link ist geschlossen oder nicht mehr gültig.');
 }
 $contextPost = $contextAuthorized ? get_post($contextId) : null;
+// phpcs:ignore WordPress.Security.NonceVerification -- Optional topic hint; signed context verified above, text nonce verified by its owner below.
+$contributionSubject = $contextPost ? iss_content_contribution_subject(wp_unslash($_POST['subject'] ?? $_GET['subject'] ?? '')) : '';
 if ($contextPost) {
     $eventSlug = $contextPost->post_type . '__' . $contextPost->post_name;
 }
@@ -349,14 +352,14 @@ $feedbackError = '';
 $feedbackValues = [];
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['submit_feedback'])) {
     $feedbackValues = wp_unslash($_POST);
-    $feedback = iss_content_submit_event_feedback($contextId, $contextKey, $feedbackValues);
+    $feedback = iss_content_submit_feedback($contextId, $contextKey, $feedbackValues);
     if (is_wp_error($feedback)) {
         $feedbackError = $feedback->get_error_message();
         $errorData = $feedback->get_error_data();
         http_response_code(is_int($errorData) ? $errorData : (is_array($errorData) ? (int) ($errorData['status'] ?? 400) : 400));
         $feedbackValues = array_map(static fn($value) => is_scalar($value) ? (string) $value : '', $feedbackValues);
     } else {
-        wp_safe_redirect(add_query_arg('feedback_sent', '1', iss_content_upload_url($contextId)), 303);
+        wp_safe_redirect(add_query_arg('feedback_sent', '1', iss_content_upload_url($contextId, $contributionSubject)), 303);
         exit;
     }
 }
@@ -475,22 +478,25 @@ if ($_SERVER['REQUEST_METHOD'] !== 'POST' || $feedbackError !== '') {
         @media (max-width: 680px) { main { width: min(100% - 20px, 980px); padding-top: 20px; } .drop-fields { grid-template-columns: 1fr; padding: 14px; } }
     </style></head><body><main><section class="drop-shell">';
     echo '<div class="drop-head"><h1>Erinnerungen und Material beitragen</h1><p class="drop-note">' . h($tokenHint) . ' Die Redaktion prüft alle Beiträge vor einer Veröffentlichung.</p></div>';
-    if ($contextPost && $contextPost->post_type === 'veranstaltung' && $contextPost->post_status === 'publish' && !post_password_required($contextPost)) {
-        echo '<p>Zur Veranstaltung: <a href="' . esc_url(get_permalink($contextPost)) . '">' . h($contextPost->post_title) . '</a></p>';
+    if ($contextPost && in_array($contextPost->post_type, ['veranstaltung', 'register_place'], true) && $contextPost->post_status === 'publish' && !post_password_required($contextPost)) {
+        $isPlace = $contextPost->post_type === 'register_place';
+        echo '<p>' . ($isPlace ? 'Zum Ort: ' : 'Zur Veranstaltung: ') . '<a href="' . esc_url(get_permalink($contextPost)) . '">' . esc_html($contextPost->post_title) . '</a></p>';
+        if ($contributionSubject !== '') { echo '<p>Ihr Beitrag zu: <strong>' . esc_html($contributionSubject) . '</strong></p>'; }
         if (isset($_GET['feedback_sent']) && $feedbackError === '') {
             echo '<p class="drop-status" role="status">Vielen Dank! Ihr Textbeitrag ist eingegangen und wartet auf redaktionelle Prüfung. Sie können unten zusätzlich Fotos oder Dokumente hochladen.</p>';
         }
         if ($feedbackError !== '') {
             echo '<p class="drop-status" role="alert">' . h($feedbackError) . '</p>';
         }
-        echo '<form class="drop-feedback" method="post" action="' . esc_url(iss_content_upload_url($contextId)) . '"><h2>Ihre Stimme zur Veranstaltung</h2><p class="drop-note">Ein Text genügt. Fotos und Dokumente können Sie unabhängig davon weiter unten einsenden.</p>';
+        echo '<form class="drop-feedback" method="post" action="' . esc_url(iss_content_upload_url($contextId, $contributionSubject)) . '"><h2>' . ($isPlace ? 'Ihre Erinnerung oder Ihr Hinweis' : 'Ihre Stimme zur Veranstaltung') . '</h2><p class="drop-note">Ein Text genügt. Fotos und Dokumente können Sie unabhängig davon weiter unten einsenden.</p>';
         echo '<input type="hidden" name="submit_feedback" value="1"><input type="hidden" name="context" value="' . h((string) $contextId) . '"><input type="hidden" name="key" value="' . h($contextKey) . '">';
         wp_nonce_field('iss_feedback_' . $contextId, 'feedback_nonce', false);
+        echo '<input type="hidden" name="subject" value="' . esc_attr($contributionSubject) . '">';
         echo '<div class="drop-fields"><label class="drop-field">Name oder Kürzel (öffentlich)<input name="feedback_name" maxlength="80" required value="' . h((string) ($feedbackValues['feedback_name'] ?? '')) . '"></label>';
         echo '<label class="drop-field">E-Mail (freiwillig, nicht öffentlich)<input name="feedback_email" type="email" value="' . h((string) ($feedbackValues['feedback_email'] ?? '')) . '"></label>';
-        echo '<label class="drop-field drop-field--wide">Ihre Eindrücke<textarea name="feedback_text" rows="5" maxlength="4000" required>' . h((string) ($feedbackValues['feedback_text'] ?? '')) . '</textarea></label>';
+        echo '<label class="drop-field drop-field--wide">' . ($isPlace ? 'Ihre Erinnerung, Ihr Wissen oder eine Korrektur' : 'Ihre Eindrücke') . '<textarea name="feedback_text" rows="5" maxlength="4000" required>' . h((string) ($feedbackValues['feedback_text'] ?? '')) . '</textarea></label>';
         echo '<label class="drop-trap" aria-hidden="true">Website<input name="feedback_website" tabindex="-1" autocomplete="off"></label>';
-        echo '<label class="drop-check"><input name="feedback_consent" type="checkbox" value="1" required' . checked((string) ($feedbackValues['feedback_consent'] ?? ''), '1', false) . '><span>Mein Text und mein Name oder Kürzel dürfen nach redaktioneller Prüfung auf der Veranstaltungsseite veröffentlicht werden.</span></label></div><button type="submit">Textbeitrag einsenden</button></form>';
+        echo '<label class="drop-check"><input name="feedback_consent" type="checkbox" value="1" required' . checked((string) ($feedbackValues['feedback_consent'] ?? ''), '1', false) . '><span>Mein Text und mein Name oder Kürzel dürfen nach redaktioneller Prüfung auf der ' . ($isPlace ? 'Ortsseite' : 'Veranstaltungsseite') . ' veröffentlicht werden.</span></label></div><button type="submit">Textbeitrag einsenden</button></form>';
     }
     echo '<h2>Fotos und Dokumente beitragen</h2>';
     echo '<div class="drop-fields" id="event-drop-fields">';
@@ -502,8 +508,9 @@ if ($_SERVER['REQUEST_METHOD'] !== 'POST' || $feedbackError !== '') {
         echo '<input type="hidden" id="token" value=""><input type="hidden" id="code" value="' . $codeValue . '">';
     }
     echo '<input type="hidden" id="context" value="' . h((string) $contextId) . '"><input type="hidden" id="key" value="' . h($contextKey) . '">';
+    echo '<input type="hidden" id="subject" value="' . esc_attr($contributionSubject) . '">';
     if ($contextPost) {
-        echo '<p class="drop-field">Beitrag zu: ' . h($contextPost->post_title) . '</p><input type="hidden" id="event" value="' . $eventInputValue . '">';
+        echo '<p class="drop-field">Beitrag zu: ' . esc_html($contextPost->post_title) . '</p><input type="hidden" id="event" value="' . $eventInputValue . '">';
     } else {
         echo '<label class="drop-field">Beitragscode<input id="event" value="' . $eventInputValue . '" required></label>';
     }
@@ -524,6 +531,7 @@ if ($_SERVER['REQUEST_METHOD'] !== 'POST' || $feedbackError !== '') {
             code: document.getElementById("code"),
             event: document.getElementById("event"),
             context: document.getElementById("context"),
+            subject: document.getElementById("subject"),
             key: document.getElementById("key"),
             attribution: document.getElementById("attribution"),
             license: document.getElementById("license"),
@@ -538,6 +546,7 @@ if ($_SERVER['REQUEST_METHOD'] !== 'POST' || $feedbackError !== '') {
                 code: fields.code.value.trim(),
                 event: fields.event.value.trim(),
                 context: fields.context.value,
+                subject: fields.subject.value,
                 key: fields.key.value,
                 attribution: fields.attribution.value.trim(),
                 license: fields.license.value,
@@ -606,7 +615,7 @@ if ($_SERVER['REQUEST_METHOD'] !== 'POST' || $feedbackError !== '') {
             limit: 2,
             timeout: 0,
             responseType: "json",
-            allowedMetaFields: ["participant_id", "token", "code", "event", "context", "key", "attribution", "license", "uploader_email", "consent", "format"],
+            allowedMetaFields: ["participant_id", "token", "code", "event", "context", "key", "subject", "attribution", "license", "uploader_email", "consent", "format"],
         });
 
         uppy.on("upload-success", (file, response) => {
@@ -720,47 +729,28 @@ if (!move_uploaded_file((string)$upload['tmp_name'], $destination)) {
 
 $size = (string)filesize($destination);
 $hash = hash_file('sha256', $destination);
-$payload = [
-    'event_slug',
-    'participant_id',
-    'original_name',
-    'stored_name',
-    'extension',
-    'size_bytes',
-    'sha256',
-    'remote_ip',
-    'user_agent',
-    'token_suffix',
-    'uploaded_at',
-    'attribution',
-    'license',
-    'consent',
-    'uploader_email',
+$receipt = [
+    'event_slug' => $event,
+    'participant_id' => $participant,
+    'original_name' => $originalName,
+    'stored_name' => $storedName,
+    'extension' => $extension,
+    'size_bytes' => $size,
+    'sha256' => $hash,
+    'remote_ip' => $_SERVER['REMOTE_ADDR'] ?? '',
+    'user_agent' => str_replace(["\r", "\n"], ' ', $_SERVER['HTTP_USER_AGENT'] ?? ''),
+    'token_suffix' => substr($token, -8),
+    'uploaded_at' => gmdate('c'),
+    'attribution' => $attribution,
+    'license' => $license,
+    'consent' => $consent,
+    'uploader_email' => $uploaderEmail,
+    'contribution_subject' => $contributionSubject,
 ];
-if (!file_exists($manifestFile) || filesize($manifestFile) === 0) {
-    file_put_contents($manifestFile, implode(',', $payload) . "\n", LOCK_EX);
-}
-    $line = [
-        $event,
-        $participant,
-        $originalName,
-        $storedName,
-        $extension,
-    $size,
-    $hash,
-        $_SERVER['REMOTE_ADDR'] ?? '',
-        str_replace(["\r", "\n"], ' ', $_SERVER['HTTP_USER_AGENT'] ?? ''),
-        substr($token, -8),
-        gmdate('c'),
-        $attribution,
-        $license,
-        $consent,
-        $uploaderEmail,
-    ];
-$fp = fopen($manifestFile, 'a');
-if ($fp !== false) {
-    fputcsv($fp, $line);
-    fclose($fp);
+if (!iss_content_editorial_sets_event_drop_append_receipt($manifestFile, $receipt)) {
+    // No successful submission without its provenance receipt.
+    unlink($destination);
+    reject(500, 'Der Beitrag konnte nicht gespeichert werden. Bitte versuchen Sie es erneut.');
 }
 
 if (($mediaType = $_POST['format'] ?? '') === 'json' || (strpos($_SERVER['HTTP_ACCEPT'] ?? '', 'application/json') !== false)) {

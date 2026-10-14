@@ -6,7 +6,7 @@ if (!defined('ABSPATH')) {
 
 // phpcs:disable WordPress.DB.DirectDatabaseQuery -- This projection service owns and caches its indexed custom-table queries.
 
-define('ISS_REGISTER_EPOCH_SCHEMA_VERSION', '2026-09-27-v3');
+define('ISS_REGISTER_EPOCH_SCHEMA_VERSION', '2026-10-14-v4');
 define('ISS_REGISTER_EPOCH_SCHEMA_OPTION', 'iss_register_epoch_schema_version');
 define('ISS_REGISTER_EPOCH_SNAPSHOT_META_KEY', '_iss_register_epoch_snapshot_latest');
 define('ISS_REGISTER_EPOCH_SNAPSHOTS_META_KEY', '_iss_register_epoch_snapshots');
@@ -67,6 +67,7 @@ final class ISS_Register_Place_Epoch_Service
             is_current tinyint(1) NOT NULL DEFAULT 0,
             source_confidence varchar(40) NOT NULL DEFAULT 'unknown',
             source_summary text NOT NULL,
+            contribution_question text NOT NULL DEFAULT '',
             source_links_json longtext NOT NULL,
             media_ids_json longtext NOT NULL,
             created_at datetime NOT NULL,
@@ -247,6 +248,7 @@ final class ISS_Register_Place_Epoch_Service
             'is_current' => 0,
             'source_confidence' => 'url',
             'source_summary' => sanitize_textarea_field($event['source_summary']),
+            'contribution_question' => '',
             'source_links_json' => wp_json_encode([$event['source_url']]),
             'media_ids_json' => '[]',
             'created_at' => $now,
@@ -416,7 +418,7 @@ final class ISS_Register_Place_Epoch_Service
                     $this->get_table_name(),
                     $db_data,
                     ['id' => $row_id, 'place_post_id' => $place_post_id],
-                    ['%d', '%s', '%s', '%s', '%s', '%d', '%d', '%d', '%d', '%s', '%s', '%s', '%s', '%s', '%s'],
+                    ['%d', '%s', '%s', '%s', '%s', '%d', '%d', '%d', '%d', '%s', '%s', '%s', '%s', '%s', '%s', '%s'],
                     ['%d', '%d']
                 );
                 if ($updated === false) {
@@ -429,7 +431,7 @@ final class ISS_Register_Place_Epoch_Service
             $inserted = $wpdb->insert(
                 $this->get_table_name(),
                 $db_data,
-                ['%d', '%s', '%s', '%s', '%s', '%d', '%d', '%d', '%d', '%s', '%s', '%s', '%s', '%s', '%s']
+                ['%d', '%s', '%s', '%s', '%s', '%d', '%d', '%d', '%d', '%s', '%s', '%s', '%s', '%s', '%s', '%s']
             );
             $new_id = (int) $wpdb->insert_id;
             if ($inserted !== 1 || $new_id <= 0) {
@@ -741,6 +743,7 @@ final class ISS_Register_Place_Epoch_Service
             'is_current' => !empty($row['is_current']) ? 1 : 0,
             'source_confidence' => $source_confidence,
             'source_summary' => sanitize_textarea_field((string) ($row['source_summary'] ?? '')),
+            'contribution_question' => mb_substr(sanitize_text_field((string) ($row['contribution_question'] ?? '')), 0, 240),
             'source_links' => $this->sanitize_source_links($row['source_links'] ?? []),
             'media_ids' => $this->sanitize_media_ids($row['media_ids'] ?? []),
         ];
@@ -762,6 +765,7 @@ final class ISS_Register_Place_Epoch_Service
             'is_current' => !empty($row['is_current']) ? 1 : 0,
             'source_confidence' => (string) $row['source_confidence'],
             'source_summary' => (string) $row['source_summary'],
+            'contribution_question' => (string) ($row['contribution_question'] ?? ''),
             'source_links_json' => wp_json_encode(array_values($row['source_links']), JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES),
             'media_ids_json' => wp_json_encode(array_values($row['media_ids']), JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES),
             'created_at' => $now,
@@ -787,6 +791,7 @@ final class ISS_Register_Place_Epoch_Service
             'is_current' => !empty($row['is_current']),
             'source_confidence' => sanitize_key((string) ($row['source_confidence'] ?? 'unknown')),
             'source_summary' => (string) ($row['source_summary'] ?? ''),
+            'contribution_question' => (string) ($row['contribution_question'] ?? ''),
             'source_links' => $this->sanitize_source_links(is_array($source_links) ? $source_links : []),
             'media_ids' => $this->sanitize_media_ids(is_array($media_ids) ? $media_ids : []),
             'created_at' => (string) ($row['created_at'] ?? ''),
@@ -935,35 +940,33 @@ final class ISS_Register_Place_Epoch_Service
     }
 }
 
-/** Merge accepted events into the existing public chronology, not Atlas use filters. */
+/** Group accepted dated updates into authored phases; retain undated/unmatched events. */
 function iss_register_merge_place_milestones(int $post_id, array $epochs): array
 {
-    $events = iss_register_get_epoch_service()->get_milestones_for_place($post_id);
-    if (!$events) {
-        return $epochs;
-    }
-    foreach ($events as $event) {
+    foreach (iss_register_get_epoch_service()->get_milestones_for_place($post_id) as $event) {
         $date = $event['event_date'] ?? null;
-        $year = is_string($date) ? (int) substr($date, 0, 4) : null;
-        $epochs[] = [
-            'milestone' => $event,
-            'title' => $event['title'],
-            'phase_name' => $event['title'],
-            'body' => esc_html($event['summary']),
-            'summary' => $event['summary'],
-            'start_year' => $year,
-            'end_year' => $year,
-            'source_confidence' => 'url',
-            'source_summary' => $event['source_summary'],
-            'source_refs' => [['label' => 'Standortregister', 'url' => $event['source_url']]],
-            'source_links' => [$event['source_url']],
-        ];
+        $year = is_string($date) && $date !== '' ? (int) substr($date, 0, 4) : null;
+        $match = null;
+        $latest_start = -1;
+        if ($year !== null) {
+            foreach ($epochs as $index => $epoch) {
+                if (!empty($epoch['milestone'])) { continue; }
+                $start = $epoch['start_year'] ?? null;
+                $end = $epoch['end_year'] ?? null;
+                if ($start !== null && $start !== '' && (int) $start <= $year
+                    && ($end === null || $end === '' || (int) $end >= $year) && (int) $start >= $latest_start) {
+                    $match = $index;
+                    $latest_start = (int) $start;
+                }
+            }
+        }
+        if ($match !== null) {
+            $epochs[$match]['milestones'][] = $event;
+        } else {
+            // Never infer an event date or assign an unknown event to a historical phase.
+            $epochs[] = ['milestone' => $event];
+        }
     }
-    usort($epochs, static function (array $a, array $b): int {
-        $left = $a['milestone']['event_date'] ?? (isset($a['start_year']) ? (string) $a['start_year'] : '9999');
-        $right = $b['milestone']['event_date'] ?? (isset($b['start_year']) ? (string) $b['start_year'] : '9999');
-        return strcmp(str_pad($left, 10, '-00'), str_pad($right, 10, '-00'));
-    });
     return $epochs;
 }
 
@@ -994,6 +997,9 @@ function iss_register_editorial_place_epoch_rows(array $document)
 {
     $rows = [];
     foreach ((array) ($document['sections'] ?? []) as $index => $section) {
+        if (is_array($section) && ($section['type'] ?? '') === 'dynamic_slot' && ($section['slot_key'] ?? '') === 'place-epoch-contribution' && !$rows) {
+            return new WP_Error('iss_register_place_contribution_context', __('Bitte „Wissen zur Epoche beitragen“ nach der gewünschten Epoche einfügen.', 'industriesalon-schoeneweide-register'));
+        }
         if (!is_array($section) || ($section['type'] ?? '') !== 'epoche') {
             continue;
         }
@@ -1023,13 +1029,10 @@ function iss_register_editorial_place_epoch_rows(array $document)
             'is_current' => !empty($section['is_current']),
             'source_confidence' => (string) ($section['source_confidence'] ?? 'unknown'),
             'source_summary' => (string) ($section['source_summary'] ?? ''),
+            'contribution_question' => (string) ($section['contribution_question'] ?? ''),
             'source_links' => array_values(array_filter($source_links)),
             'media_ids' => array_values(array_filter($media_ids)),
         ];
-    }
-
-    if (!$rows) {
-        return new WP_Error('iss_register_place_projection_empty', __('Bitte mindestens eine Epoche für die Geschichte des Ortes ergänzen.', 'industriesalon-schoeneweide-register'));
     }
 
     return $rows;

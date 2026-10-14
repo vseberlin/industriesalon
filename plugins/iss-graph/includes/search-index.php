@@ -136,6 +136,8 @@ function iss_graph_get_search_index_meta_keys_for_post_type(string $post_type): 
             'current_use_type',
             'previous_use',
             'history_long',
+            '_iss_editorial_place',
+            '_iss_editorial_enabled_place',
             'place_visibility',
             'iss_related_places',
         ];
@@ -205,7 +207,21 @@ function iss_graph_collect_public_search_text_parts(WP_Post $post): array
     ];
 
     if ($post->post_type === (function_exists('iss_graph_get_register_post_type') ? iss_graph_get_register_post_type() : 'register_place')) {
-        foreach (['owner', 'operator', 'developer', 'tenant', 'current_status', 'current_use_type', 'previous_use', 'history_long'] as $meta_key) {
+        $uses_json = function_exists('iss_editorial_document_is_enabled') && iss_editorial_document_is_enabled((int) $post->ID, 'place');
+        $meta_keys = ['owner', 'operator', 'developer', 'tenant', 'current_status', 'current_use_type', 'previous_use'];
+        if ($uses_json) {
+            // Old core content/history remain a before-image, not a second public narrative.
+            $parts[2] = '';
+            foreach (iss_editorial_get_document((int) $post->ID, 'place')['sections'] ?? [] as $section) {
+                if (($section['type'] ?? '') !== 'upload_intake') {
+                    $parts[] = (string) ($section['title'] ?? '');
+                    $parts[] = (string) ($section['body'] ?? '');
+                }
+            }
+        } else {
+            $meta_keys[] = 'history_long';
+        }
+        foreach ($meta_keys as $meta_key) {
             $parts[] = get_post_meta($post->ID, $meta_key, true);
         }
     }

@@ -311,8 +311,8 @@ try {
     $bad = $place_doc; $bad['sections'][] = $bad['sections'][1];
     $cases['two current epochs'] = [$bad, 'iss_register_epoch_multiple_current'];
     $bad = $place_doc; $bad['deleted_sections'][] = array_pop($bad['sections']);
-    $cases['last epoch in trash'] = [$bad, 'iss_register_place_projection_empty'];
-    $cases['empty new Place'] = [iss_editorial_get_empty_document('place'), 'iss_register_place_projection_empty'];
+    $assert(!is_wp_error(iss_editorial_validate_document($bad, 'place')), 'Moving the last epoch to trash leaves a valid sparse Place');
+    $assert(!is_wp_error(iss_editorial_validate_document(iss_editorial_get_empty_document('place'), 'place')), 'New Place can start without an invented epoch');
     $bad = $place_doc; $bad['sections'] = iss_editorial_get_format('place')['starters'][0]['sections'];
     $cases['unfinished Place starter'] = [$bad, 'iss_register_epoch_invalid_era'];
     foreach ($cases as $label => [$bad, $error_code]) {

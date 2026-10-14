@@ -958,33 +958,6 @@
   scroll-margin-top: calc(var(--iss-header-height, 5rem) + 2rem);
 }
 
-.iss-event-feedback {
-  border-top: 1px solid var(--iss-event-rule);
-  scroll-margin-top: calc(var(--iss-header-height, 5rem) + 2rem);
-}
-
-.iss-event-feedback__voices {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(min(100%, 20rem), 1fr));
-  gap: var(--iss-space-lg);
-  margin-block: var(--iss-space-lg);
-}
-
-.iss-event-feedback__voice {
-  margin: 0;
-  padding: var(--iss-space-lg);
-  background: var(--iss-event-soft);
-  overflow-wrap: anywhere;
-}
-
-.iss-event-feedback__voice cite {
-  display: block;
-  margin-top: var(--iss-space-md);
-  color: var(--iss-surface-fg);
-  font-style: normal;
-  font-weight: 600;
-}
-
 @media (max-width: 900px) {
   .iss-event-hero__grid,
   .iss-event-body__grid {

@@ -1160,7 +1160,7 @@ function industriesalon_enqueue_assets(): void
         array(
             'handle' => 'industriesalon-editorial-skins',
             'path' => '/assets/css/editorial-skins.css',
-            'condition' => is_front_page() || $editorial_styles,
+            'condition' => is_front_page() || $editorial_styles || is_singular('register_place'),
         ),
         array(
             'handle' => 'industriesalon-publications',

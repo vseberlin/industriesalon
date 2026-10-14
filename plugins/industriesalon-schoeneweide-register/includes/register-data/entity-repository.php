@@ -182,6 +182,20 @@ function iss_register_map_place_entity(WP_Post $post): array
         'sort_order' => (int) iss_register_get_meta_value($post_id, 'sort_order', 0),
     ];
 
+    if (function_exists('iss_editorial_document_is_enabled') && iss_editorial_document_is_enabled($post_id, 'place')) {
+        $narratives = ['intro' => [], 'gegenwart' => []];
+        foreach (iss_editorial_get_document($post_id, 'place')['sections'] ?? [] as $section) {
+            $type = (string) ($section['type'] ?? '');
+            if (isset($narratives[$type])) {
+                $narratives[$type][] = trim(wp_strip_all_tags((string) ($section['body'] ?? '')));
+            }
+        }
+        // Enabled JSON owns narrative, including an intentionally empty document.
+        $place['history_short'] = (string) $post->post_excerpt;
+        $place['history'] = implode("\n\n", array_filter($narratives['intro']));
+        $place['current'] = implode("\n\n", array_filter($narratives['gegenwart']));
+    }
+
     if (function_exists('iss_register_detect_current_status')) {
         $normalized_current_status = iss_register_detect_current_status($place);
 

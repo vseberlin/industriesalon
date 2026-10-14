@@ -36,6 +36,7 @@ foreach (array_merge(array_keys($tables), [$wpdb->options]) as $table) {
 }
 $doc = iss_editorial_get_empty_document('place');
 $doc['sections'] = [['type' => 'epoche', 'title' => 'Original phase', 'body' => '<p>Original history</p>', 'era_key' => 'nach-1990', 'function_key' => 'culture', 'start_year' => 2000, 'is_current' => true]];
+$doc['sections'][0]['contribution_question'] = 'Was geschah hier ab 2000?';
 $next = $doc;
 $next['sections'][0]['title'] = 'Changed phase';
 $next['sections'][0]['body'] = '<p>Changed history</p>';
@@ -62,7 +63,56 @@ try {
         clean_post_cache($post_id);
     }
     $expect(iss_editorial_save_document($id, 'place', $doc, false, true), 'First activation writes JSON and projections together');
+    $expect(iss_editorial_get_document($id, 'place', false)['sections'][0]['contribution_question'] === 'Was geschah hier ab 2000?' && $epochs->get_epochs_for_place($id)[0]['contribution_question'] === 'Was geschah hier ab 2000?', 'Authored question survives canonical save and epoch projection');
     $expect(count($epochs->get_epochs_for_place($id)) === 1 && count($states->get_states_for_place($id)) === 2, 'Published Place has one epoch and historical/current states');
+    // Hidden/retired controls must survive a normal facts-panel save.
+    foreach (['legacy_icon', 'legacy_color', 'history_short', 'history_long', 'current_use', 'research_note'] as $field) {
+        update_post_meta($id, $field, 'Retained ' . $field);
+    }
+    $_POST = ['iss_register_meta_nonce' => wp_create_nonce('iss_register_save_meta_box'), 'iss_register_meta' => ['address' => 'Edited address', 'history_long' => 'Discard this obsolete control']];
+    iss_register_save_meta_box($id);
+    foreach (['legacy_icon', 'legacy_color', 'history_short', 'history_long', 'current_use', 'research_note'] as $field) {
+        $expect(get_post_meta($id, $field, true) === 'Retained ' . $field, 'Hidden/missing control preserved: ' . $field);
+    }
+    $expect(get_post_meta($id, 'address', true) === 'Edited address', 'Facts panel still saves submitted address');
+    $fields = array_merge(...array_column(iss_register_get_meta_box_groups($id), 'fields'));
+    $expect(!array_intersect(['legacy_icon', 'legacy_color', 'history_short', 'history_long', 'current_use'], $fields), 'Canonical editor has no duplicated/retired fields');
+    $mapped = iss_register_map_place_entity(get_post($id));
+    $expect($mapped['history'] === '' && $mapped['current'] === '', 'Enabled document never revives hidden legacy prose in Atlas');
+    $candidate_post = clone get_post($id);
+    $candidate_post->post_content = '<!-- wp:paragraph --><p>Full published narrative</p><!-- /wp:paragraph -->';
+    $candidate_post->post_excerpt = 'Short teaser';
+    update_post_meta($id, '_iss_register_current_import', ['source_url' => 'https://example.com/report']);
+    $attachment = clone $candidate_post;
+    $attachment->ID = $draft_id + 1;
+    $attachment->post_type = 'attachment';
+    wp_cache_set($attachment->ID, $attachment, 'posts');
+    $reference = iss_content_model_place_media_reference($attachment->ID);
+    $expect($reference['kind'] === 'media' && $reference['source'] === 'wp-media', 'Candidate media uses the existing resolver contract');
+    wp_cache_delete($attachment->ID, 'posts');
+    $candidate = iss_content_model_build_place_editorial_candidate($candidate_post);
+    $expect(trim(wp_strip_all_tags($candidate['sections'][0]['body'])) === 'Full published narrative', 'Candidate preserves published full narrative');
+    $present = array_values(array_filter($candidate['sections'], static fn($section) => $section['type'] === 'gegenwart'));
+    $expect($present[0]['links'][0]['url'] === 'https://example.com/report', 'Candidate retains current report source');
+    $candidate_post->post_content = '<p>Short teaser</p>';
+    $candidate = iss_content_model_build_place_editorial_candidate($candidate_post);
+    $expect(str_contains($candidate['sections'][0]['body'], 'Retained history_long'), 'Repeated teaser does not suppress long history');
+    $_POST = $old_post;
+
+    $sparse = iss_editorial_get_empty_document('place');
+    $sparse['sections'] = [['type' => 'intro', 'body' => '<p>Small Place without invented epochs.</p>']];
+    $expect(iss_editorial_save_document($id, 'place', $sparse, false, true), 'Sparse Place saves without mandatory epochs');
+    $expect($epochs->get_epochs_for_place($id) === [], 'Sparse canonical document has no stale epoch projection');
+    $mapped = iss_register_map_place_entity(get_post($id));
+    $expect($mapped['history'] === 'Small Place without invented epochs.' && $mapped['current'] === '', 'Atlas reads sparse JSON narrative');
+    $expect(iss_editorial_save_document($id, 'place', $doc, false, true), 'Restore authored phase after sparse fixture');
+    $chosen = $doc;
+    $chosen['sections'][] = ['type' => 'dynamic_slot', 'slot_key' => 'place-epoch-contribution', 'treatment' => 'slot.place-epoch-contribution'];
+    $expect(iss_editorial_save_document($id, 'place', $chosen, false, true), 'A chosen invitation gesture saves through the existing document owner');
+    $expect(count(iss_editorial_get_document($id, 'place')['sections']) === 2 && count($epochs->get_epochs_for_place($id)) === 1, 'The dynamic gesture persists without becoming an additional epoch');
+    $orphan = $chosen; $orphan['sections'] = array_reverse($orphan['sections']);
+    $expect(!iss_editorial_save_document($id, 'place', $orphan, false, true) && count(iss_editorial_get_document($id, 'place')['sections']) === 2, 'Orphan gesture rejects the save and retains the chosen document');
+    $expect(iss_editorial_save_document($id, 'place', $doc, false, true), 'Removing a gesture saves without changing the historical phase');
     $expect(iss_editorial_save_document($id, 'place', $doc, false, true), 'Unchanged metadata is a successful save');
     foreach ([$revision_id, $draft_id] as $copy_id) {
         add_metadata('post', $copy_id, $key, wp_slash(iss_editorial_encode_document(iss_editorial_validate_document($next, 'place'))));

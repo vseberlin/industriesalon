@@ -674,6 +674,11 @@
   grid-template-columns: minmax(0, 1.58fr) minmax(7.4rem, 0.42fr);
 }
 
+/* Band surfaces stack their map and optional copy across the available width. */
+.iss-atlas-slice--layout-band {
+  grid-template-columns: minmax(0, 1fr);
+}
+
 .iss-atlas-slice__map {
   min-width: 0;
   max-width: 100%;

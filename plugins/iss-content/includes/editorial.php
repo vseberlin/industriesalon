@@ -60,8 +60,8 @@ function iss_content_model_place_media_reference(int $attachment_id): array
     }
 
     return [
-        'kind' => 'wp_media',
-        'source' => 'wordpress',
+        'kind' => 'media',
+        'source' => 'wp-media',
         'id' => (string) $attachment_id,
         'label' => (string) get_the_title($attachment),
     ];
@@ -70,14 +70,27 @@ function iss_content_model_place_media_reference(int $attachment_id): array
 function iss_content_model_build_place_editorial_candidate(WP_Post $post): array
 {
     $sections = [];
-    $history_short = trim((string) get_post_meta((int) $post->ID, 'history_short', true));
+    // Preserve the published narrative; the manual excerpt remains a separate teaser.
+    $intro = trim(wp_kses_post(do_blocks((string) $post->post_content)));
+    if (trim(wp_strip_all_tags($intro)) === trim((string) $post->post_excerpt)) {
+        $intro = '';
+    }
+    if (trim(wp_strip_all_tags($intro)) === '') {
+        $intro = wpautop(esc_html(trim((string) get_post_meta((int) $post->ID, 'history_long', true))));
+    }
+    if (trim(wp_strip_all_tags($intro)) === '') {
+        $intro = trim((string) get_post_meta((int) $post->ID, 'history_short', true));
+    }
+    if (trim(wp_strip_all_tags($intro)) === trim((string) $post->post_excerpt)) {
+        $intro = '';
+    }
     $current_use = trim((string) get_post_meta((int) $post->ID, 'current_use', true));
 
-    if ($history_short !== '') {
+    if ($intro !== '') {
         $sections[] = [
             'type' => 'intro',
-            'title' => __('Ort auf einen Blick', 'iss-content-model'),
-            'body' => $history_short,
+            'title' => __('Warum dieser Ort zählt', 'iss-content-model'),
+            'body' => $intro,
         ];
     }
 
@@ -116,16 +129,20 @@ function iss_content_model_build_place_editorial_candidate(WP_Post $post): array
             'is_current' => !empty($epoch['is_current']),
             'source_confidence' => (string) ($epoch['source_confidence'] ?? 'unknown'),
             'source_summary' => (string) ($epoch['source_summary'] ?? ''),
+            'contribution_question' => (string) ($epoch['contribution_question'] ?? ''),
             'source_refs' => $source_refs,
             'media_refs' => $media_refs,
         ];
     }
 
     if ($current_use !== '') {
+        $import = get_post_meta((int) $post->ID, '_iss_register_current_import', true);
+        $source_url = is_array($import) ? esc_url_raw((string) ($import['source_url'] ?? '')) : '';
         $sections[] = [
             'type' => 'gegenwart',
             'title' => __('Heute', 'iss-content-model'),
-            'body' => $current_use,
+            'body' => wpautop(esc_html($current_use)),
+            'links' => $source_url !== '' ? [['label' => __('Standortregister: Quelle zur Gegenwart', 'iss-content-model'), 'url' => $source_url]] : [],
         ];
     }
 
@@ -157,10 +174,10 @@ function iss_content_model_register_editorial_formats(array $formats): array
         'post_types' => ['register_place'],
         'default_skin' => 'ortsdossier',
         'default_variant' => 'standard',
-        'editor' => ['order_notice' => __('Feste Seitenfolge: Einleitung → Epochen → Gegenwart → Galerie und Material. Verschieben wirkt innerhalb dieser Bereiche. Enthält die Chronik ergänzte Ereignisse, gilt dort die Datumsfolge.', 'iss-content-model')],
+        'editor' => ['order_notice' => __('Feste Seitenfolge: Einleitung → Epochen in Datumsfolge → Gegenwart → Galerie und Material. Datierte Ereignisse erscheinen als kurze Aktualisierungen in der passenden Epoche. „Automatische Inhalte → Wissen zur Epoche beitragen“ nach der gewünschten Epoche einfügen, um dort zum Beitragen einzuladen.', 'iss-content-model')],
         'sections' => [
             'intro' => [
-                'label' => __('Kurzprofil', 'iss-content-model'),
+                'label' => __('Warum dieser Ort zählt', 'iss-content-model'),
                 'description' => __('Am Anfang des Dossiers: Titel, Text und Bilder zum Ort. Kann einmal hinzugefügt werden.', 'iss-content-model'),
                 'max_instances' => 1,
                 'supports' => ['media_refs'],
@@ -176,8 +193,26 @@ function iss_content_model_register_editorial_formats(array $formats): array
                     'is_current',
                     'source_confidence',
                     'source_summary',
+                    'contribution_question',
                     'source_refs',
                     'media_refs',
+                ],
+            ],
+            'dynamic_slot' => [
+                'description' => __('„Wissen zur Epoche beitragen“ nach der gewünschten Epoche einfügen. Die Frage verwendet deren Zeitraum. Alle Beiträge gehen in das gemeinsame Set des Ortes; Beiträge unter Material & Beiträge ausdrücklich öffnen.', 'iss-content-model'),
+                'supports' => ['treatment', 'slot_key', 'no_body'],
+                'slots' => [
+                    'place-epoch-contribution' => [
+                        'label' => __('Wissen zur Epoche beitragen', 'iss-content-model'),
+                        'treatment' => 'slot.place-epoch-contribution',
+                    ],
+                ],
+                'treatments' => [
+                    'slot.place-epoch-contribution' => [
+                        'label' => __('Wissen zur Epoche beitragen', 'iss-content-model'),
+                        'schematic' => 'callout',
+                        'hint' => __('Verwendet die vorherige Epoche. Titel leer lassen für die automatische Frage aus deren Zeitraum. Bei geöffneten Beiträgen führen alle Einladungen in das gemeinsame Set des Ortes.', 'iss-content-model'),
+                    ],
                 ],
             ],
             'gegenwart' => [

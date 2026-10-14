@@ -1,181 +1,91 @@
-# Current handoff — 13 October 2026
+# Current handoff — 14 October 2026
 
-## Editorial stabilization complete locally
+## Accepted local checkpoint
 
-The requested shared editor/gesture stabilization is implemented across all
-editorial CPTs, with Places retaining their separate dossier contract. The Place
-layout is committed as `50cebcf`, following atomic persistence `ae8ee01` and save
-validation `45a3568`. The final checkpoint completes the Place contribution
-contract. Nothing has been pushed or deployed.
+Place dossier design, optional sections, JSON editing and on-demand epoch
+invitations are complete and accepted locally. This checkpoint is local on `main`
+in `/home/vladimir/wp-website`; use Git history for implementation details and
+`HEAD`/`origin/main` for delivery refs. Nothing in this checkpoint is pushed or
+deployed. Other-machine release remains separately authorized.
 
-Place invitations now use the existing signed intake service and private Sets.
-Editors must explicitly open **Angaben & Beziehungen → Material & Beiträge →
-Upload geöffnet**; a stored Place gesture alone never enables uploads. Template
-and JSON invitation links share opening/closure/key rotation. Place report
-creation and event-only text feedback remain excluded. No real Place was opened.
+All 84 existing local Places use the canonical `place` JSON canvas; the enabled
+Kino pilot was preserved. Core titles/excerpts/content and old metadata remain
+before-images; active facts, contacts, image permissions, relations and imported
+milestones keep their owners. The atomic persistence boundary covers JSON and
+phase/state projections, not native post fields or earlier graph writes.
+Retired icon/color controls and duplicated narrative
+controls are hidden without deleting stored data. Empty sections/epochs are valid.
+The theme follows the supplied dossier proposal and retains the existing compact
+static map with its selected Place marker.
 
-Final verification: 13,115 registry/renderer checks, 433 storage checks across 94
-existing documents, 190 Set/contribution checks, 49 event/feedback checks and 44
-editor/Set UI tests. PHP lint, PHPCS and PHPStan pass. Chrome native save/reload,
-phone preview/guidance, Fertig return, correct upload form and closure pass; HTTP
-checks cover open GET, empty signed POST and closed GET/POST. No files submitted.
-All test records were removed; existing content/comments/Sets and the pilot JSON
-hash are unchanged. Kino Spreehöfe's six-epoch parity remains intact.
+Add **Automatische Inhalte → Wissen zur Epoche beitragen** after the intended
+epoch. It uses the nearest preceding epoch in document order; blank gesture title
+produces the date-based question, custom title replaces it. No implicit invitation
+appears on other epochs. All submissions use the same signed Place context and
+single private Set, with epoch topic retained for moderation. Explicit **Feedback
+und Upload geöffnet** is still required. Only KAOS 93 was opened locally; its DDR
+phase has one chosen gesture. Native moderated Place text feedback is now supported.
 
-Next is staff acceptance and a separately authorized release. Firefox, external
-Word/Docs paste and target template overrides still require acceptance. All local
-code slices are complete; wider Place migration is separate. The persistence
-transaction covers sections/projections, not native post fields or earlier graph
-writes. Effective page/report/publication/Place templates are file-backed;
-Ausstellung override 26309 is retained, and the earlier CPT archive collection
-slot needs target override review. See the
-[final checkpoint](docs/project/editorial-consolidation-audit.md#final-place-contribution-checkpoint--13-october-2026).
+Verification: 13,119 registry/renderer checks, 227 isolated Place atomic checks,
+86 optional-section checks and 64 contribution checks pass. Storage regression
+previously passed 506 checks across 177 documents (CLI-only 2 GB memory allowance
+for the large existing-data snapshot). Scoped PHP lint/PHPCS/PHPStan and JS/CSS
+checks pass; Event Drop receiver retains its pre-existing PHPCS baseline findings.
+Chrome verifies native chooser add/remove, preview source/context, Update/reload,
+desktop/390px layout, map marker and correct signed form topic. Representative
+Place/landing routes return 200. Disposable fixtures were removed; no real guest
+submission was made. Wider browser/staff acceptance remains a release gate.
 
-No real content, schema, template or upload edits; no additional paired data or
-uploads artifact is required. Work remains in `/home/vladimir/wp-website`; the
-mixed `/home/vladimir/wp` checkout is untouched.
+## Data and media delivery
 
-## Scope and delivery state
+Deploy matching code/schema before reviewing these guarded owner-API artifacts.
+Run `dry-run` before `apply`; preserve later target editorial changes. Do not copy
+this local database to staging. The readable JSON manifest contains 83 reviewed
+Places; the previously enabled Kino pilot is outside it.
 
-The six-phase [WordPress refactoring plan](docs/project/wordpress-refactoring-plan.md)
-is complete within the authorized local scope. The user authorized commits and
-execution through completion; stepwise confirmation is superseded. Work lives in
-`/home/vladimir/wp-website` on `main`. The accepted calendar/homepage and Repair-Café
-checkpoint joins the completed refactor for GitHub exchange on exit; use Git
-history and `HEAD` / `origin/main` for delivery refs. Staging deployment remains
-separate. The distinct `/home/vladimir/wp` mixed checkout remains
-dirty and is not a commit/cleanup target. No home-level files, other drives,
-preservation sources or staging state were changed.
+1. `2026-10-14-place-image-preview.php` with
+   `ops/uploads/2026-10-14-place-dossier-preview.tar.gz` and its adjacent manifest/
+   unpacked artifact directory. This adds a JPEG native large size to the existing
+   public TIFF attachment; original TIFF/attribution remain intact. Archive SHA-256:
+   `03b4b239c91aa74f8822575bf66a3f948a81d61d7a4ab046aa5c9490e3c41daf`.
+2. `2026-10-14-place-research-question-preview.php` authors the reviewed legacy
+   KAOS DDR question **before** JSON conversion. It has a targeted before-image.
+3. `2026-10-14-place-json.php` plus `2026-10-14-place-documents.json` activate the
+   reviewed documents atomically with phase/state projections. Before-images and
+   guarded rollback are per Place; milestones and intake choices stay intact.
+4. `2026-10-14-place-epoch-gesture.php` adds the one chosen KAOS DDR gesture after
+   JSON conversion, retaining its own guarded document before-image. Earlier
+   baseline-only verification intentionally rejects this later edited document.
 
-Staging was inspected read-only on 11 October: clean code at `6c8cea7`, WordPress
-7.0/PHP 8.3, healthy services, 118 GB free. Traffic WP-Cron is still enabled and
-66 old graph rows remain queued. These observations are not deployment evidence.
-The prepared scheduler, backup/retention scripts and scoped PHP limits have not
-been installed there; see [maintenance activation/recovery](docs/runbooks/staging-maintenance.md).
+`2026-10-14-place-contributions-preview.php` is a separate explicit opt-in to open
+KAOS intake; never infer target opening from a stored gesture or code deployment.
+No new uploads accompany JSON/gesture/intake artifacts. See the current contract
+and migration detail in `docs/architecture/editorial-platform.md`.
 
-## Implemented and verified
+Private ignored recovery lives in `var/place-dossier-20261014/`: 0600 Place
+before-images, the preserved unchanged pre-gesture autosave, schema/phase baseline,
+and JSON apply/verify receipts. Targeted backup options are non-autoload and
+private. Original local uploads/intake persist outside this checkout.
 
-- Versioned seed/setup gates, checked owner schema installation, transactional
-  graph/Set writers, ownership-aware queue processing, Event Drop recovery and
-  commerce retry idempotency. Public requests no longer install/backfill schemas.
-- Native GET programme controls, core Interactivity/router navigation and one
-  native booking/inquiry/order dialog. The subsequent user-requested full
-  calendar adds an availability month picker to inline tours/dialogs and a
-  Liste/Kalender programme month view with existing day results. The requested
-  live staging calendar/time chooser now uses one shared compact picker skin
-  across all three surfaces. Choosing a time reveals the request fields.
-  `/kalender/` keeps compact period/type buttons above the grid and the programme
-  results alongside it; type selection submits the existing native GET form.
-  Flatpickr and obsolete controllers/cache helpers are removed. Source
-  visibility, capacity and Berlin dates are checked
-  at intake. Booking records requests; it does not reserve capacity or confirm
-  payment. Email dispatch is not exactly-once across a process crash.
-- Bounded/private SQL search, batched read-only relations/occurrences and coalesced
-  ordinary-save projections through the existing queue. Explicit transactional
-  writers remain immediate. Curated menu selection stays on its existing owner:
-  occurrence opt-in/recurrence semantics failed the equivalence check.
-- Graph/CLI/relations/programme responsibilities are split within their owners;
-  admin/CLI code loads in context. Project/team ordering uses native controls.
-  Existing saved-layout CSS compatibility and unrelated Atlas work are preserved.
-- Monitored owner jobs, bounded non-destructive Set decay, one locked host runner,
-  seven-artifact verified backups with guarded retention, inactive-owner cron
-  migration and paired public/intake limit proposal are ready for release review.
+## Runtime and remaining release work
 
-Refactor closeout checks: 355 backend assertions across seven affected suites, 23 disposable
-host-runner/backup assertions, PHP lint/PHPCS/PHPStan, shell syntax and 63
-Chrome/Firefox/Linux-WebKit browser scenarios pass. The scoped cron migration
-passed check/apply/verify on the isolated fixture; every other event was retained.
-Earlier broader checkpoints (3,134 assertions; later extraction 1,821) retain
-separate receipts and scopes. No real notification, external sync or real queue
-drain was executed for verification. Public pages were measured locally; reduced
-calendar/tour assets and increased publication assets are not a uniform speedup.
+`wp_app` mounts website plugin/theme/receiver code from this checkout;
+core/database/uploads/intake remain in `/home/vladimir/wp`. Re-inspect mounts
+before testing. Use Compose project `wp` with `/home/vladimir/wp/docker-compose.yml`
+and `var/refactoring-20261008/website-code.yml`; private CLI wrapper/receipts remain
+under `var/refactoring-20261008/`. The mixed checkout is not a code/cleanup target.
 
-Calendar design checkpoint: 70 backend checks and 60 Chrome/Firefox/Linux-WebKit
-booking/month/commerce/filter/router scenarios pass, including phone, keyboard,
-timezone and no-JavaScript cases. The final return-to-selected-date focus check
-also passes in all three engines. PHP/PHPCS/PHPStan and JS/CSS checks pass.
-Live staging was compared read-only in the browser. Desktop/phone review confirms
-the shared date tiles, date/time/request sequence and filters above the calendar,
-without overflow. Earlier warm full local renders measured 113 SQL queries for
-the plain list and 116 for calendar plus results (zero writes in each); the earlier 79-query measurement
-was for the retired grid without its adjacent listing. Booking month/day changes
-reuse loaded slots without extra requests. These are local, not staging timings.
+Earlier refactor/calendar/Repair-Café work is locally complete; source/runbooks
+and Git history retain its evidence. A release must also review the four existing
+owner/maintenance migrations and the paired Schöneweide landing migration from
+12 October. Scheduler/retention/scoped server limits remain uninstalled on staging;
+last read-only staging inspection was 11 October, not current deployment evidence.
+Use `docs/runbooks/staging-maintenance.md` and the active release TODO.
 
-Accepted programme presentation: the calendar mockup and
-homepage share Programme / Compact programme rows, large dates, existing images
-and booking actions; running exhibitions show Läuft bis and their closing date.
-The active editorial `front-timeline` slot and Gutenberg fallback now use the
-existing program-cards block's automatic feature plus four compact dates below
-Demnächst. Existing selection/expiry rules choose the feature, including a
-current-exhibition fallback and expiring editorial focus; its source is removed
-from the adjacent list. Missing images and empty states need no manual handling.
-The layout stacks on phones and homepage cache headers prevent frozen dates.
-All 122 read-only preview/rotation/overview/booking checks, targeted PHP/JS/CSS
-checks, editor control smoke checks and template roundtrips pass; the preceding
-78-check calendar/filter/booking checkpoint also passed. Chrome desktop/390px
-review covers both pages, filters/month navigation, the feature, calendar link
-and booking request-form handoff without submission. The latest presentation's
-cross-engine rerun and real editor save/reload remain. No additional DB/uploads
-artifact is needed; editorial JSON and existing media are unchanged. No staging
-deployment was made.
-
-Repair-Café's `/repair-cafe/` destination is now enforced by shared mapping,
-SuperSaaS sync and public-read logic, including newly imported dates. Its cards
-use the effective landing-template hero without copying attachment metadata.
-All 96 destination/hero/overview/preview/booking checks, PHP lint/PHPStan and
-desktop/390px review pass. PHPCS passes six changed runtime files; sync admin's
-8 errors/21 warnings match the preceding `3ef84f7` baseline and are outside the changes. No live sync,
-content/media write or new data artifact was required.
-
-## Schöneweide landing
-
-The locally applied landing now has five sections including the opening, three
-selected Place cards, six historical phases and the existing Atlas. The prior
-card previews are retained. Matching theme/section-contract changes and
-`ops/migrations/2026-10-12-schoneweide-landing.php` plus its JSON payload are
-delivered together in Git. Deploy matching code before applying the migration; it checks the
-reviewed baseline and existing media before writing through `iss-editorial`.
-It passed check/apply/verify, repeat-apply and rejection checks. Private recovery
-is `var/schoneweide-20261012/before.json` (0600); preserve later editorial edits.
-Chrome desktop/900px/390px and 31 backend checks pass; authenticated editor
-save/reload and cross-engine UAT remain. No new uploads or staging change.
-
-## Runtime, recovery evidence and next action
-
-`wp_app` still serves website plugin/theme/receiver code from this checkout;
-core/database/uploads/intake remain in `wp`. Re-inspect mounts before testing.
-Use Compose project `wp` with both `/home/vladimir/wp/docker-compose.yml` and
-`var/refactoring-20261008/website-code.yml`; CLI wrapper is
-`var/refactoring-20261008/wp`, with `DISABLE_WP_CRON` explicitly enabled for checks.
-The isolated WordPress 7.0 fixture (`iss-refactor-wp70`, loopback 8097) is stopped;
-its private core/database/Compose files and blocked-mail/HTTP configuration remain.
-
-Private ignored evidence/backups: `var/refactoring-20261008/` (0700), especially
-`wp70/final-*.log`, `maintenance-runner-tests.log`, `wp70/restore-verification.json`
-and `file-restore-verification.json`; calendar receipts are `wp70/month-*.log`,
-`month-calendar-request-queries.json`, `month-calendar-assets.json`, and the
-current `wp70/staging-design-*` logs/screenshots; the preceding layout and query
-receipts remain in `wp70/calendar-design-*` and `calendar-design-queries.json`.
-A 118-table database restore passed (117
-matching checksums; volatile options differed), and six representative files
-restored with matching hashes. Full multi-GB uploads/intake restoration remains
-a release gate. Never restore these snapshots over later editorial work.
-
-Next is a separately authorized staging release and acceptance from GitHub `main`, following
-the maintenance runbook. Deliver matching code with four scoped artifacts:
-`2026-10-08-taxonomy-seeds.php`, `2026-10-11-commerce-idempotency.php`,
-`2026-10-11-owner-setup.php`, `2026-10-11-maintenance-cron.php` under
-`ops/migrations/`, each with target-local before-images and check/apply/verify.
-Taxonomy/commerce are already applied to the original local site; owner setup and
-cron cleanup were exercised only on the isolated fixture. No uploads transfer is
-needed for this refactor. The calendar extension changes only code/assets/tests;
-it needs no additional DB or uploads artifact. The Schöneweide composition needs
-its separate guarded content migration described above. Preserve DB template overrides (`single-ausstellung`,
-`page-projekte`, `page-publikationen`), editorial recovery, private contacts/Sets,
-historical orders, moderation and uploads. Do not copy the local DB to staging.
-
-Remaining acceptance: real editor save/reload/block validity, staff workflows
-including both new calendar views,
-macOS Safari (Linux WebKit is not Safari acceptance), full file restoration and
-actual FPM/Nginx large-upload behavior. These are release gates, not unfinished
-local code slices. Unrelated TODOs and other Atlas backlog remain separate.
+Preserve target DB template overrides, recovery, private contacts/Sets, orders,
+moderation and uploads. Local Place template authority is file-backed. The retained
+Ausstellung override and earlier archive collection slot need target review.
+Staff workflows, Firefox/external Word/Docs paste, macOS Safari, full uploads/intake
+restore and actual FPM/Nginx large-upload behavior remain acceptance work. Existing
+private refactor restore receipts remain under `var/refactoring-20261008/`; never
+restore those snapshots over later editorial work. Other Atlas/TODO work is separate.

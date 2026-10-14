@@ -589,6 +589,10 @@ function iss_editorial_sanitize_section(array $section, array $format): array
         $sanitized['source_summary'] = sanitize_textarea_field((string) ($section['source_summary'] ?? ''));
     }
 
+    if (iss_editorial_format_supports_section_field($format, $type, 'contribution_question')) {
+        $sanitized['contribution_question'] = mb_substr(sanitize_text_field((string) ($section['contribution_question'] ?? '')), 0, 240);
+    }
+
     if (iss_editorial_format_supports_section_field($format, $type, 'source_refs')) {
         $sanitized['source_refs'] = iss_editorial_sanitize_link_list($section['source_refs'] ?? []);
     }

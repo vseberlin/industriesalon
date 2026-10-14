@@ -6220,147 +6220,98 @@ iss-info-panel--brown
   padding-top: 0.1rem;
 }
 
-.iss-register-place-page .wp-block-cover.iss-front-hero {
-  --iss-hero-min-h: 31rem;
-  --iss-hero-pad-bottom: 3rem;
+/* Place dossier: the same editorial composition serves short and rich records. */
+.iss-register-place__opening {
+  padding-top: calc(var(--iss-header-height) + 1.5rem);
 }
 
-.iss-register-place-page .iss-front-hero__title {
-  max-width: 15ch;
+.iss-register-place__title {
+  margin: 1rem 0 0;
+  font-size: clamp(2.6rem, 6vw, 4.5rem);
+  font-weight: 700;
+  line-height: 1;
+  letter-spacing: -0.025em;
+  overflow-wrap: anywhere;
 }
 
-.iss-register-place__hero-contribution {
-  display: grid;
-  gap: 0.35rem;
-  min-width: min(18rem, 100%);
-  padding: 1rem 1.1rem;
-  border: 1px solid rgba(255, 255, 255, 0.58);
-  background: rgba(30, 30, 30, 0.68);
-  color: var(--iss-white);
-  text-decoration: none;
-  backdrop-filter: blur(5px);
-  transition:
-    background var(--iss-transition),
-    border-color var(--iss-transition);
+.iss-register-place__subtitle {
+  margin: 0.8rem 0 0;
+  color: var(--iss-surface-muted);
+  font-size: 1.1rem;
 }
 
-.iss-register-place__hero-contribution:where(:hover, :focus-visible) {
-  border-color: var(--iss-white);
-  background: rgba(30, 30, 30, 0.86);
-  color: var(--iss-white);
+.iss-register-place__opening-lead {
+  max-width: 60ch;
+  margin-top: 1rem;
+  font-family: var(--wp--preset--font-family--plex-serif);
+  font-size: clamp(1.3rem, 2vw, 1.85rem);
+  line-height: 1.35;
 }
 
-.iss-register-place__hero-contribution-kicker {
-  font-size: 0.72rem;
-  font-weight: 750;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
+.iss-register-place__opening-lead p {
+  margin: 0;
+  line-height: inherit;
 }
 
-.iss-register-place__hero-contribution-action {
-  font-size: clamp(0.95rem, 0.9rem + 0.22vw, 1.08rem);
-  font-weight: 650;
-  line-height: 1.3;
+.iss-register-place__images {
+  margin-top: 2rem;
 }
 
 .iss-register-place__fact-band {
-  border-bottom: 1px solid rgba(30, 30, 30, 0.12);
-  background: rgba(255, 255, 255, 0.92);
-}
-
-.iss-register-place__fact-band:not(:has(.iss-register-place__fact)) {
-  display: none;
+  margin-top: 2rem;
 }
 
 .iss-register-place__fact-band-inner {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(min(100%, 10rem), 1fr));
-  padding-top: 0;
-  padding-bottom: 0;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 12rem), 1fr));
+  padding-top: 1rem;
+  padding-bottom: 1rem;
+  border-top: 2px solid var(--iss-surface-fg);
+  border-bottom: 1px solid var(--iss-surface-rule);
 }
 
 .iss-register-place__fact-band .iss-register-place__fact {
+  margin: 0;
   min-width: 0;
-  padding: 1rem clamp(0.75rem, 2vw, 1.4rem);
-  border-left: 1px solid rgba(30, 30, 30, 0.1);
-}
-
-.iss-register-place__fact-band .iss-register-place__fact:last-child {
-  border-right: 1px solid rgba(30, 30, 30, 0.1);
+  padding: 0.25rem 1rem 0.25rem 0;
 }
 
 .iss-register-place-atlas {
-  padding: 0;
-  border-top: 1px solid rgba(30, 30, 30, 0.12);
-  border-bottom: 1px solid rgba(30, 30, 30, 0.12);
-  background: var(--iss-white);
+  --iss-atlas-slice-height: 12rem;
+  --iss-atlas-slice-min-height: 0;
+  --iss-atlas-slice-radius: 0;
+  display: grid;
+  gap: 0.6rem;
+  min-width: 0;
 }
 
-.iss-register-place-atlas .iss-container {
-  padding-top: clamp(1.1rem, 2.4vw, 1.7rem);
-  padding-bottom: clamp(1.1rem, 2.4vw, 1.7rem);
-}
-
-.iss-register-place-atlas .iss-atlas-slice {
-  grid-template-columns: minmax(0, 1.65fr) minmax(17rem, 0.72fr);
-  gap: 0;
-  border-top: 2px solid var(--iss-black);
-  border-bottom: 1px solid rgba(30, 30, 30, 0.16);
-}
-
-.iss-register-place-atlas .iss-atlas-slice__stage,
-.iss-register-place-atlas .iss-atlas-slice__body {
-  border-color: rgba(30, 30, 30, 0.16);
-  border-radius: 0;
-}
-
-.iss-register-place-atlas .iss-atlas-slice__stage {
-  min-height: clamp(12rem, 22vw, 17rem);
-  border-width: 0 1px 0 0;
-}
-
-.iss-register-place-atlas .iss-atlas-slice__body {
-  align-content: center;
-  padding: clamp(1rem, 2.2vw, 1.45rem);
-  border-width: 0;
-  background: var(--iss-white);
-}
-
-.iss-register-place-atlas .iss-atlas-slice__eyebrow {
-  color: rgba(30, 30, 30, 0.54);
-  letter-spacing: 0;
-}
-
-.iss-register-place-atlas .iss-atlas-slice__title {
-  font-size: clamp(1.08rem, 1rem + 0.35vw, 1.32rem);
-  letter-spacing: 0;
-}
-
-.iss-register-place-atlas .iss-related-place-map__marker {
-  width: 2rem;
-  height: 2rem;
+.iss-register-place-atlas p {
+  margin: 0.6rem 0 0;
+  font-size: 0.95rem;
 }
 
 .iss-register-place-story {
-  background: rgba(246, 246, 247, 0.96);
-  scroll-margin-top: 2rem;
+  padding: 2rem 0;
+  scroll-margin-top: calc(var(--iss-header-height) + 1rem);
 }
 
 .iss-register-place__dossier-grid {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) minmax(14rem, 18rem);
-  gap: 2.2rem;
+  grid-template-columns: minmax(0, 1fr) 16rem;
+  gap: 2rem;
   align-items: start;
 }
 
+.iss-register-place__dossier-grid--single {
+  grid-template-columns: minmax(0, 1fr);
+}
+
 .iss-register-place__network-rail {
-  position: sticky;
-  top: calc(var(--wp-admin--admin-bar--height, 0px) + 1.2rem);
   display: grid;
-  gap: 1.15rem;
+  gap: 1.5rem;
   align-self: start;
-  padding-top: 0.95rem;
-  border-top: 2px solid var(--iss-black);
+  min-width: 0;
+  margin: 0;
 }
 
 .iss-register-place__terms {
@@ -6376,36 +6327,37 @@ iss-info-panel--brown
   min-width: 0;
 }
 
-.iss-register-place__section--epochs:not(:has(.iss-register-place__epoch-rail)) {
-  display: none;
-}
-
 .iss-register-place__section + .iss-register-place__section {
-  margin-top: clamp(2.25rem, 5vw, 4rem);
-  padding-top: clamp(1.75rem, 4vw, 3rem);
-  border-top: 1px solid rgba(30, 30, 30, 0.1);
+  margin-top: 2rem;
 }
 
 .iss-register-place__section-title {
   margin: 0;
-  font-size: clamp(1.35rem, 1.2rem + 0.55vw, 1.8rem);
-  line-height: 1.08;
-  letter-spacing: 0;
+  color: var(--iss-surface-fg);
+  font-size: clamp(1.6rem, 2.5vw, 2.15rem);
+  line-height: 1.15;
+  letter-spacing: -0.01em;
   text-wrap: balance;
+}
+
+.iss-register-place__lead,
+.iss-register-place__present-text {
+  font-family: var(--wp--preset--font-family--plex-serif);
 }
 
 .iss-register-place__lead-primary,
 .iss-register-place__lead-secondary {
-  margin: 0;
+  max-width: 66ch;
+  font-size: 1.125rem;
+  line-height: 1.65;
+  color: var(--iss-surface-fg);
 }
 
 .iss-register-place__lead-primary {
-  max-width: 38ch;
-  font-size: clamp(1.2rem, 1.05rem + 0.65vw, 1.55rem);
-  font-weight: 520;
-  line-height: 1.48;
-  color: rgba(30, 30, 30, 0.9);
-  text-wrap: pretty;
+  max-width: 66ch;
+  font-size: 1.125rem;
+  line-height: 1.65;
+  color: var(--iss-surface-fg);
 }
 
 .iss-register-place__lead-secondary {
@@ -6434,12 +6386,13 @@ iss-info-panel--brown
 }
 
 .iss-register-place__content {
+  display: grid;
+  gap: 2rem;
   min-width: 0;
 }
 
 .iss-register-place__lead {
-  display: grid;
-  gap: 1rem;
+  display: block;
 }
 
 .iss-register-place__compact-facts {
@@ -6729,7 +6682,7 @@ iss-info-panel--brown
 
 .iss-register-place__epoch-rail {
   min-width: 0;
-  border-top: 2px solid var(--iss-black);
+  border-top: 1px solid var(--iss-surface-rule);
 }
 
 .iss-register-place__epoch-source-links a {
@@ -6738,33 +6691,19 @@ iss-info-panel--brown
 
 .iss-register-place__epoch-row {
   display: grid;
-  grid-template-columns: minmax(5.2rem, 8rem) minmax(0, 1fr);
-  gap: 1.1rem;
-  padding: 1.35rem 0;
-  border-bottom: 1px solid rgba(30, 30, 30, 0.12);
+  grid-template-columns: 5.5rem minmax(0, 1fr);
+  gap: 1.25rem;
+  padding: 1.15rem 0;
+  border-bottom: 1px solid var(--iss-surface-rule);
 }
 
 .iss-register-place__epoch-row.has-media {
-  grid-template-columns: minmax(5.2rem, 7rem) repeat(2, minmax(0, 1fr));
-  gap: clamp(1.25rem, 3vw, 2.25rem);
-  align-items: center;
-  padding: clamp(1.75rem, 4vw, 2.75rem) 0;
-}
-
-.iss-register-place__epoch-row.has-media:nth-child(even) .iss-register-place__epoch-figure {
-  grid-row: 1;
-  grid-column: 2;
-}
-
-.iss-register-place__epoch-row.has-media:nth-child(even) .iss-register-place__epoch-body {
-  grid-column: 3;
+  grid-template-columns: 5.5rem minmax(0, 1fr) minmax(8rem, 0.55fr);
+  align-items: start;
 }
 
 .iss-register-place__epoch-row.is-current {
-  margin-top: 1.25rem;
-  padding: clamp(1.25rem, 3vw, 1.8rem);
-  border-left: 3px solid var(--iss-accent);
-  background: rgba(255, 255, 255, 0.76);
+  border-bottom: 2px solid var(--iss-surface-fg);
 }
 
 .iss-register-place__epoch-index,
@@ -6775,35 +6714,32 @@ iss-info-panel--brown
 
 .iss-register-place__epoch-years {
   margin: 0;
-  color: var(--iss-accent);
-  font-family: var(--wp--preset--font-family--mono, monospace);
-  font-size: 0.9rem;
-  font-weight: 800;
-  line-height: 1.2;
+  color: var(--iss-surface-fg);
+  font-size: 1.15rem;
+  font-weight: 700;
+  line-height: 1.3;
 }
 
 .iss-register-place__epoch-meta {
   margin: 0;
-  color: rgba(30, 30, 30, 0.56);
-  font-size: 0.73rem;
-  font-weight: 700;
-  letter-spacing: 0;
-  line-height: 1.35;
-  text-transform: uppercase;
+  color: var(--iss-surface-muted);
+  font-size: 0.8rem;
+  line-height: 1.4;
 }
 
 .iss-register-place__epoch-title {
-  margin: 0;
-  font-size: clamp(1.08rem, 1rem + 0.35vw, 1.35rem);
-  line-height: 1.22;
+  margin: 0.2rem 0 0.4rem;
+  font-size: 1.35rem;
+  line-height: 1.2;
   text-wrap: balance;
 }
 
 .iss-register-place__epoch-text {
   margin: 0;
-  color: rgba(30, 30, 30, 0.78);
-  font-size: 0.96rem;
-  line-height: 1.62;
+  color: var(--iss-surface-fg);
+  font-family: var(--wp--preset--font-family--plex-serif);
+  font-size: 1.125rem;
+  line-height: 1.6;
 }
 
 .iss-register-place__epoch-figure {
@@ -6816,40 +6752,27 @@ iss-info-panel--brown
   display: block;
   width: 100%;
   height: auto;
-  aspect-ratio: 4 / 3;
-  object-fit: cover;
 }
 
 .iss-register-place__comparison {
   display: grid;
-  gap: 1.2rem;
-  margin-top: clamp(2.25rem, 5vw, 4rem);
-  padding: clamp(1.25rem, 3vw, 2rem);
-  border: 1px solid rgba(30, 30, 30, 0.12);
-  background: rgba(162, 128, 97, 0.1);
-}
-
-.iss-register-place__comparison-heading {
-  display: grid;
-  gap: 0.55rem;
-}
-
-.iss-register-place__comparison-title {
-  margin: 0;
-  font-size: clamp(1.45rem, 1.2rem + 0.8vw, 2rem);
-  line-height: 1.1;
+  gap: 1rem;
 }
 
 .iss-register-place__comparison-grid {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 2px;
+  gap: 1rem;
+  align-items: start;
+}
+
+.iss-register-place__comparison-grid--single {
+  grid-template-columns: minmax(0, 1fr);
 }
 
 .iss-register-place__comparison-figure {
   min-width: 0;
   margin: 0;
-  background: var(--iss-white);
 }
 
 .iss-register-place__comparison-media {
@@ -6859,29 +6782,23 @@ iss-info-panel--brown
 .iss-register-place__comparison-image {
   display: block;
   width: 100%;
-  aspect-ratio: 4 / 3;
-  object-fit: cover;
+  height: auto;
 }
 
 .iss-register-place__comparison-label {
-  position: absolute;
-  bottom: 0.75rem;
-  left: 0.75rem;
-  padding: 0.35rem 0.55rem;
-  background: rgba(30, 30, 30, 0.82);
-  color: var(--iss-white);
-  font-size: 0.7rem;
-  font-weight: 750;
-  letter-spacing: 0.06em;
-  text-transform: uppercase;
+  display: block;
+  margin-top: 0.5rem;
+  color: var(--iss-surface-fg);
+  font-size: 0.9rem;
+  font-weight: 600;
 }
 
 .iss-register-place__comparison-caption {
   display: grid;
-  gap: 0.35rem;
-  padding: 0.7rem 0.8rem 0.8rem;
-  color: rgba(30, 30, 30, 0.72);
-  font-size: 0.75rem;
+  gap: 0.3rem;
+  margin-top: 0.3rem;
+  color: var(--iss-surface-muted);
+  font-size: 0.85rem;
   line-height: 1.45;
 }
 
@@ -6941,8 +6858,7 @@ iss-info-panel--brown
   line-height: 1.5;
 }
 
-.iss-register-place__epoch-sources summary,
-.iss-register-place__dossier-details > summary {
+.iss-register-place__epoch-sources summary {
   width: fit-content;
   cursor: pointer;
   font-weight: 680;
@@ -6961,9 +6877,7 @@ iss-info-panel--brown
 }
 
 .iss-register-place__today-meta {
-  padding: 0.95rem 1rem;
-  border-left: 3px solid var(--iss-accent);
-  background: rgba(255, 255, 255, 0.72);
+  padding: 0;
 }
 
 .iss-register-place__today-fact {
@@ -6971,39 +6885,21 @@ iss-info-panel--brown
   gap: 0.3rem;
 }
 
-.iss-register-place__dossier-details {
-  margin-top: 0.25rem;
-}
-
-.iss-register-place__dossier-details > summary {
-  padding: 0.72rem 0;
-  color: rgba(30, 30, 30, 0.72);
-}
-
-.iss-register-place__dossier-details[open] > summary {
-  color: var(--iss-black);
-}
-
 .iss-register-place__data-grid {
   display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  border-top: 2px solid var(--iss-black);
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 0 1.25rem;
 }
 
 .iss-register-place__data-item {
   display: grid;
+  align-content: start;
   gap: 0.28rem;
   padding: 0.82rem 0.9rem 0.86rem 0;
   border-bottom: 1px solid rgba(30, 30, 30, 0.12);
 }
 
-.iss-register-place__data-item:nth-child(odd) {
-  border-right: 1px solid rgba(30, 30, 30, 0.1);
-}
 
-.iss-register-place__data-item:nth-child(even) {
-  padding-left: 0.9rem;
-}
 
 .iss-register-place__data-label,
 .iss-register-place__interpretation-label {
@@ -7051,202 +6947,142 @@ iss-info-panel--brown
 }
 
 .iss-register-place-present {
-  scroll-margin-top: 2rem;
-  padding: clamp(3.5rem, 7vw, 6rem) 0;
-  background: var(--iss-black);
-  color: var(--iss-white);
+  margin-top: 2rem;
+  scroll-margin-top: calc(var(--iss-header-height) + 1rem);
 }
 
-.iss-register-place-present__inner {
-  display: grid;
-  grid-template-columns: minmax(15rem, 0.72fr) minmax(0, 1.28fr);
-  gap: clamp(2rem, 6vw, 5rem);
-  align-items: start;
-}
-
+.iss-register-place-present__inner,
 .iss-register-place-present__heading,
 .iss-register-place-present__data {
   display: grid;
   gap: 1rem;
 }
 
-.iss-register-place-present .iss-kicker {
-  --iss-kicker-color: rgba(255, 255, 255, 0.72);
-  --iss-kicker-accent: var(--iss-accent);
-}
-
 .iss-register-place-present__title {
   margin: 0;
-  color: var(--iss-white);
-  font-size: clamp(2rem, 1.65rem + 1.25vw, 3rem);
-  line-height: 1.02;
+  font-size: clamp(1.6rem, 2.5vw, 2.15rem);
+  line-height: 1.15;
 }
 
-.iss-register-place-present .iss-register-place__today-meta {
-  border-left-color: var(--iss-accent);
-  background: rgba(255, 255, 255, 0.07);
-}
-
-.iss-register-place-present .iss-register-place__today-label,
-.iss-register-place-present .iss-register-place__data-label,
-.iss-register-place-present .iss-register-place__interpretation-label {
-  color: rgba(255, 255, 255, 0.52);
-}
-
-.iss-register-place-present .iss-register-place__today-value,
-.iss-register-place-present .iss-register-place__data-value,
-.iss-register-place-present .iss-register-place__interpretation-text,
-.iss-register-place-present .iss-register-place__data-value a {
-  color: rgba(255, 255, 255, 0.9);
-}
-
-.iss-register-place-present .iss-register-place__dossier-details {
+.iss-register-place__questions {
   margin: 0;
+  padding-left: 1.25rem;
+  font-family: var(--wp--preset--font-family--plex-serif);
+  font-size: 1rem;
+  line-height: 1.6;
 }
 
-.iss-register-place-present .iss-register-place__dossier-details > summary,
-.iss-register-place-present .iss-register-place__dossier-details[open] > summary {
-  color: rgba(255, 255, 255, 0.8);
-}
-
-.iss-register-place-present .iss-register-place__data-grid {
-  border-top-color: rgba(255, 255, 255, 0.72);
-}
-
-.iss-register-place-present .iss-register-place__data-item {
-  border-bottom-color: rgba(255, 255, 255, 0.14);
-}
-
-.iss-register-place-present .iss-register-place__data-item:nth-child(odd) {
-  border-right-color: rgba(255, 255, 255, 0.12);
+.iss-register-place__questions li {
+  padding: 0.55rem 0;
+  border-bottom: 1px solid var(--iss-surface-rule);
 }
 
 .iss-register-place-contribution {
-  scroll-margin-top: 2rem;
-  padding: clamp(3.5rem, 7vw, 6rem) 0;
-  border-bottom: 1px solid rgba(30, 30, 30, 0.12);
-  background: rgba(162, 128, 97, 0.14);
+  --iss-surface-fg: var(--iss-white);
+  --iss-surface-muted: #ddd6c9;
+  --iss-surface-rule: #504a42;
+  --iss-kicker-color: #ddd6c9;
+  margin: 0;
+  scroll-margin-top: calc(var(--iss-header-height) + 1rem);
+  padding: 2.5rem 0;
+  background: var(--iss-surface-dark);
+  color: var(--iss-white);
 }
 
 .iss-register-place-contribution__inner {
   display: grid;
-  grid-template-columns: minmax(0, 1.05fr) minmax(18rem, 0.95fr);
-  gap: clamp(2rem, 6vw, 5rem);
-  align-items: center;
+  grid-template-columns: minmax(0, 0.85fr) minmax(0, 1.15fr);
+  gap: 2.5rem;
+  align-items: start;
 }
 
-.iss-register-place-contribution__copy {
+.iss-register-place-contribution__copy,
+.iss-register-place-contribution__actions {
   display: grid;
   gap: 0.9rem;
+  margin: 0;
 }
 
 .iss-register-place-contribution__title {
-  max-width: 18ch;
+  max-width: 22ch;
   margin: 0;
-  font-size: clamp(2rem, 1.6rem + 1.4vw, 3.1rem);
-  line-height: 1.02;
+  color: var(--iss-surface-fg);
+  font-size: clamp(1.6rem, 2.5vw, 2.1rem);
+  line-height: 1.1;
   text-wrap: balance;
 }
 
 .iss-register-place-contribution__text {
-  max-width: 42rem;
+  max-width: 42ch;
   margin: 0;
-  color: rgba(30, 30, 30, 0.72);
-  line-height: 1.65;
+  color: var(--iss-surface-muted);
+  line-height: 1.6;
 }
 
-.iss-register-place__upload-intake {
-  --iss-upload-intake-background: rgba(255, 255, 255, 0.68);
-  --iss-upload-intake-margin: 0;
-  --iss-upload-intake-padding: clamp(1.1rem, 2.5vw, 1.5rem);
-  --iss-upload-intake-rule: rgba(30, 30, 30, 0.14);
+.iss-register-place__upload-button {
+  display: inline-flex;
+  align-items: center;
+  justify-self: start;
+  min-height: 44px;
+  padding: 0.65rem 1rem;
+  background: var(--iss-surface-paper);
+  color: var(--iss-black);
+  font-size: 0.95rem;
+  font-weight: 600;
+  line-height: 1.35;
+  text-decoration: none;
+}
+
+.iss-register-place__upload-button:where(:hover, :focus-visible) {
+  color: var(--iss-black);
+  text-decoration: underline;
 }
 
 @media (max-width: 900px) {
-  .iss-register-place-atlas .iss-atlas-slice {
+  .iss-register-place__dossier-grid {
     grid-template-columns: minmax(0, 1fr);
-  }
-
-  .iss-register-place-atlas .iss-atlas-slice__stage {
-    width: 100%;
-    height: auto;
-    min-height: 11rem;
-  }
-
-  .iss-register-place__dossier-grid,
-  .iss-register-place__data-grid,
-  .iss-register-place__interpretation,
-  .iss-register-place-present__inner,
-  .iss-register-place-contribution__inner {
-    grid-template-columns: 1fr;
+    gap: 2.5rem;
   }
 
   .iss-register-place__network-rail {
-    position: static;
-    margin-top: clamp(2.5rem, 7vw, 4rem);
-    padding-top: 1.5rem;
-    border-top: 2px solid var(--iss-black);
+    grid-row: 1;
   }
 
   .iss-register-place__epoch-row.has-media {
-    grid-template-columns: minmax(5.2rem, 7rem) minmax(0, 1fr);
+    grid-template-columns: 7.5rem minmax(0, 1fr);
   }
 
-  .iss-register-place__epoch-row.has-media .iss-register-place__epoch-body,
-  .iss-register-place__epoch-row.has-media:nth-child(even) .iss-register-place__epoch-body {
-    grid-row: 1;
+  .iss-register-place__epoch-row.has-media .iss-register-place__epoch-media {
     grid-column: 2;
   }
 
-  .iss-register-place__epoch-row.has-media .iss-register-place__epoch-figure,
-  .iss-register-place__epoch-row.has-media:nth-child(even) .iss-register-place__epoch-figure {
-    grid-row: 2;
-    grid-column: 2;
-  }
-
-  .iss-register-place__data-item,
-  .iss-register-place__data-item:nth-child(even) {
-    padding-left: 0;
-    padding-right: 0;
-  }
-
-  .iss-register-place__data-item:nth-child(odd) {
-    border-right: 0;
+  .iss-register-place-contribution__inner {
+    grid-template-columns: minmax(0, 1fr);
   }
 }
 
 @media (max-width: 640px) {
-  .iss-register-place-page .wp-block-cover.iss-front-hero {
-    --iss-hero-min-h: 25rem;
+  .iss-register-place__opening {
+    padding-top: calc(var(--iss-header-height) + 1.5rem);
   }
 
+  .iss-register-place__comparison-grid,
+  .iss-register-place__data-grid,
+  .iss-register-place__interpretation,
   .iss-register-place__epoch-row,
   .iss-register-place__epoch-row.has-media {
-    grid-template-columns: 1fr;
-    gap: 0.45rem;
+    grid-template-columns: minmax(0, 1fr);
   }
 
-  .iss-register-place__epoch-figure {
-    margin-top: 0.45rem;
+  .iss-register-place__epoch-row.has-media .iss-register-place__epoch-media {
+    grid-column: 1;
   }
 
-  .iss-register-place__fact-band .iss-register-place__fact {
-    padding-right: 0.6rem;
-    padding-left: 0.6rem;
+  .iss-register-place__epoch-row {
+    gap: 0.75rem;
   }
 
-  .iss-register-place__fact-label {
-    font-size: 0.62rem;
-  }
 
-  .iss-register-place__fact-value {
-    font-size: 0.76rem;
-  }
-
-  .iss-register-place__comparison-grid {
-    grid-template-columns: 1fr;
-    gap: 1rem;
-  }
 }
 
 .iss-related-feed__intro {
@@ -8311,5 +8147,140 @@ iss-info-panel--brown
 
   .iss-flex-split__panel--text {
     max-width: none;
+  }
+}
+
+.iss-editorial-feedback {
+  border-top: 1px solid var(--iss-surface-rule);
+  scroll-margin-top: calc(var(--iss-header-height, 5rem) + 2rem);
+}
+
+.iss-editorial-feedback__voices {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 20rem), 1fr));
+  gap: var(--iss-space-lg);
+  margin-block: var(--iss-space-lg);
+}
+
+.iss-editorial-feedback__voice {
+  margin: 0;
+  padding: var(--iss-space-lg);
+  background: var(--iss-surface-panel);
+  overflow-wrap: anywhere;
+}
+
+.iss-editorial-feedback__voice cite {
+  display: block;
+  margin-top: var(--iss-space-md);
+  color: var(--iss-surface-fg);
+  font-style: normal;
+  font-weight: 600;
+}
+
+
+.iss-register-place__epoch-media {
+  display: grid;
+  gap: 1rem;
+  min-width: 0;
+}
+
+.iss-register-place__epoch-contribution {
+  margin-top: 0.5rem;
+}
+
+.iss-register-place__research-button {
+  display: inline-flex;
+  align-items: center;
+  min-height: 44px;
+  padding: 0.45rem 0.7rem;
+  border: 1px solid var(--iss-surface-muted);
+  color: var(--iss-surface-fg);
+  font-size: 0.9rem;
+  font-weight: 600;
+  line-height: 1.35;
+  text-decoration: none;
+}
+
+.iss-register-place__research-button:where(:hover, :focus-visible) {
+  color: var(--iss-link-fg);
+  border-color: var(--iss-link-fg);
+  text-decoration: underline;
+}
+
+.iss-register-place__epoch-row.has-question {
+  background: repeating-linear-gradient(135deg, transparent, transparent 8px, rgba(90, 86, 78, 0.04) 8px, rgba(90, 86, 78, 0.04) 9px);
+}
+
+.iss-register-place__updates {
+  margin: 0.75rem 0 0;
+  padding: 0;
+  list-style: none;
+  font-size: 0.9rem;
+  line-height: 1.5;
+}
+
+.iss-register-place__update {
+  display: grid;
+  grid-template-columns: 6rem minmax(0, 1fr);
+  gap: 0.75rem;
+  padding: 0.6rem 0;
+  border-top: 1px solid var(--iss-surface-rule);
+}
+
+.iss-register-place__update-date {
+  color: var(--iss-surface-muted);
+}
+
+.iss-register-place__update p {
+  margin: 0.3rem 0 0;
+}
+
+.iss-register-place__lead p,
+.iss-register-place__present-text p,
+.iss-register-place__current-note p {
+  margin: 0;
+  font: inherit;
+}
+
+.iss-register-place__lead p + p,
+.iss-register-place__current-note p + p {
+  margin-top: 0.75rem;
+}
+
+.iss-register-place__current-note {
+  font-size: 1rem;
+  line-height: 1.6;
+}
+
+.iss-register-place__rail-title {
+  margin: 0 0 0.65rem;
+  font-size: 1rem;
+  line-height: 1.3;
+}
+
+.iss-register-place-atlas > *,
+.iss-register-place__network-rail > *,
+.iss-register-place-contribution__actions > *,
+.iss-register-place__content > *,
+.iss-register-place-present__inner > *,
+.iss-register-place-present__heading > *,
+.iss-register-place-present__data > *,
+.iss-register-place__section > * {
+  margin-block: 0;
+}
+
+@media (max-width: 900px) {
+  .iss-register-place__data-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 640px) {
+  .iss-register-place__data-grid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .iss-register-place__update {
+    grid-template-columns: 5rem minmax(0, 1fr);
   }
 }

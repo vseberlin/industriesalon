@@ -1,24 +1,24 @@
 <!-- wp:template-part {"slug":"header","theme":"industriesalon","tagName":"header"} /-->
 
-<!-- wp:group {"tagName":"main","className":"iss-post-page iss-register-place-page","layout":{"type":"default"}} -->
-<main class="wp-block-group iss-post-page iss-register-place-page"><!-- wp:group {"tagName":"section","className":"iss-section iss-section--hero","layout":{"type":"default"}} -->
-<section class="wp-block-group iss-section iss-section--hero"><!-- wp:cover {"useFeaturedImage":true,"dimRatio":40,"customOverlayColor":"#a28061","isUserOverlayColor":false,"contentPosition":"bottom left","isDark":false,"className":"iss-front-hero"} -->
-<div class="wp-block-cover is-light has-custom-content-position is-position-bottom-left iss-front-hero"><span aria-hidden="true" class="wp-block-cover__background has-background-dim-40 has-background-dim" style="background-color:#a28061"></span><div class="wp-block-cover__inner-container"><!-- wp:group {"className":"iss-front-hero__row","layout":{"type":"default"}} -->
-<div class="wp-block-group iss-front-hero__row"><!-- wp:group {"className":"iss-front-hero__shell","layout":{"type":"default"}} -->
-<div class="wp-block-group iss-front-hero__shell"><!-- wp:group {"className":"iss-heading iss-front-hero__content","layout":{"type":"default"}} -->
-<div class="wp-block-group iss-heading iss-front-hero__content"><!-- wp:paragraph {"className":"iss-kicker iss-kicker--light iss-kicker--lg"} -->
-<p class="iss-kicker iss-kicker--light iss-kicker--lg">Ort in Schöneweide</p>
+<!-- wp:group {"tagName":"main","className":"iss-register-place-page","layout":{"type":"default"}} -->
+<main class="wp-block-group iss-register-place-page"><!-- wp:group {"tagName":"header","className":"iss-register-place__opening","layout":{"type":"default"}} -->
+<header class="wp-block-group iss-register-place__opening"><!-- wp:group {"className":"iss-container","layout":{"type":"default"}} -->
+<div class="wp-block-group iss-container"><!-- wp:paragraph {"className":"iss-kicker iss-kicker--compact"} -->
+<p class="iss-kicker iss-kicker--compact"><a href="/schoneweide/#atlas-buehne">Orte &amp; Gebäude</a></p>
 <!-- /wp:paragraph -->
 
-<!-- wp:post-title {"level":1,"className":"iss-heading__title iss-front-hero__title"} /--></div>
-<!-- /wp:group --></div>
+<!-- wp:post-title {"level":1,"className":"iss-register-place__title"} /-->
+
+<!-- wp:post-excerpt {"moreText":"","showMoreOnNewLine":false,"className":"iss-register-place__opening-lead"} /-->
+
+</div>
+<!-- /wp:group --></header>
 <!-- /wp:group -->
 
-<!-- wp:group {"className":"iss-front-banner-slot","layout":{"type":"default"}} -->
-<div class="wp-block-group iss-front-banner-slot"><!-- wp:iss/register-place-context {"variant":"hero_contribution"} /--></div>
-<!-- /wp:group --></div>
-<!-- /wp:group --></div></div>
-<!-- /wp:cover --></section>
+<!-- wp:group {"tagName":"section","className":"iss-register-place__images","layout":{"type":"default"}} -->
+<section class="wp-block-group iss-register-place__images"><!-- wp:group {"className":"iss-container","layout":{"type":"default"}} -->
+<div class="wp-block-group iss-container"><!-- wp:iss/register-place-context {"variant":"then_now"} /--></div>
+<!-- /wp:group --></section>
 <!-- /wp:group -->
 
 <!-- wp:group {"tagName":"section","className":"iss-register-place__fact-band","layout":{"type":"default"}} -->
@@ -27,15 +27,73 @@
 <!-- /wp:group --></section>
 <!-- /wp:group -->
 
-<!-- wp:group {"tagName":"section","anchor":"zeitreise","className":"section section--soft iss-register-place-story iss-register-place-dossier","layout":{"type":"default"}} -->
-<section id="zeitreise" class="wp-block-group section section--soft iss-register-place-story iss-register-place-dossier"><!-- wp:group {"className":"iss-container","layout":{"type":"default"}} -->
+<!-- wp:group {"tagName":"section","anchor":"zeitreise","className":"iss-register-place-story iss-register-place-dossier","layout":{"type":"default"}} -->
+<section id="zeitreise" class="wp-block-group iss-register-place-story iss-register-place-dossier"><!-- wp:group {"className":"iss-container","layout":{"type":"default"}} -->
 <div class="wp-block-group iss-container"><!-- wp:group {"className":"iss-register-place__dossier-grid","layout":{"type":"default"}} -->
 <div class="wp-block-group iss-register-place__dossier-grid"><!-- wp:group {"tagName":"article","className":"iss-register-place__content","layout":{"type":"default"}} -->
-<article class="wp-block-group iss-register-place__content"><!-- wp:industriesalon/editorial-place /--></article>
+<article class="wp-block-group iss-register-place__content"><!-- wp:industriesalon/editorial-place {"slot":"story"} /-->
+
+<!-- wp:group {"tagName":"section","className":"iss-register-place__people iss-register-place__section","layout":{"type":"default"}} -->
+<section class="wp-block-group iss-register-place__people iss-register-place__section"><!-- wp:paragraph {"className":"iss-kicker iss-kicker--compact"} -->
+<p class="iss-kicker iss-kicker--compact">Menschen</p>
+<!-- /wp:paragraph -->
+
+<!-- wp:heading {"className":"iss-register-place__section-title"} -->
+<h2 class="wp-block-heading iss-register-place__section-title">Wer mit diesem Ort verbunden ist</h2>
+<!-- /wp:heading -->
+
+<!-- wp:iss/register-place-context {"variant":"people"} /--></section>
+<!-- /wp:group -->
+
+<!-- wp:industriesalon/editorial-place {"slot":"supplements"} /-->
+
+<!-- wp:group {"tagName":"section","className":"iss-register-place__collection iss-register-place__section","layout":{"type":"default"}} -->
+<section class="wp-block-group iss-register-place__collection iss-register-place__section"><!-- wp:paragraph {"className":"iss-kicker iss-kicker--compact"} -->
+<p class="iss-kicker iss-kicker--compact">Aus der Sammlung</p>
+<!-- /wp:paragraph -->
+
+<!-- wp:heading {"className":"iss-register-place__section-title"} -->
+<h2 class="wp-block-heading iss-register-place__section-title">Objekte von diesem Ort</h2>
+<!-- /wp:heading -->
+
+<!-- wp:iss/register-place-context {"variant":"collection"} /--></section>
+<!-- /wp:group -->
+
+<!-- wp:industriesalon/editorial-place {"slot":"present"} /-->
+
+<!-- wp:group {"tagName":"section","anchor":"gegenwart","className":"iss-register-place-present","layout":{"type":"default"}} -->
+<section id="gegenwart" class="wp-block-group iss-register-place-present"><!-- wp:group {"className":"iss-register-place-present__inner","layout":{"type":"default"}} -->
+<div class="wp-block-group iss-register-place-present__inner"><!-- wp:group {"className":"iss-register-place-present__heading","layout":{"type":"default"}} -->
+<div class="wp-block-group iss-register-place-present__heading"><!-- wp:paragraph {"className":"iss-kicker iss-kicker--compact"} -->
+<p class="iss-kicker iss-kicker--compact">Gegenwart</p>
+<!-- /wp:paragraph -->
+
+<!-- wp:heading {"level":2,"className":"iss-register-place-present__title"} -->
+<h2 class="wp-block-heading iss-register-place-present__title">Status und Daten</h2>
+<!-- /wp:heading -->
+
+<!-- wp:iss/register-place-context {"variant":"current_note"} /--></div>
+<!-- /wp:group -->
+
+<!-- wp:group {"className":"iss-register-place-present__data","layout":{"type":"default"}} -->
+<div class="wp-block-group iss-register-place-present__data"><!-- wp:iss/register-place-context {"variant":"current_data_grid"} /-->
+
+<!-- wp:iss/register-place-context {"variant":"risk_potential"} /--></div>
+<!-- /wp:group --></div>
+<!-- /wp:group --></section>
+<!-- /wp:group -->
+
+<!-- wp:industriesalon/editorial-place {"slot":"feedback"} /-->
+
+</article>
 <!-- /wp:group -->
 
 <!-- wp:group {"tagName":"aside","className":"iss-register-place__network-rail","layout":{"type":"default"}} -->
-<aside class="wp-block-group iss-register-place__network-rail"><!-- wp:iss/related-place-links {"title":"Orte","source":"related","perPage":6,"showRole":true} /-->
+<aside class="wp-block-group iss-register-place__network-rail"><!-- wp:paragraph {"className":"iss-kicker iss-kicker--compact"} -->
+<p class="iss-kicker iss-kicker--compact">Verbunden mit</p>
+<!-- /wp:paragraph -->
+
+<!-- wp:iss/related-place-links {"title":"Orte","source":"related","perPage":6,"showRole":true} /-->
 
 <!-- wp:iss/related-content {"title":"Projekte","postType":"projekt","perPage":4,"layoutVariant":"rail","showImage":false,"showExcerpt":false} /-->
 
@@ -47,30 +105,24 @@
 
 <!-- wp:iss/related-content {"title":"Publikationen","postType":"publication","perPage":4,"layoutVariant":"rail","showImage":false,"showExcerpt":false} /-->
 
-<!-- wp:iss/related-content {"title":"Archiv","postTypes":["post","archivbeitrag"],"perPage":5,"layoutVariant":"rail","showImage":false,"showExcerpt":false} /--></aside>
-<!-- /wp:group --></div>
-<!-- /wp:group --></div>
-<!-- /wp:group --></section>
-<!-- /wp:group -->
+<!-- wp:iss/related-content {"title":"Archiv","postTypes":["post","archivbeitrag"],"perPage":5,"layoutVariant":"rail","showImage":false,"showExcerpt":false} /-->
 
-<!-- wp:group {"tagName":"section","anchor":"gegenwart","className":"iss-register-place-present","layout":{"type":"default"}} -->
-<section id="gegenwart" class="wp-block-group iss-register-place-present"><!-- wp:group {"className":"iss-container iss-register-place-present__inner","layout":{"type":"default"}} -->
-<div class="wp-block-group iss-container iss-register-place-present__inner"><!-- wp:group {"className":"iss-register-place-present__heading","layout":{"type":"default"}} -->
-<div class="wp-block-group iss-register-place-present__heading"><!-- wp:paragraph {"className":"iss-kicker iss-kicker--compact"} -->
-<p class="iss-kicker iss-kicker--compact">Gegenwart</p>
-<!-- /wp:paragraph -->
-
-<!-- wp:heading {"level":2,"className":"iss-register-place-present__title"} -->
-<h2 class="wp-block-heading iss-register-place-present__title">Status und Daten</h2>
+<!-- wp:group {"tagName":"section","className":"iss-register-place-atlas","layout":{"type":"default"}} -->
+<section class="wp-block-group iss-register-place-atlas"><!-- wp:heading {"level":3,"className":"iss-register-place__rail-title"} -->
+<h3 class="wp-block-heading iss-register-place__rail-title">Der Ort auf der Karte</h3>
 <!-- /wp:heading -->
 
-<!-- wp:iss/register-place-context {"variant":"today_panel"} /--></div>
+<!-- wp:iss/atlas-strip {"source":"current","variant":"minimal","perPage":1,"mapPreset":"default"} /-->
+
+<!-- wp:iss/register-place-context {"variant":"location"} /-->
+
+<!-- wp:paragraph -->
+<p><a href="/schoneweide/#atlas-buehne">Ort im Atlas öffnen</a></p>
+<!-- /wp:paragraph --></section>
 <!-- /wp:group -->
 
-<!-- wp:group {"className":"iss-register-place-present__data","layout":{"type":"default"}} -->
-<div class="wp-block-group iss-register-place-present__data"><!-- wp:iss/register-place-context {"variant":"current_data_grid"} /-->
-
-<!-- wp:iss/register-place-context {"variant":"risk_potential"} /--></div>
+</aside>
+<!-- /wp:group --></div>
 <!-- /wp:group --></div>
 <!-- /wp:group --></section>
 <!-- /wp:group -->
@@ -79,27 +131,29 @@
 <section id="beitragen" class="wp-block-group iss-register-place-contribution"><!-- wp:group {"className":"iss-container iss-register-place-contribution__inner","layout":{"type":"default"}} -->
 <div class="wp-block-group iss-container iss-register-place-contribution__inner"><!-- wp:group {"className":"iss-register-place-contribution__copy","layout":{"type":"default"}} -->
 <div class="wp-block-group iss-register-place-contribution__copy"><!-- wp:paragraph {"className":"iss-kicker iss-kicker--compact"} -->
-<p class="iss-kicker iss-kicker--compact">Mitmachen</p>
+<p class="iss-kicker iss-kicker--compact">Offene Fragen</p>
 <!-- /wp:paragraph -->
 
-<!-- wp:heading {"level":2,"className":"iss-register-place-contribution__title"} -->
-<h2 class="wp-block-heading iss-register-place-contribution__title">Wissen Sie mehr über diesen Ort?</h2>
+<!-- wp:heading {"className":"iss-register-place-contribution__title"} -->
+<h2 class="wp-block-heading iss-register-place-contribution__title">Was wir über diesen Ort noch nicht wissen</h2>
 <!-- /wp:heading -->
 
 <!-- wp:paragraph {"className":"iss-register-place-contribution__text"} -->
-<p class="iss-register-place-contribution__text">Eigene Fotos, Erinnerungen oder Korrekturen helfen, die Geschichte dieses Ortes vollständiger zu erzählen.</p>
+<p class="iss-register-place-contribution__text">Beiträge helfen, die Geschichte dieses Ortes zu ergänzen. Alle Einsendungen werden vor einer Veröffentlichung redaktionell geprüft.</p>
 <!-- /wp:paragraph --></div>
 <!-- /wp:group -->
 
+<!-- wp:group {"className":"iss-register-place-contribution__actions","layout":{"type":"default"}} -->
+<div class="wp-block-group iss-register-place-contribution__actions"><!-- wp:industriesalon/editorial-place {"slot":"contribution"} /-->
+
+<!-- wp:iss/register-place-context {"variant":"questions"} /-->
+
 <!-- wp:iss/register-place-context {"variant":"contribution_link"} /--></div>
+<!-- /wp:group --></div>
 <!-- /wp:group --></section>
 <!-- /wp:group -->
 
-<!-- wp:group {"tagName":"section","anchor":"atlas","className":"iss-register-place-atlas","layout":{"type":"default"}} -->
-<section id="atlas" class="wp-block-group iss-register-place-atlas"><!-- wp:group {"className":"iss-container","layout":{"type":"default"}} -->
-<div class="wp-block-group iss-container"><!-- wp:iss/atlas-slice {"kicker":"Im Atlas","source":"current","perPage":1,"mapPreset":"default","layoutMode":"band","linkUrl":"/schoneweide/#atlas-buehne","linkLabel":"Ort im Atlas öffnen"} /--></div>
-<!-- /wp:group --></section>
-<!-- /wp:group --></main>
+</main>
 <!-- /wp:group -->
 
 <!-- wp:template-part {"slug":"footer","theme":"industriesalon","tagName":"footer"} /-->

@@ -101,36 +101,35 @@ function iss_register_get_place_context_definition_label(string $group, string $
     return '';
 }
 
-function iss_register_get_place_context_epoch_image(array $context, array $epoch): array
+/** Respect Place image visibility while keeping editorial media order. */
+function iss_register_get_place_context_epoch_images(array $epoch, int $post_id): array
 {
-    $media_ids = array_values(array_filter(array_map('absint', (array) ($epoch['media_ids'] ?? []))));
-    if (!$media_ids) {
-        return [];
-    }
-
+    $images = [];
+    $known = [];
     foreach (['archive_images', 'current_images'] as $group) {
-        foreach ((array) ($context[$group] ?? []) as $image) {
-            if (!is_array($image) || !in_array(absint($image['media_id'] ?? 0), $media_ids, true)) {
-                continue;
-            }
-
-            return $image;
+        foreach (iss_register_normalize_image_group_value(get_post_meta($post_id, $group, true)) as $image) {
+            $id = absint($image['media_id'] ?? 0);
+            if ($id > 0) { $known[$id] = $image; }
         }
     }
-
-    return ['media_id' => $media_ids[0]];
+    foreach (array_unique(array_map('absint', (array) ($epoch['media_ids'] ?? []))) as $id) {
+        if (!wp_attachment_is_image($id) || in_array(get_post_status($id), ['private', 'trash'], true)) { continue; }
+        if (isset($known[$id]) && ($known[$id]['visibility'] ?? '') !== 'public') { continue; }
+        $images[] = $known[$id] ?? ['media_id' => $id];
+    }
+    return $images;
 }
 
 function iss_register_get_place_context_primary_image(array $images): array
 {
     foreach ($images as $image) {
-        if (is_array($image) && !empty($image['is_featured']) && absint($image['media_id'] ?? 0) > 0) {
+        if (is_array($image) && !empty($image['is_featured']) && wp_attachment_is_image(absint($image['media_id'] ?? 0))) {
             return $image;
         }
     }
 
     foreach ($images as $image) {
-        if (is_array($image) && absint($image['media_id'] ?? 0) > 0) {
+        if (is_array($image) && wp_attachment_is_image(absint($image['media_id'] ?? 0))) {
             return $image;
         }
     }
@@ -268,6 +267,10 @@ function iss_register_get_place_context_payload(int $post_id): array
     $current_status = function_exists('iss_register_get_normalized_current_status_payload')
         ? iss_register_get_normalized_current_status_payload($place)
         : [];
+    // An Atlas classification fallback is not an authored Place fact.
+    if (($current_status['source'] ?? '') === 'fallback') {
+        $current_status = [];
+    }
     $current_use_type = function_exists('iss_register_detect_current_use_type')
         ? iss_register_detect_current_use_type($place)
         : [];
@@ -382,6 +385,37 @@ function iss_register_render_place_context(array $attributes = []): string
 
     $variant = sanitize_key((string) ($attributes['variant'] ?? 'terms'));
 
+    if ($variant === 'people') {
+        return (string) apply_filters('iss_register_place_people_presentation', '', (array) (iss_register_get_place_entity_by_post_id((int) $post_id)['people'] ?? []));
+    }
+
+    if ($variant === 'collection') {
+        $cards = [];
+        foreach (iss_register_get_related_objects_for_place((int) $post_id, 4) as $item) {
+            $object = get_post(absint($item['post_id'] ?? 0));
+            if (!$object || $object->post_status !== 'publish' || $object->post_password !== '') { continue; }
+            $cards[] = iss_relations_render_related_content_card($object, [], ['showImage' => true, 'showExcerpt' => false]);
+        }
+        return $cards ? iss_relations_render_cards_grid($cards, 'archivobjekt', ['columns' => 4]) : '';
+    }
+
+    if ($variant === 'location') {
+        $location = array_values(array_unique(array_filter([$context['address'], $context['area']])));
+        return $location ? '<p class="iss-register-place__location">' . esc_html(implode(' · ', $location)) . '</p>' : '';
+    }
+
+    if ($variant === 'current_note') {
+        if (iss_editorial_document_is_enabled((int) $post_id, 'place')) { return ''; }
+        $note = trim((string) get_post_meta((int) $post_id, 'current_use', true));
+        if ($note === '') { return ''; }
+        $html = '<div class="iss-register-place__current-note"><p>' . esc_html($note) . '</p>';
+        $source = get_post_meta((int) $post_id, '_iss_register_current_import', true);
+        if (is_array($source) && !empty($source['source_url'])) {
+            $html .= '<p><a href="' . esc_url($source['source_url']) . '">Quelle der aktuellen Angaben: Standortregister</a></p>';
+        }
+        return $html . '</div>';
+    }
+
     if ($variant === 'hero_meta') {
         $labels = array_values(array_filter([
             $context['history_label'] !== '' ? $context['history_label'] : '',
@@ -405,7 +439,7 @@ function iss_register_render_place_context(array $attributes = []): string
     if ($variant === 'hero_panel') {
         $items = [
             ['label' => 'Adresse', 'value' => $context['address']],
-            ['label' => 'Heute', 'value' => $context['jobs'] !== '' ? $context['jobs'] : $context['present_label']],
+            ['label' => 'Heute', 'value' => $context['present_label']],
             ['label' => 'Entstehungszeit', 'value' => $context['construction_period']],
             ['label' => 'Ursprünglicher Name', 'value' => $context['original_name']],
             ['label' => 'Denkmal', 'value' => $context['monument_status'], 'url' => $context['monument_record_url']],
@@ -440,16 +474,13 @@ function iss_register_render_place_context(array $attributes = []): string
             ['label' => 'Heute', 'value' => $context['present_label']],
         ];
 
-        $html = '<div class="wp-block-group iss-register-place__today-meta">';
-        $html .= iss_register_render_place_context_items(
+        $body = iss_register_render_place_context_items(
             $items,
             'wp-block-group iss-register-place__today-fact',
             'iss-register-place__today-label',
             'iss-register-place__today-value'
         );
-        $html .= '</div>';
-
-        return $html;
+        return $body === '' ? '' : '<div class="wp-block-group iss-register-place__today-meta">' . $body . '</div>';
     }
 
     if ($variant === 'terms' && !empty($context['epochs'])) {
@@ -482,12 +513,19 @@ function iss_register_render_place_context(array $attributes = []): string
     }
 
     if ($variant === 'epoch_rail') {
-        $context['epochs'] = iss_register_merge_place_milestones($post_id, (array) ($context['epochs'] ?? []));
+        // Narrative fields belong to authored phases, not the Atlas state classification.
+        $authored_epochs = iss_register_get_epoch_service()->get_epochs_for_place((int) $post_id);
+        $context['epochs'] = iss_register_merge_place_milestones($post_id, $authored_epochs ?: (array) ($context['epochs'] ?? []));
     }
-    if ($variant === 'epoch_rail' && !empty($context['epochs'])) {
-        $html = '<div class="wp-block-group iss-register-place__epoch-rail">';
+    if ($variant === 'epoch_rail') {
+        $html = '';
         foreach ($context['epochs'] as $epoch) {
             if (!is_array($epoch)) {
+                continue;
+            }
+
+            if (!empty($epoch['milestone'])) {
+                $html .= apply_filters('iss_register_place_updates_presentation', '', [$epoch['milestone']]);
                 continue;
             }
 
@@ -503,12 +541,24 @@ function iss_register_render_place_context(array $attributes = []): string
             ]));
             $summary = trim((string) ($epoch['summary'] ?? ''));
             $source_summary = trim((string) ($epoch['source_summary'] ?? ''));
+            $source_links = array_values(array_filter((array) ($epoch['source_links'] ?? []), static function ($url): bool {
+                return is_string($url) && esc_url($url) !== '';
+            }));
             $source_confidence_key = sanitize_key((string) ($epoch['source_confidence'] ?? ''));
             $source_confidence = in_array($source_confidence_key, ['', 'unknown', 'unbekannt', 'not-assessed', 'not_assessed', 'nicht-bewertet', 'nicht_bewertet'], true)
                 ? ''
                 : iss_register_get_place_context_definition_label('source', $source_confidence_key);
-            $image = iss_register_get_place_context_epoch_image($context, $epoch);
-            $image_html = $image ? iss_register_render_place_context_epoch_image($image) : '';
+            $image_html = '';
+            foreach (iss_register_get_place_context_epoch_images($epoch, (int) $post_id) as $image) {
+                $image_html .= iss_register_render_place_context_epoch_image($image);
+            }
+            if ($image_html !== '') { $image_html = '<div class="iss-register-place__epoch-media">' . $image_html . '</div>'; }
+            $updates = (string) apply_filters('iss_register_place_updates_presentation', '', (array) ($epoch['milestones'] ?? []));
+            $invitation = $summary !== '' || $image_html !== '' || $updates !== '' || trim((string) ($epoch['contribution_question'] ?? '')) !== ''
+                ? (string) apply_filters('iss_register_place_epoch_contribution', '', (int) $post_id, $epoch) : '';
+            if ($summary === '' && $image_html === '' && $invitation === '' && $updates === '') {
+                continue;
+            }
             $row_classes = ['wp-block-group', 'iss-register-place__epoch-row'];
             if (!empty($epoch['is_current'])) {
                 $row_classes[] = 'is-current';
@@ -516,6 +566,7 @@ function iss_register_render_place_context(array $attributes = []): string
             if ($image_html !== '') {
                 $row_classes[] = 'has-media';
             }
+            if (trim((string) ($epoch['contribution_question'] ?? '')) !== '') { $row_classes[] = 'has-question'; }
 
             $html .= '<article class="' . esc_attr(implode(' ', $row_classes)) . '">';
             $html .= '<div class="iss-register-place__epoch-index">';
@@ -531,53 +582,57 @@ function iss_register_render_place_context(array $attributes = []): string
             if ($summary !== '') {
                 $html .= '<p class="iss-register-place__epoch-text">' . esc_html($summary) . '</p>';
             }
-            if ($source_summary !== '') {
+            if ($source_summary !== '' || $source_links) {
                 $html .= '<details class="iss-register-place__epoch-sources">';
                 $html .= '<summary>Quellenhinweis</summary>';
                 if ($source_confidence !== '') {
                     $html .= '<p class="iss-register-place__epoch-source-confidence">' . esc_html($source_confidence) . '</p>';
                 }
-                $html .= '<p class="iss-register-place__epoch-source">' . esc_html($source_summary) . '</p>';
-                if (!empty($epoch['milestone']['source_url'])) {
-                    $html .= '<p><a href="' . esc_url($epoch['milestone']['source_url']) . '">Standortregister</a></p>';
+                if ($source_summary !== '') {
+                    $html .= '<p class="iss-register-place__epoch-source">' . esc_html($source_summary) . '</p>';
+                }
+                foreach (array_unique($source_links) as $url) {
+                    $label = (string) wp_parse_url($url, PHP_URL_HOST);
+                    $html .= '<p><a href="' . esc_url($url) . '">' . esc_html($label !== '' ? $label : 'Quelle öffnen') . '</a></p>';
                 }
                 $html .= '</details>';
             }
+            $html .= $updates . $invitation;
             $html .= '</div>';
             $html .= $image_html;
             $html .= '</article>';
         }
-        $html .= '</div>';
-
-        return $html;
+        return $html === '' ? '' : '<div class="wp-block-group iss-register-place__epoch-rail">' . $html . '</div>';
     }
 
     if ($variant === 'then_now') {
         $archive_image = iss_register_get_place_context_primary_image($context['archive_images']);
         $current_image = iss_register_get_place_context_primary_image($context['current_images']);
-        if (
-            !$archive_image
-            || !$current_image
-            || absint($archive_image['media_id'] ?? 0) === absint($current_image['media_id'] ?? 0)
-        ) {
-            return '';
+        if (absint($archive_image['media_id'] ?? 0) === absint($current_image['media_id'] ?? 0)) {
+            $current_image = [];
         }
 
         $archive_html = iss_register_render_place_context_comparison_image($archive_image, 'Archiv');
-        $current_html = iss_register_render_place_context_comparison_image($current_image, 'Gegenwart');
-        if ($archive_html === '' || $current_html === '') {
+        $current_html = iss_register_render_place_context_comparison_image($current_image, 'Spätere Ansicht');
+        if ($archive_html === '' && $current_html === '') {
             return '';
         }
 
-        $title_id = 'iss-register-place-comparison-title-' . $post_id;
+        $paired = $archive_html !== '' && $current_html !== '';
+        $grid_class = 'iss-register-place__comparison-grid' . ($paired ? '' : ' iss-register-place__comparison-grid--single');
+        return '<section class="iss-register-place__comparison" aria-label="' . esc_attr($paired ? 'Archiv und spätere Ansicht' : 'Ansicht des Ortes') . '">'
+            . '<div class="' . esc_attr($grid_class) . '">' . $archive_html . $current_html . '</div></section>';
+    }
 
-        return '<section class="iss-register-place__comparison" aria-labelledby="' . esc_attr($title_id) . '">'
-            . '<div class="iss-register-place__comparison-heading">'
-            . '<p class="iss-kicker iss-kicker--compact">Wandel</p>'
-            . '<h3 id="' . esc_attr($title_id) . '" class="iss-register-place__comparison-title">Archiv und Gegenwart</h3>'
-            . '</div>'
-            . '<div class="iss-register-place__comparison-grid">' . $archive_html . $current_html . '</div>'
-            . '</section>';
+    if ($variant === 'questions') {
+        $items = '';
+        foreach ($context['questions'] as $question) {
+            $question = is_scalar($question) ? trim((string) $question) : '';
+            if ($question !== '') {
+                $items .= '<li>' . esc_html($question) . '</li>';
+            }
+        }
+        return $items === '' ? '' : '<ol class="iss-register-place__questions">' . $items . '</ol>';
     }
 
     if ($variant === 'current_data_grid') {
@@ -595,10 +650,10 @@ function iss_register_render_place_context(array $attributes = []): string
             ['label' => 'Nutzung / Mieter', 'value' => $context['tenant']],
             ['label' => 'Fläche', 'value' => $context['size']],
             ['label' => 'Investition', 'value' => $context['investment']],
-            ['label' => 'Arbeitsplätze', 'value' => $context['jobs']],
+            ['label' => 'Arbeitsplätze / Nutzung', 'value' => $context['jobs']],
             ['label' => 'Kaufpreis', 'value' => $context['kaufpreis']],
             ['label' => 'Website / Quelle', 'value' => $website_label, 'url' => $website],
-            ['label' => 'Datenstand', 'value' => $source_summary],
+            ['label' => 'Quellenhinweis', 'value' => $source_summary],
         ];
         $body = iss_register_render_place_context_data_items(
             $items,
@@ -611,10 +666,7 @@ function iss_register_render_place_context(array $attributes = []): string
             return '';
         }
 
-        return '<details class="iss-register-place__dossier-details">'
-            . '<summary>Weitere Objektdaten</summary>'
-            . '<div class="wp-block-group iss-register-place__data-grid">' . $body . '</div>'
-            . '</details>';
+        return '<div class="wp-block-group iss-register-place__data-grid">' . $body . '</div>';
     }
 
     if ($variant === 'contribution_link') {
@@ -623,10 +675,7 @@ function iss_register_render_place_context(array $attributes = []): string
             return '';
         }
 
-        return '<div class="iss-upload-intake iss-register-place__upload-intake">'
-            . '<a class="iss-upload-intake__button iss-register-place__upload-button" href="' . esc_url($url) . '">Material beitragen</a>'
-            . '<p class="iss-upload-intake__note">Fotos, Erinnerungen und Korrekturen gelangen in die redaktionelle Prüfung, bevor etwas veröffentlicht wird.</p>'
-            . '</div>';
+        return '<a class="iss-register-place__upload-button" href="' . esc_url($url) . '">Fotos, Erinnerungen oder Korrekturen beitragen</a>';
     }
 
     if ($variant === 'hero_contribution') {

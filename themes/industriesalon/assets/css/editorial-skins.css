@@ -640,3 +640,18 @@
     border-left: 0;
   }
 }
+
+/* Place dossier palette is inherited by its existing renderer components. */
+.iss-register-place-page {
+  --iss-content-width: 1200px;
+  --iss-surface-bg: #f4f1ea;
+  --iss-surface-fg: #1b1a17;
+  --iss-surface-muted: #5a564e;
+  --iss-surface-rule: #d2cbbe;
+  --iss-surface-paper: #fbf9f4;
+  --iss-link-fg: #9e2119;
+  --iss-link-hover-fg: #6e150f;
+
+  background: var(--iss-surface-bg);
+  color: var(--iss-surface-fg);
+}

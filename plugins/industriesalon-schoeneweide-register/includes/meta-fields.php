@@ -60,9 +60,9 @@ function iss_register_get_meta_schema(): array
         'current_use_type' => ['type' => 'string', 'label' => 'Nutzung heute', 'input' => 'select', 'options' => iss_register_get_current_use_type_options(), 'show_in_rest' => true, 'admin' => true],
         'place_visibility' => ['type' => 'string', 'label' => 'Sichtbarkeit', 'input' => 'select', 'options' => iss_register_get_place_visibility_options(), 'show_in_rest' => true, 'admin' => true, 'description' => 'Tour-only Orte bleiben in Fuehrungsrouten nutzbar, erscheinen aber nicht im oeffentlichen Register, Atlas, in der Suche oder Sitemap.'],
         'owner' => ['type' => 'string', 'label' => 'Eigentümer', 'input' => 'text', 'show_in_rest' => true, 'admin' => true],
-        'operator' => ['type' => 'string', 'label' => 'Operator', 'input' => 'text', 'show_in_rest' => true, 'admin' => true],
-        'developer' => ['type' => 'string', 'label' => 'Developer', 'input' => 'text', 'show_in_rest' => true, 'admin' => true],
-        'tenant' => ['type' => 'string', 'label' => 'Tenant', 'input' => 'text', 'show_in_rest' => true, 'admin' => true],
+        'operator' => ['type' => 'string', 'label' => 'Betreiber', 'input' => 'text', 'show_in_rest' => true, 'admin' => true],
+        'developer' => ['type' => 'string', 'label' => 'Projektentwicklung', 'input' => 'text', 'show_in_rest' => true, 'admin' => true],
+        'tenant' => ['type' => 'string', 'label' => 'Mieter', 'input' => 'text', 'show_in_rest' => true, 'admin' => true],
         'industry' => ['type' => 'string', 'label' => 'Branche', 'input' => 'textarea', 'show_in_rest' => true, 'admin' => true],
         'investment' => ['type' => 'string', 'label' => 'Investition', 'input' => 'text', 'show_in_rest' => true, 'admin' => true],
         'size' => ['type' => 'string', 'label' => 'Fläche', 'input' => 'text', 'show_in_rest' => true, 'admin' => true],
@@ -83,11 +83,11 @@ function iss_register_get_meta_schema(): array
         'document_images' => ['type' => 'array', 'label' => 'Dokumentbilder', 'input' => 'image_group', 'show_in_rest' => true, 'admin' => true],
         'is_unclear' => ['type' => 'boolean', 'label' => 'Unklar', 'input' => 'checkbox', 'show_in_rest' => true, 'admin' => true],
         'sort_order' => ['type' => 'integer', 'label' => 'Sortierung', 'input' => 'number', 'show_in_rest' => true, 'admin' => true],
-        'legacy_icon' => ['type' => 'string', 'label' => 'Legacy Icon', 'input' => 'text', 'show_in_rest' => false, 'admin' => true],
-        'legacy_color' => ['type' => 'string', 'label' => 'Legacy Color', 'input' => 'text', 'show_in_rest' => false, 'admin' => true],
+        'legacy_icon' => ['type' => 'string', 'label' => 'Legacy Icon', 'input' => 'text', 'show_in_rest' => false, 'admin' => false],
+        'legacy_color' => ['type' => 'string', 'label' => 'Legacy Color', 'input' => 'text', 'show_in_rest' => false, 'admin' => false],
         'legacy_website' => ['type' => 'string', 'label' => 'Website', 'input' => 'text', 'show_in_rest' => false, 'admin' => true],
         'legacy_kaufpreis' => ['type' => 'string', 'label' => 'Kaufpreis', 'input' => 'text', 'show_in_rest' => false, 'admin' => true],
-        'legacy_questions' => ['type' => 'array', 'label' => 'Fragen', 'input' => 'array_textarea', 'show_in_rest' => false, 'admin' => true],
+        'legacy_questions' => ['type' => 'array', 'label' => 'Offene Fragen', 'input' => 'array_textarea', 'show_in_rest' => false, 'admin' => true],
     ];
 }
 
@@ -326,18 +326,18 @@ function iss_register_render_meta_box(WP_Post $post): void
     iss_register_render_fields_table($post, array_keys(iss_register_get_meta_schema()));
 }
 
-function iss_register_get_meta_box_groups(): array
+function iss_register_get_meta_box_groups(int $post_id = 0): array
 {
-    return [
+    $groups = [
         'atlas_basics' => [
-            'title' => __('Atlas Pflichtangaben', 'industriesalon-schoeneweide-register'),
+            'title' => __('Ort, Karte und Sichtbarkeit', 'industriesalon-schoeneweide-register'),
             'context' => 'normal',
             'priority' => 'high',
             'description' => __('Für einen nutzbaren Atlas-Ort reichen der Titel oben, Adresse, Koordinaten und mindestens ein kurzer öffentlicher Text. Alles andere kann später ergänzt werden.', 'industriesalon-schoeneweide-register'),
             'fields' => ['register_id', 'address', 'construction_period', 'original_name', 'monument_status', 'monument_record_url', 'area', 'lat', 'lng', 'coordinates_accuracy', 'status', 'role', 'current_status', 'current_use_type', 'place_visibility', 'is_unclear', 'sort_order'],
         ],
         'atlas_public' => [
-            'title' => __('Öffentliche Atlas-Texte', 'industriesalon-schoeneweide-register'),
+            'title' => __('Einordnung und Quellen', 'industriesalon-schoeneweide-register'),
             'context' => 'normal',
             'priority' => 'default',
             'description' => __('Diese Angaben speisen Atlas-Karten, Vorschauteaser und Dossiers. Wenn kein manueller Auszug gepflegt ist, wird er automatisch aus „Historie kurz“, „Aktuelle Nutzung“ oder dem Hauptinhalt gebildet.', 'industriesalon-schoeneweide-register'),
@@ -351,11 +351,11 @@ function iss_register_get_meta_box_groups(): array
             'fields' => ['archive_images', 'current_images', 'document_images'],
         ],
         'atlas_research' => [
-            'title' => __('Dossier und Forschung', 'industriesalon-schoeneweide-register'),
+            'title' => __('Status und Redaktion', 'industriesalon-schoeneweide-register'),
             'context' => 'normal',
             'priority' => 'default',
             'description' => __('Diese Angaben bleiben wichtig für Recherche und längere Dossiers, sind aber nicht nötig, um einen Ort zuerst im Atlas sichtbar zu machen.', 'industriesalon-schoeneweide-register'),
-            'fields' => ['owner', 'operator', 'developer', 'tenant', 'investment', 'size', 'jobs', 'previous_use', 'history_long', 'research_note', 'source_links', 'legacy_website', 'legacy_kaufpreis', 'legacy_questions', 'legacy_icon', 'legacy_color'],
+            'fields' => ['owner', 'operator', 'developer', 'tenant', 'investment', 'size', 'jobs', 'previous_use', 'history_long', 'research_note', 'source_links', 'legacy_website', 'legacy_kaufpreis', 'legacy_questions'],
         ],
         'atlas_contacts' => [
             'title' => __('Interne Kontakte — nicht öffentlich', 'industriesalon-schoeneweide-register'),
@@ -365,6 +365,16 @@ function iss_register_get_meta_box_groups(): array
             'fields' => ['_iss_register_contacts'],
         ],
     ];
+    $post = $post_id > 0 ? get_post($post_id) : null;
+    if ($post instanceof WP_Post && function_exists('iss_editorial_uses_canvas') && iss_editorial_uses_canvas($post)) {
+        foreach ($groups as &$group) {
+            $group['fields'] = array_values(array_diff($group['fields'], ['history_short', 'history_long', 'current_use']));
+        }
+        unset($group);
+        $groups['atlas_public']['description'] = __('Einleitung, Epochen und Gegenwart bearbeiten Sie oben in den Abschnitten. Der Auszug unter dem Titel ist der kurze öffentliche Teaser. Hier bleiben Einordnung und gemeinsame Quellen des Ortes.', 'industriesalon-schoeneweide-register');
+        $groups['atlas_research']['description'] = __('Fakten und offene Fragen ergänzen das Dossier. Die interne Recherche bleibt privat. Übernommene Meilensteine behalten ihre eigene Quelle.', 'industriesalon-schoeneweide-register');
+    }
+    return $groups;
 }
 
 function iss_register_render_fields_table(WP_Post $post, array $field_keys): void
@@ -426,6 +436,7 @@ function iss_register_render_fields_table(WP_Post $post, array $field_keys): voi
             echo '<textarea id="iss-register-' . esc_attr($key) . '" name="' . esc_attr($input_name) . '" class="iss-register-image-group__input" rows="2" style="display:none;">' . esc_textarea($json_value) . '</textarea>';
             echo '<p class="description">Nur Bilder mit Sichtbarkeit <code>public</code> werden im öffentlichen REST-Output ausgegeben.</p>';
         } elseif ($field['input'] === 'checkbox') {
+            echo '<input type="hidden" name="' . esc_attr($input_name) . '" value="0">';
             echo '<label><input id="iss-register-' . esc_attr($key) . '" type="checkbox" name="' . esc_attr($input_name) . '" value="1" ' . checked((int) $value, 1, false) . '> Ja</label>';
         } else {
             $input_type = $field['input'] === 'number' ? 'number' : 'text';
@@ -446,7 +457,7 @@ function iss_register_render_fields_table(WP_Post $post, array $field_keys): voi
 function iss_register_render_group_meta_box(WP_Post $post, array $box): void
 {
     $args = isset($box['args']) && is_array($box['args']) ? $box['args'] : [];
-    $groups = iss_register_get_meta_box_groups();
+    $groups = iss_register_get_meta_box_groups((int) $post->ID);
     $group_key = sanitize_key((string) ($args['group_key'] ?? ''));
 
     if (!isset($groups[$group_key])) {
@@ -533,8 +544,11 @@ function iss_register_render_epoch_meta_box(WP_Post $post): void
     echo '<textarea id="iss-register-epoch-rows" name="iss_register_epoch_rows" rows="6" style="display:none;">' . esc_textarea($json_epochs) . '</textarea>';
 }
 
-add_action('add_meta_boxes', function () {
-    foreach (iss_register_get_meta_box_groups() as $group_key => $group) {
+add_action('add_meta_boxes', function ($post_type, $post) {
+    if ($post_type !== ISS_REGISTER_POST_TYPE || !$post instanceof WP_Post) {
+        return;
+    }
+    foreach (iss_register_get_meta_box_groups((int) $post->ID) as $group_key => $group) {
         add_meta_box(
             'iss-register-' . $group_key,
             (string) ($group['title'] ?? __('Register Felder', 'industriesalon-schoeneweide-register')),
@@ -548,10 +562,7 @@ add_action('add_meta_boxes', function () {
         );
     }
 
-    $post_id = isset($_GET['post']) ? absint(wp_unslash($_GET['post'])) : 0; // phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Read-only editor routing.
-    $uses_editorial_epochs = $post_id > 0
-        && function_exists('iss_editorial_document_is_enabled')
-        && iss_editorial_document_is_enabled($post_id, 'place');
+    $uses_editorial_epochs = function_exists('iss_editorial_uses_canvas') && iss_editorial_uses_canvas($post);
     if (!$uses_editorial_epochs) {
         add_meta_box(
             'iss-register-epochs',
@@ -562,7 +573,7 @@ add_action('add_meta_boxes', function () {
             'default'
         );
     }
-});
+}, 10, 2);
 
 function iss_register_save_meta_box(int $post_id): void
 {
@@ -584,16 +595,18 @@ function iss_register_save_meta_box(int $post_id): void
     }
 
     $schema = iss_register_get_meta_schema();
+    $editable = array_merge(...array_column(iss_register_get_meta_box_groups($post_id), 'fields'));
     foreach ($schema as $key => $field) {
-        if (empty($field['admin'])) {
+        if (empty($field['admin']) || !in_array($key, $editable, true)) {
             continue;
         }
-        if ($key === '_iss_register_contacts' && !array_key_exists($key, $meta_input)) {
+        // Missing or retired controls must never erase stored/imported data.
+        if (!array_key_exists($key, $meta_input)) {
             continue;
         }
 
         if ($field['type'] === 'boolean') {
-            $raw_value = isset($meta_input[$key]) ? 1 : 0;
+            $raw_value = rest_sanitize_boolean($meta_input[$key]) ? 1 : 0;
         } else {
             $raw_value = $meta_input[$key] ?? '';
         }
@@ -614,7 +627,10 @@ function iss_register_save_meta_box(int $post_id): void
         return;
     }
 
-    $epoch_rows = $_POST['iss_register_epoch_rows'] ?? '[]';
+    if (!isset($_POST['iss_register_epoch_rows'])) {
+        return;
+    }
+    $epoch_rows = $_POST['iss_register_epoch_rows'];
     if (is_string($epoch_rows)) {
         $decoded = json_decode(wp_unslash($epoch_rows), true);
         if (!is_array($decoded)) {
@@ -667,15 +683,15 @@ function iss_register_admin_enqueue_image_group_assets(string $hook): void
         wp_enqueue_script(
             'iss-register-place-epochs-admin',
             ISS_REGISTER_URL . 'assets/js/register-place-epochs-admin.js',
-            [],
-            ISS_REGISTER_VERSION,
+            ['media-views'],
+            (string) filemtime(ISS_REGISTER_PATH . 'assets/js/register-place-epochs-admin.js'),
             true
         );
         wp_enqueue_style(
             'iss-register-place-epochs-admin',
             ISS_REGISTER_URL . 'assets/css/register-place-epochs-admin.css',
             [],
-            ISS_REGISTER_VERSION
+            (string) filemtime(ISS_REGISTER_PATH . 'assets/css/register-place-epochs-admin.css')
         );
     }
 }
