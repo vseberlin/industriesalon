@@ -805,7 +805,7 @@
 
 .single-projekt .iss-project-editorial {
   display: grid;
-  gap: clamp(1.3rem, 2.4vw, 2rem);
+  gap: var(--iss-project-section-gap, clamp(1.3rem, 2.4vw, 2rem));
 }
 
 .single-projekt .iss-project-editorial__rail {
@@ -823,7 +823,7 @@
 
 .single-projekt .iss-project-editorial__rail--horizontal {
   position: static;
-  margin: 0 0 clamp(1.35rem, 2.8vw, 2.2rem);
+  margin: var(--iss-project-rail-horizontal-margin, 0 0 clamp(1.35rem, 2.8vw, 2.2rem));
 }
 
 .single-projekt .iss-project-editorial__rail-inner {
@@ -838,21 +838,19 @@
 }
 
 .single-projekt .iss-project-editorial__rail--horizontal .iss-project-editorial__rail-inner {
-  grid-template-columns: minmax(9rem, 0.22fr) minmax(0, 1fr);
+  grid-template-columns: var(--iss-project-rail-horizontal-columns, minmax(9rem, 0.22fr) minmax(0, 1fr));
   align-items: center;
   gap: clamp(0.85rem, 1.8vw, 1.35rem);
-  padding: clamp(0.85rem, 1.5vw, 1.15rem);
-  border: 1px solid rgba(30, 30, 30, 0.82);
-  border-left: clamp(0.28rem, 0.55vw, 0.42rem) solid var(--iss-accent);
+  padding: var(--iss-project-rail-horizontal-padding, clamp(0.85rem, 1.5vw, 1.15rem));
+  border: var(--iss-project-rail-horizontal-border, 1px solid rgba(30, 30, 30, 0.82));
+  border-left: var(--iss-project-rail-horizontal-left-border, clamp(0.28rem, 0.55vw, 0.42rem) solid var(--iss-project-rail-accent, var(--iss-accent)));
   border-radius: var(--iss-radius-sm);
-  background:
-    linear-gradient(135deg, rgba(var(--iss-accent-rgb), 0.28), rgba(30, 30, 30, 0) 38%),
-    #171d24;
+  background: var(--iss-project-rail-horizontal-background, linear-gradient(135deg, rgba(var(--iss-accent-rgb), 0.28), rgba(30, 30, 30, 0) 38%), #171d24);
   color: var(--iss-white);
 }
 
 .single-projekt .iss-project-editorial__rail-head {
-  display: grid;
+  display: var(--iss-project-rail-head-display, grid);
   gap: 0.25rem;
 }
 
@@ -879,6 +877,8 @@
 }
 
 .single-projekt .iss-project-editorial__rail--horizontal .iss-project-editorial__rail-nav {
+  display: var(--iss-project-rail-nav-display, grid);
+  flex-wrap: wrap;
   grid-template-columns: repeat(auto-fit, minmax(min(100%, 10rem), 1fr));
   align-items: stretch;
   gap: 0.7rem;
@@ -888,7 +888,7 @@
   display: block;
   padding: 0.58rem 0.7rem;
   border: 1px solid rgba(244, 241, 237, 0.14);
-  border-left: 3px solid var(--iss-accent);
+  border-left: 3px solid var(--iss-project-rail-accent, var(--iss-accent));
   background: #171d24;
   color: rgba(244, 241, 237, 0.88);
   font-size: 0.88rem;
@@ -903,12 +903,12 @@
   align-items: center;
   gap: 0.65rem;
   min-height: 100%;
-  padding: 0.82rem 0.9rem;
-  border: 1px solid rgba(244, 241, 237, 0.22);
+  padding: var(--iss-project-rail-link-padding, 0.82rem 0.9rem);
+  border: var(--iss-project-rail-link-border, 1px solid rgba(244, 241, 237, 0.22));
   border-left: 0;
   border-radius: var(--iss-radius-sm);
-  background: rgba(249, 249, 250, 0.08);
-  color: rgba(244, 241, 237, 0.94);
+  background: var(--iss-project-rail-link-background, rgba(249, 249, 250, 0.08));
+  color: var(--iss-project-rail-link-colour, rgba(244, 241, 237, 0.94));
   font-size: 0.88rem;
   font-weight: 800;
   line-height: 1.28;
@@ -919,15 +919,15 @@
 }
 
 .single-projekt .iss-project-editorial__rail--horizontal .iss-project-editorial__rail-link::after {
-  content: "→";
-  color: var(--iss-accent);
+  content: var(--iss-project-rail-arrow, "→");
+  color: var(--iss-project-rail-accent, var(--iss-accent));
   font-size: 1rem;
   font-weight: 800;
   line-height: 1;
 }
 
 .single-projekt .iss-project-editorial__rail--horizontal .iss-project-editorial__rail-kicker {
-  color: var(--iss-accent);
+  color: var(--iss-project-rail-accent, var(--iss-accent));
   font-size: 0.68rem;
   font-weight: 800;
   letter-spacing: 0.12em;
@@ -948,14 +948,14 @@
 
 .single-projekt .iss-project-editorial__rail-link:hover,
 .single-projekt .iss-project-editorial__rail-link:focus-visible {
-  border-color: color-mix(in srgb, var(--iss-accent) 52%, transparent);
-  color: color-mix(in srgb, var(--iss-accent) 68%, var(--iss-white));
+  border-color: color-mix(in srgb, var(--iss-project-rail-accent, var(--iss-accent)) 52%, transparent);
+  color: color-mix(in srgb, var(--iss-project-rail-accent, var(--iss-accent)) 68%, var(--iss-white));
 }
 
 .single-projekt .iss-project-editorial__rail--horizontal .iss-project-editorial__rail-link:hover,
 .single-projekt .iss-project-editorial__rail--horizontal .iss-project-editorial__rail-link:focus-visible {
-  border-color: var(--iss-accent);
-  background: var(--iss-accent);
+  border-color: var(--iss-project-rail-accent, var(--iss-accent));
+  background: var(--iss-project-rail-accent, var(--iss-accent));
   color: var(--iss-white);
   outline: none;
 }
@@ -968,7 +968,7 @@
 .single-projekt .iss-project-editorial__main {
   display: grid;
   min-width: 0;
-  gap: clamp(1.3rem, 2.4vw, 2rem);
+  gap: var(--iss-project-section-gap, clamp(1.3rem, 2.4vw, 2rem));
 }
 
 .single-projekt .iss-project-section {

@@ -57,9 +57,88 @@ try {
     $image_id = (int) (get_posts(['post_type' => 'attachment', 'post_mime_type' => 'image', 'numberposts' => 1, 'fields' => 'ids'])[0] ?? 0);
     $assert($image_id > 0, 'An existing image is available for read-only media coverage');
     $media = ['kind' => 'media', 'source' => 'wp-media', 'id' => (string) $image_id];
+    $identity_id = wp_insert_post(['post_type' => 'projekt', 'post_status' => 'draft', 'post_title' => 'Disposable project identity', 'post_author' => $admin->ID]);
+    $fixtures[] = $identity_id;
+    $identity_doc = iss_editorial_sanitize_document(['schema_version' => 3, 'skin' => 'buehne', 'features' => ['identity' => ['palette' => 'neon', 'media_refs' => [$media]]], 'sections' => [
+        ['type' => 'kapitel', 'title' => 'Details <script>bad</script>', 'body' => '<p>Background</p>', 'section_treatment' => 'disclosure'],
+    ]], 'projekt');
+    $assert(!is_wp_error(iss_editorial_validate_document($identity_doc, 'projekt')), 'Project identity and disclosure validate together');
+    foreach ([['palette' => ['neon']], ['palette' => 'raw-css'], ['media_refs' => [$media, $media]], ['arbitrary' => 'value']] as $invalid_identity) {
+        $invalid = $identity_doc; $invalid['features']['identity'] = $invalid_identity;
+        $assert(is_wp_error(iss_editorial_validate_document($invalid, 'projekt')), 'Malformed project identity fails closed');
+    }
+    $foreign_identity = iss_editorial_sanitize_document($identity_doc, 'article');
+    $assert(!isset($foreign_identity['features']['identity']), 'Project identity remains with its owner');
+    $assert(iss_editorial_save_document($identity_id, 'projekt', $identity_doc, false, true), 'Identity saves through the document API');
+    $saved_identity = iss_editorial_get_document($identity_id, 'projekt');
+    $assert($saved_identity['features']['identity'] === $identity_doc['features']['identity'], 'Logo and palette survive storage');
+    $revision_id = _wp_put_post_revision($identity_id);
+    $assert(!is_wp_error($revision_id) && $revision_id > 0, 'Native revision created for identity');
+    $draft_identity = $identity_doc;
+    $draft_identity['features']['identity']['palette'] = 'ochre';
+    $draft_identity['features']['identity']['media_refs'] = [];
+    $identity_draft = iss_editorial_save_draft($identity_id, 'projekt', $draft_identity, true);
+    $assert(!is_wp_error($identity_draft), 'Identity recovery snapshot saves');
+    $assert(iss_editorial_get_read_model($identity_id, 'projekt', true)['features']['identity'] === $draft_identity['features']['identity'], 'Preview reads draft palette and logo removal');
+    $assert(iss_editorial_get_document($identity_id, 'projekt') === $saved_identity, 'Preview preserves saved identity');
+    $assert(iss_editorial_save_document($identity_id, 'projekt', $draft_identity, false, true), 'Changed identity saves');
+    wp_restore_post_revision($revision_id);
+    $assert(iss_editorial_get_document($identity_id, 'projekt')['features']['identity'] === $saved_identity['features']['identity'], 'Native revision restores palette and logo');
+    $chapter = $identity_doc['sections'][0]; $chapter['_text_version'] = 3;
+    $disclosure_html = industriesalon_render_editorial_landing_chapter_content($chapter);
+    $assert(str_contains($disclosure_html, '<details class="iss-landing-disclosure"><summary><h2>') && !str_contains($disclosure_html, '<script>'), 'Public disclosure is closed, native and escaped');
+    $chapter['_canvas_edit'] = true;
+    $disclosure_html = industriesalon_render_editorial_landing_chapter_content($chapter);
+    $assert(str_contains($disclosure_html, ' open><summary>') && substr_count($disclosure_html, 'data-iss-field="title"') === 1, 'Editable disclosure opens with one exact title field');
     $archive_id = (int) (get_posts(['post_type' => ISS_WF_IMPORT_OBJECT_POST_TYPE, 'post_status' => 'publish', 'numberposts' => 1, 'fields' => 'ids'])[0] ?? 0);
     $assert($archive_id > 0, 'Published archive object available for read-only reference coverage');
     $archive_ref = ['kind' => 'archive_object', 'source' => 'iss-archive', 'id' => (string) $archive_id, 'label' => 'Owned archive caption'];
+    $composition_doc = iss_editorial_sanitize_document(['schema_version' => 3, 'skin' => 'buehne', 'sections' => [
+        ['type' => 'feature', 'treatment' => 'feature.opening', 'title' => 'A composed opening', 'media_refs' => [$media]],
+        ['type' => 'text_bild_reihe', 'treatment' => 'text-bild-reihe.agenda', 'title' => 'Agenda', 'surface' => 'dark', 'items' => [
+            ['label' => 'First entry', 'text' => '<em>Visible without JavaScript</em>', 'eyebrow' => '10. September', 'group' => 'Art & craft', 'detail' => "Additional detail\nSecond line"],
+            ['label' => 'Second entry', 'text' => 'Still visible', 'group' => 'City'],
+        ]],
+    ]], 'projekt');
+    $assert(!is_wp_error(iss_editorial_validate_document($composition_doc, 'projekt')), 'Project stage accepts a composed opening and agenda');
+    $assert(industriesalon_project_has_opening($composition_doc), 'Valid composed opening replaces template introduction');
+    $opening_html = industriesalon_render_project_opening($composition_doc, $identity_id);
+    $assert(substr_count($opening_html, '<h1') === 1 && str_contains($opening_html, 'A composed opening'), 'Opening has exactly one semantic main heading');
+    foreach (['skin', 'position', 'title', 'image'] as $fault) {
+        $invalid = $composition_doc;
+        if ($fault === 'skin') { $invalid['skin'] = 'dossier'; }
+        elseif ($fault === 'position') { $invalid['sections'] = array_reverse($invalid['sections']); }
+        elseif ($fault === 'title') { $invalid['sections'][0]['title'] = ''; }
+        else { $invalid['sections'][0]['media_refs'] = []; }
+        $assert(is_wp_error(iss_editorial_validate_document($invalid, 'projekt')), "Invalid project opening rejected: $fault");
+        $assert(!industriesalon_project_has_opening($invalid), "Invalid project opening preserves template fallback: $fault");
+    }
+    $assert(iss_editorial_save_document($identity_id, 'projekt', $composition_doc, false, true), 'Composition saves through shared API');
+    $assert(iss_editorial_get_document($identity_id, 'projekt') === $composition_doc, 'Surface and optional agenda fields survive canonical roundtrip');
+    $agenda = $composition_doc['sections'][1]; $agenda['_text_version'] = 3;
+    $agenda_html = industriesalon_render_editorial_landing_text_image_row($agenda, 1, 'buehne');
+    $assert(substr_count($agenda_html, '<article ') === 2 && str_contains($agenda_html, '<em>Visible without JavaScript</em>'), 'Unfiltered HTML contains every agenda entry');
+    $assert(str_contains($agenda_html, 'data-agenda-group="Art &amp; craft"') && str_contains($agenda_html, 'data-agenda-filter="City"'), 'Agenda group values are escaped and filterable');
+    $assert(str_contains($agenda_html, '<details class="iss-landing-agenda__details"><summary>') && str_contains($agenda_html, 'Additional detail'), 'Agenda details use native disclosure and retain copy');
+    $assert(str_contains($agenda_html, 'iss-landing-section--surface-dark') && str_contains($agenda_html, 'iss-landing-agenda__filters" hidden'), 'Surface class and progressive-enhancement filter contract render');
+    foreach ([['surface', 'free-css'], ['eyebrow', ['bad']], ['group', '<b>bad</b>'], ['detail', ['bad']]] as [$key, $value]) {
+        $invalid = $composition_doc;
+        if ($key === 'surface') { $invalid['sections'][1][$key] = $value; }
+        else { $invalid['sections'][1]['items'][0][$key] = $value; }
+        $assert(is_wp_error(iss_editorial_validate_document($invalid, 'projekt')), "Malformed composition field rejected: $key");
+    }
+    $old_item = iss_editorial_sanitize_text_image_item(['label' => 'Legacy', 'text' => 'Preserved', 'media_refs' => []]);
+    $assert(array_keys($old_item) === ['label', 'text', 'media_refs'], 'Legacy rows do not acquire optional fields');
+    $assert(!isset($identity_doc['sections'][0]['surface']), 'Legacy sections do not acquire a surface field');
+    $composition_nav = industriesalon_editorial_project_nav_items($composition_doc['sections'], [], true);
+    $assert(count($composition_nav) === 1 && $composition_nav[0]['label'] === 'Agenda', 'Project navigation omits the opening');
+    $composition_query = new WP_Query(['post_type' => 'projekt', 'p' => $identity_id, 'post_status' => 'draft']);
+    $GLOBALS['wp_query'] = $composition_query; $GLOBALS['wp_the_query'] = $composition_query;
+    $composition_query->the_post();
+    $composition_html = industriesalon_render_editorial_project_content('Legacy content');
+    $assert(!str_contains($composition_html, 'A composed opening') && str_contains($composition_html, 'First entry'), 'Project body does not duplicate its opening');
+    wp_reset_postdata(); $GLOBALS['wp_query'] = $original_query; $GLOBALS['wp_the_query'] = $original_main_query; $GLOBALS['post'] = $original_post;
+    $assert(iss_editorial_save_document($identity_id, 'projekt', $identity_doc, false, true), 'Restore disposable identity fixture');
     $private_id = wp_insert_post(['post_type' => ISS_WF_IMPORT_OBJECT_POST_TYPE, 'post_status' => 'draft', 'post_title' => 'Private reference must stay private', 'post_author' => $admin->ID]);
     $fixtures[] = $private_id;
     $private_ref = ['kind' => 'archive_object', 'source' => 'iss-archive', 'id' => (string) $private_id, 'label' => 'Private archive caption'];

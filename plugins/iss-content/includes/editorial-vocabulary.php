@@ -120,6 +120,8 @@ function iss_content_model_editorial_gesture_registry(): array
                 'text-bild-reihe.visual' => __('Großformatige Bildreihe', 'iss-content-model'),
                 'text-bild-reihe.compact' => __('Kompakte Bildreihe', 'iss-content-model'),
                 'text-bild-reihe.chronology' => __('Chronologische Bildreihe', 'iss-content-model'),
+                'text-bild-reihe.editorial' => __('Themenspalten', 'iss-content-model'),
+                'text-bild-reihe.agenda' => __('Programm / Chronik', 'iss-content-model'),
             ],
             'icon' => 'format-gallery', 'tone' => 'media', 'group' => 'Bild', 'schematic' => 'cards',
         ],

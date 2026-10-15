@@ -24,7 +24,7 @@ function industriesalon_get_editorial_project_post_skin(int $post_id): string
         return '';
     }
 
-    return industriesalon_resolve_editorial_project_skin(iss_editorial_get_read_model($post_id, 'projekt', false));
+    return industriesalon_resolve_editorial_project_skin(iss_editorial_get_read_model($post_id, 'projekt', is_preview() && current_user_can('edit_post', $post_id)));
 }
 
 function industriesalon_editorial_project_is_enabled(int $post_id): bool
@@ -309,7 +309,7 @@ function industriesalon_editorial_project_document_rail_feature(array $document)
 
     $defaults = [
         'enabled' => $has_explicit_enabled ? !empty($rail['enabled']) : false,
-        'placement' => $skin === 'dossier' ? 'horizontal' : 'right',
+        'placement' => in_array($skin, ['dossier', 'buehne'], true) ? 'horizontal' : 'right',
         'mode' => 'contextual',
         'treatment' => 'quiet',
     ];
@@ -332,7 +332,7 @@ function industriesalon_editorial_project_sections_without_rail(array $sections)
     return array_values(array_filter($sections, 'is_array'));
 }
 
-function industriesalon_editorial_project_nav_items(array $sections, array $anchors = []): array
+function industriesalon_editorial_project_nav_items(array $sections, array $anchors = [], bool $all_headings = false): array
 {
     $items = [];
     $used = [];
@@ -343,7 +343,8 @@ function industriesalon_editorial_project_nav_items(array $sections, array $anch
         }
 
         $type = (string) ($section['type'] ?? '');
-        if (!in_array($type, ['kapitel', 'schluss'], true)) {
+        if (($section['treatment'] ?? '') === 'feature.opening' || ($section['section_treatment'] ?? '') === 'disclosure') { continue; }
+        if (!in_array($type, ['kapitel', 'schluss'], true) && (!$all_headings || trim((string) ($section['title'] ?? '')) === '')) {
             continue;
         }
 
@@ -511,7 +512,7 @@ function industriesalon_get_editorial_project_rail_context(int $post_id, bool $p
     return [
         'rail_section' => $rail_section,
         'rail_feature' => $rail_feature,
-        'nav_items' => industriesalon_editorial_project_nav_items($content_sections, $anchors),
+        'nav_items' => industriesalon_editorial_project_nav_items($content_sections, $anchors, industriesalon_resolve_editorial_project_skin($document) === 'buehne'),
         'skin' => industriesalon_resolve_editorial_project_skin($document),
     ];
 }
@@ -712,6 +713,51 @@ function industriesalon_render_editorial_project_section(array $section, bool $s
     return industriesalon_editorial_preview_section(trim((string) ob_get_clean()), $section, ['title' => 'iss-project-section__title', 'kicker' => 'iss-project-section__kicker', 'body' => 'iss-project-section__body']);
 }
 
+/** A project stage may replace its template introduction with the first shared feature. */
+function industriesalon_project_has_opening(array $document): bool
+{
+    $first = $document['sections'][0] ?? [];
+    return ($document['skin'] ?? '') === 'buehne' && ($document['schema_version'] ?? 1) >= 3
+        && ($first['type'] ?? '') === 'feature' && ($first['treatment'] ?? '') === 'feature.opening'
+        && trim((string) ($first['title'] ?? '')) !== '' && wp_attachment_is_image(absint($first['media_refs'][0]['id'] ?? 0));
+}
+
+function industriesalon_render_project_opening(array $document, int $post_id): string
+{
+    if (!industriesalon_project_has_opening($document)) { return ''; }
+    $section = $document['sections'][0];
+    $section['_text_version'] = $document['schema_version'];
+    $section['_canvas_edit'] = isset($section['_editorial_index']) && !empty(iss_editorial_embedded_preview()['canvas']);
+    $image_id = absint($section['media_refs'][0]['id']);
+    $logo_id = absint($document['features']['identity']['media_refs'][0]['id'] ?? 0);
+    $caption = wp_get_attachment_caption($image_id);
+    ob_start();
+    ?>
+    <header class="iss-project-stage__opening iss-project-stage__opening--composed">
+        <div class="iss-container iss-project-stage__hero">
+            <div class="iss-project-stage__intro">
+                <p class="iss-kicker"><a href="<?php echo esc_url(home_url('/projekte/')); ?>"><?php esc_html_e('Ein Projekt im Industriesalon', 'industriesalon'); ?></a></p>
+                <div class="iss-project-stage__brand">
+                    <?php if ($logo_id) { echo wp_get_attachment_image($logo_id, 'thumbnail', false, ['alt' => '', 'loading' => 'eager']); } ?>
+                    <p><?php echo esc_html(get_the_title($post_id)); ?></p>
+                </div>
+                <p class="iss-kicker iss-landing-section__kicker"<?php echo industriesalon_landing_field_attrs($section, 'kicker'); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- Escaped preview attributes. ?>><?php echo esc_html($section['kicker'] ?? ''); ?></p>
+                <h1<?php echo industriesalon_landing_field_attrs($section, 'title'); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- Escaped preview attributes. ?>><?php echo esc_html($section['title']); ?></h1>
+                <div class="iss-project-stage__lead"<?php echo industriesalon_landing_field_attrs($section, 'lead'); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- Escaped preview attributes. ?>><?php echo industriesalon_landing_prose($section['lead'] ?? '', $section); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- Versioned prose allowlist. ?></div>
+                <div class="iss-project-stage__body"<?php echo industriesalon_landing_field_attrs($section, 'body'); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- Escaped preview attributes. ?>><?php echo industriesalon_landing_prose($section['body'] ?? '', $section); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- Versioned prose allowlist. ?></div>
+                <?php echo industriesalon_render_editorial_landing_facts($section['facts'] ?? []); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- Shared escaped facts. ?>
+                <?php echo industriesalon_render_editorial_landing_links($section['links'] ?? []); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- Shared escaped links. ?>
+            </div>
+            <figure class="iss-project-stage__image">
+                <?php echo wp_get_attachment_image($image_id, 'full', false, ['loading' => 'eager', 'fetchpriority' => 'high', 'sizes' => '(max-width: 781px) 100vw, 52vw']); ?>
+                <?php if ($caption) : ?><figcaption><?php echo esc_html($caption); ?></figcaption><?php endif; ?>
+            </figure>
+        </div>
+    </header>
+    <?php
+    return industriesalon_editorial_preview_section(trim((string) ob_get_clean()), $section);
+}
+
 function industriesalon_render_editorial_project_content(string $content): string
 {
     if (is_admin() || doing_filter('get_the_excerpt') || !is_singular('projekt') || !in_the_loop() || !is_main_query()) {
@@ -747,13 +793,15 @@ function industriesalon_render_editorial_project_content(string $content): strin
     $rendered_index = 0;
     $show_placeholders = $prefer_autosave || current_user_can('edit_post', (int) $post_id);
     $section_count = count($content_sections);
-    for ($section_index = 0; $section_index < $section_count; ++$section_index) {
+    $start_index = industriesalon_project_has_opening($document) ? 1 : 0;
+    for ($section_index = $start_index; $section_index < $section_count; ++$section_index) {
         $section = $content_sections[$section_index] ?? null;
         if (is_array($section)) {
             $section['_text_version'] = (int) ($document['schema_version'] ?? 1);
             $next_section = $content_sections[$section_index + 1] ?? null;
             $is_dossier_spread = $skin === 'dossier'
                 && (string) ($section['type'] ?? '') === 'kapitel'
+                && ($section['section_treatment'] ?? '') !== 'disclosure'
                 && is_array($next_section)
                 && in_array((string) ($next_section['type'] ?? ''), ['facts', 'massstab'], true);
 
@@ -820,3 +868,11 @@ function industriesalon_render_editorial_project_content(string $content): strin
         . '</div>';
 }
 add_filter('the_content', 'industriesalon_render_editorial_project_content', 12);
+
+/** The stage shares the document renderer and ISS shell; only its opening/layout differ. */
+add_filter('template_include', static function (string $template): string {
+    if (is_singular('projekt') && industriesalon_get_editorial_project_post_skin((int) get_queried_object_id()) === 'buehne') {
+        return get_stylesheet_directory() . '/single-projekt-stage.php';
+    }
+    return $template;
+}, 20);

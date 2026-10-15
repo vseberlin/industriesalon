@@ -6,6 +6,18 @@ be recovered from Git history.
 
 ## 2026-10-15
 
+- Added the reusable project Bühne presentation with document-owned logo and
+  curated palettes, a shared composed opening, bounded section surfaces,
+  editorial columns, filterable agenda rows and native expandable chapters.
+  Futura's richer review draft follows the supplied mockup inside the ISS shell;
+  it preserves both published Futura versions and all other published projects.
+  Media and content have paired guarded migration artifacts. The illustration is
+  explicitly labelled as AI-generated; programme copy remains provisional and
+  the existing quiz is linked externally. No automatic event creation or staging
+  changes. Shared registry, storage, preview, revision and renderer checks pass;
+  browser review covers desktop, phone layout, filters, keyboard disclosures and
+  editor surface autosave.
+
 - Simplified Führungen to explicit Öffentlich/Gruppe selections, including both,
   and retained Sonderführung as an optional existing card label. Removed the
   keyword/date classification fallback and distinguished intentionally excluded

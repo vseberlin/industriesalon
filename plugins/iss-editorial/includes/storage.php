@@ -216,11 +216,17 @@ function iss_editorial_sanitize_text_image_item($item, string $profile = ''): ar
         return [];
     }
 
-    return [
+    $sanitized = [
         'label' => $label,
         'text' => $text,
         'media_refs' => array_slice($media_refs, 0, 1),
     ];
+    foreach (['eyebrow', 'group', 'detail'] as $key) {
+        if (isset($item[$key]) && is_string($item[$key])) {
+            $sanitized[$key] = $key === 'detail' ? sanitize_textarea_field($item[$key]) : sanitize_text_field($item[$key]);
+        }
+    }
+    return $sanitized;
 }
 
 function iss_editorial_sanitize_text_image_item_list($items, string $profile = ''): array
@@ -270,7 +276,7 @@ function iss_editorial_sanitize_section_treatment($treatment): string
 {
     $treatment = sanitize_key((string) $treatment);
 
-    return in_array($treatment, ['standard', 'aside'], true) ? $treatment : 'standard';
+    return in_array($treatment, ['standard', 'aside', 'disclosure'], true) ? $treatment : 'standard';
 }
 
 function iss_editorial_sanitize_registered_treatment($treatment, array $format, string $type): string
@@ -309,7 +315,7 @@ function iss_editorial_sanitize_document_rail_feature($feature): array
     return $sanitized;
 }
 
-function iss_editorial_sanitize_document_features($features): array
+function iss_editorial_sanitize_document_features($features, string $format_slug = ''): array
 {
     if (!is_array($features)) {
         return [];
@@ -321,7 +327,7 @@ function iss_editorial_sanitize_document_features($features): array
         $sanitized['rail'] = $rail;
     }
 
-    return $sanitized;
+    return (array) apply_filters('iss_editorial_document_features', $sanitized, $features, $format_slug);
 }
 
 function iss_editorial_sanitize_album_source($source): array
@@ -614,6 +620,11 @@ function iss_editorial_sanitize_section(array $section, array $format): array
         $sanitized['quote_treatment'] = iss_editorial_sanitize_quote_treatment($section['quote_treatment'] ?? 'pull');
     }
 
+    if (iss_editorial_format_supports_section_field($format, $type, 'surface') && isset($section['surface'])) {
+        $surface = sanitize_key((string) $section['surface']);
+        $sanitized['surface'] = in_array($surface, ['default', 'soft', 'dark', 'accent'], true) ? $surface : 'default';
+    }
+
     if (iss_editorial_format_supports_section_field($format, $type, 'section_treatment')) {
         $sanitized['section_treatment'] = iss_editorial_sanitize_section_treatment($section['section_treatment'] ?? 'standard');
     }
@@ -687,7 +698,7 @@ function iss_editorial_sanitize_document($document, string $format_slug): array
     $format['document_version'] = $sanitized['schema_version'];
     $sanitized['skin'] = sanitize_key((string) ($document['skin'] ?? $sanitized['skin']));
     $sanitized['variant'] = sanitize_key((string) ($document['variant'] ?? $sanitized['variant']));
-    $sanitized['features'] = iss_editorial_sanitize_document_features($document['features'] ?? []);
+    $sanitized['features'] = iss_editorial_sanitize_document_features($document['features'] ?? [], $format_slug);
     $sanitized['sections'] = [];
     $sanitized['deleted_sections'] = [];
 
@@ -746,7 +757,7 @@ function iss_editorial_validate_document($value, string $format_slug)
             return new WP_Error('editorial_invalid_field', sprintf(__('Bitte das Dokumentfeld „%s“ prüfen.', 'iss-editorial'), $key));
         }
     }
-    if (isset($document['features']) && (!is_array($document['features']) || $document['features'] !== iss_editorial_sanitize_document_features($document['features']))) {
+    if (isset($document['features']) && (!is_array($document['features']) || $document['features'] !== iss_editorial_sanitize_document_features($document['features'], $format_slug))) {
         return new WP_Error('editorial_invalid_features', __('Bitte die Dokumentdarstellung prüfen.', 'iss-editorial'));
     }
     foreach (['sections', 'deleted_sections'] as $list_key) {
@@ -796,6 +807,15 @@ function iss_editorial_validate_document($value, string $format_slug)
                     }
                 }
             }
+            if (in_array($type, ['text_bild_reihe', 'map_img'], true)) {
+                foreach ((array) ($section['items'] ?? []) as $item) {
+                    foreach (['eyebrow', 'group', 'detail'] as $key) {
+                        if (isset($item[$key]) && (!is_string($item[$key]) || wp_strip_all_tags($item[$key]) !== $item[$key])) {
+                            return new WP_Error('editorial_invalid_field', __('Vorspann, Filtergruppe und Details benötigen einfachen Text.', 'iss-editorial'));
+                        }
+                    }
+                }
+            }
             $normalized = iss_editorial_sanitize_section($section, $format);
             foreach (['media_refs', 'object_refs', 'links', 'facts', 'items', 'sheets', 'source_refs', 'dynamic_refs'] as $key) {
                 if (!isset($section[$key]) || $section[$key] === []) {
@@ -808,7 +828,7 @@ function iss_editorial_validate_document($value, string $format_slug)
             if (!empty($section['treatment']) && ($normalized['treatment'] ?? '') !== $section['treatment']) {
                 return new WP_Error('editorial_invalid_treatment', sprintf(__('Abschnitt %d: Bitte eine verfügbare Darstellung wählen.', 'iss-editorial'), $index + 1));
             }
-            foreach (['gallery_layout', 'media_layout', 'quote_treatment', 'section_treatment', 'orientation', 'era_key', 'function_key', 'source_confidence', 'start_year', 'end_year'] as $key) {
+            foreach (['surface', 'gallery_layout', 'media_layout', 'quote_treatment', 'section_treatment', 'orientation', 'era_key', 'function_key', 'source_confidence', 'start_year', 'end_year'] as $key) {
                 if (isset($section[$key]) && $section[$key] !== '' && (string) $section[$key] !== (string) ($normalized[$key] ?? '')) {
                     return new WP_Error('editorial_invalid_field', sprintf(__('Abschnitt %1$d: Bitte „%2$s“ prüfen.', 'iss-editorial'), $index + 1, $key));
                 }

@@ -58,6 +58,33 @@
   margin-bottom: 0;
 }
 
+/* Native disclosure is a chapter treatment, shared by every portable renderer. */
+.iss-landing-disclosure {
+  border-block: 1px solid var(--iss-landing-rule);
+}
+
+.iss-landing-disclosure > summary {
+  padding-block: 1.3rem;
+  cursor: pointer;
+  color: var(--iss-landing-ink);
+}
+
+.iss-landing-disclosure > summary h2 {
+  display: inline;
+  margin: 0;
+  font-size: clamp(1.3rem, 2.5vw, 2rem);
+  line-height: 1.2;
+}
+
+.iss-landing-disclosure > summary:focus-visible {
+  outline: 2px solid currentcolor;
+  outline-offset: 0.3rem;
+}
+
+.iss-landing-disclosure > .iss-landing-chapter {
+  padding-block: 0.5rem 2rem;
+}
+
 .iss-landing-section--treatment-atlas-map-editorial-split {
   --iss-gesture-atlas-map-marker-border: rgba(255, 255, 255, 0.78);
   --iss-gesture-atlas-map-marker-background: var(--iss-accent, #e81d25);
@@ -691,7 +718,7 @@
 
 .iss-landing-text-image-row__items {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(min(100%, 13rem), 1fr));
+  grid-template-columns: var(--iss-landing-text-image-columns, repeat(auto-fit, minmax(min(100%, 13rem), 1fr)));
   gap: var(--iss-landing-text-image-gap, clamp(1rem, 2vw, 1.5rem));
 }
 
@@ -756,7 +783,7 @@
 }
 
 .iss-landing-section--treatment-text-bild-reihe-compact .iss-landing-text-image-row__items {
-  grid-template-columns: repeat(auto-fit, minmax(min(100%, 10rem), 1fr));
+  grid-template-columns: var(--iss-landing-text-image-compact-columns, repeat(auto-fit, minmax(min(100%, 10rem), 1fr)));
 }
 
 .iss-landing-section--treatment-text-bild-reihe-compact .iss-landing-text-image-row__media {
@@ -1548,5 +1575,134 @@
 @media (max-width: 782px) {
   .iss-landing-section--treatment-text-bild-reihe-visual .iss-landing-text-image-row__items {
     grid-template-columns: 1fr;
+  }
+}
+
+/* Surfaces are bounded editorial choices; colours remain owned by the skin. */
+.iss-landing-section--surface-soft {
+  --iss-landing-surface: var(--iss-editorial-soft, #eeeee6);
+}
+
+.iss-landing-section--surface-dark,
+.iss-landing-section--surface-accent {
+  --iss-landing-surface: var(--iss-editorial-dark, #222820);
+  --iss-landing-ink: #fff;
+  --iss-landing-muted: #ededdf;
+  --iss-landing-rule: #ffffff40;
+  --iss-link-fg: #fff;
+  --iss-link-hover-fg: #fff;
+
+  color: var(--iss-landing-ink);
+}
+
+.iss-landing-section--surface-accent {
+  --iss-landing-surface: var(--iss-project-accent, #a40050);
+}
+
+.iss-landing-section--surface-dark .iss-kicker,
+.iss-landing-section--surface-accent .iss-kicker {
+  color: var(--iss-landing-ink);
+}
+
+.iss-landing-section--surface-dark .iss-landing-section__action,
+.iss-landing-section--surface-accent .iss-landing-section__action {
+  border-color: var(--iss-landing-ink);
+  background: var(--iss-landing-ink);
+  color: var(--iss-landing-surface);
+}
+
+.iss-landing-section--treatment-text-bild-reihe-editorial .iss-landing-text-image-row__item {
+  padding-top: 1.4rem;
+  border-top: 2px solid var(--iss-landing-rule);
+}
+
+.iss-landing-text-image-row__eyebrow {
+  margin: 0 0 1rem;
+  color: var(--iss-landing-ink);
+  font-size: 0.9rem;
+  font-weight: 600;
+}
+
+.iss-landing-section--treatment-text-bild-reihe-agenda {
+  --iss-landing-text-image-columns: minmax(0, 1fr);
+  --iss-landing-text-image-gap: 0;
+  --iss-landing-text-image-body-padding-top: 0;
+}
+
+.iss-landing-section--treatment-text-bild-reihe-agenda .iss-landing-text-image-row__item {
+  display: grid;
+  grid-template-columns: minmax(8rem, 0.35fr) minmax(0, 1fr);
+  gap: 1rem 3rem;
+  padding-block: 1.8rem;
+  border-top: 1px solid var(--iss-landing-rule);
+}
+
+.iss-landing-section--treatment-text-bild-reihe-agenda .iss-landing-text-image-row__media {
+  grid-column: 2;
+  max-width: 30rem;
+}
+
+.iss-landing-section--treatment-text-bild-reihe-agenda .iss-landing-text-image-row__item-body {
+  grid-column: 2;
+}
+
+.iss-landing-agenda__details {
+  margin-top: 0.6rem;
+  color: var(--iss-landing-ink);
+  line-height: 1.6;
+}
+
+.iss-landing-agenda__details summary {
+  cursor: pointer;
+  text-decoration: underline;
+  text-underline-offset: 0.2em;
+}
+
+.iss-landing-agenda__buttons {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.6rem;
+}
+
+.iss-landing-agenda__buttons button {
+  padding: 0.7rem 1rem;
+  border: 1px solid var(--iss-landing-rule);
+  border-radius: 2rem;
+  background: transparent;
+  color: var(--iss-landing-ink);
+  font: inherit;
+  cursor: pointer;
+}
+
+.iss-landing-agenda__buttons button[aria-pressed="true"] {
+  border-color: var(--iss-landing-ink);
+  background: var(--iss-landing-ink);
+  color: var(--iss-landing-surface);
+}
+
+.iss-landing-agenda__buttons button:focus-visible {
+  outline: 2px solid var(--iss-landing-ink);
+  outline-offset: 3px;
+}
+
+.iss-landing-agenda__count {
+  margin-block: 1rem 0;
+  color: var(--iss-landing-muted);
+  font-size: 0.85rem;
+}
+
+[data-iss-editorial-agenda] [hidden] {
+  display: none;
+}
+
+@media (max-width: 600px) {
+  .iss-landing-section--treatment-text-bild-reihe-agenda .iss-landing-text-image-row__item {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 0.25rem;
+  }
+
+  .iss-landing-section--treatment-text-bild-reihe-agenda .iss-landing-text-image-row__item-body,
+  .iss-landing-section--treatment-text-bild-reihe-agenda .iss-landing-text-image-row__media {
+    grid-column: 1;
   }
 }

@@ -65,13 +65,53 @@ presentation. Native introductions and hero bindings keep their owners.
 Conclusions share rich text, anchors and links, including links-only endings.
 They reuse the text renderer and selected skin. Project contact navigation and
 tour anchors keep their existing owners. Chapters share links, resolved media
-with captions, inline/right-side placement and standard/aside presentation. The
+with captions, inline/right-side placement and standard/aside/disclosure presentation. The
 stored `section_treatment=aside` is labelled Hintergrund / Exkurs in the editor.
 Event chapters retain `dynamic_refs` as an event-only extension, sanitized and
 resolved by their existing owners. Project dossier pairing reuses the shared
 chapter body while keeping its facts column, anchors and separate preview
 addresses. Publication `longread_chapter` remains a distinct Lesekapitel with its
 native numbering/navigation; no stored identifiers are rewritten.
+
+Projects also offer the theme-owned `buehne` skin. The native project stage
+keeps the ISS header/footer and the shared section renderer, with an expressive
+opening and a navigation entry for each titled section, excluding the opening
+and expandable details. Its template is selected
+from the effective saved/preview skin; the other project templates and their
+DB overrides are unchanged. Side, top and bottom reading navigation retain the
+existing document feature contract.
+
+Project identity lives in `features.identity`, with a registered `palette` and
+at most one standard WordPress image reference in `media_refs`. The project owner
+validates this feature through the shared document-feature filter; the theme
+registers the available palette choices. **Seite → Projektidentität** reuses the
+existing media picker. Logo and colours currently affect Bühne; they survive
+preview, recovery and native revisions. The palette supplies readable text and
+colour surfaces through skin tokens, without arbitrary CSS or per-project files.
+
+A first **Bild & Text → Seitenauftakt** (`feature.opening`, v3) replaces the
+Bühne template introduction when it has a title and an image. The theme renders
+one H1, preserves the exact canvas section address and omits that section from
+the body/navigation. Other project skins reject this treatment; the landing
+opening retains its existing Startseite capability. Missing/invalid openings
+fall back to the template introduction.
+
+Portable sections expose **Darstellung → Fläche** with paper, soft, dark and
+accent surfaces (`surface=default|soft|dark|accent`); these are skin tokens,
+not arbitrary colours. The composed opening owns its fixed surface. Old documents
+do not acquire new surface or item fields. **Text-Bild-Reihe** additionally offers
+**Themenspalten** and **Programm / Chronik**. Both use the existing item editor;
+optional `eyebrow`, `group` and `detail` fields are plain text. Agenda groups enable
+scoped filter buttons with a live count. Every row is server-rendered, filters
+appear only after enhancement, and native details work without JavaScript.
+These are editorial programme descriptions; event dates, bookings and confirmed
+relations remain with their existing domain owners. Quiet horizontal project
+navigation reuses the rail renderer and presentation tokens.
+
+Chapters additionally support `section_treatment=disclosure` (**Aufklappbar**).
+The portable renderer uses native `details`/`summary`, closed for visitors and
+open in the editing canvas. Dossier chapter/facts pairing excludes disclosures
+so the title, body and following facts keep independent editor addresses.
 
 Merkpunkte (`facts`) shares optional rich text, title/kicker, anchors and plain-text
 `value`/`label` rows across the same eight formats. Standalone sections reuse the

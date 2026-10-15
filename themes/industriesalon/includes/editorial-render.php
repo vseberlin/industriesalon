@@ -10,7 +10,7 @@ add_filter('iss_editorial_formats', static function (array $formats): array {
         'article' => ['standard', 'typografisch', 'dossier'],
         'ausstellung' => ['standard', 'quellenbuehne', 'objektalbum', 'typografisch', 'chronik'],
         'rueckblick' => ['standard', 'quellenbuehne', 'objektalbum', 'typografisch', 'chronik'],
-        'projekt' => ['dossier', 'standard', 'typografisch'],
+        'projekt' => ['dossier', 'standard', 'typografisch', 'buehne'],
         'fuehrung' => ['route-dossier', 'compact', 'standard'],
         'publication' => ['standard', 'bildmatrix', 'longread-poster'],
         'place' => ['standard', 'ortsdossier'],
@@ -21,6 +21,7 @@ add_filter('iss_editorial_formats', static function (array $formats): array {
         'typografisch' => __('Typografisch', 'industriesalon'),
         'frontpage' => __('Startseite', 'industriesalon'),
         'dossier' => __('Dossier', 'industriesalon'),
+        'buehne' => __('Bühne', 'industriesalon'),
         'territorial' => __('Territorial', 'industriesalon'),
         'quellenbuehne' => __('Quellenbühne', 'industriesalon'),
         'objektalbum' => __('Objektalbum', 'industriesalon'),
@@ -36,6 +37,13 @@ add_filter('iss_editorial_formats', static function (array $formats): array {
         $formats[$slug]['skins'] = array_intersect_key($labels, array_flip($choices));
         // Maintain each renderer's existing choice order.
         $formats[$slug]['skins'] = array_replace(array_fill_keys($choices, ''), $formats[$slug]['skins']);
+        if ($slug === 'projekt') {
+            $formats[$slug]['editor']['identity_palettes'] = [
+                'neutral' => __('Papier / Schwarz', 'industriesalon'),
+                'neon' => __('Neon / Vier Farben', 'industriesalon'),
+                'ochre' => __('Ocker / Blau', 'industriesalon'),
+            ];
+        }
         $formats[$slug]['editor']['preview'] = true;
         $formats[$slug]['editor']['canvas'] = true;
         foreach ($formats[$slug]['sections'] as &$section) {

@@ -282,7 +282,7 @@ function iss_content_model_register_editorial_formats(array $formats): array
         ],
     ];
 
-    // The front-page opening is a template capability, not a portable feature.
+    // Openings are template capabilities; the project stage registers its own below.
     $formats['landing']['sections']['feature']['treatments']['feature.opening'] = [
         'label' => __('Seitenauftakt', 'iss-content-model'), 'role' => 'opening', 'min_version' => 3,
     ];
@@ -452,6 +452,8 @@ function iss_content_model_landing_treatment_presentations(): array
         'text-bild-reihe.visual' => ['schematic' => 'cards', 'hint' => 'Große Bilder mit Text darunter.'],
         'text-bild-reihe.compact' => ['schematic' => 'strip', 'hint' => 'Kleine Bilder neben kurzen Texten.'],
         'text-bild-reihe.chronology' => ['schematic' => 'list', 'hint' => 'Bild und Text in zeitlicher Folge.'],
+        'text-bild-reihe.editorial' => ['schematic' => 'cards', 'hint' => 'Themen mit Vorspann, Titel und Text nebeneinander.'],
+        'text-bild-reihe.agenda' => ['schematic' => 'list', 'hint' => 'Zeiträume neben Text; Details aufklappen, optional nach Themen filtern.'],
         'map-img.editorial-atlas' => ['schematic' => 'split', 'hint' => 'Karte neben Panorama und Ortskarten.'],
         'feature.media-panel' => ['schematic' => 'panel', 'hint' => 'Bild mit hervorgehobenem Infokasten.'],
         'feature.media-text' => ['schematic' => 'split', 'hint' => 'Bild und Text nebeneinander.'],
@@ -481,12 +483,13 @@ add_filter('iss_editorial_editor_document', 'iss_content_model_landing_editor_do
 
 /** Invalid opening edits remain recoverable drafts, but cannot replace a valid preview. */
 add_filter('iss_editorial_validated_document', static function ($validated, array $raw, array $format) {
-    if (is_wp_error($validated) || $format['slug'] !== 'landing') { return $validated; }
+    if (is_wp_error($validated) || !in_array($format['slug'], ['landing', 'projekt'], true)) { return $validated; }
+    $opening_skin = $format['slug'] === 'projekt' ? 'buehne' : 'frontpage';
     foreach ($raw['sections'] as $index => $section) {
         if (($section['treatment'] ?? '') !== 'feature.opening') { continue; }
-        if ($raw['schema_version'] < 3 || $index !== 0 || ($raw['skin'] ?? '') !== 'frontpage'
+        if ($raw['schema_version'] < 3 || $index !== 0 || ($raw['skin'] ?? '') !== $opening_skin
             || trim((string) ($section['title'] ?? '')) === '' || !wp_attachment_is_image(absint($section['media_refs'][0]['id'] ?? 0))) {
-            return new WP_Error('editorial_invalid_opening', __('Seitenauftakt: Bitte an die erste Stelle setzen, den Startseiten-Stil wählen sowie Titel und Bild ergänzen.', 'iss-content-model'));
+            return new WP_Error('editorial_invalid_opening', __('Seitenauftakt: Bitte an die erste Stelle setzen, den passenden Seitenstil (Startseite oder Bühne) wählen sowie Titel und Bild ergänzen.', 'iss-content-model'));
         }
     }
     return $validated;
@@ -522,7 +525,13 @@ add_filter('iss_editorial_formats', static function (array $formats): array {
             if ($slug === 'place') {
                 unset($section['portable']);
             } elseif (!empty($definitions[$type]['portable'])) {
-                $section['supports'] = $definitions[$type]['supports'];
+                $section['supports'] = array_merge($definitions[$type]['supports'], ['surface']);
+                if ($type === 'text_bild_reihe') {
+                    $section['treatments'] = array_merge((array) ($section['treatments'] ?? []), $definitions[$type]['treatments']);
+                }
+                if ($slug === 'projekt' && $type === 'feature') {
+                    $section['treatments']['feature.opening'] = ['label' => __('Seitenauftakt', 'iss-content-model'), 'role' => 'opening', 'min_version' => 3];
+                }
                 // Live institution references remain an event-owned extension.
                 if ($slug === 'veranstaltung' && $type === 'kapitel') {
                     $section['supports'][] = 'dynamic_refs';
@@ -560,3 +569,26 @@ add_filter('iss_editorial_formats', static function (array $formats): array {
     unset($format);
     return $formats;
 }, 90);
+
+/** Project identity travels with the editorial document, including drafts and revisions. */
+add_filter('iss_editorial_document_features', static function (array $sanitized, array $features, string $format_slug): array {
+    if ($format_slug !== 'projekt' || !is_array($features['identity'] ?? null)) { return $sanitized; }
+    $identity = $features['identity'];
+    $value = [];
+    $palettes = iss_editorial_get_format('projekt')['editor']['identity_palettes'] ?? [];
+    if (isset($identity['palette']) && is_string($identity['palette']) && isset($palettes[$identity['palette']])) {
+        $value['palette'] = $identity['palette'];
+    }
+    if (isset($identity['media_refs']) && is_array($identity['media_refs'])) {
+        $value['media_refs'] = array_values(array_filter(
+            array_slice(iss_editorial_sanitize_reference_list($identity['media_refs']), 0, 1),
+            static function (array $reference): bool {
+                return ($reference['source'] ?? '') === 'wp-media'
+                    && ($reference['kind'] ?? '') === 'media'
+                    && wp_attachment_is_image(absint($reference['id'] ?? 0));
+            }
+        ));
+    }
+    $sanitized['identity'] = $value;
+    return $sanitized;
+}, 10, 3);

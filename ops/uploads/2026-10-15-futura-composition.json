@@ -1,0 +1,23 @@
+{
+  "source": "Signet: Futura-Übergabe 15.10.2026. Illustration: eingebettete KI-Bildidee aus Futura-2027-Mockup.html, unverändert.",
+  "files": [
+    {
+      "role": "identity",
+      "path": "projects/futura-2027/futura-signet.png",
+      "title": "Futura – Signet",
+      "caption": "",
+      "alt": "Futura",
+      "mime": "image/png",
+      "sha256": "b137e49e211bdbc8ef98b2b6aa7f5bc824f7652f05966f8809b0749596cf1aa6"
+    },
+    {
+      "role": "opening",
+      "path": "projects/futura-2027/futura-illustration.png",
+      "title": "Futura – Bildidee aus dem Gestaltungsentwurf",
+      "caption": "KI-generierte Bildidee · keine Dokumentation einer Veranstaltung",
+      "alt": "KI-generierte Bildidee: Menschen entwickeln gemeinsam ein Stadtmodell vor einer Industriehalle.",
+      "mime": "image/png",
+      "sha256": "cac7928f6e925e004a4d02ed2f66cadabae2644011773be51fde6d7d26524089"
+    }
+  ]
+}

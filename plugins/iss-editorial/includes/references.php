@@ -104,6 +104,9 @@ function iss_editorial_hydrate_reference_preview_list($references): array
 
 function iss_editorial_hydrate_document_previews(array $document): array
 {
+    if (isset($document['features']['identity']['media_refs'])) {
+        $document['features']['identity']['media_refs'] = iss_editorial_hydrate_reference_preview_list($document['features']['identity']['media_refs']);
+    }
     if (!is_array($document['sections'] ?? null) && !is_array($document['deleted_sections'] ?? null)) {
         return $document;
     }

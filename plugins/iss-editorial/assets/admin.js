@@ -289,6 +289,7 @@
         });
         if (skins.length > 1) { studio.ownerBody.appendChild(renderSkinControl()); }
         if (format === 'projekt') { studio.ownerBody.appendChild(renderRailFeatureControl()); }
+        if (Object.keys(config.identityPalettes || {}).length) { studio.ownerBody.appendChild(renderIdentityControl()); }
         renderRouteStationPanel(studio.ownerBody);
         renderTextUpgrade(studio.menu);
         livePreview = window.issEditorialLivePreview(studio, 0, function () { afterCanvasEdit(function () { queueSave().catch(function () {}); }); }, function (index, snapshot) {
@@ -312,6 +313,7 @@
         }
         if (!recoveryPending) { window.setTimeout(function () { queueSave().catch(function () {}); }, 0); }
       }
+      Array.prototype.forEach.call(studio.ownerBody.children, function (control) { if (control.refreshIdentity) { control.refreshIdentity(); } });
       var selected = documentState.sections.indexOf(studioSection);
       if (selected < 0) { studioSection = null; selected = Math.min(activeSectionIndex || 0, documentState.sections.length - 1); }
       activeSectionIndex = selected;
@@ -550,7 +552,7 @@
         parts.push(section.quote_treatment === 'source' ? 'Quellenauszug' : 'Zitat');
       }
       if (section.section_treatment) {
-        parts.push(section.section_treatment === 'aside' ? 'Hintergrund / Exkurs' : 'Kapitel');
+        parts.push(section.section_treatment === 'disclosure' ? 'Aufklappbar' : (section.section_treatment === 'aside' ? 'Hintergrund / Exkurs' : 'Kapitel'));
       }
       if (section.treatment) {
         parts.push(treatmentLabel(section.type || '', section.treatment));
@@ -1306,6 +1308,13 @@
         renderQuoteTreatmentControl(section, displayPanel.body);
       }
 
+      if (supports(type, 'surface') && section.treatment !== 'feature.opening') {
+        displayPanel.body.appendChild(createSelect('Fläche', section.surface || 'default', [
+          { value: 'default', label: 'Papier' }, { value: 'soft', label: 'Leise abgesetzt' },
+          { value: 'dark', label: 'Dunkel' }, { value: 'accent', label: 'Akzentfarbe' }
+        ], function (value) { section.surface = value; render(); scheduleAutosave(); }));
+      }
+
       if (supports(type, 'section_treatment')) {
         renderSectionTreatmentControl(section, displayPanel.body);
       }
@@ -1519,7 +1528,7 @@
 
     function treatmentChoices(type) {
       return (sectionConfig(type).treatments || []).filter(function (item) {
-        return item && item.slug && (item.min_version || 1) <= documentState.schema_version && (item.role !== 'opening' || config.isFrontPage);
+        return item && item.slug && (item.min_version || 1) <= documentState.schema_version && (item.role !== 'opening' || config.openingSkin);
       });
     }
 
@@ -1540,12 +1549,12 @@
 
     function openingNote(selectedSection) {
       if (selectedSection && selectedSection.treatment !== 'feature.opening') { return ''; }
-      if (!config.isFrontPage || documentState.schema_version < 3) { return ''; }
+      if (!config.openingSkin || documentState.schema_version < 3) { return ''; }
       var opening = selectedSection ? documentState.sections.indexOf(selectedSection) : documentState.sections.findIndex(function (section) { return section.treatment === 'feature.opening'; });
       if (opening === -1) { return 'Vorlagenauftakt aktiv. Für einen eigenen Auftakt im ersten hervorgehobenen Inhalt „Seitenauftakt“ wählen.'; }
       var section = documentState.sections[opening];
-      if (opening !== 0 || currentSkin() !== 'frontpage' || !(section.title || '').trim() || !(section.media_refs || []).length) {
-        return 'Seitenauftakt prüfen: erster Abschnitt, Startseiten-Stil, Titel und Bild erforderlich. Die Vorschau bleibt bei der letzten gültigen Fassung.';
+      if (opening !== 0 || currentSkin() !== config.openingSkin || !(section.title || '').trim() || !(section.media_refs || []).length) {
+        return 'Seitenauftakt prüfen: erster Abschnitt, passender Seitenstil (Startseite oder Bühne), Titel und Bild erforderlich. Die Vorschau bleibt bei der letzten gültigen Fassung.';
       }
       return 'Seitenauftakt: Dieser erste Abschnitt ersetzt den Auftakt der Vorlage. Titel und Bild sind erforderlich.';
     }
@@ -1725,9 +1734,10 @@
       var options = createElement('div', 'iss-editorial-segmented');
       var choices = [
         { value: 'standard', label: 'Kapitel' },
-        { value: 'aside', label: 'Hintergrund / Exkurs' }
+        { value: 'aside', label: 'Hintergrund / Exkurs' },
+        { value: 'disclosure', label: 'Aufklappbar' }
       ];
-      var current = section.section_treatment === 'aside' ? 'aside' : 'standard';
+      var current = ['aside', 'disclosure'].indexOf(section.section_treatment) !== -1 ? section.section_treatment : 'standard';
 
       choices.forEach(function (choice) {
         var label = createElement('label', 'iss-editorial-segmented__option');
@@ -1918,6 +1928,47 @@
       rerenderRows();
     }
 
+    function renderIdentityControl() {
+      var wrapper = createElement('fieldset', 'iss-editorial-field');
+      wrapper.appendChild(createElement('legend', '', 'Projektidentität'));
+      wrapper.appendChild(createElement('p', 'description', 'Logo und Farbraum gestalten den Auftritt in der Darstellung „Bühne“.'));
+      var paletteControl = createSelect('Farbraum', identity().palette || 'neutral', Object.keys(config.identityPalettes).map(function (key) {
+        return { value: key, label: config.identityPalettes[key] };
+      }), function (palette) {
+        afterCanvasEdit(function () {
+          documentState.features.identity = Object.assign({}, identity(), { palette: palette });
+          render(); scheduleAutosave();
+        });
+      });
+      var select = paletteControl.querySelector('select');
+      var tray = createElement('div', 'iss-editorial-media-tray');
+      var button = createElement('button', 'button', 'Projektlogo wählen');
+      button.type = 'button';
+      function identity() { return documentState.features.identity || {}; }
+      function refresh() {
+        select.value = identity().palette || 'neutral';
+        // Render a fresh view so recovery and starter changes cannot retain an old document reference.
+        var view = { media_refs: (identity().media_refs || []).slice() };
+        renderGatewayItemMedia(view, tray, function () {
+          documentState.features.identity = Object.assign({}, identity(), { media_refs: view.media_refs });
+          refresh();
+        });
+      }
+      button.addEventListener('click', function () {
+        afterCanvasEdit(function () {
+          var view = { media_refs: (identity().media_refs || []).slice() };
+          openGatewayItemMediaLibrary(view, tray, function () {
+            documentState.features.identity = Object.assign({}, identity(), { media_refs: view.media_refs });
+            refresh();
+          });
+        });
+      });
+      wrapper.append(paletteControl, tray, button);
+      wrapper.refreshIdentity = refresh;
+      refresh();
+      return wrapper;
+    }
+
     function renderGatewayItemMedia(item, target, rerender) {
       clear(target);
       item.media_refs = Array.isArray(item.media_refs) ? item.media_refs : [];
@@ -2020,6 +2071,22 @@
             render();
             scheduleAutosave();
           }, textProfile(section.type, 'items') || 3));
+          if (isTextImageRow && ['text-bild-reihe.editorial', 'text-bild-reihe.agenda'].indexOf(section.treatment) !== -1) {
+            var extra = createElement('details', 'iss-editorial-field');
+            extra.appendChild(createElement('summary', '', 'Vorspann und Details'));
+            extra.appendChild(createTextInput('Vorspann / Zeitraum', item.eyebrow || '', function (value) {
+              item.eyebrow = value; render(); scheduleAutosave();
+            }));
+            if (section.treatment === 'text-bild-reihe.agenda') {
+              extra.appendChild(createTextInput('Filtergruppe (optional)', item.group || '', function (value) {
+                item.group = value; render(); scheduleAutosave();
+              }));
+              extra.appendChild(createTextarea('Mehr erfahren', item.detail || '', function (value) {
+                item.detail = value; render(); scheduleAutosave();
+              }, 4));
+            }
+            fields.appendChild(extra);
+          }
           if (!isTextImageRow) {
             fields.appendChild(usePageLinkSelector()
               ? createPageLinkSelect(item, rerenderRows)

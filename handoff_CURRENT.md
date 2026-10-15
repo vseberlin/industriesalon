@@ -1,5 +1,35 @@
 # Current handoff — 15 October 2026
 
+## Projects — accepted local Futura composition
+
+New local draft **30743** (`futura-biennale-2027-gestaltung`) follows the supplied
+mockup with a split image opening, theme columns, filterable programme rows,
+dark participation, retrospective, concept disclosures and accent contact band.
+All 16 sections use the shared gesture editor; no separate minisite/builder.
+**30615 was published by the user after the first pilot. Preserve it and original
+Futura 25657.** All eight published project fingerprints remain unchanged.
+
+Deploy this review draft with matching code, the owner-API migration
+`ops/migrations/2026-10-15-futura-composition.{php,json}` and paired checksummed
+`ops/uploads/2026-10-15-futura-composition.{tar.gz,json}`. Run `dry-run`, `apply`,
+`verify` with `--use-include` after restoring the uploads. The migration reuses an
+existing matching signet and registers the visibly labelled AI illustration.
+Receipt: `iss_backup_20261015_futura_composition`; repeat apply verifies, rollback
+trashes only the unchanged draft and retains media/receipt. The older pilot
+migration/receipt remains historical and must not overwrite the user's edits.
+
+14,066 registry/renderer checks pass, plus PHP/JS/CSS checks. Browser checks cover
+desktop, actual 390px editor iframe without overflow, filters/counts, keyboard
+details, surface autosave/preview, loaded media and one public H1. Anonymous
+preview returns 404. Implementation accepted and committed locally on `main`;
+use Git history for the delivery ref. No push or staging changes.
+
+Review the new draft and reconcile programme/source differences before choosing
+one final public Futura route. The 15 October one-pager remains the provisional
+programme baseline; no calendar events or confirmed partners were created. The
+quiz is temporarily linked externally. Approve/replace the AI illustration and
+review retrospective facts/contact before publication; see migration JSON.
+
 ## Führungen classification — accepted local checkpoint
 
 The editor and landing now use only Öffentlich/Gruppe, with dual assignment.
