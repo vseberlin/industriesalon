@@ -19,6 +19,12 @@ Immediate executable work only. Larger future programs live in `docs/project/bac
   Include the Schöneweide theme/contract changes and guarded
   `ops/migrations/2026-10-12-schoneweide-landing.php` plus its JSON payload;
   preserve target-local editorial changes and verify existing image dependencies.
+  Include the Führungen two-category code and
+  `ops/migrations/2026-10-15-fuehrungen-categories.php` plus its JSON manifest;
+  repeat the locally verified two editor choices, optional Sonderführung label
+  and native save/reload in the target's signed-in browser. Confirm whether
+  Waldfriedhof should also be offered publicly; it currently has the reviewed
+  group assignment.
 - Staff-test the [shared workspace](docs/project/editor-workspace-plan.md)
   after its next authorized staging release: one landing, project, tour,
   publication, event and each additional article CPT; image/title/text,

@@ -4,6 +4,27 @@ This file records durable project changes. Keep it compact: current state belong
 `handoff_CURRENT.md`, active follow-up in `TODO.md`, and detailed investigation can
 be recovered from Git history.
 
+## 2026-10-15
+
+- Simplified Führungen to explicit Öffentlich/Gruppe selections, including both,
+  and retained Sonderführung as an optional existing card label. Removed the
+  keyword/date classification fallback and distinguished intentionally excluded
+  pages from missing assignments in the drift check. Contextual landing actions
+  now lead to public dates or the shared group inquiry dialog; availability and
+  the family rallye material action remain visible. A guarded slug-based owner
+  migration classifies 13 active offers, aligns booking settings, removes the
+  old classification suffix from the Helden title and updates the landing intro.
+  The duplicate Licht page and historical Rathenau page retain their content
+  and URLs with explicit empty landing selections. No new taxonomy, schema,
+  frontend script or media artifact. Verified 47 backend/editor regressions,
+  PHP lint/PHPCS/PHPStan, migration check/apply/verify and idempotence, rejection
+  of later category/copy changes before writes, 16 HTTP 200 routes, tour drift,
+  Chrome desktop/390px layout, keyboard filtering and inquiry opening. Signed-in
+  Chrome also verifies native editor save/reload for both, group-only and empty
+  selections, retaining the optional Sonderführung label; the disposable draft
+  was removed. Local before-image:
+  `var/fuehrungen-20261015/before.json` (0600); no staging changes.
+
 ## 2026-10-12
 
 - Reworked `/schoneweide/` into five sections including the photographic opening:

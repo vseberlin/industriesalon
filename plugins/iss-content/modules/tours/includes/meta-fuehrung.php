@@ -8,24 +8,16 @@ function iss_fuehrung_get_offer_catalog_group_definitions(): array
 {
     return [
         'oeffentlich' => [
-            'label' => __('Öffentlich', 'iss-fuehrungen'),
-            'title' => __('Öffentliche Termine', 'iss-fuehrungen'),
-            'description' => __('Führungen mit sichtbaren Terminen und offenem Einstieg in Schöneweide.', 'iss-fuehrungen'),
+            'label' => __('Öffentliche Führungen', 'iss-fuehrungen'),
+            'editor_label' => __('Öffentlich', 'iss-fuehrungen'),
+            'title' => __('Öffentliche Führungen', 'iss-fuehrungen'),
+            'description' => __('An öffentlichen Terminen teilnehmen und Schöneweide gemeinsam entdecken.', 'iss-fuehrungen'),
         ],
         'gruppen' => [
-            'label' => __('Gruppen', 'iss-fuehrungen'),
-            'title' => __('Gruppen & Fachbesuche', 'iss-fuehrungen'),
-            'description' => __('Formate für Gruppen, Schulklassen, Teams und vertiefte Besuche mit abgestimmtem Schwerpunkt.', 'iss-fuehrungen'),
-        ],
-        'individuell' => [
-            'label' => __('Individuell', 'iss-fuehrungen'),
-            'title' => __('Individuell buchbar', 'iss-fuehrungen'),
-            'description' => __('Routen, die sich auf Anfrage an Anlass, Gruppe oder thematischen Fokus anpassen lassen.', 'iss-fuehrungen'),
-        ],
-        'familie-kinder' => [
-            'label' => __('Familien & Kinder', 'iss-fuehrungen'),
-            'title' => __('Familien & Kinder', 'iss-fuehrungen'),
-            'description' => __('Rallyes und Formate, die Schöneweide über Mitmachen, Vergleichen und eigenes Tempo erschließen.', 'iss-fuehrungen'),
+            'label' => __('Gruppenführungen', 'iss-fuehrungen'),
+            'editor_label' => __('Gruppe', 'iss-fuehrungen'),
+            'title' => __('Gruppenführungen', 'iss-fuehrungen'),
+            'description' => __('Ein eigenes Angebot für Ihre Gruppe, Schulklasse, Familie oder Ihr Team anfragen.', 'iss-fuehrungen'),
         ],
     ];
 }

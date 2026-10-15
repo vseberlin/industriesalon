@@ -1,4 +1,28 @@
-# Current handoff — 14 October 2026
+# Current handoff — 15 October 2026
+
+## Führungen classification — accepted local checkpoint
+
+The editor and landing now use only Öffentlich/Gruppe, with dual assignment.
+Sonderführung is an optional existing card label. Keyword/date inference is
+removed. The reviewed local migration gives 13 active offers: 4 public and 11
+group entries, including 2 in both. The duplicate Licht group page and historical
+Rathenau page remain published but are excluded from the active offer list.
+Public cards retain dates/availability; group cards open the existing inquiry.
+
+Deploy matching code with `ops/migrations/2026-10-15-fuehrungen-categories.php`
+and its JSON manifest; run `check`, then `apply` with a new target-local private
+before-image, then `verify`. No uploads artifact. Local recovery is
+`var/fuehrungen-20261015/before.json` (0600); preserve later edits on rollback.
+47 category/action/native-editor checks, PHP lint/PHPCS/PHPStan, migration
+check/apply/verify/repeat-apply and the tour drift check pass. Negative migration
+checks reject changed categories/copy before writes; all 16 routes return 200. Chrome verifies
+desktop/390px layout, keyboard tabs, availability and inquiry opening. Signed-in
+Chrome also verifies the two editor choices and native save/reload for both,
+group-only and empty selections with the optional Sonderführung label retained.
+The disposable draft was removed; target/staff acceptance remains for release.
+Accepted and committed locally on `main`; use Git history for the delivery ref.
+Nothing in this slice is pushed or deployed to staging. The next release must
+include the paired category migration above.
 
 ## Accepted local checkpoint
 

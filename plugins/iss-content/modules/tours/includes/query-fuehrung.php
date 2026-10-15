@@ -138,7 +138,7 @@ function iss_fuehrung_get_inquiry_data($post_id) {
     $note = trim((string) get_post_meta($post_id, 'inquiry_note', true));
 
     if ($label === '') {
-        $label = __('Anfrage senden', 'iss-fuehrungen');
+        $label = __('Gruppenführung anfragen', 'iss-fuehrungen');
     }
 
     return [

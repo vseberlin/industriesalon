@@ -110,7 +110,7 @@ function iss_fuehrung_render_booking_box($post_id) {
     echo '<p class="iss-kicker iss-kicker--compact">Buchung</p>';
 
     if ($mode === 'on_demand') {
-        echo '<h2 class="iss-fuehrung-booking__title">' . esc_html__('Individuelle Anfrage', 'iss-fuehrungen') . '</h2>';
+        echo '<h2 class="iss-fuehrung-booking__title">' . esc_html__('Anfrage für Ihre Gruppe', 'iss-fuehrungen') . '</h2>';
 
         if ($inquiry_note !== '') {
             echo '<p class="iss-fuehrung-booking__note">' . esc_html($inquiry_note) . '</p>';
@@ -270,97 +270,10 @@ function iss_fuehrung_get_offer_catalog_groups() {
         : [];
 }
 
-function iss_fuehrung_offer_catalog_contains_any($haystack, array $needles) {
-    foreach ($needles as $needle) {
-        $needle = trim((string) $needle);
-        if ($needle === '') {
-            continue;
-        }
-
-        if (strpos($haystack, $needle) !== false) {
-            return true;
-        }
-    }
-
-    return false;
-}
-
 function iss_fuehrung_get_offer_catalog_group_keys($post_id) {
-    $post_id = (int) $post_id;
-    if ($post_id <= 0) {
-        return [];
-    }
-
-    $explicit_groups = function_exists('iss_fuehrung_sanitize_offer_catalog_groups')
-        ? iss_fuehrung_sanitize_offer_catalog_groups(get_post_meta($post_id, 'offer_catalog_groups', true))
+    return (int) $post_id > 0
+        ? iss_fuehrung_sanitize_offer_catalog_groups(get_post_meta((int) $post_id, 'offer_catalog_groups', true))
         : [];
-    if ($explicit_groups) {
-        return $explicit_groups;
-    }
-
-    $mode = iss_fuehrung_get_effective_booking_mode($post_id);
-    $stored_mode = iss_fuehrung_get_booking_mode($post_id);
-    $next_event = iss_fuehrung_get_next_event($post_id);
-    $target_group = trim((string) get_post_meta($post_id, 'target_group', true));
-    $booking_note = trim((string) get_post_meta($post_id, 'booking_note', true));
-    $inquiry = iss_fuehrung_get_inquiry_data($post_id);
-    $haystack = strtolower(remove_accents(implode(' ', array_filter([
-        get_the_title($post_id),
-        $target_group,
-        trim((string) get_post_field('post_excerpt', $post_id, 'raw')),
-        trim((string) get_post_meta($post_id, 'tour_badge', true)),
-        $booking_note,
-        trim((string) ($inquiry['note'] ?? '')),
-    ]))));
-    $groups = [];
-
-    if ((function_exists('iss_fuehrung_is_calendar_event') && iss_fuehrung_is_calendar_event($next_event)) || in_array($stored_mode, ['calendar', 'hybrid'], true)) {
-        $groups['oeffentlich'] = true;
-    }
-
-    if (iss_fuehrung_offer_catalog_contains_any($haystack, [
-        'famil',
-        'kinder',
-        'kind',
-        'schul',
-        'schuel',
-        'jugend',
-    ])) {
-        $groups['familie-kinder'] = true;
-    }
-
-    if (iss_fuehrung_offer_catalog_contains_any($haystack, [
-        'gruppe',
-        'gruppen',
-        'team',
-        'teamevent',
-        'schul',
-        'schuel',
-        'klasse',
-        'hochschule',
-        'fachpublikum',
-        'gaeste',
-        'gäste',
-    ])) {
-        $groups['gruppen'] = true;
-    }
-
-    if (iss_fuehrung_offer_catalog_contains_any($haystack, [
-        'individ',
-        'anfrage',
-        'buchbar',
-        'sonderformat',
-        'sonderroute',
-        'gutschein',
-    ]) || in_array($mode, ['hybrid', 'on_demand'], true)) {
-        $groups['individuell'] = true;
-    }
-
-    if (!$groups) {
-        $groups[(function_exists('iss_fuehrung_is_calendar_event') && iss_fuehrung_is_calendar_event($next_event)) ? 'oeffentlich' : 'individuell'] = true;
-    }
-
-    return array_keys($groups);
 }
 
 function iss_fuehrung_group_offer_catalog_posts(array $posts) {
@@ -386,94 +299,46 @@ function iss_fuehrung_group_offer_catalog_posts(array $posts) {
     return $groups;
 }
 
-function iss_fuehrung_get_offer_catalog_item_state($post_id) {
-    $mode = iss_fuehrung_get_effective_booking_mode($post_id);
-    $next_event = iss_fuehrung_get_next_event($post_id);
-    $booking_note = trim((string) get_post_meta($post_id, 'booking_note', true));
+function iss_fuehrung_get_offer_catalog_item_state($post_id, string $group_key) {
     $inquiry = iss_fuehrung_get_inquiry_data($post_id);
-    $inquiry_label = trim((string) ($inquiry['label'] ?? ''));
-    $inquiry_note = trim((string) ($inquiry['note'] ?? ''));
-    $primary_action = null;
-    $secondary_action = [
-        'url' => get_permalink($post_id),
-        'label' => __('Mehr', 'iss-fuehrungen'),
-    ];
-
-    if (function_exists('iss_fuehrung_is_calendar_event') && iss_fuehrung_is_calendar_event($next_event)) {
-        $booking_url = iss_fuehrung_get_event_booking_url($next_event, $post_id);
-        $availability = $next_event instanceof WP_Post
-            ? trim((string) get_post_meta($next_event->ID, 'availability_state', true))
-            : trim((string) ($next_event['availability_state'] ?? ''));
-        $availability_label = iss_fuehrung_get_availability_label($availability);
-        $note_parts = [];
-
-        if ($availability_label !== '') {
-            $note_parts[] = $availability_label;
-        }
-
-        if ($mode === 'hybrid') {
-            $note_parts[] = __('Auch auf Anfrage buchbar', 'iss-fuehrungen');
-        } elseif ($booking_note !== '') {
-            $note_parts[] = $booking_note;
-        }
-
-        if ($booking_url !== '') {
-            $primary_action = [
-                'url' => $booking_url,
-                'label' => __('Buchen', 'iss-fuehrungen'),
-            ];
-        }
-
-        return [
-            'mode' => $mode,
-            'label' => __('Nächster Termin', 'iss-fuehrungen'),
-            'value' => iss_fuehrung_get_event_start_label($next_event),
-            'note' => implode(' · ', array_filter($note_parts)),
-            'primary_action' => $primary_action,
-            'secondary_action' => $secondary_action,
-        ];
-    }
-
-    if ($mode === 'on_demand') {
-        $primary_action = [
-            'url' => get_permalink($post_id),
-            'label' => $inquiry_label,
-        ];
-
-        return [
-            'mode' => $mode,
-            'label' => __('Buchung', 'iss-fuehrungen'),
-            'value' => __('Auf Anfrage', 'iss-fuehrungen'),
-            'note' => $inquiry_note !== '' ? $inquiry_note : ($booking_note !== '' ? $booking_note : __('Termin und Schwerpunkt werden individuell abgestimmt.', 'iss-fuehrungen')),
-            'primary_action' => $primary_action,
-            'secondary_action' => $secondary_action,
-        ];
-    }
-
-    if ($mode === 'hybrid') {
-        $primary_action = [
-            'url' => get_permalink($post_id),
-            'label' => $inquiry_label,
-        ];
-
-        return [
-            'mode' => $mode,
-            'label' => __('Status', 'iss-fuehrungen'),
-            'value' => __('Aktuell keine Termine online', 'iss-fuehrungen'),
-            'note' => $inquiry_note !== '' ? $inquiry_note : ($booking_note !== '' ? $booking_note : __('Diese Führung bleibt individuell anfragbar.', 'iss-fuehrungen')),
-            'primary_action' => $primary_action,
-            'secondary_action' => $secondary_action,
-        ];
-    }
-
-    return [
-        'mode' => $mode,
+    $permalink = get_permalink($post_id);
+    $state = [
         'label' => __('Status', 'iss-fuehrungen'),
-        'value' => __('Aktuell keine Termine online', 'iss-fuehrungen'),
-        'note' => $booking_note,
-        'primary_action' => $primary_action,
-        'secondary_action' => $secondary_action,
+        'value' => __('Aktuell keine öffentlichen Termine', 'iss-fuehrungen'),
+        'note' => '',
+        'primary_action' => [
+            'url' => $permalink,
+            'label' => __('Details ansehen', 'iss-fuehrungen'),
+        ],
     ];
+
+    if ($group_key === 'gruppen') {
+        $state['label'] = __('Buchung', 'iss-fuehrungen');
+        $state['value'] = __('Auf Anfrage', 'iss-fuehrungen');
+        $state['note'] = (string) $inquiry['note'];
+        $state['primary_action'] = [
+            'url' => $permalink,
+            'label' => (string) $inquiry['label'],
+            'intent' => 'inquiry',
+        ];
+        return $state;
+    }
+
+    $next_event = iss_fuehrung_get_next_event($post_id);
+    if (iss_fuehrung_is_calendar_event($next_event)) {
+        $availability = $next_event instanceof WP_Post
+            ? (string) get_post_meta($next_event->ID, 'availability_state', true)
+            : (string) ($next_event['availability_state'] ?? '');
+        $state['label'] = __('Nächster Termin', 'iss-fuehrungen');
+        $state['value'] = iss_fuehrung_get_event_start_label($next_event);
+        $state['note'] = iss_fuehrung_get_availability_label($availability);
+        $state['primary_action'] = [
+            'url' => $permalink . '#naechste-termine',
+            'label' => __('Termine ansehen', 'iss-fuehrungen'),
+        ];
+    }
+
+    return $state;
 }
 
 function iss_fuehrung_block_resolve_post_id($attributes = []) {

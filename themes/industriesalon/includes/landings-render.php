@@ -1252,34 +1252,39 @@ function industriesalon_render_front_newsletter_slot(): string
     return trim((string) ob_get_clean());
 }
 
-function industriesalon_render_fuehrungen_offer_card(int $post_id): string
+function industriesalon_render_fuehrungen_offer_card(int $post_id, string $group_key): string
 {
     if ($post_id <= 0 || !function_exists('iss_fuehrung_get_offer_catalog_item_state')) {
         return '';
     }
 
-    $state = iss_fuehrung_get_offer_catalog_item_state($post_id);
+    $state = iss_fuehrung_get_offer_catalog_item_state($post_id, $group_key);
     $badge = trim((string) get_post_meta($post_id, 'tour_badge', true));
     $excerpt = trim((string) get_post_field('post_excerpt', $post_id, 'raw'));
     $meta = function_exists('iss_fuehrung_get_card_meta') ? iss_fuehrung_get_card_meta($post_id) : [];
-    $action = !empty($state['primary_action']['url']) && !empty($state['primary_action']['label'])
-        ? $state['primary_action']
-        : ($state['secondary_action'] ?? []);
+    $action = $state['primary_action'];
+    $action_attrs = ($action['intent'] ?? '') === 'inquiry' && function_exists('iss_programm_booking_trigger_attributes')
+        ? iss_timeline_render_attr_list(iss_programm_booking_trigger_attributes([
+            'source_post_id' => $post_id,
+            'source_post_type' => 'fuehrung',
+            'title' => get_the_title($post_id),
+            'intent' => 'inquiry',
+        ]))
+        : '';
 
     if ($badge === '') {
-        $labels = [
-            'calendar' => __('Öffentlicher Rundgang', 'industriesalon'),
-            'hybrid' => __('Öffentlich + Anfrage', 'industriesalon'),
-            'on_demand' => __('Individuell buchbar', 'industriesalon'),
-        ];
-        $badge = (string) ($labels[(string) ($state['mode'] ?? '')] ?? __('Führung', 'industriesalon'));
+        $badge = $group_key === 'gruppen'
+            ? __('Gruppenführung', 'industriesalon')
+            : __('Öffentliche Führung', 'industriesalon');
     }
 
     $summary = array_slice(array_values(array_filter(array_map('trim', (array) $meta))), 0, 2);
     if (!empty($state['value'])) {
         $summary[] = sprintf('%s: %s', (string) ($state['label'] ?? ''), (string) $state['value']);
     }
-    if ($excerpt === '' && !empty($state['note'])) {
+    if ($group_key === 'oeffentlich' && !empty($state['note'])) {
+        $summary[] = (string) $state['note'];
+    } elseif ($excerpt === '' && !empty($state['note'])) {
         $excerpt = (string) $state['note'];
     }
 
@@ -1295,7 +1300,8 @@ function industriesalon_render_fuehrungen_offer_card(int $post_id): string
             <?php if ($excerpt !== '') : ?><p class="iss-card__text"><?php echo esc_html($excerpt); ?></p><?php endif; ?>
             <?php if ($summary) : ?><p class="iss-card__meta"><?php echo esc_html(implode(' · ', $summary)); ?></p><?php endif; ?>
             <?php if (!empty($action['url']) && !empty($action['label'])) : ?>
-                <div class="iss-card__footer"><a class="iss-card__link" href="<?php echo esc_url((string) $action['url']); ?>"><?php echo esc_html((string) $action['label']); ?></a></div>
+                <?php // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- Existing booking renderer escapes its attribute list. ?>
+                <div class="iss-card__footer"><a class="iss-card__link" href="<?php echo esc_url((string) $action['url']); ?>"<?php echo $action_attrs; ?>><?php echo esc_html((string) $action['label']); ?></a></div>
             <?php endif; ?>
         </div>
     </article>
@@ -1351,7 +1357,7 @@ function industriesalon_render_fuehrungen_offers_slot(): string
                         </div>
                         <div class="iss-related-feed__grid iss-related-feed__grid--fuehrung iss-related-feed__grid--layout-strip iss-related-feed__grid--columns-3 iss-fuehrungen-catalog__track" data-iss-strip-carousel-track role="list">
                             <?php foreach ($grouped_posts[$group_key] as $post) : ?>
-                                <?php echo industriesalon_render_fuehrungen_offer_card((int) $post->ID); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- Card renderer escapes dynamic values. ?>
+                                <?php echo industriesalon_render_fuehrungen_offer_card((int) $post->ID, $group_key); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- Card renderer escapes dynamic values. ?>
                             <?php endforeach; ?>
                         </div>
                     </div>

@@ -92,8 +92,10 @@ if (defined('WP_CLI') && WP_CLI) {
                         ? iss_fuehrung_get_offer_catalog_group_keys($post_id)
                         : [];
                     $group_keys = array_values(array_filter(array_map('sanitize_key', (array) $group_keys)));
-                    if (empty($group_keys)) {
-                        $errors[] = sprintf('Führung #%d has no offer catalog group.', $post_id);
+                    if (!metadata_exists('post', $post_id, 'offer_catalog_groups')) {
+                        $errors[] = sprintf('Führung #%d needs an explicit catalog selection (empty means excluded).', $post_id);
+                    } elseif (get_post_meta($post_id, 'offer_catalog_groups', true) !== $group_keys) {
+                        $errors[] = sprintf('Führung #%d has an invalid stored catalog selection.', $post_id);
                     }
                     foreach ($group_keys as $group_key) {
                         if (!in_array($group_key, $known_group_keys, true)) {

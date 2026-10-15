@@ -754,11 +754,19 @@ compact stage gallery. Existing route station data, dates, booking, facts, and
 the required relation network stay outside the JSON document. Public JSON rendering is enabled
 per post through `_iss_editorial_enabled_fuehrung`; disabled Führung posts keep
 the legacy `post_content` description path through `iss/tour-description`.
-The Führungen landing offer catalog uses the controlled `offer_catalog_groups`
-post meta for `Öffentlich`, `Gruppen`, `Individuell`, and `Familien & Kinder`;
-empty values fall back to the legacy booking/text heuristic only for migration
-continuity. The old `fuehrung_typ` taxonomy is no longer an editor-facing
-classification source for landing filters. Its landing composition is the
+The Führungen landing offer catalog uses explicit `offer_catalog_groups` post
+meta with only `oeffentlich` and `gruppen`. Editors can select both; audience,
+words in the title and the presence of future dates never infer membership.
+An explicitly saved empty array omits the post from the landing while retaining
+its page; the drift check distinguishes this choice from an unmigrated missing
+key. The existing optional `tour_badge` carries labels such as `Sonderführung`,
+independently of the two categories. Audience details remain in `target_group`.
+Public cards link to source dates and retain availability; between dates they
+show an empty-date notice and a details link. Group cards show the existing
+inquiry action, even for dual-category tours with public dates. Custom labels
+such as `Unterlagen anfragen` remain supported, with a detail-page link when
+JavaScript is unavailable. The old `fuehrung_typ` taxonomy remains hidden and
+is not the classification source for landing filters. Its landing composition is the
 JSON-native `fuehrungen-offers` dynamic slot: `iss-content` supplies grouped
 posts and booking state, the theme renders the cards, and the existing
 `iss-relations` strip runtime supplies carousel interaction. The former Query
@@ -766,6 +774,13 @@ Loop, standalone catalog block, and private catalog JavaScript are retired.
 After this cutover the file template owns only the hero shell and inert landing
 slot; `ops/migrations/2026-07-11-fuehrungen-landing.php` enables the JSON-owned
 body and writes page relations through their owning APIs after code deployment.
+`ops/migrations/2026-10-15-fuehrungen-categories.php` and its readable JSON manifest
+provide `check|apply|verify` for the reviewed assignments, aligned booking settings
+and the offer-slot introduction. Slugs resolve target-local posts; later edits
+to affected values fail closed before writes. Apply requires a new private
+before-image; no uploads artifact is needed. The duplicate Licht group page and
+historical Rathenau page have explicit empty selections; their URLs, narratives
+and publication state are retained. The main Licht page supports both types.
 The theme consumes `iss_editorial_get_read_model()` in
 `themes/industriesalon/includes/tours-render.php`, exposes `route-dossier`,
 `compact`, and `standard` skins, replaces the hero description from the first

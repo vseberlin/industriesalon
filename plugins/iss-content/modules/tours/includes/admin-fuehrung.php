@@ -19,6 +19,8 @@ function iss_fuehrungen_render_meta_box($post) {
     wp_nonce_field('iss_fuehrung_save_meta', 'iss_fuehrung_meta_nonce');
 
     $fields = [
+        'offer_catalog_groups' => __('Art der Führung', 'iss-fuehrungen'),
+        'tour_badge'    => __('Zusatz / Kartenlabel (optional)', 'iss-fuehrungen'),
         'duration'      => __('Dauer', 'iss-fuehrungen'),
         'meeting_point' => __('Treffpunkt', 'iss-fuehrungen'),
         'target_group'  => __('Zielgruppe', 'iss-fuehrungen'),
@@ -29,8 +31,6 @@ function iss_fuehrungen_render_meta_box($post) {
         'allow_on_demand_with_calendar' => __('Anfrage zusätzlich erlauben', 'iss-fuehrungen'),
         'inquiry_label' => __('Anfrage-Button Label', 'iss-fuehrungen'),
         'inquiry_note'  => __('Anfrage-Hinweis', 'iss-fuehrungen'),
-        'tour_badge'    => __('Kicker / Kartenlabel', 'iss-fuehrungen'),
-        'offer_catalog_groups' => __('Art der Führung', 'iss-fuehrungen'),
     ];
 
     echo '<div class="iss-fuehrung-meta-grid">';
@@ -38,7 +38,11 @@ function iss_fuehrungen_render_meta_box($post) {
     foreach ($fields as $key => $label) {
         $value = get_post_meta($post->ID, $key, true);
         echo '<p class="iss-fuehrung-meta-field iss-fuehrung-meta-field--' . esc_attr($key) . '">';
-        echo '<label for="iss_' . esc_attr($key) . '"><strong>' . esc_html($label) . '</strong></label>';
+        if ($key === 'offer_catalog_groups') {
+            echo '<strong id="iss-offer-catalog-label">' . esc_html($label) . '</strong>';
+        } else {
+            echo '<label for="iss_' . esc_attr($key) . '"><strong>' . esc_html($label) . '</strong></label>';
+        }
 
         if ($key === 'booking_mode') {
             $mode = $value ?: 'auto';
@@ -62,15 +66,18 @@ function iss_fuehrungen_render_meta_box($post) {
         } elseif ($key === 'offer_catalog_groups') {
             $selected_groups = iss_fuehrung_sanitize_offer_catalog_groups($value);
             $selected_lookup = array_fill_keys($selected_groups, true);
-            echo '<span class="description">' . esc_html__('Leer lassen, um es automatisch zuzuordnen.', 'iss-fuehrungen') . '</span>';
-            echo '<span class="iss-fuehrung-meta-checklist">';
+            echo '<span class="description">' . esc_html__('Beides ist möglich. Die Auswahl bestimmt die Filter auf der Führungsseite, unabhängig von aktuellen Terminen. Ohne Auswahl erscheint die Führung dort nicht.', 'iss-fuehrungen') . '</span>';
+            echo '<span class="iss-fuehrung-meta-checklist" role="group" aria-labelledby="iss-offer-catalog-label">';
             foreach (iss_fuehrung_get_offer_catalog_group_definitions() as $group_key => $group) {
                 echo '<label>';
                 echo '<input type="checkbox" name="iss_fuehrung[' . esc_attr($key) . '][]" value="' . esc_attr($group_key) . '" ' . checked(isset($selected_lookup[$group_key]), true, false) . '> ';
-                echo esc_html((string) ($group['label'] ?? $group_key));
+                echo esc_html((string) ($group['editor_label'] ?? $group['label'] ?? $group_key));
                 echo '</label>';
             }
             echo '</span>';
+        } elseif ($key === 'tour_badge') {
+            echo '<input class="widefat" type="text" id="iss_tour_badge" name="iss_fuehrung[tour_badge]" value="' . esc_attr((string) $value) . '" placeholder="' . esc_attr__('z. B. Sonderführung', 'iss-fuehrungen') . '">';
+            echo '<span class="description">' . esc_html__('Sonderführung kann hier als Zusatz stehen. Die Art bleibt Öffentlich, Gruppe oder beides; der Zusatz erzeugt keinen weiteren Filter.', 'iss-fuehrungen') . '</span>';
         } elseif ($key === 'inquiry_note') {
             echo '<textarea class="widefat" rows="2" id="iss_' . esc_attr($key) . '" name="iss_fuehrung[' . esc_attr($key) . ']">' . esc_textarea((string) $value) . '</textarea>';
         } else {
@@ -133,7 +140,10 @@ add_action('save_post_' . ISS_FUEHRUNGEN_POST_TYPE, function ($post_id) {
             $value = $value ? '1' : '';
         }
 
-        if (is_array($value) && empty($value)) {
+        if ($key === 'offer_catalog_groups') {
+            // A saved empty selection intentionally excludes this post from the landing.
+            update_post_meta($post_id, $key, $value);
+        } elseif (is_array($value) && empty($value)) {
             delete_post_meta($post_id, $key);
         } elseif ($value === '' || $value === false || $value === null) {
             delete_post_meta($post_id, $key);
