@@ -6,6 +6,17 @@ be recovered from Git history.
 
 ## 2026-10-15
 
+- Added a native Schöneweider KiezKarte review project from the handover ZIP,
+  using existing gestures for the opening, three-step introduction, 20 partner
+  cards, sales locations, fund explanation, participation, announcement and FAQs.
+  A shared full-image choice for Bild & Text/Linkkarten keeps the supplied card
+  and logos intact; existing photo treatments retain their defaults. Guarded
+  content/media artifacts preserve all existing projects. Conflicting older
+  prices, fund allocation, partner fees and award artwork are recorded for
+  review; no checkout, form, merchant subsystem or calendar event was created.
+  Fixed HTML entity preservation in the shared editor's initial document data,
+  preventing valid partner text from producing a save-validation warning.
+
 - Added the reusable project Bühne presentation with document-owned logo and
   curated palettes, a shared composed opening, bounded section surfaces,
   editorial columns, filterable agenda rows and native expandable chapters.

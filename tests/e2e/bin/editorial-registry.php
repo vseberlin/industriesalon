@@ -97,7 +97,7 @@ try {
         ['type' => 'feature', 'treatment' => 'feature.opening', 'title' => 'A composed opening', 'media_refs' => [$media]],
         ['type' => 'text_bild_reihe', 'treatment' => 'text-bild-reihe.agenda', 'title' => 'Agenda', 'surface' => 'dark', 'items' => [
             ['label' => 'First entry', 'text' => '<em>Visible without JavaScript</em>', 'eyebrow' => '10. September', 'group' => 'Art & craft', 'detail' => "Additional detail\nSecond line"],
-            ['label' => 'Second entry', 'text' => 'Still visible', 'group' => 'City'],
+            ['label' => 'Second entry', 'text' => 'Culture &amp; craft &lt;3', 'group' => 'City'],
         ]],
     ]], 'projekt');
     $assert(!is_wp_error(iss_editorial_validate_document($composition_doc, 'projekt')), 'Project stage accepts a composed opening and agenda');
@@ -115,6 +115,18 @@ try {
     }
     $assert(iss_editorial_save_document($identity_id, 'projekt', $composition_doc, false, true), 'Composition saves through shared API');
     $assert(iss_editorial_get_document($identity_id, 'projekt') === $composition_doc, 'Surface and optional agenda fields survive canonical roundtrip');
+    ob_start(); iss_editorial_render_main_canvas(get_post($identity_id)); $canvas_html = ob_get_clean();
+    $canvas_tags = new WP_HTML_Tag_Processor($canvas_html);
+    $canvas_documents = 0;
+    while ($canvas_tags->next_tag()) {
+        if (!$canvas_tags->has_class('iss-editorial-document-field') && !$canvas_tags->has_class('iss-editorial-root')) { continue; }
+        $attribute = $canvas_tags->get_tag() === 'INPUT' ? 'value' : 'data-document';
+        $canvas_document = json_decode($canvas_tags->get_attribute($attribute), true);
+        $assert($canvas_document['sections'][1]['items'][1]['text'] === $composition_doc['sections'][1]['items'][1]['text'], 'Editor HTML transport preserves rich-text entities');
+        $assert(!is_wp_error(iss_editorial_validate_document($canvas_document, 'projekt')), 'Browser-decoded editor document validates without a recovery reload');
+        ++$canvas_documents;
+    }
+    $assert($canvas_documents === 2, 'Editor field and initial canvas data both roundtrip');
     $agenda = $composition_doc['sections'][1]; $agenda['_text_version'] = 3;
     $agenda_html = industriesalon_render_editorial_landing_text_image_row($agenda, 1, 'buehne');
     $assert(substr_count($agenda_html, '<article ') === 2 && str_contains($agenda_html, '<em>Visible without JavaScript</em>'), 'Unfiltered HTML contains every agenda entry');
@@ -138,6 +150,33 @@ try {
     $composition_html = industriesalon_render_editorial_project_content('Legacy content');
     $assert(!str_contains($composition_html, 'A composed opening') && str_contains($composition_html, 'First entry'), 'Project body does not duplicate its opening');
     wp_reset_postdata(); $GLOBALS['wp_query'] = $original_query; $GLOBALS['wp_the_query'] = $original_main_query; $GLOBALS['post'] = $original_post;
+    foreach (['gateway', 'feature'] as $fit_type) {
+        foreach (['landing', 'article', 'projekt', 'veranstaltung', 'fuehrung', 'publication', 'ausstellung', 'rueckblick'] as $fit_format) {
+            $fit_section = ['type' => $fit_type, 'title' => 'Image fit', 'image_fit' => 'contain'];
+            if ($fit_type === 'feature') { $fit_section['media_refs'] = [$media]; }
+            else { $fit_section['items'] = [['label' => 'Partner', 'url' => 'https://example.invalid', 'media_refs' => [$media]]]; }
+            $fit_doc = iss_editorial_sanitize_document(['schema_version' => 3, 'sections' => [$fit_section]], $fit_format);
+            $assert(!is_wp_error(iss_editorial_validate_document($fit_doc, $fit_format)) && $fit_doc['sections'][0]['image_fit'] === 'contain', "$fit_format.$fit_type: full-image choice is portable");
+            $invalid_fit = $fit_doc; $invalid_fit['sections'][0]['image_fit'] = 'arbitrary-css';
+            $assert(is_wp_error(iss_editorial_validate_document($invalid_fit, $fit_format)), "$fit_format.$fit_type: invalid fit is rejected");
+            unset($fit_section['image_fit']);
+            $legacy_fit = iss_editorial_sanitize_document(['schema_version' => 3, 'sections' => [$fit_section]], $fit_format);
+            $assert(!isset($legacy_fit['sections'][0]['image_fit']), "$fit_format.$fit_type: old document shape is preserved");
+        }
+    }
+    $whole_opening = $composition_doc;
+    $whole_opening['sections'][0]['image_fit'] = 'contain';
+    $assert(str_contains(industriesalon_render_project_opening($whole_opening, $identity_id), 'iss-editorial-image-fit--contain'), 'Project opening exposes full-image rendering choice');
+    $assert(!str_contains(industriesalon_render_project_opening($composition_doc, $identity_id), 'iss-editorial-image-fit--contain'), 'Existing project opening keeps its photo crop');
+    $whole_feature = $whole_opening['sections'][0]; $whole_feature['_text_version'] = 3;
+    foreach (['feature.media-panel', 'feature.media-text', 'feature.image-overlay', 'feature.origin-story'] as $feature_treatment) {
+        $whole_feature['treatment'] = $feature_treatment;
+        $whole_html = industriesalon_render_editorial_landing_section($whole_feature, 0, 'buehne');
+        $assert(str_contains($whole_html, 'iss-editorial-image-fit--contain'), "$feature_treatment: image-fit marker survives rendering");
+        if (in_array($feature_treatment, ['feature.media-text', 'feature.image-overlay'], true)) {
+            $assert(str_contains($whole_html, 'iss-media-card--contain') && !str_contains($whole_html, 'iss-media-card--cover'), "$feature_treatment: reuses the existing contain media primitive");
+        }
+    }
     $assert(iss_editorial_save_document($identity_id, 'projekt', $identity_doc, false, true), 'Restore disposable identity fixture');
     $private_id = wp_insert_post(['post_type' => ISS_WF_IMPORT_OBJECT_POST_TYPE, 'post_status' => 'draft', 'post_title' => 'Private reference must stay private', 'post_author' => $admin->ID]);
     $fixtures[] = $private_id;

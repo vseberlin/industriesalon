@@ -108,6 +108,12 @@ These are editorial programme descriptions; event dates, bookings and confirmed
 relations remain with their existing domain owners. Quiet horizontal project
 navigation reuses the rail renderer and presentation tokens.
 
+**Bild & Text** and **Linkkarten** share the optional `image_fit=cover|contain`
+choice (**Darstellung → Bilddarstellung**). Contain keeps supplied cards, logos
+and posters complete, including the project opening. Existing documents retain
+their cropped-photo default without acquiring a new stored field. The renderer
+reuses the existing contain media primitive and an inherited image-fit token.
+
 Chapters additionally support `section_treatment=disclosure` (**Aufklappbar**).
 The portable renderer uses native `details`/`summary`, closed for visitors and
 open in the editing canvas. Dossier chapter/facts pairing excludes disclosures

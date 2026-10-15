@@ -763,6 +763,7 @@
   --iss-landing-text-image-title-font-family: var(--iss-landing-serif);
   --iss-landing-text-image-columns: repeat(4, minmax(0, 1fr));
   --iss-landing-text-image-compact-columns: repeat(2, minmax(0, 1fr));
+  --iss-landing-gateway-columns: repeat(4, minmax(0, 1fr));
 }
 
 .iss-landing-editorial--skin-buehne .iss-landing-section {
@@ -822,6 +823,7 @@
 @media (max-width: 1000px) {
   .iss-landing-editorial--skin-buehne {
     --iss-landing-text-image-columns: repeat(2, minmax(0, 1fr));
+    --iss-landing-gateway-columns: repeat(2, minmax(0, 1fr));
   }
 }
 
@@ -829,6 +831,7 @@
   .iss-landing-editorial--skin-buehne {
     --iss-landing-text-image-columns: minmax(0, 1fr);
     --iss-landing-text-image-compact-columns: minmax(0, 1fr);
+    --iss-landing-gateway-columns: minmax(0, 1fr);
   }
 }
 
@@ -887,7 +890,7 @@
   width: 100%;
   min-height: 24rem;
   height: 0;
-  object-fit: cover;
+  object-fit: var(--iss-editorial-image-fit, cover);
 }
 
 .iss-project-stage__image figcaption {
@@ -895,6 +898,16 @@
   color: #52564d;
   font-size: 0.75rem;
   line-height: 1.4;
+}
+
+.iss-project-stage__opening.iss-editorial-image-fit--contain .iss-project-stage__image {
+  align-self: center;
+}
+
+.iss-project-stage__opening.iss-editorial-image-fit--contain .iss-project-stage__image img {
+  flex: none;
+  min-height: 0;
+  height: auto;
 }
 
 .iss-project-stage__opening .iss-landing-feature__facts {

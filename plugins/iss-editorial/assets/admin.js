@@ -1308,6 +1308,12 @@
         renderQuoteTreatmentControl(section, displayPanel.body);
       }
 
+      if (supports(type, 'image_fit')) {
+        displayPanel.body.appendChild(createSelect('Bilddarstellung', section.image_fit || 'cover', [
+          { value: 'cover', label: 'Foto im Ausschnitt' }, { value: 'contain', label: 'Ganzes Bild / Logo / Plakat' }
+        ], function (value) { section.image_fit = value; render(); scheduleAutosave(); }));
+      }
+
       if (supports(type, 'surface') && section.treatment !== 'feature.opening') {
         displayPanel.body.appendChild(createSelect('Fläche', section.surface || 'default', [
           { value: 'default', label: 'Papier' }, { value: 'soft', label: 'Leise abgesetzt' },

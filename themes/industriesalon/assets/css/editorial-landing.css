@@ -493,6 +493,7 @@
 
 .iss-landing-gateway__link {
   display: grid;
+  align-content: start;
   min-height: 100%;
   color: inherit;
   text-decoration: none;
@@ -517,7 +518,7 @@
   display: block;
   width: 100%;
   height: 100%;
-  object-fit: cover;
+  object-fit: var(--iss-editorial-image-fit, cover);
 }
 
 .iss-landing-gateway__media figcaption {
@@ -553,9 +554,12 @@
   grid-template-columns: repeat(2, minmax(0, 1fr));
 }
 
-.iss-landing-section--items-3.iss-landing-section--treatment-gateway-cards .iss-landing-gateway,
-.iss-landing-section--items-4.iss-landing-section--treatment-gateway-cards .iss-landing-gateway {
+.iss-landing-section--items-3.iss-landing-section--treatment-gateway-cards .iss-landing-gateway {
   grid-template-columns: repeat(auto-fit, minmax(min(100%, 16rem), 1fr));
+}
+
+.iss-landing-section--items-4.iss-landing-section--treatment-gateway-cards .iss-landing-gateway {
+  grid-template-columns: var(--iss-landing-gateway-columns, repeat(auto-fit, minmax(min(100%, 16rem), 1fr)));
 }
 
 .iss-landing-section--treatment-gateway-link-list .iss-landing-section__inner {
@@ -1052,7 +1056,7 @@
   width: 100%;
   height: 100%;
   min-height: 22rem;
-  object-fit: cover;
+  object-fit: var(--iss-editorial-image-fit, cover);
 }
 
 .iss-landing-section--treatment-feature-image-overlay .iss-landing-feature {
@@ -1165,7 +1169,7 @@
   display: block;
   width: 100%;
   aspect-ratio: 16 / 10;
-  object-fit: cover;
+  object-fit: var(--iss-editorial-image-fit, cover);
 }
 
 .iss-landing-origin-story__side {
@@ -1705,4 +1709,14 @@
   .iss-landing-section--treatment-text-bild-reihe-agenda .iss-landing-text-image-row__media {
     grid-column: 1;
   }
+}
+
+/* Existing image gestures can preserve supplied graphics and logos in full. */
+.iss-editorial-image-fit--contain {
+  --iss-editorial-image-fit: contain;
+  --iss-media-text-image-fit: contain;
+}
+
+.iss-editorial-image-fit--contain .wp-block-cover__image-background {
+  object-fit: contain;
 }

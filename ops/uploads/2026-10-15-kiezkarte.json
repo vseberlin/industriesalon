@@ -1,0 +1,216 @@
+{
+  "source_archive": "2026-10-15_SALON_Uebergabe_Website_Vladimir_v2.zip",
+  "source_archive_sha256": "e4b487f7b31d7902de249d3755b076918c84f1089239e117dc126c7d7dffca26",
+  "files": [
+    {
+      "key": "card",
+      "path": "projects/kiezkarte/kiezkarte.png",
+      "title": "Schöneweider KiezKarte – Pilotkarte 2026",
+      "alt": "KiezKarte 2026 mit Kaisersteg-Motiv und dem Schriftzug Einkaufen, Sparen, Kiez stärken.",
+      "caption": "Kartenmotiv für die Pilotphase 2026 · bereitgestellt mit der Projektübergabe.",
+      "mime": "image/png",
+      "sha256": "adab76de95aa1c5a050ed89caa779c909411d118d65468643aaf09d50a55ddb2",
+      "source": "03_KiezKarte/kiezkarte.png"
+    },
+    {
+      "key": "partner-algonet",
+      "path": "projects/kiezkarte/partner/algonet.png",
+      "title": "ALGONET GmbH – Projektmaterial",
+      "alt": "ALGONET GmbH",
+      "caption": "",
+      "mime": "image/png",
+      "sha256": "922055ece8a432d957418514e3c3caea8e4ce334bae55002a5a9d6343e082274",
+      "source": "03_KiezKarte/partner/algonet.png"
+    },
+    {
+      "key": "partner-allianz",
+      "path": "projects/kiezkarte/partner/allianz.png",
+      "title": "Allianz Generalvertretung Thomas Klein – Projektmaterial",
+      "alt": "Allianz Generalvertretung Thomas Klein",
+      "caption": "",
+      "mime": "image/png",
+      "sha256": "1fb9725b40a96bc6402d84df4706e4b17746eea0a298a4410d9ed9e4a043a930",
+      "source": "03_KiezKarte/partner/allianz.png"
+    },
+    {
+      "key": "partner-berlinkleinod-logo",
+      "path": "projects/kiezkarte/partner/berlinkleinod-logo.png",
+      "title": "BerlinKleinod – Projektmaterial",
+      "alt": "BerlinKleinod",
+      "caption": "",
+      "mime": "image/png",
+      "sha256": "5b8aaf02b572dcb7e997bd86bc19c013df4d23847324a8500a6dba846d971f4c",
+      "source": "03_KiezKarte/partner/berlinkleinod-logo.png"
+    },
+    {
+      "key": "partner-cento",
+      "path": "projects/kiezkarte/partner/cento.png",
+      "title": "Cento Molliche Trattoria & Pizzeria – Projektmaterial",
+      "alt": "Cento Molliche Trattoria & Pizzeria",
+      "caption": "",
+      "mime": "image/png",
+      "sha256": "fcce08fb35aa2a8b2e1f0c7a14960d2c44929dc28009a58bffbc8de51349a47e",
+      "source": "03_KiezKarte/partner/cento.png"
+    },
+    {
+      "key": "partner-dein-radius",
+      "path": "projects/kiezkarte/partner/dein-radius.png",
+      "title": "Dein Radius – Die Fahrradprofis – Projektmaterial",
+      "alt": "Dein Radius – Die Fahrradprofis",
+      "caption": "",
+      "mime": "image/png",
+      "sha256": "aa40ab4519af1ea9264e8347cba3529eb886b49393380a16cb0fd46562c60497",
+      "source": "03_KiezKarte/partner/dein-radius.png"
+    },
+    {
+      "key": "partner-industriesalon",
+      "path": "projects/kiezkarte/partner/industriesalon.png",
+      "title": "Industriesalon Schöneweide – Projektmaterial",
+      "alt": "Industriesalon Schöneweide",
+      "caption": "",
+      "mime": "image/png",
+      "sha256": "a84b0aee2c2bb3b640636a017d43a11c258b8724fdf073485595203484ee5025",
+      "source": "03_KiezKarte/partner/industriesalon.png"
+    },
+    {
+      "key": "partner-loewe-logo",
+      "path": "projects/kiezkarte/partner/loewe-logo.png",
+      "title": "Jennifer Löwe – Lomi Lomi Massagen – Projektmaterial",
+      "alt": "Jennifer Löwe – Lomi Lomi Massagen",
+      "caption": "",
+      "mime": "image/png",
+      "sha256": "773a1a69689977b5229c78a1aaddd5e6b96d6278545240771cb229dd6a7a2dca",
+      "source": "03_KiezKarte/partner/loewe-logo.png"
+    },
+    {
+      "key": "partner-kaos",
+      "path": "projects/kiezkarte/partner/kaos.png",
+      "title": "KAOS – Projektmaterial",
+      "alt": "KAOS",
+      "caption": "",
+      "mime": "image/png",
+      "sha256": "6937e0a2ed32fe5abfe063ec8738a7f41eb356a5bbc4d663c44270f4f1748228",
+      "source": "03_KiezKarte/partner/kaos.png"
+    },
+    {
+      "key": "partner-krasse-crepes",
+      "path": "projects/kiezkarte/partner/krasse-crepes.jpg",
+      "title": "Krasse Crêpes – Projektmaterial",
+      "alt": "Krasse Crêpes",
+      "caption": "",
+      "mime": "image/jpeg",
+      "sha256": "4c58c7a57134c40b4eb5807c0fd775e12e3ad3b3ad233db5b81ff2c8e4080864",
+      "source": "03_KiezKarte/partner/krasse-crepes.jpg"
+    },
+    {
+      "key": "partner-kura-logo",
+      "path": "projects/kiezkarte/partner/kura-logo.png",
+      "title": "KURA – Die Schwimmschule – Projektmaterial",
+      "alt": "KURA – Die Schwimmschule",
+      "caption": "",
+      "mime": "image/png",
+      "sha256": "83e9e75cff3f8e901fed7a42bde1e38db1f90317f8b86c10200d27d80c2c76ec",
+      "source": "03_KiezKarte/partner/kura-logo.png"
+    },
+    {
+      "key": "partner-lasergame",
+      "path": "projects/kiezkarte/partner/lasergame.jpg",
+      "title": "Lasergame Berlin – Projektmaterial",
+      "alt": "Lasergame Berlin",
+      "caption": "",
+      "mime": "image/jpeg",
+      "sha256": "06807d9a2e2503f729156fe7f96b80f8d4ee6917dca360de8be933895e59dc2e",
+      "source": "03_KiezKarte/partner/lasergame.jpg"
+    },
+    {
+      "key": "partner-lrs",
+      "path": "projects/kiezkarte/partner/lrs.jpg",
+      "title": "LRS Training – Projektmaterial",
+      "alt": "LRS Training",
+      "caption": "",
+      "mime": "image/jpeg",
+      "sha256": "c7cd49d12603bdf3213ffaf6f996e6b42357a4f68aa10034784c765f5e60d524",
+      "source": "03_KiezKarte/partner/lrs.jpg"
+    },
+    {
+      "key": "partner-manifattura",
+      "path": "projects/kiezkarte/partner/manifattura.png",
+      "title": "Manifattura del Gusto – Projektmaterial",
+      "alt": "Manifattura del Gusto",
+      "caption": "",
+      "mime": "image/png",
+      "sha256": "ccc86e3d84bc927671848c558277f81122151e180b45fc3c2c342f6cd8c413e9",
+      "source": "03_KiezKarte/partner/manifattura.png"
+    },
+    {
+      "key": "partner-prosol",
+      "path": "projects/kiezkarte/partner/prosol.png",
+      "title": "PROSOL Lacke + Farben – Projektmaterial",
+      "alt": "PROSOL Lacke + Farben",
+      "caption": "",
+      "mime": "image/png",
+      "sha256": "21e1c51f6ab58f645c796c18e760968c7329fc007abf7e1aa23a2f57b7b7a5b4",
+      "source": "03_KiezKarte/partner/prosol.png"
+    },
+    {
+      "key": "partner-sonnenapotheke",
+      "path": "projects/kiezkarte/partner/sonnenapotheke.jpg",
+      "title": "Sonnen-Apotheke – Projektmaterial",
+      "alt": "Sonnen-Apotheke",
+      "caption": "",
+      "mime": "image/jpeg",
+      "sha256": "c0030c1234ed0aceae132c75d7bed00c9892d1c9d926a935d9ee8a1bef12965f",
+      "source": "03_KiezKarte/partner/sonnenapotheke.jpg"
+    },
+    {
+      "key": "partner-tinas",
+      "path": "projects/kiezkarte/partner/tinas.jpg",
+      "title": "Tinas Feinbäckerei – Projektmaterial",
+      "alt": "Tinas Feinbäckerei",
+      "caption": "",
+      "mime": "image/jpeg",
+      "sha256": "bfd333526742271e8c3dbe82978d8d88a4238bf9988f494be48420e42dbf9c78",
+      "source": "03_KiezKarte/partner/tinas.jpg"
+    },
+    {
+      "key": "partner-werk116-logo",
+      "path": "projects/kiezkarte/partner/werk116-logo.png",
+      "title": "WERK 116 – Buchhandlung am Königsplatz – Projektmaterial",
+      "alt": "WERK 116 – Buchhandlung am Königsplatz",
+      "caption": "",
+      "mime": "image/png",
+      "sha256": "f3cefe0626f106d9d459f09a1a534a4c06b62b09d3326fc4b7bedd1d2821d780",
+      "source": "03_KiezKarte/partner/werk116-logo.png"
+    },
+    {
+      "key": "partner-wilhelminenhof",
+      "path": "projects/kiezkarte/partner/wilhelminenhof.png",
+      "title": "Wilhelminenhof-Apotheke – Projektmaterial",
+      "alt": "Wilhelminenhof-Apotheke",
+      "caption": "",
+      "mime": "image/png",
+      "sha256": "c4df92805eccd2c02cd521a7ab0f54ce56124f6134ff48e1e8bb47cc25c78c34",
+      "source": "03_KiezKarte/partner/wilhelminenhof.png"
+    },
+    {
+      "key": "partner-wuerfelgasse",
+      "path": "projects/kiezkarte/partner/wuerfelgasse.png",
+      "title": "Würfelgasse Berlin – Projektmaterial",
+      "alt": "Würfelgasse Berlin",
+      "caption": "",
+      "mime": "image/png",
+      "sha256": "6d40e82f1cc9ab53e35e2fa8eca4a5247117f0968a832b6d399fb753ed77d80b",
+      "source": "03_KiezKarte/partner/wuerfelgasse.png"
+    },
+    {
+      "key": "partner-yogalabor",
+      "path": "projects/kiezkarte/partner/yogalabor.png",
+      "title": "Yoga Labor – Projektmaterial",
+      "alt": "Yoga Labor",
+      "caption": "",
+      "mime": "image/png",
+      "sha256": "9581e8eadb544e265386212f3d0b1b7e91e0dc947766990bb86f3be995930aab",
+      "source": "03_KiezKarte/partner/yogalabor.png"
+    }
+  ]
+}

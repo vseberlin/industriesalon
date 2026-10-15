@@ -94,6 +94,8 @@ function iss_editorial_render_main_canvas(WP_Post $post): void
 
     $format_slug = (string) $format['slug'];
     $document = iss_editorial_hydrate_document_previews(iss_editorial_get_editor_document((int) $post->ID, $format_slug));
+    // Preserve rich-text entities when the browser decodes HTML attributes.
+    $document_attribute = wp_json_encode($document, JSON_HEX_AMP);
     $enabled = true;
     $route_config = iss_editorial_get_route_station_editor_config((int) $post->ID, $format_slug, (string) $post->post_type);
 
@@ -102,7 +104,7 @@ function iss_editorial_render_main_canvas(WP_Post $post): void
     echo '<div class="iss-editorial-shell">';
     echo '<div class="iss-editorial-admin iss-editorial-admin--canvas" data-format="' . esc_attr($format_slug) . '" data-post-id="' . esc_attr((string) $post->ID) . '">';
     echo '<input type="hidden" class="iss-editorial-enabled-field" name="iss_editorial[' . esc_attr($format_slug) . '][enabled]" value="' . esc_attr($enabled ? '1' : '0') . '">';
-    echo '<input type="hidden" class="iss-editorial-document-field" name="iss_editorial[' . esc_attr($format_slug) . '][document]" value="' . esc_attr(iss_editorial_encode_document($document)) . '">';
+    echo '<input type="hidden" class="iss-editorial-document-field" name="iss_editorial[' . esc_attr($format_slug) . '][document]" value="' . esc_attr($document_attribute) . '">';
     echo '<input type="hidden" class="iss-editorial-base-field" name="iss_editorial[' . esc_attr($format_slug) . '][base]" value="' . esc_attr(iss_editorial_saved_token($post->ID, $format_slug)) . '">';
     $draft = iss_editorial_get_draft($post->ID, $format_slug);
     echo '<input type="hidden" class="iss-editorial-draft-token-field" name="iss_editorial[' . esc_attr($format_slug) . '][draft_token]" value="' . esc_attr((string) ($draft['token'] ?? '')) . '">';
@@ -116,7 +118,7 @@ function iss_editorial_render_main_canvas(WP_Post $post): void
     echo '<button type="button" class="button button-secondary iss-editorial-preview-button">' . esc_html__('Vorschau öffnen', 'iss-editorial') . '</button>';
     echo '</div>';
     echo '<noscript><p>' . esc_html__('Zum Bearbeiten der Abschnitte bitte JavaScript aktivieren. Ihre gespeicherten Inhalte bleiben erhalten.', 'iss-editorial') . '</p></noscript>';
-    echo '<div class="iss-editorial-root" data-document="' . esc_attr(iss_editorial_encode_document($document)) . '" data-sections="' . esc_attr(iss_editorial_encode_document((array) $format['sections'])) . '"></div>';
+    echo '<div class="iss-editorial-root" data-document="' . esc_attr($document_attribute) . '" data-sections="' . esc_attr(wp_json_encode((array) $format['sections'], JSON_HEX_AMP)) . '"></div>';
     $revisions = wp_get_post_revisions($post->ID, ['posts_per_page' => 1, 'check_enabled' => false]);
     if ($revisions) {
         $revision = reset($revisions);

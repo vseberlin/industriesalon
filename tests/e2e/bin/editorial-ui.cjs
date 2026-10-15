@@ -462,7 +462,7 @@ test('Workspace waits for an active canvas edit before reordering and exposes na
 
 
 test('Workspace opening guidance follows its owner and invalid opening remains visible after reorder', async () => {
-  const options = workspaceOptions(); options.isFrontPage = true;
+  const options = workspaceOptions(); options.isFrontPage = true; options.openingSkin = 'frontpage';
   options.document.skin = 'frontpage'; options.skins = [{slug:'frontpage',label:'Startseite'}];
   options.document.sections[0].treatment = 'feature.opening'; options.document.sections[0].media_refs = [{id:1}];
   options.sections.feature.treatments.push({slug:'feature.opening',label:'Seitenauftakt',schematic:'opening'});

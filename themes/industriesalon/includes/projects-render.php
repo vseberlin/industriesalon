@@ -733,7 +733,7 @@ function industriesalon_render_project_opening(array $document, int $post_id): s
     $caption = wp_get_attachment_caption($image_id);
     ob_start();
     ?>
-    <header class="iss-project-stage__opening iss-project-stage__opening--composed">
+    <header class="iss-project-stage__opening iss-project-stage__opening--composed<?php echo ($section['image_fit'] ?? '') === 'contain' ? ' iss-editorial-image-fit--contain' : ''; ?>">
         <div class="iss-container iss-project-stage__hero">
             <div class="iss-project-stage__intro">
                 <p class="iss-kicker"><a href="<?php echo esc_url(home_url('/projekte/')); ?>"><?php esc_html_e('Ein Projekt im Industriesalon', 'industriesalon'); ?></a></p>

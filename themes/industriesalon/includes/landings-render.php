@@ -102,6 +102,9 @@ function industriesalon_editorial_landing_section_classes(array $section, string
         $classes[] = 'iss-scroll-target';
     }
 
+    if (($section['image_fit'] ?? '') === 'contain') {
+        $classes[] = 'iss-editorial-image-fit--contain';
+    }
     $surface = (string) ($section['surface'] ?? 'default');
     if (in_array($surface, ['soft', 'dark', 'accent'], true)) {
         $classes[] = 'iss-landing-section--surface-' . $surface;
@@ -1090,7 +1093,7 @@ function industriesalon_render_editorial_landing_feature_media_text(array $secti
                 </div>
                 <?php if ($media_html !== '') : ?>
                     <div class="iss-media-text__media-col">
-                        <div class="iss-media-text__media iss-media-card iss-media-card--cover iss-media-card--flat">
+                        <div class="iss-media-text__media iss-media-card iss-media-card--<?php echo ($section['image_fit'] ?? '') === 'contain' ? 'contain' : 'cover'; ?> iss-media-card--flat">
                             <?php echo $media_html; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- Media output uses wp_get_attachment_image. ?>
                         </div>
                     </div>
@@ -1125,7 +1128,7 @@ function industriesalon_render_editorial_landing_feature_microblocks(array $sect
                     </div>
                 </div>
                 <div class="iss-media-text__media-col">
-                    <div class="iss-media-text__media iss-media-card iss-media-card--red iss-media-card--cover">
+                    <div class="iss-media-text__media iss-media-card iss-media-card--red iss-media-card--<?php echo ($section['image_fit'] ?? '') === 'contain' ? 'contain' : 'cover'; ?>">
                         <?php echo $overlay_html; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- Copy is escaped in helper. ?>
                         <?php echo $media_html; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- Media output uses wp_get_attachment_image. ?>
                     </div>
@@ -1159,7 +1162,7 @@ function industriesalon_render_editorial_landing_feature(array $section, int $re
         <section <?php echo industriesalon_editorial_landing_section_attrs($section, $skin); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- Escaped attribute helper. ?>>
             <!-- wp:cover {"className":"iss-front-hero iss-front-hero--home","contentPosition":"bottom left"} -->
             <div class="wp-block-cover has-custom-content-position is-position-bottom-left iss-front-hero iss-front-hero--home">
-                <?php echo wp_get_attachment_image($image_id, 'full', false, ['class' => 'wp-block-cover__image-background', 'data-object-fit' => 'cover', 'sizes' => $image_sizes, 'loading' => 'eager', 'fetchpriority' => 'high']); ?>
+                <?php echo wp_get_attachment_image($image_id, 'full', false, ['class' => 'wp-block-cover__image-background', 'data-object-fit' => ($section['image_fit'] ?? '') === 'contain' ? 'contain' : 'cover', 'sizes' => $image_sizes, 'loading' => 'eager', 'fetchpriority' => 'high']); ?>
                 <div class="wp-block-cover__inner-container">
                     <div class="iss-front-hero__shell">
                         <div class="iss-heading iss-front-hero__content">

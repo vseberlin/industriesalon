@@ -1,5 +1,41 @@
 # Current handoff — 15 October 2026
 
+## Projects — KiezKarte published locally
+
+Project **30811** (`schoeneweider-kiezkarte`) integrates the ZIP's KiezKarte
+material into the ISS project shell: 14 sections using existing gestures, 20 partner cards,
+sales locations, participation links, December announcement and expandable FAQs.
+The shared Bühne skin uses ochre; optional full-image display preserves the card
+and logos. A shared editor HTML-entity fix prevents false validation errors.
+All nine pre-existing projects, including both published Futura pages and its
+review draft, remain unchanged. The user published KiezKarte locally at 21:05
+on 15 October. Preserve that published state. Implementation accepted and
+committed locally on `main`; use Git history for the delivery ref. No push or
+staging changes.
+
+Transfer matching code with `ops/migrations/2026-10-15-kiezkarte.{php,json}` and
+the checksummed `ops/uploads/2026-10-15-kiezkarte.{tar.gz,json}` (21 originals).
+Restore uploads, then run `dry-run`, `apply`, `verify` with `--use-include`.
+Receipt: `iss_backup_20261015_kiezkarte` records the original installed draft.
+Its drift guard now correctly rejects reapply/rollback after the user's publication;
+do not reset it or overwrite the published project. The artifacts create a review
+draft on a fresh target. No external hosting, forms or calendar changed.
+Commit artifact check: published copy matches the transfer content apart from
+editor-hydrated media previews/dimensions; publication remains target-local.
+
+14,127 registry/renderer checks pass, plus PHP/JS/CSS checks. Browser review
+covers desktop/390px layout, anchors, image-choice save/reload and keyboard FAQs;
+all media/variants and the installed input were verified before publication.
+The public route now returns 200 with all 20 partner cards. A password-protected
+disposable copy completed native Publish with one POST/redirect and was removed;
+the reported spinner did not reproduce as recursion. All 42 editor UI checks pass
+after updating the opening-guidance fixture to match current configuration.
+Reconcile conflicting prices/validity, fund allocation, partner terms and award
+year; confirm offers, images and the event.
+The JSON review notes retain the exact conflicts and source hashes. Next action:
+review the published copy with the project team; external redirects remain a
+separate decision.
+
 ## Projects — accepted local Futura composition
 
 New local draft **30743** (`futura-biennale-2027-gestaltung`) follows the supplied

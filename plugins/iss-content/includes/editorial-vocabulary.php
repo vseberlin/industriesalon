@@ -101,7 +101,7 @@ function iss_content_model_editorial_gesture_registry(): array
             'label' => __('Linkkarten', 'iss-content-model'),
             'description' => __('Verlinkte Einstiege zu weiteren Inhalten zusammenstellen.', 'iss-content-model'),
             'portable' => true,
-            'supports' => ['treatment', 'items', 'links'],
+            'supports' => ['treatment', 'items', 'links', 'image_fit'],
             'treatments' => [
                 'gateway.cards' => __('Karten', 'iss-content-model'),
                 'gateway.link-list' => __('Linkliste', 'iss-content-model'),
@@ -134,7 +134,7 @@ function iss_content_model_editorial_gesture_registry(): array
             'label' => __('Bild & Text', 'iss-content-model'),
             'description' => __('Ein Thema mit Bild, Text und Kernfakten hervorheben.', 'iss-content-model'),
             'portable' => true,
-            'supports' => ['treatment', 'lead', 'facts', 'links', 'media_refs', 'media_layout'],
+            'supports' => ['treatment', 'lead', 'facts', 'links', 'media_refs', 'media_layout', 'image_fit'],
             'treatments' => [
                 'feature.media-panel' => __('Bild mit Infokasten', 'iss-content-model'),
                 'feature.media-text' => __('Bild neben Text', 'iss-content-model'),

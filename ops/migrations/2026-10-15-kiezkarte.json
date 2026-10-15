@@ -1,0 +1,473 @@
+{
+  "title": "Schöneweider KiezKarte",
+  "slug": "schoeneweider-kiezkarte",
+  "excerpt": "Einkaufen, sparen, Kiez stärken: Die Schöneweider KiezKarte verbindet lokale Betriebe mit Kultur und Nachbarschaft. Eine Initiative von Industriesalon und WERK 116.",
+  "document": {
+    "schema_version": 3,
+    "skin": "buehne",
+    "variant": "standard",
+    "features": {
+      "rail": {
+        "enabled": true,
+        "placement": "horizontal",
+        "mode": "anchor-nav",
+        "treatment": "quiet"
+      },
+      "identity": {
+        "palette": "ochre",
+        "media_refs": []
+      }
+    },
+    "sections": [
+      {
+        "type": "feature",
+        "treatment": "feature.opening",
+        "image_fit": "contain",
+        "kicker": "Pilotphase 2026 · Schöneweide",
+        "title": "Eine Karte. Mehr für den Kiez.",
+        "lead": "<p>Einkaufen, sparen, Schöneweide stärken. Mit der KiezKarte unterstützt du lokale Betriebe und Kultur- und Nachbarschaftsprojekte in Ober- und Niederschöneweide.</p>",
+        "body": "<p>Eine Initiative von Industriesalon Schöneweide und WERK 116. Angaben zur Pilotphase: Stand 15. Oktober 2026.</p>",
+        "facts": [
+          {
+            "value": "49 €",
+            "label": "Einmaliger Preis in der Pilotphase"
+          },
+          {
+            "value": "31.12.2026",
+            "label": "Gültig bis zum Jahresende"
+          }
+        ],
+        "links": [
+          {
+            "label": "Verkaufsstellen finden",
+            "url": "#kaufen"
+          },
+          {
+            "label": "Partner entdecken",
+            "url": "#partner"
+          }
+        ],
+        "media_refs": []
+      },
+      {
+        "type": "gateway",
+        "treatment": "gateway.cards",
+        "kicker": "So funktioniert’s",
+        "title": "Von der Karte zum Kiez.",
+        "anchor": "so-gehts",
+        "body": "<p>Ein Einkauf vor Ort kann mehr bewegen. Die KiezKarte verbindet persönliche Vorteile mit einem Beitrag für den Stadtteil.</p>",
+        "items": [
+          {
+            "label": "01 / Karte holen",
+            "text": "Einmal 49 € bezahlen und bis zum 31. Dezember 2026 dabei sein. Erhältlich bei WERK 116, im Industriesalon und in der Würfelgasse.",
+            "url": "#kaufen"
+          },
+          {
+            "label": "02 / Vorteile nutzen",
+            "text": "Karte beim Partnerbetrieb vorzeigen. Welcher Vorteil gilt und welche Ausnahmen dazugehören, steht in der Übersicht.",
+            "url": "#partner"
+          },
+          {
+            "label": "03 / Kiez stärken",
+            "text": "Ein Teil des Kartenpreises fließt in den Kiezfonds für Kultur und soziale Projekte in Schöneweide.",
+            "url": "#fonds"
+          }
+        ]
+      },
+      {
+        "type": "fliesstext",
+        "treatment": "text.story-split-flip",
+        "surface": "soft",
+        "title": "Dein Geld bleibt im Kiez.",
+        "kicker": "Die Idee",
+        "anchor": "fonds",
+        "body": "<p>Die KiezKarte verbindet die Läden und Dienstleister vor Ort mit einem gemeinsamen Anliegen: Schöneweide als lebendigen, vielfältigen und demokratischen Stadtteil weiterzuentwickeln.</p><p>Ein Teil jedes Kartenpreises fließt in den <strong>Kiezfonds Schöneweide</strong>. Damit sollen Kultur, Nachbarschaft und soziale Projekte unterstützt werden – etwa ein Freiluftkino, das Brückenfest oder neue Ideen aus dem Kiez.</p><p>In der Pilotphase werden Erfahrungen gesammelt und weitere Partner gewonnen. Über die Mittelverwendung und die Auswahl geförderter Vorhaben informiert das Projektteam.</p>",
+        "links": []
+      },
+      {
+        "type": "gateway",
+        "treatment": "gateway.cards",
+        "image_fit": "contain",
+        "kicker": "Partnerbetriebe",
+        "title": "Hier wirkt deine Karte.",
+        "anchor": "partner",
+        "body": "<p><strong>20 Partnerbetriebe in der Projektübergabe vom 15. Oktober 2026.</strong> Die Übersicht ist alphabetisch geordnet. Die Karten führen direkt zu den Betrieben; dort erfährst du die Einzelheiten des jeweiligen Angebots.</p>",
+        "items": [
+          {
+            "label": "ALGONET GmbH",
+            "text": "<strong>Objekteinrichtung</strong><br>Kostenlose Zusatzleistung + Rabatt",
+            "url": "https://www.algonet.de/",
+            "media_refs": []
+          },
+          {
+            "label": "Allianz Generalvertretung Thomas Klein",
+            "text": "<strong>Versicherung</strong><br>10 % Standortrabatt auf alle neuen Verträge",
+            "url": "https://vertretung.allianz.de/thomas.klein1/",
+            "media_refs": []
+          },
+          {
+            "label": "BerlinKleinod",
+            "text": "<strong>Schmuck-Manufaktur</strong><br>10 % auf das gesamte Sortiment (Etsy-Shop &amp; ausgestellte Produkte bei WERK 116)<br>Für den Etsy-Shop wird ein Rabattcode benötigt; Informationen direkt beim Betrieb.",
+            "url": "https://berlinkleinod.de/",
+            "media_refs": []
+          },
+          {
+            "label": "Cento Molliche Trattoria & Pizzeria",
+            "text": "<strong>Trattoria &amp; Pizzeria</strong><br>10 % auf den Gesamtbetrag",
+            "url": "https://centomolliche.de/",
+            "media_refs": []
+          },
+          {
+            "label": "Dein Radius – Die Fahrradprofis",
+            "text": "<strong>Fahrrad</strong><br>10 % aufs Sortiment",
+            "url": "https://dein-radius.de/",
+            "media_refs": []
+          },
+          {
+            "label": "Industriesalon Schöneweide",
+            "text": "<strong>Museum &amp; Kultur</strong><br>10 % auf Publikationen des Industriesalons; bei Buchung der Führung »Elektropolis« kommt die zweite Person kostenlos mit.",
+            "url": "/",
+            "media_refs": []
+          },
+          {
+            "label": "Jennifer Löwe – Lomi Lomi Massagen",
+            "text": "<strong>Massage (mobil)</strong><br>20 % auf alle Massagen",
+            "url": "https://www.soulmotion-berlin.de/",
+            "media_refs": []
+          },
+          {
+            "label": "KAOS",
+            "text": "<strong>Kunst &amp; Events</strong><br>10 % auf alle Veranstaltungen von KAOS",
+            "url": "https://kaosberlin.de/",
+            "media_refs": []
+          },
+          {
+            "label": "Krasse Crêpes",
+            "text": "<strong>Crêpes &amp; Kiosk</strong><br>10 % auf alle Crêpes",
+            "url": "https://www.instagram.com/cafe_krasse_crepes/",
+            "media_refs": []
+          },
+          {
+            "label": "KURA – Die Schwimmschule",
+            "text": "<strong>Schwimmschule</strong><br>10 % auf das gesamte Angebot",
+            "url": "https://www.kura-pro.com/",
+            "media_refs": []
+          },
+          {
+            "label": "Lasergame Berlin",
+            "text": "<strong>Lasertag &amp; Freizeit</strong><br>10 % für die Gruppe bei FUN Lasertag (Mo–Do)",
+            "url": "https://lasergame-berlin.de/",
+            "media_refs": []
+          },
+          {
+            "label": "LRS Training",
+            "text": "<strong>LRS-Lernförderung</strong><br>500 Euro Preisvorteil auf den 7-Tage-Kurs für Kinder",
+            "url": "https://lrs-deutschland.de/trainer/kristina-rossbach/",
+            "media_refs": []
+          },
+          {
+            "label": "Manifattura del Gusto",
+            "text": "<strong>Feinkost &amp; Pizzeria</strong><br>10 % auf den Gesamtbetrag",
+            "url": "https://www.manifatturadelgusto.de/",
+            "media_refs": []
+          },
+          {
+            "label": "PROSOL Lacke + Farben",
+            "text": "<strong>Lacke &amp; Farben</strong><br>10 % Rabatt",
+            "url": "https://www.prosol-farben.de/standorte/berlin/",
+            "media_refs": []
+          },
+          {
+            "label": "Sonnen-Apotheke",
+            "text": "<strong>Apotheke</strong><br>10 % ab 20 € Einkauf. Nicht kombinierbar; ausgenommen sind rezeptpflichtige Arzneimittel, Rezepturen und Rezeptzuzahlungen.",
+            "url": "https://sonnen-apotheke-osw.de/",
+            "media_refs": []
+          },
+          {
+            "label": "Tinas Feinbäckerei",
+            "text": "<strong>Bäckerei</strong><br>10 % aufs Brotsortiment",
+            "url": "https://www.instagram.com/tinas_feinbaeckerei/",
+            "media_refs": []
+          },
+          {
+            "label": "WERK 116 – Buchhandlung am Königsplatz",
+            "text": "<strong>Buchhandlung</strong><br>10 % auf alles außer Bücher",
+            "url": "https://werk116.de/",
+            "media_refs": []
+          },
+          {
+            "label": "Wilhelminenhof-Apotheke",
+            "text": "<strong>Apotheke</strong><br>10 % Rabatt (nicht auf rezeptpflichtige Arzneimittel)",
+            "url": "https://wilhelminenhof-apotheke.de/",
+            "media_refs": []
+          },
+          {
+            "label": "Würfelgasse Berlin",
+            "text": "<strong>Spiele &amp; Brettspiele</strong><br>5 % aufs Sortiment",
+            "url": "https://www.instagram.com/wuerfelgasse.berlin/",
+            "media_refs": []
+          },
+          {
+            "label": "Yoga Labor",
+            "text": "<strong>Yoga-Studio</strong><br>10 % auf das gesamte Angebot",
+            "url": "https://www.yogalaborberlin.de/",
+            "media_refs": []
+          }
+        ]
+      },
+      {
+        "type": "gateway",
+        "treatment": "gateway.cards",
+        "surface": "soft",
+        "kicker": "Karte kaufen",
+        "title": "Drei Wege zu deiner KiezKarte.",
+        "anchor": "kaufen",
+        "body": "<p>Die Pilotkarte kostet einmalig <strong>49 €</strong> und gilt bis zum <strong>31. Dezember 2026</strong>. Du erhältst sie vor Ort bei diesen drei Verkaufsstellen. Bitte erkundige dich dort nach Verfügbarkeit und Öffnungszeiten.</p>",
+        "items": [
+          {
+            "label": "WERK 116",
+            "text": "Buchhandlung am Königsplatz. Informationen zur Karte und zum Verkauf direkt bei Dirk Sarnoch.",
+            "url": "https://werk116.de/"
+          },
+          {
+            "label": "Industriesalon Schöneweide",
+            "text": "Reinbeckstraße 10, 12459 Berlin. Informationen zum Projekt und zur Ausgabe der Karte.",
+            "url": "#kontakt"
+          },
+          {
+            "label": "Würfelgasse Berlin",
+            "text": "Spiele und Brettspiele in der Rathenaustraße. In der Projektübergabe als weitere Verkaufsstelle genannt.",
+            "url": "https://www.instagram.com/wuerfelgasse.berlin/"
+          }
+        ]
+      },
+      {
+        "type": "fliesstext",
+        "treatment": "text.story-split-flip",
+        "surface": "dark",
+        "title": "Ihr Geschäft. Unser Kiez.",
+        "kicker": "Mitmachen",
+        "anchor": "mitmachen",
+        "body": "<p>Sie betreiben ein Geschäft, eine Werkstatt oder ein Angebot in Schöneweide? Werden Sie Teil des Netzwerks: mit einem Vorteil für Karteninhaber:innen, gemeinsamen Aktionen oder Unterstützung für den Kiezfonds.</p><p>Welche Beteiligung zu Ihrem Betrieb passt, besprechen Sie mit dem Projektteam. Die bestehende Anmeldung wird weiterhin von WERK 116 betreut.</p>",
+        "links": [
+          {
+            "label": "Interesse als Partner anmelden · WERK 116",
+            "url": "https://werk116.de/mwk-tn"
+          },
+          {
+            "label": "Rückfragen an Dirk Sarnoch",
+            "url": "mailto:post@werk116.de"
+          }
+        ]
+      },
+      {
+        "type": "text_bild_reihe",
+        "treatment": "text-bild-reihe.agenda",
+        "kicker": "Ausblick",
+        "title": "Wiedersehen im Dezember.",
+        "anchor": "ausblick",
+        "body": "<p>Eine Vorankündigung aus der Projektübergabe: Das gemeinsame Feiern soll sichtbar machen, was die KiezKarte verbindet.</p>",
+        "items": [
+          {
+            "eyebrow": "5. Dezember 2026 · ab 19 Uhr",
+            "label": "KiezKarten-Benefit-Xmas-Party",
+            "text": "Im Industriesalon: angekündigt mit Glühwein, Musik, Versteigerung und KiezKultur-Überraschungen.",
+            "detail": "Vorankündigung, Stand 15. Oktober 2026. Verbindliche Informationen zu Ablauf und Teilnahme gibt das Projektteam."
+          }
+        ]
+      },
+      {
+        "type": "statement",
+        "treatment": "statement.lead",
+        "title": "Was du wissen möchtest.",
+        "kicker": "Häufige Fragen",
+        "anchor": "fragen",
+        "body": ""
+      },
+      {
+        "type": "kapitel",
+        "section_treatment": "disclosure",
+        "title": "Wie lange gilt die Karte?",
+        "body": "<p>Die Pilotkarte 2026 kostet einmalig 49 € und gilt bis zum 31. Dezember 2026. Es handelt sich um die zeitlich begrenzte Pilotphase. Informationen zu einer möglichen Fortsetzung gibt das Projektteam.</p>"
+      },
+      {
+        "type": "kapitel",
+        "section_treatment": "disclosure",
+        "title": "Wie nutze ich die Vorteile?",
+        "body": "<p>Zeige die KiezKarte beim jeweiligen Partnerbetrieb vor. Die Vorteile unterscheiden sich: Es gibt verschiedene Rabatte und einzelne Zusatzleistungen. Bitte beachte die genannten Ausnahmen und kläre die Bedingungen direkt beim Betrieb.</p>"
+      },
+      {
+        "type": "kapitel",
+        "section_treatment": "disclosure",
+        "title": "Was passiert mit meinem Beitrag?",
+        "body": "<p>Ein Teil des Kartenpreises fließt in den Kiezfonds Schöneweide. Dieser soll Kultur und soziale Projekte im Stadtteil unterstützen. Zur Aufteilung, Organisation und Mittelverwendung informiert das Projektteam.</p>"
+      },
+      {
+        "type": "kapitel",
+        "section_treatment": "disclosure",
+        "title": "Wer trägt das Projekt?",
+        "body": "<p>Die KiezKarte ist eine Initiative von Industriesalon Schöneweide und WERK 116. Die Idee stammt von Dirk Sarnoch. Laut Projektübergabe liegt die Trägerschaft des Kiezfonds in der Pilotphase beim Industriesalon Schöneweide e.V.</p>"
+      },
+      {
+        "type": "kapitel",
+        "section_treatment": "disclosure",
+        "title": "Mein Lieblingsgeschäft fehlt – was kann ich tun?",
+        "body": "<p>Sprich den Betrieb auf die KiezKarte an oder stelle den Kontakt zum Projektteam her. Betriebe und Selbstständige können ihr Interesse über die Anmeldung von WERK 116 mitteilen.</p>"
+      },
+      {
+        "type": "fliesstext",
+        "treatment": "text.story-split-flip",
+        "surface": "accent",
+        "title": "Eine Idee aus dem Kiez. Für den Kiez.",
+        "kicker": "Kontakt",
+        "anchor": "kontakt",
+        "body": "<p>Die Idee von Dirk Sarnoch wurde laut Projekt-Rückblick mit dem Jurypreis der ersten Schöneweider Zukunftspreise auf der Futura Biennale 2025 ausgezeichnet.</p><p><strong>Idee, Verkauf und Partneranmeldung</strong><br>Dirk Sarnoch · WERK 116<br>030 – 537 808 46</p><p><strong>Verein und Trägerschaft</strong><br>Klaus Burmeister · Industriesalon Schöneweide e.V.<br>Reinbeckstraße 10 · 12459 Berlin</p>",
+        "links": [
+          {
+            "label": "Dirk Sarnoch · post@werk116.de",
+            "url": "mailto:post@werk116.de"
+          },
+          {
+            "label": "Klaus Burmeister · k.burmeister@industriesalon.de",
+            "url": "mailto:k.burmeister@industriesalon.de"
+          },
+          {
+            "label": "Neuigkeiten von WERK 116",
+            "url": "https://werk116.de/newsletter-mehrswd"
+          }
+        ]
+      }
+    ]
+  },
+  "media_map": [
+    {
+      "section": 0,
+      "key": "card"
+    },
+    {
+      "section": 3,
+      "item": 0,
+      "key": "partner-algonet"
+    },
+    {
+      "section": 3,
+      "item": 1,
+      "key": "partner-allianz"
+    },
+    {
+      "section": 3,
+      "item": 2,
+      "key": "partner-berlinkleinod-logo"
+    },
+    {
+      "section": 3,
+      "item": 3,
+      "key": "partner-cento"
+    },
+    {
+      "section": 3,
+      "item": 4,
+      "key": "partner-dein-radius"
+    },
+    {
+      "section": 3,
+      "item": 5,
+      "key": "partner-industriesalon"
+    },
+    {
+      "section": 3,
+      "item": 6,
+      "key": "partner-loewe-logo"
+    },
+    {
+      "section": 3,
+      "item": 7,
+      "key": "partner-kaos"
+    },
+    {
+      "section": 3,
+      "item": 8,
+      "key": "partner-krasse-crepes"
+    },
+    {
+      "section": 3,
+      "item": 9,
+      "key": "partner-kura-logo"
+    },
+    {
+      "section": 3,
+      "item": 10,
+      "key": "partner-lasergame"
+    },
+    {
+      "section": 3,
+      "item": 11,
+      "key": "partner-lrs"
+    },
+    {
+      "section": 3,
+      "item": 12,
+      "key": "partner-manifattura"
+    },
+    {
+      "section": 3,
+      "item": 13,
+      "key": "partner-prosol"
+    },
+    {
+      "section": 3,
+      "item": 14,
+      "key": "partner-sonnenapotheke"
+    },
+    {
+      "section": 3,
+      "item": 15,
+      "key": "partner-tinas"
+    },
+    {
+      "section": 3,
+      "item": 16,
+      "key": "partner-werk116-logo"
+    },
+    {
+      "section": 3,
+      "item": 17,
+      "key": "partner-wilhelminenhof"
+    },
+    {
+      "section": 3,
+      "item": 18,
+      "key": "partner-wuerfelgasse"
+    },
+    {
+      "section": 3,
+      "item": 19,
+      "key": "partner-yogalabor"
+    }
+  ],
+  "featured_image": "card",
+  "review": {
+    "source_archive": "2026-10-15_SALON_Uebergabe_Website_Vladimir_v2.zip",
+    "archive_sha256": "e4b487f7b31d7902de249d3755b076918c84f1089239e117dc126c7d7dffca26",
+    "baseline": "03_KiezKarte/index.html, supplied on 2026-10-15. Partner directory has 20 entries; no live offer confirmation is inferred.",
+    "source_sha256": {
+      "index.html": "7afaf4b4858805405100dc056c710acb415359fe09e14172f849573fb3b25045",
+      "2026-08-03_SALON_partner.html": "0cd771f8f1a991de52c75ae06200eb911ff944d953cd08d1761470fb23fe4e71"
+    },
+    "conflicts": [
+      "Customer page: 49 EUR, valid through 2026-12-31. Older partner pitch: 50 EUR pilot, 100 EUR from 2027, twelve months. Draft uses the customer-page terms only.",
+      "Customer page: a substantial part goes into the fund and project selection in a public event. Older pitch: fixed 50/35/15 split and a board decision. Draft avoids an unconfirmed percentage, projections or selection mechanism.",
+      "Older partner fees 500/1000 EUR, promises of tax deductibility and 2027 prices are not reproduced. Confirm terms with the owner before publication.",
+      "Text says award in 2025; supplied jurypreis_badge.png says 2026. Badge omitted, text attribution retained for review.",
+      "One-off Anna Rabe reading offer for 2026-10-15 is omitted from the evergreen WERK 116/Industriesalon directory entries.",
+      "No checkout, newsletter form, merchant records, new calendar event or independent privacy/imprint pages are imported. Existing WERK 116 actions remain links; ISS supplies the native site shell."
+    ],
+    "before_publication": [
+      "Confirm current card price, availability, validity, all 20 merchant offers and image permissions. The draft states the handover date.",
+      "Confirm fund share, governance and partner terms without inferring them from conflicting versions.",
+      "Confirm the announced 2026-12-05 event and link a native ISS event after editorial approval.",
+      "Confirm award year, named contacts and support attribution. Kiezkasse support is documented in source; not turned into a confirmed entity relation.",
+      "Coordinate the external minisite handover/redirect separately; this migration does not change external hosting or DNS."
+    ]
+  }
+}

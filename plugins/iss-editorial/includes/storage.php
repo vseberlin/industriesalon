@@ -620,6 +620,10 @@ function iss_editorial_sanitize_section(array $section, array $format): array
         $sanitized['quote_treatment'] = iss_editorial_sanitize_quote_treatment($section['quote_treatment'] ?? 'pull');
     }
 
+    if (iss_editorial_format_supports_section_field($format, $type, 'image_fit') && isset($section['image_fit'])) {
+        $sanitized['image_fit'] = ($section['image_fit'] === 'contain') ? 'contain' : 'cover';
+    }
+
     if (iss_editorial_format_supports_section_field($format, $type, 'surface') && isset($section['surface'])) {
         $surface = sanitize_key((string) $section['surface']);
         $sanitized['surface'] = in_array($surface, ['default', 'soft', 'dark', 'accent'], true) ? $surface : 'default';
@@ -828,7 +832,7 @@ function iss_editorial_validate_document($value, string $format_slug)
             if (!empty($section['treatment']) && ($normalized['treatment'] ?? '') !== $section['treatment']) {
                 return new WP_Error('editorial_invalid_treatment', sprintf(__('Abschnitt %d: Bitte eine verfügbare Darstellung wählen.', 'iss-editorial'), $index + 1));
             }
-            foreach (['surface', 'gallery_layout', 'media_layout', 'quote_treatment', 'section_treatment', 'orientation', 'era_key', 'function_key', 'source_confidence', 'start_year', 'end_year'] as $key) {
+            foreach (['image_fit', 'surface', 'gallery_layout', 'media_layout', 'quote_treatment', 'section_treatment', 'orientation', 'era_key', 'function_key', 'source_confidence', 'start_year', 'end_year'] as $key) {
                 if (isset($section[$key]) && $section[$key] !== '' && (string) $section[$key] !== (string) ($normalized[$key] ?? '')) {
                     return new WP_Error('editorial_invalid_field', sprintf(__('Abschnitt %1$d: Bitte „%2$s“ prüfen.', 'iss-editorial'), $index + 1, $key));
                 }
