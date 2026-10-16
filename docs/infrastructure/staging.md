@@ -9,6 +9,11 @@ Staging is infrastructure, not a development sandbox.
 - Staging should resemble production. Avoid staging-only dependencies and permissions.
 - Public staging exposure is a blocker; verify auth and noindex behavior when relevant.
 
+For the 16 October 2026 project UAT release, the user explicitly chose to keep
+the existing public frontend previews as an exception. Preserve `blog_public=0`
+and `noindex, nofollow`; admin editing still requires WordPress login. Do not
+add site-wide password protection as part of this release.
+
 ## Before Changes
 
 Inspect system state, disk, memory, failed services, logs, active containers, and backup status. Follow `docs/agent/server-operations.md`.

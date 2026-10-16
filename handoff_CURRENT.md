@@ -1,201 +1,103 @@
 # Current handoff — 16 October 2026
 
-## Project UAT account — local only
+## Delivered to GitHub and staging
 
-Local user `Burmeister` (`k.burmeister@industriesalon.de`) has only the new
-`iss_project_uat` role: create drafts/edit projects and use media; no new
-publication, deletion, private-project access or other admin areas. No email
-was sent. Login lands on Projects; profile/logout remain in the account menu.
-Credentials and scoped setup/HTTP receipts are private and ignored under
-`var/project-uat-20261016/`; never transfer these through Git.
+Website work belongs in `/home/vladimir/wp-website`. The queued website code,
+project UAT role (`04ab699`) and reviewed legacy migration baselines (`5ed4c90`)
+are deployed through GitHub `main` to `iss-prod-01`,
+`/srv/industriesalon/stage/repo`. The final documentation commit is the delivery
+checkpoint; compare local/remote HEAD rather than copying an older ref here.
+No production deployment occurred.
 
-74 runtime checks passed for JSON autosave/save/reload, project creation, REST
-denials and existing-content preservation. Authenticated HTTP checks confirm
-the sole Projects menu, media picker access and forbidden admin routes.
-Chrome visual testing stopped at an extension popup; it remains unverified.
-Implementation accepted for GitHub/staging sync on 16 October; deployment is
-pending target preflight and backups. Staging setup is
-described in `docs/project/uat.md`: deploy code, apply the existing capability
-migration, then create the target-local account without an email. The role
-change needs no content/uploads artifact; the project review content below
-still requires its matching artifacts. Send the invitation only when requested.
+The user explicitly retained staging's existing public preview access for this
+UAT release. `blog_public=0` and `noindex, nofollow` are verified. Native admin
+login remains required; do not introduce site-wide Basic Auth for this release.
 
-## Projects — KiezKarte published locally
+Local and staging user `Burmeister` (`k.burmeister@industriesalon.de`) has only
+`iss_project_uat`: create drafts, edit draft/published projects and use media.
+It cannot publish new projects, delete them, access private projects or manage
+other admin areas. Editing a published project updates its public content.
+Login lands on Projects; only Projekte is in the sidebar; personal profile and
+logout remain in the account toolbar. No invitation/email was sent. Local and
+staging passwords are separate, private and ignored in
+`var/project-uat-20261016/{credentials,staging-credentials}.json`.
 
-Project **30811** (`schoeneweider-kiezkarte`) integrates the ZIP's KiezKarte
-material into the ISS project shell: 14 sections using existing gestures, 20 partner cards,
-sales locations, participation links, December announcement and expandable FAQs.
-The shared Bühne skin uses ochre; optional full-image display preserves the card
-and logos. A shared editor HTML-entity fix prevents false validation errors.
-All nine pre-existing projects, including both published Futura pages and its
-review draft, remain unchanged. The user published KiezKarte locally at 21:05
-on 15 October. Preserve that published state. Implementation accepted and
-committed locally on `main`; use Git history for the delivery ref. No push or
-staging changes.
+## Data delivered and recovery
 
-Transfer matching code with `ops/migrations/2026-10-15-kiezkarte.{php,json}` and
-the checksummed `ops/uploads/2026-10-15-kiezkarte.{tar.gz,json}` (21 originals).
-Restore uploads, then run `dry-run`, `apply`, `verify` with `--use-include`.
-Receipt: `iss_backup_20261015_kiezkarte` records the original installed draft.
-Its drift guard now correctly rejects reapply/rollback after the user's publication;
-do not reset it or overwrite the published project. The artifacts create a review
-draft on a fresh target. No external hosting, forms or calendar changed.
-Commit artifact check: published copy matches the transfer content apart from
-editor-hydrated media previews/dimensions; publication remains target-local.
+Fresh verified staging backup:
+`/srv/industriesalon/stage/backups/20261016-073840/` contains the 118-table SQL
+backup, uploads, private intake, tracked code, installed runtime/configuration
+and original commit `6c8cea7`, with `SHA256SUMS`. The successful archives were
+fully read and checksummed. A failed first runtime archive is explicitly named
+`runtime-config.incomplete`; it is not in the verified manifest.
 
-14,127 registry/renderer checks pass, plus PHP/JS/CSS checks. Browser review
-covers desktop/390px layout, anchors, image-choice save/reload and keyboard FAQs;
-all media/variants and the installed input were verified before publication.
-The public route now returns 200 with all 20 partner cards. A password-protected
-disposable copy completed native Publish with one POST/redirect and was removed;
-the reported spinner did not reproduce as recursion. All 42 editor UI checks pass
-after updating the opening-guidance fixture to match current configuration.
-Reconcile conflicting prices/validity, fund allocation, partner terms and award
-year; confirm offers, images and the event.
-The JSON review notes retain the exact conflicts and source hashes. Next action:
-review the published copy with the project team; external redirects remain a
-separate decision.
+Owner migrations applied and verified: `2026-10-08-taxonomy-seeds`,
+`2026-10-11-owner-setup`, `2026-10-11-commerce-idempotency`,
+`2026-10-12-schoneweide-landing`, and `2026-10-15-fuehrungen-categories`.
+Private target-local before-images are under
+`/srv/industriesalon/stage/var/project-uat-20261016/`. Existing commerce requests
+were retained. Schöneweide's two obsolete empty reference arrays and four older
+tour metadata states were reviewed and added as exact accepted baselines;
+unrecognized drift is still rejected. Never restore these snapshots over later
+editorial changes.
 
-## Projects — accepted local Futura composition
+The paired `2026-10-15-futura-composition` and `2026-10-15-kiezkarte` migrations
+and upload archives created staging review drafts **27454** and **27457**.
+All 23 original media checksums and 53 generated image sizes were verified.
+Both authenticated draft previews and sampled images return 200. Seven pre-existing published
+projects remain unchanged. Private migration receipts remain in the existing
+`iss_backup_20261015_futura_composition` and `iss_backup_20261015_kiezkarte`
+options. Do not replay/rollback after editors change these drafts without review.
 
-New local draft **30743** (`futura-biennale-2027-gestaltung`) follows the supplied
-mockup with a split image opening, theme columns, filterable programme rows,
-dark participation, retrospective, concept disclosures and accent contact band.
-All 16 sections use the shared gesture editor; no separate minisite/builder.
-**30615 was published by the user after the first pilot. Preserve it and original
-Futura 25657.** All eight published project fingerprints remain unchanged.
+Preserve local KiezKarte **30811** and Futura **30615**, which the user published,
+original Futura **25657**, and the composed review draft **30743**. Staging's
+new copies intentionally remain drafts. Review conflicting prices, programme,
+partners, historical copy, imagery and the AI illustration before publication;
+the migration JSONs retain review notes. The older Futura pilot is historical,
+not the current review draft.
 
-Deploy this review draft with matching code, the owner-API migration
-`ops/migrations/2026-10-15-futura-composition.{php,json}` and paired checksummed
-`ops/uploads/2026-10-15-futura-composition.{tar.gz,json}`. Run `dry-run`, `apply`,
-`verify` with `--use-include` after restoring the uploads. The migration reuses an
-existing matching signet and registers the visibly labelled AI illustration.
-Receipt: `iss_backup_20261015_futura_composition`; repeat apply verifies, rollback
-trashes only the unchanged draft and retains media/receipt. The older pilot
-migration/receipt remains historical and must not overwrite the user's edits.
+## Verification and remaining work
 
-14,066 registry/renderer checks pass, plus PHP/JS/CSS checks. Browser checks cover
-desktop, actual 390px editor iframe without overflow, filters/counts, keyboard
-details, surface autosave/preview, loaded media and one public H1. Anonymous
-preview returns 404. Implementation accepted and committed locally on `main`;
-use Git history for the delivery ref. No push or staging changes.
+74 project capability/native JSON autosave/save/reload checks passed locally and
+on staging; all temporary fixtures were removed. Authenticated HTTP verifies
+login routing, the sole Projects menu, both review editors, media selection and
+403 responses for unrelated admin screens. Local tour checks pass 47 assertions;
+staging tour drift and all applied migrations verify. All 11 owner schema groups
+pass. Staging media-check covers 96 canonical documents and 179 unique media refs.
+Homepage, Projects, Schöneweide, Führungen, Veranstaltungen and Kalender return
+200 with noindex. The project template is theme-owned. Containers are healthy,
+there are no failed host services and no PHP fatal/warning/parse errors in the
+post-deploy FPM log check.
 
-Review the new draft and reconcile programme/source differences before choosing
-one final public Futura route. The 15 October one-pager remains the provisional
-programme baseline; no calendar events or confirmed partners were created. The
-quiz is temporarily linked externally. Approve/replace the AI illustration and
-review retrospective facts/contact before publication; see migration JSON.
+Chrome visual verification for the restricted user remains pending because an
+extension popup blocked automation. Human editor UAT, Firefox/Word/Docs paste,
+macOS Safari and staff booking/order acceptance remain open. Send the invitation
+only when requested.
+The retained Ausstellung DB override and archive collection slot still need
+their separate target review; this release does not replace target templates.
 
-## Führungen classification — accepted local checkpoint
+The existing maintenance backlog is not resolved by this UAT release: fallback
+and Set-decay have no new monitor receipts yet, 66 old graph rows remain dirty,
+and five unregistered cron hooks remain (including `newsletter_update`, which
+needs owner review). Scheduling, retention, legacy-cron cleanup and scoped
+FPM/Nginx upload-limit activation were not changed. Follow
+`docs/runbooks/staging-maintenance.md`; never run all due mail tasks blindly.
 
-The editor and landing now use only Öffentlich/Gruppe, with dual assignment.
-Sonderführung is an optional existing card label. Keyword/date inference is
-removed. The reviewed local migration gives 13 active offers: 4 public and 11
-group entries, including 2 in both. The duplicate Licht group page and historical
-Rathenau page remain published but are excluded from the active offer list.
-Public cards retain dates/availability; group cards open the existing inquiry.
+## Place data and local runtime retained
 
-Deploy matching code with `ops/migrations/2026-10-15-fuehrungen-categories.php`
-and its JSON manifest; run `check`, then `apply` with a new target-local private
-before-image, then `verify`. No uploads artifact. Local recovery is
-`var/fuehrungen-20261015/before.json` (0600); preserve later edits on rollback.
-47 category/action/native-editor checks, PHP lint/PHPCS/PHPStan, migration
-check/apply/verify/repeat-apply and the tour drift check pass. Negative migration
-checks reject changed categories/copy before writes; all 16 routes return 200. Chrome verifies
-desktop/390px layout, keyboard tabs, availability and inquiry opening. Signed-in
-Chrome also verifies the two editor choices and native save/reload for both,
-group-only and empty selections with the optional Sonderführung label retained.
-The disposable draft was removed; target/staff acceptance remains for release.
-Accepted and committed locally on `main`; use Git history for the delivery ref.
-Nothing in this slice is pushed or deployed to staging. The next release must
-include the paired category migration above.
+Place code is deployed, but the separate 14 October Place data/preview/intake
+migrations were not applied on staging as part of project UAT. All 84 local
+Places retain their accepted canonical JSON state; the manifest contains 83
+reviewed conversions and excludes the earlier Kino pilot. For a future Place
+release, use the guarded image preview, research-question, Place JSON and epoch
+invitation artifacts in that order. Opening KAOS intake is a separate explicit
+opt-in: a stored gesture never opens it. Preserve private contacts/Sets, facts,
+relations, milestones and existing target templates. Canonical procedure is in
+`docs/architecture/editorial-platform.md`; local private recovery remains in
+`var/place-dossier-20261014/`.
 
-## Accepted local checkpoint
-
-Place dossier design, optional sections, JSON editing and on-demand epoch
-invitations are complete and accepted locally. This checkpoint is local on `main`
-in `/home/vladimir/wp-website`; use Git history for implementation details and
-`HEAD`/`origin/main` for delivery refs. Nothing in this checkpoint is pushed or
-deployed. Other-machine release remains separately authorized.
-
-All 84 existing local Places use the canonical `place` JSON canvas; the enabled
-Kino pilot was preserved. Core titles/excerpts/content and old metadata remain
-before-images; active facts, contacts, image permissions, relations and imported
-milestones keep their owners. The atomic persistence boundary covers JSON and
-phase/state projections, not native post fields or earlier graph writes.
-Retired icon/color controls and duplicated narrative
-controls are hidden without deleting stored data. Empty sections/epochs are valid.
-The theme follows the supplied dossier proposal and retains the existing compact
-static map with its selected Place marker.
-
-Add **Automatische Inhalte → Wissen zur Epoche beitragen** after the intended
-epoch. It uses the nearest preceding epoch in document order; blank gesture title
-produces the date-based question, custom title replaces it. No implicit invitation
-appears on other epochs. All submissions use the same signed Place context and
-single private Set, with epoch topic retained for moderation. Explicit **Feedback
-und Upload geöffnet** is still required. Only KAOS 93 was opened locally; its DDR
-phase has one chosen gesture. Native moderated Place text feedback is now supported.
-
-Verification: 13,119 registry/renderer checks, 227 isolated Place atomic checks,
-86 optional-section checks and 64 contribution checks pass. Storage regression
-previously passed 506 checks across 177 documents (CLI-only 2 GB memory allowance
-for the large existing-data snapshot). Scoped PHP lint/PHPCS/PHPStan and JS/CSS
-checks pass; Event Drop receiver retains its pre-existing PHPCS baseline findings.
-Chrome verifies native chooser add/remove, preview source/context, Update/reload,
-desktop/390px layout, map marker and correct signed form topic. Representative
-Place/landing routes return 200. Disposable fixtures were removed; no real guest
-submission was made. Wider browser/staff acceptance remains a release gate.
-
-## Data and media delivery
-
-Deploy matching code/schema before reviewing these guarded owner-API artifacts.
-Run `dry-run` before `apply`; preserve later target editorial changes. Do not copy
-this local database to staging. The readable JSON manifest contains 83 reviewed
-Places; the previously enabled Kino pilot is outside it.
-
-1. `2026-10-14-place-image-preview.php` with
-   `ops/uploads/2026-10-14-place-dossier-preview.tar.gz` and its adjacent manifest/
-   unpacked artifact directory. This adds a JPEG native large size to the existing
-   public TIFF attachment; original TIFF/attribution remain intact. Archive SHA-256:
-   `03b4b239c91aa74f8822575bf66a3f948a81d61d7a4ab046aa5c9490e3c41daf`.
-2. `2026-10-14-place-research-question-preview.php` authors the reviewed legacy
-   KAOS DDR question **before** JSON conversion. It has a targeted before-image.
-3. `2026-10-14-place-json.php` plus `2026-10-14-place-documents.json` activate the
-   reviewed documents atomically with phase/state projections. Before-images and
-   guarded rollback are per Place; milestones and intake choices stay intact.
-4. `2026-10-14-place-epoch-gesture.php` adds the one chosen KAOS DDR gesture after
-   JSON conversion, retaining its own guarded document before-image. Earlier
-   baseline-only verification intentionally rejects this later edited document.
-
-`2026-10-14-place-contributions-preview.php` is a separate explicit opt-in to open
-KAOS intake; never infer target opening from a stored gesture or code deployment.
-No new uploads accompany JSON/gesture/intake artifacts. See the current contract
-and migration detail in `docs/architecture/editorial-platform.md`.
-
-Private ignored recovery lives in `var/place-dossier-20261014/`: 0600 Place
-before-images, the preserved unchanged pre-gesture autosave, schema/phase baseline,
-and JSON apply/verify receipts. Targeted backup options are non-autoload and
-private. Original local uploads/intake persist outside this checkout.
-
-## Runtime and remaining release work
-
-`wp_app` mounts website plugin/theme/receiver code from this checkout;
-core/database/uploads/intake remain in `/home/vladimir/wp`. Re-inspect mounts
-before testing. Use Compose project `wp` with `/home/vladimir/wp/docker-compose.yml`
-and `var/refactoring-20261008/website-code.yml`; private CLI wrapper/receipts remain
-under `var/refactoring-20261008/`. The mixed checkout is not a code/cleanup target.
-
-Earlier refactor/calendar/Repair-Café work is locally complete; source/runbooks
-and Git history retain its evidence. A release must also review the four existing
-owner/maintenance migrations and the paired Schöneweide landing migration from
-12 October. Scheduler/retention/scoped server limits remain uninstalled on staging;
-last read-only staging inspection was 11 October, not current deployment evidence.
-Use `docs/runbooks/staging-maintenance.md` and the active release TODO.
-
-Preserve target DB template overrides, recovery, private contacts/Sets, orders,
-moderation and uploads. Local Place template authority is file-backed. The retained
-Ausstellung override and earlier archive collection slot need target review.
-Staff workflows, Firefox/external Word/Docs paste, macOS Safari, full uploads/intake
-restore and actual FPM/Nginx large-upload behavior remain acceptance work. Existing
-private refactor restore receipts remain under `var/refactoring-20261008/`; never
-restore those snapshots over later editorial work. Other Atlas/TODO work is separate.
+Local `wp_app` mounts website plugins/theme/intake receiver from this checkout;
+core/database/uploads/intake stay in `/home/vladimir/wp`. Use Compose project
+`wp`, `/home/vladimir/wp/docker-compose.yml`, and
+`var/refactoring-20261008/website-code.yml` for matching CLI code. The mixed
+checkout and archive/source storage are not cleanup or sync targets.

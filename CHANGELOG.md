@@ -6,6 +6,15 @@ be recovered from Git history.
 
 ## 2026-10-16
 
+- Synchronized the queued website release through GitHub to staging, with a
+  verified database/uploads/intake/runtime backup. Applied the taxonomy,
+  owner/capability, commerce, Schöneweide and tour-category migrations; installed
+  the paired Futura/KiezKarte review drafts and media while preserving existing
+  published projects. Created Burmeister's project-only staging account without
+  email. The user explicitly retained public noindex previews. UAT access/save,
+  media, schema and route checks passed; maintenance activation and human/browser
+  acceptance remain separate follow-up.
+
 - Reviewed the older staging baselines during the UAT release. The existing
   Schöneweide and tour migrations now accept one exact legacy landing hash and
   four exact tour before-images; all other drift still fails closed. The final

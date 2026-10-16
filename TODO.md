@@ -7,32 +7,24 @@ Immediate executable work only. Larger future programs live in `docs/project/bac
 - Correct the archive landing quick-navigation grid at phone widths: its four
   columns overflow (409 px content / 375 px viewport). The shared archive cards
   already fit; fix the quick-navigation owner without changing their layout.
-- Coordinate an authorized staging release of the completed
-  [WordPress refactor](docs/project/wordpress-refactoring-plan.md) and accepted
-  programme presentation from GitHub `main`: take target-local backups, apply the four scoped owner
-  migrations, and activate the prepared
-  [maintenance path](docs/runbooks/staging-maintenance.md). Verify real editor
-  save/reload/block validity, staff booking/order flows, the availability picker
-  and programme month view, macOS Safari, full
-  uploads/intake restoration and the paired FPM/Nginx limits before acceptance.
-  No deployment, host configuration or staging migration has been done.
-  Include the Schöneweide theme/contract changes and guarded
-  `ops/migrations/2026-10-12-schoneweide-landing.php` plus its JSON payload;
-  preserve target-local editorial changes and verify existing image dependencies.
-  Include the Führungen two-category code and
-  `ops/migrations/2026-10-15-fuehrungen-categories.php` plus its JSON manifest;
-  repeat the locally verified two editor choices, optional Sonderführung label
-  and native save/reload in the target's signed-in browser. Confirm whether
-  Waldfriedhof should also be offered publicly; it currently has the reviewed
-  group assignment.
+- Complete the remaining [maintenance activation](docs/runbooks/staging-maintenance.md)
+  in a separately coordinated operational slice. Website code, taxonomy/owner/
+  commerce migrations, Schöneweide and tour categories were deployed on
+  16 October; project UAT accounts and review drafts are ready. The existing
+  fallback/Set-decay monitor receipts, 66 old graph rows and unregistered cron
+  hooks need owner review. Scheduler/retention, full uploads/intake restore and
+  scoped FPM/Nginx limits remain unchanged. Preserve current target-local backups
+  and inspect mail mode before any due-job run.
 - Staff-test the [shared workspace](docs/project/editor-workspace-plan.md)
-  after its next authorized staging release: one landing, project, tour,
+  on the deployed staging release: one landing, project, tour,
   publication, event and each additional article CPT; image/title/text,
   owner controls, recovery and native Save Draft. Verify Firefox and external
   Word/Docs paste before a production release; controlled rich-text clipboard
   paste passed locally in Chrome. The 13 October panel/CPT changes
-  are local only; authenticated staging editor UAT remains. Include event opening
-  controls and written-feedback moderation.
+  are deployed; authenticated staging staff UAT remains. Include event opening
+  controls and written-feedback moderation. Repeat the two tour editor choices,
+  optional Sonderführung label and native save/reload on staging. Confirm whether
+  Waldfriedhof should also be public; it currently has the reviewed group assignment.
   See the [audit](docs/project/editorial-consolidation-audit.md).
 - Review the interactive Atlas outlier `Energie-Museum Berlin`: its current
   authoritative coordinate is far west of the Schöneweide core while its stored
