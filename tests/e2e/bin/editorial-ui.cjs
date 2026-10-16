@@ -39,8 +39,10 @@ async function editor(format = 'landing', extra = {}) {
   window.jQuery = node => ({ hide: () => { node.style.display = 'none'; } });
   window.HTMLElement.prototype.getClientRects = function () { return this.hidden || this.style.display === 'none' ? [] : [1]; };
   window.HTMLElement.prototype.scrollIntoView = function () {};
+  window.HTMLElement.prototype.showPopover = function () { this.dataset.popoverOpen = 'true'; };
+  window.HTMLElement.prototype.hidePopover = function () { delete this.dataset.popoverOpen; };
   window.ResizeObserver = class { observe() {} disconnect() {} };
-  for (const asset of ['ui.js', 'dnd.js', 'rich-text.js', 'live-preview.js', 'workspace.js', 'admin.js']) {
+  for (const asset of ['ui.js', 'dnd.js', 'rich-text.js', 'live-preview.js', 'help.js', 'workspace.js', 'admin.js']) {
     window.eval(fs.readFileSync('plugins/iss-editorial/assets/' + asset, 'utf8'));
   }
   // Let jsdom emit its single DOMContentLoaded event.
@@ -289,7 +291,7 @@ test('Unsupported imported markup remains intact until the author explicitly sim
 test('Live preview accepts only its current frame and token and retains valid output on failed refresh', async () => {
   const e = await editor();
   try {
-    const shell = { root:e.window.document.createElement('div') };
+    const shell = { root:e.window.document.createElement('div'), help: { hint: () => {} } };
     for (const key of ['previewMount','previewTools','previewStatus']) { shell[key]=e.window.document.createElement('div'); shell.root.appendChild(shell[key]); }
     e.window.document.body.appendChild(shell.root);
     const selected = [];
@@ -441,7 +443,7 @@ test('Landing workspace keeps field focus and preview mounted, selects and reord
     previewMessage(e,frame,{type:'iss-preview-select',section:0});
     assert.equal(e.root.querySelector('.iss-editorial-field--title textarea').value,'Edited first','Old frame index is mapped to the original object');
     previewMessage(e,frame,{type:'iss-preview-insert',section:1});
-    const search=e.root.querySelector('input[type=search]');e.input(search,'Ein Text');search.dispatchEvent(new e.window.KeyboardEvent('keydown',{key:'Enter',bubbles:true}));
+    const search=e.root.querySelector('.iss-editorial-palette input[type=search]');e.input(search,'Ein Text');search.dispatchEvent(new e.window.KeyboardEvent('keydown',{key:'Enter',bubbles:true}));
     assert.equal(e.value().sections[0].type,'statement','Gap inserts before the old snapshot object after reorder');
     assert.equal(e.value().sections.length,3);
     assert.equal(e.value().sections[2].title,'Edited first');
@@ -584,7 +586,7 @@ test('Workspace trash undo restores its own section and leaving restores native 
 });
 
 
-test('Publishing navigation uncovers native controls without submitting or changing the draft', async () => {
+test('Minimizing the workspace uncovers native controls without submitting or changing the draft', async () => {
   const e = await editor('landing', workspaceOptions());
   try {
     const native = e.button('Update'); native.id = 'publish'; native.scrollIntoView = () => {};
@@ -592,9 +594,8 @@ test('Publishing navigation uncovers native controls without submitting or chang
     e.window.document.getElementById('post').addEventListener('submit', () => { submitted = true; });
     const before = e.value();
     assert.equal(native.inert, true, 'Covered native control is outside the keyboard path');
-    e.button('Speichern / Veröffentlichen …').click();
+    e.root.querySelector('[aria-label="Arbeitsfläche verkleinern"]').click();
     assert.notEqual(native.inert, true);
-    assert.equal(e.window.document.activeElement, native);
     assert.equal(submitted, false);
     assert.equal(e.window.document.body.classList.contains('iss-editorial-studio-open'), false);
     assert.deepEqual(e.value(), before);
@@ -671,13 +672,13 @@ test('Chooser guidance follows event availability while retained sections stay e
     assert.equal(e.window.document.getElementById(programme.getAttribute('aria-describedby')).textContent, 'Festival programme');
     assert.equal(e.window.document.getElementById(programme.getAttribute('aria-labelledby')).textContent, 'Programm');
     assert.equal(choices()[1].querySelector('small'), null, 'Portable tiles stay compact');
-    e.input(e.root.querySelector('input[type="search"]'), 'Festival');
+    e.input(e.root.querySelector('.iss-editorial-palette input[type="search"]'), 'Festival');
     assert.equal(choices().length, 1, 'Search includes the owner explanation');
     e.button('Abschnitte').click();
     e.root.querySelector('.iss-editorial-outline__select').click();
     assert.equal(e.root.querySelector('.iss-editorial-studio__guidance').textContent, 'Retained introduction');
     e.button('Hinzufügen').click();
-    const search = e.root.querySelector('input[type="search"]');
+    const search = e.root.querySelector('.iss-editorial-palette input[type="search"]');
     e.input(search, 'Festival');
     const entity = e.window.document.getElementById('entity');
     entity.value = 'event.general'; entity.dispatchEvent(new e.window.Event('change', {bubbles:true}));
@@ -881,5 +882,79 @@ test('Place insertion limits preserve retained duplicates, editing, reorder and 
     const saved = JSON.parse(e.requests.at(-1).get('document'));
     assert.ok(saved.sections.some(s => s.title === 'Edited retained second'));
     assert.ok(saved.deleted_sections.some(s => s.title === 'Retained first'));
+  } finally { e.dom.window.close(); }
+});
+
+test('Help search and contextual navigation preserve the document, preview and save requests', async () => {
+  const e = await editor('projekt', { publishing: {status:'publish',canPublish:false}, sections: {kapitel:{label:'Kapitel',description:'Ein Thema vertiefen.',help:['Eine eigene Überschrift verwenden.'],supports:['body']}} });
+  try {
+    await e.settle(); const original = JSON.stringify(e.value()); const count = e.requests.length;
+    const frame = e.root.querySelector('iframe');
+    const help = e.root.querySelector('.iss-editorial-help');
+    e.button('Hilfe').click();
+    assert.equal(help.hidden, false);
+    assert.equal(e.window.document.activeElement, help.querySelector('h3'));
+    const search = help.querySelector('input'); e.input(search, 'Mediathek');
+    assert.ok(e.button('Bilder auswählen', help));
+    assert.equal(e.button('Kapitel', help), undefined);
+    const enter = new e.window.KeyboardEvent('keydown',{key:'Enter',bubbles:true,cancelable:true}); search.dispatchEvent(enter);
+    assert.equal(enter.defaultPrevented,true,'Searching help must never submit the WordPress form');
+    assert.equal(help.querySelector('h3').textContent,'Bilder auswählen');
+    e.input(search, 'nothingmatches');
+    assert.match(help.querySelector('nav').textContent, /Keine passende Hilfe/);
+    e.input(search, ''); e.button('Kapitel', help).click();
+    assert.match(help.querySelector('article').textContent, /Eine eigene Überschrift/);
+    help.dispatchEvent(new e.window.KeyboardEvent('keydown',{key:'Escape',bubbles:true}));
+    assert.equal(help.hidden,true); assert.equal(e.window.document.activeElement,e.button('Hilfe'));
+    e.root.querySelector('.iss-editorial-outline__select').click();
+    const contextual = e.root.querySelector('.iss-editorial-studio__inspector > .iss-editorial-help-button'); contextual.click();
+    const popup = e.root.querySelector('.iss-editorial-help-popup');
+    assert.equal(popup.getAttribute('role'),'dialog'); assert.match(popup.textContent,/Eine eigene Überschrift/);
+    e.button('Mehr dazu',popup).click();
+    assert.equal(popup.hidden,true); assert.equal(help.hidden,false); assert.equal(help.querySelector('h3').textContent,'Kapitel');
+    e.button('Hilfe schließen',help).click();
+    assert.equal(e.window.document.activeElement,contextual);
+    await e.settle();
+    assert.equal(JSON.stringify(e.value()),original); assert.equal(e.requests.length,count);
+    assert.equal(e.root.querySelector('iframe'),frame);
+  } finally { e.dom.window.close(); }
+});
+
+for (const [status, canPublish, expected] of [
+  ['publish', false, /öffentliche Seite/],
+  ['draft', false, /Zur Überprüfung einreichen/],
+  ['draft', true, /Veröffentlichen/],
+  ['future', true, /geplante Fassung/],
+  ['private', true, /private Fassung/]
+]) {
+  test('Help explains the actual save effect for ' + status + ', publish capability ' + canPublish, async () => {
+    const e = await editor('projekt', { publishing: {status,canPublish} });
+    try {
+      assert.match(e.root.querySelector('.iss-editorial-studio__save-guidance').textContent,expected);
+      e.button('Hilfe').click(); e.button('Speichern und Freigeben').click();
+      assert.match(e.root.querySelector('.iss-editorial-help__article').textContent, expected);
+      assert.match(e.root.querySelector('.iss-editorial-help__article').textContent, /Verkleinere die Arbeitsfläche/);
+    } finally { e.dom.window.close(); }
+  });
+}
+
+test('Control explanations support focus, Escape, click, outside dismissal and existing descriptions', async () => {
+  const e = await editor();
+  try {
+    e.root.querySelector('.iss-editorial-outline__select').click();
+    const finish = e.button('Fertig'); const popup = e.root.querySelector('.iss-editorial-help-popup');
+    finish.setAttribute('aria-describedby','existing-guidance'); finish.focus();
+    assert.equal(popup.hidden,false); assert.equal(popup.getAttribute('role'),'tooltip');
+    assert.match(popup.textContent,/privaten Entwurf/); assert.equal(finish.hasAttribute('title'),false);
+    assert.equal(finish.getAttribute('aria-describedby'),'existing-guidance iss-editorial-help-popup');
+    finish.dispatchEvent(new e.window.KeyboardEvent('keydown',{key:'Escape',bubbles:true}));
+    assert.equal(popup.hidden,true); assert.equal(e.window.document.activeElement,finish);
+    assert.equal(finish.getAttribute('aria-describedby'),'existing-guidance');
+    const help = e.root.querySelector('.iss-editorial-studio__save-guidance button'); help.click();
+    assert.equal(popup.getAttribute('role'),'dialog'); assert.equal(help.getAttribute('aria-expanded'),'true');
+    e.button('Schließen',popup).click();
+    assert.equal(popup.hidden,true); assert.equal(e.window.document.activeElement,help);
+    help.click(); e.root.dispatchEvent(new e.window.Event('pointerdown',{bubbles:true}));
+    assert.equal(popup.hidden,true); assert.equal(help.getAttribute('aria-expanded'),'false');
   } finally { e.dom.window.close(); }
 });

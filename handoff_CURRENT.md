@@ -16,6 +16,22 @@ privately on both machines. Historical migration PHP stays tracked; its private
 inputs must be restored before replay. Git history was not rewritten. Follow
 `docs/infrastructure/{sync,data-artifacts}.md`.
 
+## Futura help pilot
+
+The help slice extends the shared editor: German guide at
+`plugins/iss-editorial/README.md`, searchable help panel, focus/hover explanations,
+clickable contextual popovers, six registry-owned section explanations and
+status/capability-aware saving guidance. 52 DOM interaction checks and 14,127
+registry/renderer checks pass; PHP lint/PHPCS/PHPStan and JS/CSS lint pass. Chrome
+verified Burmeister access, search/Enter, Escape/focus, desktop, 390px mobile and
+short-height layouts. Existing Futura draft was continued, never discarded or
+published. The red-bordered Hilfe control stays prominent; the redundant toolbar
+save shortcut is removed. Native WordPress saving remains available. The help
+code needs no schema or media migration. The requested release also refreshes
+staging from the latest local content; its DB snapshot travels privately, outside
+GitHub. Deployment verification is pending. Next: human pilot using the guide
+checklist after synchronization.
+
 ## Content and UAT account
 
 The refresh aligned project IDs/status on both sites: KiezKarte **30811** and

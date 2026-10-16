@@ -24,6 +24,7 @@ This directory is the repo-owned source for durable project, agent, architecture
 ## Common Task Routing
 
 - Content/editorial: `docs/architecture/content-model.md`, `docs/project/uat.md`
+- German project editor guide / Futura practice: [Editor README](../plugins/iss-editorial/README.md)
 - Theme/presentation: `docs/agent/wordpress-engineering.md`
 - WordPress refactoring and native programme interactions:
   `docs/project/wordpress-refactoring-plan.md`

@@ -64,6 +64,7 @@ function iss_editorial_get_registered_formats(): array
                 'tone' => in_array($section['tone'] ?? '', ['text', 'media', 'navigation', 'automatic'], true) ? $section['tone'] : 'text',
                 'group' => sanitize_text_field($section['group'] ?? 'Text'),
                 'description' => sanitize_text_field((string) ($section['description'] ?? '')),
+                'help' => array_values(array_filter(array_map('sanitize_text_field', (array) ($section['help'] ?? [])))),
                 'supports' => array_values(array_filter(array_map('sanitize_key', (array) ($section['supports'] ?? [])))),
                 'treatments' => array_values($treatments),
                 'ui_hidden' => !empty($section['ui_hidden']),

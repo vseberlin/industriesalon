@@ -1135,3 +1135,36 @@ The repo target runner analyzes changed PHP files one at a time, so new plugin
 entrypoints must be in `scanFiles` before include-file globals are visible to
 PHPStan. Runtime include guards inside individual include files are not the
 right fix for those positives.
+
+### Workspace help (Futura pilot)
+
+The shared workspace has a searchable German help panel in the preview column,
+control explanations on hover/focus, and clickable `?` popovers linking to the
+relevant topic. Help navigation never submits the form, modifies the document,
+or replaces the preview iframe. An active inline text edit is finished through
+the existing workspace navigation callback before opening help. On narrow screens it occupies the preview
+view; closing it restores the previous editing view and opener focus.
+
+`iss-content` contributes optional plain-text `help` paragraphs beside section
+labels/descriptions in its existing vocabulary. `iss-editorial` normalizes
+these through the format registry; `assets/help.js` owns workflow explanations,
+search, focus handling and native top-layer popovers. The six Futura section
+types have extended explanations; other registered types retain their existing
+descriptions. There is no help REST route, persistence, new role or external
+service. Existing WordPress help tabs do not remain visible in the expanded
+workspace, and native `title` attributes cannot provide click/touch navigation,
+so the help UI belongs in the existing workspace.
+
+The persistent saving notice uses the actual post
+status and native publish capability, including the project UAT distinction:
+existing published projects can be updated publicly, while new projects can
+only be submitted for review. This guidance does not grant capabilities or
+change any save/preview/recovery handler. The native update button's label is
+used in the published-content notice to match the user's WordPress language.
+
+The German [editor guide](../../plugins/iss-editorial/README.md) provides the
+quickstart and Futura practice checklist. Keep workflow copy aligned with that
+guide; section-specific explanations stay with the vocabulary. Verify with
+`node --test tests/e2e/bin/editorial-ui.cjs`, the existing registry harness,
+PHP/JS/CSS checks and browser keyboard/layout checks. Code-only delivery: no SQL,
+content migration, upload or template artifact is required.

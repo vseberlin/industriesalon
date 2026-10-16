@@ -39,6 +39,17 @@ autosaves, role preservation and denied REST writes using disposable fixtures.
 Acceptance still includes browser testing of rich text, image selection,
 preview, save/reload, project creation and the restricted sidebar.
 
+## Futura Editor Help Pilot
+
+The local editor now includes searchable **Hilfe**, contextual `?` explanations,
+and extended help for Futura's six section types. See the German
+[editor guide and practice checklist](../../plugins/iss-editorial/README.md).
+Use a disposable draft for practice. Human acceptance: edit text, select/caption
+an image, compare presentations, reorder with mouse/keyboard, restore a deleted
+section, and explain private draft saving versus the final WordPress action
+without verbal assistance. Record unclear wording against the actual control.
+This help slice is local only until code synchronization is requested.
+
 ## Touchtable Review
 
 - Improve long detail-page previews before broad editor rollout.

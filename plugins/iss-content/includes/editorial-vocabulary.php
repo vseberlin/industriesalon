@@ -15,6 +15,10 @@ function iss_content_model_editorial_gesture_registry(): array
         'kapitel' => [
             'label' => __('Kapitel', 'iss-content-model'),
             'description' => __('Ein Thema mit Überschrift und Text vertiefen.', 'iss-content-model'),
+            'help' => [
+                __('Für ein abgegrenztes Thema mit eigener Überschrift. Unter „Darstellung“ kannst du es auch als Hintergrund oder aufklappbaren Abschnitt zeigen.', 'iss-content-model'),
+                __('Schreibe zuerst Titel und Text. Ergänze Bilder und Links nur, wenn sie das Thema erklären. Prüfe aufgeklappte Inhalte in der Vorschau.', 'iss-content-model'),
+            ],
             'portable' => true,
             'supports' => ['anchor', 'links', 'media_refs', 'media_layout', 'section_treatment'],
             'icon' => 'editor-paragraph', 'tone' => 'text', 'group' => 'Text', 'schematic' => 'text',
@@ -22,6 +26,10 @@ function iss_content_model_editorial_gesture_registry(): array
         'fliesstext' => [
             'label' => __('Fließtext', 'iss-content-model'),
             'description' => __('Ein zusammenhängender Textabschnitt.', 'iss-content-model'),
+            'help' => [
+                __('Für zusammenhängende Erzählungen. Gliedere längere Texte in kurze Absätze; Überschrift und Einleitung sollen den Einstieg erleichtern.', 'iss-content-model'),
+                __('Unter „Darstellung“ bestimmt die Variante, ob Titel und Erzählung nebeneinander stehen. Prüfe auch die Telefon-Vorschau: dort werden Spalten untereinander angeordnet.', 'iss-content-model'),
+            ],
             'portable' => true,
             'supports' => ['anchor', 'treatment', 'links', 'media_refs', 'object_refs'],
             'treatments' => [
@@ -70,6 +78,10 @@ function iss_content_model_editorial_gesture_registry(): array
         'facts' => [
             'label' => __('Merkpunkte', 'iss-content-model'),
             'description' => __('Fakten und Zahlen übersichtlich zusammenstellen.', 'iss-content-model'),
+            'help' => [
+                __('Jeder Merkpunkt besteht aus „Wert“ und „Beschreibung“: zum Beispiel „2027“ und „Geplantes Festivaljahr“. Halte beide Angaben kurz.', 'iss-content-model'),
+                __('Mit „Fakt hinzufügen“ ergänzt du einen Eintrag. „Entfernen“ löscht nur diesen Eintrag und bietet keinen Abschnitt-Papierkorb.', 'iss-content-model'),
+            ],
             'portable' => true,
             'supports' => ['anchor', 'facts'],
             'icon' => 'list-view', 'tone' => 'text', 'group' => 'Text', 'schematic' => 'list',
@@ -88,6 +100,10 @@ function iss_content_model_editorial_gesture_registry(): array
         'statement' => [
             'label' => __('Überschrift & Intro', 'iss-content-model'),
             'description' => __('Eine Überschrift, Einleitung oder Leitfrage hervorheben.', 'iss-content-model'),
+            'help' => [
+                __('Für eine zentrale Aussage, eine Leitfrage oder einen Handlungsaufruf. Schreibe eine kurze Überschrift und bei Bedarf einen erklärenden Text.', 'iss-content-model'),
+                __('Wähle unter „Darstellung“ den passenden Schwerpunkt. Soll der Aufruf zu einer anderen Seite führen, ergänze unter „Links“ ein verständlich benanntes Ziel.', 'iss-content-model'),
+            ],
             'portable' => true,
             'supports' => ['anchor', 'treatment', 'links'],
             'treatments' => [
@@ -114,6 +130,11 @@ function iss_content_model_editorial_gesture_registry(): array
         'text_bild_reihe' => [
             'label' => __('Text-Bild-Reihe', 'iss-content-model'),
             'description' => __('Bilder und Texte als zusammengehörige Reihe zeigen.', 'iss-content-model'),
+            'help' => [
+                __('Unter „Inhalt“ ergänzt du Bild-Text-Paare mit Beschriftung, Text und optional einem Bild. Die Reihenfolge der Einträge bestimmt die Lesereihenfolge.', 'iss-content-model'),
+                __('„Themenspalten“ eignet sich für parallele Themen; „Programm / Chronik“ für einen Ablauf. Unter „Vorspann und Details“ ergänzen Zeitraum, Filtergruppe und „Mehr erfahren“ die Programmeinträge.', 'iss-content-model'),
+                __('Eine andere Darstellung ordnet die vorhandenen Inhalte neu. Prüfe danach Bilder, Textlängen und die Telefon-Vorschau.', 'iss-content-model'),
+            ],
             'portable' => true,
             'supports' => ['treatment', 'items', 'links'],
             'treatments' => [
@@ -133,6 +154,11 @@ function iss_content_model_editorial_gesture_registry(): array
         'feature' => [
             'label' => __('Bild & Text', 'iss-content-model'),
             'description' => __('Ein Thema mit Bild, Text und Kernfakten hervorheben.', 'iss-content-model'),
+            'help' => [
+                __('Für einen hervorgehobenen Einstieg mit Bild, Überschrift und Text. Wähle unter „Medien“ ein Bild und prüfe dessen Ausschnitt.', 'iss-content-model'),
+                __('Die Darstellung bestimmt das Zusammenspiel von Bild und Text. „Seitenauftakt“ ist für den ersten Abschnitt gedacht und braucht Titel und Bild; bei Projekten gehört dazu die Seitengestaltung „Bühne“.', 'iss-content-model'),
+                __('Prüfe bei Text auf einem Bild die Lesbarkeit und die Telefon-Vorschau. Die Bildunterschrift beschreibt das Motiv oder nennt die Quelle.', 'iss-content-model'),
+            ],
             'portable' => true,
             'supports' => ['treatment', 'lead', 'facts', 'links', 'media_refs', 'media_layout', 'image_fit'],
             'treatments' => [

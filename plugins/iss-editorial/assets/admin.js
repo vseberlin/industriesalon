@@ -226,7 +226,7 @@
       disposeRichEditors(studio.body);
       clear(studio.body);
       renderSectionFields(studioSection, studio.body);
-      studio.organizeFields();
+      studio.organizeFields(studioSection.type);
       studio.body.scrollTop = 0;
       renderWorkspaceOutline();
       if (openInspector !== false) { studio.showView('inspector'); }
@@ -279,7 +279,7 @@
         clear(root);
         studio = window.issEditorialWorkspace(root, {
           sections: sections, hidden: isSectionHidden, status: status, retry: retry, label: config.formatLabel,
-          orderNotice: config.orderNotice,
+          orderNotice: config.orderNotice, format: format, publishing: config.publishing,
           select: function (index) { afterCanvasEdit(function () { selectWorkspace(index); }); },
           remove: function (index) { afterCanvasEdit(function () { removeSection(index); }); },
           insert: function () { afterCanvasEdit(function () { studio.insert(documentState.sections.length); }); },
@@ -2110,6 +2110,7 @@
           }
 
           mediaButton.type = 'button';
+          if (studio) { studio.help.hint(mediaButton, 'media'); }
           mediaButton.addEventListener('click', function () {
             openGatewayItemMediaLibrary(item, tray, rerenderMedia);
           });
@@ -2638,6 +2639,7 @@
       });
 
       mediaLibraryButton.type = 'button';
+      if (studio) { studio.help.hint(mediaLibraryButton, 'media'); }
       mediaLibraryButton.addEventListener('click', function () {
         openMediaLibrary();
       });

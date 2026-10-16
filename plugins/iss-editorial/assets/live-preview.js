@@ -19,10 +19,11 @@
       [['desktop', 'Desktop'], ['tablet', 'Tablet'], ['phone', 'Telefon']].forEach(function (choice) {
         var device = element('button', 'iss-editorial-preview-device', choice[1]); device.type = 'button'; device.dataset.device = choice[0];
         device.setAttribute('aria-pressed', String(choice[0] === 'desktop'));
+        shell.help.hint(device, 'preview', 'Zeigt die Vorschau in der Breite „' + choice[1] + '“. Dies ändert und veröffentlicht keine Inhalte.');
         device.addEventListener('click', function () { viewport.dataset.device = choice[0]; resize(); Array.from(devices.children).forEach(function (item) { item.setAttribute('aria-pressed', String(item === device)); }); }); devices.appendChild(device);
       }); toolbar.appendChild(devices);
     var retry = element('button', 'iss-editorial-studio__button iss-editorial-studio__icon', '↻'); retry.type = 'button';
-    retry.setAttribute('aria-label', 'Vorschau aktualisieren'); retry.title = 'Vorschau aktualisieren';
+    retry.setAttribute('aria-label', 'Vorschau aktualisieren'); shell.help.hint(retry, 'preview');
     retry.addEventListener('click', function () { if (onRetry) { onRetry(); } });
     toolbar.appendChild(retry);
     shell.previewTools.appendChild(toolbar);

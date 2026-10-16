@@ -315,7 +315,7 @@ function iss_editorial_enqueue_admin_assets(string $hook): void
         );
     }
 
-    foreach (['rich-text', 'live-preview', 'workspace'] as $asset) {
+    foreach (['rich-text', 'live-preview', 'help', 'workspace'] as $asset) {
         wp_enqueue_script('iss-editorial-' . $asset, iss_editorial_admin_url() . 'assets/' . $asset . '.js', ['editor', 'wplink'], (string) filemtime(iss_editorial_admin_path() . 'assets/' . $asset . '.js'), true);
     }
 
@@ -344,6 +344,7 @@ function iss_editorial_enqueue_admin_assets(string $hook): void
                 'iss-editorial-rich-text',
                 'iss-editorial-live-preview',
                 'iss-editorial-workspace',
+                'iss-editorial-help',
                 $route_dependency,
             ])),
             (string) filemtime($script_path),
@@ -363,6 +364,10 @@ function iss_editorial_enqueue_admin_assets(string $hook): void
                 'postId' => $post_id,
                 'userId' => get_current_user_id(),
                 'format' => (string) $format['slug'],
+                'publishing' => [
+                    'status' => $post->post_status,
+                    'canPublish' => current_user_can(get_post_type_object($post->post_type)->cap->publish_posts),
+                ],
                 'supportedVersions' => $format['supported_versions'],
                 'textPalette' => iss_editorial_text_palette(),
                 'livePreview' => !empty($format['editor']['preview']),
