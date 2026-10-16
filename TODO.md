@@ -4,6 +4,18 @@ Immediate executable work only. Larger future programs live in `docs/project/bac
 
 ## Next
 
+- Work through the [JSON editor audit](docs/project/json-editor-audit-2026-10-16.md)
+  in its fix order. First: H1 remove the iss-content Veranstaltung fallback
+  editor/writer, which downgrades or deletes event documents when
+  iss-editorial is inactive; H2 snapshot a revision inside
+  `iss_editorial_persist_document` so CLI `--force` and API writers stay
+  reversible; M1 memoize `iss_editorial_get_registered_formats()` after
+  `init`; M2/M3 memoize the programme ticket lookup and prime reference
+  caches. Measure M1–M4 with Query Monitor on the staging programme page and a
+  large album edit screen before and after. Then M4 autosave/preview cadence,
+  M8 `wp iss-editorial validate-all` plus lenient trash validation, M5
+  revision cap, H3 generic lossiness check, M6 registry-owned slugs; batch
+  L1–L10 with the `admin.js` picker split below.
 - Correct the archive landing quick-navigation grid at phone widths: its four
   columns overflow (409 px content / 375 px viewport). The shared archive cards
   already fit; fix the quick-navigation owner without changing their layout.

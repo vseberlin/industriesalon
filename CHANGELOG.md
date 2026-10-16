@@ -6,6 +6,15 @@ be recovered from Git history.
 
 ## 2026-10-16
 
+- Recorded a static audit of the shared JSON editor (`iss-editorial` plus its
+  iss-content/theme contract edges) in
+  `docs/project/json-editor-audit-2026-10-16.md`: three high findings (degraded
+  mode data loss in the Veranstaltung fallback writer, revisions only on the
+  form path, silent lossy normalization), eight medium performance/longevity
+  findings and a low cleanup list, with a fix order. Follow-up is in
+  `TODO.md`. Documentation only; no code, database migration or uploads
+  artifact.
+
 - Corrected logout with multiple logins of the same account. A remaining login
   no longer keeps another browser's project lock alive. Core `_edit_lock`
   identifies only the user, so ISS Editorial now records its owning session
