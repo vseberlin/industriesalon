@@ -23,7 +23,18 @@
           "inquiry_label": "Gruppenführung anfragen",
           "inquiry_note": "Termin und Gruppengröße stimmen wir individuell ab."
         }
-      }
+      },
+      "additional_before": [
+        {
+          "title": "Elektropolis",
+          "meta": {
+            "offer_catalog_groups": null,
+            "booking_mode": "hybrid",
+            "inquiry_label": "Anfragen",
+            "inquiry_note": null
+          }
+        }
+      ]
     },
     {
       "slug": "energie-am-fluss-fahrradtour",
@@ -68,7 +79,16 @@
           ],
           "booking_mode": "on_demand"
         }
-      }
+      },
+      "additional_before": [
+        {
+          "title": "Familienrallye: Finde den Unterschied!",
+          "meta": {
+            "offer_catalog_groups": null,
+            "booking_mode": "on_demand"
+          }
+        }
+      ]
     },
     {
       "slug": "helden-der-arbeit-individuell-buchbar",
@@ -213,7 +233,17 @@
           "booking_mode": "on_demand",
           "inquiry_label": "Gruppenführung anfragen"
         }
-      }
+      },
+      "additional_before": [
+        {
+          "title": "Mit dem Fahrrad: Die Wäschewasch-Tour",
+          "meta": {
+            "offer_catalog_groups": null,
+            "booking_mode": null,
+            "inquiry_label": null
+          }
+        }
+      ]
     },
     {
       "slug": "modernes-wohnen-in-der-elektropolis",
@@ -257,7 +287,17 @@
           "booking_mode": "on_demand",
           "inquiry_label": "Gruppenführung anfragen"
         }
-      }
+      },
+      "additional_before": [
+        {
+          "title": "Schülerrallye Hochspannung",
+          "meta": {
+            "offer_catalog_groups": null,
+            "booking_mode": "on_demand",
+            "inquiry_label": "Anfrage senden"
+          }
+        }
+      ]
     },
     {
       "slug": "spezialfuehrung-auf-den-spuren-walther-rathenaus",

@@ -74,7 +74,9 @@ if ($applied) {
     WP_CLI::success('Already applied; no changes.');
     return;
 }
-if ($fingerprint($before) !== $payload['expected_document_hash']) {
+// The reviewed older staging document retains two obsolete empty reference arrays.
+$baselines = array_merge([$payload['expected_document_hash']], $payload['additional_expected_document_hashes'] ?? []);
+if (!in_array($fingerprint($before), $baselines, true)) {
     WP_CLI::error('The existing editorial document has changed; review it before applying.');
 }
 if ($mode === 'check') {

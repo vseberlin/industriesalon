@@ -6,6 +6,11 @@ be recovered from Git history.
 
 ## 2026-10-16
 
+- Reviewed the older staging baselines during the UAT release. The existing
+  Schöneweide and tour migrations now accept one exact legacy landing hash and
+  four exact tour before-images; all other drift still fails closed. The final
+  content and target-local backup/readback checks are unchanged.
+
 - Added a project-only UAT role using the existing `iss-core` capability
   migration and native project CPT permissions. It can create/edit projects
   and use media, without publishing new projects, deleting, or administering

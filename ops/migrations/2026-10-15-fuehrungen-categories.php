@@ -45,7 +45,9 @@ foreach ($payload['tours'] as $entry) {
     $id = (int) $post->ID;
     $keys = array_keys($entry['after']['meta']);
     $current = $read($id, $keys);
-    if ($current !== $entry['before'] && $current !== $entry['after']) {
+    // Earlier staging snapshots are explicit full before-images, never wildcard exceptions.
+    $baselines = array_merge([$entry['before'], $entry['after']], $entry['additional_before'] ?? []);
+    if (!in_array($current, $baselines, true)) {
         WP_CLI::error('Later editorial changes require review: ' . $entry['slug']);
     }
     if (iss_fuehrung_sanitize_offer_catalog_groups($entry['after']['meta']['offer_catalog_groups']) !== $entry['after']['meta']['offer_catalog_groups']) {

@@ -172,5 +172,8 @@
       }
     ],
     "deleted_sections": []
-  }
+  },
+  "additional_expected_document_hashes": [
+    "66d7d4d2e54352a2acccf9adb58856f7485b9abad07fbf2a9f9d3a835bdaff1a"
+  ]
 }
