@@ -1,4 +1,24 @@
-# Current handoff — 15 October 2026
+# Current handoff — 16 October 2026
+
+## Project UAT account — local only
+
+Local user `Burmeister` (`k.burmeister@industriesalon.de`) has only the new
+`iss_project_uat` role: create drafts/edit projects and use media; no new
+publication, deletion, private-project access or other admin areas. No email
+was sent. Login lands on Projects; profile/logout remain in the account menu.
+Credentials and scoped setup/HTTP receipts are private and ignored under
+`var/project-uat-20261016/`; never transfer these through Git.
+
+74 runtime checks passed for JSON autosave/save/reload, project creation, REST
+denials and existing-content preservation. Authenticated HTTP checks confirm
+the sole Projects menu, media picker access and forbidden admin routes.
+Chrome visual testing stopped at an extension popup; it remains unverified.
+Implementation accepted for GitHub/staging sync on 16 October; deployment is
+pending target preflight and backups. Staging setup is
+described in `docs/project/uat.md`: deploy code, apply the existing capability
+migration, then create the target-local account without an email. The role
+change needs no content/uploads artifact; the project review content below
+still requires its matching artifacts. Send the invitation only when requested.
 
 ## Projects — KiezKarte published locally
 

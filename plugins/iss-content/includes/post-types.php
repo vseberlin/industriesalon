@@ -96,6 +96,11 @@ function iss_content_model_register_post_types() {
         'menu_icon' => 'dashicons-portfolio',
         'supports' => ['title', 'editor', 'excerpt', 'thumbnail', 'revisions', 'page-attributes'],
         'taxonomies' => ['category', 'post_tag', ISS_CONTENT_MODEL_PROJECT_STATUS_TAXONOMY],
+        'capability_type' => ['projekt', 'projekte'],
+        'capabilities' => function_exists('iss_core_post_type_capabilities')
+            ? iss_core_post_type_capabilities('projekt', 'projekte')
+            : ['create_posts' => 'create_projekte'],
+        'map_meta_cap' => true,
     ]);
 
     register_post_type(ISS_CONTENT_MODEL_RUECKBLICK_POST_TYPE, [
@@ -200,6 +205,7 @@ function iss_content_model_register_post_types() {
         'show_admin_column' => true,
         'show_in_rest' => true,
         'rewrite' => ['slug' => 'projekt-status', 'with_front' => false],
+        'capabilities' => ['assign_terms' => 'edit_projekte'],
     ]);
 
     register_taxonomy(ISS_CONTENT_MODEL_AUSSTELLUNG_TYPE_TAXONOMY, [ISS_CONTENT_MODEL_AUSSTELLUNG_POST_TYPE], [

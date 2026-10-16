@@ -12,15 +12,16 @@ if (!defined('ABSPATH')) {
 define('ISS_CORE_VERSION', '0.1.0');
 define('ISS_CORE_FILE', __FILE__);
 define('ISS_CORE_PATH', plugin_dir_path(__FILE__));
-define('ISS_CORE_CAPS_VERSION', '2026-07-02-fallback-caps-1');
+define('ISS_CORE_CAPS_VERSION', '2026-10-16-project-uat-1');
 define('ISS_CORE_CAPS_OPTION', 'iss_caps_version');
 define('ISS_CORE_OPERATIONS_MENU_SLUG', 'iss-operations');
 
 require_once __DIR__ . '/maintenance.php';
+require_once __DIR__ . '/project-uat.php';
 
 function iss_core_default_capability_definitions(): array
 {
-    return [
+    $definitions = [
         'iss_access_operations' => ['label' => 'Access Operations menu', 'owner' => 'iss-core'],
         'iss_manage_steuerung' => ['label' => 'Manage central site controls', 'owner' => 'industriesalon-steuerung'],
         'iss_manage_hinweise' => ['label' => 'Manage notices', 'owner' => 'industriesalon-notices'],
@@ -120,6 +121,10 @@ function iss_core_default_capability_definitions(): array
         'edit_published_archive_items' => ['label' => 'Edit published archive items', 'owner' => 'iss-archive'],
         'create_archive_items' => ['label' => 'Create archive items', 'owner' => 'iss-archive'],
     ];
+    foreach (iss_core_post_type_capabilities('projekt', 'projekte') as $capability) {
+        $definitions[$capability] = ['label' => $capability, 'owner' => 'iss-content'];
+    }
+    return $definitions;
 }
 
 function iss_core_declared_capabilities(): array
@@ -375,7 +380,7 @@ function iss_core_operations_role_grants(): array
     $set_caps = ['iss_create_sets', 'iss_edit_sets', 'iss_review_sets', 'iss_promote_media', 'iss_delete_sets', 'iss_cleanup_sets'];
     $technical_caps = ['iss_sync_external_sources', 'iss_repair_data', 'iss_cleanup_data', 'iss_run_diagnostics', 'iss_import_archive', 'iss_run_fallback_projection', 'iss_manage_fallback_mode'];
 
-    return [
+    $grants = [
         'administrator' => $all_declared,
         'editor' => array_merge([
             'read',
@@ -438,7 +443,20 @@ function iss_core_operations_role_grants(): array
             'iss_access_operations',
             'iss_manage_requests',
         ], $technical_caps),
+        'iss_project_uat' => ['read', 'upload_files', 'create_projekte', 'edit_projekte', 'edit_others_projekte', 'edit_published_projekte'],
     ];
+
+    // Preserve each existing role's project access when separating it from posts.
+    foreach (wp_roles()->roles as $role_name => $role) {
+        foreach (iss_core_post_type_capabilities('projekt', 'projekte') as $native => $project) {
+            if (in_array($native, ['edit_post', 'read_post', 'delete_post'], true)) { continue; }
+            $native = $native === 'create_posts' ? 'edit_posts' : $native;
+            if (!empty($role['capabilities'][$native])) {
+                $grants[$role_name][] = $project;
+            }
+        }
+    }
+    return $grants;
 }
 
 function iss_core_project_role_labels(): array
@@ -449,6 +467,7 @@ function iss_core_project_role_labels(): array
         'iss_reviewer' => 'ISS Reviewer',
         'iss_intake_helper' => 'ISS Intake Helper',
         'iss_technical_maintainer' => 'ISS Technical Maintainer',
+        'iss_project_uat' => 'ISS Projekte UAT',
     ];
 }
 

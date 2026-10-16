@@ -4,6 +4,17 @@ This file records durable project changes. Keep it compact: current state belong
 `handoff_CURRENT.md`, active follow-up in `TODO.md`, and detailed investigation can
 be recovered from Git history.
 
+## 2026-10-16
+
+- Added a project-only UAT role using the existing `iss-core` capability
+  migration and native project CPT permissions. It can create/edit projects
+  and use media, without publishing new projects, deleting, or administering
+  other content. Existing roles retain their project rights. Restricted
+  navigation shows only Projects, redirects login there, and rejects other
+  admin screens while preserving personal profile access. No permissions plugin
+  or separate editor was introduced. Runtime tests cover native JSON
+  autosave/save/reload, REST denials and unchanged existing content.
+
 ## 2026-10-15
 
 - Added a native Schöneweider KiezKarte review project from the handover ZIP,
