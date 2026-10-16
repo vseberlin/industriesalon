@@ -4,6 +4,18 @@ Immediate executable work only. Larger future programs live in `docs/project/bac
 
 ## Next
 
+- Restore "one shared gesture, many skins" per the proposed
+  [skin contract ADR](docs/architecture/skin-contract-adr.md). Gate first:
+  on staging, check whether Frauen im Werk (quellenbuehne), Kinder im Werk
+  (objektalbum) and a Chronik Rückblick now render their sections in the
+  landing look (static analysis: 172 of 237 Ausstellung skin rules target
+  markup no longer emitted since `9eab967`). If confirmed, accept the ADR and
+  run its migration: skin role tokens, renderer reads roles and emits
+  `.iss-skin-{slug}` / `iss-gesture--*` classes, port Quellenbühne first,
+  single skin authority (event entity skin becomes the document default),
+  skin branches to features, field switches to registered treatments, one
+  skin registry, then delete stranded skin code. This supersedes the skin
+  steps in the CSS audit item below.
 - Work through the [CSS system audit](docs/project/css-system-audit-2026-10-16.md)
   in its fix order. First: define or replace the 24 undefined `--iss-*`
   variables (visible bug: `--iss-event-ink` in `single-event.css` drops the

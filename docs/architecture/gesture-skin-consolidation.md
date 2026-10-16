@@ -460,6 +460,10 @@ domains:
 
 Still pending:
 
+- the skin half of this plan: skins as value sets on the shared gesture
+  renderer, one skin registry and one skin authority. See
+  `skin-contract-adr.md` (2026-10-16), which supersedes the per-domain skin
+  rendering left in place after the 2026-10-13 shared-gesture change;
 - promotion of `shape` beyond the Veranstaltung registry;
 - whether `programm` should remain authored prose or become an occurrence
   projection;

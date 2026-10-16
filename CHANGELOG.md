@@ -6,6 +6,16 @@ be recovered from Git history.
 
 ## 2026-10-16
 
+- Proposed `docs/architecture/skin-contract-adr.md` after reviewing the
+  gesture/skin model in code: the shared gesture half is complete (13 portable
+  gestures, one renderer since `9eab967`), but skins still target per-domain
+  markup, set only 2–4 colour values on shared gestures, branch markup in PHP
+  and have several authorities per page. The ADR defines skins as role-token
+  value sets plus feature defaults, one skin authority and registry, one
+  treatment mechanism, and a gated migration starting with a staging visual
+  check. Cross-referenced from the layering ADR and the consolidation plan.
+  Documentation only; no code, database migration or uploads artifact.
+
 - Recorded a static audit of the public CSS system against the layering ADR
   and the gesture/skin consolidation plan in
   `docs/project/css-system-audit-2026-10-16.md`: gestures forked per renderer,

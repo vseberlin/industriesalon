@@ -101,6 +101,12 @@ Use this CSS layer order:
   skins. Touched legacy CSS files should get smaller or more explicitly scoped
   over time.
 
+## Skin contract, 2026-10-16
+
+Layer 4 is made concrete by `skin-contract-adr.md`: a skin sets the skin role
+tokens on one `.iss-skin-{slug}` root plus feature defaults, and does not
+restate gesture selectors or change gesture markup.
+
 ## Editorial consolidation, 2026-09-22
 
 - `editorial-landing.css` owns ordered section/treatment anatomy for landings and
