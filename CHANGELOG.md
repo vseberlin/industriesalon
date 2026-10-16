@@ -6,6 +6,17 @@ be recovered from Git history.
 
 ## 2026-10-16
 
+- Fixed recurring JSON-editor locks during account switching. ISS Editorial
+  now releases native post locks only when their owner has no valid WordPress
+  session, closes stale takeover dialogs after a confirmed native heartbeat,
+  and stops old tabs renewing locks or saving under a changed login. Unsaved
+  fields stay available with a reopen link; genuine concurrent editors retain
+  their locks. This extends core post locks, session tokens and heartbeat
+  without adding a lock store or changing draft/revision ownership. Verified
+  with authenticated switch/logout requests, browser lock/release cycles,
+  35 lock checks, 45 UI checks and 511 storage checks. Code-only deployment;
+  no database migration or media artifact is needed.
+
 - Fixed silent native Publish/Update failures when editorial recovery is still
   pending. The submit handler now reports the reason and focuses/scrolls to
   the recovery choice or validation/save error, preserving both versions.

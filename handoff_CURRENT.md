@@ -18,14 +18,18 @@ inputs must be restored before replay. Git history was not rewritten. Follow
 
 ## Content and UAT account
 
-Projects now have the same IDs/status on both sites: KiezKarte **30811** and
+The refresh aligned project IDs/status on both sites: KiezKarte **30811** and
 Futura pilot **30615** are published, original Futura **25657** is preserved,
-and composed Futura **30743** was copied as a draft. After that refresh, local
-Burmeister saved it as Pending Review at 11:35; admin has an older 09:09 autosave.
-The recovered version choice is pending with the user; preserve both. The
-Publish handler now reveals/focuses the recovery choice instead of silently
-swallowing its error. Chrome verification and 43 editor UI checks pass; this
-follow-up is code-only and does not repeat the database refresh. All 84 Places and all canonical
+and composed Futura **30743** was copied as a draft. Subsequent local UAT saved
+and published 30743 at 11:53; the user-approved older admin autosave discard
+is complete. Do not overwrite these later edits with the refresh snapshot.
+Publish errors now reveal the recovery choice. Account switching releases
+locks from signed-out editors, clears stale native lock dialogs and prevents
+old tabs from renewing locks as another account. Other valid sessions remain
+protected; unsaved fields and private recovery remain intact. Existing tabs
+must reload once to load the fix. Browser lock/release cycles, 35 lock checks,
+45 UI checks and 511 storage checks pass. These follow-ups deploy code only,
+without another database refresh or media artifact. All 84 Places and all canonical
 JSON, facts, relations, templates, private Sets and intake state were included.
 Do not replay earlier staging-only draft migrations over this full snapshot.
 

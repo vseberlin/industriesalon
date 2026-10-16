@@ -93,6 +93,43 @@ function iss_editorial_get_draft(int $post_id, string $format_slug): array
     ];
 }
 
+/** A logged-out editor cannot renew a lock. Keep locks from any remaining session. */
+function iss_editorial_release_inactive_lock(int $post_id): void
+{
+    $post = get_post($post_id);
+    if (!$post || !current_user_can('edit_post', $post_id) || !iss_editorial_uses_canvas($post)) {
+        return;
+    }
+    $lock = (string) get_post_meta($post_id, '_edit_lock', true);
+    $owner = absint(explode(':', $lock)[1] ?? 0);
+    if ($owner && $owner !== get_current_user_id() && !WP_Session_Tokens::get_instance($owner)->get_all()) {
+        // Compare the exact value so a concurrent heartbeat/takeover keeps its newer lock.
+        delete_post_meta($post_id, '_edit_lock', $lock);
+    }
+}
+
+add_action('load-post.php', static function (): void {
+    // phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Native edit-screen entry; only an inactive session's transient lock can be removed.
+    if (($_GET['action'] ?? '') === 'edit') {
+        // phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Permission and session liveness are checked by the helper.
+        iss_editorial_release_inactive_lock(absint($_GET['post'] ?? 0));
+    }
+});
+
+/** Do not let an old tab acquire locks as the newly signed-in account. */
+add_action('wp_ajax_heartbeat', static function (): void {
+    // phpcs:ignore WordPress.Security.NonceVerification.Missing -- Account mismatch returns read-only state; lock cleanup below requires the native nonce.
+    $editor_user = absint($_POST['data']['iss-editorial-user'] ?? 0);
+    if (!$editor_user) {
+        return;
+    }
+    $nonce_valid = wp_verify_nonce(sanitize_text_field(wp_unslash((string) ($_POST['_nonce'] ?? ''))), 'heartbeat-nonce');
+    if ($editor_user !== get_current_user_id() || !$nonce_valid) {
+        wp_send_json(['iss-editorial-session-changed' => true]);
+    }
+    iss_editorial_release_inactive_lock(absint($_POST['data']['wp-refresh-post-lock']['post_id'] ?? 0));
+}, 0);
+
 /**
  * @return array|WP_Error
  */
@@ -163,6 +200,7 @@ function iss_editorial_check_edit_version(int $post_id, string $format_slug, str
     if (!function_exists('wp_check_post_lock')) {
         require_once ABSPATH . 'wp-admin/includes/post.php';
     }
+    iss_editorial_release_inactive_lock($post_id);
     if (wp_check_post_lock($post_id)) {
         return new WP_Error('editorial_locked', __('Dieser Inhalt wird gerade von einer anderen Person bearbeitet. Ihr Entwurf bleibt in diesem Fenster erhalten.', 'iss-editorial'));
     }

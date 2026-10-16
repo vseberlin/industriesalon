@@ -28,11 +28,16 @@ async function editor(format = 'landing', extra = {}) {
     return { ok: !fail, json: async () => fail ? { success: false, data: { message: 'Draft conflict: reload required' } } : { success: true, data: { draftToken: 'draft-' + requests.length, previewUrl: '/?preview=true', validationMessage } } };
   };
   const rich = [];
-  window.wp = { editor: { initialize: (id, options) => rich.push({ id, options }), remove: () => {} } };
+  const hooks = new Map();
+  window.wp = {
+    editor: { initialize: (id, options) => rich.push({ id, options }), remove: () => {} },
+    hooks: { addAction: (event, _namespace, callback) => hooks.set(event, callback), doAction: (event, data) => hooks.get(event)?.(data) }
+  };
   if (extra.routeStations) {
     window.issRelationsRouteStations = {create: () => ({render: target => { target.textContent = 'Native route stations'; }, saveIfDirty: () => Promise.resolve(), getPreviewArgs: () => ({})})};
   }
-  window.HTMLElement.prototype.getClientRects = function () { return this.hidden ? [] : [1]; };
+  window.jQuery = node => ({ hide: () => { node.style.display = 'none'; } });
+  window.HTMLElement.prototype.getClientRects = function () { return this.hidden || this.style.display === 'none' ? [] : [1]; };
   window.HTMLElement.prototype.scrollIntoView = function () {};
   window.ResizeObserver = class { observe() {} disconnect() {} };
   for (const asset of ['ui.js', 'dnd.js', 'rich-text.js', 'live-preview.js', 'workspace.js', 'admin.js']) {
@@ -77,6 +82,55 @@ for (const format of ['landing', 'article', 'projekt', 'veranstaltung', 'place',
     } finally { e.dom.window.close(); }
   });
 }
+
+test('Native heartbeat releases stale dialogs and still displays a later takeover', async () => {
+  const e = await editor('projekt', { userId: 17 });
+  try {
+    const dialog = e.window.document.createElement('div');
+    dialog.id = 'post-lock-dialog';
+    e.window.document.body.appendChild(dialog);
+    const data = {};
+    e.window.wp.hooks.doAction('heartbeat.send', data);
+    assert.equal(data['iss-editorial-user'], 17);
+    e.setFailure(true);
+    e.window.wp.hooks.doAction('heartbeat.tick', { 'wp-refresh-post-lock': { new_lock: '123:17' } });
+    await e.settle();
+    assert.equal(dialog.getClientRects().length, 0, 'A confirmed native lock removes the old modal');
+    assert.match(e.container.querySelector('.iss-editorial-autosave-status').textContent, /Draft conflict/, 'Reacquiring a lock still checks the document version');
+    const count = e.requests.length;
+    dialog.style.display = 'block'; // Core shows a new takeover before invoking heartbeat.tick.
+    e.window.wp.hooks.doAction('heartbeat.tick', { 'wp-refresh-post-lock': { lock_error: { text: 'Another editor has taken over' } } });
+    assert.equal(dialog.getClientRects().length, 1, 'Real subsequent concurrent editing remains blocked');
+    await e.settle();
+    assert.equal(e.requests.length, count, 'A real lock does not trigger a save');
+  } finally { e.dom.window.close(); }
+});
+
+test('Account changes retain unsaved fields and stop old-tab autosaves and publication', async () => {
+  const e = await editor('projekt');
+  try {
+    const title = e.window.document.getElementById('title');
+    e.input(title, 'Unsaved private title');
+    const count = e.requests.length;
+    e.window.wp.hooks.doAction('heartbeat.tick', { 'iss-editorial-session-changed': true });
+    await e.settle();
+    assert.equal(title.value, 'Unsaved private title');
+    assert.match(e.container.querySelector('[role="alert"]').textContent, /Anmeldung hat sich geändert/);
+    assert.equal(e.container.querySelector('[role="alert"] a').href, e.window.location.href);
+    e.input(title, 'Still available for copying');
+    let submitted = false;
+    e.window.document.getElementById('post').requestSubmit = () => { submitted = true; };
+    e.button('Update').click();
+    e.window.wp.hooks.doAction('heartbeat.tick', { 'iss-editorial-session-changed': true });
+    await e.settle();
+    assert.equal(submitted, false);
+    assert.equal(e.requests.length, count, 'No writes under the new account');
+    assert.equal(e.container.querySelectorAll('[role="alert"]').length, 1);
+    const leaving = new e.window.Event('beforeunload', { cancelable: true });
+    e.window.dispatchEvent(leaving);
+    assert.equal(leaving.defaultPrevented, true, 'Leaving still warns about unsaved work');
+  } finally { e.dom.window.close(); }
+});
 
 test('Recovery is explicit and restores title, summary and event structure with the document', async () => {
   const e = await editor('veranstaltung', { recovery: { base: 'older', modified: 'Today', title: 'Recovered title', excerpt: 'Recovered summary', document: { schema_version: 1, skin: 'standard', entity_key: 'event.festival', sections: [{ type: 'kapitel', title: 'Recovered section' }] } }, documentBindings: { entity_key: '#entity' } });

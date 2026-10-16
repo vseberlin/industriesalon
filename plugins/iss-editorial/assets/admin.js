@@ -203,6 +203,8 @@
     var activeSectionIndex = null;
     var submitting = false;
     var recoveryPending = !!config.recovery;
+    var sessionChanged = false;
+    var sessionMessage = 'Die Anmeldung hat sich geändert. Bitte die Seite neu öffnen. Nicht gesicherte Änderungen bleiben bis dahin in diesem Fenster erhalten.';
     var retry = createElement('button', 'button button-secondary', 'Erneut sichern');
     retry.type = 'button';
     retry.hidden = true;
@@ -584,7 +586,7 @@
 
     function scheduleAutosave() {
       updateField();
-      if (recoveryPending || submitting) { return; }
+      if (recoveryPending || submitting || sessionChanged) { return; }
       window.clearTimeout(autosaveTimer);
       setStatus('Änderungen werden gesichert …');
       if (livePreview) { livePreview.stale('Änderungen werden gesichert …'); }
@@ -2803,11 +2805,13 @@
     }
 
     function queueSave(intent) {
+      if (sessionChanged) { return Promise.reject(new Error(sessionMessage)); }
       window.clearTimeout(autosaveTimer);
       if (recoveryPending || config.validationError) {
         return Promise.reject(new Error(config.validationError || 'Bitte zuerst den vorhandenen Entwurf prüfen.'));
       }
       saveChain = saveChain.catch(function () {}).then(function () {
+        if (sessionChanged) { throw new Error(sessionMessage); }
         return savePreviewDocument(intent);
       });
       return saveChain.catch(function (error) {
@@ -2891,6 +2895,40 @@
     lastSavedValue = currentSaveValue();
     setStatus(config.validationError || 'Gespeicherte Fassung geladen.');
     if (config.validationError) { root.inert = true; }
+
+    if (window.wp && window.wp.hooks) {
+      window.wp.hooks.addAction('heartbeat.send', 'iss-editorial/session', function (data) {
+        data['iss-editorial-user'] = config.userId;
+      });
+      window.wp.hooks.addAction('heartbeat.tick', 'iss-editorial/session', function (data) {
+        if (data['iss-editorial-session-changed']) {
+          if (sessionChanged) { return; }
+          sessionChanged = true;
+          window.clearTimeout(autosaveTimer);
+          var oldDialog = document.getElementById('post-lock-dialog');
+          if (oldDialog) { window.jQuery(oldDialog).hide(); }
+          var notice = createElement('p', 'notice notice-warning', sessionMessage + ' ');
+          notice.setAttribute('role', 'alert');
+          var reopen = createElement('a', '', 'Seite neu öffnen');
+          reopen.href = window.location.href;
+          notice.appendChild(reopen);
+          container.insertBefore(notice, container.firstChild);
+          setStatus(sessionMessage);
+          notice.tabIndex = -1;
+          notice.focus();
+          notice.scrollIntoView({ block: 'center' });
+          return;
+        }
+        var lock = data['wp-refresh-post-lock'];
+        var dialog = document.getElementById('post-lock-dialog');
+        if (!lock || !dialog || sessionChanged) { return; }
+        if (lock.new_lock && dialog.getClientRects().length) {
+          // Core updates the lock field but leaves an already-open takeover dialog visible.
+          window.jQuery(dialog).hide();
+          if (!recoveryPending) { queueSave().catch(function () {}); }
+        }
+      });
+    }
 
     Object.keys(identityFields).forEach(function (key) {
       if (identityFields[key]) { identityFields[key].addEventListener('input', scheduleAutosave); }
