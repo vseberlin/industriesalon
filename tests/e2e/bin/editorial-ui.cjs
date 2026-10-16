@@ -33,6 +33,7 @@ async function editor(format = 'landing', extra = {}) {
     window.issRelationsRouteStations = {create: () => ({render: target => { target.textContent = 'Native route stations'; }, saveIfDirty: () => Promise.resolve(), getPreviewArgs: () => ({})})};
   }
   window.HTMLElement.prototype.getClientRects = function () { return this.hidden ? [] : [1]; };
+  window.HTMLElement.prototype.scrollIntoView = function () {};
   window.ResizeObserver = class { observe() {} disconnect() {} };
   for (const asset of ['ui.js', 'dnd.js', 'rich-text.js', 'live-preview.js', 'workspace.js', 'admin.js']) {
     window.eval(fs.readFileSync('plugins/iss-editorial/assets/' + asset, 'utf8'));
@@ -118,6 +119,33 @@ test('Failed draft discard keeps the choice visible; retry opens the saved canva
   } finally { e.dom.window.close(); }
 });
 
+test('Publish exposes unresolved recovery without saving either version, then resumes after the choice', async () => {
+  const e = await editor('projekt', { recovery: { base: 'older', modified: 'Earlier today', document: { schema_version: 1, sections: [{ type: 'kapitel', title: 'Older private draft' }] } } });
+  try {
+    const form = e.window.document.getElementById('post');
+    const recovery = e.container.querySelector('.iss-editorial-recovery');
+    const saved = e.value();
+    const submissions = [];
+    let revealed = false;
+    recovery.scrollIntoView = () => { revealed = true; };
+    form.requestSubmit = submitter => { submissions.push(submitter); };
+    e.button('Update').click();
+    await e.settle();
+    assert.equal(e.window.document.activeElement, recovery);
+    assert.equal(revealed, true);
+    assert.match(e.container.querySelector('.iss-editorial-autosave-status').textContent, /zuerst.*Entwurf/);
+    assert.equal(e.requests.length, 0, 'No autosave or discard before the recovery choice');
+    assert.equal(submissions.length, 0);
+    assert.deepEqual(e.value(), saved);
+    e.button('Entwurf weiterbearbeiten').click();
+    await e.settle();
+    e.button('Update').click();
+    await e.settle();
+    assert.deepEqual(submissions, [e.button('Update')]);
+    assert.equal(e.requests.at(-1).get('intent'), 'submit');
+  } finally { e.dom.window.close(); }
+});
+
 test('Failed autosave keeps local content, reports the error, blocks update and permits retry', async () => {
   const e = await editor();
   try {
@@ -131,6 +159,7 @@ test('Failed autosave keeps local content, reports the error, blocks update and 
     e.window.document.getElementById('post').dispatchEvent(submit);
     assert.equal(submit.defaultPrevented, true);
     await e.settle();
+    assert.equal(e.window.document.activeElement, e.container.querySelector('.iss-editorial-autosave-status'));
     e.setFailure(false);
     e.button('Erneut sichern').click();
     await e.settle();
@@ -152,6 +181,7 @@ test('Unfinished drafts are acknowledged as secured while publication remains bl
     await e.settle();
     assert.equal(submitted, false);
     assert.match(e.container.querySelector('.iss-editorial-draft-token-field').value, /^draft-/);
+    assert.equal(e.window.document.activeElement, e.container.querySelector('.iss-editorial-autosave-status'));
   } finally { e.dom.window.close(); }
 });
 

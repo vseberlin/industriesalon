@@ -20,7 +20,12 @@ inputs must be restored before replay. Git history was not rewritten. Follow
 
 Projects now have the same IDs/status on both sites: KiezKarte **30811** and
 Futura pilot **30615** are published, original Futura **25657** is preserved,
-and composed Futura **30743** remains a draft. All 84 Places and all canonical
+and composed Futura **30743** was copied as a draft. After that refresh, local
+Burmeister saved it as Pending Review at 11:35; admin has an older 09:09 autosave.
+The recovered version choice is pending with the user; preserve both. The
+Publish handler now reveals/focuses the recovery choice instead of silently
+swallowing its error. Chrome verification and 43 editor UI checks pass; this
+follow-up is code-only and does not repeat the database refresh. All 84 Places and all canonical
 JSON, facts, relations, templates, private Sets and intake state were included.
 Do not replay earlier staging-only draft migrations over this full snapshot.
 

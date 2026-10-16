@@ -6,6 +6,13 @@ be recovered from Git history.
 
 ## 2026-10-16
 
+- Fixed silent native Publish/Update failures when editorial recovery is still
+  pending. The submit handler now reports the reason and focuses/scrolls to
+  the recovery choice or validation/save error, preserving both versions.
+  Reproduced on local Futura 30743 under admin and verified the fix in Chrome;
+  all 43 editor UI checks pass, including recovery blocking and submission
+  after an explicit choice. This code-only fix needs no DB/media artifact.
+
 - Completed the user's full local-to-staging refresh, replacing the narrower
   project-only transfer: all 118 source DB tables, uploads, private intake and
   WordPress 7.1.3 core were synchronized with verified rollback backups. Kept

@@ -2966,7 +2966,13 @@
         afterCanvasEdit(function () { queueSave('submit').then(function () {
           submitting = true;
           form.requestSubmit(submitter || undefined);
-        }).catch(function () {}); });
+        }).catch(function (error) {
+          setStatus(error.message || 'Speichern nicht möglich. Bitte die Angaben prüfen.');
+          var target = recoveryPending ? container.querySelector('.iss-editorial-recovery') : status;
+          target.tabIndex = -1;
+          target.focus();
+          target.scrollIntoView({ block: 'center' });
+        }); });
       }, true);
     }
     window.addEventListener('beforeunload', function (event) {
