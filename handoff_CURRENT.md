@@ -2,120 +2,94 @@
 
 ## Delivery state
 
-Website work belongs in `/home/vladimir/wp-website`. GitHub `main` is the code
-exchange point; staging checkout is `/srv/industriesalon/stage/repo` on
-`iss-prod-01`. Compare HEAD/origin rather than reusing an older release ref.
-The user explicitly requested a full local-to-staging refresh: all site content,
-users, settings, templates, custom tables, uploads and private intake now come
-from local. This supersedes the earlier narrow project-draft transfer and its
-target-specific IDs. No production or external archive storage was changed.
+Website delivery belongs in `/home/vladimir/wp-website`; GitHub `main` is the
+exchange point. Staging checkout is `/srv/industriesalon/stage/repo` on
+`iss-prod-01`, reached as `vladimir@staging.industriesalon.info`. The editor help
+release `71318ad` is deployed, followed by this documentation receipt. Compare
+live HEAD/origin before further work. Both sites are running.
 
-GitHub carries code and documentation only. 112 previously tracked SQL/content
-JSON/media transfer artifacts were removed from the current tree and preserved
-privately on both machines. Historical migration PHP stays tracked; its private
-inputs must be restored before replay. Git history was not rewritten. Follow
-`docs/infrastructure/{sync,data-artifacts}.md`.
+The user-authorized full local-to-staging refresh was repeated with the latest
+local snapshot at 13:33 UTC, preserving subsequent Futura edits and private
+drafts. Local remains authoritative for content, users, settings, templates,
+custom tables, uploads and private intake. Production and external archive
+storage were untouched. GitHub carries code/documentation only; SQL/content and
+media transfer artifacts remain private. Follow `docs/infrastructure/sync.md`
+and `docs/infrastructure/data-artifacts.md`.
 
-## Futura help pilot
+## Editor help and UAT
 
-The help slice extends the shared editor: German guide at
-`plugins/iss-editorial/README.md`, searchable help panel, focus/hover explanations,
-clickable contextual popovers, six registry-owned section explanations and
-status/capability-aware saving guidance. 52 DOM interaction checks and 14,127
-registry/renderer checks pass; PHP lint/PHPCS/PHPStan and JS/CSS lint pass. Chrome
-verified Burmeister access, search/Enter, Escape/focus, desktop, 390px mobile and
-short-height layouts. Existing Futura draft was continued, never discarded or
-published. The red-bordered Hilfe control stays prominent; the redundant toolbar
-save shortcut is removed. Native WordPress saving remains available. The help
-code needs no schema or media migration. The requested release also refreshes
-staging from the latest local content; its DB snapshot travels privately, outside
-GitHub. Deployment verification is pending. Next: human pilot using the guide
-checklist after synchronization.
+The shared editor now has the German guide at `plugins/iss-editorial/README.md`,
+searchable help, hover/focus explanations, clickable contextual popovers, six
+registry-owned Futura section explanations and status-aware saving guidance.
+Hilfe has a prominent red border. The redundant toolbar save shortcut is gone;
+normal WordPress saving remains accessible by minimizing the workspace.
 
-## Content and UAT account
+Local validation passed 52 DOM interaction tests, 14,127 registry/renderer
+checks, PHP lint/PHPCS/PHPStan and JS/CSS lint. Chrome checked desktop, 390px and
+short-height layouts locally. Staging Chrome verified Burmeister login, help on
+desktop/390px, no horizontal overflow, the removed shortcut and native Update
+access. The preserved private Futura draft was continued; nothing was discarded
+or published during deployment verification. One browser-extension autofill error
+interrupted the first login click; retry succeeded, with no website JS errors.
 
-The refresh aligned project IDs/status on both sites: KiezKarte **30811** and
-Futura pilot **30615** are published, original Futura **25657** is preserved,
-and composed Futura **30743** was copied as a draft. Subsequent local UAT saved
-and published 30743; editing continues. The user-approved older admin autosave discard
-is complete. Do not overwrite these later edits with the refresh snapshot.
-Publish errors now reveal the recovery choice. Account switching releases
-locks from signed-out editors, clears stale native lock dialogs and prevents
-old tabs from renewing locks as another account. Logout now releases the exact
-native lock owned by that session even if the account has other logins. Private
-`_iss_editorial_lock_session` metadata records only the lock and a token hash;
-another browser's renewed lock is preserved. Unsaved fields and private recovery
-remain intact. Browser lock/release cycles, 50 lock checks, 45 UI checks,
-511 storage checks and 74 project UAT checks pass. These follow-ups deploy code only,
-without another database refresh or media artifact. All 84 Places and all canonical
-JSON, facts, relations, templates, private Sets and intake state were included.
-Do not replay earlier staging-only draft migrations over this full snapshot.
+Composed Futura **30743** is published at `/projekte/futura-biennale-2027-2/`;
+KiezKarte **30811** is published, Futura **30615** is a draft and original
+Futura **25657** is preserved. Earlier admin-autosave discard and account-switch/
+logout lock fixes are included. Do not replay older staging-only project migrations.
 
-`Burmeister` is **328** on both sites, email `k.burmeister@industriesalon.de`,
-with only `iss_project_uat`: create drafts, edit draft/published projects and use
-media. No publish-new, delete, private-project or other admin rights. Editing a
-published project updates its public content. Login opens Projects; only
-Projekte is in the sidebar, with personal profile/logout in the account toolbar.
-The same password now applies on both sites. Private credentials are in ignored
-`var/project-uat-20261016/{credentials,staging-credentials}.json`. No invitation
-or email was sent; send only when requested.
+`Burmeister` is user **328**, email `k.burmeister@industriesalon.de`, with only
+`iss_project_uat`: create drafts, edit draft/published projects and use media.
+New projects require review; no publish-new/delete/private-project/other-admin
+rights. Updating a published project changes its public content. Login opens
+Projects and only Projects appears in the sidebar. The same password applies
+on both sites; credentials remain in ignored
+`var/project-uat-20261016/{credentials,staging-credentials}.json`.
+No invitation or email was sent. Next: human UAT using the guide checklist.
 
-## Recovery and private delivery evidence
+## Verified parity and private rollback
 
-Verified pre-refresh staging backup:
-`/srv/industriesalon/stage/backups/20261016-full-sync/` contains `database.sql.gz`,
-`files.tar.gz`, `SHA256SUMS`, and `code-commit.txt`. Files include uploads,
-private intake, installed core/configuration, environment and prior ops inputs.
-Both archives were fully read/tested and checksums verified before replacement.
-The earlier `20261016-073840/` backup remains available for the earlier release.
+Before traffic resumed, **117 of 118** source tables matched normalized row
+hashes and counts. Only `wp_options` differed: after URL normalization the
+exceptions were `blog_public`, cron state/lock and staging's login-audit schema
+marker. The extra staging `wp_login_audit` table was retained. Eleven epoch
+modification timestamps touched by URL rewriting were restored with content
+guards. Sessions, edit locks, private-draft save timestamps, caches and job
+receipts can diverge after use.
 
-The full-sync directory also holds the imported `local-database.sql.gz`, private
-`prior-tracked-data.tar.gz`, URL-rewrite and comparison receipts, and the retired
-legacy Event Drop MU bridge. Local snapshots/receipts are in ignored
-`var/full-sync-20261016/`. The transfer archive retains historical paths under
-`ops/sql`, `ops/migrations`, and `ops/uploads`. Do not restore backups over later
-UAT edits without review. Restoring a historical release requires matching code,
-database and files, not just one SQL file.
+Checksum comparison found zero upload/intake differences: **25,170 uploads**
+(3,047,604,252 bytes) and **27 private intake files** (201,488,963 bytes).
+Installed WordPress core files match at **7.1.3**; an empty local `ops/uploads/`
+directory is not runtime content. Both canonical media checks pass for
+**180 documents / 179 references**. Authenticated HTTP checked the Projects
+menu/editor, create-project link and unrelated-screen 403s. Seven public routes
+per site return 200; staging remains public with noindex. Containers are healthy
+and post-deployment logs show no PHP fatal/warning/parse errors.
 
-## Verification and environment differences
+Fresh verified rollback backup:
+`/srv/industriesalon/stage/backups/iss-backup-20261016T133026Z/` contains DB,
+uploads, intake, code, installed runtime and configuration archives, with a
+verified checksum manifest. Its code baseline is `69396de`. The exact final
+pre-import DB is also saved in `backups/help-release-20261016/` alongside the
+imported snapshot and verification receipts. Local private evidence is in
+`var/help-release-20261016/`. The earlier `20261016-full-sync/` backup and
+private historical transfer artifacts remain available. Never restore an old
+snapshot over later UAT work without review; restore matching code/data/files.
 
-At cutover, **117 of 118** source tables matched normalized row hashes; only
-`wp_options` differed. Option differences after URL normalization were
-`blog_public`, cron state, newsletter cron diagnostics and the staging audit
-schema marker. The extra staging login-audit table was deliberately retained.
-URL rewriting touched 11 epoch timestamps; guarded restoration preserved their
-original editorial modification times. New sessions, edit locks, caches and
-job receipts can diverge after application use.
+## Environment boundaries and remaining acceptance
 
-Checksum dry runs reported zero file differences across **25,170 uploads**
-(3,047,604,252 bytes), **27 private intake files** (201,488,963 bytes), and the
-installed WordPress core. Both sites run WordPress **7.1.3**. Canonical media
-validation passes for **180 documents / 179 unique media references**.
-All 74 project/native JSON save/autosave/reload checks pass after the refresh;
-fixtures were removed. Authenticated HTTP verifies both account logins, the
-single Projects menu, two project editors and unrelated-screen 403s. Seven
-public routes per site return 200. Staging containers are healthy and its
-post-refresh log check has no PHP fatal/warning/parse errors.
+Keep staging URLs, infrastructure secrets, login-audit/REST batch helpers and
+`blog_public=0` with noindex/nofollow. The user explicitly retained public
+previews; do not add site-wide Basic Auth for this release. Local debug helpers
+remain local. The obsolete staging Event Drop MU bridge remains retired.
+PHP/web/DB container versions differ by environment; staging's persistent core
+is 7.1.3 despite its image tag 7.0. No package or image upgrade was performed.
+Mailpit is present, but default WordPress mail is not routed to it; inspect mail
+mode before notification testing. Never run all due mail tasks blindly.
 
-The user retained public staging previews; keep staging `blog_public=0` and
-noindex/nofollow with native admin login, without adding site-wide Basic Auth.
-URLs, infrastructure credentials/configuration, security helpers and operational
-logs remain environment-specific. Staging retains login-audit and REST batch
-authentication MU plugins; local transcription/debug helpers remain local.
-The obsolete staging accept-to-attachment MU bridge was retired according to
-the current Sets-backed intake runbook. PHP/web server/DB container versions
-remain environment-specific; staging's existing image is still tagged 7.0,
-while its persistent installed WordPress core is verified at 7.1.3. No package
-or container-image upgrade was performed. Mailpit exists but default WordPress
-mail is not routed to it; inspect mail mode before notification/queue testing.
-
-Human/browser UAT, Firefox/Word/Docs paste, macOS Safari and booking/order
-acceptance remain open. Chrome automation was previously blocked by an extension
-popup, so do not claim visual acceptance. Maintenance activation and upload-limit
-work remain separate; never run all due mail tasks blindly.
-
-Local `wp_app` mounts website plugins/theme/receiver from this checkout. Core,
-database, uploads and intake remain under `/home/vladimir/wp`. Use Compose
-project `wp`, its `docker-compose.yml`, and the website override
-`var/refactoring-20261008/website-code.yml` for CLI. The mixed checkout and archive
-source storage are not cleanup or sync targets.
+Human acceptance, Firefox/Word/Docs paste, macOS Safari and booking/order tests
+remain open. Maintenance activation and upload limits are separate tasks.
+Local `wp_app` mounts this checkout's plugins/theme/receiver. Core, DB, uploads
+and intake remain under `/home/vladimir/wp`. Use Compose project `wp`, that
+checkout's `docker-compose.yml`, and
+`var/refactoring-20261008/website-code.yml` for CLI. The mixed/archive checkout
+and archive source storage are not cleanup or sync targets.
