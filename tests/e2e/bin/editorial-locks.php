@@ -18,7 +18,9 @@ $session = static function (int $user): array {
     $expires = time() + HOUR_IN_SECONDS;
     $token = WP_Session_Tokens::get_instance($user)->create($expires);
     $logged_in = wp_generate_auth_cookie($user, $expires, 'logged_in', $token);
-    return ['token' => $token, 'logged_in' => $logged_in, 'headers' => ['Cookie' => AUTH_COOKIE . '=' . wp_generate_auth_cookie($user, $expires, 'auth', $token) . '; ' . LOGGED_IN_COOKIE . '=' . $logged_in]];
+    $secure = wp_parse_url(admin_url(), PHP_URL_SCHEME) === 'https';
+    $auth_cookie = ($secure ? SECURE_AUTH_COOKIE : AUTH_COOKIE) . '=' . wp_generate_auth_cookie($user, $expires, $secure ? 'secure_auth' : 'auth', $token);
+    return ['token' => $token, 'logged_in' => $logged_in, 'headers' => ['Cookie' => $auth_cookie . '; ' . LOGGED_IN_COOKIE . '=' . $logged_in]];
 };
 $activate = static function (int $user, array $session): void {
     wp_set_current_user($user);
