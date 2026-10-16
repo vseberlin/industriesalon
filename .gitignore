@@ -30,14 +30,14 @@
 !/ops/
 /ops/*
 !/ops/sql/
-!/ops/sql/*.sql
-/ops/sql/2026-06-03-production-newsletter-sync.sql
+/ops/sql/*
+!/ops/sql/*.md
 !/ops/migrations/
+/ops/migrations/*
 !/ops/migrations/*.php
-!/ops/uploads/
-!/ops/uploads/*.manifest
-!/ops/uploads/*.tar.gz
-!/ops/uploads/*.sha256
+!/ops/migrations/*.md
+# Deployment data and media travel privately, never through GitHub.
+/ops/uploads/
 !/docs/
 /docs/*
 !/docs/*.md

@@ -24,14 +24,14 @@ versioned role migration and restricted navigation. Existing roles retain their
 previous project access. Menu hiding is accompanied by native CPT/REST
 capability checks and a restricted admin-screen allowlist.
 
-For staging, deploy the matching code, then run `wp iss-core caps migrate
---dry-run`, `wp iss-core caps migrate`, and `wp iss-core caps report`. Create the
-tester locally on the target with only the `iss_project_uat` role. Do not copy
-the whole users/roles tables from local. `wp user create` sends no invitation
-unless `--send-email` is supplied; omit that flag until invitation is approved.
-Passwords stay outside Git. No content migration or uploads artifact is needed
-for the role/account change; the project content being reviewed retains its
-separate paired migration/upload requirements.
+For a role-only staging deployment, deploy matching code and run
+`wp iss-core caps migrate --apply`; create the tester with only
+`iss_project_uat`, without notification flags. Passwords stay outside Git.
+The user's explicit 16 October full-content refresh superseded that account-only
+path: local users/roles and content were copied together, so Burmeister is ID
+328 and uses the same password on both sites. No invitation was sent. Follow
+`docs/infrastructure/sync.md` for future full refreshes; never infer permission
+to replace target users or content from an ordinary role change.
 
 Verify with `wp eval-file tests/e2e/bin/project-uat.php USER_LOGIN`, using a
 read-only mount when running through Docker. It exercises native JSON saves,

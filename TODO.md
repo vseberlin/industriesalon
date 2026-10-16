@@ -9,12 +9,11 @@ Immediate executable work only. Larger future programs live in `docs/project/bac
   already fit; fix the quick-navigation owner without changing their layout.
 - Complete the remaining [maintenance activation](docs/runbooks/staging-maintenance.md)
   in a separately coordinated operational slice. Website code, taxonomy/owner/
-  commerce migrations, Schöneweide and tour categories were deployed on
-  16 October; project UAT accounts and review drafts are ready. The existing
-  fallback/Set-decay monitor receipts, 66 old graph rows and unregistered cron
-  hooks need owner review. Scheduler/retention, full uploads/intake restore and
-  scoped FPM/Nginx limits remain unchanged. Preserve current target-local backups
-  and inspect mail mode before any due-job run.
+  commerce migrations and the full local content/uploads/intake snapshot were
+  deployed on 16 October; project UAT is ready with matching local IDs. Review
+  current maintenance receipts and cron ownership after the full refresh.
+  Scheduler/retention and scoped FPM/Nginx limits remain separate. Preserve the
+  full-sync rollback backups and inspect mail mode before any due-job run.
 - Staff-test the [shared workspace](docs/project/editor-workspace-plan.md)
   on the deployed staging release: one landing, project, tour,
   publication, event and each additional article CPT; image/title/text,
@@ -44,10 +43,8 @@ Immediate executable work only. Larger future programs live in `docs/project/bac
   and enable `Tools > ISS Anfragen` notification email only for an approved
   recipient. Publication orders now share the native request dialog locally; include this
   changed presentation in staff acceptance after deployment.
-- Native page JSON landing transfer/review: after deploying the landing code and
-  theme assets, apply/review
-  `ops/sql/2026-06-30-frontpage-landing-json.sql` only on a target with matching
-  front-page content/media IDs. Then browser-check `/`, `/about/`, `/verein/`,
+- Native page JSON landing UAT: code, content and media were included in the
+  full 16 October staging refresh. Browser-check `/`, `/about/`, `/verein/`,
   `/salon-vermietung/`, and `/sammlungen/`; disabled or empty JSON must keep the
   existing template/post-content output. UAT gesture reordering, click/gap
   insertion from the compact chooser, keyboard controls and the switching
@@ -65,20 +62,16 @@ Immediate executable work only. Larger future programs live in `docs/project/bac
   should be migration-positive:
   drain reusable rules into the proper layer and remove obsolete selectors when
   safe.
-- SuperSaaS/timeline follow-up after this checkpoint: deploy the occurrence and
-  timeline code together, replay
-  `ops/sql/2026-06-29-repair-cafe-canonical-event-series.sql` only if the local
-  Repair-Café canonical content state should move to the target, then run
-  `wp iss-occurrences sync`, `verify`, `drift-check`, and `supersaas-audit`.
+- SuperSaaS/timeline follow-up: local occurrence/timeline code and data are now
+  on staging. Verify current drift and `supersaas-audit` before scheduling any
+  source refresh; do not replay older SQL over the full 16 October snapshot.
   Current audit leftovers are non-blocking: unmapped inert series have zero
   occurrence rows, and `Stadtrallye für Erwachsene` is mapped but has no future
   SuperSaaS rows.
-- Repair-Café staging schedule: the 2026-09-27 check finds Veranstaltung 26813
-  with July–September source dates and no projected occurrences. Review the
-  intended schedule and prepare an artifact using actual target IDs before any
-  import; do not blindly replay the June canonical-event SQL. Separately review
-  whether the older repo-local Apache stack on `8082` (`wp_app`/`wp_db`) is still
-  intentionally running before planning any retirement.
+- Repair-Café staging schedule: recheck intended future dates against the
+  full local snapshot delivered on 16 October; the September target observation
+  is obsolete. Do not blindly replay the June canonical-event SQL. The Apache
+  stack on `8082` is the active local website, not a retirement candidate.
 - Front-page client experiment decision: original baseline is captured in
   `ops/sql/2026-06-29-frontpage-baseline.sql`; current DB override content is
   synced to `themes/industriesalon/templates/front-page.html` for review. After

@@ -21,7 +21,8 @@ Inspect system state, disk, memory, failed services, logs, active containers, an
 ## Data
 
 - Verify backups before SQL imports or destructive operations.
-- Apply SQL artifacts deliberately after code/plugin deploy and required plugin activation/schema creation.
+- Transfer SQL/content/media privately over SSH, outside GitHub; apply them
+  deliberately after matching code/plugin deploy and schema creation.
 - Check DB `wp_template` authority when visible staging output differs from disk files.
 - See `data-artifacts.md` for SQL/upload transfer artifact rules.
 - See `sync.md` and `../runbooks/uploads-sync.md` before syncing uploads.
@@ -48,3 +49,18 @@ preserve/classify dirty state, fetch GitHub and fast-forward the checkout; the
 running containers already bind-mount its plugin and theme directories. A restart
 is not needed just to load changed source. Keep secrets such as the CARTO key in
 `app/wp-config.php`, never in the shared repository.
+
+## Current content baseline
+
+The user-authorized 16 October full refresh makes local authoritative for site
+content and users, including IDs, JSON, templates and media. Both installed
+WordPress cores are 7.1.3; staging's existing PHP 8.3 FPM container image still
+has the 7.0 tag because core lives in the persistent `app` mount. Local uses
+Apache/PHP 8.2 and MariaDB 10.11; staging keeps FPM/MariaDB 11.8. Do not mistake
+content/code parity for identical infrastructure configuration.
+
+Preserve staging URL, noindex, credentials, login-audit and REST batch controls.
+The old Event Drop MU bridge is retired; current intake uses private Sets.
+Mailpit is running, but default WordPress mail has no SMTP route to it and the
+configured sendmail executable is absent. Configure/verify mail routing in the
+mail-testing task before sending notifications; no user invitation was sent.

@@ -6,6 +6,16 @@ be recovered from Git history.
 
 ## 2026-10-16
 
+- Completed the user's full local-to-staging refresh, replacing the narrower
+  project-only transfer: all 118 source DB tables, uploads, private intake and
+  WordPress 7.1.3 core were synchronized with verified rollback backups. Kept
+  staging URL/noindex, credentials, security audit and host configuration;
+  retired the obsolete automatic Event Drop bridge. Normalized content hashes,
+  complete file checksum comparisons, media coverage and UAT access/save checks
+  pass. Burmeister now uses the same local account/password on staging, without
+  email. GitHub now carries code/docs only: removed 112 transfer-data artifacts
+  from tracking, retained private copies and left history unchanged.
+
 - Synchronized the queued website release through GitHub to staging, with a
   verified database/uploads/intake/runtime backup. Applied the taxonomy,
   owner/capability, commerce, Schöneweide and tour-category migrations; installed

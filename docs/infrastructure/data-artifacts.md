@@ -1,23 +1,29 @@
 # Data Artifacts
 
-Use explicit artifacts for data transfer and review.
+Use explicit private artifacts for data transfer and review. GitHub carries
+code, migration programs and documentation; it does not carry SQL dumps,
+content snapshot JSON, uploaded media, or transfer archives.
 
 ## Mandatory Check
 
 Every commit, push, deploy, and handoff must check whether local DB state or
 upload files are required for the changed code/templates/content to work on the
 target. When both are required, create and verify paired database artifacts
-under `ops/sql/` or `ops/migrations/` and media artifacts under `ops/uploads/`;
+in ignored local storage (for example `var/<release>/`) and transfer them
+directly to the target over SSH;
 do not treat code, database state, and media as independent closeout items. When
 no database or upload artifact is needed, record the no-op decision in the
 closeout context.
 
 ## SQL
 
-- Store deliberate transfer SQL under `ops/sql/`.
+- Store deliberate transfer SQL privately under ignored release storage.
+- Historical `ops/sql/` files are ignored compatibility inputs, not Git assets.
 - Verify backups before applying SQL to staging or production.
 - Apply SQL after code/plugin deploy and required schema creation.
-- Keep SQL artifacts narrow: stable content/configuration data, not volatile logs, runtime locks, caches, or diagnostics.
+- For ordinary deployments, keep SQL artifacts narrow: stable content/configuration
+  data, not volatile logs, runtime locks, caches, or diagnostics. An explicitly
+  authorized full refresh follows `sync.md` and transfers a consistent snapshot.
 - Do not embed normalized plugin internals such as PHP-serialized relation rows
   when the owning plugin exposes a write API.
 
@@ -27,6 +33,9 @@ Use readable WP-CLI migrations under `ops/migrations/` when transferred state
 must be normalized, indexed, or synchronized by an owning plugin.
 
 - Run them with `wp eval-file` after the matching code deployment.
+- Migration PHP stays in Git; content JSON and other source inputs travel
+  privately with the release. Historical scripts expect these inputs beside
+  the PHP files under `ops/migrations/`; restore them there from private storage.
 - Keep source inputs readable and diffable; do not paste encoded database
   representations into the migration.
 - Create a targeted backup before the first write and fail when that backup
@@ -36,14 +45,16 @@ must be normalized, indexed, or synchronized by an owning plugin.
 
 ## Uploads
 
-- Store upload transfer manifests or archives under `ops/uploads/` when they are part of deployment.
+- Store upload manifests and archives privately with the database snapshot.
+- Historical `ops/uploads/` inputs are ignored and restored privately when a
+  historical migration needs them.
 - Verify hashes locally and remotely after transfer.
 - Preserve uploads-relative archive paths so entries map cleanly into `wp-content/uploads/`.
 - Use `docs/runbooks/uploads-sync.md` for live `rsync` or restore procedures.
 
 ## Paired Database And Upload Artifacts
 
-When a checkpoint contains database artifacts and `ops/uploads/*` artifacts,
+When a checkpoint contains database and upload artifacts,
 treat them as one deployment unit.
 
 - Deploy code first so templates/plugins reference the same contract as the artifacts.

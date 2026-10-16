@@ -21,5 +21,6 @@ local upload files, attachment rows, DB-backed templates, options, custom-table
 rows, or imported content state. If it does, also classify the task as
 `Database transfer` and/or `Uploads/media`, create paired artifacts when both a
 database migration (SQL or API-owned) and files are required, and record the
-artifact names plus verification. If no artifact is needed, record that
+artifact names plus verification. Transfer data/media artifacts privately; GitHub
+carries code and documentation only. If no artifact is needed, record that
 decision in the closeout context.
