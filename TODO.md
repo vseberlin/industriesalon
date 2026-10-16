@@ -4,6 +4,18 @@ Immediate executable work only. Larger future programs live in `docs/project/bac
 
 ## Next
 
+- Work through the [CSS system audit](docs/project/css-system-audit-2026-10-16.md)
+  in its fix order. First: define or replace the 24 undefined `--iss-*`
+  variables (visible bug: `--iss-event-ink` in `single-event.css` drops the
+  event download accent border) and raise `--iss-surface-subtle` to pass
+  WCAG AA; then add type/spacing/ink-alpha tokens aliasing theme.json; then
+  emit one `.iss-gesture--{slug}` contract class from every renderer and port
+  quote, gallery and facts into `gestures.css`; then make skins value sets on
+  one `.iss-skin-{slug}` hook (typografisch first) so portable gestures take
+  the host skin. Later: split `patterns.css` out of the global payload,
+  collapse the three timeline layers, fix breakpoints to four constants, add
+  a dev-only CSS lint in `tools/`. Check unreferenced classes against stored
+  `post_content` before deleting them.
 - Work through the [JSON editor audit](docs/project/json-editor-audit-2026-10-16.md)
   in its fix order. First: H1 remove the iss-content Veranstaltung fallback
   editor/writer, which downgrades or deletes event documents when

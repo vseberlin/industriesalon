@@ -6,6 +6,15 @@ be recovered from Git history.
 
 ## 2026-10-16
 
+- Recorded a static audit of the public CSS system against the layering ADR
+  and the gesture/skin consolidation plan in
+  `docs/project/css-system-audit-2026-10-16.md`: gestures forked per renderer,
+  skins implemented as selector forks instead of value sets, portable gestures
+  ignoring the host skin, bypassed semantic tokens, ungoverned typography and
+  spacing, a 449 KB global payload, plus defects (24 undefined variables,
+  sub-AA subtle ink) and a fix order. Follow-up is in `TODO.md`.
+  Documentation only; no code, database migration or uploads artifact.
+
 - Recorded a static audit of the shared JSON editor (`iss-editorial` plus its
   iss-content/theme contract edges) in
   `docs/project/json-editor-audit-2026-10-16.md`: three high findings (degraded
