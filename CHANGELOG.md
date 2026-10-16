@@ -6,6 +6,17 @@ be recovered from Git history.
 
 ## 2026-10-16
 
+- Corrected logout with multiple logins of the same account. A remaining login
+  no longer keeps another browser's project lock alive. Core `_edit_lock`
+  identifies only the user, so ISS Editorial now records its owning session
+  fingerprint in private post metadata and releases that exact native lock on
+  logout. No raw login token is stored or session invalidated; a lock renewed
+  by another browser is preserved. Native expiry/takeover remains the fallback
+  for older untracked locks. Verified 50 authenticated lock/logout checks,
+  511 storage checks and 74 project UAT checks. No content migration, SQL
+  transfer or uploads artifact is required; ownership is recorded on edit or
+  heartbeat using the existing WordPress Metadata API.
+
 - Fixed recurring JSON-editor locks during account switching. ISS Editorial
   now releases native post locks only when their owner has no valid WordPress
   session, closes stale takeover dialogs after a confirmed native heartbeat,

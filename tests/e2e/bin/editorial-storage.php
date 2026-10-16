@@ -25,8 +25,8 @@ $admin = get_users(['role' => 'administrator', 'number' => 1])[0];
 wp_set_current_user($admin->ID);
 $snapshot = static function (): string {
     global $wpdb;
-    // An open browser renews its edit lock through heartbeat without changing editorial data.
-    return hash('sha256', serialize($wpdb->get_results("SELECT p.ID,p.post_title,p.post_excerpt,p.post_content,m.meta_key,m.meta_value FROM {$wpdb->posts} p LEFT JOIN {$wpdb->postmeta} m ON m.post_id=p.ID AND m.meta_key <> '_edit_lock' WHERE p.post_type <> 'revision' ORDER BY p.ID,m.meta_id", ARRAY_A)));
+    // An open browser renews its native lock and session ownership without changing editorial data.
+    return hash('sha256', serialize($wpdb->get_results("SELECT p.ID,p.post_title,p.post_excerpt,p.post_content,m.meta_key,m.meta_value FROM {$wpdb->posts} p LEFT JOIN {$wpdb->postmeta} m ON m.post_id=p.ID AND m.meta_key NOT IN ('_edit_lock', '_iss_editorial_lock_session') WHERE p.post_type <> 'revision' ORDER BY p.ID,m.meta_id", ARRAY_A)));
 };
 $before = $snapshot();
 $place_projection_snapshot = static function (): string {

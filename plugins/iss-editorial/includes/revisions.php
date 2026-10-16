@@ -93,7 +93,66 @@ function iss_editorial_get_draft(int $post_id, string $format_slug): array
     ];
 }
 
-/** A logged-out editor cannot renew a lock. Keep locks from any remaining session. */
+/** Associate the native lock with its browser session without storing a login token. */
+function iss_editorial_track_lock_session(int $post_id, string $lock): void
+{
+    $token = wp_get_session_token();
+    $post = get_post($post_id);
+    if ($token === '' || !$post || !iss_editorial_uses_canvas($post)
+        || absint(explode(':', $lock)[1] ?? 0) !== get_current_user_id()
+        || get_post_meta($post_id, '_edit_lock', true) !== $lock) {
+        return;
+    }
+    update_post_meta($post_id, '_iss_editorial_lock_session', ['lock' => $lock, 'session' => hash('sha256', $token)]);
+}
+
+foreach (['added_post_meta', 'updated_post_meta'] as $lock_hook) {
+    add_action($lock_hook, static function ($meta_id, int $post_id, string $key, $value): void {
+        if ($key === '_edit_lock' && is_string($value)) {
+            iss_editorial_track_lock_session($post_id, $value);
+        }
+    }, 10, 4);
+}
+
+// Two sessions of the same user can renew the same timestamp within one second,
+// so a successful heartbeat must record ownership even when core's meta did not change.
+add_filter('heartbeat_received', static function (array $response, array $data): array {
+    if (!empty($response['wp-refresh-post-lock']['new_lock'])) {
+        iss_editorial_track_lock_session(absint($data['wp-refresh-post-lock']['post_id'] ?? 0), (string) $response['wp-refresh-post-lock']['new_lock']);
+    }
+    return $response;
+}, 11, 2);
+
+/** Logout releases only this session's native locks, even if other logins remain. */
+add_action('wp_logout', static function (int $user_id): void {
+    // Core has invalidated the session, but the request cookie still identifies it.
+    $token = wp_get_session_token();
+    if ($token === '') { return; }
+    $session = hash('sha256', $token);
+    $post_types = [];
+    foreach (iss_editorial_get_registered_formats() as $format) {
+        $post_types = array_merge($post_types, $format['post_types']);
+    }
+    $post_ids = get_posts([
+        'post_type' => array_unique($post_types), 'post_status' => array_keys(get_post_stati()),
+        'numberposts' => -1, 'fields' => 'ids',
+        // phpcs:ignore WordPress.DB.SlowDBQuery.slow_db_query_meta_query -- Logout-only lookup, narrowed by the indexed lock-session meta key; never a public query.
+        'meta_query' => [['key' => '_iss_editorial_lock_session', 'value' => '"' . $session . '"', 'compare' => 'LIKE']],
+    ]);
+    foreach ($post_ids as $post_id) {
+        $owner = get_post_meta($post_id, '_iss_editorial_lock_session', true);
+        if (!is_array($owner) || ($owner['session'] ?? '') !== $session
+            || absint(explode(':', (string) ($owner['lock'] ?? ''))[1] ?? 0) !== $user_id) {
+            continue;
+        }
+        // Do not remove a lock renewed or taken over after the session's last write.
+        if (delete_post_meta($post_id, '_edit_lock', $owner['lock'])) {
+            delete_post_meta($post_id, '_iss_editorial_lock_session', $owner);
+        }
+    }
+});
+
+/** Legacy locks without session ownership still expire through core or final logout. */
 function iss_editorial_release_inactive_lock(int $post_id): void
 {
     $post = get_post($post_id);

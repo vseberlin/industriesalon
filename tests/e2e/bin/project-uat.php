@@ -21,7 +21,7 @@ $request = static function (string $method, string $route, array $params = []): 
 };
 $snapshot = static function (): string {
     global $wpdb;
-    return hash('sha256', serialize($wpdb->get_results("SELECT p.ID,p.post_title,p.post_content,p.post_excerpt,p.post_status,m.meta_key,m.meta_value FROM {$wpdb->posts} p LEFT JOIN {$wpdb->postmeta} m ON m.post_id=p.ID AND m.meta_key <> '_edit_lock' WHERE p.post_type <> 'revision' ORDER BY p.ID,m.meta_id", ARRAY_A)));
+    return hash('sha256', serialize($wpdb->get_results("SELECT p.ID,p.post_title,p.post_content,p.post_excerpt,p.post_status,m.meta_key,m.meta_value FROM {$wpdb->posts} p LEFT JOIN {$wpdb->postmeta} m ON m.post_id=p.ID AND m.meta_key NOT IN ('_edit_lock', '_iss_editorial_lock_session') WHERE p.post_type <> 'revision' ORDER BY p.ID,m.meta_id", ARRAY_A)));
 };
 $before = $snapshot();
 $die_handler = static function () {

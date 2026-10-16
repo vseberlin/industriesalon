@@ -76,7 +76,12 @@ try {
     $blocked = iss_editorial_check_edit_version($id, 'projekt', $canonical);
     $assert(is_wp_error($blocked) && $blocked->get_error_code() === 'editorial_locked', 'Saving remains blocked during genuine concurrent editing');
 
+    // An unrelated login must not retain this browser's project lock after logout.
+    $a_other = $session($first);
     $logout($first, $a);
+    clean_post_cache($id);
+    $assert(get_post_meta($id, '_edit_lock', true) === '', 'Logout immediately releases this session lock');
+    $assert(WP_Session_Tokens::get_instance($first)->verify($a_other['token']), 'Another login remains signed in');
     $activate($second, $b);
     $b_settings = $read_settings($id, $b);
     clean_post_cache($id);
@@ -99,19 +104,41 @@ try {
     $tick = $heartbeat($b, $second, wp_create_nonce('heartbeat-nonce'));
     $assert(!empty($tick['wp-refresh-post-lock']['new_lock']), 'Current-account heartbeat keeps native lock renewal');
 
-    // Logging out one browser must not release an editor still signed in elsewhere.
+    // Repeat with the restricted editor while another unrelated login remains.
     $b_other = $session($second);
     $logout($second, $b);
-    $a = $session($first);
+    clean_post_cache($id);
+    $assert(get_post_meta($id, '_edit_lock', true) === '', 'Restricted editor logout releases only its owned lock too');
+    $assert(WP_Session_Tokens::get_instance($second)->verify($b_other['token']), 'Restricted editor other session remains valid');
+    $a = $a_other;
     $activate($first, $a);
     $read_settings($id, $a);
     clean_post_cache($id);
-    $assert(wp_check_post_lock($id) === $second, 'Another valid session keeps its editing lock');
-    $logout($second, $b_other);
-    $activate($first, $a);
-    $read_settings($id, $a);
+    $assert(wp_check_post_lock($id) === false, 'Unrelated logins do not block switching back');
+
+    // The same account opens this project in another browser, which now owns the lock.
+    $a_editor = $session($first);
+    $activate($first, $a_editor);
+    $read_settings($id, $a_editor);
     clean_post_cache($id);
-    $assert(wp_check_post_lock($id) === false, 'Switching back after the final logout opens editing immediately');
+    $owner = get_post_meta($id, '_iss_editorial_lock_session', true);
+    $assert($owner['session'] === hash('sha256', $a_editor['token']), 'Opening with another session transfers native lock ownership');
+    $assert(!str_contains(serialize($owner), $a_editor['token']), 'Ownership never stores a raw login token');
+    $logout($first, $a);
+    clean_post_cache($id);
+    $assert(get_post_meta($id, '_edit_lock', true) === $owner['lock'], 'Logging out an older session leaves the other browser lock intact');
+    $activate($second, $b_other);
+    $read_settings($id, $b_other);
+    clean_post_cache($id);
+    $assert(wp_check_post_lock($id) === $first, 'Another person still sees the active browser lock');
+    $logout($first, $a_editor);
+    clean_post_cache($id);
+    $assert(get_post_meta($id, '_edit_lock', true) === '', 'Logging out the owning browser clears its lock');
+    $activate($second, $b_other);
+    $read_settings($id, $b_other);
+    clean_post_cache($id);
+    $assert(wp_check_post_lock($id) === false, 'The waiting editor can open the project immediately');
+    wp_set_current_user($first);
     $assert(iss_editorial_get_draft($id, 'projekt')['token'] === $draft['token'], 'Private recovery survives all account switches');
     $assert(iss_editorial_saved_token($id, 'projekt') === $canonical, 'Switching and heartbeat never change canonical content');
     WP_CLI::log("PASS: $checks account-switch, concurrency and recovery checks.");

@@ -251,6 +251,8 @@ function iss_editorial_enqueue_admin_assets(string $hook): void
         return;
     }
 
+    iss_editorial_track_lock_session($post_id, (string) get_post_meta($post_id, '_edit_lock', true));
+
     iss_editorial_enqueue_archive_picker_assets($post_id);
     wp_enqueue_media(['post' => $post_id]);
     wp_enqueue_editor();

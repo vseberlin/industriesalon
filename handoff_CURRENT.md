@@ -21,14 +21,16 @@ inputs must be restored before replay. Git history was not rewritten. Follow
 The refresh aligned project IDs/status on both sites: KiezKarte **30811** and
 Futura pilot **30615** are published, original Futura **25657** is preserved,
 and composed Futura **30743** was copied as a draft. Subsequent local UAT saved
-and published 30743 at 11:53; the user-approved older admin autosave discard
+and published 30743; editing continues. The user-approved older admin autosave discard
 is complete. Do not overwrite these later edits with the refresh snapshot.
 Publish errors now reveal the recovery choice. Account switching releases
 locks from signed-out editors, clears stale native lock dialogs and prevents
-old tabs from renewing locks as another account. Other valid sessions remain
-protected; unsaved fields and private recovery remain intact. Existing tabs
-must reload once to load the fix. Browser lock/release cycles, 35 lock checks,
-45 UI checks and 511 storage checks pass. These follow-ups deploy code only,
+old tabs from renewing locks as another account. Logout now releases the exact
+native lock owned by that session even if the account has other logins. Private
+`_iss_editorial_lock_session` metadata records only the lock and a token hash;
+another browser's renewed lock is preserved. Unsaved fields and private recovery
+remain intact. Browser lock/release cycles, 50 lock checks, 45 UI checks,
+511 storage checks and 74 project UAT checks pass. These follow-ups deploy code only,
 without another database refresh or media artifact. All 84 Places and all canonical
 JSON, facts, relations, templates, private Sets and intake state were included.
 Do not replay earlier staging-only draft migrations over this full snapshot.
