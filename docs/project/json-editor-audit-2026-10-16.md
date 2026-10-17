@@ -12,8 +12,9 @@ before and after each fix.
 
 Status, 17 October 2026: H1–H3, M1–M8 and L1–L10 are resolved locally,
 including the picker extraction. L3 retains the intentional existing enablement
-boundary. Changes are uncommitted and undeployed. Human/cross-browser acceptance,
-staging profiling and coordinated release remain separate; `TODO.md` tracks them.
+boundary. Code `9985528` is committed, pushed and deployed to staging (17 October,
+13:04 UTC). Target validation, preservation and release checks passed. Human/
+cross-browser acceptance and interactive profiling remain in `TODO.md`.
 The findings below describe the audit baseline, followed by their resolutions.
 
 ## Summary
@@ -896,7 +897,8 @@ opaque trash; the route owner remained unchanged. Actual validation supplied the
 restoration fingerprint and canonical save removed it. Fixtures/history/Set were
 removed. Final post/meta hashes are identical across all 15,502 posts and 239,205
 non-lock metadata rows; 193 epoch and 269 state rows are also unchanged.
-No database migration or uploads artifact is needed. No release has occurred.
+No database migration or uploads artifact was needed; the verified staging
+release is recorded below.
 
 ## Security
 
@@ -917,11 +919,28 @@ No exploitable issue found:
 Read-lenient / write-strict split, drafts on core autosave revisions, the
 lock/session handling, and the volume of storage/lock/UI checks.
 
-## Remaining release acceptance
+## Staging release — 17 October 2026
 
-Implementation and local automated verification are complete. Finish human and
-cross-browser UAT, then coordinate a code release with target validation/registry
-checks and staging Query Monitor measurements. Revision retention requires a
-current database backup; open editors must reload after token changes. Preserve
-newer UAT content and private recovery. No further implementation slice or
-unrelated queue/cron/graph work is implied.
+Code `9985528` deployed through GitHub with a clean fast-forward from `d9c4d79`.
+A fresh verified 119-table DB/uploads/intake/code/runtime rollback bundle is at
+`/srv/industriesalon/stage/backups/iss-backup-20261017T130015Z/`. No database,
+content, uploads or configuration transfer was needed; no historical purge ran.
+
+Target validation passed all 180 documents and nine format registries. All 180
+anonymous public document render hashes are identical before/after release.
+Eleven public routes remain HTTP 200/noindex. Restricted Projects login and
+editor access, unrelated-screen denial and five exact editor assets passed.
+Every staging post and non-lock metadata row retains its hash (15,504 posts,
+239,197 metadata rows), including private drafts; 193 epochs and 269 states are
+also unchanged. Service health and post-release logs passed.
+
+Read-only staging probes confirm registry builds 4 → 1 for a Futura read,
+twenty ticket lookups sanitizing 20 → 1 with identical output, and larger
+reference reads dropping 30 → 4 / 50 → 2 queries. Function timings and three-
+request public HTTP samples are in `var/editorial-release-20261017/` (ignored);
+these are not interactive Query Monitor measurements or a latency guarantee.
+
+Human/cross-browser UAT and interactive Query Monitor/editor-cadence review remain
+separate acceptance work. Already-open editors must reload after token changes;
+private recovery remains available. Later saves enforce revision retention, so
+keep the matching backup. No adjacent queue/cron/graph work is implied.

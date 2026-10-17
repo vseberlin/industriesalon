@@ -28,13 +28,12 @@ Immediate executable work only. Larger future programs live in `docs/project/bac
   collapse the three timeline layers, fix breakpoints to four constants, add
   a dev-only CSS lint in `tools/`. Check unreferenced classes against stored
   `post_content` before deleting them.
-- Coordinate release acceptance for the completed local
-  [JSON editor audit](docs/project/json-editor-audit-2026-10-16.md): human and
-  cross-browser UAT, target `wp iss-editorial validate-all` / registry checks,
-  and before/after Query Monitor profiling for M1–M4 on staging. Verify a current
-  database backup before revision retention is released; already-open editors
-  must reload after the token changes. Implementation and local Chrome/regression
-  verification are complete. See [current handoff](handoff_CURRENT.md).
+- Complete human and cross-browser UAT for the deployed
+  [JSON editor audit](docs/project/json-editor-audit-2026-10-16.md), including
+  interactive Query Monitor/editor-cadence review. Code `9985528` is deployed;
+  target registry/document checks, public render parity, restricted-editor HTTP
+  checks and read-only performance probes passed. Existing editors must reload
+  after the token changes. See [current handoff](handoff_CURRENT.md).
 - Correct the archive landing quick-navigation grid at phone widths: its four
   columns overflow (409 px content / 375 px viewport). The shared archive cards
   already fit; fix the quick-navigation owner without changing their layout.
