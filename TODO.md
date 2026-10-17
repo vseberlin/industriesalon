@@ -4,6 +4,10 @@ Immediate executable work only. Larger future programs live in `docs/project/bac
 
 ## Next
 
+- Review the local JSON editor design simplification: canvas menus removed,
+  contextual help consolidated, tab hierarchy clarified and text editors
+  auto-growing. Implementation and Chrome checks are complete; changes remain
+  committed locally, unpushed and undeployed. See [current handoff](handoff_CURRENT.md).
 - Restore "one shared gesture, many skins" per the proposed
   [skin contract ADR](docs/architecture/skin-contract-adr.md). Gate first:
   on staging, check whether Frauen im Werk (quellenbuehne), Kinder im Werk

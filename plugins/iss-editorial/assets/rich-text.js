@@ -72,9 +72,16 @@
             menubar: false,
             statusbar: false,
             height: 230,
-            toolbar1: 'undo redo | bold italic | bullist numlist | link unlink | removeformat',
+            wp_autoresize_on: true,
+            autoresize_min_height: 230,
+            resize: false,
+            toolbar1: 'undo redo | bold italic bullist numlist link issmore',
             toolbar2: '',
             setup: function (editor) {
+              editor.addButton('issmore', { type: 'menubutton', text: '⋯', icon: false, tooltip: 'Weitere Formatierungen', menu: [
+                { text: 'Link entfernen', icon: 'unlink', onclick: function () { editor.execCommand('unlink'); } },
+                { text: 'Formatierung entfernen', icon: 'removeformat', onclick: function () { editor.execCommand('RemoveFormat'); } }
+              ] });
               editor.on('input change undo redo', function () { options.onChange(editor.getContent()); });
               editor.on('blur', options.onBlur);
               editor.on('keydown', function (event) {
@@ -97,12 +104,15 @@
       menubar: false,
       statusbar: false,
       height: profile === 'block' ? 230 : 140,
+      wp_autoresize_on: true,
+      autoresize_min_height: profile === 'block' ? 230 : 140,
+      resize: false,
       forced_root_block: profile === 'block' ? 'p' : false,
       valid_elements: 'p,br,strong/b,em/i,ul,ol,li,span[class]' + (profile !== 'inline-card' ? ',a[href|target|rel]' : ''),
       paste_as_text: false,
       paste_remove_styles: true,
       paste_preprocess: function (_plugin, args) { args.content = sanitize(args.content, profile); },
-      toolbar1: 'undo redo | bold italic' + (profile === 'block' ? ' | bullist numlist' : '') + (profile !== 'inline-card' ? ' | isslink unlink' : '') + ' | issink issmark | removeformat',
+      toolbar1: 'undo redo | bold italic' + (profile === 'block' ? ' bullist numlist' : '') + (profile !== 'inline-card' ? ' isslink' : '') + ' issmore',
       toolbar2: '',
       content_style: 'body{font-family:system-ui,sans-serif;font-size:16px;line-height:1.6;margin:12px}p{margin:0 0 .8em}a{text-decoration:underline}',
       setup: function (editor) {
@@ -177,9 +187,14 @@
           panel.onkeydown = function (event) { if (event.key === 'Escape') { event.preventDefault(); event.stopPropagation(); cancel(); } };
           panel.querySelector('button').focus();
         }
-        editor.addButton('issink', { text: 'Farbe', icon: false, tooltip: 'Textfarbe', onclick: function () { colourPanel('ink'); } });
-        editor.addButton('issmark', { text: 'Marker', icon: false, tooltip: 'Hervorhebung', onclick: function () { colourPanel('mark'); } });
-        editor.addButton('isslink', { text: 'Link', icon: false, tooltip: 'Link einfügen oder bearbeiten', onclick: function () {
+        editor.addButton('issmore', { type: 'menubutton', text: '⋯', icon: false, tooltip: 'Weitere Formatierungen', menu: (profile !== 'inline-card' ? [
+          { text: 'Link entfernen', icon: 'unlink', onclick: function () { editor.execCommand('unlink'); } }
+        ] : []).concat([
+          { text: 'Textfarbe', icon: 'forecolor', onclick: function () { colourPanel('ink'); } },
+          { text: 'Hervorhebung', icon: 'backcolor', onclick: function () { colourPanel('mark'); } },
+          { text: 'Formatierung entfernen', icon: 'removeformat', onclick: function () { editor.execCommand('RemoveFormat'); } }
+        ]) });
+        editor.addButton('isslink', { icon: 'link', tooltip: 'Link einfügen oder bearbeiten', onclick: function () {
           editor.focus();
           editor.execCommand('WP_Link');
           window.wpLink.open(editor.id);

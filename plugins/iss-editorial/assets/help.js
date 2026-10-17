@@ -21,7 +21,7 @@
         'Die Seite besteht aus Abschnitten. Wähle rechts unter „Abschnitte“ einen Eintrag aus. Unter „Inhalt“ bearbeitest du die Texte; „Darstellung“, „Links“ und „Medien“ erscheinen, wenn der Abschnitt diese Möglichkeiten bietet.',
         'Beginne mit einer kleinen Textänderung. Warte auf „Entwurf gesichert“. Mit „Fertig“ kehrst du zur Übersicht zurück. Prüfe anschließend die Vorschau für Desktop und Telefon.',
         'Automatische Sicherungen sind dein privater Arbeitsstand. Erst die WordPress-Schaltflächen speichern die gemeinsame Fassung bzw. aktualisieren die öffentliche Seite. Lies dazu „Speichern und Freigeben“.',
-        'Die Hilfe ersetzt vorübergehend die Vorschau. Du kannst daneben weiterarbeiten. „Hilfe schließen“ schließt die Hilfe; deine Eingaben bleiben erhalten.'
+        'Das „?“ im Kopf der Seitenleiste erklärt den aktuellen Bereich. Die vollständige Hilfe erreichst du unter „Weitere Werkzeuge“ → „Hilfe“. Die Hilfe ersetzt vorübergehend die Vorschau. Du kannst daneben weiterarbeiten. „Hilfe schließen“ schließt die Hilfe; deine Eingaben bleiben erhalten.'
       ] },
       save: { title: 'Speichern und Freigeben', short: saveEffect, paragraphs: [
         '„Entwurf gesichert“ bestätigt die automatische Sicherung deines privaten Arbeitsstands. „Noch nicht gesichert“ oder eine Fehlermeldung bedeutet: Lass den Tab offen und prüfe die Meldung.',
@@ -34,7 +34,8 @@
       text: { title: 'Texte bearbeiten', short: 'Titel und Text im Abschnitt bearbeiten. Die Werkzeugleiste formatiert markierten Text.', paragraphs: [
         'Der Titel benennt den Abschnitt. „Vorspann & Einleitung (optional)“ ergänzt eine kurze Einordnung. Ein Vorspann ist eine kurze Zeile vor der Überschrift; die Einleitung führt in den Text ein.',
         'Markiere Text, bevor du Fett, Kursiv oder einen Link anwendest. Nutze Absätze und Listen für die Gliederung. Prüfe nach dem Einfügen aus Word oder anderen Seiten die Formatierung und Links.',
-        'Du kannst unterstützte Textfelder auch direkt in der Vorschau bearbeiten. „Fertig“ übernimmt diese Eingabe. Escape verwirft nur die laufende direkte Texteingabe und stellt deren vorherigen Wert wieder her.',
+        'Du kannst unterstützte Textfelder per Doppelklick oder mit Enter auch direkt in der Vorschau bearbeiten. „Fertig“ übernimmt diese Eingabe. Escape verwirft nur die laufende direkte Texteingabe und stellt deren vorherigen Wert wieder her.',
+        'Textfarbe, Hervorhebung, Link entfernen und Formatierung entfernen findest du unter „⋯“ in der Textwerkzeugleiste. Das Textfeld wächst mit deinem Text; scrolle in der Seitenleiste.',
         'Die Felder rechts bleiben der vollständige Bearbeitungsweg. Öffne dort „Inhalt“, wenn ein Element in der Vorschau nicht direkt bearbeitet werden kann.'
       ] },
       display: { title: 'Darstellung wählen', short: 'Ordnet vorhandene Inhalte anders an. Prüfe die Wirkung anschließend auf Desktop und Telefon.', paragraphs: [
@@ -57,7 +58,7 @@
       arrange: { title: 'Abschnitte hinzufügen und ordnen', short: 'Neue Abschnitte über „Hinzufügen“ wählen. Am Griff ziehen oder mit den Pfeiltasten verschieben.', paragraphs: [
         'Unter „Hinzufügen“ suchst du einen Abschnittstyp. Der Klick fügt ihn ein; danach füllst du seine Felder. Das Plus in der Vorschau fügt an der dort angezeigten Position ein.',
         'Unter „Abschnitte“ ziehst du einen Eintrag an die gewünschte Stelle. Mit der Tastatur: den Verschiebegriff fokussieren und Pfeil nach oben oder unten drücken.',
-        'Die Pfeile „Vorheriger Abschnitt“ und „Nächster Abschnitt“ wechseln nur die Auswahl. Sie ändern nicht die Reihenfolge.',
+        '„Vorheriger“ und „Nächster“ wechseln nur den ausgewählten Abschnitt. Sie ändern nicht die Reihenfolge.',
         'Für einen Seitenauftakt mit großem Bild muss der Auftakt an erster Stelle stehen. Prüfe nach dem Verschieben den Übergang zum nächsten Abschnitt.'
       ] },
       trash: { title: 'Entfernen und Wiederherstellen', short: 'Ganze Abschnitte bleiben im Papierkorb und können wiederhergestellt werden.', paragraphs: [
@@ -87,7 +88,7 @@
     if (options.format !== 'projekt') { topics.save.paragraphs = topics.save.paragraphs.map(function (p) { return p.replace(/Projektstatus und WordPress-Veröffentlichungsstatus sind unterschiedliche Angaben\./, ''); }); saveEffect = saveEffect.replace('Dieses Projekt', 'Dieser Inhalt').replace('Neue Projekte', 'Neue Inhalte'); topics.save.short = saveEffect; topics.save.paragraphs[3] = saveEffect; }
     if (options.format === 'projekt') {
       topics.futura = { title: 'Futura: Übungsweg', short: 'Sechs Aufgaben zum Kennenlernen des Projekteditors.', paragraphs: [
-        'Futura enthält Bild & Text, Fließtext, Merkpunkte, Text-Bild-Reihen, Überschrift & Intro und Kapitel. Die Hilfe zu einem Abschnitt öffnest du über „? Zum Abschnitt“.',
+        'Futura enthält Bild & Text, Fließtext, Merkpunkte, Text-Bild-Reihen, Überschrift & Intro und Kapitel. Die Hilfe zu einem Abschnitt öffnest du über das „?“ im Kopf der Seitenleiste.',
         'Übe Änderungen, die du nicht veröffentlichen möchtest, in einem neuen Testprojekt. Auf einer veröffentlichten Futura-Seite verändert „Aktualisieren“ die öffentliche Fassung.',
         '1. Öffne einen Textabschnitt und ändere eine Überschrift. Prüfe den Status „Entwurf gesichert“.',
         '2. Wähle für „Bild & Text“ ein Bild aus der Mediathek und ergänze eine Bildunterschrift.',
@@ -200,7 +201,7 @@
     return {
       button: helpButton, hint: hint, show: show,
       saveNotice: saveEffect + ' Automatische Sicherungen und „Fertig“ bleiben privat.',
-      section: function (type, el) { var key = 'section:' + type; el.dataset.help = topics[key] ? key : 'arrange'; el.setAttribute('aria-label', 'Hilfe: ' + (topics[key] || topics.arrange).title); },
+      context: function (key, el) { hidePopup(); el.dataset.help = topics[key] ? key : 'arrange'; el.setAttribute('aria-label', 'Hilfe: ' + (topics[key] || topics.arrange).title); },
       destroy: function () { hidePopup(); document.removeEventListener('pointerdown', outside); window.removeEventListener('resize', hidePopup); }
     };
   };

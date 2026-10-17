@@ -687,9 +687,10 @@ including recovered drafts; this does not write canonical content. The format re
 inside a linked card. The last profile excludes hyperlinks to prevent nested
 anchors; headings, labels and factual fields remain plain text.
 
-Registered rich-text fields use the installed WordPress TinyMCE with a compact toolbar. **Link**
-opens the full native dialog, including link text when no text is selected and
-internal-content search. **Farbe** and **Marker** offer the effective theme
+Registered rich-text fields use the installed WordPress TinyMCE with an icon toolbar
+and tooltips. The link icon opens the full native dialog, including link text
+when no text is selected and internal-content search. **⋯** contains link removal,
+**Textfarbe**, **Hervorhebung** and format removal. Colour controls offer the effective theme
 palette, custom six-digit RGB values, session-local recent colours and separate
 resets. Undo, selection and links survive colour changes. Version 3 stores named
 palette choices as `span.iss-ink-preset-{slug}` / `span.iss-mark-preset-{slug}`;
@@ -701,12 +702,20 @@ and CSS are excluded. The theme emits scoped stylesheet rules, not style attribu
 Block prose permits paragraphs, emphasis, lists, breaks and safe links; short
 descriptions permit their inline subset. Unsupported imported markup stays
 visible for review until the editor explicitly chooses **Formatierung
-vereinfachen**; server validation also rejects lossy normalization.
+vereinfachen**; server validation also rejects lossy normalization. Native
+`wpautoresize` grows sidebar text editors with their content, without a maximum
+height; the fields pane owns scrolling (the whole inspector at short heights).
 
 All enabled editorial documents use one persistent two-column workspace: the
 actual WordPress page preview and one right panel. **Abschnitte**, **Hinzufügen**
-and **Seite** switch between the outline, compact searchable two-column chooser
-and document controls. Selecting a section opens its inspector in the same panel.
+and **Seite** form the top segmented control for the outline, compact searchable
+two-column chooser and document controls. **Abschnitte** stays active while its
+inspector is open; secondary **Inhalt / Darstellung / Links / Medien** tabs use
+underlines. One muted **?** in the panel header follows the selected panel/tab;
+the complete searchable guide remains under **Weitere Werkzeuge → Hilfe**.
+Selecting a section opens its inspector in the same panel. Labelled
+**Vorheriger / Nächster** buttons change selection; reordering belongs to the
+outline grips.
 **Fertig** secures the draft through the existing save queue and returns to the
 outline/preview; invalid or failed saves retain the inspector and recoverable
 input. It never publishes. Skins, project rails and tour route controls live under
@@ -731,7 +740,9 @@ remain independent. See the [styling contract](../project/editor-workspace-plan.
 for responsive behavior and the limited WordPress compatibility exception.
 
 Title, kicker, body and lead can be edited directly in the authenticated canvas
-with visible buttons, double-click or Enter. The same WordPress text engine and
+by double-click or Enter. Canvas sections have a thin selection outline and a
+small non-interactive label; the duplicate section editing menus are removed.
+Single click still selects the section in the sidebar. The same WordPress text engine and
 colour/link contracts apply. Input is sent to the parent for autosave before blur;
 Escape restores only the active field. Snapshot-bound messages check source,
 origin, token, explicit field names, session and increasing sequence. Snapshot

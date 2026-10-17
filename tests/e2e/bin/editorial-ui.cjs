@@ -5,7 +5,7 @@ const fs = require('node:fs');
 const { JSDOM } = require('jsdom');
 
 async function editor(format = 'landing', extra = {}) {
-  const dom = new JSDOM('<div id="wpwrap"><form id="post"><input id="title" value="Page title"><textarea id="excerpt">Summary</textarea><select id="entity"><option value="event.general">Event</option><option value="event.festival">Festival</option></select><div class="iss-editorial-admin"><input class="iss-editorial-document-field"><input class="iss-editorial-enabled-field" value="1"><input class="iss-editorial-draft-token-field"><div class="iss-editorial-recovery"></div><p class="iss-editorial-autosave-status"></p><div class="iss-editorial-root"></div><button type="button" class="iss-editorial-preview-button">Preview</button></div><button type="submit">Update</button></form></div>', { url: 'http://localhost:8082/wp-admin/post.php', runScripts: 'outside-only', pretendToBeVisual: true });
+  const dom = new JSDOM('<div id="wpwrap"><form id="post"><input id="title" value="Page title"><textarea id="excerpt">Summary</textarea><select id="entity"><option value="event.general">Event</option><option value="event.festival">Festival</option></select><div class="iss-editorial-admin"><input class="iss-editorial-document-field"><input class="iss-editorial-enabled-field" value="1"><input class="iss-editorial-draft-token-field"><div class="iss-editorial-recovery"></div><p class="iss-editorial-autosave-status"></p><div class="iss-editorial-root"></div><button type="button" class="iss-editorial-preview-button">Preview</button></div><button type="submit">Update</button></form><div id="wp-link-backdrop" hidden></div><div id="wp-link-wrap" hidden></div></div>', { url: 'http://localhost:8082/wp-admin/post.php', runScripts: 'outside-only', pretendToBeVisual: true });
   const { window } = dom;
   window.document.getElementById('wpwrap').inert = false;
   const sections = extra.sections || { kapitel: { label: 'Kapitel', supports: ['body', 'links'] }, intro: { label: 'Intro', ui_hidden: true, supports: ['body'] } };
@@ -878,6 +878,11 @@ test('Frame plain-text keyboard edits wait for acknowledgement, stream changes, 
     Object.defineProperty(window,'parent',{value:parent});window.issEditorialPreviewFrame={token:'t',editing:true};
     window.eval(fs.readFileSync('plugins/iss-editorial/assets/preview-frame.js','utf8'));
     const title=window.document.querySelector('h1');
+    assert.equal(window.document.querySelectorAll('.iss-preview-section-tools').length, 0);
+    const section = title.closest('section');
+    assert.equal(section.querySelectorAll('button').length, 0, 'The section has no duplicate editing menu');
+    assert.equal(section.querySelector('.iss-preview-section-label').getAttribute('aria-hidden'), 'true');
+    title.click(); assert.equal(sent.at(-1).type, 'iss-preview-select');
     title.dispatchEvent(new window.KeyboardEvent('keydown',{key:'Enter',bubbles:true}));
     assert.equal(sent.at(-1).type,'iss-preview-field-start');
     assert.equal(title.hasAttribute('data-iss-editing'),false);
@@ -983,6 +988,22 @@ test('Workspace trash undo restores its own section and leaving restores native 
   } finally { e.dom.window.close(); }
 });
 
+
+test('Native link dialog remains interactive when WordPress moves it out of the expanded workspace', async () => {
+  const e = await editor();
+  try {
+    const original = JSON.stringify(e.value());
+    const dialog = e.window.document.getElementById('wp-link-wrap');
+    const backdrop = e.window.document.getElementById('wp-link-backdrop');
+    assert.notEqual(dialog.inert, true); assert.notEqual(backdrop.inert, true);
+    e.window.document.body.append(backdrop, dialog);
+    e.root.querySelector('[aria-label="Arbeitsfläche verkleinern"]').click();
+    e.root.querySelector('[aria-label="Arbeitsfläche vergrößern"]').click();
+    assert.notEqual(dialog.inert, true); assert.notEqual(backdrop.inert, true);
+    assert.equal(e.button('Update').inert, true, 'Covered native save controls remain outside the keyboard path');
+    assert.equal(JSON.stringify(e.value()), original);
+  } finally { e.dom.window.close(); }
+});
 
 test('Minimizing the workspace uncovers native controls without submitting or changing the draft', async () => {
   const e = await editor('landing', workspaceOptions());
@@ -1284,6 +1305,31 @@ test('Place insertion limits preserve retained duplicates, editing, reorder and 
   } finally { e.dom.window.close(); }
 });
 
+test('Sidebar navigation keeps its hierarchy and contextual help without changing section order or saving', async () => {
+  const e = await editor();
+  try {
+    await e.settle(); const original = JSON.stringify(e.value()); const requests = e.requests.length;
+    const top = e.root.querySelector('.iss-editorial-studio__panel-tabs');
+    const help = e.root.querySelector('.iss-editorial-studio__panel-head > .iss-editorial-help-button');
+    const active = () => top.querySelector('[aria-pressed="true"]').textContent;
+    assert.equal(e.root.querySelectorAll('.iss-editorial-help-button').length, 1);
+    assert.equal(active(), 'Abschnitte');
+    e.root.querySelector('.iss-editorial-outline__select').click();
+    assert.equal(active(), 'Abschnitte'); assert.equal(help.dataset.help, 'section:kapitel');
+    e.button('Links').click(); assert.equal(help.dataset.help, 'links');
+    const previous = e.root.querySelector('[aria-label="Vorherigen Abschnitt auswählen"]');
+    const next = e.root.querySelector('[aria-label="Nächsten Abschnitt auswählen"]');
+    assert.equal(previous.disabled, true); assert.match(next.textContent, /Nächster/);
+    next.click(); assert.match(e.root.querySelector('.iss-editorial-studio__position').textContent, /2 von 2/);
+    assert.equal(next.disabled, true); assert.equal(previous.disabled, false);
+    previous.click(); assert.match(e.root.querySelector('.iss-editorial-studio__position').textContent, /1 von 2/);
+    e.button('Hinzufügen', top).click(); assert.equal(active(), 'Hinzufügen'); assert.equal(help.dataset.help, 'arrange');
+    e.button('Seite', top).click(); assert.equal(active(), 'Seite'); assert.equal(help.dataset.help, 'page');
+    e.button('Abschnitte', top).click(); assert.equal(active(), 'Abschnitte');
+    await e.settle(); assert.equal(JSON.stringify(e.value()), original); assert.equal(e.requests.length, requests);
+  } finally { e.dom.window.close(); }
+});
+
 test('Help search and contextual navigation preserve the document, preview and save requests', async () => {
   const e = await editor('projekt', { publishing: {status:'publish',canPublish:false}, sections: {kapitel:{label:'Kapitel',description:'Ein Thema vertiefen.',help:['Eine eigene Überschrift verwenden.'],supports:['body']}} });
   try {
@@ -1306,7 +1352,7 @@ test('Help search and contextual navigation preserve the document, preview and s
     help.dispatchEvent(new e.window.KeyboardEvent('keydown',{key:'Escape',bubbles:true}));
     assert.equal(help.hidden,true); assert.equal(e.window.document.activeElement,e.button('Hilfe'));
     e.root.querySelector('.iss-editorial-outline__select').click();
-    const contextual = e.root.querySelector('.iss-editorial-studio__inspector > .iss-editorial-help-button'); contextual.click();
+    const contextual = e.root.querySelector('.iss-editorial-studio__panel-head > .iss-editorial-help-button'); contextual.click();
     const popup = e.root.querySelector('.iss-editorial-help-popup');
     assert.equal(popup.getAttribute('role'),'dialog'); assert.match(popup.textContent,/Eine eigene Überschrift/);
     e.button('Mehr dazu',popup).click();
@@ -1349,7 +1395,7 @@ test('Control explanations support focus, Escape, click, outside dismissal and e
     finish.dispatchEvent(new e.window.KeyboardEvent('keydown',{key:'Escape',bubbles:true}));
     assert.equal(popup.hidden,true); assert.equal(e.window.document.activeElement,finish);
     assert.equal(finish.getAttribute('aria-describedby'),'existing-guidance');
-    const help = e.root.querySelector('.iss-editorial-studio__save-guidance button'); help.click();
+    const help = e.root.querySelector('.iss-editorial-studio__panel-head > .iss-editorial-help-button'); help.click();
     assert.equal(popup.getAttribute('role'),'dialog'); assert.equal(help.getAttribute('aria-expanded'),'true');
     e.button('Schließen',popup).click();
     assert.equal(popup.hidden,true); assert.equal(e.window.document.activeElement,help);

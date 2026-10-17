@@ -39,8 +39,8 @@
     var preview = node('div', 'iss-editorial-studio__preview');
     var inspector = node('section', 'iss-editorial-studio__inspector'); inspector.setAttribute('aria-label', 'Abschnitt bearbeiten');
     var navigation = node('div', 'iss-editorial-studio__navigation');
-    var previous = iconButton('Vorheriger Abschnitt', 'arrow-up-alt2', function () { options.select(selected - 1); });
-    var next = iconButton('Nächster Abschnitt', 'arrow-down-alt2', function () { options.select(selected + 1); });
+    var previous = button('← Vorheriger', function () { options.select(selected - 1); }); previous.setAttribute('aria-label', 'Vorherigen Abschnitt auswählen');
+    var next = button('Nächster →', function () { options.select(selected + 1); }); next.setAttribute('aria-label', 'Nächsten Abschnitt auswählen');
     var heading = node('h3');
     var guidance = node('p', 'iss-editorial-studio__guidance'); guidance.hidden = true;
     var position = node('small', 'iss-editorial-studio__position');
@@ -55,15 +55,24 @@
     undo.append(undoText, undoAction);
     var selected = 0;
     var help = window.issEditorialHelp(root, { preview: preview, tools: tools, sections: options.sections, format: options.format, publishing: options.publishing, afterEditing: options.afterEditing });
-    var sectionHelp = help.button('arrange', '? Zum Abschnitt');
+    var sectionHelp = help.button('arrange');
+    var panelHead = node('div', 'iss-editorial-studio__panel-head'); panelHead.append(panelTabs, sectionHelp);
     var activeTab = 'content';
+    var studioType = '';
+    function contextualHelp() {
+      var key = root.dataset.panel === 'inspector'
+        ? (activeTab === 'content' ? 'section:' + studioType : ({display: 'display', links: 'links', media: 'media'}[activeTab]))
+        : (root.dataset.panel === 'settings' ? 'page' : 'arrange');
+      help.context(key, sectionHelp);
+    }
     function setPanel(panel) {
       root.dataset.panel = panel;
       outline.hidden = panel !== 'outline';
       palette.hidden = panel !== 'insert';
       inspector.hidden = panel !== 'inspector';
       settings.hidden = panel !== 'settings';
-      Array.from(panelTabs.children).forEach(function (el) { el.setAttribute('aria-pressed', String(el.dataset.panel === panel)); });
+      Array.from(panelTabs.children).forEach(function (el) { el.setAttribute('aria-pressed', String(el.dataset.panel === (panel === 'inspector' ? 'outline' : panel))); });
+      contextualHelp();
     }
     function setView(view) {
       root.dataset.view = view;
@@ -76,7 +85,7 @@
     [['outline', 'Abschnitte'], ['insert', 'Hinzufügen'], ['settings', 'Seite']].forEach(function (choice) {
       var tab = button(choice[1], function () {
         options.afterEditing(function () { if (choice[0] === 'insert') { options.insert(); } else { setView(choice[0]); } });
-      }, 'iss-editorial-studio__tab'); tab.dataset.panel = choice[0]; panelTabs.appendChild(tab);
+      }, 'iss-editorial-studio__segment'); tab.dataset.panel = choice[0]; panelTabs.appendChild(tab);
     });
     var finish = button('Fertig', function () {
       options.afterEditing(function () {
@@ -94,11 +103,12 @@
     function setExpanded(full) {
       if (full && !background.length) {
         // Keep native controls out of the keyboard path while covered. WordPress
-        // media/link dialogs outside wpwrap retain their own focus handling.
+        // moves its link dialog from wpwrap to body when opening it; never
+        // mark that dialog or its backdrop inert before the move.
         var branch = root;
         while (branch.parentElement && branch.id !== 'wpwrap') {
           Array.from(branch.parentElement.children).forEach(function (sibling) {
-            if (sibling !== branch && sibling.id !== 'wpadminbar') { background.push([sibling, sibling.inert]); sibling.inert = true; }
+            if (sibling !== branch && !sibling.matches('#wpadminbar, #wp-link-wrap, #wp-link-backdrop')) { background.push([sibling, sibling.inert]); sibling.inert = true; }
           });
           branch = branch.parentElement;
         }
@@ -124,7 +134,8 @@
     menu.appendChild(button('Angaben & Beziehungen …', function () { options.afterEditing(function () { setExpanded(false); var native = document.getElementById('poststuff'); if (native) { native.scrollIntoView({ block: 'start' }); } }); }));
     var history = mount.closest('.iss-editorial-admin').querySelector('a[href*="revision.php"]');
     if (history) { var link = history.cloneNode(true); link.textContent = 'Verlauf'; menu.appendChild(link); }
-    head.append(title, tools, previewTools, statusMount, expand, more);
+    menu.appendChild(tools);
+    head.append(title, previewTools, statusMount, expand, more);
     var ownerBody = node('div', 'iss-editorial-studio__owner-controls');
     outline.appendChild(button('+ Abschnitt hinzufügen', function () { options.insert(); }));
     if (options.orderNotice) { outline.appendChild(node('p', 'iss-editorial-studio__guidance', options.orderNotice)); }
@@ -132,10 +143,11 @@
     settings.append(node('h3', '', 'Seiteneinstellungen'), ownerBody, button('Angaben & Beziehungen …', function () {
       options.afterEditing(function () { setExpanded(false); var native = document.getElementById('poststuff'); if (native) { native.scrollIntoView({ block: 'start' }); } });
     }));
-    navigation.append(position, previous, next, finish); inspector.append(navigation, heading, guidance, sectionHelp, inspectorTabs, note, body, remove);
-    sidebar.append(panelTabs, outline, palette, inspector, settings, undo);
+    var sectionNavigation = node('div', 'iss-editorial-studio__section-navigation'); sectionNavigation.setAttribute('role', 'group'); sectionNavigation.setAttribute('aria-label', 'Abschnitt auswählen');
+    sectionNavigation.append(previous, next);
+    navigation.append(position, finish); inspector.append(navigation, sectionNavigation, heading, guidance, inspectorTabs, note, body, remove);
+    sidebar.append(panelHead, outline, palette, inspector, settings, undo);
     var saveGuidance = node('p', 'iss-editorial-studio__save-guidance', help.saveNotice);
-    saveGuidance.appendChild(help.button('save'));
     grid.append(preview, sidebar); root.append(head, saveGuidance, tabs, grid); mount.appendChild(root); setPanel('outline'); setView('preview'); setExpanded(true);
     var search = node('input'); search.type = 'search'; search.placeholder = 'Abschnitt suchen'; search.setAttribute('aria-label', 'Abschnitt suchen');
     var results = node('div', 'iss-editorial-palette__results');
@@ -188,6 +200,7 @@
     });
     function showInspectorTab(key) {
       activeTab = key;
+      contextualHelp();
       Array.from(inspectorTabs.children).forEach(function (tab) { tab.setAttribute('aria-pressed', String(tab.dataset.panel === key)); });
       Array.from(body.children).forEach(function (panel) { panel.hidden = panel.dataset.inspectorTab !== key; });
     }
@@ -200,13 +213,12 @@
       editing: function (active) { body.inert = active; remove.disabled = active; },
       insert: function (index) { insertAt = index; search.value = ''; filterPalette(); setView('insert'); search.focus(); },
       organizeFields: function (type) {
+        studioType = type;
         inspectorTabs.replaceChildren();
         var groups = {};
         Array.from(body.children).forEach(function (panel) {
           var group = panel.classList.contains('iss-editorial-panel--display') ? 'display' : panel.classList.contains('iss-editorial-panel--links') || panel.classList.contains('iss-editorial-panel--sources') ? 'links' : panel.classList.contains('iss-editorial-panel--media') || panel.classList.contains('iss-editorial-panel--archive') ? 'media' : 'content';
           panel.dataset.inspectorTab = group; groups[group] = true;
-          var key = panel.classList.contains('iss-editorial-panel--facts') ? 'section:facts' : panel.classList.contains('iss-editorial-panel--items') ? 'section:' + type : ({ content: 'text', display: 'display', links: 'links', media: 'media' }[group]);
-          if (!panel.querySelector('.iss-editorial-help-button')) { panel.querySelector('.iss-editorial-panel__body').prepend(help.button(key, '? ' + ({ content: 'Hilfe zum Inhalt', display: 'Hilfe zur Darstellung', links: 'Hilfe zu Links', media: 'Hilfe zu Bildern' }[group]))); }
         });
         [['content', 'Inhalt'], ['display', 'Darstellung'], ['links', 'Links'], ['media', 'Medien']].forEach(function (choice) {
           if (!groups[choice[0]]) { return; }
@@ -244,7 +256,7 @@
         heading.textContent = sections[index] ? ((options.sections[sections[index].type] || {}).label || 'Abschnitt') : 'Abschnitt hinzufügen';
         guidance.textContent = sections[index] ? ((options.sections[sections[index].type] || {}).description || '') : '';
         guidance.hidden = !guidance.textContent;
-        help.section(sections[index] ? sections[index].type : '', sectionHelp);
+        studioType = sections[index] ? sections[index].type : ''; contextualHelp();
         trashLabel.textContent = 'Papierkorb (' + deletedCount + ')';
         if (!palette.hidden) { filterPalette(); }
       }

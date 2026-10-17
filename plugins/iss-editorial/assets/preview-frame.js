@@ -89,15 +89,13 @@
     var heading = section.querySelector('h1, h2, h3');
     section.setAttribute('aria-label', 'Abschnitt bearbeiten: ' + (heading ? heading.textContent : String(Number(section.dataset.issPreviewSection) + 1)));
     if (!context.editing) { return; }
-    var controls = document.createElement('div'); controls.className = 'iss-preview-section-tools';
     section.querySelectorAll('[data-iss-field]').forEach(function (field) {
       if (!labels[field.dataset.issField]) { return; }
       field.tabIndex = 0; field.setAttribute('aria-label', labels[field.dataset.issField] + ' bearbeiten');
-      controls.appendChild(button(labels[field.dataset.issField] + ' bearbeiten', function () { begin(field); }));
     });
-    controls.appendChild(button('Im Formular bearbeiten', function () { send('iss-preview-form', { section: Number(section.dataset.issPreviewSection) }); }));
-    var label = document.createElement('span'); label.className = 'iss-preview-section-label'; label.textContent = 'Abschnitt ' + (Number(section.dataset.issPreviewSection) + 1); controls.prepend(label);
-    section.prepend(controls);
+    // Selection belongs to the canvas; editing controls live in the sidebar.
+    var label = document.createElement('span'); label.className = 'iss-preview-section-label'; label.setAttribute('aria-hidden', 'true');
+    label.textContent = 'Abschnitt ' + (Number(section.dataset.issPreviewSection) + 1); section.prepend(label);
     var gap = button('+ Abschnitt', function () { send('iss-preview-insert', { section: Number(section.dataset.issPreviewSection) }); }); gap.className = 'iss-preview-gap'; section.before(gap);
   });
   if (context.editing && sections.length) {
@@ -107,7 +105,7 @@
     event.preventDefault(); event.stopImmediatePropagation();
     send('iss-preview-select', { section: Number(section.dataset.issPreviewSection), scroll: window.scrollY });
   }
-  function isControl(target) { return target.closest('.iss-preview-tools, .iss-preview-section-tools, .iss-preview-gap, #wp-link-wrap, #wp-link-backdrop, .mce-container, .mce-widget'); }
+  function isControl(target) { return target.closest('.iss-preview-tools, .iss-preview-gap, #wp-link-wrap, #wp-link-backdrop, .mce-container, .mce-widget'); }
   document.addEventListener('submit', function (event) { if (!event.target.closest('#wp-link-wrap')) { event.preventDefault(); event.stopImmediatePropagation(); } }, true);
   document.addEventListener('click', function (event) {
     if (isControl(event.target) || (active && active.node.contains(event.target))) { return; }

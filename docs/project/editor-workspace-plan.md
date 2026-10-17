@@ -1,6 +1,6 @@
 # Shared editorial workspace
 
-Accepted implementation scope, updated 2026-10-13. Based on the supplied
+Accepted implementation scope, updated 2026-10-17. Based on the supplied
 `editor-workspace-sow.md`, with the review corrections below. Staff and volunteer
 editors are the first audience. The existing private front-page composition is
 the pilot; publication is a separate editorial action.
@@ -39,8 +39,11 @@ new documents use the existing v3 schema. See the
   navigation. Pane switches appear only where panes cannot remain together.
   Collapsing or leaving restores native WordPress controls and keyboard access;
   the publishing navigation never submits the post by itself.
-- Inspector tabs have one level of headings, section position and type, and an
-  automatically growing 14px title field. Outline titles take at most two lines;
+- A segmented **Abschnitte / Hinzufügen / Seite** control sits above the
+  underline inspector tabs. One muted contextual **?** lives in the panel header;
+  the complete guide is under **Weitere Werkzeuge → Hilfe**. Labelled
+  **Vorheriger / Nächster** controls select sections; outline grips reorder them.
+  The title and native rich-text fields grow with their content. Outline titles take at most two lines;
   untitled automatic sections use their registered treatment label. Treatment
   schematics include project notes, timeline, visit information and newsletter.
 - Opening guidance belongs only to the selected opening section, including an
@@ -48,8 +51,9 @@ new documents use the existing v3 schema. See the
   has a type/treatment label and scrolls clear of the measured site header.
   Quiet section removal offers undo through the existing recoverable trash.
 - In-place title and kicker editing, plus body and lead using the same compact
-  rich-text engine as the inspector. Visible edit buttons and Enter accompany
-  double-click. Cursor-only links, named theme colours and exact custom hex
+  rich-text engine as the inspector. Enter and double-click start direct edits.
+  Duplicate per-section edit menus are removed; selection uses a thin outline
+  and a small neutral label. Cursor-only links, named theme colours and exact custom hex
   colours are retained. The form path remains a first-class editing choice.
 - Generated content stays read-only in the preview. Individual gateway/item
   fields remain in the inspector. Public renderers retain their distinct content
@@ -79,8 +83,10 @@ a direct entry to its owner form. Collection and route rows fit the panel width,
 with a named route container query replacing window-based layout assumptions.
 At short window heights the whole
 inspector scrolls; phone layouts retain their existing pane switches. Canvas
-section controls sit above the fixed site header without changing public layout
-or replacing the measured header clearance used for section navigation.
+selection retains the measured header clearance used for section navigation.
+The text toolbar uses icons and tooltips, with colour, highlighting, link removal
+and format removal under **⋯**. Native `wpautoresize` leaves scrolling to the
+fields pane (the whole inspector at short heights).
 
 ## Corrections to the supplied proposal
 

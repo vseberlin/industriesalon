@@ -10,6 +10,32 @@ verification; local and staging synchronize it through GitHub `main` as well.
 The release was code-only: no DB migration, content import or uploads artifact.
 Staging's newer content and private recovery were preserved.
 
+## Current local design changes
+
+The requested editor design simplification is **committed locally, unpushed and
+undeployed**, one commit beyond `4239654` (the current GitHub/staging receipt).
+The user requested commit and exit; no further release action was taken.
+The canvas has no duplicate section editing menus: only a thin selection outline
+and neutral label. One muted contextual help button follows the sidebar panel;
+segmented top navigation stays active in the inspector, with underline secondary
+tabs and labelled previous/next selection. Native text editors auto-grow; the
+icon toolbar keeps colour/highlight/removal actions under **⋯**. A browser-found
+native link-dialog focus issue is fixed in the existing workspace inert handling.
+
+- Passed: 101 DOM tests, scoped JS/CSS lint and diff checks. Signed-in Chrome:
+  long editor grows to 1,410px, single toolbar row, contextual help, navigation,
+  highlighting/link selection, canvas Enter/Escape, phone preview and native
+  Save Draft/reload. The saved fixture retained every other section/field and
+  cleared recovery. Browser coverage here is Chrome desktop and phone preview;
+  actual narrow-window/short-height and Firefox UAT remain separate.
+- Disposable project 39298, revisions and Set 724 removed. All 15,502 posts,
+  239,205 non-lock metadata rows, 193 epochs and 269 states match full baseline
+  hashes. Evidence: `var/editorial-design-20261017/` (ignored).
+- Code/admin presentation only: no paired DB migration or uploads artifact.
+  Refresh the local editor for review. Staging still runs the prior release.
+
+## Released audit
+
 H1–H3, M1–M8 and L1–L10 are resolved; L3 intentionally retains the existing
 canvas enablement boundary. Remaining consumer controls use owner declarations;
 pickers are extracted, album imports page completely, preview caches are derived
