@@ -9,9 +9,9 @@ end to end. That request superseded the original plan's intermediate review paus
 The delivered scope covers Zitat, Kapitel and Galerie treatment resolution and
 controls, portable colour roles, event skin authority, timeline ownership and
 proved-obsolete quotation CSS. Verification and the drain record are below.
-Implementation is complete; existing content was not migrated. The user has
-authorized GitHub and staging release. See [current handoff](../../handoff_CURRENT.md)
-for the verified release state; SQL/content/media artifacts stay outside GitHub.
+Implementation is complete and released through GitHub to staging as `a9dd4a6`;
+existing content was not migrated. See [current handoff](../../handoff_CURRENT.md)
+for verification and rollback; SQL/content/media artifacts stay outside GitHub.
 
 This is the single delivery sequence for the
 [CSS audit](css-system-audit-2026-10-16.md) (`19a697c`), the proposed
@@ -296,10 +296,11 @@ No new runtime stylesheet, dependency or separate registry was introduced.
   the three inspected template authorities unchanged.
 
 Evidence and reversible starting copies are ignored local artifacts under
-`var/gesture-consolidation-20261017/`. This is a code-only local delivery: no
-schema bump, content migration, upload change, commit, push or staging deployment.
+`var/gesture-consolidation-20261017/`. The implementation required no schema bump,
+content migration or upload change. Its authorized code-only staging release is
+recorded in `handoff_CURRENT.md`, with private `var/gesture-release-20261017/` evidence.
 Rollback this change's code delta while preserving the pre-existing editor UI
 work; `before.patch` and `working-before/` record that boundary. New authored
 choices use an existing schema field plus compatible legacy values, so a later
-release must move plugin and theme changes together. Firefox/staging acceptance
-remains a separate release check, not a claimed result of this local pass.
+release must move plugin and theme changes together. Human interactive staging
+and cross-browser acceptance remain separate from the automated release checks.

@@ -1,103 +1,77 @@
 # Current handoff — 17 October 2026
 
-## Local delivery state
+## Released checkpoint
 
-Website work belongs in `/home/vladimir/wp-website`. `wp_app` mounts that
-checkout's plugins/theme; runtime/core/DB/uploads remain under `/home/vladimir/wp`.
-Release authorized: commit and sync the editor refinements, gesture-treatment/CSS
-consolidation and landing-preview recovery through GitHub to staging. Pre-release
-inspection found local HEAD `4e4dbc0`, GitHub/staging `4239654`, a clean staging
-checkout and healthy services. Deployment verification is pending in this code
-checkpoint; a follow-up receipt will record the final synchronized state.
+Gesture treatments, CSS consolidation, editor controls and landing-preview recovery
+are committed and deployed on staging as **`a9dd4a6`**, including the earlier editor
+commit `4e4dbc0`. Staging advanced cleanly from `4239654` through GitHub `main` at
+19:39:48 UTC. This receipt records the final documentation checkpoint.
+No SQL/content/uploads artifact, schema migration, service restart or configuration
+change was needed. GitHub contains code, tests and documentation only.
 
-The consolidated local work is complete: compact section selector and full-width
-admin toolbar with system typography; registered quote/chapter/gallery treatments
-with contextual choices and legacy adapters; distinct exhibition presentations;
-portable semantic colours and explicit event skin precedence; retired quote CSS
-and render branches; conditional timeline ownership and theme preset aliases.
-The edited public CSS is 42,748 source bytes smaller. The
-[delivery contract](docs/project/gesture-treatment-consolidation-plan.md)
-records the exact scope, treatment matrix, drain decisions and compatibility.
+Website delivery belongs in `/home/vladimir/wp-website`; local `wp_app` mounts its
+plugins/theme/receiver. Core, DB, uploads and intake remain under `/home/vladimir/wp`.
+Staging checkout is `/srv/industriesalon/stage/repo`, runtime is its parent's
+`compose.yml` and `app`, via `vladimir@staging.industriesalon.info` (`iss-prod-01`).
 
-## Verified and preserved
+The [delivery contract](docs/project/gesture-treatment-consolidation-plan.md)
+records treatment resolution, distinct exhibition presentations, legacy adapters,
+event skin precedence and the CSS drain. Edited public CSS is 42,748 source bytes
+smaller. Plugin and theme changes must travel together. No stored content migration.
 
-- Passed: 14,680 registry/renderer, 334 validation, 363 lossiness, 554 storage
-  (including all 180 existing documents), 42 native revision, 108 editor DOM
-  checks and 3 CSS ownership gates. PHP syntax/PHPCS/PHPStan and JS/CSS lint pass;
-  PHPStan excludes test scripts, which execute through WP-CLI.
-- Chrome: public project/exhibition/dark-event fixtures at 390/768/1280 px and
-  767/769 px; no horizontal overflow. Existing Kinder im Werk quotations retain
-  source images/captions, including the two-image station. Timeline computed
-  styles match the pre-move check; unrelated pages omit its stylesheet.
-- Actual editor treatment switch retains text, attribution and media, keeps
-  focus and reaches a saved preview. At 900×560 and 1280×620 the header uses the
-  full width, compact section navigation works and controls use system fonts.
-  Browser viewport override reset; fixtures 40842/40844/40846, their revisions,
-  private recovery and empty Set 739 removed.
-- Full baseline comparison: all 180 raw documents, 15,502 post rows and 238,933
-  metadata rows unchanged (native `_edit_lock` / `_edit_last` excluded), with
-  no added/removed rows. Three inspected template authorities unchanged,
-  including the custom `single-ausstellung` override. No live content migration.
-- Evidence and pre-change copies: `var/gesture-consolidation-20261017/` (ignored).
-  `before.patch` and `working-before/` preserve the initial dirty-work boundary.
-  Roll back this change's code delta without reverting the earlier UI work.
-- Landing preview recovery fix: an unfinished recovered draft now shows the
-  authenticated saved page without canvas editing when no previous valid frame
-  exists. Führungen's empty link in section 6 remains in its private draft;
-  completing/removing it restores the current preview. All 108 editor DOM checks
-  and scoped JS lint pass. Chrome verified Führungen's fallback (about 4 seconds),
-  Home/Schöneweide/About and an event editor, including phone preview. The original
-  Führungen tab now displays the fallback. Four saved and three private draft
-  documents are unchanged; evidence: `var/landing-preview-20261017/` (ignored).
+## Verification and preservation
 
-Code-only delivery: existing schema, content and uploads need no paired artifact.
-Move the plugin/theme changes together for this release. Unknown treatments
-stay recoverable and use a rendering fallback; validation blocks canonical writes
-until the choice is resolved. Existing scoped timeline promo compatibility is
-retained for 16 stored revisions. Other audit candidates are not implicitly dead.
+- Local: 14,680 registry/renderer, 334 validation, 363 lossiness, 554 storage,
+  42 native revision, 108 editor DOM checks and 3 CSS ownership gates pass.
+  PHP syntax/PHPCS/PHPStan and JS/CSS lint pass. Browser coverage includes
+  responsive treatments, chooser focus/preservation and compact editor controls.
+- Local Führungen: an empty link in section 6 of its private draft blocked the
+  preview. Recovery now shows the authenticated saved page without canvas editing
+  until the entry is completed/removed; then the current preview resumes. Four
+  saved and three private draft documents remained unchanged. Its original tab
+  was reloaded and the preview became visible. Nothing was published.
+- Staging: nine registries and all 180 canonical documents validate; all 180
+  document renderers return, with no previously nonempty output becoming empty.
+  Twelve public routes return 200/noindex. Restricted Projects login/editor works;
+  four unrelated admin routes remain 403. Six editor script assets match exactly.
+- Eight authenticated landing-preview requests (Führungen, home, Schöneweide,
+  About; viewing and editing modes) return 200 with correct section markers and
+  editing-asset isolation; sampled HTTP responses are 181–441 ms. Chrome confirms
+  exhibition treatment/source-image rendering and phone layouts without overflow.
+  Human interactive staging and cross-browser UAT remain separate acceptance work.
+- Staging before/after/final hashes match all 15,504 posts and 239,199 non-lock
+  postmeta rows, including revisions, private drafts and DB templates. Place epoch/
+  state projections also match. Containers are healthy; no release PHP/nginx errors.
+  No email, invitation, test content or historical revision purge was performed.
 
-## Next action and release boundary
+Private release evidence: `var/gesture-release-20261017/`; implementation evidence:
+`var/gesture-consolidation-20261017/`; preview fix: `var/landing-preview-20261017/`.
+These ignored directories are not GitHub transfer artifacts.
 
-Complete the authorized code-only staging deployment and record its verification.
-All 180 canonical staging documents passed preflight validation. No SQL/content/
-uploads transfer is needed; retain target UAT/private drafts. Human cross-browser
-acceptance remains separate. Existing editors should reload for changed assets.
+## Rollback and next action
 
-Local WP-CLI uses Compose project `wp`, `/home/vladimir/wp/docker-compose.yml`
-and `var/refactoring-20261008/website-code.yml`, mounting `tests/e2e/bin` read-only
-at `/tests`. Run `npm run lint:css` for style lint plus the new ownership gate,
-and `node --test tests/e2e/bin/editorial-ui.cjs` for editor interactions.
-Use disposable fixtures for runtime checks. No notification/mail was sent.
+Fresh verified staging backup: `backups/iss-backup-20261017T193729Z/` under the stage
+root; seven hashed/read-tested artifacts, 119 tables, code baseline `4239654`.
+The earlier audit rollback bundle is retained as the manual copy
+`backups/editorial-audit-20261017T130015Z/`; the 16 October full-refresh backup
+`backups/iss-backup-20261016T133026Z/` also remains. Never restore old content over
+newer UAT edits. This release changed code only; rollback must preserve later work.
 
-## Preserve UAT and deployment state
+Reload existing editors for changed assets. Complete the human/cross-browser
+checks in [TODO](TODO.md), especially contextual treatments and unfinished-draft
+recovery. Production deployment is not part of this release.
 
-- Last recorded staging code release: audit `9985528`; earlier editor help
-  `71318ad` remains included. German guide, contextual popovers and prominent
-  Hilfe are deployed; WordPress owns saving.
+## Preserve UAT and environment boundaries
+
 - Futura **30743**, `/projekte/futura-biennale-2027-2/`, is the UAT project.
-  Preserve Burmeister's private draft, original Futura **25657**, draft **30615**
-  and published KiezKarte **30811**. Account-switch/logout lock fixes are already
-  deployed; do not replay older staging-only migrations.
-- `Burmeister` (**328**, `k.burmeister@industriesalon.de`) has Projects-only
-  create/edit/media access; new projects need review. No invitation/email was
-  sent. Credentials are private in ignored
-  `var/project-uat-20261016/{credentials,staging-credentials}.json`.
-- Staging stays publicly previewable with `blog_public=0`/noindex by explicit
+  Preserve Burmeister's private draft, original Futura **25657**, draft **30615**,
+  and published KiezKarte **30811**; do not replay older staging-only migrations.
+- `Burmeister` (**328**) retains Projects-only create/edit/media access; new projects
+  need review. Credentials stay private in ignored `var/project-uat-20261016/`.
+- Staging remains publicly previewable with `blog_public=0`/noindex by explicit
   user exception. Default WordPress mail is not routed to Mailpit; inspect mail
-  mode before any notification test. Human UAT and cross-browser acceptance remain open.
-- Local is authoritative for content/users/templates/uploads/intake. Last full
-  sync: 16 October, 13:33 UTC; 117/118 normalized tables matched (runtime/environment
-  option exceptions), all 25,170 uploads and 27 intake files matched. Subsequent
-  use can diverge; preserve newer UAT work. Detailed receipt: `d9c4d79` and private
-  `var/help-release-20261016/`. GitHub carries code/docs only; SQL/media stay private.
-- Staging checkout: `/srv/industriesalon/stage/repo` on `iss-prod-01`, via
-  `vladimir@staging.industriesalon.info`. The last verified rollback bundle is
-  `backups/iss-backup-20261017T130015Z/` (pre-release code `d9c4d79`).
-  Earlier full-refresh backup
-  `backups/iss-backup-20261016T133026Z/` (code `69396de`) and private receipts
-  `backups/help-release-20261016/` remain historical recovery evidence.
-  Never restore an old snapshot over later UAT work; match code/data/files.
-- Local `wp_app` mounts website plugins/theme/receiver; core, DB, uploads and
-  intake remain under `/home/vladimir/wp`. Follow the [sync](docs/infrastructure/sync.md)
-  and [artifact](docs/infrastructure/data-artifacts.md) rules for later deployment.
-  The mixed/archive checkout and external archive storage are not cleanup targets.
+  mode before any notification test. Maintenance activation remains separate.
+- The last full content/users/templates/uploads/intake sync was 16 October,
+  13:33 UTC; preserve subsequent target UAT work. Its detailed receipt is `d9c4d79`
+  and private `var/help-release-20261016/`. This release did not repeat that sync.
+- The mixed/archive checkout and external archive storage are not cleanup targets.
