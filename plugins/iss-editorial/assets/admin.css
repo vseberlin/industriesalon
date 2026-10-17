@@ -64,27 +64,6 @@
   background: var(--iss-editor-hover);
 }
 
-.iss-editorial-gesture__dot {
-  width: 9px;
-  height: 9px;
-  margin-top: 3px;
-  border-radius: 50%;
-}
-
-.iss-editorial-gesture__body {
-  display: grid;
-  gap: 2px;
-}
-
-.iss-editorial-gesture__body strong {
-  font-size: 12px;
-}
-
-.iss-editorial-gesture__body span {
-  color: #646970;
-  font-size: 11px;
-}
-
 .iss-editorial-skin-control,
 .iss-editorial-rail-feature-control {
   display: grid;
@@ -106,29 +85,6 @@
   border: 1px dashed #c3c4c7;
   color: #646970;
   text-align: center;
-}
-
-.iss-editorial-insert-preview {
-  display: grid;
-  grid-template-columns: 9px minmax(0, 1fr);
-  gap: 12px;
-  align-items: start;
-  padding: 14px;
-  border: 1px solid var(--iss-editor-line, #dcdcde);
-  border-radius: 4px;
-  background: var(--iss-editor-paper);
-}
-
-.iss-editorial-insert-preview__marker {
-  width: 9px;
-  height: 9px;
-  margin-top: 4px;
-  border-radius: 50%;
-}
-
-.iss-editorial-insert-preview p {
-  margin: 0;
-  color: var(--iss-editor-muted, #50575e);
 }
 
 .iss-editorial-card__trash-note {
@@ -447,10 +403,6 @@
 
 .iss-editorial-picker {
   margin-top: 8px;
-}
-
-body.iss-editorial-modal-open {
-  overflow: hidden;
 }
 
 .iss-editorial-panel {
@@ -817,13 +769,6 @@ body.iss-editorial-modal-open {
   padding: 10px 12px;
   border-left: 3px solid var(--iss-editor-accent, #2271b1);
   background: var(--iss-editor-accent-soft, #f0f6fc);
-}
-
-.iss-editorial-opening-badge {
-  display: inline-block;
-  padding: 2px 6px;
-  background: var(--iss-editor-accent-soft, #f0f6fc);
-  color: var(--iss-editor-accent, #135e96);
 }
 
 /* Registry-owned section families replace the former JavaScript hex map. */

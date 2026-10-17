@@ -6,6 +6,10 @@ if (!defined('ABSPATH')) {
 
 function iss_content_model_editorial_gesture_registry(): array
 {
+    $inline_media_layout = [
+        'choices' => ['inline' => __('Im Text', 'iss-content-model'), 'aside-right' => __('Rechts daneben', 'iss-content-model')],
+        'default' => 'inline',
+    ];
     $gestures = [
         'intro' => [
             'label' => __('Einleitung', 'iss-content-model'),
@@ -21,6 +25,7 @@ function iss_content_model_editorial_gesture_registry(): array
             ],
             'portable' => true,
             'supports' => ['anchor', 'links', 'media_refs', 'media_layout', 'section_treatment'],
+            'media_layout' => $inline_media_layout,
             'icon' => 'editor-paragraph', 'tone' => 'text', 'group' => 'Text', 'schematic' => 'text',
         ],
         'fliesstext' => [
@@ -63,6 +68,7 @@ function iss_content_model_editorial_gesture_registry(): array
         ],
         'objektfokus' => [
             'label' => __('Archivobjekte', 'iss-content-model'),
+            'editor' => ['reference_captions' => true],
             'description' => __('Ausgewählte Archivobjekte im Zusammenhang zeigen.', 'iss-content-model'),
             'portable' => true,
             'supports' => ['anchor', 'object_refs'],
@@ -70,6 +76,7 @@ function iss_content_model_editorial_gesture_registry(): array
         ],
         'material' => [
             'label' => __('Begleitende Dateien', 'iss-content-model'),
+            'editor' => ['media_kind' => 'files', 'media_hint' => __('Dateien werden als Downloads angezeigt. Für eine Bildansicht bitte Galerie verwenden.', 'iss-content-model')],
             'description' => __('Dateien zum Herunterladen und weiterführende Links anbieten.', 'iss-content-model'),
             'portable' => true,
             'supports' => ['anchor', 'media_refs', 'links'],
@@ -137,18 +144,21 @@ function iss_content_model_editorial_gesture_registry(): array
             ],
             'portable' => true,
             'supports' => ['treatment', 'items', 'links'],
+            'items_kind' => 'text_image',
+            'items_label' => __('Bild-Text-Paare', 'iss-content-model'),
             'treatments' => [
                 'text-bild-reihe.visual' => __('Großformatige Bildreihe', 'iss-content-model'),
                 'text-bild-reihe.compact' => __('Kompakte Bildreihe', 'iss-content-model'),
                 'text-bild-reihe.chronology' => __('Chronologische Bildreihe', 'iss-content-model'),
-                'text-bild-reihe.editorial' => __('Themenspalten', 'iss-content-model'),
-                'text-bild-reihe.agenda' => __('Programm / Chronik', 'iss-content-model'),
+                'text-bild-reihe.editorial' => ['label' => __('Themenspalten', 'iss-content-model'), 'item_fields' => ['eyebrow']],
+                'text-bild-reihe.agenda' => ['label' => __('Programm / Chronik', 'iss-content-model'), 'item_fields' => ['eyebrow', 'group', 'detail']],
             ],
             'icon' => 'format-gallery', 'tone' => 'media', 'group' => 'Bild', 'schematic' => 'cards',
         ],
         'map_img' => [
             'label' => __('Karte & Bild', 'iss-content-model'),
             'description' => __('Eine Karte mit Ortsbild und Erläuterung verbinden.', 'iss-content-model'),
+            'items_kind' => 'text_image',
             'icon' => 'location-alt', 'tone' => 'navigation', 'group' => 'Orientierung', 'schematic' => 'split',
         ],
         'feature' => [
@@ -161,6 +171,7 @@ function iss_content_model_editorial_gesture_registry(): array
             ],
             'portable' => true,
             'supports' => ['treatment', 'lead', 'facts', 'links', 'media_refs', 'media_layout', 'image_fit'],
+            'media_layout' => $inline_media_layout,
             'treatments' => [
                 'feature.media-panel' => __('Bild mit Infokasten', 'iss-content-model'),
                 'feature.media-text' => __('Bild neben Text', 'iss-content-model'),
@@ -172,6 +183,7 @@ function iss_content_model_editorial_gesture_registry(): array
         ],
         'dynamic_slot' => [
             'label' => __('Automatische Inhalte', 'iss-content-model'),
+            'editor' => ['preview_editable' => false],
             'description' => __('Inhalte aus den zuständigen Datenquellen anzeigen.', 'iss-content-model'),
             'icon' => 'update', 'tone' => 'automatic', 'group' => 'Automatisch', 'schematic' => 'list',
         ],
@@ -208,6 +220,7 @@ function iss_content_model_editorial_gesture_registry(): array
         'longread_chapter' => [
             'label' => __('Lesekapitel', 'iss-content-model'),
             'description' => __('Ein Publikationskapitel mit Nummerierung und Lesenavigation.', 'iss-content-model'),
+            'media_layout' => $inline_media_layout,
             'icon' => 'editor-paragraph', 'tone' => 'text', 'group' => 'Text', 'schematic' => 'split',
         ],
         'timeline_item' => [

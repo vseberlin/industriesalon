@@ -28,18 +28,13 @@ Immediate executable work only. Larger future programs live in `docs/project/bac
   collapse the three timeline layers, fix breakpoints to four constants, add
   a dev-only CSS lint in `tools/`. Check unreferenced classes against stored
   `post_content` before deleting them.
-- Work through the [JSON editor audit](docs/project/json-editor-audit-2026-10-16.md)
-  in its fix order. First: H1 remove the iss-content Veranstaltung fallback
-  editor/writer, which downgrades or deletes event documents when
-  iss-editorial is inactive; H2 snapshot a revision inside
-  `iss_editorial_persist_document` so CLI `--force` and API writers stay
-  reversible; M1 memoize `iss_editorial_get_registered_formats()` after
-  `init`; M2/M3 memoize the programme ticket lookup and prime reference
-  caches. Measure M1–M4 with Query Monitor on the staging programme page and a
-  large album edit screen before and after. Then M4 autosave/preview cadence,
-  M8 `wp iss-editorial validate-all` plus lenient trash validation, M5
-  revision cap, H3 generic lossiness check, M6 registry-owned slugs; batch
-  L1–L10 with the `admin.js` picker split below.
+- Coordinate release acceptance for the completed local
+  [JSON editor audit](docs/project/json-editor-audit-2026-10-16.md): human and
+  cross-browser UAT, target `wp iss-editorial validate-all` / registry checks,
+  and before/after Query Monitor profiling for M1–M4 on staging. Verify a current
+  database backup before revision retention is released; already-open editors
+  must reload after the token changes. Implementation and local Chrome/regression
+  verification are complete. See [current handoff](handoff_CURRENT.md).
 - Correct the archive landing quick-navigation grid at phone widths: its four
   columns overflow (409 px content / 375 px viewport). The shared archive cards
   already fit; fix the quick-navigation owner without changing their layout.
@@ -136,13 +131,6 @@ Immediate executable work only. Larger future programs live in `docs/project/bac
   separate Gutenberg adapter for `page`, `post`, and Video if those screens
   should enter the shared workflow. Before hiding or purging more legacy boxes,
   run edit/save/reload parity with a normal editorial role.
-- JSON editor maintainability cleanup after modal/drag-drop UAT: split
-  picker-heavy code out of `plugins/iss-editorial/assets/admin.js`.
-  `assets/dnd.js` now owns shared drag/drop and `assets/ui.js` owns the modal
-  shell/panel primitives. Archive object picking, media tray/picker behavior,
-  gateway item media, and album/source sheet import are good first extraction
-  candidates; keep the main file focused on document state, section rendering,
-  save/preview wiring, and editor orchestration.
 - Archive provenance intake/browse pipeline: bring the local WF archive
   reconstruction work into the WP archive line owned by `iss-archive`, starting
   with provenance to museum-digital before DDB/Europeana. Source artifacts live

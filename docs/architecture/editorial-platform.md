@@ -28,7 +28,46 @@ This is the implementation checkpoint for the SOW in
   `docs/architecture/editorial-media-buckets.md`. Sets are private review
   state; public renderers consume only saved `media_refs` / `object_refs`.
 
+Reference reads batch-prime native WordPress post/meta caches at the document
+read-model and editor-hydration boundaries, with a second batch for archive
+thumbnails. Nested item and identity media share that boundary; deleted sections
+remain opaque recovery data and are neither resolved nor hydrated. The existing resolvers still own
+output and missing-reference behavior, and native invalidation handles changes.
+Thumbnail, dimensions and MIME are derived transport fields: current resolver
+values refresh editor previews; canonical saves and private autosaves omit these
+caches from known media/archive references, including identity and nested media.
+Album source thumbnails use the same resolver and storage boundary. Author captions,
+source identity and opaque deleted sections remain intact; no bulk rewrite runs.
+`tests/e2e/bin/editorial-reference-cache.php` covers cold/warm reads and parity;
+the [JSON audit](../project/json-editor-audit-2026-10-16.md#m3-n1-in-reference-resolution)
+records measurements and scope.
+
 ## Portable composition
+
+Format and section `editor` declarations select optional controls. Formats declare
+`route_stations_callback` for the existing relations owner and
+`rail_placement_by_skin` for rail defaults. Sections declare route shortcuts,
+post-derived titles, contextual title hints, hidden fields, media kind/hints,
+archive captions and preview-editable behavior. The shared editor consumes these
+capabilities without format-name branches; owner permissions and persistence stay
+with their existing plugins.
+
+Body sanitation and profile lookup require an explicit schema version from the
+caller. PHP link parsing uses WordPress's HTML Tag Processor and protocol filter;
+shared browser rich-text code owns both basic summaries and legacy TinyMCE setup.
+Legacy editing retains its WordPress-post HTML contract and server validation.
+
+Sections declare `legacy_body_policy` for body HTML without an active versioned
+rich-text profile: `post` (default) uses WordPress post HTML, while `basic` keeps
+the existing paragraph, break, strong/emphasis, link and list allowlist and
+safe-href filtering. `iss-content` declares `basic` for the six legacy Führung
+sections and three Project sections that already used it. Active v2/v3
+`rich_text.body` profiles take precedence; sections without a profile keep their
+fallback in every version. The registry diagnoses unknown policy names. The
+engine no longer tests format or section names to choose this policy. Existing
+loss-rejection, recovery, stored schema and public rendering remain unchanged.
+`tests/e2e/bin/editorial-legacy-body.php` covers declarations, renamed owners,
+overrides, safe links, HTML and profile precedence.
 
 The vocabulary defines `statement`, `gateway`, `text_bild_reihe`, `feature`,
 `galerie`, `fliesstext`, `zitat`, `schluss`, `kapitel`, `facts`, `material` and
@@ -38,6 +77,87 @@ their section renderer and delegates to the existing landing composition
 functions; native domain sections retain their renderers. Preview and public
 output use the same document and renderer. Event context rules permit these
 portable gestures while retaining restrictions on domain-specific sections.
+
+Item-bearing sections declare `items_kind` in the same registry: `cards`
+(the default) requires a label and destination, `text_image` holds text/image
+rows with at most one image, and `text` holds plain-text notes. The optional
+plain-text `items_label` names the editor panel and defaults to `Ziele`.
+`iss-content` declares `text_image` for `text_bild_reihe` and `map_img`, with
+`Bild-Text-Paare` as the former's panel label. Event material retains `text`.
+Shared storage, row-field validation and editor controls consume these fields
+without testing the gesture name. Rich-text profiles remain independent;
+existing row detail fields, card destinations and loss-rejection rules are
+unchanged. Registry diagnostics reject unknown declared item kinds.
+`tests/e2e/bin/editorial-item-contract.php` and the editor DOM suite cover
+renamed gestures and kind overrides. This changes no stored document schema.
+
+Treatments may declare `item_fields` for text-image rows: `eyebrow`, `group`
+and `detail`. The owner declares eyebrow for Themenspalten and all three for
+Programm / Chronik. The shared registry normalizes these names and diagnoses
+unknown fields or declarations without text-image items; the inspector uses
+the selected treatment's declaration instead of treatment-name checks.
+Missing/empty declarations hide the optional controls. Each field is independent,
+and hidden values remain stored and validated through the existing item contract.
+Control labels, row layout, rendering and the timing of inspector rebuilds are
+unchanged. `tests/e2e/bin/editorial-row-fields.php` and the editor DOM suite cover
+renamed treatments, overrides, independent fields, recovery and native submit.
+
+Sections supporting `media_layout` declare a `media_layout` registry object:
+`choices` maps stored values to labels, `default` names a choice, and optional
+`treatments` limits when the inspector offers the control (empty means all).
+Normalization exposes choices as ordered `{value, label}` entries. Shared PHP
+sanitation and JS controls use this declaration; registry diagnostics check
+choices, labels, defaults and referenced treatments. Visibility is evaluated
+when the inspector is built, as before. Hiding a control does not remove or
+invalidate its saved value. Chapters, publication reading chapters and ordinary
+features retain `inline|aside-right`; the landing owner declares feature ratios
+`50-50|40-60|60-40`, shown for `feature.media-text`. The theme retains renderer
+ownership, and the stored scalar field/schema is unchanged.
+`tests/e2e/bin/editorial-media-layout.php` covers all current declarations,
+renamed consumers, defaults independent of choice order and invalid values.
+
+Formats declare the editor's optional `opening_skin` in this same registry;
+empty means no opening treatment is offered. An optional
+`opening_eligibility_callback(WP_Post, array $format): bool` restricts the
+capability per post. The shared resolver runs this callback when preparing the
+editor settings, outside the cached definition build. `iss-content` declares
+`buehne` for projects and `frontpage` for landing pages, with the latter limited
+to the current `page_on_front`. Ordinary landings and articles retain no opening
+capability. Registry diagnostics flag unknown skins and invalid callbacks.
+This is an editor capability, not a replacement for document validation:
+the existing owner validator still enforces version, skin, first position,
+title and image requirements. Shared JS consumes the existing `openingSkin`
+setting and treatment `role`/`min_version`; no stored schema or renderer changes.
+`tests/e2e/bin/editorial-opening-skin.php` covers renamed formats, declarations
+overriding historical names and live eligibility with cached definitions.
+
+The existing format `editor` map declares optional `rail_control: true` for
+the document rail settings. `iss-content` enables it for projects; the shared
+admin payload exposes the boolean as `railControl`, and the workspace uses that
+capability rather than the format name. Omission/false hides the control without
+changing stored `features.rail`, skin defaults, validation or public rendering.
+The control retains its position/treatment choices and unexposed mode; switching
+the rail off disables its selectors and switching it on enables them immediately.
+`tests/e2e/bin/editorial-rail-capability.php` and the editor DOM suite cover
+renamed owners, hidden values, toggling, recovery and native submit.
+
+Sections supporting `era_key` or `function_key` declare `vocabularies[field]`
+with a field `label` and ordered `choices` mapping machine values to labels.
+Normalization exposes choices as `{value, label}` entries. Shared PHP uses
+these allowed values with the existing field-specific sanitizers; shared JS
+uses the labels and choices with its unchanged empty selection. Unavailable
+saved values are retained in the editor until explicitly corrected, and the
+existing validator rejects invalid nonempty input. Registry diagnostics flag
+missing labels/choices and unlabeled options.
+
+`iss-content` owns both editor vocabularies in the Place epoch declaration.
+The transitional register's projection definitions/validator remain unchanged;
+the editor definition does not gain a dependency on that plugin. Tests compare
+all current values, labels and ordering with the register's definitions, and
+verify all 54 combinations across supported versions. The public theme labels,
+Place required-field validation, epoch/state writer and transaction boundary
+retain their existing owners. See `tests/e2e/bin/editorial-place-vocabulary.php`
+and `tests/e2e/bin/place-editorial-atomic.php`.
 
 Galleries share grid, sequence, wall and viewport layouts. Galleries, prose and
 quotes consume the same resolved media/archive references, retaining captions
@@ -251,6 +371,15 @@ The existing `iss/content-meta` block has theme-owned `event-summary` and
 `event-visit` presentations, editable in its inspector. The visit card reads the
 selected Atlas place or an explicit venue relation, never a merely related place.
 External ticket links use the same material-link convention as programme cards.
+The theme resolves the source's registered editorial format and reads its
+canonical document through `iss-editorial`. It memoizes only the first matching
+ticket URL (including an absent result) for the current request, scoped to blog,
+post, format and locale. Comparing the stored JSON through WordPress's cached
+metadata API makes document saves, removals and restores visible immediately.
+Occurrence availability, booking fallback URLs and translated action labels are
+evaluated on every call; no occurrence action or page response is cached.
+`tests/e2e/bin/programme-ticket-cache.php` checks this lookup without database
+writes; `event-detail-feedback.php` also exercises real document edits and deletion.
 Past/cancelled/sold-out events suppress those ticket actions; past events move
 published reports and approved voices ahead of the original announcement and
 invite contributions only when intake is open. The existing programme-cards
@@ -314,17 +443,30 @@ This does not migrate other pages or disabled CPT documents into JSON.
 
 Events register an adapter from `iss-content` to the existing `_iss_content_json`
 key. `_iss_entity_key` continues to determine event structure and public skin.
-The old event script is only a fallback when the shared engine is inactive.
+When the shared engine is inactive, the event content box shows a read-only
+notice. Ordinary event details remain editable, but stale legacy form fields
+cannot write `_iss_content_json`; the document is also unavailable for REST
+metadata writes or native custom-field editing. The v1 sanitizer remains only
+for legacy public reads in this mode and is not registered for metadata writes.
+Stored JSON stays byte-identical until the shared engine is available again.
 Event material lists and existing references are preserved. Automatic landing
 content choices and their treatments come from one PHP registry entry.
 Section, archive and Set dialogs share one focus lifecycle: Tab stays inside
 the active dialog, Escape closes that layer, and focus returns to its opener.
+`assets/pickers.js` owns media/archive selection, media trays, row media and album
+source import; `admin.js` retains document state, rendering and save/preview
+orchestration. Set album imports read every page before merging. Missing or
+inconsistent pages leave existing sheets unchanged. The edit page carries one
+hidden document and one section registry; owner settings filters run before
+unused localized copies are removed.
 The pickers accept the shared focus handler as an optional callback, preserving
 their existing standalone consumers. Adding archive references keeps the labels
 and context of references already selected; panel counts update with their lists.
 
-Section edits, title and excerpt are autosaved after an idle interval to the
-current author's native WordPress autosave revision. A successful server response
+Section edits, title and excerpt are autosaved after 1,200 ms without input to
+the current author's native WordPress autosave revision; blur flushes sooner.
+Unchanged work is skipped when its turn reaches the serialized save queue.
+A successful server response
 is required before reporting that a draft is secured. Reloading offers explicit
 recovery or discard when a different own draft exists; neither choice publishes.
 This choice appears above the section canvas. Until it is made, the inactive
@@ -345,8 +487,28 @@ WordPress's post locking. Other fact and relation fields retain their existing
 save contracts; they are not part of JSON draft recovery.
 Project ordering joins the original `wp_insert_post_data` update, avoiding a
 recursive `save_post` update that would invalidate the editorial version token.
+Its native and administrator repair fields share the displayed order as a baseline:
+an untouched field preserves later list reordering; an intentional edit rejects
+a competing order unless both edits already agree. This check runs before any
+parent/revision write and retains the existing nonce and capability checks.
+The Place register owner also prepares an empty excerpt in that original update
+when stored Place JSON is enabled. It uses the existing intro/present excerpt
+candidate, preserving manual excerpts and blank values without a source. New
+records, legacy/disabled JSON and autosaves retain their existing paths. This
+avoids a second parent write without bypassing editorial preflight, recovery or
+revision capture. `tests/e2e/bin/place-native-save.php` covers native saves,
+paired revisions, projection updates and rejected submissions.
 
 Canonical and draft tokens reject stale saved versions and competing tabs.
+The canonical token hashes title, excerpt, raw JSON, optional enablement and
+skin metadata, plus the format owner's explicit `version_meta_keys`.
+Veranstaltung declares `_iss_entity_key` because it hydrates the editor document
+and is saved with its structure. Modification timestamps and unrelated
+revisioned metadata are excluded; native revisions still copy every registered
+revision key. Other fact/relation controls retain their owner save contracts.
+Changing the token inputs invalidates already-open pages once: reload and
+continue private recovery. Existing recovery documents remain readable without
+a migration; their separate draft token and native post locks remain enforced.
 Validation runs before the main WordPress update and before owner save hooks:
 malformed JSON, unsupported schema/sections, unsupported populated section fields,
 incomplete list entries, invalid registered choices and incompatible slots fail
@@ -355,13 +517,104 @@ shown with a blocking diagnostic. Existing hidden gesture types remain visible
 in stored documents even when they are unavailable in the insertion palette.
 Security sanitization remains in the storage layer.
 
+The shared validator also compares submitted scalar values and nested lists with
+the final normalized document, including owner validation hooks. A dropped or
+changed value returns `editorial_lossy_normalization` with its field path in the
+message and error data. This covers new fields without another field-name check:
+truncating a contribution question, slicing an item's media list, stripping title
+markup/newlines or rewriting an anchor cannot silently succeed.
+
+Intentional representation changes are explicit: omitted/empty placeholders and
+added defaults, horizontal spacing/CRLF, equivalent integer/string and boolean
+0/1 values, HTML void-tag spacing, registered section aliases, album source/sheet
+aliases and declared sheet ordering, native page permalink refresh, and removal
+of active-section trash bookkeeping. Embedded text line breaks remain content.
+Domain owners declare exact legacy input aliases through
+`iss_editorial_normalization_input`; the Veranstaltung owner uses its existing
+legacy entity-key map. This does not relax security sanitization or create a
+second writer. Private recovery still stores the exact rejected input, and the
+existing native pre-update guard prevents title/content/history changes until
+correction. Opaque trash remains untouched.
+
+`deleted_sections` is a list of recovery objects with a string `type`, not active
+content. Unknown types, slots, treatments and fields survive canonical saves,
+autosaves, editor reads and revisions without registry normalization or media
+hydration. Trash cards escape titles and show a safe text summary; they do not
+interpret retired media shapes. Restoring a section first submits the candidate
+document to the existing authenticated save endpoint with `intent=validate`.
+That branch validates without saving a draft or changing its token, then returns
+the normalized document with active media previews. Only the restored section
+is taken from that result, so registered aliases receive current controls. It
+is moved into active sections only if local input has not changed
+while the request was pending. A rejected restore leaves the original trash
+entry intact and reports the reason in the visible save-status area. Subsequent
+saves still use normal strict validation and revision capture. The validation
+response attaches a transient `restored_from` fingerprint for the original trash
+record, allowing an ordinary editor to edit it immediately before saving. Private
+recovery retains this proof; canonical sanitation removes it. Canonical, autosave
+and native preflight paths reject permanent trash removal without `manage_options`
+unless the corresponding section is restored. Native preflight and metadata saves
+also require the submitted `post_ID` to match, isolating cascaded post updates.
+
+After registry changes and before release, run `wp iss-editorial validate-all`
+(or `--format=json`). This read-only gate checks raw canonical JSON in batches of
+100 for registered formats and their post types, including disabled documents,
+all post statuses and empty/malformed stored values. It excludes revisions and
+private autosaves; it is not a history migration or repair command. Exit status
+is 0 for valid documents, 1 for invalid documents or a read failure. The report
+identifies post/meta IDs, formats and validation errors without dumping content.
+
 Document, skin and enabled metadata, plus event structure, participate in WordPress revisions. The
 native revision comparison includes section changes; restoration invokes the
 existing document-saved contract to rebuild owner projections. Preview reads
 the current author's draft only for the requested post.
 
+Changed canonical API writes and enabled-state changes capture the preceding
+state through WordPress revisions before replacing metadata. Revision metadata
+is checked against stored rows (not registered defaults); failed or incomplete
+capture stops the write. Unchanged metadata and private autosaves do not create
+extra canonical revisions. Native revision enablement applies. For posts with a
+stored document key in their eligible format, the default retention ceiling is
+30 normal revisions, including disabled or legacy JSON. Posts without stored
+JSON retain their existing WordPress policy. Lower global limits (including 0)
+are respected; the native per-post-type retention filter retains its precedence.
+Autosaves are excluded from the deletion candidates and do not consume the 30
+slots. Core prunes only when it creates a revision; opening an editor or saving
+unchanged JSON does not sweep existing history.
+The form keeps its earlier snapshot before native title/excerpt changes and
+skips a second snapshot inside that update's metadata writer, avoiding mixed
+versions. Direct captures run inside the existing owner writer, including the
+Place transaction. CLI imports save document and activation together;
+`iss_editorial_set_document_enabled()` also uses this boundary and returns
+success/failure without rewriting or revalidating the stored JSON. Native
+revision restoration retains its existing metadata-copy path. H2 checks a new
+snapshot before core may prune and again before replacing canonical metadata;
+failed insertion or metadata copying preserves the complete previous history.
+Core can prune the source of a restore while updating the parent's native fields,
+before its later metadata-copy hook runs. For that boundary, the engine retains
+the deleted revision's metadata in request memory and supplies it to core's
+existing copy routine for the exact parent/revision only. A failed source read
+prevents deletion. No persistent history store or scheduled cleanup is added.
+The existing owner transaction and readback checks still govern restoration.
+The native comparison accepts an empty left side for the oldest retained revision.
+Release/rollback implications are in the
+[deployment runbook](../runbooks/deployment.md#editorial-revision-retention).
+
 Regression checks:
 
+- `tests/e2e/bin/editorial-lossiness.php` checks scalar/nested loss across all
+  formats and schema versions, intentional conversions, owner extensions,
+  security sanitization, exact recovery and rejection/retry of native saves.
+- `tests/e2e/bin/editorial-retention.php` checks the cap across all formats,
+  normal versus private revisions, native/API saves, oldest-version comparison/restoration,
+  source-read/capture failures and preservation of unrelated records.
+- `tests/e2e/bin/editorial-validation.php` checks opaque trash, strict restores,
+  native revision recovery, CLI batching, failure exit codes and read-only
+  behavior. The storage HTTP suite also proves validation-only requests leave
+  canonical content, private drafts and revisions unchanged.
+- `tests/e2e/bin/editorial-revisions.php` checks API and CLI replacement,
+  enablement, matching title/JSON versions, no-op saves, autosaves, restoration
+  and injected revision-insert/copy failures using disposable records.
 - `node --test tests/e2e/bin/editorial-ui.cjs` checks the common DOM interactions,
   recovery and failed-save behavior; it stubs WordPress rich editing and is not a
   substitute for browser checks of TinyMCE, media dialogs or responsive layout.
@@ -385,6 +638,17 @@ contributes supported skins and preview capabilities in `includes/editorial-rend
 read the normalized choices instead of maintaining separate allowed lists.
 `wp iss-editorial registry-check [--format=json]` diagnoses missing metadata,
 invalid defaults, alias collisions and unknown starter types without writes.
+
+The normalized registry is cached in PHP for the current request, after `init`
+has finished. Reads before or during `init` remain uncached so late post-type
+registrations are visible. The cache tracks the current blog ID and locale;
+post eligibility and skin filters still run at their existing call sites.
+Register definition filters by the end of `init`. Code or tests changing them
+later must call `iss_editorial_reset_format_cache()` after adding/removing a
+filter; the next read rebuilds the contract. No persistent cache is used.
+`wp --require=/tests/editorial-format-cache.php eval-file /tests/editorial-format-cache.php`
+checks real bootstrap timing, invalidation, locale changes and live eligibility
+without content writes (mount `tests/e2e/bin` at `/tests` for the CLI container).
 
 Formats are `landing`, `article`, `projekt`, `ausstellung`, `rueckblick`,
 `veranstaltung`, `place`, `fuehrung`, and `publication`. `article` covers ordinary
@@ -415,8 +679,9 @@ and publication metadata remain attached to their original owners.
 
 All nine editorial formats support versions 1, 2 and 3. New documents start at
 version 3; saved v1 documents retain their version until explicitly upgraded. The explicit **Textfarben aktivieren** action converts legacy plain item
-descriptions to escaped rich text in the author's draft, including deleted
-sections. Version-2 documents are prepared as version 3 in the editor copy,
+descriptions to escaped rich text in the author's draft, including recognized
+deleted sections. This explicit conversion remains intentional; ordinary editor
+reads and saves leave trash opaque. Version-2 documents are prepared as version 3 in the editor copy,
 including recovered drafts; this does not write canonical content. The format registry's
 `rich_text` profiles declare block prose, inline descriptions and descriptions
 inside a linked card. The last profile excludes hyperlinks to prevent nested
@@ -478,8 +743,19 @@ text and generated content do not become editable in the canvas in this slice.
 Scrolling alone does not change the selected section. See the
 [workspace plan](../project/editor-workspace-plan.md) for acceptance and scope.
 
-The existing serialized autosave queue coalesces edits after
-350ms idle time. Only an acknowledged, valid, current draft loads a new preview.
+Opening an unchanged, valid document renders a read-only `saved:<baseToken>`
+snapshot through the existing authenticated preview; it does not create an
+autosave. The server verifies the saved version and uses the editor's read-only
+upgrade/media hydration. Canonical title, excerpt and event structure stay paired
+with that document even if the author also has a private draft. Recovery still
+requires an explicit choice before opening the canvas.
+
+The preview waits for 2,000 ms without input or for blur/field completion, and
+only an acknowledged, valid snapshot matching the current fields can replace it.
+Explicit preview, retry, Finish and native Save Draft / Update / Publish still
+flush and check the server version immediately, including unchanged documents.
+An active canvas field keeps its iframe until the edit ends. Identical pending
+or displayed tokens do not trigger repeated frame loads.
 The iframe handshake checks source, origin and exact snapshot token; an older
 response cannot replace newer work. Pending frames replace the displayed frame
 only after readiness, preserving scroll while leaving TinyMCE mounted. Invalid
@@ -490,7 +766,7 @@ The embedded page disables navigation and form submission; the separate-window
 preview remains available. No route/date/relation panel is saved by this queue.
 
 The preview bridge and source-section markers are emitted only for an
-authenticated, authorized WordPress preview of the matching draft. Public HTML
+authenticated, authorized WordPress preview of the matching saved or draft snapshot. Public HTML
 keeps its existing anchors and contains neither bridge nor editing markers.
 `workspace.js` owns the pane layout, `admin.js` retains document state and domain
 field controls, `ui.js` owns shared inputs, schematics and picker focus, `rich-text.js` owns text controls, `live-preview.js` owns frame lifecycle, and `preview-frame.js` owns the authenticated frame interaction.
@@ -1004,6 +1280,12 @@ cover-cropped viewport image, sequence, grid, or dense wall. Theme partials are 
 for true structural exceptions, not for normal gesture rendering.
 
 ## Migration Audit
+
+Legacy content import/dry-run commands retain their `wp iss-editorial` names but
+are implemented by `iss-content/includes/editorial-migrations-cli.php`, loaded
+only for WP-CLI when the shared engine is present. Shared validation, registry and
+media diagnostics remain in `iss-editorial`. Plugin version 0.2.0 declares PHP
+8.1 and WordPress 6.4 as minimums; no upgrade or data migration runs.
 
 `wp iss-editorial ausstellung-dry-run` reports read-only migration candidates
 for `Kinder im Werk` and `Frauen im Werk` by default. It does not write

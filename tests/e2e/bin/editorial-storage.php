@@ -80,7 +80,7 @@ try {
             $assert(!iss_editorial_uses_canvas(get_post($id)), 'Existing disabled JSON keeps legacy editor');
         }
         $document['sections'] = [['type' => 'kapitel', 'title' => 'Original', 'body' => '<p>Quoted "text" and C:\\source</p>']];
-        $assert(iss_editorial_save_document($id, $format, $document), 'Save canonical document');
+        $assert(iss_editorial_save_document($id, $format, $document), 'Save canonical document: ' . $format);
         iss_editorial_set_document_enabled($id, $format, true);
         $document = iss_editorial_get_document($id, $format);
         $base = iss_editorial_saved_token($id, $format);
@@ -145,7 +145,7 @@ try {
         $invalid_version['schema_version'] = 999;
         $assert(is_wp_error(iss_editorial_validate_document($invalid_version, $format)), 'Unsupported schema is rejected');
 
-        $_POST = wp_slash(['iss_editorial_nonce' => wp_create_nonce('iss_editorial_save_document'), 'iss_editorial' => [$format => ['document' => iss_editorial_encode_document($invalid), 'base' => $base, 'draft_token' => $reverted['token'], 'enabled' => '1']]]);
+        $_POST = wp_slash(['post_ID' => $id, 'iss_editorial_nonce' => wp_create_nonce('iss_editorial_save_document'), 'iss_editorial' => [$format => ['document' => iss_editorial_encode_document($invalid), 'base' => $base, 'draft_token' => $reverted['token'], 'enabled' => '1']]]);
         if ($format === 'projekt') {
             $_POST['iss_content_model_meta_nonce'] = wp_create_nonce('iss_content_model_save_meta');
             $_POST['iss_content_model'] = ['menu_order' => '37'];
@@ -160,8 +160,16 @@ try {
         $assert((int) get_post($id)->menu_order === 0, 'Rejected update leaves the project order unchanged too');
 
         $_POST['iss_editorial'][$format]['document'] = wp_slash(iss_editorial_encode_document($draft_doc));
+        if ($format === 'veranstaltung') {
+            $_POST['iss_content_model_meta_nonce'] = wp_create_nonce('iss_content_model_save_meta');
+            $_POST['iss_content_model'] = ['_iss_content_json' => wp_slash('{"schema_version":1,"sections":[]}')];
+            $assert(current_user_can('edit_post_meta', $id, $key), 'Active shared engine retains document metadata permissions');
+        }
         wp_update_post(['ID' => $id, 'post_title' => 'Saved next version']);
         $assert(iss_editorial_get_document($id, $format)['sections'][0]['title'] === 'Second draft', 'WordPress Update saves JSON');
+        if ($format === 'veranstaltung') {
+            $assert(iss_editorial_get_document($id, $format)['schema_version'] === 3, 'Stale legacy field cannot downgrade the active shared editor save');
+        }
         if ($format === 'projekt') {
             $assert((int) get_post($id)->menu_order === 37, 'Project order and JSON save in one update without a false conflict');
         }
@@ -195,6 +203,56 @@ try {
         preg_match('/var issEditorialAdmin = (.*?);\s*\n/', $html, $matches);
         $settings = json_decode($matches[1] ?? '', true);
         $assert(is_array($settings) && empty($settings['validationError']), 'Actual localized editor configuration is valid');
+        // Keep the open editor's original tokens through a later ordering-only write.
+        $order_clock = static function (array $data, array $postarr) use ($id): array {
+            if ((int) ($postarr['ID'] ?? 0) === $id) { $data['post_modified_gmt'] = '2001-01-01 00:00:00'; }
+            return $data;
+        };
+        add_filter('wp_insert_post_data', $order_clock, 98, 2);
+        try { wp_update_post(['ID' => $id, 'menu_order' => 73]); }
+        finally { remove_filter('wp_insert_post_data', $order_clock, 98); }
+        $assert((int) get_post($id)->menu_order === 73 && get_post($id)->post_modified_gmt === '2001-01-01 00:00:00', 'Ordering write really changes the open post and its timestamp');
+        $assert(iss_editorial_saved_token($id, $format) === $settings['baseToken'], 'Open editor token survives the unrelated ordering write');
+        $saved_url = add_query_arg(['iss_editorial_embed' => '1', 'iss_editorial_canvas' => '1', 'iss_editorial_snapshot' => 'saved:' . $settings['baseToken']], $settings['previewUrl']);
+        $snapshot_rows = static function () use ($wpdb, $id): string {
+            return hash('sha256', serialize([
+                $wpdb->get_results($wpdb->prepare("SELECT * FROM {$wpdb->posts} WHERE ID=%d OR post_parent=%d ORDER BY ID", $id, $id), ARRAY_A),
+                $wpdb->get_results($wpdb->prepare("SELECT m.* FROM {$wpdb->postmeta} m JOIN {$wpdb->posts} p ON m.post_id=p.ID WHERE (p.ID=%d OR p.post_parent=%d) AND m.meta_key NOT IN ('_edit_lock','_iss_editorial_lock_session') ORDER BY m.meta_id", $id, $id), ARRAY_A),
+            ]));
+        };
+        $before_saved_preview = $snapshot_rows();
+        for ($n = 0; $n < 2; ++$n) {
+            $saved_preview = wp_remote_get($saved_url, ['headers' => $headers, 'timeout' => 30]);
+            $assert(wp_remote_retrieve_response_code($saved_preview) === 200 && str_contains(wp_remote_retrieve_body($saved_preview), 'iss-editorial-preview-frame-js'), 'Saved snapshot opens the authenticated canvas without an autosave: ' . $format . ' HTTP ' . wp_remote_retrieve_response_code($saved_preview));
+        }
+        $assert($snapshot_rows() === $before_saved_preview, 'Repeated saved previews do not create or change posts, revisions or metadata');
+        $stale_saved = wp_remote_get(add_query_arg('iss_editorial_snapshot', 'saved:' . str_repeat('0', 64), $saved_url), ['headers' => $headers, 'timeout' => 30]);
+        $assert(wp_remote_retrieve_response_code($stale_saved) === 409, 'Saved snapshot enforces the current canonical version');
+        $anonymous_saved = wp_remote_get($saved_url, ['timeout' => 30]);
+        $assert(wp_remote_retrieve_response_code($anonymous_saved) !== 200 || !str_contains(wp_remote_retrieve_body($anonymous_saved), 'iss-editorial-preview-frame-js'), 'Anonymous request cannot render the saved editing canvas');
+        $before_validation = $snapshot_rows();
+        foreach ([true, false] as $restorable) {
+            $candidate = $document;
+            if ($restorable) { $candidate['sections'][] = ['type' => 'image_wall', 'title' => 'Registered legacy alias']; }
+            if (!$restorable) { $candidate['sections'][] = ['type' => 'retired_restore_fixture', 'body' => 'Kept in trash']; }
+            $check = wp_remote_post($settings['ajaxUrl'], ['headers' => $headers, 'timeout' => 30, 'body' => [
+                'action' => 'iss_editorial_save_preview_document', 'nonce' => $settings['previewNonce'], 'post_id' => $id, 'format' => $format,
+                'document' => iss_editorial_encode_document($candidate), 'base' => $settings['baseToken'], 'draft_token' => $settings['draftToken'], 'intent' => 'validate',
+            ]]);
+            $checked = json_decode(wp_remote_retrieve_body($check), true);
+            $assert(wp_remote_retrieve_response_code($check) === ($restorable ? 200 : 422) && (bool) $checked['success'] === $restorable, 'Restore preflight applies the active validator through the existing authenticated route');
+            if ($restorable) { $assert($checked['data']['document']['sections'][1]['type'] === 'galerie' && $checked['data']['document']['sections'][1]['gallery_layout'] === 'wall', 'Restore preflight returns the registered alias normalization for active controls'); }
+            $assert($snapshot_rows() === $before_validation, 'Restore preflight never writes canonical content, autosaves or revisions');
+        }
+        $lossy_candidate = $document;
+        $lossy_candidate['sections'][0]['title'] = '<b>Keep this exact title</b>';
+        $check = wp_remote_post($settings['ajaxUrl'], ['headers' => $headers, 'timeout' => 30, 'body' => [
+            'action' => 'iss_editorial_save_preview_document', 'nonce' => $settings['previewNonce'], 'post_id' => $id, 'format' => $format,
+            'document' => iss_editorial_encode_document($lossy_candidate), 'base' => $settings['baseToken'], 'draft_token' => $settings['draftToken'], 'intent' => 'validate',
+        ]]);
+        $checked = json_decode(wp_remote_retrieve_body($check), true);
+        $assert(wp_remote_retrieve_response_code($check) === 422 && empty($checked['success']) && str_contains($checked['data']['message'] ?? '', 'sections[0].title'), 'Authenticated preflight returns the affected lossiness path');
+        $assert($snapshot_rows() === $before_validation, 'Lossiness preflight leaves canonical data, recovery and revisions unchanged');
         $response = wp_remote_post($settings['ajaxUrl'], ['headers' => $headers, 'timeout' => 30, 'body' => [
             'action' => 'iss_editorial_save_preview_document', 'nonce' => $settings['previewNonce'], 'post_id' => $id, 'format' => $format,
             'document' => iss_editorial_encode_document($draft_doc), 'base' => $settings['baseToken'], 'draft_token' => $settings['draftToken'],
@@ -203,6 +261,11 @@ try {
         $saved = json_decode(wp_remote_retrieve_body($response), true);
         $assert(wp_remote_retrieve_response_code($response) === 200 && !empty($saved['success']), 'Real AJAX request saves a private draft');
         $assert(get_metadata_raw('post', $id, $key, true) === $canonical, 'AJAX autosave leaves canonical JSON unchanged');
+        $before_saved_preview = $snapshot_rows();
+        $saved_preview = wp_remote_get($saved_url, ['headers' => $headers, 'timeout' => 30]);
+        $saved_html = wp_remote_retrieve_body($saved_preview);
+        $assert(wp_remote_retrieve_response_code($saved_preview) === 200 && str_contains($saved_html, esc_html(get_post($id)->post_title)) && !str_contains($saved_html, 'HTTP draft title') && !str_contains($saved_html, 'Second draft'), 'Saved snapshot keeps canonical identity and sections even when its author has a private draft');
+        $assert($snapshot_rows() === $before_saved_preview, 'Saved snapshot never overwrites or deletes the existing private draft');
         $preview_response = wp_remote_get($saved['data']['previewUrl'], ['headers' => $headers, 'timeout' => 30]);
         $assert(wp_remote_retrieve_response_code($preview_response) === 200 && str_contains(wp_remote_retrieve_body($preview_response), 'HTTP draft title'), 'Real preview displays the saved draft title');
         $assert(!str_contains(wp_remote_retrieve_body($preview_response), 'iss-editorial-preview-frame-js') && !str_contains(wp_remote_retrieve_body($preview_response), 'iss-editorial-preview-frame-css'), 'Separate-window preview does not load the embedding bridge or selection outline');
@@ -265,7 +328,7 @@ try {
 
         $invalid = $draft_doc;
         $invalid['sections'][] = ['type' => 'unknown_future_gesture', 'body' => 'Must survive'];
-        $_POST = wp_slash(['iss_editorial_nonce' => wp_create_nonce('iss_editorial_save_document'), 'iss_editorial' => ['article' => ['document' => iss_editorial_encode_document($invalid), 'base' => $base, 'draft_token' => $draft['token'], 'enabled' => '1']]]);
+        $_POST = wp_slash(['post_ID' => $id, 'iss_editorial_nonce' => wp_create_nonce('iss_editorial_save_document'), 'iss_editorial' => ['article' => ['document' => iss_editorial_encode_document($invalid), 'base' => $base, 'draft_token' => $draft['token'], 'enabled' => '1']]]);
         $rejected = false;
         try {
             wp_update_post(['ID' => $id, 'post_title' => 'Must not be written']);
@@ -322,7 +385,7 @@ try {
         $draft = iss_editorial_save_draft($id, 'place', $bad, true);
         $assert(!is_wp_error($draft) && $draft['document'] === $bad, 'Place recovery retains ' . $label . ' exactly');
         $assert(!iss_editorial_save_document($id, 'place', $bad) && get_metadata_raw('post', $id, $key, true) === $canonical, 'Canonical Place save rejects ' . $label);
-        $_POST = wp_slash(['iss_editorial_nonce' => wp_create_nonce('iss_editorial_save_document'), 'iss_editorial' => ['place' => ['document' => iss_editorial_encode_document($bad), 'base' => $base, 'draft_token' => $draft['token'], 'enabled' => '1']]]);
+        $_POST = wp_slash(['post_ID' => $id, 'iss_editorial_nonce' => wp_create_nonce('iss_editorial_save_document'), 'iss_editorial' => ['place' => ['document' => iss_editorial_encode_document($bad), 'base' => $base, 'draft_token' => $draft['token'], 'enabled' => '1']]]);
         $rejected = false;
         try { wp_update_post(['ID' => $id, 'post_title' => 'Must not change', 'post_content' => 'Must not replace source', 'post_excerpt' => 'Must not replace summary']); }
         catch (RuntimeException $error) { $rejected = str_starts_with($error->getMessage(), 'Rejected:'); }
@@ -340,7 +403,7 @@ try {
     $assert(!is_wp_error($corrected), 'Discarded incomplete epochs do not block valid active history');
     $draft = iss_editorial_save_draft($id, 'place', $corrected, true);
     $assert(!is_wp_error($draft), 'Corrected Place recovery is available for retry');
-    $_POST = wp_slash(['iss_editorial_nonce' => wp_create_nonce('iss_editorial_save_document'), 'iss_editorial' => ['place' => ['document' => iss_editorial_encode_document($corrected), 'base' => $base, 'draft_token' => $draft['token'], 'enabled' => '1']]]);
+    $_POST = wp_slash(['post_ID' => $id, 'iss_editorial_nonce' => wp_create_nonce('iss_editorial_save_document'), 'iss_editorial' => ['place' => ['document' => iss_editorial_encode_document($corrected), 'base' => $base, 'draft_token' => $draft['token'], 'enabled' => '1']]]);
     wp_update_post(['ID' => $id, 'post_title' => 'Corrected Place fixture']);
     $projected = iss_register_get_epoch_service()->get_epochs_for_place($id);
     $assert(get_post($id)->post_title === 'Corrected Place fixture' && iss_editorial_get_document($id, 'place', false) === $corrected, 'Corrected native Place retry saves JSON and identity together');
@@ -393,6 +456,7 @@ try {
         return $formats;
     };
     add_filter('iss_editorial_formats', $fixture_format, 99);
+    iss_editorial_reset_format_cache();
     $assert(iss_editorial_save_document($id, 'landing', $v2), 'Save v2 canonical fixture');
     $key = iss_editorial_get_document_meta_key('landing');
     $canonical_v2 = get_metadata_raw('post', $id, $key, true);
@@ -506,6 +570,7 @@ try {
     }
     $assert(iss_editorial_get_document($id, 'landing', true)['sections'][0]['body'] === '<p>Later save</p>', 'Non-embedded API reads remain fresh after a save');
     remove_filter('iss_editorial_formats', $fixture_format, 99);
+    iss_editorial_reset_format_cache();
     WP_CLI::log("PASS: $checks checks, including $stored_count existing documents; temporary records only.");
 } finally {
     $_POST = [];

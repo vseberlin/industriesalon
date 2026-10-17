@@ -38,8 +38,8 @@ function iss_editorial_sanitize_reference($reference): array
         'source' => $source,
         'id' => $id,
         'label' => sanitize_textarea_field((string) ($reference['label'] ?? '')),
-        'thumbnail' => esc_url_raw((string) ($reference['thumbnail'] ?? '')),
     ];
+    if (isset($reference['thumbnail'])) { $sanitized['thumbnail'] = esc_url_raw((string) $reference['thumbnail']); }
 
     if (isset($reference['editorial_set_item_id'])) {
         $sanitized['editorial_set_item_id'] = (string) absint($reference['editorial_set_item_id']);
@@ -377,7 +377,6 @@ function iss_editorial_sanitize_album_sheet($sheet): array
         'nav_title' => sanitize_text_field((string) ($sheet['nav_title'] ?? '')),
         'caption' => sanitize_textarea_field((string) ($sheet['caption'] ?? '')),
         'caption_override' => sanitize_textarea_field((string) ($sheet['caption_override'] ?? '')),
-        'thumbnail' => esc_url_raw((string) ($sheet['thumbnail'] ?? '')),
         'position' => absint($sheet['position'] ?? 0),
     ];
 
@@ -411,52 +410,28 @@ function iss_editorial_sanitize_album_sheet_list($sheets): array
     return array_values($items);
 }
 
-function iss_editorial_body_href_is_safe(string $href): bool
-{
-    $href = trim(html_entity_decode($href, ENT_QUOTES | ENT_HTML5, get_bloginfo('charset') ?: 'UTF-8'));
-    if ($href === '') {
-        return false;
-    }
-    if (preg_match('/^(#|\/|\?|\.{1,2}\/)/', $href)) {
-        return true;
-    }
-    if (preg_match('/^[a-z][a-z0-9+.-]*:/i', $href)) {
-        return preg_match('/^(https?:|mailto:|tel:)/i', $href) === 1;
-    }
-
-    return true;
-}
-
+/** Use WordPress HTML parsing and protocol rules for both legacy and profiled text. */
 function iss_editorial_strip_unsafe_body_hrefs(string $body): string
 {
-    return (string) preg_replace_callback('/<a\b[^>]*>/i', static function (array $matches): string {
-        $tag = $matches[0];
-        if (!preg_match('/\s+href\s*=\s*("([^"]*)"|\'([^\']*)\'|([^\s>]+))/i', $tag, $href_matches)) {
-            return $tag;
+    $html = new WP_HTML_Tag_Processor($body);
+    while ($html->next_tag('a')) {
+        $href = $html->get_attribute('href');
+        if ($href === null) { continue; }
+        $value = (string) preg_replace('/[\x00-\x20\x7f]/', '', html_entity_decode((string) $href, ENT_QUOTES | ENT_HTML5, 'UTF-8'));
+        if ($value === '' || strcasecmp(wp_kses_bad_protocol($value, ['http', 'https', 'mailto', 'tel']), $value) !== 0) {
+            $html->remove_attribute('href');
         }
-
-        $href = (string) ($href_matches[2] ?? $href_matches[3] ?? $href_matches[4] ?? '');
-        if (iss_editorial_body_href_is_safe($href)) {
-            return $tag;
-        }
-
-        return (string) preg_replace('/\s+href\s*=\s*("([^"]*)"|\'([^\']*)\'|([^\s>]+))/i', '', $tag, 1);
-    }, $body);
+    }
+    return $html->get_updated_html();
 }
 
-function iss_editorial_sanitize_body_html(string $body, array $format, string $type): string
+function iss_editorial_sanitize_body_html(string $body, array $format, string $type, int $version): string
 {
-    $profile = iss_editorial_text_profile($format, $type, 'body');
+    $profile = iss_editorial_text_profile($format, $type, 'body', $version);
     if ($profile !== '') {
         return iss_editorial_sanitize_rich_text($body, $profile);
     }
-    $format_slug = (string) ($format['slug'] ?? '');
-    $safe_rich_text_sections = [
-        'fuehrung' => ['bildbuehne', 'intro', 'kapitel', 'leitfrage', 'material', 'schluss'],
-        'projekt' => ['kapitel', 'fliesstext', 'schluss'],
-    ];
-
-    if (!in_array($type, $safe_rich_text_sections[$format_slug] ?? [], true)) {
+    if (($format['sections'][$type]['legacy_body_policy'] ?? 'post') !== 'basic') {
         return wp_kses_post($body);
     }
 
@@ -476,7 +451,7 @@ function iss_editorial_sanitize_body_html(string $body, array $format, string $t
     ]);
 }
 
-function iss_editorial_sanitize_section(array $section, array $format): array
+function iss_editorial_sanitize_section(array $section, array $format, int $version): array
 {
     $section = iss_editorial_normalize_section_alias($section, $format);
     $type = sanitize_key((string) ($section['type'] ?? ''));
@@ -488,11 +463,11 @@ function iss_editorial_sanitize_section(array $section, array $format): array
         'type' => $type,
         'kicker' => sanitize_text_field((string) ($section['kicker'] ?? '')),
         'title' => sanitize_text_field((string) ($section['title'] ?? '')),
-        'body' => iss_editorial_sanitize_body_html((string) ($section['body'] ?? ''), $format, $type),
+        'body' => iss_editorial_sanitize_body_html((string) ($section['body'] ?? ''), $format, $type, $version),
     ];
 
     if (iss_editorial_format_supports_section_field($format, $type, 'lead')) {
-        $profile = iss_editorial_text_profile($format, $type, 'lead');
+        $profile = iss_editorial_text_profile($format, $type, 'lead', $version);
         $sanitized['lead'] = $profile !== '' ? iss_editorial_sanitize_rich_text((string) ($section['lead'] ?? ''), $profile) : wp_kses_post((string) ($section['lead'] ?? ''));
     }
 
@@ -527,9 +502,9 @@ function iss_editorial_sanitize_section(array $section, array $format): array
     if (iss_editorial_format_supports_section_field($format, $type, 'items')) {
         $sanitized['items'] = ($format['sections'][$type]['items_kind'] ?? '') === 'text'
             ? array_values(array_filter(array_map('sanitize_text_field', (array) ($section['items'] ?? []))))
-            : (in_array($type, ['text_bild_reihe', 'map_img'], true)
-            ? iss_editorial_sanitize_text_image_item_list($section['items'] ?? [], iss_editorial_text_profile($format, $type, 'items'))
-            : iss_editorial_sanitize_gateway_item_list($section['items'] ?? [], iss_editorial_text_profile($format, $type, 'items')));
+            : (($format['sections'][$type]['items_kind'] ?? '') === 'text_image'
+            ? iss_editorial_sanitize_text_image_item_list($section['items'] ?? [], iss_editorial_text_profile($format, $type, 'items', $version))
+            : iss_editorial_sanitize_gateway_item_list($section['items'] ?? [], iss_editorial_text_profile($format, $type, 'items', $version)));
     }
 
     if (iss_editorial_format_supports_section_field($format, $type, 'slot_key')) {
@@ -571,13 +546,13 @@ function iss_editorial_sanitize_section(array $section, array $format): array
 
     if (iss_editorial_format_supports_section_field($format, $type, 'era_key')) {
         $era_key = sanitize_title((string) ($section['era_key'] ?? ''));
-        $allowed_eras = ['kaiserzeit', 'weimar', 'ns-zeit', 'nachkriegszeit', 'ddr', 'nach-1990'];
+        $allowed_eras = array_column($format['sections'][$type]['vocabularies']['era_key']['choices'] ?? [], 'value');
         $sanitized['era_key'] = in_array($era_key, $allowed_eras, true) ? $era_key : '';
     }
 
     if (iss_editorial_format_supports_section_field($format, $type, 'function_key')) {
         $function_key = sanitize_key((string) ($section['function_key'] ?? ''));
-        $allowed_functions = ['industrial', 'commercial', 'culture', 'education', 'community', 'residential', 'mixed', 'vacant', 'infrastructure'];
+        $allowed_functions = array_column($format['sections'][$type]['vocabularies']['function_key']['choices'] ?? [], 'value');
         $sanitized['function_key'] = in_array($function_key, $allowed_functions, true) ? $function_key : '';
     }
 
@@ -604,12 +579,9 @@ function iss_editorial_sanitize_section(array $section, array $format): array
     }
 
     if (iss_editorial_format_supports_section_field($format, $type, 'media_layout')) {
-        $media_layout = sanitize_key((string) ($section['media_layout'] ?? 'inline'));
-        if (($format['slug'] ?? '') === 'landing' && $type === 'feature') {
-            $sanitized['media_layout'] = in_array($media_layout, ['40-60', '50-50', '60-40'], true) ? $media_layout : '50-50';
-        } else {
-            $sanitized['media_layout'] = in_array($media_layout, ['inline', 'aside-right'], true) ? $media_layout : 'inline';
-        }
+        $layout = $format['sections'][$type]['media_layout'];
+        $media_layout = sanitize_key((string) ($section['media_layout'] ?? $layout['default']));
+        $sanitized['media_layout'] = in_array($media_layout, array_column($layout['choices'], 'value'), true) ? $media_layout : $layout['default'];
     }
 
     if (iss_editorial_format_supports_section_field($format, $type, 'gallery_layout')) {
@@ -669,25 +641,6 @@ function iss_editorial_normalize_section_alias(array $section, array $format): a
     return $section;
 }
 
-function iss_editorial_sanitize_deleted_section(array $section, array $format): array
-{
-    $sanitized = iss_editorial_sanitize_section($section, $format);
-    if (!$sanitized) {
-        return [];
-    }
-
-    $deleted_at = sanitize_text_field((string) ($section['deleted_at'] ?? ''));
-    if ($deleted_at !== '') {
-        $sanitized['deleted_at'] = $deleted_at;
-    }
-
-    if (isset($section['original_index'])) {
-        $sanitized['original_index'] = absint($section['original_index']);
-    }
-
-    return $sanitized;
-}
-
 function iss_editorial_sanitize_document($document, string $format_slug): array
 {
     $format = iss_editorial_get_format($format_slug);
@@ -695,11 +648,10 @@ function iss_editorial_sanitize_document($document, string $format_slug): array
         return [];
     }
 
-    $document = iss_editorial_decode_document($document);
+    $document = iss_editorial_strip_document_preview_cache(iss_editorial_decode_document($document));
     $sanitized = iss_editorial_get_empty_document($format_slug);
     $schema_version = absint($document['schema_version'] ?? 1);
     $sanitized['schema_version'] = max(1, $schema_version);
-    $format['document_version'] = $sanitized['schema_version'];
     $sanitized['skin'] = sanitize_key((string) ($document['skin'] ?? $sanitized['skin']));
     $sanitized['variant'] = sanitize_key((string) ($document['variant'] ?? $sanitized['variant']));
     $sanitized['features'] = iss_editorial_sanitize_document_features($document['features'] ?? [], $format_slug);
@@ -711,7 +663,7 @@ function iss_editorial_sanitize_document($document, string $format_slug): array
             continue;
         }
 
-        $section = iss_editorial_sanitize_section($section, $format);
+        $section = iss_editorial_sanitize_section($section, $format, $sanitized['schema_version']);
         if ($section) {
             $sanitized['sections'][] = $section;
         }
@@ -722,13 +674,66 @@ function iss_editorial_sanitize_document($document, string $format_slug): array
             continue;
         }
 
-        $section = iss_editorial_sanitize_deleted_section($section, $format);
-        if ($section) {
-            $sanitized['deleted_sections'][] = $section;
-        }
+        // Opaque recovery data: never normalize retired registry fields or render this as content.
+        $sanitized['deleted_sections'][] = $section;
     }
 
     return (array) apply_filters('iss_editorial_sanitized_document', $sanitized, $document, $format);
+}
+
+/** First changed input path; defaults may be added, but submitted content must survive. */
+function iss_editorial_normalization_loss($input, $output, string $path = ''): string
+{
+    if ($input === $output || $input === '' || $input === null || $input === []) { return ''; }
+    if (is_array($input) && is_array($output)) {
+        // Existing album aliases and ordering are representation changes, not discarded content.
+        $aliases = str_ends_with($path, '.album_source') ? ['id' => 'set_id', 'title' => 'set_title'] : [];
+        if (preg_match('/\.sheets\[\d+\]$/D', $path)) {
+            $aliases = ['object_id' => 'source_id', 'attachment_id' => 'source_id'];
+        }
+        foreach ($aliases as $old => $new) {
+            if (array_key_exists($old, $input) && (!array_key_exists($new, $input) || $input[$old] === $input[$new])) {
+                $input[$new] = $input[$old];
+                unset($input[$old]);
+            }
+        }
+        if (str_ends_with($path, '.sheets') && array_is_list($input)) {
+            foreach ($input as $index => &$sheet) {
+                if (is_array($sheet) && in_array($sheet['position'] ?? null, [null, '', 0, '0'], true)) { $sheet['position'] = $index + 1; }
+            }
+            unset($sheet);
+            usort($input, static fn($a, $b): int => (int) ($a['position'] ?? 0) <=> (int) ($b['position'] ?? 0));
+        }
+        if (array_is_list($input) && (!array_is_list($output) || count($input) !== count($output))) { return $path; }
+        foreach ($input as $key => $value) {
+            $child_path = is_int($key) ? $path . '[' . $key . ']' : ltrim($path . '.' . $key, '.');
+            // Restore bookkeeping is intentionally removed when a section becomes active again.
+            if (preg_match('/^sections\[\d+\]\.(deleted_at|original_index|restored_from)$/D', $child_path)) { continue; }
+            // Native page selections own the URL; their current permalink replaces the cached URL.
+            if ($key === 'url' && preg_match('/^sections\[\d+\]\.(links|source_refs|items)\[\d+\]$/D', $path)
+                && !empty($input['page_id']) && isset($output['page_id'])
+                && (string) $input['page_id'] === (string) $output['page_id']
+                && ($output['url'] ?? '') === get_permalink((int) $output['page_id'])) { continue; }
+            if ($key === 'page_id' && in_array($value, [0, '0'], true) && !isset($output[$key])) { continue; }
+            $loss = iss_editorial_normalization_loss($value, $output[$key] ?? null, $child_path);
+            if ($loss !== '') { return $loss; }
+        }
+        return '';
+    }
+    // JSON integer/string and boolean 0/1 representations carry the same value.
+    if ((is_int($input) && is_string($output) || is_string($input) && is_int($output))
+        && (string) $input === (string) $output) { return ''; }
+    if (is_bool($output) && in_array($input, [0, 1, '0', '1'], true) && (bool) $input === $output) { return ''; }
+    if (is_string($input) && is_string($output)) {
+        // Horizontal spacing and CRLF are cosmetic; embedded line breaks and tags are content.
+        $spacing = static fn(string $value): string => trim((string) preg_replace('/[ \t]+/', ' ', str_replace("\r\n", "\n", $value)));
+        if ($spacing($input) === $spacing($output)) { return ''; }
+        if (preg_match('/\.(body|lead|quote|text)$/D', $path)) {
+            $void_tags = static fn(string $value): string => (string) preg_replace('/<(br|hr|img)\b([^<>]*?)\s*\/?>/i', '<$1$2>', $value);
+            if ($spacing($void_tags($input)) === $spacing($void_tags($output))) { return ''; }
+        }
+    }
+    return $path;
 }
 
 /**
@@ -746,7 +751,8 @@ function iss_editorial_validate_document($value, string $format_slug)
     if (!iss_editorial_supports_version($format, $document['schema_version'] ?? null) || !isset($document['sections']) || !is_array($document['sections']) || !array_is_list($document['sections'])) {
         return new WP_Error('editorial_invalid_schema', __('Dieses Dokumentformat wird nicht unterstützt. Die gespeicherte Fassung bleibt erhalten.', 'iss-editorial'));
     }
-    $format['document_version'] = $document['schema_version'];
+    $document = iss_editorial_strip_document_preview_cache($document);
+    $comparison = $document;
     $allowed_document_fields = (array) apply_filters('iss_editorial_document_fields', ['schema_version', 'skin', 'variant', 'features', 'sections', 'deleted_sections'], $format);
     foreach ($document as $key => $value) {
         if (!in_array($key, $allowed_document_fields, true) && $value !== '' && $value !== [] && $value !== null) {
@@ -776,13 +782,15 @@ function iss_editorial_validate_document($value, string $format_slug)
             if (!isset($section['type']) || !is_string($section['type'])) {
                 return new WP_Error('editorial_invalid_section', sprintf(__('Abschnitt %d hat keinen gültigen Typ.', 'iss-editorial'), $index + 1));
             }
+            if ($list_key === 'deleted_sections') { continue; }
             $section = iss_editorial_normalize_section_alias($section, $format);
+            $comparison['sections'][$index] = $section;
             $type = (string) ($section['type'] ?? '');
             if (!isset($format['sections'][$type])) {
                 return new WP_Error('editorial_unknown_section', sprintf(__('Abschnitt %d hat einen unbekannten Typ (%s). Er wurde nicht entfernt.', 'iss-editorial'), $index + 1, $type));
             }
             $supports = (array) $format['sections'][$type]['supports'];
-            $allowed = array_merge(['type', 'kicker', 'title', 'body', 'anchor', 'deleted_at', 'original_index'], $supports);
+            $allowed = array_merge(['type', 'kicker', 'title', 'body', 'anchor', 'deleted_at', 'original_index', 'restored_from'], $supports);
             if (in_array('quote', $supports, true)) {
                 $allowed[] = 'attribution';
             }
@@ -811,7 +819,7 @@ function iss_editorial_validate_document($value, string $format_slug)
                     }
                 }
             }
-            if (in_array($type, ['text_bild_reihe', 'map_img'], true)) {
+            if (($format['sections'][$type]['items_kind'] ?? '') === 'text_image') {
                 foreach ((array) ($section['items'] ?? []) as $item) {
                     foreach (['eyebrow', 'group', 'detail'] as $key) {
                         if (isset($item[$key]) && (!is_string($item[$key]) || wp_strip_all_tags($item[$key]) !== $item[$key])) {
@@ -820,7 +828,7 @@ function iss_editorial_validate_document($value, string $format_slug)
                     }
                 }
             }
-            $normalized = iss_editorial_sanitize_section($section, $format);
+            $normalized = iss_editorial_sanitize_section($section, $format, $document['schema_version']);
             foreach (['media_refs', 'object_refs', 'links', 'facts', 'items', 'sheets', 'source_refs', 'dynamic_refs'] as $key) {
                 if (!isset($section[$key]) || $section[$key] === []) {
                     continue;
@@ -849,7 +857,15 @@ function iss_editorial_validate_document($value, string $format_slug)
             }
         }
     }
-    return apply_filters('iss_editorial_validated_document', iss_editorial_sanitize_document($document, $format_slug), $document, $format);
+    $normalized = apply_filters('iss_editorial_validated_document', iss_editorial_sanitize_document($document, $format_slug), $document, $format);
+    if (is_wp_error($normalized)) { return $normalized; }
+    // Domain owners may declare exact legacy aliases without teaching the engine their slugs.
+    $comparison = apply_filters('iss_editorial_normalization_input', $comparison, $format);
+    $path = iss_editorial_normalization_loss($comparison, $normalized);
+    if ($path !== '') {
+        return new WP_Error('editorial_lossy_normalization', sprintf(__('Das Feld „%s“ würde beim Speichern verändert oder gekürzt. Bitte den Inhalt prüfen. Der Entwurf bleibt erhalten.', 'iss-editorial'), $path), ['path' => $path]);
+    }
+    return $normalized;
 }
 
 function iss_editorial_encode_document(array $document): string
@@ -902,6 +918,65 @@ function iss_editorial_persist_document(int $post_id, string $format_slug, calla
     return true;
 }
 
+/** Called inside the owning writer boundary, including Place transactions. */
+function iss_editorial_write_document_meta(int $post_id, array $values): bool
+{
+    $changed = false;
+    foreach ($values as $key => $value) {
+        $changed = $changed || get_metadata_raw('post', $post_id, $key, true) !== $value;
+    }
+    if (!$changed) {
+        return true;
+    }
+    // During save_post, the form has already captured the old title AND old JSON.
+    $captured_before_update = doing_action('save_post') && !empty($GLOBALS['iss_editorial_revision_before_update'][$post_id]);
+    if (!$captured_before_update && !iss_editorial_capture_revision($post_id)) {
+        return false;
+    }
+    foreach ($values as $key => $value) {
+        update_post_meta($post_id, $key, wp_slash($value));
+        if (get_metadata_raw('post', $post_id, $key, true) !== $value) {
+            return false;
+        }
+    }
+    return true;
+}
+
+/** Editors can restore trash, while permanent removal requires the same capability as the UI. */
+function iss_editorial_check_trash_removal(int $post_id, string $format_slug, array $document)
+{
+    if (current_user_can('manage_options')) { return true; }
+    $stored = iss_editorial_decode_document(get_metadata_raw('post', $post_id, iss_editorial_get_document_meta_key($format_slug), true));
+    $draft = iss_editorial_get_draft($post_id, $format_slug);
+    foreach ([$stored, $draft['document'] ?? []] as $before) {
+        $remaining = (array) ($document['deleted_sections'] ?? []);
+        $active = (array) ($document['sections'] ?? []);
+        foreach ((array) ($before['deleted_sections'] ?? []) as $deleted) {
+            $retained = array_search($deleted, $remaining, true);
+            if ($retained !== false) { unset($remaining[$retained]); continue; }
+            $restored = iss_editorial_validate_document(['schema_version' => $document['schema_version'] ?? 1, 'sections' => [$deleted]], $format_slug);
+            if (!is_wp_error($restored)) {
+                foreach ($active as $index => $section) {
+                    // The restore endpoint identifies the source before controls can edit it.
+                    // Retain that identity in recovery; canonical normalization removes it.
+                    if (is_array($section) && hash_equals(hash('sha256', iss_editorial_encode_document($deleted)), (string) ($section['restored_from'] ?? ''))
+                        && ($section['type'] ?? '') === $restored['sections'][0]['type']) {
+                        unset($active[$index]);
+                        continue 2;
+                    }
+                    $candidate = iss_editorial_validate_document(['schema_version' => $document['schema_version'] ?? 1, 'sections' => [$section]], $format_slug);
+                    if (!is_wp_error($candidate) && $candidate['sections'] === $restored['sections']) {
+                        unset($active[$index]);
+                        continue 2;
+                    }
+                }
+            }
+            return new WP_Error('editorial_trash_permission', __('Gelöschte Abschnitte dürfen nur von Administrator:innen endgültig entfernt werden. Bitte wiederherstellen oder im Papierkorb behalten.', 'iss-editorial'));
+        }
+    }
+    return true;
+}
+
 function iss_editorial_save_document(int $post_id, string $format_slug, $document, bool $autosave = false, ?bool $enabled = null): bool
 {
     $format = $post_id > 0 ? iss_editorial_get_format_for_post($post_id) : [];
@@ -909,8 +984,9 @@ function iss_editorial_save_document(int $post_id, string $format_slug, $documen
         return false;
     }
 
+    $raw_document = iss_editorial_decode_document($document);
     $document = iss_editorial_validate_document($document, $format_slug);
-    if (is_wp_error($document)) {
+    if (is_wp_error($document) || is_wp_error(iss_editorial_check_trash_removal($post_id, $format_slug, $raw_document))) {
         return false;
     }
 
@@ -926,13 +1002,7 @@ function iss_editorial_save_document(int $post_id, string $format_slug, $documen
         if ($enabled !== null && empty($format['always_enabled'])) {
             $values[iss_editorial_get_enabled_meta_key($format_slug)] = $enabled ? '1' : '0';
         }
-        foreach ($values as $key => $value) {
-            update_post_meta($post_id, $key, wp_slash($value));
-            if (get_metadata_raw('post', $post_id, $key, true) !== $value) {
-                return false;
-            }
-        }
-        return true;
+        return iss_editorial_write_document_meta($post_id, $values);
     });
 }
 
@@ -952,13 +1022,19 @@ function iss_editorial_document_is_enabled(int $post_id, string $format_slug): b
     return $post_id > 0 && get_post_meta($post_id, iss_editorial_get_enabled_meta_key($format_slug), true) === '1';
 }
 
-function iss_editorial_set_document_enabled(int $post_id, string $format_slug, bool $enabled): void
+function iss_editorial_set_document_enabled(int $post_id, string $format_slug, bool $enabled): bool
 {
-    if ($post_id <= 0) {
-        return;
+    $format = $post_id > 0 ? iss_editorial_get_format_for_post($post_id) : [];
+    if (!$format || $format['slug'] !== sanitize_key($format_slug)) {
+        return false;
+    }
+    if (!empty($format['always_enabled'])) {
+        return $enabled;
     }
 
-    update_post_meta($post_id, iss_editorial_get_enabled_meta_key($format_slug), $enabled ? '1' : '0');
+    return iss_editorial_persist_document($post_id, $format['slug'], static function () use ($post_id, $format, $enabled): bool {
+        return iss_editorial_write_document_meta($post_id, [iss_editorial_get_enabled_meta_key($format['slug']) => $enabled ? '1' : '0']);
+    });
 }
 
 function iss_editorial_get_read_model(int $post_id, string $format_slug, bool $prefer_autosave = false): array
@@ -974,6 +1050,7 @@ function iss_editorial_get_read_model(int $post_id, string $format_slug, bool $p
         return [];
     }
 
+    iss_editorial_prime_document_references($document);
     foreach ($document['sections'] as $index => $section) {
         if ($cache_key !== '') { $document['sections'][$index]['_editorial_index'] = $index; }
         foreach (['object_refs', 'media_refs'] as $field) {

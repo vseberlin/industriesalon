@@ -3,8 +3,22 @@
 if (!defined('ABSPATH')) {
     exit;
 }
+/** Invalidate request-local definitions after changing registry filters at runtime. */
+function iss_editorial_reset_format_cache(): void
+{
+    unset($GLOBALS['iss_editorial_format_cache']);
+}
+
 function iss_editorial_get_registered_formats(): array
 {
+    // init counts as fired while its callbacks still register post types and formats.
+    $cacheable = did_action('init') && !doing_action('init');
+    $context = [get_current_blog_id(), get_locale()];
+    $cache = $GLOBALS['iss_editorial_format_cache'] ?? null;
+    if ($cacheable && $cache !== null && $cache['context'] === $context) {
+        return $cache['formats'];
+    }
+
     $formats = (array) apply_filters('iss_editorial_formats', []);
     $normalized = [];
 
@@ -54,6 +68,29 @@ function iss_editorial_get_registered_formats(): array
                     'hint' => is_array($treatment) ? sanitize_text_field($treatment['hint'] ?? '') : '',
                     'role' => is_array($treatment) ? sanitize_key($treatment['role'] ?? '') : '',
                     'min_version' => is_array($treatment) ? absint($treatment['min_version'] ?? 1) : 1,
+                    'item_fields' => is_array($treatment) ? array_values(array_unique(array_filter(array_map('sanitize_key', (array) ($treatment['item_fields'] ?? []))))) : [],
+                ];
+            }
+
+            $media_layout = (array) ($section['media_layout'] ?? []);
+            $media_layout_choices = [];
+            foreach ((array) ($media_layout['choices'] ?? []) as $value => $label) {
+                $value = sanitize_key((string) $value);
+                if ($value === '') { continue; }
+                $media_layout_choices[$value] = ['value' => $value, 'label' => sanitize_text_field((string) $label)];
+            }
+
+            $vocabularies = [];
+            foreach ((array) ($section['vocabularies'] ?? []) as $field => $vocabulary) {
+                $choices = [];
+                foreach ((array) ($vocabulary['choices'] ?? []) as $value => $label) {
+                    $value = sanitize_key((string) $value);
+                    if ($value === '') { continue; }
+                    $choices[$value] = ['value' => $value, 'label' => sanitize_text_field((string) $label)];
+                }
+                $vocabularies[sanitize_key((string) $field)] = [
+                    'label' => sanitize_text_field((string) ($vocabulary['label'] ?? '')),
+                    'choices' => array_values($choices),
                 ];
             }
 
@@ -72,7 +109,16 @@ function iss_editorial_get_registered_formats(): array
                 'max_instances' => absint($section['max_instances'] ?? 0),
                 'slots' => (array) ($section['slots'] ?? []),
                 'rich_text' => array_intersect((array) ($section['rich_text'] ?? []), ['block', 'inline', 'inline-card']),
-                'items_kind' => ($section['items_kind'] ?? '') === 'text' ? 'text' : 'cards',
+                'legacy_body_policy' => sanitize_key((string) ($section['legacy_body_policy'] ?? 'post')),
+                'items_kind' => in_array($section['items_kind'] ?? '', ['text', 'cards', 'text_image'], true) ? $section['items_kind'] : 'cards',
+                'items_label' => sanitize_text_field((string) ($section['items_label'] ?? __('Ziele', 'iss-editorial'))),
+                'vocabularies' => $vocabularies,
+                'media_layout' => [
+                    'choices' => array_values($media_layout_choices),
+                    'default' => sanitize_key((string) ($media_layout['default'] ?? '')),
+                    'treatments' => array_values(array_unique(array_filter(array_map('iss_editorial_sanitize_treatment_slug', (array) ($media_layout['treatments'] ?? []))))),
+                ],
+                'editor' => (array) ($section['editor'] ?? []),
                 'family' => sanitize_key($section['family'] ?? $type),
                 'portable' => !empty($section['portable']),
                 'renderer' => sanitize_key($section['renderer'] ?? ''),
@@ -97,8 +143,12 @@ function iss_editorial_get_registered_formats(): array
             'default_skin' => sanitize_key((string) ($format['default_skin'] ?? 'standard')),
             'default_variant' => sanitize_key((string) ($format['default_variant'] ?? 'standard')),
             'post_eligibility_callback' => is_callable($format['post_eligibility_callback'] ?? null) ? $format['post_eligibility_callback'] : null,
+            'route_stations_callback' => is_callable($format['route_stations_callback'] ?? null) ? $format['route_stations_callback'] : null,
+            'opening_skin' => sanitize_key((string) ($format['opening_skin'] ?? '')),
+            'opening_eligibility_callback' => is_callable($format['opening_eligibility_callback'] ?? null) ? $format['opening_eligibility_callback'] : null,
             'skin_meta_key' => sanitize_key((string) ($format['skin_meta_key'] ?? '')),
             'storage_meta_key' => sanitize_key((string) ($format['storage_meta_key'] ?? '')),
+            'version_meta_keys' => array_values(array_unique(array_filter(array_map('sanitize_key', (array) ($format['version_meta_keys'] ?? []))))),
             'supported_versions' => array_values(array_unique(array_map('absint', (array) ($format['supported_versions'] ?? [1])))),
             'always_enabled' => !empty($format['always_enabled']),
             'default_version' => absint($format['default_version'] ?? 1),
@@ -107,6 +157,10 @@ function iss_editorial_get_registered_formats(): array
             'skins' => (array) ($format['skins'] ?? []),
             'renderer' => sanitize_key($format['renderer'] ?? ''),
         ];
+    }
+
+    if ($cacheable) {
+        $GLOBALS['iss_editorial_format_cache'] = ['context' => $context, 'formats' => $normalized];
     }
 
     return $normalized;
@@ -133,8 +187,21 @@ function iss_editorial_registry_errors(): array
         if (!in_array($format['default_skin'], array_column(iss_editorial_get_format_skins($slug), 'slug'), true)) {
             $errors[] = "$slug: missing default skin";
         }
+        if ($format['opening_skin'] !== '' && !in_array($format['opening_skin'], array_column(iss_editorial_get_format_skins($slug), 'slug'), true)) {
+            $errors[] = "$slug: unknown opening skin";
+        }
+        if (isset($raw[$slug]['opening_eligibility_callback']) && !is_callable($raw[$slug]['opening_eligibility_callback'])) {
+            $errors[] = "$slug: invalid opening eligibility callback";
+        }
         $aliases = [];
         foreach ($format['sections'] as $type => $section) {
+            if (!in_array($section['legacy_body_policy'], ['post', 'basic'], true)) {
+                $errors[] = "$slug.$type: unknown legacy body policy";
+            }
+            if (in_array('items', $section['supports'], true) && isset($raw[$slug]['sections'][$type]['items_kind'])
+                && !in_array($raw[$slug]['sections'][$type]['items_kind'], ['text', 'cards', 'text_image'], true)) {
+                $errors[] = "$slug.$type: unknown item kind";
+            }
             if ($section['portable'] && $section['renderer'] === '') {
                 $errors[] = "$slug.$type: portable gesture has no renderer";
             }
@@ -142,10 +209,37 @@ function iss_editorial_registry_errors(): array
                 if (empty($raw[$slug]['sections'][$type][$field])) { $errors[] = "$slug.$type: missing $field"; }
             }
             $treatments = array_column($section['treatments'], 'slug');
+            foreach (['era_key', 'function_key'] as $field) {
+                if (!in_array($field, $section['supports'], true)) { continue; }
+                $vocabulary = $section['vocabularies'][$field] ?? [];
+                if (empty($vocabulary['label']) || empty($vocabulary['choices'])) {
+                    $errors[] = "$slug.$type: missing $field vocabulary label or choices";
+                } elseif (in_array('', array_column($vocabulary['choices'], 'label'), true)) {
+                    $errors[] = "$slug.$type: $field vocabulary choice lacks a label";
+                }
+            }
+            if (in_array('media_layout', $section['supports'], true)) {
+                $layout = $section['media_layout'];
+                if (!$layout['choices'] || !in_array($layout['default'], array_column($layout['choices'], 'value'), true)) {
+                    $errors[] = "$slug.$type: missing media layout choices or invalid default";
+                }
+                if (array_diff($layout['treatments'], $treatments)) {
+                    $errors[] = "$slug.$type: unknown media layout treatment";
+                }
+                if (in_array('', array_column($layout['choices'], 'label'), true)) {
+                    $errors[] = "$slug.$type: media layout choice lacks a label";
+                }
+            }
             if ($treatments && !in_array($section['default_treatment'], $treatments, true)) {
                 $errors[] = "$slug.$type: unknown default treatment";
             }
             foreach ($section['treatments'] as $treatment) {
+                if (array_diff($treatment['item_fields'], ['eyebrow', 'group', 'detail'])) {
+                    $errors[] = "$slug.$type: treatment {$treatment['slug']} has unknown item fields";
+                }
+                if ($treatment['item_fields'] && ($section['items_kind'] !== 'text_image' || !in_array('items', $section['supports'], true))) {
+                    $errors[] = "$slug.$type: treatment {$treatment['slug']} item fields require text-image items";
+                }
                 if ($treatment['label'] === '' || $treatment['schematic'] === '') {
                     $errors[] = "$slug.$type: treatment {$treatment['slug']} lacks presentation metadata";
                 }
@@ -213,6 +307,18 @@ function iss_editorial_format_is_post_eligible(array $format, WP_Post $post): bo
     }
 
     return (bool) call_user_func($callback, $post, $format);
+}
+
+/** Resolve the editor capability per post; cached definitions never freeze eligibility. */
+function iss_editorial_get_opening_skin(array $format, WP_Post $post): string
+{
+    $skin = (string) ($format['opening_skin'] ?? '');
+    $callback = $format['opening_eligibility_callback'] ?? null;
+    if ($skin !== '' && is_callable($callback) && !call_user_func($callback, $post, $format)) {
+        return '';
+    }
+
+    return $skin;
 }
 
 function iss_editorial_get_format_for_post($post): array
@@ -301,22 +407,10 @@ function iss_editorial_get_format_skins(string $format_slug): array
     return iss_editorial_normalize_format_skins((array) $skins, $format);
 }
 
-function iss_editorial_post_type_supports_format(string $post_type, string $format_slug): bool
-{
-    $format = iss_editorial_get_format($format_slug);
-
-    return $format && in_array(sanitize_key($post_type), (array) $format['post_types'], true);
-}
-
 function iss_editorial_get_document_meta_key(string $format_slug): string
 {
     $format = iss_editorial_get_format($format_slug);
     return (string) ($format['storage_meta_key'] ?? '') ?: '_iss_editorial_' . sanitize_key($format_slug);
-}
-
-function iss_editorial_get_autosave_meta_key(string $format_slug): string
-{
-    return iss_editorial_get_document_meta_key($format_slug) . '_autosave';
 }
 
 function iss_editorial_get_preview_nonce_action(int $post_id, string $format_slug): string

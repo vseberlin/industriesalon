@@ -102,8 +102,10 @@ function iss_content_create_report(int $source_id)
     if (is_wp_error($id)) {
         return $id;
     }
-    iss_editorial_save_document($id, 'rueckblick', iss_editorial_get_empty_document('rueckblick'));
-    iss_editorial_set_document_enabled($id, 'rueckblick', true);
+    if (!iss_editorial_save_document($id, 'rueckblick', iss_editorial_get_empty_document('rueckblick'), false, true)) {
+        wp_delete_post($id, true);
+        return new WP_Error('report_document', __('Der Rückblick konnte nicht gespeichert werden.', 'iss-content-model'));
+    }
     if (!iss_content_report_set_sources($id, [$source_id])) {
         wp_delete_post($id, true);
         return new WP_Error('report_relation', __('Die Verbindung konnte nicht gespeichert werden.', 'iss-content-model'));

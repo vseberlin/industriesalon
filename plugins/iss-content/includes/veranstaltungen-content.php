@@ -9,19 +9,6 @@ function iss_content_model_veranstaltung_content_meta_key(): string
     return '_iss_content_json';
 }
 
-function iss_content_model_veranstaltung_empty_content_document(string $entity_key = ''): array
-{
-    $entity_key = function_exists('iss_content_model_sanitize_veranstaltung_entity_key')
-        ? iss_content_model_sanitize_veranstaltung_entity_key($entity_key)
-        : '';
-
-    return [
-        'schema_version' => 1,
-        'entity_key' => $entity_key,
-        'sections' => [],
-    ];
-}
-
 function iss_content_model_veranstaltung_content_gestures(): array
 {
     return [
@@ -85,7 +72,7 @@ function iss_content_model_veranstaltung_content_gestures_for_entity(string $ent
         $gestures = array_intersect_key($gestures, array_fill_keys($allowed, true));
     }
     // Shared composition is independent of event structure; domain gestures
-    // retain the entity's allowlist. The legacy editor keeps its old contract.
+    // retain the entity's allowlist, also used by the legacy public reader.
     if (function_exists('iss_editorial_get_format')) {
         $gestures = array_replace($gestures, array_filter(iss_editorial_get_format('veranstaltung')['sections'] ?? [], static fn(array $section): bool => !empty($section['portable'])));
     }
@@ -318,6 +305,8 @@ function iss_content_model_sanitize_veranstaltung_content_json($value): string
         return is_wp_error($validated) ? '' : iss_editorial_encode_document($validated);
     }
 
+    // Read-only compatibility for legacy public content. Without ISS Editorial,
+    // this sanitizer is never registered for writes and the admin has no JSON writer.
     $schema_version = (int) ($decoded['schema_version'] ?? $decoded['schemaVersion'] ?? 0);
     if ($schema_version !== 1) {
         return '';
@@ -435,14 +424,15 @@ function iss_content_model_veranstaltung_content_document(int $post_id): array
 
 function iss_content_model_register_veranstaltung_content_meta(): void
 {
+    $editor_available = function_exists('iss_editorial_validate_document') && (bool) iss_editorial_get_format('veranstaltung');
     register_post_meta(ISS_CONTENT_MODEL_VERANSTALTUNG_POST_TYPE, iss_content_model_veranstaltung_content_meta_key(), [
         'single' => true,
         'type' => 'string',
         'default' => '',
-        'show_in_rest' => true,
-        'sanitize_callback' => 'iss_content_model_sanitize_veranstaltung_content_json',
-        'auth_callback' => static function () {
-            return current_user_can('edit_posts');
+        'show_in_rest' => $editor_available,
+        'sanitize_callback' => $editor_available ? 'iss_content_model_sanitize_veranstaltung_content_json' : null,
+        'auth_callback' => static function () use ($editor_available) {
+            return $editor_available && current_user_can('edit_posts');
         },
     ]);
 }
@@ -470,6 +460,7 @@ add_filter('iss_editorial_formats', static function (array $formats): array {
         'label' => __('Veranstaltung', 'iss-content-model'),
         'post_types' => [ISS_CONTENT_MODEL_VERANSTALTUNG_POST_TYPE],
         'storage_meta_key' => iss_content_model_veranstaltung_content_meta_key(),
+        'version_meta_keys' => ['_iss_entity_key'],
         'always_enabled' => true,
         'default_skin' => 'typografisch',
         'sections' => iss_content_model_veranstaltung_content_gestures(),
@@ -493,6 +484,10 @@ add_filter('iss_editorial_draft_meta', static function (array $meta, array $docu
 
 add_filter('get_post_metadata', static function ($value, int $post_id, string $key, bool $single) {
     if ($key === '_iss_entity_key' && function_exists('iss_editorial_should_prefer_preview_autosave') && iss_editorial_should_prefer_preview_autosave($post_id, 'veranstaltung')) {
+        // phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Preview auth above; saved snapshot hash is checked before rendering.
+        if (!empty($_GET['iss_editorial_embed']) && str_starts_with((string) ($_GET['iss_editorial_snapshot'] ?? ''), 'saved:')) {
+            return $value;
+        }
         $draft = iss_editorial_get_draft($post_id, 'veranstaltung');
         if (!empty($draft['document']['entity_key'])) {
             return $single ? $draft['document']['entity_key'] : [$draft['document']['entity_key']];
@@ -545,6 +540,14 @@ add_filter('iss_editorial_sanitized_document', static function (array $sanitized
     }
     return $sanitized;
 }, 10, 3);
+
+// Only registered legacy entity aliases are intentional normalization changes.
+add_filter('iss_editorial_normalization_input', static function (array $document, array $format): array {
+    if ($format['slug'] === 'veranstaltung' && isset($document['entity_key'])) {
+        $document['entity_key'] = iss_content_model_veranstaltung_legacy_entity_key_map()[$document['entity_key']] ?? $document['entity_key'];
+    }
+    return $document;
+}, 10, 2);
 
 add_filter('iss_editorial_validated_document', static function ($validated, array $document, array $format) {
     if (is_wp_error($validated) || $format['slug'] !== 'veranstaltung') {

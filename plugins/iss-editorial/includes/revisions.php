@@ -29,8 +29,100 @@ function iss_editorial_register_revision_meta(): void
 }
 add_action('init', 'iss_editorial_register_revision_meta', 110);
 
+/** Limit only records with stored editorial JSON, including disabled/legacy documents. */
+function iss_editorial_has_revision_document(WP_Post $post): bool
+{
+    $format = iss_editorial_get_format_for_post($post);
+    return $format && metadata_exists('post', $post->ID, iss_editorial_get_document_meta_key($format['slug']));
+}
+
+function iss_editorial_revision_limit(int $limit, WP_Post $post): int {
+    if (!iss_editorial_has_revision_document($post)) { return $limit; }
+    return $limit < 0 ? 30 : min(30, $limit);
+}
+add_filter('wp_revisions_to_keep', 'iss_editorial_revision_limit', 20, 2);
+
+// Core owns pruning on revision creation. Private recovery drafts do not consume its allowance.
+function iss_editorial_retained_revisions(array $revisions, int $post_id): array {
+    $post = get_post($post_id);
+    return $post && iss_editorial_has_revision_document($post)
+        ? array_filter($revisions, static fn(WP_Post $revision): bool => !wp_is_post_autosave($revision))
+        : $revisions;
+}
+add_filter('wp_save_post_revision_revisions_before_deletion', 'iss_editorial_retained_revisions', 20, 2);
+
+// A native restore updates the parent (and may prune its source) before copying revisioned meta.
+// Keep only an in-request copy for that existing restore boundary; core still owns deletion.
+function iss_editorial_capture_pruned_revision_meta($delete, WP_Post $revision) {
+    if ($delete !== null || $revision->post_type !== 'revision' || wp_is_post_autosave($revision)
+        || !doing_action('wp_after_insert_post')) { return $delete; }
+    $parent = get_post($revision->post_parent);
+    if (!$parent || !iss_editorial_has_revision_document($parent)) { return $delete; }
+    global $wpdb;
+    wp_cache_delete($revision->ID, 'post_meta');
+    if (update_meta_cache('post', [$revision->ID]) === false || $wpdb->last_error !== '') { return false; }
+    $values = [];
+    foreach (wp_post_revision_meta_keys($parent->post_type) as $key) {
+        $values[$key] = get_post_meta($revision->ID, $key);
+    }
+    $GLOBALS['iss_editorial_pruned_revision_meta'][$revision->ID] = ['parent' => $parent->ID, 'values' => $values];
+    return $delete;
+}
+add_filter('pre_delete_post', 'iss_editorial_capture_pruned_revision_meta', 10, 2);
+
+/** Use native revision policy and verify its metadata copy before replacing a document. */
+function iss_editorial_capture_revision(int $post_id): bool
+{
+    $post = get_post($post_id);
+    if (!$post || $post->post_type === 'revision') {
+        return false;
+    }
+    if ($post->post_status === 'auto-draft' || !wp_revisions_enabled($post)) {
+        return true;
+    }
+    $meta = [];
+    foreach (wp_post_revision_meta_keys($post->post_type) as $key) {
+        // Registered defaults are not stored rows and core does not copy them.
+        $meta[$key] = get_metadata_raw('post', $post_id, $key, false);
+    }
+    $verified_revision = 0;
+    // Core prunes before wp_save_post_revision returns, even if insertion/copying failed.
+    $verify = static function (int $revision_id, int $parent_id) use ($post_id, $meta, &$verified_revision): void {
+        if ($parent_id !== $post_id || wp_is_post_autosave($revision_id)) { return; }
+        $verified_revision = 0;
+        foreach ($meta as $key => $values) {
+            if (get_metadata_raw('post', $revision_id, $key, false) !== $values) { return; }
+        }
+        $verified_revision = $revision_id;
+    };
+    $protect_history = static function (array $revisions, int $parent_id) use ($post_id, &$verified_revision): array {
+        return $parent_id === $post_id && !$verified_revision ? [] : $revisions;
+    };
+    add_action('_wp_put_post_revision', $verify, PHP_INT_MAX, 2);
+    add_filter('wp_save_post_revision_revisions_before_deletion', $protect_history, PHP_INT_MAX, 2);
+    try {
+        $revision_id = wp_save_post_revision($post_id);
+    } finally {
+        remove_action('_wp_put_post_revision', $verify, PHP_INT_MAX);
+        remove_filter('wp_save_post_revision_revisions_before_deletion', $protect_history, PHP_INT_MAX);
+    }
+    // Core returns null when the latest revision already represents this state.
+    if ($revision_id === null) {
+        return true;
+    }
+    if (is_wp_error($revision_id) || !$revision_id) {
+        return false;
+    }
+    $verify($revision_id, $post_id);
+    if ($verified_revision !== $revision_id) {
+        wp_delete_post_revision($revision_id);
+        return false;
+    }
+    return true;
+}
+
 /** Classic edit-form cleanup compares post fields only, overlooking revisioned JSON. */
-add_filter('pre_delete_post', static function ($delete, WP_Post $revision) {
+function iss_editorial_protect_private_recovery($delete, WP_Post $revision) {
     if ($delete !== null || !is_admin() || wp_doing_ajax()
         || ($GLOBALS['pagenow'] ?? '') !== 'post.php'
         || ($_SERVER['REQUEST_METHOD'] ?? '') !== 'GET'
@@ -48,17 +140,21 @@ add_filter('pre_delete_post', static function ($delete, WP_Post $revision) {
     $format = iss_editorial_get_format_for_post($parent_id);
     return $format && get_metadata_raw('post', $revision->ID, iss_editorial_get_document_meta_key($format['slug']), true)
         ? false : $delete;
-}, 10, 2);
+}
+add_filter('pre_delete_post', 'iss_editorial_protect_private_recovery', 10, 2);
 
 function iss_editorial_saved_token(int $post_id, string $format_slug): string
 {
     $post = get_post($post_id);
-    $state = ['modified' => $post ? $post->post_modified_gmt : '', 'title' => $post ? $post->post_title : '', 'excerpt' => $post ? $post->post_excerpt : ''];
-    $keys = [iss_editorial_get_document_meta_key($format_slug), iss_editorial_get_enabled_meta_key($format_slug), iss_editorial_get_skin_meta_key($format_slug)];
-    if ($post) {
-        $keys = array_unique(array_merge($keys, wp_post_revision_meta_keys($post->post_type)));
-    }
-    foreach ($keys as $key) {
+    $format = iss_editorial_get_format($format_slug);
+    $state = ['title' => $post ? $post->post_title : '', 'excerpt' => $post ? $post->post_excerpt : ''];
+    // Protect editor inputs, not unrelated post timestamps or other owners' revision metadata.
+    $keys = array_merge([
+        iss_editorial_get_document_meta_key($format_slug),
+        empty($format['always_enabled']) ? iss_editorial_get_enabled_meta_key($format_slug) : '',
+        iss_editorial_get_skin_meta_key($format_slug),
+    ], $format['version_meta_keys'] ?? []);
+    foreach (array_unique($keys) as $key) {
         if ($key !== '') {
             $state[$key] = get_metadata_raw('post', $post_id, $key, true);
         }
@@ -106,25 +202,27 @@ function iss_editorial_track_lock_session(int $post_id, string $lock): void
     update_post_meta($post_id, '_iss_editorial_lock_session', ['lock' => $lock, 'session' => hash('sha256', $token)]);
 }
 
-foreach (['added_post_meta', 'updated_post_meta'] as $lock_hook) {
-    add_action($lock_hook, static function ($meta_id, int $post_id, string $key, $value): void {
-        if ($key === '_edit_lock' && is_string($value)) {
-            iss_editorial_track_lock_session($post_id, $value);
-        }
-    }, 10, 4);
+function iss_editorial_track_lock_meta($meta_id, int $post_id, string $key, $value): void
+{
+    if ($key === '_edit_lock' && is_string($value)) {
+        iss_editorial_track_lock_session($post_id, $value);
+    }
 }
+add_action('added_post_meta', 'iss_editorial_track_lock_meta', 10, 4);
+add_action('updated_post_meta', 'iss_editorial_track_lock_meta', 10, 4);
 
 // Two sessions of the same user can renew the same timestamp within one second,
 // so a successful heartbeat must record ownership even when core's meta did not change.
-add_filter('heartbeat_received', static function (array $response, array $data): array {
+function iss_editorial_track_heartbeat_lock(array $response, array $data): array {
     if (!empty($response['wp-refresh-post-lock']['new_lock'])) {
         iss_editorial_track_lock_session(absint($data['wp-refresh-post-lock']['post_id'] ?? 0), (string) $response['wp-refresh-post-lock']['new_lock']);
     }
     return $response;
-}, 11, 2);
+}
+add_filter('heartbeat_received', 'iss_editorial_track_heartbeat_lock', 11, 2);
 
 /** Logout releases only this session's native locks, even if other logins remain. */
-add_action('wp_logout', static function (int $user_id): void {
+function iss_editorial_release_session_locks(int $user_id): void {
     // Core has invalidated the session, but the request cookie still identifies it.
     $token = wp_get_session_token();
     if ($token === '') { return; }
@@ -150,7 +248,8 @@ add_action('wp_logout', static function (int $user_id): void {
             delete_post_meta($post_id, '_iss_editorial_lock_session', $owner);
         }
     }
-});
+}
+add_action('wp_logout', 'iss_editorial_release_session_locks');
 
 /** Legacy locks without session ownership still expire through core or final logout. */
 function iss_editorial_release_inactive_lock(int $post_id): void
@@ -167,16 +266,17 @@ function iss_editorial_release_inactive_lock(int $post_id): void
     }
 }
 
-add_action('load-post.php', static function (): void {
+function iss_editorial_release_edit_screen_lock(): void {
     // phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Native edit-screen entry; only an inactive session's transient lock can be removed.
     if (($_GET['action'] ?? '') === 'edit') {
         // phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Permission and session liveness are checked by the helper.
         iss_editorial_release_inactive_lock(absint($_GET['post'] ?? 0));
     }
-});
+}
+add_action('load-post.php', 'iss_editorial_release_edit_screen_lock');
 
 /** Do not let an old tab acquire locks as the newly signed-in account. */
-add_action('wp_ajax_heartbeat', static function (): void {
+function iss_editorial_check_heartbeat_session(): void {
     // phpcs:ignore WordPress.Security.NonceVerification.Missing -- Account mismatch returns read-only state; lock cleanup below requires the native nonce.
     $editor_user = absint($_POST['data']['iss-editorial-user'] ?? 0);
     if (!$editor_user) {
@@ -187,7 +287,8 @@ add_action('wp_ajax_heartbeat', static function (): void {
         wp_send_json(['iss-editorial-session-changed' => true]);
     }
     iss_editorial_release_inactive_lock(absint($_POST['data']['wp-refresh-post-lock']['post_id'] ?? 0));
-}, 0);
+}
+add_action('wp_ajax_heartbeat', 'iss_editorial_check_heartbeat_session', 0);
 
 /**
  * @return array|WP_Error
@@ -201,10 +302,17 @@ function iss_editorial_save_draft(int $post_id, string $format_slug, array $docu
     if (!iss_editorial_supports_version(iss_editorial_get_format($format_slug), $document['schema_version'] ?? null) || !isset($document['sections']) || !is_array($document['sections']) || !array_is_list($document['sections'])) {
         return new WP_Error('editorial_invalid_schema', __('Der Entwurf konnte nicht gelesen werden.', 'iss-editorial'));
     }
+    $trash_permission = iss_editorial_check_trash_removal($post_id, $format_slug, $document);
+    if (is_wp_error($trash_permission)) { return $trash_permission; }
+    $document = iss_editorial_strip_document_preview_cache($document);
     // Recovery must preserve unfinished form entries. Canonical saves validate separately.
-    $document = map_deep($document, static function ($value) {
-        return is_string($value) ? wp_kses_post($value) : $value;
-    });
+    foreach ($document as $key => $value) {
+        // Trash is escaped when displayed, not live markup; preserve its values and key order.
+        if ($key === 'deleted_sections') { continue; }
+        $document[$key] = map_deep($value, static function ($field) {
+            return is_string($field) ? wp_kses_post($field) : $field;
+        });
+    }
     $meta = [iss_editorial_get_document_meta_key($format_slug) => iss_editorial_encode_document($document)];
     $format = iss_editorial_get_format($format_slug);
     if (empty($format['always_enabled'])) {
@@ -275,7 +383,8 @@ function iss_editorial_check_edit_version(int $post_id, string $format_slug, str
 /** Reject the entire submitted update before WordPress or owner hooks change it. */
 function iss_editorial_validate_post_update(array $data, array $postarr): array
 {
-    if (($data['post_type'] ?? '') === 'revision' || empty($_POST['iss_editorial_nonce'])) {
+    if (($data['post_type'] ?? '') === 'revision' || empty($_POST['iss_editorial_nonce'])
+        || absint($postarr['ID'] ?? 0) !== absint($_POST['post_ID'] ?? 0)) {
         return $data;
     }
     if (!wp_verify_nonce(sanitize_text_field(wp_unslash((string) $_POST['iss_editorial_nonce'])), 'iss_editorial_save_document')) {
@@ -293,14 +402,26 @@ function iss_editorial_validate_post_update(array $data, array $postarr): array
     if (!is_wp_error($result)) {
         $result = iss_editorial_validate_document((string) ($payload['document'] ?? ''), $format['slug']);
     }
+    if (!is_wp_error($result)) {
+        $result = iss_editorial_check_trash_removal($post_id, $format['slug'], iss_editorial_decode_document($payload['document'] ?? ''));
+    }
     if (is_wp_error($result)) {
         wp_die(esc_html($result->get_error_message()), esc_html__('Inhalt nicht gespeichert', 'iss-editorial'), ['response' => 409, 'back_link' => true]);
     }
     // Capture the pre-update document too, including the first edit after installing this support.
-    wp_save_post_revision($post_id);
+    if (!iss_editorial_capture_revision($post_id)) {
+        wp_die(esc_html__('Die bisherige Fassung konnte nicht gesichert werden. Bitte erneut versuchen.', 'iss-editorial'), esc_html__('Inhalt nicht gespeichert', 'iss-editorial'), ['response' => 500, 'back_link' => true]);
+    }
+    $GLOBALS['iss_editorial_revision_before_update'][$post_id] = true;
     return $data;
 }
 add_filter('wp_insert_post_data', 'iss_editorial_validate_post_update', 99, 2);
+
+// The form's pre-update snapshot covers only this native update, not a later API write.
+function iss_editorial_clear_revision_capture(int $post_id): void {
+    unset($GLOBALS['iss_editorial_revision_before_update'][$post_id]);
+}
+add_action('wp_after_insert_post', 'iss_editorial_clear_revision_capture', PHP_INT_MAX);
 
 /** Keep core's metadata copy inside the same owner boundary as ordinary saves. */
 function iss_editorial_restore_revision_meta(int $post_id, int $revision_id): void
@@ -312,15 +433,30 @@ function iss_editorial_restore_revision_meta(int $post_id, int $revision_id): vo
     }
     $saved = iss_editorial_persist_document($post_id, $format['slug'], static function () use ($post_id, $revision_id): bool {
         global $wpdb;
-        wp_cache_delete($revision_id, 'post_meta');
-        if (update_meta_cache('post', [$revision_id]) === false || $wpdb->last_error !== '') {
-            return false;
+        $pruned = $GLOBALS['iss_editorial_pruned_revision_meta'][$revision_id] ?? [];
+        $source = null;
+        if (($pruned['parent'] ?? 0) === $post_id && !get_post($revision_id)) {
+            $values = $pruned['values'];
+            // Supply the captured source to core's copy routine only for this exact revision.
+            $source = static function ($value, int $object_id, string $key, bool $single) use ($revision_id, $values) {
+                if ($object_id !== $revision_id || !array_key_exists($key, $values)) { return $value; }
+                return $single ? ($values[$key][0] ?? '') : $values[$key];
+            };
+            add_filter('get_post_metadata', $source, 10, 4);
+        } else {
+            wp_cache_delete($revision_id, 'post_meta');
+            if (update_meta_cache('post', [$revision_id]) === false || $wpdb->last_error !== '') { return false; }
+            $values = [];
+            foreach (wp_post_revision_meta_keys(get_post_type($post_id)) as $key) {
+                $values[$key] = get_post_meta($revision_id, $key);
+            }
         }
-        $values = [];
-        foreach (wp_post_revision_meta_keys(get_post_type($post_id)) as $key) {
-            $values[$key] = get_post_meta($revision_id, $key);
+        try {
+            wp_restore_post_revision_meta($post_id, $revision_id);
+        } finally {
+            if ($source) { remove_filter('get_post_metadata', $source, 10); }
+            unset($GLOBALS['iss_editorial_pruned_revision_meta'][$revision_id]);
         }
-        wp_restore_post_revision_meta($post_id, $revision_id);
         wp_cache_delete($post_id, 'post_meta');
         foreach ($values as $key => $value) {
             if (get_post_meta($post_id, $key) !== $value) {
@@ -337,9 +473,13 @@ remove_action('wp_restore_post_revision', 'wp_restore_post_revision_meta');
 add_action('wp_restore_post_revision', 'iss_editorial_restore_revision_meta', 10, 2);
 
 /** The shared preview URL uses the current author's title and summary too. */
-add_filter('the_preview', static function ($post) {
+function iss_editorial_preview_post_fields($post) {
     $format = $post instanceof WP_Post ? iss_editorial_get_format_for_post($post) : [];
     if ($format && iss_editorial_should_prefer_preview_autosave($post->ID, $format['slug'])) {
+        // phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Preview auth above; snapshot hash is checked at template_redirect.
+        if (!empty($_GET['iss_editorial_embed']) && str_starts_with((string) ($_GET['iss_editorial_snapshot'] ?? ''), 'saved:')) {
+            return get_post($post->ID);
+        }
         $draft = iss_editorial_get_draft($post->ID, $format['slug']);
         if ($draft) {
             $post = clone $post;
@@ -348,10 +488,11 @@ add_filter('the_preview', static function ($post) {
         }
     }
     return $post;
-}, 20);
+}
+add_filter('the_preview', 'iss_editorial_preview_post_fields', 20);
 
 /** Show section changes in the existing WordPress revision comparison. */
-add_filter('wp_get_revision_ui_diff', static function (array $fields, WP_Post $from, WP_Post $to): array {
+function iss_editorial_revision_ui_diff(array $fields, WP_Post|false $from, WP_Post $to): array {
     $parent_id = $to->post_parent ?: $to->ID;
     $format = iss_editorial_get_format_for_post($parent_id);
     if (!$format) {
@@ -382,9 +523,10 @@ add_filter('wp_get_revision_ui_diff', static function (array $fields, WP_Post $f
         }
         return implode("\n", $lines);
     };
-    $diff = wp_text_diff($describe($from), $describe($to));
+    $diff = wp_text_diff($from ? $describe($from) : '', $describe($to));
     if ($diff) {
         $fields[] = ['id' => 'iss-editorial-document', 'name' => __('Inhaltsabschnitte', 'iss-editorial'), 'diff' => $diff];
     }
     return $fields;
-}, 10, 3);
+}
+add_filter('wp_get_revision_ui_diff', 'iss_editorial_revision_ui_diff', 10, 3);

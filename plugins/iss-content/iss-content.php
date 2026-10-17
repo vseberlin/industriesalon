@@ -168,6 +168,12 @@ if (defined('WP_CLI') && WP_CLI) {
     require_once ISS_CONTENT_MODEL_PATH . 'includes/veranstaltungen-cli.php';
     require_once ISS_CONTENT_MODEL_PATH . 'includes/editor-ui-audit-cli.php';
     require_once ISS_CONTENT_MODEL_PATH . 'includes/fallback-cli.php';
+    // Register after all plugins load so the optional shared engine is available.
+    add_action('plugins_loaded', static function (): void {
+        if (function_exists('iss_editorial_save_document')) {
+            require_once ISS_CONTENT_MODEL_PATH . 'includes/editorial-migrations-cli.php';
+        }
+    });
 }
 
 register_activation_hook(__FILE__, function () {

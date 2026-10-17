@@ -2,7 +2,9 @@
 /**
  * Plugin Name: ISS Editorial
  * Description: Versioned editorial document engine for structured Industriesalon authoring.
- * Version: 0.1.0
+ * Version: 0.2.0
+ * Requires at least: 6.4
+ * Requires PHP: 8.1
  * Author: Industriesalon
  */
 
@@ -10,7 +12,7 @@ if (!defined('ABSPATH')) {
     exit;
 }
 
-define('ISS_EDITORIAL_VERSION', '0.1.0');
+define('ISS_EDITORIAL_VERSION', '0.2.0');
 define('ISS_EDITORIAL_PATH', plugin_dir_path(__FILE__));
 define('ISS_EDITORIAL_URL', plugin_dir_url(__FILE__));
 

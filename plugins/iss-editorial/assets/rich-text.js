@@ -18,9 +18,10 @@
   function sanitize(value, profile) {
     var template = document.createElement('template'); template.innerHTML = value || '';
     var output = document.createElement('div');
-    var allowed = ['strong', 'em', 'br', 'span'];
+    var allowed = ['strong', 'em', 'br'];
+    if (profile !== 'basic') { allowed.push('span'); }
     if (profile !== 'inline-card') { allowed.push('a'); }
-    if (profile === 'block') { allowed.push('p', 'ul', 'ol', 'li'); }
+    if (profile === 'block' || profile === 'basic') { allowed.push('p', 'ul', 'ol', 'li'); }
     function append(node, target) {
       if (node.nodeType === Node.TEXT_NODE) { target.appendChild(document.createTextNode(node.textContent)); return; }
       if (node.nodeType !== Node.ELEMENT_NODE) { return; }
@@ -31,7 +32,7 @@
       var element = keep ? document.createElement(tag) : target;
       if (keep && tag === 'a') {
         element.setAttribute('href', node.getAttribute('href').trim());
-        if (node.getAttribute('target') === '_blank') { element.setAttribute('target', '_blank'); element.setAttribute('rel', 'noopener noreferrer'); }
+        if (profile !== 'basic' && node.getAttribute('target') === '_blank') { element.setAttribute('target', '_blank'); element.setAttribute('rel', 'noopener noreferrer'); }
       }
       if (keep && tag === 'span') {
         var marks = Array.from(node.classList).filter(function (name) { return permittedMark(name); });
@@ -39,7 +40,7 @@
       }
       Array.from(node.childNodes).forEach(function (child) { append(child, element); });
       if (keep) { target.appendChild(element); }
-      else if (profile !== 'block' && ['p', 'div', 'li'].indexOf(tag) !== -1 && target.lastChild) { target.appendChild(document.createElement('br')); }
+      else if (profile !== 'block' && profile !== 'basic' && ['p', 'div', 'li'].indexOf(tag) !== -1 && target.lastChild) { target.appendChild(document.createElement('br')); }
     }
     Array.from(template.content.childNodes).forEach(function (node) { append(node, output); });
     return output.innerHTML;
@@ -66,6 +67,25 @@
     node.addEventListener('click', action); return node;
   }
   function configure(options) {
+    if (options.profile === 'legacy') { return {
+            wpautop: true,
+            menubar: false,
+            statusbar: false,
+            height: 230,
+            toolbar1: 'undo redo | bold italic | bullist numlist | link unlink | removeformat',
+            toolbar2: '',
+            setup: function (editor) {
+              editor.on('input change undo redo', function () { options.onChange(editor.getContent()); });
+              editor.on('blur', options.onBlur);
+              editor.on('keydown', function (event) {
+                if (event.key === 'Escape') {
+                  event.preventDefault();
+                  // TinyMCE must finish handling the key before its selection is destroyed.
+                  window.setTimeout(options.onClose, 0);
+                }
+              });
+            }
+          }; }
     options.wrapper.classList.add('iss-editorial-text-controls');
     var profile = options.profile;
     var palette = options.palette || [];
@@ -166,6 +186,7 @@
         } });
         editor.on('init SetContent', discover);
         editor.on('input change undo redo', function () { options.onChange(sanitize(editor.getContent(), profile)); });
+        if (options.onBlur) { editor.on('blur', options.onBlur); }
         editor.on('keydown', function (event) {
           if (event.key === 'Escape' && panel.hidden) { event.preventDefault(); window.setTimeout(options.onClose, 0); }
         });

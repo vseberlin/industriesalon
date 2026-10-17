@@ -112,6 +112,7 @@
       update: function (url, token, snapshot) {
         if (editing) { return; }
         if (destroyed) { return; }
+        if (currentToken === token && (shown || pending)) { return; }
         cancelPending(); currentToken = token;
         var address = new URL(url, window.location.href);
         if (address.origin !== window.location.origin) { stale('Vorschau-Adresse gehört zu einer anderen Website.'); return; }

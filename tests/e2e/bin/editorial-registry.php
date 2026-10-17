@@ -19,10 +19,13 @@ wp_set_current_user($admin->ID);
 $landing_id = 0;
 $landing_fixture = static function (array $formats) use (&$landing_id): array {
     $callback = $formats['landing']['post_eligibility_callback'];
-    $formats['landing']['post_eligibility_callback'] = static fn($post) => (int) $post->ID === $landing_id || $callback($post);
+    $formats['landing']['post_eligibility_callback'] = static function ($post) use (&$landing_id, $callback): bool {
+        return (int) $post->ID === $landing_id || $callback($post);
+    };
     return $formats;
 };
 add_filter('iss_editorial_formats', $landing_fixture, 99);
+iss_editorial_reset_format_cache();
 try {
     $assert(iss_editorial_registry_errors() === [], 'Effective registry must be internally consistent');
     $special_choices = [
@@ -40,8 +43,10 @@ try {
     }
     $missing_renderer = static function (array $formats): array { unset($formats['projekt']['sections']['feature']['renderer']); return $formats; };
     add_filter('iss_editorial_formats', $missing_renderer, 120);
+    iss_editorial_reset_format_cache();
     $assert(in_array('projekt.feature: portable gesture has no renderer', iss_editorial_registry_errors(), true), 'Registry diagnostics detect missing portable renderer coverage');
     remove_filter('iss_editorial_formats', $missing_renderer, 120);
+    iss_editorial_reset_format_cache();
     foreach (iss_editorial_get_registered_formats() as $format) {
         foreach ($format['sections'] as $type => $section) {
             $assert($section['label'] === iss_content_model_editorial_gesture_registry()[$type]['label'], 'Shared gesture label: ' . $type);
@@ -119,14 +124,14 @@ try {
     $canvas_tags = new WP_HTML_Tag_Processor($canvas_html);
     $canvas_documents = 0;
     while ($canvas_tags->next_tag()) {
-        if (!$canvas_tags->has_class('iss-editorial-document-field') && !$canvas_tags->has_class('iss-editorial-root')) { continue; }
-        $attribute = $canvas_tags->get_tag() === 'INPUT' ? 'value' : 'data-document';
+        if (!$canvas_tags->has_class('iss-editorial-document-field')) { continue; }
+        $attribute = 'value';
         $canvas_document = json_decode($canvas_tags->get_attribute($attribute), true);
         $assert($canvas_document['sections'][1]['items'][1]['text'] === $composition_doc['sections'][1]['items'][1]['text'], 'Editor HTML transport preserves rich-text entities');
         $assert(!is_wp_error(iss_editorial_validate_document($canvas_document, 'projekt')), 'Browser-decoded editor document validates without a recovery reload');
         ++$canvas_documents;
     }
-    $assert($canvas_documents === 2, 'Editor field and initial canvas data both roundtrip');
+    $assert($canvas_documents === 1 && !str_contains($canvas_html, 'data-document='), 'One editor document transport roundtrips without a duplicate canvas payload');
     $agenda = $composition_doc['sections'][1]; $agenda['_text_version'] = 3;
     $agenda_html = industriesalon_render_editorial_landing_text_image_row($agenda, 1, 'buehne');
     $assert(substr_count($agenda_html, '<article ') === 2 && str_contains($agenda_html, '<em>Visible without JavaScript</em>'), 'Unfiltered HTML contains every agenda entry');
@@ -481,6 +486,9 @@ try {
             $live_ref = ['kind' => 'control_field', 'source' => 'industriesalon-steuerung', 'key' => 'address.full', 'label' => 'Live source address', 'tagName' => 'p', 'linkMode' => 'none'];
             $material_doc['sections'] = [['type' => 'material', 'items' => ['Saved <em>literal</em> note'], 'dynamic_refs' => [$live_ref], 'object_refs' => [$archive_ref, $private_ref]]];
             if ($slug === 'veranstaltung') {
+                $invalid_note = iss_editorial_validate_document($material_doc, $slug);
+                $assert(is_wp_error($invalid_note) && $invalid_note->get_error_code() === 'editorial_lossy_normalization' && $invalid_note->get_error_data()['path'] === 'sections[0].items[0]', 'Event text items reject formatting loss before saving');
+                $material_doc['sections'][0]['items'] = ['Saved literal note'];
                 $assert(iss_editorial_save_document($id, $slug, $material_doc), 'Event material extensions save');
                 $valid = iss_editorial_get_document($id, $slug);
                 $assert($valid['sections'][0]['dynamic_refs'] === [$live_ref] && count($valid['sections'][0]['object_refs']) === 2, 'Event source data remains owner-managed');
@@ -944,6 +952,7 @@ try {
 } finally {
     $_GET = $original_get; $GLOBALS['wp_query'] = $original_query; $GLOBALS['wp_the_query'] = $original_main_query; $GLOBALS['post'] = $original_post;
     remove_filter('iss_editorial_formats', $landing_fixture, 99);
+    iss_editorial_reset_format_cache();
     foreach ($fixtures as $id) { wp_delete_post($id, true); }
     foreach (array_unique($sets) as $id) {
         $service = iss_content_editorial_sets_service();

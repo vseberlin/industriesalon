@@ -38,6 +38,28 @@ Use this only when deployment is in scope.
 
 Return to the previous Git commit and restore data from verified backups/artifacts when data changed.
 
+## Editorial revision retention
+
+`iss-editorial` caps normal revisions at 30 for an eligible post that has its
+canonical document metadata key. Disabled and legacy JSON are included; ordinary
+posts/pages without that key keep their existing WordPress policy. Lower global
+limits, including disabled revisions, remain effective. Native
+`wp_{post_type}_revisions_to_keep` overrides still run last. Private autosaves are
+outside the allowance; their existing explicit save/discard lifecycle is unchanged.
+
+Core removes older normal revisions on subsequent revision creation. Deployment
+and editor reads do not run a historical purge, and unchanged JSON saves do not
+trigger one. Before releasing this policy, verify a current database backup
+covering parents, revisions and revision metadata, preserving newer UAT work.
+Code rollback stops future pruning but cannot recover already removed history;
+restore any needed older revisions from the matching backup through a separately
+reviewed recovery. This policy needs no schema migration, SQL replay or uploads
+artifact. Do not bulk-prune existing records as part of deployment.
+
+Verify locally with `tests/e2e/bin/editorial-retention.php` and the revision/storage
+suites using disposable records. Run `wp iss-editorial validate-all` on the release
+target as the read-only canonical-content gate. Keep local fixtures off production.
+
 ## What To Document
 
 Record current deploy state, risk, next action, and verification in `handoff_CURRENT.md` when it changes.

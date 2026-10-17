@@ -65,6 +65,13 @@ try {
     $expect(iss_editorial_save_document($id, 'place', $doc, false, true), 'First activation writes JSON and projections together');
     $expect(iss_editorial_get_document($id, 'place', false)['sections'][0]['contribution_question'] === 'Was geschah hier ab 2000?' && $epochs->get_epochs_for_place($id)[0]['contribution_question'] === 'Was geschah hier ab 2000?', 'Authored question survives canonical save and epoch projection');
     $expect(count($epochs->get_epochs_for_place($id)) === 1 && count($states->get_states_for_place($id)) === 2, 'Published Place has one epoch and historical/current states');
+    $vocabulary_change = $doc;
+    $vocabulary_change['sections'][0] = array_replace($doc['sections'][0], ['era_key' => 'weimar', 'function_key' => 'commercial', 'start_year' => 1920, 'end_year' => 1930, 'is_current' => false]);
+    $expect(iss_editorial_save_document($id, 'place', $vocabulary_change, false, true), 'Declared vocabulary change saves through the canonical owner');
+    $projected = $epochs->get_epochs_for_place($id)[0];
+    $expect($projected['era_slug'] === 'weimar' && $projected['function_key'] === 'commercial', 'Selected vocabulary values reach the epoch projection');
+    $expect(iss_editorial_get_document($id, 'place')['sections'][0]['era_key'] === 'weimar' && iss_editorial_get_document($id, 'place')['sections'][0]['function_key'] === 'commercial', 'Canonical document retains projected values');
+    $expect(iss_editorial_save_document($id, 'place', $doc, false, true), 'Restore the baseline phase through its owner');
     // Hidden/retired controls must survive a normal facts-panel save.
     foreach (['legacy_icon', 'legacy_color', 'history_short', 'history_long', 'current_use', 'research_note'] as $field) {
         update_post_meta($id, $field, 'Retained ' . $field);
@@ -163,6 +170,8 @@ try {
         'begin' => static fn($sql) => $sql === 'START TRANSACTION',
         'source lock' => static fn($sql) => str_contains($sql, 'FOR UPDATE'),
         'source metadata read' => static fn($sql) => str_contains($sql, "FROM $wpdb->postmeta") && str_contains($sql, 'meta_id ASC'),
+        'revision insert' => static fn($sql) => str_starts_with($sql, "INSERT INTO `$wpdb->posts`") && str_contains($sql, "'revision'"),
+        'revision JSON copy' => static fn($sql) => str_starts_with($sql, "INSERT INTO `$wpdb->postmeta`") && str_contains($sql, $key),
         'canonical JSON' => static fn($sql) => str_starts_with($sql, "UPDATE `$wpdb->postmeta`") && str_contains($sql, $key),
         'epoch read' => static fn($sql) => str_contains($sql, "FROM $et") && str_contains($sql, 'milestone_key IS NULL'),
         'epoch insert' => static fn($sql) => str_starts_with($sql, "INSERT INTO `$et`"),
@@ -183,7 +192,7 @@ try {
     $fault(static fn($sql) => str_starts_with($sql, "UPDATE `$et`"), static function () use ($epochs, $id) { $rows = $epochs->get_epochs_for_place($id); $rows[0]['phase_name'] = 'Changed directly'; return $epochs->save_epochs_for_place($id, $rows); }, 'Legacy epoch update');
     $fault($matches['current state insert'], static fn() => $states->sync_place_state_for_post($id), 'Standalone state replacement');
     // Native handler must surface failure before deleting the existing recovery draft.
-    $_POST = wp_slash(['iss_editorial_nonce' => wp_create_nonce('iss_editorial_save_document'), 'iss_editorial' => ['place' => ['document' => iss_editorial_encode_document($next), 'enabled' => '1']]]);
+    $_POST = wp_slash(['post_ID' => $id, 'iss_editorial_nonce' => wp_create_nonce('iss_editorial_save_document'), 'iss_editorial' => ['place' => ['document' => iss_editorial_encode_document($next), 'enabled' => '1']]]);
     $native = static function () use ($id, $expect) {
         try { iss_editorial_save_meta_box($id); }
         catch (RuntimeException $error) { $expect(str_starts_with($error->getMessage(), 'Rejected:'), 'Native save reports an error'); return false; }

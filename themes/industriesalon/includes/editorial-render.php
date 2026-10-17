@@ -109,13 +109,12 @@ function industriesalon_editorial_preview_section(string $html, array $section, 
     $html = $tags->get_updated_html();
     if (empty($context['canvas'])) { return $html; }
     $format = iss_editorial_get_format($context['format']);
-    $format['document_version'] = $context['document']['schema_version'];
     $tags = new WP_HTML_Tag_Processor($html);
     while ($tags->next_tag()) {
         foreach ($fields as $field => $class) {
             if (!$tags->has_class($class)) { continue; }
             $source = $context['document']['sections'][$section['_editorial_index']] ?? [];
-            $profile = in_array($field, ['title', 'kicker'], true) ? 'plain' : iss_editorial_text_profile($format, (string) ($source['type'] ?? ''), $field);
+            $profile = in_array($field, ['title', 'kicker'], true) ? 'plain' : iss_editorial_text_profile($format, (string) ($source['type'] ?? ''), $field, $context['document']['schema_version']);
             if ($profile !== '') {
                 $tags->set_attribute('data-iss-field', $field);
                 $tags->set_attribute('data-iss-profile', $profile);

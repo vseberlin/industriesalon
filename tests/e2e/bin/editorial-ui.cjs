@@ -13,18 +13,24 @@ async function editor(format = 'landing', extra = {}) {
   if (document.entity_key) { window.document.getElementById('entity').value = document.entity_key; }
   const root = window.document.querySelector('.iss-editorial-root');
   root.dataset.sections = JSON.stringify(sections);
-  root.dataset.document = JSON.stringify(document);
+  root.parentElement.querySelector('.iss-editorial-document-field').value = JSON.stringify(document);
   const container = root.parentElement;
   container.dataset.format = format;
   container.dataset.postId = '99';
   const requests = [];
   let fail = false;
   let validationMessage = '';
-  window.issEditorialAdmin = { workspace: true, livePreview: true, postId: 99, ajaxUrl: '/wp-admin/admin-ajax.php', previewNonce: 'test', baseToken: 'base', pageChoices: [{ id: 2, url: 'http://localhost:8082/about/', title: 'About' }], sections, skins: [], ...extra };
+  window.issEditorialAdmin = { workspace: true, livePreview: true, postId: 99, ajaxUrl: '/wp-admin/admin-ajax.php', previewUrl: '/?preview=true', previewNonce: 'test', baseToken: 'base', pageChoices: [{ id: 2, url: 'http://localhost:8082/about/', title: 'About' }], sections, skins: [], ...extra };
   const nativeSetTimeout = window.setTimeout.bind(window);
-  window.setTimeout = (fn, delay) => nativeSetTimeout(fn, [350, 1200].includes(delay) ? 10 : delay);
+  window.setTimeout = extra.clock ? extra.clock.setTimeout : (fn, delay) => nativeSetTimeout(fn, [350, 1200, 2000].includes(delay) ? 10 : delay);
+  if (extra.clock) { window.clearTimeout = extra.clock.clearTimeout; }
   window.fetch = async (_url, request) => {
     requests.push(new URLSearchParams(request.body));
+    if (extra.beforeResponse) { await extra.beforeResponse(requests.at(-1)); }
+    if (requests.at(-1).get('intent') === 'validate') {
+      const candidate = JSON.parse(requests.at(-1).get('document'));
+      return { ok: !fail && !validationMessage, json: async () => fail || validationMessage ? { success: false, data: { message: validationMessage || 'Draft conflict: reload required' } } : { success: true, data: { valid: true, document: extra.validateDocument ? extra.validateDocument(candidate) : candidate } } };
+    }
     return { ok: !fail, json: async () => fail ? { success: false, data: { message: 'Draft conflict: reload required' } } : { success: true, data: { draftToken: 'draft-' + requests.length, previewUrl: '/?preview=true', validationMessage } } };
   };
   const rich = [];
@@ -42,7 +48,7 @@ async function editor(format = 'landing', extra = {}) {
   window.HTMLElement.prototype.showPopover = function () { this.dataset.popoverOpen = 'true'; };
   window.HTMLElement.prototype.hidePopover = function () { delete this.dataset.popoverOpen; };
   window.ResizeObserver = class { observe() {} disconnect() {} };
-  for (const asset of ['ui.js', 'dnd.js', 'rich-text.js', 'live-preview.js', 'help.js', 'workspace.js', 'admin.js']) {
+  for (const asset of ['ui.js', 'dnd.js', 'rich-text.js', 'live-preview.js', 'help.js', 'workspace.js', 'pickers.js', 'admin.js']) {
     window.eval(fs.readFileSync('plugins/iss-editorial/assets/' + asset, 'utf8'));
   }
   // Let jsdom emit its single DOMContentLoaded event.
@@ -53,6 +59,153 @@ async function editor(format = 'landing', extra = {}) {
   const settle = () => new Promise(resolve => setTimeout(resolve, 35));
   return { window, dom, root, container, requests, rich, button, value, input, settle, setFailure: value => { fail = value; }, setValidation: value => { validationMessage = value; } };
 }
+
+function controlledClock() {
+  let now = 0, id = 0;
+  const timers = new Map();
+  return {
+    setTimeout(fn, delay = 0) { const key = ++id; timers.set(key, { fn, due: now + delay }); return key; },
+    clearTimeout(key) { timers.delete(key); },
+    async tick(ms) {
+      const end = now + ms;
+      while (true) {
+        await new Promise(setImmediate);
+        const next = [...timers].filter(([, timer]) => timer.due <= end).sort((a, b) => a[1].due - b[1].due)[0];
+        if (!next) { break; }
+        now = next[1].due; timers.delete(next[0]); next[1].fn();
+      }
+      now = end;
+      await new Promise(setImmediate);
+    }
+  };
+}
+
+for (const [format, type] of [['place', 'epoche'], ['renamed_history', 'renamed_phase']]) {
+  test(`${format}.${type}: vocabulary labels and ordered choices follow the registry without rewriting rejected input`, async () => {
+    const e = await editor(format, {
+      sections: { [type]: { label: 'Phase', supports: ['era_key', 'function_key'], vocabularies: {
+        era_key: { label: 'Custom period', choices: [{value:'ancient',label:'Earlier'}, {value:'recent',label:'Recent'}] },
+        function_key: { label: 'Custom use', choices: [{value:'research',label:'Research'}, {value:'workshop',label:'Workshop'}] }
+      } } },
+      document: { schema_version: 3, sections: [{type, title:'Retained phase', era_key:'retired-value', function_key:'research'}] }
+    });
+    try {
+      const select = label => [...e.root.querySelectorAll('label')].find(node => node.querySelector('span')?.textContent === label)?.querySelector('select');
+      assert.deepEqual([...select('Custom period').options].map(o => [o.value,o.textContent]), [['','Bitte wählen'],['ancient','Earlier'],['recent','Recent']]);
+      assert.deepEqual([...select('Custom use').options].map(o => [o.value,o.textContent]), [['','Bitte wählen'],['research','Research'],['workshop','Workshop']]);
+      assert.equal(select('Custom use').value, 'research');
+      assert.equal(e.value().sections[0].era_key, 'retired-value', 'Opening never discards an unavailable saved choice');
+      select('Custom period').value = 'recent'; select('Custom period').dispatchEvent(new e.window.Event('change', {bubbles:true}));
+      select('Custom use').value = 'workshop'; select('Custom use').dispatchEvent(new e.window.Event('change', {bubbles:true}));
+      await e.settle();
+      assert.deepEqual(JSON.parse(e.requests.at(-1).get('document')).sections[0], {type, title:'Retained phase', era_key:'recent', function_key:'workshop'});
+      select('Custom period').value = ''; select('Custom period').dispatchEvent(new e.window.Event('change', {bubbles:true}));
+      assert.equal(e.value().sections[0].era_key, '', 'An explicit blank is retained for owner validation');
+      assert.equal(e.value().sections[0].function_key, 'workshop');
+    } finally { e.dom.window.close(); }
+  });
+}
+
+for (const [format, type] of [['projekt', 'renamed_media'], ['landing', 'feature']]) {
+  test(format + '.' + type + ': media layout choices, default and visibility follow the registry', async () => {
+    const e = await editor(format, {
+      sections: { [type]: { label: 'Media', supports: ['treatment', 'media_layout'],
+        default_treatment: 'media.split', treatments: [{ slug: 'media.split', label: 'Split' }, { slug: 'media.panel', label: 'Panel' }],
+        media_layout: { choices: [{ value: 'compact', label: 'Compact' }, { value: 'wide', label: 'Wide' }], default: 'wide', treatments: ['media.split'] } } },
+      document: { schema_version: 3, skin: 'standard', sections: [{ type, title: 'Retained title' }] }
+    });
+    try {
+      const choices = () => [...e.root.querySelectorAll('.iss-editorial-field--media-layout input')];
+      assert.deepEqual(choices().map(node => [node.value, node.checked]), [['compact', false], ['wide', true]], 'Declared default may be the second choice');
+      assert.equal(e.value().sections[0].media_layout, undefined, 'Rendering a default does not author a value');
+      e.button('Darstellung').click();
+      choices()[0].click();
+      assert.equal(e.value().sections[0].media_layout, 'compact');
+      e.root.querySelector('.iss-editorial-field--treatment input[value="media.panel"]').click();
+      // Existing controls are rebuilt when the section is selected again.
+      e.root.querySelector('.iss-editorial-outline__select').click();
+      assert.equal(choices().length, 0, 'Hidden for the other treatment');
+      assert.equal(e.value().sections[0].media_layout, 'compact', 'Hiding retains the saved choice');
+      await e.settle();
+      assert.equal(JSON.parse(e.requests.at(-1).get('document')).sections[0].media_layout, 'compact', 'Private autosave retains hidden layout');
+      e.button('Darstellung').click();
+      e.root.querySelector('.iss-editorial-field--treatment input[value="media.split"]').click();
+      e.root.querySelector('.iss-editorial-outline__select').click();
+      assert.deepEqual(choices().map(node => [node.value, node.checked]), [['compact', true], ['wide', false]], 'Showing restores the selected choice');
+      assert.equal(e.value().sections[0].title, 'Retained title');
+    } finally { e.dom.window.close(); }
+  });
+}
+
+test('Unrestricted media layouts stay visible and preserve rejected values for correction', async () => {
+  const e = await editor('publication', {
+    sections: { longread_chapter: { label: 'Chapter', supports: ['media_layout'], media_layout: {
+      choices: [{ value: 'inline', label: 'Im Text' }, { value: 'aside-right', label: 'Rechts daneben' }], default: 'inline', treatments: []
+    } } },
+    document: { schema_version: 3, sections: [{ type: 'longread_chapter', media_layout: 'unregistered' }] }
+  });
+  try {
+    assert.equal(e.root.querySelector('.iss-editorial-field--media-layout input:checked').value, 'inline');
+    assert.equal(e.value().sections[0].media_layout, 'unregistered', 'Opening does not silently rewrite rejected input');
+    e.button('Darstellung').click();
+    e.root.querySelector('.iss-editorial-field--media-layout input[value="aside-right"]').click();
+    assert.equal(e.value().sections[0].media_layout, 'aside-right');
+  } finally { e.dom.window.close(); }
+});
+
+for (const type of ['renamed_row', 'gateway']) {
+  test(type + ': declared text-image items add, edit and remove without link fields', async () => {
+    const e = await editor('projekt', {
+      sections: { [type]: { label: 'Rows', supports: ['items'], items_kind: 'text_image', items_label: 'Custom pairs' } },
+      document: { schema_version: 1, skin: 'standard', sections: [{ type, items: [] }] }, pageChoices: []
+    });
+    try {
+      assert.equal(e.root.querySelector('.iss-editorial-panel--items .iss-editorial-panel__label').textContent, 'Custom pairs');
+      assert.match(e.root.textContent, /Noch keine Bild-Text-Paare/);
+      e.button('Bild-Text-Paar hinzufügen').click();
+      const fields = e.root.querySelector('.iss-editorial-gateway-item-row__fields');
+      assert.equal(fields.querySelectorAll('input').length, 1, 'Only the label; no URL or page selector');
+      assert.equal(fields.querySelector('select'), null);
+      e.input(fields.querySelector('input'), 'New pair');
+      e.input(fields.querySelector('textarea'), 'Pair text');
+      assert.deepEqual(e.value().sections[0].items, [{ label: 'New pair', text: 'Pair text', media_refs: [] }]);
+      await e.settle();
+      assert.deepEqual(JSON.parse(e.requests.at(-1).get('document')).sections[0].items, e.value().sections[0].items);
+      e.button('Entfernen', e.root.querySelector('.iss-editorial-gateway-item-row')).click();
+      assert.deepEqual(e.value().sections[0].items, []);
+    } finally { e.dom.window.close(); }
+  });
+}
+
+for (const type of ['text_bild_reihe', 'map_img']) {
+  test(type + ': declared cards override the historical row name', async () => {
+    const e = await editor('projekt', {
+      sections: { [type]: { label: 'Cards', supports: ['items'], items_kind: 'cards' } },
+      document: { schema_version: 1, skin: 'standard', sections: [{ type, items: [] }] }, pageChoices: []
+    });
+    try {
+      assert.equal(e.root.querySelector('.iss-editorial-panel--items .iss-editorial-panel__label').textContent, 'Ziele');
+      e.button('Ziel hinzufügen').click();
+      const inputs = e.root.querySelectorAll('.iss-editorial-gateway-item-row__fields input');
+      assert.equal(inputs.length, 2, 'Card label and destination');
+      e.input(inputs[0], 'Card'); e.input(inputs[1], 'https://example.invalid/destination/');
+      assert.deepEqual(e.value().sections[0].items, [{ label: 'Card', text: '', url: 'https://example.invalid/destination/', page_id: '', media_refs: [] }]);
+    } finally { e.dom.window.close(); }
+  });
+}
+
+test('Renamed text items retain the line-based notes control', async () => {
+  const e = await editor('projekt', {
+    sections: { renamed_notes: { label: 'Notes', supports: ['items'], items_kind: 'text' } },
+    document: { schema_version: 1, skin: 'standard', sections: [{ type: 'renamed_notes', items: ['First note'] }] }
+  });
+  try {
+    const panel = e.root.querySelector('.iss-editorial-panel--items');
+    assert.equal(panel.querySelector('.iss-editorial-gateway-item-row'), null);
+    e.input(panel.querySelector('textarea'), 'First note\n\nSecond note');
+    assert.deepEqual(e.value().sections[0].items, ['First note', 'Second note']);
+  } finally { e.dom.window.close(); }
+});
 
 for (const format of ['landing', 'article', 'projekt', 'veranstaltung', 'place', 'fuehrung', 'publication', 'ausstellung', 'rueckblick']) {
   test(format + ': one workspace retains hidden sections, edits, reorder, trash and recovery storage', async () => {
@@ -70,6 +223,7 @@ for (const format of ['landing', 'article', 'projekt', 'veranstaltung', 'place',
       e.button('In Papierkorb', e.root.querySelector('.iss-editorial-studio__inspector')).click();
       assert.equal(e.value().deleted_sections[0].title, 'Edited title');
       e.button('Wiederherstellen').click();
+      await e.settle();
       assert.equal(e.value().sections[1].title, 'Edited title');
       assert.equal(e.value().deleted_sections.length, 0);
       e.input(e.window.document.getElementById('title'), 'Changed page title');
@@ -79,7 +233,7 @@ for (const format of ['landing', 'article', 'projekt', 'veranstaltung', 'place',
       assert.equal(request.get('title'), 'Changed page title');
       assert.equal(request.get('excerpt'), 'Changed summary');
       assert.equal(request.get('base'), 'base');
-      assert.match(request.get('draft_token'), /^draft-/);
+      assert.equal(e.requests.find(item => item.get('intent') === 'autosave').get('draft_token'), '', 'The first edit starts without an opening autosave');
       assert.match(e.container.querySelector('.iss-editorial-autosave-status').textContent, /Entwurf gesichert/);
     } finally { e.dom.window.close(); }
   });
@@ -424,6 +578,223 @@ function readyFrame(e) {
   assert.ok(frame); previewMessage(e,frame,{type:'iss-preview-ready'}); return frame;
 }
 
+test('Opaque trash survives editor rendering and rejected restoration without changing draft tokens', async () => {
+  const trash = { type: 'retired_kind', title: '<img src=x onerror=alert(1)>', body: '<legacy>Keep me</legacy>', media_refs: { old: ['shape'] }, extension: { unknown: [null, false, 4] }, deleted_at: 'Earlier', original_index: 0 };
+  const e = await editor('projekt', { document: {schema_version:3,skin:'standard',sections:[{type:'kapitel',title:'Active'}],deleted_sections:[trash]} });
+  try {
+    const before = e.value();
+    assert.equal(e.root.querySelector('.iss-editorial-card--deleted img'), null, 'Opaque media is not interpreted or loaded');
+    assert.equal(e.root.querySelector('.iss-editorial-card--deleted h3').textContent, trash.title);
+    e.setValidation('Unknown section type');
+    e.button('Wiederherstellen').click(); await e.settle();
+    assert.deepEqual(e.value(), before);
+    assert.equal(e.requests.length, 1);
+    assert.equal(e.requests[0].get('intent'), 'validate');
+    assert.equal(JSON.parse(e.requests[0].get('document')).sections[0].type, 'retired_kind');
+    assert.equal(e.container.querySelector('.iss-editorial-draft-token-field').value, '');
+    assert.match(e.container.querySelector('.iss-editorial-autosave-status').textContent, /Abschnitt bleibt im Papierkorb/, 'Restore errors stay visible outside the hidden inspector');
+    e.setValidation('');
+    e.input(e.window.document.getElementById('title'), 'Unrelated edit'); await e.settle();
+    assert.deepEqual(JSON.parse(e.requests.at(-1).get('document')).deleted_sections, [trash]);
+  } finally { e.dom.window.close(); }
+});
+
+test('Restore waits for validation and does not overwrite edits made during the request', async () => {
+  let release;
+  const clock = controlledClock();
+  const e = await editor('projekt', { clock, beforeResponse: params => params.get('intent') === 'validate' ? new Promise(resolve => { release = resolve; }) : undefined });
+  try {
+    await clock.tick(0); readyFrame(e);
+    e.button('In Papierkorb', e.root.querySelector('.iss-editorial-studio__inspector')).click();
+    e.button('Wiederherstellen').click(); await clock.tick(0);
+    const trash = e.value().deleted_sections;
+    assert.equal(e.value().sections.length, 1);
+    e.input(e.window.document.getElementById('title'), 'Concurrent local edit');
+    release(); await clock.tick(0);
+    assert.deepEqual(e.value().deleted_sections, trash);
+    assert.match(e.container.querySelector('.iss-editorial-autosave-status').textContent, /inzwischen geändert/);
+    await clock.tick(2000);
+    assert.equal(e.requests.at(-1).get('title'), 'Concurrent local edit');
+  } finally { e.dom.window.close(); }
+});
+
+test('Restore uses the server-normalized section for registered legacy aliases', async () => {
+  const e = await editor('projekt', {
+    document: {schema_version:3,skin:'standard',sections:[],deleted_sections:[{type:'old_chapter',title:'Legacy title',body:'<p>Retained text</p>'}]},
+    validateDocument: candidate => { candidate.sections[0].type = 'kapitel'; return candidate; }
+  });
+  try {
+    e.button('Wiederherstellen').click(); await e.settle();
+    assert.equal(e.value().sections[0].type, 'kapitel');
+    assert.equal(e.value().sections[0].body, '<p>Retained text</p>');
+    assert.equal(e.value().deleted_sections.length, 0);
+    e.button('Abschnitte').click(); e.root.querySelector('.iss-editorial-outline__select').click();
+    assert.equal(e.root.querySelector('.iss-editorial-field--title textarea').value, 'Legacy title', 'The restored section has current editing controls');
+  } finally { e.dom.window.close(); }
+});
+
+test('Native save queued during restoration includes the validated restored section', async () => {
+  let release;
+  const clock = controlledClock();
+  const e = await editor('projekt', { clock, beforeResponse: params => params.get('intent') === 'validate' ? new Promise(resolve => { release = resolve; }) : undefined });
+  try {
+    await clock.tick(0); readyFrame(e);
+    e.button('In Papierkorb', e.root.querySelector('.iss-editorial-studio__inspector')).click();
+    e.button('Wiederherstellen').click(); await clock.tick(0);
+    let submitted = false;
+    e.window.document.getElementById('post').requestSubmit = () => { submitted = true; };
+    e.button('Update').click();
+    release(); await clock.tick(0);
+    assert.equal(submitted, true);
+    const last = e.requests.at(-1);
+    assert.equal(last.get('intent'), 'submit');
+    assert.equal(JSON.parse(last.get('document')).sections[0].title, 'First section');
+    assert.equal(last.get('draft_token'), '', 'Validation does not advance the private draft version');
+  } finally { e.dom.window.close(); }
+});
+
+test('Untouched opening uses a saved snapshot without autosave or a leaving warning', async () => {
+  const clock = controlledClock(), e = await editor('projekt', { clock });
+  try {
+    await clock.tick(0);
+    const frame = readyFrame(e);
+    assert.equal(frame.dataset.token, 'saved:base');
+    await clock.tick(20000);
+    assert.equal(e.requests.length, 0);
+    assert.equal(e.root.querySelector('iframe'), frame);
+    const leaving = new e.window.Event('beforeunload', { cancelable: true });
+    e.window.dispatchEvent(leaving);
+    assert.equal(leaving.defaultPrevented, false);
+  } finally { e.dom.window.close(); }
+});
+
+for (const interval of [600, 1500]) {
+  test('Typing at ' + interval + ' ms secures changes but waits for preview idle', async () => {
+    const clock = controlledClock(), e = await editor('projekt', { clock });
+    try {
+      await clock.tick(0);
+      const frame = readyFrame(e), title = e.window.document.getElementById('title');
+      title.focus();
+      for (let i = 0; i < 10; i++) {
+        e.input(title, 'Typing ' + i);
+        await clock.tick(interval);
+        assert.equal(e.root.querySelector('iframe'), frame);
+        assert.equal(e.root.querySelector('iframe[hidden]'), null, 'No render while typing');
+        assert.equal(e.window.document.activeElement, title);
+      }
+      await clock.tick(2000);
+      assert.equal(e.requests.length, interval === 600 ? 1 : 10);
+      assert.equal(e.requests.at(-1).get('title'), 'Typing 9');
+      const latest = readyFrame(e);
+      assert.notEqual(latest, frame);
+      assert.equal(latest.dataset.token, e.container.querySelector('.iss-editorial-draft-token-field').value);
+      await clock.tick(10000);
+      assert.equal(e.root.querySelector('iframe'), latest, 'No repeated idle reload');
+    } finally { e.dom.window.close(); }
+  });
+}
+
+test('Blur flushes immediately, deduplicates queued saves and preserves validation feedback', async () => {
+  const clock = controlledClock(), e = await editor('projekt', { clock });
+  try {
+    await clock.tick(0); readyFrame(e);
+    const title = e.root.querySelector('.iss-editorial-field--title textarea');
+    title.focus(); e.input(title, 'Blurred section'); title.blur();
+    await clock.tick(0);
+    assert.equal(e.requests.length, 1);
+    assert.equal(JSON.parse(e.requests[0].get('document')).sections[0].title, 'Blurred section');
+    const frame = readyFrame(e);
+    title.focus(); title.blur();
+    await clock.tick(3000);
+    assert.equal(e.requests.length, 1);
+    assert.equal(e.root.querySelector('iframe'), frame);
+    e.setValidation('Link-Adresse fehlt');
+    e.input(title, 'Unfinished section'); await clock.tick(2000);
+    title.focus(); title.blur(); await clock.tick(0);
+    assert.equal(e.requests.length, 2);
+    assert.match(e.container.querySelector('.iss-editorial-autosave-status').textContent, /Link-Adresse fehlt/);
+  } finally { e.dom.window.close(); }
+});
+
+test('Undo before autosave restores the saved status without a write', async () => {
+  const clock = controlledClock(), e = await editor('projekt', { clock });
+  try {
+    await clock.tick(0); readyFrame(e);
+    const title = e.window.document.getElementById('title');
+    e.input(title, 'Temporary edit'); await clock.tick(600);
+    e.input(title, 'Page title'); await clock.tick(2000);
+    assert.equal(e.requests.length, 0);
+    assert.equal(e.container.querySelector('.iss-editorial-autosave-status').textContent, 'Gespeicherte Fassung geladen.');
+  } finally { e.dom.window.close(); }
+});
+
+test('Slow responses serialize latest changes and never render an obsolete snapshot', async () => {
+  const clock = controlledClock(), responses = [];
+  const e = await editor('projekt', { clock, beforeResponse: () => new Promise(resolve => responses.push(resolve)) });
+  try {
+    await clock.tick(0); const frame = readyFrame(e);
+    const title = e.window.document.getElementById('title');
+    e.input(title, 'First edit'); await clock.tick(1200);
+    e.input(title, 'Latest edit'); await clock.tick(2000);
+    title.focus(); title.blur(); await clock.tick(0);
+    assert.equal(e.requests.length, 1, 'Only one request is in flight');
+    responses.shift()(); await clock.tick(0);
+    assert.equal(e.requests.length, 2);
+    assert.equal(e.requests[1].get('draft_token'), 'draft-1');
+    assert.equal(e.requests[1].get('title'), 'Latest edit');
+    assert.equal(e.root.querySelector('iframe'), frame);
+    assert.equal(e.root.querySelector('iframe[hidden]'), null);
+    responses.shift()(); await clock.tick(0);
+    assert.equal(readyFrame(e).dataset.token, 'draft-2', 'A response after idle refreshes the latest snapshot');
+    await clock.tick(3000);
+    assert.equal(e.requests.length, 2, 'Duplicate work queued by blur is skipped after acknowledgement');
+  } finally { e.dom.window.close(); }
+});
+
+test('Explicit preview and native save flush before debounce and still check unchanged versions', async () => {
+  const clock = controlledClock(), e = await editor('projekt', { clock });
+  try {
+    e.window.open = () => ({ location: {}, close() {} });
+    await clock.tick(0); readyFrame(e);
+    e.input(e.window.document.getElementById('title'), 'Immediate preview');
+    e.button('Preview').click(); await clock.tick(0);
+    assert.equal(e.requests.length, 1);
+    assert.equal(e.requests[0].get('intent'), 'preview');
+    let submitted = false;
+    e.window.document.getElementById('post').requestSubmit = () => { submitted = true; };
+    e.setFailure(true);
+    e.button('Update').click(); await clock.tick(0);
+    assert.equal(e.requests.length, 2);
+    assert.equal(e.requests[1].get('intent'), 'submit');
+    assert.equal(submitted, false, 'An unchanged document still detects a concurrent server change');
+    e.setFailure(false);
+    e.input(e.window.document.getElementById('title'), 'Immediate save');
+    e.button('Update').click(); await clock.tick(0);
+    assert.equal(e.requests.at(-1).get('title'), 'Immediate save');
+    assert.equal(submitted, true);
+    await clock.tick(3000);
+    assert.equal(e.requests.length, 3);
+  } finally { e.dom.window.close(); }
+});
+
+test('Canvas autosave waits for field completion before replacing the iframe', async () => {
+  const clock = controlledClock(), e = await editor('landing', { ...workspaceOptions(), clock });
+  try {
+    await clock.tick(0); const frame = readyFrame(e);
+    const field = { section: 0, field: 'title', session: 'cadence', sequence: 0 };
+    previewMessage(e, frame, { ...field, type: 'iss-preview-field-start' });
+    previewMessage(e, frame, { ...field, type: 'iss-preview-field-change', sequence: 1, value: 'Canvas edit' });
+    await clock.tick(2500);
+    assert.equal(e.requests.length, 1);
+    assert.equal(e.root.querySelector('iframe'), frame);
+    assert.equal(e.root.querySelector('iframe[hidden]'), null);
+    previewMessage(e, frame, { ...field, type: 'iss-preview-field-end', sequence: 2 });
+    await clock.tick(0);
+    assert.equal(e.requests.length, 1, 'Ending an acknowledged edit needs no duplicate write');
+    assert.notEqual(readyFrame(e), frame);
+  } finally { e.dom.window.close(); }
+});
+
 test('Landing workspace keeps field focus and preview mounted, selects and reorders by object identity, inserts at a gap',async()=>{
   const e=await editor('landing',workspaceOptions());
   try {
@@ -547,11 +918,37 @@ test('Workspace waits for an active canvas edit before reordering and exposes na
 });
 
 
+for (const [format, openingSkin, version, visible] of [
+  ['renamed_format', 'custom-skin', 3, true], ['projekt', '', 3, false],
+  ['landing', 'frontpage', 3, true], ['landing', '', 3, false],
+  ['renamed_format', 'custom-skin', 2, false], ['renamed_format', 'custom-skin', 1, false]
+]) {
+  test(`${format} opening ${openingSkin || 'absent'}, v${version}: capability and version gate the treatment without losing saved input`, async () => {
+    const e = await editor(format, {
+      openingSkin,
+      sections: { renamed_hero: { label: 'Hero', supports: ['treatment'], default_treatment: 'hero.normal', treatments: [
+        { slug: 'hero.normal', label: 'Normal' },
+        { slug: 'hero.opening', label: 'Opening', role: 'opening', min_version: 3 }
+      ] } },
+      document: { schema_version: version, skin: 'different-skin', sections: [{ type: 'renamed_hero', treatment: 'hero.opening', title: 'Keep saved title' }] }
+    });
+    try {
+      assert.equal(!!e.root.querySelector('.iss-editorial-field--treatment input[value="hero.opening"]'), visible);
+      assert.equal(e.value().sections[0].treatment, 'hero.opening', 'Unavailable saved treatment survives for server validation');
+      assert.equal(e.value().skin, 'different-skin', 'Capability does not silently change the document skin');
+      e.button('Darstellung').click();
+      e.root.querySelector('.iss-editorial-field--treatment input[value="hero.normal"]').click();
+      await e.settle();
+      assert.equal(JSON.parse(e.requests.at(-1).get('document')).sections[0].treatment, 'hero.normal', 'Explicit correction enters private recovery');
+    } finally { e.dom.window.close(); }
+  });
+}
+
 test('Workspace opening guidance follows its owner and invalid opening remains visible after reorder', async () => {
   const options = workspaceOptions(); options.isFrontPage = true; options.openingSkin = 'frontpage';
   options.document.skin = 'frontpage'; options.skins = [{slug:'frontpage',label:'Startseite'}];
   options.document.sections[0].treatment = 'feature.opening'; options.document.sections[0].media_refs = [{id:1}];
-  options.sections.feature.treatments.push({slug:'feature.opening',label:'Seitenauftakt',schematic:'opening'});
+  options.sections.feature.treatments.push({slug:'feature.opening',label:'Seitenauftakt',schematic:'opening',role:'opening',min_version:3});
   const e = await editor('landing', options);
   try {
     assert.match(e.root.querySelector('.iss-editorial-opening-note').textContent, /ersetzt den Auftakt/);
@@ -574,6 +971,7 @@ test('Workspace trash undo restores its own section and leaving restores native 
     e.button('In Papierkorb', e.root.querySelector('.iss-editorial-studio__inspector')).click();
     assert.equal(e.value().sections.length, 1);
     e.button('Rückgängig').click();
+    await e.settle();
     assert.equal(e.value().sections[0].title, 'First');
     assert.equal(e.value().deleted_sections.length, 0);
     const content = e.value();
@@ -772,7 +1170,7 @@ for (const portable of [true, false]) {
     const image = {id: '7', kind: 'media', source: 'wp-media', mime: 'image/png', label: 'Saved image'};
     const pdf = {id: '8', kind: 'media', source: 'wp-media', mime: 'application/pdf', label: 'Saved document'};
     const e = await editor(portable ? 'article' : 'place', {
-      sections: {material: {label: 'Begleitende Dateien', supports: ['media_refs', 'links'], portable}},
+      sections: {material: {label: 'Begleitende Dateien', supports: ['media_refs', 'links'], portable, editor: {media_kind:'files',media_hide_images:!portable}}},
       document: {schema_version: 3, sections: [{type: 'material', title: 'Downloads', media_refs: [image, pdf]}]}
     });
     try {
@@ -811,7 +1209,7 @@ for (const portable of [true, false]) {
 for (const format of ['article', 'ausstellung']) {
   test(format + ': shared archive picker retains captions and Set identity through edits and reselection', async () => {
     const reference = {kind: 'archive_object', source: 'iss-archive', id: '15127', label: 'Saved object', thumbnail: '/object.jpg', set_id: '27', set_title: 'Saved Set', member_id: '4543', member_caption: 'Saved caption'};
-    const e = await editor(format, {sections: {objektfokus: {label: 'Archivobjekte', portable: true, supports: ['anchor', 'object_refs']}}, document: {schema_version: 3, sections: [{type: 'objektfokus', anchor: 'sources', object_refs: [reference]}]}});
+    const e = await editor(format, {sections: {objektfokus: {label: 'Archivobjekte', portable: true, supports: ['anchor', 'object_refs'], editor: {reference_captions:true}}}, document: {schema_version: 3, sections: [{type: 'objektfokus', anchor: 'sources', object_refs: [reference]}]}});
     try {
       e.input(e.root.querySelector('.iss-editorial-media-item input'), 'Edited label');
       e.input(e.root.querySelector('.iss-editorial-media-item textarea'), 'Edited caption');
@@ -875,6 +1273,7 @@ test('Place insertion limits preserve retained duplicates, editing, reorder and 
     e.root.querySelector('[data-section-type="intro"]').click();
     assert.equal(e.value().sections.filter(s => s.type === 'intro').length, 1);
     e.button('Wiederherstellen').click();
+    await e.settle();
     assert.equal(e.value().sections.filter(s => s.type === 'intro').length, 2, 'Recovery restores content even after a new introduction was added');
     e.button('Hinzufügen').click();
     assert.deepEqual(choices(), ['epoche']);
@@ -957,4 +1356,184 @@ test('Control explanations support focus, Escape, click, outside dismissal and e
     help.click(); e.root.dispatchEvent(new e.window.Event('pointerdown',{bubbles:true}));
     assert.equal(popup.hidden,true); assert.equal(help.getAttribute('aria-expanded'),'false');
   } finally { e.dom.window.close(); }
+});
+
+for (const [format, railControl, visible] of [['projekt', true, true], ['renamed_owner', true, true], ['projekt', false, false], ['landing', undefined, false]]) {
+  test(`${format}: rail availability follows the owner capability and preserves hidden feature values`, async () => {
+    const rail = {enabled:true,placement:'bottom',mode:'section-index',treatment:'overlay'};
+    const document = {schema_version:3,skin:'standard',features:{rail},sections:[{type:'kapitel',title:'Retained chapter',body:'<p>Retained prose.</p>',links:[]}],deleted_sections:[{type:'retired',opaque:{keep:'Exact'}}]};
+    const e = await editor(format, {railControl, document});
+    try {
+      const control = e.root.querySelector('.iss-editorial-rail-feature-control');
+      assert.equal(!!control, visible);
+      assert.deepEqual(e.value(), document, 'Opening the owner settings never authors defaults or drops hidden values');
+      if (visible) {
+        const placement = control.querySelector('[aria-label="Position der Lesenavigation"]');
+        const treatment = control.querySelector('[aria-label="Darstellung der Lesenavigation"]');
+        assert.equal(placement.value, 'bottom'); assert.equal(treatment.value, 'overlay');
+        placement.value = 'top'; placement.dispatchEvent(new e.window.Event('change', {bubbles:true}));
+        treatment.value = 'line'; treatment.dispatchEvent(new e.window.Event('change', {bubbles:true}));
+        await e.settle();
+        assert.deepEqual(JSON.parse(e.requests.at(-1).get('document')).features.rail, {...rail,placement:'top',treatment:'line'});
+        assert.deepEqual(e.value().sections, document.sections); assert.deepEqual(e.value().deleted_sections, document.deleted_sections);
+      } else {
+        e.input(e.window.document.getElementById('title'), 'Unrelated title edit'); await e.settle();
+        assert.deepEqual(JSON.parse(e.requests.at(-1).get('document')).features.rail, rail);
+      }
+    } finally {e.dom.window.close();}
+  });
+}
+
+test('Rail toggle updates dependent controls and retains choices when switched off and on', async () => {
+  const document = {schema_version:3,skin:'dossier',features:{},sections:[{type:'kapitel',title:'Retained chapter'}]};
+  const e = await editor('projekt', {railControl:true, railPlacementBySkin:{dossier:'horizontal'}, skins:[{slug:'dossier',label:'Dossier'}], document});
+  try {
+    const control = e.root.querySelector('.iss-editorial-rail-feature-control');
+    const enabled = control.querySelector('input[type="checkbox"]');
+    const placement = control.querySelector('[aria-label="Position der Lesenavigation"]');
+    const treatment = control.querySelector('[aria-label="Darstellung der Lesenavigation"]');
+    assert.equal(enabled.checked,false); assert.equal(placement.disabled,true); assert.equal(treatment.disabled,true);
+    assert.equal(placement.value,'horizontal'); assert.equal(treatment.value,'quiet');
+    assert.deepEqual(e.value().features,{},'Showing defaults does not write them');
+    enabled.click();
+    assert.equal(placement.disabled,false); assert.equal(treatment.disabled,false);
+    placement.value='bottom'; placement.dispatchEvent(new e.window.Event('change',{bubbles:true}));
+    treatment.value='card'; treatment.dispatchEvent(new e.window.Event('change',{bubbles:true}));
+    enabled.click();
+    assert.equal(placement.disabled,true); assert.equal(treatment.disabled,true);
+    assert.deepEqual(e.value().features.rail,{enabled:false,placement:'bottom',mode:'contextual',treatment:'card'});
+    enabled.click(); await e.settle();
+    assert.equal(placement.disabled,false); assert.equal(treatment.disabled,false);
+    assert.deepEqual(JSON.parse(e.requests.at(-1).get('document')).features.rail,{enabled:true,placement:'bottom',mode:'contextual',treatment:'card'});
+  } finally {e.dom.window.close();}
+});
+
+test('Recovered rail values hydrate the owner controls and reach native submit unchanged', async () => {
+  const recovered = {schema_version:3,skin:'standard',features:{rail:{enabled:true,placement:'left',mode:'anchor-nav',treatment:'sticky'}},sections:[{type:'kapitel',title:'Recovered chapter',body:'<p>Recovered prose.</p>',links:[]}],deleted_sections:[{type:'retired',opaque:{keep:'Exact'}}]};
+  const e = await editor('renamed_owner', {railControl:true, recovery:{base:'older',modified:'Today',document:recovered}});
+  try {
+    assert.equal(e.root.querySelector('.iss-editorial-rail-feature-control'), null, 'Unresolved recovery does not expose stale controls');
+    e.button('Entwurf weiterbearbeiten').click(); await e.settle();
+    const control = e.root.querySelector('.iss-editorial-rail-feature-control');
+    assert.equal(control.querySelector('input').checked, true);
+    assert.equal(control.querySelector('[aria-label="Position der Lesenavigation"]').value, 'left');
+    assert.equal(control.querySelector('[aria-label="Darstellung der Lesenavigation"]').value, 'sticky');
+    let submitted = false;
+    e.window.document.getElementById('post').requestSubmit = () => {submitted = true;};
+    e.button('Update').click(); await e.settle();
+    assert.equal(submitted,true); assert.equal(e.requests.at(-1).get('intent'),'submit');
+    const payload = JSON.parse(e.requests.at(-1).get('document'));
+    assert.deepEqual(payload.features,recovered.features); assert.deepEqual(payload.sections,recovered.sections); assert.deepEqual(payload.deleted_sections,recovered.deleted_sections);
+  } finally {e.dom.window.close();}
+});
+
+for (const [type, treatment, fields, kind = 'text_image'] of [
+  ['renamed_rows', 'renamed.agenda', ['eyebrow','group','detail']],
+  ['text_bild_reihe', 'text-bild-reihe.agenda', []],
+  ['renamed_rows', 'renamed.editorial', ['eyebrow']],
+  ['renamed_rows', 'renamed.group', ['group']],
+  ['renamed_rows', 'renamed.detail', ['detail']],
+  ['text_bild_reihe', 'text-bild-reihe.agenda', ['eyebrow','group','detail'], 'cards']
+]) {
+  test(`${type}.${treatment} ${kind}: row extras follow declared fields and retain hidden values`, async () => {
+    const item = {label:'Retained row',text:'Retained prose.',eyebrow:'2026',group:'Workshop',detail:'Retained detail.',media_refs:[]};
+    const document = {schema_version:3,skin:'standard',sections:[{type,treatment,items:[item]}],deleted_sections:[{type:'retired',opaque:'Keep'}]};
+    const e = await editor('renamed_owner', {document, pageChoices:[], sections:{[type]:{label:'Rows',supports:['items'],items_kind:kind,treatments:[{slug:treatment,label:'Rows',item_fields:fields}]}}});
+    try {
+      const extras = e.root.querySelector('.iss-editorial-gateway-item-row__fields details');
+      const expected = kind === 'text_image' ? fields : [];
+      assert.equal(!!extras, expected.length > 0);
+      if (extras) {
+        assert.deepEqual([...extras.querySelectorAll('input,textarea')].map(node=>node.value), ['eyebrow','group','detail'].filter(field=>expected.includes(field)).map(field=>item[field]));
+        const inputs = [...extras.querySelectorAll('input,textarea')];
+        for (const input of inputs) { e.input(input, input.value + ' edited'); }
+      } else { e.input(e.window.document.getElementById('title'), 'Unrelated title edit'); }
+      await e.settle();
+      const expectedItem = {...item}; for (const field of expected) { expectedItem[field] += ' edited'; }
+      assert.deepEqual(e.value().sections[0].items[0], expectedItem);
+      assert.deepEqual(JSON.parse(e.requests.at(-1).get('document')).sections[0].items[0], expectedItem);
+      assert.deepEqual(e.value().deleted_sections, document.deleted_sections);
+    } finally { e.dom.window.close(); }
+  });
+}
+
+test('Row extras survive treatment switching, private recovery and native submit', async () => {
+  const document = {schema_version:3,skin:'standard',sections:[{type:'rows',treatment:'rows.agenda',items:[{label:'Row',text:'Prose',eyebrow:'2026',group:'Group',detail:'Exact detail',media_refs:[]}]}],deleted_sections:[{type:'retired',opaque:'Exact'}]};
+  const sections = {rows:{label:'Rows',supports:['items','treatment'],items_kind:'text_image',default_treatment:'rows.visual',treatments:[{slug:'rows.visual',label:'Visual',item_fields:[]},{slug:'rows.editorial',label:'Editorial',item_fields:['eyebrow']},{slug:'rows.agenda',label:'Agenda',item_fields:['eyebrow','group','detail']}]}};
+  const e = await editor('renamed_owner', {sections, recovery:{base:'older',modified:'Today',document}});
+  try {
+    e.button('Entwurf weiterbearbeiten').click(); await e.settle();
+    const controls = () => e.root.querySelectorAll('.iss-editorial-gateway-item-row__fields details input,.iss-editorial-gateway-item-row__fields details textarea');
+    assert.equal(controls().length,3);
+    for (const [treatment,count] of [['rows.visual',0],['rows.editorial',1],['rows.agenda',3]]) {
+      e.button('Darstellung').click();
+      e.root.querySelector(`.iss-editorial-field--treatment input[value="${treatment}"]`).click();
+      e.root.querySelector('.iss-editorial-outline__select').click();
+      assert.equal(controls().length,count);
+      assert.deepEqual(e.value().sections[0].items,document.sections[0].items,'Hidden fields stay in the document');
+    }
+    let submitted = false; e.window.document.getElementById('post').requestSubmit = () => {submitted=true;};
+    e.button('Update').click(); await e.settle();
+    assert.equal(submitted,true); assert.equal(e.requests.at(-1).get('intent'),'submit');
+    const payload=JSON.parse(e.requests.at(-1).get('document'));
+    assert.deepEqual(payload.sections,document.sections); assert.deepEqual(payload.deleted_sections,document.deleted_sections);
+  } finally { e.dom.window.close(); }
+});
+
+for (const failure of ['', 'second-page', 'changing-source']) {
+  test('Album import consumes all pages atomically: ' + (failure || '241 items'), async () => {
+    const original = [{source_kind:'wp_media',source_id:'999',visible:true,label:'Existing',position:1}];
+    const e = await editor('renamed_album_owner', {contentRestRoot:'/wp-json/iss-content/v1', sections:{album:{label:'Album',supports:['album_source','sheets']}}, document:{schema_version:3,sections:[{type:'album',album_source:{kind:'editorial_set',set_id:'7'},sheets:original}]}});
+    try {
+      const normalFetch=e.window.fetch, pages=[];
+      e.window.fetch=async (url, options)=>{
+        if(options.body) return normalFetch(url, options);
+        const page=Number(new URL(url,'http://localhost').searchParams.get('page'));pages.push(page);
+        if(failure==='second-page' && page===2) return {ok:false};
+        const count=page<3?120:1;
+        return {ok:true,json:async()=>({page,total:failure==='changing-source'&&page===2?240:241,perPage:120,items:Array.from({length:count},(_,i)=>({id:(page-1)*120+i+1,sourceId:(page-1)*120+i+1000,setId:7,kind:'wp_media',status:'approved',preview:{mime:'image/jpeg'}}))})};
+      };
+      e.button('Aus Quelle importieren / synchronisieren').click(); await e.settle();
+      if(failure) {
+        assert.deepEqual(e.value().sections[0].sheets,original,'No partial merge after a later-page failure/change');
+        assert.match(e.root.textContent,/Set konnte nicht geladen werden/);
+      } else {
+        assert.deepEqual(pages,[1,2,3]);
+        assert.equal(e.value().sections[0].sheets.filter(s=>s.source_set_id==='7').length,241);
+        assert.match(e.root.textContent,/241 Bild\(er\) importiert/);
+      }
+    } finally {e.dom.window.close();}
+  });
+}
+
+test('Renamed route owner and map use declared capabilities', async()=>{
+  const e=await editor('renamed_route',{...workspaceOptions(),routeStations:{enabled:true},sections:{map:{label:'Map',supports:[],editor:{route_stations:true,title_from_post:true,title_hint:'Owner title hint'}}},document:{schema_version:3,sections:[{type:'map'}]}});
+  try {
+    assert.match(e.root.textContent,/Native route stations/);
+    e.root.querySelector('.iss-editorial-outline__select').click();
+    assert.equal(e.root.querySelector('.iss-editorial-field--title textarea').placeholder,'Page title');
+    assert.match(e.root.textContent,/Owner title hint/);
+    assert.ok(e.button('Route / Stationen bearbeiten'));
+  } finally {e.dom.window.close();}
+});
+
+test('Renamed contextual title uses the nearest preceding declared section and retains hidden question',async()=>{
+  const e=await editor('renamed_dossier',{sections:{phase:{label:'Phase',supports:['contribution_question'],editor:{hidden_fields:['contribution_question']}},invite:{label:'Invite',supports:['no_body'],editor:{title_context:{preceding_type:'phase',placeholder:'Automatic',hint:'Context: {title}',fallback_title:'Previous',missing_hint:'Insert after a phase'}}}},document:{schema_version:3,sections:[{type:'phase',title:'Earlier',contribution_question:'Retain hidden'},{type:'phase',title:'Nearest'},{type:'invite'}]}});
+  try {
+    assert.doesNotMatch(e.root.textContent,/Eigene Forschungsfrage/);
+    assert.equal(e.value().sections[0].contribution_question,'Retain hidden');
+    [...e.root.querySelectorAll('.iss-editorial-outline__select')].at(-1).click();
+    assert.match(e.root.textContent,/Context: Nearest/);
+    assert.equal(e.root.querySelector('.iss-editorial-field--title textarea').placeholder,'Automatic');
+  } finally {e.dom.window.close();}
+});
+
+test('Legacy summaries and rich text share one control-aware href policy',async()=>{
+  const e=await editor();
+  try {
+    const sanitize=e.window.issEditorialRichText.sanitize;
+    assert.equal(sanitize('<p><a href="java&#x09;script:bad()">Keep</a> <strong>bold</strong></p>','basic'),'<p>Keep <strong>bold</strong></p>');
+    assert.equal(sanitize('<a href="/safe/" target="_blank">Safe</a>','basic'),'<a href="/safe/">Safe</a>');
+    assert.equal(sanitize('<p><span class="iss-ink-123abc">Legacy</span></p>','basic'),'<p>Legacy</p>');
+  } finally {e.dom.window.close();}
 });

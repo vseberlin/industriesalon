@@ -14,12 +14,6 @@ function iss_editorial_admin_url(): string
     return defined('ISS_EDITORIAL_URL') ? (string) ISS_EDITORIAL_URL : plugin_dir_url(dirname(__DIR__) . '/iss-editorial.php');
 }
 
-function iss_editorial_add_meta_boxes(): void
-{
-    // The editorial engine renders its own main canvas; legacy meta boxes are not the editor surface.
-}
-add_action('add_meta_boxes', 'iss_editorial_add_meta_boxes', 30);
-
 function iss_editorial_use_block_editor_for_post(bool $use_block_editor, $post): bool
 {
     if (is_numeric($post)) {
@@ -58,9 +52,9 @@ function iss_editorial_get_editor_document(int $post_id, string $format_slug): a
 
 function iss_editorial_uses_integrated_route_stations(string $format_slug, string $post_type): bool
 {
-    return $format_slug === 'fuehrung'
-        && $post_type === 'fuehrung'
-        && function_exists('iss_relations_get_route_station_editor_config');
+    $format = iss_editorial_get_format($format_slug);
+    return in_array($post_type, $format['post_types'] ?? [], true)
+        && is_callable($format['route_stations_callback'] ?? null);
 }
 
 function iss_editorial_get_route_station_editor_config(int $post_id, string $format_slug, string $post_type): array
@@ -71,14 +65,7 @@ function iss_editorial_get_route_station_editor_config(int $post_id, string $for
         ];
     }
 
-    return iss_relations_get_route_station_editor_config($post_id);
-}
-
-function iss_editorial_render_route_relation_hidden_fields(array $relations): void
-{
-    if (function_exists('iss_relations_render_route_station_hidden_fields')) {
-        iss_relations_render_route_station_hidden_fields($relations);
-    }
+    return (array) call_user_func(iss_editorial_get_format($format_slug)['route_stations_callback'], $post_id);
 }
 
 function iss_editorial_render_main_canvas(WP_Post $post): void
@@ -96,14 +83,13 @@ function iss_editorial_render_main_canvas(WP_Post $post): void
     $document = iss_editorial_hydrate_document_previews(iss_editorial_get_editor_document((int) $post->ID, $format_slug));
     // Preserve rich-text entities when the browser decodes HTML attributes.
     $document_attribute = wp_json_encode($document, JSON_HEX_AMP);
-    $enabled = true;
-    $route_config = iss_editorial_get_route_station_editor_config((int) $post->ID, $format_slug, (string) $post->post_type);
 
     wp_nonce_field('iss_editorial_save_document', 'iss_editorial_nonce');
 
     echo '<div class="iss-editorial-shell">';
     echo '<div class="iss-editorial-admin iss-editorial-admin--canvas" data-format="' . esc_attr($format_slug) . '" data-post-id="' . esc_attr((string) $post->ID) . '">';
-    echo '<input type="hidden" class="iss-editorial-enabled-field" name="iss_editorial[' . esc_attr($format_slug) . '][enabled]" value="' . esc_attr($enabled ? '1' : '0') . '">';
+    // Existing canvases stay enabled; this also opts a new auto-draft into the engine.
+    echo '<input type="hidden" class="iss-editorial-enabled-field" name="iss_editorial[' . esc_attr($format_slug) . '][enabled]" value="1">';
     echo '<input type="hidden" class="iss-editorial-document-field" name="iss_editorial[' . esc_attr($format_slug) . '][document]" value="' . esc_attr($document_attribute) . '">';
     echo '<input type="hidden" class="iss-editorial-base-field" name="iss_editorial[' . esc_attr($format_slug) . '][base]" value="' . esc_attr(iss_editorial_saved_token($post->ID, $format_slug)) . '">';
     $draft = iss_editorial_get_draft($post->ID, $format_slug);
@@ -118,7 +104,7 @@ function iss_editorial_render_main_canvas(WP_Post $post): void
     echo '<button type="button" class="button button-secondary iss-editorial-preview-button">' . esc_html__('Vorschau öffnen', 'iss-editorial') . '</button>';
     echo '</div>';
     echo '<noscript><p>' . esc_html__('Zum Bearbeiten der Abschnitte bitte JavaScript aktivieren. Ihre gespeicherten Inhalte bleiben erhalten.', 'iss-editorial') . '</p></noscript>';
-    echo '<div class="iss-editorial-root" data-document="' . esc_attr($document_attribute) . '" data-sections="' . esc_attr(wp_json_encode((array) $format['sections'], JSON_HEX_AMP)) . '"></div>';
+    echo '<div class="iss-editorial-root" data-sections="' . esc_attr(wp_json_encode((array) $format['sections'], JSON_HEX_AMP)) . '"></div>';
     $revisions = wp_get_post_revisions($post->ID, ['posts_per_page' => 1, 'check_enabled' => false]);
     if ($revisions) {
         $revision = reset($revisions);
@@ -315,7 +301,7 @@ function iss_editorial_enqueue_admin_assets(string $hook): void
         );
     }
 
-    foreach (['rich-text', 'live-preview', 'help', 'workspace'] as $asset) {
+    foreach (['rich-text', 'live-preview', 'help', 'workspace', 'pickers'] as $asset) {
         wp_enqueue_script('iss-editorial-' . $asset, iss_editorial_admin_url() . 'assets/' . $asset . '.js', ['editor', 'wplink'], (string) filemtime(iss_editorial_admin_path() . 'assets/' . $asset . '.js'), true);
     }
 
@@ -328,7 +314,7 @@ function iss_editorial_enqueue_admin_assets(string $hook): void
         $document = iss_editorial_hydrate_document_previews(iss_editorial_get_editor_document($post_id, (string) $format['slug']));
         $validation = iss_editorial_validate_document($document, (string) $format['slug']);
         $draft = iss_editorial_get_draft($post_id, (string) $format['slug']);
-        if ($draft) { $draft['document'] = (array) apply_filters('iss_editorial_editor_document', $draft['document'], $post_id, (string) $format['slug']); }
+        if ($draft) { $draft['document'] = iss_editorial_hydrate_document_previews((array) apply_filters('iss_editorial_editor_document', $draft['document'], $post_id, (string) $format['slug'])); }
         $draft_validation = $draft ? iss_editorial_validate_document($draft['document'], (string) $format['slug']) : [];
         $has_recovery = $draft && (is_wp_error($draft_validation) || $draft_validation !== iss_editorial_sanitize_document($document, (string) $format['slug']) || $draft['title'] !== $post->post_title || $draft['excerpt'] !== $post->post_excerpt);
         wp_enqueue_script(
@@ -345,15 +331,13 @@ function iss_editorial_enqueue_admin_assets(string $hook): void
                 'iss-editorial-live-preview',
                 'iss-editorial-workspace',
                 'iss-editorial-help',
+                'iss-editorial-pickers',
                 $route_dependency,
             ])),
             (string) filemtime($script_path),
             true
         );
-        wp_localize_script(
-            'iss-editorial-admin',
-            'issEditorialAdmin',
-            (array) apply_filters('iss_editorial_admin_settings', [
+        $settings = (array) apply_filters('iss_editorial_admin_settings', [
                 'archiveRestRoot' => function_exists('iss_wf_import_archivset_rest_namespace')
                     ? esc_url_raw(rest_url(iss_wf_import_archivset_rest_namespace()))
                     : '',
@@ -376,8 +360,10 @@ function iss_editorial_enqueue_admin_assets(string $hook): void
                 'formatLabel' => get_post_type_object($post->post_type)->labels->singular_name ?? $format['label'],
                 'starters' => $format['starters'],
                 'identityPalettes' => $format['editor']['identity_palettes'] ?? [],
+                'railControl' => !empty($format['editor']['rail_control']),
+                'railPlacementBySkin' => (array) ($format['editor']['rail_placement_by_skin'] ?? []),
                 'isFrontPage' => $post_id === (int) get_option('page_on_front'),
-                'openingSkin' => $format['slug'] === 'projekt' ? 'buehne' : ($post_id === (int) get_option('page_on_front') ? 'frontpage' : ''),
+                'openingSkin' => iss_editorial_get_opening_skin($format, $post),
                 'document' => $document,
                 'enabled' => true,
                 'baseToken' => iss_editorial_saved_token($post_id, (string) $format['slug']),
@@ -396,8 +382,10 @@ function iss_editorial_enqueue_admin_assets(string $hook): void
                     'previewError' => __('Die Vorschau konnte nicht vorbereitet werden.', 'iss-editorial'),
                     'previewReady' => __('Vorschau wurde geöffnet.', 'iss-editorial'),
                 ],
-            ], $post, $format)
-        );
+            ], $post, $format);
+        // Owner filters may inspect the document; the browser reads the hidden field.
+        unset($settings['document'], $settings['sections'], $settings['enabled'], $settings['workspace']);
+        wp_localize_script('iss-editorial-admin', 'issEditorialAdmin', $settings);
     }
 }
 add_action('admin_enqueue_scripts', 'iss_editorial_enqueue_admin_assets', 25);
@@ -436,6 +424,23 @@ function iss_editorial_ajax_save_preview_document(): void
         wp_send_json_success(['draftToken' => '']);
     }
     $validated = iss_editorial_validate_document($document, $format_slug);
+    if (($_POST['intent'] ?? '') === 'validate') {
+        if (is_wp_error($validated)) { wp_send_json_error(['message' => $validated->get_error_message()], 422); }
+        $stored = iss_editorial_decode_document(get_metadata_raw('post', $post_id, iss_editorial_get_document_meta_key($format_slug), true));
+        $draft = iss_editorial_get_draft($post_id, $format_slug);
+        // A validated restore may be edited immediately, before the next autosave.
+        foreach ([$stored, $draft['document'] ?? []] as $source) {
+            foreach ((array) ($source['deleted_sections'] ?? []) as $deleted) {
+                $restored = iss_editorial_validate_document(['schema_version' => $validated['schema_version'], 'sections' => [$deleted]], $format_slug);
+                if (is_wp_error($restored)) { continue; }
+                foreach ($validated['sections'] as &$section) {
+                    if ($section === $restored['sections'][0]) { $section['restored_from'] = hash('sha256', iss_editorial_encode_document($deleted)); break; }
+                }
+                unset($section);
+            }
+        }
+        wp_send_json_success(['valid' => true, 'document' => iss_editorial_hydrate_document_previews($validated)]);
+    }
     $decoded = json_decode($document, true);
     if (!is_array($decoded) || !iss_editorial_supports_version($format, $decoded['schema_version'] ?? null) || !isset($decoded['sections']) || !is_array($decoded['sections']) || !array_is_list($decoded['sections'])) {
         wp_send_json_error(['message' => is_wp_error($validated) ? $validated->get_error_message() : __('Der Entwurf konnte nicht gelesen werden.', 'iss-editorial')], 422);
@@ -462,6 +467,9 @@ add_action('wp_ajax_iss_editorial_save_preview_document', 'iss_editorial_ajax_sa
 
 function iss_editorial_save_meta_box(int $post_id): void
 {
+    // A nested owner update must never consume another post's submitted canvas.
+    // phpcs:ignore WordPress.Security.NonceVerification.Missing -- Matching identity only; nonce and capability checks follow.
+    if ($post_id !== absint($_POST['post_ID'] ?? 0)) { return; }
     if (defined('DOING_AUTOSAVE') && DOING_AUTOSAVE) {
         return;
     }
@@ -475,7 +483,6 @@ function iss_editorial_save_meta_box(int $post_id): void
         return;
     }
 
-    $post_type = (string) get_post_type($post_id);
     $format = iss_editorial_get_format_for_post($post_id);
     if (!$format) {
         return;
@@ -496,6 +503,5 @@ function iss_editorial_save_meta_box(int $post_id): void
     if ($draft) {
         wp_delete_post_revision($draft['id']);
     }
-    delete_post_meta($post_id, iss_editorial_get_autosave_meta_key($format_slug));
 }
 add_action('save_post', 'iss_editorial_save_meta_box', 35, 1);

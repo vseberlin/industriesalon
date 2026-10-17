@@ -17,6 +17,7 @@ function iss_content_model_editorial_material_section(): array
 {
     return [
         'label' => __('Begleitende Dateien', 'iss-content-model'),
+        'editor' => ['media_kind' => 'files', 'media_hide_images' => true, 'media_hint' => __('Material verwendet Dateien. Bilder bitte über Galerie einsetzen.', 'iss-content-model')],
         'description' => __('Zum Herunterladen. Wichtig: Bilder und Archiv-Objekte gehören stattdessen in die Galerie.', 'iss-content-model'),
         'supports' => ['anchor', 'media_refs', 'links'],
     ];
@@ -184,7 +185,38 @@ function iss_content_model_register_editorial_formats(array $formats): array
             ],
             'epoche' => [
                 'label' => __('Epoche', 'iss-content-model'),
+                'editor' => [
+                    'hidden_fields' => ['contribution_question'],
+                    'media_hint' => __('Fotos dieser Epoche: Bilder aus einem Set oder der Mediathek auswählen. Alle ausgewählten Bilder erscheinen mit ihrer Bildunterschrift.', 'iss-content-model'),
+                ],
                 'description' => __('Eine datierte historische Phase mit Funktion, Quellen und Bildern.', 'iss-content-model'),
+                'vocabularies' => [
+                    'era_key' => [
+                        'label' => __('Historische Epoche', 'iss-content-model'),
+                        'choices' => [
+                            'kaiserzeit' => __('Kaiserzeit', 'iss-content-model'),
+                            'weimar' => __('Weimarer Republik', 'iss-content-model'),
+                            'ns-zeit' => __('NS-Zeit', 'iss-content-model'),
+                            'nachkriegszeit' => __('Nachkriegszeit', 'iss-content-model'),
+                            'ddr' => __('DDR', 'iss-content-model'),
+                            'nach-1990' => __('Nach 1990', 'iss-content-model'),
+                        ],
+                    ],
+                    'function_key' => [
+                        'label' => __('Funktion', 'iss-content-model'),
+                        'choices' => [
+                            'industrial' => __('Industrie / Produktion', 'iss-content-model'),
+                            'commercial' => __('Gewerbe / Handel', 'iss-content-model'),
+                            'culture' => __('Kultur', 'iss-content-model'),
+                            'education' => __('Bildung / Forschung', 'iss-content-model'),
+                            'community' => __('Gemeinwohl / Soziales', 'iss-content-model'),
+                            'residential' => __('Wohnen', 'iss-content-model'),
+                            'mixed' => __('Mischnutzung', 'iss-content-model'),
+                            'vacant' => __('Leerstand', 'iss-content-model'),
+                            'infrastructure' => __('Infrastruktur', 'iss-content-model'),
+                        ],
+                    ],
+                ],
                 'supports' => [
                     'start_year',
                     'end_year',
@@ -199,6 +231,16 @@ function iss_content_model_register_editorial_formats(array $formats): array
                 ],
             ],
             'dynamic_slot' => [
+                'editor' => [
+                    'preview_editable' => false,
+                    'title_context' => [
+                        'preceding_type' => 'epoche',
+                        'placeholder' => __('Automatische Frage zur vorherigen Epoche', 'iss-content-model'),
+                        'fallback_title' => __('Vorherige Epoche', 'iss-content-model'),
+                        'hint' => __('Bezug: {title}. Titel leer lassen für die automatische Frage aus deren Zeitraum. Eigener Titel ersetzt sie.', 'iss-content-model'),
+                        'missing_hint' => __('Diese Geste nach der gewünschten Epoche einfügen. Titel leer lassen für die automatische Frage aus deren Zeitraum.', 'iss-content-model'),
+                    ],
+                ],
                 'description' => __('„Wissen zur Epoche beitragen“ nach der gewünschten Epoche einfügen. Die Frage verwendet deren Zeitraum. Alle Beiträge gehen in das gemeinsame Set des Ortes; Beiträge unter Material & Beiträge ausdrücklich öffnen.', 'iss-content-model'),
                 'supports' => ['treatment', 'slot_key', 'no_body'],
                 'slots' => [
@@ -237,6 +279,10 @@ function iss_content_model_register_editorial_formats(array $formats): array
         'base' => 'ordered',
         'post_types' => ['page'],
         'post_eligibility_callback' => 'iss_content_model_landing_page_is_eligible',
+        'opening_skin' => 'frontpage',
+        'opening_eligibility_callback' => static function (WP_Post $post): bool {
+            return (int) $post->ID === (int) get_option('page_on_front');
+        },
         'default_skin' => 'typografisch',
         'default_variant' => 'standard',
         'skin_meta_key' => '_iss_editorial_landing_skin',
@@ -322,24 +368,29 @@ function iss_content_model_register_editorial_formats(array $formats): array
         'base' => 'ordered',
         'post_types' => ['fuehrung'],
         'default_skin' => 'route-dossier',
+        'route_stations_callback' => 'iss_relations_get_route_station_editor_config',
         'default_variant' => 'standard',
         'sections' => [
             'bildbuehne' => [
                 'label' => __('Bildbühne', 'iss-content-model'),
+                'editor' => ['title_from_post' => true, 'title_hint' => __('Ohne eigenen Titel erscheint der Titel der Führung.', 'iss-content-model')],
                 'description' => __('Bildauftakt der Führung mit Text und Buchungsangaben. Das erste Bild bildet den Hintergrund; weitere Bilder ergänzen die Galerie.', 'iss-content-model'),
+                'legacy_body_policy' => 'basic',
                 'supports' => ['media_refs'],
             ],
             'intro' => [
                 'label' => __('Einleitung', 'iss-content-model'),
                 'description' => __('Vorhandene Einleitung der Führung. Der Bildauftakt nutzt den Text der Bildbühne oder die Kurzbeschreibung.', 'iss-content-model'),
+                'legacy_body_policy' => 'basic',
                 'supports' => ['media_refs'],
                 'ui_hidden' => true,
             ],
-            'kapitel' => $gestures['kapitel'],
-            'leitfrage' => $gestures['leitfrage'],
+            'kapitel' => array_merge($gestures['kapitel'], ['legacy_body_policy' => 'basic']),
+            'leitfrage' => array_merge($gestures['leitfrage'], ['legacy_body_policy' => 'basic']),
             'zitat' => $gestures['zitat'],
             'galerie' => $gestures['galerie'],
             'atlas_map' => [
+                'editor' => ['route_stations' => true],
                 'label' => __('Die interaktive Landkarte zur Tour.', 'iss-content-model'),
                 'description' => __('Zeigt die Route dieser Führung. Orte und Reihenfolge über „Route / Stationen bearbeiten“ festlegen und die Route dort veröffentlichen.', 'iss-content-model'),
                 'supports' => ['anchor', 'treatment', 'links'],
@@ -347,13 +398,13 @@ function iss_content_model_register_editorial_formats(array $formats): array
                     'atlas-map.tour-route' => __('Führungsroute', 'iss-content-model'),
                 ],
             ],
-            'material' => $gestures['material'],
+            'material' => array_merge($gestures['material'], ['legacy_body_policy' => 'basic']),
             'upload_intake' => [
                 'label' => __('Öffentlicher Mitmach-Aufruf für Gäste', 'iss-content-model'),
                 'description' => $gestures['upload_intake']['description'],
                 'supports' => ['anchor'],
             ],
-            'schluss' => $gestures['schluss'],
+            'schluss' => array_merge($gestures['schluss'], ['legacy_body_policy' => 'basic']),
         ],
     ];
 
@@ -386,10 +437,12 @@ function iss_content_model_register_editorial_formats(array $formats): array
         'base' => 'ordered',
         'post_types' => [ISS_CONTENT_MODEL_PROJEKT_POST_TYPE],
         'default_skin' => 'dossier',
+        'opening_skin' => 'buehne',
+        'editor' => ['rail_control' => true, 'rail_placement_by_skin' => ['dossier' => 'horizontal']],
         'default_variant' => 'standard',
         'sections' => [
-            'kapitel' => $gestures['kapitel'],
-            'fliesstext' => $gestures['fliesstext'],
+            'kapitel' => array_merge($gestures['kapitel'], ['legacy_body_policy' => 'basic']),
+            'fliesstext' => array_merge($gestures['fliesstext'], ['legacy_body_policy' => 'basic']),
             'facts' => $gestures['facts'],
             'galerie' => $gestures['galerie'],
             'material' => $gestures['material'],
@@ -398,7 +451,7 @@ function iss_content_model_register_editorial_formats(array $formats): array
                 'description' => $gestures['upload_intake']['description'],
                 'supports' => ['anchor', 'links'],
             ],
-            'schluss' => $gestures['schluss'],
+            'schluss' => array_merge($gestures['schluss'], ['legacy_body_policy' => 'basic']),
         ],
     ];
 
@@ -557,6 +610,18 @@ add_filter('iss_editorial_formats', static function (array $formats): array {
             if ($type === 'atlas_map' && $slug === 'landing') {
                 // Keep the editor/storage default that existing saved documents already use.
                 $section['default_treatment'] = 'atlas-map.place-locator';
+            }
+            if ($slug === 'landing' && $type === 'feature') {
+                // Hidden controls retain their saved ratio when switching treatments.
+                $section['media_layout'] = [
+                    'choices' => [
+                        '50-50' => __('Ausgewogen', 'iss-content-model'),
+                        '40-60' => __('Text kompakt', 'iss-content-model'),
+                        '60-40' => __('Text breit', 'iss-content-model'),
+                    ],
+                    'default' => '50-50',
+                    'treatments' => ['feature.media-text'],
+                ];
             }
             $section['treatments'] = (array) ($section['treatments'] ?? []);
             foreach ($section['treatments'] as $treatment => &$choice) {

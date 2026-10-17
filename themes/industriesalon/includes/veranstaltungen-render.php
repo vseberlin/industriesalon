@@ -496,15 +496,31 @@ function industriesalon_event_ticket_action(int $id, array $row): array
     if (in_array($row['availability_state'] ?? '', ['cancelled', 'sold_out'], true)) {
         return [];
     }
-    $document = function_exists('iss_editorial_get_document') ? iss_editorial_get_document($id, get_post_type($id)) : [];
-    foreach (($document['sections'] ?? []) as $section) {
-        if (($section['type'] ?? '') !== 'material') {
-            continue;
-        }
-        foreach (($section['links'] ?? []) as $link) {
-            if (industriesalon_event_link_is_ticket($link)) {
-                return ['url' => $link['url'], 'label' => __('Tickets', 'industriesalon')];
+    $format = $id > 0 && function_exists('iss_editorial_get_format_for_post') ? iss_editorial_get_format_for_post($id) : [];
+    if ($format) {
+        // Only the canonical editorial URL is shared by occurrences. Keep row state live.
+        static $tickets = [];
+        $key = get_current_blog_id() . ':' . $id . ':' . $format['slug'] . ':' . get_locale();
+        $stored = get_post_meta($id, iss_editorial_get_document_meta_key($format['slug']), true);
+        if (!isset($tickets[$key]) || $tickets[$key]['stored'] !== $stored) {
+            $url = '';
+            $document = iss_editorial_get_document($id, $format['slug']);
+            foreach (($document['sections'] ?? []) as $section) {
+                if (($section['type'] ?? '') !== 'material') {
+                    continue;
+                }
+                foreach (($section['links'] ?? []) as $link) {
+                    if (industriesalon_event_link_is_ticket($link)) {
+                        $url = $link['url'];
+                        break 2;
+                    }
+                }
             }
+            // WordPress already caches this meta read; comparing it also observes saves/deletes.
+            $tickets[$key] = ['stored' => $stored, 'url' => $url];
+        }
+        if ($tickets[$key]['url'] !== '') {
+            return ['url' => $tickets[$key]['url'], 'label' => __('Tickets', 'industriesalon')];
         }
     }
     if (!empty($row['booking_url'])) {

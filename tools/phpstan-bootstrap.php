@@ -44,6 +44,10 @@ if (!class_exists('WP_CLI')) {
         {
         }
 
+        public static function halt(int $return_code): void
+        {
+        }
+
         public static function log($message): void
         {
         }

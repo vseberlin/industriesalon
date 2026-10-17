@@ -9,7 +9,6 @@
   var createTextarea = editorUi.createTextarea;
   var createCheckbox = editorUi.createCheckbox;
 
-
   function parseJson(value, fallback) {
     try {
       return JSON.parse(value || '');
@@ -35,84 +34,6 @@
     }
   }
 
-  function isSafeRichTextHref(href) {
-    var value = String(href || '').trim();
-    if (!value) {
-      return false;
-    }
-    if (/^(#|\/|\?|\.{1,2}\/)/.test(value)) {
-      return true;
-    }
-    if (/^[a-z][a-z0-9+.-]*:/i.test(value)) {
-      return /^(https?:|mailto:|tel:)/i.test(value);
-    }
-
-    return true;
-  }
-
-  function appendSanitizedRichNode(node, target) {
-    var element;
-    var tag;
-    var href;
-
-    if (node.nodeType === Node.TEXT_NODE) {
-      target.appendChild(document.createTextNode(node.textContent || ''));
-      return;
-    }
-    if (node.nodeType !== Node.ELEMENT_NODE) {
-      return;
-    }
-
-    tag = String(node.nodeName || '').toLowerCase();
-    if (tag === 'b') {
-      tag = 'strong';
-    } else if (tag === 'i') {
-      tag = 'em';
-    } else if (tag === 'div') {
-      tag = 'p';
-    }
-
-    if (['p', 'br', 'strong', 'em', 'a', 'ul', 'ol', 'li'].indexOf(tag) === -1) {
-      Array.prototype.forEach.call(node.childNodes, function (child) {
-        appendSanitizedRichNode(child, target);
-      });
-      return;
-    }
-
-    element = document.createElement(tag);
-    if (tag === 'a') {
-      href = node.getAttribute('href') || '';
-      if (!isSafeRichTextHref(href)) {
-        Array.prototype.forEach.call(node.childNodes, function (child) {
-          appendSanitizedRichNode(child, target);
-        });
-        return;
-      }
-      element.setAttribute('href', href.trim());
-    }
-
-    if (tag !== 'br') {
-      Array.prototype.forEach.call(node.childNodes, function (child) {
-        appendSanitizedRichNode(child, element);
-      });
-    }
-    target.appendChild(element);
-  }
-
-  function sanitizeRichHtml(value) {
-    var template = document.createElement('template');
-    var target = document.createElement('div');
-    template.innerHTML = String(value || '');
-    Array.prototype.forEach.call(template.content.childNodes, function (child) {
-      appendSanitizedRichNode(child, target);
-    });
-    if (!(target.textContent || '').trim()) {
-      return '';
-    }
-
-    return target.innerHTML;
-  }
-
   function escapeText(value) {
     var element = document.createElement('span');
     element.textContent = String(value || '');
@@ -132,39 +53,12 @@
 
   function richTextSummary(value) {
     var element = document.createElement('div');
-    element.innerHTML = sanitizeRichHtml(value);
+    element.innerHTML = window.issEditorialRichText.sanitize(value, 'basic');
 
     return (element.textContent || '').replace(/\s+/g, ' ').trim();
   }
 
-  function referenceFromArchiveItem(item) {
-    return {
-      kind: 'archive_object',
-      source: 'iss-archive',
-      id: String(item.id || ''),
-      label: item.title || '',
-      thumbnail: item.thumbnail || '',
-      set_id: item.setId ? String(item.setId) : '',
-      set_title: item.setTitle || '',
-      member_id: item.memberId ? String(item.memberId) : '',
-      member_caption: item.memberCaption || ''
-    };
-  }
 
-  function referenceFromMediaAttachment(attachment) {
-    var sizes = attachment.sizes || {};
-    var thumbnail = (sizes.medium && sizes.medium.url) || (sizes.thumbnail && sizes.thumbnail.url) || attachment.url || '';
-    return {
-      kind: 'media',
-      source: 'wp-media',
-      id: String(attachment.id || ''),
-      label: attachment.title || attachment.caption || '',
-      thumbnail: thumbnail,
-      width: attachment.width ? String(attachment.width) : '',
-      height: attachment.height ? String(attachment.height) : '',
-      mime: attachment.mime || ''
-    };
-  }
 
   function initEditor(container) {
     var root = container.querySelector('.iss-editorial-root');
@@ -180,7 +74,7 @@
     var format = container.getAttribute('data-format') || '';
     var postId = parseInt(container.getAttribute('data-post-id') || config.postId || '0', 10);
     var sections = parseJson(root.getAttribute('data-sections'), {});
-    var documentState = parseJson(root.getAttribute('data-document'), {
+    var documentState = parseJson(field.value, {
       schema_version: 1,
       skin: 'standard',
       variant: 'standard',
@@ -194,12 +88,16 @@
       return page && page.id && page.url;
     }) : [];
     var autosaveTimer = null;
+    var previewTimer = null;
+    var previewIdle = true;
+    var previewData = null;
     var richEditorIds = [];
     var saveChain = Promise.resolve();
     var draftToken = config.draftToken || '';
     var draftTokenField = container.querySelector('.iss-editorial-draft-token-field');
     var identityFields = { title: document.getElementById('title'), excerpt: document.getElementById('excerpt') };
     var lastSavedValue = field.value;
+    var lastSavedStatus = 'Gespeicherte Fassung geladen.';
     var activeSectionIndex = null;
     var submitting = false;
     var recoveryPending = !!config.recovery;
@@ -209,9 +107,16 @@
     retry.type = 'button';
     retry.hidden = true;
     status.insertAdjacentElement('afterend', retry);
-    retry.addEventListener('click', function () { queueSave().catch(function () {}); });
+    retry.addEventListener('click', function () { queueSave('retry').catch(function () {}); });
     var livePreview = null;
     var studio = null;
+    var pickers = window.issEditorialPickers.create({config: config, postId: postId, sections: sections, sectionEditor: sectionEditor, render: render, scheduleAutosave: scheduleAutosave, collectionCount: collectionCount, createElement: createElement, clear: clear, getStudio: function () { return studio; }});
+    var renderObjectPicker = pickers.renderObjectPicker;
+    var renderMediaPicker = pickers.renderMediaPicker;
+    var renderAlbumEditor = pickers.renderAlbumEditor;
+    var sectionMediaRefsForDisplay = pickers.sectionMediaRefsForDisplay;
+    var renderGatewayItemMedia = pickers.renderGatewayItemMedia;
+    var openGatewayItemMediaLibrary = pickers.openGatewayItemMediaLibrary;
     var studioSection = null;
     var canvasEdit = null;
 
@@ -249,7 +154,7 @@
       var index = documentState.sections.indexOf(section);
       if (!section || index < 0 || typeof data.session !== 'string') { return { accepted: false }; }
       if (data.type === 'iss-preview-field-start') {
-        if (canvasEdit || section.type === 'dynamic_slot' || JSON.stringify(section) !== JSON.stringify(snapshot.values[data.section])) { return { accepted: false, message: 'Die Vorschau wird aktualisiert. Bitte danach erneut bearbeiten.' }; }
+        if (canvasEdit || sectionEditor(section.type).preview_editable === false || JSON.stringify(section) !== JSON.stringify(snapshot.values[data.section])) { return { accepted: false, message: 'Die Vorschau wird aktualisiert. Bitte danach erneut bearbeiten.' }; }
         var profile = ['title', 'kicker'].indexOf(data.field) !== -1 ? 'plain' : textProfile(section.type, data.field);
         if (!profile || (data.field === 'lead' && !supports(section.type, 'lead'))) { return { accepted: false }; }
         canvasEdit = { section: section, field: data.field, original: section[data.field] || '', session: data.session, sequence: 0 };
@@ -271,6 +176,7 @@
         selectWorkspace(index, true);
       } else { return { accepted: false }; }
       renderWorkspaceOutline(); updateField(); scheduleAutosave();
+      if (data.type === 'iss-preview-field-end') { window.setTimeout(finishPreviewEdit, 0); }
       return { accepted: true };
     }
 
@@ -285,16 +191,16 @@
           insert: function () { afterCanvasEdit(function () { studio.insert(documentState.sections.length); }); },
           add: function (type, index) { afterCanvasEdit(function () { addSection(type, index); }); },
           afterEditing: afterCanvasEdit,
-          finish: function () { return saveRouteStationsIfDirty().then(function () { return queueSave(); }).then(function (url) { return !!url && currentSaveValue() === lastSavedValue; }); },
+          finish: function () { return saveRouteStationsIfDirty().then(function () { return queueSave('finish'); }).then(function (url) { return !!url && currentSaveValue() === lastSavedValue; }); },
           sketch: function (section) { var choice = treatmentChoices(section.type).find(function (item) { return item.slug === (section.treatment || defaultTreatment(section.type)); }); return treatmentSketch(choice || sectionConfig(section.type)); },
           treatmentLabel: function (section) { var choice = treatmentChoices(section.type).find(function (item) { return item.slug === (section.treatment || defaultTreatment(section.type)); }); return choice ? choice.label : ''; }
         });
         if (skins.length > 1) { studio.ownerBody.appendChild(renderSkinControl()); }
-        if (format === 'projekt') { studio.ownerBody.appendChild(renderRailFeatureControl()); }
+        if (config.railControl) { studio.ownerBody.appendChild(renderRailFeatureControl()); }
         if (Object.keys(config.identityPalettes || {}).length) { studio.ownerBody.appendChild(renderIdentityControl()); }
         renderRouteStationPanel(studio.ownerBody);
         renderTextUpgrade(studio.menu);
-        livePreview = window.issEditorialLivePreview(studio, 0, function () { afterCanvasEdit(function () { queueSave().catch(function () {}); }); }, function (index, snapshot) {
+        livePreview = window.issEditorialLivePreview(studio, 0, function () { afterCanvasEdit(function () { queueSave('preview').catch(function () {}); }); }, function (index, snapshot) {
           var section = snapshot && snapshot.refs[index];
           var current = documentState.sections.indexOf(section);
           if (current >= 0) { afterCanvasEdit(function () { selectWorkspace(current, true); }); }
@@ -313,7 +219,13 @@
             onKeyboardMove: function (index, direction) { afterCanvasEdit(function () { moveSection(index, direction); }); }
           });
         }
-        if (!recoveryPending) { window.setTimeout(function () { queueSave().catch(function () {}); }, 0); }
+        if (!recoveryPending && !config.validationError) {
+          window.setTimeout(function () {
+            if (currentSaveValue() !== lastSavedValue) { return; }
+            previewData = { url: config.previewUrl, token: 'saved:' + config.baseToken, value: lastSavedValue, sections: previewSections() };
+            refreshLivePreview();
+          }, 0);
+        }
       }
       Array.prototype.forEach.call(studio.ownerBody.children, function (control) { if (control.refreshIdentity) { control.refreshIdentity(); } });
       var selected = documentState.sections.indexOf(studioSection);
@@ -341,7 +253,7 @@
       if (livePreview) { livePreview.selectSection(selected, false, documentState.sections[selected]); }
       updateField();
     }
-    var routeConfig = config.routeStations && config.routeStations.enabled && format === 'fuehrung'
+    var routeConfig = config.routeStations && config.routeStations.enabled
       ? config.routeStations
       : null;
     var routeFields = container.querySelector('.iss-editorial-route-fields');
@@ -349,6 +261,10 @@
 
     function sectionConfig(type) {
       return sections[type] || { label: type, supports: [] };
+    }
+
+    function sectionEditor(type) {
+      return sectionConfig(type).editor || {};
     }
 
     function isSectionHidden(type) {
@@ -370,7 +286,7 @@
         return false;
       }
 
-      return supports(type, fieldName);
+      return (sectionEditor(type).hidden_fields || []).indexOf(fieldName) === -1 && supports(type, fieldName);
     }
 
     function textProfile(type, fieldName) {
@@ -504,7 +420,7 @@
 
       return {
         enabled: hasEnabled ? !!rail.enabled : false,
-        placement: rail.placement || (currentSkin() === 'dossier' ? 'horizontal' : 'right'),
+        placement: rail.placement || ((config.railPlacementBySkin || {})[currentSkin()] || 'right'),
         mode: rail.mode || 'contextual',
         treatment: rail.treatment || 'quiet'
       };
@@ -524,75 +440,35 @@
       }
     }
 
-    function sectionSummary(section) {
-      var parts = [];
-      if (section.kicker) {
-        parts.push(String(section.kicker).replace(/\s+/g, ' ').slice(0, 60));
-      }
-      if (section.body) {
-        parts.push(richTextSummary(section.body).slice(0, 140));
-      }
-      if (section.year) {
-        parts.push('Jahr: ' + String(section.year).replace(/\s+/g, ' ').slice(0, 24));
-      }
-      if (section.start_year || section.end_year) {
-        parts.push('Zeitraum: ' + [section.start_year || '', section.end_year || 'heute'].join('–'));
-      }
-      if (section.era_key) {
-        parts.push('Epoche: ' + section.era_key);
-      }
-      if (section.function_key) {
-        parts.push('Funktion: ' + section.function_key);
-      }
-      if (section.media_layout) {
-        parts.push(mediaLayoutLabel(section.media_layout, section));
-      }
-      if (section.gallery_layout) {
-        parts.push('Galerie: ' + galleryLayoutLabel(section.gallery_layout));
-      }
-      if (section.quote_treatment) {
-        parts.push(section.quote_treatment === 'source' ? 'Quellenauszug' : 'Zitat');
-      }
-      if (section.section_treatment) {
-        parts.push(section.section_treatment === 'disclosure' ? 'Aufklappbar' : (section.section_treatment === 'aside' ? 'Hintergrund / Exkurs' : 'Kapitel'));
-      }
-      if (section.treatment) {
-        parts.push(treatmentLabel(section.type || '', section.treatment));
-      }
-      if (section.slot_key) {
-        parts.push(slotKeyLabel(section.slot_key));
-      }
-      if ((section.items || []).length) {
-        parts.push(String((section.items || []).length) + ' Ziel(e)');
-      }
-      if ((section.facts || []).length) {
-        parts.push(String((section.facts || []).length) + ' Fakt(en)');
-      }
-      if (section.quote) {
-        parts.push('Zitat: ' + String(section.quote).replace(/\s+/g, ' ').slice(0, 110));
-      }
-      if ((section.object_refs || []).length) {
-        parts.push(String((section.object_refs || []).length) + ' Archivobjekt(e)');
-      }
-      if (sectionMediaRefsForDisplay(section).length) {
-        parts.push(String(sectionMediaRefsForDisplay(section).length) + ((section.type || '') === 'material' ? ' Datei(en)' : ' Medien'));
-      }
-      if ((section.links || []).length) {
-        parts.push(String((section.links || []).length) + ' Link(s)');
-      }
-
-      return parts.join(' · ');
-    }
-
     function scheduleAutosave() {
       updateField();
       if (recoveryPending || submitting || sessionChanged) { return; }
       window.clearTimeout(autosaveTimer);
+      window.clearTimeout(previewTimer);
+      previewIdle = false;
       setStatus('Änderungen werden gesichert …');
       if (livePreview) { livePreview.stale('Änderungen werden gesichert …'); }
       autosaveTimer = window.setTimeout(function () {
-        queueSave().catch(function () {});
-      }, config.livePreview ? 350 : 1200);
+        queueSave('autosave').catch(function () {});
+      }, 1200);
+      previewTimer = window.setTimeout(function () { previewIdle = true; refreshLivePreview(); }, 2000);
+    }
+
+    function previewSections() {
+      return { refs: documentState.sections.slice(), values: JSON.parse(JSON.stringify(documentState.sections)), labels: documentState.sections.map(function (section) { return sectionConfig(section.type).label + ' · ' + treatmentLabel(section.type, section.treatment || defaultTreatment(section.type)); }) };
+    }
+
+    function refreshLivePreview() {
+      if (livePreview && previewIdle && previewData && previewData.url && !canvasEdit && !recoveryPending && !submitting && !sessionChanged && currentSaveValue() === previewData.value) {
+        livePreview.update(previewData.url, previewData.token, previewData.sections);
+      }
+    }
+
+    function finishPreviewEdit() {
+      if (recoveryPending || submitting || sessionChanged || canvasEdit) { return; }
+      window.clearTimeout(previewTimer);
+      previewIdle = true;
+      queueSave('autosave').then(refreshLivePreview).catch(function () {});
     }
 
     function deletedSections() {
@@ -692,19 +568,34 @@
     }
 
     function restoreDeletedSection(index) {
-      var removed = deletedSections().splice(index, 1)[0];
+      var removed = deletedSections()[index];
       var targetIndex;
       if (!removed || typeof removed !== 'object') {
         return;
       }
 
-      targetIndex = parseInt(removed.original_index || '0', 10);
-      delete removed.deleted_at;
-      delete removed.original_index;
+      var before = currentSaveValue();
+      var candidate = JSON.parse(JSON.stringify(documentState));
+      var restored = candidate.deleted_sections.splice(index, 1)[0];
+      targetIndex = parseInt(restored.original_index || '0', 10);
+      delete restored.deleted_at;
+      delete restored.original_index;
       targetIndex = Math.max(0, Math.min(documentState.sections.length, targetIndex || 0));
-      documentState.sections.splice(targetIndex, 0, removed);
-      render();
-      scheduleAutosave();
+      candidate.sections.splice(targetIndex, 0, restored);
+      // Ask the existing validator before an obsolete slot/type can be normalized by controls.
+      saveChain = queueSave('validate', candidate).then(function (validated) {
+        if (sessionChanged || currentSaveValue() !== before || deletedSections()[index] !== removed) {
+          setStatus('Der Inhalt wurde inzwischen geändert. Bitte erneut wiederherstellen.');
+          return;
+        }
+        // Registered aliases and media previews now belong to the active schema.
+        restored = validated.sections[targetIndex];
+        deletedSections().splice(index, 1);
+        documentState.sections.splice(targetIndex, 0, restored);
+        render(); scheduleAutosave();
+      }).catch(function (error) {
+        setStatus('Wiederherstellen nicht möglich: ' + error.message + ' Der Abschnitt bleibt im Papierkorb.');
+      });
     }
 
     function purgeDeletedSection(index) {
@@ -714,7 +605,7 @@
     }
 
     function renderDeletedSectionCard(section, index, target) {
-      var type = section.type || 'kapitel';
+      var type = section.type || '';
       var card = createElement('article', 'iss-editorial-card iss-editorial-card--deleted iss-editorial-card--' + type);
       var marker = createElement('span', 'iss-editorial-card__marker');
       var meta = createElement('div', 'iss-editorial-card__meta');
@@ -725,13 +616,11 @@
       marker.dataset.tone = sectionConfig(type).tone || 'text';
       meta.appendChild(createElement('span', 'iss-editorial-card__type', 'Papierkorb · ' + (sectionConfig(type).label || type)));
       meta.appendChild(createElement('h3', '', section.title || 'Ohne Titel'));
-      meta.appendChild(createElement('p', '', sectionSummary(section) || 'Noch kein Inhalt.'));
+      meta.appendChild(createElement('p', '', typeof section.body === 'string' ? richTextSummary(section.body).slice(0, 140) : 'Gespeicherter Abschnitt'));
       if (section.deleted_at) {
         meta.appendChild(createElement('p', 'iss-editorial-card__trash-note', 'Gelöscht: ' + String(section.deleted_at).replace('T', ' ').replace(/\..+$/, '')));
       }
-      if (sectionMediaRefsForDisplay(section).length) {
-        renderMediaThumbs(section, meta);
-      }
+      // Do not interpret media or other fields from a retired section schema.
 
       restore.type = 'button';
       restore.addEventListener('click', function () { restoreDeletedSection(index); });
@@ -756,8 +645,8 @@
         upgrade.addEventListener('click', function () {
           ['sections', 'deleted_sections'].forEach(function (key) {
             (documentState[key] || []).forEach(function (section) {
-              if ((sectionConfig(section.type).rich_text || {}).items) {
-                (section.items || []).forEach(function (item) { item.text = escapeText(item.text || '').replace(/\n/g, '<br>'); });
+              if ((sectionConfig(section.type).rich_text || {}).items && Array.isArray(section.items)) {
+                section.items.forEach(function (item) { if (item && typeof item === 'object') { item.text = escapeText(item.text || '').replace(/\n/g, '<br>'); } });
               }
             });
           });
@@ -827,6 +716,7 @@
       enabled.type = 'checkbox';
       enabled.checked = !!rail.enabled;
       enabled.addEventListener('change', function () {
+        placement.disabled = treatment.disabled = !enabled.checked;
         setRailFeature({ enabled: !!enabled.checked });
       });
 
@@ -878,181 +768,14 @@
       return wrapper;
     }
 
-    function renderReferenceTray(section, target, rerender) {
-      clear(target);
-      (section.object_refs || []).forEach(function (reference, index) {
-        var item = createElement('div', 'iss-editorial-ref');
-        var label = createElement('span', '', reference.label || 'Ausgewähltes Archivobjekt');
-        var remove = createElement('button', 'button button-link-delete', 'Entfernen');
-        remove.type = 'button';
-        remove.addEventListener('click', function () {
-          section.object_refs.splice(index, 1);
-          rerender();
-          render();
-          scheduleAutosave();
-        });
-        if (section.type === 'objektfokus' && sectionConfig(section.type).portable) {
-          item.className = 'iss-editorial-media-item';
-          var preview = createElement('div', 'iss-editorial-media-item__preview');
-          if (reference.thumbnail) {
-            var image = document.createElement('img');
-            image.src = reference.thumbnail;
-            image.alt = '';
-            preview.appendChild(image);
-          }
-          var controls = createElement('div', 'iss-editorial-media-item__controls');
-          controls.appendChild(createTextInput('Beschriftung', reference.label || '', function (value) {
-            reference.label = value;
-            render();
-            scheduleAutosave();
-          }));
-          controls.appendChild(createTextarea('Bildunterschrift / Kontext', reference.member_caption || '', function (value) {
-            reference.member_caption = value;
-            render();
-            scheduleAutosave();
-          }, 3));
-          controls.appendChild(remove);
-          item.appendChild(preview);
-          item.appendChild(controls);
-        } else {
-          item.appendChild(label);
-          item.appendChild(remove);
-        }
-        target.appendChild(item);
-      });
 
-      if (!(section.object_refs || []).length) {
-        target.appendChild(createElement('p', 'description', 'Noch kein Archivobjekt ausgewählt.'));
-      }
-    }
 
-    function renderMediaThumbs(section, target) {
-      var strip = createElement('div', 'iss-editorial-media-strip');
-      sectionMediaRefsForDisplay(section).slice(0, 6).forEach(function (reference) {
-        var item = createElement('span', 'iss-editorial-media-thumb');
-        if (reference.thumbnail) {
-          var image = document.createElement('img');
-          image.src = reference.thumbnail;
-          image.alt = '';
-          item.appendChild(image);
-        } else {
-          item.textContent = reference.label || ((section.type || '') === 'material' ? 'Datei' : 'Bild');
-        }
-        strip.appendChild(item);
-      });
-      target.appendChild(strip);
-    }
 
-    function mediaRatioText(reference) {
-      var width = parseInt(reference.width || '0', 10);
-      var height = parseInt(reference.height || '0', 10);
-      if (!width || !height) {
-        return '';
-      }
 
-      return String(width) + ' x ' + String(height);
-    }
 
-    function mediaIsNearSixteenNine(reference) {
-      var width = parseInt(reference.width || '0', 10);
-      var height = parseInt(reference.height || '0', 10);
-      var ratio = height ? width / height : 0;
 
-      return ratio > 1.7 && ratio < 1.85;
-    }
 
-    function mediaReferenceIsImage(reference) {
-      return String(reference && reference.mime ? reference.mime : '').indexOf('image/') === 0;
-    }
 
-    function sectionUsesViewportGallery(section) {
-      return (section.type || '') === 'vollbild' || ((section.type || '') === 'galerie' && (section.gallery_layout || '') === 'viewport');
-    }
-
-    function sectionMediaRefsForDisplay(section) {
-      var refs = section && Array.isArray(section.media_refs) ? section.media_refs : [];
-      if ((section.type || '') !== 'material' || sectionConfig('material').portable) {
-        return refs;
-      }
-
-      return refs.filter(function (reference) {
-        return !mediaReferenceIsImage(reference);
-      });
-    }
-
-    function renderMediaTray(section, target, rerender) {
-      var isFullViewport = sectionUsesViewportGallery(section);
-      var isMaterial = (section.type || '') === 'material';
-      clear(target);
-      if (isFullViewport) {
-        target.appendChild(createElement(
-          'p',
-          'description iss-editorial-media-rule',
-          'Vollbild verwendet genau ein 16:9-Bild. Andere Formate werden vollflächig beschnitten.'
-        ));
-      }
-      if (isMaterial) {
-        target.appendChild(createElement(
-          'p',
-          'description iss-editorial-media-rule',
-          sectionConfig('material').portable
-            ? 'Dateien werden als Downloads angezeigt. Für eine Bildansicht bitte Galerie verwenden.'
-            : 'Material verwendet Dateien. Bilder bitte über Galerie einsetzen.'
-        ));
-      }
-      if (format === 'place' && section.type === 'epoche') {
-        target.appendChild(createElement('p', 'description iss-editorial-media-rule', 'Fotos dieser Epoche: Bilder aus einem Set oder der Mediathek auswählen. Alle ausgewählten Bilder erscheinen mit ihrer Bildunterschrift.'));
-      }
-      (section.media_refs || []).forEach(function (reference, index) {
-        var item = createElement('article', 'iss-editorial-media-item');
-        var preview = createElement('div', 'iss-editorial-media-item__preview');
-        var controls = createElement('div', 'iss-editorial-media-item__controls');
-        var remove = createElement('button', 'button button-link-delete', 'Entfernen');
-        var ratioText = mediaRatioText(reference);
-        var ratioWarning = isFullViewport && !mediaIsNearSixteenNine(reference);
-        if (reference.thumbnail) {
-          var image = document.createElement('img');
-          image.src = reference.thumbnail;
-          image.alt = '';
-          preview.appendChild(image);
-        } else {
-          preview.textContent = isMaterial ? 'Datei' : 'Bild';
-        }
-
-        controls.appendChild(createTextInput(isMaterial ? 'Dateiname / Label' : 'Bildunterschrift', reference.label || '', function (value) {
-          reference.label = value;
-          render();
-          scheduleAutosave();
-        }));
-        if (isMaterial && !sectionConfig('material').portable && mediaReferenceIsImage(reference)) {
-          controls.appendChild(createElement('p', 'description is-warning', 'Bild wird im Material nicht gerendert.'));
-        }
-        if (ratioText) {
-          controls.appendChild(createElement(
-            'p',
-            'description iss-editorial-media-ratio' + (ratioWarning ? ' is-warning' : ''),
-            ratioWarning ? ratioText + ' - kein 16:9, wird beschnitten.' : ratioText
-          ));
-        }
-
-        remove.type = 'button';
-        remove.addEventListener('click', function () {
-          section.media_refs.splice(index, 1);
-          rerender();
-          render();
-          scheduleAutosave();
-        });
-        controls.appendChild(remove);
-
-        item.appendChild(preview);
-        item.appendChild(controls);
-        target.appendChild(item);
-      });
-
-      if (!(section.media_refs || []).length) {
-        target.appendChild(createElement('p', 'description', isMaterial ? 'Noch keine Dateien ausgewählt.' : 'Noch keine Bilder ausgewählt.'));
-      }
-    }
 
     function disposeRichEditors(within) {
       richEditorIds = richEditorIds.filter(function (id) {
@@ -1078,14 +801,14 @@
     }
 
     function renderSectionFields(section, body) {
-      var type = section.type || 'kapitel';
+      var type = section.type || '';
       var contentPanel = createEditorPanel('content', 'Inhalt', 'content');
       var displayPanel = createEditorPanel('display', 'Darstellung', 'display');
       var archivePanel = createEditorPanel('archive', 'Archiv', 'archive', collectionCount(section, 'object_refs'));
-      var mediaPanel = createEditorPanel('media', type === 'material' ? 'Dateien' : 'Bilder', 'media', sectionMediaRefsForDisplay(section).length);
+      var mediaPanel = createEditorPanel('media', sectionEditor(type).media_kind === 'files' ? 'Dateien' : 'Bilder', 'media', sectionMediaRefsForDisplay(section).length);
       var albumPanel = createEditorPanel('album', 'Album', 'album', collectionCount(section, 'sheets'));
       var factPanel = createEditorPanel('facts', 'Fakten', 'facts', collectionCount(section, 'facts'));
-      var itemPanel = createEditorPanel('items', type === 'text_bild_reihe' ? 'Bild-Text-Paare' : 'Ziele', 'items', collectionCount(section, 'items'));
+      var itemPanel = createEditorPanel('items', sectionConfig(type).items_label || 'Ziele', 'items', collectionCount(section, 'items'));
       var linkPanel = createEditorPanel('links', 'Links', 'links', collectionCount(section, 'links'));
       var sourcePanel = createEditorPanel('sources', 'Quellen', 'links', collectionCount(section, 'source_refs') + collectionCount(section, 'dynamic_refs'));
       var kickerField = createTextInput('Vorspann', section.kicker || '', function (value) {
@@ -1118,18 +841,21 @@
       });
       if (config.isFrontPage && documentState.schema_version >= 3) { var opening = createElement('p', 'iss-editorial-opening-note', openingNote(section)); opening.hidden = !opening.textContent; contentPanel.body.appendChild(opening); }
       contentPanel.body.appendChild(titleField);
-      if (format === 'place' && type === 'dynamic_slot') {
-        var precedingEpoch = documentState.sections.slice(0, documentState.sections.indexOf(section)).reverse().find(function (item) { return item.type === 'epoche'; });
-        titleField.querySelector('input, textarea').placeholder = 'Automatische Frage zur vorherigen Epoche';
-        contentPanel.body.appendChild(createElement('p', 'description', precedingEpoch
-          ? 'Bezug: ' + (precedingEpoch.title || 'Vorherige Epoche') + '. Titel leer lassen für die automatische Frage aus deren Zeitraum. Eigener Titel ersetzt sie.'
-          : 'Diese Geste nach der gewünschten Epoche einfügen. Titel leer lassen für die automatische Frage aus deren Zeitraum.'));
+      var titleContext = sectionEditor(type).title_context;
+      if (titleContext) {
+        var preceding = documentState.sections.slice(0, documentState.sections.indexOf(section)).reverse().find(function (item) { return item.type === titleContext.preceding_type; });
+        titleField.querySelector('input, textarea').placeholder = titleContext.placeholder || '';
+        contentPanel.body.appendChild(createElement('p', 'description', preceding
+          ? titleContext.hint.replace('{title}', preceding.title || titleContext.fallback_title)
+          : titleContext.missing_hint));
       }
-      if (format === 'fuehrung' && type === 'bildbuehne') {
+      if (sectionEditor(type).title_from_post) {
         titleField.querySelector('input, textarea').placeholder = identityFields.title ? identityFields.title.value : '';
-        contentPanel.body.appendChild(createElement('p', 'description', 'Ohne eigenen Titel erscheint der Titel der Führung.'));
       }
-      if (format === 'fuehrung' && type === 'atlas_map' && routeConfig) {
+      if (sectionEditor(type).title_hint) {
+        contentPanel.body.appendChild(createElement('p', 'description', sectionEditor(type).title_hint));
+      }
+      if (sectionEditor(type).route_stations && routeConfig) {
         var editRoute = createElement('button', 'button', 'Route / Stationen bearbeiten'); editRoute.type = 'button';
         editRoute.addEventListener('click', function () { afterCanvasEdit(function () { studio.showView('settings'); var input = studio.ownerBody.querySelector('.iss-editorial-route-station-mount select'); if (input) { input.focus(); } }); });
         contentPanel.body.appendChild(editRoute);
@@ -1204,40 +930,17 @@
         }));
       }
 
-      if (supports(type, 'era_key')) {
-        contentPanel.body.appendChild(createSelect('Historische Epoche', section.era_key || '', [
-          { value: '', label: 'Bitte wählen' },
-          { value: 'kaiserzeit', label: 'Kaiserzeit' },
-          { value: 'weimar', label: 'Weimarer Republik' },
-          { value: 'ns-zeit', label: 'NS-Zeit' },
-          { value: 'nachkriegszeit', label: 'Nachkriegszeit' },
-          { value: 'ddr', label: 'DDR' },
-          { value: 'nach-1990', label: 'Nach 1990' }
-        ], function (value) {
-          section.era_key = value;
+      ['era_key', 'function_key'].forEach(function (field) {
+        var vocabulary = (sectionConfig(type).vocabularies || {})[field];
+        if (!supports(type, field) || !vocabulary) { return; }
+        contentPanel.body.appendChild(createSelect(vocabulary.label, section[field] || '', [
+          { value: '', label: 'Bitte wählen' }
+        ].concat(vocabulary.choices || []), function (value) {
+          section[field] = value;
           render();
           scheduleAutosave();
         }));
-      }
-
-      if (supports(type, 'function_key')) {
-        contentPanel.body.appendChild(createSelect('Funktion', section.function_key || '', [
-          { value: '', label: 'Bitte wählen' },
-          { value: 'industrial', label: 'Industrie / Produktion' },
-          { value: 'commercial', label: 'Gewerbe / Handel' },
-          { value: 'culture', label: 'Kultur' },
-          { value: 'education', label: 'Bildung / Forschung' },
-          { value: 'community', label: 'Gemeinwohl / Soziales' },
-          { value: 'residential', label: 'Wohnen' },
-          { value: 'mixed', label: 'Mischnutzung' },
-          { value: 'vacant', label: 'Leerstand' },
-          { value: 'infrastructure', label: 'Infrastruktur' }
-        ], function (value) {
-          section.function_key = value;
-          render();
-          scheduleAutosave();
-        }));
-      }
+      });
 
       if (supports(type, 'is_current')) {
         contentPanel.body.appendChild(createCheckbox('Aktuelle Phase', section.is_current, function (checked) {
@@ -1247,7 +950,7 @@
         }));
       }
 
-      if (supports(type, 'contribution_question') && !(format === 'place' && type === 'epoche')) {
+      if (isEditorFieldVisible(type, 'contribution_question')) {
         contentPanel.body.appendChild(createTextInput('Eigene Forschungsfrage (optional, max. 240 Zeichen)', section.contribution_question || '', function (value) {
           section.contribution_question = value;
           scheduleAutosave();
@@ -1376,52 +1079,6 @@
       appendPanelIfUsed(body, sourcePanel);
     }
 
-    function renderObjectPicker(section, body, setCount) {
-      var refs = createElement('div', 'iss-editorial-field iss-editorial-field--refs');
-      var tray = createElement('div', 'iss-editorial-ref-tray');
-      var pickerMount = createElement('div', 'iss-editorial-picker');
-      var pickerButton = createElement('button', 'button', 'Archivobjekte auswählen');
-
-      function rerenderTray() {
-        renderReferenceTray(section, tray, rerenderTray);
-        setCount(collectionCount(section, 'object_refs'));
-      }
-
-      pickerButton.type = 'button';
-      pickerButton.addEventListener('click', function (event) {
-        event.preventDefault();
-        event.stopPropagation();
-        if (!window.issArchiveObjectPicker || !window.issArchiveObjectPicker.create) {
-          pickerMount.textContent = 'Archiv-Auswahl ist nicht geladen.';
-          return;
-        }
-        window.issArchiveObjectPicker.create(pickerMount, {
-          mode: 'multiple',
-          modal: true,
-          bucketFirst: true,
-          manageModalFocus: editorUi.manageModalFocus,
-          contextPostId: postId,
-          initialSelection: (section.object_refs || []).map(function (reference) { return reference.id; }),
-          onConfirm: function (items) {
-            var previous = section.object_refs || [];
-            section.object_refs = (items || []).map(function (item) {
-              return previous.find(function (reference) { return String(reference.id) === String(item.id); }) || referenceFromArchiveItem(item);
-            }).filter(function (reference) {
-              return reference.id;
-            });
-            rerenderTray();
-            render();
-            scheduleAutosave();
-          }
-        });
-      });
-
-      refs.appendChild(tray);
-      refs.appendChild(pickerButton);
-      refs.appendChild(pickerMount);
-      body.appendChild(refs);
-      rerenderTray();
-    }
 
     function renderOrientationControl(section, body) {
       var wrapper = createElement('div', 'iss-editorial-field iss-editorial-field--orientation');
@@ -1468,7 +1125,7 @@
       var options = createElement('div', 'iss-editorial-segmented');
       current = choices.filter(function (choice) {
         return choice.value === section.media_layout;
-      })[0] ? section.media_layout : choices[0].value;
+      })[0] ? section.media_layout : sectionConfig(section.type).media_layout.default;
 
       choices.forEach(function (choice) {
         var label = createElement('label', 'iss-editorial-segmented__option');
@@ -1496,42 +1153,10 @@
     }
 
     function mediaLayoutChoices(section) {
-      if (format === 'landing' && (section.type || '') === 'feature') {
-        if ((section.treatment || defaultTreatment('feature')) !== 'feature.media-text') {
-          return [];
-        }
-
-        return [
-          { value: '50-50', label: 'Ausgewogen' },
-          { value: '40-60', label: 'Text kompakt' },
-          { value: '60-40', label: 'Text breit' }
-        ];
-      }
-
-      return [
-        { value: 'inline', label: 'Im Text' },
-        { value: 'aside-right', label: 'Rechts daneben' }
-      ];
-    }
-
-    function mediaLayoutLabel(layout, section) {
-      var choices = mediaLayoutChoices(section || {});
-      var match = choices.filter(function (choice) {
-        return choice.value === layout;
-      })[0];
-
-      return match ? 'Bild: ' + match.label : 'Bild: ' + layout;
-    }
-
-    function galleryLayoutLabel(layout) {
-      if (layout === 'sequence') {
-        return 'Strecke';
-      }
-      if (layout === 'wall') {
-        return 'Bilderwand';
-      }
-
-      return 'Raster';
+      var layout = sectionConfig(section.type).media_layout || {};
+      var treatments = layout.treatments || [];
+      if (treatments.length && treatments.indexOf(section.treatment || defaultTreatment(section.type)) === -1) { return []; }
+      return layout.choices || [];
     }
 
     function treatmentChoices(type) {
@@ -1568,7 +1193,7 @@
     }
 
     function renderTreatmentControl(section, body) {
-      var choices = treatmentChoices(section.type || 'kapitel');
+      var choices = treatmentChoices(section.type || '');
       if (!choices.length) { return; }
       var wrapper = createElement('fieldset', 'iss-editorial-field iss-editorial-field--treatment');
       wrapper.appendChild(createElement('legend', '', 'Darstellung wählen'));
@@ -1607,15 +1232,6 @@
       var choices = slotKeyChoices(type);
 
       return choices.length ? choices[0].value : '';
-    }
-
-    function slotKeyLabel(slotKey) {
-      var choices = slotKeyChoices('dynamic_slot');
-      var match = choices.filter(function (item) {
-        return item.value === slotKey;
-      })[0];
-
-      return match ? match.label : slotKey;
     }
 
     function renderSlotKeyControl(section, body) {
@@ -1977,79 +1593,12 @@
       return wrapper;
     }
 
-    function renderGatewayItemMedia(item, target, rerender) {
-      clear(target);
-      item.media_refs = Array.isArray(item.media_refs) ? item.media_refs : [];
 
-      if (!item.media_refs.length) {
-        target.appendChild(createElement('p', 'description', 'Kein Bild ausgewählt.'));
-        return;
-      }
-
-      item.media_refs.slice(0, 1).forEach(function (reference) {
-        var preview = createElement('div', 'iss-editorial-media-thumb');
-        var remove = createElement('button', 'button button-link-delete', 'Bild entfernen');
-        if (reference.thumbnail) {
-          var image = document.createElement('img');
-          image.src = reference.thumbnail;
-          image.alt = '';
-          preview.appendChild(image);
-        } else {
-          preview.textContent = reference.label || 'Bild';
-        }
-        remove.type = 'button';
-        remove.addEventListener('click', function () {
-          item.media_refs = [];
-          rerender();
-          render();
-          scheduleAutosave();
-        });
-        target.appendChild(preview);
-        target.appendChild(remove);
-      });
-    }
-
-    function openGatewayItemMediaLibrary(item, tray, rerender) {
-      if (!window.wp || !wp.media) {
-        tray.textContent = 'Medienauswahl ist nicht geladen.';
-        return;
-      }
-
-      var frame = wp.media({
-        title: 'Bild auswählen',
-        button: { text: 'Bild übernehmen' },
-        multiple: false,
-        library: { type: 'image' }
-      });
-
-      frame.on('open', function () {
-        var selection = frame.state().get('selection');
-        (item.media_refs || []).slice(0, 1).forEach(function (reference) {
-          if (!reference.id) {
-            return;
-          }
-          var attachment = wp.media.attachment(reference.id);
-          attachment.fetch();
-          selection.add(attachment);
-        });
-      });
-
-      frame.on('select', function () {
-        item.media_refs = frame.state().get('selection').map(function (attachment) {
-          return referenceFromMediaAttachment(attachment.toJSON());
-        }).filter(function (reference) {
-          return reference.id;
-        }).slice(0, 1);
-        rerender();
-        render();
-        scheduleAutosave();
-      });
-
-      frame.open();
-    }
 
     function renderGatewayItemEditor(section, body, setCount) {
-      var isTextImageRow = ['text_bild_reihe', 'map_img'].indexOf(section.type || '') !== -1;
+      var isTextImageRow = sectionConfig(section.type).items_kind === 'text_image';
+      var treatment = (sectionConfig(section.type).treatments || []).find(function (choice) { return choice.slug === section.treatment; });
+      var itemFields = isTextImageRow && treatment ? treatment.item_fields || [] : [];
       var wrapper = createElement('div', 'iss-editorial-field iss-editorial-field--gateway-items');
       var rows = createElement('div', 'iss-editorial-gateway-item-rows');
       var add = createElement('button', 'button', isTextImageRow ? 'Bild-Text-Paar hinzufügen' : 'Ziel hinzufügen');
@@ -2079,16 +1628,20 @@
             render();
             scheduleAutosave();
           }, textProfile(section.type, 'items') || 3));
-          if (isTextImageRow && ['text-bild-reihe.editorial', 'text-bild-reihe.agenda'].indexOf(section.treatment) !== -1) {
+          if (itemFields.length) {
             var extra = createElement('details', 'iss-editorial-field');
             extra.appendChild(createElement('summary', '', 'Vorspann und Details'));
-            extra.appendChild(createTextInput('Vorspann / Zeitraum', item.eyebrow || '', function (value) {
-              item.eyebrow = value; render(); scheduleAutosave();
-            }));
-            if (section.treatment === 'text-bild-reihe.agenda') {
+            if (itemFields.indexOf('eyebrow') !== -1) {
+              extra.appendChild(createTextInput('Vorspann / Zeitraum', item.eyebrow || '', function (value) {
+                item.eyebrow = value; render(); scheduleAutosave();
+              }));
+            }
+            if (itemFields.indexOf('group') !== -1) {
               extra.appendChild(createTextInput('Filtergruppe (optional)', item.group || '', function (value) {
                 item.group = value; render(); scheduleAutosave();
               }));
+            }
+            if (itemFields.indexOf('detail') !== -1) {
               extra.appendChild(createTextarea('Mehr erfahren', item.detail || '', function (value) {
                 item.detail = value; render(); scheduleAutosave();
               }, 4));
@@ -2206,451 +1759,19 @@
       body.appendChild(wrapper);
     }
 
-    function albumSheetKey(sheet) {
-      return [
-        sheet.source_kind || '',
-        sheet.source_id || '',
-        sheet.member_id || '',
-        sheet.source_item_id || ''
-      ].join(':');
-    }
 
-    function normalizeAlbumPositions(section) {
-      section.sheets = Array.isArray(section.sheets) ? section.sheets : [];
-      section.sheets.forEach(function (sheet, index) {
-        sheet.position = index + 1;
-      });
-    }
 
-    function mergeAlbumSheets(section, nextSheets) {
-      var existing = {};
-      (section.sheets || []).forEach(function (sheet) {
-        existing[albumSheetKey(sheet)] = sheet;
-      });
 
-      section.sheets = (nextSheets || []).map(function (sheet, index) {
-        var old = existing[albumSheetKey(sheet)] || {};
-        return Object.assign({}, sheet, {
-          visible: Object.prototype.hasOwnProperty.call(old, 'visible') ? old.visible : true,
-          label: old.label || sheet.label || '',
-          nav_title: old.nav_title || sheet.nav_title || '',
-          caption_override: old.caption_override || '',
-          position: index + 1
-        });
-      }).filter(function (sheet) {
-        return sheet.source_kind && sheet.source_id;
-      });
-      normalizeAlbumPositions(section);
-    }
 
-    function albumSheetFromArchiveMember(member, index, source) {
-      var label = member.pageLabel || ('Blatt ' + String(index + 1).padStart(2, '0'));
-      var caption = member.caption || member.displayTitle || member.title || member.memberTitle || member.objectTitle || '';
-      return {
-        source_kind: 'archive_object',
-        source_id: String(member.objectPostId || ''),
-        source_set_id: String((source && source.set_id) || member.setId || ''),
-        member_id: String(member.id || ''),
-        visible: true,
-        label: label,
-        nav_title: member.title || member.objectTitle || label,
-        caption: caption,
-        caption_override: '',
-        thumbnail: member.thumbnail || '',
-        position: index + 1
-      };
-    }
 
-    function albumSheetFromEditorialSetItem(item, index) {
-      var preview = item.preview || {};
-      var sourceId = item.sourceId || '';
-      if (item.kind === 'external_upload' && item.provenance && item.provenance.imported_attachment_id) {
-        sourceId = item.provenance.imported_attachment_id;
-      }
-      return {
-        source_kind: 'wp_media',
-        source_id: String(sourceId || ''),
-        source_set_id: String(item.setId || ''),
-        source_item_id: String(item.id || ''),
-        visible: true,
-        label: 'Bild ' + String(index + 1).padStart(2, '0'),
-        nav_title: item.label || preview.title || 'Bild ' + String(index + 1).padStart(2, '0'),
-        caption: item.label || preview.title || '',
-        caption_override: '',
-        thumbnail: preview.thumbnail || '',
-        position: index + 1
-      };
-    }
 
-    function fetchJson(url) {
-      return window.fetch(url, {
-        credentials: 'same-origin',
-        headers: {
-          'X-WP-Nonce': config.nonce || ''
-        }
-      }).then(function (response) {
-        if (!response.ok) {
-          throw new Error('request failed');
-        }
-        return response.json();
-      });
-    }
 
-    function importAlbumSource(section, status) {
-      var source = section.album_source || {};
-      var kind = source.kind || 'archive_set';
-      var setId = parseInt(source.set_id || '0', 10);
-      var url;
 
-      if (!setId) {
-        status.textContent = 'Set-ID fehlt.';
-        return;
-      }
 
-      status.textContent = 'Quelle wird geladen...';
 
-      if (kind === 'archive_set') {
-        if (!config.archiveRestRoot) {
-          status.textContent = 'Archivset-API ist nicht verfügbar.';
-          return;
-        }
-        url = config.archiveRestRoot.replace(/\/$/, '') + '/sets/' + encodeURIComponent(String(setId));
-        fetchJson(url).then(function (payload) {
-          var item = payload && payload.item ? payload.item : {};
-          var members = Array.isArray(item.members) ? item.members : [];
-          var sheets = members.filter(function (member) {
-            return member && member.memberKind === 'object' && member.objectPostId;
-          }).map(function (member, index) {
-            return albumSheetFromArchiveMember(member, index, source);
-          });
-          section.album_source.set_title = item.title || section.album_source.set_title || '';
-          mergeAlbumSheets(section, sheets);
-          render();
-          scheduleAutosave();
-          status.textContent = String(sheets.length) + ' Blatt/Blätter importiert.';
-        }).catch(function () {
-          status.textContent = 'Archivset konnte nicht geladen werden.';
-        });
-        return;
-      }
 
-      if (kind === 'editorial_set') {
-        if (!config.contentRestRoot) {
-          status.textContent = 'Set-API ist nicht verfügbar.';
-          return;
-        }
-        url = config.contentRestRoot.replace(/\/$/, '') + '/editorial-set-items?setId=' + encodeURIComponent(String(setId)) + '&perPage=120';
-        fetchJson(url).then(function (payload) {
-          var items = Array.isArray(payload && payload.items) ? payload.items : [];
-          var sheets = items.filter(function (item) {
-            var mime = item && item.preview ? String(item.preview.mime || '') : '';
-            return item && ['rejected', 'stale'].indexOf(item.status || '') === -1 && (item.kind === 'wp_media' || item.kind === 'external_upload') && (mime === '' || mime.indexOf('image/') === 0);
-          }).map(albumSheetFromEditorialSetItem).filter(function (sheet) {
-            return sheet.source_id;
-          });
-          mergeAlbumSheets(section, sheets);
-          render();
-          scheduleAutosave();
-          status.textContent = String(sheets.length) + ' Bild(er) importiert.';
-        }).catch(function () {
-          status.textContent = 'Set konnte nicht geladen werden.';
-        });
-      }
-    }
 
-    function renderAlbumSheetList(section, target, rerender) {
-      clear(target);
-      section.sheets = Array.isArray(section.sheets) ? section.sheets : [];
-      normalizeAlbumPositions(section);
 
-      if (!section.sheets.length) {
-        target.appendChild(createElement('p', 'description', 'Noch keine Albumblätter importiert.'));
-        return;
-      }
-
-      section.sheets.forEach(function (sheet, index) {
-        var row = createElement('article', 'iss-editorial-album-sheet');
-        var preview = createElement('div', 'iss-editorial-album-sheet__preview');
-        var fields = createElement('div', 'iss-editorial-album-sheet__fields');
-        var tools = createElement('div', 'iss-editorial-album-sheet__tools');
-        var up = createElement('button', 'button', 'Hoch');
-        var down = createElement('button', 'button', 'Runter');
-        var remove = createElement('button', 'button button-link-delete', 'Entfernen');
-        var visible = document.createElement('input');
-        var visibleLabel = createElement('label', 'iss-editorial-album-sheet__visible');
-
-        if (sheet.thumbnail) {
-          var image = document.createElement('img');
-          image.src = sheet.thumbnail;
-          image.alt = '';
-          preview.appendChild(image);
-        } else {
-          preview.textContent = sheet.source_kind === 'archive_object' ? 'Archiv' : 'Bild';
-        }
-
-        visible.type = 'checkbox';
-        visible.checked = sheet.visible !== false;
-        visible.addEventListener('change', function () {
-          sheet.visible = visible.checked;
-          render();
-          scheduleAutosave();
-        });
-        visibleLabel.appendChild(visible);
-        visibleLabel.appendChild(document.createTextNode(' sichtbar'));
-
-        fields.appendChild(createTextInput('Label', sheet.label || '', function (value) {
-          sheet.label = value;
-          render();
-          scheduleAutosave();
-        }));
-        fields.appendChild(createTextInput('Nav-Titel', sheet.nav_title || '', function (value) {
-          sheet.nav_title = value;
-          render();
-          scheduleAutosave();
-        }));
-        fields.appendChild(createTextarea('Beschreibung', sheet.caption_override || sheet.caption || '', function (value) {
-          sheet.caption_override = value;
-          render();
-          scheduleAutosave();
-        }, 4));
-
-        [up, down, remove].forEach(function (button) {
-          button.type = 'button';
-        });
-        up.disabled = index === 0;
-        down.disabled = index >= section.sheets.length - 1;
-        up.addEventListener('click', function () {
-          var current = section.sheets.splice(index, 1)[0];
-          section.sheets.splice(index - 1, 0, current);
-          normalizeAlbumPositions(section);
-          rerender();
-          render();
-          scheduleAutosave();
-        });
-        down.addEventListener('click', function () {
-          var current = section.sheets.splice(index, 1)[0];
-          section.sheets.splice(index + 1, 0, current);
-          normalizeAlbumPositions(section);
-          rerender();
-          render();
-          scheduleAutosave();
-        });
-        remove.addEventListener('click', function () {
-          section.sheets.splice(index, 1);
-          normalizeAlbumPositions(section);
-          rerender();
-          render();
-          scheduleAutosave();
-        });
-
-        tools.appendChild(createElement('span', 'iss-editorial-album-sheet__position', String(index + 1)));
-        tools.appendChild(visibleLabel);
-        tools.appendChild(up);
-        tools.appendChild(down);
-        tools.appendChild(remove);
-        row.appendChild(preview);
-        row.appendChild(fields);
-        row.appendChild(tools);
-        target.appendChild(row);
-      });
-    }
-
-    function renderAlbumEditor(section, body, setCount) {
-      var wrapper = createElement('div', 'iss-editorial-field iss-editorial-field--album');
-      var source = section.album_source && typeof section.album_source === 'object' ? section.album_source : {};
-      var sourceRow = createElement('div', 'iss-editorial-album-source');
-      var kindLabel = createElement('label', 'iss-editorial-field');
-      var kindSelect = document.createElement('select');
-      var idField;
-      var titleField;
-      var importButton = createElement('button', 'button button-primary', 'Aus Quelle importieren / synchronisieren');
-      var status = createElement('p', 'description');
-      var list = createElement('div', 'iss-editorial-album-sheets');
-
-      section.album_source = {
-        kind: source.kind || 'archive_set',
-        set_id: source.set_id || '',
-        set_title: source.set_title || ''
-      };
-      section.sheets = Array.isArray(section.sheets) ? section.sheets : [];
-
-      [
-        { value: 'archive_set', label: 'Archivset' },
-        { value: 'editorial_set', label: 'Set' },
-        { value: 'manual', label: 'Manuell' }
-      ].forEach(function (optionData) {
-        var option = document.createElement('option');
-        option.value = optionData.value;
-        option.textContent = optionData.label;
-        option.selected = optionData.value === section.album_source.kind;
-        kindSelect.appendChild(option);
-      });
-      kindSelect.addEventListener('change', function () {
-        section.album_source.kind = kindSelect.value;
-        render();
-        scheduleAutosave();
-      });
-
-      idField = createTextInput('Set-ID', section.album_source.set_id || '', function (value) {
-        section.album_source.set_id = value.replace(/[^0-9]/g, '');
-        scheduleAutosave();
-      });
-      titleField = createTextInput('Quellentitel', section.album_source.set_title || '', function (value) {
-        section.album_source.set_title = value;
-        render();
-        scheduleAutosave();
-      });
-
-      importButton.type = 'button';
-      importButton.disabled = section.album_source.kind === 'manual';
-      importButton.addEventListener('click', function () {
-        importAlbumSource(section, status);
-      });
-
-      function rerenderSheets() {
-        renderAlbumSheetList(section, list, rerenderSheets);
-        setCount(collectionCount(section, 'sheets'));
-      }
-
-      kindLabel.appendChild(createElement('span', '', 'Quelle'));
-      kindLabel.appendChild(kindSelect);
-      sourceRow.appendChild(kindLabel);
-      if (section.album_source.kind !== 'manual') {
-        sourceRow.appendChild(idField);
-        sourceRow.appendChild(titleField);
-        sourceRow.appendChild(importButton);
-      }
-      wrapper.appendChild(sourceRow);
-      wrapper.appendChild(status);
-      wrapper.appendChild(list);
-      body.appendChild(wrapper);
-      rerenderSheets();
-    }
-
-    function renderMediaPicker(section, body, setCount) {
-      var refs = createElement('div', 'iss-editorial-field iss-editorial-field--media');
-      var tray = createElement('div', 'iss-editorial-media-tray');
-      var isFullViewport = sectionUsesViewportGallery(section);
-      var isMaterial = (section.type || '') === 'material';
-      var noun = isMaterial ? 'Dateien' : (isFullViewport ? 'Bild' : 'Bilder');
-      var actions = createElement('div', 'iss-editorial-media-actions');
-      var setPickerButton = createElement('button', 'button button-primary', 'Aus Set auswählen');
-      var mediaLibraryButton = createElement('button', 'button', isMaterial ? 'Dateien suchen' : 'Medien suchen');
-
-      function rerenderTray() {
-        renderMediaTray(section, tray, rerenderTray);
-        setCount(sectionMediaRefsForDisplay(section).length);
-      }
-
-      function existingReferencesById() {
-        var existing = {};
-        (section.media_refs || []).forEach(function (reference) {
-          if (reference.id) {
-            existing[String(reference.id)] = reference;
-          }
-        });
-        return existing;
-      }
-
-      function applyMediaReferences(references) {
-        var existing = existingReferencesById();
-        section.media_refs = (references || []).map(function (reference) {
-          if (existing[reference.id] && existing[reference.id].label) {
-            reference.label = existing[reference.id].label;
-          }
-          return reference;
-        }).filter(function (reference) {
-          return reference.id && (!isMaterial || sectionConfig('material').portable || !mediaReferenceIsImage(reference));
-        });
-        if (isFullViewport) {
-          section.media_refs = section.media_refs.slice(0, 1);
-        }
-        rerenderTray();
-        render();
-        scheduleAutosave();
-      }
-
-      function openMediaLibrary(afterSelect) {
-        if (!window.wp || !wp.media) {
-          tray.textContent = 'Medienauswahl ist nicht geladen.';
-          return;
-        }
-
-        var frame = wp.media({
-          title: noun + ' auswählen',
-          button: { text: noun + ' übernehmen' },
-          multiple: !isFullViewport,
-          library: isMaterial ? (sectionConfig('material').portable ? {} : { type: 'application' }) : { type: 'image' }
-        });
-
-        frame.on('open', function () {
-          var selection = frame.state().get('selection');
-          (section.media_refs || []).forEach(function (reference) {
-            if (!reference.id) {
-              return;
-            }
-            var attachment = wp.media.attachment(reference.id);
-            attachment.fetch();
-            selection.add(attachment);
-          });
-        });
-
-        frame.on('select', function () {
-          var references = frame.state().get('selection').map(function (attachment) {
-            var reference = referenceFromMediaAttachment(attachment.toJSON());
-            return reference;
-          }).filter(function (reference) {
-            return reference.id;
-          });
-          applyMediaReferences(references);
-          if (typeof afterSelect === 'function') {
-            afterSelect();
-          }
-        });
-
-        frame.open();
-      }
-
-      setPickerButton.type = 'button';
-      setPickerButton.addEventListener('click', function () {
-        if (!window.issEditorialSetMediaPicker || !window.issEditorialSetMediaPicker.create) {
-          openMediaLibrary();
-          return;
-        }
-
-        window.issEditorialSetMediaPicker.create(document.createElement('div'), {
-          modal: true,
-          manageModalFocus: editorUi.manageModalFocus,
-          mode: isFullViewport ? 'single' : 'multiple',
-          mediaType: isMaterial ? (sectionConfig('material').portable ? '' : 'file') : 'image',
-          contextId: config.postId || 0,
-          initialSelection: section.media_refs || [],
-          onConfirm: function (references) {
-            applyMediaReferences(references);
-          },
-          onMediaSearch: function (api) {
-            openMediaLibrary(function () {
-              if (api && typeof api.close === 'function') {
-                api.close();
-              }
-            });
-          }
-        });
-      });
-
-      mediaLibraryButton.type = 'button';
-      if (studio) { studio.help.hint(mediaLibraryButton, 'media'); }
-      mediaLibraryButton.addEventListener('click', function () {
-        openMediaLibrary();
-      });
-
-      refs.appendChild(tray);
-      actions.appendChild(setPickerButton);
-      actions.appendChild(mediaLibraryButton);
-      refs.appendChild(actions);
-      body.appendChild(refs);
-      rerenderTray();
-    }
 
     function createRichTextInput(label, value, onChange, profile) {
       var wrapper = createElement('div', 'iss-editorial-field iss-editorial-field--rich-text');
@@ -2671,24 +1792,7 @@
         window.wp.editor.initialize(id, {
           mediaButtons: false,
           quicktags: false,
-          tinymce: profile && window.issEditorialRichText ? window.issEditorialRichText.configure({ profile: profile, wrapper: wrapper, palette: config.textPalette, onChange: onChange, onClose: scheduleAutosave }) : {
-            wpautop: true,
-            menubar: false,
-            statusbar: false,
-            height: 230,
-            toolbar1: 'undo redo | bold italic | bullist numlist | link unlink | removeformat',
-            toolbar2: '',
-            setup: function (editor) {
-              editor.on('input change undo redo', function () { onChange(editor.getContent()); });
-              editor.on('keydown', function (event) {
-                if (event.key === 'Escape') {
-                  event.preventDefault();
-                  // TinyMCE must finish handling the key before its selection is destroyed.
-                  window.setTimeout(scheduleAutosave, 0);
-                }
-              });
-            }
-          }
+          tinymce: window.issEditorialRichText.configure({ profile: profile || 'legacy', wrapper: wrapper, palette: config.textPalette, onChange: onChange, onClose: finishPreviewEdit, onBlur: finishPreviewEdit })
         });
       }
       if (profile && window.issEditorialRichText.hasUnsupportedMarkup(input.value, profile)) {
@@ -2748,7 +1852,7 @@
       return next.toString();
     }
 
-    function savePreviewDocument(intent) {
+    function savePreviewDocument(intent, candidate) {
       var params = new window.URLSearchParams();
       var saveUrl = config.ajaxUrl || window.ajaxurl || '';
 
@@ -2759,12 +1863,12 @@
 
       updateField();
       var snapshot = currentSaveValue();
-      var previewSections = { refs: documentState.sections.slice(), values: JSON.parse(JSON.stringify(documentState.sections)), labels: documentState.sections.map(function (section) { return sectionConfig(section.type).label + ' · ' + treatmentLabel(section.type, section.treatment || defaultTreatment(section.type)); }) };
+      var savedSections = previewSections();
       params.append('action', 'iss_editorial_save_preview_document');
       params.append('nonce', config.previewNonce);
       params.append('post_id', String(config.postId));
       params.append('format', format);
-      params.append('document', field.value || JSON.stringify(documentState));
+      params.append('document', candidate ? JSON.stringify(candidate) : field.value || JSON.stringify(documentState));
       params.append('base', config.baseToken || '');
       params.append('draft_token', draftToken);
       params.append('enabled', enabledField ? enabledField.value : '1');
@@ -2785,13 +1889,15 @@
           if (!response.ok || !payload || !payload.success) {
             throw new Error(payload && payload.data && payload.data.message ? payload.data.message : 'preview failed');
           }
+          if (intent === 'validate') { return payload.data.document; }
 
           draftToken = payload.data.draftToken || '';
           if (draftTokenField) { draftTokenField.value = draftToken; }
           lastSavedValue = snapshot;
           retry.hidden = true;
           if (payload.data.validationMessage) {
-            setStatus('Entwurf gesichert. Vor dem Veröffentlichen prüfen: ' + payload.data.validationMessage);
+            lastSavedStatus = 'Entwurf gesichert. Vor dem Veröffentlichen prüfen: ' + payload.data.validationMessage;
+            setStatus(lastSavedStatus);
             if (studio) { studio.message('Entwurf gesichert. Bitte prüfen: ' + payload.data.validationMessage); }
             if (livePreview) { livePreview.stale('Bitte prüfen: ' + payload.data.validationMessage); livePreview.reportSave('Entwurf gesichert. Bitte prüfen: ' + payload.data.validationMessage); }
             if (intent === 'preview' || intent === 'submit') { throw new Error(payload.data.validationMessage); }
@@ -2799,24 +1905,34 @@
           }
           if (livePreview) { livePreview.reportSave('Entwurf gesichert · unveröffentlicht'); }
           if (studio && !canvasEdit) { studio.message(''); }
-          if (livePreview && currentSaveValue() === snapshot && payload.data.previewUrl) { livePreview.update(payload.data.previewUrl, draftToken, previewSections); }
-          setStatus(currentSaveValue() === snapshot ? 'Entwurf gesichert · unveröffentlicht' : 'Weitere Änderungen werden gesichert …');
+          previewData = { url: intent === 'discard' ? config.previewUrl : payload.data.previewUrl, token: intent === 'discard' ? 'saved:' + config.baseToken : draftToken, value: snapshot, sections: savedSections };
+          if (['preview', 'retry', 'finish', 'discard'].indexOf(intent) !== -1) { previewIdle = true; }
+          if (intent !== 'submit') { refreshLivePreview(); }
+          lastSavedStatus = intent === 'discard' ? 'Gespeicherte Fassung geladen.' : 'Entwurf gesichert · unveröffentlicht';
+          setStatus(currentSaveValue() === snapshot ? lastSavedStatus : 'Weitere Änderungen werden gesichert …');
           return payload.data && payload.data.previewUrl ? payload.data.previewUrl : config.previewUrl;
         });
       });
     }
 
-    function queueSave(intent) {
+    function queueSave(intent, candidate) {
       if (sessionChanged) { return Promise.reject(new Error(sessionMessage)); }
-      window.clearTimeout(autosaveTimer);
+      if (intent !== 'validate') { window.clearTimeout(autosaveTimer); }
       if (recoveryPending || config.validationError) {
         return Promise.reject(new Error(config.validationError || 'Bitte zuerst den vorhandenen Entwurf prüfen.'));
       }
       saveChain = saveChain.catch(function () {}).then(function () {
         if (sessionChanged) { throw new Error(sessionMessage); }
-        return savePreviewDocument(intent);
+        updateField();
+        if ((!intent || intent === 'autosave') && currentSaveValue() === lastSavedValue) {
+          if (retry.hidden) { setStatus(lastSavedStatus); }
+          refreshLivePreview();
+          return previewData && previewData.value === lastSavedValue ? previewData.url : '';
+        }
+        return savePreviewDocument(intent, candidate);
       });
       return saveChain.catch(function (error) {
+        if (intent === 'validate') { throw error; }
         setStatus(error.message || 'Nicht gesichert. Bitte erneut versuchen.');
         if (studio) { studio.message('Nicht gesichert: ' + error.message); }
         retry.hidden = false;
@@ -2907,6 +2023,7 @@
           if (sessionChanged) { return; }
           sessionChanged = true;
           window.clearTimeout(autosaveTimer);
+          window.clearTimeout(previewTimer);
           var oldDialog = document.getElementById('post-lock-dialog');
           if (oldDialog) { window.jQuery(oldDialog).hide(); }
           var notice = createElement('p', 'notice notice-warning', sessionMessage + ' ');
@@ -2927,13 +2044,19 @@
         if (lock.new_lock && dialog.getClientRects().length) {
           // Core updates the lock field but leaves an already-open takeover dialog visible.
           window.jQuery(dialog).hide();
-          if (!recoveryPending) { queueSave().catch(function () {}); }
+          if (!recoveryPending) { queueSave('check').catch(function () {}); }
         }
       });
     }
 
     Object.keys(identityFields).forEach(function (key) {
-      if (identityFields[key]) { identityFields[key].addEventListener('input', scheduleAutosave); }
+      if (identityFields[key]) {
+        identityFields[key].addEventListener('input', scheduleAutosave);
+        identityFields[key].addEventListener('blur', finishPreviewEdit);
+      }
+    });
+    container.addEventListener('focusout', function (event) {
+      if (event.target.matches('input, textarea, select')) { finishPreviewEdit(); }
     });
 
     Object.keys(config.documentBindings || {}).forEach(function (key) {

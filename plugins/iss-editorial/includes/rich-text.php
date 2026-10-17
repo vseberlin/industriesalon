@@ -9,9 +9,9 @@ function iss_editorial_supports_version(array $format, $version): bool
     return is_int($version) && in_array($version, $format['supported_versions'] ?? [1], true);
 }
 
-function iss_editorial_text_profile(array $format, string $type, string $field): string
+function iss_editorial_text_profile(array $format, string $type, string $field, int $version): string
 {
-    return ($format['document_version'] ?? 1) >= 2
+    return $version >= 2
         ? (string) ($format['sections'][$type]['rich_text'][$field] ?? '') : '';
 }
 

@@ -21,17 +21,26 @@ function iss_editorial_embedded_preview(): array
     $key = get_current_user_id() . ':' . $post_id . ':' . $format['slug'] . ':' . $token;
     if (array_key_exists($key, $snapshots)) { return $snapshots[$key]; }
     $snapshots[$key] = [];
-    $draft = iss_editorial_get_draft($post_id, $format['slug']);
-    if (!$draft || !hash_equals($draft['token'], $token)) { return []; }
-    $document = iss_editorial_validate_document($draft['document'], $format['slug']);
+    if (str_starts_with($token, 'saved:')) {
+        if (!hash_equals('saved:' . iss_editorial_saved_token($post_id, $format['slug']), $token)) { return []; }
+        // Match the editor's read-only upgrade/hydration without creating a private autosave.
+        $source = iss_editorial_hydrate_document_previews(iss_editorial_get_editor_document($post_id, $format['slug']));
+        $enabled = true;
+    } else {
+        $draft = iss_editorial_get_draft($post_id, $format['slug']);
+        if (!$draft || !hash_equals($draft['token'], $token)) { return []; }
+        $source = $draft['document'];
+        $enabled = $draft['enabled'];
+    }
+    $document = iss_editorial_validate_document($source, $format['slug']);
     if (is_wp_error($document)) { return []; }
     // phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Authenticated and snapshot-bound above; this flag only enables editor controls.
     $canvas = !empty($format['editor']['canvas']) && !empty($_GET['iss_editorial_canvas']);
-    $snapshots[$key] = ['canvas' => $canvas, 'token' => $token, 'postId' => $post_id, 'format' => $format['slug'], 'document' => $document, 'enabled' => $draft['enabled']];
+    $snapshots[$key] = ['canvas' => $canvas, 'token' => $token, 'postId' => $post_id, 'format' => $format['slug'], 'document' => $document, 'enabled' => $enabled];
     return $snapshots[$key];
 }
 
-add_action('template_redirect', static function (): void {
+function iss_editorial_validate_embedded_preview(): void {
     // phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Authentication and snapshot are checked by iss_editorial_embedded_preview.
     if (empty($_GET['iss_editorial_embed'])) {
         return;
@@ -46,9 +55,10 @@ add_action('template_redirect', static function (): void {
         wp_die(esc_html__('Diese Vorschau ist nicht mehr aktuell. Bitte im Editor erneut laden.', 'iss-editorial') . $script, '', ['response' => 409]);
     }
     show_admin_bar(false);
-});
+}
+add_action('template_redirect', 'iss_editorial_validate_embedded_preview');
 
-add_action('wp_enqueue_scripts', static function (): void {
+function iss_editorial_enqueue_preview_assets(): void {
     $context = iss_editorial_embedded_preview();
     if (!$context) {
         return;
@@ -65,4 +75,5 @@ add_action('wp_enqueue_scripts', static function (): void {
     wp_enqueue_style('iss-editorial-preview-frame', iss_editorial_admin_url() . 'assets/preview-frame.css', [], (string) filemtime(iss_editorial_admin_path() . 'assets/preview-frame.css'));
     wp_enqueue_script('iss-editorial-preview-frame', iss_editorial_admin_url() . 'assets/preview-frame.js', [], (string) filemtime(iss_editorial_admin_path() . 'assets/preview-frame.js'), true);
     wp_localize_script('iss-editorial-preview-frame', 'issEditorialPreviewFrame', ['token' => $context['token'], 'postId' => $context['postId'], 'editing' => $editing, 'palette' => $editing ? iss_editorial_text_palette() : []]);
-});
+}
+add_action('wp_enqueue_scripts', 'iss_editorial_enqueue_preview_assets');

@@ -33,6 +33,22 @@ function iss_register_get_public_excerpt_candidate(int $post_id): string
     return '';
 }
 
+// Enabled Place JSON is already the excerpt source. Prepare it before the parent
+// write so save_post does not need a nested update with the original edit token.
+add_filter('wp_insert_post_data', static function (array $data, array $postarr): array {
+    $post_id = absint($postarr['ID'] ?? 0);
+    if (($data['post_type'] ?? '') !== ISS_REGISTER_POST_TYPE || $post_id <= 0
+        || trim((string) ($data['post_excerpt'] ?? '')) !== ''
+        || (defined('DOING_AUTOSAVE') && DOING_AUTOSAVE)
+        || !function_exists('iss_editorial_document_is_enabled')
+        || !iss_editorial_document_is_enabled($post_id, 'place')) {
+        return $data;
+    }
+    $candidate = iss_register_get_public_excerpt_candidate($post_id);
+    if ($candidate !== '') { $data['post_excerpt'] = wp_slash($candidate); }
+    return $data;
+}, 20, 2);
+
 function iss_register_get_public_image_candidate_id(int $post_id): int
 {
     $featured_candidate = 0;
